@@ -1,0 +1,16 @@
+/*
+A <=> a=1.
+B <=> [](x=1 => (y=2 => z=3)).
+A << B.
+*/
+/*
+INIT <=> x=0.
+INCREASE <=> [](x'=3).
+DROP <=> [](x-=10 => x=0).
+(INIT, INCREASE) << DROP.
+*/
+
+INIT   <=> f=10, t=0.
+CHANGE <=> [](t- = 5 => (t=0, f = 10 - f-)). 
+TIMER  <=> [](t'=1).
+INIT, (TIMER << CHANGE).
