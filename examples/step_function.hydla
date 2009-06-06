@@ -1,0 +1,8 @@
+// -*- coding: utf-8 -*-
+// ステップ関数
+
+INIT   <=> f=0, t=0.
+TIMER  <=> []t'=1.
+CHANGE <=> [](t- = 5 => f=1).
+
+INIT, TIMER << CHANGE.

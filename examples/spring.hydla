@@ -1,0 +1,6 @@
+// snake
+
+INIT   <=> x=1,v=0,tmp=-5.
+RUN    <=> [](x' = v, v' = tmp).
+TURN  <=> [](x- = 0 => tmp = -tmp-).
+INIT, RUN << TURN.
