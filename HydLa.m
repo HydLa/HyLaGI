@@ -8,7 +8,7 @@
 (*
  * デバック用メッセージを出力するかどうか
  *)
-globalUseDebugPrint = True
+globalUseDebugPrint = False
 
 (*
  * デバック用メッセージ出力関数
@@ -258,8 +258,8 @@ applyAskInterval[asks_, posAsk_] :=
 
 applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_] :=
   If[MemberQ[posAsk, guard],
-(*       {Join[table, removeNonAlwaysTuple[unit[elem]]], True}, *)
-      {Join[table, unit[elem]], True},
+      {Join[table, removeNonAlwaysTuple[unit[elem]]], True},
+(*       {Join[table, unit[elem]], True}, *)
       {table, askSuc}]
 
 chSolveUnitInterval[validModTable_, posAsk_, vars_] := Block[{

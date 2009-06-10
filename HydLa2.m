@@ -25,11 +25,13 @@ createModuleSet[unit[a__], mset_, True] :=
 createModuleSet[unit[a__], mset_, False] :=
   Join[mset, Map[(Join[unit[First[#1]+1], #1[[2;;-1]], unit[a]])&, mset], {unit[1, a]}]
   
-Print[Flatten[createModuleSet[group[unit[a], unit[b]]]]]
-(* Print[createModuleSet[order[unit[a], unit[b]]]] *)
-Print[createModuleSet[order[group[unit[a], unit[b]], unit[c]]]]
-Print[createModuleSet[order[order[unit[a], unit[b]], unit[c]]]]
-(* Print[createModuleSet[order[unit[a], group[unit[b], unit[c]]]]] *)
+(* Print[Flatten[createModuleSet[group[unit[a], unit[b]]]]] *)
+(* (\* Print[createModuleSet[order[unit[a], unit[b]]]] *\) *)
+(* Print[createModuleSet[order[group[unit[a], unit[b]], unit[c]]]] *)
+(* Print[createModuleSet[order[order[unit[a], unit[b]], unit[c]]]] *)
+(* (\* Print[createModuleSet[order[unit[a], group[unit[b], unit[c]]]]] *\) *)
+
+Print["xx:", createModuleSet[group[order[unit[a],unit[b]],order[unit[c],unit[d]]]]]
 
 collectTell[{elem___}]              := Fold[collectTell, {}, unit[elem]]
 collectTell[terms_, tell[elem_]]    := Append[terms, elem]
@@ -99,17 +101,17 @@ HydLaSolve[cons_, vars_, maxTime_] := Module[{
 (* {a,b,c},1 *)
 (* ] *)
 
-HydLaSolve[
-order[unit[tell[a==1], ask[a==1, tell[b==1]]],
-      unit[tell[b==2]]],
-{a,b,c},1
-]
+(* HydLaSolve[ *)
+(* order[unit[tell[a==1], ask[a==1, tell[b==1]]], *)
+(*       unit[tell[b==2]]], *)
+(* {a,b,c},1 *)
+(* ] *)
 
-HydLaSolve[
-order[unit[ask[a==1, tell[a==2]]],
-      unit[tell[a==1]]],
-{a,b,c},1
-]
+(* HydLaSolve[ *)
+(* order[unit[ask[a==1, tell[a==2]]], *)
+(*       unit[tell[a==1]]], *)
+(* {a,b,c},1 *)
+(* ] *)
 
 
 (* HydLaSolve[group[unit[tell[Equal[ht, 10]], tell[Equal[v, 0]]], order[unit[always[ask[Equal[prev[ht], 0], tell[Equal[v, Times[Minus[Divide[4, 5]], prev[v]]]]]]], group[unit[always[tell[Equal[ht', *)
