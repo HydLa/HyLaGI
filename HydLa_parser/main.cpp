@@ -23,6 +23,7 @@ void hydla_main(int argc, char* argv[])
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "version")
+    ("debug,d", "show debug message")
     ("simulation-time,s", po::value<std::string>()->default_value("1"), "simulation time")
     ("interlanguage,i", "show intermediate language")
     ("mathlink", 
@@ -57,7 +58,10 @@ void hydla_main(int argc, char* argv[])
 
   HydLaParser hp;
   if(hp.parse_flie(vm["input-file"].as<std::string>().c_str())) {
-    std::string interlanguage = hp.create_interlanguage(vm["simulation-time"].as<std::string>().c_str());
+    bool debug = vm.count("debug");
+    std::string interlanguage = 
+      hp.create_interlanguage(vm["simulation-time"].as<std::string>().c_str(), 
+			      debug);
  
     if(vm.count("interlanguage")) {
       std::cout <<  interlanguage  << std::endl;

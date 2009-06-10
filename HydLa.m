@@ -595,7 +595,7 @@ consStore2Table[consStore_, vars_] :=
 (*
  * 
  *)
-HydLaSolve[cons_, argVars_, maxTime_] := Module[{
+HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
   sol,
   vars, 
   ftVars,
@@ -611,6 +611,8 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   pftVars,
   changedAsk = {}
 },
+  globalUseDebugPrint = debug;
+
   vars     = addDifferentialVar[argVars];
   consFrameAxioms = createFrameAxiomsCons[argVars];
   ftVars   = var2TimeFunc[vars];

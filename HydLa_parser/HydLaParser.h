@@ -34,7 +34,7 @@ public:
     dump_tree(ast_tree_.trees.begin(), 0);
   }
 
-  std::string create_interlanguage(std::string max_time);
+  std::string create_interlanguage(std::string max_time, bool debug);
 
 private:
   void dump_tree(const tree_iter_t &iter, int nest) const;
