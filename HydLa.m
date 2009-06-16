@@ -651,7 +651,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
 
     {{consStore}, tmpPosAsk, tmpNegAsk} = pointPhase[consTable, {}, pftVars];
 
-    Print[N[currentTime, 5],
+    Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5],
             "\t" <> Fold[(#1<>ToString[N[First[#2 /. Solve[consStore, #2]], 5]]<>"\t")&,
          "",
          ftVarsND /. name_[t] -> name[0]]];
@@ -685,7 +685,8 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
     {tmpT, includeZero, changedAsk, tmpPrevConsTable} =
       intervalPhase[
 (*                     order[group[order[consTable, consFrameAxioms], unit[tell[consStore]]], consPrevEqNow], *)
-                    order[order[order[consTable, consFrameAxioms], tmpConsStoreTable], consPrevEqNow],
+                    order[order[tmpConsStoreTable, order[consTable, consFrameAxioms]], consPrevEqNow],
+(*                     order[order[order[consTable, consFrameAxioms], tmpConsStoreTable], consPrevEqNow], *)
                     Join[tmpNegAsk, tmpPosAsk],
                     tmpPosAsk,
                     changedAsk,
