@@ -21,6 +21,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     RI_ConstraintName,
 
     RI_LogicalAnd,
+    RI_Ask_LogicalAnd,
     RI_LogicalOr,
 
     RI_Less,
@@ -118,6 +119,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_AskUnequal)    ask_not_equal; 
 
     defRuleID(RI_LogicalAnd)  logical_and; 
+    defRuleID(RI_Ask_LogicalAnd)  ask_logical_and; 
     defRuleID(RI_LogicalOr)  logical_or; 
 
     defRuleID(RI_OrderExpr)      order_expr; 
@@ -209,7 +211,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       ask_logical = ask_logical_term % root_node_d[logical_or];
 
       //ò_óùêœ
-      ask_logical_term = ask_comparison % root_node_d[logical_and];
+      ask_logical_term = ask_comparison % root_node_d[ask_logical_and];
 
       //î‰är
       ask_comparison = ask_arithmetic % root_node_d[less_eq
@@ -274,6 +276,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //ò_óùââéZéq
       logical_and = str_p("&&") | ch_p(",");
+      ask_logical_and = str_p("&&");
       logical_or  = str_p("||");
 
       //éZèpââéZéq

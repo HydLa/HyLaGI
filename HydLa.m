@@ -5,6 +5,8 @@
 
 (* Begin["`Private`"] *)
 
+(* $MaxExtraPrecision = Infinity *)
+
 (*
  * デバック用メッセージを出力するかどうか
  *)
@@ -130,8 +132,10 @@ askTestQ[cons_, asks_, vars_] := (
  *
  * 戻り値：{tell制約, ask制約のリスト}
  *)
-splitTellAsk[unit_] := 
+splitTellAsk[unit_] := (
+  debugPrint["splitTellAsk#unit:", unit];
   Fold[splitTellAsk, {{}, {}}, unit]
+)
 splitTellAsk[{tells_, asks_}, tell[elem__]] := 
   {Join[tells, {elem}], asks}
 splitTellAsk[{tells_, asks_}, ask[elem__]] := 
@@ -533,13 +537,14 @@ intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_,
   debugPrint["askList:", askList];
   debugPrint["tmpIntegSol:", tmpIntegSol];
   debugPrint["rulePrev2IntegNow:", rulePrev2IntegNow];
+  debugPrint["ruleNow2IntegNow:", ruleNow2IntegNow];
 
   (* 積分済み変数の割り当て *)
   debugPrint["integVars:", integVars];
   debugPrint["varsND:", varsND];
   MapThread[(#1[t_] = (#2 /. tmpIntegSol))&, {integVars, varsND}];
 
-  tmpAsk = Map[({# /. rulePrev2IntegNow, #})&, askList];
+  tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList];
   debugPrint["tmpAsk:", tmpAsk];  
   
   (* 次のPointPhaseまでの時間を求める *)
@@ -575,11 +580,11 @@ intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_,
 
   (* 変数の値の出力 *)
   For[i=0, i<tmpMinT, i+=1/10,
-    Print[N[i+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[#2[t] /. t->i, 5]]<>"\t")&, "", integVars]];
-    AppendTo[gOutPut, Fold[(Append[#1, N[#2[t] /. t->i, 5]])&, {N[i+currentTime, 5]}, integVars]];
+    Print[N[i+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[FullSimplify[#2[t] /. t->i], 5]]<>"\t")&, "", integVars]];
+(*     AppendTo[gOutPut, Fold[(Append[#1, N[#2[t] /. t->i, 5]])&, {N[i+currentTime, 5]}, integVars]]; *)
   ];
-  Print[N[tmpMinT+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[#2[t] /. t->tmpMinT, 5]]<>"\t")&, "", integVars]];
-  AppendTo[gOutPut, Fold[(Append[#1, N[#2[t] /. t->tmpMinT, 5]])&, {N[i+currentTime, 5]}, integVars]];
+  Print[N[tmpMinT+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[FullSimplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]];
+(*   AppendTo[gOutPut, Fold[(Append[#1, N[FullSimplify[#2[t] /. t->tmpMinT], 5]])&, {N[i+currentTime, 5]}, integVars]]; *)
 
 
   (* 積分済み変数の割り当て解除 *)
@@ -641,7 +646,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
   debugPrint["consPrevEqNow:", consPrevEqNow];
   debugPrint["consFrameAxioms:", consFrameAxioms];
   debugPrint["rulePrev2IntegNow:", rulePrev2IntegNow];
-
+  debugPrint["ruleNow2IntegNow:", ruleNow2IntegNow];
 
   While[True,
     consTable = consTable /. name_[t] -> name[0];
@@ -652,7 +657,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
     {{consStore}, tmpPosAsk, tmpNegAsk} = pointPhase[consTable, {}, pftVars];
 
     Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5],
-            "\t" <> Fold[(#1<>ToString[N[First[#2 /. Solve[consStore, #2]], 5]]<>"\t")&,
+            "\t" <> Fold[(#1<>ToString[N[FullSimplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&,
          "",
          ftVarsND /. name_[t] -> name[0]]];
 

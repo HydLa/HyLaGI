@@ -131,6 +131,11 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
       return create_interlanguage(ch) + ", " +
         create_interlanguage(ch+1);    
 
+    case HydLaGrammar::RI_Ask_LogicalAnd:
+      return "And[" +
+	create_interlanguage(ch) + ", " +
+        create_interlanguage(ch+1) + "]";    
+
     case HydLaGrammar::RI_Previous:
       return "prev[" + create_interlanguage(ch) + "]";
 
