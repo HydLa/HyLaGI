@@ -1,0 +1,6 @@
+INIT <=> x=0, vx=10, f=0, fk=0.
+LAWS <=> [] (vx=x', m=5, fn=m*(98/10), mu0=(2/10), mu=(1/10), k=50, fk=k*x, f=m*vx'+fk).
+STOP <=> [] ((fk-)<=(mu0-)*fn- => f=fk).
+MOVE <=> [] ((fk-)>(mu0-)*fn- => f=mu*fn).
+
+INIT, LAWS, STOP, MOVE.
