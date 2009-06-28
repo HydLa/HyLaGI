@@ -1,4 +1,3 @@
-// -*- coding: utf-8 -*-
 // 方形波 (square wave)
 
 INIT   <=> f=10, t=0.

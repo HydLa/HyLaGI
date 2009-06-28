@@ -105,7 +105,7 @@ exprTimeFunc2IntegFunc[expr_, vars_] :=
  * フレーム公理を満たすための制約を作成
  *)
 createFrameAxiomsCons[vars_] :=
-  Map[(unit[tell[createUsrVar[#'][t]==0]])&, vars] /. List -> group
+  Map[(unit[always[tell[createUsrVar[#'][t]==0]]])&, vars] /. List -> group
 (*
  * {"term", elem, ...} を term[elem, ...] の形式に変換する
  *)
@@ -146,11 +146,11 @@ splitTellAsk[acc_, always[elem__]] :=
 (*
  * ask制約の適用
  *)
-applyAsk[asks_, consStore_, posAsk_, vars_] :=
-  Fold[(applyAsk[#1, #2, consStore, vars])&, {unit[], posAsk, {}, False}, asks]
+applyAsk[asks_, consStore_, posAsk_, changedAsk_, vars_] :=
+  Fold[(applyAsk[#1, #2, consStore, changedAsk, vars])&, {unit[], posAsk, {}, False}, asks]
 
-applyAsk[{newValidModTable_, posAsk_, negAsk_, askSuc_}, ask[guard_, elem__], consStore_, vars_] :=   
-  If[askTestQ[consStore, guard, vars]===True,
+applyAsk[{newValidModTable_, posAsk_, negAsk_, askSuc_}, ask[guard_, elem__], consStore_, changedAsk_, vars_] :=   
+  If[MemberQ[changedAsk, {positive, guard}]=!=True && askTestQ[consStore, guard, vars]===True,
       {Join[newValidModTable, unit[elem]],
        Append[posAsk, guard],
        negAsk,
@@ -160,7 +160,7 @@ applyAsk[{newValidModTable_, posAsk_, negAsk_, askSuc_}, ask[guard_, elem__], co
        Append[negAsk, guard],
        askSuc}]
 
-chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, vars_] := Block[{
+chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, changedAsk_, vars_] := Block[{
   posAsk    = positiveAsk,
   negAsk    = negativeAsk,
   consStore = constraintStore,
@@ -180,7 +180,7 @@ chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, vars_]
     If[consStore=!={False},
       (* true *)
       {table, posAsk, negAsk, askSuc} = 
-        applyAsk[asks, consStore, posAsk, vars];
+        applyAsk[asks, consStore, posAsk, changedAsk, vars];
       debugPrint["chSolveUnit#table:", table];
       debugPrint["chSolveUnit#posAsk:", posAsk];
       debugPrint["chSolveUnit#negAsk:", negAsk];
@@ -192,7 +192,7 @@ chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, vars_]
   solve[]
 ]
 
-chSolve[consTable_, consStore_, vars_] := Block[{
+chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
   nacc, 
   nsuc,
   solve
@@ -214,7 +214,7 @@ chSolve[consTable_, consStore_, vars_] := Block[{
   );
 
   solve[unit[elem__], {validModTable_, store_, posAsk_, negAsk_}, suc_] := (
-    nacc = chSolveUnit[Join[validModTable, unit[elem]], store, posAsk, negAsk, vars];
+    nacc = chSolveUnit[Join[validModTable, unit[elem]], store, posAsk, negAsk, changedAsk, vars];
     If[nacc=!=False, 
         {nacc, True},
         {{validModTable, store, posAsk, negAsk}, False}]
@@ -227,11 +227,6 @@ chSolve[consTable_, consStore_, vars_] := Block[{
 
 (********)
 
-validVars[expr_, vars_] := With[{
-  expr2  = expr /. name_[0] -> name[t]
-},
-  Select[vars, (MemberQ[expr2, #, Infinity])&]
-]
 
 exDSolve[expr_, vars_] := (
   debugPrint["--- exDSolve ---"];
@@ -242,12 +237,12 @@ exDSolve[expr_, vars_] := (
         Check[DSolve[expr, vars, t],
                 underconstraint,
                 {DSolve::underdet, Solve::svars, DSolve::deqx, 
-                 DSolve::bvnr, DSolve::bvsing, DSolve::dsmsm}],
+                 DSolve::bvnr, DSolve::bvsing}],
         overconstraint,
-        {DSolve::overdet, DSolve::bvnul}],
+        {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
       {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
        Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-       DSolve::dsmsm, DSolve::bvnul}] 
+       DSolve::bvnul, DSolve::dsmsm}] 
 )
 
 (* exDSolve[expr_, vars_] := *)
@@ -257,16 +252,38 @@ exDSolve[expr_, vars_] := (
  * 有効なaskを適用し、中身を取り出す
  * その際、alwaysでない中身は削除する 
  *)
-applyAskInterval[asks_, posAsk_] :=
-  Fold[(applyAskInterval[#1, #2, posAsk])&, {unit[], False}, asks]
+applyAskInterval[asks_, posAsk_, changedAsk_] :=
+  Fold[(applyAskInterval[#1, #2, posAsk, changedAsk])&, {unit[], False}, asks]
 
-applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_] :=
+applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_, changedAsk_] :=
   If[MemberQ[posAsk, guard],
-      {Join[table, removeNonAlwaysTuple[unit[elem]]], True},
-(*       {Join[table, unit[elem]], True}, *)
+      If[MemberQ[changedAsk, {positive, guard}],
+        {Join[table, removeNonAlwaysTuple[unit[elem]]], True},
+        {Join[table, unit[elem]], True}],
       {table, askSuc}]
 
-chSolveUnitInterval[validModTable_, posAsk_, vars_] := Block[{
+(* validVars[expr_] := *)
+(*   Cases[cs, _[___, usrVarf'[0], ___], Infinity] *)
+
+(*   validVars[expr_, vars_] := *)
+(*     Select[vars, (MemberQ[expr, #, Infinity])&] *)
+
+
+validVars[expr_] :=
+  Union[Flatten[
+    Cases[expr, symbol_Symbol[t] | symbol_Symbol'[t] -> {symbol[t], symbol'[t]}, Infinity]]]
+
+initialVals[expr_, consStore_] := 
+  Flatten[Map[(Cases[consStore, _[#1[0], Except[prev[_][0]]] | _[Except[prev[_][0]], #1[0]], Infinity])&,
+                Union[Flatten[Cases[expr, symbol_Symbol'[t] -> symbol, Infinity]]]]]
+
+(*   Flatten[Map[(Cases[consStore, _[#1[0], Except[prev[_][0]]] | _[Except[prev[_][0]], #1[0]], Infinity])&, *)
+(*                 Union[Flatten[{Cases[expr, symbol_Symbol'[t] -> {symbol, symbol'}, Infinity], *)
+(*                                Cases[expr, symbol_Symbol[t] -> symbol, Infinity]}]]]] *)
+
+
+
+chSolveUnitInterval[validModTable_, consStore_, posAsk_, changedAsk_, vars_] := Block[{
   askSuc,
   sol,
   tells,
@@ -280,21 +297,22 @@ chSolveUnitInterval[validModTable_, posAsk_, vars_] := Block[{
     {tells, asks} = splitTellAsk[table];
     debugPrint["chSolveUnitInterval#tells:", tells];
     debugPrint["chSolveUnitInterval#asks:", asks];
+    debugPrint["chSolveUnitInterval#consStore:", consStore];
 
     If[tells=!={},
         (* true *)
 
-        tells = {Reduce[tells, validVars[tells, vars]]};
+        tells = {Reduce[tells, vars]};
         debugPrint["chSolveUnitInterval#after reduce tells:", tells];
         If[tells === {False},
-            debugPrint["reduce error!!"]; 
+            debugPrint["reduce error!!"];
             Return[False]];
 
         (* prevに関する制約削除 *)
-        tells = DeleteCases[tells, prev[_][_]==_ | _==prev[_][_], Infinity];
+        tells = DeleteCases[tells, _[prev[_][_], _] | _[_, prev[_][_]], Infinity];
         debugPrint["remove prev cons:", tells];
 
-        sol = exDSolve[tells, validVars[tells, vars]];
+        sol = exDSolve[Join[tells, initialVals[tells, consStore]], validVars[tells]];
         debugPrint["chSolveUnitInterval#sol:", sol];
         If[Length[$MessageList]>0, Throw[{error, "cannot solve ODEs", tells, $MessageList}]];
         If[sol===overconstraint, Return[False]]];
@@ -309,7 +327,7 @@ chSolveUnitInterval[validModTable_, posAsk_, vars_] := Block[{
 (*       debugPrint["tmpIntegTest:", tmpIntegTest]; *)
 (*        If[tmpDiffTest && tmpIntegTest, ok, Return[False]]]; *)
          
-   {asks, askSuc} = applyAskInterval[asks, posAsk];
+   {asks, askSuc} = applyAskInterval[asks, posAsk, changedAsk];
    If[askSuc===True,
         If[tells=!={},
             solve[Append[asks, tell @@ tells]],
@@ -319,7 +337,7 @@ chSolveUnitInterval[validModTable_, posAsk_, vars_] := Block[{
   solve[validModTable]
 ]
 
-chSolveInterval[consTable_, posAsk_, vars_] := Block[{
+chSolveInterval[consTable_, consStore_, posAsk_, changedAsk_, vars_] := Block[{
   nacc, 
   nsuc,
   solve
@@ -341,7 +359,7 @@ chSolveInterval[consTable_, posAsk_, vars_] := Block[{
   );
 
   solve[unit[elem__], validModTable_, suc_] := (
-    nacc = chSolveUnitInterval[Join[validModTable, unit[elem]], posAsk, vars];
+    nacc = chSolveUnitInterval[Join[validModTable, unit[elem]], consStore, posAsk, changedAsk, vars];
     debugPrint["chSolveInterval#solve$unit#nacc:", nacc];
     If[nacc=!=False, 
         {nacc, True},
@@ -466,17 +484,21 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
   debugPrint["ask:", ask];
 
   If[MemberQ[changedAsk, {type, ask}]===False,
-    (* 未採用のask *)
-     tmpSol = Reduce[{If[includeZero===True, t>=0, t>0] && 
-                       (maxTime==t || If[type===negative, integAsk, Not[integAsk]])}, t];
-     debugPrint["tmpSol:", tmpSol];
-     tmpMinT = If[tmpSol =!= False, (* 解なしと境界値の解を区別するため *)
-                 First[Quiet[Minimize[{t, tmpSol}, {t}], Minimize::wksol]],
-                 error];
-     If[Length[$MessageList]>0, 
-         Throw[{error, "cannot solve min time", tmpMinT, $MessageList}]],
+      (* 未採用のask *)
+      If[integAsk=!=False,
+        tmpSol = Reduce[{If[includeZero===True, t>=0, t>0] && 
+                         (maxTime==t || If[type===negative, integAsk, Not[integAsk]])}, t];
+        debugPrint["tmpSol:", tmpSol];
+        tmpMinT = If[tmpSol =!= False, (* 解なしと境界値の解を区別するため *)
+                   First[Quiet[Minimize[{t, tmpSol}, {t}], Minimize::wksol]],
+                   error];
+        If[includeZero=!=False && tmpMinT===0, tmpMinT=error];
+        If[Length[$MessageList]>0, 
+           Throw[{error, "cannot solve min time", tmpMinT, $MessageList}]],
+        
+        tmpMinT=0],
    
-    (* すでに採用済のask *)
+      (* すでに採用済のask *)
       tmpMinT = error
     ];
 
@@ -493,15 +515,17 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
 (*
  * ポイントフェーズの処理 
  *)
-pointPhase[consTable_, consStore_, vars_] := (
+pointPhase[consTable_, consStore_, changedAsk_, vars_] := (
   debugPrint["***** point phase *****"];
-  chSolve[consTable, consStore, vars]
+  debugPrint["pointPhase#consTable:", consTable];
+
+  chSolve[consTable, consStore, changedAsk /. sym_[t] -> sym[0] , vars]
 ) 
 
 (*
  * インターバルフェイズの処理
  *)
-intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_, 
+intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, includeZero_, 
               ruleNow2IntegNow_, rulePrev2IntegNow_,
               vars_, ftvars_, varsND_, integVars_, prevVars_,
               maxTime_, currentTime_] := (
@@ -510,12 +534,13 @@ intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_,
   debugPrint["prevVars:", prevVars];  
   debugPrint["consTable:", consTable];
   debugPrint["posAsk:", posAsk];
+  debugPrint["negAsk:", negAsk];
 
 (*   (\* prevに関する制約削除 *\) *)
 (*   tmpSol = Fold[(DeleteCases[#1, #2[_]==_ | _==#2[_], Infinity])&, consTable, prevVars]; *)
 (*   debugPrint["remove prev cons:", tmpSol]; *)
 
-  tmpSol = chSolveInterval[consTable, posAsk, vars];
+  tmpSol = chSolveInterval[consTable, consStore, posAsk, changedAsk, vars];
   debugPrint["chSolveResult:", tmpSol];
   tmpTells = collectTell[List @@ tmpSol];
   debugPrint["tmpTells:", tmpTells];
@@ -528,9 +553,13 @@ intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_,
 
   (* ODE求解 *)
   debugPrint["--- DSolve ---"];
+  tmpValidVars = validVars[tmpTells];
+  tmpTells = Join[tmpTells, initialVals[tmpTells, consStore]];
+
   debugPrint["expr:", tmpTells];
   debugPrint["var:", varsND];
-  tmpIntegSol = DSolve[tmpTells, varsND, t];
+
+  tmpIntegSol = DSolve[tmpTells, tmpValidVars, t];
   If[Length[$MessageList]>0, Throw[{error, "cannot solve ODEs", tmpIntegSol, $MessageList}]];
   tmpIntegSol = First[tmpIntegSol];
 
@@ -544,37 +573,56 @@ intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_,
   debugPrint["varsND:", varsND];
   MapThread[(#1[t_] = (#2 /. tmpIntegSol))&, {integVars, varsND}];
 
-  tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList];
+(*   tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList]; *)
+(*   tmpPosAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, posAsk]; *)
+(*   tmpNegAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, negAsk]; *)
+  tmpAsk = Map[({# /. rulePrev2IntegNow, #})&, askList];
+  tmpPosAsk = Map[({# /. rulePrev2IntegNow, #})&, posAsk];
+  tmpNegAsk = Map[({# /. rulePrev2IntegNow, #})&, negAsk];
   debugPrint["tmpAsk:", tmpAsk];  
+  debugPrint["tmpPosAsk:", tmpPosAsk];  
+  debugPrint["tmpNegAsk:", tmpNegAsk];  
+
+  tmpChangedAsk = Join[changedAsk, Map[({negative, #})&, posAsk], Map[({positive, #})&, negAsk]];
+  debugPrint["tmpChangedAsk:", tmpChangedAsk];  
   
+(*   tmpChangedAsk = If[includeZero, tmpChangedAsk, {}]; *)
+
   (* 次のPointPhaseまでの時間を求める *)
   {tmpMinT, tmpMinAsk} = findNextPointPhaseTime[
                           positive, includeZero,
-                          tmpAsk, changedAsk, 
+                          tmpPosAsk, If[includeZero, tmpChangedAsk, {}],
                           maxTime, maxTime, {}];
 
   {tmpMinT, tmpMinAsk} = findNextPointPhaseTime[
                           negative, includeZero,
-                          tmpAsk, changedAsk, 
+                          tmpNegAsk, If[includeZero, tmpChangedAsk, {}], 
                           maxTime, tmpMinT, tmpMinAsk];
-
-  If[tmpMinAsk==={} && includeZero, 
-      tmpNewChangedAsk = {};
-      tmpNewIncludeZero = False;
-      tmpMinT = 0,       
-
-      If[tmpMinT===0,
-          tmpNewChangedAsk = Join[changedAsk, tmpMinAsk];
-          tmpNewIncludeZero = includeZero,
-          
-          tmpNewChangedAsk = {};
-          tmpNewIncludeZero = True]];
-
 
   debugPrint["--- findNextPointPhaseTimeResult ---"];
   debugPrint["tmpMinT:", tmpMinT];
   debugPrint["tmpMinAsk:", tmpMinAsk];
- 
+  debugPrint["includeZero:", includeZero];
+
+  If[tmpMinAsk==={} && includeZero, 
+      tmpNewChangedAsk = {};
+      tmpNewIncludeZero = False;
+      tmpMinT = 0;
+      tmpConsStore = {},
+
+      If[tmpMinT===0,
+          tmpNewChangedAsk = Join[tmpChangedAsk, tmpMinAsk];
+          tmpNewIncludeZero = includeZero;
+          tmpConsStore = MapThread[(#1 == (#2 /. t->tmpMinT))&, 
+                                    {ftvars, Flatten[Map[({#[t], #'[t]})&, integVars]]}] /. sym_[t] -> sym[0],
+          
+          tmpNewChangedAsk = {};
+          tmpNewIncludeZero = True;
+          tmpConsStore = {}]];
+
+
+  debugPrint["tmpConsStore:", tmpConsStore];
+
   tmpPrevConsTable = group @@ MapThread[(unit[tell[#1[t] == (#2 /. t->tmpMinT)]])&, 
                                    {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}];
 
@@ -590,7 +638,7 @@ intervalPhase[consTable_, askList_, posAsk_, changedAsk_, includeZero_,
   (* 積分済み変数の割り当て解除 *)
   Scan[(Clear[#])&, integVars];
 
-  {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable}
+  {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore}
 )
 
 consStore2Table[consStore_, vars_] :=
@@ -608,7 +656,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
   prevVars,
   consFrameAxioms,
   consTable,
-  consStore,
+  consStore = {},
   consStorePrev = {},
   currentTime = 0,
   includeZero = True,
@@ -649,12 +697,14 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
   debugPrint["ruleNow2IntegNow:", ruleNow2IntegNow];
 
   While[True,
-    consTable = consTable /. name_[t] -> name[0];
 
-    debugPrint["--- Before PointPhase ---"];
-    debugPrint["consTable:", consTable];
+    tmpConsTable = 
+      If[consStorePrev==={},
+          order[consTable, consPrevEqNow] /. name_[t] -> name[0],
+          order[consStorePrev, consTable, consPrevEqNow] /. name_[t] -> name[0]];
 
-    {{consStore}, tmpPosAsk, tmpNegAsk} = pointPhase[consTable, {}, pftVars];
+    {{consStore}, tmpPosAsk, tmpNegAsk} = 
+      pointPhase[tmpConsTable, consStore, changedAsk, pftVars];
 
     Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5],
             "\t" <> Fold[(#1<>ToString[N[FullSimplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&,
@@ -684,30 +734,30 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
     debugPrint["consStore:", consStore];
     debugPrint["consTable:", consTable];
 
-    tmpConsStoreTable = consStore2Table[consStore, pftVars /. name_[t] -> name[0]];
-    debugPrint["tmpConsStoreTable:", tmpConsStoreTable];
+(*     tmpConsStoreTable = consStore2Table[consStore, pftVars /. name_[t] -> name[0]]; *)
+(*     debugPrint["tmpConsStoreTable:", tmpConsStoreTable]; *)
 
-    {tmpT, includeZero, changedAsk, tmpPrevConsTable} =
+    {tmpT, includeZero, changedAsk, tmpPrevConsTable, consStore} =
       intervalPhase[
-(*                     order[group[order[consTable, consFrameAxioms], unit[tell[consStore]]], consPrevEqNow], *)
-                    order[order[tmpConsStoreTable, order[consTable, consFrameAxioms]], consPrevEqNow],
+                    order[order[consTable, consFrameAxioms], consPrevEqNow],
 (*                     order[order[order[consTable, consFrameAxioms], tmpConsStoreTable], consPrevEqNow], *)
+                    consStore,
                     Join[tmpNegAsk, tmpPosAsk],
                     tmpPosAsk,
+                    tmpNegAsk,
                     changedAsk,
                     includeZero,
                     ruleNow2IntegNow, rulePrev2IntegNow,
                     pftVars, ftVars, ftVarsND, var2IntegVar[argVars], prevVars, 
                     maxTime-currentTime, currentTime];
-  
+
+    debugPrint["--- After IntervalPhase ---"];  
     debugPrint["changedAsk:", changedAsk];
+    debugPrint["consStore:", consStore];
 
     currentTime += tmpT;
 
     If[tmpT=!=0 || consStorePrev === {}, consStorePrev = tmpPrevConsTable];
-
-    consTable = order[consStorePrev, consTable, consPrevEqNow];
-    debugPrint["consTable:", consTable];
   ];
 ]
 

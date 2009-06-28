@@ -15,7 +15,8 @@ using namespace boost::spirit;
 
 struct HydLaGrammar : public grammar<HydLaGrammar> {
   typedef enum _RuleID {
-    RI_Number = 1, 
+    RI_Number = 1, ]
+    RI_PrevVariable,
     RI_Variable,
     RI_Identifier,
     RI_ConstraintName,
@@ -90,6 +91,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     defRuleID(RI_Identifier)    identifier; 
     defRuleID(RI_Number)    number; 
+    defRuleID(RI_PrevVariable)  prev_val;
     defRuleID(RI_Variable)  variable; 
     defRuleID(RI_ConstraintName)  constraint_name; 
     
@@ -183,8 +185,8 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //î‰är
       comparison = arithmetic % root_node_d[less_eq
-                                          | less
-                                          | greater_eq
+					  | less
+					  | greater_eq
                                           | greater
                                           | equal
                                           | not_equal];
@@ -202,7 +204,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //àˆéq
       factor =  
-        variable >> !(root_node_d[previous])
+          prev_val
         | number
         | inner_node_d['(' >> logical_term >> ')'];
 
@@ -234,7 +236,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //àˆéq
       ask_factor = 
-        variable >> !(root_node_d[previous])
+          prev_val
         | number
         | inner_node_d['(' >> ask_logical >> ')'];
 
@@ -243,6 +245,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         lexeme_d[leaf_node_d[
           +digit_p >> !('.' >> +digit_p)]]; 
           
+      //prevïœêî
+      prev_val = variable >> !(root_node_d[previous]);
+
       //ïœêî
       variable = lexeme_d[leaf_node_d[identifier]] >> !(root_node_d[differential]);
 

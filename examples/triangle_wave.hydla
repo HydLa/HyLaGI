@@ -6,4 +6,5 @@ init       <=> TEMP=5, F=5.
 jackknife1 <=> [](F- = 10 => TEMP = - TEMP-).
 jackknife2 <=> [](F- =  0 => TEMP = - TEMP-).
 line       <=> [](F' = TEMP).
-init, line << (jackknife1, jackknife2).
+fa         <=> [](TEMP'=0).
+init, fa << line << (jackknife1, jackknife2).

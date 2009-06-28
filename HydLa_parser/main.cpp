@@ -79,7 +79,7 @@ void hydla_main(int argc, char* argv[])
       //      std::cout << "end" << std::endl;
     }
   } else {
-    std::cout << "false" << std::endl;
+    std::cout << "parse error" << std::endl;
   }
 }
 
