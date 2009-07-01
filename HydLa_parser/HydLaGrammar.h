@@ -15,7 +15,7 @@ using namespace boost::spirit;
 
 struct HydLaGrammar : public grammar<HydLaGrammar> {
   typedef enum _RuleID {
-    RI_Number = 1, ]
+    RI_Number = 1, 
     RI_PrevVariable,
     RI_Variable,
     RI_Identifier,
