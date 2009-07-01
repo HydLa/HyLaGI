@@ -4,7 +4,8 @@ INIT    <=> ht=20, x=0, vy=0, vx=1.
 FALL1   <=> [](ht' = vy).
 FALL2   <=> [](vy' = -10).
 X_MOVE  <=> [](x'  = vx).
-BOUNCE  <=> [](ht- = 10 => vy = -(4/5) * vy-).
-BOUNCE2 <=> [](ht- = 0 => vy = -(4/5) * vy-).
+BOUNCE  <=> [](x- <= 3 && ht- = 10 => vy = -(4/5) * vy-).
+BOUNCE2 <=> [](x- > 3 && ht- = 0 => vy = -(4/5) * vy-).
 
-INIT, X_MOVE, FALL1, FALL2, BOUNCE, BOUNCE2.
+INIT, X_MOVE, (FALL1, FALL2) << BOUNCE << BOUNCE2. 
+

@@ -492,7 +492,8 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
         tmpMinT = If[tmpSol =!= False, (* 解なしと境界値の解を区別するため *)
                    First[Quiet[Minimize[{t, tmpSol}, {t}], Minimize::wksol]],
                    error];
-        If[includeZero=!=False && tmpMinT===0, tmpMinT=error];
+        debugPrint["Minimize#tmpMinT:", tmpMinT];
+        If[includeZero===False && tmpMinT===0, tmpMinT=error];
         If[Length[$MessageList]>0, 
            Throw[{error, "cannot solve min time", tmpMinT, $MessageList}]],
         
@@ -571,7 +572,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   (* 積分済み変数の割り当て *)
   debugPrint["integVars:", integVars];
   debugPrint["varsND:", varsND];
-  MapThread[(#1[t_] = (#2 /. tmpIntegSol))&, {integVars, varsND}];
+  MapThread[(#1[t_] = FullSimplify[(#2 /. tmpIntegSol)])&, {integVars, varsND}];
 
 (*   tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList]; *)
 (*   tmpPosAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, posAsk]; *)
@@ -591,12 +592,12 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   (* 次のPointPhaseまでの時間を求める *)
   {tmpMinT, tmpMinAsk} = findNextPointPhaseTime[
                           positive, includeZero,
-                          tmpPosAsk, If[includeZero, tmpChangedAsk, {}],
+                          tmpAsk, If[includeZero, tmpChangedAsk, {}],
                           maxTime, maxTime, {}];
 
   {tmpMinT, tmpMinAsk} = findNextPointPhaseTime[
                           negative, includeZero,
-                          tmpNegAsk, If[includeZero, tmpChangedAsk, {}], 
+                          tmpAsk, If[includeZero, tmpChangedAsk, {}], 
                           maxTime, tmpMinT, tmpMinAsk];
 
   debugPrint["--- findNextPointPhaseTimeResult ---"];

@@ -5,9 +5,9 @@
 #include <map>
 #include <iterator>
 
-#include <boost/spirit/iterator/classic_file_iterator.hpp>
-#include <boost/spirit/iterator/classic_position_iterator.hpp>
-#include <boost/spirit/tree/classic_ast.hpp>
+#include <boost/spirit/iterator/file_iterator.hpp>
+#include <boost/spirit/iterator/position_iterator.hpp>
+#include <boost/spirit/tree/ast.hpp>
 
 namespace hydla {
 
