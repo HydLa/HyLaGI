@@ -8,8 +8,8 @@
 #include <boost/bind.hpp>
 
 #include "HydLaParser.h"
-//#include "MathSimulator.h"
-//#include "mathlink_helper.h"
+#include "MathSimulator.h"
+#include "mathlink_helper.h"
 
 using namespace hydla;
 namespace po = boost::program_options;
@@ -66,10 +66,10 @@ void hydla_main(int argc, char* argv[])
     if(vm.count("interlanguage")) {
       std::cout <<  interlanguage  << std::endl;
     } else {
-      //MathSimulator ms;
+      MathSimulator ms;
       //boost::thread th(boost::bind(&MathSimulator::simulate, &ms, 
       //			   vm["mathlink"].as<std::string>().c_str(), interlanguage.c_str()));
-      //ms.simulate(vm["mathlink"].as<std::string>().c_str(), interlanguage.c_str());
+      ms.simulate(vm["mathlink"].as<std::string>().c_str(), interlanguage.c_str());
       
       //      boost::system_time timeout = boost::posix_time::milliseconds(500); 
       //while(!th.timed_join(boost::posix_time::milliseconds(100))) {
