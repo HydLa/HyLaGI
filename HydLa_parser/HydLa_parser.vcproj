@@ -178,10 +178,6 @@
 				RelativePath=".\main.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\mathlink_helper.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -198,6 +194,10 @@
 			</File>
 			<File
 				RelativePath=".\HydLaParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mathlink_helper.h"
 				>
 			</File>
 		</Filter>
