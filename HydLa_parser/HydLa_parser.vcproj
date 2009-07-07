@@ -178,6 +178,10 @@
 				RelativePath=".\main.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\MathSimulator.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -198,6 +202,10 @@
 			</File>
 			<File
 				RelativePath=".\mathlink_helper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MathSimulator.h"
 				>
 			</File>
 		</Filter>

@@ -187,9 +187,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       comparison = arithmetic % root_node_d[less_eq
 					  | less
 					  | greater_eq
-                                          | greater
-                                          | equal
-                                          | not_equal];
+                      | greater
+                      | equal
+                      | not_equal];
 
       //éZèpéÆ
       arithmetic =

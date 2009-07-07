@@ -19,7 +19,7 @@ void hydla_main(int argc, char* argv[])
 {
   po::variables_map vm;
 
-  po::options_description generic_desc("Usage: hydla [options] file\nOptions");
+  po::options_description generic_desc("Usage: hydla [options] [file]\nOptions");
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "version")
@@ -51,14 +51,22 @@ void hydla_main(int argc, char* argv[])
   po::notify(vm);
 
 
-  if (vm.count("help") || !vm.count("input-file")) {
+  if (vm.count("help")) {
     std::cout << generic_desc << "\n";
     return;
   }
 
   HydLaParser hp;
-  if(hp.parse_flie(vm["input-file"].as<std::string>().c_str())) {
-    bool debug = vm.count("debug");
+  bool suc;
+  if(vm.count("input-file")) {
+    suc = hp.parse_flie(vm["input-file"].as<std::string>().c_str());
+  } else {
+    suc = hp.parse(std::cin);
+  }
+//  hp.dump();
+
+  if(suc) {
+    bool debug = vm.count("debug")>0;
     std::string interlanguage = 
       hp.create_interlanguage(vm["simulation-time"].as<std::string>().c_str(), 
 			      debug);
@@ -67,19 +75,10 @@ void hydla_main(int argc, char* argv[])
       std::cout <<  interlanguage  << std::endl;
     } else {
       MathSimulator ms;
-      //boost::thread th(boost::bind(&MathSimulator::simulate, &ms, 
-      //			   vm["mathlink"].as<std::string>().c_str(), interlanguage.c_str()));
       ms.simulate(vm["mathlink"].as<std::string>().c_str(), interlanguage.c_str());
-      
-      //      boost::system_time timeout = boost::posix_time::milliseconds(500); 
-      //while(!th.timed_join(boost::posix_time::milliseconds(100))) {
-      //	std::cout << "wait..." << std::endl;
-      //}
-      //std::cout << "exit!!!" << std::endl;
-      //      std::cout << "end" << std::endl;
     }
   } else {
-    std::cout << "parse error" << std::endl;
+    std::cout << "parse error -- line: " << hp.get_line() << std::endl;
   }
 }
 
@@ -98,8 +97,6 @@ int main(int argc, char* argv[])
   } catch(...) {
     std::cerr << "fatal error!!" << std::endl;
   }
-
-  //getchar();
 
   return 0;
 }
