@@ -1,10 +1,15 @@
-.SUFFIXES: 
-.SUFFIXES: .o .c .cc .cpp .h .d
-.PHONY : clean
 
+SUBDIR := $(dir $(shell find . -mindepth 2 -name "Makefile"))
+
+.PHONY : all
 all:
-	cd HydLa_parser; ${MAKE}
+	@for i in $(SUBDIR); do \
+	   (cd $$i && $(MAKE) all); \
+	done
 
+.PHONY : clean
 clean:
-	cd HydLa_parser; ${MAKE} clean
+	@for i in $(SUBDIR); do \
+	   (cd $$i && $(MAKE) clean); \
+	done
 
