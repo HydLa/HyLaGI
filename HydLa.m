@@ -495,7 +495,10 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
                    First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (tmpSol)}, {t}], Minimize::wksol]],
                    error];
         debugPrint["Minimize#tmpMinT:", tmpMinT];
-        If[includeZero===False && tmpMinT===0, tmpMinT=error];
+        (* 0秒後のを含んではいけない *)
+        If[includeZero===False && tmpMinT===0, tmpMinT=error]; 
+        (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
+        If[includeZero===True  && tmpMinT=!=0, tmpMinT=error]; 
         If[Length[$MessageList]>0, 
            Throw[{error, "cannot solve min time", tmpMinT, $MessageList}]],
         
@@ -611,13 +614,13 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
       tmpNewChangedAsk = tmpChangedAsk;
       tmpNewIncludeZero = False;
       tmpMinT = 0;
-      tmpConsStore = MapThread[(#1 == (#2 /. t->tmpMinT))&, 
+      tmpConsStore = MapThread[(#1 == FullSimplify[(#2 /. t->tmpMinT)])&, 
                                     {ftvars, Flatten[Map[({#[t], #'[t]})&, integVars]]}] /. sym_[t] -> sym[0],
 
       If[tmpMinT===0,
           tmpNewChangedAsk = Join[tmpChangedAsk, tmpMinAsk];
           tmpNewIncludeZero = includeZero;
-          tmpConsStore = MapThread[(#1 == (#2 /. t->tmpMinT))&, 
+          tmpConsStore = MapThread[(#1 == FullSimplify[(#2 /. t->tmpMinT)])&, 
                                     {ftvars, Flatten[Map[({#[t], #'[t]})&, integVars]]}] /. sym_[t] -> sym[0],
           
           tmpNewChangedAsk = {};
@@ -627,7 +630,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
 
   debugPrint["tmpConsStore:", tmpConsStore];
 
-  tmpPrevConsTable = group @@ MapThread[(unit[tell[#1[t] == (#2 /. t->tmpMinT)]])&, 
+  tmpPrevConsTable = group @@ MapThread[(unit[tell[#1[t] == FullSimplify[(#2 /. t->tmpMinT)]]])&, 
                                    {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}];
 
   (* 変数の値の出力 *)
@@ -710,10 +713,10 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
     {{consStore}, tmpPosAsk, tmpNegAsk} = 
       pointPhase[tmpConsTable, consStore, changedAsk, pftVars];
 
-    Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5],
-            "\t" <> Fold[(#1<>ToString[N[FullSimplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&,
-         "",
-         ftVarsND /. name_[t] -> name[0]]];
+(*     Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5], *)
+(*             "\t" <> Fold[(#1<>ToString[N[FullSimplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&, *)
+(*          "", *)
+(*          ftVarsND /. name_[t] -> name[0]]]; *)
 
     debugPrint["--- After PointPhase ---"];
     debugPrint["consTable:", consTable];
