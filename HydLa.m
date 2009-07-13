@@ -245,6 +245,8 @@ exDSolve[expr_, vars_] := (
        DSolve::bvnul, DSolve::dsmsm}] 
 )
 
+ (* , Solve::verif, Solve::tdep *)
+
 (* exDSolve[expr_, vars_] := *)
 (*   DSolve[expr, vars, t] *)
 
@@ -486,8 +488,8 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
   If[MemberQ[changedAsk, {type, ask}]===False,
       (* 未採用のask *)
       If[integAsk=!=False,
-        tmpSol = Reduce[{If[includeZero===True, t>=0, t>0] && 
-                         (maxTime==t || If[type===negative, integAsk, Not[integAsk]])}, t];
+        tmpSol = Reduce[{If[includeZero===True, (t>=0), (maxTime>=t && t>0)] && 
+                         (If[type===negative, integAsk, Not[integAsk]])}, t];
         debugPrint["tmpSol:", tmpSol];
         tmpMinT = If[tmpSol =!= False, (* 解なしと境界値の解を区別するため *)
                    First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (tmpSol)}, {t}], Minimize::wksol]],
