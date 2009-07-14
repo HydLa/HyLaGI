@@ -18,6 +18,9 @@ globalUseDebugPrint = False
 debugPrint[arg___] := 
   If[globalUseDebugPrint, Print[arg]]
 
+simplify[expr_] := 
+  Simplify[expr]
+
 (*
  * funcの結果がTrueとなる要素と、Falseとなる要素を分ける
  * Splitと違い、同一要素は連続している必要はない
@@ -270,6 +273,13 @@ applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_, changedAsk_] :
 (*   validVars[expr_, vars_] := *)
 (*     Select[vars, (MemberQ[expr, #, Infinity])&] *)
 
+
+approxExpr[expr_] :=
+(*   FromDigits[RealDigits[expr, 10, 3]] * If[expr < 0, -1, 1] *)
+
+  Quiet[
+    FromContinuedFraction[ContinuedFraction[expr, 3]],
+    ContinuedFraction::incomp]
 
 validVars[expr_] :=
   Union[Flatten[
@@ -562,6 +572,10 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   tmpValidVars = validVars[tmpTells];
   tmpTells = Join[tmpTells, initialVals[tmpTells, consStore]];
 
+(*   tmpTells = Join[tmpTells,  *)
+(*                     Map[(Head[#][#[[1]], approxExpr[#[[2]]]])&,  *)
+(*                           initialVals[tmpTells, consStore]]]; *)
+
   debugPrint["expr:", tmpTells];
   debugPrint["var:", varsND];
 
@@ -577,7 +591,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   (* 積分済み変数の割り当て *)
   debugPrint["integVars:", integVars];
   debugPrint["varsND:", varsND];
-  MapThread[(#1[t_] = FullSimplify[(#2 /. tmpIntegSol)])&, {integVars, varsND}];
+  MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)])&, {integVars, varsND}];
 
 (*   tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList]; *)
 (*   tmpPosAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, posAsk]; *)
@@ -614,33 +628,31 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
       tmpNewChangedAsk = tmpChangedAsk;
       tmpNewIncludeZero = False;
       tmpMinT = 0;
-      tmpConsStore = MapThread[(#1 == FullSimplify[(#2 /. t->tmpMinT)])&, 
+      tmpConsStore = MapThread[(#1 == simplify[(#2 /. t->tmpMinT)])&, 
                                     {ftvars, Flatten[Map[({#[t], #'[t]})&, integVars]]}] /. sym_[t] -> sym[0],
 
       If[tmpMinT===0,
           tmpNewChangedAsk = Join[tmpChangedAsk, tmpMinAsk];
           tmpNewIncludeZero = includeZero;
-          tmpConsStore = MapThread[(#1 == FullSimplify[(#2 /. t->tmpMinT)])&, 
+          tmpConsStore = MapThread[(#1 == simplify[(#2 /. t->tmpMinT)])&, 
                                     {ftvars, Flatten[Map[({#[t], #'[t]})&, integVars]]}] /. sym_[t] -> sym[0],
           
           tmpNewChangedAsk = {};
           tmpNewIncludeZero = True;
           tmpConsStore = {}]];
 
-
   debugPrint["tmpConsStore:", tmpConsStore];
 
-  tmpPrevConsTable = group @@ MapThread[(unit[tell[#1[t] == FullSimplify[(#2 /. t->tmpMinT)]]])&, 
+  tmpPrevConsTable = group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
                                    {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}];
 
   (* 変数の値の出力 *)
+  debugPrint["begin answer"];
   For[i=0, i<tmpMinT, i+=1/10,
-    Print[N[i+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[FullSimplify[#2[t] /. t->i], 5]]<>"\t")&, "", integVars]];
-(*     AppendTo[gOutPut, Fold[(Append[#1, N[#2[t] /. t->i, 5]])&, {N[i+currentTime, 5]}, integVars]]; *)
+    Print[N[i+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[simplify[#2[t] /. t->i], 5]]<>"\t")&, "", integVars]];
   ];
-  Print[N[tmpMinT+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[FullSimplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]];
-(*   AppendTo[gOutPut, Fold[(Append[#1, N[FullSimplify[#2[t] /. t->tmpMinT], 5]])&, {N[i+currentTime, 5]}, integVars]]; *)
-
+  Print[N[tmpMinT+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[simplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]];
+  debugPrint["end answer"];
 
   (* 積分済み変数の割り当て解除 *)
   Scan[(Clear[#])&, integVars];
@@ -714,7 +726,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
       pointPhase[tmpConsTable, consStore, changedAsk, pftVars];
 
 (*     Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5], *)
-(*             "\t" <> Fold[(#1<>ToString[N[FullSimplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&, *)
+(*             "\t" <> Fold[(#1<>ToString[N[simplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&, *)
 (*          "", *)
 (*          ftVarsND /. name_[t] -> name[0]]]; *)
 
@@ -762,9 +774,12 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
     debugPrint["changedAsk:", changedAsk];
     debugPrint["consStore:", consStore];
 
-    currentTime += tmpT;
+    currentTime = simplify[currentTime + tmpT];
+(*     currentTime = FromDigits[RealDigits[currentTime + tmpT, 10, 10]]; *)
 
     If[tmpT=!=0 || consStorePrev === {}, consStorePrev = tmpPrevConsTable];
+    debugPrint["currentTime:", currentTime];
+    debugPrint["consStorePrev:", consStorePrev];
   ];
 ]
 
