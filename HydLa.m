@@ -324,10 +324,11 @@ chSolveUnitInterval[validModTable_, consStore_, posAsk_, changedAsk_, vars_] := 
         tells = DeleteCases[tells, _[prev[_][_], _] | _[_, prev[_][_]], Infinity];
         debugPrint["remove prev cons:", tells];
 
-        sol = exDSolve[Join[tells, initialVals[tells, consStore]], validVars[tells]];
-        debugPrint["chSolveUnitInterval#sol:", sol];
-        If[Length[$MessageList]>0, Throw[{error, "cannot solve ODEs", tells, $MessageList}]];
-        If[sol===overconstraint, Return[False]]];
+        If[tells=!={True},
+          sol = exDSolve[Join[tells, initialVals[tells, consStore]], validVars[tells]];
+          debugPrint["chSolveUnitInterval#sol:", sol];
+          If[Length[$MessageList]>0, Throw[{error, "cannot solve ODEs", tells, $MessageList}]];
+          If[sol===overconstraint, Return[False]]]];
 
 (*        tmpNewVars = Union[Cases[tells, Derivative[n_Integer][sym_Symbol][t] -> Derivative[n][sym], Infinity]]; *)
 (*        tmpDiffTest = Fold[(FreeQ[consStore, #2] && #1)&, True, *)
