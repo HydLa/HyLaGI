@@ -11,14 +11,13 @@
 #include "MathSimulator.h"
 #include "mathlink_helper.h"
 
+#include "ModuleSetGraph.h"
+
 using namespace hydla;
 namespace po = boost::program_options;
 
-
-void hydla_main(int argc, char* argv[])
+bool analyze_program_opt(int argc, char* argv[], po::variables_map& vm)
 {
-  po::variables_map vm;
-
   po::options_description generic_desc("Usage: hydla [options] [file]\nOptions");
   generic_desc.add_options()
     ("help,h", "produce help message")
@@ -50,11 +49,18 @@ void hydla_main(int argc, char* argv[])
 	    positional(positional_opt).run(), vm);
   po::notify(vm);
 
-
   if (vm.count("help")) {
     std::cout << generic_desc << "\n";
-    return;
+    return false;
   }
+
+  return true;
+}
+
+void hydla_main(int argc, char* argv[])
+{
+  po::variables_map vm;
+  if(!analyze_program_opt(argc, argv, vm)) return;
 
   HydLaParser hp;
   bool suc;
@@ -63,8 +69,7 @@ void hydla_main(int argc, char* argv[])
   } else {
     suc = hp.parse(std::cin);
   }
-//  hp.dump();
-
+  //  hp.dump();
   if(suc) {
     bool debug = vm.count("debug")>0;
     std::string interlanguage = 
@@ -89,6 +94,9 @@ int main(int argc, char* argv[])
 #endif
 
   try {
+    //ModuleSetGraph msg;
+    //msg.dump();
+
     hydla_main(argc, argv);
 
   } catch(std::exception &e) {

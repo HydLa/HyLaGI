@@ -499,6 +499,7 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
   If[MemberQ[changedAsk, {type, ask}]===False,
       (* 未採用のask *)
       If[integAsk=!=False,
+        (* true *)
         tmpSol = Reduce[{If[includeZero===True, (t>=0), (maxTime>=t && t>0)] && 
                          (If[type===negative, integAsk, Not[integAsk]])}, t];
         debugPrint["tmpSol:", tmpSol];
@@ -506,18 +507,20 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
                    First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (tmpSol)}, {t}], Minimize::wksol]],
                    error];
         debugPrint["Minimize#tmpMinT:", tmpMinT];
-        (* 0秒後のを含んではいけない *)
-        If[includeZero===False && tmpMinT===0, tmpMinT=error]; 
-        (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
-        If[includeZero===True  && tmpMinT=!=0, tmpMinT=error]; 
         If[Length[$MessageList]>0, 
            Throw[{error, "cannot solve min time", tmpMinT, $MessageList}]],
         
+        (* false *)
         tmpMinT=0],
    
       (* すでに採用済のask *)
       tmpMinT = error
     ];
+
+  (* 0秒後のを含んではいけない *)
+  If[includeZero===False && tmpMinT===0, tmpMinT=error]; 
+  (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
+  If[includeZero===True && tmpMinT=!=0, tmpMinT=error]; 
 
   debugPrint["tmpMinT:", tmpMinT];
  

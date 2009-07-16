@@ -182,6 +182,10 @@
 				RelativePath=".\MathSimulator.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ModuleSetGraph.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -206,6 +210,10 @@
 			</File>
 			<File
 				RelativePath=".\MathSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ModuleSetGraph.h"
 				>
 			</File>
 		</Filter>
