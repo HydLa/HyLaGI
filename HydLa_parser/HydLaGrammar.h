@@ -280,7 +280,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       ask_not_equal   = str_p("!="); 
 
       //ò_óùââéZéq
-      logical_and = str_p("&&") | ch_p(",");
+      logical_and = str_p("&") | str_p("/\\") | ch_p(",");
       ask_logical_and = str_p("&&");
       logical_or  = str_p("||");
 
