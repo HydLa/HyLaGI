@@ -577,9 +577,9 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   tmpTells = Join[tmpTells, initialVals[tmpTells, consStore]];
 
   (* 解の近似（精度保証ではなくなる） *)
-  tmpTells = Join[tmpTells,
-                    Map[(Head[#][#[[1]], approxExpr[#[[2]]]])&,
-                          initialVals[tmpTells, consStore]]];
+(*   tmpTells = Join[tmpTells, *)
+(*                     Map[(Head[#][#[[1]], approxExpr[#[[2]]]])&, *)
+(*                           initialVals[tmpTells, consStore]]]; *)
 
   debugPrint["expr:", tmpTells];
   debugPrint["var:", varsND];
