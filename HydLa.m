@@ -276,10 +276,10 @@ applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_, changedAsk_] :
 
 approxExpr[expr_] :=
 (*   FromDigits[RealDigits[expr, 10, 3]] * If[expr < 0, -1, 1] *)
-
   Quiet[
     FromContinuedFraction[ContinuedFraction[expr, 3]],
     ContinuedFraction::incomp]
+
 
 validVars[expr_] :=
   Union[Flatten[
@@ -576,9 +576,10 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   tmpValidVars = validVars[tmpTells];
   tmpTells = Join[tmpTells, initialVals[tmpTells, consStore]];
 
-(*   tmpTells = Join[tmpTells,  *)
-(*                     Map[(Head[#][#[[1]], approxExpr[#[[2]]]])&,  *)
-(*                           initialVals[tmpTells, consStore]]]; *)
+  (* 解の近似（精度保証ではなくなる） *)
+  tmpTells = Join[tmpTells,
+                    Map[(Head[#][#[[1]], approxExpr[#[[2]]]])&,
+                          initialVals[tmpTells, consStore]]];
 
   debugPrint["expr:", tmpTells];
   debugPrint["var:", varsND];
@@ -597,12 +598,12 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   debugPrint["varsND:", varsND];
   MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)])&, {integVars, varsND}];
 
-(*   tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList]; *)
-(*   tmpPosAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, posAsk]; *)
-(*   tmpNegAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, negAsk]; *)
-  tmpAsk = Map[({# /. rulePrev2IntegNow, #})&, askList];
-  tmpPosAsk = Map[({# /. rulePrev2IntegNow, #})&, posAsk];
-  tmpNegAsk = Map[({# /. rulePrev2IntegNow, #})&, negAsk];
+  tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList];
+  tmpPosAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, posAsk];
+  tmpNegAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, negAsk];
+(*   tmpAsk = Map[({# /. rulePrev2IntegNow, #})&, askList]; *)
+(*   tmpPosAsk = Map[({# /. rulePrev2IntegNow, #})&, posAsk]; *)
+(*   tmpNegAsk = Map[({# /. rulePrev2IntegNow, #})&, negAsk]; *)
   debugPrint["tmpAsk:", tmpAsk];  
   debugPrint["tmpPosAsk:", tmpPosAsk];  
   debugPrint["tmpNegAsk:", tmpNegAsk];  
