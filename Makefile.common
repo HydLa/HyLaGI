@@ -1,9 +1,6 @@
 .SUFFIXES: 
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-MAKE_INC := Makefile.inc
-include $(MAKE_INC)
-
 CXX      := g++
 SED      := sed #@SED@
 MV       := mv #@MV@

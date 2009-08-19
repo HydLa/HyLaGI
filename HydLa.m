@@ -601,9 +601,9 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   tmpAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, askList];
   tmpPosAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, posAsk];
   tmpNegAsk = Map[({# /. Join[rulePrev2IntegNow, ruleNow2IntegNow], #})&, negAsk];
-(*   tmpAsk = Map[({# /. rulePrev2IntegNow, #})&, askList]; *)
-(*   tmpPosAsk = Map[({# /. rulePrev2IntegNow, #})&, posAsk]; *)
-(*   tmpNegAsk = Map[({# /. rulePrev2IntegNow, #})&, negAsk]; *)
+(*   tmpAsk = Map[({simplify[# /. Join[rulePrev2IntegNow, ruleNow2IntegNow]], #})&, askList]; *)
+(*   tmpPosAsk = Map[({simplify[# /. Join[rulePrev2IntegNow, ruleNow2IntegNow]], #})&, posAsk]; *)
+(*   tmpNegAsk = Map[({simplify[# /. Join[rulePrev2IntegNow, ruleNow2IntegNow]], #})&, negAsk]; *)
   debugPrint["tmpAsk:", tmpAsk];  
   debugPrint["tmpPosAsk:", tmpPosAsk];  
   debugPrint["tmpNegAsk:", tmpNegAsk];  

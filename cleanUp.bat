@@ -1,4 +1,3 @@
-del /S /Q hydla
 rd /S /Q Debug
 rd /S /Q Release
 rd /S /Q HydLa_parser\Debug
