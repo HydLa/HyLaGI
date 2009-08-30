@@ -37,40 +37,61 @@ bool MathSimulator::simulate(const char mathlink[], const char interlanguage[])
     return false;
   }
   
-  ml.MLPutFunction("EvaluatePacket", 2);  
-  
+  ml.MLPutFunction("EvaluatePacket", 1);  
   ml.MLPutFunction("Get", 1);
   ml.MLPutString("HydLa.m"); 
 
+  ml.MLPutFunction("EvaluatePacket", 1);  
   ml.MLPutFunction("ToExpression", 1);
   ml.MLPutString(interlanguage); 
 
   ml.MLEndPacket();
 
   ml.MLPutFunction("Exit", 0);
+  ml.MLEndPacket();
 
   sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
   std::ostream_iterator< char > out_iter( std::cout );
   rawchar_formatter rfmt;
 
-  	
   int pkt;
   while((pkt = ml.MLNextPacket()) != ILLEGALPKT) {
     switch(pkt) {
     case RETURNPKT:
-      {
-// 	const char *str;
-// 	ml.MLGetString(&str);
-// 	std::cout << str << std::endl;
-// 	ml.MLReleaseString(str);
+      switch(ml.MLGetType()) {
+      case MLTKSTR: {
+	const char *str;
+	ml.MLGetString(&str);
+	std::cout << "#string:" << str << std::endl;
+	ml.MLReleaseString(str);
+	break;
+      }
+
+      case MLTKSYM: {
+	const char *sym;
+	ml.MLGetSymbol(&sym);
+	std::cout << "#symbol:" << sym << std::endl;
+	ml.MLReleaseSymbol(sym);
+	break;
+      }
+	
+      case MLTKINT:
+      case MLTKOLDINT: {	  
 	int q;
 	ml.MLGetInteger(&q);
-	//	printf( "sol = %d\n", q);
+	std::cout << "#integer:" << q << std::endl;
+	break;
+      }
+      case MLTKERR:
+	std::cout << "#error type" << std::endl;
+	break;
+	  
+      default:
+	std::cout << "#unknown type" << std::endl;
       }
       break;
 
-    case TEXTPKT:
-      {
+    case TEXTPKT: {
 	const char *s;
 	ml.MLGetString(&s);
 	string str(s);
@@ -82,21 +103,12 @@ bool MathSimulator::simulate(const char mathlink[], const char interlanguage[])
       //    default:
     }
     ml.MLNewPacket();
-    /* 
-   ml.MLFlush();
-    int i=0;
-    while(ml.MLReady() == 0) {
-      std::cout << "wait_" << i++ << std::endl;
-      //boost::xtime xt;
-      //boost::xtime_get(&xt, boost::TIME_UTC);
-      //xt.nsec += 100;
-      //boost::thread::sleep(xt);
-    }
-    */
   }
   
   return true;
 }
+
+
 
 } //namespace hydla
 
