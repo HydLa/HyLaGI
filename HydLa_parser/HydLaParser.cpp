@@ -69,7 +69,7 @@ void HydLaParser::dump_tree(const tree_iter_t &iter, int nest) const
     }
 }
 
-std::string HydLaParser::create_interlanguage(std::string max_time, bool debug)
+std::string HydLaParser::create_interlanguage(std::string max_time)
 {
     std::string str;
     str += "HydLaSolve[";
@@ -80,7 +80,7 @@ std::string HydLaParser::create_interlanguage(std::string max_time, bool debug)
         str += iter->first;
         if(++iter != variable_.end()) str += ", ";
     }
-    str += "}, " + max_time + ", " + (debug ? "True" : "False") + "];";
+    str += "}," + max_time + "];";
     return str;
 }
 

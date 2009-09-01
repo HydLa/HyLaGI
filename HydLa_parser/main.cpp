@@ -71,16 +71,16 @@ void hydla_main(int argc, char* argv[])
   }
   //  hp.dump();
   if(suc) {
-    bool debug = vm.count("debug")>0;
     std::string interlanguage = 
-      hp.create_interlanguage(vm["simulation-time"].as<std::string>().c_str(), 
-			      debug);
+      hp.create_interlanguage(vm["simulation-time"].as<std::string>().c_str());
  
     if(vm.count("interlanguage")) {
       std::cout <<  interlanguage  << std::endl;
     } else {
       MathSimulator ms;
-      ms.simulate(vm["mathlink"].as<std::string>().c_str(), interlanguage.c_str());
+      ms.simulate(vm["mathlink"].as<std::string>().c_str(), 
+		  interlanguage.c_str(),
+		  (bool)vm.count("debug")>0);
     }
   } else {
     std::cout << "parse error -- line: " << hp.get_line() << std::endl;

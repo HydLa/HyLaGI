@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <boost/xpressive/xpressive.hpp>
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 #include "mathlink_helper.h"
 
 using namespace std;
@@ -18,7 +18,7 @@ MathSimulator::MathSimulator()
 MathSimulator::~MathSimulator()
 {
 }
-
+  
 struct rawchar_formatter
 {
   string operator()(smatch const &what) const
@@ -28,8 +28,11 @@ struct rawchar_formatter
     return c;
   }
 };
+  
 
-bool MathSimulator::simulate(const char mathlink[], const char interlanguage[])
+bool MathSimulator::simulate(const char mathlink[], 
+			     const char interlanguage[],
+			     bool debug_mode)
 {
   MathLink ml;
   if(!ml.init(mathlink)) {
@@ -37,6 +40,11 @@ bool MathSimulator::simulate(const char mathlink[], const char interlanguage[])
     return false;
   }
   
+//   ml.MLPutFunction("EvaluatePacket", 1);  
+//   ml.MLPutFunction("Set", 2);
+//   ml.MLPutSymbol("optUseDebugPrint"); 
+//   ml.MLPutSymbol("True"); 
+
   ml.MLPutFunction("EvaluatePacket", 1);  
   ml.MLPutFunction("Get", 1);
   ml.MLPutString("HydLa.m"); 
@@ -50,6 +58,7 @@ bool MathSimulator::simulate(const char mathlink[], const char interlanguage[])
   ml.MLPutFunction("Exit", 0);
   ml.MLEndPacket();
 
+  
   sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
   std::ostream_iterator< char > out_iter( std::cout );
   rawchar_formatter rfmt;
@@ -95,7 +104,7 @@ bool MathSimulator::simulate(const char mathlink[], const char interlanguage[])
 	const char *s;
 	ml.MLGetString(&s);
 	string str(s);
-	regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);
+	regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
 	ml.MLReleaseString(s);
       }
       break;

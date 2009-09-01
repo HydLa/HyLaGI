@@ -8,15 +8,25 @@
 (* $MaxExtraPrecision = Infinity *)
 
 (*
- * デバック用メッセージを出力するかどうか
- *)
-globalUseDebugPrint = False
-
-(*
  * デバック用メッセージ出力関数
  *)
-debugPrint[arg___] := 
-  If[globalUseDebugPrint, Print[arg]]
+
+If[optUseDebugPrint,
+  debugPrint[arg___] = Print[arg],
+  debugPrint[arg___] = Null]
+
+(*
+ * profiling function
+ * print CPU-time of function and return function's value
+ *)
+profile[label_String, func_] :=
+  Block[{time, val},
+    {time, val} = Timing[func];
+    Print[label, " : ", time];
+    val
+  ]
+SetAttributes[profile, {HoldAll, SequenceHold}]
+
 
 simplify[expr_] := 
   Simplify[expr]
@@ -672,7 +682,7 @@ consStore2Table[consStore_, vars_] :=
 (*
  * 
  *)
-HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
+HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   sol,
   vars, 
   ftVars,
@@ -688,8 +698,6 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
   pftVars,
   changedAsk = {}
 },
-  globalUseDebugPrint = debug;
-
   vars     = addDifferentialVar[argVars];
   consFrameAxioms = createFrameAxiomsCons[argVars];
   ftVars   = var2TimeFunc[vars];
@@ -762,6 +770,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
 (*     debugPrint["tmpConsStoreTable:", tmpConsStoreTable]; *)
 
     {tmpT, includeZero, changedAsk, tmpPrevConsTable, consStore} =
+      profile["INTERVAL-PHASE",
       intervalPhase[
                     order[order[consTable, consFrameAxioms], consPrevEqNow],
 (*                     order[order[order[consTable, consFrameAxioms], tmpConsStoreTable], consPrevEqNow], *)
@@ -773,7 +782,7 @@ HydLaSolve[cons_, argVars_, maxTime_, debug_] := Module[{
                     includeZero,
                     ruleNow2IntegNow, rulePrev2IntegNow,
                     pftVars, ftVars, ftVarsND, var2IntegVar[argVars], prevVars, 
-                    maxTime-currentTime, currentTime];
+                    maxTime-currentTime, currentTime]];
 
     debugPrint["--- After IntervalPhase ---"];  
     debugPrint["changedAsk:", changedAsk];

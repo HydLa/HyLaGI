@@ -9,8 +9,9 @@ class MathSimulator
   MathSimulator();
   ~MathSimulator();
 
-  bool simulate(const char mathlink[], const char interlanguage[]);
-
+  bool simulate(const char mathlink[], 
+		const char interlanguage[],
+		bool debug_mode);
 
 };
 }

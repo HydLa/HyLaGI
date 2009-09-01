@@ -41,7 +41,7 @@ public:
       return ast_tree_.stop.get_position().column;
     }
 
-    std::string create_interlanguage(std::string max_time, bool debug);
+    std::string create_interlanguage(std::string max_time);
 
 private:
     void dump_tree(const tree_iter_t &iter, int nest) const;
