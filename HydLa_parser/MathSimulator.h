@@ -11,7 +11,8 @@ class MathSimulator
 
   bool simulate(const char mathlink[], 
 		const char interlanguage[],
-		bool debug_mode);
+		bool debug_mode,
+		bool profile_mode);
 
 };
 }

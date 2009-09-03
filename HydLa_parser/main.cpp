@@ -22,7 +22,8 @@ bool analyze_program_opt(int argc, char* argv[], po::variables_map& vm)
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "version")
-    ("debug,d", "show debug message")
+    ("debug,d", "enable debug mode")
+    ("profile,p", "enable profile mode")
     ("simulation-time,s", po::value<std::string>()->default_value("1"), "simulation time")
     ("interlanguage,i", "show intermediate language")
     ("mathlink", 
@@ -80,7 +81,8 @@ void hydla_main(int argc, char* argv[])
       MathSimulator ms;
       ms.simulate(vm["mathlink"].as<std::string>().c_str(), 
 		  interlanguage.c_str(),
-		  (bool)vm.count("debug")>0);
+		  (bool)vm.count("debug")>0,
+		  (bool)vm.count("profile")>0);
     }
   } else {
     std::cout << "parse error -- line: " << hp.get_line() << std::endl;

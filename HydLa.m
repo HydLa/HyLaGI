@@ -12,21 +12,42 @@
  *)
 
 If[optUseDebugPrint,
-  debugPrint[arg___] = Print[arg],
-  debugPrint[arg___] = Null]
+  debugPrint[arg___] := Print[arg],
+  debugPrint[arg___] := Null]
 
 (*
  * profiling function
  * print CPU-time of function and return function's value
  *)
-profile[label_String, func_] :=
-  Block[{time, val},
+If[optUseProfile,
+  (* True *)
+  profile[label_String, func_] := Block[{time, val},
+    If[MatchQ[profInfo[label], _profInfo],
+      (* True *)(* {呼び出し回数, 実行CPU時間} *)
+      profInfo[label] = {0, 0.0};
+      profLabels = Append[profLabels, label],
+      (* False *)
+      Null
+    ];
     {time, val} = Timing[func];
-    Print[label, " : ", time];
+    profInfo[label] = {profInfo[label][[1]]+1, profInfo[label][[2]]+time};
+    Print["#*** ", label, " : ", time, " ***"];
     val
-  ]
-SetAttributes[profile, {HoldAll, SequenceHold}]
-
+  ];
+  profLabels = {};
+  SetAttributes[profile, {HoldAll, SequenceHold}];
+  profilePrintResult[label_String] := Block[{},
+    Print["#  ", label, "\t-- count: ", profInfo[label][[1]],
+          ", time: ", profInfo[label][[2]]]
+  ];
+  profilePrintResultAll[] := Block[{},
+    Print["#*** Profile Result ***"];
+    Map[profilePrintResult, profLabels]
+  ],
+  (* False *)
+  profile[label_String, func_] := func;
+  profilePrintResult[___] := Null;
+  profilePrintResultAll[] := Null]
 
 simplify[expr_] := 
   Simplify[expr]
@@ -666,7 +687,8 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   For[i=0, i<tmpMinT, i+=1/10,
     Print[N[i+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[simplify[#2[t] /. t->i], 5]]<>"\t")&, "", integVars]];
   ];
-  Print[N[tmpMinT+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[simplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]];
+  Print[N[tmpMinT+currentTime, 5], "\t", 
+          Fold[(#1<>ToString[N[simplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]];
   debugPrint["end answer"];
 
   (* 積分済み変数の割り当て解除 *)
@@ -748,9 +770,10 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
 
     debugPrint["ret pointPhase:consStore:", consStore];
 
-    If[currentTime >= maxTime,   (*Print["----end----"];*)
+    If[currentTime >= maxTime,
+      profilePrintResultAll[];
       Return[gOutPut]];
-(*      Return[currentTime]];*)
+
 
     debugPrint["expandAsks:consTable:", consTable];
     consTable = expandAsks[consTable, tmpPosAsk, pftVars];

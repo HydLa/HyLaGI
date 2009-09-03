@@ -32,7 +32,8 @@ struct rawchar_formatter
 
 bool MathSimulator::simulate(const char mathlink[], 
 			     const char interlanguage[],
-			     bool debug_mode)
+			     bool debug_mode,
+			     bool profile_mode)
 {
   MathLink ml;
   if(!ml.init(mathlink)) {
@@ -40,16 +41,17 @@ bool MathSimulator::simulate(const char mathlink[],
     return false;
   }
   
-//   ml.MLPutFunction("EvaluatePacket", 1);  
-//   ml.MLPutFunction("Set", 2);
-//   ml.MLPutSymbol("optUseDebugPrint"); 
-//   ml.MLPutSymbol("True"); 
+  ml.MLPutFunction("Set", 2);
+  ml.MLPutSymbol("optUseDebugPrint"); 
+  ml.MLPutSymbol(debug_mode ? "True" : "False");
 
-  ml.MLPutFunction("EvaluatePacket", 1);  
+  ml.MLPutFunction("Set", 2);
+  ml.MLPutSymbol("optUseProfile"); 
+  ml.MLPutSymbol(profile_mode ? "True" : "False");
+ 
   ml.MLPutFunction("Get", 1);
   ml.MLPutString("HydLa.m"); 
 
-  ml.MLPutFunction("EvaluatePacket", 1);  
   ml.MLPutFunction("ToExpression", 1);
   ml.MLPutString(interlanguage); 
 
@@ -59,7 +61,7 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLEndPacket();
 
   
-  sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
+  sregex rawchar_reg = sregex::compile("\\\\(0\\d\\d)");
   std::ostream_iterator< char > out_iter( std::cout );
   rawchar_formatter rfmt;
 
@@ -104,7 +106,8 @@ bool MathSimulator::simulate(const char mathlink[],
 	const char *s;
 	ml.MLGetString(&s);
 	string str(s);
-	regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
+ 	regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
+	//	std::cout << str << std::endl;
 	ml.MLReleaseString(s);
       }
       break;
