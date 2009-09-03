@@ -72,7 +72,7 @@ void HydLaParser::dump_tree(const tree_iter_t &iter, int nest) const
 std::string HydLaParser::create_interlanguage(std::string max_time)
 {
     std::string str;
-    str += "HydLaSolve[";
+    str += "HydLaMain[";
     str += create_interlanguage(ast_tree_.trees.begin());
     str += ", {";
     variable_map_t::iterator iter = variable_.begin();

@@ -1,11 +1,17 @@
-(* BeginPackage["HydLa`"] *)
-
-(* HydLaSolve::usage = "HydLa" *)
-(* PlotSamples::usage = "Plot samples" *)
-
-(* Begin["`Private`"] *)
-
 (* $MaxExtraPrecision = Infinity *)
+SetOptions[$Output, PageWidth->Infinity]
+
+(*
+ * main function
+ *)
+
+If[optUseProfile, 
+  HydLaMain[arg___] := (
+    profile["Total", HydLaSolve[arg]];
+    profilePrintResultAll[]
+  ),
+  HydLaMain[arg___] := HydLaSolve[arg]
+]
 
 (*
  * デバック用メッセージ出力関数
@@ -33,7 +39,7 @@ If[optUseProfile,
     ];
     {time, val} = Timing[func];
     profInfo[label] = {profInfo[label][[1]]+1, profInfo[label][[2]]+time};
-    indent = Nest[(#<>"** ")&, "", profCount];
+    indent = Nest[(#<>"** ")&, "", profCount-1];
     Print["#*", indent, label, " : ", CForm[time], " ***"];
     profCount = profCount - 1;
     val
@@ -41,9 +47,16 @@ If[optUseProfile,
   profLabels = {};
   profCount = 0;
   SetAttributes[profile, {HoldAll, SequenceHold}];
-  profilePrintResult[label_String] := Block[{},
-    Print["#  ", label, "\t-- count: ", profInfo[label][[1]],
-          ",\ttime: ", CForm[profInfo[label][[2]]]]
+  profilePrintResult[label_String] := Print[
+    "#  ",
+    label,
+    "\t-- count: ",
+    profInfo[label][[1]],
+    ",\ttime: ",
+    NumberForm[CForm[profInfo[label][[2]]], 5],
+    "[sec](",
+    NumberForm[CForm[profInfo[label][[2]] / profInfo["Total"][[2]]], 5],
+    "%)"
   ];
   profilePrintResultAll[] := Block[{},
     profLabels = Sort[profLabels, (profInfo[#1][[2]]>profInfo[#2][[2]])&];
@@ -55,6 +68,25 @@ If[optUseProfile,
   profilePrintResult[___] := Null;
   profilePrintResultAll[] := Null]
 
+(*
+ * parallelmap
+ *)
+optParallel=False
+
+If[optParallel, 
+   (* True *)
+   Print["LaunchKernels:", LaunchKernels[]];
+   pMap[f_, a_] := ParallelMap[f,a];
+   pMap[f_, a_, level_] := ParallelMap[f, a, level],
+
+   (* False *)
+   pMap[f_, a_] := Map[f,a];
+   pMap[f_, a_, level_] := Map[f, a, level]
+]
+
+(*
+ * proxy of simplify
+ *)
 simplify[expr_] := 
   Simplify[expr]
 
@@ -187,18 +219,42 @@ splitTellAsk[acc_, always[elem__]] :=
  * ask制約の適用
  *)
 applyAsk[asks_, consStore_, posAsk_, changedAsk_, vars_] :=
-  Fold[(applyAsk[#1, #2, consStore, changedAsk, vars])&, {unit[], posAsk, {}, False}, asks]
+  Fold[applyAskFold, 
+       {unit[], posAsk, {}, False}, 
+       pMap[(applyAskMap[#, consStore, changedAsk, vars])&, asks]]
 
-applyAsk[{newValidModTable_, posAsk_, negAsk_, askSuc_}, ask[guard_, elem__], consStore_, changedAsk_, vars_] :=   
-  If[MemberQ[changedAsk, {positive, guard}]=!=True && askTestQ[consStore, guard, vars]===True,
-      {Join[newValidModTable, unit[elem]],
-       Append[posAsk, guard],
-       negAsk,
+applyAskMap[ask[guard_, elem__], consStore_, changedAsk_, vars_] :=
+  If[MemberQ[changedAsk, {positive, guard}]=!=True && 
+       askTestQ[consStore, guard, vars]===True,
+      (* True *)
+      {unit[elem],
+       {positive, guard},
        True},
-      {Append[newValidModTable, ask[guard, elem]],
-       posAsk,
-       Append[negAsk, guard],
-       askSuc}]
+      (* False *)
+      {unit[ask[guard, elem]],
+       {negative, guard},
+       False}]
+
+applyAskFold[{table_, posAsk_, negAsk_, askSuc_}, {newunit_, {type_, guard_}, suc_}] :=
+  {Join[table, newunit],
+   If[type===positive, Append[posAsk, guard], posAsk],
+   If[type===negative, Append[negAsk, guard], negAsk],
+   askSuc || suc}
+   
+
+(* applyAsk[asks_, consStore_, posAsk_, changedAsk_, vars_] := *)
+(*   Fold[(applyAsk[#1, #2, consStore, changedAsk, vars])&, {unit[], posAsk, {}, False}, asks] *)
+
+(* applyAsk[{newValidModTable_, posAsk_, negAsk_, askSuc_}, ask[guard_, elem__], consStore_, changedAsk_, vars_] :=    *)
+(*   If[MemberQ[changedAsk, {positive, guard}]=!=True && askTestQ[consStore, guard, vars]===True, *)
+(*       {Join[newValidModTable, unit[elem]], *)
+(*        Append[posAsk, guard], *)
+(*        negAsk, *)
+(*        True}, *)
+(*       {Append[newValidModTable, ask[guard, elem]], *)
+(*        posAsk, *)
+(*        Append[negAsk, guard], *)
+(*        askSuc}] *)
 
 chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, changedAsk_, vars_] := Block[{
   posAsk    = positiveAsk,
@@ -783,7 +839,6 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
     debugPrint["ret pointPhase:consStore:", consStore];
 
     If[currentTime >= maxTime,
-      profilePrintResultAll[];
       Return[gOutPut]];
 
 
@@ -832,5 +887,3 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   ];
 ]
 
-(* End[] *)
-(* EndPackage[] *)
