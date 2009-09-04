@@ -71,10 +71,9 @@ If[optUseProfile,
 (*
  * parallelmap
  *)
-optParallel=False
-
 If[optParallel, 
    (* True *)
+   CloseKernels[];
    Print["LaunchKernels:", LaunchKernels[]];
    pMap[f_, a_] := ParallelMap[f,a];
    pMap[f_, a_, level_] := ParallelMap[f, a, level],
@@ -748,14 +747,27 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   tmpPrevConsTable = profile["MapTHREAD4",group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
                                    {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}]];
 
-  (* 変数の値の出力 *)
+  (* 変数の値の出力
+   *  
+   * optOutputFormat変数がfmtTFunctionの場合にはtの関数による表示
+   * fmtNumericの場合には今まで通りの表示
+   *)
   debugPrint["begin answer"];
- profile["PRINT",
-  For[i=0, i<tmpMinT, i+=1/10,
-    Print[N[i+currentTime, 5], "\t" <> Fold[(#1<>ToString[N[simplify[#2[t] /. t->i], 5]]<>"\t")&, "", integVars]];
-  ];
-  Print[N[tmpMinT+currentTime, 5], "\t",
-    Fold[(#1<>ToString[N[simplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]]];
+  profile["PRINT",
+   Switch[optOutputFormat, 
+    fmtTFunction,
+     If[tmpMinT>0,
+        Print[CForm[tmpPrevTime], " <= t <=",
+              CForm[tmpMinT+currentTime], "\t", 
+              Fold[(#1<>ToString[CForm[simplify[#2[t] ]]]<>"\t")&, "",integVars]]];
+     tmpPrevTime = tmpMinT+currentTime, 
+    fmtNumeric,
+     For[i=0, i<tmpMinT, i+=1/10,
+       Print[N[i+currentTime, 5], "\t",
+             Fold[(#1<>ToString[N[simplify[#2[t] /. t->i], 5]]<>"\t")&, "", integVars]]];
+     Print[N[tmpMinT+currentTime, 5], "\t" <>
+           Fold[(#1<>ToString[N[simplify[#2[t] /. t->tmpMinT], 5]]<>"\t")&, "", integVars]];
+   ]];
   debugPrint["end answer"];
 
   (* 積分済み変数の割り当て解除 *)
@@ -793,6 +805,9 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   ftVarsND = var2TimeFunc[argVars];
   prevVars = Map[prev, Map[createUsrVar, vars]];
   pftVars  = Join[ftVars, Map[(#[t])&, prevVars]];
+
+  (* 各変数の値をtの関数として表示用の変数初期化 *)
+  tmpPrevTime = 0;
 
   gOutPut = {};
 (*   Print[""]; *)

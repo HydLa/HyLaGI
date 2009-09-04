@@ -23,7 +23,11 @@ bool analyze_program_opt(int argc, char* argv[], po::variables_map& vm)
     ("help,h", "produce help message")
     ("version", "version")
     ("debug,d", "enable debug mode")
-    ("profile,p", "enable profile mode")
+    ("profile", "enable profile mode")
+    ("parallel,p", "enable parallel execution")
+    ("output-format,f", 
+     po::value<std::string>()->default_value("n"), 
+     "output format: t - time function, n - numeric")
     ("simulation-time,s", po::value<std::string>()->default_value("1"), "simulation time")
     ("interlanguage,i", "show intermediate language")
     ("mathlink", 
@@ -78,14 +82,26 @@ void hydla_main(int argc, char* argv[])
     if(vm.count("interlanguage")) {
       std::cout <<  interlanguage  << std::endl;
     } else {
+      MathSimulator::OutputFormat output_format;
+      if(vm["output-format"].as<std::string>() == "t") {
+	output_format = MathSimulator::fmtTFunction;
+      } else if(vm["output-format"].as<std::string>() == "n"){
+	output_format = MathSimulator::fmtNumeric; 
+      } else {
+	std::cerr << "invalid option - output format" << std::endl;
+	return;
+      }
+
       MathSimulator ms;
       ms.simulate(vm["mathlink"].as<std::string>().c_str(), 
 		  interlanguage.c_str(),
 		  (bool)vm.count("debug")>0,
-		  (bool)vm.count("profile")>0);
+		  (bool)vm.count("profile")>0,
+		  (bool)vm.count("parallel")>0,
+		  output_format);
     }
   } else {
-    std::cout << "parse error -- line: " << hp.get_line() << std::endl;
+    std::cerr << "parse error -- line: " << hp.get_line() << std::endl;
   }
 }
 

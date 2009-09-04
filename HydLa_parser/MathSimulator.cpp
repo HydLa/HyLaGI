@@ -33,7 +33,9 @@ struct rawchar_formatter
 bool MathSimulator::simulate(const char mathlink[], 
 			     const char interlanguage[],
 			     bool debug_mode,
-			     bool profile_mode)
+			     bool profile_mode,
+			     bool parallel_mode,
+			     OutputFormat output_format)
 {
   MathLink ml;
   if(!ml.init(mathlink)) {
@@ -49,6 +51,24 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutSymbol("optUseProfile"); 
   ml.MLPutSymbol(profile_mode ? "True" : "False");
  
+  ml.MLPutFunction("Set", 2);
+  ml.MLPutSymbol("optParallel"); 
+  ml.MLPutSymbol(parallel_mode ? "True" : "False");
+
+
+  ml.MLPutFunction("Set", 2);
+  ml.MLPutSymbol("optOutputFormat"); 
+  switch(output_format) {
+  case fmtTFunction:
+    ml.MLPutSymbol("fmtTFunction");
+    break;
+
+  case fmtNumeric:
+  default:
+    ml.MLPutSymbol("fmtNumeric");
+    break;
+  }
+
   ml.MLPutFunction("Get", 1);
   ml.MLPutString("HydLa.m"); 
 
