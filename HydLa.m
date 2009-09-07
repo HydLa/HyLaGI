@@ -47,16 +47,17 @@ If[optUseProfile,
   profLabels = {};
   profCount = 0;
   SetAttributes[profile, {HoldAll, SequenceHold}];
-  profilePrintResult[label_String] := Print[
-    "#  ",
-    label,
-    "\t-- count: ",
-    profInfo[label][[1]],
-    ",\ttime: ",
-    NumberForm[CForm[profInfo[label][[2]]], 5],
-    "[sec](",
-    NumberForm[CForm[profInfo[label][[2]] / profInfo["Total"][[2]]], 5],
-    "%)"
+  profilePrintResult[label_String] := 
+    Print[
+      "#  ",
+      label,
+      "\t-- count: ",
+      profInfo[label][[1]],
+      ",\ttime: ",
+      NumberForm[CForm[profInfo[label][[2]]], 5],
+      "[sec](",
+      NumberForm[CForm[profInfo[label][[2]] * 100 / profInfo["Total"][[2]]], 5],
+      "%)"
   ];
   profilePrintResultAll[] := Block[{},
     profLabels = Sort[profLabels, (profInfo[#1][[2]]>profInfo[#2][[2]])&];
@@ -270,12 +271,16 @@ chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, change
     debugPrint["chSolveUnit#tells:", tells];
     debugPrint["chSolveUnit#asks:", asks];
 
-    If[tells=!={}, consStore = {Reduce[Join[consStore, tells], vars]}];
+    If[tells=!={}, 
+        consStore = profile["chSolveUnit#Reduce",
+                            {Reduce[Join[consStore, tells], vars]}]];
+
     debugPrint["chSolveUnit#consStore:", consStore];
     If[consStore=!={False},
       (* true *)
       {table, posAsk, negAsk, askSuc} = 
-        applyAsk[asks, consStore, posAsk, changedAsk, vars];
+        profile["applyASK", 
+                applyAsk[asks, consStore, posAsk, changedAsk, vars]];
       debugPrint["chSolveUnit#table:", table];
       debugPrint["chSolveUnit#posAsk:", posAsk];
       debugPrint["chSolveUnit#negAsk:", negAsk];
@@ -405,8 +410,8 @@ chSolveUnitInterval[validModTable_, consStore_, posAsk_, changedAsk_, vars_] := 
 
     If[tells=!={},
         (* true *)
-
-        tells = {Reduce[tells, vars]};
+        tells = profile["chSolveUnitInterval#Reduce",
+                        {Reduce[tells, vars]}];
         debugPrint["chSolveUnitInterval#after reduce tells:", tells];
         If[tells === {False},
             debugPrint["reduce error!!"];
@@ -417,7 +422,8 @@ chSolveUnitInterval[validModTable_, consStore_, posAsk_, changedAsk_, vars_] := 
         debugPrint["remove prev cons:", tells];
 
         If[tells=!={True},
-          sol = exDSolve[Join[tells, initialVals[tells, consStore]], validVars[tells]];
+          sol = profile["chSolveUnitInterval#exDSOLVE",
+                  exDSolve[Join[tells, initialVals[tells, consStore]], validVars[tells]]];
           debugPrint["chSolveUnitInterval#sol:", sol];
           If[Length[$MessageList]>0, Throw[{error, "cannot solve ODEs", tells, $MessageList}]];
           If[sol===overconstraint, Return[False]]]];
