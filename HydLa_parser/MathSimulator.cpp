@@ -4,11 +4,11 @@
 #include <boost/xpressive/xpressive.hpp>
 //#include <boost/thread.hpp>
 #include "mathlink_helper.h"
+#include "math_source.h"
 
 using namespace std;
 using namespace boost;
 using namespace boost::xpressive;
-
 
 namespace hydla{
 MathSimulator::MathSimulator()
@@ -69,12 +69,18 @@ bool MathSimulator::simulate(const char mathlink[],
     break;
   }
 
-  ml.MLPutFunction("Get", 1);
-  ml.MLPutString("HydLa.m"); 
+//   ml.MLPutFunction("Get", 1);
+//   ml.MLPutString("HydLa.m"); 
+
+  ml.MLPutFunction("ToExpression", 1);
+  ml.MLPutString(math_source()); 
 
   ml.MLPutFunction("ToExpression", 1);
   ml.MLPutString(interlanguage); 
 
+  ml.MLPutFunction("ToExpression", 1);
+  ml.MLPutString("f[5]"); 
+  
   ml.MLEndPacket();
 
   ml.MLPutFunction("Exit", 0);

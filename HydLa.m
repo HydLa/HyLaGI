@@ -1,5 +1,5 @@
 (* $MaxExtraPrecision = Infinity *)
-SetOptions[$Output, PageWidth->Infinity]
+SetOptions[$Output, PageWidth->Infinity];
 
 (*
  * main function
@@ -11,7 +11,7 @@ If[optUseProfile,
     profilePrintResultAll[]
   ),
   HydLaMain[arg___] := HydLaSolve[arg]
-]
+];
 
 (*
  * デバック用メッセージ出力関数
@@ -19,7 +19,7 @@ If[optUseProfile,
 
 If[optUseDebugPrint,
   debugPrint[arg___] := Print[arg],
-  debugPrint[arg___] := Null]
+  debugPrint[arg___] := Null];
 
 (*
  * profiling function
@@ -67,7 +67,7 @@ If[optUseProfile,
   (* False *)
   profile[label_String, func_] := func;
   profilePrintResult[___] := Null;
-  profilePrintResultAll[] := Null]
+  profilePrintResultAll[] := Null];
 
 (*
  * parallelmap
@@ -82,13 +82,13 @@ If[optParallel,
    (* False *)
    pMap[f_, a_] := Map[f,a];
    pMap[f_, a_, level_] := Map[f, a, level]
-]
+];
 
 (*
  * proxy of simplify
  *)
 simplify[expr_] := 
-  Simplify[expr]
+  Simplify[expr];
 
 (*
  * funcの結果がTrueとなる要素と、Falseとなる要素を分ける
@@ -100,7 +100,7 @@ split2[list_, func_] :=
   Fold[(If[func[#2], 
           {Append[#1[[1]], #2], #1[[2]]}, 
           {#1[[1]], Append[#1[[2]], #2]}])&, 
-        {{}, {}}, list]
+        {{}, {}}, list];
 
 (*
  * 各変数を1次微分したものを追加したリストを返す
@@ -112,82 +112,82 @@ addDifferentialVar[vars_] :=
  * 入力された変数を内部で処理する形式に変換する
  *)
 createUsrVar[var_] := 
-  ToExpression["usrVar" <> ToString[var]]
+  ToExpression["usrVar" <> ToString[var]];
 
 createUsrPrevVar[var_] := 
-  prev[createUsrVar[var]]
+  prev[createUsrVar[var]];
 
 createUsrIntegVar[var_] := 
-  ToExpression["usrIntegVar" <> ToString[var]]
+  ToExpression["usrIntegVar" <> ToString[var]];
 
-var2UsrVar[vars_] := Map[(createUsrVar[#])&, vars]
+var2UsrVar[vars_] := Map[(createUsrVar[#])&, vars];
 
 (*
  * 与えられた関数を原始関数になるまで積分を行い、
  * 経過をリストとして返す
  *)
-createIntegFuncList[func_] := {}
+createIntegFuncList[func_] := {};
 createIntegFuncList[Derivative[n_Integer][func_]] := 
-  NestList[(#')&, func, n-1]
+  NestList[(#')&, func, n-1];
 
 (*
  * 原始関数を取り出す
  *)
-removeDerivative[Derivative[_][func_][_]] := func
-removeDerivative[func_[_]] := func
+removeDerivative[Derivative[_][func_][_]] := func;
+removeDerivative[func_[_]] := func;
 
 (* 
  * 変数を時間関数にする 
  *)
-var2TimeFunc[vars_] := Map[(createUsrVar[#][t])&, vars]
+var2TimeFunc[vars_] := Map[(createUsrVar[#][t])&, vars];
 
 (* 
  * 変数を積分済み変数にする 
  *)
-var2IntegVar[vars_] := Map[createUsrIntegVar, vars]
+var2IntegVar[vars_] := Map[createUsrIntegVar, vars];
 
 (*
  * expr内のvarsの表現形式をfuncに従って変換する
  *)
-transExpr[expr_, vars_, func_] := expr /. Map[func, vars]  
+transExpr[expr_, vars_, func_] := expr /. Map[func, vars];  
 
 (*
  * 与えられた式内の変数を時間関数に変換する
  * 例： x => x[t], y' => y'[t]
  *)
 exprVar2TimeFunc[expr_, vars_] := 
-  expr /. Map[(# -> createUsrVar[#][t])&, vars]
+  expr /. Map[(# -> createUsrVar[#][t])&, vars];
 
 (*
  * 与えられた式内の時間関数を変数に変換する
  * 例： varx[t] => x, vary'[t] => y'
  *)
 exprTimeFunc2Var[expr_, vars_] := 
-  transExpr[expr, vars, (createUsrVar[#][t] -> #)&]
+  transExpr[expr, vars, (createUsrVar[#][t] -> #)&];
 
 (*
  * 与えられた式内の時間関数を積分済み関数に変換する
  * 例： varx[t] => integVarx, vary'[t] => integVary'
  *)
 exprTimeFunc2IntegFunc[expr_, vars_] := 
-  transExpr[expr, vars, (createUsrVar[#][t] -> createUsrIntegVar[#][t])&]
+  transExpr[expr, vars, (createUsrVar[#][t] -> createUsrIntegVar[#][t])&];
 
 
 (*
  * フレーム公理を満たすための制約を作成
  *)
 createFrameAxiomsCons[vars_] :=
-  Map[(unit[always[tell[createUsrVar[#'][t]==0]]])&, vars] /. List -> group
+  Map[(unit[always[tell[createUsrVar[#'][t]==0]]])&, vars] /. List -> group;
 (*
  * {"term", elem, ...} を term[elem, ...] の形式に変換する
  *)
-parseCons[{"group", elem__}]       := Map[parseCons, group[elem]]
-parseCons[{"ask", guard_, elem__}] := Insert[Map[parseCons, ask[elem]], guard, 1]
-parseCons[{"order", elem__}]       := Map[parseCons, order[elem]]
-parseCons[{"unit", elem__}]        := Map[parseCons, unit[elem]]
-parseCons[{"always", elem___}]     := Map[parseCons, always[elem]]
-parseCons[{"tell", elem__}]        := tell[elem]
-parseCons[other___]                := Throw[{error, "unknown term", other}]
+parseCons[{"group", elem__}]       := Map[parseCons, group[elem]];
+parseCons[{"ask", guard_, elem__}] := Insert[Map[parseCons, ask[elem]], guard, 1];
+parseCons[{"order", elem__}]       := Map[parseCons, order[elem]];
+parseCons[{"unit", elem__}]        := Map[parseCons, unit[elem]];
+parseCons[{"always", elem___}]     := Map[parseCons, always[elem]];
+parseCons[{"tell", elem__}]        := tell[elem];
+parseCons[other___]                := Throw[{error, "unknown term", other}];
 
 (* 
  * 現在の制約ストアからask制約がエンテール出来るかどうか 
@@ -196,7 +196,7 @@ askTestQ[cons_, asks_, vars_] := (
   tmpSol = Reduce[Append[cons, asks], vars, Reals];
   If[tmpSol===False, Return[False]];
   If[Reduce[Append[cons, Not[tmpSol]], vars, Reals]===False, True, False]	
-)
+);
 
 (*
  * unitをtell制約とask制約に分ける
@@ -207,13 +207,13 @@ askTestQ[cons_, asks_, vars_] := (
 splitTellAsk[unit_] := (
   debugPrint["splitTellAsk#unit:", unit];
   Fold[splitTellAsk, {{}, {}}, unit]
-)
+);
 splitTellAsk[{tells_, asks_}, tell[elem__]] := 
-  {Join[tells, {elem}], asks}
+  {Join[tells, {elem}], asks};
 splitTellAsk[{tells_, asks_}, ask[elem__]] := 
-  {tells, Append[asks, ask[elem]]}
+  {tells, Append[asks, ask[elem]]};
 splitTellAsk[acc_, always[elem__]] :=
-  Fold[splitTellAsk, acc, {elem}]
+  Fold[splitTellAsk, acc, {elem}];
 
 (*
  * ask制約の適用
@@ -221,7 +221,7 @@ splitTellAsk[acc_, always[elem__]] :=
 applyAsk[asks_, consStore_, posAsk_, changedAsk_, vars_] :=
   Fold[applyAskFold, 
        {unit[], posAsk, {}, False}, 
-       pMap[(applyAskMap[#, consStore, changedAsk, vars])&, asks]]
+       pMap[(applyAskMap[#, consStore, changedAsk, vars])&, asks]];
 
 applyAskMap[ask[guard_, elem__], consStore_, changedAsk_, vars_] :=
   If[MemberQ[changedAsk, {positive, guard}]=!=True && 
@@ -233,13 +233,13 @@ applyAskMap[ask[guard_, elem__], consStore_, changedAsk_, vars_] :=
       (* False *)
       {unit[ask[guard, elem]],
        {negative, guard},
-       False}]
+       False}];
 
 applyAskFold[{table_, posAsk_, negAsk_, askSuc_}, {newunit_, {type_, guard_}, suc_}] :=
   {Join[table, newunit],
    If[type===positive, Append[posAsk, guard], posAsk],
    If[type===negative, Append[negAsk, guard], negAsk],
-   askSuc || suc}
+   askSuc || suc};
    
 
 (* applyAsk[asks_, consStore_, posAsk_, changedAsk_, vars_] := *)
@@ -290,7 +290,7 @@ chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, change
       False]
   );
   solve[]
-]
+];
 
 chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
   nacc, 
@@ -323,7 +323,7 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
   {nacc, nsuc} =
     solve[consTable, {unit[], consStore, {}, {}}, False];
   nacc[[2;;4]]
-]
+];
 
 (********)
 
@@ -343,7 +343,7 @@ exDSolve[expr_, vars_] := (
       {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
        Solve::svars, DSolve::bvnr, DSolve::bvsing, 
        DSolve::bvnul, DSolve::dsmsm}] 
-)
+);
 
  (* , Solve::verif, Solve::tdep *)
 
@@ -355,14 +355,14 @@ exDSolve[expr_, vars_] := (
  * その際、alwaysでない中身は削除する 
  *)
 applyAskInterval[asks_, posAsk_, changedAsk_] :=
-  Fold[(applyAskInterval[#1, #2, posAsk, changedAsk])&, {unit[], False}, asks]
+  Fold[(applyAskInterval[#1, #2, posAsk, changedAsk])&, {unit[], False}, asks];
 
 applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_, changedAsk_] :=
   If[MemberQ[posAsk, guard],
       If[MemberQ[changedAsk, {positive, guard}],
         {Join[table, removeNonAlwaysTuple[unit[elem]]], True},
         {Join[table, unit[elem]], True}],
-      {table, askSuc}]
+      {table, askSuc}];
 
 (* validVars[expr_] := *)
 (*   Cases[cs, _[___, usrVarf'[0], ___], Infinity] *)
@@ -375,16 +375,16 @@ approxExpr[expr_] :=
 (*   FromDigits[RealDigits[expr, 10, 3]] * If[expr < 0, -1, 1] *)
   Quiet[
     FromContinuedFraction[ContinuedFraction[expr, 3]],
-    ContinuedFraction::incomp]
+    ContinuedFraction::incomp];
 
 
 validVars[expr_] :=
   Union[Flatten[
-    Cases[expr, symbol_Symbol[t] | symbol_Symbol'[t] -> {symbol[t], symbol'[t]}, Infinity]]]
+    Cases[expr, symbol_Symbol[t] | symbol_Symbol'[t] -> {symbol[t], symbol'[t]}, Infinity]]];
 
 initialVals[expr_, consStore_] := 
   Flatten[Map[(Cases[consStore, _[#1[0], Except[prev[_][0]]] | _[Except[prev[_][0]], #1[0]], Infinity])&,
-                Union[Flatten[Cases[expr, symbol_Symbol'[t] -> symbol, Infinity]]]]]
+                Union[Flatten[Cases[expr, symbol_Symbol'[t] -> symbol, Infinity]]]]];
 
 (*   Flatten[Map[(Cases[consStore, _[#1[0], Except[prev[_][0]]] | _[Except[prev[_][0]], #1[0]], Infinity])&, *)
 (*                 Union[Flatten[{Cases[expr, symbol_Symbol'[t] -> {symbol, symbol'}, Infinity], *)
@@ -446,7 +446,7 @@ chSolveUnitInterval[validModTable_, consStore_, posAsk_, changedAsk_, vars_] := 
         table]
   );
   solve[validModTable]
-]
+];
 
 chSolveInterval[consTable_, consStore_, posAsk_, changedAsk_, vars_] := Block[{
   nacc, 
@@ -480,12 +480,12 @@ chSolveInterval[consTable_, consStore_, posAsk_, changedAsk_, vars_] := Block[{
   {nacc, nsuc} =
     solve[consTable, unit[], False];
   nacc
-]
+];
 
-collectTell[{elem___}]              := Fold[collectTell, {}, unit[elem]]
-collectTell[terms_, tell[elem_]]    := Append[terms, elem]
-collectTell[terms_, ask[__]]        := terms
-collectTell[terms_, always[elem__]] := Fold[collectTell, terms, {elem}]
+collectTell[{elem___}]              := Fold[collectTell, {}, unit[elem]];
+collectTell[terms_, tell[elem_]]    := Append[terms, elem];
+collectTell[terms_, ask[__]]        := terms;
+collectTell[terms_, always[elem__]] := Fold[collectTell, terms, {elem}];
 
 
 (* chSolveInterval[unit[elem__], consStore_, newConsTable_, suc_, vars_] := ( *)
@@ -517,18 +517,18 @@ collectTell[terms_, always[elem__]] := Fold[collectTell, terms, {elem}]
  * 戻り値 : 展開済みの制約テーブル
  *)
 expandAsks[group[elem___], posAsk_, vars_] := 
-  Map[(expandAsks[#, posAsk, vars])&, group[elem]]
+  Map[(expandAsks[#, posAsk, vars])&, group[elem]];
 
 expandAsks[order[elem___], posAsk_, vars_] := 
-  Map[(expandAsks[#, posAsk, vars])&, order[elem]]
+  Map[(expandAsks[#, posAsk, vars])&, order[elem]];
 
 expandAsks[unit[elem___], posAsk_, vars_] := 
-  expandAsksUnit[{elem}, posAsk, vars, unit[]]
+  expandAsksUnit[{elem}, posAsk, vars, unit[]];
 
-expandAsksUnit[{}, posAsk_, vars_, unitTable_] := unitTable
+expandAsksUnit[{}, posAsk_, vars_, unitTable_] := unitTable;
 
 expandAsksUnit[{tell[elem_], tail___}, posAsk_, vars_, unitTable_] :=
-   expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, tell[elem]]]
+   expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, tell[elem]]];
 
 expandAsksUnit[{ask[guard_, elem__], tail___}, posAsk_, vars_, unitTable_] := (
   If[MemberQ[posAsk, guard], 
@@ -543,12 +543,12 @@ expandAsksUnit[{ask[guard_, elem__], tail___}, posAsk_, vars_, unitTable_] := (
     (* guardが成り立たなかったとき *)
     expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, ask[guard, elem]]]
   ]
-)
+);
 
 expandAsksUnit[{always[elem__], tail___}, posAsk_, vars_, unitTable_] := (
   tmpNewUnitTable= expandAsksUnit[{elem}, posAsk, vars, always[]];
   expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, tmpNewUnitTable]]
-)
+);
 
 (*
  * alwaysに囲まれていないタプルを削除する
@@ -564,7 +564,7 @@ removeNonAlwaysTuple[group[elem__]] := (
 (*   tmpSol = Fold[(tmpSol=removeNonAlwaysTuple[#2];  *)
 (*               If[Length[tmpSol]>0, Append[#1, tmpSol], #1])&, group[], group[elem]]; *)
 (*   If[Length[tmpSol]==1, group[tmpSol]=tmpSol; tmpSol, tmpSol] *)
-)
+);
 
 removeNonAlwaysTuple[order[elem__]] := (
  Fold[(tmpSol=removeNonAlwaysTuple[#2];
@@ -573,17 +573,17 @@ removeNonAlwaysTuple[order[elem__]] := (
 (*   tmpSol = Fold[(tmpSol=removeNonAlwaysTuple[#2];  *)
 (*               If[Length[tmpSol]>0, Append[#1, tmpSol], #1])&, order[], order[elem]]; *)
 (*   If[Length[tmpSol]==1, order[tmpSol]=tmpSol; tmpSol, tmpSol] *)
-)
+);
 
 removeNonAlwaysTuple[unit[elem__]]  :=
-  Select[unit[elem], (Head[#]===always)&]  
+  Select[unit[elem], (Head[#]===always)&];
 
 
 (*
  * 次のポイントフェーズに移行するTを求める
  *)
 findNextPointPhaseTime[type_, includeZero_, {}, changedAsk_, maxTime_, currentMinT_, currentMinAsk_] := 
-  {currentMinT, currentMinAsk}
+  {currentMinT, currentMinAsk};
 
 findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, changedAsk_, 
                           maxTime_, currentMinT_, currentMinAsk_] := (
@@ -628,7 +628,7 @@ findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, change
           tmpMinT == currentMinT, {tmpMinT,     Append[currentMinAsk, {type, ask}]},
           True,                   {currentMinT, currentMinAsk}];
   findNextPointPhaseTime[type, includeZero, {tail}, changedAsk, maxTime, tmpNewMinT, tmpNewMinAsk]
-)
+);
 
 (*
  * ポイントフェーズの処理 
@@ -638,7 +638,7 @@ pointPhase[consTable_, consStore_, changedAsk_, vars_] := (
   debugPrint["pointPhase#consTable:", consTable];
 
   profile["chSolve",chSolve[consTable, consStore, changedAsk /. sym_[t] -> sym[0] , vars]]
-) 
+);
 
 (*
  * インターバルフェイズの処理
@@ -780,11 +780,11 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   Scan[(Clear[#])&, integVars];
 
   {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore}
-)
+);
 
 consStore2Table[consStore_, vars_] :=
   group @@ 
-   DeleteCases[Map[(unit[tell[# == First[# /. Solve[consStore, #]]]])&, vars], unit[tell[True]]]
+   DeleteCases[Map[(unit[tell[# == First[# /. Solve[consStore, #]]]])&, vars], unit[tell[True]]];
 
 (*
  * 
@@ -906,5 +906,4 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
     debugPrint["currentTime:", currentTime];
     debugPrint["consStorePrev:", consStorePrev];
   ];
-]
-
+];
