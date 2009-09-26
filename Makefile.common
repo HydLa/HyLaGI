@@ -15,12 +15,14 @@ SRC      := $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp)
 OBJECT   := $(addsuffix .o, $(basename $(SRC)))
 DEP_FILE := $(OBJECT:.o=.d)
 
+VS_FILES := Debug Release *.user *.ncb
+
 .PHONY : all
 all: $(TARGET)
 
 .PHONY : clean
 clean:
-	-$(RM) -f $(TARGET) $(OBJECT) $(DEP_FILE)
+	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(VS_FILES)
 
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)
