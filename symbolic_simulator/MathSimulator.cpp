@@ -69,11 +69,12 @@ bool MathSimulator::simulate(const char mathlink[],
     break;
   }
 
-  ml.MLPutFunction("Get", 1);
-  ml.MLPutString("symbolic_simulator/HydLa.m"); 
+//   ml.MLPutFunction("Get", 1);
+//   ml.MLPutString("symbolic_simulator/HydLa.m"); 
 
-//   ml.MLPutFunction("ToExpression", 1);
-//   ml.MLPutString(math_source()); 
+  ml.MLPutFunction("ToExpression", 2);
+  ml.MLPutString(math_source()); 
+  ml.MLPutSymbol("InputForm"); 
 
   //  std::cout << math_source() << std::endl;
 
@@ -134,10 +135,36 @@ bool MathSimulator::simulate(const char mathlink[],
  	regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
 	//	std::cout << str << std::endl;
 	ml.MLReleaseString(s);
-      }
+    }
       break;
 
-      //    default:
+    case MESSAGEPKT: {
+      const char *sym, *tag;
+      ml.MLGetSymbol(&sym);
+      ml.MLGetString(&tag);
+      std::cout << "#message:" << sym << ":" << tag << std::endl;
+      ml.MLReleaseSymbol(sym);
+      ml.MLReleaseString(tag);
+    }
+      break;
+
+    case SYNTAXPKT: {
+      int q;
+      ml.MLGetInteger(&q);
+      std::cout << "#syntax:" << q << std::endl;
+    }
+      break; 
+
+    case INPUTNAMEPKT: {
+      const char *name;
+      ml.MLGetString(&name);
+      std::cout << "#inputname:" << name << std::endl;
+      ml.MLReleaseString(name);
+    }
+      break;
+
+    default:
+      std::cout << "#unknown packet:" << pkt << std::endl;
     }
     ml.MLNewPacket();
   }
