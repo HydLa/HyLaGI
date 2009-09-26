@@ -31,7 +31,7 @@ void conv()
       break;
       
     case '\n':
-      *out_itr++ = '\\';
+
       *out_itr++ = '\\';
       *out_itr++ = '\\';
       *out_itr++ = 'n';

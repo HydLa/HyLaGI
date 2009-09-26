@@ -4,9 +4,7 @@ SUBDIR := parser math_source_converter symbolic_simulator core
 
 .PHONY : all
 all:
-	@for i in $(SUBDIR); do \
-	   (cd $$i && $(MAKE) all); \
-	done
+	cd core && $(MAKE) all
 
 .PHONY : clean
 clean:

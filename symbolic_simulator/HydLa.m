@@ -846,6 +846,7 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
       profile["point-PHASE",
       pointPhase[tmpConsTable, consStore, changedAsk, pftVars]];
 
+
 (*     Print[If[globalUseDebugPrint, "R:", ""], N[currentTime, 5], *)
 (*             "\t" <> Fold[(#1<>ToString[N[simplify[First[#2 /. Solve[consStore, #2]]], 5]]<>"\t")&, *)
 (*          "", *)

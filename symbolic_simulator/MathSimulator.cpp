@@ -69,18 +69,17 @@ bool MathSimulator::simulate(const char mathlink[],
     break;
   }
 
-//   ml.MLPutFunction("Get", 1);
-//   ml.MLPutString("HydLa.m"); 
+  ml.MLPutFunction("Get", 1);
+  ml.MLPutString("symbolic_simulator/HydLa.m"); 
 
-  ml.MLPutFunction("ToExpression", 1);
-  ml.MLPutString(math_source()); 
+//   ml.MLPutFunction("ToExpression", 1);
+//   ml.MLPutString(math_source()); 
+
+  //  std::cout << math_source() << std::endl;
 
   ml.MLPutFunction("ToExpression", 1);
   ml.MLPutString(interlanguage); 
 
-  ml.MLPutFunction("ToExpression", 1);
-  ml.MLPutString("f[5]"); 
-  
   ml.MLEndPacket();
 
   ml.MLPutFunction("Exit", 0);
