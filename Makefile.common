@@ -11,18 +11,18 @@ LN       := ln #@LN@
 ARFLAGS  := crus
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
 
-SRC      := $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp)
+CXX_OPT  += -O2 -Wall
+
+SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp)
 OBJECT   := $(addsuffix .o, $(basename $(SRC)))
 DEP_FILE := $(OBJECT:.o=.d)
-
-VS_FILES := Debug Release *.user *.ncb
 
 .PHONY : all
 all: $(TARGET)
 
 .PHONY : clean
 clean:
-	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(VS_FILES)
+	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES)
 
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)

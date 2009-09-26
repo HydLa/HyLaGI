@@ -1,4 +1,4 @@
-TARGET	 := ../msc
+TARGET	 := msc
 INCLUDES += 
 LDFLAGS	 += 
 LIBS	 += 

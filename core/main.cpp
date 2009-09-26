@@ -4,7 +4,6 @@
 #include <vector>
 
 #include <boost/program_options.hpp>
-#include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
 #include "HydLaParser.h"
@@ -74,7 +73,7 @@ void hydla_main(int argc, char* argv[])
   } else {
     suc = hp.parse(std::cin);
   }
-  //  hp.dump();
+
   if(suc) {
     std::string interlanguage = 
       hp.create_interlanguage(vm["simulation-time"].as<std::string>().c_str());
@@ -82,6 +81,7 @@ void hydla_main(int argc, char* argv[])
     if(vm.count("interlanguage")) {
       std::cout <<  interlanguage  << std::endl;
     } else {
+
       MathSimulator::OutputFormat output_format;
       if(vm["output-format"].as<std::string>() == "t") {
 	output_format = MathSimulator::fmtTFunction;
@@ -116,12 +116,14 @@ int main(int argc, char* argv[])
     //msg.dump();
 
     hydla_main(argc, argv);
-
-  } catch(std::exception &e) {
-      std::cerr << e.what() << std::endl;
-
-  } catch(...) {
+  } 
+  catch(std::exception &e) {
+    std::cerr << e.what() << std::endl;
+    return -1;
+  } 
+  catch(...) {
     std::cerr << "fatal error!!" << std::endl;
+    return -1;
   }
 
   return 0;

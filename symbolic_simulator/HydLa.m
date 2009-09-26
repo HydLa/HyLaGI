@@ -4,7 +4,6 @@ SetOptions[$Output, PageWidth->Infinity];
 (*
  * main function
  *)
-
 If[optUseProfile, 
   HydLaMain[arg___] := (
     profile["Total", HydLaSolve[arg]];
@@ -16,7 +15,6 @@ If[optUseProfile,
 (*
  * デバック用メッセージ出力関数
  *)
-
 If[optUseDebugPrint,
   debugPrint[arg___] := Print[arg],
   debugPrint[arg___] := Null];
@@ -25,7 +23,6 @@ If[optUseDebugPrint,
  * profiling function
  * print CPU-time of function and return function's value
  *)
-
 If[optUseProfile,
   (* True *)
   profile[label_String, func_] := Block[{time, val, indent},
