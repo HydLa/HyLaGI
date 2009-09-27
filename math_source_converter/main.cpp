@@ -10,38 +10,65 @@ void conv()
   
   *out_itr++ = '\"';
   
+  char c = *in_itr++;
   while(in_itr != std::istreambuf_iterator<char>()) {
-    char c = *in_itr++;
     switch(c) {
     case '\"':
       *out_itr++ = '\\';
-      *out_itr++ = '\\';
-      *out_itr++ = '\\';
       *out_itr++ = '\"';
+      c = *in_itr++;
       break;
       
     case '\\':
       *out_itr++ = '\\';
       *out_itr++ = '\\';
-      *out_itr++ = '\\';
-      *out_itr++ = '\\';
+      c = *in_itr++;
       break;
       
     case '\r':
+      c = *in_itr++;
       break;
       
     case '\n':
-
-      *out_itr++ = '\\';
       *out_itr++ = '\\';
       *out_itr++ = 'n';
       *out_itr++ = '\"';
       *out_itr++ = '\n';
       *out_itr++ = '\"';
+      c = *in_itr++;   
       break;
+
+      //コメント削除
+    case '(': {
+      char nc = *in_itr++;
+      if(nc == '*') {
+	int count = 1;
+	c  = *in_itr++;
+	nc = *in_itr++;
+	while(count > 0) {
+	  if(c == '(' && nc == '*') {
+	    count++;
+	    c  = *in_itr++;
+	    nc = *in_itr++;
+	  } else if(c == '*' && nc == ')') {
+	    count--;
+	    c  = *in_itr++;
+	    if(count>0) nc = *in_itr++;
+	  } else {
+	    c  = nc;
+	    nc = *in_itr++;
+	  }
+	}
+      } else {
+	*out_itr++ = c;
+	c = nc;
+      }
+      break;    
+    }
 
     default:
       *out_itr++ = c;
+      c = *in_itr++;
     }
   }
 

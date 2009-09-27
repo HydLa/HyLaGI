@@ -76,7 +76,7 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutString(math_source()); 
   ml.MLPutSymbol("InputForm"); 
 
-  //  std::cout << math_source() << std::endl;
+  //std::cout << math_source() << std::endl;
 
   ml.MLPutFunction("ToExpression", 1);
   ml.MLPutString(interlanguage); 
