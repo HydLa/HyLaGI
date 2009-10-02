@@ -1,15 +1,18 @@
-
-SUBDIR := parser math_source_converter symbolic_simulator core
-#$(dir $(shell find . -mindepth 2 -name "Makefile"))
+projects := parser math_source_converter symbolic_simulator core
 
 .PHONY : all
-all:
-	cd core && $(MAKE) all
+all: $(projects)
 
 .PHONY : clean
 clean:
-	@for i in $(SUBDIR); do \
+	@for i in $(projects); do \
 	   (cd $$i && $(MAKE) clean); \
 	done
-	-$(RM) -fr Debug Release *.user *.ncb
 
+.PHONY : $(projects)
+$(projects):
+	$(MAKE) --directory=$@
+
+# dependency
+core: parser symbolic_simulator
+symbolic_simulator: math_source_converter

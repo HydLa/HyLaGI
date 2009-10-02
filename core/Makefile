@@ -12,8 +12,5 @@ LIBS	 += -lML32i3 -lm -lrt
 DEFINES  += 
 CXX_OPT  += 
 
-DEP_PROJ := ../symbolic_simulator ../parser
-TARGET_DEP_FILES := ../symbolic_simulator/libhydla_symbolic_simulator.a ../parser/libhydla_parser.a
-
 include ../Makefile.common
 

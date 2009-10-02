@@ -12,8 +12,6 @@ CXX_OPT  +=
 SRC         += math_source.cpp
 CLEAN_FILES += math_source.cpp
 
-DEP_PROJ := ../math_source_converter
-
 include ../Makefile.common
 
 math_source.cpp: HydLa.m ../math_source_converter/msc

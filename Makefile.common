@@ -18,11 +18,7 @@ OBJECT   := $(addsuffix .o, $(basename $(SRC)))
 DEP_FILE := $(OBJECT:.o=.d)
 
 .PHONY : all
-all: 
-	@for i in $(DEP_PROJ); do \
-	   (cd $$i && $(MAKE)); \
-	done
-	$(MAKE) $(TARGET)
+all: $(TARGET)
 
 .PHONY : clean
 clean:
@@ -40,7 +36,7 @@ endif
 	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
 	$(MV) $@.tmp $@
 
-$(TARGET): $(OBJECT) $(TARGET_DEP_FILES)
+$(TARGET): $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
 else
