@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 #include <boost/bind.hpp>
 
+#include "version.h"
 #include "HydLaParser.h"
 #include "MathSimulator.h"
 #include "mathlink_helper.h"
@@ -65,6 +66,11 @@ void hydla_main(int argc, char* argv[])
 {
   po::variables_map vm;
   if(!analyze_program_opt(argc, argv, vm)) return;
+  
+  if(vm.count("version")) {
+    std::cout << Version::description() << std::endl;
+    return;
+  }
 
   HydLaParser hp;
   bool suc;
