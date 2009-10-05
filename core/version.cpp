@@ -1,0 +1,32 @@
+#include "version.h"
+
+#include <sstream>
+
+namespace hydla {
+  Version::Version() {
+  }
+  
+  Version::~Version() {
+  }
+
+  std::string Version::version()  {
+    return "0.2.5";
+  }
+  
+  std::string Version::revision() {
+    return "$$Revision$$"; //template
+  }
+  
+  std::string Version::copyright() {
+    return "Copyright (C) 2008-2009 uedalab HydLa project";
+  }
+  
+  std::string Version::description() {
+    std::stringstream s;
+    s << "hydla v" << version() 
+      << " (r" << revision() << ")\n\n" 
+      << copyright();
+
+    return s.str();
+  }
+}
