@@ -14,16 +14,27 @@ CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
 CXX_OPT  += -O2 -Wall
 
 SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp) 
-OBJECT   = $(addsuffix .o, $(basename $(SRC)))
-DEP_FILE = $(OBJECT:.o=.d)
+OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
+	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
+	    $(subst .cpp,.o,$(filter %.cpp,$(SRC)))
+DEP_FILE := $(OBJECT:.o=.d)
 
 .PHONY : all
-all: $(DEP_PROJECTS)
-	$(MAKE) $(TARGET)
+all: $(DEP_PROJECTS) $(TARGET)
 
 .PHONY : clean
 clean:
 	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES)
+
+$(TARGET): $(DEP_OBJECTS) $(OBJECT)
+ifeq ($(MAKE_TYPE),library)
+	$(AR) $(ARFLAGS) $@ $(OBJECT)
+else
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
+endif
+
+#$(DEP_OBJECTS):
+#	$(MAKE) --directory=$(dir $@)
 
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)
@@ -36,15 +47,4 @@ endif
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
 	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
 	$(MV) $@.tmp $@
-
-$(TARGET): $(DEP_OBJECTS) $(OBJECT)
-ifeq ($(MAKE_TYPE),library)
-	$(AR) $(ARFLAGS) $@ $(OBJECT)
-else
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
-endif
-
-.PHONY : $(DEP_PROJECTS)
-$(DEP_PROJECTS):
-	$(MAKE) --directory=$@
 

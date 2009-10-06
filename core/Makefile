@@ -13,7 +13,6 @@ DEFINES  +=
 CXX_OPT  += 
 
 DEP_OBJECTS  := ../parser/libhydla_parser.a ../symbolic_simulator/libhydla_symbolic_simulator.a
-DEP_PROJECTS := $(dir $(DEP_OBJECTS))
 
 include ../Makefile.common
 
