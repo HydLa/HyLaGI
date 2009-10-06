@@ -14,11 +14,12 @@ CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
 CXX_OPT  += -O2 -Wall
 
 SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp) 
-OBJECT   := $(addsuffix .o, $(basename $(SRC)))
-DEP_FILE := $(OBJECT:.o=.d)
+OBJECT   = $(addsuffix .o, $(basename $(SRC)))
+DEP_FILE = $(OBJECT:.o=.d)
 
 .PHONY : all
-all: $(TARGET)
+all: $(DEP_PROJECTS)
+	$(MAKE) $(TARGET)
 
 .PHONY : clean
 clean:
@@ -36,9 +37,14 @@ endif
 	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
 	$(MV) $@.tmp $@
 
-$(TARGET): $(OBJECT)
+$(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
 else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
 endif
+
+.PHONY : $(DEP_PROJECTS)
+$(DEP_PROJECTS):
+	$(MAKE) --directory=$@
+

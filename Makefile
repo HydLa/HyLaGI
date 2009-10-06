@@ -1,7 +1,8 @@
 projects := parser math_source_converter symbolic_simulator core
 
 .PHONY : all
-all: $(projects)
+all: 
+	$(MAKE) --directory="core"
 
 .PHONY : clean
 clean:
@@ -9,10 +10,10 @@ clean:
 	   (cd $$i && $(MAKE) clean); \
 	done
 
-.PHONY : $(projects)
-$(projects):
-	$(MAKE) --directory=$@
+# .PHONY : $(projects)
+# $(projects):
+# 	$(MAKE) --directory=$@
 
-# dependency
-core: parser symbolic_simulator
-symbolic_simulator: math_source_converter
+# # dependency
+# core: parser symbolic_simulator
+# symbolic_simulator: math_source_converter
