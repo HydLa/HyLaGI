@@ -6,18 +6,18 @@
 #include <istream>
 #include <iterator>
 
-#include <boost/spirit/iterator/multi_pass.hpp>
-#include <boost/spirit/iterator/position_iterator.hpp>
-#include <boost/spirit/tree/ast.hpp>
+#include <boost/spirit/include/classic_multi_pass.hpp>
+#include <boost/spirit/include/classic_position_iterator.hpp>
+#include <boost/spirit/include/classic_ast.hpp>
 
 namespace hydla {
 class HydLaParser {
 public:
-    typedef boost::spirit::multi_pass<std::istreambuf_iterator<char> > multipass_iter_t;
-    typedef boost::spirit::position_iterator<multipass_iter_t> pos_iter_t;
-    typedef boost::spirit::node_val_data_factory<> node_val_data_factory_t;
-    typedef boost::spirit::tree_parse_info<pos_iter_t, node_val_data_factory_t> tree_info_t;
-    typedef boost::spirit::tree_match<pos_iter_t, node_val_data_factory_t>::tree_iterator	tree_iter_t;
+    typedef boost::spirit::classic::multi_pass<std::istreambuf_iterator<char> > multipass_iter_t;
+    typedef boost::spirit::classic::position_iterator<multipass_iter_t> pos_iter_t;
+    typedef boost::spirit::classic::node_val_data_factory<> node_val_data_factory_t;
+    typedef boost::spirit::classic::tree_parse_info<pos_iter_t, node_val_data_factory_t> tree_info_t;
+    typedef boost::spirit::classic::tree_match<pos_iter_t, node_val_data_factory_t>::tree_iterator	tree_iter_t;
 
     typedef std::map<std::string, std::string> module_map_t;
     typedef std::map<std::string, int>         variable_map_t;

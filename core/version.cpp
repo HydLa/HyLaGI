@@ -23,8 +23,8 @@ namespace hydla {
   
   std::string Version::description() {
     std::stringstream s;
-    s << "hydla v" << version() 
-      << " (r" << revision() << ")\n\n" 
+    s << "hydla v" << version() << "\n\n" 
+      //      << " (r" << revision() << ")\n\n" 
       << copyright();
 
     return s.str();

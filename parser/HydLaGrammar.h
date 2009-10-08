@@ -1,17 +1,15 @@
 #ifndef _INCLUDED_HTDLA_HYDLA_GRAMMAR_H_
 #define _INCLUDED_HTDLA_HYDLA_GRAMMAR_H_
 
-
 #include <boost/bind.hpp>
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/utility/functor_parser.hpp>
-#include <boost/spirit/utility/escape_char.hpp>
-#include <boost/spirit/tree/parse_tree.hpp>
-#include <boost/spirit/tree/ast.hpp>
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_functor_parser.hpp>
+#include <boost/spirit/include/classic_escape_char.hpp>
+#include <boost/spirit/include/classic_parse_tree.hpp>
+#include <boost/spirit/include/classic_ast.hpp>
 
 namespace hydla {
-
-using namespace boost::spirit;
+using namespace boost::spirit::classic;
 
 struct HydLaGrammar : public grammar<HydLaGrammar> {
   typedef enum _RuleID {
@@ -19,7 +17,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     RI_PrevVariable,
     RI_Variable,
     RI_Identifier,
-    RI_ConstraintName,
+    RI_ModuleName,
 
     RI_LogicalAnd,
     RI_Ask_LogicalAnd,
@@ -44,7 +42,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     RI_Entailment,
     RI_Globally,
-    RI_Equivalence,
+    RI_Equivalent,
     RI_Weaker,
     RI_Parallel,
     RI_Differential,
@@ -56,12 +54,14 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     RI_Expression,
     RI_Factor,
+    RI_Limit,
     RI_Unary,
     RI_Arith_term,
     RI_Arithmetic,
     RI_Comparison,
     RI_Always,
     RI_Ask,
+    RI_Tell,
     RI_Logical_term,
     RI_Logical,
 
@@ -73,11 +73,18 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     RI_Ask_Logical_Term,
     RI_Ask_Logical,
 
-    RI_OrderExpr,
-    RI_OrderTerm,
-    RI_OrderFactor,
+    RI_Program,
+    RI_ProgramParallel,
+    RI_ProgramOrdered,
+    RI_ProgramFactor,
 
+    RI_Module,
+    RI_Constraint,
+    RI_ConstraintName,
+
+    RI_DefStatement,
     RI_ProgramDef,
+    RI_ModuleDef,
     RI_ConstraintDef,
 
     RI_Statements,
@@ -89,23 +96,23 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
 #define defRuleID(ID) rule<S, parser_context<>, parser_tag<ID> >
 
-    defRuleID(RI_Identifier)    identifier; 
-    defRuleID(RI_Number)    number; 
-    defRuleID(RI_PrevVariable)  prev_val;
-    defRuleID(RI_Variable)  variable; 
-    defRuleID(RI_ConstraintName)  constraint_name; 
+    defRuleID(RI_Identifier)   identifier; 
+    defRuleID(RI_Number)       number; 
+    defRuleID(RI_PrevVariable) prev_val;
+    defRuleID(RI_Variable)     variable; 
+    defRuleID(RI_ModuleName)   module_name; 
     
     defRuleID(RI_Globally)  globally; 
     defRuleID(RI_Entailment)  entailment; 
-    defRuleID(RI_Equivalence)  equivalence; 
+    defRuleID(RI_Equivalent)  equivalent; 
     defRuleID(RI_Weaker)  weaker; 
     defRuleID(RI_Parallel)  parallel; 
     defRuleID(RI_Differential)  differential; 
     defRuleID(RI_Previous)  previous;     
 
-    defRuleID(RI_Plus)    add; 
-    defRuleID(RI_Subtract)    sub; 
-    defRuleID(RI_Times)   mul; 
+    defRuleID(RI_Plus)     add; 
+    defRuleID(RI_Subtract) sub; 
+    defRuleID(RI_Times)    mul; 
     defRuleID(RI_Divide)   div;
 
     defRuleID(RI_Positive)   positive; 
@@ -124,18 +131,27 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Ask_LogicalAnd)  ask_logical_and; 
     defRuleID(RI_LogicalOr)  logical_or; 
 
-    defRuleID(RI_OrderExpr)      order_expr; 
-    defRuleID(RI_OrderTerm)      order_term; 
-    defRuleID(RI_OrderFactor)    order_factor; 
+    defRuleID(RI_Program)          program; 
+    defRuleID(RI_ProgramParallel)  program_parallel; 
+    defRuleID(RI_ProgramOrdered)   program_ordered; 
+    defRuleID(RI_ProgramFactor)    program_factor; 
 
+    defRuleID(RI_DefStatement)    def_statement; 
     defRuleID(RI_ProgramDef)    program_def; 
     defRuleID(RI_ConstraintDef) constraint_def; 
+    defRuleID(RI_ModuleDef)     module_def; 
+
+    defRuleID(RI_Constraint)     constraint; 
+    defRuleID(RI_ConstraintName) constraint_name; 
+    defRuleID(RI_Module)    module;           
 
     defRuleID(RI_Always)  always; 
     defRuleID(RI_Ask)     ask; 
+    defRuleID(RI_Tell)    tell; 
 
     defRuleID(RI_Expression)    expression; 
     defRuleID(RI_Factor)        factor; 
+    defRuleID(RI_Limit)         limit; 
     defRuleID(RI_Unary)         unary; 
     defRuleID(RI_Arithmetic)    arithmetic;
     defRuleID(RI_Arith_term)    arith_term;
@@ -157,21 +173,31 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     definition(const HydLaGrammar& self) {
             
       //開始
-      statements  =
-        *((constraint_def | program_def | order_expr) >> discard_node_d[ch_p('.')]) >> end_p;
+      statements  = *((def_statement | program) 
+                       >> discard_node_d[ch_p('.')]) >> end_p;
+
+      //プログラム
+      program = program_parallel;
+
+      program_parallel = program_ordered % root_node_d[parallel];
+      program_ordered  = program_factor  % root_node_d[weaker];
+      program_factor   = module
+                       | inner_node_d['(' >> program_parallel >> ')'];
+
+      // 定義
+      def_statement = constraint_def | program_def;
 
       //program定義
-      program_def = constraint_name >> inner_node_d['{' >> logical_term >> '}'];
-
+      program_def = module_name >> inner_node_d['{' >> program >> '}'];
+      
       //constraint定義
-      constraint_def = constraint_name >> root_node_d[equivalence] >> logical_term;
+      constraint_def = constraint_name >> root_node_d[equivalent] >> gen_pt_node_d[constraint];
 
-
-      //半順序定義
-      order_expr   = order_term % root_node_d[parallel];
-      order_term   = order_factor % root_node_d[weaker];
-      order_factor = constraint_name
-                   | inner_node_d['(' >> order_expr >> ')'];
+      //module定義
+      module = gen_pt_node_d[constraint];
+      
+      //制約式
+      constraint = logical_term;
 
       //論理積
       logical_term = always % root_node_d[logical_and];
@@ -181,15 +207,22 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //ask
       ask = ask_logical >> root_node_d[entailment] >> logical_term
-          | comparison;
+          | gen_pt_node_d[tell]
+          | constraint_name
+          | inner_node_d['(' >> logical_term >> ')']; 
+
+      //tell制約
+      tell = comparison;
 
       //比較
-      comparison = arithmetic % root_node_d[less_eq
-					  | less
-					  | greater_eq
-                      | greater
-                      | equal
-                      | not_equal];
+      comparison = arithmetic 
+              >> root_node_d[less_eq
+                             | less
+                             | greater_eq
+                             | greater
+                             | equal
+                             | not_equal]
+              >> arithmetic;
 
       //算術式
       arithmetic =
@@ -200,28 +233,37 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         unary % root_node_d[mul | div];
       
       //単項演算子
-      unary = !(root_node_d[positive | negative]) >> factor;
+      unary = !(root_node_d[positive | negative]) >> limit;
+
+      //極限
+      limit = factor >> !(root_node_d[differential]) >> !(root_node_d[previous]);
 
       //因子
       factor =  
-          prev_val
+          variable
         | number
-        | inner_node_d['(' >> logical_term >> ')'];
+        | inner_node_d['(' >> arithmetic >> ')'];
 
       // ---- ask ----      
       //論理和
       ask_logical = ask_logical_term % root_node_d[logical_or];
 
       //論理積
-      ask_logical_term = ask_comparison % root_node_d[ask_logical_and];
+      ask_logical_term = ask_comparison % root_node_d[ask_logical_and]
+              | comparison
+              | constraint_name
+              | inner_node_d['(' >> ask_logical >> ')'];
+
 
       //比較
-      ask_comparison = ask_arithmetic % root_node_d[less_eq
-                                                 | less
-                                                 | greater_eq
-                                                 | greater
-                                                 | ask_equal
-                                                 | ask_not_equal];
+      ask_comparison = ask_arithmetic 
+              >> root_node_d[less_eq
+                             | less
+                             | greater_eq
+                             | greater
+                             | ask_equal
+                             | ask_not_equal]
+              >> ask_arithmetic;
 
       //算術式
       ask_arithmetic =
@@ -238,28 +280,28 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       ask_factor = 
           prev_val
         | number
-        | inner_node_d['(' >> ask_logical >> ')'];
+        | inner_node_d['(' >> ask_arithmetic >> ')'];
 
       //数字
       number = 
         lexeme_d[leaf_node_d[
           +digit_p >> !('.' >> +digit_p)]]; 
-          
-      //prev変数
-      prev_val = variable >> !(root_node_d[previous]);
 
       //変数
-      variable = lexeme_d[leaf_node_d[identifier]] >> !(root_node_d[differential]);
+      variable = lexeme_d[leaf_node_d[identifier]];
 
       //制約名
       constraint_name = lexeme_d[leaf_node_d[identifier]];
+
+      //モジュール名
+      module_name = lexeme_d[leaf_node_d[identifier]];
 
       //識別子
       identifier = lexeme_d[leaf_node_d[
                      (alpha_p | '_') >> *(alpha_p | digit_p | '_')]];
 
       //特殊記号定義
-      equivalence  = str_p("<=>"); // equivalent iff
+      equivalent   = str_p("<=>");
       entailment   = str_p("=>"); //implies entails
       globally     = str_p("[]"); 
       differential = +ch_p('\'');
@@ -280,9 +322,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       ask_not_equal   = str_p("!="); 
 
       //論理演算子
-      logical_and = str_p("&") | str_p("/\\") | ch_p(","); // TODO: ch_p(",")の削除
-      ask_logical_and = str_p("&&") | str_p("&") | str_p("/\\"); //TODO: str_p("&&")の削除
-      logical_or  = str_p("||") | str_p("|") | str_p("\\/"); ////TODO: str_p("||")の削除
+      logical_and     = str_p("&") | str_p("/\\");
+      ask_logical_and = str_p("&") | str_p("/\\");
+      logical_or      = str_p("|") | str_p("\\/");
 
       //算術演算子
       add          = ch_p('+');

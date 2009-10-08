@@ -95,7 +95,7 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
     std::string val = string(iter->value.begin(), iter->value.end());
 
     switch(iter->value.id().to_long()) {
-    case HydLaGrammar::RI_Equivalence:
+    case HydLaGrammar::RI_Equivalent:
         module_.insert(std::make_pair(
             string(ch->value.begin(), ch->value.end()), 
             "unit[" + create_interlanguage(ch+1) + "]"));
@@ -103,9 +103,9 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
         return "";
 
     case HydLaGrammar::RI_Equal:
-        return "tell[Equal[" + 
+        return "Equal[" + 
             create_interlanguage(ch) + ", " + 
-            create_interlanguage(ch+1) + "]]";
+            create_interlanguage(ch+1) + "]";
 
     case HydLaGrammar::RI_AskEqual:
         return "Equal[" + 
@@ -113,9 +113,9 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
             create_interlanguage(ch+1) + "]";
 
     case HydLaGrammar::RI_Unequal:
-        return "tell[Unequal[" + 
+        return "Unequal[" + 
             create_interlanguage(ch) + ", " + 
-            create_interlanguage(ch+1) + "]]";
+            create_interlanguage(ch+1) + "]";
 
     case HydLaGrammar::RI_AskUnequal:
         return "Unequal[" + 
@@ -126,6 +126,9 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
         return "ask[" + 
             create_interlanguage(ch) + ", " + 
             create_interlanguage(ch+1) +"]";
+
+    case HydLaGrammar::RI_Tell:
+        return "tell[" + create_interlanguage(ch) + "]";
 
     case HydLaGrammar::RI_LogicalAnd:
         return create_interlanguage(ch) + ", " +

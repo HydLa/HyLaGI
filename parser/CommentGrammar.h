@@ -1,8 +1,8 @@
 #ifndef _INCLUDED_HTDLA_COMMENT_GRAMMAR_H_
 #define _INCLUDED_HTDLA_COMMENT_GRAMMAR_H_
 
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/utility/confix.hpp>
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_confix.hpp>
 
 namespace hydla {
 
