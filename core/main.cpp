@@ -33,7 +33,7 @@ void hydla_main()
   }
 
   if(suc) {
-    hp.dump();
+    //    hp.dump();
 
     std::string interlanguage = 
       hp.create_interlanguage(po.get<std::string>("simulation-time").c_str());

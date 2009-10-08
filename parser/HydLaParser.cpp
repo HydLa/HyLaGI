@@ -103,9 +103,9 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
         return "";
 
     case HydLaGrammar::RI_Equal:
-        return "Equal[" + 
+        return "tell[Equal[" + 
             create_interlanguage(ch) + ", " + 
-            create_interlanguage(ch+1) + "]";
+            create_interlanguage(ch+1) + "]]";
 
     case HydLaGrammar::RI_AskEqual:
         return "Equal[" + 
@@ -113,9 +113,9 @@ std::string HydLaParser::create_interlanguage(const tree_iter_t &iter)
             create_interlanguage(ch+1) + "]";
 
     case HydLaGrammar::RI_Unequal:
-        return "Unequal[" + 
+        return "tell[Unequal[" + 
             create_interlanguage(ch) + ", " + 
-            create_interlanguage(ch+1) + "]";
+            create_interlanguage(ch+1) + "]]";
 
     case HydLaGrammar::RI_AskUnequal:
         return "Unequal[" + 

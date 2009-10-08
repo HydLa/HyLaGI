@@ -107,7 +107,7 @@ bool MathSimulator::simulate(const char mathlink[],
       case MLTKSYM: {
 	const char *sym;
 	ml.MLGetSymbol(&sym);
-	std::cout << "#symbol:" << sym << std::endl;
+	//std::cout << "#symbol:" << sym << std::endl;
 	ml.MLReleaseSymbol(sym);
 	break;
       }
@@ -158,7 +158,7 @@ bool MathSimulator::simulate(const char mathlink[],
     case INPUTNAMEPKT: {
       const char *name;
       ml.MLGetString(&name);
-      std::cout << "#inputname:" << name << std::endl;
+      //std::cout << "#inputname:" << name << std::endl;
       ml.MLReleaseString(name);
     }
       break;

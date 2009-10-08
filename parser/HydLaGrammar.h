@@ -207,11 +207,11 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //ask
       ask = ask_logical >> root_node_d[entailment] >> logical_term
-          | gen_pt_node_d[tell]
-          | constraint_name
-          | inner_node_d['(' >> logical_term >> ')']; 
+          | inner_node_d['(' >> logical_term >> ')']
+          | eps_p >> root_node_d[tell] >> eps_p
+          | constraint_name;
 
-      //tell制約
+      //tell
       tell = comparison;
 
       //比較
@@ -250,7 +250,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //論理積
       ask_logical_term = ask_comparison % root_node_d[ask_logical_and]
-              | comparison
+              | ask_comparison
               | constraint_name
               | inner_node_d['(' >> ask_logical >> ')'];
 
@@ -278,7 +278,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //因子
       ask_factor = 
-          prev_val
+          variable >> !(root_node_d[differential]) >> !(root_node_d[previous])
         | number
         | inner_node_d['(' >> ask_arithmetic >> ')'];
 
@@ -299,6 +299,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //識別子
       identifier = lexeme_d[leaf_node_d[
                      (alpha_p | '_') >> *(alpha_p | digit_p | '_')]];
+
 
       //特殊記号定義
       equivalent   = str_p("<=>");
