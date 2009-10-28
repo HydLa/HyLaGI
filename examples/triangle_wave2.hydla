@@ -3,7 +3,8 @@
 // モジュール名を小文字に、変数名を大文字にのチェックも兼ねる
 // askの条件によるorのテスト
 
-init      <=> TEMP=5, F=5.
-jackknife <=> []((F- = 10 || F- = 0) => TEMP = - TEMP-).
+init      <=> TEMP=5 /\ F=5.
+jackknife <=> []((F- = 10 | F- = 0) => TEMP = - TEMP-).
 line      <=> [](F' = TEMP).
-init, line << jackknife.
+fa        <=> [](TEMP' = 0).
+init, fa << line << jackknife.

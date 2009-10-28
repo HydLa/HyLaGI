@@ -1,10 +1,12 @@
 #include "ProgramOptions.h"
 
+#define LINE_LENGTH 1000
+
 namespace hydla {
 
-  using namespace boost::program_options;
+using namespace boost::program_options;
 
-ProgramOptions::ProgramOptions()
+ProgramOptions::ProgramOptions() : visible_desc_(LINE_LENGTH)
 {
   init_descriptions();
 }
@@ -15,18 +17,26 @@ ProgramOptions::~ProgramOptions()
 
 void ProgramOptions::init_descriptions()
 {
-  options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:");
+  options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:", 
+				   LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "version")
     ("debug,d", "enable debug mode")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
+    
     ("output-format,f", 
      value<std::string>()->default_value("n"), 
-     "output format: t - time function, n - numeric")
-    ("simulation-time,s", value<std::string>()->default_value("1"), "simulation time")
-    ("interlanguage,i", "show intermediate language")
+     "output format:\n  t - time function\n  n - numeric")
+    
+    ("simulation-time,s", 
+     value<std::string>()->default_value("1"), 
+     "simulation time")
+    
+    ("interlanguage,i", 
+     "show intermediate language")
+    
     ("mathlink", 
      value<std::string>()->default_value("-linkmode launch -linkname 'math -mathlink'"), 
      "mathlink option")

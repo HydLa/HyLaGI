@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HTDLA_COMMENT_GRAMMAR_H_
-#define _INCLUDED_HTDLA_COMMENT_GRAMMAR_H_
+#ifndef _INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
+#define _INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
 
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_confix.hpp>
@@ -25,5 +25,5 @@ struct CommentGrammar : public grammar<CommentGrammar> {
 
 }
 
-#endif //_INCLUDED_HTDLA_COMMENT_GRAMMAR_H_
+#endif //_INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
 

@@ -1,3 +1,6 @@
+#ifndef _INCLUDED_MATHLINK_HELPER_H_
+#define _INCLUDED_MATHLINK_HELPER_H_
+
 #include "mathlink.h"
 #include <string.h>
 
@@ -90,12 +93,12 @@ public:
     return str;
   }
 
-
   MLENV getEnv()  {return env_;}
   MLINK getLink() {return link_;}
 
   /////////// Mathematica Function /////////////
-  int MLPutFunction(const char *s, int n) {return ::MLPutFunction(link_, s, n);}
+  int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}
+  int MLGetFunction(const char **s,int *n)  {return ::MLGetFunction(link_, s, n);}
 
   int MLPutInteger(int i)                 {return ::MLPutInteger(link_, i);}
   int MLGetInteger(int *i)                {return ::MLGetInteger(link_, i);}
@@ -107,6 +110,12 @@ public:
   int MLPutString(const char*s)           {return ::MLPutString(link_, s);}
   int MLGetString(const char **s)         {return ::MLGetString(link_, s);}
   void MLReleaseString(const char *s)     {return ::MLReleaseString(link_, s);}
+
+  int MLPutNext(int type)                 {return ::MLPutNext(link_, type);}
+  int MLGetNext()                         {return ::MLGetNext(link_);}
+
+  int MLPutArgCount(int n)                {return ::MLPutArgCount(link_, n);}
+  int MLGetArgCount(int *n)               {return ::MLGetArgCount(link_, n);}
 
   int MLEndPacket()                       {return ::MLEndPacket(link_);}
   int MLReady()                           {return ::MLReady(link_);}
@@ -121,3 +130,4 @@ private:
   MLINK link_;
 };
 
+#endif //_INCLUDED_MATHLINK_HELPER_H_

@@ -3,66 +3,76 @@
 #include <string>
 #include <vector>
 
-#include <boost/bind.hpp>
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
 
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+
+// core
 #include "version.h"
+#include "ProgramOptions.h"
+
+// parser
 #include "HydLaParser.h"
+#include "ModuleSetGraph.h"
+
+// symbolic_simulator
+#include "SSNodeFactory.h"
 #include "MathSimulator.h"
 #include "mathlink_helper.h"
 
-#include "ModuleSetGraph.h"
-#include "ProgramOptions.h"
-
 using namespace hydla;
+using namespace hydla::parse_tree;
+using namespace hydla::symbolic_simulator;
+using namespace boost;
 
-void hydla_main()
+void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
+  po.parse(argc, argv);
+
+  if(po.count("help")) {
+    po.help_msg(std::cout);
+    return;
+  }
 
   if(po.count("version")) {
     std::cout << Version::description() << std::endl;
     return;
   }
 
-  HydLaParser hp;
-  bool suc;
+  bool debug_mode = po.count("debug")>0;
+
+  shared_ptr<NodeFactory> nf(new NodeFactory());
+  HydLaParser hp(nf, debug_mode);
+  
   if(po.count("input-file")) {
-    suc = hp.parse_flie(po.get<std::string>("input-file").c_str());
+    hp.parse_flie(po.get<std::string>("input-file"));
   } else {
-    suc = hp.parse(std::cin);
+    hp.parse(std::cin);
   }
 
-  if(suc) {
-    //    hp.dump();
-
-    std::string interlanguage = 
-      hp.create_interlanguage(po.get<std::string>("simulation-time").c_str());
- 
-    if(po.count("interlanguage")) {
-      std::cout <<  interlanguage  << std::endl;
-    } else {
-
-      MathSimulator::OutputFormat output_format;
-      if(po.get<std::string>("output-format") == "t") {
-	output_format = MathSimulator::fmtTFunction;
-      } else if(po.get<std::string>("output-format") == "n"){
-	output_format = MathSimulator::fmtNumeric; 
-      } else {
-	std::cerr << "invalid option - output format" << std::endl;
-	return;
-      }
-
-      MathSimulator ms;
-      ms.simulate(po.get<std::string>("mathlink").c_str(), 
-		  interlanguage.c_str(),
-		  (bool)po.count("debug")>0,
-		  (bool)po.count("profile")>0,
-		  (bool)po.count("parallel")>0,
-		  output_format);
-    }
+  MathSimulator::OutputFormat output_format;
+  if(po.get<std::string>("output-format") == "t") {
+    output_format = MathSimulator::fmtTFunction;
+  } else if(po.get<std::string>("output-format") == "n"){
+    output_format = MathSimulator::fmtNumeric; 
   } else {
-    std::cerr << "parse error -- line: " << hp.get_line() << std::endl;
+    std::cerr << "invalid option - output format" << std::endl;
+    return;
   }
+
+  MathSimulator ms;
+  ms.simulate(po.get<std::string>("mathlink").c_str(), 
+    hp,
+    debug_mode,
+    po.get<std::string>("simulation-time"),
+    po.count("profile")>0,
+    po.count("parallel")>0,
+    output_format);
+  
 }
 
 int main(int argc, char* argv[]) 
@@ -71,25 +81,23 @@ int main(int argc, char* argv[])
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+  int ret = 0;
+
   try {
-    //ModuleSetGraph msg;
-    //msg.dump();
-    ProgramOptions &po = ProgramOptions::instance();
-    po.parse(argc, argv);
-    if(po.count("help")) {
-      po.help_msg(std::cout);
-    } else {
-      hydla_main();
-    }
-  } 
+    hydla_main(argc, argv);
+  }
   catch(std::exception &e) {
-    std::cerr << "err:" << e.what() << std::endl;
-    return -1;
+    std::cerr << "error : " << e.what() << std::endl;
+    ret = -1;
   } 
+#if !(defined(_MSC_VER) && defined(_DEBUG))
   catch(...) {
     std::cerr << "fatal error!!" << std::endl;
-    return -1;
+    ret = -1;
   }
+#else
+    system("pause");
+#endif
 
-  return 0;
+  return ret;
 }

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="HydLa_parser"
-	ProjectGUID="{3D72A70B-C352-470C-9114-628852EE3E1C}"
-	RootNamespace="HydLa_parser"
+	Name="unit_tests"
+	ProjectGUID="{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}"
+	RootNamespace="unit_tests"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -114,8 +115,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -132,6 +134,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)\HydLa_UnitTest.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -171,19 +174,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\HydLaParser.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetGraph.cpp"
+				RelativePath=".\test_main.cpp"
 				>
 			</File>
 		</Filter>
@@ -192,30 +183,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\CommentGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaParser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathlink_helper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetGraph.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"

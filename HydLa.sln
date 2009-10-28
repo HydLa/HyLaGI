@@ -1,7 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HydLa_parser", "HydLa_parser\HydLa_parser.vcproj", "{3D72A70B-C352-470C-9114-628852EE3E1C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "parser", "parser\parser.vcproj", "{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", "{612AC655-3448-425F-B7AE-CB12A41BC630}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E} = {C37DA84E-F258-44FC-A914-B19AE6C0FB2E}
+		{5E34BE62-2104-42F3-9E59-CED1ED540932} = {5E34BE62-2104-42F3-9E59-CED1ED540932}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbolic_simulator", "symbolic_simulator\symbolic_simulator.vcproj", "{5E34BE62-2104-42F3-9E59-CED1ED540932}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FF9B5F1F-F0A5-4441-9D11-6E381AA1F61D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_tests", "unit_tests\unit_tests.vcproj", "{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E} = {C37DA84E-F258-44FC-A914-B19AE6C0FB2E}
+		{5E34BE62-2104-42F3-9E59-CED1ED540932} = {5E34BE62-2104-42F3-9E59-CED1ED540932}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +25,22 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3D72A70B-C352-470C-9114-628852EE3E1C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3D72A70B-C352-470C-9114-628852EE3E1C}.Debug|Win32.Build.0 = Debug|Win32
-		{3D72A70B-C352-470C-9114-628852EE3E1C}.Release|Win32.ActiveCfg = Release|Win32
-		{3D72A70B-C352-470C-9114-628852EE3E1C}.Release|Win32.Build.0 = Release|Win32
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}.Debug|Win32.Build.0 = Debug|Win32
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}.Release|Win32.ActiveCfg = Release|Win32
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}.Release|Win32.Build.0 = Release|Win32
+		{612AC655-3448-425F-B7AE-CB12A41BC630}.Debug|Win32.ActiveCfg = Debug|Win32
+		{612AC655-3448-425F-B7AE-CB12A41BC630}.Debug|Win32.Build.0 = Debug|Win32
+		{612AC655-3448-425F-B7AE-CB12A41BC630}.Release|Win32.ActiveCfg = Release|Win32
+		{612AC655-3448-425F-B7AE-CB12A41BC630}.Release|Win32.Build.0 = Release|Win32
+		{5E34BE62-2104-42F3-9E59-CED1ED540932}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5E34BE62-2104-42F3-9E59-CED1ED540932}.Debug|Win32.Build.0 = Debug|Win32
+		{5E34BE62-2104-42F3-9E59-CED1ED540932}.Release|Win32.ActiveCfg = Release|Win32
+		{5E34BE62-2104-42F3-9E59-CED1ED540932}.Release|Win32.Build.0 = Release|Win32
+		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Debug|Win32.Build.0 = Debug|Win32
+		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Release|Win32.ActiveCfg = Release|Win32
+		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

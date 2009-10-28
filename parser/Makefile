@@ -4,7 +4,7 @@ TARGET	 := libhydla_parser.a
 INCLUDES += -I. 
 INCLUDES += -I/usr/local/include/boost-1_38
 LDFLAGS	 += -L/usr/local/lib
-LIBS	 += -lboost_program_options
+LIBS	 += 
 DEFINES  += 
 CXX_OPT  += 
 
