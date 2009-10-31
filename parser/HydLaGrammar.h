@@ -127,9 +127,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       program_ordered  = program_factor  % root_node_d[weaker];
       program_factor   = 
           gen_pt_node_d[program_caller] 
-            >> eps_p(*ch_p(')') >> (parallel | weaker | ch_p('.')))
+            >> eps_p(*ch_p(')') >> (parallel | weaker | ch_p('}') | ch_p('.')))
         | no_node_d[ch_p('(')] >> program_parallel >> no_node_d[ch_p(')')] // do not use inner_node_d
-            >> eps_p(*ch_p(')') >> (parallel | weaker | ch_p('.')))
+            >> eps_p(*ch_p(')') >> (parallel | weaker | ch_p('}') | ch_p('.')))
         | module;
       
       // ’è‹`

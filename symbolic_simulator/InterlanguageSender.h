@@ -21,245 +21,254 @@ public:
   {}
 
   // ’è‹`
-  virtual void visit(ConstraintDefinition* node)  {}
-  virtual void visit(ProgramDefinition* node)     {}
+  virtual void visit(boost::shared_ptr<ConstraintDefinition> node)  {}
+  virtual void visit(boost::shared_ptr<ProgramDefinition> node)     {}
 
   // ŒÄ‚Ño‚µ
-  virtual void visit(ConstraintCaller* node)      
+  virtual void visit(boost::shared_ptr<ConstraintCaller> node)      
   {
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
   }
 
-  virtual void visit(ProgramCaller* node)         
+  virtual void visit(boost::shared_ptr<ProgramCaller> node)         
   {
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
   }
 
   // §–ñ®
-  virtual void visit(Constraint* node)            
+  virtual void visit(boost::shared_ptr<Constraint> node)            
   {
     //ml_.MLPutFunction("unit", 1);
     inter_str_ += "unit[";
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
 
   // Ask§–ñ
-  virtual void visit(Ask* node)                   
+  virtual void visit(boost::shared_ptr<Ask> node)                   
   {
     inter_str_ += "ask[";
     //ml_.MLPutFunction("ask", 2);
     in_guard_ = true;
-    node->get_guard_node()->accept(this);
+    node_sptr gunode(node->get_guard_node());
+    gunode->accept(gunode, this);
 
     inter_str_ += ",";
 
     in_guard_ = false;
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
 
   // Tell§–ñ
-  virtual void visit(Tell* node)                  
+  virtual void visit(boost::shared_ptr<Tell> node)                  
   {
     //ml_.MLPutFunction("tell", 1);
     inter_str_ += "tell[";
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
 
   // ”äŠr‰‰Zq
-  virtual void visit(Equal* node)                 
+  virtual void visit(boost::shared_ptr<Equal> node)                 
   {
     //ml_.MLPutFunction("Equal", 2);
         
     inter_str_ += "Equal[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(UnEqual* node)               
+  virtual void visit(boost::shared_ptr<UnEqual> node)               
   {
     //ml_.MLPutFunction("UnEqual", 2);
     
     inter_str_ += "UnEqual[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(Less* node)                  
+  virtual void visit(boost::shared_ptr<Less> node)                  
   {
     //ml_.MLPutFunction("Less", 2);
     
     inter_str_ += "Less[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(LessEqual* node)             
+  virtual void visit(boost::shared_ptr<LessEqual> node)             
   {
     //ml_.MLPutFunction("LessEqual", 2);
     
     inter_str_ += "LessEqual[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(Greater* node)               
+  virtual void visit(boost::shared_ptr<Greater> node)               
   {
     //ml_.MLPutFunction("Greater", 2);
     
     inter_str_ += "Greater[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(GreaterEqual* node)          
+  virtual void visit(boost::shared_ptr<GreaterEqual> node)          
   {
     //ml_.MLPutFunction("GreaterEqual", 2);
     
     inter_str_ += "GreaterEqual[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
   // ˜_—‰‰Zq
-  virtual void visit(LogicalAnd* node)            
+  virtual void visit(boost::shared_ptr<LogicalAnd> node)            
   {
     //ml_.MLPutFunction("And", 2);
 
     if(in_guard_) {
       inter_str_ += "And[";
-      node->get_lhs()->accept(this);
+      node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
       inter_str_ += ",";
-      node->get_rhs()->accept(this);
+      node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
       inter_str_ += "]";
     } else {
-      node->get_lhs()->accept(this);
+      node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
       inter_str_ += ",";
-      node->get_rhs()->accept(this);
+      node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     }
   }
 
-  virtual void visit(LogicalOr* node)             
+  virtual void visit(boost::shared_ptr<LogicalOr> node)             
   {
     //ml_.MLPutFunction("Or", 2);
     
     inter_str_ += "Or[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
   
   // Zp“ñ€‰‰Zq
-  virtual void visit(Plus* node)                  
+  virtual void visit(boost::shared_ptr<Plus> node)                  
   {
     //ml_.MLPutFunction("Plus", 2);
     
     inter_str_ += "Plus[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(Subtract* node)              
+  virtual void visit(boost::shared_ptr<Subtract> node)              
   {
     //ml_.MLPutFunction("Subtract", 2);
     
     inter_str_ += "Subtract[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(Times* node)                 
+  virtual void visit(boost::shared_ptr<Times> node)                 
   {
     //ml_.MLPutFunction("Times", 2);
 
     inter_str_ += "Times[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(Divide* node)                
+  virtual void visit(boost::shared_ptr<Divide> node)                
   {
     //ml_.MLPutFunction("Divide", 2);
     
     inter_str_ += "Divide[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
   
   // Zp’P€‰‰Zq
-  virtual void visit(Negative* node)              
+  virtual void visit(boost::shared_ptr<Negative> node)              
   {       
     //ml_.MLPutFunction("Minus", 1);
     
     inter_str_ += "Minus[";
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
 
-  virtual void visit(Positive* node)              
+  virtual void visit(boost::shared_ptr<Positive> node)              
   {
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
   }
   
   // §–ñŠK‘w’è‹`‰‰Zq
-  virtual void visit(Weaker* node)                
+  virtual void visit(boost::shared_ptr<Weaker> node)                
   {
     // ‹t‚É‚µ‚Ä‘—M
     //ml_.MLPutFunction("order", 2);
     
     inter_str_ += "order[";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += ",";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += "]";
   }
   
-  virtual void visit(Parallel* node)              
+  virtual void visit(boost::shared_ptr<Parallel> node)              
   {
     //ml_.MLPutFunction("group", 2);
 
     inter_str_ += "group[";
-    node->get_lhs()->accept(this);
+    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     inter_str_ += ",";
-    node->get_rhs()->accept(this);
+    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
     inter_str_ += "]";
   }
 
 
   // ‘Š‰‰Zq
-  virtual void visit(Always* node)                
+  virtual void visit(boost::shared_ptr<Always> node)                
   {
     //ml_.MLPutFunction("always", 1);
     inter_str_ += "always[";
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
   
   // ”÷•ª
-  virtual void visit(Differential* node)          
+  virtual void visit(boost::shared_ptr<Differential> node)          
   {
 //     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
 //     ml_.MLPutArgCount(1);      // this 1 is for the 'f'
@@ -269,28 +278,30 @@ public:
 //     ml_.MLPutInteger(1);
 
     inter_str_ += "Derivative[1][";
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
 
   // ¶‹ÉŒÀ
-  virtual void visit(Previous* node)              
+  virtual void visit(boost::shared_ptr<Previous> node)              
   {
     //ml_.MLPutFunction("prev", 1);
     inter_str_ += "prev[";
-    node->get_child_node()->accept(this);
+    node_sptr chnode(node->get_child_node());
+    chnode->accept(chnode, this);
     inter_str_ += "]";
   }
   
   // •Ï”
-  virtual void visit(Variable* node)              
+  virtual void visit(boost::shared_ptr<Variable> node)              
   {
     //ml_.MLPutSymbol(node->get_name().c_str());
     inter_str_ += node->get_name();
   }
 
   // ”š
-  virtual void visit(Number* node)                
+  virtual void visit(boost::shared_ptr<Number> node)                
   {    
     //ml_.MLPutInteger(atoi(node->get_number().c_str()));
     inter_str_ += node->get_number();

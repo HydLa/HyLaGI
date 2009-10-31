@@ -104,7 +104,7 @@ public:
   Node(){}
   virtual ~Node(){}
 
-  virtual void accept(TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) = 0;
   virtual node_sptr clone() = 0;
 
@@ -130,7 +130,7 @@ public:
   virtual ~UnaryNode()
   {}
 
-  virtual void accept(TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) 
   {
@@ -180,7 +180,7 @@ public:
     
   virtual ~BinaryNode(){}
 
-  virtual void accept(TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
   {
@@ -223,7 +223,7 @@ public:
   Caller(){}
   virtual ~Caller(){}
 
-  virtual void accept(TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) = 0;
   virtual node_sptr clone();
   virtual std::string to_string() const;
@@ -247,7 +247,7 @@ public:
   ConstraintCaller(){}
   virtual ~ConstraintCaller(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
 
@@ -264,7 +264,7 @@ public:
   ProgramCaller(){}
   virtual ~ProgramCaller(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
 
   // specific functions
@@ -282,7 +282,7 @@ public:
   Definition(){}
   virtual ~Definition(){}
 
-  virtual void accept(TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) 
   {}
@@ -320,7 +320,7 @@ public:
   ProgramDefinition(){}
   virtual ~ProgramDefinition(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
 private:
 };
@@ -333,7 +333,7 @@ public:
   ConstraintDefinition(){}
   virtual ~ConstraintDefinition(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
 private:
 };
@@ -348,7 +348,7 @@ public:
     
   virtual ~Constraint(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
   {
@@ -388,7 +388,7 @@ public:
     
   virtual ~Tell(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
   {
@@ -420,7 +420,7 @@ public:
     
   virtual ~Ask(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
   {
@@ -472,7 +472,7 @@ NAME(node_sptr& lhs, node_sptr& rhs) :                      \
                                                             \
 virtual ~NAME(){}                                           \
                                                             \
-virtual void accept(TreeVisitor* visitor);                  \
+virtual void accept(node_sptr own, TreeVisitor* visitor);   \
                                                             \
 virtual node_sptr clone()                                   \
 {                                                           \
@@ -500,7 +500,7 @@ NAME(node_sptr& lhs, node_sptr& rhs) :                            \
                                                                   \
 virtual ~NAME(){}                                                 \
                                                                   \
-virtual void accept(TreeVisitor* visitor);                        \
+virtual void accept(node_sptr own, TreeVisitor* visitor);         \
                                                                   \
 virtual node_sptr clone()                                         \
 {                                                                 \
@@ -606,7 +606,7 @@ public:
 
   virtual ~Always(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone()
   {
@@ -638,7 +638,7 @@ public:
 
   virtual ~Positive(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone()
   {
@@ -673,7 +673,7 @@ public:
 
   virtual ~Negative(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone()
   {
@@ -708,7 +708,7 @@ public:
 
   virtual ~Differential(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone()
   {
@@ -745,7 +745,7 @@ public:
 
   virtual ~Previous(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone()
   {
@@ -779,7 +779,7 @@ public:
   virtual ~Number()
   {}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
   {
@@ -818,7 +818,7 @@ public:
     
   virtual ~Variable(){}
 
-  virtual void accept(TreeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
 

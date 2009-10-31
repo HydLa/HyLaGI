@@ -161,10 +161,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ModuleSetContainerCreator.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ModuleSetGraph.cpp"
 				>
 			</File>

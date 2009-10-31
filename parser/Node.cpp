@@ -1,5 +1,6 @@
 #include "Node.h"
 
+#include <assert.h>
 #include <algorithm>
 #include <boost/bind.hpp>
 
@@ -244,7 +245,12 @@ void Variable::preprocess(node_sptr& own, preprocess_arg_t& arg)
  */
 
 #define DEFINE_ACCEPT_FUNC(CLASS) \
-  void CLASS::accept(TreeVisitor* visitor) { visitor->visit(this); }
+  void CLASS::accept(node_sptr own, \
+                     TreeVisitor* visitor) \
+  { \
+    assert(this == own.get()); \
+    visitor->visit(boost::shared_static_cast<CLASS>(own)); \
+  }
 
 //’è‹`
 DEFINE_ACCEPT_FUNC(ProgramDefinition)

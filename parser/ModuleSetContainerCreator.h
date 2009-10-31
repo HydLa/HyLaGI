@@ -1,10 +1,13 @@
 #ifndef _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_
 #define _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_
 
+#include <assert.h>
 #include <vector>
+#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 
+#include "ParseTree.h"
 #include "Node.h"
 #include "TreeVisitor.h"
 
@@ -15,44 +18,98 @@ namespace hydla {
 namespace ch {
 
 template <class Container>
-class ModuleSetContainerCreator : public hydla::parse_treeTreeVisitor {
+class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
 public:
   typedef typename boost::shared_ptr<Container> container_sptr;
   typedef std::vector<container_sptr>           container_stack_t;
 
-  ModuleSetContainerCreator(ParseTree& parse_tree) :
-    parse_tree_(parse_tree)
+  ModuleSetContainerCreator()
   {}
 
   virtual ~ModuleSetContainerCreator()
   {}
 
-  // 呼び出し
-  virtual void visit(ConstraintCaller* node)
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
   {
     container_name_ = node->get_name();
+    node->get_child_node()->accept(node->get_child_node(), this);
   }
 
-  virtual void visit(ProgramCaller* node)
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
   {
     container_name_ = node->get_name();
+    node->get_child_node()->accept(node->get_child_node(), this);
   }
 
-  // 制約式
-  virtual void visit(Constraint* node)
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
   {
-    new ModuleSet(std::string("A"), node_sptr())
+    if(container_name_.empty()) {
+      std::stringstream s;
+      s << "$" << unnamed_module_num_++;
+      container_name_ = s.str();
+    }
 
+    // create ModuleSet
+    module_set_sptr mod_set(new ModuleSet(container_name_, node));
+    container_name_.clear();
+
+    // create Container
+    container_sptr  container(new Container(mod_set));
+    mod_set_stack_.push_back(container);
   }
 
-  // 制約階層定義演算子
-  virtual void visit(Weaker* node);
-  virtual void visit(Parallel* node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
+  {    
+    container_name_.clear();
+
+    // 左辺：弱い制約
+    node->get_lhs()->accept(node->get_lhs(), this);
+    container_sptr lhs(mod_set_stack_.back());
+    mod_set_stack_.pop_back();
+
+    // 右辺：強い制約
+    node->get_rhs()->accept(node->get_rhs(), this);
+    mod_set_stack_.back()->add_weak(*lhs);
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
+  {    
+    container_name_.clear();
+
+    // 左辺
+    node->get_lhs()->accept(node->get_lhs(), this);
+    container_sptr lhs(mod_set_stack_.back());
+    mod_set_stack_.pop_back();
+
+    // 右辺
+    node->get_rhs()->accept(node->get_rhs(), this);
+    mod_set_stack_.back()->add_parallel(*lhs);
+  }
+
+  container_sptr create_module_set_container(hydla::parse_tree::ParseTree* parse_tree)
+  {
+    assert(parse_tree != NULL);
+
+    mod_set_stack_.clear();
+    container_name_.clear();
+    unnamed_module_num_ = 1;
+
+    parse_tree->dispatch(this);
+    assert(mod_set_stack_.size() == 1);
+    return mod_set_stack_.back();
+  }
 
 private:
-  ParseTree&        parse_tree_;
-  container_stack_t mod_set_stack_;
-  std::string       container_name_;
+  
+  hydla::parse_tree::ParseTree* parse_tree_;
+  
+  container_stack_t             mod_set_stack_;
+
+  // 登録される制約モジュールの名前
+  std::string                   container_name_;
+
+  // 無名制約モジュールの通し番号
+  int                           unnamed_module_num_;
 };
 
 } // namespace ch

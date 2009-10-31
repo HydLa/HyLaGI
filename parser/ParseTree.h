@@ -27,7 +27,7 @@ public:
 
   void dispatch(parse_tree::TreeVisitor* visitor)
   {
-    if(node_tree_) node_tree_->accept(visitor);
+    if(node_tree_) node_tree_->accept(node_tree_, visitor);
   }
 
   const variable_map_t& get_variable_map() const 

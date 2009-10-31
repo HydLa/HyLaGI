@@ -17,6 +17,7 @@
 // parser
 #include "HydLaParser.h"
 #include "ModuleSetList.h"
+#include "ModuleSetContainerCreator.h"
 
 // symbolic_simulator
 #include "SSNodeFactory.h"
@@ -46,15 +47,31 @@ void hydla_main(int argc, char* argv[])
 
   bool debug_mode = po.count("debug")>0;
 
+  // パースツリーの構築
   shared_ptr<NodeFactory> nf(new NodeFactory());
   HydLaParser hp(nf, debug_mode);
-  
   if(po.count("input-file")) {
     hp.parse_flie(po.get<std::string>("input-file"));
   } else {
     hp.parse(std::cin);
   }
 
+  // 解候補モジュール集合の導出
+  ModuleSetContainerCreator<ModuleSetList> mscc;
+  boost::shared_ptr<ModuleSetList> msl(
+    mscc.create_module_set_container(&hp.parse_tree()));
+
+  if(debug_mode) {
+    std::cout << "#*** set of module which might be solution ***\n"
+              << *msl << std::endl;
+  }
+
+  if(po.count("module-set-list")>0) {
+    std::cout << *msl << std::endl;
+    return;
+  }
+
+  // シミュレーション開始
   MathSimulator::OutputFormat output_format;
   if(po.get<std::string>("output-format") == "t") {
     output_format = MathSimulator::fmtTFunction;
@@ -85,27 +102,7 @@ int main(int argc, char* argv[])
   int ret = 0;
 
   try {
-    module_set_sptr ms_a(new ModuleSet(std::string("A"), node_sptr()));
-    module_set_sptr ms_b(new ModuleSet(std::string("B"), node_sptr()));
-    module_set_sptr ms_c(new ModuleSet(std::string("C"), node_sptr()));
-    module_set_sptr ms_d(new ModuleSet(std::string("D"), node_sptr()));
-
-    ModuleSetList msl_a(ms_a);
-    ModuleSetList msl_b(ms_b);
-    ModuleSetList msl_c(ms_c);
-    ModuleSetList msl_d(ms_d);
-
-    msl_b.add_weak(msl_a);
-
-    msl_d.add_weak(msl_c);
-
-        
-    msl_b.add_parallel(msl_d);
-    std::cout << msl_b;
-
-    
-
-    //hydla_main(argc, argv);
+    hydla_main(argc, argv);
   }
   catch(std::exception &e) {
     std::cerr << "error : " << e.what() << std::endl;

@@ -20,62 +20,62 @@ public:
   {}
 
   // ’è‹`
-  virtual void visit(ConstraintDefinition* node)  {}
-  virtual void visit(ProgramDefinition* node)     {}
+  virtual void visit(boost::shared_ptr<ConstraintDefinition> node)  {}
+  virtual void visit(boost::shared_ptr<ProgramDefinition> node)     {}
 
   // ŒÄ‚Ño‚µ
-  virtual void visit(ConstraintCaller* node)      {}
-  virtual void visit(ProgramCaller* node)         {}
+  virtual void visit(boost::shared_ptr<ConstraintCaller> node)      {}
+  virtual void visit(boost::shared_ptr<ProgramCaller> node)         {}
 
   // §–ñ®
-  virtual void visit(Constraint* node)            {}
+  virtual void visit(boost::shared_ptr<Constraint> node)            {}
 
   // Ask§–ñ
-  virtual void visit(Ask* node)                   {}
+  virtual void visit(boost::shared_ptr<Ask> node)                   {}
 
   // Tell§–ñ
-  virtual void visit(Tell* node)                  {}
+  virtual void visit(boost::shared_ptr<Tell> node)                  {}
 
   // ”äŠr‰‰Zq
-  virtual void visit(Equal* node)                 {}
-  virtual void visit(UnEqual* node)               {}
-  virtual void visit(Less* node)                  {}
-  virtual void visit(LessEqual* node)             {}
-  virtual void visit(Greater* node)               {}
-  virtual void visit(GreaterEqual* node)          {}
+  virtual void visit(boost::shared_ptr<Equal> node)                 {}
+  virtual void visit(boost::shared_ptr<UnEqual> node)               {}
+  virtual void visit(boost::shared_ptr<Less> node)                  {}
+  virtual void visit(boost::shared_ptr<LessEqual> node)             {}
+  virtual void visit(boost::shared_ptr<Greater> node)               {}
+  virtual void visit(boost::shared_ptr<GreaterEqual> node)          {}
 
   // ˜_—‰‰Zq
-  virtual void visit(LogicalAnd* node)            {}
-  virtual void visit(LogicalOr* node)             {}
+  virtual void visit(boost::shared_ptr<LogicalAnd> node)            {}
+  virtual void visit(boost::shared_ptr<LogicalOr> node)             {}
   
   // Zp“ñ€‰‰Zq
-  virtual void visit(Plus* node)                  {}
-  virtual void visit(Subtract* node)              {}
-  virtual void visit(Times* node)                 {}
-  virtual void visit(Divide* node)                {}
+  virtual void visit(boost::shared_ptr<Plus> node)                  {}
+  virtual void visit(boost::shared_ptr<Subtract> node)              {}
+  virtual void visit(boost::shared_ptr<Times> node)                 {}
+  virtual void visit(boost::shared_ptr<Divide> node)                {}
   
   // Zp’P€‰‰Zq
-  virtual void visit(Negative* node)              {}
-  virtual void visit(Positive* node)              {}
+  virtual void visit(boost::shared_ptr<Negative> node)              {}
+  virtual void visit(boost::shared_ptr<Positive> node)              {}
   
   // §–ñŠK‘w’è‹`‰‰Zq
-  virtual void visit(Weaker* node)                {}
-  virtual void visit(Parallel* node)              {}
+  virtual void visit(boost::shared_ptr<Weaker> node)                {}
+  virtual void visit(boost::shared_ptr<Parallel> node)              {}
 
   // ‘Š‰‰Zq
-  virtual void visit(Always* node)                {}
+  virtual void visit(boost::shared_ptr<Always> node)                {}
   
   // ”÷•ª
-  virtual void visit(Differential* node)          {}
+  virtual void visit(boost::shared_ptr<Differential> node)          {}
 
   // ¶‹ÉŒÀ
-  virtual void visit(Previous* node)              {}
+  virtual void visit(boost::shared_ptr<Previous> node)              {}
   
   // •Ï”
-  virtual void visit(Variable* node)              {}
+  virtual void visit(boost::shared_ptr<Variable> node)              {}
 
   // ”š
-  virtual void visit(Number* node)                {}
+  virtual void visit(boost::shared_ptr<Number> node)                {}
 
 };
 

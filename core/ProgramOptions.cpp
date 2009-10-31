@@ -25,6 +25,7 @@ void ProgramOptions::init_descriptions()
     ("debug,d", "enable debug mode")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
+    ("module-set-list", "output set of module which might be solution")
     
     ("output-format,f", 
      value<std::string>()->default_value("n"), 

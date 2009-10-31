@@ -39,8 +39,6 @@ void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list)
     module_set_list_t::iterator this_end = module_set_list_.end();
     
     for(; this_it!=this_end; ++this_it) {
-      std::cout << **this_it << ":" << **p_it << std::endl;
-
       module_set_sptr ms(new ModuleSet(**this_it,  **p_it));
       new_list.push_back(ms);
     }

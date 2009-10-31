@@ -28,7 +28,7 @@ public:
   } ModuleComp;
 
   ModuleSet();
-  ModuleSet(std::string& name, hydla::parse_tree::node_sptr& node);
+  ModuleSet(std::string& name, hydla::parse_tree::node_sptr node);
   ModuleSet(ModuleSet& lhs, ModuleSet& rhs);
 
   ~ModuleSet();
