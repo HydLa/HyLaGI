@@ -16,7 +16,7 @@
 
 // parser
 #include "HydLaParser.h"
-#include "ModuleSetGraph.h"
+#include "ModuleSetList.h"
 
 // symbolic_simulator
 #include "SSNodeFactory.h"
@@ -26,6 +26,7 @@
 using namespace hydla;
 using namespace hydla::parse_tree;
 using namespace hydla::symbolic_simulator;
+using namespace hydla::ch;
 using namespace boost;
 
 void hydla_main(int argc, char* argv[])
@@ -84,7 +85,27 @@ int main(int argc, char* argv[])
   int ret = 0;
 
   try {
-    hydla_main(argc, argv);
+    module_set_sptr ms_a(new ModuleSet(std::string("A"), node_sptr()));
+    module_set_sptr ms_b(new ModuleSet(std::string("B"), node_sptr()));
+    module_set_sptr ms_c(new ModuleSet(std::string("C"), node_sptr()));
+    module_set_sptr ms_d(new ModuleSet(std::string("D"), node_sptr()));
+
+    ModuleSetList msl_a(ms_a);
+    ModuleSetList msl_b(ms_b);
+    ModuleSetList msl_c(ms_c);
+    ModuleSetList msl_d(ms_d);
+
+    msl_b.add_weak(msl_a);
+
+    msl_d.add_weak(msl_c);
+
+        
+    msl_b.add_parallel(msl_d);
+    std::cout << msl_b;
+
+    
+
+    //hydla_main(argc, argv);
   }
   catch(std::exception &e) {
     std::cerr << "error : " << e.what() << std::endl;

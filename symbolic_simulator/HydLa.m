@@ -579,19 +579,20 @@ removeNonAlwaysTuple[unit[elem__]]  :=
 (*
  * 次のポイントフェーズに移行するTを求める
  *)
-findNextPointPhaseTime[includeZero_, maxTime_, 
+findNextPointPhaseTime[includeZero_, maxTime_,
                         posAsk_, negAsk_, changedAsk_] := Block[{
   removeDisableAsk,
   calcMinTime,
   sol,
   minT
 },
-  removeDisableAsk[type_, ask_] := 
-    Select[ask, (!(includeZero===False && #[[1]]===False) 
+  removeDisableAsk[type_, ask_] :=
+    Select[ask, (!(includeZero===False && #[[1]]===False)
                   && Not[MemberQ[changedAsk, {type, #[[2]]}]])&];
 
   calcMinTime[{type_, integAsk_, ask_}] := (
     debugPrint["----- findNextPointPhaseTime -----"];
+    debugPrint["type:", type];
     debugPrint["includeZero:", includeZero];
     debugPrint["changedAsk:", changedAsk];
     debugPrint["integAsk:", integAsk];
@@ -600,22 +601,27 @@ findNextPointPhaseTime[includeZero_, maxTime_,
     (* 未採用のask *)
     If[integAsk=!=False,
       (* true *)
-      sol = Reduce[{If[includeZero===True, (t>=0), (maxTime>=t && t>0)] && (integAsk)}, t];
+      sol = Reduce[{If[includeZero===True, (t>=0), (t>0)] && (maxTime>=t) && (integAsk)}, t];
       debugPrint["sol:", sol];
       minT = If[sol =!= False, (* 解なしと境界値の解を区別するため *)
                  First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (sol)}, {t}], Minimize::wksol]],
                  error];
+      (* 最大値が0でない場合、一瞬のみ成り立つaskではない  *)
+(*       If[includeZero===True, *)
+(*         tmpMaxT = First[Quiet[Maximize[{t, t>=0 && (sol)}, {t}], Maximize::wksol]]; *)
+(*         debugPrint["tmpMaxT:", tmpMaxT]; *)
+(*         If[tmpMaxT === 0, minT = error]]; *)
       debugPrint["Minimize#minT:", minT];
-      If[Length[$MessageList]>0, 
+      If[Length[$MessageList]>0,
          Throw[{error, "cannot solve min time", minT, $MessageList}]],
         
       (* false *)
       minT=0];
 
     (* 0秒後のを含んではいけない *)
-    If[includeZero===False && minT===0, minT=error]; 
+    If[includeZero===False && minT===0, minT=error];
     (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
-    If[includeZero===True && minT=!=0, minT=error]; 
+    If[includeZero===True && minT=!=0, minT=error];
 
     debugPrint["minT:", minT];
 
@@ -628,17 +634,17 @@ findNextPointPhaseTime[includeZero_, maxTime_,
           time == currentMinT, {time,        Append[currentMinAsk, ask]},
           True,                {currentMinT, currentMinAsk}];
     
-  Fold[minimumTime, 
-        {maxTime, {}}, 
-        pMap[calcMinTime, 
+  Fold[minimumTime,
+        {maxTime, {}},
+        pMap[calcMinTime,
               Join[Map[({positive, Not[#[[1]]], #[[2]]})&, removeDisableAsk[positive, posAsk]],
                    Map[({negative,     #[[1]],  #[[2]]})&, removeDisableAsk[negative, negAsk]]]]]
 ];
 
-(* findNextPointPhaseTime[type_, includeZero_, {}, changedAsk_, maxTime_, currentMinT_, currntMinAsk_] :=  *)
+(* findNextPointPhaseTime[type_, includeZero_, {}, changedAsk_, maxTime_, currentMinT_, currntMinAsk_] := *)
 (*   {currentMinT, currentMinAsk}; *)
 
-(* findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, changedAsk_,  *)
+(* findNextPointPhaseTime[type_, includeZero_, {{integAsk_, ask_}, tail___}, changedAsk_, *)
 (*                           maxTime_, currentMinT_, currentMinAsk_] := ( *)
 (*   debugPrint["----- findNextPointPhaseTime -----"]; *)
 (*   debugPrint["type:", type]; *)
@@ -651,14 +657,14 @@ findNextPointPhaseTime[includeZero_, maxTime_,
 (*       (\* 未採用のask *\) *)
 (*       If[integAsk=!=False, *)
 (*         (\* true *\) *)
-(*         tmpSol = Reduce[{If[includeZero===True, (t>=0), (maxTime>=t && t>0)] &&  *)
+(*         tmpSol = Reduce[{If[includeZero===True, (t>=0), (maxTime>=t && t>0)] && *)
 (*                          (If[type===negative, integAsk, Not[integAsk]])}, t]; *)
 (*         debugPrint["tmpSol:", tmpSol]; *)
 (*         tmpMinT = If[tmpSol =!= False, (\* 解なしと境界値の解を区別するため *\) *)
 (*                    First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (tmpSol)}, {t}], Minimize::wksol]], *)
 (*                    error]; *)
 (*         debugPrint["Minimize#tmpMinT:", tmpMinT]; *)
-(*         If[Length[$MessageList]>0,  *)
+(*         If[Length[$MessageList]>0, *)
 (*            Throw[{error, "cannot solve min time", tmpMinT, $MessageList}]], *)
         
 (*         (\* false *\) *)
@@ -669,13 +675,13 @@ findNextPointPhaseTime[includeZero_, maxTime_,
 (*     ]; *)
 
 (*   (\* 0秒後のを含んではいけない *\) *)
-(*   If[includeZero===False && tmpMinT===0, tmpMinT=error];  *)
+(*   If[includeZero===False && tmpMinT===0, tmpMinT=error]; *)
 (*   (\* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *\) *)
-(*   If[includeZero===True && tmpMinT=!=0, tmpMinT=error];  *)
+(*   If[includeZero===True && tmpMinT=!=0, tmpMinT=error]; *)
 
 (*   debugPrint["tmpMinT:", tmpMinT]; *)
  
-(*   {tmpNewMinT, tmpNewMinAsk} =  *)
+(*   {tmpNewMinT, tmpNewMinAsk} = *)
 (*     Which[tmpMinT === error,      {currentMinT, currentMinAsk}, *)
 (*           tmpMinT <  currentMinT, {tmpMinT,     {{type, ask}}}, *)
 (*           tmpMinT == currentMinT, {tmpMinT,     Append[currentMinAsk, {type, ask}]}, *)
@@ -706,6 +712,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   debugPrint["consTable:", consTable];
   debugPrint["posAsk:", posAsk];
   debugPrint["negAsk:", negAsk];
+  debugPrint["changedAsk:", changedAsk];
 
 (*   (\* prevに関する制約削除 *\) *)
 (*   tmpSol = Fold[(DeleteCases[#1, #2[_]==_ | _==#2[_], Infinity])&, consTable, prevVars]; *)
@@ -773,10 +780,11 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
 (*   tmpChangedAsk = If[includeZero, tmpChangedAsk, {}]; *)
 
   (* 次のPointPhaseまでの時間を求める *)
-  profile["findNEXTPOINTPHASETIME", 
-          {tmpMinT, tmpMinAsk} = 
+  profile["findNEXTPOINTPHASETIME",
+
+          {tmpMinT, tmpMinAsk} =
             findNextPointPhaseTime[includeZero, maxTime,
-                                    tmpPosAsk, tmpNegAsk, 
+                                    tmpPosAsk, tmpNegAsk,
                                     If[includeZero, tmpChangedAsk, {}]]
   ];
 
@@ -786,7 +794,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
 (*                                   maxTime, maxTime, {}]; *)
 (*           {tmpMinT, tmpMinAsk} = findNextPointPhaseTime[ *)
 (*                                   negative, includeZero, *)
-(*                                   tmpNegAsk, If[includeZero, tmpChangedAsk, {}],  *)
+(*                                   tmpNegAsk, If[includeZero, tmpChangedAsk, {}], *)
 (*                                   maxTime, tmpMinT, tmpMinAsk]]; *)
 
   debugPrint["--- findNextPointPhaseTimeResult ---"];
@@ -795,7 +803,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   debugPrint["includeZero:", includeZero];
 
   profile["MapTHREAD2",
-  If[tmpMinAsk==={} && includeZero, 
+  If[tmpMinAsk==={} && includeZero == True, 
       tmpNewChangedAsk = tmpChangedAsk;
       tmpNewIncludeZero = False;
       tmpMinT = 0;
@@ -814,8 +822,9 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
 
   debugPrint["tmpConsStore:", tmpConsStore];
 
-  tmpPrevConsTable = profile["MapTHREAD4",group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
-                                   {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}]];
+  tmpPrevConsTable = profile["MapTHREAD4",
+    group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
+                            {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}]];
 
   (* 変数の値の出力
    *  

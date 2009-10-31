@@ -157,7 +157,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ModuleSet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ModuleSetContainerCreator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ModuleSetGraph.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ModuleSetList.cpp"
 				>
 			</File>
 			<File
@@ -191,7 +203,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ModuleSet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ModuleSetContainerCreator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ModuleSetGraph.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ModuleSetList.h"
 				>
 			</File>
 			<File
