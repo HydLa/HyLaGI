@@ -482,7 +482,7 @@ virtual node_sptr clone()                                   \
                                                             \
 virtual std::string to_string() const                       \
 {                                                           \
-  return lhs_->to_string() + OPNAME + rhs_->to_string();    \
+  return std::string(OPNAME) + "[" + lhs_->to_string() + "," + rhs_->to_string() + "]"; \
 }                                                           \
 }
 
@@ -513,7 +513,7 @@ virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);   \
                                                                   \
 virtual std::string to_string() const                             \
 {                                                                 \
-  return lhs_->to_string() + OPNAME + rhs_->to_string();          \
+  return std::string(OPNAME) + "[" + lhs_->to_string() + "," + rhs_->to_string() + "]"; \
 }                                                                 \
 }
 

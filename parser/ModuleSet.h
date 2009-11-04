@@ -14,6 +14,10 @@ namespace ch {
 
 typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 
+/**
+ * モジュールの集合を表すクラス
+ *
+ */
 class ModuleSet {
 public:
   typedef std::pair<std::string,
@@ -35,7 +39,7 @@ public:
 
   std::string get_name() const ;
 
-  bool operator<(ModuleSet& rhs) const;
+  int compare(ModuleSet& rhs) const;
 
   std::ostream& dump(std::ostream& s)
   {
@@ -47,6 +51,7 @@ private:
   module_list_t module_list_;
 };
 
+bool operator<(ModuleSet& lhs, ModuleSet& rhs);
 std::ostream& operator<<(std::ostream& s, ModuleSet& m);
 
 } // namespace ch

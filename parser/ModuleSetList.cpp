@@ -3,8 +3,6 @@
 #include <iostream>
 #include <algorithm>
 
-#include <boost/lambda/lambda.hpp>
-
 namespace hydla {
 namespace ch {
 
@@ -45,8 +43,7 @@ void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list)
   }
 
 
-  sort(new_list.begin(), new_list.end(), 
-    *boost::lambda::_1 < *boost::lambda::_2);
+  sort(new_list.begin(), new_list.end());
 
   module_set_list_.swap(new_list);
 }
@@ -74,8 +71,7 @@ void ModuleSetList::add_weak(ModuleSetList& weak_module_set_list)
     }
   }
 
-  sort(new_list.begin(), new_list.end(), 
-    *boost::lambda::_1 < *boost::lambda::_2);
+  sort(new_list.begin(), new_list.end());
 
   module_set_list_.swap(new_list);
 }

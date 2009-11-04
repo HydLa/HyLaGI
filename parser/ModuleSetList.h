@@ -8,6 +8,13 @@
 namespace hydla {
 namespace ch {
 
+/**
+ * 解候補モジュール集合の集合をリスト構造で表すクラス
+ * 解候補モジュール集合の集合を導出するアルゴリズムは
+ * 「制約階層によるハイブリッドシステムのモデリング手法(JSSST2009)」
+ * 参照のこと
+ *
+ */
 class ModuleSetList {
 public:
   typedef std::vector<module_set_sptr> module_set_list_t;
@@ -16,8 +23,19 @@ public:
   ModuleSetList(module_set_sptr m);
   ~ModuleSetList();
 
+  /**
+   * 並列合成として集合を合成する
+   */
   void add_parallel(ModuleSetList& parallel_module_set_list);
+  
+  /**
+   * 弱合成として集合を合成する
+   */
   void add_weak(ModuleSetList& weak_module_set_list);
+
+  /**
+   * 集合を出力する
+   */
   std::ostream& dump(std::ostream& s);
 
 private:
