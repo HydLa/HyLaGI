@@ -62,7 +62,7 @@ void hydla_main(int argc, char* argv[])
     mscc.create_module_set_container(&hp.parse_tree()));
 
   if(debug_mode) {
-    std::cout << "#*** set of module which might be solution ***\n"
+    std::cout << "#*** set of module sets which might be solution ***\n"
               << *msl << std::endl;
   }
 
