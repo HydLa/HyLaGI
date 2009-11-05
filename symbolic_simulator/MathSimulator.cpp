@@ -49,28 +49,37 @@ bool MathSimulator::simulate(const char mathlink[],
     return false;
   }
 
-
+  int p;
+/*
   // 出力する画面の横幅の設定
   ml.MLPutFunction("SetOptions", 2);
   ml.MLPutSymbol("$Output"); 
   ml.MLPutFunction("Rule", 2);
   ml.MLPutSymbol("PageWidth"); 
   ml.MLPutSymbol("Infinity"); 
+  ml.MLEndPacket();
+  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
 
   // デバッグプリント
   ml.MLPutFunction("Set", 2);
   ml.MLPutSymbol("optUseDebugPrint"); 
   ml.MLPutSymbol(debug_mode ? "True" : "False");
+  ml.MLEndPacket();
+  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
 
   // プロファイルモード
   ml.MLPutFunction("Set", 2);
   ml.MLPutSymbol("optUseProfile"); 
   ml.MLPutSymbol(profile_mode ? "True" : "False");
+  ml.MLEndPacket();
+  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
 
   // 並列モード
   ml.MLPutFunction("Set", 2);
   ml.MLPutSymbol("optParallel"); 
   ml.MLPutSymbol(parallel_mode ? "True" : "False");
+  ml.MLEndPacket();
+  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
 
   // 出力形式
   ml.MLPutFunction("Set", 2);
@@ -85,13 +94,18 @@ bool MathSimulator::simulate(const char mathlink[],
     ml.MLPutSymbol("fmtNumeric");
     break;
   }
+  ml.MLEndPacket();
+  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
 
   //   ml.MLPutFunction("Get", 1);
   //   ml.MLPutString("symbolic_simulator/HydLa.m"); 
-
+*/
   ml.MLPutFunction("ToExpression", 2);
   ml.MLPutString(math_source()); 
   ml.MLPutSymbol("InputForm"); 
+  ml.MLEndPacket();
+  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.MLNewPacket();
 
   //std::cout << math_source() << std::endl;
 
@@ -118,11 +132,11 @@ bool MathSimulator::simulate(const char mathlink[],
 
   }
 
-  CollectTellVisitor ctv; 
-  ctv.is_consinstent(ml);
-
   // ml.MLPutFunction("ToExpression", 1);
   // ml.MLPutString(interlanguage_sender.get_interlanguage().c_str());
+  
+  CollectTellVisitor ctv; 
+  ctv.is_consinstent(ml);
 
 
   ml.MLPutFunction("Exit", 0);

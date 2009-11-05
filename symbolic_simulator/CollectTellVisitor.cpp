@@ -1,6 +1,6 @@
 #include "CollectTellVisitor.h"
-#include "TreeVisitor.h"
-#include "mathlink_helper.h"
+
+#include <iostream>
 
 using namespace hydla::parse_tree;
 
@@ -9,15 +9,14 @@ namespace symbolic_simulator {
 
 bool CollectTellVisitor::is_consinstent(MathLink& ml)
 {
-//    ml.MLPutFunction("Equal", 2);
-    ml.MLPutSymbol("x");
-    //  ml.MLPutSymbol("x");
+  ml.MLPutFunction("Equal", 2);
+  ml.MLPutSymbol("x");
+  ml.MLPutSymbol("x");
+  ml.MLEndPacket();
 
     int p;
     while ((p = ml.MLNextPacket()) && p != RETURNPKT)
       ml.MLNewPacket();
-
-    std::cout << "type:" << ml.MLGetType() << std::endl;
 
     const char *sym;
     ml.MLGetSymbol(&sym);
