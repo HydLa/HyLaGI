@@ -7,6 +7,7 @@
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
+#include "CollectTellVisitor.h"
 
 using namespace std;
 using namespace boost;
@@ -117,8 +118,11 @@ bool MathSimulator::simulate(const char mathlink[],
 
   }
 
-  ml.MLPutFunction("ToExpression", 1);
-  ml.MLPutString(interlanguage_sender.get_interlanguage().c_str());
+  CollectTellVisitor ctv; 
+  ctv.is_consinstent(ml);
+
+  // ml.MLPutFunction("ToExpression", 1);
+  // ml.MLPutString(interlanguage_sender.get_interlanguage().c_str());
 
 
   ml.MLPutFunction("Exit", 0);
