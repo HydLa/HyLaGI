@@ -1,3 +1,9 @@
+(*
+ * 制約が無矛盾であるかをチェック
+ *)
+isConsistent[expr__, vars__] :=
+  If[Reduce[expr, vars] != False, 1, 0];
+
 (* $MaxExtraPrecision = Infinity *)
 SetOptions[$Output, PageWidth->Infinity];
 

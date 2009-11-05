@@ -136,7 +136,8 @@ bool MathSimulator::simulate(const char mathlink[],
   // ml.MLPutString(interlanguage_sender.get_interlanguage().c_str());
   
   CollectTellVisitor ctv; 
-  ctv.is_consinstent(ml);
+  ctv.is_consistent(ml);
+//  ctv.is_consistent(parser.parse_tree(), ml);
 
 
   ml.MLPutFunction("Exit", 0);

@@ -10,7 +10,8 @@ namespace symbolic_simulator {
 
 class CollectTellVisitor : public parse_tree::TreeVisitor {
 public:
-  bool is_consinstent(MathLink& ml);
+  bool is_consistent(MathLink& ml);
+//  bool is_consinstent(ParseTree& parse_tree, MathLink& ml);
 };
 
 } //namespace symbolic_simulator
