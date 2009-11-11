@@ -1,4 +1,5 @@
 #include "CollectTellVisitor.h"
+//#include "PacketChecker.h"
 
 #include <iostream>
 
@@ -10,7 +11,9 @@ namespace symbolic_simulator {
 
 CollectTellVisitor::CollectTellVisitor(ParseTree& parse_tree, MathLink& ml) :
   parse_tree_(parse_tree),
-  ml_(ml)
+  ml_(ml),
+  in_differential_(false),
+  in_differential_equality_(false)
 {}
 
 CollectTellVisitor::~CollectTellVisitor()
@@ -69,6 +72,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     std::cout << "=";
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    in_differential_equality_ = false;
   }
 
   void CollectTellVisitor::visit(boost::shared_ptr<UnEqual> node)               
@@ -78,7 +82,8 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     std::cout << "!=";
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    }
+    in_differential_equality_ = false;
+  }
 
   void CollectTellVisitor::visit(boost::shared_ptr<Less> node)                  
   {
@@ -87,6 +92,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     std::cout << "<";
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    in_differential_equality_ = false;
   }
 
   void CollectTellVisitor::visit(boost::shared_ptr<LessEqual> node)             
@@ -96,6 +102,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     std::cout << "<=";
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    in_differential_equality_ = false;
   }
 
   void CollectTellVisitor::visit(boost::shared_ptr<Greater> node)               
@@ -105,6 +112,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     std::cout << ">";
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    in_differential_equality_ = false;
   }
 
   void CollectTellVisitor::visit(boost::shared_ptr<GreaterEqual> node)          
@@ -114,6 +122,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
     std::cout << ">=";
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    in_differential_equality_ = false;
   }
 
   // 論理演算子
@@ -214,16 +223,27 @@ CollectTellVisitor::~CollectTellVisitor()
   // 微分
   void CollectTellVisitor::visit(boost::shared_ptr<Differential> node)          
   {
+/*
     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
     ml_.MLPutArgCount(1);      // this 1 is for the 'f'
     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
     ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
     ml_.MLPutSymbol("Derivative");
     ml_.MLPutInteger(1);
+*/
+    ml_.MLPutFunction("D", 2);
 
+    in_differential_equality_ = true;
+    in_differential_ = true;
     node_sptr chnode(node->get_child_node());
     chnode->accept(chnode, this);
     std::cout << "'";
+    if(in_differential_){
+        std::cout << "[t]"; // ht[t]' のようになるのを防ぐため
+    }
+
+    ml_.MLPutSymbol("t"); // D 関数の2個目の引数
+    in_differential_ = false;
   }
 
   // 左極限
@@ -238,9 +258,20 @@ CollectTellVisitor::~CollectTellVisitor()
   // 変数
   void CollectTellVisitor::visit(boost::shared_ptr<Variable> node)              
   {
-    ml_.MLPutSymbol(node->get_name().c_str());
+    ml_.MLPutFunction(node->get_name().c_str(), 1);
     vars_.insert(node->get_name().c_str());
     std::cout << node->get_name().c_str();
+    if(in_differential_equality_){
+      if(in_differential_){
+        ml_.MLPutSymbol("t");
+      }else{
+        ml_.MLPutSymbol("t");
+        std::cout << "[t]";
+      }
+    } else {
+      ml_.MLPutInteger(0);
+      std::cout << "[0]";
+    }
   }
 
   // 数字
@@ -291,12 +322,22 @@ bool CollectTellVisitor::is_consistent()
   std::cout << "vars: ";
   while(it!=vars_.end()){
     sym = (*it).c_str();
-    ml_.MLPutSymbol(sym);
-    std::cout << sym << " ";
+    ml_.MLPutFunction(sym, 1);
+    ml_.MLPutSymbol("t");
+    std::cout << sym << "[t] ";
     it++;
   }
 
+  // 要素の全削除
+  vars_.clear();
+
   std::cout << std::endl << std::endl;
+
+/*
+  // 返ってくるパケットを解析
+  PacketChecker pc(ml_);
+  pc.check();
+*/
 
   int p;
   while ((p = ml_.MLNextPacket()) && p != RETURNPKT) ml_.MLNewPacket();
@@ -307,6 +348,7 @@ bool CollectTellVisitor::is_consistent()
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   if(num==1) return true;
+
   return false;
 }
 

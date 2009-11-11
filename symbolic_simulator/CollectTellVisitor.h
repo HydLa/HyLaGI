@@ -83,6 +83,8 @@ private:
   MathLink& ml_;
   ParseTree& parse_tree_;
   std::set<std::string> vars_;
+  int in_differential_equality_;
+  int in_differential_;
 
 };
 

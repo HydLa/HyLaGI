@@ -1,8 +1,12 @@
 (*
  * 制約が無矛盾であるかをチェック
  *)
-isConsistent[expr__, vars__] :=
-  If[Reduce[expr, vars] != False, 1, 0];
+(*
+ * isConsistent[expr_, vars_] :=
+ *   If[Reduce[expr, vars] != False, 1, 0];
+ *)
+isConsistent[expr_, vars_] :=
+  If[DSolve[expr, vars, t] != {}, 1, 0];
 
 (* $MaxExtraPrecision = Infinity *)
 SetOptions[$Output, PageWidth->Infinity];
