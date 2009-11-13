@@ -65,32 +65,17 @@ public:
       MLDeinitialize(env_);
       env_ = 0;
     }
-  }
-  
-  char* replace_slash_zero_one_two(char* str) 
+  }  
+
+  /** 
+   * 指定されたタイプのパケット返ってくるまでスキップする
+   */ 
+  void skip_pkt_until(int pkt_name = RETURNPKT) 
   {
-    char crlf[] = "\\012";
-    char ht[]   = {10, 9, 0};
-
-    char *instance = str;
-    instance = strstr(instance, crlf);
-    while(instance) {
-      instance[0] = ' ';
-      instance[1] = ' ';
-      instance[2] = 13;
-      instance[3] = 10;
-      instance = strstr(instance, crlf);
+    int p;
+    while ((p = MLNextPacket()) && p != pkt_name) {
+      MLNewPacket();
     }
-    
-    instance = str;
-    instance = strstr(instance, ht);
-    while(instance) {
-      instance[0] = 13;
-      instance[1] = 10;
-      instance = strstr(instance, ht);
-    }
-
-    return str;
   }
 
   MLENV getEnv()  {return env_;}

@@ -49,8 +49,6 @@ bool MathSimulator::simulate(const char mathlink[],
     return false;
   }
 
-  int p;
-/*
   // 出力する画面の横幅の設定
   ml.MLPutFunction("SetOptions", 2);
   ml.MLPutSymbol("$Output"); 
@@ -58,28 +56,32 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutSymbol("PageWidth"); 
   ml.MLPutSymbol("Infinity"); 
   ml.MLEndPacket();
-  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.skip_pkt_until();
+  ml.MLNewPacket();
 
   // デバッグプリント
   ml.MLPutFunction("Set", 2);
   ml.MLPutSymbol("optUseDebugPrint"); 
   ml.MLPutSymbol(debug_mode ? "True" : "False");
   ml.MLEndPacket();
-  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.skip_pkt_until();
+  ml.MLNewPacket();
 
   // プロファイルモード
   ml.MLPutFunction("Set", 2);
   ml.MLPutSymbol("optUseProfile"); 
   ml.MLPutSymbol(profile_mode ? "True" : "False");
   ml.MLEndPacket();
-  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.skip_pkt_until();
+  ml.MLNewPacket();
 
   // 並列モード
   ml.MLPutFunction("Set", 2);
   ml.MLPutSymbol("optParallel"); 
   ml.MLPutSymbol(parallel_mode ? "True" : "False");
   ml.MLEndPacket();
-  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.skip_pkt_until();
+  ml.MLNewPacket();
 
   // 出力形式
   ml.MLPutFunction("Set", 2);
@@ -95,16 +97,17 @@ bool MathSimulator::simulate(const char mathlink[],
     break;
   }
   ml.MLEndPacket();
-  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.skip_pkt_until();
+  ml.MLNewPacket();
 
   //   ml.MLPutFunction("Get", 1);
   //   ml.MLPutString("symbolic_simulator/HydLa.m"); 
-*/
+
   ml.MLPutFunction("ToExpression", 2);
   ml.MLPutString(math_source()); 
   ml.MLPutSymbol("InputForm"); 
   ml.MLEndPacket();
-  while ((p = ml.MLNextPacket()) && p != RETURNPKT) ml.MLNewPacket();
+  ml.skip_pkt_until();
   ml.MLNewPacket();
 
   //std::cout << math_source() << std::endl;
@@ -115,21 +118,6 @@ bool MathSimulator::simulate(const char mathlink[],
   if(debug_mode) {
     std::cout << "#*** Interlanguage ***\n"; 
     std::cout << interlanguage_sender.get_interlanguage() << std::endl;
-
-//     ml.MLPutFunction("Print", 1);
-//     ml.MLPutFunction("InputForm", 1);
-//     ml.MLPutFunction("Hold", 1);
-
-//     ml.MLPutFunction("HydLaMain", 3);
-
-//     InterlanguageSender interlanguage_sender(ml);
-//     parser.dispatch(&interlanguage_sender);
-
-//     ml.MLPutFunction("ToExpression", 1);
-//     ml.MLPutString("{ht, v}");
-
-//     ml.MLPutInteger(1);
-
   }
 
   // ml.MLPutFunction("ToExpression", 1);
@@ -137,7 +125,6 @@ bool MathSimulator::simulate(const char mathlink[],
   
   CollectTellVisitor ctv(parser.parse_tree(), ml);
   ctv.is_consistent();
-
 
   ml.MLPutFunction("Exit", 0);
   ml.MLEndPacket();

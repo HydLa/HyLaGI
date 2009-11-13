@@ -8,10 +8,10 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
+CXX_OPT  += #-O2 -Wall #-pg
+
 ARFLAGS  := crus
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
-
-CXX_OPT  += -O2 -Wall
 
 SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp) 
 OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \

@@ -41,20 +41,20 @@ void HydLaParser::parse(std::istream& s)
 {
   clear_tree();
  
-  if(debug_dump_ ) std::cout << "#*** create ast tree ***\n";
+  if(debug_dump_ ) std::cout << "#*** AST Tree ***\n";
   create_ast(s);  
   if(debug_dump_ ) dump_ast(std::cout);
 
-  if(debug_dump_ ) std::cout << "#*** create parse tree ***\n";
+  if(debug_dump_ ) std::cout << "#*** Parse Tree ***\n";
   create_parse_tree();
   if(debug_dump_ ) dump_parse_tree(std::cout);
 
-  if(debug_dump_ ) std::cout << "#*** begin parse tree preprocessing ***\n";
+  if(debug_dump_ ) std::cout << "#*** Preprocessed Parse Tree ***\n";
   execute_preprocess();
   if(debug_dump_ ) dump_parse_tree(std::cout);
 
   if(debug_dump_ ) {
-    std::cout << "#*** variables ***\n";
+    std::cout << "#*** Variables ***\n";
     const variable_map_t &variable_map = parse_tree_.get_variable_map();
     variable_map_t::const_iterator it  = variable_map.begin();
     variable_map_t::const_iterator end = variable_map.end();

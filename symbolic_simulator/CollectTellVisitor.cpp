@@ -339,17 +339,14 @@ bool CollectTellVisitor::is_consistent()
   pc.check();
 */
 
-  int p;
-  while ((p = ml_.MLNextPacket()) && p != RETURNPKT) ml_.MLNewPacket();
+  ml_.skip_pkt_until();
 
   int num;
   ml_.MLGetInteger(&num);
   std::cout << "#num:" << num << std::endl;
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
-  if(num==1) return true;
-
-  return false;
+  return num==1;
 }
 
 

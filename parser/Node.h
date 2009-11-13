@@ -458,7 +458,7 @@ private:
   node_sptr child_;
 };
 
-#define DEFINE_BINARY_OP_NODE(NAME, OPNAME)                 \
+#define DEFINE_BINARY_OP_NODE(NAME)                         \
   class NAME : public BinaryNode {                          \
 public:                                                     \
 typedef boost::shared_ptr<NAME> node_type_sptr;             \
@@ -482,11 +482,13 @@ virtual node_sptr clone()                                   \
                                                             \
 virtual std::string to_string() const                       \
 {                                                           \
-  return std::string(OPNAME) + "[" + lhs_->to_string() + "," + rhs_->to_string() + "]"; \
+  return std::string(#NAME) + "[" +                         \
+    lhs_->to_string() + "," +                               \
+    rhs_->to_string() + "]";                                \
 }                                                           \
 }
 
-#define DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(NAME, OPNAME)       \
+#define DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(NAME)               \
   class NAME : public BinaryNode {                                \
 public:                                                           \
 typedef boost::shared_ptr<NAME> node_type_sptr;                   \
@@ -513,7 +515,9 @@ virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);   \
                                                                   \
 virtual std::string to_string() const                             \
 {                                                                 \
-  return std::string(OPNAME) + "[" + lhs_->to_string() + "," + rhs_->to_string() + "]"; \
+  return std::string(#NAME) + "[" +                               \
+          lhs_->to_string() + "," +                               \
+          rhs_->to_string() + "]";                                \
 }                                                                 \
 }
 
@@ -521,74 +525,74 @@ virtual std::string to_string() const                             \
 /**
  * 比較演算子「=」
  */
-DEFINE_BINARY_OP_NODE(Equal, "=");
+DEFINE_BINARY_OP_NODE(Equal);
 
 /**
  * 比較演算子「!=」
  */
-DEFINE_BINARY_OP_NODE(UnEqual, "!=");
+DEFINE_BINARY_OP_NODE(UnEqual);
 
 /**
  * 比較演算子「<」
  */
-DEFINE_BINARY_OP_NODE(Less, "<");
+DEFINE_BINARY_OP_NODE(Less);
 
 /**
  * 比較演算子「<=」
  */
-DEFINE_BINARY_OP_NODE(LessEqual, "<=");
+DEFINE_BINARY_OP_NODE(LessEqual);
 
 /**
  * 比較演算子「>」
  */
-DEFINE_BINARY_OP_NODE(Greater, ">");
+DEFINE_BINARY_OP_NODE(Greater);
 
 /**
  * 比較演算子「>=」
  */
-DEFINE_BINARY_OP_NODE(GreaterEqual, ">=");
+DEFINE_BINARY_OP_NODE(GreaterEqual);
 
 /**
  * 算術演算子「+」
  */
-DEFINE_BINARY_OP_NODE(Plus, "+");
+DEFINE_BINARY_OP_NODE(Plus);
 
 /**
  * 算術演算子「-」
  */
-DEFINE_BINARY_OP_NODE(Subtract, "-");
+DEFINE_BINARY_OP_NODE(Subtract);
 
 /**
  * 算術演算子「*」
  */
-DEFINE_BINARY_OP_NODE(Times, "*");
+DEFINE_BINARY_OP_NODE(Times);
 
 /**
  * 算術演算子「/」
  */
-DEFINE_BINARY_OP_NODE(Divide, "/");
+DEFINE_BINARY_OP_NODE(Divide);
 
 /**
  * 論理演算子「/\」（連言）
  */
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalAnd, "/\\");
+DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalAnd);
 
 /**
  * 論理演算子「\/」（選言）
  */
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalOr, "\\/");
+DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalOr);
 
 /**
  * 制約階層定義演算子
  * 並列制約「,」
  */ 
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Parallel, ",");
+DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Parallel);
 
 /**
  * 制約階層定義演算子
  * 弱制約「<<」
  */ 
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Weaker, "<<");
+DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Weaker);
 
 /**
  * 時相演算子「[]」(Always)
