@@ -11,6 +11,7 @@ isConsistent[expr_, vars_] :=
 (* $MaxExtraPrecision = Infinity *)
 SetOptions[$Output, PageWidth->Infinity];
 
+
 (*
  * main function
  *)

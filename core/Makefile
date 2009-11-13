@@ -1,18 +1,23 @@
 TARGET	 := ../hydla
 
-INCLUDES += -I. -I../parser -I../symbolic_simulator
+LIB_DIRS := parser constraint_hierarchy symbolic_simulator
+
+INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 INCLUDES += -I/usr/local/include/boost-1_38
 
+LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
-LDFLAGS	 += -L/usr/local/lib -L../parser -L../symbolic_simulator
+LDFLAGS	 += -L/usr/local/lib
 
-LIBS	 += -lhydla_symbolic_simulator -lhydla_parser -lboost_program_options
-LIBS	 += -lML32i3 -lm -lrt
+LIBS     += $(addprefix -lhydla_,$(LIB_DIRS))
+LIBS     += -lboost_program_options
+LIBS     += -lML32i3 -lm -lrt
+
 DEFINES  += 
 CXX_OPT  += 
 
-DEP_OBJECTS  := ../parser/libhydla_parser.a ../symbolic_simulator/libhydla_symbolic_simulator.a
+DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 
 include ../Makefile.common
 
