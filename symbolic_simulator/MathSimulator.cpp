@@ -56,7 +56,7 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutSymbol("PageWidth"); 
   ml.MLPutSymbol("Infinity"); 
   ml.MLEndPacket();
-  ml.skip_pkt_until();
+  ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
   // デバッグプリント
@@ -64,7 +64,7 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutSymbol("optUseDebugPrint"); 
   ml.MLPutSymbol(debug_mode ? "True" : "False");
   ml.MLEndPacket();
-  ml.skip_pkt_until();
+  ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
   // プロファイルモード
@@ -72,7 +72,7 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutSymbol("optUseProfile"); 
   ml.MLPutSymbol(profile_mode ? "True" : "False");
   ml.MLEndPacket();
-  ml.skip_pkt_until();
+  ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
   // 並列モード
@@ -80,7 +80,7 @@ bool MathSimulator::simulate(const char mathlink[],
   ml.MLPutSymbol("optParallel"); 
   ml.MLPutSymbol(parallel_mode ? "True" : "False");
   ml.MLEndPacket();
-  ml.skip_pkt_until();
+  ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
   // 出力形式
@@ -97,21 +97,22 @@ bool MathSimulator::simulate(const char mathlink[],
     break;
   }
   ml.MLEndPacket();
-  ml.skip_pkt_until();
+  ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
+  // HydLa.mの内容送信
   //   ml.MLPutFunction("Get", 1);
-  //   ml.MLPutString("symbolic_simulator/HydLa.m"); 
-
+  //   ml.MLPutString("symbolic_simulator/HydLa.m");
   ml.MLPutFunction("ToExpression", 2);
   ml.MLPutString(math_source()); 
   ml.MLPutSymbol("InputForm"); 
   ml.MLEndPacket();
-  ml.skip_pkt_until();
+  ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
   //std::cout << math_source() << std::endl;
 
+  // 中間言語送信
   InterlanguageSender interlanguage_sender(parser.parse_tree(), ml);
   interlanguage_sender.create_interlanguage(max_time);
 

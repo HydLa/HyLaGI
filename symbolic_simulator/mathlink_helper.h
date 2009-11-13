@@ -70,7 +70,7 @@ public:
   /** 
    * 指定されたタイプのパケット返ってくるまでスキップする
    */ 
-  void skip_pkt_until(int pkt_name = RETURNPKT) 
+  void skip_pkt_until(int pkt_name) 
   {
     int p;
     while ((p = MLNextPacket()) && p != pkt_name) {

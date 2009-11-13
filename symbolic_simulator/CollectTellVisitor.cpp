@@ -339,7 +339,7 @@ bool CollectTellVisitor::is_consistent()
   pc.check();
 */
 
-  ml_.skip_pkt_until();
+  ml_.skip_pkt_until(RETURNPKT);
 
   int num;
   ml_.MLGetInteger(&num);
