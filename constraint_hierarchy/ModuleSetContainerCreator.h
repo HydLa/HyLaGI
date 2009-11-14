@@ -12,11 +12,13 @@
 #include "TreeVisitor.h"
 
 #include "ModuleSet.h"
-#include "ModuleSetList.h"
 
 namespace hydla {
 namespace ch {
 
+/**
+ * Container型のモジュール集合の集合を表すクラスを構築するためのクラス
+ */
 template <class Container>
 class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
 public:
@@ -86,6 +88,9 @@ public:
     mod_set_stack_.back()->add_parallel(*lhs);
   }
 
+  /**
+   * 与えられたパースツリーを元にモジュール集合の集合を表すクラスを構築する
+   */
   container_sptr create_module_set_container(hydla::parse_tree::ParseTree* parse_tree)
   {
     assert(parse_tree != NULL);
@@ -100,9 +105,10 @@ public:
   }
 
 private:
-  
+  // 構築するために使用するパースツリー
   hydla::parse_tree::ParseTree* parse_tree_;
-  
+
+  // モジュール集合の集合を一時的に保存しておくスタック
   container_stack_t             mod_set_stack_;
 
   // 登録される制約モジュールの名前

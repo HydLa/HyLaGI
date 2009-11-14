@@ -37,21 +37,43 @@ public:
 
   ~ModuleSet();
 
-  std::string get_name() const ;
+  /**
+   * 集合(このクラス)の名前
+   */ 
+  std::string get_name() const;
 
+  /**
+   * このクラス同士の比較
+   * 含まれるモジュール数が少ないほど小さい
+   * モジュール数が同一の時は含まれているモジュール名により判断をおこなう
+   */ 
   int compare(ModuleSet& rhs) const;
 
+  /**
+   * 集合を出力する
+   */
   std::ostream& dump(std::ostream& s)
   {
     s << get_name();
     return s;
   }
 
+  /**
+   * 集合の各制約モジュールに対してTreeVisitorの適用
+   */ 
+  void dispatch(hydla::parse_tree::TreeVisitor* visitor)
+  {
+    module_list_t::iterator it  = module_list_.begin();
+    module_list_t::iterator end = module_list_.end();
+    for(; it!=end; ++it) {
+      (it->second)->accept(it->second, visitor);
+    }
+  }
+
 private:
   module_list_t module_list_;
 };
 
-bool operator<(ModuleSet& lhs, ModuleSet& rhs);
 std::ostream& operator<<(std::ostream& s, ModuleSet& m);
 
 } // namespace ch

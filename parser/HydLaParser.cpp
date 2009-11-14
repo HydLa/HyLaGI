@@ -19,16 +19,15 @@ using namespace hydla::grammer_rule;
 
 namespace hydla {
 HydLaParser::HydLaParser(node_factory_sptr node_factory) :
-  node_factory_(node_factory),
-  debug_dump_(false)
-
+  debug_dump_(false),
+  node_factory_(node_factory)
 {
 }
   
 HydLaParser::HydLaParser(node_factory_sptr node_factory, 
                          bool debug_dump) :
-  node_factory_(node_factory),
-  debug_dump_(debug_dump)
+  debug_dump_(debug_dump),
+  node_factory_(node_factory)
 {
 }
   

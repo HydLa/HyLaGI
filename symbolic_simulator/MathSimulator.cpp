@@ -3,7 +3,7 @@
 #include <iostream>
 #include <boost/xpressive/xpressive.hpp>
 //#include <boost/thread.hpp>
-#include "mathlink_helper.h"
+
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
@@ -13,16 +13,10 @@ using namespace std;
 using namespace boost;
 using namespace boost::xpressive;
 
+using namespace hydla::ch;
+
 namespace hydla{
 namespace symbolic_simulator {
-
-MathSimulator::MathSimulator()
-{
-}
-
-MathSimulator::~MathSimulator()
-{
-}
 
 struct rawchar_formatter
 {
@@ -34,130 +28,137 @@ struct rawchar_formatter
   }
 };
 
-
-bool MathSimulator::simulate(const char mathlink[], 
-  HydLaParser& parser,
-  bool debug_mode,
-  std::string max_time,
-  bool profile_mode,
-  bool parallel_mode,
-  OutputFormat output_format)
+MathSimulator::MathSimulator()
 {
-  MathLink ml;
-  if(!ml.init(mathlink)) {
+}
+
+MathSimulator::~MathSimulator()
+{
+}
+
+void MathSimulator::init(Opts& opts)
+{
+  if(!ml_.init(opts.mathlink.c_str())) {
     std::cerr << "can not link" << std::endl;
-    return false;
+    exit(-1);
   }
 
   // 出力する画面の横幅の設定
-  ml.MLPutFunction("SetOptions", 2);
-  ml.MLPutSymbol("$Output"); 
-  ml.MLPutFunction("Rule", 2);
-  ml.MLPutSymbol("PageWidth"); 
-  ml.MLPutSymbol("Infinity"); 
-  ml.MLEndPacket();
-  ml.skip_pkt_until(RETURNPKT);
-  ml.MLNewPacket();
+  ml_.MLPutFunction("SetOptions", 2);
+  ml_.MLPutSymbol("$Output"); 
+  ml_.MLPutFunction("Rule", 2);
+  ml_.MLPutSymbol("PageWidth"); 
+  ml_.MLPutSymbol("Infinity"); 
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   // デバッグプリント
-  ml.MLPutFunction("Set", 2);
-  ml.MLPutSymbol("optUseDebugPrint"); 
-  ml.MLPutSymbol(debug_mode ? "True" : "False");
-  ml.MLEndPacket();
-  ml.skip_pkt_until(RETURNPKT);
-  ml.MLNewPacket();
+  ml_.MLPutFunction("Set", 2);
+  ml_.MLPutSymbol("optUseDebugPrint"); 
+  ml_.MLPutSymbol(opts.debug_mode ? "True" : "False");
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   // プロファイルモード
-  ml.MLPutFunction("Set", 2);
-  ml.MLPutSymbol("optUseProfile"); 
-  ml.MLPutSymbol(profile_mode ? "True" : "False");
-  ml.MLEndPacket();
-  ml.skip_pkt_until(RETURNPKT);
-  ml.MLNewPacket();
+  ml_.MLPutFunction("Set", 2);
+  ml_.MLPutSymbol("optUseProfile"); 
+  ml_.MLPutSymbol(opts.profile_mode ? "True" : "False");
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   // 並列モード
-  ml.MLPutFunction("Set", 2);
-  ml.MLPutSymbol("optParallel"); 
-  ml.MLPutSymbol(parallel_mode ? "True" : "False");
-  ml.MLEndPacket();
-  ml.skip_pkt_until(RETURNPKT);
-  ml.MLNewPacket();
+  ml_.MLPutFunction("Set", 2);
+  ml_.MLPutSymbol("optParallel"); 
+  ml_.MLPutSymbol(opts.parallel_mode ? "True" : "False");
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   // 出力形式
-  ml.MLPutFunction("Set", 2);
-  ml.MLPutSymbol("optOutputFormat"); 
-  switch(output_format) {
+  ml_.MLPutFunction("Set", 2);
+  ml_.MLPutSymbol("optOutputFormat"); 
+  switch(opts.output_format) {
   case fmtTFunction:
-    ml.MLPutSymbol("fmtTFunction");
+    ml_.MLPutSymbol("fmtTFunction");
     break;
 
   case fmtNumeric:
   default:
-    ml.MLPutSymbol("fmtNumeric");
+    ml_.MLPutSymbol("fmtNumeric");
     break;
   }
-  ml.MLEndPacket();
-  ml.skip_pkt_until(RETURNPKT);
-  ml.MLNewPacket();
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   // HydLa.mの内容送信
-  //   ml.MLPutFunction("Get", 1);
-  //   ml.MLPutString("symbolic_simulator/HydLa.m");
-  ml.MLPutFunction("ToExpression", 2);
-  ml.MLPutString(math_source()); 
-  ml.MLPutSymbol("InputForm"); 
-  ml.MLEndPacket();
-  ml.skip_pkt_until(RETURNPKT);
-  ml.MLNewPacket();
+  //   ml_.MLPutFunction("Get", 1);
+  //   ml_.MLPutString("symbolic_simulator/HydLa.m");
+  ml_.MLPutFunction("ToExpression", 2);
+  ml_.MLPutString(math_source()); 
+  ml_.MLPutSymbol("InputForm"); 
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+}
 
-  //std::cout << math_source() << std::endl;
+bool MathSimulator::simulate(
+  HydLaParser& parser,
+  boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
+  Opts& opts)
+{
+  init(opts);
+
+  //module_set_container_ = msc;
 
   // 中間言語送信
-  InterlanguageSender interlanguage_sender(parser.parse_tree(), ml);
-  interlanguage_sender.create_interlanguage(max_time);
+  InterlanguageSender interlanguage_sender(parser.parse_tree(), ml_);
+  interlanguage_sender.create_interlanguage(opts.max_time);
 
-  if(debug_mode) {
+  if(opts.debug_mode) {
     std::cout << "#*** Interlanguage ***\n"; 
     std::cout << interlanguage_sender.get_interlanguage() << std::endl;
   }
 
-  // ml.MLPutFunction("ToExpression", 1);
-  // ml.MLPutString(interlanguage_sender.get_interlanguage().c_str());
+  //ml_.MLPutFunction("ToExpression", 1);
+  //ml_.MLPutString(interlanguage_sender.get_interlanguage().c_str());
   
-  CollectTellVisitor ctv(parser.parse_tree(), ml);
-  ctv.is_consistent();
+  msc->dispatch(this);
 
-  ml.MLPutFunction("Exit", 0);
-  ml.MLEndPacket();
+  ml_.MLPutFunction("Exit", 0);
+  ml_.MLEndPacket();
 
   sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
   std::ostream_iterator< char > out_iter( std::cout );
   rawchar_formatter rfmt;
 
   int pkt;
-  while((pkt = ml.MLNextPacket()) != ILLEGALPKT) {
+  while((pkt = ml_.MLNextPacket()) != ILLEGALPKT) {
     switch(pkt) 
     {
     case RETURNPKT:
       {
-        int rpt = ml.MLGetType();
+        int rpt = ml_.MLGetType();
         switch(rpt) 
         {
         case MLTKSTR: 
           {
             const char *str;
-            ml.MLGetString(&str);
+            ml_.MLGetString(&str);
             std::cout << "#string:" << str << std::endl;
-            ml.MLReleaseString(str);
+            ml_.MLReleaseString(str);
             break;
           }
 
         case MLTKSYM: 
           {
             const char *sym;
-            ml.MLGetSymbol(&sym);
+            ml_.MLGetSymbol(&sym);
             //std::cout << "#symbol:" << sym << std::endl;
-            ml.MLReleaseSymbol(sym);
+            ml_.MLReleaseSymbol(sym);
             break;
           }
 
@@ -165,7 +166,7 @@ bool MathSimulator::simulate(const char mathlink[],
         case MLTKOLDINT: 
           {	  
             int q;
-            ml.MLGetInteger(&q);
+            ml_.MLGetInteger(&q);
             std::cout << "#integer:" << q << std::endl;
             break;
           }
@@ -185,29 +186,29 @@ bool MathSimulator::simulate(const char mathlink[],
     case TEXTPKT: 
       {
         const char *s;
-        ml.MLGetString(&s);
+        ml_.MLGetString(&s);
         string str(s);
         regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
         std::cout << std::flush;
-        ml.MLReleaseString(s);
+        ml_.MLReleaseString(s);
         break;
       }
 
     case MESSAGEPKT: 
       {
         const char *sym, *tag;
-        ml.MLGetSymbol(&sym);
-        ml.MLGetString(&tag);
+        ml_.MLGetSymbol(&sym);
+        ml_.MLGetString(&tag);
         std::cout << "#message:" << sym << ":" << tag << std::endl;
-        ml.MLReleaseSymbol(sym);
-        ml.MLReleaseString(tag);
+        ml_.MLReleaseSymbol(sym);
+        ml_.MLReleaseString(tag);
         break;
       }
 
     case SYNTAXPKT: 
       {
         int q;
-        ml.MLGetInteger(&q);
+        ml_.MLGetInteger(&q);
         std::cout << "#syntax:" << q << std::endl;
         break; 
       }
@@ -215,20 +216,32 @@ bool MathSimulator::simulate(const char mathlink[],
     case INPUTNAMEPKT: 
       {
         const char *name;
-        ml.MLGetString(&name);
+        ml_.MLGetString(&name);
         //std::cout << "#inputname:" << name << std::endl;
-        ml.MLReleaseString(name);
+        ml_.MLReleaseString(name);
         break;
       }
 
     default:
       std::cout << "#unknown packet:" << pkt << std::endl;
     }
-    ml.MLNewPacket();
+    ml_.MLNewPacket();
   }
 
   return true;
 }
+
+bool MathSimulator::test_module_set(module_set_sptr ms)
+{
+  std::cout << ms->get_name() << std::endl;
+
+  //CollectTellVisitor ctv(parser.parse_tree(), ml_);
+  //ctv.is_consistent();
+
+  
+  return false;
+}
+
 
 } //namespace symbolic_simulator
 } //namespace hydla

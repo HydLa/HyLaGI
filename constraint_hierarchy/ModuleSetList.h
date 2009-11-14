@@ -4,7 +4,8 @@
 #include <vector>
 
 #include "ModuleSet.h"
-
+#include "ModuleSetContainer.h"
+#include "ModuleSetTester.h"
 
 namespace hydla {
 namespace ch {
@@ -16,7 +17,7 @@ namespace ch {
  * 参照のこと
  *
  */
-class ModuleSetList {
+class ModuleSetList : public ModuleSetContainer {
 public:
   typedef std::vector<module_set_sptr> module_set_list_t;
 
@@ -38,6 +39,11 @@ public:
    * 集合を出力する
    */
   std::ostream& dump(std::ostream& s);
+
+  /**
+   * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
+   */
+  virtual bool dispatch(ModuleSetTester* tester, int threads = 1);
 
 private:
   module_set_list_t module_set_list_;

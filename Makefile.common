@@ -8,7 +8,7 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-CXX_OPT  += #-O2 -Wall #-pg
+CXX_OPT  += -Wall #-O2 #-pg
 
 ARFLAGS  := crus
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)

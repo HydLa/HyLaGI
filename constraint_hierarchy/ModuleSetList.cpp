@@ -2,9 +2,20 @@
 
 #include <iostream>
 #include <algorithm>
+#include <boost/lambda/lambda.hpp>
+
+using namespace boost::lambda;
 
 namespace hydla {
 namespace ch {
+
+class ModuleSetComparator {
+public:
+  bool operator()(const module_set_sptr &lhs, const module_set_sptr &rhs) 
+  {
+    return lhs->compare(*rhs) > 0;
+  }
+};
 
 ModuleSetList::ModuleSetList()
 {}
@@ -42,8 +53,7 @@ void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list)
     }
   }
 
-
-  sort(new_list.begin(), new_list.end());
+  sort(new_list.begin(), new_list.end(), ModuleSetComparator());
 
   module_set_list_.swap(new_list);
 }
@@ -71,7 +81,7 @@ void ModuleSetList::add_weak(ModuleSetList& weak_module_set_list)
     }
   }
 
-  sort(new_list.begin(), new_list.end());
+  sort(new_list.begin(), new_list.end(), ModuleSetComparator());
 
   module_set_list_.swap(new_list);
 }
@@ -82,13 +92,24 @@ std::ostream& ModuleSetList::dump(std::ostream& s)
   module_set_list_t::iterator end = module_set_list_.end();
   
   s << "{";
-  if(it!=end) s << "{" << **(it++) << "}";
-  for(; it!=end; ++it) {
-    s << ", {" << **it << "}";
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << ", " << **(it++);
   }
   s << "}";
   return s;
 }
+
+bool ModuleSetList::dispatch(ModuleSetTester* tester, int threads)
+{
+  module_set_list_t::iterator it  = module_set_list_.begin();
+  module_set_list_t::iterator end = module_set_list_.end();
+  while(it!=end) {
+    if(tester->test_module_set(*it++)) return true;
+  }
+  return false;
+}
+
 
 std::ostream& operator<<(std::ostream& s, ModuleSetList& m)
 {

@@ -1,7 +1,7 @@
 MAKE_TYPE := library
 
 TARGET	 := libhydla_symbolic_simulator.a
-INCLUDES += -I. -I../parser
+INCLUDES += -I. -I../parser -I../constraint_hierarchy
 INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LIBS	 += -lML32i3 -lm -lrt

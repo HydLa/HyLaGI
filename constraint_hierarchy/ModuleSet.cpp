@@ -1,5 +1,6 @@
 #include "ModuleSet.h"
 
+#include <iostream>
 #include <algorithm>
 
 #include <boost/lambda/lambda.hpp>
@@ -32,11 +33,13 @@ std::string ModuleSet::get_name() const
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
 
+  str += "{";
   if(it!=end) str += (it++)->first;
   for(; it!=end; ++it) {
-    str += " /\\ ";
+    str += ", ";
     str += it->first;
   }
+  str += "}";
   return str;
 }
 
@@ -46,16 +49,11 @@ int ModuleSet::compare(ModuleSet& rhs) const
   module_list_t::const_iterator this_end = module_list_.end();
   module_list_t::const_iterator rhs_it   = rhs.module_list_.begin();
   
-  int comp = module_list_.size() - rhs.module_list_.size();
-  while(comp==0 && (this_it++)!=(this_end++)) {
-    comp = this_it->first.compare(rhs_it->first);
+  int comp = (int)module_list_.size() - rhs.module_list_.size();
+  while(comp==0 && this_it!=this_end) {
+    comp = (this_it++)->first.compare((rhs_it++)->first);
   }
   return comp;
-}
-
-bool operator<(ModuleSet& lhs, ModuleSet& rhs)
-{
-  return lhs.compare(rhs) < 0;
 }
 
 std::ostream& operator<<(std::ostream& s, ModuleSet& m)

@@ -72,25 +72,25 @@ void hydla_main(int argc, char* argv[])
   }
 
   // シミュレーション開始
-  MathSimulator::OutputFormat output_format;
+  MathSimulator::Opts msopts;
+
   if(po.get<std::string>("output-format") == "t") {
-    output_format = MathSimulator::fmtTFunction;
+    msopts.output_format = MathSimulator::fmtTFunction;
   } else if(po.get<std::string>("output-format") == "n"){
-    output_format = MathSimulator::fmtNumeric; 
+    msopts.output_format = MathSimulator::fmtNumeric; 
   } else {
     std::cerr << "invalid option - output format" << std::endl;
     return;
   }
 
+  msopts.mathlink      = po.get<std::string>("mathlink");
+  msopts.debug_mode    = debug_mode;
+  msopts.max_time      = po.get<std::string>("simulation-time");
+  msopts.profile_mode  = po.count("profile")>0;
+  msopts.parallel_mode = po.count("parallel")>0;
+
   MathSimulator ms;
-  ms.simulate(po.get<std::string>("mathlink").c_str(), 
-    hp,
-    debug_mode,
-    po.get<std::string>("simulation-time"),
-    po.count("profile")>0,
-    po.count("parallel")>0,
-    output_format);
-  
+  ms.simulate(hp, msl, msopts);
 }
 
 int main(int argc, char* argv[]) 
