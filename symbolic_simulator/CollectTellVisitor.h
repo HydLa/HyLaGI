@@ -20,24 +20,24 @@ public:
 
   bool is_consistent();
 
-  // ÄêµÁ
+  // ’è‹`
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<ProgramDefinition> node);
 
-  // ¸Æ¤Ó½Ğ¤·
+  // ŒÄ‚Ño‚µ
   virtual void visit(boost::shared_ptr<ConstraintCaller> node);
   virtual void visit(boost::shared_ptr<ProgramCaller> node);     
 
-  // À©Ìó¼°
+  // §–ñ®
   virtual void visit(boost::shared_ptr<Constraint> node);
 
-  // AskÀ©Ìó
+  // Ask§–ñ
   virtual void visit(boost::shared_ptr<Ask> node);
 
-  // TellÀ©Ìó
+  // Tell§–ñ
   virtual void visit(boost::shared_ptr<Tell> node);
 
-  // Èæ³Ó±é»»»Ò
+  // ”äŠr‰‰Zq
   virtual void visit(boost::shared_ptr<Equal> node);
   virtual void visit(boost::shared_ptr<UnEqual> node);
   virtual void visit(boost::shared_ptr<Less> node);
@@ -45,37 +45,37 @@ public:
   virtual void visit(boost::shared_ptr<Greater> node);
   virtual void visit(boost::shared_ptr<GreaterEqual> node);
 
-  // ÏÀÍı±é»»»Ò
+  // ˜_—‰‰Zq
   virtual void visit(boost::shared_ptr<LogicalAnd> node);
   virtual void visit(boost::shared_ptr<LogicalOr> node);
 
-  // »»½ÑÆó¹à±é»»»Ò
+  // Zp“ñ€‰‰Zq
   virtual void visit(boost::shared_ptr<Plus> node);
   virtual void visit(boost::shared_ptr<Subtract> node);
   virtual void visit(boost::shared_ptr<Times> node);
   virtual void visit(boost::shared_ptr<Divide> node);
 
-  // »»½ÑÃ±¹à±é»»»Ò
+  // Zp’P€‰‰Zq
   virtual void visit(boost::shared_ptr<Negative> node);
   virtual void visit(boost::shared_ptr<Positive> node);
 
-  // À©Ìó³¬ÁØÄêµÁ±é»»»Ò
+  // §–ñŠK‘w’è‹`‰‰Zq
   virtual void visit(boost::shared_ptr<Weaker> node);
   virtual void visit(boost::shared_ptr<Parallel> node);
 
-  // »şÁê±é»»»Ò
+  // ‘Š‰‰Zq
   virtual void visit(boost::shared_ptr<Always> node);
 
-  // ÈùÊ¬
+  // ”÷•ª
   virtual void visit(boost::shared_ptr<Differential> node);
 
-  // º¸¶Ë¸Â
+  // ¶‹ÉŒÀ
   virtual void visit(boost::shared_ptr<Previous> node);
   
-  // ÊÑ¿ô
+  // •Ï”
   virtual void visit(boost::shared_ptr<Variable> node);
 
-  // ¿ô»ú
+  // ”š
   virtual void visit(boost::shared_ptr<Number> node);
 
 

@@ -19,11 +19,11 @@ CollectTellVisitor::CollectTellVisitor(ParseTree& parse_tree, MathLink& ml) :
 CollectTellVisitor::~CollectTellVisitor()
 {}
 
-  // ÄêµÁ
+  // ’è‹`
   void CollectTellVisitor::visit(boost::shared_ptr<ConstraintDefinition> node)  {}
   void CollectTellVisitor::visit(boost::shared_ptr<ProgramDefinition> node)     {}
 
-  // ¸Æ¤Ó½Ğ¤·
+  // ŒÄ‚Ño‚µ
   void CollectTellVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      
   {
     node_sptr chnode(node->get_child_node());
@@ -36,7 +36,7 @@ CollectTellVisitor::~CollectTellVisitor()
     chnode->accept(chnode, this);
   }
 
-  // À©Ìó¼°
+  // §–ñ®
   void CollectTellVisitor::visit(boost::shared_ptr<Constraint> node)            
   {
     //ml_MLPutFunction("unit", 1);
@@ -45,14 +45,14 @@ CollectTellVisitor::~CollectTellVisitor()
     chnode->accept(chnode, this);
   }
 
-  // AskÀ©Ìó
+  // Ask§–ñ
   void CollectTellVisitor::visit(boost::shared_ptr<Ask> node)                   
   {
     //ml_MLPutFunction("ask", 2);
     
   }
 
-  // TellÀ©Ìó
+  // Tell§–ñ
   void CollectTellVisitor::visit(boost::shared_ptr<Tell> node)                  
   {
     //ml_.MLPutFunction("tell", 1);
@@ -64,7 +64,7 @@ CollectTellVisitor::~CollectTellVisitor()
     std::cout << std::endl;
   }
 
-  // Èæ³Ó±é»»»Ò
+  // ”äŠr‰‰Zq
   void CollectTellVisitor::visit(boost::shared_ptr<Equal> node)                 
   {
     ml_.MLPutFunction("Equal", 2);
@@ -125,7 +125,7 @@ CollectTellVisitor::~CollectTellVisitor()
     in_differential_equality_ = false;
   }
 
-  // ÏÀÍı±é»»»Ò
+  // ˜_—‰‰Zq
   void CollectTellVisitor::visit(boost::shared_ptr<LogicalAnd> node)            
   {
     //ml_.MLPutFunction("And, 2);
@@ -142,7 +142,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
   }
   
-  // »»½ÑÆó¹à±é»»»Ò
+  // Zp“ñ€‰‰Zq
   void CollectTellVisitor::visit(boost::shared_ptr<Plus> node)                  
   {
     ml_.MLPutFunction("Plus", 2);
@@ -179,7 +179,7 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
   }
   
-  // »»½ÑÃ±¹à±é»»»Ò
+  // Zp’P€‰‰Zq
   void CollectTellVisitor::visit(boost::shared_ptr<Negative> node)              
   {       
     ml_.MLPutFunction("Minus", 1);
@@ -195,10 +195,10 @@ CollectTellVisitor::~CollectTellVisitor()
     chnode->accept(chnode, this);
   }
 
-  // À©Ìó³¬ÁØÄêµÁ±é»»»Ò
+  // §–ñŠK‘w’è‹`‰‰Zq
   void CollectTellVisitor::visit(boost::shared_ptr<Weaker> node)                
   {
-    // µÕ¤Ë¤·¤ÆÁ÷¿®
+    // ‹t‚É‚µ‚Ä‘—M
     //ml_.MLPutFunction("order", 2);
     
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
@@ -213,14 +213,14 @@ CollectTellVisitor::~CollectTellVisitor()
     node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
   }
 
-  // »şÁê±é»»»Ò
+  // ‘Š‰‰Zq
   void CollectTellVisitor::visit(boost::shared_ptr<Always> node)                
   {
     node_sptr chnode(node->get_child_node());
     chnode->accept(chnode, this);
   }
 
-  // ÈùÊ¬
+  // ”÷•ª
   void CollectTellVisitor::visit(boost::shared_ptr<Differential> node)          
   {
 /*
@@ -239,14 +239,14 @@ CollectTellVisitor::~CollectTellVisitor()
     chnode->accept(chnode, this);
     std::cout << "'";
     if(in_differential_){
-        std::cout << "[t]"; // ht[t]' ¤Î¤è¤¦¤Ë¤Ê¤ë¤Î¤òËÉ¤°¤¿¤á
+        std::cout << "[t]"; // ht[t]' ‚Ì‚æ‚¤‚É‚È‚é‚Ì‚ğ–h‚®‚½‚ß
     }
 
-    ml_.MLPutSymbol("t"); // D ´Ø¿ô¤Î2¸ÄÌÜ¤Î°ú¿ô
+    ml_.MLPutSymbol("t"); // D ŠÖ”‚Ì2ŒÂ–Ú‚Ìˆø”
     in_differential_ = false;
   }
 
-  // º¸¶Ë¸Â
+  // ¶‹ÉŒÀ
   void CollectTellVisitor::visit(boost::shared_ptr<Previous> node)              
   {
     //ml_.MLPutFunction("prev", 1);
@@ -255,7 +255,7 @@ CollectTellVisitor::~CollectTellVisitor()
     std::cout << "-";
   }
   
-  // ÊÑ¿ô
+  // •Ï”
   void CollectTellVisitor::visit(boost::shared_ptr<Variable> node)              
   {
     ml_.MLPutFunction(node->get_name().c_str(), 1);
@@ -274,7 +274,7 @@ CollectTellVisitor::~CollectTellVisitor()
     }
   }
 
-  // ¿ô»ú
+  // ”š
   void CollectTellVisitor::visit(boost::shared_ptr<Number> node)                
   {    
     ml_.MLPutInteger(atoi(node->get_number().c_str()));
@@ -303,18 +303,18 @@ bool CollectTellVisitor::is_consistent()
 */
 
 
-  // isConsistent[expr, vars]¤òÅÏ¤·¤¿¤¤
+  // isConsistent[expr, vars]‚ğ“n‚µ‚½‚¢
   ml_.MLPutFunction("isConsistent", 2);
 
 
-  // ¥Ñ¡¼¥¹¥Ä¥ê¡¼¤«¤éexpr¤òÆÀ¤ÆMathematica¤ËÅÏ¤¹
+  // ƒp[ƒXƒcƒŠ[‚©‚çexpr‚ğ“¾‚ÄMathematica‚É“n‚·
   parse_tree_.dispatch(this);
 
-  // ºÇ¸å¤Ë¶õ¤Î¥ê¥¹¥È¤ò¤¯¤Ã¤Ä¤±¤ë
+  // ÅŒã‚É‹ó‚ÌƒŠƒXƒg‚ğ‚­‚Á‚Â‚¯‚é
   ml_.MLPutFunction("List", 0);
 
 
-  // vars¤òÅÏ¤¹
+  // vars‚ğ“n‚·
   int var_num = vars_.size();
   ml_.MLPutFunction("List", var_num);
   std::set<std::string>::iterator it = vars_.begin();
@@ -328,13 +328,13 @@ bool CollectTellVisitor::is_consistent()
     it++;
   }
 
-  // Í×ÁÇ¤ÎÁ´ºï½ü
+  // —v‘f‚Ì‘Síœ
   vars_.clear();
 
   std::cout << std::endl << std::endl;
 
 /*
-  // ÊÖ¤Ã¤Æ¤¯¤ë¥Ñ¥±¥Ã¥È¤ò²òÀÏ
+  // •Ô‚Á‚Ä‚­‚éƒpƒPƒbƒg‚ğ‰ğÍ
   PacketChecker pc(ml_);
   pc.check();
 */
@@ -345,7 +345,7 @@ bool CollectTellVisitor::is_consistent()
   ml_.MLGetInteger(&num);
   std::cout << "#num:" << num << std::endl;
   
-  // Mathematica¤«¤é1¡ÊTrue¤òÉ½¤¹¡Ë¤¬ÊÖ¤ì¤Ğtrue¤ò¡¢0¡ÊFalse¤òÉ½¤¹¡Ë¤¬ÊÖ¤ì¤Ğfalse¤òÊÖ¤¹
+  // Mathematica‚©‚ç1iTrue‚ğ•\‚·j‚ª•Ô‚ê‚Îtrue‚ğA0iFalse‚ğ•\‚·j‚ª•Ô‚ê‚Îfalse‚ğ•Ô‚·
   return num==1;
 }
 

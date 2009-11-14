@@ -11,24 +11,24 @@ TreeVisitor::TreeVisitor()
 TreeVisitor::~TreeVisitor()
 {}
 
-// ÄêµÁ
+// ’è‹`
 void TreeVisitor::visit(boost::shared_ptr<ConstraintDefinition> node)  {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<ProgramDefinition> node)     {assert(0);}
 
-// ¸Æ¤Ó½Ğ¤·
+// ŒÄ‚Ño‚µ
 void TreeVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<ProgramCaller> node)         {assert(0);}
 
-// À©Ìó¼°
+// §–ñ®
 void TreeVisitor::visit(boost::shared_ptr<Constraint> node)            {assert(0);}
 
-// AskÀ©Ìó
+// Ask§–ñ
 void TreeVisitor::visit(boost::shared_ptr<Ask> node)                   {assert(0);}
 
-// TellÀ©Ìó
+// Tell§–ñ
 void TreeVisitor::visit(boost::shared_ptr<Tell> node)                  {assert(0);}
 
-// Èæ³Ó±é»»»Ò
+// ”äŠr‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Equal> node)                 {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<UnEqual> node)               {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Less> node)                  {assert(0);}
@@ -36,37 +36,37 @@ void TreeVisitor::visit(boost::shared_ptr<LessEqual> node)             {assert(0
 void TreeVisitor::visit(boost::shared_ptr<Greater> node)               {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<GreaterEqual> node)          {assert(0);}
 
-// ÏÀÍı±é»»»Ò
+// ˜_—‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<LogicalAnd> node)            {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<LogicalOr> node)             {assert(0);}
   
-// »»½ÑÆó¹à±é»»»Ò
+// Zp“ñ€‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Plus> node)                  {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Subtract> node)              {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Times> node)                 {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Divide> node)                {assert(0);}
   
-// »»½ÑÃ±¹à±é»»»Ò
+// Zp’P€‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Negative> node)              {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Positive> node)              {assert(0);}
   
-// À©Ìó³¬ÁØÄêµÁ±é»»»Ò
+// §–ñŠK‘w’è‹`‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Weaker> node)                {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Parallel> node)              {assert(0);}
 
-// »şÁê±é»»»Ò
+// ‘Š‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Always> node)                {assert(0);}
   
-// ÈùÊ¬
+// ”÷•ª
 void TreeVisitor::visit(boost::shared_ptr<Differential> node)          {assert(0);}
 
-// º¸¶Ë¸Â
+// ¶‹ÉŒÀ
 void TreeVisitor::visit(boost::shared_ptr<Previous> node)              {assert(0);}
   
-// ÊÑ¿ô
+// •Ï”
 void TreeVisitor::visit(boost::shared_ptr<Variable> node)              {assert(0);}
 
-// ¿ô»ú
+// ”š
 void TreeVisitor::visit(boost::shared_ptr<Number> node)                {assert(0);}
 
 } //namespace parse_tree
