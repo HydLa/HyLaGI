@@ -372,7 +372,7 @@ public:
   
   virtual std::string to_string() const 
   {
-    return "constraint[" + child_->to_string() + "]";
+    return "Constraint[" + child_->to_string() + "]";
   }
 
 private:
@@ -404,7 +404,7 @@ public:
   
   virtual std::string to_string() const 
   {
-    return "tell[" + child_->to_string() + "]";
+    return "Tell[" + child_->to_string() + "]";
   }
 
 private:
@@ -443,7 +443,9 @@ public:
   
   virtual std::string to_string() const 
   {
-    return guard_->to_string() + "=>" + child_->to_string();
+    return "Ask[" + 
+      guard_->to_string() + "=>" + 
+      child_->to_string() + "]";
   }
 
   // specific functions
@@ -622,7 +624,7 @@ public:
 
   virtual std::string to_string() const
   {
-    return "[](" + child_->to_string() + ")";
+    return "Always[" + child_->to_string() + "]";
   }
 };
 
@@ -657,7 +659,7 @@ public:
 
   virtual std::string to_string() const
   {
-    return "+" + child_->to_string();
+    return "Positive[" + child_->to_string() + "]";
   }
 };
 
@@ -692,7 +694,7 @@ public:
 
   virtual std::string to_string() const
   {
-    return "-" + child_->to_string();
+    return "Negative[" + child_->to_string() + "]";
   }
 };
 
@@ -729,7 +731,7 @@ public:
 
   virtual std::string to_string() const
   {
-    return child_->to_string() + "'";
+    return "Differential[" + child_->to_string() + "]";
   }
 };
 
@@ -764,7 +766,7 @@ public:
 
   virtual std::string to_string() const
   {
-    return child_->to_string() + "-";
+    return "Previous[" + child_->to_string() + "]";
   }
 };
 

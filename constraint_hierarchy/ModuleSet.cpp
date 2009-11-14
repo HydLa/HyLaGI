@@ -43,6 +43,22 @@ std::string ModuleSet::get_name() const
   return str;
 }
 
+std::string ModuleSet::get_tree_dump() const
+{
+  std::string str;
+  module_list_t::const_iterator it  = module_list_.begin();    
+  module_list_t::const_iterator end = module_list_.end();
+
+  str += "{";
+  if(it!=end) str += (it++)->second->to_string();
+  for(; it!=end; ++it) {
+    str += ", ";
+    str += it->second->to_string();
+  }
+  str += "}";
+  return str;
+}
+
 int ModuleSet::compare(ModuleSet& rhs) const
 {
   module_list_t::const_iterator this_it  = module_list_.begin();

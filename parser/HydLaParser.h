@@ -11,10 +11,9 @@
 
 #include "ParseTree.h"
 #include "NodeFactory.h"
+#include "TreeVisitor.h"
 
 namespace hydla {
-
-class parse_tree::TreeVisitor;
 
 class HydLaParser {
 public:

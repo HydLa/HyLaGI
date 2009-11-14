@@ -234,6 +234,7 @@ bool MathSimulator::simulate(
 bool MathSimulator::test_module_set(module_set_sptr ms)
 {
   std::cout << ms->get_name() << std::endl;
+  std::cout << ms->get_tree_dump() << std::endl;
 
   //CollectTellVisitor ctv(parser.parse_tree(), ml_);
   //ctv.is_consistent();
