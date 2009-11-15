@@ -55,15 +55,6 @@ public:
   int compare(ModuleSet& rhs) const;
 
   /**
-   * 集合を出力する
-   */
-  std::ostream& dump(std::ostream& s)
-  {
-    s << get_name();
-    return s;
-  }
-
-  /**
    * 集合の各制約モジュールに対してTreeVisitorの適用
    */ 
   void dispatch(hydla::parse_tree::TreeVisitor* visitor)
@@ -78,8 +69,6 @@ public:
 private:
   module_list_t module_list_;
 };
-
-std::ostream& operator<<(std::ostream& s, ModuleSet& m);
 
 } // namespace ch
 } // namespace hydla

@@ -57,17 +57,19 @@ void hydla_main(int argc, char* argv[])
   }
 
   // 解候補モジュール集合の導出
-  ModuleSetContainerCreator<ModuleSetList> mscc;
   boost::shared_ptr<ModuleSetList> msl(
-    mscc.create_module_set_container(&hp.parse_tree()));
+    ModuleSetContainerCreator<ModuleSetList>().
+    create_module_set_container(&hp.parse_tree()));
 
   if(debug_mode) {
     std::cout << "#*** set of module sets which might be solution ***\n"
-              << *msl << std::endl;
+//              << *msl << std::endl;
+              << msl->get_name() << "\n\n" << msl->get_tree_dump() << std::endl;
   }
 
   if(po.count("module-set-list")>0) {
-    std::cout << *msl << std::endl;
+//    std::cout << *msl << std::endl;
+    std::cout << msl->get_name() << "\n\n" << msl->get_tree_dump() << std::endl;
     return;
   }
 

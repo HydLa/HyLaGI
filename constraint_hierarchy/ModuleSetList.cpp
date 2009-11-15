@@ -86,34 +86,46 @@ void ModuleSetList::add_weak(ModuleSetList& weak_module_set_list)
   module_set_list_.swap(new_list);
 }
 
-std::ostream& ModuleSetList::dump(std::ostream& s)
+std::string ModuleSetList::get_name() const
 {
-  module_set_list_t::iterator it = module_set_list_.begin();
-  module_set_list_t::iterator end = module_set_list_.end();
+  std::string s;
+  module_set_list_t::const_iterator it  = module_set_list_.begin();
+  module_set_list_t::const_iterator end = module_set_list_.end();
   
-  s << "{";
-  if(it!=end) s << **(it++);
+  s += "{";
+  if(it!=end) s += (*it++)->get_name();
   while(it!=end) {
-    s << ", " << **(it++);
+    s += ", " + (*it++)->get_name();
   }
-  s << "}";
+  s += "}";
   return s;
 }
 
-bool ModuleSetList::dispatch(ModuleSetTester* tester, int threads)
+std::string ModuleSetList::get_tree_dump() const
+{
+  std::string s;
+  module_set_list_t::const_iterator it  = module_set_list_.begin();
+  module_set_list_t::const_iterator end = module_set_list_.end();
+  
+  s += "{";
+  if(it!=end) s += (*it++)->get_tree_dump();
+  while(it!=end) {
+    s += ", " + (*it++)->get_tree_dump();
+  }
+  s += "}";
+  return s;
+}
+
+bool ModuleSetList::dispatch(
+  boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
+  int threads)
 {
   module_set_list_t::iterator it  = module_set_list_.begin();
   module_set_list_t::iterator end = module_set_list_.end();
   while(it!=end) {
-    if(tester->test_module_set(*it++)) return true;
+    if(callback_func(*it++)) return true;
   }
   return false;
-}
-
-
-std::ostream& operator<<(std::ostream& s, ModuleSetList& m)
-{
-  return m.dump(s);
 }
 
 } // namespace ch

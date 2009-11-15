@@ -14,6 +14,7 @@ using namespace boost;
 using namespace boost::xpressive;
 
 using namespace hydla::ch;
+using namespace hydla::simulator;
 
 namespace hydla{
 namespace symbolic_simulator {
@@ -81,14 +82,14 @@ void MathSimulator::init(Opts& opts)
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optOutputFormat"); 
   switch(opts.output_format) {
-  case fmtTFunction:
-    ml_.MLPutSymbol("fmtTFunction");
-    break;
+    case fmtTFunction:
+      ml_.MLPutSymbol("fmtTFunction");
+      break;
 
-  case fmtNumeric:
-  default:
-    ml_.MLPutSymbol("fmtNumeric");
-    break;
+    case fmtNumeric:
+    default:
+      ml_.MLPutSymbol("fmtNumeric");
+      break;
   }
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
@@ -125,8 +126,8 @@ bool MathSimulator::simulate(
 
   //ml_.MLPutFunction("ToExpression", 1);
   //ml_.MLPutString(interlanguage_sender.get_interlanguage().c_str());
-  
-  msc->dispatch(this);
+
+  Simulator<SymbolicVariable, SymbolicValue>::simulate(msc);
 
   ml_.MLPutFunction("Exit", 0);
   ml_.MLEndPacket();
@@ -139,12 +140,12 @@ bool MathSimulator::simulate(
   while((pkt = ml_.MLNextPacket()) != ILLEGALPKT) {
     switch(pkt) 
     {
-    case RETURNPKT:
+      case RETURNPKT:
       {
         int rpt = ml_.MLGetType();
         switch(rpt) 
         {
-        case MLTKSTR: 
+          case MLTKSTR: 
           {
             const char *str;
             ml_.MLGetString(&str);
@@ -153,7 +154,7 @@ bool MathSimulator::simulate(
             break;
           }
 
-        case MLTKSYM: 
+          case MLTKSYM: 
           {
             const char *sym;
             ml_.MLGetSymbol(&sym);
@@ -162,28 +163,28 @@ bool MathSimulator::simulate(
             break;
           }
 
-        case MLTKINT:
-        case MLTKOLDINT: 
+          case MLTKINT:
+          case MLTKOLDINT: 
           {	  
             int q;
             ml_.MLGetInteger(&q);
             std::cout << "#integer:" << q << std::endl;
             break;
           }
-        case MLTKERR:
-          std::cout << "#error type" << std::endl;
-          break;
+          case MLTKERR:
+            std::cout << "#error type" << std::endl;
+            break;
 
-        case MLTKFUNC:
-          break;
+          case MLTKFUNC:
+            break;
 
-        default:
-          std::cout << "#unknown type:" << rpt << std::endl;
+          default:
+            std::cout << "#unknown type:" << rpt << std::endl;
         }
         break;
       }
 
-    case TEXTPKT: 
+      case TEXTPKT: 
       {
         const char *s;
         ml_.MLGetString(&s);
@@ -194,7 +195,7 @@ bool MathSimulator::simulate(
         break;
       }
 
-    case MESSAGEPKT: 
+      case MESSAGEPKT: 
       {
         const char *sym, *tag;
         ml_.MLGetSymbol(&sym);
@@ -205,7 +206,7 @@ bool MathSimulator::simulate(
         break;
       }
 
-    case SYNTAXPKT: 
+      case SYNTAXPKT: 
       {
         int q;
         ml_.MLGetInteger(&q);
@@ -213,7 +214,7 @@ bool MathSimulator::simulate(
         break; 
       }
 
-    case INPUTNAMEPKT: 
+      case INPUTNAMEPKT: 
       {
         const char *name;
         ml_.MLGetString(&name);
@@ -222,8 +223,8 @@ bool MathSimulator::simulate(
         break;
       }
 
-    default:
-      std::cout << "#unknown packet:" << pkt << std::endl;
+      default:
+        std::cout << "#unknown packet:" << pkt << std::endl;
     }
     ml_.MLNewPacket();
   }
@@ -231,17 +232,18 @@ bool MathSimulator::simulate(
   return true;
 }
 
-bool MathSimulator::test_module_set(module_set_sptr ms)
-{
-  std::cout << ms->get_name() << std::endl;
-  std::cout << ms->get_tree_dump() << std::endl;
+// bool MathSimulator::test_module_set(module_set_sptr ms)
+// {
+//   std::cout << ms->get_name() << std::endl;
+//   std::cout << ms->get_tree_dump() << std::endl;
 
-  //CollectTellVisitor ctv(parser.parse_tree(), ml_);
-  //ctv.is_consistent();
+//   return false;
 
-  
-  return false;
-}
+// //   for(;;) {
+// //     point_phase(ms);
+// //     interval_phase(ms);
+// //   }
+// }
 
 
 } //namespace symbolic_simulator

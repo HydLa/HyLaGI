@@ -5,7 +5,6 @@
 
 #include "ModuleSet.h"
 #include "ModuleSetContainer.h"
-#include "ModuleSetTester.h"
 
 namespace hydla {
 namespace ch {
@@ -23,7 +22,7 @@ public:
 
   ModuleSetList();
   ModuleSetList(module_set_sptr m);
-  ~ModuleSetList();
+  virtual ~ModuleSetList();
 
   /**
    * 並列合成として集合を合成する
@@ -36,20 +35,24 @@ public:
   void add_weak(ModuleSetList& weak_module_set_list);
 
   /**
-   * 集合を出力する
+   * 集合の集合(このクラス)の名前
+   */ 
+  std::string get_name() const;
+
+  /**
+   * 集合の集合のパースツリーの内容出力
    */
-  std::ostream& dump(std::ostream& s);
+   std::string get_tree_dump() const;
 
   /**
    * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
    */
-  virtual bool dispatch(ModuleSetTester* tester, int threads = 1);
+  virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
+                        int threads = 1);
 
 private:
   module_set_list_t module_set_list_;
 };
-
-std::ostream& operator<<(std::ostream& s, ModuleSetList& m);
 
 } // namespace ch
 } // namespace hydla

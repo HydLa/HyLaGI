@@ -2,7 +2,7 @@ TARGET	 := ../hydla
 
 LIB_DIRS := parser constraint_hierarchy symbolic_simulator
 
-INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
+INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS)) -I../simulator
 INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 INCLUDES += -I/usr/local/include/boost-1_38
 

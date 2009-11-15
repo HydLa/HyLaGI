@@ -1,10 +1,12 @@
 #ifndef _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_H_
 #define _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_H_
 
+#include <boost/function.hpp>
+
+#include "ModuleSet.h"
+
 namespace hydla {
 namespace ch {
-
-class ModuleSetTester;
 
 class ModuleSetContainer {
 public:
@@ -17,7 +19,8 @@ public:
   /**
    * ‹É‘å‚È§–ñƒ‚ƒWƒ…[ƒ‹W‡‚ğ–³–µ‚‚È‚à‚Ì‚ªŒ©‚Â‚©‚é‚Ü‚Å‚½‚ß‚·
    */
-  virtual bool dispatch(ModuleSetTester* tester, int threads = 1) = 0;
+  virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
+                        int threads = 1) = 0;
 };
 
 } // namespace ch

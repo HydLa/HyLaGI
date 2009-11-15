@@ -72,10 +72,5 @@ int ModuleSet::compare(ModuleSet& rhs) const
   return comp;
 }
 
-std::ostream& operator<<(std::ostream& s, ModuleSet& m)
-{
-  return m.dump(s);
-}
-
 } // namespace ch
 } // namespace hydla

@@ -4,16 +4,25 @@
 #include <string>
 
 #include "mathlink_helper.h"
-#include "ModuleSetTester.h"
-#include "ModuleSetContainer.h"
+#include "Simulator.h"
 
 namespace hydla {
 class HydLaParser;
 
 namespace symbolic_simulator {
 
+typedef struct SymbolicVariable_ {
+  std::string name;
+  unsigned int derivative_count;
+  bool previous;
+} SymbolicVariable;
+
+typedef struct SymbolicValue_ {
+} SymbolicValue;
+
+
 class MathSimulator : 
-    public hydla::ch::ModuleSetTester
+    public hydla::simulator::Simulator<SymbolicVariable, SymbolicValue>
 {
 public:
   typedef enum OutputFormat_ {
@@ -30,6 +39,7 @@ public:
     OutputFormat output_format;
   } Opts;
 
+
   MathSimulator();
   ~MathSimulator();
 
@@ -37,7 +47,7 @@ public:
                 boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
                 Opts& opts);
 
-  virtual bool test_module_set(hydla::ch::module_set_sptr ms);
+//  virtual bool test_module_set(hydla::ch::module_set_sptr ms);
 
 private:
   void init(Opts& opts);
