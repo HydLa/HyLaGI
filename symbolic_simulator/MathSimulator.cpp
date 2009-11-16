@@ -16,7 +16,7 @@ using namespace boost::xpressive;
 using namespace hydla::ch;
 using namespace hydla::simulator;
 
-namespace hydla{
+namespace hydla {
 namespace symbolic_simulator {
 
 struct rawchar_formatter

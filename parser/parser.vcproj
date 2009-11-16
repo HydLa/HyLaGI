@@ -157,23 +157,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ModuleSet.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetGraph.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetList.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Node.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ParseTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeVisitor.cpp"
 				>
 			</File>
 		</Filter>
@@ -196,22 +188,6 @@
 			</File>
 			<File
 				RelativePath=".\HydLaParser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSet.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetContainerCreator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetGraph.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetList.h"
 				>
 			</File>
 			<File
