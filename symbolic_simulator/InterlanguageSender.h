@@ -339,8 +339,8 @@ public:
   }
 
 private:
-  MathLink& ml_;
   ParseTree& parse_tree_;
+  MathLink& ml_;
 
   int         in_guard_;
   std::string inter_str_;

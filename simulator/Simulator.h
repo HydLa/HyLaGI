@@ -27,7 +27,8 @@ public:
    * §–ñƒXƒgƒA
    */
   typedef struct ConstraintStore_ {
-    typedef std::map<VariableType, ValueType> variable_list_t;
+    typedef typename std::map<VariableType, ValueType> variable_list_t;
+    typedef typename variable_list_t::const_iterator variable_list_const_iterator_t;
     variable_list_t variable_list_;
 
     /**
@@ -35,8 +36,8 @@ public:
      */
     std::ostream& dump(std::ostream& s) const
     {
-      variable_list_t::const_iterator it  = variable_list_.begin();
-      variable_list_t::const_iterator end = variable_list_.end();
+      variable_list_const_iterator_t it  = variable_list_.begin();
+      variable_list_const_iterator_t end = variable_list_.end();
       while(it!=end) {
         s << it->first.dump(s) << " : " << it->second.dump(s) << "\n";
       }
