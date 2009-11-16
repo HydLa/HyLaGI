@@ -3,11 +3,15 @@
 #include <iostream>
 #include <boost/xpressive/xpressive.hpp>
 //#include <boost/thread.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
+#include <boost/bind.hpp>
 
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
 #include "CollectTellVisitor.h"
+
+#include "TellCollector.h"
 
 using namespace std;
 using namespace boost;
@@ -111,6 +115,8 @@ bool MathSimulator::simulate(
   boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
   Opts& opts)
 {
+  debug_mode_ = opts.debug_mode;
+
   init(opts);
 
   //module_set_container_ = msc;
@@ -127,7 +133,7 @@ bool MathSimulator::simulate(
   //ml_.MLPutFunction("ToExpression", 1);
   //ml_.MLPutString(interlanguage_sender.get_interlanguage().c_str());
 
-  Simulator<SymbolicVariable, SymbolicValue>::simulate(msc);
+  simulator_t::simulate(msc);
 
   ml_.MLPutFunction("Exit", 0);
   ml_.MLEndPacket();
@@ -232,19 +238,76 @@ bool MathSimulator::simulate(
   return true;
 }
 
-// bool MathSimulator::test_module_set(module_set_sptr ms)
-// {
-//   std::cout << ms->get_name() << std::endl;
-//   std::cout << ms->get_tree_dump() << std::endl;
+namespace {
+class NodeDump {
+public:
+  template<typename T>
+  void operator()(T& it) 
+  {
+    std::cout << *it << "\n";
+  }
+};
+}
 
-//   return false;
+bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
+{
+  std::cout << ms->get_name() << std::endl;
+  std::cout << ms->get_tree_dump() << std::endl;
 
-// //   for(;;) {
-// //     point_phase(ms);
-// //     interval_phase(ms);
-// //   }
-// }
+  TellCollector tell_collector;
+  //AskCollector  ask_collector;
+  //ConstraintStoreBuilderPoint csbp(ml_); //TODO: kenshiroが作成
 
+  std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > new_tells;
+  std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells;
+  std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     entailed_asks;
+  
+  bool expanded = true;
+  while(expanded) {
+    // tell制約を集める
+    tell_collector.collect_tell(ms, &new_tells, &collected_tells, &entailed_asks);
+    if(debug_mode_) {
+      std::cout << "#** new tells **\n";
+      std::for_each(new_tells.begin(), new_tells.end(), NodeDump());
+
+      std::cout << "#** collected tells **\n";  
+      std::for_each(collected_tells.begin(), collected_tells.end(), NodeDump());
+              
+      std::cout << "#** entailed asks **\n";  
+      std::for_each(entailed_asks.begin(), entailed_asks.end(), NodeDump());
+    }
+
+    // 制約ストア構築
+    //TODO: kenshiroが作成
+    /*
+    if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
+      return false;
+    }
+    */
+    if(debug_mode_) {
+      std::cout << "#** constraint store **\n";  
+      state->constraint_store.dump(std::cout);
+    }
+    
+
+    // ask制約を集める
+
+
+    // ask制約のエンテール処理
+    expanded = false;
+  }
+
+  state->phase = IntervalPhase;
+  //state_queue_.push(*state);
+
+  return true;
+}
+
+bool MathSimulator::interval_phase(hydla::ch::module_set_sptr& ms, State* state)
+{
+
+  return true;
+}
 
 } //namespace symbolic_simulator
 } //namespace hydla

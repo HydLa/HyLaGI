@@ -7,26 +7,63 @@
 #include <map>
 #include <set>
 #include <queue>
+#include <vector>
+
+#include <assert.h>
 
 #include <boost/bind.hpp>
 
+#include "Node.h"
 #include "ModuleSetContainer.h"
 
 namespace hydla {
 namespace simulator {
 
-template<typename VariableType, typename ValueType>
+template<typename VariableType, typename ValueType, typename TimeType>
 class Simulator
 {
 public:
+  /**
+   * §–ñƒXƒgƒA
+   */
   typedef struct ConstraintStore_ {
-    std::map<VariableType, ValueType> variable_list_;
+    typedef std::map<VariableType, ValueType> variable_list_t;
+    variable_list_t variable_list_;
+
+    /**
+     * ƒf[ƒ^‚ğƒ_ƒ“ƒv‚·‚é
+     */
+    std::ostream& dump(std::ostream& s) const
+    {
+      variable_list_t::const_iterator it  = variable_list_.begin();
+      variable_list_t::const_iterator end = variable_list_.end();
+      while(it!=end) {
+        s << it->first.dump(s) << " : " << it->second.dump(s) << "\n";
+      }
+      return s;
+    }
   } ConstraintStore;
 
+  /**
+   * ˆ—‚ÌƒtƒF[ƒY
+   */
+  typedef enum Phase_ {
+    PointPhase,
+    IntervalPhase,
+  } Phase;
+
+  /**
+   * Šeˆ—‚Ìó‘Ô
+   */
   typedef struct State_ {
-//    std::set<ask_index_t> entailed_ask;
-//    std::vector<boost::shared_ptr<hydla::parse_tree::Always> > expanded_always;
-    bool initial_time;
+    typedef boost::shared_ptr<hydla::parse_tree::Always> always_sptr;
+    typedef std::vector<always_sptr>                     always_sptr_list_t;
+
+    Phase               phase;
+    TimeType            time;
+    ConstraintStore     constraint_store;
+    always_sptr_list_t  expanded_always;
+    bool                initial_time;
   } State;
 
   Simulator()
@@ -35,70 +72,62 @@ public:
   virtual ~Simulator()
   {}
 
-  void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc)
+  /**
+   * —^‚¦‚ç‚ê‚½‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ğŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“Às‚ğ‚¨‚±‚È‚¤
+   */
+  void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc)//,
+//                const hydla::parse_tree::variable_map_t& variable_map)
   {
-    //state_queue_
-    State state;
-    msc->dispatch(
-      boost::bind(&Simulator<VariableType, ValueType>::execute_module_set, 
-                  this, 
-                  _1,
-                  &state));
-    
+    State init_state;
+    init_state.phase = PointPhase;
+    state_queue_.push(init_state);
+
+    while(!state_queue_.empty()) {
+      msc->dispatch(
+        boost::bind(&Simulator<VariableType, ValueType, TimeType>::execute_module_set, 
+                    this, 
+                    _1,
+                    &state_queue_.front()));
+      state_queue_.pop();
+    }
   }
 
+  /**
+   * ‹É‘å‚È§–ñƒ‚ƒWƒ…[ƒ‹W‡‚ÌÀs‚ğ‚¨‚±‚È‚¤
+   */
   bool execute_module_set(hydla::ch::module_set_sptr ms, State* state)
   {
-    std::cout << ms->get_name() << std::endl;
-    std::cout << ms->get_tree_dump() << std::endl;
+    bool ret;
+    switch(state->phase) 
+    {
+    case PointPhase:
+      ret = point_phase(ms, state);
+      break;
 
-//     point_phase();
-//     interval_phase();
+    case IntervalPhase:
+      ret = interval_phase(ms, state);
+      break;
 
-    return false;
+    default:
+      assert(0);
+    }
+
+    return ret;
   }
 
-
 protected:
-//   bool point_phase(module_set_sptr& ms, 
-//                    std::vector<t> prev_vars)
-//   {
-//     ConsistencyCheckerPoint ccp(ms, ml_);
-//     EntailmentCheckerPoint  ecp(ms, ml_);
 
-
-//     bool expanded = true;
-//     while(expanded) {
-//       // À©Ìó¤¬½¼Â­¤·¤Æ¤¤¤ë¤«¤É¤¦¤«³ÎÇ§
-//       if(!ctv.is_consistent(entailed_ask)) return false;
-
-//       // À®¤êÎ©¤Ä´Ş°ÕÀ©Ìó¤òÄ´¤Ù¤ë
-//       expanded = ecp.entail_check(entailed_ask);
-//     }
+  /**
+   * Point Phase‚Ìˆ—
+   */
+  virtual bool point_phase(hydla::ch::module_set_sptr& ms, State* state) = 0;
   
-//     return true;
-//   }
+  /**
+   * Interval Phase‚Ìˆ—
+   */
+  virtual bool interval_phase(hydla::ch::module_set_sptr& ms, State* state) = 0;
 
-//   bool interval_phase(module_set_sptr& ms,
-//                       std::vector<t> initial_vars)
-//   {
-//     ConsistencyCheckerInterval cci(ms, ml_);
-//     EntailmentCheckerInterval  eci(ms, ml_);
-
-//     std::vector<ask_index_t> entailed_ask;
-//     bool expanded = true;
-//     while(expanded) {
-//       // À©Ìó¤¬½¼Â­¤·¤Æ¤¤¤ë¤«¤É¤¦¤«³ÎÇ§
-//       if(!ctv.is_consistent(entailed_ask)) return false;
-
-//       // À®¤êÎ©¤Ä´Ş°ÕÀ©Ìó¤òÄ´¤Ù¤ë
-//       expanded = ecp.entail_check(entailed_ask);
-//     }
-
-//     return false;
-//   }
-
-private:
+  // Šeó‘Ô‚ğ•Û‘¶‚µ‚Ä‚¨‚­‚½‚ß‚ÌƒLƒ…[
   std::queue<State> state_queue_;
 };
 

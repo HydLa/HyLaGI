@@ -196,6 +196,18 @@
 				RelativePath=".\SSParseTree.h"
 				>
 			</File>
+			<File
+				RelativePath=".\SymbolicTime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicValue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicVariable.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"

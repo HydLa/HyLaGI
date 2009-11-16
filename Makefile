@@ -1,4 +1,4 @@
-main_projects := parser math_source_converter constraint_hierarchy symbolic_simulator core
+main_projects := parser math_source_converter constraint_hierarchy symbolic_simulator core simulator
 test_projects := unit_tests
 
 projects := $(main_projects) $(test_projects)
@@ -21,6 +21,6 @@ $(projects):
 	$(MAKE) --directory=$@
 
 # dependency
-$(test_projects): parser symbolic_simulator constraint_hierarchy
-core: parser symbolic_simulator constraint_hierarchy
+$(test_projects): parser symbolic_simulator constraint_hierarchy simulator
+core: parser symbolic_simulator constraint_hierarchy simulator
 symbolic_simulator: math_source_converter
