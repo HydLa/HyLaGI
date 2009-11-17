@@ -6,6 +6,7 @@
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include <set>
+#include <vector>
 
 using namespace hydla::parse_tree;
 
@@ -14,25 +15,11 @@ namespace symbolic_simulator {
 
 class CollectTellVisitor : public parse_tree::TreeVisitor {
 public:
-  CollectTellVisitor(ParseTree& parse_tree, MathLink& ml);
+  CollectTellVisitor(MathLink& ml);
 
   virtual ~CollectTellVisitor();
 
-  bool is_consistent();
-
-  // ’è‹`
-  virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
-  virtual void visit(boost::shared_ptr<ProgramDefinition> node);
-
-  // ŒÄ‚Ño‚µ
-  virtual void visit(boost::shared_ptr<ConstraintCaller> node);
-  virtual void visit(boost::shared_ptr<ProgramCaller> node);     
-
-  // §–ñ®
-  virtual void visit(boost::shared_ptr<Constraint> node);
-
-  // Ask§–ñ
-  virtual void visit(boost::shared_ptr<Ask> node);
+  bool is_consistent(std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >& tells);
 
   // Tell§–ñ
   virtual void visit(boost::shared_ptr<Tell> node);
@@ -59,13 +46,6 @@ public:
   virtual void visit(boost::shared_ptr<Negative> node);
   virtual void visit(boost::shared_ptr<Positive> node);
 
-  // §–ñŠK‘w’è‹`‰‰Zq
-  virtual void visit(boost::shared_ptr<Weaker> node);
-  virtual void visit(boost::shared_ptr<Parallel> node);
-
-  // ‘Š‰‰Zq
-  virtual void visit(boost::shared_ptr<Always> node);
-
   // ”÷•ª
   virtual void visit(boost::shared_ptr<Differential> node);
 
@@ -81,7 +61,6 @@ public:
 
 private:
   MathLink& ml_;
-  ParseTree& parse_tree_;
   std::set<std::string> vars_;
   int in_differential_equality_;
   int in_differential_;

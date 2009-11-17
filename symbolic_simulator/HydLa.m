@@ -6,7 +6,8 @@
  *   If[Reduce[expr, vars] != False, 1, 0];
  *)
 isConsistent[expr_, vars_] :=
-  If[DSolve[expr, vars, t] != {}, 1, 0];
+  If[DSolve[expr, vars, t] != {}, 1, 0]; 
+  (* DSolve[expr, vars, t]; *)
 
 (* $MaxExtraPrecision = Infinity *)
 SetOptions[$Output, PageWidth->Infinity];

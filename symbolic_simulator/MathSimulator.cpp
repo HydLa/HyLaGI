@@ -9,7 +9,7 @@
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
-#include "CollectTellVisitor.h"
+#include "ConsistencyChecker.h"
 
 #include "TellCollector.h"
 
@@ -257,6 +257,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
   TellCollector tell_collector;
   //AskCollector  ask_collector;
   //ConstraintStoreBuilderPoint csbp(ml_); //TODO: kenshiroが作成
+  ConsistencyChecker consistency_checker(ml_);
 
   std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > new_tells;
   std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells;
@@ -279,6 +280,9 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
 
     // 制約ストア構築
     //TODO: kenshiroが作成
+    if(!consistency_checker.is_consistent(new_tells)){
+      return false;
+    }
     /*
     if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
       return false;
