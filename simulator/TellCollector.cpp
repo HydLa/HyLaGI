@@ -1,5 +1,7 @@
 #include "TellCollector.h"
 
+#include <assert.h>
+
 namespace hydla {
 namespace simulator {
   
@@ -9,18 +11,33 @@ TellCollector::TellCollector()
 TellCollector::~TellCollector()
 {}
 
-void TellCollector::collect_tell(
-  hydla::ch::module_set_sptr& ms,
-  std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >* new_tells,
-  std::set<boost::shared_ptr<hydla::parse_tree::Tell> >*    collected_tells,
-  std::set<boost::shared_ptr<hydla::parse_tree::Ask> >*     entailed_asks)
+void TellCollector::collect_tell(module_set_t*      ms,
+                                 expanded_always_t* expanded_always,                   
+                                 collected_tells_t* collected_tells,
+                                 positive_asks_t*   positive_asks)
 {
-  new_tells_        = new_tells;
-  collected_tells_  = collected_tells;
-  entailed_asks_    = entailed_asks;
+  assert(ms);
+  assert(expanded_always);
+  assert(collected_tells);
+  assert(positive_asks);
+  
+  expanded_always_ = expanded_always;
+  collected_tells_ = collected_tells;
+  positive_asks_   = positive_asks;
 
-  new_tells->clear();
+   // ModuleSetÇÃÉmÅ[ÉhÇÃíTçı
+  in_expanded_always_ = false;
   ms->dispatch(this);
+  
+  // ìWäJçœÇ›alwaysÉmÅ[ÉhÇÃíTçı
+  in_expanded_always_ = true;
+  expanded_always_t::iterator it  = expanded_always->begin();
+  expanded_always_t::iterator end = expanded_always->end();
+  while(it!=end) {
+    if(visited_always_.find(*it) != visited_always_.end()) {
+      (*it)->accept(*it, this);
+    }
+  }
 }
 
 // êßñÒéÆ
@@ -33,19 +50,18 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   // askÇ™ÉeÉìÉeÅ[Éãâ¬î\Ç≈Ç†Ç¡ÇΩÇÁéqÉmÅ[ÉhÇ‡íTçıÇ∑ÇÈ
-  if(entailed_asks_->find(node) != entailed_asks_->end()) {
-      node->get_child_node()->accept(node->get_child_node(), this);
+  if(positive_asks_->find(node) != positive_asks_->end()) {
+    in_ask_ = true;
+    node->get_child_node()->accept(node->get_child_node(), this);
+    in_ask_ = false;
   }
 }
 
 // TellêßñÒ
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
-  // é˚èWçœÇ›Ç≈Ç»Ç¢tellêßñÒÇ≈Ç†Ç¡ÇΩÇÁìoò^Ç∑ÇÈ
-  if(collected_tells_->find(node) == collected_tells_->end()) {
-    new_tells_->push_back(node);
-    collected_tells_->insert(node);
-  }
+  // tellêßñÒÇÃìoò^
+  collected_tells_->insert(node);
 }
 
 // ò_óùêœ
@@ -58,7 +74,14 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
 // éûëäââéZéq
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
-  node->get_child_node()->accept(node->get_child_node(), this);
+  if(in_expanded_always_) {
+    if(visited_always_.find(node) != visited_always_.end()) {
+      node->get_child_node()->accept(node->get_child_node(), this);
+    }
+  } else {
+    node->get_child_node()->accept(node->get_child_node(), this);
+    visited_always_.insert(node);
+  }
 }
 
 } //namespace simulator

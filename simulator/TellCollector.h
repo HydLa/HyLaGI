@@ -10,18 +10,31 @@
 #include "ModuleSet.h"
 #include "TreeVisitor.h"
 
+#include "./Types.h"
+
 namespace hydla {
 namespace simulator {
 
+/**
+ * tellノードを集めるビジタークラス
+ */
 class TellCollector : public parse_tree::TreeVisitor {
 public:
   TellCollector();
   virtual ~TellCollector();
-  
-  void collect_tell(hydla::ch::module_set_sptr&                               ms,
-                    std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >* new_tells,
-                    std::set<boost::shared_ptr<hydla::parse_tree::Tell> >*    collected_tells,
-                    std::set<boost::shared_ptr<hydla::parse_tree::Ask> >*     entailed_asks);
+
+  /** 
+   * tellノードを集める
+   *
+   * @param expanded_always  展開済みalwaysノードの集合
+   *                           （askの中にあったalwaysが展開されたもの）
+   * @param collected_tells  集められたtellノードの集合
+   * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
+   */
+  void collect_tell(module_set_t*      ms,
+                    expanded_always_t* expanded_always,                   
+                    collected_tells_t* collected_tells,
+                    positive_asks_t*   positive_asks);
 
   // 制約式
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
@@ -39,9 +52,18 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
 private:
-  std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >* new_tells_;
-  std::set<boost::shared_ptr<hydla::parse_tree::Tell> >*    collected_tells_;
-  std::set<boost::shared_ptr<hydla::parse_tree::Ask> >*     entailed_asks_;
+  expanded_always_t* expanded_always_;                 
+  collected_tells_t* collected_tells_;
+  positive_asks_t*   positive_asks_;
+
+  /// askノードの子ノードかどうか
+  bool               in_ask_;
+
+  /// 展開済みalwaysノードのリストからの探索かどうか
+  bool               in_expanded_always_;
+
+  /// 探索したalwaysノードのリスト
+  visited_always_t   visited_always_;
 };
 
 } //namespace simulator

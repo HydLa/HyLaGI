@@ -29,6 +29,7 @@ public:
   typedef struct ConstraintStore_ {
     typedef typename std::map<VariableType, ValueType> variable_list_t;
     typedef typename variable_list_t::const_iterator variable_list_const_iterator_t;
+
     variable_list_t variable_list_;
 
     /**

@@ -445,7 +445,7 @@ public:
   virtual std::string to_string() const 
   {
     return "Ask[" + 
-      guard_->to_string() + "=>" + 
+      guard_->to_string() + "," + 
       child_->to_string() + "]";
   }
 

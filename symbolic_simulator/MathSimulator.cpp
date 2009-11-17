@@ -9,9 +9,10 @@
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
-#include "ConsistencyChecker.h"
+//#include "ConsistencyChecker.h"
 
 #include "TellCollector.h"
+#include "AskCollector.h"
 
 using namespace std;
 using namespace boost;
@@ -251,55 +252,62 @@ public:
 
 bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
 {
-  std::cout << ms->get_name() << std::endl;
-  std::cout << ms->get_tree_dump() << std::endl;
+  if(debug_mode_) {
+    std::cout << "#***** bagin point phase *****\n";
+    std::cout << "#** module set **\n";
+    std::cout << ms->get_name() << std::endl;
+    std::cout << ms->get_tree_dump() << std::endl;
+  }
 
   TellCollector tell_collector;
-  //AskCollector  ask_collector;
-  //ConstraintStoreBuilderPoint csbp(ml_); //TODO: kenshiroが作成
-  ConsistencyChecker consistency_checker(ml_);
+  AskCollector  ask_collector;
+  //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiroが作成
+  //ConsistencyChecker consistency_checker(ml_); //TODO: kenshiroが作成
+  //EntailmentChecker entailment_checker(ml_);   //TODO: kenshiroが作成
 
-  std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > new_tells;
-  std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells;
-  std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     entailed_asks;
-  
-  bool expanded = true;
+  expanded_always_t expanded_always;
+  collected_tells_t collected_tells;
+  positive_asks_t   positive_asks;
+  negative_asks_t   negative_asks;
+
+  bool expanded   = true;
   while(expanded) {
     // tell制約を集める
-    tell_collector.collect_tell(ms, &new_tells, &collected_tells, &entailed_asks);
+    tell_collector.collect_tell(ms.get(), &expanded_always, 
+                                &collected_tells, &positive_asks);
     if(debug_mode_) {
-      std::cout << "#** new tells **\n";
-      std::for_each(new_tells.begin(), new_tells.end(), NodeDump());
-
       std::cout << "#** collected tells **\n";  
       std::for_each(collected_tells.begin(), collected_tells.end(), NodeDump());
-              
-      std::cout << "#** entailed asks **\n";  
-      std::for_each(entailed_asks.begin(), entailed_asks.end(), NodeDump());
     }
 
     // 制約ストア構築
     //TODO: kenshiroが作成
-    if(!consistency_checker.is_consistent(new_tells)){
-      return false;
-    }
-    /*
-    if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
-      return false;
-    }
-    */
-    if(debug_mode_) {
-      std::cout << "#** constraint store **\n";  
-      state->constraint_store.dump(std::cout);
-    }
-    
+//     if(!consistency_checker.is_consistent(new_tells)){
+//    if(debug_mode_) std::cout << "#*** inconsistent\n";
+//       return false;
+//     }
+    if(debug_mode_) std::cout << "#*** consistent\n";
 
     // ask制約を集める
+    ask_collector.collect_ask(ms.get(), &expanded_always, 
+                              &positive_asks, &negative_asks);
+    if(debug_mode_) {
+      std::cout << "#** positive asks **\n";  
+      std::for_each(positive_asks.begin(), positive_asks.end(), NodeDump());
 
+      std::cout << "#** negative asks **\n";  
+      std::for_each(negative_asks.begin(), negative_asks.end(), NodeDump());
+    }
 
     // ask制約のエンテール処理
+    //TODO: kenshiroが作成
+//    expanded = entailment_checker.check();
     expanded = false;
   }
+    
+//   if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
+//     return false;
+//   }
 
   state->phase = IntervalPhase;
   //state_queue_.push(*state);
