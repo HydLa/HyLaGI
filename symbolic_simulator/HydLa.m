@@ -1,13 +1,17 @@
 (*
  * 制約が無矛盾であるかをチェック
  *)
-(*
- * isConsistent[expr_, vars_] :=
- *   If[Reduce[expr, vars] != False, 1, 0];
+
+isConsistent[expr_, vars_] := (
+  (*Print["expr:", expr];*)
+  (*Print["vars:", vars];*)
+  (*Return[116]*)
+  If[Reduce[expr, vars] =!= False, 1, 0]
+);
+
+(* isConsistent[expr_, vars_] :=
+ *  If[DSolve[expr, vars, t] != {}, 1, 0]; 
  *)
-isConsistent[expr_, vars_] :=
-  If[DSolve[expr, vars, t] != {}, 1, 0]; 
-  (* DSolve[expr, vars, t]; *)
 
 (* $MaxExtraPrecision = Infinity *)
 SetOptions[$Output, PageWidth->Infinity];

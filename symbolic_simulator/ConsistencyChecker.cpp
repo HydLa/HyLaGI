@@ -1,6 +1,5 @@
-#include "CollectTellVisitor.h"
-#include "PacketChecker.h"
-
+#include "ConsistencyChecker.h"
+//#include "PacketChecker.h"
 #include <iostream>
 
 using namespace hydla::parse_tree;
@@ -9,341 +8,295 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-CollectTellVisitor::CollectTellVisitor(ParseTree& parse_tree, MathLink& ml) :
-  parse_tree_(parse_tree),
+ConsistencyChecker::ConsistencyChecker(MathLink& ml) :
   ml_(ml),
-  in_differential_(false),
-  in_differential_equality_(false)
+  in_differential_equality_(false),
+  in_differential_(false)
 {}
 
-CollectTellVisitor::~CollectTellVisitor()
+ConsistencyChecker::~ConsistencyChecker()
 {}
 
-  // íËã`
-  void CollectTellVisitor::visit(boost::shared_ptr<ConstraintDefinition> node)  {}
-  void CollectTellVisitor::visit(boost::shared_ptr<ProgramDefinition> node)     {}
+// TellêßñÒ
+void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)                  
+{
+  //ml_.MLPutFunction("tell", 1);
 
-  // åƒÇ—èoÇµ
-  void CollectTellVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      
-  {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-  }
+  node_sptr chnode(node->get_child_node());
+  chnode->accept(chnode, this);
+  std::cout << std::endl;
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<ProgramCaller> node)         
-  {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-  }
-
-  // êßñÒéÆ
-  void CollectTellVisitor::visit(boost::shared_ptr<Constraint> node)            
-  {
-    //ml_MLPutFunction("unit", 1);
-
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-  }
-
-  // AskêßñÒ
-  void CollectTellVisitor::visit(boost::shared_ptr<Ask> node)                   
-  {
-    //ml_MLPutFunction("ask", 2);
-    
-  }
-
-  // TellêßñÒ
-  void CollectTellVisitor::visit(boost::shared_ptr<Tell> node)                  
-  {
-    //ml_.MLPutFunction("tell", 1);
-    ml_.MLPutFunction("Join", 2);
-    ml_.MLPutFunction("List", 1);
-
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-    std::cout << std::endl;
-  }
-
-  // î‰ärââéZéq
-  void CollectTellVisitor::visit(boost::shared_ptr<Equal> node)                 
-  {
-    ml_.MLPutFunction("Equal", 2);
+// î‰ärââéZéq
+void ConsistencyChecker::visit(boost::shared_ptr<Equal> node)                 
+{
+  ml_.MLPutFunction("Equal", 2);
         
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "=";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    in_differential_equality_ = false;
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "=";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  in_differential_equality_ = false;
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<UnEqual> node)               
-  {
-    ml_.MLPutFunction("UnEqual", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<UnEqual> node)               
+{
+  ml_.MLPutFunction("UnEqual", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "!=";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    in_differential_equality_ = false;
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "!=";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  in_differential_equality_ = false;
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<Less> node)                  
-  {
-    ml_.MLPutFunction("Less", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<Less> node)                  
+{
+  ml_.MLPutFunction("Less", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "<";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    in_differential_equality_ = false;
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "<";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  in_differential_equality_ = false;
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<LessEqual> node)             
-  {
-    ml_.MLPutFunction("LessEqual", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<LessEqual> node)             
+{
+  ml_.MLPutFunction("LessEqual", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "<=";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    in_differential_equality_ = false;
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "<=";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  in_differential_equality_ = false;
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<Greater> node)               
-  {
-    ml_.MLPutFunction("Greater", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<Greater> node)               
+{
+  ml_.MLPutFunction("Greater", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << ">";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    in_differential_equality_ = false;
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << ">";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  in_differential_equality_ = false;
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<GreaterEqual> node)          
-  {
-    ml_.MLPutFunction("GreaterEqual", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<GreaterEqual> node)          
+{
+  ml_.MLPutFunction("GreaterEqual", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << ">=";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    in_differential_equality_ = false;
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << ">=";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  in_differential_equality_ = false;
+}
 
-  // ò_óùââéZéq
-  void CollectTellVisitor::visit(boost::shared_ptr<LogicalAnd> node)            
-  {
-    //ml_.MLPutFunction("And, 2);
+// ò_óùââéZéq
+void ConsistencyChecker::visit(boost::shared_ptr<LogicalAnd> node)            
+{
+  //ml_.MLPutFunction("And, 2);
 
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<LogicalOr> node)             
-  {
-    //ml_.MLPutFunction("Or", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<LogicalOr> node)             
+{
+  //ml_.MLPutFunction("Or", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+}
   
-  // éZèpìÒçÄââéZéq
-  void CollectTellVisitor::visit(boost::shared_ptr<Plus> node)                  
-  {
-    ml_.MLPutFunction("Plus", 2);
+// éZèpìÒçÄââéZéq
+void ConsistencyChecker::visit(boost::shared_ptr<Plus> node)                  
+{
+  ml_.MLPutFunction("Plus", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "+";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "+";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<Subtract> node)              
-  {
-    ml_.MLPutFunction("Subtract", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<Subtract> node)              
+{
+  ml_.MLPutFunction("Subtract", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "-";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "-";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<Times> node)                 
-  {
-    ml_.MLPutFunction("Times", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<Times> node)                 
+{
+  ml_.MLPutFunction("Times", 2);
 
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "*";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "*";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+}
 
-  void CollectTellVisitor::visit(boost::shared_ptr<Divide> node)                
-  {
-    ml_.MLPutFunction("Divide", 2);
+void ConsistencyChecker::visit(boost::shared_ptr<Divide> node)                
+{
+  ml_.MLPutFunction("Divide", 2);
     
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    std::cout << "/";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  }
+  node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+  std::cout << "/";
+  node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+}
   
-  // éZèpíPçÄââéZéq
-  void CollectTellVisitor::visit(boost::shared_ptr<Negative> node)              
-  {       
-    ml_.MLPutFunction("Minus", 1);
-    std::cout << "-";
+// éZèpíPçÄââéZéq
+void ConsistencyChecker::visit(boost::shared_ptr<Negative> node)              
+{       
+  ml_.MLPutFunction("Minus", 1);
+  std::cout << "-";
 
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+  node_sptr chnode(node->get_child_node());
+  chnode->accept(chnode, this);
+}
+
+void ConsistencyChecker::visit(boost::shared_ptr<Positive> node)              
+{
+  node_sptr chnode(node->get_child_node());
+  chnode->accept(chnode, this);
+}
+
+// î˜ï™
+void ConsistencyChecker::visit(boost::shared_ptr<Differential> node)          
+{
+
+  ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+  ml_.MLPutArgCount(1);      // this 1 is for the 'f'
+  ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+  ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
+  ml_.MLPutSymbol("Derivative");
+  ml_.MLPutInteger(1);
+
+
+  in_differential_equality_ = true;
+  in_differential_ = true;
+  node_sptr chnode(node->get_child_node());
+  chnode->accept(chnode, this);
+  std::cout << "'";
+  if(in_differential_){
+    //std::cout << "[t]"; // ht[t]' ÇÃÇÊÇ§Ç…Ç»ÇÈÇÃÇñhÇÆÇΩÇﬂ
   }
 
-  void CollectTellVisitor::visit(boost::shared_ptr<Positive> node)              
-  {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-  }
+  in_differential_ = false;
+}
 
-  // êßñÒäKëwíËã`ââéZéq
-  void CollectTellVisitor::visit(boost::shared_ptr<Weaker> node)                
-  {
-    // ãtÇ…ÇµÇƒëóêM
-    //ml_.MLPutFunction("order", 2);
-    
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  }
+// ç∂ã…å¿
+void ConsistencyChecker::visit(boost::shared_ptr<Previous> node)              
+{
+  //ml_.MLPutFunction("prev", 1);
+  node_sptr chnode(node->get_child_node());
+  chnode->accept(chnode, this);
+  std::cout << "-";
+}
   
-  void CollectTellVisitor::visit(boost::shared_ptr<Parallel> node)              
-  {
-    //ml_.MLPutFunction("group", 2);
-
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+// ïœêî
+void ConsistencyChecker::visit(boost::shared_ptr<Variable> node)              
+{
+  ml_.MLPutSymbol(node->get_name().c_str());
+  if(in_differential_){
+    vars_.insert(std::pair<std::string, int>(node->get_name() + "'", 1));
   }
-
-  // éûëäââéZéq
-  void CollectTellVisitor::visit(boost::shared_ptr<Always> node)                
-  {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+  else {
+    vars_.insert(std::pair<std::string, int>(node->get_name(), 0));
   }
-
-  // î˜ï™
-  void CollectTellVisitor::visit(boost::shared_ptr<Differential> node)          
-  {
-/*
-    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-    ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-    ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-    ml_.MLPutSymbol("Derivative");
-    ml_.MLPutInteger(1);
-*/
-    ml_.MLPutFunction("D", 2);
-
-    in_differential_equality_ = true;
-    in_differential_ = true;
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-    std::cout << "'";
+  std::cout << node->get_name().c_str();
+  if(in_differential_equality_){
     if(in_differential_){
-        std::cout << "[t]"; // ht[t]' ÇÃÇÊÇ§Ç…Ç»ÇÈÇÃÇñhÇÆÇΩÇﬂ
+      //ml_.MLPutSymbol("t");
+    }else{
+      //ml_.MLPutSymbol("t");
+      //std::cout << "[t]";
     }
-
-    ml_.MLPutSymbol("t"); // D ä÷êîÇÃ2å¬ñ⁄ÇÃà¯êî
-    in_differential_ = false;
+  } else {
+    //ml_.MLPutInteger(0);
+    //std::cout << "[0]";
   }
+}
 
-  // ç∂ã…å¿
-  void CollectTellVisitor::visit(boost::shared_ptr<Previous> node)              
-  {
-    //ml_.MLPutFunction("prev", 1);
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
-    std::cout << "-";
-  }
-  
-  // ïœêî
-  void CollectTellVisitor::visit(boost::shared_ptr<Variable> node)              
-  {
-    ml_.MLPutFunction(node->get_name().c_str(), 1);
-    vars_.insert(node->get_name().c_str());
-    std::cout << node->get_name().c_str();
-    if(in_differential_equality_){
-      if(in_differential_){
-        ml_.MLPutSymbol("t");
-      }else{
-        ml_.MLPutSymbol("t");
-        std::cout << "[t]";
-      }
-    } else {
-      ml_.MLPutInteger(0);
-      std::cout << "[0]";
-    }
-  }
-
-  // êîéö
-  void CollectTellVisitor::visit(boost::shared_ptr<Number> node)                
-  {    
-    ml_.MLPutInteger(atoi(node->get_number().c_str()));
-    std::cout << node->get_number().c_str();
-  }
+// êîéö
+void ConsistencyChecker::visit(boost::shared_ptr<Number> node)                
+{    
+  ml_.MLPutInteger(atoi(node->get_number().c_str()));
+  std::cout << node->get_number().c_str();
+}
 
 
-bool CollectTellVisitor::is_consistent()
+bool ConsistencyChecker::is_consistent(std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >& tells)
 {
 
 /*
-  ml.MLPutFunction("List", 3);
-  ml.MLPutFunction("Equal", 2);
-  ml.MLPutSymbol("x");
-  ml.MLPutSymbol("y");
-  ml.MLPutFunction("Equal", 2);
-  ml.MLPutSymbol("x");
-  ml.MLPutInteger(1);
-  ml.MLPutFunction("Equal", 2);
-  ml.MLPutSymbol("y");
-  ml.MLPutInteger(2);
-  ml.MLPutFunction("List", 2);
-  ml.MLPutSymbol("x");
-  ml.MLPutSymbol("y");
-  ml.MLEndPacket();
+  ml_.MLPutFunction("List", 3);
+  ml_.MLPutFunction("Equal", 2);
+  ml_.MLPutSymbol("x");
+  ml_.MLPutSymbol("y");
+  ml_.MLPutFunction("Equal", 2);
+  ml_.MLPutSymbol("x");
+  ml_.MLPutInteger(2);
+  ml_.MLPutFunction("Equal", 2);
+  ml_.MLPutSymbol("y");
+  ml_.MLPutInteger(2);
+
+  ml_.MLPutFunction("List", 2);
+  ml_.MLPutSymbol("x");
+  ml_.MLPutSymbol("y");
+  ml_.MLEndPacket();
 */
 
-
+  int tells_size = tells.size();
   // isConsistent[expr, vars]ÇìnÇµÇΩÇ¢
   ml_.MLPutFunction("isConsistent", 2);
+  ml_.MLPutFunction("List", tells_size);
 
-
-  // ÉpÅ[ÉXÉcÉäÅ[Ç©ÇÁexprÇìæÇƒMathematicaÇ…ìnÇ∑
-  parse_tree_.dispatch(this);
-
-  // ç≈å„Ç…ãÛÇÃÉäÉXÉgÇÇ≠Ç¡Ç¬ÇØÇÈ
-  ml_.MLPutFunction("List", 0);
+  // tellêßñÒÇÃèWçáÇ©ÇÁexprÇìæÇƒMathematicaÇ…ìnÇ∑
+  for(int i=0; i<tells_size; i++){
+    visit(tells[i]);
+  }
 
 
   // varsÇìnÇ∑
   int var_num = vars_.size();
   ml_.MLPutFunction("List", var_num);
-  std::set<std::string>::iterator it = vars_.begin();
+  std::map<std::string, int>::iterator it = vars_.begin();
   const char* sym;
   std::cout << "vars: ";
   while(it!=vars_.end()){
-    sym = (*it).c_str();
-    ml_.MLPutFunction(sym, 1);
-    ml_.MLPutSymbol("t");
-    std::cout << sym << "[t] ";
+    sym = ((*it).first).c_str();
+    if((*it).second==0){
+      ml_.MLPutSymbol(sym);
+    }else {
+      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+      ml_.MLPutArgCount(1);      // this 1 is for the 'f'
+      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+      ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
+      ml_.MLPutSymbol("Derivative");
+      ml_.MLPutInteger(1);
+      ml_.MLPutSymbol(sym);
+      //ml_.MLPutSymbol("t");
+    }
+    std::cout << sym << " ";
     it++;
   }
+
+  // ml_.MLEndPacket();
 
   // óvëfÇÃëSçÌèú
   vars_.clear();
 
-  std::cout << std::endl << std::endl;
+  std::cout << std::endl;
 
 /*
-  // ï‘Ç¡ÇƒÇ≠ÇÈÉpÉPÉbÉgÇâêÕ
-  PacketChecker pc(ml_);
-  pc.check();
+// ï‘Ç¡ÇƒÇ≠ÇÈÉpÉPÉbÉgÇâêÕ
+PacketChecker pc(ml_);
+pc.check();
 */
 
   ml_.skip_pkt_until(RETURNPKT);
-
+  
   int num;
   ml_.MLGetInteger(&num);
-  std::cout << "#num:" << num << std::endl;
+  //std::cout << "#num:" << num << std::endl;
   
   // MathematicaÇ©ÇÁ1ÅiTrueÇï\Ç∑ÅjÇ™ï‘ÇÍÇŒtrueÇÅA0ÅiFalseÇï\Ç∑ÅjÇ™ï‘ÇÍÇŒfalseÇï‘Ç∑
   return num==1;

@@ -1,11 +1,11 @@
-#ifndef _INCLUDED_HYDLA_COLLECT_TELL_VISITOR_H_
-#define _INCLUDED_HYDLA_COLLECT_TELL_VISITOR_H_
+#ifndef _INCLUDED_HYDLA_CONSISTENCY_CHECKER_H_
+#define _INCLUDED_HYDLA_CONSISTENCY_CHECKER_H_
 
 #include "Node.h"
 #include "TreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
-#include <set>
+#include <map>
 #include <vector>
 
 using namespace hydla::parse_tree;
@@ -13,11 +13,11 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace symbolic_simulator {
 
-class CollectTellVisitor : public parse_tree::TreeVisitor {
+class ConsistencyChecker : public parse_tree::TreeVisitor {
 public:
-  CollectTellVisitor(MathLink& ml);
+  ConsistencyChecker(MathLink& ml);
 
-  virtual ~CollectTellVisitor();
+  virtual ~ConsistencyChecker();
 
   bool is_consistent(std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >& tells);
 
@@ -61,7 +61,7 @@ public:
 
 private:
   MathLink& ml_;
-  std::set<std::string> vars_;
+  std::map<std::string, int> vars_;
   int in_differential_equality_;
   int in_differential_;
 
@@ -70,5 +70,5 @@ private:
 } //namespace symbolic_simulator
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_COLLECT_TELL_VISITOR_H__
+#endif //_INCLUDED_HYDLA_CONSISTENCY_CHECKER_H__
 
