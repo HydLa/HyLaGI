@@ -281,7 +281,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
     }
 
     // 制約が充足しているかどうかの確認
-    if(!consistency_checker.is_consistent(collected_tells, state->variable_map)){
+    if(!consistency_checker.is_consistent(collected_tells/*, state->variable_map*/)){
       if(debug_mode_) std::cout << "#*** inconsistent\n";
       return false;
     }
@@ -300,7 +300,8 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
 
     // ask制約のエンテール処理
     //TODO: kenshiroが作成
-//    expanded = entailment_checker.check();
+    expanded = entailment_checker.check_entailment(
+      positive_asks, negative_asks, collected_tells/*, state->variable_map*/);
 
 //     // entailment_checkerができるまでのテストコード
 //     if(negative_asks.size()>0) {
