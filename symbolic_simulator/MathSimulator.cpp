@@ -269,7 +269,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
   collected_tells_t collected_tells;
   positive_asks_t   positive_asks;
   negative_asks_t   negative_asks;
-
+  
   bool expanded   = true;
   while(expanded) {
     // tell制約を集める
@@ -280,12 +280,11 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
       std::for_each(collected_tells.begin(), collected_tells.end(), NodeDump());
     }
 
-    // 制約ストア構築
-    //TODO: kenshiroが作成
-//     if(!consistency_checker.is_consistent(new_tells)){
-//    if(debug_mode_) std::cout << "#*** inconsistent\n";
-//       return false;
-//     }
+    // 制約が充足しているかどうかの確認
+    if(!consistency_checker.is_consistent(collected_tells, state->variable_map)){
+      if(debug_mode_) std::cout << "#*** inconsistent\n";
+      return false;
+    }
     if(debug_mode_) std::cout << "#*** consistent\n";
 
     // ask制約を集める
@@ -302,7 +301,16 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
     // ask制約のエンテール処理
     //TODO: kenshiroが作成
 //    expanded = entailment_checker.check();
-    expanded = false;
+
+//     // entailment_checkerができるまでのテストコード
+//     if(negative_asks.size()>0) {
+//       positive_asks.insert(negative_asks.begin(), negative_asks.end());
+      
+//       expanded = true;
+//     } else {
+//       expanded = false;
+//     }
+
   }
     
 //   if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {

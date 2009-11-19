@@ -24,13 +24,13 @@ class Simulator
 {
 public:
   /**
-   * 制約ストア
+   * 変数表
    */
-  typedef struct ConstraintStore_ {
+  typedef struct VariableMap_ {
     typedef typename std::map<VariableType, ValueType> variable_list_t;
     typedef typename variable_list_t::const_iterator variable_list_const_iterator_t;
 
-    variable_list_t variable_list_;
+    variable_list_t variables;
 
     /**
      * データをダンプする
@@ -44,7 +44,7 @@ public:
       }
       return s;
     }
-  } ConstraintStore;
+  } VariableMap;
 
   /**
    * 処理のフェーズ
@@ -63,7 +63,7 @@ public:
 
     Phase               phase;
     TimeType            time;
-    ConstraintStore     constraint_store;
+    VariableMap         variable_map;
     always_sptr_list_t  expanded_always;
     bool                initial_time;
   } State;
