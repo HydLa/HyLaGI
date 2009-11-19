@@ -15,11 +15,15 @@ class HydLaParser;
 
 namespace symbolic_simulator {
 
-typedef hydla::simulator::Simulator<SymbolicVariable, SymbolicValue, SymbolicTime> simulator_t;
+typedef simulator::VariableMap<SymbolicVariable, SymbolicValue> variable_map_t;
+typedef simulator::PhaseState<variable_map_t, SymbolicTime> phase_state_t;
+typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
+typedef simulator::Simulator<phase_state_t> simulator_t;
 
 class MathSimulator : public simulator_t
 {
 public:
+
   typedef enum OutputFormat_ {
     fmtTFunction,
     fmtNumeric,
@@ -43,9 +47,16 @@ public:
 
 //  virtual bool test_module_set(hydla::ch::module_set_sptr ms);
 
-protected:
-  virtual bool point_phase(hydla::ch::module_set_sptr& ms, State* state);
-  virtual bool interval_phase(hydla::ch::module_set_sptr& ms, State* state);
+
+  /**
+   * Point Phaseの処理
+   */
+  virtual bool point_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state);
+  
+  /**
+   * Interval Phaseの処理
+   */
+  virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state);
 
 private:
   void init(Opts& opts);

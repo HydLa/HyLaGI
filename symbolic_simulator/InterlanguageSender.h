@@ -324,8 +324,8 @@ public:
     tmpstr += "HydLaMain[";
     tmpstr += inter_str_;
     tmpstr += ", {";
-    variable_map_t::const_iterator it  = parse_tree_.get_variable_map().begin();
-    variable_map_t::const_iterator end = parse_tree_.get_variable_map().end();
+    parse_tree::variable_map_t::const_iterator it  = parse_tree_.get_variable_map().begin();
+    parse_tree::variable_map_t::const_iterator end = parse_tree_.get_variable_map().end();
     while(it!=end) {
       tmpstr += it->first;
       if(++it != end) tmpstr += ",";

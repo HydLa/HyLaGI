@@ -9,7 +9,7 @@
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
-//#include "ConsistencyChecker.h"
+#include "ConsistencyChecker.h"
 
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -250,7 +250,8 @@ public:
 };
 }
 
-bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
+bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, 
+                                phase_state_sptr& state)
 {
   if(debug_mode_) {
     std::cout << "#***** bagin point phase *****\n";
@@ -262,7 +263,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
   TellCollector tell_collector;
   AskCollector  ask_collector;
   //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiroが作成
-  //ConsistencyChecker consistency_checker(ml_); //TODO: kenshiroが作成
+  ConsistencyChecker consistency_checker(ml_);
   //EntailmentChecker entailment_checker(ml_);   //TODO: kenshiroが作成
 
   expanded_always_t expanded_always;
@@ -281,10 +282,10 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
     }
 
     // 制約が充足しているかどうかの確認
-    if(!consistency_checker.is_consistent(collected_tells/*, state->variable_map*/)){
-      if(debug_mode_) std::cout << "#*** inconsistent\n";
-      return false;
-    }
+//     if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
+//       if(debug_mode_) std::cout << "#*** inconsistent\n";
+//       return false;
+//     }
     if(debug_mode_) std::cout << "#*** consistent\n";
 
     // ask制約を集める
@@ -299,32 +300,31 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, State* state)
     }
 
     // ask制約のエンテール処理
-    //TODO: kenshiroが作成
-    expanded = entailment_checker.check_entailment(
-      positive_asks, negative_asks, collected_tells/*, state->variable_map*/);
+//     expanded = entailment_checker.check_entailment(
+//       positive_asks, negative_asks, collected_tells /*, state->variable_map*/);
 
-//     // entailment_checkerができるまでのテストコード
-//     if(negative_asks.size()>0) {
-//       positive_asks.insert(negative_asks.begin(), negative_asks.end());
-      
-//       expanded = true;
-//     } else {
-//       expanded = false;
-//     }
-
+    // entailment_checkerができるまでのテストコード
+    if(negative_asks.size()>0) {
+      positive_asks.insert(negative_asks.begin(), negative_asks.end());
+      negative_asks.clear();
+      expanded = true;
+    } else {
+      expanded = false;
+    }
   }
     
 //   if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
 //     return false;
 //   }
 
-  state->phase = IntervalPhase;
+//  state->phase = IntervalPhase;
   //state_queue_.push(*state);
 
   return true;
 }
 
-bool MathSimulator::interval_phase(hydla::ch::module_set_sptr& ms, State* state)
+bool MathSimulator::interval_phase(hydla::ch::module_set_sptr& ms, 
+                                   phase_state_sptr& state)
 {
 
   return true;
