@@ -40,7 +40,7 @@ private:
 };
 
 /**
- * æ–‡æ³•ã‚¨ãƒ©ãƒ¼æ™‚ã«ä½¿ç”¨ã™ã‚‹ã‚¯ãƒ©ã‚¹
+ * •¶–@ƒGƒ‰[Žž‚ÉŽg—p‚·‚éƒNƒ‰ƒX
  */
 class SyntaxError : public ParseError {
 public:
@@ -54,7 +54,7 @@ public:
 };
 
 /**
- * åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®å¤šé‡å®šç¾©æ™‚ã«ä½¿ç”¨ã™ã‚‹ã‚¯ãƒ©ã‚¹
+ * §–ñ‚âƒvƒƒOƒ‰ƒ€‚Ì‘½d’è‹`Žž‚ÉŽg—p‚·‚éƒNƒ‰ƒX
  */
 class MultipleDefinition : public ParseError {
 public:
@@ -68,7 +68,7 @@ public:
 };
 
 /**
- * å®šç¾©ã•ã‚Œã¦ã„ãªã„åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚’å‚ç…§ã—ãŸæ™‚ã«ä½¿ç”¨ã™ã‚‹ã‚¯ãƒ©ã‚¹
+ * ’è‹`‚³‚ê‚Ä‚¢‚È‚¢§–ñ‚âƒvƒƒOƒ‰ƒ€‚ðŽQÆ‚µ‚½Žž‚ÉŽg—p‚·‚éƒNƒ‰ƒX
  */
 class UndefinedReference : public ParseError {
 public:
@@ -82,7 +82,7 @@ public:
 };
 
 /**
- * åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®å¾ªç’°å‚ç…§ãŒå­˜åœ¨ã—ãŸéš›ã«ç™ºç”Ÿã™ã‚‹ä¾‹å¤–ã‚¯ãƒ©ã‚¹
+ * §–ñ‚âƒvƒƒOƒ‰ƒ€‚ÌzŠÂŽQÆ‚ª‘¶Ý‚µ‚½Û‚É”­¶‚·‚é—áŠOƒNƒ‰ƒX
  */
 class CircularReference : public ParseError {
 public:
@@ -96,7 +96,7 @@ public:
 };
 
 /**
- * åˆ¶ç´„ã§ãªã„ã‚‚ã®ï¼ˆãƒ—ãƒ­ã‚°ãƒ©ãƒ ç­‰ï¼‰ã®é€£è¨€ã‚’ã¨ã‚ã†ã¨ã—ãŸéš›ã«ç™ºç”Ÿã™ã‚‹ä¾‹å¤–ã‚¯ãƒ©ã‚¹
+ * §–ñ‚Å‚È‚¢‚à‚ÌiƒvƒƒOƒ‰ƒ€“™j‚Ì˜AŒ¾‚ð‚Æ‚ë‚¤‚Æ‚µ‚½Û‚É”­¶‚·‚é—áŠOƒNƒ‰ƒX
  */
 class InvalidConjunction : public ParseError {
 public:
@@ -125,7 +125,7 @@ private:
 };
 
 /**
- * ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ã§ãªã„åˆ¶ç´„åŒå£«ã‚’é¸è¨€ã§çµåˆã—ã‚ˆã†ã¨ã—ãŸéš›ã«ç™ºç”Ÿã™ã‚‹ä¾‹å¤–ã‚¯ãƒ©ã‚¹
+ * ƒK[ƒhðŒ‚Å‚È‚¢§–ñ“¯Žm‚ð‘IŒ¾‚ÅŒ‹‡‚µ‚æ‚¤‚Æ‚µ‚½Û‚É”­¶‚·‚é—áŠOƒNƒ‰ƒX
  */
 class InvalidDisjunction : public ParseError {
 public:
@@ -154,7 +154,7 @@ private:
 };
 
 /**
- * åˆ¶ç´„å†…ã§ä¸¦åˆ—åˆæˆã‚’ãŠã“ãªãŠã†ã¨ã—ãŸéš›ã«ç™ºç”Ÿã™ã‚‹ä¾‹å¤–ã‚¯ãƒ©ã‚¹
+ * §–ñ“à‚Å•À—ñ‡¬‚ð‚¨‚±‚È‚¨‚¤‚Æ‚µ‚½Û‚É”­¶‚·‚é—áŠOƒNƒ‰ƒX
  */
 class InvalidParallelComposition : public ParseError {
 public:
@@ -183,7 +183,7 @@ private:
 };
 
 /**
- * åˆ¶ç´„å†…ã§å¼±åˆæˆã‚’ãŠã“ãªãŠã†ã¨ã—ãŸéš›ã«ç™ºç”Ÿã™ã‚‹ä¾‹å¤–ã‚¯ãƒ©ã‚¹
+ * §–ñ“à‚ÅŽã‡¬‚ð‚¨‚±‚È‚¨‚¤‚Æ‚µ‚½Û‚É”­¶‚·‚é—áŠOƒNƒ‰ƒX
  */
 class InvalidWeakComposition : public ParseError {
 public:
@@ -212,7 +212,7 @@ private:
 };
 
 /**
- * ã‚¬ãƒ¼ãƒ‰æ¡ä»¶å†…ã§Alwaysåˆ¶ç´„ã‚’ä½¿ç”¨ã—ãŸéš›ã«ç™ºç”Ÿã™ã‚‹ä¾‹å¤–ã‚¯ãƒ©ã‚¹
+ * ƒK[ƒhðŒ“à‚ÅAlways§–ñ‚ðŽg—p‚µ‚½Û‚É”­¶‚·‚é—áŠOƒNƒ‰ƒX
  */
 class InvalidAlways : public ParseError {
 public:

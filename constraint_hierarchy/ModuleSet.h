@@ -15,7 +15,7 @@ namespace ch {
 typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 
 /**
- * モジュールの集合を表すクラス
+ * ���W���[���̏W����\���N���X
  *
  */
 class ModuleSet {
@@ -38,24 +38,24 @@ public:
   ~ModuleSet();
 
   /**
-   * 集合(このクラス)の名前
+   * �W��(���̃N���X)�̖��O
    */ 
   std::string get_name() const;
 
   /**
-   * 集合のパースツリーの内容出力
+   * �W���̃p�[�X�c���[�̓��e�o��
    */
    std::string get_tree_dump() const;
 
   /**
-   * このクラス同士の比較
-   * 含まれるモジュール数が少ないほど小さい
-   * モジュール数が同一の時は含まれているモジュール名により判断をおこなう
+   * ���̃N���X���m�̔�r
+   * �܂܂�郂�W���[���������Ȃ��قǏ�����
+   * ���W���[����������̎��͊܂܂�Ă��郂�W���[�����ɂ�蔻�f�������Ȃ�
    */ 
   int compare(ModuleSet& rhs) const;
 
   /**
-   * 集合の各制約モジュールに対してTreeVisitorの適用
+   * �W���̊e���񃂃W���[���ɑ΂���TreeVisitor�̓K�p
    */ 
   void dispatch(hydla::parse_tree::TreeVisitor* visitor)
   {

@@ -1,7 +1,8 @@
-main_projects := parser math_source_converter constraint_hierarchy symbolic_simulator branch_and_prune_simulator core simulator
+main_projects := core 
+lib_projects  := parser math_source_converter constraint_hierarchy simulator symbolic_simulator #branch_and_prune_simulator
 test_projects := unit_tests
 
-projects := $(main_projects) $(test_projects)
+projects := $(main_projects) $(test_projects) $(lib_projects)
 
 .PHONY : all
 all: $(main_projects)
@@ -11,12 +12,12 @@ all: $(main_projects)
 check: $(projects)
 	cd unit_tests && ./unit_test
 
-# æ–‡å­—ã‚³ãƒ¼ãƒ‰ã®è¨­å®š & propsetã®ç™»éŒ²
+# •¶šƒR[ƒh‚Ìİ’è & propset‚Ì“o˜^
 charset:
 	@sources=`find . -name "Makefile" -or -name "*.cpp" -or -name "*.h" -or -name "*.m"` && \
 	echo $${sources} && \
-	nkf -w8 -Lw --overwrite $$sources  && \
-	svn propset svn:mime-type 'text/plain; charset=utf-8' $$sources
+	nkf -s -Lw --overwrite $$sources  && \
+	svn propset svn:mime-type 'text/plain; charset=shift-jis' $$sources
 
 
 # remove all temp files
@@ -32,6 +33,6 @@ $(projects):
 	$(MAKE) --directory=$@
 
 # dependency
-$(test_projects): parser symbolic_simulator constraint_hierarchy branch_and_prune_simulator simulator
-core: parser symbolic_simulator constraint_hierarchy branch_and_prune_simulator simulator
+$(test_projects): $(lib_projects)
+core: $(lib_projects)
 symbolic_simulator: math_source_converter

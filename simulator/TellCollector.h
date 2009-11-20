@@ -16,7 +16,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * tellãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹ãƒ“ã‚¸ã‚¿ãƒ¼ã‚¯ãƒ©ã‚¹
+ * tellƒm[ƒh‚ğW‚ß‚éƒrƒWƒ^[ƒNƒ‰ƒX
  */
 class TellCollector : public parse_tree::TreeVisitor {
 public:
@@ -24,31 +24,31 @@ public:
   virtual ~TellCollector();
 
   /** 
-   * tellãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹
+   * tellƒm[ƒh‚ğW‚ß‚é
    *
-   * @param expanded_always  å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®é›†åˆ
-   *                           ï¼ˆaskã®ä¸­ã«ã‚ã£ãŸalwaysãŒå±•é–‹ã•ã‚ŒãŸã‚‚ã®ï¼‰
-   * @param collected_tells  é›†ã‚ã‚‰ã‚ŒãŸtellãƒãƒ¼ãƒ‰ã®é›†åˆ
-   * @param positive_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
+   * @param expanded_always  “WŠJÏ‚İalwaysƒm[ƒh‚ÌW‡
+   *                           iask‚Ì’†‚É‚ ‚Á‚½always‚ª“WŠJ‚³‚ê‚½‚à‚Ìj
+   * @param collected_tells  W‚ß‚ç‚ê‚½tellƒm[ƒh‚ÌW‡
+   * @param positive_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹‰Â”\‚Èaskƒm[ƒh‚ÌW‡
    */
   void collect_tell(module_set_t*      ms,
                     expanded_always_t* expanded_always,                   
                     collected_tells_t* collected_tells,
                     positive_asks_t*   positive_asks);
 
-  // åˆ¶ç´„å¼
+  // §–ñ®
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
-  // Askåˆ¶ç´„
+  // Ask§–ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tellåˆ¶ç´„
+  // Tell§–ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // è«–ç†ç©
+  // ˜_—Ï
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   
-  // æ™‚ç›¸æ¼”ç®—å­
+  // ‘Š‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
 private:
@@ -56,13 +56,13 @@ private:
   collected_tells_t* collected_tells_;
   positive_asks_t*   positive_asks_;
 
-  /// askãƒãƒ¼ãƒ‰ã®å­ãƒãƒ¼ãƒ‰ã‹ã©ã†ã‹
+  /// askƒm[ƒh‚Ìqƒm[ƒh‚©‚Ç‚¤‚©
   bool               in_ask_;
 
-  /// å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆã‹ã‚‰ã®æ¢ç´¢ã‹ã©ã†ã‹
+  /// “WŠJÏ‚İalwaysƒm[ƒh‚ÌƒŠƒXƒg‚©‚ç‚Ì’Tõ‚©‚Ç‚¤‚©
   bool               in_expanded_always_;
 
-  /// æ¢ç´¢ã—ãŸalwaysãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆ
+  /// ’Tõ‚µ‚½alwaysƒm[ƒh‚ÌƒŠƒXƒg
   visited_always_t   visited_always_;
 };
 

@@ -42,7 +42,7 @@ typedef std::map<std::string, int>              variable_map_t;
 
 
 /**
- * Nodeã®preprocessé–¢æ•°ã®å¼•æ•°ã‚¯ãƒ©ã‚¹
+ * Node‚ÌpreprocessŠÖ”‚Ìˆø”ƒNƒ‰ƒX
  */
 typedef struct PreprocessArg_ {
 
@@ -75,17 +75,17 @@ typedef struct PreprocessArg_ {
   {}
 
 
-    // ã‚¬ãƒ¼ãƒ‰ã®ä¸­ã‹ã©ã†ã‹
+    // ƒK[ƒh‚Ì’†‚©‚Ç‚¤‚©
     bool in_guard_;
     
-    // åˆ¶ç´„å¼ã®ä¸­ã‹ã©ã†ã‹
+    // §–ñŽ®‚Ì’†‚©‚Ç‚¤‚©
     bool in_constraint_;
 
-    // alwaysåˆ¶ç´„ã®æœ‰åŠ¹ç¯„å›²å†…ã‹ã©ã†ã‹
+    // always§–ñ‚Ì—LŒø”ÍˆÍ“à‚©‚Ç‚¤‚©
     bool in_always_;
 
-    // å¾®åˆ†è¨˜å·ã‚’é€šéŽã—ãŸå›žæ•°
-    // å¤‰æ•°ã«åˆ°é”ã—ãŸéš›ã€ã“ã®å€¤ãŒãã®å¤‰æ•°ã«å¯¾ã™ã‚‹å¾®åˆ†ã®æœ€å¤§å›žæ•°
+    // ”÷•ª‹L†‚ð’Ê‰ß‚µ‚½‰ñ”
+    // •Ï”‚É“ž’B‚µ‚½ÛA‚±‚Ì’l‚ª‚»‚Ì•Ï”‚É‘Î‚·‚é”÷•ª‚ÌÅ‘å‰ñ”
     int differential_count_;
 
     variable_map_t&         variable_map_;
@@ -97,7 +97,7 @@ typedef struct PreprocessArg_ {
 typedef PreprocessArg preprocess_arg_t;
 
 /**
- * ãƒ‘ã‚¹ãƒ„ãƒªãƒ¼ã®åŸºåº•ãƒŽãƒ¼ãƒ‰
+ * ƒpƒXƒcƒŠ[‚ÌŠî’êƒm[ƒh
  */
 class Node {
 public:
@@ -114,7 +114,7 @@ public:
 };
 
 /**
- * 1ã¤ã®å­ãƒŽãƒ¼ãƒ‰ã‚’æŒã¤ãƒŽãƒ¼ãƒ‰
+ * 1‚Â‚ÌŽqƒm[ƒh‚ðŽ‚Âƒm[ƒh
  */
 class UnaryNode : public Node {
 public:
@@ -165,7 +165,7 @@ protected:
 };
 
 /**
- * 2ã¤ã®å­ãƒŽãƒ¼ãƒ‰ã‚’æŒã¤ãƒŽãƒ¼ãƒ‰
+ * 2‚Â‚ÌŽqƒm[ƒh‚ðŽ‚Âƒm[ƒh
  */
 class BinaryNode : public Node{
 public:
@@ -216,7 +216,7 @@ protected:
 };
 
 /**
- * åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®å‘¼ã³å‡ºã—ãƒŽãƒ¼ãƒ‰ã®å…±é€šã‚¯ãƒ©ã‚¹
+ * §–ñ‚âƒvƒƒOƒ‰ƒ€‚ÌŒÄ‚Ño‚µƒm[ƒh‚Ì‹¤’ÊƒNƒ‰ƒX
  */
 class Caller : public UnaryNode {
 public:
@@ -240,7 +240,7 @@ protected:
 };
 
 /**
- * åˆ¶ç´„å‘¼ã³å‡ºã—
+ * §–ñŒÄ‚Ño‚µ
  */
 class ConstraintCaller : public Caller {
 public:
@@ -257,7 +257,7 @@ private:
 };
 
 /**
- * ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
+ * ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
  */
 class ProgramCaller : public Caller {
 public:
@@ -274,7 +274,7 @@ private:
 };
 
 /**
- * åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®å®šç¾©ãƒŽãƒ¼ãƒ‰ã®å…±é€šã‚¯ãƒ©ã‚¹
+ * §–ñ‚âƒvƒƒOƒ‰ƒ€‚Ì’è‹`ƒm[ƒh‚Ì‹¤’ÊƒNƒ‰ƒX
  */
 class Definition : public UnaryNode {
 public:
@@ -314,7 +314,7 @@ private:
 };
 
 /**
- * ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
+ * ƒvƒƒOƒ‰ƒ€’è‹`
  */
 class ProgramDefinition : public Definition {
 public:
@@ -327,7 +327,7 @@ private:
 };
 
 /**
- * åˆ¶ç´„å®šç¾©
+ * §–ñ’è‹`
  */
 class ConstraintDefinition : public Definition {
 public:
@@ -340,7 +340,7 @@ private:
 };
 
 /**
- * åˆ¶ç´„å¼
+ * §–ñŽ®
  */ 
 class Constraint : public UnaryNode {
 public:
@@ -353,7 +353,7 @@ public:
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
   {
-    // ã™ã§ã«åˆ¶ç´„å¼ã®ä¸­ã§ã‚ã£ãŸå ´åˆã¯è‡ªåˆ†è‡ªèº«ã‚’å–ã‚Šé™¤ã
+    // ‚·‚Å‚É§–ñŽ®‚Ì’†‚Å‚ ‚Á‚½ê‡‚ÍŽ©•ªŽ©g‚ðŽæ‚èœ‚­
     if(arg.in_constraint_) {
       child_->preprocess(child_, arg);
       own = child_;
@@ -380,7 +380,7 @@ private:
 };
 
 /**
- * tellåˆ¶ç´„
+ * tell§–ñ
  */ 
 class Tell : public UnaryNode {
 public:
@@ -412,7 +412,7 @@ private:
 };
 
 /**
- * askåˆ¶ç´„
+ * ask§–ñ
  */ 
 class Ask : public Node {
 public:
@@ -526,79 +526,79 @@ virtual std::string to_string() const                             \
 
 
 /**
- * æ¯”è¼ƒæ¼”ç®—å­ã€Œ=ã€
+ * ”äŠr‰‰ŽZŽqu=v
  */
 DEFINE_BINARY_OP_NODE(Equal);
 
 /**
- * æ¯”è¼ƒæ¼”ç®—å­ã€Œ!=ã€
+ * ”äŠr‰‰ŽZŽqu!=v
  */
 DEFINE_BINARY_OP_NODE(UnEqual);
 
 /**
- * æ¯”è¼ƒæ¼”ç®—å­ã€Œ<ã€
+ * ”äŠr‰‰ŽZŽqu<v
  */
 DEFINE_BINARY_OP_NODE(Less);
 
 /**
- * æ¯”è¼ƒæ¼”ç®—å­ã€Œ<=ã€
+ * ”äŠr‰‰ŽZŽqu<=v
  */
 DEFINE_BINARY_OP_NODE(LessEqual);
 
 /**
- * æ¯”è¼ƒæ¼”ç®—å­ã€Œ>ã€
+ * ”äŠr‰‰ŽZŽqu>v
  */
 DEFINE_BINARY_OP_NODE(Greater);
 
 /**
- * æ¯”è¼ƒæ¼”ç®—å­ã€Œ>=ã€
+ * ”äŠr‰‰ŽZŽqu>=v
  */
 DEFINE_BINARY_OP_NODE(GreaterEqual);
 
 /**
- * ç®—è¡“æ¼”ç®—å­ã€Œ+ã€
+ * ŽZp‰‰ŽZŽqu+v
  */
 DEFINE_BINARY_OP_NODE(Plus);
 
 /**
- * ç®—è¡“æ¼”ç®—å­ã€Œ-ã€
+ * ŽZp‰‰ŽZŽqu-v
  */
 DEFINE_BINARY_OP_NODE(Subtract);
 
 /**
- * ç®—è¡“æ¼”ç®—å­ã€Œ*ã€
+ * ŽZp‰‰ŽZŽqu*v
  */
 DEFINE_BINARY_OP_NODE(Times);
 
 /**
- * ç®—è¡“æ¼”ç®—å­ã€Œ/ã€
+ * ŽZp‰‰ŽZŽqu/v
  */
 DEFINE_BINARY_OP_NODE(Divide);
 
 /**
- * è«–ç†æ¼”ç®—å­ã€Œ/\ã€ï¼ˆé€£è¨€ï¼‰
+ * ˜_—‰‰ŽZŽqu/\vi˜AŒ¾j
  */
 DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalAnd);
 
 /**
- * è«–ç†æ¼”ç®—å­ã€Œ\/ã€ï¼ˆé¸è¨€ï¼‰
+ * ˜_—‰‰ŽZŽqu\/vi‘IŒ¾j
  */
 DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalOr);
 
 /**
- * åˆ¶ç´„éšŽå±¤å®šç¾©æ¼”ç®—å­
- * ä¸¦åˆ—åˆ¶ç´„ã€Œ,ã€
+ * §–ñŠK‘w’è‹`‰‰ŽZŽq
+ * •À—ñ§–ñu,v
  */ 
 DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Parallel);
 
 /**
- * åˆ¶ç´„éšŽå±¤å®šç¾©æ¼”ç®—å­
- * å¼±åˆ¶ç´„ã€Œ<<ã€
+ * §–ñŠK‘w’è‹`‰‰ŽZŽq
+ * Žã§–ñu<<v
  */ 
 DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Weaker);
 
 /**
- * æ™‚ç›¸æ¼”ç®—å­ã€Œ[]ã€(Always)
+ * Žž‘Š‰‰ŽZŽqu[]v(Always)
  */
 class Always: public UnaryNode {
 public:
@@ -630,7 +630,7 @@ public:
 };
 
 /**
- * ç®—è¡“å˜é …æ¼”ç®—å­ã€Œ+ã€
+ * ŽZp’P€‰‰ŽZŽqu+v
  */
 class Positive: public UnaryNode {
 public:
@@ -665,7 +665,7 @@ public:
 };
 
 /**
- * ç®—è¡“å˜é …æ¼”ç®—å­ã€Œ-ã€
+ * ŽZp’P€‰‰ŽZŽqu-v
  */
 class Negative: public UnaryNode {
 public:
@@ -700,7 +700,7 @@ public:
 };
 
 /**
- * å¾®åˆ†ã€Œ'ã€
+ * ”÷•ªu'v
  */
 class Differential: public UnaryNode {
 public:
@@ -737,7 +737,7 @@ public:
 };
 
 /**
- * å·¦æ¥µé™ã€Œ-ã€
+ * ¶‹ÉŒÀu-v
  */
 class Previous: public UnaryNode {
 public:
@@ -772,7 +772,7 @@ public:
 };
 
 /**
- * å°æ•°
+ * ¬”
  */ 
 class Number : public Node {
 public:
@@ -811,8 +811,8 @@ private:
 };
 
 /**
- * å¤‰æ•°
- * å¾“å±žå¤‰æ•°ã®å ´åˆã‚‚ã‚ã‚Š
+ * •Ï”
+ * ]‘®•Ï”‚Ìê‡‚à‚ ‚è
  */ 
 class Variable : public Node {
 public:

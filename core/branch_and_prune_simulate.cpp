@@ -1,10 +1,12 @@
 
+#include <boost/shared_ptr.hpp>
+
 #include "ModuleSetList.h"
 
 using namespace hydla::ch;
 
 /**
- * RealPaver繧剃ｽｿ逕ｨ縺励◆Branch and Prune縺ｫ繧医ｋ繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ
+ * RealPaverを使用したBranch and Pruneによるシミュレーション
  */
 void branch_and_prune_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc) 
 {

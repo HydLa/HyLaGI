@@ -17,7 +17,7 @@ namespace hydla {
 namespace ch {
 
 /**
- * Containerå‹ã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é›†åˆã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹ã‚’æ§‹ç¯‰ã™ã‚‹ãŸã‚ã®ã‚¯ãƒ©ã‚¹
+ * ContainerŒ^‚Ìƒ‚ƒWƒ…[ƒ‹W‡‚ÌW‡‚ğ•\‚·ƒNƒ‰ƒX‚ğ\’z‚·‚é‚½‚ß‚ÌƒNƒ‰ƒX
  */
 template <class Container>
 class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
@@ -64,12 +64,12 @@ public:
   {    
     container_name_.clear();
 
-    // å·¦è¾ºï¼šå¼±ã„åˆ¶ç´„
+    // ¶•ÓFã‚¢§–ñ
     node->get_lhs()->accept(node->get_lhs(), this);
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
 
-    // å³è¾ºï¼šå¼·ã„åˆ¶ç´„
+    // ‰E•ÓF‹­‚¢§–ñ
     node->get_rhs()->accept(node->get_rhs(), this);
     mod_set_stack_.back()->add_weak(*lhs);
   }
@@ -78,18 +78,18 @@ public:
   {    
     container_name_.clear();
 
-    // å·¦è¾º
+    // ¶•Ó
     node->get_lhs()->accept(node->get_lhs(), this);
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
 
-    // å³è¾º
+    // ‰E•Ó
     node->get_rhs()->accept(node->get_rhs(), this);
     mod_set_stack_.back()->add_parallel(*lhs);
   }
 
   /**
-   * ä¸ãˆã‚‰ã‚ŒãŸãƒ‘ãƒ¼ã‚¹ãƒ„ãƒªãƒ¼ã‚’å…ƒã«ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é›†åˆã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹ã‚’æ§‹ç¯‰ã™ã‚‹
+   * —^‚¦‚ç‚ê‚½ƒp[ƒXƒcƒŠ[‚ğŒ³‚Éƒ‚ƒWƒ…[ƒ‹W‡‚ÌW‡‚ğ•\‚·ƒNƒ‰ƒX‚ğ\’z‚·‚é
    */
   container_sptr create_module_set_container(hydla::parse_tree::ParseTree* parse_tree)
   {
@@ -105,16 +105,16 @@ public:
   }
 
 private:
-  // æ§‹ç¯‰ã™ã‚‹ãŸã‚ã«ä½¿ç”¨ã™ã‚‹ãƒ‘ãƒ¼ã‚¹ãƒ„ãƒªãƒ¼
+  // \’z‚·‚é‚½‚ß‚Ég—p‚·‚éƒp[ƒXƒcƒŠ[
   hydla::parse_tree::ParseTree* parse_tree_;
 
-  // ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é›†åˆã‚’ä¸€æ™‚çš„ã«ä¿å­˜ã—ã¦ãŠãã‚¹ã‚¿ãƒƒã‚¯
+  // ƒ‚ƒWƒ…[ƒ‹W‡‚ÌW‡‚ğˆê“I‚É•Û‘¶‚µ‚Ä‚¨‚­ƒXƒ^ƒbƒN
   container_stack_t             mod_set_stack_;
 
-  // ç™»éŒ²ã•ã‚Œã‚‹åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®åå‰
+  // “o˜^‚³‚ê‚é§–ñƒ‚ƒWƒ…[ƒ‹‚Ì–¼‘O
   std::string                   container_name_;
 
-  // ç„¡ååˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®é€šã—ç•ªå·
+  // –³–¼§–ñƒ‚ƒWƒ…[ƒ‹‚Ì’Ê‚µ”Ô†
   int                           unnamed_module_num_;
 };
 

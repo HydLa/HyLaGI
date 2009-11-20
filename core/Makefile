@@ -1,6 +1,6 @@
-﻿﻿﻿﻿TARGET	 := ../hydla
+TARGET	 := ../hydla
 
-LIB_DIRS := parser constraint_hierarchy simulator symbolic_simulator branch_and_prune_simulator  
+LIB_DIRS := parser constraint_hierarchy simulator symbolic_simulator #branch_and_prune_simulator  
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/

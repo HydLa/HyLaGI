@@ -35,7 +35,7 @@ public:
   {}
 
   /**
-   * ä¸Žãˆã‚‰ã‚ŒãŸè§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å…ƒã«ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å®Ÿè¡Œã‚’ãŠã“ãªã†
+   * —^‚¦‚ç‚ê‚½‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ðŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŽÀs‚ð‚¨‚±‚È‚¤
    */
   void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc)
                 //              boost::function<bool (hydla::ch::module_set_sptr& ms, phase_state_sptr& state)> point_phase_func)
@@ -71,19 +71,19 @@ public:
   }
 
   /**
-   * Point Phaseã®å‡¦ç†
+   * Point Phase‚Ìˆ—
    */
   virtual bool point_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
 
   /**
-   * Interval Phaseã®å‡¦ç†
+   * Interval Phase‚Ìˆ—
    */
   virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
 
 private:
 //  boost::function<bool (hydla::ch::module_set_sptr& ms, phase_state_sptr& state)> point_phase_func_;
 
-  // å„çŠ¶æ…‹ã‚’ä¿å­˜ã—ã¦ãŠããŸã‚ã®ã‚­ãƒ¥ãƒ¼
+  // Šeó‘Ô‚ð•Û‘¶‚µ‚Ä‚¨‚­‚½‚ß‚ÌƒLƒ…[
   std::queue<phase_state_sptr> state_queue_;
 };
 

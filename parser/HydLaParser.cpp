@@ -84,7 +84,7 @@ std::ostream& HydLaParser::dump_ast(std::ostream& outstream,
                                     int nest)
 {
   for(int i=0; i<nest; i++) {
-    outstream << "  "; // ã‚¹ãƒšãƒ¼ã‚¹ï¼’å€‹åˆ†ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆ
+    outstream << "  "; // ƒXƒy[ƒX‚QŒÂ•ªƒCƒ“ƒfƒ“ƒg
   }
 
 #define OUT_ID_NAME(X) case X: outstream << " " << #X; break
@@ -143,7 +143,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
   long node_id = tree_node.value.id().to_long();
   switch(node_id) 
   {
-    // ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®é›†åˆ
+    // ƒvƒƒOƒ‰ƒ€‚ÌW‡
   case RI_Statements:
     {
       node_sptr node_tree;
@@ -151,7 +151,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       const_tree_iter_t end = tree_node.children.end();
       while(it != end) {
         if(node_sptr new_tree = create_parse_tree(*it++)) {
-          // åˆ¶ç´„å®£è¨€ãŒè¤‡æ•°å›å‡ºç¾ã—ãŸå ´åˆã¯ã€Œ,ã€ã«ã‚ˆã£ã¦é€£çµã™ã‚‹
+          // §–ñéŒ¾‚ª•¡”‰ñoŒ»‚µ‚½ê‡‚Íu,v‚É‚æ‚Á‚Ä˜AŒ‹‚·‚é
           if(node_tree) {
             shared_ptr<Parallel> rn(node_factory_->createParallel());
             rn->set_lhs(node_tree);
@@ -166,7 +166,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       return node_sptr();
     }
 
-    // åˆ¶ç´„å®šç¾©
+    // §–ñ’è‹`
   case RI_ConstraintDef:
     {
       const_tree_iter_t gch = ch->children.begin();
@@ -175,10 +175,10 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       shared_ptr<ConstraintDefinition> 
         node(node_factory_->createConstraintDefinition());
 
-      //å®šç¾©å
+      //’è‹`–¼
       node->set_name(name);
 
-      //ä»®å¼•æ•°
+      //‰¼ˆø”
       if (ch->children.size()>1) {
         const_tree_iter_t args = (gch+1)->children.begin();
         size_t bound_variable_count = (gch+1)->children.size();
@@ -195,7 +195,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       return node_sptr();
     }
 
-    // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
+    // ƒvƒƒOƒ‰ƒ€’è‹`
   case RI_ProgramDef:
     {
       const_tree_iter_t gch = ch->children.begin();
@@ -204,10 +204,10 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       shared_ptr<ProgramDefinition> 
         node(node_factory_->createProgramDefinition());
 
-      //å®šç¾©å
+      //’è‹`–¼
       node->set_name(name);
 
-      //ä»®å¼•æ•°
+      //‰¼ˆø”
       if (ch->children.size()>1) {
         const_tree_iter_t args = (gch+1)->children.begin();
         size_t bound_variable_count = (gch+1)->children.size();
@@ -224,7 +224,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       return node_sptr();
     }
 
-    // åˆ¶ç´„å‘¼ã³å‡ºã—
+    // §–ñŒÄ‚Ño‚µ
   case RI_ConstraintCaller:
     {
       std::string name(ch->value.begin(), ch->value.end());
@@ -232,10 +232,10 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       shared_ptr<ConstraintCaller> 
         node(node_factory_->createConstraintCaller());
 
-      //ãƒ—ãƒ­ã‚°ãƒ©ãƒ å
+      //ƒvƒƒOƒ‰ƒ€–¼
       node->set_name(name);
 
-      //å®Ÿå¼•æ•°
+      //Àˆø”
       if (tree_node.children.size()>1) {
         const_tree_iter_t args = (ch+1)->children.begin();
         size_t bound_variable_count = (ch+1)->children.size();
@@ -246,7 +246,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       return node;
     }
 
-    // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
+    // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
   case RI_ProgramCaller:
     {
       std::string name(ch->value.begin(), ch->value.end());
@@ -254,10 +254,10 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       shared_ptr<ProgramCaller> 
         node(node_factory_->createProgramCaller());
 
-      //ãƒ—ãƒ­ã‚°ãƒ©ãƒ å
+      //ƒvƒƒOƒ‰ƒ€–¼
       node->set_name(name);
 
-      //å®Ÿå¼•æ•°
+      //Àˆø”
       if (tree_node.children.size()>1) {
         const_tree_iter_t args = (ch+1)->children.begin();
         size_t bound_variable_count = (ch+1)->children.size();
@@ -268,27 +268,27 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       return node;
     }
 
-    // askåˆ¶ç´„
+    // ask§–ñ
   case RI_Implies:
     {
       shared_ptr<Ask> node(node_factory_->createAsk());
 
-      // ã‚¬ãƒ¼ãƒ‰æ¡ä»¶
+      // ƒK[ƒhğŒ
       node->set_guard_node(create_parse_tree(*ch));
 
-      // å­åˆ¶ç´„
+      // q§–ñ
       node->set_child_node(create_parse_tree(*(ch+1)));
 
       return node;
     }
 
-    // Tellåˆ¶ç´„
+    // Tell§–ñ
     CREATE_UNARY_OP(Tell)
 
-    // åˆ¶ç´„å¼
+    // §–ñ®
     CREATE_UNARY_OP(Constraint)
 
-    // æ¯”è¼ƒæ¼”ç®—å­
+    // ”äŠr‰‰Zq
     CREATE_BINARY_OP(Equal)
     CREATE_BINARY_OP(UnEqual)
     CREATE_BINARY_OP(Less)
@@ -296,34 +296,34 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     CREATE_BINARY_OP(Greater)
     CREATE_BINARY_OP(GreaterEqual)
 
-    // è«–ç†æ¼”ç®—å­
+    // ˜_—‰‰Zq
     CREATE_BINARY_OP(LogicalAnd)
     CREATE_BINARY_OP(LogicalOr)
 
-    // ç®—è¡“äºŒé …æ¼”ç®—å­
+    // Zp“ñ€‰‰Zq
     CREATE_BINARY_OP(Plus)
     CREATE_BINARY_OP(Subtract)
     CREATE_BINARY_OP(Times)
     CREATE_BINARY_OP(Divide)
 
-    // ç®—è¡“å˜é …æ¼”ç®—å­
+    // Zp’P€‰‰Zq
     CREATE_UNARY_OP(Negative)
     CREATE_UNARY_OP(Positive)
 
-    // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
+    // §–ñŠK‘w’è‹`‰‰Zq
     CREATE_BINARY_OP(Weaker)
     CREATE_BINARY_OP(Parallel)
 
-    // æ™‚ç›¸æ¼”ç®—å­
+    // ‘Š‰‰Zq
     CREATE_UNARY_OP(Always)
 
-    // å¾®åˆ†
+    // ”÷•ª
     CREATE_UNARY_OP(Differential)
     
-    // å·¦æ¥µé™
+    // ¶‹ÉŒÀ
     CREATE_UNARY_OP(Previous)
 
-  // å¤‰æ•°ãƒ»æŸç¸›å¤‰æ•°
+  // •Ï”E‘©”›•Ï”
   case RI_BoundVariable:
   case RI_Variable:
     {
@@ -334,7 +334,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       return node;
     }
 
-  // æ•°å­—
+  // ”š
   case RI_Number:
     {
       shared_ptr<Number> node(node_factory_->createNumber()); 

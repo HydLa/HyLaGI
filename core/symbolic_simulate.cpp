@@ -11,7 +11,7 @@ using namespace hydla::ch;
 using namespace hydla::symbolic_simulator;
 
 /**
- * 險伜捷蜃ｦ逅�縺ｫ繧医ｋ繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ
+ * 記号処理によるシミュレーション
  */
 void symbolic_simulate(HydLaParser& hp, 
                        boost::shared_ptr<hydla::ch::ModuleSetContainer> msc) 

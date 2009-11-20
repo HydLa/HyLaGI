@@ -1,5 +1,5 @@
 (*
- * åˆ¶ç´„ãŒç„¡çŸ›ç›¾ã§ã‚ã‚‹ã‹ã‚’ãƒã‚§ãƒƒã‚¯
+ * §–ñ‚ª–³–µ‚‚Å‚ ‚é‚©‚ğƒ`ƒFƒbƒN
  *)
 
 isConsistent[expr_, vars_] := (
@@ -29,7 +29,7 @@ If[optUseProfile,
 ];
 
 (*
- * ãƒ‡ãƒãƒƒã‚¯ç”¨ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å‡ºåŠ›é–¢æ•°
+ * ƒfƒoƒbƒN—pƒƒbƒZ[ƒWo—ÍŠÖ”
  *)
 If[optUseDebugPrint,
   debugPrint[arg___] := Print[arg],
@@ -44,7 +44,7 @@ If[optUseProfile,
   profile[label_String, func_] := Block[{time, val, indent},
     profCount = profCount + 1;
     If[MatchQ[profInfo[label], _profInfo],
-      (* True *)(* {å‘¼ã³å‡ºã—å›æ•°, å®Ÿè¡ŒCPUæ™‚é–“} *)
+      (* True *)(* {ŒÄ‚Ño‚µ‰ñ”, ÀsCPUŠÔ} *)
       profInfo[label] = {0, 0.0};
       AppendTo[profLabels, label],
       (* False *)
@@ -104,10 +104,10 @@ simplify[expr_] :=
   Simplify[expr];
 
 (*
- * funcã®çµæœãŒTrueã¨ãªã‚‹è¦ç´ ã¨ã€Falseã¨ãªã‚‹è¦ç´ ã‚’åˆ†ã‘ã‚‹
- * Splitã¨é•ã„ã€åŒä¸€è¦ç´ ã¯é€£ç¶šã—ã¦ã„ã‚‹å¿…è¦ã¯ãªã„
+ * func‚ÌŒ‹‰Ê‚ªTrue‚Æ‚È‚é—v‘f‚ÆAFalse‚Æ‚È‚é—v‘f‚ğ•ª‚¯‚é
+ * Split‚Æˆá‚¢A“¯ˆê—v‘f‚Í˜A‘±‚µ‚Ä‚¢‚é•K—v‚Í‚È‚¢
  *
- * æˆ»ã‚Šå€¤ : {Trueã¨ãªã‚‹è¦ç´ , Falseã¨ãªã‚‹è¦ç´ }
+ * –ß‚è’l : {True‚Æ‚È‚é—v‘f, False‚Æ‚È‚é—v‘f}
  *)
 split2[list_, func_] :=
   Fold[(If[func[#2], 
@@ -116,13 +116,13 @@ split2[list_, func_] :=
         {{}, {}}, list];
 
 (*
- * å„å¤‰æ•°ã‚’1æ¬¡å¾®åˆ†ã—ãŸã‚‚ã®ã‚’è¿½åŠ ã—ãŸãƒªã‚¹ãƒˆã‚’è¿”ã™
+ * Še•Ï”‚ğ1Ÿ”÷•ª‚µ‚½‚à‚Ì‚ğ’Ç‰Á‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·
  *)
 addDifferentialVar[vars_] :=
   Fold[(Join[#1, {#2, Derivative[1][#2]}])&, {}, vars];
 
 (*
- * å…¥åŠ›ã•ã‚ŒãŸå¤‰æ•°ã‚’å†…éƒ¨ã§å‡¦ç†ã™ã‚‹å½¢å¼ã«å¤‰æ›ã™ã‚‹
+ * “ü—Í‚³‚ê‚½•Ï”‚ğ“à•”‚Åˆ—‚·‚éŒ`®‚É•ÏŠ·‚·‚é
  *)
 createUsrVar[var_] := 
   ToExpression["usrVar" <> ToString[var]];
@@ -136,63 +136,63 @@ createUsrIntegVar[var_] :=
 var2UsrVar[vars_] := Map[(createUsrVar[#])&, vars];
 
 (*
- * ä¸ãˆã‚‰ã‚ŒãŸé–¢æ•°ã‚’åŸå§‹é–¢æ•°ã«ãªã‚‹ã¾ã§ç©åˆ†ã‚’è¡Œã„ã€
- * çµŒéã‚’ãƒªã‚¹ãƒˆã¨ã—ã¦è¿”ã™
+ * —^‚¦‚ç‚ê‚½ŠÖ”‚ğŒ´nŠÖ”‚É‚È‚é‚Ü‚ÅÏ•ª‚ğs‚¢A
+ * Œo‰ß‚ğƒŠƒXƒg‚Æ‚µ‚Ä•Ô‚·
  *)
 createIntegFuncList[func_] := {};
 createIntegFuncList[Derivative[n_Integer][func_]] := 
   NestList[(#')&, func, n-1];
 
 (*
- * åŸå§‹é–¢æ•°ã‚’å–ã‚Šå‡ºã™
+ * Œ´nŠÖ”‚ğæ‚èo‚·
  *)
 removeDerivative[Derivative[_][func_][_]] := func;
 removeDerivative[func_[_]] := func;
 
 (* 
- * å¤‰æ•°ã‚’æ™‚é–“é–¢æ•°ã«ã™ã‚‹ 
+ * •Ï”‚ğŠÔŠÖ”‚É‚·‚é 
  *)
 var2TimeFunc[vars_] := Map[(createUsrVar[#][t])&, vars];
 
 (* 
- * å¤‰æ•°ã‚’ç©åˆ†æ¸ˆã¿å¤‰æ•°ã«ã™ã‚‹ 
+ * •Ï”‚ğÏ•ªÏ‚İ•Ï”‚É‚·‚é 
  *)
 var2IntegVar[vars_] := Map[createUsrIntegVar, vars];
 
 (*
- * exprå†…ã®varsã®è¡¨ç¾å½¢å¼ã‚’funcã«å¾“ã£ã¦å¤‰æ›ã™ã‚‹
+ * expr“à‚Ìvars‚Ì•\Œ»Œ`®‚ğfunc‚É]‚Á‚Ä•ÏŠ·‚·‚é
  *)
 transExpr[expr_, vars_, func_] := expr /. Map[func, vars];  
 
 (*
- * ä¸ãˆã‚‰ã‚ŒãŸå¼å†…ã®å¤‰æ•°ã‚’æ™‚é–“é–¢æ•°ã«å¤‰æ›ã™ã‚‹
- * ä¾‹ï¼š x => x[t], y' => y'[t]
+ * —^‚¦‚ç‚ê‚½®“à‚Ì•Ï”‚ğŠÔŠÖ”‚É•ÏŠ·‚·‚é
+ * —áF x => x[t], y' => y'[t]
  *)
 exprVar2TimeFunc[expr_, vars_] := 
   expr /. Map[(# -> createUsrVar[#][t])&, vars];
 
 (*
- * ä¸ãˆã‚‰ã‚ŒãŸå¼å†…ã®æ™‚é–“é–¢æ•°ã‚’å¤‰æ•°ã«å¤‰æ›ã™ã‚‹
- * ä¾‹ï¼š varx[t] => x, vary'[t] => y'
+ * —^‚¦‚ç‚ê‚½®“à‚ÌŠÔŠÖ”‚ğ•Ï”‚É•ÏŠ·‚·‚é
+ * —áF varx[t] => x, vary'[t] => y'
  *)
 exprTimeFunc2Var[expr_, vars_] := 
   transExpr[expr, vars, (createUsrVar[#][t] -> #)&];
 
 (*
- * ä¸ãˆã‚‰ã‚ŒãŸå¼å†…ã®æ™‚é–“é–¢æ•°ã‚’ç©åˆ†æ¸ˆã¿é–¢æ•°ã«å¤‰æ›ã™ã‚‹
- * ä¾‹ï¼š varx[t] => integVarx, vary'[t] => integVary'
+ * —^‚¦‚ç‚ê‚½®“à‚ÌŠÔŠÖ”‚ğÏ•ªÏ‚İŠÖ”‚É•ÏŠ·‚·‚é
+ * —áF varx[t] => integVarx, vary'[t] => integVary'
  *)
 exprTimeFunc2IntegFunc[expr_, vars_] := 
   transExpr[expr, vars, (createUsrVar[#][t] -> createUsrIntegVar[#][t])&];
 
 
 (*
- * ãƒ•ãƒ¬ãƒ¼ãƒ å…¬ç†ã‚’æº€ãŸã™ãŸã‚ã®åˆ¶ç´„ã‚’ä½œæˆ
+ * ƒtƒŒ[ƒ€Œö—‚ğ–‚½‚·‚½‚ß‚Ì§–ñ‚ğì¬
  *)
 createFrameAxiomsCons[vars_] :=
   Map[(unit[always[tell[createUsrVar[#'][t]==0]]])&, vars] /. List -> group;
 (*
- * {"term", elem, ...} ã‚’ term[elem, ...] ã®å½¢å¼ã«å¤‰æ›ã™ã‚‹
+ * {"term", elem, ...} ‚ğ term[elem, ...] ‚ÌŒ`®‚É•ÏŠ·‚·‚é
  *)
 parseCons[{"group", elem__}]       := Map[parseCons, group[elem]];
 parseCons[{"ask", guard_, elem__}] := Insert[Map[parseCons, ask[elem]], guard, 1];
@@ -203,7 +203,7 @@ parseCons[{"tell", elem__}]        := tell[elem];
 parseCons[other___]                := Throw[{error, "unknown term", other}];
 
 (* 
- * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰askåˆ¶ç´„ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å‡ºæ¥ã‚‹ã‹ã©ã†ã‹ 
+ * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚çask§–ñ‚ªƒGƒ“ƒe[ƒ‹o—ˆ‚é‚©‚Ç‚¤‚© 
  *)
 askTestQ[cons_, asks_, vars_] := (
   tmpSol = Reduce[Append[cons, asks], vars, Reals];
@@ -212,10 +212,10 @@ askTestQ[cons_, asks_, vars_] := (
 );
 
 (*
- * unitã‚’tellåˆ¶ç´„ã¨askåˆ¶ç´„ã«åˆ†ã‘ã‚‹
- * alwaysã¯å–ã‚Šé™¤ã
+ * unit‚ğtell§–ñ‚Æask§–ñ‚É•ª‚¯‚é
+ * always‚Íæ‚èœ‚­
  *
- * æˆ»ã‚Šå€¤ï¼š{tellåˆ¶ç´„, askåˆ¶ç´„ã®ãƒªã‚¹ãƒˆ}
+ * –ß‚è’lF{tell§–ñ, ask§–ñ‚ÌƒŠƒXƒg}
  *)
 splitTellAsk[unit_] := (
   debugPrint["splitTellAsk#unit:", unit];
@@ -229,7 +229,7 @@ splitTellAsk[acc_, always[elem__]] :=
   Fold[splitTellAsk, acc, {elem}];
 
 (*
- * askåˆ¶ç´„ã®é©ç”¨
+ * ask§–ñ‚Ì“K—p
  *)
 applyAsk[asks_, consStore_, posAsk_, changedAsk_, vars_] :=
   Fold[applyAskFold, 
@@ -364,8 +364,8 @@ exDSolve[expr_, vars_] := (
 (*   DSolve[expr, vars, t] *)
 
 (*
- * æœ‰åŠ¹ãªaskã‚’é©ç”¨ã—ã€ä¸­èº«ã‚’å–ã‚Šå‡ºã™
- * ãã®éš›ã€alwaysã§ãªã„ä¸­èº«ã¯å‰Šé™¤ã™ã‚‹ 
+ * —LŒø‚Èask‚ğ“K—p‚µA’†g‚ğæ‚èo‚·
+ * ‚»‚ÌÛAalways‚Å‚È‚¢’†g‚Ííœ‚·‚é 
  *)
 applyAskInterval[asks_, posAsk_, changedAsk_] :=
   Fold[(applyAskInterval[#1, #2, posAsk, changedAsk])&, {unit[], False}, asks];
@@ -430,7 +430,7 @@ chSolveUnitInterval[validModTable_, consStore_, posAsk_, changedAsk_, vars_] := 
             debugPrint["reduce error!!"];
             Return[False]];
 
-        (* prevã«é–¢ã™ã‚‹åˆ¶ç´„å‰Šé™¤ *)
+        (* prev‚ÉŠÖ‚·‚é§–ñíœ *)
         tells = DeleteCases[tells, _[prev[_][_], _] | _[_, prev[_][_]], Infinity];
         debugPrint["remove prev cons:", tells];
 
@@ -525,9 +525,9 @@ collectTell[terms_, always[elem__]] := Fold[collectTell, terms, {elem}];
 (********)
 
 (*
- * æœ‰åŠ¹ãªaskä¸­ã®åˆ¶ç´„ãŒalwaysã®å ´åˆã¯askã®å¤–ã‹ã‚‰å‡ºã™
+ * —LŒø‚Èask’†‚Ì§–ñ‚ªalways‚Ìê‡‚Íask‚ÌŠO‚©‚ço‚·
  *
- * æˆ»ã‚Šå€¤ : å±•é–‹æ¸ˆã¿ã®åˆ¶ç´„ãƒ†ãƒ¼ãƒ–ãƒ«
+ * –ß‚è’l : “WŠJÏ‚İ‚Ì§–ñƒe[ƒuƒ‹
  *)
 expandAsks[group[elem___], posAsk_, vars_] := 
   Map[(expandAsks[#, posAsk, vars])&, group[elem]];
@@ -545,15 +545,15 @@ expandAsksUnit[{tell[elem_], tail___}, posAsk_, vars_, unitTable_] :=
 
 expandAsksUnit[{ask[guard_, elem__], tail___}, posAsk_, vars_, unitTable_] := (
   If[MemberQ[posAsk, guard], 
-    (* guardãŒæˆã‚Šç«‹ã£ãŸã¨ã *)
+    (* guard‚ª¬‚è—§‚Á‚½‚Æ‚« *)
     {tmpAlwaysElem, tmpNonAlwaysElem} = 
       split2[expandAsksUnit[{elem}, posAsk, vars, {}], (Head[#]===always)&];
     expandAsksUnit[{tail}, posAsk, vars,     
-                    Join[If[Length[tmpNonAlwaysElem]>0, (* alwaysã§ãªã„ã‚‚ã®ã¯askã®ä¸­ã¸ *) 
+                    Join[If[Length[tmpNonAlwaysElem]>0, (* always‚Å‚È‚¢‚à‚Ì‚Íask‚Ì’†‚Ö *) 
                             Append[unitTable, Join[ask[guard], ask @@ tmpNonAlwaysElem]], 
                             unitTable],
-                         always @@ tmpAlwaysElem]], (* alwaysã¯askã®å¤–ã¸ *)
-    (* guardãŒæˆã‚Šç«‹ãŸãªã‹ã£ãŸã¨ã *)
+                         always @@ tmpAlwaysElem]], (* always‚Íask‚ÌŠO‚Ö *)
+    (* guard‚ª¬‚è—§‚½‚È‚©‚Á‚½‚Æ‚« *)
     expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, ask[guard, elem]]]
   ]
 );
@@ -564,11 +564,11 @@ expandAsksUnit[{always[elem__], tail___}, posAsk_, vars_, unitTable_] := (
 );
 
 (*
- * alwaysã«å›²ã¾ã‚Œã¦ã„ãªã„ã‚¿ãƒ—ãƒ«ã‚’å‰Šé™¤ã™ã‚‹
- * ã„ã¡ã°ã‚“å¤–å´ã®alwaysã«å›²ã¾ã‚Œã¦ã„ã‚‹ã‚‚ã®ã¯
- * ä¸­èº«ã‚’å¤–ã«å‡ºã—ã¦alwaysã‚¿ãƒ—ãƒ«ã‚’æ¶ˆã™
- * ç©ºã®group, order, unitã¯å‰Šé™¤
- * è¦ç´ ãŒ1ã®group, orderã¯ä¸­èº«ã‚’è¦ªã®ã‚¿ãƒ—ãƒ«ã«ç§»è­²
+ * always‚ÉˆÍ‚Ü‚ê‚Ä‚¢‚È‚¢ƒ^ƒvƒ‹‚ğíœ‚·‚é
+ * ‚¢‚¿‚Î‚ñŠO‘¤‚Ìalways‚ÉˆÍ‚Ü‚ê‚Ä‚¢‚é‚à‚Ì‚Í
+ * ’†g‚ğŠO‚Éo‚µ‚Äalwaysƒ^ƒvƒ‹‚ğÁ‚·
+ * ‹ó‚Ìgroup, order, unit‚Ííœ
+ * —v‘f‚ª1‚Ìgroup, order‚Í’†g‚ğe‚Ìƒ^ƒvƒ‹‚ÉˆÚ÷
  *)
 removeNonAlwaysTuple[group[elem__]] := (
   Fold[(tmpSol=removeNonAlwaysTuple[#2];
@@ -593,7 +593,7 @@ removeNonAlwaysTuple[unit[elem__]]  :=
 
 
 (*
- * æ¬¡ã®ãƒã‚¤ãƒ³ãƒˆãƒ•ã‚§ãƒ¼ã‚ºã«ç§»è¡Œã™ã‚‹Tã‚’æ±‚ã‚ã‚‹
+ * Ÿ‚Ìƒ|ƒCƒ“ƒgƒtƒF[ƒY‚ÉˆÚs‚·‚éT‚ğ‹‚ß‚é
  *)
 findNextPointPhaseTime[includeZero_, maxTime_,
                         posAsk_, negAsk_, changedAsk_] := Block[{
@@ -614,15 +614,15 @@ findNextPointPhaseTime[includeZero_, maxTime_,
     debugPrint["integAsk:", integAsk];
     debugPrint["ask:", ask];
 
-    (* æœªæ¡ç”¨ã®ask *)
+    (* –¢Ì—p‚Ìask *)
     If[integAsk=!=False,
       (* true *)
       sol = Reduce[{If[includeZero===True, (t>=0), (t>0)] && (maxTime>=t) && (integAsk)}, t];
       debugPrint["sol:", sol];
-      minT = If[sol =!= False, (* è§£ãªã—ã¨å¢ƒç•Œå€¤ã®è§£ã‚’åŒºåˆ¥ã™ã‚‹ãŸã‚ *)
+      minT = If[sol =!= False, (* ‰ğ‚È‚µ‚Æ‹«ŠE’l‚Ì‰ğ‚ğ‹æ•Ê‚·‚é‚½‚ß *)
                  First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (sol)}, {t}], Minimize::wksol]],
                  error];
-      (* æœ€å¤§å€¤ãŒ0ã§ãªã„å ´åˆã€ä¸€ç¬ã®ã¿æˆã‚Šç«‹ã¤askã§ã¯ãªã„  *)
+      (* Å‘å’l‚ª0‚Å‚È‚¢ê‡Aˆêu‚Ì‚İ¬‚è—§‚Âask‚Å‚Í‚È‚¢  *)
 (*       If[includeZero===True, *)
 (*         tmpMaxT = First[Quiet[Maximize[{t, t>=0 && (sol)}, {t}], Maximize::wksol]]; *)
 (*         debugPrint["tmpMaxT:", tmpMaxT]; *)
@@ -634,9 +634,9 @@ findNextPointPhaseTime[includeZero_, maxTime_,
       (* false *)
       minT=0];
 
-    (* 0ç§’å¾Œã®ã‚’å«ã‚“ã§ã¯ã„ã‘ãªã„ *)
+    (* 0•bŒã‚Ì‚ğŠÜ‚ñ‚Å‚Í‚¢‚¯‚È‚¢ *)
     If[includeZero===False && minT===0, minT=error];
-    (* 0ç§’å¾Œã®é›¢æ•£å¤‰åŒ–ãŒè¡Œã‚ã‚Œã‚‹ã‹ã®ãƒã‚§ãƒƒã‚¯ãªã®ã§0ã§ãªã‘ã‚Œã°ã‚¨ãƒ©ãƒ¼ *)
+    (* 0•bŒã‚Ì—£U•Ï‰»‚ªs‚í‚ê‚é‚©‚Ìƒ`ƒFƒbƒN‚È‚Ì‚Å0‚Å‚È‚¯‚ê‚ÎƒGƒ‰[ *)
     If[includeZero===True && minT=!=0, minT=error];
 
     debugPrint["minT:", minT];
@@ -670,13 +670,13 @@ findNextPointPhaseTime[includeZero_, maxTime_,
 (*   debugPrint["ask:", ask]; *)
 
 (*   If[MemberQ[changedAsk, {type, ask}]===False, *)
-(*       (\* æœªæ¡ç”¨ã®ask *\) *)
+(*       (\* –¢Ì—p‚Ìask *\) *)
 (*       If[integAsk=!=False, *)
 (*         (\* true *\) *)
 (*         tmpSol = Reduce[{If[includeZero===True, (t>=0), (maxTime>=t && t>0)] && *)
 (*                          (If[type===negative, integAsk, Not[integAsk]])}, t]; *)
 (*         debugPrint["tmpSol:", tmpSol]; *)
-(*         tmpMinT = If[tmpSol =!= False, (\* è§£ãªã—ã¨å¢ƒç•Œå€¤ã®è§£ã‚’åŒºåˆ¥ã™ã‚‹ãŸã‚ *\) *)
+(*         tmpMinT = If[tmpSol =!= False, (\* ‰ğ‚È‚µ‚Æ‹«ŠE’l‚Ì‰ğ‚ğ‹æ•Ê‚·‚é‚½‚ß *\) *)
 (*                    First[Quiet[Minimize[{t, If[includeZero===True, t>=0, t>0] && (tmpSol)}, {t}], Minimize::wksol]], *)
 (*                    error]; *)
 (*         debugPrint["Minimize#tmpMinT:", tmpMinT]; *)
@@ -686,13 +686,13 @@ findNextPointPhaseTime[includeZero_, maxTime_,
 (*         (\* false *\) *)
 (*         tmpMinT=0], *)
    
-(*       (\* ã™ã§ã«æ¡ç”¨æ¸ˆã®ask *\) *)
+(*       (\* ‚·‚Å‚ÉÌ—pÏ‚Ìask *\) *)
 (*       tmpMinT = error *)
 (*     ]; *)
 
-(*   (\* 0ç§’å¾Œã®ã‚’å«ã‚“ã§ã¯ã„ã‘ãªã„ *\) *)
+(*   (\* 0•bŒã‚Ì‚ğŠÜ‚ñ‚Å‚Í‚¢‚¯‚È‚¢ *\) *)
 (*   If[includeZero===False && tmpMinT===0, tmpMinT=error]; *)
-(*   (\* 0ç§’å¾Œã®é›¢æ•£å¤‰åŒ–ãŒè¡Œã‚ã‚Œã‚‹ã‹ã®ãƒã‚§ãƒƒã‚¯ãªã®ã§0ã§ãªã‘ã‚Œã°ã‚¨ãƒ©ãƒ¼ *\) *)
+(*   (\* 0•bŒã‚Ì—£U•Ï‰»‚ªs‚í‚ê‚é‚©‚Ìƒ`ƒFƒbƒN‚È‚Ì‚Å0‚Å‚È‚¯‚ê‚ÎƒGƒ‰[ *\) *)
 (*   If[includeZero===True && tmpMinT=!=0, tmpMinT=error]; *)
 
 (*   debugPrint["tmpMinT:", tmpMinT]; *)
@@ -706,7 +706,7 @@ findNextPointPhaseTime[includeZero_, maxTime_,
 (* ); *)
 
 (*
- * ãƒã‚¤ãƒ³ãƒˆãƒ•ã‚§ãƒ¼ã‚ºã®å‡¦ç† 
+ * ƒ|ƒCƒ“ƒgƒtƒF[ƒY‚Ìˆ— 
  *)
 pointPhase[consTable_, consStore_, changedAsk_, vars_] := (
   debugPrint["***** point phase *****"];
@@ -716,7 +716,7 @@ pointPhase[consTable_, consStore_, changedAsk_, vars_] := (
 );
 
 (*
- * ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ«ãƒ•ã‚§ã‚¤ã‚ºã®å‡¦ç†
+ * ƒCƒ“ƒ^[ƒoƒ‹ƒtƒFƒCƒY‚Ìˆ—
  *)
 intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, includeZero_, 
               ruleNow2IntegNow_, rulePrev2IntegNow_,
@@ -730,7 +730,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   debugPrint["negAsk:", negAsk];
   debugPrint["changedAsk:", changedAsk];
 
-(*   (\* prevã«é–¢ã™ã‚‹åˆ¶ç´„å‰Šé™¤ *\) *)
+(*   (\* prev‚ÉŠÖ‚·‚é§–ñíœ *\) *)
 (*   tmpSol = Fold[(DeleteCases[#1, #2[_]==_ | _==#2[_], Infinity])&, consTable, prevVars]; *)
 (*   debugPrint["remove prev cons:", tmpSol]; *)
 
@@ -741,18 +741,18 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
 
   tmpTells = {Reduce[tmpTells, vars]};
 
-  (* prevã«é–¢ã™ã‚‹åˆ¶ç´„å‰Šé™¤ *)
+  (* prev‚ÉŠÖ‚·‚é§–ñíœ *)
   tmpTells = DeleteCases[tmpTells, prev[_][_]==_ | _==prev[_][_], Infinity];
   debugPrint["remove prev cons:", tmpTells];
 
-  (* ODEæ±‚è§£ *)
+  (* ODE‹‰ğ *)
   debugPrint["--- DSolve ---"];
   profile["VALS",
     tmpValidVars = validVars[tmpTells];
     tmpTells = Join[tmpTells, initialVals[tmpTells, consStore]]
   ];
 
-  (* è§£ã®è¿‘ä¼¼ï¼ˆç²¾åº¦ä¿è¨¼ã§ã¯ãªããªã‚‹ï¼‰ *)
+  (* ‰ğ‚Ì‹ß—i¸“x•ÛØ‚Å‚Í‚È‚­‚È‚éj *)
 (*   tmpTells = Join[tmpTells, *)
 (*                     Map[(Head[#][#[[1]], approxExpr[#[[2]]]])&, *)
 (*                           initialVals[tmpTells, consStore]]]; *)
@@ -771,7 +771,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   debugPrint["rulePrev2IntegNow:", rulePrev2IntegNow];
   debugPrint["ruleNow2IntegNow:", ruleNow2IntegNow];
 
-  (* ç©åˆ†æ¸ˆã¿å¤‰æ•°ã®å‰²ã‚Šå½“ã¦ *)
+  (* Ï•ªÏ‚İ•Ï”‚ÌŠ„‚è“–‚Ä *)
   debugPrint["integVars:", integVars];
   debugPrint["varsND:", varsND];
   profile["MapTHREAD1",
@@ -795,7 +795,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   
 (*   tmpChangedAsk = If[includeZero, tmpChangedAsk, {}]; *)
 
-  (* æ¬¡ã®PointPhaseã¾ã§ã®æ™‚é–“ã‚’æ±‚ã‚ã‚‹ *)
+  (* Ÿ‚ÌPointPhase‚Ü‚Å‚ÌŠÔ‚ğ‹‚ß‚é *)
   profile["findNEXTPOINTPHASETIME",
 
           {tmpMinT, tmpMinAsk} =
@@ -842,10 +842,10 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
     group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
                             {prevVars, Flatten[Map[({#[t], #'[t]})&, integVars]]}]];
 
-  (* å¤‰æ•°ã®å€¤ã®å‡ºåŠ›
+  (* •Ï”‚Ì’l‚Ìo—Í
    *  
-   * optOutputFormatå¤‰æ•°ãŒfmtTFunctionã®å ´åˆã«ã¯tã®é–¢æ•°ã«ã‚ˆã‚‹è¡¨ç¤º
-   * fmtNumericã®å ´åˆã«ã¯ä»Šã¾ã§é€šã‚Šã®è¡¨ç¤º
+   * optOutputFormat•Ï”‚ªfmtTFunction‚Ìê‡‚É‚Ít‚ÌŠÖ”‚É‚æ‚é•\¦
+   * fmtNumeric‚Ìê‡‚É‚Í¡‚Ü‚Å’Ê‚è‚Ì•\¦
    *)
   debugPrint["begin answer"];
   profile["PRINT",
@@ -865,7 +865,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
    ]];
   debugPrint["end answer"];
 
-  (* ç©åˆ†æ¸ˆã¿å¤‰æ•°ã®å‰²ã‚Šå½“ã¦è§£é™¤ *)
+  (* Ï•ªÏ‚İ•Ï”‚ÌŠ„‚è“–‚Ä‰ğœ *)
   Scan[(Clear[#])&, integVars];
 
   {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore}
@@ -901,7 +901,7 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   prevVars = Map[prev, Map[createUsrVar, vars]];
   pftVars  = Join[ftVars, Map[(#[t])&, prevVars]];
 
-  (* å„å¤‰æ•°ã®å€¤ã‚’tã®é–¢æ•°ã¨ã—ã¦è¡¨ç¤ºç”¨ã®å¤‰æ•°åˆæœŸåŒ– *)
+  (* Še•Ï”‚Ì’l‚ğt‚ÌŠÖ”‚Æ‚µ‚Ä•\¦—p‚Ì•Ï”‰Šú‰» *)
   tmpPrevTime = 0;
 
   gOutPut = {};

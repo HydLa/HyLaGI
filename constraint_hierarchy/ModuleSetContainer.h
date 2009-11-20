@@ -17,7 +17,7 @@ public:
   {}
 
   /**
-   * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
+   * �ɑ�Ȑ��񃂃W���[���W���𖳖����Ȃ��̂�������܂ł��߂�
    */
   virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
                         int threads = 1) = 0;

@@ -10,7 +10,7 @@ typedef struct SymbolicVariable_ {
   bool previous;
   
   /**
-   * æ§‹é€ ä½“ã®å€¤ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
+   * \‘¢‘Ì‚Ì’l‚ğƒ_ƒ“ƒv‚·‚é
    */
   std::ostream& dump(std::ostream& s) const
   {

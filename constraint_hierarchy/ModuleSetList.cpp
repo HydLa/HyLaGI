@@ -29,7 +29,7 @@ ModuleSetList::~ModuleSetList()
 
 void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list) 
 {
-  // parallel(X, Y) = X âˆª Y âˆª {x âˆª y | xâˆˆX, yâˆˆY}
+  // parallel(X, Y) = X ¾ Y ¾ {x ¾ y | x¸X, y¸Y}
 
   module_set_list_t::const_iterator p_it = 
     parallel_module_set_list.module_set_list_.begin();
@@ -42,7 +42,7 @@ void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list)
   // Y
   new_list.insert(new_list.end(), p_it, p_end);
 
-  // {x âˆª y | xâˆˆX, yâˆˆY}
+  // {x ¾ y | x¸X, y¸Y}
   for(; p_it!=p_end; ++p_it) {
     module_set_list_t::iterator this_it =  module_set_list_.begin();
     module_set_list_t::iterator this_end = module_set_list_.end();
@@ -60,12 +60,12 @@ void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list)
 
 void ModuleSetList::add_weak(ModuleSetList& weak_module_set_list) 
 {
-  // ordered(X, Y) = Y âˆª {x âˆª y | xâˆˆX, yâˆˆY}
+  // ordered(X, Y) = Y ¾ {x ¾ y | x¸X, y¸Y}
       
   // Y
   module_set_list_t new_list(module_set_list_);
 
-  // {x âˆª y | xâˆˆX, yâˆˆY}
+  // {x ¾ y | x¸X, y¸Y}
   module_set_list_t::const_iterator p_it = 
     weak_module_set_list.module_set_list_.begin();
   module_set_list_t::const_iterator p_end = 

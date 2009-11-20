@@ -1,6 +1,6 @@
 /**
  *
- * ParseTreeã®ãƒ†ã‚¹ãƒˆã‚±ãƒ¼ã‚¹
+ * ParseTree‚ÌƒeƒXƒgƒP[ƒX
  *
  */
 #include <boost/test/auto_unit_test.hpp>
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
 {
   SETUP_PARSE_TREE_TEST();
 
-  // å®Ÿå¤‰æ•°ã¨å¾“å±å¤‰æ•°ã®åŒºåˆ¥ã¯å‡ºæ¥ã¦ã„ã‚‹ã‹ã©ã†ã‹
+  // À•Ï”‚Æ]‘®•Ï”‚Ì‹æ•Ê‚Ío—ˆ‚Ä‚¢‚é‚©‚Ç‚¤‚©
   PARSE_TREE_TEST_EQUAL(
     "A(x)<=>B(x).B(y)<=>x=y.A(5)."
     ,
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
     "program_definition[],"
     "node_tree[call<A(5)>[call<B(5)>[tell[x=5]]]]]");
 
-  // è¤‡æ•°ã®åå‰å‘¼ã³å‡ºã—ã‚’æ­£ã—ãè§£æ±ºã§ãã‚‹ã‹
+  // •¡”‚Ì–¼‘OŒÄ‚Ño‚µ‚ğ³‚µ‚­‰ğŒˆ‚Å‚«‚é‚©
   PARSE_TREE_TEST_EQUAL(
     "A(x)<=>x=y.A(5).A(10)."
     ,
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
     "program_definition[],"
     "node_tree[call<A(5)>[constraint[tell[5=y]]],call<A(10)>[constraint[tell[10=y]]]]");
 
-  // é€£ç¶šã—ãŸalwaysåˆ¶ç´„ã¯å‰Šé™¤ã•ã‚Œã€
-  // askã®å­ãƒãƒ¼ãƒ‰ã«ãŠã‘ã‚‹alwaysåˆ¶ç´„ã¯å¤–ã®alwaysã«å½±éŸ¿ã•ã‚Œãšã«æ®‹ã‚‹ã‹
+  // ˜A‘±‚µ‚½always§–ñ‚Ííœ‚³‚êA
+  // ask‚Ìqƒm[ƒh‚É‚¨‚¯‚éalways§–ñ‚ÍŠO‚Ìalways‚É‰e‹¿‚³‚ê‚¸‚Éc‚é‚©
     PARSE_TREE_TEST_EQUAL(
     "[](x=1 & []y=2 => z=3 & v=4=>[]w=5)."
     ,
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
 */
 
 /**
- * ç„¡åŠ¹ãªé¸è¨€
+ * –³Œø‚È‘IŒ¾
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_invalid_disjunction)
 {
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_invalid_disjunction)
 }
 
 /**
- * å­˜åœ¨ã—ãªã„åå‰ã¸ã®å‘¼ã³å‡ºã—
+ * ‘¶İ‚µ‚È‚¢–¼‘O‚Ö‚ÌŒÄ‚Ño‚µ
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_undefined_reference)
 {
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_undefined_reference)
 }
 
 /**
- * å¾ªç’°å‚ç…§
+ * zŠÂQÆ
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_circular_reference)
 {
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_circular_reference)
 }
 
 /**
- * å¤šé‡å®šç¾©
+ * ‘½d’è‹`
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_multiple_definition)
 {
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_multiple_definition)
 }
 
 /**
- * å®Ÿéš›ã®ä¾‹é¡Œã‚’æ­£ã—ããƒ‘ãƒ¼ã‚¹ã§ãã‚‹ã‹ã©ã†ã‹
+ * ÀÛ‚Ì—á‘è‚ğ³‚µ‚­ƒp[ƒX‚Å‚«‚é‚©‚Ç‚¤‚©
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
 {

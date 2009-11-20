@@ -10,10 +10,10 @@ namespace hydla {
 namespace ch {
 
 /**
- * 解候補モジュール集合の集合をリスト構造で表すクラス
- * 解候補モジュール集合の集合を導出するアルゴリズムは
- * 「制約階層によるハイブリッドシステムのモデリング手法(JSSST2009)」
- * 参照のこと
+ * ����⃂�W���[���W���̏W�������X�g�\���ŕ\���N���X
+ * ����⃂�W���[���W���̏W���𓱏o����A���S���Y����
+ * �u����K�w�ɂ��n�C�u���b�h�V�X�e���̃��f�����O��@(JSSST2009)�v
+ * �Q�Ƃ̂���
  *
  */
 class ModuleSetList : public ModuleSetContainer {
@@ -25,27 +25,27 @@ public:
   virtual ~ModuleSetList();
 
   /**
-   * 並列合成として集合を合成する
+   * ���񍇐��Ƃ��ďW������������
    */
   void add_parallel(ModuleSetList& parallel_module_set_list);
   
   /**
-   * 弱合成として集合を合成する
+   * �㍇���Ƃ��ďW������������
    */
   void add_weak(ModuleSetList& weak_module_set_list);
 
   /**
-   * 集合の集合(このクラス)の名前
+   * �W���̏W��(���̃N���X)�̖��O
    */ 
   std::string get_name() const;
 
   /**
-   * 集合の集合のパースツリーの内容出力
+   * �W���̏W���̃p�[�X�c���[�̓��e�o��
    */
    std::string get_tree_dump() const;
 
   /**
-   * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
+   * �ɑ�Ȑ��񃂃W���[���W���𖳖����Ȃ��̂�������܂ł��߂�
    */
   virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
                         int threads = 1);

@@ -5,7 +5,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * å„å‡¦ç†ã®çŠ¶æ…‹
+ * Šeˆ—‚Ìó‘Ô
  */
 template<typename VariableMapType, 
          typename TimeType>
@@ -15,7 +15,7 @@ struct PhaseState {
   typedef std::vector<always_sptr>                      always_sptr_list_t;
 
   /**
-   * å‡¦ç†ã®ãƒ•ã‚§ãƒ¼ã‚º
+   * ˆ—‚ÌƒtƒF[ƒY
    */
   typedef enum Phase_ {
     PointPhase,

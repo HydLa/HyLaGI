@@ -7,7 +7,7 @@ namespace symbolic_simulator {
 typedef struct SymbolicValue_ {
 
   /**
-   * ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
+   * ƒf[ƒ^‚ğƒ_ƒ“ƒv‚·‚é
    */
   std::ostream& dump(std::ostream& s) const
   {

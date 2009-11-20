@@ -9,7 +9,7 @@ namespace hydla {
 namespace parse_tree {
   
 /**
- * ParseTreeã®ãƒãƒ¼ãƒ‰é›†åˆã«å¯¾ã™ã‚‹Visitorã‚¯ãƒ©ã‚¹
+ * ParseTree‚Ìƒm[ƒhW‡‚É‘Î‚·‚éVisitorƒNƒ‰ƒX
  */
 class TreeVisitor {
 public:
@@ -17,24 +17,24 @@ public:
 
   virtual ~TreeVisitor();
 
-  // å®šç¾©
+  // ’è‹`
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<ProgramDefinition> node);
 
-  // å‘¼ã³å‡ºã—
+  // ŒÄ‚Ño‚µ
   virtual void visit(boost::shared_ptr<ConstraintCaller> node);
   virtual void visit(boost::shared_ptr<ProgramCaller> node);
 
-  // åˆ¶ç´„å¼
+  // §–ñ®
   virtual void visit(boost::shared_ptr<Constraint> node);
 
-  // Askåˆ¶ç´„
+  // Ask§–ñ
   virtual void visit(boost::shared_ptr<Ask> node);
 
-  // Tellåˆ¶ç´„
+  // Tell§–ñ
   virtual void visit(boost::shared_ptr<Tell> node);
 
-  // æ¯”è¼ƒæ¼”ç®—å­
+  // ”äŠr‰‰Zq
   virtual void visit(boost::shared_ptr<Equal> node);
   virtual void visit(boost::shared_ptr<UnEqual> node);
   virtual void visit(boost::shared_ptr<Less> node);
@@ -42,37 +42,37 @@ public:
   virtual void visit(boost::shared_ptr<Greater> node);
   virtual void visit(boost::shared_ptr<GreaterEqual> node);
 
-  // è«–ç†æ¼”ç®—å­
+  // ˜_—‰‰Zq
   virtual void visit(boost::shared_ptr<LogicalAnd> node);
   virtual void visit(boost::shared_ptr<LogicalOr> node);
   
-  // ç®—è¡“äºŒé …æ¼”ç®—å­
+  // Zp“ñ€‰‰Zq
   virtual void visit(boost::shared_ptr<Plus> node);
   virtual void visit(boost::shared_ptr<Subtract> node);
   virtual void visit(boost::shared_ptr<Times> node);
   virtual void visit(boost::shared_ptr<Divide> node);
   
-  // ç®—è¡“å˜é …æ¼”ç®—å­
+  // Zp’P€‰‰Zq
   virtual void visit(boost::shared_ptr<Negative> node);
   virtual void visit(boost::shared_ptr<Positive> node);
   
-  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
+  // §–ñŠK‘w’è‹`‰‰Zq
   virtual void visit(boost::shared_ptr<Weaker> node);
   virtual void visit(boost::shared_ptr<Parallel> node);
 
-  // æ™‚ç›¸æ¼”ç®—å­
+  // ‘Š‰‰Zq
   virtual void visit(boost::shared_ptr<Always> node);
   
-  // å¾®åˆ†
+  // ”÷•ª
   virtual void visit(boost::shared_ptr<Differential> node);
 
-  // å·¦æ¥µé™
+  // ¶‹ÉŒÀ
   virtual void visit(boost::shared_ptr<Previous> node);
   
-  // å¤‰æ•°
+  // •Ï”
   virtual void visit(boost::shared_ptr<Variable> node);
 
-  // æ•°å­—
+  // ”š
   virtual void visit(boost::shared_ptr<Number> node);
 
 };

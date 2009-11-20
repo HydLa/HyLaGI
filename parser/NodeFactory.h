@@ -25,24 +25,24 @@ public:
   virtual ~NodeFactory()
   {}
   
-  //å®šç¾©
+  //’è‹`
   CREATE_NEW_PT_NODE(ProgramDefinition)
   CREATE_NEW_PT_NODE(ConstraintDefinition)
 
-  //å‘¼ã³å‡ºã—
+  //ŒÄ‚Ño‚µ
   CREATE_NEW_PT_NODE(ProgramCaller)
   CREATE_NEW_PT_NODE(ConstraintCaller)
   
-   //åˆ¶ç´„å¼
+   //§–ñŽ®
   CREATE_NEW_PT_NODE(Constraint);
 
-  //Tellåˆ¶ç´„
+  //Tell§–ñ
   CREATE_NEW_PT_NODE(Tell)
 
-  //Askåˆ¶ç´„
+  //Ask§–ñ
   CREATE_NEW_PT_NODE(Ask)
 
-  //æ¯”è¼ƒæ¼”ç®—å­
+  //”äŠr‰‰ŽZŽq
   CREATE_NEW_PT_NODE(Equal)
   CREATE_NEW_PT_NODE(UnEqual)
   CREATE_NEW_PT_NODE(Less)
@@ -50,37 +50,37 @@ public:
   CREATE_NEW_PT_NODE(Greater)
   CREATE_NEW_PT_NODE(GreaterEqual)
 
-  //è«–ç†æ¼”ç®—å­
+  //˜_—‰‰ŽZŽq
   CREATE_NEW_PT_NODE(LogicalAnd)
   CREATE_NEW_PT_NODE(LogicalOr)
 
-  //ç®—è¡“äºŒé …æ¼”ç®—å­
+  //ŽZp“ñ€‰‰ŽZŽq
   CREATE_NEW_PT_NODE(Plus)
   CREATE_NEW_PT_NODE(Subtract)
   CREATE_NEW_PT_NODE(Times)
   CREATE_NEW_PT_NODE(Divide)
   
-  //ç®—è¡“å˜é …æ¼”ç®—å­
+  //ŽZp’P€‰‰ŽZŽq
   CREATE_NEW_PT_NODE(Negative)
   CREATE_NEW_PT_NODE(Positive)
 
-  //åˆ¶ç´„éšŽå±¤å®šç¾©æ¼”ç®—å­
+  //§–ñŠK‘w’è‹`‰‰ŽZŽq
   CREATE_NEW_PT_NODE(Weaker)
   CREATE_NEW_PT_NODE(Parallel)
 
-  // æ™‚ç›¸æ¼”ç®—å­
+  // Žž‘Š‰‰ŽZŽq
   CREATE_NEW_PT_NODE(Always)
 
-  //å¾®åˆ†
+  //”÷•ª
   CREATE_NEW_PT_NODE(Differential)
   
-  //å·¦æ¥µé™
+  //¶‹ÉŒÀ
   CREATE_NEW_PT_NODE(Previous)
 
-  //å¤‰æ•°ãƒ»æŸç¸›å¤‰æ•°
+  //•Ï”E‘©”›•Ï”
   CREATE_NEW_PT_NODE(Variable)
 
-  //æ•°å­—
+  //”Žš
   CREATE_NEW_PT_NODE(Number)
 };
 
