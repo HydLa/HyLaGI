@@ -169,11 +169,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PhaseState.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Simulator.h"
 				>
 			</File>
 			<File
 				RelativePath=".\TellCollector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Types.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableMap.h"
 				>
 			</File>
 		</Filter>

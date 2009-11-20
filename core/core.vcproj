@@ -175,11 +175,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\branch_and_prune_simulate.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ProgramOptions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\symbolic_simulate.cpp"
 				>
 			</File>
 			<File
