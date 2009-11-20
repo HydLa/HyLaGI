@@ -35,14 +35,14 @@ public:
   ~HydLaParser();
 
   /**
-   * “ü—Í‚ğ‰ğÍ‚µAƒp[ƒXƒcƒŠ[‚ğ\’z‚·‚é
+   * å…¥åŠ›ã‚’è§£æã—ã€ãƒ‘ãƒ¼ã‚¹ãƒ„ãƒªãƒ¼ã‚’æ§‹ç¯‰ã™ã‚‹
    */
   void parse(std::istream& s);
   void parse_flie(const std::string& filename);
   void parse_string(const std::string& str);
 
   /**
-   * AST‚Ì\‘¢‚ğo—Í‚·‚é
+   * ASTã®æ§‹é€ ã‚’å‡ºåŠ›ã™ã‚‹
    */
   std::ostream& dump_ast(std::ostream& outstream)
   {
@@ -50,7 +50,7 @@ public:
   }
 
   /**
-   * ParseTree‚Ì\‘¢‚ğo—Í‚·‚é
+   * ParseTreeã®æ§‹é€ ã‚’å‡ºåŠ›ã™ã‚‹
    */ 
   std::ostream& dump_parse_tree(std::ostream& outstream)
   {
@@ -61,7 +61,7 @@ public:
   std::string create_interlanguage(std::string max_time);
 
   /**
-   * ParseTree‚É‘Î‚µ‚Ä”CˆÓ‚ÌVisitor‚ğ“K—p‚·‚é
+   * ParseTreeã«å¯¾ã—ã¦ä»»æ„ã®Visitorã‚’é©ç”¨ã™ã‚‹
    */
   void dispatch(parse_tree::TreeVisitor* visitor)
   {
@@ -74,7 +74,7 @@ public:
   }
 
   /**
-   * ‚·‚×‚Ä‚ÌƒcƒŠ[ƒf[ƒ^‚ğ”jŠü‚µA‰Šúó‘Ô‚É–ß‚·
+   * ã™ã¹ã¦ã®ãƒ„ãƒªãƒ¼ãƒ‡ãƒ¼ã‚¿ã‚’ç ´æ£„ã—ã€åˆæœŸçŠ¶æ…‹ã«æˆ»ã™
    */
   void clear_tree()
   {
@@ -84,12 +84,12 @@ public:
 
 private:
   /**
-   * “ü—Í‚ğŒ³‚ÉAST‚ğ\’z‚·‚é
+   * å…¥åŠ›ã‚’å…ƒã«ASTã‚’æ§‹ç¯‰ã™ã‚‹
    */
   void create_ast(std::istream& inter);
 
   /*
-   * AST‚©‚çParseTree‚ğì¬
+   * ASTã‹ã‚‰ParseTreeã‚’ä½œæˆ
    */
   void create_parse_tree() 
   {
@@ -97,7 +97,7 @@ private:
   }
 
   /**
-   * ParseTree‚É‘Î‚µ‚Ä–‘Oˆ—i§–ñŒÄ‚Ño‚µ‚ÌQÆ‰ğŒˆ“™j‚ğ‚©‚¯‚é
+   * ParseTreeã«å¯¾ã—ã¦äº‹å‰å‡¦ç†ï¼ˆåˆ¶ç´„å‘¼ã³å‡ºã—ã®å‚ç…§è§£æ±ºç­‰ï¼‰ã‚’ã‹ã‘ã‚‹
    */
   void execute_preprocess() 
   {

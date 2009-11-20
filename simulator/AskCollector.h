@@ -16,7 +16,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * askƒm[ƒh‚ğW‚ß‚éƒrƒWƒ^[ƒNƒ‰ƒX
+ * askãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹ãƒ“ã‚¸ã‚¿ãƒ¼ã‚¯ãƒ©ã‚¹
  */
 class AskCollector : public parse_tree::TreeVisitor {
 public:
@@ -24,12 +24,12 @@ public:
   virtual ~AskCollector();
 
   /** 
-   * askƒm[ƒh‚ğW‚ß‚é
+   * askãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹
    *
-   * @param expanded_always  “WŠJÏ‚İalwaysƒm[ƒh‚ÌW‡
-   *                           iask‚Ì’†‚É‚ ‚Á‚½always‚ª“WŠJ‚³‚ê‚½‚à‚Ìj
-   * @param negative_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹•s‰Â”\‚Èaskƒm[ƒh‚ÌW‡
-   * @param positive_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹‰Â”\‚Èaskƒm[ƒh‚ÌW‡
+   * @param expanded_always  å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®é›†åˆ
+   *                           ï¼ˆaskã®ä¸­ã«ã‚ã£ãŸalwaysãŒå±•é–‹ã•ã‚ŒãŸã‚‚ã®ï¼‰
+   * @param negative_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«ä¸å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
+   * @param positive_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
    */
   void collect_ask(module_set_t*      ms,
                    expanded_always_t* expanded_always,                   
@@ -37,19 +37,19 @@ public:
                    negative_asks_t*   negative_asks);
 
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ˜_—Ï
+  // è«–ç†ç©
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
 private:

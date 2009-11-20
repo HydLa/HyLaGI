@@ -1,10 +1,10 @@
 /**
  *
- * ƒ†ƒjƒbƒgƒeƒXƒg‚ÌƒƒCƒ“
+ * ãƒ¦ãƒ‹ãƒƒãƒˆãƒ†ã‚¹ãƒˆã®ãƒ¡ã‚¤ãƒ³
  *
  */
 
 #define BOOST_AUTO_TEST_MAIN
 #include <boost/test/auto_unit_test.hpp>
 
-// “Á‚É‰½‚à‘‚©‚È‚¢
+// ç‰¹ã«ä½•ã‚‚æ›¸ã‹ãªã„

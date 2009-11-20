@@ -5,7 +5,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * •Ï”•\
+ * å¤‰æ•°è¡¨
  */
 template<typename VariableType, typename ValueType>
 struct VariableMap {
@@ -16,7 +16,7 @@ public:
   variable_list_t variables;
 
   /**
-   * ƒf[ƒ^‚ğƒ_ƒ“ƒv‚·‚é
+   * ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
    */
   std::ostream& dump(std::ostream& s) const
   {

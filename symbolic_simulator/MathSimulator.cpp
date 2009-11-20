@@ -49,7 +49,7 @@ void MathSimulator::init(Opts& opts)
     exit(-1);
   }
 
-  // o—Í‚·‚é‰æ–Ê‚Ì‰¡•‚Ìİ’è
+  // å‡ºåŠ›ã™ã‚‹ç”»é¢ã®æ¨ªå¹…ã®è¨­å®š
   ml_.MLPutFunction("SetOptions", 2);
   ml_.MLPutSymbol("$Output"); 
   ml_.MLPutFunction("Rule", 2);
@@ -59,7 +59,7 @@ void MathSimulator::init(Opts& opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // ƒfƒoƒbƒOƒvƒŠƒ“ƒg
+  // ãƒ‡ãƒãƒƒã‚°ãƒ—ãƒªãƒ³ãƒˆ
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optUseDebugPrint"); 
   ml_.MLPutSymbol(opts.debug_mode ? "True" : "False");
@@ -67,7 +67,7 @@ void MathSimulator::init(Opts& opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // ƒvƒƒtƒ@ƒCƒ‹ƒ‚[ƒh
+  // ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«ãƒ¢ãƒ¼ãƒ‰
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optUseProfile"); 
   ml_.MLPutSymbol(opts.profile_mode ? "True" : "False");
@@ -75,7 +75,7 @@ void MathSimulator::init(Opts& opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // •À—ñƒ‚[ƒh
+  // ä¸¦åˆ—ãƒ¢ãƒ¼ãƒ‰
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optParallel"); 
   ml_.MLPutSymbol(opts.parallel_mode ? "True" : "False");
@@ -83,7 +83,7 @@ void MathSimulator::init(Opts& opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // o—ÍŒ`®
+  // å‡ºåŠ›å½¢å¼
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optOutputFormat"); 
   switch(opts.output_format) {
@@ -100,7 +100,7 @@ void MathSimulator::init(Opts& opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // HydLa.m‚Ì“à—e‘—M
+  // HydLa.mã®å†…å®¹é€ä¿¡
   //   ml_.MLPutFunction("Get", 1);
   //   ml_.MLPutString("symbolic_simulator/HydLa.m");
   ml_.MLPutFunction("ToExpression", 2);
@@ -122,7 +122,7 @@ bool MathSimulator::simulate(
 
   //module_set_container_ = msc;
 
-  // ’†ŠÔŒ¾Œê‘—M
+  // ä¸­é–“è¨€èªé€ä¿¡
   InterlanguageSender interlanguage_sender(parser.parse_tree(), ml_);
   interlanguage_sender.create_interlanguage(opts.max_time);
 
@@ -262,9 +262,9 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
 
   TellCollector tell_collector;
   AskCollector  ask_collector;
-  //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiro‚ªì¬
+  //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiroãŒä½œæˆ
   ConsistencyChecker consistency_checker(ml_);
-  //EntailmentChecker entailment_checker(ml_);   //TODO: kenshiro‚ªì¬
+  //EntailmentChecker entailment_checker(ml_);   //TODO: kenshiroãŒä½œæˆ
 
   expanded_always_t expanded_always;
   collected_tells_t collected_tells;
@@ -273,7 +273,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
   
   bool expanded   = true;
   while(expanded) {
-    // tell§–ñ‚ğW‚ß‚é
+    // tellåˆ¶ç´„ã‚’é›†ã‚ã‚‹
     tell_collector.collect_tell(ms.get(), &expanded_always, 
                                 &collected_tells, &positive_asks);
     if(debug_mode_) {
@@ -281,14 +281,14 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
       std::for_each(collected_tells.begin(), collected_tells.end(), NodeDump());
     }
 
-    // §–ñ‚ª[‘«‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ÌŠm”F
+    // åˆ¶ç´„ãŒå……è¶³ã—ã¦ã„ã‚‹ã‹ã©ã†ã‹ã®ç¢ºèª
 //     if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
 //       if(debug_mode_) std::cout << "#*** inconsistent\n";
 //       return false;
 //     }
     if(debug_mode_) std::cout << "#*** consistent\n";
 
-    // ask§–ñ‚ğW‚ß‚é
+    // askåˆ¶ç´„ã‚’é›†ã‚ã‚‹
     ask_collector.collect_ask(ms.get(), &expanded_always, 
                               &positive_asks, &negative_asks);
     if(debug_mode_) {
@@ -299,11 +299,11 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
       std::for_each(negative_asks.begin(), negative_asks.end(), NodeDump());
     }
 
-    // ask§–ñ‚ÌƒGƒ“ƒe[ƒ‹ˆ—
+    // askåˆ¶ç´„ã®ã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å‡¦ç†
 //     expanded = entailment_checker.check_entailment(
 //       positive_asks, negative_asks, collected_tells /*, state->variable_map*/);
 
-    // entailment_checker‚ª‚Å‚«‚é‚Ü‚Å‚ÌƒeƒXƒgƒR[ƒh
+    // entailment_checkerãŒã§ãã‚‹ã¾ã§ã®ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰
     if(negative_asks.size()>0) {
       positive_asks.insert(negative_asks.begin(), negative_asks.end());
       negative_asks.clear();

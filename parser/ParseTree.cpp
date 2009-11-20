@@ -34,7 +34,7 @@ ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
   std::string name = d->get_name();
   int bound_variable_count = d->get_bound_variables()->size();
 
-  // Šù‚É§–ñ/ƒvƒƒOƒ‰ƒ€’è‹`‚Æ‚µ‚Ä’è‹`‚³‚ê‚Ä‚¢‚È‚¢‚©‚Ç‚¤‚©
+  // æ—¢ã«åˆ¶ç´„/ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©ã¨ã—ã¦å®šç¾©ã•ã‚Œã¦ã„ãªã„ã‹ã©ã†ã‹
   if(cons_def_map_.find(make_pair(name, bound_variable_count)) != cons_def_map_.end() ||
      prog_def_map_.find(make_pair(name, bound_variable_count)) != prog_def_map_.end()) 
   {

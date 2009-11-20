@@ -88,7 +88,7 @@ void hydla_main(int argc, char* argv[])
 
   bool debug_mode = po.count("debug")>0;
 
-  // ƒp[ƒXƒcƒŠ[‚Ì\’z
+  // ãƒ‘ãƒ¼ã‚¹ãƒ„ãƒªãƒ¼ã®æ§‹ç¯‰
   shared_ptr<NodeFactory> nf(new NodeFactory());
   HydLaParser hp(nf, debug_mode);
   if(po.count("input-file")) {
@@ -97,7 +97,7 @@ void hydla_main(int argc, char* argv[])
     hp.parse(std::cin);
   }
 
-  // ‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚Ì“±o
+  // è§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®å°å‡º
   boost::shared_ptr<ModuleSetList> msl(
     ModuleSetContainerCreator<ModuleSetList>().
     create_module_set_container(&hp.parse_tree()));

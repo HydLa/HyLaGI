@@ -20,11 +20,11 @@ public:
   virtual ~InterlanguageSender()
   {}
 
-  // ’è‹`
+  // å®šç¾©
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node)  {}
   virtual void visit(boost::shared_ptr<ProgramDefinition> node)     {}
 
-  // ŒÄ‚Ño‚µ
+  // å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<ConstraintCaller> node)      
   {
     node_sptr chnode(node->get_child_node());
@@ -37,7 +37,7 @@ public:
     chnode->accept(chnode, this);
   }
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<Constraint> node)            
   {
     //ml_.MLPutFunction("unit", 1);
@@ -47,7 +47,7 @@ public:
     inter_str_ += "]";
   }
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<Ask> node)                   
   {
     inter_str_ += "ask[";
@@ -64,7 +64,7 @@ public:
     inter_str_ += "]";
   }
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<Tell> node)                  
   {
     //ml_.MLPutFunction("tell", 1);
@@ -74,7 +74,7 @@ public:
     inter_str_ += "]";
   }
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Equal> node)                 
   {
     //ml_.MLPutFunction("Equal", 2);
@@ -141,7 +141,7 @@ public:
     inter_str_ += "]";
   }
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<LogicalAnd> node)            
   {
     //ml_.MLPutFunction("And", 2);
@@ -170,7 +170,7 @@ public:
     inter_str_ += "]";
   }
   
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Plus> node)                  
   {
     //ml_.MLPutFunction("Plus", 2);
@@ -215,7 +215,7 @@ public:
     inter_str_ += "]";
   }
   
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Negative> node)              
   {       
     //ml_.MLPutFunction("Minus", 1);
@@ -232,10 +232,10 @@ public:
     chnode->accept(chnode, this);
   }
   
-  // §–ñŠK‘w’è‹`‰‰Zq
+  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Weaker> node)                
   {
-    // ‹t‚É‚µ‚Ä‘—M
+    // é€†ã«ã—ã¦é€ä¿¡
     //ml_.MLPutFunction("order", 2);
     
     inter_str_ += "order[";
@@ -257,7 +257,7 @@ public:
   }
 
 
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Always> node)                
   {
     //ml_.MLPutFunction("always", 1);
@@ -267,7 +267,7 @@ public:
     inter_str_ += "]";
   }
   
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<Differential> node)          
   {
 //     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
@@ -283,7 +283,7 @@ public:
     inter_str_ += "]";
   }
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<Previous> node)              
   {
     //ml_.MLPutFunction("prev", 1);
@@ -293,14 +293,14 @@ public:
     inter_str_ += "]";
   }
   
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<Variable> node)              
   {
     //ml_.MLPutSymbol(node->get_name().c_str());
     inter_str_ += node->get_name();
   }
 
-  // ”š
+  // æ•°å­—
   virtual void visit(boost::shared_ptr<Number> node)                
   {    
     //ml_.MLPutInteger(atoi(node->get_number().c_str()));

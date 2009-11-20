@@ -4,7 +4,7 @@
 using namespace hydla::ch;
 
 /**
- * RealPaverを使用したBranch and Pruneによるシミュレーション
+ * RealPaver繧剃ｽｿ逕ｨ縺励◆Branch and Prune縺ｫ繧医ｋ繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ
  */
 void branch_and_prune_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc) 
 {

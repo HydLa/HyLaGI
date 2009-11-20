@@ -26,12 +26,12 @@ void ProgramCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
 
   difinition_type_t def_type(name_, actual_arg_list_.size());
 
-  // §–ñ’è‹`‚©‚ç’T‚·
+  // åˆ¶ç´„å®šç¾©ã‹ã‚‰æŽ¢ã™
   constraint_def_map_t::iterator cons_it = arg.cons_def_map_.find(def_type);
   if(cons_it!=arg.cons_def_map_.end()) {
     defnode = (*cons_it).second;
   } else {
-    // ƒvƒƒOƒ‰ƒ€’è‹`‚©‚ç’T‚·
+    // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©ã‹ã‚‰æŽ¢ã™
     program_def_map_t::iterator prog_it = arg.prog_def_map_.find(def_type);
     if(prog_it!=arg.prog_def_map_.end()) {
       defnode = (*prog_it).second;
@@ -40,12 +40,12 @@ void ProgramCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
     }
   }
 
-  //zŠÂŽQÆ‚Ìƒ`ƒFƒbƒN
+  //å¾ªç’°å‚ç…§ã®ãƒã‚§ãƒƒã‚¯
   if (arg.refered_def_.find(def_type) != arg.refered_def_.end()) {
     throw CircularReference(to_string());
   }
 
-  // ŽÀˆø”‚É‘Î‚µpreprocess“K—p
+  // å®Ÿå¼•æ•°ã«å¯¾ã—preprocessé©ç”¨
   for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
            bind(&Node::preprocess, _1, _1, arg));
 
@@ -56,19 +56,19 @@ void ConstraintCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
 {
   difinition_type_t def_type(name_, actual_arg_list_.size());
 
-  // §–ñ’è‹`‚©‚ç’T‚·
+  // åˆ¶ç´„å®šç¾©ã‹ã‚‰æŽ¢ã™
   constraint_def_map_t::iterator it = arg.cons_def_map_.find(def_type);
   if(it==arg.cons_def_map_.end()) {
     throw UndefinedReference(to_string());
   }
 
-  //zŠÂŽQÆ‚Ìƒ`ƒFƒbƒN
+  //å¾ªç’°å‚ç…§ã®ãƒã‚§ãƒƒã‚¯
   if (arg.refered_def_.find(def_type) != arg.refered_def_.end()) {
     throw CircularReference(to_string());
   }
 
 
-  // ŽÀˆø”‚É‘Î‚µpreprocess“K—p
+  // å®Ÿå¼•æ•°ã«å¯¾ã—preprocessé©ç”¨
   for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
            bind(&Node::preprocess, _1, _1, arg));
 
@@ -117,7 +117,7 @@ void Definition::preprocess(node_sptr& own,
 {
   formal_arg_map_t fam;
 
-  // ‰¼ˆø”‚ÆŽÀˆø”‚Ì‘Î‰ž•t‚¯
+  // ä»®å¼•æ•°ã¨å®Ÿå¼•æ•°ã®å¯¾å¿œä»˜ã‘
   bound_variables_t::iterator bv_it = bound_variables_.begin();
   actual_arg_list_t::iterator aa_it = actual_arg_list.begin();
   for(; aa_it!=actual_arg_list.end(); ++bv_it, ++aa_it) {
@@ -125,7 +125,7 @@ void Definition::preprocess(node_sptr& own,
     fam.insert(make_pair(*bv_it, *aa_it));
   }
 
-  // zŠÂŽQÆŒŸo—pƒŠƒXƒg‚É“o˜^
+  // å¾ªç’°å‚ç…§æ¤œå‡ºç”¨ãƒªã‚¹ãƒˆã«ç™»éŒ²
   preprocess_arg_t narg(arg, fam);
   narg.refered_def_.insert(make_pair(name_, bound_variables_.size()));
 
@@ -215,7 +215,7 @@ void Always::preprocess(node_sptr& own, preprocess_arg_t& arg)
   child_->preprocess(child_, narg);
 
     
-  // ‚·‚Å‚Éalways§–ñ“à‚Å‚ ‚Á‚½ê‡‚±‚Ìƒm[ƒh‚Í‚Í‚¸‚·
+  // ã™ã§ã«alwaysåˆ¶ç´„å†…ã§ã‚ã£ãŸå ´åˆã“ã®ãƒŽãƒ¼ãƒ‰ã¯ã¯ãšã™
   if(arg.in_always_) {
     own = child_;
   }
@@ -225,11 +225,11 @@ void Variable::preprocess(node_sptr& own, preprocess_arg_t& arg)
 {
   formal_arg_map_t::iterator it = arg.formal_arg_map_.find(name_);
   if(it != arg.formal_arg_map_.end()) {
-    // Ž©g‚ª‰¼ˆø”‚Å‚ ‚Á‚½ê‡A‘‚«Š·‚¦‚é
+    // è‡ªèº«ãŒä»®å¼•æ•°ã§ã‚ã£ãŸå ´åˆã€æ›¸ãæ›ãˆã‚‹
     own = (*it).second;
   } else {
-    // ŽÀˆø”‚Å‚ ‚Á‚½ê‡AŽ©g‚Ì‚·‚Å‚É“o˜^Ï‚Ý‚Ì”÷•ª‰ñ”‚æ‚è‚à
-    // ‘å‚«‚©‚Á‚½‚ç•Ï”‚ÌƒŠƒXƒg‚É“o˜^‚·‚é
+    // å®Ÿå¼•æ•°ã§ã‚ã£ãŸå ´åˆã€è‡ªèº«ã®ã™ã§ã«ç™»éŒ²æ¸ˆã¿ã®å¾®åˆ†å›žæ•°ã‚ˆã‚Šã‚‚
+    // å¤§ãã‹ã£ãŸã‚‰å¤‰æ•°ã®ãƒªã‚¹ãƒˆã«ç™»éŒ²ã™ã‚‹
     variable_map_t::iterator it = arg.variable_map_.find(name_);
     if(it == arg.variable_map_.end() ||
       it->second < arg.differential_count_) {
@@ -241,7 +241,7 @@ void Variable::preprocess(node_sptr& own, preprocess_arg_t& arg)
 }
 
 /**
- * Šeƒm[ƒh‚ÌacceptŠÖ”’è‹`
+ * å„ãƒŽãƒ¼ãƒ‰ã®accepté–¢æ•°å®šç¾©
  */
 
 #define DEFINE_ACCEPT_FUNC(CLASS) \
@@ -252,24 +252,24 @@ void Variable::preprocess(node_sptr& own, preprocess_arg_t& arg)
     visitor->visit(boost::shared_static_cast<CLASS>(own)); \
   }
 
-//’è‹`
+//å®šç¾©
 DEFINE_ACCEPT_FUNC(ProgramDefinition)
 DEFINE_ACCEPT_FUNC(ConstraintDefinition)
 
-//ŒÄ‚Ño‚µ
+//å‘¼ã³å‡ºã—
 DEFINE_ACCEPT_FUNC(ProgramCaller)
 DEFINE_ACCEPT_FUNC(ConstraintCaller)
 
- //§–ñŽ®
+ //åˆ¶ç´„å¼
 DEFINE_ACCEPT_FUNC(Constraint);
 
-//Tell§–ñ
+//Tellåˆ¶ç´„
 DEFINE_ACCEPT_FUNC(Tell)
 
-//Ask§–ñ
+//Askåˆ¶ç´„
 DEFINE_ACCEPT_FUNC(Ask)
 
-//”äŠr‰‰ŽZŽq
+//æ¯”è¼ƒæ¼”ç®—å­
 DEFINE_ACCEPT_FUNC(Equal)
 DEFINE_ACCEPT_FUNC(UnEqual)
 DEFINE_ACCEPT_FUNC(Less)
@@ -277,37 +277,37 @@ DEFINE_ACCEPT_FUNC(LessEqual)
 DEFINE_ACCEPT_FUNC(Greater)
 DEFINE_ACCEPT_FUNC(GreaterEqual)
 
-//˜_—‰‰ŽZŽq
+//è«–ç†æ¼”ç®—å­
 DEFINE_ACCEPT_FUNC(LogicalAnd)
 DEFINE_ACCEPT_FUNC(LogicalOr)
 
-//ŽZp“ñ€‰‰ŽZŽq
+//ç®—è¡“äºŒé …æ¼”ç®—å­
 DEFINE_ACCEPT_FUNC(Plus)
 DEFINE_ACCEPT_FUNC(Subtract)
 DEFINE_ACCEPT_FUNC(Times)
 DEFINE_ACCEPT_FUNC(Divide)
 
-//ŽZp’P€‰‰ŽZŽq
+//ç®—è¡“å˜é …æ¼”ç®—å­
 DEFINE_ACCEPT_FUNC(Negative)
 DEFINE_ACCEPT_FUNC(Positive)
 
-//§–ñŠK‘w’è‹`‰‰ŽZŽq
+//åˆ¶ç´„éšŽå±¤å®šç¾©æ¼”ç®—å­
 DEFINE_ACCEPT_FUNC(Weaker)
 DEFINE_ACCEPT_FUNC(Parallel)
 
-// Žž‘Š‰‰ŽZŽq
+// æ™‚ç›¸æ¼”ç®—å­
 DEFINE_ACCEPT_FUNC(Always)
 
-//”÷•ª
+//å¾®åˆ†
 DEFINE_ACCEPT_FUNC(Differential)
 
-//¶‹ÉŒÀ
+//å·¦æ¥µé™
 DEFINE_ACCEPT_FUNC(Previous)
 
-//•Ï”E‘©”›•Ï”
+//å¤‰æ•°ãƒ»æŸç¸›å¤‰æ•°
 DEFINE_ACCEPT_FUNC(Variable)
 
-//”Žš
+//æ•°å­—
 DEFINE_ACCEPT_FUNC(Number)
 
 } //namespace parse_tree

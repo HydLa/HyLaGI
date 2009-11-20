@@ -12,11 +12,11 @@ typedef enum _RuleID {
   RI_Identifier,
   RI_ProgramName,
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   RI_LogicalAnd,
   RI_LogicalOr,
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   RI_CompOp,
   RI_Less,
   RI_LessEqual,
@@ -25,27 +25,27 @@ typedef enum _RuleID {
   RI_Equal,
   RI_UnEqual,
 
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   RI_Negative,
   RI_Positive,
 
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   RI_Plus,
   RI_Subtract,
   RI_Times,
   RI_Divide,
 
-  // §–ñŠK‘w’è‹`‰‰Zq
+  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
   RI_Weaker,
   RI_Parallel,
 
-  // ”÷•ª
+  // å¾®åˆ†
   RI_Differential,
   
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   RI_Previous,
 
-  // ‘Š‰‰Zq (Always = Globally)
+  // æ™‚ç›¸æ¼”ç®—å­ (Always = Globally)
   RI_Always,
 
   RI_Implies,
