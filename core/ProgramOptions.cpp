@@ -26,6 +26,10 @@ void ProgramOptions::init_descriptions()
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
     ("module-set-list", "output set of module sets which might be solution")
+
+    ("method,m", 
+     value<std::string>()->default_value("s"), 
+     "simulation method:\n  b or BandPSimulator\n  s or SymbolicSimulator")
     
     ("output-format,f", 
      value<std::string>()->default_value("n"), 
