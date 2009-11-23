@@ -165,6 +165,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PreprocessParseTree.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TreeVisitor.cpp"
 				>
 			</File>
@@ -204,6 +208,10 @@
 			</File>
 			<File
 				RelativePath=".\ParseTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PreprocessParseTree.h"
 				>
 			</File>
 			<File

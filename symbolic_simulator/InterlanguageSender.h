@@ -27,14 +27,12 @@ public:
   // ŒÄ‚Ño‚µ
   virtual void visit(boost::shared_ptr<ConstraintCaller> node)      
   {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
   }
 
   virtual void visit(boost::shared_ptr<ProgramCaller> node)         
   {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
   }
 
   // §–ñ®
@@ -42,8 +40,7 @@ public:
   {
     //ml_.MLPutFunction("unit", 1);
     inter_str_ += "unit[";
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
 
@@ -53,14 +50,12 @@ public:
     inter_str_ += "ask[";
     //ml_.MLPutFunction("ask", 2);
     in_guard_ = true;
-    node_sptr gunode(node->get_guard_node());
-    gunode->accept(gunode, this);
+    accept(node->get_guard());
 
     inter_str_ += ",";
 
     in_guard_ = false;
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
 
@@ -69,8 +64,7 @@ public:
   {
     //ml_.MLPutFunction("tell", 1);
     inter_str_ += "tell[";
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
 
@@ -78,11 +72,11 @@ public:
   virtual void visit(boost::shared_ptr<Equal> node)                 
   {
     //ml_.MLPutFunction("Equal", 2);
-        
+
     inter_str_ += "Equal[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -91,9 +85,9 @@ public:
     //ml_.MLPutFunction("UnEqual", 2);
     
     inter_str_ += "UnEqual[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -102,9 +96,9 @@ public:
     //ml_.MLPutFunction("Less", 2);
     
     inter_str_ += "Less[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -113,9 +107,9 @@ public:
     //ml_.MLPutFunction("LessEqual", 2);
     
     inter_str_ += "LessEqual[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -124,9 +118,9 @@ public:
     //ml_.MLPutFunction("Greater", 2);
     
     inter_str_ += "Greater[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -135,9 +129,9 @@ public:
     //ml_.MLPutFunction("GreaterEqual", 2);
     
     inter_str_ += "GreaterEqual[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -148,14 +142,14 @@ public:
 
     if(in_guard_) {
       inter_str_ += "And[";
-      node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+      accept(node->get_lhs());
       inter_str_ += ",";
-      node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+      accept(node->get_rhs());
       inter_str_ += "]";
     } else {
-      node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+      accept(node->get_lhs());
       inter_str_ += ",";
-      node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+      accept(node->get_rhs());
     }
   }
 
@@ -164,9 +158,9 @@ public:
     //ml_.MLPutFunction("Or", 2);
     
     inter_str_ += "Or[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
   
@@ -176,9 +170,9 @@ public:
     //ml_.MLPutFunction("Plus", 2);
     
     inter_str_ += "Plus[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -187,9 +181,9 @@ public:
     //ml_.MLPutFunction("Subtract", 2);
     
     inter_str_ += "Subtract[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -198,9 +192,9 @@ public:
     //ml_.MLPutFunction("Times", 2);
 
     inter_str_ += "Times[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -209,9 +203,9 @@ public:
     //ml_.MLPutFunction("Divide", 2);
     
     inter_str_ += "Divide[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
   
@@ -221,15 +215,13 @@ public:
     //ml_.MLPutFunction("Minus", 1);
     
     inter_str_ += "Minus[";
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
 
   virtual void visit(boost::shared_ptr<Positive> node)              
   {
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
   }
   
   // §–ñŠK‘w’è‹`‰‰Zq
@@ -239,9 +231,9 @@ public:
     //ml_.MLPutFunction("order", 2);
     
     inter_str_ += "order[";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += ",";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += "]";
   }
   
@@ -250,9 +242,9 @@ public:
     //ml_.MLPutFunction("group", 2);
 
     inter_str_ += "group[";
-    node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
+    accept(node->get_lhs());
     inter_str_ += ",";
-    node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+    accept(node->get_rhs());
     inter_str_ += "]";
   }
 
@@ -262,8 +254,7 @@ public:
   {
     //ml_.MLPutFunction("always", 1);
     inter_str_ += "always[";
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
   
@@ -278,8 +269,7 @@ public:
 //     ml_.MLPutInteger(1);
 
     inter_str_ += "Derivative[1][";
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
 
@@ -288,8 +278,7 @@ public:
   {
     //ml_.MLPutFunction("prev", 1);
     inter_str_ += "prev[";
-    node_sptr chnode(node->get_child_node());
-    chnode->accept(chnode, this);
+    accept(node->get_child());
     inter_str_ += "]";
   }
   

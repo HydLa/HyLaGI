@@ -17,12 +17,25 @@ public:
 
   virtual ~TreeVisitor();
 
-  // 定義
+  /**
+   * Nodeクラスのaccept関数呼び出し用ヘルパ関数
+   */
+  template<class T>
+  void accept(const T& n)
+  {
+    n->accept(n, this);
+  }
+
+  // 制約定義
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
+  
+  // プログラム定義
   virtual void visit(boost::shared_ptr<ProgramDefinition> node);
 
-  // 呼び出し
+  // 制約呼び出し
   virtual void visit(boost::shared_ptr<ConstraintCaller> node);
+  
+  // プログラム呼び出し
   virtual void visit(boost::shared_ptr<ProgramCaller> node);
 
   // 制約式

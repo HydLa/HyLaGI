@@ -8,7 +8,7 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-CXX_OPT  += -Wall #-O2 #-pg
+CXX_OPT  += -Wall --input-charset=cp932 #-O2 #-pg
 
 ARFLAGS  := crus
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)

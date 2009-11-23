@@ -274,10 +274,10 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
       shared_ptr<Ask> node(node_factory_->createAsk());
 
       // ƒK[ƒhğŒ
-      node->set_guard_node(create_parse_tree(*ch));
+      node->set_guard(create_parse_tree(*ch));
 
       // q§–ñ
-      node->set_child_node(create_parse_tree(*(ch+1)));
+      node->set_child(create_parse_tree(*(ch+1)));
 
       return node;
     }

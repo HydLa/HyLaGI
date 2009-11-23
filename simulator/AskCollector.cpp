@@ -42,7 +42,7 @@ void AskCollector::collect_ask(module_set_t*      ms,
 // 制約式
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 {
-  node->get_child_node()->accept(node->get_child_node(), this);
+  accept(node->get_child());
 }
 
 // Ask制約
@@ -50,7 +50,7 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   if(positive_asks_->find(node) != positive_asks_->end()) {
     // 既に展開済みのaskノードであった場合
-    node->get_child_node()->accept(node->get_child_node(), this);
+    accept(node->get_child());
   } else {
     // まだ展開されていないaskノードであった場合
     negative_asks_->insert(node);  
@@ -66,14 +66,14 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 // 論理積
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
 {
-  node->get_lhs()->accept(node->get_lhs(), this);
-  node->get_rhs()->accept(node->get_rhs(), this);
+  accept(node->get_lhs());
+  accept(node->get_rhs());
 }
 
 // 時相演算子
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
-  node->get_child_node()->accept(node->get_child_node(), this);
+  accept(node->get_child());
 }
 
 } //namespace simulator

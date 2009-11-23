@@ -155,7 +155,18 @@ public:
     child_ = child;
   }
 
+  void set_child(node_sptr child)
+  {
+    child_ = child;
+  }
+
+  // TODO: 
   const node_sptr get_child_node() const
+  {
+    return child_;
+  }
+
+  const node_sptr get_child() const
   {
     return child_;
   }
@@ -450,11 +461,11 @@ public:
   }
 
   // specific functions
-  void set_child_node(node_sptr child)    {child_ = child;}
-  const node_sptr get_child_node() const  {return child_;}
+  void set_child(node_sptr child)    {child_ = child;}
+  const node_sptr get_child() const  {return child_;}
 
-  void set_guard_node(node_sptr guard)    {guard_ = guard;}
-  const node_sptr get_guard_node() const  {return guard_;}
+  void set_guard(node_sptr guard)    {guard_ = guard;}
+  const node_sptr get_guard() const  {return guard_;}
 
 private:
   node_sptr guard_;
