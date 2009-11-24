@@ -3,6 +3,7 @@
 #include <iostream>
 
 using namespace hydla::parse_tree;
+using namespace hydla::simulator;
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -223,10 +224,11 @@ void ConsistencyChecker::visit(boost::shared_ptr<Number> node)
 }
 
 
-bool ConsistencyChecker::is_consistent(std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >& tells)
+bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
 {
 
 /*
+  ml_.MLPutFunction("isConsistent", 2);
   ml_.MLPutFunction("List", 3);
   ml_.MLPutFunction("Equal", 2);
   ml_.MLPutSymbol("x");
@@ -244,28 +246,36 @@ bool ConsistencyChecker::is_consistent(std::vector<boost::shared_ptr<hydla::pars
   ml_.MLEndPacket();
 */
 
-  int tells_size = tells.size();
+  int tells_size = collected_tells.size();
   // isConsistent[expr, vars]‚ğ“n‚µ‚½‚¢
   ml_.MLPutFunction("isConsistent", 2);
   ml_.MLPutFunction("List", tells_size);
 
+  //typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> > collected_tells_t;
   // tell§–ñ‚ÌW‡‚©‚çexpr‚ğ“¾‚ÄMathematica‚É“n‚·
-  for(int i=0; i<tells_size; i++){
-    visit(tells[i]);
+  collected_tells_t::iterator tells_it = collected_tells.begin();
+  while((tells_it) != collected_tells.end())
+  {
+    visit((*tells_it));
+    tells_it++;
   }
 
 
   // vars‚ğ“n‚·
   int var_num = vars_.size();
   ml_.MLPutFunction("List", var_num);
-  std::map<std::string, int>::iterator it = vars_.begin();
+  std::map<std::string, int>::iterator vars_it = vars_.begin();
   const char* sym;
   std::cout << "vars: ";
-  while(it!=vars_.end()){
-    sym = ((*it).first).c_str();
-    if((*it).second==0){
+  while(vars_it!=vars_.end())
+  {
+    sym = ((*vars_it).first).c_str();
+    if((*vars_it).second==0)
+    {
       ml_.MLPutSymbol(sym);
-    }else {
+    }
+    else
+    {
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
@@ -276,7 +286,7 @@ bool ConsistencyChecker::is_consistent(std::vector<boost::shared_ptr<hydla::pars
       //ml_.MLPutSymbol("t");
     }
     std::cout << sym << " ";
-    it++;
+    vars_it++;
   }
 
   // ml_.MLEndPacket();

@@ -6,9 +6,7 @@
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include <map>
-#include <vector>
-
-using namespace hydla::parse_tree;
+#include "Types.h"
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -19,44 +17,44 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  bool is_consistent(std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >& tells);
+  bool is_consistent(hydla::simulator::collected_tells_t& collected_tells);
 
   // Tell§–ñ
-  virtual void visit(boost::shared_ptr<Tell> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
   // ”äŠr‰‰Zq
-  virtual void visit(boost::shared_ptr<Equal> node);
-  virtual void visit(boost::shared_ptr<UnEqual> node);
-  virtual void visit(boost::shared_ptr<Less> node);
-  virtual void visit(boost::shared_ptr<LessEqual> node);
-  virtual void visit(boost::shared_ptr<Greater> node);
-  virtual void visit(boost::shared_ptr<GreaterEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
   // ˜_—‰‰Zq
-  virtual void visit(boost::shared_ptr<LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<LogicalOr> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
 
   // Zp“ñ€‰‰Zq
-  virtual void visit(boost::shared_ptr<Plus> node);
-  virtual void visit(boost::shared_ptr<Subtract> node);
-  virtual void visit(boost::shared_ptr<Times> node);
-  virtual void visit(boost::shared_ptr<Divide> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
 
   // Zp’P€‰‰Zq
-  virtual void visit(boost::shared_ptr<Negative> node);
-  virtual void visit(boost::shared_ptr<Positive> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
 
   // ”÷•ª
-  virtual void visit(boost::shared_ptr<Differential> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
   // ¶‹ÉŒÀ
-  virtual void visit(boost::shared_ptr<Previous> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
   // •Ï”
-  virtual void visit(boost::shared_ptr<Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
   // ”š
-  virtual void visit(boost::shared_ptr<Number> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
 
 private:
