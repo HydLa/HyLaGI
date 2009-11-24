@@ -94,8 +94,6 @@ private:
 
   typedef std::map<std::string, node_sptr>        formal_arg_map_t;
 
-  typedef std::vector<node_sptr>                  actual_arg_list_t;
-
   typedef std::map<std::string, int>              variable_map_t;
 
   /**
@@ -116,7 +114,7 @@ private:
     int differential_count;
 
     /// 展開された定義のリスト 
-    referenced_definition_list_t refered_def_list;
+    referenced_definition_list_t referenced_definition_list;
 
     /// 仮引数とそれに対応する実引数ノードの対応表  
     formal_arg_map_t formal_arg_map;
@@ -130,25 +128,50 @@ private:
 
   /// プログラム定義の表
   program_def_map_t program_def_map_;
-
+  
   /// プログラム中で使用される変数の表
   variable_map_t variable_map_;
-
+  
   /**
    * 新しい子ノード
    * accept後、これに値が入っている場合はノードの値を交換する
    */
   node_sptr new_child_;
-
-  template<class NodeType>
-  void dispatch_child(const NodeType& node)
+  
+  /**
+   * 指定したノードを呼び出し、
+   * new_child_に値が設定されていた場合、子ノードを入れ替える
+   */
+  template<class C, 
+           const node_sptr& (C::*getter)() const,
+           void (C::*setter)(const node_sptr& child)>
+  void dispatch(C* n) 
   {
-    accept(node->get_child());
+    accept((n->*getter)());
     if(new_child_) {
-      node->set_child(new_child_);
+      (n->*setter)(new_child_);
       new_child_.reset();
     }
-  };
+  }
+
+  
+  template<class NodeType>
+  void dispatch_child(NodeType& node)
+  {
+    dispatch<UnaryNode, &UnaryNode::get_child, &UnaryNode::set_child>(node.get());
+  }
+
+  template<class NodeType>
+  void dispatch_rhs(NodeType& node)
+  {
+    dispatch<BinaryNode, &BinaryNode::get_rhs, &BinaryNode::set_rhs>(node.get());
+  }
+
+  template<class NodeType>
+  void dispatch_lhs(NodeType& node)
+  {
+    dispatch<BinaryNode, &BinaryNode::get_lhs, &BinaryNode::set_lhs>(node.get());
+  }
 
 };
 

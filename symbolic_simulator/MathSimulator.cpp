@@ -5,11 +5,13 @@
 //#include <boost/thread.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 
 #include "math_source.h"
 #include "HydLaParser.h"
 #include "InterlanguageSender.h"
 #include "ConsistencyChecker.h"
+#include "EntailmentChecker.h"
 
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -264,7 +266,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
   AskCollector  ask_collector;
   //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiroが作成
   ConsistencyChecker consistency_checker(ml_);
-  //EntailmentChecker entailment_checker(ml_);   //TODO: kenshiroが作成
+  EntailmentChecker entailment_checker(ml_);   //TODO: kenshiroが作成
 
   expanded_always_t expanded_always;
   collected_tells_t collected_tells;
@@ -300,16 +302,20 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
     }
 
     // ask制約のエンテール処理
-//     expanded = entailment_checker.check_entailment(
-//       positive_asks, negative_asks, collected_tells /*, state->variable_map*/);
-
-    // entailment_checkerができるまでのテストコード
-    if(negative_asks.size()>0) {
-      positive_asks.insert(negative_asks.begin(), negative_asks.end());
-      negative_asks.clear();
-      expanded = true;
-    } else {
-      expanded = false;
+    expanded = false;
+    {
+      negative_asks_t::iterator it  = negative_asks.begin();
+      negative_asks_t::iterator end = negative_asks.end();
+      while(it!=end) {
+        if(entailment_checker.check_entailment(*it, collected_tells)) {
+          expanded = true;
+          positive_asks.insert(*it);
+          negative_asks.erase(it++);
+        }
+        else {
+          it++;
+        }
+      }
     }
   }
     

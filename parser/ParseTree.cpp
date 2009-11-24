@@ -32,7 +32,7 @@ difinition_type_t
 ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
 {
   std::string name = d->get_name();
-  int bound_variable_count = d->get_bound_variables()->size();
+  int bound_variable_count = d->bound_variable_size();
 
   // 既に制約/プログラム定義として定義されていないかどうか
   if(cons_def_map_.find(make_pair(name, bound_variable_count)) != cons_def_map_.end() ||

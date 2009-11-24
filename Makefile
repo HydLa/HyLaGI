@@ -19,6 +19,8 @@ charset:
 	nkf -s -Lw --overwrite $$sources  && \
 	svn propset svn:mime-type 'text/plain; charset=shift-jis' $$sources
 
+charset_guess:
+	@nkf --guess `find . -name "*.cpp" -or -name "*.h" `
 
 # remove all temp files
 .PHONY : clean

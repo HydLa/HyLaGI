@@ -229,7 +229,7 @@ public:
   /**
    * getter of left-hand-side node
    */
-  const node_sptr& get_lhs()         
+  const node_sptr& get_lhs() const         
   {
     return lhs_;
   }
@@ -245,7 +245,7 @@ public:
   /**
    * getter of right-hand-side node
    */  
-  const node_sptr& get_rhs()  
+  const node_sptr& get_rhs() const
   {
     return rhs_;
   }
@@ -260,6 +260,8 @@ protected:
  */
 class Caller : public UnaryNode {
 public:
+  typedef std::vector<node_sptr> actual_arg_list_t;
+
   Caller(){}
   virtual ~Caller(){}
 
@@ -268,11 +270,49 @@ public:
   virtual node_sptr clone();
   virtual std::string to_string() const;
 
-  // specific functions
-  void        set_name(std::string& name) {name_ = name;}
-  std::string get_name() const            {return name_;}
+  /**
+   * 呼び出す定義名を設定する
+   */
+  void set_name(const std::string& name) 
+  {
+    name_ = name;
+  }
 
-  void add_actual_arg(node_sptr a) {actual_arg_list_.push_back(a);}
+  /**
+   * 呼び出す定義名を返す
+   */  
+  std::string get_name() const
+  {
+    return name_;
+  }
+
+  /**
+   * 実引数ノードの追加
+   *
+   * @param node 実引数のノード
+   */
+  void add_actual_arg(const node_sptr& node) 
+  {
+    actual_arg_list_.push_back(node);
+  }
+
+  /**
+   * 実引数ノードを返す
+   *
+   * @param index 実引数ノードの番号
+   */
+  node_sptr get_actual_arg(size_t index) const
+  {
+    return actual_arg_list_[index];
+  }
+
+  /**
+   * 実引数の数を返す
+   */
+  size_t actual_arg_size() const 
+  {
+    return actual_arg_list_.size();
+  }
 
 protected:
   std::string name_;
@@ -290,10 +330,6 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
-
-  // specific functions
-
-private:
 };
 
 /**
@@ -307,10 +343,6 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
-
-  // specific functions
-
-private:
 };
 
 /**
@@ -334,18 +366,48 @@ public:
   virtual node_sptr clone();
   virtual std::string to_string() const;
 
-  // specific functions
-  void        set_name(std::string& name) {name_ = name;}
-  std::string get_name() const            {return name_;}
-
-  void add_bound_variable(std::string& bound_variable) 
+  /**
+   * 定義名を設定する
+   */
+  void set_name(const std::string& name) 
   {
-    bound_variables_.push_back(bound_variable);
+    name_ = name;
   }
- 
-  const bound_variables_t* get_bound_variables() const 
+  
+  /**
+   * 定義名を返す
+   */
+  std::string get_name() const            
   {
-    return &bound_variables_;
+    return name_;
+  }
+
+  /**
+   * 束縛変数の追加
+   *
+   * @param variable_name 束縛変数の名前
+   */
+  void add_bound_variable(const std::string& variable_name) 
+  {
+    bound_variables_.push_back(variable_name);
+  }
+
+  /**
+   * 束縛変数名を返す
+   *
+   * @param index 束縛変数の番号
+   */
+  std::string get_bound_variable(size_t index) const
+  {
+    return bound_variables_[index];
+  }
+
+  /**
+   * 束縛変数の数を返す
+   */
+  size_t bound_variable_size() const 
+  {
+    return bound_variables_.size();
   }
 
 private:
@@ -362,8 +424,6 @@ public:
   virtual ~ProgramDefinition(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-private:
 };
 
 /**
@@ -375,8 +435,6 @@ public:
   virtual ~ConstraintDefinition(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-private:
 };
 
 /**
@@ -490,11 +548,11 @@ public:
   }
 
   // specific functions
-  void set_child(node_sptr child)    {child_ = child;}
-  const node_sptr& get_child() const  {return child_;}
+  void set_child(const node_sptr& child) {child_ = child;}
+  const node_sptr& get_child() const     {return child_;}
 
-  void set_guard(node_sptr guard)    {guard_ = guard;}
-  const node_sptr& get_guard() const  {return guard_;}
+  void set_guard(const node_sptr& guard) {guard_ = guard;}
+  const node_sptr& get_guard() const     {return guard_;}
 
 private:
   node_sptr guard_;
