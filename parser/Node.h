@@ -150,23 +150,26 @@ public:
     return "unary_node[" + child_->to_string() + "]";    
   }
 
-  void set_child_node(node_sptr child)
+  /**
+   * setter of child node
+   */
+  void set_child(const node_sptr& child)  
   {
     child_ = child;
   }
 
-  void set_child(node_sptr child)
-  {
-    child_ = child;
-  }
-
-  // TODO: 
-  const node_sptr get_child_node() const
+  /**
+   * getter of child node
+   */
+  const node_sptr& get_child() const
   {
     return child_;
   }
 
-  const node_sptr get_child() const
+  /**
+   * getter of child node
+   */
+  const node_sptr& get_child_node() const
   {
     return child_;
   }
@@ -215,11 +218,37 @@ public:
       rhs_->to_string() + "]";
   }
 
-  void set_lhs(node_sptr lhs) {lhs_ = lhs;}
-  node_sptr get_lhs()         {return lhs_;}
+  /**
+   * setter of left-hand-side node
+   */
+  void set_lhs(const node_sptr& lhs) 
+  {
+    lhs_ = lhs;
+  }
 
-  void set_rhs(node_sptr rhs) {rhs_ = rhs;}
-  node_sptr get_rhs()         {return rhs_;}
+  /**
+   * getter of left-hand-side node
+   */
+  const node_sptr& get_lhs()         
+  {
+    return lhs_;
+  }
+
+  /**
+   * setter of right-hand-side node
+   */
+  void set_rhs(const node_sptr& rhs) 
+  {
+    rhs_ = rhs;
+  }
+
+  /**
+   * getter of right-hand-side node
+   */  
+  const node_sptr& get_rhs()  
+  {
+    return rhs_;
+  }
 
 protected:
   node_sptr lhs_;
@@ -462,10 +491,10 @@ public:
 
   // specific functions
   void set_child(node_sptr child)    {child_ = child;}
-  const node_sptr get_child() const  {return child_;}
+  const node_sptr& get_child() const  {return child_;}
 
   void set_guard(node_sptr guard)    {guard_ = guard;}
-  const node_sptr get_guard() const  {return guard_;}
+  const node_sptr& get_guard() const  {return guard_;}
 
 private:
   node_sptr guard_;

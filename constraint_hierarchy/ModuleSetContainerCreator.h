@@ -34,13 +34,13 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
   {
     container_name_ = node->get_name();
-    node->get_child_node()->accept(node->get_child_node(), this);
+    accept(node->get_child());
   }
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
   {
     container_name_ = node->get_name();
-    node->get_child_node()->accept(node->get_child_node(), this);
+    accept(node->get_child());
   }
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)

@@ -131,7 +131,7 @@ std::ostream& HydLaParser::dump_ast(std::ostream& outstream,
   case RI_##X: \
     {  \
       shared_ptr<X> node(node_factory_->create##X()); \
-      node->set_child_node(create_parse_tree(*ch)); \
+      node->set_child(create_parse_tree(*ch)); \
       return node; \
     }
 
@@ -188,7 +188,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
         }
       }
 
-      node->set_child_node(create_parse_tree(*(ch+1)));
+      node->set_child(create_parse_tree(*(ch+1)));
 
       parse_tree_.addConstraintDefinition(node);
 
@@ -217,7 +217,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
         }
       }
 
-      node->set_child_node(create_parse_tree(*(ch+1)));
+      node->set_child(create_parse_tree(*(ch+1)));
 
       parse_tree_.addProgramDefinition(node);
 
