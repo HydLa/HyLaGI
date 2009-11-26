@@ -62,6 +62,7 @@ private:
   std::map<std::string, int> vars_;
   int in_differential_equality_;
   int in_differential_;
+  int in_prev_;
 
 };
 

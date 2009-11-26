@@ -12,7 +12,8 @@ namespace symbolic_simulator {
 ConsistencyChecker::ConsistencyChecker(MathLink& ml) :
   ml_(ml),
   in_differential_equality_(false),
-  in_differential_(false)
+  in_differential_(false),
+  in_prev_(false)
 {}
 
 ConsistencyChecker::~ConsistencyChecker()
@@ -92,7 +93,7 @@ void ConsistencyChecker::visit(boost::shared_ptr<GreaterEqual> node)
 // 論理演算子
 void ConsistencyChecker::visit(boost::shared_ptr<LogicalAnd> node)            
 {
-  //ml_.MLPutFunction("And, 2);
+  ml_.MLPutFunction("And", 2);
 
   node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
   node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
@@ -163,19 +164,20 @@ void ConsistencyChecker::visit(boost::shared_ptr<Positive> node)
 void ConsistencyChecker::visit(boost::shared_ptr<Differential> node)          
 {
 
+/*
   ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
   ml_.MLPutArgCount(1);      // this 1 is for the 'f'
   ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
   ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
   ml_.MLPutSymbol("Derivative");
   ml_.MLPutInteger(1);
-
+*/
 
   in_differential_equality_ = true;
   in_differential_ = true;
   node_sptr chnode(node->get_child_node());
   chnode->accept(chnode, this);
-  std::cout << "'";
+  std::cout << "dash";
   if(in_differential_){
     //std::cout << "[t]"; // ht[t]' のようになるのを防ぐため
   }
@@ -186,21 +188,30 @@ void ConsistencyChecker::visit(boost::shared_ptr<Differential> node)
 // 左極限
 void ConsistencyChecker::visit(boost::shared_ptr<Previous> node)              
 {
+  in_prev_ = true;
   //ml_.MLPutFunction("prev", 1);
   node_sptr chnode(node->get_child_node());
   chnode->accept(chnode, this);
-  std::cout << "-";
+  std::cout << "prev";
+
+  in_prev_ = false;
 }
   
 // 変数
 void ConsistencyChecker::visit(boost::shared_ptr<Variable> node)              
 {
-  ml_.MLPutSymbol(node->get_name().c_str());
+
   if(in_differential_){
-    vars_.insert(std::pair<std::string, int>(node->get_name() + "'", 1));
+    ml_.MLPutSymbol(("usrVar" + node->get_name() + "dash").c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name() + "dash", 0)); // 本当は1として扱いたい？
+  }
+  else if(in_prev_){
+    ml_.MLPutSymbol(("usrVar" + node->get_name() + "prev").c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name() + "prev", 0)); // 本当は2として扱いたい
   }
   else {
-    vars_.insert(std::pair<std::string, int>(node->get_name(), 0));
+    ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name(), 0));
   }
   std::cout << node->get_name().c_str();
   if(in_differential_equality_){
@@ -238,7 +249,7 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
   ml_.MLPutInteger(2);
   ml_.MLPutFunction("Equal", 2);
   ml_.MLPutSymbol("y");
-  ml_.MLPutInteger(2);
+  ml_.MLPutInteger(1);
 
   ml_.MLPutFunction("List", 2);
   ml_.MLPutSymbol("x");
@@ -246,13 +257,13 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
   ml_.MLEndPacket();
 */
 
-  int tells_size = collected_tells.size();
+
   // isConsistent[expr, vars]を渡したい
   ml_.MLPutFunction("isConsistent", 2);
-  ml_.MLPutFunction("List", tells_size);
 
-  //typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> > collected_tells_t;
   // tell制約の集合からexprを得てMathematicaに渡す
+  int tells_size = collected_tells.size();
+  ml_.MLPutFunction("List", tells_size);
   collected_tells_t::iterator tells_it = collected_tells.begin();
   while((tells_it) != collected_tells.end())
   {
@@ -270,12 +281,12 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
   while(vars_it!=vars_.end())
   {
     sym = ((*vars_it).first).c_str();
-    if((*vars_it).second==0)
+    switch((*vars_it).second)
     {
+    case 0:
       ml_.MLPutSymbol(sym);
-    }
-    else
-    {
+      break;
+    case 1:
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
@@ -284,6 +295,13 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
       ml_.MLPutInteger(1);
       ml_.MLPutSymbol(sym);
       //ml_.MLPutSymbol("t");
+      break;
+    case 2:
+      ml_.MLPutFunction("prev", 1);
+      ml_.MLPutSymbol(sym);
+      break;
+    default:
+      ;
     }
     std::cout << sym << " ";
     vars_it++;
@@ -296,6 +314,7 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
 
   std::cout << std::endl;
 
+
 /*
 // 返ってくるパケットを解析
 PacketChecker pc(ml_);
@@ -306,7 +325,7 @@ pc.check();
   
   int num;
   ml_.MLGetInteger(&num);
-  //std::cout << "#num:" << num << std::endl;
+  std::cout << "ConsistencyChecker#num:" << num << std::endl;
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   return num==1;

@@ -12,11 +12,27 @@ namespace symbolic_simulator {
 EntailmentChecker::EntailmentChecker(MathLink& ml) :
   ml_(ml),
   in_differential_equality_(false),
-  in_differential_(false)
+  in_differential_(false),
+  in_prev_(false),
+  in_guard_(false)
 {}
 
 EntailmentChecker::~EntailmentChecker()
 {}
+
+  // Ask制約
+void EntailmentChecker::visit(boost::shared_ptr<Ask> node)                   
+{
+  std::cout << "guard:";
+  //ml_.MLPutFunction("ask", 2);
+  in_guard_ = true;
+  accept(node->get_guard());
+  
+  in_guard_ = false;
+  //std::cout << " => ";
+  //accept(node->get_child());
+  std::cout << std::endl;
+}
 
 // Tell制約
 void EntailmentChecker::visit(boost::shared_ptr<Tell> node)                  
@@ -92,7 +108,7 @@ void EntailmentChecker::visit(boost::shared_ptr<GreaterEqual> node)
 // 論理演算子
 void EntailmentChecker::visit(boost::shared_ptr<LogicalAnd> node)            
 {
-  //ml_.MLPutFunction("And, 2);
+  ml_.MLPutFunction("And", 2);
 
   node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
   node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
@@ -163,19 +179,20 @@ void EntailmentChecker::visit(boost::shared_ptr<Positive> node)
 void EntailmentChecker::visit(boost::shared_ptr<Differential> node)          
 {
 
+/*
   ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
   ml_.MLPutArgCount(1);      // this 1 is for the 'f'
   ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
   ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
   ml_.MLPutSymbol("Derivative");
   ml_.MLPutInteger(1);
-
+*/
 
   in_differential_equality_ = true;
   in_differential_ = true;
   node_sptr chnode(node->get_child_node());
   chnode->accept(chnode, this);
-  std::cout << "'";
+  std::cout << "dash";
   if(in_differential_){
     //std::cout << "[t]"; // ht[t]' のようになるのを防ぐため
   }
@@ -186,21 +203,29 @@ void EntailmentChecker::visit(boost::shared_ptr<Differential> node)
 // 左極限
 void EntailmentChecker::visit(boost::shared_ptr<Previous> node)              
 {
+  in_prev_ = true;
   //ml_.MLPutFunction("prev", 1);
   node_sptr chnode(node->get_child_node());
   chnode->accept(chnode, this);
-  std::cout << "-";
+  std::cout << "prev";
+  in_prev_ = false;
 }
   
 // 変数
 void EntailmentChecker::visit(boost::shared_ptr<Variable> node)              
 {
-  ml_.MLPutSymbol(node->get_name().c_str());
+
   if(in_differential_){
-    vars_.insert(std::pair<std::string, int>(node->get_name() + "'", 1));
+    ml_.MLPutSymbol(("usrVar" + node->get_name() + "dash").c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name() + "dash", 0)); // 本当は1として扱いたい？
+  }
+  else if(in_prev_){
+    ml_.MLPutSymbol(("usrVar" + node->get_name() + "prev").c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name() + "prev", 0)); // 本当は2として扱いたい
   }
   else {
-    vars_.insert(std::pair<std::string, int>(node->get_name(), 0));
+    ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name(), 0));
   }
   std::cout << node->get_name().c_str();
   if(in_differential_equality_){
@@ -227,8 +252,7 @@ void EntailmentChecker::visit(boost::shared_ptr<Number> node)
  * collected_tellsから、negative_asks内のask制約のガード条件が満たされるかどうか調べる
  * 
  * Input:
- *  positive_asks すでに展開されているask制約
- *  negative_asks まだ展開されていないask制約
+ *  negative_ask まだ展開されていないask制約1つ
  *  collected_tells tell制約のリスト（展開されたask制約の「=>」の右辺がここに追加される）
  * Output:
  *  チェックの結果、展開されたask制約が1つでも存在したかどうか
@@ -238,9 +262,8 @@ bool EntailmentChecker::check_entailment(
   boost::shared_ptr<hydla::parse_tree::Ask> negative_ask, collected_tells_t& collected_tells)
 {
 
-  return true;
-
-  ml_.MLPutFunction("EntailmentChecker", 3);
+/*
+  ml_.MLPutFunction("checkEntailment", 3);
 
   ml_.MLPutFunction("And", 2);
   ml_.MLPutFunction("GreaterEqual", 2);
@@ -250,6 +273,7 @@ bool EntailmentChecker::check_entailment(
   ml_.MLPutSymbol("x");
   ml_.MLPutInteger(5);
 
+  ml_.MLPutFunction("List", 1);
   ml_.MLPutFunction("And", 2);
   ml_.MLPutFunction("GreaterEqual", 2);
   ml_.MLPutSymbol("x");
@@ -260,19 +284,23 @@ bool EntailmentChecker::check_entailment(
 
   ml_.MLPutFunction("List", 1);
   ml_.MLPutSymbol("x");
+
   ml_.MLEndPacket();
+*/
 
-/*
-  int positive_asks_size   = positive_asks.size();
-  int negative_asks_size   = negative_asks.size();
-  int collected_tells_size = collected_tells.size();
-  // checkEntailment[asks, tells, vars]を渡したい
+  // checkEntailment[guard, tells, vars]を渡したい
   ml_.MLPutFunction("checkEntailment", 3);
-  ml_.MLPutFunction("List", tells_size);
 
-  // tell制約の集合からexprを得てMathematicaに渡す
-  collected_tells_t::iterator tells_it = tells.begin();
-  while(tells_it!=vars_.end())
+
+  // ask制約のガードの式を得てMathematicaに渡す
+  visit(negative_ask);
+
+
+  // tell制約の集合からtellsを得てMathematicaに渡す
+  int tells_size = collected_tells.size();
+  ml_.MLPutFunction("List", tells_size);
+  collected_tells_t::iterator tells_it = collected_tells.begin();
+  while(tells_it!=collected_tells.end())
   {
     visit((*tells_it));
     tells_it++;
@@ -288,12 +316,12 @@ bool EntailmentChecker::check_entailment(
   while(vars_it!=vars_.end())
   {
     sym = ((*vars_it).first).c_str();
-    if((*vars_it).second==0)
+    switch((*vars_it).second)
     {
+    case 0:
       ml_.MLPutSymbol(sym);
-    }
-    else
-    {
+      break;
+    case 1:
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
@@ -302,10 +330,18 @@ bool EntailmentChecker::check_entailment(
       ml_.MLPutInteger(1);
       ml_.MLPutSymbol(sym);
       //ml_.MLPutSymbol("t");
+      break;
+    case 2:
+      ml_.MLPutFunction("prev", 1);
+      ml_.MLPutSymbol(sym);
+      break;
+    default:
+      ;
     }
     std::cout << sym << " ";
     vars_it++;
   }
+
 
   // ml_.MLEndPacket();
 
@@ -313,7 +349,7 @@ bool EntailmentChecker::check_entailment(
   vars_.clear();
 
   std::cout << std::endl;
-*/
+
 
 /*
 // 返ってくるパケットを解析
@@ -325,7 +361,7 @@ pc.check();
   
   int num;
   ml_.MLGetInteger(&num);
-  std::cout << "#num:" << num << std::endl;
+  std::cout << "EntailmentChecker#num:" << num << std::endl;
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   return num==1;

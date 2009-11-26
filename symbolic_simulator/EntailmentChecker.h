@@ -25,6 +25,9 @@ public:
     boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
     hydla::simulator::collected_tells_t& collected_tells);
 
+  // AskêßñÒ
+  virtual void visit(boost::shared_ptr<Ask> node);
+
   // TellêßñÒ
   virtual void visit(boost::shared_ptr<Tell> node);
 
@@ -68,6 +71,8 @@ private:
   std::map<std::string, int> vars_;
   int in_differential_equality_;
   int in_differential_;
+  int in_prev_;
+  int in_guard_;
 
 };
 

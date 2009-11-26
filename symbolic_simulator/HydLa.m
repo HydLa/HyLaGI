@@ -1,11 +1,21 @@
+
+(*
+ * ある1つのask制約に関して、そのガードがtell制約からentailできるかどうかをチェック
+ *)
+checkEntailment[guard_, tells_, vars_] := (
+  tmpSol = Reduce[Append[tells, guard], vars, Reals];
+  If[tmpSol===False, Return[-1]];
+  If[Reduce[Append[tells, Not[tmpSol]], vars, Reals]===False, 1, 0]
+);
+
 (*
  * 制約が無矛盾であるかをチェック
  *)
-
 isConsistent[expr_, vars_] := (
-  (*Print["expr:", expr];*)
-  (*Print["vars:", vars];*)
+  (*Print["isConsistent#expr:", expr];*)
+  (*Print["isConsistent#vars:", vars];*)
   (*Return[116]*)
+  (*Return[expr]*)
   If[Reduce[expr, vars] =!= False, 1, 0]
 );
 
