@@ -153,6 +153,14 @@
 				RelativePath=".\BPSimulator.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ConsistencyChecker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EntailmentChecker.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -161,6 +169,14 @@
 			>
 			<File
 				RelativePath=".\BPSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsistencyChecker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EntailmentChecker.h"
 				>
 			</File>
 		</Filter>

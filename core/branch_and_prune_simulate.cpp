@@ -2,9 +2,10 @@
 #include <boost/shared_ptr.hpp>
 
 #include "ModuleSetList.h"
-
+#include "ProgramOptions.h"
 #include "BPSimulator.h"
 
+using namespace hydla;
 using namespace hydla::ch;
 using namespace hydla::bp_simulator;
 
@@ -13,6 +14,14 @@ using namespace hydla::bp_simulator;
  */
 void branch_and_prune_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc) 
 {
+  ProgramOptions &po = ProgramOptions::instance();
+  BPSimulator::Opts bpopts;
+
+  bpopts.debug_mode    = po.count("debug") > 0;
+  bpopts.max_time      = po.get<std::string>("simulation-time");
+  bpopts.profile_mode  = po.count("profile") > 0;
+  bpopts.parallel_mode = po.count("parallel")> 0;
+
   BPSimulator bps;
-  bps.simulate(msc);
+  bps.simulate(msc, bpopts);
 }
