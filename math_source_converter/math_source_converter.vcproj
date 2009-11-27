@@ -2,9 +2,13 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="symbolic_simulator"
-	ProjectGUID="{5E34BE62-2104-42F3-9E59-CED1ED540932}"
-	RootNamespace="symbolic_simulator"
+	Name="math_source_converter"
+	ProjectGUID="{7AA041C5-8C78-402D-A7F0-855B469C0650}"
+	RootNamespace="math_source_converter"
+	SccProjectName="Svn"
+	SccAuxPath="Svn"
+	SccLocalPath="Svn"
+	SccProvider="SubversionScc"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,7 +24,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -28,9 +32,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine=""
-				AdditionalDependencies=""
-				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -44,7 +45,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,10 +63,18 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)\msc.exe"
+				LinkIncremental="2"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -78,6 +86,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -85,7 +96,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -94,9 +105,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine=""
-				AdditionalDependencies=""
-				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -111,7 +119,6 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\simulator"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -129,10 +136,20 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)\msc.exe"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -142,6 +159,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -157,23 +177,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ConsistencyChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\math_source.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -182,84 +186,12 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\ConsistencyChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InterlanguageSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\math_source.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathlink_helper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SSNodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SSParseTree.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicTime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicVariable.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\HydLa.m"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m &gt; $(ProjectDir)\math_source.cpp"
-						Outputs="$(ProjectDir)\math_source.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m"
-						Outputs="$(ProjectDir)\math_source.cpp"
-					/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

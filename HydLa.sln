@@ -14,6 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbolic_simulator", "symbolic_simulator\symbolic_simulator.vcproj", "{5E34BE62-2104-42F3-9E59-CED1ED540932}"
 	ProjectSection(ProjectDependencies) = postProject
+		{7AA041C5-8C78-402D-A7F0-855B469C0650} = {7AA041C5-8C78-402D-A7F0-855B469C0650}
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
 EndProject
@@ -37,7 +38,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "branch_and_prune_simulator"
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math_source_converter", "math_source_converter\math_source_converter.vcproj", "{7AA041C5-8C78-402D-A7F0-855B469C0650}"
+EndProject
 Global
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
@@ -71,6 +78,10 @@ Global
 		{26B21888-DF06-41CF-849C-4C936BBAB30E}.Debug|Win32.Build.0 = Debug|Win32
 		{26B21888-DF06-41CF-849C-4C936BBAB30E}.Release|Win32.ActiveCfg = Release|Win32
 		{26B21888-DF06-41CF-849C-4C936BBAB30E}.Release|Win32.Build.0 = Release|Win32
+		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Debug|Win32.Build.0 = Debug|Win32
+		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Release|Win32.ActiveCfg = Release|Win32
+		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
