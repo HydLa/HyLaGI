@@ -24,7 +24,7 @@ void ProgramCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
 {
   shared_ptr<Definition> defnode;
 
-  difinition_type_t def_type(name_, actual_arg_list_.size());
+  difinition_type_t def_type(name_, actual_args_.size());
 
   // 制約定義から探す
   constraint_def_map_t::iterator cons_it = arg.cons_def_map_.find(def_type);
@@ -46,15 +46,15 @@ void ProgramCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
   }
 
   // 実引数に対しpreprocess適用
-  for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
+  for_each(actual_args_.begin(), actual_args_.end(), 
            bind(&Node::preprocess, _1, _1, arg));
 
-  defnode->preprocess(child_, arg, actual_arg_list_);
+  defnode->preprocess(child_, arg, actual_args_);
 }
 
 void ConstraintCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
 {
-  difinition_type_t def_type(name_, actual_arg_list_.size());
+  difinition_type_t def_type(name_, actual_args_.size());
 
   // 制約定義から探す
   constraint_def_map_t::iterator it = arg.cons_def_map_.find(def_type);
@@ -69,16 +69,16 @@ void ConstraintCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
 
 
   // 実引数に対しpreprocess適用
-  for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
+  for_each(actual_args_.begin(), actual_args_.end(), 
            bind(&Node::preprocess, _1, _1, arg));
 
-  (*it).second->preprocess(child_, arg, actual_arg_list_);
+  (*it).second->preprocess(child_, arg, actual_args_);
 }
 
 std::string Caller::to_string() const
 {
-  actual_arg_list_t::const_iterator it  = actual_arg_list_.begin();
-  actual_arg_list_t::const_iterator end = actual_arg_list_.end();
+  actual_arg_list_t::const_iterator it  = actual_args_.begin();
+  actual_arg_list_t::const_iterator end = actual_args_.end();
 
   std::string s;
   s += "call<";
@@ -104,8 +104,8 @@ node_sptr Caller::clone()
 {
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
-  n->actual_arg_list_.resize(actual_arg_list_.size());
-  copy(actual_arg_list_.begin(), actual_arg_list_.end(),  n->actual_arg_list_.begin());
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
   if(child_) n->child_ = child_->clone();
   
   return n;

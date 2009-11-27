@@ -260,7 +260,10 @@ protected:
  */
 class Caller : public UnaryNode {
 public:
-  typedef std::vector<node_sptr> actual_arg_list_t;
+  typedef std::vector<node_sptr>        actual_args_t;
+  typedef actual_args_t::iterator       actual_args_iterator;
+  typedef actual_args_t::const_iterator actual_args_const_iterator;
+
 
   Caller(){}
   virtual ~Caller(){}
@@ -293,7 +296,7 @@ public:
    */
   void add_actual_arg(const node_sptr& node) 
   {
-    actual_arg_list_.push_back(node);
+    actual_args_.push_back(node);
   }
 
   /**
@@ -303,7 +306,7 @@ public:
    */
   node_sptr get_actual_arg(size_t index) const
   {
-    return actual_arg_list_[index];
+    return actual_args_[index];
   }
 
   /**
@@ -311,12 +314,56 @@ public:
    */
   size_t actual_arg_size() const 
   {
-    return actual_arg_list_.size();
+    return actual_args_.size();
   }
 
+  /**
+   * 束縛変数のリストの最初の要素を指す
+   * 読み書き可能なiteratorを返す
+   */
+  actual_args_iterator
+  actual_arg_begin()
+  {
+    return actual_args_.begin();
+  }
+
+  /**
+   * 束縛変数のリストの最初の要素を指す
+   * 読み込みのみ可能なiteratorを返す
+   */
+  actual_args_const_iterator
+  actual_arg_begin() const
+  {
+    return actual_args_.begin();
+  }
+
+  /**
+   * 束縛変数のリストの最後の次の要素を指す
+   * 読み書き可能なiteratorを返す
+   */
+  actual_args_iterator
+  actual_arg_end()
+  {
+    return actual_args_.end();
+  }
+
+  /**
+   * 束縛変数のリストの最後の次の要素を指す
+   * 読み込みのみ可能なiteratorを返す
+   */
+  actual_args_const_iterator
+  actual_arg_end() const
+  {
+    return actual_args_.end();
+  }
+
+
 protected:
+  /// このノードが呼び出す定義名
   std::string name_;
-  actual_arg_list_t actual_arg_list_;
+
+  /// 呼び出し時に使用する実引数のリスト
+  actual_args_t actual_args_;
 };
 
 /**
@@ -350,7 +397,9 @@ public:
  */
 class Definition : public UnaryNode {
 public:
-  typedef std::vector<std::string> bound_variables_t;
+  typedef std::vector<std::string>          bound_variables_t;
+  typedef bound_variables_t::iterator       bound_variables_iterator;
+  typedef bound_variables_t::const_iterator bound_variables_const_iterator;
 
   Definition(){}
   virtual ~Definition(){}
@@ -409,6 +458,47 @@ public:
   {
     return bound_variables_.size();
   }
+
+  /**
+   * 束縛変数のリストの最初の要素を指す
+   * 読み書き可能なiteratorを返す
+   */
+  bound_variables_iterator 
+  bound_variable_begin()
+  {
+    return bound_variables_.begin();
+  }
+
+  /**
+   * 束縛変数のリストの最初の要素を指す
+   * 読み込みのみ可能なiteratorを返す
+   */
+  bound_variables_const_iterator 
+  bound_variable_begin() const
+  {
+    return bound_variables_.begin();
+  }
+
+  /**
+   * 束縛変数のリストの最後の次の要素を指す
+   * 読み書き可能なiteratorを返す
+   */
+  bound_variables_iterator 
+  bound_variable_end()
+  {
+    return bound_variables_.end();
+  }
+
+  /**
+   * 束縛変数のリストの最後の次の要素を指す
+   * 読み込みのみ可能なiteratorを返す
+   */
+  bound_variables_const_iterator 
+  bound_variable_end() const
+  {
+    return bound_variables_.end();
+  }
+
 
 private:
   std::string name_;
