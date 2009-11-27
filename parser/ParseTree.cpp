@@ -16,18 +16,6 @@ ParseTree::ParseTree()
 ParseTree::~ParseTree()
 {}
 
-void ParseTree::addConstraintDefinition(boost::shared_ptr<ConstraintDefinition> d) 
-{
-  cons_def_map_.insert(
-    make_pair(create_definition_key(d), d));
-}
-
-void ParseTree::addProgramDefinition(boost::shared_ptr<ProgramDefinition> d) 
-{
-  prog_def_map_.insert(
-    make_pair(create_definition_key(d), d));
-}
-
 difinition_type_t 
 ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
 {

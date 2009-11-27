@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace hydla;
+using namespace hydla::parser;
 using namespace hydla::parse_tree;
 using namespace hydla::parse_error;
 

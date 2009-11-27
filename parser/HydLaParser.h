@@ -14,6 +14,7 @@
 #include "TreeVisitor.h"
 
 namespace hydla {
+namespace parser {
 
 class HydLaParser {
 public:
@@ -106,8 +107,6 @@ private:
 
   std::ostream& dump_ast(std::ostream& outstream, tree_iter_t iter, int nest);
 
-  std::string create_interlanguage(const_tree_iter_t &iter);
-
   boost::shared_ptr<parse_tree::Node> 
     create_parse_tree(const tree_node_t &tree_node);
 
@@ -118,5 +117,8 @@ private:
   node_factory_sptr     node_factory_;
   parse_tree::ParseTree parse_tree_;
 };
-}
+
+} //namespace parser
+} //namespace hydla
+
 #endif //_INCLUDED_HYDLA_PARSER_H_

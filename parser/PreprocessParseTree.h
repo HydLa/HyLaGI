@@ -6,89 +6,87 @@
 #include "Node.h"
 #include "TreeVisitor.h"
 
-namespace hydla { 
-namespace parse_tree {
+#include "ParseTree.h"
 
-class PreprocessParseTree : public TreeVisitor
+namespace hydla { 
+namespace parser {
+  
+class PreprocessParseTree : public hydla::parse_tree::TreeVisitor
 {
 public:
+  typedef hydla::parse_tree::node_sptr node_sptr;
+
   PreprocessParseTree();
   virtual ~PreprocessParseTree();
 
+  /**
+   * 
+   */
+  void start(hydla::parse_tree::ParseTree *pt);
+
+
   // 定義
-  virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
-  virtual void visit(boost::shared_ptr<ProgramDefinition> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramDefinition> node);
 
   // 呼び出し
-  virtual void visit(boost::shared_ptr<ConstraintCaller> node);
-  virtual void visit(boost::shared_ptr<ProgramCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
   // 制約式
-  virtual void visit(boost::shared_ptr<Constraint> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<Tell> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<Equal> node);
-  virtual void visit(boost::shared_ptr<UnEqual> node);
-  virtual void visit(boost::shared_ptr<Less> node);
-  virtual void visit(boost::shared_ptr<LessEqual> node);
-  virtual void visit(boost::shared_ptr<Greater> node);
-  virtual void visit(boost::shared_ptr<GreaterEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<LogicalOr> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
   
   // 算術二項演算子
-  virtual void visit(boost::shared_ptr<Plus> node);
-  virtual void visit(boost::shared_ptr<Subtract> node);
-  virtual void visit(boost::shared_ptr<Times> node);
-  virtual void visit(boost::shared_ptr<Divide> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
   
   // 算術単項演算子
-  virtual void visit(boost::shared_ptr<Negative> node);
-  virtual void visit(boost::shared_ptr<Positive> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
   
   // 制約階層定義演算子
-  virtual void visit(boost::shared_ptr<Weaker> node);
-  virtual void visit(boost::shared_ptr<Parallel> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
 
   // 時相演算子
-  virtual void visit(boost::shared_ptr<Always> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
   
   // 微分
-  virtual void visit(boost::shared_ptr<Differential> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<Previous> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
   // 変数
-  virtual void visit(boost::shared_ptr<Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
   // 数字
-  virtual void visit(boost::shared_ptr<Number> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
 private:
-  // 定義の型
-  typedef std::string                             difinition_name_t;
-  typedef int                                     bound_variable_count_t;
-  typedef std::pair<difinition_name_t, 
-                    bound_variable_count_t>       difinition_type_t;
-
-  // 制約定義
-  typedef boost::shared_ptr<ConstraintDefinition> constraint_def_map_value_t;
-  typedef std::map<difinition_type_t,
-                   constraint_def_map_value_t>    constraint_def_map_t;
-
-  // プログラム定義
-  typedef boost::shared_ptr<ProgramDefinition>    program_def_map_value_t;
-  typedef std::map<difinition_type_t,
-                   program_def_map_value_t>       program_def_map_t;
+  typedef hydla::parse_tree::ParseTree::difinition_type_t difinition_type_t;
+  typedef hydla::parse_tree::ParseTree::constraint_def_map_t constraint_def_map_t;
+  typedef hydla::parse_tree::ParseTree::program_def_map_t program_def_map_t;
 
   typedef std::set<difinition_type_t>             referenced_definition_list_t;
 
@@ -124,10 +122,10 @@ private:
   std::stack<State> state_stack_;
 
   /// 制約定義の表
-  constraint_def_map_t constraint_def_map_;
+  const constraint_def_map_t* constraint_def_map_;
 
   /// プログラム定義の表
-  program_def_map_t program_def_map_;
+  const program_def_map_t*    program_def_map_;
   
   /// プログラム中で使用される変数の表
   variable_map_t variable_map_;
@@ -153,7 +151,6 @@ private:
       new_child_.reset();
     }
   }
-
   
   template<class NodeType>
   void dispatch_child(NodeType& node)
@@ -173,9 +170,14 @@ private:
     dispatch<BinaryNode, &BinaryNode::get_lhs, &BinaryNode::set_lhs>(node.get());
   }
 
+  /**
+   * 定義の簡約化(展開)をおこなう
+   */
+  node_sptr apply_definition(difinition_type_t* def_type,
+    hydla::parse_tree::Caller* caller, hydla::parse_tree::Definition* definition);
 };
 
-} //namespace parse_tree
+} //namespace parser
 } //namespace hydla
 
 #endif //_INCLUDED_HYDLA_PREPROCESS_PARSE_TREE_H_

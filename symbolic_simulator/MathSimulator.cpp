@@ -8,7 +8,6 @@
 #include <boost/foreach.hpp>
 
 #include "math_source.h"
-#include "HydLaParser.h"
 #include "InterlanguageSender.h"
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
@@ -114,7 +113,6 @@ void MathSimulator::init(Opts& opts)
 }
 
 bool MathSimulator::simulate(
-  HydLaParser& parser,
   boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
   Opts& opts)
 {
@@ -125,6 +123,7 @@ bool MathSimulator::simulate(
   //module_set_container_ = msc;
 
   // 中間言語送信
+  /*
   InterlanguageSender interlanguage_sender(parser.parse_tree(), ml_);
   interlanguage_sender.create_interlanguage(opts.max_time);
 
@@ -133,8 +132,13 @@ bool MathSimulator::simulate(
     std::cout << interlanguage_sender.get_interlanguage() << std::endl;
   }
 
-  //ml_.MLPutFunction("ToExpression", 1);
-  //ml_.MLPutString(interlanguage_sender.get_interlanguage().c_str());
+  ml_.MLPutFunction("ToExpression", 1);
+  ml_.MLPutString(interlanguage_sender.get_interlanguage().c_str());
+  */
+
+  phase_state_sptr init_state(new phase_state_t);
+  init_state->phase = phase_state_t::PointPhase;
+  push_phase_state(init_state);
 
   simulator_t::simulate(msc);
 
@@ -284,10 +288,10 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
     }
 
     // 制約が充足しているかどうかの確認
-//     if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
-//       if(debug_mode_) std::cout << "#*** inconsistent\n";
-//       return false;
-//     }
+    if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
+      if(debug_mode_) std::cout << "#*** inconsistent\n";
+      return false;
+    }
     if(debug_mode_) std::cout << "#*** consistent\n";
 
     // ask制約を集める

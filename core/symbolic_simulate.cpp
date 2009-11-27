@@ -13,8 +13,7 @@ using namespace hydla::symbolic_simulator;
 /**
  * 記号処理によるシミュレーション
  */
-void symbolic_simulate(HydLaParser& hp, 
-                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc) 
+void symbolic_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc) 
 {
   ProgramOptions &po = ProgramOptions::instance();
 
@@ -36,6 +35,6 @@ void symbolic_simulate(HydLaParser& hp,
   msopts.parallel_mode = po.count("parallel")>0;
 
   MathSimulator ms;
-  ms.simulate(hp, msc, msopts);
+  ms.simulate(msc, msopts);
 }
 

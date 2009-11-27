@@ -12,18 +12,6 @@
 
 #include "HydLaGrammarRule.h"
 
-struct print_match_str {
-    std::string message;
-  
-print_match_str(std::string message_) : message(message_) {}
-    
-    void operator()(char const *first, char const *last) const {
-        std::string str(first, last);
-        std::cout << message << " : " << str << std::endl;
-    }
- };
-
-
 namespace hydla {
 using namespace hydla::grammer_rule;
 using namespace boost::spirit::classic;

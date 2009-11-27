@@ -19,6 +19,7 @@ using namespace hydla::parse_error;
 using namespace hydla::grammer_rule;
 
 namespace hydla {
+namespace parser {
 
 void HydLaParser::create_ast(std::istream& iter)
 {
@@ -35,4 +36,5 @@ void HydLaParser::create_ast(std::istream& iter)
   }
 }
 
-} //namespace hydla
+} // namespace parser
+} // namespace hydla

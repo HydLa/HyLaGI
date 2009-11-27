@@ -12,7 +12,6 @@
 
 BOOST_AUTO_TEST_CASE(module_set_list_test)
 {
-  std::cout << "he" << std::endl;
   //shared_ptr<NodeFactory> nf(new NodeFactory());
   //HydLaParser hp(nf);
   //hp.parse_string(INPUT);

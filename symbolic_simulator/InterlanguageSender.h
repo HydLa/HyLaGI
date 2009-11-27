@@ -4,6 +4,7 @@
 #include "mathlink_helper.h"
 #include "Node.h"
 #include "TreeVisitor.h"
+#include "ParseTree.h"
 
 using namespace hydla::parse_tree;
 

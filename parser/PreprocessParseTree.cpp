@@ -6,16 +6,33 @@
 
 #include "ParseError.h"
 
+using namespace hydla::parse_tree;
 using namespace hydla::parse_error;
 
 namespace hydla { 
-namespace parse_tree {
+namespace parser {
 
 PreprocessParseTree::PreprocessParseTree()
 {}
 
 PreprocessParseTree::~PreprocessParseTree()
 {}
+
+void PreprocessParseTree::start(hydla::parse_tree::ParseTree *pt)
+{
+  constraint_def_map_ = pt->get_constraint_def_map();
+  program_def_map_    = pt->get_program_def_map();
+
+  State state;
+  state.in_guard           = false;
+  state.in_always          = false;
+  state.in_constraint      = false;
+  state.differential_count = 0;
+  state_stack_.push(state);
+
+  pt->dispatch(this);
+  assert(state_stack_.size() == 1);
+}
 
 // 制約定義
 void PreprocessParseTree::visit(boost::shared_ptr<ConstraintDefinition> node)  
@@ -29,49 +46,120 @@ void PreprocessParseTree::visit(boost::shared_ptr<ProgramDefinition> node)
   assert(0);
 }
 
+node_sptr PreprocessParseTree::apply_definition(difinition_type_t* def_type,
+                                                Caller* caller, 
+                                                Definition* definition)
+{
+  State& state = state_stack_.top();
+  
+  //循環参照のチェック
+  if (state.referenced_definition_list.find(*def_type) != 
+      state.referenced_definition_list.end()) {
+    throw CircularReference(caller->to_string());
+  }
+
+  State new_state(state);
+  new_state.formal_arg_map.clear();
+
+  assert(definition->bound_variable_size() == caller->actual_arg_size());
+  
+  Definition::bound_variables_iterator 
+    bv_it = definition->bound_variable_begin();
+  Definition::bound_variables_iterator 
+    bv_end = definition->bound_variable_end();
+  Caller::actual_args_iterator         
+    aa_it = caller->actual_arg_begin();
+  for(; bv_it!=bv_end; ++bv_it, ++aa_it) {
+    // 実引数に対しpreprocess適用
+    accept(*aa_it);
+    if(new_child_) {
+      *aa_it = new_child_;
+      new_child_.reset();
+    }
+
+    // 仮引数と実引数の対応付け
+    new_state.formal_arg_map.insert(make_pair(*bv_it, *aa_it));
+  }
+
+  // 循環参照検出用リストに登録
+  new_state.referenced_definition_list.insert(*def_type);
+
+  // 定義の子ノードに対しpreprocess適用
+  boost::shared_ptr<Definition> defnode(
+    boost::shared_static_cast<Definition>(definition->clone()));
+  state_stack_.push(new_state);
+  dispatch_child(defnode);
+  state_stack_.pop();
+
+  return defnode->get_child();
+}
+
 // 制約呼び出し
 void PreprocessParseTree::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
-  /*
   State& state = state_stack_.top();
 
-  difinition_type_t def_type(node->get_name(), 
-                             node->actual_arg_size());
+  difinition_type_t def_type(node->get_name(), node->actual_arg_size());
 
   // 制約定義から探す
-  if(constraint_def_map_.find(def_type) == 
-     constraint_def_map_.end()) {
+  constraint_def_map_t::const_iterator cons_def = 
+    constraint_def_map_->find(def_type);
+  if(cons_def == constraint_def_map_->end()) {
     throw UndefinedReference(node->to_string());
   }
 
-  //循環参照のチェック
-  if (state.referenced_definition_list.find(def_type) != 
-      state.referenced_definition_list.end()) {
-    throw CircularReference(node->to_string());
-  }
-
-
-  // 実引数に対しpreprocess適用
-  for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
-           bind(&Node::preprocess, _1, _1, arg));
-
-  dispatch<Ask, &Ask::get_guard, &Ask::set_guard>(node.get());
-
-
-  (*it).second->preprocess(child_, arg, actual_arg_list_);
-*/
+  // 定義の展開
+  node->set_child(apply_definition(&def_type, 
+                                   node.get(), 
+                                   cons_def->second.get()));
 }
 
 // プログラム呼び出し
 void PreprocessParseTree::visit(boost::shared_ptr<ProgramCaller> node)         
 {
-  assert(0);
+  State& state = state_stack_.top();
+
+  difinition_type_t def_type(node->get_name(), node->actual_arg_size());
+  Definition* defnode;
+
+  // 制約定義から探す
+  constraint_def_map_t::const_iterator 
+    cons_it = constraint_def_map_->find(def_type);
+  if(cons_it!=constraint_def_map_->end()) {
+    defnode = (*cons_it).second.get();
+  } else {
+    // プログラム定義から探す
+    program_def_map_t::const_iterator 
+      prog_it = program_def_map_->find(def_type);
+    if(prog_it!=program_def_map_->end()) {
+      defnode = (*prog_it).second.get();
+    } else {
+      throw UndefinedReference(node->to_string());
+    }
+  }
+
+  // 定義の展開
+  node->set_child(apply_definition(&def_type, 
+                                   node.get(), 
+                                   defnode));
 }
 
 // 制約式
 void PreprocessParseTree::visit(boost::shared_ptr<Constraint> node)            
 {
-  assert(0);
+  State& state = state_stack_.top();
+
+  // すでに制約式の中であった場合は自分自身を取り除く
+  if(state.in_constraint) {
+    dispatch_child(node);
+    new_child_ = node->get_child();
+  } 
+  else {
+    state_stack_.push(state);
+    state_stack_.top().in_constraint = true;
+    dispatch_child(node);
+    state_stack_.pop();
+  }
 }
 
 // Ask制約
@@ -285,5 +373,5 @@ void PreprocessParseTree::visit(boost::shared_ptr<Number> node)
 }
 
 
-} //namespace parse_tree
+} //namespace parser
 } //namespace hydla

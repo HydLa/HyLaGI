@@ -1,4 +1,4 @@
-devenv HydLa.sln /Build Release /Project 
+devenv HydLa.sln /Build Release
 
 for /F "tokens=1-3 delims=/ " %%a in ('date /t') do SET DT=HydLa_%%a%%b%%c
 md %DT%

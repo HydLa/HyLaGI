@@ -10,6 +10,7 @@
 #include "HydLaParser.h"
 #include "HydLaGrammarRule.h"
 #include "ParseError.h"
+#include "PreprocessParseTree.h"
 
 using namespace std;
 using namespace boost;
@@ -18,6 +19,8 @@ using namespace hydla::parse_tree;
 using namespace hydla::grammer_rule;
 
 namespace hydla {
+namespace parser {
+
 HydLaParser::HydLaParser(node_factory_sptr node_factory) :
   debug_dump_(false),
   node_factory_(node_factory)
@@ -49,7 +52,10 @@ void HydLaParser::parse(std::istream& s)
   if(debug_dump_ ) dump_parse_tree(std::cout);
 
   if(debug_dump_ ) std::cout << "#*** Preprocessed Parse Tree ***\n";
-  execute_preprocess();
+  PreprocessParseTree ppt;
+  ppt.start(&parse_tree_);
+
+  //execute_preprocess();
   if(debug_dump_ ) dump_parse_tree(std::cout);
 
   if(debug_dump_ ) {
@@ -352,37 +358,5 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
   }
 }
 
-
-
-
-std::string HydLaParser::create_interlanguage(std::string max_time)
-{
-
-/*
-  std::string str;
-  str += "HydLaMain[";
-  str += create_interlanguage(ast_tree_.trees.begin());
-  str += ", {";
-  variable_map_t::iterator iter = variable_.begin();
-  while(iter!=variable_.end()) {
-    str += iter->first;
-    if(++iter != variable_.end()) str += ", ";
-  }
-  str += "}," + max_time + "];";
-  */
-
-
-  return "";
-}
-
-#define TransExpArg2(X) case RI_##X:                \
-  return #X "[" + create_interlanguage(ch) + ", " + \
-    create_interlanguage(ch+1) + "]";
-
-
-std::string HydLaParser::create_interlanguage(const_tree_iter_t &iter) 
-{
-  return "";
-}
-
+} //namespace parser
 } //namespace hydla

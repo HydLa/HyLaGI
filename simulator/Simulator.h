@@ -38,17 +38,9 @@ public:
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc)
-                //              boost::function<bool (hydla::ch::module_set_sptr& ms, phase_state_sptr& state)> point_phase_func)
-  //                const hydla::parse_tree::variable_map_t& variable_map)
   {
-    phase_state_sptr init_state(new phase_state_t);
-    init_state->phase = phase_state_t::PointPhase;
-    state_queue_.push(init_state);
-
     while(!state_queue_.empty()) {
-      phase_state_sptr state(state_queue_.front());
-      state_queue_.pop();
-      std::cout << "state queue size:" << state_queue_.size() << std::endl;
+      phase_state_sptr state(pop_phase_state());
 
       switch(state->phase) 
       {
@@ -71,6 +63,24 @@ public:
   }
 
   /**
+   * 状態キューに新たな状態を追加する
+   */
+  void push_phase_state(const phase_state_sptr& state) 
+  {
+    state_queue_.push(state);
+  }
+
+  /**
+   * 状態キューから状態をひとつ取り出す
+   */
+  phase_state_sptr pop_phase_state()
+  {
+    phase_state_sptr state(state_queue_.front());
+    state_queue_.pop();
+    return state;
+  }
+
+  /**
    * Point Phaseの処理
    */
   virtual bool point_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
@@ -81,9 +91,10 @@ public:
   virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
 
 private:
-//  boost::function<bool (hydla::ch::module_set_sptr& ms, phase_state_sptr& state)> point_phase_func_;
 
-  // 各状態を保存しておくためのキュー
+  /**
+   * 各状態を保存しておくためのキュー
+   */
   std::queue<phase_state_sptr> state_queue_;
 };
 

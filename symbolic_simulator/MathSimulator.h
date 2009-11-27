@@ -11,8 +11,6 @@
 #include "SymbolicTime.h"
 
 namespace hydla {
-class HydLaParser;
-
 namespace symbolic_simulator {
 
 typedef simulator::VariableMap<SymbolicVariable, SymbolicValue> variable_map_t;
@@ -41,8 +39,7 @@ public:
   MathSimulator();
   virtual ~MathSimulator();
 
-  bool simulate(HydLaParser& parser, 
-                boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
+  bool simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
                 Opts& opts);
 
 //  virtual bool test_module_set(hydla::ch::module_set_sptr ms);

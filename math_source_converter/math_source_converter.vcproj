@@ -5,10 +5,6 @@
 	Name="math_source_converter"
 	ProjectGUID="{7AA041C5-8C78-402D-A7F0-855B469C0650}"
 	RootNamespace="math_source_converter"
-	SccProjectName="Svn"
-	SccAuxPath="Svn"
-	SccLocalPath="Svn"
-	SccProvider="SubversionScc"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
