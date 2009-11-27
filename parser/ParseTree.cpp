@@ -16,7 +16,7 @@ ParseTree::ParseTree()
 ParseTree::~ParseTree()
 {}
 
-difinition_type_t 
+ParseTree::difinition_type_t 
 ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
 {
   std::string name = d->get_name();
@@ -50,8 +50,8 @@ struct AppendDefinitionString {
     }
   }
 
-  bool first;
   string& s;
+  bool first;
 };
 }
 
@@ -80,11 +80,13 @@ std::string ParseTree::to_string()
 
 void ParseTree::preprocess()
 {
+  /*
   if(node_tree_) {
     formal_arg_map_t fam;
     preprocess_arg_t arg(variable_map_, prog_def_map_, cons_def_map_, fam);
     node_tree_->preprocess(node_tree_, arg);
   }
+  */
 }
 
 } //namespace parse_tree

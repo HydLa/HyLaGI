@@ -97,8 +97,6 @@ node_sptr PreprocessParseTree::apply_definition(difinition_type_t* def_type,
 // 制約呼び出し
 void PreprocessParseTree::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
-  State& state = state_stack_.top();
-
   difinition_type_t def_type(node->get_name(), node->actual_arg_size());
 
   // 制約定義から探す
@@ -117,8 +115,6 @@ void PreprocessParseTree::visit(boost::shared_ptr<ConstraintCaller> node)
 // プログラム呼び出し
 void PreprocessParseTree::visit(boost::shared_ptr<ProgramCaller> node)         
 {
-  State& state = state_stack_.top();
-
   difinition_type_t def_type(node->get_name(), node->actual_arg_size());
   Definition* defnode;
 

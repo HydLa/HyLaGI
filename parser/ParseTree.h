@@ -30,6 +30,9 @@ public:
   typedef boost::shared_ptr<hydla::parse_tree::ProgramDefinition>    program_def_map_value_t;
   typedef std::map<difinition_type_t,
                    program_def_map_value_t>       program_def_map_t;
+  
+  typedef std::map<std::string, int>              variable_map_t;
+
 
   ParseTree();
   virtual ~ParseTree();

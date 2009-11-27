@@ -19,83 +19,6 @@ class TreeVisitor;
 
 typedef boost::shared_ptr<Node> node_sptr;
 
-typedef std::string                             difinition_name_t;
-typedef int                                     bound_variable_count_t;
-typedef std::pair<difinition_name_t, 
-                  bound_variable_count_t>       difinition_type_t;
-
-typedef boost::shared_ptr<ConstraintDefinition> constraint_def_map_value_t;
-typedef std::map<difinition_type_t,
-                 constraint_def_map_value_t>    constraint_def_map_t;
-
-typedef boost::shared_ptr<ProgramDefinition>    program_def_map_value_t;
-typedef std::map<difinition_type_t,
-                 program_def_map_value_t>       program_def_map_t;
-
-typedef std::set<difinition_type_t>             referenced_definition_t;
-
-typedef std::map<std::string, node_sptr>        formal_arg_map_t;
-
-typedef std::vector<node_sptr>                  actual_arg_list_t;
-
-typedef std::map<std::string, int>              variable_map_t;
-
-
-/**
- * Nodeのpreprocess関数の引数クラス
- */
-typedef struct PreprocessArg_ {
-
-  PreprocessArg_(variable_map_t&        variable_map,
-                 program_def_map_t&     prog_def_map,
-                 constraint_def_map_t&  cons_def_map,
-                 formal_arg_map_t&      formal_arg_map) :
-    in_guard_(false),
-    in_constraint_(false),
-    in_always_(false),
-    differential_count_(0),
-    variable_map_(variable_map),
-    prog_def_map_(prog_def_map),
-    cons_def_map_(cons_def_map),
-    formal_arg_map_(formal_arg_map),
-    refered_def_()
-  {}
-
-  PreprocessArg_(const PreprocessArg_& arg, 
-                 formal_arg_map_t& formal_arg_map) :
-    in_guard_(arg.in_guard_),
-    in_constraint_(arg.in_constraint_),
-    in_always_(arg.in_always_),
-    differential_count_(arg.differential_count_),
-    variable_map_(arg.variable_map_),
-    prog_def_map_(arg.prog_def_map_),
-    cons_def_map_(arg.cons_def_map_),
-    formal_arg_map_(formal_arg_map),
-    refered_def_(arg.refered_def_)
-  {}
-
-
-    // ガードの中かどうか
-    bool in_guard_;
-    
-    // 制約式の中かどうか
-    bool in_constraint_;
-
-    // always制約の有効範囲内かどうか
-    bool in_always_;
-
-    // 微分記号を通過した回数
-    // 変数に到達した際、この値がその変数に対する微分の最大回数
-    int differential_count_;
-
-    variable_map_t&         variable_map_;
-    program_def_map_t&      prog_def_map_;
-    constraint_def_map_t&   cons_def_map_;
-    formal_arg_map_t&       formal_arg_map_;
-    referenced_definition_t refered_def_;
-} PreprocessArg;
-typedef PreprocessArg preprocess_arg_t;
-
 /**
  * パスツリーの基底ノード
  */
@@ -105,7 +28,7 @@ public:
   virtual ~Node(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) = 0;
+
   virtual node_sptr clone() = 0;
 
   virtual std::string to_string() const {return "";}
@@ -123,7 +46,7 @@ public:
   UnaryNode()
   {}
   
-  UnaryNode(node_sptr &child) :
+  UnaryNode(const node_sptr &child) :
     child_(child)
   {}
   
@@ -132,11 +55,6 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) 
-  {
-    child_->preprocess(child_, arg);
-  }
-  
   virtual node_sptr clone() = 0;
 
   node_type_sptr clone(node_type_sptr n)
@@ -188,19 +106,13 @@ public:
   BinaryNode()
   {}  
   
-  BinaryNode(node_sptr &lhs, node_sptr &rhs) : 
+  BinaryNode(const node_sptr &lhs, const node_sptr &rhs) : 
     lhs_(lhs), rhs_(rhs)
   {}
     
   virtual ~BinaryNode(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    lhs_->preprocess(lhs_, arg);
-    rhs_->preprocess(rhs_, arg);
-  }
 
   virtual node_sptr clone() = 0;
 
@@ -269,7 +181,6 @@ public:
   virtual ~Caller(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) = 0;
   virtual node_sptr clone();
   virtual std::string to_string() const;
 
@@ -375,8 +286,6 @@ public:
   virtual ~ConstraintCaller(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
 };
 
 /**
@@ -388,8 +297,6 @@ public:
   virtual ~ProgramCaller(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
 };
 
 /**
@@ -405,13 +312,6 @@ public:
   virtual ~Definition(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg) 
-  {}
-  
-  virtual void preprocess(node_sptr& own, 
-                          preprocess_arg_t& arg, 
-                          actual_arg_list_t& actual_arg_list);
   virtual node_sptr clone();
   virtual std::string to_string() const;
 
@@ -539,19 +439,6 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    // すでに制約式の中であった場合は自分自身を取り除く
-    if(arg.in_constraint_) {
-      child_->preprocess(child_, arg);
-      own = child_;
-    } else {
-      preprocess_arg_t narg(arg);
-      narg.in_constraint_ = true;
-      child_->preprocess(child_, narg);
-    }
-  }
-
   virtual node_sptr clone()
   {
     boost::shared_ptr<Constraint> n(new Constraint());
@@ -579,11 +466,6 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    child_->preprocess(child_, arg);
-  }
-
   virtual node_sptr clone()
   {
     boost::shared_ptr<Tell> n(new Tell());
@@ -610,17 +492,6 @@ public:
   virtual ~Ask(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    preprocess_arg_t guard_arg(arg);
-    guard_arg.in_guard_ = true;
-    guard_->preprocess(guard_, guard_arg);
-  
-    preprocess_arg_t child_arg(arg);
-    child_arg.in_always_ = false;    
-    child_->preprocess(child_, child_arg);
-  }
 
   virtual node_sptr clone()
   {
@@ -651,67 +522,33 @@ private:
 
 #define DEFINE_BINARY_OP_NODE(NAME)                         \
   class NAME : public BinaryNode {                          \
-public:                                                     \
-typedef boost::shared_ptr<NAME> node_type_sptr;             \
+  public:                                                   \
+  typedef boost::shared_ptr<NAME> node_type_sptr;           \
                                                             \
-NAME()                                                      \
-{}                                                          \
+  NAME()                                                    \
+    {}                                                      \
                                                             \
-NAME(node_sptr& lhs, node_sptr& rhs) :                      \
-  BinaryNode(lhs, rhs)                                      \
-{}                                                          \
+  NAME(const node_sptr& lhs, const node_sptr& rhs) :        \
+    BinaryNode(lhs, rhs)                                    \
+    {}                                                      \
                                                             \
-virtual ~NAME(){}                                           \
+  virtual ~NAME(){}                                         \
                                                             \
-virtual void accept(node_sptr own, TreeVisitor* visitor);   \
+  virtual void accept(node_sptr own, TreeVisitor* visitor); \
                                                             \
-virtual node_sptr clone()                                   \
-{                                                           \
-  node_type_sptr n(new NAME);                               \
-  return BinaryNode::clone(n);                              \
-}                                                           \
+  virtual node_sptr clone()                                 \
+    {                                                       \
+      node_type_sptr n(new NAME);                           \
+      return BinaryNode::clone(n);                          \
+    }                                                       \
                                                             \
-virtual std::string to_string() const                       \
-{                                                           \
-  return std::string(#NAME) + "[" +                         \
-    lhs_->to_string() + "," +                               \
-    rhs_->to_string() + "]";                                \
-}                                                           \
-}
-
-#define DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(NAME)               \
-  class NAME : public BinaryNode {                                \
-public:                                                           \
-typedef boost::shared_ptr<NAME> node_type_sptr;                   \
-                                                                  \
-NAME()                                                            \
-{}                                                                \
-                                                                  \
-NAME(node_sptr& lhs, node_sptr& rhs) :                            \
-  BinaryNode(lhs, rhs)                                            \
-{}                                                                \
-                                                                  \
-virtual ~NAME(){}                                                 \
-                                                                  \
-virtual void accept(node_sptr own, TreeVisitor* visitor);         \
-                                                                  \
-virtual node_sptr clone()                                         \
-{                                                                 \
-  node_type_sptr n(new NAME);                                     \
-  return BinaryNode::clone(n);                                    \
-}                                                                 \
-                                                                  \
-virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);   \
-                                                                  \
-                                                                  \
-virtual std::string to_string() const                             \
-{                                                                 \
-  return std::string(#NAME) + "[" +                               \
-          lhs_->to_string() + "," +                               \
-          rhs_->to_string() + "]";                                \
-}                                                                 \
-}
-
+  virtual std::string to_string() const                     \
+    {                                                       \
+      return std::string(#NAME) + "[" +                     \
+        lhs_->to_string() + "," +                           \
+        rhs_->to_string() + "]";                            \
+    }                                                       \
+  };
 
 /**
  * 比較演算子「=」
@@ -766,198 +603,80 @@ DEFINE_BINARY_OP_NODE(Divide);
 /**
  * 論理演算子「/\」（連言）
  */
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalAnd);
+DEFINE_BINARY_OP_NODE(LogicalAnd);
 
 /**
  * 論理演算子「\/」（選言）
  */
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(LogicalOr);
+DEFINE_BINARY_OP_NODE(LogicalOr);
 
 /**
  * 制約階層定義演算子
  * 並列制約「,」
  */ 
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Parallel);
+DEFINE_BINARY_OP_NODE(Parallel);
 
 /**
  * 制約階層定義演算子
  * 弱制約「<<」
  */ 
-DEFINE_BINARY_OP_NODE_WITH_PREPROCESS(Weaker);
+DEFINE_BINARY_OP_NODE(Weaker);
+
+
+#define DEFINE_UNARY_OP_NODE(NAME)                          \
+  class NAME : public UnaryNode {                           \
+  public:                                                   \
+  typedef boost::shared_ptr<NAME> node_type_sptr;           \
+                                                            \
+  NAME()                                                    \
+    {}                                                      \
+                                                            \
+  NAME(const node_sptr& child) :                            \
+    UnaryNode(child)                                        \
+    {}                                                      \
+                                                            \
+  virtual ~NAME(){}                                         \
+                                                            \
+  virtual void accept(node_sptr own, TreeVisitor* visitor); \
+                                                            \
+  virtual node_sptr clone()                                 \
+    {                                                       \
+      node_type_sptr n(new NAME);                           \
+      return UnaryNode::clone(n);                           \
+    }                                                       \
+                                                            \
+  virtual std::string to_string() const                     \
+    {                                                       \
+      return std::string(#NAME) + "[" +                     \
+        child_->to_string() + "]";                          \
+    }                                                       \
+  };
+
 
 /**
  * 時相演算子「[]」(Always)
  */
-class Always: public UnaryNode {
-public:
-  typedef boost::shared_ptr<Always> node_type_sptr;
-
-  Always()
-  {}
-
-  Always(node_sptr& child):
-  UnaryNode(child)
-  {}
-
-  virtual ~Always(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    node_type_sptr n(new Always);
-    return UnaryNode::clone(n);
-  }
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
-
-  virtual std::string to_string() const
-  {
-    return "Always[" + child_->to_string() + "]";
-  }
-};
+DEFINE_UNARY_OP_NODE(Always);
 
 /**
  * 算術単項演算子「+」
  */
-class Positive: public UnaryNode {
-public:
-  typedef boost::shared_ptr<Positive> node_type_sptr;
-
-  Positive()
-  {}
-
-  Positive(node_sptr& child):
-  UnaryNode(child)
-  {}
-
-  virtual ~Positive(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    node_type_sptr n(new Positive);
-    return UnaryNode::clone(n);
-  }
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    child_->preprocess(child_, arg);
-  }
-
-  virtual std::string to_string() const
-  {
-    return "Positive[" + child_->to_string() + "]";
-  }
-};
+DEFINE_UNARY_OP_NODE(Positive);
 
 /**
  * 算術単項演算子「-」
  */
-class Negative: public UnaryNode {
-public:
-  typedef boost::shared_ptr<Negative> node_type_sptr;
-
-  Negative()
-  {}
-
-  Negative(node_sptr& child):
-    UnaryNode(child)
-  {}
-
-  virtual ~Negative(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    node_type_sptr n(new Negative);
-    return UnaryNode::clone(n);
-  }
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    child_->preprocess(child_, arg);
-  }
-
-  virtual std::string to_string() const
-  {
-    return "Negative[" + child_->to_string() + "]";
-  }
-};
+DEFINE_UNARY_OP_NODE(Negative);
 
 /**
  * 微分「'」
  */
-class Differential: public UnaryNode {
-public:
-  typedef boost::shared_ptr<Differential> node_type_sptr;
-
-  Differential()
-  {}
-
-  Differential(node_sptr& child):
-    UnaryNode(child)
-  {}
-
-  virtual ~Differential(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    node_type_sptr n(new Differential);
-    return UnaryNode::clone(n);
-  }
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    preprocess_arg_t narg(arg);
-    narg.differential_count_++;
-    child_->preprocess(child_, narg);
-  }
-
-  virtual std::string to_string() const
-  {
-    return "Differential[" + child_->to_string() + "]";
-  }
-};
+DEFINE_UNARY_OP_NODE(Differential);
 
 /**
  * 左極限「-」
  */
-class Previous: public UnaryNode {
-public:
-  typedef boost::shared_ptr<Previous> node_type_sptr;
-
-  Previous()
-  {}
-
-  Previous(node_sptr& child):
-    UnaryNode(child)
-  {}
-
-  virtual ~Previous(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    node_type_sptr n(new Previous);
-    return UnaryNode::clone(n);
-  }
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    child_->preprocess(child_, arg);
-  }
-
-  virtual std::string to_string() const
-  {
-    return "Previous[" + child_->to_string() + "]";
-  }
-};
+DEFINE_UNARY_OP_NODE(Previous);
 
 /**
  * 小数
@@ -975,11 +694,6 @@ public:
   {}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg)
-  {
-    //do nothing
-  }
 
   virtual node_sptr clone()
   {
@@ -1014,8 +728,6 @@ public:
   virtual ~Variable(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual void preprocess(node_sptr& own, preprocess_arg_t& arg);
 
   virtual node_sptr clone()
   {

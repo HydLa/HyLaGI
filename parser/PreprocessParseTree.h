@@ -92,7 +92,8 @@ private:
 
   typedef std::map<std::string, node_sptr>        formal_arg_map_t;
 
-  typedef std::map<std::string, int>              variable_map_t;
+    typedef std::map<std::string, int>              variable_map_t;
+
 
   /**
    * 探索中のノードツリーの状態を保存するための構造体
@@ -155,19 +156,25 @@ private:
   template<class NodeType>
   void dispatch_child(NodeType& node)
   {
-    dispatch<UnaryNode, &UnaryNode::get_child, &UnaryNode::set_child>(node.get());
+    dispatch<hydla::parse_tree::UnaryNode, 
+      &hydla::parse_tree::UnaryNode::get_child, 
+      &hydla::parse_tree::UnaryNode::set_child>(node.get());
   }
 
   template<class NodeType>
   void dispatch_rhs(NodeType& node)
   {
-    dispatch<BinaryNode, &BinaryNode::get_rhs, &BinaryNode::set_rhs>(node.get());
+    dispatch<hydla::parse_tree::BinaryNode, 
+      &hydla::parse_tree::BinaryNode::get_rhs, 
+      &hydla::parse_tree::BinaryNode::set_rhs>(node.get());
   }
 
   template<class NodeType>
   void dispatch_lhs(NodeType& node)
   {
-    dispatch<BinaryNode, &BinaryNode::get_lhs, &BinaryNode::set_lhs>(node.get());
+    dispatch<hydla::parse_tree::BinaryNode, 
+      &hydla::parse_tree::BinaryNode::get_lhs, 
+      &hydla::parse_tree::BinaryNode::set_lhs>(node.get());
   }
 
   /**

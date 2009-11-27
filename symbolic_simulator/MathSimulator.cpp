@@ -8,7 +8,7 @@
 #include <boost/foreach.hpp>
 
 #include "math_source.h"
-#include "InterlanguageSender.h"
+//#include "InterlanguageSender.h"
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
 
