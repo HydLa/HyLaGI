@@ -1,5 +1,5 @@
 #include "ConsistencyChecker.h"
-//#include "PacketChecker.h"
+#include "PacketChecker.h"
 #include <iostream>
 
 using namespace hydla::parse_tree;
@@ -12,7 +12,7 @@ namespace symbolic_simulator {
 ConsistencyChecker::ConsistencyChecker(MathLink& ml) :
   ml_(ml),
   in_differential_equality_(false),
-  in_differential_(false),
+  differential_count_(0),
   in_prev_(false)
 {}
 
@@ -164,35 +164,26 @@ void ConsistencyChecker::visit(boost::shared_ptr<Positive> node)
 void ConsistencyChecker::visit(boost::shared_ptr<Differential> node)          
 {
 
-/*
-  ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-  ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-  ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-  ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-  ml_.MLPutSymbol("Derivative");
-  ml_.MLPutInteger(1);
-*/
-
+  differential_count_++;
   in_differential_equality_ = true;
-  in_differential_ = true;
   node_sptr chnode(node->get_child_node());
   chnode->accept(chnode, this);
-  std::cout << "dash";
+
+/*
   if(in_differential_){
     //std::cout << "[t]"; // ht[t]' ÇÃÇÊÇ§Ç…Ç»ÇÈÇÃÇñhÇÆÇΩÇﬂ
   }
+*/
 
-  in_differential_ = false;
+  differential_count_--;
 }
 
 // ç∂ã…å¿
 void ConsistencyChecker::visit(boost::shared_ptr<Previous> node)              
 {
   in_prev_ = true;
-  //ml_.MLPutFunction("prev", 1);
   node_sptr chnode(node->get_child_node());
   chnode->accept(chnode, this);
-  std::cout << "prev";
 
   in_prev_ = false;
 }
@@ -201,30 +192,71 @@ void ConsistencyChecker::visit(boost::shared_ptr<Previous> node)
 void ConsistencyChecker::visit(boost::shared_ptr<Variable> node)              
 {
 
-  if(in_differential_){
-    ml_.MLPutSymbol(("usrVar" + node->get_name() + "dash").c_str());
-    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name() + "dash", 0)); // ñ{ìñÇÕ1Ç∆ÇµÇƒàµÇ¢ÇΩÇ¢ÅH
+  if(in_prev_)
+  {
+    ml_.MLPutFunction("prev", 1);
+    std::cout << "prev[";
+    if(differential_count_ > 0)
+    {
+      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+      ml_.MLPutArgCount(1);      // this 1 is for the 'f'
+      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+      ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
+      ml_.MLPutSymbol("Derivative");
+      ml_.MLPutInteger(differential_count_);
+
+      std::cout << "Derivative[1][";
+      ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+      vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name(), -1*(differential_count_ +1)));
+      std::cout << node->get_name().c_str() << "]";
+    }
+    else
+    {
+      ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+      vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name(), -1));
+      std::cout << node->get_name().c_str();
+    }
+    std::cout << "]";
   }
-  else if(in_prev_){
-    ml_.MLPutSymbol(("usrVar" + node->get_name() + "prev").c_str());
-    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name() + "prev", 0)); // ñ{ìñÇÕ2Ç∆ÇµÇƒàµÇ¢ÇΩÇ¢
+  else if(differential_count_ > 0){
+    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+    ml_.MLPutArgCount(1);      // this 1 is for the 'f'
+    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+    ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
+    ml_.MLPutSymbol("Derivative");
+    ml_.MLPutInteger(differential_count_);
+
+    std::cout << "Derivative[1][";
+    ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+    vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name(), differential_count_));
+    std::cout << node->get_name().c_str() << "]";
   }
-  else {
+  else
+  {
     ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
     vars_.insert(std::pair<std::string, int>("usrVar" + node->get_name(), 0));
+    std::cout << node->get_name().c_str();
   }
-  std::cout << node->get_name().c_str();
+
+/*
   if(in_differential_equality_){
-    if(in_differential_){
-      //ml_.MLPutSymbol("t");
-    }else{
-      //ml_.MLPutSymbol("t");
-      //std::cout << "[t]";
+    if(in_differential_)
+    {
+      ml_.MLPutSymbol("t");
     }
-  } else {
-    //ml_.MLPutInteger(0);
-    //std::cout << "[0]";
+    else
+    {
+      ml_.MLPutSymbol("t");
+      std::cout << "[t]";
+    }
   }
+  else
+  {
+    ml_.MLPutInteger(0);
+    std::cout << "[0]";
+  }
+*/
+
 }
 
 // êîéö
@@ -271,41 +303,63 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
     tells_it++;
   }
 
-
   // varsÇìnÇ∑
   int var_num = vars_.size();
   ml_.MLPutFunction("List", var_num);
-  std::map<std::string, int>::iterator vars_it = vars_.begin();
+  std::multimap<std::string, int>::iterator vars_it = vars_.begin();
   const char* sym;
+  int value;
   std::cout << "vars: ";
   while(vars_it!=vars_.end())
   {
     sym = ((*vars_it).first).c_str();
-    switch((*vars_it).second)
+    value = (*vars_it).second;
+    if(value < 0)
     {
-    case 0:
-      ml_.MLPutSymbol(sym);
-      break;
-    case 1:
+      ml_.MLPutFunction("prev", 1);
+      std::cout << "prev[";
+      value += 1;
+      value *= -1;
+      if(value != 0)
+      {
+        ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+        ml_.MLPutArgCount(1);      // this 1 is for the 'f'
+        ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+        ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
+        ml_.MLPutSymbol("Derivative");
+        ml_.MLPutInteger(value);
+        ml_.MLPutSymbol(sym);
+        //ml_.MLPutSymbol("t");
+        std::cout << "Derivative[" << value << "][" << sym << "]";
+      }
+      else
+      {
+        ml_.MLPutSymbol(sym);
+        std::cout << sym;
+      }
+      std::cout << "]";
+    }
+    else if(value != 0)
+    {
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
       ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
       ml_.MLPutSymbol("Derivative");
-      ml_.MLPutInteger(1);
+      ml_.MLPutInteger(value);
       ml_.MLPutSymbol(sym);
       //ml_.MLPutSymbol("t");
-      break;
-    case 2:
-      ml_.MLPutFunction("prev", 1);
-      ml_.MLPutSymbol(sym);
-      break;
-    default:
-      ;
+      std::cout << "Derivative[" << value << "][" << sym << "]";
     }
-    std::cout << sym << " ";
+    else
+    {
+      ml_.MLPutSymbol(sym);
+      std::cout << sym;
+    }
+    std::cout << " ";
     vars_it++;
   }
+
 
   // ml_.MLEndPacket();
 

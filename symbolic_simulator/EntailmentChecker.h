@@ -68,11 +68,15 @@ public:
 
 private:
   MathLink& ml_;
-  std::map<std::string, int> vars_;
-  int in_differential_equality_;
-  int in_differential_;
-  int in_prev_;
-  int in_guard_;
+  std::multimap<std::string, int> vars_;
+  // 微分方程式の中にいるかどうか（PointPhaseでは不要？）
+  bool in_differential_equality_;
+  // Differentialノードを何回通ったか（何階微分か）
+  int differential_count_;
+  // Prevノードの下にいるかどうか
+  bool in_prev_;
+  // ask制約のガードの中にいるかどうか
+  bool in_guard_;
 
 };
 
