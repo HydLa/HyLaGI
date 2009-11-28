@@ -40,6 +40,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "branch_and_prune_simulator"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math_source_converter", "math_source_converter\math_source_converter.vcproj", "{7AA041C5-8C78-402D-A7F0-855B469C0650}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaverbasic", "..\..\..\realpaver\trunk\librealpaverbasic\librealpaverbasic.vcproj", "{725E89B0-0DEE-4801-965B-4ACF8B366E42}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaver", "..\..\..\realpaver\trunk\librealpaver\librealpaver.vcproj", "{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -82,6 +86,14 @@ Global
 		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Debug|Win32.Build.0 = Debug|Win32
 		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Release|Win32.ActiveCfg = Release|Win32
 		{7AA041C5-8C78-402D-A7F0-855B469C0650}.Release|Win32.Build.0 = Release|Win32
+		{725E89B0-0DEE-4801-965B-4ACF8B366E42}.Debug|Win32.ActiveCfg = Debug|Win32
+		{725E89B0-0DEE-4801-965B-4ACF8B366E42}.Debug|Win32.Build.0 = Debug|Win32
+		{725E89B0-0DEE-4801-965B-4ACF8B366E42}.Release|Win32.ActiveCfg = Release|Win32
+		{725E89B0-0DEE-4801-965B-4ACF8B366E42}.Release|Win32.Build.0 = Release|Win32
+		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Debug|Win32.Build.0 = Debug|Win32
+		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Release|Win32.ActiveCfg = Release|Win32
+		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
