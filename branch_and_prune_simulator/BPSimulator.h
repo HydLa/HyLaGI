@@ -83,6 +83,7 @@ public:
 
 private:
   bool debug_mode_;
+  std::string max_time_;
 
 };
 

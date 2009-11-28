@@ -29,9 +29,12 @@ namespace bp_simulator {
   bool BPSimulator::simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, Opts& opts)
   {
     this->debug_mode_ = opts.debug_mode;
+    this->max_time_   = opts.max_time;
 
-    // シミュレーション時間をもっておく
-    // 経過時間変数はいつつくる？phase_state？
+    // 初期stateをスタックに積む
+    phase_state_sptr init_state_sptr(new phase_state_t);
+    init_state_sptr->phase = phase_state_t::PointPhase;
+    this->push_phase_state(init_state_sptr);
 
     // 自動的に時刻0のBPSimulator::point_phaseがはじまる
     simulator_t::simulate(msc);
