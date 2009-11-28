@@ -245,7 +245,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m &gt; $(ProjectDir)\math_source.cpp"
+						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m &gt; $(ProjectDir)\math_source.cpp&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)\math_source.cpp"
 					/>
 				</FileConfiguration>
@@ -255,7 +255,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m"
+						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)\math_source.cpp"
 					/>
 				</FileConfiguration>
