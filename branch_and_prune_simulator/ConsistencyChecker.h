@@ -2,6 +2,7 @@
 #define _INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 
 #include <map>
+#include <stack>
 
 // parser
 #include "Node.h"
@@ -10,6 +11,16 @@
 
 // simulator
 #include "Types.h"
+
+// librealpaverbasic
+#include "realpaverbasic.h"
+
+//#define RP_RELATION_EQUAL     1
+//#define RP_RELATION_SUPEQUAL  2
+//#define RP_RELATION_INFEQUAL  3
+#define RP_RELATION_UNEQUAL 4
+#define RP_RELATION_SUP 5
+#define RP_RELATION_INF 6
 
 namespace hydla {
 namespace bp_simulator {
@@ -61,9 +72,17 @@ public:
 
 
 private:
+  void create_unary_erep(boost::shared_ptr<hydla::parse_tree::UnaryNode> node, int op);
+  void create_binary_erep(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int op);
+  void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
+
+  std::set<rp_constraint> constraints_;
   std::map<std::string, int> vars_;
-  int in_differential_equality_;
-  int in_differential_;
+
+  std::stack<rp_erep> rep_stack_;
+  rp_ctr_num ctr_;
+  bool in_differential_;
+  bool in_prev_;
 
 };
 

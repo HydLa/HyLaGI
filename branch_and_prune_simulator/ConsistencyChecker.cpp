@@ -1,6 +1,7 @@
 #include "ConsistencyChecker.h"
 
 #include <iostream>
+#include <cassert>
 
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
@@ -9,8 +10,8 @@ namespace hydla {
 namespace bp_simulator {
 
 ConsistencyChecker::ConsistencyChecker() :
-  in_differential_equality_(false),
-  in_differential_(false)
+  in_differential_(false),
+  in_prev_(false)
 {}
 
 ConsistencyChecker::~ConsistencyChecker()
@@ -19,244 +20,142 @@ ConsistencyChecker::~ConsistencyChecker()
 // Tell§–ñ
 void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)                  
 {
-  ////ml_.MLPutFunction("tell", 1);
-
-  //node_sptr chnode(node->get_child_node());
-  //chnode->accept(chnode, this);
-  //std::cout << std::endl;
+  rp_constraint c;
+  this->accept(node->get_child());
+  rp_constraint_create_num(&c, this->ctr_);
+  this->constraints_.insert(c);
 }
 
 // ”äŠr‰‰Zq
 void ConsistencyChecker::visit(boost::shared_ptr<Equal> node)                 
 {
-  //ml_.MLPutFunction("Equal", 2);
-  //      
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "=";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  //in_differential_equality_ = false;
+  this->create_ctr_num(node, RP_RELATION_EQUAL);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<UnEqual> node)               
 {
-  //ml_.MLPutFunction("UnEqual", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "!=";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  //in_differential_equality_ = false;
+  //this->create_ctr_num(node, RP_RELATION_UNEQUAL);
+  this->create_ctr_num(node, RP_RELATION_EQUAL);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<Less> node)                  
 {
-  //ml_.MLPutFunction("Less", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "<";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  //in_differential_equality_ = false;
+  //this->create_ctr_num(node, RP_RELATION_INF);
+  this->create_ctr_num(node, RP_RELATION_INFEQUAL);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<LessEqual> node)             
 {
-  //ml_.MLPutFunction("LessEqual", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "<=";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  //in_differential_equality_ = false;
+  this->create_ctr_num(node, RP_RELATION_INFEQUAL);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<Greater> node)               
 {
-  //ml_.MLPutFunction("Greater", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << ">";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  //in_differential_equality_ = false;
+  //this->create_ctr_num(node, RP_RELATION_SUP);
+  this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<GreaterEqual> node)          
 {
-  //ml_.MLPutFunction("GreaterEqual", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << ">=";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
-  //in_differential_equality_ = false;
+  this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
 }
 
 // ˜_—‰‰Zq
 void ConsistencyChecker::visit(boost::shared_ptr<LogicalAnd> node)            
 {
-  ////ml_.MLPutFunction("And, 2);
-
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<LogicalOr> node)             
 {
-  ////ml_.MLPutFunction("Or", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
 }
   
 // Zp“ñ€‰‰Zq
 void ConsistencyChecker::visit(boost::shared_ptr<Plus> node)                  
 {
-  //ml_.MLPutFunction("Plus", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "+";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  create_binary_erep(node, RP_SYMBOL_ADD);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<Subtract> node)              
 {
-  //ml_.MLPutFunction("Subtract", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "-";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  create_binary_erep(node, RP_SYMBOL_SUB);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<Times> node)                 
 {
-  //ml_.MLPutFunction("Times", 2);
-
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "*";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  create_binary_erep(node, RP_SYMBOL_MUL);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<Divide> node)                
 {
-  //ml_.MLPutFunction("Divide", 2);
-  //  
-  //node_sptr lnode(node->get_lhs()); lnode->accept(lnode, this);
-  //std::cout << "/";
-  //node_sptr rnode(node->get_rhs()); rnode->accept(rnode, this);
+  // TODO: 0œZ‚È‚Ç“Áê‚ÈœZ‚É‚Â‚¢‚Ä
+  create_binary_erep(node, RP_SYMBOL_DIV);
 }
   
 // Zp’P€‰‰Zq
 void ConsistencyChecker::visit(boost::shared_ptr<Negative> node)              
 {
-  //ml_.MLPutFunction("Minus", 1);
-  //std::cout << "-";
-
-  //node_sptr chnode(node->get_child_node());
-  //chnode->accept(chnode, this);
+  create_unary_erep(node, RP_SYMBOL_NEG);
 }
 
 void ConsistencyChecker::visit(boost::shared_ptr<Positive> node)              
 {
-  //node_sptr chnode(node->get_child_node());
-  //chnode->accept(chnode, this);
+  this->accept(node->get_child());
 }
 
 // ”÷•ª
 void ConsistencyChecker::visit(boost::shared_ptr<Differential> node)          
 {
-
-  //ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-  //ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-  //ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-  //ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-  //ml_.MLPutSymbol("Derivative");
-  //ml_.MLPutInteger(1);
-
-
-  //in_differential_equality_ = true;
-  //in_differential_ = true;
-  //node_sptr chnode(node->get_child_node());
-  //chnode->accept(chnode, this);
-  //std::cout << "'";
-  //if(in_differential_){
-  //  //std::cout << "[t]"; // ht[t]' ‚Ì‚æ‚¤‚É‚È‚é‚Ì‚ğ–h‚®‚½‚ß
-  //}
-
-  //in_differential_ = false;
+  this->in_differential_ = true;
+  this->accept(node->get_child());
+  this->in_differential_ = false;
 }
 
 // ¶‹ÉŒÀ
 void ConsistencyChecker::visit(boost::shared_ptr<Previous> node)              
 {
-  ////ml_.MLPutFunction("prev", 1);
-  //node_sptr chnode(node->get_child_node());
-  //chnode->accept(chnode, this);
-  //std::cout << "-";
+  this->in_prev_ = true;
+  this->accept(node->get_child());
+  this->in_prev_ = false;
 }
 
 // •Ï”
 void ConsistencyChecker::visit(boost::shared_ptr<Variable> node)              
 {
-  //ml_.MLPutSymbol(node->get_name().c_str());
-  //if(in_differential_){
-  //  vars_.insert(std::pair<std::string, int>(node->get_name() + "'", 1));
-  //}
-  //else {
-  //  vars_.insert(std::pair<std::string, int>(node->get_name(), 0));
-  //}
-  //std::cout << node->get_name().c_str();
-  //if(in_differential_equality_){
-  //  if(in_differential_){
-  //    //ml_.MLPutSymbol("t");
-  //  }else{
-  //    //ml_.MLPutSymbol("t");
-  //    //std::cout << "[t]";
-  //  }
-  //} else {
-  //  //ml_.MLPutInteger(0);
-  //  //std::cout << "[0]";
-  //}
+  // •Ï”•\‚É“o˜^ ‚¢‚¸‚ê•ÏXcH
+  std::string name(node->get_name());
+  unsigned int size = this->vars_.size();
+  assert(!(this->in_differential_ & this->in_prev_)); // ‚Ç‚¿‚ç‚©‚Ífalse
+  if(this->in_differential_) name += "_d";
+  if(this->in_prev_) name += "_p";
+  this->vars_.insert(std::pair<std::string, int>(name, size)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
+
+  // TODO: “Á’è‚Ì•Ï”‚Í’è”ˆµ‚¢‚µ‚È‚¢‚Æprove‚Å‚«‚È‚¢‰Â”\«
+  rp_erep rep;
+  rp_erep_create_var(&rep, this->vars_[name]);
+  this->rep_stack_.push(rep);
 }
 
 // ”š
 void ConsistencyChecker::visit(boost::shared_ptr<Number> node)                
 {
-  //ml_.MLPutInteger(atoi(node->get_number().c_str()));
-  //std::cout << node->get_number().c_str();
+  rp_interval i;
+  rp_interval_from_str(const_cast<char *>(node->get_number().c_str()), i);
+  rp_erep rep;
+  rp_erep_create_cst(&rep, "", i);
+  this->rep_stack_.push(rep);
 }
 
 
 bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
 {
-//
-///*
-//  ml_.MLPutFunction("isConsistent", 2);
-//  ml_.MLPutFunction("List", 3);
-//  ml_.MLPutFunction("Equal", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutSymbol("y");
-//  ml_.MLPutFunction("Equal", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutInteger(2);
-//  ml_.MLPutFunction("Equal", 2);
-//  ml_.MLPutSymbol("y");
-//  ml_.MLPutInteger(2);
-//
-//  ml_.MLPutFunction("List", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutSymbol("y");
-//  ml_.MLEndPacket();
-//*/
-//
-//  int tells_size = collected_tells.size();
-//  // isConsistent[expr, vars]‚ğ“n‚µ‚½‚¢
-//  ml_.MLPutFunction("isConsistent", 2);
-//  ml_.MLPutFunction("List", tells_size);
-//
-//  //typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> > collected_tells_t;
-//  // tell§–ñ‚ÌW‡‚©‚çexpr‚ğ“¾‚ÄMathematica‚É“n‚·
-//  collected_tells_t::iterator tells_it = collected_tells.begin();
-//  while((tells_it) != collected_tells.end())
-//  {
-//    visit((*tells_it));
-//    tells_it++;
-//  }
+  //typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> > collected_tells_t;
+  // tell§–ñ‚ÌW‡‚©‚çexpr‚ğ“¾‚ÄMathematica‚É“n‚·
+  collected_tells_t::iterator tells_it = collected_tells.begin();
+  while((tells_it) != collected_tells.end())
+  {
+    this->accept(*tells_it);
+    tells_it++;
+  }
 //
 //
 //  // vars‚ğ“n‚·
@@ -311,5 +210,67 @@ bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
   return true;
 }
 
-} //namespace symbolic_simulator
+/**
+ * ’P€‰‰Z‚Ìrp_erep‚ğì‚Á‚ÄƒXƒ^ƒbƒN‚ÉÏ‚Ş
+ */
+void ConsistencyChecker::create_unary_erep(boost::shared_ptr<UnaryNode> node, int op)
+{
+  rp_erep child, rep;
+
+  this->accept(node->get_child());
+  rp_erep_set(&child, this->rep_stack_.top());
+  assert(!(this->rep_stack_.empty()));
+  this->rep_stack_.pop();
+
+  rp_erep_create_unary(&rep, op, child);
+  this->rep_stack_.push(rep);
+  rp_erep_destroy(&child);
+  assert(child);
+}
+
+/**
+ * “ñ€‰‰Z‚Ìrp_erep‚ğì‚Á‚ÄƒXƒ^ƒbƒN‚ÉÏ‚Ş
+ */
+void ConsistencyChecker::create_binary_erep(boost::shared_ptr<BinaryNode> node, int op)
+{
+  rp_erep l, r, rep;
+
+  this->accept(node->get_lhs());
+  rp_erep_set(&l, this->rep_stack_.top());
+  assert(!(this->rep_stack_.empty()));
+  this->rep_stack_.pop();
+
+  this->accept(node->get_rhs());
+  rp_erep_set(&r, this->rep_stack_.top());
+  assert(!(this->rep_stack_.empty()));
+  this->rep_stack_.pop();
+
+  rp_erep_create_binary(&rep,op,l,r);
+  this->rep_stack_.push(rep);
+  rp_erep_destroy(&l);
+  rp_erep_destroy(&r);
+  assert(l); assert(r);
+}
+
+/**
+ * rp_ctr_num‚ğì‚é
+ */
+void ConsistencyChecker::create_ctr_num(boost::shared_ptr<BinaryNode> node, int rel)
+{
+  rp_erep l, r;
+
+  this->accept(node->get_lhs());
+  rp_erep_set(&l, this->rep_stack_.top());
+  assert(!(this->rep_stack_.empty()));
+  this->rep_stack_.pop();
+
+  this->accept(node->get_rhs());
+  rp_erep_set(&r, this->rep_stack_.top());
+  assert(!(this->rep_stack_.empty()));
+  this->rep_stack_.pop();
+
+  rp_ctr_num_create(&(this->ctr_), &l, rel, &r);
+}
+
+} //namespace bp_simulator
 } // namespace hydla
