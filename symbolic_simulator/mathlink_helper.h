@@ -3,6 +3,8 @@
 
 #include "mathlink.h"
 #include <string.h>
+#include <stdexcept>
+#include <sstream>
 
 #ifdef _MSC_VER
 #pragma comment(lib, "ml32i1m.lib")
@@ -10,7 +12,23 @@
 #pragma comment(lib, "ml32i3m.lib")
 #endif
 
-class MathLink {
+class MathLinkError : public std::runtime_error {
+public:
+  MathLinkError(const std::string& msg, int code) : 
+    std::runtime_error(init(msg, code))
+  {}
+
+private:
+  std::string init(const std::string& msg, int code)
+  {
+    std::stringstream s;
+    s << "mathlink error: " << msg << " : " << code;
+    return s.str();
+  }
+};
+
+class MathLink 
+{
 public:
   MathLink() : env_(0), link_(0)
   {}
@@ -78,8 +96,68 @@ public:
     }
   }
 
-  MLENV getEnv()  {return env_;}
-  MLINK getLink() {return link_;}
+  MLENV get_env()  {return env_;}
+  MLINK get_link() {return link_;}
+
+  /////////// Helper Function /////////////
+
+  int put_function(const char* s, int n) {
+    return MLPutFunction(s, n);
+  }
+  
+  int put_function(const std::string& s, int n) {
+    return MLPutFunction(s.c_str(), n);
+  }
+
+  std::pair<std::string, int> get_function()
+  {
+    const char *s;
+    int n;
+    if(MLGetFunction(&s, &n) == 0) {
+      throw MathLinkError("get_function", MLError());
+    }
+    std::string sym(s);
+    MLReleaseSymbol(s);
+    return make_pair(sym, n);
+  }
+
+  int put_symbol(const char* s) {
+    return MLPutSymbol(s);
+  }
+  
+  int put_symbol(const std::string& s) {
+    return MLPutSymbol(s.c_str());
+  }
+
+  std::string get_symbol()
+  {
+    const char *s;
+    if(MLGetSymbol(&s)) {
+      throw MathLinkError("get_symbol", MLError());
+    }
+    std::string sym(s);
+    MLReleaseSymbol(s);
+    return sym;
+  }
+
+  int put_string(const char* s) {
+    return MLPutString(s);
+  }
+  
+  int put_string(const std::string& s) {
+    return MLPutString(s.c_str());
+  }
+
+  std::string get_string()
+  {
+    const char *s;
+    if(MLGetString(&s)) {
+      throw MathLinkError("get_string", MLError());
+    }
+    std::string str(s);
+    MLReleaseString(s);
+    return str;
+  }
 
   /////////// Mathematica Function /////////////
   int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}
@@ -109,6 +187,7 @@ public:
   int MLGetType()                         {return ::MLGetType(link_);}      
   int MLFlush()                           {return ::MLFlush(link_);}
 
+  int MLError()                           {return ::MLError(link_);}
 
 private:
   MLENV env_;
