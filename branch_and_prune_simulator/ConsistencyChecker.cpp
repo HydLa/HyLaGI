@@ -6,10 +6,19 @@
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
 
+#define DISPLAY_DIGITS 10
+
 namespace hydla {
 namespace bp_simulator {
 
 ConsistencyChecker::ConsistencyChecker() :
+  debug_mode_(false),
+  in_differential_(false),
+  in_prev_(false)
+{}
+
+ConsistencyChecker::ConsistencyChecker(bool debug_mode) :
+  debug_mode_(debug_mode),
   in_differential_(false),
   in_prev_(false)
 {}
@@ -24,6 +33,7 @@ void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)
   this->accept(node->get_child());
   rp_constraint_create_num(&c, this->ctr_);
   this->constraints_.insert(c);
+  this->ctr_ = NULL;
 }
 
 // ”äŠr‰‰Zq
@@ -58,15 +68,6 @@ void ConsistencyChecker::visit(boost::shared_ptr<Greater> node)
 void ConsistencyChecker::visit(boost::shared_ptr<GreaterEqual> node)          
 {
   this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
-}
-
-// ˜_—‰‰Zq
-void ConsistencyChecker::visit(boost::shared_ptr<LogicalAnd> node)            
-{
-}
-
-void ConsistencyChecker::visit(boost::shared_ptr<LogicalOr> node)             
-{
 }
   
 // Zp“ñ€‰‰Zq
@@ -121,17 +122,19 @@ void ConsistencyChecker::visit(boost::shared_ptr<Previous> node)
 // •Ï”
 void ConsistencyChecker::visit(boost::shared_ptr<Variable> node)              
 {
+  typedef boost::bimaps::bimap<std::string, int>::value_type vars_type_t;
+
   // •Ï”•\‚É“o˜^ ‚¢‚¸‚ê•ÏXcH
   std::string name(node->get_name());
   unsigned int size = this->vars_.size();
   assert(!(this->in_differential_ & this->in_prev_)); // ‚Ç‚¿‚ç‚©‚Ífalse
   if(this->in_differential_) name += "_d";
   if(this->in_prev_) name += "_p";
-  this->vars_.insert(std::pair<std::string, int>(name, size)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
+  this->vars_.insert(vars_type_t(name, size)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
 
   // TODO: “Á’è‚Ì•Ï”‚Í’è”ˆµ‚¢‚µ‚È‚¢‚Æprove‚Å‚«‚È‚¢‰Â”\«
   rp_erep rep;
-  rp_erep_create_var(&rep, this->vars_[name]);
+  rp_erep_create_var(&rep, this->vars_.left.at(name));
   this->rep_stack_.push(rep);
 }
 
@@ -145,68 +148,33 @@ void ConsistencyChecker::visit(boost::shared_ptr<Number> node)
   this->rep_stack_.push(rep);
 }
 
-
 bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
 {
   //typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> > collected_tells_t;
-  // tell§–ñ‚ÌW‡‚©‚çexpr‚ğ“¾‚ÄMathematica‚É“n‚·
   collected_tells_t::iterator tells_it = collected_tells.begin();
-  while((tells_it) != collected_tells.end())
-  {
+  while((tells_it) != collected_tells.end()){
     this->accept(*tells_it);
     tells_it++;
   }
-//
-//
-//  // vars‚ğ“n‚·
-//  int var_num = vars_.size();
-//  ml_.MLPutFunction("List", var_num);
-//  std::map<std::string, int>::iterator vars_it = vars_.begin();
-//  const char* sym;
-//  std::cout << "vars: ";
-//  while(vars_it!=vars_.end())
-//  {
-//    sym = ((*vars_it).first).c_str();
-//    if((*vars_it).second==0)
-//    {
-//      ml_.MLPutSymbol(sym);
-//    }
-//    else
-//    {
-//      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-//      ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-//      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-//      ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-//      ml_.MLPutSymbol("Derivative");
-//      ml_.MLPutInteger(1);
-//      ml_.MLPutSymbol(sym);
-//      //ml_.MLPutSymbol("t");
-//    }
-//    std::cout << sym << " ";
-//    vars_it++;
-//  }
-//
-//  // ml_.MLEndPacket();
-//
-//  // —v‘f‚Ì‘Síœ
-//  vars_.clear();
-//
-//  std::cout << std::endl;
-//
-///*
-//// •Ô‚Á‚Ä‚­‚éƒpƒPƒbƒg‚ğ‰ğÍ
-//PacketChecker pc(ml_);
-//pc.check();
-//*/
-//
-//  ml_.skip_pkt_until(RETURNPKT);
-//  
-//  int num;
-//  ml_.MLGetInteger(&num);
-//  //std::cout << "#num:" << num << std::endl;
-//  
-//  // Mathematica‚©‚ç1iTrue‚ğ•\‚·j‚ª•Ô‚ê‚Îtrue‚ğA0iFalse‚ğ•\‚·j‚ª•Ô‚ê‚Îfalse‚ğ•Ô‚·
-//  return num==1;
+  rp_vector_variable vec = this->to_rp_vector();
+  if(this->debug_mode_){
+    std::cout << "#**** tells expression ****\n";
+    std::set<rp_constraint>::iterator it = this->constraints_.begin();
+    while(it != this->constraints_.end()){
+      rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
+      std::cout << "\n";
+      it++;
+    }
+  }
+  rp_vector_destroy(&vec);
+
+  std::set<rp_constraint>::iterator it = this->constraints_.begin();
+  while(it != this->constraints_.end()){
+    rp_constraint_destroy(&(*it));
+    this->constraints_.erase(it++);
+  }
+
+  // return []solve(???) != true
   return true;
 }
 
@@ -270,6 +238,23 @@ void ConsistencyChecker::create_ctr_num(boost::shared_ptr<BinaryNode> node, int 
   this->rep_stack_.pop();
 
   rp_ctr_num_create(&(this->ctr_), &l, rel, &r);
+}
+
+/**
+ * vars_‚ğrp_vector_variable‚É•ÏŠ·
+ * TODO: •Ï”’l‚ğ³‚µ‚­İ’è‚·‚é
+ */
+rp_vector_variable ConsistencyChecker::to_rp_vector()
+{
+  rp_vector_variable vec;
+  rp_vector_variable_create(&vec);
+  int size = this->vars_.size();
+  for(int i=0; i<size; i++){
+    rp_variable v;
+    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
+    rp_vector_insert(vec, v);
+  }
+  return vec;
 }
 
 } //namespace bp_simulator

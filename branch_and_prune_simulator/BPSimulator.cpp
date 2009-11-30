@@ -67,7 +67,7 @@ namespace bp_simulator {
     TellCollector tell_collector;
     AskCollector  ask_collector;
     //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiro‚ªì¬
-    ConsistencyChecker consistency_checker;
+    ConsistencyChecker consistency_checker(this->debug_mode_);
     EntailmentChecker entailment_checker;   //TODO: kenshiro‚ªì¬
 
     expanded_always_t expanded_always;
@@ -86,10 +86,10 @@ namespace bp_simulator {
       }
 
       // §–ñ‚ª[‘«‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ÌŠm”F
-           //if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
-           //  if(debug_mode_) std::cout << "#*** inconsistent\n";
-           //  return false;
-           //}
+      if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
+        if(debug_mode_) std::cout << "#*** inconsistent\n";
+        return false;
+      }
       if(debug_mode_) std::cout << "#*** consistent\n";
 
       // ask§–ñ‚ðW‚ß‚é

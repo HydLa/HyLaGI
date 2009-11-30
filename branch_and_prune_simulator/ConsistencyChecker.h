@@ -1,8 +1,8 @@
 #ifndef _INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 #define _INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 
-#include <map>
 #include <stack>
+#include <boost/bimap/bimap.hpp>
 
 // parser
 #include "Node.h"
@@ -28,6 +28,7 @@ namespace bp_simulator {
 class ConsistencyChecker : public parse_tree::TreeVisitor {
 public:
   ConsistencyChecker();
+  ConsistencyChecker(bool debug_mode);
 
   virtual ~ConsistencyChecker();
 
@@ -43,10 +44,6 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
-
-  // ò_óùââéZéq
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
 
   // éZèpìÒçÄââéZéq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
@@ -76,13 +73,18 @@ private:
   void create_binary_erep(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int op);
   void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
 
+  rp_vector_variable to_rp_vector();
+
   std::set<rp_constraint> constraints_;
-  std::map<std::string, int> vars_;
+  boost::bimaps::bimap<std::string, int> vars_;
+  //std::map<std::string, int> vars_;
 
   std::stack<rp_erep> rep_stack_;
   rp_ctr_num ctr_;
   bool in_differential_;
   bool in_prev_;
+
+  bool debug_mode_;
 
 };
 

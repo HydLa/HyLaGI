@@ -221,112 +221,27 @@ void EntailmentChecker::visit(boost::shared_ptr<Number> node)
   //std::cout << node->get_number().c_str();
 }
 
-/*
- * collected_tellsから、negative_asks内のask制約のガード条件が満たされるかどうか調べる
+/**
+ * collected_tellsからnegative_askのガード条件がentailされるどうか調べる
+ * TRUEならcollected_tellsにask制約の後件を追加する
  * 
  * Input:
- *  positive_asks すでに展開されているask制約
- *  negative_asks まだ展開されていないask制約
+ *  negative_ask まだ展開されていないask制約
  *  collected_tells tell制約のリスト（展開されたask制約の「=>」の右辺がここに追加される）
  * Output:
- *  チェックの結果、展開されたask制約が1つでも存在したかどうか
+ *  entailされるかどうか {TRUE, UNKNOWN, FALSE}
  */
-
 Trivalent EntailmentChecker::check_entailment(
-  boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
+  boost::shared_ptr<Ask> negative_ask,
   collected_tells_t& collected_tells)
 {
+  // collected_tellsをrp_constraint化 -> S
+  // negative_ask前件をrp_constraint化 -> g
+  // !(negative_ask前件)をrp_constraint化 -> ng
+  // if []solve(X, S & g, D) == empty -> FALSE
+  // elseif []solve(X, S & ng, D) == empty -> TRUE
+  // else -> UNKNOWN
   return TRUE;
-//
-//  ml_.MLPutFunction("EntailmentChecker", 3);
-//
-//  ml_.MLPutFunction("And", 2);
-//  ml_.MLPutFunction("GreaterEqual", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutInteger(0);
-//  ml_.MLPutFunction("LessEqual", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutInteger(5);
-//
-//  ml_.MLPutFunction("And", 2);
-//  ml_.MLPutFunction("GreaterEqual", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutInteger(2);
-//  ml_.MLPutFunction("LessEqual", 2);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLPutInteger(3);
-//
-//  ml_.MLPutFunction("List", 1);
-//  ml_.MLPutSymbol("x");
-//  ml_.MLEndPacket();
-//
-///*
-//  int positive_asks_size   = positive_asks.size();
-//  int negative_asks_size   = negative_asks.size();
-//  int collected_tells_size = collected_tells.size();
-//  // checkEntailment[asks, tells, vars]を渡したい
-//  ml_.MLPutFunction("checkEntailment", 3);
-//  ml_.MLPutFunction("List", tells_size);
-//
-//  // tell制約の集合からexprを得てMathematicaに渡す
-//  collected_tells_t::iterator tells_it = tells.begin();
-//  while(tells_it!=vars_.end())
-//  {
-//    visit((*tells_it));
-//    tells_it++;
-//  }
-//
-//
-//  // varsを渡す
-//  int var_num = vars_.size();
-//  ml_.MLPutFunction("List", var_num);
-//  std::map<std::string, int>::iterator vars_it = vars_.begin();
-//  const char* sym;
-//  std::cout << "vars: ";
-//  while(vars_it!=vars_.end())
-//  {
-//    sym = ((*vars_it).first).c_str();
-//    if((*vars_it).second==0)
-//    {
-//      ml_.MLPutSymbol(sym);
-//    }
-//    else
-//    {
-//      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-//      ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-//      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-//      ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-//      ml_.MLPutSymbol("Derivative");
-//      ml_.MLPutInteger(1);
-//      ml_.MLPutSymbol(sym);
-//      //ml_.MLPutSymbol("t");
-//    }
-//    std::cout << sym << " ";
-//    vars_it++;
-//  }
-//
-//  // ml_.MLEndPacket();
-//
-//  // 要素の全削除
-//  vars_.clear();
-//
-//  std::cout << std::endl;
-//*/
-//
-///*
-//// 返ってくるパケットを解析
-//PacketChecker pc(ml_);
-//pc.check();
-//*/
-//
-//  ml_.skip_pkt_until(RETURNPKT);
-//  
-//  int num;
-//  ml_.MLGetInteger(&num);
-//  std::cout << "#num:" << num << std::endl;
-//  
-//  // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
-//  return num==1;
 }
 
 } //namespace bp_simulator
