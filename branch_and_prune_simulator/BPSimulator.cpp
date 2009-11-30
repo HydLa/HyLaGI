@@ -12,8 +12,6 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 
-//sadasdasdasd
-
 using namespace hydla::simulator;
 
 namespace hydla {
@@ -88,10 +86,10 @@ namespace bp_simulator {
       }
 
       // 制約が充足しているかどうかの確認
-      //     if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
-      //       if(debug_mode_) std::cout << "#*** inconsistent\n";
-      //       return false;
-      //     }
+           //if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
+           //  if(debug_mode_) std::cout << "#*** inconsistent\n";
+           //  return false;
+           //}
       if(debug_mode_) std::cout << "#*** consistent\n";
 
       // ask制約を集める
@@ -120,8 +118,8 @@ namespace bp_simulator {
               negative_asks.erase(it++);
               break;
             case UNKNOWN:
-              // phase_state_sptr& state_include_true;
-              // phase_state_sptr& state_include_false;
+              // phase_state_sptr state_include_true;
+              // phase_state_sptr state_include_false;
               // それぞれ値boxを更新
               // positive_asksとnegative_asksを持ち越す必要がある
               // PointPhase(ms, state_include_true);
