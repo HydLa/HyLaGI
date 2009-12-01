@@ -64,36 +64,34 @@ namespace bp_simulator {
       std::cout << ms->get_tree_dump() << std::endl;
     }
 
-    TellCollector tell_collector;
+    TellCollector tell_collector(ms);
     AskCollector  ask_collector;
     //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiroが作成
     ConsistencyChecker consistency_checker(this->debug_mode_);
     EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
 
-    expanded_always_t expanded_always;
-    collected_tells_t collected_tells;
+    TellCollector::tells_t tell_list;
     positive_asks_t   positive_asks;
     negative_asks_t   negative_asks;
 
     bool expanded   = true;
     while(expanded) {
       // tell制約を集める
-      tell_collector.collect_tell(ms.get(), &expanded_always, 
-                                  &collected_tells, &positive_asks);
+      tell_collector.collect_all_tells(&tell_list, &state->expanded_always, &positive_asks);
       if(debug_mode_) {
         std::cout << "#** collected tells **\n";  
-        std::for_each(collected_tells.begin(), collected_tells.end(), NodeDump());
+        std::for_each(tell_list.begin(), tell_list.end(), NodeDump());
       }
 
       // 制約が充足しているかどうかの確認
-      if(!consistency_checker.is_consistent(collected_tells /*, state->variable_map*/)){
+      if(!consistency_checker.is_consistent(tell_list)){
         if(debug_mode_) std::cout << "#*** inconsistent\n";
         return false;
       }
       if(debug_mode_) std::cout << "#*** consistent\n";
 
       // ask制約を集める
-      ask_collector.collect_ask(ms.get(), &expanded_always, 
+      ask_collector.collect_ask(ms.get(), &state->expanded_always, 
         &positive_asks, &negative_asks);
       if(debug_mode_) {
         std::cout << "#** positive asks **\n";  
@@ -110,7 +108,7 @@ namespace bp_simulator {
         negative_asks_t::iterator end = negative_asks.end();
         while(it!=end) {
           // 他に値boxが必要では？
-          Trivalent res = entailment_checker.check_entailment(*it, collected_tells);
+          Trivalent res = entailment_checker.check_entailment(*it, tell_list);
           switch(res) {
             case TRUE:
               expanded = true;

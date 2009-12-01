@@ -6,7 +6,7 @@
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include <map>
-#include "Types.h"
+#include "TellCollector.h"
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -17,7 +17,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  bool is_consistent(hydla::simulator::collected_tells_t& collected_tells);
+  bool is_consistent(hydla::simulator::TellCollector::tells_t& collected_tells);
 
   // TellêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);

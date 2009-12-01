@@ -5,30 +5,37 @@
 namespace hydla {
 namespace simulator {
   
-TellCollector::TellCollector()
+TellCollector::TellCollector(const module_set_sptr& module_set) :
+  module_set_(module_set)
 {}
 
 TellCollector::~TellCollector()
 {}
 
-void TellCollector::collect_tell(module_set_t*      ms,
-                                 expanded_always_t* expanded_always,                   
-                                 collected_tells_t* collected_tells,
-                                 positive_asks_t*   positive_asks)
+void TellCollector::collected_tells(tells_t* collected_tells)
 {
-  assert(ms);
-  assert(expanded_always);
-  assert(collected_tells);
-  assert(positive_asks);
-  
-  expanded_always_ = expanded_always;
-  collected_tells_ = collected_tells;
-  positive_asks_   = positive_asks;
+  collected_tells->clear();
+  collected_tells->reserve(collected_tells_.size());
+  collected_tells->insert(collected_tells->end(), 
+    collected_tells_.begin(), collected_tells_.end());
+}
 
-   // ModuleSetのノードの探索
+void TellCollector::collect(tells_t*           tells,
+                            expanded_always_t* expanded_always,                   
+                            positive_asks_t*   positive_asks)
+{
+  assert(expanded_always);
+  assert(tells);
+  assert(positive_asks);
+
+  tells->clear();
+  tells_          = tells;
+  positive_asks_  = positive_asks;
+
+  // ModuleSetのノードの探索
   in_expanded_always_ = false;
-  ms->dispatch(this);
-  
+  module_set_->dispatch(this);
+
   // 展開済みalwaysノードの探索
   in_expanded_always_ = true;
   expanded_always_t::iterator it  = expanded_always->begin();
@@ -61,7 +68,10 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
   // tell制約の登録
-  collected_tells_->insert(node);
+  if(collected_tells_.find(node) == collected_tells_.end()) {
+    tells_->push_back(node);
+    collected_tells_.insert(node);
+  }
 }
 
 // 論理積
@@ -82,6 +92,32 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
     accept(node->get_child());
     visited_always_.insert(node);
   }
+}
+
+// モジュールの弱合成
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
+{
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
+
+// モジュールの並列合成
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
+{
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
+
+// 制約呼び出し
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
+{
+  accept(node->get_child());
+}
+
+// プログラム呼び出し
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
+{
+  accept(node->get_child());
 }
 
 } //namespace simulator

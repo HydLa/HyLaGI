@@ -292,7 +292,8 @@ void EntailmentChecker::visit(boost::shared_ptr<Number> node)
  */
 
 bool EntailmentChecker::check_entailment(
-  boost::shared_ptr<hydla::parse_tree::Ask> negative_ask, collected_tells_t& collected_tells)
+  boost::shared_ptr<hydla::parse_tree::Ask> negative_ask, 
+  hydla::simulator::TellCollector::tells_t& collected_tells)
 {
 
 /*
@@ -332,7 +333,7 @@ bool EntailmentChecker::check_entailment(
   // tell§–ñ‚ÌW‡‚©‚çtells‚ğ“¾‚ÄMathematica‚É“n‚·
   int tells_size = collected_tells.size();
   ml_.MLPutFunction("List", tells_size);
-  collected_tells_t::iterator tells_it = collected_tells.begin();
+  TellCollector::tells_t::iterator tells_it = collected_tells.begin();
   while(tells_it!=collected_tells.end())
   {
     visit((*tells_it));

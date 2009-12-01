@@ -8,6 +8,8 @@ using namespace hydla::simulator;
 
 #define DISPLAY_DIGITS 10
 
+using namespace hydla::simulator;
+
 namespace hydla {
 namespace bp_simulator {
 
@@ -148,10 +150,10 @@ void ConsistencyChecker::visit(boost::shared_ptr<Number> node)
   this->rep_stack_.push(rep);
 }
 
-bool ConsistencyChecker::is_consistent(collected_tells_t& collected_tells)
+bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells)
 {
   //typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> > collected_tells_t;
-  collected_tells_t::iterator tells_it = collected_tells.begin();
+  TellCollector::tells_t::iterator tells_it = collected_tells.begin();
   while((tells_it) != collected_tells.end()){
     this->accept(*tells_it);
     tells_it++;

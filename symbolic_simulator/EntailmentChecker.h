@@ -7,6 +7,7 @@
 #include "ParseTree.h"
 #include <map>
 #include "Types.h"
+#include "TellCollector.h"
 #include <boost/shared_ptr.hpp>
 
 
@@ -23,7 +24,7 @@ public:
 
   bool check_entailment(
     boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
-    hydla::simulator::collected_tells_t& collected_tells);
+    hydla::simulator::TellCollector::tells_t& collected_tells);
 
   // AskêßñÒ
   virtual void visit(boost::shared_ptr<Ask> node);

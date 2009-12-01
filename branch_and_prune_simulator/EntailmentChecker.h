@@ -11,6 +11,7 @@
 
 // simulator
 #include "Types.h"
+#include "TellCollector.h"
 
 
 using namespace hydla::parse_tree;
@@ -30,7 +31,7 @@ public:
 
   Trivalent check_entailment(
     boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
-    hydla::simulator::collected_tells_t& collected_tells);
+    hydla::simulator::TellCollector::tells_t& collected_tells);
 
   // TellêßñÒ
   virtual void visit(boost::shared_ptr<Tell> node);
