@@ -40,7 +40,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)..\librealpaverbasic\header&quot;"
+				AdditionalIncludeDirectories="&quot;..\librealpaverbasic&quot;"
+				PreprocessorDefinitions="RP_SYSTEM_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -151,39 +152,39 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\rp_box_set.cpp"
+				RelativePath=".\rp_box_set.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_operator.cpp"
+				RelativePath=".\rp_operator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_operator_factory.cpp"
+				RelativePath=".\rp_operator_factory.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_output.cpp"
+				RelativePath=".\rp_output.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_propagator.cpp"
+				RelativePath=".\rp_propagator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_solver.cpp"
+				RelativePath=".\rp_solver.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_split.cpp"
+				RelativePath=".\rp_split.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_split_selector.cpp"
+				RelativePath=".\rp_split_selector.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_verification.cpp"
+				RelativePath=".\rp_verification.cpp"
 				>
 			</File>
 		</Filter>
@@ -193,135 +194,135 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\librealpaverbasic\header\realpaver.h"
+				RelativePath="..\librealpaverbasic\realpaver.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\realpaverbasic.h"
+				RelativePath="..\librealpaverbasic\realpaverbasic.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_box.h"
+				RelativePath="..\librealpaverbasic\rp_box.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_box_set.h"
+				RelativePath="..\librealpaverbasic\rp_box_set.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_clock.h"
+				RelativePath="..\librealpaverbasic\rp_clock.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_config.h"
+				RelativePath="..\librealpaverbasic\rp_config.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_constant.h"
+				RelativePath="..\librealpaverbasic\rp_constant.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_constraint.h"
+				RelativePath="..\librealpaverbasic\rp_constraint.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_container.h"
+				RelativePath="..\librealpaverbasic\rp_container.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_expression.h"
+				RelativePath="..\librealpaverbasic\rp_expression.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_expression_symbol.h"
+				RelativePath="..\librealpaverbasic\rp_expression_symbol.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_float.h"
+				RelativePath="..\librealpaverbasic\rp_float.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_function.h"
+				RelativePath="..\librealpaverbasic\rp_function.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_interval.h"
+				RelativePath="..\librealpaverbasic\rp_interval.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_lexer.h"
+				RelativePath="..\librealpaverbasic\rp_lexer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_matrix.h"
+				RelativePath="..\librealpaverbasic\rp_matrix.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_memory.h"
+				RelativePath="..\librealpaverbasic\rp_memory.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_operator.h"
+				RelativePath="..\librealpaverbasic\rp_operator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_operator_factory.h"
+				RelativePath="..\librealpaverbasic\rp_operator_factory.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_operator_num.h"
+				RelativePath="..\librealpaverbasic\rp_operator_num.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_operator_sat.h"
+				RelativePath="..\librealpaverbasic\rp_operator_sat.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_output.h"
+				RelativePath="..\librealpaverbasic\rp_output.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_parser.h"
+				RelativePath="..\librealpaverbasic\rp_parser.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_problem.h"
+				RelativePath="..\librealpaverbasic\rp_problem.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_projection.h"
+				RelativePath="..\librealpaverbasic\rp_projection.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_propagator.h"
+				RelativePath="..\librealpaverbasic\rp_propagator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_solver.h"
+				RelativePath="..\librealpaverbasic\rp_solver.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_split.h"
+				RelativePath="..\librealpaverbasic\rp_split.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_split_selector.h"
+				RelativePath="..\librealpaverbasic\rp_split_selector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_stream.h"
+				RelativePath="..\librealpaverbasic\rp_stream.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_union_interval.h"
+				RelativePath="..\librealpaverbasic\rp_union_interval.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_variable.h"
+				RelativePath="..\librealpaverbasic\rp_variable.h"
 				>
 			</File>
 			<File
-				RelativePath="..\librealpaverbasic\header\rp_verification.h"
+				RelativePath="..\librealpaverbasic\rp_verification.h"
 				>
 			</File>
 		</Filter>

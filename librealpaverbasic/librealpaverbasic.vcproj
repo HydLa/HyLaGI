@@ -40,8 +40,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)header&quot;"
-				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="RP_SYSTEM_WIN32;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -105,7 +105,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)header&quot;"
-				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="RP_SYSTEM_WIN32;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -149,91 +149,91 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\rp_box.c"
+				RelativePath=".\rp_box.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_clock.c"
+				RelativePath=".\rp_clock.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_constant.c"
+				RelativePath=".\rp_constant.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_constraint.c"
+				RelativePath=".\rp_constraint.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_container.c"
+				RelativePath=".\rp_container.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_expression.c"
+				RelativePath=".\rp_expression.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_expression_symbol.c"
+				RelativePath=".\rp_expression_symbol.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_float.c"
+				RelativePath=".\rp_float.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_float_sub.cpp"
+				RelativePath=".\rp_float_sub.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_function.c"
+				RelativePath=".\rp_function.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_interval.c"
+				RelativePath=".\rp_interval.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_lexer.c"
+				RelativePath=".\rp_lexer.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_matrix.c"
+				RelativePath=".\rp_matrix.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_memory.c"
+				RelativePath=".\rp_memory.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_operator_num.c"
+				RelativePath=".\rp_operator_num.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_operator_sat.c"
+				RelativePath=".\rp_operator_sat.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_parser.c"
+				RelativePath=".\rp_parser.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_problem.c"
+				RelativePath=".\rp_problem.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_projection.c"
+				RelativePath=".\rp_projection.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_stream.c"
+				RelativePath=".\rp_stream.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_union_interval.c"
+				RelativePath=".\rp_union_interval.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\rp_variable.c"
+				RelativePath=".\rp_variable.c"
 				>
 			</File>
 		</Filter>
@@ -243,135 +243,135 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\header\realpaver.h"
+				RelativePath=".\realpaver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\realpaverbasic.h"
+				RelativePath=".\realpaverbasic.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_box.h"
+				RelativePath=".\rp_box.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_box_set.h"
+				RelativePath=".\rp_box_set.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_clock.h"
+				RelativePath=".\rp_clock.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_config.h"
+				RelativePath=".\rp_config.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_constant.h"
+				RelativePath=".\rp_constant.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_constraint.h"
+				RelativePath=".\rp_constraint.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_container.h"
+				RelativePath=".\rp_container.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_expression.h"
+				RelativePath=".\rp_expression.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_expression_symbol.h"
+				RelativePath=".\rp_expression_symbol.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_float.h"
+				RelativePath=".\rp_float.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_function.h"
+				RelativePath=".\rp_function.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_interval.h"
+				RelativePath=".\rp_interval.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_lexer.h"
+				RelativePath=".\rp_lexer.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_matrix.h"
+				RelativePath=".\rp_matrix.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_memory.h"
+				RelativePath=".\rp_memory.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_operator.h"
+				RelativePath=".\rp_operator.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_operator_factory.h"
+				RelativePath=".\rp_operator_factory.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_operator_num.h"
+				RelativePath=".\rp_operator_num.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_operator_sat.h"
+				RelativePath=".\rp_operator_sat.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_output.h"
+				RelativePath=".\rp_output.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_parser.h"
+				RelativePath=".\rp_parser.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_problem.h"
+				RelativePath=".\rp_problem.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_projection.h"
+				RelativePath=".\rp_projection.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_propagator.h"
+				RelativePath=".\rp_propagator.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_solver.h"
+				RelativePath=".\rp_solver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_split.h"
+				RelativePath=".\rp_split.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_split_selector.h"
+				RelativePath=".\rp_split_selector.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_stream.h"
+				RelativePath=".\rp_stream.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_union_interval.h"
+				RelativePath=".\rp_union_interval.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_variable.h"
+				RelativePath=".\rp_variable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\header\rp_verification.h"
+				RelativePath=".\rp_verification.h"
 				>
 			</File>
 		</Filter>

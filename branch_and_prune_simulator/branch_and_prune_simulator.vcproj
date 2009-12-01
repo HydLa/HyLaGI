@@ -41,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\librealpaverbasic\header"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\librealpaverbasic"
+				PreprocessorDefinitions="RP_SYSTEM_WIN32;WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
