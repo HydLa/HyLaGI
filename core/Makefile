@@ -16,7 +16,7 @@ LIBS     += -lrealpaver -lrealpaverbasic
 LIBS     += -lboost_program_options
 LIBS     += -lML32i3 -lm -lrt
 
-DEFINES  += 
+DEFINES  +=
 CXX_OPT  += 
 
 DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)

@@ -1,6 +1,7 @@
 .SUFFIXES: 
 .SUFFIXES: .o .c .cc .cpp .h .d
 
+CC       := gcc
 CXX      := g++
 SED      := sed #@SED@
 MV       := mv #@MV@
@@ -10,7 +11,7 @@ LN       := ln #@LN@
 
 CXX_OPT  += -Wall --input-charset=cp932 #-O2 #-pg
 
-ARFLAGS  := crus
+ARFLAGS  := cru
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
 
 SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp) 
@@ -29,6 +30,7 @@ clean:
 $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
+	ranlib $@
 else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
 endif
@@ -40,7 +42,10 @@ ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)
 endif
 
-.c.o .cc.o .cpp.o: 
+.c.o:
+	$(CC) $(CXXFLAGS) -c $<
+
+.cc.o .cpp.o: 
 	$(CXX) $(CXXFLAGS) -c $<
 
 .c.d .cc.d .cpp.d:
