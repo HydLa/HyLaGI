@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser"
+				AdditionalIncludeDirectories="..\;..\symbolic_simulator;..\parser;..\constraint_hierarchy;..\simulator"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -173,6 +173,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\consistency_checker_test.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\module_set_test.cpp"
 				>

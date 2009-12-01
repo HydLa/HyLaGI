@@ -31,12 +31,16 @@ void TellCollector::collect(tells_t*           tells,
   tells->clear();
   tells_          = tells;
   positive_asks_  = positive_asks;
+  visited_always_.clear();
+
 
   // ModuleSet‚Ìƒm[ƒh‚Ì’Tõ
+  in_ask_             = false;
   in_expanded_always_ = false;
   module_set_->dispatch(this);
 
   // “WŠJÏ‚İalwaysƒm[ƒh‚Ì’Tõ
+  in_ask_             = false;
   in_expanded_always_ = true;
   expanded_always_t::iterator it  = expanded_always->begin();
   expanded_always_t::iterator end = expanded_always->end();

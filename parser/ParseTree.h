@@ -56,9 +56,14 @@ public:
   /**
    * パースされたノードツリーの設定
    */
-  void setTree(const node_sptr& tree) 
+  void set_tree(const node_sptr& tree) 
   {
     node_tree_ = tree;
+  }
+
+  node_sptr get_tree()
+  {
+    return node_tree_;
   }
 
   std::string to_string();

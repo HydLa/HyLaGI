@@ -11,7 +11,7 @@ namespace ch {
 ModuleSet::ModuleSet()
 {}
 
-ModuleSet::ModuleSet(std::string& name, hydla::parse_tree::node_sptr node) :
+ModuleSet::ModuleSet(const std::string& name, hydla::parse_tree::node_sptr node) :
   module_list_(1, std::make_pair(name, node))
 {}
 

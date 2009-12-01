@@ -21,6 +21,7 @@ namespace simulator {
 class TellCollector : public parse_tree::TreeVisitor {
 public:
   typedef hydla::ch::module_set_sptr module_set_sptr;
+  typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
   typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >  tells_t;
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >     collected_tells_t;
 

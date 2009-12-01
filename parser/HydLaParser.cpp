@@ -168,7 +168,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
           }
         }
       }
-      parse_tree_.setTree(node_tree);
+      parse_tree_.set_tree(node_tree);
       return node_sptr();
     }
 

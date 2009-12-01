@@ -104,9 +104,8 @@ void MathSimulator::init(Opts& opts)
   // HydLa.mÇÃì‡óeëóêM
   //   ml_.MLPutFunction("Get", 1);
   //   ml_.MLPutString("symbolic_simulator/HydLa.m");
-  ml_.MLPutFunction("ToExpression", 2);
-  ml_.MLPutString(math_source()); 
-  ml_.MLPutSymbol("InputForm"); 
+  ml_.MLPutFunction("ToExpression", 1);
+  ml_.MLPutString(math_source());  
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
