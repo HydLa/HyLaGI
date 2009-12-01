@@ -49,7 +49,7 @@ void rp_function_clone(rp_function * f, rp_function src)
 	for(i=0; i<rp_vector_size(rp_function_lvars(src)); i++)
 	{
 		rp_variable v;
-		rp_variable_clone(&v, rp_vector_elem(rp_function_lvars(src), i));
+		rp_variable_clone(&v, (rp_variable)rp_vector_elem(rp_function_lvars(src), i));
 		rp_vector_insert(rp_function_lvars(*f), v);
 	}
 	rp_function_arity(*f) = rp_function_arity(src);

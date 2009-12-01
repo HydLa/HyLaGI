@@ -62,6 +62,11 @@ extern double pow       (double, double) rp_throw;
 # define RP_MAX_LONG          LONG_MAX
 static const double RP_INFINITY = 1.0/0.0;
 
+extern double acosh     (double) rp_throw;
+extern double asinh     (double) rp_throw;
+extern double atanh     (double) rp_throw;
+extern double nextafter (double, double) rp_throw;
+
 #elif RP_SYSTEM_LINUX_IX86
 /* PC i386 and Linux */
 # include <fenv.h>
@@ -72,6 +77,11 @@ static const double RP_INFINITY = 1.0/0.0;
 # define RP_MAX_DOUBLE        DBL_MAX
 # define RP_MAX_LONG          LONG_MAX
 # define RP_INFINITY          HUGE_VAL
+
+extern double acosh     (double) rp_throw;
+extern double asinh     (double) rp_throw;
+extern double atanh     (double) rp_throw;
+extern double nextafter (double, double) rp_throw;
 
 #elif RP_SYSTEM_POWERPC
 /* POWER PC and MAC OS X */
@@ -85,6 +95,11 @@ static const double RP_INFINITY = 1.0/0.0;
 # define RP_MAX_LONG          LONG_MAX
 static const double RP_INFINITY = 1.0/0.0;
 
+extern double acosh     (double) rp_throw;
+extern double asinh     (double) rp_throw;
+extern double atanh     (double) rp_throw;
+extern double nextafter (double, double) rp_throw;
+
 #elif RP_SYSTEM_SGI
 /* MIPS SGI */
 # include <limits.h>
@@ -96,6 +111,11 @@ static const double RP_INFINITY = 1.0/0.0;
 # define RP_MAX_DOUBLE        DBL_MAX
 # define RP_MAX_LONG          LONG_MAX
 static const double RP_INFINITY = 1.0/0.0;
+
+extern double acosh     (double) rp_throw;
+extern double asinh     (double) rp_throw;
+extern double atanh     (double) rp_throw;
+extern double nextafter (double, double) rp_throw;
 
 #elif RP_SYSTEM_WIN32
 /* Windows -ohtani- */
@@ -109,14 +129,12 @@ static const double RP_INFINITY = 1.0/0.0;
 # define RP_MAX_LONG          LONG_MAX
 # define RP_INFINITY          HUGE_VAL
 
-double nextafter_next(double x);
-double nextafter_prev(double x);
-
 double trunc(double x);
 
 double acosh(double x);
 double asinh(double x);
 double atanh(double x);
+double nextafter(double x, double y);
 
 #endif
 
@@ -137,8 +155,8 @@ double atanh(double x);
 #define rp_max_num(x,y)   (((x)<(y))? y : x)
 #define rp_abs(x)         (((x)<=0.0) ? -(x) : (x))
 
-#define rp_next_double(x) nextafter_next(x)
-#define rp_prev_double(x) nextafter_prev(x)
+#define rp_next_double(x) nextafter(x,RP_INFINITY)
+#define rp_prev_double(x) nextafter(x,(-RP_INFINITY))
 
 /* ----------------------------------------- */
 /* Functions for floating-point computations */

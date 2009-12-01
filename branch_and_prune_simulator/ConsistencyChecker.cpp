@@ -172,7 +172,7 @@ bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells)
 
   std::set<rp_constraint>::iterator it = this->constraints_.begin();
   while(it != this->constraints_.end()){
-    rp_constraint_destroy(&(*it));
+    rp_constraint_destroy(((rp_constraint *)&(*it)));
     this->constraints_.erase(it++);
   }
 

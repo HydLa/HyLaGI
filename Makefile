@@ -38,4 +38,5 @@ $(projects):
 $(test_projects): $(lib_projects)
 core: $(lib_projects)
 symbolic_simulator: math_source_converter
+branch_and_prune_simulator : librealpaver
 librealpaver: librealpaverbasic

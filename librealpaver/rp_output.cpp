@@ -11,7 +11,9 @@
  * rp_output.cpp                                                            *
  ****************************************************************************/
 
+#include <cstring>
 #include "rp_output.h"
+
 
 // ----------------------------------
 // Output filter of problem solutions

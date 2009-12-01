@@ -42,7 +42,7 @@ void rp_table_symbol_copy(rp_table_symbol t, rp_table_symbol src)
 	for(i=2; i<rp_vector_size(rp_table_symbol_nums(src)); i++)
 	{
 		rp_constant c;
-		rp_constant_clone(&c, rp_vector_elem(rp_table_symbol_nums(src), i));
+		rp_constant_clone(&c, (rp_constant)rp_vector_elem(rp_table_symbol_nums(src), i));
 		rp_vector_insert(rp_table_symbol_nums(t), c);
 	}
 	rp_vector_destroy(&rp_table_symbol_vars(t));
@@ -50,7 +50,7 @@ void rp_table_symbol_copy(rp_table_symbol t, rp_table_symbol src)
 	for(i=0; i<rp_vector_size(rp_table_symbol_vars(src)); i++)
 	{
 		rp_variable v;
-		rp_variable_clone(&v, rp_vector_elem(rp_table_symbol_vars(src), i));
+		rp_variable_clone(&v, (rp_variable)rp_vector_elem(rp_table_symbol_vars(src), i));
 		rp_vector_insert(rp_table_symbol_vars(t), v);
 	}
 	rp_vector_destroy(&rp_table_symbol_funcs(t));
@@ -58,7 +58,7 @@ void rp_table_symbol_copy(rp_table_symbol t, rp_table_symbol src)
 	for(i=0; i<rp_vector_size(rp_table_symbol_funcs(src)); i++)
 	{
 		rp_function f;
-		rp_function_clone(&f, rp_vector_elem(rp_table_symbol_funcs(src), i));
+		rp_function_clone(&f, (rp_function)rp_vector_elem(rp_table_symbol_funcs(src), i));
 		rp_vector_insert(rp_table_symbol_funcs(t), f);
 	}
 }

@@ -6,12 +6,9 @@
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
 
-double nextafter_next(double x) {
-	return boost::math::nextafter<double>(x,RP_INFINITY);
-}
-
-double nextafter_prev(double x) {
-	return boost::math::nextafter<double>(x,(-RP_INFINITY));
+#ifdef RP_SYSTEM_WIN32
+double nextafter(double x, double y) {
+	return boost::math::nextafter<double>(x, y);
 }
 
 double trunc(double x) {
@@ -29,3 +26,4 @@ double asinh(double x) {
 double atanh(double x) {
 	return boost::math::atanh<double>(x);
 }
+#endif // RP_SYSTEM_WIN32

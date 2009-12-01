@@ -7,7 +7,7 @@ INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/Deve
 INCLUDES += -I/usr/local/include/boost-1_38
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
-LDFLAGS  +=  -L../realpaver  -L../realpaverbasic
+LDFLAGS  +=  -L../librealpaver  -L../librealpaverbasic
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/lib
 
