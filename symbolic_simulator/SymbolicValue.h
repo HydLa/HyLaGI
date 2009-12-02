@@ -1,6 +1,8 @@
 #ifndef _INCLUDED_HYDLA_SYMBOLIC_VALUE_H_
 #define _INCLUDED_HYDLA_SYMBOLIC_VALUE_H_
 
+#include <iostream>
+
 namespace hydla {
 namespace symbolic_simulator {
 

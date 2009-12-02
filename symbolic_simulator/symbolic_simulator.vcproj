@@ -161,6 +161,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\EntailmentChecker.cpp"
 				>
 			</File>
@@ -172,6 +176,10 @@
 				RelativePath=".\MathSimulator.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\PacketSender.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -180,6 +188,10 @@
 			>
 			<File
 				RelativePath=".\ConsistencyChecker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintStoreBuilderPoint.h"
 				>
 			</File>
 			<File
@@ -200,6 +212,10 @@
 			</File>
 			<File
 				RelativePath=".\MathSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PacketSender.h"
 				>
 			</File>
 			<File
