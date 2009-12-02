@@ -94,7 +94,7 @@ private:
    */
   void create_parse_tree() 
   {
-      create_parse_tree(*ast_tree_.trees.begin());
+    create_parse_tree(*ast_tree_.trees.begin());
   }
 
   /**
@@ -102,13 +102,34 @@ private:
    */
   void execute_preprocess() 
   {
-      parse_tree_.preprocess();
+    parse_tree_.preprocess();
+  }
+
+  template<typename NodeType, typename TreeIter>
+  boost::shared_ptr<NodeType> 
+  create_unary_node(const TreeIter& tree_it)
+  {
+    boost::shared_ptr<NodeType> n(
+      node_factory_->create<NodeType>());
+    n->set_child(create_parse_tree(*tree_it));
+    return n;
+  }
+
+  template<typename NodeType, typename TreeIter>
+  boost::shared_ptr<NodeType> 
+  create_binary_node(const TreeIter& tree_it)
+  {
+    boost::shared_ptr<NodeType> n(
+      node_factory_->create<NodeType>());
+    n->set_lhs(create_parse_tree(*tree_it));
+    n->set_rhs(create_parse_tree(*(tree_it+1)));
+    return n;
   }
 
   std::ostream& dump_ast(std::ostream& outstream, tree_iter_t iter, int nest);
 
   boost::shared_ptr<parse_tree::Node> 
-    create_parse_tree(const tree_node_t &tree_node);
+  create_parse_tree(const tree_node_t &tree_node);
 
   void parse_common();
 

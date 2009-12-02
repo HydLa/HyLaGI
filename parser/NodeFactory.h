@@ -5,16 +5,27 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/utility/enable_if.hpp> 
+#include <boost/type_traits/is_same.hpp> 
 
 #include "ParseTree.h"
 
 namespace hydla { 
 namespace parse_tree {
 
-#define CREATE_NEW_PT_NODE(NAME) \
-  virtual boost::shared_ptr<NAME> create##NAME() const { \
-    boost::shared_ptr<NAME> p(new NAME()); \
-    return p; \
+#define CREATE_NEW_PT_NODE(NAME)                                        \
+  template<typename T>                                                  \
+  struct NodeCreator<T,                                                 \
+                     typename boost::enable_if<boost::is_same<T, NAME> >::type> \
+  {                                                                     \
+  boost::shared_ptr<T> operator()(const NodeFactory* nf) const {        \
+    return nf->create##NAME();                                          \
+  }                                                                     \
+  };                                                                    \
+                                                                        \
+  virtual boost::shared_ptr<NAME> create##NAME() const {                \
+    boost::shared_ptr<NAME> p(new NAME());                              \
+    return p;                                                           \
   }
 
 class NodeFactory {
@@ -24,7 +35,16 @@ public:
  
   virtual ~NodeFactory()
   {}
-  
+
+  // テンプレートの部分特殊化用
+  template<typename T, typename N=void>
+  struct NodeCreator;
+
+  template<typename T>
+  boost::shared_ptr<T> create() const {
+    return NodeCreator<T>()(this);
+  }
+
   //定義
   CREATE_NEW_PT_NODE(ProgramDefinition)
   CREATE_NEW_PT_NODE(ConstraintDefinition)
@@ -33,7 +53,7 @@ public:
   CREATE_NEW_PT_NODE(ProgramCaller)
   CREATE_NEW_PT_NODE(ConstraintCaller)
   
-   //制約式
+  //制約式
   CREATE_NEW_PT_NODE(Constraint);
 
   //Tell制約

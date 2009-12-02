@@ -124,23 +124,6 @@ std::ostream& HydLaParser::dump_ast(std::ostream& outstream,
   return outstream;
 }
 
-#define CREATE_BINARY_OP(X) \
-  case RI_##X: \
-    {  \
-      shared_ptr<X> node(node_factory_->create##X()); \
-      node->set_lhs(create_parse_tree(*ch)); \
-      node->set_rhs(create_parse_tree(*(ch+1))); \
-      return node; \
-    }
-
-#define CREATE_UNARY_OP(X) \
-  case RI_##X: \
-    {  \
-      shared_ptr<X> node(node_factory_->create##X()); \
-      node->set_child(create_parse_tree(*ch)); \
-      return node; \
-    }
-
 boost::shared_ptr<parse_tree::Node>
 HydLaParser::create_parse_tree(const tree_node_t &tree_node)
 {
@@ -150,7 +133,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
   switch(node_id) 
   {
     // ƒvƒƒOƒ‰ƒ€‚ÌW‡
-  case RI_Statements:
+    case RI_Statements:
     {
       node_sptr node_tree;
       const_tree_iter_t it  = tree_node.children.begin();
@@ -173,7 +156,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     }
 
     // §–ñ’è‹`
-  case RI_ConstraintDef:
+    case RI_ConstraintDef:
     {
       const_tree_iter_t gch = ch->children.begin();
       std::string name(gch->value.begin(), gch->value.end());
@@ -202,7 +185,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     }
 
     // ƒvƒƒOƒ‰ƒ€’è‹`
-  case RI_ProgramDef:
+    case RI_ProgramDef:
     {
       const_tree_iter_t gch = ch->children.begin();
       std::string name(gch->value.begin(), gch->value.end());
@@ -231,7 +214,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     }
 
     // §–ñŒÄ‚Ño‚µ
-  case RI_ConstraintCaller:
+    case RI_ConstraintCaller:
     {
       std::string name(ch->value.begin(), ch->value.end());
 
@@ -253,7 +236,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     }
 
     // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
-  case RI_ProgramCaller:
+    case RI_ProgramCaller:
     {
       std::string name(ch->value.begin(), ch->value.end());
 
@@ -275,7 +258,7 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     }
 
     // ask§–ñ
-  case RI_Implies:
+    case RI_Implies:
     {
       shared_ptr<Ask> node(node_factory_->createAsk());
 
@@ -289,68 +272,66 @@ HydLaParser::create_parse_tree(const tree_node_t &tree_node)
     }
 
     // Tell§–ñ
-    CREATE_UNARY_OP(Tell)
+    case RI_Tell:         {return create_unary_node<Tell>(ch);}
+      
+      // §–ñ®
+    case RI_Constraint:   {return create_unary_node<Constraint>(ch);}
 
-    // §–ñ®
-    CREATE_UNARY_OP(Constraint)
-
-    // ”äŠr‰‰Zq
-    CREATE_BINARY_OP(Equal)
-    CREATE_BINARY_OP(UnEqual)
-    CREATE_BINARY_OP(Less)
-    CREATE_BINARY_OP(LessEqual)
-    CREATE_BINARY_OP(Greater)
-    CREATE_BINARY_OP(GreaterEqual)
-
-    // ˜_—‰‰Zq
-    CREATE_BINARY_OP(LogicalAnd)
-    CREATE_BINARY_OP(LogicalOr)
-
-    // Zp“ñ€‰‰Zq
-    CREATE_BINARY_OP(Plus)
-    CREATE_BINARY_OP(Subtract)
-    CREATE_BINARY_OP(Times)
-    CREATE_BINARY_OP(Divide)
-
-    // Zp’P€‰‰Zq
-    CREATE_UNARY_OP(Negative)
-    CREATE_UNARY_OP(Positive)
-
-    // §–ñŠK‘w’è‹`‰‰Zq
-    CREATE_BINARY_OP(Weaker)
-    CREATE_BINARY_OP(Parallel)
-
-    // ‘Š‰‰Zq
-    CREATE_UNARY_OP(Always)
-
-    // ”÷•ª
-    CREATE_UNARY_OP(Differential)
+      // ”äŠr‰‰Zq
+    case RI_Equal:        {return create_binary_node<Equal>(ch);}
+    case RI_UnEqual:      {return create_binary_node<UnEqual>(ch);}
+    case RI_Less:         {return create_binary_node<Less>(ch);}
+    case RI_LessEqual:    {return create_binary_node<LessEqual>(ch);}
+    case RI_Greater:      {return create_binary_node<Greater>(ch);}
+    case RI_GreaterEqual: {return create_binary_node<GreaterEqual>(ch);}
     
-    // ¶‹ÉŒÀ
-    CREATE_UNARY_OP(Previous)
+      // ˜_—‰‰Zq
+    case RI_LogicalAnd:   {return create_binary_node<LogicalAnd>(ch);}
+    case RI_LogicalOr:    {return create_binary_node<LogicalOr>(ch);}
+      
+      // Zp“ñ€‰‰Zq
+    case RI_Plus:         {return create_binary_node<Plus>(ch);}
+    case RI_Subtract:     {return create_binary_node<Subtract>(ch);}
+    case RI_Times:        {return create_binary_node<Times>(ch);}
+    case RI_Divide:       {return create_binary_node<Divide>(ch);}
 
-  // •Ï”E‘©”›•Ï”
-  case RI_BoundVariable:
-  case RI_Variable:
+      // Zp’P€‰‰Zq
+    case RI_Negative:     {return create_unary_node<Negative>(ch);}
+    case RI_Positive:     {return create_unary_node<Positive>(ch);}
+
+      // §–ñŠK‘w’è‹`‰‰Zq
+    case RI_Weaker:       {return create_binary_node<Weaker>(ch);}
+    case RI_Parallel:     {return create_binary_node<Parallel>(ch);}
+
+      // ‘Š‰‰Zq
+    case RI_Always:       {return create_unary_node<Always>(ch);}
+
+        // ”÷•ª
+    case RI_Differential: {return create_unary_node<Differential>(ch);}
+    
+        // ¶‹ÉŒÀ
+    case RI_Previous:     {return create_unary_node<Previous>(ch);}
+
+        // •Ï”E‘©”›•Ï”
+    case RI_BoundVariable:
+    case RI_Variable:
     {
       shared_ptr<Variable> node(node_factory_->createVariable()); 
       string val(tree_node.value.begin(), tree_node.value.end());
       node->set_name(val);
-     
       return node;
     }
 
-  // ”š
-  case RI_Number:
+    // ”š
+    case RI_Number:
     {
       shared_ptr<Number> node(node_factory_->createNumber()); 
       string val(tree_node.value.begin(), tree_node.value.end());
-      node->set_number(val);
-     
+      node->set_number(val);     
       return node;
     }
 
-  default:
+    default:
     {
       assert(0);
       return node_sptr();
