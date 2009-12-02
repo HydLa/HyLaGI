@@ -13,7 +13,7 @@ typedef struct BPVaribale_ {
   std::string name;
   bool previous;
   bool initial;
-  
+
   /* ƒ_ƒ“ƒv */
   std::ostream& dump(std::ostream& s) const
   {
