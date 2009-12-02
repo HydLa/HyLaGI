@@ -11,6 +11,7 @@
 //#include "InterlanguageSender.h"
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
+#include "ConstraintStoreBuilderPoint.h"
 
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -267,7 +268,8 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
 
   TellCollector tell_collector(ms);
   AskCollector  ask_collector;
-  //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiro‚ªì¬
+  ConstraintStoreBuilderPoint csbp;       //TODO: kenshiro‚ªì¬
+  csbp.build_constraint_store();
   ConsistencyChecker consistency_checker(ml_);
   EntailmentChecker entailment_checker(ml_);
 
@@ -287,7 +289,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
     }
 
     // §–ñ‚ª[‘«‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ÌŠm”F
-    if(!consistency_checker.is_consistent(tell_list)){
+    if(!consistency_checker.is_consistent(tell_list, csbp.getcs())){
       if(debug_mode_) std::cout << "#*** inconsistent\n";
       return false;
     }

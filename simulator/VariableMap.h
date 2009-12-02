@@ -1,5 +1,7 @@
 #ifndef _INCLUDED_HYDLA_SIMULATOR_VARIABLE_MAP_H_
 #define _INCLUDED_HYDLA_SIMULATOR_VARIABLE_MAP_H_
+#include <map>
+#include <iostream>
 
 namespace hydla {
 namespace simulator {

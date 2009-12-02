@@ -5,13 +5,17 @@ namespace hydla {
 namespace symbolic_simulator {
 
 typedef struct SymbolicValue_ {
+  bool rational; // 分数の形かどうか
+  int numerator; // 分子
+  int denominator; // 分母
 
   /**
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const
   {
-    s << "value";
+    if(rational) s << "Rational[numerator,denominator]";
+    else s << numerator;
     return s;
   }
 } SymbolicValue;

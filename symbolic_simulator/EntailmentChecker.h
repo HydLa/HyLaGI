@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_ENTAILMENT_CHECKER_H_
 
 #include "Node.h"
-#include "TreeVisitor.h"
+#include "PacketSender.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include <map>
@@ -11,12 +11,11 @@
 #include <boost/shared_ptr.hpp>
 
 
-using namespace hydla::parse_tree;
-
 namespace hydla {
 namespace symbolic_simulator {
 
-class EntailmentChecker : public parse_tree::TreeVisitor {
+class EntailmentChecker
+{
 public:
   EntailmentChecker(MathLink& ml);
 
@@ -26,58 +25,8 @@ public:
     boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
     hydla::simulator::TellCollector::tells_t& collected_tells);
 
-  // Ask§–ñ
-  virtual void visit(boost::shared_ptr<Ask> node);
-
-  // Tell§–ñ
-  virtual void visit(boost::shared_ptr<Tell> node);
-
-  // ”äŠr‰‰Zq
-  virtual void visit(boost::shared_ptr<Equal> node);
-  virtual void visit(boost::shared_ptr<UnEqual> node);
-  virtual void visit(boost::shared_ptr<Less> node);
-  virtual void visit(boost::shared_ptr<LessEqual> node);
-  virtual void visit(boost::shared_ptr<Greater> node);
-  virtual void visit(boost::shared_ptr<GreaterEqual> node);
-
-  // ˜_—‰‰Zq
-  virtual void visit(boost::shared_ptr<LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<LogicalOr> node);
-
-  // Zp“ñ€‰‰Zq
-  virtual void visit(boost::shared_ptr<Plus> node);
-  virtual void visit(boost::shared_ptr<Subtract> node);
-  virtual void visit(boost::shared_ptr<Times> node);
-  virtual void visit(boost::shared_ptr<Divide> node);
-
-  // Zp’P€‰‰Zq
-  virtual void visit(boost::shared_ptr<Negative> node);
-  virtual void visit(boost::shared_ptr<Positive> node);
-
-  // ”÷•ª
-  virtual void visit(boost::shared_ptr<Differential> node);
-
-  // ¶‹ÉŒÀ
-  virtual void visit(boost::shared_ptr<Previous> node);
-  
-  // •Ï”
-  virtual void visit(boost::shared_ptr<Variable> node);
-
-  // ”š
-  virtual void visit(boost::shared_ptr<Number> node);
-
-
 private:
   MathLink& ml_;
-  std::multimap<std::string, int> vars_;
-  // ”÷•ª•û’ö®‚Ì’†‚É‚¢‚é‚©‚Ç‚¤‚©iPointPhase‚Å‚Í•s—vHj
-  bool in_differential_equality_;
-  // Differentialƒm[ƒh‚ğ‰½‰ñ’Ê‚Á‚½‚©i‰½ŠK”÷•ª‚©j
-  int differential_count_;
-  // Prevƒm[ƒh‚Ì‰º‚É‚¢‚é‚©‚Ç‚¤‚©
-  bool in_prev_;
-  // ask§–ñ‚ÌƒK[ƒh‚Ì’†‚É‚¢‚é‚©‚Ç‚¤‚©
-  bool in_guard_;
 
 };
 

@@ -9,14 +9,37 @@ checkEntailment[guard_, tells_, vars_] := (
 );
 
 (*
- * 制約が無矛盾であるかをチェック
+ * isConsistent内のReduceの結果得られた解を{変数名, 値}　のリスト形式にする
+ *)
+createVariableList[Equal[varName_, varValue_], result_] := (
+  Append[result, pair[varName, varValue]]
+);
+
+createVariableList[And[expr_], result_] := (
+  createVariableList[expr, result]
+);
+
+createVariableList[And[expr_, others__], result_] := (
+  variableList = createVariableList[expr, result];
+  createVariableList[others, variableList]
+  (*Map[createVariableList[#, result], {expr}]*)
+);
+
+(* Reduce[{}, {}]のとき *)
+createVariableList[True, result_] := (
+  Return[{}]
+);
+
+(*
+ * 制約が無矛盾であるかをチェックする
+ * Reduceで解いた結果、解が得られれば無矛盾
+ * 得られた解を用いて、各変数に関して{変数名, 値}　という形式で表したリストを返す
  *)
 isConsistent[expr_, vars_] := (
-  (*Print["isConsistent#expr:", expr];*)
-  (*Print["isConsistent#vars:", vars];*)
-  (*Return[116]*)
   (*Return[expr]*)
-  If[Reduce[expr, vars] =!= False, 1, 0]
+  (*If[Reduce[expr, vars] =!= False, 1, 0]*)
+  sol = Reduce[expr, vars];
+  If[sol =!= False, createVariableList[sol, {}], 0]
 );
 
 (* isConsistent[expr_, vars_] :=
