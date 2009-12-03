@@ -20,8 +20,7 @@ ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 
 void ParseTreeSemanticAnalyzer::analyze(boost::shared_ptr<hydla::parse_tree::ParseTree> pt)
 {
-  constraint_def_map_ = pt->get_constraint_def_map();
-  program_def_map_    = pt->get_program_def_map();
+  parse_tree_         = pt;
 
   State state;
   state.in_guard           = false;
@@ -100,16 +99,15 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
   difinition_type_t def_type(node->get_name(), node->actual_arg_size());
 
   // 制約定義から探す
-  constraint_def_map_t::const_iterator cons_def = 
-    constraint_def_map_->find(def_type);
-  if(cons_def == constraint_def_map_->end()) {
+  boost::shared_ptr<ConstraintDefinition> cons_def(
+    parse_tree_->get_constraint_difinition(def_type));
+  if(!cons_def) {
     throw UndefinedReference(node->to_string());
   }
 
   // 定義の展開
-  node->set_child(apply_definition(&def_type, 
-                                   node.get(), 
-                                   cons_def->second.get()));
+  node->set_child(
+    apply_definition(&def_type, node.get(), cons_def.get()));
 }
 
 // プログラム呼び出し
@@ -119,16 +117,16 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
   Definition* defnode;
 
   // 制約定義から探す
-  constraint_def_map_t::const_iterator 
-    cons_it = constraint_def_map_->find(def_type);
-  if(cons_it!=constraint_def_map_->end()) {
-    defnode = (*cons_it).second.get();
+  boost::shared_ptr<ConstraintDefinition> cons_def(
+    parse_tree_->get_constraint_difinition(def_type));
+  if(cons_def) {
+    defnode = cons_def.get();
   } else {
     // プログラム定義から探す
-    program_def_map_t::const_iterator 
-      prog_it = program_def_map_->find(def_type);
-    if(prog_it!=program_def_map_->end()) {
-      defnode = (*prog_it).second.get();
+    boost::shared_ptr<ProgramDefinition> prog_def(
+      parse_tree_->get_program_difinition(def_type));
+    if(prog_def) {
+      defnode = prog_def.get();
     } else {
       throw UndefinedReference(node->to_string());
     }

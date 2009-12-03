@@ -85,8 +85,6 @@ public:
 
 private:
   typedef hydla::parse_tree::ParseTree::difinition_type_t difinition_type_t;
-  typedef hydla::parse_tree::ParseTree::constraint_def_map_t constraint_def_map_t;
-  typedef hydla::parse_tree::ParseTree::program_def_map_t program_def_map_t;
 
   typedef std::set<difinition_type_t>             referenced_definition_list_t;
 
@@ -121,12 +119,6 @@ private:
 
   /// Stateをつむためのスタック
   std::stack<State> state_stack_;
-
-  /// 制約定義の表
-  const constraint_def_map_t* constraint_def_map_;
-
-  /// プログラム定義の表
-  const program_def_map_t*    program_def_map_;
   
   /// プログラム中で使用される変数の表
   variable_map_t variable_map_;
@@ -136,6 +128,9 @@ private:
    * accept後、これに値が入っている場合はノードの値を交換する
    */
   node_sptr new_child_;
+
+  /// 解析対象のParseTree
+  boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_;
   
   /**
    * 指定したノードを呼び出し、

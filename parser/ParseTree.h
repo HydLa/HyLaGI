@@ -23,17 +23,20 @@ public:
                     bound_variable_count_t>       difinition_type_t;
 
   // 制約定義
-  typedef boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> constraint_def_map_value_t;
-  typedef std::map<difinition_type_t,
-                   constraint_def_map_value_t>    constraint_def_map_t;
+  typedef boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> 
+    constraint_def_map_value_t;
+  typedef std::map<difinition_type_t, constraint_def_map_value_t>    
+    constraint_def_map_t;
 
   // プログラム定義
-  typedef boost::shared_ptr<hydla::parse_tree::ProgramDefinition>    program_def_map_value_t;
-  typedef std::map<difinition_type_t,
-                   program_def_map_value_t>       program_def_map_t;
+  typedef boost::shared_ptr<hydla::parse_tree::ProgramDefinition>    
+    program_def_map_value_t;
+  typedef std::map<difinition_type_t, program_def_map_value_t>
+    program_def_map_t;
   
   // 変数表
-  typedef std::map<std::string, int>              variable_map_t;
+  typedef std::map<std::string, int>              
+    variable_map_t;
 
 
   ParseTree();
@@ -80,14 +83,35 @@ public:
     return variable_map_;
   }
 
-  const constraint_def_map_t* get_constraint_def_map() const
+  /**
+   * 制約定義ノードを返す
+   *
+   * @return 与えられた定義に対するノード．存在しない定義の場合は空クラスを返す
+   */
+  const boost::shared_ptr<ConstraintDefinition> 
+    get_constraint_difinition(const difinition_type_t& def) const
   {
-    return &cons_def_map_;
+    constraint_def_map_t::const_iterator it = cons_def_map_.find(def);
+    if(it == cons_def_map_.end()) {
+      return boost::shared_ptr<ConstraintDefinition>();
+    }
+    return it->second;
   }
 
-  const program_def_map_t* get_program_def_map() const
+
+  /**
+   * プログラム定義ノードを返す
+   *
+   * @return 与えられた定義に対するノード．存在しない定義の場合は空クラスを返す
+   */
+  const boost::shared_ptr<ProgramDefinition> 
+    get_program_difinition(const difinition_type_t& def) const
   {
-    return &prog_def_map_;
+    program_def_map_t::const_iterator it = prog_def_map_.find(def);
+    if(it == prog_def_map_.end()) {
+      return boost::shared_ptr<ProgramDefinition>();
+    }
+    return it->second;
   }
 
   /**
