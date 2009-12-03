@@ -143,7 +143,7 @@ void ConstraintBuilder::visit(boost::shared_ptr<Variable> node)
 }
 
 // ”š
-void ConstraintBuilder::visit(boost::shared_ptr<Number> node)                
+void ConstraintBuilder::visit(boost::shared_ptr<Number> node)
 {
   rp_interval i;
   rp_interval_from_str(const_cast<char *>(node->get_number().c_str()), i);
@@ -160,7 +160,7 @@ void ConstraintBuilder::create_unary_erep(boost::shared_ptr<UnaryNode> node, int
   rp_erep child, rep;
 
   this->accept(node->get_child());
-  rp_erep_set(&child, this->rep_stack_.top());
+  child = this->rep_stack_.top();
   assert(!(this->rep_stack_.empty()));
   this->rep_stack_.pop();
 
@@ -178,12 +178,12 @@ void ConstraintBuilder::create_binary_erep(boost::shared_ptr<BinaryNode> node, i
   rp_erep l, r, rep;
 
   this->accept(node->get_lhs());
-  rp_erep_set(&l, this->rep_stack_.top());
+  l = this->rep_stack_.top();
   assert(!(this->rep_stack_.empty()));
   this->rep_stack_.pop();
 
   this->accept(node->get_rhs());
-  rp_erep_set(&r, this->rep_stack_.top());
+  r = this->rep_stack_.top();
   assert(!(this->rep_stack_.empty()));
   this->rep_stack_.pop();
 
@@ -202,12 +202,12 @@ void ConstraintBuilder::create_ctr_num(boost::shared_ptr<BinaryNode> node, int r
   rp_erep l, r;
 
   this->accept(node->get_lhs());
-  rp_erep_set(&l, this->rep_stack_.top());
+  l = this->rep_stack_.top();
   assert(!(this->rep_stack_.empty()));
   this->rep_stack_.pop();
 
   this->accept(node->get_rhs());
-  rp_erep_set(&r, this->rep_stack_.top());
+  r = this->rep_stack_.top();
   assert(!(this->rep_stack_.empty()));
   this->rep_stack_.pop();
 

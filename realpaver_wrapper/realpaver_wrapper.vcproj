@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="symbolic_simulator"
-	ProjectGUID="{5E34BE62-2104-42F3-9E59-CED1ED540932}"
-	RootNamespace="symbolic_simulator"
+	Name="realpaver_wrapper"
+	ProjectGUID="{76B337D3-611E-477D-8358-C94F9C76CCF0}"
+	RootNamespace="realpaver_wrapper"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -28,9 +28,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine=""
-				AdditionalDependencies=""
-				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -44,11 +41,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="..\librealpaverbasic"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -64,6 +61,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -94,9 +92,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine=""
-				AdditionalDependencies=""
-				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -111,9 +106,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\simulator"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -130,6 +124,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -156,30 +151,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\ConsistencyChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\math_source.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSender.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -187,55 +158,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ConsistencyChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InterlanguageSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\math_source.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathlink_helper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SSNodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SSParseTree.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicTime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicVariable.h"
+				RelativePath=".\rp_constraint_w.h"
 				>
 			</File>
 		</Filter>
@@ -244,30 +167,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\HydLa.m"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m &gt; $(ProjectDir)\math_source.cpp&#x0D;&#x0A;"
-						Outputs="$(ProjectDir)\math_source.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m&#x0D;&#x0A;"
-						Outputs="$(ProjectDir)\math_source.cpp"
-					/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
