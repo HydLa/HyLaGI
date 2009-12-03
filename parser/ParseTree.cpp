@@ -34,13 +34,14 @@ ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
 
 namespace {
 
-template <typename T>
 struct AppendDefinitionString {
   AppendDefinitionString(string& str) : 
     s(str),
     first(true)
   {}
 
+
+  template <typename T>
   void operator()(T c) {
     if(first) {
       s += c.second->to_string();
@@ -61,14 +62,12 @@ std::string ParseTree::to_string() const
   str += "parse_tree[\n";
   str += "constraint_definition[\n";
   for_each(cons_def_map_.begin(), cons_def_map_.end(), 
-           AppendDefinitionString<pair<difinition_type_t, 
-                                       constraint_def_map_value_t> >(str));
+           AppendDefinitionString(str));
   str += "],\n";
 
   str += "program_definition[\n";
   for_each(prog_def_map_.begin(), prog_def_map_.end(), 
-           AppendDefinitionString<pair<difinition_type_t, 
-                                       program_def_map_value_t> >(str));
+           AppendDefinitionString(str));
   str += "],\n";
 
   str += "node_tree[\n";

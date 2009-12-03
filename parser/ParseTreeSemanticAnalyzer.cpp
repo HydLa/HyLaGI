@@ -1,4 +1,4 @@
-#include "PreprocessParseTree.h"
+#include "ParseTreeSemanticAnalyzer.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -12,13 +12,13 @@ using namespace hydla::parse_error;
 namespace hydla { 
 namespace parser {
 
-PreprocessParseTree::PreprocessParseTree()
+ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer()
 {}
 
-PreprocessParseTree::~PreprocessParseTree()
+ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 {}
 
-void PreprocessParseTree::start(hydla::parse_tree::ParseTree *pt)
+void ParseTreeSemanticAnalyzer::analyze(boost::shared_ptr<hydla::parse_tree::ParseTree> pt)
 {
   constraint_def_map_ = pt->get_constraint_def_map();
   program_def_map_    = pt->get_program_def_map();
@@ -35,18 +35,18 @@ void PreprocessParseTree::start(hydla::parse_tree::ParseTree *pt)
 }
 
 // 制約定義
-void PreprocessParseTree::visit(boost::shared_ptr<ConstraintDefinition> node)  
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintDefinition> node)  
 {
   assert(0);
 }
 
 // プログラム定義
-void PreprocessParseTree::visit(boost::shared_ptr<ProgramDefinition> node)     
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramDefinition> node)     
 {
   assert(0);
 }
 
-node_sptr PreprocessParseTree::apply_definition(difinition_type_t* def_type,
+node_sptr ParseTreeSemanticAnalyzer::apply_definition(difinition_type_t* def_type,
                                                 Caller* caller, 
                                                 Definition* definition)
 {
@@ -95,7 +95,7 @@ node_sptr PreprocessParseTree::apply_definition(difinition_type_t* def_type,
 }
 
 // 制約呼び出し
-void PreprocessParseTree::visit(boost::shared_ptr<ConstraintCaller> node)      
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
   difinition_type_t def_type(node->get_name(), node->actual_arg_size());
 
@@ -113,7 +113,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<ConstraintCaller> node)
 }
 
 // プログラム呼び出し
-void PreprocessParseTree::visit(boost::shared_ptr<ProgramCaller> node)         
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)         
 {
   difinition_type_t def_type(node->get_name(), node->actual_arg_size());
   Definition* defnode;
@@ -141,7 +141,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<ProgramCaller> node)
 }
 
 // 制約式
-void PreprocessParseTree::visit(boost::shared_ptr<Constraint> node)            
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)            
 {
   State& state = state_stack_.top();
 
@@ -159,7 +159,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<Constraint> node)
 }
 
 // Ask制約
-void PreprocessParseTree::visit(boost::shared_ptr<Ask> node)                   
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)                   
 {
   State& state = state_stack_.top();
 
@@ -177,83 +177,83 @@ void PreprocessParseTree::visit(boost::shared_ptr<Ask> node)
 }
 
 // Tell制約
-void PreprocessParseTree::visit(boost::shared_ptr<Tell> node)                  
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Tell> node)                  
 {
   dispatch_child(node);
 }
 
 // 算術単項演算子
-void PreprocessParseTree::visit(boost::shared_ptr<Negative> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Negative> node)
 {
   dispatch_child(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Positive> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Positive> node)
 {
   dispatch_child(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Equal> node)                 
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Equal> node)                 
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<UnEqual> node)               
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<UnEqual> node)               
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Less> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Less> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<LessEqual> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LessEqual> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Greater> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Greater> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<GreaterEqual> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<GreaterEqual> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Plus> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Plus> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Subtract> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Subtract> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Times> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Times> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Divide> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Divide> node)
 {
   dispatch_lhs(node);
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<LogicalAnd> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 {
   if(!state_stack_.top().in_constraint) {
     throw InvalidConjunction(node->get_lhs()->to_string(), 
@@ -264,7 +264,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<LogicalAnd> node)
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<LogicalOr> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
 {
   if(!state_stack_.top().in_guard) {
     throw InvalidDisjunction(node->get_lhs()->to_string(), 
@@ -275,7 +275,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<LogicalOr> node)
   dispatch_rhs(node);
 }  
 
-void PreprocessParseTree::visit(boost::shared_ptr<Weaker> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 {
   if(state_stack_.top().in_constraint) {
     throw InvalidWeakComposition(node->get_lhs()->to_string(), 
@@ -286,7 +286,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<Weaker> node)
   dispatch_rhs(node);
 }
 
-void PreprocessParseTree::visit(boost::shared_ptr<Parallel> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 {
   if(state_stack_.top().in_constraint) {
     throw InvalidParallelComposition(node->get_lhs()->to_string(), 
@@ -298,7 +298,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<Parallel> node)
 }
   
 // 時相演算子
-void PreprocessParseTree::visit(boost::shared_ptr<Always> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 {
   State& state = state_stack_.top();
 
@@ -320,7 +320,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<Always> node)
 }
   
 // 微分
-void PreprocessParseTree::visit(boost::shared_ptr<Differential> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
 {
   State& state = state_stack_.top();
 
@@ -332,13 +332,13 @@ void PreprocessParseTree::visit(boost::shared_ptr<Differential> node)
 }
 
 // 左極限
-void PreprocessParseTree::visit(boost::shared_ptr<Previous> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 {
   dispatch_child(node);
 }
   
 // 変数
-void PreprocessParseTree::visit(boost::shared_ptr<Variable> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 {
   State& state = state_stack_.top();
 
@@ -363,7 +363,7 @@ void PreprocessParseTree::visit(boost::shared_ptr<Variable> node)
 }
 
 // 数字
-void PreprocessParseTree::visit(boost::shared_ptr<Number> node)
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Number> node)
 {
   //do nothing
 }

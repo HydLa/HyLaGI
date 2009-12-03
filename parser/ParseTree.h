@@ -32,6 +32,7 @@ public:
   typedef std::map<difinition_type_t,
                    program_def_map_value_t>       program_def_map_t;
   
+  // •Ï”•\
   typedef std::map<std::string, int>              variable_map_t;
 
 

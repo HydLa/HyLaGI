@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_PREPROCESS_PARSE_TREE_H_
-#define _INCLUDED_HYDLA_PREPROCESS_PARSE_TREE_H_
+#ifndef _INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_
+#define _INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_
 
 #include <stack>
 
@@ -10,19 +10,19 @@
 
 namespace hydla { 
 namespace parser {
-  
-class PreprocessParseTree : public hydla::parse_tree::TreeVisitor
+
+class ParseTreeSemanticAnalyzer : public hydla::parse_tree::TreeVisitor
 {
 public:
   typedef hydla::parse_tree::node_sptr node_sptr;
 
-  PreprocessParseTree();
-  virtual ~PreprocessParseTree();
+  ParseTreeSemanticAnalyzer();
+  virtual ~ParseTreeSemanticAnalyzer();
 
   /**
-   * 
+   * âêÕÇ®ÇÊÇ—êßñÒåƒÇ—èoÇµÇÃìWäJÇÇ®Ç±Ç»Ç§
    */
-  void start(hydla::parse_tree::ParseTree *pt);
+  void analyze(boost::shared_ptr<hydla::parse_tree::ParseTree> pt);
 
 
   // íËã`
@@ -92,7 +92,7 @@ private:
 
   typedef std::map<std::string, node_sptr>        formal_arg_map_t;
 
-    typedef std::map<std::string, int>              variable_map_t;
+  typedef std::map<std::string, int>              variable_map_t;
 
 
   /**
@@ -187,4 +187,4 @@ private:
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PREPROCESS_PARSE_TREE_H_
+#endif //_INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_

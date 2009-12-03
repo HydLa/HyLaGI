@@ -31,6 +31,21 @@ public:
   virtual ~ModuleSetContainerCreator()
   {}
 
+  /**
+   * 与えられたパースツリーを元にモジュール集合の集合を表すクラスを構築する
+   */
+  container_sptr create_module_set_container(
+    boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
+  {
+    mod_set_stack_.clear();
+    container_name_.clear();
+    unnamed_module_num_ = 1;
+
+    parse_tree->dispatch(this);
+    assert(mod_set_stack_.size() == 1);
+    return mod_set_stack_.back();
+  }
+
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
   {
     container_name_ = node->get_name();
@@ -88,33 +103,17 @@ public:
     mod_set_stack_.back()->add_parallel(*lhs);
   }
 
-  /**
-   * 与えられたパースツリーを元にモジュール集合の集合を表すクラスを構築する
-   */
-  container_sptr create_module_set_container(hydla::parse_tree::ParseTree* parse_tree)
-  {
-    assert(parse_tree != NULL);
-
-    mod_set_stack_.clear();
-    container_name_.clear();
-    unnamed_module_num_ = 1;
-
-    parse_tree->dispatch(this);
-    assert(mod_set_stack_.size() == 1);
-    return mod_set_stack_.back();
-  }
-
 private:
-  // 構築するために使用するパースツリー
+  /// 構築するために使用するパースツリー
   hydla::parse_tree::ParseTree* parse_tree_;
 
-  // モジュール集合の集合を一時的に保存しておくスタック
+  /// モジュール集合の集合を一時的に保存しておくスタック
   container_stack_t             mod_set_stack_;
 
-  // 登録される制約モジュールの名前
+  /// 登録される制約モジュールの名前
   std::string                   container_name_;
 
-  // 無名制約モジュールの通し番号
+  /// 無名制約モジュールの通し番号
   int                           unnamed_module_num_;
 };
 

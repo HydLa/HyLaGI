@@ -18,6 +18,7 @@
 #include "HydLaAST.h"
 #include "NodeFactory.h"
 #include "ParseTreeGenerator.h"
+#include "ParseTreeSemanticAnalyzer.h"
 #include "ModuleSetList.h"
 #include "ModuleSetContainerCreator.h"
 
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
 void symbolic_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc);
 void branch_and_prune_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc);
-
+boost::shared_ptr<ParseTree> build_parse_tree();
 
 //
 int main(int argc, char* argv[]) 
@@ -73,6 +74,43 @@ int main(int argc, char* argv[])
   return ret;
 }
 
+boost::shared_ptr<ParseTree> build_parse_tree()
+{  
+  ProgramOptions &po = ProgramOptions::instance();
+  bool debug_mode = po.count("debug")>0;
+
+  // ASTの構築
+  HydLaAST ast;
+  if(po.count("input-file")) {
+    ast.parse_flie(po.get<std::string>("input-file"));
+  } else {
+    ast.parse(std::cin);
+  }
+  if(debug_mode) {
+    std::cout << "#*** AST Tree ***\n"; 
+    std::cout << ast << std::endl;
+  }
+
+  // ParseTreeの構築
+  boost::shared_ptr<ParseTree> pt(
+    ParseTreeGenerator<DefaultNodeFactory>().generate(
+      ast.get_tree_iterator()));
+  if(debug_mode) {
+    std::cout << "#*** Parse Tree ***\n"; 
+    std::cout << *pt << std::endl;
+  }
+
+  // 意味解析・制約呼び出しの展開
+  ParseTreeSemanticAnalyzer analyer;  
+  analyer.analyze(pt);  
+  if(debug_mode) {
+    std::cout << "#*** Analyzed Parse Tree ***\n"; 
+    std::cout << *pt << std::endl;
+  }
+
+  return pt;
+}
+
 void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
@@ -91,28 +129,12 @@ void hydla_main(int argc, char* argv[])
   bool debug_mode = po.count("debug")>0;
 
   // パースツリーの構築
-  HydLaAST ast;
-  if(po.count("input-file")) {
-    ast.parse_flie(po.get<std::string>("input-file"));
-  } else {
-    ast.parse(std::cin);
-  }
-  if(debug_mode) {
-    std::cout << ast << std::endl;
-  }
-
-  boost::shared_ptr<ParseTree> pt(
-    ParseTreeGenerator<DefaultNodeFactory>().generate(
-      ast.get_tree_iterator()));
-  if(debug_mode) {
-    std::cout << *pt << std::endl;
-  }
+  boost::shared_ptr<ParseTree> pt(build_parse_tree());
 
   // 解候補モジュール集合の導出
-/*
   boost::shared_ptr<ModuleSetList> msl(
     ModuleSetContainerCreator<ModuleSetList>().
-    create_module_set_container(&hp.parse_tree()));
+    create_module_set_container(pt));
   if(debug_mode) {
     std::cout << "#*** set of module sets which might be solution ***\n"
               << msl->get_name() << "\n\n" << msl->get_tree_dump() << std::endl;
@@ -133,6 +155,5 @@ void hydla_main(int argc, char* argv[])
     std::cerr << "invalid method" << std::endl;
     return;
   }
-*/
 }
 

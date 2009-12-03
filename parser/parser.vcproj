@@ -161,7 +161,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PreprocessParseTree.cpp"
+				RelativePath=".\ParseTreeSemanticAnalyzer.cpp"
 				>
 			</File>
 			<File
@@ -211,7 +211,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PreprocessParseTree.h"
+				RelativePath=".\ParseTreeSemanticAnalyzer.h"
 				>
 			</File>
 			<File
