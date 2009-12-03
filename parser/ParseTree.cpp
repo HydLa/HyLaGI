@@ -55,7 +55,7 @@ struct AppendDefinitionString {
 };
 }
 
-std::string ParseTree::to_string()
+std::string ParseTree::to_string() const
 {
   string str;
   str += "parse_tree[\n";
@@ -78,15 +78,9 @@ std::string ParseTree::to_string()
   return str;
 }
 
-void ParseTree::preprocess()
+std::ostream& operator<<(std::ostream& s, const ParseTree& pt)
 {
-  /*
-  if(node_tree_) {
-    formal_arg_map_t fam;
-    preprocess_arg_t arg(variable_map_, prog_def_map_, cons_def_map_, fam);
-    node_tree_->preprocess(node_tree_, arg);
-  }
-  */
+  return s << pt.to_string();
 }
 
 } //namespace parse_tree

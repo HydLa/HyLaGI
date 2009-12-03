@@ -149,11 +149,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\HydLaParser.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaParser_parse.cpp"
+				RelativePath=".\HydLaAST.cpp"
 				>
 			</File>
 			<File
@@ -183,15 +179,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HydLaAST.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HydLaGrammar.h"
 				>
 			</File>
 			<File
 				RelativePath=".\HydLaGrammarRule.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaParser.h"
 				>
 			</File>
 			<File
@@ -208,6 +204,10 @@
 			</File>
 			<File
 				RelativePath=".\ParseTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseTreeGenerator.h"
 				>
 			</File>
 			<File

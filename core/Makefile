@@ -1,6 +1,6 @@
 TARGET	 := ../hydla
 
-LIB_DIRS := parser constraint_hierarchy symbolic_simulator branch_and_prune_simulator simulator 
+LIB_DIRS := symbolic_simulator branch_and_prune_simulator simulator constraint_hierarchy parser 
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
@@ -11,7 +11,7 @@ LDFLAGS  +=  -L../librealpaver  -L../librealpaverbasic
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/lib
 
-LIBS     += $(addprefix -lhydla_,$(LIB_DIRS))
+LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2回やって順序による依存関係の問題を解消
 LIBS     += -lrealpaver -lrealpaverbasic
 LIBS     += -lboost_program_options
 LIBS     += -lML32i3 -lm -lrt

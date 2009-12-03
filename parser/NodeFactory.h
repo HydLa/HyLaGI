@@ -11,97 +11,77 @@
 #include "ParseTree.h"
 
 namespace hydla { 
-namespace parse_tree {
+namespace parser {
 
-#define CREATE_NEW_PT_NODE(NAME)                                        \
-  template<typename T>                                                  \
-  struct NodeCreator<T,                                                 \
-                     typename boost::enable_if<boost::is_same<T, NAME> >::type> \
-  {                                                                     \
-  boost::shared_ptr<T> operator()(const NodeFactory* nf) const {        \
-    return nf->create##NAME();                                          \
-  }                                                                     \
-  };                                                                    \
-                                                                        \
-  virtual boost::shared_ptr<NAME> create##NAME() const {                \
-    boost::shared_ptr<NAME> p(new NAME());                              \
-    return p;                                                           \
-  }
+#define DEFAULT_NODE_FACTORY_PT_NODE(NAME)              \
+  boost::shared_ptr<hydla::parse_tree::NAME>            \
+  operator()(hydla::parse_tree::NAME)                   \
+  {                                                     \
+    return boost::shared_ptr<hydla::parse_tree::NAME>(  \
+      new hydla::parse_tree::NAME());                   \
+  }                                                      
 
-class NodeFactory {
-public:
-  NodeFactory()
-  {}
- 
-  virtual ~NodeFactory()
-  {}
-
-  // テンプレートの部分特殊化用
-  template<typename T, typename N=void>
-  struct NodeCreator;
-
-  template<typename T>
-  boost::shared_ptr<T> create() const {
-    return NodeCreator<T>()(this);
-  }
+struct DefaultNodeFactory
+{
 
   //定義
-  CREATE_NEW_PT_NODE(ProgramDefinition)
-  CREATE_NEW_PT_NODE(ConstraintDefinition)
+  DEFAULT_NODE_FACTORY_PT_NODE(ProgramDefinition)
+  DEFAULT_NODE_FACTORY_PT_NODE(ConstraintDefinition)
 
   //呼び出し
-  CREATE_NEW_PT_NODE(ProgramCaller)
-  CREATE_NEW_PT_NODE(ConstraintCaller)
+  DEFAULT_NODE_FACTORY_PT_NODE(ProgramCaller)
+  DEFAULT_NODE_FACTORY_PT_NODE(ConstraintCaller)
   
   //制約式
-  CREATE_NEW_PT_NODE(Constraint);
+  DEFAULT_NODE_FACTORY_PT_NODE(Constraint);
 
   //Tell制約
-  CREATE_NEW_PT_NODE(Tell)
+  DEFAULT_NODE_FACTORY_PT_NODE(Tell)
 
   //Ask制約
-  CREATE_NEW_PT_NODE(Ask)
+  DEFAULT_NODE_FACTORY_PT_NODE(Ask)
 
   //比較演算子
-  CREATE_NEW_PT_NODE(Equal)
-  CREATE_NEW_PT_NODE(UnEqual)
-  CREATE_NEW_PT_NODE(Less)
-  CREATE_NEW_PT_NODE(LessEqual)
-  CREATE_NEW_PT_NODE(Greater)
-  CREATE_NEW_PT_NODE(GreaterEqual)
+  DEFAULT_NODE_FACTORY_PT_NODE(Equal)
+  DEFAULT_NODE_FACTORY_PT_NODE(UnEqual)
+  DEFAULT_NODE_FACTORY_PT_NODE(Less)
+  DEFAULT_NODE_FACTORY_PT_NODE(LessEqual)
+  DEFAULT_NODE_FACTORY_PT_NODE(Greater)
+  DEFAULT_NODE_FACTORY_PT_NODE(GreaterEqual)
 
   //論理演算子
-  CREATE_NEW_PT_NODE(LogicalAnd)
-  CREATE_NEW_PT_NODE(LogicalOr)
+  DEFAULT_NODE_FACTORY_PT_NODE(LogicalAnd)
+  DEFAULT_NODE_FACTORY_PT_NODE(LogicalOr)
 
   //算術二項演算子
-  CREATE_NEW_PT_NODE(Plus)
-  CREATE_NEW_PT_NODE(Subtract)
-  CREATE_NEW_PT_NODE(Times)
-  CREATE_NEW_PT_NODE(Divide)
+  DEFAULT_NODE_FACTORY_PT_NODE(Plus)
+  DEFAULT_NODE_FACTORY_PT_NODE(Subtract)
+  DEFAULT_NODE_FACTORY_PT_NODE(Times)
+  DEFAULT_NODE_FACTORY_PT_NODE(Divide)
   
   //算術単項演算子
-  CREATE_NEW_PT_NODE(Negative)
-  CREATE_NEW_PT_NODE(Positive)
+  DEFAULT_NODE_FACTORY_PT_NODE(Negative)
+  DEFAULT_NODE_FACTORY_PT_NODE(Positive)
 
   //制約階層定義演算子
-  CREATE_NEW_PT_NODE(Weaker)
-  CREATE_NEW_PT_NODE(Parallel)
+  DEFAULT_NODE_FACTORY_PT_NODE(Weaker)
+  DEFAULT_NODE_FACTORY_PT_NODE(Parallel)
 
   // 時相演算子
-  CREATE_NEW_PT_NODE(Always)
+  DEFAULT_NODE_FACTORY_PT_NODE(Always)
 
   //微分
-  CREATE_NEW_PT_NODE(Differential)
+  DEFAULT_NODE_FACTORY_PT_NODE(Differential)
   
   //左極限
-  CREATE_NEW_PT_NODE(Previous)
+  DEFAULT_NODE_FACTORY_PT_NODE(Previous)
 
   //変数・束縛変数
-  CREATE_NEW_PT_NODE(Variable)
+  DEFAULT_NODE_FACTORY_PT_NODE(Variable)
 
   //数字
-  CREATE_NEW_PT_NODE(Number)
+  DEFAULT_NODE_FACTORY_PT_NODE(Number)
+
 };
 
 } //namespace parse_tree

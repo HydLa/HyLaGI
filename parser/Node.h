@@ -686,7 +686,7 @@ public:
   Number()
   {}  
   
-  Number(std::string number) : 
+  Number(const std::string& number) : 
     number_(number)
   {}
     
@@ -702,11 +702,20 @@ public:
     return n;
   }
   
-  virtual std::string to_string() const {return number_;}
+  virtual std::string to_string() const 
+  {
+    return number_;
+  }
 
-  // specific functions
-  void        set_number(std::string& number) {number_ = number;}
-  std::string get_number() const              {return number_;}
+  void set_number(const std::string& number) 
+  {
+    number_ = number;
+  }
+  
+  std::string get_number() const
+  {
+    return number_;
+  }
 
 private:
   std::string number_;
@@ -721,7 +730,7 @@ public:
   Variable()
   {}  
   
-  Variable(std::string name) : 
+  Variable(const std::string& name) : 
     name_(name)
   {}
     
@@ -736,11 +745,20 @@ public:
     return n;
   }
   
-  virtual std::string to_string() const {return name_;}
+  virtual std::string to_string() const 
+  {
+    return name_;
+  }
 
-  // specific functions
-  void        set_name(std::string& name) {name_ = name;}
-  std::string get_name() const            {return name_;}
+  void set_name(const std::string& name) 
+  {
+    name_ = name;
+  }
+
+  std::string get_name() const            
+  {
+    return name_;
+  }
 
 private:
   std::string name_;

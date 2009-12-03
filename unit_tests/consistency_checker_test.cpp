@@ -1,7 +1,7 @@
 /**
  * ConsistencyChecker‚ÌƒeƒXƒg
  */
-
+/*
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -64,3 +64,4 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   SS_CONSISTEMCY_CHECKER_TEST_F("x=1 & x=2.");
 
 }
+*/

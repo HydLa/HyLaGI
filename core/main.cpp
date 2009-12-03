@@ -15,12 +15,13 @@
 #include "ProgramOptions.h"
 
 // parser
-#include "HydLaParser.h"
+#include "HydLaAST.h"
+#include "NodeFactory.h"
+#include "ParseTreeGenerator.h"
 #include "ModuleSetList.h"
 #include "ModuleSetContainerCreator.h"
 
 // symbolic_simulator
-#include "SSNodeFactory.h"
 #include "MathSimulator.h"
 #include "mathlink_helper.h"
 
@@ -90,15 +91,25 @@ void hydla_main(int argc, char* argv[])
   bool debug_mode = po.count("debug")>0;
 
   // パースツリーの構築
-  shared_ptr<NodeFactory> nf(new NodeFactory());
-  HydLaParser hp(nf, debug_mode);
+  HydLaAST ast;
   if(po.count("input-file")) {
-    hp.parse_flie(po.get<std::string>("input-file"));
+    ast.parse_flie(po.get<std::string>("input-file"));
   } else {
-    hp.parse(std::cin);
+    ast.parse(std::cin);
+  }
+  if(debug_mode) {
+    std::cout << ast << std::endl;
+  }
+
+  boost::shared_ptr<ParseTree> pt(
+    ParseTreeGenerator<DefaultNodeFactory>().generate(
+      ast.get_tree_iterator()));
+  if(debug_mode) {
+    std::cout << *pt << std::endl;
   }
 
   // 解候補モジュール集合の導出
+/*
   boost::shared_ptr<ModuleSetList> msl(
     ModuleSetContainerCreator<ModuleSetList>().
     create_module_set_container(&hp.parse_tree()));
@@ -122,5 +133,6 @@ void hydla_main(int argc, char* argv[])
     std::cerr << "invalid method" << std::endl;
     return;
   }
+*/
 }
 

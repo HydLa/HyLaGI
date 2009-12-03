@@ -1,6 +1,7 @@
 #ifndef _INCLUDED_HYDLA_PARSE_TREE_H_
 #define _INCLUDED_HYDLA_PARSE_TREE_H_
 
+#include <ostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -66,8 +67,7 @@ public:
     return node_tree_;
   }
 
-  std::string to_string();
-  void preprocess();
+  std::string to_string() const;
 
   void dispatch(parse_tree::TreeVisitor* visitor)
   {
@@ -107,6 +107,9 @@ private:
   program_def_map_t    prog_def_map_;
   variable_map_t       variable_map_;
 };
+
+std::ostream& operator<<(std::ostream& s, const ParseTree& pt);
+
 
 } //namespace parse_tree
 } //namespace hydla

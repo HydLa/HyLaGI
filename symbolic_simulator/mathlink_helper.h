@@ -159,6 +159,7 @@ public:
     return str;
   }
 
+
   /////////// Mathematica Function /////////////
   int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}
   int MLGetFunction(const char **s,int *n)  {return ::MLGetFunction(link_, s, n);}
