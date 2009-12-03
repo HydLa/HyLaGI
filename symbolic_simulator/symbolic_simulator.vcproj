@@ -219,14 +219,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SSNodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SSParseTree.h"
-				>
-			</File>
-			<File
 				RelativePath=".\SymbolicTime.h"
 				>
 			</File>
