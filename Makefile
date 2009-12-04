@@ -22,9 +22,15 @@ charset:
 charset_guess:
 	@nkf --guess `find . -name "*.cpp" -or -name "*.h" `
 
+# generate documentation
+.PHONY : doc
+doc:
+	doxygen doc/doxygen.conf
+
 # remove all temp files
 .PHONY : clean
 clean:
+	rm -fvr doc/html
 	@for i in $(projects); do \
 	   (cd $$i && $(MAKE) clean); \
 	done
