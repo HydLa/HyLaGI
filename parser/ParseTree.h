@@ -6,7 +6,12 @@
 #include <vector>
 #include <map>
 
+#include <assert.h>
+
 #include <boost/shared_ptr.hpp>
+#include <boost/bimap/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+#include <boost/bimap/support/lambda.hpp>
 
 #include "ParseError.h"
 #include "Node.h"
@@ -38,6 +43,12 @@ public:
   typedef std::map<std::string, int>     variable_map_t;
   typedef variable_map_t::const_iterator variable_map_const_iterator;
 
+    
+  // ノード表
+  typedef boost::bimaps::bimap<
+            boost::bimaps::unordered_set_of<node_id_t>, 
+            boost::bimaps::unordered_set_of<node_sptr> > node_map_t;
+  typedef node_map_t::value_type                         node_map_value_t;
 
   ParseTree();
   virtual ~ParseTree();
@@ -124,8 +135,6 @@ public:
     return node_tree_;
   }
 
-  std::string to_string() const;
-
   void dispatch(parse_tree::TreeVisitor* visitor)
   {
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
@@ -165,14 +174,78 @@ public:
   }
 
   /**
+   * 新しいノードを追加する
+   */
+  node_id_t register_node(const node_sptr& n)
+  {
+    assert(n->get_id() == 0);
+    assert(node_map_.right.find(n) == node_map_.right.end());
+    
+    ++max_node_id_;
+    n->set_id(max_node_id_);
+    node_map_.insert(node_map_value_t(max_node_id_, n));
+    return max_node_id_;
+  }
+
+  /**
+   * IDに対応付けられているノードの変更
+   */
+  void update_node(node_id_t id, const node_sptr& n)
+  {
+    node_map_t::left_iterator it = node_map_.left.find(id);
+    assert(it != node_map_.left.end());
+
+    node_map_.left.modify_data(it, boost::bimaps::_data = n);
+  }
+    
+  /**
+   * ノードに対応付けられているIDの変更
+   */
+  void update_node_id(node_id_t id, const node_sptr& n)
+  {
+    node_map_t::right_iterator it = node_map_.right.find(n);
+    assert(it != node_map_.right.end());
+      
+    node_map_.right.modify_data(it, boost::bimaps::_data = id);
+  }
+
+  /**
+   * 指定されたIDに対応するノードを得る
+   */
+  node_sptr get_node(node_id_t id)
+  {
+    node_map_t::left_iterator it = node_map_.left.find(id);
+    if(it != node_map_.left.end()) {
+      return it->second;
+    }
+    return node_sptr();
+  }
+  
+  /**
+   * 指定されたノードに対応するIDを得る
+   */
+  node_id_t get_node_id(const node_sptr& n)
+  {
+    node_map_t::right_iterator it = node_map_.right.find(n);
+    if(it != node_map_.right.end()) {
+      return it->second;
+    }
+    return node_id_t();
+  }
+
+  /**
    * すべてのデータを破棄し、初期状態に戻す
    */
   void clear()
   {
+    max_node_id_ = 0;
     node_tree_.reset();
     cons_def_map_.clear();
     prog_def_map_.clear();
+    variable_map_.clear();
   }
+
+  std::ostream& dump(std::ostream& s) const;
 
 private:
   difinition_type_t create_definition_key(boost::shared_ptr<Definition> d);
@@ -181,6 +254,9 @@ private:
   constraint_def_map_t cons_def_map_;
   program_def_map_t    prog_def_map_;
   variable_map_t       variable_map_;
+
+  node_map_t           node_map_;
+  node_id_t            max_node_id_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ParseTree& pt);

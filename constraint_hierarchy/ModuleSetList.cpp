@@ -101,18 +101,19 @@ std::string ModuleSetList::get_name() const
   return s;
 }
 
-std::string ModuleSetList::get_tree_dump() const
+std::ostream& ModuleSetList::dump_tree(std::ostream& s) const
 {
-  std::string s;
   module_set_list_t::const_iterator it  = module_set_list_.begin();
   module_set_list_t::const_iterator end = module_set_list_.end();
   
-  s += "{";
-  if(it!=end) s += (*it++)->get_tree_dump();
+  s << "{";
+  if(it!=end) (*it++)->dump_tree(s);
   while(it!=end) {
-    s += ", " + (*it++)->get_tree_dump();
+    s << ", ";
+    (*it++)->dump_tree(s);
   }
-  s += "}";
+  s << "}";
+
   return s;
 }
 

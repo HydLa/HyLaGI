@@ -43,20 +43,19 @@ std::string ModuleSet::get_name() const
   return str;
 }
 
-std::string ModuleSet::get_tree_dump() const
+std::ostream& ModuleSet::dump_tree(std::ostream& s) const
 {
   std::string str;
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
 
-  str += "{";
-  if(it!=end) str += (it++)->second->to_string();
+  s << "{";
+  if(it!=end) s << *(it++)->second;
   for(; it!=end; ++it) {
-    str += ", ";
-    str += it->second->to_string();
+    s << ", " << *it->second;
   }
-  str += "}";
-  return str;
+  s << "}";
+  return s;
 }
 
 int ModuleSet::compare(ModuleSet& rhs) const

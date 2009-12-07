@@ -39,7 +39,9 @@ private:
   boost::shared_ptr<NodeType>
   create_node()
   {
-    return NodeFactory()(NodeType());
+    boost::shared_ptr<NodeType> n(NodeFactory().operator()(NodeType()));
+    pt_->register_node(n);
+    return n;
   }
 
   /**
@@ -186,22 +188,11 @@ private:
         return create_caller<ProgramCaller>(ch);
       }
 
-      // ask§–ñ
-      case RI_Implies:
-      {
-        boost::shared_ptr<Ask> node(create_node<Ask>());
-
-        // ƒK[ƒhğŒ
-        node->set_guard(create_parse_tree(ch));
-
-        // q§–ñ
-        node->set_child(create_parse_tree(ch+1));
-
-        return node;
-      }
-
       // Tell§–ñ
       case RI_Tell:         {return create_unary_node<Tell>(ch);}
+
+      // Ask§–ñ
+      case RI_Implies:      {return create_unary_node<Ask>(ch);}
       
         // §–ñ®
       case RI_Constraint:   {return create_unary_node<Constraint>(ch);}

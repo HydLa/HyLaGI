@@ -1,6 +1,7 @@
 #ifndef _INCLUDED_HYDLA_PARSE_TREE_NODE_H_
 #define _INCLUDED_HYDLA_PARSE_TREE_NODE_H_
 
+#include <ostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -17,6 +18,7 @@ class ProgramDefinition;
 
 class TreeVisitor;
 
+typedef unsigned int           node_id_t;
 typedef boost::shared_ptr<Node> node_sptr;
 
 /**
@@ -24,17 +26,39 @@ typedef boost::shared_ptr<Node> node_sptr;
  */
 class Node {
 public:
-  Node(){}
-  virtual ~Node(){}
+  Node() : 
+    id_(0)
+  {}
+  
+  virtual ~Node()
+  {}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
   virtual node_sptr clone() = 0;
 
-  virtual std::string to_string() const {return "";}
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    return s << "Node<"
+             << get_id()
+             << ">";
+  }
 
-  friend std::ostream& operator<< (std::ostream&, Node&);
+  void set_id(node_id_t id)
+  {
+    id_ = id;
+  }
+
+  node_id_t get_id() const 
+  {
+    return id_;
+  }
+
+private:
+  node_id_t id_;
 };
+
+std::ostream& operator<<(std::ostream&, const Node&);
 
 /**
  * 1つの子ノードを持つノード
@@ -62,10 +86,14 @@ public:
     n->child_ = child_->clone();
     return n;
   }
-  
-  virtual std::string to_string() const
+
+  virtual std::ostream& dump(std::ostream& s) const 
   {
-    return "unary_node[" + child_->to_string() + "]";    
+    return s << "UnaryNode<"
+             << get_id()
+             << ">["
+             << *child_
+             << "]";
   }
 
   /**
@@ -123,11 +151,15 @@ public:
     return n;
   }
 
-  virtual std::string to_string() const
+  virtual std::ostream& dump(std::ostream& s) const 
   {
-    return "binary_node[" + 
-      lhs_->to_string() +  "," + 
-      rhs_->to_string() + "]";
+    return s << "BinaryNode<"
+             << get_id()
+             <<">["
+             << *lhs_
+             << ","
+             << *rhs_
+             << "]";
   }
 
   /**
@@ -182,7 +214,7 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual node_sptr clone();
-  virtual std::string to_string() const;
+  virtual std::ostream& dump(std::ostream& s) const;
 
   /**
    * 呼び出す定義名を設定する
@@ -313,7 +345,7 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual node_sptr clone();
-  virtual std::string to_string() const;
+  virtual std::ostream& dump(std::ostream& s) const;
 
   /**
    * 定義名を設定する
@@ -445,13 +477,13 @@ public:
     n->child_ = child_->clone();
     return n;
   }
-  
-  virtual std::string to_string() const 
-  {
-    return "Constraint[" + child_->to_string() + "]";
-  }
 
-private:
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    return s << "Constraint["
+             << *child_
+             << "]";
+  }
 };
 
 /**
@@ -472,21 +504,25 @@ public:
     n->child_ = child_->clone();
     return n;
   }
-  
-  virtual std::string to_string() const 
-  {
-    return "Tell[" + child_->to_string() + "]";
-  }
 
-private:
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    return s << "Tell["
+             << *child_
+             << "]";
+  }
 };
 
 /**
  * ask制約
  */ 
-class Ask : public Node {
+class Ask : public BinaryNode {
 public:
   Ask()
+  {}
+
+  Ask(const node_sptr& guard, const node_sptr& child) :
+    BinaryNode(guard, child)
   {}
     
   virtual ~Ask(){}
@@ -495,29 +531,50 @@ public:
 
   virtual node_sptr clone()
   {
-    boost::shared_ptr<Ask> n(new Ask());
-    n->guard_ = guard_->clone();
-    n->child_ = child_->clone();
-    return n;
+    node_type_sptr n(new Ask);
+    return BinaryNode::clone(n);
   }
-  
-  virtual std::string to_string() const 
+
+  virtual std::ostream& dump(std::ostream& s) const 
   {
-    return "Ask[" + 
-      guard_->to_string() + "," + 
-      child_->to_string() + "]";
+    return s << "Ask["
+             << *lhs_
+             << ","
+             << *rhs_
+             << "]";
   }
 
-  // specific functions
-  void set_child(const node_sptr& child) {child_ = child;}
-  const node_sptr& get_child() const     {return child_;}
+  /**
+   * ガードノードを設定する
+   */
+  void set_guard(const node_sptr& guard) 
+  {
+    set_lhs(guard);
+  }
 
-  void set_guard(const node_sptr& guard) {guard_ = guard;}
-  const node_sptr& get_guard() const     {return guard_;}
-
-private:
-  node_sptr guard_;
-  node_sptr child_;
+  /**
+   * ガードノードを得る
+   */
+  const node_sptr& get_guard() const     
+  {
+    return get_lhs();
+  }
+    
+  /**
+   * 子ノードを設定する
+   */
+  void set_child(const node_sptr& child) 
+  {
+    set_rhs(child);
+  }
+    
+  /**
+   * 子ノードを得る
+   */
+  const node_sptr& get_child() const     
+  {
+    return get_rhs();
+  }
 };
 
 #define DEFINE_BINARY_OP_NODE(NAME)                         \
@@ -542,11 +599,14 @@ private:
       return BinaryNode::clone(n);                          \
     }                                                       \
                                                             \
-  virtual std::string to_string() const                     \
+  virtual std::ostream& dump(std::ostream& s) const         \
     {                                                       \
-      return std::string(#NAME) + "[" +                     \
-        lhs_->to_string() + "," +                           \
-        rhs_->to_string() + "]";                            \
+      return s << #NAME                                     \
+               << "["                                       \
+               << *lhs_                                     \
+               << ","                                       \
+               << *rhs_                                     \
+               << "]";                                      \
     }                                                       \
   };
 
@@ -645,10 +705,12 @@ DEFINE_BINARY_OP_NODE(Weaker);
       return UnaryNode::clone(n);                           \
     }                                                       \
                                                             \
-  virtual std::string to_string() const                     \
+  virtual std::ostream& dump(std::ostream& s) const         \
     {                                                       \
-      return std::string(#NAME) + "[" +                     \
-        child_->to_string() + "]";                          \
+      return s << #NAME                                     \
+               << "["                                       \
+               << *child_                                   \
+               << "]";                                      \
     }                                                       \
   };
 
@@ -702,9 +764,9 @@ public:
     return n;
   }
   
-  virtual std::string to_string() const 
+  virtual std::ostream& dump(std::ostream& s) const 
   {
-    return number_;
+    return s << number_;
   }
 
   void set_number(const std::string& number) 
@@ -745,9 +807,9 @@ public:
     return n;
   }
   
-  virtual std::string to_string() const 
+  virtual std::ostream& dump(std::ostream& s) const 
   {
-    return name_;
+    return s << name_;
   }
 
   void set_name(const std::string& name) 

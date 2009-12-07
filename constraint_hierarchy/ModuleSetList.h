@@ -42,7 +42,7 @@ public:
   /**
    * 集合の集合のパースツリーの内容出力
    */
-   std::string get_tree_dump() const;
+  std::ostream& dump_tree(std::ostream& s) const;
 
   /**
    * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす

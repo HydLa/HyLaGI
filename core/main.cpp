@@ -137,10 +137,13 @@ void hydla_main(int argc, char* argv[])
     create_module_set_container(pt));
   if(debug_mode) {
     std::cout << "#*** set of module sets which might be solution ***\n"
-              << msl->get_name() << "\n\n" << msl->get_tree_dump() << std::endl;
+              << msl->get_name() << "\n";
+      msl->dump_tree(std::cout) << std::endl;
+
   }  
   if(po.count("module-set-list")>0) {
-    std::cout << msl->get_name() << "\n\n" << msl->get_tree_dump() << std::endl;
+    std::cout << msl->get_name() << "\n";
+    msl->dump_tree(std::cout) << std::endl;
     return;
   }
   

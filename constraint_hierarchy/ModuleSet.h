@@ -45,7 +45,7 @@ public:
   /**
    * 集合のパースツリーの内容出力
    */
-   std::string get_tree_dump() const;
+  std::ostream& dump_tree(std::ostream& s) const;
 
   /**
    * このクラス同士の比較

@@ -263,7 +263,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
     std::cout << "#***** bagin point phase *****\n";
     std::cout << "#** module set **\n";
     std::cout << ms->get_name() << std::endl;
-    std::cout << ms->get_tree_dump() << std::endl;
+    ms->dump_tree(std::cout) << std::endl;
   }
 
   TellCollector tell_collector(ms);

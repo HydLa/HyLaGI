@@ -175,8 +175,10 @@ private:
   /**
    * ’è‹`‚ÌŠÈ–ñ‰»(“WŠJ)‚ð‚¨‚±‚È‚¤
    */
-  node_sptr apply_definition(difinition_type_t* def_type,
-    hydla::parse_tree::Caller* caller, hydla::parse_tree::Definition* definition);
+  node_sptr apply_definition(
+    difinition_type_t* def_type,
+    const boost::shared_ptr<hydla::parse_tree::Caller>& caller, 
+    hydla::parse_tree::Definition* definition);
 };
 
 } //namespace parser

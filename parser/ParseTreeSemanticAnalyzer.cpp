@@ -45,16 +45,17 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramDefinition> node)
   assert(0);
 }
 
-node_sptr ParseTreeSemanticAnalyzer::apply_definition(difinition_type_t* def_type,
-                                                Caller* caller, 
-                                                Definition* definition)
+node_sptr ParseTreeSemanticAnalyzer::apply_definition(
+  difinition_type_t* def_type,
+  const boost::shared_ptr<hydla::parse_tree::Caller>& caller, 
+  Definition* definition)
 {
   State& state = state_stack_.top();
   
   //循環参照のチェック
   if (state.referenced_definition_list.find(*def_type) != 
       state.referenced_definition_list.end()) {
-    throw CircularReference(caller->to_string());
+    throw CircularReference(caller);
   }
 
   State new_state(state);
@@ -102,12 +103,12 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
   boost::shared_ptr<ConstraintDefinition> cons_def(
     parse_tree_->get_constraint_difinition(def_type));
   if(!cons_def) {
-    throw UndefinedReference(node->to_string());
+    throw UndefinedReference(node);
   }
 
   // 定義の展開
   node->set_child(
-    apply_definition(&def_type, node.get(), cons_def.get()));
+    apply_definition(&def_type, node, cons_def.get()));
 }
 
 // プログラム呼び出し
@@ -128,13 +129,13 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
     if(prog_def) {
       defnode = prog_def.get();
     } else {
-      throw UndefinedReference(node->to_string());
+      throw UndefinedReference(node);
     }
   }
 
   // 定義の展開
   node->set_child(
-    apply_definition(&def_type, node.get(), defnode));
+    apply_definition(&def_type, node, defnode));
 }
 
 // 制約式
@@ -253,8 +254,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Divide> node)
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 {
   if(!state_stack_.top().in_constraint) {
-    throw InvalidConjunction(node->get_lhs()->to_string(), 
-                             node->get_rhs()->to_string());
+    throw InvalidConjunction(node->get_lhs(), 
+                             node->get_rhs());
   }
 
   dispatch_lhs(node);
@@ -264,8 +265,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
 {
   if(!state_stack_.top().in_guard) {
-    throw InvalidDisjunction(node->get_lhs()->to_string(), 
-                             node->get_rhs()->to_string());
+    throw InvalidDisjunction(node->get_lhs(), 
+                             node->get_rhs());
   }
 
   dispatch_lhs(node);
@@ -275,8 +276,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 {
   if(state_stack_.top().in_constraint) {
-    throw InvalidWeakComposition(node->get_lhs()->to_string(), 
-                                 node->get_rhs()->to_string());
+    throw InvalidWeakComposition(node->get_lhs(), 
+                                 node->get_rhs());
   }
 
   dispatch_lhs(node);
@@ -286,8 +287,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 {
   if(state_stack_.top().in_constraint) {
-    throw InvalidParallelComposition(node->get_lhs()->to_string(), 
-                                     node->get_rhs()->to_string());
+    throw InvalidParallelComposition(node->get_lhs(), 
+                                     node->get_rhs());
   }
 
   dispatch_lhs(node);
@@ -301,7 +302,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 
   // ガードの中にはない
   if(state.in_guard) {
-    throw InvalidAlways(node->get_child()->to_string());
+    throw InvalidAlways(node->get_child());
   }
 
   // 子ノードの探索

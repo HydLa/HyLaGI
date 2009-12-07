@@ -26,6 +26,11 @@ charset_guess:
 .PHONY : doc
 doc:
 	doxygen doc/doxygen.conf
+#latex‚ğo—Í‚·‚éê‡
+#	nkf -e --overwrite `find doc/latex -name "*.tex"`
+#	make -f doc/latex
+#	dvipdfmx doc/latex/refman.dvi
+#	cp doc/latex/refman.dvi doc/
 
 # remove documentation
 .PHONY : doc-clean

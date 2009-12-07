@@ -5,34 +5,50 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <boost/lexical_cast.hpp>
+
+#include "Node.h"
+
 namespace hydla {
 namespace parse_error {
 
 class ParseError : public std::runtime_error {
 public:
-  ParseError(const std::string& msg) : 
-    std::runtime_error(init(msg, -1))
+  ParseError(const std::string& msg, 
+             int line = -1) : 
+    std::runtime_error(init("", msg, line))
   {}
 
-  ParseError(const std::string& msg, int line) : 
-    std::runtime_error(init(msg, line))
+  ParseError(const hydla::parse_tree::node_sptr& node, 
+             int line = -1) : 
+    std::runtime_error(
+      init("", 
+           boost::lexical_cast<std::string>(node), 
+           line))
   {}
-
+  
   ParseError(const std::string& tag, 
-             const std::string& msg) : 
-    std::runtime_error(init(tag + " : " + msg, -1))
+             const hydla::parse_tree::node_sptr& node, 
+             int line = -1) : 
+    std::runtime_error(
+      init(tag, 
+           boost::lexical_cast<std::string>(node), 
+           line))
   {}
 
   ParseError(const std::string& tag, 
              const std::string& msg, 
-             int line) : 
-    std::runtime_error(init(tag + " : " + msg, line))
+             int line = -1) : 
+    std::runtime_error(init(tag, msg, line))
   {}
 
 private:
-  std::string init(const std::string& msg, int line)
+  std::string init(const std::string& tag, 
+                   const std::string& msg, 
+                   int line)
   {
     std::stringstream s;
+    if(!tag.empty()) s << tag << " : ";
     s << msg;
     if(line>0) s << " : line - " << line;
     return s.str();
@@ -44,11 +60,7 @@ private:
  */
 class SyntaxError : public ParseError {
 public:
-  SyntaxError(const std::string& name) :
-      ParseError("syntax error", name)    
-  {}
-
-  SyntaxError(const std::string& name, int line) :
+  SyntaxError(const std::string& name, int line = -1) :
     ParseError("syntax error", name, line)    
   {}
 };
@@ -58,11 +70,8 @@ public:
  */
 class MultipleDefinition : public ParseError {
 public:
-  MultipleDefinition(const std::string& name) :
-      ParseError("multiple definition", name)    
-  {}
-
-  MultipleDefinition(const std::string& name, int line) :
+  MultipleDefinition(const std::string& name, 
+                     int line = -1) :
     ParseError("multiple definition", name, line)    
   {}
 };
@@ -72,12 +81,9 @@ public:
  */
 class UndefinedReference : public ParseError {
 public:
-  UndefinedReference(const std::string& name) :
-      ParseError("undefined reference", name)    
-  {}
-
-  UndefinedReference(const std::string& name, int line) :
-    ParseError("undefined reference", name, line)    
+  UndefinedReference(const hydla::parse_tree::node_sptr& node, 
+                     int line = -1) :
+    ParseError("undefined reference", node, line)    
   {}
 };
 
@@ -86,129 +92,92 @@ public:
  */
 class CircularReference : public ParseError {
 public:
-  CircularReference(const std::string& name) :
-    ParseError("circular reference", name)
-  {}
-
-  CircularReference(const std::string& name, int line) :
-    ParseError("circular reference", name, line)
+  CircularReference(const hydla::parse_tree::node_sptr& node, 
+                    int line = -1) :
+    ParseError("circular reference", node, line)
   {}
 };
+
+class BinNodeError : public ParseError {
+public:
+  BinNodeError(const std::string& tag,
+               const hydla::parse_tree::node_sptr& lhs,
+               const hydla::parse_tree::node_sptr& rhs, 
+               int line = -1) :
+    ParseError(tag,
+               msg(lhs, rhs), 
+               line)    
+  {}
+
+private:
+  std::string msg(const hydla::parse_tree::node_sptr& lhs,
+                  const hydla::parse_tree::node_sptr& rhs)
+  {
+    std::stringstream s;
+    s << "between '" 
+      << lhs
+      <<"' and '" 
+      << rhs 
+      << "'";
+    return s.str();
+  }
+};
+
 
 /**
  * 制約でないもの（プログラム等）の連言をとろうとした際に発生する例外クラス
  */
-class InvalidConjunction : public ParseError {
+class InvalidConjunction : public BinNodeError {
 public:
-  InvalidConjunction(const std::string& lhs,
-                     const std::string& rhs) :
-    ParseError(tag(), msg(lhs, rhs))    
+  InvalidConjunction(const hydla::parse_tree::node_sptr& lhs,
+                     const hydla::parse_tree::node_sptr& rhs, 
+                     int line = -1) :
+    BinNodeError("cannot conbine using conjunction", 
+                 lhs, rhs, 
+                 line)    
   {}
-
-  InvalidConjunction(const std::string& lhs,
-                     const std::string& rhs, 
-                     int line) :
-    ParseError(tag(), msg(lhs, rhs), line)    
-  {}
-
-private:
-  std::string tag()
-  {
-    return "cannot conbine using conjunction";
-  }
-
-  std::string msg(const std::string& lhs,
-    const std::string& rhs)
-  {
-    return "between '" + lhs + "' and '" + rhs + "'";
-  }
 };
 
 /**
  * ガード条件でない制約同士を選言で結合しようとした際に発生する例外クラス
  */
-class InvalidDisjunction : public ParseError {
+class InvalidDisjunction : public BinNodeError {
 public:
-  InvalidDisjunction(const std::string& lhs,
-                     const std::string& rhs) :
-    ParseError(tag(), msg(lhs, rhs))    
+  InvalidDisjunction(const hydla::parse_tree::node_sptr& lhs,
+                     const hydla::parse_tree::node_sptr& rhs, 
+                     int line = -1) :
+    BinNodeError("cannot conbine using disjunction", 
+                 lhs, rhs, 
+                 line)    
   {}
-
-  InvalidDisjunction(const std::string& lhs,
-                     const std::string& rhs, 
-                     int line) :
-    ParseError(tag(), msg(lhs, rhs), line)    
-  {}
-
-private:
-  std::string tag()
-  {
-    return "cannot conbine using disjunction";
-  }
-
-  std::string msg(const std::string& lhs,
-    const std::string& rhs)
-  {
-    return "between '" + lhs + "' and '" + rhs + "'";
-  }
 };
 
 /**
  * 制約内で並列合成をおこなおうとした際に発生する例外クラス
  */
-class InvalidParallelComposition : public ParseError {
+class InvalidParallelComposition : public BinNodeError {
 public:
-  InvalidParallelComposition(const std::string& lhs,
-                           const std::string& rhs) :
-    ParseError(tag(), msg(lhs, rhs))    
+  InvalidParallelComposition(const hydla::parse_tree::node_sptr& lhs,
+                             const hydla::parse_tree::node_sptr& rhs, 
+                             int line = -1) :
+    BinNodeError("invalid parallel composition",
+                 lhs, rhs, 
+                 line)    
   {}
-
-  InvalidParallelComposition(const std::string& lhs,
-                           const std::string& rhs, 
-                           int line) :
-    ParseError(tag(), msg(lhs, rhs), line)    
-  {}
-
-private:
-  std::string tag()
-  {
-    return "invalid parallel composition";
-  }
-
-  std::string msg(const std::string& lhs,
-                  const std::string& rhs)
-  {
-    return "between '" + lhs + "' and '" + rhs + "'";
-  }
 };
 
 /**
  * 制約内で弱合成をおこなおうとした際に発生する例外クラス
  */
-class InvalidWeakComposition : public ParseError {
+class InvalidWeakComposition : public BinNodeError {
 public:
-  InvalidWeakComposition(const std::string& lhs,
-                           const std::string& rhs) :
-    ParseError(tag(), msg(lhs, rhs))    
+  InvalidWeakComposition(const hydla::parse_tree::node_sptr& lhs,
+                         const hydla::parse_tree::node_sptr& rhs, 
+                         int line = -1) :
+    BinNodeError("invalid weak composition",
+                 lhs, rhs, 
+                 line)    
   {}
-
-  InvalidWeakComposition(const std::string& lhs,
-                           const std::string& rhs, 
-                           int line) :
-    ParseError(tag(), msg(lhs, rhs), line)    
-  {}
-
-private:
-  std::string tag()
-  {
-    return "invalid weak composition";
-  }
-
-  std::string msg(const std::string& lhs,
-                  const std::string& rhs)
-  {
-    return "between '" + lhs + "' and '" + rhs + "'";
-  }
 };
 
 /**
@@ -216,25 +185,12 @@ private:
  */
 class InvalidAlways : public ParseError {
 public:
-  InvalidAlways(const std::string& child) :
-    ParseError(tag(), msg(child))    
+  InvalidAlways(const hydla::parse_tree::node_sptr& child, 
+                int line = -1) :
+    ParseError("invalid always. do not use always operator in guard constraints", 
+                 child, 
+                 line)    
   {}
-
-  InvalidAlways(const std::string& child, 
-                int line) :
-    ParseError(tag(), msg(child), line)    
-  {}
-
-private:
-  std::string tag()
-  {
-    return "invalid always. do not use always operator in guard constraints";
-  }
-
-  std::string msg(const std::string& child)
-  {
-    return child;
-  }
 };
 
 } //namespace parse_error

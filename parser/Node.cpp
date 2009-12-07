@@ -14,54 +14,48 @@ using namespace hydla::parse_error;
 namespace hydla { 
 namespace parse_tree {
   
-std::ostream& operator<< (std::ostream& s, Node& node)
+std::ostream& operator<<(std::ostream& s, const Node& node)
 {
-  s << node.to_string();
-  return s;
+  return node.dump(s);
 }
 
-std::string Caller::to_string() const
+std::ostream& Caller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  std::string s;
-  s += "call<";
-  s += name_;
-  s += "(";
+  s << "call<" 
+    << name_
+    << "(";
 
-  if(it!=end) s += (*it++)->to_string();
+  if(it!=end) s << (it++)->get();
   while(it!=end) {
-    s += ",";
-    s += (*it++)->to_string();
+    s << "," << (it++)->get();
   }
 
-  s += ")>";
+  s << ")>";
   if(child_) {
-    s +=  "[";
-    s += child_->to_string();
-    s += "]";
+    s <<  "["
+      << *child_
+      << "]";
   }
+
   return s;
 }
 
-std::string Definition::to_string() const
+std::ostream& Definition::dump(std::ostream& s) const 
 {
   bound_variables_t::const_iterator it  = bound_variables_.begin();
   bound_variables_t::const_iterator end = bound_variables_.end();
 
-  std::string s;
-  s += name_;
-  s += "(";
+  s << name_ << "(";
 
-  if(it!=end) s += *(it++);
+  if(it!=end) s << *(it++);
   while(it!=end) {
-    s += ",";
-    s += *(it++);
+    s << "," << *(it++);
   }
+  s << "):=" << *child_;
 
-  s += "):=";
-  s += child_->to_string();
   return s;
 }
 

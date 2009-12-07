@@ -10,7 +10,8 @@ using namespace hydla::parse_error;
 namespace hydla { 
 namespace parse_tree {
 
-ParseTree::ParseTree()
+ParseTree::ParseTree() :
+  max_node_id_(0)
 {}
 
 ParseTree::~ParseTree()
@@ -34,52 +35,53 @@ ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
 
 namespace {
 
-struct AppendDefinitionString {
-  AppendDefinitionString(string& str) : 
+struct DefinitionDumper {
+  DefinitionDumper(std::ostream& str) : 
     s(str),
     first(true)
   {}
 
 
   template <typename T>
-  void operator()(T c) {
+  void operator()(const T& c) {
     if(first) {
-      s += c.second->to_string();
+      s << *c.second;
       first = false;
     } else {
-      s += ",\n" + c.second->to_string();
+      s << ",\n" << *c.second;
     }
   }
 
-  string& s;
+  std::ostream& s;
   bool first;
 };
 }
 
-std::string ParseTree::to_string() const
+std::ostream& ParseTree::dump(std::ostream& s) const 
 {
-  string str;
-  str += "parse_tree[\n";
-  str += "constraint_definition[\n";
-  for_each(cons_def_map_.begin(), cons_def_map_.end(), 
-           AppendDefinitionString(str));
-  str += "],\n";
+  s << "parse_tree[\n"
+    << "constraint_definition[\n";
+  for_each(cons_def_map_.begin(), 
+           cons_def_map_.end(), 
+           DefinitionDumper(s));
+  s << "],\n";
 
-  str += "program_definition[\n";
-  for_each(prog_def_map_.begin(), prog_def_map_.end(), 
-           AppendDefinitionString(str));
-  str += "],\n";
+  s << "program_definition[\n";
+  for_each(prog_def_map_.begin(), 
+           prog_def_map_.end(), 
+           DefinitionDumper(s));
+  s << "],\n";
 
-  str += "node_tree[\n";
-  if(node_tree_) str += node_tree_->to_string();
-  str += "]]\n";
+  s << "node_tree[\n";
+  if(node_tree_) s << *node_tree_;
+  s << "]]\n";
 
-  return str;
+  return s;
 }
 
 std::ostream& operator<<(std::ostream& s, const ParseTree& pt)
 {
-  return s << pt.to_string();
+  return pt.dump(s);
 }
 
 } //namespace parse_tree

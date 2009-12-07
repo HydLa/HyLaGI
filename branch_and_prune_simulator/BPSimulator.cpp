@@ -61,7 +61,7 @@ namespace bp_simulator {
       std::cout << "#***** begin point phase *****\n";
       std::cout << "#** module set **\n";
       std::cout << ms->get_name() << std::endl;
-      std::cout << ms->get_tree_dump() << std::endl;
+      ms->dump_tree(std::cout) << std::endl;
     }
 
     TellCollector tell_collector(ms);
