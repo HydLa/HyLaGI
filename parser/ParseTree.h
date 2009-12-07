@@ -35,8 +35,8 @@ public:
     program_def_map_t;
   
   // 変数表
-  typedef std::map<std::string, int>              
-    variable_map_t;
+  typedef std::map<std::string, int>     variable_map_t;
+  typedef variable_map_t::const_iterator variable_map_const_iterator;
 
 
   ParseTree();
@@ -59,6 +59,59 @@ public:
   }
 
   /**
+   * 変数を登録する
+   * すでに登録済みの同一変数の微分回数よりも
+   * 大きかったら変数のリストに登録される
+   *
+   * @param name 変数名
+   * @param differential_count 微分回数
+   *
+   * @return 登録されたかどうか
+   */
+  bool register_variable(const std::string& name, int differential_count)
+  {
+    variable_map_t::iterator it = variable_map_.find(name);
+    if(it == variable_map_.end() ||
+      it->second < differential_count) 
+    {
+      variable_map_[name] = differential_count;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 指定した変数の最大微分回数を求める
+   */
+  int get_differential_count(const std::string& name) const
+  {
+    int ret = -1;
+
+    variable_map_t::const_iterator it = variable_map_.find(name);
+    if(it != variable_map_.end()) {
+      ret =  it->second;
+    }
+
+    return ret;
+  }
+
+  /**
+   * 変数表の先頭の要素を返す
+   */
+  variable_map_const_iterator variable_map_begin() const
+  {
+    return variable_map_.begin();
+  }
+
+  /**
+   * 変数表の最後の次の要素を返す
+   */
+  variable_map_const_iterator variable_map_end() const
+  {
+    return variable_map_.end();
+  }
+
+  /**
    * パースされたノードツリーの設定
    */
   void set_tree(const node_sptr& tree) 
@@ -78,15 +131,11 @@ public:
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
   }
 
-  const variable_map_t& get_variable_map() const 
-  {
-    return variable_map_;
-  }
-
   /**
    * 制約定義ノードを返す
    *
-   * @return 与えられた定義に対するノード．存在しない定義の場合は空クラスを返す
+   * @return 与えられた定義に対するノード．
+   *          存在しない定義の場合は空クラスを返す
    */
   const boost::shared_ptr<ConstraintDefinition> 
     get_constraint_difinition(const difinition_type_t& def) const
@@ -102,7 +151,8 @@ public:
   /**
    * プログラム定義ノードを返す
    *
-   * @return 与えられた定義に対するノード．存在しない定義の場合は空クラスを返す
+   * @return 与えられた定義に対するノード．
+   *          存在しない定義の場合は空クラスを返す
    */
   const boost::shared_ptr<ProgramDefinition> 
     get_program_difinition(const difinition_type_t& def) const

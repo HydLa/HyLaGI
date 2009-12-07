@@ -27,13 +27,21 @@ charset_guess:
 doc:
 	doxygen doc/doxygen.conf
 
+# remove documentation
+.PHONY : doc-clean
+doc-clean:
+	rm -fvr doc/html
+
 # remove all temp files
 .PHONY : clean
 clean:
-	rm -fvr doc/html
 	@for i in $(projects); do \
 	   (cd $$i && $(MAKE) clean); \
 	done
+
+.PHONY : distclean
+distclean: doc-clean clean
+
 
 # 
 .PHONY : $(projects)

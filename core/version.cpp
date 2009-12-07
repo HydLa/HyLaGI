@@ -10,7 +10,7 @@ namespace hydla {
   }
 
   std::string Version::version()  {
-    return "0.3.0";
+    return "0.4.0";
   }
   
   std::string Version::revision() {

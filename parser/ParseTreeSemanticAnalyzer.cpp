@@ -133,9 +133,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
   }
 
   // ’è‹`‚Ì“WŠJ
-  node->set_child(apply_definition(&def_type, 
-                                   node.get(), 
-                                   defnode));
+  node->set_child(
+    apply_definition(&def_type, node.get(), defnode));
 }
 
 // §–ñ®
@@ -347,16 +346,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
     new_child_ = (*it).second;
   } 
   else {
-    // ©g‚ªÀˆø”‚Å‚ ‚Á‚½ê‡A
-    // ©g‚Ì‚·‚Å‚É“o˜^Ï‚İ‚Ì”÷•ª‰ñ”‚æ‚è‚à
-    // ‘å‚«‚©‚Á‚½‚ç•Ï”‚ÌƒŠƒXƒg‚É“o˜^‚·‚é
-    variable_map_t::iterator it = variable_map_.find(node->get_name());
-    if(it == variable_map_.end() ||
-       it->second < state.differential_count) 
-    {
-      variable_map_.insert(make_pair(node->get_name(), 
-                                     state.differential_count));
-    }
+    // ©g‚ªÀˆø”‚Å‚ ‚Á‚½ê‡
+    parse_tree_->register_variable(node->get_name(), 
+                                   state.differential_count);
   }
 }
 
