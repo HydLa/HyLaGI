@@ -1,0 +1,30 @@
+// tworooms.hydla
+OFFOFFA(tempA) <=> [](ta-=tempA /\ s-=1 => s=0 /\ timer=0).
+OFFONA(tempA,tempB)  <=> [](ta-=tempA /\ (tb-<tempB | tb-<=tempB) /\
+s-=1 => s=2 /\ timer=0).
+
+OFFOFFB(tempB) <=> [](tb-=tempB /\ s-=2 => s=0 /\ timer=0).
+ONOFFB(tempB,tempA)  <=> [](tb-=tempB /\ (ta-<tempA | ta-<=tempA) /\
+s-=2 => s=1 /\ timer=0).
+
+ONOFFC(tempA)  <=> [](ta-=tempA /\ s-=0 => s=1 /\ timer=0).
+OFFONC(tempB)  <=> [](tb-=tempB /\ s-=0 => s=2 /\ timer=0).
+
+CC <=> [](ta'=-1/2 /\ tb'=-1).
+HC <=> [](s-=1 /\ (timer->1 | timer->=1) => ta'=3 /\ tb'=-1).
+CH <=> [](s-=2 /\ (timer->1 | timer->=1) => ta'= -1/2 /\ tb'=4).
+
+ROOM(20,20),THERMO(0,10).
+ROOM(initTempA,initTempB){
+        ta=initTempA,
+        tb=initTempB,
+        CC<<(HC/\CH)
+}.
+THERMO(initSwitch,initTimer){
+        s=initSwitch,
+        timer=initTimer,
+        OFFOFFA(22)<<OFFONA(22,18),
+        OFFOFFB(22)<<ONOFFB(22,18),
+        ONOFFC(18),OFFONC(18),
+        [](timer'=1)
+}.
