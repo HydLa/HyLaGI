@@ -169,6 +169,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DefaultVariable.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PhaseState.h"
 				>
 			</File>

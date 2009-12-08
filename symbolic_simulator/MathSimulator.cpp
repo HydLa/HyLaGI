@@ -114,6 +114,7 @@ void MathSimulator::init(Opts& opts)
 
 bool MathSimulator::simulate(
   boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
+  boost::shared_ptr<hydla::parse_tree::ParseTree> pt,
   Opts& opts)
 {
   debug_mode_ = opts.debug_mode;
@@ -136,11 +137,8 @@ bool MathSimulator::simulate(
   ml_.MLPutString(interlanguage_sender.get_interlanguage().c_str());
   */
 
-  phase_state_sptr init_state(new phase_state_t);
-  init_state->phase = phase_state_t::PointPhase;
-  push_phase_state(init_state);
 
-  simulator_t::simulate(msc);
+  simulator_t::simulate(msc, pt);
 
   ml_.MLPutFunction("Exit", 0);
   ml_.MLEndPacket();

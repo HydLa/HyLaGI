@@ -1,7 +1,9 @@
 #ifndef _INCLUDED_HYDLA_SIMULATOR_VARIABLE_MAP_H_
 #define _INCLUDED_HYDLA_SIMULATOR_VARIABLE_MAP_H_
+
 #include <map>
-#include <iostream>
+#include <ostream>
+#include <string>
 
 namespace hydla {
 namespace simulator {
@@ -10,25 +12,74 @@ namespace simulator {
  * 変数表
  */
 template<typename VariableType, typename ValueType>
-struct VariableMap {
+class VariableMap {
 public:
+  typedef VariableType variable_t;
+  typedef ValueType    value_t;
   typedef typename std::map<VariableType, ValueType> variable_list_t;
-  typedef typename variable_list_t::const_iterator variable_list_const_iterator_t;
+  typedef typename variable_list_t::iterator         iterator;
+  typedef typename variable_list_t::const_iterator   const_iterator;
 
-  variable_list_t variables;
+  void set_variable(const variable_t& var, const value_t& val)
+  {
+    iterator it = variables_.find(var);
+    if(it != variables_.end()) {
+      it->second = val;
+    }
+    else {
+      variables_.insert(it, val);
+    }
+  }
+
+  value_t& get_variable(const variable_t& var)
+  {
+    iterator it = variables_.find(var);
+    if(it != variables_.end()) {
+      return it->second;
+    }
+    return value_t();
+  }
+
+  iterator begin()       
+  {
+    return variables_.begin();
+  }
+
+  const_iterator begin() const 
+  {
+    return variables_.begin();
+  }
+
+  iterator end()       
+  {
+    return variables_.end();
+  }
+
+  const_iterator end() const 
+  {
+    return variables_.end();
+  }
+
+  size_t size() const
+  {
+    return variables_.size();
+  }
 
   /**
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const
   {
-    variable_list_const_iterator_t it  = variables.begin();
-    variable_list_const_iterator_t end = variables.end();
-    while(it!=end) {
-      s << it->first.dump(s) << " : " << it->second.dump(s) << "\n";
+    const_iterator it  = variables_.begin();
+    const_iterator end = variables_.end();
+    for(; it!=end; ++it) {
+      s << it->first << " <=> " << it->second << "\n";
     }
     return s;
   }
+
+private:  
+  variable_list_t variables_;
 };
 
 } // namespace simulator

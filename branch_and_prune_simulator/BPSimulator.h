@@ -47,8 +47,7 @@ typedef struct BPTime_
 {
 } BPTime;
 
-typedef simulator::VariableMap<BPVariable, BPValue> variable_map_t;
-typedef simulator::PhaseState<variable_map_t, BPTime> phase_state_t;
+typedef simulator::PhaseState<BPVariable, BPValue, BPTime> phase_state_t;
 typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
 typedef simulator::Simulator<phase_state_t> simulator_t;
 

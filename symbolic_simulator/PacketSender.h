@@ -12,9 +12,6 @@
 namespace hydla {
 namespace symbolic_simulator {
 
-typedef variable_map_t::variable_list_t vlt;
-typedef vlt::const_iterator vltcit;
-
 class PacketSender : public parse_tree::TreeVisitor
 {
 public:

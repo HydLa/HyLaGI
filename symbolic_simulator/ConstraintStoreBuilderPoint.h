@@ -1,5 +1,6 @@
 #ifndef _INCLUDED_HYDLA_CONSTRAINT_STORE_BUILDER_POINT_H_
 #define _INCLUDED_HYDLA_CONSTRAINT_STORE_BUILDER_POINT_H_
+
 #include "VariableMap.h"
 #include "SymbolicVariable.h"
 #include "SymbolicValue.h"
@@ -11,7 +12,6 @@ namespace symbolic_simulator {
 /**
  * êßñÒÉXÉgÉA
  */
-
 typedef variable_map_t ConstraintStore;
 //typedef variable_map_t::variable_list_t ConstraintStore;
 

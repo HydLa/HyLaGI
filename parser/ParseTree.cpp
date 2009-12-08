@@ -1,5 +1,7 @@
 #include "ParseTree.h"
 
+#include <ostream>
+#include <iterator>
 #include <algorithm>
 #include <boost/bind.hpp>
 
@@ -34,47 +36,54 @@ ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
 }
 
 namespace {
+  template<typename T>
+  void definition_dumper(std::ostream& s, const T& m)
+  {
+    typedef typename T::const_iterator citer_t;
+    citer_t it  = m.begin();
+    citer_t end = m.end();
 
-struct DefinitionDumper {
-  DefinitionDumper(std::ostream& str) : 
-    s(str),
-    first(true)
-  {}
-
-
-  template <typename T>
-  void operator()(const T& c) {
-    if(first) {
-      s << *c.second;
-      first = false;
-    } else {
-      s << ",\n" << *c.second;
+    if(it!=end) s << "  " << *(it++)->second;
+    for(; it!=end; ++it) {
+      s << ",\n  " << *it->second;
     }
   }
 
-  std::ostream& s;
-  bool first;
-};
+  template<typename T>
+  void variable_dumper(std::ostream& s, const T& m)
+  {
+    typedef typename T::const_iterator citer_t;
+    citer_t it  = m.begin();
+    citer_t end = m.end();
+
+    if(it!=end) {
+      s << "  " << it->first << ":" << it->second;
+      ++it;
+    }
+    for(; it!=end; ++it) {
+      s << ",\n  " << it->first << ":" << it->second;
+    }
+  }
 }
 
 std::ostream& ParseTree::dump(std::ostream& s) const 
 {
   s << "parse_tree[\n"
-    << "constraint_definition[\n";
-  for_each(cons_def_map_.begin(), 
-           cons_def_map_.end(), 
-           DefinitionDumper(s));
+    << "constraint_definition[\n";  
+  definition_dumper(s, cons_def_map_);
   s << "],\n";
 
   s << "program_definition[\n";
-  for_each(prog_def_map_.begin(), 
-           prog_def_map_.end(), 
-           DefinitionDumper(s));
+  definition_dumper(s, prog_def_map_);
   s << "],\n";
 
   s << "node_tree[\n";
-  if(node_tree_) s << *node_tree_;
-  s << "]]\n";
+  if(node_tree_) s << "  " << *node_tree_;
+  s << "],\n";
+
+  s << "variables[\n";
+  variable_dumper(s, variable_map_);
+  s << "]]";
 
   return s;
 }

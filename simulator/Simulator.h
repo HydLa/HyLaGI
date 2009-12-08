@@ -13,6 +13,7 @@
 //#include <boost/function.hpp>
 
 #include "Node.h"
+#include "ParseTree.h"
 #include "ModuleSetContainer.h"
 
 #include "VariableMap.h"
@@ -25,7 +26,12 @@ template<typename PhaseStateType>
 class Simulator
 {
 public:
-  typedef PhaseStateType phase_state_t;
+  typedef PhaseStateType                         phase_state_t; 
+  typedef typename phase_state_t::variable_map_t variable_map_t;
+  typedef typename variable_map_t::variable_t    variable_t;
+  typedef typename variable_map_t::value_t       value_t;
+
+  typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
   typedef typename boost::shared_ptr<PhaseStateType> phase_state_sptr; 
 
   Simulator()
@@ -37,8 +43,11 @@ public:
   /**
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
-  void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc)
+  void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
+                parse_tree_sptr pt)
   {
+    init_state_queue(pt);
+
     while(!state_queue_.empty()) {
       phase_state_sptr state(pop_phase_state());
 
@@ -78,6 +87,13 @@ public:
     phase_state_sptr state(state_queue_.front());
     state_queue_.pop();
     return state;
+  }
+
+  virtual void init_state_queue(const parse_tree_sptr& pt)
+  {
+    phase_state_sptr init_state(new phase_state_t);
+    init_state->phase = phase_state_t::PointPhase;
+    push_phase_state(init_state);
   }
 
   /**

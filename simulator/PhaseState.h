@@ -3,16 +3,22 @@
 
 #include <set>
 
+#include "VariableMap.h"
+
 namespace hydla {
 namespace simulator {
 
 /**
  * Šeˆ—‚Ìó‘Ô
  */
-template<typename VariableMapType, 
+template<typename VariableType, 
+         typename ValueType, 
          typename TimeType>
 struct PhaseState {
-  typedef VariableMapType variable_map_t;
+  typedef VariableType variable_t;
+  typedef ValueType    value_t;
+  typedef TimeType     time_t;
+  typedef typename VariableMap<variable_t, value_t> variable_map_t;
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> > expanded_always_t;
 
   /**

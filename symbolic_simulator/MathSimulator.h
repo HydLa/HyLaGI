@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "ParseTree.h"
+
 #include "mathlink_helper.h"
 #include "Simulator.h"
 
@@ -13,8 +15,8 @@
 namespace hydla {
 namespace symbolic_simulator {
 
-typedef simulator::VariableMap<SymbolicVariable, SymbolicValue> variable_map_t;
-typedef simulator::PhaseState<variable_map_t, SymbolicTime> phase_state_t;
+typedef hydla::simulator::VariableMap<SymbolicVariable, SymbolicValue> variable_map_t;
+typedef simulator::PhaseState<SymbolicVariable, SymbolicValue, SymbolicTime> phase_state_t;
 typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
 typedef simulator::Simulator<phase_state_t> simulator_t;
 
@@ -40,6 +42,7 @@ public:
   virtual ~MathSimulator();
 
   bool simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
+                boost::shared_ptr<hydla::parse_tree::ParseTree> pt,
                 Opts& opts);
 
 //  virtual bool test_module_set(hydla::ch::module_set_sptr ms);

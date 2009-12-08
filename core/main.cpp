@@ -42,7 +42,8 @@ using namespace boost;
 // prototype declaration
 int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
-void symbolic_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc);
+void symbolic_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
+                       boost::shared_ptr<ParseTree> pt);
 void branch_and_prune_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc);
 boost::shared_ptr<ParseTree> build_parse_tree();
 
@@ -150,7 +151,7 @@ void hydla_main(int argc, char* argv[])
   // シミュレーション開始
   std::string method(po.get<std::string>("method"));
   if(method == "s" || method == "SymbolicSimulator") {
-    symbolic_simulate(msl);
+    symbolic_simulate(msl, pt);
   } 
   else if(method == "b" || method == "BandPSimulator") {
     branch_and_prune_simulate(msl);

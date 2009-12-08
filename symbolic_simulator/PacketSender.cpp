@@ -347,8 +347,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
 {
   std::cout << "Constraint store: ";
   // vlt  cs_map = constraint_store.variables;
-  variable_map_t::variable_list_t cs_map = constraint_store.variables;
-  int cs_size = cs_map.size();
+  int cs_size = constraint_store.size();
   if(cs_size < 1)
   {
     ml_.MLPutFunction("List", 0);
@@ -357,8 +356,9 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
   }
   ml_.MLPutFunction("List", cs_size);
 
-  vltcit cs_it = cs_map.begin();
-  while((cs_it) != cs_map.end())
+  variable_map_t::iterator cs_it = constraint_store.begin();
+  variable_map_t::iterator cs_end = constraint_store.end();
+  for(; cs_it!=cs_end; ++cs_it)
   {
     SymbolicVariable variable = (*cs_it).first;
     SymbolicValue value = (*cs_it).second;
@@ -403,8 +403,6 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
     {
       ml_.MLPutInteger(value.numerator);
     }
-
-    cs_it++;
   }
 }
 

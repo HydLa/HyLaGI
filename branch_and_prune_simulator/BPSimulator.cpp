@@ -28,7 +28,7 @@ namespace bp_simulator {
   {
     this->debug_mode_ = opts.debug_mode;
     this->max_time_   = opts.max_time;
-
+/*
     // 初期stateをスタックに積む
     phase_state_sptr init_state_sptr(new phase_state_t);
     init_state_sptr->phase = phase_state_t::PointPhase;
@@ -36,7 +36,7 @@ namespace bp_simulator {
 
     // 自動的に時刻0のBPSimulator::point_phaseがはじまる
     simulator_t::simulate(msc);
-
+*/
     return true;
   }
 
