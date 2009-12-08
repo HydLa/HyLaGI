@@ -1,7 +1,9 @@
 #ifndef _INCLUDED_HYDLA_BP_SIMULATOR_H_
 #define _INCLUDED_HYDLA_BP_SIMULATOR_H_
 
+
 #include "Simulator.h"
+#include "DefaultVariable.h"
 
 namespace hydla {
 namespace bp_simulator {
@@ -9,12 +11,14 @@ namespace bp_simulator {
 /**
  * 変数名・属性
  */
-typedef struct BPVaribale_ {
+  /*
+struct BPVariable {
   std::string name;
+  unsigned int derivative_count;
+
   bool previous;
   bool initial;
 
-  /* ダンプ */
   std::ostream& dump(std::ostream& s) const
   {
     s << name;
@@ -22,12 +26,21 @@ typedef struct BPVaribale_ {
     if(initial) s << "_0";
     return s;
   }
-} BPVariable;
+
+   
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  const BPVariable & v)
+  {
+    return v.dump(s);
+  }
+};
+*/
+typedef simulator::DefaultVariable BPVariable;
 
 /**
  * 変数値
  */
-typedef struct BPValue_
+struct BPValue
 {
   // rp_interval?
 
@@ -37,15 +50,21 @@ typedef struct BPValue_
     s << "value";
     return s;
   }
-} BPValue;
+    
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  const BPValue & v)
+  {
+    return v.dump(s);
+  }
+};
 
 /**
  * 時刻
  * 時刻と経過時間？
  */
-typedef struct BPTime_
+struct BPTime
 {
-} BPTime;
+};
 
 typedef simulator::PhaseState<BPVariable, BPValue, BPTime> phase_state_t;
 typedef boost::shared_ptr<phase_state_t> phase_state_sptr;

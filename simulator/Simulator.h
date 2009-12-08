@@ -93,6 +93,23 @@ public:
   {
     phase_state_sptr init_state(new phase_state_t);
     init_state->phase = phase_state_t::PointPhase;
+
+    // •Ï”•\ì¬
+    typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
+    vmci it  = pt->variable_map_begin();
+    vmci end = pt->variable_map_end();
+    for(; it != end; ++it)
+    {
+      for(int d=0; d<=it->second; ++d) {
+        variable_t v;
+        v.name             = it->first;
+        v.derivative_count = d;
+        init_state->variable_map.set_variable(v, value_t());
+      }
+    }
+
+    std::cout << init_state->variable_map;
+
     push_phase_state(init_state);
   }
 

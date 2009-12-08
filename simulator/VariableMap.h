@@ -16,6 +16,7 @@ class VariableMap {
 public:
   typedef VariableType variable_t;
   typedef ValueType    value_t;
+  typedef VariableMap<VariableType, ValueType> variable_map_t;
   typedef typename std::map<VariableType, ValueType> variable_list_t;
   typedef typename variable_list_t::iterator         iterator;
   typedef typename variable_list_t::const_iterator   const_iterator;
@@ -27,7 +28,7 @@ public:
       it->second = val;
     }
     else {
-      variables_.insert(it, val);
+      variables_.insert(std::make_pair(var, val));
     }
   }
 
@@ -81,6 +82,14 @@ public:
 private:  
   variable_list_t variables_;
 };
+
+
+template<typename VariableType, typename ValueType>
+std::ostream& operator<<(std::ostream& s, 
+                         const VariableMap<VariableType, ValueType> & v)
+{
+  return v.dump(s);
+}
 
 } // namespace simulator
 } // namespace hydla 

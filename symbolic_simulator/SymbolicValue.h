@@ -6,7 +6,7 @@
 namespace hydla {
 namespace symbolic_simulator {
 
-typedef struct SymbolicValue_ {
+struct SymbolicValue {
   bool rational; // •ª”‚ÌŒ`‚©‚Ç‚¤‚©
   int numerator; // •ªq
   int denominator; // •ª•ê
@@ -20,7 +20,13 @@ typedef struct SymbolicValue_ {
     else s << numerator;
     return s;
   }
-} SymbolicValue;
+
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  const SymbolicValue & v)
+  {
+    return v.dump(s);
+  }
+};
 
 } //namespace symbolic_simulator
 } // namespace hydla

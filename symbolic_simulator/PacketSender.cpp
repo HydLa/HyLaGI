@@ -365,7 +365,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
     ml_.MLPutFunction("Equal", 2);
 
     // •Ï”–¼
-    if(variable.previous == true)
+    //if(variable.previous == true)
     {
       ml_.MLPutFunction("prev", 1);
       std::cout << "prev[";
@@ -386,7 +386,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
     {
       std::cout << "]";
     }
-    if(variable.previous == true)
+    //if(variable.previous == true)
     {
       std::cout << "]";
     }

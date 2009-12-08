@@ -124,7 +124,7 @@ pc.check();
         std::cout << "Derivative[" << n << "][" << symname << "]";
         break;
       case MLTKSYM: // prev
-        symbolic_variable.previous = true;
+//        symbolic_variable.previous = true;
         //std::cout << "prev[";
         goto A; // prev‚Ì’†g‚ð’²‚×‚éi’Êí•Ï”‚Ìê‡‚ÆDerivative‚Â‚«‚Ìê‡‚Æ‚ª‚ ‚éj
         break;

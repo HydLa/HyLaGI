@@ -6,29 +6,32 @@
 namespace hydla {
 namespace symbolic_simulator {
 
-struct SymbolicVariable //: public DefaultVariable
-{
-  std::string  name;
-  unsigned int derivative_count;
-  bool previous;
+//struct SymbolicVariable //: public DefaultVariable
+//{
+//  std::string  name;
+//  unsigned int derivative_count;
+//  bool previous;
+//
+//  /**
+//   * 構造体の値をダンプする
+//   */
+//  std::ostream& dump(std::ostream& s) const
+//  {
+//    s << name;
+//    for(size_t i=0; i<derivative_count; i++) s << "'";
+//    if(previous)
+//    return s;
+//  }
+//
+//  friend std::ostream& operator<<(std::ostream& s, 
+//                                  const SymbolicVariable& v) 
+//  {
+//    return v.dump(s);
+//  }
+//};
+  
+typedef simulator::DefaultVariable SymbolicVariable;
 
-  /**
-   * 構造体の値をダンプする
-   */
-  std::ostream& dump(std::ostream& s) const
-  {
-    s << name;
-    for(size_t i=0; i<derivative_count; i++) s << "'";
-    if(previous)
-    return s;
-  }
-
-  friend std::ostream& operator<<(std::ostream& s, 
-                                  const SymbolicVariable& v) 
-  {
-    return v.dump(s);
-  }
-};
 
 } //namespace symbolic_simulator
 } // namespace hydla

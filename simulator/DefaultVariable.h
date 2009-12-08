@@ -21,6 +21,15 @@ struct DefaultVariable {
     return s;
   }
 
+  friend bool operator<(const DefaultVariable& lhs, 
+                        const DefaultVariable& rhs)
+  {
+    if(lhs.derivative_count == rhs.derivative_count) {
+      return lhs.name < rhs.name;
+    }
+    return lhs.derivative_count - rhs.derivative_count < 0;
+  }
+
   friend std::ostream& operator<<(std::ostream& s, 
                                   const DefaultVariable& v) 
   {
