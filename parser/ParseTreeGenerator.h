@@ -192,7 +192,7 @@ private:
       case RI_Tell:         {return create_unary_node<Tell>(ch);}
 
       // Ask§–ñ
-      case RI_Implies:      {return create_unary_node<Ask>(ch);}
+      case RI_Implies:      {return create_binary_node<Ask>(ch);}
       
         // §–ñ®
       case RI_Constraint:   {return create_unary_node<Constraint>(ch);}

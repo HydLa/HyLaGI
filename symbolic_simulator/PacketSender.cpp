@@ -356,8 +356,8 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
   }
   ml_.MLPutFunction("List", cs_size);
 
-  variable_map_t::iterator cs_it = constraint_store.begin();
-  variable_map_t::iterator cs_end = constraint_store.end();
+  variable_map_t::const_iterator cs_it = constraint_store.begin();
+  variable_map_t::const_iterator cs_end = constraint_store.end();
   for(; cs_it!=cs_end; ++cs_it)
   {
     SymbolicVariable variable = (*cs_it).first;

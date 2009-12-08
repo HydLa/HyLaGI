@@ -28,8 +28,8 @@ class Simulator
 public:
   typedef PhaseStateType                         phase_state_t; 
   typedef typename phase_state_t::variable_map_t variable_map_t;
-  typedef typename variable_map_t::variable_t    variable_t;
-  typedef typename variable_map_t::value_t       value_t;
+  typedef typename phase_state_t::variable_t     variable_t;
+  typedef typename phase_state_t::value_t        value_t;
 
   typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
   typedef typename boost::shared_ptr<PhaseStateType> phase_state_sptr; 

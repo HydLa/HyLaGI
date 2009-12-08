@@ -16,9 +16,9 @@ namespace hydla {
 namespace symbolic_simulator {
 
 typedef hydla::simulator::VariableMap<SymbolicVariable, SymbolicValue> variable_map_t;
-typedef simulator::PhaseState<SymbolicVariable, SymbolicValue, SymbolicTime> phase_state_t;
+typedef hydla::simulator::PhaseState<SymbolicVariable, SymbolicValue, SymbolicTime> phase_state_t;
 typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
-typedef simulator::Simulator<phase_state_t> simulator_t;
+typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
 
 class MathSimulator : public simulator_t
 {
