@@ -96,7 +96,7 @@ pc.check();
   // Listに含まれる1つ1つのpairについて調べる
   for(int i = 0; i < funcarg; i++)
   {
-    std::cout << " ";
+    //std::cout << i << "th variable" << std::endl;
     const char* symname;
     ml_.MLGetNext(); // pair関数が得られる
     ml_.MLGetNext(); // pairという関数名
@@ -104,9 +104,11 @@ pc.check();
     switch(ml_.MLGetNext()) // pair[variable, value]のvariable側が得られる
     {
     case MLTKFUNC: // Derivative[number][]とprev[]
+      //std::cout << "in MLTKFUNC" << std::endl;
       switch(ml_.MLGetNext()) // Derivative[number]やprevという関数名
       {
       case MLTKFUNC: // Derivative[number]
+        //std::cout << "in MLTKFUNC-MLTKFUNC" << std::endl;
         ml_.MLGetNext(); // Derivativeという関数名
         ml_.MLGetNext(); // number
         int n;
@@ -124,8 +126,9 @@ pc.check();
         std::cout << "Derivative[" << n << "][" << symname << "]";
         break;
       case MLTKSYM: // prev
+        //std::cout << "in MLTKFUNC-MLTKSYM" << std::endl;
 //        symbolic_variable.previous = true;
-        //std::cout << "prev[";
+        std::cout << "prev[";
         goto A; // prevの中身を調べる（通常変数の場合とDerivativeつきの場合とがある）
         break;
       default:
@@ -133,6 +136,7 @@ pc.check();
       }
       break;
     case MLTKSYM: // シンボル（記号）xとかyとか
+      //std::cout << "in MLTKSYM" << std::endl;
       if(! ml_.MLGetSymbol(&symname)){
         std::cout << "MLGetSymbol:unable to read the symbol from ml" << std::endl;
         return false;
@@ -185,7 +189,7 @@ pc.check();
     std::cout << std::endl;
   }
 
-  std::cout << "--------------------------" << std::endl;
+  std::cout << "----------------------------" << std::endl;
   std::cout << "ConsistencyChecker: true" << std::endl;
 
   return true;

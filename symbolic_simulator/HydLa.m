@@ -15,14 +15,18 @@ createVariableList[Equal[varName_, varValue_], result_] := (
   Append[result, pair[varName, varValue]]
 );
 
-createVariableList[And[expr_], result_] := (
+createVariableList[{expr_}, result_] := (
   createVariableList[expr, result]
+);
+
+createVariableList[{expr_, others__}, result_] := (
+  variableList = createVariableList[expr, result];
+  createVariableList[{others}, variableList]
 );
 
 createVariableList[And[expr_, others__], result_] := (
   variableList = createVariableList[expr, result];
-  createVariableList[others, variableList]
-  (*Map[createVariableList[#, result], {expr}]*)
+  createVariableList[{others}, variableList]
 );
 
 (* Reduce[{}, {}]のとき *)
@@ -36,8 +40,6 @@ createVariableList[True, result_] := (
  * 得られた解を用いて、各変数に関して{変数名, 値}　という形式で表したリストを返す
  *)
 isConsistent[expr_, vars_] := (
-  (*Return[expr]*)
-  (*If[Reduce[expr, vars] =!= False, 1, 0]*)
   sol = Reduce[expr, vars];
   If[sol =!= False, createVariableList[sol, {}], 0]
 );
