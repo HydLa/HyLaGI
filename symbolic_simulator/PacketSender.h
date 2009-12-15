@@ -68,14 +68,14 @@ public:
 private:
   MathLink& ml_;
   std::set<std::pair<std::string, int> > vars_;
-  // 微分方程式の中にいるかどうか（PointPhaseでは不要？）
+  /// 微分方程式の中にいるかどうか（PointPhaseでは不要？）
   bool in_differential_equality_;
-  // Differentialノードを何回通ったか（何階微分か）
+  /// Differentialノードを何回通ったか
   int differential_count_;
-  // Prevノードの下にいるかどうか
+  /// Prevノードの下にいるかどうか
   // （通常変数なら1、prev変数だと-1などにするか？）
   bool in_prev_;
-  // ask制約のガードの中にいるかどうか
+  /// ask制約のガードの中にいるかどうか
   bool in_guard_;
 
 };

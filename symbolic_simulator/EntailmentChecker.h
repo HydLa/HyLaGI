@@ -9,6 +9,7 @@
 #include "Types.h"
 #include "TellCollector.h"
 #include <boost/shared_ptr.hpp>
+#include "ConstraintStoreBuilderPoint.h"
 
 
 namespace hydla {
@@ -23,8 +24,8 @@ public:
 
   bool check_entailment(
     boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
-    hydla::simulator::TellCollector::tells_t& collected_tells);
-
+//    hydla::simulator::TellCollector::tells_t& collected_tells);
+    hydla::symbolic_simulator::ConstraintStore& constraint_store);
 private:
   MathLink& ml_;
 

@@ -27,7 +27,7 @@ public:
 
   void build_variable_map(variable_map_t variable_map);
 
-  ConstraintStore getcs();
+  ConstraintStore& getcs();
 
 private:
   ConstraintStore constraint_store_;

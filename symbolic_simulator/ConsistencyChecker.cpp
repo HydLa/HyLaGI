@@ -8,7 +8,6 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
-
 ConsistencyChecker::ConsistencyChecker(MathLink& ml) :
   ml_(ml)
 {}
@@ -17,7 +16,7 @@ ConsistencyChecker::~ConsistencyChecker()
 {}
 
 
-bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells, ConstraintStore constraint_store)
+bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells, ConstraintStore& constraint_store)
 {
 
 /*
@@ -63,21 +62,22 @@ bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells, 
   // varsを渡す
   ps.put_vars();
 
-
 /*
+ml_.skip_pkt_until(RETURNPKT);
 // 返ってくるパケットを解析
 PacketChecker pc(ml_);
-pc.check();
+pc.check2();
 */
-
 
   ml_.skip_pkt_until(RETURNPKT);
   // 解けなかった場合は0が返る（制約間に矛盾があるということ）
   if(ml_.MLGetType() == MLTKINT)
   {
     std::cout << "ConsistencyChecker: false" << std::endl;
+    ml_.MLNewPacket();
     return false;
   }
+
   // 解けた場合は各変数名とその値が返ってくるのでそれを制約ストアに入れる
   // List[pair[x,1]]やList[pair[x,1], pair[y,2], pair[z,3]]や
   // List[pair[x,1], pair[Derivative[1][x],1], pair[prev[x],1], pair[prev[Derivative[2][x],1]]]やList[]など
@@ -89,6 +89,7 @@ pc.check();
     std::cout << "#funcCase:MLGetArgCount:unable to get the number of arguments from ml" << std::endl;
     return false;
   }
+
   ml_.MLGetNext(); // Listという関数名
 
   SymbolicVariable symbolic_variable;
@@ -96,19 +97,17 @@ pc.check();
   // Listに含まれる1つ1つのpairについて調べる
   for(int i = 0; i < funcarg; i++)
   {
-    //std::cout << i << "th variable" << std::endl;
     const char* symname;
     ml_.MLGetNext(); // pair関数が得られる
     ml_.MLGetNext(); // pairという関数名
+//    symbolic_variable.previous = false;    
   A:
     switch(ml_.MLGetNext()) // pair[variable, value]のvariable側が得られる
     {
     case MLTKFUNC: // Derivative[number][]とprev[]
-      //std::cout << "in MLTKFUNC" << std::endl;
       switch(ml_.MLGetNext()) // Derivative[number]やprevという関数名
       {
       case MLTKFUNC: // Derivative[number]
-        //std::cout << "in MLTKFUNC-MLTKFUNC" << std::endl;
         ml_.MLGetNext(); // Derivativeという関数名
         ml_.MLGetNext(); // number
         int n;
@@ -126,7 +125,6 @@ pc.check();
         std::cout << "Derivative[" << n << "][" << symname << "]";
         break;
       case MLTKSYM: // prev
-        //std::cout << "in MLTKFUNC-MLTKSYM" << std::endl;
 //        symbolic_variable.previous = true;
         std::cout << "prev[";
         goto A; // prevの中身を調べる（通常変数の場合とDerivativeつきの場合とがある）
@@ -136,7 +134,7 @@ pc.check();
       }
       break;
     case MLTKSYM: // シンボル（記号）xとかyとか
-      //std::cout << "in MLTKSYM" << std::endl;
+      symbolic_variable.derivative_count = 0;
       if(! ml_.MLGetSymbol(&symname)){
         std::cout << "MLGetSymbol:unable to read the symbol from ml" << std::endl;
         return false;
@@ -184,11 +182,11 @@ pc.check();
       default:
         ;
     }   
-    //(constraint_store.variables).insert(std::make_pair(symbolic_variable, symbolic_value)); 
-    //constraint_store.dump(std::cout);
+    constraint_store.set_variable(symbolic_variable, symbolic_value); 
     std::cout << std::endl;
   }
 
+  std::cout << constraint_store;
   std::cout << "----------------------------" << std::endl;
   std::cout << "ConsistencyChecker: true" << std::endl;
 

@@ -310,7 +310,7 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        if(entailment_checker.check_entailment(*it, tell_list)) {
+        if(entailment_checker.check_entailment(*it, csbp.getcs())) {
           expanded = true;
           positive_asks.insert(*it);
           negative_asks.erase(it++);

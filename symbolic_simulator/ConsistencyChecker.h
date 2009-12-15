@@ -20,7 +20,7 @@ public:
   virtual ~ConsistencyChecker();
 
   bool is_consistent(hydla::simulator::TellCollector::tells_t& collected_tells,
-                     hydla::symbolic_simulator::ConstraintStore constraint_store);
+                     hydla::symbolic_simulator::ConstraintStore& constraint_store);
 
 private:
   MathLink& ml_;

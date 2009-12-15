@@ -178,6 +178,14 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
 
   differential_count_++;
   in_differential_equality_ = true;
+
+  ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+  ml_.MLPutArgCount(1);      // this 1 is for the 'f'
+  ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+  ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
+  ml_.MLPutSymbol("Derivative");
+  ml_.MLPutInteger(1);
+
   accept(node->get_child());
 
 /*
@@ -194,7 +202,6 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
 {
   in_prev_ = true;
   accept(node->get_child());
-
   in_prev_ = false;
 }
   
@@ -208,17 +215,9 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
     std::cout << "prev[";
     if(differential_count_ > 0)
     {
-      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-      ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-      ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-      ml_.MLPutSymbol("Derivative");
-      ml_.MLPutInteger(differential_count_);
-
-      std::cout << "Derivative[1][";
       ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
       vars_.insert(std::make_pair("usrVar" + node->get_name(), -1*(differential_count_ +1)));
-      std::cout << node->get_name().c_str() << "]";
+      std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
     }
     else
     {
@@ -229,17 +228,9 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
     std::cout << "]";
   }
   else if(differential_count_ > 0){
-    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-    ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-    ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-    ml_.MLPutSymbol("Derivative");
-    ml_.MLPutInteger(differential_count_);
-
-    std::cout << "Derivative[1][";
     ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
     vars_.insert(std::make_pair("usrVar" + node->get_name(), differential_count_));
-    std::cout << node->get_name().c_str() << "]";
+    std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
   }
   else
   {
@@ -345,15 +336,19 @@ void PacketSender::put_vars()
 // 制約ストアの中身を分析して送信
 void PacketSender::put_cs(ConstraintStore constraint_store)
 {
-  std::cout << "Constraint store: ";
-  // vlt  cs_map = constraint_store.variables;
+  std::cout << "Constraint store:";
   int cs_size = constraint_store.size();
   if(cs_size < 1)
   {
     ml_.MLPutFunction("List", 0);
-    std::cout << "no Constraint store" << std::endl;
+    std::cout << "no Constraints" << std::endl;
     return;
   }
+  std::cout << std::endl;
+  std::cout << "----------------------------" << std::endl;
+  std::cout << constraint_store;
+  std::cout << "----------------------------" << std::endl;
+
   ml_.MLPutFunction("List", cs_size);
 
   variable_map_t::const_iterator cs_it = constraint_store.begin();
@@ -365,11 +360,12 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
     ml_.MLPutFunction("Equal", 2);
 
     // 変数名
-    //if(variable.previous == true)
+/*
+    if(variable.previous == true)
     {
       ml_.MLPutFunction("prev", 1);
-      std::cout << "prev[";
     }
+*/
     if(variable.derivative_count > 0)
     {
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
@@ -378,19 +374,8 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
       ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
       ml_.MLPutSymbol("Derivative");
       ml_.MLPutInteger(variable.derivative_count);
-      std::cout << "Derivative[" << variable.derivative_count << "][";
     }
     ml_.MLPutSymbol(variable.name.c_str());
-    std::cout << variable.name;
-    if(variable.derivative_count > 0)
-    {
-      std::cout << "]";
-    }
-    //if(variable.previous == true)
-    {
-      std::cout << "]";
-    }
-    std::cout << "=";
 
     // 変数の値
     if(value.rational == true)

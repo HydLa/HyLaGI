@@ -16,19 +16,17 @@ EntailmentChecker::EntailmentChecker(MathLink& ml) :
 EntailmentChecker::~EntailmentChecker()
 {}
 
-/*
+/**
  * collected_tellsから、negative_asks内のask制約のガード条件が満たされるかどうか調べる
- * 
- * Input:
- *  negative_ask まだ展開されていないask制約1つ
- *  collected_tells tell制約のリスト（展開されたask制約の「=>」の右辺はここに追加される）
- * Output:
- *  チェックの結果、そのask制約が展開されたかどうか
+ * @param negative_ask     まだ展開されていないask制約1つ
+ * @param collected_tells  tell制約のリスト（展開されたask制約の「=>」の右辺はここに追加される）
+ * @return チェックの結果、そのask制約が展開されたかどうか
  */
 
 bool EntailmentChecker::check_entailment(
   boost::shared_ptr<hydla::parse_tree::Ask> negative_ask, 
-  hydla::simulator::TellCollector::tells_t& collected_tells)
+//hydla::simulator::TellCollector::tells_t& collected_tells)
+  hydla::symbolic_simulator::ConstraintStore& constraint_store)
 {
 
 /*
@@ -66,6 +64,10 @@ bool EntailmentChecker::check_entailment(
   ps.visit(negative_ask);
 
 
+  // 制約ストアからもexprを得てMathematicaに渡す
+  ps.put_cs(constraint_store);
+
+/*
   // tell制約の集合からtellsを得てMathematicaに渡す
   int tells_size = collected_tells.size();
   ml_.MLPutFunction("List", tells_size);
@@ -75,6 +77,7 @@ bool EntailmentChecker::check_entailment(
     ps.visit((*tells_it));
     tells_it++;
   }
+*/
 
   // varsを渡す
   ps.put_vars();

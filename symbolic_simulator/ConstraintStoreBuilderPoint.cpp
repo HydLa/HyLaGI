@@ -24,9 +24,9 @@ void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t variable_map
   variable_map = this->constraint_store_;
 }
 
-ConstraintStore ConstraintStoreBuilderPoint::getcs()
+ConstraintStore& ConstraintStoreBuilderPoint::getcs()
 {
-  return constraint_store_;
+  return this->constraint_store_;
 }
 
 } //namespace symbolic_simulator
