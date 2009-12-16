@@ -18,6 +18,7 @@
 
 #include "VariableMap.h"
 #include "PhaseState.h"
+#include "InitNodeRemover.h"
 
 namespace hydla {
 namespace simulator {
@@ -40,12 +41,30 @@ public:
   virtual ~Simulator()
   {}
 
+  void set_debug_mode(bool m)
+  {
+    debug_mode_ = m;
+  }
+
+  bool is_debug_mode() const 
+  {
+    return debug_mode_;
+  }
+
   /**
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
                 parse_tree_sptr pt)
   {
+    parse_tree_sptr pt_no_init_node(new hydla::parse_tree::ParseTree(*pt));
+    InitNodeRemover init_node_remover;
+    init_node_remover.apply(pt_no_init_node);
+    if(debug_mode_) {
+      std::cout << "#*** No Initial Node Tree ***\n"
+        << *pt_no_init_node << std::endl;
+    }
+
     init_state_queue(pt);
 
     while(!state_queue_.empty()) {
@@ -124,6 +143,8 @@ public:
   virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
 
 private:
+
+  bool debug_mode_;
 
   /**
    * 各状態を保存しておくためのキュー

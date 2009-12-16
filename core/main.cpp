@@ -18,7 +18,6 @@
 #include "HydLaAST.h"
 #include "NodeFactory.h"
 #include "ParseTreeGenerator.h"
-#include "ParseTreeSemanticAnalyzer.h"
 #include "ModuleSetList.h"
 #include "ModuleSetContainerCreator.h"
 
@@ -102,8 +101,7 @@ boost::shared_ptr<ParseTree> build_parse_tree()
   }
 
   // ˆÓ–¡‰ðÍE§–ñŒÄ‚Ño‚µ‚Ì“WŠJ
-  ParseTreeSemanticAnalyzer analyer;  
-  analyer.analyze(pt);  
+  pt->analyze_tree(); 
   if(debug_mode) {
     std::cout << "#*** Analyzed Parse Tree ***\n"; 
     std::cout << *pt << std::endl;

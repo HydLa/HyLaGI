@@ -117,7 +117,7 @@ bool MathSimulator::simulate(
   boost::shared_ptr<hydla::parse_tree::ParseTree> pt,
   Opts& opts)
 {
-  debug_mode_ = opts.debug_mode;
+  set_debug_mode(opts.debug_mode);
 
   init(opts);
 
@@ -257,7 +257,7 @@ public:
 bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, 
                                 phase_state_sptr& state)
 {
-  if(debug_mode_) {
+  if(is_debug_mode()) {
     std::cout << "#***** bagin point phase *****\n";
     std::cout << "#** module set **\n";
     std::cout << ms->get_name() << std::endl;
@@ -281,22 +281,22 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
     tell_collector.collect_all_tells(&tell_list,
                                      &state->expanded_always, 
                                      &positive_asks);
-    if(debug_mode_) {
+    if(is_debug_mode()) {
       std::cout << "#** collected tells **\n";  
       std::for_each(tell_list.begin(), tell_list.end(), NodeDump());
     }
 
     // §–ñ‚ª[‘«‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ÌŠm”F
     if(!consistency_checker.is_consistent(tell_list, csbp.getcs())){
-      if(debug_mode_) std::cout << "#*** inconsistent\n";
+      if(is_debug_mode()) std::cout << "#*** inconsistent\n";
       return false;
     }
-    if(debug_mode_) std::cout << "#*** consistent\n";
+    if(is_debug_mode()) std::cout << "#*** consistent\n";
 
     // ask§–ñ‚ðW‚ß‚é
     ask_collector.collect_ask(ms.get(), &state->expanded_always, 
                               &positive_asks, &negative_asks);
-    if(debug_mode_) {
+    if(is_debug_mode()) {
       std::cout << "#** positive asks **\n";  
       std::for_each(positive_asks.begin(), positive_asks.end(), NodeDump());
 

@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_
 
 #include <stack>
-
+#include <iostream>
 #include "Node.h"
 #include "TreeVisitor.h"
 
@@ -22,7 +22,7 @@ public:
   /**
    * 解析および制約呼び出しの展開をおこなう
    */
-  void analyze(boost::shared_ptr<hydla::parse_tree::ParseTree> pt);
+  void analyze(hydla::parse_tree::ParseTree* pt);
 
 
   // 定義
@@ -130,7 +130,7 @@ private:
   node_sptr new_child_;
 
   /// 解析対象のParseTree
-  boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_;
+  hydla::parse_tree::ParseTree* parse_tree_;
   
   /**
    * 指定したノードを呼び出し、
@@ -170,6 +170,22 @@ private:
     dispatch<hydla::parse_tree::BinaryNode, 
       &hydla::parse_tree::BinaryNode::get_lhs, 
       &hydla::parse_tree::BinaryNode::set_lhs>(node.get());
+  }
+
+  /**
+   * ノードのIDを更新する
+   */
+  template<typename T>
+  void update_node_id(const T& n)
+  {
+    hydla::parse_tree::node_id_t id = n->get_id();
+    std::cout << "id:" << id << std::endl;
+    if(id == 0) {
+      parse_tree_->register_node(n);
+    }
+    else {
+      parse_tree_->update_node(id, n);
+    }
   }
 
   /**

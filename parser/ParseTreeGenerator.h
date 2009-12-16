@@ -39,9 +39,7 @@ private:
   boost::shared_ptr<NodeType>
   create_node()
   {
-    boost::shared_ptr<NodeType> n(NodeFactory().operator()(NodeType()));
-    pt_->register_node(n);
-    return n;
+    return boost::shared_ptr<NodeType>(NodeFactory().operator()(NodeType()));
   }
 
   /**

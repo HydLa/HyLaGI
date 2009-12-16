@@ -54,7 +54,7 @@ public:
     return id_;
   }
 
-private:
+protected:
   node_id_t id_;
 };
 
@@ -84,6 +84,7 @@ public:
   node_type_sptr clone(node_type_sptr n)
   {
     n->child_ = child_->clone();
+    n->id_    = id_;
     return n;
   }
 
@@ -124,6 +125,38 @@ protected:
   node_sptr child_;
 };
 
+#define DEFINE_UNARY_NODE(NAME)                          \
+  class NAME : public UnaryNode {                           \
+  public:                                                   \
+  typedef boost::shared_ptr<NAME> node_type_sptr;           \
+                                                            \
+  NAME()                                                    \
+    {}                                                      \
+                                                            \
+  NAME(const node_sptr& child) :                            \
+    UnaryNode(child)                                        \
+    {}                                                      \
+                                                            \
+  virtual ~NAME(){}                                         \
+                                                            \
+  virtual void accept(node_sptr own, TreeVisitor* visitor); \
+                                                            \
+  virtual node_sptr clone()                                 \
+    {                                                       \
+      node_type_sptr n(new NAME);                           \
+      return UnaryNode::clone(n);                           \
+    }                                                       \
+                                                            \
+  virtual std::ostream& dump(std::ostream& s) const         \
+    {                                                         \
+    return s << #NAME "<"                                    \
+             << get_id()                                    \
+             << ">["                                       \
+             << *child_                                     \
+             << "]";                                      \
+    }                                                         \
+  };
+
 /**
  * 2つの子ノードを持つノード
  */
@@ -148,6 +181,7 @@ public:
   {
     n->lhs_ = lhs_->clone();
     n->rhs_ = rhs_->clone();
+    n->id_  = id_;
     return n;
   }
 
@@ -198,6 +232,40 @@ protected:
   node_sptr lhs_;
   node_sptr rhs_;
 };
+
+#define DEFINE_BINARY_NODE(NAME)                         \
+  class NAME : public BinaryNode {                          \
+  public:                                                   \
+  typedef boost::shared_ptr<NAME> node_type_sptr;           \
+                                                            \
+  NAME()                                                    \
+    {}                                                      \
+                                                            \
+  NAME(const node_sptr& lhs, const node_sptr& rhs) :        \
+    BinaryNode(lhs, rhs)                                    \
+    {}                                                      \
+                                                            \
+  virtual ~NAME(){}                                         \
+                                                            \
+  virtual void accept(node_sptr own, TreeVisitor* visitor); \
+                                                            \
+  virtual node_sptr clone()                                 \
+    {                                                       \
+      node_type_sptr n(new NAME);                           \
+      return BinaryNode::clone(n);                          \
+    }                                                       \
+                                                            \
+  virtual std::ostream& dump(std::ostream& s) const         \
+    {                                                       \
+    return s << #NAME "<"                                    \
+             << get_id()                                    \
+             << ">["                                       \
+             << *lhs_                                     \
+             << ","                                       \
+             << *rhs_                                     \
+             << "]";                                      \
+    }                                                       \
+  };
 
 /**
  * 制約やプログラムの呼び出しノードの共通クラス
@@ -462,56 +530,12 @@ public:
 /**
  * 制約式
  */ 
-class Constraint : public UnaryNode {
-public:
-  Constraint()
-  {}
-    
-  virtual ~Constraint(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    boost::shared_ptr<Constraint> n(new Constraint());
-    n->child_ = child_->clone();
-    return n;
-  }
-
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    return s << "Constraint["
-             << *child_
-             << "]";
-  }
-};
+DEFINE_UNARY_NODE(Constraint);
 
 /**
  * tell制約
  */ 
-class Tell : public UnaryNode {
-public:
-  Tell()
-  {}
-    
-  virtual ~Tell(){}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual node_sptr clone()
-  {
-    boost::shared_ptr<Tell> n(new Tell());
-    n->child_ = child_->clone();
-    return n;
-  }
-
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    return s << "Tell["
-             << *child_
-             << "]";
-  }
-};
+DEFINE_UNARY_NODE(Tell);
 
 /**
  * ask制約
@@ -537,7 +561,9 @@ public:
 
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << "Ask["
+    return s << "Ask<"
+             << get_id()
+             << ">["
              << *lhs_
              << ","
              << *rhs_
@@ -577,168 +603,103 @@ public:
   }
 };
 
-#define DEFINE_BINARY_OP_NODE(NAME)                         \
-  class NAME : public BinaryNode {                          \
-  public:                                                   \
-  typedef boost::shared_ptr<NAME> node_type_sptr;           \
-                                                            \
-  NAME()                                                    \
-    {}                                                      \
-                                                            \
-  NAME(const node_sptr& lhs, const node_sptr& rhs) :        \
-    BinaryNode(lhs, rhs)                                    \
-    {}                                                      \
-                                                            \
-  virtual ~NAME(){}                                         \
-                                                            \
-  virtual void accept(node_sptr own, TreeVisitor* visitor); \
-                                                            \
-  virtual node_sptr clone()                                 \
-    {                                                       \
-      node_type_sptr n(new NAME);                           \
-      return BinaryNode::clone(n);                          \
-    }                                                       \
-                                                            \
-  virtual std::ostream& dump(std::ostream& s) const         \
-    {                                                       \
-      return s << #NAME                                     \
-               << "["                                       \
-               << *lhs_                                     \
-               << ","                                       \
-               << *rhs_                                     \
-               << "]";                                      \
-    }                                                       \
-  };
-
 /**
  * 比較演算子「=」
  */
-DEFINE_BINARY_OP_NODE(Equal);
+DEFINE_BINARY_NODE(Equal);
 
 /**
  * 比較演算子「!=」
  */
-DEFINE_BINARY_OP_NODE(UnEqual);
+DEFINE_BINARY_NODE(UnEqual);
 
 /**
  * 比較演算子「<」
  */
-DEFINE_BINARY_OP_NODE(Less);
+DEFINE_BINARY_NODE(Less);
 
 /**
  * 比較演算子「<=」
  */
-DEFINE_BINARY_OP_NODE(LessEqual);
+DEFINE_BINARY_NODE(LessEqual);
 
 /**
  * 比較演算子「>」
  */
-DEFINE_BINARY_OP_NODE(Greater);
+DEFINE_BINARY_NODE(Greater);
 
 /**
  * 比較演算子「>=」
  */
-DEFINE_BINARY_OP_NODE(GreaterEqual);
+DEFINE_BINARY_NODE(GreaterEqual);
 
 /**
  * 算術演算子「+」
  */
-DEFINE_BINARY_OP_NODE(Plus);
+DEFINE_BINARY_NODE(Plus);
 
 /**
  * 算術演算子「-」
  */
-DEFINE_BINARY_OP_NODE(Subtract);
+DEFINE_BINARY_NODE(Subtract);
 
 /**
  * 算術演算子「*」
  */
-DEFINE_BINARY_OP_NODE(Times);
+DEFINE_BINARY_NODE(Times);
 
 /**
  * 算術演算子「/」
  */
-DEFINE_BINARY_OP_NODE(Divide);
+DEFINE_BINARY_NODE(Divide);
 
 /**
  * 論理演算子「/\」（連言）
  */
-DEFINE_BINARY_OP_NODE(LogicalAnd);
+DEFINE_BINARY_NODE(LogicalAnd);
 
 /**
  * 論理演算子「\/」（選言）
  */
-DEFINE_BINARY_OP_NODE(LogicalOr);
+DEFINE_BINARY_NODE(LogicalOr);
 
 /**
  * 制約階層定義演算子
  * 並列制約「,」
  */ 
-DEFINE_BINARY_OP_NODE(Parallel);
+DEFINE_BINARY_NODE(Parallel);
 
 /**
  * 制約階層定義演算子
  * 弱制約「<<」
  */ 
-DEFINE_BINARY_OP_NODE(Weaker);
-
-
-#define DEFINE_UNARY_OP_NODE(NAME)                          \
-  class NAME : public UnaryNode {                           \
-  public:                                                   \
-  typedef boost::shared_ptr<NAME> node_type_sptr;           \
-                                                            \
-  NAME()                                                    \
-    {}                                                      \
-                                                            \
-  NAME(const node_sptr& child) :                            \
-    UnaryNode(child)                                        \
-    {}                                                      \
-                                                            \
-  virtual ~NAME(){}                                         \
-                                                            \
-  virtual void accept(node_sptr own, TreeVisitor* visitor); \
-                                                            \
-  virtual node_sptr clone()                                 \
-    {                                                       \
-      node_type_sptr n(new NAME);                           \
-      return UnaryNode::clone(n);                           \
-    }                                                       \
-                                                            \
-  virtual std::ostream& dump(std::ostream& s) const         \
-    {                                                       \
-      return s << #NAME                                     \
-               << "["                                       \
-               << *child_                                   \
-               << "]";                                      \
-    }                                                       \
-  };
+DEFINE_BINARY_NODE(Weaker);
 
 
 /**
  * 時相演算子「[]」(Always)
  */
-DEFINE_UNARY_OP_NODE(Always);
+DEFINE_UNARY_NODE(Always);
 
 /**
  * 算術単項演算子「+」
  */
-DEFINE_UNARY_OP_NODE(Positive);
+DEFINE_UNARY_NODE(Positive);
 
 /**
  * 算術単項演算子「-」
  */
-DEFINE_UNARY_OP_NODE(Negative);
+DEFINE_UNARY_NODE(Negative);
 
 /**
  * 微分「'」
  */
-DEFINE_UNARY_OP_NODE(Differential);
+DEFINE_UNARY_NODE(Differential);
 
 /**
  * 左極限「-」
  */
-DEFINE_UNARY_OP_NODE(Previous);
+DEFINE_UNARY_NODE(Previous);
 
 /**
  * 小数
@@ -761,12 +722,17 @@ public:
   {
     boost::shared_ptr<Number> n(new Number());
     n->number_ = number_;
+    n->id_   = id_;
     return n;
   }
   
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << number_;
+    return s << "Number<"
+             << get_id()
+             << ">["
+             << number_
+             << "]";
   }
 
   void set_number(const std::string& number) 
@@ -804,12 +770,17 @@ public:
   {
     boost::shared_ptr<Variable> n(new Variable());
     n->name_ = name_;
+    n->id_   = id_;
     return n;
   }
   
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << name_;
+    return s << "Variable<"
+             << get_id()
+             << ">["
+             << name_
+             << "]";
   }
 
   void set_name(const std::string& name) 

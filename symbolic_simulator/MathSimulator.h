@@ -61,7 +61,6 @@ public:
 private:
   void init(Opts& opts);
 
-  bool debug_mode_;
   MathLink ml_; 
   //boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_;
 };

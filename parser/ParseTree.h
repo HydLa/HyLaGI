@@ -51,7 +51,14 @@ public:
   typedef node_map_t::value_type                         node_map_value_t;
 
   ParseTree();
+  ParseTree(const ParseTree& pt);
+
   virtual ~ParseTree();
+
+  /**
+   * ƒcƒŠ[‚Ì‰ğÍ‚ğ‚¨‚±‚È‚¤
+   */
+  void analyze_tree();
 
   /**
    * §–ñ’è‹`‚ğ’Ç‰Á‚·‚é

@@ -25,6 +25,8 @@ std::ostream& Caller::dump(std::ostream& s) const
   actual_args_t::const_iterator end = actual_args_.end();
 
   s << "call<" 
+    << get_id()
+    << ","
     << name_
     << "(";
 
@@ -48,7 +50,10 @@ std::ostream& Definition::dump(std::ostream& s) const
   bound_variables_t::const_iterator it  = bound_variables_.begin();
   bound_variables_t::const_iterator end = bound_variables_.end();
 
-  s << name_ << "(";
+  s << name_
+    << "<"
+    << get_id()
+    << ">(";
 
   if(it!=end) s << *(it++);
   while(it!=end) {
@@ -63,8 +68,11 @@ node_sptr Caller::clone()
 {
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
+  n->id_  = id_;
+
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
   if(child_) n->child_ = child_->clone();
   
   return n;
@@ -74,6 +82,8 @@ node_sptr Definition::clone()
 {
   boost::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());
   n->name_ = name_;
+  n->id_  = id_;
+
   n->bound_variables_.resize(bound_variables_.size());
   copy(bound_variables_.begin(), bound_variables_.end(),  n->bound_variables_.begin());
   n->child_ = child_->clone();

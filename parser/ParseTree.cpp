@@ -1,12 +1,15 @@
 #include "ParseTree.h"
 
-#include <ostream>
+#include <iostream>
 #include <iterator>
 #include <algorithm>
 #include <boost/bind.hpp>
 
+#include "ParseTreeSemanticAnalyzer.h"
+
 using namespace std;
 using namespace boost;
+using namespace hydla::parser;
 using namespace hydla::parse_error;
 
 namespace hydla { 
@@ -16,8 +19,30 @@ ParseTree::ParseTree() :
   max_node_id_(0)
 {}
 
+    
+ParseTree::ParseTree(const ParseTree& pt) :
+  node_tree_(pt.node_tree_->clone()),
+  cons_def_map_(pt.cons_def_map_),
+  prog_def_map_(pt.prog_def_map_),
+  node_map_(pt.node_map_),
+  max_node_id_(pt.max_node_id_)
+{
+  std::cout << "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n"
+    <<*node_tree_;
+
+  analyze_tree();
+}
+
 ParseTree::~ParseTree()
 {}
+
+void ParseTree::analyze_tree()
+{
+  variable_map_.clear();
+
+  ParseTreeSemanticAnalyzer analyer;  
+  analyer.analyze(this);
+}
 
 ParseTree::difinition_type_t 
 ParseTree::create_definition_key(boost::shared_ptr<Definition> d)

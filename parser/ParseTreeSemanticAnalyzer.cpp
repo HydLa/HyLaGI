@@ -18,7 +18,7 @@ ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer()
 ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 {}
 
-void ParseTreeSemanticAnalyzer::analyze(boost::shared_ptr<hydla::parse_tree::ParseTree> pt)
+void ParseTreeSemanticAnalyzer::analyze(hydla::parse_tree::ParseTree* pt)
 {
   parse_tree_         = pt;
 
@@ -109,6 +109,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
   // 定義の展開
   node->set_child(
     apply_definition(&def_type, node, cons_def.get()));
+
+  update_node_id(node);
 }
 
 // プログラム呼び出し
@@ -136,6 +138,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
   // 定義の展開
   node->set_child(
     apply_definition(&def_type, node, defnode));
+
+  update_node_id(node);
 }
 
 // 制約式
@@ -154,6 +158,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)
     dispatch_child(node);
     state_stack_.pop();
   }
+
+  update_node_id(node);
 }
 
 // Ask制約
@@ -172,83 +178,100 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)
   state_stack_.top().in_always = false;
   dispatch<Ask, &Ask::get_child, &Ask::set_child>(node.get());
   state_stack_.pop();
+
+
+  update_node_id(node);
 }
 
 // Tell制約
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Tell> node)                  
 {
   dispatch_child(node);
+
+  update_node_id(node);
 }
 
 // 算術単項演算子
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Negative> node)
 {
   dispatch_child(node);
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Positive> node)
 {
   dispatch_child(node);
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Equal> node)                 
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<UnEqual> node)               
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Less> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LessEqual> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Greater> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<GreaterEqual> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Plus> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Subtract> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Times> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Divide> node)
 {
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
@@ -259,7 +282,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
   }
 
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
@@ -270,7 +294,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
   }
 
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }  
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
@@ -281,7 +306,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
   }
 
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+  update_node_id(node);
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
@@ -292,7 +318,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
   }
 
   dispatch_lhs(node);
-  dispatch_rhs(node);
+  dispatch_rhs(node); 
+
+  update_node_id(node);
 }
   
 // 時相演算子
@@ -314,7 +342,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
   // すでにalways制約内であった場合このノードをはずす
   if(state.in_always) {
     new_child_ = node->get_child();
-  }
+  } 
+
+  update_node_id(node);
 }
   
 // 微分
@@ -326,13 +356,17 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
   state_stack_.push(state);
   state_stack_.top().differential_count++;
   dispatch_child(node);
-  state_stack_.pop();
+  state_stack_.pop(); 
+
+  update_node_id(node);
 }
 
 // 左極限
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 {
-  dispatch_child(node);
+  dispatch_child(node); 
+
+  update_node_id(node);
 }
   
 // 変数
@@ -350,13 +384,15 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
     // 自身が実引数であった場合
     parse_tree_->register_variable(node->get_name(), 
                                    state.differential_count);
-  }
+  } 
+
+  update_node_id(node);
 }
 
 // 数字
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Number> node)
 {
-  //do nothing
+  update_node_id(node);
 }
 
 
