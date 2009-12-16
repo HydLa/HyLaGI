@@ -69,9 +69,9 @@ bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells)
     rp_variable v;
     rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
     // TODO: ‚·‚×‚Ä‚Ì•Ï”‚Í‰Šú’l[-oo,+oo]‚ğ‚à‚Â,‚±‚±‚Å“ü‚ê‚é‚Æ‚æ‚¢‚©‚à
-    rp_interval i;
-    rp_interval_set(i,(-1)*RP_INFINITY,RP_INFINITY);
-    rp_union_insert(rp_variable_domain(v), i);
+    rp_interval interval;
+    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
+    rp_union_insert(rp_variable_domain(v), interval);
     rp_vector_insert(rp_problem_vars(problem), v);
   }
 
