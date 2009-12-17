@@ -56,10 +56,15 @@ public:
   virtual ~ParseTree();
 
   /**
-   * ツリーの解析をおこなう
+   * ツリーの意味解析をおこなう
    */
-  void analyze_tree();
+  void semantic_analyze();
 
+  /**
+   * ノードのIDの更新をおこなう
+   */
+  void uptate_node_id();
+  
   /**
    * 制約定義を追加する
    */
@@ -143,6 +148,11 @@ public:
   }
 
   void dispatch(parse_tree::TreeVisitor* visitor)
+  {
+    if(node_tree_) node_tree_->accept(node_tree_, visitor);
+  }
+  
+  void dispatch(parse_tree::BaseNodeVisitor* visitor)
   {
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
   }

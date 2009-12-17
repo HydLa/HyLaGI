@@ -5,6 +5,7 @@
 #include <boost/bind.hpp>
 
 #include "ParseError.h"
+#include "BaseNodeVisitor.h"
 #include "TreeVisitor.h"
 
 using namespace std;
@@ -95,71 +96,83 @@ node_sptr Definition::clone()
  * 各ノードのaccept関数定義
  */
 
-#define DEFINE_ACCEPT_FUNC(CLASS) \
+#define DEFINE_ACCEPT_FUNC(CLASS, VISITOR) \
   void CLASS::accept(node_sptr own, \
-                     TreeVisitor* visitor) \
+                     VISITOR* visitor) \
   { \
     assert(this == own.get()); \
     visitor->visit(boost::shared_static_cast<CLASS>(own)); \
   }
 
+/// BaseNodeVisitorのaccept関数定義
+#define DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(CLASS) \
+  DEFINE_ACCEPT_FUNC(CLASS, BaseNodeVisitor)
+
+DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(FactorNode)
+DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(UnaryNode)
+DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(BinaryNode)
+
+/// TreeVisitorのaccept関数定義
+#define DEFINE_TREE_VISITOR_ACCEPT_FUNC(CLASS) \
+  DEFINE_ACCEPT_FUNC(CLASS, TreeVisitor)
+
 //定義
-DEFINE_ACCEPT_FUNC(ProgramDefinition)
-DEFINE_ACCEPT_FUNC(ConstraintDefinition)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramDefinition)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintDefinition)
 
 //呼び出し
-DEFINE_ACCEPT_FUNC(ProgramCaller)
-DEFINE_ACCEPT_FUNC(ConstraintCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
 
  //制約式
-DEFINE_ACCEPT_FUNC(Constraint);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
 
 //Tell制約
-DEFINE_ACCEPT_FUNC(Tell)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Tell)
 
 //Ask制約
-DEFINE_ACCEPT_FUNC(Ask)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ask)
 
 //比較演算子
-DEFINE_ACCEPT_FUNC(Equal)
-DEFINE_ACCEPT_FUNC(UnEqual)
-DEFINE_ACCEPT_FUNC(Less)
-DEFINE_ACCEPT_FUNC(LessEqual)
-DEFINE_ACCEPT_FUNC(Greater)
-DEFINE_ACCEPT_FUNC(GreaterEqual)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Equal)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnEqual)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Less)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(LessEqual)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Greater)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(GreaterEqual)
 
 //論理演算子
-DEFINE_ACCEPT_FUNC(LogicalAnd)
-DEFINE_ACCEPT_FUNC(LogicalOr)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalAnd)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalOr)
 
 //算術二項演算子
-DEFINE_ACCEPT_FUNC(Plus)
-DEFINE_ACCEPT_FUNC(Subtract)
-DEFINE_ACCEPT_FUNC(Times)
-DEFINE_ACCEPT_FUNC(Divide)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Plus)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Subtract)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Times)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Divide)
 
 //算術単項演算子
-DEFINE_ACCEPT_FUNC(Negative)
-DEFINE_ACCEPT_FUNC(Positive)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Negative)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Positive)
 
 //制約階層定義演算子
-DEFINE_ACCEPT_FUNC(Weaker)
-DEFINE_ACCEPT_FUNC(Parallel)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Weaker)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parallel)
 
 // 時相演算子
-DEFINE_ACCEPT_FUNC(Always)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Always)
 
 //微分
-DEFINE_ACCEPT_FUNC(Differential)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Differential)
 
 //左極限
-DEFINE_ACCEPT_FUNC(Previous)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Previous)
 
 //変数・束縛変数
-DEFINE_ACCEPT_FUNC(Variable)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
 //数字
-DEFINE_ACCEPT_FUNC(Number)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
 
 } //namespace parse_tree
 } //namespace hydla

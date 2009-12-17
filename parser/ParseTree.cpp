@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <boost/bind.hpp>
 
+#include "NodeIDUpdater.h"
 #include "ParseTreeSemanticAnalyzer.h"
 
 using namespace std;
@@ -24,24 +25,29 @@ ParseTree::ParseTree(const ParseTree& pt) :
   node_tree_(pt.node_tree_->clone()),
   cons_def_map_(pt.cons_def_map_),
   prog_def_map_(pt.prog_def_map_),
+  variable_map_(pt.variable_map_),
   node_map_(pt.node_map_),
   max_node_id_(pt.max_node_id_)
 {
-  std::cout << "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n"
-    <<*node_tree_;
-
-  analyze_tree();
+  uptate_node_id();
 }
 
 ParseTree::~ParseTree()
 {}
 
-void ParseTree::analyze_tree()
-{
-  variable_map_.clear();
 
+void ParseTree::uptate_node_id()
+{
+  NodeIDUpdater updater;
+  updater.update(this);
+}
+
+void ParseTree::semantic_analyze()
+{
   ParseTreeSemanticAnalyzer analyer;  
   analyer.analyze(this);
+
+  uptate_node_id();
 }
 
 ParseTree::difinition_type_t 

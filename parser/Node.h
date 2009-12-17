@@ -17,6 +17,7 @@ class ConstraintDefinition;
 class ProgramDefinition;
 
 class TreeVisitor;
+class BaseNodeVisitor;
 
 typedef unsigned int           node_id_t;
 typedef boost::shared_ptr<Node> node_sptr;
@@ -26,6 +27,8 @@ typedef boost::shared_ptr<Node> node_sptr;
  */
 class Node {
 public:
+  typedef boost::shared_ptr<Node> node_type_sptr;
+
   Node() : 
     id_(0)
   {}
@@ -34,6 +37,7 @@ public:
   {}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, BaseNodeVisitor* visitor) = 0;
 
   virtual node_sptr clone() = 0;
 
@@ -60,6 +64,29 @@ protected:
 
 std::ostream& operator<<(std::ostream&, const Node&);
 
+class FactorNode : public Node {
+public:
+  typedef boost::shared_ptr<FactorNode> node_type_sptr;
+
+  FactorNode()
+  {}
+
+  virtual ~FactorNode()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
+  
+  virtual node_sptr clone() = 0;
+  
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    return s << "FactorNode<"
+             << get_id()
+             << ">";
+  }
+};
+
 /**
  * 1つの子ノードを持つノード
  */
@@ -78,6 +105,7 @@ public:
   {}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
 
   virtual node_sptr clone() = 0;
 
@@ -174,6 +202,7 @@ public:
   virtual ~BinaryNode(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
+  virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
 
   virtual node_sptr clone() = 0;
 
@@ -704,7 +733,7 @@ DEFINE_UNARY_NODE(Previous);
 /**
  * 小数
  */ 
-class Number : public Node {
+class Number : public FactorNode {
 public:
   Number()
   {}  
@@ -753,7 +782,7 @@ private:
  * 変数
  * 従属変数の場合もあり
  */ 
-class Variable : public Node {
+class Variable : public FactorNode {
 public:
   Variable()
   {}  

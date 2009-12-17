@@ -101,7 +101,7 @@ boost::shared_ptr<ParseTree> build_parse_tree()
   }
 
   // ˆÓ–¡‰ðÍE§–ñŒÄ‚Ño‚µ‚Ì“WŠJ
-  pt->analyze_tree(); 
+  pt->semantic_analyze(); 
   if(debug_mode) {
     std::cout << "#*** Analyzed Parse Tree ***\n"; 
     std::cout << *pt << std::endl;

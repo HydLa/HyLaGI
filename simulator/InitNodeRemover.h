@@ -15,13 +15,15 @@ namespace simulator {
  */
 class InitNodeRemover : public parse_tree::TreeVisitor {
 public:
+  typedef hydla::parse_tree::node_sptr node_sptr;
+
   InitNodeRemover();
   virtual ~InitNodeRemover();
 
   /**
    *
    */
-  void apply(boost::shared_ptr<hydla::parse_tree::ParseTree> pt);
+  void apply(hydla::parse_tree::ParseTree* pt);
 
   // êßñÒéÆ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
@@ -51,7 +53,10 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
 private:
+  node_sptr child_;
 
+  void unary_node(boost::shared_ptr<hydla::parse_tree::UnaryNode> node);
+  void binary_node(boost::shared_ptr<hydla::parse_tree::BinaryNode> node);
 };
 
 } //namespace simulator

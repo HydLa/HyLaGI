@@ -59,7 +59,7 @@ public:
   {
     parse_tree_sptr pt_no_init_node(new hydla::parse_tree::ParseTree(*pt));
     InitNodeRemover init_node_remover;
-    init_node_remover.apply(pt_no_init_node);
+    init_node_remover.apply(pt_no_init_node.get());
     if(debug_mode_) {
       std::cout << "#*** No Initial Node Tree ***\n"
         << *pt_no_init_node << std::endl;

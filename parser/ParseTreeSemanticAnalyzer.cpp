@@ -97,18 +97,20 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
 // 制約呼び出し
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
-  difinition_type_t def_type(node->get_name(), node->actual_arg_size());
+  if(!node->get_child()) {
+    difinition_type_t def_type(node->get_name(), node->actual_arg_size());
 
-  // 制約定義から探す
-  boost::shared_ptr<ConstraintDefinition> cons_def(
-    parse_tree_->get_constraint_difinition(def_type));
-  if(!cons_def) {
-    throw UndefinedReference(node);
+    // 制約定義から探す
+    boost::shared_ptr<ConstraintDefinition> cons_def(
+      parse_tree_->get_constraint_difinition(def_type));
+    if(!cons_def) {
+      throw UndefinedReference(node);
+    }
+
+    // 定義の展開
+    node->set_child(
+      apply_definition(&def_type, node, cons_def.get()));
   }
-
-  // 定義の展開
-  node->set_child(
-    apply_definition(&def_type, node, cons_def.get()));
 
   update_node_id(node);
 }
@@ -116,28 +118,30 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
 // プログラム呼び出し
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)         
 {
-  difinition_type_t def_type(node->get_name(), node->actual_arg_size());
-  Definition* defnode;
+  if(!node->get_child()) {
+    difinition_type_t def_type(node->get_name(), node->actual_arg_size());
+    Definition* defnode;
 
-  // 制約定義から探す
-  boost::shared_ptr<ConstraintDefinition> cons_def(
-    parse_tree_->get_constraint_difinition(def_type));
-  if(cons_def) {
-    defnode = cons_def.get();
-  } else {
-    // プログラム定義から探す
-    boost::shared_ptr<ProgramDefinition> prog_def(
-      parse_tree_->get_program_difinition(def_type));
-    if(prog_def) {
-      defnode = prog_def.get();
+    // 制約定義から探す
+    boost::shared_ptr<ConstraintDefinition> cons_def(
+      parse_tree_->get_constraint_difinition(def_type));
+    if(cons_def) {
+      defnode = cons_def.get();
     } else {
-      throw UndefinedReference(node);
+      // プログラム定義から探す
+      boost::shared_ptr<ProgramDefinition> prog_def(
+        parse_tree_->get_program_difinition(def_type));
+      if(prog_def) {
+        defnode = prog_def.get();
+      } else {
+        throw UndefinedReference(node);
+      }
     }
-  }
 
-  // 定義の展開
-  node->set_child(
-    apply_definition(&def_type, node, defnode));
+    // 定義の展開
+    node->set_child(
+      apply_definition(&def_type, node, defnode));
+  }
 
   update_node_id(node);
 }
