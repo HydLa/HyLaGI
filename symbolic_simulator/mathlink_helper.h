@@ -132,7 +132,7 @@ public:
   std::string get_symbol()
   {
     const char *s;
-    if(MLGetSymbol(&s)) {
+    if(!MLGetSymbol(&s)) {
       throw MathLinkError("get_symbol", MLError());
     }
     std::string sym(s);
@@ -151,7 +151,7 @@ public:
   std::string get_string()
   {
     const char *s;
-    if(MLGetString(&s)) {
+    if(!MLGetString(&s)) {
       throw MathLinkError("get_string", MLError());
     }
     std::string str(s);

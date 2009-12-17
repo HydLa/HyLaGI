@@ -75,8 +75,6 @@ private:
   /// Prevノードの下にいるかどうか
   // （通常変数なら1、prev変数だと-1などにするか？）
   bool in_prev_;
-  /// ask制約のガードの中にいるかどうか
-  bool in_guard_;
 
 };
 

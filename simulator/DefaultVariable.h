@@ -17,7 +17,7 @@ struct DefaultVariable {
   std::ostream& dump(std::ostream& s) const
   {
     s << name;
-    for(size_t i=0; i<derivative_count; i++) s << "'";
+    for(int i=0; i<derivative_count; i++) s << "'";
     return s;
   }
 

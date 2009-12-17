@@ -20,33 +20,33 @@ bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells, 
 {
 
 /*
-  ml_.MLPutFunction("isConsistent", 2);
-  ml_.MLPutFunction("List", 3);
-  ml_.MLPutFunction("Equal", 2);
-  ml_.MLPutSymbol("x");
-  ml_.MLPutSymbol("y");
-  ml_.MLPutFunction("Equal", 2);
-  ml_.MLPutSymbol("x");
+  ml_.put_function("isConsistent", 2);
+  ml_.put_function("List", 3);
+  ml_.put_function("Equal", 2);
+  ml_.put_symbol("x");
+  ml_.put_symbol("y");
+  ml_.put_function("Equal", 2);
+  ml_.put_symbol("x");
   ml_.MLPutInteger(2);
-  ml_.MLPutFunction("Equal", 2);
-  ml_.MLPutSymbol("y");
+  ml_.put_function("Equal", 2);
+  ml_.put_symbol("y");
   ml_.MLPutInteger(1);
 
-  ml_.MLPutFunction("List", 2);
-  ml_.MLPutSymbol("x");
-  ml_.MLPutSymbol("y");
+  ml_.put_function("List", 2);
+  ml_.put_symbol("x");
+  ml_.put_symbol("y");
   ml_.MLEndPacket();
 */
 
 
   // isConsistent[expr, vars]を渡したい
-  ml_.MLPutFunction("isConsistent", 2);
+  ml_.put_function("isConsistent", 2);
 
 
-  ml_.MLPutFunction("Join", 2);
+  ml_.put_function("Join", 2);
   // tell制約の集合からexprを得てMathematicaに渡す
   int tells_size = collected_tells.size();
-  ml_.MLPutFunction("List", tells_size);
+  ml_.put_function("List", tells_size);
   TellCollector::tells_t::iterator tells_it = collected_tells.begin();
   PacketSender ps(ml_);
   while((tells_it) != collected_tells.end())
@@ -97,7 +97,6 @@ pc.check2();
   // Listに含まれる1つ1つのpairについて調べる
   for(int i = 0; i < funcarg; i++)
   {
-    const char* symname;
     ml_.MLGetNext(); // pair関数が得られる
     ml_.MLGetNext(); // pairという関数名
 //    symbolic_variable.previous = false;    
@@ -117,16 +116,10 @@ pc.check2();
         }
         symbolic_variable.derivative_count = n;
         ml_.MLGetNext(); // 変数
-        if(! ml_.MLGetSymbol(&symname)){
-          std::cout << "MLGetSymbol:unable to read the symbol from ml" << std::endl;
-          return false;
-        }
-        symbolic_variable.name = symname;
-        //std::cout << "Derivative[" << n << "][" << symname << "]";
+        symbolic_variable.name = ml_.get_symbol();
         break;
       case MLTKSYM: // prev
 //        symbolic_variable.previous = true;
-        //std::cout << "prev[";
         goto A; // prevの中身を調べる（通常変数の場合とDerivativeつきの場合とがある）
         break;
       default:
@@ -135,19 +128,12 @@ pc.check2();
       break;
     case MLTKSYM: // シンボル（記号）xとかyとか
       symbolic_variable.derivative_count = 0;
-      if(! ml_.MLGetSymbol(&symname)){
-        std::cout << "MLGetSymbol:unable to read the symbol from ml" << std::endl;
-        return false;
-      }
-      symbolic_variable.name = symname;
-      //std::cout << symname;
+      symbolic_variable.name = ml_.get_symbol();
       break;
     default:
       ;
     }
-    ml_.MLReleaseSymbol(symname);
 
-    //std::cout << "=";
     int numerator;
     int denominator;
     switch(ml_.MLGetNext()) // pair[variable, value]のvalue側が得られる
@@ -167,7 +153,6 @@ pc.check2();
           return false;
         }
         symbolic_value.denominator = denominator;
-        //std::cout << "Rational[" << numerator << "," << denominator << "]";
         break;
       case MLTKINT:
         symbolic_value.rational = false;
@@ -177,13 +162,11 @@ pc.check2();
         }
         symbolic_value.numerator = numerator;        
         symbolic_value.denominator = 1;
-        //std::cout << numerator;
         break;
       default:
         ;
     }   
     constraint_store.set_variable(symbolic_variable, symbolic_value); 
-    //std::cout << std::endl;
   }
 
   std::cout << constraint_store;

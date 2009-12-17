@@ -12,8 +12,7 @@ PacketSender::PacketSender(MathLink& ml) :
   ml_(ml),
   in_differential_equality_(false),
   differential_count_(0),
-  in_prev_(false),
-  in_guard_(false)
+  in_prev_(false)
 {}
 
 PacketSender::~PacketSender()
@@ -24,11 +23,9 @@ PacketSender::~PacketSender()
 void PacketSender::visit(boost::shared_ptr<Ask> node)                   
 {
   std::cout << "guard:";
-  //ml_.MLPutFunction("ask", 2);
-  in_guard_ = true;
+  //ml_.put_function("ask", 2);
   accept(node->get_guard());
   
-  in_guard_ = false;
   //std::cout << " => ";
   //accept(node->get_child());
   std::cout << std::endl;
@@ -37,7 +34,7 @@ void PacketSender::visit(boost::shared_ptr<Ask> node)
 // Tell§–ñ
 void PacketSender::visit(boost::shared_ptr<Tell> node)                  
 {
-  //ml_.MLPutFunction("tell", 1);
+  //ml_.put_function("tell", 1);
 
   accept(node->get_child());
   std::cout << std::endl;
@@ -46,7 +43,7 @@ void PacketSender::visit(boost::shared_ptr<Tell> node)
 // ”äŠr‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Equal> node)                 
 {
-  ml_.MLPutFunction("Equal", 2);
+  ml_.put_function("Equal", 2);
         
   accept(node->get_lhs());
   std::cout << "=";
@@ -56,7 +53,7 @@ void PacketSender::visit(boost::shared_ptr<Equal> node)
 
 void PacketSender::visit(boost::shared_ptr<UnEqual> node)               
 {
-  ml_.MLPutFunction("UnEqual", 2);
+  ml_.put_function("UnEqual", 2);
 
   accept(node->get_lhs());
   std::cout << "!=";
@@ -66,7 +63,7 @@ void PacketSender::visit(boost::shared_ptr<UnEqual> node)
 
 void PacketSender::visit(boost::shared_ptr<Less> node)                  
 {
-  ml_.MLPutFunction("Less", 2);
+  ml_.put_function("Less", 2);
 
   accept(node->get_lhs());
   std::cout << "<";
@@ -76,7 +73,7 @@ void PacketSender::visit(boost::shared_ptr<Less> node)
 
 void PacketSender::visit(boost::shared_ptr<LessEqual> node)             
 {
-  ml_.MLPutFunction("LessEqual", 2);
+  ml_.put_function("LessEqual", 2);
 
   accept(node->get_lhs());    
   std::cout << "<=";
@@ -86,7 +83,7 @@ void PacketSender::visit(boost::shared_ptr<LessEqual> node)
 
 void PacketSender::visit(boost::shared_ptr<Greater> node)               
 {
-  ml_.MLPutFunction("Greater", 2);
+  ml_.put_function("Greater", 2);
     
   accept(node->get_lhs());
   std::cout << ">";
@@ -96,7 +93,7 @@ void PacketSender::visit(boost::shared_ptr<Greater> node)
 
 void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)          
 {
-  ml_.MLPutFunction("GreaterEqual", 2);
+  ml_.put_function("GreaterEqual", 2);
     
   accept(node->get_lhs());
   std::cout << ">=";
@@ -107,7 +104,7 @@ void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)
 // ˜_—‰‰Zq
 void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)            
 {
-  ml_.MLPutFunction("And", 2);
+  ml_.put_function("And", 2);
 
   accept(node->get_lhs());
   std::cout << " & ";
@@ -116,7 +113,7 @@ void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)
 
 void PacketSender::visit(boost::shared_ptr<LogicalOr> node)             
 {
-  //ml_.MLPutFunction("Or", 2);
+  //ml_.put_function("Or", 2);
     
   accept(node->get_lhs());
   accept(node->get_rhs());
@@ -125,7 +122,7 @@ void PacketSender::visit(boost::shared_ptr<LogicalOr> node)
 // Zp“ñ€‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Plus> node)                  
 {
-  ml_.MLPutFunction("Plus", 2);
+  ml_.put_function("Plus", 2);
     
   accept(node->get_lhs());
   std::cout << "+";
@@ -134,7 +131,7 @@ void PacketSender::visit(boost::shared_ptr<Plus> node)
 
 void PacketSender::visit(boost::shared_ptr<Subtract> node)              
 {
-  ml_.MLPutFunction("Subtract", 2);
+  ml_.put_function("Subtract", 2);
     
   accept(node->get_lhs());
   std::cout << "-";
@@ -143,7 +140,7 @@ void PacketSender::visit(boost::shared_ptr<Subtract> node)
 
 void PacketSender::visit(boost::shared_ptr<Times> node)                 
 {
-  ml_.MLPutFunction("Times", 2);
+  ml_.put_function("Times", 2);
 
   accept(node->get_lhs());
   std::cout << "*";
@@ -152,7 +149,7 @@ void PacketSender::visit(boost::shared_ptr<Times> node)
 
 void PacketSender::visit(boost::shared_ptr<Divide> node)                
 {
-  ml_.MLPutFunction("Divide", 2);
+  ml_.put_function("Divide", 2);
     
   accept(node->get_lhs());
   std::cout << "/";
@@ -162,7 +159,7 @@ void PacketSender::visit(boost::shared_ptr<Divide> node)
 // Zp’P€‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Negative> node)              
 {       
-  ml_.MLPutFunction("Minus", 1);
+  ml_.put_function("Minus", 1);
   std::cout << "-";
 
   accept(node->get_child());
@@ -184,7 +181,7 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
   ml_.MLPutArgCount(1);      // this 1 is for the 'f'
   ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
   ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-  ml_.MLPutSymbol("Derivative");
+  ml_.put_symbol("Derivative");
   ml_.MLPutInteger(1);
 
   accept(node->get_child());
@@ -212,30 +209,30 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
 
   if(in_prev_)
   {
-    ml_.MLPutFunction("prev", 1);
+    ml_.put_function("prev", 1);
     std::cout << "prev[";
     if(differential_count_ > 0)
     {
-      ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+      ml_.put_symbol(("usrVar" + node->get_name()).c_str());
       vars_.insert(std::make_pair("usrVar" + node->get_name(), -1*(differential_count_ +1)));
       std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
     }
     else
     {
-      ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+      ml_.put_symbol(("usrVar" + node->get_name()).c_str());
       vars_.insert(std::make_pair("usrVar" + node->get_name(), -1));
       std::cout << node->get_name().c_str();
     }
     std::cout << "]";
   }
   else if(differential_count_ > 0){
-    ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+    ml_.put_symbol(("usrVar" + node->get_name()).c_str());
     vars_.insert(std::make_pair("usrVar" + node->get_name(), differential_count_));
     std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
   }
   else
   {
-    ml_.MLPutSymbol(("usrVar" + node->get_name()).c_str());
+    ml_.put_symbol(("usrVar" + node->get_name()).c_str());
     vars_.insert(std::make_pair("usrVar" + node->get_name(), 0));
     std::cout << node->get_name().c_str();
   }
@@ -244,11 +241,11 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   if(in_differential_equality_){
     if(in_differential_)
     {
-      ml_.MLPutSymbol("t");
+      ml_.put_symbol("t");
     }
     else
     {
-      ml_.MLPutSymbol("t");
+      ml_.put_symbol("t");
       std::cout << "[t]";
     }
   }
@@ -273,7 +270,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 void PacketSender::put_vars()
 {
   int var_num = vars_.size();
-  ml_.MLPutFunction("List", var_num);
+  ml_.put_function("List", var_num);
   std::set<std::pair<std::string, int> >::iterator vars_it = vars_.begin();
   const char* sym;
   int value;
@@ -284,7 +281,7 @@ void PacketSender::put_vars()
     value = (*vars_it).second;
     if(value < 0)
     {
-      ml_.MLPutFunction("prev", 1);
+      ml_.put_function("prev", 1);
       std::cout << "prev[";
       value += 1;
       value *= -1;
@@ -294,15 +291,15 @@ void PacketSender::put_vars()
         ml_.MLPutArgCount(1);      // this 1 is for the 'f'
         ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
         ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-        ml_.MLPutSymbol("Derivative");
+        ml_.put_symbol("Derivative");
         ml_.MLPutInteger(value);
-        ml_.MLPutSymbol(sym);
-        //ml_.MLPutSymbol("t");
+        ml_.put_symbol(sym);
+        //ml_.put_symbol("t");
         std::cout << "Derivative[" << value << "][" << sym << "]";
       }
       else
       {
-        ml_.MLPutSymbol(sym);
+        ml_.put_symbol(sym);
         std::cout << sym;
       }
       std::cout << "]";
@@ -313,15 +310,15 @@ void PacketSender::put_vars()
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
       ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-      ml_.MLPutSymbol("Derivative");
+      ml_.put_symbol("Derivative");
       ml_.MLPutInteger(value);
-      ml_.MLPutSymbol(sym);
-      //ml_.MLPutSymbol("t");
+      ml_.put_symbol(sym);
+      //ml_.put_symbol("t");
       std::cout << "Derivative[" << value << "][" << sym << "]";
     }
     else
     {
-      ml_.MLPutSymbol(sym);
+      ml_.put_symbol(sym);
       std::cout << sym;
     }
     std::cout << " ";
@@ -341,7 +338,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
   int cs_size = constraint_store.size();
   if(cs_size < 1)
   {
-    ml_.MLPutFunction("List", 0);
+    ml_.put_function("List", 0);
     std::cout << "no Constraints" << std::endl;
     return;
   }
@@ -350,7 +347,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
   std::cout << constraint_store;
   std::cout << "----------------------------" << std::endl;
 
-  ml_.MLPutFunction("List", cs_size);
+  ml_.put_function("List", cs_size);
 
   variable_map_t::const_iterator cs_it = constraint_store.begin();
   variable_map_t::const_iterator cs_end = constraint_store.end();
@@ -358,13 +355,13 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
   {
     SymbolicVariable variable = (*cs_it).first;
     SymbolicValue value = (*cs_it).second;
-    ml_.MLPutFunction("Equal", 2);
+    ml_.put_function("Equal", 2);
 
     // •Ï”–¼
 /*
     if(variable.previous == true)
     {
-      ml_.MLPutFunction("prev", 1);
+      ml_.put_function("prev", 1);
     }
 */
     if(variable.derivative_count > 0)
@@ -373,15 +370,15 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
       ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-      ml_.MLPutSymbol("Derivative");
+      ml_.put_symbol("Derivative");
       ml_.MLPutInteger(variable.derivative_count);
     }
-    ml_.MLPutSymbol(variable.name.c_str());
+    ml_.put_symbol(variable.name.c_str());
 
     // •Ï”‚Ì’l
     if(value.rational == true)
     {
-      ml_.MLPutFunction("Rational", 2);
+      ml_.put_function("Rational", 2);
       ml_.MLPutInteger(value.numerator);
       ml_.MLPutInteger(value.denominator);
     }

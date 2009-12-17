@@ -30,33 +30,33 @@ bool EntailmentChecker::check_entailment(
 {
 
 /*
-  ml_.MLPutFunction("checkEntailment", 3);
+  ml_.put_function("checkEntailment", 3);
 
-  ml_.MLPutFunction("And", 2);
-  ml_.MLPutFunction("GreaterEqual", 2);
-  ml_.MLPutSymbol("x");
+  ml_.put_function("And", 2);
+  ml_.put_function("GreaterEqual", 2);
+  ml_.put_symbol("x");
   ml_.MLPutInteger(0);
-  ml_.MLPutFunction("LessEqual", 2);
-  ml_.MLPutSymbol("x");
+  ml_.put_function("LessEqual", 2);
+  ml_.put_symbol("x");
   ml_.MLPutInteger(5);
 
-  ml_.MLPutFunction("List", 1);
-  ml_.MLPutFunction("And", 2);
-  ml_.MLPutFunction("GreaterEqual", 2);
-  ml_.MLPutSymbol("x");
+  ml_.put_function("List", 1);
+  ml_.put_function("And", 2);
+  ml_.put_function("GreaterEqual", 2);
+  ml_.put_symbol("x");
   ml_.MLPutInteger(2);
-  ml_.MLPutFunction("LessEqual", 2);
-  ml_.MLPutSymbol("x");
+  ml_.put_function("LessEqual", 2);
+  ml_.put_symbol("x");
   ml_.MLPutInteger(3);
 
-  ml_.MLPutFunction("List", 1);
-  ml_.MLPutSymbol("x");
+  ml_.put_function("List", 1);
+  ml_.put_symbol("x");
 
   ml_.MLEndPacket();
 */
 
   // checkEntailment[guard, tells, vars]‚ğ“n‚µ‚½‚¢
-  ml_.MLPutFunction("checkEntailment", 3);
+  ml_.put_function("checkEntailment", 3);
 
 
   // ask§–ñ‚ÌƒK[ƒh‚Ì®‚ğ“¾‚ÄMathematica‚É“n‚·
@@ -70,7 +70,7 @@ bool EntailmentChecker::check_entailment(
 /*
   // tell§–ñ‚ÌW‡‚©‚çtells‚ğ“¾‚ÄMathematica‚É“n‚·
   int tells_size = collected_tells.size();
-  ml_.MLPutFunction("List", tells_size);
+  ml_.put_function("List", tells_size);
   TellCollector::tells_t::iterator tells_it = collected_tells.begin();
   while(tells_it!=collected_tells.end())
   {
