@@ -115,18 +115,18 @@ pc.check2();
           std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
           return false;
         }
-        symbolic_variable.derivative_count = (unsigned int)n;
+        symbolic_variable.derivative_count = n;
         ml_.MLGetNext(); // •Ï”
         if(! ml_.MLGetSymbol(&symname)){
           std::cout << "MLGetSymbol:unable to read the symbol from ml" << std::endl;
           return false;
         }
         symbolic_variable.name = symname;
-        std::cout << "Derivative[" << n << "][" << symname << "]";
+        //std::cout << "Derivative[" << n << "][" << symname << "]";
         break;
       case MLTKSYM: // prev
 //        symbolic_variable.previous = true;
-        std::cout << "prev[";
+        //std::cout << "prev[";
         goto A; // prev‚Ì’†g‚ð’²‚×‚éi’Êí•Ï”‚Ìê‡‚ÆDerivative‚Â‚«‚Ìê‡‚Æ‚ª‚ ‚éj
         break;
       default:
@@ -140,14 +140,14 @@ pc.check2();
         return false;
       }
       symbolic_variable.name = symname;
-      std::cout << symname;
+      //std::cout << symname;
       break;
     default:
       ;
     }
     ml_.MLReleaseSymbol(symname);
 
-    std::cout << "=";
+    //std::cout << "=";
     int numerator;
     int denominator;
     switch(ml_.MLGetNext()) // pair[variable, value]‚Ìvalue‘¤‚ª“¾‚ç‚ê‚é
@@ -167,7 +167,7 @@ pc.check2();
           return false;
         }
         symbolic_value.denominator = denominator;
-        std::cout << "Rational[" << numerator << "," << denominator << "]";
+        //std::cout << "Rational[" << numerator << "," << denominator << "]";
         break;
       case MLTKINT:
         symbolic_value.rational = false;
@@ -177,13 +177,13 @@ pc.check2();
         }
         symbolic_value.numerator = numerator;        
         symbolic_value.denominator = 1;
-        std::cout << numerator;
+        //std::cout << numerator;
         break;
       default:
         ;
     }   
     constraint_store.set_variable(symbolic_variable, symbolic_value); 
-    std::cout << std::endl;
+    //std::cout << std::endl;
   }
 
   std::cout << constraint_store;

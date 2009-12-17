@@ -16,7 +16,7 @@ struct SymbolicValue {
    */
   std::ostream& dump(std::ostream& s) const
   {
-    if(rational) s << "Rational[numerator,denominator]";
+    if(rational) s << "Rational[" << numerator << "," << denominator << "]";
     else s << numerator;
     return s;
   }

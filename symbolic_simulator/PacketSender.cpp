@@ -110,6 +110,7 @@ void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)
   ml_.MLPutFunction("And", 2);
 
   accept(node->get_lhs());
+  std::cout << " & ";
   accept(node->get_rhs());
 }
 

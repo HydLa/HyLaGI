@@ -9,7 +9,7 @@ namespace simulator {
 
 struct DefaultVariable {
   std::string  name;
-  unsigned int derivative_count;
+  int derivative_count;
 
   /**
    * 構造体の値をダンプする
