@@ -731,7 +731,7 @@ DEFINE_UNARY_NODE(Differential);
 DEFINE_UNARY_NODE(Previous);
 
 /**
- * è¨êî
+ * êîéö
  */ 
 class Number : public FactorNode {
 public:
@@ -759,6 +759,8 @@ public:
   {
     return s << "Number<"
              << get_id()
+             << ","
+             << this
              << ">["
              << number_
              << "]";

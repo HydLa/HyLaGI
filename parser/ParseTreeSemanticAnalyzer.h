@@ -173,27 +173,12 @@ private:
   }
 
   /**
-   * ノードのIDを更新する
-   */
-  template<typename T>
-  void update_node_id(const T& n)
-  {
-    hydla::parse_tree::node_id_t id = n->get_id();
-    if(id == 0) {
-      parse_tree_->register_node(n);
-    }
-    else {
-      parse_tree_->update_node(id, n);
-    }
-  }
-
-  /**
    * 定義の簡約化(展開)をおこなう
    */
   node_sptr apply_definition(
     difinition_type_t* def_type,
-    const boost::shared_ptr<hydla::parse_tree::Caller>& caller, 
-    hydla::parse_tree::Definition* definition);
+    boost::shared_ptr<hydla::parse_tree::Caller> caller, 
+    boost::shared_ptr<hydla::parse_tree::Definition> definition);
 };
 
 } //namespace parser

@@ -42,8 +42,16 @@ public:
     unnamed_module_num_ = 1;
 
     parse_tree->dispatch(this);
-    assert(mod_set_stack_.size() == 1);
-    return mod_set_stack_.back();
+    assert(mod_set_stack_.size() <= 1);
+
+    container_sptr ret;
+    if(mod_set_stack_.size() == 1) {
+      ret = mod_set_stack_.back();
+    }
+    else {
+      ret.reset(new Container);
+    }
+    return ret;
   }
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
