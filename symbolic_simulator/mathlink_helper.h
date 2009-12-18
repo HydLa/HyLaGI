@@ -76,6 +76,8 @@ public:
   void clean()
   {
     if(link_) {
+      MLPutFunction("Exit", 0);
+      MLEndPacket();
       MLClose(link_);
       link_ = 0;
     }

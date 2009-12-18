@@ -22,6 +22,7 @@ namespace ch {
 template <class Container>
 class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
 public:
+  typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
   typedef typename boost::shared_ptr<Container> container_sptr;
   typedef std::vector<container_sptr>           container_stack_t;
 
@@ -34,8 +35,7 @@ public:
   /**
    * 与えられたパースツリーを元にモジュール集合の集合を表すクラスを構築する
    */
-  container_sptr create_module_set_container(
-    boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
+  container_sptr create(const parse_tree_sptr& parse_tree)
   {
     mod_set_stack_.clear();
     container_name_.clear();
@@ -62,7 +62,6 @@ public:
   {
     if(container_name_.empty()) {
       std::stringstream s;
-      s << "$" << unnamed_module_num_++;
       container_name_ = s.str();
     }
 
@@ -104,8 +103,6 @@ public:
   }
 
 private:
-  /// 構築するために使用するパースツリー
-  hydla::parse_tree::ParseTree* parse_tree_;
 
   /// モジュール集合の集合を一時的に保存しておくスタック
   container_stack_t             mod_set_stack_;

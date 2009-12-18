@@ -32,15 +32,28 @@ public:
   typedef typename phase_state_t::variable_t     variable_t;
   typedef typename phase_state_t::value_t        value_t;
 
-  typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
-  typedef typename boost::shared_ptr<PhaseStateType> phase_state_sptr; 
+  typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
+  typedef typename boost::shared_ptr<PhaseStateType>       phase_state_sptr; 
+  typedef hydla::ch::module_set_sptr                       module_set_sptr;
+  typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
-  Simulator()
+  Simulator() :
+    debug_mode_(false)    
   {}
   
   virtual ~Simulator()
   {}
 
+  void set_module_set_container(const module_set_container_sptr& msc)
+  {
+    msc_ = msc;
+  }
+
+  void set_module_set_container_no_init(const module_set_container_sptr& msc_no_init)
+  {
+    msc_no_init_ = msc_no_init;
+  }
+  
   void set_debug_mode(bool m)
   {
     debug_mode_ = m;
@@ -54,18 +67,10 @@ public:
   /**
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
-  void simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
-                parse_tree_sptr pt)
+  void simulate()
   {
-    parse_tree_sptr pt_no_init_node(new hydla::parse_tree::ParseTree(*pt));
-    InitNodeRemover init_node_remover;
-    init_node_remover.apply(pt_no_init_node.get());
-    if(debug_mode_) {
-      std::cout << "#*** No Initial Node Tree ***\n"
-        << *pt_no_init_node << std::endl;
-    }
-
-    init_state_queue(pt);
+    assert(msc_);
+    assert(msc_no_init_);
 
     while(!state_queue_.empty()) {
       phase_state_sptr state(pop_phase_state());
@@ -73,13 +78,13 @@ public:
       switch(state->phase) 
       {
         case phase_state_t::PointPhase:
-          msc->dispatch(
+          msc_->dispatch(
             boost::bind(&Simulator<phase_state_t>::point_phase, 
                         this, _1, state));
           break;
 
         case phase_state_t::IntervalPhase:
-          msc->dispatch(
+          msc_->dispatch(
             boost::bind(&Simulator<phase_state_t>::interval_phase, 
                         this, _1, state));
           break;
@@ -108,26 +113,50 @@ public:
     return state;
   }
 
-  virtual void init_state_queue(const parse_tree_sptr& pt)
+  void initialize(
+    const parse_tree_sptr&           parse_tree,
+    const module_set_container_sptr& msc, 
+    const module_set_container_sptr& msc_no_init)
   {
-    phase_state_sptr init_state(new phase_state_t);
-    init_state->phase = phase_state_t::PointPhase;
+    msc_         = msc;
+    msc_no_init_ = msc_no_init;
 
-    // 変数表作成
+    init_variable_map(parse_tree);
+    init_state_queue(parse_tree);
+    do_initialize();
+  }
+
+  /**
+   * シミュレーション時に使用される変数表のオリジナルの作成
+   */
+  virtual void init_variable_map(const parse_tree_sptr& parse_tree)
+  {
     typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
-    vmci it  = pt->variable_map_begin();
-    vmci end = pt->variable_map_end();
+
+    vmci it  = parse_tree->variable_map_begin();
+    vmci end = parse_tree->variable_map_end();
     for(; it != end; ++it)
     {
       for(int d=0; d<=it->second; ++d) {
         variable_t v;
         v.name             = it->first;
         v.derivative_count = d;
-        init_state->variable_map.set_variable(v, value_t());
+        variable_map_.set_variable(v, value_t());
       }
     }
 
-    std::cout << init_state->variable_map;
+    if(is_debug_mode()) {
+      std::cout << "#*** variable map ***" 
+                << variable_map_ 
+                << std::endl;
+    }
+  }
+
+  virtual void init_state_queue(const parse_tree_sptr& parse_tree)
+  {
+    phase_state_sptr init_state(new phase_state_t);
+    init_state->phase = phase_state_t::PointPhase;
+    init_state->variable_map = variable_map_;
 
     push_phase_state(init_state);
   }
@@ -135,16 +164,25 @@ public:
   /**
    * Point Phaseの処理
    */
-  virtual bool point_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
+  virtual bool point_phase(module_set_sptr& ms, phase_state_sptr& state) = 0;
 
   /**
    * Interval Phaseの処理
    */
-  virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state) = 0;
+  virtual bool interval_phase(module_set_sptr& ms, phase_state_sptr& state) = 0;
 
 private:
+  virtual void do_initialize()
+  {}
 
+  module_set_container_sptr msc_;
+  module_set_container_sptr msc_no_init_;
   bool debug_mode_;
+
+  /**
+   * シミュレーション中で使用されるすべての変数を格納した表
+   */
+  variable_map_t variable_map_;
 
   /**
    * 各状態を保存しておくためのキュー

@@ -38,15 +38,8 @@ public:
     OutputFormat output_format;
   } Opts;
 
-  MathSimulator();
+  MathSimulator(const Opts& opts);
   virtual ~MathSimulator();
-
-  bool simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
-                boost::shared_ptr<hydla::parse_tree::ParseTree> pt,
-                Opts& opts);
-
-//  virtual bool test_module_set(hydla::ch::module_set_sptr ms);
-
 
   /**
    * Point Phase‚Ìˆ—
@@ -59,10 +52,13 @@ public:
   virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state);
 
 private:
-  void init(Opts& opts);
+  /**
+   * ‰Šú‰»ˆ—
+   */
+  virtual void do_initialize();
 
+  Opts     opts_;
   MathLink ml_; 
-  //boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_;
 };
 
 } //namespace symbolic_simulator

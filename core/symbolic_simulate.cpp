@@ -12,29 +12,36 @@ using namespace hydla::symbolic_simulator;
 /**
  * 記号処理によるシミュレーション
  */
-void symbolic_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc,
-                       boost::shared_ptr<hydla::parse_tree::ParseTree> pt) 
-{
+void setup_symbolic_simulator_opts(MathSimulator::Opts& opts)
+{  
   ProgramOptions &po = ProgramOptions::instance();
 
-  MathSimulator::Opts msopts;
-
   if(po.get<std::string>("output-format") == "t") {
-    msopts.output_format = MathSimulator::fmtTFunction;
+    opts.output_format = MathSimulator::fmtTFunction;
   } else if(po.get<std::string>("output-format") == "n"){
-    msopts.output_format = MathSimulator::fmtNumeric; 
+    opts.output_format = MathSimulator::fmtNumeric; 
   } else {
+    // TODO: 例外を投げるようにする
     std::cerr << "invalid option - output format" << std::endl;
-    return;
+    exit(-1);
   }
 
-  msopts.mathlink      = po.get<std::string>("mathlink");
-  msopts.debug_mode    = po.count("debug")>0;
-  msopts.max_time      = po.get<std::string>("simulation-time");
-  msopts.profile_mode  = po.count("profile")>0;
-  msopts.parallel_mode = po.count("parallel")>0;
+  opts.mathlink      = po.get<std::string>("mathlink");
+  opts.debug_mode    = po.count("debug")>0;
+  opts.max_time      = po.get<std::string>("simulation-time");
+  opts.profile_mode  = po.count("profile")>0;
+  opts.parallel_mode = po.count("parallel")>0;
+}
 
-  MathSimulator ms;
-  ms.simulate(msc, pt, msopts);
+void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree,
+                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
+                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc_no_init)
+{
+  MathSimulator::Opts opts;
+  setup_symbolic_simulator_opts(opts);
+
+  MathSimulator ms(opts);
+  ms.initialize(parse_tree, msc, msc_no_init);
+  ms.simulate();
 }
 

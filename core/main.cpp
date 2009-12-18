@@ -20,6 +20,7 @@
 #include "ParseTreeGenerator.h"
 #include "ModuleSetList.h"
 #include "ModuleSetContainerCreator.h"
+#include "InitNodeRemover.h"
 
 // symbolic_simulator
 #include "MathSimulator.h"
@@ -41,10 +42,13 @@ using namespace boost;
 // prototype declaration
 int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
-void symbolic_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
-                       boost::shared_ptr<ParseTree> pt);
-void branch_and_prune_simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc);
-boost::shared_ptr<ParseTree> build_parse_tree();
+void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree,
+                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
+                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc_no_init);
+void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree,
+                               boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
+                               boost::shared_ptr<hydla::ch::ModuleSetContainer> msc_no_init);
+void setup_symbolic_simulator_opts(MathSimulator::Opts& opts);
 
 //
 int main(int argc, char* argv[]) 
@@ -74,42 +78,6 @@ int main(int argc, char* argv[])
   return ret;
 }
 
-boost::shared_ptr<ParseTree> build_parse_tree()
-{  
-  ProgramOptions &po = ProgramOptions::instance();
-  bool debug_mode = po.count("debug")>0;
-
-  // ASTの構築
-  HydLaAST ast;
-  if(po.count("input-file")) {
-    ast.parse_flie(po.get<std::string>("input-file"));
-  } else {
-    ast.parse(std::cin);
-  }
-  if(debug_mode) {
-    std::cout << "#*** AST Tree ***\n"; 
-    std::cout << ast << std::endl;
-  }
-
-  // ParseTreeの構築
-  boost::shared_ptr<ParseTree> pt(
-    ParseTreeGenerator<DefaultNodeFactory>().generate(
-      ast.get_tree_iterator()));
-  if(debug_mode) {
-    std::cout << "#*** Parse Tree ***\n"; 
-    std::cout << *pt << std::endl;
-  }
-
-  // 意味解析・制約呼び出しの展開
-  pt->semantic_analyze(); 
-  if(debug_mode) {
-    std::cout << "#*** Analyzed Parse Tree ***\n"; 
-    std::cout << *pt << std::endl;
-  }
-
-  return pt;
-}
-
 void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
@@ -127,35 +95,73 @@ void hydla_main(int argc, char* argv[])
 
   bool debug_mode = po.count("debug")>0;
 
-  // パースツリーの構築
-  boost::shared_ptr<ParseTree> pt(build_parse_tree());
+  // ASTの構築
+  HydLaAST ast;
+  if(po.count("input-file")) {
+    ast.parse_flie(po.get<std::string>("input-file"));
+  } else {
+    ast.parse(std::cin);
+  }
+  if(debug_mode) {
+    std::cout << "#*** AST Tree ***\n"
+              << ast << std::endl;
+  }
+
+  // ParseTreeの構築
+  boost::shared_ptr<ParseTree> pt(
+    ParseTreeGenerator<DefaultNodeFactory>().generate(
+      ast.get_tree_iterator()));
+  if(debug_mode) {
+    std::cout << "#*** Parse Tree ***\n"
+              << *pt << std::endl;
+  }
+
+  // 意味解析・制約呼び出しの展開
+  pt->semantic_analyze(); 
+  if(debug_mode) {
+    std::cout << "#*** Analyzed Parse Tree ***\n"
+              << *pt << std::endl;
+  }
+
+  // alwaysが付いていない制約を取り除いたパースツリーの構築
+  boost::shared_ptr<ParseTree> pt_no_init_node(new hydla::parse_tree::ParseTree(*pt));
+  hydla::simulator::InitNodeRemover init_node_remover;
+  init_node_remover.apply(pt_no_init_node.get());
+  if(debug_mode) {
+    std::cout << "#*** No Initial Node Tree ***\n"
+              << *pt_no_init_node << std::endl;
+  }
 
   // 解候補モジュール集合の導出
-  boost::shared_ptr<ModuleSetList> msl(
-    ModuleSetContainerCreator<ModuleSetList>().
-    create_module_set_container(pt));
+  ModuleSetContainerCreator<ModuleSetList> mcc;
+  boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
+  boost::shared_ptr<ModuleSetList> msc_no_init(mcc.create(pt_no_init_node));
   if(debug_mode) {
-    std::cout << "#*** set of module sets which might be solution ***\n"
-              << msl->get_name() << "\n";
-      msl->dump_tree(std::cout) << std::endl;
+    std::cout << "#*** set of module sets ***\n"
+              << msc->get_name() << "\n";
+      msc->dump_tree(std::cout) << std::endl;
 
+    std::cout << "#*** set of no init module sets ***\n"
+              << msc_no_init->get_name() << "\n";
+      msc_no_init->dump_tree(std::cout) << std::endl;
   }  
+
   if(po.count("module-set-list")>0) {
-    std::cout << msl->get_name() << "\n";
-    msl->dump_tree(std::cout) << std::endl;
+    std::cout << msc->get_name() << "\n";
+    msc->dump_tree(std::cout) << std::endl;
     return;
   }
   
   // シミュレーション開始
   std::string method(po.get<std::string>("method"));
   if(method == "s" || method == "SymbolicSimulator") {
-    symbolic_simulate(msl, pt);
+    symbolic_simulate(pt, msc, msc_no_init);
   } 
   else if(method == "b" || method == "BandPSimulator") {
-    branch_and_prune_simulate(msl);
+    branch_and_prune_simulate(pt, msc, msc_no_init);
   } else {
+    // TODO: 例外を投げるようにする
     std::cerr << "invalid method" << std::endl;
     return;
   }
 }
-

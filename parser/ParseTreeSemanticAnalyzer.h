@@ -179,7 +179,6 @@ private:
   void update_node_id(const T& n)
   {
     hydla::parse_tree::node_id_t id = n->get_id();
-    std::cout << "id:" << id << std::endl;
     if(id == 0) {
       parse_tree_->register_node(n);
     }

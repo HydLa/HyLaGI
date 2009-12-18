@@ -81,12 +81,8 @@ public:
     bool parallel_mode;   // Ç»Ç¢
   } Opts;
 
-  BPSimulator();
+  BPSimulator(const Opts& opts);
   virtual ~BPSimulator();
-
-  bool simulate(boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, Opts& opts);
-
-//  virtual bool test_module_set(hydla::ch::module_set_sptr ms);
 
 
   /**
@@ -99,10 +95,14 @@ public:
    */
   virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state);
 
-private:
-  bool debug_mode_;
-  std::string max_time_;
+private:  
+  /**
+   * èâä˙âªèàóù
+   */
+  virtual void do_initialize();
 
+  Opts opts_;
+  std::string max_time_;
 };
 
 } // namespace bp_simulator
