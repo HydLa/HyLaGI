@@ -31,9 +31,9 @@ std::ostream& Caller::dump(std::ostream& s) const
     << name_
     << "(";
 
-  if(it!=end) s << (it++)->get();
+  if(it!=end) s << **(it++);
   while(it!=end) {
-    s << "," << (it++)->get();
+    s << "," << **(it++);
   }
 
   s << ")>";

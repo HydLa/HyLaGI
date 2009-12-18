@@ -23,7 +23,7 @@ public:
              int line = -1) : 
     std::runtime_error(
       init("", 
-           boost::lexical_cast<std::string>(node), 
+           boost::lexical_cast<std::string>(*node), 
            line))
   {}
   
@@ -32,7 +32,7 @@ public:
              int line = -1) : 
     std::runtime_error(
       init(tag, 
-           boost::lexical_cast<std::string>(node), 
+           boost::lexical_cast<std::string>(*node), 
            line))
   {}
 

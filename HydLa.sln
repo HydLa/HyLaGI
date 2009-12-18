@@ -22,11 +22,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_tests", "unit_tests\unit_tests.vcproj", "{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}"
 	ProjectSection(ProjectDependencies) = postProject
+		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA} = {89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}
 		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E} = {C37DA84E-F258-44FC-A914-B19AE6C0FB2E}
 		{5E34BE62-2104-42F3-9E59-CED1ED540932} = {5E34BE62-2104-42F3-9E59-CED1ED540932}
 		{985BE36E-C416-4E28-8974-70BAAD004FA9} = {985BE36E-C416-4E28-8974-70BAAD004FA9}
 		{26B21888-DF06-41CF-849C-4C936BBAB30E} = {26B21888-DF06-41CF-849C-4C936BBAB30E}
-		{76B337D3-611E-477D-8358-C94F9C76CCF0} = {76B337D3-611E-477D-8358-C94F9C76CCF0}
+		{725E89B0-0DEE-4801-965B-4ACF8B366E42} = {725E89B0-0DEE-4801-965B-4ACF8B366E42}
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
 EndProject
@@ -52,10 +53,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "realpaver_wrapper", "realpa
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(SubversionScc) = preSolution
-		Svn-Managed = True
-		Manager = AnkhSVN - Subversion Support for Visual Studio
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
@@ -108,5 +105,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal

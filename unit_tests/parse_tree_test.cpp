@@ -9,8 +9,9 @@
 
 #include <sstream>
 
+#include "HydLaAST.h"
 #include "NodeFactory.h"
-#include "HydLaParser.h"
+#include "ParseTreeGenerator.h"
 #include "ParseError.h"
 
 using namespace std;
@@ -26,8 +27,8 @@ using namespace boost;
   stringstream stream; \
   std::string out_str; \
   const boost::regex reg_exp("\\r|\\n"); \
-  shared_ptr<NodeFactory> nf(new NodeFactory()); \
-  HydLaParser hp(nf);
+  HydLaAST ast; \
+  ParseTreeGenerator<DefaultNodeFactory> ptg;
 
 #define PARSE_TREE_TEST_EQUAL(INPUT, ANS) \
   hp.parse_string(INPUT); \
@@ -37,11 +38,16 @@ using namespace boost;
   BOOST_CHECK_EQUAL(out_str, ANS);
 
 #define PARSE_TREE_TEST_ERROR(INPUT, ERR_TYPE) \
-    BOOST_CHECK_THROW(hp.parse_string(INPUT), ERR_TYPE);
+  BOOST_CHECK_THROW({ \
+    ast.parse_string(INPUT); \
+    ptg.generate(ast.get_tree_iterator())->semantic_analyze(); \
+  }, ERR_TYPE);
 
 #define PARSE_TREE_TEST_NO_ERROR(INPUT) \
-    BOOST_CHECK_NO_THROW(hp.parse_string(INPUT));
-
+  BOOST_CHECK_NO_THROW({ \
+    ast.parse_string(INPUT); \
+    ptg.generate(ast.get_tree_iterator())->semantic_analyze(); \
+  });
 
 BOOST_AUTO_TEST_CASE(parse_tree_test_syntax)
 {  
@@ -291,21 +297,17 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_multiple_definition)
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
 {
-  shared_ptr<NodeFactory> nf(new NodeFactory());
-  HydLaParser hp(nf);
+  HydLaAST ast;
+  ParseTreeGenerator<DefaultNodeFactory> ptg;
 
-  BOOST_CHECK_NO_THROW(
-    hp.parse_flie("../examples/bouncing_particle.hydla"));
-
-  BOOST_CHECK_NO_THROW(
-    hp.parse_flie("../examples/box1.hydla"));
-  
-  BOOST_CHECK_NO_THROW(
-    hp.parse_flie("../examples/box_mod.hydla"));
-
-  BOOST_CHECK_NO_THROW(
-    hp.parse_flie("../examples/impulse_function.hydla"));
-
-  BOOST_CHECK_NO_THROW(
-    hp.parse_flie("../examples/navigation.hydla"));
+#define PARSE_TREE_TEST_EXAMPLE_FILE(FILE) \
+  BOOST_CHECK_NO_THROW({ \
+    ast.parse_flie(FILE); \
+    ptg.generate(ast.get_tree_iterator())->semantic_analyze();});
+    
+  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/bouncing_particle.hydla");
+  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box1.hydla");
+  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box_mod.hydla");
+  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/impulse_function.hydla");
+  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/navigation.hydla");
 }

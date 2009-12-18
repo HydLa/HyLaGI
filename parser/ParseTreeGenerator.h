@@ -103,18 +103,19 @@ private:
   boost::shared_ptr<NodeType>  
   create_caller(const TreeIter& tree_iter)
   {
+    TreeIter ch = tree_iter->children.begin();
     boost::shared_ptr<NodeType> node(create_node<NodeType>());
 
     //プログラム名
     node->set_name(    
-      std::string(tree_iter->value.begin(), tree_iter->value.end()));
+      std::string(ch->value.begin(), ch->value.end()));
 
     //実引数
-    if (tree_iter->children.size()>1) {
-      TreeIter args = (tree_iter+1)->children.begin();
-      size_t bound_variable_count = (tree_iter+1)->children.size();
-      for(size_t i=0; i<bound_variable_count; i++) {
-        node->add_actual_arg(create_parse_tree(args+i));
+    if (tree_iter->children.size()==2) {
+      TreeIter it  = (ch+1)->children.begin();
+      TreeIter end = (ch+1)->children.end();
+      for(; it!=end; ++it) {
+        node->add_actual_arg(create_parse_tree(it));
       }
     }
     return node;
@@ -177,13 +178,13 @@ private:
       // 制約呼び出し
       case RI_ConstraintCaller:
       {
-        return create_caller<ConstraintCaller>(ch);
+        return create_caller<ConstraintCaller>(tree_iter);
       }
       
       // プログラム呼び出し
       case RI_ProgramCaller:
       {
-        return create_caller<ProgramCaller>(ch);
+        return create_caller<ProgramCaller>(tree_iter);
       }
 
       // Tell制約
