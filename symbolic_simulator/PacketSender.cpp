@@ -206,36 +206,25 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
 // •Ï”
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
 {
-
   if(in_prev_)
   {
     ml_.put_function("prev", 1);
     std::cout << "prev[";
-    if(differential_count_ > 0)
-    {
-      ml_.put_symbol(("usrVar" + node->get_name()).c_str());
-      vars_.insert(std::make_pair("usrVar" + node->get_name(), -1*(differential_count_ +1)));
-      std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
-    }
-    else
-    {
-      ml_.put_symbol(("usrVar" + node->get_name()).c_str());
-      vars_.insert(std::make_pair("usrVar" + node->get_name(), -1));
-      std::cout << node->get_name().c_str();
-    }
-    std::cout << "]";
   }
-  else if(differential_count_ > 0){
-    ml_.put_symbol(("usrVar" + node->get_name()).c_str());
-    vars_.insert(std::make_pair("usrVar" + node->get_name(), differential_count_));
+
+  ml_.put_symbol(("usrVar" + node->get_name()).c_str());
+  if(in_prev_){
+    vars_.insert(std::make_pair("usrVar" + node->get_name(), -1*(differential_count_ +1)));
+  }else{
+    vars_.insert(std::make_pair("usrVar" + node->get_name(), differential_count_ + 1));
+  }
+
+  if(differential_count_ > 0){
     std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
-  }
-  else
-  {
-    ml_.put_symbol(("usrVar" + node->get_name()).c_str());
-    vars_.insert(std::make_pair("usrVar" + node->get_name(), 0));
+  }else{
     std::cout << node->get_name().c_str();
   }
+  if(in_prev_) std::cout << "]";
 
 /*
   if(in_differential_equality_){
@@ -279,32 +268,16 @@ void PacketSender::put_vars()
   {
     sym = ((*vars_it).first).c_str();
     value = (*vars_it).second;
+    int prevflag = 0;
     if(value < 0)
     {
+      prevflag = 1;
       ml_.put_function("prev", 1);
       std::cout << "prev[";
-      value += 1;
       value *= -1;
-      if(value != 0)
-      {
-        ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-        ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-        ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-        ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-        ml_.put_symbol("Derivative");
-        ml_.MLPutInteger(value);
-        ml_.put_symbol(sym);
-        //ml_.put_symbol("t");
-        std::cout << "Derivative[" << value << "][" << sym << "]";
-      }
-      else
-      {
-        ml_.put_symbol(sym);
-        std::cout << sym;
-      }
-      std::cout << "]";
     }
-    else if(value != 0)
+    value -= 1;
+    if(value != 0)
     {
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
@@ -321,6 +294,9 @@ void PacketSender::put_vars()
       ml_.put_symbol(sym);
       std::cout << sym;
     }
+
+    if(prevflag) std::cout << "]";
+
     std::cout << " ";
     vars_it++;
   }
@@ -374,6 +350,8 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
       ml_.MLPutInteger(variable.derivative_count);
     }
     ml_.put_symbol(variable.name.c_str());
+
+    vars_.insert(std::make_pair(variable.name, variable.derivative_count + 1));
 
     // •Ï”‚Ì’l
     if(value.rational == true)
