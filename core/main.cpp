@@ -19,6 +19,7 @@
 #include "NodeFactory.h"
 #include "ParseTreeGenerator.h"
 #include "ModuleSetList.h"
+#include "ModuleSetGraph.h"
 #include "ModuleSetContainerCreator.h"
 #include "InitNodeRemover.h"
 
@@ -132,23 +133,38 @@ void hydla_main(int argc, char* argv[])
               << *pt_no_init_node << std::endl;
   }
 
+  if(po.count("module-set-graph")>0) {
+    ModuleSetContainerCreator<ModuleSetGraph> mcc;
+    boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
+    std::cout << msc->get_name() << std::endl;
+    msc->build_edges();
+    return;
+  }
+
+
   // 解候補モジュール集合の導出
   ModuleSetContainerCreator<ModuleSetList> mcc;
   boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
   boost::shared_ptr<ModuleSetList> msc_no_init(mcc.create(pt_no_init_node));
   if(debug_mode) {
     std::cout << "#*** set of module sets ***\n"
-              << msc->get_name() << "\n";
-      msc->dump_tree(std::cout) << std::endl;
+              << msc->get_name() 
+              << "\n"
+              << *msc 
+              << std::endl;
 
     std::cout << "#*** set of no init module sets ***\n"
-              << msc_no_init->get_name() << "\n";
-      msc_no_init->dump_tree(std::cout) << std::endl;
+              << msc_no_init->get_name()
+              << "\n"
+              << *msc_no_init 
+              << std::endl;
   }  
 
   if(po.count("module-set-list")>0) {
-    std::cout << msc->get_name() << "\n";
-    msc->dump_tree(std::cout) << std::endl;
+    std::cout << msc->get_name() 
+              << "\n"
+              << *msc 
+              << std::endl;
     return;
   }
   

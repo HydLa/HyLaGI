@@ -132,10 +132,12 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
                                 phase_state_sptr& state)
 {
   if(is_debug_mode()) {
-    std::cout << "#***** bagin point phase *****\n";
-    std::cout << "#** module set **\n";
-    std::cout << ms->get_name() << std::endl;
-    ms->dump_tree(std::cout) << std::endl;
+    std::cout << "#***** begin point phase *****\n"
+              << "#** module set **\n"
+              << ms->get_name()
+              << "\n"
+              << *ms 
+              << std::endl;
   }
 
   TellCollector tell_collector(ms);

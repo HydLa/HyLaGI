@@ -9,14 +9,6 @@ using namespace boost::lambda;
 namespace hydla {
 namespace ch {
 
-class ModuleSetComparator {
-public:
-  bool operator()(const module_set_sptr &lhs, const module_set_sptr &rhs) 
-  {
-    return lhs->compare(*rhs) > 0;
-  }
-};
-
 ModuleSetList::ModuleSetList()
 {}
 
@@ -101,16 +93,16 @@ std::string ModuleSetList::get_name() const
   return s;
 }
 
-std::ostream& ModuleSetList::dump_tree(std::ostream& s) const
+std::ostream& ModuleSetList::dump(std::ostream& s) const
 {
   module_set_list_t::const_iterator it  = module_set_list_.begin();
   module_set_list_t::const_iterator end = module_set_list_.end();
   
   s << "{";
-  if(it!=end) (*it++)->dump_tree(s);
+  if(it!=end) (*it++)->dump(s);
   while(it!=end) {
     s << ", ";
-    (*it++)->dump_tree(s);
+    (*it++)->dump(s);
   }
   s << "}";
 
@@ -127,6 +119,11 @@ bool ModuleSetList::dispatch(
     if(callback_func(*it++)) return true;
   }
   return false;
+}
+
+std::ostream& operator<<(std::ostream& s, const ModuleSetList& m)
+{
+  return m.dump(s);
 }
 
 } // namespace ch

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <ostream>
+#include <algorithm>
 
 #include <boost/shared_ptr.hpp>
 
@@ -24,12 +25,12 @@ public:
                     hydla::parse_tree::node_sptr> module_t;
   typedef std::vector<module_t>                   module_list_t;
 
-  typedef struct ModuleComp_ {
-    bool operator()(module_t& a, module_t& b)
+  struct ModuleComp {
+    bool operator()(const module_t& a, const module_t& b) const
     {
       return a.first < b.first;
     }
-  } ModuleComp;
+  };
 
   ModuleSet();
   ModuleSet(const std::string& name, hydla::parse_tree::node_sptr node);
@@ -43,16 +44,33 @@ public:
   std::string get_name() const;
 
   /**
+   * 集合の要素の数
+   */
+  size_t size() const 
+  {
+    return module_list_.size();
+  }
+
+  bool is_super_set(const ModuleSet& subset_mod) const
+  {
+    return std::includes(module_list_.begin(), 
+                         module_list_.end(),
+                         subset_mod.module_list_.begin(), 
+                         subset_mod.module_list_.end(),
+                         ModuleComp());
+  }
+ 
+  /**
    * 集合のパースツリーの内容出力
    */
-  std::ostream& dump_tree(std::ostream& s) const;
+  std::ostream& dump(std::ostream& s) const;
 
   /**
    * このクラス同士の比較
    * 含まれるモジュール数が少ないほど小さい
    * モジュール数が同一の時は含まれているモジュール名により判断をおこなう
    */ 
-  int compare(ModuleSet& rhs) const;
+  int compare(const ModuleSet& rhs) const;
 
   /**
    * 集合の各制約モジュールに対してTreeVisitorの適用
@@ -68,6 +86,17 @@ public:
 
 private:
   module_list_t module_list_;
+};
+
+std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
+
+class ModuleSetComparator {
+public:
+  bool operator()(const module_set_sptr &lhs, 
+                  const module_set_sptr &rhs) const
+  {
+    return lhs->compare(*rhs) > 0;
+  }
 };
 
 } // namespace ch

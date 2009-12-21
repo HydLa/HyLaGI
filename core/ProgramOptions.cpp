@@ -25,7 +25,8 @@ void ProgramOptions::init_descriptions()
     ("debug,d", "enable debug mode")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
-    ("module-set-list", "output set of module sets which might be solution")
+    ("module-set-list", "output set of module sets which might be solution by list representation")
+    ("module-set-graph", "output set of module sets which might be solution by graph representation")
 
     ("method,m", 
      value<std::string>()->default_value("s"), 

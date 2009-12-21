@@ -42,7 +42,7 @@ public:
   /**
    * 集合の集合のパースツリーの内容出力
    */
-  std::ostream& dump_tree(std::ostream& s) const;
+  std::ostream& dump(std::ostream& s) const;
 
   /**
    * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
@@ -53,6 +53,8 @@ public:
 private:
   module_set_list_t module_set_list_;
 };
+
+std::ostream& operator<<(std::ostream& s, const ModuleSetList& m);
 
 } // namespace ch
 } // namespace hydla

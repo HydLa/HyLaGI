@@ -43,7 +43,7 @@ std::string ModuleSet::get_name() const
   return str;
 }
 
-std::ostream& ModuleSet::dump_tree(std::ostream& s) const
+std::ostream& ModuleSet::dump(std::ostream& s) const
 {
   std::string str;
   module_list_t::const_iterator it  = module_list_.begin();    
@@ -58,7 +58,7 @@ std::ostream& ModuleSet::dump_tree(std::ostream& s) const
   return s;
 }
 
-int ModuleSet::compare(ModuleSet& rhs) const
+int ModuleSet::compare(const ModuleSet& rhs) const
 {
   module_list_t::const_iterator this_it  = module_list_.begin();
   module_list_t::const_iterator this_end = module_list_.end();
@@ -69,6 +69,11 @@ int ModuleSet::compare(ModuleSet& rhs) const
     comp = (this_it++)->first.compare((rhs_it++)->first);
   }
   return comp;
+}
+
+std::ostream& operator<<(std::ostream& s, const ModuleSet& m)
+{
+  return m.dump(s);
 }
 
 } // namespace ch
