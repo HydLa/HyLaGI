@@ -115,8 +115,10 @@ bool ModuleSetList::dispatch(
 {
   module_set_list_t::iterator it  = module_set_list_.begin();
   module_set_list_t::iterator end = module_set_list_.end();
-  while(it!=end) {
-    if(callback_func(*it++)) return true;
+  for(; it!=end; ++it) {
+    if(callback_func(*it)) {
+      return true;
+    }
   }
   return false;
 }

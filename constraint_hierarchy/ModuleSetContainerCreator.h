@@ -2,10 +2,11 @@
 #define _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_
 
 #include <assert.h>
-#include <vector>
-#include <sstream>
+#include <deque>
+#include <map>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "ParseTree.h"
 #include "Node.h"
@@ -24,7 +25,9 @@ class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
 public:
   typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
   typedef typename boost::shared_ptr<Container> container_sptr;
-  typedef std::vector<container_sptr>           container_stack_t;
+  typedef std::deque<container_sptr>            container_stack_t;
+  typedef std::map<std::string, int>            mod_name_map_t;
+
 
   ModuleSetContainerCreator()
   {}
@@ -39,7 +42,7 @@ public:
   {
     mod_set_stack_.clear();
     container_name_.clear();
-    unnamed_module_num_ = 1;
+    mod_name_map_.clear();
 
     parse_tree->dispatch(this);
     assert(mod_set_stack_.size() <= 1);
@@ -68,10 +71,9 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
   {
-    if(container_name_.empty()) {
-      std::stringstream s;
-      container_name_ = s.str();
-    }
+    container_name_ += "$";
+    container_name_ += boost::lexical_cast<std::string>(
+                        mod_name_map_[container_name_]++);
 
     // create ModuleSet
     module_set_sptr mod_set(new ModuleSet(container_name_, node));
@@ -113,13 +115,17 @@ public:
 private:
 
   /// モジュール集合の集合を一時的に保存しておくスタック
-  container_stack_t             mod_set_stack_;
+  container_stack_t mod_set_stack_;
 
   /// 登録される制約モジュールの名前
-  std::string                   container_name_;
+  std::string       container_name_;
 
-  /// 無名制約モジュールの通し番号
-  int                           unnamed_module_num_;
+  /**
+   * 制約モジュールの管理
+   * HydLaの制約モジュールは多重集合のため，
+   * 同一名のモジュールも区別する必要がある
+   */
+  mod_name_map_t    mod_name_map_;
 };
 
 } // namespace ch

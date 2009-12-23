@@ -72,7 +72,9 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
   // tell§–ñ‚Ì“o˜^
-  if(collected_tells_.find(node) == collected_tells_.end()) {
+  if(collect_all_tells_ || 
+      collected_tells_.find(node) == collected_tells_.end()) 
+  {
     tells_->push_back(node);
     collected_tells_.insert(node);
   }

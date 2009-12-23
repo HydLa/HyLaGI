@@ -37,8 +37,8 @@ public:
   typedef hydla::ch::module_set_sptr                       module_set_sptr;
   typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
-  Simulator() :
-    debug_mode_(false)    
+  Simulator(bool debug_mode = false) :
+    debug_mode_(debug_mode)    
   {}
   
   virtual ~Simulator()

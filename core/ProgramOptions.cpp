@@ -31,6 +31,8 @@ void ProgramOptions::init_descriptions()
     ("method,m", 
      value<std::string>()->default_value("s"), 
      "simulation method:\n  b or BandPSimulator\n  s or SymbolicSimulator")
+
+    ("nd", "nondeterministic mode")
     
     ("output-format,f", 
      value<std::string>()->default_value("n"), 

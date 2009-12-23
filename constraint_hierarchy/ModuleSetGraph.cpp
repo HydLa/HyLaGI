@@ -106,53 +106,31 @@ void ModuleSetGraph::build_edges()
 {
   edges_.clear();
 
-  std::cout << "aaa" << nodes_.size() << std::endl;
-
   if(nodes_.size() == 0) return;
 
-  {
-    nodes_t::const_iterator it  = nodes_.begin();
-    nodes_t::const_iterator end = nodes_.end();
-
-    for(; it!=end; ++it) {
-      std::cout << it->mod << std::endl;
-    }
-  }
-
-  nodes_t::const_iterator node_begin = nodes_.begin();
-  nodes_t::const_iterator node_end   = nodes_.end();
+  nodes_t::iterator node_begin = nodes_.begin();
+  nodes_t::iterator node_end   = nodes_.end();
 
   int modsize = (int)node_begin->mod->size();
-  std::cout << "modsize:" << modsize << std::endl;
 
-  nodes_t::const_iterator super_it = node_begin;
-  nodes_t::const_iterator super_end = 
+  nodes_t::iterator super_it = node_begin;
+  nodes_t::iterator super_end = 
     std::find_if(node_begin, node_end, ModSizePred(--modsize));
   
   while(super_it!=node_end) {
-  std::cout << "a" << std::endl;
-
-    nodes_t::const_iterator subset_it  = super_end;
-    nodes_t::const_iterator subset_end = 
+    nodes_t::iterator subset_it  = super_end;
+    nodes_t::iterator subset_end = 
       std::find_if(subset_it, node_end, ModSizePred(--modsize));
     
     for(; super_it!=super_end; ++super_it) {
-      std::cout << "super_it:" << super_it->mod << std::endl;
-      std::cout << "super_end:" << super_end->mod << std::endl;
-      std::cout << "subset_it:" << subset_it->mod << std::endl;
-      std::cout << "subset_end:" << subset_end->mod << std::endl;
-
-      std::cout << "b" << std::endl;
-
-      for(nodes_t::const_iterator tmp_subset_it = subset_it;
+      for(nodes_t::iterator tmp_subset_it = subset_it;
           tmp_subset_it!=subset_end; 
           ++tmp_subset_it) {
-        std::cout << super_it->mod->get_name() << ">>>>" 
-                  << tmp_subset_it->mod->get_name() << std::endl;
-
         if(super_it->mod->is_super_set(*tmp_subset_it->mod)) {
           std::cout << super_it->mod->get_name() << "=>" 
                     << tmp_subset_it->mod->get_name() << std::endl;
+          edges_.insert(
+            edges_t::value_type(&(*super_it), &(*tmp_subset_it)));
         }
       }
     } 
@@ -179,19 +157,66 @@ std::string ModuleSetGraph::get_name() const
 
 std::ostream& ModuleSetGraph::dump(std::ostream& s) const
 {
+  
+
+  edges_t::left_const_iterator it  = edges_.left.begin();
+  edges_t::left_const_iterator end = edges_.left.end();
+  for(; it!=end; ++it) {
+    s << *it->first->mod << " -> " << *it->second->mod << ";\n";
+  }
+
+  return s;
+}
+
+std::ostream& ModuleSetGraph::to_graphviz(std::ostream& s) const
+{
+  s << "digraph g {\n";
+    
+  edges_t::left_const_iterator it  = edges_.left.begin();
+  edges_t::left_const_iterator end = edges_.left.end();
+  for(; it!=end; ++it) {
+    s << "  \"" << it->first->mod->get_name() 
+      << "\" -> \"" << it->second->mod->get_name() << "\";\n";
+  }
+
+  s << "}" << std::endl;
+
   return s;
 }
 
 bool ModuleSetGraph::dispatch(
   boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
   int threads)
-{
-  nodes_t::const_iterator it  = nodes_.begin();
-  nodes_t::const_iterator end = nodes_.end();
-  while(it!=end) {
-    if(callback_func((it++)->mod)) return true;
+{  
+  nodes_t::iterator it  = nodes_.begin();
+  nodes_t::iterator end = nodes_.end();
+
+  // ‘Sƒm[ƒh‚ð–¢’Tõó‘Ô‚É‚·‚é
+  for(; it!=end; ++it) {
+    it->visited = false;
+  }
+
+  // ’Tõ
+  for(it=nodes_.begin(); it!=end; ++it) {
+    if(!it->visited && callback_func(it->mod)) {
+      // •ïŠÜ‚³‚ê‚éƒ‚ƒWƒ…[ƒ‹W‡‚Í’TõÏ‚Ý‚É‚·‚é
+      mark_visited_flag(&*it);
+    }
   }
   return false;
+}
+
+void ModuleSetGraph::mark_visited_flag(Node* node)
+{
+  node->visited = true;
+
+  std::pair<edges_t::map_by<superset>::const_iterator, 
+            edges_t::map_by<superset>::const_iterator>
+    superset_range = edges_.by<superset>().equal_range(node);
+
+  for(; superset_range.first!=superset_range.second; ++superset_range.first) {
+    mark_visited_flag(superset_range.first->get<subset>());
+  }
 }
 
 std::ostream& operator<<(std::ostream& s, const ModuleSetGraph& m)

@@ -12,22 +12,13 @@
 namespace hydla {
 namespace ch {
 
-class ModuleSetGraph {
+class ModuleSetGraph : public ModuleSetContainer {
 public:
-  struct superset {};
-  struct subset {};
-  
-  typedef boost::bimaps::bimap<
-    boost::bimaps::multiset_of<
-      boost::bimaps::tags::tagged<module_set_sptr, superset>, 
-      ModuleSetComparator>,
-    boost::bimaps::multiset_of<
-      boost::bimaps::tags::tagged<module_set_sptr, subset>, 
-      ModuleSetComparator>
-  > edges_t;
-
   struct Node {
+    /// モジュール集合
     module_set_sptr mod;
+
+    /// ノードの訪問フラグ
     bool            visited;
   };
 
@@ -36,9 +27,27 @@ public:
     {      
       return ModuleSetComparator()(lhs.mod, rhs.mod);
     }
+     
+    bool operator()(const Node* lhs, const Node* rhs) const
+    {      
+      return ModuleSetComparator()(lhs->mod, rhs->mod);
+    }
   };
 
   typedef std::vector<Node> nodes_t;
+
+  struct superset {};
+  struct subset {};
+  
+  typedef boost::bimaps::bimap<
+    boost::bimaps::multiset_of<
+      boost::bimaps::tags::tagged<Node*, superset>,
+      NodeComp>,
+    boost::bimaps::multiset_of<
+      boost::bimaps::tags::tagged<Node*, subset>,
+      NodeComp>
+  > edges_t;
+
 
   ModuleSetGraph();
   ModuleSetGraph(module_set_sptr m);
@@ -56,7 +65,7 @@ public:
   void add_weak(ModuleSetGraph& weak_module_set_graph);
 
   /**
-   * 集合の集合(このクラス)の名前
+   * モジュール名の集合の集合を返す
    */ 
   std::string get_name() const;
 
@@ -64,6 +73,8 @@ public:
    * 集合の集合のパースツリーの内容出力
    */
   std::ostream& dump(std::ostream& s) const;
+
+  std::ostream& to_graphviz(std::ostream& s) const;
 
   /**
    * 
@@ -77,6 +88,11 @@ public:
   void build_edges();
 
 private:
+  /**
+   * 与えられたノードおよび，
+   * それに包含されるノードに対して訪問フラグを立てる
+   */
+  void mark_visited_flag(Node* node);
 
   /**
    * 辺

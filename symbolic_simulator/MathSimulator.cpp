@@ -41,6 +41,7 @@ namespace symbolic_simulator {
 //regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
 
 MathSimulator::MathSimulator(const Opts& opts) :
+  simulator_t(opts.debug_mode),
   opts_(opts)
 {
 }
