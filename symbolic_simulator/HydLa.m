@@ -40,8 +40,9 @@ createVariableList[True, result_] := (
  * 得られた解を用いて、各変数に関して{変数名, 値}　という形式で表したリストを返す
  *)
 isConsistent[expr_, vars_] := (
-  sol = Reduce[expr, vars];
-  If[sol =!= False, createVariableList[sol, {}], 0]
+  sol = Solve[expr, vars];
+  If[sol =!= {}, ToString[Apply[Or, Apply[Equal, sol, {2}], {0}]], 0]
+  (*  If[sol =!= False, createVariableList[sol, {}], 0] *)
 );
 
 (* isConsistent[expr_, vars_] :=

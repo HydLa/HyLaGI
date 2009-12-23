@@ -310,8 +310,20 @@ void PacketSender::put_vars()
 // 制約ストアの中身を分析して送信
 void PacketSender::put_cs(ConstraintStore constraint_store)
 {
-  std::cout << "Constraint store:";
+  std::cout << "Constraint store:" << std::endl;
+  std::cout << "----------------------------" << std::endl;
+  std::cout << constraint_store << std::endl;
+  std::cout << "----------------------------" << std::endl;
+
+  ml_.put_function("ToExpression", 1);
+  ml_.put_string(constraint_store.str);
+
+  // TODO:varsへの追加処理
+  
+
+/*
   int cs_size = constraint_store.size();
+  // 制約ストアが空の場合は、空のリストをJoinする必要あり
   if(cs_size < 1)
   {
     ml_.put_function("List", 0);
@@ -334,12 +346,12 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
     ml_.put_function("Equal", 2);
 
     // 変数名
-/*
+
     if(variable.previous == true)
     {
       ml_.put_function("prev", 1);
     }
-*/
+
     if(variable.derivative_count > 0)
     {
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
@@ -365,6 +377,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
       ml_.MLPutInteger(value.numerator);
     }
   }
+*/
 }
 
 

@@ -12,7 +12,9 @@ namespace symbolic_simulator {
 /**
  * §–ñƒXƒgƒA
  */
-typedef variable_map_t ConstraintStore;
+
+typedef SymbolicValue ConstraintStore;
+//typedef variable_map_t ConstraintStore;
 //typedef variable_map_t::variable_list_t ConstraintStore;
 
 // class ConstraintStoreBuilderPoint : public VariableMap<SymbolicVariable, SymbolicValue>

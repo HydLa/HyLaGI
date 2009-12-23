@@ -9,7 +9,9 @@ namespace symbolic_simulator {
 
 
 ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint()
-{}
+{
+  constraint_store_.str = "{}";
+}
 
 ConstraintStoreBuilderPoint::~ConstraintStoreBuilderPoint()
 {}
@@ -21,7 +23,7 @@ void ConstraintStoreBuilderPoint::build_constraint_store( /*variable_map_t varia
 
 void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t variable_map)
 {
-  variable_map = this->constraint_store_;
+  /*variable_map = this->constraint_store_*/;
 }
 
 ConstraintStore& ConstraintStoreBuilderPoint::getcs()
