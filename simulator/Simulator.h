@@ -26,15 +26,19 @@ namespace simulator {
 template<typename PhaseStateType>
 class Simulator
 {
-public:
-  typedef PhaseStateType                         phase_state_t; 
+public:  
+  typedef PhaseStateType                                   phase_state_t; 
+  typedef typename boost::shared_ptr<phase_state_t>        phase_state_sptr; 
+  typedef typename boost::shared_ptr<const phase_state_t>  phase_state_const_sptr; 
+
   typedef typename phase_state_t::variable_map_t variable_map_t;
   typedef typename phase_state_t::variable_t     variable_t;
   typedef typename phase_state_t::value_t        value_t;
 
   typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
-  typedef typename boost::shared_ptr<PhaseStateType>       phase_state_sptr; 
-  typedef hydla::ch::module_set_sptr                       module_set_sptr;
+
+  typedef boost::shared_ptr<hydla::ch::ModuleSet>          module_set_sptr;
+  typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
   typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
   Simulator(bool debug_mode = false) :
@@ -127,6 +131,25 @@ public:
   }
 
   /**
+   * 新たなPhaseStateの作成
+   */
+  phase_state_sptr create_new_phase_state() const
+  {
+    phase_state_sptr ph(new phase_state_t());
+    return ph;
+  }
+
+  /**
+   * 与えられたPhaseStateの情報をを引き継いだ，
+   * 新たなPhaseStateの作成
+   */
+  phase_state_sptr create_new_phase_state(const phase_state_const_sptr& old) const
+  {
+    phase_state_sptr ph(new phase_state_t(*old));
+    return ph;
+  }
+
+  /**
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree)
@@ -146,7 +169,7 @@ public:
     }
 
     if(is_debug_mode()) {
-      std::cout << "#*** variable map ***" 
+      std::cout << "#*** variable map ***\n" 
                 << variable_map_ 
                 << std::endl;
     }
@@ -164,12 +187,14 @@ public:
   /**
    * Point Phaseの処理
    */
-  virtual bool point_phase(module_set_sptr& ms, phase_state_sptr& state) = 0;
+  virtual bool point_phase(const module_set_sptr& ms, 
+                           const phase_state_const_sptr& state) = 0;
 
   /**
    * Interval Phaseの処理
    */
-  virtual bool interval_phase(module_set_sptr& ms, phase_state_sptr& state) = 0;
+  virtual bool interval_phase(const module_set_sptr& ms, 
+                              const phase_state_const_sptr& state) = 0;
 
 private:
   virtual void do_initialize()

@@ -30,8 +30,8 @@ public:
   virtual ~EntailmentChecker();
 
   Trivalent check_entailment(
-    boost::shared_ptr<hydla::parse_tree::Ask> negative_ask,
-    hydla::simulator::TellCollector::tells_t& collected_tells);
+    const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask,
+    hydla::simulator::tells_t& collected_tells);
 
   // TellêßñÒ
   virtual void visit(boost::shared_ptr<Tell> node);

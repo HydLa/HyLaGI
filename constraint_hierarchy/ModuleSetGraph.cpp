@@ -127,8 +127,6 @@ void ModuleSetGraph::build_edges()
           tmp_subset_it!=subset_end; 
           ++tmp_subset_it) {
         if(super_it->mod->is_super_set(*tmp_subset_it->mod)) {
-          std::cout << super_it->mod->get_name() << "=>" 
-                    << tmp_subset_it->mod->get_name() << std::endl;
           edges_.insert(
             edges_t::value_type(&(*super_it), &(*tmp_subset_it)));
         }

@@ -129,8 +129,8 @@ public:
 };
 }
 
-bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms, 
-                                phase_state_sptr& state)
+bool MathSimulator::point_phase(const module_set_sptr& ms, 
+                                const phase_state_const_sptr& state)
 {
   if(is_debug_mode()) {
     std::cout << "#***** begin point phase *****\n"
@@ -142,15 +142,15 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
   }
 
   TellCollector tell_collector(ms);
-  AskCollector  ask_collector;
-  ConstraintStoreBuilderPoint csbp;       //TODO: kenshiro‚ªì¬
+  AskCollector  ask_collector(ms);
+  ConstraintStoreBuilderPoint csbp;
   csbp.build_constraint_store();
   ConsistencyChecker consistency_checker(ml_);
-  EntailmentChecker entailment_checker(ml_);
+  EntailmentChecker  entailment_checker(ml_);
 
-  TellCollector::tells_t tell_list;
-  positive_asks_t   positive_asks;
-  negative_asks_t   negative_asks;
+  tells_t         tell_list;
+  positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
   
   bool expanded   = true;
   while(expanded) {
@@ -171,8 +171,9 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
     if(is_debug_mode()) std::cout << "#*** consistent\n";
 
     // ask§–ñ‚ðW‚ß‚é
-    ask_collector.collect_ask(ms.get(), &state->expanded_always, 
-                              &positive_asks, &negative_asks);
+    ask_collector.collect_ask(&state->expanded_always, 
+                              &positive_asks, 
+                              &negative_asks);
     if(is_debug_mode()) {
       std::cout << "#** positive asks **\n";  
       std::for_each(positive_asks.begin(), positive_asks.end(), NodeDump());
@@ -198,19 +199,17 @@ bool MathSimulator::point_phase(hydla::ch::module_set_sptr& ms,
       }
     }
   }
-    
-//   if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
-//     return false;
-//   }
 
-//  state->phase = IntervalPhase;
-  //state_queue_.push(*state);
+  // Interval Phase‚ÖˆÚs
+  phase_state_sptr new_state(create_new_phase_state(state));
+  new_state->phase = phase_state_t::IntervalPhase;
+  push_phase_state(new_state);
 
   return true;
 }
 
-bool MathSimulator::interval_phase(hydla::ch::module_set_sptr& ms, 
-                                   phase_state_sptr& state)
+bool MathSimulator::interval_phase(const module_set_sptr& ms, 
+                                   const phase_state_const_sptr& state)
 {
 
   return true;

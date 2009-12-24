@@ -232,8 +232,8 @@ void EntailmentChecker::visit(boost::shared_ptr<Number> node)
  *  entail‚³‚ê‚é‚©‚Ç‚¤‚© {TRUE, UNKNOWN, FALSE}
  */
 Trivalent EntailmentChecker::check_entailment(
-  boost::shared_ptr<Ask> negative_ask,
-  TellCollector::tells_t& collected_tells)
+  const boost::shared_ptr<Ask>& negative_ask,
+  tells_t& collected_tells)
 {
   // collected_tells‚ðrp_constraint‰» -> S
   // negative_ask‘OŒ‚ðrp_constraint‰» -> g

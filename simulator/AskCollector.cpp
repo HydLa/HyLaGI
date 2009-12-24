@@ -13,18 +13,17 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace simulator {
   
-AskCollector::AskCollector()
+AskCollector::AskCollector(const module_set_sptr& module_set) :
+  module_set_(module_set)
 {}
 
 AskCollector::~AskCollector()
 {}
 
-void AskCollector::collect_ask(module_set_t*      ms,
-                               expanded_always_t* expanded_always,                   
-                               positive_asks_t*   positive_asks,
-                               negative_asks_t*   negative_asks)
+void AskCollector::collect_ask(const expanded_always_t* expanded_always,                   
+                               positive_asks_t*         positive_asks,
+                               negative_asks_t*         negative_asks)
 {
-  assert(ms);
   assert(expanded_always);
   assert(negative_asks);
   assert(positive_asks);
@@ -33,7 +32,7 @@ void AskCollector::collect_ask(module_set_t*      ms,
   positive_asks_   = positive_asks;
 
   // Šeƒm[ƒh‚Ì’Tõ
-  ms->dispatch(this);
+  module_set_->dispatch(this);
   for_each(expanded_always->begin(), 
            expanded_always->end(),
            bind(&Always::accept, _1, _1, this));

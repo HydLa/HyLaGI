@@ -20,9 +20,9 @@ void TellCollector::collected_tells(tells_t* collected_tells)
     collected_tells_.begin(), collected_tells_.end());
 }
 
-void TellCollector::collect(tells_t*           tells,
-                            expanded_always_t* expanded_always,                   
-                            positive_asks_t*   positive_asks)
+void TellCollector::collect(tells_t*                 tells,
+                            const expanded_always_t* expanded_always,                   
+                            const positive_asks_t*   positive_asks)
 {
   assert(expanded_always);
   assert(tells);
@@ -42,8 +42,8 @@ void TellCollector::collect(tells_t*           tells,
   // “WŠJÏ‚Ýalwaysƒm[ƒh‚Ì’Tõ
   in_ask_             = false;
   in_expanded_always_ = true;
-  expanded_always_t::iterator it  = expanded_always->begin();
-  expanded_always_t::iterator end = expanded_always->end();
+  expanded_always_t::const_iterator it  = expanded_always->begin();
+  expanded_always_t::const_iterator end = expanded_always->end();
   while(it!=end) {
     if(visited_always_.find(*it) != visited_always_.end()) {
       accept(*it);

@@ -133,6 +133,20 @@ void hydla_main(int argc, char* argv[])
               << *pt_no_init_node << std::endl;
   }
 
+  if(po.count("module-set-list")>0) {
+    ModuleSetContainerCreator<ModuleSetList> mcc;
+    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
+    msc->dump_node_names(std::cout);
+    return;
+  }
+
+  if(po.count("module-set-list-noinit")>0) {
+    ModuleSetContainerCreator<ModuleSetList> mcc;
+    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
+    msc->dump_node_names(std::cout);
+    return;
+  }
+
   if(po.count("module-set-graph")>0) {
     ModuleSetContainerCreator<ModuleSetGraph> mcc;
     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
@@ -140,10 +154,10 @@ void hydla_main(int argc, char* argv[])
     return;
   }
 
-  if(po.count("module-set-list")>0) {
-    ModuleSetContainerCreator<ModuleSetList> mcc;
-    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
-    msc->dump_node_names(std::cout);
+  if(po.count("module-set-graph-noinit")>0) {
+    ModuleSetContainerCreator<ModuleSetGraph> mcc;
+    boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
+    msc->dump_graphviz(std::cout);
     return;
   }
 

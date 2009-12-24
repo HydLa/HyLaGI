@@ -20,7 +20,7 @@ namespace simulator {
  */
 class AskCollector : public parse_tree::TreeVisitor {
 public:
-  AskCollector();
+  AskCollector(const module_set_sptr& module_set);
   virtual ~AskCollector();
 
   /** 
@@ -31,10 +31,9 @@ public:
    * @param negative_asks    ガード条件がエンテール不可能なaskノードの集合
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
-  void collect_ask(module_set_t*      ms,
-                   expanded_always_t* expanded_always,                   
-                   positive_asks_t*   positive_asks,
-                   negative_asks_t*   negative_asks);
+  void collect_ask(const  expanded_always_t* expanded_always,                   
+                   positive_asks_t*          positive_asks,
+                   negative_asks_t*          negative_asks);
 
 
   // 制約式
@@ -53,9 +52,10 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
 private:
-  expanded_always_t* expanded_always_;                   
-  negative_asks_t*   negative_asks_;
-  positive_asks_t*   positive_asks_;
+  module_set_sptr          module_set_; 
+  const expanded_always_t* expanded_always_;                   
+  negative_asks_t*         negative_asks_;
+  positive_asks_t*         positive_asks_;
 };
 
 } //namespace simulator

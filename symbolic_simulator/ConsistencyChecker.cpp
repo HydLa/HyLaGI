@@ -16,7 +16,7 @@ ConsistencyChecker::~ConsistencyChecker()
 {}
 
 
-bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells, 
+bool ConsistencyChecker::is_consistent(tells_t& collected_tells, 
                                        ConstraintStore& constraint_store)
 {
 
@@ -48,7 +48,7 @@ bool ConsistencyChecker::is_consistent(TellCollector::tells_t& collected_tells,
   // tell§–ñ‚ÌW‡‚©‚çexpr‚ğ“¾‚ÄMathematica‚É“n‚·
   int tells_size = collected_tells.size();
   ml_.put_function("List", tells_size);
-  TellCollector::tells_t::iterator tells_it = collected_tells.begin();
+  tells_t::iterator tells_it = collected_tells.begin();
   PacketSender ps(ml_);
   while((tells_it) != collected_tells.end())
   {

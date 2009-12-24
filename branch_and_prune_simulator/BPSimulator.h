@@ -88,12 +88,14 @@ public:
   /**
    * Point Phase‚Ìˆ—
    */
-  virtual bool point_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state);
+  virtual bool point_phase(const module_set_sptr& ms, 
+                           const phase_state_const_sptr& state);
   
   /**
    * Interval Phase‚Ìˆ—
    */
-  virtual bool interval_phase(hydla::ch::module_set_sptr& ms, phase_state_sptr& state);
+  virtual bool interval_phase(const module_set_sptr& ms, 
+                              const phase_state_const_sptr& state);
 
 private:  
   /**

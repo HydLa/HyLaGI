@@ -1,6 +1,6 @@
 #include "ProgramOptions.h"
 
-#define LINE_LENGTH 1000
+#define LINE_LENGTH 30
 
 namespace hydla {
 
@@ -25,8 +25,15 @@ void ProgramOptions::init_descriptions()
     ("debug,d", "enable debug mode")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
-    ("module-set-list", "output set of module sets which might be solution by list representation")
-    ("module-set-graph", "output set of module sets which might be solution by graph representation")
+
+    ("module-set-list", 
+     "output set of module sets which might be solution by list representation")
+    ("module-set-list-noinit", 
+     "output set of non initial module sets which might be solution by list representation")
+    ("module-set-graph", 
+     "output set of module sets which might be solution by graph representation")
+    ("module-set-graph-noinit", 
+     "output set of non initial module sets which might be solution by graph representation")
 
     ("method,m", 
      value<std::string>()->default_value("s"), 

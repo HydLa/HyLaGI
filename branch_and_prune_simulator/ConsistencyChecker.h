@@ -20,7 +20,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  bool is_consistent(hydla::simulator::TellCollector::tells_t& collected_tells);
+  bool is_consistent(hydla::simulator::tells_t& collected_tells);
 
   // TellêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);

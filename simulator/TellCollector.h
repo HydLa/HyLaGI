@@ -20,11 +20,6 @@ namespace simulator {
  */
 class TellCollector : public parse_tree::TreeVisitor {
 public:
-  typedef hydla::ch::module_set_sptr module_set_sptr;
-  typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
-  typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> >  tells_t;
-  typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >     collected_tells_t;
-
   TellCollector(const module_set_sptr& module_set);
   virtual ~TellCollector();
 
@@ -36,9 +31,9 @@ public:
    * @param all_tells        集められたtellノードの集合
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
-  void collect_all_tells(tells_t*           all_tells,
-                         expanded_always_t* expanded_always,
-                         positive_asks_t*   positive_asks)
+  void collect_all_tells(tells_t*                 all_tells,
+                         const expanded_always_t* expanded_always,
+                         const positive_asks_t*   positive_asks)
   {
     collect_all_tells_ = true;
     collect(all_tells, expanded_always, positive_asks);
@@ -52,9 +47,9 @@ public:
    * @param all_tells        集められたtellノードの集合
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
-  void collect_new_tells(tells_t*           new_tells,
-                         expanded_always_t* expanded_always,                   
-                         positive_asks_t*   positive_asks)
+  void collect_new_tells(tells_t*                 new_tells,
+                         const expanded_always_t* expanded_always,                   
+                         const positive_asks_t*   positive_asks)
   {
     collect_all_tells_ = false;
     collect(new_tells, expanded_always, positive_asks);
@@ -103,13 +98,16 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
 private:
-  void collect(tells_t*           tells,
-               expanded_always_t* expanded_always,                   
-               positive_asks_t*   positive_asks);
+  typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
+
+  void collect(tells_t*                 tells,
+               const expanded_always_t* expanded_always,                   
+               const positive_asks_t*   positive_asks);
 
   module_set_sptr    module_set_; 
 
-  positive_asks_t*   positive_asks_;
+  /// 有効となっているaskのリスト
+  const positive_asks_t*   positive_asks_;
 
   /// 収集したtellノードのリスト
   tells_t*           tells_;

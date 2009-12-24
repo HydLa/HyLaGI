@@ -24,7 +24,7 @@ EntailmentChecker::~EntailmentChecker()
  */
 
 bool EntailmentChecker::check_entailment(
-  boost::shared_ptr<hydla::parse_tree::Ask> negative_ask, 
+  const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask, 
 //hydla::simulator::TellCollector::tells_t& collected_tells)
   hydla::symbolic_simulator::ConstraintStore& constraint_store)
 {
