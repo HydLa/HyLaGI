@@ -78,31 +78,39 @@ void ModuleSetList::add_weak(ModuleSetList& weak_module_set_list)
   module_set_list_.swap(new_list);
 }
 
-std::string ModuleSetList::get_name() const
+std::ostream& ModuleSetList::dump(std::ostream& s) const
 {
-  std::string s;
-  module_set_list_t::const_iterator it  = module_set_list_.begin();
-  module_set_list_t::const_iterator end = module_set_list_.end();
-  
-  s += "{";
-  if(it!=end) s += (*it++)->get_name();
-  while(it!=end) {
-    s += ", " + (*it++)->get_name();
-  }
-  s += "}";
+  dump_node_names(s);
+  s << "\n";
+  dump_node_trees(s);
+
   return s;
 }
 
-std::ostream& ModuleSetList::dump(std::ostream& s) const
+std::ostream& ModuleSetList::dump_node_names(std::ostream& s) const
 {
   module_set_list_t::const_iterator it  = module_set_list_.begin();
   module_set_list_t::const_iterator end = module_set_list_.end();
-  
+
   s << "{";
-  if(it!=end) (*it++)->dump(s);
+  if(it!=end) s << (*it++)->get_name();
   while(it!=end) {
-    s << ", ";
-    (*it++)->dump(s);
+    s << ", " << (*it++)->get_name();
+  }
+  s << "}";
+
+  return s;
+}
+
+std::ostream& ModuleSetList::dump_node_trees(std::ostream& s) const
+{
+  module_set_list_t::const_iterator it  = module_set_list_.begin();
+  module_set_list_t::const_iterator end = module_set_list_.end();
+
+  s << "{";
+  if(it!=end) s << **it++;
+  while(it!=end) {
+    s << ", " << **it++;
   }
   s << "}";
 
@@ -121,11 +129,6 @@ bool ModuleSetList::dispatch(
     }
   }
   return false;
-}
-
-std::ostream& operator<<(std::ostream& s, const ModuleSetList& m)
-{
-  return m.dump(s);
 }
 
 } // namespace ch

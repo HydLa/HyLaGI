@@ -65,16 +65,29 @@ public:
   void add_weak(ModuleSetGraph& weak_module_set_graph);
 
   /**
-   * モジュール名の集合の集合を返す
-   */ 
-  std::string get_name() const;
+   * 集合の集合のダンプ
+   */
+  virtual std::ostream& dump(std::ostream& s) const;
 
   /**
-   * 集合の集合のパースツリーの内容出力
+   * ノードの情報の名前表現によるダンプ
    */
-  std::ostream& dump(std::ostream& s) const;
+  std::ostream& dump_node_names(std::ostream& s) const;
+  
+  /**
+   * ノードの情報のツリー表現によるダンプ
+   */
+  std::ostream& dump_node_trees(std::ostream& s) const;
 
-  std::ostream& to_graphviz(std::ostream& s) const;
+  /**
+   * エッジの情報のダンプ
+   */
+  std::ostream& dump_edges(std::ostream& s) const;
+
+  /**
+   * graphvizで解釈可能な形式で出力をおこなう
+   */
+  std::ostream& dump_graphviz(std::ostream& s) const;
 
   /**
    * 
@@ -82,17 +95,17 @@ public:
   virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
                         int threads = 1);
 
-  /**
-   * グラフの辺を構築する
-   */
-  void build_edges();
-
 private:
   /**
    * 与えられたノードおよび，
    * それに包含されるノードに対して訪問フラグを立てる
    */
   void mark_visited_flag(Node* node);
+
+  /**
+   * グラフの辺を構築する
+   */
+  void build_edges();
 
   /**
    * 辺
@@ -106,7 +119,6 @@ private:
 };
 
 
-std::ostream& operator<<(std::ostream& s, const ModuleSetGraph& m);
 
 } // namespace ch
 } // namespace hydla

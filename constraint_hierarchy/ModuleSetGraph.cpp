@@ -53,8 +53,8 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
   }
 
   sort(new_nodes.begin(), new_nodes.end(), NodeComp());
-
   nodes_.swap(new_nodes);
+  build_edges();
 }
 
 void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
@@ -84,8 +84,8 @@ void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
   }
 
   sort(new_nodes.begin(), new_nodes.end(), NodeComp());
-
   nodes_.swap(new_nodes);
+  build_edges();
 }
 
 namespace {
@@ -140,43 +140,79 @@ void ModuleSetGraph::build_edges()
   }
 }
 
-std::string ModuleSetGraph::get_name() const
-{
-  std::string s;
-  nodes_t::const_iterator it  = nodes_.begin();
-  nodes_t::const_iterator end = nodes_.end();
-  
-  s += "{";
-  if(it!=end) s += (it++)->mod->get_name();
-  while(it!=end) {
-    s += ", " + (it++)->mod->get_name();
-  }
-  s += "}";
-  return s;
-}
-
 std::ostream& ModuleSetGraph::dump(std::ostream& s) const
 {
-  
-
-  edges_t::left_const_iterator it  = edges_.left.begin();
-  edges_t::left_const_iterator end = edges_.left.end();
-  for(; it!=end; ++it) {
-    s << *it->first->mod << " -> " << *it->second->mod << ";\n";
-  }
+  dump_node_names(s);
+  s << "\n";
+  dump_node_trees(s);
+  s << "\n";
+  dump_edges(s);
 
   return s;
 }
 
-std::ostream& ModuleSetGraph::to_graphviz(std::ostream& s) const
+std::ostream& ModuleSetGraph::dump_node_names(std::ostream& s) const
 {
-  s << "digraph g {\n";
+  nodes_t::const_iterator it  = nodes_.begin();
+  nodes_t::const_iterator end = nodes_.end();
+
+  s << "{";
+  if(it!=end) s << (it++)->mod->get_name();
+  while(it!=end) {
+    s << ", " << (it++)->mod->get_name();
+  }
+  s << "}";
+
+  return s;
+}
+
+std::ostream& ModuleSetGraph::dump_node_trees(std::ostream& s) const
+{
+  nodes_t::const_iterator it  = nodes_.begin();
+  nodes_t::const_iterator end = nodes_.end();
+
+  s << "{";
+  if(it!=end) s << *(it++)->mod;
+  while(it!=end) {
+    s << ",\n" << *(it++)->mod;
+  }
+  s << "}";
+
+  return s;
+}
+
+std::ostream& ModuleSetGraph::dump_edges(std::ostream& s) const
+{
+  edges_t::left_const_iterator it  = edges_.left.begin();
+  edges_t::left_const_iterator end = edges_.left.end();
+
     
+  s << "{";
+  for(; it!=end; ++it) {
+    s << it->first->mod->get_name() 
+      << "->" 
+      << it->second->mod->get_name() 
+      << "\n";
+  }
+  s << "}";
+
+  return s;
+}
+
+
+std::ostream& ModuleSetGraph::dump_graphviz(std::ostream& s) const
+{
+  s << "digraph g {\n"
+    << "  edge [dir=back];\n";
+  
   edges_t::left_const_iterator it  = edges_.left.begin();
   edges_t::left_const_iterator end = edges_.left.end();
   for(; it!=end; ++it) {
-    s << "  \"" << it->first->mod->get_name() 
-      << "\" -> \"" << it->second->mod->get_name() << "\";\n";
+    s << "  \"" 
+      << it->first->mod->get_name() 
+      << "\" -> \"" 
+      << it->second->mod->get_name() 
+      << "\";\n";
   }
 
   s << "}" << std::endl;
@@ -218,12 +254,6 @@ void ModuleSetGraph::mark_visited_flag(Node* node)
     mark_visited_flag(superset_range.first->get<subset>());
   }
 }
-
-std::ostream& operator<<(std::ostream& s, const ModuleSetGraph& m)
-{
-  return m.dump(s);
-}
-
 
 } // namespace ch
 } // namespace hydla

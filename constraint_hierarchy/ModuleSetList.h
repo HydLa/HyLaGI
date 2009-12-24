@@ -40,9 +40,19 @@ public:
   std::string get_name() const;
 
   /**
-   * 集合の集合のパースツリーの内容出力
+   * 集合の集合のダンプ
    */
-  std::ostream& dump(std::ostream& s) const;
+  virtual std::ostream& dump(std::ostream& s) const;
+
+  /**
+   * 名前表現によるダンプ
+   */
+  std::ostream& dump_node_names(std::ostream& s) const;
+  
+  /**
+   * ツリー表現によるダンプ
+   */
+  std::ostream& dump_node_trees(std::ostream& s) const;
 
   /**
    * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
@@ -53,8 +63,6 @@ public:
 private:
   module_set_list_t module_set_list_;
 };
-
-std::ostream& operator<<(std::ostream& s, const ModuleSetList& m);
 
 } // namespace ch
 } // namespace hydla

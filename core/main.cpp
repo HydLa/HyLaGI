@@ -136,37 +136,23 @@ void hydla_main(int argc, char* argv[])
   if(po.count("module-set-graph")>0) {
     ModuleSetContainerCreator<ModuleSetGraph> mcc;
     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
-    std::cout << msc->get_name() << std::endl;
-    msc->build_edges();
-    msc->to_graphviz(std::cout);
+    msc->dump_graphviz(std::cout);
     return;
   }
 
   if(po.count("module-set-list")>0) {
     ModuleSetContainerCreator<ModuleSetList> mcc;
-    boost::shared_ptr<ModuleSetList> msc;
-      msc         = mcc.create(pt);
-    std::cout << msc->get_name() 
-      << "\n"
-      << *msc 
-      << std::endl;
+    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
+    msc->dump_node_names(std::cout);
     return;
   }
-
 
   // 解候補モジュール集合の導出
   boost::shared_ptr<ModuleSetContainer> msc;
   boost::shared_ptr<ModuleSetContainer> msc_no_init;
   if(po.count("nd")>0) {    
     ModuleSetContainerCreator<ModuleSetGraph> mcc;
-    boost::shared_ptr<ModuleSetGraph> tt = mcc.create(pt);
-
-
-    std::cout << tt->get_name() << std::endl;
-    tt->build_edges();
-    tt->to_graphviz(std::cout);
-    msc = tt;
-
+    msc         = mcc.create(pt);
     msc_no_init = mcc.create(pt_no_init_node);
   }
   else {    
@@ -174,22 +160,15 @@ void hydla_main(int argc, char* argv[])
     msc         = mcc.create(pt);
     msc_no_init = mcc.create(pt_no_init_node);
   }
-  /*
   if(debug_mode) {
     std::cout << "#*** set of module sets ***\n"
-              << msc->get_name() 
-              << "\n"
               << *msc 
               << std::endl;
 
     std::cout << "#*** set of no init module sets ***\n"
-              << msc_no_init->get_name()
-              << "\n"
               << *msc_no_init 
               << std::endl;
   }
-  */
-
   
   // シミュレーション開始
   std::string method(po.get<std::string>("method"));

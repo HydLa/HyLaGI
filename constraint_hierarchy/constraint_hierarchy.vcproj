@@ -155,6 +155,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ModuleSetContainer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ModuleSetGraph.cpp"
 				>
 			</File>
