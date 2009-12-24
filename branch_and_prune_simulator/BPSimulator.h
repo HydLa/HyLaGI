@@ -2,8 +2,13 @@
 #define _INCLUDED_HYDLA_BP_SIMULATOR_H_
 
 
+
+// simulator
 #include "Simulator.h"
 #include "DefaultVariable.h"
+#include "TellCollector.h"
+#include "AskCollector.h"
+
 
 namespace hydla {
 namespace bp_simulator {
@@ -97,11 +102,16 @@ public:
   virtual bool interval_phase(const module_set_sptr& ms, 
                               const phase_state_const_sptr& state);
 
-private:  
+private:
   /**
    * èâä˙âªèàóù
    */
   virtual void do_initialize();
+  bool do_point_phase(const module_set_sptr& ms,
+    const phase_state_const_sptr& state,
+    hydla::simulator::tells_t tell_list,
+    hydla::simulator::positive_asks_t positive_asks,
+    hydla::simulator::negative_asks_t negative_asks);
 
   Opts opts_;
   std::string max_time_;

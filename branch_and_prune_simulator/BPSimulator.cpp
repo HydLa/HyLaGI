@@ -8,16 +8,13 @@
 // constraint_hierarchy
 #include "ModuleSet.h"
 
-// simulator
-#include "TellCollector.h"
-#include "AskCollector.h"
-
 using namespace hydla::simulator;
 
 namespace hydla {
 namespace bp_simulator {
 
 BPSimulator::BPSimulator(const Opts& opts) :
+  simulator_t(opts.debug_mode),
   opts_(opts)
 {}
 
@@ -37,8 +34,7 @@ namespace {
 }
 
 void BPSimulator::do_initialize()
-{
-}
+{}
 
 /**
  * Point Phaseの処理
@@ -55,15 +51,41 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
               << std::endl;
   }
 
-  TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
-  //ConstraintStoreBuilderPoint csbp(ml_);       //TODO: kenshiroが作成
-  ConsistencyChecker consistency_checker(is_debug_mode());
-  EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
-
+  // TODO: 無駄な宣言
   tells_t         tell_list;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
+
+  return this->do_point_phase(ms, state, tell_list, positive_asks, negative_asks);
+}
+
+/**
+ * Point Phaseの実質的な処理
+ * askのエンテールに基づき分割再帰される可能性がある．
+ * 制約ストアは最後まで更新せず，有効なtell制約はtell_listに保持される．
+ * 最後にストアとtell_listを合わせて新状態を生成する．
+ *
+ * @param ms モジュール集合
+ * @param state Point Phase開始時の状態
+ * @param tell_list tell制約リスト
+ * @param positive_asks エンテールされたask制約リスト
+ * @param negative_asks エンテールされていないask制約リスト
+ *
+ * @return Point Phaseを満たす解が存在するか
+ */
+bool BPSimulator::do_point_phase(const module_set_sptr& ms,
+                    const phase_state_const_sptr& state,
+                    tells_t tell_list,
+                    positive_asks_t positive_asks,
+                    negative_asks_t negative_asks)
+{
+  TellCollector tell_collector(ms);
+  AskCollector  ask_collector(ms);
+  //ConstraintStoreBuilderPoint csbp; //TODO: kenshiroが作成
+  ConsistencyChecker consistency_checker(is_debug_mode());
+  EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
+
+  // TODO: stateから制約ストアを作る
 
   bool expanded   = true;
   while(expanded) {
@@ -107,13 +129,11 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
             negative_asks.erase(it++);
             break;
           case UNKNOWN:
-            // phase_state_sptr state_include_true;
-            // phase_state_sptr state_include_false;
-            // それぞれ値boxを更新
-            // positive_asksとnegative_asksを持ち越す必要がある
-            // PointPhase(ms, state_include_true);
-            // PointPhase(ms, state_include_false);
+            // TRUEの場合とFALSEの場合に分割再帰
+            // bool rt = do_point_phase(ms, state, ...); // TRUE
+            // bool rf = do_point_phase(ms, state, ...); // FALSE
             // 後始末？
+            // return (rt | rf);
             return true;
           case FALSE:
             it++;
@@ -123,12 +143,15 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
     }
   } // while(expanded)
 
-  ////   if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
-  ////     return false;
-  ////   }
+  // ?
+  //if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
+  //  return false;
+  //}
 
-  ////  state->phase = IntervalPhase;
-  ////state_queue_.push(*state);
+  //// IntervalPhaseへ
+  //state->phase = IntervalPhase;
+  //state_queue_.push(*state);
+
   return true;
 }
 

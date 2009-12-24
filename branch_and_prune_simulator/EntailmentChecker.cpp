@@ -241,7 +241,7 @@ Trivalent EntailmentChecker::check_entailment(
   // if []solve(X, S & g, D) == empty -> FALSE
   // elseif []solve(X, S & ng, D) == empty -> TRUE
   // else -> UNKNOWN
-  return TRUE;
+  return FALSE;
 }
 
 } //namespace bp_simulator

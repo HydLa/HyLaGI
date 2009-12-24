@@ -157,6 +157,8 @@ double nextafter(double x, double y);
 
 #define rp_next_double(x) nextafter(x,RP_INFINITY)
 #define rp_prev_double(x) nextafter(x,(-RP_INFINITY))
+//#define rp_next_double(x) nextafter(x,1.0)
+//#define rp_prev_double(x) nextafter(x,-1.0)
 
 /* ----------------------------------------- */
 /* Functions for floating-point computations */

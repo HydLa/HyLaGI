@@ -56,6 +56,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells)
       std::cout << "\n";
       it++;
     }
+    std::cout << "\n";
   }
   rp_vector_destroy(&vec);
 
@@ -68,14 +69,14 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells)
   for(int i=0; i<size; i++){
     rp_variable v;
     rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
-    // TODO: すべての変数は初期値[-oo,+oo]をもつ,ここで入れるとよいかも
+    // すべての変数に初期値(-oo,+oo)を与える
     rp_interval interval;
     rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
     rp_union_insert(rp_variable_domain(v), interval);
     rp_vector_insert(rp_problem_vars(problem), v);
   }
 
-  // TODO: 制約ベクタに制約を追加
+  // 制約ベクタに制約を追加
   std::set<rp_constraint>::iterator it = this->constraints_.begin();
   while(it != this->constraints_.end())
   {
@@ -90,7 +91,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells)
   // 変数の初期値からボックスが自動作成される
   rp_problem_set_initial_box(problem);
 
-  // TODO: ソルバを作成して求解
+  // ソルバを作成して求解
   rp_selector * select;
   //rp_new(select,rp_selector_decirdom,(&problem));
   //rp_new(select,rp_selector_decirrobust,(&problem,1));
@@ -105,26 +106,24 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells)
 
   rp_bpsolver solver(&problem,10,select,split); //,prover);
 
-  rp_problem_display(stdout,problem);
-  std::cout << "\n";
+  if(this->debug_mode_){
+    rp_problem_display(stdout,problem);
+    std::cout << "\n";
+  }
 
   rp_box sol;
   sol = solver.compute_next();
 
-  // 後始末
-  it = this->constraints_.begin();
-  while(it != this->constraints_.end()){
-    rp_constraint_destroy(((rp_constraint *)&(*it)));
-    this->constraints_.erase(it++);
-  }
+  // 後始末 problemのメンバはすべてこれで掃除される，solverは関数を抜けると消える
+  rp_problem_destroy(&problem);
 
-  // return ソルバから解が一つでも出力させたか？
+  // return ソルバから解が一つでも出力されたか？
   return (sol != NULL);
 }
 
 /**
  * vars_をrp_vector_variableに変換
- * TODO: 変数値を正しく設定する
+ * 変数の値は正しく設定されていない
  */
 rp_vector_variable ConsistencyChecker::to_rp_vector()
 {
