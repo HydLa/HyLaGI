@@ -2,6 +2,7 @@
 
 #include <assert.h>
 
+#include <iostream>
 #include <algorithm>
 
 #include <boost/bind.hpp>
@@ -13,8 +14,21 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace simulator {
   
-AskCollector::AskCollector(const module_set_sptr& module_set) :
-  module_set_(module_set)
+namespace {
+class NodeDumper {
+public:
+  template<typename T>
+  void operator()(T& it) 
+  {
+    std::cout << *it << "\n";
+  }
+};
+}
+
+AskCollector::AskCollector(const module_set_sptr& module_set,
+                           bool debug_mode) :
+  module_set_(module_set),
+  debug_mode_(debug_mode)
 {}
 
 AskCollector::~AskCollector()
@@ -36,6 +50,14 @@ void AskCollector::collect_ask(const expanded_always_t* expanded_always,
   for_each(expanded_always->begin(), 
            expanded_always->end(),
            bind(&Always::accept, _1, _1, this));
+
+  if(debug_mode_) {
+    std::cout << "#** positive asks **\n";  
+    std::for_each(positive_asks->begin(), positive_asks->end(), NodeDumper());
+
+    std::cout << "#** negative asks **\n";  
+    std::for_each(negative_asks->begin(), negative_asks->end(), NodeDumper());
+  }
 }
 
 // êßñÒéÆ

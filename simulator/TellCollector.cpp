@@ -1,12 +1,26 @@
 #include "TellCollector.h"
 
 #include <assert.h>
+#include <iostream>
 
 namespace hydla {
 namespace simulator {
   
-TellCollector::TellCollector(const module_set_sptr& module_set) :
-  module_set_(module_set)
+namespace {
+class NodeDumper {
+public:
+  template<typename T>
+  void operator()(T& it) 
+  {
+    std::cout << *it << "\n";
+  }
+};
+}
+
+TellCollector::TellCollector(const module_set_sptr& module_set, 
+                             bool debug_mode) :
+  module_set_(module_set),
+  debug_mode_(debug_mode)
 {}
 
 TellCollector::~TellCollector()
@@ -48,6 +62,11 @@ void TellCollector::collect(tells_t*                 tells,
     if(visited_always_.find(*it) != visited_always_.end()) {
       accept(*it);
     }
+  }
+
+  if(debug_mode_) {
+    std::cout << "#** collected tells **\n";  
+    std::for_each(tells->begin(), tells->end(), NodeDumper());
   }
 }
 

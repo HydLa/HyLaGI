@@ -79,22 +79,16 @@ public:
     while(!state_queue_.empty()) {
       phase_state_sptr state(pop_phase_state());
 
-      switch(state->phase) 
-      {
-        case phase_state_t::PointPhase:
-          msc_->dispatch(
-            boost::bind(&Simulator<phase_state_t>::point_phase, 
-                        this, _1, state));
-          break;
+      if(state->initial_time) {
+        msc_->dispatch(
+          boost::bind(&Simulator<phase_state_t>::simulate_phase_state, 
+                      this, _1, state));
+      }
+      else {
+        msc_no_init_->dispatch(
+          boost::bind(&Simulator<phase_state_t>::simulate_phase_state, 
+                      this, _1, state));
 
-        case phase_state_t::IntervalPhase:
-          msc_->dispatch(
-            boost::bind(&Simulator<phase_state_t>::interval_phase, 
-                        this, _1, state));
-          break;
-        
-        default:
-          assert(0);
       }
     }
   }
@@ -177,11 +171,60 @@ public:
 
   virtual void init_state_queue(const parse_tree_sptr& parse_tree)
   {
-    phase_state_sptr init_state(new phase_state_t);
-    init_state->phase = phase_state_t::PointPhase;
-    init_state->variable_map = variable_map_;
+    phase_state_sptr state(new phase_state_t);
+    state->phase        = phase_state_t::PointPhase;
+    state->initial_time = true;
+    state->variable_map = variable_map_;
 
-    push_phase_state(init_state);
+    push_phase_state(state);
+  }
+
+
+  virtual bool simulate_phase_state(const module_set_sptr& ms, 
+                                    const phase_state_const_sptr& state)
+  {      
+    bool ret =false;
+    switch(state->phase) 
+    {
+    case phase_state_t::PointPhase:
+      {
+        if(is_debug_mode()) {
+          std::cout << "#***** begin point phase *****"
+                    << "\n#** module set **\n"
+                    << ms->get_name()
+                    << "\n"
+                    << *ms 
+                    << "\n#*** variable map ***\n" 
+                    << variable_map_ 
+                    << std::endl;
+        }
+
+        ret = point_phase(ms, state);
+        break;
+      }
+
+    case phase_state_t::IntervalPhase: 
+      {        
+        if(is_debug_mode()) {
+          std::cout << "#***** begin interval phase *****"
+                    << "\n#** module set **\n"
+                    << ms->get_name()
+                    << "\n"
+                    << *ms 
+                    << "\n#*** variable map ***\n" 
+                    << variable_map_ 
+                    << std::endl;
+        }
+
+        ret = interval_phase(ms, state);
+        break;            
+      }
+
+    default:
+      assert(0);
+    }
+
+    return ret;
   }
 
   /**

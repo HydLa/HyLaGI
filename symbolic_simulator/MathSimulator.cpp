@@ -118,31 +118,11 @@ void MathSimulator::do_initialize()
   ml_.MLNewPacket();
 }
 
-namespace {
-class NodeDump {
-public:
-  template<typename T>
-  void operator()(T& it) 
-  {
-    std::cout << *it << "\n";
-  }
-};
-}
-
 bool MathSimulator::point_phase(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
 {
-  if(is_debug_mode()) {
-    std::cout << "#***** begin point phase *****\n"
-              << "#** module set **\n"
-              << ms->get_name()
-              << "\n"
-              << *ms 
-              << std::endl;
-  }
-
-  TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
+  TellCollector tell_collector(ms, is_debug_mode());
+  AskCollector  ask_collector(ms, is_debug_mode());
   ConstraintStoreBuilderPoint csbp;
   csbp.build_constraint_store();
   ConsistencyChecker consistency_checker(ml_);
@@ -158,29 +138,16 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     tell_collector.collect_all_tells(&tell_list,
                                      &state->expanded_always, 
                                      &positive_asks);
-    if(is_debug_mode()) {
-      std::cout << "#** collected tells **\n";  
-      std::for_each(tell_list.begin(), tell_list.end(), NodeDump());
-    }
 
     // 制約が充足しているかどうかの確認
     if(!consistency_checker.is_consistent(tell_list, csbp.getcs())){
-      if(is_debug_mode()) std::cout << "#*** inconsistent\n";
       return false;
     }
-    if(is_debug_mode()) std::cout << "#*** consistent\n";
 
     // ask制約を集める
     ask_collector.collect_ask(&state->expanded_always, 
                               &positive_asks, 
                               &negative_asks);
-    if(is_debug_mode()) {
-      std::cout << "#** positive asks **\n";  
-      std::for_each(positive_asks.begin(), positive_asks.end(), NodeDump());
-
-      std::cout << "#** negative asks **\n";  
-      std::for_each(negative_asks.begin(), negative_asks.end(), NodeDump());
-    }
 
     // ask制約のエンテール処理
     expanded = false;
@@ -202,7 +169,9 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
   // Interval Phaseへ移行
   phase_state_sptr new_state(create_new_phase_state(state));
-  new_state->phase = phase_state_t::IntervalPhase;
+  new_state->phase        = phase_state_t::IntervalPhase;
+  new_state->initial_time = false;
+  //state->variable_map
   push_phase_state(new_state);
 
   return true;

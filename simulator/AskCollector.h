@@ -20,7 +20,9 @@ namespace simulator {
  */
 class AskCollector : public parse_tree::TreeVisitor {
 public:
-  AskCollector(const module_set_sptr& module_set);
+  AskCollector(const module_set_sptr& module_set,
+               bool debug_mode = false);
+
   virtual ~AskCollector();
 
   /** 
@@ -52,10 +54,19 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
 private:
+  /// 収集をおこなう対象の制約モジュール集合
   module_set_sptr          module_set_; 
+
   const expanded_always_t* expanded_always_;                   
+  
+  /// 無効となっているaskのリスト
   negative_asks_t*         negative_asks_;
+
+  /// 有効となっているaskのリスト
   positive_asks_t*         positive_asks_;
+
+  /// デバッグ出力をするかどうか
+  bool               debug_mode_;
 };
 
 } //namespace simulator

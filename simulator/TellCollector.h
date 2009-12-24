@@ -20,7 +20,9 @@ namespace simulator {
  */
 class TellCollector : public parse_tree::TreeVisitor {
 public:
-  TellCollector(const module_set_sptr& module_set);
+  TellCollector(const module_set_sptr& module_set, 
+                bool debug_mode = false);
+
   virtual ~TellCollector();
 
   /** 
@@ -104,6 +106,7 @@ private:
                const expanded_always_t* expanded_always,                   
                const positive_asks_t*   positive_asks);
 
+  /// 収集をおこなう対象の制約モジュール集合
   module_set_sptr    module_set_; 
 
   /// 有効となっているaskのリスト
@@ -126,6 +129,9 @@ private:
 
   /// 探索したalwaysノードのリスト
   visited_always_t   visited_always_;
+
+  /// デバッグ出力をするかどうか
+  bool               debug_mode_;
 };
 
 } //namespace simulator

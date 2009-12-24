@@ -42,15 +42,6 @@ void BPSimulator::do_initialize()
 bool BPSimulator::point_phase(const module_set_sptr& ms, 
                               const phase_state_const_sptr& state)
 {
-  if(is_debug_mode()) {
-    std::cout << "#***** begin point phase *****\n"
-              << "#** module set **\n"
-              << ms->get_name()
-              << "\n"
-              << *ms 
-              << std::endl;
-  }
-
   // TODO: 無駄な宣言
   tells_t         tell_list;
   positive_asks_t positive_asks;
@@ -79,8 +70,8 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
                     positive_asks_t positive_asks,
                     negative_asks_t negative_asks)
 {
-  TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
+  TellCollector tell_collector(ms, is_debug_mode());
+  AskCollector  ask_collector(ms, is_debug_mode());
   //ConstraintStoreBuilderPoint csbp; //TODO: kenshiroが作成
   ConsistencyChecker consistency_checker(is_debug_mode());
   EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
@@ -91,28 +82,15 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   while(expanded) {
     // tell制約を集める
     tell_collector.collect_all_tells(&tell_list, &state->expanded_always, &positive_asks);
-    if(is_debug_mode()) {
-      std::cout << "#** collected tells **\n";  
-      std::for_each(tell_list.begin(), tell_list.end(), NodeDump());
-    }
 
     // 制約が充足しているかどうかの確認
     if(!consistency_checker.is_consistent(tell_list)){
-      if(is_debug_mode()) std::cout << "#*** inconsistent\n";
       return false;
     }
-    if(is_debug_mode()) std::cout << "#*** consistent\n";
 
     // ask制約を集める
     ask_collector.collect_ask(&state->expanded_always, 
                               &positive_asks, &negative_asks);
-    if(is_debug_mode()) {
-      std::cout << "#** positive asks **\n";  
-      std::for_each(positive_asks.begin(), positive_asks.end(), NodeDump());
-
-      std::cout << "#** negative asks **\n";  
-      std::for_each(negative_asks.begin(), negative_asks.end(), NodeDump());
-    }
 
     //ask制約のエンテール処理
     expanded = false;
