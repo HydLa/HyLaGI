@@ -162,6 +162,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConstraintStore.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
 				>
 			</File>
@@ -180,11 +184,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BPTime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BPTypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BPValue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BPVariable.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConsistencyChecker.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ConstraintBuilder.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintStore.h"
 				>
 			</File>
 			<File

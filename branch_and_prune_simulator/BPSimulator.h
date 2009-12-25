@@ -1,79 +1,14 @@
 #ifndef _INCLUDED_HYDLA_BP_SIMULATOR_H_
 #define _INCLUDED_HYDLA_BP_SIMULATOR_H_
 
-
+#include "BPTypes.h"
 
 // simulator
-#include "Simulator.h"
-#include "DefaultVariable.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
 
-
 namespace hydla {
 namespace bp_simulator {
-
-/**
- * 変数名・属性
- */
-  /*
-struct BPVariable {
-  std::string name;
-  unsigned int derivative_count;
-
-  bool previous;
-  bool initial;
-
-  std::ostream& dump(std::ostream& s) const
-  {
-    s << name;
-    if(previous) s << "-";
-    if(initial) s << "_0";
-    return s;
-  }
-
-   
-  friend std::ostream& operator<<(std::ostream& s, 
-                                  const BPVariable & v)
-  {
-    return v.dump(s);
-  }
-};
-*/
-typedef simulator::DefaultVariable BPVariable;
-
-/**
- * 変数値
- */
-struct BPValue
-{
-  // rp_interval?
-
-  /* ダンプ */
-  std::ostream& dump(std::ostream& s) const
-  {
-    s << "value";
-    return s;
-  }
-    
-  friend std::ostream& operator<<(std::ostream& s, 
-                                  const BPValue & v)
-  {
-    return v.dump(s);
-  }
-};
-
-/**
- * 時刻
- * 時刻と経過時間？
- */
-struct BPTime
-{
-};
-
-typedef simulator::PhaseState<BPVariable, BPValue, BPTime> phase_state_t;
-typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
-typedef simulator::Simulator<phase_state_t> simulator_t;
 
 class BPSimulator : public simulator_t
 {

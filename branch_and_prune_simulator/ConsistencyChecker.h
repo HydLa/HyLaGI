@@ -2,6 +2,7 @@
 #define _INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 
 #include "ConstraintBuilder.h"
+#include "ConstraintStore.h"
 
 //#define RP_RELATION_EQUAL     1
 //#define RP_RELATION_SUPEQUAL  2
@@ -20,7 +21,8 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  bool is_consistent(hydla::simulator::tells_t& collected_tells);
+  bool is_consistent(simulator::tells_t& collected_tells,
+    ConstraintStore& constraint_store);
 
   // TellêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
@@ -37,5 +39,5 @@ private:
 } //namespace bp_simulator
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H__
+#endif //_INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 

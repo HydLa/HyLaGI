@@ -1,15 +1,19 @@
 #include "ConstraintStoreBuilderPoint.h"
 
+using namespace hydla::simulator;
+
 namespace hydla {
 namespace bp_simulator {
 
-ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint()
+ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(bool debug_mode) :
+  constraint_store_(),
+  debug_mode_(debug_mode)
 {}
 
 ConstraintStoreBuilderPoint::~ConstraintStoreBuilderPoint()
 {}
 
-void ConstraintStoreBuilderPoint::build_constraint_store( /*variable_map_t variable_map*/ )
+void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& variable_map)
 {}
 
 ConstraintStore& ConstraintStoreBuilderPoint::getcs()

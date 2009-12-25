@@ -1,4 +1,5 @@
 #include "BPSimulator.h"
+#include "ConstraintStoreBuilderPoint.h"
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
 
@@ -72,11 +73,12 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
-  //ConstraintStoreBuilderPoint csbp; //TODO: kenshiroが作成
+  ConstraintStoreBuilderPoint csbp(is_debug_mode()); //TODO: kenshiroが作成
   ConsistencyChecker consistency_checker(is_debug_mode());
   EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
 
   // TODO: stateから制約ストアを作る
+  csbp.build_constraint_store(state->variable_map);
 
   bool expanded   = true;
   while(expanded) {
@@ -84,7 +86,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
     tell_collector.collect_all_tells(&tell_list, &state->expanded_always, &positive_asks);
 
     // 制約が充足しているかどうかの確認
-    if(!consistency_checker.is_consistent(tell_list)){
+    if(!consistency_checker.is_consistent(tell_list, csbp.getcs())){
       return false;
     }
 

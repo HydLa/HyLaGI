@@ -37,7 +37,7 @@ void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)
   this->ctr_ = NULL;
 }
 
-bool ConsistencyChecker::is_consistent(tells_t& collected_tells)
+bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore& constraint_store)
 {
   // rp_constraintW‡‚ğ¶¬
   tells_t::iterator tells_it = collected_tells.begin();
