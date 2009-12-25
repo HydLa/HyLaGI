@@ -40,13 +40,13 @@ using namespace boost;
 #define PARSE_TREE_TEST_ERROR(INPUT, ERR_TYPE) \
   BOOST_CHECK_THROW({ \
     ast.parse_string(INPUT); \
-    ptg.generate(ast.get_tree_iterator())->semantic_analyze(); \
+    ptg.generate(ast.get_tree_iterator()); \
   }, ERR_TYPE);
 
 #define PARSE_TREE_TEST_NO_ERROR(INPUT) \
   BOOST_CHECK_NO_THROW({ \
     ast.parse_string(INPUT); \
-    ptg.generate(ast.get_tree_iterator())->semantic_analyze(); \
+    ptg.generate(ast.get_tree_iterator()); \
   });
 
 BOOST_AUTO_TEST_CASE(parse_tree_test_syntax)
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
 #define PARSE_TREE_TEST_EXAMPLE_FILE(FILE) \
   BOOST_CHECK_NO_THROW({ \
     ast.parse_flie(FILE); \
-    ptg.generate(ast.get_tree_iterator())->semantic_analyze();});
+    ptg.generate(ast.get_tree_iterator());});
     
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/bouncing_particle.hydla");
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box1.hydla");

@@ -14,7 +14,7 @@ InitNodeRemover::~InitNodeRemover()
 void InitNodeRemover::apply(hydla::parse_tree::ParseTree* pt)
 {
    pt->dispatch(this);
-   pt->set_tree(child_);
+   pt->swap_tree(child_);
 }
 
 void InitNodeRemover::unary_node(boost::shared_ptr<hydla::parse_tree::UnaryNode> node)

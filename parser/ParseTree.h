@@ -56,11 +56,6 @@ public:
   virtual ~ParseTree();
 
   /**
-   * ツリーの意味解析をおこなう
-   */
-  void semantic_analyze();
-
-  /**
    * ノードのIDの更新をおこなう
    */
   void uptate_node_id();
@@ -91,32 +86,12 @@ public:
    *
    * @return 登録されたかどうか
    */
-  bool register_variable(const std::string& name, int differential_count)
-  {
-    variable_map_t::iterator it = variable_map_.find(name);
-    if(it == variable_map_.end() ||
-      it->second < differential_count) 
-    {
-      variable_map_[name] = differential_count;
-      return true;
-    }
-    return false;
-  }
+  bool register_variable(const std::string& name, int differential_count);
 
   /**
    * 指定した変数の最大微分回数を求める
    */
-  int get_differential_count(const std::string& name) const
-  {
-    int ret = -1;
-
-    variable_map_t::const_iterator it = variable_map_.find(name);
-    if(it != variable_map_.end()) {
-      ret =  it->second;
-    }
-
-    return ret;
-  }
+  int get_differential_count(const std::string& name) const;
 
   /**
    * 変数表の先頭の要素を返す
@@ -136,22 +111,27 @@ public:
 
   /**
    * パースされたノードツリーの設定
+   * 設定された後，意味解析等の前処理は自動でおこなわれる
    */
-  void set_tree(const node_sptr& tree) 
-  {
-    node_tree_ = tree;
-  }
+  void set_tree(const node_sptr& tree);
+ 
+  /**
+   * ノードツリーを交換する
+   * 新しいノードツリーは意味解析等の前処理をおこなった後である必要がある
+   */
+  node_sptr swap_tree(const node_sptr& tree);
 
-  node_sptr get_tree()
-  {
-    return node_tree_;
-  }
-
+  /**
+   * ノードツリーに対してビジターを適用する
+   */
   void dispatch(parse_tree::TreeVisitor* visitor)
   {
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
   }
-  
+
+  /**
+   * ノードツリーに対してビジターを適用する
+   */
   void dispatch(parse_tree::BaseNodeVisitor* visitor)
   {
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
@@ -164,15 +144,7 @@ public:
    *          存在しない定義の場合は空クラスを返す
    */
   const boost::shared_ptr<ConstraintDefinition> 
-    get_constraint_difinition(const difinition_type_t& def) const
-  {
-    constraint_def_map_t::const_iterator it = cons_def_map_.find(def);
-    if(it == cons_def_map_.end()) {
-      return boost::shared_ptr<ConstraintDefinition>();
-    }
-    return it->second;
-  }
-
+    get_constraint_difinition(const difinition_type_t& def) const;
 
   /**
    * プログラム定義ノードを返す
@@ -181,50 +153,22 @@ public:
    *          存在しない定義の場合は空クラスを返す
    */
   const boost::shared_ptr<ProgramDefinition> 
-    get_program_difinition(const difinition_type_t& def) const
-  {
-    program_def_map_t::const_iterator it = prog_def_map_.find(def);
-    if(it == prog_def_map_.end()) {
-      return boost::shared_ptr<ProgramDefinition>();
-    }
-    return it->second;
-  }
+    get_program_difinition(const difinition_type_t& def) const;
 
   /**
    * 新しいノードを追加する
    */
-  node_id_t register_node(const node_sptr& n)
-  {
-    assert(n->get_id() == 0);
-    assert(node_map_.right.find(n) == node_map_.right.end());
-    
-    ++max_node_id_;
-    n->set_id(max_node_id_);
-    node_map_.insert(node_map_value_t(max_node_id_, n));
-    return max_node_id_;
-  }
+  node_id_t register_node(const node_sptr& n);
 
   /**
    * IDに対応付けられているノードの変更
    */
-  void update_node(node_id_t id, const node_sptr& n)
-  {
-    node_map_t::left_iterator it = node_map_.left.find(id);
-    assert(it != node_map_.left.end());
-
-    node_map_.left.modify_data(it, boost::bimaps::_data = n);
-  }
+  void update_node(node_id_t id, const node_sptr& n);
     
   /**
    * ノードに対応付けられているIDの変更
    */
-  void update_node_id(node_id_t id, const node_sptr& n)
-  {
-    node_map_t::right_iterator it = node_map_.right.find(n);
-    assert(it != node_map_.right.end());
-      
-    node_map_.right.modify_data(it, boost::bimaps::_data = id);
-  }
+  void update_node_id(node_id_t id, const node_sptr& n);
 
   /**
    * 指定されたIDに対応するノードを得る
@@ -253,18 +197,22 @@ public:
   /**
    * すべてのデータを破棄し、初期状態に戻す
    */
-  void clear()
-  {
-    max_node_id_ = 0;
-    node_tree_.reset();
-    cons_def_map_.clear();
-    prog_def_map_.clear();
-    variable_map_.clear();
-  }
+  void clear();
 
+  /**
+   * ParseTreeの状態の出力
+   */
   std::ostream& dump(std::ostream& s) const;
 
-private:
+private:  
+  /**
+   * ツリーの意味解析をおこなう
+   */
+  void semantic_analyze();
+
+  /**
+   * 定義を格納するためのキーを作成する
+   */
   difinition_type_t create_definition_key(boost::shared_ptr<Definition> d);
 
   node_sptr            node_tree_;

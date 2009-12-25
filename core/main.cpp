@@ -113,13 +113,6 @@ void hydla_main(int argc, char* argv[])
     ParseTreeGenerator<DefaultNodeFactory>().generate(
       ast.get_tree_iterator()));
   if(debug_mode) {
-    std::cout << "#*** Parse Tree ***\n"
-              << *pt << std::endl;
-  }
-
-  // ˆÓ–¡‰ðÍE§–ñŒÄ‚Ño‚µ‚Ì“WŠJ
-  pt->semantic_analyze(); 
-  if(debug_mode) {
     std::cout << "#*** Analyzed Parse Tree ***\n"
               << *pt << std::endl;
   }
