@@ -18,7 +18,7 @@ namespace symbolic_simulator {
 class EntailmentChecker
 {
 public:
-  EntailmentChecker(MathLink& ml);
+  EntailmentChecker(MathLink& ml, bool debug_mode);
 
   virtual ~EntailmentChecker();
 
@@ -28,6 +28,8 @@ public:
     hydla::symbolic_simulator::ConstraintStore& constraint_store);
 private:
   MathLink& ml_;
+  /// デバッグ出力をするかどうか
+  bool               debug_mode_;
 
 };
 

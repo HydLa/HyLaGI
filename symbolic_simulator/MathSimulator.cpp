@@ -123,10 +123,10 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
-  ConstraintStoreBuilderPoint csbp(ml_);
+  ConstraintStoreBuilderPoint csbp(ml_, is_debug_mode());
   csbp.build_constraint_store();
-  ConsistencyChecker consistency_checker(ml_);
-  EntailmentChecker  entailment_checker(ml_);
+  ConsistencyChecker consistency_checker(ml_, is_debug_mode());
+  EntailmentChecker  entailment_checker(ml_, is_debug_mode());
 
   tells_t         tell_list;
   positive_asks_t positive_asks;

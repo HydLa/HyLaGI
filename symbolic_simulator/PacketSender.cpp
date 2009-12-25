@@ -8,11 +8,12 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-PacketSender::PacketSender(MathLink& ml) :
+PacketSender::PacketSender(MathLink& ml, bool debug_mode) :
   ml_(ml),
   in_differential_equality_(false),
   differential_count_(0),
-  in_prev_(false)
+  in_prev_(false),
+  debug_mode_(debug_mode)
 {}
 
 PacketSender::~PacketSender()
@@ -22,13 +23,13 @@ PacketSender::~PacketSender()
 // Ask制約
 void PacketSender::visit(boost::shared_ptr<Ask> node)                   
 {
-  std::cout << "guard:";
+  if(debug_mode_) std::cout << "guard:";
   //ml_.put_function("ask", 2);
   accept(node->get_guard());
-  
+    
   //std::cout << " => ";
   //accept(node->get_child());
-  std::cout << std::endl;
+  if(debug_mode_) std::cout << std::endl;
 }
 
 // Tell制約
@@ -37,7 +38,7 @@ void PacketSender::visit(boost::shared_ptr<Tell> node)
   //ml_.put_function("tell", 1);
 
   accept(node->get_child());
-  std::cout << std::endl;
+  if(debug_mode_) std::cout << std::endl;
 }
 
 // 比較演算子
@@ -46,7 +47,7 @@ void PacketSender::visit(boost::shared_ptr<Equal> node)
   ml_.put_function("Equal", 2);
         
   accept(node->get_lhs());
-  std::cout << "=";
+  if(debug_mode_) std::cout << "=";
   accept(node->get_rhs());
   in_differential_equality_ = false;
 }
@@ -56,7 +57,7 @@ void PacketSender::visit(boost::shared_ptr<UnEqual> node)
   ml_.put_function("UnEqual", 2);
 
   accept(node->get_lhs());
-  std::cout << "!=";
+  if(debug_mode_) std::cout << "!=";
   accept(node->get_rhs());
   in_differential_equality_ = false;
 }
@@ -66,7 +67,7 @@ void PacketSender::visit(boost::shared_ptr<Less> node)
   ml_.put_function("Less", 2);
 
   accept(node->get_lhs());
-  std::cout << "<";
+  if(debug_mode_) std::cout << "<";
   accept(node->get_rhs());
   in_differential_equality_ = false;
 }
@@ -76,7 +77,7 @@ void PacketSender::visit(boost::shared_ptr<LessEqual> node)
   ml_.put_function("LessEqual", 2);
 
   accept(node->get_lhs());    
-  std::cout << "<=";
+  if(debug_mode_) std::cout << "<=";
   accept(node->get_rhs());
   in_differential_equality_ = false;
 }
@@ -86,7 +87,7 @@ void PacketSender::visit(boost::shared_ptr<Greater> node)
   ml_.put_function("Greater", 2);
     
   accept(node->get_lhs());
-  std::cout << ">";
+  if(debug_mode_) std::cout << ">";
   accept(node->get_rhs());
   in_differential_equality_ = false;
 }
@@ -96,7 +97,7 @@ void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)
   ml_.put_function("GreaterEqual", 2);
     
   accept(node->get_lhs());
-  std::cout << ">=";
+  if(debug_mode_) std::cout << ">=";
   accept(node->get_rhs());
   in_differential_equality_ = false;
 }
@@ -107,7 +108,7 @@ void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)
   ml_.put_function("And", 2);
 
   accept(node->get_lhs());
-  std::cout << " & ";
+  if(debug_mode_) std::cout << " & ";
   accept(node->get_rhs());
 }
 
@@ -125,7 +126,7 @@ void PacketSender::visit(boost::shared_ptr<Plus> node)
   ml_.put_function("Plus", 2);
     
   accept(node->get_lhs());
-  std::cout << "+";
+  if(debug_mode_) std::cout << "+";
   accept(node->get_rhs());
 }
 
@@ -134,7 +135,7 @@ void PacketSender::visit(boost::shared_ptr<Subtract> node)
   ml_.put_function("Subtract", 2);
     
   accept(node->get_lhs());
-  std::cout << "-";
+  if(debug_mode_) std::cout << "-";
   accept(node->get_rhs());
 }
 
@@ -143,7 +144,7 @@ void PacketSender::visit(boost::shared_ptr<Times> node)
   ml_.put_function("Times", 2);
 
   accept(node->get_lhs());
-  std::cout << "*";
+  if(debug_mode_) std::cout << "*";
   accept(node->get_rhs());
 }
 
@@ -152,7 +153,7 @@ void PacketSender::visit(boost::shared_ptr<Divide> node)
   ml_.put_function("Divide", 2);
     
   accept(node->get_lhs());
-  std::cout << "/";
+  if(debug_mode_) std::cout << "/";
   accept(node->get_rhs());
 }
   
@@ -160,7 +161,7 @@ void PacketSender::visit(boost::shared_ptr<Divide> node)
 void PacketSender::visit(boost::shared_ptr<Negative> node)              
 {       
   ml_.put_function("Minus", 1);
-  std::cout << "-";
+  if(debug_mode_) std::cout << "-";
 
   accept(node->get_child());
 }
@@ -209,7 +210,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   if(in_prev_)
   {
     ml_.put_function("prev", 1);
-    std::cout << "prev[";
+    if(debug_mode_) std::cout << "prev[";
   }
 
   ml_.put_symbol(("usrVar" + node->get_name()).c_str());
@@ -219,12 +220,14 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
     vars_.insert(std::make_pair("usrVar" + node->get_name(), differential_count_ + 1));
   }
 
-  if(differential_count_ > 0){
-    std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
-  }else{
-    std::cout << node->get_name().c_str();
+  if(debug_mode_) {
+    if(differential_count_ > 0){
+      std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
+    }else{
+      std::cout << node->get_name().c_str();
+    }
+    if(in_prev_) std::cout << "]";
   }
-  if(in_prev_) std::cout << "]";
 
 /*
   if(in_differential_equality_){
@@ -251,7 +254,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
 void PacketSender::visit(boost::shared_ptr<Number> node)                
 {    
   ml_.MLPutInteger(atoi(node->get_number().c_str()));
-  std::cout << node->get_number().c_str();
+  if(debug_mode_) std::cout << node->get_number().c_str();
 }
 
 
@@ -263,7 +266,7 @@ void PacketSender::put_vars()
   std::set<std::pair<std::string, int> >::iterator vars_it = vars_.begin();
   const char* sym;
   int value;
-  std::cout << "vars: ";
+  if(debug_mode_) std::cout << "vars: ";
   while(vars_it!=vars_.end())
   {
     sym = ((*vars_it).first).c_str();
@@ -273,7 +276,7 @@ void PacketSender::put_vars()
     {
       prevflag = 1;
       ml_.put_function("prev", 1);
-      std::cout << "prev[";
+      if(debug_mode_) std::cout << "prev[";
       value *= -1;
     }
     value -= 1;
@@ -287,40 +290,45 @@ void PacketSender::put_vars()
       ml_.MLPutInteger(value);
       ml_.put_symbol(sym);
       //ml_.put_symbol("t");
-      std::cout << "Derivative[" << value << "][" << sym << "]";
+      if(debug_mode_) std::cout << "Derivative[" << value << "][" << sym << "]";
     }
     else
     {
       ml_.put_symbol(sym);
-      std::cout << sym;
+      if(debug_mode_) std::cout << sym;
     }
 
-    if(prevflag) std::cout << "]";
+    if(debug_mode_){
+      if(prevflag) std::cout << "]";
 
-    std::cout << " ";
+      std::cout << " ";
+    }    
+
     vars_it++;
   }
 
   // 要素の全削除
   vars_.clear();
 
-  std::cout << std::endl;
+  if(debug_mode_) std::cout << std::endl;
 }
 
 // 制約ストアの中身を分析して送信
 void PacketSender::put_cs(ConstraintStore constraint_store)
 {
   //std::cout << "Constraint store:" << std::endl;
-  std::cout << "------Constraint store------" << std::endl;
-  if(constraint_store.first.str == "True")
-  {
-    std::cout << "no Constraints" << std::endl;
+  if(debug_mode_) {
+    std::cout << "------Constraint store------" << std::endl;
+    if(constraint_store.first.str == "True")
+    {
+      std::cout << "no Constraints" << std::endl;
+    }
+    else
+    {
+      std::cout << constraint_store.first << std::endl;
+    }
+    std::cout << "----------------------------" << std::endl;
   }
-  else
-  {
-    std::cout << constraint_store.first << std::endl;
-  }
-  std::cout << "----------------------------" << std::endl;
 
   ml_.put_function("List", 1);
   ml_.put_function("ToExpression", 1);

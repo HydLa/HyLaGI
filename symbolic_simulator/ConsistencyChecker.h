@@ -15,7 +15,7 @@ namespace symbolic_simulator {
 class ConsistencyChecker
 {
 public:
-  ConsistencyChecker(MathLink& ml);
+  ConsistencyChecker(MathLink& ml, bool debug_mode);
 
   virtual ~ConsistencyChecker();
 
@@ -24,6 +24,8 @@ public:
 
 private:
   MathLink& ml_;
+  /// デバッグ出力をするかどうか
+  bool               debug_mode_;
 
 };
 

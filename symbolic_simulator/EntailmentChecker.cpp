@@ -9,8 +9,9 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-EntailmentChecker::EntailmentChecker(MathLink& ml) :
-  ml_(ml)
+EntailmentChecker::EntailmentChecker(MathLink& ml, bool debug_mode) :
+  ml_(ml),
+  debug_mode_(debug_mode)
 {}
 
 EntailmentChecker::~EntailmentChecker()
@@ -60,7 +61,7 @@ bool EntailmentChecker::check_entailment(
 
 
   // ask制約のガードの式を得てMathematicaに渡す
-  PacketSender ps(ml_);
+  PacketSender ps(ml_, debug_mode_);
   ps.visit(negative_ask);
 
 
@@ -95,8 +96,8 @@ pc.check();
   
   int num;
   ml_.MLGetInteger(&num);
-  std::cout << "EntailmentChecker#num:" << num << std::endl;
-  
+  if(debug_mode_) std::cout << "EntailmentChecker#num:" << num << std::endl;
+
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   return num==1;
 }

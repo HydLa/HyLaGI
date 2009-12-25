@@ -20,7 +20,7 @@ typedef std::pair<SymbolicValue, SymbolicValue> ConstraintStore;
 class ConstraintStoreBuilderPoint
 {
 public:
-  ConstraintStoreBuilderPoint(MathLink& ml);
+  ConstraintStoreBuilderPoint(MathLink& ml, bool debug_mode);
 
   virtual ~ConstraintStoreBuilderPoint();
 
@@ -33,6 +33,8 @@ public:
 private:
   ConstraintStore constraint_store_;
   MathLink& ml_;
+  /// デバッグ出力をするかどうか
+  bool               debug_mode_;
 
 };
 

@@ -8,8 +8,9 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
-ConsistencyChecker::ConsistencyChecker(MathLink& ml) :
-  ml_(ml)
+ConsistencyChecker::ConsistencyChecker(MathLink& ml, bool debug_mode) :
+  ml_(ml),
+  debug_mode_(debug_mode)
 {}
 
 ConsistencyChecker::~ConsistencyChecker()
@@ -49,7 +50,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells,
   int tells_size = collected_tells.size();
   ml_.put_function("List", tells_size);
   tells_t::iterator tells_it = collected_tells.begin();
-  PacketSender ps(ml_);
+  PacketSender ps(ml_, debug_mode_);
   while((tells_it) != collected_tells.end())
   {
     ps.visit((*tells_it));
@@ -77,7 +78,7 @@ pc.check2();
   // âÇØÇ»Ç©Ç¡ÇΩèÍçáÇÕ0Ç™ï‘ÇÈÅiêßñÒä‘Ç…ñµèÇÇ™Ç†ÇÈÇ∆Ç¢Ç§Ç±Ç∆Åj
   if(ml_.MLGetType() == MLTKINT)
   {
-    std::cout << "ConsistencyChecker: false" << std::endl;
+    if(debug_mode_) std::cout << "ConsistencyChecker: false" << std::endl;
     ml_.MLNewPacket();
     return false;
   }
@@ -86,7 +87,9 @@ pc.check2();
   // List["Equal[x,1]", "List[x]"]Ç‚List["And[Equal[x, 1], Equal[y, 2], Equal[z, 3]]", "List[x, y, z]"]Ç‚
   // List["And[Equal[x, 1], Equal[Derivative[1][x], 1], Equal[prev[x], 1], Equal[prev[Derivative[2][x]], 1]]",
   //      "List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]"]  Ç‚List["True", "List[]"]Ç»Ç«
-  std::cout << "---build constraint store---" << std::endl;
+  if(debug_mode_) {
+    std::cout << "---build constraint store---" << std::endl;
+  }
 
   ml_.MLGetNext(); // Listä÷êî
   ml_.MLGetNext(); // ListÇ∆Ç¢Ç§ä÷êîñº
@@ -194,9 +197,11 @@ pc.check2();
   }
 */
 
-  std::cout << constraint_store.first << std::endl;
-  std::cout << "----------------------------" << std::endl;
-  std::cout << "ConsistencyChecker: true" << std::endl;
+  if(debug_mode_) {
+    std::cout << constraint_store.first << std::endl;
+    std::cout << "----------------------------" << std::endl;
+    std::cout << "ConsistencyChecker: true" << std::endl;
+  }
 
   return true;
 }

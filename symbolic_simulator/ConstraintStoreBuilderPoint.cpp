@@ -8,8 +8,9 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(MathLink& ml) :
-  ml_(ml)
+ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(MathLink& ml, bool debug_mode) :
+  ml_(ml),
+  debug_mode_(debug_mode)
 {
   constraint_store_.first.str = "True";
   constraint_store_.second.str = "{}";
@@ -41,7 +42,7 @@ variable_map_t ConstraintStoreBuilderPoint::build_variable_map()
   // 各変数名とその値（文字列）が返ってくるのでそれを変数表に入れる
   // List[pair[x,"1"]]やList[pair[x,"1"], pair[y,"2"], pair[z,"3"]]や
   // List[pair[x,"1"], pair[Derivative[1][x],"1"], pair[prev[x],"1"], pair[prev[Derivative[2][x],"1"]]]やList[]など
-  std::cout << "--------Variable Map--------" << std::endl;
+  if(debug_mode_) std::cout << "--------Variable Map--------" << std::endl;
 
   // 最初はList関数が届くのでその要素数（pairの個数）を得る
   ml_.MLGetType(); // MLGetTypeしてからでないとMLGetArgCountでエラーになる（原因はよく分からない？）
@@ -100,8 +101,10 @@ variable_map_t ConstraintStoreBuilderPoint::build_variable_map()
 
     variable_map.set_variable(symbolic_variable, symbolic_value); 
   }
-  std::cout << variable_map;
-  std::cout << "----------------------------" << std::endl;
+  if(debug_mode_) {
+    std::cout << variable_map;
+    std::cout << "----------------------------" << std::endl;
+  }
   return variable_map;
 }
 

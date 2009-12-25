@@ -16,7 +16,7 @@ class PacketSender : public parse_tree::TreeVisitor
 {
 public:
 
-  PacketSender(MathLink& ml);
+  PacketSender(MathLink& ml, bool debug_mode);
 
   virtual ~PacketSender();
 
@@ -76,6 +76,8 @@ private:
   /// Prevノードの下にいるかどうか
   // （通常変数なら1、prev変数だと-1などにするか？）
   bool in_prev_;
+  /// デバッグ出力をするかどうか
+  bool debug_mode_;
 
 };
 
