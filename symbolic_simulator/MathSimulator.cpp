@@ -172,6 +172,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   new_state->phase        = phase_state_t::IntervalPhase;
   new_state->initial_time = false;
   new_state->variable_map = csbp.build_variable_map();
+  std::cout << new_state->variable_map;
   push_phase_state(new_state);
 
   return true;

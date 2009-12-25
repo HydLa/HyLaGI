@@ -310,8 +310,8 @@ void PacketSender::put_vars()
 // 制約ストアの中身を分析して送信
 void PacketSender::put_cs(ConstraintStore constraint_store)
 {
-  std::cout << "Constraint store:" << std::endl;
-  std::cout << "----------------------------" << std::endl;
+  //std::cout << "Constraint store:" << std::endl;
+  std::cout << "------Constraint store------" << std::endl;
   if(constraint_store.first.str == "True")
   {
     std::cout << "no Constraints" << std::endl;
