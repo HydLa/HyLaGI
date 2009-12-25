@@ -61,7 +61,10 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells,
 
 
   // varsを渡す
+  ml_.put_function("Join", 2);
   ps.put_vars();
+  ml_.put_function("ToExpression", 1);
+  ml_.put_string(constraint_store.second.str);
 
 /*
 ml_.skip_pkt_until(RETURNPKT);
@@ -80,15 +83,24 @@ pc.check2();
   }
 
   // 解けた場合は各変数名とその値が「文字列で」返ってくるのでそれを制約ストアに入れる
-  // "List[Equal[x,1]]"や"List[Equal[x,1], Equal[y,2], Equal[z,3]]"や
-  // "List[Equal[x,1], Equal[Derivative[1][x],1], Equal[prev[x],1], Equal[prev[Derivative[2][x],1]]]"や"List[]"など
+  // List["Equal[x,1]", "List[x]"]やList["And[Equal[x, 1], Equal[y, 2], Equal[z, 3]]", "List[x, y, z]"]や
+  // List["And[Equal[x, 1], Equal[Derivative[1][x], 1], Equal[prev[x], 1], Equal[prev[Derivative[2][x]], 1]]",
+  //      "List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]"]  やList["True", "List[]"]など
   std::cout << "---build constraint store---" << std::endl;
 
+  ml_.MLGetNext(); // List関数
+  ml_.MLGetNext(); // Listという関数名
   std::string str = ml_.get_string();
   SymbolicValue symbolic_value;
   symbolic_value.str = str;
-  constraint_store = symbolic_value;
+  constraint_store.first = symbolic_value;
 
+  // 出現する変数の一覧が文字列で返ってくるのでそれを制約ストアに入れる
+  str = ml_.get_string();
+  SymbolicValue vars_list;
+  vars_list.str = str;
+  constraint_store.second = vars_list;
+  
 /*
   // 解けた場合は各変数名とその値が返ってくるのでそれを制約ストアに入れる
   // List[pair[x,1]]やList[pair[x,1], pair[y,2], pair[z,3]]や
@@ -182,7 +194,7 @@ pc.check2();
   }
 */
 
-  std::cout << constraint_store << std::endl;
+  std::cout << constraint_store.first << std::endl;
   std::cout << "----------------------------" << std::endl;
   std::cout << "ConsistencyChecker: true" << std::endl;
 

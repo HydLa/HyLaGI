@@ -312,14 +312,20 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
 {
   std::cout << "Constraint store:" << std::endl;
   std::cout << "----------------------------" << std::endl;
-  std::cout << constraint_store << std::endl;
+  if(constraint_store.first.str == "True")
+  {
+    std::cout << "no Constraints" << std::endl;
+  }
+  else
+  {
+    std::cout << constraint_store.first << std::endl;
+  }
   std::cout << "----------------------------" << std::endl;
 
+  ml_.put_function("List", 1);
   ml_.put_function("ToExpression", 1);
-  ml_.put_string(constraint_store.str);
-
-  // TODO:vars‚Ö‚Ì’Ç‰Áˆ—
-  
+  std::string str = constraint_store.first.str;
+  ml_.put_string(str);
 
 /*
   int cs_size = constraint_store.size();
@@ -378,6 +384,7 @@ void PacketSender::put_cs(ConstraintStore constraint_store)
     }
   }
 */
+
 }
 
 

@@ -11,7 +11,7 @@ checkEntailment[guard_, tells_, vars_] := (
 (*
  * isConsistent内のReduceの結果得られた解を{変数名, 値}　のリスト形式にする
  *)
-createVariableList[Equal[varName_, varValue_], result_] := (
+createVariableList[Rule[varName_, varValue_], result_] := (
   Append[result, pair[varName, varValue]]
 );
 
@@ -24,14 +24,24 @@ createVariableList[{expr_, others__}, result_] := (
   createVariableList[{others}, variableList]
 );
 
-createVariableList[And[expr_, others__], result_] := (
-  variableList = createVariableList[expr, result];
-  createVariableList[{others}, variableList]
+createVariableList[And[expr__], vars_, result_] := (
+  sol = (Solve[expr, vars])[[1]];
+  createVariableList[sol, result]
+);
+
+(* Orでつながっている（複数解がある）場合は、そのうちの1つのみを返す？ *)
+createVariableList[Or[expr_, others__], vars_, result_] := (
+  createVariableList[expr, vars, result]
+);
+
+createVariableList[Equal[varName_, varValue_], vars_, result_] := (
+  sol = (Solve[Equal[varName_, varValue_], vars])[[1]];
+  createVariableList[sol, result]
 );
 
 (* Reduce[{}, {}]のとき *)
-createVariableList[True, result_] := (
-  Return[{}]
+createVariableList[True, vars_, result_] := (
+  Return[result]
 );
 
 (*
@@ -40,9 +50,8 @@ createVariableList[True, result_] := (
  * 得られた解を用いて、各変数に関して{変数名, 値}　という形式で表したリストを返す
  *)
 isConsistent[expr_, vars_] := (
-  sol = Solve[expr, vars];
-  If[sol =!= {}, ToString[Apply[Or, Apply[Equal, sol, {2}], {0}]], 0]
-  (*  If[sol =!= False, createVariableList[sol, {}], 0] *)
+  sol = Reduce[expr, vars];
+  If[sol =!= False, {ToString[FullForm[sol]], ToString[FullForm[vars]]}, 0]
 );
 
 (* isConsistent[expr_, vars_] :=

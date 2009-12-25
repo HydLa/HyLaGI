@@ -123,7 +123,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
-  ConstraintStoreBuilderPoint csbp;
+  ConstraintStoreBuilderPoint csbp(ml_);
   csbp.build_constraint_store();
   ConsistencyChecker consistency_checker(ml_);
   EntailmentChecker  entailment_checker(ml_);
@@ -171,7 +171,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   phase_state_sptr new_state(create_new_phase_state(state));
   new_state->phase        = phase_state_t::IntervalPhase;
   new_state->initial_time = false;
-  //state->variable_map
+  new_state->variable_map = csbp.build_variable_map();
   push_phase_state(new_state);
 
   return true;

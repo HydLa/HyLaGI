@@ -13,26 +13,26 @@ namespace symbolic_simulator {
  * 制約ストア
  */
 
-typedef SymbolicValue ConstraintStore;
+// その時点での制約ストア内に出現する変数の一覧も持つ
+typedef std::pair<SymbolicValue, SymbolicValue> ConstraintStore;
 //typedef variable_map_t ConstraintStore;
-//typedef variable_map_t::variable_list_t ConstraintStore;
 
-// class ConstraintStoreBuilderPoint : public VariableMap<SymbolicVariable, SymbolicValue>
 class ConstraintStoreBuilderPoint
 {
 public:
-  ConstraintStoreBuilderPoint();
+  ConstraintStoreBuilderPoint(MathLink& ml);
 
   virtual ~ConstraintStoreBuilderPoint();
 
   void build_constraint_store( /*variable_map_t variable_map*/ );
 
-  void build_variable_map(variable_map_t variable_map);
+  variable_map_t build_variable_map();
 
   ConstraintStore& getcs();
 
 private:
   ConstraintStore constraint_store_;
+  MathLink& ml_;
 
 };
 

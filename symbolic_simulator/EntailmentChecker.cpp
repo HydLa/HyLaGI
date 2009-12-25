@@ -80,8 +80,10 @@ bool EntailmentChecker::check_entailment(
 */
 
   // varsを渡す
+  ml_.put_function("Join", 2);
   ps.put_vars();
-
+  ml_.put_function("ToExpression", 1);
+  ml_.put_string(constraint_store.second.str);
 
 /*
 // 返ってくるパケットを解析
