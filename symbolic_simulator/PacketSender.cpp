@@ -316,7 +316,6 @@ void PacketSender::put_vars()
 // 制約ストアの中身を分析して送信
 void PacketSender::put_cs(ConstraintStore constraint_store)
 {
-  //std::cout << "Constraint store:" << std::endl;
   if(debug_mode_) {
     std::cout << "------Constraint store------" << std::endl;
     if(constraint_store.first.str == "True")

@@ -124,7 +124,8 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
   ConstraintStoreBuilderPoint csbp(ml_, is_debug_mode());
-  csbp.build_constraint_store();
+  variable_map_t vm;
+  csbp.build_constraint_store(vm);
   ConsistencyChecker consistency_checker(ml_, is_debug_mode());
   EntailmentChecker  entailment_checker(ml_, is_debug_mode());
 
