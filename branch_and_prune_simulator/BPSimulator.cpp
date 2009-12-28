@@ -73,7 +73,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
-  ConstraintStoreBuilderPoint csbp(is_debug_mode()); //TODO: kenshiroが作成
+  ConstraintStoreBuilderPoint csbp(is_debug_mode()); //TODO: kenshiroが作成？
   ConsistencyChecker consistency_checker(is_debug_mode());
   EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
 
@@ -101,7 +101,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
         // 他に値boxが必要では？
-        Trivalent res = entailment_checker.check_entailment(*it, tell_list);
+        Trivalent res = entailment_checker.check_entailment(*it, tell_list, csbp.getcs());
         switch(res) {
           case TRUE:
             expanded = true;

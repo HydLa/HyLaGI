@@ -16,6 +16,8 @@ class ConstraintStore
 public:
   ConstraintStore();
   ~ConstraintStore();
+  std::set<rp_constraint>& get_store_exprs();
+  boost::bimaps::bimap<std::string, int>& get_store_vars();
 
 private:
   std::set<rp_constraint> exprs_;

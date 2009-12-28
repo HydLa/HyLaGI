@@ -39,6 +39,9 @@ void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)
 
 bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore& constraint_store)
 {
+  // ストアの変数情報と制約情報をコピー
+  this->constraints_ = constraint_store.get_store_exprs();
+  this->vars_ = constraint_store.get_store_vars();
   // rp_constraint集合を生成
   tells_t::iterator tells_it = collected_tells.begin();
   while((tells_it) != collected_tells.end()){

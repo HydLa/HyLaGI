@@ -13,6 +13,8 @@
 #include "Types.h"
 #include "TellCollector.h"
 
+#include "ConstraintBuilder.h"
+#include "ConstraintStore.h"
 
 using namespace hydla::parse_tree;
 
@@ -23,16 +25,20 @@ namespace bp_simulator {
 typedef enum Trivalent_ {FALSE, UNKNOWN, TRUE} Trivalent;
 
 
-class EntailmentChecker : public parse_tree::TreeVisitor {
+class EntailmentChecker : public ConstraintBuilder {
 public:
   EntailmentChecker();
+  EntailmentChecker(bool debug_mode);
 
   virtual ~EntailmentChecker();
 
   Trivalent check_entailment(
     const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask,
-    hydla::simulator::tells_t& collected_tells);
+    hydla::simulator::tells_t& collected_tells,
+    ConstraintStore& constraint_store);
 
+  // Ask§–ñ
+  virtual void visit(boost::shared_ptr<Ask> node);
   // Tell§–ñ
   virtual void visit(boost::shared_ptr<Tell> node);
 
@@ -46,35 +52,11 @@ public:
 
   // ˜_—‰‰Zq
   virtual void visit(boost::shared_ptr<LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<LogicalOr> node);
-
-  // Zp“ñ€‰‰Zq
-  virtual void visit(boost::shared_ptr<Plus> node);
-  virtual void visit(boost::shared_ptr<Subtract> node);
-  virtual void visit(boost::shared_ptr<Times> node);
-  virtual void visit(boost::shared_ptr<Divide> node);
-
-  // Zp’P€‰‰Zq
-  virtual void visit(boost::shared_ptr<Negative> node);
-  virtual void visit(boost::shared_ptr<Positive> node);
-
-  // ”÷•ª
-  virtual void visit(boost::shared_ptr<Differential> node);
-
-  // ¶‹ÉŒÀ
-  virtual void visit(boost::shared_ptr<Previous> node);
-  
-  // •Ï”
-  virtual void visit(boost::shared_ptr<Variable> node);
-
-  // ”š
-  virtual void visit(boost::shared_ptr<Number> node);
-
+  //virtual void visit(boost::shared_ptr<LogicalOr> node);
 
 private:
-  std::map<std::string, int> vars_;
-  int in_differential_equality_;
-  int in_differential_;
+  std::set<rp_constraint> guards_, not_guards;
+  bool debug_mode_;
 
 };
 
