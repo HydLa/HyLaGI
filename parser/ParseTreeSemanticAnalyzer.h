@@ -11,7 +11,8 @@
 namespace hydla { 
 namespace parser {
 
-class ParseTreeSemanticAnalyzer : public hydla::parse_tree::TreeVisitor
+class ParseTreeSemanticAnalyzer : 
+  public hydla::parse_tree::TreeVisitor
 {
 public:
   typedef hydla::parse_tree::node_sptr node_sptr;

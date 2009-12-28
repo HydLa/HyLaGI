@@ -173,6 +173,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AskDisjunctionFormatter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\DefaultVariable.h"
 				>
 			</File>

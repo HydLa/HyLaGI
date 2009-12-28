@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodeIndentedDumper.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ParseError.h"
 				>
 			</File>

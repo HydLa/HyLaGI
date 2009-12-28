@@ -23,6 +23,8 @@
 #include "ModuleSetContainerCreator.h"
 #include "InitNodeRemover.h"
 
+#include "AskDisjunctionFormatter.h"
+
 // symbolic_simulator
 #include "MathSimulator.h"
 #include "mathlink_helper.h"
@@ -31,6 +33,7 @@
 using namespace hydla;
 using namespace hydla::parser;
 using namespace hydla::parse_tree;
+using namespace hydla::simulator;
 using namespace hydla::symbolic_simulator;
 using namespace hydla::ch;
 using namespace boost;
@@ -116,6 +119,14 @@ void hydla_main(int argc, char* argv[])
     std::cout << "#*** Analyzed Parse Tree ***\n"
               << *pt << std::endl;
   }
+
+  /*
+  AskDisjunctionFormatter<DefaultNodeFactory> adf;
+  adf.format(pt);
+  std::cout << "#*** Format Ask Disjunction ***\n"
+            << *pt << std::endl;
+  return;
+  */
 
   // alwaysが付いていない制約を取り除いたパースツリーの構築
   boost::shared_ptr<ParseTree> pt_no_init_node(new hydla::parse_tree::ParseTree(*pt));
