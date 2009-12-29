@@ -47,12 +47,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaverbasic", "librea
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaver", "librealpaver\librealpaver.vcproj", "{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "realpaver_wrapper", "realpaver_wrapper\realpaver_wrapper.vcproj", "{76B337D3-611E-477D-8358-C94F9C76CCF0}"
-	ProjectSection(ProjectDependencies) = postProject
-		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA} = {89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}
-	EndProjectSection
-EndProject
 Global
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
@@ -98,16 +97,8 @@ Global
 		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Debug|Win32.Build.0 = Debug|Win32
 		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Release|Win32.ActiveCfg = Release|Win32
 		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Release|Win32.Build.0 = Release|Win32
-		{76B337D3-611E-477D-8358-C94F9C76CCF0}.Debug|Win32.ActiveCfg = Debug|Win32
-		{76B337D3-611E-477D-8358-C94F9C76CCF0}.Debug|Win32.Build.0 = Debug|Win32
-		{76B337D3-611E-477D-8358-C94F9C76CCF0}.Release|Win32.ActiveCfg = Release|Win32
-		{76B337D3-611E-477D-8358-C94F9C76CCF0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(SubversionScc) = preSolution
-		Svn-Managed = True
-		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal
