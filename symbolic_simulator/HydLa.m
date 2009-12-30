@@ -54,9 +54,10 @@ isConsistent[expr_, vars_] := (
   If[sol =!= False, {ToString[FullForm[sol]], ToString[FullForm[vars]]}, 0]
 );
 
-(* isConsistent[expr_, vars_] :=
- *  If[DSolve[expr, vars, t] != {}, 1, 0]; 
- *)
+isConsistentInterval[expr_, vars_] := (
+  sol = DSolve[expr, vars, t];
+  If[sol =!= {}, {ToString[FullForm[Apply[And, Apply[Equal, sol, {2}], {1}]]], ToString[FullForm[vars]]}, 0]
+)
 
 (* $MaxExtraPrecision = Infinity *)
 
