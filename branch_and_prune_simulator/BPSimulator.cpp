@@ -75,7 +75,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   AskCollector  ask_collector(ms, is_debug_mode());
   ConstraintStoreBuilderPoint csbp(is_debug_mode()); //TODO: kenshiroが作成？
   ConsistencyChecker consistency_checker(is_debug_mode());
-  EntailmentChecker entailment_checker;   //TODO: kenshiroが作成
+  EntailmentChecker entailment_checker(is_debug_mode());   //TODO: kenshiroが作成
 
   // TODO: stateから制約ストアを作る
   csbp.build_constraint_store(state->variable_map);

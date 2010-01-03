@@ -717,6 +717,27 @@ void rp_constraint_destroy (rp_constraint * c)
   rp_free(*c);
 }
 
+/* Clone -ohtani- 
+ * impliment only RP_CONSTRAINT_NUMERICAL */
+void rp_constraint_clone(rp_constraint *c, rp_constraint src)
+{
+  rp_erep l, r;
+  rp_ctr_num cnum;
+  switch (rp_constraint_type(src))
+  {
+    case RP_CONSTRAINT_NUMERICAL:
+      rp_erep_copy(&l, rp_expression_rep(rp_ctr_num_left(rp_constraint_num(src))));
+      rp_erep_copy(&r, rp_expression_rep(rp_ctr_num_right(rp_constraint_num(src))));
+      rp_ctr_num_create(&cnum, &l, rp_ctr_num_rel(rp_constraint_num(src)), &r);
+      rp_constraint_create_num(c, cnum);
+      break;
+    case RP_CONSTRAINT_CONDITIONAL:
+      break;
+    case RP_CONSTRAINT_PIECEWISE:
+      break;
+  }
+}
+
 /* Display c on out */
 void rp_constraint_display(FILE* out, rp_constraint c,
 			   rp_vector_variable var, int digits)

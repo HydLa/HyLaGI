@@ -22,6 +22,9 @@
 #define RP_RELATION_SUP 5
 #define RP_RELATION_INF 6
 
+#define BP_PREV_STR "_p"
+#define BP_DERIV_STR "_d"
+
 namespace hydla {
 namespace bp_simulator {
 
@@ -64,16 +67,16 @@ public:
 protected:
   boost::bimaps::bimap<std::string, int> vars_;
   rp_ctr_num ctr_;
+  bool in_prev_;
+  bool in_differential_;
 
+  void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
 
 private:
   void create_unary_erep(boost::shared_ptr<hydla::parse_tree::UnaryNode> node, int op);
   void create_binary_erep(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int op);
-  void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
 
   std::stack<rp_erep> rep_stack_;
-  bool in_differential_;
-  bool in_prev_;
 
 };
 

@@ -238,6 +238,9 @@ void rp_constraint_create_piece (rp_constraint * c,
 /* Destruction */
 void rp_constraint_destroy (rp_constraint * c);
 
+/* Clone -ohtani- */
+void rp_constraint_clone(rp_constraint *c, rp_constraint src);
+
 /* Satisfiability tests */
 int rp_constraint_unfeasible (rp_constraint c, rp_box b);
 int rp_constraint_inner      (rp_constraint c, rp_box b);

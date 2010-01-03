@@ -17,6 +17,7 @@ public:
   ConstraintStore();
   ~ConstraintStore();
   std::set<rp_constraint>& get_store_exprs();
+  std::set<rp_constraint> get_store_exprs_copy();
   boost::bimaps::bimap<std::string, int>& get_store_vars();
 
 private:

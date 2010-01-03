@@ -54,9 +54,18 @@ public:
   virtual void visit(boost::shared_ptr<LogicalAnd> node);
   //virtual void visit(boost::shared_ptr<LogicalOr> node);
 
+  // •Ï”
+  virtual void visit(boost::shared_ptr<Variable> node);
+
 private:
-  std::set<rp_constraint> guards_, not_guards;
+  std::set<rp_constraint> guards_, not_guards_;
+  std::set<rp_constraint> constraints_;
+  std::set<std::string> prevs_in_guard_;
+  // protected boost::bimaps::bimap<std::string, int> vars_;
+  bool is_tell_ctr_;
   bool debug_mode_;
+
+  rp_vector_variable to_rp_vector();
 
 };
 

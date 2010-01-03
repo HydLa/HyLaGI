@@ -43,6 +43,7 @@ void ConstraintBuilder::visit(boost::shared_ptr<Equal> node)
 
 void ConstraintBuilder::visit(boost::shared_ptr<UnEqual> node)
 {
+  // TODO: 完全に間違っている，UnEqualの区間近似は「制約なし」
   //this->create_ctr_num(node, RP_RELATION_UNEQUAL);
   this->create_ctr_num(node, RP_RELATION_EQUAL);
 }
@@ -127,8 +128,8 @@ void ConstraintBuilder::visit(boost::shared_ptr<Variable> node)
   std::string name(node->get_name());
   unsigned int size = this->vars_.size();
   //assert(!(this->in_differential_ & this->in_prev_)); // どちらかはfalse…なわけない
-  if(this->in_differential_) name += "_d";
-  if(this->in_prev_) name += "_p";
+  if(this->in_differential_) name += BP_DERIV_STR;
+  if(this->in_prev_) name += BP_PREV_STR;
   this->vars_.insert(vars_type_t(name, size)); // 登録済みの変数は変更されない
 
   // TODO: 特定の変数は定数扱いしないとproveできない可能性
