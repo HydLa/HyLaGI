@@ -65,6 +65,9 @@ private:
   bool is_tell_ctr_;
   bool debug_mode_;
 
+  bool is_guard_about_undefined_prev();
+  bool solve_hull(std::set<rp_constraint> c, rp_box b);
+  std::set<rp_constraint> copy_constraints();
   rp_vector_variable to_rp_vector();
 
 };

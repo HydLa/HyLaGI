@@ -100,7 +100,6 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        // 他に値boxが必要では？
         Trivalent res = entailment_checker.check_entailment(*it, tell_list, csbp.getcs());
         switch(res) {
           case TRUE:
@@ -109,19 +108,18 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
             negative_asks.erase(it++);
             break;
           case UNKNOWN:
-            // TRUEの場合とFALSEの場合に分割再帰
-            // bool rt = do_point_phase(ms, state, ...); // TRUE
-            // bool rf = do_point_phase(ms, state, ...); // FALSE
-            // 後始末？
-            // return (rt | rf);
-            return true;
-          case FALSE:
+            // UNKNOWNの処理はexpandが終わってから
             it++;
+            break;
+          case FALSE:
+            // ask条件
+            negative_asks.erase(it++);
             break;
         }
       }
     }
   } // while(expanded)
+  // negative_asksがtrueの場合とfalseの場合全ての組み合わせを考え分割
 
   // ?
   //if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {

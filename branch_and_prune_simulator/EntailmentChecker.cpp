@@ -162,7 +162,7 @@ void EntailmentChecker::visit(boost::shared_ptr<LogicalAnd> node)
 void EntailmentChecker::visit(boost::shared_ptr<Variable> node)
 {
   ConstraintBuilder::visit(node);
-  if(this->in_prev_) this->prevs_in_guard_.insert(node->get_name());
+  if(this->in_prev_) this->prevs_in_guard_.insert(node->get_name() + BP_PREV_STR);
 }
 
 /**
@@ -234,9 +234,9 @@ Trivalent EntailmentChecker::check_entailment(
   }
   rp_vector_destroy(&vec);
 
-  // ask条件がprev変数に関する式であり，かつそのprev変数の値が(-oo,+oo)だった場合にはfalse
-  //// guardに現れるprev変数を列挙
-  //// 一度ストアだけを解いてprev変数の値を調べる
+  // ask条件がprev変数に関する式であり，かつそのprev変数の値が(-oo,+oo)だった場合にはFALSE
+  if(this->is_guard_about_undefined_prev()) return FALSE;
+
   // solve(S & g) == empty -> FALSE
   // solve(S&ng0)==empty /\ solve(S&ng1)==empty /\ ... -> TRUE
   // else -> UNKNOWN
@@ -244,8 +244,81 @@ Trivalent EntailmentChecker::check_entailment(
 }
 
 /**
+ * ask条件が未定義のprev変数に関する式であるか
+ * ask条件がprev変数に関する式であり，かつそのprev変数の値が(-oo,+oo)だった場合にはtrue
+ *  1. guardに現れるprev変数を列挙 = prevs_in_guard_
+ *  2. ストアだけを解いてprev変数の値を決定
+ *  3. 列挙されたprev変数の値が一つでも(-oo,+oo)？
+ */
+bool EntailmentChecker::is_guard_about_undefined_prev()
+{
+  bool res = false;
+  rp_box box;
+  rp_box_create(&box, this->vars_.size());
+  for(int i=0; i<rp_box_size(box); i++) {
+    rp_interval_set(rp_box_elem(box, i), -RP_INFINITY, RP_INFINITY);
+  }
+  bool is_consistent_store_only = this->solve_hull(this->constraints_, box);
+  assert(is_consistent_store_only);
+  std::set<std::string>::iterator it = this->prevs_in_guard_.begin();
+  while(it != this->prevs_in_guard_.end()) {
+    int index = this->vars_.left.at(*it);
+    assert(index >= 0);
+    if(rp_binf(rp_box_elem(box, index))==-RP_INFINITY
+      && rp_bsup(rp_box_elem(box, index))==RP_INFINITY) res = true;
+    it++;
+  }
+  rp_box_destroy(&box);
+  return res;
+}
+
+/**
+ * □SOLVEと(ほぼ)同様の計算をする
+ * @param c 制約
+ * @param b 初期box
+ * @return b中にcを満たす範囲が存在するかどうか
+ */
+bool EntailmentChecker::solve_hull(std::set<rp_constraint> c, rp_box b)
+{
+  std::set<rp_constraint>::iterator it = c.begin();
+  while(it != c.end()) {
+    assert(rp_constraint_type(*it) == RP_CONSTRAINT_NUMERICAL);
+    int rel = rp_ctr_num_rel(rp_constraint_num(*it));
+    switch(rel) {
+      case RP_RELATION_EQUAL:
+        if(!rp_sat_hull_eq(rp_constraint_num(*it), b)) return false;
+        break;
+      case RP_RELATION_SUPEQUAL:
+        if(!rp_sat_hull_sup(rp_constraint_num(*it), b)) return false;
+        break;
+      case RP_RELATION_INFEQUAL:
+        if(!rp_sat_hull_inf(rp_constraint_num(*it), b)) return false;
+        break;
+    }
+    it++;
+  }
+  return true;
+}
+
+/**
+ * constraints_の中身をすべて複製したsetを返す
+ */
+std::set<rp_constraint> EntailmentChecker::copy_constraints()
+{
+  std::set<rp_constraint> res;
+  std::set<rp_constraint>::iterator it = this->constraints_.begin();
+  while(it != this->constraints_.end()) {
+    rp_constraint c;
+    rp_constraint_clone(&c, *it);
+    res.insert(c);
+    it++;
+  }
+  return res;
+}
+
+/**
  * vars_をrp_vector_variableに変換
- * 変数の値は正しく設定されていない
+ * 変数の値は(-oo, +oo)
  */
 rp_vector_variable EntailmentChecker::to_rp_vector()
 {
@@ -255,6 +328,9 @@ rp_vector_variable EntailmentChecker::to_rp_vector()
   for(int i=0; i<size; i++){
     rp_variable v;
     rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
+    rp_interval interval;
+    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
+    rp_union_insert(rp_variable_domain(v), interval);
     rp_vector_insert(vec, v);
   }
   return vec;
