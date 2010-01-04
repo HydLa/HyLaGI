@@ -41,6 +41,8 @@ public:
 
   virtual node_sptr clone() = 0;
 
+  virtual bool is_same_struct(const Node& n) const;
+
   virtual std::ostream& dump(std::ostream& s) const 
   {
     return s << "Node<"
@@ -108,6 +110,8 @@ public:
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
 
   virtual node_sptr clone() = 0;
+
+  virtual bool is_same_struct(const Node& n) const;
 
   node_type_sptr clone(node_type_sptr n)
   {
@@ -203,6 +207,8 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n) const;
 
   virtual node_sptr clone() = 0;
 

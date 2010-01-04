@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <typeinfo>
+
 #include <boost/bind.hpp>
 
 #include "ParseError.h"
@@ -18,6 +20,24 @@ namespace parse_tree {
 std::ostream& operator<<(std::ostream& s, const Node& node)
 {
   return node.dump(s);
+}
+
+bool Node::is_same_struct(const Node& n) const
+{
+  return typeid(*this) == typeid(n);
+}
+
+bool UnaryNode::is_same_struct(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+          child_->is_same_struct(*(static_cast<const UnaryNode*>(&n))->child_.get());
+}
+
+bool BinaryNode::is_same_struct(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+          lhs_->is_same_struct(*(static_cast<const BinaryNode*>(&n))->lhs_.get()) &&
+          rhs_->is_same_struct(*(static_cast<const BinaryNode*>(&n))->rhs_.get());
 }
 
 std::ostream& Caller::dump(std::ostream& s) const 

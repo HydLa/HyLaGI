@@ -121,6 +121,10 @@ public:
    */
   node_sptr swap_tree(const node_sptr& tree);
 
+  bool is_same_tree_struct(const ParseTree& pt) const {
+    return node_tree_->is_same_struct(*pt.node_tree_);
+  }
+
   /**
    * ノードツリーに対してビジターを適用する
    */
