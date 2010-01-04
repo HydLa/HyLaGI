@@ -19,7 +19,7 @@ ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(MathLink& ml, bool debu
 ConstraintStoreBuilderPoint::~ConstraintStoreBuilderPoint()
 {}
 
-void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t variable_map)
+void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variable_map)
 {
   // variable_map ‚ğ‚à‚Æ‚É constraint_store ‚ğ‚Â‚­‚é
 
@@ -62,6 +62,8 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t variable
 
     // SymbolicVariable‘¤‚ÉŠÖ‚·‚é•¶š—ñ‚ğì¬
     str += "Equal[";
+    str += "prev[";
+    vars_list += "prev[";
     if(symbolic_variable.derivative_count > 0)
     {
       std::ostringstream derivative_count;
@@ -71,6 +73,7 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t variable
       str += "][";
       str += name;
       str += "]";
+      
       vars_list += "Derivative[";
       vars_list += derivative_count.str();
       vars_list += "][";
@@ -82,6 +85,8 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t variable
       str += name;
       vars_list += name;
     }
+    str += "]";
+    vars_list += "]";
 
     str += ",";
 
