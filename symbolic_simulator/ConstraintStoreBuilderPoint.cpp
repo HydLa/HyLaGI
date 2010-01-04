@@ -113,10 +113,8 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variabl
   }
 }
 
-variable_map_t ConstraintStoreBuilderPoint::build_variable_map()
+void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t& variable_map)
 {
-
-  variable_map_t variable_map;
 
   // createVariableList[制約ストアの式, 制約ストアに出現する変数の一覧, {}]を送信
   ml_.put_function("createVariableList", 3);
@@ -189,13 +187,6 @@ variable_map_t ConstraintStoreBuilderPoint::build_variable_map()
 
     variable_map.set_variable(symbolic_variable, symbolic_value); 
   }
-
-  return variable_map;
-}
-
-ConstraintStore& ConstraintStoreBuilderPoint::getcs()
-{
-  return this->constraint_store_;
 }
 
 } //namespace symbolic_simulator

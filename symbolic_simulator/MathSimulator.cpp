@@ -141,7 +141,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
                                      &positive_asks);
 
     // §–ñ‚ª[‘«‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ÌŠm”F
-    if(!consistency_checker.is_consistent(tell_list, csbp.getcs())){
+    if(!consistency_checker.is_consistent(tell_list, csbp.get_constraint_store())){
       return false;
     }
 
@@ -156,7 +156,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        if(entailment_checker.check_entailment(*it, csbp.getcs())) {
+        if(entailment_checker.check_entailment(*it, csbp.get_constraint_store())) {
           expanded = true;
           positive_asks.insert(*it);
           negative_asks.erase(it++);
@@ -172,7 +172,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   phase_state_sptr new_state(create_new_phase_state(state));
   new_state->phase        = phase_state_t::IntervalPhase;
   new_state->initial_time = false;
-  new_state->variable_map = csbp.build_variable_map();
+  csbp.build_variable_map(new_state->variable_map);
   std::cout << new_state->variable_map;
   push_phase_state(new_state);
 
