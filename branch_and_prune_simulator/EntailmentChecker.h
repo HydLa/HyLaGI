@@ -65,6 +65,7 @@ private:
   bool is_tell_ctr_;
   bool debug_mode_;
 
+  void create_initial_box(rp_box *b);
   bool is_guard_about_undefined_prev();
   bool solve_hull(std::set<rp_constraint> c, rp_box b);
   std::set<rp_constraint> copy_constraints();

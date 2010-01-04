@@ -23,7 +23,27 @@ EntailmentChecker::EntailmentChecker(bool debug_mode) :
 {}
 
 EntailmentChecker::~EntailmentChecker()
-{}
+{
+  std::set<rp_constraint>::iterator it;
+  it = this->constraints_.begin();
+  while(it != this->constraints_.end()) {
+    rp_constraint c = *it;
+    rp_constraint_destroy(&c);
+    it++;
+  }
+  it = this->guards_.begin();
+  while(it != this->guards_.end()) {
+    rp_constraint c = *it;
+    rp_constraint_destroy(&c);
+    it++;
+  }
+  it = this->not_guards_.begin();
+  while(it != this->not_guards_.end()) {
+    rp_constraint c = *it;
+    rp_constraint_destroy(&c);
+    it++;
+  }
+}
 
 // Ask§–ñ
 void EntailmentChecker::visit(boost::shared_ptr<Ask> node)
@@ -235,12 +255,53 @@ Trivalent EntailmentChecker::check_entailment(
   rp_vector_destroy(&vec);
 
   // askğŒ‚ªprev•Ï”‚ÉŠÖ‚·‚é®‚Å‚ ‚èC‚©‚Â‚»‚Ìprev•Ï”‚Ì’l‚ª(-oo,+oo)‚¾‚Á‚½ê‡‚É‚ÍFALSE
-  if(this->is_guard_about_undefined_prev()) return FALSE;
+  if(this->is_guard_about_undefined_prev()) {
+    if(this->debug_mode_) std::cout << "#*** entailment check ==> FALSE(guard_about_undefined_prev) ***\n";
+    return FALSE;
+  }
 
   // solve(S & g) == empty -> FALSE
+  rp_box box;
+  this->create_initial_box(&box);
+  std::set<rp_constraint> ctr_and_g = this->constraints_;
+  ctr_and_g.insert(this->guards_.begin(), this->guards_.end());
+  if(!(this->solve_hull(ctr_and_g, box))) {
+    rp_box_destroy(&box);
+    if(this->debug_mode_) std::cout << "#*** entailment check ==> FALSE ***\n";
+    return FALSE;
+  }
+  rp_box_destroy(&box);
+
   // solve(S&ng0)==empty /\ solve(S&ng1)==empty /\ ... -> TRUE
+  bool is_TRUE = true;
+  std::set<rp_constraint>::iterator ctr_it = this->not_guards_.begin();
+  while(ctr_it != this->not_guards_.end()) {
+    this->create_initial_box(&box);
+    std::set<rp_constraint> ctr_and_ng = this->constraints_;
+    ctr_and_ng.insert(*ctr_it);
+    if(this->solve_hull(ctr_and_ng, box)) is_TRUE = false;
+    rp_box_destroy(&box);
+    ctr_it++;
+  }
+  if(is_TRUE) {
+    if(this->debug_mode_) std::cout << "#*** entailment check ==> TRUE ***\n";
+    return TRUE;
+  }
+
   // else -> UNKNOWN
-  return FALSE;
+  if(this->debug_mode_) std::cout << "#*** entailment check ==> UNKNOWN ***\n";
+  return UNKNOWN;
+}
+
+/**
+ * •Ï”‚Ì‰Šú’l((-oo,+oo))‚ğ“ü‚ê‚½box‚ğì‚é
+ */
+void EntailmentChecker::create_initial_box(rp_box *b)
+{
+  rp_box_create(b, this->vars_.size());
+  for(int i=0; i<rp_box_size(*b); i++) {
+    rp_interval_set(rp_box_elem(*b, i), -RP_INFINITY, RP_INFINITY);
+  }
 }
 
 /**
@@ -254,10 +315,7 @@ bool EntailmentChecker::is_guard_about_undefined_prev()
 {
   bool res = false;
   rp_box box;
-  rp_box_create(&box, this->vars_.size());
-  for(int i=0; i<rp_box_size(box); i++) {
-    rp_interval_set(rp_box_elem(box, i), -RP_INFINITY, RP_INFINITY);
-  }
+  this->create_initial_box(&box);
   bool is_consistent_store_only = this->solve_hull(this->constraints_, box);
   assert(is_consistent_store_only);
   std::set<std::string>::iterator it = this->prevs_in_guard_.begin();

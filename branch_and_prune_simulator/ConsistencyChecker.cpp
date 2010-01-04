@@ -52,7 +52,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
   // 作成できたか確認
   rp_vector_variable vec = this->to_rp_vector();
   if(this->debug_mode_){
-    std::cout << "#**** tells expression ****\n";
+    std::cout << "#**** consistency check: constraints expression ****\n";
     std::set<rp_constraint>::iterator it = this->constraints_.begin();
     while(it != this->constraints_.end()){
       rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
@@ -110,6 +110,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
   rp_bpsolver solver(&problem,10,select,split); //,prover);
 
   if(this->debug_mode_){
+    std::cout << "#**** consistency check: problem to solve ****\n";
     rp_problem_display(stdout,problem);
     std::cout << "\n";
   }
@@ -121,6 +122,10 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
   rp_problem_destroy(&problem);
 
   // return ソルバから解が一つでも出力されたか？
+  if(this->debug_mode_) {
+    std::string result = (sol!=NULL) ? "Consistent" : "Inconsistent";
+    std::cout << "#*** consistency check ==> " << result << " ***\n\n";
+  }
   return (sol != NULL);
 }
 
