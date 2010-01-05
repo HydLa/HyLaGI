@@ -28,8 +28,6 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
 private:
-  rp_vector_variable to_rp_vector();
-
   std::set<rp_constraint> constraints_;
 
   bool debug_mode_;

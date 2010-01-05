@@ -1,5 +1,6 @@
 #include "BPSimulator.h"
-#include "ConstraintStoreBuilderPoint.h"
+#include "ConstraintStore.h"
+//#include "ConstraintStoreBuilderPoint.h"
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
 
@@ -73,12 +74,13 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
-  ConstraintStoreBuilderPoint csbp(is_debug_mode()); //TODO: kenshiroが作成？
+  ConstraintStore constraint_store(is_debug_mode());
+  //ConstraintStoreBuilderPoint csbp(is_debug_mode()); //TODO: kenshiroが作成？
   ConsistencyChecker consistency_checker(is_debug_mode());
   EntailmentChecker entailment_checker(is_debug_mode());   //TODO: kenshiroが作成
 
   // TODO: stateから制約ストアを作る
-  csbp.build_constraint_store(state->variable_map);
+  constraint_store.build(state->variable_map);
 
   bool expanded   = true;
   while(expanded) {
@@ -86,7 +88,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
     tell_collector.collect_all_tells(&tell_list, &state->expanded_always, &positive_asks);
 
     // 制約が充足しているかどうかの確認
-    if(!consistency_checker.is_consistent(tell_list, csbp.getcs())){
+    if(!consistency_checker.is_consistent(tell_list, constraint_store)){
       return false;
     }
 
@@ -100,7 +102,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        Trivalent res = entailment_checker.check_entailment(*it, tell_list, csbp.getcs());
+        Trivalent res = entailment_checker.check_entailment(*it, tell_list, constraint_store);
         switch(res) {
           case TRUE:
             expanded = true;

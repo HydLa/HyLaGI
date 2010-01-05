@@ -210,5 +210,26 @@ void ConstraintBuilder::create_ctr_num(boost::shared_ptr<BinaryNode> node, int r
   rp_ctr_num_create(&(this->ctr_), &l, rel, &r);
 }
 
+/**
+ * vars_‚ðrp_vector_variable‚É•ÏŠ·
+ * •Ï”‚Ì’l‚Í(-oo, +oo)
+ */
+rp_vector_variable ConstraintBuilder::to_rp_vector() const
+{
+  rp_vector_variable vec;
+  rp_vector_variable_create(&vec);
+  int size = this->vars_.size();
+  boost::bimaps::bimap<std::string, int>::right_const_iterator it;
+  for(it=this->vars_.right.begin(); it!=this->vars_.right.end(); it++){
+    rp_variable v;
+    rp_variable_create(&v, ((it->second).c_str()));
+    rp_interval interval;
+    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
+    rp_union_insert(rp_variable_domain(v), interval);
+    rp_vector_insert(vec, v);
+  }
+  return vec;
+}
+
 } //namespace bp_simulator
 } // namespace hydla

@@ -71,6 +71,7 @@ protected:
   bool in_differential_;
 
   void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
+  rp_vector_variable to_rp_vector() const;
 
 private:
   void create_unary_erep(boost::shared_ptr<hydla::parse_tree::UnaryNode> node, int op);

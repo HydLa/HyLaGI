@@ -94,7 +94,7 @@ void EntailmentChecker::visit(boost::shared_ptr<UnEqual> node)
     rp_constraint not_a;
     this->create_ctr_num(node, RP_RELATION_EQUAL);
     rp_constraint_create_num(&not_a, this->ctr_);
-    this->guards_.insert(not_a);
+    this->not_guards_.insert(not_a);
     this->ctr_ = NULL;
   }
 }
@@ -273,7 +273,9 @@ Trivalent EntailmentChecker::check_entailment(
   rp_box_destroy(&box);
 
   // solve(S&ng0)==empty /\ solve(S&ng1)==empty /\ ... -> TRUE
+  // ngが存在しない(gが等式)場合，TRUEではない
   bool is_TRUE = true;
+  if(this->not_guards_.size() == 0) is_TRUE = false;
   std::set<rp_constraint>::iterator ctr_it = this->not_guards_.begin();
   while(ctr_it != this->not_guards_.end()) {
     this->create_initial_box(&box);
@@ -358,41 +360,41 @@ bool EntailmentChecker::solve_hull(std::set<rp_constraint> c, rp_box b)
   return true;
 }
 
-/**
- * constraints_の中身をすべて複製したsetを返す
- */
-std::set<rp_constraint> EntailmentChecker::copy_constraints()
-{
-  std::set<rp_constraint> res;
-  std::set<rp_constraint>::iterator it = this->constraints_.begin();
-  while(it != this->constraints_.end()) {
-    rp_constraint c;
-    rp_constraint_clone(&c, *it);
-    res.insert(c);
-    it++;
-  }
-  return res;
-}
+///**
+// * constraints_の中身をすべて複製したsetを返す
+// */
+//std::set<rp_constraint> EntailmentChecker::copy_constraints()
+//{
+//  std::set<rp_constraint> res;
+//  std::set<rp_constraint>::iterator it = this->constraints_.begin();
+//  while(it != this->constraints_.end()) {
+//    rp_constraint c;
+//    rp_constraint_clone(&c, *it);
+//    res.insert(c);
+//    it++;
+//  }
+//  return res;
+//}
 
-/**
- * vars_をrp_vector_variableに変換
- * 変数の値は(-oo, +oo)
- */
-rp_vector_variable EntailmentChecker::to_rp_vector()
-{
-  rp_vector_variable vec;
-  rp_vector_variable_create(&vec);
-  int size = this->vars_.size();
-  for(int i=0; i<size; i++){
-    rp_variable v;
-    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
-    rp_interval interval;
-    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
-    rp_union_insert(rp_variable_domain(v), interval);
-    rp_vector_insert(vec, v);
-  }
-  return vec;
-}
+///**
+// * vars_をrp_vector_variableに変換
+// * 変数の値は(-oo, +oo)
+// */
+//rp_vector_variable EntailmentChecker::to_rp_vector()
+//{
+//  rp_vector_variable vec;
+//  rp_vector_variable_create(&vec);
+//  int size = this->vars_.size();
+//  for(int i=0; i<size; i++){
+//    rp_variable v;
+//    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
+//    rp_interval interval;
+//    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
+//    rp_union_insert(rp_variable_domain(v), interval);
+//    rp_vector_insert(vec, v);
+//  }
+//  return vec;
+//}
 
 } //namespace bp_simulator
 } // namespace hydla

@@ -61,23 +61,14 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
     }
     std::cout << "\n";
   }
-  rp_vector_destroy(&vec);
 
   // 問題とソルバを作成し,解いてチェック
   rp_problem problem;
   rp_problem_create(&problem, "consistency_check");
 
   // 変数ベクタに変数を追加
-  int size = this->vars_.size();
-  for(int i=0; i<size; i++){
-    rp_variable v;
-    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
-    // すべての変数に初期値(-oo,+oo)を与える
-    rp_interval interval;
-    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
-    rp_union_insert(rp_variable_domain(v), interval);
-    rp_vector_insert(rp_problem_vars(problem), v);
-  }
+  rp_vector_destroy(&rp_table_symbol_vars(rp_problem_symb(problem)));
+  rp_table_symbol_vars(rp_problem_symb(problem)) = vec;
 
   // 制約ベクタに制約を追加
   std::set<rp_constraint>::iterator it = this->constraints_.begin();
@@ -129,22 +120,22 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
   return (sol != NULL);
 }
 
-/**
- * vars_をrp_vector_variableに変換
- * 変数の値は正しく設定されていない
- */
-rp_vector_variable ConsistencyChecker::to_rp_vector()
-{
-  rp_vector_variable vec;
-  rp_vector_variable_create(&vec);
-  int size = this->vars_.size();
-  for(int i=0; i<size; i++){
-    rp_variable v;
-    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
-    rp_vector_insert(vec, v);
-  }
-  return vec;
-}
+///**
+// * vars_をrp_vector_variableに変換
+// * 変数の値は正しく設定されていない
+// */
+//rp_vector_variable ConsistencyChecker::to_rp_vector()
+//{
+//  rp_vector_variable vec;
+//  rp_vector_variable_create(&vec);
+//  int size = this->vars_.size();
+//  for(int i=0; i<size; i++){
+//    rp_variable v;
+//    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
+//    rp_vector_insert(vec, v);
+//  }
+//  return vec;
+//}
 
 } //namespace bp_simulator
 } // namespace hydla

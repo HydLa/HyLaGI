@@ -166,10 +166,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\EntailmentChecker.cpp"
 				>
 			</File>
@@ -209,10 +205,6 @@
 			</File>
 			<File
 				RelativePath=".\ConstraintStore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.h"
 				>
 			</File>
 			<File

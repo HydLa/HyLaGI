@@ -3,21 +3,23 @@
 namespace hydla {
 namespace bp_simulator {
 
-  ConstraintStore::ConstraintStore()
+  ConstraintStore::ConstraintStore(bool debug_mode) :
+  debug_mode_(debug_mode)
   {}
 
   ConstraintStore::~ConstraintStore()
   {}
 
-  std::set<rp_constraint>& ConstraintStore::get_store_exprs()
+  // TODO: ‚»‚Ì‚¤‚¿‘‚­
+  void ConstraintStore::build(const variable_map_t& variable_map)
   {
-    return this->exprs_;
   }
 
-  std::set<rp_constraint> ConstraintStore::get_store_exprs_copy()
+
+  std::set<rp_constraint> ConstraintStore::get_store_exprs_copy() const
   {
     std::set<rp_constraint> ans;
-    std::set<rp_constraint>::iterator it = this->exprs_.begin();
+    std::set<rp_constraint>::const_iterator it = this->exprs_.begin();
     while(it != this->exprs_.end()) {
       rp_constraint c;
       // TODO: ŠÔˆá‚Á‚Ä‚¢‚é‰Â”\«
@@ -27,9 +29,18 @@ namespace bp_simulator {
     return ans;
   }
 
-  boost::bimaps::bimap<std::string, int>& ConstraintStore::get_store_vars()
+  void ConstraintStore::add_constraint(rp_constraint c, var_name_map_t vars)
   {
-    return this->vars_;
+    this->exprs_.insert(c);
+    this->vars_.insert(vars.begin(), vars.end());
+  }
+
+  void ConstraintStore::add_constraint(std::set<rp_constraint>::iterator start,
+                                       std::set<rp_constraint>::iterator end,
+                                       var_name_map_t vars)
+  {
+    this->exprs_.insert(start, end);
+    this->vars_.insert(vars.begin(), vars.end());
   }
 
 } // namespace bp_simulator
