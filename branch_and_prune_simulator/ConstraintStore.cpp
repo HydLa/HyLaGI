@@ -33,8 +33,8 @@ namespace bp_simulator {
     std::set<rp_constraint>::const_iterator it = this->exprs_.begin();
     while(it != this->exprs_.end()) {
       rp_constraint c;
-      // TODO: ŠÔˆá‚Á‚Ä‚¢‚é‰Â”\«
       rp_constraint_clone(&c, (*it));
+      ans.insert(c);
       it++;
     }
     return ans;
