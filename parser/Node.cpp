@@ -40,6 +40,18 @@ bool BinaryNode::is_same_struct(const Node& n) const
           rhs_->is_same_struct(*(static_cast<const BinaryNode*>(&n))->rhs_.get());
 }
 
+bool Number::is_same_struct(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+          number_ == static_cast<const Number*>(&n)->number_;          
+}
+
+bool Variable::is_same_struct(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+          name_ == static_cast<const Variable*>(&n)->name_;          
+}
+
 std::ostream& Caller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();

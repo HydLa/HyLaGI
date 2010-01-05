@@ -182,6 +182,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\parse_tree_struct_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\parse_tree_test.cpp"
 				>
 			</File>
@@ -195,6 +199,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\test_common.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"

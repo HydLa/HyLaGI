@@ -4,9 +4,10 @@
  *
  */
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/regex.hpp>
+#include "test_common.h"
+#ifndef DISABLE_PARSE_TREE_BUILD_TEST
 
+#include <boost/regex.hpp>
 #include <sstream>
 
 #include "HydLaAST.h"
@@ -311,3 +312,5 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/impulse_function.hydla");
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/navigation.hydla");
 }
+
+#endif // DISABLE_PARSE_TREE_BUILD_TEST

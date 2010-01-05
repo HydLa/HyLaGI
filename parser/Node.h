@@ -38,9 +38,20 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor) = 0;
-
+  
+  /**
+   * 子ノードを含めたノード（ツリー）の構造を複製する
+   * 
+   * 複製されたノードのIDはすべて0となる
+   */
   virtual node_sptr clone() = 0;
 
+  /**
+   * 子ノードを含めたノード（ツリー）の構造の比較を行う
+   * 
+   * 構造比較時に，ノードのIDは考慮されない
+   * 終端ノードにおいてはそのノードの具体的な値は比較時に考慮される
+   */
   virtual bool is_same_struct(const Node& n) const;
 
   virtual std::ostream& dump(std::ostream& s) const 
@@ -753,6 +764,8 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
+  virtual bool is_same_struct(const Node& n) const;
+
   virtual node_sptr clone()
   {
     boost::shared_ptr<Number> n(new Number());
@@ -802,6 +815,8 @@ public:
   virtual ~Variable(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n) const;
 
   virtual node_sptr clone()
   {

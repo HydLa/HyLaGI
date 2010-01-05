@@ -4,9 +4,8 @@
  *
  */
 
-#include <iostream>
-
-#include <boost/test/auto_unit_test.hpp>
+#include "test_common.h"
+#ifndef DISABLE_MODULE_SET_LIST_TEST
 
 #include "HydLaAST.h"
 #include "NodeFactory.h"
@@ -37,16 +36,8 @@ BOOST_AUTO_TEST_CASE(module_set_list_test)
 //  virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
 //                        int threads = 1) = 0;
 
-  HydLaAST ast;
-  ParseTreeGenerator<DefaultNodeFactory> ptg;
 
-
-    ast.parse_string("x=1.");
-     boost::shared_ptr<ParseTree> pt1(ptg.generate(ast.get_tree_iterator()));
-
-    ast.parse_string("1=x.");
-     boost::shared_ptr<ParseTree> pt2(ptg.generate(ast.get_tree_iterator()));
-
-    BOOST_CHECK_EQUAL(pt1->is_same_tree_struct(*pt2), true);
 
 }
+
+#endif //DISABLE_MODULE_SET_LIST_TEST
