@@ -218,7 +218,6 @@ rp_vector_variable ConstraintBuilder::to_rp_vector() const
 {
   rp_vector_variable vec;
   rp_vector_variable_create(&vec);
-  int size = this->vars_.size();
   boost::bimaps::bimap<std::string, int>::right_const_iterator it;
   for(it=this->vars_.right.begin(); it!=this->vars_.right.end(); it++){
     rp_variable v;

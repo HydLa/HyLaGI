@@ -33,8 +33,7 @@ public:
   virtual ~EntailmentChecker();
 
   Trivalent check_entailment(
-    const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask,
-    hydla::simulator::tells_t& collected_tells,
+    const boost::shared_ptr<Ask>& negative_ask,
     ConstraintStore& constraint_store);
 
   // AskêßñÒ
@@ -65,6 +64,7 @@ private:
   bool is_tell_ctr_;
   bool debug_mode_;
 
+  void finalize();
   void create_initial_box(rp_box *b);
   bool is_guard_about_undefined_prev();
   bool solve_hull(std::set<rp_constraint> c, rp_box b);

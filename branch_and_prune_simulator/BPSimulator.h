@@ -10,6 +10,8 @@
 namespace hydla {
 namespace bp_simulator {
 
+class ConstraintStore;
+
 class BPSimulator : public simulator_t
 {
 public:
@@ -44,9 +46,8 @@ private:
   virtual void do_initialize();
   bool do_point_phase(const module_set_sptr& ms,
     const phase_state_const_sptr& state,
-    hydla::simulator::tells_t tell_list,
-    hydla::simulator::positive_asks_t positive_asks,
-    hydla::simulator::negative_asks_t negative_asks);
+    ConstraintStore& constraint_store,
+    hydla::simulator::positive_asks_t& positive_asks);
 
   Opts opts_;
   std::string max_time_;

@@ -39,8 +39,7 @@ void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)
 
 bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore& constraint_store)
 {
-  // ストアの変数情報と制約情報をコピー
-  this->constraints_ = constraint_store.get_store_exprs_copy();
+  // ストアの変数情報をコピー
   this->vars_ = constraint_store.get_store_vars();
   // rp_constraint集合を生成
   tells_t::iterator tells_it = collected_tells.begin();
@@ -48,6 +47,19 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
     this->accept(*tells_it);
     tells_it++;
   }
+  // tell制約(rp_constraint)をコピーしておく
+  std::set<rp_constraint> tells_ctr_copy;
+  std::set<rp_constraint>::iterator ctr_it = this->constraints_.begin();
+  while(ctr_it != this->constraints_.end()) {
+    rp_constraint c;
+    rp_constraint_clone(&c, *ctr_it);
+    tells_ctr_copy.insert(c);
+    ctr_it++;
+  }
+
+  // ストアの制約を追加
+  std::set<rp_constraint> store_expr_copy = constraint_store.get_store_exprs_copy();
+  this->constraints_.insert(store_expr_copy.begin(), store_expr_copy.end());
 
   // 作成できたか確認
   rp_vector_variable vec = this->to_rp_vector();
@@ -113,11 +125,25 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
   rp_problem_destroy(&problem);
 
   // return ソルバから解が一つでも出力されたか？
-  if(this->debug_mode_) {
-    std::string result = (sol!=NULL) ? "Consistent" : "Inconsistent";
-    std::cout << "#*** consistency check ==> " << result << " ***\n\n";
+  if(sol != NULL) {
+    constraint_store.add_constraint(tells_ctr_copy.begin(),
+                                    tells_ctr_copy.end(), this->vars_);
+    if(this->debug_mode_) {
+      std::cout << "#*** consistency check ==> Consistent ***\n";
+      std::cout << "#**** consistency check: new constraint_store ***\n";
+      constraint_store.display(10);
+    }
+    return true;
+  } else {
+    if(this->debug_mode_) std::cout << "#*** consistency check ==> Inconsistent ***\n\n";
+    ctr_it = tells_ctr_copy.begin();
+    while(ctr_it != tells_ctr_copy.end()) {
+      rp_constraint c = *ctr_it;
+      rp_constraint_destroy(&c);
+      ctr_it++;
+    }
+    return false;
   }
-  return (sol != NULL);
 }
 
 ///**

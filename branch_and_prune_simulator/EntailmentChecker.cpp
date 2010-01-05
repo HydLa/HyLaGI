@@ -197,18 +197,11 @@ void EntailmentChecker::visit(boost::shared_ptr<Variable> node)
  */
 Trivalent EntailmentChecker::check_entailment(
   const boost::shared_ptr<Ask>& negative_ask,
-  tells_t& collected_tells,
   ConstraintStore& constraint_store)
 {
-  // constraint_store + collected_tells = 現制約 S
+  // constraint_store = 現制約 S
   this->constraints_ = constraint_store.get_store_exprs_copy();
   this->vars_ = constraint_store.get_store_vars();
-  // collected_tellsから
-  tells_t::iterator tells_it = collected_tells.begin();
-  while((tells_it) != collected_tells.end()){
-    this->accept(*tells_it);
-    tells_it++;
-  }
 
   // 作成できたか確認
   rp_vector_variable vec = this->to_rp_vector();
@@ -257,6 +250,7 @@ Trivalent EntailmentChecker::check_entailment(
   // ask条件がprev変数に関する式であり，かつそのprev変数の値が(-oo,+oo)だった場合にはFALSE
   if(this->is_guard_about_undefined_prev()) {
     if(this->debug_mode_) std::cout << "#*** entailment check ==> FALSE(guard_about_undefined_prev) ***\n";
+    this->finalize();
     return FALSE;
   }
 
@@ -268,6 +262,7 @@ Trivalent EntailmentChecker::check_entailment(
   if(!(this->solve_hull(ctr_and_g, box))) {
     rp_box_destroy(&box);
     if(this->debug_mode_) std::cout << "#*** entailment check ==> FALSE ***\n";
+    this->finalize();
     return FALSE;
   }
   rp_box_destroy(&box);
@@ -287,11 +282,13 @@ Trivalent EntailmentChecker::check_entailment(
   }
   if(is_TRUE) {
     if(this->debug_mode_) std::cout << "#*** entailment check ==> TRUE ***\n";
+    this->finalize();
     return TRUE;
   }
 
   // else -> UNKNOWN
   if(this->debug_mode_) std::cout << "#*** entailment check ==> UNKNOWN ***\n";
+  this->finalize();
   return UNKNOWN;
 }
 
@@ -360,6 +357,32 @@ bool EntailmentChecker::solve_hull(std::set<rp_constraint> c, rp_box b)
   return true;
 }
 
+/**
+ * 終了処理，rp_constraintを解放する
+ * デストラクタと同じ
+ */
+void EntailmentChecker::finalize()
+{
+  std::set<rp_constraint>::iterator it;
+  it = this->constraints_.begin();
+  while(it != this->constraints_.end()) {
+    rp_constraint c = *it;
+    rp_constraint_destroy(&c);
+    this->constraints_.erase(it++);
+  }
+  it = this->guards_.begin();
+  while(it != this->guards_.end()) {
+    rp_constraint c = *it;
+    rp_constraint_destroy(&c);
+    this->guards_.erase(it++);
+  }
+  it = this->not_guards_.begin();
+  while(it != this->not_guards_.end()) {
+    rp_constraint c = *it;
+    rp_constraint_destroy(&c);
+    this->not_guards_.erase(it++);
+  }
+}
 ///**
 // * constraints_の中身をすべて複製したsetを返す
 // */
