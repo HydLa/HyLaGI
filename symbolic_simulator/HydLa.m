@@ -1,18 +1,26 @@
 
 (*
- * ある1つのask制約に関して、そのガードがtell制約からentailできるかどうかをチェック
+ * ある1つのask制約に関して、そのガードが制約ストアからentailできるかどうかをチェック
  *)
-checkEntailment[guard_, tells_, vars_] := (
-  tmpSol = Reduce[Append[tells, guard], vars, Reals];
+checkEntailment[guard_, store_, vars_] := (
+  tmpSol = Reduce[Append[store, guard], vars, Reals];
   If[tmpSol===False, Return[-1]];
   If[Reduce[Append[tells, Not[tmpSol]], vars, Reals]===False, 1, 0]
+);
+
+(*
+ * 変数名の頭についている"usrVar"を取り除く
+ *)
+renameVar[varName_] := (
+  ToExpression[First[StringCases[ToString[varName], "usrVar" ~~ x__ -> x]]]
 );
 
 (*
  * isConsistent内のReduceの結果得られた解を{変数名, 値}　のリスト形式にする
  *)
 createVariableList[Rule[varName_, varValue_], result_] := (
-  Append[result, pair[varName, varValue]]
+  name = renameVar[varName];
+  Append[result, pair[name, varValue]]
 );
 
 createVariableList[{expr_}, result_] := (
@@ -54,10 +62,17 @@ isConsistent[expr_, vars_] := (
   If[sol =!= False, {ToString[FullForm[sol]], ToString[FullForm[vars]]}, 0]
 );
 
-isConsistentInterval[expr_, vars_] := (
-  sol = DSolve[expr, vars, t];
-  If[sol =!= {}, {ToString[FullForm[Apply[And, Apply[Equal, sol, {2}], {1}]]], ToString[FullForm[vars]]}, 0]
-)
+isConsistentInterval[tells_, store_, tellsvars_, storevars_] := (
+  sol = Quiet[Check[Check[DSolve[Join[tells,store], Join[tellsvars,storevars], t],
+                          overconstraint,
+                          {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet}],
+                    underconstraint,
+                    {DSolve::underdet}],
+              {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet}];
+  If[sol =!= overconstraint,
+     If[sol =!= underconstraint, 1, 2],
+     0]
+);
 
 (* $MaxExtraPrecision = Infinity *)
 

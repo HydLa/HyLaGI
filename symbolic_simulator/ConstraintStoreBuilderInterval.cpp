@@ -1,4 +1,4 @@
-#include "ConstraintStoreBuilderPoint.h"
+#include "ConstraintStoreBuilderInterval.h"
 #include <iostream>
 
 using namespace hydla::parse_tree;
@@ -8,7 +8,7 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(MathLink& ml, bool debug_mode) :
+ConstraintStoreBuilderInterval::ConstraintStoreBuilderInterval(MathLink& ml, bool debug_mode) :
   ml_(ml),
   debug_mode_(debug_mode)
 {
@@ -16,10 +16,10 @@ ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(MathLink& ml, bool debu
   constraint_store_.second.str = "{}";
 }
 
-ConstraintStoreBuilderPoint::~ConstraintStoreBuilderPoint()
+ConstraintStoreBuilderInterval::~ConstraintStoreBuilderInterval()
 {}
 
-void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variable_map)
+void ConstraintStoreBuilderInterval::build_constraint_store(variable_map_t& variable_map)
 {
   // variable_map をもとに constraint_store をつくる
 
@@ -50,8 +50,8 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variabl
   // "List[x]"や"List[x,y,z]"や"List[x,Derivative[1][x],prev[x],prev[Derivative[2][x]]"や
   // "List[]"などが入る
 
-  str += "And[";
-  vars_list += "List[";
+  str.append("And[");
+  vars_list.append("List[");
   variable_map_t::variable_list_t::iterator it = variable_map.begin();
   SymbolicVariable symbolic_variable = (*it).first;
   SymbolicValue symbolic_value = (*it).second;    
@@ -75,8 +75,6 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variabl
 
     // SymbolicVariable側に関する文字列を作成
     str += "Equal[";
-    str += "prev[";
-    vars_list += "prev[";
     if(symbolic_variable.derivative_count > 0)
     {
       std::ostringstream derivative_count;
@@ -85,23 +83,23 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variabl
       str += derivative_count.str();
       str += "][usrVar";
       str += name;
-      str += "]";
+      str += "][0]";
       
       vars_list += "Derivative[";
       vars_list += derivative_count.str();
       vars_list += "][usrVar";
       vars_list += name;
-      vars_list += "]";
+      vars_list += "][t]";
     }
     else
     {
       str += "usrVar";
       str += name;
+      str += "[0]";
       vars_list += "usrVar";
       vars_list += name;
+      vars_list += "[t]";
     }
-    str += "]"; // prevの閉じ括弧
-    vars_list += "]"; // prevの閉じ括弧
 
     str += ",";
 
@@ -136,7 +134,7 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variabl
   }
 }
 
-void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t& variable_map)
+void ConstraintStoreBuilderInterval::build_variable_map(variable_map_t& variable_map)
 {
 
   // createVariableList[制約ストアの式, 制約ストアに出現する変数の一覧, {}]を送信
