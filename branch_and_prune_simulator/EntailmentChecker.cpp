@@ -11,171 +11,13 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace bp_simulator {
 
-
-EntailmentChecker::EntailmentChecker() :
-  is_tell_ctr_(false),
-  debug_mode_(false)
-{}
-
 EntailmentChecker::EntailmentChecker(bool debug_mode) :
-  is_tell_ctr_(false),
   debug_mode_(debug_mode)
 {}
 
 EntailmentChecker::~EntailmentChecker()
 {
-  std::set<rp_constraint>::iterator it;
-  it = this->constraints_.begin();
-  while(it != this->constraints_.end()) {
-    rp_constraint c = *it;
-    rp_constraint_destroy(&c);
-    it++;
-  }
-  it = this->guards_.begin();
-  while(it != this->guards_.end()) {
-    rp_constraint c = *it;
-    rp_constraint_destroy(&c);
-    it++;
-  }
-  it = this->not_guards_.begin();
-  while(it != this->not_guards_.end()) {
-    rp_constraint c = *it;
-    rp_constraint_destroy(&c);
-    it++;
-  }
-}
-
-// Ask制約
-void EntailmentChecker::visit(boost::shared_ptr<Ask> node)
-{
-  // ask条件から
-  // guard_list(andつながり)
-  // not_guard_list(orつながり)
-  // の両方を作る
-  this->accept(node->get_guard());
-}
-
-// Tell制約 必要ない？
-void EntailmentChecker::visit(boost::shared_ptr<Tell> node)
-{
-  this->is_tell_ctr_ = true;
-  rp_constraint c;
-  this->accept(node->get_child());
-  rp_constraint_create_num(&c, this->ctr_);
-  this->constraints_.insert(c);
-  this->ctr_ = NULL;
-  this->is_tell_ctr_ = false;
-}
-
-// 比較演算子
-// ここで一気に二つの式を作る
-void EntailmentChecker::visit(boost::shared_ptr<Equal> node)
-{
-  if(this->is_tell_ctr_) {
-    ConstraintBuilder::visit(node);
-  } else {
-    // ask時
-    rp_constraint a;
-    this->create_ctr_num(node, RP_RELATION_EQUAL);
-    rp_constraint_create_num(&a, this->ctr_);
-    this->guards_.insert(a);
-    this->ctr_ = NULL;
-    // not_a は制約なし
-  }
-}
-
-void EntailmentChecker::visit(boost::shared_ptr<UnEqual> node)               
-{
-  if(this->is_tell_ctr_) {
-    ConstraintBuilder::visit(node);
-  } else {
-    // ask時
-    // a は制約なし
-    rp_constraint not_a;
-    this->create_ctr_num(node, RP_RELATION_EQUAL);
-    rp_constraint_create_num(&not_a, this->ctr_);
-    this->not_guards_.insert(not_a);
-    this->ctr_ = NULL;
-  }
-}
-
-void EntailmentChecker::visit(boost::shared_ptr<Less> node)                  
-{
-  if(this->is_tell_ctr_) {
-    ConstraintBuilder::visit(node);
-  } else {
-    // ask時
-    rp_constraint a, not_a;
-    this->create_ctr_num(node, RP_RELATION_INFEQUAL);
-    rp_constraint_create_num(&a, this->ctr_);
-    this->guards_.insert(a);
-    this->ctr_ = NULL;
-    this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
-    rp_constraint_create_num(&not_a, this->ctr_);
-    this->not_guards_.insert(not_a);
-    this->ctr_ = NULL;
-  }
-}
-
-void EntailmentChecker::visit(boost::shared_ptr<LessEqual> node)             
-{
-  if(this->is_tell_ctr_) {
-    ConstraintBuilder::visit(node);
-  } else {
-    // ask時
-    rp_constraint a, not_a;
-    this->create_ctr_num(node, RP_RELATION_INFEQUAL);
-    rp_constraint_create_num(&a, this->ctr_);
-    this->guards_.insert(a);
-    this->ctr_ = NULL;
-    this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
-    rp_constraint_create_num(&not_a, this->ctr_);
-    this->not_guards_.insert(not_a);
-    this->ctr_ = NULL;
-  }
-}
-
-void EntailmentChecker::visit(boost::shared_ptr<Greater> node)               
-{
-  if(this->is_tell_ctr_) {
-    ConstraintBuilder::visit(node);
-  } else {
-    // ask時
-    rp_constraint a, not_a;
-    this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
-    rp_constraint_create_num(&a, this->ctr_);
-    this->guards_.insert(a);
-    this->ctr_ = NULL;
-    this->create_ctr_num(node, RP_RELATION_INFEQUAL);
-    rp_constraint_create_num(&not_a, this->ctr_);
-    this->not_guards_.insert(not_a);
-    this->ctr_ = NULL;
-  }
-}
-
-void EntailmentChecker::visit(boost::shared_ptr<GreaterEqual> node)          
-{
-  if(this->is_tell_ctr_) {
-    ConstraintBuilder::visit(node);
-  } else {
-    // ask時
-    rp_constraint a, not_a;
-    this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
-    rp_constraint_create_num(&a, this->ctr_);
-    this->guards_.insert(a);
-    this->ctr_ = NULL;
-    this->create_ctr_num(node, RP_RELATION_INFEQUAL);
-    rp_constraint_create_num(&not_a, this->ctr_);
-    this->not_guards_.insert(not_a);
-    this->ctr_ = NULL;
-  }
-}
-
-// 論理演算子
-void EntailmentChecker::visit(boost::shared_ptr<LogicalAnd> node)            
-{
-  this->accept(node->get_lhs());
-  this->accept(node->get_rhs());
+  this->finalize();
 }
 
 // 変数
@@ -233,7 +75,7 @@ Trivalent EntailmentChecker::check_entailment(
     std::cout << "\n#**** entailment check: not_guards ****\n";
     it = this->not_guards_.begin();
     while(it != this->not_guards_.end()){
-      rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
+      if(*it != NULL) rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
       std::cout << "\n";
       it++;
     }
@@ -331,12 +173,14 @@ bool EntailmentChecker::is_guard_about_undefined_prev()
 
 /**
  * □SOLVEと(ほぼ)同様の計算をする
+ * TODO: これで動くが，box consistencyを満たしていない
  * @param c 制約
  * @param b 初期box
  * @return b中にcを満たす範囲が存在するかどうか
  */
 bool EntailmentChecker::solve_hull(std::set<rp_constraint> c, rp_box b)
 {
+  c.erase(static_cast<rp_constraint>(NULL));
   std::set<rp_constraint>::iterator it = c.begin();
   while(it != c.end()) {
     assert(rp_constraint_type(*it) == RP_CONSTRAINT_NUMERICAL);
@@ -363,6 +207,9 @@ bool EntailmentChecker::solve_hull(std::set<rp_constraint> c, rp_box b)
  */
 void EntailmentChecker::finalize()
 {
+  this->constraints_.erase(static_cast<rp_constraint>(NULL));
+  this->guards_.erase(static_cast<rp_constraint>(NULL));
+  this->not_guards_.erase(static_cast<rp_constraint>(NULL));
   std::set<rp_constraint>::iterator it;
   it = this->constraints_.begin();
   while(it != this->constraints_.end()) {
@@ -397,26 +244,6 @@ void EntailmentChecker::finalize()
 //    it++;
 //  }
 //  return res;
-//}
-
-///**
-// * vars_をrp_vector_variableに変換
-// * 変数の値は(-oo, +oo)
-// */
-//rp_vector_variable EntailmentChecker::to_rp_vector()
-//{
-//  rp_vector_variable vec;
-//  rp_vector_variable_create(&vec);
-//  int size = this->vars_.size();
-//  for(int i=0; i<size; i++){
-//    rp_variable v;
-//    rp_variable_create(&v, ((this->vars_.right.at(i)).c_str()));
-//    rp_interval interval;
-//    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
-//    rp_union_insert(rp_variable_domain(v), interval);
-//    rp_vector_insert(vec, v);
-//  }
-//  return vec;
 //}
 
 } //namespace bp_simulator

@@ -20,6 +20,7 @@ class ConstraintStore
 {
 public:
   ConstraintStore(bool debug_mode = false);
+  ConstraintStore(const ConstraintStore& src);
   ~ConstraintStore();
   void build(const variable_map_t& variable_map);
   //const std::set<rp_constraint>& get_store_exprs() const

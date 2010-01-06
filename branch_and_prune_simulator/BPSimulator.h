@@ -47,7 +47,9 @@ private:
   bool do_point_phase(const module_set_sptr& ms,
     const phase_state_const_sptr& state,
     ConstraintStore& constraint_store,
-    hydla::simulator::positive_asks_t& positive_asks);
+    hydla::simulator::TellCollector& tell_collector,
+    hydla::simulator::positive_asks_t& positive_asks,
+    hydla::simulator::negative_asks_t& negative_asks);
 
   Opts opts_;
   std::string max_time_;

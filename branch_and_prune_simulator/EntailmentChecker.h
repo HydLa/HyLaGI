@@ -25,10 +25,9 @@ namespace bp_simulator {
 typedef enum Trivalent_ {FALSE, UNKNOWN, TRUE} Trivalent;
 
 
-class EntailmentChecker : public ConstraintBuilder {
+class EntailmentChecker : protected GuardConstraintBuilder {
 public:
-  EntailmentChecker();
-  EntailmentChecker(bool debug_mode);
+  EntailmentChecker(bool debug_mode = false);
 
   virtual ~EntailmentChecker();
 
@@ -36,32 +35,13 @@ public:
     const boost::shared_ptr<Ask>& negative_ask,
     ConstraintStore& constraint_store);
 
-  // AskêßñÒ
-  virtual void visit(boost::shared_ptr<Ask> node);
-  // TellêßñÒ
-  virtual void visit(boost::shared_ptr<Tell> node);
-
-  // î‰ärââéZéq
-  virtual void visit(boost::shared_ptr<Equal> node);
-  virtual void visit(boost::shared_ptr<UnEqual> node);
-  virtual void visit(boost::shared_ptr<Less> node);
-  virtual void visit(boost::shared_ptr<LessEqual> node);
-  virtual void visit(boost::shared_ptr<Greater> node);
-  virtual void visit(boost::shared_ptr<GreaterEqual> node);
-
-  // ò_óùââéZéq
-  virtual void visit(boost::shared_ptr<LogicalAnd> node);
-  //virtual void visit(boost::shared_ptr<LogicalOr> node);
-
   // ïœêî
   virtual void visit(boost::shared_ptr<Variable> node);
 
 private:
-  std::set<rp_constraint> guards_, not_guards_;
   std::set<rp_constraint> constraints_;
   std::set<std::string> prevs_in_guard_;
   // protected boost::bimaps::bimap<std::string, int> vars_;
-  bool is_tell_ctr_;
   bool debug_mode_;
 
   void finalize();
@@ -76,4 +56,3 @@ private:
 } // namespace hydla
 
 #endif //_INCLUDED_HYDLA_BP_SIMULATOR_ENTAILMENT_CHECKER_H__
-

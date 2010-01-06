@@ -18,9 +18,9 @@
 //#define RP_RELATION_EQUAL     1
 //#define RP_RELATION_SUPEQUAL  2
 //#define RP_RELATION_INFEQUAL  3
-#define RP_RELATION_UNEQUAL 4
-#define RP_RELATION_SUP 5
-#define RP_RELATION_INF 6
+//#define RP_RELATION_UNEQUAL 4
+//#define RP_RELATION_SUP 5
+//#define RP_RELATION_INF 6
 
 #define BP_PREV_STR "_p"
 #define BP_DERIV_STR "_d"
@@ -57,7 +57,7 @@ public:
 
   // ç∂ã…å¿
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
-  
+
   // ïœêî
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
@@ -68,7 +68,7 @@ protected:
   boost::bimaps::bimap<std::string, int> vars_;
   rp_ctr_num ctr_;
   bool in_prev_;
-  bool in_differential_;
+  unsigned int derivative_count_;
 
   void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
   rp_vector_variable to_rp_vector() const;
@@ -78,6 +78,34 @@ private:
   void create_binary_erep(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int op);
 
   std::stack<rp_erep> rep_stack_;
+
+};
+
+class GuardConstraintBuilder : public ConstraintBuilder {
+public:
+
+  void create_guard_expr(boost::shared_ptr<hydla::parse_tree::Ask> node,
+    std::set<rp_constraint>& guards,
+    std::set<rp_constraint>& not_guards,
+    boost::bimaps::bimap<std::string, int>& vars);
+
+  // AskêßñÒ
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+
+  // î‰ärââéZéq
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
+
+  // ò_óùââéZéq
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
+
+protected:
+  std::set<rp_constraint> guards_;
+  std::set<rp_constraint> not_guards_;
 
 };
 

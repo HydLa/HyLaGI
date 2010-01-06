@@ -44,11 +44,14 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
                               const phase_state_const_sptr& state)
 {
   positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
   ConstraintStore constraint_store(is_debug_mode());
   // TODO: stateから制約ストアを作る
   constraint_store.build(state->variable_map);
+  TellCollector tell_collector(ms, is_debug_mode());
 
-  return this->do_point_phase(ms, state, constraint_store, positive_asks);
+  return this->do_point_phase(ms, state, constraint_store,
+                              tell_collector, positive_asks, negative_asks);
 }
 
 /**
@@ -59,16 +62,19 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
  * @param state Point Phase開始時の状態
  * @param constraint_store 制約ストア
  * @param positive_asks エンテールされたask制約リスト
+ * @param negative_asks エンテールされないask制約リスト
  *
  * @return Point Phaseを満たす解が存在するか
  */
 bool BPSimulator::do_point_phase(const module_set_sptr& ms,
                     const phase_state_const_sptr& state,
                     ConstraintStore& constraint_store,
-                    positive_asks_t& positive_asks)
+                    TellCollector& tell_collector,
+                    positive_asks_t& positive_asks,
+                    negative_asks_t& negative_asks)
 {
+  if(this->is_debug_mode()) std::cout << "#** do_point_phase: BEGIN **\n\n";
   negative_asks_t unknown_asks; // Symbolicではnegative_asks
-  TellCollector tell_collector(ms, is_debug_mode());
   AskCollector  ask_collector(ms, is_debug_mode());
   ConsistencyChecker consistency_checker(is_debug_mode());
   EntailmentChecker entailment_checker(is_debug_mode());
@@ -95,6 +101,11 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = unknown_asks.begin();
       negative_asks_t::iterator end = unknown_asks.end();
       while(it!=end) {
+        if(negative_asks.find(*it)!=negative_asks.end()) {
+          if(this->is_debug_mode()) std::cout << "#*** do_point_phase: skip un-entailed ask ***\n";
+          unknown_asks.erase(it++);
+          continue;
+        }
         Trivalent res = entailment_checker.check_entailment(*it, constraint_store);
         switch(res) {
           case TRUE:
@@ -103,29 +114,51 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
             unknown_asks.erase(it++);
             break;
           case UNKNOWN:
-            // UNKNOWNの処理はexpandが全て終わってから
-            it++;
+            {
+              // Ask条件に基づいて分岐
+              // エンテールされる場合
+              if(this->is_debug_mode()) std::cout << "#*** do_point_phase: BRANCH ***\n\n";
+              std::set<rp_constraint> guards, not_guards;
+              boost::bimaps::bimap<std::string, int> vars;
+              GuardConstraintBuilder gcb;
+              gcb.create_guard_expr(*it, guards, not_guards, vars);
+              ConstraintStore cs_t(constraint_store);
+              cs_t.add_constraint(guards.begin(), guards.end(), vars);
+              TellCollector tc_t(tell_collector);
+              positive_asks_t pa_t(positive_asks);
+              pa_t.insert(*it);
+              negative_asks_t na_t(negative_asks);
+              bool result = this->do_point_phase(ms, state, cs_t, tc_t, pa_t, na_t);
+              // エンテールされない場合
+              std::set<rp_constraint>::iterator ctr_it;
+              for(ctr_it=not_guards.begin(); ctr_it!=not_guards.end(); ctr_it++) {
+                ConstraintStore cs_f(constraint_store);
+                TellCollector tc_f(tell_collector);
+                cs_f.add_constraint(*ctr_it, vars);
+                positive_asks_t pa_f(positive_asks);
+                negative_asks_t na_f(negative_asks);
+                na_f.insert(*it);
+                result = this->do_point_phase(ms, state, cs_f, tc_f, pa_f, na_f) || result;
+              }
+              return result;
+            }
+            assert(false);
             break;
           case FALSE:
-            // FALSEになったaskは以降エンテールされることはないので消す
+            negative_asks.insert(*it);
             unknown_asks.erase(it++);
             break;
         }
       }
     }
   } // while(expanded)
-  // negative_asksがtrueの場合とfalseの場合全ての組み合わせを考え分割
-
-  // unknown_asksがあれば
-
-  // ?
-  //if(!csbp.build_constraint_store(&new_tells, &state->constraint_store)) {
-  //  return false;
-  //}
 
   //// IntervalPhaseへ
-  //state->phase = IntervalPhase;
-  //state_queue_.push(*state);
+  //phase_state_sptr new_state(create_new_phase_state(state));
+  //new_state->phase = phase_state_t::IntervalPhase;
+  //new_state->initial_time = false;
+  //// ConstraintStoreからvariable_mapを作成
+  //push_phase_state(new_state);
 
   return true;
 }

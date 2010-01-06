@@ -7,13 +7,20 @@ namespace bp_simulator {
   debug_mode_(debug_mode)
   {}
 
+  ConstraintStore::ConstraintStore(const ConstraintStore& src) :
+  debug_mode_(src.debug_mode_)
+  {
+    this->exprs_ = src.get_store_exprs_copy();
+    this->vars_ = src.vars_;
+  }
+
   ConstraintStore::~ConstraintStore()
   {
     std::set<rp_constraint>::iterator it = this->exprs_.begin();
     while(it != this->exprs_.end()) {
       rp_constraint c = *it;
       rp_constraint_destroy(&c);
-      it++;
+      this->exprs_.erase(it++);
     }
   }
 
