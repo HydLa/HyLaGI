@@ -52,18 +52,21 @@ public:
    * 
    * 構造比較時に，ノードのIDは考慮されない
    * 終端ノードにおいてはそのノードの具体的な値は比較時に考慮される
-   * consider_symmetryが真の場合，
-   * x=1と1=xの様に対称性をもつツリーも同一であるとみなされる
-   * なお，"(x=1 & y=2) & z=3."と"x=1 & (y=2 & z=3)."のようなものは
-   * 対称性を満たしていないために同一とはならない
+   * exactly_sameが真の場合，
+   * x=1と1=xの様に対称性をもつツリーは同一であるとはみなされない
+   * exactly_sameが偽の場合，
+   * (x=1 & 2=y) & z=3 と x=1 & (y=2 & z=3)
    */
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
+  virtual std::string get_node_type_name() const {
+    return "Node";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << "Node<"
-             << get_id()
-             << ">";
+    return s << get_node_type_name()
+             << "<" << get_id() << ">";
   }
 
   void set_id(node_id_t id)
@@ -96,12 +99,9 @@ public:
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
   
   virtual node_sptr clone() = 0;
-  
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    return s << "FactorNode<"
-             << get_id()
-             << ">";
+
+  virtual std::string get_node_type_name() const {
+    return "FactorNode";
   }
 };
 
@@ -136,13 +136,14 @@ public:
     return n;
   }
 
+  virtual std::string get_node_type_name() const {
+    return "UnaryNode";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << "UnaryNode<"
-             << get_id()
-             << ">["
-             << *child_
-             << "]";
+    Node::dump(s);
+    return s << "[" << *child_ << "]";
   }
 
   /**
@@ -195,14 +196,9 @@ protected:
       return UnaryNode::clone(n);                           \
     }                                                       \
                                                             \
-  virtual std::ostream& dump(std::ostream& s) const         \
-    {                                                         \
-    return s << #NAME "<"                                    \
-             << get_id()                                    \
-             << ">["                                       \
-             << *child_                                     \
-             << "]";                                      \
-    }                                                         \
+  virtual std::string get_node_type_name() const {          \
+    return #NAME;                                    \
+  }                                                            \
   };
 
 /**
@@ -236,15 +232,14 @@ public:
     return n;
   }
 
+  virtual std::string get_node_type_name() const {
+    return "BinaryNode";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << "BinaryNode<"
-             << get_id()
-             <<">["
-             << *lhs_
-             << ","
-             << *rhs_
-             << "]";
+    Node::dump(s);
+    return s << "[" << *lhs_ << "," << *rhs_ << "]";
   }
 
   /**
@@ -281,7 +276,7 @@ public:
 
 protected:
   struct CheckInclude;
-  typedef std::vector<std::pair<const Node*, bool>> child_node_list_t;
+  typedef std::vector<std::pair<const Node*, bool> > child_node_list_t;
 
   bool is_exactly_same(const Node& n, bool exactly_same) const;
   void create_child_node_list(child_node_list_t& cnl, 
@@ -312,17 +307,9 @@ protected:
       node_type_sptr n(new NAME);                           \
       return BinaryNode::clone(n);                          \
     }                                                       \
-                                                            \
-  virtual std::ostream& dump(std::ostream& s) const         \
-    {                                                       \
-    return s << #NAME "<"                                    \
-             << get_id()                                    \
-             << ">["                                       \
-             << *lhs_                                     \
-             << ","                                       \
-             << *rhs_                                     \
-             << "]";                                      \
-    }                                                       \
+  virtual std::string get_node_type_name() const {          \
+    return #NAME;                                           \
+  }                                                         \
   };
 
 #define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                 \
@@ -349,16 +336,9 @@ protected:
       return BinaryNode::clone(n);                          \
     }                                                       \
                                                             \
-  virtual std::ostream& dump(std::ostream& s) const         \
-    {                                                       \
-    return s << #NAME "<"                                    \
-             << get_id()                                    \
-             << ">["                                       \
-             << *lhs_                                     \
-             << ","                                       \
-             << *rhs_                                     \
-             << "]";                                      \
-    }                                                       \
+  virtual std::string get_node_type_name() const {          \
+    return #NAME;                                           \
+  }                                                       \
   };
 
 /**
@@ -376,6 +356,11 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "Caller";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const;
 
   /**
@@ -480,6 +465,10 @@ public:
   virtual ~ConstraintCaller(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ConstraintCaller";
+  }
 };
 
 /**
@@ -491,6 +480,10 @@ public:
   virtual ~ProgramCaller(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramCaller";
+  }
 };
 
 /**
@@ -507,6 +500,11 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "Definition";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const;
 
   /**
@@ -608,6 +606,10 @@ public:
   virtual ~ProgramDefinition(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramDefinition";
+  }
 };
 
 /**
@@ -619,6 +621,10 @@ public:
   virtual ~ConstraintDefinition(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ConstraintDefinition";
+  }
 };
 
 /**
@@ -655,15 +661,8 @@ public:
     return BinaryNode::clone(n);
   }
 
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    return s << "Ask<"
-             << get_id()
-             << ">["
-             << *lhs_
-             << ","
-             << *rhs_
-             << "]";
+  virtual std::string get_node_type_name() const {
+    return "Ask";
   }
 
   /**
@@ -824,15 +823,14 @@ public:
     return n;
   }
   
+  virtual std::string get_node_type_name() const {
+    return "Number";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << "Number<"
-             << get_id()
-             << ","
-             << this
-             << ">["
-             << number_
-             << "]";
+    Node::dump(s);
+    return s <<"[" << number_ << "]";
   }
 
   void set_number(const std::string& number) 
@@ -875,14 +873,15 @@ public:
     n->id_   = id_;
     return n;
   }
-  
+    
+  virtual std::string get_node_type_name() const {
+    return "Variable";
+  }
+
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << "Variable<"
-             << get_id()
-             << ">["
-             << name_
-             << "]";
+    Node::dump(s);
+    return s <<"[" << name_ << "]";
   }
 
   void set_name(const std::string& name) 

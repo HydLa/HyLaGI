@@ -165,6 +165,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ParseTreeGraphvizDumper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ParseTreeSemanticAnalyzer.cpp"
 				>
 			</File>
@@ -224,6 +228,10 @@
 			</File>
 			<File
 				RelativePath=".\ParseTreeGenerator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseTreeGraphvizDumper.h"
 				>
 			</File>
 			<File
