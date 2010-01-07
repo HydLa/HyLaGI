@@ -14,39 +14,216 @@ using namespace std;
 using namespace boost;
 using namespace hydla::parse_error;
 
+
 namespace hydla { 
 namespace parse_tree {
-  
+
+
+
 std::ostream& operator<<(std::ostream& s, const Node& node)
 {
   return node.dump(s);
 }
 
-bool Node::is_same_struct(const Node& n) const
+bool Node::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
 }
 
-bool UnaryNode::is_same_struct(const Node& n) const
+bool UnaryNode::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          child_->is_same_struct(*(static_cast<const UnaryNode*>(&n))->child_.get());
+          child_->is_same_struct(*static_cast<const UnaryNode*>(&n)->child_.get(), 
+                                 exactly_same);
 }
 
-bool BinaryNode::is_same_struct(const Node& n) const
+bool BinaryNode::is_exactly_same(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          lhs_->is_same_struct(*(static_cast<const BinaryNode*>(&n))->lhs_.get()) &&
-          rhs_->is_same_struct(*(static_cast<const BinaryNode*>(&n))->rhs_.get());
+    lhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->lhs_.get(), exactly_same) &&
+    rhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->rhs_.get(), exactly_same);
 }
 
-bool Number::is_same_struct(const Node& n) const
+void BinaryNode::create_child_node_list(child_node_list_t& cnl, 
+                                        const Node* n) const
+{
+  const BinaryNode* binnode = dynamic_cast<const BinaryNode*>(n);
+
+  if(binnode != NULL) {
+    const Node* lhs = binnode->lhs_.get();
+    const Node* rhs = binnode->rhs_.get();
+
+
+    // ¶•Óƒm[ƒh
+    if(typeid(*n) == typeid(*lhs)) {
+      create_child_node_list(cnl, lhs);
+    }
+    else {
+      cnl.push_back(make_pair(lhs, false));
+    }
+
+    // ‰E•Óƒm[ƒh
+    if(typeid(*n) == typeid(*rhs)) {
+      create_child_node_list(cnl, rhs);
+    }
+    else {
+      cnl.push_back(make_pair(rhs, false));
+    }
+  }
+}
+
+struct BinaryNode::CheckInclude
+{
+  CheckInclude(const Node* n) :
+    node(n)
+  {}
+
+  template<typename T>
+  bool operator()(T& it)
+  {
+    if(!it.second && node->is_same_struct(*it.first, false)) {
+      it.second = true;
+      return true;
+    }
+    return false;
+  }
+  
+  const Node* node;
+};
+
+bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
+{
+  if(exactly_same) {
+    return is_exactly_same(n, exactly_same);
+  }
+
+  if(typeid(*this) == typeid(n)) {
+    child_node_list_t this_node;
+    child_node_list_t target_node;
+    create_child_node_list(this_node,   this);
+    create_child_node_list(target_node, static_cast<const BinaryNode*>(&n));
+    if(this_node.size() != target_node.size()) return false;
+
+    child_node_list_t::const_iterator it  = this_node.begin();
+    child_node_list_t::const_iterator end = this_node.end();
+    for(; it!=end; ++it) {
+      if(std::find_if(target_node.begin(), 
+                      target_node.end(), 
+                      CheckInclude(it->first)) == target_node.end()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+
+
+
+
+    /*
+    const Node& n_lhs = *(static_cast<const BinaryNode*>(&n))->lhs_.get();
+    const Node& n_rhs = *(static_cast<const BinaryNode*>(&n))->rhs_.get();
+
+    // ‘ÎÛ«
+    ret = 
+      ((lhs_->is_same_struct(n_lhs, false) &&
+      rhs_->is_same_struct(n_rhs, false)) ||
+      (lhs_->is_same_struct(n_rhs, false) &&
+      rhs_->is_same_struct(n_lhs, false)));
+
+
+    // node1
+    //      &
+    //    /   \  
+    //   &     c
+    //  /  \  
+    // a    b
+    //
+    // ‚Æ
+    //
+    // node2
+    //   &
+    //  / \  
+    // a   &
+    //    / \  
+    //   b   c
+    //
+    // ‚Ì“¯ˆê‹
+
+    // ‚±‚Ìƒm[ƒh‚ªnode1‚ÅC”äŠrƒm[ƒh‚ªnode2‚¾‚Á‚½ê‡
+    if(!ret && typeid(*this)==typeid(*lhs_) && typeid(n)==typeid(n_rhs)) {
+      const BinaryNode* b_lhs = static_cast<const BinaryNode*>(lhs_.get());
+      const BinaryNode* b_n_rhs = static_cast<const BinaryNode*>(&n_rhs);
+
+      ret = 
+        b_lhs->lhs_->is_same_struct(n_lhs, false) &&
+        b_lhs->rhs_->is_same_struct(*b_n_rhs->lhs_.get(), false) &&
+        rhs_->is_same_struct(*b_n_rhs->rhs_.get(), false);
+    }
+     
+
+    // ‚±‚Ìƒm[ƒh‚ªnode2‚ÅC”äŠrƒm[ƒh‚ªnode1‚¾‚Á‚½ê‡
+    if(!ret && typeid(*this)==typeid(*rhs_) && typeid(n)==typeid(n_lhs)) {
+      const BinaryNode* b_rhs = static_cast<const BinaryNode*>(rhs_.get());
+      const BinaryNode* b_n_lhs = static_cast<const BinaryNode*>(&n_lhs);
+
+      ret = 
+        b_rhs->lhs_->is_same_struct(*b_n_lhs->rhs_.get(), false) &&
+        b_rhs->rhs_->is_same_struct(n_rhs, false) &&
+        lhs_->is_same_struct(*b_n_lhs->lhs_.get(), false);
+    }
+    */
+
+bool Ask::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Less::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool LessEqual::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Greater::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool GreaterEqual::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Subtract::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Divide::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Weaker::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Number::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          number_ == static_cast<const Number*>(&n)->number_;          
+    number_ == static_cast<const Number*>(&n)->number_;          
 }
 
-bool Variable::is_same_struct(const Node& n) const
+bool Variable::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
           name_ == static_cast<const Variable*>(&n)->name_;          

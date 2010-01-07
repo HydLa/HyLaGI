@@ -19,8 +19,9 @@ class ProgramDefinition;
 class TreeVisitor;
 class BaseNodeVisitor;
 
-typedef unsigned int           node_id_t;
+typedef unsigned int            node_id_t;
 typedef boost::shared_ptr<Node> node_sptr;
+typedef boost::shared_ptr<const Node> node_const_sptr;
 
 /**
  * パスツリーの基底ノード
@@ -51,8 +52,12 @@ public:
    * 
    * 構造比較時に，ノードのIDは考慮されない
    * 終端ノードにおいてはそのノードの具体的な値は比較時に考慮される
+   * consider_symmetryが真の場合，
+   * x=1と1=xの様に対称性をもつツリーも同一であるとみなされる
+   * なお，"(x=1 & y=2) & z=3."と"x=1 & (y=2 & z=3)."のようなものは
+   * 対称性を満たしていないために同一とはならない
    */
-  virtual bool is_same_struct(const Node& n) const;
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   virtual std::ostream& dump(std::ostream& s) const 
   {
@@ -122,7 +127,7 @@ public:
 
   virtual node_sptr clone() = 0;
 
-  virtual bool is_same_struct(const Node& n) const;
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   node_type_sptr clone(node_type_sptr n)
   {
@@ -219,7 +224,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
 
-  virtual bool is_same_struct(const Node& n) const;
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   virtual node_sptr clone() = 0;
 
@@ -275,6 +280,13 @@ public:
   }
 
 protected:
+  struct CheckInclude;
+  typedef std::vector<std::pair<const Node*, bool>> child_node_list_t;
+
+  bool is_exactly_same(const Node& n, bool exactly_same) const;
+  void create_child_node_list(child_node_list_t& cnl, 
+                              const Node* n) const;
+
   node_sptr lhs_;
   node_sptr rhs_;
 };
@@ -295,6 +307,42 @@ protected:
                                                             \
   virtual void accept(node_sptr own, TreeVisitor* visitor); \
                                                             \
+  virtual node_sptr clone()                                 \
+    {                                                       \
+      node_type_sptr n(new NAME);                           \
+      return BinaryNode::clone(n);                          \
+    }                                                       \
+                                                            \
+  virtual std::ostream& dump(std::ostream& s) const         \
+    {                                                       \
+    return s << #NAME "<"                                    \
+             << get_id()                                    \
+             << ">["                                       \
+             << *lhs_                                     \
+             << ","                                       \
+             << *rhs_                                     \
+             << "]";                                      \
+    }                                                       \
+  };
+
+#define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                 \
+  class NAME : public BinaryNode {                          \
+  public:                                                   \
+  typedef boost::shared_ptr<NAME> node_type_sptr;           \
+                                                            \
+  NAME()                                                    \
+    {}                                                      \
+                                                            \
+  NAME(const node_sptr& lhs, const node_sptr& rhs) :        \
+    BinaryNode(lhs, rhs)                                    \
+    {}                                                      \
+                                                            \
+  virtual ~NAME(){}                                         \
+                                                            \
+  virtual void accept(node_sptr own, TreeVisitor* visitor); \
+                                                            \
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const; \
+                                                                            \
   virtual node_sptr clone()                                 \
     {                                                       \
       node_type_sptr n(new NAME);                           \
@@ -599,6 +647,8 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
   virtual node_sptr clone()
   {
     node_type_sptr n(new Ask);
@@ -662,22 +712,22 @@ DEFINE_BINARY_NODE(UnEqual);
 /**
  * 比較演算子「<」
  */
-DEFINE_BINARY_NODE(Less);
+DEFINE_ASYMMETRIC_BINARY_NODE(Less);
 
 /**
  * 比較演算子「<=」
  */
-DEFINE_BINARY_NODE(LessEqual);
+DEFINE_ASYMMETRIC_BINARY_NODE(LessEqual);
 
 /**
  * 比較演算子「>」
  */
-DEFINE_BINARY_NODE(Greater);
+DEFINE_ASYMMETRIC_BINARY_NODE(Greater);
 
 /**
  * 比較演算子「>=」
  */
-DEFINE_BINARY_NODE(GreaterEqual);
+DEFINE_ASYMMETRIC_BINARY_NODE(GreaterEqual);
 
 /**
  * 算術演算子「+」
@@ -687,7 +737,7 @@ DEFINE_BINARY_NODE(Plus);
 /**
  * 算術演算子「-」
  */
-DEFINE_BINARY_NODE(Subtract);
+DEFINE_ASYMMETRIC_BINARY_NODE(Subtract);
 
 /**
  * 算術演算子「*」
@@ -697,7 +747,7 @@ DEFINE_BINARY_NODE(Times);
 /**
  * 算術演算子「/」
  */
-DEFINE_BINARY_NODE(Divide);
+DEFINE_ASYMMETRIC_BINARY_NODE(Divide);
 
 /**
  * 論理演算子「/\」（連言）
@@ -719,7 +769,7 @@ DEFINE_BINARY_NODE(Parallel);
  * 制約階層定義演算子
  * 弱制約「<<」
  */ 
-DEFINE_BINARY_NODE(Weaker);
+DEFINE_ASYMMETRIC_BINARY_NODE(Weaker);
 
 
 /**
@@ -764,7 +814,7 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
-  virtual bool is_same_struct(const Node& n) const;
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   virtual node_sptr clone()
   {
@@ -816,7 +866,7 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
-  virtual bool is_same_struct(const Node& n) const;
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   virtual node_sptr clone()
   {

@@ -1,8 +1,10 @@
 /**
  * ConsistencyChecker‚ÌƒeƒXƒg
  */
-/*
-#include <boost/test/auto_unit_test.hpp>
+
+#include "test_common.h"
+#ifndef DISABLE_CONSISTENCY_CHECKER_TEST
+
 #include <boost/shared_ptr.hpp>
 
 #include "math_source.h"
@@ -64,4 +66,5 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   SS_CONSISTEMCY_CHECKER_TEST_F("x=1 & x=2.");
 
 }
-*/
+
+#endif // DISABLE_CONSISTENCY_CHECKER_TEST
