@@ -24,7 +24,12 @@ EntailmentChecker::~EntailmentChecker()
 void EntailmentChecker::visit(boost::shared_ptr<Variable> node)
 {
   ConstraintBuilder::visit(node);
-  if(this->in_prev_) this->prevs_in_guard_.insert(node->get_name() + BP_PREV_STR);
+  if(this->in_prev_) {
+    std::string name(node->get_name());
+    for(unsigned int i=0; i< this->derivative_count_; i++) name += BP_DERIV_STR;
+    name += BP_PREV_STR;
+    this->prevs_in_guard_.insert(name);
+  }
 }
 
 /**

@@ -107,14 +107,15 @@ void ConstraintBuilder::visit(boost::shared_ptr<Previous> node)
 // •Ï”
 void ConstraintBuilder::visit(boost::shared_ptr<Variable> node)
 {
-  typedef boost::bimaps::bimap<std::string, int>::value_type vars_type_t;
+  typedef var_name_map_t::value_type vars_type_t;
 
   // •Ï”•\‚É“o˜^ ‚¢‚¸‚ê•ÏXcH
   std::string name(node->get_name());
   unsigned int size = this->vars_.size();
   for(unsigned int i=0; i< this->derivative_count_; i++) name += BP_DERIV_STR;
   if(this->in_prev_) name += BP_PREV_STR;
-  this->vars_.insert(vars_type_t(name, size)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
+  var_property vp(this->derivative_count_, this->in_prev_);
+  this->vars_.insert(vars_type_t(name, size, vp)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
 
   // TODO: “Á’è‚Ì•Ï”‚Í’è”ˆµ‚¢‚µ‚È‚¢‚Æprove‚Å‚«‚È‚¢‰Â”\«
   rp_erep rep;
@@ -202,7 +203,7 @@ rp_vector_variable ConstraintBuilder::to_rp_vector() const
 {
   rp_vector_variable vec;
   rp_vector_variable_create(&vec);
-  boost::bimaps::bimap<std::string, int>::right_const_iterator it;
+  var_name_map_t::right_const_iterator it;
   for(it=this->vars_.right.begin(); it!=this->vars_.right.end(); it++){
     rp_variable v;
     rp_variable_create(&v, ((it->second).c_str()));
@@ -303,7 +304,7 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<LogicalAnd> node)
 void GuardConstraintBuilder::create_guard_expr(boost::shared_ptr<Ask> node,
                                                std::set<rp_constraint>& guards,
                                                std::set<rp_constraint>& not_guards,
-                                               boost::bimaps::bimap<std::string, int>& vars)
+                                               var_name_map_t& vars)
 {
   this->accept(node);
   guards.insert(this->guards_.begin(), this->guards_.end());

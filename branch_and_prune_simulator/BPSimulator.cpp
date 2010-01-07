@@ -39,6 +39,7 @@ void BPSimulator::do_initialize()
 
 /**
  * Point Phaseの処理
+ * TODO: どっかにフレーム公理な処理を入れる！
  */
 bool BPSimulator::point_phase(const module_set_sptr& ms, 
                               const phase_state_const_sptr& state)
@@ -119,7 +120,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
               // エンテールされる場合
               if(this->is_debug_mode()) std::cout << "#*** do_point_phase: BRANCH ***\n\n";
               std::set<rp_constraint> guards, not_guards;
-              boost::bimaps::bimap<std::string, int> vars;
+              var_name_map_t vars;
               GuardConstraintBuilder gcb;
               gcb.create_guard_expr(*it, guards, not_guards, vars);
               ConstraintStore cs_t(constraint_store);
@@ -153,12 +154,13 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
     }
   } // while(expanded)
 
-  //// IntervalPhaseへ
-  //phase_state_sptr new_state(create_new_phase_state(state));
-  //new_state->phase = phase_state_t::IntervalPhase;
-  //new_state->initial_time = false;
-  //// ConstraintStoreからvariable_mapを作成
-  //push_phase_state(new_state);
+  // IntervalPhaseへ
+  phase_state_sptr new_state(create_new_phase_state(state));
+  new_state->phase = phase_state_t::IntervalPhase;
+  new_state->initial_time = false;
+  // ConstraintStoreからvariable_mapを作成
+  constraint_store.build_variable_map(new_state->variable_map);
+  push_phase_state(new_state);
 
   return true;
 }

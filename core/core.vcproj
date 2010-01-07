@@ -41,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator;..\librealpaverbasic"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;RP_SYSTEM_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

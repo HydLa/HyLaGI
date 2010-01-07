@@ -4,6 +4,8 @@
 #include <stack>
 #include <boost/bimap/bimap.hpp>
 
+#include "BPTypes.h"
+
 // parser
 #include "Node.h"
 #include "TreeVisitor.h"
@@ -21,9 +23,6 @@
 //#define RP_RELATION_UNEQUAL 4
 //#define RP_RELATION_SUP 5
 //#define RP_RELATION_INF 6
-
-#define BP_PREV_STR "_p"
-#define BP_DERIV_STR "_d"
 
 namespace hydla {
 namespace bp_simulator {
@@ -65,7 +64,7 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
 protected:
-  boost::bimaps::bimap<std::string, int> vars_;
+  var_name_map_t vars_;
   rp_ctr_num ctr_;
   bool in_prev_;
   unsigned int derivative_count_;
@@ -87,7 +86,7 @@ public:
   void create_guard_expr(boost::shared_ptr<hydla::parse_tree::Ask> node,
     std::set<rp_constraint>& guards,
     std::set<rp_constraint>& not_guards,
-    boost::bimaps::bimap<std::string, int>& vars);
+    var_name_map_t& vars);
 
   // AskêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);

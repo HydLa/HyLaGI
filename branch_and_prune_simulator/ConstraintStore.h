@@ -11,7 +11,7 @@
 namespace hydla {
 namespace bp_simulator {
 
-typedef boost::bimaps::bimap<std::string, int> var_name_map_t;
+//typedef boost::bimaps::bimap<std::string, int> var_name_map_t;
 
 /**
  * §–ñƒXƒgƒA
@@ -23,10 +23,7 @@ public:
   ConstraintStore(const ConstraintStore& src);
   ~ConstraintStore();
   void build(const variable_map_t& variable_map);
-  //const std::set<rp_constraint>& get_store_exprs() const
-  //{
-  //  return this->exprs_;
-  //}
+  void build_variable_map(variable_map_t& variable_map) const;
   std::set<rp_constraint> get_store_exprs_copy() const;
   void add_constraint(rp_constraint c, const var_name_map_t& vars);
   void add_constraint(std::set<rp_constraint>::iterator start, std::set<rp_constraint>::iterator end, const var_name_map_t& vars);
@@ -37,6 +34,7 @@ public:
   void display(const int digits) const;
 
 private:
+  rp_vector_variable to_rp_vector() const;
   std::set<rp_constraint> exprs_;
   var_name_map_t vars_;
   bool debug_mode_;
