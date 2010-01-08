@@ -120,8 +120,14 @@ void hydla_main(int argc, char* argv[])
               << *pt << std::endl;
   }
 
-  pt->to_graphviz(std::cout);
-  return;
+/*
+    if(po.count("graphviz")) {
+      pt->to_graphviz(std::cout);
+    }
+    else {
+      pt->dump(std::cout);
+    }
+*/
 
   /*
   AskDisjunctionFormatter<DefaultNodeFactory> adf;

@@ -35,6 +35,9 @@ void ProgramOptions::init_descriptions()
     ("module-set-graph-noinit", 
      "output set of non initial module sets which might be solution by graph representation")
 
+    ("graphviz", 
+     "dump tree by dot language representation")
+
     ("method,m", 
      value<std::string>()->default_value("s"), 
      "simulation method:\n  b or BandPSimulator\n  s or SymbolicSimulator")
