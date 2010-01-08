@@ -49,6 +49,7 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
   ConstraintStore constraint_store(is_debug_mode());
   // TODO: state‚©‚ç§–ñƒXƒgƒA‚ğì‚é
   constraint_store.build(state->variable_map);
+  if(this->is_debug_mode()) constraint_store.display(10);
   TellCollector tell_collector(ms, is_debug_mode());
 
   return this->do_point_phase(ms, state, constraint_store,

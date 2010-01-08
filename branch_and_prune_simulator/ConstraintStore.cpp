@@ -33,6 +33,55 @@ namespace bp_simulator {
    */
   void ConstraintStore::build(const variable_map_t& variable_map)
   {
+    typedef var_name_map_t::value_type vars_type_t;
+    variable_map_t::const_iterator it;
+    for(it=variable_map.begin(); it!=variable_map.end(); it++) {
+      // •Ï”–¼‚ğì‚é
+      std::string name(it->first.name);
+      for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
+      std::string prev_name(name);
+      prev_name += BP_PREV_STR;
+      // •\‚É“o˜^
+      unsigned int size = this->vars_.size();
+      var_property vp(it->first.derivative_count, false),
+        vp_p(it->first.derivative_count, true);
+      this->vars_.insert(vars_type_t(name, size, vp)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
+      this->vars_.insert(vars_type_t(prev_name, size+1, vp_p));
+      // rp_interval‚©‚çrp_constraint‚ğì‚é
+      rp_interval i;
+      it->second.get(i);
+      // (-oo, +oo) ==> ì‚ç‚È‚¢C“o˜^‚µ‚È‚¢
+      if(rp_binf(i)==-RP_INFINITY && rp_bsup(i)==RP_INFINITY) continue;
+      if(rp_interval_point(i)) {
+        // rp_interval_point ==> ®1‚Â“o˜^
+        rp_erep l, r;
+        rp_ctr_num cnum;
+        rp_constraint c;
+        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+        rp_erep_create_cst(&r, "", i);
+        rp_ctr_num_create(&cnum, &l, RP_RELATION_EQUAL, &r);
+        rp_constraint_create_num(&c, cnum);
+        this->exprs_.insert(c);
+      } else {
+        // else ==> ®2‚Â“o˜^
+        rp_interval i_tmp;
+        rp_erep l, r;
+        rp_ctr_num cnum;
+        rp_constraint c;
+        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+        rp_interval_set_point(i_tmp, rp_binf(i));
+        rp_erep_create_cst(&r, "", i_tmp);
+        rp_ctr_num_create(&cnum, &l, RP_RELATION_SUPEQUAL, &r);
+        rp_constraint_create_num(&c, cnum);
+        this->exprs_.insert(c);
+        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+        rp_interval_set_point(i_tmp, rp_bsup(i));
+        rp_erep_create_cst(&r, "", i_tmp);
+        rp_ctr_num_create(&cnum, &l, RP_RELATION_INFEQUAL, &r);
+        rp_constraint_create_num(&c, cnum);
+        this->exprs_.insert(c);
+      }
+    }
   }
 
   /**
@@ -56,9 +105,12 @@ namespace bp_simulator {
         ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*it, i)));
       }
     }
+    // TODO: §–ñ‚ÉˆË‘¶‚µ‚Ä‚¢‚È‚¢•Ï”‚Ìprecision‚ÍRP_INFINITY‚É
+    // TODO: ‘¼‚Ì•Ï”‚ÍcBPSimulator‚Åˆê‚Â‚Ìprecision‚ğ‚Â‚æ‚¤‚É‚·‚é
     rp_problem_set_initial_box(problem);
     if(this->debug_mode_) {
       std::cout << "#*** constraint store: problem to solve ***\n";
+      std::cout << rp_variable_precision(rp_problem_var(problem, 0)) << "\n";
       rp_problem_display(stdout, problem);
       std::cout << "\n";
     }
@@ -81,6 +133,7 @@ namespace bp_simulator {
 
     // ‰ğ‚¢‚Ähull‚ğ‹‚ß‚é
     rp_box sol, tmp_box = solver.compute_next();
+    rp_box_display_simple_nl(tmp_box);
     assert(tmp_box != NULL);
     rp_box_clone(&sol, tmp_box);
     while((tmp_box=solver.compute_next()) != NULL) {
@@ -113,6 +166,8 @@ namespace bp_simulator {
         variable_map.set_variable(bp_variable, bp_value);
       }
     }
+    // Œãn––
+    rp_box_destroy(&sol);
   }
 
   /**
