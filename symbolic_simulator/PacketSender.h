@@ -69,8 +69,6 @@ private:
   MathLink& ml_;
   std::set<std::pair<std::string, int> > vars_;
   std::string vars_str_;
-  /// 微分方程式の中にいるかどうか（PointPhaseでは不要？）
-  bool in_differential_equality_;
   /// Differentialノードを何回通ったか
   int differential_count_;
   /// Prevノードの下にいるかどうか

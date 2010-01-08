@@ -10,7 +10,6 @@ namespace symbolic_simulator {
 
 PacketSender::PacketSender(MathLink& ml, bool debug_mode) :
   ml_(ml),
-  in_differential_equality_(false),
   differential_count_(0),
   in_prev_(false),
   debug_mode_(debug_mode)
@@ -49,7 +48,6 @@ void PacketSender::visit(boost::shared_ptr<Equal> node)
   accept(node->get_lhs());
   if(debug_mode_) std::cout << "=";
   accept(node->get_rhs());
-  in_differential_equality_ = false;
 }
 
 void PacketSender::visit(boost::shared_ptr<UnEqual> node)               
@@ -59,7 +57,6 @@ void PacketSender::visit(boost::shared_ptr<UnEqual> node)
   accept(node->get_lhs());
   if(debug_mode_) std::cout << "!=";
   accept(node->get_rhs());
-  in_differential_equality_ = false;
 }
 
 void PacketSender::visit(boost::shared_ptr<Less> node)                  
@@ -69,7 +66,6 @@ void PacketSender::visit(boost::shared_ptr<Less> node)
   accept(node->get_lhs());
   if(debug_mode_) std::cout << "<";
   accept(node->get_rhs());
-  in_differential_equality_ = false;
 }
 
 void PacketSender::visit(boost::shared_ptr<LessEqual> node)             
@@ -79,7 +75,6 @@ void PacketSender::visit(boost::shared_ptr<LessEqual> node)
   accept(node->get_lhs());    
   if(debug_mode_) std::cout << "<=";
   accept(node->get_rhs());
-  in_differential_equality_ = false;
 }
 
 void PacketSender::visit(boost::shared_ptr<Greater> node)               
@@ -89,7 +84,6 @@ void PacketSender::visit(boost::shared_ptr<Greater> node)
   accept(node->get_lhs());
   if(debug_mode_) std::cout << ">";
   accept(node->get_rhs());
-  in_differential_equality_ = false;
 }
 
 void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)          
@@ -99,7 +93,6 @@ void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)
   accept(node->get_lhs());
   if(debug_mode_) std::cout << ">=";
   accept(node->get_rhs());
-  in_differential_equality_ = false;
 }
 
 // ò_óùââéZéq
@@ -176,7 +169,6 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
 {
 
   differential_count_++;
-  in_differential_equality_ = true;
 
   ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
   ml_.MLPutArgCount(1);      // this 1 is for the 'f'
@@ -187,12 +179,6 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
 
   accept(node->get_child());
 
-/*
-  if(in_differential_){
-    //std::cout << "[t]"; // ht[t]' ÇÃÇÊÇ§Ç…Ç»ÇÈÇÃÇñhÇÆÇΩÇﬂ
-  }
-*/
-
   differential_count_--;
 }
 
@@ -200,19 +186,16 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
 void PacketSender::visit(boost::shared_ptr<Previous> node)              
 {
   in_prev_ = true;
+  ml_.put_function("prev", 1);
+  if(debug_mode_) std::cout << "prev[";
   accept(node->get_child());
+  if(debug_mode_) std::cout << "]";
   in_prev_ = false;
 }
   
 // ïœêî
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
 {
-  if(in_prev_)
-  {
-    ml_.put_function("prev", 1);
-    if(debug_mode_) std::cout << "prev[";
-  }
-
   ml_.put_symbol(("usrVar" + node->get_name()).c_str());
   if(in_prev_){
     vars_.insert(std::make_pair("usrVar" + node->get_name(), -1*(differential_count_ +1)));
@@ -226,28 +209,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
     }else{
       std::cout << node->get_name().c_str();
     }
-    if(in_prev_) std::cout << "]";
   }
-
-/*
-  if(in_differential_equality_){
-    if(in_differential_)
-    {
-      ml_.put_symbol("t");
-    }
-    else
-    {
-      ml_.put_symbol("t");
-      std::cout << "[t]";
-    }
-  }
-  else
-  {
-    ml_.MLPutInteger(0);
-    std::cout << "[0]";
-  }
-*/
-
 }
 
 // êîéö

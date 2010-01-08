@@ -56,7 +56,7 @@ bool EntailmentChecker::check_entailment(
   ml_.MLEndPacket();
 */
 
-  // checkEntailment[guard, tells, vars]‚ğ“n‚µ‚½‚¢
+  // checkEntailment[guard, store, vars]‚ğ“n‚µ‚½‚¢
   ml_.put_function("checkEntailment", 3);
 
 
@@ -65,7 +65,7 @@ bool EntailmentChecker::check_entailment(
   ps.visit(negative_ask);
 
 
-  // §–ñƒXƒgƒA‚©‚ç‚àexpr‚ğ“¾‚ÄMathematica‚É“n‚·
+  // §–ñƒXƒgƒA‚©‚ç®‚ğ“¾‚ÄMathematica‚É“n‚·
   ps.put_cs(constraint_store);
 
 /*
