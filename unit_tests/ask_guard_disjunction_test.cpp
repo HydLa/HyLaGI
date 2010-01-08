@@ -34,11 +34,11 @@ bool comp_formatted_struct(std::string lhs, std::string rhs)
   ast.parse_string(lhs);
   boost::shared_ptr<ParseTree> pt_lhs(ptg.generate(ast.get_tree_iterator()));
   adf.format(pt_lhs);
+  
+  //pt_lhs->to_graphviz(std::cout);
 
   ast.parse_string(rhs);
   boost::shared_ptr<ParseTree> pt_rhs(ptg.generate(ast.get_tree_iterator()));
-
-  //std::cout << *pt_lhs << std::endl;
 
   return pt_lhs->is_same_struct(*pt_rhs, false);
 }
@@ -77,7 +77,6 @@ BOOST_AUTO_TEST_CASE(ask_guard_disjunction_format_test)
   BOOST_CHECK(comp_formatted_struct(
     "(a=1 | (b=2 | c=3)) & (d=4 | e=5) => z=1.", 
     "(a=1 & d=4) | (a=1 & e=5) | (b=2 & d=4) | (b=2 & e=5) | (c=3 & d=4) | (c=3 & e=5) => z=1."));
-
 }
 
 #endif // DISABLE_AST_GUARD_DISJUNCTION_TEST

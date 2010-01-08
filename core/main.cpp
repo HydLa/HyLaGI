@@ -120,6 +120,9 @@ void hydla_main(int argc, char* argv[])
               << *pt << std::endl;
   }
 
+  pt->to_graphviz(std::cout);
+  return;
+
   /*
   AskDisjunctionFormatter<DefaultNodeFactory> adf;
   adf.format(pt);

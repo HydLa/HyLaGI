@@ -23,10 +23,13 @@ public:
 
   virtual ~AskDisjunctionFormatter()
   {}
-  
+
   void format(const boost::shared_ptr<hydla::parse_tree::ParseTree>& pt)
   {
-     pt->dispatch(this);
+    do {
+      swapped_ = false;
+      pt->dispatch(this);
+    } while(swapped_);
   }
 
   // 制約呼び出し
@@ -117,6 +120,7 @@ public:
       rhs_and->set_rhs(n->get_rhs());
 
       n = node_or;
+      swapped_ = true;
     }
     dispatch_lhs(n);        
 
@@ -138,6 +142,7 @@ public:
       rhs_and->set_rhs(n->get_lhs());
 
       n = node_or;
+      swapped_ = true;
     }
     dispatch_rhs(n);        
 
@@ -221,6 +226,11 @@ private:
    * accept後、これに値が入っている場合はノードの値を交換する
    */
   node_sptr new_child_;
+
+  /**
+   * ORノードとANDノード間の交換がおこなわれたかどうか
+   */
+  bool swapped_;
 };
 
 } //namespace simulator

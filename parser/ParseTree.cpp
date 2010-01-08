@@ -7,6 +7,7 @@
 
 #include "NodeIDUpdater.h"
 #include "ParseTreeSemanticAnalyzer.h"
+#include "ParseTreeGraphvizDumper.h"
 
 using namespace std;
 using namespace boost;
@@ -62,6 +63,13 @@ node_sptr ParseTree::swap_tree(const node_sptr& tree)
   node_tree_ = tree;
   uptate_node_id();
   return ret;
+}
+
+std::ostream& ParseTree::to_graphviz(std::ostream& s) const
+{
+  ParseTreeGraphvizDumper dumper;
+  dumper.dump(s, node_tree_);
+  return s;
 }
 
 bool ParseTree::register_variable(const std::string& name, 

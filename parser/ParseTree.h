@@ -126,6 +126,11 @@ public:
   }
 
   /**
+   * dot言語形式での表示
+   */
+  std::ostream& to_graphviz(std::ostream& s) const;
+
+  /**
    * ノードツリーに対してビジターを適用する
    */
   void dispatch(parse_tree::TreeVisitor* visitor)
