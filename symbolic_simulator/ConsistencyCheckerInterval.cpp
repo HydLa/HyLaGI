@@ -20,23 +20,15 @@ ConsistencyCheckerInterval::~ConsistencyCheckerInterval()
 bool ConsistencyCheckerInterval::is_consistent(tells_t& collected_tells, 
                                                ConstraintStore& constraint_store)
 {
-  // isConsistentInterval[tells, store, tellsvars, storevars]を渡したい
+  // isConsistentInterval[tells, store, tellsVars, storeVars]を渡したい
   ml_.put_function("isConsistentInterval", 4);
 
 
   // tell制約の集合からtellsを得てMathematicaに渡す
   int tells_size = collected_tells.size();
-//  ml_.put_function("List", 2);
   ml_.put_function("List", tells_size);
   tells_t::iterator tells_it = collected_tells.begin();
   PacketSenderInterval psi(ml_, debug_mode_);
-
-/*
-  psi.visit((*tells_it));
-  tells_it++;
-  psi.visit((*tells_it));
-  tells_it++;
-*/
 
   while((tells_it) != collected_tells.end())
   {
@@ -70,6 +62,7 @@ pc.check2();
 
   ml_.skip_pkt_until(RETURNPKT);
 
+  // 問題なく解けたら1、under-constraintが起きていれば2、over-constraintが起きていれば0が返る
   int n;
   if(! ml_.MLGetInteger(&n)){
     std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
@@ -80,6 +73,7 @@ pc.check2();
     std::cout << "ConsistencyCheckerInterval: " << n  << std::endl;
   }
 
+  // over-constraintが起きている時のみfalseを返す
   return n >= 1;
 /*
   // 解けなかった場合は0が返る（制約間に矛盾があるということ）

@@ -26,7 +26,7 @@ EntailmentCheckerInterval::~EntailmentCheckerInterval()
 
 bool EntailmentCheckerInterval::check_entailment(
   const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask, 
-//  hydla::simulator::TellCollector::tells_t& collected_tells,
+  tells_t& collected_tells,
   hydla::symbolic_simulator::ConstraintStore& constraint_store)
 {
 
@@ -38,18 +38,18 @@ bool EntailmentCheckerInterval::check_entailment(
   PacketSenderInterval psi(ml_, debug_mode_);
   psi.visit(negative_ask);
 
-/*
+
   ml_.put_function("Join", 2);
   // tell制約の集合からtellsを得てMathematicaに渡す
   int tells_size = collected_tells.size();
   ml_.put_function("List", tells_size);
-  TellCollector::tells_t::iterator tells_it = collected_tells.begin();
+  tells_t::iterator tells_it = collected_tells.begin();
+
   while(tells_it!=collected_tells.end())
   {
     psi.visit((*tells_it));
     tells_it++;
   }
-*/
 
   // 制約ストアからも式storeを得てMathematicaに渡す
   psi.put_cs(constraint_store);

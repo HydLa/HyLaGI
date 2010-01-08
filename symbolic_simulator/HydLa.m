@@ -62,13 +62,47 @@ isConsistent[expr_, vars_] := (
   If[sol =!= False, {ToString[FullForm[sol]], ToString[FullForm[vars]]}, 0]
 );
 
-isConsistentInterval[tells_, store_, tellsvars_, storevars_] := (
-  sol = Quiet[Check[Check[DSolve[Join[tells,store], Join[tellsvars,storevars], t],
+
+(* 変数名から 「’」を取る *)
+removeDash[var_] := (
+   var /. Derivative[_][x_] -> x
+);
+
+(* 
+ * tellVarsを元に、その初期値制約が必要かどうかを調べる
+ * 初期値制約中に出現する変数がvars内になければ不要
+ *)
+isRequiredConstraint[cons_, tellVars_] := (
+   consVar = cons /. x_[0] == y_ -> x;
+   removeDash[consVar];
+   If[MemberQ[tellVars, consVar], True, False]
+);
+
+(* tellVarsを元に、その変数が必要かどうかを調べる *)
+isRequiredVariable[var_, tellVars_] := (
+   If[MemberQ[tellVars, var], True, False]
+);
+
+isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
+  If[store =!= {},
+     (* 制約ストアが空でない場合、不要な初期値制約を取り除く必要がある *)
+     newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]];
+     (* storeがList[And[]]の形になっている場合は、一旦、中のAndを取り出す *)
+     newStore = If[Head[First[store]] === And, Apply[List, First[store]], store];
+     removedStore = {Apply[And, Select[newStore, (isRequiredConstraint[#, newTellVars]) &]]};
+     newStoreVars = Map[removeDash, Map[(# /. x_[t] -> x) &, storeVars]];
+     removedStoreVars = Select[newStoreVars, (isRequiredVariable[#, newTellVars]) &],
+
+     (* 制約ストアが空の場合 *)
+     removedStore = store;
+     removedStoreVars = storeVars];
+
+  sol = Quiet[Check[Check[DSolve[Join[tells, removedStore], Join[tellsVars, removedStoreVars], t],
                           overconstraint,
                           {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet}],
                     underconstraint,
                     {DSolve::underdet}],
-              {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet}];
+              {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet, DSolve::underdet}];
   If[sol =!= overconstraint,
      If[sol =!= underconstraint, 1, 2],
      0]

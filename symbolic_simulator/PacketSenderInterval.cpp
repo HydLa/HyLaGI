@@ -187,7 +187,7 @@ void PacketSenderInterval::visit(boost::shared_ptr<Variable> node)
   ml_.MLPutNext(MLTKFUNC);
   ml_.MLPutArgCount(1);
 
-  if(in_prev_) ml_.put_function("prev", 1);
+//  if(in_prev_) ml_.put_function("prev", 1);
   if(differential_count_ > 0){
     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
     ml_.MLPutArgCount(1);      // this 1 is for the 'f'
@@ -208,13 +208,13 @@ void PacketSenderInterval::visit(boost::shared_ptr<Variable> node)
   }
 
   if(debug_mode_) {
-    if(in_prev_) std::cout << "prev[";
+//    if(in_prev_) std::cout << "prev[";
     if(differential_count_ > 0){
       std::cout << "Derivative[" << differential_count_ << "][" << node->get_name().c_str() << "]";
     }else{
       std::cout << node->get_name().c_str();
     }
-    if(in_prev_) std::cout << "]";
+//    if(in_prev_) std::cout << "]";
     std::cout << "[t]";
   }
 }
@@ -244,8 +244,8 @@ void PacketSenderInterval::put_vars()
     if(value < 0)
     {
       prevflag = 1;
-      ml_.put_function("prev", 1);
-      if(debug_mode_) std::cout << "prev[";
+//      ml_.put_function("prev", 1);
+//      if(debug_mode_) std::cout << "prev[";
       value *= -1;
     }
     value -= 1;
@@ -270,7 +270,7 @@ void PacketSenderInterval::put_vars()
 
     ml_.put_symbol("t");
     if(debug_mode_){
-      if(prevflag) std::cout << "]";
+//      if(prevflag) std::cout << "]";
       std::cout << "[t] ";
     }    
 
