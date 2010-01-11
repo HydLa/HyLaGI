@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="parser"
-	ProjectGUID="{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}"
-	RootNamespace="parser"
+	Name="common"
+	ProjectGUID="{21D7CEA2-6255-428C-85E3-268EFF5FE36E}"
+	RootNamespace="common"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -41,8 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -105,8 +104,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\common"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -151,31 +149,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\BaseNodeVisitor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaAST.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Node.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeGraphvizDumper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeSemanticAnalyzer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeVisitor.cpp"
+				RelativePath=".\Logger.cpp"
 				>
 			</File>
 		</Filter>
@@ -185,67 +159,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\BaseNodeVisitor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CommentGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DefaultNodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DefinitionContainer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaAST.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaGrammarRule.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Node.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeIDUpdater.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeTreeGenerator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseError.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTree.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeGraphvizDumper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeSemanticAnalyzer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeVisitor.h"
+				RelativePath=".\Logger.h"
 				>
 			</File>
 		</Filter>

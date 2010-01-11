@@ -3,6 +3,7 @@
 
 #include <ostream>
 
+#include "rp_float.h"
 #include "rp_interval.h"
 
 namespace hydla {

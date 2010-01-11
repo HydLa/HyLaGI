@@ -28,17 +28,17 @@ using namespace boost;
 bool comp_formatted_struct(std::string lhs, std::string rhs)
 {
   HydLaAST ast;
-  ParseTreeGenerator<DefaultNodeFactory> ptg;  
+  ParseTreeGenerator ptg;  
   AskDisjunctionFormatter<DefaultNodeFactory> adf;
 
   ast.parse_string(lhs);
-  boost::shared_ptr<ParseTree> pt_lhs(ptg.generate(ast.get_tree_iterator()));
+  boost::shared_ptr<ParseTree> pt_lhs(ptg.generate<DefaultNodeFactory>(ast.get_tree_iterator()));
   adf.format(pt_lhs);
   
   //pt_lhs->to_graphviz(std::cout);
 
   ast.parse_string(rhs);
-  boost::shared_ptr<ParseTree> pt_rhs(ptg.generate(ast.get_tree_iterator()));
+  boost::shared_ptr<ParseTree> pt_rhs(ptg.generate<DefaultNodeFactory>(ast.get_tree_iterator()));
 
   return pt_lhs->is_same_struct(*pt_rhs, false);
 }

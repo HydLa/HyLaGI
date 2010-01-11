@@ -1,90 +1,88 @@
-#ifndef _INCLUDED_HYDLA_NODE_FACTORY_H_
-#define _INCLUDED_HYDLA_NODE_FACTORY_H_
-
-#include <string>
-#include <vector>
+#ifndef _INCLUDED_HYDLA_PARSER_NODE_FACTORY_H_
+#define _INCLUDED_HYDLA_PARSER_NODE_FACTORY_H_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/utility/enable_if.hpp> 
-#include <boost/type_traits/is_same.hpp> 
+#include <boost/make_shared.hpp>
 
 #include "ParseTree.h"
 
 namespace hydla { 
 namespace parser {
 
-#define DEFAULT_NODE_FACTORY_PT_NODE(NAME)              \
-  boost::shared_ptr<hydla::parse_tree::NAME>            \
-  operator()(hydla::parse_tree::NAME)                   \
-  {                                                     \
-    return boost::shared_ptr<hydla::parse_tree::NAME>(  \
-      new hydla::parse_tree::NAME());                   \
-  }                                                      
+#define NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(NAME) \
+  virtual boost::shared_ptr<hydla::parse_tree::NAME> \
+  create(hydla::parse_tree::NAME) const = 0;
 
-struct DefaultNodeFactory
+class NodeFactory 
 {
+public:
+  template<typename NodeType>
+  boost::shared_ptr<NodeType> create() const
+  {
+    return create(NodeType());
+  }
 
-  //íËã`
-  DEFAULT_NODE_FACTORY_PT_NODE(ProgramDefinition)
-  DEFAULT_NODE_FACTORY_PT_NODE(ConstraintDefinition)
+protected:
+    //íËã`
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(ProgramDefinition)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(ConstraintDefinition)
 
   //åƒÇ—èoÇµ
-  DEFAULT_NODE_FACTORY_PT_NODE(ProgramCaller)
-  DEFAULT_NODE_FACTORY_PT_NODE(ConstraintCaller)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(ProgramCaller)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(ConstraintCaller)
   
   //êßñÒéÆ
-  DEFAULT_NODE_FACTORY_PT_NODE(Constraint);
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Constraint)
 
   //TellêßñÒ
-  DEFAULT_NODE_FACTORY_PT_NODE(Tell)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Tell)
 
   //AskêßñÒ
-  DEFAULT_NODE_FACTORY_PT_NODE(Ask)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Ask)
 
   //î‰ärââéZéq
-  DEFAULT_NODE_FACTORY_PT_NODE(Equal)
-  DEFAULT_NODE_FACTORY_PT_NODE(UnEqual)
-  DEFAULT_NODE_FACTORY_PT_NODE(Less)
-  DEFAULT_NODE_FACTORY_PT_NODE(LessEqual)
-  DEFAULT_NODE_FACTORY_PT_NODE(Greater)
-  DEFAULT_NODE_FACTORY_PT_NODE(GreaterEqual)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Equal)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(UnEqual)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Less)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(LessEqual)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Greater)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(GreaterEqual)
 
   //ò_óùââéZéq
-  DEFAULT_NODE_FACTORY_PT_NODE(LogicalAnd)
-  DEFAULT_NODE_FACTORY_PT_NODE(LogicalOr)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(LogicalAnd)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(LogicalOr)
 
   //éZèpìÒçÄââéZéq
-  DEFAULT_NODE_FACTORY_PT_NODE(Plus)
-  DEFAULT_NODE_FACTORY_PT_NODE(Subtract)
-  DEFAULT_NODE_FACTORY_PT_NODE(Times)
-  DEFAULT_NODE_FACTORY_PT_NODE(Divide)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Plus)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Subtract)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Times)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Divide)
   
   //éZèpíPçÄââéZéq
-  DEFAULT_NODE_FACTORY_PT_NODE(Negative)
-  DEFAULT_NODE_FACTORY_PT_NODE(Positive)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Negative)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Positive)
 
   //êßñÒäKëwíËã`ââéZéq
-  DEFAULT_NODE_FACTORY_PT_NODE(Weaker)
-  DEFAULT_NODE_FACTORY_PT_NODE(Parallel)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Weaker)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Parallel)
 
   // éûëäââéZéq
-  DEFAULT_NODE_FACTORY_PT_NODE(Always)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Always)
 
   //î˜ï™
-  DEFAULT_NODE_FACTORY_PT_NODE(Differential)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Differential)
   
   //ç∂ã…å¿
-  DEFAULT_NODE_FACTORY_PT_NODE(Previous)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Previous)
 
   //ïœêîÅEë©îõïœêî
-  DEFAULT_NODE_FACTORY_PT_NODE(Variable)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Variable)
 
   //êîéö
-  DEFAULT_NODE_FACTORY_PT_NODE(Number)
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Number)
+};                                                     
 
-};
-
-} //namespace parse_tree
+} //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_NODE_FACTORY_H_
+#endif //_INCLUDED_HYDLA_PARSER_NODE_FACTORY_H_

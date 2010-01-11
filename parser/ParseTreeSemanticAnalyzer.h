@@ -3,9 +3,10 @@
 
 #include <stack>
 #include <iostream>
+
 #include "Node.h"
 #include "TreeVisitor.h"
-
+#include "DefinitionContainer.h"
 #include "ParseTree.h"
 
 namespace hydla { 
@@ -15,16 +16,20 @@ class ParseTreeSemanticAnalyzer :
   public hydla::parse_tree::TreeVisitor
 {
 public:
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef hydla::parse_tree::node_sptr                 node_sptr;
+  typedef hydla::parse_tree::ParseTree::variable_map_t variable_map_t;
 
-  ParseTreeSemanticAnalyzer();
+  ParseTreeSemanticAnalyzer(
+    DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
+    DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
+    hydla::parse_tree::ParseTree* parse_tree);
+  
   virtual ~ParseTreeSemanticAnalyzer();
 
   /**
    * 解析および制約呼び出しの展開をおこなう
    */
-  void analyze(hydla::parse_tree::ParseTree* pt);
-
+  void analyze(node_sptr& n/*, variable_map_t& variable_map*/);
 
   // 定義
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> node);
@@ -85,14 +90,12 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
 private:
-  typedef hydla::parse_tree::ParseTree::difinition_type_t difinition_type_t;
+  typedef hydla::parser::DefinitionContainer<
+    hydla::parse_tree::Definition>::definition_map_key_t referenced_definition_t;
 
-  typedef std::set<difinition_type_t>             referenced_definition_list_t;
-
+  typedef std::set<referenced_definition_t>         referenced_definition_list_t;
+  
   typedef std::map<std::string, node_sptr>        formal_arg_map_t;
-
-  typedef std::map<std::string, int>              variable_map_t;
-
 
   /**
    * 探索中のノードツリーの状態を保存するための構造体
@@ -121,8 +124,8 @@ private:
   /// Stateをつむためのスタック
   std::stack<State> state_stack_;
   
-  /// プログラム中で使用される変数の表
-  variable_map_t variable_map_;
+  /// プログラム中で使用される変数の一覧
+  variable_map_t* variable_map_;
   
   /**
    * 新しい子ノード
@@ -130,7 +133,18 @@ private:
    */
   node_sptr new_child_;
 
-  /// 解析対象のParseTree
+  /**
+   * 制約定義の情報
+   */
+  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& 
+    constraint_definition_;
+    
+  /**
+   * プログラム定義の情報
+   */
+  DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    
+    program_definition_;
+
   hydla::parse_tree::ParseTree* parse_tree_;
   
   /**
@@ -177,7 +191,7 @@ private:
    * 定義の簡約化(展開)をおこなう
    */
   node_sptr apply_definition(
-    difinition_type_t* def_type,
+    const referenced_definition_t& def_type,
     boost::shared_ptr<hydla::parse_tree::Caller> caller, 
     boost::shared_ptr<hydla::parse_tree::Definition> definition);
 };

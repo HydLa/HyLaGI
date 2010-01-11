@@ -174,7 +174,7 @@ protected:
   node_sptr child_;
 };
 
-#define DEFINE_UNARY_NODE(NAME)                          \
+#define DEFINE_UNARY_NODE(NAME)                             \
   class NAME : public UnaryNode {                           \
   public:                                                   \
   typedef boost::shared_ptr<NAME> node_type_sptr;           \
@@ -197,8 +197,8 @@ protected:
     }                                                       \
                                                             \
   virtual std::string get_node_type_name() const {          \
-    return #NAME;                                    \
-  }                                                            \
+    return #NAME;                                           \
+  }                                                         \
   };
 
 /**
@@ -286,7 +286,7 @@ protected:
   node_sptr rhs_;
 };
 
-#define DEFINE_BINARY_NODE(NAME)                         \
+#define DEFINE_BINARY_NODE(NAME)                            \
   class NAME : public BinaryNode {                          \
   public:                                                   \
   typedef boost::shared_ptr<NAME> node_type_sptr;           \
@@ -312,33 +312,33 @@ protected:
   }                                                         \
   };
 
-#define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                 \
-  class NAME : public BinaryNode {                          \
-  public:                                                   \
-  typedef boost::shared_ptr<NAME> node_type_sptr;           \
-                                                            \
-  NAME()                                                    \
-    {}                                                      \
-                                                            \
-  NAME(const node_sptr& lhs, const node_sptr& rhs) :        \
-    BinaryNode(lhs, rhs)                                    \
-    {}                                                      \
-                                                            \
-  virtual ~NAME(){}                                         \
-                                                            \
-  virtual void accept(node_sptr own, TreeVisitor* visitor); \
-                                                            \
-  virtual bool is_same_struct(const Node& n, bool exactly_same) const; \
-                                                                            \
-  virtual node_sptr clone()                                 \
-    {                                                       \
-      node_type_sptr n(new NAME);                           \
-      return BinaryNode::clone(n);                          \
-    }                                                       \
-                                                            \
-  virtual std::string get_node_type_name() const {          \
-    return #NAME;                                           \
-  }                                                       \
+#define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                             \
+  class NAME : public BinaryNode {                                      \
+  public:                                                               \
+  typedef boost::shared_ptr<NAME> node_type_sptr;                       \
+                                                                        \
+  NAME()                                                                \
+    {}                                                                  \
+                                                                        \
+  NAME(const node_sptr& lhs, const node_sptr& rhs) :                    \
+    BinaryNode(lhs, rhs)                                                \
+    {}                                                                  \
+                                                                        \
+  virtual ~NAME(){}                                                     \
+                                                                        \
+  virtual void accept(node_sptr own, TreeVisitor* visitor);             \
+                                                                        \
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;  \
+                                                                        \
+  virtual node_sptr clone()                                             \
+    {                                                                   \
+      node_type_sptr n(new NAME);                                       \
+      return BinaryNode::clone(n);                                      \
+    }                                                                   \
+                                                                        \
+  virtual std::string get_node_type_name() const {                      \
+    return #NAME;                                                       \
+  }                                                                     \
   };
 
 /**

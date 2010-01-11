@@ -12,16 +12,20 @@ using namespace hydla::parse_error;
 namespace hydla { 
 namespace parser {
 
-ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer()
+ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
+  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
+  DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
+  hydla::parse_tree::ParseTree* parse_tree) :
+    constraint_definition_(constraint_definition),
+    program_definition_(program_definition),
+    parse_tree_(parse_tree)
 {}
 
 ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 {}
 
-void ParseTreeSemanticAnalyzer::analyze(hydla::parse_tree::ParseTree* pt)
+void ParseTreeSemanticAnalyzer::analyze(node_sptr& n/*, variable_map_t& variable_map*/)
 {
-  parse_tree_         = pt;
-
   State state;
   state.in_guard           = false;
   state.in_always          = false;
@@ -29,7 +33,11 @@ void ParseTreeSemanticAnalyzer::analyze(hydla::parse_tree::ParseTree* pt)
   state.differential_count = 0;
   state_stack_.push(state);
 
-  pt->dispatch(this);
+//  variable_map_ = &variable_map;
+
+  accept(n);
+  if(new_child_) n = new_child_;
+
   assert(state_stack_.size() == 1);
 }
 
@@ -46,7 +54,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramDefinition> node)
 }
 
 node_sptr ParseTreeSemanticAnalyzer::apply_definition(
-  difinition_type_t* def_type,
+  const referenced_definition_t& def_type,
   boost::shared_ptr<hydla::parse_tree::Caller> caller, 
   boost::shared_ptr<Definition> definition)
 {
@@ -55,7 +63,7 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   definition = boost::shared_static_cast<Definition>(definition->clone());
   
   //循環参照のチェック
-  if (state.referenced_definition_list.find(*def_type) != 
+  if (state.referenced_definition_list.find(def_type) != 
       state.referenced_definition_list.end()) {
     throw CircularReference(caller);
   }
@@ -84,7 +92,7 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   }
 
   // 循環参照検出用リストに登録
-  new_state.referenced_definition_list.insert(*def_type);
+  new_state.referenced_definition_list.insert(def_type);
 
   // 定義の子ノードに対しpreprocess適用
   state_stack_.push(new_state);
@@ -97,38 +105,43 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
 // 制約呼び出し
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
-  if(!node->get_child()) {
-    difinition_type_t def_type(node->get_name(), node->actual_arg_size());
+  referenced_definition_t deftype(
+    std::make_pair(node->get_name(), 
+                   node->actual_arg_size()));
 
+  if(!node->get_child()) {
     // 制約定義から探す
     boost::shared_ptr<ConstraintDefinition> cons_def(
-      parse_tree_->get_constraint_difinition(def_type));
+      constraint_definition_.get_definition(deftype));
     if(!cons_def) {
       throw UndefinedReference(node);
     }
 
     // 定義の展開
-    node->set_child(
-      apply_definition(&def_type, node, cons_def));
+    node->set_child( 
+      apply_definition(deftype, node, cons_def));
   }
 }
 
 // プログラム呼び出し
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)         
 {
+  referenced_definition_t deftype(
+    std::make_pair(node->get_name(), 
+                   node->actual_arg_size()));
+
   if(!node->get_child()) {
-    difinition_type_t def_type(node->get_name(), node->actual_arg_size());
     boost::shared_ptr<Definition> defnode;
 
     // 制約定義から探す
     boost::shared_ptr<ConstraintDefinition> cons_def(
-      parse_tree_->get_constraint_difinition(def_type));
+      constraint_definition_.get_definition(deftype));
     if(cons_def) {
       defnode = cons_def;
     } else {
       // プログラム定義から探す
       boost::shared_ptr<ProgramDefinition> prog_def(
-        parse_tree_->get_program_difinition(def_type));
+        program_definition_.get_definition(deftype));
       if(prog_def) {
         defnode = prog_def;
       } else {
@@ -138,7 +151,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
 
     // 定義の展開
     node->set_child(
-      apply_definition(&def_type, node, defnode));
+      apply_definition(deftype, node, defnode));
   }
 }
 
@@ -365,8 +378,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 {
   dispatch_child(node); 
-
-
 }
   
 // 変数
@@ -385,8 +396,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
     parse_tree_->register_variable(node->get_name(), 
                                    state.differential_count);
   } 
-
-
 }
 
 // 数字

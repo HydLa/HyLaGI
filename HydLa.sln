@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "parser", "parser\parser.vcproj", "{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E} = {21D7CEA2-6255-428C-85E3-268EFF5FE36E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", "{612AC655-3448-425F-B7AE-CB12A41BC630}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -9,6 +12,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", 
 		{5E34BE62-2104-42F3-9E59-CED1ED540932} = {5E34BE62-2104-42F3-9E59-CED1ED540932}
 		{985BE36E-C416-4E28-8974-70BAAD004FA9} = {985BE36E-C416-4E28-8974-70BAAD004FA9}
 		{26B21888-DF06-41CF-849C-4C936BBAB30E} = {26B21888-DF06-41CF-849C-4C936BBAB30E}
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E} = {21D7CEA2-6255-428C-85E3-268EFF5FE36E}
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
 EndProject
@@ -47,11 +51,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaverbasic", "librea
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaver", "librealpaver\librealpaver.vcproj", "{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcproj", "{21D7CEA2-6255-428C-85E3-268EFF5FE36E}"
+EndProject
 Global
-	GlobalSection(SubversionScc) = preSolution
-		Svn-Managed = True
-		Manager = AnkhSVN - Subversion Support for Visual Studio
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
@@ -97,8 +99,16 @@ Global
 		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Debug|Win32.Build.0 = Debug|Win32
 		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Release|Win32.ActiveCfg = Release|Win32
 		{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}.Release|Win32.Build.0 = Release|Win32
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Debug|Win32.Build.0 = Debug|Win32
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Release|Win32.ActiveCfg = Release|Win32
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal

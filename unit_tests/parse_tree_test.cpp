@@ -29,7 +29,7 @@ using namespace boost;
   std::string out_str; \
   const boost::regex reg_exp("\\r|\\n"); \
   HydLaAST ast; \
-  ParseTreeGenerator<DefaultNodeFactory> ptg;
+  ParseTreeGenerator ptg;
 
 #define PARSE_TREE_TEST_EQUAL(INPUT, ANS) \
   hp.parse_string(INPUT); \
@@ -41,7 +41,7 @@ using namespace boost;
 #define PARSE_TREE_TEST_ERROR(INPUT, ERR_TYPE) \
   BOOST_CHECK_THROW({ \
     ast.parse_string(INPUT); \
-    ptg.generate(ast.get_tree_iterator()); \
+    ptg.generate<DefaultNodeFactory>(ast.get_tree_iterator()); \
   }, ERR_TYPE);
 
 #define PARSE_TREE_TEST_NO_ERROR(INPUT) \

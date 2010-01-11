@@ -20,25 +20,7 @@ namespace hydla {
 namespace parse_tree {
 
 class ParseTree {
-public:
-  // 定義の型
-  typedef std::string                             difinition_name_t;
-  typedef int                                     bound_variable_count_t;
-  typedef std::pair<difinition_name_t, 
-                    bound_variable_count_t>       difinition_type_t;
-
-  // 制約定義
-  typedef boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> 
-    constraint_def_map_value_t;
-  typedef std::map<difinition_type_t, constraint_def_map_value_t>    
-    constraint_def_map_t;
-
-  // プログラム定義
-  typedef boost::shared_ptr<hydla::parse_tree::ProgramDefinition>    
-    program_def_map_value_t;
-  typedef std::map<difinition_type_t, program_def_map_value_t>
-    program_def_map_t;
-  
+public: 
   // 変数表
   typedef std::map<std::string, int>     variable_map_t;
   typedef variable_map_t::const_iterator variable_map_const_iterator;
@@ -55,26 +37,16 @@ public:
 
   virtual ~ParseTree();
 
+    
+
+  void parse(std::istream& s);  
+  void parse_flie(const std::string& filename);
+  void parse_string(const std::string& str);
+
   /**
    * ノードのIDの更新をおこなう
    */
   void uptate_node_id();
-  
-  /**
-   * 制約定義を追加する
-   */
-  void addConstraintDefinition(const boost::shared_ptr<ConstraintDefinition>& d)
-  {
-    cons_def_map_.insert(make_pair(create_definition_key(d), d));
-  }
-  
-  /**
-   * プログラム定義を追加する
-   */
-  void addProgramDefinition(boost::shared_ptr<ProgramDefinition> d)
-  {
-    prog_def_map_.insert(make_pair(create_definition_key(d), d));
-  }
 
   /**
    * 変数を登録する
@@ -147,24 +119,6 @@ public:
   }
 
   /**
-   * 制約定義ノードを返す
-   *
-   * @return 与えられた定義に対するノード．
-   *          存在しない定義の場合は空クラスを返す
-   */
-  const boost::shared_ptr<ConstraintDefinition> 
-    get_constraint_difinition(const difinition_type_t& def) const;
-
-  /**
-   * プログラム定義ノードを返す
-   *
-   * @return 与えられた定義に対するノード．
-   *          存在しない定義の場合は空クラスを返す
-   */
-  const boost::shared_ptr<ProgramDefinition> 
-    get_program_difinition(const difinition_type_t& def) const;
-
-  /**
    * 新しいノードを追加する
    */
   node_id_t register_node(const node_sptr& n);
@@ -214,19 +168,7 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:  
-  /**
-   * ツリーの意味解析をおこなう
-   */
-  void semantic_analyze();
-
-  /**
-   * 定義を格納するためのキーを作成する
-   */
-  difinition_type_t create_definition_key(boost::shared_ptr<Definition> d);
-
   node_sptr            node_tree_;
-  constraint_def_map_t cons_def_map_;
-  program_def_map_t    prog_def_map_;
   variable_map_t       variable_map_;
 
   node_map_t           node_map_;

@@ -14,10 +14,11 @@
 #include "version.h"
 #include "ProgramOptions.h"
 
+//common
+#include "Logger.h"
+
 // parser
-#include "HydLaAST.h"
-#include "NodeFactory.h"
-#include "ParseTreeGenerator.h"
+#include "DefaultNodeFactory.h"
 #include "ModuleSetList.h"
 #include "ModuleSetGraph.h"
 #include "ModuleSetContainerCreator.h"
@@ -31,6 +32,7 @@
 
 // namespace
 using namespace hydla;
+using namespace hydla::logger;
 using namespace hydla::parser;
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
@@ -87,6 +89,15 @@ void hydla_main(int argc, char* argv[])
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
 
+
+  bool debug_mode = po.count("debug")>0;
+  if(po.count("debug")>0) {
+    Logger::instance().set_log_level(Logger::Debug);
+  }
+  else {
+    Logger::instance().set_log_level(Logger::None);
+  }
+
   if(po.count("help")) {
     po.help_msg(std::cout);
     return;
@@ -97,9 +108,9 @@ void hydla_main(int argc, char* argv[])
     return;
   }
 
-  bool debug_mode = po.count("debug")>0;
 
   // AST‚Ì\’z
+  /*
   HydLaAST ast;
   if(po.count("input-file")) {
     ast.parse_flie(po.get<std::string>("input-file"));
@@ -113,12 +124,22 @@ void hydla_main(int argc, char* argv[])
 
   // ParseTree‚Ì\’z
   boost::shared_ptr<ParseTree> pt(
-    ParseTreeGenerator<DefaultNodeFactory>().generate(
-      ast.get_tree_iterator()));
+    ParseTreeGenerator().generate<DefaultNodeFactory>(ast.get_tree_iterator()));
   if(debug_mode) {
     std::cout << "#*** Analyzed Parse Tree ***\n"
               << *pt << std::endl;
   }
+  */
+
+  // ParseTree‚Ì\’z
+  boost::shared_ptr<ParseTree> pt(new ParseTree);
+  if(po.count("input-file")) {
+    pt->parse_flie(po.get<std::string>("input-file"));
+  } else {
+    pt->parse(std::cin);
+  }
+
+
 
 /*
     if(po.count("graphviz")) {

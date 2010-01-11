@@ -1,46 +1,47 @@
-#ifndef _INCLUDED_HYDLA_PARSER_PARSE_TREE_GENERATOR_H_
-#define _INCLUDED_HYDLA_PARSER_PARSE_TREE_GENERATOR_H_
+#ifndef _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
+#define _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
 
+#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "Node.h"
 #include "HydLaGrammarRule.h"
 #include "ParseTree.h"
+#include "NodeFactory.h"
+#include "DefinitionContainer.h"
+#include "ParseError.h"
 
 namespace hydla {
 namespace parser {
 
-template<typename NodeFactory>
-class ParseTreeGenerator
+class NodeTreeGenerator
 {
 public:
+  typedef hydla::parse_tree::node_sptr node_sptr;
+
+  NodeTreeGenerator(
+    DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
+    DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
+    const boost::shared_ptr<NodeFactory>& node_factory) :
+    
+    constraint_definition_(constraint_definition),
+    program_definition_(program_definition),
+    node_factory_(node_factory)
+  {}
 
   /**
    * ASTを元にParseTreeを構築する
    */
   template<typename TreeIter>
-  boost::shared_ptr<hydla::parse_tree::ParseTree>
-    generate(const TreeIter& tree_iter)
+  node_sptr generate(const TreeIter& tree_iter)
   {
-    pt_.reset(new hydla::parse_tree::ParseTree);
+    constraint_definition_.clear();
+    program_definition_.clear();
 
-    create_parse_tree(tree_iter);
-
-    return pt_;
+    return create_parse_tree(tree_iter);
   }
-
 
 private:
-
-  /**
-   * 指定した型のノードを作成する
-   */
-  template<typename NodeType>
-  boost::shared_ptr<NodeType>
-  create_node()
-  {
-    return boost::shared_ptr<NodeType>(NodeFactory().operator()(NodeType()));
-  }
 
   /**
    * 引数を1つとる指定した型のノードを作成する
@@ -49,7 +50,7 @@ private:
   boost::shared_ptr<NodeType>
   create_unary_node(const TreeIter& tree_iter)
   {
-    boost::shared_ptr<NodeType> n(create_node<NodeType>());
+    boost::shared_ptr<NodeType> n(node_factory_->create<NodeType>());
     n->set_child(create_parse_tree(tree_iter));
     return n;
   }
@@ -61,7 +62,7 @@ private:
   boost::shared_ptr<NodeType>  
   create_binary_node(const TreeIter& tree_iter)
   { 
-    boost::shared_ptr<NodeType> n(create_node<NodeType>());
+    boost::shared_ptr<NodeType> n(node_factory_->create<NodeType>());
     n->set_lhs(create_parse_tree(tree_iter)); 
     n->set_rhs(create_parse_tree(tree_iter+1)); 
     return n; 
@@ -74,7 +75,7 @@ private:
   boost::shared_ptr<NodeType>  
   create_definition(const TreeIter& tree_iter)
   {
-    boost::shared_ptr<NodeType> node(create_node<NodeType>());
+    boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
 
     TreeIter gch = tree_iter->children.begin();
 
@@ -104,7 +105,7 @@ private:
   create_caller(const TreeIter& tree_iter)
   {
     TreeIter ch = tree_iter->children.begin();
-    boost::shared_ptr<NodeType> node(create_node<NodeType>());
+    boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
 
     //プログラム名
     node->set_name(    
@@ -146,7 +147,7 @@ private:
           if(node_sptr new_tree = create_parse_tree(it++)) {
             // 制約宣言が複数回出現した場合は「,」によって連結する
             if(node_tree) {
-              boost::shared_ptr<Parallel> rn(create_node<Parallel>());
+              boost::shared_ptr<Parallel> rn(node_factory_->create<Parallel>());
               rn->set_lhs(node_tree);
               rn->set_rhs(new_tree);
               node_tree = rn;
@@ -155,24 +156,45 @@ private:
             }
           }
         }
-        pt_->set_tree(node_tree);
-        return node_sptr();
+        return node_tree;
       }
 
       // 制約定義
       case RI_ConstraintDef:
-      {
-        pt_->addConstraintDefinition(
-          create_definition<ConstraintDefinition>(ch));
-        return node_sptr();
-      }
+        {
+          // 定義ノードの作成
+          boost::shared_ptr<ConstraintDefinition> d(
+            create_definition<ConstraintDefinition>(ch));
+
+          // 既に制約/プログラム定義として定義されていないかどうか
+          if(constraint_definition_.is_registered(d) ||
+             program_definition_.is_registered(d)) {
+            throw hydla::parse_error::MultipleDefinition(d->get_name()); 
+          }
+
+          // 定義ノードの登録
+          constraint_definition_.add_definition(d);
+
+          return node_sptr();
+        }
 
       // プログラム定義
       case RI_ProgramDef:
       {
-        pt_->addProgramDefinition(
-          create_definition<ProgramDefinition>(ch));
-        return node_sptr();
+          // 定義ノードの作成
+          boost::shared_ptr<ProgramDefinition> d(
+            create_definition<ProgramDefinition>(ch));
+
+          // 既に制約/プログラム定義として定義されていないかどうか
+          if(constraint_definition_.is_registered(d) ||
+             program_definition_.is_registered(d)) {
+            throw hydla::parse_error::MultipleDefinition(d->get_name()); 
+          }
+
+          // 定義ノードの登録
+          program_definition_.add_definition(d);
+
+          return node_sptr();
       }
       
       // 制約呼び出し
@@ -235,7 +257,7 @@ private:
       case RI_BoundVariable:
       case RI_Variable:
       {
-        boost::shared_ptr<Variable> node(create_node<Variable>());
+        boost::shared_ptr<Variable> node(node_factory_->create<Variable>());
         node->set_name(
           std::string(tree_iter->value.begin(), tree_iter->value.end()));
         return node;
@@ -244,7 +266,7 @@ private:
       // 数字
       case RI_Number:
       {
-        boost::shared_ptr<Number> node(create_node<Number>());
+        boost::shared_ptr<Number> node(node_factory_->create<Number>());
         node->set_number(
           std::string(tree_iter->value.begin(), tree_iter->value.end()));     
         return node;
@@ -258,10 +280,13 @@ private:
     }  
   }
 
-  boost::shared_ptr<hydla::parse_tree::ParseTree> pt_;
+  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition_;
+  DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition_;
+
+  boost::shared_ptr<NodeFactory>   node_factory_;
 };
 
 } // namespace parser
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_PARSER_PARSE_TREE_GENERATOR_H_
+#endif // _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_

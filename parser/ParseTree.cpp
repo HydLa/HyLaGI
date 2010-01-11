@@ -3,11 +3,19 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <fstream>
 #include <boost/bind.hpp>
 
+#include "Logger.h"
+#include "HydLaAST.h"
 #include "NodeIDUpdater.h"
+#include "NodeTreeGenerator.h"
 #include "ParseTreeSemanticAnalyzer.h"
 #include "ParseTreeGraphvizDumper.h"
+#include "DefinitionContainer.h"
+
+#include "DefaultNodeFactory.h"
+
 
 using namespace std;
 using namespace boost;
@@ -24,8 +32,6 @@ ParseTree::ParseTree() :
     
 ParseTree::ParseTree(const ParseTree& pt) :
   node_tree_(pt.node_tree_->clone()),
-  cons_def_map_(pt.cons_def_map_),
-  prog_def_map_(pt.prog_def_map_),
   variable_map_(pt.variable_map_),
   node_map_(pt.node_map_),
   max_node_id_(pt.max_node_id_)
@@ -36,6 +42,44 @@ ParseTree::ParseTree(const ParseTree& pt) :
 ParseTree::~ParseTree()
 {}
 
+void ParseTree::parse(std::istream& stream) 
+{
+  HydLaAST ast;
+  ast.parse(stream);
+
+  HYDLA_LOGGER_DEBUG("#*** AST Tree ***\n", ast);
+
+    
+  DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
+  DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
+  boost::shared_ptr<NodeFactory> node_factory(new DefaultNodeFactory());
+  NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
+  node_tree_ = genarator.generate(ast.get_tree_iterator());
+
+  HYDLA_LOGGER_DEBUG("#*** Constraint Definition ***\n", constraint_definition);
+  HYDLA_LOGGER_DEBUG("#*** Program Definition ***\n", program_definition);
+    
+  ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
+  analyer.analyze(node_tree_);
+
+  uptate_node_id();
+}
+
+void ParseTree::parse_flie(const std::string& filename) 
+{
+  ifstream in(filename.c_str());
+  if (!in) {    
+    throw std::runtime_error(string("cannot open \"") + filename + "\"");
+  }
+
+  parse(in);
+}
+
+void ParseTree::parse_string(const std::string& str)
+{    
+  stringstream in(str);
+  parse(in);
+}
 
 void ParseTree::uptate_node_id()
 {
@@ -43,18 +87,10 @@ void ParseTree::uptate_node_id()
   updater.update(this);
 }
 
-void ParseTree::semantic_analyze()
-{
-  ParseTreeSemanticAnalyzer analyer;  
-  analyer.analyze(this);
-
-  uptate_node_id();
-}
-
 void ParseTree::set_tree(const node_sptr& tree) 
 {
   node_tree_ = tree;
-  semantic_analyze();
+//  semantic_analyze();
 }
 
 node_sptr ParseTree::swap_tree(const node_sptr& tree) 
@@ -97,26 +133,6 @@ int ParseTree::get_differential_count(const std::string& name) const
   return ret;
 }
 
-const boost::shared_ptr<ConstraintDefinition> 
-ParseTree::get_constraint_difinition(const difinition_type_t& def) const
-{
-  constraint_def_map_t::const_iterator it = cons_def_map_.find(def);
-  if(it == cons_def_map_.end()) {
-    return boost::shared_ptr<ConstraintDefinition>();
-  }
-  return it->second;
-}
-
-const boost::shared_ptr<ProgramDefinition> 
-ParseTree::get_program_difinition(const difinition_type_t& def) const
-{
-  program_def_map_t::const_iterator it = prog_def_map_.find(def);
-  if(it == prog_def_map_.end()) {
-    return boost::shared_ptr<ProgramDefinition>();
-  }
-  return it->second;
-}
-
 node_id_t ParseTree::register_node(const node_sptr& n)
 {
   assert(n->get_id() == 0);
@@ -148,25 +164,7 @@ void ParseTree::clear()
 {
   max_node_id_ = 0;
   node_tree_.reset();
-  cons_def_map_.clear();
-  prog_def_map_.clear();
   variable_map_.clear();
-}
-
-ParseTree::difinition_type_t 
-ParseTree::create_definition_key(boost::shared_ptr<Definition> d)
-{
-  std::string name = d->get_name();
-  int bound_variable_count = d->bound_variable_size();
-
-  // 既に制約/プログラム定義として定義されていないかどうか
-  if(cons_def_map_.find(make_pair(name, bound_variable_count)) != cons_def_map_.end() ||
-     prog_def_map_.find(make_pair(name, bound_variable_count)) != prog_def_map_.end()) 
-  {
-    throw MultipleDefinition(name);
-  }
-
-  return make_pair(name, bound_variable_count);
 }
 
 namespace {
@@ -202,7 +200,8 @@ void variable_dumper(std::ostream& s, const T& m)
 
 std::ostream& ParseTree::dump(std::ostream& s) const 
 {
-  s << "parse_tree[\n"
+  s << "parse_tree[\n";
+    /*
     << "constraint_definition[\n";  
   definition_dumper(s, cons_def_map_);
   s << "],\n";
@@ -210,6 +209,7 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   s << "program_definition[\n";
   definition_dumper(s, prog_def_map_);
   s << "],\n";
+  */
 
   s << "node_tree[\n";
   if(node_tree_) s << "  " << *node_tree_;
