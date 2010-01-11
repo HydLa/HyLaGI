@@ -18,7 +18,7 @@ namespace symbolic_simulator {
 class EntailmentChecker
 {
 public:
-  EntailmentChecker(MathLink& ml, bool debug_mode);
+  EntailmentChecker(MathLink& ml, bool debug_mode = true);
 
   virtual ~EntailmentChecker();
 

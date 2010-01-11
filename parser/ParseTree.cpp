@@ -56,11 +56,15 @@ void ParseTree::parse(std::istream& stream)
   NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
 
+  HYDLA_LOGGER_DEBUG("#*** Parse Tree ***\n", *this);
+
   HYDLA_LOGGER_DEBUG("#*** Constraint Definition ***\n", constraint_definition);
-  HYDLA_LOGGER_DEBUG("#*** Program Definition ***\n", program_definition);
+  HYDLA_LOGGER_DEBUG("#*** Program Definition ***\n",    program_definition);
     
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
+
+  HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
 
   uptate_node_id();
 }

@@ -41,7 +41,6 @@ namespace symbolic_simulator {
 //regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
 
 MathSimulator::MathSimulator(const Opts& opts) :
-  simulator_t(opts.debug_mode),
   opts_(opts)
 {
 }
@@ -121,13 +120,13 @@ void MathSimulator::do_initialize()
 bool MathSimulator::point_phase(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
 {
-  TellCollector tell_collector(ms, is_debug_mode());
-  AskCollector  ask_collector(ms, is_debug_mode());
-  ConstraintStoreBuilderPoint csbp(ml_, is_debug_mode());
+  TellCollector tell_collector(ms);
+  AskCollector  ask_collector(ms);
+  ConstraintStoreBuilderPoint csbp(ml_);
   variable_map_t vm;
   csbp.build_constraint_store(vm);
-  ConsistencyChecker consistency_checker(ml_, is_debug_mode());
-  EntailmentChecker  entailment_checker(ml_, is_debug_mode());
+  ConsistencyChecker consistency_checker(ml_);
+  EntailmentChecker  entailment_checker(ml_);
 
   tells_t         tell_list;
   positive_asks_t positive_asks;

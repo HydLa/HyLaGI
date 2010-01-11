@@ -12,6 +12,8 @@
 #include <boost/shared_ptr.hpp>
 //#include <boost/function.hpp>
 
+#include "Logger.h"
+
 #include "Node.h"
 #include "ParseTree.h"
 #include "ModuleSetContainer.h"
@@ -41,8 +43,7 @@ public:
   typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
   typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
-  Simulator(bool debug_mode = false) :
-    debug_mode_(debug_mode)    
+  Simulator()
   {}
   
   virtual ~Simulator()
@@ -56,16 +57,6 @@ public:
   void set_module_set_container_no_init(const module_set_container_sptr& msc_no_init)
   {
     msc_no_init_ = msc_no_init;
-  }
-  
-  void set_debug_mode(bool m)
-  {
-    debug_mode_ = m;
-  }
-
-  bool is_debug_mode() const 
-  {
-    return debug_mode_;
   }
 
   /**
@@ -162,11 +153,9 @@ public:
       }
     }
 
-    if(is_debug_mode()) {
-      std::cout << "#*** variable map ***\n" 
-                << variable_map_ 
-                << std::endl;
-    }
+    HYDLA_LOGGER_DEBUG(
+      "#*** variable map ***\n",
+      variable_map_);
   }
 
   virtual void init_state_queue(const parse_tree_sptr& parse_tree)
@@ -187,17 +176,15 @@ public:
     switch(state->phase) 
     {
     case phase_state_t::PointPhase:
-      {
-        if(is_debug_mode()) {
-          std::cout << "#***** begin point phase *****"
-                    << "\n#** module set **\n"
-                    << ms->get_name()
-                    << "\n"
-                    << *ms 
-                    << "\n#*** variable map ***\n" 
-                    << variable_map_ 
-                    << std::endl;
-        }
+      {        
+        HYDLA_LOGGER_DEBUG(
+          "#***** begin point phase *****",
+          "\n#** module set **\n",
+          ms->get_name(),
+          "\n",
+          *ms,
+          "\n#*** variable map ***\n",
+          variable_map_);
 
         ret = point_phase(ms, state);
         break;
@@ -205,16 +192,14 @@ public:
 
     case phase_state_t::IntervalPhase: 
       {        
-        if(is_debug_mode()) {
-          std::cout << "#***** begin interval phase *****"
-                    << "\n#** module set **\n"
-                    << ms->get_name()
-                    << "\n"
-                    << *ms 
-                    << "\n#*** variable map ***\n" 
-                    << variable_map_ 
-                    << std::endl;
-        }
+        HYDLA_LOGGER_DEBUG(
+          "#***** begin interval phase *****",
+          "\n#** module set **\n",
+          ms->get_name(),
+          "\n",
+          *ms,
+          "\n#*** variable map ***\n",
+          variable_map_);
 
         ret = interval_phase(ms, state);
         break;            
@@ -245,7 +230,6 @@ private:
 
   module_set_container_sptr msc_;
   module_set_container_sptr msc_no_init_;
-  bool debug_mode_;
 
   /**
    * シミュレーション中で使用されるすべての変数を格納した表

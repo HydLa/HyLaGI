@@ -3,6 +3,8 @@
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
 
+#include "Logger.h"
+
 #include <iostream>
 #include <boost/foreach.hpp>
 
@@ -15,7 +17,6 @@ namespace hydla {
 namespace bp_simulator {
 
 BPSimulator::BPSimulator(const Opts& opts) :
-  simulator_t(opts.debug_mode),
   opts_(opts)
 {}
 
@@ -46,11 +47,12 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
 {
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
-  ConstraintStore constraint_store(is_debug_mode());
+  ConstraintStore constraint_store;
   // TODO: stateから制約ストアを作る
   constraint_store.build(state->variable_map);
-  if(this->is_debug_mode()) constraint_store.display(10);
-  TellCollector tell_collector(ms, is_debug_mode());
+  //TODO: hirose 後で考える
+  //if(this->is_debug_mode()) constraint_store.display(10);
+  TellCollector tell_collector(ms);
 
   return this->do_point_phase(ms, state, constraint_store,
                               tell_collector, positive_asks, negative_asks);
@@ -75,11 +77,11 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
                     positive_asks_t& positive_asks,
                     negative_asks_t& negative_asks)
 {
-  if(this->is_debug_mode()) std::cout << "#** do_point_phase: BEGIN **\n\n";
+  HYDLA_LOGGER_DEBUG("#** do_point_phase: BEGIN **\n");
   negative_asks_t unknown_asks; // Symbolicではnegative_asks
-  AskCollector  ask_collector(ms, is_debug_mode());
-  ConsistencyChecker consistency_checker(is_debug_mode());
-  EntailmentChecker entailment_checker(is_debug_mode());
+  AskCollector  ask_collector(ms);
+  ConsistencyChecker consistency_checker;
+  EntailmentChecker entailment_checker;
 
   bool expanded   = true;
   while(expanded) {
@@ -104,7 +106,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator end = unknown_asks.end();
       while(it!=end) {
         if(negative_asks.find(*it)!=negative_asks.end()) {
-          if(this->is_debug_mode()) std::cout << "#*** do_point_phase: skip un-entailed ask ***\n";
+          HYDLA_LOGGER_DEBUG("#*** do_point_phase: skip un-entailed ask ***");
           unknown_asks.erase(it++);
           continue;
         }
@@ -119,7 +121,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
             {
               // Ask条件に基づいて分岐
               // エンテールされる場合
-              if(this->is_debug_mode()) std::cout << "#*** do_point_phase: BRANCH ***\n\n";
+              HYDLA_LOGGER_DEBUG("#*** do_point_phase: BRANCH ***\n");
               std::set<rp_constraint> guards, not_guards;
               var_name_map_t vars;
               GuardConstraintBuilder gcb;

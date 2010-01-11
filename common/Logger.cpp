@@ -8,10 +8,9 @@ namespace logger {
 Logger::Logger()
 {
   debug_.push(std::cout);
-
-  //warn_;
-  //error_;
-  //fatal_;
+  warn_.push(std::cout);
+  error_.push(std::cout);
+  fatal_.push(std::cout);
 }
 
 Logger::~Logger()
