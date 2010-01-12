@@ -277,6 +277,44 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_multiple_definition)
 }
 
 /**
+ * 式に対しての微分の適用
+ */
+BOOST_AUTO_TEST_CASE(parse_tree_test_differential)
+{
+  // differential
+  PARSE_TREE_TEST_NO_ERROR(
+    "a''''''=b.");
+
+  PARSE_TREE_TEST_ERROR(
+    "(a+1)'=b.",
+    InvalidDifferential);
+
+  PARSE_TREE_TEST_ERROR(
+    "((a-)')=b.",
+    InvalidDifferential);
+}
+
+/**
+ * 式に対してのprevの適用
+ */
+BOOST_AUTO_TEST_CASE(parse_tree_test_previous)
+{
+  PARSE_TREE_TEST_NO_ERROR(
+    "a-=b.");
+
+  PARSE_TREE_TEST_NO_ERROR(
+    "a'''''-=b.");
+
+  PARSE_TREE_TEST_ERROR(
+    "(a-)-=b.",
+    InvalidPrevious);
+
+  PARSE_TREE_TEST_ERROR(
+    "(a+1)-=b.",
+    InvalidPrevious);
+}
+
+/**
  * 実際の例題を正しくパースできるかどうか
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)

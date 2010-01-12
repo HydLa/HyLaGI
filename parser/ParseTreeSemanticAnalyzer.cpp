@@ -365,20 +365,27 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 // 微分
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
 {
-  State& state = state_stack_.top();
+  // 子ノードが微分か変数でなかったらエラー
+  if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
+     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+       throw InvalidDifferential(node);
+  }
 
   // 子ノードの探索
-  state_stack_.push(state);
   state_stack_.top().differential_count++;
   dispatch_child(node);
-  state_stack_.pop(); 
-
-
+  state_stack_.top().differential_count--;
 }
 
 // 左極限
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
-{
+{  
+  // 子ノードが微分か変数でなかったらエラー
+  if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
+     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+       throw InvalidPrevious(node);
+  }
+
   dispatch_child(node); 
 }
   
