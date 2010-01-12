@@ -8,6 +8,13 @@ checkEntailment[guard_, store_, vars_] := (
   If[Reduce[Append[tells, Not[tmpSol]], vars, Reals]===False, 1, 0]
 );
 
+checkEntailmentInterval[guard_, store_, vars_] := (
+  Return[ToString[guard]]
+  (*                                             tmpSol = Reduce[Append[store, guard], vars, Reals];
+  If[tmpSol===False, Return[-1]];
+   If[Reduce[Append[tells, Not[tmpSol]], vars, Reals]===False, 1, 0]*)
+);
+
 (*
  * 変数名の頭についている"usrVar"を取り除く
  *)
@@ -59,7 +66,14 @@ createVariableList[True, vars_, result_] := (
  *)
 isConsistent[expr_, vars_] := (
   sol = Reduce[expr, vars];
-  If[sol =!= False, {ToString[FullForm[sol]], ToString[FullForm[vars]]}, 0]
+  If[sol =!= {},
+     (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
+     sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
+     (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
+     sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
+     (*  一番内側の要素 （レベル2）を文字列にする *)
+     {Map[(ToString[FullForm[#]]) &, sol, {2}], vars},
+     0]
 );
 
 
@@ -84,6 +98,7 @@ isRequiredVariable[var_, tellVars_] := (
 );
 
 isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
+                                                                 (*Return[ToString[tellsVars]]*)
   If[store =!= {},
      (* 制約ストアが空でない場合、不要な初期値制約を取り除く必要がある *)
      newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]];
@@ -91,7 +106,7 @@ isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
      newStore = If[Head[First[store]] === And, Apply[List, First[store]], store];
      removedStore = {Apply[And, Select[newStore, (isRequiredConstraint[#, newTellVars]) &]]};
      newStoreVars = Map[removeDash, Map[(# /. x_[t] -> x) &, storeVars]];
-     removedStoreVars = Select[newStoreVars, (isRequiredVariable[#, newTellVars]) &],
+     removedStoreVars = Map[(#[t])&, Select[newStoreVars, (isRequiredVariable[#, newTellVars])&]],
 
      (* 制約ストアが空の場合 *)
      removedStore = store;
@@ -104,7 +119,10 @@ isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
                     {DSolve::underdet}],
               {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet, DSolve::underdet}];
   If[sol =!= overconstraint,
-     If[sol =!= underconstraint, 1, 2],
+     cons = Map[(ToString[FullForm[#]]) &, Join[tells, removedStore]];
+     vars = Join[tellsVars, removedStoreVars];
+     If[sol =!= underconstraint, {1, cons, vars}, {2, cons, vars}],
+     (*If[sol =!= underconstraint, {1, ToString[FullForm[cons]], ToString[FullForm[vars]]}, {2, cons, vars}],*)
      0]
 );
 
