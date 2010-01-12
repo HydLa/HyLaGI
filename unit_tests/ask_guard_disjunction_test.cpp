@@ -10,10 +10,10 @@
 #include <boost/regex.hpp>
 
 #include <iostream>
+#include <sstream>
 
-#include "HydLaAST.h"
-#include "NodeFactory.h"
-#include "ParseTreeGenerator.h"
+#include "DefaultNodeFactory.h"
+#include "ParseTree.h"
 #include "ParseError.h"
 #include "AskDisjunctionFormatter.h"
 
@@ -27,20 +27,18 @@ using namespace boost;
 
 bool comp_formatted_struct(std::string lhs, std::string rhs)
 {
-  HydLaAST ast;
-  ParseTreeGenerator ptg;  
-  AskDisjunctionFormatter<DefaultNodeFactory> adf;
+  AskDisjunctionFormatter adf;
 
-  ast.parse_string(lhs);
-  boost::shared_ptr<ParseTree> pt_lhs(ptg.generate<DefaultNodeFactory>(ast.get_tree_iterator()));
-  adf.format(pt_lhs);
+  ParseTree pt_lhs;
+  pt_lhs.parse_string<DefaultNodeFactory>(lhs); 
+  adf.format(&pt_lhs);
   
   //pt_lhs->to_graphviz(std::cout);
+  
+  ParseTree pt_rhs;
+  pt_rhs.parse_string<DefaultNodeFactory>(rhs); 
 
-  ast.parse_string(rhs);
-  boost::shared_ptr<ParseTree> pt_rhs(ptg.generate<DefaultNodeFactory>(ast.get_tree_iterator()));
-
-  return pt_lhs->is_same_struct(*pt_rhs, false);
+  return pt_lhs.is_same_struct(pt_rhs, false);
 }
 
 BOOST_AUTO_TEST_CASE(ask_guard_disjunction_format_test)

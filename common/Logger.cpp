@@ -5,7 +5,8 @@
 namespace hydla {
 namespace logger {
 
-Logger::Logger()
+Logger::Logger() :
+  log_level_(Warn)
 {
   debug_.push(std::cout);
   warn_.push(std::cout);

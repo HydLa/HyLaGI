@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
-#include "ParseTree.h"
+#include "Node.h"
 
 namespace hydla { 
 namespace parser {
@@ -16,6 +16,12 @@ namespace parser {
 class NodeFactory 
 {
 public:
+  NodeFactory()
+  {}
+
+  virtual ~NodeFactory()
+  {}
+
   template<typename NodeType>
   boost::shared_ptr<NodeType> create() const
   {

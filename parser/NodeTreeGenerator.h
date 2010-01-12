@@ -283,6 +283,7 @@ private:
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition_;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition_;
 
+
   boost::shared_ptr<NodeFactory>   node_factory_;
 };
 

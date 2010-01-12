@@ -2,6 +2,7 @@
 #include <exception>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -108,38 +109,18 @@ void hydla_main(int argc, char* argv[])
     return;
   }
 
-
-  // ASTÇÃç\íz
-  /*
-  HydLaAST ast;
-  if(po.count("input-file")) {
-    ast.parse_flie(po.get<std::string>("input-file"));
-  } else {
-    ast.parse(std::cin);
-  }
-  if(debug_mode) {
-    std::cout << "#*** AST Tree ***\n"
-              << ast << std::endl;
-  }
-
-  // ParseTreeÇÃç\íz
-  boost::shared_ptr<ParseTree> pt(
-    ParseTreeGenerator().generate<DefaultNodeFactory>(ast.get_tree_iterator()));
-  if(debug_mode) {
-    std::cout << "#*** Analyzed Parse Tree ***\n"
-              << *pt << std::endl;
-  }
-  */
-
   // ParseTreeÇÃç\íz
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   if(po.count("input-file")) {
-    pt->parse_flie(po.get<std::string>("input-file"));
+    std::string filename(po.get<std::string>("input-file"));
+    std::ifstream in(filename.c_str());
+    if (!in) {    
+      throw std::runtime_error(std::string("cannot open \"") + filename + "\"");
+    }
+    pt->parse<DefaultNodeFactory>(in);
   } else {
-    pt->parse(std::cin);
+    pt->parse<DefaultNodeFactory>(std::cin);
   }
-
-
 
 /*
     if(po.count("graphviz")) {

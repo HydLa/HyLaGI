@@ -3,7 +3,6 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
-#include <fstream>
 #include <boost/bind.hpp>
 
 #include "Logger.h"
@@ -31,7 +30,7 @@ ParseTree::ParseTree() :
 
     
 ParseTree::ParseTree(const ParseTree& pt) :
-  node_tree_(pt.node_tree_->clone()),
+  node_tree_(pt.node_tree_ ? pt.node_tree_->clone() : node_sptr()),
   variable_map_(pt.variable_map_),
   node_map_(pt.node_map_),
   max_node_id_(pt.max_node_id_)
@@ -42,8 +41,10 @@ ParseTree::ParseTree(const ParseTree& pt) :
 ParseTree::~ParseTree()
 {}
 
-void ParseTree::parse(std::istream& stream) 
+void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory) 
 {
+  node_factory_ = node_factory;
+
   HydLaAST ast;
   ast.parse(stream);
 
@@ -52,7 +53,6 @@ void ParseTree::parse(std::istream& stream)
     
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
-  boost::shared_ptr<NodeFactory> node_factory(new DefaultNodeFactory());
   NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
 
@@ -69,32 +69,10 @@ void ParseTree::parse(std::istream& stream)
   uptate_node_id();
 }
 
-void ParseTree::parse_flie(const std::string& filename) 
-{
-  ifstream in(filename.c_str());
-  if (!in) {    
-    throw std::runtime_error(string("cannot open \"") + filename + "\"");
-  }
-
-  parse(in);
-}
-
-void ParseTree::parse_string(const std::string& str)
-{    
-  stringstream in(str);
-  parse(in);
-}
-
 void ParseTree::uptate_node_id()
 {
   NodeIDUpdater updater;
   updater.update(this);
-}
-
-void ParseTree::set_tree(const node_sptr& tree) 
-{
-  node_tree_ = tree;
-//  semantic_analyze();
 }
 
 node_sptr ParseTree::swap_tree(const node_sptr& tree) 

@@ -5,22 +5,27 @@
 #include <string>
 #include <vector>
 #include <map>
-
-#include <assert.h>
+#include <sstream>
+#include <cassert>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/bimap/bimap.hpp>
 #include <boost/bimap/unordered_set_of.hpp>
 #include <boost/bimap/support/lambda.hpp>
 
 #include "ParseError.h"
 #include "Node.h"
+#include "NodeFactory.h"
 
 namespace hydla { 
 namespace parse_tree {
 
 class ParseTree {
 public: 
+  typedef hydla::parser::NodeFactory        node_factory_t;
+  typedef boost::shared_ptr<node_factory_t> node_factory_sptr;
+
   // 変数表
   typedef std::map<std::string, int>     variable_map_t;
   typedef variable_map_t::const_iterator variable_map_const_iterator;
@@ -37,11 +42,24 @@ public:
 
   virtual ~ParseTree();
 
-    
+  /**
+   * ParseTreeを構築する
+   */
+  template<typename NodeFactoryT>
+  void parse(std::istream& s)
+  {
+    parse(s, boost::make_shared<NodeFactoryT>());
+  }
 
-  void parse(std::istream& s);  
-  void parse_flie(const std::string& filename);
-  void parse_string(const std::string& str);
+  template<typename NodeFactoryT>
+  void parse_string(std::string str)
+  {
+    std::istringstream stream(str);
+    parse<NodeFactoryT>(stream);
+  }
+    
+  void parse(std::istream& s, node_factory_sptr node_factory);
+
 
   /**
    * ノードのIDの更新をおこなう
@@ -85,7 +103,7 @@ public:
    * パースされたノードツリーの設定
    * 設定された後，意味解析等の前処理は自動でおこなわれる
    */
-  void set_tree(const node_sptr& tree);
+  //void set_tree(const node_sptr& tree);
  
   /**
    * ノードツリーを交換する
@@ -158,6 +176,16 @@ public:
   }
 
   /**
+   * 登録されているNodeFactoryを元に指定された型のノードを生成する
+   */
+  template<typename NodeType>
+  boost::shared_ptr<NodeType> create_node() const
+  {
+    return node_factory_->create<NodeType>();
+  }
+  
+
+  /**
    * すべてのデータを破棄し、初期状態に戻す
    */
   void clear();
@@ -168,6 +196,8 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:  
+  node_factory_sptr    node_factory_;
+
   node_sptr            node_tree_;
   variable_map_t       variable_map_;
 

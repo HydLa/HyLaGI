@@ -7,13 +7,12 @@
 #include "test_common.h"
 #ifndef DISABLE_PARSE_TREE_STRUCT_TEST
 
-#include <boost/regex.hpp>
-
 #include <sstream>
 
-#include "HydLaAST.h"
-#include "NodeFactory.h"
-#include "ParseTreeGenerator.h"
+#include <boost/regex.hpp>
+
+#include "DefaultNodeFactory.h"
+#include "ParseTree.h"
 #include "ParseError.h"
 
 using namespace std;
@@ -24,35 +23,26 @@ using namespace hydla::parse_error;
 
 using namespace boost;
 
-boost::shared_ptr<ParseTree> create_parse_tree(std::string str)
-{  
-  HydLaAST ast;
-  ParseTreeGenerator<DefaultNodeFactory> ptg;
-
-  ast.parse_string(str);
-  boost::shared_ptr<ParseTree> pt(ptg.generate(ast.get_tree_iterator()));
-
-  return pt;
-}
-
-bool comp_exactly_same(std::string lhs, std::string rhs)
+bool comp_same(std::string lhs, std::string rhs, bool exactly)
 {
-  return create_parse_tree(lhs)->is_same_struct(*create_parse_tree(rhs), true);
+  ParseTree pt_lhs;
+  pt_lhs.parse_string<DefaultNodeFactory>(lhs);
+
+  ParseTree pt_rhs;
+  pt_rhs.parse_string<DefaultNodeFactory>(rhs);
+
+  return pt_lhs.is_same_struct(pt_rhs, exactly);
 }
 
-bool comp_same(std::string lhs, std::string rhs)
-{
-  return create_parse_tree(lhs)->is_same_struct(*create_parse_tree(rhs), false);
-}
 
 BOOST_AUTO_TEST_CASE(parse_tree_exactly_same_struct_test)
 {
 
 #define TEST_EXACTLY_SAME(L, R) \
-  BOOST_CHECK(comp_exactly_same(L, R));
+  BOOST_CHECK(comp_same(L, R, true));
 
 #define TEST_NOT_EXACTLY_SAME(L, R) \
-  BOOST_CHECK(!comp_exactly_same(L, R));
+  BOOST_CHECK(!comp_same(L, R, true));
 
   // ìØàÍç\ë¢
   TEST_EXACTLY_SAME("x=1.", "x=1.");
@@ -82,10 +72,10 @@ BOOST_AUTO_TEST_CASE(parse_tree_exactly_same_struct_test)
 BOOST_AUTO_TEST_CASE(parse_tree_same_struct_test)
 {
 #define TEST_SAME(L, R) \
-  BOOST_CHECK(comp_same(L, R));
+  BOOST_CHECK(comp_same(L, R, false));
 
 #define TEST_NOT_SAME(L, R) \
-  BOOST_CHECK(!comp_same(L, R));
+  BOOST_CHECK(!comp_same(L, R, false));
 
   // ìØàÍç\ë¢
   TEST_SAME("x=1.", "x=1.");

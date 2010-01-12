@@ -26,19 +26,21 @@ ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 
 void ParseTreeSemanticAnalyzer::analyze(node_sptr& n/*, variable_map_t& variable_map*/)
 {
-  State state;
-  state.in_guard           = false;
-  state.in_always          = false;
-  state.in_constraint      = false;
-  state.differential_count = 0;
-  state_stack_.push(state);
+  if(n) {
+    State state;
+    state.in_guard           = false;
+    state.in_always          = false;
+    state.in_constraint      = false;
+    state.differential_count = 0;
+    state_stack_.push(state);
 
-//  variable_map_ = &variable_map;
+  //  variable_map_ = &variable_map;
 
-  accept(n);
-  if(new_child_) n = new_child_;
+    accept(n);
+    if(new_child_) n = new_child_;
 
-  assert(state_stack_.size() == 1);
+    assert(state_stack_.size() == 1);
+  }
 }
 
 // §–ñ’è‹`

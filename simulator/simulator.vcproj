@@ -155,6 +155,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AskDisjunctionFormatter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InitNodeRemover.cpp"
 				>
 			</File>
