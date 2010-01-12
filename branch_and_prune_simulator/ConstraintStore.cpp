@@ -1,15 +1,18 @@
 #include "ConstraintStore.h"
+#include "Logger.h"
 #include "realpaver.h"
+#include "rp_problem_ext.h"
+#include "rp_constraint_ext.h"
+
+#include <sstream>
+
 
 namespace hydla {
 namespace bp_simulator {
 
-  ConstraintStore::ConstraintStore(bool debug_mode) :
-  debug_mode_(debug_mode)
-  {}
+  ConstraintStore::ConstraintStore(){}
 
-  ConstraintStore::ConstraintStore(const ConstraintStore& src) :
-  debug_mode_(src.debug_mode_)
+  ConstraintStore::ConstraintStore(const ConstraintStore& src)
   {
     this->exprs_ = src.get_store_exprs_copy();
     this->vars_ = src.vars_;
@@ -108,12 +111,9 @@ namespace bp_simulator {
     // TODO: 制約に依存していない変数のprecisionはRP_INFINITYに
     // TODO: 他の変数は…BPSimulatorで一つのprecisionを持つようにする
     rp_problem_set_initial_box(problem);
-    if(this->debug_mode_) {
-      std::cout << "#*** constraint store: problem to solve ***\n";
-      std::cout << rp_variable_precision(rp_problem_var(problem, 0)) << "\n";
-      rp_problem_display(stdout, problem);
-      std::cout << "\n";
-    }
+    HYDLA_LOGGER_DEBUG(
+      "#*** constraint store: problem to solve ***\n",
+      problem);
 
     // ソルバの作成
     rp_selector * select;
@@ -129,22 +129,22 @@ namespace bp_simulator {
     //rp_new(prover,rp_interval_satisfaction_prover,(&problem,100000));
 
     rp_bpsolver solver(&problem,10,select,split); //,prover);
-    rp_ofilter_text oft(&problem, &(std::cout), -1);
+    std::stringstream ss;    
+    rp_ofilter_text oft(&problem, &(ss), -1);
 
     // 解いてhullを求める
     rp_box sol, tmp_box = solver.compute_next();
-    rp_box_display_simple_nl(tmp_box);
     assert(tmp_box != NULL);
     rp_box_clone(&sol, tmp_box);
     while((tmp_box=solver.compute_next()) != NULL) {
       rp_box_merge(sol, tmp_box);
     }
-    if(this->debug_mode_) {
-      std::cout << "#*** constraint store: variable_map(hull of "
-        << solver.solution() << " boxes) ***\n";
-      //rp_box_display_simple_nl(sol);
-      oft.apply_box(sol, "");
-    }
+    oft.apply_box(sol, "");
+    HYDLA_LOGGER_DEBUG(
+      "#*** constraint store: variable_map(hull of ",
+      solver.solution(),
+      " boxes) ***\n",
+      ss.str());
     rp_problem_destroy(&problem);
 
     // variable_mapを作成
@@ -213,21 +213,21 @@ namespace bp_simulator {
   }
 
   /**
-   * ストアを表示する
-   * TODO: ダンプ形式にする？
+   * ストア内容を表示する
    */
-  void ConstraintStore::display(const int digits) const
+  std::ostream& ConstraintStore::dump_cs(std::ostream& s) const
   {
     rp_vector_variable vec = this->to_rp_vector();
     std::set<rp_constraint>::const_iterator ctr_it = this->exprs_.begin();
     while(ctr_it != this->exprs_.end()){
-      rp_constraint_display(stdout, *ctr_it, vec, digits);
-      std::cout << "\n";
+      rp::dump_constraint(s, *ctr_it, vec); // digits, mode);
+      s << "\n";
       ctr_it++;
     }
-    std::cout << "\n";
+    s << "\n";
     rp_vector_destroy(&vec);
-  }
+    return s;
+  } 
 
   /**
    * vars_をrp_vector_variableに変換

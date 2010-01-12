@@ -165,7 +165,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rp_constraint_ext.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rp_container.c"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_container_ext.cpp"
 				>
 			</File>
 			<File
@@ -173,7 +181,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rp_expression_ext.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rp_expression_symbol.c"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_expression_symbol_ext.cpp"
 				>
 			</File>
 			<File
@@ -221,6 +237,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rp_problem_ext.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rp_projection.c"
 				>
 			</File>
@@ -230,6 +250,10 @@
 			</File>
 			<File
 				RelativePath=".\rp_union_interval.c"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_union_interval_ext.cpp"
 				>
 			</File>
 			<File
@@ -275,7 +299,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rp_constraint_ext.h"
+				>
+			</File>
+			<File
 				RelativePath=".\rp_container.h"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_container_ext.h"
 				>
 			</File>
 			<File
@@ -283,7 +315,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rp_expression_ext.h"
+				>
+			</File>
+			<File
 				RelativePath=".\rp_expression_symbol.h"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_expression_symbol_ext.h"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_ext.h"
 				>
 			</File>
 			<File
@@ -339,6 +383,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rp_problem_ext.h"
+				>
+			</File>
+			<File
 				RelativePath=".\rp_projection.h"
 				>
 			</File>
@@ -364,6 +412,10 @@
 			</File>
 			<File
 				RelativePath=".\rp_union_interval.h"
+				>
+			</File>
+			<File
+				RelativePath=".\rp_union_interval_ext.h"
 				>
 			</File>
 			<File

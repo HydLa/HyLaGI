@@ -131,7 +131,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
     if(this->debug_mode_) {
       std::cout << "#*** consistency check ==> Consistent ***\n";
       std::cout << "#**** consistency check: new constraint_store ***\n";
-      constraint_store.display(10);
+      //constraint_store.display(10);
     }
     return true;
   } else {

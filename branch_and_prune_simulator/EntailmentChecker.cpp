@@ -1,6 +1,9 @@
 #include "EntailmentChecker.h"
+#include "Logger.h"
+#include "rp_constraint_ext.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
@@ -52,15 +55,16 @@ Trivalent EntailmentChecker::check_entailment(
 
   // 作成できたか確認
   rp_vector_variable vec = this->to_rp_vector();
-  if(this->debug_mode_){
-    std::cout << "#**** entailment check: constraints ****\n";
+  {
+    HYDLA_LOGGER_DEBUG("#**** entailment check: constraints ****");
+    std::stringstream ss;
     std::set<rp_constraint>::iterator it = this->constraints_.begin();
     while(it != this->constraints_.end()){
-      rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
-      std::cout << "\n";
+      rp::dump_constraint(ss, *it, vec, DISPLAY_DIGITS);
+      ss << "\n";
       it++;
     }
-    std::cout << "\n";
+    HYDLA_LOGGER_DEBUG(ss.str());
   }
   rp_vector_destroy(&vec);
 
@@ -69,28 +73,33 @@ Trivalent EntailmentChecker::check_entailment(
 
   // 作成できたか確認
   vec = this->to_rp_vector();
-  if(this->debug_mode_){
-    std::cout << "#**** entailment check: guards ****\n";
+  {
+    HYDLA_LOGGER_DEBUG("#**** entailment check: guards ****");
+    std::stringstream ss;
     std::set<rp_constraint>::iterator it = this->guards_.begin();
     while(it != this->guards_.end()){
-      rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
-      std::cout << "\n";
+      rp::dump_constraint(ss, *it, vec, DISPLAY_DIGITS);
+      ss << "\n";
       it++;
     }
-    std::cout << "\n#**** entailment check: not_guards ****\n";
+    HYDLA_LOGGER_DEBUG(ss.str());
+    ss.str("");
+    HYDLA_LOGGER_DEBUG("#**** entailment check: not_guards ****");
     it = this->not_guards_.begin();
     while(it != this->not_guards_.end()){
-      if(*it != NULL) rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
-      std::cout << "\n";
+      if(*it != NULL) rp::dump_constraint(ss, *it, vec, DISPLAY_DIGITS);
+      ss << "\n";
       it++;
     }
-    std::cout << "\n#**** entailment check: prevs_in_guard ****\n";
+    HYDLA_LOGGER_DEBUG(ss.str());
+    ss.str("");
+    HYDLA_LOGGER_DEBUG("#**** entailment check: prevs_in_guard ****");
     std::set<std::string>::iterator it2 = this->prevs_in_guard_.begin();
     while(it2 != this->prevs_in_guard_.end()){
-      std::cout << *it2 <<"\n";
+      HYDLA_LOGGER_DEBUG(*it2);
       it2++;
     }
-    std::cout << "\n";
+    HYDLA_LOGGER_DEBUG("\n");
   }
   rp_vector_destroy(&vec);
 

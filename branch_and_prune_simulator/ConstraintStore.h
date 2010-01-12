@@ -2,6 +2,7 @@
 #define _INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_STORE_H_
 
 #include <set>
+#include <iostream>
 #include "realpaverbasic.h"
 #include <boost/bimap/bimap.hpp>
 
@@ -19,7 +20,7 @@ namespace bp_simulator {
 class ConstraintStore
 {
 public:
-  ConstraintStore(bool debug_mode = false);
+  ConstraintStore();
   ConstraintStore(const ConstraintStore& src);
   ~ConstraintStore();
   void build(const variable_map_t& variable_map);
@@ -31,13 +32,16 @@ public:
   {
     return this->vars_;
   }
-  void display(const int digits) const;
+  std::ostream& dump_cs(std::ostream& s) const;
+  friend std::ostream& operator<<(std::ostream& s, const ConstraintStore& cs)
+  {
+    return cs.dump_cs(s);
+  }
 
 private:
   rp_vector_variable to_rp_vector() const;
   std::set<rp_constraint> exprs_;
   var_name_map_t vars_;
-  bool debug_mode_;
 };
 
 } // namespace bp_simulator
