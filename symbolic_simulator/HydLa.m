@@ -126,6 +126,53 @@ isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
      0]
 );
 
+(*
+ * 次のポイントフェーズに移行する時刻を求める
+ *)
+nextPointPhaseTime[
+  includeZero_, maxTime_, posAsk_, negAsk_] := 
+Block[{
+  calcMinTime,
+  sol,
+  minT,
+  timeMinCons = If[includeZero===True, (t>=0), (t>0)]
+},
+  calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, ask_}] := (
+    If[integAsk=!=False,
+      (* true *)
+      (* 解なしと境界値の解を区別する *)  
+      sol = Reduce[{timeMinCons && (maxTime>=t) && (integAsk)}, t];
+      If[sol===False, minT = error];
+
+      (* 成り立つtの最小値を求める *)
+      minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
+                         Minimize::wksol]];
+      If[Length[$MessageList]>0,
+         Throw[{error, "cannot solve min time", minT, $MessageList}]],
+        
+      (* false *)
+      minT=0];
+
+    (* 0秒後のを含んではいけない *)
+    If[includeZero===False && minT===0, minT=error];
+    (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
+    If[includeZero===True && minT=!=0, minT=error];
+
+    Which[minT === error,      {currentMinT, currentMinAsk},
+          minT <  currentMinT, {minT,        {ask}},
+          minT == currentMinT, {minT,        Append[currentMinAsk, ask]},
+          True,                {currentMinT, currentMinAsk}]
+  );
+
+  Fold[calcMinTime,
+       {maxTime, {}},
+        Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
+             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk]]]
+];
+
+(* nextPointPhaseTime[False, 10, {{t<=3, c3}}, {{t!=0, c2}, {t-5==0, c1}}] *)
+
+
 (* $MaxExtraPrecision = Infinity *)
 
 (*
