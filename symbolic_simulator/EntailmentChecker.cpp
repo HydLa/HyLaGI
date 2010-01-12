@@ -26,7 +26,6 @@ EntailmentChecker::~EntailmentChecker()
 
 bool EntailmentChecker::check_entailment(
   const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask, 
-//hydla::simulator::TellCollector::tells_t& collected_tells)
   hydla::symbolic_simulator::ConstraintStore& constraint_store)
 {
 
@@ -83,8 +82,8 @@ bool EntailmentChecker::check_entailment(
   // varsを渡す
   ml_.put_function("Join", 2);
   ps.put_vars();
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(constraint_store.second.str);
+  // 制約ストア内に出現する変数も渡す
+  ps.put_cs_vars(constraint_store);
 
 /*
 // 返ってくるパケットを解析
@@ -95,7 +94,10 @@ pc.check();
   ml_.skip_pkt_until(RETURNPKT);
   
   int num;
-  ml_.MLGetInteger(&num);
+  if(! ml_.MLGetInteger(&num)){
+    std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
+    throw MathLinkError("MLGetInteger", ml_.MLError());
+  }
   if(debug_mode_) std::cout << "EntailmentChecker#num:" << num << std::endl;
 
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す

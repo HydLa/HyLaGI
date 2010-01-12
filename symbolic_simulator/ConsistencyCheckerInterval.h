@@ -5,8 +5,7 @@
 #include "PacketSenderInterval.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
-#include <map>
-#include "TellCollector.h"
+#include "Types.h"
 #include "ConstraintStoreBuilderInterval.h"
 
 namespace hydla {
@@ -15,12 +14,12 @@ namespace symbolic_simulator {
 class ConsistencyCheckerInterval
 {
 public:
-  ConsistencyCheckerInterval(MathLink& ml, bool debug_mode);
+  ConsistencyCheckerInterval(MathLink& ml, bool debug_mode = true);
 
   virtual ~ConsistencyCheckerInterval();
 
   bool is_consistent(hydla::simulator::tells_t& collected_tells,
-                     hydla::symbolic_simulator::ConstraintStore& constraint_store);
+                     hydla::symbolic_simulator::ConstraintStoreInterval& constraint_store);
 
 private:
   MathLink& ml_;

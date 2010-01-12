@@ -24,6 +24,8 @@ public:
 
   void put_cs(ConstraintStore constraint_store);
 
+  void put_cs_vars(ConstraintStore constraint_store);
+
   // Ask§–ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 

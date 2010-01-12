@@ -26,11 +26,10 @@ EntailmentCheckerInterval::~EntailmentCheckerInterval()
 
 bool EntailmentCheckerInterval::check_entailment(
   const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask, 
-  tells_t& collected_tells,
-  hydla::symbolic_simulator::ConstraintStore& constraint_store)
+  hydla::symbolic_simulator::ConstraintStoreInterval& constraint_store)
 {
 
-  // checkEntailment[guard, Join[tells, store], vars]を渡したい
+  // checkEntailment[guard, store, vars]を渡したい
   ml_.put_function("checkEntailment", 3);
 
 
@@ -38,29 +37,17 @@ bool EntailmentCheckerInterval::check_entailment(
   PacketSenderInterval psi(ml_, debug_mode_);
   psi.visit(negative_ask);
 
-
-  ml_.put_function("Join", 2);
-  // tell制約の集合からtellsを得てMathematicaに渡す
-  int tells_size = collected_tells.size();
-  ml_.put_function("List", tells_size);
-  tells_t::iterator tells_it = collected_tells.begin();
-
-  while(tells_it!=collected_tells.end())
-  {
-    psi.visit((*tells_it));
-    tells_it++;
-  }
-
-  // 制約ストアからも式storeを得てMathematicaに渡す
+  // 制約ストアから式storeを得てMathematicaに渡す
   psi.put_cs(constraint_store);
 
   // varsを渡す
   ml_.put_function("Join", 2);
   psi.put_vars();
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(constraint_store.second.str);
+  // 制約ストア内に出現する変数も渡す
+  psi.put_cs_vars(constraint_store);
 
 /*
+//  ml_.skip_pkt_until(RETURNPKT);
 // 返ってくるパケットを解析
 PacketChecker pc(ml_);
 pc.check();
@@ -69,7 +56,10 @@ pc.check();
   ml_.skip_pkt_until(RETURNPKT);
   
   int num;
-  ml_.MLGetInteger(&num);
+  if(! ml_.MLGetInteger(&num)){
+    std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
+    throw MathLinkError("MLGetInteger", ml_.MLError());
+  }
   if(debug_mode_) std::cout << "EntailmentCheckerInterval#num:" << num << std::endl;
 
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す

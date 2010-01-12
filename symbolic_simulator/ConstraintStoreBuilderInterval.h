@@ -14,13 +14,13 @@ namespace symbolic_simulator {
  */
 
 // その時点での制約ストア内に出現する変数の一覧も持つ
-typedef std::pair<SymbolicValue, SymbolicValue> ConstraintStore;
-//typedef variable_map_t ConstraintStore;
+typedef std::pair<std::set<std::set<SymbolicValue> >, std::set<SymbolicVariable> > ConstraintStoreInterval;
+//typedef std::pair<SymbolicValue, SymbolicValue> ConstraintStoreInterval;
 
 class ConstraintStoreBuilderInterval
 {
 public:
-  ConstraintStoreBuilderInterval(MathLink& ml, bool debug_mode);
+  ConstraintStoreBuilderInterval(MathLink& ml, bool debug_mode = true);
 
   virtual ~ConstraintStoreBuilderInterval();
 
@@ -28,13 +28,13 @@ public:
 
   void build_variable_map(variable_map_t& variable_map);
 
-  ConstraintStore& get_constraint_store()
+  ConstraintStoreInterval& get_constraint_store()
   {
     return constraint_store_;
   }
 
 private:
-  ConstraintStore constraint_store_;
+  ConstraintStoreInterval constraint_store_;
   MathLink& ml_;
   /// デバッグ出力をするかどうか
   bool               debug_mode_;

@@ -11,10 +11,7 @@ namespace symbolic_simulator {
 ConstraintStoreBuilderInterval::ConstraintStoreBuilderInterval(MathLink& ml, bool debug_mode) :
   ml_(ml),
   debug_mode_(debug_mode)
-{
-  constraint_store_.first.str = "True";
-  constraint_store_.second.str = "{}";
-}
+{}
 
 ConstraintStoreBuilderInterval::~ConstraintStoreBuilderInterval()
 {}
@@ -37,30 +34,20 @@ void ConstraintStoreBuilderInterval::build_constraint_store(variable_map_t& vari
   {
     std::cout << variable_map;
     std::cout << "------------------------" << std::endl;
+    std::cout << "--build constraint store--" << std::endl;
   }
 
-  if(debug_mode_) std::cout << "--build constraint store--" << std::endl;
-  std::string str = "";
-  // strには
-  // "And[Equal[x,1]]"や"And[Equal[x,1],Equal[y,2],Equal[z,3]]"や
-  // "And[Equal[x,1],Equal[Derivative[1][x],1],Equal[prev[x],1],Equal[prev[Derivative[2][x]],1]]"や
-  // "And[]"？などが入る
-  std::string vars_list = "";
-  // vars_listには
-  // "List[x]"や"List[x,y,z]"や"List[x,Derivative[1][x],prev[x],prev[Derivative[2][x]]"や
-  // "List[]"などが入る
+  SymbolicValue symbolic_value;
+  std::string value;
+  SymbolicVariable symbolic_variable;
+  std::string variable_name;
 
-  str.append("And[");
-  vars_list.append("List[");
   variable_map_t::variable_list_t::iterator it = variable_map.begin();
-  SymbolicVariable symbolic_variable = (*it).first;
-  SymbolicValue symbolic_value = (*it).second;    
-  std::string name = symbolic_variable.name;
-  std::string value = symbolic_value.str;
 
+  std::set<SymbolicValue> value_set;
   while(it != variable_map.end())
   {
-    symbolic_value = (*it).second;
+    symbolic_value = (*it).second;    
     value = symbolic_value.str;
     if(value != "") break;
     it++;
@@ -70,8 +57,10 @@ void ConstraintStoreBuilderInterval::build_constraint_store(variable_map_t& vari
   {
     symbolic_variable = (*it).first;
     symbolic_value = (*it).second;    
-    name = symbolic_variable.name;
+    variable_name = symbolic_variable.name;
     value = symbolic_value.str;
+
+    std::string str = "";
 
     // SymbolicVariable側に関する文字列を作成
     str += "Equal[";
@@ -82,23 +71,14 @@ void ConstraintStoreBuilderInterval::build_constraint_store(variable_map_t& vari
       str += "Derivative[";
       str += derivative_count.str();
       str += "][usrVar";
-      str += name;
+      str += variable_name;
       str += "][0]";
-      
-      vars_list += "Derivative[";
-      vars_list += derivative_count.str();
-      vars_list += "][usrVar";
-      vars_list += name;
-      vars_list += "][t]";
     }
     else
     {
       str += "usrVar";
-      str += name;
+      str += variable_name;
       str += "[0]";
-      vars_list += "usrVar";
-      vars_list += name;
-      vars_list += "[t]";
     }
 
     str += ",";
@@ -106,6 +86,15 @@ void ConstraintStoreBuilderInterval::build_constraint_store(variable_map_t& vari
     // SymbolicValue側に関する文字列を作成
     str += value;
     str += "]"; // Equalの閉じ括弧
+
+    SymbolicValue new_symbolic_value;
+    new_symbolic_value.str = str;
+    value_set.insert(new_symbolic_value);
+
+
+    // 制約ストア内の変数一覧を作成
+    symbolic_variable.name = "usrVar" + variable_name;
+    constraint_store_.second.insert(symbolic_variable);
 
     it++;
     while(it != variable_map.end())
@@ -115,99 +104,130 @@ void ConstraintStoreBuilderInterval::build_constraint_store(variable_map_t& vari
       if(value != "") break;
       it++;
     }
-    if(it == variable_map.end()) break;
-    str += ",";
-    vars_list += ",";
   }
+  constraint_store_.first.insert(value_set);
 
-  str += "]"; // Andの閉じ括弧
-  vars_list += "]"; // Listの閉じ括弧
-
-  constraint_store_.first.str = str;
-  constraint_store_.second.str = vars_list;
 
   if(debug_mode_)
   {
-    std::cout << constraint_store_.first << std::endl;
-    std::cout << constraint_store_.second << std::endl;
+    std::set<std::set<SymbolicValue> >::iterator or_cons_it;
+    std::set<SymbolicValue>::iterator and_cons_it;
+    std::set<SymbolicVariable>::iterator vars_it = constraint_store_.second.begin();
+
+    or_cons_it = constraint_store_.first.begin();
+    while((or_cons_it) != constraint_store_.first.end())
+    {
+      and_cons_it = (*or_cons_it).begin();
+      while((and_cons_it) != (*or_cons_it).end())
+      {
+        std::cout << (*and_cons_it).str << " ";
+        and_cons_it++;
+      }
+      std::cout << std::endl;
+      or_cons_it++;
+    }
+
+    while((vars_it) != constraint_store_.second.end())
+    {
+      std::cout << *(vars_it) << " ";
+      vars_it++;
+    }
+    std::cout << std::endl;
     std::cout << "--------------------------" << std::endl;
   }
 }
 
 void ConstraintStoreBuilderInterval::build_variable_map(variable_map_t& variable_map)
 {
+  // constraint_store をもとに variable_map をつくる
 
-  // createVariableList[制約ストアの式, 制約ストアに出現する変数の一覧, {}]を送信
-  ml_.put_function("createVariableList", 3);
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(constraint_store_.first.str);
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(constraint_store_.second.str);
-  ml_.put_function("List", 0);
-
-  ml_.skip_pkt_until(RETURNPKT);
-
-  // 各変数名とその値（文字列）が返ってくるのでそれを変数表に入れる
-  // List[pair[x,"1"]]やList[pair[x,"1"], pair[y,"2"], pair[z,"3"]]や
-  // List[pair[x,"1"], pair[Derivative[1][x],"1"], pair[prev[x],"1"], pair[prev[Derivative[2][x],"1"]]]やList[]など
-
-  // 最初はList関数が届くのでその要素数（pairの個数）を得る
-  ml_.MLGetType(); // MLGetTypeしてからでないとMLGetArgCountでエラーになる（原因はよく分からない？）
-  int funcarg;
-  if(! ml_.MLGetArgCount(&funcarg)){
-    std::cout << "#funcCase:MLGetArgCount:unable to get the number of arguments from ml" << std::endl;
-    throw MathLinkError("MLGetArgCount", ml_.MLError());
-  }
-
-  ml_.MLGetNext(); // Listという関数名
-
-  SymbolicVariable symbolic_variable;
-  SymbolicValue symbolic_value;
-  // Listに含まれる1つ1つのpairについて調べる
-  for(int i = 0; i < funcarg; i++)
+  std::set<std::set<SymbolicValue> >::iterator or_cons_it = constraint_store_.first.begin();
+  // Orでつながった制約のうち、最初の1つだけを採用することにする
+  std::set<SymbolicValue>::iterator and_cons_it = (*or_cons_it).begin();
+  while((and_cons_it) != (*or_cons_it).end())
   {
-    ml_.MLGetNext(); // pair関数が得られる
-    ml_.MLGetNext(); // pairという関数名
-//    symbolic_variable.previous = false;    
-  A:
-    switch(ml_.MLGetNext()) // pair[variable, value]のvariable側が得られる
+    std::string cons_str = (*and_cons_it).str;
+    // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
+
+    unsigned int loc = cons_str.find("Equal[", 0);
+    loc += 6; // 文字列"Equal["の長さ分
+    unsigned int comma_loc = cons_str.find(",", loc);
+    if(comma_loc == std::string::npos)
     {
-    case MLTKFUNC: // Derivative[number][]とprev[]
-      switch(ml_.MLGetNext()) // Derivative[number]やprevという関数名
+      std::cout << "can't find comma." << std::endl;
+      return;
+    }
+    std::string variable_str = cons_str.substr(loc, comma_loc-loc);
+    // variable_strは"usrVarx"や"Derivative[1][usrVarx]"など
+
+    // nameとderivative_countへの分離
+    std::string variable_name;
+    int variable_derivative_count;
+    unsigned int variable_loc = variable_str.find("Derivative[", 0);
+    if(variable_loc != std::string::npos)
+    {
+      variable_loc += 11; // "Derivative["の長さ分
+      unsigned int bracket_loc = variable_str.find("][", variable_loc);
+      if(bracket_loc == std::string::npos)
       {
-      case MLTKFUNC: // Derivative[number]
-        ml_.MLGetNext(); // Derivativeという関数名
-        ml_.MLGetNext(); // number
-        int n;
-        if(! ml_.MLGetInteger(&n)){
-          std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
-          throw MathLinkError("MLGetInteger", ml_.MLError());
-        }
-        symbolic_variable.derivative_count = n;
-        ml_.MLGetNext(); // 変数
-        symbolic_variable.name = ml_.get_symbol();
-        break;
-      case MLTKSYM: // prev
-//        symbolic_variable.previous = true;
-        goto A; // prevの中身を調べる（通常変数の場合とDerivativeつきの場合とがある）
-        break;
-      default:
-        ;
+        std::cout << "can't find bracket." << std::endl;
+        return;
       }
-      break;
-    case MLTKSYM: // シンボル（記号）xとかyとか
-      symbolic_variable.derivative_count = 0;
-      symbolic_variable.name = ml_.get_symbol();
-      break;
-    default:
-      ;
+      std::string variable_derivative_count_str = variable_str.substr(variable_loc, bracket_loc-variable_loc);
+      variable_derivative_count = std::atoi(variable_derivative_count_str.c_str());
+      variable_loc = bracket_loc + 2; // "]["の長さ分
+      bracket_loc = variable_str.find("]", variable_loc);
+      if(bracket_loc == std::string::npos)
+      {
+        std::cout << "can't find bracket." << std::endl;
+        return;
+      }
+      variable_loc += 6; // "usrVar"の長さ分
+      variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
+    }
+    else
+    {
+      variable_name =  variable_str.substr(6); // "usrVar"の長さ分
+      variable_derivative_count = 0;
     }
 
-    std::string str = ml_.get_string(); //pair[variable, value]のvalue側（文字列）が得られる
-    symbolic_value.str = str;
+    // 値の取得
+    int str_size = cons_str.size();
+    unsigned int end_loc = cons_str.rfind("]", str_size-1);
+
+    if(end_loc == std::string::npos)
+    {
+      std::cout << "can't find bracket." << std::endl;
+      return;
+    }
+    std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
+
+/*
+    // "["と"]"の個数を調べ、"]"の方が多くなったらEqualの"]"になっている（値部分の終了）
+    int left_bracket_count = 0;
+    int right_bracket_count = 0;
+    char ch;
+    while(left_bracket_count >= right_bracket_count)
+    {
+      // cons_strから1文字取ってきて括弧ならカウントを増やす
+      ch = ;
+      if(ch == '[') left_bracket_count++;
+      else if(ch == ']') right_bracket_count++;
+      value_str.append(ch);
+    }
+*/
+
+    SymbolicVariable symbolic_variable;
+    SymbolicValue symbolic_value;
+    symbolic_variable.name = variable_name;
+    symbolic_variable.derivative_count = variable_derivative_count;
+    symbolic_value.str = value_str;
 
     variable_map.set_variable(symbolic_variable, symbolic_value); 
+    and_cons_it++;
   }
+
+  // [t]を除く処理は要らなさそう？
 }
 
 } //namespace symbolic_simulator

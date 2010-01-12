@@ -6,7 +6,7 @@
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include <map>
-#include "ConstraintStoreBuilderPoint.h"
+#include "ConstraintStoreBuilderInterval.h"
 
 
 namespace hydla {
@@ -22,7 +22,9 @@ public:
 
   void put_vars();
 
-  void put_cs(ConstraintStore constraint_store);
+  void put_cs(ConstraintStoreInterval constraint_store);
+
+  void put_cs_vars(ConstraintStoreInterval constraint_store);
 
   // AskêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);

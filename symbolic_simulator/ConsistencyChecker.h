@@ -5,8 +5,7 @@
 #include "PacketSender.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
-#include <map>
-#include "TellCollector.h"
+#include "Types.h"
 #include "ConstraintStoreBuilderPoint.h"
 
 namespace hydla {
@@ -25,7 +24,7 @@ public:
 private:
   MathLink& ml_;
   /// デバッグ出力をするかどうか
-  bool               debug_mode_;
+  bool debug_mode_;
 
 };
 

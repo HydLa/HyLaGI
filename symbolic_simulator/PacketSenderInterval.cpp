@@ -280,90 +280,94 @@ void PacketSenderInterval::put_vars()
   // 要素の全削除
   vars_.clear();
 
-  if(debug_mode_) std::cout << std::endl;
 }
 
 // 制約ストアの中身を分析して送信
-void PacketSenderInterval::put_cs(ConstraintStore constraint_store)
+void PacketSenderInterval::put_cs(ConstraintStoreInterval constraint_store)
 {
   if(debug_mode_) {
     std::cout << "------Constraint store------" << std::endl;
-    if(constraint_store.first.str == "True")
+  }
+  int or_cons_size = constraint_store.first.size();
+  if(or_cons_size <= 0)
+  {
+    std::cout << "no Constraints" << std::endl;
+    std::cout << "----------------------------" << std::endl;
+    ml_.put_function("List", 0);
+    return;
+  }
+
+  std::set<std::set<SymbolicValue> >::iterator or_cons_it;
+  std::set<SymbolicValue>::iterator and_cons_it;
+  or_cons_it = constraint_store.first.begin();
+  while((or_cons_it) != constraint_store.first.end())
+  {
+    and_cons_it = (*or_cons_it).begin();
+    while((and_cons_it) != (*or_cons_it).end())
     {
-      std::cout << "no Constraints" << std::endl;
+      std::cout << (*and_cons_it).str << " ";
+      and_cons_it++;
     }
-    else
-    {
-      std::cout << constraint_store.first << std::endl;
-    }
+    std::cout << std::endl;
+    or_cons_it++;
+  }
+
+  if(debug_mode_) {
     std::cout << "----------------------------" << std::endl;
   }
 
   ml_.put_function("List", 1);
-  ml_.put_function("ToExpression", 1);
-  std::string str = constraint_store.first.str;
-  ml_.put_string(str);
-
-/*
-  int cs_size = constraint_store.size();
-  // 制約ストアが空の場合は、空のリストをJoinする必要あり
-  if(cs_size < 1)
+  ml_.put_function("Or", or_cons_size);
+  or_cons_it = constraint_store.first.begin();
+  while((or_cons_it) != constraint_store.first.end())
   {
-    ml_.put_function("List", 0);
-    std::cout << "no Constraints" << std::endl;
-    return;
-  }
-  std::cout << std::endl;
-  std::cout << "----------------------------" << std::endl;
-  std::cout << constraint_store;
-  std::cout << "----------------------------" << std::endl;
-
-  ml_.put_function("List", cs_size);
-
-  variable_map_t::const_iterator cs_it = constraint_store.begin();
-  variable_map_t::const_iterator cs_end = constraint_store.end();
-  for(; cs_it!=cs_end; ++cs_it)
-  {
-    SymbolicVariable variable = (*cs_it).first;
-    SymbolicValue value = (*cs_it).second;
-    ml_.put_function("Equal", 2);
-
-    // 変数名
-
-    if(variable.previous == true)
+    int and_cons_size = (*or_cons_it).size();
+    ml_.put_function("And", and_cons_size);
+    and_cons_it = (*or_cons_it).begin();
+    while((and_cons_it) != (*or_cons_it).end())
     {
-      ml_.put_function("prev", 1);
+      ml_.put_function("ToExpression", 1);
+      std::string str = (*and_cons_it).str;
+      ml_.put_string(str);
+      and_cons_it++;
     }
+    or_cons_it++;
+  }
+}
 
-    if(variable.derivative_count > 0)
+// 制約ストアに出現する変数の一覧を送信
+void PacketSenderInterval::put_cs_vars(ConstraintStoreInterval constraint_store)
+{
+  int vars_size = constraint_store.second.size();
+  std::set<SymbolicVariable>::iterator vars_it = constraint_store.second.begin();
+
+  ml_.put_function("List", vars_size);
+  while((vars_it) != constraint_store.second.end())
+  {
+    if(int value = (*vars_it).derivative_count > 0)
     {
+      ml_.MLPutNext(MLTKFUNC);
+      ml_.MLPutArgCount(1);
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_.MLPutArgCount(1);      // this 1 is for the 'f'
       ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
       ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
       ml_.put_symbol("Derivative");
-      ml_.MLPutInteger(variable.derivative_count);
+      ml_.MLPutInteger(value);
+      ml_.put_symbol((*vars_it).name);
+      if(debug_mode_) std::cout << "Derivative[" << value << "][" << (*vars_it).name << "]";
     }
-    ml_.put_symbol(variable.name.c_str());
-
-    vars_.insert(std::make_pair(variable.name, variable.derivative_count + 1));
-
-    // 変数の値
-    if(value.rational == true)
+    else
     {
-      ml_.put_function("Rational", 2);
-      ml_.MLPutInteger(value.numerator);
-      ml_.MLPutInteger(value.denominator);
+      ml_.put_function((*vars_it).name, 1);
+      if(debug_mode_) std::cout << (*vars_it).name;
     }
-    else 
-    {
-      ml_.MLPutInteger(value.numerator);
-    }
+    ml_.put_symbol("t");
+    if(debug_mode_) std::cout << "[t] ";
+    vars_it++;
   }
-*/
-
+  if(debug_mode_) std::cout << std::endl;
 }
-
 
 } //namespace symbolic_simulator
 } // namespace hydla

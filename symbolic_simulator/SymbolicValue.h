@@ -27,6 +27,12 @@ struct SymbolicValue {
     return s;
   }
 
+  friend bool operator<(const SymbolicValue& lhs, 
+                        const SymbolicValue& rhs)
+  {
+    return lhs.str < rhs.str;
+  }
+
   friend std::ostream& operator<<(std::ostream& s, 
                                   const SymbolicValue & v)
   {

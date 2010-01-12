@@ -5,14 +5,7 @@
 checkEntailment[guard_, store_, vars_] := (
   tmpSol = Reduce[Append[store, guard], vars, Reals];
   If[tmpSol===False, Return[-1]];
-  If[Reduce[Append[tells, Not[tmpSol]], vars, Reals]===False, 1, 0]
-);
-
-checkEntailmentInterval[guard_, store_, vars_] := (
-  Return[ToString[guard]]
-  (*                                             tmpSol = Reduce[Append[store, guard], vars, Reals];
-  If[tmpSol===False, Return[-1]];
-   If[Reduce[Append[tells, Not[tmpSol]], vars, Reals]===False, 1, 0]*)
+  If[Reduce[Append[store, Not[tmpSol]], vars, Reals]===False, 1, 0]
 );
 
 (*
@@ -98,7 +91,6 @@ isRequiredVariable[var_, tellVars_] := (
 );
 
 isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
-                                                                 (*Return[ToString[tellsVars]]*)
   If[store =!= {},
      (* 制約ストアが空でない場合、不要な初期値制約を取り除く必要がある *)
      newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]];
@@ -122,7 +114,6 @@ isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
      cons = Map[(ToString[FullForm[#]]) &, Join[tells, removedStore]];
      vars = Join[tellsVars, removedStoreVars];
      If[sol =!= underconstraint, {1, cons, vars}, {2, cons, vars}],
-     (*If[sol =!= underconstraint, {1, ToString[FullForm[cons]], ToString[FullForm[vars]]}, {2, cons, vars}],*)
      0]
 );
 
