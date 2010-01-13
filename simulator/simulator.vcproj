@@ -159,6 +159,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AskDisjunctionSplitter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InitNodeRemover.cpp"
 				>
 			</File>
@@ -178,6 +182,10 @@
 			</File>
 			<File
 				RelativePath=".\AskDisjunctionFormatter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\AskDisjunctionSplitter.h"
 				>
 			</File>
 			<File

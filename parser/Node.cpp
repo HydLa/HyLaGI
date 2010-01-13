@@ -98,6 +98,8 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
   }
 
   if(typeid(*this) == typeid(n)) {
+    // 双方の子ノードの集合が同一かどうか調べる
+
     child_node_list_t this_node;
     child_node_list_t target_node;
     create_child_node_list(this_node,   this);

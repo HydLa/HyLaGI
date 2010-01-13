@@ -25,6 +25,7 @@
 #include "ModuleSetContainerCreator.h"
 #include "InitNodeRemover.h"
 
+#include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
 
 // symbolic_simulator
@@ -130,6 +131,10 @@ void hydla_main(int argc, char* argv[])
       pt->dump(std::cout);
     }
 */
+  AskDisjunctionSplitter ads;
+  ads.split(pt.get());
+  std::cout << "split\n" << std::endl;
+  std::cout << *pt << std::endl;
 
   /*
   AskDisjunctionFormatter<DefaultNodeFactory> adf;

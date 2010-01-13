@@ -1,5 +1,7 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_FORMATTER_H_
-#define _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_FORMATTER_H_
+#ifndef _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_SPLITTER_H_
+#define _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_SPLITTER_H_
+
+#include <vector>
 
 #include "Node.h"
 #include "ParseTree.h"
@@ -8,19 +10,23 @@
 namespace hydla {
 namespace simulator {
 
-class AskDisjunctionFormatter : 
+class AskDisjunctionSplitter : 
   public hydla::parse_tree::TreeVisitor
 {
 public:
-  typedef hydla::parse_tree::node_sptr node_sptr;
-  typedef boost::shared_ptr<hydla::parse_tree::LogicalOr>  logical_or_sptr;
+  typedef hydla::parse_tree::node_sptr                     node_sptr;
   typedef boost::shared_ptr<hydla::parse_tree::LogicalAnd> logical_and_sptr;
+  typedef boost::shared_ptr<hydla::parse_tree::LogicalOr>  logical_or_sptr;
+  typedef boost::shared_ptr<hydla::parse_tree::Ask>        ask_sptr;
 
-  AskDisjunctionFormatter();
+  typedef std::vector<node_sptr>                           splitted_guard_nodes_t;
+  
 
-  virtual ~AskDisjunctionFormatter();
+  AskDisjunctionSplitter();
 
-  void format(hydla::parse_tree::ParseTree* pt);
+  virtual ~AskDisjunctionSplitter();
+
+  void split(hydla::parse_tree::ParseTree* pt);
 
   // 制約呼び出し
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
@@ -101,6 +107,13 @@ private:
     dispatch_rhs(node);
   }
 
+  ask_sptr create_ask_node(node_sptr guard, node_sptr child)
+  {
+    ask_sptr ask_node = pt_->create_node<hydla::parse_tree::Ask>();
+    ask_node->set_guard(guard);
+    ask_node->set_child(child);
+    return ask_node;
+  }
 
   /**
    * フォーマット対象となるParseTree
@@ -113,13 +126,14 @@ private:
    */
   node_sptr new_child_;
 
+  
   /**
-   * ORノードとANDノード間の交換がおこなわれたかどうか
+   * 分割されたguard群
    */
-  bool swapped_;
+  splitted_guard_nodes_t splitted_guard_nodes_;
 };
 
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_FORMATTER_H_
+#endif // _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_SPLITTER_H_

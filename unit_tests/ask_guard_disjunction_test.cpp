@@ -7,15 +7,13 @@
 #include "test_common.h"
 #ifndef DISABLE_AST_GUARD_DISJUNCTION_TEST
 
-#include <boost/regex.hpp>
-
 #include <iostream>
-#include <sstream>
 
-#include "DefaultNodeFactory.h"
 #include "ParseTree.h"
-#include "ParseError.h"
+#include "DefaultNodeFactory.h"
+
 #include "AskDisjunctionFormatter.h"
+#include "AskDisjunctionSplitter.h"
 
 using namespace std;
 using namespace hydla;
@@ -33,7 +31,19 @@ bool comp_formatted_struct(std::string lhs, std::string rhs)
   pt_lhs.parse_string<DefaultNodeFactory>(lhs); 
   adf.format(&pt_lhs);
   
-  //pt_lhs->to_graphviz(std::cout);
+  ParseTree pt_rhs;
+  pt_rhs.parse_string<DefaultNodeFactory>(rhs); 
+
+  return pt_lhs.is_same_struct(pt_rhs, false);
+}
+
+bool comp_splitted_struct(std::string lhs, std::string rhs)
+{
+  AskDisjunctionSplitter ads;
+
+  ParseTree pt_lhs;
+  pt_lhs.parse_string<DefaultNodeFactory>(lhs); 
+  ads.split(&pt_lhs);
   
   ParseTree pt_rhs;
   pt_rhs.parse_string<DefaultNodeFactory>(rhs); 
@@ -75,6 +85,33 @@ BOOST_AUTO_TEST_CASE(ask_guard_disjunction_format_test)
   BOOST_CHECK(comp_formatted_struct(
     "(a=1 | (b=2 | c=3)) & (d=4 | e=5) => z=1.", 
     "(a=1 & d=4) | (a=1 & e=5) | (b=2 & d=4) | (b=2 & e=5) | (c=3 & d=4) | (c=3 & e=5) => z=1."));
+}
+
+BOOST_AUTO_TEST_CASE(ask_guard_disjunction_split_test)
+{  
+  // •Ï‰»‚È‚µ
+  BOOST_CHECK(comp_splitted_struct("x=1=>z=1.", "x=1=>z=1."));  
+  BOOST_CHECK(comp_splitted_struct("a=1 & b=2 => z=1.", "a=1 & b=2 => z=1."));
+  BOOST_CHECK(comp_splitted_struct("a=1 & b=2 & c=3 => z=1.", "a=1 & b=2 & c=3 => z=1."));
+    
+  // •ªŠ„
+  BOOST_CHECK(comp_splitted_struct("a=1 | b=2 => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1)."));
+
+  BOOST_CHECK(comp_splitted_struct("(a=1 | b=2) | c=3 => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1) & (c=3 => z=1)."));
+  BOOST_CHECK(comp_splitted_struct("a=1 | (b=2 | c=3) => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1) & (c=3 => z=1)."));
+
+  BOOST_CHECK(comp_splitted_struct("(a=1 | (b=2 | (c=3 | d=4))) => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1) & (c=3 => z=1) & (d=4 => z=1)."));
+  BOOST_CHECK(comp_splitted_struct("(((a=1 | b=2) | c=3) | d=4) => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1) & (c=3 => z=1) & (d=4 => z=1)."));
+  BOOST_CHECK(comp_splitted_struct("a=1 | (b=2 | c=3) | d=4 => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1) & (c=3 => z=1) & (d=4 => z=1)."));
+  BOOST_CHECK(comp_splitted_struct("(a=1 | b=2) | (c=3 | d=4) => z=1.", 
+    "(a=1 => z=1) & (b=2 => z=1) & (c=3 => z=1) & (d=4 => z=1)."));
+
 }
 
 #endif // DISABLE_AST_GUARD_DISJUNCTION_TEST
