@@ -133,14 +133,17 @@ Block[{
       (* true *)
       (* ‰ð‚È‚µ‚Æ‹«ŠE’l‚Ì‰ð‚ð‹æ•Ê‚·‚é *)  
       sol = Reduce[{timeMinCons && (maxTime>=t) && (integAsk)}, t];
-      If[sol===False, minT = error];
+      If[sol=!=False, 
+         (* true *)
+         (* ¬‚è—§‚Ât‚ÌÅ¬’l‚ð‹‚ß‚é *)
+         minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
+                            Minimize::wksol]];
+         If[Length[$MessageList]>0,
+            Throw[{error, "cannot solve min time", minT, $MessageList}]],
 
-      (* ¬‚è—§‚Ât‚ÌÅ¬’l‚ð‹‚ß‚é *)
-      minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
-                         Minimize::wksol]];
-      If[Length[$MessageList]>0,
-         Throw[{error, "cannot solve min time", minT, $MessageList}]],
-        
+         (* false *)
+         minT = error],
+      
       (* false *)
       minT=0];
 
@@ -161,7 +164,7 @@ Block[{
              Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk]]]
 ];
 
-(* Print[nextPointPhaseTime[False, 10, {{t<=5, c3}}, {{t!=0, c2}, {t-5==0, c1}}]] *)
+(* Print[nextPointPhaseTime[False, 10, {}, {{t*t==2, c3}}]] *)
 
 createIntegUsrVar[var_] := ToExpression["Integ" <> ToString[var]];
 
