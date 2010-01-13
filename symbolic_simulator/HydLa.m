@@ -43,7 +43,7 @@ createVariableList[Or[expr_, others__], vars_, result_] := (
 );
 
 createVariableList[Equal[varName_, varValue_], vars_, result_] := (
-  sol = (Solve[Equal[varName_, varValue_], vars])[[1]];
+  sol = (Solve[Equal[varName, varValue], vars])[[1]];
   createVariableList[sol, result]
 );
 
@@ -150,8 +150,8 @@ Block[{
     If[includeZero===True && minT=!=0, minT=error];
 
     Which[minT === error,      {currentMinT, currentMinAsk},
-          minT <  currentMinT, {minT,        {ask}},
-          minT == currentMinT, {minT,        Append[currentMinAsk, ask]},
+          minT <  currentMinT, {minT,        {{type, ask}}},
+          minT == currentMinT, {minT,        Append[currentMinAsk, {type, ask}]},
           True,                {currentMinT, currentMinAsk}]
   );
 
@@ -161,7 +161,7 @@ Block[{
              Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk]]]
 ];
 
-(* nextPointPhaseTime[False, 10, {{t<=3, c3}}, {{t!=0, c2}, {t-5==0, c1}}] *)
+(* Print[nextPointPhaseTime[False, 10, {{t<=5, c3}}, {{t!=0, c2}, {t-5==0, c1}}]] *)
 
 createIntegUsrVar[var_] := ToExpression["Integ" <> ToString[var]];
 
