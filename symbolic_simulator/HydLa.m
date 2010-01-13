@@ -163,6 +163,23 @@ Block[{
 
 (* nextPointPhaseTime[False, 10, {{t<=3, c3}}, {{t!=0, c2}, {t-5==0, c1}}] *)
 
+createIntegUsrVar[var_] := ToExpression["Integ" <> ToString[var]];
+
+var2IntegUsrVar[vars_] := Map[createIntegUsrVar, vars];
+
+integrateCalc[cons_, vars_, posAsk_, negAsk_, maxTime_] := (
+  tmpIntegSol = First[DSolve[cons, vars, t]];
+  tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
+  tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
+  {tmpMinT, tmpMinAskIDs} = nextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
+  varsND = DeleteDuplicates[Map[removeDash, vars]];
+  integVars = var2IntegUsrVar[Map[(# /. x_[t] -> x) &, varsND]];
+  MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)]) &, {integVars, varsND}];
+  tmpPrevConsTable = MapThread[(#1 == simplify[(#2 /. t -> tmpMinT)])&,
+                               {vars, Flatten[Map[({#[t], #'[t]}) &, integVars]]}];
+  {tmpPrevConsTable, tmpMinAskIDs}
+);
+
 
 (* $MaxExtraPrecision = Infinity *)
 
