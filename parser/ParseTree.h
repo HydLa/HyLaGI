@@ -64,7 +64,7 @@ public:
   /**
    * ノードのIDの更新をおこなう
    */
-  void uptate_node_id();
+  void update_node_id();
 
   /**
    * 変数を登録する

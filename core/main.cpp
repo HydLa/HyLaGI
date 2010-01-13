@@ -25,6 +25,7 @@
 #include "ModuleSetContainerCreator.h"
 #include "InitNodeRemover.h"
 
+// simulator
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
 
@@ -123,26 +124,17 @@ void hydla_main(int argc, char* argv[])
     pt->parse<DefaultNodeFactory>(std::cin);
   }
 
-/*
-    if(po.count("graphviz")) {
-      pt->to_graphviz(std::cout);
-    }
-    else {
-      pt->dump(std::cout);
-    }
-*/
+  // AskのガードをDNF形式に変換
+  AskDisjunctionFormatter adf;
+  adf.format(pt.get());
+  HYDLA_LOGGER_DEBUG(
+    "*** Format Ask Disjunction ***\n", *pt);
+  
+  // DNF形式のガードを分割
   AskDisjunctionSplitter ads;
   ads.split(pt.get());
-  std::cout << "split\n" << std::endl;
-  std::cout << *pt << std::endl;
-
-  /*
-  AskDisjunctionFormatter<DefaultNodeFactory> adf;
-  adf.format(pt);
-  std::cout << "#*** Format Ask Disjunction ***\n"
-            << *pt << std::endl;
-  return;
-  */
+  HYDLA_LOGGER_DEBUG(
+    "*** Split Ask Disjunction ***\n", *pt);
 
   // alwaysが付いていない制約を取り除いたパースツリーの構築
   boost::shared_ptr<ParseTree> pt_no_init_node(new hydla::parse_tree::ParseTree(*pt));

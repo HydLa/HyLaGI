@@ -1,4 +1,5 @@
 #include "TellCollector.h"
+#include "Logger.h"
 
 #include <assert.h>
 #include <iostream>
@@ -6,21 +7,8 @@
 namespace hydla {
 namespace simulator {
   
-namespace {
-class NodeDumper {
-public:
-  template<typename T>
-  void operator()(T& it) 
-  {
-    std::cout << *it << "\n";
-  }
-};
-}
-
-TellCollector::TellCollector(const module_set_sptr& module_set, 
-                             bool debug_mode) :
-  module_set_(module_set),
-  debug_mode_(debug_mode)
+TellCollector::TellCollector(const module_set_sptr& module_set) :
+  module_set_(module_set)
 {}
 
 TellCollector::~TellCollector()
@@ -32,6 +20,28 @@ void TellCollector::collected_tells(tells_t* collected_tells)
   collected_tells->reserve(collected_tells_.size());
   collected_tells->insert(collected_tells->end(), 
     collected_tells_.begin(), collected_tells_.end());
+}
+
+namespace {
+
+  struct NodeDumper {
+      
+    template<typename T>
+    NodeDumper(T it, T end) 
+    {
+      for(; it!=end; ++it) {
+        ss << **it << "\n";
+      }
+    }
+
+    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+    {
+      s << nd.ss.str();
+      return s;
+    }
+
+    std::stringstream ss;
+  };
 }
 
 void TellCollector::collect(tells_t*                 tells,
@@ -64,10 +74,9 @@ void TellCollector::collect(tells_t*                 tells,
     }
   }
 
-  if(debug_mode_) {
-    std::cout << "#** collected tells **\n";  
-    std::for_each(tells->begin(), tells->end(), NodeDumper());
-  }
+  HYDLA_LOGGER_DEBUG(
+    "#** collected tells **\n", 
+    NodeDumper(tells->begin(), tells->end()));
 }
 
 // êßñÒéÆ

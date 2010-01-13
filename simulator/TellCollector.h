@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 
@@ -20,8 +21,7 @@ namespace simulator {
  */
 class TellCollector : public parse_tree::TreeVisitor {
 public:
-  TellCollector(const module_set_sptr& module_set, 
-                bool debug_mode = false);
+  TellCollector(const module_set_sptr& module_set);
 
   virtual ~TellCollector();
 
@@ -129,9 +129,6 @@ private:
 
   /// 探索したalwaysノードのリスト
   visited_always_t   visited_always_;
-
-  /// デバッグ出力をするかどうか
-  bool               debug_mode_;
 };
 
 } //namespace simulator

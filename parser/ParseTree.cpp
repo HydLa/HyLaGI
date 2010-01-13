@@ -35,7 +35,7 @@ ParseTree::ParseTree(const ParseTree& pt) :
   node_map_(pt.node_map_),
   max_node_id_(pt.max_node_id_)
 {
-  uptate_node_id();
+  update_node_id();
 }
 
 ParseTree::~ParseTree()
@@ -66,10 +66,10 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
 
   HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
 
-  uptate_node_id();
+  update_node_id();
 }
 
-void ParseTree::uptate_node_id()
+void ParseTree::update_node_id()
 {
   NodeIDUpdater updater;
   updater.update(this);
@@ -79,7 +79,7 @@ node_sptr ParseTree::swap_tree(const node_sptr& tree)
 {
   node_sptr ret(node_tree_);
   node_tree_ = tree;
-  uptate_node_id();
+  update_node_id();
   return ret;
 }
 

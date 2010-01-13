@@ -20,8 +20,7 @@ namespace simulator {
  */
 class AskCollector : public parse_tree::TreeVisitor {
 public:
-  AskCollector(const module_set_sptr& module_set,
-               bool debug_mode = false);
+  AskCollector(const module_set_sptr& module_set);
 
   virtual ~AskCollector();
 
@@ -64,9 +63,6 @@ private:
 
   /// 有効となっているaskのリスト
   positive_asks_t*         positive_asks_;
-
-  /// デバッグ出力をするかどうか
-  bool               debug_mode_;
 };
 
 } //namespace simulator

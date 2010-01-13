@@ -1,12 +1,14 @@
 #include "AskCollector.h"
 
-#include <assert.h>
-
+#include <cassert>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 
 #include <boost/bind.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
+
+#include "Logger.h"
 
 using namespace std;
 using namespace hydla::parse_tree;
@@ -15,20 +17,28 @@ namespace hydla {
 namespace simulator {
   
 namespace {
-class NodeDumper {
-public:
-  template<typename T>
-  void operator()(T& it) 
-  {
-    std::cout << *it << "\n";
-  }
-};
+  struct NodeDumper {
+      
+    template<typename T>
+    NodeDumper(T it, T end) 
+    {
+      for(; it!=end; ++it) {
+        ss << **it << "\n";
+      }
+    }
+
+    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+    {
+      s << nd.ss.str();
+      return s;
+    }
+
+    std::stringstream ss;
+  };
 }
 
-AskCollector::AskCollector(const module_set_sptr& module_set,
-                           bool debug_mode) :
-  module_set_(module_set),
-  debug_mode_(debug_mode)
+AskCollector::AskCollector(const module_set_sptr& module_set) :
+  module_set_(module_set)
 {}
 
 AskCollector::~AskCollector()
@@ -51,13 +61,12 @@ void AskCollector::collect_ask(const expanded_always_t* expanded_always,
            expanded_always->end(),
            bind(&Always::accept, _1, _1, this));
 
-  if(debug_mode_) {
-    std::cout << "#** positive asks **\n";  
-    std::for_each(positive_asks->begin(), positive_asks->end(), NodeDumper());
-
-    std::cout << "#** negative asks **\n";  
-    std::for_each(negative_asks->begin(), negative_asks->end(), NodeDumper());
-  }
+    
+  HYDLA_LOGGER_DEBUG(
+    "#** positive asks **\n", 
+    NodeDumper(positive_asks->begin(), positive_asks->end()),
+    "#** negative asks **\n",
+    NodeDumper(negative_asks->begin(), negative_asks->end()));
 }
 
 // êßñÒéÆ

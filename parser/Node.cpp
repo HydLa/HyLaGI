@@ -280,7 +280,6 @@ node_sptr Caller::clone()
 {
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
-  n->id_  = id_;
 
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
@@ -294,7 +293,6 @@ node_sptr Definition::clone()
 {
   boost::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());
   n->name_ = name_;
-  n->id_  = id_;
 
   n->bound_variables_.resize(bound_variables_.size());
   copy(bound_variables_.begin(), bound_variables_.end(),  n->bound_variables_.begin());

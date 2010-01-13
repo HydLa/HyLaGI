@@ -55,31 +55,47 @@ public:
    * exactly_sameが真の場合，
    * x=1と1=xの様に対称性をもつツリーは同一であるとはみなされない
    * exactly_sameが偽の場合，
-   * (x=1 & 2=y) & z=3 と x=1 & (y=2 & z=3)
+   * (x=1 & 2=y) & z=3 と x=1 & (y=2 & z=3) のようなHydLaプログラムとして
+   * 同一の意味を持つ構造の場合は同一とみなされる
    */
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
+  /**
+   * ノードの型の名前
+   */
   virtual std::string get_node_type_name() const {
     return "Node";
   }
 
+  /**
+   * ノードの状態を出力する
+   */
   virtual std::ostream& dump(std::ostream& s) const 
   {
     return s << get_node_type_name()
              << "<" << get_id() << ">";
   }
 
+  /**
+   * ノードIDの設定
+   */
   void set_id(node_id_t id)
   {
     id_ = id;
   }
 
+  /**
+   * ノードIDを得る
+   */
   node_id_t get_id() const 
   {
     return id_;
   }
 
-protected:
+private:
+  /**
+   * ノードID
+   */
   node_id_t id_;
 };
 
@@ -132,7 +148,6 @@ public:
   node_type_sptr clone(node_type_sptr n)
   {
     n->child_ = child_->clone();
-    n->id_    = id_;
     return n;
   }
 
@@ -228,7 +243,6 @@ public:
   {
     n->lhs_ = lhs_->clone();
     n->rhs_ = rhs_->clone();
-    n->id_  = id_;
     return n;
   }
 
@@ -819,7 +833,6 @@ public:
   {
     boost::shared_ptr<Number> n(new Number());
     n->number_ = number_;
-    n->id_   = id_;
     return n;
   }
   
@@ -870,7 +883,6 @@ public:
   {
     boost::shared_ptr<Variable> n(new Variable());
     n->name_ = name_;
-    n->id_   = id_;
     return n;
   }
     
