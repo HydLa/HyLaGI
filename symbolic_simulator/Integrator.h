@@ -13,7 +13,7 @@
 namespace hydla {
 namespace symbolic_simulator {
 
-struct State {
+struct NextPointPhaseState {
 //    hydla::symbolic_simulator::SymbolicTime next_point_phase_time;
   std::string next_point_phase_time;
   hydla::symbolic_simulator::variable_map_t variable_map;
@@ -23,13 +23,13 @@ struct State {
 typedef std::vector<std::pair<std::string, int> > ask_list_t;
 
 struct IntegrateResult {
-  std::vector<State> states;
+  std::vector<NextPointPhaseState> states;
   ask_list_t ask_list;
 
   std::ostream& dump(std::ostream& s) const
   {
     s << "states: " << std::endl;
-    std::vector<State>::const_iterator state_it = states.begin();
+    std::vector<NextPointPhaseState>::const_iterator state_it = states.begin();
     while((state_it)!=states.end())
     {
       s << "  next_point_phase_time=" << (*state_it).next_point_phase_time << ", ";

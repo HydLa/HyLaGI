@@ -220,15 +220,15 @@ pc.check();
     tmp_cons_it++;
   }
 
-  State states;
-  states.next_point_phase_time = next_point_phase_time;
-  states.variable_map = variable_map;
-  states.is_max_time = is_max_time;
-  std::vector<State> states_vector;
-  states_vector.push_back(states);
+  NextPointPhaseState next_point_phase_state;
+  next_point_phase_state.next_point_phase_time = next_point_phase_time;
+  next_point_phase_state.variable_map = variable_map;
+  next_point_phase_state.is_max_time = is_max_time;
+  std::vector<NextPointPhaseState> next_point_phase_states_vector;
+  next_point_phase_states_vector.push_back(next_point_phase_state);
 
   IntegrateResult integrate_result;
-  integrate_result.states = states_vector;
+  integrate_result.states = next_point_phase_states_vector;
   integrate_result.ask_list = changed_asks;
 
   return integrate_result;
