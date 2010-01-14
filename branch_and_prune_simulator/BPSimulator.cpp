@@ -136,7 +136,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 
   //TODO: do_point_phaseの引数でpositive_asksみたいに引き回す必要あり
   expanded_always_t expanded_always;
-  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
   bool expanded   = true;
   while(expanded) {
@@ -218,7 +218,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   new_state->phase = IntervalPhase;
   // ConstraintStoreからvariable_mapを作成
   constraint_store.build_variable_map(new_state->variable_map);
-  expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
+  //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   push_phase_state(new_state);
 
   std::cout << new_state->variable_map;
@@ -243,7 +243,7 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   negative_asks_t negative_asks;
   //TODO: do_point_phaseの引数でpositive_asksみたいに引き回す必要あり
   expanded_always_t expanded_always;
-  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
   bool expanded = true;
   while(expanded) {
     // tell制約を集める

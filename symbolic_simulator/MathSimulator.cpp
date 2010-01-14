@@ -188,7 +188,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
 
   expanded_always_t expanded_always;
-  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
   csbp.build_constraint_store((*state).variable_map);
 
@@ -230,7 +230,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   // Interval Phase�ֈڍs
   phase_state_sptr new_state(create_new_phase_state());
   new_state->phase        = IntervalPhase;
-  expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
+  //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   csbp.build_variable_map(new_state->variable_map);
   new_state->module_set_container = msc_no_init_discreteask_;
 
@@ -258,7 +258,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   negative_asks_t negative_asks;
 
   expanded_always_t expanded_always;
-  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
   csbi.build_constraint_store((*state).variable_map);
 

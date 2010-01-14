@@ -205,7 +205,8 @@ public:
     expanded_always_t::const_iterator it  = ea_sptr.begin();
     expanded_always_t::const_iterator end = ea_sptr.end();
     for(; it!=end; ++it) {
-      ea_id.push_back(parse_tree_->get_node_id(*it));
+      //ea_id.push_back(parse_tree_->get_node_id(*it));
+      ea_id.push_back((*it)->get_id());
     }
   }
 
