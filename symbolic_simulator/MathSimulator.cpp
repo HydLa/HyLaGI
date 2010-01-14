@@ -257,13 +257,16 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
 
+  expanded_always_t expanded_always;
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+
   csbi.build_constraint_store((*state).variable_map);
 
   bool expanded   = true;
   while(expanded) {
     // tell制約を集める
     tell_collector.collect_all_tells(&tell_list,
-                                     &state->expanded_always, 
+                                     &expanded_always, 
                                      &positive_asks);
 
     // 制約が充足しているかどうかの確認
@@ -272,7 +275,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     }
 
     // ask制約を集める
-    ask_collector.collect_ask(&state->expanded_always, 
+    ask_collector.collect_ask(&expanded_always, 
                               &positive_asks, 
                               &negative_asks);
 

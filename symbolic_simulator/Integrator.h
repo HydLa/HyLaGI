@@ -25,7 +25,7 @@ typedef std::vector<std::pair<std::string, int> > ask_list_t;
 typedef struct IntegrateResult_ {
   std::vector<State> states;
   ask_list_t ask_list;
-
+/*
   std::ostream& dump(std::ostream& s) const
   {
     s << "states: " << std::endl;
@@ -53,7 +53,7 @@ typedef struct IntegrateResult_ {
   {
     return t.dump(s);
   }
-
+*/
 } IntegrateResult;
 
 class Integrator
