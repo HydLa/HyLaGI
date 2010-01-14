@@ -24,7 +24,7 @@ public:
 
   virtual ~ConstraintStoreBuilderPoint();
 
-  void build_constraint_store(variable_map_t& variable_map);
+  void build_constraint_store(const variable_map_t& variable_map);
 
   void build_variable_map(variable_map_t& variable_map);
 

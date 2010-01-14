@@ -14,8 +14,10 @@
 
 #include "symbolic_simulator/ConsistencyChecker.h"
 #include "symbolic_simulator/mathlink_helper.h"
-#include "parser/HydLaParser.h"
+#include "parser/HydLaAST.h"
 #include "simulator/TellCollector.h"
+#include "parser/NodeFactory.h"
+#include "ParseTreeGenerator.h"
 
 using namespace hydla;
 using namespace hydla::parser;
@@ -35,31 +37,36 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   ml.skip_pkt_until(RETURNPKT);
   ml.MLNewPacket();
 
-  boost::shared_ptr<NodeFactory> nf(new NodeFactory());
-  HydLaParser hp(nf);
+  ParseTreeGenerator<DefaultNodeFactory> ptg;
+//  boost::shared_ptr<DefaultNodeFactory> nf(new DefaultNodeFactory());  から変えてある
+  HydLaAST ast;
 
 #define SS_CONSISTEMCY_CHECKER_TEST(EXP)                          \
-  hp.parse_string(EXP);                                           \
-  boost::shared_ptr<ModuleSet> ms(                                \
-    new ModuleSet("a", hp.parse_tree().get_tree()));              \
-  TellCollector tc(ms);                                           \
-  TellCollector::tells_t tells;                                   \
+  ast.parse_string(EXP);                                          \
+  ptg.generate(ast.get_tree_iterator());                          \
+  TellCollector tc(ms, false);                                    \
+  tells_t tells;                                                  \
   expanded_always_t expanded_always;                              \
   positive_asks_t positive_asks;                                  \
   tc.collect_all_tells(&tells, &expanded_always, &positive_asks); \
   hydla::symbolic_simulator::ConsistencyChecker cc(ml);           \
+  ConstraintStoreBuilderPoint csbp;                               \
+  csbp.build_constraint_store();                                  \
 
+//  元々はSS_CONSISTEMCY_CHECKER_TESTの2行目あたりに以下の記述があったが変えてある
+//  module_set_sptr ms(                                           
+//    new ModuleSet("a", ast.parse_tree().get_tree()));           
 
 #define SS_CONSISTEMCY_CHECKER_TEST_T(EXP)              \
   {                                                     \
     SS_CONSISTEMCY_CHECKER_TEST(EXP);                   \
-    BOOST_CHECK_MESSAGE(cc.is_consistent(tells), EXP);  \
+    BOOST_CHECK_MESSAGE(cc.is_consistent(tells, csbp.getcs()), EXP);  \
   }
 
 #define SS_CONSISTEMCY_CHECKER_TEST_F(EXP)              \
   {                                                     \
     SS_CONSISTEMCY_CHECKER_TEST(EXP);                   \
-    BOOST_CHECK_MESSAGE(!cc.is_consistent(tells), EXP); \
+    BOOST_CHECK_MESSAGE(!cc.is_consistent(tells, csbp.getcs()), EXP); \
   }
 
   SS_CONSISTEMCY_CHECKER_TEST_T("x=1.");

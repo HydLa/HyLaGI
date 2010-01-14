@@ -16,7 +16,7 @@ ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(MathLink& ml, bool debu
 ConstraintStoreBuilderPoint::~ConstraintStoreBuilderPoint()
 {}
 
-void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variable_map)
+void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& variable_map)
 {
   // variable_map をもとに constraint_store をつくる
 
@@ -42,7 +42,7 @@ void ConstraintStoreBuilderPoint::build_constraint_store(variable_map_t& variabl
   SymbolicVariable symbolic_variable;
   std::string variable_name;
 
-  variable_map_t::variable_list_t::iterator it = variable_map.begin();
+   variable_map_t::variable_list_t::const_iterator it = variable_map.begin();
 
   while(it != variable_map.end())
   {
@@ -202,21 +202,6 @@ void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t& variable_ma
       return;
     }
     std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
-
-/*
-    // "["と"]"の個数を調べ、"]"の方が多くなったらEqualの"]"になっている（値部分の終了）
-    int left_bracket_count = 0;
-    int right_bracket_count = 0;
-    char ch;
-    while(left_bracket_count >= right_bracket_count)
-    {
-      // cons_strから1文字取ってきて括弧ならカウントを増やす
-      ch = ;
-      if(ch == '[') left_bracket_count++;
-      else if(ch == ']') right_bracket_count++;
-      value_str.append(ch);
-    }
-*/
 
     SymbolicVariable symbolic_variable;
     SymbolicValue symbolic_value;

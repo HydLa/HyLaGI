@@ -170,7 +170,7 @@ createIntegUsrVar[var_] := ToExpression["Integ" <> ToString[var]];
 
 var2IntegUsrVar[vars_] := Map[createIntegUsrVar, vars];
 
-integrateCalc[cons_, vars_, posAsk_, negAsk_, maxTime_] := (
+integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
   tmpIntegSol = First[DSolve[cons, vars, t]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
@@ -178,9 +178,9 @@ integrateCalc[cons_, vars_, posAsk_, negAsk_, maxTime_] := (
   varsND = DeleteDuplicates[Map[removeDash, vars]];
   integVars = var2IntegUsrVar[Map[(# /. x_[t] -> x) &, varsND]];
   MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)]) &, {integVars, varsND}];
-  tmpPrevConsTable = MapThread[(#1 == simplify[(#2 /. t -> tmpMinT)])&,
+  tmpPrevConsTable = MapThread[(ToString[FullForm[#1 == simplify[(#2 /. t -> tmpMinT)]]])&,
                                {vars, Flatten[Map[({#[t], #'[t]}) &, integVars]]}];
-  {tmpPrevConsTable, tmpMinAskIDs}
+  {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs}
 );
 
 

@@ -13,6 +13,10 @@
 #include "ConsistencyChecker.h"
 #include "EntailmentChecker.h"
 #include "ConstraintStoreBuilderPoint.h"
+#include "ConsistencyCheckerInterval.h"
+#include "EntailmentCheckerInterval.h"
+#include "ConstraintStoreBuilderInterval.h"
+#include "Integrator.h"
 
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -174,8 +178,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   ConstraintStoreBuilderPoint csbp(ml_);
-  variable_map_t vm;
-  csbp.build_constraint_store(vm);
+
   ConsistencyChecker consistency_checker(ml_);
   EntailmentChecker  entailment_checker(ml_);
 
@@ -186,7 +189,9 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
   expanded_always_t expanded_always;
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
-  
+
+  csbp.build_constraint_store((*state).variable_map);
+
   bool expanded   = true;
   while(expanded) {
     // tell制約を集める
@@ -240,6 +245,71 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
                                    const phase_state_const_sptr& state)
 {
 
+  TellCollector tell_collector(ms);
+  AskCollector  ask_collector(ms);
+  ConstraintStoreBuilderInterval csbi(ml_);
+
+  ConsistencyCheckerInterval consistency_checker_interval(ml_);
+  EntailmentCheckerInterval  entailment_checker_interval(ml_);
+  Integrator integrator(ml_);
+
+  tells_t         tell_list;
+  positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
+
+  csbi.build_constraint_store((*state).variable_map);
+
+  bool expanded   = true;
+  while(expanded) {
+    // tell制約を集める
+    tell_collector.collect_all_tells(&tell_list,
+                                     &state->expanded_always, 
+                                     &positive_asks);
+
+    // 制約が充足しているかどうかの確認
+    if(!consistency_checker_interval.is_consistent(tell_list, csbi.get_constraint_store())){
+      return false;
+    }
+
+    // ask制約を集める
+    ask_collector.collect_ask(&state->expanded_always, 
+                              &positive_asks, 
+                              &negative_asks);
+
+    // ask制約のエンテール処理
+    expanded = false;
+    {
+      negative_asks_t::iterator it  = negative_asks.begin();
+      negative_asks_t::iterator end = negative_asks.end();
+      while(it!=end) {
+        if(entailment_checker_interval.check_entailment(*it, csbi.get_constraint_store())) {
+          expanded = true;
+          positive_asks.insert(*it);
+          negative_asks.erase(it++);
+        }
+        else {
+          it++;
+        }
+      }
+    }
+  }
+
+  IntegrateResult integrate_result = integrator.integrate(csbi.get_constraint_store(),
+                                                          positive_asks,
+                                                          negative_asks,
+                                                          (*state).time,
+                                                          opts_.max_time);
+//  std::cout << integrate_result;
+
+  //to next pointphase
+/*
+  phase_state_sptr new_state(create_new_phase_state(state));
+  new_state->phase        = phase_state_t::PointPhase;
+  new_state->initial_time = false;
+  csbi.build_variable_map(new_state->variable_map);
+  std::cout << new_state->variable_map;
+  push_phase_state(new_state);
+*/
   return true;
 }
 

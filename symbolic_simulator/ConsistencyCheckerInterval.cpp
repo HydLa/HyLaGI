@@ -70,7 +70,7 @@ pc.check2();
   // 数値部分は問題なく解けたら1、under-constraintが起きていれば2が返る
 
   ml_.MLGetNext(); // Listという関数名
-  ml_.MLGetNext(); // Listの中の先頭
+  ml_.MLGetNext(); // Listの中の先頭（数値）
 
   int n;
   if(! ml_.MLGetInteger(&n)){

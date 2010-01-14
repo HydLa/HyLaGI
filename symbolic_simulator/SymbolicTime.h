@@ -1,11 +1,13 @@
 #ifndef _INCLUDED_HYDLA_SYMBOLIC_TIME_H_
 #define _INCLUDED_HYDLA_SYMBOLIC_TIME_H_
 
+#include <iostream>
+
 namespace hydla {
 namespace symbolic_simulator {
 
-typedef struct SymbolicTime_ {
-} SymbolicTime;
+struct SymbolicTime {
+};
 
 } //namespace symbolic_simulator
 } // namespace hydla
