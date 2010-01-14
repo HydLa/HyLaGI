@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PacketChecker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PacketSender.cpp"
 				>
 			</File>
@@ -248,6 +252,10 @@
 			</File>
 			<File
 				RelativePath=".\MathSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PacketChecker.h"
 				>
 			</File>
 			<File
