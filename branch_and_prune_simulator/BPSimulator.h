@@ -60,6 +60,9 @@ private:
     hydla::simulator::positive_asks_t& positive_asks,
     hydla::simulator::negative_asks_t& negative_asks);
 
+  module_set_container_sptr msc_original_;
+  module_set_container_sptr msc_no_init_;
+  module_set_container_sptr msc_no_init_discreteask_;
   Opts opts_;
 };
 

@@ -7,12 +7,22 @@
 
 #include "Logger.h"
 
+#include "InitNodeRemover.h"
+#include "AskDisjunctionSplitter.h"
+#include "AskDisjunctionFormatter.h"
+#include "DiscreteAskRemover.h"
+
+
 #include <iostream>
 #include <boost/foreach.hpp>
 
 // constraint_hierarchy
 #include "ModuleSet.h"
+//#include "ModuleSetList.h"
+#include "ModuleSetGraph.h"
+#include "ModuleSetContainerCreator.h"
 
+using namespace hydla::ch;
 using namespace hydla::simulator;
 
 namespace hydla {
@@ -38,7 +48,47 @@ namespace {
 }
 
 void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
-{}
+{
+  ModuleSetContainerCreator<ModuleSetGraph> mcc;
+
+  {
+    // ask‚Ìformat‚Ì‚İ
+    parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
+    AskDisjunctionFormatter().format(pt_original.get());
+    AskDisjunctionSplitter().split(pt_original.get());
+    msc_original_ = mcc.create(pt_original);
+  }
+
+  {
+    // initial‚È§–ñ‚ğœ‚¢‚½ + ask format
+    parse_tree_sptr pt_no_init(boost::make_shared<ParseTree>(*parse_tree));
+    InitNodeRemover().apply(pt_no_init.get());
+    AskDisjunctionFormatter().format(pt_no_init.get());
+    AskDisjunctionSplitter().split(pt_no_init.get());
+    msc_no_init_ = mcc.create(pt_no_init);
+  }
+
+  {
+    // no initial + —£U•Ï‰»ask‚ğœ‚¢‚½ + ask format
+    // —£U•Ï‰»ask‚Æ‚ÍcğŒ‚Éprev•Ï”‚Ì‚ ‚éask
+    parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
+    InitNodeRemover().apply(pt_no_init_discreteask.get());
+    DiscreteAskRemover().apply(pt_no_init_discreteask.get());
+    AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
+    AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
+    msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
+  }
+
+  // Ï‚Ş
+  phase_state_sptr state(create_new_phase_state());
+  state->phase        = PointPhase;
+  state->time         = BPTime();
+  state->variable_map = variable_map_;
+  state->module_set_container = msc_original_;
+
+  push_phase_state(state);
+
+}
 
 /**
  * Point Phase‚Ìˆ—
@@ -163,13 +213,15 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   } // while(expanded)
 
   // IntervalPhase‚Ö
-  phase_state_sptr new_state(create_new_phase_state(state));
+  phase_state_sptr new_state(create_new_phase_state(/*state*/));
+  new_state->module_set_container = msc_no_init_discreteask_;
   new_state->phase = IntervalPhase;
   // ConstraintStore‚©‚çvariable_map‚ğì¬
   constraint_store.build_variable_map(new_state->variable_map);
-  std::cout << new_state->variable_map;
   expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   push_phase_state(new_state);
+
+  std::cout << new_state->variable_map;
 
   return true;
 }
