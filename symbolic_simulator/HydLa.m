@@ -120,7 +120,7 @@ isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
-nextPointPhaseTime[
+calcNextPointPhaseTime[
   includeZero_, maxTime_, posAsk_, negAsk_] := 
 Block[{
   calcMinTime,
@@ -174,7 +174,7 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
   tmpIntegSol = First[DSolve[cons, vars, t]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
-  {tmpMinT, tmpMinAskIDs} = nextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
+  {tmpMinT, tmpMinAskIDs} = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
   varsND = DeleteDuplicates[Map[removeDash, vars]];
   integVars = var2IntegUsrVar[Map[(# /. x_[t] -> x) &, varsND]];
   MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)]) &, {integVars, varsND}];
