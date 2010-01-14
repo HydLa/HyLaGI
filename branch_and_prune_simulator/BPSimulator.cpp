@@ -35,7 +35,7 @@ namespace {
   };
 }
 
-void BPSimulator::do_initialize()
+void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 {}
 
 /**
@@ -82,12 +82,16 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   ConsistencyChecker consistency_checker;
   EntailmentChecker entailment_checker;
 
+  //TODO: do_point_phaseの引数でpositive_asksみたいに引き回す必要あり
+  expanded_always_t expanded_always;
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+
   bool expanded   = true;
   while(expanded) {
     // tell制約を集める
     tells_t tell_list;
     tell_collector.collect_new_tells(&tell_list,
-                                     &state->expanded_always, &positive_asks);
+                                     &expanded_always, &positive_asks);
 
     // 制約が充足しているかどうかの確認
     // 充足していればストアを更新
@@ -95,7 +99,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
                                           constraint_store)) return false;
 
     // ask制約を集める
-    ask_collector.collect_ask(&state->expanded_always, 
+    ask_collector.collect_ask(&expanded_always, 
                               &positive_asks, &unknown_asks);
 
     //ask制約のエンテール処理
@@ -158,10 +162,10 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 
   // IntervalPhaseへ
   phase_state_sptr new_state(create_new_phase_state(state));
-  new_state->phase = phase_state_t::IntervalPhase;
-  new_state->initial_time = false;
+  new_state->phase = IntervalPhase;
   // ConstraintStoreからvariable_mapを作成
   constraint_store.build_variable_map(new_state->variable_map);
+  expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   push_phase_state(new_state);
 
   return true;

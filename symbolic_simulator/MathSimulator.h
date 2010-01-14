@@ -57,7 +57,17 @@ private:
   /**
    * ‰Šú‰»ˆ—
    */
-  virtual void do_initialize();
+  virtual void do_initialize(const parse_tree_sptr& parse_tree);
+
+  void init_mathlink();
+
+  /**
+   * 
+   */
+  module_set_container_sptr msc_original_;
+
+  module_set_container_sptr msc_no_init_;
+  module_set_container_sptr msc_no_init_discreteask_;
 
   Opts     opts_;
   MathLink ml_; 

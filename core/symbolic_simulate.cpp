@@ -33,15 +33,13 @@ void setup_symbolic_simulator_opts(MathSimulator::Opts& opts)
   opts.parallel_mode = po.count("parallel")>0;
 }
 
-void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree,
-                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
-                       boost::shared_ptr<hydla::ch::ModuleSetContainer> msc_no_init)
+void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   MathSimulator::Opts opts;
   setup_symbolic_simulator_opts(opts);
 
   MathSimulator ms(opts);
-  ms.initialize(parse_tree, msc, msc_no_init);
+  ms.initialize(parse_tree);
   ms.simulate();
 }
 

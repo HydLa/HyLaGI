@@ -163,6 +163,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DiscreteAskRemover.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InitNodeRemover.cpp"
 				>
 			</File>
@@ -193,6 +197,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DiscreteAskRemover.h"
+				>
+			</File>
+			<File
 				RelativePath=".\InitNodeRemover.h"
 				>
 			</File>
@@ -206,6 +214,10 @@
 			</File>
 			<File
 				RelativePath=".\TellCollector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TypedAsk.h"
 				>
 			</File>
 			<File

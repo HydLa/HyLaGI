@@ -30,6 +30,7 @@ ParseTree::ParseTree() :
 
     
 ParseTree::ParseTree(const ParseTree& pt) :
+  node_factory_(pt.node_factory_),
   node_tree_(pt.node_tree_ ? pt.node_tree_->clone() : node_sptr()),
   variable_map_(pt.variable_map_),
   node_map_(pt.node_map_),

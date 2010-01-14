@@ -2,11 +2,9 @@
 #define _INCLUDED_HYDLA_SIMULATOR_H_
 
 #include <iostream>
-
 #include <string>
 #include <queue>
-
-#include <assert.h>
+#include <cassert>
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -49,38 +47,17 @@ public:
   virtual ~Simulator()
   {}
 
-  void set_module_set_container(const module_set_container_sptr& msc)
-  {
-    msc_ = msc;
-  }
-
-  void set_module_set_container_no_init(const module_set_container_sptr& msc_no_init)
-  {
-    msc_no_init_ = msc_no_init;
-  }
-
   /**
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   void simulate()
   {
-    assert(msc_);
-    assert(msc_no_init_);
-
     while(!state_queue_.empty()) {
       phase_state_sptr state(pop_phase_state());
 
-      if(state->initial_time) {
-        msc_->dispatch(
+      state->module_set_container->dispatch(
           boost::bind(&Simulator<phase_state_t>::simulate_phase_state, 
                       this, _1, state));
-      }
-      else {
-        msc_no_init_->dispatch(
-          boost::bind(&Simulator<phase_state_t>::simulate_phase_state, 
-                      this, _1, state));
-
-      }
     }
   }
 
@@ -102,17 +79,11 @@ public:
     return state;
   }
 
-  void initialize(
-    const parse_tree_sptr&           parse_tree,
-    const module_set_container_sptr& msc, 
-    const module_set_container_sptr& msc_no_init)
+  void initialize(const parse_tree_sptr& parse_tree)
   {
-    msc_         = msc;
-    msc_no_init_ = msc_no_init;
-
+    parse_tree_ = parse_tree;
     init_variable_map(parse_tree);
-    init_state_queue(parse_tree);
-    do_initialize();
+    do_initialize(parse_tree);
   }
 
   /**
@@ -158,24 +129,13 @@ public:
       variable_map_);
   }
 
-  virtual void init_state_queue(const parse_tree_sptr& parse_tree)
-  {
-    phase_state_sptr state(new phase_state_t);
-    state->phase        = phase_state_t::PointPhase;
-    state->initial_time = true;
-    state->variable_map = variable_map_;
-
-    push_phase_state(state);
-  }
-
-
   virtual bool simulate_phase_state(const module_set_sptr& ms, 
                                     const phase_state_const_sptr& state)
   {      
     bool ret =false;
     switch(state->phase) 
     {
-    case phase_state_t::PointPhase:
+    case PointPhase:
       {        
         HYDLA_LOGGER_DEBUG(
           "#***** begin point phase *****",
@@ -190,7 +150,7 @@ public:
         break;
       }
 
-    case phase_state_t::IntervalPhase: 
+    case IntervalPhase: 
       {        
         HYDLA_LOGGER_DEBUG(
           "#***** begin interval phase *****",
@@ -212,6 +172,43 @@ public:
     return ret;
   }
 
+
+  /**
+   * id形式のexpanded_alwaysをshared_ptr形式に変換する
+   */
+  void expanded_always_id2sptr(const expanded_always_id_t& ea_id, 
+                               expanded_always_t& ea_sptr) const
+  {
+    ea_sptr.clear();
+
+    expanded_always_id_t::const_iterator it  = ea_id.begin();
+    expanded_always_id_t::const_iterator end = ea_id.end();
+    for(; it!=end; ++it) {
+      assert(
+        boost::dynamic_pointer_cast<hydla::parse_tree::Always>(
+          parse_tree_->get_node(*it)));
+
+      ea_sptr.insert(
+        boost::static_pointer_cast<hydla::parse_tree::Always>(
+          parse_tree_->get_node(*it)));
+    }
+  }
+
+  /**
+   * shared_ptr形式のexpanded_alwaysをid形式に変換する
+   */
+  void expanded_always_sptr2id(const expanded_always_t& ea_sptr, 
+                               expanded_always_id_t& ea_id) const
+  {
+    ea_id.clear();
+
+    expanded_always_t::const_iterator it  = ea_sptr.begin();
+    expanded_always_t::const_iterator end = ea_sptr.end();
+    for(; it!=end; ++it) {
+      ea_id.push_back(parse_tree_->get_node_id(*it));
+    }
+  }
+
   /**
    * Point Phaseの処理
    */
@@ -224,12 +221,11 @@ public:
   virtual bool interval_phase(const module_set_sptr& ms, 
                               const phase_state_const_sptr& state) = 0;
 
-private:
-  virtual void do_initialize()
+protected:
+  virtual void do_initialize(const parse_tree_sptr& parse_tree)
   {}
 
-  module_set_container_sptr msc_;
-  module_set_container_sptr msc_no_init_;
+  parse_tree_sptr parse_tree_;
 
   /**
    * シミュレーション中で使用されるすべての変数を格納した表

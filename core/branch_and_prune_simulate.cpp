@@ -12,9 +12,7 @@ using namespace hydla::bp_simulator;
 /**
  * RealPaverを使用したBranch and Pruneによるシミュレーション
  */
-void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree,
-                               boost::shared_ptr<hydla::ch::ModuleSetContainer> msc, 
-                               boost::shared_ptr<hydla::ch::ModuleSetContainer> msc_no_init)
+void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   ProgramOptions &po = ProgramOptions::instance();
   BPSimulator::Opts bpopts;
@@ -25,6 +23,6 @@ void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> p
   bpopts.parallel_mode = po.count("parallel")> 0;
 
   BPSimulator bps(bpopts);
-  bps.initialize(parse_tree, msc, msc_no_init);
+  bps.initialize(parse_tree);
   bps.simulate();
 }

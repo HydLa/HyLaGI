@@ -6,6 +6,7 @@
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 #include "math_source.h"
 //#include "InterlanguageSender.h"
@@ -16,12 +17,21 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 
+#include "ModuleSetList.h"
+#include "ModuleSetGraph.h"
+#include "ModuleSetContainerCreator.h"
+#include "InitNodeRemover.h"
+#include "AskDisjunctionSplitter.h"
+#include "AskDisjunctionFormatter.h"
+#include "DiscreteAskRemover.h"
+
 using namespace std;
 using namespace boost;
 using namespace boost::xpressive;
 
 using namespace hydla::ch;
 using namespace hydla::simulator;
+using namespace hydla::parse_tree;
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -49,8 +59,49 @@ MathSimulator::~MathSimulator()
 {
 }
 
-void MathSimulator::do_initialize()
+void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 {
+  ModuleSetContainerCreator<ModuleSetList> mcc;
+
+  {
+    parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
+    AskDisjunctionFormatter().format(pt_original.get());
+    AskDisjunctionSplitter().split(pt_original.get());
+    msc_original_ = mcc.create(pt_original);
+  }
+
+  {
+    parse_tree_sptr pt_no_init(boost::make_shared<ParseTree>(*parse_tree));
+    InitNodeRemover().apply(pt_no_init.get());
+    AskDisjunctionFormatter().format(pt_no_init.get());
+    AskDisjunctionSplitter().split(pt_no_init.get());
+    msc_no_init_ = mcc.create(pt_no_init);
+  }
+
+  {
+    parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
+    InitNodeRemover().apply(pt_no_init_discreteask.get());
+    DiscreteAskRemover().apply(pt_no_init_discreteask.get());
+    AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
+    AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
+    msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
+  }
+
+  phase_state_sptr state(create_new_phase_state());
+  state->phase        = PointPhase;
+  state->time         = SymbolicTime();
+  state->variable_map = variable_map_;
+  state->module_set_container = msc_original_;
+
+  push_phase_state(state);
+
+  init_mathlink();
+
+}
+
+void MathSimulator::init_mathlink()
+{
+  //TODO: 例外を投げるようにする
   if(!ml_.init(opts_.mathlink.c_str())) {
     std::cerr << "can not link" << std::endl;
     exit(-1);
@@ -129,14 +180,18 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   EntailmentChecker  entailment_checker(ml_);
 
   tells_t         tell_list;
-  positive_asks_t positive_asks;
-  negative_asks_t negative_asks;
+  positive_asks_t   positive_asks;
+  negative_asks_t   negative_asks;
+
+
+  expanded_always_t expanded_always;
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
   
   bool expanded   = true;
   while(expanded) {
     // tell制約を集める
     tell_collector.collect_all_tells(&tell_list,
-                                     &state->expanded_always, 
+                                     &expanded_always, 
                                      &positive_asks);
 
     // 制約が充足しているかどうかの確認
@@ -145,7 +200,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     }
 
     // ask制約を集める
-    ask_collector.collect_ask(&state->expanded_always, 
+    ask_collector.collect_ask(&expanded_always, 
                               &positive_asks, 
                               &negative_asks);
 
@@ -168,12 +223,15 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   }
 
   // Interval Phaseへ移行
-  phase_state_sptr new_state(create_new_phase_state(state));
-  new_state->phase        = phase_state_t::IntervalPhase;
-  new_state->initial_time = false;
+  phase_state_sptr new_state(create_new_phase_state());
+  new_state->phase        = IntervalPhase;
+  expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   csbp.build_variable_map(new_state->variable_map);
-  std::cout << new_state->variable_map;
+  new_state->module_set_container = msc_no_init_discreteask_;
+
   push_phase_state(new_state);
+
+  std::cout << new_state->variable_map;
 
   return true;
 }

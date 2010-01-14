@@ -196,6 +196,8 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:  
+  ParseTree& operator=(const ParseTree& pt);
+
   node_factory_sptr    node_factory_;
 
   node_sptr            node_tree_;

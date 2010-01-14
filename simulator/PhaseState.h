@@ -1,9 +1,12 @@
 #ifndef _INCLUDED_HYDLA_SIMULATOR_PHASE_STATE_H_
 #define _INCLUDED_HYDLA_SIMULATOR_PHASE_STATE_H_
 
-#include <set>
+#include <vector>
 
-#include "VariableMap.h"
+#include <boost/shared_ptr.hpp>
+
+#include "./VariableMap.h"
+#include "./Types.h"
 
 namespace hydla {
 namespace simulator {
@@ -15,25 +18,17 @@ template<typename VariableType,
          typename ValueType, 
          typename TimeType>
 struct PhaseState {
-  typedef VariableType variable_t;
-  typedef ValueType    value_t;
-  typedef TimeType     time_t;
-  typedef VariableMap<variable_t, value_t> variable_map_t;
-  typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> > expanded_always_t;
+  typedef VariableType                                      variable_t;
+  typedef ValueType                                         value_t;
+  typedef TimeType                                          time_t;
+  typedef VariableMap<variable_t, value_t>                  variable_map_t;
 
-  /**
-   * 処理のフェーズ
-   */
-  typedef enum Phase_ {
-    PointPhase,
-    IntervalPhase,
-  } Phase;
-
-  Phase               phase;
-  TimeType            time;
-  variable_map_t      variable_map;
-  expanded_always_t   expanded_always;
-  bool                initial_time;
+  Phase                     phase;
+  TimeType                  time;
+  variable_map_t            variable_map;
+  expanded_always_id_t      expanded_always_id;
+  changed_asks_t            changed_asks;
+  module_set_container_sptr module_set_container;
 };
 
 

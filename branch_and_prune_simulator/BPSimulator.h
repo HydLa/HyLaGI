@@ -43,7 +43,7 @@ private:
   /**
    * ‰Šú‰»ˆ—
    */
-  virtual void do_initialize();
+  virtual void do_initialize(const parse_tree_sptr& parse_tree);
   bool do_point_phase(const module_set_sptr& ms,
     const phase_state_const_sptr& state,
     ConstraintStore& constraint_store,
