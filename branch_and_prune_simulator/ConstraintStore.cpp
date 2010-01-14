@@ -6,7 +6,6 @@
 
 #include <sstream>
 
-
 namespace hydla {
 namespace bp_simulator {
 

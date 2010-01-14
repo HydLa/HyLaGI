@@ -1,6 +1,8 @@
 #include "BPSimulator.h"
 #include "ConstraintStore.h"
+#include "ConstraintStoreInterval.h"
 #include "ConsistencyChecker.h"
+#include "ConsistencyCheckerInterval.h"
 #include "EntailmentChecker.h"
 
 #include "Logger.h"
@@ -165,6 +167,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   new_state->phase = IntervalPhase;
   // ConstraintStoreからvariable_mapを作成
   constraint_store.build_variable_map(new_state->variable_map);
+  std::cout << new_state->variable_map;
   expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   push_phase_state(new_state);
 
@@ -176,6 +179,72 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
  */
 bool BPSimulator::interval_phase(const module_set_sptr& ms, 
                                  const phase_state_const_sptr& state)
+{
+  // 初期値はコピーしておく必要があるかも？
+  TellCollector tell_collector(ms);
+  AskCollector ask_collector(ms);
+  ConstraintStoreInterval constraint_store;
+  constraint_store.build(state->variable_map);
+  ConsistencyCheckerInterval consistency_checker;
+  tells_t tell_list;
+  positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
+  //TODO: do_point_phaseの引数でpositive_asksみたいに引き回す必要あり
+  expanded_always_t expanded_always;
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  bool expanded = true;
+  while(expanded) {
+    // tell制約を集める
+    tell_collector.collect_all_tells(&tell_list,
+                                     &expanded_always, 
+                                     &positive_asks);
+
+    // 充足確認とストアへの追加, ODE求解
+    if(!consistency_checker.is_consistent(tell_list, constraint_store)) {
+      return false;
+    }
+
+    // ask制約を集める
+    ask_collector.collect_ask(&expanded_always,
+                              &positive_asks,
+                              &negative_asks);
+
+    expanded = false;
+    {
+      // ask条件のエンテール判定
+    }
+  }
+  // (list({t, vm}),list({ask,p?n})) = 積分処理(integrate)
+  // time, vm, c_askからphase_stateを作る
+  // 積む
+  // ↓正確にはfor文で囲むと思われる
+  /*phase_state_sptr new_state(create_new_phase_state(state));
+  new_state->phase        = phase_state_t::PointPhase;
+  new_state->initial_time = false;
+  new_state->variable_map = vm;
+  push_phase_state(new_state);*/
+
+  return true;
+}
+
+/**
+ * Interval Phaseの実質的な処理
+ * askのエンテールに基づき分割再帰される可能性がある．
+ *
+ * @param ms モジュール集合
+ * @param state Point Phase開始時の状態
+ * @param constraint_store 制約ストア
+ * @param positive_asks エンテールされたask制約リスト
+ * @param negative_asks エンテールされないask制約リスト
+ *
+ * @return Interval Phaseを満たす解が存在するか
+ */
+bool BPSimulator::do_interval_phase(const module_set_sptr &ms,
+                                    const phase_state_const_sptr &state,
+                                    ConstraintStoreInterval &constraitn_store,
+                                    TellCollector &tell_collector,
+                                    positive_asks_t &positive_asks,
+                                    negative_asks_t &negative_asks)
 {
   return true;
 }

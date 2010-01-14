@@ -13,23 +13,23 @@
 namespace hydla {
 namespace symbolic_simulator {
 
-typedef struct State_ {
+struct State {
 //    hydla::symbolic_simulator::SymbolicTime next_point_phase_time;
   std::string next_point_phase_time;
   hydla::symbolic_simulator::variable_map_t variable_map;
   bool is_max_time;
-} State;
+};
 
 typedef std::vector<std::pair<std::string, int> > ask_list_t;
 
-typedef struct IntegrateResult_ {
+struct IntegrateResult {
   std::vector<State> states;
   ask_list_t ask_list;
-/*
+
   std::ostream& dump(std::ostream& s) const
   {
     s << "states: " << std::endl;
-    std::vector<State>::iterator state_it = states.begin();
+    std::vector<State>::const_iterator state_it = states.begin();
     while((state_it)!=states.end())
     {
       s << "  next_point_phase_time=" << (*state_it).next_point_phase_time << ", ";
@@ -37,7 +37,7 @@ typedef struct IntegrateResult_ {
       state_it++;
     }
     s << std::endl << "ask_list: ";
-    ask_list_t::iterator ask_list_it = ask_list.begin();
+    ask_list_t::const_iterator ask_list_it = ask_list.begin();
     while((ask_list_it)!=ask_list.end())
     {
       s << "ask_type= " << (*ask_list_it).first << ", ";
@@ -53,8 +53,8 @@ typedef struct IntegrateResult_ {
   {
     return t.dump(s);
   }
-*/
-} IntegrateResult;
+
+};
 
 class Integrator
 {

@@ -11,6 +11,7 @@ namespace hydla {
 namespace bp_simulator {
 
 class ConstraintStore;
+class ConstraintStoreInterval;
 
 class BPSimulator : public simulator_t
 {
@@ -44,6 +45,7 @@ private:
    * èâä˙âªèàóù
    */
   virtual void do_initialize(const parse_tree_sptr& parse_tree);
+
   bool do_point_phase(const module_set_sptr& ms,
     const phase_state_const_sptr& state,
     ConstraintStore& constraint_store,
@@ -51,8 +53,14 @@ private:
     hydla::simulator::positive_asks_t& positive_asks,
     hydla::simulator::negative_asks_t& negative_asks);
 
+  bool do_interval_phase(const module_set_sptr& ms,
+    const phase_state_const_sptr& state,
+    ConstraintStoreInterval& constraitn_store,
+    hydla::simulator::TellCollector& tell_collector,
+    hydla::simulator::positive_asks_t& positive_asks,
+    hydla::simulator::negative_asks_t& negative_asks);
+
   Opts opts_;
-  std::string max_time_;
 };
 
 } // namespace bp_simulator

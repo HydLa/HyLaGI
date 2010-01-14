@@ -159,11 +159,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConsistencyCheckerInterval.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ConstraintBuilder.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ConstraintStore.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintStoreInterval.cpp"
 				>
 			</File>
 			<File
@@ -201,11 +209,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConsistencyCheckerInterval.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConstraintBuilder.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ConstraintStore.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintStoreInterval.h"
 				>
 			</File>
 			<File

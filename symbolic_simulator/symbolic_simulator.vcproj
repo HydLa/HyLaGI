@@ -161,11 +161,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConsistencyCheckerInterval.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintStoreBuilderInterval.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\EntailmentChecker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EntailmentCheckerInterval.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Integrator.cpp"
 				>
 			</File>
 			<File
@@ -180,6 +196,10 @@
 				RelativePath=".\PacketSender.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\PacketSenderInterval.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -191,11 +211,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConsistencyCheckerInterval.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintStoreBuilderInterval.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConstraintStoreBuilderPoint.h"
 				>
 			</File>
 			<File
 				RelativePath=".\EntailmentChecker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EntailmentCheckerInterval.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Integrator.h"
 				>
 			</File>
 			<File
@@ -216,6 +252,10 @@
 			</File>
 			<File
 				RelativePath=".\PacketSender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PacketSenderInterval.h"
 				>
 			</File>
 			<File
