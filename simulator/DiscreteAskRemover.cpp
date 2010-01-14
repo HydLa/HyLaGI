@@ -2,8 +2,6 @@
 
 #include <boost/make_shared.hpp>
 
-#include "TypedAsk.h"
-
 using namespace hydla::parse_tree;
 
 namespace hydla {

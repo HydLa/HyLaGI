@@ -217,10 +217,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TypedAsk.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Types.h"
 				>
 			</File>
