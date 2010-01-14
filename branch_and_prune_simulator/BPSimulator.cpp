@@ -50,8 +50,7 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
   ConstraintStore constraint_store;
   // TODO: stateから制約ストアを作る
   constraint_store.build(state->variable_map);
-  //TODO: hirose 後で考える
-  //if(this->is_debug_mode()) constraint_store.display(10);
+  HYDLA_LOGGER_DEBUG(constraint_store);
   TellCollector tell_collector(ms);
 
   return this->do_point_phase(ms, state, constraint_store,

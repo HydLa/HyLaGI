@@ -1,9 +1,12 @@
 #include "ConsistencyChecker.h"
+#include "Logger.h"
 
 #include <iostream>
+#include <sstream>
 #include <cassert>
 
 #include "realpaver.h"
+#include "rp_constraint_ext.h"
 
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
@@ -63,15 +66,16 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
 
   // 作成できたか確認
   rp_vector_variable vec = this->to_rp_vector();
-  if(this->debug_mode_){
-    std::cout << "#**** consistency check: constraints expression ****\n";
+  {
+    HYDLA_LOGGER_DEBUG("#**** consistency check: constraints expression ****\n");
+    std::stringstream ss;
     std::set<rp_constraint>::iterator it = this->constraints_.begin();
     while(it != this->constraints_.end()){
-      rp_constraint_display(stdout, *it, vec, DISPLAY_DIGITS);
-      std::cout << "\n";
+      rp::dump_constraint(ss, *it, vec, DISPLAY_DIGITS);
+      ss << "\n";
       it++;
     }
-    std::cout << "\n";
+    HYDLA_LOGGER_DEBUG(ss.str());
   }
 
   // 問題とソルバを作成し,解いてチェック
@@ -112,11 +116,9 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
 
   rp_bpsolver solver(&problem,10,select,split); //,prover);
 
-  if(this->debug_mode_){
-    std::cout << "#**** consistency check: problem to solve ****\n";
-    rp_problem_display(stdout,problem);
-    std::cout << "\n";
-  }
+  HYDLA_LOGGER_DEBUG(
+    "#**** consistency check: problem to solve ****\n",
+    problem);
 
   rp_box sol;
   sol = solver.compute_next();
@@ -128,14 +130,14 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
   if(sol != NULL) {
     constraint_store.add_constraint(tells_ctr_copy.begin(),
                                     tells_ctr_copy.end(), this->vars_);
-    if(this->debug_mode_) {
-      std::cout << "#*** consistency check ==> Consistent ***\n";
-      std::cout << "#**** consistency check: new constraint_store ***\n";
-      //constraint_store.display(10);
+    {
+      HYDLA_LOGGER_DEBUG("#*** consistency check ==> Consistent ***\n",
+        "#**** consistency check: new constraint_store ***\n",
+        constraint_store);
     }
     return true;
   } else {
-    if(this->debug_mode_) std::cout << "#*** consistency check ==> Inconsistent ***\n\n";
+    HYDLA_LOGGER_DEBUG("#*** consistency check ==> Inconsistent ***\n");
     ctr_it = tells_ctr_copy.begin();
     while(ctr_it != tells_ctr_copy.end()) {
       rp_constraint c = *ctr_it;
