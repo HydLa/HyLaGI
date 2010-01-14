@@ -178,8 +178,8 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
   varsND = DeleteDuplicates[Map[removeDash, vars]];
   integVars = var2IntegUsrVar[Map[(# /. x_[t] -> x) &, varsND]];
   MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)]) &, {integVars, varsND}];
-  tmpPrevConsTable = MapThread[(ToString[FullForm[#1 == simplify[(#2 /. t -> tmpMinT)]]])&,
-                               {vars, Flatten[Map[({#[t], #'[t]}) &, integVars]]}];
+  tmpPrevConsTable =  MapThread[(ToString[FullForm[#1 == simplify[(#2 /. t -> tmpMinT)]]])&,
+                                {vars, Map[(ToExpression["Integ" <> ToString[#]])&, vars]}];
   {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs}
 );
 

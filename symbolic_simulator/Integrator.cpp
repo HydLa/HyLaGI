@@ -105,9 +105,9 @@ pc.check();
 
   // next_point_phase_time‚ğ“¾‚é
   ml_.MLGetNext(); // List‚Ì’†‚Ìæ“ª—v‘f
-  std::string next_point_phase_time;
-  next_point_phase_time = ml_.get_string();
-
+  SymbolicTime next_point_phase_time;
+  next_point_phase_time.str = ml_.get_string();
+  
 
   // §–ñˆê——‚ğ“¾‚é
   ml_.MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
@@ -140,7 +140,14 @@ pc.check();
   {
     ml_.MLGetNext(); // ListŠÖ”
     ml_.MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
-    std::string changed_ask_type = ml_.get_symbol(); // pos2neg‚Ü‚½‚Íneg2pos
+    std::string changed_ask_type_str = ml_.get_symbol(); // pos2neg‚Ü‚½‚Íneg2pos
+    AskState changed_ask_type;
+    if(changed_ask_type_str == "pos2neg"){
+      changed_ask_type = Positive2Negative;
+    }
+    else{
+      changed_ask_type = Negative2Positive;
+    }
     int changed_ask_id;
     if(! ml_.MLGetInteger(&changed_ask_id)){
       std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
@@ -148,6 +155,7 @@ pc.check();
     }
     changed_asks.push_back(std::make_pair(changed_ask_type, changed_ask_id));
   }
+
 
   // tmp_cons‚©‚ç•Ï”•\‚ğ‚Â‚­‚é
   std::set<std::string>::iterator tmp_cons_it = tmp_cons.begin();

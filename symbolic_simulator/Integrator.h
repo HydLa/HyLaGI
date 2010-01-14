@@ -14,13 +14,12 @@ namespace hydla {
 namespace symbolic_simulator {
 
 struct NextPointPhaseState {
-//    hydla::symbolic_simulator::SymbolicTime next_point_phase_time;
-  std::string next_point_phase_time;
+  hydla::symbolic_simulator::SymbolicTime next_point_phase_time;
   hydla::symbolic_simulator::variable_map_t variable_map;
   bool is_max_time;
 };
 
-typedef std::vector<std::pair<std::string, int> > ask_list_t;
+typedef std::vector<std::pair<hydla::simulator::AskState, int> > ask_list_t;
 
 struct IntegrateResult {
   std::vector<NextPointPhaseState> states;
@@ -32,8 +31,8 @@ struct IntegrateResult {
     std::vector<NextPointPhaseState>::const_iterator state_it = states.begin();
     while((state_it)!=states.end())
     {
-      s << "  next_point_phase_time=" << (*state_it).next_point_phase_time << ", ";
-      s << "  variable_map=" << (*state_it).variable_map;
+      s << "next_point_phase_time:" << (*state_it).next_point_phase_time << std::endl;
+      s << "variable_map:" << std::endl <<  (*state_it).variable_map << std::endl;
       state_it++;
     }
     s << std::endl << "ask_list: ";
@@ -42,9 +41,9 @@ struct IntegrateResult {
     {
       s << "ask_type= " << (*ask_list_it).first << ", ";
       s << "ask_id= " << (*ask_list_it).second;
+      s << std::endl;
       ask_list_it++;
     }
-    s << std::endl;
     return s;
   }
 

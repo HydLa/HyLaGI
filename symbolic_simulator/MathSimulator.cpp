@@ -302,7 +302,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
                                                           negative_asks,
                                                           (*state).time,
                                                           opts_.max_time);
-//  std::cout << integrate_result;
+  std::cout << integrate_result;
 
   //to next pointphase
 /*
