@@ -20,7 +20,7 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
     pt->dispatch(this);
   } while(swapped_);
 
-  pt->update_node_id();
+  pt->rebuild_node_id_list();
 }
 
 // §–ñŒÄ‚Ño‚µ

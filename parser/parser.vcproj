@@ -221,6 +221,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodeIDRebuilder.h"
+				>
+			</File>
+			<File
 				RelativePath=".\NodeIDUpdater.h"
 				>
 			</File>

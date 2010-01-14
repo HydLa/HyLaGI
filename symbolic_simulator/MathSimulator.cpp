@@ -8,6 +8,8 @@
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 
+#include "Logger.h"
+
 #include "math_source.h"
 //#include "InterlanguageSender.h"
 #include "ConsistencyChecker.h"
@@ -65,8 +67,25 @@ MathSimulator::~MathSimulator()
 
 void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 {
-  ModuleSetContainerCreator<ModuleSetList> mcc;
+  init_module_set_container(parse_tree);
 
+  phase_state_sptr state(create_new_phase_state());
+  state->phase        = PointPhase;
+  state->time         = SymbolicTime();
+  state->variable_map = variable_map_;
+  state->module_set_container = msc_original_;
+
+  push_phase_state(state);
+
+  init_mathlink();
+
+}
+
+void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
+{  
+  HYDLA_LOGGER_DEBUG("#*** create module set list ***");
+
+  ModuleSetContainerCreator<ModuleSetList> mcc;
   {
     parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
     AskDisjunctionFormatter().format(pt_original.get());
@@ -90,18 +109,8 @@ void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
     msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
   }
-
-  phase_state_sptr state(create_new_phase_state());
-  state->phase        = PointPhase;
-  state->time         = SymbolicTime();
-  state->variable_map = variable_map_;
-  state->module_set_container = msc_original_;
-
-  push_phase_state(state);
-
-  init_mathlink();
-
 }
+
 
 void MathSimulator::init_mathlink()
 {

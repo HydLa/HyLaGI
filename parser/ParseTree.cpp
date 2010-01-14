@@ -4,10 +4,12 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 
 #include "Logger.h"
 #include "HydLaAST.h"
 #include "NodeIDUpdater.h"
+#include "NodeIDRebuilder.h"
 #include "NodeTreeGenerator.h"
 #include "ParseTreeSemanticAnalyzer.h"
 #include "ParseTreeGraphvizDumper.h"
@@ -25,7 +27,7 @@ namespace hydla {
 namespace parse_tree {
 
 ParseTree::ParseTree() :
-  max_node_id_(0)
+  max_node_id_(INITIAL_MAX_NODE_ID)
 {}
 
     
@@ -36,7 +38,7 @@ ParseTree::ParseTree(const ParseTree& pt) :
   node_map_(pt.node_map_),
   max_node_id_(pt.max_node_id_)
 {
-  update_node_id();
+  update_node_id_list();
 }
 
 ParseTree::~ParseTree()
@@ -46,31 +48,37 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
 {
   node_factory_ = node_factory;
 
+  // ASTÇÃç\íz
   HydLaAST ast;
   ast.parse(stream);
-
   HYDLA_LOGGER_DEBUG("#*** AST Tree ***\n", ast);
 
-    
+  // ParseTreeÇÃç\íz
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
-
   HYDLA_LOGGER_DEBUG("#*** Parse Tree ***\n", *this);
-
   HYDLA_LOGGER_DEBUG("#*** Constraint Definition ***\n", constraint_definition);
   HYDLA_LOGGER_DEBUG("#*** Program Definition ***\n",    program_definition);
     
+  // à”ñ°âêÕ
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
-
+  update_node_id_list();
   HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
-
-  update_node_id();
 }
 
-void ParseTree::update_node_id()
+void ParseTree::rebuild_node_id_list()
+{
+  node_map_.clear();
+  max_node_id_ = INITIAL_MAX_NODE_ID;
+
+  NodeIDRebuilder rebuilder;
+  rebuilder.rebuild(this);  
+}
+
+void ParseTree::update_node_id_list()
 {
   NodeIDUpdater updater;
   updater.update(this);
@@ -80,7 +88,7 @@ node_sptr ParseTree::swap_tree(const node_sptr& tree)
 {
   node_sptr ret(node_tree_);
   node_tree_ = tree;
-  update_node_id();
+  rebuild_node_id_list();
   return ret;
 }
 
@@ -119,7 +127,8 @@ int ParseTree::get_differential_count(const std::string& name) const
 node_id_t ParseTree::register_node(const node_sptr& n)
 {
   assert(n->get_id() == 0);
-  assert(node_map_.right.find(n) == node_map_.right.end());
+  assert(node_map_.by<tag_node_sptr>().find(n) == 
+            node_map_.by<tag_node_sptr>().end());
     
   ++max_node_id_;
   n->set_id(max_node_id_);
@@ -129,18 +138,22 @@ node_id_t ParseTree::register_node(const node_sptr& n)
 
 void ParseTree::update_node(node_id_t id, const node_sptr& n)
 {
-  node_map_t::left_iterator it = node_map_.left.find(id);
-  assert(it != node_map_.left.end());
+  node_map_t::map_by<tag_node_id>::iterator it = 
+    node_map_.by<tag_node_id>().find(id);
+  assert(it != node_map_.by<tag_node_id>().end());
 
-  node_map_.left.modify_data(it, boost::bimaps::_data = n);
+  node_map_.by<tag_node_id>().
+    modify_data(it, boost::bimaps::_data = n);
 }
 
 void ParseTree::update_node_id(node_id_t id, const node_sptr& n)
 {
-  node_map_t::right_iterator it = node_map_.right.find(n);
-  assert(it != node_map_.right.end());
+  node_map_t::map_by<tag_node_sptr>::iterator it = 
+    node_map_.by<tag_node_sptr>().find(n);
+  assert(it != node_map_.by<tag_node_sptr>().end());
       
-  node_map_.right.modify_data(it, boost::bimaps::_data = id);
+  node_map_.by<tag_node_sptr>().
+    modify_data(it, boost::bimaps::_data = id);
 }
 
 void ParseTree::clear()
@@ -183,8 +196,7 @@ void variable_dumper(std::ostream& s, const T& m)
 
 std::ostream& ParseTree::dump(std::ostream& s) const 
 {
-  s << "parse_tree[\n";
-    /*
+      /*
     << "constraint_definition[\n";  
   definition_dumper(s, cons_def_map_);
   s << "],\n";
@@ -194,13 +206,32 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   s << "],\n";
   */
 
-  s << "node_tree[\n";
-  if(node_tree_) s << "  " << *node_tree_;
-  s << "],\n";
+  s << "--- node_tree ---\n";
+  if(node_tree_) s << *node_tree_;
+  s << "\n";
 
-  s << "variables[\n";
-  variable_dumper(s, variable_map_);
-  s << "]]";
+  s << "--- variables ---\n";
+  BOOST_FOREACH(const variable_map_t::value_type& i, 
+                variable_map_) 
+  {
+    s << i.first << " : " << i.second << "\n";
+  }
+
+  s << "--- node id table (id -> sptr) ---\n";
+  BOOST_FOREACH(const node_map_t::map_by<tag_node_id>::value_type& i, 
+                node_map_.by<tag_node_id>()) 
+  {
+    s << i.get<tag_node_id>() << " => " 
+      << i.get<tag_node_sptr>() << "\n";
+  }
+
+  s << "--- node id table (sptr -> id) ---\n";
+  BOOST_FOREACH(const node_map_t::map_by<tag_node_sptr>::value_type& i, 
+                node_map_.by<tag_node_sptr>()) 
+  {
+    s << i.get<tag_node_sptr>() << " => " 
+      << i.get<tag_node_id>() << "\n";
+  }
 
   return s;
 }

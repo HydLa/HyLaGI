@@ -59,6 +59,7 @@ private:
    */
   virtual void do_initialize(const parse_tree_sptr& parse_tree);
 
+  void init_module_set_container(const parse_tree_sptr& parse_tree);
   void init_mathlink();
 
   /**

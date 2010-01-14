@@ -32,10 +32,19 @@ public:
 
     
   // ノード表
-  typedef boost::bimaps::bimap<
-            boost::bimaps::unordered_set_of<node_id_t>, 
-            boost::bimaps::unordered_set_of<node_sptr> > node_map_t;
+  struct tag_node_id {};
+  struct tag_node_sptr {};
+
+  typedef 
+    boost::bimaps::bimap<
+      boost::bimaps::unordered_set_of<
+        boost::bimaps::tags::tagged<node_id_t, tag_node_id> >,
+    boost::bimaps::unordered_set_of<
+        boost::bimaps::tags::tagged<node_sptr, tag_node_sptr> > > node_map_t;
+
   typedef node_map_t::value_type                         node_map_value_t;
+
+  static const int INITIAL_MAX_NODE_ID = 0;
 
   ParseTree();
   ParseTree(const ParseTree& pt);
@@ -62,9 +71,18 @@ public:
 
 
   /**
-   * ノードのIDの更新をおこなう
+   * ノードIDの表の再構築をおこなう
+   * 今までのノードIDは無効となる
    */
-  void update_node_id();
+  void rebuild_node_id_list();
+
+  /**
+   * IDの割り当てられていないノードに対してIDを割り当てる
+   * ParseTree内でのノードの削除等が発生した場合は
+   * この関数ではなく，rebuild_node_id_listを使用して
+   * ID表の再構築をおこなうこと
+   */
+  void update_node_id_list();
 
   /**
    * 変数を登録する
@@ -154,10 +172,11 @@ public:
   /**
    * 指定されたIDに対応するノードを得る
    */
-  node_sptr get_node(node_id_t id)
+  node_sptr get_node(node_id_t id) const
   {
-    node_map_t::left_iterator it = node_map_.left.find(id);
-    if(it != node_map_.left.end()) {
+    node_map_t::map_by<tag_node_id>::const_iterator it = 
+      node_map_.by<tag_node_id>().find(id);
+    if(it != node_map_.by<tag_node_id>().end()) {
       return it->second;
     }
     return node_sptr();
@@ -166,10 +185,11 @@ public:
   /**
    * 指定されたノードに対応するIDを得る
    */
-  node_id_t get_node_id(const node_sptr& n)
+  node_id_t get_node_id(const node_sptr& n) const
   {
-    node_map_t::right_iterator it = node_map_.right.find(n);
-    if(it != node_map_.right.end()) {
+    node_map_t::map_by<tag_node_sptr>::const_iterator it = 
+      node_map_.by<tag_node_sptr>().find(n);
+    if(it != node_map_.by<tag_node_sptr>().end()) {
       return it->second;
     }
     return node_id_t();
