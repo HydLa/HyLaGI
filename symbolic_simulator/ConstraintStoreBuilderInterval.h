@@ -20,7 +20,7 @@ typedef std::pair<std::set<std::set<SymbolicValue> >, std::set<SymbolicVariable>
 class ConstraintStoreBuilderInterval
 {
 public:
-  ConstraintStoreBuilderInterval(MathLink& ml, bool debug_mode = true);
+  ConstraintStoreBuilderInterval(bool debug_mode = true);
 
   virtual ~ConstraintStoreBuilderInterval();
 
@@ -35,7 +35,6 @@ public:
 
 private:
   ConstraintStoreInterval constraint_store_;
-  MathLink& ml_;
   /// デバッグ出力をするかどうか
   bool               debug_mode_;
 

@@ -177,7 +177,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
-  ConstraintStoreBuilderPoint csbp(ml_);
+  ConstraintStoreBuilderPoint csbp;
 
   ConsistencyChecker consistency_checker(ml_);
   EntailmentChecker  entailment_checker(ml_);
@@ -247,7 +247,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
-  ConstraintStoreBuilderInterval csbi(ml_);
+  ConstraintStoreBuilderInterval csbi;
 
   ConsistencyCheckerInterval consistency_checker_interval(ml_);
   EntailmentCheckerInterval  entailment_checker_interval(ml_);

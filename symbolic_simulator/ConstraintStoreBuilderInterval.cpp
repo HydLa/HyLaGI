@@ -8,8 +8,7 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-ConstraintStoreBuilderInterval::ConstraintStoreBuilderInterval(MathLink& ml, bool debug_mode) :
-  ml_(ml),
+ConstraintStoreBuilderInterval::ConstraintStoreBuilderInterval(bool debug_mode) :
   debug_mode_(debug_mode)
 {}
 
