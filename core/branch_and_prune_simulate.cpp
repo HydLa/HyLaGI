@@ -17,6 +17,7 @@ void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> p
   ProgramOptions &po = ProgramOptions::instance();
   BPSimulator::Opts bpopts;
 
+  bpopts.mathlink      = po.get<std::string>("mathlink");
   bpopts.debug_mode    = po.count("debug") > 0;
   bpopts.max_time      = po.get<std::string>("simulation-time");
   bpopts.profile_mode  = po.count("profile") > 0;

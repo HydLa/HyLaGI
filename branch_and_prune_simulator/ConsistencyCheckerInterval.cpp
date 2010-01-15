@@ -8,7 +8,10 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace bp_simulator {
 
-  ConsistencyCheckerInterval::ConsistencyCheckerInterval(){}
+  ConsistencyCheckerInterval::ConsistencyCheckerInterval(MathLink& ml) :
+  packet_sender_(ml, false),
+  ml_(ml)
+  {}
 
   ConsistencyCheckerInterval::~ConsistencyCheckerInterval(){}
 
@@ -16,133 +19,33 @@ namespace bp_simulator {
                                                  ConstraintStoreInterval& constraint_store)
   {
     // ストアの変数情報をコピー
-    this->vars_ = constraint_store.get_store_vars();
+    //this->vars_ = constraint_store.get_store_vars();
     // tellを積分，rp_constraint集合を生成
-    this->send_expression_str = "DSolve[{";
-    tells_t::iterator it;
-    for(it=collected_tells.begin(); it!=collected_tells.end(); it++) {
-      this->accept(*it);
-    }
-    this->send_expression_str += "}";
 
+    // 実験中
+    // tellsを送信可能な形へ変換
+    this->ml_.put_function("ToString", 1);
+    tells_t::iterator it = collected_tells.begin();
+    for(; it!=collected_tells.end(); it++) {
+      this->packet_sender_.put_node(*it);
+    }
+    this->ml_.MLEndPacket();
+    ml_.skip_pkt_until(RETURNPKT);
+    int r = this->ml_.MLGetNext();
+    std::string str(ml_.get_string());
+    std::cout << r << " : " << str << "\n\n";
+
+    // tellsに使われている変数リスト？
+    this->packet_sender_.put_vars();
+    this->ml_.MLEndPacket();
+
+    // 受け取った式リストをrp_constraint集合に変換
+    // tell制約をコピーしておく
+    // ストアの制約を追加
+    // 問題とソルバを作成し，解いてチェック
+    // ソルバから解が出力されればconsistent，tell制約をストアに追加
     return true;
   }
 
-  // Tell制約
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Tell> node)
-  {
-    this->accept(node->get_child());
-  }
-
-  // 比較演算子
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Equal> node)
-  {
-    this->accept(node->get_lhs());
-    this->send_expression_str += " == ";
-    this->accept(node->get_rhs());
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<UnEqual> node)
-  {
-    this->accept(node->get_lhs());
-    this->send_expression_str += " != ";
-    this->accept(node->get_rhs());
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Less> node)
-  {
-    this->accept(node->get_lhs());
-    this->send_expression_str += " < ";
-    this->accept(node->get_rhs());
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<LessEqual> node)
-  {
-    this->accept(node->get_lhs());
-    this->send_expression_str += " <= ";
-    this->accept(node->get_rhs());
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Greater> node)
-  {
-    this->accept(node->get_lhs());
-    this->send_expression_str += " > ";
-    this->accept(node->get_rhs());
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<GreaterEqual> node)
-  {
-    this->accept(node->get_lhs());
-    this->send_expression_str += " >= ";
-    this->accept(node->get_rhs());
-}
-
-  // 算術二項演算子
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Plus> node)
-  {
-    this->send_expression_str += "(";
-    this->accept(node->get_lhs());
-    this->send_expression_str += " + ";
-    this->accept(node->get_rhs());
-    this->send_expression_str += ")";
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Subtract> node)
-  {
-    this->send_expression_str += "(";
-    this->accept(node->get_lhs());
-    this->send_expression_str += " - ";
-    this->accept(node->get_rhs());
-    this->send_expression_str += ")";
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Times> node)
-  {
-    this->send_expression_str += "(";
-    this->accept(node->get_lhs());
-    this->send_expression_str += " * ";
-    this->accept(node->get_rhs());
-    this->send_expression_str += ")";
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Divide> node)
-  {
-    this->send_expression_str += "(";
-    this->accept(node->get_lhs());
-    this->send_expression_str += " / ";
-    this->accept(node->get_rhs());
-    this->send_expression_str += ")";
-  }
-
-  // 算術単項演算子
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Negative> node)
-  {
-    this->send_expression_str += "-";
-    this->accept(node->get_child());
-  }
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Positive> node)
-  {
-    this->send_expression_str += "+";
-    this->accept(node->get_child());
-  }
-
-  // 微分
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Differential> node)
-  {
-    this->derivative_count_++;
-    this->accept(node->get_child());
-    this->send_expression_str += "'";
-    this->derivative_count_--;
-  }
-
-  // 左極限
-  // 左極限はIPにおいて初期値と同じ
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Previous> node)
-  {
-    this->in_prev_ = true;
-    this->accept(node->get_child());
-    this->in_prev_ = false;
-  }
-
-  // 変数
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Variable> node)
-  {
-    // BP_USERVAR_PREFIX + node->get_name();
-  }
-
-  // 数字
-  void ConsistencyCheckerInterval::visit(boost::shared_ptr<Number> node){}
 }
 }

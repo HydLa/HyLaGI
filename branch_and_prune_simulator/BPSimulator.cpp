@@ -88,6 +88,13 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 
   push_phase_state(state);
 
+  // MathLink初期化
+  //TODO: 例外を投げるようにする
+  if(!ml_.init(opts_.mathlink.c_str())) {
+    std::cerr << "can not link" << std::endl;
+    exit(-1);
+  }
+
 }
 
 /**
@@ -240,7 +247,7 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
 
   HYDLA_LOGGER_DEBUG(constraint_store);
 
-  ConsistencyCheckerInterval consistency_checker;
+  ConsistencyCheckerInterval consistency_checker(this->ml_);
   tells_t tell_list;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
@@ -267,9 +274,18 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
     expanded = false;
     {
       // ask条件のエンテール判定
+      // IPでask条件にprevは入ってない => たぶんUNKNOWNにはならない…
+      // ただし，数学的にT/FなのにUになるものがあるので対策
+      // for all unknown_asks do
+      //   Trivalent res = EntailmentCheckerInterval.check_entailment(ask, constraint_store);
+      //   if(res==Tri_TRUE) positive_asks + ask
+      //   if(res==Tri_FALSE) negative_asks + ask
+      //   if(res==Tri_UNKNOWN) assert(false)かなぁ？
     }
   }
+
   // (list({t, vm}),list({ask,p?n})) = 積分処理(integrate)
+  // integrate(cs, p_a, n_a, time, max_time);
   // time, vm, c_askからphase_stateを作る
   // 積む
   // ↓正確にはfor文で囲むと思われる

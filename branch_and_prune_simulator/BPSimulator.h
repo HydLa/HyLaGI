@@ -7,6 +7,9 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 
+// symbolic_simulator
+#include "../symbolic_simulator/mathlink_helper.h"
+
 namespace hydla {
 namespace bp_simulator {
 
@@ -18,6 +21,7 @@ class BPSimulator : public simulator_t
 public:
 
   typedef struct Opts_ {
+    std::string mathlink;
     bool debug_mode;
     std::string max_time;
     bool profile_mode;    // ‚È‚¢
@@ -64,6 +68,7 @@ private:
   module_set_container_sptr msc_no_init_;
   module_set_container_sptr msc_no_init_discreteask_;
   Opts opts_;
+  MathLink ml_;
 };
 
 } // namespace bp_simulator
