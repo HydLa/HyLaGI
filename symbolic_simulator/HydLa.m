@@ -166,22 +166,45 @@ Block[{
 
 (* Print[nextPointPhaseTime[False, 10, {}, {{t*t==2, c3}}]] *)
 
-createIntegUsrVar[var_] := ToExpression["Integ" <> ToString[var]];
 
-var2IntegUsrVar[vars_] := Map[createIntegUsrVar, vars];
+getVariableName[variable_] := variable;
+getVariableName[Derivative[n_][f_]] := f;
+
+getDerivativeCount[variable_] := 0;
+getDerivativeCount[Derivative[n_][f_]] := n;
+
+createIntegratedValue[variable_, integRule_] := (
+  variable /. (integRule /. x_[t] -> x)
+           /. Derivative[n_][f_] :> D[f, {t, n}]
+           /. t -> tmpMinT // Simplify // FullForm // ToString
+);
 
 integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
   tmpIntegSol = First[DSolve[cons, vars, t]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
-  {tmpMinT, tmpMinAskIDs} = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
-  varsND = DeleteDuplicates[Map[removeDash, vars]];
-  integVars = var2IntegUsrVar[Map[(# /. x_[t] -> x) &, varsND]];
-  MapThread[(#1[t_] = simplify[(#2 /. tmpIntegSol)]) &, {integVars, varsND}];
-  tmpPrevConsTable =  MapThread[(ToString[FullForm[#1 == simplify[(#2 /. t -> tmpMinT)]]])&,
-                                {vars, Map[(ToExpression["Integ" <> ToString[#]])&, vars]}];
+  {tmpMinT, tmpMinAskIDs} = 
+    calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
+  tmpPrevConsTable = 
+    Map[({getVariableName[#], 
+          getDerivativeCount[#], 
+          createIntegratedValue[#, tmpIntegSol]})&, 
+        vars /. x_[t] -> x];
   {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs}
 );
+
+Print[];
+Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0],
+    Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]},
+  {}, 
+  {{usrVarht[t]==0, 10}}, 
+  {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10] // FullForm];
+
+Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0],
+    Equal[Derivative[2][usrVarht][t], -10]},
+  {}, 
+  {{usrVarht[t]==0, 10}}, 
+  {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10]];
 
 
 (* $MaxExtraPrecision = Infinity *)

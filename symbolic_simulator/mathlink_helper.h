@@ -161,6 +161,25 @@ public:
     return str;
   }
 
+  int get_integer()
+  {
+    int i;
+    if(!MLGetInteger(&i)) {
+      throw MathLinkError("get_integer", MLError());      
+    }
+    return i;
+  }
+
+  int get_arg_count()
+  {
+    int count;
+    if(!MLGetArgCount(&count)){
+      throw MathLinkError("get_arg_count", MLError());
+    }
+    return count;
+  }
+
+
 
   /////////// Mathematica Function /////////////
   int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}

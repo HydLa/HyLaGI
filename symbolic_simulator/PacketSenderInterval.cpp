@@ -226,6 +226,14 @@ void PacketSenderInterval::visit(boost::shared_ptr<Number> node)
   if(debug_mode_) std::cout << node->get_number().c_str();
 }
 
+void PacketSenderInterval::put_node(const node_sptr& node)
+{
+  differential_count_ = 0;
+  in_prev_ = false;
+  debug_mode_ = true;
+  accept(node);
+}
+
 
 // •Ï”‚Ìˆê——‚ğ‘—M
 void PacketSenderInterval::put_vars()

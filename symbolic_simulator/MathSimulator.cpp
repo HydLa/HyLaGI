@@ -241,7 +241,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   new_state->phase        = IntervalPhase;
   //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   csbp.build_variable_map(new_state->variable_map);
-  new_state->module_set_container = msc_no_init_discreteask_;
+  new_state->module_set_container = msc_no_init_;
 
   push_phase_state(new_state);
 
@@ -314,14 +314,20 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   std::cout << integrate_result;
 
   //to next pointphase
-/*
-  phase_state_sptr new_state(create_new_phase_state(state));
-  new_state->phase        = phase_state_t::PointPhase;
-  new_state->initial_time = false;
-  csbi.build_variable_map(new_state->variable_map);
-  std::cout << new_state->variable_map;
-  push_phase_state(new_state);
-*/
+  assert(integrate_result.states.size() == 1);
+
+  if(!integrate_result.states[0].is_max_time) {
+    phase_state_sptr new_state(create_new_phase_state());
+    new_state->phase        = PointPhase;
+    new_state->variable_map = integrate_result.states[0].variable_map;
+    new_state->module_set_container = msc_no_init_;
+
+    push_phase_state(new_state);
+  }
+
+  std::cout << "%%%%%%%%%%%%% interval phase\n";
+  std::cout << integrate_result.states[0].variable_map;
+
   return true;
 }
 

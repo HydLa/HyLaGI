@@ -1,24 +1,29 @@
 #ifndef _INCLUDED_HYDLA_PACKET_SENDER_INTERVAL_H_
 #define _INCLUDED_HYDLA_PACKET_SENDER_INTERVAL_H_
 
+#include <map>
+
 #include "Node.h"
 #include "TreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
-#include <map>
 #include "ConstraintStoreBuilderInterval.h"
 
 
 namespace hydla {
 namespace symbolic_simulator {
 
-class PacketSenderInterval : public parse_tree::TreeVisitor
+class PacketSenderInterval : 
+    public hydla::parse_tree::TreeVisitor
 {
 public:
+  typedef hydla::parse_tree::node_sptr node_sptr;
 
   PacketSenderInterval(MathLink& ml, bool debug_mode);
 
   virtual ~PacketSenderInterval();
+
+  void put_node(const node_sptr& node);
 
   void put_vars();
 

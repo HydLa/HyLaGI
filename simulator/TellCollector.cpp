@@ -22,28 +22,6 @@ void TellCollector::collected_tells(tells_t* collected_tells)
     collected_tells_.begin(), collected_tells_.end());
 }
 
-namespace {
-
-  struct NodeDumper {
-      
-    template<typename T>
-    NodeDumper(T it, T end) 
-    {
-      for(; it!=end; ++it) {
-        ss << **it << "\n";
-      }
-    }
-
-    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
-    {
-      s << nd.ss.str();
-      return s;
-    }
-
-    std::stringstream ss;
-  };
-}
-
 void TellCollector::collect(tells_t*                 tells,
                             const expanded_always_t* expanded_always,                   
                             const positive_asks_t*   positive_asks)
@@ -74,9 +52,7 @@ void TellCollector::collect(tells_t*                 tells,
     }
   }
 
-  HYDLA_LOGGER_DEBUG(
-    "#** collected tells **\n", 
-    NodeDumper(tells->begin(), tells->end()));
+//  HYDLA_LOGGER_DEBUG("#** collected tells **\n", *tells);
 }
 
 // êßñÒéÆ

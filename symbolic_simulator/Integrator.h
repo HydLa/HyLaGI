@@ -2,13 +2,14 @@
 #define _INCLUDED_HYDLA_INTEGRATOR_H_
 
 #include "Node.h"
-#include "PacketSenderInterval.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include "Types.h"
-#include <boost/shared_ptr.hpp>
-#include "ConstraintStoreBuilderInterval.h"
 #include "SymbolicTime.h"
+#include "ConstraintStoreBuilderInterval.h"
+#include "PacketSenderInterval.h"
+
+#include <boost/shared_ptr.hpp>
 
 namespace hydla {
 namespace symbolic_simulator {

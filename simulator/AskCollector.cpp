@@ -82,9 +82,9 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
     "--- positive asks ---\n", 
     NodeDumper(positive_asks->begin(), positive_asks->end()),
     "--- negative asks ---\n",
-    NodeDumper(negative_asks->begin(), negative_asks->end()),
-    "--- expanded always ---\n",
-    NodeDumper(expanded_always->begin(), expanded_always->end()));
+    NodeDumper(negative_asks->begin(), negative_asks->end()));
+//     "--- expanded always ---\n",
+//     NodeDumper(expanded_always->begin(), expanded_always->end()));
 }
 
 // §–ñ®

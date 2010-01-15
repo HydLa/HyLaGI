@@ -1,6 +1,9 @@
 #include "Integrator.h"
-//#include "PacketChecker.h"
+
+#include "PacketChecker.h"
 #include <iostream>
+
+#include "Logger.h"
 
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
@@ -31,10 +34,22 @@ IntegrateResult Integrator::integrate(
   const SymbolicTime& current_time,
   std::string max_time)
 {
-  // integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
+  HYDLA_LOGGER_DEBUG(
+    "#*** Integrator ***\n",
+    "--- positive asks ---\n",
+    positive_asks,
+    "--- negative asks ---\n",
+    negative_asks,
+    "--- current time ---\n",
+    current_time,
+    "--- max time ---\n",
+    max_time);
+
+  
+// integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
   ml_.put_function("integrateCalc", 5);
 
-  PacketSenderInterval psi(ml_, debug_mode_);
+  PacketSenderInterval psi(ml_, true);
 
   // 制約ストアから式storeを得てMathematicaに渡す
   psi.put_cs(constraint_store);
@@ -45,12 +60,14 @@ IntegrateResult Integrator::integrate(
   positive_asks_t::iterator pos_asks_it = positive_asks.begin();
   while((pos_asks_it) != positive_asks.end())
   {
+    HYDLA_LOGGER_DEBUG("send pos ask : ", **pos_asks_it);
+
     ml_.put_function("List", 2);    
-    psi.visit((*pos_asks_it));
+    psi.put_node((*pos_asks_it)->get_guard());
     // IDを送る
     int pos_id = (*pos_asks_it)->get_id();
-    //std::cout << "pos_id= " << pos_id << std::endl;
     ml_.MLPutInteger(pos_id);
+
     pos_asks_it++;
   }
 
@@ -60,12 +77,14 @@ IntegrateResult Integrator::integrate(
   negative_asks_t::iterator neg_asks_it = negative_asks.begin();
   while((neg_asks_it) != negative_asks.end())
   {
-    ml_.put_function("List", 2);    
-    psi.visit((*neg_asks_it));
+    HYDLA_LOGGER_DEBUG("send neg ask : ", **neg_asks_it);
+
+    ml_.put_function("List", 2);
+    psi.put_node((*neg_asks_it)->get_guard());
     // IDを送る
     int neg_id = (*neg_asks_it)->get_id();
-    //std::cout << "neg_id= " << neg_id << std::endl;
     ml_.MLPutInteger(neg_id);
+
     neg_asks_it++;
   }
 
@@ -80,53 +99,57 @@ IntegrateResult Integrator::integrate(
   ml_.put_function("ToExpression", 1);
   ml_.put_string(max_time);
 
-/*
-// 返ってくるパケットを解析
-PacketChecker pc(ml_);
-pc.check();
-*/
+
+  // 返ってくるパケットを解析
+//  PacketChecker pc(ml_);
+//  pc.check();
 
   ml_.skip_pkt_until(RETURNPKT);
 
-  ml_.MLGetNext(); // List関数
-  int list_size;
-  if(! ml_.MLGetArgCount(&list_size)){
-    std::cout << "#funcCase:MLGetArgCount:unable to get the number of arguments from ml" << std::endl;
-    std::cout << "list_size?" << std::endl;
-    throw MathLinkError("MLGetArgCount", ml_.MLError());
-  }
+  HYDLA_LOGGER_DEBUG("---integrate calc result---");
 
+  ml_.MLGetNext(); // List関数
+  int list_size = ml_.get_arg_count();
+  HYDLA_LOGGER_DEBUG("list_size : ", list_size);
+  
   // List[制約一覧, 変化したaskとそのIDの組の一覧]が返る
   ml_.MLGetNext(); // Listという関数名
-
-  if(debug_mode_) {
-    std::cout << "---integrate calc result---" << std::endl;
-  }
 
   // next_point_phase_timeを得る
   ml_.MLGetNext(); // Listの中の先頭要素
   SymbolicTime next_point_phase_time;
   next_point_phase_time.str = ml_.get_string();
-  
+  HYDLA_LOGGER_DEBUG("next_point_phase_time : ", next_point_phase_time.str);  
 
   // 制約一覧を得る
   ml_.MLGetNext(); // Listという関数名
   // List関数の要素数（制約の個数）を得る
-  int cons_size;
-  if(! ml_.MLGetArgCount(&cons_size)){
-    std::cout << "#funcCase:MLGetArgCount:unable to get the number of arguments from ml" << std::endl;
-    throw MathLinkError("MLGetArgCount", ml_.MLError());
-  }
-  ml_.MLGetNext(); // Listという関数名
-  ml_.MLGetNext(); // Listの中の先頭要素
-  std::set<std::string> tmp_cons;
-  for(int i=0; i<cons_size; i++)
-  {
-    std::string str = ml_.get_string();
-    tmp_cons.insert(str);
-  }
+  int variable_list_size = ml_.get_arg_count();
+  HYDLA_LOGGER_DEBUG("variable_list_size : ", variable_list_size);  
+  ml_.MLGetNext(); // List中の先頭要素
 
+  variable_map_t variable_map;
+  for(int i=0; i<variable_list_size; i++)
+  {
+    ml_.MLGetNext(); ml_.MLGetNext();
+    
+    std::string name = ml_.get_symbol();
+    int derivative = ml_.get_integer();
+    std::string value = ml_.get_string();
+
+    HYDLA_LOGGER_DEBUG("name  : ", name);
+
+//    std::string variable_value = ml_.get_string();
+
+//     HYDLA_LOGGER_DEBUG(
+//       "name  : ", variable_name,
+//       "value : ", variable_value);
+
+//    tmp_cons.insert(str);
+  }
   ml_.MLGetNext(); // List関数
+/*
+
   // askとそのIDの組一覧を得る
   int changed_asks_size;
   if(! ml_.MLGetArgCount(&changed_asks_size)){
@@ -150,7 +173,7 @@ pc.check();
     }
     int changed_ask_id;
     if(! ml_.MLGetInteger(&changed_ask_id)){
-      std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
+      HYDLA_LOGGER_ERROR("MLGetInteger:unable to read the int from ml");
       throw MathLinkError("MLGetInteger", ml_.MLError());
     }
     changed_asks.push_back(std::make_pair(changed_ask_type, changed_ask_id));
@@ -234,10 +257,10 @@ pc.check();
   next_point_phase_state.is_max_time = is_max_time;
   std::vector<NextPointPhaseState> next_point_phase_states_vector;
   next_point_phase_states_vector.push_back(next_point_phase_state);
-
+*/
   IntegrateResult integrate_result;
-  integrate_result.states = next_point_phase_states_vector;
-  integrate_result.ask_list = changed_asks;
+  //integrate_result.states = next_point_phase_states_vector;
+  //integrate_result.ask_list = changed_asks;
 
   return integrate_result;
 }
