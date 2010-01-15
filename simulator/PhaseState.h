@@ -24,7 +24,7 @@ struct PhaseState {
   typedef VariableMap<variable_t, value_t>                  variable_map_t;
 
   Phase                     phase;
-  TimeType                  time;
+  TimeType                  current_time;
   variable_map_t            variable_map;
   expanded_always_id_t      expanded_always_id;
   changed_asks_t            changed_asks;

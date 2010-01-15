@@ -82,7 +82,7 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   // Ï‚Þ
   phase_state_sptr state(create_new_phase_state());
   state->phase        = PointPhase;
-  state->time         = BPTime();
+  state->current_time = BPTime();
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
 

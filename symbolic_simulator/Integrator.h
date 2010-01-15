@@ -20,62 +20,41 @@ struct NextPointPhaseState {
   bool is_max_time;
 };
 
-typedef std::vector<std::pair<hydla::simulator::AskState, int> > ask_list_t;
-
 struct IntegrateResult {
+  typedef std::vector<std::pair<hydla::simulator::AskState, int> > ask_list_t;
+  
   std::vector<NextPointPhaseState> states;
   ask_list_t ask_list;
 
-  std::ostream& dump(std::ostream& s) const
-  {
-    s << "states: " << std::endl;
-    std::vector<NextPointPhaseState>::const_iterator state_it = states.begin();
-    while((state_it)!=states.end())
-    {
-      s << "next_point_phase_time:" << (*state_it).next_point_phase_time << std::endl;
-      s << "variable_map:" << std::endl <<  (*state_it).variable_map << std::endl;
-      state_it++;
-    }
-    s << std::endl << "ask_list: ";
-    ask_list_t::const_iterator ask_list_it = ask_list.begin();
-    while((ask_list_it)!=ask_list.end())
-    {
-      s << "ask_type= " << (*ask_list_it).first << ", ";
-      s << "ask_id= " << (*ask_list_it).second;
-      s << std::endl;
-      ask_list_it++;
-    }
-    return s;
-  }
+  std::ostream& dump(std::ostream& s) const;
 
   friend std::ostream& operator<<(std::ostream& s, 
                                   const IntegrateResult & t)
   {
     return t.dump(s);
   }
-
 };
 
 class Integrator
 {
 public:
-  Integrator(MathLink& ml, bool debug_mode = true);
+  typedef hydla::symbolic_simulator::SymbolicTime time_t;
+
+  Integrator(MathLink& ml);
 
   virtual ~Integrator();
 
-  IntegrateResult integrate(
+  void integrate(
+    IntegrateResult& integrate_result,
     hydla::symbolic_simulator::ConstraintStoreInterval& constraint_store,
-    hydla::simulator::positive_asks_t& positive_asks,
-    hydla::simulator::negative_asks_t& negative_asks,
-    const hydla::symbolic_simulator::SymbolicTime& current_time,
-    std::string max_time);
+    const hydla::simulator::positive_asks_t& positive_asks,
+    const hydla::simulator::negative_asks_t& negative_asks,
+    const time_t& current_time,
+    const time_t& max_time);
 //  outFunc
 
 private:
   MathLink& ml_;
-  /// デバッグ出力をするかどうか
-  bool               debug_mode_;
-
 };
 
 } //namespace symbolic_simulator

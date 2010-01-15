@@ -71,14 +71,13 @@ void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 
   phase_state_sptr state(create_new_phase_state());
   state->phase        = PointPhase;
-  state->time         = SymbolicTime();
+  state->current_time = SymbolicTime();
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
 
   push_phase_state(state);
 
   init_mathlink();
-
 }
 
 void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
@@ -305,14 +304,17 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
       }
     }
   }
-
-  IntegrateResult integrate_result = integrator.integrate(csbi.get_constraint_store(),
-                                                          positive_asks,
-                                                          negative_asks,
-                                                          (*state).time,
-                                                          opts_.max_time);
-  std::cout << integrate_result;
-
+  
+  // ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ð‚¨‚±‚È‚¤
+  IntegrateResult integrate_result;
+  integrator.integrate(
+    integrate_result,
+    csbi.get_constraint_store(),
+    positive_asks,
+    negative_asks,
+    state->current_time,
+    SymbolicTime(opts_.max_time));
+  
   //to next pointphase
   assert(integrate_result.states.size() == 1);
 
@@ -321,6 +323,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     new_state->phase        = PointPhase;
     new_state->variable_map = integrate_result.states[0].variable_map;
     new_state->module_set_container = msc_no_init_;
+    new_state->current_time = integrate_result.states[0].next_point_phase_time;
 
     push_phase_state(new_state);
   }

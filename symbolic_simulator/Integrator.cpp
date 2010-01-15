@@ -11,10 +11,37 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
+std::ostream& IntegrateResult::dump(std::ostream& s) const
+{
+  std::vector<NextPointPhaseState>::const_iterator state_it = states.begin();
+  while((state_it)!=states.end())
+  {
+    s << "--- next_point_phase_time ---" 
+      << state_it->next_point_phase_time 
+      << "\n"
+      << "--- variable_map ---" 
+      << state_it->variable_map 
+      << "\n";
+    state_it++;
+  }
 
-Integrator::Integrator(MathLink& ml, bool debug_mode) :
-  ml_(ml),
-  debug_mode_(debug_mode)
+  s << std::endl << "---- ask_list ----";
+  ask_list_t::const_iterator ask_list_it = ask_list.begin();
+  while((ask_list_it)!=ask_list.end())
+  {
+    s << "ask_type : "
+      << ask_list_it->first 
+      << ", "
+      << "ask_id : " << ask_list_it->second
+      << "\n";
+    ask_list_it++;
+  }
+  return s;
+}
+
+
+Integrator::Integrator(MathLink& ml) :
+  ml_(ml)
 {}
 
 Integrator::~Integrator()
@@ -27,12 +54,13 @@ Integrator::~Integrator()
  * @return チェックの結果、そのask制約が展開されたかどうか
  */
 
-IntegrateResult Integrator::integrate(
+void Integrator::integrate(
+  IntegrateResult& integrate_result,
   ConstraintStoreInterval& constraint_store,
-  positive_asks_t& positive_asks,
-  negative_asks_t& negative_asks,
-  const SymbolicTime& current_time,
-  std::string max_time)
+  const positive_asks_t& positive_asks,
+  const negative_asks_t& negative_asks,
+  const time_t& current_time,
+  const time_t& max_time)
 {
   HYDLA_LOGGER_DEBUG(
     "#*** Integrator ***\n",
@@ -45,11 +73,12 @@ IntegrateResult Integrator::integrate(
     "--- max time ---\n",
     max_time);
 
-  
-// integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
-  ml_.put_function("integrateCalc", 5);
 
+////////////////// 送信処理
   PacketSenderInterval psi(ml_, true);
+  
+  // integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
+  ml_.put_function("integrateCalc", 5);
 
   // 制約ストアから式storeを得てMathematicaに渡す
   psi.put_cs(constraint_store);
@@ -57,7 +86,7 @@ IntegrateResult Integrator::integrate(
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
   int pos_asks_size = positive_asks.size();
   ml_.put_function("List", pos_asks_size);
-  positive_asks_t::iterator pos_asks_it = positive_asks.begin();
+  positive_asks_t::const_iterator pos_asks_it = positive_asks.begin();
   while((pos_asks_it) != positive_asks.end())
   {
     HYDLA_LOGGER_DEBUG("send pos ask : ", **pos_asks_it);
@@ -74,7 +103,7 @@ IntegrateResult Integrator::integrate(
   // negAskを渡す（{ガードの式、askのID}をそれぞれ）
   int neg_asks_size = negative_asks.size();
   ml_.put_function("List", neg_asks_size);
-  negative_asks_t::iterator neg_asks_it = negative_asks.begin();
+  negative_asks_t::const_iterator neg_asks_it = negative_asks.begin();
   while((neg_asks_it) != negative_asks.end())
   {
     HYDLA_LOGGER_DEBUG("send neg ask : ", **neg_asks_it);
@@ -97,17 +126,15 @@ IntegrateResult Integrator::integrate(
 
   // maxTimeを渡す
   ml_.put_function("ToExpression", 1);
-  ml_.put_string(max_time);
-
-
-  // 返ってくるパケットを解析
-//  PacketChecker pc(ml_);
-//  pc.check();
+  time_t send_time(max_time);
+  send_time -= current_time;
+  send_time.send_time(ml_);
 
   ml_.skip_pkt_until(RETURNPKT);
 
+////////////////// 受信処理
+
   HYDLA_LOGGER_DEBUG("---integrate calc result---");
-  IntegrateResult integrate_result;
   integrate_result.states.resize(1);
   NextPointPhaseState& state = integrate_result.states.back();
 
@@ -121,8 +148,9 @@ IntegrateResult Integrator::integrate(
 
   // next_point_phase_timeを得る
   SymbolicTime next_point_phase_time;
-  state.next_point_phase_time.str = ml_.get_string();
-  HYDLA_LOGGER_DEBUG("next_point_phase_time : ", state.next_point_phase_time.str);  
+  state.next_point_phase_time.receive_time(ml_);
+  state.next_point_phase_time += current_time;
+  HYDLA_LOGGER_DEBUG("next_point_phase_time : ", state.next_point_phase_time);  
   ml_.MLGetNext(); // Listという関数名
   
   // 変数表の作成
@@ -159,7 +187,7 @@ IntegrateResult Integrator::integrate(
   // askとそのIDの組一覧を得る
   int changed_asks_size = ml_.get_arg_count();
   HYDLA_LOGGER_DEBUG("changed_asks_size : ", changed_asks_size);
-  state.is_max_time = changed_asks_size > 0; // 変化したaskがない場合はmax_timeに達した場合である
+  state.is_max_time = changed_asks_size == 0; // 変化したaskがない場合はmax_timeに達した場合である
   HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
   ml_.MLGetNext(); // List関数
   ml_.MLGetNext(); // Listという関数名
@@ -193,9 +221,6 @@ IntegrateResult Integrator::integrate(
   HYDLA_LOGGER_DEBUG(
     "--- integrate result ---\n", 
     integrate_result);
-
-
-  return integrate_result;
 }
 
 
