@@ -14,6 +14,7 @@
 
 #define BP_PREV_STR "_p"
 #define BP_DERIV_STR "_d"
+#define BP_INITIAL_STR "_0"
 
 namespace hydla {
 namespace bp_simulator {

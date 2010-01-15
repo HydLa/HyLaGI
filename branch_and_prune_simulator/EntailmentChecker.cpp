@@ -1,4 +1,4 @@
-#include "EntailmentChecker.h"
+#include "./EntailmentChecker.h"
 #include "Logger.h"
 #include "rp_constraint_ext.h"
 
@@ -107,7 +107,7 @@ Trivalent EntailmentChecker::check_entailment(
   if(this->is_guard_about_undefined_prev()) {
     if(this->debug_mode_) std::cout << "#*** entailment check ==> FALSE(guard_about_undefined_prev) ***\n";
     this->finalize();
-    return FALSE;
+    return Tri_FALSE;
   }
 
   // solve(S & g) == empty -> FALSE
@@ -119,7 +119,7 @@ Trivalent EntailmentChecker::check_entailment(
     rp_box_destroy(&box);
     if(this->debug_mode_) std::cout << "#*** entailment check ==> FALSE ***\n";
     this->finalize();
-    return FALSE;
+    return Tri_FALSE;
   }
   rp_box_destroy(&box);
 
@@ -139,13 +139,13 @@ Trivalent EntailmentChecker::check_entailment(
   if(is_TRUE) {
     if(this->debug_mode_) std::cout << "#*** entailment check ==> TRUE ***\n";
     this->finalize();
-    return TRUE;
+    return Tri_TRUE;
   }
 
   // else -> UNKNOWN
   if(this->debug_mode_) std::cout << "#*** entailment check ==> UNKNOWN ***\n";
   this->finalize();
-  return UNKNOWN;
+  return Tri_UNKNOWN;
 }
 
 /**

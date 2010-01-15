@@ -19,16 +19,9 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace bp_simulator {
 
-ConsistencyChecker::ConsistencyChecker() :
-  debug_mode_(false)
-{}
+ConsistencyChecker::ConsistencyChecker(){}
 
-ConsistencyChecker::ConsistencyChecker(bool debug_mode) :
-  debug_mode_(debug_mode)
-{}
-
-ConsistencyChecker::~ConsistencyChecker()
-{}
+ConsistencyChecker::~ConsistencyChecker(){}
 
 // TellêßñÒ
 void ConsistencyChecker::visit(boost::shared_ptr<Tell> node)                  

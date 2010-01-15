@@ -30,6 +30,7 @@ public:
 
 private:
   rp_vector_variable to_rp_vector() const;
+  void add_vm_constraint(std::string var, rp_interval val, const int op);
   std::set<rp_constraint> exprs_;
   var_name_map_t vars_;
 };

@@ -1,8 +1,8 @@
 #ifndef _INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 #define _INCLUDED_HYDLA_BP_SIMULATOR_CONSISTENCY_CHECKER_H_
 
-#include "ConstraintBuilder.h"
-#include "ConstraintStore.h"
+#include "./ConstraintBuilder.h"
+#include "./ConstraintStore.h"
 
 //#define RP_RELATION_EQUAL     1
 //#define RP_RELATION_SUPEQUAL  2
@@ -17,7 +17,6 @@ namespace bp_simulator {
 class ConsistencyChecker : public ConstraintBuilder {
 public:
   ConsistencyChecker();
-  ConsistencyChecker(bool debug_mode);
 
   virtual ~ConsistencyChecker();
 
@@ -29,9 +28,6 @@ public:
 
 private:
   std::set<rp_constraint> constraints_;
-
-  bool debug_mode_;
-
 };
 
 } //namespace bp_simulator

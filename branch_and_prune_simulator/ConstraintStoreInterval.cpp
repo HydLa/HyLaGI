@@ -1,19 +1,83 @@
 #include "ConstraintStoreInterval.h"
 #include "rp_constraint_ext.h"
 
+#include <cassert>
+
 namespace hydla {
 namespace bp_simulator {
 
-  ConstraintStoreInterval::ConstraintStoreInterval()
-  {
-  }
+  ConstraintStoreInterval::ConstraintStoreInterval(){}
   
   ConstraintStoreInterval::~ConstraintStoreInterval()
   {
+    std::set<rp_constraint>::iterator it = this->exprs_.begin();
+    while(it != this->exprs_.end()) {
+      rp_constraint c = *it;
+      rp_constraint_destroy(&c);
+      this->exprs_.erase(it++);
+    }
   }
-  
+
+  /**
+   * variable_map‚©‚çƒXƒgƒA‚ğ\’z‚·‚é
+   * initial_var <- var ‚Ì•ÏŠ·‚Í‚±‚±‚Å‚¨‚±‚È‚¤
+   * IP‚Å‚Íprev‚Í‘¶İ‚¹‚¸Cinital_var‚Æ‚È‚é
+   * –Ê“|‚È‚Ì‚Åvar_property‚Ìis_prev‚ğg‚Á‚Äinitial‚Å‚ ‚é‚©‚ğŠÇ—‚·‚é
+   * @param variable_map •Ï”•\
+   * TODO: ‚¿‚á‚ñ‚Æ‘‚­
+   */
   void ConstraintStoreInterval::build(const variable_map_t& variable_map)
   {
+    typedef var_name_map_t::value_type vars_type_t;
+    variable_map_t::const_iterator it;
+    for(it=variable_map.begin(); it!=variable_map.end(); it++) {
+      // •Ï”–¼‚ğì‚é
+      std::string name(it->first.name);
+      for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
+      std::string initial_name(name);
+      initial_name += BP_INITIAL_STR;
+      // •\‚É“o˜^
+      unsigned int size = this->vars_.size();
+      var_property vp(it->first.derivative_count, false),
+        vp_0(it->first.derivative_count, true);
+      this->vars_.insert(vars_type_t(name, size, vp)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
+      this->vars_.insert(vars_type_t(initial_name, size+1, vp_0));
+      // rp_interval‚©‚çrp_constraint‚ğì‚é
+      rp_interval i;
+      it->second.get(i);
+      // (-oo, +oo) ==> ì‚ç‚È‚¢C“o˜^‚µ‚È‚¢
+      if(rp_binf(i)==-RP_INFINITY && rp_bsup(i)==RP_INFINITY) continue;
+      if(rp_interval_point(i)) {
+        // rp_interval_point ==> ®1‚Â“o˜^
+        this->add_vm_constraint(initial_name, i, RP_RELATION_EQUAL);
+      } else {
+        // else ==> ®2‚Â“o˜^
+        rp_interval i_tmp;
+        rp_interval_set_point(i_tmp, rp_binf(i));
+        this->add_vm_constraint(initial_name, i_tmp, RP_RELATION_SUPEQUAL);
+        rp_interval_set_point(i_tmp, rp_bsup(i));
+        this->add_vm_constraint(initial_name, i_tmp, RP_RELATION_INFEQUAL);
+      }
+    }
+  }
+
+  /**
+   * variable_map‚©‚çrp_constraint‚ğ¶¬C’Ç‰Á‚·‚éƒwƒ‹ƒp
+   * @param var •Ï”–¼
+   * @param val ’l(“_‹æŠÔ‚Å‚ ‚é‚±‚Æ)
+   * @param op ‰‰Zq({=,>=,<=})
+   */
+  void ConstraintStoreInterval::add_vm_constraint(std::string var, rp_interval val, const int op)
+  {
+    rp_erep l, r;
+    rp_ctr_num cnum;
+    rp_constraint c;
+    rp_erep_create_var(&l, this->vars_.left.at(var));
+    assert(rp_interval_point(val));
+    rp_erep_create_cst(&r, "", val);
+    rp_ctr_num_create(&cnum, &l, op, &r);
+    rp_constraint_create_num(&c, cnum);
+    this->exprs_.insert(c);
   }
 
   void ConstraintStoreInterval::add_constraint(rp_constraint c, const var_name_map_t& vars)

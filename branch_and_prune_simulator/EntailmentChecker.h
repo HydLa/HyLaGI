@@ -22,7 +22,7 @@ namespace hydla {
 namespace bp_simulator {
 
 /* 真・偽・不明 */
-typedef enum Trivalent_ {FALSE, UNKNOWN, TRUE} Trivalent;
+enum Trivalent {Tri_FALSE, Tri_UNKNOWN, Tri_TRUE};
 
 
 class EntailmentChecker : protected GuardConstraintBuilder {

@@ -1,9 +1,9 @@
 #include "BPSimulator.h"
+#include "EntailmentChecker.h"
 #include "ConstraintStore.h"
 #include "ConstraintStoreInterval.h"
 #include "ConsistencyChecker.h"
 #include "ConsistencyCheckerInterval.h"
-#include "EntailmentChecker.h"
 
 #include "Logger.h"
 
@@ -167,12 +167,11 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
         }
         Trivalent res = entailment_checker.check_entailment(*it, constraint_store);
         switch(res) {
-          case TRUE:
-            expanded = true;
-            positive_asks.insert(*it);
+          case Tri_FALSE:
+            negative_asks.insert(*it);
             unknown_asks.erase(it++);
             break;
-          case UNKNOWN:
+          case Tri_UNKNOWN:
             {
               // AskðŒ‚ÉŠî‚Ã‚¢‚Ä•ªŠò
               // ƒGƒ“ƒe[ƒ‹‚³‚ê‚éê‡
@@ -203,8 +202,9 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
             }
             assert(false);
             break;
-          case FALSE:
-            negative_asks.insert(*it);
+          case Tri_TRUE:
+            expanded = true;
+            positive_asks.insert(*it);
             unknown_asks.erase(it++);
             break;
         }
@@ -237,6 +237,9 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   AskCollector ask_collector(ms);
   ConstraintStoreInterval constraint_store;
   constraint_store.build(state->variable_map);
+
+  HYDLA_LOGGER_DEBUG(constraint_store);
+
   ConsistencyCheckerInterval consistency_checker;
   tells_t tell_list;
   positive_asks_t positive_asks;
