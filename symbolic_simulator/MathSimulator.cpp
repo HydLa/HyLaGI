@@ -190,10 +190,6 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 {
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
-  ConstraintStoreBuilderPoint csbp;
-
-  ConsistencyChecker consistency_checker(ml_);
-  EntailmentChecker  entailment_checker(ml_);
 
   tells_t         tell_list;
   positive_asks_t   positive_asks;
@@ -206,9 +202,6 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_);
   vcs.reset(state->variable_map);
 
-/*  
-  csbp.build_constraint_store((*state).variable_map);
-
   bool expanded   = true;
   while(expanded) {
     // tell制約を集める
@@ -216,8 +209,8 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
                                      &expanded_always, 
                                      &positive_asks);
 
-    // 制約が充足しているかどうかの確認
-    if(!consistency_checker.is_consistent(tell_list, csbp.get_constraint_store())){
+    // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
+    if(!vcs.add_constraint(tell_list)) {
       return false;
     }
 
@@ -232,7 +225,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        if(entailment_checker.check_entailment(*it, csbp.get_constraint_store())) {
+        if(vcs.check_entailment(*it)) {
           expanded = true;
           positive_asks.insert(*it);
           negative_asks.erase(it++);
@@ -244,6 +237,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     }
   }
 
+/*
   // Interval Phaseへ移行
   phase_state_sptr new_state(create_new_phase_state());
   new_state->phase        = IntervalPhase;

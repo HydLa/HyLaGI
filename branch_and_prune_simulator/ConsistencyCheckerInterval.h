@@ -15,12 +15,11 @@
 // librealpaverbasic
 #include "realpaverbasic.h"
 
-// symbolic_simulator
-#include "../symbolic_simulator/PacketSender.h"
+//#include "../PacketSender.h"
 
 namespace hydla {
 namespace bp_simulator {
-
+/*
 class ConsistencyCheckerInterval {
 public:
   ConsistencyCheckerInterval(MathLink& ml);
@@ -31,7 +30,7 @@ public:
     ConstraintStoreInterval& constraint_store);
 
 private:
-  symbolic_simulator::PacketSender packet_sender_;
+  //hydla::vcs::mathematica::PacketSender packet_sender_;
   MathLink& ml_;
   var_name_map_t vars_;
   rp_ctr_num ctr_;
@@ -42,6 +41,7 @@ private:
   std::string send_expression_str;
 
 };
+*/
 
 }
 }

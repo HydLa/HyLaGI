@@ -196,10 +196,6 @@
 				RelativePath=".\PacketChecker.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\PacketSender.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -252,10 +248,6 @@
 			</File>
 			<File
 				RelativePath=".\PacketChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSender.h"
 				>
 			</File>
 			<File

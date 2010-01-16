@@ -239,6 +239,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 bool BPSimulator::interval_phase(const module_set_sptr& ms, 
                                  const phase_state_const_sptr& state)
 {
+  /*
   // 初期値はコピーしておく必要があるかも？
   TellCollector tell_collector(ms);
   AskCollector ask_collector(ms);
@@ -293,8 +294,8 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   new_state->phase        = phase_state_t::PointPhase;
   new_state->initial_time = false;
   new_state->variable_map = vm;
-  push_phase_state(new_state);*/
-
+  push_phase_state(new_state);
+*/
   return true;
 }
 

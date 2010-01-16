@@ -28,7 +28,7 @@ bool EntailmentCheckerInterval::check_entailment(
   const boost::shared_ptr<hydla::parse_tree::Ask>& negative_ask, 
   hydla::symbolic_simulator::ConstraintStoreInterval& constraint_store)
 {
-
+/*
   // checkEntailment[guard, store, vars]を渡したい
   ml_.put_function("checkEntailment", 3);
 
@@ -46,13 +46,6 @@ bool EntailmentCheckerInterval::check_entailment(
   // 制約ストア内に出現する変数も渡す
   psi.put_cs_vars(constraint_store);
 
-/*
-//  ml_.skip_pkt_until(RETURNPKT);
-// 返ってくるパケットを解析
-PacketChecker pc(ml_);
-pc.check();
-*/
-
   ml_.skip_pkt_until(RETURNPKT);
   
   int num;
@@ -64,6 +57,8 @@ pc.check();
 
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   return num==1;
+  */
+  return true;
 }
 
 

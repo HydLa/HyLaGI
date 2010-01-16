@@ -39,7 +39,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells,
   ml_.put_symbol("y");
   ml_.MLEndPacket();
 */
-
+/*
   // isConsistent[expr, vars]を渡したい
   ml_.put_function("isConsistent", 2);
 
@@ -69,13 +69,6 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells,
   // 結果を受け取る前に制約ストアを初期化
   constraint_store.first.clear();
   constraint_store.second.clear();
-
-/*
-//ml_.skip_pkt_until(RETURNPKT);
-// 返ってくるパケットを解析
-PacketChecker pc(ml_);
-pc.check();
-*/
 
   ml_.skip_pkt_until(RETURNPKT);
   // 解けなかった場合は0が返る（制約間に矛盾があるということ）
@@ -196,7 +189,7 @@ pc.check();
     std::cout << "----------------------------" << std::endl;
     std::cout << "ConsistencyChecker: true" << std::endl;
   }
-
+*/
   return true;
 }
 

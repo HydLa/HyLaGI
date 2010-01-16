@@ -20,6 +20,7 @@ ConsistencyCheckerInterval::~ConsistencyCheckerInterval()
 bool ConsistencyCheckerInterval::is_consistent(tells_t& collected_tells, 
                                                ConstraintStoreInterval& constraint_store)
 {
+  /*
   // isConsistentInterval[tells, store, tellsVars, storeVars]を渡したい
   ml_.put_function("isConsistentInterval", 4);
 
@@ -48,13 +49,6 @@ bool ConsistencyCheckerInterval::is_consistent(tells_t& collected_tells,
   // 結果を受け取る前に制約ストアを初期化
   constraint_store.first.clear();  
   constraint_store.second.clear();  
-
-/*
-ml_.skip_pkt_until(RETURNPKT);
-// 返ってくるパケットを解析
-PacketChecker pc(ml_);
-pc.check2();
-*/
 
   ml_.skip_pkt_until(RETURNPKT);
 
@@ -173,6 +167,8 @@ pc.check2();
   }
 
   return n >= 1;
+  */
+  return true;
 }
 
 

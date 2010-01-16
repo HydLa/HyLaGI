@@ -54,7 +54,7 @@ bool EntailmentChecker::check_entailment(
 
   ml_.MLEndPacket();
 */
-
+/*
   // checkEntailment[guard, store, vars]を渡したい
   ml_.put_function("checkEntailment", 3);
 
@@ -66,7 +66,7 @@ bool EntailmentChecker::check_entailment(
 
   // 制約ストアから式を得てMathematicaに渡す
   ps.put_cs(constraint_store);
-
+*/
 /*
   // tell制約の集合からtellsを得てMathematicaに渡す
   int tells_size = collected_tells.size();
@@ -78,18 +78,14 @@ bool EntailmentChecker::check_entailment(
     tells_it++;
   }
 */
-
+/*
   // varsを渡す
   ml_.put_function("Join", 2);
   ps.put_vars();
   // 制約ストア内に出現する変数も渡す
   ps.put_cs_vars(constraint_store);
 
-/*
-// 返ってくるパケットを解析
-PacketChecker pc(ml_);
-pc.check();
-*/
+
 
   ml_.skip_pkt_until(RETURNPKT);
   
@@ -102,6 +98,8 @@ pc.check();
 
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   return num==1;
+  */
+  return true;
 }
 
 

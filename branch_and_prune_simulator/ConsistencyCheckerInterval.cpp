@@ -7,7 +7,7 @@ using namespace hydla::simulator;
 
 namespace hydla {
 namespace bp_simulator {
-
+/*
   ConsistencyCheckerInterval::ConsistencyCheckerInterval(MathLink& ml) :
     packet_sender_(ml, symbolic_simulator::NP_INTERVAL_PHASE),
     ml_(ml)
@@ -46,6 +46,6 @@ namespace bp_simulator {
     // ソルバから解が出力されればconsistent，tell制約をストアに追加
     return true;
   }
-
+*/
 }
 }

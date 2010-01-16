@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_PACKET_SENDER_H_
-#define _INCLUDED_HYDLA_PACKET_SENDER_H_
+#ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
+#define _INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
 
 #include <map>
 
@@ -8,19 +8,24 @@
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 
-
 namespace hydla {
-namespace symbolic_simulator {
+namespace vcs {
+namespace mathematica {
 
-enum now_phase_t { NP_POINT_PHASE, NP_INTERVAL_PHASE };
-
-class PacketSender : public hydla::parse_tree::TreeVisitor
+class PacketSender : 
+  public hydla::parse_tree::TreeVisitor
 {
 public:
-  typedef std::pair<std::string, int> var_info_t;
-  typedef std::set<var_info_t>::const_iterator const_iterator;
+  enum now_phase_t 
+  { 
+    NP_POINT_PHASE, 
+    NP_INTERVAL_PHASE,
+  };
 
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef std::pair<std::string, int>     var_info_t;
+  typedef std::set<var_info_t>            var_info_list_t;
+  typedef var_info_list_t::const_iterator vars_const_iterator;
+  typedef hydla::parse_tree::node_sptr    node_sptr;
 
   // MathematicaÇ…ëóÇÈç€Ç…ïœêîñºÇ…Ç¬ÇØÇÈê⁄ì™åÍ "usrVar"
   static const std::string var_prefix;
@@ -47,9 +52,9 @@ public:
 
   virtual ~PacketSender();
 
-  const_iterator begin() const { return vars_.begin(); }
+  vars_const_iterator vars_begin() const { return vars_.begin(); }
 
-  const_iterator end() const { return vars_.end(); }
+  vars_const_iterator vars_end() const { return vars_.end(); }
 
   void put_node(const node_sptr& node);
 
@@ -105,7 +110,7 @@ private:
   MathLink& ml_;
 
   // pair<ïœêîñº, (prevïœêîÇ»ÇÁ-1*)î˜ï™âÒêî+1>
-  std::set<std::pair<std::string, int> > vars_;
+  var_info_list_t vars_;
 
   std::string vars_str_;
 
@@ -121,10 +126,9 @@ private:
 
 };
 
-} // namespace symbolic_simulator
-} // namespace hydla
-
-
+} // namespace mathematica
+} // namespace simulator
+} // namespace hydla 
 
 //#include "Node.h"
 //#include "TreeVisitor.h"
@@ -209,5 +213,5 @@ private:
 //} //namespace symbolic_simulator
 //} // namespace hydla
 
-#endif //_INCLUDED_HYDLA_PACKET_SENDER_H_
+#endif //_INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
 

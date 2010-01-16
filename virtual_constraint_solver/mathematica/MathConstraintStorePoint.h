@@ -149,7 +149,7 @@ struct MathConstraintStorePoint
   /**
    * constraint_store をもとに variable_map をつくる
    */
-  void create_variable_map(variable_map_t& variable_map) const
+  bool create_variable_map(variable_map_t& variable_map) const
   {
     std::set<std::set<MathValue> >::const_iterator or_cons_it = store.first.begin();
     // Orでつながった制約のうち、最初の1つだけを採用することにする
@@ -165,7 +165,7 @@ struct MathConstraintStorePoint
       if(comma_loc == std::string::npos)
       {
         std::cout << "can't find comma." << std::endl;
-        return;
+        return false;
       }
       std::string variable_str = cons_str.substr(loc, comma_loc-loc);
       // variable_strは"usrVarx"や"Derivative[1][usrVarx]"など
@@ -181,7 +181,7 @@ struct MathConstraintStorePoint
         if(bracket_loc == std::string::npos)
         {
           std::cout << "can't find bracket." << std::endl;
-          return;
+          return false;
         }
         std::string variable_derivative_count_str = variable_str.substr(variable_loc, bracket_loc-variable_loc);
         variable_derivative_count = std::atoi(variable_derivative_count_str.c_str());
@@ -190,7 +190,7 @@ struct MathConstraintStorePoint
         if(bracket_loc == std::string::npos)
         {
           std::cout << "can't find bracket." << std::endl;
-          return;
+          return false;
         }
         variable_loc += 6; // "usrVar"の長さ分
         variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
@@ -208,7 +208,7 @@ struct MathConstraintStorePoint
       if(end_loc == std::string::npos)
       {
         std::cout << "can't find bracket." << std::endl;
-        return;
+        return false;
       }
       std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
 
@@ -222,6 +222,7 @@ struct MathConstraintStorePoint
       and_cons_it++;
     }
     // prev[]を除く処理は要らなさそう？
+    return true;
   }
 
   void send_cs(MathLink* ml) const
