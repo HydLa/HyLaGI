@@ -25,19 +25,19 @@ public:
   // Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar"
   static const std::string var_prefix;
 
-  // var_info_t‚É‘Î‚·‚é•Ö—˜ŠÖ”
+  // var_info_t‚É‘Î‚·‚é•Ö—˜ŠÖ” •Ï”–¼(var_prefix•t‚«)‚ğ“¾‚é
   static const std::string get_var_name(const var_info_t vi)
   {
     return vi.first;
   }
 
-  // var_info_t‚É‘Î‚·‚é•Ö—˜ŠÖ”
+  // var_info_t‚É‘Î‚·‚é•Ö—˜ŠÖ” •Ï”‚Ì”÷•ª‰ñ”‚ğ“¾‚é
   static const int get_var_differential_count(const var_info_t vi)
   {
     return std::abs(vi.second)-1;
   }
 
-  // var_info_t‚É‘Î‚·‚é•Ö—˜ŠÖ”
+  // var_info_t‚É‘Î‚·‚é•Ö—˜ŠÖ” prev•Ï”‚Å‚ ‚é‚©‚Ç‚¤‚©‚ğ“¾‚é
   static const bool is_var_prev(const var_info_t vi)
   {
     return (vi.second < 0);
@@ -54,6 +54,8 @@ public:
   void put_node(const node_sptr& node);
 
   void put_vars();
+
+  void clear();
 
   //void put_cs(ConstraintStoreInterval constraint_store);
 

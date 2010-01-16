@@ -8,8 +8,14 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
+/** Mathematicaに送る際に変数名につける接頭語 "usrVar" */
 const std::string PacketSender::var_prefix("usrVar");
 
+/**
+ * 式(ノード)をMathematicaへ送信するクラス．
+ * @param ml Mathlinkインスタンスの参照
+ * @param phase {NP_POINT_PHASE | NP_INTERVAL_PHASE} 使用する際のフェーズ
+ */
 PacketSender::PacketSender(MathLink& ml, now_phase_t phase) :
   ml_(ml),
   phase_(phase),
@@ -306,6 +312,19 @@ void PacketSender::put_vars()
   } // for
 
   HYDLA_LOGGER_DEBUG(debug_str);
+}
+
+/**
+ * 内部情報(特に変数情報)をリセットする．
+ * 式のputをやり直したいときなどに
+ */
+void PacketSender::clear()
+{
+  vars_.clear();
+  vars_str_.erase();
+  differential_count_ = 0;
+  in_prev_ = false;
+  debug_string_.erase();
 }
 
 // 制約ストアの中身を分析して送信
