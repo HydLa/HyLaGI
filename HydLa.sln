@@ -18,6 +18,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbolic_simulator", "symbolic_simulator\symbolic_simulator.vcproj", "{5E34BE62-2104-42F3-9E59-CED1ED540932}"
 	ProjectSection(ProjectDependencies) = postProject
+		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E} = {2C310513-2A25-46EB-BE63-0FB67CFA9D7E}
 		{7AA041C5-8C78-402D-A7F0-855B469C0650} = {7AA041C5-8C78-402D-A7F0-855B469C0650}
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
@@ -52,6 +53,15 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librealpaver", "librealpaver\librealpaver.vcproj", "{89BDC93A-A25D-4A3F-B7EE-2F29F9CC74DA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcproj", "{21D7CEA2-6255-428C-85E3-268EFF5FE36E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "virtual_constraint_solver", "virtual_constraint_solver\virtual_constraint_solver.vcproj", "{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C37DA84E-F258-44FC-A914-B19AE6C0FB2E} = {C37DA84E-F258-44FC-A914-B19AE6C0FB2E}
+		{985BE36E-C416-4E28-8974-70BAAD004FA9} = {985BE36E-C416-4E28-8974-70BAAD004FA9}
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E} = {21D7CEA2-6255-428C-85E3-268EFF5FE36E}
+		{7AA041C5-8C78-402D-A7F0-855B469C0650} = {7AA041C5-8C78-402D-A7F0-855B469C0650}
+		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -103,6 +113,10 @@ Global
 		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Debug|Win32.Build.0 = Debug|Win32
 		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Release|Win32.ActiveCfg = Release|Win32
 		{21D7CEA2-6255-428C-85E3-268EFF5FE36E}.Release|Win32.Build.0 = Release|Win32
+		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Debug|Win32.Build.0 = Debug|Win32
+		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Release|Win32.ActiveCfg = Release|Win32
+		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

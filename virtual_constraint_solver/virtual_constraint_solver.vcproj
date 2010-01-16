@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="symbolic_simulator"
-	ProjectGUID="{5E34BE62-2104-42F3-9E59-CED1ED540932}"
-	RootNamespace="symbolic_simulator"
+	Name="virtual_constraint_solver"
+	ProjectGUID="{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}"
+	RootNamespace="virtual_constraint_solver"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -28,9 +28,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine=""
-				AdditionalDependencies=""
-				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -44,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;..\virtual_constraint_solver;..\virtual_constraint_solver\mathematica"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;.\mathematica"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -94,9 +91,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine=""
-				AdditionalDependencies=""
-				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -111,8 +105,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;..\virtual_constraint_solver;..\virtual_constraint_solver\mathematica"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;.\mathematica"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -157,47 +151,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ConsistencyChecker.cpp"
+				RelativePath=".\mathematica\MathematicaVCS.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ConsistencyCheckerInterval.cpp"
+				RelativePath=".\mathematica\MathematicaVCSPoint.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ConstraintStoreBuilderInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentCheckerInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Integrator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\math_source.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSender.cpp"
+				RelativePath=".\mathematica\MathTime.cpp"
 				>
 			</File>
 		</Filter>
@@ -207,67 +169,39 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ConsistencyChecker.h"
+				RelativePath=".\mathematica\MathConstraintStorePoint.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ConsistencyCheckerInterval.h"
+				RelativePath=".\mathematica\MathematicaVCS.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ConstraintStoreBuilderInterval.h"
+				RelativePath=".\mathematica\MathematicaVCSPoint.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.h"
+				RelativePath=".\mathematica\mathlink_helper.h"
 				>
 			</File>
 			<File
-				RelativePath=".\EntailmentChecker.h"
+				RelativePath=".\mathematica\MathTime.h"
 				>
 			</File>
 			<File
-				RelativePath=".\EntailmentCheckerInterval.h"
+				RelativePath=".\mathematica\MathValue.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Integrator.h"
+				RelativePath=".\mathematica\MathVariable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\InterlanguageSender.h"
+				RelativePath=".\mathematica\MathVCSType.h"
 				>
 			</File>
 			<File
-				RelativePath=".\math_source.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathlink_helper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MathSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicTime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicVariable.h"
+				RelativePath=".\VirtualConstraintSolver.h"
 				>
 			</File>
 		</Filter>
@@ -276,30 +210,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\HydLa.m"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m &gt; $(ProjectDir)\math_source.cpp&#x0D;&#x0A;"
-						Outputs="$(ProjectDir)\math_source.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="HydLa.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)\msc.exe &lt; $(ProjectDir)\HydLa.m&#x0D;&#x0A;"
-						Outputs="$(ProjectDir)\math_source.cpp"
-					/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

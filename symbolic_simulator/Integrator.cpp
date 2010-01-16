@@ -62,6 +62,7 @@ void Integrator::integrate(
   const time_t& current_time,
   const time_t& max_time)
 {
+/*
   HYDLA_LOGGER_DEBUG(
     "#*** Integrator ***\n",
     "--- positive asks ---\n",
@@ -221,6 +222,7 @@ void Integrator::integrate(
   HYDLA_LOGGER_DEBUG(
     "--- integrate result ---\n", 
     integrate_result);
+*/
 }
 
 

@@ -17,6 +17,7 @@ ConstraintStoreBuilderPoint::~ConstraintStoreBuilderPoint()
 
 void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& variable_map)
 {
+/*
   // variable_map ‚ğ‚à‚Æ‚É constraint_store ‚ğ‚Â‚­‚é
 
   if(debug_mode_) std::cout << "------Variable map------" << std::endl;
@@ -135,10 +136,12 @@ void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& v
     std::cout << std::endl;
     std::cout << "--------------------------" << std::endl;
   }
+*/
 }
 
 void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t& variable_map)
 {
+/*
   // constraint_store ‚ğ‚à‚Æ‚É variable_map ‚ğ‚Â‚­‚é
 
   std::set<std::set<SymbolicValue> >::iterator or_cons_it = constraint_store_.first.begin();
@@ -213,6 +216,7 @@ void ConstraintStoreBuilderPoint::build_variable_map(variable_map_t& variable_ma
   }
 
   // prev[]‚ğœ‚­ˆ—‚Í—v‚ç‚È‚³‚»‚¤H
+  */
 }
 
 } //namespace symbolic_simulator

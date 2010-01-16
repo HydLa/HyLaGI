@@ -1,18 +1,19 @@
 #ifndef _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
 #define _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
 
+/**
+ * プログラム間の依存性の問題から，
+ * このヘッダーおよびこのヘッダーからインクルードされるヘッダーにおいて
+ * ソルバー依存のヘッダー(mathematicaやrealpaver等の固有のヘッダー)を
+ * インクルードしてはならない
+ *
+ * この制約はVirtualConstraintSolverを継承したクラスの定義ヘッダーにも適用される
+ */
+
 #include <vector>
 
 #include "Types.h"
-
-
-#include "Node.h"
-#include "ParseTree.h"
-#include "ModuleSetContainer.h"
-
 #include "VariableMap.h"
-#include "PhaseState.h"
-#include "InitNodeRemover.h"
 
 namespace hydla {
 namespace vcs {

@@ -1,6 +1,9 @@
 #include "MathematicaVCS.h"
 
-#include "Logger.h"
+#include <cassert>
+
+#include "MathematicaVCSPoint.h"
+// #include "MathematicaVCSInterval.h"
 
 using namespace hydla::vcs;
 
@@ -8,35 +11,50 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-MathematicaVCS::MathematicaVCS(Mode m)
-{}
+MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml)
+{
+  mode_ = m;
+
+  switch(m) {
+    case DiscreteMode:
+      vcs_.reset(new MathematicaVCSPoint(ml));
+      break;
+
+//     case ContinuousMode:
+//       vcs_.reset(new MathematicaVCSInterval(ml));
+//       break;
+
+    default:
+      assert(0);
+  }
+}
 
 MathematicaVCS::~MathematicaVCS()
 {}
 
 bool MathematicaVCS::reset()
 {
-  return true;
+  return vcs_->reset();
 }
 
 bool MathematicaVCS::reset(const variable_map_t& vm)
 {
-  return true;
+  return vcs_->reset(vm);
 }
 
 bool MathematicaVCS::create_variable_map(variable_map_t& vm)
 {
-  return true;
+  return vcs_->create_variable_map(vm);
 }
 
 Trivalent MathematicaVCS::add_constraint(const tells_t& collected_tells)
 {
-  return Tri_TRUE;
+  return vcs_->add_constraint(collected_tells);
 }
   
 Trivalent MathematicaVCS::check_entailment(const ask_node_sptr& negative_ask)
 {
-  return Tri_TRUE;
+  return vcs_->check_entailment(negative_ask);
 }
 
 bool MathematicaVCS::integrate(
@@ -46,7 +64,11 @@ bool MathematicaVCS::integrate(
   const time_t& current_time,
   const time_t& max_time)
 {
-  return true;
+  return vcs_->integrate(integrate_result, 
+                         positive_asks, 
+                         negative_asks, 
+                         current_time, 
+                         max_time);
 }
 
 

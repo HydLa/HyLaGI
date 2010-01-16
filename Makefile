@@ -1,5 +1,5 @@
 main_projects := core 
-lib_projects  := common parser math_source_converter constraint_hierarchy simulator symbolic_simulator librealpaver librealpaverbasic branch_and_prune_simulator
+lib_projects  := common parser math_source_converter constraint_hierarchy simulator virtual_constraint_solver symbolic_simulator librealpaver librealpaverbasic branch_and_prune_simulator
 test_projects := unit_tests
 
 projects := $(main_projects) $(test_projects) $(lib_projects)

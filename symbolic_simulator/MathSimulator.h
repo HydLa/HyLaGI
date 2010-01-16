@@ -8,15 +8,22 @@
 #include "mathlink_helper.h"
 #include "Simulator.h"
 
-#include "SymbolicVariable.h"
-#include "SymbolicValue.h"
-#include "SymbolicTime.h"
+#include "../virtual_constraint_solver/mathematica/MathVariable.h"
+#include "../virtual_constraint_solver/mathematica/MathValue.h"
+#include "../virtual_constraint_solver/mathematica/MathTime.h"
 
 namespace hydla {
 namespace symbolic_simulator {
 
-typedef hydla::simulator::VariableMap<SymbolicVariable, SymbolicValue> variable_map_t;
-typedef hydla::simulator::PhaseState<SymbolicVariable, SymbolicValue, SymbolicTime> phase_state_t;
+typedef hydla::vcs::mathematica::MathVariable symbolic_variable_t;
+typedef hydla::vcs::mathematica::MathValue    symbolic_value_t;
+typedef hydla::vcs::mathematica::MathTime     symbolic_time_t;
+
+typedef hydla::simulator::VariableMap<symbolic_variable_t, 
+                                      symbolic_value_t> variable_map_t;
+typedef hydla::simulator::PhaseState<symbolic_variable_t, 
+                                     symbolic_value_t, 
+                                     symbolic_time_t> phase_state_t;
 typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
 typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
 

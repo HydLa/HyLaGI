@@ -31,6 +31,11 @@
 #include "AskDisjunctionFormatter.h"
 #include "DiscreteAskRemover.h"
 
+#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+
+using namespace hydla::vcs;
+using namespace hydla::vcs::mathematica;
+
 using namespace std;
 using namespace boost;
 using namespace boost::xpressive;
@@ -71,7 +76,7 @@ void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 
   phase_state_sptr state(create_new_phase_state());
   state->phase        = PointPhase;
-  state->current_time = SymbolicTime();
+  state->current_time = symbolic_time_t();
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
 
@@ -198,6 +203,10 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   expanded_always_t expanded_always;
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
+  MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_);
+  vcs.reset(state->variable_map);
+
+/*  
   csbp.build_constraint_store((*state).variable_map);
 
   bool expanded   = true;
@@ -245,14 +254,14 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   push_phase_state(new_state);
 
   std::cout << new_state->variable_map;
-
+*/
   return true;
 }
 
 bool MathSimulator::interval_phase(const module_set_sptr& ms, 
                                    const phase_state_const_sptr& state)
 {
-
+/*
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   ConstraintStoreBuilderInterval csbi;
@@ -330,7 +339,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 
   std::cout << "%%%%%%%%%%%%% interval phase\n";
   std::cout << integrate_result.states[0].variable_map;
-
+*/
   return true;
 }
 
