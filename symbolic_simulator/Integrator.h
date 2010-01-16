@@ -7,7 +7,7 @@
 #include "Types.h"
 #include "SymbolicTime.h"
 #include "ConstraintStoreBuilderInterval.h"
-#include "PacketSenderInterval.h"
+#include "PacketSender.h"
 
 #include <boost/shared_ptr.hpp>
 

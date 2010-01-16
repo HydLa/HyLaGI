@@ -34,7 +34,7 @@ bool EntailmentCheckerInterval::check_entailment(
 
 
   // ask制約のガードの式を得てMathematicaに渡す
-  PacketSenderInterval psi(ml_, debug_mode_);
+  PacketSender psi(ml_, NP_INTERVAL_PHASE);
   psi.visit(negative_ask);
 
   // 制約ストアから式storeを得てMathematicaに渡す

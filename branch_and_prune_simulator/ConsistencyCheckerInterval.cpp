@@ -9,8 +9,8 @@ namespace hydla {
 namespace bp_simulator {
 
   ConsistencyCheckerInterval::ConsistencyCheckerInterval(MathLink& ml) :
-  packet_sender_(ml, false),
-  ml_(ml)
+    packet_sender_(ml, symbolic_simulator::NP_INTERVAL_PHASE),
+    ml_(ml)
   {}
 
   ConsistencyCheckerInterval::~ConsistencyCheckerInterval(){}

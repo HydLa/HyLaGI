@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_ENTAILMENT_CHECKER_INTERVAL_H_
 
 #include "Node.h"
-#include "PacketSenderInterval.h"
+#include "PacketSender.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 #include "Types.h"

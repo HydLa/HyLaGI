@@ -75,7 +75,7 @@ void Integrator::integrate(
 
 
 ////////////////// ‘—Mˆ—
-  PacketSenderInterval psi(ml_, true);
+  PacketSender psi(ml_, NP_INTERVAL_PHASE);
   
   // integrateCalc[store, posAsk, negAsk, vars, maxTime]‚ğ“n‚µ‚½‚¢
   ml_.put_function("integrateCalc", 5);

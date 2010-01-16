@@ -16,7 +16,7 @@
 #include "realpaverbasic.h"
 
 // symbolic_simulator
-#include "../symbolic_simulator/PacketSenderInterval.h"
+#include "../symbolic_simulator/PacketSender.h"
 
 namespace hydla {
 namespace bp_simulator {
@@ -31,7 +31,7 @@ public:
     ConstraintStoreInterval& constraint_store);
 
 private:
-  symbolic_simulator::PacketSenderInterval packet_sender_;
+  symbolic_simulator::PacketSender packet_sender_;
   MathLink& ml_;
   var_name_map_t vars_;
   rp_ctr_num ctr_;

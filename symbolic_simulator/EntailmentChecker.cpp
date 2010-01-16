@@ -60,7 +60,7 @@ bool EntailmentChecker::check_entailment(
 
 
   // ask§–ñ‚ÌƒK[ƒh‚Ì®‚ğ“¾‚ÄMathematica‚É“n‚·
-  PacketSender ps(ml_, debug_mode_);
+  PacketSender ps(ml_, NP_POINT_PHASE);
   ps.visit(negative_ask);
 
 

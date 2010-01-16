@@ -48,7 +48,7 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells,
   int tells_size = collected_tells.size();
   ml_.put_function("List", tells_size);
   tells_t::iterator tells_it = collected_tells.begin();
-  PacketSender ps(ml_, debug_mode_);
+  PacketSender ps(ml_, NP_POINT_PHASE);
   while((tells_it) != collected_tells.end())
   {
     ps.visit((*tells_it));
