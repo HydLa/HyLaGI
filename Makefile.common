@@ -14,7 +14,8 @@ CXX_OPT  += -Wall --input-charset=cp932 #-O2 #-pg
 ARFLAGS  := cru
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
 
-SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp) 
+SRC_DIR  += .
+SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 
 OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
 	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
 	    $(subst .cpp,.o,$(filter %.cpp,$(SRC)))
@@ -43,10 +44,10 @@ ifneq "$(MAKECMDGOALS)" "clean"
 endif
 
 .c.o:
-	$(CC) $(CXXFLAGS) -c $<
+	$(CC) $(CXXFLAGS) -c -o $@ $<
 
 .cc.o .cpp.o: 
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 .c.d .cc.d .cpp.d:
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \

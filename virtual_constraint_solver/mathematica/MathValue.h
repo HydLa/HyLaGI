@@ -19,14 +19,14 @@ struct MathValue {
     return s;
   }
 
-  friend bool operator<(const SymbolicValue& lhs, 
-                        const SymbolicValue& rhs)
+  friend bool operator<(const MathValue& lhs, 
+                        const MathValue& rhs)
   {
     return lhs.str < rhs.str;
   }
 
   friend std::ostream& operator<<(std::ostream& s, 
-                                  const SymbolicValue & v)
+                                  const MathValue & v)
   {
     return v.dump(s);
   }

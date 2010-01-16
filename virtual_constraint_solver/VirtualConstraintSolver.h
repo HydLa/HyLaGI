@@ -17,14 +17,23 @@
 namespace hydla {
 namespace vcs {
 
+/**
+ *  ^E‹UE•s–¾ 
+ */
+enum Trivalent {
+  Tri_FALSE, 
+  Tri_UNKNOWN, 
+  Tri_TRUE};
+
 template<typename VariableT, typename ValueT, typename TimeT>
 class VirtualConstraintSolver
 {
 public:  
-  typedef VariableType                                       variable_t;
-  typedef ValueType                                          value_t;
+  typedef VariableT                                          variable_t;
+  typedef ValueT                                             value_t;
   typedef TimeT                                              time_t;
   typedef hydla::simulator::VariableMap<variable_t, value_t> variable_map_t;
+  typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
@@ -44,45 +53,42 @@ public:
     changed_asks_t                  changed_asks;
   } integrate_result_t;
 
-  VirtualConstraintSolver();
+  VirtualConstraintSolver()
+  {}
 
-  virtual ~VirtualConstraintSolver();
-
-  /**
-    ¿¿¡¦µ¶¡¦ÉÔÌÀ 
-  */
-  enum Trivalent {Tri_FALSE, Tri_UNKNOWN, Tri_TRUE};
+  virtual ~VirtualConstraintSolver()
+  {}
 
   /**
-   * À©Ìó¥¹¥È¥¢¤Î½é´ü²½¤ò¤ª¤³¤Ê¤¦
+   * §–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
    */
-  bool reset() = 0;
+  virtual bool reset() = 0;
 
   /**
-   * Í¿¤¨¤é¤ì¤¿ÊÑ¿ôÉ½¤ò¸µ¤Ë¡¤À©Ìó¥¹¥È¥¢¤Î½é´ü²½¤ò¤ª¤³¤Ê¤¦
+   * —^‚¦‚ç‚ê‚½•Ï”•\‚ğŒ³‚ÉC§–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
    */
-  bool reset(const variable_map_t& vm) = 0;  
+  virtual bool reset(const variable_map_t& vm) = 0;  
 
   /**
-   * ¸½ºß¤ÎÀ©Ìó¥¹¥È¥¢¤«¤éÊÑ¿ôÉ½¤òºîÀ®¤¹¤ë
+   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚ğì¬‚·‚é
    */
-  bool create_variable_map(variable_map_t& vm) = 0;
+  virtual bool create_variable_map(variable_map_t& vm) = 0;
 
   /**
-   * À©Ìó¤òÄÉ²Ã¤¹¤ë
+   * §–ñ‚ğ’Ç‰Á‚·‚é
    */
-  Trivalent add_constraint(const tells_t& collected_tells) = 0;
+  virtual Trivalent add_constraint(const tells_t& collected_tells) = 0;
   
   /**
-   * ¸½ºß¤ÎÀ©Ìó¥¹¥È¥¢¤«¤éÍ¿¤¨¤¿ask¤¬Æ³½Ğ²ÄÇ½¤«¤É¤¦¤«
+   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç—^‚¦‚½ask‚ª“±o‰Â”\‚©‚Ç‚¤‚©
    */
-  Trivalent check_entailment(const boost::shared_ptr<Ask>& negative_ask) = 0;
+  virtual Trivalent check_entailment(const ask_node_sptr& negative_ask) = 0;
 
   /**
-   * ask¤ÎÆ³½Ğ¾õÂÖ¤¬ÊÑ²½¤¹¤ë¤Ş¤ÇÀÑÊ¬¤ò¤ª¤³¤Ê¤¦
+   * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
    */
-  bool integrate(
-    IntegrateResult& integrate_result,
+  virtual bool integrate(
+    integrate_result_t& integrate_result,
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,
     const time_t& current_time,
@@ -91,11 +97,42 @@ public:
 
 };
 
-std::ostream& operator<<(std::ostream& s, 
-                         const VirtualConstraintSolver::integrate_result_t & t);
+/*
+  template<typename VariableT, typename ValueT, typename TimeT>
+  std::ostream& operator<<(
+  std::ostream& s, 
+  const VirtualConstraintSolver<VariableT, ValueT, TimeT>::integrate_result_t & t)
+  {
+  s << "#*** integrate result ***\n";
+
+  next_phase_state_list_t::const_iterator ps_it = 
+  BOOST_FOREACH(next_phase_state_list_t::value_type& i, t.states)
+  {
+  s << "---- next_phase_state ----"
+  s << "- time -\n" 
+  << i.time 
+  << "\n"
+  << "- variable_map -" 
+  << i.variable_map 
+  << "\n";
+  }
+
+  s << std::endl << "---- changed asks ----\n";
+  BOOST_FOREACH(changed_asks_t::value_type& i, t.changed_asks)
+  {
+  s << "ask_type : "
+  << ask_list_it->first 
+  << ", "
+  << "ask_id : " << ask_list_it->second
+  << "\n";
+  }
+  return s;
+
+  }
+*/
 
 
-} //namespace simulator
+} //namespace vcs
 } //namespace hydla 
 
 #endif // _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_

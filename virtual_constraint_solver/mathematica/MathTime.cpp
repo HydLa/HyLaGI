@@ -19,28 +19,28 @@ MathTime::~MathTime()
 {}
 
 
-void MathTime::send_time(MathLink* ml)
+void MathTime::send_time(MathLink& ml)
 {
   ml.put_function("ToExpression", 1);
   ml.put_string(time_);
 }
 
-void MathTime::receive_time(MathLink* ml)
+void MathTime::receive_time(MathLink& ml)
 {
   time_ = ml.get_string();
 }
 
-  MathTime& MathTime::operator+=(const SymbolicTime& rhs)
-  {
-    time_ += " + " + rhs.time_;
-    return *this;
-  }
+MathTime& MathTime::operator+=(const MathTime& rhs)
+{
+  time_ += " + " + rhs.time_;
+  return *this;
+}
 
-  MathTime& MathTime::operator-=(const SymbolicTime& rhs)
-  {
-    time_ += " - " + rhs.time_;
-    return *this;
-  }
+MathTime& MathTime::operator-=(const MathTime& rhs)
+{
+  time_ += " - " + rhs.time_;
+  return *this;
+}
 
 
 std::ostream& MathTime::dump(std::ostream& s) const

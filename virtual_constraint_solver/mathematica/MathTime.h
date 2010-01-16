@@ -37,22 +37,22 @@ public:
   /**
    * Mathematicaへ時刻データを送信する
    */
-  void send_time(MathLink* ml);
+  void send_time(MathLink& ml);
 
   /**
    * Mathematicaから時刻データを受信する
    */
-  void receive_time(MathLink* ml);
+  void receive_time(MathLink& ml);
 
   /**
    * MathTime同士の加算
    */
-  MathTime& operator+=(const SymbolicTime& rhs);
+  MathTime& operator+=(const MathTime& rhs);
 
   /**
    * MathTime同士の減算
    */
-  MathTime& operator-=(const SymbolicTime& rhs);
+  MathTime& operator-=(const MathTime& rhs);
 
   /**
    * データをダンプする

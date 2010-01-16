@@ -5,9 +5,9 @@
 
 #include "VirtualConstraintSolver.h"
 
-#inlucde "MathVariable.h"
-#inlucde "MathValue.h"
-#inlucde "MathTime.h"
+#include "MathVariable.h"
+#include "MathValue.h"
+#include "MathTime.h"
 
 namespace hydla {
 namespace vcs {
@@ -26,41 +26,41 @@ public:
   enum Mode {
     ContinuousMode,
     DiscreteMode,
-  }
+  };
 
   MathematicaVCS(Mode m);
 
   virtual ~MathematicaVCS();
 
   /**
-   * À©Ìó¥¹¥È¥¢¤Î½é´ü²½¤ò¤ª¤³¤Ê¤¦
+   * §–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
    */
-  bool reset();
+  virtual bool reset();
 
   /**
-   * Í¿¤¨¤é¤ì¤¿ÊÑ¿ôÉ½¤ò¸µ¤Ë¡¤À©Ìó¥¹¥È¥¢¤Î½é´ü²½¤ò¤ª¤³¤Ê¤¦
+   * —^‚¦‚ç‚ê‚½•Ï”•\‚ğŒ³‚ÉC§–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
    */
-  bool reset(const variable_map_t& vm);
+  virtual bool reset(const variable_map_t& vm);
 
   /**
-   * ¸½ºß¤ÎÀ©Ìó¥¹¥È¥¢¤«¤éÊÑ¿ôÉ½¤òºîÀ®¤¹¤ë
+   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚ğì¬‚·‚é
    */
-  bool create_variable_map(variable_map_t& vm);
+  virtual bool create_variable_map(variable_map_t& vm);
 
   /**
-   * À©Ìó¤òÄÉ²Ã¤¹¤ë
+   * §–ñ‚ğ’Ç‰Á‚·‚é
    */
-  Trivalent add_constraint(const tells_t& collected_tells);
+  virtual Trivalent add_constraint(const tells_t& collected_tells);
   
   /**
-   * ¸½ºß¤ÎÀ©Ìó¥¹¥È¥¢¤«¤éÍ¿¤¨¤¿ask¤¬Æ³½Ğ²ÄÇ½¤«¤É¤¦¤«
+   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç—^‚¦‚½ask‚ª“±o‰Â”\‚©‚Ç‚¤‚©
    */
-  Trivalent check_entailment(const boost::shared_ptr<Ask>& negative_ask);
+  virtual Trivalent check_entailment(const ask_node_sptr& negative_ask);
 
   /**
-   * ask¤ÎÆ³½Ğ¾õÂÖ¤¬ÊÑ²½¤¹¤ë¤Ş¤ÇÀÑÊ¬¤ò¤ª¤³¤Ê¤¦
+   * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
    */
-  bool integrate(
+  virtual bool integrate(
     integrate_result_t& integrate_result,
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,

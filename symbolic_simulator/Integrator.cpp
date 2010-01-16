@@ -167,7 +167,7 @@ void Integrator::integrate(
     HYDLA_LOGGER_DEBUG("--- add variable ---");
 
     // ïœêîñº
-    variable.name = ml_.get_symbol();
+    variable.name = ml_.get_symbol().substr(6);
     HYDLA_LOGGER_DEBUG("name  : ", variable.name);
     ml_.MLGetNext();
 
