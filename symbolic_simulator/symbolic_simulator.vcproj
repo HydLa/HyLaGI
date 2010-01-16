@@ -200,10 +200,6 @@
 				RelativePath=".\PacketSender.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\PacketSenderInterval.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -260,10 +256,6 @@
 			</File>
 			<File
 				RelativePath=".\PacketSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSenderInterval.h"
 				>
 			</File>
 			<File
