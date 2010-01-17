@@ -1,8 +1,9 @@
 #ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_POINT_H_
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_POINT_H_
 
-#include "mathlink_helper.h"
+#include <ostream>
 
+#include "mathlink_helper.h"
 #include "MathVCSType.h"
 
 namespace hydla {
@@ -55,6 +56,11 @@ public:
     const time_t& current_time,
     const time_t& max_time);
 
+  /**
+   * ì‡ïîèÛë‘ÇÃèoóÕÇÇ®Ç±Ç»Ç§
+   */
+  std::ostream& dump(std::ostream& s) const;
+
 private:
   void send_cs() const;
   void send_cs_vars() const;
@@ -62,6 +68,8 @@ private:
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
 };
+
+std::ostream& operator<<(std::ostream& s, const MathematicaVCSPoint& m);
 
 } // namespace mathematica
 } // namespace simulator

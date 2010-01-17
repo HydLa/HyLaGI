@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "MathematicaVCSPoint.h"
-// #include "MathematicaVCSInterval.h"
+#include "MathematicaVCSInterval.h"
 
 using namespace hydla::vcs;
 
@@ -20,9 +20,9 @@ MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml)
       vcs_.reset(new MathematicaVCSPoint(ml));
       break;
 
-//     case ContinuousMode:
-//       vcs_.reset(new MathematicaVCSInterval(ml));
-//       break;
+    case ContinuousMode:
+      vcs_.reset(new MathematicaVCSInterval(ml));
+      break;
 
     default:
       assert(0);

@@ -28,7 +28,7 @@ bool MathematicaVCSPoint::reset()
 
 bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 {
-  HYDLA_LOGGER_DEBUG("----- Reset Constraint Store -----");
+  HYDLA_LOGGER_DEBUG("#*** Reset Constraint Store ***");
 
   if(variable_map.size() == 0)
   {
@@ -109,31 +109,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
     }
   }
 
-//     if(debug_mode_)
-//     {
-//       std::set<std::set<MathValue> >::const_iterator or_cons_it;
-//       std::set<MathValue>::const_iterator and_cons_it;
-//       std::set<MathVariable>::const_iterator vars_it = constraint_store_.second.begin();
-//       or_cons_it = store.first.begin();
-//       while((or_cons_it) != store.first.end())
-//       {
-//         and_cons_it = (*or_cons_it).begin();
-//         while((and_cons_it) != (*or_cons_it).end())
-//         {
-//           std::cout << (*and_cons_it).str << " ";
-//           and_cons_it++;
-//         }
-//         std::cout << std::endl;
-//         or_cons_it++;
-//       }
-//       while((vars_it) != store.second.end())
-//       {
-//         std::cout << *(vars_it) << " ";
-//         vars_it++;
-//       }
-//       std::cout << std::endl;
-//       std::cout << "--------------------------" << std::endl;
-//     }
+  HYDLA_LOGGER_DEBUG(*this);
 
   return true;
 }
@@ -322,26 +298,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
     constraint_store_.second.insert(symbolic_variable);
   }
 
-
-  //if(debug_mode_) {
-  //  std::set<std::set<MathValue> >::iterator or_cons_it;
-  //  std::set<MathValue>::iterator and_cons_it;
-  //  or_cons_it = constraint_store_.first.begin();
-  //  while((or_cons_it) != constraint_store_.first.end())
-  //  {
-  //    and_cons_it = (*or_cons_it).begin();
-  //    while((and_cons_it) != (*or_cons_it).end())
-  //    {
-  //      std::cout << (*and_cons_it).str << " ";
-  //      and_cons_it++;
-  //    }
-  //    std::cout << std::endl;
-  //    or_cons_it++;
-  //  }
-  //  std::cout << "----------------------------" << std::endl;
-  //  std::cout << "ConsistencyChecker: true" << std::endl;
-  //}
-
+  HYDLA_LOGGER_DEBUG(*this);
 
   return VCSR_TRUE;
 }
@@ -388,18 +345,18 @@ bool MathematicaVCSPoint::integrate(
 
 void MathematicaVCSPoint::send_cs() const
 {
-    HYDLA_LOGGER_DEBUG("---- Send Constraint Store -----");
+  HYDLA_LOGGER_DEBUG("---- Send Constraint Store -----");
 
-    int or_cons_size = constraint_store_.first.size();
-    if(or_cons_size <= 0)
-    {
-      HYDLA_LOGGER_DEBUG("no Constraints");
-      ml_->put_function("List", 0);
-      return;
-    }
+  int or_cons_size = constraint_store_.first.size();
+  if(or_cons_size <= 0)
+  {
+    HYDLA_LOGGER_DEBUG("no Constraints");
+    ml_->put_function("List", 0);
+    return;
+  }
 
-    std::set<std::set<MathValue> >::const_iterator or_cons_it;
-    std::set<MathValue>::const_iterator and_cons_it;
+  std::set<std::set<MathValue> >::const_iterator or_cons_it;
+  std::set<MathValue>::const_iterator and_cons_it;
 //     or_cons_it = constraint_store_.first.begin();
 //     while((or_cons_it) != constraint_store_.first.end())
 //     {
@@ -417,23 +374,23 @@ void MathematicaVCSPoint::send_cs() const
 //       std::cout << "----------------------------" << std::endl;
 //     }
 
-    ml_->put_function("List", 1);
-    ml_->put_function("Or", or_cons_size);
-    or_cons_it = constraint_store_.first.begin();
-    while((or_cons_it) != constraint_store_.first.end())
+  ml_->put_function("List", 1);
+  ml_->put_function("Or", or_cons_size);
+  or_cons_it = constraint_store_.first.begin();
+  while((or_cons_it) != constraint_store_.first.end())
+  {
+    int and_cons_size = (*or_cons_it).size();
+    ml_->put_function("And", and_cons_size);
+    and_cons_it = (*or_cons_it).begin();
+    while((and_cons_it) != (*or_cons_it).end())
     {
-      int and_cons_size = (*or_cons_it).size();
-      ml_->put_function("And", and_cons_size);
-      and_cons_it = (*or_cons_it).begin();
-      while((and_cons_it) != (*or_cons_it).end())
-      {
-        ml_->put_function("ToExpression", 1);
-        std::string str = (*and_cons_it).str;
-        ml_->put_string(str);
-        and_cons_it++;
-      }
-      or_cons_it++;
+      ml_->put_function("ToExpression", 1);
+      std::string str = (*and_cons_it).str;
+      ml_->put_string(str);
+      and_cons_it++;
     }
+    or_cons_it++;
+  }
 }
 
 void MathematicaVCSPoint::send_cs_vars() const
@@ -468,6 +425,42 @@ void MathematicaVCSPoint::send_cs_vars() const
     vars_it++;
   }
 }
+
+std::ostream& MathematicaVCSPoint::dump(std::ostream& s) const
+{
+  s << "#*** Dump MathematicaVCSPoint ***\n"
+    << "--- constraint store ---\n";
+
+  std::set<std::set<MathValue> >::const_iterator or_cons_it = 
+    constraint_store_.first.begin();
+  std::set<MathVariable>::const_iterator vars_it = 
+    constraint_store_.second.begin();
+  while((or_cons_it) != constraint_store_.first.end())
+  {
+    std::set<MathValue>::const_iterator and_cons_it = 
+      (*or_cons_it).begin();
+    while((and_cons_it) != (*or_cons_it).end())
+    {
+      s << (*and_cons_it).str << " ";
+      and_cons_it++;
+    }
+    s << "\n";
+    or_cons_it++;
+  }
+  while((vars_it) != constraint_store_.second.end())
+  {
+    s << *(vars_it) << " ";
+    vars_it++;
+  }
+
+  return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const MathematicaVCSPoint& m)
+{
+  return m.dump(s);
+}
+
 
 } // namespace mathematica
 } // namespace simulator

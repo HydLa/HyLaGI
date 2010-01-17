@@ -38,12 +38,12 @@ public:
   /**
    * 制約を追加する
    */
-  virtual  VCSResult add_constraint(const tells_t& collected_tells);
+  virtual VCSResult add_constraint(const tells_t& collected_tells);
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual  VCSResult check_entailment(const ask_node_sptr& negative_ask);
+  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask);
 
   /**
    * askの導出状態が変化するまで積分をおこなう
@@ -55,6 +55,11 @@ public:
     const time_t& current_time,
     const time_t& max_time);
 
+  /**
+   * 内部状態の出力をおこなう
+   */
+  std::ostream& dump(std::ostream& s) const;
+
 private:
   void send_cs() const;
   void send_cs_vars() const;
@@ -62,6 +67,9 @@ private:
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
 };
+
+
+std::ostream& operator<<(std::ostream& s, const MathematicaVCSInterval& m);
 
 } // namespace mathematica
 } // namespace simulator
