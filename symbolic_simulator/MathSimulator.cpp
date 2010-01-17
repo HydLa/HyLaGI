@@ -210,8 +210,15 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
                                      &positive_asks);
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    if(!vcs.add_constraint(tell_list)) {
-      return false;
+    switch(vcs.add_constraint(tell_list)) 
+    {
+      case Tri_TRUE:
+        break;
+      case Tri_FALSE:
+        return false;
+        break;
+      case Tri_UNKNOWN:
+        break;
     }
 
     // ask制約を集める
@@ -225,7 +232,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        if(vcs.check_entailment(*it)) {
+        if(vcs.check_entailment(*it) == Tri_TRUE) {
           expanded = true;
           positive_asks.insert(*it);
           negative_asks.erase(it++);
@@ -237,18 +244,19 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     }
   }
 
-/*
+  
   // Interval Phaseへ移行
+  HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
   phase_state_sptr new_state(create_new_phase_state());
   new_state->phase        = IntervalPhase;
   //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
-  csbp.build_variable_map(new_state->variable_map);
+  vcs.create_variable_map(new_state->variable_map);
   new_state->module_set_container = msc_no_init_;
 
   push_phase_state(new_state);
 
   std::cout << new_state->variable_map;
-*/
+
   return true;
 }
 

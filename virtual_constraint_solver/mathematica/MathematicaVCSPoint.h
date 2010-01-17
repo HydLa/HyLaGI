@@ -4,7 +4,6 @@
 #include "mathlink_helper.h"
 
 #include "MathVCSType.h"
-#include "MathConstraintStorePoint.h"
 
 namespace hydla {
 namespace vcs {
@@ -14,6 +13,9 @@ class MathematicaVCSPoint :
     public virtual_constraint_solver_t
 {
 public:
+  typedef std::pair<std::set<std::set<MathValue> >, 
+                    std::set<MathVariable> > constraint_store_t;
+
   MathematicaVCSPoint(MathLink* ml);
 
   virtual ~MathematicaVCSPoint();
@@ -26,12 +28,12 @@ public:
   /**
    * 与えられた変数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& vm);
+  virtual bool reset(const variable_map_t& variable_map);
 
   /**
    * 現在の制約ストアから変数表を作成する
    */
-  virtual bool create_variable_map(variable_map_t& vm);
+  virtual bool create_variable_map(variable_map_t& variable_map);
 
   /**
    * 制約を追加する
@@ -54,8 +56,11 @@ public:
     const time_t& max_time);
 
 private:
-  MathLink* ml_;
-  MathConstraintStorePoint cons_store_;
+  void send_cs() const;
+  void send_cs_vars() const;
+
+  mutable MathLink* ml_;
+  constraint_store_t constraint_store_;
 };
 
 } // namespace mathematica
