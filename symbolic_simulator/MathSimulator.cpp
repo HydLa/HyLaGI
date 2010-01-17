@@ -196,10 +196,15 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
   bool expanded   = true;
   while(expanded) {
+    std::cout << "c\n";
+
     // tell制約を集める
-    tell_collector.collect_all_tells(&tell_list,
+    tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
                                      &positive_asks);
+
+    std::cout << "d\n";
+
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
     switch(vcs.add_constraint(tell_list)) 
@@ -225,29 +230,31 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
     // ask制約のエンテール処理
     expanded = false;
-    {
-      negative_asks_t::iterator it  = negative_asks.begin();
-      negative_asks_t::iterator end = negative_asks.end();
-      while(it!=end) {
-        switch(vcs.check_entailment(*it))
-        {
-          case VCSR_TRUE:
-            expanded = true;
-            positive_asks.insert(*it);
-            negative_asks.erase(it++);
-            break;
-          case VCSR_FALSE:
-            it++;
-            break;
-          case VCSR_UNKNOWN:
-            assert(0);
-            break;
-          case VCSR_SOLVER_ERROR:
-            // TODO: 例外とかなげたり、BPシミュレータに移行したり
-            break;
-        }
+    negative_asks_t::iterator it  = negative_asks.begin();
+    negative_asks_t::iterator end = negative_asks.end();
+    while(it!=end) {
+      switch(vcs.check_entailment(*it))
+      {
+        case VCSR_TRUE:
+          expanded = true;
+          positive_asks.insert(*it);
+          negative_asks.erase(it++);
+          break;
+        case VCSR_FALSE:
+          it++;
+          break;
+        case VCSR_UNKNOWN:
+          assert(0);
+          break;
+        case VCSR_SOLVER_ERROR:
+          // TODO: 例外とかなげたり、BPシミュレータに移行したり
+          assert(0);
+          break;
       }
+      std::cout << "a\n";
     }
+      std::cout << "b\n";
+
   }
 
   

@@ -46,7 +46,7 @@ void TellCollector::collect(tells_t*                 tells,
   in_expanded_always_ = true;
   expanded_always_t::const_iterator it  = expanded_always->begin();
   expanded_always_t::const_iterator end = expanded_always->end();
-  while(it!=end) {
+  for(; it!=end; ++it) {
     if(visited_always_.find(*it) != visited_always_.end()) {
       accept(*it);
     }

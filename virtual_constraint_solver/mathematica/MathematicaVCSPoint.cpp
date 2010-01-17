@@ -35,77 +35,51 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
     HYDLA_LOGGER_DEBUG("no Variables");
     return true;
   }
-  HYDLA_LOGGER_DEBUG("------Variable map------", variable_map);
+  HYDLA_LOGGER_DEBUG("------Variable map------\n", variable_map);
 
-  MathValue symbolic_value;    
-  std::string value;
-  MathVariable symbolic_variable;
-  std::string variable_name;
-
-  variable_map_t::variable_list_t::const_iterator it = variable_map.begin();
-
-  while(it != variable_map.end())
+  variable_map_t::variable_list_t::const_iterator it = 
+    variable_map.begin();
+  variable_map_t::variable_list_t::const_iterator end = 
+    variable_map.end();
+  for(; it!=end; ++it)
   {
-    symbolic_value = (*it).second;
-    value = symbolic_value.str;
-    if(value != "") break;
-    it++;
-  }
+    const MathVariable& symbolic_variable = (*it).first;
+    const MathValue& symbolic_value = (*it).second;    
 
-  while(it != variable_map.end())
-  {
-    symbolic_variable = (*it).first;
-    symbolic_value = (*it).second;    
-    variable_name = symbolic_variable.name;
-    value = symbolic_value.str;
+    if(symbolic_value.str != "") { //未定義かどうか  TODO: 未定義判定関数つくる？
+      std::ostringstream val_str;
 
-    std::string str = "";
+      // MathVariable側に関する文字列を作成
+      val_str << "Equal[";
+      if(symbolic_variable.derivative_count > 0)
+      {
+        val_str << "Derivative["
+                << symbolic_variable.derivative_count
+                << "][prev[usrVar"
+                << symbolic_variable.name
+                << "]]";
+      }
+      else
+      {
+        val_str << "prev[usrVar"
+                << symbolic_variable.name
+                << "]";
+      }
 
-    // MathVariable側に関する文字列を作成
-    str += "Equal[";
-    str += "prev[";
-    if(symbolic_variable.derivative_count > 0)
-    {
-      std::ostringstream derivative_count;
-      derivative_count << symbolic_variable.derivative_count;
-      str += "Derivative[";
-      str += derivative_count.str();
-      str += "][usrVar";
-      str += variable_name;
-      str += "]";
-    }
-    else
-    {
-      str += "usrVar";
-      str += variable_name;
-    }
-    str += "]"; // prevの閉じ括弧
+      val_str << ","
+              << symbolic_value.str
+              << "]"; // Equalの閉じ括弧
 
-    str += ",";
+      MathValue new_symbolic_value;
+      new_symbolic_value.str = val_str.str();
+      std::set<MathValue> value_set;
+      value_set.insert(new_symbolic_value);
+      constraint_store_.first.insert(value_set);
 
-    // MathValue側に関する文字列を作成
-    str += value;
-    str += "]"; // Equalの閉じ括弧
-
-    MathValue new_symbolic_value;
-    new_symbolic_value.str = str;
-    std::set<MathValue> value_set;
-    value_set.insert(new_symbolic_value);
-    constraint_store_.first.insert(value_set);
-
-
-    // 制約ストア内の変数一覧を作成
-//    std::string vars_name;
-    symbolic_variable.name = "prev[usrVar" + variable_name + "]";
-    constraint_store_.second.insert(symbolic_variable);
-
-    it++;
-    while(it != variable_map.end())
-    {
-      symbolic_value = (*it).second;
-      value = symbolic_value.str;
-      if(value != "") break;
-      it++;
+      // 制約ストア内の変数一覧を作成
+      MathVariable new_variable(symbolic_variable);
+      new_variable.name = "prev[usrVar" + symbolic_variable.name + "]";
+      constraint_store_.second.insert(new_variable);
     }
   }
 
@@ -193,7 +167,8 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 
 VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 {
-  HYDLA_LOGGER_DEBUG("#*** add constraint ***");
+  HYDLA_LOGGER_DEBUG(
+    "#*** Begin MathematicaVCSPoint::add_constraint ***");
 
   // isConsistent[expr, vars]を渡したい
   ml_->put_function("isConsistent", 2);
@@ -206,7 +181,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   PacketSender ps(*ml_);
   while((tells_it) != collected_tells.end())
   {
-    ps.visit((*tells_it));
+    ps.put_node(*tells_it);
     tells_it++;
   }
 
@@ -222,10 +197,13 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   // 結果を受け取る前に制約ストアを初期化
   reset();
 
+
   ml_->skip_pkt_until(RETURNPKT);
   // 解けなかった場合は0が返る（制約間に矛盾があるということ）
-  if(ml_->MLGetType() == MLTKINT)
+  HYDLA_LOGGER_DEBUG("GetType: ", ml_->MLGetType());
+  if(ml_->MLGetType() == 35)
   {
+    std::cout << ml_->get_symbol() << std::endl;
     HYDLA_LOGGER_DEBUG("Consistency Check : false");
     ml_->MLNewPacket();
     return VCSR_FALSE;
@@ -237,12 +215,15 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
   // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
   HYDLA_LOGGER_DEBUG( "---build constraint store---");
-
+  std::cout << "a" << std::endl;
   ml_->MLGetNext(); // Listという関数名
+  std::cout << "b" << std::endl;
   ml_->MLGetNext(); // List関数（Orで結ばれた解を表している）
+  std::cout << "c" << std::endl;
 
   // List関数の要素数（Orで結ばれた解の個数）を得る
   int or_size = ml_->get_arg_count();
+  HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
   ml_->MLGetNext(); // Listという関数名
 
   for(int i=0; i<or_size; i++)
@@ -251,6 +232,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
     // List関数の要素数（Andで結ばれた解の個数）を得る
     int and_size = ml_->get_arg_count();
+    HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
     ml_->MLGetNext(); // Listという関数名
     ml_->MLGetNext(); // Listの中の先頭要素
 
@@ -298,13 +280,19 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
     constraint_store_.second.insert(symbolic_variable);
   }
 
-  HYDLA_LOGGER_DEBUG(*this);
-
+  HYDLA_LOGGER_DEBUG(
+    *this,
+    "\n#*** End MathematicaVCSPoint::add_constraint ***");
+  
   return VCSR_TRUE;
 }
   
 VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
 {
+  HYDLA_LOGGER_DEBUG(
+    "#*** MathematicaVCSPoint::check_entailment ***\n", 
+    "ask: ", *negative_ask);
+
   // checkEntailment[guard, store, vars]を渡したい
   ml_->put_function("checkEntailment", 3);
 

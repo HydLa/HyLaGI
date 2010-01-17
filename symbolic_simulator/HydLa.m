@@ -64,7 +64,7 @@ isConsistent[expr_, vars_] := (
      sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
      (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
      sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
-     (*  一番内側の要素 （レベル2）を文字列にする *)
+     (* 一番内側の要素 （レベル2）を文字列にする *)
      {Map[(ToString[FullForm[#]]) &, sol, {2}], vars},
      0]
 );
@@ -174,9 +174,9 @@ getDerivativeCount[variable_] := 0;
 getDerivativeCount[Derivative[n_][f_]] := n;
 
 createIntegratedValue[variable_, integRule_] := (
-  variable /. (integRule /. x_[t] -> x)
-           /. Derivative[n_][f_] :> D[f, {t, n}]
-           /. t -> tmpMinT // Simplify // FullForm // ToString
+  (variable /. (integRule /. x_[t] -> x)
+            /. Derivative[n_][f_] :> D[f, {t, n}]
+            /. t -> tmpMinT) // Simplify // FullForm
 );
 
 integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
@@ -188,7 +188,7 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
   tmpPrevConsTable = 
     Map[({getVariableName[#], 
           getDerivativeCount[#], 
-          createIntegratedValue[#, tmpIntegSol]})&, 
+          ToString[createIntegratedValue[#, tmpIntegSol]]})&, 
         vars /. x_[t] -> x];
   {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs}
 );
@@ -198,13 +198,13 @@ Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0],
     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]},
   {}, 
   {{usrVarht[t]==0, 10}}, 
-  {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10] // FullForm];
+  {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10]];
 
 Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0],
     Equal[Derivative[2][usrVarht][t], -10]},
   {}, 
   {{usrVarht[t]==0, 10}}, 
-  {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10]];
+  {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm];
 
 
 (* $MaxExtraPrecision = Infinity *)

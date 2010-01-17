@@ -440,7 +440,8 @@ bool MathematicaVCSInterval::integrate(
   ml_->MLGetNext(); ml_->MLGetNext();
   for(int i=0; i<variable_list_size; i++)
   {
-    ml_->MLGetNext(); ml_->MLGetNext();
+    ml_->MLGetNext(); 
+    ml_->MLGetNext();
 
     MathVariable variable;
     MathValue    value;
@@ -459,6 +460,9 @@ bool MathematicaVCSInterval::integrate(
 
     // ’l
     value.str = ml_->get_string();
+    // Function[List, .....] ‚ð‚Ì‚¼‚­
+    // TODO: ‚±‚ñ‚Èˆ—–{“–‚Í‚¢‚È‚ç‚È‚¢‚Í‚¸
+    value.str = value.str.substr(15, value.str.size() - 16);
     HYDLA_LOGGER_DEBUG("value : ", value.str);
     ml_->MLGetNext();
 
