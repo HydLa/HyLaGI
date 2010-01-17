@@ -212,12 +212,17 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
     switch(vcs.add_constraint(tell_list)) 
     {
-      case Tri_TRUE:
+      case VCSR_TRUE:
+        // do nothing
         break;
-      case Tri_FALSE:
+      case VCSR_FALSE:
         return false;
         break;
-      case Tri_UNKNOWN:
+      case VCSR_UNKNOWN:
+        assert(0);
+        break;
+      case VCSR_SOLVER_ERROR:
+        // TODO: 例外とかなげたり、BPシミュレータに移行したり
         break;
     }
 
@@ -232,13 +237,22 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        if(vcs.check_entailment(*it) == Tri_TRUE) {
-          expanded = true;
-          positive_asks.insert(*it);
-          negative_asks.erase(it++);
-        }
-        else {
-          it++;
+        switch(vcs.check_entailment(*it))
+        {
+          case VCSR_TRUE:
+            expanded = true;
+            positive_asks.insert(*it);
+            negative_asks.erase(it++);
+            break;
+          case VCSR_FALSE:
+            it++;
+            break;
+          case VCSR_UNKNOWN:
+            assert(0);
+            break;
+          case VCSR_SOLVER_ERROR:
+            // TODO: 例外とかなげたり、BPシミュレータに移行したり
+            break;
         }
       }
     }
@@ -283,60 +297,60 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 
   bool expanded   = true;
   while(expanded) {
-    // tell制約を集める
-    tell_collector.collect_all_tells(&tell_list,
-                                     &expanded_always, 
-                                     &positive_asks);
+  // tell制約を集める
+  tell_collector.collect_all_tells(&tell_list,
+  &expanded_always, 
+  &positive_asks);
 
-    // 制約が充足しているかどうかの確認
-    if(!consistency_checker_interval.is_consistent(tell_list, csbi.get_constraint_store())){
-      return false;
-    }
+  // 制約が充足しているかどうかの確認
+  if(!consistency_checker_interval.is_consistent(tell_list, csbi.get_constraint_store())){
+  return false;
+  }
 
-    // ask制約を集める
-    ask_collector.collect_ask(&expanded_always, 
-                              &positive_asks, 
-                              &negative_asks);
+  // ask制約を集める
+  ask_collector.collect_ask(&expanded_always, 
+  &positive_asks, 
+  &negative_asks);
 
-    // ask制約のエンテール処理
-    expanded = false;
-    {
-      negative_asks_t::iterator it  = negative_asks.begin();
-      negative_asks_t::iterator end = negative_asks.end();
-      while(it!=end) {
-        if(entailment_checker_interval.check_entailment(*it, csbi.get_constraint_store())) {
-          expanded = true;
-          positive_asks.insert(*it);
-          negative_asks.erase(it++);
-        }
-        else {
-          it++;
-        }
-      }
-    }
+  // ask制約のエンテール処理
+  expanded = false;
+  {
+  negative_asks_t::iterator it  = negative_asks.begin();
+  negative_asks_t::iterator end = negative_asks.end();
+  while(it!=end) {
+  if(entailment_checker_interval.check_entailment(*it, csbi.get_constraint_store())) {
+  expanded = true;
+  positive_asks.insert(*it);
+  negative_asks.erase(it++);
+  }
+  else {
+  it++;
+  }
+  }
+  }
   }
   
   // askの導出状態が変化するまで積分をおこなう
   IntegrateResult integrate_result;
   integrator.integrate(
-    integrate_result,
-    csbi.get_constraint_store(),
-    positive_asks,
-    negative_asks,
-    state->current_time,
-    SymbolicTime(opts_.max_time));
+  integrate_result,
+  csbi.get_constraint_store(),
+  positive_asks,
+  negative_asks,
+  state->current_time,
+  SymbolicTime(opts_.max_time));
   
   //to next pointphase
   assert(integrate_result.states.size() == 1);
 
   if(!integrate_result.states[0].is_max_time) {
-    phase_state_sptr new_state(create_new_phase_state());
-    new_state->phase        = PointPhase;
-    new_state->variable_map = integrate_result.states[0].variable_map;
-    new_state->module_set_container = msc_no_init_;
-    new_state->current_time = integrate_result.states[0].next_point_phase_time;
+  phase_state_sptr new_state(create_new_phase_state());
+  new_state->phase        = PointPhase;
+  new_state->variable_map = integrate_result.states[0].variable_map;
+  new_state->module_set_container = msc_no_init_;
+  new_state->current_time = integrate_result.states[0].next_point_phase_time;
 
-    push_phase_state(new_state);
+  push_phase_state(new_state);
   }
 
   std::cout << "%%%%%%%%%%%%% interval phase\n";

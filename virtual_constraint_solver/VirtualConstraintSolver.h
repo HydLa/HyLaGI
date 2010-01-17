@@ -19,12 +19,14 @@ namespace hydla {
 namespace vcs {
 
 /**
- *  真・偽・不明 
+ *  真・偽・不明・求解不能 
  */
-enum Trivalent {
-  Tri_FALSE, 
-  Tri_UNKNOWN, 
-  Tri_TRUE};
+enum VCSResult {
+  VCSR_TRUE,
+  VCSR_FALSE, 
+  VCSR_UNKNOWN,
+  VCSR_SOLVER_ERROR,
+};
 
 template<typename VariableT, typename ValueT, typename TimeT>
 class VirtualConstraintSolver
@@ -78,12 +80,12 @@ public:
   /**
    * 制約を追加する
    */
-  virtual Trivalent add_constraint(const tells_t& collected_tells) = 0;
+  virtual VCSResult add_constraint(const tells_t& collected_tells) = 0;
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual Trivalent check_entailment(const ask_node_sptr& negative_ask) = 0;
+  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask) = 0;
 
   /**
    * askの導出状態が変化するまで積分をおこなう

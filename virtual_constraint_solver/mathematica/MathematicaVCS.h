@@ -49,12 +49,12 @@ public:
   /**
    * 制約を追加する
    */
-  virtual Trivalent add_constraint(const tells_t& collected_tells);
+  virtual VCSResult add_constraint(const tells_t& collected_tells);
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual Trivalent check_entailment(const ask_node_sptr& negative_ask);
+  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask);
 
   /**
    * askの導出状態が変化するまで積分をおこなう

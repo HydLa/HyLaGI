@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_POINT_H_
-#define _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_POINT_H_
+#ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_INTERVAL_H_
+#define _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_INTERVAL_H_
 
 #include "mathlink_helper.h"
 
@@ -9,16 +9,16 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-class MathematicaVCSPoint : 
+class MathematicaVCSInterval : 
     public virtual_constraint_solver_t
 {
 public:
   typedef std::pair<std::set<std::set<MathValue> >, 
                     std::set<MathVariable> > constraint_store_t;
 
-  MathematicaVCSPoint(MathLink* ml);
+  MathematicaVCSInterval(MathLink* ml);
 
-  virtual ~MathematicaVCSPoint();
+  virtual ~MathematicaVCSInterval();
 
   /**
    * 制約ストアの初期化をおこなう
@@ -38,12 +38,12 @@ public:
   /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells);
+  virtual  VCSResult add_constraint(const tells_t& collected_tells);
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask);
+  virtual  VCSResult check_entailment(const ask_node_sptr& negative_ask);
 
   /**
    * askの導出状態が変化するまで積分をおこなう
@@ -67,4 +67,4 @@ private:
 } // namespace simulator
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_POINT_H_
+#endif // _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_INTERVAL_H_

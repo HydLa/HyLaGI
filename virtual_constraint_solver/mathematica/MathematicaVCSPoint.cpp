@@ -215,7 +215,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   return true;
 }
 
-Trivalent MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
+VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 {
   HYDLA_LOGGER_DEBUG("#*** add constraint ***");
 
@@ -252,7 +252,7 @@ Trivalent MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   {
     HYDLA_LOGGER_DEBUG("Consistency Check : false");
     ml_->MLNewPacket();
-    return Tri_FALSE;
+    return VCSR_FALSE;
   }
 
   // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
@@ -343,10 +343,10 @@ Trivalent MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   //}
 
 
-  return Tri_TRUE;
+  return VCSR_TRUE;
 }
   
-Trivalent MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
+VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
 {
   // checkEntailment[guard, store, vars]を渡したい
   ml_->put_function("checkEntailment", 3);
@@ -371,7 +371,7 @@ Trivalent MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   HYDLA_LOGGER_DEBUG("EntailmentChecker#num:", num);
 
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
-  return num==1 ? Tri_TRUE : Tri_FALSE;
+  return num==1 ? VCSR_TRUE : VCSR_FALSE;
 }
 
 bool MathematicaVCSPoint::integrate(
