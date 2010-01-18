@@ -1,15 +1,16 @@
-#ifndef _INCLUDED_HYDLA_BP_SIMULATOR_BP_TIME_H_
-#define _INCLUDED_HYDLA_BP_SIMULATOR_BP_TIME_H_
+#ifndef _INCLUDED_HYDLA_VCS_REALPAVER_RP_TIME_H_
+#define _INCLUDED_HYDLA_VCS_REALPAVER_RP_TIME_H_
 
 #include <ostream>
 
 namespace hydla {
-namespace bp_simulator {
+namespace vcs {
+namespace realpaver {
 /**
  * 時刻
  * 時刻と経過時間？
  */
-struct BPTime
+struct RPTime
 {
   /* ダンプ */
   std::ostream& dump(std::ostream& s) const
@@ -19,13 +20,14 @@ struct BPTime
   }
     
   friend std::ostream& operator<<(std::ostream& s, 
-                                  const BPTime & v)
+                                  const RPTime & v)
   {
     return v.dump(s);
   }
 };
 
-} // namespace bp_simulator
+} // namespace realpaver
+} // namespace vcs
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_BP_SIMULATOR_BP_TIME_H_
+#endif // _INCLUDED_HYDLA_VCS_REALPAVER_RP_TIME_H_

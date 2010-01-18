@@ -1,42 +1,19 @@
-#ifndef _INCLUDED_HYDLA_BP_SIMULATOR_BP_VARIABLE_H_
-#define _INCLUDED_HYDLA_BP_SIMULATOR_BP_VARIABLE_H_
+#ifndef _INCLUDED_HYDLA_VCS_REALPAVER_RP_VARIABLE_H_
+#define _INCLUDED_HYDLA_VCS_REALPAVER_RP_VARIABLE_H_
 
 #include "DefaultVariable.h"
 
 namespace hydla {
-namespace bp_simulator {
-
-/*
-struct BPVariable {
-  std::string name;
-  unsigned int derivative_count;
-
-  bool previous;
-  bool initial;
-
-  std::ostream& dump(std::ostream& s) const
-  {
-    s << name;
-    if(previous) s << "-";
-    if(initial) s << "_0";
-    return s;
-  }
-
-
-  friend std::ostream& operator<<(std::ostream& s, 
-                                  const BPVariable & v)
-  {
-    return v.dump(s);
-  }
-};
-*/
+namespace vcs {
+namespace realpaver {
 
 /**
  * •Ï”–¼E‘®«
  */
-typedef simulator::DefaultVariable BPVariable;
+typedef simulator::DefaultVariable RPVariable;
 
-} //namespace bp_simulator
+} // namespace realpaver
+} // namespace vcs
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_BP_SIMULATOR_BP_VARIABLE_H_
+#endif //_INCLUDED_HYDLA_VCS_REALPAVER_RP_VARIABLE_H_
