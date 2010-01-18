@@ -1,10 +1,14 @@
 #ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_INTERVAL_H_
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_INTERVAL_H_
 
+#include <map>
+#include <set>
+#include <vector>
+
 #include "mathlink_helper.h"
 
 #include "MathVCSType.h"
-
+#include "PacketSender.h"
 namespace hydla {
 namespace vcs {
 namespace mathematica {
@@ -13,8 +17,22 @@ class MathematicaVCSInterval :
     public virtual_constraint_solver_t
 {
 public:
-  typedef std::pair<std::set<std::set<MathValue> >, 
-                    std::set<MathVariable> > constraint_store_t;
+  struct ConstraintStore 
+  {
+    typedef std::map<MathVariable, MathValue>      init_vars_t;
+    typedef hydla::simulator::tells_t              constraints_t;
+    typedef std::set<MathVariable>                 cons_vars_t;
+
+    init_vars_t   init_vars;
+    constraints_t constraints;
+    cons_vars_t   cons_vars;
+  };
+  
+  typedef ConstraintStore constraint_store_t;
+
+//   typedef std::pair<std::set<std::set<MathValue> >, 
+//                     std::set<MathVariable> > constraint_store_t;
+
 
   MathematicaVCSInterval(MathLink* ml);
 
@@ -61,15 +79,30 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:
-  void send_cs() const;
+  void send_cs(PacketSender& ps) const;
   void send_cs_vars() const;
+
+  /**
+   * 初期値制約をMathematicaに渡す
+   * 
+   * Mathematicaに送る制約の中に出現する変数の
+   * 最大微分回数未満の初期値制約のみ送信をおこなう
+   */
+  void send_init_cons(PacketSender& ps);
+
+  /**
+   * 与えられたaskのガード制約を送信する
+   */
+  void send_ask_guards(PacketSender& ps, 
+                       const hydla::simulator::ask_set_t& asks) const;
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
 };
 
 
-std::ostream& operator<<(std::ostream& s, const MathematicaVCSInterval& m);
+std::ostream& operator<<(std::ostream& s, 
+                         const MathematicaVCSInterval::constraint_store_t& c);
 
 } // namespace mathematica
 } // namespace simulator

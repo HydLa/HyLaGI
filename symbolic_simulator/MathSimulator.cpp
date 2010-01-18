@@ -196,15 +196,10 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
   bool expanded   = true;
   while(expanded) {
-    std::cout << "c\n";
-
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
                                      &positive_asks);
-
-    std::cout << "d\n";
-
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
     switch(vcs.add_constraint(tell_list)) 
@@ -251,10 +246,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
           assert(0);
           break;
       }
-      std::cout << "a\n";
     }
-      std::cout << "b\n";
-
   }
 
   
@@ -270,6 +262,10 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   HYDLA_LOGGER_DEBUG("#*** end point phase ***\n",
                      "--- variable map ---\n",
                      new_state->variable_map);
+
+  std::cout << "%%%%%%%%%%%%% point phase\n";
+  std::cout << new_state->variable_map;
+
   return true;
 }
 

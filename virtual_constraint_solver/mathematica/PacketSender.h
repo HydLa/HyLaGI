@@ -3,6 +3,10 @@
 
 #include <map>
 
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+#include <boost/tuple/tuple_io.hpp>
+
 #include "Node.h"
 #include "TreeVisitor.h"
 #include "mathlink_helper.h"
@@ -22,33 +26,20 @@ public:
     NP_INTERVAL_PHASE,
   };
 
-  typedef std::pair<std::string, int>     var_info_t;
-  typedef std::set<var_info_t>            var_info_list_t;
-  typedef var_info_list_t::const_iterator vars_const_iterator;
-  typedef hydla::parse_tree::node_sptr    node_sptr;
+  /**
+   * 変数データ
+   * (変数名， 微分回数,  prev変数かどうか)
+   */
+  typedef boost::tuple<std::string, int, bool> var_info_t;
+
+  typedef std::set<var_info_t>                 var_info_list_t;
+  typedef var_info_list_t::const_iterator      vars_const_iterator;
+  typedef hydla::parse_tree::node_sptr         node_sptr;
 
   // Mathematicaに送る際に変数名につける接頭語 "usrVar"
   static const std::string var_prefix;
 
-  // var_info_tに対する便利関数 変数名(var_prefix付き)を得る
-  static const std::string get_var_name(const var_info_t vi)
-  {
-    return vi.first;
-  }
-
-  // var_info_tに対する便利関数 変数の微分回数を得る
-  static const int get_var_differential_count(const var_info_t vi)
-  {
-    return std::abs(vi.second)-1;
-  }
-
-  // var_info_tに対する便利関数 prev変数であるかどうかを得る
-  static const bool is_var_prev(const var_info_t vi)
-  {
-    return (vi.second < 0);
-  }
-
-  PacketSender(MathLink& ml, now_phase_t phase=NP_POINT_PHASE);
+  PacketSender(MathLink& ml, now_phase_t phase);
 
   virtual ~PacketSender();
 
@@ -56,15 +47,29 @@ public:
 
   vars_const_iterator vars_end() const { return vars_.end(); }
 
+  /**
+   * 与えられたノードの送信をおこなう
+   *
+   * ノードの送信をおこなう際は直接visit関数を呼ばずに，
+   * 必ずこの関数を経由すること
+   */
   void put_node(const node_sptr& node);
 
+  /**
+   * put_nodeの際に送信された変数群の送信をおこなう
+   */
   void put_vars();
 
+  /**
+   * put_nodeの際に送信された変数群のデータを消去し，初期化する
+   */
   void clear();
 
-  //void put_cs(ConstraintStoreInterval constraint_store);
+  /**
+   * 変数の送信
+   */
+  void put_var(const var_info_t var);
 
-  //void put_cs_vars(ConstraintStoreInterval constraint_store);
 
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
@@ -109,21 +114,16 @@ public:
 private:
   MathLink& ml_;
 
-  // pair<変数名, (prev変数なら-1*)微分回数+1>
+  /// 送信された変数の一覧
   var_info_list_t vars_;
-
-  std::string vars_str_;
 
   // Differentialノードを何回通ったか
   int differential_count_;
 
-  /// Prevノードの下にいるかどうか（通常変数なら1、prev変数だと-1などにするか？）
+  /// Prevノードの下にいるかどうか
   bool in_prev_;
 
   now_phase_t phase_; // 現在のフェーズ
-
-  std::string debug_string_; // デバッグ出力用一時変数
-
 };
 
 } // namespace mathematica

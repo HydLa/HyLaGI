@@ -2,9 +2,10 @@
 
 #include <cassert>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 #include "mathlink_helper.h"
 #include "Logger.h"
-#include "PacketSender.h"
 
 using namespace hydla::vcs;
 
@@ -43,31 +44,33 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
     variable_map.end();
   for(; it!=end; ++it)
   {
-    const MathVariable& symbolic_variable = (*it).first;
-    const MathValue& symbolic_value = (*it).second;    
+    const MathVariable& variable = (*it).first;
+    const MathValue&    value = (*it).second;    
 
-    if(symbolic_value.str != "") { //未定義かどうか  TODO: 未定義判定関数つくる？
+    if(value.str != "") { //未定義かどうか  TODO: 未定義判定関数つくる？
       std::ostringstream val_str;
 
       // MathVariable側に関する文字列を作成
       val_str << "Equal[";
-      if(symbolic_variable.derivative_count > 0)
+      if(variable.derivative_count > 0)
       {
         val_str << "Derivative["
-                << symbolic_variable.derivative_count
-                << "][prev[usrVar"
-                << symbolic_variable.name
+                << variable.derivative_count
+                << "][prev["
+                << PacketSender::var_prefix
+                << variable.name
                 << "]]";
       }
       else
       {
-        val_str << "prev[usrVar"
-                << symbolic_variable.name
+        val_str << "prev["
+                << PacketSender::var_prefix
+                << variable.name
                 << "]";
       }
 
       val_str << ","
-              << symbolic_value.str
+              << value.str
               << "]"; // Equalの閉じ括弧
 
       MathValue new_symbolic_value;
@@ -77,9 +80,10 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
       constraint_store_.first.insert(value_set);
 
       // 制約ストア内の変数一覧を作成
-      MathVariable new_variable(symbolic_variable);
-      new_variable.name = "prev[usrVar" + symbolic_variable.name + "]";
-      constraint_store_.second.insert(new_variable);
+      constraint_store_.second.insert(
+        boost::make_tuple(variable.name,
+                          variable.derivative_count,
+                          true));
     }
   }
 
@@ -90,11 +94,18 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 
 bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 {
+  HYDLA_LOGGER_DEBUG(
+    "#*** MathematicaVCSPoint::create_variable_map ***\n",
+    "--- variable_map ---\n",
+    variable_map,
+    "--- constraint_store ---\n",
+    *this);    
+
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
   // Orでつながった制約のうち、最初の1つだけを採用することにする
   std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
-  while((and_cons_it) != (*or_cons_it).end())
+  for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)
   {
     std::string cons_str = (*and_cons_it).str;
     // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
@@ -132,36 +143,39 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
         std::cout << "can't find bracket." << std::endl;
         return false;
       }
-      variable_loc += 6; // "usrVar"の長さ分
       variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
     }
     else
     {
-      variable_name =  variable_str.substr(6); // "usrVar"の長さ分
+      variable_name =  variable_str; // "usrVar"の長さ分      
       variable_derivative_count = 0;
     }
 
-    // 値の取得
-    int str_size = cons_str.size();
-    unsigned int end_loc = cons_str.rfind("]", str_size-1);
+    // prev変数でなかったら処理
+    if(!boost::starts_with(variable_name, "prev")) {
+      // 値の取得
+      int str_size = cons_str.size();
+      unsigned int end_loc = cons_str.rfind("]", str_size-1);
 
-    if(end_loc == std::string::npos)
-    {
-      std::cout << "can't find bracket." << std::endl;
-      return false;
-    }
-    std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
+      if(end_loc == std::string::npos)
+      {
+        std::cout << "can't find bracket." << std::endl;
+        return false;
+      }
+      std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
 
-    MathVariable symbolic_variable;
-    MathValue symbolic_value;
-    symbolic_variable.name = variable_name;
-    symbolic_variable.derivative_count = variable_derivative_count;
-    symbolic_value.str = value_str;
+      MathVariable symbolic_variable;
+      MathValue symbolic_value;
+      symbolic_variable.name = 
+        variable_name.substr(PacketSender::var_prefix.size());
+      symbolic_variable.derivative_count = 
+        variable_derivative_count;
+      symbolic_value.str = value_str;
 
-    variable_map.set_variable(symbolic_variable, symbolic_value); 
-    and_cons_it++;
+      variable_map.set_variable(symbolic_variable, symbolic_value);
+    } 
   }
-  // prev[]を除く処理は要らなさそう？
+
   return true;
 }
 
@@ -170,19 +184,23 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   HYDLA_LOGGER_DEBUG(
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
 
+  PacketSender ps(*ml_, PacketSender::NP_POINT_PHASE);
+
+
+/////////////////// 送信処理
+
   // isConsistent[expr, vars]を渡したい
   ml_->put_function("isConsistent", 2);
 
   ml_->put_function("Join", 2);
-  // tell制約の集合からexprを得てMathematicaに渡す
   int tells_size = collected_tells.size();
   ml_->put_function("List", tells_size);
-  tells_t::const_iterator tells_it = collected_tells.begin();
-  PacketSender ps(*ml_);
-  while((tells_it) != collected_tells.end())
-  {
-    ps.put_node(*tells_it);
-    tells_it++;
+
+  // tell制約の集合からexprを得てMathematicaに渡す
+  tells_t::const_iterator tells_it  = collected_tells.begin();
+  tells_t::const_iterator tells_end = collected_tells.end();
+  for(; tells_it!=tells_end; ++tells_it) {
+    ps.put_node((*tells_it)->get_child());
   }
 
   // 制約ストアからもexprを得てMathematicaに渡す
@@ -194,90 +212,78 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
 
+  
+  
+//   ml_->skip_pkt_until(TEXTPKT);
+//   std::cout << ml_->get_string() << std::endl;
+
+
+/////////////////// 受信処理
+  HYDLA_LOGGER_DEBUG( "--- receive ---");
+  ml_->skip_pkt_until(RETURNPKT);
+
   // 結果を受け取る前に制約ストアを初期化
   reset();
 
+  ml_->MLGetNext();
+  ml_->MLGetNext();
+  ml_->MLGetNext();
 
-  ml_->skip_pkt_until(RETURNPKT);
-  // 解けなかった場合は0が返る（制約間に矛盾があるということ）
-  HYDLA_LOGGER_DEBUG("GetType: ", ml_->MLGetType());
-  if(ml_->MLGetType() == 35)
+  int ret = ml_->get_integer();
+  HYDLA_LOGGER_DEBUG("ret: ", ret);
+  switch(ret) 
   {
-    std::cout << ml_->get_symbol() << std::endl;
-    HYDLA_LOGGER_DEBUG("Consistency Check : false");
-    ml_->MLNewPacket();
-    return VCSR_FALSE;
-  }
+    case 0: {
+      // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
+      // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
+      // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
+      // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
+      // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
+      HYDLA_LOGGER_DEBUG( "---build constraint store---");
+      ml_->MLGetNext();
 
-  // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
-  // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
-  // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
-  // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
-  // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
-  HYDLA_LOGGER_DEBUG( "---build constraint store---");
-  std::cout << "a" << std::endl;
-  ml_->MLGetNext(); // Listという関数名
-  std::cout << "b" << std::endl;
-  ml_->MLGetNext(); // List関数（Orで結ばれた解を表している）
-  std::cout << "c" << std::endl;
+      // List関数の要素数（Orで結ばれた解の個数）を得る
+      int or_size = ml_->get_arg_count();
+      HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
+      ml_->MLGetNext(); // Listという関数名
 
-  // List関数の要素数（Orで結ばれた解の個数）を得る
-  int or_size = ml_->get_arg_count();
-  HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
-  ml_->MLGetNext(); // Listという関数名
+      for(int i=0; i<or_size; i++)
+      {
+        ml_->MLGetNext(); // List関数（Andで結ばれた解を表している）
 
-  for(int i=0; i<or_size; i++)
-  {
-    ml_->MLGetNext(); // List関数（Andで結ばれた解を表している）
+        // List関数の要素数（Andで結ばれた解の個数）を得る
+        int and_size = ml_->get_arg_count();
+        HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
+        ml_->MLGetNext(); // Listという関数名
+        ml_->MLGetNext(); // Listの中の先頭要素
 
-    // List関数の要素数（Andで結ばれた解の個数）を得る
-    int and_size = ml_->get_arg_count();
-    HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
-    ml_->MLGetNext(); // Listという関数名
-    ml_->MLGetNext(); // Listの中の先頭要素
-
-    std::set<MathValue> value_set;    
-    for(int j=0; j<and_size; j++)
-    {
-      std::string str = ml_->get_string();
-      MathValue math_value;
-      math_value.str = str;
-      value_set.insert(math_value);
+        std::set<MathValue> value_set;    
+        for(int j=0; j<and_size; j++)
+        {
+          std::string str = ml_->get_string();
+          MathValue math_value;
+          math_value.str = str;
+          value_set.insert(math_value);
+        }
+        constraint_store_.first.insert(value_set);
+      }
+      
+      constraint_store_.second.insert(ps.vars_begin(), ps.vars_end());
+      break;
     }
-    constraint_store_.first.insert(value_set);
-  }
+    
+    case 1:
+      HYDLA_LOGGER_DEBUG("inconsistent");
+      ml_->MLNewPacket();
+      return VCSR_FALSE;
+    
+    case 2:
+      HYDLA_LOGGER_DEBUG("cannot solve");
+      ml_->MLNewPacket();
+      return VCSR_SOLVER_ERROR;
 
-
-  // 出現する変数の一覧が文字列で返ってくるのでそれを制約ストアに入れる
-  ml_->MLGetNext(); // List関数
-
-  // List関数の要素数（変数一覧に含まれる変数の個数）を得る
-  int vars_size = ml_->get_arg_count();
-  ml_->MLGetNext(); // Listという関数名
-
-  for(int k=0; k<vars_size; k++)
-  {
-    MathVariable symbolic_variable;
-    switch(ml_->MLGetNext())
-    {
-      case MLTKFUNC: // Derivative[number][]
-        ml_->MLGetNext(); // Derivative[number]という関数名
-        ml_->MLGetNext(); // Derivativeという関数名
-        ml_->MLGetNext(); // number
-        symbolic_variable.derivative_count =
-          ml_->get_integer();
-        ml_->MLGetNext(); // 変数
-        symbolic_variable.name = ml_->get_symbol();
-        break;
-      case MLTKSYM: // シンボル（記号）xとかyとか
-        symbolic_variable.derivative_count = 0;
-        symbolic_variable.name = ml_->get_symbol();
-        break;
-      default:
-        ;
-    }
-
-    constraint_store_.second.insert(symbolic_variable);
+    default:
+      assert(0);
   }
 
   HYDLA_LOGGER_DEBUG(
@@ -299,7 +305,7 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
 
   // ask制約のガードの式を得てMathematicaに渡す
   PacketSender ps(*ml_, PacketSender::NP_POINT_PHASE);
-  ps.put_node(negative_ask);
+  ps.put_node(negative_ask->get_guard());
 
   // 制約ストアから式を得てMathematicaに渡す
   send_cs();
@@ -312,10 +318,9 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
 
   ml_->skip_pkt_until(RETURNPKT);
   
+  // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   int num  = ml_->get_integer();
   HYDLA_LOGGER_DEBUG("EntailmentChecker#num:", num);
-
-  // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   return num==1 ? VCSR_TRUE : VCSR_FALSE;
 }
 
@@ -343,74 +348,44 @@ void MathematicaVCSPoint::send_cs() const
     return;
   }
 
-  std::set<std::set<MathValue> >::const_iterator or_cons_it;
-  std::set<MathValue>::const_iterator and_cons_it;
-//     or_cons_it = constraint_store_.first.begin();
-//     while((or_cons_it) != constraint_store_.first.end())
-//     {
-//       and_cons_it = (*or_cons_it).begin();
-//       while((and_cons_it) != (*or_cons_it).end())
-//       {
-//         std::cout << (*and_cons_it).str << " ";
-//         and_cons_it++;
-//       }
-//       std::cout << std::endl;
-//       or_cons_it++;
-//     }
-
-//     if(debug_mode_) {
-//       std::cout << "----------------------------" << std::endl;
-//     }
-
   ml_->put_function("List", 1);
   ml_->put_function("Or", or_cons_size);
-  or_cons_it = constraint_store_.first.begin();
-  while((or_cons_it) != constraint_store_.first.end())
+  std::set<std::set<MathValue> >::const_iterator or_cons_it = 
+    constraint_store_.first.begin();
+  for(; (or_cons_it) != constraint_store_.first.end(); ++or_cons_it)
   {
     int and_cons_size = (*or_cons_it).size();
     ml_->put_function("And", and_cons_size);
-    and_cons_it = (*or_cons_it).begin();
-    while((and_cons_it) != (*or_cons_it).end())
+    std::set<MathValue>::const_iterator and_cons_it = 
+      (*or_cons_it).begin();
+    for(; (and_cons_it) != (*or_cons_it).end(); ++and_cons_it)
     {
       ml_->put_function("ToExpression", 1);
       std::string str = (*and_cons_it).str;
       ml_->put_string(str);
-      and_cons_it++;
+      HYDLA_LOGGER_DEBUG("put cons: ", str);
     }
-    or_cons_it++;
   }
 }
 
 void MathematicaVCSPoint::send_cs_vars() const
 {
-  HYDLA_LOGGER_DEBUG("---- Send Constraint Store Vars -----");
-
   int vars_size = constraint_store_.second.size();
-  std::set<MathVariable>::const_iterator vars_it = 
-    constraint_store_.second.begin();
 
+  HYDLA_LOGGER_DEBUG(
+    "---- Send Constraint Store Vars -----\n",
+    "vars_size: ", vars_size);
+
+  PacketSender ps(*ml_, PacketSender::NP_POINT_PHASE);
+  
   ml_->put_function("List", vars_size);
-  while((vars_it) != constraint_store_.second.end())
-  {
-    if(int value = (*vars_it).derivative_count > 0)
-    {
-      ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-      ml_->MLPutArgCount(1);      // this 1 is for the 'f'
-      ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-      ml_->MLPutArgCount(1);      // this 1 is for the '*number*'
-      ml_->put_symbol("Derivative");
-      ml_->MLPutInteger(value);
-      ml_->put_symbol((*vars_it).name);
 
-      HYDLA_LOGGER_DEBUG("Derivative[", value, "][", (*vars_it).name, "]");
-    }
-    else
-    {
-      ml_->put_symbol((*vars_it).name);
-        
-      HYDLA_LOGGER_DEBUG((*vars_it).name);
-    }
-    vars_it++;
+  constraint_store_vars_t::const_iterator it = 
+    constraint_store_.second.begin();
+  constraint_store_vars_t::const_iterator end = 
+    constraint_store_.second.end();
+  for(; it!=end; ++it) {
+    ps.put_var(*it);
   }
 }
 
@@ -419,10 +394,9 @@ std::ostream& MathematicaVCSPoint::dump(std::ostream& s) const
   s << "#*** Dump MathematicaVCSPoint ***\n"
     << "--- constraint store ---\n";
 
+  // 
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
-  std::set<MathVariable>::const_iterator vars_it = 
-    constraint_store_.second.begin();
   while((or_cons_it) != constraint_store_.first.end())
   {
     std::set<MathValue>::const_iterator and_cons_it = 
@@ -435,9 +409,14 @@ std::ostream& MathematicaVCSPoint::dump(std::ostream& s) const
     s << "\n";
     or_cons_it++;
   }
+
+  // 制約ストア内に存在する変数のダンプ
+  s << "-- vars --\n";
+  constraint_store_vars_t::const_iterator vars_it = 
+    constraint_store_.second.begin();
   while((vars_it) != constraint_store_.second.end())
   {
-    s << *(vars_it) << " ";
+    s << *(vars_it) << "\n";
     vars_it++;
   }
 

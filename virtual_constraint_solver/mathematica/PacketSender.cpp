@@ -1,5 +1,8 @@
 #include "PacketSender.h"
+
 #include <iostream>
+#include <cassert>
+
 #include "Logger.h"
 
 using namespace hydla::parse_tree;
@@ -29,89 +32,86 @@ PacketSender::~PacketSender(){}
 // Ask§–ñ
 void PacketSender::visit(boost::shared_ptr<Ask> node)                   
 {
-  // ƒK[ƒhğŒ‚Ì‚İput‚·‚é
-  debug_string_ += "guard:";
-  accept(node->get_guard());    
-  HYDLA_LOGGER_DEBUG(debug_string_);
-  debug_string_.erase();
+  // ask§–ñ‚Í‘—‚ê‚È‚¢
+  assert(0);
 }
 
 // Tell§–ñ
 void PacketSender::visit(boost::shared_ptr<Tell> node)                  
 {
-  accept(node->get_child());
-  HYDLA_LOGGER_DEBUG(debug_string_);
-  debug_string_.erase();
+  // tell§–ñ‚Í‘—‚ê‚È‚¢
+  assert(0);
 }
 
 // ”äŠr‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Equal> node)                 
 {
+  HYDLA_LOGGER_DEBUG("put: Equal");
   ml_.put_function("Equal", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "=";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<UnEqual> node)               
 {
+  HYDLA_LOGGER_DEBUG("put: UnEqual");
   ml_.put_function("UnEqual", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "!=";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<Less> node)                  
 {
+  HYDLA_LOGGER_DEBUG("put: Less");
   ml_.put_function("Less", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "<";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<LessEqual> node)             
 {
+  HYDLA_LOGGER_DEBUG("put: LessEqual");
   ml_.put_function("LessEqual", 2);
 
   accept(node->get_lhs());    
-  debug_string_ += "<=";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<Greater> node)               
 {
+  HYDLA_LOGGER_DEBUG("put: Greater");
   ml_.put_function("Greater", 2);
 
   accept(node->get_lhs());
-  debug_string_ += ">";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)          
 {
+  HYDLA_LOGGER_DEBUG("put: GreaterEqual");
   ml_.put_function("GreaterEqual", 2);
 
   accept(node->get_lhs());
-  debug_string_ += ">=";
   accept(node->get_rhs());
 }
 
 // ˜_—‰‰Zq
 void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)            
 {
+  HYDLA_LOGGER_DEBUG("put: And");
   ml_.put_function("And", 2);
 
   accept(node->get_lhs());
-  debug_string_ += " & ";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<LogicalOr> node)             
 {
-  //ml_.put_function("Or", 2);
+  HYDLA_LOGGER_DEBUG("put: Or");
+  ml_.put_function("Or", 2);
 
   accept(node->get_lhs());
   accept(node->get_rhs());
@@ -120,46 +120,46 @@ void PacketSender::visit(boost::shared_ptr<LogicalOr> node)
 // Zp“ñ€‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Plus> node)                  
 {
+  HYDLA_LOGGER_DEBUG("put: Plus");
   ml_.put_function("Plus", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "+";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<Subtract> node)              
 {
+  HYDLA_LOGGER_DEBUG("put: Subtract");
   ml_.put_function("Subtract", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "-";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<Times> node)                 
 {
+  HYDLA_LOGGER_DEBUG("put: Times");
   ml_.put_function("Times", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "*";
   accept(node->get_rhs());
 }
 
 void PacketSender::visit(boost::shared_ptr<Divide> node)                
 {
+  HYDLA_LOGGER_DEBUG("put: Divide");
   ml_.put_function("Divide", 2);
 
   accept(node->get_lhs());
-  debug_string_ += "/";
   accept(node->get_rhs());
 }
   
 // Zp’P€‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Negative> node)              
 {
+  HYDLA_LOGGER_DEBUG("put: Minus");
   ml_.put_function("Minus", 1);
 
-  debug_string_ += "-";
   accept(node->get_child());
 }
 
@@ -180,68 +180,83 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
 void PacketSender::visit(boost::shared_ptr<Previous> node)              
 {
   in_prev_ = true;
-  if(this->phase_==NP_POINT_PHASE) {
-    ml_.put_function("prev", 1);
-    this->debug_string_ += "prev[";
-    accept(node->get_child());
-    this->debug_string_ += "]";
-  } else {
-    accept(node->get_child());
-  }
+  accept(node->get_child());
   in_prev_ = false;
 }
   
 // •Ï”
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
 {
-  if(this->phase_==NP_INTERVAL_PHASE) {
-    // •Ï”–¼‚ÌÅŒã‚É•K‚¸[t]‚ª‚Â‚­•ª
+  // •Ï”‚Ì‘—M
+  var_info_t new_var = 
+    boost::make_tuple(node->get_name(), differential_count_, in_prev_);
+
+  if(phase_==NP_INTERVAL_PHASE) {
+    // •Ï”–¼‚ÌÅŒã‚É[t]‚ğ‚Â‚¯‚é
     ml_.MLPutNext(MLTKFUNC);
     ml_.MLPutArgCount(1);
+    put_var(new_var);
+    ml_.put_symbol("t");
+  }
+  else {
+    put_var(new_var);
   }
 
+  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
+  vars_.insert(new_var);
+}
+
+// ”š
+void PacketSender::visit(boost::shared_ptr<Number> node)                
+{    
+  HYDLA_LOGGER_DEBUG("put: Number : ", node->get_number());
+  ml_.MLPutInteger(atoi(node->get_number().c_str()));
+}
+
+void PacketSender::put_var(const var_info_t var)
+{
+  std::string name(PacketSender::var_prefix + var.get<0>());
+  int diff_count = var.get<1>();
+  bool prev      = var.get<2>();
+  
+  HYDLA_LOGGER_DEBUG(
+    "PacketSender::put_var: ",
+    "name: ", name,
+    "  diff_count: ", diff_count,
+    "  prev: ", prev);
+  
+//   // •Ï”–¼‚ÌÅŒã‚É•K‚¸[t]‚ª‚Â‚­•ª
+//   if(phase_==NP_INTERVAL_PHASE) {
+//     ml_.MLPutNext(MLTKFUNC);
+//     ml_.MLPutArgCount(1);
+//   }
+
   // •Ï”‚Ìput
-  if(differential_count_ > 0){
+  if(diff_count > 0){
     // ”÷•ª•Ï”‚È‚ç (Derivative[‰ñ”])[•Ï”–¼]‚ğput
     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
     ml_.MLPutArgCount(1);      // this 1 is for the 'f'
     ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
     ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
     ml_.put_symbol("Derivative");
-    ml_.MLPutInteger(differential_count_);
-    ml_.put_symbol((PacketSender::var_prefix + node->get_name()).c_str());
-  }else{
-    ml_.put_symbol((PacketSender::var_prefix + node->get_name()).c_str());
+    ml_.MLPutInteger(diff_count);
   }
-  if(this->phase_==NP_INTERVAL_PHASE) ml_.put_symbol("t");
-
-  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
-  if(in_prev_){
-    vars_.insert(std::make_pair(PacketSender::var_prefix + node->get_name(),
-      -1*(differential_count_ +1)));
-  }else{
-    vars_.insert(std::make_pair(PacketSender::var_prefix + node->get_name(),
-      differential_count_ + 1));
+   
+  // prev•Ï”‚Æ‚µ‚Ä‘—‚é‚©‚Ç‚¤‚©
+  if(prev && phase_==NP_POINT_PHASE) {
+    ml_.put_function("prev", 1);
+    ml_.put_symbol(name);
+  }
+  else {
+    ml_.put_symbol(name);
   }
 
-  // ƒfƒoƒbƒO•¶š—ñ‚Ì¶¬
-  if(differential_count_ > 0){
-    this->debug_string_ += "Derivative[";
-    this->debug_string_ += differential_count_ ;
-    this->debug_string_ += "][";
-    this->debug_string_ += (node->get_name() + "]");
-  }else{
-    this->debug_string_ += node->get_name();
-  }
-  if(this->phase_==NP_INTERVAL_PHASE) this->debug_string_ += "[t]";
+//   // [t]‚Ì•ª
+//   if(this->phase_==NP_INTERVAL_PHASE) {
+//     ml_.put_symbol("t");
+//   }
 }
 
-// ”š
-void PacketSender::visit(boost::shared_ptr<Number> node)                
-{    
-  ml_.MLPutInteger(atoi(node->get_number().c_str()));
-  this->debug_string_ += node->get_number();
-}
 
 /**
  * ‚ ‚é®(ƒm[ƒh)‚ğput‚·‚é
@@ -251,6 +266,7 @@ void PacketSender::put_node(const node_sptr& node)
 {
   differential_count_ = 0;
   in_prev_ = false;
+
   accept(node);
 }
 
@@ -259,59 +275,28 @@ void PacketSender::put_node(const node_sptr& node)
  */
 void PacketSender::put_vars()
 {
+  HYDLA_LOGGER_DEBUG(
+    "---- PacketSender::put_vars ----\n",
+    "var size:", vars_.size());
+  
   ml_.put_function("List", vars_.size());
 
-  std::string debug_str("vars: ");
-
-  PacketSender::vars_const_iterator it;
-  for(it=this->vars_begin(); it!=this->vars_end(); it++) {
-    const std::string name(PacketSender::get_var_name(*it));
-    const int d_count = PacketSender::get_var_differential_count(*it);
-    const bool is_prev = PacketSender::is_var_prev(*it);
-
-    // •Ï”‚ªprev && PointPhase -> prevŠÖ”‚ğput
-    if(is_prev && this->phase_==NP_POINT_PHASE) {
-      ml_.put_function("prev", 1);
-      debug_str += "prev[";
-    }
-
-    // Interval Phase‚È‚çŠÖ”•Ï”‚Æ‚µ‚Ä‚Ì[t]‚ğput‚·‚é€”õ‚ª•K—v
-    if(this->phase_==NP_INTERVAL_PHASE) {
+  PacketSender::vars_const_iterator it  = vars_begin();
+  PacketSender::vars_const_iterator end = vars_end();
+  if(phase_==NP_INTERVAL_PHASE) {
+    // •Ï”–¼‚ÌÅŒã‚É[t]‚ğ‚Â‚¯‚é
+    for(; it!=end; ++it) {
       ml_.MLPutNext(MLTKFUNC);
       ml_.MLPutArgCount(1);
-    }
-
-    // ”÷•ª•Ï”‚È‚ç (Derivative[‰ñ”])[•Ï”–¼]‚ğput
-    if(d_count > 0) {
-      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-      ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-      ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-      ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-      ml_.put_symbol("Derivative");
-      ml_.MLPutInteger(d_count);
-      ml_.put_symbol(name);
-      debug_str += "Derivative[";
-      debug_str += d_count;
-      debug_str += "][" + name + "]";
-    } else {
-      // ‚½‚ñ‚É•Ï”–¼‚ğput
-      ml_.put_symbol(name);
-      debug_str += name;
-    }
-
-    // Interval Phase‚È‚ç[t]‚ğput
-    if(this->phase_==NP_INTERVAL_PHASE) {
+      put_var(*it);
       ml_.put_symbol("t");
-      debug_str += "[t]";
     }
-
-    // •Ï”‚ªprev && PointPhase -> prevŠÖ”‚ğput‚µ‚½
-    if(is_prev && this->phase_==NP_POINT_PHASE) debug_str += "]";
-    debug_str += ", ";
-
-  } // for
-
-  HYDLA_LOGGER_DEBUG(debug_str);
+  }
+  else {
+    for(; it!=end; ++it) {
+      put_var(*it);
+    }
+  }
 }
 
 /**
@@ -320,11 +305,10 @@ void PacketSender::put_vars()
  */
 void PacketSender::clear()
 {
-  vars_.clear();
-  vars_str_.erase();
   differential_count_ = 0;
   in_prev_ = false;
-  debug_string_.erase();
+
+  vars_.clear();
 }
 
 } // namespace mathematica

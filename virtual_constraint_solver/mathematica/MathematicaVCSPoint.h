@@ -5,6 +5,7 @@
 
 #include "mathlink_helper.h"
 #include "MathVCSType.h"
+#include "PacketSender.h"
 
 namespace hydla {
 namespace vcs {
@@ -14,8 +15,10 @@ class MathematicaVCSPoint :
     public virtual_constraint_solver_t
 {
 public:
+  typedef std::set<PacketSender::var_info_t> constraint_store_vars_t;
+  
   typedef std::pair<std::set<std::set<MathValue> >, 
-                    std::set<MathVariable> > constraint_store_t;
+                    constraint_store_vars_t> constraint_store_t;
 
   MathematicaVCSPoint(MathLink* ml);
 

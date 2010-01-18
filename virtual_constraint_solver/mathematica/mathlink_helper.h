@@ -161,6 +161,10 @@ public:
     return str;
   }
 
+  int put_integer(int i) {
+    return MLPutInteger(i);
+  }
+
   int get_integer()
   {
     int i;

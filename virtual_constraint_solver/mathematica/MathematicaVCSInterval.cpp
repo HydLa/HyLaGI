@@ -1,10 +1,12 @@
 #include "MathematicaVCSInterval.h"
 
+#include <string>
 #include <cassert>
 
 #include "mathlink_helper.h"
 #include "Logger.h"
 #include "PacketSender.h"
+#include "PacketChecker.h"
 
 using namespace hydla::vcs;
 
@@ -36,300 +38,220 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
   }
   HYDLA_LOGGER_DEBUG("------Variable map------", variable_map);
 
-  MathValue symbolic_value;
-  std::string value;
-  MathVariable symbolic_variable;
-  std::string variable_name;
-
-  variable_map_t::variable_list_t::const_iterator it = variable_map.begin();
-
-  std::set<MathValue> value_set;
-  while(it != variable_map.end())
-  {
-    symbolic_value = (*it).second;    
-    value = symbolic_value.str;
-    if(value != "") break;
-    it++;
+  variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
+  variable_map_t::variable_list_t::const_iterator end = variable_map.end();
+  for(; it!=end; ++it) {
+    constraint_store_.init_vars.insert(
+      std::make_pair(it->first, it->second));
   }
 
-  while(it != variable_map.end())
-  {
-    symbolic_variable = (*it).first;
-    symbolic_value = (*it).second;    
-    variable_name = symbolic_variable.name;
-    value = symbolic_value.str;
-
-    std::string str = "";
-
-    // MathVariable側に関する文字列を作成
-    str += "Equal[";
-    if(symbolic_variable.derivative_count > 0)
-    {
-      std::ostringstream derivative_count;
-      derivative_count << symbolic_variable.derivative_count;
-      str += "Derivative[";
-      str += derivative_count.str();
-      str += "][usrVar";
-      str += variable_name;
-      str += "][0]";
-    }
-    else
-    {
-      str += "usrVar";
-      str += variable_name;
-      str += "[0]";
-    }
-
-    str += ",";
-
-    // MathValue側に関する文字列を作成
-    str += value;
-    str += "]"; // Equalの閉じ括弧
-
-    MathValue new_symbolic_value;
-    new_symbolic_value.str = str;
-    value_set.insert(new_symbolic_value);
-
-
-    // 制約ストア内の変数一覧を作成
-    symbolic_variable.name = "usrVar" + variable_name;
-    constraint_store_.second.insert(symbolic_variable);
-
-    it++;
-    while(it != variable_map.end())
-    {
-      symbolic_value = (*it).second;
-      value = symbolic_value.str;
-      if(value != "") break;
-      it++;
-    }
-  }
-  constraint_store_.first.insert(value_set);
-
-  HYDLA_LOGGER_DEBUG(*this);
+  HYDLA_LOGGER_DEBUG(constraint_store_);
 
   return true;
 }
 
 bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
 {
-  //TODO: coutに出力するのをやめる
+  // Intervalではcreate_variable_map関数無効
+  assert(0);
+  return false;
+}
 
-  std::set<std::set<MathValue> >::const_iterator or_cons_it = 
-    constraint_store_.first.begin();
-  // Orでつながった制約のうち、最初の1つだけを採用することにする
-  std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
-  while((and_cons_it) != (*or_cons_it).end())
-  {
-    std::string cons_str = (*and_cons_it).str;
-    // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
+void MathematicaVCSInterval::send_init_cons(PacketSender& ps)
+{
+  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_init_cons ----");
+    
+  // 変数の最大微分回数をもとめる
+  typedef std::map<std::string, int> max_diff_map_t;
+  typedef max_diff_map_t::iterator max_diff_map_itr;
+  max_diff_map_t max_diff_map;
 
-    unsigned int loc = cons_str.find("Equal[", 0);
-    loc += 6; // 文字列"Equal["の長さ分
-    unsigned int comma_loc = cons_str.find(",", loc);
-    if(comma_loc == std::string::npos)
-    {
-      std::cout << "can't find comma." << std::endl;
-      return false;
+  PacketSender::vars_const_iterator vars_it  = ps.vars_begin();
+  PacketSender::vars_const_iterator vars_end = ps.vars_end();
+  for(; vars_it!=vars_end; ++vars_it) {
+    std::string name(vars_it->get<0>());
+    int derivative_count = vars_it->get<1>();
+
+    max_diff_map_itr it = max_diff_map.find(name);
+    if(it==max_diff_map.end()) {
+      max_diff_map.insert(
+        std::make_pair(name, derivative_count));
     }
-    std::string variable_str = cons_str.substr(loc, comma_loc-loc);
-    // variable_strは"usrVarx"や"Derivative[1][usrVarx]"など
-
-    // nameとderivative_countへの分離
-    std::string variable_name;
-    int variable_derivative_count;
-    unsigned int variable_loc = variable_str.find("Derivative[", 0);
-    if(variable_loc != std::string::npos)
-    {
-      variable_loc += 11; // "Derivative["の長さ分
-      unsigned int bracket_loc = variable_str.find("][", variable_loc);
-      if(bracket_loc == std::string::npos)
-      {
-        std::cout << "can't find bracket." << std::endl;
-        return false;
-      }
-      std::string variable_derivative_count_str = variable_str.substr(variable_loc, bracket_loc-variable_loc);
-      variable_derivative_count = std::atoi(variable_derivative_count_str.c_str());
-      variable_loc = bracket_loc + 2; // "]["の長さ分
-      bracket_loc = variable_str.find("]", variable_loc);
-      if(bracket_loc == std::string::npos)
-      {
-        std::cout << "can't find bracket." << std::endl;
-        return false;
-      }
-      variable_loc += 6; // "usrVar"の長さ分
-      variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
-    }
-    else
-    {
-      variable_name =  variable_str.substr(6); // "usrVar"の長さ分
-      variable_derivative_count = 0;
-    }
-
-    // 値の取得
-    int str_size = cons_str.size();
-    unsigned int end_loc = cons_str.rfind("]", str_size-1);
-
-    if(end_loc == std::string::npos)
-    {
-      std::cout << "can't find bracket." << std::endl;
-      return false;
-    }
-    std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
-
-    MathVariable symbolic_variable;
-    MathValue symbolic_value;
-    symbolic_variable.name = variable_name;
-    symbolic_variable.derivative_count = variable_derivative_count;
-    symbolic_value.str = value_str;
-
-    variable_map.set_variable(symbolic_variable, symbolic_value); 
-    and_cons_it++;
+    else if(it->second < derivative_count) {
+      it->second = derivative_count;
+    }    
   }
 
-  // [t]を除く処理は要らなさそう？
+  // 送信する制約の個数を求める
+  constraint_store_t::init_vars_t::const_iterator init_vars_it;
+  constraint_store_t::init_vars_t::const_iterator init_vars_end;
+  init_vars_it  = constraint_store_.init_vars.begin();
+  init_vars_end = constraint_store_.init_vars.end();
+  int init_vars_count = 0;
+  for(; init_vars_it!=init_vars_end; ++init_vars_it) {
+    if(max_diff_map[init_vars_it->first.name] > 
+       init_vars_it->first.derivative_count) {
+      init_vars_count++;
+    }
+  }
 
-  return true;
+  // Mathematicaへ送信
+  ml_->put_function("List", init_vars_count);
+  init_vars_it  = constraint_store_.init_vars.begin();
+  init_vars_end = constraint_store_.init_vars.end();
+  for(; init_vars_it!=init_vars_end; ++init_vars_it) {
+    if(max_diff_map[init_vars_it->first.name] > 
+       init_vars_it->first.derivative_count) 
+    {
+      ml_->put_function("Equal", 2);
+
+      // 変数名
+      ml_->MLPutNext(MLTKFUNC);
+      ml_->MLPutArgCount(1);
+      ps.put_var(
+        boost::make_tuple(init_vars_it->first.name, 
+                          init_vars_it->first.derivative_count, 
+                          false));
+      ml_->put_integer(0);
+
+      // 値
+      ml_->put_function("ToExpression", 1);
+      ml_->put_string(init_vars_it->second.str);      
+    }
+  }
 }
+
 
 VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
 {
-  // isConsistentInterval[tells, store, tellsVars, storeVars]を渡したい
-  ml_->put_function("isConsistentInterval", 4);
+  HYDLA_LOGGER_DEBUG("#*** Begin MathematicaVCSInterval::add_constraint ***");
+
+  PacketSender ps(*ml_, PacketSender::NP_INTERVAL_PHASE);
+
+  // isConsistentInterval[expr, vars]を渡したい
+  ml_->put_function("isConsistentInterval", 2);
+  
+  ml_->put_function("Join", 2);
+  ml_->put_function("List", 
+                    collected_tells.size() + 
+                    constraint_store_.constraints.size());
 
   // tell制約の集合からtellsを得てMathematicaに渡す
-  int tells_size = collected_tells.size();
-  ml_->put_function("List", tells_size);
-  tells_t::const_iterator tells_it = collected_tells.begin();
-  PacketSender psi(*ml_, PacketSender::NP_INTERVAL_PHASE);
-
-  while((tells_it) != collected_tells.end())
-  {
-    psi.visit((*tells_it));
-    tells_it++;
+  tells_t::const_iterator tells_it  = collected_tells.begin();
+  tells_t::const_iterator tells_end = collected_tells.end();
+  for(; (tells_it) != tells_end; ++tells_it) {
+    ps.put_node((*tells_it)->get_child());
   }
 
-  // 制約ストアstoreをMathematicaに渡す
-  send_cs();
+  // 制約ストアconstraintsをMathematicaに渡す
+  send_cs(ps);
 
-  // TODO: 初期値制約の送り方が間違えている
-  
-  // tellsvarsを渡す
-  psi.put_vars();
+  // 初期値制約の送信
+  send_init_cons(ps);
 
-  // storevarsを渡す
-  send_cs_vars();
+  // 変数の一覧を送信
+  ps.put_vars();
 
   // 結果を受け取る前に制約ストアを初期化
   reset();
 
   ml_->skip_pkt_until(RETURNPKT);
 
-  // 解けなかった場合は0が返る（制約間に矛盾がある、またはover-constraintということ）
-  if(ml_->MLGetType() == MLTKINT)
+  HYDLA_LOGGER_DEBUG("--- receive  ---");
+
+  VCSResult ret;
+  switch(ml_->get_integer()) 
   {
-    HYDLA_LOGGER_DEBUG("over-constraint");
-    ml_->MLNewPacket();
-    return VCSR_FALSE;
+    case 0: {
+      HYDLA_LOGGER_DEBUG("consistent");
+      ret = VCSR_TRUE;
+
+      // 制約ストアにtell制約の追加
+      constraint_store_.constraints.insert(
+        constraint_store_.constraints.end(),
+        collected_tells.begin(), 
+        collected_tells.end());
+
+      // 制約ストア中で使用される変数の一覧の更新
+      PacketSender::vars_const_iterator ps_vars_it  = ps.vars_begin();
+      PacketSender::vars_const_iterator ps_vars_end = ps.vars_end();
+      for(; ps_vars_it!=ps_vars_end; ++ps_vars_it) {
+        MathVariable mv;
+        mv.name             = ps_vars_it->get<0>();
+        mv.derivative_count = ps_vars_it->get<1>();
+        constraint_store_.cons_vars.insert(mv);
+      }
+    }      
+      break;
+
+    case 1:
+      HYDLA_LOGGER_DEBUG("over-constraint");
+      ret = VCSR_FALSE;
+      break;
+
+    case 2:
+      HYDLA_LOGGER_DEBUG("solver error");
+      ret = VCSR_SOLVER_ERROR;
+      break;
+
+    default:
+      assert(0);
   }
 
-  // List[数値, 制約一覧, 変数一覧]が返る
-  // 数値部分は問題なく解けたら1、under-constraintが起きていれば2が返る
+  HYDLA_LOGGER_DEBUG(constraint_store_);
 
-  ml_->MLGetNext(); // Listという関数名
-  ml_->MLGetNext(); // Listの中の先頭（数値）
-
-  int n = ml_->get_integer();
-
-  HYDLA_LOGGER_DEBUG(
-    n==2 ? "over-constraint" : "", 
-    "---build constraint store---");
-
-  ml_->MLGetNext(); // List関数
-
-  // List関数の要素数（制約の個数）を得る
-  int cons_size = ml_->get_arg_count();
-  ml_->MLGetNext(); // Listという関数名
-  ml_->MLGetNext(); // Listの中の先頭要素
-
-  std::set<MathValue> value_set;    
-  for(int i=0; i<cons_size; i++)
-  {
-    std::string str = ml_->get_string();
-    MathValue symbolic_value;
-    symbolic_value.str = str;
-    value_set.insert(symbolic_value);
-  }
-  constraint_store_.first.insert(value_set);
-
-
-  // 出現する変数の一覧が文字列で返ってくるのでそれを制約ストアに入れる
-  ml_->MLGetNext(); // List関数
-
-  // List関数の要素数（変数一覧に含まれる変数の個数）を得る
-  int vars_size = ml_->get_arg_count();
-  ml_->MLGetNext(); // Listという関数名
-
-  for(int k=0; k<vars_size; k++)
-  {
-    MathVariable symbolic_variable;
-    std::string sym;
-    ml_->MLGetNext(); // Derivative[number][変数名][]またはx[]などの関数
-    switch(ml_->MLGetNext()) // Derivative[number][変数名]またはxという関数名
-    {
-      case MLTKFUNC:
-        ml_->MLGetNext(); // Derivative[number]という関数名
-        ml_->MLGetNext(); // Derivativeという関数名
-        ml_->MLGetNext(); // number
-        symbolic_variable.derivative_count = ml_->get_integer();
-        ml_->MLGetNext(); // 変数名
-        symbolic_variable.name = ml_->get_symbol();
-        ml_->MLGetNext(); // t
-        break;
-      case MLTKSYM:
-        sym = ml_->get_symbol();
-        symbolic_variable.derivative_count = 0;
-        ml_->MLGetNext(); // t
-        symbolic_variable.name = sym;
-        break;
-      default:
-        ;
-    }
-    constraint_store_.second.insert(symbolic_variable);
-  }
-  ml_->MLNewPacket(); // エラー回避用。エラーの原因不明
-
-  HYDLA_LOGGER_DEBUG(*this);
-
-  return n >= 1 ? VCSR_TRUE : VCSR_FALSE;
+  return ret;
 }
   
 VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
 {
+  HYDLA_LOGGER_DEBUG(
+    "#*** MathematicaVCSInterval::check_entailment ***\n", 
+    "ask: ", *negative_ask);
+
+  PacketSender ps(*ml_, PacketSender::NP_INTERVAL_PHASE);
+
   // checkEntailment[guard, store, vars]を渡したい
   ml_->put_function("checkEntailment", 3);
 
-
   // ask制約のガードの式を得てMathematicaに渡す
-  PacketSender psi(*ml_, PacketSender::NP_INTERVAL_PHASE);
-  psi.put_node(negative_ask);
+  ps.put_node(negative_ask->get_guard());
 
-  // 制約ストアから式storeを得てMathematicaに渡す
-  send_cs();
+  // 制約ストアconstraintsをMathematicaに渡す
+  send_cs(ps);
 
   // varsを渡す
-  ml_->put_function("Join", 2);
-  psi.put_vars();
-  // 制約ストア内に出現する変数も渡す
-  send_cs_vars();
+  ps.put_vars();
 
   ml_->skip_pkt_until(RETURNPKT);
   
-  int num = ml_->get_integer();
-  HYDLA_LOGGER_DEBUG("EntailmentCheckerInterval#num:", num);
-
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
+  int num  = ml_->get_integer();
+  HYDLA_LOGGER_DEBUG("EntailmentChecker#num:", num);
   return num==1 ? VCSR_TRUE : VCSR_FALSE;
+}
+
+void MathematicaVCSInterval::send_ask_guards(
+  PacketSender& ps, 
+  const hydla::simulator::ask_set_t& asks) const
+{
+  // {ガードの式、askのID}のリスト形式で送信する
+
+  ml_->put_function("List", asks.size());
+  hydla::simulator::ask_set_t::const_iterator it  = asks.begin();
+  hydla::simulator::ask_set_t::const_iterator end = asks.end();
+  for(; it!=end; ++it)
+  {
+    HYDLA_LOGGER_DEBUG("send ask : ", **it);
+
+    ml_->put_function("List", 2);    
+
+    // guard条件を送る
+    ps.put_node((*it)->get_guard());
+
+    // IDを送る
+    ml_->MLPutInteger((*it)->get_id());
+  }
 }
 
 bool MathematicaVCSInterval::integrate(
@@ -339,8 +261,6 @@ bool MathematicaVCSInterval::integrate(
   const time_t& current_time,
   const time_t& max_time)
 {
-  //TODO: 初期値制約の送り方に問題あり
-
   HYDLA_LOGGER_DEBUG("#*** MathematicaVCSInterval::integrate ***");
 
 //   HYDLA_LOGGER_DEBUG(
@@ -355,60 +275,33 @@ bool MathematicaVCSInterval::integrate(
 //     max_time);
 
 ////////////////// 送信処理
-  PacketSender psi(*ml_, PacketSender::NP_INTERVAL_PHASE);
+  PacketSender ps(*ml_, PacketSender::NP_INTERVAL_PHASE);
   
   // integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
   ml_->put_function("integrateCalc", 5);
 
   // 制約ストアから式storeを得てMathematicaに渡す
-  send_cs();
+  send_cs(ps);
 
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
-  int pos_asks_size = positive_asks.size();
-  ml_->put_function("List", pos_asks_size);
-  positive_asks_t::const_iterator pos_asks_it = positive_asks.begin();
-  while((pos_asks_it) != positive_asks.end())
-  {
-    HYDLA_LOGGER_DEBUG("send pos ask : ", **pos_asks_it);
-
-    ml_->put_function("List", 2);    
-    psi.put_node((*pos_asks_it)->get_guard());
-    // IDを送る
-    int pos_id = (*pos_asks_it)->get_id();
-    ml_->MLPutInteger(pos_id);
-
-    pos_asks_it++;
-  }
+  HYDLA_LOGGER_DEBUG("-- send positive ask -- ");
+  send_ask_guards(ps, positive_asks);
 
   // negAskを渡す（{ガードの式、askのID}をそれぞれ）
-  int neg_asks_size = negative_asks.size();
-  ml_->put_function("List", neg_asks_size);
-  negative_asks_t::const_iterator neg_asks_it = negative_asks.begin();
-  while((neg_asks_it) != negative_asks.end())
-  {
-    HYDLA_LOGGER_DEBUG("send neg ask : ", **neg_asks_it);
-
-    ml_->put_function("List", 2);
-    psi.put_node((*neg_asks_it)->get_guard());
-    // IDを送る
-    int neg_id = (*neg_asks_it)->get_id();
-    ml_->MLPutInteger(neg_id);
-
-    neg_asks_it++;
-  }
+  HYDLA_LOGGER_DEBUG("-- send negative ask -- ");
+  send_ask_guards(ps, negative_asks);
 
   // varsを渡す
-  ml_->put_function("DeleteDuplicates", 1); // 重複を回避。要修正。
-  ml_->put_function("Join", 2);
-  psi.put_vars();
-  // 制約ストア内に出現する変数も渡す
-  send_cs_vars();
+  ps.put_vars();
 
   // maxTimeを渡す
   ml_->put_function("ToExpression", 1);
   time_t send_time(max_time);
   send_time -= current_time;
   send_time.send_time(*ml_);
+
+  PacketChecker pc(*ml_);
+  pc.check();
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -419,7 +312,8 @@ bool MathematicaVCSInterval::integrate(
   virtual_constraint_solver_t::IntegrateResult::NextPhaseState& state = 
     integrate_result.states.back();
 
-  ml_->MLGetNext(); // List関数
+
+  std::cout << ml_->MLGetNext() << std::endl; // List関数
   int list_size = ml_->get_arg_count();
   HYDLA_LOGGER_DEBUG("list_size : ", list_size);
   
@@ -476,8 +370,8 @@ bool MathematicaVCSInterval::integrate(
   HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
 
   if(changed_asks_size>0) {
-  ml_->MLGetNext(); // List関数
-  ml_->MLGetNext(); // Listという関数名
+    ml_->MLGetNext(); // List関数
+    ml_->MLGetNext(); // Listという関数名
   }
   for(int j=0; j<changed_asks_size; j++)
   {
@@ -513,87 +407,22 @@ bool MathematicaVCSInterval::integrate(
   return true;
 }
 
-void MathematicaVCSInterval::send_cs() const
+void MathematicaVCSInterval::send_cs(PacketSender& ps) const
 {
   HYDLA_LOGGER_DEBUG("---- Send Constraint Store -----");
 
-  int or_cons_size = constraint_store_.first.size();
-  if(or_cons_size <= 0)
-  {
-    HYDLA_LOGGER_DEBUG("no Constraints");
-    ml_->put_function("List", 0);
-    return;
-  }
-
-  std::set<std::set<MathValue> >::const_iterator or_cons_it;
-  std::set<MathValue>::const_iterator and_cons_it;
-//     or_cons_it = constraint_store_.first.begin();
-//     while((or_cons_it) != constraint_store_.first.end())
-//     {
-//       and_cons_it = (*or_cons_it).begin();
-//       while((and_cons_it) != (*or_cons_it).end())
-//       {
-//         std::cout << (*and_cons_it).str << " ";
-//         and_cons_it++;
-//       }
-//       std::cout << std::endl;
-//       or_cons_it++;
-//     }
-
-//     if(debug_mode_) {
-//       std::cout << "----------------------------" << std::endl;
-//     }
-
-  ml_->put_function("List", 1);
-  ml_->put_function("Or", or_cons_size);
-  or_cons_it = constraint_store_.first.begin();
-  while((or_cons_it) != constraint_store_.first.end())
-  {
-    int and_cons_size = (*or_cons_it).size();
-    ml_->put_function("And", and_cons_size);
-    and_cons_it = (*or_cons_it).begin();
-    while((and_cons_it) != (*or_cons_it).end())
-    {
-      ml_->put_function("ToExpression", 1);
-      std::string str = (*and_cons_it).str;
-      ml_->put_string(str);
-      and_cons_it++;
-    }
-    or_cons_it++;
+  constraint_store_t::constraints_t::const_iterator 
+    cons_it  = constraint_store_.constraints.begin();
+  constraint_store_t::constraints_t::const_iterator 
+    cons_end = constraint_store_.constraints.end();
+  for(; (cons_it) != cons_end; ++cons_it) {
+    ps.put_node((*cons_it)->get_child());
   }
 }
 
 void MathematicaVCSInterval::send_cs_vars() const
 {
   HYDLA_LOGGER_DEBUG("---- Send Constraint Store Vars -----");
-
-  int vars_size = constraint_store_.second.size();
-  std::set<MathVariable>::const_iterator vars_it = 
-    constraint_store_.second.begin();
-
-  ml_->put_function("List", vars_size);
-  while((vars_it) != constraint_store_.second.end())
-  {
-    if(int value = (*vars_it).derivative_count > 0)
-    {
-      ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-      ml_->MLPutArgCount(1);      // this 1 is for the 'f'
-      ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-      ml_->MLPutArgCount(1);      // this 1 is for the '*number*'
-      ml_->put_symbol("Derivative");
-      ml_->MLPutInteger(value);
-      ml_->put_symbol((*vars_it).name);
-
-      HYDLA_LOGGER_DEBUG("Derivative[", value, "][", (*vars_it).name, "]");
-    }
-    else
-    {
-      ml_->put_symbol((*vars_it).name);
-        
-      HYDLA_LOGGER_DEBUG((*vars_it).name);
-    }
-    vars_it++;
-  }
 }
 
 std::ostream& MathematicaVCSInterval::dump(std::ostream& s) const
@@ -601,35 +430,37 @@ std::ostream& MathematicaVCSInterval::dump(std::ostream& s) const
   s << "#*** Dump MathematicaVCSInterval ***\n"
     << "--- constraint store ---\n";
 
-  std::set<MathVariable>::const_iterator vars_it = 
-    constraint_store_.second.begin();
-  std::set<std::set<MathValue> >::const_iterator or_cons_it = 
-    constraint_store_.first.begin();
-  while((or_cons_it) != constraint_store_.first.end())
-  {
-    std::set<MathValue>::const_iterator and_cons_it = 
-      (*or_cons_it).begin();
-    while((and_cons_it) != (*or_cons_it).end())
-    {
-      s << (*and_cons_it).str << " ";
-      and_cons_it++;
-    }
-    s << "\n";
-    or_cons_it++;
-  }
+//   std::set<MathVariable>::const_iterator vars_it = 
+//     constraint_store_.second.begin();
+//   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
+//     constraint_store_.first.begin();
+//   while((or_cons_it) != constraint_store_.first.end())
+//   {
+//     std::set<MathValue>::const_iterator and_cons_it = 
+//       (*or_cons_it).begin();
+//     while((and_cons_it) != (*or_cons_it).end())
+//     {
+//       s << (*and_cons_it).str << " ";
+//       and_cons_it++;
+//     }
+//     s << "\n";
+//     or_cons_it++;
+//   }
 
-  while((vars_it) != constraint_store_.second.end())
-  {
-    s << *(vars_it) << " ";
-    vars_it++;
-  }
+//   while((vars_it) != constraint_store_.second.end())
+//   {
+//     s << *(vars_it) << " ";
+//     vars_it++;
+//   }
 
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const MathematicaVCSInterval& m)
+std::ostream& operator<<(std::ostream& s, 
+                         const MathematicaVCSInterval::constraint_store_t& c)
 {
-  return m.dump(s);
+  s << "---- MathematicaVCSInterval::consraint_store_t ----";
+  return s;
 }
 
 

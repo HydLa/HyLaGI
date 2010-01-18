@@ -37,12 +37,12 @@ typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  expanded_always_t;
 typedef std::vector<node_id_t>                                   expanded_always_id_t;
-typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     positive_asks_t;
-typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     negative_asks_t;
+typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     ask_set_t;
+typedef ask_set_t                                                 positive_asks_t;
+typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
 
-std::ostream& operator<<(std::ostream& s, const positive_asks_t& a);
-std::ostream& operator<<(std::ostream& s, const negative_asks_t& a);
+std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
 

@@ -3,9 +3,6 @@
 
 #include "mathlink_helper.h"
 
-namespace hydla {
-namespace symbolic_simulator {
-
 class PacketChecker {
 public:
   PacketChecker(MathLink& ml);
@@ -24,9 +21,6 @@ private:
   MathLink& ml_;
 
 };
-
-} //namespace symbolic_simulator
-} // namespace hydla
 
 #endif //_INCLUDED_HYDLA_PACKET_CHECKER_H__
 

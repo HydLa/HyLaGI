@@ -56,19 +56,31 @@ createVariableList[True, vars_, result_] := (
  * 制約が無矛盾であるかをチェックする
  * Reduceで解いた結果、解が得られれば無矛盾
  * 得られた解を用いて、各変数に関して{変数名, 値}　という形式で表したリストを返す
+ *
+ * 戻り値のリストの先頭：
+ *  0 : 充足
+ *  1 : 制約エラー
+ *  2 : Mathematicaでは解けない
  *)
 isConsistent[expr_, vars_] := (
   sol = Reduce[expr, vars];
-  If[sol =!= {},
-     (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
-     sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
-     (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
-     sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
-     (* 一番内側の要素 （レベル2）を文字列にする *)
-     {Map[(ToString[FullForm[#]]) &, sol, {2}], vars},
-     0]
+  Which[
+    Head[sol] === Reduce,
+      {2},
+    sol =!= False,  
+      (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
+      sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
+      (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
+      sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
+      (* 一番内側の要素 （レベル2）を文字列にする *)
+      {0, Map[(ToString[FullForm[#]]) &, sol, {2}]},
+    sol === False, 
+      {1},
+    True,
+      {2}] 
 );
 
+(* Print[isConsistent[s[x==2, 7==x*x], {x,y}]] *)
 
 (* 変数名から 「’」を取る *)
 removeDash[var_] := (
@@ -90,32 +102,61 @@ isRequiredVariable[var_, tellVars_] := (
    If[MemberQ[tellVars, var], True, False]
 );
 
-isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := (
-  If[store =!= {},
-     (* 制約ストアが空でない場合、不要な初期値制約を取り除く必要がある *)
-     newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]];
-     (* storeがList[And[]]の形になっている場合は、一旦、中のAndを取り出す *)
-     newStore = If[Head[First[store]] === And, Apply[List, First[store]], store];
-     removedStore = {Apply[And, Select[newStore, (isRequiredConstraint[#, newTellVars]) &]]};
-     newStoreVars = Map[removeDash, Map[(# /. x_[t] -> x) &, storeVars]];
-     removedStoreVars = Map[(#[t])&, Select[newStoreVars, (isRequiredVariable[#, newTellVars])&]],
-
-     (* 制約ストアが空の場合 *)
-     removedStore = store;
-     removedStoreVars = storeVars];
-
-  sol = Quiet[Check[Check[DSolve[Join[tells, removedStore], Join[tellsVars, removedStoreVars], t],
-                          overconstraint,
-                          {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet}],
-                    underconstraint,
-                    {DSolve::underdet}],
-              {DSolve::bvnul, DSolve::dsmsm, DSolve::overdet, DSolve::underdet}];
-  If[sol =!= overconstraint,
-     cons = Map[(ToString[FullForm[#]]) &, Join[tells, removedStore]];
-     vars = Join[tellsVars, removedStoreVars];
-     If[sol =!= underconstraint, {1, cons, vars}, {2, cons, vars}],
-     0]
+exDSolve[expr_, vars_] := (
+  Quiet[Check[
+        Check[DSolve[expr, vars, t],
+                underconstraint,
+                {DSolve::underdet, Solve::svars, DSolve::deqx, 
+                 DSolve::bvnr, DSolve::bvsing}],
+        overconstraint,
+        {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
+      {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
+       Solve::svars, DSolve::bvnr, DSolve::bvsing, 
+       DSolve::bvnul, DSolve::dsmsm}] 
 );
+
+
+(* isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := ( *)
+(*   If[store =!= {}, *)
+(*      (\* 制約ストアが空でない場合、不要な初期値制約を取り除く必要がある *\) *)
+(*      newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]]; *)
+(*      (\* storeがList[And[]]の形になっている場合は、一旦、中のAndを取り出す *\) *)
+(*      newStore = If[Head[First[store]] === And, Apply[List, First[store]], store]; *)
+(*      removedStore = {Apply[And, Select[newStore, (isRequiredConstraint[#, newTellVars]) &]]}; *)
+(*      newStoreVars = Map[removeDash, Map[(# /. x_[t] -> x) &, storeVars]]; *)
+(*      removedStoreVars = Map[(#[t])&, Select[newStoreVars, (isRequiredVariable[#, newTellVars])&]], *)
+
+(*      (\* 制約ストアが空の場合 *\) *)
+(*      removedStore = store; *)
+(*      removedStoreVars = storeVars]; *)
+
+(*   If[sol =!= overconstraint, *)
+(*      cons = Map[(ToString[FullForm[#]]) &, Join[tells, removedStore]]; *)
+(*      vars = Join[tellsVars, removedStoreVars]; *)
+(*      If[sol =!= underconstraint, {1, cons, vars}, {2, cons, vars}], *)
+(*      0] *)
+(* ); *)
+
+(*
+ * 戻り値のリストの先頭：
+ *  0 : 充足
+ *  1 : 制約エラー
+ *  2 : Mathematicaでは解けない
+ *)
+isConsistentInterval[expr_, vars_] := (
+  sol = exDSolve[expr, vars];
+  Which[
+    Head[sol] === DSolve,
+      2,
+    sol =!= overconstraint,  
+      0,
+    sol === overconstraint, 
+      1,
+    True,
+      2] 
+);
+
+(* Print[isConsistentInterval[{x'[t]==2, x[0]==3}, {x[t]}]]; *)
 
 (*
  * 次のポイントフェーズに移行する時刻を求める
@@ -533,22 +574,21 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
 (********)
 
 
-exDSolve[expr_, vars_] := (
-  debugPrint["--- exDSolve ---"];
-  debugPrint["expr:", expr];
-  debugPrint["vars:", vars];
-
-  Quiet[Check[
-        Check[DSolve[expr, vars, t],
-                underconstraint,
-                {DSolve::underdet, Solve::svars, DSolve::deqx, 
-                 DSolve::bvnr, DSolve::bvsing}],
-        overconstraint,
-        {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
-      {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-       Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-       DSolve::bvnul, DSolve::dsmsm}] 
-);
+(* exDSolve[expr_, vars_] := ( *)
+(*   debugPrint["--- exDSolve ---"]; *)
+(*   debugPrint["expr:", expr]; *)
+(*   debugPrint["vars:", vars]; *)
+(*   Quiet[Check[ *)
+(*         Check[DSolve[expr, vars, t], *)
+(*                 underconstraint, *)
+(*                 {DSolve::underdet, Solve::svars, DSolve::deqx,  *)
+(*                  DSolve::bvnr, DSolve::bvsing}], *)
+(*         overconstraint, *)
+(*         {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}], *)
+(*       {DSolve::underdet, DSolve::overdet, DSolve::deqx,  *)
+(*        Solve::svars, DSolve::bvnr, DSolve::bvsing,  *)
+(*        DSolve::bvnul, DSolve::dsmsm}]  *)
+(* ); *)
 
  (* , Solve::verif, Solve::tdep *)
 

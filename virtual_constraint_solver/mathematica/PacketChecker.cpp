@@ -1,10 +1,6 @@
 #include "PacketChecker.h"
 #include <iostream>
 
-namespace hydla {
-namespace symbolic_simulator {
-
-
 PacketChecker::PacketChecker(MathLink& ml) :
   ml_(ml)
 {}
@@ -207,6 +203,3 @@ void PacketChecker::funcCase(){
     }
   }
 }
-
-} //namespace symbolic_simulator
-} // namespace hydla
