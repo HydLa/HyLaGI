@@ -17,7 +17,7 @@ class RealPaverVCSPoint :
 {
 public:
 
-  RealPaverVCSPoint(MathLink* ml);
+  RealPaverVCSPoint();
 
   virtual ~RealPaverVCSPoint();
 
@@ -71,10 +71,7 @@ private:
   ConstraintStore constraint_store_;
 };
 
-std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs)
-{
-  return vcs.dump(s);
-}
+std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs);
 
 } // namespace realapver
 } // namespace vcs

@@ -1,5 +1,9 @@
 #include "RealPaverVCS.h"
 
+#include <cassert>
+
+#include "RealPaverVCSPoint.h"
+
 namespace hydla {
 namespace vcs {
 namespace realpaver {
@@ -7,11 +11,31 @@ namespace realpaver {
 RealPaverVCS::RealPaverVCS(Mode m)
 {
   mode_ = m;
+  switch(m) {
+  case DiscreteMode:
+    vcs_.reset(new RealPaverVCSPoint());
+    break;
+  case ContinuousMode:
+    //vcs_.reset(new RealPaverVCSInterval());
+    break;
+  default:
+    assert(false);
+  }
 }
 
 RealPaverVCS::RealPaverVCS(Mode m, MathLink* ml)
 {
   mode_ = m;
+  switch(m) {
+  case DiscreteMode:
+    vcs_.reset(new RealPaverVCSPoint());
+    break;
+  case ContinuousMode:
+    //vcs_.reset(new RealPaverVCSInterval(ml));
+    break;
+  default:
+    assert(false);
+  }
 }
 
 RealPaverVCS::~RealPaverVCS()

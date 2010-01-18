@@ -4,7 +4,7 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
-RealPaverVCSPoint::RealPaverVCSPoint(MathLink* ml)
+RealPaverVCSPoint::RealPaverVCSPoint()
 {}
 
 RealPaverVCSPoint::~RealPaverVCSPoint()
@@ -74,6 +74,12 @@ void RealPaverVCSPoint::add_single_constraint(const node_sptr &constraint_node,
                                               const bool neg_expression)
 {
 }
+
+std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs)
+{
+  return vcs.dump(s);
+}
+
 
 } // namespace realapver
 } // namespace vcs
