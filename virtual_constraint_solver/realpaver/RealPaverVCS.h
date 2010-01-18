@@ -10,7 +10,8 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include "RPVCSType.h"
+//#include "RPVCSType.h"
+#include "RealPaverBaseVCS.h"
 
 class MathLink;
 
@@ -19,7 +20,7 @@ namespace vcs {
 namespace realpaver {
 
 class RealPaverVCS : 
-    public virtual_constraint_solver_t
+    public RealPaverBaseVCS
 {
 public:
   enum Mode {
@@ -27,6 +28,7 @@ public:
     DiscreteMode,
   };
 
+  RealPaverVCS(Mode m);
   RealPaverVCS(Mode m, MathLink* ml);
 
   virtual ~RealPaverVCS();
@@ -73,10 +75,17 @@ public:
     return mode_;
   }
 
+/******************** realpaver only ********************/
+
+  virtual void add_single_constraint(const node_sptr& constraint_node,
+    const bool neg_expression=false);
+
+/******************** realpaver only ********************/
+
 private:
   Mode mode_;
 
-  boost::scoped_ptr<virtual_constraint_solver_t> vcs_;
+  boost::scoped_ptr<RealPaverBaseVCS> vcs_;
 };
 
 } // namespace realpaver

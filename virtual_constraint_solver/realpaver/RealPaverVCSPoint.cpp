@@ -70,6 +70,11 @@ std::ostream& RealPaverVCSPoint::dump(std::ostream& s) const
   return s;
 }
 
+void RealPaverVCSPoint::add_single_constraint(const node_sptr &constraint_node,
+                                              const bool neg_expression)
+{
+}
+
 } // namespace realapver
 } // namespace vcs
 } // namespace hydla 

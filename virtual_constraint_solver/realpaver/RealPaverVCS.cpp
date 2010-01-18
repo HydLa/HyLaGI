@@ -4,6 +4,10 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
+RealPaverVCS::RealPaverVCS(Mode m)
+{
+  mode_ = m;
+}
 
 RealPaverVCS::RealPaverVCS(Mode m, MathLink* ml)
 {
@@ -18,7 +22,7 @@ RealPaverVCS::~RealPaverVCS()
  */
 bool RealPaverVCS::reset()
 {
-return vcs_->reset();
+  return vcs_->reset();
 }
 
 /**
@@ -68,6 +72,16 @@ bool RealPaverVCS::integrate(integrate_result_t& integrate_result,
                          current_time, 
                          max_time);
 }
+
+/******************** realpaver only ********************/
+
+void RealPaverVCS::add_single_constraint(const node_sptr& constraint_node,
+                                         const bool neg_expression)
+{
+  return vcs_->add_single_constraint(constraint_node, neg_expression);
+}
+
+/******************** realpaver only ********************/
 
 } // namespace realpaver
 } // namespace vcs

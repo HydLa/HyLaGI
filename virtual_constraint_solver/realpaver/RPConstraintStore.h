@@ -1,16 +1,15 @@
-#ifndef _INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_STORE_H_
-#define _INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_STORE_H_
+#ifndef _INCLUDED_HYDLA_VCS_REALPAVER_RP_CONSTRAINT_STORE_H_
+#define _INCLUDED_HYDLA_VCS_REALPAVER_RP_CONSTRAINT_STORE_H_
+
+#include "RPVCSType.h"
 
 #include <set>
 #include <iostream>
-#include "realpaverbasic.h"
-#include <boost/bimap/bimap.hpp>
-
-#include "BPTime.h"
-#include "BPTypes.h"
+#include "rp_constraint.h"
 
 namespace hydla {
-namespace bp_simulator {
+namespace vcs {
+namespace realpaver {
 
 //typedef boost::bimaps::bimap<std::string, int> var_name_map_t;
 
@@ -21,18 +20,28 @@ class ConstraintStore
 {
 public:
   ConstraintStore();
+
   ConstraintStore(const ConstraintStore& src);
+
   ~ConstraintStore();
-  void build(const variable_map_t& variable_map);
-  void build_variable_map(variable_map_t& variable_map) const;
+
+  void build(const virtual_constraint_solver_t::variable_map_t& variable_map);
+
+  void build_variable_map(virtual_constraint_solver_t::variable_map_t& variable_map) const;
+
   std::set<rp_constraint> get_store_exprs_copy() const;
+
   void add_constraint(rp_constraint c, const var_name_map_t& vars);
+
   void add_constraint(std::set<rp_constraint>::iterator start, std::set<rp_constraint>::iterator end, const var_name_map_t& vars);
+
   const var_name_map_t& get_store_vars() const
   {
     return this->vars_;
   }
+
   std::ostream& dump_cs(std::ostream& s) const;
+
   friend std::ostream& operator<<(std::ostream& s, const ConstraintStore& cs)
   {
     return cs.dump_cs(s);
@@ -40,11 +49,13 @@ public:
 
 private:
   rp_vector_variable to_rp_vector() const;
+
   std::set<rp_constraint> exprs_;
   var_name_map_t vars_;
 };
 
-} // namespace bp_simulator
+} // namespace realpaver
+} // namespace vcs
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_STORE_H_
+#endif // _INCLUDED_HYDLA_VCS_REALPAVER_RP_CONSTRAINT_STORE_H_

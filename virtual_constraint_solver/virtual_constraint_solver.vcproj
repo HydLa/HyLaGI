@@ -229,6 +229,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\realpaver\RealPaverBaseVCS.h"
+				>
+			</File>
+			<File
 				RelativePath=".\realpaver\RealPaverVCS.h"
 				>
 			</File>

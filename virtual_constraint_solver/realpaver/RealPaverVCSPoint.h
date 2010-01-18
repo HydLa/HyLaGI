@@ -4,7 +4,8 @@
 #include <ostream>
 
 #include "mathlink_helper.h"
-#include "RPVCSType.h"
+//#include "RPVCSType.h"
+#include "RealPaverBaseVCS.h"
 #include "RPConstraintStore.h"
 
 namespace hydla {
@@ -12,7 +13,7 @@ namespace vcs {
 namespace realpaver {
 
 class RealPaverVCSPoint : 
-    public virtual_constraint_solver_t
+    public RealPaverBaseVCS
 {
 public:
 
@@ -59,6 +60,9 @@ public:
    * “à•”ó‘Ô‚Ìo—Í‚ğ‚¨‚±‚È‚¤
    */
   std::ostream& dump(std::ostream& s) const;
+
+  virtual void add_single_constraint(const node_sptr& constraint_node,
+    const bool neg_expression);
 
 private:
   //void send_cs() const;
