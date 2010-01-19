@@ -131,10 +131,8 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   // isConsistentInterval[expr, vars]を渡したい
   ml_->put_function("isConsistentInterval", 2);
   
-  ml_->put_function("Join", 2);
-  ml_->put_function("List", 
-                    collected_tells.size() + 
-                    constraint_store_.constraints.size());
+  ml_->put_function("Join", 3);
+  ml_->put_function("List", collected_tells.size());
 
   // tell制約の集合からtellsを得てMathematicaに渡す
   tells_t::const_iterator tells_it  = collected_tells.begin();
@@ -154,6 +152,9 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
 
   // 結果を受け取る前に制約ストアを初期化
   reset();
+
+//   PacketChecker pc(*ml_);
+//   pc.check();    
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -223,7 +224,13 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   // varsを渡す
   ps.put_vars();
 
+  ml_->MLEndPacket();
+
+//   PacketChecker pc(*ml_);
+//   pc.check();
+
   ml_->skip_pkt_until(RETURNPKT);
+  std::cout << ml_->MLGetType() << std::endl;
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   int num  = ml_->get_integer();
@@ -300,8 +307,8 @@ bool MathematicaVCSInterval::integrate(
   send_time -= current_time;
   send_time.send_time(*ml_);
 
-  PacketChecker pc(*ml_);
-  pc.check();
+//   PacketChecker pc(*ml_);
+//   pc.check();
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -356,7 +363,7 @@ bool MathematicaVCSInterval::integrate(
     value.str = ml_->get_string();
     // Function[List, .....] をのぞく
     // TODO: こんな処理本当はいならないはず
-    value.str = value.str.substr(15, value.str.size() - 16);
+    //value.str = value.str.substr(15, value.str.size() - 16);
     HYDLA_LOGGER_DEBUG("value : ", value.str);
     ml_->MLGetNext();
 
@@ -409,7 +416,12 @@ bool MathematicaVCSInterval::integrate(
 
 void MathematicaVCSInterval::send_cs(PacketSender& ps) const
 {
-  HYDLA_LOGGER_DEBUG("---- Send Constraint Store -----");
+  HYDLA_LOGGER_DEBUG(
+    "---- Send Constraint Store -----\n",
+    "cons size: ", constraint_store_.constraints.size());
+
+  ml_->put_function("List", 
+                    constraint_store_.constraints.size());
 
   constraint_store_t::constraints_t::const_iterator 
     cons_it  = constraint_store_.constraints.begin();
