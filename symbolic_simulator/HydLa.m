@@ -2,11 +2,21 @@
 (*
  * ある1つのask制約に関して、そのガードが制約ストアからentailできるかどうかをチェック
  *)
-checkEntailment[guard_, store_, vars_] := (
-  tmpSol = Reduce[Append[store, guard], vars, Reals];
-  If[tmpSol===False, Return[-1]];
-  If[Reduce[Append[store, Not[tmpSol]], vars, Reals]===False, 1, 0]
-);
+checkEntailment[guard_, store_, vars_] := Block[
+{sol},
+  Print["guard: ", guard];
+  Print["store: ", store];
+  Print["vars: ", vars];
+
+  sol = Reduce[Append[store, guard], vars, Reals];
+  If[sol=!=False, 
+      If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
+          1, 
+          0],
+      0]
+];
+
+(* Print[checkEntailment[ht==0, {}, {ht}]] *)
 
 (*
  * 変数名の頭についている"usrVar"を取り除く
@@ -143,7 +153,8 @@ exDSolve[expr_, vars_] := (
  *  1 : 制約エラー
  *  2 : Mathematicaでは解けない
  *)
-isConsistentInterval[expr_, vars_] := (
+isConsistentInterval[expr_, vars_] := Block[
+{sol},
   sol = exDSolve[expr, vars];
   Which[
     Head[sol] === DSolve,
@@ -154,7 +165,7 @@ isConsistentInterval[expr_, vars_] := (
       1,
     True,
       2] 
-);
+];
 
 (* Print[isConsistentInterval[{x'[t]==2, x[0]==3}, {x[t]}]]; *)
 
@@ -221,6 +232,11 @@ createIntegratedValue[variable_, integRule_] := (
 );
 
 integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
+  Print["cons:", cons];
+  Print["posAsk:", posAsk];
+  Print["negAsk:", negAsk];
+  Print["vars:", vars];
+  Print["maxTime:", maxTime];
   tmpIntegSol = First[DSolve[cons, vars, t]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
