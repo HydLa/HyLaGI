@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "RPConstraintSolver.h"
 #include "Logger.h"
 #include "rp_constraint.h"
 #include "rp_constraint_ext.h"
@@ -23,7 +24,7 @@ RealPaverVCSPoint::~RealPaverVCSPoint()
  */
 bool RealPaverVCSPoint::reset()
 {
-  this->constraint_store_ = ConstraintStore();
+  this->constraint_store_ = ConstraintStore(); // これあってんのか？
   return true;
 }
 
@@ -52,12 +53,15 @@ VCSResult RealPaverVCSPoint::add_constraint(const tells_t& collected_tells)
 {
   typedef std::set<rp_constraint> ctr_set_t;
   var_name_map_t vars = this->constraint_store_.get_store_vars();
+  ConstraintBuilder builder;
+  builder.set_vars(vars);
   ctr_set_t ctrs, ctrs_copy;
   // tell制約をrp_constraintへ
   for(tells_t::const_iterator t_it = collected_tells.begin();
       t_it!=collected_tells.end(); t_it++) {
-        ctrs.insert(this->builder_.build_constraint_from_tell(*t_it));
+        ctrs.insert(builder.build_constraint_from_tell(*t_it));
   }
+  vars.insert(builder.vars_begin(), builder.vars_end());
   // tell制約のみをコピーしておく
   for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
     rp_constraint c;
@@ -68,15 +72,38 @@ VCSResult RealPaverVCSPoint::add_constraint(const tells_t& collected_tells)
   ctr_set_t store_copy = this->constraint_store_.get_store_exprs_copy();
   ctrs.insert(store_copy.begin(), store_copy.end());
   // 確認
-  rp_vector_variable vec = this->builder_.to_rp_vector();
-  HYDLA_LOGGER_DEBUG("#**** vcs:add_constraint: constraints expression ****\n");
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
+  HYDLA_LOGGER_DEBUG("#**** vcs:add_constraint: constraints expression ****");
   std::stringstream ss;
   for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
     rp::dump_constraint(ss, *it, vec, 10);
     ss << "\n";
   }
   HYDLA_LOGGER_DEBUG(ss.str());
-  return VCSR_TRUE;
+  // 制約の解が存在するかどうか？
+  rp_box b;
+  bool res = ConstraintSolver::solve_hull(&b, vars, ctrs);
+  if(res) {
+    this->constraint_store_.add_constraint(ctrs_copy.begin(), ctrs_copy.end(), vars);
+    HYDLA_LOGGER_DEBUG("#*** vcs:add_constraint ==> Consistent ***\n",
+      "#**** vcs:add_constraint: new constraint_store ***\n",
+      this->constraint_store_);
+    rp_box_destroy(&b);
+    for(std::set<rp_constraint>::iterator it=ctrs.begin();
+      it!=ctrs.end(); it++) {
+        rp_constraint c = *it;
+        rp_constraint_destroy(&c);
+    }
+    return VCSR_TRUE;
+  } else {
+    HYDLA_LOGGER_DEBUG("#*** vcs:add_constraint ==> Inconsistent ***\n");
+    for(std::set<rp_constraint>::iterator it=ctrs.begin();
+      it!=ctrs.end(); it++) {
+        rp_constraint c = *it;
+        rp_constraint_destroy(&c);
+    }
+    return VCSR_FALSE;
+  }
 }
 
 /**
@@ -84,6 +111,15 @@ VCSResult RealPaverVCSPoint::add_constraint(const tells_t& collected_tells)
  */
 VCSResult RealPaverVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
 {
+  // 制約ストアをコピー
+  std::set<rp_constraint> ctrs = this->constraint_store_.get_store_exprs_copy();
+  var_name_map_t vars = this->constraint_store_.get_store_vars();
+  // ガード条件とその否定を作る
+  std::set<rp_constraint> g, ng;
+  GuardConstraintBuilder builder;
+  builder.set_vars(vars);
+  builder.create_guard_expr(negative_ask, g, ng, vars);
+
   return VCSR_TRUE;
 }
 

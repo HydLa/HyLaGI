@@ -64,6 +64,12 @@ public:
   // 数字
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
+  // 変数表などのリセット
+  void reset();
+
+  // 変数表のセット
+  void set_vars(const var_name_map_t vars);
+
   /**
    * Nodeから式を一つ作る
    */
@@ -73,6 +79,16 @@ public:
   rp_constraint build_constraint_from_tell(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
   rp_vector_variable to_rp_vector() const;
+
+  var_name_map_t::const_iterator vars_begin() const
+  {
+    return vars_.begin();
+  }
+
+  var_name_map_t::const_iterator vars_end() const
+  {
+    return vars_.end();
+  }
 
 protected:
   var_name_map_t vars_;

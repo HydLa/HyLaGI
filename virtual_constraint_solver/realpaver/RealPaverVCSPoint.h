@@ -71,7 +71,7 @@ private:
   //void send_cs_vars() const;
 
   ConstraintStore constraint_store_;
-  ConstraintBuilder builder_;
+  //ConstraintBuilder builder_;
 };
 
 std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs);

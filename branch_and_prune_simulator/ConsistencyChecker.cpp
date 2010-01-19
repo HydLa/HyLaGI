@@ -71,11 +71,11 @@ bool ConsistencyChecker::is_consistent(tells_t& collected_tells, ConstraintStore
     HYDLA_LOGGER_DEBUG(ss.str());
   }
 
-  // 問題とソルバを作成し,解いてチェック
+  // 問題とソルバを作成し,解いてチェック(笑)
   rp_problem problem;
   rp_problem_create(&problem, "consistency_check");
 
-  // 変数ベクタに変数を追加
+  // 変数ベクタに変数を追加＼(^○^)／
   rp_vector_destroy(&rp_table_symbol_vars(rp_problem_symb(problem)));
   rp_table_symbol_vars(rp_problem_symb(problem)) = vec;
 

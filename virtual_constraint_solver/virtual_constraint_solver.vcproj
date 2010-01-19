@@ -187,6 +187,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\realpaver\RPConstraintSolver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\realpaver\RPConstraintStore.cpp"
 				>
 			</File>
@@ -254,6 +258,10 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RPConstraintBuilder.h"
+				>
+			</File>
+			<File
+				RelativePath=".\realpaver\RPConstraintSolver.h"
 				>
 			</File>
 			<File

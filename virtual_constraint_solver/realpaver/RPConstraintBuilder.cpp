@@ -135,6 +135,19 @@ void ConstraintBuilder::visit(boost::shared_ptr<Number> node)
   this->rep_stack_.push(rep);
 }
 
+void ConstraintBuilder::reset()
+{
+  this->derivative_count_ = 0;
+  this->in_prev_ = false;
+  this->neg_expr_ = false;
+  this->vars_.clear();
+}
+
+void ConstraintBuilder::set_vars(const var_name_map_t vars)
+{
+  this->vars_.insert(vars.begin(), vars.end());
+}
+
 /**
  * Tellƒm[ƒh‚©‚ç§–ñ‚ğˆê‚Âì‚é
  */
