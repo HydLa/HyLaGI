@@ -30,7 +30,7 @@ namespace logger {
     if(is_valid_level(Logger::BOOST_PP_TUPLE_ELEM(3, 1, d))) {    \
       BOOST_PP_TUPLE_ELEM(3, 2, d)                                \
         BOOST_PP_REPEAT(n, HYDLA_LOGGER_LEFT_SHIFT_ARGS_GEN, _)   \
-          << std::endl;                                           \
+        << std::endl;                                             \
     }                                                             \
   }
 

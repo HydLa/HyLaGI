@@ -1,6 +1,7 @@
 #include "MathTime.h"
 
 #include "mathlink_helper.h"
+#include "Logger.h"
 
 namespace hydla {
 namespace vcs {
@@ -21,6 +22,7 @@ MathTime::~MathTime()
 
 void MathTime::send_time(MathLink& ml)
 {
+  HYDLA_LOGGER_DEBUG("time:", time_);
   ml.put_function("ToExpression", 1);
   ml.put_string(time_);
 }

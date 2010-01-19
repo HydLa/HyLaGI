@@ -81,7 +81,7 @@ void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {  
   HYDLA_LOGGER_DEBUG("#*** create module set list ***");
 
-  ModuleSetContainerCreator<ModuleSetList> mcc;
+  ModuleSetContainerCreator<ModuleSetGraph> mcc;
   {
     parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
     AskDisjunctionFormatter().format(pt_original.get());
@@ -117,14 +117,14 @@ void MathSimulator::init_mathlink()
   }
 
   // 出力する画面の横幅の設定
-  //ml_.MLPutFunction("SetOptions", 2);
-  //ml_.MLPutSymbol("$Output"); 
-  //ml_.MLPutFunction("Rule", 2);
-  //ml_.MLPutSymbol("PageWidth"); 
-  //ml_.MLPutSymbol("Infinity"); 
-  //ml_.MLEndPacket();
-  //ml_.skip_pkt_until(RETURNPKT);
-  //ml_.MLNewPacket();
+  ml_.MLPutFunction("SetOptions", 2);
+  ml_.MLPutSymbol("$Output"); 
+  ml_.MLPutFunction("Rule", 2);
+  ml_.MLPutSymbol("PageWidth"); 
+  ml_.MLPutSymbol("Infinity"); 
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   // デバッグプリント
   ml_.MLPutFunction("Set", 2);
@@ -254,6 +254,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
   phase_state_sptr new_state(create_new_phase_state());
   new_state->phase        = IntervalPhase;
+  new_state->current_time = state->current_time;
   //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   vcs.create_variable_map(new_state->variable_map);
   new_state->module_set_container = msc_no_init_;
@@ -364,8 +365,9 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     push_phase_state(new_state);
   }
 
-  std::cout << "%%%%%%%%%%%%% interval phase\n";
-  std::cout << integrate_result.states[0].variable_map;
+  std::cout << "%%%%%%%%%%%%% interval phase\n"
+            << "time:" << integrate_result.states[0].time << "\n"
+            << integrate_result.states[0].variable_map;
 
   return true;
 }

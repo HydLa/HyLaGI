@@ -103,77 +103,81 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
-  // Orでつながった制約のうち、最初の1つだけを採用することにする
-  std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
-  for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)
-  {
-    std::string cons_str = (*and_cons_it).str;
-    // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
+  std::set<std::set<MathValue> >::const_iterator or_cons_end = 
+    constraint_store_.first.end();
 
-    unsigned int loc = cons_str.find("Equal[", 0);
-    loc += 6; // 文字列"Equal["の長さ分
-    unsigned int comma_loc = cons_str.find(",", loc);
-    if(comma_loc == std::string::npos)
+  for(; or_cons_it!=or_cons_end; ++or_cons_it) {
+    std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
+    for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)
     {
-      std::cout << "can't find comma." << std::endl;
-      return false;
-    }
-    std::string variable_str = cons_str.substr(loc, comma_loc-loc);
-    // variable_strは"usrVarx"や"Derivative[1][usrVarx]"など
+      std::string cons_str = (*and_cons_it).str;
+      // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
 
-    // nameとderivative_countへの分離
-    std::string variable_name;
-    int variable_derivative_count;
-    unsigned int variable_loc = variable_str.find("Derivative[", 0);
-    if(variable_loc != std::string::npos)
-    {
-      variable_loc += 11; // "Derivative["の長さ分
-      unsigned int bracket_loc = variable_str.find("][", variable_loc);
-      if(bracket_loc == std::string::npos)
+      unsigned int loc = cons_str.find("Equal[", 0);
+      loc += 6; // 文字列"Equal["の長さ分
+      unsigned int comma_loc = cons_str.find(",", loc);
+      if(comma_loc == std::string::npos)
       {
-        std::cout << "can't find bracket." << std::endl;
+        std::cout << "can't find comma." << std::endl;
         return false;
       }
-      std::string variable_derivative_count_str = variable_str.substr(variable_loc, bracket_loc-variable_loc);
-      variable_derivative_count = std::atoi(variable_derivative_count_str.c_str());
-      variable_loc = bracket_loc + 2; // "]["の長さ分
-      bracket_loc = variable_str.find("]", variable_loc);
-      if(bracket_loc == std::string::npos)
+      std::string variable_str = cons_str.substr(loc, comma_loc-loc);
+      // variable_strは"usrVarx"や"Derivative[1][usrVarx]"など
+
+      // nameとderivative_countへの分離
+      std::string variable_name;
+      int variable_derivative_count;
+      unsigned int variable_loc = variable_str.find("Derivative[", 0);
+      if(variable_loc != std::string::npos)
       {
-        std::cout << "can't find bracket." << std::endl;
-        return false;
+        variable_loc += 11; // "Derivative["の長さ分
+        unsigned int bracket_loc = variable_str.find("][", variable_loc);
+        if(bracket_loc == std::string::npos)
+        {
+          std::cout << "can't find bracket." << std::endl;
+          return false;
+        }
+        std::string variable_derivative_count_str = variable_str.substr(variable_loc, bracket_loc-variable_loc);
+        variable_derivative_count = std::atoi(variable_derivative_count_str.c_str());
+        variable_loc = bracket_loc + 2; // "]["の長さ分
+        bracket_loc = variable_str.find("]", variable_loc);
+        if(bracket_loc == std::string::npos)
+        {
+          std::cout << "can't find bracket." << std::endl;
+          return false;
+        }
+        variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
       }
-      variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
-    }
-    else
-    {
-      variable_name =  variable_str; // "usrVar"の長さ分      
-      variable_derivative_count = 0;
-    }
-
-    // prev変数でなかったら処理
-    if(!boost::starts_with(variable_name, "prev")) {
-      // 値の取得
-      int str_size = cons_str.size();
-      unsigned int end_loc = cons_str.rfind("]", str_size-1);
-
-      if(end_loc == std::string::npos)
+      else
       {
-        std::cout << "can't find bracket." << std::endl;
-        return false;
+        variable_name =  variable_str; // "usrVar"の長さ分      
+        variable_derivative_count = 0;
       }
-      std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
 
-      MathVariable symbolic_variable;
-      MathValue symbolic_value;
-      symbolic_variable.name = 
-        variable_name.substr(PacketSender::var_prefix.size());
-      symbolic_variable.derivative_count = 
-        variable_derivative_count;
-      symbolic_value.str = value_str;
+      // prev変数でなかったら処理
+      if(!boost::starts_with(variable_name, "prev")) {
+        // 値の取得
+        int str_size = cons_str.size();
+        unsigned int end_loc = cons_str.rfind("]", str_size-1);
 
-      variable_map.set_variable(symbolic_variable, symbolic_value);
-    } 
+        if(end_loc == std::string::npos)
+        {
+          std::cout << "can't find bracket." << std::endl;
+          return false;
+        }
+        std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
+
+        MathVariable symbolic_variable;
+        MathValue symbolic_value;
+        symbolic_variable.name = 
+          variable_name.substr(PacketSender::var_prefix.size());
+        symbolic_variable.derivative_count = 
+          variable_derivative_count;
+        symbolic_value.str = value_str;
+
+        variable_map.set_variable(symbolic_variable, symbolic_value);
+      } 
+    }
   }
 
   return true;
@@ -220,10 +224,15 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
 /////////////////// 受信処理
   HYDLA_LOGGER_DEBUG( "--- receive ---");
+
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+
   ml_->skip_pkt_until(RETURNPKT);
 
   // 結果を受け取る前に制約ストアを初期化
-  reset();
+//  reset();
 
   ml_->MLGetNext();
   ml_->MLGetNext();
@@ -316,12 +325,30 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
 
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+
   ml_->skip_pkt_until(RETURNPKT);
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
-  int num  = ml_->get_integer();
-  HYDLA_LOGGER_DEBUG("EntailmentChecker#num:", num);
-  return num==1 ? VCSR_TRUE : VCSR_FALSE;
+  VCSResult ret;
+  switch(ml_->get_integer())
+  {
+    case 0:
+      ret = VCSR_FALSE;
+      HYDLA_LOGGER_DEBUG("not entailed");
+      break;
+
+    case 1:
+      ret = VCSR_TRUE;
+      HYDLA_LOGGER_DEBUG("entailed");
+      break;
+
+    default:
+      assert(0);
+  }
+  return ret;
 }
 
 bool MathematicaVCSPoint::integrate(

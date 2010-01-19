@@ -1,12 +1,16 @@
+(*
+ * デバック用メッセージ出力関数
+ *)
+If[optUseDebugPrint,
+  debugPrint[arg___] := Print[InputForm[{arg}]],
+  debugPrint[arg___] := Null];
 
 (*
  * ある1つのask制約に関して、そのガードが制約ストアからentailできるかどうかをチェック
  *)
 checkEntailment[guard_, store_, vars_] := Block[
 {sol},
-  Print["guard: ", guard];
-  Print["store: ", store];
-  Print["vars: ", vars];
+  debugPrint["guard:", guard, "store:", store, "vars:", vars];
 
   sol = Reduce[Append[store, guard], vars, Reals];
   If[sol=!=False, 
@@ -73,12 +77,14 @@ createVariableList[True, vars_, result_] := (
  *  2 : Mathematicaでは解けない
  *)
 isConsistent[expr_, vars_] := (
+  debugPrint["expr:", expr, "vars:", vars];
   sol = Reduce[expr, vars];
   Which[
     Head[sol] === Reduce,
       {2},
     sol =!= False,  
       (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
+      sol = LogicalExpand[sol];
       sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
       (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
       sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
@@ -155,7 +161,9 @@ exDSolve[expr_, vars_] := (
  *)
 isConsistentInterval[expr_, vars_] := Block[
 {sol},
-  sol = exDSolve[expr, vars];
+  debugPrint["expr:", expr, "vars:", vars];
+
+  sol = exDSolve[Cases[expr, Except[True]], vars];
   Which[
     Head[sol] === DSolve,
       2,
@@ -167,7 +175,11 @@ isConsistentInterval[expr_, vars_] := Block[
       2] 
 ];
 
-(* Print[isConsistentInterval[{x'[t]==2, x[0]==3}, {x[t]}]]; *)
+(* Print[isConsistentInterval[ *)
+(* {Derivative[1][usrVarht][t] == usrVarv[t],  *)
+(*   Derivative[1][usrVarv][t] == -10,  *)
+(*   usrVarv[0] == Derivative[1][usrVarht]},  *)
+(*   {Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}]]; *)
 
 (*
  * 次のポイントフェーズに移行する時刻を求める
@@ -232,12 +244,13 @@ createIntegratedValue[variable_, integRule_] := (
 );
 
 integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
-  Print["cons:", cons];
-  Print["posAsk:", posAsk];
-  Print["negAsk:", negAsk];
-  Print["vars:", vars];
-  Print["maxTime:", maxTime];
-  tmpIntegSol = First[DSolve[cons, vars, t]];
+  debugPrint["cons:", cons, 
+             "posAsk:", posAsk, 
+             "negAsk:", negAsk, 
+             "vars:", vars, 
+             "maxTime:", maxTime];
+
+  tmpIntegSol = First[DSolve[Cases[cons, Except[True]], vars, t]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
   {tmpMinT, tmpMinAskIDs} = 
@@ -250,18 +263,22 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
   {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs}
 );
 
-Print[];
-Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0],
-    Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]},
-  {}, 
-  {{usrVarht[t]==0, 10}}, 
-  {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10]];
+Print[integrateCalc[{True, Derivative[1][usrVarht][t] == usrVarv[t], Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0},
+{}, {{usrVarht[t] == 0, 26}},
+{usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]},
+10]]
 
-Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0],
-    Equal[Derivative[2][usrVarht][t], -10]},
-  {}, 
-  {{usrVarht[t]==0, 10}}, 
-  {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm];
+(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
+(*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)
+(*   {},  *)
+(*   {{usrVarht[t]==0, 10}},  *)
+(*   {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10]]; *)
+
+(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0], *)
+(*     Equal[Derivative[2][usrVarht][t], -10]}, *)
+(*   {},  *)
+(*   {{usrVarht[t]==0, 10}},  *)
+(*   {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm]; *)
 
 
 (* $MaxExtraPrecision = Infinity *)
@@ -276,13 +293,6 @@ If[optUseProfile,
   ),
   HydLaMain[arg___] := HydLaSolve[arg]
 ];
-
-(*
- * デバック用メッセージ出力関数
- *)
-If[optUseDebugPrint,
-  debugPrint[arg___] := Print[arg],
-  debugPrint[arg___] := Null];
 
 (*
  * profiling function

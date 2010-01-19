@@ -79,8 +79,17 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:
+  typedef std::map<std::string, int> max_diff_map_t;
+
   void send_cs(PacketSender& ps) const;
   void send_cs_vars() const;
+
+  /**
+   * 変数の最大微分回数をもとめる
+   */
+  void create_max_diff_map(PacketSender& ps, max_diff_map_t& max_diff_map);
+
+  void send_vars(PacketSender& ps, const max_diff_map_t& max_diff_map);
 
   /**
    * 初期値制約をMathematicaに渡す
@@ -88,7 +97,7 @@ private:
    * Mathematicaに送る制約の中に出現する変数の
    * 最大微分回数未満の初期値制約のみ送信をおこなう
    */
-  void send_init_cons(PacketSender& ps);
+  void send_init_cons(PacketSender& ps, const max_diff_map_t& max_diff_map);
 
   /**
    * 与えられたaskのガード制約を送信する

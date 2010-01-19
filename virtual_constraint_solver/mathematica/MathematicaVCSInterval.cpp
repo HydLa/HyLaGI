@@ -2,11 +2,13 @@
 
 #include <string>
 #include <cassert>
+#include <boost/foreach.hpp>
 
 #include "mathlink_helper.h"
 #include "Logger.h"
 #include "PacketSender.h"
 #include "PacketChecker.h"
+#include "Types.h"
 
 using namespace hydla::vcs;
 
@@ -36,7 +38,8 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
     HYDLA_LOGGER_DEBUG("no Variables");
     return true;
   }
-  HYDLA_LOGGER_DEBUG("------Variable map------", variable_map);
+  HYDLA_LOGGER_DEBUG("------Variable map------\n", 
+                     variable_map);
 
   variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
   variable_map_t::variable_list_t::const_iterator end = variable_map.end();
@@ -57,22 +60,35 @@ bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
   return false;
 }
 
-void MathematicaVCSInterval::send_init_cons(PacketSender& ps)
-{
-  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_init_cons ----");
-    
-  // 変数の最大微分回数をもとめる
-  typedef std::map<std::string, int> max_diff_map_t;
-  typedef max_diff_map_t::iterator max_diff_map_itr;
-  max_diff_map_t max_diff_map;
+namespace {
 
+struct MaxDiffMapDumper
+{
+  template<typename T>
+  MaxDiffMapDumper(T it, T end)
+  {
+    for(; it!=end; ++it) {
+      s << "name: " << it->first
+        << "diff: " << it->second
+        << "\n";      
+    }
+  }
+
+  std::stringstream s;
+};
+
+}
+
+void MathematicaVCSInterval::create_max_diff_map(
+  PacketSender& ps, max_diff_map_t& max_diff_map)
+{
   PacketSender::vars_const_iterator vars_it  = ps.vars_begin();
   PacketSender::vars_const_iterator vars_end = ps.vars_end();
   for(; vars_it!=vars_end; ++vars_it) {
     std::string name(vars_it->get<0>());
     int derivative_count = vars_it->get<1>();
 
-    max_diff_map_itr it = max_diff_map.find(name);
+    max_diff_map_t::iterator it = max_diff_map.find(name);
     if(it==max_diff_map.end()) {
       max_diff_map.insert(
         std::make_pair(name, derivative_count));
@@ -82,6 +98,18 @@ void MathematicaVCSInterval::send_init_cons(PacketSender& ps)
     }    
   }
 
+  HYDLA_LOGGER_DEBUG(
+    "-- max diff map --\n",
+    MaxDiffMapDumper(max_diff_map.begin(), 
+                     max_diff_map.end()).s.str());
+
+}
+
+void MathematicaVCSInterval::send_init_cons(
+  PacketSender& ps, const max_diff_map_t& max_diff_map)
+{
+  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_init_cons ----");
+    
   // 送信する制約の個数を求める
   constraint_store_t::init_vars_t::const_iterator init_vars_it;
   constraint_store_t::init_vars_t::const_iterator init_vars_end;
@@ -89,19 +117,26 @@ void MathematicaVCSInterval::send_init_cons(PacketSender& ps)
   init_vars_end = constraint_store_.init_vars.end();
   int init_vars_count = 0;
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
-    if(max_diff_map[init_vars_it->first.name] > 
-       init_vars_it->first.derivative_count) {
+    max_diff_map_t::const_iterator md_it = 
+      max_diff_map.find(init_vars_it->first.name);
+    if(md_it==max_diff_map.end() ||
+       md_it->second  > init_vars_it->first.derivative_count) 
+    {
       init_vars_count++;
     }
   }
+
+  HYDLA_LOGGER_DEBUG("init_vars_count: ", init_vars_count);
 
   // Mathematicaへ送信
   ml_->put_function("List", init_vars_count);
   init_vars_it  = constraint_store_.init_vars.begin();
   init_vars_end = constraint_store_.init_vars.end();
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
-    if(max_diff_map[init_vars_it->first.name] > 
-       init_vars_it->first.derivative_count) 
+    max_diff_map_t::const_iterator md_it = 
+      max_diff_map.find(init_vars_it->first.name);
+    if(md_it==max_diff_map.end() ||
+       md_it->second  > init_vars_it->first.derivative_count) 
     {
       ml_->put_function("Equal", 2);
 
@@ -121,6 +156,38 @@ void MathematicaVCSInterval::send_init_cons(PacketSender& ps)
   }
 }
 
+void MathematicaVCSInterval::send_vars(
+  PacketSender& ps, const max_diff_map_t& max_diff_map)
+{
+  HYDLA_LOGGER_DEBUG("---- MathematicaVCSInterval::send_vars ----");
+
+  max_diff_map_t::const_iterator it;
+  max_diff_map_t::const_iterator end = max_diff_map.end();
+
+  // 送信する個数
+  int vars_count = 0;
+  for(it=max_diff_map.begin(); it!=end; ++it) {
+    for(int i=0; i<=it->second; i++) {
+      vars_count++;
+    }
+  }
+
+  HYDLA_LOGGER_DEBUG("count:", vars_count);
+
+  ml_->put_function("List", vars_count);
+  for(it=max_diff_map.begin(); it!=end; ++it) {
+    for(int i=0; i<=it->second; i++) {
+      ml_->MLPutNext(MLTKFUNC);
+      ml_->MLPutArgCount(1);
+      ps.put_var(boost::make_tuple(it->first, i, false));
+      ml_->put_symbol("t");
+
+      HYDLA_LOGGER_DEBUG("put: ", 
+                         "  name: ", it->first,
+                         "  diff: ", i);
+    }
+  }  
+}
 
 VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
 {
@@ -144,21 +211,25 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   // 制約ストアconstraintsをMathematicaに渡す
   send_cs(ps);
 
+  max_diff_map_t max_diff_map;
+
+  // 変数の最大微分回数をもとめる
+  create_max_diff_map(ps, max_diff_map);
+  
   // 初期値制約の送信
-  send_init_cons(ps);
+  send_init_cons(ps, max_diff_map);
 
-  // 変数の一覧を送信
-  ps.put_vars();
+  // 変数のリストを渡す
+  send_vars(ps, max_diff_map);
 
-  // 結果を受け取る前に制約ストアを初期化
-  reset();
-
-//   PacketChecker pc(*ml_);
-//   pc.check();    
-
-  ml_->skip_pkt_until(RETURNPKT);
 
   HYDLA_LOGGER_DEBUG("--- receive  ---");
+
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+
+  ml_->skip_pkt_until(RETURNPKT);
 
   VCSResult ret;
   switch(ml_->get_integer()) 
@@ -229,8 +300,12 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 //   PacketChecker pc(*ml_);
 //   pc.check();
 
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+
   ml_->skip_pkt_until(RETURNPKT);
-  std::cout << ml_->MLGetType() << std::endl;
+  ml_->MLGetType();
   
   // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
   int num  = ml_->get_integer();
@@ -270,6 +345,8 @@ bool MathematicaVCSInterval::integrate(
 {
   HYDLA_LOGGER_DEBUG("#*** MathematicaVCSInterval::integrate ***");
 
+  HYDLA_LOGGER_DEBUG(constraint_store_);
+
 //   HYDLA_LOGGER_DEBUG(
 //     "#*** Integrator ***\n",
 //     "--- positive asks ---\n",
@@ -287,8 +364,18 @@ bool MathematicaVCSInterval::integrate(
   // integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
   ml_->put_function("integrateCalc", 5);
 
+  ml_->put_function("Join", 2);
+
   // 制約ストアから式storeを得てMathematicaに渡す
   send_cs(ps);
+
+  max_diff_map_t max_diff_map;
+
+  // 変数の最大微分回数をもとめる
+  create_max_diff_map(ps, max_diff_map);
+  
+  // 初期値制約の送信
+  send_init_cons(ps, max_diff_map);
 
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
   HYDLA_LOGGER_DEBUG("-- send positive ask -- ");
@@ -298,21 +385,29 @@ bool MathematicaVCSInterval::integrate(
   HYDLA_LOGGER_DEBUG("-- send negative ask -- ");
   send_ask_guards(ps, negative_asks);
 
-  // varsを渡す
-  ps.put_vars();
+  // 変数のリストを渡す
+  send_vars(ps, max_diff_map);
 
   // maxTimeを渡す
-  ml_->put_function("ToExpression", 1);
   time_t send_time(max_time);
   send_time -= current_time;
+  HYDLA_LOGGER_DEBUG("send time:", send_time);
   send_time.send_time(*ml_);
 
 //   PacketChecker pc(*ml_);
 //   pc.check();
 
-  ml_->skip_pkt_until(RETURNPKT);
-
 ////////////////// 受信処理
+
+  HYDLA_LOGGER_DEBUG("-- math debug print -- \n");  
+
+  ml_->skip_pkt_until(TEXTPKT);
+  
+  while(ml_->MLGetType() == 34) {
+    std::cout << ml_->get_string() << "\n";
+  }
+
+  ml_->skip_pkt_until(RETURNPKT);
 
   HYDLA_LOGGER_DEBUG("---integrate calc result---");
   integrate_result.states.resize(1);
@@ -471,7 +566,26 @@ std::ostream& MathematicaVCSInterval::dump(std::ostream& s) const
 std::ostream& operator<<(std::ostream& s, 
                          const MathematicaVCSInterval::constraint_store_t& c)
 {
-  s << "---- MathematicaVCSInterval::consraint_store_t ----";
+  s << "---- MathematicaVCSInterval::consraint_store_t ----\n"
+    << "-- init vars --\n";
+
+  BOOST_FOREACH(
+    const MathematicaVCSInterval::constraint_store_t::init_vars_t::value_type& i, 
+    c.init_vars)
+  {
+    s << "variable: " << i.first
+      << "   value: " << i.second
+      << "\n";
+  }
+
+  s << "-- constraints --\n";
+  BOOST_FOREACH(
+    const MathematicaVCSInterval::constraint_store_t::constraints_t::value_type& i, 
+    c.constraints)
+  {
+    s << *i;
+  }
+  
   return s;
 }
 
