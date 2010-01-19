@@ -192,10 +192,6 @@
 				RelativePath=".\MathSimulator.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\PacketChecker.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -244,10 +240,6 @@
 			</File>
 			<File
 				RelativePath=".\MathSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketChecker.h"
 				>
 			</File>
 			<File

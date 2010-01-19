@@ -4,9 +4,11 @@
 #include <ostream>
 
 #include "mathlink_helper.h"
-//#include "RPVCSType.h"
+
 #include "RealPaverBaseVCS.h"
 #include "RPConstraintStore.h"
+#include "RPConstraintBuilder.h"
+
 
 namespace hydla {
 namespace vcs {
@@ -69,6 +71,7 @@ private:
   //void send_cs_vars() const;
 
   ConstraintStore constraint_store_;
+  ConstraintBuilder builder_;
 };
 
 std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs);

@@ -1,4 +1,4 @@
-#include "ConstraintBuilder.h"
+#include "RPConstraintBuilder.h"
 
 #include <iostream>
 #include <cassert>
@@ -11,11 +11,13 @@ using namespace hydla::simulator;
 using namespace hydla::simulator;
 
 namespace hydla {
-namespace bp_simulator {
+namespace vcs {
+namespace realpaver {
 
 ConstraintBuilder::ConstraintBuilder() :
   derivative_count_(0),
-  in_prev_(false)
+  in_prev_(false),
+  neg_expr_(false)
 {}
 
 ConstraintBuilder::~ConstraintBuilder()
@@ -131,6 +133,21 @@ void ConstraintBuilder::visit(boost::shared_ptr<Number> node)
   rp_erep rep;
   rp_erep_create_cst(&rep, "", i);
   this->rep_stack_.push(rep);
+}
+
+/**
+ * Tellƒm[ƒh‚©‚ç§–ñ‚ğˆê‚Âì‚é
+ */
+rp_constraint ConstraintBuilder::build_constraint_from_tell(boost::shared_ptr<Tell> node)
+{
+  this->derivative_count_ = 0;
+  this->in_prev_ = false;
+  this->neg_expr_ = false;
+  rp_constraint c;
+  this->accept(node->get_child());
+  rp_constraint_create_num(&c, this->ctr_);
+  this->ctr_ = NULL;
+  return c;
 }
 
 /**
@@ -312,5 +329,6 @@ void GuardConstraintBuilder::create_guard_expr(boost::shared_ptr<Ask> node,
   vars.insert(this->vars_.begin(), this->vars_.end());
 }
 
-} //namespace bp_simulator
+} // namespace realpaver
+} // namespace vcs
 } // namespace hydla

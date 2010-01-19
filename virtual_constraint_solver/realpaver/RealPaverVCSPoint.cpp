@@ -1,5 +1,13 @@
 #include "RealPaverVCSPoint.h"
 
+#include <sstream>
+
+#include "Logger.h"
+#include "rp_constraint.h"
+#include "rp_constraint_ext.h"
+#include "rp_container.h"
+#include "rp_container_ext.h"
+
 namespace hydla {
 namespace vcs {
 namespace realpaver {
@@ -15,6 +23,7 @@ RealPaverVCSPoint::~RealPaverVCSPoint()
  */
 bool RealPaverVCSPoint::reset()
 {
+  this->constraint_store_ = ConstraintStore();
   return true;
 }
 
@@ -23,6 +32,7 @@ bool RealPaverVCSPoint::reset()
  */
 bool RealPaverVCSPoint::reset(const variable_map_t& variable_map)
 {
+  this->constraint_store_.build(variable_map);
   return true;
 }
 
@@ -31,6 +41,7 @@ bool RealPaverVCSPoint::reset(const variable_map_t& variable_map)
  */
 bool RealPaverVCSPoint::create_variable_map(variable_map_t& variable_map)
 {
+  this->constraint_store_.build_variable_map(variable_map);
   return true;
 }
 
@@ -39,9 +50,35 @@ bool RealPaverVCSPoint::create_variable_map(variable_map_t& variable_map)
  */
 VCSResult RealPaverVCSPoint::add_constraint(const tells_t& collected_tells)
 {
+  typedef std::set<rp_constraint> ctr_set_t;
+  var_name_map_t vars = this->constraint_store_.get_store_vars();
+  ctr_set_t ctrs, ctrs_copy;
+  // tell制約をrp_constraintへ
+  for(tells_t::const_iterator t_it = collected_tells.begin();
+      t_it!=collected_tells.end(); t_it++) {
+        ctrs.insert(this->builder_.build_constraint_from_tell(*t_it));
+  }
+  // tell制約のみをコピーしておく
+  for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
+    rp_constraint c;
+    rp_constraint_clone(&c, *it);
+    ctrs_copy.insert(c);
+  }
+  // ストアの制約を追加
+  ctr_set_t store_copy = this->constraint_store_.get_store_exprs_copy();
+  ctrs.insert(store_copy.begin(), store_copy.end());
+  // 確認
+  rp_vector_variable vec = this->builder_.to_rp_vector();
+  HYDLA_LOGGER_DEBUG("#**** vcs:add_constraint: constraints expression ****\n");
+  std::stringstream ss;
+  for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
+    rp::dump_constraint(ss, *it, vec, 10);
+    ss << "\n";
+  }
+  HYDLA_LOGGER_DEBUG(ss.str());
   return VCSR_TRUE;
 }
-  
+
 /**
  * 現在の制約ストアから与えたaskが導出可能かどうか
  */
@@ -67,7 +104,7 @@ bool RealPaverVCSPoint::integrate(integrate_result_t& integrate_result,
  */
 std::ostream& RealPaverVCSPoint::dump(std::ostream& s) const
 {
-  return s;
+  return this->constraint_store_.dump_cs(s);
 }
 
 void RealPaverVCSPoint::add_single_constraint(const node_sptr &constraint_node,

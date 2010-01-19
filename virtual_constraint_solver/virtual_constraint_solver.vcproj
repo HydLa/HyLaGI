@@ -167,6 +167,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mathematica\PacketChecker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\PacketSender.cpp"
 				>
 			</File>
@@ -176,6 +180,10 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RealPaverVCSPoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\realpaver\RPConstraintBuilder.cpp"
 				>
 			</File>
 			<File
@@ -225,6 +233,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mathematica\PacketChecker.h"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\PacketSender.h"
 				>
 			</File>
@@ -238,6 +250,10 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RealPaverVCSPoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\realpaver\RPConstraintBuilder.h"
 				>
 			</File>
 			<File

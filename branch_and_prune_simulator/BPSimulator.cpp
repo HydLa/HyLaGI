@@ -337,7 +337,8 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
 bool BPSimulator::do_interval_phase(const module_set_sptr &ms,
                                     const phase_state_const_sptr &state,
                                     hydla::vcs::realpaver::RealPaverVCS& vcs,
-                                    TellCollector &tell_collector,                                    expanded_always_t& expanded_always,
+                                    TellCollector &tell_collector,
+                                    expanded_always_t& expanded_always,
                                     positive_asks_t &positive_asks,
                                     negative_asks_t &negative_asks)
 {

@@ -1,10 +1,10 @@
-#ifndef _INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_BUILDER_H_
-#define _INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_BUILDER_H_
+#ifndef _INCLUDED_HYDLA_VCS_REALPAVER_RP_CONSTRAINT_BUILDER_H_
+#define _INCLUDED_HYDLA_VCS_REALPAVER_RP_CONSTRAINT_BUILDER_H_
 
 #include <stack>
-#include <boost/bimap/bimap.hpp>
 
-#include "BPTypes.h"
+//#include "BPTypes.h"
+#include "RPVCSType.h"
 
 // parser
 #include "Node.h"
@@ -25,7 +25,8 @@
 //#define RP_RELATION_INF 6
 
 namespace hydla {
-namespace bp_simulator {
+namespace vcs {
+namespace realpaver {
 
 class ConstraintBuilder : public parse_tree::TreeVisitor {
 public:
@@ -63,6 +64,16 @@ public:
   // êîéö
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
+  /**
+   * NodeÇ©ÇÁéÆÇàÍÇ¬çÏÇÈ
+   */
+  /*rp_constraint build_constraint(boost::shared_ptr<hydla::parse_tree::Node> node,
+    const bool neg_expression=false);*/
+
+  rp_constraint build_constraint_from_tell(boost::shared_ptr<hydla::parse_tree::Tell> node);
+
+  rp_vector_variable to_rp_vector() const;
+
 protected:
   var_name_map_t vars_;
   rp_ctr_num ctr_;
@@ -70,14 +81,13 @@ protected:
   unsigned int derivative_count_;
 
   void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
-  rp_vector_variable to_rp_vector() const;
 
 private:
   void create_unary_erep(boost::shared_ptr<hydla::parse_tree::UnaryNode> node, int op);
   void create_binary_erep(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int op);
 
   std::stack<rp_erep> rep_stack_;
-
+  bool neg_expr_;
 };
 
 class GuardConstraintBuilder : public ConstraintBuilder {
@@ -108,7 +118,8 @@ protected:
 
 };
 
-} //namespace bp_simulator
+} // namespace realpaver
+} // namespace vcs
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_BP_SIMULATOR_CONSTRAINT_BUILDER_H__
+#endif //_INCLUDED_HYDLA_VCS_REALPAVER_RP_CONSTRAINT_BUILDER_H_
