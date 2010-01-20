@@ -1,5 +1,7 @@
 #include "MathTime.h"
 
+#include <cassert>
+
 #include "mathlink_helper.h"
 #include "Logger.h"
 
@@ -32,15 +34,28 @@ void MathTime::receive_time(MathLink& ml)
   time_ = ml.get_string();
 }
 
+std::string MathTime::get_real_val(MathLink& ml, int precision)
+{
+  ml.put_function("ToString", 1);  
+  ml.put_function("N", 2);  
+  ml.put_function("ToExpression", 1);
+  ml.put_string(time_);
+  ml.put_integer(precision);
+  
+  ml.skip_pkt_until(RETURNPKT);
+  return  ml.get_string();
+}
+
+
 MathTime& MathTime::operator+=(const MathTime& rhs)
 {
-  time_ += " + " + rhs.time_;
+  time_ += " + (" + rhs.time_ + ")";
   return *this;
 }
 
 MathTime& MathTime::operator-=(const MathTime& rhs)
 {
-  time_ += " - " + rhs.time_;
+  time_ += " - (" + rhs.time_ + ")";
   return *this;
 }
 

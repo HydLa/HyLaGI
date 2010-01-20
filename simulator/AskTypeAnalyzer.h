@@ -1,29 +1,27 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_DISCRETE_ASK_REMOVER_H_
-#define _INCLUDED_HYDLA_SIMULATOR_DISCRETE_ASK_REMOVER_H_
+#ifndef _INCLUDED_HYDLA_SIMULATOR_ASK_TYPE_ANALYZER_H_
+#define _INCLUDED_HYDLA_SIMULATOR_ASK_TYPE_ANALYZER_H_
 
-#include <vector>
-
-#include "Node.h"
+#include "TypedAsk.h"
 #include "ParseTree.h"
 #include "TreeVisitor.h"
 
 namespace hydla {
 namespace simulator {
   
-class DiscreteAskRemover : 
+class AskTypeAnalyzer : 
   public hydla::parse_tree::TreeVisitor
 {
 public:
   typedef hydla::parse_tree::node_sptr node_sptr;
 
-  DiscreteAskRemover();
+  AskTypeAnalyzer();
 
-  virtual ~DiscreteAskRemover();
+  virtual ~AskTypeAnalyzer();
  
   /**
    * Ask制約を解析し，型付けをおこなう
    */
-  void apply(hydla::parse_tree::ParseTree* pt);
+  void analyze(hydla::parse_tree::ParseTree* pt);
 
   // 呼び出し
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
@@ -85,8 +83,9 @@ private:
     
   /**
    * 新しい子ノード
+   * accept後、これに値が入っている場合はノードの値を交換する
    */
-  node_sptr child_;
+  node_sptr new_child_;
 
   /**
    * 検索をおこなったノードの中にprev制約が存在したかどうか
@@ -97,4 +96,4 @@ private:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_DISCRETE_ASK_REMOVER_H_
+#endif // _INCLUDED_HYDLA_SIMULATOR_ASK_TYPE_ANALYZER_H_

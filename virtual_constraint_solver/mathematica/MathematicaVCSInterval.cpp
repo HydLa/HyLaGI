@@ -407,6 +407,7 @@ bool MathematicaVCSInterval::integrate(
   // maxTime‚ð“n‚·
   time_t send_time(max_time);
   send_time -= current_time;
+  HYDLA_LOGGER_DEBUG("current time:", current_time);
   HYDLA_LOGGER_DEBUG("send time:", send_time);
   send_time.send_time(*ml_);
 
@@ -415,7 +416,8 @@ bool MathematicaVCSInterval::integrate(
 
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -442,8 +444,9 @@ bool MathematicaVCSInterval::integrate(
   // next_point_phase_time‚ð“¾‚é
   MathTime next_phase_time;
   state.time.receive_time(*ml_);
+  HYDLA_LOGGER_DEBUG("receive_time: ", state.time);  
   state.time += current_time;
-  HYDLA_LOGGER_DEBUG("next_phase_time : ", state.time);  
+  HYDLA_LOGGER_DEBUG("next_phase_time: ", state.time);  
   ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
   
   // •Ï”•\‚Ìì¬

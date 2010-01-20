@@ -163,6 +163,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AskTypeAnalyzer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DiscreteAskRemover.cpp"
 				>
 			</File>
@@ -197,6 +201,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AskTypeAnalyzer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\DefaultVariable.h"
 				>
 			</File>
@@ -218,6 +226,10 @@
 			</File>
 			<File
 				RelativePath=".\TellCollector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TypedAsk.h"
 				>
 			</File>
 			<File

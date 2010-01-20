@@ -38,6 +38,8 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
   }
   HYDLA_LOGGER_DEBUG("------Variable map------\n", variable_map);
 
+  std::set<MathValue> and_cons_set;
+
   variable_map_t::variable_list_t::const_iterator it = 
     variable_map.begin();
   variable_map_t::variable_list_t::const_iterator end = 
@@ -73,11 +75,9 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
               << value.str
               << "]"; // Equal‚Ì•Â‚¶Š‡ŒÊ
 
-      MathValue new_symbolic_value;
-      new_symbolic_value.str = val_str.str();
-      std::set<MathValue> value_set;
-      value_set.insert(new_symbolic_value);
-      constraint_store_.first.insert(value_set);
+      MathValue new_math_value;
+      new_math_value.str = val_str.str();
+      and_cons_set.insert(new_math_value);
 
       // §–ñƒXƒgƒA“à‚Ì•Ï”ˆê——‚ðì¬
       constraint_store_.second.insert(
@@ -86,6 +86,8 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
                           true));
     }
   }
+
+  constraint_store_.first.insert(and_cons_set);
 
   HYDLA_LOGGER_DEBUG(*this);
 
@@ -204,6 +206,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; tells_it!=tells_end; ++tells_it) {
+    HYDLA_LOGGER_DEBUG("put node: ", *(*tells_it)->get_child());
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_None);
   }
 
@@ -308,12 +311,13 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
     "#*** MathematicaVCSPoint::check_entailment ***\n", 
     "ask: ", *negative_ask);
 
+  PacketSender ps(*ml_);
+  
+
   // checkEntailment[guard, store, vars]‚ð“n‚µ‚½‚¢
   ml_->put_function("checkEntailment", 3);
 
-
   // ask§–ñ‚ÌƒK[ƒh‚ÌŽ®‚ð“¾‚ÄMathematica‚É“n‚·
-  PacketSender ps(*ml_);
   ps.put_node(negative_ask->get_guard(), PacketSender::VA_None);
 
   // §–ñƒXƒgƒA‚©‚çŽ®‚ð“¾‚ÄMathematica‚É“n‚·
@@ -377,15 +381,23 @@ void MathematicaVCSPoint::send_cs() const
 
   ml_->put_function("List", 1);
   ml_->put_function("Or", or_cons_size);
+  HYDLA_LOGGER_DEBUG("or cons size: ", or_cons_size);
+
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
-  for(; (or_cons_it) != constraint_store_.first.end(); ++or_cons_it)
+  std::set<std::set<MathValue> >::const_iterator or_cons_end = 
+    constraint_store_.first.end();
+  for(; or_cons_it!=or_cons_end; ++or_cons_it)
   {
     int and_cons_size = (*or_cons_it).size();
     ml_->put_function("And", and_cons_size);
+    HYDLA_LOGGER_DEBUG("and cons size: ", and_cons_size);
+
     std::set<MathValue>::const_iterator and_cons_it = 
       (*or_cons_it).begin();
-    for(; (and_cons_it) != (*or_cons_it).end(); ++and_cons_it)
+    std::set<MathValue>::const_iterator and_cons_end = 
+      (*or_cons_it).end();
+    for(; and_cons_it!=and_cons_end; ++and_cons_it)
     {
       ml_->put_function("ToExpression", 1);
       std::string str = (*and_cons_it).str;

@@ -20,6 +20,8 @@ public:
   typedef std::pair<std::set<std::set<MathValue> >, 
                     constraint_store_vars_t> constraint_store_t;
 
+  
+
   MathematicaVCSPoint(MathLink* ml);
 
   virtual ~MathematicaVCSPoint();

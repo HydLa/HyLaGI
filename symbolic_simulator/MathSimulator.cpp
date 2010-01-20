@@ -22,6 +22,7 @@
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
 #include "DiscreteAskRemover.h"
+#include "AskTypeAnalyzer.h"
 
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
@@ -84,6 +85,7 @@ void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
   ModuleSetContainerCreator<ModuleSetGraph> mcc;
   {
     parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
+    AskTypeAnalyzer().analyze(pt_original.get());
     AskDisjunctionFormatter().format(pt_original.get());
     AskDisjunctionSplitter().split(pt_original.get());
     msc_original_ = mcc.create(pt_original);
@@ -92,19 +94,20 @@ void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
   {
     parse_tree_sptr pt_no_init(boost::make_shared<ParseTree>(*parse_tree));
     InitNodeRemover().apply(pt_no_init.get());
+    AskTypeAnalyzer().analyze(pt_no_init.get());
     AskDisjunctionFormatter().format(pt_no_init.get());
     AskDisjunctionSplitter().split(pt_no_init.get());
     msc_no_init_ = mcc.create(pt_no_init);
   }
 
-  {
-    parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
-    InitNodeRemover().apply(pt_no_init_discreteask.get());
-    DiscreteAskRemover().apply(pt_no_init_discreteask.get());
-    AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
-    AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
-    msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
-  }
+  //{
+  //  parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
+  //  InitNodeRemover().apply(pt_no_init_discreteask.get());
+  //  DiscreteAskRemover().apply(pt_no_init_discreteask.get());
+  //  AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
+  //  AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
+  //  msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
+  //}
 }
 
 
@@ -181,7 +184,10 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
                                 const phase_state_const_sptr& state)
 {
   TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
+
+  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+                                  AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
+                                  AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
 
   tells_t         tell_list;
   positive_asks_t   positive_asks;
@@ -276,7 +282,9 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 {
 
   TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
+
+  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+                                  AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
 
   tells_t         tell_list;
   positive_asks_t positive_asks;
@@ -368,9 +376,16 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     push_phase_state(new_state);
   }
 
-  std::cout << "%%%%%%%%%%%%% interval phase\n"
-            << "time:" << integrate_result.states[0].time << "\n"
-            << integrate_result.states[0].variable_map;
+  std::cout << "%%%%%%%%%%%%% interval phase result %%%%%%%%%%%%% \n"
+            << "time:" << integrate_result.states[0].time.get_real_val(ml_, 5) << "\n";
+
+  variable_map_t::const_iterator it  = integrate_result.states[0].variable_map.begin();
+  variable_map_t::const_iterator end = integrate_result.states[0].variable_map.end();
+  for(; it!=end; ++it) {
+    std::cout << it->first << "\t: "
+              << it->second.get_real_val(ml_, 5) << "\n";
+  }
+
 
   return true;
 }

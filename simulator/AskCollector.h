@@ -20,7 +20,16 @@ namespace simulator {
  */
 class AskCollector : public parse_tree::TreeVisitor {
 public:
-  AskCollector(const module_set_sptr& module_set);
+  typedef unsigned int collect_flag_t;
+  static const collect_flag_t ENABLE_COLLECT_NON_TYPED_ASK  = 0x01;
+  static const collect_flag_t ENABLE_COLLECT_DISCRETE_ASK   = 0x02;
+  static const collect_flag_t ENABLE_COLLECT_CONTINUOUS_ASK = 0x04;
+
+  AskCollector(const module_set_sptr& module_set, 
+    collect_flag_t collect_type = 
+      ENABLE_COLLECT_NON_TYPED_ASK | 
+      ENABLE_COLLECT_DISCRETE_ASK |
+      ENABLE_COLLECT_CONTINUOUS_ASK);
 
   virtual ~AskCollector();
 
@@ -76,6 +85,8 @@ private:
   visited_always_t   visited_always_;
 
   expanded_always_t  new_expanded_always_;
+
+  collect_flag_t collect_type_;
 };
 
 } //namespace simulator

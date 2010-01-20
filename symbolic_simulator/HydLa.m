@@ -243,7 +243,16 @@ createIntegratedValue[variable_, integRule_] := (
             /. t -> tmpMinT) // Simplify // FullForm
 );
 
-integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
+integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := Block[
+{
+  tmpIntegSol,
+  tmpPosAsk,
+  tmpNegAsk,
+  tmpMinT, 
+  tmpMinAskIDs,
+  tmpPrevConsTable,
+  tmpRet
+},
   debugPrint["cons:", cons, 
              "posAsk:", posAsk, 
              "negAsk:", negAsk, 
@@ -260,8 +269,13 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
           getDerivativeCount[#], 
           ToString[createIntegratedValue[#, tmpIntegSol]]})&, 
         vars /. x_[t] -> x];
-  {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs, If[tmpMinT>=maxTime, 1, 0]}
-);
+  tmpRet = {ToString[tmpMinT, InputForm], 
+            tmpPrevConsTable, 
+            tmpMinAskIDs, 
+            If[tmpMinT>=maxTime, 1, 0]};
+  debugPrint["ret:", tmpRet];
+  tmpRet
+];
 
 (* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
 (*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)

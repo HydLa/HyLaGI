@@ -9,6 +9,7 @@
 #include <boost/iterator/indirect_iterator.hpp>
 
 #include "Logger.h"
+#include "TypedAsk.h"
 
 using namespace std;
 using namespace hydla::parse_tree;
@@ -17,28 +18,30 @@ namespace hydla {
 namespace simulator {
   
 namespace {
-  struct NodeDumper {
+struct NodeDumper {
       
-    template<typename T>
-    NodeDumper(T it, T end) 
-    {
-      for(; it!=end; ++it) {
-        ss << **it << "\n";
-      }
+  template<typename T>
+  NodeDumper(T it, T end) 
+  {
+    for(; it!=end; ++it) {
+      ss << **it << "\n";
     }
+  }
 
-    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
-    {
-      s << nd.ss.str();
-      return s;
-    }
+  friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+  {
+    s << nd.ss.str();
+    return s;
+  }
 
-    std::stringstream ss;
-  };
+  std::stringstream ss;
+};
 }
 
-AskCollector::AskCollector(const module_set_sptr& module_set) :
-  module_set_(module_set)
+AskCollector::AskCollector(const module_set_sptr& module_set, 
+                           collect_flag_t collect_type) :
+  module_set_(module_set),
+  collect_type_(collect_type)
 {}
 
 AskCollector::~AskCollector()
@@ -96,7 +99,23 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 // AskêßñÒ
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
-  if(positive_asks_->find(node) != positive_asks_->end()) {
+  bool collect = false;
+  if(boost::dynamic_pointer_cast<DiscreteAsk>(node)) {
+    // ó£éUïœâªASK
+    if(collect_type_ & ENABLE_COLLECT_DISCRETE_ASK) collect = true;
+  }
+  else if(boost::dynamic_pointer_cast<ContinuousAsk>(node)) {
+    // òAë±ïœâªASK
+    if(collect_type_ & ENABLE_COLLECT_CONTINUOUS_ASK) collect = true;
+  }
+  else {
+    // å^Ç™ë∂ç›ÇµÇ»Ç¢ASK
+    if(collect_type_ & ENABLE_COLLECT_NON_TYPED_ASK) collect = true;
+  }
+
+  if(collect && 
+     positive_asks_->find(node) != positive_asks_->end()) 
+  {
     // ä˘Ç…ìWäJçœÇ›ÇÃaskÉmÅ[ÉhÇ≈Ç†Ç¡ÇΩèÍçá
     in_positive_ask_ = true;
     accept(node->get_child());
