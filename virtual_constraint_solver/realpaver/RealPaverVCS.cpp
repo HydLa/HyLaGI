@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "RealPaverVCSPoint.h"
+#include "RealPaverVCSInterval.h"
 
 namespace hydla {
 namespace vcs {
@@ -31,7 +32,7 @@ RealPaverVCS::RealPaverVCS(Mode m, MathLink* ml)
     vcs_.reset(new RealPaverVCSPoint());
     break;
   case ContinuousMode:
-    //vcs_.reset(new RealPaverVCSInterval(ml));
+    vcs_.reset(new RealPaverVCSInterval(ml));
     break;
   default:
     assert(false);

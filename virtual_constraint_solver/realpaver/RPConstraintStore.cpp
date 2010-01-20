@@ -10,7 +10,7 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
-ConstraintStore::ConstraintStore(){}
+ConstraintStore::ConstraintStore(NowPhase np) : phase_(np){}
 
 ConstraintStore::ConstraintStore(const ConstraintStore& src)
 {
@@ -52,12 +52,18 @@ void ConstraintStore::build(const virtual_constraint_solver_t::variable_map_t& v
     for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
     std::string prev_name(name);
     prev_name += BP_PREV_STR;
+    std::string ini_name(name);
+    ini_name += BP_INITIAL_STR;
     // •\‚É“o˜^
     unsigned int size = this->vars_.size();
     var_property vp(it->first.derivative_count, false),
       vp_p(it->first.derivative_count, true);
     this->vars_.insert(vars_type_t(name, size, vp)); // “o˜^Ï‚Ý‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
-    this->vars_.insert(vars_type_t(prev_name, size+1, vp_p));
+    if(this->phase_ == NP_POINT) {
+      this->vars_.insert(vars_type_t(prev_name, size+1, vp_p));
+    } else {
+      this->vars_.insert(vars_type_t(ini_name, size+1, vp_p));
+    }
     // rp_interval‚©‚çrp_constraint‚ðì‚é
     rp_interval i;
     it->second.get(rp_binf(i), rp_bsup(i));
@@ -68,7 +74,11 @@ void ConstraintStore::build(const virtual_constraint_solver_t::variable_map_t& v
       rp_erep l, r;
       rp_ctr_num cnum;
       rp_constraint c;
-      rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+      if(this->phase_ == NP_POINT) {
+        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+      } else {
+        rp_erep_create_var(&l, this->vars_.left.at(ini_name));
+      }
       rp_erep_create_cst(&r, "", i);
       rp_ctr_num_create(&cnum, &l, RP_RELATION_EQUAL, &r);
       rp_constraint_create_num(&c, cnum);
@@ -79,13 +89,21 @@ void ConstraintStore::build(const virtual_constraint_solver_t::variable_map_t& v
       rp_erep l, r;
       rp_ctr_num cnum;
       rp_constraint c;
-      rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+      if(this->phase_ == NP_POINT) {
+        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+      } else {
+        rp_erep_create_var(&l, this->vars_.left.at(ini_name));
+      }
       rp_interval_set_point(i_tmp, rp_binf(i));
       rp_erep_create_cst(&r, "", i_tmp);
       rp_ctr_num_create(&cnum, &l, RP_RELATION_SUPEQUAL, &r);
       rp_constraint_create_num(&c, cnum);
       this->exprs_.insert(c);
-      rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+      if(this->phase_ == NP_POINT) {
+        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
+      } else {
+        rp_erep_create_var(&l, this->vars_.left.at(ini_name));
+      }
       rp_interval_set_point(i_tmp, rp_bsup(i));
       rp_erep_create_cst(&r, "", i_tmp);
       rp_ctr_num_create(&cnum, &l, RP_RELATION_INFEQUAL, &r);

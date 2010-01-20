@@ -19,7 +19,9 @@ namespace realpaver {
 class ConstraintStore
 {
 public:
-  ConstraintStore();
+  enum NowPhase { NP_POINT, NP_INTERVAL };
+
+  ConstraintStore(NowPhase np=NP_POINT);
 
   ConstraintStore(const ConstraintStore& src);
 
@@ -54,6 +56,7 @@ private:
 
   std::set<rp_constraint> exprs_;
   var_name_map_t vars_;
+  NowPhase phase_;
 };
 
 } // namespace realpaver

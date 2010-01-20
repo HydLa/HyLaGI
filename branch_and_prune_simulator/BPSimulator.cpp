@@ -262,22 +262,19 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 bool BPSimulator::interval_phase(const module_set_sptr& ms, 
                                  const phase_state_const_sptr& state)
 {
-  /*
+  HYDLA_LOGGER_DEBUG("#** interval_phase: BEGIN **\n");
   // 初期値はコピーしておく必要があるかも？
-  TellCollector tell_collector(ms);
-  AskCollector ask_collector(ms);
-  ConstraintStoreInterval constraint_store;
-  constraint_store.build(state->variable_map);
-
-  HYDLA_LOGGER_DEBUG(constraint_store);
-
-  ConsistencyCheckerInterval consistency_checker(this->ml_);
-  tells_t tell_list;
-  positive_asks_t positive_asks;
-  negative_asks_t negative_asks;
-  //TODO: do_point_phaseの引数でpositive_asksみたいに引き回す必要あり
   expanded_always_t expanded_always;
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
+  RealPaverVCS vcs(RealPaverVCS::ContinuousMode, &ml_);
+  vcs.reset(state->variable_map);
+  TellCollector tell_collector(ms);
+  AskCollector ask_collector(ms);
+
+  tells_t tell_list;
+
   bool expanded = true;
   while(expanded) {
     // tell制約を集める
@@ -286,8 +283,17 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
                                      &positive_asks);
 
     // 充足確認とストアへの追加, ODE求解
-    if(!consistency_checker.is_consistent(tell_list, constraint_store)) {
+    switch(vcs.add_constraint(tell_list)) {
+    case hydla::vcs::VCSR_TRUE:
+      break;
+    case hydla::vcs::VCSR_FALSE:
       return false;
+    case hydla::vcs::VCSR_UNKNOWN:
+      assert(false);
+      break;
+    case hydla::vcs::VCSR_SOLVER_ERROR:
+      assert(false);
+      break;
     }
 
     // ask制約を集める
@@ -296,6 +302,8 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
                               &negative_asks);
 
     expanded = false;
+  }
+/*
     {
       // ask条件のエンテール判定
       // IPでask条件にprevは入ってない => たぶんUNKNOWNにはならない…
