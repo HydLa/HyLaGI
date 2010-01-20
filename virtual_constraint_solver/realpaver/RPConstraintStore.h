@@ -25,6 +25,8 @@ public:
 
   ~ConstraintStore();
 
+  ConstraintStore& operator=(const ConstraintStore& src);
+
   void build(const virtual_constraint_solver_t::variable_map_t& variable_map);
 
   void build_variable_map(virtual_constraint_solver_t::variable_map_t& variable_map) const;

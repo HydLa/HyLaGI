@@ -14,6 +14,8 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
+typedef std::set<rp_constraint> ctr_set_t;
+
 class RealPaverVCSPoint : 
     public RealPaverBaseVCS
 {
@@ -22,6 +24,8 @@ public:
   RealPaverVCSPoint();
 
   virtual ~RealPaverVCSPoint();
+
+  virtual RealPaverBaseVCS* clone();
 
   /**
    * §–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
@@ -69,6 +73,11 @@ public:
 private:
   //void send_cs() const;
   //void send_cs_vars() const;
+  bool is_guard_about_undefined_prev(const var_name_map_t& vars,
+    const ctr_set_t& ctrs,
+    const var_name_map_t& p_in_g);
+
+  static void clear_ctr_set(ctr_set_t& ctrs);
 
   ConstraintStore constraint_store_;
   //ConstraintBuilder builder_;

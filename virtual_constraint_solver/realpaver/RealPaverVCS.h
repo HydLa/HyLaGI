@@ -30,6 +30,7 @@ public:
 
   RealPaverVCS(Mode m);
   RealPaverVCS(Mode m, MathLink* ml);
+  RealPaverVCS(const RealPaverVCS& src);
 
   virtual ~RealPaverVCS();
 
@@ -83,6 +84,8 @@ public:
 /******************** realpaver only ********************/
 
 private:
+  virtual RealPaverBaseVCS* clone(); //ÉRÉsÅ[ã÷é~
+
   Mode mode_;
 
   boost::scoped_ptr<RealPaverBaseVCS> vcs_;

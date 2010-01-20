@@ -22,6 +22,8 @@ public:
 
 /******************** realpaver only ********************/
 
+  virtual RealPaverBaseVCS* clone() = 0;
+
   virtual void add_single_constraint(const node_sptr& constraint_node,
     const bool neg_expression) = 0;
 

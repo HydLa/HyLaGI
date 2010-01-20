@@ -73,8 +73,8 @@ public:
   /**
    * Node‚©‚ç®‚ğˆê‚Âì‚é
    */
-  /*rp_constraint build_constraint(boost::shared_ptr<hydla::parse_tree::Node> node,
-    const bool neg_expression=false);*/
+  rp_constraint build_constraint(boost::shared_ptr<hydla::parse_tree::Node> node,
+    const bool neg_expression=false);
 
   rp_constraint build_constraint_from_tell(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
@@ -112,7 +112,8 @@ public:
   void create_guard_expr(boost::shared_ptr<hydla::parse_tree::Ask> node,
     std::set<rp_constraint>& guards,
     std::set<rp_constraint>& not_guards,
-    var_name_map_t& vars);
+    var_name_map_t& vars,
+    var_name_map_t& prevs_in_guards);
 
   // Ask§–ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
@@ -125,12 +126,16 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
+  // •Ï”
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+
   // ˜_—‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
 
 protected:
   std::set<rp_constraint> guards_;
   std::set<rp_constraint> not_guards_;
+  var_name_map_t prevs_in_guards_;
 
 };
 

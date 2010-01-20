@@ -38,8 +38,20 @@ RealPaverVCS::RealPaverVCS(Mode m, MathLink* ml)
   }
 }
 
+RealPaverVCS::RealPaverVCS(const RealPaverVCS& src)
+{
+  mode_ = src.mode_;
+  vcs_.reset(src.vcs_->clone());
+}
+
 RealPaverVCS::~RealPaverVCS()
 {}
+
+RealPaverBaseVCS* RealPaverVCS::clone()
+{
+  assert(false);
+  return NULL;
+}
 
 /**
  * §–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤

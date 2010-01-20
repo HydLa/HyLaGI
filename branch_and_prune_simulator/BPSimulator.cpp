@@ -1,4 +1,5 @@
 #include "BPSimulator.h"
+#include "GuardLister.h"
 //#include "EntailmentChecker.h"
 //#include "ConstraintStore.h"
 //#include "ConstraintStoreInterval.h"
@@ -28,6 +29,8 @@ using namespace hydla::simulator;
 using namespace hydla::parse_tree;
 
 using namespace hydla::vcs::realpaver;
+
+typedef std::set<hydla::parse_tree::node_sptr> node_list_t;
 
 namespace hydla {
 namespace bp_simulator {
@@ -202,35 +205,33 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
         case hydla::vcs::VCSR_UNKNOWN:
           {
             // Ask条件に基づいて分岐
-            // エンテールされる場合
             HYDLA_LOGGER_DEBUG("#*** do_point_phase: BRANCH ***\n");
-            //std::set<rp_constraint> guards, not_guards;
-            var_name_map_t vars;
-            //GuardConstraintBuilder gcb;
-            //gcb.create_guard_expr(*it, guards, not_guards, vars);
-            // TODO: コピーコンストラクタ
-            RealPaverVCS vcs_t(RealPaverVCS::DiscreteMode);
-            vcs_t.add_single_constraint(*it);
-            //ConstraintStore cs_t(constraint_store);
-            //cs_t.add_constraint(guards.begin(), guards.end(), vars);
+            // エンテールされる場合
+            HYDLA_LOGGER_DEBUG("#*** do_point_phase: TRUE CASE ***\n");
+            // Askから式nodeのリストを得る
+            GuardLister lister;
+            node_list_t g_list = lister.get_guard_list(*it);
+            RealPaverVCS vcs_t(vcs);
+            for(node_list_t::iterator nit=g_list.begin(); nit!=g_list.end(); nit++) {
+              // ガード条件をストア(VCS)に加える
+              vcs_t.add_single_constraint(*nit);
+            }
             TellCollector tc_t(tell_collector);
-            positive_asks_t pa_t(positive_asks);
-            pa_t.insert(*it);
+            expanded_always_t ea_t(expanded_always);
+            positive_asks_t pa_t(positive_asks); pa_t.insert(*it);
             negative_asks_t na_t(negative_asks);
-            bool result = true;//this->do_point_phase(ms, state, cs_t, tc_t, pa_t, na_t);
+            bool result = this->do_point_phase(ms, state, vcs_t, tc_t, ea_t, pa_t, na_t);
             // エンテールされない場合
-            //std::set<rp_constraint>::iterator ctr_it;
-            //for(ctr_it=not_guards.begin(); ctr_it!=not_guards.end(); ctr_it++) {
-              RealPaverVCS vcs_f(RealPaverVCS::DiscreteMode);
-              vcs.add_single_constraint(*it, true);
-              //ConstraintStore cs_f(constraint_store);
+            for(node_list_t::iterator nit=g_list.begin(); nit!=g_list.end(); nit++) {
+              HYDLA_LOGGER_DEBUG("#*** do_point_phase: FALSE CASE(S) ***\n");
+              RealPaverVCS vcs_f(vcs);
+              vcs_f.add_single_constraint(*nit, true);
               TellCollector tc_f(tell_collector);
-              //cs_f.add_constraint(*ctr_it, vars);
+              expanded_always_t ea_f(expanded_always);
               positive_asks_t pa_f(positive_asks);
-              negative_asks_t na_f(negative_asks);
-              na_f.insert(*it);
-              //result = this->do_point_phase(ms, state, cs_f, tc_f, pa_f, na_f) || result;
-            //}
+              negative_asks_t na_f(negative_asks); na_f.insert(*it);
+              result = this->do_point_phase(ms, state, vcs_f, tc_f, ea_f, pa_f, na_f) || result;
+            }
             return result;
           }
           assert(false);
@@ -245,13 +246,12 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   new_state->module_set_container = msc_no_init_discreteask_;
   new_state->phase = IntervalPhase;
   // ConstraintStoreからvariable_mapを作成
-  //constraint_store.build_variable_map(new_state->variable_map);
   vcs.create_variable_map(new_state->variable_map);
   //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
   push_phase_state(new_state);
 
   // ここはシミュレーション結果の出力として必要なんじゃない？
-  std::cout << new_state->variable_map;
+  //std::cout << new_state->variable_map;
 
   return true;
 }

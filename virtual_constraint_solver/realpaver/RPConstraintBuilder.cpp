@@ -26,34 +26,38 @@ ConstraintBuilder::~ConstraintBuilder()
 // ”äŠr‰‰Zq
 void ConstraintBuilder::visit(boost::shared_ptr<Equal> node)
 {
-  this->create_ctr_num(node, RP_RELATION_EQUAL);
+  if(!(this->neg_expr_)) this->create_ctr_num(node, RP_RELATION_EQUAL);
+  else                   this->ctr_ = NULL;
 }
 
 void ConstraintBuilder::visit(boost::shared_ptr<UnEqual> node)
 {
-  this->ctr_ = NULL;
+  if(!(this->neg_expr_)) this->ctr_ = NULL;
+  else                   this->create_ctr_num(node, RP_RELATION_EQUAL);
 }
 
 void ConstraintBuilder::visit(boost::shared_ptr<Less> node)
 {
-  //this->create_ctr_num(node, RP_RELATION_INF);
-  this->create_ctr_num(node, RP_RELATION_INFEQUAL);
+  if(!(this->neg_expr_)) this->create_ctr_num(node, RP_RELATION_INFEQUAL);
+  else                   this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
 }
 
 void ConstraintBuilder::visit(boost::shared_ptr<LessEqual> node)
 {
-  this->create_ctr_num(node, RP_RELATION_INFEQUAL);
+  if(!(this->neg_expr_)) this->create_ctr_num(node, RP_RELATION_INFEQUAL);
+  else                   this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
 }
 
 void ConstraintBuilder::visit(boost::shared_ptr<Greater> node)
 {
-  //this->create_ctr_num(node, RP_RELATION_SUP);
-  this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
+  if(!(this->neg_expr_)) this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
+  else                   this->create_ctr_num(node, RP_RELATION_INFEQUAL);
 }
 
 void ConstraintBuilder::visit(boost::shared_ptr<GreaterEqual> node)
 {
-  this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
+  if(!(this->neg_expr_)) this->create_ctr_num(node, RP_RELATION_SUPEQUAL);
+  else                   this->create_ctr_num(node, RP_RELATION_INFEQUAL);
 }
   
 // Zp“ñ€‰‰Zq
@@ -111,7 +115,7 @@ void ConstraintBuilder::visit(boost::shared_ptr<Variable> node)
 {
   typedef var_name_map_t::value_type vars_type_t;
 
-  // •Ï”•\‚É“o˜^ ‚¢‚¸‚ê•ÏXcH
+  // •Ï”•\‚É“o˜^
   std::string name(node->get_name());
   unsigned int size = this->vars_.size();
   for(unsigned int i=0; i< this->derivative_count_; i++) name += BP_DERIV_STR;
@@ -146,6 +150,25 @@ void ConstraintBuilder::reset()
 void ConstraintBuilder::set_vars(const var_name_map_t vars)
 {
   this->vars_.insert(vars.begin(), vars.end());
+}
+
+/**
+ * Node‚©‚ç®‚ğˆê‚Âì‚é
+ */
+rp_constraint ConstraintBuilder::build_constraint(boost::shared_ptr<Node> node,
+                                                  const bool neg_expression)
+{
+  this->derivative_count_ = 0;
+  this->in_prev_ = false;
+  this->neg_expr_ = neg_expression;
+  rp_constraint c;
+  this->accept(node);
+  if(this->ctr_) {
+    rp_constraint_create_num(&c, this->ctr_);
+  } else {
+    c = NULL;
+  }
+  return c;
 }
 
 /**
@@ -325,6 +348,22 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<GreaterEqual> node)
   this->ctr_ = NULL;
 }
 
+void GuardConstraintBuilder::visit(boost::shared_ptr<Variable> node)
+{
+  typedef var_name_map_t::value_type vars_type_t;
+
+  ConstraintBuilder::visit(node);
+  // prev•Ï”‚Ìê‡‚Í“Á•Ê‚É•Û
+  if(this->in_prev_) {
+    std::string name(node->get_name());
+    for(unsigned int i=0; i< this->derivative_count_; i++) name += BP_DERIV_STR;
+    if(this->in_prev_) name += BP_PREV_STR;
+    var_name_map_t::left_iterator item = this->vars_.left.find(name);
+    assert(item != this->vars_.left.end());
+    this->prevs_in_guards_.insert(vars_type_t(item->first, item->second, item->info));
+  }
+}
+
 void GuardConstraintBuilder::visit(boost::shared_ptr<LogicalAnd> node)
 {
   this->accept(node->get_lhs());
@@ -334,12 +373,14 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<LogicalAnd> node)
 void GuardConstraintBuilder::create_guard_expr(boost::shared_ptr<Ask> node,
                                                std::set<rp_constraint>& guards,
                                                std::set<rp_constraint>& not_guards,
-                                               var_name_map_t& vars)
+                                               var_name_map_t& vars,
+                                               var_name_map_t& prevs_in_guards)
 {
   this->accept(node);
   guards.insert(this->guards_.begin(), this->guards_.end());
   not_guards.insert(this->not_guards_.begin(), this->not_guards_.end());
   vars.insert(this->vars_.begin(), this->vars_.end());
+  prevs_in_guards.insert(this->prevs_in_guards_.begin(), this->prevs_in_guards_.end());
 }
 
 } // namespace realpaver

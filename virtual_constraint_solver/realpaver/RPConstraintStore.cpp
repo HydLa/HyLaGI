@@ -20,12 +20,20 @@ ConstraintStore::ConstraintStore(const ConstraintStore& src)
 
 ConstraintStore::~ConstraintStore()
 {
+  this->exprs_.erase(static_cast<rp_constraint>(NULL));
   std::set<rp_constraint>::iterator it = this->exprs_.begin();
   while(it != this->exprs_.end()) {
     rp_constraint c = *it;
     rp_constraint_destroy(&c);
     this->exprs_.erase(it++);
   }
+}
+
+ConstraintStore& ConstraintStore::operator =(const ConstraintStore &src)
+{
+  this->exprs_ = src.get_store_exprs_copy();
+  this->vars_ = src.vars_;
+  return *this;
 }
 
 /**
