@@ -237,10 +237,10 @@ getVariableName[Derivative[n_][f_]] := f;
 getDerivativeCount[variable_] := 0;
 getDerivativeCount[Derivative[n_][f_]] := n;
 
-createIntegratedValue[variable_, integRule_] := (
-  (variable /. (integRule /. x_[t] -> x)
-            /. Derivative[n_][f_] :> D[f, {t, n}]
-            /. t -> tmpMinT) // Simplify // FullForm
+createIntegratedValue[variable_, integRule_, time_] := (
+  (variable /. Derivative[n_][f_] :> D[f, {t, n}]
+            /. (integRule /. x_[t] -> x)
+            /. t -> time) // Simplify // FullForm
 );
 
 integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := Block[
@@ -267,7 +267,7 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := Block[
   tmpPrevConsTable = 
     Map[({getVariableName[#], 
           getDerivativeCount[#], 
-          ToString[createIntegratedValue[#, tmpIntegSol]]})&, 
+          ToString[createIntegratedValue[#, tmpIntegSol, tmpMinT]]})&, 
         vars /. x_[t] -> x];
   tmpRet = {ToString[tmpMinT, InputForm], 
             tmpPrevConsTable, 
@@ -276,6 +276,24 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := Block[
   debugPrint["ret:", tmpRet];
   tmpRet
 ];
+
+integ[cons_, vars_] := Block[
+{tmpIntegSol},
+  tmpIntegSol = First[DSolve[Reduce[cons, vars], vars, t]];
+    Map[({getVariableName[#], 
+          getDerivativeCount[#], 
+          ToString[createIntegratedValue[#, tmpIntegSol, t]]})&, 
+        vars /. x_[t] -> x]
+];
+
+(* Print["integ:", integ[{x'[t]==2, x[0]==a}, {x[t], x'[t]}]] *)
+
+Print[integrateCalc[
+{True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10},
+{}, 
+{{usrVarht[t] == 0, 73}}, 
+{usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t], Derivative[2][usrVarv][t]},
+4]];
 
 (* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
 (*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)
