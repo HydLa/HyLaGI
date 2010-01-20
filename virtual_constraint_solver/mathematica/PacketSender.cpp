@@ -17,11 +17,9 @@ const std::string PacketSender::var_prefix("usrVar");
 /**
  * 式(ノード)をMathematicaへ送信するクラス．
  * @param ml Mathlinkインスタンスの参照
- * @param phase {NP_POINT_PHASE | NP_INTERVAL_PHASE} 使用する際のフェーズ
  */
-PacketSender::PacketSender(MathLink& ml, now_phase_t phase) :
+PacketSender::PacketSender(MathLink& ml) :
   ml_(ml),
-  phase_(phase),
   differential_count_(0),
   in_prev_(false)
 {}
@@ -189,18 +187,11 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
 {
   // 変数の送信
   var_info_t new_var = 
-    boost::make_tuple(node->get_name(), differential_count_, in_prev_);
+    boost::make_tuple(node->get_name(), 
+                      differential_count_, 
+                      in_prev_ && !ignore_prev_);
 
-  if(phase_==NP_INTERVAL_PHASE) {
-    // 変数名の最後に[t]をつける
-    ml_.MLPutNext(MLTKFUNC);
-    ml_.MLPutArgCount(1);
-    put_var(new_var);
-    ml_.put_symbol("t");
-  }
-  else {
-    put_var(new_var);
-  }
+  put_var(new_var, variable_arg_);
 
   // putした変数の情報を保持
   vars_.insert(new_var);
@@ -213,7 +204,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
   ml_.MLPutInteger(atoi(node->get_number().c_str()));
 }
 
-void PacketSender::put_var(const var_info_t var)
+void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
 {
   std::string name(PacketSender::var_prefix + var.get<0>());
   int diff_count = var.get<1>();
@@ -225,11 +216,11 @@ void PacketSender::put_var(const var_info_t var)
     "  diff_count: ", diff_count,
     "  prev: ", prev);
   
-//   // 変数名の最後に必ず[t]がつく分
-//   if(phase_==NP_INTERVAL_PHASE) {
-//     ml_.MLPutNext(MLTKFUNC);
-//     ml_.MLPutArgCount(1);
-//   }
+  // 変数名の最後に必ず[t]がつく分
+  if(variable_arg != VA_None) {
+    ml_.MLPutNext(MLTKFUNC);
+    ml_.MLPutArgCount(1);
+  }
 
   // 変数のput
   if(diff_count > 0){
@@ -243,7 +234,7 @@ void PacketSender::put_var(const var_info_t var)
   }
    
   // prev変数として送るかどうか
-  if(prev && phase_==NP_POINT_PHASE) {
+  if(prev /* && phase_==NP_POINT_PHASE */) {
     ml_.put_function("prev", 1);
     ml_.put_symbol(name);
   }
@@ -251,10 +242,22 @@ void PacketSender::put_var(const var_info_t var)
     ml_.put_symbol(name);
   }
 
-//   // [t]の分
-//   if(this->phase_==NP_INTERVAL_PHASE) {
-//     ml_.put_symbol("t");
-//   }
+  switch(variable_arg) {
+    case VA_None:
+      // do nothing
+      break;
+      
+    case VA_Time:
+      ml_.put_symbol("t");
+      break;
+
+    case VA_Zero:
+      ml_.put_integer(0);
+      break;
+      
+    default:
+      assert(0);
+  }
 }
 
 
@@ -262,10 +265,14 @@ void PacketSender::put_var(const var_info_t var)
  * ある式(ノード)をputする
  * @param node putしたい式(ノード)
  */
-void PacketSender::put_node(const node_sptr& node)
+void PacketSender::put_node(const node_sptr& node, 
+                            VariableArg variable_arg, 
+                            bool ignore_prev)
 {
   differential_count_ = 0;
   in_prev_ = false;
+  variable_arg_ = variable_arg;
+  ignore_prev_ = ignore_prev;
 
   accept(node);
 }
@@ -273,7 +280,8 @@ void PacketSender::put_node(const node_sptr& node)
 /**
  * 変数の一覧を送信
  */
-void PacketSender::put_vars()
+void PacketSender::put_vars(VariableArg variable_arg, 
+                            bool ignore_prev)
 {
   HYDLA_LOGGER_DEBUG(
     "---- PacketSender::put_vars ----\n",
@@ -283,19 +291,12 @@ void PacketSender::put_vars()
 
   PacketSender::vars_const_iterator it  = vars_begin();
   PacketSender::vars_const_iterator end = vars_end();
-  if(phase_==NP_INTERVAL_PHASE) {
-    // 変数名の最後に[t]をつける
-    for(; it!=end; ++it) {
-      ml_.MLPutNext(MLTKFUNC);
-      ml_.MLPutArgCount(1);
-      put_var(*it);
-      ml_.put_symbol("t");
-    }
-  }
-  else {
-    for(; it!=end; ++it) {
-      put_var(*it);
-    }
+  for(; it!=end; ++it) {
+    put_var(boost::make_tuple(
+              it->get<0>(),
+              it->get<1>(),
+              it->get<2>() && !ignore_prev), 
+            variable_arg);
   }
 }
 

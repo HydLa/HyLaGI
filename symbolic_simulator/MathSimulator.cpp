@@ -215,6 +215,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
         break;
       case VCSR_SOLVER_ERROR:
         // TODO: 例外とかなげたり、BPシミュレータに移行したり
+        assert(0);
         break;
     }
 
@@ -308,6 +309,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
         break;
       case VCSR_SOLVER_ERROR:
         // TODO: 例外とかなげたり、BPシミュレータに移行したり
+        assert(0);
         break;
     }
 
@@ -337,6 +339,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
             break;
           case VCSR_SOLVER_ERROR:
             // TODO: 例外とかなげたり、BPシミュレータに移行したり
+            assert(0);
             break;
         }
       }

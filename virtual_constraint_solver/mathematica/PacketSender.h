@@ -26,6 +26,12 @@ public:
     NP_INTERVAL_PHASE,
   };
 
+  enum VariableArg {
+    VA_None,
+    VA_Time,
+    VA_Zero,
+  };
+
   /**
    * 変数データ
    * (変数名， 微分回数,  prev変数かどうか)
@@ -39,7 +45,7 @@ public:
   // Mathematicaに送る際に変数名につける接頭語 "usrVar"
   static const std::string var_prefix;
 
-  PacketSender(MathLink& ml, now_phase_t phase);
+  PacketSender(MathLink& ml);
 
   virtual ~PacketSender();
 
@@ -53,22 +59,23 @@ public:
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  void put_node(const node_sptr& node);
+  void put_node(const node_sptr& node, VariableArg variable_arg, bool ignore_prev = false);
+
+  /**
+   * 変数の送信
+   */
+  void put_var(const var_info_t var, VariableArg variable_arg);
 
   /**
    * put_nodeの際に送信された変数群の送信をおこなう
    */
-  void put_vars();
+  void put_vars(VariableArg variable_arg, bool ignore_prev = false);
+
 
   /**
    * put_nodeの際に送信された変数群のデータを消去し，初期化する
    */
   void clear();
-
-  /**
-   * 変数の送信
-   */
-  void put_var(const var_info_t var);
 
 
   // Ask制約
@@ -123,95 +130,15 @@ private:
   /// Prevノードの下にいるかどうか
   bool in_prev_;
 
-  now_phase_t phase_; // 現在のフェーズ
+  /// 変数の引数として送る物
+  VariableArg variable_arg_;
+
+  // prev制約を無視するかどうか
+  bool ignore_prev_;
 };
 
 } // namespace mathematica
 } // namespace simulator
 } // namespace hydla 
 
-//#include "Node.h"
-//#include "TreeVisitor.h"
-//#include "mathlink_helper.h"
-//#include "ParseTree.h"
-//#include <map>
-//#include "ConstraintStoreBuilderPoint.h"
-//
-//
-//namespace hydla {
-//namespace symbolic_simulator {
-//
-//class PacketSender : public parse_tree::TreeVisitor
-//{
-//public:
-//
-//  PacketSender(MathLink& ml, bool debug_mode);
-//
-//  virtual ~PacketSender();
-//
-//  void put_vars();
-//
-//  void put_cs(ConstraintStore constraint_store);
-//
-//  void put_cs_vars(ConstraintStore constraint_store);
-//
-//  // Ask制約
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
-//
-//  // Tell制約
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
-//
-//  // 比較演算子
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
-//
-//  // 論理演算子
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
-//
-//  // 算術二項演算子
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
-//
-//  // 算術単項演算子
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
-//
-//  // 微分
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
-//
-//  // 左極限
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
-//  
-//  // 変数
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
-//
-//  // 数字
-//  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
-//
-//
-//private:
-//  MathLink& ml_;
-//  std::set<std::pair<std::string, int> > vars_;
-//  std::string vars_str_;
-//  /// Differentialノードを何回通ったか
-//  int differential_count_;
-//  /// Prevノードの下にいるかどうか
-//  // （通常変数なら1、prev変数だと-1などにするか？）
-//  bool in_prev_;
-//  /// デバッグ出力をするかどうか
-//  bool debug_mode_;
-//
-//};
-//
-//} //namespace symbolic_simulator
-//} // namespace hydla
-
-#endif //_INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
-
+#endif // _INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_

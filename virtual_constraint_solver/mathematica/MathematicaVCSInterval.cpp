@@ -119,7 +119,7 @@ void MathematicaVCSInterval::send_init_cons(
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
-    if(md_it==max_diff_map.end() ||
+    if(md_it!=max_diff_map.end() &&
        md_it->second  > init_vars_it->first.derivative_count) 
     {
       init_vars_count++;
@@ -135,19 +135,17 @@ void MathematicaVCSInterval::send_init_cons(
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
-    if(md_it==max_diff_map.end() ||
+    if(md_it!=max_diff_map.end() &&
        md_it->second  > init_vars_it->first.derivative_count) 
     {
       ml_->put_function("Equal", 2);
 
       // •Ï”–¼
-      ml_->MLPutNext(MLTKFUNC);
-      ml_->MLPutArgCount(1);
       ps.put_var(
         boost::make_tuple(init_vars_it->first.name, 
                           init_vars_it->first.derivative_count, 
-                          false));
-      ml_->put_integer(0);
+                          false),
+        PacketSender::VA_Zero);
 
       // ’l
       ml_->put_function("ToExpression", 1);
@@ -177,10 +175,8 @@ void MathematicaVCSInterval::send_vars(
   ml_->put_function("List", vars_count);
   for(it=max_diff_map.begin(); it!=end; ++it) {
     for(int i=0; i<=it->second; i++) {
-      ml_->MLPutNext(MLTKFUNC);
-      ml_->MLPutArgCount(1);
-      ps.put_var(boost::make_tuple(it->first, i, false));
-      ml_->put_symbol("t");
+      ps.put_var(boost::make_tuple(it->first, i, false), 
+                 PacketSender::VA_Time);
 
       HYDLA_LOGGER_DEBUG("put: ", 
                          "  name: ", it->first,
@@ -193,7 +189,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
 {
   HYDLA_LOGGER_DEBUG("#*** Begin MathematicaVCSInterval::add_constraint ***");
 
-  PacketSender ps(*ml_, PacketSender::NP_INTERVAL_PHASE);
+  PacketSender ps(*ml_);
 
   // isConsistentInterval[expr, vars]‚ð“n‚µ‚½‚¢
   ml_->put_function("isConsistentInterval", 2);
@@ -205,7 +201,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; (tells_it) != tells_end; ++tells_it) {
-    ps.put_node((*tells_it)->get_child());
+    ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time, true);
   }
 
   // §–ñƒXƒgƒAconstraints‚ðMathematica‚É“n‚·
@@ -281,19 +277,39 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
     "#*** MathematicaVCSInterval::check_entailment ***\n", 
     "ask: ", *negative_ask);
 
-  PacketSender ps(*ml_, PacketSender::NP_INTERVAL_PHASE);
+  PacketSender ps(*ml_);
 
   // checkEntailment[guard, store, vars]‚ð“n‚µ‚½‚¢
   ml_->put_function("checkEntailment", 3);
 
   // ask§–ñ‚ÌƒK[ƒh‚ÌŽ®‚ð“¾‚ÄMathematica‚É“n‚·
-  ps.put_node(negative_ask->get_guard());
+  ps.put_node(negative_ask->get_guard(), PacketSender::VA_Zero, true);
 
   // §–ñƒXƒgƒAconstraints‚ðMathematica‚É“n‚·
-  send_cs(ps);
+  ml_->put_function("List", constraint_store_.init_vars.size());
+  constraint_store_t::init_vars_t::const_iterator 
+    init_vars_it = constraint_store_.init_vars.begin();
+  constraint_store_t::init_vars_t::const_iterator 
+    init_vars_end = constraint_store_.init_vars.end();
+  for(; init_vars_it!=init_vars_end; ++init_vars_it) {
+    ml_->put_function("Equal", 2);
+
+    // •Ï”–¼
+    ps.put_var(
+      boost::make_tuple(init_vars_it->first.name, 
+                        init_vars_it->first.derivative_count, 
+                        false),
+      PacketSender::VA_Zero);
+
+    // ’l
+    ml_->put_function("ToExpression", 1);
+    ml_->put_string(init_vars_it->second.str);      
+  }
+
+  
 
   // vars‚ð“n‚·
-  ps.put_vars();
+  ps.put_vars(PacketSender::VA_Zero, true);
 
   ml_->MLEndPacket();
 
@@ -329,7 +345,7 @@ void MathematicaVCSInterval::send_ask_guards(
     ml_->put_function("List", 2);    
 
     // guardðŒ‚ð‘—‚é
-    ps.put_node((*it)->get_guard());
+    ps.put_node((*it)->get_guard(), PacketSender::VA_Time, true);
 
     // ID‚ð‘—‚é
     ml_->MLPutInteger((*it)->get_id());
@@ -359,7 +375,7 @@ bool MathematicaVCSInterval::integrate(
 //     max_time);
 
 ////////////////// ‘—Mˆ—
-  PacketSender ps(*ml_, PacketSender::NP_INTERVAL_PHASE);
+  PacketSender ps(*ml_);
   
   // integrateCalc[store, posAsk, negAsk, vars, maxTime]‚ð“n‚µ‚½‚¢
   ml_->put_function("integrateCalc", 5);
@@ -394,18 +410,12 @@ bool MathematicaVCSInterval::integrate(
   HYDLA_LOGGER_DEBUG("send time:", send_time);
   send_time.send_time(*ml_);
 
-//   PacketChecker pc(*ml_);
-//   pc.check();
 
 ////////////////// ŽóMˆ—
 
-  HYDLA_LOGGER_DEBUG("-- math debug print -- \n");  
-
-  ml_->skip_pkt_until(TEXTPKT);
-  
-  while(ml_->MLGetType() == 34) {
-    std::cout << ml_->get_string() << "\n";
-  }
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -414,12 +424,18 @@ bool MathematicaVCSInterval::integrate(
   virtual_constraint_solver_t::IntegrateResult::NextPhaseState& state = 
     integrate_result.states.back();
 
-
-  std::cout << ml_->MLGetNext() << std::endl; // ListŠÖ”
-  int list_size = ml_->get_arg_count();
-  HYDLA_LOGGER_DEBUG("list_size : ", list_size);
+//   PacketChecker pc(*ml_);
+//   pc.check2();
   
+//   while(ml_->MLGetType() != MLTKINT) {
+//     int pkt = ml_->MLGetNext();
+//     HYDLA_LOGGER_DEBUG("skip:", pkt);
+//   }
+//   int list_size = ml_->get_arg_count();
+//   HYDLA_LOGGER_DEBUG("list_size : ", list_size);
+    
   // List[§–ñˆê——, •Ï‰»‚µ‚½ask‚Æ‚»‚ÌID‚Ì‘g‚Ìˆê——]‚ª•Ô‚é
+  ml_->MLGetNext(); 
   ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
   ml_->MLGetNext(); // List‚Ì’†‚Ìæ“ª—v‘f
 
@@ -468,9 +484,6 @@ bool MathematicaVCSInterval::integrate(
   // ask‚Æ‚»‚ÌID‚Ì‘gˆê——‚ð“¾‚é
   int changed_asks_size = ml_->get_arg_count();
   HYDLA_LOGGER_DEBUG("changed_asks_size : ", changed_asks_size);
-  state.is_max_time = changed_asks_size == 0; // •Ï‰»‚µ‚½ask‚ª‚È‚¢ê‡‚Ímax_time‚É’B‚µ‚½ê‡‚Å‚ ‚é
-  HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
-
   if(changed_asks_size>0) {
     ml_->MLGetNext(); // ListŠÖ”
     ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
@@ -481,6 +494,7 @@ bool MathematicaVCSInterval::integrate(
 
     ml_->MLGetNext(); // ListŠÖ”
     ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
+
     std::string changed_ask_type_str = ml_->get_symbol(); // pos2neg‚Ü‚½‚Íneg2pos
     HYDLA_LOGGER_DEBUG("changed_ask_type_str : ", changed_ask_type_str);
 
@@ -501,6 +515,17 @@ bool MathematicaVCSInterval::integrate(
     integrate_result.changed_asks.push_back(
       std::make_pair(changed_ask_type, changed_ask_id));
   }
+
+  // max time‚©‚Ç‚¤‚©
+  HYDLA_LOGGER_DEBUG("-- receive max time --");
+//   PacketChecker c(*ml_);
+//   c.check2();
+  if(changed_asks_size==0) {
+    ml_->MLGetNext();  
+    ml_->MLGetNext();  
+  }
+  state.is_max_time = ml_->get_integer() == 1;
+  HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
 
 //   HYDLA_LOGGER_DEBUG(
 //     "--- integrate result ---\n", 
@@ -523,7 +548,7 @@ void MathematicaVCSInterval::send_cs(PacketSender& ps) const
   constraint_store_t::constraints_t::const_iterator 
     cons_end = constraint_store_.constraints.end();
   for(; (cons_it) != cons_end; ++cons_it) {
-    ps.put_node((*cons_it)->get_child());
+    ps.put_node((*cons_it)->get_child(), PacketSender::VA_Time, true);
   }
 }
 

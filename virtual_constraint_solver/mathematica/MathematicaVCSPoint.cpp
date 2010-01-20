@@ -188,7 +188,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   HYDLA_LOGGER_DEBUG(
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
 
-  PacketSender ps(*ml_, PacketSender::NP_POINT_PHASE);
+  PacketSender ps(*ml_);
 
 
 /////////////////// ‘—Mˆ—
@@ -204,7 +204,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; tells_it!=tells_end; ++tells_it) {
-    ps.put_node((*tells_it)->get_child());
+    ps.put_node((*tells_it)->get_child(), PacketSender::VA_None);
   }
 
   // §–ñƒXƒgƒA‚©‚ç‚àexpr‚ð“¾‚ÄMathematica‚É“n‚·
@@ -212,7 +212,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
   // vars‚ð“n‚·
   ml_->put_function("Join", 2);
-  ps.put_vars();
+  ps.put_vars(PacketSender::VA_None);
   // §–ñƒXƒgƒA“à‚ÉoŒ»‚·‚é•Ï”‚à“n‚·
   send_cs_vars();
 
@@ -313,15 +313,15 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
 
 
   // ask§–ñ‚ÌƒK[ƒh‚ÌŽ®‚ð“¾‚ÄMathematica‚É“n‚·
-  PacketSender ps(*ml_, PacketSender::NP_POINT_PHASE);
-  ps.put_node(negative_ask->get_guard());
+  PacketSender ps(*ml_);
+  ps.put_node(negative_ask->get_guard(), PacketSender::VA_None);
 
   // §–ñƒXƒgƒA‚©‚çŽ®‚ð“¾‚ÄMathematica‚É“n‚·
   send_cs();
 
   // vars‚ð“n‚·
   ml_->put_function("Join", 2);
-  ps.put_vars();
+  ps.put_vars(PacketSender::VA_None);
   // §–ñƒXƒgƒA“à‚ÉoŒ»‚·‚é•Ï”‚à“n‚·
   send_cs_vars();
 
@@ -403,7 +403,7 @@ void MathematicaVCSPoint::send_cs_vars() const
     "---- Send Constraint Store Vars -----\n",
     "vars_size: ", vars_size);
 
-  PacketSender ps(*ml_, PacketSender::NP_POINT_PHASE);
+  PacketSender ps(*ml_);
   
   ml_->put_function("List", vars_size);
 
@@ -412,7 +412,7 @@ void MathematicaVCSPoint::send_cs_vars() const
   constraint_store_vars_t::const_iterator end = 
     constraint_store_.second.end();
   for(; it!=end; ++it) {
-    ps.put_var(*it);
+    ps.put_var(*it, PacketSender::VA_None);
   }
 }
 

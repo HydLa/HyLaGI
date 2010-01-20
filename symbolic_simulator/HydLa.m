@@ -163,7 +163,7 @@ isConsistentInterval[expr_, vars_] := Block[
 {sol},
   debugPrint["expr:", expr, "vars:", vars];
 
-  sol = exDSolve[Cases[expr, Except[True]], vars];
+  sol = exDSolve[Reduce[expr, vars], vars];
   Which[
     Head[sol] === DSolve,
       2,
@@ -250,7 +250,7 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
              "vars:", vars, 
              "maxTime:", maxTime];
 
-  tmpIntegSol = First[DSolve[Cases[cons, Except[True]], vars, t]];
+  tmpIntegSol = First[DSolve[Reduce[cons, vars], vars, t]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
   {tmpMinT, tmpMinAskIDs} = 
@@ -260,13 +260,8 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := (
           getDerivativeCount[#], 
           ToString[createIntegratedValue[#, tmpIntegSol]]})&, 
         vars /. x_[t] -> x];
-  {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs}
+  {ToString[tmpMinT], tmpPrevConsTable, tmpMinAskIDs, If[tmpMinT>=maxTime, 1, 0]}
 );
-
-Print[integrateCalc[{True, Derivative[1][usrVarht][t] == usrVarv[t], Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0},
-{}, {{usrVarht[t] == 0, 26}},
-{usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]},
-10]]
 
 (* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
 (*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)
