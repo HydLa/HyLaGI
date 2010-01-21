@@ -18,6 +18,10 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
+const std::string var_prefix("usrVar");
+const std::string prev_prefix("prevVar");
+const std::string init_prefix("initValue");
+
 struct var_property {
 public:
   var_property(int c, bool p) : derivative_count(c), prev_flag(p) {} 

@@ -5,6 +5,8 @@
 #include "rp_constraint_ext.h"
 #include "RPConstraintSolver.h"
 
+#include <boost/lexical_cast.hpp>
+
 namespace hydla {
 namespace vcs {
 namespace realpaver {
@@ -28,11 +30,16 @@ void ConstraintStoreInterval::build(const virtual_constraint_solver_t::variable_
   typedef var_name_map_t::value_type vars_type_t;
   virtual_constraint_solver_t::variable_map_t::const_iterator it;
   for(it=variable_map.begin(); it!=variable_map.end(); it++) {
-    // •Ï”–¼‚ðì‚é
-    std::string name(it->first.name);
-    for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
-    std::string ini_name(name);
-    ini_name += BP_INITIAL_STR;
+    // •Ï”–¼‚ðì‚é ex. "usrVar0ht" "initValue0ht"
+    std::string name(var_prefix);
+    //std::string name(it->first.name);
+    name += boost::lexical_cast<std::string>(it->first.derivative_count);
+    name += it->first.name;
+    //for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
+    std::string ini_name(init_prefix);
+    ini_name += boost::lexical_cast<std::string>(it->first.derivative_count);
+    ini_name += it->first.name;
+    //ini_name += BP_INITIAL_STR;
     // •\‚É“o˜^
     unsigned int size = this->vars_.size();
     var_property vp(it->first.derivative_count, false),
