@@ -47,7 +47,7 @@ public:
   /**
    * •‚“®¬”“_Œ`®‚Ì’l‚ğæ“¾‚·‚é
    */
-  std::string get_real_val(MathLink& ml, int precision);
+  std::string get_real_val(MathLink& ml, int precision) const;
 
   /**
    * MathTime“¯m‚Ì‰ÁZ

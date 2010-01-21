@@ -12,6 +12,15 @@ namespace realpaver {
  */
 struct RPTime
 {
+  RPTime()
+  {}
+
+  /**
+   * —^‚¦‚ç‚ê‚½•¶š—ñ‚ğŒ³‚Éì¬
+   */
+  RPTime(std::string str)
+  {}
+
   /* ƒ_ƒ“ƒv */
   std::ostream& dump(std::ostream& s) const
   {

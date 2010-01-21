@@ -5,7 +5,9 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "mathlink_helper.h"
+#include "PacketErrorHandler.h"
 #include "Logger.h"
+#include "PacketChecker.h"
 
 using namespace hydla::vcs;
 
@@ -234,69 +236,62 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
   ml_->skip_pkt_until(RETURNPKT);
 
-  // 結果を受け取る前に制約ストアを初期化
-//  reset();
-
   ml_->MLGetNext();
   ml_->MLGetNext();
   ml_->MLGetNext();
-
-  int ret = ml_->get_integer();
-  HYDLA_LOGGER_DEBUG("ret: ", ret);
-  switch(ret) 
-  {
-    case 0: {
-      // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
-      // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
-      // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
-      // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
-      // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
-      HYDLA_LOGGER_DEBUG( "---build constraint store---");
-      ml_->MLGetNext();
-
-      // List関数の要素数（Orで結ばれた解の個数）を得る
-      int or_size = ml_->get_arg_count();
-      HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
-      ml_->MLGetNext(); // Listという関数名
-
-      for(int i=0; i<or_size; i++)
-      {
-        ml_->MLGetNext(); // List関数（Andで結ばれた解を表している）
-
-        // List関数の要素数（Andで結ばれた解の個数）を得る
-        int and_size = ml_->get_arg_count();
-        HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
-        ml_->MLGetNext(); // Listという関数名
-        ml_->MLGetNext(); // Listの中の先頭要素
-
-        std::set<MathValue> value_set;    
-        for(int j=0; j<and_size; j++)
-        {
-          std::string str = ml_->get_string();
-          MathValue math_value;
-          math_value.str = str;
-          value_set.insert(math_value);
-        }
-        constraint_store_.first.insert(value_set);
-      }
-      
-      constraint_store_.second.insert(ps.vars_begin(), ps.vars_end());
-      break;
-    }
-    
-    case 1:
-      HYDLA_LOGGER_DEBUG("inconsistent");
-      ml_->MLNewPacket();
-      return VCSR_FALSE;
-    
-    case 2:
-      HYDLA_LOGGER_DEBUG("cannot solve");
-      ml_->MLNewPacket();
-      return VCSR_SOLVER_ERROR;
-
-    default:
-      assert(0);
+  
+  VCSResult result;
+  int ret_code = ml_->get_integer();
+  if(PacketErrorHandler::handle(ml_, ret_code)) {
+    result = VCSR_SOLVER_ERROR;
   }
+  else if(ret_code==1) {
+    // 充足
+    result = VCSR_TRUE;
+    HYDLA_LOGGER_DEBUG("consistent");
+    // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
+    // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
+    // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
+    // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
+    // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
+    HYDLA_LOGGER_DEBUG( "---build constraint store---");
+    ml_->MLGetNext();
+
+    // List関数の要素数（Orで結ばれた解の個数）を得る
+    int or_size = ml_->get_arg_count();
+    HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
+    ml_->MLGetNext(); // Listという関数名
+
+    for(int i=0; i<or_size; i++)
+    {
+      ml_->MLGetNext(); // List関数（Andで結ばれた解を表している）
+
+      // List関数の要素数（Andで結ばれた解の個数）を得る
+      int and_size = ml_->get_arg_count();
+      HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
+      ml_->MLGetNext(); // Listという関数名
+      ml_->MLGetNext(); // Listの中の先頭要素
+
+      std::set<MathValue> value_set;    
+      for(int j=0; j<and_size; j++)
+      {
+        std::string str = ml_->get_string();
+        MathValue math_value;
+        math_value.str = str;
+        value_set.insert(math_value);
+      }
+      constraint_store_.first.insert(value_set);
+    }
+
+    constraint_store_.second.insert(ps.vars_begin(), ps.vars_end());
+  }
+  else {
+    assert(ret_code==2);
+    result = VCSR_FALSE;
+    HYDLA_LOGGER_DEBUG("inconsistent");
+  }
+
+  return result;
 
   HYDLA_LOGGER_DEBUG(
     *this,
@@ -333,26 +328,31 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
+////////// 受信処理
+
+//   PacketChecker pc(*ml_);
+//   pc.check();
+
   ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLGetNext();
+  ml_->MLGetNext();
+  ml_->MLGetNext();
   
-  // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
-  VCSResult ret;
-  switch(ml_->get_integer())
-  {
-    case 0:
-      ret = VCSR_FALSE;
-      HYDLA_LOGGER_DEBUG("not entailed");
-      break;
-
-    case 1:
-      ret = VCSR_TRUE;
-      HYDLA_LOGGER_DEBUG("entailed");
-      break;
-
-    default:
-      assert(0);
+  VCSResult result;
+  int ret_code = ml_->get_integer();
+  if(PacketErrorHandler::handle(ml_, ret_code)) {
+    result = VCSR_SOLVER_ERROR;
   }
-  return ret;
+  else if(ret_code==1) {
+    result = VCSR_TRUE;
+    HYDLA_LOGGER_DEBUG("entailed");
+  }
+  else {
+    assert(ret_code==2);
+    result = VCSR_FALSE;
+    HYDLA_LOGGER_DEBUG("not entailed");
+  }
+  return result;
 }
 
 VCSResult MathematicaVCSPoint::integrate(

@@ -7,18 +7,24 @@ If[optUseDebugPrint,
 
 (*
  * ある1つのask制約に関して、そのガードが制約ストアからentailできるかどうかをチェック
+ *  0 : Solver Error
+ *  1 : 導出可能
+ *  2 : 導出不可能
  *)
-checkEntailment[guard_, store_, vars_] := Block[
+checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 {sol},
   debugPrint["guard:", guard, "store:", store, "vars:", vars];
 
   sol = Reduce[Append[store, guard], vars, Reals];
   If[sol=!=False, 
       If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
-          1, 
-          0],
-      0]
-];
+          {1}, 
+          {2}],
+      {2}]
+],
+  {0, $MessageList}
+]];
+
 
 (* Print[checkEntailment[ht==0, {}, {ht}]] *)
 
@@ -72,29 +78,32 @@ createVariableList[True, vars_, result_] := (
  * 得られた解を用いて、各変数に関して{変数名, 値}　という形式で表したリストを返す
  *
  * 戻り値のリストの先頭：
- *  0 : 充足
- *  1 : 制約エラー
- *  2 : Mathematicaでは解けない
+ *  0 : Solver Error
+ *  1 : 充足
+ *  2 : 制約エラー
  *)
-isConsistent[expr_, vars_] := (
+isConsistent[expr_, vars_] := Quiet[Check[Block[
+{
+  sol
+},
   debugPrint["expr:", expr, "vars:", vars];
   sol = Reduce[expr, vars];
-  Which[
-    Head[sol] === Reduce,
-      {2},
-    sol =!= False,  
+  If[sol =!= False,
+      (* true *)
       (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
       sol = LogicalExpand[sol];
       sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
       (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
       sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
       (* 一番内側の要素 （レベル2）を文字列にする *)
-      {0, Map[(ToString[FullForm[#]]) &, sol, {2}]},
-    sol === False, 
-      {1},
-    True,
-      {2}] 
-);
+      {1, Map[(ToString[FullForm[#]]) &, sol, {2}]},
+
+      (* false *)
+      {2}]
+],
+  {0, $MessageList}
+]];
+
 
 (* Print[isConsistent[s[x==2, 7==x*x], {x,y}]] *)
 
@@ -155,25 +164,24 @@ exDSolve[expr_, vars_] := (
 
 (*
  * 戻り値のリストの先頭：
- *  0 : 充足
- *  1 : 制約エラー
- *  2 : Mathematicaでは解けない
+ *  0 : Solver Error
+ *  1 : 充足
+ *  2 : 制約エラー
  *)
-isConsistentInterval[expr_, vars_] := Block[
-{sol},
+isConsistentInterval[expr_, vars_] :=  Quiet[Check[(
   debugPrint["expr:", expr, "vars:", vars];
+  If[expr === {},
+    (* true *)
+    {1}, 
 
-  sol = exDSolve[Reduce[expr, vars], vars];
-  Which[
-    Head[sol] === DSolve,
-      2,
-    sol =!= overconstraint,  
-      0,
-    sol === overconstraint, 
-      1,
-    True,
-      2] 
-];
+    (* false *)
+    If[exDSolve[Reduce[expr, vars], vars]=!=overconstraint,
+        {1},
+        {2}]]
+),
+  {0, $MessageList}
+]];
+
 
 (* Print[isConsistentInterval[ *)
 (* {Derivative[1][usrVarht][t] == usrVarv[t],  *)
@@ -201,9 +209,7 @@ Block[{
          (* true *)
          (* 成り立つtの最小値を求める *)
          minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
-                            Minimize::wksol]];
-         If[Length[$MessageList]>0,
-            Throw[{error, "cannot solve min time", minT, $MessageList}]],
+                            Minimize::wksol]],
 
          (* false *)
          minT = error],
@@ -237,13 +243,19 @@ getVariableName[Derivative[n_][f_]] := f;
 getDerivativeCount[variable_] := 0;
 getDerivativeCount[Derivative[n_][f_]] := n;
 
-createIntegratedValue[variable_, integRule_, time_] := (
-  (variable /. Derivative[n_][f_] :> D[f, {t, n}]
-            /. (integRule /. x_[t] -> x)
-            /. t -> time) // Simplify // FullForm
+createIntegratedValue[variable_, integRule_] := (
+  variable /. Derivative[n_][f_] :> D[f, {t, n}]
+           /. (integRule /. x_[t] -> x)
 );
 
-integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := Block[
+(*
+ * askの導出状態が変化するまで積分をおこなう
+ *)
+
+integrateCalc[cons_, 
+              posAsk_, negAsk_, 
+              vars_, 
+              maxTime_] := Quiet[Check[Block[
 {
   tmpIntegSol,
   tmpPosAsk,
@@ -267,33 +279,55 @@ integrateCalc[cons_, posAsk_, negAsk_, vars_, maxTime_] := Block[
   tmpPrevConsTable = 
     Map[({getVariableName[#], 
           getDerivativeCount[#], 
-          ToString[createIntegratedValue[#, tmpIntegSol, tmpMinT]]})&, 
+          (createIntegratedValue[#, tmpIntegSol] 
+            /. t->tmpMinT) // Simplify // FullForm // ToString})&, 
         vars /. x_[t] -> x];
-  tmpRet = {ToString[tmpMinT, InputForm], 
+  tmpRet = {1,
+            ToString[tmpMinT, InputForm], 
             tmpPrevConsTable, 
             tmpMinAskIDs, 
             If[tmpMinT>=maxTime, 1, 0]};
   debugPrint["ret:", tmpRet];
   tmpRet
-];
+],
+  {0, $MessageList}
+]];
 
-integ[cons_, vars_] := Block[
-{tmpIntegSol},
-  tmpIntegSol = First[DSolve[Reduce[cons, vars], vars, t]];
-    Map[({getVariableName[#], 
-          getDerivativeCount[#], 
-          ToString[createIntegratedValue[#, tmpIntegSol, t]]})&, 
-        vars /. x_[t] -> x]
-];
+(*
+ * 与えられた式を積分し，返す
+ *
+ * 0: Solver Error
+ * 1: 求解できた
+ * 
+ *)
+integrateExpr[cons_, vars_] := Quiet[Check[Block[
+{ sol },
+  sol = First[DSolve[Reduce[cons, vars], vars, t]];
+  {1,         
+   Map[({getVariableName[#], 
+         getDerivativeCount[#], 
+         createIntegratedValue[#, First[sol]] // Simplify})&, 
+       vars /. x_[t] -> x]}
+],
+  {0, $MessageList}
+]];
 
-(* Print["integ:", integ[{x'[t]==2, x[0]==a}, {x[t], x'[t]}]] *)
+Print["integ:", integrateExpr[{x''[t]==2, x'[0]==initVar1x, x[0]==initVar0x}, {x[t], x'[t]}]];
 
 Print[integrateCalc[
-{True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10},
-{}, 
-{{usrVarht[t] == 0, 73}}, 
-{usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t], Derivative[2][usrVarv][t]},
-4]];
+{True, Derivative[1][usrVarht][t] == usrVarv[t], 
+Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0},
+{},
+{{usrVarht[t] == 0, 26}},
+{usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]},
+1]];
+
+(* Print[integrateCalc[ *)
+(* {True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10}, *)
+(* {}, *)
+(* {{usrVarht[t] == 0, 73}}, *)
+(* {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t], Derivative[2][usrVarv][t]}, *)
+(* 4]]; *)
 
 (* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
 (*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)

@@ -12,6 +12,8 @@
 
 #include <vector>
 
+#include <boost/function.hpp>
+
 #include "Types.h"
 #include "VariableMap.h"
 
@@ -41,6 +43,9 @@ public:
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
   typedef hydla::simulator::changed_asks_t                   changed_asks_t;
+  typedef boost::function<void (const time_t& time, 
+                                const variable_map_t& vm)>   output_function_t;
+
 
   typedef struct IntegrateResult 
   {
@@ -97,6 +102,25 @@ public:
     const time_t& current_time,
     const time_t& max_time) = 0;
   
+  void set_output_func(const time_t& max_interval, output_function_t func) {
+    max_interval_ = max_interval;
+    output_func_  = func;
+  }
+
+  void reset_output_func() {
+    output_func_.clear();
+  }
+
+protected:
+  void output(const time_t& time, const variable_map_t& vm) {
+    if(output_func_) {
+      output_func_(time, vm);
+    }
+  }
+
+private:
+  time_t            max_interval_;
+  output_function_t output_func_;
 
 };
 

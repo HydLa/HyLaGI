@@ -34,7 +34,7 @@ void MathTime::receive_time(MathLink& ml)
   time_ = ml.get_string();
 }
 
-std::string MathTime::get_real_val(MathLink& ml, int precision)
+std::string MathTime::get_real_val(MathLink& ml, int precision) const
 {
   ml.put_function("ToString", 1);  
   ml.put_function("N", 2);  

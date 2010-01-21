@@ -8,6 +8,7 @@
 #include "Logger.h"
 #include "PacketSender.h"
 #include "PacketChecker.h"
+#include "PacketErrorHandler.h"
 #include "Types.h"
 
 using namespace hydla::vcs;
@@ -219,6 +220,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   send_vars(ps, max_diff_map);
 
 
+////////// 受信処理
   HYDLA_LOGGER_DEBUG("--- receive  ---");
 
   HYDLA_LOGGER_DEBUG(
@@ -226,49 +228,46 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
   ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLGetNext();
+  ml_->MLGetNext();
+  ml_->MLGetNext();  
+  
+  VCSResult result;
+  int ret_code = ml_->get_integer();
+  if(PacketErrorHandler::handle(ml_, ret_code)) {
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code==1) { 
+    // 充足
+    HYDLA_LOGGER_DEBUG("consistent");
+    result = VCSR_TRUE;
 
-  VCSResult ret;
-  switch(ml_->get_integer()) 
-  {
-    case 0: {
-      HYDLA_LOGGER_DEBUG("consistent");
-      ret = VCSR_TRUE;
+    // 制約ストアにtell制約の追加
+    constraint_store_.constraints.insert(
+      constraint_store_.constraints.end(),
+      collected_tells.begin(), 
+      collected_tells.end());
 
-      // 制約ストアにtell制約の追加
-      constraint_store_.constraints.insert(
-        constraint_store_.constraints.end(),
-        collected_tells.begin(), 
-        collected_tells.end());
-
-      // 制約ストア中で使用される変数の一覧の更新
-      PacketSender::vars_const_iterator ps_vars_it  = ps.vars_begin();
-      PacketSender::vars_const_iterator ps_vars_end = ps.vars_end();
-      for(; ps_vars_it!=ps_vars_end; ++ps_vars_it) {
-        MathVariable mv;
-        mv.name             = ps_vars_it->get<0>();
-        mv.derivative_count = ps_vars_it->get<1>();
-        constraint_store_.cons_vars.insert(mv);
-      }
-    }      
-      break;
-
-    case 1:
-      HYDLA_LOGGER_DEBUG("over-constraint");
-      ret = VCSR_FALSE;
-      break;
-
-    case 2:
-      HYDLA_LOGGER_DEBUG("solver error");
-      ret = VCSR_SOLVER_ERROR;
-      break;
-
-    default:
-      assert(0);
+    // 制約ストア中で使用される変数の一覧の更新
+    PacketSender::vars_const_iterator ps_vars_it  = ps.vars_begin();
+    PacketSender::vars_const_iterator ps_vars_end = ps.vars_end();
+    for(; ps_vars_it!=ps_vars_end; ++ps_vars_it) {
+      MathVariable mv;
+      mv.name             = ps_vars_it->get<0>();
+      mv.derivative_count = ps_vars_it->get<1>();
+      constraint_store_.cons_vars.insert(mv);
+    }
+  }
+  else { 
+    // 制約エラー
+    assert(ret_code==2);
+    result = VCSR_FALSE;
+    HYDLA_LOGGER_DEBUG("inconsistent");
   }
 
   HYDLA_LOGGER_DEBUG(constraint_store_);
 
-  return ret;
+  return result;
 }
   
 VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
@@ -284,6 +283,8 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
   // ask制約のガードの式を得てMathematicaに渡す
   ps.put_node(negative_ask->get_guard(), PacketSender::VA_Zero, true);
+
+  ml_->put_function("Join", 2);
 
   // 制約ストアconstraintsをMathematicaに渡す
   ml_->put_function("List", constraint_store_.init_vars.size());
@@ -306,27 +307,49 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
     ml_->put_string(init_vars_it->second.str);      
   }
 
+  max_diff_map_t max_diff_map;
+
+  // 変数の最大微分回数をもとめる
+  create_max_diff_map(ps, max_diff_map);
   
+  // 初期値制約の送信
+  send_init_cons(ps, max_diff_map);
+
+  // 変数のリストを渡す
+  send_vars(ps, max_diff_map);
 
   // varsを渡す
-  ps.put_vars(PacketSender::VA_Zero, true);
+//  ps.put_vars(PacketSender::VA_Zero, true);
 
   ml_->MLEndPacket();
-
-//   PacketChecker pc(*ml_);
-//   pc.check();
 
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
+////////// 受信処理
+
+
   ml_->skip_pkt_until(RETURNPKT);
-  ml_->MLGetType();
+  ml_->MLGetNext();
+  ml_->MLGetNext();
+  ml_->MLGetNext();  
   
-  // Mathematicaから1（Trueを表す）が返ればtrueを、0（Falseを表す）が返ればfalseを返す
-  int num  = ml_->get_integer();
-  HYDLA_LOGGER_DEBUG("EntailmentChecker#num:", num);
-  return num==1 ? VCSR_TRUE : VCSR_FALSE;
+  VCSResult result;
+  int ret_code = ml_->get_integer();
+  if(PacketErrorHandler::handle(ml_, ret_code)) {
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code==1) {
+    result = VCSR_TRUE;
+    HYDLA_LOGGER_DEBUG("entailed");
+  }
+  else {
+    assert(ret_code==2);
+    result = VCSR_FALSE;
+    HYDLA_LOGGER_DEBUG("not entailed");
+  }
+  return result;
 }
 
 void MathematicaVCSInterval::send_ask_guards(
@@ -420,26 +443,20 @@ VCSResult MathematicaVCSInterval::integrate(
   HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
   ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLGetNext(); 
+  ml_->MLGetNext(); // Listという関数名
+  ml_->MLGetNext(); // Listの中の先頭要素
+
+  // 求解に成功したかどうか
+  int ret_code = ml_->get_integer();
+  if(PacketErrorHandler::handle(ml_, ret_code)) {
+    return VCSR_SOLVER_ERROR;
+  }
 
   HYDLA_LOGGER_DEBUG("---integrate calc result---");
   integrate_result.states.resize(1);
   virtual_constraint_solver_t::IntegrateResult::NextPhaseState& state = 
     integrate_result.states.back();
-
-//   PacketChecker pc(*ml_);
-//   pc.check2();
-  
-//   while(ml_->MLGetType() != MLTKINT) {
-//     int pkt = ml_->MLGetNext();
-//     HYDLA_LOGGER_DEBUG("skip:", pkt);
-//   }
-//   int list_size = ml_->get_arg_count();
-//   HYDLA_LOGGER_DEBUG("list_size : ", list_size);
-    
-  // List[制約一覧, 変化したaskとそのIDの組の一覧]が返る
-  ml_->MLGetNext(); 
-  ml_->MLGetNext(); // Listという関数名
-  ml_->MLGetNext(); // Listの中の先頭要素
 
   // next_point_phase_timeを得る
   MathTime next_phase_time;
@@ -475,9 +492,6 @@ VCSResult MathematicaVCSInterval::integrate(
 
     // 値
     value.str = ml_->get_string();
-    // Function[List, .....] をのぞく
-    // TODO: こんな処理本当はいならないはず
-    //value.str = value.str.substr(15, value.str.size() - 16);
     HYDLA_LOGGER_DEBUG("value : ", value.str);
     ml_->MLGetNext();
 
@@ -533,6 +547,8 @@ VCSResult MathematicaVCSInterval::integrate(
 //   HYDLA_LOGGER_DEBUG(
 //     "--- integrate result ---\n", 
 //     integrate_result);
+
+  output(state.time, state.variable_map);
 
   return VCSR_TRUE;
 }

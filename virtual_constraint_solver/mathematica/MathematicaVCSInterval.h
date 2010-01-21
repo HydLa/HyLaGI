@@ -9,6 +9,7 @@
 
 #include "MathVCSType.h"
 #include "PacketSender.h"
+
 namespace hydla {
 namespace vcs {
 namespace mathematica {

@@ -69,6 +69,9 @@ private:
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   void init_mathlink();
 
+  void output(const symbolic_time_t& time, 
+              const variable_map_t& vm);
+
   /**
    * 
    */

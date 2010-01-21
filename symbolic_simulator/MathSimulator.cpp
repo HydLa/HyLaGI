@@ -186,8 +186,8 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   TellCollector tell_collector(ms);
 
   AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
-                                  AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
-                                  AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
+                              AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
+                              AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
 
   tells_t         tell_list;
   positive_asks_t   positive_asks;
@@ -283,8 +283,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 
   TellCollector tell_collector(ms);
 
-  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
-                                  AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
+  AskCollector  ask_collector(ms);
 
   tells_t         tell_list;
   positive_asks_t positive_asks;
@@ -332,23 +331,28 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        switch(vcs.check_entailment(*it))
-        {
-          case VCSR_TRUE:
-            expanded = true;
-            positive_asks.insert(*it);
-            negative_asks.erase(it++);
-            break;
-          case VCSR_FALSE:
-            it++;
-            break;
-          case VCSR_UNKNOWN:
-            assert(0);
-            break;
-          case VCSR_SOLVER_ERROR:
-            // TODO: 例外とかなげたり、BPシミュレータに移行したり
-            assert(0);
-            break;
+        if(boost::dynamic_pointer_cast<DiscreteAsk>(*it)) {
+          it++;
+        }
+        else {
+          switch(vcs.check_entailment(*it))
+          {
+            case VCSR_TRUE:
+              expanded = true;
+              positive_asks.insert(*it);
+              negative_asks.erase(it++);
+              break;
+            case VCSR_FALSE:
+              it++;
+              break;
+            case VCSR_UNKNOWN:
+              assert(0);
+              break;
+            case VCSR_SOLVER_ERROR:
+              // TODO: 例外とかなげたり、BPシミュレータに移行したり
+              assert(0);
+              break;
+          }
         }
       }
     }
@@ -376,6 +380,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     push_phase_state(new_state);
   }
 
+  
   std::cout << "%%%%%%%%%%%%% interval phase result %%%%%%%%%%%%% \n"
             << "time:" << integrate_result.states[0].time.get_real_val(ml_, 5) << "\n";
 
@@ -385,9 +390,25 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     std::cout << it->first << "\t: "
               << it->second.get_real_val(ml_, 5) << "\n";
   }
+  
 
 
   return true;
+}
+
+void MathSimulator::output(const symbolic_time_t& time, 
+                           const variable_map_t& vm)
+{
+  std::cout << "%%%%%%%%%%%%% output%%%%%%%%%%%%% \n"
+            << "time:" << time.get_real_val(ml_, 5) << "\n";
+
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  for(; it!=end; ++it) {
+    std::cout << it->first << "\t: "
+              << it->second.get_real_val(ml_, 5) << "\n";
+  }
+
 }
 
 } //namespace symbolic_simulator

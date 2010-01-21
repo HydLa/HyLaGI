@@ -213,8 +213,9 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
   HYDLA_LOGGER_DEBUG(
     "PacketSender::put_var: ",
     "name: ", name,
-    "  diff_count: ", diff_count,
-    "  prev: ", prev);
+    "\tdiff_count: ", diff_count,
+    "\tprev: ", prev,
+    "\tvariable_arg: ", variable_arg);
   
   // •Ï”–¼‚ÌÅŒã‚É•K‚¸[t]‚ª‚Â‚­•ª
   if(variable_arg != VA_None) {
@@ -234,7 +235,7 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
   }
    
   // prev•Ï”‚Æ‚µ‚Ä‘—‚é‚©‚Ç‚¤‚©
-  if(prev /* && phase_==NP_POINT_PHASE */) {
+  if(prev) {
     ml_.put_function("prev", 1);
     ml_.put_symbol(name);
   }
