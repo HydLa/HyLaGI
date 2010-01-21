@@ -8,6 +8,8 @@
 
 #include "Logger.h"
 
+#include "../symbolic_simulator/math_source.h"
+
 #include "InitNodeRemover.h"
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
@@ -101,7 +103,14 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     std::cerr << "can not link" << std::endl;
     exit(-1);
   }
-
+  // HydLa.m‚Ì“à—e‘—M
+  //   ml_.MLPutFunction("Get", 1);
+  //   ml_.MLPutString("symbolic_simulator/HydLa.m");
+  ml_.MLPutFunction("ToExpression", 1);
+  ml_.MLPutString(math_source());  
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 }
 
 /**

@@ -73,6 +73,12 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
  */
 VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
 {
+  // ストアをコピー
+  // ガード条件と否定を作る(変数はすべて初期値変数へ)
+  // solve(S & g) == empty -> FALSE
+  // solve(S&ng0)==empty /\ solve(S&ng1)==empty /\ ... -> TRUE
+  // ngが存在しない(gが等式)場合，TRUEではない
+  // else -> UNKNOWN
 /*
   // 制約ストアをコピー
   ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
@@ -210,6 +216,17 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
                                   const time_t& current_time,
                                   const time_t& max_time)
 {
+  // nodes_をrp_constraintになおす
+  // 時刻を変数として問題に組み込む(rp_variable)
+  // 解く
+  // 答えがない→VCSR_FALSE(向こうで積まないだけでもいいんだけど)
+  // 答えがproofされているか？
+  //// proofチェック１：答えのhullが初期値変数のドメインをすべて含んでいるか？
+  //// proofチェック２：(ソルバによるproofが存在するか？)
+  //// proofチェック２改：答え一つ一つについて時刻以外の変数を定数に変えてproofが得られるか？
+  // されている→答えを時刻順にソート，hullが初期値変数ドメインをすべて含んだ時点で残りを捨てる
+  //// 「時点で」だと少し捨てすぎてしまう可能性が…？ -> 同じ時刻のはゆるせばいい
+  // されてない→全部積む，今のaskを抜いて再度integrateするためにVCSR_UNKNOWNを返す
   return VCSR_TRUE;
 }
 

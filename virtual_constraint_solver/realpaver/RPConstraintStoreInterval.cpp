@@ -1,4 +1,9 @@
 #include "RPConstraintStoreInterval.h"
+#include "Logger.h"
+#include "realpaver.h"
+#include "rp_problem_ext.h"
+#include "rp_constraint_ext.h"
+#include "RPConstraintSolver.h"
 
 namespace hydla {
 namespace vcs {
@@ -84,8 +89,19 @@ void ConstraintStoreInterval::build_variable_map(virtual_constraint_solver_t::va
 //void ConstraintStoreInterval::add_constraint(std::set<rp_constraint>::iterator start, std::set<rp_constraint>::iterator end, const var_name_map_t& vars)
 //{}
 
-//std::ostream& ConstraintStoreInterval::dump_cs(std::ostream& s) const
-//{}
+std::ostream& ConstraintStoreInterval::dump_cs(std::ostream& s) const
+{
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_);
+  std::set<rp_constraint>::const_iterator ctr_it = this->exprs_.begin();
+  while(ctr_it != this->exprs_.end()){
+    rp::dump_constraint(s, *ctr_it, vec); // digits, mode);
+    s << "\n";
+    ctr_it++;
+  }
+  s << "\n";
+  rp_vector_destroy(&vec);
+  return s;
+}
 
 } // namespace realpaver
 } // namespace vcs

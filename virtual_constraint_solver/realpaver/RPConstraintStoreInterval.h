@@ -45,11 +45,11 @@ public:
   //  return this->vars_;
   //}
 
-  //std::ostream& dump_cs(std::ostream& s) const;
+  std::ostream& dump_cs(std::ostream& s) const;
 
   friend std::ostream& operator<<(std::ostream& s, const ConstraintStoreInterval& cs)
   {
-    return s;
+    return cs.dump_cs(s);
   }
 
   // 有効なtell制約のリスト(TODO: privateにしてアクセサを作る？)
