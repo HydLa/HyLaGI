@@ -313,6 +313,51 @@ void PacketSender::clear()
   vars_.clear();
 }
 
+namespace {
+
+struct MaxDiffMapDumper
+{
+  template<typename T>
+  MaxDiffMapDumper(T it, T end)
+  {
+    for(; it!=end; ++it) {
+      s << "name: " << it->first
+        << "diff: " << it->second
+        << "\n";      
+    }
+  }
+
+  std::stringstream s;
+};
+
+}
+
+void PacketSender::create_max_diff_map(max_diff_map_t& max_diff_map)
+{
+  vars_const_iterator vars_it  = vars_begin();
+  vars_const_iterator vars_end_it = vars_end();
+
+  for(; vars_it!=vars_end_it; ++vars_it) {
+    std::string name(vars_it->get<0>());
+    int derivative_count = vars_it->get<1>();
+
+    max_diff_map_t::iterator it = max_diff_map.find(name);
+    if(it==max_diff_map.end()) {
+      max_diff_map.insert(
+        std::make_pair(name, derivative_count));
+    }
+    else if(it->second < derivative_count) {
+      it->second = derivative_count;
+    }    
+  }
+
+  HYDLA_LOGGER_DEBUG(
+    "-- max diff map --\n",
+    MaxDiffMapDumper(max_diff_map.begin(), 
+                     max_diff_map.end()).s.str());
+
+}
+
 } // namespace mathematica
 } // namespace simulator
 } // namespace hydla 

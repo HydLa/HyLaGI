@@ -32,6 +32,7 @@ public:
     VA_Zero,
   };
 
+  typedef std::map<std::string, int> max_diff_map_t;
   /**
    * 変数データ
    * (変数名， 微分回数,  prev変数かどうか)
@@ -76,6 +77,8 @@ public:
    * put_nodeの際に送信された変数群のデータを消去し，初期化する
    */
   void clear();
+
+  void create_max_diff_map(max_diff_map_t& max_diff_map);
 
 
   // Ask制約

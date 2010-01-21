@@ -251,8 +251,9 @@ getDerivativeCount[variable_] := 0;
 getDerivativeCount[Derivative[n_][f_]] := n;
 
 createIntegratedValue[variable_, integRule_] := (
-  variable /. Derivative[n_][f_] :> D[f, {t, n}]
-           /. (integRule /. x_[t] -> x)
+  variable /. (integRule /. x_[t] -> x) 
+  /. Derivative[n_][f_] :> D[f, {t, n}]
+           
 );
 
 (*
@@ -321,7 +322,7 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
       {1,         
        Map[({getVariableName[#], 
              getDerivativeCount[#], 
-             createIntegratedValue[#, First[sol]] // Simplify})&, 
+             ToString[InputForm[createIntegratedValue[#, First[sol]] // Simplify]]})&, 
            vars /. x_[t] -> x]}]
 ],
   {0, $MessageList}

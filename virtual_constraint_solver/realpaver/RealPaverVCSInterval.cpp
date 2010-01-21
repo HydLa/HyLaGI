@@ -10,6 +10,10 @@
 #include "rp_container_ext.h"
 
 #include "../mathematica/PacketSender.h"
+#include "../mathematica/PacketChecker.h"
+#include <boost/lexical_cast.hpp>
+
+using namespace hydla::vcs::mathematica;
 
 namespace hydla {
 namespace vcs {
@@ -65,6 +69,125 @@ bool RealPaverVCSInterval::create_variable_map(variable_map_t& variable_map)
  */
 VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
 {
+  // integrateExpr[cons, vars]を渡したい
+  ml_->put_function("integrateExpr", 2);
+  ml_->put_function("Join", 3);
+
+  // tell制約の集合からtellsを得てMathematicaに渡す
+  ml_->put_function("List", collected_tells.size());
+  PacketSender ps(*ml_);
+  tells_t::const_iterator tells_it  = collected_tells.begin();
+  tells_t::const_iterator tells_end = collected_tells.end();
+  for(; (tells_it) != tells_end; ++tells_it) {
+    ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time, true);
+  }
+  // 制約ストア内にあるtell制約も渡す
+  int cs_exprs_size = constraint_store_.nodes_.size();
+  ml_->put_function("List", cs_exprs_size);
+  tells_t::const_iterator cs_tells_it  = constraint_store_.nodes_.begin();
+  tells_t::const_iterator cs_tells_end = constraint_store_.nodes_.end();
+  for(; (cs_tells_it) != cs_tells_end; ++cs_tells_it) {
+    ps.put_node((*cs_tells_it)->get_child(), PacketSender::VA_Time, true);
+  }
+  // 初期値制約も渡す（必要なもののみ）
+  // tellsと制約ストア内のtell制約それぞれに関して、出現する変数の最大微分回数未満までが必要
+  // 例）制約内にx''まで出現する（最大微分回数が2）ならば、x[0]とx'[0]までの値が必要
+
+  // 各変数に関して、最大微分回数を保持するような配列がほしい
+  PacketSender::max_diff_map_t max_diff_map;
+  ps.create_max_diff_map(max_diff_map);
+
+  // max_diff_map内にある変数に関して、Mathematicaに渡す
+  int max_diff_map_count = 0;
+  PacketSender::max_diff_map_t::const_iterator max_diff_map_it = max_diff_map.begin();
+  for( ;max_diff_map_it != max_diff_map.end(); ++max_diff_map_it)
+  {
+    for(int i=0; i< max_diff_map_it->second; ++i) // 微分回数が1回以上のもののみ必要
+    {
+      max_diff_map_count++;
+    }
+  }
+  ml_->put_function("List", max_diff_map_count);
+  max_diff_map_it = max_diff_map.begin();
+  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it)
+  {
+    for(int i=0; i< max_diff_map_it->second; ++i)
+    {
+      ml_->put_function("Equal", 2);
+      ps.put_var(
+        boost::make_tuple(max_diff_map_it->first, 
+                          i,
+                          false),
+        PacketSender::VA_Zero);
+      // 変数名を元に、値のシンボル作成
+      std::string init_value_str = init_prefix;    
+      init_value_str += boost::lexical_cast<std::string>(i);
+      init_value_str += max_diff_map_it->first;
+      ml_->put_symbol(init_value_str);
+    }
+  }
+
+  // varsを渡す
+  //ps.put_vars(PacketSender::VA_Time);
+
+  int vars_count = 0;
+  max_diff_map_it = max_diff_map.begin();
+  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it)
+  {
+    for(int j=0; j<= max_diff_map_it->second; ++j)
+    {
+      vars_count++;
+    }
+  }
+
+  ml_->put_function("List", vars_count);
+  max_diff_map_it = max_diff_map.begin();
+  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it)
+  {
+    for(int j=0; j<= max_diff_map_it->second; ++j)
+    {
+      ps.put_var(
+        boost::make_tuple(max_diff_map_it->first, 
+                          j,
+                          false),
+        PacketSender::VA_Time);
+    }
+  }
+
+/*
+  PacketChecker pc(*ml_);
+  pc.check();
+*/
+
+  ml_->skip_pkt_until(RETURNPKT);
+
+  ml_->MLGetNext(); // List関数
+  // 結果の受け取り
+  // {1, {{usrVarht, 1, 0}, {usrVarv, 0, initValue0v - 10 t}, {usrVarht, 0, initValue0ht + (initValue0v - 5 t) t}, {usrVarv, 1, 0}}}
+  // 条件によりList関数の要素数が変わる
+  // underconstraintまたはoverconstraintだと要素数1、それ以外なら要素数2のはず
+  int list_arg_count = ml_->get_arg_count();
+  if(list_arg_count ==1){
+    // under or over constraint
+  }
+  ml_->MLGetNext(); // Listという関数名
+  ml_->MLGetNext(); // Listの先頭の要素（数字1）
+  ml_->MLGetNext(); // List関数
+  int cons_count = ml_->get_arg_count();
+  ml_->MLGetNext(); // Listという関数名
+  for(int k=0; k<cons_count; ++k)
+  {
+    ml_->MLGetNext(); // List関数
+    ml_->MLGetNext(); // Listという関数名
+    ml_->MLGetNext(); // Listの先頭要素（変数名）
+    std::string var_name = ml_->get_symbol();
+    int derivative_count = ml_->get_integer();
+    var_name.insert(PacketSender::var_prefix.length(), boost::lexical_cast<std::string>(derivative_count));
+    std::string value_str = ml_->get_string();
+    std::string cons_str = var_name + "=" + value_str;
+    std::cout << "cons_str:" << cons_str << std::endl;
+  }
+
   return VCSR_TRUE;
 }
 

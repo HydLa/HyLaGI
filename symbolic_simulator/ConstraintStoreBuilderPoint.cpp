@@ -7,6 +7,43 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
+namespace {
+struct Dumper {
+      
+  template<typename T>
+  Dumper(T obj) 
+  {
+    ss << obj;
+  }
+
+  friend std::ostream& operator<<(std::ostream& s, const Dumper& nd)
+  {
+    s << nd.ss.str();
+    return s;
+  }
+
+  std::stringstream ss;
+};
+
+struct IterDumper {
+      
+  template<typename T>
+  IterDumper(T it, T end, std::string str) 
+  {
+    for(; it!=end; ++it) {
+      ss << *it << str;
+    }
+  }
+
+  friend std::ostream& operator<<(std::ostream& s, const IterDumper& nd)
+  {
+    s << nd.ss.str();
+    return s;
+  }
+
+  std::stringstream ss;
+};
+}
 
 ConstraintStoreBuilderPoint::ConstraintStoreBuilderPoint(bool debug_mode) :
   debug_mode_(debug_mode)
@@ -20,29 +57,25 @@ void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& v
 /*
   // variable_map ‚ð‚à‚Æ‚É constraint_store ‚ð‚Â‚­‚é
 
-  if(debug_mode_) std::cout << "------Variable map------" << std::endl;
+  HYDLA_LOGGER_DEBUG("------Variable map------");
   if(variable_map.size() == 0)
   {
-    if(debug_mode_)
-    {
-      std::cout << "no Variables" << std::endl;
-      std::cout << "-------------------------" << std::endl;
-    }
+    HYDLA_LOGGER_DEBUG(
+      "no Variables\n",
+      "-------------------------");
     return;
   }
-  if(debug_mode_)
-  {
-    std::cout << variable_map;
-    std::cout << "------------------------" << std::endl;
-    std::cout << "--build constraint store--" << std::endl;
-  }
+  HYDLA_LOGGER_DEBUG(
+    Dumper(variable_map),
+    "------------------------\n",
+    "--build constraint store--");
 
   SymbolicValue symbolic_value;    
   std::string value;
   SymbolicVariable symbolic_variable;
   std::string variable_name;
 
-   variable_map_t::variable_list_t::const_iterator it = variable_map.begin();
+  variable_map_t::variable_list_t::const_iterator it = variable_map.begin();
 
   while(it != variable_map.end())
   {
@@ -95,7 +128,6 @@ void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& v
 
 
     // §–ñƒXƒgƒA“à‚Ì•Ï”ˆê——‚ðì¬
-//    std::string vars_name;
     symbolic_variable.name = "prev[usrVar" + variable_name + "]";
     constraint_store_.second.insert(symbolic_variable);
 
@@ -113,7 +145,6 @@ void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& v
   {
     std::set<std::set<SymbolicValue> >::iterator or_cons_it;
     std::set<SymbolicValue>::iterator and_cons_it;
-    std::set<SymbolicVariable>::iterator vars_it = constraint_store_.second.begin();
 
     or_cons_it = constraint_store_.first.begin();
     while((or_cons_it) != constraint_store_.first.end())
@@ -127,15 +158,14 @@ void ConstraintStoreBuilderPoint::build_constraint_store(const variable_map_t& v
       std::cout << std::endl;
       or_cons_it++;
     }
-
-    while((vars_it) != constraint_store_.second.end())
-    {
-      std::cout << *(vars_it) << " ";
-      vars_it++;
-    }
-    std::cout << std::endl;
-    std::cout << "--------------------------" << std::endl;
   }
+
+  HYDLA_LOGGER_DEBUG(
+//    IterDumper(constraint_store_.first.begin(), constraint_store_.first.end(), "\n"),
+//    IterDumper(constraint_store_.first.begin(), constraint_store_.first.end(), " "),
+    IterDumper(constraint_store_.second.begin(), constraint_store_.second.end(), " "),
+    "\n--------------------------");
+
 */
 }
 
