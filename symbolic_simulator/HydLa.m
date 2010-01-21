@@ -129,12 +129,12 @@ isRequiredVariable[var_, tellVars_] := (
 
 exDSolve[expr_, vars_] := Block[
 {sol},
-  sol = Reduce[expr, vars];
+  sol = Reduce[Cases[expr, Except[True] | Except[False]], vars];
   If[sol===False,
       overconstraint,
 
       Quiet[Check[
-            Check[DSolve[expr, vars, t],
+            Check[DSolve[sol, vars, t],
                     underconstraint,
                     {DSolve::underdet, Solve::svars, DSolve::deqx, 
                      DSolve::bvnr, DSolve::bvsing}],
@@ -187,6 +187,8 @@ isConsistentInterval[expr_, vars_] :=  Quiet[Check[(
   {0, $MessageList}
 ]];
 
+(* Print[exDSolve[{True, True, Derivative[1][usrVarht][t] == usrVarv[t], Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0},  *)
+(* {usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}]]; *)
 
 (* Print[isConsistentInterval[ *)
 (* {Derivative[1][usrVarht][t] == usrVarv[t],  *)
