@@ -8,6 +8,7 @@
 #include "mathlink_helper.h"
 #include "Simulator.h"
 
+#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 #include "../virtual_constraint_solver/mathematica/MathVariable.h"
 #include "../virtual_constraint_solver/mathematica/MathValue.h"
 #include "../virtual_constraint_solver/mathematica/MathTime.h"
@@ -82,6 +83,8 @@ private:
 
   Opts     opts_;
   MathLink ml_; 
+
+//  hydla::vcs::mathematica::MathematicaVCS vcs_;
 };
 
 } //namespace symbolic_simulator

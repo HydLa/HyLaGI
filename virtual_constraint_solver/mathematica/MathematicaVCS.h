@@ -67,14 +67,32 @@ public:
     const time_t& max_time);
 
   /**
-   * モードを返す
+   * 現在のモードを返す
    */
   Mode get_mode() const {
     return mode_;
   }
 
+  /**
+   * モードを変更する
+   * 制約ストア等のすべての内部状態はすべて初期化される
+   */
+//  void change_mode(Mode m);
+
+  /**
+   * 結果の出力関数を設定する
+   */
+  virtual void set_output_func(const time_t& max_interval, 
+                               const output_function_t& func);
+
+  /**
+   * 結果の出力関数の設定をリセットし，初期状態に戻す
+   */
+  virtual void reset_output_func();
+
 private:
-  Mode mode_;
+  Mode      mode_;
+//  MathLink* ml_;
 
   boost::scoped_ptr<virtual_constraint_solver_t> vcs_;
 };

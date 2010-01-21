@@ -14,7 +14,6 @@ namespace mathematica {
 MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml)
 {
   mode_ = m;
-
   switch(m) {
     case DiscreteMode:
       vcs_.reset(new MathematicaVCSPoint(ml));
@@ -69,6 +68,40 @@ VCSResult MathematicaVCS::integrate(
                          negative_asks, 
                          current_time, 
                          max_time);
+}
+
+// void MathematicaVCS::change_mode(Mode m)
+// {
+//   if(mode_ == m) {
+//     vcs_->reset();
+//   }
+//   else {
+//     mode_ = m;
+//     switch(m) {
+//       case DiscreteMode:
+//         vcs_.reset(new MathematicaVCSPoint(ml_));
+//         break;
+
+//       case ContinuousMode:
+//         vcs_.reset(new MathematicaVCSInterval(ml_));
+//         break;
+
+//       default:
+//         assert(0);
+//     }
+//   }
+// }
+
+
+void MathematicaVCS::set_output_func(const time_t& max_interval, 
+                                     const output_function_t& func)
+{
+  vcs_->set_output_func(max_interval, func);
+}
+
+void MathematicaVCS::reset_output_func()
+{
+  vcs_->reset_output_func();
 }
 
 

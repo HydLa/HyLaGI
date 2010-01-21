@@ -24,8 +24,6 @@
 #include "DiscreteAskRemover.h"
 #include "AskTypeAnalyzer.h"
 
-#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
-
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 
@@ -56,6 +54,7 @@ namespace symbolic_simulator {
 
 MathSimulator::MathSimulator(const Opts& opts) :
   opts_(opts)
+//  vcs_(MathematicaVCS::DiscreteMode, &ml_)
 {
 }
 
@@ -113,6 +112,8 @@ void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 
 void MathSimulator::init_mathlink()
 {
+  HYDLA_LOGGER_DEBUG("#*** init mathlink ***");
+
   //TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
   if(!ml_.init(opts_.mathlink.c_str())) {
     std::cerr << "can not link" << std::endl;
@@ -197,7 +198,10 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   expanded_always_t expanded_always;
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
+  
   MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_);
+  vcs.set_output_func(symbolic_time_t("1/10"), 
+                      boost::bind(&MathSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
 
   bool expanded   = true;
@@ -267,12 +271,12 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   new_state->module_set_container = msc_no_init_;
   push_phase_state(new_state);
 
-  HYDLA_LOGGER_DEBUG("#*** end point phase ***\n",
-                     "--- variable map ---\n",
+  HYDLA_LOGGER_DEBUG("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
+                     "time:", new_state->current_time, "\n",
                      new_state->variable_map);
 
-  std::cout << "%%%%%%%%%%%%% point phase\n";
-  std::cout << new_state->variable_map;
+  HYDLA_LOGGER_DEBUG("#*** end point phase ***");
+
 
   return true;
 }
@@ -293,6 +297,8 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
   MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_);
+  vcs.set_output_func(symbolic_time_t("1/10"), 
+                      boost::bind(&MathSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
 
   bool expanded   = true;
@@ -380,7 +386,13 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     push_phase_state(new_state);
   }
 
+
+  HYDLA_LOGGER_DEBUG("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
+                     "time:", integrate_result.states[0].time.get_real_val(ml_, 5), "\n",
+                     integrate_result.states[0].variable_map);
+
   
+/*
   std::cout << "%%%%%%%%%%%%% interval phase result %%%%%%%%%%%%% \n"
             << "time:" << integrate_result.states[0].time.get_real_val(ml_, 5) << "\n";
 
@@ -390,7 +402,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
     std::cout << it->first << "\t: "
               << it->second.get_real_val(ml_, 5) << "\n";
   }
-  
+*/
 
 
   return true;
@@ -399,15 +411,17 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 void MathSimulator::output(const symbolic_time_t& time, 
                            const variable_map_t& vm)
 {
-  std::cout << "%%%%%%%%%%%%% output%%%%%%%%%%%%% \n"
-            << "time:" << time.get_real_val(ml_, 5) << "\n";
+//   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
+  std::cout << time.get_real_val(ml_, 5) << "\t";
 
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    std::cout << it->first << "\t: "
-              << it->second.get_real_val(ml_, 5) << "\n";
+//     std::cout << it->first << "\t: "
+//               << it->second.get_real_val(ml_, 5) << "\n";
+    std::cout << it->second.get_real_val(ml_, 5) << "\t";
   }
+  std::cout << std::endl;
 
 }
 

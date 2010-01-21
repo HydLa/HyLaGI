@@ -10,6 +10,10 @@
  * この制約はVirtualConstraintSolverを継承したクラスの定義ヘッダーにも適用される
  */
 
+#include <iostream>
+
+
+
 #include <vector>
 
 #include <boost/function.hpp>
@@ -101,27 +105,33 @@ public:
     const negative_asks_t& negative_asks,
     const time_t& current_time,
     const time_t& max_time) = 0;
-  
-  void set_output_func(const time_t& max_interval, output_function_t func) {
+
+  /**
+   * 結果の出力関数を設定する
+   */
+  virtual void set_output_func(const time_t& max_interval, 
+                               const output_function_t& func) 
+  {
     max_interval_ = max_interval;
     output_func_  = func;
   }
 
-  void reset_output_func() {
+  /**
+   * 結果の出力関数の設定をリセットし，初期状態に戻す
+   */
+  virtual void reset_output_func() {
     output_func_.clear();
   }
 
 protected:
-  void output(const time_t& time, const variable_map_t& vm) {
-    if(output_func_) {
+  void output(const time_t& time, const variable_map_t& vm) {    
+    if(!output_func_.empty()) {
       output_func_(time, vm);
     }
   }
 
-private:
   time_t            max_interval_;
   output_function_t output_func_;
-
 };
 
 /*
