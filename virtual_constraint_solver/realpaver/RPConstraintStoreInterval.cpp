@@ -81,6 +81,9 @@ void ConstraintStoreInterval::build(const virtual_constraint_solver_t::variable_
       this->exprs_.insert(c);
     }
   }
+  unsigned int size = this->vars_.size();
+  var_property vp(0, false);
+  this->vars_.insert(vars_type_t("t", size, vp)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
 }
 
 // Á‚·—\’è

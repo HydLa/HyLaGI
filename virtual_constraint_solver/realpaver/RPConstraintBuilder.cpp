@@ -352,7 +352,24 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<Variable> node)
 {
   typedef var_name_map_t::value_type vars_type_t;
 
-  ConstraintBuilder::visit(node);
+  if(this->only_init_var_) {
+    assert(!(this->in_prev_));
+    // 変数表に登録
+    std::string name(init_prefix);
+    name += boost::lexical_cast<std::string>(this->derivative_count_);
+    name += node->get_name();
+    unsigned int size = this->vars_.size();
+    var_property vp(this->derivative_count_, this->in_prev_);
+    this->vars_.insert(vars_type_t(name, size, vp)); // 登録済みの変数は変更されない
+
+    // TODO: 特定の変数は定数扱いしないとproveできない可能性
+    rp_erep rep;
+    rp_erep_create_var(&rep, this->vars_.left.at(name));
+    this->rep_stack_.push(rep);
+  } else {
+    ConstraintBuilder::visit(node);
+  }
+
   // prev変数の場合は特別に保持
   if(this->in_prev_) {
     std::string name(node->get_name());
@@ -370,12 +387,20 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<LogicalAnd> node)
   this->accept(node->get_rhs());
 }
 
+/**
+ * Ask制約からガード条件のrp_constraintリストと
+ * ￢(ガード条件)のリストを作る
+ * guardsは(論理的には)＆でつながる制約だが
+ * not_guardsは｜でつながる制約である，使う際は注意
+ */
 void GuardConstraintBuilder::create_guard_expr(boost::shared_ptr<Ask> node,
                                                std::set<rp_constraint>& guards,
                                                std::set<rp_constraint>& not_guards,
                                                var_name_map_t& vars,
-                                               var_name_map_t& prevs_in_guards)
+                                               var_name_map_t& prevs_in_guards,
+                                               const bool only_init_var)
 {
+  this->only_init_var_ = only_init_var;
   this->accept(node);
   guards.insert(this->guards_.begin(), this->guards_.end());
   not_guards.insert(this->not_guards_.begin(), this->not_guards_.end());

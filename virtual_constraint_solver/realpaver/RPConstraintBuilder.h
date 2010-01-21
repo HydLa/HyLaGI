@@ -94,6 +94,7 @@ protected:
   var_name_map_t vars_;
   rp_ctr_num ctr_;
   bool in_prev_;
+  std::stack<rp_erep> rep_stack_;
   unsigned int derivative_count_;
 
   void create_ctr_num(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int rel);
@@ -102,7 +103,6 @@ private:
   void create_unary_erep(boost::shared_ptr<hydla::parse_tree::UnaryNode> node, int op);
   void create_binary_erep(boost::shared_ptr<hydla::parse_tree::BinaryNode> node, int op);
 
-  std::stack<rp_erep> rep_stack_;
   bool neg_expr_;
 };
 
@@ -113,7 +113,8 @@ public:
     std::set<rp_constraint>& guards,
     std::set<rp_constraint>& not_guards,
     var_name_map_t& vars,
-    var_name_map_t& prevs_in_guards);
+    var_name_map_t& prevs_in_guards,
+    const bool only_init_var=false);
 
   // Ask§–ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
@@ -136,6 +137,7 @@ protected:
   std::set<rp_constraint> guards_;
   std::set<rp_constraint> not_guards_;
   var_name_map_t prevs_in_guards_;
+  bool only_init_var_;
 
 };
 

@@ -8,6 +8,7 @@
 #include "rp_constraint_ext.h"
 #include "rp_container.h"
 #include "rp_container_ext.h"
+#include "realpaverbasic.h"
 
 #include "../mathematica/PacketSender.h"
 #include "../mathematica/PacketChecker.h"
@@ -175,6 +176,15 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
   ml_->MLGetNext(); // Listä÷êî
   int cons_count = ml_->get_arg_count();
   ml_->MLGetNext(); // ListÇ∆Ç¢Ç§ä÷êîñº
+
+  // rp_constraintçÏê¨ÅCï€éùóp
+  ctr_set_t ctrs;
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->constraint_store_.get_store_vars());
+  rp_table_symbol ts;
+  rp_table_symbol_create(&ts);
+  rp_vector_destroy(&rp_table_symbol_vars(ts));
+  rp_table_symbol_vars(ts) = vec;
+
   for(int k=0; k<cons_count; ++k)
   {
     ml_->MLGetNext(); // Listä÷êî
@@ -185,8 +195,16 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
     var_name.insert(PacketSender::var_prefix.length(), boost::lexical_cast<std::string>(derivative_count));
     std::string value_str = ml_->get_string();
     std::string cons_str = var_name + "=" + value_str;
-    std::cout << "cons_str:" << cons_str << std::endl;
+    // rp_constraintÇçÏê¨
+    rp_constraint c;
+    rp_parse_constraint_string(&c, const_cast<char *>(cons_str.c_str()), ts);
+    ctrs.insert(c);
+    // ï\é¶
+    rp::dump_constraint(std::cout, c, vec, 10, RP_INTERVAL_MODE_BOUND);
+    std::cout << "\n";
+    //std::cout << "cons_str:" << cons_str << std::endl;
   }
+  rp_table_symbol_destroy(&ts);
 
   return VCSR_TRUE;
 }

@@ -40,10 +40,10 @@ public:
 
   //void add_constraint(std::set<rp_constraint>::iterator start, std::set<rp_constraint>::iterator end, const var_name_map_t& vars);
 
-  //const var_name_map_t& get_store_vars() const
-  //{
-  //  return this->vars_;
-  //}
+  const var_name_map_t& get_store_vars() const
+  {
+    return this->vars_;
+  }
 
   std::ostream& dump_cs(std::ostream& s) const;
 
