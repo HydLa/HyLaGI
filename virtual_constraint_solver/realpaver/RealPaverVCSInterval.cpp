@@ -16,7 +16,7 @@ namespace vcs {
 namespace realpaver {
 
 RealPaverVCSInterval::RealPaverVCSInterval(MathLink* ml) :
-constraint_store_(ConstraintStore::NP_INTERVAL),
+constraint_store_(),
   ml_(ml)
 {}
 
@@ -36,7 +36,7 @@ RealPaverBaseVCS* RealPaverVCSInterval::clone()
  */
 bool RealPaverVCSInterval::reset()
 {
-  this->constraint_store_ = ConstraintStore(ConstraintStore::NP_INTERVAL); // これあってんのか？
+  this->constraint_store_ = ConstraintStoreInterval(); // これあってんのか？
   return true;
 }
 
@@ -65,64 +65,7 @@ bool RealPaverVCSInterval::create_variable_map(variable_map_t& variable_map)
  */
 VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
 {
-  typedef std::set<rp_constraint> ctr_set_t;
-  var_name_map_t vars = this->constraint_store_.get_store_vars();
-  ConstraintBuilder builder;
-  builder.set_vars(vars);
-  ctr_set_t ctrs, ctrs_copy;
-  // tell制約をrp_constraintへ
-  for(tells_t::const_iterator t_it = collected_tells.begin();
-      t_it!=collected_tells.end(); t_it++) {
-        ctrs.insert(builder.build_constraint_from_tell(*t_it));
-  }
-  vars.insert(builder.vars_begin(), builder.vars_end());
-  // tell制約のみをコピーしておく
-  for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
-    rp_constraint c;
-    rp_constraint_clone(&c, *it);
-    ctrs_copy.insert(c);
-  }
-  // ストアの制約を追加
-  ctr_set_t store_copy = this->constraint_store_.get_store_exprs_copy();
-  ctrs.insert(store_copy.begin(), store_copy.end());
-  // 確認
-  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
-  HYDLA_LOGGER_DEBUG("#**** vcs:add_constraint: constraints expression ****");
-  std::stringstream ss;
-  for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
-    rp::dump_constraint(ss, *it, vec, 10);
-    ss << "\n";
-  }
-  rp_vector_destroy(&vec);
-  HYDLA_LOGGER_DEBUG(ss.str());
-  // 制約の解が存在するかどうか？
-  rp_box b;
-  bool res = ConstraintSolver::solve_hull(&b, vars, ctrs);
-  if(res) {
-    // consistentなら，ストアに制約を追加
-    this->constraint_store_.add_constraint(ctrs_copy.begin(), ctrs_copy.end(), vars);
-    HYDLA_LOGGER_DEBUG("#*** vcs:add_constraint ==> Consistent ***\n",
-      "#**** vcs:add_constraint: new constraint_store ***\n",
-      this->constraint_store_);
-    rp_box_destroy(&b);
-    for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
-      rp_constraint c = *it;
-      rp_constraint_destroy(&c);
-    }
-    return VCSR_TRUE;
-  } else {
-    // in-consistentなら，何もしない
-    for(ctr_set_t::iterator it=ctrs_copy.begin(); it!=ctrs_copy.end(); it++) {
-      rp_constraint c = *it;
-      rp_constraint_destroy(&c);
-    }
-    HYDLA_LOGGER_DEBUG("#*** vcs:add_constraint ==> Inconsistent ***\n");
-    for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
-      rp_constraint c = *it;
-      rp_constraint_destroy(&c);
-    }
-    return VCSR_FALSE;
-  }
+  return VCSR_TRUE;
 }
 
 /**
@@ -275,7 +218,8 @@ bool RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
  */
 std::ostream& RealPaverVCSInterval::dump(std::ostream& s) const
 {
-  return this->constraint_store_.dump_cs(s);
+  return s;
+  //return this->constraint_store_.dump_cs(s);
 }
 
 void RealPaverVCSInterval::add_single_constraint(const node_sptr &constraint_node,
@@ -286,7 +230,7 @@ void RealPaverVCSInterval::add_single_constraint(const node_sptr &constraint_nod
   c = builder.build_constraint(constraint_node, neg_expression);
   var_name_map_t vars;
   vars.insert(builder.vars_begin(), builder.vars_end());
-  if(c) this->constraint_store_.add_constraint(c, vars);
+  //if(c) this->constraint_store_.add_constraint(c, vars);
 }
 
 std::ostream& operator<<(std::ostream& s, const RealPaverVCSInterval& vcs)

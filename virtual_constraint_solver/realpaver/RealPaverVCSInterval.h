@@ -6,7 +6,7 @@
 #include "mathlink_helper.h"
 
 #include "RealPaverBaseVCS.h"
-#include "RPConstraintStore.h"
+#include "RPConstraintStoreInterval.h"
 #include "RPConstraintBuilder.h"
 
 
@@ -77,7 +77,7 @@ private:
 
   static void clear_ctr_set(ctr_set_t& ctrs);
 
-  ConstraintStore constraint_store_;
+  ConstraintStoreInterval constraint_store_;
   MathLink* ml_;
 };
 

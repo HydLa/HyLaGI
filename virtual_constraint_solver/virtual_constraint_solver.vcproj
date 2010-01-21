@@ -167,6 +167,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mathematica\MathValue.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\PacketChecker.cpp"
 				>
 			</File>
@@ -196,6 +200,10 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RPConstraintStore.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\realpaver\RPConstraintStoreInterval.cpp"
 				>
 			</File>
 			<File
@@ -274,6 +282,10 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RPConstraintStore.h"
+				>
+			</File>
+			<File
+				RelativePath=".\realpaver\RPConstraintStoreInterval.h"
 				>
 			</File>
 			<File
