@@ -127,18 +127,23 @@ isRequiredVariable[var_, tellVars_] := (
    If[MemberQ[tellVars, var], True, False]
 );
 
-exDSolve[expr_, vars_] := (
-  Quiet[Check[
-        Check[DSolve[expr, vars, t],
-                underconstraint,
-                {DSolve::underdet, Solve::svars, DSolve::deqx, 
-                 DSolve::bvnr, DSolve::bvsing}],
-        overconstraint,
-        {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
-      {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-       Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-       DSolve::bvnul, DSolve::dsmsm}] 
-);
+exDSolve[expr_, vars_] := Block[
+{sol},
+  sol = Reduce[expr, vars];
+  If[sol===False,
+      overconstraint,
+
+      Quiet[Check[
+            Check[DSolve[expr, vars, t],
+                    underconstraint,
+                    {DSolve::underdet, Solve::svars, DSolve::deqx, 
+                     DSolve::bvnr, DSolve::bvsing}],
+            overconstraint,
+            {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
+          {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
+           Solve::svars, DSolve::bvnr, DSolve::bvsing, 
+           DSolve::bvnul, DSolve::dsmsm}]]
+];
 
 
 (* isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := ( *)
@@ -175,7 +180,7 @@ isConsistentInterval[expr_, vars_] :=  Quiet[Check[(
     {1}, 
 
     (* false *)
-    If[exDSolve[Reduce[expr, vars], vars]=!=overconstraint,
+    If[exDSolve[expr, vars]=!=overconstraint,
         {1},
         {2}]]
 ),
@@ -297,30 +302,40 @@ integrateCalc[cons_,
  * —^‚¦‚ç‚ê‚½Ž®‚ðÏ•ª‚µC•Ô‚·
  *
  * 0: Solver Error
- * 1: ‹‰ð‚Å‚«‚½
+ * 1: Solved Successfully
+ * 2: Under Constraint
+ * 3: Over Constraint
  * 
  *)
 integrateExpr[cons_, vars_] := Quiet[Check[Block[
 { sol },
-  sol = First[DSolve[Reduce[cons, vars], vars, t]];
-  {1,         
-   Map[({getVariableName[#], 
-         getDerivativeCount[#], 
-         createIntegratedValue[#, First[sol]] // Simplify})&, 
-       vars /. x_[t] -> x]}
+  sol = exDSolve[cons, vars];
+  Switch[sol,
+    underconstraint, 
+      {2},
+    overconstraint,
+      {3},
+    _,
+      {1,         
+       Map[({getVariableName[#], 
+             getDerivativeCount[#], 
+             createIntegratedValue[#, First[sol]] // Simplify})&, 
+           vars /. x_[t] -> x]}]
 ],
   {0, $MessageList}
 ]];
 
-Print["integ:", integrateExpr[{x''[t]==2, x'[0]==initVar1x, x[0]==initVar0x}, {x[t], x'[t]}]];
+(* Print["integ:", integrateExpr[{ht'[t]==v[t], v'[t]==-10, ht[0]==a, v[0]==b}, {ht[t], ht'[t], v[t], v'[t]}]]; *)
+(* Print["integ:", integrateExpr[{ht'[t]==v[t], v'[t]==-10, v'[t]==-20, ht[0]==a, v[0]==b}, {ht[t], ht'[t], v[t], v'[t]}]]; *)
+(* Print["integ:", integrateExpr[{ht'[t]==x[t], v'[t]==-10, ht[0]==a, v[0]==b}, {x[t], ht[t], ht'[t], v[t], v'[t]}]]; *)
 
-Print[integrateCalc[
-{True, Derivative[1][usrVarht][t] == usrVarv[t], 
-Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0},
-{},
-{{usrVarht[t] == 0, 26}},
-{usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]},
-1]];
+(* Print[integrateCalc[ *)
+(* {True, Derivative[1][usrVarht][t] == usrVarv[t],  *)
+(* Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0}, *)
+(* {}, *)
+(* {{usrVarht[t] == 0, 26}}, *)
+(* {usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}, *)
+(* 1]]; *)
 
 (* Print[integrateCalc[ *)
 (* {True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10}, *)
