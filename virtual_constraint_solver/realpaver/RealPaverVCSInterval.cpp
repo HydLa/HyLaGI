@@ -204,13 +204,13 @@ bool RealPaverVCSInterval::is_guard_about_undefined_prev(const var_name_map_t& v
 /**
  * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
  */
-bool RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
+VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
                                   const positive_asks_t& positive_asks,
                                   const negative_asks_t& negative_asks,
                                   const time_t& current_time,
                                   const time_t& max_time)
 {
-  return true;
+  return VCSR_TRUE;
 }
 
 /**

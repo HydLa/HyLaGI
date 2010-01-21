@@ -57,7 +57,7 @@ VCSResult MathematicaVCS::check_entailment(const ask_node_sptr& negative_ask)
   return vcs_->check_entailment(negative_ask);
 }
 
-bool MathematicaVCS::integrate(
+VCSResult MathematicaVCS::integrate(
   integrate_result_t& integrate_result,
   const positive_asks_t& positive_asks,
   const negative_asks_t& negative_asks,

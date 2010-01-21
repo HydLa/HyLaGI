@@ -148,7 +148,9 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 {
   HYDLA_LOGGER_DEBUG("#** do_point_phase: BEGIN **\n");
   negative_asks_t unknown_asks; // Symbolicではnegative_asks
-  AskCollector  ask_collector(ms);
+  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+    AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
+    AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
   //ConsistencyChecker consistency_checker;
   //EntailmentChecker entailment_checker;
 
@@ -236,6 +238,9 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
           }
           assert(false);
           break;
+        case hydla::vcs::VCSR_SOLVER_ERROR:
+          assert(false);
+          break;
         }
       }
     }
@@ -243,7 +248,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
 
   // IntervalPhaseへ
   phase_state_sptr new_state(create_new_phase_state(/*state*/));
-  new_state->module_set_container = msc_no_init_discreteask_;
+  new_state->module_set_container = msc_no_init_;
   new_state->phase = IntervalPhase;
   // ConstraintStoreからvariable_mapを作成
   vcs.create_variable_map(new_state->variable_map);
@@ -271,7 +276,8 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   RealPaverVCS vcs(RealPaverVCS::ContinuousMode, &ml_);
   vcs.reset(state->variable_map);
   TellCollector tell_collector(ms);
-  AskCollector ask_collector(ms);
+  AskCollector ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+    AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
 
   tells_t tell_list;
 
@@ -302,20 +308,38 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
                               &negative_asks);
 
     expanded = false;
-  }
-/*
     {
       // ask条件のエンテール判定
       // IPでask条件にprevは入ってない => たぶんUNKNOWNにはならない…
       // ただし，数学的にT/FなのにUになるものがあるので対策
-      // for all unknown_asks do
-      //   Trivalent res = EntailmentCheckerInterval.check_entailment(ask, constraint_store);
-      //   if(res==Tri_TRUE) positive_asks + ask
-      //   if(res==Tri_FALSE) negative_asks + ask
-      //   if(res==Tri_UNKNOWN) assert(false)かなぁ？
+      // IPでは連続を仮定 => 時刻0であるこのときは全ての変数の値が初期値変数と同じ
+      // この状況でFALSEであるものに二度目のチャンスを与える必要があるか？
+      // まぁいいけど
+      negative_asks_t::iterator it  = negative_asks.begin();
+      negative_asks_t::iterator end = negative_asks.end();
+      while(it!=end) {
+        switch(vcs.check_entailment(*it)) {
+        case hydla::vcs::VCSR_TRUE:
+          expanded = true;
+          positive_asks.insert(*it);
+          negative_asks.erase(it++);
+          break;
+        case hydla::vcs::VCSR_FALSE:
+          it++;
+          break;
+        case hydla::vcs::VCSR_UNKNOWN:
+          // IPでは起こらない(ようにする)
+          assert(false);
+          break;
+        case hydla::vcs::VCSR_SOLVER_ERROR:
+          assert(false);
+          break;
+        }
+      }
     }
-  }
+  } // while
 
+  virtual_constraint_solver_t::IntegrateResult integrate_result;
   // (list({t, vm}),list({ask,p?n})) = 積分処理(integrate)
   // integrate(cs, p_a, n_a, time, max_time);
   // time, vm, c_askからphase_stateを作る

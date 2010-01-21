@@ -97,7 +97,7 @@ VCSResult RealPaverVCS::check_entailment(const ask_node_sptr& negative_ask)
 /**
  * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
  */
-bool RealPaverVCS::integrate(integrate_result_t& integrate_result,
+VCSResult RealPaverVCS::integrate(integrate_result_t& integrate_result,
                              const positive_asks_t& positive_asks,
                              const negative_asks_t& negative_asks,
                              const time_t& current_time,

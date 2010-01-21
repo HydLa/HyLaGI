@@ -352,7 +352,7 @@ void MathematicaVCSInterval::send_ask_guards(
   }
 }
 
-bool MathematicaVCSInterval::integrate(
+VCSResult MathematicaVCSInterval::integrate(
   integrate_result_t& integrate_result,
   const positive_asks_t& positive_asks,
   const negative_asks_t& negative_asks,
@@ -534,7 +534,7 @@ bool MathematicaVCSInterval::integrate(
 //     "--- integrate result ---\n", 
 //     integrate_result);
 
-  return true;
+  return VCSR_TRUE;
 }
 
 void MathematicaVCSInterval::send_cs(PacketSender& ps) const

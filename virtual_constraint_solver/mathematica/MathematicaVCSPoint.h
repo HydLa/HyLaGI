@@ -54,7 +54,7 @@ public:
   /**
    * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
    */
-  virtual bool integrate(
+  virtual VCSResult integrate(
     integrate_result_t& integrate_result,
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,

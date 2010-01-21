@@ -355,7 +355,7 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   return ret;
 }
 
-bool MathematicaVCSPoint::integrate(
+VCSResult MathematicaVCSPoint::integrate(
   integrate_result_t& integrate_result,
   const positive_asks_t& positive_asks,
   const negative_asks_t& negative_asks,
@@ -364,7 +364,7 @@ bool MathematicaVCSPoint::integrate(
 {
   // Point‚Å‚ÍintegrateŠÖ”–³Œø
   assert(0);
-  return false;
+  return VCSR_FALSE;
 }
 
 void MathematicaVCSPoint::send_cs() const
