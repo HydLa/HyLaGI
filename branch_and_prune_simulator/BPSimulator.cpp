@@ -14,6 +14,8 @@
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
 #include "DiscreteAskRemover.h"
+#include "AskTypeAnalyzer.h"
+#include "TypedAsk.h"
 
 #include "../virtual_constraint_solver/realpaver/RealPaverVCS.h"
 
@@ -63,6 +65,7 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   {
     // ask‚Ìformat‚Ì‚İ
     parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
+    AskTypeAnalyzer().analyze(pt_original.get());
     AskDisjunctionFormatter().format(pt_original.get());
     AskDisjunctionSplitter().split(pt_original.get());
     msc_original_ = mcc.create(pt_original);
@@ -72,21 +75,23 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     // initial‚È§–ñ‚ğœ‚¢‚½ + ask format
     parse_tree_sptr pt_no_init(boost::make_shared<ParseTree>(*parse_tree));
     InitNodeRemover().apply(pt_no_init.get());
+    AskTypeAnalyzer().analyze(pt_no_init.get());
     AskDisjunctionFormatter().format(pt_no_init.get());
     AskDisjunctionSplitter().split(pt_no_init.get());
     msc_no_init_ = mcc.create(pt_no_init);
   }
 
-  {
-    // no initial + —£U•Ï‰»ask‚ğœ‚¢‚½ + ask format
-    // —£U•Ï‰»ask‚Æ‚ÍcğŒ‚Éprev•Ï”‚Ì‚ ‚éask
-    parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
-    InitNodeRemover().apply(pt_no_init_discreteask.get());
-    DiscreteAskRemover().apply(pt_no_init_discreteask.get());
-    AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
-    AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
-    msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
-  }
+  // TODO: ”p~
+  //{
+  //  // no initial + —£U•Ï‰»ask‚ğœ‚¢‚½ + ask format
+  //  // —£U•Ï‰»ask‚Æ‚ÍcğŒ‚Éprev•Ï”‚Ì‚ ‚éask
+  //  parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
+  //  InitNodeRemover().apply(pt_no_init_discreteask.get());
+  //  DiscreteAskRemover().apply(pt_no_init_discreteask.get());
+  //  AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
+  //  AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
+  //  msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
+  //}
 
   // Ï‚Ş
   phase_state_sptr state(create_new_phase_state());
@@ -285,8 +290,7 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   RealPaverVCS vcs(RealPaverVCS::ContinuousMode, &ml_);
   vcs.reset(state->variable_map);
   TellCollector tell_collector(ms);
-  AskCollector ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
-    AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
+  AskCollector ask_collector(ms);
 
   tells_t tell_list;
 
@@ -327,22 +331,27 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
-        switch(vcs.check_entailment(*it)) {
-        case hydla::vcs::VCSR_TRUE:
-          expanded = true;
-          positive_asks.insert(*it);
-          negative_asks.erase(it++);
-          break;
-        case hydla::vcs::VCSR_FALSE:
+        // —£U•Ï‰»ask‚ÍIP‚Å‚Íƒ`ƒFƒbƒN‚µ‚È‚¢
+        if(boost::dynamic_pointer_cast<hydla::simulator::DiscreteAsk>(*it)) {
           it++;
-          break;
-        case hydla::vcs::VCSR_UNKNOWN:
-          // IP‚Å‚Í‹N‚±‚ç‚È‚¢(‚æ‚¤‚É‚·‚é)
-          assert(false);
-          break;
-        case hydla::vcs::VCSR_SOLVER_ERROR:
-          assert(false);
-          break;
+        } else {
+          switch(vcs.check_entailment(*it)) {
+          case hydla::vcs::VCSR_TRUE:
+            expanded = true;
+            positive_asks.insert(*it);
+            negative_asks.erase(it++);
+            break;
+         case hydla::vcs::VCSR_FALSE:
+           it++;
+           break;
+         case hydla::vcs::VCSR_UNKNOWN:
+           // IP‚Å‚Í‹N‚±‚ç‚È‚¢(‚æ‚¤‚É‚·‚é)
+           assert(false);
+           break;
+         case hydla::vcs::VCSR_SOLVER_ERROR:
+           assert(false);
+           break;
+          }
         }
       }
     }

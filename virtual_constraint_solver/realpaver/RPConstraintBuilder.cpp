@@ -353,6 +353,7 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<Variable> node)
   typedef var_name_map_t::value_type vars_type_t;
 
   if(this->only_init_var_) {
+    // ‚±‚ê‚ÍIP‚Å‚µ‚©ŒÄ‚Î‚ê‚È‚¢ -> IP‚Å‚ÍƒK[ƒhğŒ‚Éprev‚ª‚È‚¢
     assert(!(this->in_prev_));
     // •Ï”•\‚É“o˜^
     std::string name(init_prefix);

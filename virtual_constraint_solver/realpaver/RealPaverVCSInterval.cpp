@@ -70,6 +70,7 @@ bool RealPaverVCSInterval::create_variable_map(variable_map_t& variable_map)
  */
 VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
 {
+  HYDLA_LOGGER_DEBUG("#** vcs:add_constraint: use MathLink to integrate expression **");
   // integrateExpr[cons, vars]を渡したい
   ml_->put_function("integrateExpr", 2);
   ml_->put_function("Join", 3);
@@ -116,9 +117,7 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
     {
       ml_->put_function("Equal", 2);
       ps.put_var(
-        boost::make_tuple(max_diff_map_it->first, 
-                          i,
-                          false),
+        boost::make_tuple(max_diff_map_it->first, i, false),
         PacketSender::VA_Zero);
       // 変数名を元に、値のシンボル作成
       std::string init_value_str = init_prefix;    
@@ -133,32 +132,19 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
 
   int vars_count = 0;
   max_diff_map_it = max_diff_map.begin();
-  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it)
-  {
-    for(int j=0; j<= max_diff_map_it->second; ++j)
-    {
-      vars_count++;
-    }
+  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it) {
+    for(int j=0; j<= max_diff_map_it->second; ++j) vars_count++;
   }
 
   ml_->put_function("List", vars_count);
   max_diff_map_it = max_diff_map.begin();
-  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it)
-  {
-    for(int j=0; j<= max_diff_map_it->second; ++j)
-    {
+  for(; max_diff_map_it != max_diff_map.end(); ++max_diff_map_it) {
+    for(int j=0; j<= max_diff_map_it->second; ++j) {
       ps.put_var(
-        boost::make_tuple(max_diff_map_it->first, 
-                          j,
-                          false),
+        boost::make_tuple(max_diff_map_it->first, j, false),
         PacketSender::VA_Time);
     }
   }
-
-/*
-  PacketChecker pc(*ml_);
-  pc.check();
-*/
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -170,6 +156,8 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
   int list_arg_count = ml_->get_arg_count();
   if(list_arg_count ==1){
     // under or over constraint
+    HYDLA_LOGGER_DEBUG("#** vcs:add_constraint: cannot integrate expression ==> SOLVER ERROR **");
+    return VCSR_SOLVER_ERROR;
   }
   ml_->MLGetNext(); // Listという関数名
   ml_->MLGetNext(); // Listの先頭の要素（数字1）
@@ -178,7 +166,7 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
   ml_->MLGetNext(); // Listという関数名
 
   // rp_constraint作成，保持用
-  ctr_set_t ctrs;
+  ctr_set_t ctrs, ctrs_copy;
   rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->constraint_store_.get_store_vars());
   rp_table_symbol ts;
   rp_table_symbol_create(&ts);
@@ -197,16 +185,56 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
     std::string cons_str = var_name + "=" + value_str;
     // rp_constraintを作成
     rp_constraint c;
-    rp_parse_constraint_string(&c, const_cast<char *>(cons_str.c_str()), ts);
+    // TODO: cons_str内の[]や大文字やe^などを適切に変更すればもっと広くパーズ可能
+    if(!rp_parse_constraint_string(&c, const_cast<char *>(cons_str.c_str()), ts)){
+      // TODO: 何かメモリ解放の必要があるかも
+      HYDLA_LOGGER_DEBUG("#** vcs:add_constraint: cannot translate into rp_constraint ==> SOLVER ERROR");
+      rp_table_symbol_destroy(&ts);
+      return VCSR_SOLVER_ERROR;
+    }
     ctrs.insert(c);
-    // 表示
-    rp::dump_constraint(std::cout, c, vec, 10, RP_INTERVAL_MODE_BOUND);
-    std::cout << "\n";
-    //std::cout << "cons_str:" << cons_str << std::endl;
   }
   rp_table_symbol_destroy(&ts);
+  // コピーしておく
+  for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
+    rp_constraint c;
+    rp_constraint_clone(&c, *it);
+    ctrs_copy.insert(c);
+  }
 
-  return VCSR_TRUE;
+  // consistencyをチェック
+  ctr_set_t store_copy = this->constraint_store_.get_store_exprs_copy();
+  ctrs.insert(store_copy.begin(), store_copy.end());
+  // 確認
+  // TODO: get_store_varsに存在しない変数が式に使われている可能性？
+  vec = ConstraintSolver::create_rp_vector(this->constraint_store_.get_store_vars());
+  HYDLA_LOGGER_DEBUG("#**** vcs:add_constraint: constraints expression ****");
+  std::stringstream ss;
+  for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
+    rp::dump_constraint(ss, *it, vec, 10); ss << "\n";
+  }
+  rp_vector_destroy(&vec);
+  HYDLA_LOGGER_DEBUG(ss.str());
+  // 制約の解が存在するかどうか？
+  rp_box b;
+  bool res = ConstraintSolver::solve_hull(&b, this->constraint_store_.get_store_vars(), ctrs);
+  if(res) {
+    // consistentなら，ストアにtellノードを追加
+    HYDLA_LOGGER_DEBUG("#*** vcs:add_constraint ==> Consistent ***\n");
+    this->constraint_store_.nodes_.insert(this->constraint_store_.nodes_.end(),
+      collected_tells.begin(), collected_tells.end());
+    this->constraint_store_.clear_non_init_constraint();
+    this->constraint_store_.set_non_init_constraint(ctrs_copy);
+    rp_box_destroy(&b);
+    RealPaverVCSInterval::clear_ctr_set(ctrs);
+    return VCSR_TRUE;
+  } else {
+    // in-consistentなら，何もしない
+    HYDLA_LOGGER_DEBUG("#*** vcs:add_constraint ==> Inconsistent ***\n");
+    RealPaverVCSInterval::clear_ctr_set(ctrs);
+    RealPaverVCSInterval::clear_ctr_set(ctrs_copy);
+    return VCSR_FALSE;
+  }
 }
 
 /**
@@ -220,7 +248,7 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
   // solve(S&ng0)==empty /\ solve(S&ng1)==empty /\ ... -> TRUE
   // ngが存在しない(gが等式)場合，TRUEではない
   // else -> UNKNOWN
-/*
+
   // 制約ストアをコピー
   ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
   var_name_map_t vars = this->constraint_store_.get_store_vars();
@@ -229,7 +257,8 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
   var_name_map_t prevs_in_g;
   GuardConstraintBuilder builder;
   builder.set_vars(vars);
-  builder.create_guard_expr(negative_ask, g, ng, vars, prevs_in_g);
+  // ガード中の全ての変数は初期値変数である(6引数目のtrueで制御)
+  builder.create_guard_expr(negative_ask, g, ng, vars, prevs_in_g, true);
   // 確認
   {
     rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
@@ -259,16 +288,6 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
       it2++;
     }
     rp_vector_destroy(&vec);
-  }
-
-  // ask条件がprev変数に関する式であり，かつそのprev変数の値が(-oo,+oo)だった場合にはFALSE
-  if(this->is_guard_about_undefined_prev(vars, ctrs, prevs_in_g)) {
-    HYDLA_LOGGER_DEBUG("#*** vcs:check_entailment ==> FALSE(guard_about_undefined_prev) ***");
-    RealPaverVCSInterval::clear_ctr_set(ctrs);
-    RealPaverVCSInterval::clear_ctr_set(g);
-    RealPaverVCSInterval::clear_ctr_set(ng);
-    //this->finalize();
-    return VCSR_FALSE;
   }
 
   // solve(S & g) == empty -> FALSE
@@ -307,15 +326,14 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
     return VCSR_TRUE;
   }
 
-  // else -> UNKNOWN
-  HYDLA_LOGGER_DEBUG("#*** vcs:check_entailment: ==> UNKNOWN ***");
+  // else -> UNKNOWNだが，IPでUNKOWNは起きないはずなのでSOLVER ERROR
+  // TODO: 「はず」だが，現実には起きる．前のPPからの値以外の引き継ぎが重要な気がする
+  HYDLA_LOGGER_DEBUG("#*** vcs:check_entailment: ==> SOLVER ERROR(UNKNOWN) ***");
   RealPaverVCSInterval::clear_ctr_set(ctrs);
   RealPaverVCSInterval::clear_ctr_set(g);
   RealPaverVCSInterval::clear_ctr_set(ng);
   //this->finalize();
-  return VCSR_UNKNOWN;
-*/
-return VCSR_TRUE;
+  return VCSR_SOLVER_ERROR;
 }
 
 void RealPaverVCSInterval::clear_ctr_set(ctr_set_t& ctrs)

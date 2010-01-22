@@ -5,6 +5,7 @@
 #include "rp_constraint_ext.h"
 #include "RPConstraintSolver.h"
 
+#include <cassert>
 #include <boost/lexical_cast.hpp>
 
 namespace hydla {
@@ -32,14 +33,11 @@ void ConstraintStoreInterval::build(const virtual_constraint_solver_t::variable_
   for(it=variable_map.begin(); it!=variable_map.end(); it++) {
     // 変数名を作る ex. "usrVar0ht" "initValue0ht"
     std::string name(var_prefix);
-    //std::string name(it->first.name);
     name += boost::lexical_cast<std::string>(it->first.derivative_count);
     name += it->first.name;
-    //for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
     std::string ini_name(init_prefix);
     ini_name += boost::lexical_cast<std::string>(it->first.derivative_count);
     ini_name += it->first.name;
-    //ini_name += BP_INITIAL_STR;
     // 表に登録
     unsigned int size = this->vars_.size();
     var_property vp(it->first.derivative_count, false),
@@ -88,10 +86,45 @@ void ConstraintStoreInterval::build(const virtual_constraint_solver_t::variable_
 
 // 消す予定
 void ConstraintStoreInterval::build_variable_map(virtual_constraint_solver_t::variable_map_t& variable_map) const
-{}
+{
+  assert(false);
+}
 
-//std::set<rp_constraint> ConstraintStoreInterval::get_store_exprs_copy() const
-//{}
+std::set<rp_constraint> ConstraintStoreInterval::get_store_exprs_copy() const
+{
+  std::set<rp_constraint> ans;
+  std::set<rp_constraint>::const_iterator it = this->exprs_.begin();
+  while(it != this->exprs_.end()) {
+    rp_constraint c;
+    rp_constraint_clone(&c, (*it));
+    ans.insert(c);
+    it++;
+  }
+  return ans;
+}
+
+/**
+ * 非初期値制約をクリアする．VCSのadd_constraint用
+ */
+void ConstraintStoreInterval::clear_non_init_constraint()
+{
+  for(ctr_set_t::iterator it=this->non_init_exprs_.begin();
+    it!=this->non_init_exprs_.end(); ++it) {
+      rp_constraint c = *it;
+      if(c) rp_constraint_destroy(&c);
+      this->non_init_exprs_.erase(it++);
+  }
+}
+
+/**
+ * 非初期値制約をセットする．VCSのadd_constraint用
+ * あれ？関数一つでいいんじゃね？
+ */
+void ConstraintStoreInterval::set_non_init_constraint(const ctr_set_t ctrs)
+{
+  assert(this->non_init_exprs_.size() == 0);
+  this->non_init_exprs_ = ctrs;
+}
 
 //void ConstraintStoreInterval::add_constraint(rp_constraint c, const var_name_map_t& vars)
 //{}
@@ -102,11 +135,14 @@ void ConstraintStoreInterval::build_variable_map(virtual_constraint_solver_t::va
 std::ostream& ConstraintStoreInterval::dump_cs(std::ostream& s) const
 {
   rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_);
-  std::set<rp_constraint>::const_iterator ctr_it = this->exprs_.begin();
+  ctr_set_t::const_iterator ctr_it = this->exprs_.begin();
   while(ctr_it != this->exprs_.end()){
     rp::dump_constraint(s, *ctr_it, vec); // digits, mode);
     s << "\n";
     ctr_it++;
+  }
+  for(ctr_it=this->non_init_exprs_.begin(); ctr_it!=this->non_init_exprs_.end(); ++ctr_it){
+    rp::dump_constraint(s, *ctr_it, vec);
   }
   s << "\n";
   rp_vector_destroy(&vec);

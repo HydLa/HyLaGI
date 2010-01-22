@@ -21,6 +21,8 @@ namespace realpaver {
 class ConstraintStoreInterval
 {
 public:
+  typedef std::set<rp_constraint> ctr_set_t;
+
   ConstraintStoreInterval();
 
   ConstraintStoreInterval(const ConstraintStoreInterval& src);
@@ -34,7 +36,11 @@ public:
   // Á‚·—\’è
   void build_variable_map(virtual_constraint_solver_t::variable_map_t& variable_map) const;
 
-  //std::set<rp_constraint> get_store_exprs_copy() const;
+  std::set<rp_constraint> get_store_exprs_copy() const;
+
+  void clear_non_init_constraint();
+
+  void set_non_init_constraint(const ctr_set_t ctrs);
 
   //void add_constraint(rp_constraint c, const var_name_map_t& vars);
 
@@ -56,10 +62,9 @@ public:
   hydla::simulator::tells_t nodes_;
 
 private:
-  rp_vector_variable to_rp_vector() const;
-
-  std::set<rp_constraint> exprs_;
-  var_name_map_t vars_;
+  ctr_set_t exprs_; // ‰Šú’l‚ÉŠÖ‚·‚é§–ñ‚ª“ü‚é
+  ctr_set_t non_init_exprs_; // IP‚ÅV‚½‚É–‚½‚·‚×‚«§–ñ‚ª“ü‚é
+  var_name_map_t vars_; // •Ï”•\
 };
 
 } // namespace realpaver
