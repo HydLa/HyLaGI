@@ -16,8 +16,12 @@ class VariableMap {
 public:
   typedef VariableType variable_t;
   typedef ValueType    value_t;
+  
   typedef VariableMap<VariableType, ValueType> variable_map_t;
   typedef typename std::map<VariableType, ValueType> variable_list_t;
+
+  // STLŒÝŠ·‚Ì‚½‚ß‚Ìtypedef (–¢Š®)
+  typedef typename variable_list_t::value_type       value_type;
   typedef typename variable_list_t::iterator         iterator;
   typedef typename variable_list_t::const_iterator   const_iterator;
 

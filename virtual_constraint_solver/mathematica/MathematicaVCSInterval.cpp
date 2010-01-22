@@ -461,14 +461,16 @@ VCSResult MathematicaVCSInterval::integrate(
     integrate_result.states.back();
 
   // next_point_phase_timeを得る
-  MathTime next_phase_time;
-  state.time.receive_time(*ml_);
-  HYDLA_LOGGER_DEBUG("receive_time: ", state.time);  
+  MathTime elapsed_time;
+  elapsed_time.receive_time(*ml_);
+  HYDLA_LOGGER_DEBUG("elapsed_time: ", elapsed_time);  
+  state.time  = elapsed_time;
   state.time += current_time;
   HYDLA_LOGGER_DEBUG("next_phase_time: ", state.time);  
   ml_->MLGetNext(); // Listという関数名
   
-  // 変数表の作成
+  // 変数と値の組を受け取る
+  variable_map_t varmap;
   int variable_list_size = ml_->get_arg_count();
   HYDLA_LOGGER_DEBUG("variable_list_size : ", variable_list_size);  
   ml_->MLGetNext(); ml_->MLGetNext();
@@ -497,7 +499,7 @@ VCSResult MathematicaVCSInterval::integrate(
     HYDLA_LOGGER_DEBUG("value : ", value.str);
     ml_->MLGetNext();
 
-    state.variable_map.set_variable(variable, value); 
+    varmap.set_variable(variable, value); 
   }
 
   // askとそのIDの組一覧を得る
@@ -546,14 +548,85 @@ VCSResult MathematicaVCSInterval::integrate(
   state.is_max_time = ml_->get_integer() == 1;
   HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
 
+
+  // 次のフェーズにおける変数の値を導出する
+  HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
+  apply_time_to_vm(varmap, state.variable_map, elapsed_time);    
+
+
+  // 出力する時刻のリストを作成する
+  HYDLA_LOGGER_DEBUG("--- calc output time list ---");  
+
+  ml_->put_function("createOutputTimeList", 3);
+  ml_->put_integer(0);
+  elapsed_time.send_time(*ml_);
+  max_interval_.send_time(*ml_);
+
+  ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLGetNext(); 
+  int output_time_size = ml_->get_arg_count();
+  HYDLA_LOGGER_DEBUG("output_time_size : ", output_time_size);  
+  ml_->MLGetNext(); 
+  ml_->MLGetNext(); 
+  std::vector<MathTime> output_time_list(output_time_size);
+  for(int i=0; i<output_time_size; i++) {
+
+    output_time_list[i].receive_time(*ml_);
+    HYDLA_LOGGER_DEBUG("output time : ", output_time_list[i]);  
+  }
+
+//   PacketChecker pc(*ml_);
+//   pc.check2();
+
+  // 出力関数に対して時刻と変数表の組を与える
+  HYDLA_LOGGER_DEBUG("--- send vm to output func ---");  
+  std::vector<MathTime>::const_iterator outtime_it  = output_time_list.begin();
+  std::vector<MathTime>::const_iterator outtime_end = output_time_list.end();
+  for(; outtime_it!=outtime_end; ++outtime_it) {
+    variable_map_t outtime_vm;
+    apply_time_to_vm(varmap, outtime_vm, *outtime_it);
+    
+    output(*outtime_it + current_time, outtime_vm);
+  }
+  
+  
 //   HYDLA_LOGGER_DEBUG(
 //     "--- integrate result ---\n", 
 //     integrate_result);
 
-  output(state.time, state.variable_map);
 
   return VCSR_TRUE;
 }
+
+void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm, 
+                                              variable_map_t& out_vm, 
+                                              const MathTime& time)
+{
+  HYDLA_LOGGER_DEBUG("--- apply_time_to_vm ---");
+
+  variable_map_t::const_iterator it  = in_vm.begin();
+  variable_map_t::const_iterator end = in_vm.end();
+  for(; it!=end; ++it) {
+    
+    HYDLA_LOGGER_DEBUG("variable : ", it->first);
+
+    ml_->put_function("applyTime2Expr", 2);
+    ml_->put_function("ToExpression", 1);
+    ml_->put_string(it->second.str);
+    time.send_time(*ml_);
+
+    ml_->skip_pkt_until(RETURNPKT);
+    ml_->MLGetNext(); 
+
+    // 値
+    MathValue    value;
+    value.str = ml_->get_string();
+    HYDLA_LOGGER_DEBUG("value : ", value.str);
+
+    out_vm.set_variable(it->first, value);   
+  }
+}
+
 
 void MathematicaVCSInterval::send_cs(PacketSender& ps) const
 {

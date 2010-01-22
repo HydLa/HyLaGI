@@ -72,6 +72,14 @@ void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
 
+  // 変数のラベル
+  // TODO: 未定義の値とかのせいでずれる可能性あり?
+  std::cout << "# time\t";
+  BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
+    std::cout << i.first << "\t";
+  }
+  std::cout << std::endl;
+
   push_phase_state(state);
 
   init_mathlink();

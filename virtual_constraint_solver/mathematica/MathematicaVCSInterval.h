@@ -106,6 +106,11 @@ private:
   void send_ask_guards(PacketSender& ps, 
                        const hydla::simulator::ask_set_t& asks) const;
 
+  /**
+   * •Ï”•\‚É‘Î‚µ‚Ä—^‚¦‚ç‚ê‚½‚ğ“K—p‚·‚é
+   */
+  void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const MathTime& time);
+
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
 };

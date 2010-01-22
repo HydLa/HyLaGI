@@ -22,9 +22,9 @@ MathTime::~MathTime()
 {}
 
 
-void MathTime::send_time(MathLink& ml)
+void MathTime::send_time(MathLink& ml) const
 {
-  HYDLA_LOGGER_DEBUG("time:", time_);
+  HYDLA_LOGGER_DEBUG("MathTime::send_time : ", time_);
   ml.put_function("ToExpression", 1);
   ml.put_string(time_);
 }

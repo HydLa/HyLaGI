@@ -37,7 +37,7 @@ public:
   /**
    * Mathematicaへ時刻データを送信する
    */
-  void send_time(MathLink& ml);
+  void send_time(MathLink& ml) const;
 
   /**
    * Mathematicaから時刻データを受信する

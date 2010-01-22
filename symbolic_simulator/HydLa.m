@@ -251,19 +251,18 @@ getDerivativeCount[variable_[_]] := 0;
 getDerivativeCount[Derivative[n_][f_][_]] := n;
 
 createIntegratedValue[variable_, integRule_] := (
-  variable /. Map[(Rule[#[[1]] /. x_[t]-> x, #[[2]]])&, integRule]
-           /. Derivative[n_][f_] :> D[f, {t, n}] 
-           /. x_[t] -> x
+  Simplify[
+    variable /. Map[(Rule[#[[1]] /. x_[t]-> x, #[[2]]])&, integRule]
+             /. Derivative[n_][f_] :> D[f, {t, n}] 
+             /. x_[t] -> x]
 );
 
 (* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 2t+Sin[t]}"]]] *)
 (* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 10}"]]] *)
 
-
 (*
  * askの導出状態が変化するまで積分をおこなう
  *)
-
 integrateCalc[cons_, 
               posAsk_, negAsk_, 
               vars_, 
@@ -274,9 +273,18 @@ integrateCalc[cons_,
   tmpNegAsk,
   tmpMinT, 
   tmpMinAskIDs,
-  tmpPrevConsTable,
+  tmpVarMap,
   tmpRet
+(*   applyTime2VarMap *)
 },
+(*   applyTime2VarMap[{name_, derivative_, expr_}, time_, extrafunc_] := *)
+(*     {name,  *)
+(*      derivative,  *)
+(*      extrafunc[expr /. t->time]}; *)
+(* Map[(applyTime2VarMap[#,  *)
+(*                                   tmpMinT,  *)
+(*                                   Function[{expr}, ToString[FullForm[Simplify[expr]]]]])&,  *)
+
   debugPrint["cons:", cons, 
              "posAsk:", posAsk, 
              "negAsk:", negAsk, 
@@ -288,15 +296,14 @@ integrateCalc[cons_,
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
   {tmpMinT, tmpMinAskIDs} = 
     calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
-  tmpPrevConsTable = 
+  tmpVarMap = 
     Map[({getVariableName[#], 
           getDerivativeCount[#], 
-          (createIntegratedValue[#, tmpIntegSol] 
-            /. t->tmpMinT) // Simplify // FullForm // ToString})&, 
+          createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
         vars];
   tmpRet = {1,
             ToString[tmpMinT, InputForm], 
-            tmpPrevConsTable, 
+            tmpVarMap,
             tmpMinAskIDs, 
             If[tmpMinT>=maxTime, 1, 0]};
   debugPrint["ret:", tmpRet];
@@ -304,6 +311,31 @@ integrateCalc[cons_,
 ],
   {0, $MessageList}
 ]];
+
+(*
+ * 式に対して与えられた時間を適用する
+ *)
+applyTime2Expr[expr_, time_] := (
+  (expr /. t -> time) // FullForm // ToString
+);
+
+(*
+ * formからtoまでのリストをinterval間隔で作成する
+ * 最後に必ずtoが来るために，
+ * 最後の間隔のみintervalよりも短くなる可能性がある
+ *)
+createValueList[from_, to_, interval_] := Block[
+{sol},
+  sol = NestWhileList[((#) + (interval))&, from, (# <= to)&, 1, Infinity, -1];
+  If[Last[sol] =!= to, 
+      Append[sol, to], 
+      sol]
+];
+
+createOutputTimeList[from_, to_, interval_] :=
+  Map[(ToString[#, InputForm])&, createValueList[from, to, interval]];
+
+(* Print[createOutputTimeList[0, 5, 1/3]] *)
 
 (* Print[integrateCalc[ *)
 (* {True, Derivative[1][usrVarht][t] == usrVarv[t], *)
@@ -354,7 +386,7 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
       {1,         
        Map[({getVariableName[#], 
              getDerivativeCount[#], 
-             ToString[InputForm[createIntegratedValue[#, First[sol]] // Simplify]]})&, 
+             ToString[createIntegratedValue[#, First[sol]], InputForm]})&, 
            vars]}]
 ],
   {0, $MessageList}

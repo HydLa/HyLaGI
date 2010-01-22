@@ -36,14 +36,14 @@ open(OUT_PLOT, "w") do |f|
   f.puts <<EOS
 set terminal #{terminal_type}
 set output "out.#{output_ext}"
-set xlabel 'time'
-set ylabel '#{vars.join(", ")}'
+set xlabel "time"
+set ylabel "#{vars.join(", ")}"
 EOS
 
   f.print "plot "
   index = 2
   vars.each do |v|
-    f.print "'#{OUT_DATA}' u 1:#{index} title '#{v}' w l"
+    f.print "\"#{OUT_DATA}\" u 1:#{index} title \"#{v}\" w l"
     f.print ", \\\n     " if vars.size != index-1
     index += 1
   end
