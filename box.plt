@@ -13,4 +13,4 @@ set ylabel "by"
 set object 1 rect from 5,6 to 6,14
 set object 2 rect from 1,4.5 to 4,15
 
-plot 'out.data' u 4:5 title 'trajectory' w l
+plot 'out.data' u 3:4 title 'trajectory' w l

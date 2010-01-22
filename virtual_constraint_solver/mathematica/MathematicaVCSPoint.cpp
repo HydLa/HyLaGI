@@ -110,8 +110,10 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   std::set<std::set<MathValue> >::const_iterator or_cons_end = 
     constraint_store_.first.end();
 
-  // TODO: 一つだけ採用するように戻す
-  for(; or_cons_it!=or_cons_end; ++or_cons_it) {
+  // 一つだけ採用
+  // TODO: 複数解ある場合の処理もきちんと考える
+  assert(constraint_store_.first.size() == 1);
+//  for(; or_cons_it!=or_cons_end; ++or_cons_it) {
     std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
     for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)
     {
@@ -183,7 +185,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
         variable_map.set_variable(symbolic_variable, symbolic_value);
       } 
     }
-  }
+//  }
 
   return true;
 }
@@ -221,8 +223,6 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   ps.put_vars(PacketSender::VA_None);
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
-
-  
   
 //   ml_->skip_pkt_until(TEXTPKT);
 //   std::cout << ml_->get_string() << std::endl;
@@ -258,6 +258,9 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
     HYDLA_LOGGER_DEBUG( "---build constraint store---");
     ml_->MLGetNext();
 
+    // 制約ストアをリセット
+    reset();
+
     // List関数の要素数（Orで結ばれた解の個数）を得る
     int or_size = ml_->get_arg_count();
     HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
@@ -292,13 +295,11 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
     HYDLA_LOGGER_DEBUG("inconsistent");
   }
 
-  return result;
-
   HYDLA_LOGGER_DEBUG(
     *this,
     "\n#*** End MathematicaVCSPoint::add_constraint ***");
-  
-  return VCSR_TRUE;
+
+  return result;
 }
   
 VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
