@@ -226,6 +226,9 @@ protected:
   virtual void do_initialize(const parse_tree_sptr& parse_tree)
   {}
 
+  /**
+   * シミュレーション対象となるパースツリー
+   */
   parse_tree_sptr parse_tree_;
 
   /**

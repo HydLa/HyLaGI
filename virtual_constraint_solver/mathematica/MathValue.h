@@ -12,6 +12,12 @@ namespace mathematica {
 struct MathValue {
   std::string str; // 文字列（任意の式を扱える）
 
+
+  /**
+   * 未定義値かどうか
+   */
+  bool is_undefined() const;
+
   /**
    * 浮動小数点形式の値を取得する
    */

@@ -260,6 +260,9 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     }
   }
 
+  variable_map_t new_variable_map;
+  
+
   
   // Interval Phaseへ移行
   HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
@@ -267,8 +270,23 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   new_state->phase        = IntervalPhase;
   new_state->current_time = state->current_time;
   //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
-  vcs.create_variable_map(new_state->variable_map);
   new_state->module_set_container = msc_no_init_;
+  
+
+  {
+    // 暫定的なフレーム公理の処理
+    // 未定義の値や変数表に存在しない場合は以前の値をコピー
+    vcs.create_variable_map(new_state->variable_map);
+    variable_map_t::const_iterator it  = state->variable_map.begin();
+    variable_map_t::const_iterator end = state->variable_map.end();
+    for(; it!=end; ++it) {
+      if(new_state->variable_map.get_variable(it->first).is_undefined())
+      {
+        new_state->variable_map.set_variable(it->first, it->second);
+      }
+    }
+  }
+
   push_phase_state(new_state);
 
   HYDLA_LOGGER_DEBUG("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",

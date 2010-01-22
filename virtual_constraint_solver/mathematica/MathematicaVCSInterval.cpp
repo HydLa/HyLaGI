@@ -45,10 +45,12 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
   variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
   variable_map_t::variable_list_t::const_iterator end = variable_map.end();
   for(; it!=end; ++it) {
-    constraint_store_.init_vars.insert(
-      std::make_pair(it->first, it->second));
+    if(!it->second.is_undefined()) {
+      constraint_store_.init_vars.insert(
+        std::make_pair(it->first, it->second));
+    }
   }
-
+  
   HYDLA_LOGGER_DEBUG(constraint_store_);
 
   return true;

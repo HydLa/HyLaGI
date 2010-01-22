@@ -51,7 +51,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
     const MathVariable& variable = (*it).first;
     const MathValue&    value = (*it).second;    
 
-    if(value.str != "") { //未定義かどうか  TODO: 未定義判定関数つくる？
+    if(!value.is_undefined()) {
       std::ostringstream val_str;
 
       // MathVariable側に関する文字列を作成
@@ -110,6 +110,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   std::set<std::set<MathValue> >::const_iterator or_cons_end = 
     constraint_store_.first.end();
 
+  // TODO: 一つだけ採用するように戻す
   for(; or_cons_it!=or_cons_end; ++or_cons_it) {
     std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
     for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)

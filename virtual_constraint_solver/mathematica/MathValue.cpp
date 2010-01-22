@@ -16,6 +16,11 @@ namespace mathematica {
 // MathValue::~MathValue()
 // {}
 
+bool MathValue::is_undefined() const
+{
+  return str.empty();
+}
+
 std::string MathValue::get_real_val(MathLink& ml, int precision) const
 {
   ml.put_function("ToString", 1);  

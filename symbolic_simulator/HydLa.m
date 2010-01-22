@@ -244,17 +244,21 @@ Block[{
 (* Print[nextPointPhaseTime[False, 10, {}, {{t*t==2, c3}}]] *)
 
 
-getVariableName[variable_] := variable;
-getVariableName[Derivative[n_][f_]] := f;
+getVariableName[variable_[_]] := variable;
+getVariableName[Derivative[n_][f_][_]] := f;
 
-getDerivativeCount[variable_] := 0;
-getDerivativeCount[Derivative[n_][f_]] := n;
+getDerivativeCount[variable_[_]] := 0;
+getDerivativeCount[Derivative[n_][f_][_]] := n;
 
 createIntegratedValue[variable_, integRule_] := (
-  variable /. (integRule /. x_[t] -> x) 
-  /. Derivative[n_][f_] :> D[f, {t, n}]
-           
+  variable /. Map[(Rule[#[[1]] /. x_[t]-> x, #[[2]]])&, integRule]
+           /. Derivative[n_][f_] :> D[f, {t, n}] 
+           /. x_[t] -> x
 );
+
+(* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 2t+Sin[t]}"]]] *)
+(* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 10}"]]] *)
+
 
 (*
  * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ð‚¨‚±‚È‚¤
@@ -289,7 +293,7 @@ integrateCalc[cons_,
           getDerivativeCount[#], 
           (createIntegratedValue[#, tmpIntegSol] 
             /. t->tmpMinT) // Simplify // FullForm // ToString})&, 
-        vars /. x_[t] -> x];
+        vars];
   tmpRet = {1,
             ToString[tmpMinT, InputForm], 
             tmpPrevConsTable, 
@@ -300,6 +304,34 @@ integrateCalc[cons_,
 ],
   {0, $MessageList}
 ]];
+
+(* Print[integrateCalc[ *)
+(* {True, Derivative[1][usrVarht][t] == usrVarv[t], *)
+(* Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0}, *)
+(* {}, *)
+(* {{usrVarht[t] == 0, 26}}, *)
+(* {usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}, *)
+(* 1]]; *)
+
+(*  Print[integrateCalc[ *)
+(* {True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10}, *)
+(* {}, *)
+(* {{usrVarht[t] == 0, 73}}, *)
+(* {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t], Derivative[2][usrVarv][t]}, *)
+(* 4]]; *)
+
+(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
+(*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)
+(*   {}, *)
+(*   {{usrVarht[t]==0, 10}}, *)
+(*   {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10]]; *)
+
+(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0], *)
+(*     Equal[Derivative[2][usrVarht][t], -10]}, *)
+(*   {}, *)
+(*   {{usrVarht[t]==0, 10}}, *)
+(*   {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm]; *)
+
 
 (*
  * —^‚¦‚ç‚ê‚½Ž®‚ðÏ•ª‚µC•Ô‚·
@@ -323,7 +355,7 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
        Map[({getVariableName[#], 
              getDerivativeCount[#], 
              ToString[InputForm[createIntegratedValue[#, First[sol]] // Simplify]]})&, 
-           vars /. x_[t] -> x]}]
+           vars]}]
 ],
   {0, $MessageList}
 ]];
@@ -332,32 +364,6 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
 (* Print["integ:", integrateExpr[{ht'[t]==v[t], v'[t]==-10, v'[t]==-20, ht[0]==a, v[0]==b}, {ht[t], ht'[t], v[t], v'[t]}]]; *)
 (* Print["integ:", integrateExpr[{ht'[t]==x[t], v'[t]==-10, ht[0]==a, v[0]==b}, {x[t], ht[t], ht'[t], v[t], v'[t]}]]; *)
 
-(* Print[integrateCalc[ *)
-(* {True, Derivative[1][usrVarht][t] == usrVarv[t],  *)
-(* Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0}, *)
-(* {}, *)
-(* {{usrVarht[t] == 0, 26}}, *)
-(* {usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}, *)
-(* 1]]; *)
-
-(* Print[integrateCalc[ *)
-(* {True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10}, *)
-(* {}, *)
-(* {{usrVarht[t] == 0, 73}}, *)
-(* {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t], Derivative[2][usrVarv][t]}, *)
-(* 4]]; *)
-
-(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
-(*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)
-(*   {},  *)
-(*   {{usrVarht[t]==0, 10}},  *)
-(*   {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10]]; *)
-
-(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0], *)
-(*     Equal[Derivative[2][usrVarht][t], -10]}, *)
-(*   {},  *)
-(*   {{usrVarht[t]==0, 10}},  *)
-(*   {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm]; *)
 
 
 (* $MaxExtraPrecision = Infinity *)

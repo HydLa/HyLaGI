@@ -21,6 +21,10 @@ public:
   typedef typename variable_list_t::iterator         iterator;
   typedef typename variable_list_t::const_iterator   const_iterator;
 
+  /**
+   * 変数と値の組を設定する
+   * すでに設定済みの変数であった場合，値は上書きされる
+   */
   void set_variable(const variable_t& var, const value_t& val)
   {
     iterator it = variables_.find(var);
@@ -32,13 +36,17 @@ public:
     }
   }
 
+  /**
+   * 要求された変数に対応する値のリファレンスを返す
+   */
   value_t& get_variable(const variable_t& var)
   {
-    iterator it = variables_.find(var);
-    if(it != variables_.end()) {
-      return it->second;
-    }
-    return value_t();
+//     iterator it = variables_.find(var);
+//     if(it != variables_.end()) {
+//       return it->second;
+//     }
+
+    return variables_[var];
   }
 
   iterator begin()       
@@ -61,6 +69,9 @@ public:
     return variables_.end();
   }
 
+  /**
+   * 変数表のサイズを返す
+   */
   size_t size() const
   {
     return variables_.size();
