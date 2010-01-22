@@ -60,6 +60,18 @@ public:
   
   // 時相演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
+  
+  // モジュールの弱合成
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
+
+  // モジュールの並列合成
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
+   
+  // 制約呼び出し
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
+  
+  // プログラム呼び出し
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
 private:
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
