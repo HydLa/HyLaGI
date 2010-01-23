@@ -8,14 +8,16 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 
-// symbolic_simulator
-#include "../symbolic_simulator/mathlink_helper.h"
-
 // virtual_consraint_solver
 #include "../virtual_constraint_solver/realpaver/RPVariable.h"
 #include "../virtual_constraint_solver/realpaver/RPValue.h"
 #include "../virtual_constraint_solver/realpaver/RPTime.h"
 #include "../virtual_constraint_solver/realpaver/RealPaverVCS.h"
+
+#include "..//virtual_constraint_solver/mathematica/mathlink_helper.h"
+
+#include "../symbolic_simulator/math_source.h"
+
 
 namespace hydla {
 namespace bp_simulator {

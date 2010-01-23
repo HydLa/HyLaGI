@@ -8,8 +8,6 @@
 
 #include "Logger.h"
 
-#include "../symbolic_simulator/math_source.h"
-
 #include "InitNodeRemover.h"
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"

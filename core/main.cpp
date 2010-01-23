@@ -23,7 +23,7 @@
 
 // symbolic_simulator
 #include "MathSimulator.h"
-#include "mathlink_helper.h"
+// #include "mathlink_helper.h"
 
 // namespace
 using namespace hydla;

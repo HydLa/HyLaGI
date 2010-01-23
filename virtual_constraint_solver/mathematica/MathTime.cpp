@@ -36,11 +36,12 @@ void MathTime::receive_time(MathLink& ml)
 
 std::string MathTime::get_real_val(MathLink& ml, int precision) const
 {
-  ml.put_function("ToString", 1);  
+  ml.put_function("ToString", 2);  
   ml.put_function("N", 2);  
   ml.put_function("ToExpression", 1);
   ml.put_string(time_);
   ml.put_integer(precision);
+  ml.put_symbol("CForm");  
   
   ml.skip_pkt_until(RETURNPKT);
   return  ml.get_string();

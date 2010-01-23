@@ -26,11 +26,12 @@ std::string MathValue::get_real_val(MathLink& ml, int precision) const
   std::string ret;
 
   if(!is_undefined()) {
-    ml.put_function("ToString", 1);  
+    ml.put_function("ToString", 2);  
     ml.put_function("N", 2);  
     ml.put_function("ToExpression", 1);
     ml.put_string(str);
     ml.put_integer(precision);
+    ml.put_symbol("CForm");  
   
     ml.skip_pkt_until(RETURNPKT);
     ret = ml.get_string();
