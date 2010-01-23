@@ -163,6 +163,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodeIDUpdater.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ParseTree.cpp"
 				>
 			</File>

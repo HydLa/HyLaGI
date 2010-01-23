@@ -208,7 +208,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
 
   
   MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_);
-  vcs.set_output_func(symbolic_time_t("1/10"), 
+  vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
                       boost::bind(&MathSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
 
@@ -268,9 +268,6 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     }
   }
 
-  variable_map_t new_variable_map;
-  
-
   
   // Interval Phase�ֈڍs
   HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
@@ -294,6 +291,8 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
       }
     }
   }
+
+  output(new_state->current_time, new_state->variable_map);
 
   push_phase_state(new_state);
 
@@ -323,7 +322,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
   MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_);
-  vcs.set_output_func(symbolic_time_t("1/10"), 
+  vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
                       boost::bind(&MathSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
 
@@ -438,14 +437,14 @@ void MathSimulator::output(const symbolic_time_t& time,
                            const variable_map_t& vm)
 {
 //   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
-  std::cout << time.get_real_val(ml_, 5) << "\t";
+  std::cout << time.get_real_val(ml_, opts_.output_precision) << "\t";
 
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
 //     std::cout << it->first << "\t: "
 //               << it->second.get_real_val(ml_, 5) << "\n";
-    std::cout << it->second.get_real_val(ml_, 5) << "\t";
+    std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
   }
   std::cout << std::endl;
 

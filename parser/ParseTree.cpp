@@ -88,7 +88,7 @@ node_sptr ParseTree::swap_tree(const node_sptr& tree)
 {
   node_sptr ret(node_tree_);
   node_tree_ = tree;
-  rebuild_node_id_list();
+  update_node_id_list();
   return ret;
 }
 
@@ -127,6 +127,35 @@ int ParseTree::get_differential_count(const std::string& name) const
 node_id_t ParseTree::register_node(const node_sptr& n)
 {
   assert(n->get_id() == 0);
+  assert(node_map_.find(n->get_id()) == node_map_.end());
+    
+  ++max_node_id_;
+  n->set_id(max_node_id_);
+  node_map_.insert(std::make_pair(max_node_id_, n));
+  return max_node_id_;
+}
+
+void ParseTree::update_node(node_id_t id, const node_sptr& n)
+{
+  node_map_t::iterator it = node_map_.find(id);
+  assert(it != node_map_.end());
+
+  it->second = n;
+}
+
+void ParseTree::remove_node(node_id_t id)
+{
+  node_map_t::iterator it = node_map_.find(id);
+  if(it!=node_map_.end()) {
+    node_map_.erase(it);
+  }
+}
+
+
+/*
+node_id_t ParseTree::register_node(const node_sptr& n)
+{
+  assert(n->get_id() == 0);
   assert(node_map_.by<tag_node_sptr>().find(n) == 
             node_map_.by<tag_node_sptr>().end());
     
@@ -155,10 +184,13 @@ void ParseTree::update_node_id(node_id_t id, const node_sptr& n)
   node_map_.by<tag_node_sptr>().
     modify_data(it, boost::bimaps::_data = id);
 }
+*/
 
 void ParseTree::clear()
 {
-  max_node_id_ = 0;
+  max_node_id_ = INITIAL_MAX_NODE_ID;
+  node_factory_.reset();
+  node_map_.clear();
   node_tree_.reset();
   variable_map_.clear();
 }
@@ -218,13 +250,12 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   }
 
   s << "--- node id table (id -> sptr) ---\n";
-  BOOST_FOREACH(const node_map_t::map_by<tag_node_id>::value_type& i, 
-                node_map_.by<tag_node_id>()) 
+  BOOST_FOREACH(const node_map_value_t& i, node_map_) 
   {
-    s << i.get<tag_node_id>() << " => " 
-      << i.get<tag_node_sptr>() << "\n";
+    s << i.first << " => " 
+      << i.second << "\n";
   }
-
+/*
   s << "--- node id table (sptr -> id) ---\n";
   BOOST_FOREACH(const node_map_t::map_by<tag_node_sptr>::value_type& i, 
                 node_map_.by<tag_node_sptr>()) 
@@ -232,7 +263,7 @@ std::ostream& ParseTree::dump(std::ostream& s) const
     s << i.get<tag_node_sptr>() << " => " 
       << i.get<tag_node_id>() << "\n";
   }
-
+*/
   return s;
 }
 

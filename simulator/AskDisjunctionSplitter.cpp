@@ -15,7 +15,7 @@ void AskDisjunctionSplitter::split(hydla::parse_tree::ParseTree* pt)
 {
   pt_ = pt;
   pt->dispatch(this);
-  pt->rebuild_node_id_list();
+  pt->update_node_id_list();
 }
 
 // §–ñŒÄ‚Ño‚µ

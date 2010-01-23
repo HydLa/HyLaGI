@@ -10,9 +10,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/bimap/bimap.hpp>
-#include <boost/bimap/unordered_set_of.hpp>
-#include <boost/bimap/support/lambda.hpp>
+//#include <boost/bimap/bimap.hpp>
+//#include <boost/bimap/unordered_set_of.hpp>
+//#include <boost/bimap/support/lambda.hpp>
 
 #include "ParseError.h"
 #include "Node.h"
@@ -32,6 +32,11 @@ public:
 
     
   // ノード表
+  typedef std::map<node_id_t, node_sptr> node_map_t;
+  typedef node_map_t::value_type         node_map_value_t;
+  typedef node_map_t::const_iterator     node_map_const_iterator;
+
+  /*
   struct tag_node_id {};
   struct tag_node_sptr {};
 
@@ -43,6 +48,7 @@ public:
         boost::bimaps::tags::tagged<node_sptr, tag_node_sptr> > > node_map_t;
 
   typedef node_map_t::value_type                         node_map_value_t;
+  */
 
   static const int INITIAL_MAX_NODE_ID = 0;
 
@@ -78,9 +84,7 @@ public:
 
   /**
    * IDの割り当てられていないノードに対してIDを割り当てる
-   * ParseTree内でのノードの削除等が発生した場合は
-   * この関数ではなく，rebuild_node_id_listを使用して
-   * ID表の再構築をおこなうこと
+   * ノードが削除された場合は，ノード表から削除する
    */
   void update_node_id_list();
 
@@ -163,15 +167,30 @@ public:
    * IDに対応付けられているノードの変更
    */
   void update_node(node_id_t id, const node_sptr& n);
+
+  /**
+   * ノード表から指定されたノードIDの情報を削除する
+   */
+  void remove_node(node_id_t id);
     
   /**
    * ノードに対応付けられているIDの変更
    */
-  void update_node_id(node_id_t id, const node_sptr& n);
+  //void update_node_id(node_id_t id, const node_sptr& n);
 
   /**
    * 指定されたIDに対応するノードを得る
-   */
+   */  
+  node_sptr get_node(node_id_t id) const
+  {
+    node_map_t::const_iterator it = node_map_.find(id);
+    if(it != node_map_.end()) {
+      return it->second;
+    }
+
+    return node_sptr();
+  }  
+  /*
   node_sptr get_node(node_id_t id) const
   {
     node_map_t::map_by<tag_node_id>::const_iterator it = 
@@ -181,10 +200,13 @@ public:
     }
     return node_sptr();
   }
+  */
+
   
   /**
    * 指定されたノードに対応するIDを得る
    */
+  /*
   node_id_t get_node_id(const node_sptr& n) const
   {
     node_map_t::map_by<tag_node_sptr>::const_iterator it = 
@@ -193,6 +215,31 @@ public:
       return it->second;
     }
     return node_id_t();
+  }
+  */
+
+  /**
+   * ノード表の最初の要素
+   */
+  node_map_const_iterator node_map_begin() const 
+  {
+    return node_map_.begin();
+  }
+
+  /**
+   * ノード表の最後の次の要素
+   */ 
+  node_map_const_iterator node_map_end() const 
+  {
+    return node_map_.end();
+  }
+
+  /**
+   * ノード表のサイズ
+   */
+  size_t node_map_size() const
+  {
+    return node_map_.size();
   }
 
   /**

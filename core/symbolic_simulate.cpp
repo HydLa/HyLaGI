@@ -31,6 +31,9 @@ void setup_symbolic_simulator_opts(MathSimulator::Opts& opts)
   opts.max_time      = po.get<std::string>("simulation-time");
   opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;
+  opts.output_interval = po.get<std::string>("output-interval");
+  opts.output_precision = po.get<int>("output-precision");
+
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)

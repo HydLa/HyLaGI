@@ -157,34 +157,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ConsistencyChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConsistencyCheckerInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentCheckerInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Integrator.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\math_source.cpp"
 				>
 			</File>
@@ -199,34 +171,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ConsistencyChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConsistencyCheckerInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstraintStoreBuilderPoint.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentChecker.h"
-				>
-			</File>
-			<File
-				RelativePath=".\EntailmentCheckerInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Integrator.h"
-				>
-			</File>
-			<File
 				RelativePath=".\InterlanguageSender.h"
 				>
 			</File>
@@ -235,23 +179,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mathlink_helper.h"
-				>
-			</File>
-			<File
 				RelativePath=".\MathSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicTime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicVariable.h"
 				>
 			</File>
 		</Filter>

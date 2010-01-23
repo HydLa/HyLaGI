@@ -48,6 +48,14 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value("n"), 
      "output format:\n  t - time function\n  n - numeric")
     
+    ("output-interval", 
+     value<std::string>()->default_value("1/10"), 
+     "max time interval of output message")
+  
+    ("output-precision", 
+     value<int>()->default_value(5), 
+     "precision of output message")
+
     ("simulation-time,s", 
      value<std::string>()->default_value("1"), 
      "simulation time")

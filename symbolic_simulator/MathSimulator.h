@@ -44,6 +44,8 @@ public:
     bool profile_mode;
     bool parallel_mode;
     OutputFormat output_format;
+    symbolic_time_t output_interval;
+    int             output_precision;
   } Opts;
 
   MathSimulator(const Opts& opts);
