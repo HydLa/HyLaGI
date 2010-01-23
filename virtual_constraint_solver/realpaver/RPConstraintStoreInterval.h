@@ -38,6 +38,8 @@ public:
 
   std::set<rp_constraint> get_store_exprs_copy() const;
 
+  ctr_set_t get_store_non_init_constraint_copy() const;
+
   void clear_non_init_constraint();
 
   void set_non_init_constraint(const ctr_set_t ctrs);

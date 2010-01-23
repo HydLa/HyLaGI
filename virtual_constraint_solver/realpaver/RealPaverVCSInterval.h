@@ -15,6 +15,7 @@ namespace vcs {
 namespace realpaver {
 
 typedef std::set<rp_constraint> ctr_set_t;
+typedef boost::shared_ptr<hydla::parse_tree::Ask> ask_sptr;
 
 class RealPaverVCSInterval : 
   public RealPaverBaseVCS
@@ -74,6 +75,8 @@ private:
   //bool is_guard_about_undefined_prev(const var_name_map_t& vars,
   //  const ctr_set_t& ctrs,
   //  const var_name_map_t& p_in_g);
+  void find_next_point_phase_states(integrate_result_t& integrate_result,
+    const ask_sptr ask, hydla::simulator::AskState state);
 
   static void clear_ctr_set(ctr_set_t& ctrs);
 

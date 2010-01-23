@@ -10,29 +10,32 @@ namespace realpaver {
  * 時刻
  * 時刻と経過時間？
  */
-struct RPTime
+class RPTime
 {
-  RPTime()
-  {}
+public:
+  RPTime(int digits=10);
 
   /**
    * 与えられた文字列を元に作成
    */
-  RPTime(std::string str)
-  {}
+  RPTime(std::string str, int digits=10);
 
   /* ダンプ */
-  std::ostream& dump(std::ostream& s) const
-  {
-    s << "time";
-    return s;
-  }
-    
+  std::ostream& dump(std::ostream& s) const;
+
   friend std::ostream& operator<<(std::ostream& s, 
                                   const RPTime & v)
   {
     return v.dump(s);
   }
+
+  RPTime& operator+=(const RPTime& t);
+
+  RPTime& operator-=(const RPTime& t);
+
+private:
+  double inf_, sup_;
+  int display_digits_;
 };
 
 } // namespace realpaver

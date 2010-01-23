@@ -4,17 +4,18 @@
 
 #include "RPConstraintSolver.h"
 #include "Logger.h"
-#include "rp_constraint.h"
+//#include "rp_constraint.h"
 #include "rp_constraint_ext.h"
-#include "rp_container.h"
+//#include "rp_container.h"
 #include "rp_container_ext.h"
-#include "realpaverbasic.h"
+#include "realpaver.h"
 
 #include "../mathematica/PacketSender.h"
 #include "../mathematica/PacketChecker.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace hydla::vcs::mathematica;
+using namespace hydla::simulator;
 
 namespace hydla {
 namespace vcs {
@@ -242,13 +243,6 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
  */
 VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
 {
-  // ストアをコピー
-  // ガード条件と否定を作る(変数はすべて初期値変数へ)
-  // solve(S & g) == empty -> FALSE
-  // solve(S&ng0)==empty /\ solve(S&ng1)==empty /\ ... -> TRUE
-  // ngが存在しない(gが等式)場合，TRUEではない
-  // else -> UNKNOWN
-
   // 制約ストアをコピー
   ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
   var_name_map_t vars = this->constraint_store_.get_store_vars();
@@ -299,7 +293,6 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
     RealPaverVCSInterval::clear_ctr_set(ctrs);
     RealPaverVCSInterval::clear_ctr_set(g);
     RealPaverVCSInterval::clear_ctr_set(ng);
-    //this->finalize();
     return VCSR_FALSE;
   }
   rp_box_destroy(&box);
@@ -322,7 +315,6 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
     RealPaverVCSInterval::clear_ctr_set(ctrs);
     RealPaverVCSInterval::clear_ctr_set(g);
     RealPaverVCSInterval::clear_ctr_set(ng);
-    //this->finalize();
     return VCSR_TRUE;
   }
 
@@ -332,7 +324,6 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
   RealPaverVCSInterval::clear_ctr_set(ctrs);
   RealPaverVCSInterval::clear_ctr_set(g);
   RealPaverVCSInterval::clear_ctr_set(ng);
-  //this->finalize();
   return VCSR_SOLVER_ERROR;
 }
 
@@ -342,30 +333,11 @@ void RealPaverVCSInterval::clear_ctr_set(ctr_set_t& ctrs)
   for(ctr_set_t::iterator it=ctrs.begin();
     it!=ctrs.end();it++) {
       rp_constraint c = *it;
-      rp_constraint_destroy(&c);
+      if(c) rp_constraint_destroy(&c);
   }
   ctrs.clear();
 }
-/*
-bool RealPaverVCSInterval::is_guard_about_undefined_prev(const var_name_map_t& vars,
-                                                      const std::set<rp_constraint>& ctrs,
-                                                      const var_name_map_t& p_in_g)
-{
-  bool res = false;
-  rp_box box;
-  bool is_consistent_store_only = ConstraintSolver::solve_hull(&box, vars, ctrs);
-  assert(is_consistent_store_only);
-  for(var_name_map_t::right_const_iterator it=p_in_g.right.begin();
-    it!=p_in_g.right.end(); it++) {
-    int index = it->first;
-    assert(index >= 0);
-    if(rp_binf(rp_box_elem(box, index))==-RP_INFINITY
-      && rp_bsup(rp_box_elem(box, index))==RP_INFINITY) res = true;
-  }
-  rp_box_destroy(&box);
-  return res;
-}
-*/
+
 /**
  * askの導出状態が変化するまで積分をおこなう
  */
@@ -375,10 +347,48 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
                                   const time_t& current_time,
                                   const time_t& max_time)
 {
-  // nodes_をrp_constraintになおす
-  // 時刻を変数として問題に組み込む(rp_variable)
-  // 解く
+  typedef var_name_map_t::value_type vars_type_t;
+
+  // 制約をコピー
+  ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
+  ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
+  ctrs.insert(non_init_ctrs.begin(), non_init_ctrs.end());
+
+  // 新しい変数tt = t - t0(原点がIPの開始時刻である本当の(?)時刻変数)と
+  // 定数t0(これまでの経過時間区間の幅)，te(経過時間区間と同じ値)
+  // 変数 tsum = t + te(総経過時間，RPに計算してもらう)
+  // を用意
+  // とりあえず変数だけ用意
+  var_name_map_t vars = this->constraint_store_.get_store_vars();
+  std::string timevar_names[2] = {"tt", "tsum"};
+  for(int i=0; i<2; ++i) {
+    unsigned int size = vars.size();
+    var_property vp(0, false);
+    vars.insert(vars_type_t(timevar_names[i], size, vp));
+  }
+
+  double min_time = RP_INFINITY;
+  integrate_result_t tmp_result;
+
+  // 全てのaskについて計算する
+  // まずはpositive_asksから
+  positive_asks_t::const_iterator pit, pend = positive_asks.end();
+  for(pit=positive_asks.begin(); pit!=pend; ++pit) {
+    // 問題を解く関数
+    this->find_next_point_phase_states(tmp_result, *pit, Positive2Negative);
+    // 答えの時刻の最小値を計算し，min_timeより小さかったら更新(resultにコピー)する．
+  }
+  // 次はnegative_asks
+  negative_asks_t::const_iterator nit, nend = negative_asks.end();
+  for(nit=negative_asks.begin(); nit!=nend; ++nit) {
+    // 問題を解く関数
+    this->find_next_point_phase_states(tmp_result, *nit, Negative2Positive);
+    // 答えの時刻の最小値を計算し，min_timeより小さかったら更新(resultにコピー)する．
+  }
+
   // 答えがない→VCSR_FALSE(向こうで積まないだけでもいいんだけど)
+
+  // 時刻の最小値のもののみを考える，他は捨てる
   // 答えがproofされているか？
   //// proofチェック１：答えのhullが初期値変数のドメインをすべて含んでいるか？
   //// proofチェック２：(ソルバによるproofが存在するか？)
@@ -387,6 +397,22 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
   //// 「時点で」だと少し捨てすぎてしまう可能性が…？ -> 同じ時刻のはゆるせばいい
   // されてない→全部積む，今のaskを抜いて再度integrateするためにVCSR_UNKNOWNを返す
   return VCSR_TRUE;
+}
+
+/**
+ * ask制約に対して，そのガード条件を(満たす|満たさない)ようになる
+ * 状態を求めてintegrate_resultへ入れる
+ */
+void RealPaverVCSInterval::find_next_point_phase_states(
+  integrate_result_t &integrate_result,
+  const ask_sptr ask,
+  hydla::simulator::AskState state)
+{
+  // askからガード条件(または否定)をつくる
+  GuardConstraintBuilder builder;
+  // N2P -> ガード条件を制約に加える
+  // P2N -> ガード条件の否定を一つずつ加えた問題を解いて最小時刻を取る
+  return;
 }
 
 /**

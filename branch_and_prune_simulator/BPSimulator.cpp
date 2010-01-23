@@ -322,10 +322,8 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
     {
       // ask条件のエンテール判定
       // IPでask条件にprevは入ってない => たぶんUNKNOWNにはならない…
-      // ただし，数学的にT/FなのにUになるものがあるので対策
+      // TODO: ただし，数学的にT/FなのにUになるものがあるので対策
       // IPでは連続を仮定 => 時刻0であるこのときは全ての変数の値が初期値変数と同じ
-      // この状況でFALSEであるものに二度目のチャンスを与える必要があるか？
-      // まぁいいけど
       negative_asks_t::iterator it  = negative_asks.begin();
       negative_asks_t::iterator end = negative_asks.end();
       while(it!=end) {
@@ -356,6 +354,28 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   } // while
 
   virtual_constraint_solver_t::IntegrateResult integrate_result;
+  bool all_proof = false;
+  while(!all_proof) {
+    switch(vcs.integrate(integrate_result, positive_asks,
+      negative_asks, state->current_time, bp_time_t(opts_.max_time))) {
+    case hydla::vcs::VCSR_TRUE:
+      // 全ての初期状態について次のポイントフェーズ時刻が見つかった
+      all_proof = true;
+      break;
+    case hydla::vcs::VCSR_FALSE:
+      // 次のポイントフェーズがもうなかった
+      // resultのis_max_timeはtrue
+      break;
+    case hydla::vcs::VCSR_UNKNOWN:
+      // ポイントフェーズはあったが，全ての初期状態についてではなかった
+      // TODO: 現状，全ての初期状態について引っかかるaskがないと大変なことになる
+      break;
+    case hydla::vcs::VCSR_SOLVER_ERROR:
+      assert(false);
+      break;
+    }
+    // 積む処理はここでやる
+  }
   // (list({t, vm}),list({ask,p?n})) = 積分処理(integrate)
   // integrate(cs, p_a, n_a, time, max_time);
   // time, vm, c_askからphase_stateを作る

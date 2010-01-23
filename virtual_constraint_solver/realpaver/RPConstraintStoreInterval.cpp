@@ -12,6 +12,8 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
+typedef std::set<rp_constraint> ctr_set_t;
+
 ConstraintStoreInterval::ConstraintStoreInterval()
 {}
 
@@ -79,6 +81,7 @@ void ConstraintStoreInterval::build(const virtual_constraint_solver_t::variable_
       this->exprs_.insert(c);
     }
   }
+  // Intervalでは時刻tも変数
   unsigned int size = this->vars_.size();
   var_property vp(0, false);
   this->vars_.insert(vars_type_t("t", size, vp)); // 登録済みの変数は変更されない
@@ -90,11 +93,31 @@ void ConstraintStoreInterval::build_variable_map(virtual_constraint_solver_t::va
   assert(false);
 }
 
+/**
+ * ストアの初期値制約のみをコピーして返す
+ */
 std::set<rp_constraint> ConstraintStoreInterval::get_store_exprs_copy() const
 {
   std::set<rp_constraint> ans;
   std::set<rp_constraint>::const_iterator it = this->exprs_.begin();
   while(it != this->exprs_.end()) {
+    rp_constraint c;
+    rp_constraint_clone(&c, (*it));
+    ans.insert(c);
+    it++;
+  }
+  return ans;
+}
+
+/**
+ * ストアの非初期値制約のみをコピーして返す
+ * TODO: 名前に統一性がなさすぎる…要リファクタリング
+ */
+ctr_set_t ConstraintStoreInterval::get_store_non_init_constraint_copy() const
+{
+  ctr_set_t ans;
+  ctr_set_t::const_iterator it = this->non_init_exprs_.begin();
+  while(it != this->non_init_exprs_.end()) {
     rp_constraint c;
     rp_constraint_clone(&c, (*it));
     ans.insert(c);
