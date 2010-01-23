@@ -25,7 +25,10 @@ MathematicaVCSPoint::~MathematicaVCSPoint()
 
 bool MathematicaVCSPoint::reset()
 {
-  constraint_store_ = constraint_store_t();
+  // TODO: チョイ考える
+  assert(0);
+//   constraint_store_.first.clear();
+//   constraint_store_.second.clear();
   return true;
 }
 
@@ -259,7 +262,8 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
     ml_->MLGetNext();
 
     // 制約ストアをリセット
-    reset();
+//    reset();
+    constraint_store_.first.clear();
 
     // List関数の要素数（Orで結ばれた解の個数）を得る
     int or_size = ml_->get_arg_count();
