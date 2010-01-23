@@ -42,6 +42,8 @@ bool RealPaverVCSPoint::reset()
 bool RealPaverVCSPoint::reset(const variable_map_t& variable_map)
 {
   this->constraint_store_.build(variable_map);
+  HYDLA_LOGGER_DEBUG("vcs:reset: new_constraint_store\n",
+    this->constraint_store_);
   return true;
 }
 

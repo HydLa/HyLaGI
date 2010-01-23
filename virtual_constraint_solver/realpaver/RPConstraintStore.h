@@ -11,7 +11,7 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
-//typedef boost::bimaps::bimap<std::string, int> var_name_map_t;
+typedef std::set<rp_constraint> ctr_set_t;
 
 /**
  * êßñÒÉXÉgÉA
@@ -19,9 +19,7 @@ namespace realpaver {
 class ConstraintStore
 {
 public:
-  enum NowPhase { NP_POINT, NP_INTERVAL };
-
-  ConstraintStore(NowPhase np=NP_POINT);
+  ConstraintStore();
 
   ConstraintStore(const ConstraintStore& src);
 
@@ -33,11 +31,11 @@ public:
 
   void build_variable_map(virtual_constraint_solver_t::variable_map_t& variable_map) const;
 
-  std::set<rp_constraint> get_store_exprs_copy() const;
+  ctr_set_t get_store_exprs_copy() const;
 
   void add_constraint(rp_constraint c, const var_name_map_t& vars);
 
-  void add_constraint(std::set<rp_constraint>::iterator start, std::set<rp_constraint>::iterator end, const var_name_map_t& vars);
+  void add_constraint(ctr_set_t::iterator start, ctr_set_t::iterator end, const var_name_map_t& vars);
 
   const var_name_map_t& get_store_vars() const
   {
@@ -54,9 +52,8 @@ public:
 private:
   rp_vector_variable to_rp_vector() const;
 
-  std::set<rp_constraint> exprs_;
+  ctr_set_t exprs_;
   var_name_map_t vars_;
-  NowPhase phase_;
 };
 
 } // namespace realpaver

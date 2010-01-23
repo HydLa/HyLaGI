@@ -106,6 +106,40 @@ private:
   bool neg_expr_;
 };
 
+/**
+ * ノードに関わらず等式を作成する制約ビルダー
+ * integrateでしか使用しないのでprev変数はすべて通常の変数に変換する
+ * 汎用性はこれっぽっちもないので注意？
+ */
+class EqualConstraintBuilder : public ConstraintBuilder {
+public:
+  void create_expr(boost::shared_ptr<hydla::parse_tree::Ask> node,
+    std::set<rp_constraint>& exprs,
+    var_name_map_t& vars,
+    const bool is_n2p);
+
+  // Ask制約
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+
+  // 比較演算子
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
+
+  // 変数
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+
+  // 論理演算子
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
+
+private:
+  std::set<rp_constraint> exprs_;
+  bool is_n2p_;
+};
+
 class GuardConstraintBuilder : public ConstraintBuilder {
 public:
 

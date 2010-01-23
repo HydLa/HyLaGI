@@ -72,11 +72,9 @@ public:
     const bool neg_expression);
 
 private:
-  //bool is_guard_about_undefined_prev(const var_name_map_t& vars,
-  //  const ctr_set_t& ctrs,
-  //  const var_name_map_t& p_in_g);
   void find_next_point_phase_states(integrate_result_t& integrate_result,
-    const ask_sptr ask, hydla::simulator::AskState state);
+    const ask_sptr ask, var_name_map_t vars, const time_t& current_time,
+    const time_t& max_time, hydla::simulator::AskState state);
 
   static void clear_ctr_set(ctr_set_t& ctrs);
 

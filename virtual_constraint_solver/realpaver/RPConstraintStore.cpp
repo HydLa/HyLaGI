@@ -1,16 +1,22 @@
 #include "RPConstraintStore.h"
+#include "RPConstraintSolver.h"
 #include "Logger.h"
 #include "realpaver.h"
 #include "rp_problem_ext.h"
 #include "rp_constraint_ext.h"
 
 #include <sstream>
+#include <boost/lexical_cast.hpp>
 
 namespace hydla {
 namespace vcs {
 namespace realpaver {
 
-ConstraintStore::ConstraintStore(NowPhase np) : phase_(np){}
+/**
+ * ƒ|ƒCƒ“ƒgƒtƒF[ƒY—p§–ñƒXƒgƒA
+ */
+ConstraintStore::ConstraintStore()
+{}
 
 ConstraintStore::ConstraintStore(const ConstraintStore& src)
 {
@@ -24,7 +30,7 @@ ConstraintStore::~ConstraintStore()
   std::set<rp_constraint>::iterator it = this->exprs_.begin();
   while(it != this->exprs_.end()) {
     rp_constraint c = *it;
-    rp_constraint_destroy(&c);
+    if(c) rp_constraint_destroy(&c);
     this->exprs_.erase(it++);
   }
 }
@@ -45,65 +51,52 @@ ConstraintStore& ConstraintStore::operator =(const ConstraintStore &src)
 void ConstraintStore::build(const virtual_constraint_solver_t::variable_map_t& variable_map)
 {
   typedef var_name_map_t::value_type vars_type_t;
+
   virtual_constraint_solver_t::variable_map_t::const_iterator it;
-  for(it=variable_map.begin(); it!=variable_map.end(); it++) {
-    // •Ï”–¼‚ğì‚é
-    std::string name(it->first.name);
-    for(int i=it->first.derivative_count; i>0; i--) name += BP_DERIV_STR;
-    std::string prev_name(name);
-    prev_name += BP_PREV_STR;
-    std::string ini_name(name);
-    ini_name += BP_INITIAL_STR;
+  for(it=variable_map.begin(); it!=variable_map.end(); ++it) {
+    // •Ï”–¼‚ğì‚é ex. "usrVar0ht" prevVar0ht"
+    int dc = it->first.derivative_count;
+    std::string dc_str(boost::lexical_cast<std::string>(dc));
+    std::string name(var_prefix);
+    name += dc_str;
+    name += it->first.name;
+    std::string prev_name(prev_prefix);
+    prev_name += dc_str;
+    prev_name += it->first.name;
     // •\‚É“o˜^
     unsigned int size = this->vars_.size();
-    var_property vp(it->first.derivative_count, false),
-      vp_p(it->first.derivative_count, true);
+    var_property vp(dc, false),
+      vp_p(dc, true);
     this->vars_.insert(vars_type_t(name, size, vp)); // “o˜^Ï‚İ‚Ì•Ï”‚Í•ÏX‚³‚ê‚È‚¢
-    if(this->phase_ == NP_POINT) {
-      this->vars_.insert(vars_type_t(prev_name, size+1, vp_p));
-    } else {
-      this->vars_.insert(vars_type_t(ini_name, size+1, vp_p));
-    }
-    // rp_interval‚©‚çrp_constraint‚ğì‚é
+    this->vars_.insert(vars_type_t(prev_name, size+1, vp_p));
+    // •Ï”‚Ì(‹æŠÔ)’l x[inf, sup] ‚©‚ç§–ñ inf <= x, x <= sup ‚ğì‚é
     rp_interval i;
     it->second.get(rp_binf(i), rp_bsup(i));
-    // (-oo, +oo) ==> ì‚ç‚È‚¢C“o˜^‚µ‚È‚¢
+    // x(-oo, +oo) ==> ì‚ç‚È‚¢C“o˜^‚µ‚È‚¢
     if(rp_binf(i)==-RP_INFINITY && rp_bsup(i)==RP_INFINITY) continue;
     if(rp_interval_point(i)) {
-      // rp_interval_point ==> ®1‚Â“o˜^
+      // inf==sup ==> ®1‚Â“o˜^ (x = inf)
       rp_erep l, r;
       rp_ctr_num cnum;
       rp_constraint c;
-      if(this->phase_ == NP_POINT) {
-        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
-      } else {
-        rp_erep_create_var(&l, this->vars_.left.at(ini_name));
-      }
+      rp_erep_create_var(&l, this->vars_.left.at(prev_name));
       rp_erep_create_cst(&r, "", i);
       rp_ctr_num_create(&cnum, &l, RP_RELATION_EQUAL, &r);
       rp_constraint_create_num(&c, cnum);
       this->exprs_.insert(c);
     } else {
-      // else ==> ®2‚Â“o˜^
+      // else ==> ®2‚Â“o˜^ (inf <= x, x <= sup)
       rp_interval i_tmp;
       rp_erep l, r;
       rp_ctr_num cnum;
       rp_constraint c;
-      if(this->phase_ == NP_POINT) {
-        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
-      } else {
-        rp_erep_create_var(&l, this->vars_.left.at(ini_name));
-      }
+      rp_erep_create_var(&l, this->vars_.left.at(prev_name));
       rp_interval_set_point(i_tmp, rp_binf(i));
       rp_erep_create_cst(&r, "", i_tmp);
       rp_ctr_num_create(&cnum, &l, RP_RELATION_SUPEQUAL, &r);
       rp_constraint_create_num(&c, cnum);
       this->exprs_.insert(c);
-      if(this->phase_ == NP_POINT) {
-        rp_erep_create_var(&l, this->vars_.left.at(prev_name));
-      } else {
-        rp_erep_create_var(&l, this->vars_.left.at(ini_name));
-      }
+      rp_erep_create_var(&l, this->vars_.left.at(prev_name));
       rp_interval_set_point(i_tmp, rp_bsup(i));
       rp_erep_create_cst(&r, "", i_tmp);
       rp_ctr_num_create(&cnum, &l, RP_RELATION_INFEQUAL, &r);
@@ -121,14 +114,15 @@ void ConstraintStore::build_variable_map(virtual_constraint_solver_t::variable_m
 {
   // –â‘è‚Ì¶¬
   // TODO: precision‚ÍH
-  std::set<rp_constraint> exprs_copy = this->get_store_exprs_copy();
-  rp_vector_variable vec = this->to_rp_vector();
+  ctr_set_t exprs_copy = this->get_store_exprs_copy();
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_);
+  // TODO: ConstraintSolver::solve_exact_hull‚ğg‚¤‚×‚«(‚ ‚Á‚¿‚àƒƒ‚ƒŠ‰ğ•ú‚É©M‚È‚¢‚¯‚Ç)
   rp_problem problem;
   rp_problem_create(&problem, "build_variable_map");
   rp_vector_destroy(&rp_table_symbol_vars(rp_problem_symb(problem)));
   rp_table_symbol_vars(rp_problem_symb(problem)) = vec;
-  std::set<rp_constraint>::const_iterator it;
-  for(it=exprs_copy.begin(); it!=exprs_copy.end(); it++) {
+  ctr_set_t::const_iterator it;
+  for(it=exprs_copy.begin(); it!=exprs_copy.end(); ++it) {
     rp_vector_insert(rp_problem_ctrs(problem), *it);
     for(int i=0; i<rp_constraint_arity(*it); i++) {
       ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*it, i)));
@@ -143,55 +137,46 @@ void ConstraintStore::build_variable_map(virtual_constraint_solver_t::variable_m
 
   // ƒ\ƒ‹ƒo‚Ìì¬
   rp_selector * select;
-  //rp_new(select,rp_selector_decirdom,(&problem));
-  //rp_new(select,rp_selector_decirrobust,(&problem,1));
   rp_new(select,rp_selector_roundrobin,(&problem));
-
   rp_splitter * split;
   rp_new(split,rp_splitter_mixed,(&problem));
-  //rp_new(split,rp_splitter_bisection,(&problem));
-
-  //rp_interval_satisfaction_prover * prover;
-  //rp_new(prover,rp_interval_satisfaction_prover,(&problem,100000));
-
-  rp_bpsolver solver(&problem,10,select,split); //,prover);
-  std::stringstream ss;    
-  rp_ofilter_text oft(&problem, &(ss), -1);
+  rp_bpsolver solver(&problem,10,select,split);
+  std::stringstream ss;
+  rp_ofilter_text oft(&problem, &(ss), -1); // Œ‹‰Ê•\¦—p
 
   // ‰ğ‚¢‚Ähull‚ğ‹‚ß‚é
   rp_box sol, tmp_box = solver.compute_next();
   assert(tmp_box != NULL);
+  rp_box_display_simple_nl(tmp_box);
   rp_box_clone(&sol, tmp_box);
+  rp_box_display_simple_nl(sol);
   while((tmp_box=solver.compute_next()) != NULL) {
     rp_box_merge(sol, tmp_box);
   }
+  rp_box_display_simple_nl(sol);
   oft.apply_box(sol, "");
   HYDLA_LOGGER_DEBUG(
     "#*** constraint store: variable_map(hull of ",
     solver.solution(),
-    " boxes) ***\n",
+    " boxes) ***",
     ss.str());
   rp_problem_destroy(&problem);
 
   // variable_map‚ğì¬
-  // prev•Ï”‚ÍÚ‚¹‚È‚¢(?)
+  // prev•Ï”‚ÍÚ‚¹‚È‚¢
   var_name_map_t::right_const_iterator vnm_it;
-  for(vnm_it=this->vars_.right.begin(); vnm_it!=this->vars_.right.end(); vnm_it++) {
-    if(!(vnm_it->info.prev_flag)) { // prev•Ï”‚Å‚È‚¯‚ê‚Î
-      RPVariable bp_variable;
-      // derivative_count‚¾‚¯•Ï”–¼‚ğk‚ß‚é
-      std::string name(vnm_it->second);
-      for(int i=vnm_it->info.derivative_count; i>0; i--) {
-        int loc = name.rfind(BP_DERIV_STR);
-        assert(loc != std::string::npos);
-        name.erase(loc);
-      }
-      bp_variable.derivative_count = vnm_it->info.derivative_count;
-      bp_variable.name = name;
-      RPValue bp_value(rp_binf(rp_box_elem(sol, vnm_it->first)),
-        rp_bsup(rp_box_elem(sol, vnm_it->first)));
-      variable_map.set_variable(bp_variable, bp_value);
-    }
+  for(vnm_it=this->vars_.right.begin(); vnm_it!=this->vars_.right.end(); ++vnm_it) {
+    if(vnm_it->info.prev_flag) continue; // prev•Ï”‚Í‰½‚à‚µ‚È‚¢
+    RPVariable bp_variable;
+    std::string name(vnm_it->second);
+    name.erase(0, var_prefix.length());
+    std::string dc_str(boost::lexical_cast<std::string>(vnm_it->info.derivative_count));
+    name.erase(0, dc_str.length());
+    bp_variable.derivative_count = vnm_it->info.derivative_count;
+    bp_variable.name = name;
+    RPValue bp_value(rp_binf(rp_box_elem(sol, vnm_it->first)),
+                     rp_bsup(rp_box_elem(sol, vnm_it->first)));
+    variable_map.set_variable(bp_variable, bp_value);
   }
   // Œãn––
   rp_box_destroy(&sol);

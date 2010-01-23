@@ -354,9 +354,9 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
   ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
   ctrs.insert(non_init_ctrs.begin(), non_init_ctrs.end());
 
-  // 新しい変数tt = t - t0(原点がIPの開始時刻である本当の(?)時刻変数)と
+  // 新しい変数tt = t + t0(原点がIPの開始時刻である本当の(?)時刻変数)と
   // 定数t0(これまでの経過時間区間の幅)，te(経過時間区間と同じ値)
-  // 変数 tsum = t + te(総経過時間，RPに計算してもらう)
+  // 変数 tsum = tt + te(総経過時間，RPに計算してもらう)
   // を用意
   // とりあえず変数だけ用意
   var_name_map_t vars = this->constraint_store_.get_store_vars();
@@ -375,14 +375,16 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
   positive_asks_t::const_iterator pit, pend = positive_asks.end();
   for(pit=positive_asks.begin(); pit!=pend; ++pit) {
     // 問題を解く関数
-    this->find_next_point_phase_states(tmp_result, *pit, Positive2Negative);
+    this->find_next_point_phase_states(tmp_result, *pit, vars,
+      current_time, max_time, Positive2Negative);
     // 答えの時刻の最小値を計算し，min_timeより小さかったら更新(resultにコピー)する．
   }
   // 次はnegative_asks
   negative_asks_t::const_iterator nit, nend = negative_asks.end();
   for(nit=negative_asks.begin(); nit!=nend; ++nit) {
     // 問題を解く関数
-    this->find_next_point_phase_states(tmp_result, *nit, Negative2Positive);
+    this->find_next_point_phase_states(tmp_result, *nit, vars,
+      current_time, max_time, Negative2Positive);
     // 答えの時刻の最小値を計算し，min_timeより小さかったら更新(resultにコピー)する．
   }
 
@@ -406,12 +408,90 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
 void RealPaverVCSInterval::find_next_point_phase_states(
   integrate_result_t &integrate_result,
   const ask_sptr ask,
+  var_name_map_t vars,
+  const time_t& current_time,
+  const time_t& max_time,
   hydla::simulator::AskState state)
 {
   // askからガード条件(または否定)をつくる
-  GuardConstraintBuilder builder;
-  // N2P -> ガード条件を制約に加える
+  EqualConstraintBuilder builder;
+  ctr_set_t guards;
+  bool is_n2p = (state == Negative2Positive);
+  builder.create_expr(ask, guards, vars, is_n2p);
+  // 確認
+  std::stringstream ss;
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
+  for(ctr_set_t::iterator it=guards.begin(); it!=guards.end(); ++it) {
+    rp_constraint c = *it;
+    if(!c) assert(false); // 解けない！今後の課題
+    rp::dump_constraint(ss, c, vec);
+    ss << "\n";
+  }
+  rp_vector_destroy(&vec);
+  HYDLA_LOGGER_DEBUG("#*** vcs:integrate:find_naxt_pp_states: ***\n",
+    " **** guards ****\n",
+    ss.str());
+
+  // 定数t0(これまでの経過時間区間の幅)，te(経過時間区間と同じ値)
+  // を用意
+  if(is_n2p) {
+    // N2P -> ガード条件を制約に加える
+    // 定数t0とteを用意
+    rp_problem problem;
+    rp_problem_create(&problem, "find_next_pp");
+    rp_constant t0, te;
+    rp_interval t0i, tei;
+    rp_interval_set(t0i, 0.0, current_time.width()); // TODO: widthによる桁落ち？
+    rp_interval_set(tei, current_time.inf_, current_time.sup_);
+    rp_constant_create(&t0, "t0", t0i);
+    rp_constant_create(&te, "te", tei);
+    rp_vector_insert(rp_problem_nums(problem), t0);
+    rp_vector_insert(rp_problem_nums(problem), te);
+    // 変数のドメインを用意
+    // 基本的には(-oo, +oo)
+    // 新しい変数tt = t + t0(原点がIPの開始時刻である本当の(?)時刻変数)と
+    // 変数 tsum = tt + te(総経過時間，RPに計算してもらう)
+    // を用意
+    // ttは[0, max_time.sup - current_time.inf]
+    // tは[0, +oo)
+    // tsumは[0, +oo)
+    //TODO: 精度は？
+    rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars, 0.5);
+    rp_interval tti, ti, tsumi;
+    rp_interval_set(tti, 0, max_time.sup_ - current_time.inf_); // TODO: 桁落ち？
+    rp_interval_set(ti, 0, RP_INFINITY);
+    rp_interval_set(tsumi, 0, RP_INFINITY);
+    // "tt"のドメインを再設定
+    // TODO: デバッグメッセージだよ
+    rp::dump_vector<rp_variable>(std::cout, vec);
+    std::cout << "\n";
+    rp_union_set_empty(rp_variable_domain(
+      rp_vector_variable_elem(vec,
+        rp_vector_variable_index(vec, "tt")
+      )));
+    rp_union_insert(rp_variable_domain(
+      rp_vector_variable_elem(vec,
+        rp_vector_variable_index(vec, "tt")
+      )), tti);
+    // TODO: デバッグメッセージだよ
+    rp::dump_vector<rp_variable>(std::cout, vec);
+    std::cout << std::endl;
+
+    //rp_union_set_empty(rp_variable_domain(
+    //  rp_vector_variable_elem(
+    //    rp_problem_vars(problem),
+    //    rp_vector_variable_index(rp_problem_vars(problem), "tt")
+    //  )));
+    //rp_union_insert(rp_variable_domain(
+    //  rp_vector_variable_elem(
+    //    rp_problem_vars(problem),
+    //    rp_vector_variable_index(rp_problem_vars(problem), "tt")
+    //  )), tti);
+
+
+  } else {
   // P2N -> ガード条件の否定を一つずつ加えた問題を解いて最小時刻を取る
+  }
   return;
 }
 

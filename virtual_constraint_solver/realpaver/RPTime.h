@@ -33,8 +33,15 @@ public:
 
   RPTime& operator-=(const RPTime& t);
 
-private:
+  double width() const
+  {
+    return sup_ - inf_;
+  }
+
+  // TODO: –Ê“|‚È‚Ì‚Åpublic‚É‚µ‚Ä‚¢‚é
   double inf_, sup_;
+
+private:
   int display_digits_;
 };
 

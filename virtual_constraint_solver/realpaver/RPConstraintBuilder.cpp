@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <boost/lexical_cast.hpp>
 
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
@@ -116,10 +117,15 @@ void ConstraintBuilder::visit(boost::shared_ptr<Variable> node)
   typedef var_name_map_t::value_type vars_type_t;
 
   // 変数表に登録
-  std::string name(node->get_name());
+  std::string name;
+  if(this->in_prev_) {
+    name = prev_prefix;
+  } else {
+    name = var_prefix;
+  }
+  name += boost::lexical_cast<std::string>(this->derivative_count_);
+  name += node->get_name();
   unsigned int size = this->vars_.size();
-  for(unsigned int i=0; i< this->derivative_count_; i++) name += BP_DERIV_STR;
-  if(this->in_prev_) name += BP_PREV_STR;
   var_property vp(this->derivative_count_, this->in_prev_);
   this->vars_.insert(vars_type_t(name, size, vp)); // 登録済みの変数は変更されない
 
@@ -268,6 +274,116 @@ rp_vector_variable ConstraintBuilder::to_rp_vector() const
   return vec;
 }
 
+/******************** EqualConstraintBuilder ********************/
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<Ask> node)
+{
+  this->accept(node->get_guard());
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<Equal> node)
+{
+  if(this->is_n2p_) {
+    rp_constraint a;
+    this->create_ctr_num(node, RP_RELATION_EQUAL);
+    rp_constraint_create_num(&a, this->ctr_);
+    this->exprs_.insert(a);
+    this->ctr_ = NULL;
+  } else {
+    // TODO: 本当はエラーを投げるべきか
+    this->exprs_.insert(static_cast<rp_constraint>(NULL));
+  }
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<UnEqual> node)
+{
+  if(this->is_n2p_) {
+    // TODO: 本当はエラーを投げるべきか
+    this->exprs_.insert(static_cast<rp_constraint>(NULL));
+  } else {
+    rp_constraint a;
+    this->create_ctr_num(node, RP_RELATION_EQUAL);
+    rp_constraint_create_num(&a, this->ctr_);
+    this->exprs_.insert(a);
+    this->ctr_ = NULL;
+  }
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<Less> node)
+{
+  rp_constraint a;
+  this->create_ctr_num(node, RP_RELATION_EQUAL);
+  rp_constraint_create_num(&a, this->ctr_);
+  this->exprs_.insert(a);
+  this->ctr_ = NULL;
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<LessEqual> node)
+{
+  rp_constraint a;
+  this->create_ctr_num(node, RP_RELATION_EQUAL);
+  rp_constraint_create_num(&a, this->ctr_);
+  this->exprs_.insert(a);
+  this->ctr_ = NULL;
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<Greater> node)
+{
+  rp_constraint a;
+  this->create_ctr_num(node, RP_RELATION_EQUAL);
+  rp_constraint_create_num(&a, this->ctr_);
+  this->exprs_.insert(a);
+  this->ctr_ = NULL;
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<GreaterEqual> node)
+{
+  rp_constraint a;
+  this->create_ctr_num(node, RP_RELATION_EQUAL);
+  rp_constraint_create_num(&a, this->ctr_);
+  this->exprs_.insert(a);
+  this->ctr_ = NULL;
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<Variable> node)
+{
+  typedef var_name_map_t::value_type vars_type_t;
+
+  // 変数表に登録 全て通常変数
+  std::string name(var_prefix);
+  name += boost::lexical_cast<std::string>(this->derivative_count_);
+  name += node->get_name();
+  unsigned int size = this->vars_.size();
+  var_property vp(this->derivative_count_, false);
+  this->vars_.insert(vars_type_t(name, size, vp)); // 登録済みの変数は変更されない
+
+  // TODO: 特定の変数は定数扱いしないとproveできない可能性
+  rp_erep rep;
+  rp_erep_create_var(&rep, this->vars_.left.at(name));
+  this->rep_stack_.push(rep);
+}
+
+void EqualConstraintBuilder::visit(boost::shared_ptr<LogicalAnd> node)
+{
+  this->accept(node->get_lhs());
+  this->accept(node->get_rhs());
+}
+
+/**
+ * integrate用にガード制約を作る
+ * 現在の手法では解けない制約に関してはNULLポインタが入ってることがある
+ */
+void EqualConstraintBuilder::create_expr(boost::shared_ptr<Ask> node,
+                                         std::set<rp_constraint>& expr,
+                                         var_name_map_t& vars,
+                                         const bool is_n2p)
+{
+  this->is_n2p_ = is_n2p;
+  this->set_vars(vars);
+  this->accept(node);
+  expr.insert(this->exprs_.begin(), this->exprs_.end());
+}
+
 /******************** GuardConstraintBuilder ********************/
 
 void GuardConstraintBuilder::visit(boost::shared_ptr<Ask> node)
@@ -373,9 +489,9 @@ void GuardConstraintBuilder::visit(boost::shared_ptr<Variable> node)
 
   // prev変数の場合は特別に保持
   if(this->in_prev_) {
-    std::string name(node->get_name());
-    for(unsigned int i=0; i< this->derivative_count_; i++) name += BP_DERIV_STR;
-    if(this->in_prev_) name += BP_PREV_STR;
+    std::string name(prev_prefix);
+    name += boost::lexical_cast<std::string>(this->derivative_count_);
+    name += node->get_name();
     var_name_map_t::left_iterator item = this->vars_.left.find(name);
     assert(item != this->vars_.left.end());
     this->prevs_in_guards_.insert(vars_type_t(item->first, item->second, item->info));
