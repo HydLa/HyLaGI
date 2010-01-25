@@ -76,14 +76,6 @@ private:
     hydla::simulator::positive_asks_t& positive_asks,
     hydla::simulator::negative_asks_t& negative_asks);
 
-  bool do_interval_phase(const module_set_sptr& ms,
-    const phase_state_const_sptr& state,
-    hydla::vcs::realpaver::RealPaverVCS& vcs,
-    hydla::simulator::TellCollector& tell_collector,
-    hydla::simulator::expanded_always_t& expanded_always,
-    hydla::simulator::positive_asks_t& positive_asks,
-    hydla::simulator::negative_asks_t& negative_asks);
-
   module_set_container_sptr msc_original_, msc_no_init_, msc_no_init_discreteask_;
   Opts opts_;
   MathLink ml_;

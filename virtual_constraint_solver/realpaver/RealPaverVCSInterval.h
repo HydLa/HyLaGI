@@ -72,9 +72,17 @@ public:
     const bool neg_expression);
 
 private:
-  void find_next_point_phase_states(integrate_result_t& integrate_result,
-    const ask_sptr ask, var_name_map_t vars, const time_t& current_time,
+  //void find_next_point_phase_states(rp_box* box_hull,
+  //  integrate_result_t& integrate_result,
+  //  const ask_sptr ask, var_name_map_t vars, 
+  //  const time_t& current_time,
+  //  const time_t& max_time, hydla::simulator::AskState state);
+
+  void find_next_point_phase_states(std::vector<rp_box>& results,
+    const ask_sptr ask, var_name_map_t vars, 
+    const time_t& current_time,
     const time_t& max_time, hydla::simulator::AskState state);
+
 
   static void clear_ctr_set(ctr_set_t& ctrs);
 

@@ -8,6 +8,9 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
+typedef std::pair<double, double> interval_t;
+typedef std::map<std::string, interval_t> dom_map_t;
+
 bool
 ConstraintSolver::solve_hull(rp_box* result,
                              const var_name_map_t& vars,
@@ -115,6 +118,33 @@ ConstraintSolver::create_rp_vector(const var_name_map_t& vars,
     rp_interval interval;
     rp_interval_set_real_line(interval);
     rp_union_insert(rp_variable_domain(v), interval);
+    rp_variable_precision(v) = precision;
+    rp_vector_insert(vec, v);
+  }
+  return vec;
+}
+
+rp_vector_variable
+ConstraintSolver::create_rp_vector(const var_name_map_t& vars,
+                                   const dom_map_t& domain,
+                                   const double precision)
+{
+  rp_vector_variable vec;
+  rp_vector_variable_create(&vec);
+  dom_map_t::const_iterator dit;
+  var_name_map_t::right_const_iterator it;
+  for(it=vars.right.begin(); it!=vars.right.end(); it++){
+    rp_variable v;
+    rp_variable_create(&v, ((it->second).c_str()));
+    if((dit=domain.find(it->second))!=domain.end()) {
+      rp_interval interval;
+      rp_interval_set(interval, dit->second.first, dit->second.second);
+      rp_union_insert(rp_variable_domain(v), interval);
+    } else {
+      rp_interval interval;
+      rp_interval_set_real_line(interval);
+      rp_union_insert(rp_variable_domain(v), interval);
+    }
     rp_variable_precision(v) = precision;
     rp_vector_insert(vec, v);
   }

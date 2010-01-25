@@ -61,8 +61,8 @@ public:
     } next_phase_state_t;
     typedef std::vector<next_phase_state_t> next_phase_state_list_t;
   
-    std::vector<next_phase_state_t> states;
-    changed_asks_t                  changed_asks;
+    next_phase_state_list_t states;
+    changed_asks_t          changed_asks;
   } integrate_result_t;
 
   VirtualConstraintSolver()

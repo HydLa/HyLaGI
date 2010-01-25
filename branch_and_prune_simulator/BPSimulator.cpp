@@ -126,9 +126,13 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
   expanded_always_t expanded_always;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
-  //ConstraintStore constraint_store;
-  //// TODO: stateから制約ストアを作る
-  //constraint_store.build(state->variable_map);
+
+  if(state->changed_asks.size() != 0) {
+    HYDLA_LOGGER_DEBUG("#** point_phase: changed_ask_id: ",
+      state->changed_asks.at(0).second,
+      " **");
+  }
+
   RealPaverVCS vcs(RealPaverVCS::DiscreteMode);
   vcs.reset(state->variable_map);
 
@@ -206,6 +210,23 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
           unknown_asks.erase(it++);
           continue;
         }
+        HYDLA_LOGGER_DEBUG("#*** do_point_phase: ask_node_id: ",
+          (*it)->get_id(),
+          " ***");
+        if(state->changed_asks.size() != 0 &&
+          (*it)->get_id() == state->changed_asks.at(0).second) {
+            if(state->changed_asks.at(0).first == Negative2Positive) {
+              HYDLA_LOGGER_DEBUG("#*** do_point_phase: previous changed ask TRUE ***");
+              expanded = true;
+              positive_asks.insert(*it);
+              unknown_asks.erase(it++);
+            } else {
+              HYDLA_LOGGER_DEBUG("#*** do_point_phase: previous changed ask FALSE ***");
+              negative_asks.insert(*it);
+              unknown_asks.erase(it++);
+            }
+            continue;
+        }
         switch(vcs.check_entailment(*it)) {
         case hydla::vcs::VCSR_TRUE:
           expanded = true;
@@ -262,6 +283,7 @@ bool BPSimulator::do_point_phase(const module_set_sptr& ms,
   phase_state_sptr new_state(create_new_phase_state(/*state*/));
   new_state->module_set_container = msc_no_init_;
   new_state->phase = IntervalPhase;
+  new_state->current_time = state->current_time;
   // ConstraintStoreからvariable_mapを作成
   vcs.create_variable_map(new_state->variable_map);
   //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
@@ -354,7 +376,7 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   } // while
 
   virtual_constraint_solver_t::IntegrateResult integrate_result;
-  bool all_proof = false;
+  bool all_proof = false, finish_simulate = false;
   while(!all_proof) {
     switch(vcs.integrate(integrate_result, positive_asks,
       negative_asks, state->current_time, bp_time_t(opts_.max_time))) {
@@ -364,52 +386,49 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
       break;
     case hydla::vcs::VCSR_FALSE:
       // 次のポイントフェーズがもうなかった
-      // resultのis_max_timeはtrue
+      // resultのis_max_timeはtrue？
+      finish_simulate = true;
+      all_proof = true;
       break;
     case hydla::vcs::VCSR_UNKNOWN:
       // ポイントフェーズはあったが，全ての初期状態についてではなかった
       // TODO: 現状，全ての初期状態について引っかかるaskがないと大変なことになる
+      if(integrate_result.changed_asks.at(0).first == Negative2Positive) {
+        for(negative_asks_t::iterator nit=negative_asks.begin(); nit!=negative_asks.end(); ++nit) {
+          if((*nit)->get_id() == integrate_result.changed_asks.at(0).second) {
+            negative_asks.erase(nit);
+            break;
+          }
+        }
+      } else {
+        for(positive_asks_t::iterator pit=positive_asks.begin(); pit!=positive_asks.end(); ++pit) {
+          if((*pit)->get_id() == integrate_result.changed_asks.at(0).second) {
+            positive_asks.erase(pit);
+            break;
+          }
+        }
+      }
       break;
     case hydla::vcs::VCSR_SOLVER_ERROR:
       assert(false);
       break;
     }
     // 積む処理はここでやる
-  }
-  // (list({t, vm}),list({ask,p?n})) = 積分処理(integrate)
-  // integrate(cs, p_a, n_a, time, max_time);
-  // time, vm, c_askからphase_stateを作る
-  // 積む
-  // ↓正確にはfor文で囲むと思われる
-  /*phase_state_sptr new_state(create_new_phase_state(state));
-  new_state->phase        = phase_state_t::PointPhase;
-  new_state->initial_time = false;
-  new_state->variable_map = vm;
-  push_phase_state(new_state);
-*/
-  return true;
-}
+    typedef virtual_constraint_solver_t::IntegrateResult::next_phase_state_list_t next_phase_state_list_t;
+    if(!finish_simulate) {
+      for(next_phase_state_list_t::const_iterator npit=integrate_result.states.begin();
+        npit!=integrate_result.states.end(); ++npit) {
+          phase_state_sptr new_state(create_new_phase_state());
+          new_state->phase        = PointPhase;
+          new_state->module_set_container = msc_no_init_;
+          new_state->variable_map = (*npit).variable_map;
+          new_state->current_time = (*npit).time;
+          new_state->changed_asks = integrate_result.changed_asks;
+          push_phase_state(new_state);
+      }
+    }
+  } // while
 
-/**
- * Interval Phaseの実質的な処理
- * askのエンテールに基づき分割再帰される可能性がある．
- *
- * @param ms モジュール集合
- * @param state Point Phase開始時の状態
- * @param constraint_store 制約ストア
- * @param positive_asks エンテールされたask制約リスト
- * @param negative_asks エンテールされないask制約リスト
- *
- * @return Interval Phaseを満たす解が存在するか
- */
-bool BPSimulator::do_interval_phase(const module_set_sptr &ms,
-                                    const phase_state_const_sptr &state,
-                                    hydla::vcs::realpaver::RealPaverVCS& vcs,
-                                    TellCollector &tell_collector,
-                                    expanded_always_t& expanded_always,
-                                    positive_asks_t &positive_asks,
-                                    negative_asks_t &negative_asks)
-{
   return true;
 }
 

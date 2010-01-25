@@ -1,18 +1,22 @@
 #include "RealPaverVCSInterval.h"
 
 #include <sstream>
+#include <algorithm>
+#include <map>
 
 #include "RPConstraintSolver.h"
 #include "Logger.h"
-//#include "rp_constraint.h"
-#include "rp_constraint_ext.h"
-//#include "rp_container.h"
-#include "rp_container_ext.h"
 #include "realpaver.h"
+#include "rp_constraint_ext.h"
+#include "rp_container_ext.h"
+#include "rp_problem_ext.h"
 
 #include "../mathematica/PacketSender.h"
 #include "../mathematica/PacketChecker.h"
 #include <boost/lexical_cast.hpp>
+
+#undef min
+#undef max
 
 using namespace hydla::vcs::mathematica;
 using namespace hydla::simulator;
@@ -20,6 +24,18 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace vcs {
 namespace realpaver {
+
+/**
+ * ソート用比較関数(next_phase_state_t)
+ */
+struct TimeBoxCompare {
+  int index_;
+  TimeBoxCompare(int index):index_(index){}
+  template<typename T>
+  bool operator()(const T& lhs, const T& rhs) {
+    return rp_binf(rp_box_elem(lhs, index_)) < rp_binf(rp_box_elem(rhs, index_));
+  }
+};
 
 RealPaverVCSInterval::RealPaverVCSInterval(MathLink* ml) :
 constraint_store_(),
@@ -347,18 +363,13 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
                                   const time_t& current_time,
                                   const time_t& max_time)
 {
+  typedef virtual_constraint_solver_t::IntegrateResult::next_phase_state_t next_phase_state_t;
   typedef var_name_map_t::value_type vars_type_t;
 
-  // 制約をコピー
-  ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
-  ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
-  ctrs.insert(non_init_ctrs.begin(), non_init_ctrs.end());
-
   // 新しい変数tt = t + t0(原点がIPの開始時刻である本当の(?)時刻変数)と
+  // 変数 tsum = tt + te(総経過時間，RPに計算してもらう) を用意
   // 定数t0(これまでの経過時間区間の幅)，te(経過時間区間と同じ値)
-  // 変数 tsum = tt + te(総経過時間，RPに計算してもらう)
-  // を用意
-  // とりあえず変数だけ用意
+  // ここでは変数だけ用意
   var_name_map_t vars = this->constraint_store_.get_store_vars();
   std::string timevar_names[2] = {"tt", "tsum"};
   for(int i=0; i<2; ++i) {
@@ -368,37 +379,167 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
   }
 
   double min_time = RP_INFINITY;
-  integrate_result_t tmp_result;
+  std::vector<rp_box> results;
+  ask_sptr ask_node;
+  AskState ask_state;
 
   // 全てのaskについて計算する
   // まずはpositive_asksから
   positive_asks_t::const_iterator pit, pend = positive_asks.end();
   for(pit=positive_asks.begin(); pit!=pend; ++pit) {
+    std::vector<rp_box> tmp_results;
     // 問題を解く関数
-    this->find_next_point_phase_states(tmp_result, *pit, vars,
+    this->find_next_point_phase_states(tmp_results, *pit, vars,
       current_time, max_time, Positive2Negative);
-    // 答えの時刻の最小値を計算し，min_timeより小さかったら更新(resultにコピー)する．
+    // 答えがなかったらcontinue
+    if(tmp_results.size() == 0) continue;
+    // 時刻順にソートして最小値を得る
+    std::sort(tmp_results.begin(), tmp_results.end(), TimeBoxCompare(vars.left.at("tsum")));
+    // 答えの時刻の最小値を計算し，min_timeより小さかったら更新する．
+    if(rp_binf(rp_box_elem(tmp_results.at(0), vars.left.at("tt"))) < min_time) { // TODO: 完全に同時刻の場合は？
+      for(std::vector<rp_box>::iterator vit=results.begin(); vit!=results.end(); ++vit) {
+        rp_box b = *vit;
+        rp_box_destroy(&b);
+      }
+      results.clear();
+      results = tmp_results;
+      ask_node = *pit;
+      ask_state = Positive2Negative;
+    }
   }
   // 次はnegative_asks
   negative_asks_t::const_iterator nit, nend = negative_asks.end();
   for(nit=negative_asks.begin(); nit!=nend; ++nit) {
+    std::vector<rp_box> tmp_results;
+    integrate_result_t tmp_result;
+    rp_box tmp_box=NULL;
     // 問題を解く関数
-    this->find_next_point_phase_states(tmp_result, *nit, vars,
+    this->find_next_point_phase_states(tmp_results, *nit, vars,
       current_time, max_time, Negative2Positive);
-    // 答えの時刻の最小値を計算し，min_timeより小さかったら更新(resultにコピー)する．
+    // 答えがなかったらcontinue
+    if(tmp_results.size()==0) continue;
+    // 時刻順にソートして最小値を得る
+    std::sort(tmp_results.begin(), tmp_results.end(), TimeBoxCompare(vars.left.at("tsum")));
+    // 答えの時刻の最小値を計算し，min_timeより小さかったら更新する．
+    if(rp_binf(rp_box_elem(tmp_results.at(0), vars.left.at("tt"))) < min_time) { // TODO: 完全に同時刻の場合は？
+      for(std::vector<rp_box>::iterator vit=results.begin(); vit!=results.end(); ++vit) {
+        rp_box b = *vit;
+        rp_box_destroy(&b);
+      }
+      results.clear();
+      results = tmp_results;
+      ask_node = *nit;
+      ask_state = Negative2Positive;
+    }
   }
 
-  // 答えがない→VCSR_FALSE(向こうで積まないだけでもいいんだけど)
+  // デバッグ確認
+  //for(std::vector<rp_box>::iterator vit=results.begin(); vit!=results.end(); ++vit) {
+  //  rp_box_display_simple_nl(*vit);
+  //}
 
-  // 時刻の最小値のもののみを考える，他は捨てる
+  // 答えがない→VCSR_FALSE(向こうで積まないだけでもいいんだけど)
+  if(results.size() == 0) return VCSR_FALSE;
+
   // 答えがproofされているか？
   //// proofチェック１：答えのhullが初期値変数のドメインをすべて含んでいるか？
-  //// proofチェック２：(ソルバによるproofが存在するか？)
-  //// proofチェック２改：答え一つ一つについて時刻以外の変数を定数に変えてproofが得られるか？
+  //// box_hullのうち初期値のドメインについて調べる
+  //// init_ctrだけをsolve_hullしたboxと初期値変数だけ比べて一致すればＯＫ
+  bool guarantee = false;
+  double g_time_sup;
+  rp_box init_hull, result_hull;
+  ctr_set_t init_ctr = this->constraint_store_.get_store_exprs_copy();
+  ConstraintSolver::solve_hull(&init_hull, vars, init_ctr, 0.5);
+  clear_ctr_set(init_ctr);
+  rp_box_clone(&result_hull, results.at(0));
+  // 答えのhullを計算しつつinit_hullと一致するか確かめる
+  for(std::vector<rp_box>::iterator vit=results.begin(); vit!=results.end(); ++vit) {
+    rp_box_merge(result_hull, *vit);
+    bool hull_g = true;
+    for(var_name_map_t::right_iterator vnm_it=vars.right.begin();
+      vnm_it!=vars.right.end(); ++vnm_it) {
+        if(vnm_it->info.prev_flag) {
+          if(!rp_interval_equal(
+            rp_box_elem(result_hull, vnm_it->first),
+            rp_box_elem(init_hull, vnm_it->first))) {
+              hull_g = false;
+          }
+        }
+    }
+    if(hull_g && !guarantee) { // ある時刻でproofチェック１を満たした
+      guarantee = true;
+      g_time_sup = rp_bsup(rp_box_elem(*vit, vars.left.at("tsum")));
+    }
+    if(guarantee) { // すでにproofチェックを満たした
+      if(rp_bsup(rp_box_elem(*vit, vars.left.at("tsum"))) > g_time_sup) {
+        // proofチェックを満たした時刻より後のboxである => 残り削除
+        for(std::vector<rp_box>::iterator vit2=vit; vit2!=results.end(); ++vit2) {
+          rp_box b = *vit2;
+          rp_box_destroy(&b);
+        }
+        results.erase(vit, results.end());
+        break;
+      }
+    }
+  }
+  rp_box_destroy(&init_hull);
+  rp_box_destroy(&result_hull);
+  
+  // 積むべき結果が得られた
   // されている→答えを時刻順にソート，hullが初期値変数ドメインをすべて含んだ時点で残りを捨てる
-  //// 「時点で」だと少し捨てすぎてしまう可能性が…？ -> 同じ時刻のはゆるせばいい
+  // TODO: 非線形なガード条件だと時刻順でhullを取っていくとダメなときがありそう！
   // されてない→全部積む，今のaskを抜いて再度integrateするためにVCSR_UNKNOWNを返す
-  return VCSR_TRUE;
+  if(guarantee) {
+    HYDLA_LOGGER_DEBUG("#*** vcs:integrate: ==> GUARANTEED");
+
+  } else {
+    HYDLA_LOGGER_DEBUG("#*** vcs:integrate: ==> NOT GUARANTEED");
+  }
+  // resultsをtime, vmに変換して全部積む
+  for(std::vector<rp_box>::iterator vit=results.begin(); vit!=results.end(); ++vit) {
+    next_phase_state_t nps;
+    nps.is_max_time = false;
+    // まず，tsumをtime_tへ直す
+    rp_interval tsumi;
+    rp_interval_copy(tsumi, rp_box_elem(*vit, vars.left.at("tsum")));
+    nps.time.inf_ = rp_binf(tsumi);
+    nps.time.sup_ = rp_bsup(tsumi);
+    // 変数をvariable_mapに直す
+    // 初期値変数も入れておく
+    for(var_name_map_t::right_const_iterator vnm_it=vars.right.begin();
+      vnm_it!=vars.right.end(); ++vnm_it) {
+        if(vnm_it->info.prev_flag) continue; // 初期値変数は直さない
+        std::string name(vnm_it->second);
+        if(name=="t" || name=="tt" || name=="tsum") continue; //時刻変数は直さない
+        RPVariable bp_variable;
+        name.erase(0, var_prefix.length());
+        std::string dc_str(boost::lexical_cast<std::string>(vnm_it->info.derivative_count));
+        name.erase(0, dc_str.length());
+        bp_variable.derivative_count = vnm_it->info.derivative_count;
+        bp_variable.name = name;
+        RPValue bp_value(rp_binf(rp_box_elem(*vit, vnm_it->first)),
+          rp_bsup(rp_box_elem(*vit, vnm_it->first)));
+        nps.variable_map.set_variable(bp_variable, bp_value);
+    }
+    HYDLA_LOGGER_DEBUG("#*** vcs:integrate: one of result ***\n",
+      "time <=> ", nps.time, "\n",
+      nps.variable_map);
+    integrate_result.states.push_back(nps);
+  }
+  integrate_result.changed_asks.push_back(
+    std::make_pair(ask_state, ask_node->get_id()));
+
+  // 後始末
+  for(std::vector<rp_box>::iterator vit=results.begin(); vit!=results.end(); ++vit) {
+    rp_box b = *vit;
+    rp_box_destroy(&b);
+  }
+
+  if(guarantee) return VCSR_TRUE;
+  else          return VCSR_UNKNOWN;
+
+  //// TODO: proofチェック２：(ソルバによるproofが存在するか？)
+  //// TODO: proofチェック２改：答え一つ一つについて時刻以外の変数を定数に変えてproofが得られるか？
 }
 
 /**
@@ -406,13 +547,16 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
  * 状態を求めてintegrate_resultへ入れる
  */
 void RealPaverVCSInterval::find_next_point_phase_states(
-  integrate_result_t &integrate_result,
+  std::vector<rp_box>& results,
   const ask_sptr ask,
   var_name_map_t vars,
   const time_t& current_time,
   const time_t& max_time,
   hydla::simulator::AskState state)
 {
+  typedef std::pair<double, double> interval_t;
+  typedef std::map<std::string, interval_t> dom_map_t;
+
   // askからガード条件(または否定)をつくる
   EqualConstraintBuilder builder;
   ctr_set_t guards;
@@ -450,47 +594,94 @@ void RealPaverVCSInterval::find_next_point_phase_states(
     // 変数のドメインを用意
     // 基本的には(-oo, +oo)
     // 新しい変数tt = t + t0(原点がIPの開始時刻である本当の(?)時刻変数)と
-    // 変数 tsum = tt + te(総経過時間，RPに計算してもらう)
-    // を用意
+    // 変数 tsum = tt + te(総経過時間，RPに計算してもらう) を用意
     // ttは[0, max_time.sup - current_time.inf]
-    // tは[0, +oo)
-    // tsumは[0, +oo)
+    // tは[0, +oo), tsumは[0, +oo)
+    // TODO: ttいらなくね？
     //TODO: 精度は？
-    rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars, 0.5);
-    rp_interval tti, ti, tsumi;
-    rp_interval_set(tti, 0, max_time.sup_ - current_time.inf_); // TODO: 桁落ち？
-    rp_interval_set(ti, 0, RP_INFINITY);
-    rp_interval_set(tsumi, 0, RP_INFINITY);
-    // "tt"のドメインを再設定
-    // TODO: デバッグメッセージだよ
-    rp::dump_vector<rp_variable>(std::cout, vec);
-    std::cout << "\n";
-    rp_union_set_empty(rp_variable_domain(
-      rp_vector_variable_elem(vec,
-        rp_vector_variable_index(vec, "tt")
-      )));
-    rp_union_insert(rp_variable_domain(
-      rp_vector_variable_elem(vec,
-        rp_vector_variable_index(vec, "tt")
-      )), tti);
-    // TODO: デバッグメッセージだよ
-    rp::dump_vector<rp_variable>(std::cout, vec);
-    std::cout << std::endl;
-
-    //rp_union_set_empty(rp_variable_domain(
-    //  rp_vector_variable_elem(
-    //    rp_problem_vars(problem),
-    //    rp_vector_variable_index(rp_problem_vars(problem), "tt")
-    //  )));
-    //rp_union_insert(rp_variable_domain(
-    //  rp_vector_variable_elem(
-    //    rp_problem_vars(problem),
-    //    rp_vector_variable_index(rp_problem_vars(problem), "tt")
-    //  )), tti);
-
-
+    dom_map_t dom_map;
+    dom_map.insert(dom_map_t::value_type("tt", interval_t(0, max_time.sup_ - current_time.inf_)));
+    dom_map.insert(dom_map_t::value_type("t", interval_t(0, RP_INFINITY)));
+    dom_map.insert(dom_map_t::value_type("tsum", interval_t(0, RP_INFINITY)));
+    rp_vector_destroy(&rp_problem_vars(problem));
+    rp_problem_vars(problem) = ConstraintSolver::create_rp_vector(vars, dom_map, 0.1);
+    // 制約をコピー
+    ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
+    ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
+    ctrs.insert(non_init_ctrs.begin(), non_init_ctrs.end());
+    ctrs.insert(guards.begin(), guards.end());
+    // 新しい制約 t = tt - t0と tsum = tt + teを加える
+    rp_constraint c;
+    rp_parse_constraint_string(&c, "t=tt-t0", rp_problem_symb(problem));
+    ctrs.insert(c);
+    rp_parse_constraint_string(&c, "tsum=tt+te", rp_problem_symb(problem));
+    ctrs.insert(c);
+    // 問題に制約を登録
+    for(ctr_set_t::iterator cit=ctrs.begin(); cit!=ctrs.end(); ++cit) {
+      if(*cit==NULL) continue; // NULLポインタはスキップ
+      rp_vector_insert(rp_problem_ctrs(problem), *cit);
+      for(int i=0; i<rp_constraint_arity(*cit); i++) {
+        ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*cit, i)));
+      }
+    }
+    rp_problem_set_initial_box(problem);
+    HYDLA_LOGGER_DEBUG("#*** vcs:integrate:find_naxt_pp_states: ***\n",
+      "#**** problem to solve ****\n",
+      problem);
+    // 解く
+    rp_selector* select;
+    rp_new(select,rp_selector_roundrobin,(&problem));
+    rp_splitter* split;
+    rp_new(split,rp_splitter_mixed,(&problem));
+    // TODO: prover使う
+    rp_bpsolver solver(&problem,10,select,split);
+    rp_box sol;
+    // 解をvariable_mapに直してresultへ入れていく
+    virtual_constraint_solver_t::IntegrateResult::next_phase_state_t nps;
+    nps.is_max_time = true; // 解が出なかった場合，true
+    while((sol=solver.compute_next())!=NULL) {
+      // ttが0を含むものは解じゃない -> 捨てる
+      if(rp_interval_contains(rp_box_elem(sol, vars.left.at("tt")), 0.0)) continue;
+      nps.is_max_time = false; // TODO: 厳密には違う可能性も…？
+      // boxをクローンしてvectorに入れる
+      rp_box sol_clone;
+      rp_box_clone(&sol_clone, sol);
+      results.push_back(sol_clone);
+      //// まず，tsumをtime_tへ直す
+      //rp_interval tsumi;
+      //rp_interval_copy(tsumi, rp_box_elem(sol, vars.left.at("tsum")));
+      //nps.time.inf_ = rp_binf(tsumi);
+      //nps.time.sup_ = rp_bsup(tsumi);
+      //// 変数をvariable_mapに直す
+      //// 初期値変数も入れておく
+      //var_name_map_t::right_const_iterator vnm_it;
+      //for(vnm_it=vars.right.begin(); vnm_it!=vars.right.end(); ++vnm_it) {
+      //  std::string name(vnm_it->second);
+      //  if(vnm_it->info.prev_flag) {
+      //    name.erase(0, init_prefix.length());
+      //  } else {
+      //    if(name=="t" || name=="tt" || name=="tsum") continue; //時刻変数は直さない
+      //    RPVariable bp_variable;
+      //    name.erase(0, var_prefix.length());
+      //  }
+      //  std::string dc_str(boost::lexical_cast<std::string>(vnm_it->info.derivative_count));
+      //  name.erase(0, dc_str.length());
+      //  bp_variable.derivative_count = vnm_it->info.derivative_count;
+      //  bp_variable.name = name;
+      //  RPValue bp_value(rp_binf(rp_box_elem(sol, vnm_it->first)),
+      //    rp_bsup(rp_box_elem(sol, vnm_it->first)));
+      //  nps.variable_map.set_variable(bp_variable, bp_value);
+      //}
+      //HYDLA_LOGGER_DEBUG("#*** vcs:integrate:find_naxt_pp_states: ***\n",
+      //  "#**** one of result ****\n",
+      //  "time <=> ", nps.time, "\n",
+      //  nps.variable_map);
+      //integrate_result.states.push_back(nps);
+    } // while
+    rp_problem_destroy(&problem);
   } else {
-  // P2N -> ガード条件の否定を一つずつ加えた問題を解いて最小時刻を取る
+    // P2N -> ガード条件の否定を一つずつ加えた問題を解いて最小時刻を取る
+    //　TODO: 近いうち書く！ 
   }
   return;
 }

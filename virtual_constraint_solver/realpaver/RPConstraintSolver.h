@@ -3,6 +3,8 @@
 
 #include "RPVCSType.h"
 #include <set>
+#include <map>
+#include "rp_interval.h"
 #include "rp_constraint.h"
 #include "rp_box.h"
 #include "rp_variable.h"
@@ -41,6 +43,11 @@ public:
    */
   static rp_vector_variable create_rp_vector(const var_name_map_t& vars,
                                              const double precision=1.0e-8);
+
+
+  static rp_vector_variable create_rp_vector(const var_name_map_t& vars,
+    const std::map<std::string, std::pair<double, double> >& domain,
+    const double precision=1.0e-8);
 
   /**
    * 全ての要素が(-oo,+oo)であるvarsと同じサイズのboxを作る
