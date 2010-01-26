@@ -27,6 +27,8 @@ public:
   virtual void add_single_constraint(const node_sptr& constraint_node,
     const bool neg_expression) = 0;
 
+  virtual void set_precision(const double p) = 0;
+
 /******************** realpaver only ********************/
 
 };

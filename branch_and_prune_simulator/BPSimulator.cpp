@@ -38,6 +38,7 @@ namespace hydla {
 namespace bp_simulator {
 
 BPSimulator::BPSimulator(const Opts& opts) :
+  precision_(0.5),
   opts_(opts)
 {}
 
@@ -67,6 +68,7 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     AskDisjunctionFormatter().format(pt_original.get());
     AskDisjunctionSplitter().split(pt_original.get());
     msc_original_ = mcc.create(pt_original);
+    HYDLA_LOGGER_DEBUG("#* original module set * \n",*pt_original); // ƒfƒoƒbƒO
   }
 
   {
@@ -77,6 +79,7 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     AskDisjunctionFormatter().format(pt_no_init.get());
     AskDisjunctionSplitter().split(pt_no_init.get());
     msc_no_init_ = mcc.create(pt_no_init);
+    HYDLA_LOGGER_DEBUG("#* no init module set *\n", *pt_no_init); 
   }
 
   // TODO: ”pŽ~
@@ -134,6 +137,7 @@ bool BPSimulator::point_phase(const module_set_sptr& ms,
   }
 
   RealPaverVCS vcs(RealPaverVCS::DiscreteMode);
+  vcs.set_precision(this->precision_);
   vcs.reset(state->variable_map);
 
   TellCollector tell_collector(ms);
@@ -308,6 +312,7 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
   RealPaverVCS vcs(RealPaverVCS::ContinuousMode, &ml_);
+  vcs.set_precision(this->precision_);
   vcs.reset(state->variable_map);
   TellCollector tell_collector(ms);
   AskCollector ask_collector(ms);

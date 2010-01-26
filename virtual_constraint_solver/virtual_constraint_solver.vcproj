@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;.\mathematica"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;.\mathematica;..\librealpaverbasic"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;RP_SYSTEM_WIN32"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"

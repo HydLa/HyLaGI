@@ -76,6 +76,11 @@ private:
     hydla::simulator::positive_asks_t& positive_asks,
     hydla::simulator::negative_asks_t& negative_asks);
 
+  void set_precision(double prec) {
+    precision_ = prec;
+  }
+
+  double precision_; // デフォルト0.5
   module_set_container_sptr msc_original_, msc_no_init_, msc_no_init_discreteask_;
   Opts opts_;
   MathLink ml_;

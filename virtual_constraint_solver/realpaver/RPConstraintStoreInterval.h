@@ -23,7 +23,7 @@ class ConstraintStoreInterval
 public:
   typedef std::set<rp_constraint> ctr_set_t;
 
-  ConstraintStoreInterval();
+  ConstraintStoreInterval(const double prec=0.5);
 
   ConstraintStoreInterval(const ConstraintStoreInterval& src);
 
@@ -60,6 +60,8 @@ public:
     return cs.dump_cs(s);
   }
 
+  void set_precision(const double p);
+
   // 有効なtell制約のリスト(TODO: privateにしてアクセサを作る？)
   hydla::simulator::tells_t nodes_;
 
@@ -67,6 +69,7 @@ private:
   ctr_set_t exprs_; // 初期値に関する制約が入る
   ctr_set_t non_init_exprs_; // IPで新たに満たすべき制約が入る
   var_name_map_t vars_; // 変数表
+  double prec_;
 };
 
 } // namespace realpaver

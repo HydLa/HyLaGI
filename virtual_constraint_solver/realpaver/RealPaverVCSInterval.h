@@ -71,22 +71,22 @@ public:
   virtual void add_single_constraint(const node_sptr& constraint_node,
     const bool neg_expression);
 
-private:
-  //void find_next_point_phase_states(rp_box* box_hull,
-  //  integrate_result_t& integrate_result,
-  //  const ask_sptr ask, var_name_map_t vars, 
-  //  const time_t& current_time,
-  //  const time_t& max_time, hydla::simulator::AskState state);
+  virtual void set_precision(const double p);
 
+private:
   void find_next_point_phase_states(std::vector<rp_box>& results,
     const ask_sptr ask, var_name_map_t vars, 
     const time_t& current_time,
     const time_t& max_time, hydla::simulator::AskState state);
 
+  void output_trajectory(const ask_sptr ask, var_name_map_t vars,
+    const time_t& current_time, const double next_time,
+    hydla::simulator::AskState state);
 
   static void clear_ctr_set(ctr_set_t& ctrs);
 
   ConstraintStoreInterval constraint_store_;
+  double prec_;
   MathLink* ml_;
 };
 

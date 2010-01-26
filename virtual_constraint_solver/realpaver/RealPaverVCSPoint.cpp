@@ -13,7 +13,8 @@ namespace hydla {
 namespace vcs {
 namespace realpaver {
 
-RealPaverVCSPoint::RealPaverVCSPoint()
+RealPaverVCSPoint::RealPaverVCSPoint() :
+  prec_(0.5)
 {}
 
 
@@ -82,7 +83,7 @@ VCSResult RealPaverVCSPoint::add_constraint(const tells_t& collected_tells)
   ctr_set_t store_copy = this->constraint_store_.get_store_exprs_copy();
   ctrs.insert(store_copy.begin(), store_copy.end());
   // 確認
-  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars, prec_);
   HYDLA_LOGGER_DEBUG("#**** vcs:add_constraint: constraints expression ****");
   std::stringstream ss;
   for(ctr_set_t::iterator it=ctrs.begin(); it!=ctrs.end(); it++) {
@@ -93,7 +94,7 @@ VCSResult RealPaverVCSPoint::add_constraint(const tells_t& collected_tells)
   HYDLA_LOGGER_DEBUG(ss.str());
   // 制約の解が存在するかどうか？
   rp_box b;
-  bool res = ConstraintSolver::solve_hull(&b, vars, ctrs);
+  bool res = ConstraintSolver::solve_hull(&b, vars, ctrs, prec_);
   if(res) {
     // consistentなら，ストアに制約を追加
     this->constraint_store_.add_constraint(ctrs_copy.begin(), ctrs_copy.end(), vars);
@@ -137,7 +138,7 @@ VCSResult RealPaverVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
   builder.create_guard_expr(negative_ask, g, ng, vars, prevs_in_g);
   // 確認
   {
-    rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
+    rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars, prec_);
     HYDLA_LOGGER_DEBUG("#**** vcs:check_entailment: guards ****");
     std::stringstream ss;
     ctr_set_t::iterator it = g.begin();
@@ -180,7 +181,7 @@ VCSResult RealPaverVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
   rp_box box;
   ctr_set_t ctr_and_g = ctrs;
   ctr_and_g.insert(g.begin(), g.end());
-  if(!(ConstraintSolver::solve_hull(&box, vars, ctr_and_g))) {
+  if(!(ConstraintSolver::solve_hull(&box, vars, ctr_and_g, prec_))) {
     HYDLA_LOGGER_DEBUG("#*** vcs:chack_entailment: ==> FALSE ***");
     RealPaverVCSPoint::clear_ctr_set(ctrs);
     RealPaverVCSPoint::clear_ctr_set(g);
@@ -198,7 +199,7 @@ VCSResult RealPaverVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
     ctr_it!=ng.end(); ctr_it++) {
     ctr_set_t ctr_and_ng = ctrs;
     ctr_and_ng.insert(*ctr_it);
-    if(ConstraintSolver::solve_hull(&box, vars, ctr_and_ng)) {
+    if(ConstraintSolver::solve_hull(&box, vars, ctr_and_ng, prec_)) {
       is_TRUE = false;
       rp_box_destroy(&box);
     }
@@ -238,7 +239,7 @@ bool RealPaverVCSPoint::is_guard_about_undefined_prev(const var_name_map_t& vars
 {
   bool res = false;
   rp_box box;
-  bool is_consistent_store_only = ConstraintSolver::solve_hull(&box, vars, ctrs);
+  bool is_consistent_store_only = ConstraintSolver::solve_hull(&box, vars, ctrs, prec_);
   assert(is_consistent_store_only);
   for(var_name_map_t::right_const_iterator it=p_in_g.right.begin();
     it!=p_in_g.right.end(); it++) {
@@ -272,6 +273,9 @@ std::ostream& RealPaverVCSPoint::dump(std::ostream& s) const
   return this->constraint_store_.dump_cs(s);
 }
 
+/**
+ * 制約ストアに制約を追加する
+ */
 void RealPaverVCSPoint::add_single_constraint(const node_sptr &constraint_node,
                                               const bool neg_expression)
 {
@@ -281,6 +285,15 @@ void RealPaverVCSPoint::add_single_constraint(const node_sptr &constraint_node,
   var_name_map_t vars;
   vars.insert(builder.vars_begin(), builder.vars_end());
   if(c) this->constraint_store_.add_constraint(c, vars);
+}
+
+/**
+ * boxの精度を設定する
+ */
+void RealPaverVCSPoint::set_precision(const double p)
+{
+  this->prec_ = p;
+  this->constraint_store_.set_precision(p);
 }
 
 std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs)

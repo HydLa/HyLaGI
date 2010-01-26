@@ -38,10 +38,10 @@ struct TimeBoxCompare {
 };
 
 RealPaverVCSInterval::RealPaverVCSInterval(MathLink* ml) :
-constraint_store_(),
+  prec_(0.5),
+  constraint_store_(),
   ml_(ml)
 {}
-
 
 RealPaverVCSInterval::~RealPaverVCSInterval()
 {}
@@ -271,7 +271,7 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
   builder.create_guard_expr(negative_ask, g, ng, vars, prevs_in_g, true);
   // 確認
   {
-    rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
+    rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars, prec_);
     HYDLA_LOGGER_DEBUG("#**** vcs:check_entailment: guards ****");
     std::stringstream ss;
     ctr_set_t::iterator it = g.begin();
@@ -304,7 +304,7 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
   rp_box box;
   ctr_set_t ctr_and_g = ctrs;
   ctr_and_g.insert(g.begin(), g.end());
-  if(!(ConstraintSolver::solve_hull(&box, vars, ctr_and_g))) {
+  if(!(ConstraintSolver::solve_hull(&box, vars, ctr_and_g, prec_))) {
     HYDLA_LOGGER_DEBUG("#*** vcs:chack_entailment: ==> FALSE ***");
     RealPaverVCSInterval::clear_ctr_set(ctrs);
     RealPaverVCSInterval::clear_ctr_set(g);
@@ -321,7 +321,7 @@ VCSResult RealPaverVCSInterval::check_entailment(const ask_node_sptr& negative_a
     ctr_it!=ng.end(); ctr_it++) {
     ctr_set_t ctr_and_ng = ctrs;
     ctr_and_ng.insert(*ctr_it);
-    if(ConstraintSolver::solve_hull(&box, vars, ctr_and_ng)) {
+    if(ConstraintSolver::solve_hull(&box, vars, ctr_and_ng, prec_)) {
       is_TRUE = false;
       rp_box_destroy(&box);
     }
@@ -401,8 +401,10 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
         rp_box b = *vit;
         rp_box_destroy(&b);
       }
+      min_time = rp_binf(rp_box_elem(tmp_results.at(0), vars.left.at("tt")));
       results.clear();
       results = tmp_results;
+      tmp_results.clear();
       ask_node = *pit;
       ask_state = Positive2Negative;
     }
@@ -426,8 +428,10 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
         rp_box b = *vit;
         rp_box_destroy(&b);
       }
+      min_time = rp_binf(rp_box_elem(tmp_results.at(0), vars.left.at("tt")));
       results.clear();
       results = tmp_results;
+      tmp_results.clear();
       ask_node = *nit;
       ask_state = Negative2Positive;
     }
@@ -438,8 +442,12 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
   //  rp_box_display_simple_nl(*vit);
   //}
 
-  // 答えがない→VCSR_FALSE(向こうで積まないだけでもいいんだけど)
-  if(results.size() == 0) return VCSR_FALSE;
+  // 答えがない→VCSR_FALSE
+  // シミュレーション時間まで軌道を表示
+  if(results.size() == 0) {
+    this->output_trajectory(ask_node, vars,current_time, max_time.sup_, ask_state);
+    return VCSR_FALSE;
+  }
 
   // 答えがproofされているか？
   //// proofチェック１：答えのhullが初期値変数のドメインをすべて含んでいるか？
@@ -449,7 +457,7 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
   double g_time_sup;
   rp_box init_hull, result_hull;
   ctr_set_t init_ctr = this->constraint_store_.get_store_exprs_copy();
-  ConstraintSolver::solve_hull(&init_hull, vars, init_ctr, 0.5);
+  ConstraintSolver::solve_hull(&init_hull, vars, init_ctr, prec_);
   clear_ctr_set(init_ctr);
   rp_box_clone(&result_hull, results.at(0));
   // 答えのhullを計算しつつinit_hullと一致するか確かめる
@@ -482,6 +490,11 @@ VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
       }
     }
   }
+  // 軌道を表示
+  // TODO: output_functionでやるべき
+  if(!guarantee) g_time_sup = rp_bsup(rp_box_elem(result_hull, vars.left.at("tsum")));
+  this->output_trajectory(ask_node, vars,current_time, g_time_sup, ask_state);
+
   rp_box_destroy(&init_hull);
   rp_box_destroy(&result_hull);
   
@@ -564,7 +577,7 @@ void RealPaverVCSInterval::find_next_point_phase_states(
   builder.create_expr(ask, guards, vars, is_n2p);
   // 確認
   std::stringstream ss;
-  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars);
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(vars, prec_);
   for(ctr_set_t::iterator it=guards.begin(); it!=guards.end(); ++it) {
     rp_constraint c = *it;
     if(!c) assert(false); // 解けない！今後の課題
@@ -604,7 +617,7 @@ void RealPaverVCSInterval::find_next_point_phase_states(
     dom_map.insert(dom_map_t::value_type("t", interval_t(0, RP_INFINITY)));
     dom_map.insert(dom_map_t::value_type("tsum", interval_t(0, RP_INFINITY)));
     rp_vector_destroy(&rp_problem_vars(problem));
-    rp_problem_vars(problem) = ConstraintSolver::create_rp_vector(vars, dom_map, 0.1);
+    rp_problem_vars(problem) = ConstraintSolver::create_rp_vector(vars, dom_map, prec_);
     // 制約をコピー
     ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
     ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
@@ -622,6 +635,12 @@ void RealPaverVCSInterval::find_next_point_phase_states(
       rp_vector_insert(rp_problem_ctrs(problem), *cit);
       for(int i=0; i<rp_constraint_arity(*cit); i++) {
         ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*cit, i)));
+      }
+    }
+    // 制約に依存していない変数のprecisionはRP_INFINITYに
+    for(int i=0; i<rp_vector_size(rp_problem_vars(problem)); ++i) {
+      if(rp_variable_constrained(rp_problem_var(problem, i))==0) {
+        rp_variable_precision(rp_problem_var(problem, i)) = RP_INFINITY;
       }
     }
     rp_problem_set_initial_box(problem);
@@ -647,43 +666,154 @@ void RealPaverVCSInterval::find_next_point_phase_states(
       rp_box sol_clone;
       rp_box_clone(&sol_clone, sol);
       results.push_back(sol_clone);
-      //// まず，tsumをtime_tへ直す
-      //rp_interval tsumi;
-      //rp_interval_copy(tsumi, rp_box_elem(sol, vars.left.at("tsum")));
-      //nps.time.inf_ = rp_binf(tsumi);
-      //nps.time.sup_ = rp_bsup(tsumi);
-      //// 変数をvariable_mapに直す
-      //// 初期値変数も入れておく
-      //var_name_map_t::right_const_iterator vnm_it;
-      //for(vnm_it=vars.right.begin(); vnm_it!=vars.right.end(); ++vnm_it) {
-      //  std::string name(vnm_it->second);
-      //  if(vnm_it->info.prev_flag) {
-      //    name.erase(0, init_prefix.length());
-      //  } else {
-      //    if(name=="t" || name=="tt" || name=="tsum") continue; //時刻変数は直さない
-      //    RPVariable bp_variable;
-      //    name.erase(0, var_prefix.length());
-      //  }
-      //  std::string dc_str(boost::lexical_cast<std::string>(vnm_it->info.derivative_count));
-      //  name.erase(0, dc_str.length());
-      //  bp_variable.derivative_count = vnm_it->info.derivative_count;
-      //  bp_variable.name = name;
-      //  RPValue bp_value(rp_binf(rp_box_elem(sol, vnm_it->first)),
-      //    rp_bsup(rp_box_elem(sol, vnm_it->first)));
-      //  nps.variable_map.set_variable(bp_variable, bp_value);
-      //}
-      //HYDLA_LOGGER_DEBUG("#*** vcs:integrate:find_naxt_pp_states: ***\n",
-      //  "#**** one of result ****\n",
-      //  "time <=> ", nps.time, "\n",
-      //  nps.variable_map);
-      //integrate_result.states.push_back(nps);
-    } // while
+    }
     rp_problem_destroy(&problem);
   } else {
     // P2N -> ガード条件の否定を一つずつ加えた問題を解いて最小時刻を取る
     //　TODO: 近いうち書く！ 
   }
   return;
+}
+
+/**
+ * 次のポイントフェーズまでの軌道を表示する
+ * TODO: 表示形式を選べるように？とりあえずgnuplot形式で
+ */
+void RealPaverVCSInterval::output_trajectory(const ask_sptr ask,
+                                             var_name_map_t vars,
+                                             const time_t& current_time,
+                                             const double next_time,
+                                             AskState state)
+{
+  typedef std::pair<double, double> interval_t;
+  typedef std::map<std::string, interval_t> dom_map_t;
+
+  //TODO: ガード条件を反映できるようになるべき…現状ではできない
+  // ストアをコピー
+  ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
+  ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
+  ctrs.insert(non_init_ctrs.begin(), non_init_ctrs.end());
+
+  // 定数t0とteを用意
+  rp_problem problem;
+  rp_problem_create(&problem, "output_trajectory");
+  rp_constant t0, te;
+  rp_interval t0i, tei;
+  rp_interval_set(t0i, 0.0, current_time.width()); // TODO: widthによる桁落ち？
+  rp_interval_set(tei, current_time.inf_, current_time.sup_);
+  rp_constant_create(&t0, "t0", t0i);
+  rp_constant_create(&te, "te", tei);
+  rp_vector_insert(rp_problem_nums(problem), t0);
+  rp_vector_insert(rp_problem_nums(problem), te);
+  // 変数のドメインを用意
+  // tt = t + t0, tsum = tt + te
+  // ttは[0, +oo) tは[0, +oo), tsumは[0, next_time]
+  // 次のポイントフェーズ時刻まで計算する
+  dom_map_t dom_map;
+  dom_map.insert(dom_map_t::value_type("tt", interval_t(0, RP_INFINITY)));
+  dom_map.insert(dom_map_t::value_type("t", interval_t(0, RP_INFINITY)));
+  dom_map.insert(dom_map_t::value_type("tsum", interval_t(0, next_time)));
+  rp_vector_destroy(&rp_problem_vars(problem));
+  rp_problem_vars(problem) = ConstraintSolver::create_rp_vector(vars, dom_map, prec_);
+
+  // 新しい制約 t = tt - t0と tsum = tt + teを加える
+  rp_constraint c;
+  rp_parse_constraint_string(&c, "t=tt-t0", rp_problem_symb(problem));
+  ctrs.insert(c);
+  rp_parse_constraint_string(&c, "tsum=tt+te", rp_problem_symb(problem));
+  ctrs.insert(c);
+  // 問題に制約を登録
+  for(ctr_set_t::iterator cit=ctrs.begin(); cit!=ctrs.end(); ++cit) {
+    if(*cit==NULL) continue; // NULLポインタはスキップ
+    rp_vector_insert(rp_problem_ctrs(problem), *cit);
+    for(int i=0; i<rp_constraint_arity(*cit); i++) {
+      ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*cit, i)));
+    }
+  }
+  // 制約に依存していない変数のprecisionはRP_INFINITYに
+  for(int i=0; i<rp_vector_size(rp_problem_vars(problem)); ++i) {
+    if(rp_variable_constrained(rp_problem_var(problem, i))==0) {
+      rp_variable_precision(rp_problem_var(problem, i)) = RP_INFINITY;
+    }
+  }
+  rp_problem_set_initial_box(problem);
+  HYDLA_LOGGER_DEBUG("#*** vcs:integrate:output_trajectory: ***\n",
+    "#**** problem to solve ****\n",
+    problem);
+  // 解く
+  rp_selector* select;
+  rp_new(select,rp_selector_roundrobin,(&problem));
+  rp_splitter* split;
+  rp_new(split,rp_splitter_mixed,(&problem));
+  rp_bpsolver solver(&problem,10,select,split);
+  rp_box sol;
+  // 変数名を表示
+  std::cout << "#time";
+  for(var_name_map_t::right_const_iterator vit=vars.right.begin();
+    vit!=vars.right.end(); ++vit) {
+      if(vit->info.prev_flag) continue;
+      std::string name(vit->second);
+      if(name=="t" || name=="tt" || name=="tsum") continue;
+      name.erase(0, var_prefix.length());
+      std::string dc_str(boost::lexical_cast<std::string>(vit->info.derivative_count));
+      name.erase(0, dc_str.length());
+      for(int i=0; i< vit->info.derivative_count; ++i) name += "'";
+      std::cout << "\t" << name;
+  }
+  std::cout << "\n";
+
+  while((sol=solver.compute_next()) != NULL) {
+    // 表示
+    rp_interval timei;
+    rp_interval_copy(timei, rp_box_elem(sol, vars.left.at("tsum")));
+    // 左下
+    std::cout << rp_binf(timei);
+    for(var_name_map_t::right_const_iterator vit=vars.right.begin();
+      vit!=vars.right.end(); ++vit) {
+      if(vit->info.prev_flag) continue;
+      std::string name(vit->second);
+      if(name=="t" || name=="tt" || name=="tsum") continue;
+      std::cout << " " << rp_binf(rp_box_elem(sol, vit->first));
+    }
+    // 右下
+    std::cout << "\n" << rp_bsup(timei);
+    for(var_name_map_t::right_const_iterator vit=vars.right.begin();
+      vit!=vars.right.end(); ++vit) {
+      if(vit->info.prev_flag) continue;
+      std::string name(vit->second);
+      if(name=="t" || name=="tt" || name=="tsum") continue;
+      std::cout << " " << rp_binf(rp_box_elem(sol, vit->first));
+    }
+    // 右上
+    std::cout << "\n" << rp_bsup(timei);
+    for(var_name_map_t::right_const_iterator vit=vars.right.begin();
+      vit!=vars.right.end(); ++vit) {
+      if(vit->info.prev_flag) continue;
+      std::string name(vit->second);
+      if(name=="t" || name=="tt" || name=="tsum") continue;
+      std::cout << " " << rp_bsup(rp_box_elem(sol, vit->first));
+    }
+    // 左上
+    std::cout << "\n" << rp_binf(timei);
+    for(var_name_map_t::right_const_iterator vit=vars.right.begin();
+      vit!=vars.right.end(); ++vit) {
+      if(vit->info.prev_flag) continue;
+      std::string name(vit->second);
+      if(name=="t" || name=="tt" || name=="tsum") continue;
+      std::cout << " " << rp_bsup(rp_box_elem(sol, vit->first));
+    }
+    // 左下
+    std::cout << "\n" << rp_binf(timei);
+    for(var_name_map_t::right_const_iterator vit=vars.right.begin();
+      vit!=vars.right.end(); ++vit) {
+      if(vit->info.prev_flag) continue;
+      std::string name(vit->second);
+      if(name=="t" || name=="tt" || name=="tsum") continue;
+      std::cout << " " << rp_binf(rp_box_elem(sol, vit->first));
+    }
+    std::cout << "\n\n";
+  } // while
+  rp_problem_destroy(&problem);
 }
 
 /**
@@ -704,6 +834,15 @@ void RealPaverVCSInterval::add_single_constraint(const node_sptr &constraint_nod
   var_name_map_t vars;
   vars.insert(builder.vars_begin(), builder.vars_end());
   //if(c) this->constraint_store_.add_constraint(c, vars);
+}
+
+/**
+ * boxの精度を設定する
+ */
+void RealPaverVCSInterval::set_precision(const double p)
+{
+  this->prec_ = p;
+  this->constraint_store_.set_precision(p);
 }
 
 std::ostream& operator<<(std::ostream& s, const RealPaverVCSInterval& vcs)

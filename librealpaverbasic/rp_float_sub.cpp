@@ -7,8 +7,14 @@
 #include <boost/math/special_functions/atanh.hpp>
 
 #ifdef RP_SYSTEM_WIN32
+
+/**
+ * boostのnextafterは無限値(?)に対してエラーを返すので対策
+ * POSIXのnextafterは無限値には無限値を返す(でも意味的にはエラーらしい)
+ */
 double nextafter(double x, double y) {
-	return boost::math::nextafter<double>(x, y);
+  if(x==RP_INFINITY || x==-RP_INFINITY) return x;
+	else return boost::math::nextafter<double>(x, y);
 }
 
 double trunc(double x) {

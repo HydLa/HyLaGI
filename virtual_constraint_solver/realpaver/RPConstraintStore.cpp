@@ -15,13 +15,15 @@ namespace realpaver {
 /**
  * ポイントフェーズ用制約ストア
  */
-ConstraintStore::ConstraintStore()
+ConstraintStore::ConstraintStore(const double prec) :
+  prec_(prec)
 {}
 
 ConstraintStore::ConstraintStore(const ConstraintStore& src)
 {
   this->exprs_ = src.get_store_exprs_copy();
   this->vars_ = src.vars_;
+  this->prec_ = src.prec_;
 }
 
 ConstraintStore::~ConstraintStore()
@@ -115,7 +117,7 @@ void ConstraintStore::build_variable_map(virtual_constraint_solver_t::variable_m
   // 問題の生成
   // TODO: precisionは？
   ctr_set_t exprs_copy = this->get_store_exprs_copy();
-  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_);
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_, prec_);
   // TODO: ConstraintSolver::solve_exact_hullを使うべき(あっちもメモリ解放に自信ないけど)
   rp_problem problem;
   rp_problem_create(&problem, "build_variable_map");
@@ -128,8 +130,12 @@ void ConstraintStore::build_variable_map(virtual_constraint_solver_t::variable_m
       ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*it, i)));
     }
   }
-  // TODO: 制約に依存していない変数のprecisionはRP_INFINITYに
-  // TODO: 他の変数は…BPSimulatorで一つのprecisionを持つようにする
+  // 制約に依存していない変数のprecisionはRP_INFINITYに
+  for(int i=0; i<rp_vector_size(rp_problem_vars(problem)); ++i) {
+    if(rp_variable_constrained(rp_problem_var(problem, i))==0) {
+      rp_variable_precision(rp_problem_var(problem, i)) = RP_INFINITY;
+    }
+  }
   rp_problem_set_initial_box(problem);
   HYDLA_LOGGER_DEBUG(
     "#*** constraint store: problem to solve ***\n",
@@ -147,13 +153,11 @@ void ConstraintStore::build_variable_map(virtual_constraint_solver_t::variable_m
   // 解いてhullを求める
   rp_box sol, tmp_box = solver.compute_next();
   assert(tmp_box != NULL);
-  rp_box_display_simple_nl(tmp_box);
   rp_box_clone(&sol, tmp_box);
-  rp_box_display_simple_nl(sol);
   while((tmp_box=solver.compute_next()) != NULL) {
+    //rp_box_display_simple_nl(tmp_box);
     rp_box_merge(sol, tmp_box);
   }
-  rp_box_display_simple_nl(sol);
   oft.apply_box(sol, "");
   HYDLA_LOGGER_DEBUG(
     "#*** constraint store: variable_map(hull of ",
@@ -229,7 +233,7 @@ void ConstraintStore::add_constraint(std::set<rp_constraint>::iterator start,
  */
 std::ostream& ConstraintStore::dump_cs(std::ostream& s) const
 {
-  rp_vector_variable vec = this->to_rp_vector();
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_, prec_);
   std::set<rp_constraint>::const_iterator ctr_it = this->exprs_.begin();
   while(ctr_it != this->exprs_.end()){
     rp::dump_constraint(s, *ctr_it, vec); // digits, mode);
@@ -241,26 +245,9 @@ std::ostream& ConstraintStore::dump_cs(std::ostream& s) const
   return s;
 } 
 
-/**
- * vars_をrp_vector_variableに変換
- * 変数の値は(-oo, +oo)
- * TODO: ConstraintBuilderにもあるよ
- */
-rp_vector_variable ConstraintStore::to_rp_vector() const
+void ConstraintStore::set_precision(const double p)
 {
-  rp_vector_variable vec;
-  rp_vector_variable_create(&vec);
-  var_name_map_t::right_const_iterator it;
-  for(it=this->vars_.right.begin(); it!=this->vars_.right.end(); it++){
-    rp_variable v;
-    rp_variable_create(&v, ((it->second).c_str()));
-    rp_variable_set_decision(v);
-    rp_interval interval;
-    rp_interval_set(interval,(-1)*RP_INFINITY,RP_INFINITY);
-    rp_union_insert(rp_variable_domain(v), interval);
-    rp_vector_insert(vec, v);
-  }
-  return vec;
+  this->prec_ = p;
 }
 
 } // namespace realpaver

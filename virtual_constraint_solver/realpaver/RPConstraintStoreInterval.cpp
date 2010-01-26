@@ -14,7 +14,8 @@ namespace realpaver {
 
 typedef std::set<rp_constraint> ctr_set_t;
 
-ConstraintStoreInterval::ConstraintStoreInterval()
+ConstraintStoreInterval::ConstraintStoreInterval(const double prec) : 
+  prec_(prec)
 {}
 
 ConstraintStoreInterval::ConstraintStoreInterval(const ConstraintStoreInterval& src)
@@ -149,6 +150,11 @@ void ConstraintStoreInterval::set_non_init_constraint(const ctr_set_t ctrs)
   this->non_init_exprs_ = ctrs;
 }
 
+void ConstraintStoreInterval::set_precision(const double p)
+{
+  this->prec_ = p;
+}
+
 //void ConstraintStoreInterval::add_constraint(rp_constraint c, const var_name_map_t& vars)
 //{}
 
@@ -157,7 +163,7 @@ void ConstraintStoreInterval::set_non_init_constraint(const ctr_set_t ctrs)
 
 std::ostream& ConstraintStoreInterval::dump_cs(std::ostream& s) const
 {
-  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_);
+  rp_vector_variable vec = ConstraintSolver::create_rp_vector(this->vars_, prec_);
   ctr_set_t::const_iterator ctr_it = this->exprs_.begin();
   while(ctr_it != this->exprs_.end()){
     rp::dump_constraint(s, *ctr_it, vec); // digits, mode);

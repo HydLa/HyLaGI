@@ -70,6 +70,8 @@ public:
   virtual void add_single_constraint(const node_sptr& constraint_node,
     const bool neg_expression);
 
+  virtual void set_precision(const double p);
+
 private:
   //void send_cs() const;
   //void send_cs_vars() const;
@@ -80,7 +82,7 @@ private:
   static void clear_ctr_set(ctr_set_t& ctrs);
 
   ConstraintStore constraint_store_;
-  //ConstraintBuilder builder_;
+  double prec_;
 };
 
 std::ostream& operator<<(std::ostream& s, const RealPaverVCSPoint& vcs);

@@ -112,10 +112,21 @@ VCSResult RealPaverVCS::integrate(integrate_result_t& integrate_result,
 
 /******************** realpaver only ********************/
 
+/**
+ * 制約ストアに制約を追加する
+ */
 void RealPaverVCS::add_single_constraint(const node_sptr& constraint_node,
                                          const bool neg_expression)
 {
   return vcs_->add_single_constraint(constraint_node, neg_expression);
+}
+
+/**
+ * boxの精度を設定する
+ */
+void RealPaverVCS::set_precision(const double p)
+{
+  vcs_->set_precision(p);
 }
 
 /******************** realpaver only ********************/

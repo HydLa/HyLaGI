@@ -19,7 +19,7 @@ typedef std::set<rp_constraint> ctr_set_t;
 class ConstraintStore
 {
 public:
-  ConstraintStore();
+  ConstraintStore(const double prec=0.5);
 
   ConstraintStore(const ConstraintStore& src);
 
@@ -49,11 +49,13 @@ public:
     return cs.dump_cs(s);
   }
 
+  void set_precision(const double p);
+
 private:
-  rp_vector_variable to_rp_vector() const;
 
   ctr_set_t exprs_;
   var_name_map_t vars_;
+  double prec_;
 };
 
 } // namespace realpaver
