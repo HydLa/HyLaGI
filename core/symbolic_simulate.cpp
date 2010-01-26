@@ -33,6 +33,7 @@ void setup_symbolic_simulator_opts(MathSimulator::Opts& opts)
   opts.parallel_mode = po.count("parallel")>0;
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
+  opts.approx_precision = po.get<int>("approx");
 
 }
 

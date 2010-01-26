@@ -62,7 +62,11 @@ void ProgramOptions::init_descriptions()
     
     ("interlanguage,i", 
      "show intermediate language")
-    
+
+    ("approx,a", 
+     value<int>()->default_value(-1), 
+     "approximate mode:\n negative value: no approx\n positive value: presicion")
+
     ("mathlink", 
      value<std::string>()->default_value("-linkmode launch -linkname 'math -mathlink'"), 
      "mathlink option")

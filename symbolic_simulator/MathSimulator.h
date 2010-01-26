@@ -46,6 +46,7 @@ public:
     OutputFormat output_format;
     symbolic_time_t output_interval;
     int             output_precision;
+    int approx_precision;
   } Opts;
 
   MathSimulator(const Opts& opts);

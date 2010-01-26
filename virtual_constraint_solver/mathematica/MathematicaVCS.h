@@ -27,7 +27,7 @@ public:
     DiscreteMode,
   };
 
-  MathematicaVCS(Mode m, MathLink* ml);
+  MathematicaVCS(Mode m, MathLink* ml, int approx_precision);
 
   virtual ~MathematicaVCS();
 

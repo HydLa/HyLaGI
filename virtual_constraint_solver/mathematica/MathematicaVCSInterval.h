@@ -35,7 +35,10 @@ public:
 //                     std::set<MathVariable> > constraint_store_t;
 
 
-  MathematicaVCSInterval(MathLink* ml);
+  /**
+   * @param approx_precision 近似する精度 値が負の場合は近似を行わない
+   */
+  MathematicaVCSInterval(MathLink* ml, int approx_precision);
 
   virtual ~MathematicaVCSInterval();
 
@@ -98,7 +101,9 @@ private:
    * Mathematicaに送る制約の中に出現する変数の
    * 最大微分回数未満の初期値制約のみ送信をおこなう
    */
-  void send_init_cons(PacketSender& ps, const max_diff_map_t& max_diff_map);
+  void send_init_cons(PacketSender& ps, 
+                      const max_diff_map_t& max_diff_map, 
+                      bool use_approx);
 
   /**
    * 与えられたaskのガード制約を送信する
@@ -113,6 +118,7 @@ private:
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
+  int approx_precision_;
 };
 
 

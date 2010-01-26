@@ -11,7 +11,7 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml)
+MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml, int approx_precision)
 {
   mode_ = m;
   switch(m) {
@@ -20,7 +20,7 @@ MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml)
       break;
 
     case ContinuousMode:
-      vcs_.reset(new MathematicaVCSInterval(ml));
+      vcs_.reset(new MathematicaVCSInterval(ml, approx_precision));
       break;
 
     default:

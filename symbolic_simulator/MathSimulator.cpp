@@ -207,7 +207,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
   
-  MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_);
+  MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
                       boost::bind(&MathSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
@@ -321,7 +321,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   expanded_always_t expanded_always;
   //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
-  MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_);
+  MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_, opts_.approx_precision);
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
                       boost::bind(&MathSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);

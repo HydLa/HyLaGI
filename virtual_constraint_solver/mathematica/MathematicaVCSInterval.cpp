@@ -17,8 +17,9 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-MathematicaVCSInterval::MathematicaVCSInterval(MathLink* ml) :
-  ml_(ml)
+MathematicaVCSInterval::MathematicaVCSInterval(MathLink* ml, int approx_precision) :
+  ml_(ml),
+  approx_precision_(approx_precision)
 {
 }
 
@@ -109,7 +110,9 @@ void MathematicaVCSInterval::create_max_diff_map(
 }
 
 void MathematicaVCSInterval::send_init_cons(
-  PacketSender& ps, const max_diff_map_t& max_diff_map)
+  PacketSender& ps, 
+  const max_diff_map_t& max_diff_map,
+  bool use_approx)
 {
   HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_init_cons ----");
     
@@ -151,6 +154,12 @@ void MathematicaVCSInterval::send_init_cons(
         PacketSender::VA_Zero);
 
       // 値
+      if(use_approx && approx_precision_ > 0) {
+        // 近似して送信
+        ml_->put_function("approxExpr", 2);
+        ml_->put_integer(approx_precision_);
+      }
+
       ml_->put_function("ToExpression", 1);
       ml_->put_string(init_vars_it->second.str);      
     }
@@ -216,7 +225,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   create_max_diff_map(ps, max_diff_map);
   
   // 初期値制約の送信
-  send_init_cons(ps, max_diff_map);
+  send_init_cons(ps, max_diff_map, false);
 
   // 変数のリストを渡す
   send_vars(ps, max_diff_map);
@@ -315,7 +324,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   create_max_diff_map(ps, max_diff_map);
   
   // 初期値制約の送信
-  send_init_cons(ps, max_diff_map);
+  send_init_cons(ps, max_diff_map, false);
 
   // 変数のリストを渡す
   send_vars(ps, max_diff_map);
@@ -416,7 +425,7 @@ VCSResult MathematicaVCSInterval::integrate(
   create_max_diff_map(ps, max_diff_map);
   
   // 初期値制約の送信
-  send_init_cons(ps, max_diff_map);
+  send_init_cons(ps, max_diff_map, true);
 
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
   HYDLA_LOGGER_DEBUG("-- send positive ask -- ");
@@ -434,13 +443,18 @@ VCSResult MathematicaVCSInterval::integrate(
   send_time -= current_time;
   HYDLA_LOGGER_DEBUG("current time:", current_time);
   HYDLA_LOGGER_DEBUG("send time:", send_time);
+  if(approx_precision_ > 0) {
+    // 近似して送信
+    ml_->put_function("approxExpr", 2);
+    ml_->put_integer(approx_precision_);
+  }
   send_time.send_time(*ml_);
 
 
 ////////////////// 受信処理
 
   HYDLA_LOGGER_DEBUG(
-    "-- math debug print -- \n",
+    "-- integrate math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
@@ -548,6 +562,18 @@ VCSResult MathematicaVCSInterval::integrate(
   state.is_max_time = ml_->get_integer() == 1;
   HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
 
+
+  // 時刻の近似
+  if(approx_precision_ > 0) {
+    ml_->put_function("ToString", 1);
+    ml_->put_function("FullForm", 1);
+    ml_->put_function("approxExpr", 2);
+    ml_->put_integer(approx_precision_);
+    state.time.send_time(*ml_);
+    ml_->skip_pkt_until(RETURNPKT);
+    ml_->MLGetNext(); 
+    state.time.receive_time(*ml_);
+  }
 
   // 次のフェーズにおける変数の値を導出する
   HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
