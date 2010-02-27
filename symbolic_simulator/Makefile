@@ -9,12 +9,4 @@ LIBS	 += -lML32i3 -lm -lrt
 DEFINES  += 
 CXX_OPT  += 
 
-SRC         += math_source.cpp
-CLEAN_FILES += math_source.cpp
-
-#DEP_OBJECTS  := ../math_source_converter/msc
-
 include ../Makefile.common
-
-math_source.cpp: HydLa.m
-	cat HydLa.m | ../math_source_converter/msc > math_source.cpp

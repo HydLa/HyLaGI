@@ -1,5 +1,7 @@
 #include "AskDisjunctionSplitter.h"
 
+#include "Logger.h"
+
 using namespace hydla::parse_tree;
 
 namespace hydla {
@@ -16,6 +18,10 @@ void AskDisjunctionSplitter::split(hydla::parse_tree::ParseTree* pt)
   pt_ = pt;
   pt->dispatch(this);
   pt->update_node_id_list();
+
+  HYDLA_LOGGER_DEBUG("#*** ask disjunction split result ***\n",
+                     *pt, "\n",
+                     pt->to_graphviz());
 }
 
 // §–ñŒÄ‚Ño‚µ

@@ -41,6 +41,7 @@ public:
     std::string mathlink;
     bool debug_mode;
     std::string max_time;
+    bool nd_mode;
     bool profile_mode;
     bool parallel_mode;
     OutputFormat output_format;

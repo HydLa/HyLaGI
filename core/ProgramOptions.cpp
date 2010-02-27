@@ -26,13 +26,15 @@ void ProgramOptions::init_descriptions()
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
 
-    ("module-set-list", 
+    ("dump-parse-tree", 
+     "output parse tree")
+    ("dump-module-set-list", 
      "output set of module sets which might be solution by list representation")
-    ("module-set-list-noinit", 
+    ("dump-module-set-list-noinit", 
      "output set of non initial module sets which might be solution by list representation")
-    ("module-set-graph", 
+    ("dump-module-set-graph", 
      "output set of module sets which might be solution by graph representation")
-    ("module-set-graph-noinit", 
+    ("dump-module-set-graph-noinit", 
      "output set of non initial module sets which might be solution by graph representation")
 
     ("graphviz", 

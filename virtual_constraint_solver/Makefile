@@ -11,10 +11,10 @@ CXX_OPT  +=
 
 SRC_DIR += mathematica realpaver
 
-# SRC         += math_source.cpp
-# CLEAN_FILES += math_source.cpp
+SRC         += mathematica/vcs_math_source.cpp
+CLEAN_FILES += mathematica/vcs_math_source.cpp
 
 include ../Makefile.common
 
-# math_source.cpp: HydLa.m
-# 	cat HydLa.m | ../math_source_converter/msc > math_source.cpp
+mathematica/vcs_math_source.cpp: mathematica/vcs_math_source.m
+	cat mathematica/vcs_math_source.m | ../math_source_converter/msc vcs_math_source > mathematica/vcs_math_source.cpp

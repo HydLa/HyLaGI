@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <sstream>
@@ -140,6 +141,13 @@ public:
   /**
    * dotŒ¾ŒêŒ`Ž®‚Å‚Ì•\Ž¦
    */
+  std::string to_graphviz() const
+  {
+    std::stringstream str;
+    to_graphviz(str);
+    return str.str();
+  }
+
   std::ostream& to_graphviz(std::ostream& s) const;
 
   /**

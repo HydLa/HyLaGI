@@ -12,7 +12,7 @@ LDFLAGS  += -L../librealpaver  -L../librealpaverbasic
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/lib
 
-LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2²ó¤ä¤Ã¤Æ½ç½ø¤Ë¤è¤ë°ÍÂ¸´Ø·¸¤ÎÌäÂê¤ò²ò¾Ã
+LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2‰ñ‚â‚Á‚Ä‡˜‚É‚æ‚éˆË‘¶ŠÖŒW‚Ì–â‘è‚ğ‰ğÁ
 LIBS     += -lrealpaver -lrealpaverbasic  
 LIBS     += -lboost_unit_test_framework -lboost_regex 
 LIBS     += -lML32i3 -lm -lrt

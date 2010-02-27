@@ -13,73 +13,78 @@ void conv()
   char c = *in_itr++;
   while(in_itr != std::istreambuf_iterator<char>()) {
     switch(c) {
-    case '\"':
-      *out_itr++ = '\\';
-      *out_itr++ = '\"';
-      c = *in_itr++;
-      break;
+      case '\"':
+        *out_itr++ = '\\';
+        *out_itr++ = '\"';
+        c = *in_itr++;
+        break;
       
-    case '\\':
-      *out_itr++ = '\\';
-      *out_itr++ = '\\';
-      c = *in_itr++;
-      break;
+      case '\\':
+        *out_itr++ = '\\';
+        *out_itr++ = '\\';
+        c = *in_itr++;
+        break;
       
-    case '\r':
-      c = *in_itr++;
-      break;
+      case '\r':
+        c = *in_itr++;
+        break;
       
-    case '\n':
-      *out_itr++ = '\\';
-      *out_itr++ = 'n';
-      *out_itr++ = '\"';
-      *out_itr++ = '\n';
-      *out_itr++ = '\"';
-      c = *in_itr++;   
-      break;
+      case '\n':
+        *out_itr++ = '\\';
+        *out_itr++ = 'n';
+        *out_itr++ = '\"';
+        *out_itr++ = '\n';
+        *out_itr++ = '\"';
+        c = *in_itr++;   
+        break;
 
-      // コメント削除
-    case '(': {
-      char nc = *in_itr++;
-      if(nc == '*') {
-	int count = 1;
-	c  = *in_itr++;
-	nc = *in_itr++;
-	while(count > 0) {
-	  if(c == '(' && nc == '*') {
-	    count++;
-	    c  = *in_itr++;
-	    nc = *in_itr++;
-	  } else if(c == '*' && nc == ')') {
-	    count--;
-	    c  = *in_itr++;
-	    if(count>0) nc = *in_itr++;
-	  } else {
-	    c  = nc;
-	    nc = *in_itr++;
-	  }
-	}
-      } else {
-	*out_itr++ = c;
-	c = nc;
+        // コメント削除
+      case '(': {
+        char nc = *in_itr++;
+        if(nc == '*') {
+          int count = 1;
+          c  = *in_itr++;
+          nc = *in_itr++;
+          while(count > 0) {
+            if(c == '(' && nc == '*') {
+              count++;
+              c  = *in_itr++;
+              nc = *in_itr++;
+            } else if(c == '*' && nc == ')') {
+              count--;
+              c  = *in_itr++;
+              if(count>0) nc = *in_itr++;
+            } else {
+              c  = nc;
+              nc = *in_itr++;
+            }
+          }
+        } else {
+          *out_itr++ = c;
+          c = nc;
+        }
+        break;    
       }
-      break;    
-    }
 
-    default:
-      *out_itr++ = c;
-      c = *in_itr++;
+      default:
+        *out_itr++ = c;
+        c = *in_itr++;
     }
   }
 
   *out_itr++ = '\"';
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-  std::cout << 
-    "#include \"math_source.h\"\n\n"
-    "const char* math_source() {\n"
+  if(argc != 2) {
+    std::cerr << "arg size must be 2" << std::endl;
+    return -1;
+  }
+
+  std::cout <<
+    "#include \"" << argv[1] << ".h\"\n\n"
+    "const char* " << argv[1] << "() {\n"
     "  return \n";
   conv();
   std::cout << 

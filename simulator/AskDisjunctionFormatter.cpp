@@ -1,5 +1,7 @@
 #include "AskDisjunctionFormatter.h"
 
+#include "Logger.h"
+
 using namespace hydla::parse_tree;
 
 namespace hydla {
@@ -21,6 +23,10 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
   } while(swapped_);
 
   pt->update_node_id_list();
+
+  HYDLA_LOGGER_DEBUG("#*** ask disjunction format result ***\n",
+                     *pt, "\n",
+                     pt->to_graphviz());
 }
 
 // §–ñŒÄ‚Ño‚µ

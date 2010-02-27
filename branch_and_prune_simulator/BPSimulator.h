@@ -16,9 +16,6 @@
 
 #include "..//virtual_constraint_solver/mathematica/mathlink_helper.h"
 
-#include "../symbolic_simulator/math_source.h"
-
-
 namespace hydla {
 namespace bp_simulator {
 

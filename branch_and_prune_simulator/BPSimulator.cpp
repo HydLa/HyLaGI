@@ -16,6 +16,8 @@
 #include "TypedAsk.h"
 
 #include "../virtual_constraint_solver/realpaver/RealPaverVCS.h"
+#include "../virtual_constraint_solver/mathematica/vcs_math_source.h"
+
 
 #include <iostream>
 
@@ -113,7 +115,7 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   //   ml_.MLPutFunction("Get", 1);
   //   ml_.MLPutString("symbolic_simulator/HydLa.m");
   ml_.MLPutFunction("ToExpression", 1);
-  ml_.MLPutString(math_source());  
+  ml_.MLPutString(vcs_math_source());  
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();

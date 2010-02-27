@@ -1,4 +1,4 @@
-#include "MathSimulator.h"
+#include "SymbolicSimulator.h"
 
 #include <iostream>
 #include <boost/xpressive/xpressive.hpp>
@@ -10,7 +10,7 @@
 
 #include "Logger.h"
 
-#include "math_source.h"
+#include "vcs_math_source.h"
 
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -85,36 +85,61 @@ void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   init_mathlink();
 }
 
+namespace {
+
+struct ModuleSetContainerInitializer {
+  typedef boost::shared_ptr<ParseTree> parse_tree_sptr;
+
+  template<typename MSCC>
+  static void init(
+    const parse_tree_sptr& parse_tree,
+    module_set_container_sptr& msc_original, 
+    module_set_container_sptr& msc_no_init)
+  {
+    ModuleSetContainerCreator<MSCC> mcc;
+    {
+      parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
+      AskDisjunctionFormatter().format(pt_original.get());
+      AskDisjunctionSplitter().split(pt_original.get());
+      AskTypeAnalyzer().analyze(pt_original.get());
+      msc_original = mcc.create(pt_original);
+    }
+
+    {
+      parse_tree_sptr pt_no_init(boost::make_shared<ParseTree>(*parse_tree));
+      InitNodeRemover().apply(pt_no_init.get());
+      AskDisjunctionFormatter().format(pt_no_init.get());
+      AskDisjunctionSplitter().split(pt_no_init.get());
+      AskTypeAnalyzer().analyze(pt_no_init.get());
+      msc_no_init = mcc.create(pt_no_init);
+    }
+
+    //{
+    //  parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
+    //  InitNodeRemover().apply(pt_no_init_discreteask.get());
+    //  DiscreteAskRemover().apply(pt_no_init_discreteask.get());
+    //  AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
+    //  AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
+    //  msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
+    //}
+  }
+};
+
+}
+
 void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {  
-  HYDLA_LOGGER_DEBUG("#*** create module set list ***");
-
-  ModuleSetContainerCreator<ModuleSetGraph> mcc;
-  {
-    parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
-    AskTypeAnalyzer().analyze(pt_original.get());
-    AskDisjunctionFormatter().format(pt_original.get());
-    AskDisjunctionSplitter().split(pt_original.get());
-    msc_original_ = mcc.create(pt_original);
+  HYDLA_LOGGER_DEBUG("#*** create module set list ***\n",
+                     "nd_mode=", opts_.nd_mode);
+  
+  if(opts_.nd_mode) {
+    ModuleSetContainerInitializer::init<ModuleSetGraph>(
+      parse_tree, msc_original_, msc_no_init_);
   }
-
-  {
-    parse_tree_sptr pt_no_init(boost::make_shared<ParseTree>(*parse_tree));
-    InitNodeRemover().apply(pt_no_init.get());
-    AskTypeAnalyzer().analyze(pt_no_init.get());
-    AskDisjunctionFormatter().format(pt_no_init.get());
-    AskDisjunctionSplitter().split(pt_no_init.get());
-    msc_no_init_ = mcc.create(pt_no_init);
+  else {
+    ModuleSetContainerInitializer::init<ModuleSetList>(
+      parse_tree, msc_original_, msc_no_init_);
   }
-
-  //{
-  //  parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
-  //  InitNodeRemover().apply(pt_no_init_discreteask.get());
-  //  DiscreteAskRemover().apply(pt_no_init_discreteask.get());
-  //  AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
-  //  AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
-  //  msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
-  //}
 }
 
 
@@ -183,7 +208,7 @@ void MathSimulator::init_mathlink()
   //   ml_.MLPutFunction("Get", 1);
   //   ml_.MLPutString("symbolic_simulator/HydLa.m");
   ml_.MLPutFunction("ToExpression", 1);
-  ml_.MLPutString(math_source());  
+  ml_.MLPutString(vcs_math_source());  
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
@@ -292,7 +317,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
     }
   }
 
-  output(new_state->current_time, new_state->variable_map);
+  //output(new_state->current_time, new_state->variable_map);
 
   push_phase_state(new_state);
 
@@ -419,13 +444,13 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   
 /*
   std::cout << "%%%%%%%%%%%%% interval phase result %%%%%%%%%%%%% \n"
-            << "time:" << integrate_result.states[0].time.get_real_val(ml_, 5) << "\n";
+  << "time:" << integrate_result.states[0].time.get_real_val(ml_, 5) << "\n";
 
   variable_map_t::const_iterator it  = integrate_result.states[0].variable_map.begin();
   variable_map_t::const_iterator end = integrate_result.states[0].variable_map.end();
   for(; it!=end; ++it) {
-    std::cout << it->first << "\t: "
-              << it->second.get_real_val(ml_, 5) << "\n";
+  std::cout << it->first << "\t: "
+  << it->second.get_real_val(ml_, 5) << "\n";
   }
 */
 

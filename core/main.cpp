@@ -15,14 +15,19 @@
 #include "version.h"
 #include "ProgramOptions.h"
 
-//common
+// common
 #include "Logger.h"
+
+// constraint hierarchy
+#include "ModuleSetContainerCreator.h"
+#include "ModuleSetList.h"
+#include "ModuleSetGraph.h"
 
 // parser
 #include "DefaultNodeFactory.h"
 
 // symbolic_simulator
-#include "MathSimulator.h"
+#include "SymbolicSimulator.h"
 // #include "mathlink_helper.h"
 
 // namespace
@@ -46,6 +51,7 @@ void hydla_main(int argc, char* argv[]);
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 void setup_symbolic_simulator_opts(MathSimulator::Opts& opts);
+bool dump(boost::shared_ptr<ParseTree> pt);
 
 //
 int main(int argc, char* argv[]) 
@@ -84,7 +90,7 @@ void hydla_main(int argc, char* argv[])
     Logger::instance().set_log_level(Logger::Debug);
   }
   else {
-    Logger::instance().set_log_level(Logger::None);
+    Logger::instance().set_log_level(Logger::Warn);
   }
 
   if(po.count("help")) {
@@ -109,7 +115,11 @@ void hydla_main(int argc, char* argv[])
   } else {
     pt->parse<DefaultNodeFactory>(std::cin);
   }
-
+  
+  // いろいろと表示
+  if(dump(pt)) {
+    return;
+  }
   
   // シミュレーション開始
   std::string method(po.get<std::string>("method"));
@@ -126,33 +136,42 @@ void hydla_main(int argc, char* argv[])
   }
 }
 
+bool dump(boost::shared_ptr<ParseTree> pt)
+{
+  ProgramOptions &po = ProgramOptions::instance();
 
-/*
-  if(po.count("module-set-list")>0) {
+  if(po.count("dump-parse-tree")>0) {
+    pt->to_graphviz(std::cout);
+    return true;
+  }    
+
+  if(po.count("dump-module-set-list")>0) {
     ModuleSetContainerCreator<ModuleSetList> mcc;
     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
     msc->dump_node_names(std::cout);
-    return;
+    return true;
   }
 
-  if(po.count("module-set-list-noinit")>0) {
-    ModuleSetContainerCreator<ModuleSetList> mcc;
-    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
-    msc->dump_node_names(std::cout);
-    return;
-  }
+//   if(po.count("dump-module-set-list-noinit")>0) {
+//     ModuleSetContainerCreator<ModuleSetList> mcc;
+//     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
+//     msc->dump_node_names(std::cout);
+//     return true;
+//   }
 
-  if(po.count("module-set-graph")>0) {
+  if(po.count("dump-module-set-graph")>0) {
     ModuleSetContainerCreator<ModuleSetGraph> mcc;
     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
     msc->dump_graphviz(std::cout);
-    return;
+    return true;
   }
 
-  if(po.count("module-set-graph-noinit")>0) {
-    ModuleSetContainerCreator<ModuleSetGraph> mcc;
-    boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
-    msc->dump_graphviz(std::cout);
-    return;
-  }
-*/
+//   if(po.count("dump-module-set-graph-noinit")>0) {
+//     ModuleSetContainerCreator<ModuleSetGraph> mcc;
+//     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
+//     msc->dump_graphviz(std::cout);
+//     return true;
+//   }
+
+  return false;
+}
