@@ -8,7 +8,7 @@
 #include <boost/make_shared.hpp>
 
 #include "Logger.h"
-
+#include "IntermediateCodeGenerator.h"
 #include "sls_math_source.h"
 
 using namespace std;
@@ -20,15 +20,20 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace symbolic_legacy_simulator {
 
-//struct rawchar_formatter
-//{
-//  string operator()(smatch const &what) const
-//  {
-//    char c[2] = {0, 0};
-//    c[0] = (char)strtol(what.str(1).c_str(), NULL, 8);
-//    return c;
-//  }
-//};
+namespace {
+
+struct rawchar_formatter
+{
+ string operator()(smatch const &what) const
+ {
+   char c[2] = {0, 0};
+   c[0] = (char)strtol(what.str(1).c_str(), NULL, 8);
+   return c;
+ }
+};
+
+}
+
 //sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
 //std::ostream_iterator< char > out_iter( std::cout );
 //rawchar_formatter rfmt;
@@ -104,9 +109,7 @@ void SymbolicLegacySimulator::init_mathlink()
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // HydLa.mの内容送信
-  //   ml_.MLPutFunction("Get", 1);
-  //   ml_.MLPutString("symbolic_simulator/HydLa.m");
+  // sls_math_sourceの内容送信
   ml_.MLPutFunction("ToExpression", 1);
   ml_.MLPutString(sls_math_source());  
   ml_.MLEndPacket();
@@ -122,7 +125,106 @@ void SymbolicLegacySimulator::initialize(const parse_tree_sptr& parse_tree)
 }
 
 void SymbolicLegacySimulator::simulate()
-{}
+{
+  ml_.MLPutFunction("ToExpression", 1);
+  IntermediateCodeGenerator icg;
+  ml_.put_string(icg.create(pt_, opts_.max_time));
+  ml_.MLPutFunction("Exit", 0);
+  ml_.MLEndPacket();
+
+  sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
+  std::ostream_iterator<char> out_iter(std::cout);
+  rawchar_formatter rfmt;
+
+  int pkt;
+  while((pkt = ml_.MLNextPacket()) != ILLEGALPKT) {
+    switch(pkt) 
+    {
+    case RETURNPKT:
+      {
+        int rpt = ml_.MLGetType();
+        switch(rpt) 
+        {
+        case MLTKSTR: 
+          {
+//             const char *str;
+//             ml_.MLGetString(&str);
+//             std::cout << "#string:" << str << std::endl;
+//             ml_.MLReleaseString(str);
+            break;
+          }
+
+        case MLTKSYM: 
+          {
+//             const char *sym;
+//             ml_.MLGetSymbol(&sym);
+//             std::cout << "#symbol:" << sym << std::endl;
+//             ml_.MLReleaseSymbol(sym);
+            break;
+          }
+
+        case MLTKINT:
+        case MLTKOLDINT: 
+          {	  
+//             int q;
+//             ml_.MLGetInteger(&q);
+//             std::cout << "#integer:" << q << std::endl;
+            break;
+          }
+        case MLTKERR:
+          std::cerr << "#error type" << std::endl;
+          break;
+
+        case MLTKFUNC:
+          break;
+
+        default:
+          std::cerr << "#unknown type:" << rpt << std::endl;
+        }
+        break;
+      }
+
+    case TEXTPKT: 
+      {
+        std::string str(ml_.get_string());
+        regex_replace(out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
+        break;
+      }
+
+    case MESSAGEPKT: 
+      {
+        const char *sym, *tag;
+        ml_.MLGetSymbol(&sym);
+        ml_.MLGetString(&tag);
+        std::cout << "#message:" << sym << ":" << tag << std::endl;
+        ml_.MLReleaseSymbol(sym);
+        ml_.MLReleaseString(tag);
+        break;
+      }
+
+    case SYNTAXPKT: 
+      {
+//         int q;
+//         ml_.MLGetInteger(&q);
+//         std::cout << "#syntax:" << q << std::endl;
+        break; 
+      }
+
+    case INPUTNAMEPKT: 
+      {
+//         const char *name;
+//         ml_.MLGetString(&name);
+//         std::cout << "#inputname:" << name << std::endl;
+//         ml_.MLReleaseString(name);
+        break;
+      }
+
+    default:
+      std::cerr << "#unknown packet:" << pkt << std::endl;
+    }
+    ml_.MLNewPacket();
+  }
+}
 
 } // namespace symbolic_legacy_simulator
 } // namespace hydla
