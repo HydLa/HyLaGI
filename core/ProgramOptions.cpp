@@ -41,7 +41,7 @@ void ProgramOptions::init_descriptions()
      "dump tree by dot language representation")
 
     ("method,m", 
-     value<std::string>()->default_value("s"), 
+     value<std::string>()->default_value("l"), 
      "simulation method:\n"
      "  b or BandPSimulator\n"
      "  s or SymbolicSimulator\n"
