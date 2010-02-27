@@ -26,31 +26,20 @@
 // parser
 #include "DefaultNodeFactory.h"
 
-// symbolic_simulator
-#include "SymbolicSimulator.h"
-// #include "mathlink_helper.h"
-
 // namespace
+using namespace boost;
 using namespace hydla;
 using namespace hydla::logger;
 using namespace hydla::parser;
 using namespace hydla::parse_tree;
-using namespace hydla::simulator;
-using namespace hydla::symbolic_simulator;
 using namespace hydla::ch;
-using namespace boost;
 
-
-// typedef
-//typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
-
-
-// prototype declaration
+// prototype declarations
 int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+void symbolic_legacy_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
-void setup_symbolic_simulator_opts(MathSimulator::Opts& opts);
 bool dump(boost::shared_ptr<ParseTree> pt);
 
 //
@@ -128,6 +117,9 @@ void hydla_main(int argc, char* argv[])
   } 
   else if(method == "b" || method == "BandPSimulator") {
     branch_and_prune_simulate(pt);
+  } 
+  else if(method == "l" || method == "SymbolicLegacySimulator") {
+    symbolic_legacy_simulate(pt);
   } 
   else {
     // TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é

@@ -1,6 +1,6 @@
 TARGET	 := ../hydla
 
-LIB_DIRS := symbolic_simulator branch_and_prune_simulator virtual_constraint_solver simulator constraint_hierarchy parser common
+LIB_DIRS := symbolic_simulator symbolic_legacy_simulator branch_and_prune_simulator virtual_constraint_solver simulator constraint_hierarchy parser common
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I../librealpaver -I../librealpaverbasic

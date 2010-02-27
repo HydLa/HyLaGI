@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_MATH_SIMULATOR_H_
-#define _INCLUDED_MATH_SIMULATOR_H_
+#ifndef _INCLUDED_SYMBOLIC_SIMULATOR_H_
+#define _INCLUDED_SYMBOLIC_SIMULATOR_H_
 
 #include <string>
 
@@ -28,7 +28,7 @@ typedef hydla::simulator::PhaseState<symbolic_variable_t,
 typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
 typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
 
-class MathSimulator : public simulator_t
+class SymbolicSimulator : public simulator_t
 {
 public:
 
@@ -40,7 +40,7 @@ public:
   typedef struct Opts_ {
     std::string mathlink;
     bool debug_mode;
-    std::string max_time;
+    std::string max_time; //TODO: symbolic_time_tÇ…Ç∑ÇÈ
     bool nd_mode;
     bool profile_mode;
     bool parallel_mode;
@@ -50,8 +50,8 @@ public:
     int approx_precision;
   } Opts;
 
-  MathSimulator(const Opts& opts);
-  virtual ~MathSimulator();
+  SymbolicSimulator(const Opts& opts);
+  virtual ~SymbolicSimulator();
 
   /**
    * Point PhaseÇÃèàóù
@@ -91,7 +91,7 @@ private:
 //  hydla::vcs::mathematica::MathematicaVCS vcs_;
 };
 
-} //namespace symbolic_simulator
+} // namespace symbolic_simulator
 } // namespace hydla
 
-#endif //_INCLUDED_MATH_SIMULATOR_H_
+#endif //_INCLUDED_SYMBOLIC_SIMULATOR_H_

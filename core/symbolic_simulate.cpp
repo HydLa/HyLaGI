@@ -12,14 +12,14 @@ using namespace hydla::symbolic_simulator;
 /**
  * 記号処理によるシミュレーション
  */
-void setup_symbolic_simulator_opts(MathSimulator::Opts& opts)
+void setup_symbolic_simulator_opts(SymbolicSimulator::Opts& opts)
 {  
   ProgramOptions &po = ProgramOptions::instance();
 
   if(po.get<std::string>("output-format") == "t") {
-    opts.output_format = MathSimulator::fmtTFunction;
+    opts.output_format = SymbolicSimulator::fmtTFunction;
   } else if(po.get<std::string>("output-format") == "n"){
-    opts.output_format = MathSimulator::fmtNumeric; 
+    opts.output_format = SymbolicSimulator::fmtNumeric; 
   } else {
     // TODO: 例外を投げるようにする
     std::cerr << "invalid option - output format" << std::endl;
@@ -40,10 +40,10 @@ void setup_symbolic_simulator_opts(MathSimulator::Opts& opts)
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  MathSimulator::Opts opts;
+  SymbolicSimulator::Opts opts;
   setup_symbolic_simulator_opts(opts);
 
-  MathSimulator ms(opts);
+  SymbolicSimulator ms(opts);
   ms.initialize(parse_tree);
   ms.simulate();
 }

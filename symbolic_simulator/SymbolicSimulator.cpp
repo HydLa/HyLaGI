@@ -52,17 +52,17 @@ namespace symbolic_simulator {
 //rawchar_formatter rfmt;
 //regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
 
-MathSimulator::MathSimulator(const Opts& opts) :
+SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
   opts_(opts)
 //  vcs_(MathematicaVCS::DiscreteMode, &ml_)
 {
 }
 
-MathSimulator::~MathSimulator()
+SymbolicSimulator::~SymbolicSimulator()
 {
 }
 
-void MathSimulator::do_initialize(const parse_tree_sptr& parse_tree)
+void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
 
@@ -127,7 +127,7 @@ struct ModuleSetContainerInitializer {
 
 }
 
-void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
+void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {  
   HYDLA_LOGGER_DEBUG("#*** create module set list ***\n",
                      "nd_mode=", opts_.nd_mode);
@@ -143,7 +143,7 @@ void MathSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 }
 
 
-void MathSimulator::init_mathlink()
+void SymbolicSimulator::init_mathlink()
 {
   HYDLA_LOGGER_DEBUG("#*** init mathlink ***");
 
@@ -214,7 +214,7 @@ void MathSimulator::init_mathlink()
   ml_.MLNewPacket();
 }
 
-bool MathSimulator::point_phase(const module_set_sptr& ms, 
+bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
 {
   TellCollector tell_collector(ms);
@@ -234,7 +234,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   
   MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&MathSimulator::output, this, _1, _2));
+                      boost::bind(&SymbolicSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
 
   bool expanded   = true;
@@ -331,7 +331,7 @@ bool MathSimulator::point_phase(const module_set_sptr& ms,
   return true;
 }
 
-bool MathSimulator::interval_phase(const module_set_sptr& ms, 
+bool SymbolicSimulator::interval_phase(const module_set_sptr& ms, 
                                    const phase_state_const_sptr& state)
 {
 
@@ -348,7 +348,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
 
   MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_, opts_.approx_precision);
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&MathSimulator::output, this, _1, _2));
+                      boost::bind(&SymbolicSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
 
   bool expanded   = true;
@@ -458,7 +458,7 @@ bool MathSimulator::interval_phase(const module_set_sptr& ms,
   return true;
 }
 
-void MathSimulator::output(const symbolic_time_t& time, 
+void SymbolicSimulator::output(const symbolic_time_t& time, 
                            const variable_map_t& vm)
 {
 //   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
