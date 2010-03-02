@@ -317,6 +317,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mathematica\vcs_math_source.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VirtualConstraintSolver.h"
 				>
 			</File>
@@ -326,6 +330,29 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\mathematica\vcs_math_source.m"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="vcs_math_source.mに対するカスタム ビルド ステップを実行しています。"
+						CommandLine="$(SolutionDir)msc.exe &lt; $(InputPath) &gt; $(ProjectDir)vcs_math_source.cpp"
+						Outputs="$(ProjectDir)vcs_math_source.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="vcs_math_source.mに対するカスタム ビルド ステップを実行しています。"
+						CommandLine="$(SolutionDir)msc.exe &lt; $(ProjectDir)$(InputFileName) &gt; $(ProjectDir)vcs_math_source.cpp"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
