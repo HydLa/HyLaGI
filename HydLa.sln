@@ -64,11 +64,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "virtual_constraint_solver",
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbolic_legacy_simulator", "symbolic_legacy_simulator\symbolic_legacy_simulator.vcproj", "{1C956B04-4C24-4272-877A-2FA9895EB8C5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{21D7CEA2-6255-428C-85E3-268EFF5FE36E} = {21D7CEA2-6255-428C-85E3-268EFF5FE36E}
+		{7AA041C5-8C78-402D-A7F0-855B469C0650} = {7AA041C5-8C78-402D-A7F0-855B469C0650}
+	EndProjectSection
+EndProject
 Global
-	GlobalSection(SubversionScc) = preSolution
-		Svn-Managed = True
-		Manager = AnkhSVN - Subversion Support for Visual Studio
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
@@ -122,8 +124,16 @@ Global
 		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Debug|Win32.Build.0 = Debug|Win32
 		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Release|Win32.ActiveCfg = Release|Win32
 		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E}.Release|Win32.Build.0 = Release|Win32
+		{1C956B04-4C24-4272-877A-2FA9895EB8C5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1C956B04-4C24-4272-877A-2FA9895EB8C5}.Debug|Win32.Build.0 = Debug|Win32
+		{1C956B04-4C24-4272-877A-2FA9895EB8C5}.Release|Win32.ActiveCfg = Release|Win32
+		{1C956B04-4C24-4272-877A-2FA9895EB8C5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal

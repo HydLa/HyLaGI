@@ -13,6 +13,8 @@
 #include "HydLaGrammarRule.h"
 
 namespace hydla {
+namespace parser {
+
 using namespace hydla::grammer_rule;
 using namespace boost::spirit::classic;
 
@@ -293,6 +295,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     }
   };
 };
-}
+
+} // namespace parser
+} // namespace hydla
+
 #endif //_INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
 

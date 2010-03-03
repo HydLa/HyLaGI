@@ -162,6 +162,10 @@
 				RelativePath=".\Logger.h"
 				>
 			</File>
+			<File
+				RelativePath=".\mathlink_helper.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"
