@@ -3,7 +3,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "../virtual_constraint_solver/mathematica/mathlink_helper.h"
 #include "Node.h"
 #include "TreeVisitor.h"
 #include "ParseTree.h"

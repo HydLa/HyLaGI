@@ -5,7 +5,7 @@
 
 #include "ParseTree.h"
 
-#include "../virtual_constraint_solver/mathematica/mathlink_helper.h"
+#include "mathlink_helper.h"
 
 namespace hydla {
 namespace symbolic_legacy_simulator {

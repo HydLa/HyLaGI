@@ -14,7 +14,7 @@
 #include "../virtual_constraint_solver/realpaver/RPTime.h"
 #include "../virtual_constraint_solver/realpaver/RealPaverVCS.h"
 
-#include "..//virtual_constraint_solver/mathematica/mathlink_helper.h"
+#include "mathlink_helper.h"
 
 namespace hydla {
 namespace bp_simulator {

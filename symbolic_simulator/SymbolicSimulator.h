@@ -6,8 +6,8 @@
 #include "ParseTree.h"
 
 #include "Simulator.h"
+#include "mathlink_helper.h"
 
-#include "../virtual_constraint_solver/mathematica/mathlink_helper.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 #include "../virtual_constraint_solver/mathematica/MathVariable.h"
 #include "../virtual_constraint_solver/mathematica/MathValue.h"
