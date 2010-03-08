@@ -115,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser"
+				AdditionalIncludeDirectories="..\;..\symbolic_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
