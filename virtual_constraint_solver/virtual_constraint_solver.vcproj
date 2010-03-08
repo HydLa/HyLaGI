@@ -218,6 +218,10 @@
 				RelativePath=".\realpaver\RPValue.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\vcs_math_source.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -335,7 +339,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="vcs_math_source.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)msc.exe &lt; $(InputPath) &gt; $(ProjectDir)vcs_math_source.cpp&#x0D;&#x0A;"
+						CommandLine="$(SolutionDir)msc.exe vcs_math_source &lt; $(InputPath) &gt; $(ProjectDir)vcs_math_source.cpp&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)vcs_math_source.cpp"
 					/>
 				</FileConfiguration>
