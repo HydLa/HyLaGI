@@ -396,4 +396,9 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
 (* Print["integ:", integrateExpr[{ht'[t]==v[t], v'[t]==-10, v'[t]==-20, ht[0]==a, v[0]==b}, {ht[t], ht'[t], v[t], v'[t]}]]; *)
 (* Print["integ:", integrateExpr[{ht'[t]==x[t], v'[t]==-10, ht[0]==a, v[0]==b}, {x[t], ht[t], ht'[t], v[t], v'[t]}]]; *)
 
-
+(*
+ * —^‚¦‚ç‚ê‚½Ž®‚ð‹ßŽ—‚·‚é
+ *)
+approxExpr[precision_, expr_] :=
+  Rationalize[N[Simplify[expr], precision + 3], 
+              Divide[1, Power[10, precision]]];

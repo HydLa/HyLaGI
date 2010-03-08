@@ -364,9 +364,12 @@ applyAskInterval[{table_, askSuc_}, ask[guard_, elem__], posAsk_, changedAsk_] :
 (*     Select[vars, (MemberQ[expr, #, Infinity])&] *)
 
 
+(*
+ * —^‚¦‚ç‚ê‚½Ž®‚ð‹ßŽ—‚·‚é
+ *)
 approxExpr[precision_, expr_] :=
   Rationalize[N[Simplify[expr], precision + 3], 
-              Divide[1, Power[10, precision]]]
+              Divide[1, Power[10, precision]]];
 (*   FromDigits[RealDigits[expr, 10, 3]] * If[expr < 0, -1, 1] *)
 (*   Quiet[ *)
 (*     FromContinuedFraction[ContinuedFraction[expr, 3]], *)
