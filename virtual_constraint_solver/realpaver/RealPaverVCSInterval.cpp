@@ -670,7 +670,87 @@ void RealPaverVCSInterval::find_next_point_phase_states(
     rp_problem_destroy(&problem);
   } else {
     // P2N -> ガード条件の否定を一つずつ加えた問題を解いて最小時刻を取る
-    //　TODO: 近いうち書く！ 
+    //TODO: ここはほぼコピペなので動くか怪しい…
+    //for(ctr_set_t::iterator it=guards.begin(); it!=guards.end(); ++it) {
+    //  rp_constraint c_guard = *it;
+
+    //  // ここからほとんどN2Pと同じ…
+    //  // 定数t0とteを用意
+    //  rp_problem problem;
+    //  rp_problem_create(&problem, "find_next_pp");
+    //  rp_constant t0, te;
+    //  rp_interval t0i, tei;
+    //  rp_interval_set(t0i, 0.0, current_time.width()); // TODO: widthによる桁落ち？
+    //  rp_interval_set(tei, current_time.inf_, current_time.sup_);
+    //  rp_constant_create(&t0, "t0", t0i);
+    //  rp_constant_create(&te, "te", tei);
+    //  rp_vector_insert(rp_problem_nums(problem), t0);
+    //  rp_vector_insert(rp_problem_nums(problem), te);
+    //  // 変数のドメインを用意
+    //  // 基本的には(-oo, +oo)
+    //  // 新しい変数tt = t + t0(原点がIPの開始時刻である本当の(?)時刻変数)と
+    //  // 変数 tsum = tt + te(総経過時間，RPに計算してもらう) を用意
+    //  // ttは[0, max_time.sup - current_time.inf]
+    //  // tは[0, +oo), tsumは[0, +oo)
+    //  // TODO: ttいらなくね？
+    //  //TODO: 精度は？
+    //  dom_map_t dom_map;
+    //  dom_map.insert(dom_map_t::value_type("tt", interval_t(0, max_time.sup_ - current_time.inf_)));
+    //  dom_map.insert(dom_map_t::value_type("t", interval_t(0, RP_INFINITY)));
+    //  dom_map.insert(dom_map_t::value_type("tsum", interval_t(0, RP_INFINITY)));
+    //  rp_vector_destroy(&rp_problem_vars(problem));
+    //  rp_problem_vars(problem) = ConstraintSolver::create_rp_vector(vars, dom_map, prec_);
+    //  // 制約をコピー
+    //  ctr_set_t ctrs = this->constraint_store_.get_store_exprs_copy();
+    //  ctr_set_t non_init_ctrs = this->constraint_store_.get_store_non_init_constraint_copy();
+    //  ctrs.insert(non_init_ctrs.begin(), non_init_ctrs.end());
+    //  ctrs.insert(c_guard);
+    //  // 新しい制約 t = tt - t0と tsum = tt + teを加える
+    //  rp_constraint c;
+    //  rp_parse_constraint_string(&c, "t=tt-t0", rp_problem_symb(problem));
+    //  ctrs.insert(c);
+    //  rp_parse_constraint_string(&c, "tsum=tt+te", rp_problem_symb(problem));
+    //  ctrs.insert(c);
+    //  // 問題に制約を登録
+    //  for(ctr_set_t::iterator cit=ctrs.begin(); cit!=ctrs.end(); ++cit) {
+    //    if(*cit==NULL) continue; // NULLポインタはスキップ
+    //    rp_vector_insert(rp_problem_ctrs(problem), *cit);
+    //    for(int i=0; i<rp_constraint_arity(*cit); i++) {
+    //      ++rp_variable_constrained(rp_problem_var(problem, rp_constraint_var(*cit, i)));
+    //    }
+    //  }
+    //  // 制約に依存していない変数のprecisionはRP_INFINITYに
+    //  for(int i=0; i<rp_vector_size(rp_problem_vars(problem)); ++i) {
+    //    if(rp_variable_constrained(rp_problem_var(problem, i))==0) {
+    //      rp_variable_precision(rp_problem_var(problem, i)) = RP_INFINITY;
+    //    }
+    //  }
+    //  rp_problem_set_initial_box(problem);
+    //  HYDLA_LOGGER_DEBUG("#*** vcs:integrate:find_naxt_pp_states: ***\n",
+    //    "#**** problem to solve ****\n",
+    //    problem);
+    //  // 解く
+    //  rp_selector* select;
+    //  rp_new(select,rp_selector_roundrobin,(&problem));
+    //  rp_splitter* split;
+    //  rp_new(split,rp_splitter_mixed,(&problem));
+    //  // TODO: prover使う
+    //  rp_bpsolver solver(&problem,10,select,split);
+    //  rp_box sol;
+    //  // 解をvariable_mapに直してresultへ入れていく
+    //  virtual_constraint_solver_t::IntegrateResult::next_phase_state_t nps;
+    //  nps.is_max_time = true; // 解が出なかった場合，true
+    //  while((sol=solver.compute_next())!=NULL) {
+    //    // ttが0を含むものは解じゃない -> 捨てる
+    //    if(rp_interval_contains(rp_box_elem(sol, vars.left.at("tt")), 0.0)) continue;
+    //    nps.is_max_time = false; // TODO: 厳密には違う可能性も…？
+    //    // boxをクローンしてvectorに入れる
+    //    rp_box sol_clone;
+    //    rp_box_clone(&sol_clone, sol);
+    //    results.push_back(sol_clone);
+    //  }
+    //  rp_problem_destroy(&problem);
+    //}
   }
   return;
 }
