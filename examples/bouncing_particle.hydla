@@ -1,7 +1,13 @@
 // bouncing particle
-
+/*
 INIT   <=> ht=10 & v=0.
 FALL   <=> [](ht' = v & v'  = -10).
 BOUNCE <=> [](ht- = 0 => v = -(4/5) * v-).
+
+INIT, FALL << BOUNCE.
+*/
+INIT   <=> ht=10 & ht'=0.
+FALL   <=> [](ht''  = -10).
+BOUNCE <=> [](ht- = 0 => ht' = -(4/5) * ht'-).
 
 INIT, FALL << BOUNCE.
