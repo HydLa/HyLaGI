@@ -50,6 +50,12 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
       constraint_store_.init_vars.insert(
         std::make_pair(it->first, it->second));
     }
+    else {
+      MathValue value;
+      value.str="UNDEF";
+      constraint_store_.init_vars.insert(
+        std::make_pair(it->first, value));
+    }
   }
   
   HYDLA_LOGGER_DEBUG(constraint_store_);
@@ -575,6 +581,10 @@ VCSResult MathematicaVCSInterval::integrate(
     state.time.receive_time(*ml_);
   }
 
+  // 未定義の変数を変数表に反映
+  // 初期値制約（未定義変数を含む）とvarmapとの差分を解消
+  add_undefined_vars_to_vm(varmap);
+
   // 次のフェーズにおける変数の値を導出する
   HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
   apply_time_to_vm(varmap, state.variable_map, elapsed_time);    
@@ -653,6 +663,37 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
   }
 }
 
+void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
+{
+  HYDLA_LOGGER_DEBUG("--- add undefined vars to vm ---");  
+
+  // 変数表に登録されている変数名一覧
+  HYDLA_LOGGER_DEBUG("-- variable_name_list --");
+  std::set<MathVariable> variable_name_list;
+  variable_map_t::const_iterator vm_it = vm.begin();
+  variable_map_t::const_iterator vm_end = vm.end();
+  for(; vm_it!=vm_end; ++vm_it){
+    variable_name_list.insert(vm_it->first);
+    HYDLA_LOGGER_DEBUG(vm_it->first);
+  }
+
+  constraint_store_t::init_vars_t::const_iterator init_vars_it;
+  constraint_store_t::init_vars_t::const_iterator init_vars_end;
+  init_vars_it  = constraint_store_.init_vars.begin();
+  init_vars_end = constraint_store_.init_vars.end();
+  HYDLA_LOGGER_DEBUG("-- search undefined variable --");
+  for(; init_vars_it!=init_vars_end; ++init_vars_it) {
+    MathVariable variable = init_vars_it->first;
+    std::set<MathVariable>::const_iterator vlist_it = variable_name_list.find(variable);
+    if(vlist_it==variable_name_list.end()){      
+      MathValue value;
+      value.str= "UNDEF";
+      HYDLA_LOGGER_DEBUG("variable : ", variable);
+      HYDLA_LOGGER_DEBUG("value : ", value);
+      vm.set_variable((MathVariable)variable, value);
+    }
+  }
+}
 
 void MathematicaVCSInterval::send_cs(PacketSender& ps) const
 {

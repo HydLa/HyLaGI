@@ -44,7 +44,8 @@ std::string MathValue::get_real_val(MathLink& ml, int precision) const
 
 std::ostream& MathValue::dump(std::ostream& s) const
 {
-  s << str;
+  if(is_undefined()) s << "UNDEF";
+  else s << str;
   return s;
 }
 

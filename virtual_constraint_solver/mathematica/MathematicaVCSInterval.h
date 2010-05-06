@@ -116,6 +116,11 @@ private:
    */
   void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const MathTime& time);
 
+  /**
+   * •Ï”•\‚É–¢’è‹`‚Ì•Ï”‚ğ’Ç‰Á‚·‚é
+   */
+  void add_undefined_vars_to_vm(variable_map_t& vm);
+
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
   int approx_precision_;
