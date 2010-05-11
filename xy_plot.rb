@@ -37,8 +37,10 @@ open(OUT_PLOT, "w") do |f|
 set terminal #{terminal_type}
 set output "out.#{output_ext}"
 set xlabel "x"
-set ylabel "y"
-plot "out.data" u #{vars.index("x")+2}:#{vars.index("y")+2} title "x-y" w l
+set ylabel "H"
+#set xrange [-5:5]
+#set yrange [-2:2]
+plot "out.data" u #{vars.index("time")+2}:#{vars.index("y")+2} title "y" w l
 EOS
 end
 
