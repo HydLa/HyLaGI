@@ -525,16 +525,14 @@ VCSResult MathematicaVCSInterval::integrate(
   // ask‚Æ‚»‚ÌID‚Ì‘gˆê——‚ğ“¾‚é
   int changed_asks_size = ml_->get_arg_count();
   HYDLA_LOGGER_DEBUG("changed_asks_size : ", changed_asks_size);
-  if(changed_asks_size>0) {
-    ml_->MLGetNext(); // ListŠÖ”
-    ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
-  }
+  ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
   for(int j=0; j<changed_asks_size; j++)
   {
     HYDLA_LOGGER_DEBUG("--- add changed ask ---");
 
     ml_->MLGetNext(); // ListŠÖ”
     ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
+    ml_->MLGetNext();
 
     std::string changed_ask_type_str = ml_->get_symbol(); // pos2neg‚Ü‚½‚Íneg2pos
     HYDLA_LOGGER_DEBUG("changed_ask_type_str : ", changed_ask_type_str);
@@ -562,7 +560,6 @@ VCSResult MathematicaVCSInterval::integrate(
 //   PacketChecker c(*ml_);
 //   c.check2();
   if(changed_asks_size==0) {
-    ml_->MLGetNext();  
     ml_->MLGetNext();  
   }
   state.is_max_time = ml_->get_integer() == 1;
