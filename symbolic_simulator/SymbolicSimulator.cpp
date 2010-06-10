@@ -317,7 +317,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     }
   }
 
-  //output(new_state->current_time, new_state->variable_map);
+  output(new_state->current_time, new_state->variable_map);
 
   push_phase_state(new_state);
 
