@@ -261,6 +261,7 @@ chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, change
   solve
 },
   solve[] := ( 
+    debugPrint["chSolveUnit#table: ", table];
     {tells, asks} = splitTellAsk[table];
     debugPrint["chSolveUnit#tells:", tells];
     debugPrint["chSolveUnit#asks:", asks];
@@ -281,6 +282,7 @@ chSolveUnit[validModTable_, constraintStore_, positiveAsk_, negativeAsk_, change
       debugPrint["chSolveUnit#askSuc:", askSuc];
       If[askSuc===True, solve[], {table, consStore, posAsk, negAsk}],
       (* false *)
+      debugPrint["chSolveUnit# Inconsistent"];
       False]
   );
   solve[]
@@ -293,6 +295,8 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
 },
   solve[group[], acc_, suc_] := {acc, suc};
   solve[group[head_, tail___], acc_, suc_] := (
+    debugPrint["solve(group)#head: ", head];
+    debugPrint["solve(group)#tail: ", tail];
     {nacc, nsuc} = solve[head, acc, False];
     If[nsuc=!=False,
         solve[group[tail], nacc, True],
@@ -301,6 +305,8 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
 
   solve[order[], acc_, suc_] := {acc, suc};
   solve[order[head_, tail___], acc_, suc_] := (
+    debugPrint["solve(order)#head: ", head];
+    debugPrint["solve(order)#tail: ", tail];
     {nacc, nsuc} = solve[head, acc, False];
     If[nsuc=!=False,
         solve[order[tail], nacc, True],
@@ -308,6 +314,7 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
   );
 
   solve[unit[elem__], {validModTable_, store_, posAsk_, negAsk_}, suc_] := (
+    debugPrint["chSolve#validModTable: ", validModTable];
     nacc = profile["chSOLVEUNIT",chSolveUnit[Join[validModTable, unit[elem]], store, posAsk, negAsk, changedAsk, vars]];
     If[nacc=!=False, 
         {nacc, True},
@@ -316,18 +323,24 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
 
   {nacc, nsuc} =
     solve[consTable, {unit[], consStore, {}, {}}, False];
+  debugPrint["chSolve#nacc-result: ", nacc];
+  debugPrint["chSolve#nsuc-result: ", nsuc];
   nacc[[2;;4]]
 ];
 
 (********)
 
 
+removeInequality[sol_] := (
+   DeleteCases[sol, Unequal[lhs_, rhs_], Infinity]
+);
+
 exDSolve[expr_, vars_] := (
   debugPrint["--- exDSolve ---"];
   debugPrint["expr:", expr];
   debugPrint["vars:", vars];
   Quiet[Check[
-        Check[DSolve[expr, vars, t],
+        Check[DSolve[removeInequality[expr], vars, t],
                 underconstraint,
                 {DSolve::underdet, Solve::svars, DSolve::deqx,
                  DSolve::bvnr, DSolve::bvsing}],
@@ -335,7 +348,7 @@ exDSolve[expr_, vars_] := (
         {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
       {DSolve::underdet, DSolve::overdet, DSolve::deqx,
        Solve::svars, DSolve::bvnr, DSolve::bvsing,
-       DSolve::bvnul, DSolve::dsmsm}]
+       DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]
 );
 
  (* , Solve::verif, Solve::tdep *)
@@ -467,6 +480,7 @@ chSolveInterval[consTable_, consStore_, posAsk_, changedAsk_, vars_] := Block[{
   );
 
   solve[unit[elem__], validModTable_, suc_] := (
+    debugPrint["chSolveInterval#validModTable: ", validModTable];
     nacc = profile["chSOLVEUNITINTERVAL",chSolveUnitInterval[Join[validModTable, unit[elem]], consStore, posAsk, changedAsk, vars]];
     debugPrint["chSolveInterval#solve$unit#nacc:", nacc];
     If[nacc=!=False, 
@@ -476,6 +490,8 @@ chSolveInterval[consTable_, consStore_, posAsk_, changedAsk_, vars_] := Block[{
 
   {nacc, nsuc} =
     solve[consTable, unit[], False];
+  debugPrint["chSolveInterval#nacc-result: ", nacc];
+  debugPrint["chSolveInterval#nsuc-result: ", nsuc];
   nacc
 ];
 
@@ -586,17 +602,20 @@ findNextPointPhaseTime[includeZero_, maxTime_,
   sol,
   minT
 },
-  removeDisableAsk[type_, ask_] :=
+  removeDisableAsk[type_, ask_] := (
+    debugPrint["removeDisableAsk#type: ", type];
+    debugPrint["removeDisableAsk#ask: ", ask];
     Select[ask, (!(includeZero===False && #[[1]]===False)
-                  && Not[MemberQ[changedAsk, {type, #[[2]]}]])&];
+                  && Not[MemberQ[changedAsk, {type, #[[2]]}]])&]
+);
 
   calcMinTime[{type_, integAsk_, ask_}] := (
     debugPrint["----- findNextPointPhaseTime -----"];
-    debugPrint["type:", type];
-    debugPrint["includeZero:", includeZero];
-    debugPrint["changedAsk:", changedAsk];
-    debugPrint["integAsk:", integAsk];
-    debugPrint["ask:", ask];
+    debugPrint["calcMinTime#type:", type];
+    debugPrint["calcMinTime#includeZero:", includeZero];
+    debugPrint["calcMinTime#wchangedAsk:", changedAsk];
+    debugPrint["calcMinTime#integAsk:", integAsk];
+    debugPrint["calcMinTime#ask:", ask];
 
     (* –¢Ì—p‚Ìask *)
     If[integAsk=!=False,
@@ -634,6 +653,8 @@ findNextPointPhaseTime[includeZero_, maxTime_,
           time == currentMinT, {time,        Append[currentMinAsk, ask]},
           True,                {currentMinT, currentMinAsk}];
     
+  debugPrint["findNextPointPhaseTime#posAsk", posAsk];
+  debugPrint["findNextPointPhaseTime#negAsk", negAsk];
   Fold[minimumTime,
         {maxTime, {}},
         pMap[calcMinTime,
@@ -719,11 +740,11 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
 (*   debugPrint["remove prev cons:", tmpSol]; *)
 
   tmpSol = profile["chSOLVEINTERVAL",chSolveInterval[consTable, consStore, posAsk, changedAsk, vars]];
-  debugPrint["chSolveResult:", tmpSol];
+  debugPrint["chSolveIntervalResult:", tmpSol];
   tmpTells = profile["collectTELL",collectTell[List @@ tmpSol]];
   debugPrint["tmpTells:", tmpTells];
 
-  tmpTells = {Reduce[tmpTells, vars]};
+  tmpTells = {removeInequality[Reduce[tmpTells, vars]]};
 
   (* prev‚ÉŠÖ‚·‚é§–ñíœ *)
   tmpTells = DeleteCases[tmpTells, prev[_][_]==_ | _==prev[_][_], Infinity];
@@ -745,7 +766,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   debugPrint["var:", varsND];
 
   profile["DSOLVE",
-    tmpIntegSol = DSolve[tmpTells, tmpValidVars, t];
+    tmpIntegSol = Quiet[DSolve[tmpTells, tmpValidVars, t], {Solve::incnst}];
     If[Length[$MessageList]>0, Throw[{error, "cannot solve ODEs", tmpIntegSol, $MessageList}]];
     tmpIntegSol = First[tmpIntegSol]
   ];
@@ -821,6 +842,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
           tmpConsStore = {}]]];
 
   debugPrint["tmpConsStore:", tmpConsStore];
+  debugPrint["tmpNewIncludeZero:", tmpNewIncludeZero];
 
   tmpPrevConsTable = profile["MapTHREAD4",
     group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
