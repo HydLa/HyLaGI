@@ -96,7 +96,7 @@ isConsistent[expr_, vars_] := Quiet[Check[Block[
       (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
       sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
       (* 一番内側の要素 （レベル2）を文字列にする *)
-      {1, Map[(ToString[FullForm[#]]) &, sol, {2}]},
+      {1, Map[(ToString[FullForm[#]]) &, removeInequality[sol], {2}]},
 
       (* false *)
       {2}]
@@ -128,7 +128,7 @@ isRequiredVariable[var_, tellVars_] := (
 );
 
 removeInequality[sol_] := (
-   DeleteCases[sol, Unequal[lhs_, rhs_]]
+   DeleteCases[sol, Unequal[lhs_, rhs_], Infinity]
 );
 
 exDSolve[expr_, vars_] := Block[
