@@ -127,9 +127,14 @@ isRequiredVariable[var_, tellVars_] := (
    If[MemberQ[tellVars, var], True, False]
 );
 
+removeInequality[sol_] := (
+   DeleteCases[sol, Unequal[lhs_, rhs_]]
+);
+
 exDSolve[expr_, vars_] := Block[
 {sol},
   sol = Reduce[Cases[expr, Except[True] | Except[False]], vars];
+  sol = removeInequality[sol];
   If[sol===False,
       overconstraint,
 
@@ -142,7 +147,7 @@ exDSolve[expr_, vars_] := Block[
             {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
           {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
            Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-           DSolve::bvnul, DSolve::dsmsm}]]
+           DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]
 ];
 
 
@@ -291,7 +296,8 @@ integrateCalc[cons_,
              "vars:", vars, 
              "maxTime:", maxTime];
 
-  tmpIntegSol = First[DSolve[Reduce[cons, vars], vars, t]];
+  tmpIntegSol = First[Quiet[DSolve[removeInequality[Reduce[cons, vars]], vars, t],
+                            {Solve::incnst}]];
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
   {tmpMinT, tmpMinAskIDs} = 
@@ -376,6 +382,10 @@ createOutputTimeList[from_, to_, interval_] :=
  *)
 integrateExpr[cons_, vars_] := Quiet[Check[Block[
 { sol },
+(*
+  debugPrint["cons:", cons,
+             "vars:", vars];
+ *)
   sol = exDSolve[cons, vars];
   Switch[sol,
     underconstraint, 
