@@ -186,11 +186,13 @@ parseCons[other___]                := Throw[{error, "unknown term", other}];
 (* 
  * 現在の制約ストアからask制約がエンテール出来るかどうか 
  *)
-askTestQ[cons_, asks_, vars_] := (
+askTestQ[cons_, asks_, vars_] := Block[{
+  tmpSol
+},
   tmpSol = Reduce[Append[cons, asks], vars, Reals];
   If[tmpSol===False, Return[False]];
   If[Reduce[Append[cons, Not[tmpSol]], vars, Reals]===False, True, False]	
-);
+];
 
 (*
  * unitをtell制約とask制約に分ける
@@ -331,9 +333,8 @@ chSolve[consTable_, consStore_, changedAsk_, vars_] := Block[{
 (********)
 
 
-removeInequality[sol_] := (
-   DeleteCases[sol, Unequal[lhs_, rhs_], Infinity]
-);
+removeInequality[sol_] := 
+  DeleteCases[sol, Unequal[lhs_, rhs_], Infinity];
 
 exDSolve[expr_, vars_] := (
   debugPrint["--- exDSolve ---"];
@@ -543,7 +544,10 @@ expandAsksUnit[{}, posAsk_, vars_, unitTable_] := unitTable;
 expandAsksUnit[{tell[elem_], tail___}, posAsk_, vars_, unitTable_] :=
    expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, tell[elem]]];
 
-expandAsksUnit[{ask[guard_, elem__], tail___}, posAsk_, vars_, unitTable_] := (
+expandAsksUnit[{ask[guard_, elem__], tail___}, posAsk_, vars_, unitTable_] := Block[{
+  tmpAlwaysElem,
+  tmpNonAlwaysElem
+},
   If[MemberQ[posAsk, guard], 
     (* guardが成り立ったとき *)
     {tmpAlwaysElem, tmpNonAlwaysElem} = 
@@ -556,12 +560,14 @@ expandAsksUnit[{ask[guard_, elem__], tail___}, posAsk_, vars_, unitTable_] := (
     (* guardが成り立たなかったとき *)
     expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, ask[guard, elem]]]
   ]
-);
+];
 
-expandAsksUnit[{always[elem__], tail___}, posAsk_, vars_, unitTable_] := (
+expandAsksUnit[{always[elem__], tail___}, posAsk_, vars_, unitTable_] := Block[{
+  tmpNewUnitTable
+},
   tmpNewUnitTable= expandAsksUnit[{elem}, posAsk, vars, always[]];
   expandAsksUnit[{tail}, posAsk, vars, Append[unitTable, tmpNewUnitTable]]
-);
+];
 
 (*
  * alwaysに囲まれていないタプルを削除する
@@ -570,23 +576,27 @@ expandAsksUnit[{always[elem__], tail___}, posAsk_, vars_, unitTable_] := (
  * 空のgroup, order, unitは削除
  * 要素が1のgroup, orderは中身を親のタプルに移譲
  *)
-removeNonAlwaysTuple[group[elem__]] := (
+removeNonAlwaysTuple[group[elem__]] := Block[{
+  tmpSol
+},
   Fold[(tmpSol=removeNonAlwaysTuple[#2];
           If[Length[tmpSol]>0, Append[#1, tmpSol], #1])&, group[], group[elem]]
 
 (*   tmpSol = Fold[(tmpSol=removeNonAlwaysTuple[#2];  *)
 (*               If[Length[tmpSol]>0, Append[#1, tmpSol], #1])&, group[], group[elem]]; *)
 (*   If[Length[tmpSol]==1, group[tmpSol]=tmpSol; tmpSol, tmpSol] *)
-);
+];
 
-removeNonAlwaysTuple[order[elem__]] := (
+removeNonAlwaysTuple[order[elem__]] := Block[{
+ tmpSol
+},
  Fold[(tmpSol=removeNonAlwaysTuple[#2];
               If[Length[tmpSol]>0, Append[#1, tmpSol], #1])&, order[], order[elem]]
 
 (*   tmpSol = Fold[(tmpSol=removeNonAlwaysTuple[#2];  *)
 (*               If[Length[tmpSol]>0, Append[#1, tmpSol], #1])&, order[], order[elem]]; *)
 (*   If[Length[tmpSol]==1, order[tmpSol]=tmpSol; tmpSol, tmpSol] *)
-);
+];
 
 removeNonAlwaysTuple[unit[elem__]]  :=
   Select[unit[elem], (Head[#]===always)&];
@@ -600,7 +610,8 @@ findNextPointPhaseTime[includeZero_, maxTime_,
   removeDisableAsk,
   calcMinTime,
   sol,
-  minT
+  minT,
+  minimumTime
 },
   removeDisableAsk[type_, ask_] := (
     debugPrint["removeDisableAsk#type: ", type];
@@ -726,7 +737,23 @@ pointPhase[consTable_, consStore_, changedAsk_, vars_] := (
 intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, includeZero_, 
               ruleNow2IntegNow_, rulePrev2IntegNow_,
               vars_, ftvars_, varsND_, integVars_, prevVars_,
-              maxTime_, currentTime_] := (
+              maxTime_, currentTime_, tmpPrevTime_] := Block[{
+  tmpSol,
+  tmpTells,
+  tmpValidVars,
+  tmpIntegSol,
+  tmpAsk,
+  tmpPosAsk,
+  tmpNegAsk,
+  tmpChangedAsk,
+  tmpMinT,
+  tmpMinAsk,
+  tmpNewChangedAsk,
+  tmpNewIncludeZero,
+  tmpConsStore,
+  tmpPrevConsTable,
+  tmpNewPrevTime
+},
 
   debugPrint["***** interval phase *****"];
   debugPrint["prevVars:", prevVars];  
@@ -861,7 +888,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
         Print[CForm[tmpPrevTime], " <= t <=",
               CForm[tmpMinT+currentTime], "\t", 
               Fold[(#1<>ToString[CForm[simplify[#2[t] ]]]<>"\t")&, "",integVars]]];
-     tmpPrevTime = tmpMinT+currentTime, 
+     tmpNewPrevTime = tmpMinT+currentTime, 
     fmtNumeric,
      For[i=0, i<tmpMinT, i+=1/10,
        Print[N[i+currentTime, 5], "\t",
@@ -874,8 +901,8 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   (* 積分済み変数の割り当て解除 *)
   Scan[(Clear[#])&, integVars];
 
-  {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore}
-);
+  {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore, tmpNewPrevTime}
+];
 
 consStore2Table[consStore_, vars_] :=
   group @@ 
@@ -885,20 +912,29 @@ consStore2Table[consStore_, vars_] :=
  * 
  *)
 HydLaSolve[cons_, argVars_, maxTime_] := Module[{
-  sol,
   vars, 
   ftVars,
   ftVarsND,
   prevVars,
+  pftVars,
   consFrameAxioms,
   consTable,
   consStore = {},
   consStorePrev = {},
   currentTime = 0,
   includeZero = True,
-  rval = {},
-  pftVars,
-  changedAsk = {}
+  changedAsk = {},
+  tmpT,
+  tmpPrevTime,
+  tmpPrevConsTable,
+  consPrevEqNow,
+  rulePrev2Now,
+  rulePrev2IntegNow,
+  ruleNow2Prev,
+  ruleNow2IntegNow,
+  tmpConsTable,
+  tmpPosAsk,
+  tmpNegAsk
 },
   vars     = addDifferentialVar[argVars];
   consFrameAxioms = createFrameAxiomsCons[argVars];
@@ -976,7 +1012,7 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
 (*     tmpConsStoreTable = consStore2Table[consStore, pftVars /. name_[t] -> name[0]]; *)
 (*     debugPrint["tmpConsStoreTable:", tmpConsStoreTable]; *)
 
-    {tmpT, includeZero, changedAsk, tmpPrevConsTable, consStore} =
+    {tmpT, includeZero, changedAsk, tmpPrevConsTable, consStore, tmpPrevTime} =
       profile["INTERVAL-PHASE",
       intervalPhase[
                     order[order[consTable, consFrameAxioms], consPrevEqNow],
@@ -989,7 +1025,7 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
                     includeZero,
                     ruleNow2IntegNow, rulePrev2IntegNow,
                     pftVars, ftVars, ftVarsND, var2IntegVar[argVars], prevVars, 
-                    maxTime-currentTime, currentTime]];
+                    maxTime-currentTime, currentTime, tmpPrevTime]];
 
     debugPrint["--- After IntervalPhase ---"];  
     debugPrint["changedAsk:", changedAsk];

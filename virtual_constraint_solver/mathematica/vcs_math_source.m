@@ -38,34 +38,42 @@ renameVar[varName_] := (
 (*
  * isConsistent内のReduceの結果得られた解を{変数名, 値}　のリスト形式にする
  *)
-createVariableList[Rule[varName_, varValue_], result_] := (
+createVariableList[Rule[varName_, varValue_], result_] := Block[{
+  name
+},
   name = renameVar[varName];
   Append[result, pair[name, varValue]]
-);
+];
 
 createVariableList[{expr_}, result_] := (
   createVariableList[expr, result]
 );
 
-createVariableList[{expr_, others__}, result_] := (
+createVariableList[{expr_, others__}, result_] := Block[{
+  variableList
+},
   variableList = createVariableList[expr, result];
   createVariableList[{others}, variableList]
-);
+];
 
-createVariableList[And[expr__], vars_, result_] := (
+createVariableList[And[expr__], vars_, result_] := Block[{
+  sol
+}
   sol = (Solve[expr, vars])[[1]];
   createVariableList[sol, result]
-);
+];
 
 (* Orでつながっている（複数解がある）場合は、そのうちの1つのみを返す？ *)
 createVariableList[Or[expr_, others__], vars_, result_] := (
   createVariableList[expr, vars, result]
 );
 
-createVariableList[Equal[varName_, varValue_], vars_, result_] := (
+createVariableList[Equal[varName_, varValue_], vars_, result_] := Block[{
+  sol
+},
   sol = (Solve[Equal[varName, varValue], vars])[[1]];
   createVariableList[sol, result]
-);
+];
 
 (* Reduce[{}, {}]のとき *)
 createVariableList[True, vars_, result_] := (
@@ -116,20 +124,21 @@ removeDash[var_] := (
  * tellVarsを元に、その初期値制約が必要かどうかを調べる
  * 初期値制約中に出現する変数がvars内になければ不要
  *)
-isRequiredConstraint[cons_, tellVars_] := (
+isRequiredConstraint[cons_, tellVars_] := Block[{
+   consVar
+},
    consVar = cons /. x_[0] == y_ -> x;
    removeDash[consVar];
    If[MemberQ[tellVars, consVar], True, False]
-);
+];
 
 (* tellVarsを元に、その変数が必要かどうかを調べる *)
 isRequiredVariable[var_, tellVars_] := (
    If[MemberQ[tellVars, var], True, False]
 );
 
-removeInequality[sol_] := (
-   DeleteCases[sol, Unequal[lhs_, rhs_], Infinity]
-);
+removeInequality[sol_] := 
+   DeleteCases[sol, Unequal[lhs_, rhs_], Infinity];
 
 exDSolve[expr_, vars_] := Block[
 {sol},
