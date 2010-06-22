@@ -737,7 +737,7 @@ pointPhase[consTable_, consStore_, changedAsk_, vars_] := (
 intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, includeZero_, 
               ruleNow2IntegNow_, rulePrev2IntegNow_,
               vars_, ftvars_, varsND_, integVars_, prevVars_,
-              maxTime_, currentTime_, tmpPrevTime_] := Block[{
+              maxTime_, currentTime_] := Block[{
   tmpSol,
   tmpTells,
   tmpValidVars,
@@ -751,8 +751,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   tmpNewChangedAsk,
   tmpNewIncludeZero,
   tmpConsStore,
-  tmpPrevConsTable,
-  tmpNewPrevTime
+  tmpPrevConsTable
 },
 
   debugPrint["***** interval phase *****"];
@@ -868,8 +867,10 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
           tmpNewIncludeZero = True;
           tmpConsStore = {}]]];
 
-  debugPrint["tmpConsStore:", tmpConsStore];
+  debugPrint["tmpMinT:", tmpMinT];
+  debugPrint["tmpNewChangedAsk:", tmpNewChangedAsk];
   debugPrint["tmpNewIncludeZero:", tmpNewIncludeZero];
+  debugPrint["tmpConsStore:", tmpConsStore];
 
   tmpPrevConsTable = profile["MapTHREAD4",
     group @@ MapThread[(unit[tell[#1[t] == simplify[(#2 /. t->tmpMinT)]]])&,
@@ -880,15 +881,15 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
    * optOutputFormat変数がfmtTFunctionの場合にはtの関数による表示
    * fmtNumericの場合には今まで通りの表示
    *)
+  debugPrint["currentTime:", currentTime];
   debugPrint["begin answer"];
   profile["PRINT",
    Switch[optOutputFormat, 
     fmtTFunction,
      If[tmpMinT>0,
-        Print[CForm[tmpPrevTime], " <= t <=",
+        Print[CForm[currentTime], " <= t <=",
               CForm[tmpMinT+currentTime], "\t", 
-              Fold[(#1<>ToString[CForm[simplify[#2[t] ]]]<>"\t")&, "",integVars]]];
-     tmpNewPrevTime = tmpMinT+currentTime, 
+              Fold[(#1<>ToString[CForm[simplify[#2[t] ]]]<>"\t")&, "",integVars]]],
     fmtNumeric,
      For[i=0, i<tmpMinT, i+=1/10,
        Print[N[i+currentTime, 5], "\t",
@@ -901,7 +902,7 @@ intervalPhase[consTable_, consStore_, askList_, posAsk_, negAsk_, changedAsk_, i
   (* 積分済み変数の割り当て解除 *)
   Scan[(Clear[#])&, integVars];
 
-  {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore, tmpNewPrevTime}
+  {tmpMinT, tmpNewIncludeZero, tmpNewChangedAsk, tmpPrevConsTable, tmpConsStore}
 ];
 
 consStore2Table[consStore_, vars_] :=
@@ -925,7 +926,6 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   includeZero = True,
   changedAsk = {},
   tmpT,
-  tmpPrevTime,
   tmpPrevConsTable,
   consPrevEqNow,
   rulePrev2Now,
@@ -934,7 +934,8 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   ruleNow2IntegNow,
   tmpConsTable,
   tmpPosAsk,
-  tmpNegAsk
+  tmpNegAsk,
+  gOutPut
 },
   vars     = addDifferentialVar[argVars];
   consFrameAxioms = createFrameAxiomsCons[argVars];
@@ -942,9 +943,6 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
   ftVarsND = var2TimeFunc[argVars];
   prevVars = Map[prev, Map[createUsrVar, vars]];
   pftVars  = Join[ftVars, Map[(#[t])&, prevVars]];
-
-  (* 各変数の値をtの関数として表示用の変数初期化 *)
-  tmpPrevTime = 0;
 
   gOutPut = {};
 (*   Print[""]; *)
@@ -995,8 +993,10 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
       Return[gOutPut]];
 
 
-    debugPrint["expandAsks:consTable:", consTable];
+    debugPrint["Before expandAsks#consTable:", consTable];
+    debugPrint["Before expandAsks#tmpPosAsk:", tmpPosAsk];
     consTable = profile["expandASKS",expandAsks[consTable, tmpPosAsk, pftVars]];
+    debugPrint["After expandAsks#consTable:", consTable];
     consTable = profile["removeNONALWAYSTUPLE",removeNonAlwaysTuple[consTable]];
  
     {consTable, tmpPosAsk, tmpNegAsk} = {consTable, tmpPosAsk, tmpNegAsk} /. name_[0] -> name[t];
@@ -1012,7 +1012,7 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
 (*     tmpConsStoreTable = consStore2Table[consStore, pftVars /. name_[t] -> name[0]]; *)
 (*     debugPrint["tmpConsStoreTable:", tmpConsStoreTable]; *)
 
-    {tmpT, includeZero, changedAsk, tmpPrevConsTable, consStore, tmpPrevTime} =
+    {tmpT, includeZero, changedAsk, tmpPrevConsTable, consStore} =
       profile["INTERVAL-PHASE",
       intervalPhase[
                     order[order[consTable, consFrameAxioms], consPrevEqNow],
@@ -1025,7 +1025,7 @@ HydLaSolve[cons_, argVars_, maxTime_] := Module[{
                     includeZero,
                     ruleNow2IntegNow, rulePrev2IntegNow,
                     pftVars, ftVars, ftVarsND, var2IntegVar[argVars], prevVars, 
-                    maxTime-currentTime, currentTime, tmpPrevTime]];
+                    maxTime-currentTime, currentTime]];
 
     debugPrint["--- After IntervalPhase ---"];  
     debugPrint["changedAsk:", changedAsk];
