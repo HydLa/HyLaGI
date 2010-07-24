@@ -565,6 +565,10 @@ VCSResult MathematicaVCSInterval::integrate(
   state.is_max_time = ml_->get_integer() == 1;
   HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
 
+////////////////// ŽóMI—¹
+
+  // Žž‚ÌŠÈ–ñ‰»
+  state.time.simplify(*ml_);
 
   // Žž‚Ì‹ßŽ—
   if(approx_precision_ > 0) {

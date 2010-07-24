@@ -21,6 +21,16 @@ MathTime::MathTime(const std::string& str)
 MathTime::~MathTime()
 {}
 
+void MathTime::simplify(MathLink& ml) 
+{
+  HYDLA_LOGGER_DEBUG("MathTime::send_time : ", time_);
+  ml.put_function("ToString", 1);
+  ml.put_function("Simplify", 1);
+  ml.put_function("ToExpression", 1);
+  ml.put_string(time_);
+  ml.skip_pkt_until(RETURNPKT);
+  receive_time(ml);
+}
 
 void MathTime::send_time(MathLink& ml) const
 {

@@ -35,6 +35,11 @@ public:
   ~MathTime();
 
   /**
+   * 時刻の簡約化
+   */
+  void simplify(MathLink& ml);
+
+  /**
    * Mathematicaへ時刻データを送信する
    */
   void send_time(MathLink& ml) const;
