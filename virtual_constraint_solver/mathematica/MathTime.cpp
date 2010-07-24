@@ -25,6 +25,7 @@ void MathTime::simplify(MathLink& ml)
 {
   HYDLA_LOGGER_DEBUG("MathTime::send_time : ", time_);
   ml.put_function("ToString", 1);
+  ml.put_function("FullForm", 1);
   ml.put_function("Simplify", 1);
   ml.put_function("ToExpression", 1);
   ml.put_string(time_);
