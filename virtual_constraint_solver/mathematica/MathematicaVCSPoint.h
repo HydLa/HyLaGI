@@ -65,8 +65,20 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:
+  typedef std::map<std::string, int> max_diff_map_t;
+
   void send_cs() const;
   void send_cs_vars() const;
+
+  /**
+   * •Ï”‚ÌÅ‘å”÷•ª‰ñ”‚ğ‚à‚Æ‚ß‚é
+   */
+  void create_max_diff_map(PacketSender& ps, max_diff_map_t& max_diff_map);
+
+  /**
+   * ¶˜A‘±«‚ÉŠÖ‚·‚é§–ñ‚ğ‰Á‚¦‚é
+   */
+  void add_left_continuity_constraint(PacketSender& ps, max_diff_map_t& max_diff_map);
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;

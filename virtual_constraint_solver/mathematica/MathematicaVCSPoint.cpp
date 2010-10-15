@@ -193,6 +193,164 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   return true;
 }
 
+namespace {
+
+struct MaxDiffMapDumper
+{
+  template<typename T>
+  MaxDiffMapDumper(T it, T end)
+  {
+    for(; it!=end; ++it) {
+      s << "name: " << it->first
+        << "diff: " << it->second
+        << "\n";      
+    }
+  }
+
+  std::stringstream s;
+};
+
+}
+
+void MathematicaVCSPoint::create_max_diff_map(
+  PacketSender& ps, max_diff_map_t& max_diff_map)
+{
+  PacketSender::vars_const_iterator vars_it  = ps.vars_begin();
+  PacketSender::vars_const_iterator vars_end = ps.vars_end();
+  for(; vars_it!=vars_end; ++vars_it) {
+    std::string name(vars_it->get<0>());
+    int derivative_count = vars_it->get<1>();
+
+    max_diff_map_t::iterator it = max_diff_map.find(name);
+    if(it==max_diff_map.end()) {
+      max_diff_map.insert(
+        std::make_pair(name, derivative_count));
+    }
+    else if(it->second < derivative_count) {
+      it->second = derivative_count;
+    }    
+  }
+
+  HYDLA_LOGGER_DEBUG(
+    "-- max diff map --\n",
+    MaxDiffMapDumper(max_diff_map.begin(), 
+                     max_diff_map.end()).s.str());
+
+}
+
+void MathematicaVCSPoint::add_left_continuity_constraint(
+  PacketSender& ps, max_diff_map_t& max_diff_map)
+{
+  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
+
+  // 送信する制約の個数を求める
+  constraint_store_vars_t::const_iterator cs_vars_it;
+  constraint_store_vars_t::const_iterator cs_vars_end;
+  cs_vars_it  = constraint_store_.second.begin();
+  cs_vars_end = constraint_store_.second.end();
+  int left_cont_vars_count = 0;
+
+  // 制約ストア中の変数のうち、集めたtell制約に出現する最大微分回数より小さい微分回数であるもののみ追加
+  for(; cs_vars_it!=cs_vars_end; ++cs_vars_it) {
+    max_diff_map_t::const_iterator md_it = 
+      max_diff_map.find(cs_vars_it->get<0>());
+    if(md_it!=max_diff_map.end() &&
+       md_it->second  > cs_vars_it->get<1>()) 
+    {
+      left_cont_vars_count++;
+    }
+  }
+
+  HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var): ", left_cont_vars_count);  
+
+
+  // 時刻0では制約ストアが空なため、集めたtell制約内の変数について調べる
+  max_diff_map_t::const_iterator md_it = max_diff_map.begin();
+  max_diff_map_t::const_iterator md_end = max_diff_map.end();
+  for(; md_it!=md_end; ++md_it) {
+    if(constraint_store_.second.find(md_it->first)==constraint_store_.second.end()){
+      for(int i=0; i<md_it->second; ++i){
+        left_cont_vars_count++;
+      }
+    }
+  }
+
+  HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
+
+  HYDLA_LOGGER_DEBUG("--- in cs_var ---");  
+
+  // Mathematicaへ送信
+  ml_->put_function("List", left_cont_vars_count);
+
+  cs_vars_it  = constraint_store_.second.begin();
+  cs_vars_end = constraint_store_.second.end();
+  for(; cs_vars_it!=cs_vars_end; ++cs_vars_it) {
+    max_diff_map_t::const_iterator md_it = 
+      max_diff_map.find(cs_vars_it->get<0>());
+    if(md_it!=max_diff_map.end() &&
+       md_it->second  > cs_vars_it->get<1>()) 
+    {
+      ml_->put_function("Equal", 2);
+
+      // Prev変数側
+      // 変数名
+      ps.put_var(
+        boost::make_tuple(cs_vars_it->get<0>(), 
+                          cs_vars_it->get<1>(), 
+                          true),
+        PacketSender::VA_None);
+
+      // Now変数側
+      // 変数名
+      ps.put_var(
+        boost::make_tuple(cs_vars_it->get<0>(), 
+                          cs_vars_it->get<1>(), 
+                          false),
+        PacketSender::VA_None);
+    }
+  }
+
+  HYDLA_LOGGER_DEBUG("--- in vars ---");  
+
+  // max_diff_mapについてつくる
+  md_it = max_diff_map.begin();
+  md_end = max_diff_map.end();
+  for(; md_it!=md_end; ++md_it) {
+    if(constraint_store_.second.find(md_it->first)==constraint_store_.second.end()){
+      for(int i=0; i<md_it->second; ++i){
+        ml_->put_function("Equal", 2);
+        
+        // Prev変数側
+        // 変数名
+        ps.put_var(
+          boost::make_tuple(md_it->first, 
+                            i, 
+                            true),
+          PacketSender::VA_None);
+        
+        // Now変数側
+        // 変数名
+        ps.put_var(
+          boost::make_tuple(md_it->first, 
+                            i, 
+                            false),
+          PacketSender::VA_None);
+
+        // 制約ストア内の変数扱いする（要検討）
+        constraint_store_.second.insert(boost::make_tuple(md_it->first, 
+                                                          i, 
+                                                          true));
+
+        constraint_store_.second.insert(boost::make_tuple(md_it->first, 
+                                                          i, 
+                                                          false));
+
+      }
+    }
+  }
+
+}
+
 VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 {
   HYDLA_LOGGER_DEBUG(
@@ -206,7 +364,8 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   // isConsistent[expr, vars]を渡したい
   ml_->put_function("isConsistent", 2);
 
-  ml_->put_function("Join", 2);
+  // exprは3つの部分から成る
+  ml_->put_function("Join", 3);
   int tells_size = collected_tells.size();
   ml_->put_function("List", tells_size);
 
@@ -220,6 +379,13 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
   // 制約ストアからもexprを得てMathematicaに渡す
   send_cs();
+
+  // 左連続性に関する制約を渡す
+  // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
+  max_diff_map_t max_diff_map;
+  create_max_diff_map(ps, max_diff_map);
+  add_left_continuity_constraint(ps, max_diff_map);
+
 
   // varsを渡す
   ml_->put_function("Join", 2);
