@@ -6,6 +6,42 @@ If[optUseDebugPrint,
   debugPrint[arg___] := Null];
 
 (*
+ * checkEntailmentのIPバージョン
+ * 0 : Solver Error
+ * 1 : 導出可能
+ * 2 : 導出不可能
+ *)
+checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
+  {tStore, sol, integGuard},
+  debugPrint["guard:", guard, "store:", store, "vars:", vars];
+  tStore = exDSolve[store, vars];
+  If[tStore =!= overconstraint,
+    (* under-constraintのときはどうする？？？ *)
+    (* guardにtStoreを適用する *)
+    integGuard = First[guard /. tStore];
+    If[integGuard =!= False,
+      (* その結果とt>0とを連立 *)
+      (* debugPrint["integGuard:", integGuard]; *)
+      sol = Reduce[{integGuard && t > 0}, t];
+      (* Infを取って0になればEntailed *)
+      If[sol =!= False,
+        If[MinValue[{t, sol}, t] === 0,
+          {1},
+          {2}
+        ],
+        {2}
+      ],
+      {2}
+    ],
+    (* debugPrint["over-constraint"]; *)
+    {2}
+  ]
+],
+  {0, $MessageList}
+]];
+
+
+(*
  * ある1つのask制約に関して、そのガードが制約ストアからentailできるかどうかをチェック
  *  0 : Solver Error
  *  1 : 導出可能
@@ -96,13 +132,17 @@ isConsistent[expr_, vars_] := Quiet[Check[Block[
 },
   debugPrint["expr:", expr, "vars:", vars];
   sol = Reduce[expr, vars];
+(*  debugPrint["sol after Reduce:", sol];*)
   If[sol =!= False,
       (* true *)
       (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
       sol = LogicalExpand[sol];
+     (*      debugPrint["sol after LogicalExpand:", sol];*)
       sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
+     (*      debugPrint["sol after Apply Or List:", sol];*)
       (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
       sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
+     (*      debugPrint["sol after Apply And List:", sol];*)
       (* 一番内側の要素 （レベル2）を文字列にする *)
       {1, Map[(ToString[FullForm[#]]) &, removeInequality[sol], {2}]},
 
@@ -226,6 +266,7 @@ Block[{
       (* true *)
       (* 解なしと境界値の解を区別する *)  
       sol = Reduce[{timeMinCons && (maxTime>=t) && (integAsk)}, t];
+      (*  debugPrint["calcNextPointPhaseTime#sol: ", sol]; *)
       If[sol=!=False, 
          (* true *)
          (* 成り立つtの最小値を求める *)
@@ -238,6 +279,7 @@ Block[{
       (* false *)
       minT=0];
 
+      (* debugPrint["calcMinTime#minT: ", minT];*)
     (* 0秒後のを含んではいけない *)
     If[includeZero===False && minT===0, minT=error];
     (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
@@ -307,6 +349,7 @@ integrateCalc[cons_,
 
   tmpIntegSol = First[Quiet[DSolve[removeInequality[Reduce[cons, vars]], vars, t],
                             {Solve::incnst}]];
+ (*   debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
   {tmpMinT, tmpMinAskIDs} = 
@@ -324,6 +367,7 @@ integrateCalc[cons_,
   debugPrint["ret:", tmpRet];
   tmpRet
 ],
+  (* debugPrint["MessageList:", $MessageList]; *)
   {0, $MessageList}
 ]];
 

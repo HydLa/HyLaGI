@@ -23,10 +23,12 @@ public:
     typedef std::map<MathVariable, MathValue>      init_vars_t;
     typedef hydla::simulator::tells_t              constraints_t;
     typedef std::set<MathVariable>                 cons_vars_t;
+    typedef std::map<std::string, int>             init_vars_max_diff_map_t;
 
     init_vars_t   init_vars;
     constraints_t constraints;
     cons_vars_t   cons_vars;
+    init_vars_max_diff_map_t init_vars_max_diff_map;
   };
   
   typedef ConstraintStore constraint_store_t;
