@@ -21,18 +21,26 @@ ModuleSetList::~ModuleSetList()
 
 void ModuleSetList::add_parallel(ModuleSetList& parallel_module_set_list) 
 {
-  // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
+  // parallel(X, Y) = {x ∪ y | x∈X, y∈Y}
 
   module_set_list_t::const_iterator p_it = 
     parallel_module_set_list.module_set_list_.begin();
   module_set_list_t::const_iterator p_end = 
     parallel_module_set_list.module_set_list_.end();
 
-  // X
+/*
+  // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
+
+  // Y
   module_set_list_t new_list(module_set_list_);
     
-  // Y
+  // X
   new_list.insert(new_list.end(), p_it, p_end);
+*/
+
+  // 空のモジュール集合の集合を用意
+  module_set_list_t new_list(module_set_list_);
+  new_list.clear();
 
   // {x ∪ y | x∈X, y∈Y}
   for(; p_it!=p_end; ++p_it) {

@@ -26,17 +26,25 @@ ModuleSetGraph::~ModuleSetGraph()
 
 void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 {
-  // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
+  // parallel(X, Y) = {x ∪ y | x∈X, y∈Y}
   nodes_t::const_iterator p_it = 
     parallel_module_set_graph.nodes_.begin();
   nodes_t::const_iterator p_end = 
     parallel_module_set_graph.nodes_.end();
+
+/*
+  // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
 
   // X
   nodes_t new_nodes(nodes_);
     
   // Y
   new_nodes.insert(new_nodes.end(), p_it, p_end);
+*/
+
+  // 空のモジュール集合の集合を用意
+  nodes_t new_nodes(nodes_);
+  new_nodes.clear();
 
   // {x ∪ y | x∈X, y∈Y}
   for(; p_it!=p_end; ++p_it) {
