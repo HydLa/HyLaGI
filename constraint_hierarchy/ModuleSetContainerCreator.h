@@ -43,6 +43,7 @@ public:
     mod_set_stack_.clear();
     container_name_.clear();
     mod_name_map_.clear();
+    in_weaker_ = false;
 
     parse_tree->dispatch(this);
     assert(mod_set_stack_.size() <= 1);
@@ -86,6 +87,7 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
   {    
+    in_weaker_ = true;
     container_name_.clear();
 
     // 左辺：弱い制約
@@ -96,6 +98,8 @@ public:
     // 右辺：強い制約
     node->get_rhs()->accept(node->get_rhs(), this);
     mod_set_stack_.back()->add_weak(*lhs);
+
+    in_weaker_ = false;
   }
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
@@ -109,7 +113,8 @@ public:
 
     // 右辺
     node->get_rhs()->accept(node->get_rhs(), this);
-    mod_set_stack_.back()->add_parallel(*lhs);
+    if(in_weaker_) mod_set_stack_.back()->add_parallel(*lhs);
+    else mod_set_stack_.back()->add_required_parallel(*lhs);
   }
 
 private:
@@ -126,6 +131,9 @@ private:
    * 同一名のモジュールも区別する必要がある
    */
   mod_name_map_t    mod_name_map_;
+
+  /// Weakerノードの下にいるかどうか
+  bool in_weaker_;
 };
 
 } // namespace ch

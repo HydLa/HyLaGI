@@ -58,6 +58,11 @@ public:
    * 並列合成として集合を合成する
    */
   void add_parallel(ModuleSetGraph& parallel_module_set_graph);
+
+  /**
+   * 並列合成として集合を合成する（required制約扱い）
+   */
+  void add_required_parallel(ModuleSetGraph& parallel_module_set_graph);
   
   /**
    * 弱合成として集合を合成する

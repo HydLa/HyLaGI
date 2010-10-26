@@ -28,6 +28,11 @@ public:
    * 並列合成として集合を合成する
    */
   void add_parallel(ModuleSetList& parallel_module_set_list);
+
+  /**
+   * 並列合成として集合を合成する（required制約扱い）
+   */
+  void add_required_parallel(ModuleSetList& parallel_module_set_list);
   
   /**
    * 弱合成として集合を合成する

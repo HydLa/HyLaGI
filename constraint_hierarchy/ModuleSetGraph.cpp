@@ -26,21 +26,48 @@ ModuleSetGraph::~ModuleSetGraph()
 
 void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 {
-  // parallel(X, Y) = {x ∪ y | x∈X, y∈Y}
+
+  // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
+
   nodes_t::const_iterator p_it = 
     parallel_module_set_graph.nodes_.begin();
   nodes_t::const_iterator p_end = 
     parallel_module_set_graph.nodes_.end();
-
-/*
-  // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
 
   // X
   nodes_t new_nodes(nodes_);
     
   // Y
   new_nodes.insert(new_nodes.end(), p_it, p_end);
-*/
+
+  // {x ∪ y | x∈X, y∈Y}
+  for(; p_it!=p_end; ++p_it) {
+    nodes_t::iterator this_it =  nodes_.begin();
+    nodes_t::iterator this_end = nodes_.end();
+    
+    for(; this_it!=this_end; ++this_it) {
+      module_set_sptr ms(new ModuleSet(*(this_it->mod),  *(p_it->mod)));
+      Node n;
+      n.mod     = ms;
+      n.visited = false;
+      new_nodes.push_back(n);
+    }
+  }
+
+  sort(new_nodes.begin(), new_nodes.end(), NodeComp());
+  nodes_.swap(new_nodes);
+  build_edges();
+}
+
+void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_graph)
+{
+
+  // parallel(X, Y) = {x ∪ y | x∈X, y∈Y}
+
+  nodes_t::const_iterator p_it = 
+    parallel_module_set_graph.nodes_.begin();
+  nodes_t::const_iterator p_end = 
+    parallel_module_set_graph.nodes_.end();
 
   // 空のモジュール集合の集合を用意
   nodes_t new_nodes(nodes_);
