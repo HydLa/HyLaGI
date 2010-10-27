@@ -43,7 +43,7 @@ public:
     mod_set_stack_.clear();
     container_name_.clear();
     mod_name_map_.clear();
-    in_weaker_ = false;
+    constraint_level_ = 0;
 
     parse_tree->dispatch(this);
     assert(mod_set_stack_.size() <= 1);
@@ -87,7 +87,7 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
   {    
-    in_weaker_ = true;
+    constraint_level_++;
     container_name_.clear();
 
     // 左辺：弱い制約
@@ -95,11 +95,12 @@ public:
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
 
+    constraint_level_--;
+
     // 右辺：強い制約
     node->get_rhs()->accept(node->get_rhs(), this);
     mod_set_stack_.back()->add_weak(*lhs);
 
-    in_weaker_ = false;
   }
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
@@ -113,8 +114,9 @@ public:
 
     // 右辺
     node->get_rhs()->accept(node->get_rhs(), this);
-    if(in_weaker_) mod_set_stack_.back()->add_parallel(*lhs);
-    else mod_set_stack_.back()->add_required_parallel(*lhs);
+    // トップレベルではrequired制約扱いする
+    if(constraint_level_ == 0) mod_set_stack_.back()->add_required_parallel(*lhs);
+    else mod_set_stack_.back()->add_parallel(*lhs);
   }
 
 private:
@@ -132,8 +134,8 @@ private:
    */
   mod_name_map_t    mod_name_map_;
 
-  /// Weakerノードの下にいるかどうか
-  bool in_weaker_;
+  /// 制約の優先順位に関するレベル・深さ（0が最優先, required）
+  int constraint_level_;
 };
 
 } // namespace ch
