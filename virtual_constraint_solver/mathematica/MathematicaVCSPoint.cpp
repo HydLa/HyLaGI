@@ -115,7 +115,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 
   // ˆê‚Â‚¾‚¯Ì—p
   // TODO: •¡”‰ğ‚ ‚éê‡‚Ìˆ—‚à‚«‚¿‚ñ‚Æl‚¦‚é
-  assert(constraint_store_.first.size() == 1);
+//  assert(constraint_store_.first.size() == 1);
 //  for(; or_cons_it!=or_cons_end; ++or_cons_it) {
     std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
     for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)

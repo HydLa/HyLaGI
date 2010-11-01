@@ -184,6 +184,9 @@ exDSolve[expr_, vars_] := Block[
 {sol},
   sol = Reduce[Cases[expr, Except[True] | Except[False]], vars];
   sol = removeInequality[sol];
+  (* 1つだけ採用 *)
+  (* TODO: 複数解ある場合も考える *)
+  If[Head[sol]===Or, sol = First[sol]];
   If[sol===False,
       overconstraint,
 
@@ -347,7 +350,11 @@ integrateCalc[cons_,
              "vars:", vars, 
              "maxTime:", maxTime];
 
-  tmpIntegSol = First[Quiet[DSolve[removeInequality[Reduce[cons, vars]], vars, t],
+  tmpIntegSol = removeInequality[Reduce[cons, vars]];
+  (* 1つだけ採用 *)
+  (* TODO: 複数解ある場合も考える *)
+  If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
+  tmpIntegSol = First[Quiet[DSolve[tmpIntegSol, vars, t],
                             {Solve::incnst}]];
  (*   debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
