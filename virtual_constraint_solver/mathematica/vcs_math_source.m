@@ -131,7 +131,7 @@ isConsistent[expr_, vars_] := Quiet[Check[Block[
   sol
 },
   debugPrint["expr:", expr, "vars:", vars];
-  sol = Reduce[expr, vars];
+  sol = Reduce[expr, vars, Reals];
 (*  debugPrint["sol after Reduce:", sol];*)
   If[sol =!= False,
       (* true *)
