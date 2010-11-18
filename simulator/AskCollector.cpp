@@ -55,23 +55,31 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   assert(negative_asks);
   assert(positive_asks);
 
+  HYDLA_LOGGER_DEBUG(
+    "#*** ask collector ***\n", 
+    "--- expanded always from previous phase ---\n",
+    NodeDumper(expanded_always->begin(), expanded_always->end()));
+
   expanded_always_ = expanded_always;
   negative_asks_   = negative_asks;
   positive_asks_   = positive_asks;
 
   // ModuleSetÇÃÉmÅ[ÉhÇÃíTçı
   in_positive_ask_    = false;
+  in_negative_ask_    = false;
   in_expanded_always_ = false;
   module_set_->dispatch(this);
 
   // ìWäJçœÇ›alwaysÉmÅ[ÉhÇÃíTçı
   in_positive_ask_    = false;
+  in_negative_ask_    = false;
   in_expanded_always_ = true;
   expanded_always_t::const_iterator it  = expanded_always->begin();
   expanded_always_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
+    // çÃópÇµÇƒÇ¢ÇÈÉÇÉWÉÖÅ[ÉãèWçáì‡Ç…ì¸Ç¡ÇƒÇ¢ÇÈÇ©Ç«Ç§Ç©
     if(visited_always_.find(*it) != visited_always_.end()) {
-      accept(*it);
+      accept((*it)->get_child());
     }
   }
 
@@ -85,9 +93,9 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
     "--- positive asks ---\n", 
     NodeDumper(positive_asks->begin(), positive_asks->end()),
     "--- negative asks ---\n",
-    NodeDumper(negative_asks->begin(), negative_asks->end()));
-//     "--- expanded always ---\n",
-//     NodeDumper(expanded_always->begin(), expanded_always->end()));
+    NodeDumper(negative_asks->begin(), negative_asks->end()),
+    "--- expanded always ---\n",
+    NodeDumper(expanded_always->begin(), expanded_always->end()));
 }
 
 // êßñÒéÆ
@@ -100,33 +108,39 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
 
-
-  bool collect = false;
-  if(boost::dynamic_pointer_cast<DiscreteAsk>(node)) {
-    // ó£éUïœâªASK
-    if(collect_type_ & ENABLE_COLLECT_DISCRETE_ASK) collect = true;
-  }
-  else if(boost::dynamic_pointer_cast<ContinuousAsk>(node)) {
-    // òAë±ïœâªASK
-    if(collect_type_ & ENABLE_COLLECT_CONTINUOUS_ASK) collect = true;
-  }
-  else {
-    // å^Ç™ë∂ç›ÇµÇ»Ç¢ASK
-    if(collect_type_ & ENABLE_COLLECT_NON_TYPED_ASK) collect = true;
-  }
-
-  if(collect) {
-    if(positive_asks_->find(node) != positive_asks_->end()) 
-    {
-      // ä˘Ç…ìWäJçœÇ›ÇÃaskÉmÅ[ÉhÇ≈Ç†Ç¡ÇΩèÍçá
-      in_positive_ask_ = true;
-      accept(node->get_child());
-      in_positive_ask_ = false;
+  if(!in_negative_ask_){
+    bool collect = false;
+    if(boost::dynamic_pointer_cast<DiscreteAsk>(node)) {
+      // ó£éUïœâªASK
+      if(collect_type_ & ENABLE_COLLECT_DISCRETE_ASK) collect = true;
+    }
+    else if(boost::dynamic_pointer_cast<ContinuousAsk>(node)) {
+      // òAë±ïœâªASK
+      if(collect_type_ & ENABLE_COLLECT_CONTINUOUS_ASK) collect = true;
     }
     else {
-      // Ç‹ÇæìWäJÇ≥ÇÍÇƒÇ¢Ç»Ç¢askÉmÅ[ÉhÇ≈Ç†Ç¡ÇΩèÍçá
-      negative_asks_->insert(node);  
+      // å^Ç™ë∂ç›ÇµÇ»Ç¢ASK
+      if(collect_type_ & ENABLE_COLLECT_NON_TYPED_ASK) collect = true;
     }
+    
+    if(collect) {
+      if(positive_asks_->find(node) != positive_asks_->end()) 
+      {
+        // ä˘Ç…ìWäJçœÇ›ÇÃaskÉmÅ[ÉhÇ≈Ç†Ç¡ÇΩèÍçá
+        in_positive_ask_ = true;
+        accept(node->get_child());
+        in_positive_ask_ = false;
+      }
+      else {
+        // Ç‹ÇæìWäJÇ≥ÇÍÇƒÇ¢Ç»Ç¢askÉmÅ[ÉhÇ≈Ç†Ç¡ÇΩèÍçá
+        negative_asks_->insert(node);
+        in_negative_ask_ = true;
+        accept(node->get_child());
+        in_negative_ask_ = false;
+      }
+    }
+  } else {
+    accept(node->get_child());
   }
 }
 
@@ -152,8 +166,10 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
       accept(node->get_child());
     }
   } else {
-    accept(node->get_child());
-    new_expanded_always_.insert(node);
+    if(!in_negative_ask_){
+      accept(node->get_child());
+      new_expanded_always_.insert(node);
+    }
     visited_always_.insert(node);
   }
 }

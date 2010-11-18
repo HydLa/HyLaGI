@@ -186,6 +186,19 @@ void ParseTree::update_node_id(node_id_t id, const node_sptr& n)
 }
 */
 
+void ParseTree::make_node_id_list()
+{
+
+  node_id_list_.clear();
+
+  node_map_const_iterator it = node_map_begin();
+  node_map_const_iterator end = node_map_end();
+  for(; it!=end; ++it)
+  {
+    node_id_list_.insert((*it).first);
+  }
+}
+
 void ParseTree::clear()
 {
   max_node_id_ = INITIAL_MAX_NODE_ID;

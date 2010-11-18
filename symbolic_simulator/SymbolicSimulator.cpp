@@ -94,14 +94,15 @@ struct ModuleSetContainerInitializer {
   static void init(
     const parse_tree_sptr& parse_tree,
     module_set_container_sptr& msc_original, 
-    module_set_container_sptr& msc_no_init)
+    module_set_container_sptr& msc_no_init,
+    parse_tree_sptr& member_parse_tree)
   {
     ModuleSetContainerCreator<MSCC> mcc;
     {
       parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
       AskDisjunctionFormatter().format(pt_original.get());
       AskDisjunctionSplitter().split(pt_original.get());
-      AskTypeAnalyzer().analyze(pt_original.get());
+      //AskTypeAnalyzer().analyze(pt_original.get());
       msc_original = mcc.create(pt_original);
     }
 
@@ -110,8 +111,11 @@ struct ModuleSetContainerInitializer {
       InitNodeRemover().apply(pt_no_init.get());
       AskDisjunctionFormatter().format(pt_no_init.get());
       AskDisjunctionSplitter().split(pt_no_init.get());
-      AskTypeAnalyzer().analyze(pt_no_init.get());
+      //AskTypeAnalyzer().analyze(pt_no_init.get());
       msc_no_init = mcc.create(pt_no_init);
+
+      // 最適化された形のパースツリーを得る
+      member_parse_tree = pt_no_init;
     }
 
     //{
@@ -134,11 +138,11 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
   
   if(opts_.nd_mode) {
     ModuleSetContainerInitializer::init<ModuleSetGraph>(
-      parse_tree, msc_original_, msc_no_init_);
+      parse_tree, msc_original_, msc_no_init_, parse_tree_);
   }
   else {
     ModuleSetContainerInitializer::init<ModuleSetList>(
-      parse_tree, msc_original_, msc_no_init_);
+      parse_tree, msc_original_, msc_no_init_, parse_tree_);
   }
 }
 
@@ -227,10 +231,17 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   positive_asks_t   positive_asks;
   negative_asks_t   negative_asks;
 
+  if(state->changed_asks.size() != 0) {
+    HYDLA_LOGGER_DEBUG("#** point_phase: changed_ask_id: ",
+                       state->changed_asks.at(0).second,
+                       " **");
+  }
 
   expanded_always_t expanded_always;
-  //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
+                     expanded_always);
   
   MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
@@ -299,7 +310,9 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   phase_state_sptr new_state(create_new_phase_state());
   new_state->phase        = IntervalPhase;
   new_state->current_time = state->current_time;
-  //expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
+  expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
+  HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
+                     new_state->expanded_always_id);
   new_state->module_set_container = msc_no_init_;
   
 
@@ -344,7 +357,9 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   negative_asks_t negative_asks;
 
   expanded_always_t expanded_always;
-  //expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
+                     expanded_always);
 
   MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_, opts_.approx_precision);
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
@@ -429,6 +444,9 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   if(!integrate_result.states[0].is_max_time) {
     phase_state_sptr new_state(create_new_phase_state());
     new_state->phase        = PointPhase;
+    expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
+    HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
+                       new_state->expanded_always_id);
     new_state->variable_map = integrate_result.states[0].variable_map;
     new_state->module_set_container = msc_no_init_;
     new_state->current_time = integrate_result.states[0].time;

@@ -93,6 +93,9 @@ private:
   /// 有効となっているaskの中かどうか
   bool                in_positive_ask_;
 
+  /// 無効となっているaskの中かどうか
+  bool                in_negative_ask_;
+
   /// 探索したalwaysノードのリスト
   visited_always_t   visited_always_;
 

@@ -6,6 +6,27 @@
 
 namespace hydla {
 namespace simulator {
+
+namespace {
+struct NodeDumper {
+      
+  template<typename T>
+  NodeDumper(T it, T end) 
+  {
+    for(; it!=end; ++it) {
+      ss << **it << "\n";
+    }
+  }
+
+  friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+  {
+    s << nd.ss.str();
+    return s;
+  }
+
+  std::stringstream ss;
+};
+}
   
 TellCollector::TellCollector(const module_set_sptr& module_set) :
   module_set_(module_set)
@@ -37,22 +58,28 @@ void TellCollector::collect(tells_t*                 tells,
 
 
   // ModuleSetÇÃÉmÅ[ÉhÇÃíTçı
-  in_ask_             = false;
+  in_positive_ask_    = false;
+  in_negative_ask_    = false;
   in_expanded_always_ = false;
   module_set_->dispatch(this);
 
   // ìWäJçœÇ›alwaysÉmÅ[ÉhÇÃíTçı
-  in_ask_             = false;
+  in_positive_ask_    = false;
+  in_negative_ask_    = false;
   in_expanded_always_ = true;
   expanded_always_t::const_iterator it  = expanded_always->begin();
   expanded_always_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
+    // çÃópÇµÇƒÇ¢ÇÈÉÇÉWÉÖÅ[ÉãèWçáì‡Ç…ì¸Ç¡ÇƒÇ¢ÇÈÇ©Ç«Ç§Ç©
     if(visited_always_.find(*it) != visited_always_.end()) {
-      accept(*it);
+      accept((*it)->get_child());
     }
   }
 
-//  HYDLA_LOGGER_DEBUG("#** collected tells **\n", *tells);
+  HYDLA_LOGGER_DEBUG(
+    "#*** tell collector ***\n", 
+    "--- collected tells ---\n", 
+    NodeDumper(tells->begin(), tells->end()));
 }
 
 // êßñÒéÆ
@@ -66,21 +93,27 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   // askÇ™ÉeÉìÉeÅ[Éãâ¬î\Ç≈Ç†Ç¡ÇΩÇÁéqÉmÅ[ÉhÇ‡íTçıÇ∑ÇÈ
   if(positive_asks_->find(node) != positive_asks_->end()) {
-    in_ask_ = true;
+    in_positive_ask_ = true;
     accept(node->get_child());
-    in_ask_ = false;
+    in_positive_ask_ = false;
+  } else {
+    in_negative_ask_ = true;
+    accept(node->get_child());
+    in_negative_ask_ = false;
   }
 }
 
 // TellêßñÒ
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
-  // tellêßñÒÇÃìoò^
-  if(collect_all_tells_ || 
-      collected_tells_.find(node) == collected_tells_.end()) 
-  {
-    tells_->push_back(node);
-    collected_tells_.insert(node);
+  if(!in_negative_ask_){
+    // tellêßñÒÇÃìoò^
+    if(collect_all_tells_ || 
+       collected_tells_.find(node) == collected_tells_.end()) 
+    {
+      tells_->push_back(node);
+      collected_tells_.insert(node);
+    }
   }
 }
 

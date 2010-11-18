@@ -45,6 +45,8 @@ typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
+std::ostream& operator<<(std::ostream& s, const expanded_always_t& a);
+std::ostream& operator<<(std::ostream& s, const expanded_always_id_t& a);
 
 } //namespace simulator
 } //namespace hydla 

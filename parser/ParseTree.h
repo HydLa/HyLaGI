@@ -6,8 +6,8 @@
 #include <sstream>
 #include <vector>
 #include <map>
-#include <sstream>
 #include <cassert>
+#include <set>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -36,6 +36,10 @@ public:
   typedef std::map<node_id_t, node_sptr> node_map_t;
   typedef node_map_t::value_type         node_map_value_t;
   typedef node_map_t::const_iterator     node_map_const_iterator;
+
+  // ノードID表
+  typedef std::set<node_id_t>           node_id_list_t;
+  typedef node_id_list_t::const_iterator node_id_list_const_iterator;
 
   /*
   struct tag_node_id {};
@@ -251,6 +255,27 @@ public:
   }
 
   /**
+   * ノード表中にあるノードIDのリストを作成する
+   */
+  void make_node_id_list();
+
+  /**
+   * ノードIDリストの最初の要素
+   */
+  node_id_list_const_iterator node_id_list_begin()
+  {
+    return node_id_list_.begin();
+  }
+
+  /**
+   * ノードIDリストの最後の次の要素
+   */
+  node_id_list_const_iterator node_id_list_end()
+  {
+    return node_id_list_.end();
+  }
+
+  /**
    * 登録されているNodeFactoryを元に指定された型のノードを生成する
    */
   template<typename NodeType>
@@ -280,6 +305,7 @@ private:
 
   node_map_t           node_map_;
   node_id_t            max_node_id_;
+  node_id_list_t       node_id_list_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ParseTree& pt);

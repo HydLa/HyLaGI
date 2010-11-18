@@ -121,8 +121,11 @@ private:
   /// すべてのtellノードを収集するかどうか
   bool               collect_all_tells_;
 
-  /// askノードの子ノードかどうか
-  bool               in_ask_;
+  /// 有効となっているaskノードの子ノードかどうか
+  bool               in_positive_ask_;
+
+  /// 無効となっているaskノードの子ノードかどうか
+  bool               in_negative_ask_;
 
   /// 展開済みalwaysノードのリストからの探索かどうか
   bool               in_expanded_always_;

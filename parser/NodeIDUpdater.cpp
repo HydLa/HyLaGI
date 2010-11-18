@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "Logger.h"
+#include <iostream>
 
 namespace hydla { 
 namespace parser {
@@ -23,24 +24,26 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
 
   pt->dispatch(this);
 
-  // TODO: 削除されていたノードを表から取り除く
-  /*
+  // 削除されていたノードを表から取り除く
+  
   assert(node_id_list_.size() <= pt->node_map_size());
   node_id_list_t diff_id( pt->node_map_size());
+
+  pt->make_node_id_list();
+
   std::set_symmetric_difference(
     node_id_list_.begin(),
     node_id_list_.end(),
-    pt->node_map_begin(),
-    pt->node_map_end(),
+    pt->node_id_list_begin(),
+    pt->node_id_list_end(),
     diff_id.begin());
 
-  node_id_list_t::const_iterator it  = node_id_list_.begin();
-  node_id_list_t::const_iterator end = node_id_list_.end();
+  node_id_list_t::const_iterator it  = diff_id.begin();
+  node_id_list_t::const_iterator end = diff_id.end();
   for(; it!=end; ++it) {
     HYDLA_LOGGER_DEBUG("remove id: ", *it);
     pt->remove_node(*it);
   }
-  */
 }
 
 void NodeIDUpdater::visit(boost::shared_ptr<hydla::parse_tree::FactorNode> node)

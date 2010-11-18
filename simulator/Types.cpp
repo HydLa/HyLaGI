@@ -44,6 +44,22 @@ std::ostream& operator<<(std::ostream& s, const collected_tells_t& a)
   return s;
 }
 
+std::ostream& operator<<(std::ostream& s, const expanded_always_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const expanded_always_id_t& a)
+{
+  expanded_always_id_t::const_iterator it = a.begin();
+  expanded_always_id_t::const_iterator end = a.end();
+
+  for(; it!=end; ++it){
+    s << *it << "\n";
+  }
+  return s;
+}
 
 } //namespace simulator
 } //namespace hydla 
