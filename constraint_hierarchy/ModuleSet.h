@@ -24,6 +24,7 @@ public:
   typedef std::pair<std::string,
                     hydla::parse_tree::node_sptr> module_t;
   typedef std::vector<module_t>                   module_list_t;
+  typedef module_list_t::const_iterator           module_list_const_iterator;
 
   struct ModuleComp {
     bool operator()(const module_t& a, const module_t& b) const
@@ -42,6 +43,22 @@ public:
    * 集合(このクラス)の名前
    */ 
   std::string get_name() const;
+
+  /**
+   * 集合の最初の要素
+   */
+  module_list_const_iterator begin() const 
+  {
+    return module_list_.begin();
+  }
+
+  /**
+   * 集合の最後の次の要素
+   */
+  module_list_const_iterator end() const 
+  {
+    return module_list_.end();
+  }
 
   /**
    * 集合の要素の数

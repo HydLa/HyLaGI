@@ -95,6 +95,14 @@ public:
   std::ostream& dump_graphviz(std::ostream& s) const;
 
   /**
+   * 要素数最大であるモジュール集合を得る
+   */
+  module_set_sptr get_max_module_set() const
+  {
+    return nodes_.front().mod;
+  };
+
+  /**
    * 
    */
   virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 

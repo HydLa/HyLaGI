@@ -428,6 +428,26 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       }
     }
   }
+
+
+  // MaxModuleの導出
+  module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
+
+  HYDLA_LOGGER_DEBUG("#** interval_phase: ms: **\n",
+                     *ms,
+                     "\n#** interval_phase: max_module_set: ##\n",
+                     *max_module_set);
+
+  // 採用していないモジュールの集合導出
+  hydla::ch::ModuleSet::module_list_t diff_module_list(max_module_set->size() - ms->size());
+
+  std::set_difference(
+    max_module_set->begin(),
+    max_module_set->end(),
+    ms->begin(),
+    ms->end(),
+    diff_module_list.begin());
+
   
   // askの導出状態が変化するまで積分をおこなう
   virtual_constraint_solver_t::IntegrateResult integrate_result;

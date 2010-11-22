@@ -60,6 +60,14 @@ public:
   std::ostream& dump_node_trees(std::ostream& s) const;
 
   /**
+   * 要素数最大であるモジュール集合を得る
+   */
+  module_set_sptr get_max_module_set() const
+  {
+    return module_set_list_.front();
+  };
+
+  /**
    * 極大な制約モジュール集合を無矛盾なものが見つかるまでためす
    */
   virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
