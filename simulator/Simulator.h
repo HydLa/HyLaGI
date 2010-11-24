@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include <queue>
+#include <stack>
 #include <cassert>
 
 #include <boost/bind.hpp>
@@ -50,9 +50,9 @@ public:
   /**
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
-  void simulate()
+  virtual void simulate()
   {
-    while(!state_queue_.empty()) {
+    while(!state_stack_.empty()) {
       phase_state_sptr state(pop_phase_state());
 
       state->module_set_container->dispatch(
@@ -66,7 +66,7 @@ public:
    */
   void push_phase_state(const phase_state_sptr& state) 
   {
-    state_queue_.push(state);
+    state_stack_.push(state);
   }
 
   /**
@@ -74,8 +74,8 @@ public:
    */
   phase_state_sptr pop_phase_state()
   {
-    phase_state_sptr state(state_queue_.front());
-    state_queue_.pop();
+    phase_state_sptr state(state_stack_.top());
+    state_stack_.pop();
     return state;
   }
 
@@ -239,7 +239,7 @@ protected:
   /**
    * 各状態を保存しておくためのキュー
    */
-  std::queue<phase_state_sptr> state_queue_;
+  std::stack<phase_state_sptr> state_stack_;
 };
 
 } //namespace simulator

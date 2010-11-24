@@ -75,6 +75,17 @@ public:
     return s << get_node_type_name()
              << "<" << get_id() << ">";
   }
+  
+  
+  /**
+   * ノードの状態を中置記法で出力する。定義が無い場合は通常のdumpと同じにする方向で
+   */
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    s << "infix_node";
+    return s << get_node_type_name()
+             << "<" << get_id() << ">";
+  }
 
   /**
    * ノードIDの設定
@@ -160,6 +171,22 @@ public:
     Node::dump(s);
     return s << "[" << *child_ << "]";
   }
+  
+  virtual std::string get_node_type_presymbol() const{
+   return "";
+  }
+  virtual std::string get_node_type_postsymbol() const{
+   return ""; 
+  }
+  
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    s << get_node_type_presymbol() ; 
+    child_->dump_infix(s);
+    s << get_node_type_postsymbol();
+    return s ;
+  }
+
 
   /**
    * setter of child node
@@ -189,7 +216,7 @@ protected:
   node_sptr child_;
 };
 
-#define DEFINE_UNARY_NODE(NAME)                             \
+#define DEFINE_UNARY_NODE(NAME,PRE,POST)                    \
   class NAME : public UnaryNode {                           \
   public:                                                   \
   typedef boost::shared_ptr<NAME> node_type_sptr;           \
@@ -213,6 +240,12 @@ protected:
                                                             \
   virtual std::string get_node_type_name() const {          \
     return #NAME;                                           \
+  }                                                         \
+  virtual std::string get_node_type_presymbol() const{      \
+    return PRE;                                             \
+  }                                                         \
+  virtual std::string get_node_type_postsymbol() const{     \
+    return POST;                                            \
   }                                                         \
   };
 
@@ -249,11 +282,23 @@ public:
   virtual std::string get_node_type_name() const {
     return "BinaryNode";
   }
+  
+  virtual std::string get_node_type_symbol() const {
+    return " B ";
+  }
 
   virtual std::ostream& dump(std::ostream& s) const 
   {
     Node::dump(s);
     return s << "[" << *lhs_ << "," << *rhs_ << "]";
+  }
+  
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    lhs_->dump_infix(s);
+    s << get_node_type_symbol();
+    rhs_->dump_infix(s);
+    return s;
   }
 
   /**
@@ -300,7 +345,7 @@ protected:
   node_sptr rhs_;
 };
 
-#define DEFINE_BINARY_NODE(NAME)                            \
+#define DEFINE_BINARY_NODE(NAME, SYMBOL)                    \
   class NAME : public BinaryNode {                          \
   public:                                                   \
   typedef boost::shared_ptr<NAME> node_type_sptr;           \
@@ -324,9 +369,12 @@ protected:
   virtual std::string get_node_type_name() const {          \
     return #NAME;                                           \
   }                                                         \
+  virtual std::string get_node_type_symbol() const {        \
+    return #SYMBOL;                                         \
+  }                                                         \
   };
 
-#define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                             \
+#define DEFINE_ASYMMETRIC_BINARY_NODE(NAME,SYMBOL)                      \
   class NAME : public BinaryNode {                                      \
   public:                                                               \
   typedef boost::shared_ptr<NAME> node_type_sptr;                       \
@@ -352,6 +400,9 @@ protected:
                                                                         \
   virtual std::string get_node_type_name() const {                      \
     return #NAME;                                                       \
+  }                                                                     \
+  virtual std::string get_node_type_symbol() const {                    \
+    return #SYMBOL;                                                     \
   }                                                                     \
   };
 
@@ -644,12 +695,12 @@ public:
 /**
  * 制約式
  */ 
-DEFINE_UNARY_NODE(Constraint);
+DEFINE_UNARY_NODE(Constraint, "" , "." );
 
 /**
  * tell制約
  */ 
-DEFINE_UNARY_NODE(Tell);
+DEFINE_UNARY_NODE(Tell, "" , "" );
 
 /**
  * ask制約
@@ -677,6 +728,10 @@ public:
 
   virtual std::string get_node_type_name() const {
     return "Ask";
+  }
+
+  virtual std::string get_node_type_symbol() const {
+    return "=>";
   }
 
   /**
@@ -715,100 +770,101 @@ public:
 /**
  * 比較演算子「=」
  */
-DEFINE_BINARY_NODE(Equal);
+DEFINE_BINARY_NODE(Equal, =);
 
 /**
  * 比較演算子「!=」
  */
-DEFINE_BINARY_NODE(UnEqual);
+DEFINE_BINARY_NODE(UnEqual, !=);
 
 /**
  * 比較演算子「<」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(Less);
+DEFINE_ASYMMETRIC_BINARY_NODE(Less, <);
 
 /**
  * 比較演算子「<=」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(LessEqual);
+DEFINE_ASYMMETRIC_BINARY_NODE(LessEqual, <=);
 
 /**
  * 比較演算子「>」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(Greater);
+DEFINE_ASYMMETRIC_BINARY_NODE(Greater, >);
 
 /**
  * 比較演算子「>=」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(GreaterEqual);
+DEFINE_ASYMMETRIC_BINARY_NODE(GreaterEqual, >=);
 
 /**
  * 算術演算子「+」
  */
-DEFINE_BINARY_NODE(Plus);
+DEFINE_BINARY_NODE(Plus, +);
 
 /**
  * 算術演算子「-」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(Subtract);
+DEFINE_ASYMMETRIC_BINARY_NODE(Subtract, -);
 
 /**
  * 算術演算子「*」
  */
-DEFINE_BINARY_NODE(Times);
+DEFINE_BINARY_NODE(Times, *);
 
 /**
  * 算術演算子「/」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(Divide);
+DEFINE_ASYMMETRIC_BINARY_NODE(Divide, /);
 
 /**
  * 論理演算子「/\」（連言）
  */
-DEFINE_BINARY_NODE(LogicalAnd);
+DEFINE_BINARY_NODE(LogicalAnd, &);
 
 /**
  * 論理演算子「\/」（選言）
  */
-DEFINE_BINARY_NODE(LogicalOr);
+DEFINE_BINARY_NODE(LogicalOr, |);
 
 /**
  * 制約階層定義演算子
  * 並列制約「,」
  */ 
-DEFINE_BINARY_NODE(Parallel);
+DEFINE_BINARY_NODE(Parallel, comma);
 
 /**
  * 制約階層定義演算子
  * 弱制約「<<」
  */ 
-DEFINE_ASYMMETRIC_BINARY_NODE(Weaker);
+DEFINE_ASYMMETRIC_BINARY_NODE(Weaker, <<);
 
 
 /**
  * 時相演算子「[]」(Always)
  */
-DEFINE_UNARY_NODE(Always);
+DEFINE_UNARY_NODE(Always,"[](",")");
 
 /**
  * 算術単項演算子「+」
  */
-DEFINE_UNARY_NODE(Positive);
+DEFINE_UNARY_NODE(Positive,"+","");
 
 /**
  * 算術単項演算子「-」
  */
-DEFINE_UNARY_NODE(Negative);
+DEFINE_UNARY_NODE(Negative,"-","");
 
 /**
  * 微分「'」
  */
-DEFINE_UNARY_NODE(Differential);
+DEFINE_UNARY_NODE(Differential,"","'");
 
 /**
  * 左極限「-」
  */
-DEFINE_UNARY_NODE(Previous);
+DEFINE_UNARY_NODE(Previous,"","-");
+
 
 /**
  * 数字
@@ -844,6 +900,11 @@ public:
   {
     Node::dump(s);
     return s <<"[" << number_ << "]";
+  }
+  
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    return s << number_;
   }
 
   void set_number(const std::string& number) 
@@ -894,6 +955,12 @@ public:
   {
     Node::dump(s);
     return s <<"[" << name_ << "]";
+  }
+  
+  
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    return s << name_;
   }
 
   void set_name(const std::string& name) 

@@ -43,7 +43,7 @@ public:
    * 集合(このクラス)の名前
    */ 
   std::string get_name() const;
-
+  
   /**
    * 集合の最初の要素
    */
@@ -52,12 +52,12 @@ public:
     return module_list_.begin();
   }
 
-  /**
+ /**
    * 集合の最後の次の要素
    */
   module_list_const_iterator end() const 
   {
-    return module_list_.end();
+   return module_list_.end();
   }
 
   /**
@@ -81,6 +81,12 @@ public:
    * 集合のパースツリーの内容出力
    */
   std::ostream& dump(std::ostream& s) const;
+
+
+  /**
+   * 集合のパースツリーの内容出力。中置記法版
+   */
+  std::ostream& dump_infix(std::ostream& s, std::string prefix = "") const;
 
   /**
    * このクラス同士の比較
