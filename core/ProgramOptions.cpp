@@ -49,6 +49,12 @@ void ProgramOptions::init_descriptions()
 
     ("nd", "nondeterministic mode")
     
+    ("in", "interactive mode")
+
+     ("output-dest", 
+      value<std::string>()->default_value(""),
+     "output destination file")
+    
     ("output-format,f", 
      value<std::string>()->default_value("n"), 
      "output format:\n  t - time function\n  n - numeric")
