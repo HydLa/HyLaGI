@@ -41,6 +41,7 @@ typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
+typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
 
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);

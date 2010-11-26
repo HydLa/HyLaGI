@@ -163,6 +163,14 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
     }
   }
 
+  ////////////////// óMˆ—
+
+/*
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+*/
+
   ml_->skip_pkt_until(RETURNPKT);
 
   ml_->MLGetNext(); // ListŠÖ”
@@ -358,10 +366,11 @@ void RealPaverVCSInterval::clear_ctr_set(ctr_set_t& ctrs)
  * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
  */
 VCSResult RealPaverVCSInterval::integrate(integrate_result_t& integrate_result,
-                                  const positive_asks_t& positive_asks,
-                                  const negative_asks_t& negative_asks,
-                                  const time_t& current_time,
-                                  const time_t& max_time)
+                                          const positive_asks_t& positive_asks,
+                                          const negative_asks_t& negative_asks,
+                                          const time_t& current_time,
+                                          const time_t& max_time,
+                                          const not_adopted_tells_list_t& not_adopted_tells_list)
 {
   typedef virtual_constraint_solver_t::IntegrateResult::next_phase_state_t next_phase_state_t;
   typedef var_name_map_t::value_type vars_type_t;

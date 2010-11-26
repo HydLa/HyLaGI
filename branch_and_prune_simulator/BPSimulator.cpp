@@ -382,11 +382,58 @@ bool BPSimulator::interval_phase(const module_set_sptr& ms,
     }
   } // while
 
+  // MaxModuleの導出
+  module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
+  HYDLA_LOGGER_DEBUG("#** interval_phase: ms: **\n",
+                     *ms,
+                     "\n#** interval_phase: max_module_set: ##\n",
+                     *max_module_set);
+
+
+  // 採用していないモジュールのリスト導出
+  hydla::ch::ModuleSet::module_list_t diff_module_list(max_module_set->size() - ms->size());
+
+  std::set_difference(
+    max_module_set->begin(),
+    max_module_set->end(),
+    ms->begin(),
+    ms->end(),
+    diff_module_list.begin());
+
+
+  // それぞれのモジュールをsingletonなモジュール集合とする
+  std::vector<module_set_sptr> diff_module_set_list;
+
+  hydla::ch::ModuleSet::module_list_const_iterator diff_it = diff_module_list.begin();
+  hydla::ch::ModuleSet::module_list_const_iterator diff_end = diff_module_list.end();
+  for(; diff_it!=diff_end; ++diff_it){
+    module_set_sptr diff_ms(new ModuleSet((*diff_it).first, (*diff_it).second));
+    diff_module_set_list.push_back(diff_ms);
+  }
+
+  assert(diff_module_list.size() == diff_module_set_list.size());
+
+
+  // diff_module_set_list内の各モジュール集合内にある条件なし制約をそれぞれ得る
+  not_adopted_tells_list_t not_adopted_tells_list;
+
+  std::vector<module_set_sptr>::const_iterator diff_ms_list_it = diff_module_set_list.begin();
+  std::vector<module_set_sptr>::const_iterator diff_ms_list_end = diff_module_set_list.end();
+  for(; diff_ms_list_it!=diff_ms_list_end; ++diff_ms_list_it){
+    TellCollector not_adopted_tells_collector(*diff_ms_list_it);
+    tells_t       not_adopted_tells;
+    not_adopted_tells_collector.collect_all_tells(&not_adopted_tells,
+                                                  &expanded_always, 
+                                                  &positive_asks);
+    not_adopted_tells_list.push_back(not_adopted_tells);
+  }
+
+
   virtual_constraint_solver_t::IntegrateResult integrate_result;
   bool all_proof = false, finish_simulate = false;
   while(!all_proof) {
-    switch(vcs.integrate(integrate_result, positive_asks,
-      negative_asks, state->current_time, bp_time_t(opts_.max_time))) {
+    switch(vcs.integrate(integrate_result, positive_asks, negative_asks,
+                         state->current_time, bp_time_t(opts_.max_time), not_adopted_tells_list)) {
     case hydla::vcs::VCSR_TRUE:
       // 全ての初期状態について次のポイントフェーズ時刻が見つかった
       all_proof = true;

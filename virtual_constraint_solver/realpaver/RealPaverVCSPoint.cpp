@@ -256,10 +256,11 @@ bool RealPaverVCSPoint::is_guard_about_undefined_prev(const var_name_map_t& vars
  * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
  */
 VCSResult RealPaverVCSPoint::integrate(integrate_result_t& integrate_result,
-                                  const positive_asks_t& positive_asks,
-                                  const negative_asks_t& negative_asks,
-                                  const time_t& current_time,
-                                  const time_t& max_time)
+                                       const positive_asks_t& positive_asks,
+                                       const negative_asks_t& negative_asks,
+                                       const time_t& current_time,
+                                       const time_t& max_time,
+                                       const not_adopted_tells_list_t& not_adopted_tells_list)
 {
   assert(false);
   return VCSR_FALSE;

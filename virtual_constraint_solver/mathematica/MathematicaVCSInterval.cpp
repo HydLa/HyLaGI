@@ -528,7 +528,8 @@ VCSResult MathematicaVCSInterval::integrate(
   const positive_asks_t& positive_asks,
   const negative_asks_t& negative_asks,
   const time_t& current_time,
-  const time_t& max_time)
+  const time_t& max_time,
+  const not_adopted_tells_list_t& not_adopted_tells_list)
 {
   HYDLA_LOGGER_DEBUG("#*** MathematicaVCSInterval::integrate ***");
 
@@ -543,26 +544,28 @@ VCSResult MathematicaVCSInterval::integrate(
 //     "--- current time ---\n",
 //     current_time,
 //     "--- max time ---\n",
-//     max_time);
+//     max_time,
+//     "--- not_adopted_tells_list ---\n",
+//     not_adopted_tells_list);
 
 ////////////////// 送信処理
   PacketSender ps(*ml_);
   
-  // integrateCalc[store, posAsk, negAsk, vars, maxTime]を渡したい
-  ml_->put_function("integrateCalc", 5);
+  // integrateCalc[cons, posAsk, negAsk, NACons, vars, maxTime]を渡したい
+  ml_->put_function("integrateCalc", 6);
 
+  // 制約consを渡す
   ml_->put_function("Join", 2);
 
   // 制約ストアから式storeを得てMathematicaに渡す
   send_cs(ps);
 
-  max_diff_map_t max_diff_map;
-
   // 変数の最大微分回数をもとめる
-  create_max_diff_map(ps, max_diff_map);
-  
+  max_diff_map_t max_diff_map;
+  create_max_diff_map(ps, max_diff_map);  
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, true);
+
 
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
   HYDLA_LOGGER_DEBUG("-- send positive ask -- ");
@@ -571,6 +574,10 @@ VCSResult MathematicaVCSInterval::integrate(
   // negAskを渡す（{ガードの式、askのID}をそれぞれ）
   HYDLA_LOGGER_DEBUG("-- send negative ask -- ");
   send_ask_guards(ps, negative_asks);
+
+  // 採用していないモジュール内のtell制約NAConsを渡す（{{式、ID}, {式、ID}, ...}をそれぞれのモジュールに関して）
+  HYDLA_LOGGER_DEBUG("-- send not adopted constraint -- ");
+  send_not_adopted_tells(ps, not_adopted_tells_list);
 
   // 変数のリストを渡す
   send_vars(ps, max_diff_map);
@@ -828,6 +835,35 @@ void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
       HYDLA_LOGGER_DEBUG("variable : ", variable);
       HYDLA_LOGGER_DEBUG("value : ", value);
       vm.set_variable((MathVariable)variable, value);
+    }
+  }
+}
+
+void MathematicaVCSInterval::send_not_adopted_tells(PacketSender& ps, const not_adopted_tells_list_t& na_tells_list) const
+{
+  // {tellの式、tellのID}のリストのリスト形式で送信する
+
+  // 採用していないモジュールの数
+  ml_->put_function("List", na_tells_list.size());
+
+  not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
+  not_adopted_tells_list_t::const_iterator na_tells_list_end = na_tells_list.end();
+  for(; na_tells_list_it!=na_tells_list_end; ++na_tells_list_it){
+    // 採用していない、あるモジュール内のtell制約の数
+    ml_->put_function("List", (*na_tells_list_it).size());
+
+    tells_t::const_iterator na_tells_it  = (*na_tells_list_it).begin();
+    tells_t::const_iterator na_tells_end = (*na_tells_list_it).end();
+    for(; na_tells_it!=na_tells_end; ++na_tells_it) {
+      HYDLA_LOGGER_DEBUG("send not adopted tell : ", **na_tells_it);
+
+      ml_->put_function("List", 2);
+
+      // tell制約を送る
+      ps.put_node((*na_tells_it)->get_child(), PacketSender::VA_Time, true);
+      
+      // IDを送る
+      ml_->MLPutInteger((*na_tells_it)->get_id());
     }
   }
 }

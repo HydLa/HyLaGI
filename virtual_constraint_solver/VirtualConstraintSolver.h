@@ -49,6 +49,9 @@ public:
   typedef hydla::simulator::changed_asks_t                   changed_asks_t;
   typedef boost::function<void (const time_t& time, 
                                 const variable_map_t& vm)>   output_function_t;
+  typedef hydla::simulator::module_set_sptr                  module_set_sptr;
+  typedef std::vector<module_set_sptr>                       module_set_list_t;
+  typedef hydla::simulator::not_adopted_tells_list_t         not_adopted_tells_list_t;
 
 
   typedef struct IntegrateResult 
@@ -104,7 +107,8 @@ public:
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,
     const time_t& current_time,
-    const time_t& max_time) = 0;
+    const time_t& max_time,
+    const not_adopted_tells_list_t& not_adopted_tells_list) = 0;
 
   /**
    * Œ‹‰Ê‚Ìo—ÍŠÖ”‚ğİ’è‚·‚é

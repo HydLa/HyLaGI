@@ -257,14 +257,14 @@ isConsistentInterval[expr_, vars_] :=  Quiet[Check[(
  * 次のポイントフェーズに移行する時刻を求める
  *)
 calcNextPointPhaseTime[
-  includeZero_, maxTime_, posAsk_, negAsk_] := 
+                       includeZero_, maxTime_, posAsk_, negAsk_, NACons_] := 
 Block[{
   calcMinTime,
   sol,
   minT,
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
-  calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, ask_}] := (
+  calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, askID_}] := (
     If[integAsk=!=False,
       (* true *)
       (* 解なしと境界値の解を区別する *)  
@@ -289,15 +289,16 @@ Block[{
     If[includeZero===True && minT=!=0, minT=error];
 
     Which[minT === error,      {currentMinT, currentMinAsk},
-          minT <  currentMinT, {minT,        {{type, ask}}},
-          minT == currentMinT, {minT,        Append[currentMinAsk, {type, ask}]},
+          minT <  currentMinT, {minT,        {{type, askID}}},
+          minT == currentMinT, {minT,        Append[currentMinAsk, {type, askID}]},
           True,                {currentMinT, currentMinAsk}]
   );
 
   Fold[calcMinTime,
        {maxTime, {}},
         Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
-             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk]]]
+             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk],
+             Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]]
 ];
 
 (* Print[nextPointPhaseTime[False, 10, {}, {{t*t==2, c3}}]] *)
@@ -323,13 +324,14 @@ createIntegratedValue[variable_, integRule_] := (
  * askの導出状態が変化するまで積分をおこなう
  *)
 integrateCalc[cons_, 
-              posAsk_, negAsk_, 
+              posAsk_, negAsk_, NACons_,
               vars_, 
               maxTime_] := Quiet[Check[Block[
 {
   tmpIntegSol,
   tmpPosAsk,
   tmpNegAsk,
+  tmpNACons,
   tmpMinT, 
   tmpMinAskIDs,
   tmpVarMap,
@@ -347,6 +349,7 @@ integrateCalc[cons_,
   debugPrint["cons:", cons, 
              "posAsk:", posAsk, 
              "negAsk:", negAsk, 
+             "NACons:", NACons,
              "vars:", vars, 
              "maxTime:", maxTime];
 
@@ -359,8 +362,9 @@ integrateCalc[cons_,
  (*   debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
   tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
   tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
+  tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
   {tmpMinT, tmpMinAskIDs} = 
-    calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk];
+    calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons];
   tmpVarMap = 
     Map[({getVariableName[#], 
           getDerivativeCount[#], 

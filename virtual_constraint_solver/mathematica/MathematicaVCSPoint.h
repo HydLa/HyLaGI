@@ -57,7 +57,8 @@ public:
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,
     const time_t& current_time,
-    const time_t& max_time);
+    const time_t& max_time,
+    const not_adopted_tells_list_t& not_adopted_tells_list);
 
   /**
    * “à•”ó‘Ô‚Ìo—Í‚ğ‚¨‚±‚È‚¤

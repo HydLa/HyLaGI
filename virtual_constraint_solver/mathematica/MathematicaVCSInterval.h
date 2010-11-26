@@ -77,7 +77,8 @@ public:
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,
     const time_t& current_time,
-    const time_t& max_time);
+    const time_t& max_time,
+    const not_adopted_tells_list_t& not_adopted_tells_list);
 
   /**
    * 内部状態の出力をおこなう
@@ -122,6 +123,11 @@ private:
    * 変数表に未定義の変数を追加する
    */
   void add_undefined_vars_to_vm(variable_map_t& vm);
+
+  /**
+   * 採用していないモジュール内にある制約を送信する
+   */
+  void send_not_adopted_tells(PacketSender& ps, const not_adopted_tells_list_t& na_tells_list) const;
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
