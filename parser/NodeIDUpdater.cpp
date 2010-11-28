@@ -29,6 +29,7 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
   assert(node_id_list_.size() <= pt->node_map_size());
   node_id_list_t diff_id( pt->node_map_size());
 
+  std::sort(node_id_list_.begin(), node_id_list_.end());
   pt->make_node_id_list();
 
   std::set_symmetric_difference(
