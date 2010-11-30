@@ -150,6 +150,16 @@ void MathematicaVCSInterval::send_init_cons(
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
 
+
+    // 初期値制約のうち、集めたtell制約に出現する際の最大微分回数よりも小さい微分回数のものをカウントする
+    if(md_it!=max_diff_map.end() && 
+       md_it->second  > init_vars_it->first.derivative_count)
+    {
+      init_vars_count++;
+    }
+
+
+/*
     // 初期値制約のうち、集めたtell制約に出現しないものをカウント
     if(md_it==max_diff_map.end())
     {
@@ -160,12 +170,15 @@ void MathematicaVCSInterval::send_init_cons(
     {
       init_vars_count++;
     }
+*/
+
 
   }
 
   HYDLA_LOGGER_DEBUG("init_vars_count: ", init_vars_count);
 
-  // Mathematicaへ送信
+
+  // 制約をMathematicaへ送信
   ml_->put_function("List", init_vars_count);
   init_vars_it  = constraint_store_.init_vars.begin();
   init_vars_end = constraint_store_.init_vars.end();
@@ -173,6 +186,32 @@ void MathematicaVCSInterval::send_init_cons(
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
 
+
+    if(md_it!=max_diff_map.end() &&
+       md_it->second  > init_vars_it->first.derivative_count) 
+    {
+      ml_->put_function("Equal", 2);
+
+      // 変数名
+      ps.put_var(
+        boost::make_tuple(init_vars_it->first.name, 
+                          init_vars_it->first.derivative_count, 
+                          false),
+        PacketSender::VA_Zero);
+
+      // 値
+      if(use_approx && approx_precision_ > 0) {
+        // 近似して送信
+        ml_->put_function("approxExpr", 2);
+        ml_->put_integer(approx_precision_);
+      }
+
+      ml_->put_function("ToExpression", 1);
+      ml_->put_string(init_vars_it->second.str);      
+    }
+
+
+/*
     // 集めたtell制約内に出現しない
     if(md_it==max_diff_map.end())
     {
@@ -237,32 +276,8 @@ void MathematicaVCSInterval::send_init_cons(
       ml_->put_string(init_vars_it->second.str);      
 
     }
-
-
-/*
-    if(md_it!=max_diff_map.end() &&
-       md_it->second  > init_vars_it->first.derivative_count) 
-    {
-      ml_->put_function("Equal", 2);
-
-      // 変数名
-      ps.put_var(
-        boost::make_tuple(init_vars_it->first.name, 
-                          init_vars_it->first.derivative_count, 
-                          false),
-        PacketSender::VA_Zero);
-
-      // 値
-      if(use_approx && approx_precision_ > 0) {
-        // 近似して送信
-        ml_->put_function("approxExpr", 2);
-        ml_->put_integer(approx_precision_);
-      }
-
-      ml_->put_function("ToExpression", 1);
-      ml_->put_string(init_vars_it->second.str);      
-    }
 */
+
 
   }
 
@@ -301,6 +316,10 @@ void MathematicaVCSInterval::send_vars(
   }  
 
 
+  ml_->put_function("List", 0);
+
+
+/*
   // 制約ストア中の変数のうち、集めたtell制約中に含まれないものも追加で送信
   constraint_store_t::cons_vars_t::const_iterator cs_vars_it = constraint_store_.cons_vars.begin();
   constraint_store_t::cons_vars_t::const_iterator cs_vars_end = constraint_store_.cons_vars.end();
@@ -317,6 +336,7 @@ void MathematicaVCSInterval::send_vars(
                          "  name: ", cs_vars_it->name,
                          "  diff: ", cs_vars_it->derivative_count);
   }
+*/
 
 }
 

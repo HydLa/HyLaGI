@@ -268,9 +268,12 @@ Block[{
     If[integAsk=!=False,
       (* true *)
       (* ‰ğ‚È‚µ‚Æ‹«ŠE’l‚Ì‰ğ‚ğ‹æ•Ê‚·‚é *)  
-      sol = Reduce[{timeMinCons && (maxTime>=t) && (integAsk)}, t];
+       sol = Quiet[Check[Reduce[{timeMinCons && (maxTime>=t) && (integAsk)}, t],
+                         errorSol,
+                         {Reduce::nsmet}],
+                   {Reduce::nsmet}];
       (*  debugPrint["calcNextPointPhaseTime#sol: ", sol]; *)
-      If[sol=!=False, 
+      If[sol=!=False && sol=!=errorSol, 
          (* true *)
          (* ¬‚è—§‚Ât‚ÌÅ¬’l‚ğ‹‚ß‚é *)
          minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
