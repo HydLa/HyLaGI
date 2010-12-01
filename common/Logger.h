@@ -50,6 +50,7 @@ class Logger
 public:
   enum LogLevel {
     Debug,
+	Summary,//追加大局的デバッグモード
     Warn,
     Error,
     Fatal,
@@ -83,6 +84,11 @@ public:
   HYDLA_LOGGER_DEF_LOG_WRITE(debug_write, Debug, debug_)
 
   /**
+   * ログレベルsummary_debugとしてログの出力をおこなう
+   */
+  HYDLA_LOGGER_DEF_LOG_WRITE(summary_write, Summary, summary_)
+
+  /**
    * ログレベルwarnとしてログの出力をおこなう
    */
   HYDLA_LOGGER_DEF_LOG_WRITE(warn_write,  Warn,  warn_)
@@ -105,6 +111,7 @@ private:
   LogLevel log_level_;
 
   boost::iostreams::filtering_ostream debug_;
+  boost::iostreams::filtering_ostream summary_;//大局的デバッグモード
   boost::iostreams::filtering_ostream warn_;
   boost::iostreams::filtering_ostream error_;
   boost::iostreams::filtering_ostream fatal_;
@@ -123,6 +130,12 @@ private:
  */
 #define HYDLA_LOGGER_DEBUG(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Debug, debug_write, (__VA_ARGS__))
+
+/**
+ * ログレベルsummaryでのログの出力
+ */
+#define HYDLA_LOGGER_SUMMARY(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(Summary, summary_write, (__VA_ARGS__))
 
 /**
  * ログレベルwarnでのログの出力

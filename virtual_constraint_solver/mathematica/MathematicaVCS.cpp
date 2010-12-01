@@ -24,7 +24,7 @@ MathematicaVCS::MathematicaVCS(Mode m, MathLink* ml, int approx_precision)
       break;
 
     default:
-      assert(0);
+      assert(0);//assert”­Œ©
   }
 }
 

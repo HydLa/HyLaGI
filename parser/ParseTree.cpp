@@ -52,6 +52,8 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   HydLaAST ast;
   ast.parse(stream);
   HYDLA_LOGGER_DEBUG("#*** AST Tree ***\n", ast);
+  //startÇÃçáê}ÅEÇ±Ç±Ç≈Ç†ÇÈà”ñ°ÇÕÇ»Ç¢
+  HYDLA_LOGGER_SUMMARY("############ Comprehensive debug mode ############");
 
   // ParseTreeÇÃç\íz
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
@@ -265,8 +267,8 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   s << "--- node id table (id -> sptr) ---\n";
   BOOST_FOREACH(const node_map_value_t& i, node_map_) 
   {
-    s << i.first << " => " 
-      << i.second << "\n";
+    /*s << i.first << " => " 
+      << i.second << "\n";*/  //ÇΩÇﬂÇµÇ…nodeÇè¡ÇµÇƒÇ›ÇΩ
   }
 /*
   s << "--- node id table (sptr -> id) ---\n";

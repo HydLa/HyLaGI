@@ -34,14 +34,14 @@ bool MathematicaVCSPoint::reset()
 
 bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 {
-  HYDLA_LOGGER_DEBUG("#*** Reset Constraint Store ***");
+  HYDLA_LOGGER_SUMMARY("#*** Reset Constraint Store ***");
 
   if(variable_map.size() == 0)
   {
-    HYDLA_LOGGER_DEBUG("no Variables");
+    HYDLA_LOGGER_SUMMARY("no Variables");
     return true;
   }
-  HYDLA_LOGGER_DEBUG("------Variable map------\n", variable_map);
+  HYDLA_LOGGER_SUMMARY("------Variable map------\n", variable_map);
 
   std::set<MathValue> and_cons_set;
 
@@ -418,7 +418,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   else if(ret_code==1) {
     // 充足
     result = VCSR_TRUE;
-    HYDLA_LOGGER_DEBUG("consistent");
+    HYDLA_LOGGER_SUMMARY("consistent");//無矛盾性判定
     // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
     // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
     // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
@@ -462,7 +462,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_DEBUG("inconsistent");
+    HYDLA_LOGGER_SUMMARY("inconsistent");//矛盾
   }
 
   HYDLA_LOGGER_DEBUG(
@@ -517,12 +517,12 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   }
   else if(ret_code==1) {
     result = VCSR_TRUE;
-    HYDLA_LOGGER_DEBUG("entailed");
+    HYDLA_LOGGER_SUMMARY("entailed");
   }
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_DEBUG("not entailed");
+    HYDLA_LOGGER_SUMMARY("not entailed");
   }
   return result;
 }

@@ -54,13 +54,13 @@ bool MathematicaVCSInterval::reset()
 
 bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
 {
-  HYDLA_LOGGER_DEBUG("#*** Reset Constraint Store ***");
+  HYDLA_LOGGER_SUMMARY("#*** Reset Constraint Store ***");
   if(variable_map.size() == 0)
   {
-    HYDLA_LOGGER_DEBUG("no Variables");
+    HYDLA_LOGGER_SUMMARY("no Variables");
     return true;
   }
-  HYDLA_LOGGER_DEBUG("------Variable map------\n", 
+  HYDLA_LOGGER_SUMMARY("------Variable map------\n", 
                      variable_map);
 
   variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
@@ -428,7 +428,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   
 VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
 {
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_SUMMARY(
     "#*** MathematicaVCSInterval::check_entailment ***\n", 
     "ask: ", *negative_ask);
 
@@ -510,12 +510,12 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   }
   else if(ret_code==1) {
     result = VCSR_TRUE;
-    HYDLA_LOGGER_DEBUG("entailed");
+    HYDLA_LOGGER_SUMMARY("entailed");
   }
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_DEBUG("not entailed");
+    HYDLA_LOGGER_SUMMARY("not entailed");
   }
   return result;
 }
@@ -645,7 +645,7 @@ VCSResult MathematicaVCSInterval::integrate(
   HYDLA_LOGGER_DEBUG("elapsed_time: ", elapsed_time);  
   state.time  = elapsed_time;
   state.time += current_time;
-  HYDLA_LOGGER_DEBUG("next_phase_time: ", state.time);  
+  HYDLA_LOGGER_SUMMARY("next_phase_time: ", state.time);  
   ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
   
   // •Ï”‚Æ’l‚Ì‘g‚ðŽó‚¯Žæ‚é

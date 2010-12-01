@@ -137,6 +137,13 @@ public:
     {
     case PointPhase:
       {        
+		HYDLA_LOGGER_SUMMARY(
+          "#***** begin point phase *****",
+          "\n#** module set **\n",
+          ms->get_name(),
+          "\n"
+		  );
+
         HYDLA_LOGGER_DEBUG(
           "#***** begin point phase *****",
           "\n#** module set **\n",
@@ -152,6 +159,12 @@ public:
 
     case IntervalPhase: 
       {        
+		HYDLA_LOGGER_SUMMARY(
+          "#***** begin interval phase *****",
+          "\n#** module set **\n",
+          ms->get_name(),
+          "\n");
+
         HYDLA_LOGGER_DEBUG(
           "#***** begin interval phase *****",
           "\n#** module set **\n",

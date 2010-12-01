@@ -77,11 +77,12 @@ void hydla_main(int argc, char* argv[])
 
   if(po.count("debug")>0) {
     Logger::instance().set_log_level(Logger::Debug);
-  }
-  else {
+  } else if(po.count("summary")>0){//追加予定の大局的デバッグモード
+	Logger::instance().set_log_level(Logger::Summary);
+  } else {
     Logger::instance().set_log_level(Logger::Warn);
   }
-
+	
   if(po.count("help")) {
     po.help_msg(std::cout);
     return;

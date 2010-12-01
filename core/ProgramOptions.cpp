@@ -23,6 +23,7 @@ void ProgramOptions::init_descriptions()
     ("help,h", "produce help message")
     ("version", "version")
     ("debug,d", "enable debug mode")
+    ("summary,c","enable summary debug mode")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
 

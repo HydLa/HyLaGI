@@ -631,11 +631,11 @@ bool SymbolicSimulator::do_point_phase(const module_set_sptr& ms,
   output(new_state->current_time, new_state->variable_map);
   push_phase_state(new_state);
 
-  HYDLA_LOGGER_DEBUG("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
+  HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                      "time:", new_state->current_time, "\n",
                      new_state->variable_map);
 
-  HYDLA_LOGGER_DEBUG("#*** end point phase ***");
+  HYDLA_LOGGER_SUMMARY("#*** end point phase ***");
 
 
   return true;
@@ -758,11 +758,11 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
 
   push_phase_state(new_state);
 
-  HYDLA_LOGGER_DEBUG("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
+  HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                      "time:", new_state->current_time, "\n",
                      new_state->variable_map);
 
-  HYDLA_LOGGER_DEBUG("#*** end point phase ***");
+  HYDLA_LOGGER_SUMMARY("#*** end point phase ***");
 
 
   return true;
@@ -927,7 +927,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   }
 
 
-  HYDLA_LOGGER_DEBUG("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
+  HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
                      "time:", integrate_result.states[0].time.get_real_val(ml_, 5), "\n",
                      integrate_result.states[0].variable_map);
 
