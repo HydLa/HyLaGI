@@ -267,8 +267,8 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   s << "--- node id table (id -> sptr) ---\n";
   BOOST_FOREACH(const node_map_value_t& i, node_map_) 
   {
-    /*s << i.first << " => " 
-      << i.second << "\n";*/  //‚½‚ß‚µ‚Énode‚ðÁ‚µ‚Ä‚Ý‚½
+    s << i.first << " => " 
+      << i.second << "\n";
   }
 /*
   s << "--- node id table (sptr -> id) ---\n";
