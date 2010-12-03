@@ -15,8 +15,7 @@ checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
   {tStore, sol, integGuard},
   debugPrint["guard:", guard, "store:", store, "vars:", vars];
   tStore = exDSolve[store, vars];
-  If[tStore =!= overconstraint,
-    (* under-constraintのときはどうする？？？ *)
+  If[tStore =!= overconstraint && tStore =!= underconstraint,
     (* guardにtStoreを適用する *)
     integGuard = First[guard /. tStore];
     If[integGuard =!= False,
@@ -24,16 +23,12 @@ checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
       (* debugPrint["integGuard:", integGuard]; *)
       sol = Reduce[{integGuard && t > 0}, t];
       (* Infを取って0になればEntailed *)
-      If[sol =!= False,
-        If[MinValue[{t, sol}, t] === 0,
-          {1},
-          {2}
-        ],
+      If[sol =!= False && MinValue[{t, sol}, t] === 0,
+        {1},
         {2}
       ],
       {2}
     ],
-    (* debugPrint["over-constraint"]; *)
     {2}
   ]
 ],
@@ -189,17 +184,17 @@ exDSolve[expr_, vars_] := Block[
   If[Head[sol]===Or, sol = First[sol]];
   If[sol===False,
       overconstraint,
-
-      Quiet[Check[
-            Check[DSolve[sol, vars, t],
-                    underconstraint,
-                    {DSolve::underdet, Solve::svars, DSolve::deqx, 
-                     DSolve::bvnr, DSolve::bvsing}],
-            overconstraint,
-            {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
-          {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-           Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-           DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]
+      If[sol===True,
+         underconstraint,
+         Quiet[Check[Check[DSolve[sol, vars, t],
+                           underconstraint,
+                           {DSolve::underdet, Solve::svars, DSolve::deqx, 
+                            DSolve::bvnr, DSolve::bvsing}],
+                     overconstraint,
+                     {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
+               {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
+                Solve::svars, DSolve::bvnr, DSolve::bvsing, 
+                DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]]
 ];
 
 
@@ -356,23 +351,29 @@ integrateCalc[cons_,
              "vars:", vars, 
              "maxTime:", maxTime];
 
-  tmpIntegSol = removeInequality[Reduce[cons, vars]];
-  (* 1つだけ採用 *)
-  (* TODO: 複数解ある場合も考える *)
-  If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
-  tmpIntegSol = First[Quiet[DSolve[tmpIntegSol, vars, t],
-                            {Solve::incnst}]];
- (*   debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
-  tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
-  tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
-  tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
-  {tmpMinT, tmpMinAskIDs} = 
-    calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons];
-  tmpVarMap = 
-    Map[({getVariableName[#], 
-          getDerivativeCount[#], 
-          createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
-        vars];
+  If[cons=!={},
+    (* true *)
+    tmpIntegSol = removeInequality[Reduce[cons, vars]];
+    (* 1つだけ採用 *)
+    (* TODO: 複数解ある場合も考える *)
+    If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
+    tmpIntegSol = First[Quiet[DSolve[tmpIntegSol, vars, t],
+                              {Solve::incnst}]];
+    (* debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
+    tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
+    tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
+    tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
+    {tmpMinT, tmpMinAskIDs} = 
+      calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons];
+    tmpVarMap = 
+      Map[({getVariableName[#], 
+            getDerivativeCount[#], 
+            createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
+            vars],
+    (* false *)
+    tmpMinT = maxTime;
+    tmpVarMap = {};
+    tmpMinAskIDs = {}];
   tmpRet = {1,
             ToString[tmpMinT, InputForm], 
             tmpVarMap,

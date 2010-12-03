@@ -192,9 +192,6 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
                       in_prev_ && !ignore_prev_);
 
   put_var(new_var, variable_arg_);
-
-  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
-  vars_.insert(new_var);
 }
 
 // ”š
@@ -259,6 +256,9 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
     default:
       assert(0);
   }
+
+  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
+  vars_.insert(var);
 }
 
 

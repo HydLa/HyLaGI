@@ -244,13 +244,11 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
   HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
 
   // 送信する制約の個数を求める
-  constraint_store_vars_t::const_iterator cs_vars_it;
-  constraint_store_vars_t::const_iterator cs_vars_end;
-  cs_vars_it  = constraint_store_.second.begin();
-  cs_vars_end = constraint_store_.second.end();
   int left_cont_vars_count = 0;
 
   // 制約ストア中の変数のうち、集めたtell制約に出現する最大微分回数より小さい微分回数であるもののみ追加
+  constraint_store_vars_t::const_iterator cs_vars_it = constraint_store_.second.begin();
+  constraint_store_vars_t::const_iterator cs_vars_end = constraint_store_.second.end();
   for(; cs_vars_it!=cs_vars_end; ++cs_vars_it) {
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(cs_vars_it->get<0>());
@@ -276,6 +274,8 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
   }
 
   HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
+
+
 
   HYDLA_LOGGER_DEBUG("--- in cs_var ---");  
 
@@ -336,7 +336,8 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
                             false),
           PacketSender::VA_None);
 
-        // 制約ストア内の変数扱いする（要検討）
+        // 制約ストア内の変数扱いする
+        // TODO:要検討
         constraint_store_.second.insert(boost::make_tuple(md_it->first, 
                                                           i, 
                                                           true));
