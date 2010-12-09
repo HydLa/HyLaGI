@@ -17,7 +17,7 @@ checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
   tStore = exDSolve[store, vars];
   If[tStore =!= overconstraint && tStore =!= underconstraint,
     (* guard’¤ËtStore’¤ò’Å¬’ÍÑ’¤¹’¤ë *)
-    integGuard = First[guard /. tStore];
+    integGuard = guard /. tStore;
     If[integGuard =!= False,
       (* ’¤½’¤Î’·ë’²Ì’¤Èt>0’¤È’¤ò’Ï¢’Î© *)
       (* debugPrint["integGuard:", integGuard]; *)
@@ -201,28 +201,42 @@ applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
 exDSolve[expr_, vars_] := Block[
-{sol},
-  sol = applyList[removeNotEqual[Reduce[Cases[expr, Except[True] | Except[False]], vars]]];
+{sol, DExpr, DExprVars, NDExpr},
+  sol = removeNotEqual[Reduce[Cases[expr, Except[True] | Except[False]], vars]];
 
-  (* ’Äê’¿ô’´Ø’¿ô’¤Î’¾ì’¹ç’¤Ë’²á’¾ê’·è’Äê’·Ï’¤Î’¸¶’°ø’¤È’¤Ê’¤ë’Èù’Ê¬’À©’Ìó’¤ò’¼è’¤ê’½ü’¤¯ *)
-  sol = Fold[(Intersection[#1, removeTrivialCons[sol, #2]]) &, sol, getNDVars[vars]]; 
-
-  (* 1’¤Ä’¤À’¤±’ºÎ’ÍÑ *)
-  (* TODO: ’Ê£’¿ô’²ò’¤¢’¤ë’¾ì’¹ç’¤â’¹Í’¤¨’¤ë *)
-  If[Head[sol]===Or, sol = First[sol]];
   If[sol===False,
-      overconstraint,
-      If[sol===True,
-         underconstraint,
-         Quiet[Check[Check[DSolve[sol, vars, t],
-                           underconstraint,
-                           {DSolve::underdet, Solve::svars, DSolve::deqx, 
-                            DSolve::bvnr, DSolve::bvsing}],
-                     overconstraint,
-                     {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
-               {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-                Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-                DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]]
+    overconstraint,
+    If[sol===True,
+      underconstraint,
+
+      (* 1’¤Ä’¤À’¤±’ºÎ’ÍÑ *)
+      (* TODO: ’Ê£’¿ô’²ò’¤¢’¤ë’¾ì’¹ç’¤â’¹Í’¤¨’¤ë *)
+      If[Head[sol]===Or, sol = First[sol]];
+
+      sol = applyList[sol];
+
+      (* ’Äê’¿ô’´Ø’¿ô’¤Î’¾ì’¹ç’¤Ë’²á’¾ê’·è’Äê’·Ï’¤Î’¸¶’°ø’¤È’¤Ê’¤ë’Èù’Ê¬’À©’Ìó’¤ò’¼è’¤ê’½ü’¤¯ *)
+      sol = Fold[(Intersection[#1, removeTrivialCons[sol, #2]]) &, sol, getNDVars[vars]]; 
+
+      {DExpr, DExprVars, NDExpr} = splitExprs[sol];
+
+      Quiet[Check[Check[sol = DSolve[DExpr, DExprVars, t];
+                        (* 1’¤Ä’¤À’¤±’ºÎ’ÍÑ *)
+                        (* TODO: ’Ê£’¿ô’²ò’¤¢’¤ë’¾ì’¹ç’¤â’¹Í’¤¨’¤ë *)
+                        sol = First[sol];
+                        sol = Reduce[Join[Map[(Equal @@ #) &, sol], NDExpr], 
+                                     Map[(#[t]) &, getNDVars[vars]]];
+                        If[sol =!= False, 
+                           Map[(Rule @@ #) &, applyList[sol]], 
+                           overconstraint],
+                        underconstraint,
+                        {DSolve::underdet, Solve::svars, DSolve::deqx, 
+                         DSolve::bvnr, DSolve::bvsing}],
+                  overconstraint,
+                  {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
+            {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
+             Solve::svars, DSolve::bvnr, DSolve::bvsing, 
+             DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]]
 ];
 
 (* DSolve’¤Ç’°·’¤¨’¤ë’¼° (DExpr)’¤È’¤½’¤¦’¤Ç’¤Ê’¤¤’¼° (NDExpr)’¤Ë’Ê¬’¤±’¤ë *)
@@ -265,7 +279,7 @@ splitExprs[expr_] := Block[
  *  2 : ’À©’Ìó’¥¨’¥é’¡¼
  *)
 isConsistentInterval[expr_, vars_] :=  Block[
-  {DExpr, DExprVars, NDExpr, sol},
+  {sol},
   Quiet[Check[(
     debugPrint["expr:", expr, "vars:", vars];
     If[expr === {},
@@ -273,16 +287,9 @@ isConsistentInterval[expr_, vars_] :=  Block[
       {1}, 
 
       (* false *)
-      {DExpr, DExprVars, NDExpr} = splitExprs[expr];
-      sol = exDSolve[DExpr, DExprVars];
+      sol = exDSolve[expr, vars];
       If[sol=!=overconstraint,
-        (*1’¤Ä’¤À’¤±’ºÎ’ÍÑ*)
-        (*TODO:’Ê£’¿ô’²ò’¤¢’¤ë’¾ì’¹ç’¤â’¹Í’¤¨’¤ë*)
-        sol = First[sol];
-        If[Reduce[Join[Map[(Equal @@ #) &, sol], NDExpr], vars] =!= False,
-          {1},
-          {2}
-        ],
+        {1},
         {2}]]
   ),
   {0, $MessageList}
