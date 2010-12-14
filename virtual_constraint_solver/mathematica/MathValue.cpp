@@ -37,7 +37,7 @@ std::string MathValue::get_real_val(MathLink& ml, int precision) const
     ret = ml.get_string();
   }
   else {
-    ret = "NaN";
+    ret = "UNDEF";
   }
   return ret;
 }

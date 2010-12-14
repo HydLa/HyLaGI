@@ -73,7 +73,6 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
 
     else {
       MathValue value;
-      value.str="UNDEF";
       constraint_store_.init_vars.insert(
         std::make_pair(it->first, value));
     }
@@ -809,18 +808,20 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
     
     HYDLA_LOGGER_DEBUG("variable : ", it->first);
 
-    ml_->put_function("applyTime2Expr", 2);
-    ml_->put_function("ToExpression", 1);
-    ml_->put_string(it->second.str);
-    time.send_time(*ml_);
-
-    ml_->skip_pkt_until(RETURNPKT);
-    ml_->MLGetNext(); 
-
-    // ’l
     MathValue    value;
-    value.str = ml_->get_string();
-    HYDLA_LOGGER_DEBUG("value : ", value.str);
+    if(!it->second.is_undefined()) {
+      ml_->put_function("applyTime2Expr", 2);
+      ml_->put_function("ToExpression", 1);
+      ml_->put_string(it->second.str);
+      time.send_time(*ml_);
+
+      ml_->skip_pkt_until(RETURNPKT);
+      ml_->MLGetNext(); 
+
+      // ’l
+      value.str = ml_->get_string();
+      HYDLA_LOGGER_DEBUG("value : ", value.str);
+    }
 
     out_vm.set_variable(it->first, value);   
   }
@@ -851,7 +852,6 @@ void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
     std::set<MathVariable>::const_iterator vlist_it = variable_name_list.find(variable);
     if(vlist_it==variable_name_list.end()){      
       MathValue value;
-      value.str= "UNDEF";
       HYDLA_LOGGER_DEBUG("variable : ", variable);
       HYDLA_LOGGER_DEBUG("value : ", value);
       vm.set_variable((MathVariable)variable, value);
