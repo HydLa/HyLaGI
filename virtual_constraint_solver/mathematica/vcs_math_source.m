@@ -21,7 +21,8 @@ checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
     If[integGuard =!= False,
       (* その結果とt>0とを連立 *)
       (* debugPrint["integGuard:", integGuard]; *)
-      sol = Reduce[{integGuard && t > 0}, t];
+      sol = Quiet[Check[Reduce[{integGuard && t > 0}, t],
+                        False, {Reduce::nsmet}], {Reduce::nsmet}];
       (* Infを取って0になればEntailed *)
       If[sol =!= False && MinValue[{t, sol}, t] === 0,
         {1},
@@ -179,20 +180,32 @@ getNDVars[vars_] := Union[Map[(removeDash[#] /. x_[t] -> x) &, vars]];
 
 (* ある変数xについて、 *)
 (* x[t]==a と x[0]==a があった場合は、x'[t]==0を消去 （あれば） *)
-removeTrivialCons[expr_, var_] := Block[
-   {exprRule, varSol, removedExpr},
+removeTrivialCons[cons_, consVars_] := Block[
+  {exprRule, varSol, removedExpr,
+   removeTrivialConsUnit, getRequiredVars},
 
-   (* 方程式をルール化する *)
-   exprRule = Map[(Rule @@ #) &, expr];
-   varSol = var[t] /. exprRule;
-   If[MemberQ[expr, var[0] == varSol] && MemberQ[expr, var'[t] == 0],
-     (* true *)
-     removedExpr = DeleteCases[expr, var'[t] == 0],
+  removeTrivialConsUnit[expr_, var_]:=(
+    (* 方程式をルール化する *)
+    exprRule = Map[(Rule @@ #) &, expr];
+    varSol = var[t] /. exprRule;
+    If[MemberQ[expr, var[0] == varSol] && MemberQ[expr, var'[t] == 0],
+      (* true *)
+      removedExpr = DeleteCases[expr, var'[t] == 0],
 
-     (* false *)
-     removedExpr = expr
-   ];
-   removedExpr
+      (* false *)
+      removedExpr = expr
+    ];
+    removedExpr
+  );
+
+  getRequiredVars[vars_] := (
+    Union[Map[(# /. Derivative[n_][x_][t] -> Derivative[n - 1][x]
+                         /.  Derivative[0][x_][t] -> x) &, vars]]
+  );
+
+  Fold[(Intersection[#1, removeTrivialConsUnit[cons, #2]]) &,
+       cons, getRequiredVars[consVars]]
+
 ];
 
 (* Reduceで得られた結果をリスト形式にする *)
@@ -216,7 +229,7 @@ exDSolve[expr_, vars_] := Block[
       sol = applyList[sol];
 
       (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
-      sol = Fold[(Intersection[#1, removeTrivialCons[sol, #2]]) &, sol, getNDVars[vars]]; 
+      sol = removeTrivialCons[sol, vars];
 
       {DExpr, DExprVars, NDExpr} = splitExprs[sol];
 
@@ -415,8 +428,7 @@ integrateCalc[cons_,
     {DExpr, DExprVars, NDExpr} = splitExprs[cons];
     tmpIntegSol = applyList[removeNotEqual[Reduce[DExpr, DExprVars]]];
 
-    tmpIntegSol = Fold[(Intersection[#1, removeTrivialCons[tmpIntegSol, #2]]) &, 
-                       tmpIntegSol, getNDVars[vars]]; 
+    tmpIntegSol = removeTrivialCons[tmpIntegSol, vars];
 
     (* 1つだけ採用 *)
     (* TODO: 複数解ある場合も考える *)
