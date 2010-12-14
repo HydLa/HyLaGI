@@ -75,13 +75,13 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   state->module_set_container = msc_original_;
   
   if(opts_.output.size()>0){
-    output_dest= new std::ofstream(opts_.output.c_str());
-    if(!(*output_dest)){
-      std::cout << "Output-File can't be opend.";
+    output_dest_= new std::ofstream(opts_.output.c_str());
+    if(!(*output_dest_)){
+      std::cout << "Output-File can't be opened.";
       assert(0);
     }
   }else{
-    output_dest=NULL;
+    output_dest_=NULL;
   }
   // 変数のラベル
   // TODO: 未定義の値とかのせいでずれる可能性あり?
@@ -90,17 +90,17 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     std::cout << i.first << "\t";
   }
   std::cout << std::endl;
-  if(output_dest){
-    (*output_dest) << "# time\t";
+  if(output_dest_){
+    (*output_dest_) << "# time\t";
     BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
-     (*output_dest) << i.first << "\t";
+     (*output_dest_) << i.first << "\t";
     }
-   (*output_dest) << std::endl;
+   (*output_dest_) << std::endl;
   }
 
   push_phase_state(state);
 
-  step=0;
+  step_=0;
   init_mathlink();
   
 }
@@ -251,17 +251,17 @@ void SymbolicSimulator::simulate()
         boost::bind(&SymbolicSimulator::judge_phase_state, 
                    this, _1, state));
       int selected_num=0;
-      int vector_size=module_set_vector.size();
-      if(--step<=0||vector_size>1){
+      int vector_size=module_set_vector_.size();
+      if(--step_<=0||vector_size>1){
         cout << endl;
         for(int i=0;i<vector_size;i++){
          ostringstream ost,ost2;
-         cout << i << endl << "|Module\t\t:" << module_set_vector[i]->get_name() << endl;
+         cout << i << endl << "|Module\t\t:" << module_set_vector_[i]->get_name() << endl;
          cout << "|Constraint\t: ";
-         module_set_vector[i]->dump_infix(cout,"\n|                 ");
+         module_set_vector_[i]->dump_infix(cout,"\n|                 ");
          cout << endl;
-         positive_asks_t::iterator it=positive_asks_vector[i].begin();
-         positive_asks_t::iterator end=positive_asks_vector[i].end();
+         positive_asks_t::iterator it=positive_asks_vector_[i].begin();
+         positive_asks_t::iterator end=positive_asks_vector_[i].end();
          if(it!=end){
           cout << "|Positive Ask\t: ";
           (*it)->dump_infix(cout);
@@ -301,35 +301,35 @@ void SymbolicSimulator::simulate()
            cout << endl;
           }while(selected_num<0||selected_num>=vector_size);
         }
-        if(step<=0){
+        if(step_<=0){
           do{
            cout << "How many steps?" << endl;
            cin >> buf;
            try{
-             step=lexical_cast<int>(buf);
+             step_=lexical_cast<int>(buf);
            }catch(bad_lexical_cast e){
              cerr << "exeption: " << e.what() << endl;
              continue;
            }
            cout << endl;
-          }while(step==0);
+          }while(step_==0);
         }
-        if(step<0){
-          while(++step<0&&track_back_stack.size()>1){
-            track_back_stack.pop();
+        if(step_<0){
+          while(++step_<0&&track_back_stack_.size()>1){
+            track_back_stack_.pop();
           }
-          if(track_back_stack.size()>0){
-            push_phase_state(track_back_stack.top());
-            track_back_stack.pop();
+          if(track_back_stack_.size()>0){
+            push_phase_state(track_back_stack_.top());
+            track_back_stack_.pop();
           }else{
             push_phase_state(state);
           }
-          step=0;
-          module_set_vector.clear();
-          positive_asks_vector.clear();
-          negative_asks_vector.clear();
-          expanded_always_vector.clear();
-          tell_vector.clear();
+          step_=0;
+          module_set_vector_.clear();
+          positive_asks_vector_.clear();
+          negative_asks_vector_.clear();
+          expanded_always_vector_.clear();
+          tell_vector_.clear();
           continue;
         }
         std::cout << "# time\t";
@@ -341,29 +341,61 @@ void SymbolicSimulator::simulate()
       switch(state->phase) 
       {
         case PointPhase:
-        do_point_phase(module_set_vector[selected_num],state, tell_vector[selected_num], expanded_always_vector[selected_num]);
-        //point_phase(module_set_vector[selected_num],state);
+        do_point_phase(module_set_vector_[selected_num],state, tell_vector_[selected_num], expanded_always_vector_[selected_num]);
+        //point_phase(module_set_vector_[selected_num],state);
         break;
 
         case IntervalPhase: 
-        do_interval_phase(module_set_vector[selected_num],state, tell_vector[selected_num],positive_asks_vector[selected_num],negative_asks_vector[selected_num], expanded_always_vector[selected_num]);
-        //interval_phase(module_set_vector[selected_num],state);
+        do_interval_phase(module_set_vector_[selected_num],state, tell_vector_[selected_num],positive_asks_vector_[selected_num],negative_asks_vector_[selected_num], expanded_always_vector_[selected_num]);
+        //interval_phase(module_set_vector_[selected_num],state);
         break;
       
         default:
         assert(0);
       }
-      module_set_vector.clear();
-      positive_asks_vector.clear();
-      negative_asks_vector.clear();
-      expanded_always_vector.clear();
-      tell_vector.clear();
-      track_back_stack.push(state);
+      module_set_vector_.clear();
+      positive_asks_vector_.clear();
+      negative_asks_vector_.clear();
+      expanded_always_vector_.clear();
+      tell_vector_.clear();
+      track_back_stack_.push(state);
     }
     else{
+      branch_=0;
       state->module_set_container->dispatch(
       boost::bind(&SymbolicSimulator::simulate_phase_state, 
                  this, _1, state));
+      if(opts_.nd_mode&&opts_.output_style==styleList){
+       if(!branch_){       
+         if(!output_vector_.empty()){
+           std::cout << std::endl;
+           std::cout << "# time\t";
+           BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
+             std::cout << i.first << "\t";
+           }
+           std::cout << std::endl;
+           std::vector<string>::iterator it = output_vector_.begin();
+           std::vector<string>::iterator end = output_vector_.end();
+           for(;it!=end;it++){
+              std::cout << *it;
+              std::cout << std::endl;
+           }
+         }
+         std::cout << output_buffer_.str();
+
+         while(!branch_stack_.empty()&&--branch_stack_.top()<=0){
+           branch_stack_.pop();
+           if(!output_vector_.empty()){
+             output_vector_.pop_back();
+           }
+         }
+         output_buffer_.str("");
+       }else if(branch_>1){
+         branch_stack_.push(branch_);
+         output_vector_.push_back(output_buffer_.str());
+         output_buffer_.str("");
+       }
+      }
     }
   }
 }
@@ -499,11 +531,11 @@ bool SymbolicSimulator::judge_phase_state(const module_set_sptr& ms,
       }
     }
   }
-  module_set_vector.push_back(ms);
-  positive_asks_vector.push_back(positive_asks);
-  negative_asks_vector.push_back(negative_asks);
-  tell_vector.push_back(tell_list);
-  expanded_always_vector.push_back(expanded_always);
+  module_set_vector_.push_back(ms);
+  positive_asks_vector_.push_back(positive_asks);
+  negative_asks_vector_.push_back(negative_asks);
+  tell_vector_.push_back(tell_list);
+  expanded_always_vector_.push_back(expanded_always);
   return true;
 }
 
@@ -951,27 +983,40 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
 void SymbolicSimulator::output(const symbolic_time_t& time, 
                            const variable_map_t& vm)
 {
-  if(output_dest){
-    (*output_dest) << time.get_real_val(ml_, opts_.output_precision) << "\t";
+  if(output_dest_){
+    (*output_dest_) << time.get_real_val(ml_, opts_.output_precision) << "\t";
 
     variable_map_t::const_iterator it  = vm.begin();
     variable_map_t::const_iterator end = vm.end();
     for(; it!=end; ++it) {
-       (*output_dest) << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+       (*output_dest_) << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
     }
-    (*output_dest) << std::endl;
+    (*output_dest_) << std::endl;
   }
-//   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
-  std::cout << time.get_real_val(ml_, opts_.output_precision) << "\t";
+  
+  if(opts_.output_style==styleList){
+    output_buffer_ << time.get_real_val(ml_, opts_.output_precision) << "\t";
 
-  variable_map_t::const_iterator it  = vm.begin();
-  variable_map_t::const_iterator end = vm.end();
-  for(; it!=end; ++it) {
-//     std::cout << it->first << "\t: "
-//               << it->second.get_real_val(ml_, 5) << "\n";
-     std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+    variable_map_t::const_iterator it  = vm.begin();
+    variable_map_t::const_iterator end = vm.end();
+    for(; it!=end; ++it) {
+       output_buffer_ << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+    }
+    output_buffer_ << std::endl;
+  }else{
+    
+  //   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
+    std::cout << time.get_real_val(ml_, opts_.output_precision) << "\t";
+
+    variable_map_t::const_iterator it  = vm.begin();
+    variable_map_t::const_iterator end = vm.end();
+    for(; it!=end; ++it) {
+  //     std::cout << it->first << "\t: "
+  //               << it->second.get_real_val(ml_, 5) << "\n";
+       std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+    }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
   
 }
 

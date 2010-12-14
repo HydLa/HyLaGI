@@ -50,6 +50,10 @@ void ProgramOptions::init_descriptions()
 
     ("nd", "nondeterministic mode")
     
+    ("nd-out",
+      value<std::string>()->default_value("t"),
+      "output style in nondeterministic mode:\n t - tree l - list")
+    
     ("in", "interactive mode")
 
      ("output-dest", 

@@ -2,6 +2,7 @@
 #define _INCLUDED_SYMBOLIC_SIMULATOR_H_
 
 #include <string>
+#include <sstream>
 #include <stack>
 
 #include "ParseTree.h"
@@ -40,6 +41,11 @@ public:
     fmtTFunction,
     fmtNumeric,
   } OutputFormat;
+  
+  typedef enum OutputStyle_ {
+    styleTree,
+    styleList,
+  } OutputStyle;
 
   typedef struct Opts_ {
     std::string mathlink;
@@ -47,6 +53,7 @@ public:
     bool debug_mode;
     std::string max_time; //TODO: symbolic_time_tにする
     bool nd_mode;
+    OutputStyle output_style;
     bool interactive_mode;
     bool profile_mode;
     bool parallel_mode;
@@ -101,7 +108,11 @@ private:
   MathLink ml_; 
   
   
-
+  virtual void push_phase_state(const phase_state_sptr& state) 
+  {
+    branch_++;
+    state_stack_.push(state);
+  }
   
   /*
   * インタラクティブモード用。各Phaseにおける、モジュール集合の矛盾性判定を行う
@@ -122,16 +133,18 @@ private:
                               const phase_state_const_sptr& state, const tells_t& tell_list,const positive_asks_t& positive_asks, const negative_asks_t& negative_asks, const expanded_always_t& expanded_always);
                                 
   
-  std::vector<module_set_sptr> module_set_vector; //インタラクティブモード用の、無矛盾極大集合のvector
-  std::vector<tells_t> tell_vector;         //インタラクティブモード用の、tellのvector
-  std::vector<hydla::simulator::positive_asks_t> positive_asks_vector; //インタラクティブモード用の、negative askのvector
-  std::vector<hydla::simulator::negative_asks_t> negative_asks_vector; //インタラクティブモード用の、positive askのvector
-  std::vector<hydla::simulator::expanded_always_t> expanded_always_vector; //インタラクティブモード用の、positive askのvector
-  int step;                                       //インタラクティブモード用の、進めるステップ数
-  std::ostream *output_dest;                       //シミュレーション結果の出力先。ユーザーへのメッセージを除く
-  std::stack<phase_state_sptr> track_back_stack;
-  //std::vector<phase_state_sptr> state_vector; 
-//  hydla::vcs::mathematica::MathematicaVCS vcs_;
+  std::vector<module_set_sptr> module_set_vector_; //インタラクティブモード用の、無矛盾極大集合のvector
+  std::vector<tells_t> tell_vector_;         //インタラクティブモード用の、tellのvector
+  std::vector<hydla::simulator::positive_asks_t> positive_asks_vector_; //インタラクティブモード用の、negative askのvector
+  std::vector<hydla::simulator::negative_asks_t> negative_asks_vector_; //インタラクティブモード用の、positive askのvector
+  std::vector<hydla::simulator::expanded_always_t> expanded_always_vector_; //インタラクティブモード用の、positive askのvector
+  int step_;                                       //インタラクティブモード用の、進めるステップ数
+  std::ostream *output_dest_;                       //シミュレーション結果の出力先。ユーザーへのメッセージを除く
+  std::stack<phase_state_sptr> track_back_stack_;  //インタラクティブモード，トラックバック用のスタック
+  std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列
+  std::stack<int> branch_stack_;                   //直前に分岐した数を記憶するためのスタック
+  int branch_;                                     //今フェーズで何状態に分岐したかを示す変数
+  std::ostringstream output_buffer_;                      //スタックに入れるための，直前の分岐から現在までの出力保持
 };
 
 } // namespace symbolic_simulator

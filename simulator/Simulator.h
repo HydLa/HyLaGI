@@ -64,7 +64,7 @@ public:
   /**
    * 状態キューに新たな状態を追加する
    */
-  void push_phase_state(const phase_state_sptr& state) 
+  virtual void push_phase_state(const phase_state_sptr& state) 
   {
     state_stack_.push(state);
   }
@@ -250,7 +250,7 @@ protected:
   variable_map_t variable_map_;
 
   /**
-   * 各状態を保存しておくためのキュー
+   * 各状態を保存しておくためのスタック
    */
   std::stack<phase_state_sptr> state_stack_;
 };

@@ -25,6 +25,12 @@ void setup_symbolic_simulator_opts(SymbolicSimulator::Opts& opts)
     std::cerr << "invalid option - output format" << std::endl;
     exit(-1);
   }
+  
+  if(po.get<std::string>("nd-out") == "l"){
+    opts.output_style = SymbolicSimulator::styleList;
+  }else{
+    opts.output_style = SymbolicSimulator::styleTree;
+  }
 
   opts.mathlink      = po.get<std::string>("mathlink");
   opts.debug_mode    = po.count("debug")>0;

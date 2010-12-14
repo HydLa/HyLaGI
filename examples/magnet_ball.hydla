@@ -2,14 +2,14 @@
 重力と磁力の影響を考えたボールの動き
 磁力は重力と逆向きに働き、スイッチでＯＮ／ＯＦＦできる
 スイッチは１秒ごとに切り替えられる可能性がある
-コメントアウトしてあるBOUNCEを入れると、跳ねる際に止まる場合がある
 */
 
 INIT <=> y=10&y'=0&mag=12&count=0.
 FALL <=> [](y''=-10+mag).
-//BOUNCE <=> [](y-=0=>y'=-y'-*4/5).
+BOUNCE <=> [](y-=0=>y'=-y'-*4/5).
+TRUE <=> [](1=1).
 COUNT <=> [](mag'=0&count'=1).
 SWITCHON <=> [](count-=1=>mag=12&count=0).
 SWITCHOFF <=> [](count-=1=>mag=0&count=0).
-INIT,COUNT<<(SWITCHOFF,SWITCHON),FALL.
-//INIT,COUNT<<(SWITCHOFF,SWITCHON),FALL<<BOUNCE.
+//INIT,COUNT<<(SWITCHOFF,SWITCHON)<<TRUE,FALL.
+INIT,COUNT<<(SWITCHOFF,SWITCHON)<<TRUE,FALL<<BOUNCE.
