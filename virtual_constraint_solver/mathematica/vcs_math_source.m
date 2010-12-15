@@ -256,7 +256,7 @@ exDSolve[expr_, vars_] := Block[
 (* 微分値を含まず､かつ､変数が2種類以上出る式 (NDExpr)はDSolveで扱えない *)
 splitExprs[expr_] := Block[
   {NDExpr, DExpr, DExprVars},
-  NDExpr = Select[expr, (MemberQ[#, _'[t], Infinity] =!= True &&
+  NDExpr = Select[expr, (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True &&
                          Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
   DExpr = Complement[expr, NDExpr];
   DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
@@ -475,9 +475,15 @@ integrateCalc[cons_,
 (*
  * 式に対して与えられた時間を適用する
  *)
-applyTime2Expr[expr_, time_] := (
-  (expr /. t -> time) // FullForm // ToString
-);
+applyTime2Expr[expr_, time_] := Block[
+  {appliedExpr},
+  debugPrint["expr:", expr,
+             "time:", time];
+  appliedExpr = (expr /. t -> time);
+  If[Element[appliedExpr, Reals],
+    {1, appliedExpr  // FullForm // ToString},
+    {0}]
+];
 
 (*
  * formからtoまでのリストをinterval間隔で作成する

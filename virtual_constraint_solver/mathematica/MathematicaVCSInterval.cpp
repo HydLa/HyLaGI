@@ -744,11 +744,6 @@ VCSResult MathematicaVCSInterval::integrate(
   // 初期値制約（未定義変数を含む）とvarmapとの差分を解消
   add_undefined_vars_to_vm(varmap);
 
-  // 次のフェーズにおける変数の値を導出する
-  HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
-  apply_time_to_vm(varmap, state.variable_map, elapsed_time);    
-
-
   // 出力する時刻のリストを作成する
   HYDLA_LOGGER_DEBUG("--- calc output time list ---");  
 
@@ -784,6 +779,11 @@ VCSResult MathematicaVCSInterval::integrate(
     output(*outtime_it + current_time, outtime_vm);
   }
 
+  // 次のフェーズにおける変数の値を導出する
+  HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
+  apply_time_to_vm(varmap, state.variable_map, elapsed_time);    
+
+
   // 離散変化時のプロットを補正
   std::cout << std::endl;
   
@@ -808,6 +808,7 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
     
     HYDLA_LOGGER_DEBUG("variable : ", it->first);
 
+    // 値
     MathValue    value;
     if(!it->second.is_undefined()) {
       ml_->put_function("applyTime2Expr", 2);
@@ -815,12 +816,27 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       ml_->put_string(it->second.str);
       time.send_time(*ml_);
 
+    ////////////////// 受信処理
+
+      HYDLA_LOGGER_DEBUG(
+        "-- math debug print -- \n",
+        (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+
       ml_->skip_pkt_until(RETURNPKT);
+      ml_->MLGetNext();
+      ml_->MLGetNext();
       ml_->MLGetNext(); 
 
-      // 値
-      value.str = ml_->get_string();
-      HYDLA_LOGGER_DEBUG("value : ", value.str);
+      int ret_code = ml_->get_integer();
+      if(ret_code==0) {
+        // TODO: 適切な処理をする
+        assert(0);
+      }
+      else {
+        assert(ret_code==1);
+        value.str = ml_->get_string();
+        HYDLA_LOGGER_DEBUG("value : ", value.str);
+      }
     }
 
     out_vm.set_variable(it->first, value);   
