@@ -92,6 +92,9 @@ private:
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   void init_mathlink();
+  
+  bool calculate_closure(const module_set_sptr& ms, hydla::vcs::mathematica::MathematicaVCS &vcs, expanded_always_t &expanded_always,
+                         positive_asks_t &positive_asks, negative_asks_t &negative_asks);
 
   void output(const symbolic_time_t& time, 
               const variable_map_t& vm);
@@ -105,7 +108,7 @@ private:
   module_set_container_sptr msc_no_init_discreteask_;
 
   Opts     opts_;
-  MathLink ml_; 
+  MathLink ml_;
   
   
   virtual void push_phase_state(const phase_state_sptr& state) 

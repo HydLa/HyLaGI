@@ -674,9 +674,9 @@ bool SymbolicSimulator::do_point_phase(const module_set_sptr& ms,
 }
 
 
-bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
-                                const phase_state_const_sptr& state)
-{
+bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, MathematicaVCS &vcs, expanded_always_t &expanded_always,
+                                          positive_asks_t &positive_asks, negative_asks_t &negative_asks){
+
   TellCollector tell_collector(ms);
 
   AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
@@ -684,25 +684,6 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
 
   tells_t         tell_list;
-  positive_asks_t   positive_asks;
-  negative_asks_t   negative_asks;
-
-  if(state->changed_asks.size() != 0) {
-    HYDLA_LOGGER_DEBUG("#** point_phase: changed_ask_id: ",
-                       state->changed_asks.at(0).second,
-                       " **");
-  }
-
-  expanded_always_t expanded_always;
-
-  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
-  HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
-                     expanded_always);
-  
-  MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
-  vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&SymbolicSimulator::output, this, _1, _2));
-  vcs.reset(state->variable_map);
 
   bool expanded   = true;
   while(expanded) {
@@ -759,6 +740,37 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
       }
     }
   }
+  return true;
+}
+
+
+bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
+                                const phase_state_const_sptr& state)
+{
+
+  if(state->changed_asks.size() != 0) {
+    HYDLA_LOGGER_DEBUG("#** point_phase: changed_ask_id: ",
+                       state->changed_asks.at(0).second,
+                       " **");
+  }
+
+  expanded_always_t expanded_always;
+
+  expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
+                     expanded_always);
+  
+  MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
+  vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
+                      boost::bind(&SymbolicSimulator::output, this, _1, _2));
+  vcs.reset(state->variable_map);
+
+  positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
+
+  if(!calculate_closure(ms, vcs,expanded_always,positive_asks,negative_asks)){
+    return false;
+  }
 
   
   // Interval Phaseへ移行
@@ -804,14 +816,6 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                                    const phase_state_const_sptr& state)
 {
 
-  TellCollector tell_collector(ms);
-
-  AskCollector  ask_collector(ms);
-
-  tells_t         tell_list;
-  positive_asks_t positive_asks;
-  negative_asks_t negative_asks;
-
   expanded_always_t expanded_always;
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
   HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
@@ -821,68 +825,13 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
                       boost::bind(&SymbolicSimulator::output, this, _1, _2));
   vcs.reset(state->variable_map);
+  
+  
+  positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
 
-  bool expanded   = true;
-  while(expanded) {
-    // tell制約を集める
-    tell_collector.collect_all_tells(&tell_list,
-                                     &expanded_always, 
-                                     &positive_asks);
-
-    // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    switch(vcs.add_constraint(tell_list)) 
-    {
-      case VCSR_TRUE:
-        // do nothing
-        break;
-      case VCSR_FALSE:
-        return false;
-        break;
-      case VCSR_UNKNOWN:
-        assert(0);
-        break;
-      case VCSR_SOLVER_ERROR:
-        // TODO: 例外とかなげたり、BPシミュレータに移行したり
-        assert(0);
-        break;
-    }
-
-    // ask制約を集める
-    ask_collector.collect_ask(&expanded_always, 
-                              &positive_asks, 
-                              &negative_asks);
-
-    // ask制約のエンテール処理
-    expanded = false;
-    {
-      negative_asks_t::iterator it  = negative_asks.begin();
-      negative_asks_t::iterator end = negative_asks.end();
-      while(it!=end) {
-        if(boost::dynamic_pointer_cast<DiscreteAsk>(*it)) {
-          it++;
-        }
-        else {
-          switch(vcs.check_entailment(*it))
-          {
-            case VCSR_TRUE:
-              expanded = true;
-              positive_asks.insert(*it);
-              negative_asks.erase(it++);
-              break;
-            case VCSR_FALSE:
-              it++;
-              break;
-            case VCSR_UNKNOWN:
-              assert(0);
-              break;
-            case VCSR_SOLVER_ERROR:
-              // TODO: 例外とかなげたり、BPシミュレータに移行したり
-              assert(0);
-              break;
-          }
-        }
-      }
-    }
+  if(!calculate_closure(ms, vcs,expanded_always,positive_asks,negative_asks)){
+    return false;
   }
 
   // MaxModuleの導出
