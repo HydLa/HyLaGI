@@ -11,5 +11,4 @@ TRUE <=> [](1=1).
 COUNT <=> [](mag'=0&count'=1).
 SWITCHON <=> [](count-=1=>mag=12&count=0).
 SWITCHOFF <=> [](count-=1=>mag=0&count=0).
-//INIT,COUNT<<(SWITCHOFF,SWITCHON)<<TRUE,FALL.
 INIT,COUNT<<(SWITCHOFF,SWITCHON)<<TRUE,FALL<<BOUNCE.

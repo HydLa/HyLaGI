@@ -49,7 +49,6 @@ public:
 
   typedef struct Opts_ {
     std::string mathlink;
-    std::string output;
     bool debug_mode;
     std::string max_time; //TODO: symbolic_time_tにする
     bool nd_mode;
@@ -100,7 +99,7 @@ private:
               const variable_map_t& vm);
               
               
-
+  void output(const phase_state_sptr state);
                               
   module_set_container_sptr msc_original_;
 
@@ -119,8 +118,6 @@ private:
  
                                
   
-
-  std::ostream *output_dest_;                       //シミュレーション結果の出力先。ユーザーへのメッセージを除く
   std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列
   std::stack<int> branch_stack_;                   //直前に分岐した数を記憶するためのスタック
   int branch_;                                     //今フェーズで何状態に分岐したかを示す変数

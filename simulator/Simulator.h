@@ -136,7 +136,7 @@ public:
     switch(state->phase) 
     {
     case PointPhase:
-      {        
+      {
 		HYDLA_LOGGER_SUMMARY(
           "#***** begin point phase *****",
           "\n#** module set **\n",

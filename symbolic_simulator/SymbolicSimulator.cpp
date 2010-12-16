@@ -77,15 +77,6 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   push_phase_state(state);
 
   
-  if(opts_.output.size()>0){
-    output_dest_= new std::ofstream(opts_.output.c_str());
-    if(!(*output_dest_)){
-      std::cout << "Output-File can't be opened.";
-      assert(0);
-    }
-  }else{
-    output_dest_=NULL;
-  }
 
   // 変数のラベル
   // TODO: 未定義の値とかのせいでずれる可能性あり?
@@ -94,13 +85,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     std::cout << i.first << "\t";
   }
   std::cout << std::endl;
-  if(output_dest_){
-    (*output_dest_) << "# time\t";
-    BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
-     (*output_dest_) << i.first << "\t";
-    }
-   (*output_dest_) << std::endl;
-  }
+
 
   //mathematica関連
   init_mathlink();
@@ -372,8 +357,8 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
                      expanded_always);  
   MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
-  vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&SymbolicSimulator::output, this, _1, _2));
+  /*vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
+                      boost::bind(&SymbolicSimulator::output, this, _1, _2));*/
   vcs.reset(state->variable_map);
 
   positive_asks_t positive_asks;
@@ -385,7 +370,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     return false;
   }
 
-  
+
   // Interval Phaseへ移行（次状態の生成）
   HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
   phase_state_sptr new_state(create_new_phase_state());
@@ -412,11 +397,10 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
 
 
   //出力
-  output(new_state->current_time, new_state->variable_map);
+  output(new_state);
 
   //状態をスタックに押し込む
   push_phase_state(new_state);
-
 
   HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                      "time:", new_state->current_time, "\n",
@@ -437,8 +421,8 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                      expanded_always);
 
   MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_, opts_.approx_precision);
-  vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&SymbolicSimulator::output, this, _1, _2));
+  /*vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
+                      boost::bind(&SymbolicSimulator::output, this, _1, _2));*/
   vcs.reset(state->variable_map);
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
@@ -504,7 +488,34 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     state->current_time,
     symbolic_time_t(opts_.max_time),
     not_adopted_tells_list);
+
   
+  symbolic_time_t et("0");
+  do{
+    std::cout << (et+state->current_time).get_real_val(ml_, opts_.output_precision) << "\t";
+    variable_map_t outtime_vm;
+    vcs.apply_time_to_vm(integrate_result.states[0].variable_map, outtime_vm, et);
+    variable_map_t::const_iterator it  = outtime_vm.begin();
+    variable_map_t::const_iterator end = outtime_vm.end();
+    for(; it!=end; ++it) {
+      std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+    }
+    std::cout << std::endl;
+  }while(((et+=symbolic_time_t(opts_.output_interval))+state->current_time).lessThan(ml_,integrate_result.states[0].time));
+  et=integrate_result.states[0].time-state->current_time;
+  std::cout << (et+state->current_time).get_real_val(ml_, opts_.output_precision) << "\t";
+  variable_map_t outtime_vm;
+  vcs.apply_time_to_vm(integrate_result.states[0].variable_map, outtime_vm, et);
+  variable_map_t::const_iterator it  = outtime_vm.begin();
+  variable_map_t::const_iterator end = outtime_vm.end();
+  for(; it!=end; ++it) {
+    std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+  }
+  std::cout << std::endl;
+  std::cout << std::endl;
+
+
+
   //to next pointphase
   assert(integrate_result.states.size() == 1);
 
@@ -514,13 +525,15 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
     HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
                        new_state->expanded_always_id);
-    new_state->variable_map = integrate_result.states[0].variable_map;
     new_state->module_set_container = msc_no_init_;
     new_state->current_time = integrate_result.states[0].time;
+    
+    //次のフェーズにおける変数の値を導出する
+    HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
+    vcs.apply_time_to_vm(integrate_result.states[0].variable_map, new_state->variable_map, integrate_result.states[0].time-state->current_time);
 
     push_phase_state(new_state);
   }
-
 
 
 
@@ -543,19 +556,43 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   return true;
 }
 
+
+void SymbolicSimulator::output(const phase_state_sptr state)
+{
+  //ここで各出力方式に対応できるようにすれば良いはず
+  if(state->phase==IntervalPhase){
+    
+  }else if(state->phase==PointPhase){
+    
+  }
+  
+  if(opts_.output_style==styleList){
+    output_buffer_ << state->current_time.get_real_val(ml_, opts_.output_precision) << "\t";
+
+    variable_map_t::const_iterator it  = state->variable_map.begin();
+    variable_map_t::const_iterator end = state->variable_map.end();
+    for(; it!=end; ++it) {
+       output_buffer_ << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+    }
+    output_buffer_ << std::endl;
+  }else{
+    std::cout << state->current_time.get_real_val(ml_, opts_.output_precision) << "\t";
+
+    variable_map_t::const_iterator it  = state->variable_map.begin();
+    variable_map_t::const_iterator end = state->variable_map.end();
+    for(; it!=end; ++it) {
+       std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+    }
+    std::cout << std::endl;
+  }
+}
+
+
 void SymbolicSimulator::output(const symbolic_time_t& time, 
                            const variable_map_t& vm)
 {
-  if(output_dest_){
-    (*output_dest_) << time.get_real_val(ml_, opts_.output_precision) << "\t";
-
-    variable_map_t::const_iterator it  = vm.begin();
-    variable_map_t::const_iterator end = vm.end();
-    for(; it!=end; ++it) {
-       (*output_dest_) << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
-    }
-    (*output_dest_) << std::endl;
-  }
+  //ここで各出力方式に対応できるようにすれば良いはず
+  
   
   if(opts_.output_style==styleList){
     output_buffer_ << time.get_real_val(ml_, opts_.output_precision) << "\t";
@@ -567,7 +604,6 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
     }
     output_buffer_ << std::endl;
   }else{
-    
   //   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
     std::cout << time.get_real_val(ml_, opts_.output_precision) << "\t";
 
@@ -580,7 +616,6 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
     }
     std::cout << std::endl;
   }
-  
 }
 
 } //namespace symbolic_simulator
