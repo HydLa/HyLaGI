@@ -95,6 +95,10 @@ VCSResult MathematicaVCS::integrate(
 // }
 
 
+void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){
+  vcs_->apply_time_to_vm(in_vm, out_vm, time);
+}
+
 void MathematicaVCS::set_output_func(const time_t& max_interval, 
                                      const output_function_t& func)
 {

@@ -90,6 +90,9 @@ public:
    * 結果の出力関数の設定をリセットし，初期状態に戻す
    */
   virtual void reset_output_func();
+  
+  
+  virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
 private:
   Mode      mode_;

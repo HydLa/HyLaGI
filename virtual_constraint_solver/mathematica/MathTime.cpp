@@ -65,12 +65,41 @@ MathTime& MathTime::operator+=(const MathTime& rhs)
   return *this;
 }
 
+
+
+
 MathTime& MathTime::operator-=(const MathTime& rhs)
 {
   time_ += " - (" + rhs.time_ + ")";
   return *this;
 }
 
+MathTime MathTime::operator+(const MathTime& rhs)
+{
+  MathTime t = time_ + " + (" + rhs.time_ + ")";
+  return t;
+}
+
+
+MathTime MathTime::operator-(const MathTime& rhs)
+{
+  MathTime t = time_ + " - (" + rhs.time_ + ")";
+  return t;
+}
+
+bool MathTime::lessThan(MathLink& ml, const MathTime& rhs)
+{
+  ml.put_function("ToString", 1);  
+  ml.put_function("Less", 2);  
+  ml.put_function("ToExpression", 1);
+  ml.put_string(time_);
+  ml.put_function("ToExpression", 1);
+  ml.put_string(rhs.time_);
+  
+  ml.skip_pkt_until(RETURNPKT);
+  std::string ret = ml.get_string();
+  return  ret == "True";
+}
 
 std::ostream& MathTime::dump(std::ostream& s) const
 {

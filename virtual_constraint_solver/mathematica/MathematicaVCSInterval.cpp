@@ -581,7 +581,7 @@ VCSResult MathematicaVCSInterval::integrate(
 
   // 変数の最大微分回数をもとめる
   max_diff_map_t max_diff_map;
-  create_max_diff_map(ps, max_diff_map);  
+  create_max_diff_map(ps, max_diff_map);
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, true);
 
@@ -648,7 +648,6 @@ VCSResult MathematicaVCSInterval::integrate(
   ml_->MLGetNext(); // Listという関数名
   
   // 変数と値の組を受け取る
-  variable_map_t varmap;
   int variable_list_size = ml_->get_arg_count();
   HYDLA_LOGGER_DEBUG("variable_list_size : ", variable_list_size);  
   ml_->MLGetNext(); ml_->MLGetNext();
@@ -677,7 +676,7 @@ VCSResult MathematicaVCSInterval::integrate(
     HYDLA_LOGGER_DEBUG("value : ", value.str);
     ml_->MLGetNext();
 
-    varmap.set_variable(variable, value); 
+    state.variable_map.set_variable(variable, value); 
   }
 
   // askとそのIDの組一覧を得る
@@ -741,9 +740,11 @@ VCSResult MathematicaVCSInterval::integrate(
   }
 
   // 未定義の変数を変数表に反映
-  // 初期値制約（未定義変数を含む）とvarmapとの差分を解消
-  add_undefined_vars_to_vm(varmap);
+  // 初期値制約（未定義変数を含む）とvariable_mapとの差分を解消
+  add_undefined_vars_to_vm(state.variable_map);
 
+
+/*
   // 出力する時刻のリストを作成する
   HYDLA_LOGGER_DEBUG("--- calc output time list ---");  
 
@@ -774,19 +775,19 @@ VCSResult MathematicaVCSInterval::integrate(
   std::vector<MathTime>::const_iterator outtime_end = output_time_list.end();
   for(; outtime_it!=outtime_end; ++outtime_it) {
     variable_map_t outtime_vm;
-    apply_time_to_vm(varmap, outtime_vm, *outtime_it);
+    apply_time_to_vm(state.variable_map, outtime_vm, *outtime_it);
     
     output(*outtime_it + current_time, outtime_vm);
   }
 
   // 次のフェーズにおける変数の値を導出する
-  HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
-  apply_time_to_vm(varmap, state.variable_map, elapsed_time);    
+  //HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
+  //apply_time_to_vm(integrate_result.map_with_t, state.variable_map, elapsed_time);    
 
 
   // 離散変化時のプロットを補正
   std::cout << std::endl;
-  
+  */
   
 //   HYDLA_LOGGER_DEBUG(
 //     "--- integrate result ---\n", 
@@ -798,7 +799,7 @@ VCSResult MathematicaVCSInterval::integrate(
 
 void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm, 
                                               variable_map_t& out_vm, 
-                                              const MathTime& time)
+                                              const time_t& time)
 {
   HYDLA_LOGGER_DEBUG("--- apply_time_to_vm ---");
 

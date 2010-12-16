@@ -58,11 +58,28 @@ public:
    * MathTime“¯m‚Ì‰ÁZ
    */
   MathTime& operator+=(const MathTime& rhs);
+  
+  
+  /**
+   * MathTime“¯m‚Ì‰ÁZ
+   */
+  MathTime operator+(const MathTime& rhs);
 
   /**
    * MathTime“¯m‚ÌŒ¸Z
    */
   MathTime& operator-=(const MathTime& rhs);
+
+
+  /**
+   * MathTime“¯m‚ÌŒ¸Z
+   */
+  MathTime operator-(const MathTime& rhs);
+  
+  /**
+   * MathTime“¯m‚Ì”äŠr
+   */
+  bool lessThan(MathLink& ml, const MathTime& rhs);
 
   /**
    * ƒf[ƒ^‚ğƒ_ƒ“ƒv‚·‚é

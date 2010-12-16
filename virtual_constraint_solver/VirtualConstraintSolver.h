@@ -63,7 +63,7 @@ public:
       bool           is_max_time;
     } next_phase_state_t;
     typedef std::vector<next_phase_state_t> next_phase_state_list_t;
-  
+    
     next_phase_state_list_t states;
     changed_asks_t          changed_asks;
   } integrate_result_t;
@@ -126,6 +126,10 @@ public:
   virtual void reset_output_func() {
     output_func_.clear();
   }
+  
+  //変数表に，時刻を適用する．Symbolic専用
+  virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
+
 
 protected:
   void output(const time_t& time, const variable_map_t& vm) {    

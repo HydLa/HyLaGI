@@ -84,6 +84,12 @@ public:
    * 内部状態の出力をおこなう
    */
   std::ostream& dump(std::ostream& s) const;
+  
+  
+  /**
+   * 変数表に対して与えられた時刻を適用する
+   */
+  virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
 private:
   typedef std::map<std::string, int> max_diff_map_t;
@@ -114,10 +120,6 @@ private:
   void send_ask_guards(PacketSender& ps, 
                        const hydla::simulator::ask_set_t& asks) const;
 
-  /**
-   * 変数表に対して与えられた時刻を適用する
-   */
-  void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const MathTime& time);
 
   /**
    * 変数表に未定義の変数を追加する
