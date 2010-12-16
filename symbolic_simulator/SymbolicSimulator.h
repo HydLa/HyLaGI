@@ -97,9 +97,11 @@ private:
 
   void output(const symbolic_time_t& time, 
               const variable_map_t& vm);
+
+
+void output_interval(hydla::vcs::mathematica::MathematicaVCS &vcs, const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
+                     const variable_map_t& variable_map);
               
-              
-  void output(const phase_state_sptr state);
                               
   module_set_container_sptr msc_original_;
 
