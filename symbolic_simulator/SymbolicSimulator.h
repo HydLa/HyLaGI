@@ -116,34 +116,11 @@ private:
     branch_++;
     state_stack_.push(state);
   }
+ 
+                               
   
-  /*
-  * インタラクティブモード用。各Phaseにおける、モジュール集合の矛盾性判定を行う
-  */
-  virtual bool judge_phase_state(const module_set_sptr& ms, 
-                                    const phase_state_const_sptr& state);
 
-  /**
-   インタラクティブモード用。Point Phaseの出力＆次状態生成
-   */
-  bool do_point_phase(const module_set_sptr& ms, 
-                              const phase_state_const_sptr& state, tells_t tell_list, const expanded_always_t& expanded_always);
-
-  /**
-   インタラクティブモード用。Interval Phaseの出力＆次状態生成
-   */
-  bool do_interval_phase(const module_set_sptr& ms, 
-                              const phase_state_const_sptr& state, const tells_t& tell_list,const positive_asks_t& positive_asks, const negative_asks_t& negative_asks, const expanded_always_t& expanded_always);
-                                
-  
-  std::vector<module_set_sptr> module_set_vector_; //インタラクティブモード用の、無矛盾極大集合のvector
-  std::vector<tells_t> tell_vector_;         //インタラクティブモード用の、tellのvector
-  std::vector<hydla::simulator::positive_asks_t> positive_asks_vector_; //インタラクティブモード用の、negative askのvector
-  std::vector<hydla::simulator::negative_asks_t> negative_asks_vector_; //インタラクティブモード用の、positive askのvector
-  std::vector<hydla::simulator::expanded_always_t> expanded_always_vector_; //インタラクティブモード用の、positive askのvector
-  int step_;                                       //インタラクティブモード用の、進めるステップ数
   std::ostream *output_dest_;                       //シミュレーション結果の出力先。ユーザーへのメッセージを除く
-  std::stack<phase_state_sptr> track_back_stack_;  //インタラクティブモード，トラックバック用のスタック
   std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列
   std::stack<int> branch_stack_;                   //直前に分岐した数を記憶するためのスタック
   int branch_;                                     //今フェーズで何状態に分岐したかを示す変数
