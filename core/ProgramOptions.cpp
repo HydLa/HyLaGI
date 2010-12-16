@@ -55,10 +55,6 @@ void ProgramOptions::init_descriptions()
       "output style in nondeterministic mode:\n t - tree l - list")
     
     ("in", "interactive mode")
-
-     ("output-dest", 
-      value<std::string>()->default_value(""),
-     "output destination file")
     
     ("output-format,f", 
      value<std::string>()->default_value("n"), 
