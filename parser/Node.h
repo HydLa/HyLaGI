@@ -406,6 +406,7 @@ protected:
   }                                                                     \
   };
 
+
 /**
  * 制約やプログラムの呼び出しノードの共通クラス
  */
@@ -810,12 +811,84 @@ DEFINE_ASYMMETRIC_BINARY_NODE(Subtract, -);
 /**
  * 算術演算子「*」
  */
-DEFINE_BINARY_NODE(Times, *);
+
+class Times : public BinaryNode {                           
+  public:                                                   
+  typedef boost::shared_ptr<Times> node_type_sptr;          
+                                                            
+  Times()                                                   
+    {}                                                      
+                                                            
+  Times(const node_sptr& lhs, const node_sptr& rhs) :       
+    BinaryNode(lhs, rhs)                                    
+    {}                                                      
+                                                            
+  virtual ~Times(){}                                        
+                                                            
+  virtual void accept(node_sptr own, TreeVisitor* visitor); 
+                                                            
+  virtual node_sptr clone()                                 
+    {                                                       
+      node_type_sptr n(new Times);                          
+      return BinaryNode::clone(n);                          
+    }                                                       
+  virtual std::string get_node_type_name() const {         
+    return "Times";                                         
+  }                                                         
+  virtual std::string get_node_type_symbol() const {        
+    return "*";                                             
+  }
+  virtual std::ostream& dump_infix(std::ostream& s) const   
+  {
+    s << "(";
+    lhs_->dump_infix(s);
+    s << get_node_type_symbol();
+    rhs_->dump_infix(s);
+    s << ")";
+    return s;
+  }                                              
+};
 
 /**
  * 算術演算子「/」
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(Divide, /);
+class Divide : public BinaryNode {                           
+  public:                                                   
+  typedef boost::shared_ptr<Divide> node_type_sptr;          
+                                                            
+  Divide()                                                   
+    {}                                                      
+                                                            
+  Divide(const node_sptr& lhs, const node_sptr& rhs) :       
+    BinaryNode(lhs, rhs)                                    
+    {}                                                      
+                                                            
+  virtual ~Divide(){}                                        
+                                                            
+  virtual void accept(node_sptr own, TreeVisitor* visitor); 
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+                                                            
+  virtual node_sptr clone()                                 
+    {                                                       
+      node_type_sptr n(new Divide);                          
+      return BinaryNode::clone(n);                          
+    }                                                       
+  virtual std::string get_node_type_Divide() const {         
+    return "Divide";                                         
+  }                                                         
+  virtual std::string get_node_type_symbol() const {        
+    return "/";                                             
+  }
+  virtual std::ostream& dump_infix(std::ostream& s) const   
+  {
+    s << "(";
+    lhs_->dump_infix(s);
+    s << get_node_type_symbol();
+    rhs_->dump_infix(s);
+    s << ")";
+    return s;
+  }                                              
+};
 
 /**
  * 論理演算子「/\」（連言）
