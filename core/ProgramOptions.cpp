@@ -48,6 +48,8 @@ void ProgramOptions::init_descriptions()
      "  s or SymbolicSimulator\n"
      "  l or SymbolicLegacySimulator")
 
+	 ("ar",value<std::string>()->default_value(""),"enable area searching mode")//局所的出力モード
+
     ("nd", "nondeterministic mode")
     
     ("nd-out",

@@ -74,10 +74,61 @@ void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
-
-  if(po.count("debug")>0) {
+  
+    if(po.get<std::string>("ar") == "test") {		//局部的出力entail
+	  Logger::enflag=5; //テスト用に常に出力するものを作る
+	Logger::instance().set_log_level(Logger::Area);
+	} else/* if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=2;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=4;
+	//Logger::instance().set_log_level(Logger::Area);
+    } else */if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree
+	  Logger::ptflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+    } else if(po.get<std::string>("ar") == "ent_e1") {			//局部的出力entail_pp_
+	  Logger::enflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "ent_e2") {			//局部的出力entail_??_
+	  Logger::enflag=2;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "ent_e3") {			//局部的出力entail_ip_
+	  Logger::enflag=3;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "ent_e4") {			//局部的出力entail_??_
+	  Logger::enflag=4;
+	Logger::instance().set_log_level(Logger::Area);
+    } else if(po.get<std::string>("ar") == "ent_e5") {			//局部的出力entail_??_
+	  Logger::enflag=5;
+	Logger::instance().set_log_level(Logger::Area);
+    } else if(po.get<std::string>("ar") == "entail"||po.get<std::string>("ar") == "ent") {	//局部的出力entail判定
+	  Logger::enflag=0;
+	Logger::instance().set_log_level(Logger::Area);
+    } else if(po.get<std::string>("ar") == "inco"||po.get<std::string>("ar") == "inconsistent") {	//局部的出力無矛盾性判定
+	  Logger::conflag=0;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "inco_c1") {		//局部的出力inconsistent_pp_
+	  Logger::conflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "inco_c2") {		//局部的出力inconsistent_ip_
+	  Logger::conflag=2;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "inco_c3") {		//局部的出力inconsistent_??_
+	  Logger::conflag=3;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "inco_c4") {		//局部的出力inconsistent_??_
+	  Logger::conflag=4;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "inco_ent_"||po.get<std::string>("ar") == "ent_inco_") {		//局部的出力inconsistent
+	  Logger::conflag=0;Logger::enflag=0;
+	Logger::instance().set_log_level(Logger::Area);
+	}else if(po.count("debug")>0) {
     Logger::instance().set_log_level(Logger::Debug);
-  } else if(po.count("summary")>0){//追加予定の大局的デバッグモード
+  } else if(po.count("summary")>0){					//追加予定の大局的出力モード
 	Logger::instance().set_log_level(Logger::Summary);
   } else {
     Logger::instance().set_log_level(Logger::Warn);

@@ -1,6 +1,6 @@
-// デルタ関数 (impulse function)
+//(impulse function)
 
-INIT  <=> a=0 /\ b=0.
+INIT  <=> a=0 & b=0.
 PULSE <=> [](a- = 5 => b=1).
 FLAT  <=> [](b=0).
 TIMER <=> [](a'=1).

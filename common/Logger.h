@@ -45,12 +45,17 @@ namespace logger {
     (FUNC, LEVEL, FILTER))
 
 
+
 class Logger
 {
 public:
+	static int enflag;//entailflag
+	static int conflag;//consistentflag
+	static int ptflag;//parse_treeflag
   enum LogLevel {
-    Debug,
-	Summary,//追加大局的デバッグモード
+    Area,//追加局所的出力モード
+	Debug,
+	Summary,//追加大局的出力モード
     Warn,
     Error,
     Fatal,
@@ -73,10 +78,19 @@ public:
 
   bool is_valid_level(LogLevel level)
   {
-    return log_level_ <= level;
+	  if(log_level_ == Area){		//局所的出力モードのみ出力
+		  return log_level_ == level;
+	  } else {
+		  return log_level_ <= level;
+	  }
   }
 
   static Logger& instance();
+
+  /**
+   * ログレベルareaとしてログの出力をおこなう
+   */
+  HYDLA_LOGGER_DEF_LOG_WRITE(area_write, Area, area_)
 
   /**
    * ログレベルdebugとしてログの出力をおこなう
@@ -110,8 +124,9 @@ private:
 
   LogLevel log_level_;
 
+  boost::iostreams::filtering_ostream area_;	//局所的出力モード
   boost::iostreams::filtering_ostream debug_;
-  boost::iostreams::filtering_ostream summary_;//大局的デバッグモード
+  boost::iostreams::filtering_ostream summary_;	//大局的出力モード
   boost::iostreams::filtering_ostream warn_;
   boost::iostreams::filtering_ostream error_;
   boost::iostreams::filtering_ostream fatal_;
@@ -124,6 +139,12 @@ private:
       logger. FUNC ARGS;                                              \
     }                                                                 \
   }
+
+/**
+ * ログレベルareaでのログの出力
+ */
+#define HYDLA_LOGGER_AREA(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(Area, area_write, (__VA_ARGS__))
 
 /**
  * ログレベルdebugでのログの出力

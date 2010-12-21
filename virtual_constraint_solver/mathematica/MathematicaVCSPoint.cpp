@@ -10,6 +10,7 @@
 #include "PacketChecker.h"
 
 using namespace hydla::vcs;
+using namespace hydla::logger;
 
 namespace hydla {
 namespace vcs {
@@ -379,7 +380,8 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   }
 
   // 制約ストアからもexprを得てMathematicaに渡す
-  send_cs();
+	send_cs();
+
 
   // 左連続性に関する制約を渡す
   // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
@@ -403,7 +405,8 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+
 
   ml_->skip_pkt_until(RETURNPKT);
 
@@ -419,6 +422,9 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   else if(ret_code==1) {
     // 充足
     result = VCSR_TRUE;
+	if(Logger::conflag==1||Logger::conflag==0){
+     HYDLA_LOGGER_AREA("consistent");
+    }
     HYDLA_LOGGER_SUMMARY("consistent");//無矛盾性判定
     // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
     // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
@@ -463,6 +469,9 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
+	if(Logger::conflag==1||Logger::conflag==0){
+     HYDLA_LOGGER_AREA("inconsistent");
+    }
     HYDLA_LOGGER_SUMMARY("inconsistent");//矛盾
   }
 
@@ -475,6 +484,12 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   
 VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
 {
+  if(Logger::enflag==1||Logger::enflag==0){
+     HYDLA_LOGGER_AREA(	"#*** MathematicaVCSPoint::check_entailment ***\n", 
+	"ask: ");
+	 (negative_ask)->dump_infix(std::cout);
+	 HYDLA_LOGGER_AREA("\n");
+	}
   HYDLA_LOGGER_DEBUG(
     "#*** MathematicaVCSPoint::check_entailment ***\n", 
     "ask: ", *negative_ask);
@@ -497,6 +512,12 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
 
+  /*if(hydla::logger::Logger::flag==2||hydla::logger::Logger::flag==0){
+     HYDLA_LOGGER_AREA(
+		 "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+    }*/
+
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
@@ -518,11 +539,20 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   }
   else if(ret_code==1) {
     result = VCSR_TRUE;
+	if(Logger::enflag==1||Logger::enflag==0){
+     HYDLA_LOGGER_AREA("entailed");
+	}
+	if(Logger::conflag==1||Logger::conflag==0){
+     HYDLA_LOGGER_AREA("Because entailed,isConsistency judgment is done again");
+    }
     HYDLA_LOGGER_SUMMARY("entailed");
   }
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
+	if(Logger::enflag==1||Logger::enflag==0){
+     HYDLA_LOGGER_AREA("not entailed");
+    }
     HYDLA_LOGGER_SUMMARY("not entailed");
   }
   return result;

@@ -22,6 +22,7 @@ using namespace std;
 using namespace boost;
 using namespace hydla::parser;
 using namespace hydla::parse_error;
+using namespace hydla::logger;
 
 namespace hydla { 
 namespace parse_tree {
@@ -47,28 +48,42 @@ ParseTree::~ParseTree()
 void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory) 
 {
   node_factory_ = node_factory;
+  //局所的出力モード
+  if(Logger::enflag>=0||Logger::conflag>=0){
+     HYDLA_LOGGER_AREA("############ Area Output mode ############");
+   }
 
+  
   // ASTの構築
   HydLaAST ast;
   ast.parse(stream);
-  HYDLA_LOGGER_DEBUG("#*** AST Tree ***\n", ast);
-  //startの合図・ここである意味はない
-  HYDLA_LOGGER_SUMMARY("############ Comprehensive debug mode ############");
+  if(Logger::ptflag==1){
+  HYDLA_LOGGER_AREA("#*** AST Tree ***\n", ast);
+  }
+  
+  //大局的出力モード
+  HYDLA_LOGGER_SUMMARY("############ Comprehensive output mode ############");
+  
+  
+  
 
   // ParseTreeの構築
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
-  HYDLA_LOGGER_DEBUG("#*** Parse Tree ***\n", *this);
-  HYDLA_LOGGER_DEBUG("#*** Constraint Definition ***\n", constraint_definition);
-  HYDLA_LOGGER_DEBUG("#*** Program Definition ***\n",    program_definition);
-    
+  if(Logger::ptflag==1){
+  HYDLA_LOGGER_AREA("#*** Parse Tree ***\n", *this);
+  HYDLA_LOGGER_AREA("#*** Constraint Definition ***\n", constraint_definition);
+  HYDLA_LOGGER_AREA("#*** Program Definition ***\n",    program_definition);
+  }
   // 意味解析
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
   update_node_id_list();
-  HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
+  if(Logger::ptflag==1){
+  HYDLA_LOGGER_AREA("#*** Analyzed Parse Tree ***\n", *this);
+  }
 }
 
 void ParseTree::rebuild_node_id_list()

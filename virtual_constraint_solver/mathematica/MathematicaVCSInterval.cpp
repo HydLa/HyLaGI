@@ -12,6 +12,7 @@
 #include "Types.h"
 
 using namespace hydla::vcs;
+using namespace hydla::logger;
 
 namespace hydla {
 namespace vcs {
@@ -393,6 +394,9 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
     result = VCSR_SOLVER_ERROR;
   }
   else if(ret_code==1) { 
+	if(Logger::conflag==2||Logger::conflag==0){
+     HYDLA_LOGGER_AREA("consistent");
+    }
     // [‘«
     HYDLA_LOGGER_DEBUG("consistent");
     result = VCSR_TRUE;
@@ -417,6 +421,9 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
     // §–ñƒGƒ‰[
     assert(ret_code==2);
     result = VCSR_FALSE;
+	if(Logger::conflag==2||Logger::conflag==0){
+     HYDLA_LOGGER_AREA("inconsistent");
+    }
     HYDLA_LOGGER_DEBUG("inconsistent");
   }
 
@@ -427,6 +434,13 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
   
 VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
 {
+  if(Logger::enflag==3||Logger::enflag==0){
+     HYDLA_LOGGER_AREA(	"#*** MathematicaVCSInterval::check_entailment ***\n", 
+	"ask: ");
+	 (negative_ask)->dump_infix(std::cout);
+	 HYDLA_LOGGER_AREA("\n");
+  }
+
   HYDLA_LOGGER_SUMMARY(
     "#*** MathematicaVCSInterval::check_entailment ***\n", 
     "ask: ", *negative_ask);
@@ -509,11 +523,20 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   }
   else if(ret_code==1) {
     result = VCSR_TRUE;
+	if(Logger::enflag==3||Logger::enflag==0){
+     HYDLA_LOGGER_AREA("entailed");
+	}
+	if(Logger::conflag==2||Logger::conflag==0){
+     HYDLA_LOGGER_AREA("Because entailed,isConsistency judgment is done again");
+    }
     HYDLA_LOGGER_SUMMARY("entailed");
   }
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
+	if(Logger::enflag==3||Logger::enflag==0){
+     HYDLA_LOGGER_AREA("not entailed");
+	}
     HYDLA_LOGGER_SUMMARY("not entailed");
   }
   return result;
