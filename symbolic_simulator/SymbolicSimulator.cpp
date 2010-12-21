@@ -290,6 +290,9 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, Mathematica
                                      &expanded_always, 
                                      &positive_asks);
 
+    HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
+                       expanded_always);  
+
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
     switch(vcs.add_constraint(tell_list)) 
     {
@@ -312,6 +315,9 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, Mathematica
     ask_collector.collect_ask(&expanded_always, 
                               &positive_asks, 
                               &negative_asks);
+
+    HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_ask: **\n",
+                       expanded_always);  
 
     // ask制約のエンテール処理
     expanded = false;

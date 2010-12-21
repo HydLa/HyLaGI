@@ -162,7 +162,7 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
   if(in_expanded_always_) {
-    if(visited_always_.find(node) != visited_always_.end()) {
+    if(visited_always_.find(node) != visited_always_.end() && (!in_negative_ask_)) {
       new_expanded_always_.insert(node);
       accept(node->get_child());
     }
