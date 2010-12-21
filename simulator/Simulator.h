@@ -136,7 +136,16 @@ public:
     switch(state->phase) 
     {
     case PointPhase:
-      {
+
+      { 
+		if(hydla::logger::Logger::conflag==1||hydla::logger::Logger::conflag==0){
+        HYDLA_LOGGER_AREA(
+			"#***** begin point phase *****",
+          "\n#** module set **\n",
+          ms->get_name(),
+          "\n");
+          }
+
 		HYDLA_LOGGER_SUMMARY(
           "#***** begin point phase *****",
           "\n#** module set **\n",
@@ -145,10 +154,10 @@ public:
 		  );
 
         HYDLA_LOGGER_DEBUG(
-          "#***** begin point phase *****",
+          /*"#***** begin point phase *****",
           "\n#** module set **\n",
           ms->get_name(),
-          "\n",
+          "\n",*/
           *ms,
           "\n#*** variable map ***\n",
           variable_map_);
@@ -159,6 +168,14 @@ public:
 
     case IntervalPhase: 
       {        
+		  if(hydla::logger::Logger::conflag==2||hydla::logger::Logger::conflag==0){
+        HYDLA_LOGGER_AREA(
+			"#***** begin interval phase *****",
+          "\n#** module set **\n",
+          ms->get_name(),
+          "\n");
+		  }
+
 		HYDLA_LOGGER_SUMMARY(
           "#***** begin interval phase *****",
           "\n#** module set **\n",
@@ -166,10 +183,10 @@ public:
           "\n");
 
         HYDLA_LOGGER_DEBUG(
-          "#***** begin interval phase *****",
+          /*"#***** begin interval phase *****",
           "\n#** module set **\n",
           ms->get_name(),
-          "\n",
+          "\n",*/
           *ms,
           "\n#*** variable map ***\n",
           variable_map_);
