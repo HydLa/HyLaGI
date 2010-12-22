@@ -109,6 +109,9 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
     "--- constraint_store ---\n",
     *this);    
 
+  // 制約ストアが空（true）の場合は変数表も空で良い
+  if(cs_is_true()) return true;
+
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
   std::set<std::set<MathValue> >::const_iterator or_cons_end = 
@@ -422,7 +425,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   else if(ret_code==1) {
     // 充足
     result = VCSR_TRUE;
-	if(Logger::conflag==1||Logger::conflag==0){
+    if(Logger::conflag==1||Logger::conflag==0){
      HYDLA_LOGGER_AREA("consistent");
     }
     HYDLA_LOGGER_SUMMARY("consistent");//無矛盾性判定

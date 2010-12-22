@@ -81,6 +81,16 @@ private:
    */
   void add_left_continuity_constraint(PacketSender& ps, max_diff_map_t& max_diff_map);
 
+  /**
+   * §–ñƒXƒgƒA‚ªtrue‚Å‚ ‚é‚©‚Ç‚¤‚©
+   */
+  bool cs_is_true()
+  {
+    return constraint_store_.first.size()==1 && 
+      (*constraint_store_.first.begin()).size()==1 &&
+      (*(*constraint_store_.first.begin()).begin()).str=="True";
+  }
+
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
 };
