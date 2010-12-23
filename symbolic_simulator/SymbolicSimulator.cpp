@@ -14,6 +14,8 @@
 
 #include "vcs_math_source.h"
 
+//仮追加
+#include "RTreeVisitor.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
 
@@ -351,6 +353,11 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, Mathematica
 bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
 {
+  //reduce出力用分岐
+  if(opts_.solver == "r" || opts_.solver == "Reduce") {
+    reduce_output(ms,state);
+    return true;
+  }
 
   //前準備
   if(state->changed_asks.size() != 0) {
@@ -561,6 +568,103 @@ void SymbolicSimulator::output_interval(MathematicaVCS &vcs, const symbolic_time
 }
 
 
+// Reduce用のファイル出力関数
+bool SymbolicSimulator::reduce_output(const module_set_sptr& ms, 
+                                const phase_state_const_sptr& state)
+{
+  TellCollector tell_collector(ms);
+
+  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+                              AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
+                              AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
+
+  tells_t         tell_list;
+  positive_asks_t   positive_asks;
+  negative_asks_t   negative_asks;
+
+  if(state->changed_asks.size() != 0) {
+    HYDLA_LOGGER_DEBUG("#** point_phase: changed_ask_id: ",
+                       state->changed_asks.at(0).second,
+                       " **");
+  }
+
+  expanded_always_t expanded_always;
+
+//ファイル出力
+  std::ofstream ofs( "in.red" );
+  int count = 0;
+
+//vcsにTreeVisitorを仮設置 引数はダミー
+  RTreeVisitor rtv(1);
+
+// 変数表
+  std::cout << "variable map_output" << std::endl;
+// do_initializeから
+    std::cout << "varN:={";
+    ofs << "varN:={";
+  BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
+    std::cout << "\"" << i.first << "\",";
+    ofs << "\"" << i.first << "\",";
+  }
+  std::cout << "\b};" << std::endl;
+  ofs << "\b};" << std::endl;
+
+//depend文
+  std::cout << "depend y,t;" << std::endl;
+  ofs << "depend y,t;" << std::endl;
+
+// 制約
+  // tell制約を集める
+  tell_collector.collect_new_tells(&tell_list,
+                                   &expanded_always, 
+                                   &positive_asks);
+  tells_t::const_iterator tells_it  = tell_list.begin();
+  tells_t::const_iterator tells_end = tell_list.end();
+
+  std::cout << "%tell_list" << std::endl;
+  ofs << "%tell_list" << std::endl;
+  while(tells_it!=tells_end) {
+    std::cout << "tell" << count << ":= " << rtv.get_expr(*tells_it) << ";" << std::endl;
+    ofs << "tell" << count << ":= " << rtv.get_expr(*tells_it) << ";" << std::endl;
+    count++;
+    tells_it++;
+  }
+  count = 0;
+
+  
+  // ask制約を集める
+  std::cout << "%negative_asks_t" << std::endl;
+  ofs << "%negative_asks_t" << std::endl;
+  ask_collector.collect_ask(&expanded_always, 
+                            &positive_asks, 
+                            &negative_asks);
+  // ask制約のエンテール処理
+//    expanded = false;
+  negative_asks_t::iterator it  = negative_asks.begin();
+  negative_asks_t::iterator end = negative_asks.end();
+  
+  while(it!=end) {
+    std::cout << "map" << "" << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
+    std::cout << "guard" << "" << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
+    ofs << "map" << "" << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
+    ofs << "guard" << "" << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
+  
+    count++;
+    it++;
+  }
+  count = 0;
+
+
+// シミュレーション終了時刻
+  std::cout << "MaxT:= " << opts_.max_time << ";" << std::endl;
+  ofs << "MaxT:= " << opts_.max_time << ";" << std::endl;
+  std::cout << ";end;" << std::endl;
+  ofs << ";end;" << std::endl;
+  
+
+  return true;
+} 
+
 void SymbolicSimulator::output(const symbolic_time_t& time, 
                            const variable_map_t& vm)
 {
@@ -592,4 +696,3 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
 
 } //namespace symbolic_simulator
 } //namespace hydla
-

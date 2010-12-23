@@ -47,6 +47,13 @@ void ProgramOptions::init_descriptions()
      "  b or BandPSimulator\n"
      "  s or SymbolicSimulator\n"
      "  l or SymbolicLegacySimulator")
+     
+     ("sl",
+     value<std::string>()->default_value("m"), 
+     "using solver:\n"
+     "  m or Mathematica\n"
+     "  r or Reduce")
+
 
 	 ("ar",value<std::string>()->default_value(""),"enable area searching mode")//局所的出力モード
 

@@ -42,6 +42,8 @@ void setup_symbolic_simulator_opts(SymbolicSimulator::Opts& opts)
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
   opts.approx_precision = po.get<int>("approx");
+  opts.solver        = po.get<std::string>("sl");
+
 
 }
 

@@ -60,6 +60,7 @@ public:
     symbolic_time_t output_interval;
     int             output_precision;
     int approx_precision;
+    std::string solver;
   } Opts;
 
   SymbolicSimulator(const Opts& opts);
@@ -82,6 +83,13 @@ public:
    */
   virtual bool interval_phase(const module_set_sptr& ms, 
                               const phase_state_const_sptr& state);
+
+  /*
+  * reduceo—Í—pŠÖ”BŒ»İ‚Ípoint_phaseŠÖ”‚©‚ç•ªŠò
+  */
+  
+  virtual bool reduce_output(const module_set_sptr& ms, 
+                           const phase_state_const_sptr& state);
 
 private:
   /**
