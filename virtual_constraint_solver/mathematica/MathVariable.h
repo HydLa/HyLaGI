@@ -1,13 +1,13 @@
 #ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_MATHVARIABLE_H_
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_MATHVARIABLE_H_
 
-#include "DefaultVariable.h"
+#include "../../symbolic_simulator/SymbolicTypes.h"
 
 namespace hydla {
 namespace vcs {
 namespace mathematica {
   
-typedef simulator::DefaultVariable MathVariable;
+typedef hydla::symbolic_simulator::symbolic_variable_t MathVariable;
 
 } // namespace mathematica
 } // namespace simulator

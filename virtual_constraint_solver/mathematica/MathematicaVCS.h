@@ -1,16 +1,12 @@
 #ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_H_
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_H_
 
-/**
- * プログラム間の依存性の問題から，
- * このヘッダーおよびこのヘッダーからインクルードされるヘッダーにおいて
- * ソルバー依存のヘッダー(mathematicaやrealpaver等の固有のヘッダー)を
- * インクルードしてはならない
- */
 
 #include <boost/scoped_ptr.hpp>
 
 #include "MathVCSType.h"
+#include "mathlink_helper.h"
+#include "vcs_math_source.h"
 
 class MathLink;
 
@@ -22,14 +18,15 @@ class MathematicaVCS :
     public virtual_constraint_solver_t
 {
 public:
-  enum Mode {
-    ContinuousMode,
-    DiscreteMode,
-  };
 
-  MathematicaVCS(Mode m, MathLink* ml, int approx_precision);
+
+  //MathematicaVCS(Mode m, MathLink* ml, int approx_precision);
+  MathematicaVCS(const hydla::symbolic_simulator::Opts &opts);
 
   virtual ~MathematicaVCS();
+  
+  //ソルバのモードを変更する
+  virtual void change_mode(hydla::symbolic_simulator::Mode m, int approx_precision);
 
   /**
    * 制約ストアの初期化をおこなう
@@ -67,37 +64,23 @@ public:
     const time_t& max_time,
     const not_adopted_tells_list_t& not_adopted_tells_list);
 
-  /**
-   * 現在のモードを返す
-   */
-  Mode get_mode() const {
-    return mode_;
-  }
 
-  /**
-   * モードを変更する
-   * 制約ストア等のすべての内部状態はすべて初期化される
-   */
-//  void change_mode(Mode m);
 
-  /**
-   * 結果の出力関数を設定する
-   */
-  virtual void set_output_func(const time_t& max_interval, 
-                               const output_function_t& func);
-
-  /**
-   * 結果の出力関数の設定をリセットし，初期状態に戻す
-   */
-  virtual void reset_output_func();
-  
-  
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
-private:
-  Mode      mode_;
-//  MathLink* ml_;
+  //SymbolicValueを指定された精度で数値に変換する
+  virtual std::string get_real_val(const value_t &val, int precision);
+  //SymbolicTimeを指定された精度で数値に変換する
+  virtual std::string get_real_val(const time_t &val, int precision);
+  //SymbolicTimeを簡約する
+  virtual void simplify(time_t &val);
+  //SymbolicTimeを比較する
+  virtual bool less_than(const time_t &lhs, const time_t &rhs);
 
+private:
+  hydla::symbolic_simulator::Mode      mode_;
+
+  MathLink ml_;
   boost::scoped_ptr<virtual_constraint_solver_t> vcs_;
 };
 

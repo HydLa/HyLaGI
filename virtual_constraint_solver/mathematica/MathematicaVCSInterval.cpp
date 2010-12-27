@@ -625,16 +625,16 @@ VCSResult MathematicaVCSInterval::integrate(
   send_vars(ps, max_diff_map);
 
   // maxTimeを渡す
-  time_t send_time(max_time);
-  send_time -= current_time;
+  time_t tmp_time(max_time);
+  tmp_time -= current_time;
   HYDLA_LOGGER_DEBUG("current time:", current_time);
-  HYDLA_LOGGER_DEBUG("send time:", send_time);
+  HYDLA_LOGGER_DEBUG("send time:", tmp_time);
   if(approx_precision_ > 0) {
     // 近似して送信
     ml_->put_function("approxExpr", 2);
     ml_->put_integer(approx_precision_);
   }
-  send_time.send_time(*ml_);
+  send_time(tmp_time);
 
 
 ////////////////// 受信処理
@@ -663,7 +663,7 @@ VCSResult MathematicaVCSInterval::integrate(
 
   // next_point_phase_timeを得る
   MathTime elapsed_time;
-  elapsed_time.receive_time(*ml_);
+  elapsed_time.set(ml_->get_string());
   HYDLA_LOGGER_DEBUG("elapsed_time: ", elapsed_time);  
   state.time  = elapsed_time;
   state.time += current_time;
@@ -747,8 +747,16 @@ VCSResult MathematicaVCSInterval::integrate(
 
 ////////////////// 受信終了
 
-  // 時刻の簡約化
-  state.time.simplify(*ml_);
+  // 時刻の簡約化。本来は関数使ってやるべきだけど、とりあえずそのままここに
+  HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", state.time);
+  ml_->put_function("ToString", 1);
+  ml_->put_function("FullForm", 1);
+  ml_->put_function("Simplify", 1);
+  ml_->put_function("ToExpression", 1);
+  ml_->put_string(state.time.get_string());
+  ml_->skip_pkt_until(RETURNPKT);
+  state.time.set(ml_->get_string());
+
 
   // 時刻の近似
   if(approx_precision_ > 0) {
@@ -756,10 +764,10 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->put_function("FullForm", 1);
     ml_->put_function("approxExpr", 2);
     ml_->put_integer(approx_precision_);
-    state.time.send_time(*ml_);
+    send_time(state.time);
     ml_->skip_pkt_until(RETURNPKT);
     ml_->MLGetNext(); 
-    state.time.receive_time(*ml_);
+    state.time.set(ml_->get_string());
   }
 
   // 未定義の変数を変数表に反映
@@ -820,6 +828,12 @@ VCSResult MathematicaVCSInterval::integrate(
   return VCSR_TRUE;
 }
 
+void MathematicaVCSInterval::send_time(const time_t& time){
+  HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
+  ml_->put_function("ToExpression", 1);
+  ml_->put_string(time.get_string());
+}
+
 void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm, 
                                               variable_map_t& out_vm, 
                                               const time_t& time)
@@ -838,7 +852,7 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       ml_->put_function("applyTime2Expr", 2);
       ml_->put_function("ToExpression", 1);
       ml_->put_string(it->second.str);
-      time.send_time(*ml_);
+      send_time(time);
 
     ////////////////// 受信処理
 

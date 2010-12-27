@@ -120,6 +120,10 @@ private:
   void send_ask_guards(PacketSender& ps, 
                        const hydla::simulator::ask_set_t& asks) const;
 
+  /**
+  * ‚ğ‘—M‚·‚é
+  */
+  void send_time(const time_t& time);
 
   /**
    * •Ï”•\‚É–¢’è‹`‚Ì•Ï”‚ğ’Ç‰Á‚·‚é

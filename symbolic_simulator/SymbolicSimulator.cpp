@@ -12,7 +12,6 @@
 
 #include "Logger.h"
 
-#include "vcs_math_source.h"
 
 //仮追加
 #include "RTreeVisitor.h"
@@ -27,6 +26,7 @@
 #include "AskDisjunctionFormatter.h"
 #include "DiscreteAskRemover.h"
 #include "AskTypeAnalyzer.h"
+#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
@@ -58,7 +58,6 @@ namespace symbolic_simulator {
 
 SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
   opts_(opts)
-//  vcs_(MathematicaVCS::DiscreteMode, &ml_)
 {
 }
 
@@ -89,9 +88,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   std::cout << std::endl;
 
 
-  //mathematica関連
-  init_mathlink();
-  
+  solver_.reset(new MathematicaVCS(opts_));   //使用するソルバを決定
 }
 
 namespace {
@@ -157,79 +154,6 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
   }
 }
 
-
-void SymbolicSimulator::init_mathlink()
-{
-  HYDLA_LOGGER_DEBUG("#*** init mathlink ***");
-
-  //TODO: 例外を投げるようにする
-  if(!ml_.init(opts_.mathlink.c_str())) {
-    std::cerr << "can not link" << std::endl;
-    exit(-1);
-  }
-
-  // 出力する画面の横幅の設定
-  ml_.MLPutFunction("SetOptions", 2);
-  ml_.MLPutSymbol("$Output"); 
-  ml_.MLPutFunction("Rule", 2);
-  ml_.MLPutSymbol("PageWidth"); 
-  ml_.MLPutSymbol("Infinity"); 
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-
-  // デバッグプリント
-  ml_.MLPutFunction("Set", 2);
-  ml_.MLPutSymbol("optUseDebugPrint"); 
-  ml_.MLPutSymbol(opts_.debug_mode ? "True" : "False");
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-
-  // プロファイルモード
-  ml_.MLPutFunction("Set", 2);
-  ml_.MLPutSymbol("optUseProfile"); 
-  ml_.MLPutSymbol(opts_.profile_mode ? "True" : "False");
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-
-  // 並列モード
-  ml_.MLPutFunction("Set", 2);
-  ml_.MLPutSymbol("optParallel"); 
-  ml_.MLPutSymbol(opts_.parallel_mode ? "True" : "False");
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-
-  // 出力形式
-  ml_.MLPutFunction("Set", 2);
-  ml_.MLPutSymbol("optOutputFormat"); 
-  switch(opts_.output_format) {
-    case fmtTFunction:
-      ml_.MLPutSymbol("fmtTFunction");
-      break;
-
-    case fmtNumeric:
-    default:
-      ml_.MLPutSymbol("fmtNumeric");
-      break;
-  }
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-
-  // HydLa.mの内容送信
-  //   ml_.MLPutFunction("Get", 1);
-  //   ml_.MLPutString("symbolic_simulator/HydLa.m");
-  ml_.MLPutFunction("ToExpression", 1);
-  ml_.MLPutString(vcs_math_source());  
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-}
-
-
 void SymbolicSimulator::simulate()
 {
 
@@ -274,7 +198,7 @@ void SymbolicSimulator::simulate()
 }
 
 
-bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, MathematicaVCS &vcs, expanded_always_t &expanded_always,
+bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, expanded_always_t &expanded_always,
                                           positive_asks_t &positive_asks, negative_asks_t &negative_asks){
 
   //前準備
@@ -296,7 +220,7 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, Mathematica
                        expanded_always);  
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    switch(vcs.add_constraint(tell_list)) 
+    switch(solver_->add_constraint(tell_list)) 
     {
       case VCSR_TRUE:
         // do nothing
@@ -326,7 +250,7 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, Mathematica
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
     while(it!=end) {
-      switch(vcs.check_entailment(*it))
+      switch(solver_->check_entailment(*it))
       {
         case VCSR_TRUE:
           expanded = true;
@@ -369,17 +293,15 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
                      expanded_always);  
-  MathematicaVCS vcs(MathematicaVCS::DiscreteMode, &ml_, opts_.approx_precision);
-  /*vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&SymbolicSimulator::output, this, _1, _2));*/
-  vcs.reset(state->variable_map);
+  solver_->change_mode(DiscreteMode, opts_.approx_precision);
+  solver_->reset(state->variable_map);
 
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
 
 
   //閉包計算
-  if(!calculate_closure(ms, vcs,expanded_always,positive_asks,negative_asks)){
+  if(!calculate_closure(ms,expanded_always,positive_asks,negative_asks)){
     return false;
   }
 
@@ -397,7 +319,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   {
     // 暫定的なフレーム公理の処理
     // 未定義の値や変数表に存在しない場合は以前の値をコピー
-    vcs.create_variable_map(new_state->variable_map);
+    solver_->create_variable_map(new_state->variable_map);
     variable_map_t::const_iterator it  = state->variable_map.begin();
     variable_map_t::const_iterator end = state->variable_map.end();
     for(; it!=end; ++it) {
@@ -433,15 +355,13 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
                      expanded_always);
 
-  MathematicaVCS vcs(MathematicaVCS::ContinuousMode, &ml_, opts_.approx_precision);
-  /*vcs.set_output_func(symbolic_time_t(opts_.output_interval), 
-                      boost::bind(&SymbolicSimulator::output, this, _1, _2));*/
-  vcs.reset(state->variable_map);
+  solver_->change_mode(ContinuousMode, opts_.approx_precision);
+  solver_->reset(state->variable_map);
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
 
   //閉包計算
-  if(!calculate_closure(ms, vcs,expanded_always,positive_asks,negative_asks)){
+  if(!calculate_closure(ms, expanded_always,positive_asks,negative_asks)){
     return false;
   }
 
@@ -494,7 +414,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   
   // askの導出状態が変化するまで積分をおこなう
   virtual_constraint_solver_t::IntegrateResult integrate_result;
-  vcs.integrate(
+  solver_->integrate(
     integrate_result,
     positive_asks,
     negative_asks,
@@ -503,8 +423,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     not_adopted_tells_list);
 
   //出力
-  output_interval(vcs,
-                  state->current_time,
+  output_interval(state->current_time,
                   integrate_result.states[0].time-state->current_time,
                   integrate_result.states[0].variable_map);
 
@@ -524,7 +443,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     
     //次のフェーズにおける変数の値を導出する
     HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
-    vcs.apply_time_to_vm(integrate_result.states[0].variable_map, new_state->variable_map, integrate_result.states[0].time-state->current_time);
+    solver_->apply_time_to_vm(integrate_result.states[0].variable_map, new_state->variable_map, integrate_result.states[0].time-state->current_time);
 
     push_phase_state(new_state);
   }
@@ -532,36 +451,24 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
 
 
   HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
-                     "time:", integrate_result.states[0].time.get_real_val(ml_, 5), "\n",
+                     "time:", solver_->get_real_val(integrate_result.states[0].time, 5), "\n",
                      integrate_result.states[0].variable_map);
-
-/*
-  std::cout << "%%%%%%%%%%%%% interval phase result %%%%%%%%%%%%% \n"
-  << "time:" << integrate_result.states[0].time.get_real_val(ml_, 5) << "\n";
-
-  variable_map_t::const_iterator it  = integrate_result.states[0].variable_map.begin();
-  variable_map_t::const_iterator end = integrate_result.states[0].variable_map.end();
-  for(; it!=end; ++it) {
-  std::cout << it->first << "\t: "
-  << it->second.get_real_val(ml_, 5) << "\n";
-  }
-*/
 
   return true;
 }
 
-void SymbolicSimulator::output_interval(MathematicaVCS &vcs, const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
+void SymbolicSimulator::output_interval(const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
                                         const variable_map_t& variable_map){
   variable_map_t output_vm;
   symbolic_time_t elapsed_time;
   
   do{
-    vcs.apply_time_to_vm(variable_map, output_vm, elapsed_time);
+    solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
     output((elapsed_time+current_time),output_vm);
     elapsed_time += symbolic_time_t(opts_.output_interval);
-  }while(elapsed_time.lessThan(ml_, limit_time));
+  }while(solver_->less_than(elapsed_time, limit_time));
   elapsed_time = limit_time;
-  vcs.apply_time_to_vm(variable_map, output_vm, elapsed_time);
+  solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
   output((elapsed_time+current_time),output_vm);
 
   std::cout << std::endl << std::endl;
@@ -671,24 +578,21 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
   
   
   if(opts_.output_style==styleList){
-    output_buffer_ << time.get_real_val(ml_, opts_.output_precision) << "\t";
+    output_buffer_ << solver_->get_real_val(time, opts_.output_precision) << "\t";
 
     variable_map_t::const_iterator it  = vm.begin();
     variable_map_t::const_iterator end = vm.end();
     for(; it!=end; ++it) {
-       output_buffer_ << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+       output_buffer_ << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
     }
     output_buffer_ << std::endl;
   }else{
-  //   std::cout << "$time\t: " << time.get_real_val(ml_, 5) << "\n";
-    std::cout << time.get_real_val(ml_, opts_.output_precision) << "\t";
+    std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
 
     variable_map_t::const_iterator it  = vm.begin();
     variable_map_t::const_iterator end = vm.end();
     for(; it!=end; ++it) {
-  //     std::cout << it->first << "\t: "
-  //               << it->second.get_real_val(ml_, 5) << "\n";
-       std::cout << it->second.get_real_val(ml_, opts_.output_precision) << "\t";
+       std::cout <<  solver_->get_real_val(it->second, opts_.output_precision) << "\t";
     }
     std::cout << std::endl;
   }
