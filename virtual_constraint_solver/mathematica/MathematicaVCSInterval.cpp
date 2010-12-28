@@ -639,6 +639,9 @@ VCSResult MathematicaVCSInterval::integrate(
 
 ////////////////// óMˆ—
 
+//   PacketChecker pc(*ml_);
+//   pc.check();
+
   HYDLA_LOGGER_DEBUG(
     "-- integrate math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));

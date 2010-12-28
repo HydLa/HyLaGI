@@ -237,10 +237,10 @@ exDSolve[expr_, vars_] := Block[
                         (* 1つだけ採用 *)
                         (* TODO: 複数解ある場合も考える *)
                         sol = First[sol];
-                        sol = removeNotEqual[Reduce[Join[Map[(Equal @@ #) &, sol], NDExpr], 
-                                                    Map[(#[t]) &, getNDVars[vars]]]];
-                        If[sol =!= False, 
-                           Map[(Rule @@ #) &, applyList[sol]], 
+                        sol = First[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], 
+                                          Map[(#[t]) &, getNDVars[vars]]]];
+                        If[sol =!= {}, 
+                           sol,
                            overconstraint],
                         underconstraint,
                         {DSolve::underdet, Solve::svars, DSolve::deqx, 
@@ -423,7 +423,7 @@ integrateCalc[cons_,
              "vars:", vars, 
              "maxTime:", maxTime];
 
-  If[cons=!={},
+  If[Cases[cons, Except[True]]=!={},
     (* true *)
     {DExpr, DExprVars, NDExpr} = splitExprs[cons];
     tmpIntegSol = applyList[removeNotEqual[Reduce[DExpr, DExprVars]]];
@@ -437,12 +437,14 @@ integrateCalc[cons_,
                         {Solve::incnst}];
     (* debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
 
-    (*1つだけ採用*)
-    (*TODO:複数解ある場合も考える*)
+    (* 1つだけ採用 *)
+    (* TODO:複数解ある場合も考える *)
     tmpIntegSol = First[tmpIntegSol];
-    tmpIntegSol = applyList[removeNotEqual[Reduce[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], vars]]];
+    (* tmpIntegSol = applyList[removeNotEqual[Reduce[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], vars]]]; *)
     (* 方程式をルール化する *)
-    tmpIntegSol = Map[(Rule @@ #) &, tmpIntegSol];
+    (* tmpIntegSol = Map[(Rule @@ #) &, tmpIntegSol]; *)
+    tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
+                              Map[(#[t])&, getNDVars[vars]]]];
 
     tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
