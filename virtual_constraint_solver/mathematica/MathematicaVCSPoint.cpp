@@ -117,6 +117,14 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   std::set<std::set<MathValue> >::const_iterator or_cons_end = 
     constraint_store_.first.end();
 
+/*
+  // convertCSToVM[exprs]‚ğ“n‚µ‚½‚¢
+  // TODO:Or‚Ì•ª‰ğ
+  ml_->put_function("convertCSToVM", 1);
+  ml_->put_function("List", and_size);
+*/
+
+
   // ˆê‚Â‚¾‚¯Ì—p
   // TODO: •¡”‰ğ‚ ‚éê‡‚Ìˆ—‚à‚«‚¿‚ñ‚Æl‚¦‚é
 //  assert(constraint_store_.first.size() == 1);

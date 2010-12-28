@@ -60,12 +60,65 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 
 (* Print[checkEntailment[ht==0, {}, {ht}]] *)
 
-(*
- * 変数名の頭についている"usrVar"を取り除く
- *)
-renameVar[varName_] := (
-  ToExpression[First[StringCases[ToString[varName], "usrVar" ~~ x__ -> x]]]
-);
+
+renameVar[varName_] := Block[
+  {renamedVarName, derivativeCount = 0, prev = 0,
+   getVariableCount, removeUsrVar
+  },  
+
+  getVariableCount[Derivative[n_][var_]] := n;
+  removeUsrVar[var_] := ToExpression[First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]]];
+
+  (* 変数名に'がつく場合の処理 *)
+  If[MemberQ[{varName}, Derivative[n_][x_], Infinity],
+    derivativeCount = getVariableCount[varName];
+    renamedVarName = removeDash[varName],
+    renamedVarName = varName
+  ];
+  (* 変数名にprevがつく場合の処理 *)
+  If[Head[renamedVarName] === prev,
+    renamedVarName = First[renamedVarName];
+    prev = 1
+  ];
+  (* 変数名の頭についている "usrVar"を取り除く *)
+  renamedVarName = removeUsrVar[renamedVarName];
+  {renamedVarName, derivativeCount, prev}
+];
+
+(* 変数とその値に関する式のリストを、変数表的形式に変換
+ * 0:Equal
+ * 1:Less
+ * 2:Greater
+ * 3:LessEqual
+ * 4:GreaterEqual
+*)
+convertStoreToVM[exprs_] := Block[
+  {getExprCode, removeInequality},
+      
+  getExprCode[expr_] := Switch[Head[expr],
+    Equal, 0,
+    Less, 1,
+    Greater, 2,
+    LessEqual, 3,
+    GreaterEqual, 4
+  ];
+   
+  (* Inequality[a, relop, x, relop, b]の形を変形 *)
+  removeInequality[ret_, expr_] := (
+    If[Head[expr] === Inequality,
+      Join[ret,
+           {Reduce[expr[[2]][expr[[1]], expr[[3]]], expr[[3]]]},
+           {expr[[4]][expr[[3]], expr[[5]]]}
+      ],
+      Append[ret, expr]
+    ]
+  );
+   
+  Map[({getExprCode[#], renameVar[#[[1]]], #[[2]]} ) &, 
+      Fold[(removeInequality[#1, #2]) &, {}, exprs]]
+   
+];
+
 
 (*
  * isConsistent内のReduceの結果得られた解を{変数名, 値}　のリスト形式にする
