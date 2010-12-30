@@ -112,25 +112,88 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   // 制約ストアが空（true）の場合は変数表も空で良い
   if(cs_is_true()) return true;
 
-  std::set<std::set<MathValue> >::const_iterator or_cons_it = 
-    constraint_store_.first.begin();
-  std::set<std::set<MathValue> >::const_iterator or_cons_end = 
-    constraint_store_.first.end();
+
+/////////////////// 送信処理
+
+  // convertCSToVM[exprs]を渡したい
+  ml_->put_function("convertCSToVM", 1);
+  send_cs();
+
+
+/////////////////// 受信処理
+
+//   PacketChecker pc(*ml_);
+//   pc.check();
+
+  HYDLA_LOGGER_DEBUG(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+
+  ml_->skip_pkt_until(RETURNPKT);
+
+  ml_->MLGetNext();
+//  ml_->MLGetNext();
+
+  // List関数の要素数（式の個数）を得る
+  int expr_size = ml_->get_arg_count();
+  ml_->MLGetNext(); // Listという関数名
+
+
+  for(int i=0; i<expr_size; i++)
+  {
+    ml_->MLGetNext();
+    ml_->MLGetNext();
+
+    // 変数名（名前、微分回数、prev）
+    ml_->MLGetNext();
+    ml_->MLGetNext();
+    ml_->MLGetNext(); // ?
+    std::string variable_name = ml_->get_string();
+    int variable_derivative_count = ml_->get_integer();
+    int prev = ml_->get_integer();
+
+    // 関係演算子のコード
+    int relop_code = ml_->get_integer();
+    // 値
+    std::string value_str = ml_->get_string();
+
+
+    // prev変数は処理しない
+    if(prev==1) continue;
+
+    MathVariable symbolic_variable;
+    MathValue symbolic_value;
+    symbolic_variable.name = variable_name;
+    symbolic_variable.derivative_count = variable_derivative_count;    
+    symbolic_value.str = value_str;
+
+    // 関係演算子コードを元に、変数表の対応する部分に代入する
+    // TODO: Orの扱い
+    switch(relop_code)
+    {
+      case 0: // Equal
+        variable_map.set_variable(symbolic_variable, symbolic_value);
+        break;
+      case 1: // Less
+        break;
+      case 2: // Greater
+        break;
+      case 3: // LessEqual
+        break;
+      case 4: // GreaterEqual
+        break;        
+    }
+  }
+    
 
 /*
-  // convertCSToVM[exprs]を渡したい
-  // TODO:Orの分解
-  ml_->put_function("convertCSToVM", 1);
-  ml_->put_function("List", and_size);
-*/
-
-
   // 一つだけ採用
   // TODO: 複数解ある場合の処理もきちんと考える
 //  assert(constraint_store_.first.size() == 1);
 //  for(; or_cons_it!=or_cons_end; ++or_cons_it) {
     std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
-    for(; (and_cons_it) != (*or_cons_it).end(); and_cons_it++)
+    std::set<MathValue>::const_iterator and_cons_end = (*or_cons_it).end();
+    for(; (and_cons_it) != and_cons_end; and_cons_it++)
     {
       std::string cons_str = (*and_cons_it).str;
       // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
@@ -201,6 +264,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
       } 
     }
 //  }
+*/
 
   return true;
 }

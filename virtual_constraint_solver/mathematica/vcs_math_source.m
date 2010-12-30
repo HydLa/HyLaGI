@@ -63,15 +63,15 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 
 renameVar[varName_] := Block[
   {renamedVarName, derivativeCount = 0, prev = 0,
-   getVariableCount, removeUsrVar
+   getDerivativeCount, removeUsrVar
   },  
 
-  getVariableCount[Derivative[n_][var_]] := n;
-  removeUsrVar[var_] := ToExpression[First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]]];
+  getDerivativeCount[Derivative[n_][var_]] := n;
+  removeUsrVar[var_] := First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]];
 
   (* ïœêîñºÇ…'Ç™Ç¬Ç≠èÍçáÇÃèàóù *)
   If[MemberQ[{varName}, Derivative[n_][x_], Infinity],
-    derivativeCount = getVariableCount[varName];
+    derivativeCount = getDerivativeCount[varName];
     renamedVarName = removeDash[varName],
     renamedVarName = varName
   ];
@@ -92,8 +92,8 @@ renameVar[varName_] := Block[
  * 3:LessEqual
  * 4:GreaterEqual
 *)
-convertStoreToVM[exprs_] := Block[
-  {getExprCode, removeInequality},
+convertCSToVM[orExprs_] := Block[
+  {andExprs, getExprCode, removeInequality},
       
   getExprCode[expr_] := Switch[Head[expr],
     Equal, 0,
@@ -113,9 +113,18 @@ convertStoreToVM[exprs_] := Block[
       Append[ret, expr]
     ]
   );
-   
-  Map[({getExprCode[#], renameVar[#[[1]]], #[[2]]} ) &, 
-      Fold[(removeInequality[#1, #2]) &, {}, exprs]]
+
+  debugPrint["orExprs:", orExprs];   
+  If[Length[orExprs] <= 1,
+    (* OrÇ≈Ç¬Ç»Ç™ÇÍÇƒÇ¢ÇÈóvëfêîÇ™1å¬à»â∫ *)
+    andExprs = First[orExprs];
+    Map[({renameVar[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]} ) &, 
+        Fold[(removeInequality[#1, #2]) &, {}, andExprs]],
+ 
+    (* OrÇ≈ï°êîÇ¬Ç»Ç™ÇÍÇƒÇ¢ÇÈ *)
+    (* TODO: *)
+    1
+  ]
    
 ];
 
