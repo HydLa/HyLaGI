@@ -34,7 +34,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
 
   opts.mathlink      = po.get<std::string>("mathlink");
   opts.debug_mode    = po.count("debug")>0;
-  opts.max_time      = po.get<std::string>("simulation-time");
+  opts.max_time      = po.get<std::string>("time");
   opts.nd_mode       = po.count("nd")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.profile_mode  = po.count("profile")>0;
@@ -42,7 +42,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
   opts.approx_precision = po.get<int>("approx");
-  opts.solver        = po.get<std::string>("sl");
+  opts.solver        = po.get<std::string>("solver");
 
 
 }

@@ -19,7 +19,7 @@ void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> p
 
   bpopts.mathlink      = po.get<std::string>("mathlink");
   bpopts.debug_mode    = po.count("debug") > 0;
-  bpopts.max_time      = po.get<std::string>("simulation-time");
+  bpopts.max_time      = po.get<std::string>("time");
   bpopts.profile_mode  = po.count("profile") > 0;
   bpopts.parallel_mode = po.count("parallel")> 0;
 

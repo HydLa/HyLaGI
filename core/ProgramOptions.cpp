@@ -23,7 +23,7 @@ void ProgramOptions::init_descriptions()
     ("help,h", "produce help message")
     ("version", "version")
     ("debug,d", "enable debug mode")
-    ("summary,c","enable summary debug mode")
+    ("comprehensive,c","enable comprehensive debug mode")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
 
@@ -48,9 +48,9 @@ void ProgramOptions::init_descriptions()
      "  s or SymbolicSimulator\n"
      "  l or SymbolicLegacySimulator")
      
-     ("sl",
+     ("solver,s",
      value<std::string>()->default_value("m"), 
-     "using solver:\n"
+     "solver:\n"
      "  m or Mathematica\n"
      "  r or Reduce")
 
@@ -77,7 +77,7 @@ void ProgramOptions::init_descriptions()
      value<int>()->default_value(5), 
      "precision of output message")
 
-    ("simulation-time,s", 
+    ("time,t", 
      value<std::string>()->default_value("1"), 
      "simulation time")
     

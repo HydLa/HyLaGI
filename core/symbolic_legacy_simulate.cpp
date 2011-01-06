@@ -27,7 +27,7 @@ void setup_symbolic_legacy_simulator_opts(
 
   opts.mathlink         = po.get<std::string>("mathlink");
   opts.debug_mode       = po.count("debug")>0;
-  opts.max_time         = po.get<std::string>("simulation-time");
+  opts.max_time         = po.get<std::string>("time");
   opts.profile_mode     = po.count("profile")>0;
   opts.parallel_mode    = po.count("parallel")>0;
   opts.output_interval  = po.get<std::string>("output-interval");
