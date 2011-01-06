@@ -88,7 +88,7 @@ private:
   {
     return constraint_store_.first.size()==1 && 
       (*constraint_store_.first.begin()).size()==1 &&
-      (*(*constraint_store_.first.begin()).begin()).str=="True";
+      (*(*constraint_store_.first.begin()).begin()).get_string()=="True";
   }
 
   mutable MathLink* ml_;

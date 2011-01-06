@@ -2,13 +2,12 @@
 #define _SYMBOLIC_VALUE_H_
 
 #include <string>
+#include <vector>
 
 namespace hydla {
 namespace symbolic_simulator {
 
 struct SymbolicValue {
-  std::string str; // 文字列（任意の式を扱える）
-
 
   /**
    * 未定義値かどうか
@@ -16,14 +15,25 @@ struct SymbolicValue {
   bool is_undefined() const;
 
   /**
-   * 浮動小数点形式の値を取得する
+   * 文字列表現を取得する
    */
-  //std::string get_real_val(MathLink& ml, int precision) const;
+  std::string get_string() const;
+  
+  /**
+   * とりあえず文字列をセット
+   */
+  void set(std::string);
 
   /**
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const;
+
+  private:
+  
+
+  std::vector<std::vector< std::string > > value_; //文字列の列の列（文字列のDNF形式になっている．∧でつながれたものを∨でつなぐ）
+  std::string str_; // 文字列（任意の式を扱える）
 };
 
 bool operator<(const SymbolicValue& lhs, const SymbolicValue& rhs);

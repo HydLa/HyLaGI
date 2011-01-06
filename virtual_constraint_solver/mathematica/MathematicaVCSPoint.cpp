@@ -53,7 +53,8 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
   for(; it!=end; ++it)
   {
     const MathVariable& variable = (*it).first;
-    const MathValue&    value = (*it).second;    
+    MathValue    value;
+    value.set((*it).second.get_string());
 
     if(!value.is_undefined()) {
       std::ostringstream val_str;
@@ -78,11 +79,11 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
       }
 
       val_str << ","
-              << value.str
+              << value.get_string()
               << "]"; // Equalの閉じ括弧
 
       MathValue new_math_value;
-      new_math_value.str = val_str.str();
+      new_math_value.set(val_str.str());
       and_cons_set.insert(new_math_value);
 
       // 制約ストア内の変数一覧を作成
@@ -161,11 +162,11 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
     // prev変数は処理しない
     if(prev==1) continue;
 
-    MathVariable symbolic_variable;
-    MathValue symbolic_value;
+    variable_t symbolic_variable;
+    value_t symbolic_value;
     symbolic_variable.name = variable_name;
     symbolic_variable.derivative_count = variable_derivative_count;    
-    symbolic_value.str = value_str;
+    symbolic_value.set(value_str);
 
     // 関係演算子コードを元に、変数表の対応する部分に代入する
     // TODO: Orの扱い
@@ -533,7 +534,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
       {
         std::string str = ml_->get_string();
         MathValue math_value;
-        math_value.str = str;
+        math_value.set(str);
         value_set.insert(math_value);
       }
       constraint_store_.first.insert(value_set);
@@ -679,7 +680,7 @@ void MathematicaVCSPoint::send_cs() const
     for(; and_cons_it!=and_cons_end; ++and_cons_it)
     {
       ml_->put_function("ToExpression", 1);
-      std::string str = (*and_cons_it).str;
+      std::string str = (*and_cons_it).get_string();
       ml_->put_string(str);
       HYDLA_LOGGER_DEBUG("put cons: ", str);
     }
@@ -721,7 +722,7 @@ std::ostream& MathematicaVCSPoint::dump(std::ostream& s) const
       (*or_cons_it).begin();
     while((and_cons_it) != (*or_cons_it).end())
     {
-      s << (*and_cons_it).str << " ";
+      s << (*and_cons_it).get_string() << " ";
       and_cons_it++;
     }
     s << "\n";

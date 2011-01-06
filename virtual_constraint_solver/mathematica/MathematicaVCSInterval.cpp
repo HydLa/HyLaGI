@@ -68,8 +68,10 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
   variable_map_t::variable_list_t::const_iterator end = variable_map.end();
   for(; it!=end; ++it) {
     if(!it->second.is_undefined()) {
+      MathValue math_value;
+      math_value.set(it->second.get_string());
       constraint_store_.init_vars.insert(
-        std::make_pair(it->first, it->second));
+        std::make_pair(it->first, math_value));
     }
 
     else {
@@ -207,7 +209,7 @@ void MathematicaVCSInterval::send_init_cons(
       }
 
       ml_->put_function("ToExpression", 1);
-      ml_->put_string(init_vars_it->second.str);      
+      ml_->put_string(init_vars_it->second.get_string());
     }
 
 
@@ -682,8 +684,8 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext(); 
     ml_->MLGetNext();
 
-    MathVariable variable;
-    MathValue    value;
+    variable_t variable;
+    value_t    value;
 
     HYDLA_LOGGER_DEBUG("--- add variable ---");
 
@@ -698,8 +700,8 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();
 
     // 値
-    value.str = ml_->get_string();
-    HYDLA_LOGGER_DEBUG("value : ", value.str);
+    value.set(ml_->get_string());
+    HYDLA_LOGGER_DEBUG("value : ", value.get_string());
     ml_->MLGetNext();
 
     state.variable_map.set_variable(variable, value); 
@@ -850,11 +852,11 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
     HYDLA_LOGGER_DEBUG("variable : ", it->first);
 
     // 値
-    MathValue    value;
+    value_t    value;
     if(!it->second.is_undefined()) {
       ml_->put_function("applyTime2Expr", 2);
       ml_->put_function("ToExpression", 1);
-      ml_->put_string(it->second.str);
+      ml_->put_string(it->second.get_string());
       send_time(time);
 
     ////////////////// 受信処理
@@ -875,8 +877,8 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       }
       else {
         assert(ret_code==1);
-        value.str = ml_->get_string();
-        HYDLA_LOGGER_DEBUG("value : ", value.str);
+        value.set(ml_->get_string());
+        HYDLA_LOGGER_DEBUG("value : ", value.get_string());
       }
     }
 
@@ -905,13 +907,13 @@ void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
   HYDLA_LOGGER_DEBUG("-- search undefined variable --");
   // 初期値制約変数のうち、変数表に登録されている変数名一覧内にないものを抽出？
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
-    MathVariable variable = init_vars_it->first;
+    variable_t variable = init_vars_it->first;
     std::set<MathVariable>::const_iterator vlist_it = variable_name_list.find(variable);
     if(vlist_it==variable_name_list.end()){      
-      MathValue value;
+      value_t value;
       HYDLA_LOGGER_DEBUG("variable : ", variable);
       HYDLA_LOGGER_DEBUG("value : ", value);
-      vm.set_variable((MathVariable)variable, value);
+      vm.set_variable(variable, value);
     }
   }
 }

@@ -180,7 +180,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  
     ml_.put_function("ToExpression", 1);
-    ml_.put_string(val.str);
+    ml_.put_string(val.get_string());
     ml_.put_integer(precision);
     ml_.put_symbol("CForm");  
     ml_.skip_pkt_until(RETURNPKT);
