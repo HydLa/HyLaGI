@@ -2,6 +2,9 @@
 #define _INCLUDED_SYMBOLIC_SIMULATOR_H_
 
 #include <string>
+#include <iostream>
+#include <fstream>
+
 #include <sstream>
 #include <stack>
 
@@ -49,12 +52,24 @@ public:
   virtual bool interval_phase(const module_set_sptr& ms, 
                               const phase_state_const_sptr& state);
 
+
+  /*
+  * 与えられた解候補モジュール集合のリストをreduceのためにファイル出力する関数。initialize前で分岐
+  */
+    virtual bool reduce_simulate();
+
   /*
   * reduce出力用関数。現在はpoint_phase関数から分岐
+  * svn Rev: 1062
   */
+    virtual bool reduce_output(const module_set_sptr& ms, 
+                             const phase_state_const_sptr& state);
   
-  virtual bool reduce_output(const module_set_sptr& ms, 
-                           const phase_state_const_sptr& state);
+  /*
+  * dispatch関数に渡してModuleSetのpair<name,node>を取得
+  */
+
+  virtual bool reduce_simulate_phase_state(const module_set_sptr& ms);
 
 private:
   /**

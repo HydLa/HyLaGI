@@ -18,9 +18,13 @@ class RTreeVisitor :
   public hydla::parse_tree::TreeVisitor
 {
 public:
+//呼び出す関数
+  std::string caller_;
   std::string expr_;
   //コンストラクタ
   RTreeVisitor(int a);
+  //コンストラクタ 旧reduce_output関数用
+  RTreeVisitor(std::string caller);
 //  RTreeVisitor();
 
   virtual ~RTreeVisitor();
@@ -40,6 +44,8 @@ public:
 
   // 制約式を人が読めるstringにして返す
   virtual std::string get_expr(const node_sptr& node);
+  //acceptを外部で行う場合
+  virtual std::string get_expr();
   // ガードを人が読めるstringにして返す
   virtual std::string get_guard(const boost::shared_ptr<hydla::parse_tree::Ask>& ask);
   // ask右辺をstringで返す

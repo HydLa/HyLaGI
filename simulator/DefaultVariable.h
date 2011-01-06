@@ -11,6 +11,16 @@ struct DefaultVariable {
   std::string  name;
   int derivative_count;
 
+  std::string get_name() const
+  {
+    return name;
+  }
+  
+  int get_derivative_count() const
+  {
+    return derivative_count;
+  }
+
   /**
    * 構造体の値をダンプする
    */

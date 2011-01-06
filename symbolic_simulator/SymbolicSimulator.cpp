@@ -77,7 +77,13 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   state->module_set_container = msc_original_;
   push_phase_state(state);
 
-  
+  //reduce出力用分岐
+  if(opts_.solver == "r" || opts_.solver == "Reduce") {
+    reduce_simulate();
+//    exit(0);
+  }
+
+
 
   // 変数のラベル
   // TODO: 未定義の値とかのせいでずれる可能性あり?
@@ -277,7 +283,7 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, expanded_al
 bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
 {
-  //reduce出力用分岐
+  //旧 reduce出力用分岐
   if(opts_.solver == "r" || opts_.solver == "Reduce") {
     reduce_output(ms,state);
     return true;
@@ -474,8 +480,137 @@ void SymbolicSimulator::output_interval(const symbolic_time_t& current_time, con
   std::cout << std::endl << std::endl;
 }
 
+/*
+* reduce用のファイル出力関数
+* 出力: シミュレーション終了時刻MaxT
+*       depend文, 変数表var_list
+        解候補モジュール集合のリストmsc
+*/
+bool SymbolicSimulator::reduce_simulate()
+{
+/*
+* input: opts_, variable_map_, msc_original_, 
+*/
 
-// Reduce用のファイル出力関数
+//ファイルストリームを開く
+  std::ofstream ofs( "in.red" );
+
+//vcsにTreeVisitorを仮設置 引数はダミー
+//  RTreeVisitor rtv(1);
+
+/*
+* シミュレーション終了時刻の出力
+*/
+  std::cout << "MaxT:= " << opts_.max_time << ";" << std::endl;
+  ofs       << "MaxT:= " << opts_.max_time << ";" << std::endl;
+
+/*
+* depend文の出力
+* TODO: 場合により同じ文が複数回出るのを直す
+*/
+  variable_map_t::const_iterator v_it = variable_map_.begin();
+  variable_map_t::const_iterator v_end = variable_map_.end();
+  std::string name;
+  while(v_it!=v_end) {
+    if(name!=v_it->first.get_name()){
+      name = v_it->first.get_name();
+      std::cout << "depend " << name << ",t;" << std::endl;
+      ofs       << "depend " << name << ",t;" << std::endl;
+    }
+    v_it++;
+  }
+
+
+/*
+* 変数表の出力
+*/
+  std::cout << "%variable map" << std::endl;
+  std::cout << "%{var_string, var_name, var_derivative_count}" << std::endl;
+  ofs       << "%{var_string, var_name, var_derivative_count}" << std::endl;
+  std::cout << "var_list:={";
+  ofs       << "var_list:={";
+
+  v_it = variable_map_.begin();
+//v_end = variable_map_.end();
+  while(v_it!=v_end) {
+    std::cout << "{\"" << v_it->first << "\", ";
+    ofs       << "{\"" << v_it->first << "\", ";
+    std::cout << v_it->first.get_name() << ", ";
+    ofs       << v_it->first.get_name() << ", ";
+    std::cout << v_it->first.get_derivative_count() << "}";
+    ofs       << v_it->first.get_derivative_count() << "}";
+//    std::cout << "v_it->second: " << v_it->second << std::endl;
+    v_it++;
+    if(v_it!=v_end) {
+    std::cout << ", ";
+    ofs       << ", ";
+    }
+  }
+  std::cout << "};" << std::endl;
+  ofs       << "};" << std::endl;
+
+/*
+* 制約の出力
+* dispatchでmscからmsを一つ一つ取得
+* TODO: ofsの代わりをコールバック関数に渡す
+*/
+  std::cout << "msc:={";
+
+  phase_state_sptr state;
+  
+  msc_original_->dispatch(
+  boost::bind(&SymbolicSimulator::reduce_simulate_phase_state, 
+             this, _1));
+
+  std::cout << "\b\b \n};" << std::endl;
+
+// これを記述しとくと ./hydla | reduce とパイプ処理出来るかも
+//  std::cout << "in \"bball.data\";" << std::endl;
+
+  std::cout << ";end;" << std::endl;
+  ofs       << ";end;" << std::endl;
+
+  return true;
+} 
+
+/*
+* dispatch用コールバック関数
+* 引数をbind使わなくても良いよう直す
+*/
+
+bool SymbolicSimulator::reduce_simulate_phase_state(const module_set_sptr& ms)
+{
+  RTreeVisitor rtv(1);
+  hydla::ch::ModuleSet::module_list_t::const_iterator it = ms->begin();
+  hydla::ch::ModuleSet::module_list_t::const_iterator end = ms->end();
+
+/*
+* ms_name:={"BOUNCE$0", "FALL$0", "INIT$0"};
+
+  std::cout << "ms_name:={";
+  while(it!=end){
+    std::cout << "\"" << it->first << "\"";
+    it++;
+    if(it!=end) {
+      std::cout << ", ";
+    }
+  }
+
+  std::cout << "};" << std::endl;
+//  ofs       << "};" << std::endl;
+*/
+
+//  std::cout << ms->get_name() << std::endl;
+  std::cout << "\n{";
+  ms->dispatch(&rtv);
+  std::cout << rtv.get_expr() << "}, ";
+  return false;
+}
+
+/*
+* Reduce用のファイル出力関数 中間発表までに作った物
+* svn Rev: 1062
+*/
 bool SymbolicSimulator::reduce_output(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
 {
@@ -502,23 +637,51 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   int count = 0;
 
 //vcsにTreeVisitorを仮設置 引数はダミー
-  RTreeVisitor rtv(1);
+  RTreeVisitor rtv("reduce_output");
 
-// 変数表
-  std::cout << "variable map_output" << std::endl;
-// do_initializeから
-    std::cout << "varN:={";
-    ofs << "varN:={";
-  BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
-    std::cout << "\"" << i.first << "\",";
-    ofs << "\"" << i.first << "\",";
+/*
+* depend文の出力
+* TODO: 場合により同じ文が複数回出るのを直す
+*/
+  variable_map_t::const_iterator v_it = variable_map_.begin();
+  variable_map_t::const_iterator v_end = variable_map_.end();
+  std::string name;
+  while(v_it!=v_end) {
+    if(name!=v_it->first.get_name()){
+      name = v_it->first.get_name();
+      std::cout << "depend " << name << ",t;" << std::endl;
+      ofs       << "depend " << name << ",t;" << std::endl;
+    }
+    v_it++;
   }
-  std::cout << "\b};" << std::endl;
-  ofs << "\b};" << std::endl;
 
-//depend文
-  std::cout << "depend y,t;" << std::endl;
-  ofs << "depend y,t;" << std::endl;
+/*
+* 変数表の出力
+*/
+  std::cout << "%{var_string, var_name, var_derivative_count}" << std::endl;
+  ofs       << "%{var_string, var_name, var_derivative_count}" << std::endl;
+  std::cout << "var_list:={";
+  ofs       << "var_list:={";
+
+  v_it = variable_map_.begin();
+//v_end = variable_map_.end();
+  while(v_it!=v_end) {
+    std::cout << "{\"" << v_it->first << "\", ";
+    ofs       << "{\"" << v_it->first << "\", ";
+    std::cout << v_it->first.get_name() << ", ";
+    ofs       << v_it->first.get_name() << ", ";
+    std::cout << v_it->first.get_derivative_count() << "}";
+    ofs       << v_it->first.get_derivative_count() << "}";
+    v_it++;
+    if(v_it!=v_end) {
+    std::cout << ", ";
+    ofs       << ", ";
+    }
+  }
+  std::cout << "};" << std::endl;
+  ofs       << "};" << std::endl;
+
+
 
 // 制約
   // tell制約を集める
@@ -529,10 +692,10 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   tells_t::const_iterator tells_end = tell_list.end();
 
   std::cout << "%tell_list" << std::endl;
-  ofs << "%tell_list" << std::endl;
+  ofs       << "%tell_list" << std::endl;
   while(tells_it!=tells_end) {
     std::cout << "tell" << count << ":= " << rtv.get_expr(*tells_it) << ";" << std::endl;
-    ofs << "tell" << count << ":= " << rtv.get_expr(*tells_it) << ";" << std::endl;
+    ofs       << "tell" << count << ":= " << rtv.get_expr(*tells_it) << ";" << std::endl;
     count++;
     tells_it++;
   }
@@ -541,7 +704,7 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   
   // ask制約を集める
   std::cout << "%negative_asks_t" << std::endl;
-  ofs << "%negative_asks_t" << std::endl;
+  ofs       << "%negative_asks_t" << std::endl;
   ask_collector.collect_ask(&expanded_always, 
                             &positive_asks, 
                             &negative_asks);
@@ -551,10 +714,10 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   negative_asks_t::iterator end = negative_asks.end();
   
   while(it!=end) {
-    std::cout << "map" << "" << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
-    std::cout << "guard" << "" << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
-    ofs << "map" << "" << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
-    ofs << "guard" << "" << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
+    std::cout << "map" << count << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
+    ofs       << "map" << count << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
+    std::cout << "guard" << count << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
+    ofs       << "guard" << count << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
   
     count++;
     it++;
@@ -564,9 +727,9 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
 
 // シミュレーション終了時刻
   std::cout << "MaxT:= " << opts_.max_time << ";" << std::endl;
-  ofs << "MaxT:= " << opts_.max_time << ";" << std::endl;
+  ofs       << "MaxT:= " << opts_.max_time << ";" << std::endl;
   std::cout << ";end;" << std::endl;
-  ofs << ";end;" << std::endl;
+  ofs       << ";end;" << std::endl;
   
 
   return true;
