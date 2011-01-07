@@ -63,15 +63,15 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 
 renameVar[varName_] := Block[
   {renamedVarName, derivativeCount = 0, prev = 0,
-   getDerivativeCount, removeUsrVar
+   getDerivativeCountPoint, removeUsrVar
   },  
 
-  getDerivativeCount[Derivative[n_][var_]] := n;
+  getDerivativeCountPoint[Derivative[n_][var_]] := n;
   removeUsrVar[var_] := First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]];
 
   (* •Ï”–¼‚É'‚ª‚Â‚­ê‡‚Ìˆ— *)
   If[MemberQ[{varName}, Derivative[n_][x_], Infinity],
-    derivativeCount = getDerivativeCount[varName];
+    derivativeCount = getDerivativeCountPoint[varName];
     renamedVarName = removeDash[varName],
     renamedVarName = varName
   ];
@@ -606,10 +606,9 @@ createOutputTimeList[from_, to_, interval_] :=
  *)
 integrateExpr[cons_, vars_] := Quiet[Check[Block[
 { sol },
-(*
-  debugPrint["cons:", cons,
-             "vars:", vars];
- *)
+
+(*  debugPrint["cons:", cons, "vars:", vars]; *)
+ 
   sol = exDSolve[cons, vars];
   Switch[sol,
     underconstraint, 
@@ -620,7 +619,7 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
       {1,         
        Map[({getVariableName[#], 
              getDerivativeCount[#], 
-             ToString[createIntegratedValue[#, First[sol]], InputForm]})&, 
+             ToString[createIntegratedValue[#, sol], InputForm]})&, 
            vars]}]
 ],
   {0, $MessageList}

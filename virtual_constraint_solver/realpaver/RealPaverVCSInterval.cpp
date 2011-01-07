@@ -165,6 +165,9 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
 
   ////////////////// óMˆ—
 
+//  PacketChecker pc(*ml_);
+//  pc.check();
+
 /*
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
