@@ -117,7 +117,7 @@ convertCSToVM[orExprs_] := Block[
   debugPrint["orExprs:", orExprs];   
   If[Length[orExprs] <= 1,
     (* Or‚Å‚Â‚È‚ª‚ê‚Ä‚¢‚é—v‘f”‚ª1ŒÂˆÈ‰º *)
-    andExprs = First[orExprs];
+    andExprs = applyList[First[orExprs]];
     Map[({renameVar[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]} ) &, 
         Fold[(removeInequality[#1, #2]) &, {}, andExprs]],
  
