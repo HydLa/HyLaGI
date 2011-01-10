@@ -842,7 +842,9 @@ class Times : public BinaryNode {
   {
     s << "(";
     lhs_->dump_infix(s);
+    s << ")";
     s << get_node_type_symbol();
+    s << "(";
     rhs_->dump_infix(s);
     s << ")";
     return s;
@@ -883,12 +885,58 @@ class Divide : public BinaryNode {
   {
     s << "(";
     lhs_->dump_infix(s);
+    s << ")";
     s << get_node_type_symbol();
+    s << "(";
     rhs_->dump_infix(s);
     s << ")";
     return s;
   }                                              
 };
+
+/**
+ * 算術演算子「**」 「^」
+ */
+class Power : public BinaryNode {                           
+  public:                                                   
+  typedef boost::shared_ptr<Power> node_type_sptr;          
+                                                            
+  Power()                                                   
+    {}                                                      
+                                                            
+  Power(const node_sptr& lhs, const node_sptr& rhs) :       
+    BinaryNode(lhs, rhs)                                    
+    {}                                                      
+                                                            
+  virtual ~Power(){}                                        
+                                                            
+  virtual void accept(node_sptr own, TreeVisitor* visitor); 
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+                                                            
+  virtual node_sptr clone()                                 
+    {                                                       
+      node_type_sptr n(new Power);                          
+      return BinaryNode::clone(n);                          
+    }                                                       
+  virtual std::string get_node_type_Power() const {         
+    return "Power";                                         
+  }                                                         
+  virtual std::string get_node_type_symbol() const {        
+    return "**";                                             
+  }
+  virtual std::ostream& dump_infix(std::ostream& s) const   
+  {
+    s << "(";
+    lhs_->dump_infix(s);
+    s << ")";
+    s << get_node_type_symbol();
+    s << "(";
+    rhs_->dump_infix(s);
+    s << ")";
+    return s;
+  }                                              
+};
+
 
 /**
  * 論理演算子「/\」（連言）

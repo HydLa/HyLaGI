@@ -214,6 +214,11 @@ bool Divide::is_same_struct(const Node& n, bool exactly_same) const
   return is_exactly_same(n, exactly_same);
 }
 
+bool Power::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
 bool Weaker::is_same_struct(const Node& n, bool exactly_same) const
 {
   return is_exactly_same(n, exactly_same);
@@ -359,6 +364,7 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Plus)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Subtract)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Times)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Divide)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Power)
 
 //éZèpíPçÄââéZéq
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Negative)

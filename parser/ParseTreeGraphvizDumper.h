@@ -65,6 +65,7 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
   
   // Zp’P€‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);

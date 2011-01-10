@@ -45,6 +45,7 @@ void TreeVisitor::visit(boost::shared_ptr<Plus> node)                  {assert(0
 void TreeVisitor::visit(boost::shared_ptr<Subtract> node)              {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Times> node)                 {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<Divide> node)                {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<Power> node)                 {assert(0);}
   
 // Zp’P€‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Negative> node)              {assert(0);}

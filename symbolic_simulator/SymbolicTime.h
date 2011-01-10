@@ -52,6 +52,11 @@ public:
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const;
+  
+  /**
+   * 時刻が幅を持たないならtrueにする予定
+   */
+  bool is_unique() const{return true;}
 
 private:
   time_t time_; 

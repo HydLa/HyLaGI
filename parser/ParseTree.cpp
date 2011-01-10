@@ -65,7 +65,6 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   HYDLA_LOGGER_SUMMARY("############ Comprehensive output mode ############");
   
   
-  
 
   // ParseTreeÇÃç\íz
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;

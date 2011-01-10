@@ -64,6 +64,7 @@ public:
   virtual void visit(boost::shared_ptr<Subtract> node);
   virtual void visit(boost::shared_ptr<Times> node);
   virtual void visit(boost::shared_ptr<Divide> node);
+  virtual void visit(boost::shared_ptr<Power> node);
   
   // Zp’P€‰‰Zq
   virtual void visit(boost::shared_ptr<Negative> node);

@@ -43,6 +43,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Subtract) sub; 
     defRuleID(RI_Times)    mul; 
     defRuleID(RI_Divide)   div;
+    defRuleID(RI_Power)    pow;
 
     defRuleID(RI_Positive)   positive; 
     defRuleID(RI_Negative)   negative;
@@ -184,7 +185,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //éZèpçÄ
       arith_term =  
-        unary % root_node_d[mul | div];
+        unary % root_node_d[mul | div | pow];
       
       //íPçÄââéZéq
       unary = !(root_node_d[positive | negative]) >> limit;
@@ -283,6 +284,8 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       sub          = ch_p('-');
       mul          = ch_p('*');
       div          = ch_p('/');
+      pow          = ch_p('^') | str_p("**");
+
 
       //éZèpíPçÄââéZéq
       positive    = ch_p('+');

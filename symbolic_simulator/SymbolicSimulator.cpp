@@ -113,6 +113,7 @@ struct ModuleSetContainerInitializer {
     {
       parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
       AskDisjunctionFormatter().format(pt_original.get());
+      std::cout << "eeeee" << std::endl;
       AskDisjunctionSplitter().split(pt_original.get());
       //AskTypeAnalyzer().analyze(pt_original.get());
       msc_original = mcc.create(pt_original);
@@ -467,7 +468,11 @@ void SymbolicSimulator::output_interval(const symbolic_time_t& current_time, con
                                         const variable_map_t& variable_map){
   variable_map_t output_vm;
   symbolic_time_t elapsed_time;
-  
+
+  if(!current_time.is_unique()){
+    return;
+  }
+
   do{
     solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
     output((elapsed_time+current_time),output_vm);

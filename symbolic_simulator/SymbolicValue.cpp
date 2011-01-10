@@ -7,8 +7,8 @@
 namespace hydla {
 namespace symbolic_simulator{
 
-using namespace std;
 
+const std::string SymbolicValue::relation_symbol_[RELATION_NUMBER] = {"=", "!=", "<=", "<", ">=", ">"};
 
 bool SymbolicValue::is_undefined() const
 {
@@ -17,40 +17,54 @@ bool SymbolicValue::is_undefined() const
 }
 
 
-ostream& SymbolicValue::dump(ostream& s) const
+std::ostream& SymbolicValue::dump(std::ostream& s) const
 {
   if(is_undefined()) s << "UNDEF";
   else s << str_;
   return s;
 }
 
-string SymbolicValue::get_string() const
+std::string SymbolicValue::get_string() const
 {
-  return str_;/*
-  string tmp_str;
-  vector< vector<string> >::const_iterator out_it = value_.begin();
-  vector<string>::const_iterator in_it = out_it->begin();
-  for(;out_it != out_it->end();out_it++){
+  return str_;
+  std::string tmp_str;
+  std::vector< std::vector<Element> >::const_iterator out_it = value_.begin();
+  tmp_str.append(visit_all(*out_it, "&&"));
+  for(;out_it != value_.end();out_it++){
     tmp_str.append("||");
-    tmp_str.append(visit_all(out_it, out_it->end(), "&&");
+    tmp_str.append(visit_all(*out_it, "&&"));
   }
-  return tmp_str;*/
+  return tmp_str;
+
 }
 
-/*
-template <typename Element> string visit_all(vector<Element>::const_iterator begin,vector<Element>::const_iterator end, string delimiter){
-  string tmp;
-  tmp.append(*(begin++));
-  for(;begin != end;begin++){
+
+std::string SymbolicValue::visit_all(const std::vector<Element> &vec, const std::string &delimiter) const{
+  if(vec.empty()) return "";
+  std::string tmp;
+  std::vector<Element>::const_iterator it = vec.begin();
+  tmp.append((it++)->value);
+  for(;it != vec.end();it++){
     tmp.append(delimiter);
-    tmp.append(*begin);
+    tmp.append(it->value);
   }
+  return tmp;
 }
-*/
 
-void SymbolicValue::set(string string)
+
+void SymbolicValue::set(std::string string)
 {
   str_ = string;
+}
+
+void SymbolicValue::add(const std::vector<Element> &vec)
+{
+  //value_.push_back(vec);
+}
+
+void SymbolicValue::set(const std::vector<std::vector<SymbolicValue::Element> > &vec)
+{
+ value_ = vec;
 }
 
 bool operator<(const SymbolicValue& lhs, 
@@ -60,7 +74,7 @@ bool operator<(const SymbolicValue& lhs,
 }
 
 
-ostream& operator<<(ostream& s, 
+std::ostream& operator<<(std::ostream& s, 
                          const SymbolicValue & v)
 {
   return v.dump(s);

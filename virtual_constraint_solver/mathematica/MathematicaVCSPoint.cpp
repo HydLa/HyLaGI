@@ -123,8 +123,8 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 
 /////////////////// 受信処理
 
-//   PacketChecker pc(*ml_);
-//   pc.check();
+ //  PacketChecker pc(*ml_);
+ //  pc.check();
 
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
@@ -144,7 +144,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   {
     ml_->MLGetNext();
     ml_->MLGetNext();
-
+    
     // 変数名（名前、微分回数、prev）
     ml_->MLGetNext();
     ml_->MLGetNext();

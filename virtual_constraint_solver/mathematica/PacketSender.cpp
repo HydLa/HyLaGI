@@ -151,6 +151,16 @@ void PacketSender::visit(boost::shared_ptr<Divide> node)
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
+
+
+void PacketSender::visit(boost::shared_ptr<Power> node)                
+{
+  HYDLA_LOGGER_DEBUG("put: Power");
+  ml_.put_function("Power", 2);
+
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
   
 // Zp’P€‰‰Zq
 void PacketSender::visit(boost::shared_ptr<Negative> node)              

@@ -235,6 +235,7 @@ private:
       case RI_Subtract:     {return create_binary_node<Subtract>(ch);}
       case RI_Times:        {return create_binary_node<Times>(ch);}
       case RI_Divide:       {return create_binary_node<Divide>(ch);}
+      case RI_Power:        {return create_binary_node<Power>(ch);}
 
         // Zp’P€‰‰Zq
       case RI_Negative:     {return create_unary_node<Negative>(ch);}

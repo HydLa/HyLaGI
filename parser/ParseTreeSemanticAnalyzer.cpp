@@ -289,6 +289,14 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Divide> node)
 
 }
 
+
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Power> node)
+{
+  dispatch_lhs(node);
+  dispatch_rhs(node); 
+
+}
+
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 {
   if(!state_stack_.top().in_constraint) {

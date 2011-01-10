@@ -34,6 +34,7 @@ typedef enum _RuleID {
   RI_Subtract,
   RI_Times,
   RI_Divide,
+  RI_Power,
 
   // §–ñŠK‘w’è‹`‰‰Zq
   RI_Weaker,

@@ -195,6 +195,12 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Divide> node)
   dump_node(node);
 }
 
+
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Power> node)
+{
+  dump_node(node);
+}
+
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<LogicalAnd> node)
 {
   dump_node(node);
