@@ -113,7 +113,6 @@ struct ModuleSetContainerInitializer {
     {
       parse_tree_sptr pt_original(boost::make_shared<ParseTree>(*parse_tree));
       AskDisjunctionFormatter().format(pt_original.get());
-      std::cout << "eeeee" << std::endl;
       AskDisjunctionSplitter().split(pt_original.get());
       //AskTypeAnalyzer().analyze(pt_original.get());
       msc_original = mcc.create(pt_original);
