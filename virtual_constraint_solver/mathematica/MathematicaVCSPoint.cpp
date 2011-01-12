@@ -623,13 +623,17 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
     }
     HYDLA_LOGGER_SUMMARY("entailed");
   }
-  else {
-    assert(ret_code==2);
+  else if(ret_code==2) {
     result = VCSR_FALSE;
-	if(Logger::enflag==1||Logger::enflag==0){
-     HYDLA_LOGGER_AREA("not entailed");
+    if(Logger::enflag==1||Logger::enflag==0){
+      HYDLA_LOGGER_AREA("not entailed");
     }
     HYDLA_LOGGER_SUMMARY("not entailed");
+  }
+  else {
+    assert(ret_code==3);
+    // TODO: VCSR_UNKNOWNÇï‘ÇµÅAï™äÚèàóù
+    result = VCSR_FALSE;
   }
   return result;
 }

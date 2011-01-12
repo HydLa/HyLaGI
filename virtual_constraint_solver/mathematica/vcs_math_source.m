@@ -42,6 +42,7 @@ checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
  *  0 : Solver Error
  *  1 : 導出可能
  *  2 : 導出不可能
+ *  3 : 不明（要分岐）
  *)
 checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 {sol},
@@ -51,7 +52,7 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
   If[sol=!=False, 
       If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
           {1}, 
-          {2}],
+          {3}],
       {2}]
 ],
   {0, $MessageList}
