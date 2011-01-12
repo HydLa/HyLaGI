@@ -115,17 +115,17 @@ convertCSToVM[orExprs_] := Block[
   );
 
   debugPrint["orExprs:", orExprs];   
-  If[Length[orExprs] <= 1,
-    (* Or‚Å‚Â‚È‚ª‚ê‚Ä‚¢‚é—v‘f”‚ª1ŒÂˆÈ‰º *)
-    andExprs = applyList[First[orExprs]];
-    Map[({renameVar[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]} ) &, 
-        Fold[(removeInequality[#1, #2]) &, {}, andExprs]],
- 
-    (* Or‚Å•¡”‚Â‚È‚ª‚ê‚Ä‚¢‚é *)
-    (* TODO: *)
-    1
-  ]
-   
+  If[Head[First[orExprs]] === Or,
+    (* Or‚ªŠÜ‚Ü‚ê‚éê‡‚Í1‚Â‚¾‚¯Ì—p *)
+    (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
+    andExprs = First[First[orExprs]],
+    (* Or‚ªŠÜ‚Ü‚ê‚È‚¢ê‡ *)
+    andExprs = First[orExprs]
+  ];
+  andExprs = applyList[andExprs];
+  Map[({renameVar[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]} ) &, 
+      Fold[(removeInequality[#1, #2]) &, {}, andExprs]]
+
 ];
 
 
