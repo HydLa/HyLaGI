@@ -544,7 +544,7 @@ applyTime2Expr[expr_, time_] := Block[
   {appliedExpr},
   debugPrint["expr:", expr,
              "time:", time];
-  appliedExpr = (expr /. t -> time);
+  appliedExpr = Simplify[(expr /. t -> time)];
   If[Element[appliedExpr, Reals],
     {1, appliedExpr  // FullForm // ToString},
     {0}]
