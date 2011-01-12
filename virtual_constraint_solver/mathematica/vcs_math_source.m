@@ -239,7 +239,7 @@ isRequiredVariable[var_, tellVars_] := (
 removeNotEqual[sol_] := 
    DeleteCases[sol, Unequal[lhs_, rhs_], Infinity];
 
-getNDVars[vars_] := Union[Map[(removeDash[#] /. x_[t] -> x) &, vars]];
+getNDVars[vars_] := Union[Map[(removeDash[#])&, vars]];
 
 (* ある変数xについて、 *)
 (* x[t]==a と x[0]==a があった場合は、x'[t]==0を消去 （あれば） *)
@@ -278,7 +278,7 @@ applyList[reduceSol_] :=
 
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr},
-  sol = removeNotEqual[Reduce[Cases[expr, Except[True] | Except[False]], vars]];
+  sol = LogicalExpand[removeNotEqual[Reduce[Cases[expr, Except[True] | Except[False]], vars, Reals]]];
 
   If[sol===False,
     overconstraint,
@@ -301,7 +301,7 @@ exDSolve[expr_, vars_] := Block[
                         (* TODO: 複数解ある場合も考える *)
                         sol = First[sol];
                         sol = First[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], 
-                                          Map[(#[t]) &, getNDVars[vars]]]];
+                                          getNDVars[vars]]];
                         If[sol =!= {}, 
                            sol,
                            overconstraint],
@@ -468,7 +468,9 @@ integrateCalc[cons_,
   tmpRet,
   NDExpr,
   DExpr,
-  DExprVars
+  DExprVars,
+  returnVars,
+  solVars
 (*   applyTime2VarMap *)
 },
 (*   applyTime2VarMap[{name_, derivative_, expr_}, time_, extrafunc_] := *)
@@ -488,14 +490,15 @@ integrateCalc[cons_,
 
   If[Cases[cons, Except[True]]=!={},
     (* true *)
-    {DExpr, DExprVars, NDExpr} = splitExprs[cons];
-    tmpIntegSol = applyList[removeNotEqual[Reduce[DExpr, DExprVars]]];
-
-    tmpIntegSol = removeTrivialCons[tmpIntegSol, vars];
-
+    tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[cons, vars, Reals]]];
     (* 1つだけ採用 *)
     (* TODO: 複数解ある場合も考える *)
     If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
+
+    tmpIntegSol = removeTrivialCons[applyList[tmpIntegSol], vars];
+
+    {DExpr, DExprVars, NDExpr} = splitExprs[tmpIntegSol];
+
     tmpIntegSol = Quiet[DSolve[tmpIntegSol, DExprVars, t],
                         {Solve::incnst}];
     (* debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
@@ -503,11 +506,15 @@ integrateCalc[cons_,
     (* 1つだけ採用 *)
     (* TODO:複数解ある場合も考える *)
     tmpIntegSol = First[tmpIntegSol];
-    (* tmpIntegSol = applyList[removeNotEqual[Reduce[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], vars]]]; *)
-    (* 方程式をルール化する *)
-    (* tmpIntegSol = Map[(Rule @@ #) &, tmpIntegSol]; *)
+
+    (* tmpIntegSolおよびNDExpr内に出現するND変数の一覧を得る *)
+    solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
+    (* integrateCalcの計算結果として必要な変数の一覧 *)
+    returnVars = Fold[(If[MemberQ[solVars, removeDash[#2]], Append[#1, #2], #1] ) &,
+                      {}, vars];
+
     tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
-                              Map[(#[t])&, getNDVars[vars]]]];
+                              getNDVars[returnVars]]];
 
     tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
@@ -518,7 +525,7 @@ integrateCalc[cons_,
       Map[({getVariableName[#], 
             getDerivativeCount[#], 
             createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
-            vars],
+          returnVars],
 
     (* false *)
     tmpMinT = maxTime;
