@@ -45,14 +45,18 @@ checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
  *  3 : 不明（要分岐）
  *)
 checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
-{sol},
+  {sol, SAndG, SAndNotG},
   debugPrint["guard:", guard, "store:", store, "vars:", vars];
 
   sol = Reduce[Append[store, guard], vars, Reals];
   If[sol=!=False, 
       If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
           {1}, 
-          {3}],
+          (* 分岐先の変数表を構築 *)
+          {SAndG, SAndNotG} = 
+            Map[(removeNotEqual[{LogicalExpand[Reduce[Append[store, #], vars, Reals]]}]) &,
+                {guard, Not[guard]}];
+          {3, convertCSToVM[SAndG], convertCSToVM[SAndNotG]}],
       {2}]
 ],
   {0, $MessageList}
