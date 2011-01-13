@@ -79,7 +79,7 @@ private:
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   
-  bool calculate_closure(const module_set_sptr& ms, expanded_always_t &expanded_always,
+  CalculateClosureResult calculate_closure(const phase_state_const_sptr& state, const module_set_sptr& ms, expanded_always_t &expanded_always,
                          positive_asks_t &positive_asks, negative_asks_t &negative_asks);
 
   void output(const symbolic_time_t& time, 

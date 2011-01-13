@@ -46,6 +46,7 @@ class SymbolicVirtualConstraintSolver
 public:  
   typedef hydla::symbolic_simulator::symbolic_variable_t     variable_t;
   typedef hydla::symbolic_simulator::symbolic_value_t        value_t;
+  typedef hydla::symbolic_simulator::symbolic_element_value_t        element_value_t;
   typedef hydla::symbolic_simulator::symbolic_time_t         time_t;
   typedef hydla::simulator::VariableMap<variable_t, value_t> variable_map_t;
   typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
@@ -101,17 +102,20 @@ public:
   virtual bool create_variable_map(variable_map_t& vm) = 0;
 
   /**
+   * CheckEntailmentでＳ∧ｇとＳ∧￢Ｇが出たときにそれぞれの変数表を作成する
+   */
+  virtual bool create_variable_map(variable_map_t& vm, variable_map_t& vm_not) = 0;
+  
+  /**
    * 制約を追加する
    */
   virtual VCSResult add_constraint(const tells_t& collected_tells) = 0;
+  
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask) = 0;
-
-  //symbolic用でとりあえず作ってみる．２番目の変数表には，solverが選ばなかった方が入る
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, variable_map_t& another_vm){return VCSR_SOLVER_ERROR;}
 
   /**
    * askの導出状態が変化するまで積分をおこなう
@@ -128,6 +132,8 @@ public:
   virtual std::string get_real_val(const value_t &val, int precision){return "get_real_val(value) is unavailable";}
   //SymbolicTimeを指定された精度で数値に変換する
   virtual std::string get_real_val(const time_t &val, int precision){return "get_real_val(time) is unavailable";}
+  //element_valueを指定された精度で数値に変換する
+  virtual std::string get_real_val(const element_value_t &val, int precision){return "get_real_val(element value) is unavailable";}
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &val){assert(0);}
   //SymbolicTimeを比較する

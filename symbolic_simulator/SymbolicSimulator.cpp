@@ -204,7 +204,8 @@ void SymbolicSimulator::simulate()
 }
 
 
-bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, expanded_always_t &expanded_always,
+CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_const_sptr& state,
+                                          const module_set_sptr& ms, expanded_always_t &expanded_always,
                                           positive_asks_t &positive_asks, negative_asks_t &negative_asks){
 
   //前準備
@@ -215,8 +216,8 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, expanded_al
   tells_t         tell_list;
 
 
-  bool expanded   = true;
-  while(expanded) {
+  bool expanded;
+  do{
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
@@ -232,7 +233,7 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, expanded_al
         // do nothing
         break;
       case VCSR_FALSE:
-        return false;
+        return CC_FALSE;
         break;
       case VCSR_UNKNOWN:
         assert(0);
@@ -266,17 +267,56 @@ bool SymbolicSimulator::calculate_closure(const module_set_sptr& ms, expanded_al
         case VCSR_FALSE:
           it++;
           break;
-        case VCSR_UNKNOWN:
-          assert(0);
+        case VCSR_UNKNOWN://分岐する場合
+        {
+          // 分岐先を生成
+          HYDLA_LOGGER_DEBUG("#*** create new phase state branch***");
+          phase_state_sptr new_state(create_new_phase_state());
+          phase_state_sptr new_state_not(create_new_phase_state());
+          new_state->phase        = new_state_not->phase = state->phase;
+          new_state->current_time = new_state_not->current_time = state->current_time;
+          expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
+          expanded_always_sptr2id(expanded_always, new_state_not->expanded_always_id);
+          HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
+                             new_state->expanded_always_id);
+          HYDLA_LOGGER_DEBUG("--- expanded always ID NOT---\n",
+                             new_state_not->expanded_always_id);
+          new_state->module_set_container = new_state_not->module_set_container = msc_no_init_;
+          
+          {
+            // 暫定的なフレーム公理の処理
+            // 未定義の値や変数表に存在しない場合は以前の値をコピー
+            variable_map_t::const_iterator it  = state->variable_map.begin();
+            variable_map_t::const_iterator end = state->variable_map.end();
+            for(; it!=end; ++it) {
+              if(new_state_not->variable_map.get_variable(it->first).is_undefined())
+              {
+                new_state_not->variable_map.set_variable(it->first, it->second);
+              }
+              if(new_state->variable_map.get_variable(it->first).is_undefined())
+              {
+                new_state->variable_map.set_variable(it->first, it->second);
+              }
+            }
+          }
+          solver_->create_variable_map(new_state->variable_map, new_state_not->variable_map);
+
+          //状態をスタックに押し込む
+          push_phase_state(new_state);
+          if(opts_.nd_mode){
+            push_phase_state(new_state_not);
+          }
+          return CC_BRANCH;
           break;
+        }
         case VCSR_SOLVER_ERROR:
           // TODO: 例外とかなげたり、BPシミュレータに移行したり
           assert(0);
           break;
       }
     }
-  }
-  return true;
+  }while(expanded);
+  return CC_TRUE;
 }
 
 
@@ -305,10 +345,14 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
 
-
   //閉包計算
-  if(!calculate_closure(ms,expanded_always,positive_asks,negative_asks)){
-    return false;
+  switch(calculate_closure(state,ms,expanded_always,positive_asks,negative_asks)){
+    case CC_TRUE:
+    break;
+    case CC_FALSE:
+    return false;    
+    case CC_BRANCH:
+    return true;
   }
 
 
@@ -367,8 +411,13 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   negative_asks_t negative_asks;
 
   //閉包計算
-  if(!calculate_closure(ms, expanded_always,positive_asks,negative_asks)){
-    return false;
+  switch(calculate_closure(state,ms,expanded_always,positive_asks,negative_asks)){
+    case CC_TRUE:
+    break;
+    case CC_FALSE:
+    return false;    
+    case CC_BRANCH:
+    return true;
   }
 
   // MaxModuleの導出
@@ -743,7 +792,7 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
                            const variable_map_t& vm)
 {
   
-  
+  /*
   if(opts_.output_style==styleList){
     output_buffer_ << solver_->get_real_val(time, opts_.output_precision) << "\t";
 
@@ -753,16 +802,16 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
        output_buffer_ << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
     }
     output_buffer_ << std::endl;
-  }else{
-    std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
+  }else{*/
+  std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
 
-    variable_map_t::const_iterator it  = vm.begin();
-    variable_map_t::const_iterator end = vm.end();
-    for(; it!=end; ++it) {
-       std::cout <<  solver_->get_real_val(it->second, opts_.output_precision) << "\t";
-    }
-    std::cout << std::endl;
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  for(; it!=end; ++it) {
+     std::cout << it->second.get_first_symbol() << solver_->get_real_val(it->second.get_first_value(), opts_.output_precision) << "\t";
+     //std::cout <<  solver_->get_real_val(it->second, opts_.output_precision) << "\t";
   }
+  std::cout << std::endl;
 }
 
 } //namespace symbolic_simulator

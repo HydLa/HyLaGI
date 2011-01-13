@@ -27,6 +27,13 @@ namespace symbolic_simulator {
                                        symbolic_time_t> phase_state_t;
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
   typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
+  
+  
+  typedef enum CalculateClosureResult_ {
+    CC_TRUE,
+    CC_FALSE,
+    CC_BRANCH
+  } CalculateClosureResult;
 
   typedef enum OutputFormat_ {
     fmtTFunction,

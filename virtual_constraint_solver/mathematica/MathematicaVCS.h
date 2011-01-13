@@ -42,6 +42,11 @@ public:
    * 現在の制約ストアから変数表を作成する
    */
   virtual bool create_variable_map(variable_map_t& vm);
+  
+  /**
+   * CheckEntailmentでＳ∧ＧとＳ∧￢Ｇが出たときにそれぞれの変数表を作成する
+   */
+  virtual bool create_variable_map(variable_map_t& vm, variable_map_t& vm_not);
 
   /**
    * 制約を追加する
@@ -72,6 +77,8 @@ public:
   virtual std::string get_real_val(const value_t &val, int precision);
   //SymbolicTimeを指定された精度で数値に変換する
   virtual std::string get_real_val(const time_t &val, int precision);
+  //element_valueを指定された精度で数値に変換する
+  virtual std::string get_real_val(const element_value_t &val, int precision);
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &val);
   //SymbolicTimeを比較する

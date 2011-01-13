@@ -53,14 +53,32 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
   for(; it!=end; ++it)
   {
     const MathVariable& variable = (*it).first;
-    MathValue    value;
-    value.set((*it).second.get_string());
+    const value_t&    value = it->second;
 
     if(!value.is_undefined()) {
       std::ostringstream val_str;
 
       // MathVariable側に関する文字列を作成
-      val_str << "Equal[";
+      switch(value.value_.front().front().relation){
+        default:
+          assert(0);
+          break;
+        case value_t::EQUAL:
+          val_str << "Equal[";
+          break;
+        case value_t::GREATER:
+          val_str << "Greater[";
+          break;
+        case value_t::GREATER_EQUAL:
+          val_str << "GreaterEqual[";
+          break;
+        case value_t::LESS:
+          val_str << "Less[";
+          break;
+        case value_t::LESS_EQUAL:
+          val_str << "LessEqual[";
+          break;
+      }
       if(variable.derivative_count > 0)
       {
         val_str << "Derivative["
@@ -79,7 +97,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
       }
 
       val_str << ","
-              << value.get_string()
+              << value.get_first_value()
               << "]"; // Equalの閉じ括弧
 
       MathValue new_math_value;
@@ -119,18 +137,27 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   // convertCSToVM[exprs]を渡したい
   ml_->put_function("convertCSToVM", 1);
   send_cs();
-
-
-/////////////////// 受信処理
-
- //  PacketChecker pc(*ml_);
- //  pc.check();
-
+  
+  
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
   ml_->skip_pkt_until(RETURNPKT);
+  
+  return receive_variable_map(variable_map);
+}
+
+
+
+
+bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
+{
+/////////////////// 受信処理
+
+//   PacketChecker pc(*ml_);
+//   pc.check();
+
 
   ml_->MLGetNext();
 //  ml_->MLGetNext();
@@ -163,27 +190,37 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
     if(prev==1) continue;
 
     variable_t symbolic_variable;
-    value_t symbolic_value;
     symbolic_variable.name = variable_name;
     symbolic_variable.derivative_count = variable_derivative_count;    
-    symbolic_value.set(value_str);
+    
+    value_t symbolic_value;
+    value_t::Element element;
+    symbolic_value.go_next_or();
+    element.value = value_str;
+
 
     // 関係演算子コードを元に、変数表の対応する部分に代入する
     // TODO: Orの扱い
     switch(relop_code)
     {
       case 0: // Equal
-        variable_map.set_variable(symbolic_variable, symbolic_value);
+        element.relation = value_t::EQUAL;
         break;
       case 1: // Less
+        element.relation = value_t::LESS;
         break;
       case 2: // Greater
+        element.relation = value_t::GREATER;
         break;
       case 3: // LessEqual
+        element.relation = value_t::LESS_EQUAL;
         break;
       case 4: // GreaterEqual
-        break;        
+        element.relation = value_t::GREATER_EQUAL;
+        break;
     }
+    symbolic_value.add(element);
+    variable_map.set_variable(symbolic_variable, symbolic_value);
   }
     
 
@@ -269,6 +306,16 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 
   return true;
 }
+
+
+
+bool MathematicaVCSPoint::create_variable_map(variable_map_t& vm, variable_map_t& vm_not)
+{
+  vm = vm_;
+  vm_not = vm_not_;
+  return true;
+}
+
 
 namespace {
 
@@ -571,7 +618,6 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
     "ask: ", *negative_ask);
 
   PacketSender ps(*ml_);
-  
 
   // checkEntailment[guard, store, vars]を渡したい
   ml_->put_function("checkEntailment", 3);
@@ -633,7 +679,9 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   else {
     assert(ret_code==3);
     // TODO: VCSR_UNKNOWNを返し、分岐処理
-    result = VCSR_FALSE;
+    receive_variable_map(vm_);
+    receive_variable_map(vm_not_);
+    result = VCSR_UNKNOWN;
   }
   return result;
 }

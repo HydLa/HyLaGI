@@ -68,14 +68,12 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
   variable_map_t::variable_list_t::const_iterator end = variable_map.end();
   for(; it!=end; ++it) {
     if(!it->second.is_undefined()) {
-      MathValue math_value;
-      math_value.set(it->second.get_string());
       constraint_store_.init_vars.insert(
-        std::make_pair(it->first, math_value));
+        std::make_pair(it->first, it->second));
     }
 
     else {
-      MathValue value;
+      value_t value;
       constraint_store_.init_vars.insert(
         std::make_pair(it->first, value));
     }
@@ -101,6 +99,14 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
 }
 
 bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
+{
+  // Interval‚Å‚Ícreate_variable_mapŠÖ”–³Œø
+  assert(0);
+  return false;
+}
+
+
+bool MathematicaVCSInterval::create_variable_map(variable_map_t& vm, variable_map_t& vm_not)
 {
   // Interval‚Å‚Ícreate_variable_mapŠÖ”–³Œø
   assert(0);
@@ -192,7 +198,26 @@ void MathematicaVCSInterval::send_init_cons(
     if(md_it!=max_diff_map.end() &&
        md_it->second  > init_vars_it->first.derivative_count) 
     {
-      ml_->put_function("Equal", 2);
+      switch(init_vars_it->second.value_.front().front().relation){
+        default:
+          assert(0);
+          break;
+        case value_t::EQUAL:
+          ml_->put_function("Equal", 2);
+          break;
+        case value_t::GREATER:
+          ml_->put_function("Greater", 2);
+          break;
+        case value_t::GREATER_EQUAL:
+          ml_->put_function("GreaterEqual", 2);
+          break;
+        case value_t::LESS:
+          ml_->put_function("Less", 2);
+          break;
+        case value_t::LESS_EQUAL:
+          ml_->put_function("LessEqual", 2);
+          break;
+      }
 
       // •Ï”–¼
       ps.put_var(
@@ -209,7 +234,7 @@ void MathematicaVCSInterval::send_init_cons(
       }
 
       ml_->put_function("ToExpression", 1);
-      ml_->put_string(init_vars_it->second.get_string());
+      ml_->put_string(init_vars_it->second.get_first_value());
     }
 
 
@@ -525,20 +550,20 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   }
   else if(ret_code==1) {
     result = VCSR_TRUE;
-	if(Logger::enflag==3||Logger::enflag==0){
-     HYDLA_LOGGER_AREA("entailed");
-	}
-	if(Logger::conflag==2||Logger::conflag==0){
-     HYDLA_LOGGER_AREA("Because entailed,isConsistency judgment is done again");
+  	if(Logger::enflag==3||Logger::enflag==0){
+      HYDLA_LOGGER_AREA("entailed");
+  	}
+  	if(Logger::conflag==2||Logger::conflag==0){
+      HYDLA_LOGGER_AREA("Because entailed,isConsistency judgment is done again");
     }
     HYDLA_LOGGER_SUMMARY("entailed");
   }
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
-	if(Logger::enflag==3||Logger::enflag==0){
-     HYDLA_LOGGER_AREA("not entailed");
-	}
+  	if(Logger::enflag==3||Logger::enflag==0){
+      HYDLA_LOGGER_AREA("not entailed");
+  	}
     HYDLA_LOGGER_SUMMARY("not entailed");
   }
   return result;
@@ -700,8 +725,12 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();
 
     // ’l
-    value.set(ml_->get_string());
-    HYDLA_LOGGER_DEBUG("value : ", value.get_string());
+    value_t::Element ele;
+    ele.value = ml_->get_string();
+    ele.relation = value_t::EQUAL;
+    value.go_next_or();
+    value.add(ele);
+    HYDLA_LOGGER_DEBUG("value : ", value.get_first_value());
     ml_->MLGetNext();
 
     state.variable_map.set_variable(variable, value); 
@@ -856,7 +885,7 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
     if(!it->second.is_undefined()) {
       ml_->put_function("applyTime2Expr", 2);
       ml_->put_function("ToExpression", 1);
-      ml_->put_string(it->second.get_string());
+      ml_->put_string(it->second.get_first_value());
       send_time(time);
 
     ////////////////// ŽóMˆ—
@@ -877,8 +906,12 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       }
       else {
         assert(ret_code==1);
-        value.set(ml_->get_string());
-        HYDLA_LOGGER_DEBUG("value : ", value.get_string());
+        value_t::Element ele;
+        ele.value = ml_->get_string();
+        ele.relation = value_t::EQUAL;
+        value.go_next_or();
+        value.add(ele);
+        HYDLA_LOGGER_DEBUG("value : ", value.get_first_value());
       }
     }
 

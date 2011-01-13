@@ -20,7 +20,7 @@ class MathematicaVCSInterval :
 public:
   struct ConstraintStore 
   {
-    typedef std::map<MathVariable, MathValue>      init_vars_t;
+    typedef std::map<MathVariable, value_t>      init_vars_t;
     typedef hydla::simulator::tells_t              constraints_t;
     typedef std::set<MathVariable>                 cons_vars_t;
     typedef std::map<std::string, int>             init_vars_max_diff_map_t;
@@ -58,6 +58,11 @@ public:
    * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚ğì¬‚·‚é
    */
   virtual bool create_variable_map(variable_map_t& variable_map);
+  
+  /**
+   * CheckEntailment‚Å‚rÈ‚f‚Æ‚rÈÊ‚f‚ªo‚½‚Æ‚«‚É‚»‚ê‚¼‚ê‚Ì•Ï”•\‚ğì¬‚·‚é
+   */
+  virtual bool create_variable_map(variable_map_t& vm, variable_map_t& vm_not);
 
   /**
    * §–ñ‚ğ’Ç‰Á‚·‚é

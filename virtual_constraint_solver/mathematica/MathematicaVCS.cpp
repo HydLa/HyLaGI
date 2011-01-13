@@ -118,6 +118,11 @@ bool MathematicaVCS::create_variable_map(variable_map_t& vm)
   return vcs_->create_variable_map(vm);
 }
 
+bool MathematicaVCS::create_variable_map(variable_map_t& vm, variable_map_t& vm_not)
+{
+  return vcs_->create_variable_map(vm, vm_not);
+}
+
 VCSResult MathematicaVCS::add_constraint(const tells_t& collected_tells)
 {
   return vcs_->add_constraint(collected_tells);
@@ -198,6 +203,20 @@ std::string MathematicaVCS::get_real_val(const time_t &time, int precision){
   ml_.put_function("N", 2);  
   ml_.put_function("ToExpression", 1);
   ml_.put_string(time.get_string());
+  ml_.put_integer(precision);
+  ml_.put_symbol("CForm");
+  
+  ml_.skip_pkt_until(RETURNPKT);
+  return  ml_.get_string();
+}
+
+
+  //element_value_t‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
+std::string MathematicaVCS::get_real_val(const element_value_t &val, int precision){
+  ml_.put_function("ToString", 2);  
+  ml_.put_function("N", 2);  
+  ml_.put_function("ToExpression", 1);
+  ml_.put_string(val);
   ml_.put_integer(precision);
   ml_.put_symbol("CForm");
   
