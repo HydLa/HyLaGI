@@ -50,14 +50,16 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 
   sol = Reduce[Append[store, guard], vars, Reals];
   If[sol=!=False, 
-      If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
-          {1}, 
-          (* 分岐先の変数表を構築 *)
-          {SAndG, SAndNotG} = 
-            Map[(removeNotEqual[{LogicalExpand[Reduce[Append[store, #], vars, Reals]]}]) &,
-                {guard, Not[guard]}];
-          {3, convertCSToVM[SAndG], convertCSToVM[SAndNotG]}],
-      {2}]
+    If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
+      {1}, 
+      (* 分岐先の変数表を構築 *)
+      {SAndG, SAndNotG} = 
+        Map[(removeNotEqual[{LogicalExpand[Reduce[Append[store, #], vars, Reals]]}]) &,
+            {guard, Not[guard]}];
+      {3, convertCSToVM[SAndG], convertCSToVM[SAndNotG]}
+    ],
+    {2}
+  ]
 ],
   {0, $MessageList}
 ]];
@@ -287,7 +289,7 @@ exDSolve[expr_, vars_] := Block[
   If[sol===False,
     overconstraint,
     If[sol===True,
-      underconstraint,
+      {},
 
       (* 1つだけ採用 *)
       (* TODO: 複数解ある場合も考える *)
@@ -300,15 +302,19 @@ exDSolve[expr_, vars_] := Block[
 
       {DExpr, DExprVars, NDExpr} = splitExprs[sol];
 
-      Quiet[Check[Check[sol = DSolve[DExpr, DExprVars, t];
+      Quiet[Check[Check[If[Cases[DExpr, Except[True]] === {},
+                          (* ストアが空の場合はDSolveが解けないので空集合を返す *)
+                          sol = {},
+                          sol = DSolve[DExpr, DExprVars, t]];
+
                         (* 1つだけ採用 *)
                         (* TODO: 複数解ある場合も考える *)
                         sol = First[sol];
                         sol = First[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], 
                                           getNDVars[vars]]];
                         If[sol =!= {}, 
-                           sol,
-                           overconstraint],
+                          sol,
+                          overconstraint],
                         underconstraint,
                         {DSolve::underdet, Solve::svars, DSolve::deqx, 
                          DSolve::bvnr, DSolve::bvsing}],
@@ -360,18 +366,12 @@ splitExprs[expr_] := Block[
  *)
 isConsistentInterval[expr_, vars_] :=  Block[
   {sol},
-  Quiet[Check[(
+  Quiet[Check[
     debugPrint["expr:", expr, "vars:", vars];
-    If[expr === {},
-      (* true *)
-      {1}, 
-
-      (* false *)
-      sol = exDSolve[expr, vars];
-      If[sol=!=overconstraint,
-        {1},
-        {2}]]
-  ),
+    sol = exDSolve[expr, vars];
+    If[sol=!=overconstraint,
+      {1},
+      {2}],
   {0, $MessageList}
 ]]];
 
