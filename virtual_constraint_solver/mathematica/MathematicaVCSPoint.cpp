@@ -110,13 +110,19 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
                           variable.derivative_count,
                           true));
     }
-  }
+  }  
 
   constraint_store_.first.insert(and_cons_set);
 
   HYDLA_LOGGER_DEBUG(*this);
 
   return true;
+}
+
+
+bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const appended_asks_t &appended_asks)
+{
+  return reset(variable_map);
 }
 
 bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
@@ -197,7 +203,6 @@ bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
     value_t::Element element;
     symbolic_value.go_next_or();
     element.value = value_str;
-
 
     // 関係演算子コードを元に、変数表の対応する部分に代入する
     // TODO: Orの扱い
@@ -304,15 +309,6 @@ bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
 //  }
 */
 
-  return true;
-}
-
-
-
-bool MathematicaVCSPoint::create_variable_map(variable_map_t& vm, variable_map_t& vm_not)
-{
-  vm = vm_;
-  vm_not = vm_not_;
   return true;
 }
 
@@ -476,7 +472,7 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
 
 }
 
-VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
+VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
   HYDLA_LOGGER_DEBUG(
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
@@ -491,8 +487,10 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
 
   // exprは3つの部分から成る
   ml_->put_function("Join", 3);
-  int tells_size = collected_tells.size();
+  int tells_size = collected_tells.size() + appended_asks.size();
   ml_->put_function("List", tells_size);
+  HYDLA_LOGGER_DEBUG(
+    "tells_size:", tells_size);
 
   // tell制約の集合からexprを得てMathematicaに渡す
   tells_t::const_iterator tells_it  = collected_tells.begin();
@@ -500,6 +498,14 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells)
   for(; tells_it!=tells_end; ++tells_it) {
     HYDLA_LOGGER_DEBUG("put node: ", *(*tells_it)->get_child());
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_None);
+  }
+  
+  // appended_asksからガード部分を得てMathematicaに渡す
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_None, false, append_it->entailed);
   }
 
   // 制約ストアからもexprを得てMathematicaに渡す
@@ -679,8 +685,6 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   else {
     assert(ret_code==3);
     // TODO: VCSR_UNKNOWNを返し、分岐処理
-    receive_variable_map(vm_);
-    receive_variable_map(vm_not_);
     result = VCSR_UNKNOWN;
   }
   return result;

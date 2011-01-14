@@ -34,20 +34,17 @@ public:
    */
   virtual bool reset(const variable_map_t& variable_map);
 
+  virtual bool reset(const variable_map_t& vm, const appended_asks_t &appended_asks);  
+
   /**
    * 現在の制約ストアから変数表を作成する
    */
   virtual bool create_variable_map(variable_map_t& variable_map);
 
   /**
-   * CheckEntailmentでＳ∧ＧとＳ∧￢Ｇが出たときにそれぞれの変数表を作成する
-   */
-  virtual bool create_variable_map(variable_map_t& vm, variable_map_t& vm_not);
-
-  /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells);
+  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks);
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
@@ -103,7 +100,6 @@ private:
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
-  variable_map_t vm_, vm_not_;  //CheckEntailmentで使う，SGとSnotG用の変数表
 };
 
 std::ostream& operator<<(std::ostream& s, const MathematicaVCSPoint& m);

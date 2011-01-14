@@ -875,7 +875,7 @@ class Divide : public BinaryNode {
       node_type_sptr n(new Divide);                          
       return BinaryNode::clone(n);                          
     }                                                       
-  virtual std::string get_node_type_Divide() const {         
+  virtual std::string get_node_type_name() const {         
     return "Divide";                                         
   }                                                         
   virtual std::string get_node_type_symbol() const {        
@@ -918,7 +918,7 @@ class Power : public BinaryNode {
       node_type_sptr n(new Power);                          
       return BinaryNode::clone(n);                          
     }                                                       
-  virtual std::string get_node_type_Power() const {         
+  virtual std::string get_node_type_name() const {         
     return "Power";                                         
   }                                                         
   virtual std::string get_node_type_symbol() const {        

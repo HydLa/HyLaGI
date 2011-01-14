@@ -98,6 +98,11 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
   return true;
 }
 
+
+bool MathematicaVCSInterval::reset(const variable_map_t& variable_map, const appended_asks_t& appended_asks){
+  return reset(variable_map);
+}
+
 bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
 {
   // Interval‚Å‚Ícreate_variable_mapŠÖ”–³Œø
@@ -105,13 +110,6 @@ bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
   return false;
 }
 
-
-bool MathematicaVCSInterval::create_variable_map(variable_map_t& vm, variable_map_t& vm_not)
-{
-  // Interval‚Å‚Ícreate_variable_mapŠÖ”–³Œø
-  assert(0);
-  return false;
-}
 
 void MathematicaVCSInterval::create_max_diff_map(
   PacketSender& ps, max_diff_map_t& max_diff_map)
@@ -367,7 +365,7 @@ void MathematicaVCSInterval::send_vars(
 
 }
 
-VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
+VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks)
 {
   HYDLA_LOGGER_DEBUG("#*** Begin MathematicaVCSInterval::add_constraint ***");
 
@@ -378,13 +376,23 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells)
 
   // expr•”•ª
   ml_->put_function("Join", 3);
-  ml_->put_function("List", collected_tells.size());
+  ml_->put_function("List", collected_tells.size() + appended_asks.size());
+  HYDLA_LOGGER_DEBUG(
+    "tells_size:", collected_tells.size() + appended_asks.size());
 
   // tell§–ñ‚ÌW‡‚©‚çtells‚ğ“¾‚ÄMathematica‚É“n‚·
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; (tells_it) != tells_end; ++tells_it) {
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time, true);
+  }
+      
+  // appended_asks‚©‚çƒK[ƒh•”•ª‚ğ“¾‚ÄMathematica‚É“n‚·
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
   }
 
   // §–ñƒXƒgƒAconstraints‚ğMathematica‚É“n‚·

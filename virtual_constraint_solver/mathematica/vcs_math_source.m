@@ -52,11 +52,7 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
   If[sol=!=False, 
     If[Reduce[Append[store, Not[sol]], vars, Reals]===False, 
       {1}, 
-      (* •ªŠòæ‚Ì•Ï”•\‚ğ\’z *)
-      {SAndG, SAndNotG} = 
-        Map[(removeNotEqual[{LogicalExpand[Reduce[Append[store, #], vars, Reals]]}]) &,
-            {guard, Not[guard]}];
-      {3, convertCSToVM[SAndG], convertCSToVM[SAndNotG]}
+      {3}
     ],
     {2}
   ]

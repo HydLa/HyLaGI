@@ -60,7 +60,7 @@ public:
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  void put_node(const node_sptr& node, VariableArg variable_arg, bool ignore_prev = false);
+  void put_node(const node_sptr& node, VariableArg variable_arg, bool ignore_prev = false, bool entailed = true);
 
   /**
    * 変数の送信

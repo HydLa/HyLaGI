@@ -278,13 +278,17 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
  */
 void PacketSender::put_node(const node_sptr& node, 
                             VariableArg variable_arg, 
-                            bool ignore_prev)
+                            bool ignore_prev,
+                            bool entailed)
 {
   differential_count_ = 0;
   in_prev_ = false;
   variable_arg_ = variable_arg;
   ignore_prev_ = ignore_prev;
-
+  if(!entailed){
+    HYDLA_LOGGER_DEBUG("put: Not");
+    ml_.put_function("Not", 1);
+  }
   accept(node);
 }
 

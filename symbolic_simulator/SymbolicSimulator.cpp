@@ -214,10 +214,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
   tells_t         tell_list;
+  ask_set_t       branched_asks;                           //UNKNOWN返されたAsk入れる
 
 
   bool expanded;
   do{
+    branched_asks.clear();
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
@@ -227,7 +229,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                        expanded_always);  
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    switch(solver_->add_constraint(tell_list)) 
+    switch(solver_->add_constraint(tell_list,state->appended_asks)) 
     {
       case VCSR_TRUE:
         // do nothing
@@ -267,48 +269,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
         case VCSR_FALSE:
           it++;
           break;
-        case VCSR_UNKNOWN://分岐する場合
-        {
-          // 分岐先を生成
-          HYDLA_LOGGER_DEBUG("#*** create new phase state branch***");
-          phase_state_sptr new_state(create_new_phase_state());
-          phase_state_sptr new_state_not(create_new_phase_state());
-          new_state->phase        = new_state_not->phase = state->phase;
-          new_state->current_time = new_state_not->current_time = state->current_time;
-          expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
-          expanded_always_sptr2id(expanded_always, new_state_not->expanded_always_id);
-          HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
-                             new_state->expanded_always_id);
-          HYDLA_LOGGER_DEBUG("--- expanded always ID NOT---\n",
-                             new_state_not->expanded_always_id);
-          new_state->module_set_container = new_state_not->module_set_container = msc_no_init_;
-          
-          {
-            // 暫定的なフレーム公理の処理
-            // 未定義の値や変数表に存在しない場合は以前の値をコピー
-            variable_map_t::const_iterator it  = state->variable_map.begin();
-            variable_map_t::const_iterator end = state->variable_map.end();
-            for(; it!=end; ++it) {
-              if(new_state_not->variable_map.get_variable(it->first).is_undefined())
-              {
-                new_state_not->variable_map.set_variable(it->first, it->second);
-              }
-              if(new_state->variable_map.get_variable(it->first).is_undefined())
-              {
-                new_state->variable_map.set_variable(it->first, it->second);
-              }
-            }
+        case VCSR_UNKNOWN:
+          if(!expanded){
+            branched_asks.insert(*it);
           }
-          solver_->create_variable_map(new_state->variable_map, new_state_not->variable_map);
-
-          //状態をスタックに押し込む
-          push_phase_state(new_state);
-          if(opts_.nd_mode){
-            push_phase_state(new_state_not);
-          }
-          return CC_BRANCH;
+          it++;
           break;
-        }
         case VCSR_SOLVER_ERROR:
           // TODO: 例外とかなげたり、BPシミュレータに移行したり
           assert(0);
@@ -316,6 +282,24 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
       }
     }
   }while(expanded);
+  
+  if(!branched_asks.empty()){
+    // 分岐先を生成
+    HYDLA_LOGGER_DEBUG("#*** create new phase state (branch) ***");
+    phase_state_sptr new_state(create_new_phase_state(state)),new_state_not(create_new_phase_state(state));
+    appended_ask_t tmpAppend;
+    tmpAppend.ask = *(branched_asks.begin());    //最初を取って分岐
+    tmpAppend.entailed = true;
+    new_state->appended_asks.push_back(tmpAppend);
+    tmpAppend.entailed = false;
+    new_state_not->appended_asks.push_back(tmpAppend);
+    //状態をスタックに押し込む
+    push_phase_state(new_state_not);
+    if(opts_.nd_mode){
+      push_phase_state(new_state);
+    }
+    return CC_BRANCH;
+  }
   return CC_TRUE;
 }
 

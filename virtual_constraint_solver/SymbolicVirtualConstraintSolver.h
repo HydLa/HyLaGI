@@ -51,6 +51,7 @@ public:
   typedef hydla::simulator::VariableMap<variable_t, value_t> variable_map_t;
   typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
   typedef hydla::simulator::tells_t                          tells_t;
+  typedef hydla::simulator::appended_asks_t                  appended_asks_t;
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
   typedef hydla::simulator::changed_asks_t                   changed_asks_t;
@@ -97,19 +98,19 @@ public:
   virtual bool reset(const variable_map_t& vm) = 0;  
 
   /**
+   * 与えられた変数表と追加ガード（Ｇ）を元に，制約ストアの初期化をおこなう
+   */
+  virtual bool reset(const variable_map_t& vm, const appended_asks_t& appended_asks) = 0;  
+
+  /**
    * 現在の制約ストアから変数表を作成する
    */
   virtual bool create_variable_map(variable_map_t& vm) = 0;
-
-  /**
-   * CheckEntailmentでＳ∧ｇとＳ∧￢Ｇが出たときにそれぞれの変数表を作成する
-   */
-  virtual bool create_variable_map(variable_map_t& vm, variable_map_t& vm_not) = 0;
   
   /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells) = 0;
+  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks) = 0;
   
   
   /**

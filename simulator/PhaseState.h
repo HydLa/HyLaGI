@@ -27,6 +27,7 @@ struct PhaseState {
   TimeType                  current_time;
   variable_map_t            variable_map;
   expanded_always_id_t      expanded_always_id;
+  appended_asks_t           appended_asks;
   changed_asks_t            changed_asks;
   module_set_container_sptr module_set_container;
 };

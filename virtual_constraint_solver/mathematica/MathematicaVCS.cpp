@@ -113,19 +113,21 @@ bool MathematicaVCS::reset(const variable_map_t& vm)
   return vcs_->reset(vm);
 }
 
+
+bool MathematicaVCS::reset(const variable_map_t& vm, const appended_asks_t &appended_asks)
+{
+  return vcs_->reset(vm, appended_asks);
+}
+
 bool MathematicaVCS::create_variable_map(variable_map_t& vm)
 {
   return vcs_->create_variable_map(vm);
 }
 
-bool MathematicaVCS::create_variable_map(variable_map_t& vm, variable_map_t& vm_not)
-{
-  return vcs_->create_variable_map(vm, vm_not);
-}
 
-VCSResult MathematicaVCS::add_constraint(const tells_t& collected_tells)
+VCSResult MathematicaVCS::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
-  return vcs_->add_constraint(collected_tells);
+  return vcs_->add_constraint(collected_tells, appended_asks);
 }
   
 VCSResult MathematicaVCS::check_entailment(const ask_node_sptr& negative_ask)

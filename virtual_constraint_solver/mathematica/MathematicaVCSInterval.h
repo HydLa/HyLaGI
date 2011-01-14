@@ -53,21 +53,21 @@ public:
    * 与えられた変数表を元に，制約ストアの初期化をおこなう
    */
   virtual bool reset(const variable_map_t& variable_map);
+  
+  /**
+   * 与えられた変数表と追加ガード（Ｇ）を元に，制約ストアの初期化をおこなう
+   */
+  virtual bool reset(const variable_map_t& variable_map, const appended_asks_t& appended_asks);
 
   /**
    * 現在の制約ストアから変数表を作成する
    */
   virtual bool create_variable_map(variable_map_t& variable_map);
-  
-  /**
-   * CheckEntailmentでＳ∧ＧとＳ∧￢Ｇが出たときにそれぞれの変数表を作成する
-   */
-  virtual bool create_variable_map(variable_map_t& vm, variable_map_t& vm_not);
 
   /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells);
+  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks);
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか

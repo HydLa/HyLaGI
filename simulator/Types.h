@@ -43,6 +43,12 @@ typedef ask_set_t                                                negative_asks_t
 typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
 
+typedef struct{
+  boost::shared_ptr<hydla::parse_tree::Ask> ask;
+  bool entailed;
+}appended_ask_t;
+typedef std::vector<appended_ask_t>                          appended_asks_t;
+
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
