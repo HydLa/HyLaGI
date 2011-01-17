@@ -475,7 +475,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 	 (negative_ask)->dump_infix(std::cout);
 	 HYDLA_LOGGER_AREA("\n");
   }
-
+	
   HYDLA_LOGGER_SUMMARY(
     "#*** MathematicaVCSInterval::check_entailment ***\n", 
     "ask: ", *negative_ask);

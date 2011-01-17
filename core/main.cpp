@@ -84,11 +84,11 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=4;
-	//Logger::instance().set_log_level(Logger::Area);
-    } else */if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree
-	  Logger::ptflag=1;
+	} else */if(po.get<std::string>("ar") == "pt_p5") {		//局部的出力entail
+	  Logger::ptflag=5;
+	Logger::instance().set_log_level(Logger::Area);
+    } else if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree
+	  Logger::ptflag=0;
 	Logger::instance().set_log_level(Logger::Area);
     } else if(po.get<std::string>("ar") == "ent_e1") {			//局部的出力entail_pp_
 	  Logger::enflag=1;

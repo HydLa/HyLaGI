@@ -49,7 +49,7 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
 {
   node_factory_ = node_factory;
   //局所的出力モード
-  if(Logger::enflag>=0||Logger::conflag>=0){
+  if(Logger::enflag>=0||Logger::conflag>=0||Logger::ptflag>=0){
      HYDLA_LOGGER_AREA("############ Area Output mode ############");
    }
 
@@ -71,7 +71,7 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
-  if(Logger::ptflag==1){
+  if(Logger::ptflag==0){
   HYDLA_LOGGER_AREA("#*** Parse Tree ***\n", *this);
   HYDLA_LOGGER_AREA("#*** Constraint Definition ***\n", constraint_definition);
   HYDLA_LOGGER_AREA("#*** Program Definition ***\n",    program_definition);
@@ -80,7 +80,7 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
   update_node_id_list();
-  if(Logger::ptflag==1){
+  if(Logger::ptflag==0){
   HYDLA_LOGGER_AREA("#*** Analyzed Parse Tree ***\n", *this);
   }
 }
