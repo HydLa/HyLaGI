@@ -96,7 +96,8 @@ renameVar[varName_] := Block[
  * 4:GreaterEqual
 *)
 convertCSToVM[orExprs_] := Block[
-  {andExprs, getExprCode, removeInequality},
+  {andExprs, 
+   getExprCode, removeInequality},
       
   getExprCode[expr_] := Switch[Head[expr],
     Equal, 0,
@@ -126,8 +127,13 @@ convertCSToVM[orExprs_] := Block[
     andExprs = First[orExprs]
   ];
   andExprs = applyList[andExprs];
-  Map[({renameVar[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]} ) &, 
-      Fold[(removeInequality[#1, #2]) &, {}, andExprs]]
+  If[Cases[andExprs, Except[True]]==={},
+    (* ストアが空の場合は空集合を返す *)
+    {},
+    Map[({renameVar[#[[1]]], 
+          getExprCode[#], 
+          ToString[FullForm[#[[2]]]]} ) &, 
+        Fold[(removeInequality[#1, #2]) &, {}, andExprs]]]
 
 ];
 
@@ -177,6 +183,9 @@ createVariableList[True, vars_, result_] := (
   Return[result]
 );
 
+(* 式中に変数名が出現するか否か *)
+hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
+
 (*
  * 制約が無矛盾であるかをチェックする
  * Reduceで解いた結果、解が得られれば無矛盾
@@ -189,26 +198,48 @@ createVariableList[True, vars_, result_] := (
  *)
 isConsistent[expr_, vars_] := Quiet[Check[Block[
 {
-  sol
+  sol,
+  getInverseRelOp, adjustExprs
 },
+
+  getInverseRelop[relop_] := Switch[relop,
+                                    Equal, Equal,
+                                    Less, Greater,
+                                    Greater, Less,
+                                    LessEqual, GreaterEqual,
+                                    GreaterEqual, LessEqual];
+
+  (* 必ず関係演算子の左側に変数名が入るようにする *)
+  adjustExprs[andExprs_] := 
+    Fold[(If[Not[hasVariable[#2[[1]]]],
+            If[hasVariable[#2[[2]]],
+              (* 逆になってるので、演算子を逆にして追加する *)
+              Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
+              (* 多分ここには入らない *)
+              1],
+            Append[#1, #2]]) &,
+         {}, andExprs];
+
+
   debugPrint["expr:", expr, "vars:", vars];
   sol = Reduce[expr, vars, Reals];
-(*  debugPrint["sol after Reduce:", sol];*)
+  (*  debugPrint["sol after Reduce:", sol];*)
   If[sol =!= False,
-      (* true *)
-      (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
-      sol = LogicalExpand[sol];
-     (*      debugPrint["sol after LogicalExpand:", sol];*)
-      sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
-     (*      debugPrint["sol after Apply Or List:", sol];*)
-      (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
-      sol = Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol];
-     (*      debugPrint["sol after Apply And List:", sol];*)
-      (* 一番内側の要素 （レベル2）を文字列にする *)
-      {1, Map[(ToString[FullForm[#]]) &, removeNotEqual[sol], {2}]},
+    (* true *)
+    (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
+    sol = LogicalExpand[sol];
+    (* debugPrint["sol after LogicalExpand:", sol];*)
+    sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
+    (* debugPrint["sol after Apply Or List:", sol];*)
+    (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
+    sol = removeNotEqual[Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol]];
+    (* debugPrint["sol after Apply And List:", sol];*)
+    (* 一番内側の要素 （レベル2）を文字列にする *)
+    {1, Map[(ToString[FullForm[#]]) &, 
+            Map[(adjustExprs[#])&, sol], {2}]},
 
-      (* false *)
-      {2}]
+    (* false *)
+    {2}]
 ],
   {0, $MessageList}
 ]];

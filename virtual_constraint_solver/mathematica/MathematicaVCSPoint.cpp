@@ -143,7 +143,13 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   // convertCSToVM[exprs]を渡したい
   ml_->put_function("convertCSToVM", 1);
   send_cs();
+
   
+/////////////////// 受信処理
+
+//   PacketChecker pc(*ml_);
+//   pc.check();
+
   
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
@@ -159,17 +165,13 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 
 bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
 {
-/////////////////// 受信処理
-
-//   PacketChecker pc(*ml_);
-//   pc.check();
-
 
   ml_->MLGetNext();
 //  ml_->MLGetNext();
 
   // List関数の要素数（式の個数）を得る
   int expr_size = ml_->get_arg_count();
+  HYDLA_LOGGER_DEBUG("expr_size: ", expr_size);
   ml_->MLGetNext(); // Listという関数名
 
 
@@ -580,7 +582,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
       int and_size = ml_->get_arg_count();
       HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
       ml_->MLGetNext(); // Listという関数名
-      ml_->MLGetNext(); // Listの中の先頭要素
+      if(and_size > 0) ml_->MLGetNext(); // Listの中の先頭要素
 
       std::set<MathValue> value_set;    
       for(int j=0; j<and_size; j++)
