@@ -111,6 +111,12 @@ void hydla_main(int argc, char* argv[])
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "mat_s1") {		//mathematicaの通信(sendのs)
+	  Logger::mathsendflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);

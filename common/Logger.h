@@ -54,6 +54,8 @@ public:
 	static int ptflag;//parse_treeflag
 	static int constflag;//constraintflag制約
 	static int varflag;//variablesflag
+	static int mathsendflag;//mathematicaflag
+
   enum LogLevel {
     Area,//追加局所的出力モード
 	Debug,

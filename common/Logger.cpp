@@ -10,6 +10,7 @@ int Logger::conflag=-1;//consistentflag
 int Logger::ptflag=-1;//parse_treeflag
 int Logger::constflag=-1;//constraintflagêßñÒ
 int Logger::varflag=-1;//variablesflag
+int Logger::mathsendflag=-1;//mathematicaflag
 
 Logger::Logger() :
   log_level_(Warn)
