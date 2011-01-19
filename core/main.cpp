@@ -102,12 +102,18 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else */if(po.get<std::string>("ar") == "const_co1") {		//局部的出力entail
+	} else */if(po.get<std::string>("ar") == "const_co1") {		//条件付制約
 	  Logger::constflag=1;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co2") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "const_co2") {		//tell制約
 	  Logger::constflag=2;
 	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co3") {		//制約集めた後のalways制約
+	  Logger::constflag=3;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
@@ -132,6 +138,15 @@ void hydla_main(int argc, char* argv[])
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "pt_p1") {		//局部的出力
+	  Logger::ptflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
 	} else if(po.get<std::string>("ar") == "pt_p4") {		//AskDisjunction
 	  Logger::ptflag=4;
 	Logger::instance().set_log_level(Logger::Area);
@@ -140,7 +155,7 @@ void hydla_main(int argc, char* argv[])
 	Logger::instance().set_log_level(Logger::Area);
     } else if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree
 	  Logger::ptflag=0;
-	Logger::instance().set_log_level(Logger::Area);
+	  	Logger::instance().set_log_level(Logger::Area);
     } else if(po.get<std::string>("ar") == "ent_e1") {			//局部的出力entail_pp_
 	  Logger::enflag=1;
 	Logger::instance().set_log_level(Logger::Area);

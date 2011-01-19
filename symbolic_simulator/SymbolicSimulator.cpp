@@ -38,6 +38,7 @@ using namespace boost::xpressive;
 using namespace hydla::ch;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
+using namespace hydla::logger;
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -224,6 +225,10 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
                                      &positive_asks);
+    if(Logger::constflag==3){
+	HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
+                       expanded_always); 
+	}
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always);  
@@ -250,6 +255,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     ask_collector.collect_ask(&expanded_always, 
                               &positive_asks, 
                               &negative_asks);
+
+    if(Logger::constflag==3){
+		HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_ask: **\n",
+                       expanded_always);
+		//(expanded_always).dump_infix(std::cout);
+	}
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_ask: **\n",
                        expanded_always);  
