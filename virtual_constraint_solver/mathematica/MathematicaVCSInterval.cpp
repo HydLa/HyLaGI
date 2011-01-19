@@ -55,6 +55,17 @@ bool MathematicaVCSInterval::reset()
 
 bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
 {
+  if(Logger::varflag==1||Logger::varflag==0){
+	  HYDLA_LOGGER_AREA("#*** Reset Constraint Store ***");
+  if(variable_map.size() == 0)
+  {
+    HYDLA_LOGGER_AREA("no Variables");
+    return true;
+  }
+  HYDLA_LOGGER_AREA("------Variable map------\n", 
+                     variable_map);
+  }
+
   HYDLA_LOGGER_SUMMARY("#*** Reset Constraint Store ***");
   if(variable_map.size() == 0)
   {
