@@ -35,6 +35,17 @@ bool MathematicaVCSPoint::reset()
 
 bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 {
+  if(Logger::varflag==6){
+  HYDLA_LOGGER_AREA("#*** Reset Constraint Store ***");
+
+  if(variable_map.size() == 0)
+  {
+    HYDLA_LOGGER_AREA("no Variables");
+    return true;
+  }
+  HYDLA_LOGGER_AREA("------Variable map------\n", variable_map);
+  }
+
   HYDLA_LOGGER_SUMMARY("#*** Reset Constraint Store ***");
 
   if(variable_map.size() == 0)
@@ -127,6 +138,15 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const append
 
 bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
 {
+	if(Logger::varflag==7){
+	HYDLA_LOGGER_AREA(
+    "#*** MathematicaVCSPoint::create_variable_map ***\n",
+    "--- variable_map ---\n",
+    variable_map,
+    "--- constraint_store ---\n",
+    *this);
+	}
+	
   HYDLA_LOGGER_DEBUG(
     "#*** MathematicaVCSPoint::create_variable_map ***\n",
     "--- variable_map ---\n",

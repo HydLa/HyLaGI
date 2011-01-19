@@ -331,6 +331,10 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   }
   expanded_always_t expanded_always;
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  if(Logger::constflag==5){
+  HYDLA_LOGGER_AREA("#** point_phase: expanded always from IP: **\n",
+                     expanded_always); 
+  }
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
                      expanded_always);  
   solver_->change_mode(DiscreteMode, opts_.approx_precision);
@@ -403,6 +407,10 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   //前準備
   expanded_always_t expanded_always;
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
+  if(Logger::constflag==5){
+	  HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
+                     expanded_always);
+  }
   HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
                      expanded_always);
 
@@ -420,7 +428,14 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     case CC_BRANCH:
     return true;
   }
-
+  if(Logger::constflag==4){
+  // MaxModuleの導出
+  module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
+  HYDLA_LOGGER_AREA("#** interval_phase: ms: **\n",
+                     *ms,
+                     "\n#** interval_phase: max_module_set: ##\n",
+                     *max_module_set);
+  }
   // MaxModuleの導出
   module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
   HYDLA_LOGGER_DEBUG("#** interval_phase: ms: **\n",
@@ -496,7 +511,13 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                        new_state->expanded_always_id);
     new_state->module_set_container = msc_no_init_;
     new_state->current_time = integrate_result.states[0].time;
-    
+
+    if(Logger::varflag==5){
+    //次のフェーズにおける変数の値を導出する
+    HYDLA_LOGGER_AREA("--- calc next phase variable map ---");  
+    solver_->apply_time_to_vm(integrate_result.states[0].variable_map, new_state->variable_map, integrate_result.states[0].time-state->current_time);
+	}
+
     //次のフェーズにおける変数の値を導出する
     HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
     solver_->apply_time_to_vm(integrate_result.states[0].variable_map, new_state->variable_map, integrate_result.states[0].time-state->current_time);

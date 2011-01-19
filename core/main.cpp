@@ -76,7 +76,7 @@ void hydla_main(int argc, char* argv[])
   po.parse(argc, argv);
   
     if(po.get<std::string>("ar") == "test") {		//局部的出力entail
-	  Logger::enflag=5; //テスト用に常に出力するものを作る
+	  Logger::enflag=6; //テスト用に常に出力するものを作る
 	Logger::instance().set_log_level(Logger::Area);
 	} else/* if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=2;
@@ -111,6 +111,24 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "const_co3") {		//制約集めた後のalways制約
 	  Logger::constflag=3;
 	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co4") {		//maxmoduleなどの導出
+	  Logger::constflag=4;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co5") {		//always制約fromIP/PP
+	  Logger::constflag=5;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co6") {		//consraint_store_t
+	  Logger::constflag=6;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co7") {		//Begin Interval add_constraint
+	  Logger::constflag=7;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co8") {		//PP変数表
+	  Logger::constflag=8;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
@@ -120,16 +138,16 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "mat_s1") {		//mathematicaの通信(sendのs)左連続制約
 	  Logger::mathsendflag=1;
 	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "mat_s2") {		//通信・intervalでの
+	  Logger::mathsendflag=2;
+	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v1") {		//変数表
+	} else if(po.get<std::string>("ar") == "var_v1") {		//IP変数表
 	  Logger::varflag=1;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v2") {		//局部的出力
+	} else if(po.get<std::string>("ar") == "var_v2") {		//左連続制約について
 	  Logger::varflag=2;
 	Logger::instance().set_log_level(Logger::Area);
 	} else if(po.get<std::string>("ar") == "var_v3") {		//pointphaseの結果
@@ -138,19 +156,31 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "var_v4") {		//intervalphaseの結果
 	  Logger::varflag=4;
 	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v5") {		//次のフェーズにおける変数の値の導出
+	  Logger::varflag=5;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v6") {		//PP変数表
+	  Logger::varflag=6;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v7") {		//Point::create_variable_map
+	  Logger::varflag=7;
+	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t1") {		//局部的出力
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "time_t1") {		//シミュレーションにおける該当時間・送信時間
 	  Logger::timeflag=1;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t2") {		//局部的出力
+	} else if(po.get<std::string>("ar") == "time_t2") {		//経過時間・次のフェーズの始まる時間
 	  Logger::timeflag=2;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t3") {		//局部的出力
+	} else if(po.get<std::string>("ar") == "time_t3") {		//maxtime(動作せず)
 	  Logger::timeflag=3;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t4") {		//局部的出力
+	} else if(po.get<std::string>("ar") == "time_t4") {		//apply_time_to_vm>>Symbolictime
 	  Logger::timeflag=4;
 	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力

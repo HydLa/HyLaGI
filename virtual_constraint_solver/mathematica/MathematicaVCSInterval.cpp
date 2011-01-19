@@ -104,6 +104,10 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
 
   }
   
+  if(Logger::constflag==6){
+  HYDLA_LOGGER_AREA(constraint_store_);
+  }
+
   HYDLA_LOGGER_DEBUG(constraint_store_);
 
   return true;
@@ -141,6 +145,12 @@ void MathematicaVCSInterval::create_max_diff_map(
     }    
   }
 
+  if(Logger::constflag==7){
+  HYDLA_LOGGER_AREA(
+    "-- max diff map --\n",
+    MaxDiffMapDumper(max_diff_map.begin(), 
+                     max_diff_map.end()).s.str());
+  }
   HYDLA_LOGGER_DEBUG(
     "-- max diff map --\n",
     MaxDiffMapDumper(max_diff_map.begin(), 
@@ -329,6 +339,9 @@ void MathematicaVCSInterval::send_init_cons(
 void MathematicaVCSInterval::send_vars(
   PacketSender& ps, const max_diff_map_t& max_diff_map)
 {
+	if(Logger::mathsendflag==2){
+		HYDLA_LOGGER_AREA("---- MathematicaVCSInterval::send_vars ----");
+	}
   HYDLA_LOGGER_DEBUG("---- MathematicaVCSInterval::send_vars ----");
 
   ml_->put_function("Join", 2);
@@ -344,6 +357,9 @@ void MathematicaVCSInterval::send_vars(
     }
   }
 
+  if(Logger::mathsendflag==2){
+	  HYDLA_LOGGER_AREA("count:", vars_count);
+  }
   HYDLA_LOGGER_DEBUG("count:", vars_count);
 
   ml_->put_function("List", vars_count);
@@ -352,6 +368,11 @@ void MathematicaVCSInterval::send_vars(
       ps.put_var(boost::make_tuple(md_it->first, i, false), 
                  PacketSender::VA_Time);
 
+	if(Logger::mathsendflag==2){
+		HYDLA_LOGGER_AREA("put: ", 
+                         "  name: ", md_it->first,
+                         "  diff: ", i);
+	}
       HYDLA_LOGGER_DEBUG("put: ", 
                          "  name: ", md_it->first,
                          "  diff: ", i);
@@ -385,6 +406,9 @@ void MathematicaVCSInterval::send_vars(
 
 VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks)
 {
+	if(Logger::constflag==7){
+      HYDLA_LOGGER_AREA("#*** Begin MathematicaVCSInterval::add_constraint ***");
+	}
   HYDLA_LOGGER_DEBUG("#*** Begin MathematicaVCSInterval::add_constraint ***");
 
   PacketSender ps(*ml_);
@@ -395,6 +419,10 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
   // expr•”•ª
   ml_->put_function("Join", 3);
   ml_->put_function("List", collected_tells.size() + appended_asks.size());
+  if(Logger::constflag==7){
+  HYDLA_LOGGER_AREA(
+    "tells_size:", collected_tells.size() + appended_asks.size());
+  }
   HYDLA_LOGGER_DEBUG(
     "tells_size:", collected_tells.size() + appended_asks.size());
 
@@ -409,6 +437,9 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
   for(; append_it!=append_end; ++append_it) {
+	  if(Logger::constflag==7){
+		HYDLA_LOGGER_AREA("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+	  }
     HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
     ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
   }
@@ -912,6 +943,9 @@ VCSResult MathematicaVCSInterval::integrate(
 }
 
 void MathematicaVCSInterval::send_time(const time_t& time){
+  if(Logger::timeflag==4){
+  HYDLA_LOGGER_AREA("SymbolicTime::send_time : ", time);
+  }
   HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
   ml_->put_function("ToExpression", 1);
   ml_->put_string(time.get_string());
@@ -921,12 +955,18 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
                                               variable_map_t& out_vm, 
                                               const time_t& time)
 {
+	if(Logger::timeflag==4){
+		HYDLA_LOGGER_AREA("--- apply_time_to_vm ---");
+	}
+
   HYDLA_LOGGER_DEBUG("--- apply_time_to_vm ---");
 
   variable_map_t::const_iterator it  = in_vm.begin();
   variable_map_t::const_iterator end = in_vm.end();
   for(; it!=end; ++it) {
-    
+    if(Logger::timeflag==4){
+    HYDLA_LOGGER_AREA("variable : ", it->first);
+	}
     HYDLA_LOGGER_DEBUG("variable : ", it->first);
 
     // ’l
