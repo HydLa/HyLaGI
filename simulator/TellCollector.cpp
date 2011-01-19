@@ -6,6 +6,8 @@
 
 namespace hydla {
 namespace simulator {
+using namespace hydla::logger;
+
 
 namespace {
 struct NodeDumper {
@@ -74,6 +76,13 @@ void TellCollector::collect(tells_t*                 tells,
     if(visited_always_.find(*it) != visited_always_.end()) {
       accept((*it)->get_child());
     }
+  }
+  
+  if(Logger::constflag==2||Logger::constflag==0){
+	HYDLA_LOGGER_AREA(
+    "#*** tell collector ***\n", 
+    "--- collected tells ---\n", 
+    NodeDumper(tells->begin(), tells->end()));
   }
 
   HYDLA_LOGGER_DEBUG(

@@ -84,7 +84,43 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else */if(po.get<std::string>("ar") == "pt_p5") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else */if(po.get<std::string>("ar") == "const_1") {		//局部的出力entail
+	  Logger::constflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_2") {		//局部的出力entail
+	  Logger::constflag=2;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "pt_p5") {		//局部的出力entail
 	  Logger::ptflag=5;
 	Logger::instance().set_log_level(Logger::Area);
     } else if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree

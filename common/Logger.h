@@ -52,6 +52,7 @@ public:
 	static int enflag;//entailflag
 	static int conflag;//consistentflag
 	static int ptflag;//parse_treeflag
+	static int constflag;//constraintflag制約
   enum LogLevel {
     Area,//追加局所的出力モード
 	Debug,
