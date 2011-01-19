@@ -153,6 +153,9 @@ void MathematicaVCSInterval::send_init_cons(
   const max_diff_map_t& max_diff_map,
   bool use_approx)
 {
+  if(Logger::mathsendflag==1){
+    HYDLA_LOGGER_AREA("---- Begin MathematicaVCSInterval::send_init_cons ----");
+  }
   HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_init_cons ----");
     
   // ‘—M‚·‚é§–ñ‚ÌŒÂ”‚ğ‹‚ß‚é
@@ -190,6 +193,10 @@ void MathematicaVCSInterval::send_init_cons(
 */
 
 
+  }
+
+  if(Logger::mathsendflag==1){
+	  HYDLA_LOGGER_AREA("init_vars_count: ", init_vars_count);
   }
 
   HYDLA_LOGGER_DEBUG("init_vars_count: ", init_vars_count);

@@ -51,10 +51,12 @@ class Logger
 public:
 	static int enflag;//entailflag
 	static int conflag;//consistentflag
-	static int ptflag;//parse_treeflag
-	static int constflag;//constraintflag制約
+	static int ptflag;//parse_treeflagorアドレスID
+	static int constflag;//constraintflag制約orモジュール
 	static int varflag;//variablesflag
-	static int mathsendflag;//mathematicaflag
+	static int mathsendflag;//mathematicasendingflag
+	static int mathcalcflag;//mathematicacalculationflag
+	static int timeflag;//時間出力
 
   enum LogLevel {
     Area,//追加局所的出力モード

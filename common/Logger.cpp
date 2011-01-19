@@ -11,6 +11,8 @@ int Logger::ptflag=-1;//parse_treeflag
 int Logger::constflag=-1;//constraintflag§–ñ
 int Logger::varflag=-1;//variablesflag
 int Logger::mathsendflag=-1;//mathematicaflag
+int Logger::mathcalcflag=-1;//mathematicacalculationflag
+int Logger::timeflag=-1;//ŠÔo—Í
 
 Logger::Logger() :
   log_level_(Warn)
