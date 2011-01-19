@@ -120,6 +120,15 @@ void hydla_main(int argc, char* argv[])
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "pt_p4") {		//局部的出力entail
+	  Logger::ptflag=4;
+	Logger::instance().set_log_level(Logger::Area);
 	} else if(po.get<std::string>("ar") == "pt_p5") {		//局部的出力entail
 	  Logger::ptflag=5;
 	Logger::instance().set_log_level(Logger::Area);

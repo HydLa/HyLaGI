@@ -3,6 +3,7 @@
 #include "Logger.h"
 
 using namespace hydla::parse_tree;
+using namespace hydla::logger;
 
 namespace hydla {
 namespace simulator {
@@ -23,6 +24,13 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
   } while(swapped_);
 
   pt->update_node_id_list();
+
+  if(Logger::ptflag==4){
+	  HYDLA_LOGGER_AREA("#*** ask disjunction format result ***\n",
+                     *pt, "\n",
+                     pt->to_graphviz());
+  }
+
 
   HYDLA_LOGGER_DEBUG("#*** ask disjunction format result ***\n",
                      *pt, "\n",
