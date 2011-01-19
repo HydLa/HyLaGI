@@ -680,6 +680,12 @@ VCSResult MathematicaVCSInterval::integrate(
   // maxTime‚ð“n‚·
   time_t tmp_time(max_time);
   tmp_time -= current_time;
+  
+  if(Logger::timeflag==1){
+  HYDLA_LOGGER_AREA("current time:", current_time);
+  HYDLA_LOGGER_AREA("send time:", tmp_time);
+  }
+
   HYDLA_LOGGER_DEBUG("current time:", current_time);
   HYDLA_LOGGER_DEBUG("send time:", tmp_time);
   if(approx_precision_ > 0) {
@@ -720,6 +726,12 @@ VCSResult MathematicaVCSInterval::integrate(
   // next_point_phase_time‚ð“¾‚é
   MathTime elapsed_time;
   elapsed_time.set(ml_->get_string());
+  if(Logger::timeflag==2){
+  HYDLA_LOGGER_AREA("elapsed_time: ", elapsed_time);  
+  state.time  = elapsed_time;
+  state.time += current_time;
+  HYDLA_LOGGER_AREA("next_phase_time: ", state.time);  
+  }
   HYDLA_LOGGER_DEBUG("elapsed_time: ", elapsed_time);  
   state.time  = elapsed_time;
   state.time += current_time;
@@ -793,6 +805,17 @@ VCSResult MathematicaVCSInterval::integrate(
 
     integrate_result.changed_asks.push_back(
       std::make_pair(changed_ask_type, changed_ask_id));
+  }
+  if(Logger::timeflag==3){
+  // max time‚©‚Ç‚¤‚©
+  HYDLA_LOGGER_AREA("-- receive max time --");
+//   PacketChecker c(*ml_);
+//   c.check2();
+  if(changed_asks_size==0) {
+    ml_->MLGetNext();  
+  }
+  state.is_max_time = ml_->get_integer() == 1;
+  HYDLA_LOGGER_AREA("is_max_time : ", state.is_max_time);
   }
 
   // max time‚©‚Ç‚¤‚©

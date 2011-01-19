@@ -132,16 +132,34 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "var_v2") {		//局部的出力
 	  Logger::varflag=2;
 	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v3") {		//pointphaseの結果
+	  Logger::varflag=3;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v4") {		//intervalphaseの結果
+	  Logger::varflag=4;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "time_t1") {		//局部的出力
+	  Logger::timeflag=1;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "time_t2") {		//局部的出力
+	  Logger::timeflag=2;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "time_t3") {		//局部的出力
+	  Logger::timeflag=3;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "time_t4") {		//局部的出力
+	  Logger::timeflag=4;
+	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "pt_p1") {		//局部的出力
+	} else if(po.get<std::string>("ar") == "pt_p1") {		//ASTtree
 	  Logger::ptflag=1;
 	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
