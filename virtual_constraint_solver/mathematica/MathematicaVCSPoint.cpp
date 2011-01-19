@@ -363,6 +363,10 @@ void MathematicaVCSPoint::create_max_diff_map(
 void MathematicaVCSPoint::add_left_continuity_constraint(
   PacketSender& ps, max_diff_map_t& max_diff_map)
 {
+  if(Logger::varflag==2){
+	  HYDLA_LOGGER_AREA("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
+  }
+
   HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
 
   // ëóêMÇ∑ÇÈêßñÒÇÃå¬êîÇãÅÇﬂÇÈ
@@ -380,6 +384,9 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
       left_cont_vars_count++;
     }
   }
+  if(Logger::varflag==2){
+	  HYDLA_LOGGER_AREA("left_cont_vars_count(in cs_var): ", left_cont_vars_count);
+  }
 
   HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var): ", left_cont_vars_count);  
 
@@ -394,10 +401,16 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
       }
     }
   }
+  if(Logger::varflag==2){
+	    HYDLA_LOGGER_AREA("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
+  }
 
   HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
 
 
+  if(Logger::varflag==2){
+	    HYDLA_LOGGER_AREA("--- in cs_var ---");  
+  }
 
   HYDLA_LOGGER_DEBUG("--- in cs_var ---");  
 
@@ -430,6 +443,9 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
                           false),
         PacketSender::VA_None);
     }
+  }
+  if(Logger::varflag==2){
+	    HYDLA_LOGGER_AREA("--- in vars ---");  
   }
 
   HYDLA_LOGGER_DEBUG("--- in vars ---");  
@@ -748,6 +764,12 @@ void MathematicaVCSPoint::send_cs() const
 void MathematicaVCSPoint::send_cs_vars() const
 {
   int vars_size = constraint_store_.second.size();
+
+  if(Logger::varflag==2){
+	    HYDLA_LOGGER_AREA(
+    "---- Send Constraint Store Vars -----\n",
+    "vars_size: ", vars_size);
+  }
 
   HYDLA_LOGGER_DEBUG(
     "---- Send Constraint Store Vars -----\n",

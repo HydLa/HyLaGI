@@ -102,10 +102,10 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else */if(po.get<std::string>("ar") == "const_1") {		//局部的出力entail
+	} else */if(po.get<std::string>("ar") == "const_co1") {		//局部的出力entail
 	  Logger::constflag=1;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_2") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "const_co2") {		//局部的出力entail
 	  Logger::constflag=2;
 	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
@@ -114,22 +114,22 @@ void hydla_main(int argc, char* argv[])
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_1") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "var_v1") {		//変数表
 	  Logger::varflag=1;
 	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "var_v2") {		//局部的出力
+	  Logger::varflag=2;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "pt_p4") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "pt_p4") {		//AskDisjunction
 	  Logger::ptflag=4;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "pt_p5") {		//局部的出力entail
+	} else if(po.get<std::string>("ar") == "pt_p5") {		//remove id
 	  Logger::ptflag=5;
 	Logger::instance().set_log_level(Logger::Area);
     } else if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree

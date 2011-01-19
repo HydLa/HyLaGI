@@ -6,6 +6,7 @@
 #include "Logger.h"
 
 using namespace hydla::parse_tree;
+using namespace hydla::logger;
 
 namespace hydla {
 namespace vcs {
@@ -217,6 +218,17 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
   int diff_count = var.get<1>();
   bool prev      = var.get<2>();
   
+  if(Logger::varflag==2){
+	    HYDLA_LOGGER_AREA(
+    "PacketSender::put_var: ",
+    "name: ", name,
+    "\tdiff_count: ", diff_count,
+    "\tprev: ", prev,
+    "\tvariable_arg: ", variable_arg);
+  }
+
+
+
   HYDLA_LOGGER_DEBUG(
     "PacketSender::put_var: ",
     "name: ", name,
@@ -298,6 +310,12 @@ void PacketSender::put_node(const node_sptr& node,
 void PacketSender::put_vars(VariableArg variable_arg, 
                             bool ignore_prev)
 {
+  if(Logger::varflag==2){
+	    HYDLA_LOGGER_AREA(
+    "---- PacketSender::put_vars ----\n",
+    "var size:", vars_.size());
+  }
+
   HYDLA_LOGGER_DEBUG(
     "---- PacketSender::put_vars ----\n",
     "var size:", vars_.size());
