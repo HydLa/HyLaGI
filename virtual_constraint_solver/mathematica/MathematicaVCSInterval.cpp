@@ -657,6 +657,11 @@ VCSResult MathematicaVCSInterval::integrate(
   const time_t& max_time,
   const not_adopted_tells_list_t& not_adopted_tells_list)
 {
+  if(Logger::mathcalcflag==1){
+    HYDLA_LOGGER_AREA("#*** MathematicaVCSInterval::integrate ***");
+
+    HYDLA_LOGGER_AREA(constraint_store_);
+  }
   HYDLA_LOGGER_DEBUG("#*** MathematicaVCSInterval::integrate ***");
 
   HYDLA_LOGGER_DEBUG(constraint_store_);
@@ -692,6 +697,19 @@ VCSResult MathematicaVCSInterval::integrate(
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, true);
 
+  if(Logger::constflag==11){
+  // posAskを渡す（{ガードの式、askのID}をそれぞれ）
+  HYDLA_LOGGER_AREA("-- send positive ask -- ");
+  send_ask_guards(ps, positive_asks);
+
+  // negAskを渡す（{ガードの式、askのID}をそれぞれ）
+  HYDLA_LOGGER_AREA("-- send negative ask -- ");
+  send_ask_guards(ps, negative_asks);
+
+  // 採用していないモジュール内のtell制約NAConsを渡す（{{式、ID}, {式、ID}, ...}をそれぞれのモジュールに関して）
+  HYDLA_LOGGER_AREA("-- send not adopted constraint -- ");
+  send_not_adopted_tells(ps, not_adopted_tells_list);
+  }
 
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
   HYDLA_LOGGER_DEBUG("-- send positive ask -- ");
@@ -771,6 +789,9 @@ VCSResult MathematicaVCSInterval::integrate(
   
   // 変数と値の組を受け取る
   int variable_list_size = ml_->get_arg_count();
+  if(Logger::varflag==8){
+  HYDLA_LOGGER_AREA("variable_list_size : ", variable_list_size);
+  }
   HYDLA_LOGGER_DEBUG("variable_list_size : ", variable_list_size);  
   ml_->MLGetNext(); ml_->MLGetNext();
   for(int i=0; i<variable_list_size; i++)
@@ -780,17 +801,25 @@ VCSResult MathematicaVCSInterval::integrate(
 
     variable_t variable;
     value_t    value;
-
+  if(Logger::varflag==8){
+	HYDLA_LOGGER_AREA("--- add variable ---");
+  }
     HYDLA_LOGGER_DEBUG("--- add variable ---");
 
     // 変数名
     variable.name = ml_->get_symbol().substr(6);
+	if(Logger::varflag==8){
+		HYDLA_LOGGER_AREA("name  : ", variable.name);
+	}
     HYDLA_LOGGER_DEBUG("name  : ", variable.name);
     ml_->MLGetNext();
 
     // 微分回数
     variable.derivative_count = ml_->get_integer();
-    HYDLA_LOGGER_DEBUG("derivative : ", variable.derivative_count);
+    if(Logger::varflag==8){
+		HYDLA_LOGGER_AREA("derivative : ", variable.derivative_count);
+	}
+	HYDLA_LOGGER_DEBUG("derivative : ", variable.derivative_count);
     ml_->MLGetNext();
 
     // 値
@@ -799,6 +828,9 @@ VCSResult MathematicaVCSInterval::integrate(
     ele.relation = value_t::EQUAL;
     value.go_next_or();
     value.add(ele);
+  if(Logger::varflag==8){
+	HYDLA_LOGGER_AREA("value : ", value.get_first_value());
+  }
     HYDLA_LOGGER_DEBUG("value : ", value.get_first_value());
     ml_->MLGetNext();
 
@@ -807,10 +839,16 @@ VCSResult MathematicaVCSInterval::integrate(
 
   // askとそのIDの組一覧を得る
   int changed_asks_size = ml_->get_arg_count();
+  if(Logger::constflag==12){
+	  HYDLA_LOGGER_AREA("changed_asks_size : ", changed_asks_size);
+  }
   HYDLA_LOGGER_DEBUG("changed_asks_size : ", changed_asks_size);
   ml_->MLGetNext(); // Listという関数名
   for(int j=0; j<changed_asks_size; j++)
   {
+	if(Logger::constflag==12){
+	  HYDLA_LOGGER_AREA("--- add changed ask ---");
+	}
     HYDLA_LOGGER_DEBUG("--- add changed ask ---");
 
     ml_->MLGetNext(); // List関数
@@ -818,7 +856,10 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();
 
     std::string changed_ask_type_str = ml_->get_symbol(); // pos2negまたはneg2pos
-    HYDLA_LOGGER_DEBUG("changed_ask_type_str : ", changed_ask_type_str);
+    if(Logger::constflag==12){
+		HYDLA_LOGGER_AREA("changed_ask_type_str : ", changed_ask_type_str);
+	}
+	HYDLA_LOGGER_DEBUG("changed_ask_type_str : ", changed_ask_type_str);
 
     hydla::simulator::AskState changed_ask_type;
     if(changed_ask_type_str == "pos2neg"){
@@ -1010,15 +1051,24 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
 
 void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
 {
+	if(Logger::varflag==9){
+		HYDLA_LOGGER_AREA("--- add undefined vars to vm ---");  
+	}
   HYDLA_LOGGER_DEBUG("--- add undefined vars to vm ---");  
 
   // 変数表に登録されている変数名一覧
+  if(Logger::varflag==9){
+	  HYDLA_LOGGER_AREA("-- variable_name_list --");
+  }
   HYDLA_LOGGER_DEBUG("-- variable_name_list --");
   std::set<MathVariable> variable_name_list;
   variable_map_t::const_iterator vm_it = vm.begin();
   variable_map_t::const_iterator vm_end = vm.end();
   for(; vm_it!=vm_end; ++vm_it){
     variable_name_list.insert(vm_it->first);
+	if(Logger::varflag==9){
+		HYDLA_LOGGER_AREA(vm_it->first);
+	}
     HYDLA_LOGGER_DEBUG(vm_it->first);
   }
 
@@ -1026,6 +1076,9 @@ void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
   constraint_store_t::init_vars_t::const_iterator init_vars_end;
   init_vars_it  = constraint_store_.init_vars.begin();
   init_vars_end = constraint_store_.init_vars.end();
+  if(Logger::varflag==9){
+  HYDLA_LOGGER_AREA("-- search undefined variable --");
+  }
   HYDLA_LOGGER_DEBUG("-- search undefined variable --");
   // 初期値制約変数のうち、変数表に登録されている変数名一覧内にないものを抽出？
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
@@ -1033,6 +1086,10 @@ void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
     std::set<MathVariable>::const_iterator vlist_it = variable_name_list.find(variable);
     if(vlist_it==variable_name_list.end()){      
       value_t value;
+	  if(Logger::varflag==9){
+		  HYDLA_LOGGER_AREA("variable : ", variable);
+          HYDLA_LOGGER_AREA("value : ", value);
+	  }
       HYDLA_LOGGER_DEBUG("variable : ", variable);
       HYDLA_LOGGER_DEBUG("value : ", value);
       vm.set_variable(variable, value);

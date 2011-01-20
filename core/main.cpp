@@ -84,24 +84,6 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
 	} else */if(po.get<std::string>("ar") == "const_co1") {		//条件付制約
 	  Logger::constflag=1;
 	Logger::instance().set_log_level(Logger::Area);
@@ -120,18 +102,24 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "const_co6") {		//consraint_store_t
 	  Logger::constflag=6;
 	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co7") {		//Begin Interval add_constraint
+	} else if(po.get<std::string>("ar") == "const_co7") {		//Begin Interval add_constraint 情報不足
 	  Logger::constflag=7;
 	Logger::instance().set_log_level(Logger::Area);
 	} else if(po.get<std::string>("ar") == "const_co8") {		//PP変数表
 	  Logger::constflag=8;
 	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co9") {		//Begin MathematicaVCSPoint::add_constraint(情報不足)
+	  Logger::constflag=9;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co10") {		//制約ストアの構築　List関数の要素数(Or/Andで結ばれた解の個数)を得る
+	  Logger::constflag=10;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co11") {		//posAsk,negAsk,NACons(採用していないモジュール内のtell制約)＞動かない
+	  Logger::constflag=11;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "const_co12") {		//changed askに関して
+	  Logger::constflag=12;
+	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
@@ -140,6 +128,15 @@ void hydla_main(int argc, char* argv[])
 	Logger::instance().set_log_level(Logger::Area);
 	} else if(po.get<std::string>("ar") == "mat_s2") {		//通信・intervalでの
 	  Logger::mathsendflag=2;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "mat_s3") {		//制約ストアの送信PP
+	  Logger::mathsendflag=3;
+	Logger::instance().set_log_level(Logger::Area);
+	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
+	  //Logger::flag=3;
+	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "mat_c1") {		//局部的出力entail
+	  Logger::mathcalcflag=1;
 	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
 	  //Logger::flag=3;
@@ -165,9 +162,12 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "var_v7") {		//Point::create_variable_map
 	  Logger::varflag=7;
 	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v8") {		//変数と値の組を受取るIP
+	  Logger::varflag=8;
+	Logger::instance().set_log_level(Logger::Area);
+	} else if(po.get<std::string>("ar") == "var_v9") {		//変数表に登録されている変数名一覧or登録されていないもの
+	  Logger::varflag=9;
+	Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
@@ -183,9 +183,6 @@ void hydla_main(int argc, char* argv[])
 	} else if(po.get<std::string>("ar") == "time_t4") {		//apply_time_to_vm>>Symbolictime
 	  Logger::timeflag=4;
 	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
 	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
 	  //Logger::flag=3;
 	//Logger::instance().set_log_level(Logger::Area);
@@ -242,7 +239,7 @@ void hydla_main(int argc, char* argv[])
 	Logger::instance().set_log_level(Logger::Area);
 	}else if(po.count("debug")>0) {
     Logger::instance().set_log_level(Logger::Debug);
-  } else if(po.count("comprehensive")>0){					//追加予定の大局的出力モード
+  } else if(po.count("comprehensive")>0){					//大局的出力モード
 	Logger::instance().set_log_level(Logger::Summary);
   } else {
     Logger::instance().set_log_level(Logger::Warn);
