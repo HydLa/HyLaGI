@@ -12,16 +12,18 @@ If[optUseDebugPrint,
  * 2 : 導出不可能
  *)
 checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
-  {tStore, sol, integGuard},
+  {tStore, sol, integGuard, otherExpr},
   debugPrint["guard:", guard, "store:", store, "vars:", vars];
-  tStore = exDSolve[store, vars];
-  If[tStore =!= overconstraint && tStore =!= underconstraint,
+  sol = exDSolve[store, vars];
+  If[sol =!= overconstraint && sol =!= underconstraint,
+    tStore = sol[[1]];
+    otherExpr = sol[[2]];
     (* guardにtStoreを適用する *)
     integGuard = guard /. tStore;
     If[integGuard =!= False,
       (* その結果とt>0とを連立 *)
       (* debugPrint["integGuard:", integGuard]; *)
-      sol = Quiet[Check[Reduce[{integGuard && t > 0}, t],
+      sol = Quiet[Check[Reduce[{integGuard && t > 0 && (And@@otherExpr)}, t],
                         False, {Reduce::nsmet}], {Reduce::nsmet}];
       (* Infを取って0になればEntailed *)
       If[sol =!= False && MinValue[{t, sol}, t] === 0,
@@ -310,13 +312,13 @@ applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
 exDSolve[expr_, vars_] := Block[
-{sol, DExpr, DExprVars, NDExpr},
+{sol, DExpr, DExprVars, NDExpr, otherExpr},
   sol = LogicalExpand[removeNotEqual[Reduce[Cases[expr, Except[True] | Except[False]], vars, Reals]]];
 
   If[sol===False,
     overconstraint,
     If[sol===True,
-      {},
+      {{}, {}},
 
       (* 1つだけ採用 *)
       (* TODO: 複数解ある場合も考える *)
@@ -327,7 +329,7 @@ exDSolve[expr_, vars_] := Block[
       (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
       sol = removeTrivialCons[sol, vars];
 
-      {DExpr, DExprVars, NDExpr} = splitExprs[sol];
+      {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
 
       Quiet[Check[Check[If[Cases[DExpr, Except[True]] === {},
                           (* ストアが空の場合はDSolveが解けないので空集合を返す *)
@@ -340,7 +342,7 @@ exDSolve[expr_, vars_] := Block[
                         sol = First[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], 
                                           getNDVars[vars]]];
                         If[sol =!= {}, 
-                          sol,
+                          {sol, otherExpr},
                           overconstraint],
                         underconstraint,
                         {DSolve::underdet, Solve::svars, DSolve::deqx, 
@@ -352,16 +354,17 @@ exDSolve[expr_, vars_] := Block[
              DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]]
 ];
 
-(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)に分ける *)
-(* 微分値を含まず､かつ､変数が2種類以上出る式 (NDExpr)はDSolveで扱えない *)
+(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外（otherExpr）に分ける *)
+(* 微分値を含まず､かつ､変数が2種類以上出る式 (NDExpr)や等式以外（otherExpr）はDSolveで扱えない *)
 splitExprs[expr_] := Block[
-  {NDExpr, DExpr, DExprVars},
-  NDExpr = Select[expr, (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True &&
-                         Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
-  DExpr = Complement[expr, NDExpr];
+  {NDExpr, DExpr, DExprVars, otherExpr},
+  otherExpr = Select[expr, (Head[#] =!= Equal) &];
+  NDExpr = Select[Complement[expr, otherExpr], 
+                  (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
+  DExpr = Complement[expr, Join[otherExpr, NDExpr]];
   DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
                          {}, DExpr]];
-  {DExpr, DExprVars, NDExpr}
+  {DExpr, DExprVars, NDExpr, otherExpr}
 ];
 
 (* isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := ( *)
@@ -500,6 +503,7 @@ integrateCalc[cons_,
   NDExpr,
   DExpr,
   DExprVars,
+  otherExpr,
   returnVars,
   solVars
 (*   applyTime2VarMap *)
@@ -528,9 +532,9 @@ integrateCalc[cons_,
 
     tmpIntegSol = removeTrivialCons[applyList[tmpIntegSol], vars];
 
-    {DExpr, DExprVars, NDExpr} = splitExprs[tmpIntegSol];
+    {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[tmpIntegSol];
 
-    tmpIntegSol = Quiet[DSolve[tmpIntegSol, DExprVars, t],
+    tmpIntegSol = Quiet[DSolve[DExpr, DExprVars, t],
                         {Solve::incnst}];
     (* debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
 
