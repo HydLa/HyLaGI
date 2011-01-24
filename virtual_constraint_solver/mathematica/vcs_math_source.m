@@ -311,9 +311,14 @@ removeTrivialCons[cons_, consVars_] := Block[
 applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
+(* パラメータの制約を得る *)
+getParamCons[cons_] := 
+  Fold[(If[Not[hasVariable[#2]], Append[#1, #2], #1]) &, {}, cons];
+
 exDSolve[expr_, vars_] := Block[
-{sol, DExpr, DExprVars, NDExpr, otherExpr},
-  sol = LogicalExpand[removeNotEqual[Reduce[Cases[expr, Except[True] | Except[False]], vars, Reals]]];
+{sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
+  paramCons = getParamCons[expr];
+  sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons], Except[True] | Except[False]], vars, Reals]]];
 
   If[sol===False,
     overconstraint,
@@ -334,15 +339,16 @@ exDSolve[expr_, vars_] := Block[
       Quiet[Check[Check[If[Cases[DExpr, Except[True]] === {},
                           (* ストアが空の場合はDSolveが解けないので空集合を返す *)
                           sol = {},
-                          sol = DSolve[DExpr, DExprVars, t]];
 
-                        (* 1つだけ採用 *)
-                        (* TODO: 複数解ある場合も考える *)
-                        sol = First[sol];
+                          sol = DSolve[DExpr, DExprVars, t];
+                          (* 1つだけ採用 *)
+                          (* TODO: 複数解ある場合も考える *)
+                          sol = First[sol]];
+
                         sol = First[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], 
                                           getNDVars[vars]]];
                         If[sol =!= {}, 
-                          {sol, otherExpr},
+                          {sol, Join[otherExpr, paramCons]},
                           overconstraint],
                         underconstraint,
                         {DSolve::underdet, Solve::svars, DSolve::deqx, 
@@ -445,6 +451,8 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
       (* false *)
       minT=0];
 
+    (* Piecewiseへの対応 *)
+    If[Head[minT] === Piecewise, minT = First[First[First[minT]]]];
     (* debugPrint["calcMinTime#minT: ", minT];*)
     (* 0秒後のを含んではいけない *)
     If[includeZero===False && minT===0, minT=error];
@@ -505,7 +513,8 @@ integrateCalc[cons_,
   DExprVars,
   otherExpr,
   returnVars,
-  solVars
+  solVars,
+  paramCons
 (*   applyTime2VarMap *)
 },
 (*   applyTime2VarMap[{name_, derivative_, expr_}, time_, extrafunc_] := *)
@@ -525,7 +534,8 @@ integrateCalc[cons_,
 
   If[Cases[cons, Except[True]]=!={},
     (* true *)
-    tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[cons, vars, Reals]]];
+    paramCons = getParamCons[cons];
+    tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
     (* 1つだけ採用 *)
     (* TODO: 複数解ある場合も考える *)
     If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
@@ -534,14 +544,15 @@ integrateCalc[cons_,
 
     {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[tmpIntegSol];
 
-    tmpIntegSol = Quiet[DSolve[DExpr, DExprVars, t],
+    If[Cases[DExpr, Except[True]] === {},
+      tmpIntegSol = {},
+      tmpIntegSol = Quiet[DSolve[DExpr, DExprVars, t],
                         {Solve::incnst}];
+      (* 1つだけ採用 *)
+      (* TODO:複数解ある場合も考える *)
+      tmpIntegSol = First[tmpIntegSol]];
+
     (* debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
-
-    (* 1つだけ採用 *)
-    (* TODO:複数解ある場合も考える *)
-    tmpIntegSol = First[tmpIntegSol];
-
     (* tmpIntegSolおよびNDExpr内に出現するND変数の一覧を得る *)
     solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
     (* integrateCalcの計算結果として必要な変数の一覧 *)
@@ -555,7 +566,7 @@ integrateCalc[cons_,
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
     tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
     {tmpMinT, tmpMinAskIDs} = 
-      calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, otherExpr];
+      calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, Join[otherExpr, paramCons]];
     tmpVarMap = 
       Map[({getVariableName[#], 
             getDerivativeCount[#], 
