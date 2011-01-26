@@ -578,8 +578,7 @@ integrateCalc[cons_,
     (* tmpIntegSolおよびNDExpr内に出現するND変数の一覧を得る *)
     solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
     (* integrateCalcの計算結果として必要な変数の一覧 *)
-    returnVars = Fold[(If[MemberQ[solVars, removeDash[#2]], Append[#1, #2], #1] ) &,
-                      {}, vars];
+    returnVars = Select[vars, (MemberQ[solVars, removeDash[#]]) &];
 
     tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
                               getNDVars[returnVars]]];
