@@ -426,8 +426,7 @@ isConsistentInterval[expr_, vars_] :=  Block[
 calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherExpr_] := Block[
 {
   calcMinTime,
-  sol,
-  minT,
+  sol, minT, paramVars, compareResult,
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
   calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, askID_}] := (
@@ -459,10 +458,24 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
     (* 0秒後の離散変化が行われるかのチェックなので0でなければエラー *)
     If[includeZero===True && minT=!=0, minT=error];
 
-    Which[minT === error,      {currentMinT, currentMinAsk},
-          minT <  currentMinT, {minT,        {{type, askID}}},
-          minT == currentMinT, {minT,        Append[currentMinAsk, {type, askID}]},
-          True,                {currentMinT, currentMinAsk}]
+    If[minT === error,
+      (* true *)
+      {currentMinT, currentMinAsk},
+ 
+      (* false *)
+      paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, otherExpr]];
+      compareResult = Map[(Reduce[{#[minT, currentMinT] && (And @@ otherExpr)}, paramVars]) &, 
+                          {Less, Equal, Greater}];
+
+
+      If[Count[compareResult, Not[False]] > 1,
+        (* 要分岐 *)
+        (* TODO: 適切な処理をする *)
+        1,
+        Switch[First[First[Position[compareResult, x_ /; x =!= False, {1}, Heads -> False]]],
+          1, {minT, {{type, askID}}},
+          2, {minT, Append[currentMinAsk, {type, askID}]},
+          3, {currentMinT, currentMinAsk}]]]
   );
 
 
@@ -492,6 +505,12 @@ createIntegratedValue[variable_, integRule_] := (
 (* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 2t+Sin[t]}"]]] *)
 (* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 10}"]]] *)
 
+(* パラメータ制約を得る *)
+getParamCons[cons_] := Cases[cons, x_ /; Not[hasVariable[x]], {1}];
+(* 式中のパラメータ変数を得る *)
+getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
+
+
 (*
  * askの導出状態が変化するまで積分をおこなう
  *)
@@ -507,6 +526,7 @@ integrateCalc[cons_,
   tmpMinT, 
   tmpMinAskIDs,
   tmpVarMap,
+  endTimeFlag,
   tmpRet,
   NDExpr,
   DExpr,
@@ -514,7 +534,8 @@ integrateCalc[cons_,
   otherExpr,
   returnVars,
   solVars,
-  paramCons
+  paramCons,
+  paramVars
 (*   applyTime2VarMap *)
 },
 (*   applyTime2VarMap[{name_, derivative_, expr_}, time_, extrafunc_] := *)
@@ -535,6 +556,7 @@ integrateCalc[cons_,
   If[Cases[cons, Except[True]]=!={},
     (* true *)
     paramCons = getParamCons[cons];
+    paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, paramCons]];
     tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
     (* 1つだけ採用 *)
     (* TODO: 複数解ある場合も考える *)
@@ -571,19 +593,21 @@ integrateCalc[cons_,
       Map[({getVariableName[#], 
             getDerivativeCount[#], 
             createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
-          returnVars],
+          returnVars];
+    endTimeFlag = If[Reduce[tmpMinT >= maxTime && (And @@ Join[otherExpr, paramCons]), paramVars] =!= False, 1, 0],
 
     (* false *)
     tmpMinT = maxTime;
     tmpVarMap = {};
-    tmpMinAskIDs = {}
+    tmpMinAskIDs = {};
+    endTimeFlag = 1
   ];
   tmpRet = {1,
             ToString[tmpMinT, InputForm], 
             tmpVarMap,
             tmpMinAskIDs, 
-            If[tmpMinT>=maxTime, 1, 0]};
-  debugPrint["ret:", tmpRet];
+            endTimeFlag};
+  debugPrint["tmpRet:", tmpRet];
   tmpRet
 ],
   (* debugPrint["MessageList:", $MessageList]; *)
