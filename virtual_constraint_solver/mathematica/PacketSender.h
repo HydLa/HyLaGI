@@ -20,6 +20,7 @@ class PacketSender :
   public hydla::parse_tree::TreeVisitor
 {
 public:
+  
   enum now_phase_t 
   { 
     NP_POINT_PHASE, 
@@ -45,6 +46,8 @@ public:
 
   // Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar"
   static const std::string var_prefix;
+  // Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê
+  static const std::string par_prefix;
 
   PacketSender(MathLink& ml);
 

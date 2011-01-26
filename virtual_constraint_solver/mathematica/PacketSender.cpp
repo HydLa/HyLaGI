@@ -15,6 +15,9 @@ namespace mathematica {
 /** Mathematicaに送る際に変数名につける接頭語 "usrVar" */
 const std::string PacketSender::var_prefix("usrVar");
 
+/** Mathematicaに送る際に定数名につける接頭語 */
+const std::string PacketSender::par_prefix("p");
+
 /**
  * 式(ノード)をMathematicaへ送信するクラス．
  * @param ml Mathlinkインスタンスの参照
@@ -284,6 +287,7 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
 }
 
 
+
 /**
  * ある式(ノード)をputする
  * @param node putしたい式(ノード)
@@ -305,7 +309,7 @@ void PacketSender::put_node(const node_sptr& node,
 }
 
 /**
- * 変数の一覧を送信
+ * 変数の一覧を送信．とりあえず定数の一覧も同時に
  */
 void PacketSender::put_vars(VariableArg variable_arg, 
                             bool ignore_prev)
@@ -331,6 +335,7 @@ void PacketSender::put_vars(VariableArg variable_arg,
               it->get<2>() && !ignore_prev), 
             variable_arg);
   }
+  
 }
 
 /**

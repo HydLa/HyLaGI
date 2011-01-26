@@ -588,6 +588,7 @@ integrateCalc[cons_,
     tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
     {tmpMinT, tmpMinAskIDs} = 
       calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, Join[otherExpr, paramCons]];
+
     tmpVarMap = 
       Map[({getVariableName[#], 
             getDerivativeCount[#], 

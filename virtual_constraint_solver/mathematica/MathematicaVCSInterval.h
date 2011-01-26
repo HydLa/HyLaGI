@@ -55,9 +55,9 @@ public:
   virtual bool reset(const variable_map_t& variable_map);
   
   /**
-   * 与えられた変数表と追加ガード（Ｇ）を元に，制約ストアの初期化をおこなう
+   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& variable_map, const appended_asks_t& appended_asks);
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
    * 現在の制約ストアから変数表を作成する
@@ -139,9 +139,15 @@ private:
    * 採用していないモジュール内にある制約を送信する
    */
   void send_not_adopted_tells(PacketSender& ps, const not_adopted_tells_list_t& na_tells_list) const;
+  
+  /**
+   * 定数制約を送る
+   */
+  void send_parameter_cons() const;
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
+  parameter_map_t parameter_map_;
   int approx_precision_;
 };
 

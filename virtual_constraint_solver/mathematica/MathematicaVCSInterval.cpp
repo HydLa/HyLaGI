@@ -114,9 +114,27 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
 }
 
 
-bool MathematicaVCSInterval::reset(const variable_map_t& variable_map, const appended_asks_t& appended_asks){
-  return reset(variable_map);
+
+bool MathematicaVCSInterval::reset(const variable_map_t& variable_map,  const parameter_map_t& parameter_map)
+{
+  if(!reset(variable_map)){
+    return false;
+  }
+
+
+  if(parameter_map.size() == 0)
+  {
+    HYDLA_LOGGER_SUMMARY("no Variables");
+    return true;
+  }
+  HYDLA_LOGGER_SUMMARY("------Parameter map------\n", 
+                     parameter_map);
+
+  parameter_map_=parameter_map;
+
+  return true;
 }
+
 
 bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
 {
@@ -177,6 +195,7 @@ void MathematicaVCSInterval::send_init_cons(
 
   // 送る必要のある初期値制約をカウント
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
+    
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
 
@@ -224,43 +243,23 @@ void MathematicaVCSInterval::send_init_cons(
     if(md_it!=max_diff_map.end() &&
        md_it->second  > init_vars_it->first.derivative_count) 
     {
-      switch(init_vars_it->second.value_.front().front().relation){
-        default:
-          assert(0);
-          break;
-        case value_t::EQUAL:
-          ml_->put_function("Equal", 2);
-          break;
-        case value_t::GREATER:
-          ml_->put_function("Greater", 2);
-          break;
-        case value_t::GREATER_EQUAL:
-          ml_->put_function("GreaterEqual", 2);
-          break;
-        case value_t::LESS:
-          ml_->put_function("Less", 2);
-          break;
-        case value_t::LESS_EQUAL:
-          ml_->put_function("LessEqual", 2);
-          break;
-      }
+       ml_->put_function("Equal", 2);
+        // 変数名
+        ps.put_var(
+         boost::make_tuple(init_vars_it->first.name, 
+                            init_vars_it->first.derivative_count, 
+                            false),
+          PacketSender::VA_Zero);
 
-      // 変数名
-      ps.put_var(
-        boost::make_tuple(init_vars_it->first.name, 
-                          init_vars_it->first.derivative_count, 
-                          false),
-        PacketSender::VA_Zero);
+        // 値
+        if(use_approx && approx_precision_ > 0) {
+          // 近似して送信
+          ml_->put_function("approxExpr", 2);
+          ml_->put_integer(approx_precision_);
+        }
 
-      // 値
-      if(use_approx && approx_precision_ > 0) {
-        // 近似して送信
-        ml_->put_function("approxExpr", 2);
-        ml_->put_integer(approx_precision_);
-      }
-
-      ml_->put_function("ToExpression", 1);
-      ml_->put_string(init_vars_it->second.get_first_value());
+        ml_->put_function("ToExpression", 1);
+        ml_->put_string(init_vars_it->second.get_first_value());
     }
 
 
@@ -336,6 +335,72 @@ void MathematicaVCSInterval::send_init_cons(
 
 }
 
+
+
+void MathematicaVCSInterval::send_parameter_cons() const{
+  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_parameter_cons ----");
+
+
+  parameter_map_t::const_iterator par_it = parameter_map_.begin();
+  parameter_map_t::const_iterator par_end = parameter_map_.end();
+  int para_size=0;
+  for(; par_it!=par_end; ++par_it) {  
+    value_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
+    for(;or_it != or_end; or_it++){
+      para_size += or_it->size();
+    }
+  }
+
+  HYDLA_LOGGER_DEBUG("parameter_cons_count: ", para_size);
+  HYDLA_LOGGER_SUMMARY("------Parameter map------\n", 
+                     parameter_map_);
+  
+  // 制約をMathematicaへ送信
+  ml_->put_function("List", para_size);
+  
+  for(par_it = parameter_map_.begin(); par_it!=par_end; ++par_it) {
+  
+    value_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
+    for(;or_it != or_end; or_it++){
+      value_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
+      for(; and_it != and_end; and_it++){
+        switch(and_it->relation){
+          default:
+            assert(0);
+            break;
+          case value_t::EQUAL:
+            ml_->put_function("Equal", 2);
+            break;
+          case value_t::NOT_EQUAL:
+            ml_->put_function("UnEqual", 2);
+            break;
+          case value_t::GREATER:
+            ml_->put_function("Greater", 2);
+            break;
+          case value_t::GREATER_EQUAL:
+            ml_->put_function("GreaterEqual", 2);
+            break;
+          case value_t::LESS:
+            ml_->put_function("Less", 2);
+            break;
+          case value_t::LESS_EQUAL:
+            ml_->put_function("LessEqual", 2);
+            break;
+        }
+        // 変数名
+        ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
+
+        // 値
+        ml_->put_function("ToExpression", 1);
+        ml_->put_string(and_it->value);
+      }
+    }
+  }
+}
+
+
+
+
 void MathematicaVCSInterval::send_vars(
   PacketSender& ps, const max_diff_map_t& max_diff_map)
 {
@@ -377,7 +442,7 @@ void MathematicaVCSInterval::send_vars(
                          "  name: ", md_it->first,
                          "  diff: ", i);
     }
-  }  
+  }
 
 
   ml_->put_function("List", 0);
@@ -432,7 +497,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
   for(; (tells_it) != tells_end; ++tells_it) {
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time, true);
   }
-      
+  
   // appended_asksからガード部分を得てMathematicaに渡す
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
@@ -457,8 +522,11 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
 
   // vars部分
   // 変数のリストを渡す
-  send_vars(ps, max_diff_map);
+//  send_vars(ps, max_diff_map);
 
+
+  // varsを渡す
+  ps.put_vars(PacketSender::VA_Time, true);
 
 ////////// 受信処理
   HYDLA_LOGGER_DEBUG("--- receive  ---");
@@ -531,7 +599,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
   PacketSender ps(*ml_);
 
-  // checkEntailment[guard, store, vars]を渡したい
+  // checkEntailment[guard, store, vars, pstore]を渡したい
   ml_->put_function("checkEntailmentInterval", 3);
 
   // guard部分
@@ -541,7 +609,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
 
   // store部分
-  ml_->put_function("Join", 2);
+  ml_->put_function("Join", 3);
 
   // 制約ストアconstraintsをMathematicaに渡す
 
@@ -576,13 +644,17 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, false);
+  
+  // pstoreを渡す
+  send_parameter_cons();
 
 
   // 変数のリストを渡す
   send_vars(ps, max_diff_map);
 
   // varsを渡す
-//  ps.put_vars(PacketSender::VA_Zero, true);
+  //ps.put_vars(PacketSender::VA_Time, true);
+  
 
   ml_->MLEndPacket();
 
@@ -686,7 +758,7 @@ VCSResult MathematicaVCSInterval::integrate(
   ml_->put_function("integrateCalc", 6);
 
   // 制約consを渡す
-  ml_->put_function("Join", 2);
+  ml_->put_function("Join", 3);
 
   // 制約ストアから式storeを得てMathematicaに渡す
   send_cs(ps);
@@ -696,19 +768,21 @@ VCSResult MathematicaVCSInterval::integrate(
   create_max_diff_map(ps, max_diff_map);
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, true);
+  
+  send_parameter_cons();
 
   if(Logger::constflag==11){
-  // posAskを渡す（{ガードの式、askのID}をそれぞれ）
-  HYDLA_LOGGER_AREA("-- send positive ask -- ");
-  send_ask_guards(ps, positive_asks);
+    // posAskを渡す（{ガードの式、askのID}をそれぞれ）
+    HYDLA_LOGGER_AREA("-- send positive ask -- ");
+    send_ask_guards(ps, positive_asks);
 
-  // negAskを渡す（{ガードの式、askのID}をそれぞれ）
-  HYDLA_LOGGER_AREA("-- send negative ask -- ");
-  send_ask_guards(ps, negative_asks);
+    // negAskを渡す（{ガードの式、askのID}をそれぞれ）
+    HYDLA_LOGGER_AREA("-- send negative ask -- ");
+    send_ask_guards(ps, negative_asks);
 
-  // 採用していないモジュール内のtell制約NAConsを渡す（{{式、ID}, {式、ID}, ...}をそれぞれのモジュールに関して）
-  HYDLA_LOGGER_AREA("-- send not adopted constraint -- ");
-  send_not_adopted_tells(ps, not_adopted_tells_list);
+    // 採用していないモジュール内のtell制約NAConsを渡す（{{式、ID}, {式、ID}, ...}をそれぞれのモジュールに関して）
+    HYDLA_LOGGER_AREA("-- send not adopted constraint -- ");
+    send_not_adopted_tells(ps, not_adopted_tells_list);
   }
 
   // posAskを渡す（{ガードの式、askのID}をそれぞれ）
@@ -823,11 +897,7 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();
 
     // 値
-    value_t::Element ele;
-    ele.value = ml_->get_string();
-    ele.relation = value_t::EQUAL;
-    value.go_next_or();
-    value.add(ele);
+    value.set( value_t::Element(ml_->get_string(), value_t::EQUAL));
   if(Logger::varflag==8){
 	HYDLA_LOGGER_AREA("value : ", value.get_first_value());
   }
@@ -1036,11 +1106,7 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       }
       else {
         assert(ret_code==1);
-        value_t::Element ele;
-        ele.value = ml_->get_string();
-        ele.relation = value_t::EQUAL;
-        value.go_next_or();
-        value.add(ele);
+        value.set( value_t::Element(ml_->get_string(), value_t::EQUAL));
         HYDLA_LOGGER_DEBUG("value : ", value.get_first_value());
       }
     }

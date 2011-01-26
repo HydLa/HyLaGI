@@ -48,7 +48,8 @@ public:
   typedef hydla::symbolic_simulator::symbolic_value_t        value_t;
   typedef hydla::symbolic_simulator::symbolic_element_value_t        element_value_t;
   typedef hydla::symbolic_simulator::symbolic_time_t         time_t;
-  typedef hydla::simulator::VariableMap<variable_t, value_t> variable_map_t;
+  typedef hydla::symbolic_simulator::variable_map_t variable_map_t;
+  typedef hydla::symbolic_simulator::parameter_map_t    parameter_map_t;
   typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::simulator::appended_asks_t                  appended_asks_t;
@@ -92,15 +93,17 @@ public:
    */
   virtual bool reset() = 0;
 
+
   /**
    * 与えられた変数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& vm) = 0;  
+  virtual bool reset(const variable_map_t& vm) = 0;
+
 
   /**
-   * 与えられた変数表と追加ガード（Ｇ）を元に，制約ストアの初期化をおこなう
+   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& vm, const appended_asks_t& appended_asks) = 0;  
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0);}
 
   /**
    * 現在の制約ストアから変数表を作成する
@@ -136,7 +139,7 @@ public:
   //element_valueを指定された精度で数値に変換する
   virtual std::string get_real_val(const element_value_t &val, int precision){return "get_real_val(element value) is unavailable";}
   //SymbolicTimeを簡約する
-  virtual void simplify(time_t &val){assert(0);}
+  virtual void simplify(time_t &time){assert(0);}
   //SymbolicTimeを比較する
   virtual bool less_than(const time_t &lhs, const time_t &rhs){assert(0);}
   

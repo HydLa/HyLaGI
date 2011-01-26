@@ -113,10 +113,9 @@ bool MathematicaVCS::reset(const variable_map_t& vm)
   return vcs_->reset(vm);
 }
 
-
-bool MathematicaVCS::reset(const variable_map_t& vm, const appended_asks_t &appended_asks)
+bool MathematicaVCS::reset(const variable_map_t& vm, const parameter_map_t& pm)
 {
-  return vcs_->reset(vm, appended_asks);
+  return vcs_->reset(vm, pm);
 }
 
 bool MathematicaVCS::create_variable_map(variable_map_t& vm)

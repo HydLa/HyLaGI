@@ -8,23 +8,31 @@
 
 #include "SymbolicValue.h"
 #include "SymbolicTime.h"
+#include "SymbolicParameter.h"
 
 #include "Types.h"
 
 using namespace hydla::simulator;
 
-
 namespace hydla {
 namespace symbolic_simulator {
 
   typedef simulator::DefaultVariable            symbolic_variable_t;
+  typedef SymbolicParameter                     symbolic_parameter_t;
   typedef SymbolicValue                         symbolic_value_t;
   typedef SymbolicTime                          symbolic_time_t;
   typedef hydla::simulator::VariableMap<symbolic_variable_t, 
                                         symbolic_value_t> variable_map_t;
-  typedef hydla::simulator::PhaseState<symbolic_variable_t, 
+  typedef hydla::simulator::VariableMap<symbolic_parameter_t, 
+                                        symbolic_value_t> parameter_map_t;
+
+  typedef struct SymbolicPhaseState: public hydla::simulator::PhaseState<symbolic_variable_t, 
                                        symbolic_value_t, 
-                                       symbolic_time_t> phase_state_t;
+                                       symbolic_time_t>{
+    parameter_map_t parameter_map;
+  }phase_state_t;
+
+  typedef SymbolicPhaseState phase_state_t;
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
   typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
   

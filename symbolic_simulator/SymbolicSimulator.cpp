@@ -88,13 +88,13 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 
   // 変数のラベル
   // TODO: 未定義の値とかのせいでずれる可能性あり?
-  std::cout << "# time\t";
-  BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
-    std::cout << i.first << "\t";
+  if(opts_.output_format == fmtNumeric){
+    std::cout << "# time\t";
+    BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
+     std::cout << i.first << "\t";
+    }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
-
-
   solver_.reset(new MathematicaVCS(opts_));   //使用するソルバを決定
 }
 
@@ -226,9 +226,9 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                                      &expanded_always, 
                                      &positive_asks);
     if(Logger::constflag==3){
-	HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
+    	HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always); 
-	}
+	  }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always);  
@@ -298,7 +298,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     HYDLA_LOGGER_DEBUG("#*** create new phase state (branch) ***");
     phase_state_sptr new_state(create_new_phase_state(state)),new_state_not(create_new_phase_state(state));
     appended_ask_t tmpAppend;
-    tmpAppend.ask = *(branched_asks.begin());    //最初を取って分岐
+    tmpAppend.ask = *(branched_asks.begin());    //最初の分岐askを取って分岐
     tmpAppend.entailed = true;
     new_state->appended_asks.push_back(tmpAppend);
     tmpAppend.entailed = false;
@@ -338,10 +338,12 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
                      expanded_always);  
   solver_->change_mode(DiscreteMode, opts_.approx_precision);
-  solver_->reset(state->variable_map);
+  solver_->reset(state->variable_map, state->parameter_map);
 
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
+
+
 
   //閉包計算
   switch(calculate_closure(state,ms,expanded_always,positive_asks,negative_asks)){
@@ -363,6 +365,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
                      new_state->expanded_always_id);
   new_state->module_set_container = msc_no_init_;
+  new_state->parameter_map = state->parameter_map;
 
   {
     // 暫定的なフレーム公理の処理
@@ -379,8 +382,24 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   }
 
 
+  //値が一意に定まらない変数があるなら、ＩＰに備えて変数表と定数表を変えておく
+  {
+    variable_map_t::iterator it  = new_state->variable_map.begin();
+    variable_map_t::iterator end = new_state->variable_map.end();
+    for(;it!=end;++it){
+      if(!it->second.is_undefined()&&!it->second.is_unique()){
+        symbolic_parameter_t tmp_param;
+        tmp_param.name = it->first.get_name();
+        new_state->parameter_map.set_variable(tmp_param, it->second);
+        it->second.set(symbolic_value_t::Element( "p" + tmp_param.get_name(),symbolic_value_t::EQUAL));
+      }
+    }
+  }
+  
+  
+
   //出力
-  output(new_state->current_time, new_state->variable_map);
+  output_point(new_state->current_time, new_state->variable_map, new_state->parameter_map);
 
   //状態をスタックに押し込む
   push_phase_state(new_state);
@@ -415,7 +434,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                      expanded_always);
 
   solver_->change_mode(ContinuousMode, opts_.approx_precision);
-  solver_->reset(state->variable_map);
+  solver_->reset(state->variable_map, state->parameter_map);
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
 
@@ -511,6 +530,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                        new_state->expanded_always_id);
     new_state->module_set_container = msc_no_init_;
     new_state->current_time = integrate_result.states[0].time;
+    new_state->parameter_map = state->parameter_map;
 
     if(Logger::varflag==5){
     //次のフェーズにおける変数の値を導出する
@@ -539,23 +559,37 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
 
 void SymbolicSimulator::output_interval(const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
                                         const variable_map_t& variable_map){
-  variable_map_t output_vm;
-  symbolic_time_t elapsed_time;
 
-  if(!current_time.is_unique()){
-    return;
-  }
 
-  do{
+  symbolic_time_t tmp_time = limit_time+current_time;
+  solver_->simplify(tmp_time);
+  if(opts_.output_format != fmtNumeric||!current_time.is_unique()){
+    std::cout << "(in IP)" << std::endl;
+    output(tmp_time, variable_map);
+  }else{
+    variable_map_t output_vm;
+    symbolic_time_t elapsed_time;
+
+    do{
+      solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
+      output((elapsed_time+current_time),output_vm);
+      elapsed_time += symbolic_time_t(opts_.output_interval);
+      solver_->simplify(elapsed_time);
+    }while(solver_->less_than(elapsed_time, limit_time));
+    elapsed_time = limit_time;
     solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
-    output((elapsed_time+current_time),output_vm);
-    elapsed_time += symbolic_time_t(opts_.output_interval);
-  }while(solver_->less_than(elapsed_time, limit_time));
-  elapsed_time = limit_time;
-  solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
-  output((elapsed_time+current_time),output_vm);
+    output(tmp_time,output_vm);
 
-  std::cout << std::endl << std::endl;
+    std::cout << std::endl << std::endl;
+  }
+}
+
+
+void SymbolicSimulator::output_point(const symbolic_time_t& time, const variable_map_t& variable_map,const parameter_map_t& parameter_map){
+  if(opts_.output_format != fmtNumeric||!time.is_unique()){
+    std::cout << std::endl << "(in PP)" << std::endl;
+  }
+  output(time, variable_map, parameter_map);
 }
 
 /*
@@ -828,13 +862,51 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
     }
     output_buffer_ << std::endl;
   }else{*/
-  std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
+  std::cout << std::endl;
+  if(opts_.output_format == fmtNumeric && time.is_unique()){
+    std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
+    variable_map_t::const_iterator it  = vm.begin();
+    variable_map_t::const_iterator end = vm.end();
+    for(; it!=end; ++it) {
+      std::cout << it->second.get_first_symbol() << solver_->get_real_val(it->second.get_first_value(), opts_.output_precision) << "\t";
+    }
+  }else{
+    std::cout << "time\t: " << time << "\n";
+    variable_map_t::const_iterator it  = vm.begin();
+    variable_map_t::const_iterator end = vm.end();
+    for(; it!=end; ++it) {
+      std::cout << it->first << "\t: " << it->second.get_first_symbol() <<  it->second.get_first_value() << "\n" ;
+    }
+  }
+}
 
-  variable_map_t::const_iterator it  = vm.begin();
-  variable_map_t::const_iterator end = vm.end();
+std::string SymbolicSimulator::value_to_string(const symbolic_value_t& val){
+  std::string tmp;
+  if(val.is_undefined()||val.is_unique())
+    return val.get_first_value();
+  symbolic_value_t::or_const_iterator or_it = val.or_begin(), or_end  = val.or_end();
+  while(1){
+    symbolic_value_t::and_const_iterator and_it = or_it->begin(), and_end  = or_it->end();
+    while(1){
+      tmp.append(and_it->get_symbol());
+      tmp.append(and_it->get_value());
+      if(++and_it==and_end)break;
+      tmp.append("&");
+    }
+    if(++or_it==or_end)break;
+    tmp.append("|");
+  }
+  return tmp;
+}
+
+void SymbolicSimulator::output(const symbolic_time_t& time, 
+                           const variable_map_t& vm,const parameter_map_t& pm)
+{  
+  output(time,vm);
+  parameter_map_t::const_iterator it  = pm.begin();
+  parameter_map_t::const_iterator end = pm.end();
   for(; it!=end; ++it) {
-     std::cout << it->second.get_first_symbol() << solver_->get_real_val(it->second.get_first_value(), opts_.output_precision) << "\t";
-     //std::cout <<  solver_->get_real_val(it->second, opts_.output_precision) << "\t";
+    std::cout << "p" << it->first << "\t: " << value_to_string(it->second) << "\n" ;
   }
   std::cout << std::endl;
 }

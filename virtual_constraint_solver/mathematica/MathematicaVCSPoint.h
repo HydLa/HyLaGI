@@ -34,7 +34,11 @@ public:
    */
   virtual bool reset(const variable_map_t& variable_map);
 
-  virtual bool reset(const variable_map_t& vm, const appended_asks_t &appended_asks);  
+
+  /**
+   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
+   */
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
    * 現在の制約ストアから変数表を作成する
@@ -72,6 +76,7 @@ private:
 
   void send_cs() const;
   void send_cs_vars() const;
+  void send_pars() const;
 
   /**
    * 変数の最大微分回数をもとめる
@@ -100,6 +105,7 @@ private:
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
+  std::set<std::string> par_names_; //一時しのぎ
 };
 
 std::ostream& operator<<(std::ostream& s, const MathematicaVCSPoint& m);

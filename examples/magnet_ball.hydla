@@ -4,11 +4,11 @@
 スイッチは１秒ごとに切り替えられる可能性がある
 */
 
-INIT <=> y=10&y'=0&mag=12&count=0.
+INIT <=> y=10&y'=0&mag=12&timer=0.
 FALL <=> [](y''=-10+mag).
 BOUNCE <=> [](y-=0=>y'=-y'-*4/5).
 TRUE <=> [](1=1).
-COUNT <=> [](mag'=0&count'=1).
-SWITCHON <=> [](count-=1=>mag=12&count=0).
-SWITCHOFF <=> [](count-=1=>mag=0&count=0).
-INIT,COUNT<<(SWITCHOFF,SWITCHON)<<TRUE,FALL<<BOUNCE.
+TIMER <=> [](mag'=0&timer'=1).
+SWITCHON <=> [](timer-=1=>mag=12&timer=0).
+SWITCHOFF <=> [](timer-=1=>mag=0&timer=0).
+INIT,TIMER<<(SWITCHOFF,SWITCHON)<<TRUE,FALL<<BOUNCE.

@@ -21,11 +21,22 @@ struct SymbolicValue {
     RELATION_NUMBER
   }Relation;
   
-  typedef struct{
+  typedef struct Element{
     Relation relation;
     symbolic_element_value_t value;
-  }Element;
+    Element(const symbolic_element_value_t& val, const Relation& rel);
+    std::string get_symbol()const;
+    std::string get_value()const;
+  }element_t;
   
+
+  typedef std::vector< Element > and_vector;
+  typedef std::vector< and_vector > or_vector;
+  typedef and_vector::iterator         and_iterator;
+  typedef and_vector::const_iterator   and_const_iterator;
+  typedef or_vector::iterator         or_iterator;
+  typedef or_vector::const_iterator   or_const_iterator;
+
   SymbolicValue();
   
   static const std::string relation_symbol_[RELATION_NUMBER];
@@ -34,6 +45,11 @@ struct SymbolicValue {
    * 未定義値かどうか
    */
   bool is_undefined() const;
+  
+  /**
+   * 値が（定量的に）一意に定まるか
+   */
+  bool is_unique() const;
 
   /**
    * 文字列表現を取得する
@@ -56,15 +72,21 @@ struct SymbolicValue {
    */
   std::string get_first_symbol() const;
   
-  /**
-   * とりあえず文字列をセット
-   */
-  void set(std::string);
 
   /**
    * 新たなものをセット
    */
   void set(const std::vector<std::vector<Element> > &vec);
+  
+  /**
+   * 新たな要素を１つセットする（それまでのものは捨てる）
+   */
+  void set(const Element &ele);
+
+  /**
+   * 要素を全て捨て，初期化する
+   */
+  void clear();
   
   /**
    * addの対象を次のorに．
@@ -75,14 +97,20 @@ struct SymbolicValue {
    * 新たな要素を追加
    */
   void add(const Element &ele);
+  
+  or_const_iterator or_begin() const {return value_.begin();}
+  or_iterator or_begin() {return value_.begin();}
+  or_const_iterator or_end() const {return value_.end();}
+  or_iterator or_end() {return value_.end();}
 
+  
   /**
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const;
   
   
-  std::vector<std::vector< Element > > value_; //値との関係の列の列（DNF形式．∧でつながれたものを∨でつなぐ）
+  or_vector value_; //値との関係の列の列（DNF形式．∧でつながれたものを∨でつなぐ）
 
   private:
   
@@ -91,7 +119,6 @@ struct SymbolicValue {
   std::string visit_all(const std::vector<Element> &vec, const std::string &delimiter) const;
   //配列を走査してデリミタで連結して出力
   
-  std::string str_; // 文字列（任意の式を扱える）
 };
 
 bool operator<(const SymbolicValue& lhs, const SymbolicValue& rhs);

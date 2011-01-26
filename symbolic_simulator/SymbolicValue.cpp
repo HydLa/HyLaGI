@@ -11,12 +11,39 @@ namespace symbolic_simulator{
 const std::string SymbolicValue::relation_symbol_[RELATION_NUMBER] = {"", "!=", "<=", "<", ">=", ">"};
 
 SymbolicValue::SymbolicValue(){
+ current_or_ = NULL;
 }
+
+SymbolicValue::Element::Element(const symbolic_element_value_t& val, const Relation& rel){
+  value = val;
+  relation = rel;
+}
+
+
+std::string SymbolicValue::Element::get_symbol() const{
+  return SymbolicValue::relation_symbol_[relation];
+}
+
+std::string SymbolicValue::Element::get_value() const{
+  if(value.empty())return "UNDEF";
+  return value;
+}
+
+
+
 
 bool SymbolicValue::is_undefined() const
 {
   return value_.empty();
-  //return str_.empty();
+}
+
+
+//定量的に一意に定まるかどうか．
+//複数の不等号から値が一意に決定する場合は考慮しない
+bool SymbolicValue::is_unique() const
+{
+  if(value_.empty()) return false;
+  return value_.front().size()==1&&value_.front().front().relation == EQUAL;
 }
 
 
@@ -62,18 +89,14 @@ std::string SymbolicValue::visit_all(const std::vector<Element> &vec, const std:
   if(vec.empty()) return "";
   std::string tmp;
   std::vector<Element>::const_iterator it = vec.begin();
+  tmp.append(relation_symbol_[it->relation]);
   tmp.append((it++)->value);
   for(;it != vec.end();it++){
     tmp.append(delimiter);
+    tmp.append(relation_symbol_[it->relation]);
     tmp.append(it->value);
   }
   return tmp;
-}
-
-
-void SymbolicValue::set(std::string string)
-{
-  str_ = string;
 }
 
 void SymbolicValue::set(const std::vector<std::vector<SymbolicValue::Element> > &vec)
@@ -81,6 +104,18 @@ void SymbolicValue::set(const std::vector<std::vector<SymbolicValue::Element> > 
  value_ = vec;
 }
 
+void SymbolicValue::clear()
+{
+ value_.clear();
+ current_or_ = NULL;
+}
+
+void SymbolicValue::set(const Element &ele)
+{
+ clear();
+ go_next_or();
+ add(ele);
+}
 
 void SymbolicValue::go_next_or()
 {
@@ -91,6 +126,9 @@ void SymbolicValue::go_next_or()
 
 void SymbolicValue::add(const SymbolicValue::Element &ele)
 {
+ if(!current_or_){
+  go_next_or();
+ }
  current_or_->push_back(ele);
 }
 
@@ -110,4 +148,3 @@ std::ostream& operator<<(std::ostream& s,
 
 } // namespace symbolic_simulator
 } // namespace hydla
-

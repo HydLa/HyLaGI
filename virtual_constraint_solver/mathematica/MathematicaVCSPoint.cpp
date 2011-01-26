@@ -69,51 +69,61 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
     if(!value.is_undefined()) {
       std::ostringstream val_str;
 
-      // MathVariable側に関する文字列を作成
-      switch(value.value_.front().front().relation){
-        default:
-          assert(0);
-          break;
-        case value_t::EQUAL:
-          val_str << "Equal[";
-          break;
-        case value_t::GREATER:
-          val_str << "Greater[";
-          break;
-        case value_t::GREATER_EQUAL:
-          val_str << "GreaterEqual[";
-          break;
-        case value_t::LESS:
-          val_str << "Less[";
-          break;
-        case value_t::LESS_EQUAL:
-          val_str << "LessEqual[";
-          break;
-      }
-      if(variable.derivative_count > 0)
-      {
-        val_str << "Derivative["
-                << variable.derivative_count
-                << "][prev["
-                << PacketSender::var_prefix
-                << variable.name
-                << "]]";
-      }
-      else
-      {
-        val_str << "prev["
-                << PacketSender::var_prefix
-                << variable.name
-                << "]";
-      }
+      value_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
+      for(;or_it != or_end; or_it++){
+         value_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
+         for(; and_it != and_end; and_it++){
+            // MathVariable側に関する文字列を作成
+            switch(and_it->relation){
+              default:
+                assert(0);
+                break;
+              case value_t::EQUAL:
+                val_str << "Equal[";
+                break;
+              case value_t::NOT_EQUAL:
+                val_str << "UnEqual[";
+                break;
+              case value_t::GREATER:
+                val_str << "Greater[";
+                break;
+              case value_t::GREATER_EQUAL:
+                val_str << "GreaterEqual[";
+                break;
+              case value_t::LESS:
+                val_str << "Less[";
+                break;
+              case value_t::LESS_EQUAL:
+                val_str << "LessEqual[";
+                break;
+            }
 
-      val_str << ","
-              << value.get_first_value()
-              << "]"; // Equalの閉じ括弧
+            if(variable.derivative_count > 0)
+            {
+              val_str << "Derivative["
+                      << variable.derivative_count
+                      << "][prev["
+                      << PacketSender::var_prefix
+                      << variable.name
+                      << "]]";
+            }
+            else
+            {
+              val_str << "prev["
+                      << PacketSender::var_prefix
+                      << variable.name
+                      << "]";
+            }
 
-      MathValue new_math_value;
-      new_math_value.set(val_str.str());
-      and_cons_set.insert(new_math_value);
+            val_str << ","
+                    << and_it->value
+                    << "]"; // Equalの閉じ括弧
+
+            MathValue new_math_value;
+            new_math_value.set(val_str.str());
+            and_cons_set.insert(new_math_value);
+         }
+      }
 
       // 制約ストア内の変数一覧を作成
       constraint_store_.second.insert(
@@ -121,7 +131,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
                           variable.derivative_count,
                           true));
     }
-  }  
+  }
 
   constraint_store_.first.insert(and_cons_set);
 
@@ -130,10 +140,76 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
   return true;
 }
 
+bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map){
+  if(!reset(variable_map)){
+    return false;
+  }
 
-bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const appended_asks_t &appended_asks)
-{
-  return reset(variable_map);
+  if(parameter_map.size() == 0)
+  {
+    HYDLA_LOGGER_SUMMARY("no Parameters");
+    return true;
+  }
+  HYDLA_LOGGER_SUMMARY("------Parameter map------\n", parameter_map);
+
+
+  std::set<MathValue> and_cons_set = *(constraint_store_.first.begin());
+  constraint_store_.first.clear();
+  par_names_.clear();
+
+  parameter_map_t::variable_list_t::const_iterator it = 
+    parameter_map.begin();
+  parameter_map_t::variable_list_t::const_iterator end = 
+    parameter_map.end();
+  for(; it!=end; ++it)
+  {
+    const value_t&    value = it->second;
+    if(!value.is_undefined()) {
+      value_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
+      for(;or_it != or_end; or_it++){
+        value_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
+        for(; and_it != and_end; and_it++){
+          std::ostringstream val_str;
+          
+          // MathVariable側に関する文字列を作成
+          switch(and_it->relation){
+            default:
+              assert(0);
+              break;
+            case value_t::EQUAL:
+              val_str << "Equal[";
+              break;
+            case value_t::GREATER:
+              val_str << "Greater[";
+              break;
+            case value_t::GREATER_EQUAL:
+              val_str << "GreaterEqual[";
+              break;
+            case value_t::LESS:
+              val_str << "Less[";
+              break;
+            case value_t::LESS_EQUAL:
+              val_str << "LessEqual[";
+              break;
+          }
+
+          val_str << PacketSender::par_prefix
+                  << it->first.get_name();
+
+          val_str << ","
+                  << and_it->value
+                  << "]"; // Equalの閉じ括弧
+          MathValue new_math_value;
+          new_math_value.set(val_str.str());
+          and_cons_set.insert(new_math_value);
+          par_names_.insert(it->first.get_name());
+        }
+      }
+    }
+  }
+
+  constraint_store_.first.insert(and_cons_set);
+  return true;
 }
 
 bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
@@ -194,6 +270,8 @@ bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
   HYDLA_LOGGER_DEBUG("expr_size: ", expr_size);
   ml_->MLGetNext(); // Listという関数名
 
+  variable_t symbolic_variable;
+  value_t symbolic_value;
 
   for(int i=0; i<expr_size; i++)
   {
@@ -216,120 +294,36 @@ bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
 
     // prev変数は処理しない
     if(prev==1) continue;
-
-    variable_t symbolic_variable;
-    symbolic_variable.name = variable_name;
-    symbolic_variable.derivative_count = variable_derivative_count;    
     
-    value_t symbolic_value;
-    value_t::Element element;
-    symbolic_value.go_next_or();
-    element.value = value_str;
+    if(symbolic_variable.name != variable_name || symbolic_variable.derivative_count != variable_derivative_count){
+      symbolic_variable.name = variable_name;
+      symbolic_variable.derivative_count = variable_derivative_count;
+      symbolic_value.clear();
+    }
+    
 
     // 関係演算子コードを元に、変数表の対応する部分に代入する
     // TODO: Orの扱い
     switch(relop_code)
     {
       case 0: // Equal
-        element.relation = value_t::EQUAL;
+        symbolic_value.add(value_t::Element(value_str,value_t::EQUAL));
         break;
       case 1: // Less
-        element.relation = value_t::LESS;
+        symbolic_value.add(value_t::Element(value_str,value_t::LESS));
         break;
       case 2: // Greater
-        element.relation = value_t::GREATER;
+        symbolic_value.add(value_t::Element(value_str,value_t::GREATER));
         break;
       case 3: // LessEqual
-        element.relation = value_t::LESS_EQUAL;
+        symbolic_value.add(value_t::Element(value_str,value_t::LESS_EQUAL));
         break;
       case 4: // GreaterEqual
-        element.relation = value_t::GREATER_EQUAL;
+        symbolic_value.add(value_t::Element(value_str,value_t::GREATER_EQUAL));
         break;
     }
-    symbolic_value.add(element);
     variable_map.set_variable(symbolic_variable, symbolic_value);
   }
-    
-
-/*
-  // 一つだけ採用
-  // TODO: 複数解ある場合の処理もきちんと考える
-//  assert(constraint_store_.first.size() == 1);
-//  for(; or_cons_it!=or_cons_end; ++or_cons_it) {
-    std::set<MathValue>::const_iterator and_cons_it = (*or_cons_it).begin();
-    std::set<MathValue>::const_iterator and_cons_end = (*or_cons_it).end();
-    for(; (and_cons_it) != and_cons_end; and_cons_it++)
-    {
-      std::string cons_str = (*and_cons_it).str;
-      // cons_strは"Equal[usrVarx,2]"や"Equal[Derivative[1][usrVary],3]"など
-
-      unsigned int loc = cons_str.find("Equal[", 0);
-      loc += 6; // 文字列"Equal["の長さ分
-      unsigned int comma_loc = cons_str.find(",", loc);
-      if(comma_loc == std::string::npos)
-      {
-        std::cout << "can't find comma." << std::endl;
-        return false;
-      }
-      std::string variable_str = cons_str.substr(loc, comma_loc-loc);
-      // variable_strは"usrVarx"や"Derivative[1][usrVarx]"など
-
-      // nameとderivative_countへの分離
-      std::string variable_name;
-      int variable_derivative_count;
-      unsigned int variable_loc = variable_str.find("Derivative[", 0);
-      if(variable_loc != std::string::npos)
-      {
-        variable_loc += 11; // "Derivative["の長さ分
-        unsigned int bracket_loc = variable_str.find("][", variable_loc);
-        if(bracket_loc == std::string::npos)
-        {
-          std::cout << "can't find bracket." << std::endl;
-          return false;
-        }
-        std::string variable_derivative_count_str = variable_str.substr(variable_loc, bracket_loc-variable_loc);
-        variable_derivative_count = std::atoi(variable_derivative_count_str.c_str());
-        variable_loc = bracket_loc + 2; // "]["の長さ分
-        bracket_loc = variable_str.find("]", variable_loc);
-        if(bracket_loc == std::string::npos)
-        {
-          std::cout << "can't find bracket." << std::endl;
-          return false;
-        }
-        variable_name =  variable_str.substr(variable_loc, bracket_loc-variable_loc);
-      }
-      else
-      {
-        variable_name =  variable_str; // "usrVar"の長さ分      
-        variable_derivative_count = 0;
-      }
-
-      // prev変数でなかったら処理
-      if(!boost::starts_with(variable_name, "prev")) {
-        // 値の取得
-        int str_size = cons_str.size();
-        unsigned int end_loc = cons_str.rfind("]", str_size-1);
-
-        if(end_loc == std::string::npos)
-        {
-          std::cout << "can't find bracket." << std::endl;
-          return false;
-        }
-        std::string value_str = cons_str.substr(comma_loc + 1, end_loc - (comma_loc + 1));
-
-        MathVariable symbolic_variable;
-        MathValue symbolic_value;
-        symbolic_variable.name = 
-          variable_name.substr(PacketSender::var_prefix.size());
-        symbolic_variable.derivative_count = 
-          variable_derivative_count;
-        symbolic_value.str = value_str;
-
-        variable_map.set_variable(symbolic_variable, symbolic_value);
-      } 
-    }
-//  }
-*/
 
   return true;
 }
@@ -512,6 +506,7 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
 
 VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
+  static int tmpi=0;
 	if(Logger::constflag==9){
 		HYDLA_LOGGER_AREA(
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
@@ -571,17 +566,21 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
 
   // varsを渡す
-  ml_->put_function("Join", 2);
+  ml_->put_function("Join", 3);
   ps.put_vars(PacketSender::VA_None);
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
   
-//   ml_->skip_pkt_until(TEXTPKT);
-//   std::cout << ml_->get_string() << std::endl;
+  send_pars();
 
 
 /////////////////// 受信処理
   HYDLA_LOGGER_DEBUG( "--- receive ---");
+  /*
+  if(tmpi++>5){
+   PacketChecker pc(*ml_);
+   pc.check();
+  }*/
 
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
@@ -605,7 +604,8 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
     if(Logger::conflag==1||Logger::conflag==0){
      HYDLA_LOGGER_AREA("consistent");
     }
-    HYDLA_LOGGER_SUMMARY("consistent");//無矛盾性判定
+    HYDLA_LOGGER_SUMMARY("consistent");
+    //無矛盾性判定
     // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
     // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
     // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
@@ -613,7 +613,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
     // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
 	if(Logger::constflag==10){
 		HYDLA_LOGGER_AREA( "---build constraint store---");
-	}	
+	}
 	HYDLA_LOGGER_DEBUG( "---build constraint store---");
     ml_->MLGetNext();
 
@@ -700,10 +700,12 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   send_cs();
 
   // varsを渡す
-  ml_->put_function("Join", 2);
+  ml_->put_function("Join", 3);
   ps.put_vars(PacketSender::VA_None);
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
+  
+  send_pars();
 
   /*if(hydla::logger::Logger::flag==2||hydla::logger::Logger::flag==0){
      HYDLA_LOGGER_AREA(
@@ -821,6 +823,14 @@ void MathematicaVCSPoint::send_cs() const
    }
       HYDLA_LOGGER_DEBUG("put cons: ", str);
     }
+  }
+}
+
+
+void MathematicaVCSPoint::send_pars() const{
+  ml_->put_function("List", par_names_.size());
+  for(std::set<std::string>::const_iterator it=par_names_.begin();it!=par_names_.end();it++){
+    ml_->put_symbol(PacketSender::par_prefix + *it);
   }
 }
 

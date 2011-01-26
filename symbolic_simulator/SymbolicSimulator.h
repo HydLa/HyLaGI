@@ -84,10 +84,16 @@ private:
 
   void output(const symbolic_time_t& time, 
               const variable_map_t& vm);
-
+  
+  void output(const symbolic_time_t& time, 
+              const variable_map_t& vm,
+              const parameter_map_t& pm);
+  
 
   void output_interval(const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
                      const variable_map_t& variable_map);
+
+  void output_point(const symbolic_time_t& time, const variable_map_t& variable_map, const parameter_map_t& parameter_map);
               
                               
   module_set_container_sptr msc_original_;
@@ -103,7 +109,10 @@ private:
     branch_++;
     state_stack_.push(state);
   }
- 
+  
+  std::string value_to_string(const symbolic_value_t& val);
+
+
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ
   
   std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列

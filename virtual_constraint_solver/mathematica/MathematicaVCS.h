@@ -37,11 +37,11 @@ public:
    * 与えられた変数表を元に，制約ストアの初期化をおこなう
    */
   virtual bool reset(const variable_map_t& vm);
-  
+ 
   /**
-   * 与えられた変数表と追加ガード（Ｇ）を元に，制約ストアの初期化をおこなう
+   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& vm, const appended_asks_t& appended_asks);
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
   
 
   /**
@@ -81,7 +81,7 @@ public:
   //element_valueを指定された精度で数値に変換する
   virtual std::string get_real_val(const element_value_t &val, int precision);
   //SymbolicTimeを簡約する
-  virtual void simplify(time_t &val);
+  virtual void simplify(time_t &time);
   //SymbolicTimeを比較する
   virtual bool less_than(const time_t &lhs, const time_t &rhs);
 
