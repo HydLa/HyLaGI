@@ -238,7 +238,8 @@ void hydla_main(int argc, char* argv[])
 	  Logger::conflag=0;Logger::enflag=0;
 	Logger::instance().set_log_level(Logger::Area);
 	}else if(po.count("debug")>0) {
-    Logger::instance().set_log_level(Logger::Debug);
+	  Logger::ptflag=0;
+      Logger::instance().set_log_level(Logger::Debug);
   } else if(po.count("comprehensive")>0){					//大局的出力モード
 	Logger::instance().set_log_level(Logger::Summary);
   } else {
