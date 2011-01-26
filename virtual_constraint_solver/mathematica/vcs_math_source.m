@@ -729,3 +729,10 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
 approxExpr[precision_, expr_] :=
   Rationalize[N[Simplify[expr], precision + 3], 
               Divide[1, Power[10, precision]]];
+
+(* 
+ * 与えられたtの式をタイムシフト
+ *)
+exprTimeShift[expr_, time_] := ToString[FullForm[Simplify[expr /. t -> t - time]]];
+
+
