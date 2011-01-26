@@ -86,7 +86,8 @@ renameVar[varName_] := Block[
     prev = 1
   ];
   (* •Ï”–¼‚Ì“ª‚É‚Â‚¢‚Ä‚¢‚é "usrVar"‚ğæ‚èœ‚­ *)
-  renamedVarName = removeUsrVar[renamedVarName];
+  If[StringMatchQ[ToString[renamedVarName], "usrVar" ~~ x__],
+    renamedVarName = removeUsrVar[renamedVarName]];
   {renamedVarName, derivativeCount, prev}
 ];
 
@@ -214,11 +215,20 @@ isConsistent[expr_, vars_] := Quiet[Check[Block[
   (* •K‚¸ŠÖŒW‰‰Zq‚Ì¶‘¤‚É•Ï”–¼‚ª“ü‚é‚æ‚¤‚É‚·‚é *)
   adjustExprs[andExprs_] := 
     Fold[(If[Not[hasVariable[#2[[1]]]],
+            (* true *)
             If[hasVariable[#2[[2]]],
+              (* true *)
               (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰Zq‚ğ‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
               Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
-              (* ‘½•ª‚±‚±‚É‚Í“ü‚ç‚È‚¢ *)
-              1],
+              (* false *)
+              (* ƒpƒ‰ƒ[ƒ^§–ñ‚Ìê‡‚É‚±‚±‚É“ü‚é *)
+              If[NumericQ[#2[[1]]],
+                (* true *)
+                (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰Zq‚ğ‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
+                Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
+                (* false *)
+                Append[#1, #2]]],
+            (* false *)
             Append[#1, #2]]) &,
          {}, andExprs];
 
