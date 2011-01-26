@@ -333,7 +333,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
   if(Logger::constflag==5){
   HYDLA_LOGGER_AREA("#** point_phase: expanded always from IP: **\n",
-                     expanded_always); 
+                     expanded_always);
   }
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
                      expanded_always);  

@@ -550,7 +550,8 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
      HYDLA_LOGGER_AREA("consistent");
     }
     // è[ë´
-    HYDLA_LOGGER_DEBUG("consistent");
+    //HYDLA_LOGGER_DEBUG("consistent");
+	HYDLA_LOGGER_SUMMARY("consistent");
     result = VCSR_TRUE;
 
     // êßñÒÉXÉgÉAÇ…tellêßñÒÇÃí«â¡
@@ -576,7 +577,8 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
 	if(Logger::conflag==2||Logger::conflag==0){
      HYDLA_LOGGER_AREA("inconsistent");
     }
-    HYDLA_LOGGER_DEBUG("inconsistent");
+    //HYDLA_LOGGER_DEBUG("inconsistent");
+	HYDLA_LOGGER_SUMMARY("inconsistent");
   }
 
   HYDLA_LOGGER_DEBUG(constraint_store_);

@@ -109,11 +109,11 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   HYDLA_LOGGER_SUMMARY(
     "#*** ask collector ***\n", 
     "--- positive asks ---\n", 
-    NodeDumper(positive_asks->begin(), positive_asks->end()));
-  HYDLA_LOGGER_DEBUG(
+    NodeDumper(positive_asks->begin(), positive_asks->end()),
     "--- negative asks ---\n",
-    NodeDumper(negative_asks->begin(), negative_asks->end()),
-    "--- expanded always ---\n",
+    NodeDumper(negative_asks->begin(), negative_asks->end()));
+  HYDLA_LOGGER_DEBUG(
+	"--- expanded always ---\n",
     NodeDumper(expanded_always->begin(), expanded_always->end()));
 }
 
