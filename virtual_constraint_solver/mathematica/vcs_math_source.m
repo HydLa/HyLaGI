@@ -67,7 +67,7 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 
 
 renameVar[varName_] := Block[
-  {renamedVarName, derivativeCount = 0, prev = 0,
+  {renamedVarName, derivativeCount = 0, prevFlag = 0,
    getDerivativeCountPoint, removeUsrVar
   },  
 
@@ -83,12 +83,17 @@ renameVar[varName_] := Block[
   (* 変数名にprevがつく場合の処理 *)
   If[Head[renamedVarName] === prev,
     renamedVarName = First[renamedVarName];
-    prev = 1
+    prevFlag = 1
   ];
   (* 変数名の頭についている "usrVar"を取り除く *)
   If[StringMatchQ[ToString[renamedVarName], "usrVar" ~~ x__],
     renamedVarName = removeUsrVar[renamedVarName]];
-  {renamedVarName, derivativeCount, prev}
+
+  (* この時点で単体の変数名のはず *)
+  If[Length[renamedVarName] === 0,
+    {renamedVarName, derivativeCount, prevFlag},
+    (* 式形式のものはハネる *)
+    invalidVar]
 ];
 
 (* 変数とその値に関する式のリストを、変数表的形式に変換
@@ -133,10 +138,11 @@ convertCSToVM[orExprs_] := Block[
   If[Cases[andExprs, Except[True]]==={},
     (* ストアが空の場合は空集合を返す *)
     {},
-    Map[({renameVar[#[[1]]], 
-          getExprCode[#], 
-          ToString[FullForm[#[[2]]]]} ) &, 
-        Fold[(removeInequality[#1, #2]) &, {}, andExprs]]]
+    DeleteCases[Map[({renameVar[#[[1]]], 
+                      getExprCode[#], 
+                      ToString[FullForm[#[[2]]]]} ) &, 
+                    Fold[(removeInequality[#1, #2]) &, {}, andExprs]],
+                {invalidVar, _, _}]]
 
 ];
 
