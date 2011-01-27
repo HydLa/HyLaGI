@@ -361,10 +361,9 @@ exDSolve[expr_, vars_] := Block[
                           (* TODO: ï°êîâÇ†ÇÈèÍçáÇ‡çlÇ¶ÇÈ *)
                           sol = First[sol]];
 
-                        sol = First[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], 
-                                          getNDVars[vars]]];
+                        sol = Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]];
                         If[sol =!= {}, 
-                          {sol, Join[otherExpr, paramCons]},
+                          {First[sol], Join[otherExpr, paramCons]},
                           overconstraint],
                         underconstraint,
                         {DSolve::underdet, Solve::svars, DSolve::deqx, 
