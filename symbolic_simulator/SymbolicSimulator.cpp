@@ -720,7 +720,7 @@ bool SymbolicSimulator::reduce_simulate_phase_state(const module_set_sptr& ms)
 }
 
 /*
-* Reduce用のファイル出力関数 中間発表までに作った物
+* Reduce用のファイル出力関数 中間発表までに作った物 + 通信処理
 * svn Rev: 1062
 */
 bool SymbolicSimulator::reduce_output(const module_set_sptr& ms, 
@@ -842,7 +842,59 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   ofs       << "MaxT:= " << opts_.max_time << ";" << std::endl;
   std::cout << ";end;" << std::endl;
   ofs       << ";end;" << std::endl;
+
+  ofs.close();
   
+/*
+送信処理
+reduceを起動
+*/
+	cout << "-------- start Reduce ----------" << endl;
+	char buf[256];
+	sprintf(buf, "reduce bball.data");
+// コマンドラインで "reduce.com bball.data" を叩くのと大体同じ意味
+	system(buf);
+
+	cout << "-------- Reduce ended ----------" << endl;
+
+
+/*
+受信処理
+out.redをオープンして読み込む
+*/
+    const char fname[256] = "out.red";
+    char s[256];
+
+    FILE *fp;
+	int i=0;
+	while((fp=fopen(fname,"r"))==NULL){
+		i++;
+		printf("fp==NULL %d回目\n", i);
+//		sleep(500);
+	}
+
+	i=0;
+	while(fgets(s,256,fp)==NULL){
+		i++;
+		printf("完全空ファイル %d回目\n", i);
+		if(i<=10){
+			printf("REDUCE側ファイル生成失敗\n");
+			 exit(0);
+		}
+		sleep(500);
+		rewind(fp);
+	}
+	
+
+	rewind(fp);
+	while (fgets(s, 256, fp) != NULL) {
+		printf("%s", s);    // 画面出力
+	}
+	fclose(fp);
+
+//	if(remove(fname)==0){
+//		std::cout << fname << " is removed" << std::endl;
+//	}
 
   return true;
 } 
