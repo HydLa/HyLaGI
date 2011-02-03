@@ -153,8 +153,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   HYDLA_LOGGER_SUMMARY("------Parameter map------\n", parameter_map);
 
 
-  std::set<MathValue> and_cons_set = *(constraint_store_.first.begin());
-  constraint_store_.first.clear();
+  std::set<MathValue> and_cons_set;
   par_names_.clear();
 
   parameter_map_t::variable_list_t::const_iterator it = 
@@ -207,13 +206,12 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
       }
     }
   }
-
-  constraint_store_.first.insert(and_cons_set);
+  parameter_store_.first.insert(and_cons_set);
   return true;
 }
 
 bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
-{
+{/*
 	if(Logger::varflag==7){
 	HYDLA_LOGGER_AREA(
     "#*** MathematicaVCSPoint::create_variable_map ***\n",
@@ -228,7 +226,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
     "--- variable_map ---\n",
     variable_map,
     "--- constraint_store ---\n",
-    *this);    
+    *this);*/
 
   // 制約ストアが空（true）の場合は変数表も空で良い
   if(cs_is_true()) return true;
@@ -243,14 +241,13 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
   
 /////////////////// 受信処理
 
-//   PacketChecker pc(*ml_);
-//   pc.check();
+  //PacketChecker pc(*ml_);
+  //pc.check();
 
   
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-
   ml_->skip_pkt_until(RETURNPKT);
   
   return receive_variable_map(variable_map);
@@ -506,7 +503,6 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
 
 VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
-  static int tmpi=0;
 	if(Logger::constflag==9){
 		HYDLA_LOGGER_AREA(
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
@@ -520,8 +516,10 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
 /////////////////// 送信処理
 
-  // isConsistent[expr, vars]を渡したい
-  ml_->put_function("isConsistent", 2);
+  // isConsistent[ pexpr, expr, vars]を渡したい
+  ml_->put_function("isConsistent", 3);
+
+  send_ps();
 
   // exprは3つの部分から成る
   ml_->put_function("Join", 3);
@@ -566,21 +564,19 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
 
   // varsを渡す
-  ml_->put_function("Join", 3);
+  ml_->put_function("Join", 2);
   ps.put_vars(PacketSender::VA_None);
   // 制約ストア内に出現する変数も渡す
   send_cs_vars();
   
-  send_pars();
+  //send_pars();
 
 
 /////////////////// 受信処理
   HYDLA_LOGGER_DEBUG( "--- receive ---");
-  /*
-  if(tmpi++>5){
-   PacketChecker pc(*ml_);
-   pc.check();
-  }*/
+ 
+  //PacketChecker pc(*ml_);
+  //pc.check();
 
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
@@ -696,8 +692,10 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   // ask制約のガードの式を得てMathematicaに渡す
   ps.put_node(negative_ask->get_guard(), PacketSender::VA_None);
 
-  // 制約ストアから式を得てMathematicaに渡す
+  ml_->put_function("Join", 2);
+  // 制約ストアとpsから式を得てMathematicaに渡す
   send_cs();
+  send_ps();
 
   // varsを渡す
   ml_->put_function("Join", 3);
@@ -719,8 +717,8 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
 
 ////////// 受信処理
 
-//   PacketChecker pc(*ml_);
-//   pc.check();
+  // PacketChecker pc(*ml_);
+  // pc.check();
 
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLGetNext();
@@ -821,6 +819,47 @@ void MathematicaVCSPoint::send_cs() const
    if(Logger::mathsendflag==3){
 	   HYDLA_LOGGER_AREA("put cons: ", str);
    }
+      HYDLA_LOGGER_DEBUG("put cons: ", str);
+    }
+  }
+}
+
+
+void MathematicaVCSPoint::send_ps() const
+{
+  HYDLA_LOGGER_DEBUG("---- Send Parameter Store -----");
+
+  int or_cons_size = parameter_store_.first.size();
+  if(or_cons_size <= 0)
+  {
+    HYDLA_LOGGER_DEBUG("no Parameters");
+    ml_->put_function("List", 0);
+    return;
+  }
+
+  ml_->put_function("List", 1);
+  ml_->put_function("Or", or_cons_size);
+  HYDLA_LOGGER_DEBUG("or cons size: ", or_cons_size);
+
+  std::set<std::set<MathValue> >::const_iterator or_cons_it = 
+    parameter_store_.first.begin();
+  std::set<std::set<MathValue> >::const_iterator or_cons_end = 
+    parameter_store_.first.end();
+  for(; or_cons_it!=or_cons_end; ++or_cons_it)
+  {
+    int and_cons_size = (*or_cons_it).size();
+    ml_->put_function("And", and_cons_size);
+    HYDLA_LOGGER_DEBUG("and cons size: ", and_cons_size);
+
+    std::set<MathValue>::const_iterator and_cons_it = 
+      (*or_cons_it).begin();
+    std::set<MathValue>::const_iterator and_cons_end = 
+      (*or_cons_it).end();
+    for(; and_cons_it!=and_cons_end; ++and_cons_it)
+    {
+      ml_->put_function("ToExpression", 1);
+      std::string str = (*and_cons_it).get_string();
+      ml_->put_string(str);
       HYDLA_LOGGER_DEBUG("put cons: ", str);
     }
   }

@@ -75,6 +75,7 @@ private:
   typedef std::map<std::string, int> max_diff_map_t;
 
   void send_cs() const;
+  void send_ps() const;
   void send_cs_vars() const;
   void send_pars() const;
 
@@ -105,6 +106,7 @@ private:
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;
+  constraint_store_t parameter_store_;
   std::set<std::string> par_names_; //ˆêŽž‚µ‚Ì‚¬
 };
 

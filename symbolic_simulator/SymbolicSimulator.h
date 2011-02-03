@@ -76,24 +76,27 @@ private:
    * 初期化処理
    */
   virtual void do_initialize(const parse_tree_sptr& parse_tree);
+  
+  variable_map_t shift_variable_map_time(const variable_map_t& vm,const time_t &time);
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   
-  CalculateClosureResult calculate_closure(const phase_state_const_sptr& state, const module_set_sptr& ms, expanded_always_t &expanded_always,
+  CalculateClosureResult calculate_closure(const phase_state_const_sptr& state,
+                        const module_set_sptr& ms, expanded_always_t &expanded_always,
                          positive_asks_t &positive_asks, negative_asks_t &negative_asks);
 
-  void output(const symbolic_time_t& time, 
+  void output(const time_t& time, 
               const variable_map_t& vm);
   
-  void output(const symbolic_time_t& time, 
+  void output(const time_t& time, 
               const variable_map_t& vm,
               const parameter_map_t& pm);
   
 
-  void output_interval(const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
+  void output_interval(const time_t& current_time, const time_t& limit_time,
                      const variable_map_t& variable_map);
 
-  void output_point(const symbolic_time_t& time, const variable_map_t& variable_map, const parameter_map_t& parameter_map);
+  void output_point(const time_t& time, const variable_map_t& variable_map, const parameter_map_t& parameter_map);
               
                               
   module_set_container_sptr msc_original_;
@@ -110,7 +113,7 @@ private:
     state_stack_.push(state);
   }
   
-  std::string value_to_string(const symbolic_value_t& val);
+  std::string value_to_string(const value_t& val);
 
 
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ

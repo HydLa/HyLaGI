@@ -34,7 +34,7 @@ std::string SymbolicValue::Element::get_value() const{
 
 bool SymbolicValue::is_undefined() const
 {
-  return value_.empty();
+  return value_range_.empty();
 }
 
 
@@ -42,8 +42,8 @@ bool SymbolicValue::is_undefined() const
 //ï°êîÇÃïsìôçÜÇ©ÇÁílÇ™àÍà”Ç…åàíËÇ∑ÇÈèÍçáÇÕçló∂ÇµÇ»Ç¢
 bool SymbolicValue::is_unique() const
 {
-  if(value_.empty()) return false;
-  return value_.front().size()==1&&value_.front().front().relation == EQUAL;
+  if(value_range_.empty()) return false;
+  return value_range_.front().size()==1&&value_range_.front().front().relation == EQUAL;
 }
 
 
@@ -57,11 +57,11 @@ std::ostream& SymbolicValue::dump(std::ostream& s) const
 std::string SymbolicValue::get_string() const
 {
   //return str_;
-  if(value_.empty()||value_.front().empty())return "";
+  if(value_range_.empty()||value_range_.front().empty())return "";
   std::string tmp_str;
-  std::vector< std::vector<Element> >::const_iterator out_it = value_.begin();
+  std::vector< std::vector<Element> >::const_iterator out_it = value_range_.begin();
   tmp_str.append(visit_all(*out_it++, "&&"));
-  for(;out_it != value_.end();out_it++){
+  for(;out_it != value_range_.end();out_it++){
     tmp_str.append("||");
     tmp_str.append(visit_all(*out_it, "&&"));
   }
@@ -70,18 +70,18 @@ std::string SymbolicValue::get_string() const
 }
 
 symbolic_element_value_t SymbolicValue::get_first_value() const{
-  if(value_.empty()||value_.front().empty())return "UNDEF";
-  return value_.front().front().value;
+  if(value_range_.empty()||value_range_.front().empty())return "UNDEF";
+  return value_range_.front().front().value;
 }
 
 SymbolicValue::Relation SymbolicValue::get_first_relation() const{
-  if(value_.empty()||value_.front().empty())return EQUAL;
-  return value_.front().front().relation;
+  if(value_range_.empty()||value_range_.front().empty())return EQUAL;
+  return value_range_.front().front().relation;
 }
 
 std::string SymbolicValue::get_first_symbol() const{
-  if(value_.empty()||value_.front().empty())return "";
-  return relation_symbol_[value_.front().front().relation];
+  if(value_range_.empty()||value_range_.front().empty())return "";
+  return relation_symbol_[value_range_.front().front().relation];
 }
 
 
@@ -101,13 +101,22 @@ std::string SymbolicValue::visit_all(const std::vector<Element> &vec, const std:
 
 void SymbolicValue::set(const std::vector<std::vector<SymbolicValue::Element> > &vec)
 {
- value_ = vec;
+ value_range_ = vec;
 }
 
 void SymbolicValue::clear()
 {
- value_.clear();
+ value_range_.clear();
  current_or_ = NULL;
+}
+
+
+void SymbolicValue::set(const std::string &str)
+{
+ clear();
+ go_next_or();
+ Element ele(str,EQUAL);
+ add(ele);
 }
 
 void SymbolicValue::set(const Element &ele)
@@ -120,8 +129,8 @@ void SymbolicValue::set(const Element &ele)
 void SymbolicValue::go_next_or()
 {
  std::vector< Element> tmp;
- value_.push_back(tmp);
- current_or_ = &value_.back();
+ value_range_.push_back(tmp);
+ current_or_ = &value_range_.back();
 }
 
 void SymbolicValue::add(const SymbolicValue::Element &ele)

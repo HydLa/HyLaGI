@@ -124,7 +124,7 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map,  const pa
 
   if(parameter_map.size() == 0)
   {
-    HYDLA_LOGGER_SUMMARY("no Variables");
+    HYDLA_LOGGER_SUMMARY("no Parameters");
     return true;
   }
   HYDLA_LOGGER_SUMMARY("------Parameter map------\n", 
@@ -482,7 +482,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
   ml_->put_function("isConsistentInterval", 2);
 
   // expr部分
-  ml_->put_function("Join", 3);
+  ml_->put_function("Join", 4);
   ml_->put_function("List", collected_tells.size() + appended_asks.size());
   if(Logger::constflag==7){
   HYDLA_LOGGER_AREA(
@@ -511,6 +511,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
 
   // 制約ストアconstraintsをMathematicaに渡す
   send_cs(ps);
+  send_parameter_cons();
 
   max_diff_map_t max_diff_map;
 
@@ -601,7 +602,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
   PacketSender ps(*ml_);
 
-  // checkEntailment[guard, store, vars, pstore]を渡したい
+  // checkEntailment[guard, store, vars]を渡したい
   ml_->put_function("checkEntailmentInterval", 3);
 
   // guard部分
@@ -616,6 +617,18 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   // 制約ストアconstraintsをMathematicaに渡す
 
   send_cs(ps);
+  /*
+  ml_->put_function("List", appended_asks.size());
+  // appended_asksからガード部分を得てMathematicaに渡す
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+	  if(Logger::constflag==7){
+		HYDLA_LOGGER_AREA("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+	  }
+    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
+  }*/
 
 /*
   ml_->put_function("List", constraint_store_.init_vars.size());
@@ -689,13 +702,15 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
     }
     HYDLA_LOGGER_SUMMARY("entailed");
   }
-  else {
-    assert(ret_code==2);
+  else if(ret_code==2){
     result = VCSR_FALSE;
   	if(Logger::enflag==3||Logger::enflag==0){
       HYDLA_LOGGER_AREA("not entailed");
   	}
     HYDLA_LOGGER_SUMMARY("not entailed");
+  }else{
+    assert(ret_code==3);
+    result = VCSR_UNKNOWN;
   }
   return result;
 }
@@ -983,6 +998,7 @@ VCSResult MathematicaVCSInterval::integrate(
   ml_->put_string(state.time.get_string());
   ml_->skip_pkt_until(RETURNPKT);
   state.time.set(ml_->get_string());
+
 
 
   // 時刻の近似

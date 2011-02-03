@@ -78,12 +78,12 @@ public:
   virtual std::string get_real_val(const value_t &val, int precision);
   //SymbolicTimeを指定された精度で数値に変換する
   virtual std::string get_real_val(const time_t &val, int precision);
-  //element_valueを指定された精度で数値に変換する
-  virtual std::string get_real_val(const element_value_t &val, int precision);
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time);
   //SymbolicTimeを比較する
   virtual bool less_than(const time_t &lhs, const time_t &rhs);
+  //SymbolicValueの時間をずらす
+  virtual value_t shift_expr_time(const value_t &val, const time_t &time);
 
 private:
   hydla::symbolic_simulator::Mode      mode_;

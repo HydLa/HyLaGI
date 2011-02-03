@@ -9,6 +9,7 @@
 #include "SymbolicValue.h"
 #include "SymbolicTime.h"
 #include "SymbolicParameter.h"
+#include "SymbolicValueRange.h"
 
 #include "Types.h"
 
@@ -17,22 +18,23 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
-  typedef simulator::DefaultVariable            symbolic_variable_t;
-  typedef SymbolicParameter                     symbolic_parameter_t;
-  typedef SymbolicValue                         symbolic_value_t;
-  typedef SymbolicTime                          symbolic_time_t;
-  typedef hydla::simulator::VariableMap<symbolic_variable_t, 
-                                        symbolic_value_t> variable_map_t;
-  typedef hydla::simulator::VariableMap<symbolic_parameter_t, 
-                                        symbolic_value_t> parameter_map_t;
+  typedef simulator::DefaultVariable            variable_t;
+  typedef SymbolicParameter                     parameter_t;
+  typedef SymbolicValue                         value_t;
+  typedef SymbolicTime                          time_t;
+  typedef SymbolicValue                         value_t;
+  typedef SymbolicValueRange                    value_range_t;
+  typedef hydla::simulator::VariableMap<variable_t, 
+                                        value_t> variable_map_t;
+  typedef hydla::simulator::VariableMap<parameter_t, 
+                                        value_t> parameter_map_t;
 
-  typedef struct SymbolicPhaseState: public hydla::simulator::PhaseState<symbolic_variable_t, 
-                                       symbolic_value_t, 
-                                       symbolic_time_t>{
+  typedef struct SymbolicPhaseState: public hydla::simulator::PhaseState<variable_t, 
+                                       value_t, 
+                                       time_t>{
     parameter_map_t parameter_map;
   }phase_state_t;
 
-  typedef SymbolicPhaseState phase_state_t;
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
   typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
   
@@ -61,14 +63,14 @@ namespace symbolic_simulator {
   typedef struct Opts_ {
     std::string mathlink;
     bool debug_mode;
-    std::string max_time; //TODO: symbolic_time_t‚É‚·‚é
+    std::string max_time; //TODO: time_t‚É‚·‚é
     bool nd_mode;
     OutputStyle output_style;
     bool interactive_mode;
     bool profile_mode;
     bool parallel_mode;
     OutputFormat output_format;
-    symbolic_time_t output_interval;
+    time_t output_interval;
     int             output_precision;
     int approx_precision;
     std::string solver;

@@ -211,21 +211,6 @@ std::string MathematicaVCS::get_real_val(const time_t &time, int precision){
   return  ml_.get_string();
 }
 
-
-  //element_value_t‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
-std::string MathematicaVCS::get_real_val(const element_value_t &val, int precision){
-  ml_.put_function("ToString", 2);  
-  ml_.put_function("N", 2);  
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(val);
-  ml_.put_integer(precision);
-  ml_.put_symbol("CForm");
-  
-  ml_.skip_pkt_until(RETURNPKT);
-  return  ml_.get_string();
-}
-
-
 bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
 {
   ml_.put_function("ToString", 1);  
@@ -252,6 +237,18 @@ void MathematicaVCS::simplify(time_t &time)
   time.set(ml_.get_string());
 }
 
+
+
+  //SymbolicValue‚ÌŠÔ‚ğ‚¸‚ç‚·
+hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_time(const value_t& val, const time_t& time){
+  value_t tmp_val;
+  ml_.put_function("exprTimeShift", 2);  
+  ml_.put_string(val.get_string());
+  ml_.put_string(time.get_string());
+  ml_.skip_pkt_until(RETURNPKT);
+  tmp_val.set(ml_.get_string());
+  return  tmp_val;
+}
 
 
 } // namespace mathematica

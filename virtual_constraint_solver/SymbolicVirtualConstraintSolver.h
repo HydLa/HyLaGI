@@ -44,12 +44,11 @@ enum VCSResult {
 class SymbolicVirtualConstraintSolver
 {
 public:  
-  typedef hydla::symbolic_simulator::symbolic_variable_t     variable_t;
-  typedef hydla::symbolic_simulator::symbolic_value_t        value_t;
-  typedef hydla::symbolic_simulator::symbolic_element_value_t        element_value_t;
-  typedef hydla::symbolic_simulator::symbolic_time_t         time_t;
-  typedef hydla::symbolic_simulator::variable_map_t variable_map_t;
-  typedef hydla::symbolic_simulator::parameter_map_t    parameter_map_t;
+  typedef hydla::symbolic_simulator::variable_t              variable_t;
+  typedef hydla::symbolic_simulator::value_t                 value_t;
+  typedef hydla::symbolic_simulator::time_t                  time_t;
+  typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
+  typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
   typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::simulator::appended_asks_t                  appended_asks_t;
@@ -136,12 +135,12 @@ public:
   virtual std::string get_real_val(const value_t &val, int precision){return "get_real_val(value) is unavailable";}
   //SymbolicTimeを指定された精度で数値に変換する
   virtual std::string get_real_val(const time_t &val, int precision){return "get_real_val(time) is unavailable";}
-  //element_valueを指定された精度で数値に変換する
-  virtual std::string get_real_val(const element_value_t &val, int precision){return "get_real_val(element value) is unavailable";}
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time){assert(0);}
   //SymbolicTimeを比較する
   virtual bool less_than(const time_t &lhs, const time_t &rhs){assert(0);}
+  //SymbolicValueの時間をずらす
+  virtual value_t shift_expr_time(const value_t& val, const time_t &time){assert(0);}
   
   
   //変数表に時刻を適用する

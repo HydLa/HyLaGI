@@ -1,0 +1,17 @@
+// bouncing particle with nonequality
+
+
+/*
+INIT <=> ht = 10 & -5 < v & v < 5.
+FALL <=> [](ht'=v & v'=-10).
+BOUNCE <=> []( ht- = 0 => v= -(4/5)*v-).
+
+INIT, FALL << BOUNCE.
+*/
+
+
+INIT <=> 9<ht&ht<11 & v=0.
+FALL <=> [](ht'=v & v'=-10).
+BOUNCE <=> []( ht- = 0 => v= -(4/5)*v-).
+
+INIT, FALL << BOUNCE.

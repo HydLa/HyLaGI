@@ -73,7 +73,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   //初期状態を作ってスタックに入れる
   phase_state_sptr state(create_new_phase_state());
   state->phase        = PointPhase;
-  state->current_time = symbolic_time_t();
+  state->current_time = time_t();
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
   push_phase_state(state);
@@ -215,20 +215,20 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
   tells_t         tell_list;
-  ask_set_t       branched_asks;                           //UNKNOWN返されたAsk入れる
+  boost::shared_ptr<hydla::parse_tree::Ask>  const*branched_ask;                           //UNKNOWN返されたAsk入れる
 
 
   bool expanded;
   do{
-    branched_asks.clear();
+    branched_ask=NULL;
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
                                      &positive_asks);
     if(Logger::constflag==3){
-    	HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
+      HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always); 
-	  }
+    }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always);  
@@ -257,9 +257,9 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                               &negative_asks);
 
     if(Logger::constflag==3){
-		HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_ask: **\n",
+      HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_ask: **\n",
                        expanded_always);
-	}
+    }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_ask: **\n",
                        expanded_always);  
@@ -280,8 +280,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           it++;
           break;
         case VCSR_UNKNOWN:
-          if(!expanded){
-            branched_asks.insert(*it);
+          if(!expanded&&branched_ask==NULL){
+            branched_ask=&(*it);
           }
           it++;
           break;
@@ -293,12 +293,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     }
   }while(expanded);
   
-  if(!branched_asks.empty()){
+  if(branched_ask!=NULL){
     // 分岐先を生成
     HYDLA_LOGGER_DEBUG("#*** create new phase state (branch) ***");
     phase_state_sptr new_state(create_new_phase_state(state)),new_state_not(create_new_phase_state(state));
     appended_ask_t tmpAppend;
-    tmpAppend.ask = *(branched_asks.begin());    //最初の分岐askを取って分岐
+    tmpAppend.ask = *branched_ask;
     tmpAppend.entailed = true;
     new_state->appended_asks.push_back(tmpAppend);
     tmpAppend.entailed = false;
@@ -344,7 +344,6 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   negative_asks_t negative_asks;
 
 
-
   //閉包計算
   switch(calculate_closure(state,ms,expanded_always,positive_asks,negative_asks)){
     case CC_TRUE:
@@ -388,10 +387,20 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     variable_map_t::iterator end = new_state->variable_map.end();
     for(;it!=end;++it){
       if(!it->second.is_undefined()&&!it->second.is_unique()){
-        symbolic_parameter_t tmp_param;
+        parameter_t tmp_param;
         tmp_param.name = it->first.get_name();
+        for(int i=0;i<it->first.get_derivative_count();i++){
+          tmp_param.name.append("d");
+        }
+        while(1){   
+          value_t &value = new_state->parameter_map.get_variable(tmp_param);
+          if(value.is_undefined()){
+            break;
+          }
+          tmp_param.name.append("i");
+        }
         new_state->parameter_map.set_variable(tmp_param, it->second);
-        it->second.set(symbolic_value_t::Element( "p" + tmp_param.get_name(),symbolic_value_t::EQUAL));
+        it->second.set(value_t::Element( "p" + tmp_param.get_name(),value_t::EQUAL));
       }
     }
   }
@@ -509,7 +518,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     positive_asks,
     negative_asks,
     state->current_time,
-    symbolic_time_t(opts_.max_time),
+    time_t(opts_.max_time),
     not_adopted_tells_list);
 
   //出力
@@ -533,10 +542,9 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     new_state->parameter_map = state->parameter_map;
 
     if(Logger::varflag==5){
-    //次のフェーズにおける変数の値を導出する
-    HYDLA_LOGGER_AREA("--- calc next phase variable map ---");  
-    solver_->apply_time_to_vm(integrate_result.states[0].variable_map, new_state->variable_map, integrate_result.states[0].time-state->current_time);
-	}
+     //次のフェーズにおける変数の値を導出する
+     HYDLA_LOGGER_AREA("--- calc next phase variable map ---");  
+	  }
 
     //次のフェーズにおける変数の値を導出する
     HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
@@ -557,23 +565,34 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   return true;
 }
 
-void SymbolicSimulator::output_interval(const symbolic_time_t& current_time, const symbolic_time_t& limit_time,
+variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
+    variable_map_t shifted_vm;
+    variable_map_t::const_iterator it  = vm.begin();
+    variable_map_t::const_iterator end = vm.end();
+    for(; it!=end; ++it) {
+      shifted_vm.set_variable(it->first, solver_->shift_expr_time(it->second, time));
+    }
+    return shifted_vm;
+}
+
+void SymbolicSimulator::output_interval(const time_t& current_time, const time_t& limit_time,
                                         const variable_map_t& variable_map){
 
 
-  symbolic_time_t tmp_time = limit_time+current_time;
+  time_t tmp_time = limit_time+current_time;
   solver_->simplify(tmp_time);
   if(opts_.output_format != fmtNumeric||!current_time.is_unique()){
     std::cout << "(in IP)" << std::endl;
-    output(tmp_time, variable_map);
+    variable_map_t shifted_vm = shift_variable_map_time(variable_map, current_time);
+    output(tmp_time, shifted_vm);
   }else{
     variable_map_t output_vm;
-    symbolic_time_t elapsed_time;
+    time_t elapsed_time;
 
     do{
       solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
       output((elapsed_time+current_time),output_vm);
-      elapsed_time += symbolic_time_t(opts_.output_interval);
+      elapsed_time += time_t(opts_.output_interval);
       solver_->simplify(elapsed_time);
     }while(solver_->less_than(elapsed_time, limit_time));
     elapsed_time = limit_time;
@@ -585,9 +604,9 @@ void SymbolicSimulator::output_interval(const symbolic_time_t& current_time, con
 }
 
 
-void SymbolicSimulator::output_point(const symbolic_time_t& time, const variable_map_t& variable_map,const parameter_map_t& parameter_map){
+void SymbolicSimulator::output_point(const time_t& time, const variable_map_t& variable_map,const parameter_map_t& parameter_map){
   if(opts_.output_format != fmtNumeric||!time.is_unique()){
-    std::cout << std::endl << "(in PP)" << std::endl;
+    std::cout << std::endl <<"(in PP)" << std::endl;
   }
   output(time, variable_map, parameter_map);
 }
@@ -720,7 +739,7 @@ bool SymbolicSimulator::reduce_simulate_phase_state(const module_set_sptr& ms)
 }
 
 /*
-* Reduce用のファイル出力関数 中間発表までに作った物 + 通信処理
+* Reduce用のファイル出力関数 中間発表までに作った物
 * svn Rev: 1062
 */
 bool SymbolicSimulator::reduce_output(const module_set_sptr& ms, 
@@ -842,64 +861,12 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   ofs       << "MaxT:= " << opts_.max_time << ";" << std::endl;
   std::cout << ";end;" << std::endl;
   ofs       << ";end;" << std::endl;
-
-  ofs.close();
   
-/*
-送信処理
-reduceを起動
-*/
-	cout << "-------- start Reduce ----------" << endl;
-	char buf[256];
-	sprintf(buf, "reduce bball.data");
-// コマンドラインで "reduce.com bball.data" を叩くのと大体同じ意味
-	system(buf);
-
-	cout << "-------- Reduce ended ----------" << endl;
-
-
-/*
-受信処理
-out.redをオープンして読み込む
-*/
-    const char fname[256] = "out.red";
-    char s[256];
-
-    FILE *fp;
-	int i=0;
-	while((fp=fopen(fname,"r"))==NULL){
-		i++;
-		printf("fp==NULL %d回目\n", i);
-//		sleep(500);
-	}
-
-	i=0;
-	while(fgets(s,256,fp)==NULL){
-		i++;
-		printf("完全空ファイル %d回目\n", i);
-		if(i<=10){
-			printf("REDUCE側ファイル生成失敗\n");
-			 exit(0);
-		}
-		sleep(500);
-		rewind(fp);
-	}
-	
-
-	rewind(fp);
-	while (fgets(s, 256, fp) != NULL) {
-		printf("%s", s);    // 画面出力
-	}
-	fclose(fp);
-
-//	if(remove(fname)==0){
-//		std::cout << fname << " is removed" << std::endl;
-//	}
 
   return true;
 } 
 
-void SymbolicSimulator::output(const symbolic_time_t& time, 
+void SymbolicSimulator::output(const time_t& time, 
                            const variable_map_t& vm)
 {
   
@@ -932,13 +899,13 @@ void SymbolicSimulator::output(const symbolic_time_t& time,
   }
 }
 
-std::string SymbolicSimulator::value_to_string(const symbolic_value_t& val){
+std::string SymbolicSimulator::value_to_string(const value_t& val){
   std::string tmp;
   if(val.is_undefined()||val.is_unique())
     return val.get_first_value();
-  symbolic_value_t::or_const_iterator or_it = val.or_begin(), or_end  = val.or_end();
+  value_t::or_const_iterator or_it = val.or_begin(), or_end  = val.or_end();
   while(1){
-    symbolic_value_t::and_const_iterator and_it = or_it->begin(), and_end  = or_it->end();
+    value_t::and_const_iterator and_it = or_it->begin(), and_end  = or_it->end();
     while(1){
       tmp.append(and_it->get_symbol());
       tmp.append(and_it->get_value());
@@ -951,7 +918,7 @@ std::string SymbolicSimulator::value_to_string(const symbolic_value_t& val){
   return tmp;
 }
 
-void SymbolicSimulator::output(const symbolic_time_t& time, 
+void SymbolicSimulator::output(const time_t& time, 
                            const variable_map_t& vm,const parameter_map_t& pm)
 {  
   output(time,vm);

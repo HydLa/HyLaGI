@@ -82,6 +82,12 @@ struct SymbolicValue {
    * 新たな要素を１つセットする（それまでのものは捨てる）
    */
   void set(const Element &ele);
+  
+  
+  /**
+   * 新たな文字列をセット
+   */
+  void set(const std::string&);
 
   /**
    * 要素を全て捨て，初期化する
@@ -98,10 +104,10 @@ struct SymbolicValue {
    */
   void add(const Element &ele);
   
-  or_const_iterator or_begin() const {return value_.begin();}
-  or_iterator or_begin() {return value_.begin();}
-  or_const_iterator or_end() const {return value_.end();}
-  or_iterator or_end() {return value_.end();}
+  or_const_iterator or_begin() const {return value_range_.begin();}
+  or_iterator or_begin() {return value_range_.begin();}
+  or_const_iterator or_end() const {return value_range_.end();}
+  or_iterator or_end() {return value_range_.end();}
 
   
   /**
@@ -110,7 +116,7 @@ struct SymbolicValue {
   std::ostream& dump(std::ostream& s) const;
   
   
-  or_vector value_; //値との関係の列の列（DNF形式．∧でつながれたものを∨でつなぐ）
+  or_vector value_range_; //値との関係の列の列（DNF形式．∧でつながれたものを∨でつなぐ）
 
   private:
   
