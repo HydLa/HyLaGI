@@ -736,4 +736,4 @@ approxExpr[precision_, expr_] :=
 (* 
  * 与えられたtの式をタイムシフト
  *)
-exprTimeShift[expr_, time_] := ToString[FullForm[Simplify[ToExpression[expr] /. t -> t - ToExpression[time] ]]];
+exprTimeShift[expr_, time_] := ToString[FullForm[Simplify[expr /. t -> t - time ]]];

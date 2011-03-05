@@ -247,9 +247,11 @@ void MathematicaVCS::simplify(time_t &time)
   //SymbolicValue‚ÌŽžŠÔ‚ð‚¸‚ç‚·
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_time(const value_t& val, const time_t& time){
   value_t tmp_val;
+  PacketSender ps(ml_);
   MathematicaExpressionConverter mec;
   ml_.put_function("exprTimeShift", 2);
-  ml_.put_string(mec.convert_symbolic_value_to_expression(val));
+  ps.put_node(val.get_node(), PacketSender::VA_None, true);
+  ml_.put_function("ToExpression", 1);
   ml_.put_string(time.get_string());
   ml_.skip_pkt_until(RETURNPKT);
   tmp_val = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_.get_string());
