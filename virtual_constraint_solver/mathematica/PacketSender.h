@@ -7,7 +7,6 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include "Node.h"
 #include "TreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
@@ -124,6 +123,12 @@ public:
 
   // ”š
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
+
+  // ‹L†’è”
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
+
+  // t
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
 
 private:
   MathLink& ml_;

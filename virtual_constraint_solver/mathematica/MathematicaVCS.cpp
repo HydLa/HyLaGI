@@ -4,6 +4,8 @@
 
 #include "MathematicaVCSPoint.h"
 #include "MathematicaVCSInterval.h"
+#include "MathematicaExpressionConverter.h"
+#include "PacketSender.h"
 
 using namespace hydla::vcs;
 
@@ -98,6 +100,8 @@ MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
+  
+  MathematicaExpressionConverter::initialize();
 }
 
 MathematicaVCS::~MathematicaVCS()
@@ -118,9 +122,9 @@ bool MathematicaVCS::reset(const variable_map_t& vm, const parameter_map_t& pm)
   return vcs_->reset(vm, pm);
 }
 
-bool MathematicaVCS::create_variable_map(variable_map_t& vm)
+bool MathematicaVCS::create_variable_map(variable_map_t& vm, parameter_map_t& pm)
 {
-  return vcs_->create_variable_map(vm);
+  return vcs_->create_variable_map(vm, pm);
 }
 
 
@@ -181,14 +185,15 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_
   //value_tÇéwíËÇ≥ÇÍÇΩê∏ìxÇ≈êîílÇ…ïœä∑Ç∑ÇÈ
 std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
   std::string ret;
+  PacketSender ps(ml_);
+  MathematicaExpressionConverter mec;
   
   if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  
-    ml_.put_function("ToExpression", 1);
-    ml_.put_string(val.get_string());
+    ps.put_node(val.get_node(), PacketSender::VA_None, true);
     ml_.put_integer(precision);
-    ml_.put_symbol("CForm");  
+    ml_.put_symbol("CForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
   }
@@ -242,11 +247,12 @@ void MathematicaVCS::simplify(time_t &time)
   //SymbolicValueÇÃéûä‘ÇÇ∏ÇÁÇ∑
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_time(const value_t& val, const time_t& time){
   value_t tmp_val;
-  ml_.put_function("exprTimeShift", 2);  
-  ml_.put_string(val.get_string());
+  MathematicaExpressionConverter mec;
+  ml_.put_function("exprTimeShift", 2);
+  ml_.put_string(mec.convert_symbolic_value_to_expression(val));
   ml_.put_string(time.get_string());
   ml_.skip_pkt_until(RETURNPKT);
-  tmp_val.set(ml_.get_string());
+  tmp_val = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_.get_string());
   return  tmp_val;
 }
 

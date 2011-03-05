@@ -10,6 +10,7 @@
 #include "PacketChecker.h"
 #include "PacketErrorHandler.h"
 #include "Types.h"
+#include "MathematicaExpressionConverter.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
@@ -136,13 +137,6 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map,  const pa
 }
 
 
-bool MathematicaVCSInterval::create_variable_map(variable_map_t& variable_map)
-{
-  // Intervalではcreate_variable_map関数無効
-  assert(0);
-  return false;
-}
-
 
 void MathematicaVCSInterval::create_max_diff_map(
   PacketSender& ps, max_diff_map_t& max_diff_map)
@@ -257,79 +251,8 @@ void MathematicaVCSInterval::send_init_cons(
           ml_->put_function("approxExpr", 2);
           ml_->put_integer(approx_precision_);
         }
-
-        ml_->put_function("ToExpression", 1);
-        ml_->put_string(init_vars_it->second.get_first_value());
+        ps.put_node(init_vars_it->second.get_node(), PacketSender::VA_None, false);
     }
-
-
-/*
-    // 集めたtell制約内に出現しない
-    if(md_it==max_diff_map.end())
-    {
-      ml_->put_function("Equal", 2);
-
-      // 変数名
-      // 初期値制約内で最大微分回数のものは時刻引数[t]として送る
-      constraint_store_t::init_vars_max_diff_map_t::const_iterator ivmd_it = 
-        constraint_store_.init_vars_max_diff_map.find(init_vars_it->first.name);
-      if(init_vars_it->first.derivative_count==ivmd_it->second){
-        ps.put_var(
-          boost::make_tuple(init_vars_it->first.name, 
-                            init_vars_it->first.derivative_count, 
-                            false),
-          PacketSender::VA_Time);
-      }
-      else
-      {
-        ps.put_var(
-          boost::make_tuple(init_vars_it->first.name, 
-                            init_vars_it->first.derivative_count, 
-                            false),
-          PacketSender::VA_Zero);
-      }
-
-      // 値
-      if(use_approx && approx_precision_ > 0) {
-        // 近似して送信
-        ml_->put_function("approxExpr", 2);
-        ml_->put_integer(approx_precision_);
-      }
-
-      ml_->put_function("ToExpression", 1);
-      ml_->put_string(init_vars_it->second.str);      
-
-      // 制約ストア中で使用される変数の一覧にも追加
-      MathVariable mv;
-      mv.name             = init_vars_it->first.name;
-      mv.derivative_count = init_vars_it->first.derivative_count;
-      constraint_store_.cons_vars.insert(mv);
-
-    }
-    else if(md_it->second  > init_vars_it->first.derivative_count)
-    {
-      ml_->put_function("Equal", 2);
-
-      // 変数名
-      ps.put_var(
-        boost::make_tuple(init_vars_it->first.name, 
-                          init_vars_it->first.derivative_count, 
-                          false),
-        PacketSender::VA_Zero);
-
-      // 値
-      if(use_approx && approx_precision_ > 0) {
-        // 近似して送信
-        ml_->put_function("approxExpr", 2);
-        ml_->put_integer(approx_precision_);
-      }
-
-      ml_->put_function("ToExpression", 1);
-      ml_->put_string(init_vars_it->second.str);      
-
-    }
-*/
-
 
   }
 
@@ -344,8 +267,8 @@ void MathematicaVCSInterval::send_parameter_cons() const{
   parameter_map_t::const_iterator par_it = parameter_map_.begin();
   parameter_map_t::const_iterator par_end = parameter_map_.end();
   int para_size=0;
-  for(; par_it!=par_end; ++par_it) {  
-    value_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
+  for(; par_it!=par_end; ++par_it) {
+    value_range_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
     for(;or_it != or_end; or_it++){
       para_size += or_it->size();
     }
@@ -359,40 +282,20 @@ void MathematicaVCSInterval::send_parameter_cons() const{
   ml_->put_function("List", para_size);
   
   for(par_it = parameter_map_.begin(); par_it!=par_end; ++par_it) {
-  
-    value_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
+    value_range_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
     for(;or_it != or_end; or_it++){
-      value_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
+      value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
       for(; and_it != and_end; and_it++){
-        switch(and_it->relation){
-          default:
-            assert(0);
-            break;
-          case value_t::EQUAL:
-            ml_->put_function("Equal", 2);
-            break;
-          case value_t::NOT_EQUAL:
-            ml_->put_function("UnEqual", 2);
-            break;
-          case value_t::GREATER:
-            ml_->put_function("Greater", 2);
-            break;
-          case value_t::GREATER_EQUAL:
-            ml_->put_function("GreaterEqual", 2);
-            break;
-          case value_t::LESS:
-            ml_->put_function("Less", 2);
-            break;
-          case value_t::LESS_EQUAL:
-            ml_->put_function("LessEqual", 2);
-            break;
-        }
+      
+        ml_->put_function(
+          MathematicaExpressionConverter::get_relation_expression(and_it->relation), 2);
+
         // 変数名
         ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
 
         // 値
         ml_->put_function("ToExpression", 1);
-        ml_->put_string(and_it->value);
+        ml_->put_string(and_it->value.get_string());
       }
     }
   }
@@ -914,11 +817,11 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();
 
     // 値
-    value.set( value_t::Element(ml_->get_string(), value_t::EQUAL));
+    value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_->get_string());
   if(Logger::varflag==8){
-	HYDLA_LOGGER_AREA("value : ", value.get_first_value());
+	HYDLA_LOGGER_AREA("value : ", value.get_string());
   }
-    HYDLA_LOGGER_DEBUG("value : ", value.get_first_value());
+    HYDLA_LOGGER_DEBUG("value : ", value.get_string());
     ml_->MLGetNext();
 
     state.variable_map.set_variable(variable, value); 
@@ -1090,6 +993,8 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
 
   HYDLA_LOGGER_DEBUG("--- apply_time_to_vm ---");
 
+  PacketSender ps(*ml_);
+
   variable_map_t::const_iterator it  = in_vm.begin();
   variable_map_t::const_iterator end = in_vm.end();
   for(; it!=end; ++it) {
@@ -1102,8 +1007,7 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
     value_t    value;
     if(!it->second.is_undefined()) {
       ml_->put_function("applyTime2Expr", 2);
-      ml_->put_function("ToExpression", 1);
-      ml_->put_string(it->second.get_first_value());
+      ps.put_node(it->second.get_node(), PacketSender::VA_Time, true);
       send_time(time);
 
     ////////////////// 受信処理
@@ -1124,8 +1028,9 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       }
       else {
         assert(ret_code==1);
-        value.set( value_t::Element(ml_->get_string(), value_t::EQUAL));
-        HYDLA_LOGGER_DEBUG("value : ", value.get_first_value());
+        std::string tmp = ml_->get_string();
+        value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(tmp);
+        HYDLA_LOGGER_DEBUG("value : ", value.get_string());
       }
     }
 

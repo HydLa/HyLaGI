@@ -70,5 +70,11 @@ void TreeVisitor::visit(boost::shared_ptr<Variable> node)              {assert(0
 // ”š
 void TreeVisitor::visit(boost::shared_ptr<Number> node)                {assert(0);}
 
+// ‹L†’è”
+void TreeVisitor::visit(boost::shared_ptr<Parameter> node)                {assert(0);}
+
+// t
+void TreeVisitor::visit(boost::shared_ptr<SymbolicT> node)                {assert(0);}
+
 } //namespace parse_tree
 } //namespace hydla

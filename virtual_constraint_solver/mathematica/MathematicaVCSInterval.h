@@ -60,11 +60,6 @@ public:
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
-   * 現在の制約ストアから変数表を作成する
-   */
-  virtual bool create_variable_map(variable_map_t& variable_map);
-
-  /**
    * 制約を追加する
    */
   virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks);

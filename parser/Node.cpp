@@ -241,6 +241,13 @@ bool Variable::is_same_struct(const Node& n, bool exactly_same) const
           name_ == static_cast<const Variable*>(&n)->name_;          
 }
 
+
+bool Parameter::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          name_ == static_cast<const Parameter*>(&n)->name_;          
+}
+
 std::ostream& Caller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();
@@ -393,6 +400,12 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
 //êîéö
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
+
+//ãLçÜíËêî
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)
+
+//t
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SymbolicT)
 
 } //namespace parse_tree
 } //namespace hydla

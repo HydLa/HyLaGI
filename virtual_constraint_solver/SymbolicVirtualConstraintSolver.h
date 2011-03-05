@@ -46,6 +46,8 @@ class SymbolicVirtualConstraintSolver
 public:  
   typedef hydla::symbolic_simulator::variable_t              variable_t;
   typedef hydla::symbolic_simulator::value_t                 value_t;
+  typedef hydla::symbolic_simulator::parameter_t             parameter_t;
+  typedef hydla::symbolic_simulator::value_range_t           value_range_t;
   typedef hydla::symbolic_simulator::time_t                  time_t;
   typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
   typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
@@ -60,7 +62,6 @@ public:
   typedef hydla::simulator::module_set_sptr                  module_set_sptr;
   typedef std::vector<module_set_sptr>                       module_set_list_t;
   typedef hydla::simulator::not_adopted_tells_list_t         not_adopted_tells_list_t;
-
 
 
   typedef struct IntegrateResult 
@@ -82,6 +83,7 @@ public:
 
   virtual ~SymbolicVirtualConstraintSolver()
   {}
+
   /**
    * 離散変化モード，連続変化モードの切り替えをおこなう
    */
@@ -105,9 +107,9 @@ public:
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0);}
 
   /**
-   * 現在の制約ストアから変数表を作成する
+   * 現在の制約ストアから変数表と定数表を作成する
    */
-  virtual bool create_variable_map(variable_map_t& vm) = 0;
+  virtual bool create_variable_map(variable_map_t& vm, parameter_map_t& pm){assert(0);}
   
   /**
    * 制約を追加する

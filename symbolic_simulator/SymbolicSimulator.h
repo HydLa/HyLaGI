@@ -113,7 +113,7 @@ private:
     state_stack_.push(state);
   }
   
-  std::string value_to_string(const value_t& val);
+  std::string range_to_string(const value_range_t& val);
 
 
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ

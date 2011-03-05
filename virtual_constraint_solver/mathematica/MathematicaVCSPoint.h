@@ -43,7 +43,7 @@ public:
   /**
    * 現在の制約ストアから変数表を作成する
    */
-  virtual bool create_variable_map(variable_map_t& variable_map);
+  virtual bool create_variable_map(variable_map_t& variable_map, parameter_map_t& parameter_map);
 
   /**
    * 制約を追加する
@@ -99,10 +99,6 @@ private:
       (*(*constraint_store_.first.begin()).begin()).get_string()=="True";
   }
   
-  /**
-   * convertCSToVMを送信後に呼び出す．受信した後，変数表を作成する
-   */
-  bool receive_variable_map(variable_map_t& variable_map);
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;

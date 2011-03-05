@@ -88,7 +88,12 @@ public:
 
   // 数字
   virtual void visit(boost::shared_ptr<Number> node);
-
+  
+  // 記号定数
+  virtual void visit(boost::shared_ptr<Parameter> node);
+  
+  // t（時間）．実験も兼ねて
+  virtual void visit(boost::shared_ptr<SymbolicT> node);
 };
 
 } //namespace parse_tree

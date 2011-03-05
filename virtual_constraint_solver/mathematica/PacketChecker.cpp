@@ -193,13 +193,13 @@ void PacketChecker::funcCase(){
         std::cout << "#funcCase:oldreal" << std::endl;
         break;
       case MLTKOLDSTR:
-        std::cout <<"#funcCase:oldstr" << std::endl;
+        std::cout << "#funcCase:oldstr" << std::endl;
         break;
       case MLTKOLDSYM:
         std::cout << "#funcCase:oldsym" << std::endl;
         break;
       default:
-        std::cout <<"#funcCase:unknown_token" << std::endl;      
+        std::cout << "#funcCase:unknown_token" << std::endl;      
     }
   }
 }

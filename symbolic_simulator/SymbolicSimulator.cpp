@@ -215,7 +215,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
   tells_t         tell_list;
-  boost::shared_ptr<hydla::parse_tree::Ask>  const*branched_ask;                           //UNKNOWN返されたAsk入れる
+  boost::shared_ptr<hydla::parse_tree::Ask>  const *branched_ask;                           //UNKNOWN返されたAsk入れる
 
 
   bool expanded;
@@ -369,7 +369,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   {
     // 暫定的なフレーム公理の処理
     // 未定義の値や変数表に存在しない場合は以前の値をコピー
-    solver_->create_variable_map(new_state->variable_map);
+    solver_->create_variable_map(new_state->variable_map, new_state->parameter_map);
     variable_map_t::const_iterator it  = state->variable_map.begin();
     variable_map_t::const_iterator end = state->variable_map.end();
     for(; it!=end; ++it) {
@@ -379,33 +379,6 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
       }
     }
   }
-
-
-  //値が一意に定まらない変数があるなら、ＩＰに備えて変数表と定数表を変えておく
-  {
-    variable_map_t::iterator it  = new_state->variable_map.begin();
-    variable_map_t::iterator end = new_state->variable_map.end();
-    for(;it!=end;++it){
-      if(!it->second.is_undefined()&&!it->second.is_unique()){
-        parameter_t tmp_param;
-        tmp_param.name = it->first.get_name();
-        for(int i=0;i<it->first.get_derivative_count();i++){
-          tmp_param.name.append("d");
-        }
-        while(1){   
-          value_t &value = new_state->parameter_map.get_variable(tmp_param);
-          if(value.is_undefined()){
-            break;
-          }
-          tmp_param.name.append("i");
-        }
-        new_state->parameter_map.set_variable(tmp_param, it->second);
-        it->second.set(value_t::Element( "p" + tmp_param.get_name(),value_t::EQUAL));
-      }
-    }
-  }
-  
-  
 
   //出力
   output_point(new_state->current_time, new_state->variable_map, new_state->parameter_map);
@@ -887,28 +860,28 @@ void SymbolicSimulator::output(const time_t& time,
     variable_map_t::const_iterator it  = vm.begin();
     variable_map_t::const_iterator end = vm.end();
     for(; it!=end; ++it) {
-      std::cout << it->second.get_first_symbol() << solver_->get_real_val(it->second.get_first_value(), opts_.output_precision) << "\t";
+      std::cout << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
     }
   }else{
     std::cout << "time\t: " << time << "\n";
     variable_map_t::const_iterator it  = vm.begin();
     variable_map_t::const_iterator end = vm.end();
     for(; it!=end; ++it) {
-      std::cout << it->first << "\t: " << it->second.get_first_symbol() <<  it->second.get_first_value() << "\n" ;
+      std::cout << it->first << "\t: " << it->second << "\n" ;
     }
   }
 }
 
-std::string SymbolicSimulator::value_to_string(const value_t& val){
+std::string SymbolicSimulator::range_to_string(const value_range_t& val){
   std::string tmp;
   if(val.is_undefined()||val.is_unique())
-    return val.get_first_value();
-  value_t::or_const_iterator or_it = val.or_begin(), or_end  = val.or_end();
+    return val.get_first_value().get_string();
+  value_range_t::or_const_iterator or_it = val.or_begin(), or_end  = val.or_end();
   while(1){
-    value_t::and_const_iterator and_it = or_it->begin(), and_end  = or_it->end();
+    value_range_t::and_const_iterator and_it = or_it->begin(), and_end  = or_it->end();
     while(1){
       tmp.append(and_it->get_symbol());
-      tmp.append(and_it->get_value());
+      tmp.append(and_it->get_value().get_string());
       if(++and_it==and_end)break;
       tmp.append("&");
     }
@@ -920,12 +893,12 @@ std::string SymbolicSimulator::value_to_string(const value_t& val){
 
 void SymbolicSimulator::output(const time_t& time, 
                            const variable_map_t& vm,const parameter_map_t& pm)
-{  
+{
   output(time,vm);
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
   for(; it!=end; ++it) {
-    std::cout << "p" << it->first << "\t: " << value_to_string(it->second) << "\n" ;
+    std::cout << "p" << it->first << "\t: " << range_to_string(it->second) << "\n";
   }
   std::cout << std::endl;
 }

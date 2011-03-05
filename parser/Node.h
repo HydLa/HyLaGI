@@ -11,7 +11,7 @@
 
 namespace hydla { 
 namespace parse_tree {
-  
+
 class Node;
 class ConstraintDefinition;
 class ProgramDefinition;
@@ -78,7 +78,7 @@ public:
   
   
   /**
-   * ノードの状態を中置記法で出力する。定義が無い場合は通常のdumpと同じにする方向で
+   * ノードの状態を中置記法で出力する。個別の定義が無い場合は通常のdumpと同じにする方針で
    */
   virtual std::ostream& dump_infix(std::ostream& s) const 
   {
@@ -1089,7 +1089,7 @@ public:
     name_ = name;
   }
 
-  std::string get_name() const            
+  std::string get_name() const
   {
     return name_;
   }
@@ -1097,6 +1097,103 @@ public:
 private:
   std::string name_;
 };
+
+/**
+ * 記号定数
+ */ 
+class Parameter : public FactorNode {
+public:
+  Parameter()
+  {}  
+  
+  Parameter(const std::string& name) : 
+    name_(name)
+  {}
+    
+  virtual ~Parameter(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Parameter> n(new Parameter());
+    n->name_ = name_;
+    return n;
+  }
+    
+  virtual std::string get_node_type_name() const {
+    return "Parameter";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << name_ << "]";
+  }
+  
+  
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    return s << "p" + name_;
+  }
+
+  void set_name(const std::string& name) 
+  {
+    name_ = name;
+  }
+
+  std::string get_name() const
+  {
+    return name_;
+  }
+
+private:
+  std::string name_;
+};
+
+
+/**
+ * ｔ（時間）を表すノード．変数の時刻に対する式の中に出現するやつ．数式処理用
+ */
+
+class SymbolicT : public FactorNode {
+public:
+  SymbolicT()
+  {}
+    
+  virtual ~SymbolicT()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const{return typeid(*this) == typeid(n);}
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<SymbolicT> n(new SymbolicT());
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "SymbolicT";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s;
+  }
+  
+  virtual std::ostream& dump_infix(std::ostream& s) const 
+  {
+    return s << "t";
+  }
+
+};
+
+
 
 } //namespace parse_tree
 } //namespace hydla

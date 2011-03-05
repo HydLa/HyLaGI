@@ -27,7 +27,7 @@ namespace symbolic_simulator {
   typedef hydla::simulator::VariableMap<variable_t, 
                                         value_t> variable_map_t;
   typedef hydla::simulator::VariableMap<parameter_t, 
-                                        value_t> parameter_map_t;
+                                        value_range_t> parameter_map_t;
 
   typedef struct SymbolicPhaseState: public hydla::simulator::PhaseState<variable_t, 
                                        value_t, 

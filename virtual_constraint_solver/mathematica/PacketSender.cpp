@@ -210,9 +210,29 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
 
 // 数字
 void PacketSender::visit(boost::shared_ptr<Number> node)                
-{    
+{
   HYDLA_LOGGER_DEBUG("put: Number : ", node->get_number());
-  ml_.MLPutInteger(atoi(node->get_number().c_str()));
+  // ml_.MLPutInteger(atoi(node->get_number().c_str())); //数値がでかいとオーバーフローする
+
+  ml_.put_function("ToExpression", 1);
+
+  ml_.put_string(node->get_number());
+}
+
+
+// 記号定数
+void PacketSender::visit(boost::shared_ptr<Parameter> node)
+{    
+  HYDLA_LOGGER_DEBUG("put: Parameter : ", node->get_name());
+  ml_.put_symbol(par_prefix + node->get_name());
+}
+
+
+// t
+void PacketSender::visit(boost::shared_ptr<SymbolicT> node)                
+{    
+  HYDLA_LOGGER_DEBUG("put: t");
+  ml_.put_symbol("t");
 }
 
 void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
@@ -309,7 +329,7 @@ void PacketSender::put_node(const node_sptr& node,
 }
 
 /**
- * 変数の一覧を送信．とりあえず定数の一覧も同時に
+ * 変数の一覧を送信．
  */
 void PacketSender::put_vars(VariableArg variable_arg, 
                             bool ignore_prev)

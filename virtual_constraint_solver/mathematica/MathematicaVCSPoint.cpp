@@ -8,6 +8,7 @@
 #include "PacketErrorHandler.h"
 #include "Logger.h"
 #include "PacketChecker.h"
+#include "MathematicaExpressionConverter.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
@@ -56,6 +57,8 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
   HYDLA_LOGGER_SUMMARY("------Variable map------\n", variable_map);
 
   std::set<MathValue> and_cons_set;
+  
+  MathematicaExpressionConverter mec;
 
   variable_map_t::variable_list_t::const_iterator it = 
     variable_map.begin();
@@ -68,62 +71,32 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 
     if(!value.is_undefined()) {
       std::ostringstream val_str;
+      val_str << "Equal[";
 
-      value_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
-      for(;or_it != or_end; or_it++){
-         value_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
-         for(; and_it != and_end; and_it++){
-            // MathVariable側に関する文字列を作成
-            switch(and_it->relation){
-              default:
-                assert(0);
-                break;
-              case value_t::EQUAL:
-                val_str << "Equal[";
-                break;
-              case value_t::NOT_EQUAL:
-                val_str << "UnEqual[";
-                break;
-              case value_t::GREATER:
-                val_str << "Greater[";
-                break;
-              case value_t::GREATER_EQUAL:
-                val_str << "GreaterEqual[";
-                break;
-              case value_t::LESS:
-                val_str << "Less[";
-                break;
-              case value_t::LESS_EQUAL:
-                val_str << "LessEqual[";
-                break;
-            }
-
-            if(variable.derivative_count > 0)
-            {
-              val_str << "Derivative["
-                      << variable.derivative_count
-                      << "][prev["
-                      << PacketSender::var_prefix
-                      << variable.name
-                      << "]]";
-            }
-            else
-            {
-              val_str << "prev["
-                      << PacketSender::var_prefix
-                      << variable.name
-                      << "]";
-            }
-
-            val_str << ","
-                    << and_it->value
-                    << "]"; // Equalの閉じ括弧
-
-            MathValue new_math_value;
-            new_math_value.set(val_str.str());
-            and_cons_set.insert(new_math_value);
-         }
+      if(variable.derivative_count > 0)
+      {
+        val_str << "Derivative["
+                << variable.derivative_count
+                << "][prev["
+                << PacketSender::var_prefix
+                << variable.name
+                << "]]";
       }
+      else
+      {
+        val_str << "prev["
+                << PacketSender::var_prefix
+                << variable.name
+                << "]";
+      }
+
+      val_str << ","
+              << mec.convert_symbolic_value_to_expression(value)
+              << "]"; // Equalの閉じ括弧
+
+      MathValue new_math_value;
+      new_math_value.set(val_str.str());
+      and_cons_set.insert(new_math_value);
 
       // 制約ストア内の変数一覧を作成
       constraint_store_.second.insert(
@@ -162,42 +135,23 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
     parameter_map.end();
   for(; it!=end; ++it)
   {
-    const value_t&    value = it->second;
+    const value_range_t&    value = it->second;
     if(!value.is_undefined()) {
-      value_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
+      value_range_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
       for(;or_it != or_end; or_it++){
-        value_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
+        value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
         for(; and_it != and_end; and_it++){
           std::ostringstream val_str;
           
           // MathVariable側に関する文字列を作成
-          switch(and_it->relation){
-            default:
-              assert(0);
-              break;
-            case value_t::EQUAL:
-              val_str << "Equal[";
-              break;
-            case value_t::GREATER:
-              val_str << "Greater[";
-              break;
-            case value_t::GREATER_EQUAL:
-              val_str << "GreaterEqual[";
-              break;
-            case value_t::LESS:
-              val_str << "Less[";
-              break;
-            case value_t::LESS_EQUAL:
-              val_str << "LessEqual[";
-              break;
-          }
+          val_str << MathematicaExpressionConverter::get_relation_expression(and_it->relation) << "[" ;
 
           val_str << PacketSender::par_prefix
                   << it->first.get_name();
 
           val_str << ","
                   << and_it->value
-                  << "]"; // Equalの閉じ括弧
+                  << "]"; // 閉じ括弧
           MathValue new_math_value;
           new_math_value.set(val_str.str());
           and_cons_set.insert(new_math_value);
@@ -210,8 +164,8 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   return true;
 }
 
-bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
-{/*
+bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, parameter_map_t& parameter_map)
+{
 	if(Logger::varflag==7){
 	HYDLA_LOGGER_AREA(
     "#*** MathematicaVCSPoint::create_variable_map ***\n",
@@ -226,11 +180,10 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
     "--- variable_map ---\n",
     variable_map,
     "--- constraint_store ---\n",
-    *this);*/
+    *this);
 
   // 制約ストアが空（true）の場合は変数表も空で良い
   if(cs_is_true()) return true;
-
 
 /////////////////// 送信処理
 
@@ -250,25 +203,19 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map)
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   ml_->skip_pkt_until(RETURNPKT);
   
-  return receive_variable_map(variable_map);
-}
-
-
-
-
-bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
-{
 
   ml_->MLGetNext();
-//  ml_->MLGetNext();
 
   // List関数の要素数（式の個数）を得る
   int expr_size = ml_->get_arg_count();
   HYDLA_LOGGER_DEBUG("expr_size: ", expr_size);
   ml_->MLGetNext(); // Listという関数名
 
-  variable_t symbolic_variable;
+  variable_t symbolic_variable, prev_variable;
   value_t symbolic_value;
+  value_range_t tmp_range;
+  parameter_t tmp_param;
+  
 
   for(int i=0; i<expr_size; i++)
   {
@@ -288,43 +235,71 @@ bool MathematicaVCSPoint::receive_variable_map(variable_map_t& variable_map)
     // 値
     std::string value_str = ml_->get_string();
 
-
     // prev変数は処理しない
     if(prev==1) continue;
+
     
-    if(symbolic_variable.name != variable_name || symbolic_variable.derivative_count != variable_derivative_count){
-      symbolic_variable.name = variable_name;
-      symbolic_variable.derivative_count = variable_derivative_count;
-      symbolic_value.clear();
-    }
-    
+    symbolic_variable.name = variable_name;
+    symbolic_variable.derivative_count = variable_derivative_count;
 
     // 関係演算子コードを元に、変数表の対応する部分に代入する
     // TODO: Orの扱い
-    switch(relop_code)
-    {
-      case 0: // Equal
-        symbolic_value.add(value_t::Element(value_str,value_t::EQUAL));
-        break;
-      case 1: // Less
-        symbolic_value.add(value_t::Element(value_str,value_t::LESS));
-        break;
-      case 2: // Greater
-        symbolic_value.add(value_t::Element(value_str,value_t::GREATER));
-        break;
-      case 3: // LessEqual
-        symbolic_value.add(value_t::Element(value_str,value_t::LESS_EQUAL));
-        break;
-      case 4: // GreaterEqual
-        symbolic_value.add(value_t::Element(value_str,value_t::GREATER_EQUAL));
-        break;
+    if(!relop_code){
+      //等号
+      symbolic_value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(value_str);
+      symbolic_value.set_unique(true);
+    }else{
+      //不等号．この変数の値の範囲を表現するための記号定数を作成
+      tmp_param.name = variable_name;
+      value_t tmp_value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(value_str);
+
+      for(int i=0;i<variable_derivative_count;i++){
+        //とりあえず微分回数分dをつける
+        tmp_param.name.append("d");
+      }
+      if(prev_variable.name!=symbolic_variable.name||prev_variable.derivative_count!=symbolic_variable.derivative_count){
+        //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
+        tmp_range.clear();
+        while(1){
+          value_range_t &value = parameter_map.get_variable(tmp_param);
+         if(value.is_undefined()){
+           break;
+         }
+          //とりあえず重複回数分iをつける
+         tmp_param.name.append("i");
+         }
+      }
+      MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
+      symbolic_value.set_unique(false);
+      switch(relop_code){
+        case 1: // Less
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS));          
+          break;
+
+        case 2: // Greater
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER));
+          break;
+
+        case 3: // LessEqual
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS_EQUAL));
+          break;
+
+        case 4: // GreaterEqual
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER_EQUAL));
+          break;
+
+        default:
+          assert(0);
+      }
+      parameter_map.set_variable(tmp_param, tmp_range);
     }
     variable_map.set_variable(symbolic_variable, symbolic_value);
+    prev_variable.name = variable_name;
+    prev_variable.derivative_count = variable_derivative_count;
   }
 
   return true;
 }
-
 
 namespace {
 
