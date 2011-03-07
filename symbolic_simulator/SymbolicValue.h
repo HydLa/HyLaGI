@@ -6,16 +6,27 @@
 #include <boost/shared_ptr.hpp>
 #include "Node.h"
 
+#include <boost/operators.hpp>
+
 namespace hydla {
 namespace symbolic_simulator {
 
-struct SymbolicValue {
+class SymbolicValue:
+    public boost::additive<SymbolicValue>
+{
 
   typedef hydla::parse_tree::node_sptr node_sptr;
+  node_sptr node_;  //値はnode_sptr
+  
+  bool is_unique_;  //値が一意かどうかを示す変数．とりあえず外部から設定する
+
+  public:
 
 
   SymbolicValue(){}
-  SymbolicValue(const std::string &str){str_=str;}
+  //単なる文字列は数値と見なして受け取る
+  SymbolicValue(const std::string &str){node_.reset(new hydla::parse_tree::Number(str));}
+  SymbolicValue(const node_sptr & node){node_ = node;}
   
   /**
    * 未定義値かどうか
@@ -39,25 +50,25 @@ struct SymbolicValue {
   node_sptr get_node() const;
   
   /**
-   * 新たな文字列をセット
-   */
-  void set(const std::string&);
-  /**
    * 新たなノードをセット
    */
   void set(const node_sptr&);
 
+  /**
+   * SymbolicValue同士の加算. additiveを継承しているのでこれで+も使えるようになる
+   */
+  SymbolicValue& operator+=(const SymbolicValue& rhs);
+  
+
+  /**
+   * SymbolicValue同士の減算. additiveを継承しているのでこれで-も使えるようになる
+   */
+  SymbolicValue& operator-=(const SymbolicValue& rhs);
   
   /**
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const;
-
-  private:
-  std::string str_;  //とりあえず値は文字列で
-  node_sptr node_;  //値をnode_sptrにしてみたい
-  
-  bool is_unique_;  //値が一意かどうかを示す変数．とりあえず外部から設定する
 };
 
 bool operator<(const SymbolicValue& lhs, const SymbolicValue& rhs);

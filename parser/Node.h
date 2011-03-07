@@ -86,6 +86,15 @@ public:
     return s << get_node_type_name()
              << "<" << get_id() << ">";
   }
+  
+  /**
+   * äáå ÇÇ¬ÇØÇ»Ç¢Ç∆à”ñ°Ç™àŸÇ»Ç¡ÇƒÇµÇ‹Ç§â¬î\ê´Ç™Ç†ÇÈèÍçáÇ…åƒÇ—èoÇ∑dump_infixÅDäÓñ{ÇÕdump_infixÇ∆ìØól
+   */
+  virtual std::ostream& dump_infix_with_parentheses(std::ostream& s) const 
+  {
+    dump_infix(s);
+    return s;
+  }
 
   /**
    * ÉmÅ[ÉhIDÇÃê›íË
@@ -300,7 +309,7 @@ public:
     rhs_->dump_infix(s);
     return s;
   }
-
+  
   /**
    * setter of left-hand-side node
    */
@@ -801,12 +810,85 @@ DEFINE_ASYMMETRIC_BINARY_NODE(GreaterEqual, >=);
 /**
  * éZèpââéZéqÅu+Åv
  */
-DEFINE_BINARY_NODE(Plus, +);
+class Plus : public BinaryNode {                          
+  public:                                                   
+  typedef boost::shared_ptr<Plus> node_type_sptr;           
+                                                            
+  Plus()                                                    
+    {}                                                      
+                                                            
+  Plus(const node_sptr& lhs, const node_sptr& rhs) :        
+    BinaryNode(lhs, rhs)                                    
+    {}                                                      
+                                                            
+  virtual ~Plus(){}                                         
+                                                            
+  virtual void accept(node_sptr own, TreeVisitor* visitor); 
+                                                            
+  virtual node_sptr clone()                                 
+    {                                                       
+      node_type_sptr n(new Plus);                           
+      return BinaryNode::clone(n);                          
+    }                                                       
+  virtual std::string get_node_type_name() const {          
+    return "Plus";                                           
+  }                                                         
+  virtual std::string get_node_type_symbol() const {        
+    return "+";                                         
+  }  
+  virtual std::ostream& dump_infix_with_parentheses(std::ostream& s) const
+  {
+    s << "(";
+    lhs_->dump_infix(s);
+    s << get_node_type_symbol();
+    rhs_->dump_infix(s);
+    s << ")";
+    return s;
+  } 
+};
 
 /**
  * éZèpââéZéqÅu-Åv
  */
-DEFINE_ASYMMETRIC_BINARY_NODE(Subtract, -);
+class Subtract : public BinaryNode {                          
+  public:                                                   
+  typedef boost::shared_ptr<Subtract> node_type_sptr;           
+                                                            
+  Subtract()                                                    
+    {}                                                      
+                                                            
+  Subtract(const node_sptr& lhs, const node_sptr& rhs) :        
+    BinaryNode(lhs, rhs)                                    
+    {}                                                      
+                                                            
+  virtual ~Subtract(){}                                         
+                                                            
+  virtual void accept(node_sptr own, TreeVisitor* visitor); 
+  
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+   
+  virtual node_sptr clone()                                 
+    {                                                       
+      node_type_sptr n(new Subtract);                           
+      return BinaryNode::clone(n);                          
+    }                                                       
+  virtual std::string get_node_type_name() const {          
+    return "Subtract";                                           
+  }                                                         
+  virtual std::string get_node_type_symbol() const {        
+    return "-";                                         
+  }  
+  virtual std::ostream& dump_infix_with_parentheses(std::ostream& s) const   
+  {
+    s << "(";
+    lhs_->dump_infix(s);
+    s << get_node_type_symbol();
+    rhs_->dump_infix(s);
+    s << ")";
+    return s;
+  } 
+};
+
 
 /**
  * éZèpââéZéqÅu*Åv
@@ -840,13 +922,9 @@ class Times : public BinaryNode {
   }
   virtual std::ostream& dump_infix(std::ostream& s) const   
   {
-    s << "(";
-    lhs_->dump_infix(s);
-    s << ")";
+    lhs_->dump_infix_with_parentheses(s);
     s << get_node_type_symbol();
-    s << "(";
-    rhs_->dump_infix(s);
-    s << ")";
+    rhs_->dump_infix_with_parentheses(s);
     return s;
   }                                              
 };
@@ -883,13 +961,9 @@ class Divide : public BinaryNode {
   }
   virtual std::ostream& dump_infix(std::ostream& s) const   
   {
-    s << "(";
-    lhs_->dump_infix(s);
-    s << ")";
+    lhs_->dump_infix_with_parentheses(s);
     s << get_node_type_symbol();
-    s << "(";
-    rhs_->dump_infix(s);
-    s << ")";
+    rhs_->dump_infix_with_parentheses(s);
     return s;
   }                                              
 };
@@ -922,17 +996,17 @@ class Power : public BinaryNode {
     return "Power";                                         
   }                                                         
   virtual std::string get_node_type_symbol() const {        
-    return "**";                                             
+    return "^";                                             
   }
   virtual std::ostream& dump_infix(std::ostream& s) const   
   {
-    s << "(";
+    s << "(" ;
     lhs_->dump_infix(s);
-    s << ")";
+    s << ")" ;
     s << get_node_type_symbol();
-    s << "(";
+    s << "(" ;
     rhs_->dump_infix(s);
-    s << ")";
+    s << ")" ;
     return s;
   }                                              
 };

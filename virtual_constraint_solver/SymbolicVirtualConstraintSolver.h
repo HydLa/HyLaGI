@@ -134,9 +134,7 @@ public:
     const not_adopted_tells_list_t& not_adopted_tells_list) = 0;
 
   //SymbolicValueを指定された精度で数値に変換する
-  virtual std::string get_real_val(const value_t &val, int precision){return "get_real_val(value) is unavailable";}
-  //SymbolicTimeを指定された精度で数値に変換する
-  virtual std::string get_real_val(const time_t &val, int precision){return "get_real_val(time) is unavailable";}
+  virtual std::string get_real_val(const value_t &val, int precision){return "get_real_val is unavailable";}
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time){assert(0);}
   //SymbolicTimeを比較する

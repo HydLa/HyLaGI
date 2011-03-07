@@ -623,7 +623,7 @@ integrateCalc[cons_,
     endTimeFlag = 1
   ];
   tmpRet = {1,
-            ToString[tmpMinT, InputForm], 
+            ToString[FullForm[tmpMinT]],
             tmpVarMap,
             tmpMinAskIDs, 
             endTimeFlag};

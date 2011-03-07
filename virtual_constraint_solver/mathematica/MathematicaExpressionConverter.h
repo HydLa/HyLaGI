@@ -115,7 +115,7 @@ class MathematicaExpressionConverter:
   // ”š
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
-  // t
+  // ‹L†’è”
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
 
   // t

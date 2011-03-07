@@ -186,7 +186,6 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_
 std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
   std::string ret;
   PacketSender ps(ml_);
-  MathematicaExpressionConverter mec;
   
   if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
@@ -203,27 +202,14 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
   return ret;
 }
 
-  //time_tÇéwíËÇ≥ÇÍÇΩê∏ìxÇ≈êîílÇ…ïœä∑Ç∑ÇÈ
-std::string MathematicaVCS::get_real_val(const time_t &time, int precision){
-  ml_.put_function("ToString", 2);  
-  ml_.put_function("N", 2);  
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(time.get_string());
-  ml_.put_integer(precision);
-  ml_.put_symbol("CForm");
-  
-  ml_.skip_pkt_until(RETURNPKT);
-  return  ml_.get_string();
-}
 
 bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
 {
   ml_.put_function("ToString", 1);  
   ml_.put_function("Less", 2);  
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(lhs.get_string());
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(rhs.get_string());
+  PacketSender ps(ml_);
+  ps.put_node(lhs.get_node(), PacketSender::VA_None, true);
+  ps.put_node(rhs.get_node(), PacketSender::VA_None, true);
   
   ml_.skip_pkt_until(RETURNPKT);
   std::string ret = ml_.get_string();
@@ -236,10 +222,10 @@ void MathematicaVCS::simplify(time_t &time)
   ml_.put_function("ToString", 1);
   ml_.put_function("FullForm", 1);
   ml_.put_function("Simplify", 1);
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(time.get_string());
+  PacketSender ps(ml_);
+  ps.put_node(time.get_node(), PacketSender::VA_None, true);
   ml_.skip_pkt_until(RETURNPKT);
-  time.set(ml_.get_string());
+  time = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_.get_string());
 }
 
 
@@ -247,12 +233,10 @@ void MathematicaVCS::simplify(time_t &time)
   //SymbolicValueÇÃéûä‘ÇÇ∏ÇÁÇ∑
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_time(const value_t& val, const time_t& time){
   value_t tmp_val;
-  PacketSender ps(ml_);
-  MathematicaExpressionConverter mec;
   ml_.put_function("exprTimeShift", 2);
+  PacketSender ps(ml_);
   ps.put_node(val.get_node(), PacketSender::VA_None, true);
-  ml_.put_function("ToExpression", 1);
-  ml_.put_string(time.get_string());
+  ps.put_node(time.get_node(), PacketSender::VA_None, true);
   ml_.skip_pkt_until(RETURNPKT);
   tmp_val = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_.get_string());
   return  tmp_val;

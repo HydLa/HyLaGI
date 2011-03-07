@@ -76,8 +76,6 @@ public:
 
   //SymbolicValueを指定された精度で数値に変換する
   virtual std::string get_real_val(const value_t &val, int precision);
-  //SymbolicTimeを指定された精度で数値に変換する
-  virtual std::string get_real_val(const time_t &val, int precision);
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time);
   //SymbolicTimeを比較する

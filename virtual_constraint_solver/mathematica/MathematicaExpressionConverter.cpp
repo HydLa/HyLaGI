@@ -45,9 +45,13 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::convert_expression_to_symbolic_tree(const std::string &expr, std::string::size_type &now){
   now = expr.find_first_not_of(" ", now);
   std::string::size_type prev = now;
-  if((expr[now]>='0'&&expr[now]<='9')||expr[now]<='-'){//数値の場合
+  if((expr[now]>='0'&&expr[now]<='9')){//正の数値の場合
     now = expr.find_first_of("],", now);
     return node_sptr(new hydla::parse_tree::Number(expr.substr(prev,now-prev)));
+  }
+  if(expr[now]=='-'){ //負の数値の場合
+    now = expr.find_first_of("],", now);
+    return node_sptr(new hydla::parse_tree::Negative(node_sptr(new hydla::parse_tree::Number(expr.substr(prev+1,now-prev-1)))));
   }
 
   now = expr.find_first_of("[],", prev);
@@ -61,7 +65,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
     if(expr[prev]=='p'){
       return node_sptr(new hydla::parse_tree::Parameter(expr.substr(prev+1,now-prev-1)));
     }
-    return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev,now-prev-1)));
+    return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev,now-prev)));
   }
   
   //何か子ノードがあるはず．Derivativeの場合は少し特別か
@@ -108,7 +112,11 @@ MathematicaExpressionConverter::node_sptr
     return node_sptr(new hydla::parse_tree::Previous(tmp_node));
     
     case NODE_SQRT:
-    return node_sptr(new hydla::parse_tree::Power(tmp_node, node_sptr(new hydla::parse_tree::Number("1/2"))));
+    return node_sptr(new hydla::parse_tree::Power
+      (tmp_node, 
+       node_sptr(new hydla::parse_tree::Divide(
+          node_sptr(new hydla::parse_tree::Number("1")),
+          node_sptr(new hydla::parse_tree::Number("2")) ) ) ) );
   }
 }
 

@@ -21,8 +21,7 @@ namespace symbolic_simulator {
   typedef simulator::DefaultVariable            variable_t;
   typedef SymbolicParameter                     parameter_t;
   typedef SymbolicValue                         value_t;
-  typedef SymbolicTime                          time_t;
-  typedef SymbolicValue                         value_t;
+  typedef SymbolicValue                          time_t;
   typedef SymbolicValueRange                    value_range_t;
   typedef hydla::simulator::VariableMap<variable_t, 
                                         value_t> variable_map_t;
@@ -71,7 +70,7 @@ namespace symbolic_simulator {
     bool parallel_mode;
     OutputFormat output_format;
     time_t output_interval;
-    int             output_precision;
+    int output_precision;
     int approx_precision;
     std::string solver;
   } Opts;

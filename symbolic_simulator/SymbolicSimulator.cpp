@@ -73,7 +73,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   //初期状態を作ってスタックに入れる
   phase_state_sptr state(create_new_phase_state());
   state->phase        = PointPhase;
-  state->current_time = time_t();
+  state->current_time = time_t("0");
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
   push_phase_state(state);
@@ -491,7 +491,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     positive_asks,
     negative_asks,
     state->current_time,
-    time_t(opts_.max_time),
+    time_t(node_sptr(new hydla::parse_tree::Number(opts_.max_time))),
     not_adopted_tells_list);
 
   //出力
