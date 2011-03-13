@@ -37,6 +37,30 @@ class TreeInfixPrinter:
                           const needParenthesis &pre_par = PAR_NONE, const needParenthesis &post_par = PAR_NONE);
   void print_unary_node(const hydla::parse_tree::UnaryNode &, const std::string &pre, const std::string &post);
 
+
+
+  // 制約定義
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> node);
+  
+  // プログラム定義
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramDefinition> node);
+
+  // 制約呼び出し
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
+  
+  // プログラム呼び出し
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
+
+  // 制約式
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
+
+  // Ask制約
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+
+  // Tell制約
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
+
+
   // 比較演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
@@ -44,6 +68,15 @@ class TreeInfixPrinter:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
+
+  
+  // 制約階層定義演算子
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
+
+  // 時相演算子
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
+
 
   // 論理演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);

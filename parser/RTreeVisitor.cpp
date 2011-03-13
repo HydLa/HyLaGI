@@ -105,9 +105,7 @@ void RTreeVisitor::visit(boost::shared_ptr<Ask> node){
 void RTreeVisitor::visit(boost::shared_ptr<Tell> node)                  {
 // ãå reduce_outputÇ…åƒÇ—èoÇ≥ÇÍÇΩÇ∆Ç´
 	if(caller_=="reduce_output"){
-		expr_ += node->get_node_type_presymbol();
 		accept(node->get_child());
-		expr_ += node->get_node_type_presymbol();
 	}else{
 		expr_ += "{Tell, ";
 		accept(node->get_child());
@@ -118,32 +116,32 @@ void RTreeVisitor::visit(boost::shared_ptr<Tell> node)                  {
 // î‰ärââéZéq ASYMMETRIC_BINARY_NODE
 void RTreeVisitor::visit(boost::shared_ptr<Equal> node)                 {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "=";
 	accept(node->get_rhs());
 }
 void RTreeVisitor::visit(boost::shared_ptr<UnEqual> node)               {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "!=";
 	accept(node->get_rhs());
 }
 void RTreeVisitor::visit(boost::shared_ptr<Less> node)                  {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "<";
 	accept(node->get_rhs());
 }
 void RTreeVisitor::visit(boost::shared_ptr<LessEqual> node)             {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "<=";
 	accept(node->get_rhs());
 }
 void RTreeVisitor::visit(boost::shared_ptr<Greater> node)               {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += ">";
 	accept(node->get_rhs());
 }
 void RTreeVisitor::visit(boost::shared_ptr<GreaterEqual> node)          {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += ">=";
 	accept(node->get_rhs());
 }
 
@@ -168,33 +166,32 @@ void RTreeVisitor::visit(boost::shared_ptr<LogicalOr> node)             {
 void RTreeVisitor::visit(boost::shared_ptr<Plus> node)                  {
 	expr_ += "(";
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "+";
 	accept(node->get_rhs());
 	expr_ += ")";
 }
 void RTreeVisitor::visit(boost::shared_ptr<Subtract> node)              {
 	expr_ += "(";
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "-";
 	accept(node->get_rhs());
 	expr_ += ")";
 }
 void RTreeVisitor::visit(boost::shared_ptr<Times> node)                 {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "*";
 	accept(node->get_rhs());
 }
 void RTreeVisitor::visit(boost::shared_ptr<Divide> node)                {
 	accept(node->get_lhs());
-	expr_ += node->get_node_type_symbol();
+	expr_ += "/";
 	accept(node->get_rhs());
 }
   
 // éZèpíPçÄââéZéq UNARYNODE
 void RTreeVisitor::visit(boost::shared_ptr<Negative> node)              {
-    expr_ += node->get_node_type_presymbol();
+    expr_ += "-";
     accept(node->get_child());
-    expr_ += node->get_node_type_postsymbol();
 }
 void RTreeVisitor::visit(boost::shared_ptr<Positive> node)              {assert(0);}
   

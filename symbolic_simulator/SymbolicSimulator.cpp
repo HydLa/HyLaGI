@@ -560,7 +560,7 @@ void SymbolicSimulator::output_interval(const time_t& current_time, const time_t
     output(tmp_time, shifted_vm);
   }else{
     variable_map_t output_vm;
-    time_t elapsed_time;
+    time_t elapsed_time("0");
 
     do{
       solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);

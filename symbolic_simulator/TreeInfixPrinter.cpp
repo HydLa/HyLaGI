@@ -8,12 +8,15 @@ namespace symbolic_simulator{
 std::ostream& TreeInfixPrinter::print_infix(const TreeInfixPrinter::node_sptr & node, std::ostream& s){
   need_par_ = PAR_NONE;
   output_stream_ = &s;
+  //s << "print_infix\n";
   accept(node);
   return s;
 }
 
 
 void TreeInfixPrinter::print_binary_node(const hydla::parse_tree::BinaryNode &node, const std::string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
+
+  //(*output_stream_) << "binary_node\n";
   need_par_ = pre_par;
   accept(node.get_lhs());
   (*output_stream_) << symbol;
@@ -21,39 +24,60 @@ void TreeInfixPrinter::print_binary_node(const hydla::parse_tree::BinaryNode &no
   accept(node.get_rhs());
 }
 void TreeInfixPrinter::print_unary_node(const hydla::parse_tree::UnaryNode &node, const std::string &pre, const std::string &post){
+  //(*output_stream_) << "unary_node\n";
   (*output_stream_) << pre;
   accept(node.get_child());
   (*output_stream_) << post;
 }
 
+#define DEFINE_INFIX_VISIT_BINARY(NAME, SYMBOL)  \
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::NAME> node){\
+  print_binary_node(*node, #SYMBOL);\
+}
+
+
+
+//弱合成
+DEFINE_INFIX_VISIT_BINARY(Weaker, <<)
 
 // 比較演算子
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Equal> node){
-  print_binary_node(*node, "=");
-}
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node){
-  print_binary_node(*node, "!=");
-}
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Less> node){
-  print_binary_node(*node, "<");
-}
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node){
-  print_binary_node(*node, "<=");
-}
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Greater> node){
-  print_binary_node(*node, ">");
-}
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node){
-  print_binary_node(*node, ">=");
+DEFINE_INFIX_VISIT_BINARY(Equal, =)
+DEFINE_INFIX_VISIT_BINARY(UnEqual, !=)
+DEFINE_INFIX_VISIT_BINARY(Less, <)
+DEFINE_INFIX_VISIT_BINARY(LessEqual, <=)
+DEFINE_INFIX_VISIT_BINARY(Greater, >)
+DEFINE_INFIX_VISIT_BINARY(GreaterEqual, >=)
+// 論理演算子
+DEFINE_INFIX_VISIT_BINARY(LogicalAnd, &)
+DEFINE_INFIX_VISIT_BINARY(LogicalOr, |)
+  // Ask制約
+DEFINE_INFIX_VISIT_BINARY(Ask, =>)
+
+
+#define DEFINE_INFIX_VISIT_UNARY(NAME, PRE, POST)  \
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::NAME> node){\
+  print_unary_node(*node, PRE, POST);\
 }
 
-// 論理演算子
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node){
-  print_binary_node(*node, "&");
+//単項演算子 "+"
+DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
+
+//微分
+DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
+//左極限
+DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
+//時相演算子
+DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
+// Tell制約
+DEFINE_INFIX_VISIT_UNARY(Tell, "", "")
+// 制約式
+DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".")
+
+//並列合成
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node){
+  print_binary_node(*node, ",");
 }
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node){
-  print_binary_node(*node, "|");
-}
+
 
 // 算術二項演算子
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Plus> node){
@@ -102,7 +126,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Power> node){
   }
 }
 
-// 算術単項演算子
+// 算術単項演算子"-"
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Negative> node){
   if(need_par_>=PAR_N){
     (*output_stream_) << "(";
@@ -113,20 +137,6 @@ void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Negative> node
     print_unary_node(*node, "-", "");
   }
 }
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Positive> node){
-  print_unary_node(*node, "", "");
-}
-
-// 微分
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Differential> node){
-  print_unary_node(*node, "'", "");
-}
-
-// 左極限
-void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Previous> node){
-  print_unary_node(*node, "", "-");
-}
-
 // 変数
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Variable> node){
   (*output_stream_) << node->get_name();
@@ -146,6 +156,73 @@ void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Parameter> nod
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node){
   (*output_stream_) << "t";
 }
+
+
+// 制約定義
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> node){
+  (*output_stream_) << node->get_name() << "(";
+  hydla::parse_tree::Definition::bound_variables_iterator it = node->bound_variable_begin();
+  hydla::parse_tree::Definition::bound_variables_iterator end = node->bound_variable_end();
+  if(it != end){
+    while(1){
+      (*output_stream_) << *it;
+      if(++it==end)break;
+      (*output_stream_) << ", ";
+    }
+  }
+  (*output_stream_) << ") ";
+  if(node->get_child())print_unary_node(*node, "<=>", "");
+}
+  
+// プログラム定義
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::ProgramDefinition> node){
+  (*output_stream_) << node->get_name() << "(";
+  hydla::parse_tree::Definition::bound_variables_iterator it = node->bound_variable_begin();
+  hydla::parse_tree::Definition::bound_variables_iterator end = node->bound_variable_end();
+  if(it != end){
+    while(1){
+      (*output_stream_) << *it;
+      if(++it==end)break;
+      (*output_stream_) << ", ";
+    }
+  }
+  (*output_stream_) << ") ";
+  if(node->get_child()) print_unary_node(*node, "<=>", "");
+}
+
+
+// 制約呼び出し
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node){
+  (*output_stream_) << node->get_name() << "(";
+  hydla::parse_tree::Caller::actual_args_iterator it = node->actual_arg_begin();
+  hydla::parse_tree::Caller::actual_args_iterator end = node->actual_arg_end();
+  if(it != end){
+    while(1){
+      accept(*it);
+      if(++it==end)break;
+      (*output_stream_) << ", ";
+    }
+  }
+  (*output_stream_) << ") ";
+  if(node->get_child()) print_unary_node(*node, "{", "}");
+}
+  
+// プログラム呼び出し
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node){
+  (*output_stream_) << node->get_name() << "(";
+  hydla::parse_tree::Caller::actual_args_iterator it = node->actual_arg_begin();
+  hydla::parse_tree::Caller::actual_args_iterator end = node->actual_arg_end();
+  if(it != end){
+    while(1){
+      accept(*it);
+      if(++it==end)break;
+      (*output_stream_) << ", ";
+    }
+  }
+  (*output_stream_) << ")";
+  if(node->get_child())print_unary_node(*node, "{", "}");
+}
+
 
 } // namespace symbolic_simulator
 } // namespace hydla

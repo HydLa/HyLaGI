@@ -31,18 +31,18 @@ void MathematicaExpressionConverter::initialize(){
   //string_map_.insert(std::make_pair("E", boost::make_shared<Power>()));
 }
 
-MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_expression_to_symbolic_value(const std::string &expr){
+MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_math_string_to_symbolic_value(const std::string &expr){
 
   HYDLA_LOGGER_DEBUG("#*** convert string to value ***\n",
                      expr);
 
   value_t value;
   std::string::size_type now = 0;
-  value.set(convert_expression_to_symbolic_tree(expr, now));
+  value.set(convert_math_string_to_symbolic_tree(expr, now));
   return value;
 }
 
-MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::convert_expression_to_symbolic_tree(const std::string &expr, std::string::size_type &now){
+MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now){
   now = expr.find_first_not_of(" ", now);
   std::string::size_type prev = now;
   if((expr[now]>='0'&&expr[now]<='9')){//正の数値の場合
@@ -57,15 +57,29 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
   now = expr.find_first_of("[],", prev);
   string_map_t::iterator it = string_map_.find(expr.substr(prev,now-prev));
   if(it == string_map_.end()){
-    /*変数名，時間，定数名のいずれかのはず．
-      というか考えてみたらここに変数名は来ないのかもしれない*/
-    if(expr.substr(prev,now-prev)=="t"){
+    if(expr.substr(prev,now-prev)=="t"){//時刻
       return node_sptr(new hydla::parse_tree::SymbolicT());
     }
-    if(expr[prev]=='p'){
+    if(expr[prev]=='p'){//定数名
       return node_sptr(new hydla::parse_tree::Parameter(expr.substr(prev+1,now-prev-1)));
     }
-    return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev,now-prev)));
+    if(expr.substr(prev,now-prev)==PacketSender::var_prefix){//変数名
+      return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev,now-prev)));
+    }
+    int depth = 1;
+    while(depth>0){
+      now = expr.find_first_of("[]", now+1);
+      if(now == std::string::npos){
+        assert(0);
+      }
+      if(expr[now]=='['){
+        depth++;
+      }else{
+        depth--;
+      }
+    }
+    //謎ノード．Numberノードに入れておけば，ソルバがMathematicaである限り処理を継続することはできるはずだが・・・将来的には全対応したい
+    return node_sptr(new hydla::parse_tree::Number(expr.substr(prev, (now++)-prev+1)));
   }
   
   //何か子ノードがあるはず．Derivativeの場合は少し特別か
@@ -88,7 +102,7 @@ MathematicaExpressionConverter::node_sptr
   derivative_count = atoi(expr.substr(prev,now-prev).c_str());
   now+=2;//][
   //次に中身
-  node_sptr tmp_node = convert_expression_to_symbolic_tree(expr, now);
+  node_sptr tmp_node = convert_math_string_to_symbolic_tree(expr, now);
   for(int i=0;i<derivative_count-1;i++){
     tmp_node.reset(new hydla::parse_tree::Differential(tmp_node));
   }
@@ -102,7 +116,7 @@ MathematicaExpressionConverter::node_sptr
     std::string::size_type &now,
     const MathematicaExpressionConverter::nodeType &nt){
   //中身
-  node_sptr tmp_node = convert_expression_to_symbolic_tree(expr, now);
+  node_sptr tmp_node = convert_math_string_to_symbolic_tree(expr, now);
   now++;//]
   switch(nt){
     default:
@@ -128,11 +142,11 @@ MathematicaExpressionConverter::node_sptr
   //BinaryNodeを作るための関数だけど，PlusとTimesはリストで複数引数取れるみたいだから特別にループ
 
   //左
-  node_sptr lhs = convert_expression_to_symbolic_tree(expr, now);
+  node_sptr lhs = convert_math_string_to_symbolic_tree(expr, now);
   now++;//,
   while(1){
    //右
-   node_sptr rhs = convert_expression_to_symbolic_tree(expr, now);
+   node_sptr rhs = convert_math_string_to_symbolic_tree(expr, now);
    now++;//]
    switch(nt){
      case NODE_PLUS:
@@ -162,7 +176,7 @@ MathematicaExpressionConverter::node_sptr
   }
 }
 
-std::string MathematicaExpressionConverter::get_relation_expression(value_range_t::Relation rel){
+std::string MathematicaExpressionConverter::get_relation_math_string(value_range_t::Relation rel){
   switch(rel){
     case value_range_t::EQUAL:
       return "Equal";
@@ -187,142 +201,142 @@ void MathematicaExpressionConverter::set_parameter_on_value(MathematicaExpressio
   return;
 }
 
-std::string MathematicaExpressionConverter::convert_symbolic_value_to_expression(const MathematicaExpressionConverter::value_t &val){
-  string_for_expression_.clear();
+std::string MathematicaExpressionConverter::convert_symbolic_value_to_math_string(const MathematicaExpressionConverter::value_t &val){
+  string_for_math_string_.clear();
   differential_count_=0;
   in_prev_=0;
   accept(val.get_node());
-  return string_for_expression_;
+  return string_for_math_string_;
 }
 
 // 比較演算子
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Equal> node)                 
 {
-  string_for_expression_.append("Equal[");
+  string_for_math_string_.append("Equal[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<UnEqual> node)               
 {
-  string_for_expression_.append("UnEqual[");
+  string_for_math_string_.append("UnEqual[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Less> node)                  
 {
-  string_for_expression_.append("Less[");
+  string_for_math_string_.append("Less[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<LessEqual> node)             
 {
-  string_for_expression_.append("LessEqual[");
+  string_for_math_string_.append("LessEqual[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Greater> node)               
 {
-  string_for_expression_.append("Greater[");
+  string_for_math_string_.append("Greater[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<GreaterEqual> node)          
 {
-  string_for_expression_.append("GreaterEqual[");
+  string_for_math_string_.append("GreaterEqual[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 // 論理演算子
 void MathematicaExpressionConverter::visit(boost::shared_ptr<LogicalAnd> node)            
 {
-  string_for_expression_.append("And[");
+  string_for_math_string_.append("And[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<LogicalOr> node)             
 {
-  string_for_expression_.append("Or[");
+  string_for_math_string_.append("Or[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
   
 // 算術二項演算子
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Plus> node)                  
 {
-  string_for_expression_.append("Plus[");
+  string_for_math_string_.append("Plus[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Subtract> node)              
 {
-  string_for_expression_.append("Subtract[");
+  string_for_math_string_.append("Subtract[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Times> node)                 
 {
-  string_for_expression_.append("Times[");
+  string_for_math_string_.append("Times[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Divide> node)                
 {
-  string_for_expression_.append("Divide[");
+  string_for_math_string_.append("Divide[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Power> node)                
 {
-  string_for_expression_.append("Power[");
+  string_for_math_string_.append("Power[");
   accept(node->get_lhs());
-  string_for_expression_.append(", ");
+  string_for_math_string_.append(", ");
   accept(node->get_rhs());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
   
 // 算術単項演算子
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Negative> node)              
 {
-  string_for_expression_.append("Minus[");
+  string_for_math_string_.append("Minus[");
 
   accept(node->get_child());
-  string_for_expression_.append("]");
+  string_for_math_string_.append("]");
 }
 
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Positive> node)              
@@ -364,26 +378,26 @@ void MathematicaExpressionConverter::visit(boost::shared_ptr<Variable> node)
    tmp << "]";
   }
 
-  string_for_expression_.append(tmp.str());
+  string_for_math_string_.append(tmp.str());
 }
 
 // 数字
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Number> node)                
 {    
-  string_for_expression_.append(node->get_number());
+  string_for_math_string_.append(node->get_number());
 }
 
 
 // 記号定数
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Parameter> node)                
 {    
-  string_for_expression_.append(PacketSender::par_prefix + node->get_name());
+  string_for_math_string_.append(PacketSender::par_prefix + node->get_name());
 }
 
 // t
 void MathematicaExpressionConverter::visit(boost::shared_ptr<SymbolicT> node)                
 {    
-  string_for_expression_.append("t");
+  string_for_math_string_.append("t");
 }
 
 

@@ -14,6 +14,16 @@ bool SymbolicValue::is_undefined() const
   return (node_==NULL);
 }
 
+SymbolicValue::SymbolicValue():is_unique_(true){}
+
+SymbolicValue::SymbolicValue(const std::string &str){
+  node_.reset((new hydla::parse_tree::Number(str)));
+  is_unique_=true;
+}
+SymbolicValue::SymbolicValue(const SymbolicValue::node_sptr & node){
+  node_ = node;
+  is_unique_=true;
+}
 
 //定量的に一意に定まるかどうか．
 //複数の不等号から値が一意に決定する場合は考慮しない？
@@ -66,6 +76,7 @@ SymbolicValue& SymbolicValue::operator-=(const SymbolicValue& rhs)
   node_ = node_sptr(new hydla::parse_tree::Subtract(node_, rhs.get_node()));
   return *this;
 }
+
 
 
 bool operator<(const SymbolicValue& lhs, 

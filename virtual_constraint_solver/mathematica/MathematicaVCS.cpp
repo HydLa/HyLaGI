@@ -225,7 +225,8 @@ void MathematicaVCS::simplify(time_t &time)
   PacketSender ps(ml_);
   ps.put_node(time.get_node(), PacketSender::VA_None, true);
   ml_.skip_pkt_until(RETURNPKT);
-  time = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_.get_string());
+  MathematicaExpressionConverter mec;
+  time = mec.convert_math_string_to_symbolic_value(ml_.get_string());
 }
 
 
@@ -238,7 +239,8 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_
   ps.put_node(val.get_node(), PacketSender::VA_None, true);
   ps.put_node(time.get_node(), PacketSender::VA_None, true);
   ml_.skip_pkt_until(RETURNPKT);
-  tmp_val = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_.get_string());
+  MathematicaExpressionConverter mec;
+  tmp_val = mec.convert_math_string_to_symbolic_value(ml_.get_string());
   return  tmp_val;
 }
 

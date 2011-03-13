@@ -2,10 +2,8 @@
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_EXPRESSION_CONVERTER_H_
 
 
-//Mathematica表現→SymbolicValueを担当するクラス．SymbolicValueRange→Mathematica表現とかもやるかも
-//大まかに言うなら，クラス名の通りMathematicaの式関連の変換全般
-//受信部も併せて担当すべきかを考える．
-//とはいえあんま１つのクラスの仕事の範囲を増やすべきではないって話もあったような
+//Mathematica文字列⇔SymbolicValueという，式の変換を担当するクラス．SymbolicValueRangeも少し．
+
 
 #include "SymbolicVirtualConstraintSolver.h"
 #include "Node.h"
@@ -57,23 +55,23 @@ class MathematicaExpressionConverter:
   static function_for_node for_binary_node;
 
   //文字列とってvalueに変換する
-  static value_t convert_expression_to_symbolic_value(const std::string &expr);
+  static value_t convert_math_string_to_symbolic_value(const std::string &expr);
 
   //関係演算子の文字列表現を返す
-  static std::string get_relation_expression(value_range_t::Relation rel);
+  static std::string get_relation_math_string(value_range_t::Relation rel);
   
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
   
   //valueとって文字列に変換する
-  std::string convert_symbolic_value_to_expression(const value_t&);
+  std::string convert_symbolic_value_to_math_string(const value_t&);
 
   private:
   //再帰で呼び出していく方
-  static node_sptr convert_expression_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
+  static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
 
   //変換時に使う文字列変数
-  std::string string_for_expression_;
+  std::string string_for_math_string_;
   //変換時に使う微分回数
   int differential_count_;
   //変換時に使う左極限判定

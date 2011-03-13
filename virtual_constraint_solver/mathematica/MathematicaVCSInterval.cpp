@@ -288,7 +288,7 @@ void MathematicaVCSInterval::send_parameter_cons() const{
       for(; and_it != and_end; and_it++){
       
         ml_->put_function(
-          MathematicaExpressionConverter::get_relation_expression(and_it->relation), 2);
+          MathematicaExpressionConverter::get_relation_math_string(and_it->relation), 2);
 
         // •Ï”–¼
         ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
@@ -495,7 +495,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   if(Logger::enflag==3||Logger::enflag==0){
      HYDLA_LOGGER_AREA(	"#*** MathematicaVCSInterval::check_entailment ***\n", 
 	"ask: ");
-	 (negative_ask)->dump_infix(std::cout);
+	 (negative_ask)->dump(std::cout);
 	 HYDLA_LOGGER_AREA("\n");
   }
 	
@@ -768,7 +768,8 @@ VCSResult MathematicaVCSInterval::integrate(
 
   // next_point_phase_time‚ð“¾‚é
   MathTime elapsed_time;
-  elapsed_time = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_->get_string());
+  MathematicaExpressionConverter mec;
+  elapsed_time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
   if(Logger::timeflag==2){
   HYDLA_LOGGER_AREA("elapsed_time: ", elapsed_time);  
   state.time  = elapsed_time;
@@ -817,7 +818,7 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();
 
     // ’l
-    value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_->get_string());
+    value = mec.convert_math_string_to_symbolic_value(ml_->get_string());
   if(Logger::varflag==8){
 	HYDLA_LOGGER_AREA("value : ", value.get_string());
   }
@@ -899,7 +900,7 @@ VCSResult MathematicaVCSInterval::integrate(
   ml_->put_function("Simplify", 1);
   ps.put_node(state.time.get_node(), PacketSender::VA_None, true);
   ml_->skip_pkt_until(RETURNPKT);
-  state.time = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_->get_string());
+  state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
 
 
 
@@ -912,7 +913,7 @@ VCSResult MathematicaVCSInterval::integrate(
     send_time(state.time);
     ml_->skip_pkt_until(RETURNPKT);
     ml_->MLGetNext(); 
-    state.time = MathematicaExpressionConverter::convert_expression_to_symbolic_value(ml_->get_string());
+    state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
   }
 
   // –¢’è‹`‚Ì•Ï”‚ð•Ï”•\‚É”½‰f
@@ -1028,7 +1029,8 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       else {
         assert(ret_code==1);
         std::string tmp = ml_->get_string();
-        value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(tmp);
+        MathematicaExpressionConverter mec;
+        value = mec.convert_math_string_to_symbolic_value(tmp);
         HYDLA_LOGGER_DEBUG("value : ", value.get_string());
       }
     }

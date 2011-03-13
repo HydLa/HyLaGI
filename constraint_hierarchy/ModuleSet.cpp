@@ -58,19 +58,6 @@ std::ostream& ModuleSet::dump(std::ostream& s) const
   return s;
 }
 
-std::ostream& ModuleSet::dump_infix(std::ostream& s, std::string prefix) const
-{
-  module_list_t::const_iterator it  = module_list_.begin();    
-  module_list_t::const_iterator end = module_list_.end();
-
-  if(it!=end) (it++)->second->dump_infix(s);
-  for(; it!=end; ++it) {
-    s << prefix;
-    it->second->dump_infix(s);
-  }
-  return s;
-}
-
 int ModuleSet::compare(const ModuleSet& rhs) const
 {
   module_list_t::const_iterator this_it  = module_list_.begin();

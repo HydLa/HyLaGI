@@ -86,7 +86,7 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   if(Logger::ptflag==0){
   HYDLA_LOGGER_AREA("#*** Analyzed Parse Tree ***\n", *this);
   }
-  //HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
+  HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
 }
 
 void ParseTree::rebuild_node_id_list()
@@ -259,6 +259,7 @@ void variable_dumper(std::ostream& s, const T& m)
 }
 }
 
+
 std::ostream& ParseTree::dump(std::ostream& s) const 
 {
       /*
@@ -274,6 +275,7 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   s << "--- node_tree ---\n";
   if(node_tree_) s << *node_tree_;
   s << "\n";
+  
 
   s << "--- variables ---\n";
   BOOST_FOREACH(const variable_map_t::value_type& i, 

@@ -91,7 +91,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
       }
 
       val_str << ","
-              << mec.convert_symbolic_value_to_expression(value)
+              << mec.convert_symbolic_value_to_math_string(value)
               << "]"; // Equalの閉じ括弧
 
       MathValue new_math_value;
@@ -144,7 +144,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
           std::ostringstream val_str;
           
           // MathVariable側に関する文字列を作成
-          val_str << MathematicaExpressionConverter::get_relation_expression(and_it->relation) << "[" ;
+          val_str << MathematicaExpressionConverter::get_relation_math_string(and_it->relation) << "[" ;
 
           val_str << PacketSender::par_prefix
                   << it->first.get_name();
@@ -246,12 +246,12 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, para
     // TODO: Orの扱い
     if(!relop_code){
       //等号
-      symbolic_value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(value_str);
+      symbolic_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
       symbolic_value.set_unique(true);
     }else{
       //不等号．この変数の値の範囲を表現するための記号定数を作成
       tmp_param.name = variable_name;
-      value_t tmp_value = MathematicaExpressionConverter::convert_expression_to_symbolic_value(value_str);
+      value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
 
       for(int i=0;i<variable_derivative_count;i++){
         //とりあえず微分回数分dをつける
@@ -652,7 +652,7 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   if(Logger::enflag==1||Logger::enflag==0){
      HYDLA_LOGGER_AREA(	"#*** MathematicaVCSPoint::check_entailment ***\n", 
 	"ask: ");
-	 (negative_ask)->dump_infix(std::cout);
+	 (negative_ask)->dump(std::cout);
 	 HYDLA_LOGGER_AREA("\n");
 	}
   HYDLA_LOGGER_DEBUG(
