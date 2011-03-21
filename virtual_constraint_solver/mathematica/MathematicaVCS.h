@@ -57,7 +57,7 @@ public:
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask);
+  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
 
   /**
    * askの導出状態が変化するまで積分をおこなう

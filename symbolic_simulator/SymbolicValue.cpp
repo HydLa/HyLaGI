@@ -42,8 +42,8 @@ std::ostream& SymbolicValue::dump(std::ostream& s) const
 
 std::string SymbolicValue::get_string() const
 {
-  TreeInfixPrinter printer;
   if(is_undefined()) return "";
+  TreeInfixPrinter printer;
   std::ostringstream os;
   printer.print_infix(node_,os);
   return os.str();

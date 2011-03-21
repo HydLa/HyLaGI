@@ -302,6 +302,21 @@ void MathematicaVCSInterval::send_parameter_cons() const{
 }
 
 
+void MathematicaVCSInterval::send_pars() const{
+  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSInterval::send_pars ----");
+
+
+  parameter_map_t::const_iterator par_it = parameter_map_.begin();
+  parameter_map_t::const_iterator par_end = parameter_map_.end();
+  
+  // 制約をMathematicaへ送信
+  ml_->put_function("List", parameter_map_.size());
+  
+  for(par_it = parameter_map_.begin(); par_it!=par_end; ++par_it) {
+    ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
+  }
+}
+
 
 
 void MathematicaVCSInterval::send_vars(
@@ -490,7 +505,7 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
   return result;
 }
   
-VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask)
+VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
 {
   if(Logger::enflag==3||Logger::enflag==0){
      HYDLA_LOGGER_AREA(	"#*** MathematicaVCSInterval::check_entailment ***\n", 
@@ -505,8 +520,8 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
   PacketSender ps(*ml_);
 
-  // checkEntailment[guard, store, vars]を渡したい
-  ml_->put_function("checkEntailmentInterval", 3);
+  // checkEntailment[guard, store, vars, pars]を渡したい
+  ml_->put_function("checkEntailmentInterval", 4);
 
   // guard部分
   // ask制約のガードの式を得てMathematicaに渡す
@@ -515,7 +530,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
 
   // store部分
-  ml_->put_function("Join", 3);
+  ml_->put_function("Join", 4);
 
   // 制約ストアconstraintsをMathematicaに渡す
 
@@ -562,13 +577,27 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, false);
-  
+
+  ml_->put_function("List", appended_asks.size());
+  // appended_asksからガード部分を得てMathematicaに渡す
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+	  if(Logger::constflag==7){
+		HYDLA_LOGGER_AREA("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+	  }
+    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
+  }
+
   // pstoreを渡す
   send_parameter_cons();
 
-
   // 変数のリストを渡す
   send_vars(ps, max_diff_map);
+
+  // 記号定数のリストを渡す
+  send_pars();
 
   // varsを渡す
   //ps.put_vars(PacketSender::VA_Time, true);
@@ -579,8 +608,6 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
-//  HYDLA_LOGGER_DEBUG(
-//    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
 ////////// 受信処理
 

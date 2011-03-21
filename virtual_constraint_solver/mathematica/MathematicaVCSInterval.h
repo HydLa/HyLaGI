@@ -67,7 +67,7 @@ public:
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask);
+  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
 
   /**
    * askの導出状態が変化するまで積分をおこなう
@@ -139,6 +139,9 @@ private:
    * 定数制約を送る
    */
   void send_parameter_cons() const;
+  
+  //記号定数のリストを送る
+  void send_pars() const;
 
   mutable MathLink* ml_;
   constraint_store_t constraint_store_;

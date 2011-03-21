@@ -269,7 +269,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
     while(it!=end) {
-      switch(solver_->check_entailment(*it))
+      switch(solver_->check_entailment(*it,state->appended_asks))
       {
         case VCSR_TRUE:
           expanded = true;
@@ -543,7 +543,10 @@ variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& 
     variable_map_t::const_iterator it  = vm.begin();
     variable_map_t::const_iterator end = vm.end();
     for(; it!=end; ++it) {
-      shifted_vm.set_variable(it->first, solver_->shift_expr_time(it->second, time));
+      if(it->second.is_undefined())
+        shifted_vm.set_variable(it->first, it->second);
+      else
+        shifted_vm.set_variable(it->first, solver_->shift_expr_time(it->second, time));
     }
     return shifted_vm;
 }

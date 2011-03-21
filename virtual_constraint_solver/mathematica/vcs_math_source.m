@@ -11,25 +11,31 @@ If[optUseDebugPrint,
  * 1 : 導出可能
  * 2 : 導出不可能
  *)
-checkEntailmentInterval[guard_, store_, vars_] := Quiet[Check[Block[
+checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
   {tStore, sol, integGuard, otherExpr, minT},
-  debugPrint["guard:", guard, "store:", store, "vars:", vars];
+  debugPrint["guard:", guard, "store:", store, "vars:", vars, "pars:", pars];
   sol = exDSolve[store, vars];
+  (*debugPrint["sol:", sol];*)
   If[sol =!= overconstraint && sol =!= underconstraint,
     tStore = sol[[1]];
     otherExpr = sol[[2]];
-    (* guardにtStoreを適用する *)
+    (* guardとotherExprにtStoreを適用する *)
     integGuard = guard /. tStore;
+    otherExpr = otherExpr /. tStore;
     If[integGuard =!= False,
       (* その結果とt>0とを連立 *)
-      (* debugPrint["integGuard:", integGuard]; *)
+      (*debugPrint["integGuard:", integGuard];*)
       sol = Quiet[Check[Reduce[{integGuard && t > 0 && (And@@otherExpr)}, t],
                         False, {Reduce::nsmet}], {Reduce::nsmet}];
       (* Infを取って0になればEntailed *)
       If[sol =!= False,
-        minT = MinValue[{t, sol}, t];
+        minT = Quiet[First[Minimize[{t, sol}, Append[pars,t]]]];
         If[minT === 0,
-          {1},
+          (* 十分条件かどうか判定したい *)
+          If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False,
+            {1},
+            {3}
+          ],
           {2}
         ],
         {2}

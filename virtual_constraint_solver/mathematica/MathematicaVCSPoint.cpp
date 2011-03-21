@@ -647,7 +647,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   return result;
 }
   
-VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask)
+VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
 {
   if(Logger::enflag==1||Logger::enflag==0){
      HYDLA_LOGGER_AREA(	"#*** MathematicaVCSPoint::check_entailment ***\n", 

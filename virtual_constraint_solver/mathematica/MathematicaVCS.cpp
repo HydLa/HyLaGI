@@ -133,9 +133,9 @@ VCSResult MathematicaVCS::add_constraint(const tells_t& collected_tells, const a
   return vcs_->add_constraint(collected_tells, appended_asks);
 }
   
-VCSResult MathematicaVCS::check_entailment(const ask_node_sptr& negative_ask)
+VCSResult MathematicaVCS::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
 {
-  return vcs_->check_entailment(negative_ask);
+  return vcs_->check_entailment(negative_ask, appended_asks);
 }
 
 VCSResult MathematicaVCS::integrate(
