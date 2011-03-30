@@ -1,15 +1,15 @@
 (*
- * ¥Ç¥Ð¥Ã¥¯ÍÑ¥á¥Ã¥»¡¼¥¸½ÐÎÏ´Ø¿ô
+ * ƒfƒoƒbƒN—pƒƒbƒZ[ƒWo—ÍŠÖ”
  *)
 If[optUseDebugPrint,
   debugPrint[arg___] := Print[InputForm[{arg}]],
   debugPrint[arg___] := Null];
 
 (*
- * checkEntailment¤ÎIP¥Ð¡¼¥¸¥ç¥ó
+ * checkEntailment‚ÌIPƒo[ƒWƒ‡ƒ“
  * 0 : Solver Error
- * 1 : Æ³½Ð²ÄÇ½
- * 2 : Æ³½ÐÉÔ²ÄÇ½
+ * 1 : “±o‰Â”\
+ * 2 : “±o•s‰Â”\
  *)
 checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
   {tStore, sol, integGuard, otherExpr, minT},
@@ -19,19 +19,19 @@ checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
   If[sol =!= overconstraint && sol =!= underconstraint,
     tStore = sol[[1]];
     otherExpr = sol[[2]];
-    (* guard¤ÈotherExpr¤ËtStore¤òÅ¬ÍÑ¤¹¤ë *)
+    (* guard‚ÆotherExpr‚ÉtStore‚ð“K—p‚·‚é *)
     integGuard = guard /. tStore;
     otherExpr = otherExpr /. tStore;
     If[integGuard =!= False,
-      (* ¤½¤Î·ë²Ì¤Èt>0¤È¤òÏ¢Î© *)
+      (* ‚»‚ÌŒ‹‰Ê‚Æt>0‚Æ‚ð˜A—§ *)
       (*debugPrint["integGuard:", integGuard];*)
       sol = Quiet[Check[Reduce[{integGuard && t > 0 && (And@@otherExpr)}, t],
                         False, {Reduce::nsmet}], {Reduce::nsmet}];
-      (* Inf¤ò¼è¤Ã¤Æ0¤Ë¤Ê¤ì¤ÐEntailed *)
+      (* Inf‚ðŽæ‚Á‚Ä0‚É‚È‚ê‚ÎEntailed *)
       If[sol =!= False,
         minT = Quiet[First[Minimize[{t, sol}, Append[pars,t]]]];
         If[minT === 0,
-          (* ½½Ê¬¾ò·ï¤«¤É¤¦¤«È½Äê¤·¤¿¤¤ *)
+          (* \•ªðŒ‚©‚Ç‚¤‚©”»’è‚µ‚½‚¢ *)
           If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False,
             {1},
             {3}
@@ -49,11 +49,11 @@ checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
 ]];
 
 (*
- * ¤¢¤ë1¤Ä¤ÎaskÀ©Ìó¤Ë´Ø¤·¤Æ¡¢¤½¤Î¥¬¡¼¥É¤¬À©Ìó¥¹¥È¥¢¤«¤éentail¤Ç¤­¤ë¤«¤É¤¦¤«¤ò¥Á¥§¥Ã¥¯
+ * ‚ ‚é1‚Â‚Ìask§–ñ‚ÉŠÖ‚µ‚ÄA‚»‚ÌƒK[ƒh‚ª§–ñƒXƒgƒA‚©‚çentail‚Å‚«‚é‚©‚Ç‚¤‚©‚ðƒ`ƒFƒbƒN
  *  0 : Solver Error
- *  1 : Æ³½Ð²ÄÇ½
- *  2 : Æ³½ÐÉÔ²ÄÇ½
- *  3 : ÉÔÌÀ ¡ÊÍ×Ê¬´ô¡Ë
+ *  1 : “±o‰Â”\
+ *  2 : “±o•s‰Â”\
+ *  3 : •s–¾ i—v•ªŠòj
  *)
 checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
   {sol, SAndG, SAndNotG},
@@ -81,33 +81,33 @@ renameVar[varName_] := Block[
   getDerivativeCountPoint[Derivative[n_][var_]] := n;
   removeUsrVar[var_] := First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]];
 
-  (* ÊÑ¿ôÌ¾¤Ë'¤¬¤Ä¤¯¾ì¹ç¤Î½èÍý *)
+  (* •Ï”–¼‚É'‚ª‚Â‚­ê‡‚Ìˆ— *)
   If[MemberQ[{varName}, Derivative[n_][x_], Infinity],
     derivativeCount = getDerivativeCountPoint[varName];
     renamedVarName = removeDash[varName],
     renamedVarName = varName
   ];
-  (* ÊÑ¿ôÌ¾¤Ëprev¤¬¤Ä¤¯¾ì¹ç¤Î½èÍý *)
+  (* •Ï”–¼‚Éprev‚ª‚Â‚­ê‡‚Ìˆ— *)
   If[Head[renamedVarName] === prev,
     renamedVarName = First[renamedVarName];
     prevFlag = 1
   ];
 
-  (*ÊÑ¿ôÌ¾¤ÎÆ¬¤Ë¤Ä¤¤¤Æ¤¤¤ë "usrVar"¤ò¼è¤ê½ü¤¯ ¡ÊÌ¾Á°¤ÎÆ¬¤¬usrVar¤¸¤ã¤Ê¤¤¤Î¤ÏinvalidVar¡¥Äê¿ôÌ¾¤È¤«¡Ë *)
+  (*•Ï”–¼‚Ì“ª‚É‚Â‚¢‚Ä‚¢‚é "usrVar"‚ðŽæ‚èœ‚­ i–¼‘O‚Ì“ª‚ªusrVar‚¶‚á‚È‚¢‚Ì‚ÍinvalidVarD’è”–¼‚Æ‚©j *)
    If[StringMatchQ[ToString[renamedVarName], "usrVar" ~~ x__],
      (* true *)
      renamedVarName = removeUsrVar[renamedVarName];
-     (* ¤³¤Î»þÅÀ¤ÇÃ±ÂÎ¤ÎÊÑ¿ôÌ¾¤Î¤Ï¤º¡¥ *)
+     (* ‚±‚ÌŽž“_‚Å’P‘Ì‚Ì•Ï”–¼‚Ì‚Í‚¸D *)
      If[Length[renamedVarName] === 0,
        {renamedVarName, derivativeCount, prevFlag},
-       (* ¼°·Á¼°¤Î¤â¤Î¤Ï¥Ï¥Í¤ë *)
+       (* Ž®Œ`Ž®‚Ì‚à‚Ì‚Íƒnƒl‚é *)
        invalidVar],
      (* false *)
      invalidVar
    ]
 ];
 
-(* ÊÑ¿ô¤È¤½¤ÎÃÍ¤Ë´Ø¤¹¤ë¼°¤Î¥ê¥¹¥È¤ò¡¢ÊÑ¿ôÉ½Åª·Á¼°¤ËÊÑ´¹
+(* •Ï”‚Æ‚»‚Ì’l‚ÉŠÖ‚·‚éŽ®‚ÌƒŠƒXƒg‚ðA•Ï”•\“IŒ`Ž®‚É•ÏŠ·
  * 0:Equal
  * 1:Less
  * 2:Greater
@@ -126,7 +126,7 @@ convertCSToVM[orExprs_] := Block[
     GreaterEqual, 4
   ];
    
-  (* Inequality[a, relop, x, relop, b]¤Î·Á¤òÊÑ·Á *)
+  (* Inequality[a, relop, x, relop, b]‚ÌŒ`‚ð•ÏŒ` *)
   removeInequality[ret_, expr_] := (
     If[Head[expr] === Inequality,
       Join[ret,
@@ -140,15 +140,15 @@ convertCSToVM[orExprs_] := Block[
 
   debugPrint["orExprs:", orExprs];
   If[Head[First[orExprs]] === Or,
-    (* Or¤¬´Þ¤Þ¤ì¤ë¾ì¹ç¤Ï1¤Ä¤À¤±ºÎÍÑ *)
-    (* TODO: Ê£¿ô²ò¤¢¤ë¾ì¹ç¤â¹Í¤¨¤ë *)
+    (* Or‚ªŠÜ‚Ü‚ê‚éê‡‚Í1‚Â‚¾‚¯Ì—p *)
+    (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
     andExprs = First[First[orExprs]],
-    (* Or¤¬´Þ¤Þ¤ì¤Ê¤¤¾ì¹ç *)
+    (* Or‚ªŠÜ‚Ü‚ê‚È‚¢ê‡ *)
     andExprs = First[orExprs]
   ];
   andExprs = applyList[andExprs];
   If[Cases[andExprs, Except[True]]==={},
-    (* ¥¹¥È¥¢¤¬¶õ¤Î¾ì¹ç¤Ï¶õ½¸¹ç¤òÊÖ¤¹ *)
+    (* ƒXƒgƒA‚ª‹ó‚Ìê‡‚Í‹óW‡‚ð•Ô‚· *)
     {},
     andExprs = Fold[(removeInequality[#1, #2]) &, {}, andExprs];
     DeleteCases[Map[({renameVar[#[[1]]], 
@@ -160,7 +160,7 @@ convertCSToVM[orExprs_] := Block[
 ];
 
 (*
- * isConsistentÆâ¤ÎReduce¤Î·ë²ÌÆÀ¤é¤ì¤¿²ò¤ò {ÊÑ¿ôÌ¾, ÃÍ}¡¡¤Î¥ê¥¹¥È·Á¼°¤Ë¤¹¤ë
+ * isConsistent“à‚ÌReduce‚ÌŒ‹‰Ê“¾‚ç‚ê‚½‰ð‚ð {•Ï”–¼, ’l}@‚ÌƒŠƒXƒgŒ`Ž®‚É‚·‚é
  *)
 createVariableList[Rule[varName_, varValue_], result_] := Block[{
   name
@@ -187,7 +187,7 @@ createVariableList[And[expr__], vars_, result_] := Block[{
   createVariableList[sol, result]
 ];
 
-(* Or¤Ç¤Ä¤Ê¤¬¤Ã¤Æ¤¤¤ë ¡ÊÊ£¿ô²ò¤¬¤¢¤ë¡Ë¾ì¹ç¤Ï¡¢¤½¤Î¤¦¤Á¤Î1¤Ä¤Î¤ß¤òÊÖ¤¹¡© *)
+(* Or‚Å‚Â‚È‚ª‚Á‚Ä‚¢‚é i•¡”‰ð‚ª‚ ‚éjê‡‚ÍA‚»‚Ì‚¤‚¿‚Ì1‚Â‚Ì‚Ý‚ð•Ô‚·H *)
 createVariableList[Or[expr_, others__], vars_, result_] := (
   createVariableList[expr, vars, result]
 );
@@ -199,23 +199,23 @@ createVariableList[Equal[varName_, varValue_], vars_, result_] := Block[{
   createVariableList[sol, result]
 ];
 
-(* Reduce[{}, {}]¤Î¤È¤­ *)
+(* Reduce[{}, {}]‚Ì‚Æ‚« *)
 createVariableList[True, vars_, result_] := (
   Return[result]
 );
 
-(* ¼°Ãæ¤ËÊÑ¿ôÌ¾¤¬½Ð¸½¤¹¤ë¤«ÈÝ¤« *)
+(* Ž®’†‚É•Ï”–¼‚ªoŒ»‚·‚é‚©”Û‚© *)
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
 (*
- * À©Ìó¤¬ÌµÌ·½â¤Ç¤¢¤ë¤«¤ò¥Á¥§¥Ã¥¯¤¹¤ë
- * Reduce¤Ç²ò¤¤¤¿·ë²Ì¡¢²ò¤¬ÆÀ¤é¤ì¤ì¤ÐÌµÌ·½â
- * ÆÀ¤é¤ì¤¿²ò¤òÍÑ¤¤¤Æ¡¢³ÆÊÑ¿ô¤Ë´Ø¤·¤Æ {ÊÑ¿ôÌ¾, ÃÍ}¡¡¤È¤¤¤¦·Á¼°¤ÇÉ½¤·¤¿¥ê¥¹¥È¤òÊÖ¤¹
+ * §–ñ‚ª–³–µ‚‚Å‚ ‚é‚©‚ðƒ`ƒFƒbƒN‚·‚é
+ * Reduce‚Å‰ð‚¢‚½Œ‹‰ÊA‰ð‚ª“¾‚ç‚ê‚ê‚Î–³–µ‚
+ * “¾‚ç‚ê‚½‰ð‚ð—p‚¢‚ÄAŠe•Ï”‚ÉŠÖ‚µ‚Ä {•Ï”–¼, ’l}@‚Æ‚¢‚¤Œ`Ž®‚Å•\‚µ‚½ƒŠƒXƒg‚ð•Ô‚·
  *
- * Ìá¤êÃÍ¤Î¥ê¥¹¥È¤ÎÀèÆ¬¡§
+ * –ß‚è’l‚ÌƒŠƒXƒg‚Ìæ“ªF
  *  0 : Solver Error
- *  1 : ½¼Â­
- *  2 : À©Ìó¥¨¥é¡¼
+ *  1 : [‘«
+ *  2 : §–ñƒGƒ‰[
  *)
 isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
 {
@@ -230,19 +230,19 @@ isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
                                     LessEqual, GreaterEqual,
                                     GreaterEqual, LessEqual];
 
-  (* É¬¤º´Ø·¸±é»»»Ò¤Îº¸Â¦¤ËÊÑ¿ôÌ¾¤¬Æþ¤ë¤è¤¦¤Ë¤¹¤ë *)
+  (* •K‚¸ŠÖŒW‰‰ŽZŽq‚Ì¶‘¤‚É•Ï”–¼‚ª“ü‚é‚æ‚¤‚É‚·‚é *)
   adjustExprs[andExprs_] := 
     Fold[(If[Not[hasVariable[#2[[1]]]],
             (* true *)
             If[hasVariable[#2[[2]]],
               (* true *)
-              (* µÕ¤Ë¤Ê¤Ã¤Æ¤ë¤Î¤Ç¡¢±é»»»Ò¤òµÕ¤Ë¤·¤ÆÄÉ²Ã¤¹¤ë *)
+              (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰ŽZŽq‚ð‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
               Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
               (* false *)
-              (* ¥Ñ¥é¥á¡¼¥¿À©Ìó¤Î¾ì¹ç¤Ë¤³¤³¤ËÆþ¤ë *)
+              (* ƒpƒ‰ƒ[ƒ^§–ñ‚Ìê‡‚É‚±‚±‚É“ü‚é *)
               If[NumericQ[#2[[1]]],
                 (* true *)
-                (* µÕ¤Ë¤Ê¤Ã¤Æ¤ë¤Î¤Ç¡¢±é»»»Ò¤òµÕ¤Ë¤·¤ÆÄÉ²Ã¤¹¤ë *)
+                (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰ŽZŽq‚ð‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
                 Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
                 (* false *)
                 Append[#1, #2]]],
@@ -257,15 +257,15 @@ isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
   If[sol =!= False,
     If[Reduce[Append[pexpr,sol],vars, Reals] =!= False,
       (* true *)
-      (* ³°Â¦¤ËOr[]¤Î¤¢¤ë¾ì¹ç¤ÏList¤ÇÃÖ¤­´¹¤¨¤ë¡£¤Ê¤¤¾ì¹ç¤âList¤Ç°Ï¤à *)
+      (* ŠO‘¤‚ÉOr[]‚Ì‚ ‚éê‡‚ÍList‚Å’u‚«Š·‚¦‚éB‚È‚¢ê‡‚àList‚ÅˆÍ‚Þ *)
       sol = LogicalExpand[sol];
       (* debugPrint["sol after LogicalExpand:", sol];*)
       sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
       (* debugPrint["sol after Apply Or List:", sol];*)
-      (* ÆÀ¤é¤ì¤¿¥ê¥¹¥È¤ÎÍ×ÁÇ¤Î¥Ø¥Ã¥É¤¬And¤Ç¤¢¤ë¾ì¹ç¤ÏList¤ÇÃÖ¤­´¹¤¨¤ë¡£¤Ê¤¤¾ì¹ç¤âList¤Ç°Ï¤à *)
+      (* “¾‚ç‚ê‚½ƒŠƒXƒg‚Ì—v‘f‚Ìƒwƒbƒh‚ªAnd‚Å‚ ‚éê‡‚ÍList‚Å’u‚«Š·‚¦‚éB‚È‚¢ê‡‚àList‚ÅˆÍ‚Þ *)
       sol = removeNotEqual[Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol]];
       (* debugPrint["sol after Apply And List:", sol];*)
-      (* °ìÈÖÆâÂ¦¤ÎÍ×ÁÇ ¡Ê¥ì¥Ù¥ë2¡Ë¤òÊ¸»úÎó¤Ë¤¹¤ë *)
+      (* ˆê”Ô“à‘¤‚Ì—v‘f iƒŒƒxƒ‹2j‚ð•¶Žš—ñ‚É‚·‚é *)
       {1, Map[(ToString[FullForm[#]]) &, 
               Map[(adjustExprs[#])&, sol], {2}]},
       {2}
@@ -278,14 +278,14 @@ isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
 
 (* Print[isConsistent[s[x==2, 7==x*x], {x,y}]] *)
 
-(* ÊÑ¿ôÌ¾¤«¤é ¡Ö\[CloseCurlyQuote]¡×¤ò¼è¤ë *)
+(* •Ï”–¼‚©‚ç u\[CloseCurlyQuote]v‚ðŽæ‚é *)
 removeDash[var_] := (
    var /. Derivative[_][x_] -> x
 );
 
 (* 
- * tellVars¤ò¸µ¤Ë¡¢¤½¤Î½é´üÃÍÀ©Ìó¤¬É¬Í×¤«¤É¤¦¤«¤òÄ´¤Ù¤ë
- * ½é´üÃÍÀ©ÌóÃæ¤Ë½Ð¸½¤¹¤ëÊÑ¿ô¤¬varsÆâ¤Ë¤Ê¤±¤ì¤ÐÉÔÍ×
+ * tellVars‚ðŒ³‚ÉA‚»‚Ì‰Šú’l§–ñ‚ª•K—v‚©‚Ç‚¤‚©‚ð’²‚×‚é
+ * ‰Šú’l§–ñ’†‚ÉoŒ»‚·‚é•Ï”‚ªvars“à‚É‚È‚¯‚ê‚Î•s—v
  *)
 isRequiredConstraint[cons_, tellVars_] := Block[{
    consVar
@@ -295,7 +295,7 @@ isRequiredConstraint[cons_, tellVars_] := Block[{
    If[MemberQ[tellVars, consVar], True, False]
 ];
 
-(* tellVars¤ò¸µ¤Ë¡¢¤½¤ÎÊÑ¿ô¤¬É¬Í×¤«¤É¤¦¤«¤òÄ´¤Ù¤ë *)
+(* tellVars‚ðŒ³‚ÉA‚»‚Ì•Ï”‚ª•K—v‚©‚Ç‚¤‚©‚ð’²‚×‚é *)
 isRequiredVariable[var_, tellVars_] := (
    If[MemberQ[tellVars, var], True, False]
 );
@@ -305,14 +305,14 @@ removeNotEqual[sol_] :=
 
 getNDVars[vars_] := Union[Map[(removeDash[#])&, vars]];
 
-(* ¤¢¤ëÊÑ¿ôx¤Ë¤Ä¤¤¤Æ¡¢ *)
-(* x[t]==a ¤È x[0]==a ¤¬¤¢¤Ã¤¿¾ì¹ç¤Ï¡¢x'[t]==0¤ò¾Ãµî ¡Ê¤¢¤ì¤Ð¡Ë *)
+(* ‚ ‚é•Ï”x‚É‚Â‚¢‚ÄA *)
+(* x[t]==a ‚Æ x[0]==a ‚ª‚ ‚Á‚½ê‡‚ÍAx'[t]==0‚ðÁ‹Ž i‚ ‚ê‚Îj *)
 removeTrivialCons[cons_, consVars_] := Block[
   {exprRule, varSol, removedExpr,
    removeTrivialConsUnit, getRequiredVars},
 
   removeTrivialConsUnit[expr_, var_]:=(
-    (* ÊýÄø¼°¤ò¥ë¡¼¥ë²½¤¹¤ë *)
+    (* •û’öŽ®‚ðƒ‹[ƒ‹‰»‚·‚é *)
     exprRule = Map[(Rule @@ #) &, expr];
     varSol = var[t] /. exprRule;
     If[MemberQ[expr, var[0] == varSol] && MemberQ[expr, var'[t] == 0],
@@ -335,12 +335,12 @@ removeTrivialCons[cons_, consVars_] := Block[
 
 ];
 
-(* Reduce¤ÇÆÀ¤é¤ì¤¿·ë²Ì¤ò¥ê¥¹¥È·Á¼°¤Ë¤¹¤ë *)
-(* And¤Ç¤Ï¤Ê¤¯List¤Ç¤¯¤¯¤ë *)
+(* Reduce‚Å“¾‚ç‚ê‚½Œ‹‰Ê‚ðƒŠƒXƒgŒ`Ž®‚É‚·‚é *)
+(* And‚Å‚Í‚È‚­List‚Å‚­‚­‚é *)
 applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
-(* ¥Ñ¥é¥á¡¼¥¿¤ÎÀ©Ìó¤òÆÀ¤ë *)
+(* ƒpƒ‰ƒ[ƒ^‚Ì§–ñ‚ð“¾‚é *)
 getParamCons[cons_] := 
   Fold[(If[Not[hasVariable[#2]], Append[#1, #2], #1]) &, {}, cons];
 
@@ -354,24 +354,24 @@ exDSolve[expr_, vars_] := Block[
     If[sol===True,
       {{}, {}},
 
-      (* 1¤Ä¤À¤±ºÎÍÑ *)
-      (* TODO: Ê£¿ô²ò¤¢¤ë¾ì¹ç¤â¹Í¤¨¤ë *)
+      (* 1‚Â‚¾‚¯Ì—p *)
+      (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
       If[Head[sol]===Or, sol = First[sol]];
 
       sol = applyList[sol];
 
-      (* Äê¿ô´Ø¿ô¤Î¾ì¹ç¤Ë²á¾ê·èÄê·Ï¤Î¸¶°ø¤È¤Ê¤ëÈùÊ¬À©Ìó¤ò¼è¤ê½ü¤¯ *)
+      (* ’è”ŠÖ”‚Ìê‡‚É‰ßèŒˆ’èŒn‚ÌŒ´ˆö‚Æ‚È‚é”÷•ª§–ñ‚ðŽæ‚èœ‚­ *)
       sol = removeTrivialCons[sol, vars];
 
       {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
 
       Quiet[Check[Check[If[Cases[DExpr, Except[True]] === {},
-                          (* ¥¹¥È¥¢¤¬¶õ¤Î¾ì¹ç¤ÏDSolve¤¬²ò¤±¤Ê¤¤¤Î¤Ç¶õ½¸¹ç¤òÊÖ¤¹ *)
+                          (* ƒXƒgƒA‚ª‹ó‚Ìê‡‚ÍDSolve‚ª‰ð‚¯‚È‚¢‚Ì‚Å‹óW‡‚ð•Ô‚· *)
                           sol = {},
 
                           sol = DSolve[DExpr, DExprVars, t];
-                          (* 1¤Ä¤À¤±ºÎÍÑ *)
-                          (* TODO: Ê£¿ô²ò¤¢¤ë¾ì¹ç¤â¹Í¤¨¤ë *)
+                          (* 1‚Â‚¾‚¯Ì—p *)
+                          (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
                           sol = First[sol]];
 
                         sol = Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]];
@@ -388,8 +388,8 @@ exDSolve[expr_, vars_] := Block[
              DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]]
 ];
 
-(* DSolve¤Ç°·¤¨¤ë¼° (DExpr)¤È¤½¤¦¤Ç¤Ê¤¤¼° (NDExpr)¤È¤½¤ì°Ê³° ¡ÊotherExpr¡Ë¤ËÊ¬¤±¤ë *)
-(* ÈùÊ¬ÃÍ¤ò´Þ¤Þ¤ºŽÿŽÿŽÿŽÿŽÿŽÿÊÑ¿ô¤¬2¼ïÎà°Ê¾å½Ð¤ë¼° (NDExpr)¤äÅù¼°°Ê³° ¡ÊotherExpr¡Ë¤ÏDSolve¤Ç°·¤¨¤Ê¤¤ *)
+(* DSolve‚Åˆµ‚¦‚éŽ® (DExpr)‚Æ‚»‚¤‚Å‚È‚¢Ž® (NDExpr)‚Æ‚»‚êˆÈŠO iotherExprj‚É•ª‚¯‚é *)
+(* ”÷•ª’l‚ðŠÜ‚Ü‚¸/////•Ï”‚ª2Ží—ÞˆÈão‚éŽ® (NDExpr)‚â“™Ž®ˆÈŠO iotherExprj‚ÍDSolve‚Åˆµ‚¦‚È‚¢ *)
 splitExprs[expr_] := Block[
   {NDExpr, DExpr, DExprVars, otherExpr},
   otherExpr = Select[expr, (Head[#] =!= Equal) &];
@@ -403,15 +403,15 @@ splitExprs[expr_] := Block[
 
 (* isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := ( *)
 (*   If[store =!= {}, *)
-(*      (\* À©Ìó¥¹¥È¥¢¤¬¶õ¤Ç¤Ê¤¤¾ì¹ç¡¢ÉÔÍ×¤Ê½é´üÃÍÀ©Ìó¤ò¼è¤ê½ü¤¯É¬Í×¤¬¤¢¤ë *\) *)
+(*      (\* §–ñƒXƒgƒA‚ª‹ó‚Å‚È‚¢ê‡A•s—v‚È‰Šú’l§–ñ‚ðŽæ‚èœ‚­•K—v‚ª‚ ‚é *\) *)
 (*      newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]]; *)
-(*      (\* store¤¬List[And[]]¤Î·Á¤Ë¤Ê¤Ã¤Æ¤¤¤ë¾ì¹ç¤Ï¡¢°ìÃ¶¡¢Ãæ¤ÎAnd¤ò¼è¤ê½Ð¤¹ *\) *)
+(*      (\* store‚ªList[And[]]‚ÌŒ`‚É‚È‚Á‚Ä‚¢‚éê‡‚ÍAˆê’UA’†‚ÌAnd‚ðŽæ‚èo‚· *\) *)
 (*      newStore = If[Head[First[store]] === And, Apply[List, First[store]], store]; *)
 (*      removedStore = {Apply[And, Select[newStore, (isRequiredConstraint[#, newTellVars]) &]]}; *)
 (*      newStoreVars = Map[removeDash, Map[(# /. x_[t] -> x) &, storeVars]]; *)
 (*      removedStoreVars = Map[(#[t])&, Select[newStoreVars, (isRequiredVariable[#, newTellVars])&]], *)
 
-(*      (\* À©Ìó¥¹¥È¥¢¤¬¶õ¤Î¾ì¹ç *\) *)
+(*      (\* §–ñƒXƒgƒA‚ª‹ó‚Ìê‡ *\) *)
 (*      removedStore = store; *)
 (*      removedStoreVars = storeVars]; *)
 
@@ -423,10 +423,10 @@ splitExprs[expr_] := Block[
 (* ); *)
 
 (*
- * Ìá¤êÃÍ¤Î¥ê¥¹¥È¤ÎÀèÆ¬¡§
+ * –ß‚è’l‚ÌƒŠƒXƒg‚Ìæ“ªF
  *  0 : Solver Error
- *  1 : ½¼Â­
- *  2 : À©Ìó¥¨¥é¡¼
+ *  1 : [‘«
+ *  2 : §–ñƒGƒ‰[
  *)
 isConsistentInterval[expr_, vars_] :=  Block[
   {sol},
@@ -449,7 +449,7 @@ isConsistentInterval[expr_, vars_] :=  Block[
 (*   {Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}]]; *)
 
 (*
- * ¼¡¤Î¥Ý¥¤¥ó¥È¥Õ¥§¡¼¥º¤Ë°Ü¹Ô¤¹¤ë»þ¹ï¤òµá¤á¤ë
+ * ŽŸ‚Ìƒ|ƒCƒ“ƒgƒtƒF[ƒY‚ÉˆÚs‚·‚éŽž‚ð‹‚ß‚é
  *)
 calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherExpr_] := Block[
 {
@@ -460,7 +460,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
   calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, askID_}] := (
     If[integAsk=!=False,
       (* true *)
-      (* ²ò¤Ê¤·¤È¶­³¦ÃÍ¤Î²ò¤ò¶èÊÌ¤¹¤ë *)  
+      (* ‰ð‚È‚µ‚Æ‹«ŠE’l‚Ì‰ð‚ð‹æ•Ê‚·‚é *)  
       sol = Quiet[Check[Reduce[{timeMinCons && (maxTime>=t) && (integAsk) && (And @@ otherExpr)}, t],
                         errorSol,
                         {Reduce::nsmet}],
@@ -468,7 +468,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
       (*  debugPrint["calcMinTime#sol: ", sol]; *)
       If[sol=!=False && sol=!=errorSol, 
         (* true *)
-        (* À®¤êÎ©¤Ät¤ÎºÇ¾®ÃÍ¤òµá¤á¤ë *)
+        (* ¬‚è—§‚Ât‚ÌÅ¬’l‚ð‹‚ß‚é *)
         minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
                            Minimize::wksol]],
 
@@ -479,11 +479,11 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
       minT=0];
 
     debugPrint["calcMinTime#minT: ", minT];
-    (* Piecewise¤Ø¤ÎÂÐ±þ *)
+    (* Piecewise‚Ö‚Ì‘Î‰ž *)
     If[Head[minT] === Piecewise, minT = First[First[First[minT]]]];
-    (* 0ÉÃ¸å¤Î¤ò´Þ¤ó¤Ç¤Ï¤¤¤±¤Ê¤¤ *)
+    (* 0•bŒã‚Ì‚ðŠÜ‚ñ‚Å‚Í‚¢‚¯‚È‚¢ *)
     If[includeZero===False && minT===0, minT=error];
-    (* 0ÉÃ¸å¤ÎÎ¥»¶ÊÑ²½¤¬¹Ô¤ï¤ì¤ë¤«¤Î¥Á¥§¥Ã¥¯¤Ê¤Î¤Ç0¤Ç¤Ê¤±¤ì¤Ð¥¨¥é¡¼ *)
+    (* 0•bŒã‚Ì—£ŽU•Ï‰»‚ªs‚í‚ê‚é‚©‚Ìƒ`ƒFƒbƒN‚È‚Ì‚Å0‚Å‚È‚¯‚ê‚ÎƒGƒ‰[ *)
     If[includeZero===True && minT=!=0, minT=error];
 
     If[minT === error,
@@ -497,8 +497,8 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
 
 
       If[Count[compareResult, Not[False]] > 1,
-        (* Í×Ê¬´ô *)
-        (* TODO: Å¬ÀÚ¤Ê½èÍý¤ò¤¹¤ë *)
+        (* —v•ªŠò *)
+        (* TODO: “KØ‚Èˆ—‚ð‚·‚é *)
         1,
         Switch[First[First[Position[compareResult, x_ /; x =!= False, {1}, Heads -> False]]],
           1, {minT, {{type, askID}}},
@@ -532,13 +532,13 @@ createIntegratedValue[variable_, integRule_] := (
 (* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 2t+Sin[t]}"]]] *)
 (* Print[createIntegratedValue[ToExpression["{ht'[t]}"], ToExpression["{ht[t] -> 10}"]]] *)
 
-(* ¥Ñ¥é¥á¡¼¥¿À©Ìó¤òÆÀ¤ë *)
+(* ƒpƒ‰ƒ[ƒ^§–ñ‚ð“¾‚é *)
 getParamCons[cons_] := Cases[cons, x_ /; Not[hasVariable[x]], {1}];
-(* ¼°Ãæ¤Î¥Ñ¥é¥á¡¼¥¿ÊÑ¿ô¤òÆÀ¤ë *)
+(* Ž®’†‚Ìƒpƒ‰ƒ[ƒ^•Ï”‚ð“¾‚é *)
 getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
 
 (*
- * ask¤ÎÆ³½Ð¾õÂÖ¤¬ÊÑ²½¤¹¤ë¤Þ¤ÇÀÑÊ¬¤ò¤ª¤³¤Ê¤¦
+ * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ð‚¨‚±‚È‚¤
  *)
 integrateCalc[cons_, 
               posAsk_, negAsk_, NACons_,
@@ -584,8 +584,8 @@ integrateCalc[cons_,
     paramCons = getParamCons[cons];
     paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, paramCons]];
     tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
-    (* 1¤Ä¤À¤±ºÎÍÑ *)
-    (* TODO: Ê£¿ô²ò¤¢¤ë¾ì¹ç¤â¹Í¤¨¤ë *)
+    (* 1‚Â‚¾‚¯Ì—p *)
+    (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
     If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
 
     tmpIntegSol = removeTrivialCons[applyList[tmpIntegSol], vars];
@@ -596,14 +596,14 @@ integrateCalc[cons_,
       tmpIntegSol = {},
       tmpIntegSol = Quiet[DSolve[DExpr, DExprVars, t],
                         {Solve::incnst}];
-      (* 1¤Ä¤À¤±ºÎÍÑ *)
-      (* TODO:Ê£¿ô²ò¤¢¤ë¾ì¹ç¤â¹Í¤¨¤ë *)
+      (* 1‚Â‚¾‚¯Ì—p *)
+      (* TODO:•¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
       tmpIntegSol = First[tmpIntegSol]];
 
     (* debugPrint["tmpIntegSol: ", tmpIntegSol]; *)
-    (* tmpIntegSol¤ª¤è¤ÓNDExprÆâ¤Ë½Ð¸½¤¹¤ëNDÊÑ¿ô¤Î°ìÍ÷¤òÆÀ¤ë *)
+    (* tmpIntegSol‚¨‚æ‚ÑNDExpr“à‚ÉoŒ»‚·‚éND•Ï”‚Ìˆê——‚ð“¾‚é *)
     solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
-    (* integrateCalc¤Î·×»»·ë²Ì¤È¤·¤ÆÉ¬Í×¤ÊÊÑ¿ô¤Î°ìÍ÷ *)
+    (* integrateCalc‚ÌŒvŽZŒ‹‰Ê‚Æ‚µ‚Ä•K—v‚È•Ï”‚Ìˆê—— *)
     returnVars = Select[vars, (MemberQ[solVars, removeDash[#]]) &];
 
     tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
@@ -641,7 +641,7 @@ integrateCalc[cons_,
 ]];
 
 (*
- * ¼°¤ËÂÐ¤·¤ÆÍ¿¤¨¤é¤ì¤¿»þ´Ö¤òÅ¬ÍÑ¤¹¤ë
+ * Ž®‚É‘Î‚µ‚Ä—^‚¦‚ç‚ê‚½ŽžŠÔ‚ð“K—p‚·‚é
  *)
 applyTime2Expr[expr_, time_] := Block[
   {appliedExpr},
@@ -654,9 +654,9 @@ applyTime2Expr[expr_, time_] := Block[
 ];
 
 (*
- * form¤«¤éto¤Þ¤Ç¤Î¥ê¥¹¥È¤òinterval´Ö³Ö¤ÇºîÀ®¤¹¤ë
- * ºÇ¸å¤ËÉ¬¤ºto¤¬Íè¤ë¤¿¤á¤Ë¡¤
- * ºÇ¸å¤Î´Ö³Ö¤Î¤ßinterval¤è¤ê¤âÃ»¤¯¤Ê¤ë²ÄÇ½À­¤¬¤¢¤ë
+ * form‚©‚çto‚Ü‚Å‚ÌƒŠƒXƒg‚ðintervalŠÔŠu‚Åì¬‚·‚é
+ * ÅŒã‚É•K‚¸to‚ª—ˆ‚é‚½‚ß‚ÉC
+ * ÅŒã‚ÌŠÔŠu‚Ì‚Ýinterval‚æ‚è‚à’Z‚­‚È‚é‰Â”\«‚ª‚ ‚é
  *)
 createValueList[from_, to_, interval_] := Block[
 {sol},
@@ -699,7 +699,7 @@ createOutputTimeList[from_, to_, interval_] :=
 (*   {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm]; *)
 
 (*
- * Í¿¤¨¤é¤ì¤¿¼°¤òÀÑÊ¬¤·¡¤ÊÖ¤¹
+ * —^‚¦‚ç‚ê‚½Ž®‚ðÏ•ª‚µC•Ô‚·
  *
  * 0: Solver Error
  * 1: Solved Successfully
@@ -733,13 +733,13 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
 (* Print["integ:", integrateExpr[{ht'[t]==x[t], v'[t]==-10, ht[0]==a, v[0]==b}, {x[t], ht[t], ht'[t], v[t], v'[t]}]]; *)
 
 (*
- * Í¿¤¨¤é¤ì¤¿¼°¤ò¶á»÷¤¹¤ë
+ * —^‚¦‚ç‚ê‚½Ž®‚ð‹ßŽ—‚·‚é
  *)
 approxExpr[precision_, expr_] :=
   Rationalize[N[Simplify[expr], precision + 3], 
               Divide[1, Power[10, precision]]];
 
 (* 
- * Í¿¤¨¤é¤ì¤¿t¤Î¼°¤ò¥¿¥¤¥à¥·¥Õ¥È
+ * —^‚¦‚ç‚ê‚½t‚ÌŽ®‚ðƒ^ƒCƒ€ƒVƒtƒg
  *)
 exprTimeShift[expr_, time_] := ToString[FullForm[Simplify[expr /. t -> t - time ]]];
