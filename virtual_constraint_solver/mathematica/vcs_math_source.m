@@ -32,7 +32,9 @@ checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
         minT = Quiet[First[Minimize[{t, sol}, Append[pars,t]]]];
         If[minT === 0,
           (* \•ªğŒ‚©‚Ç‚¤‚©”»’è‚µ‚½‚¢ *)
-          If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False,
+          (* MinValue‚Å‚Í‚È‚­Minimize‚ğg—p‚·‚é *)
+          (* If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False, *)
+          If[Reduce[ForAll[pars, And@@otherExpr, First[Minimize[{t, sol}, t]] == 0]] =!= False,
             {1},
             {3}
           ],
