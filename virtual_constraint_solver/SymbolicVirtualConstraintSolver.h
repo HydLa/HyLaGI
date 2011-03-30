@@ -104,12 +104,12 @@ public:
   /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0);}
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0); return false;}
 
   /**
    * 現在の制約ストアから変数表と定数表を作成する
    */
-  virtual bool create_variable_map(variable_map_t& vm, parameter_map_t& pm){assert(0);}
+  virtual bool create_variable_map(variable_map_t& vm, parameter_map_t& pm){assert(0); return false;}
   
   /**
    * 制約を追加する
@@ -138,9 +138,9 @@ public:
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time){assert(0);}
   //SymbolicTimeを比較する
-  virtual bool less_than(const time_t &lhs, const time_t &rhs){assert(0);}
+  virtual bool less_than(const time_t &lhs, const time_t &rhs){assert(0); return false;}
   //SymbolicValueの時間をずらす
-  virtual value_t shift_expr_time(const value_t& val, const time_t &time){assert(0);}
+  virtual value_t shift_expr_time(const value_t& val, const time_t &time){assert(0); value_t tmp; return tmp;}
   
   
   //変数表に時刻を適用する

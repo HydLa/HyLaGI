@@ -5,7 +5,7 @@
 //Mathematica文字列⇔SymbolicValueという，式の変換を担当するクラス．SymbolicValueRangeも少し．
 
 
-#include "SymbolicVirtualConstraintSolver.h"
+#include "../SymbolicVirtualConstraintSolver.h"
 #include "Node.h"
 #include <map>
 #include "TreeVisitor.h"
