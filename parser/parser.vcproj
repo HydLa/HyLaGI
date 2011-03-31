@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RTreeVisitor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TreeVisitor.cpp"
 				>
 			</File>
@@ -250,6 +254,10 @@
 			</File>
 			<File
 				RelativePath=".\ParseTreeSemanticAnalyzer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RTreeVisitor.h"
 				>
 			</File>
 			<File

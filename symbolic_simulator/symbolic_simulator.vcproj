@@ -160,6 +160,18 @@
 				RelativePath=".\SymbolicSimulator.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\SymbolicValue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicValueRange.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeInfixPrinter.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -168,6 +180,22 @@
 			>
 			<File
 				RelativePath=".\SymbolicSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicTypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicValue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicValueRange.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeInfixPrinter.h"
 				>
 			</File>
 		</Filter>

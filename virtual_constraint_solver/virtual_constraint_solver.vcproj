@@ -151,6 +151,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\MathematicaVCS.cpp"
 				>
 			</File>
@@ -160,10 +164,6 @@
 			</File>
 			<File
 				RelativePath=".\mathematica\MathematicaVCSPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathTime.cpp"
 				>
 			</File>
 			<File
@@ -228,6 +228,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\mathematica\MathematicaExpressionConverter.h"
+				>
+			</File>
 			<File
 				RelativePath=".\mathematica\MathematicaVCS.h"
 				>
@@ -317,6 +321,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SymbolicVirtualConstraintSolver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\vcs_math_source.h"
 				>
 			</File>
@@ -349,7 +357,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="vcs_math_source.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)msc.exe vcs_math_source &lt; $(InputPath) &gt; $(ProjectDir)vcs_math_source.cpp"
+						CommandLine="$(SolutionDir)msc.exe vcs_math_source &lt; $(InputPath) &gt; $(ProjectDir)vcs_math_source.cpp&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)vcs_math_source.cpp"
 					/>
 				</FileConfiguration>
