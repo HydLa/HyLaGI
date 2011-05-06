@@ -39,6 +39,8 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
   value_t value;
   std::string::size_type now = 0;
   value.set(convert_math_string_to_symbolic_tree(expr, now));
+  HYDLA_LOGGER_DEBUG("#*** convert result value ***\n",
+                     value.get_string());
   return value;
 }
 
@@ -66,24 +68,30 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
     if(expr.substr(prev,now-prev)==PacketSender::var_prefix){//変数名
       return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev,now-prev)));
     }
-    int depth = 1;
-    while(depth>0){
-      now = expr.find_first_of("[]", now+1);
-      if(now == std::string::npos){
-        assert(0);
-      }
+    
+    //謎ノード．Numberノードに入れておけば，ソルバがMathematicaである限り処理を継続することはできるはずだが・・・将来的には全対応したい
+    int depth = 0;
+    while(1){
       if(expr[now]=='['){
         depth++;
       }else{
         depth--;
+        if(depth<=0){
+          if(now == std::string::npos){
+            now = expr.length() - 1;
+          }else if(depth<0){
+            now--;
+          }
+          break;
+        }
       }
+      now = expr.find_first_of("[]", now+1);
+      assert(now != std::string::npos);
     }
-    //謎ノード．Numberノードに入れておけば，ソルバがMathematicaである限り処理を継続することはできるはずだが・・・将来的には全対応したい
     return node_sptr(new hydla::parse_tree::Number(expr.substr(prev, (now++)-prev+1)));
   }
   
-  //何か子ノードがあるはず．Derivativeの場合は少し特別か
-  
+  //何か子ノードがあるはず．Derivativeの場合は少し特別か  
   now++;//[の分前進
   return (*(it->second.function))(expr, now, it->second.node);
 }
@@ -147,13 +155,15 @@ MathematicaExpressionConverter::node_sptr
   while(1){
    //右
    node_sptr rhs = convert_math_string_to_symbolic_tree(expr, now);
-   now++;//]
+   now++;//]や,
    switch(nt){
      case NODE_PLUS:
-     if(expr[now-1]==']')//ここで終了
+     if(expr[now-1]==']'){//ここで終了
        return node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
-     else
+     }
+     else{
        lhs = node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
+     }
      break;
 
      case NODE_TIMES:
