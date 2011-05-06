@@ -15,6 +15,7 @@
 #include "ParseTreeGraphvizDumper.h"
 #include "DefinitionContainer.h"
 
+#include "../symbolic_simulator/TreeInfixPrinter.h"
 #include "DefaultNodeFactory.h"
 
 
@@ -271,9 +272,12 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   definition_dumper(s, prog_def_map_);
   s << "],\n";
   */
-
+  hydla::symbolic_simulator::TreeInfixPrinter printer;
   s << "--- node_tree ---\n";
-  if(node_tree_) s << *node_tree_;
+  if(node_tree_){
+    s << *node_tree_;
+   // printer.print_infix(node_tree_, s);
+  }
   s << "\n";
   
 

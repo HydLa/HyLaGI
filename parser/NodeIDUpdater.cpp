@@ -25,15 +25,13 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
 
   parse_tree_ = pt;
   node_id_list_.clear();
-
+  
   pt->dispatch(this);
 
   // íœ‚³‚ê‚Ä‚¢‚½ƒm[ƒh‚ğ•\‚©‚çæ‚èœ‚­
   
   assert(node_id_list_.size() <= pt->node_map_size());
-  node_id_list_t diff_id( pt->node_map_size());
-
-  std::sort(node_id_list_.begin(), node_id_list_.end());
+  std::vector<hydla::parse_tree::node_id_t> diff_id( pt->node_map_size());
   pt->make_node_id_list();
 
   std::set_symmetric_difference(
@@ -43,8 +41,8 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
     pt->node_id_list_end(),
     diff_id.begin());
 
-  node_id_list_t::const_iterator it  = diff_id.begin();
-  node_id_list_t::const_iterator end = diff_id.end();
+  std::vector<hydla::parse_tree::node_id_t>::const_iterator it  = diff_id.begin();
+  std::vector<hydla::parse_tree::node_id_t>::const_iterator end = diff_id.end();
   for(; it!=end; ++it) {
 	if(Logger::ptflag==5){
 		HYDLA_LOGGER_AREA("remove id: ", *it);

@@ -63,6 +63,9 @@ void TreeVisitor::visit(boost::shared_ptr<Differential> node)          {assert(0
 
 // ç∂ã…å¿
 void TreeVisitor::visit(boost::shared_ptr<Previous> node)              {assert(0);}
+
+// î€íË
+void TreeVisitor::visit(boost::shared_ptr<Not> node)              {assert(0);}
   
 // ïœêî
 void TreeVisitor::visit(boost::shared_ptr<Variable> node)              {assert(0);}

@@ -819,11 +819,18 @@ DEFINE_UNARY_NODE(Negative);
  */
 DEFINE_UNARY_NODE(Differential);
 
+
+
 /**
  * 左極限「-」
  */
 DEFINE_UNARY_NODE(Previous);
 
+
+/**
+ * 否定「!」
+ */
+DEFINE_UNARY_NODE(Not);
 
 /**
  * 数字

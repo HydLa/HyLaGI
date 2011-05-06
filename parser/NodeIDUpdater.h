@@ -15,7 +15,7 @@ class NodeIDUpdater :
 {
 public:
   typedef hydla::parse_tree::node_sptr node_sptr;
-  typedef std::vector<hydla::parse_tree::node_id_t> node_id_list_t;
+  typedef std::set<hydla::parse_tree::node_id_t> node_id_list_t;
 
   NodeIDUpdater();
 
@@ -46,11 +46,11 @@ private:
     hydla::parse_tree::node_id_t id = n->get_id();
     if(id == 0) {
       parse_tree_->register_node(n);
-      node_id_list_.push_back(n->get_id());
+      node_id_list_.insert(n->get_id());
     }
     else {
       parse_tree_->update_node(id, n);
-      node_id_list_.push_back(id);
+      node_id_list_.insert(id);
     }
   }
 
