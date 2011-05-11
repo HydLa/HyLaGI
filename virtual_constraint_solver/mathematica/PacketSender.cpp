@@ -195,6 +195,15 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
   accept(node->get_child());
   in_prev_ = false;
 }
+
+
+// ”Û’è
+void PacketSender::visit(boost::shared_ptr<Not> node)              
+{
+  HYDLA_LOGGER_DEBUG("put: Not");
+  ml_.put_function("Not", 1);
+  accept(node->get_child());
+}
   
 // •Ï”
 void PacketSender::visit(boost::shared_ptr<Variable> node)              

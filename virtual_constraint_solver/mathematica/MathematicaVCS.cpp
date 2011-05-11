@@ -144,14 +144,16 @@ VCSResult MathematicaVCS::integrate(
   const negative_asks_t& negative_asks,
   const time_t& current_time,
   const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list)
+  const not_adopted_tells_list_t& not_adopted_tells_list,
+  const appended_asks_t& appended_asks)
 {
   return vcs_->integrate(integrate_result, 
                          positive_asks, 
                          negative_asks, 
                          current_time, 
                          max_time,
-                         not_adopted_tells_list);
+                         not_adopted_tells_list,
+                         appended_asks);
 }
 
 // void MathematicaVCS::change_mode(Mode m)

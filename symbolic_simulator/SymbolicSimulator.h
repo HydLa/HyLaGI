@@ -94,7 +94,7 @@ private:
   
 
   void output_interval(const time_t& current_time, const time_t& limit_time,
-                     const variable_map_t& variable_map);
+                     const variable_map_t& variable_map, const parameter_map_t& parameter_map);
 
   void output_point(const time_t& time, const variable_map_t& variable_map, const parameter_map_t& parameter_map);
               

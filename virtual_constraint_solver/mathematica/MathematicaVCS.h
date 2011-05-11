@@ -68,7 +68,8 @@ public:
     const negative_asks_t& negative_asks,
     const time_t& current_time,
     const time_t& max_time,
-    const not_adopted_tells_list_t& not_adopted_tells_list);
+    const not_adopted_tells_list_t& not_adopted_tells_list,
+    const appended_asks_t& appended_asks);
 
 
 

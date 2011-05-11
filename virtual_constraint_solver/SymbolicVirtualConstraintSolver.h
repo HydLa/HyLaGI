@@ -131,7 +131,8 @@ public:
     const negative_asks_t& negative_asks,
     const time_t& current_time,
     const time_t& max_time,
-    const not_adopted_tells_list_t& not_adopted_tells_list) = 0;
+    const not_adopted_tells_list_t& not_adopted_tells_list,
+    const appended_asks_t& appended_asks) = 0;
 
   //SymbolicValue‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
   virtual std::string get_real_val(const value_t &val, int precision){return "get_real_val is unavailable";}

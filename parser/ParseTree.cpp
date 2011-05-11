@@ -116,7 +116,10 @@ node_sptr ParseTree::swap_tree(const node_sptr& tree)
 std::ostream& ParseTree::to_graphviz(std::ostream& s) const
 {
   ParseTreeGraphvizDumper dumper;
-  dumper.dump(s, node_tree_);
+  if(node_tree_)
+    dumper.dump(s, node_tree_);
+  else
+    s << "ParseTree is empty." << std::endl;
   return s;
 }
 

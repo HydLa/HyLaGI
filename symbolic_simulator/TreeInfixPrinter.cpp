@@ -49,7 +49,13 @@ DEFINE_INFIX_VISIT_BINARY(Greater, >)
 DEFINE_INFIX_VISIT_BINARY(GreaterEqual, >=)
 // ò_óùââéZéq
 DEFINE_INFIX_VISIT_BINARY(LogicalAnd, &)
-DEFINE_INFIX_VISIT_BINARY(LogicalOr, |)
+
+void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node){
+  (*output_stream_) << "(";
+  print_binary_node(*node, "|");
+  (*output_stream_) << ")";
+}
+
   // AskêßñÒ
 DEFINE_INFIX_VISIT_BINARY(Ask, =>)
 
@@ -66,6 +72,8 @@ DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
 DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
 //ç∂ã…å¿
 DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
+//î€íË
+DEFINE_INFIX_VISIT_UNARY(Not, "!(", ")")
 //éûëäââéZéq
 DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
 // TellêßñÒ

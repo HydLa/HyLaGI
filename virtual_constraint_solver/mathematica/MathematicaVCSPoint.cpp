@@ -192,7 +192,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, para
   send_cs();
 
   
-/////////////////// 受信処理
+/////////////////// 受信処理                        
 
   //PacketChecker pc(*ml_);
   //pc.check();
@@ -237,14 +237,47 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, para
 
     // prev変数は処理しない
     if(prev==1) continue;
-
     
     symbolic_variable.name = variable_name;
     symbolic_variable.derivative_count = variable_derivative_count;
 
+    if(prev==-1){//既存の記号定数の場合
+      if(prev_variable.name!=symbolic_variable.name){
+        //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
+        tmp_range.clear();
+      }
+      value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
+      switch(relop_code){
+        case 0: // Equal
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::EQUAL));          
+          break;
+ 
+        case 1: // Less
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS));          
+          break;
+
+        case 2: // Greater
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER));
+          break;
+
+        case 3: // LessEqual
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS_EQUAL));
+          break;
+
+        case 4: // GreaterEqual
+          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER_EQUAL));
+          break;
+        default:
+          assert(0);
+      }
+      tmp_param.name = variable_name;
+      parameter_map.set_variable(tmp_param, tmp_range);
+      prev_variable.name = variable_name;
+      continue;
+    }
     // 関係演算子コードを元に、変数表の対応する部分に代入する
     // TODO: Orの扱い
-    if(!relop_code){
+    else if(!relop_code){
       //等号
       symbolic_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
       symbolic_value.set_unique(true);
@@ -294,6 +327,7 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, para
       parameter_map.set_variable(tmp_param, tmp_range);
     }
     variable_map.set_variable(symbolic_variable, symbolic_value);
+    HYDLA_LOGGER_SUMMARY(variable_map);
     prev_variable.name = variable_name;
     prev_variable.derivative_count = variable_derivative_count;
   }
@@ -736,7 +770,8 @@ VCSResult MathematicaVCSPoint::integrate(
   const negative_asks_t& negative_asks,
   const time_t& current_time,
   const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list)
+  const not_adopted_tells_list_t& not_adopted_tells_list,
+  const appended_asks_t& appended_asks)
 {
   // Pointではintegrate関数無効
   assert(0);

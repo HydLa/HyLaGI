@@ -130,15 +130,6 @@ struct ModuleSetContainerInitializer {
       // 最適化された形のパースツリーを得る
       member_parse_tree = pt_no_init;
     }
-
-    //{
-    //  parse_tree_sptr pt_no_init_discreteask(boost::make_shared<ParseTree>(*parse_tree));
-    //  InitNodeRemover().apply(pt_no_init_discreteask.get());
-    //  DiscreteAskRemover().apply(pt_no_init_discreteask.get());
-    //  AskDisjunctionFormatter().format(pt_no_init_discreteask.get());
-    //  AskDisjunctionSplitter().split(pt_no_init_discreteask.get());
-    //  msc_no_init_discreteask_ = mcc.create(pt_no_init_discreteask);
-    //}
   }
 };
 
@@ -492,12 +483,14 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     negative_asks,
     state->current_time,
     time_t(node_sptr(new hydla::parse_tree::Number(opts_.max_time))),
-    not_adopted_tells_list);
+    not_adopted_tells_list,
+    state->appended_asks);
 
   //出力
   output_interval(state->current_time,
                   integrate_result.states[0].time-state->current_time,
-                  integrate_result.states[0].variable_map);
+                  integrate_result.states[0].variable_map,
+                  state->parameter_map);
 
 
 
@@ -552,8 +545,7 @@ variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& 
 }
 
 void SymbolicSimulator::output_interval(const time_t& current_time, const time_t& limit_time,
-                                        const variable_map_t& variable_map){
-
+                                        const variable_map_t& variable_map, const parameter_map_t& parameter_map){
 
   time_t tmp_time = limit_time+current_time;
   solver_->simplify(tmp_time);
@@ -573,7 +565,7 @@ void SymbolicSimulator::output_interval(const time_t& current_time, const time_t
     }while(solver_->less_than(elapsed_time, limit_time));
     elapsed_time = limit_time;
     solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
-    output(tmp_time,output_vm);
+    output(tmp_time,output_vm, parameter_map);
 
     std::cout << std::endl << std::endl;
   }

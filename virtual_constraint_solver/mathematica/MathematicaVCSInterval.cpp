@@ -479,6 +479,12 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
       collected_tells.begin(), 
       collected_tells.end());
 
+    // appended_asksも追加
+    constraint_store_.constraints.insert(
+      constraint_store_.constraints.end(),
+      collected_tells.begin(), 
+      collected_tells.end());
+
     // 制約ストア中で使用される変数の一覧の更新
     PacketSender::vars_const_iterator ps_vars_it  = ps.vars_begin();
     PacketSender::vars_const_iterator ps_vars_end = ps.vars_end();
@@ -674,7 +680,8 @@ VCSResult MathematicaVCSInterval::integrate(
   const negative_asks_t& negative_asks,
   const time_t& current_time,
   const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list)
+  const not_adopted_tells_list_t& not_adopted_tells_list,
+  const appended_asks_t& appended_asks)
 {
   if(Logger::mathcalcflag==1){
     HYDLA_LOGGER_AREA("#*** MathematicaVCSInterval::integrate ***");
@@ -705,7 +712,8 @@ VCSResult MathematicaVCSInterval::integrate(
   ml_->put_function("integrateCalc", 6);
 
   // 制約consを渡す
-  ml_->put_function("Join", 3);
+  ml_->put_function("Join", 4);
+
 
   // 制約ストアから式storeを得てMathematicaに渡す
   send_cs(ps);
@@ -715,6 +723,20 @@ VCSResult MathematicaVCSInterval::integrate(
   create_max_diff_map(ps, max_diff_map);
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, true);
+  
+
+  ml_->put_function("List", appended_asks.size());  
+  // appended_asksからガード部分を得てMathematicaに渡す
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+    if(Logger::constflag==7){
+      HYDLA_LOGGER_AREA("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    }
+    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
+  }
+
   
   send_parameter_cons();
 

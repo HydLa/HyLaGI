@@ -11,4 +11,5 @@ TRUE <=> [](1=1).
 TIMER <=> [](mag'=0&timer'=1).
 SWITCHON <=> [](timer-=1=>mag=12&timer=0).
 SWITCHOFF <=> [](timer-=1=>mag=0&timer=0).
+
 INIT,TIMER<<(SWITCHOFF,SWITCHON)<<TRUE,FALL<<BOUNCE.
