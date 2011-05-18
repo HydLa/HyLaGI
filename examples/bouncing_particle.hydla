@@ -7,20 +7,7 @@ BOUNCE <=> [](ht = 0 => ht' = -(4/5) * ht'-).
 
 
 INIT <=> ht=10&v=0.
-EQ <=> [](ht'=v).
-FALL <=> [](v'=-10).
-BOUNCE <=> [](ht=0 => v= -(4/5)*v-).
-
-INIT, EQ, FALL << BOUNCE.
-
-
-/*
-// for RP
-
-INIT <=> ht=10&v=0.
-EQ <=> [](ht'=v & ht=ht-).
-FALL <=> [](v'=-10).
+FALL <=> [](ht'=v & v'=-10).
 BOUNCE <=> [](ht-=0 => v= -(4/5)*v-).
 
-INIT, EQ, FALL << BOUNCE.
-*/
+INIT, FALL << BOUNCE.
