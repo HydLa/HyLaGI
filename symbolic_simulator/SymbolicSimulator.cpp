@@ -12,7 +12,6 @@
 
 #include "Logger.h"
 
-
 //仮追加
 #include "RTreeVisitor.h"
 #include "TellCollector.h"
@@ -28,8 +27,13 @@
 #include "AskTypeAnalyzer.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
+//#include "../virtual_constraint_solver/reduce/REDUCEVCSPoint.h"
+#include "../virtual_constraint_solver/reduce/REDUCEClient.h"
+
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
+
+//using namespace hydla::vcs::reduce;
 
 using namespace std;
 using namespace boost;
@@ -79,9 +83,12 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   push_phase_state(state);
 
   //reduce出力用分岐
+  //20110529 分岐をreduce_simulate()からsolver_によるものに変更(後コメントアウト)
   if(opts_.solver == "r" || opts_.solver == "Reduce") {
-    reduce_simulate();
-//    exit(0);
+//    reduce_simulate();
+//    REDUCEClient cl;
+//    solver_.reset(new REDUCEVCSPoint(&cl));   //使用するソルバを決定
+    exit(0);
   }
 
 

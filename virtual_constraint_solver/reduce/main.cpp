@@ -40,7 +40,7 @@ public:
     cout << "cmd: " << cmd << endl;
     s << cmd;
     s << "\r\n";
-  
+
     return 0;
   }
 
@@ -49,14 +49,14 @@ public:
   int recv_from_reduce(){
     int i = 0;
     string line;
-  
+
     cout << "---- recv phase ----" << endl;
     while(getline(s, line)){
   //    cout << i++ << "”Ô–Ú, length: " << line.length() << endl;
       cout << line << endl;
       if(line.length()==0) break;
     }
-  
+
     return 0;
   }
 
@@ -87,7 +87,7 @@ public:
       recv_from_reduce();
     }
   }
-  
+
 /*
 Goal ˆÈ‰º‚Ì3–½—ß‚ð‘—‚èŒvŽZ‚ð¬Œ÷‚³‚¹“š‚¦‚ðrecv
      recv‚Ìwhile‚Ì”²‚¯‚éðŒ‚ðAline[0]=='('‚Æ‚·‚é
@@ -119,7 +119,7 @@ Goal ˆÈ‰º‚Ì3–½—ß‚ð‘—‚èŒvŽZ‚ð¬Œ÷‚³‚¹“š‚¦‚ðrecv
       std::cout << line << std::endl;
 //      std::cout << line[line.length()-1] << std::endl;
     }
-    
+
 //  string’†‚Ì '('‚ð”‚¦‚éŠÖ”
 //  int i = count_char(line, '(');
 
@@ -189,8 +189,8 @@ Goal ˆÈ‰º‚Ì3–½—ß‚ð‘—‚èŒvŽZ‚ð¬Œ÷‚³‚¹“š‚¦‚ðrecv
 
 int main(int argc, char** argv){
   asio_cl cl;
- 
-  cl.recv_from_reduce();	
+
+  cl.recv_from_reduce();
 
 //  "in \"lib.red\";"‚ðsend‚·‚é
   cl.file_input_test();
@@ -202,18 +202,18 @@ int main(int argc, char** argv){
   }else{
     std::cout << "argc!=2" << std::endl;
   }
-  
+
 
   std::string ans;
 //  "isConsistent(expr, vars)"‚ðsend‚·‚é
-//  ans = cl.isConsistent_test(); 
+//  ans = cl.isConsistent_test();
 //  std::cout << "ans= " << ans << std::endl;
 //  std::cout << "ans has " << cl.count_char(ans, '(') << "'('s, and "
 //          << cl.count_char(ans, ')') << "')'s" << std::endl;
 
 // scanf -> send -> recv -> scanf‚ÌŒJ‚è•Ô‚µ
   cl.scanf_test();
-  
+
   cl.send_to_reduce("bye;");
   cl.recv_from_reduce();
 }
