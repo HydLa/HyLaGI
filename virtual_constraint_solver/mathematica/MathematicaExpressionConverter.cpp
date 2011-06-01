@@ -27,8 +27,6 @@ void MathematicaExpressionConverter::initialize(){
   string_map_.insert(std::make_pair("Derivative", function_and_node(for_derivative, NODE_DIFFERENTIAL)));
   string_map_.insert(std::make_pair("prev", function_and_node(for_unary_node, NODE_PREVIOUS)));
   string_map_.insert(std::make_pair("Sqrt", function_and_node(for_unary_node, NODE_SQRT)));
-  //string_map_.insert(std::make_pair("Pi", boost::make_shared<Power>()));
-  //string_map_.insert(std::make_pair("E", boost::make_shared<Power>()));
 }
 
 MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_math_string_to_symbolic_value(const std::string &expr){
@@ -205,13 +203,37 @@ std::string MathematicaExpressionConverter::get_relation_math_string(value_range
   }
 }
 
+MathematicaExpressionConverter::value_range_t::Relation MathematicaExpressionConverter::get_relation_from_code(const int &relop_code){
+  switch(relop_code){
+    case 0: // Equal
+      return value_range_t::EQUAL;
+      break;
+
+    case 1: // Less
+      return value_range_t::LESS;    
+      break;
+
+    case 2: // Greater
+      return value_range_t::GREATER;
+      break;
+
+    case 3: // LessEqual
+      return value_range_t::LESS_EQUAL;
+      break;
+
+    case 4: // GreaterEqual
+      return value_range_t::GREATER_EQUAL;
+    default:
+      assert(0);
+  }
+}
 
 void MathematicaExpressionConverter::set_parameter_on_value(MathematicaExpressionConverter::value_t &val,const std::string &par_name){
   val.set(node_sptr(new hydla::parse_tree::Parameter(par_name)));
   return;
 }
 
-std::string MathematicaExpressionConverter::convert_symbolic_value_to_math_string(const MathematicaExpressionConverter::value_t &val){
+std::string MathematicaExpressionConverter::convert_symbolic_value_to_math_string(const value_t &val){
   string_for_math_string_.clear();
   differential_count_=0;
   in_prev_=0;
@@ -368,6 +390,15 @@ void MathematicaExpressionConverter::visit(boost::shared_ptr<Previous> node)
   in_prev_++;
   accept(node->get_child());
   in_prev_--;
+}
+
+
+// íºëOÇÃPPÇÃíl
+void MathematicaExpressionConverter::visit(boost::shared_ptr<PreviousPoint> node)              
+{
+  in_prev_point_++;
+  accept(node->get_child());
+  in_prev_point_--;
 }
   
 // ïœêî

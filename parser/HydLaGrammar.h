@@ -38,6 +38,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Parallel)      parallel; 
     defRuleID(RI_Differential)  differential; 
     defRuleID(RI_Previous)      previous;     
+    defRuleID(RI_PreviousPoint)      previous_point;     
 
     defRuleID(RI_Plus)     add; 
     defRuleID(RI_Subtract) sub; 
@@ -64,7 +65,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_ProgramOrdered)   program_ordered; 
     defRuleID(RI_ProgramFactor)    program_factor; 
 
-    defRuleID(RI_DefStatement)    def_statement; 
+    defRuleID(RI_DefStatement)    def_statement;
     defRuleID(RI_ProgramDef)    program_def; 
     defRuleID(RI_ConstraintDef) constraint_def; 
     defRuleID(RI_ModuleDef)     module_def; 
@@ -86,7 +87,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Expression)    expression; 
     defRuleID(RI_Factor)        factor; 
     defRuleID(RI_Diff)          diff; 
-    defRuleID(RI_Limit)         limit; 
+    defRuleID(RI_Limit)         limit;
     defRuleID(RI_Unary)         unary; 
     defRuleID(RI_Arithmetic)    arithmetic;
     defRuleID(RI_Arith_term)    arith_term;
@@ -190,9 +191,10 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //単項演算子
       unary = !(root_node_d[positive | negative]) >> limit;
 
-      //極限
+      //極限か直前のPP
       //factor以外の物が後ろにあったらprev
-      limit = diff >> !(root_node_d[previous] >> eps_p(eps_p - factor));
+      limit = diff >> !((root_node_d[previous] >> eps_p(eps_p - factor)) | root_node_d[previous_point]);
+      
 
       //微分
       diff = factor >> *(root_node_d[differential]);
@@ -255,6 +257,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       always       = str_p("[]"); 
       differential = ch_p("'");
       previous     = ch_p('-');
+      previous_point     = ch_p('@');
 
       //半順序定義演算子
       weaker       = str_p("<<");

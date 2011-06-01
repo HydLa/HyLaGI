@@ -17,7 +17,9 @@ AskDisjunctionFormatter::~AskDisjunctionFormatter()
 void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
 {
   pt_ = pt;
-
+  
+  HYDLA_LOGGER_DEBUG("start format\n");
+  
   do {
     swapped_ = false;
     pt->dispatch(this);
@@ -25,6 +27,7 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
 
   pt->update_node_id_list();
   
+  HYDLA_LOGGER_DEBUG("start format\n");
 
   if(Logger::ptflag==4){
 	  HYDLA_LOGGER_AREA("#*** ask disjunction format result ***\n",

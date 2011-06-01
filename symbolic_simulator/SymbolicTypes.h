@@ -17,6 +17,9 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
+class StateResult;
+typedef boost::shared_ptr<StateResult> state_result_sptr_t;
+
   typedef simulator::DefaultVariable            variable_t;
   typedef SymbolicParameter                     parameter_t;
   typedef SymbolicValue                         value_t;
@@ -31,9 +34,11 @@ namespace symbolic_simulator {
                                        value_t, 
                                        time_t>{
     parameter_map_t parameter_map;
+    state_result_sptr_t parent_state_result;
   }phase_state_t;
 
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
+  
   typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
   
   

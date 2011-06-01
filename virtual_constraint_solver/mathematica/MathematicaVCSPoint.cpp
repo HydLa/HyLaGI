@@ -164,21 +164,17 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   return true;
 }
 
-bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, parameter_map_t& parameter_map)
+bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
 {
 	if(Logger::varflag==7){
 	HYDLA_LOGGER_AREA(
     "#*** MathematicaVCSPoint::create_variable_map ***\n",
-    "--- variable_map ---\n",
-    variable_map,
     "--- constraint_store ---\n",
     *this);
 	}
 	
   HYDLA_LOGGER_DEBUG(
     "#*** MathematicaVCSPoint::create_variable_map ***\n",
-    "--- variable_map ---\n",
-    variable_map,
     "--- constraint_store ---\n",
     *this);
 
@@ -194,8 +190,8 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, para
   
 /////////////////// 受信処理                        
 
-  //PacketChecker pc(*ml_);
-  //pc.check();
+//  PacketChecker pc(*ml_);
+//  pc.check();
 
   
   HYDLA_LOGGER_DEBUG(
@@ -207,130 +203,95 @@ bool MathematicaVCSPoint::create_variable_map(variable_map_t& variable_map, para
   ml_->MLGetNext();
 
   // List関数の要素数（式の個数）を得る
-  int expr_size = ml_->get_arg_count();
-  HYDLA_LOGGER_DEBUG("expr_size: ", expr_size);
-  ml_->MLGetNext(); // Listという関数名
-
-  variable_t symbolic_variable, prev_variable;
-  value_t symbolic_value;
-  value_range_t tmp_range;
-  parameter_t tmp_param;
-  
-
-  for(int i=0; i<expr_size; i++)
-  {
+  int or_size = ml_->get_arg_count();
+  HYDLA_LOGGER_DEBUG("or_size: ", or_size);
+  ml_->MLGetNext();
+  for(int or_it = 0; or_it < or_size; or_it++){
+    create_result_t::maps_t maps;
+    variable_t symbolic_variable, prev_variable;
+    value_t symbolic_value;
+    value_range_t tmp_range;
+    parameter_t tmp_param;
     ml_->MLGetNext();
-    ml_->MLGetNext();
-    
-    // 変数名（名前、微分回数、prev）
-    ml_->MLGetNext();
-    ml_->MLGetNext();
-    ml_->MLGetNext(); // ?
-    std::string variable_name = ml_->get_string();
-    int variable_derivative_count = ml_->get_integer();
-    int prev = ml_->get_integer();
+    int and_size = ml_->get_arg_count();
+    HYDLA_LOGGER_DEBUG("and_size: ", and_size);
+    ml_->MLGetNext(); // Listという関数名
+    for(int i = 0; i < and_size; i++)
+    {
+      ml_->MLGetNext();
+      ml_->MLGetNext();
+      
+      // 変数名（名前、微分回数、prev）
+      ml_->MLGetNext();
+      ml_->MLGetNext();
+      ml_->MLGetNext(); // ?
+      std::string variable_name = ml_->get_string();
+      int variable_derivative_count = ml_->get_integer();
+      int prev = ml_->get_integer();
 
-    // 関係演算子のコード
-    int relop_code = ml_->get_integer();
-    // 値
-    std::string value_str = ml_->get_string();
+      // 関係演算子のコード
+      int relop_code = ml_->get_integer();
+      // 値
+      std::string value_str = ml_->get_string();
 
-    // prev変数は処理しない
-    if(prev==1) continue;
-    
-    symbolic_variable.name = variable_name;
-    symbolic_variable.derivative_count = variable_derivative_count;
+      // prev変数は処理しない
+      if(prev==1) continue;
+      
+      symbolic_variable.name = variable_name;
+      symbolic_variable.derivative_count = variable_derivative_count;
 
-    if(prev==-1){//既存の記号定数の場合
-      if(prev_variable.name!=symbolic_variable.name){
-        //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
-        tmp_range.clear();
+      if(prev==-1){//既存の記号定数の場合
+        if(prev_variable.name!=symbolic_variable.name){
+          //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
+          tmp_range.clear();
+        }
+        value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
+        tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+        tmp_param.name = variable_name;
+        maps.parameter_map.set_variable(tmp_param, tmp_range);
+        prev_variable.name = variable_name;
+        continue;
       }
-      value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
-      switch(relop_code){
-        case 0: // Equal
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::EQUAL));          
-          break;
- 
-        case 1: // Less
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS));          
-          break;
+      // 関係演算子コードを元に、変数表の対応する部分に代入する
+      // TODO: Orの扱い
+      else if(!relop_code){
+        //等号
+        symbolic_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
+        symbolic_value.set_unique(true);
+      }else{
+        //不等号．この変数の値の範囲を表現するための記号定数を作成
+        tmp_param.name = variable_name;
+        value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
 
-        case 2: // Greater
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER));
-          break;
-
-        case 3: // LessEqual
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS_EQUAL));
-          break;
-
-        case 4: // GreaterEqual
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER_EQUAL));
-          break;
-        default:
-          assert(0);
+        for(int i=0;i<variable_derivative_count;i++){
+          //とりあえず微分回数分dをつける
+          tmp_param.name.append("d");
+        }
+        if(prev_variable.name!=symbolic_variable.name||prev_variable.derivative_count!=symbolic_variable.derivative_count){
+          //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
+          tmp_range.clear();
+          while(1){
+           value_range_t &value = maps.parameter_map.get_variable(tmp_param);
+           if(value.is_undefined()){
+             break;
+           }
+            //とりあえず重複回数分iをつける
+           tmp_param.name.append("i");
+           }
+        }
+        MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
+        symbolic_value.set_unique(false);
+        tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+        maps.parameter_map.set_variable(tmp_param, tmp_range);
       }
-      tmp_param.name = variable_name;
-      parameter_map.set_variable(tmp_param, tmp_range);
+      maps.variable_map.set_variable(symbolic_variable, symbolic_value);
+      HYDLA_LOGGER_SUMMARY(maps.variable_map);
       prev_variable.name = variable_name;
-      continue;
+      prev_variable.derivative_count = variable_derivative_count;
     }
-    // 関係演算子コードを元に、変数表の対応する部分に代入する
-    // TODO: Orの扱い
-    else if(!relop_code){
-      //等号
-      symbolic_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
-      symbolic_value.set_unique(true);
-    }else{
-      //不等号．この変数の値の範囲を表現するための記号定数を作成
-      tmp_param.name = variable_name;
-      value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
-
-      for(int i=0;i<variable_derivative_count;i++){
-        //とりあえず微分回数分dをつける
-        tmp_param.name.append("d");
-      }
-      if(prev_variable.name!=symbolic_variable.name||prev_variable.derivative_count!=symbolic_variable.derivative_count){
-        //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
-        tmp_range.clear();
-        while(1){
-          value_range_t &value = parameter_map.get_variable(tmp_param);
-         if(value.is_undefined()){
-           break;
-         }
-          //とりあえず重複回数分iをつける
-         tmp_param.name.append("i");
-         }
-      }
-      MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
-      symbolic_value.set_unique(false);
-      switch(relop_code){
-        case 1: // Less
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS));          
-          break;
-
-        case 2: // Greater
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER));
-          break;
-
-        case 3: // LessEqual
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::LESS_EQUAL));
-          break;
-
-        case 4: // GreaterEqual
-          tmp_range.add(value_range_t::Element(tmp_value,value_range_t::GREATER_EQUAL));
-          break;
-
-        default:
-          assert(0);
-      }
-      parameter_map.set_variable(tmp_param, tmp_range);
-    }
-    variable_map.set_variable(symbolic_variable, symbolic_value);
-    HYDLA_LOGGER_SUMMARY(variable_map);
-    prev_variable.name = variable_name;
-    prev_variable.derivative_count = variable_derivative_count;
+    create_result.result_maps.push_back(maps);
   }
+  
 
   return true;
 }

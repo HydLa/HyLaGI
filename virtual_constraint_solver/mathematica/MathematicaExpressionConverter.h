@@ -60,10 +60,13 @@ class MathematicaExpressionConverter:
   //関係演算子の文字列表現を返す
   static std::string get_relation_math_string(value_range_t::Relation rel);
   
+  //数字に対応付けられた関係を返す
+  static value_range_t::Relation get_relation_from_code(const int &relop_code);
+  
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
   
-  //valueとって文字列に変換する
+  //valueとってmathematica用の文字列に変換する．(t)とか(0)とかつけないので，PP専用としておく
   std::string convert_symbolic_value_to_math_string(const value_t&);
 
   private:
@@ -76,6 +79,9 @@ class MathematicaExpressionConverter:
   int differential_count_;
   //変換時に使う左極限判定
   int in_prev_;
+  //変換時に使う前PP判定
+  int in_prev_point_;
+
 
 
   // 比較演算子
@@ -106,6 +112,9 @@ class MathematicaExpressionConverter:
 
   // 左極限
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+  
+  // 直前のPPの値
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PreviousPoint> node);
   
   // 変数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);

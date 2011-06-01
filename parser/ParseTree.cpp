@@ -48,6 +48,7 @@ ParseTree::~ParseTree()
 
 void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory) 
 {
+
   node_factory_ = node_factory;
   //局所的出力モード
   if(Logger::enflag>=0||Logger::conflag>=0||Logger::ptflag>=0){

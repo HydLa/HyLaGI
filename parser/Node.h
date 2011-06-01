@@ -826,6 +826,11 @@ DEFINE_UNARY_NODE(Differential);
  */
 DEFINE_UNARY_NODE(Previous);
 
+/**
+ * 直前のPPの値「@」（仮）
+ */
+DEFINE_UNARY_NODE(PreviousPoint);
+
 
 /**
  * 否定「!」

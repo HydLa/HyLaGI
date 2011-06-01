@@ -188,6 +188,13 @@ void DiscreteAskRemover::visit(boost::shared_ptr<Previous> node)
   exist_prev_cons_ = true;
   dispatch(node);
 }
+
+
+// ˆÈ‘O‚ÌPP‚Ì’l
+void DiscreteAskRemover::visit(boost::shared_ptr<PreviousPoint> node)
+{  
+  dispatch(node);
+}
   
 // •Ï”
 void DiscreteAskRemover::visit(boost::shared_ptr<Variable> node)

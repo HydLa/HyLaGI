@@ -99,6 +99,9 @@ class TreeInfixPrinter:
   // ç∂ã…å¿
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
+  // íºëOÇÃPPÇÃíl
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PreviousPoint> node);
+  
   // î€íË
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   

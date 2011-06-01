@@ -25,7 +25,8 @@ const std::string PacketSender::par_prefix("p");
 PacketSender::PacketSender(MathLink& ml) :
   ml_(ml),
   differential_count_(0),
-  in_prev_(false)
+  in_prev_(false),
+  in_prev_point_(false)
 {}
 
 PacketSender::~PacketSender(){}
@@ -197,6 +198,15 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
 }
 
 
+// ç∂ã…å¿
+void PacketSender::visit(boost::shared_ptr<PreviousPoint> node)              
+{
+  in_prev_point_ = true;
+  accept(node->get_child());
+  in_prev_point_ = false;
+}
+
+
 // î€íË
 void PacketSender::visit(boost::shared_ptr<Not> node)              
 {
@@ -214,7 +224,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
                       differential_count_, 
                       in_prev_ && !ignore_prev_);
 
-  put_var(new_var, variable_arg_);
+    put_var(new_var, variable_arg_);
 }
 
 // êîéö
@@ -300,9 +310,12 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
       break;
       
     case VA_Time:
-      ml_.put_symbol("t");
+      if(in_prev_point_){
+       ml_.put_integer(0);
+      }else{
+       ml_.put_symbol("t");
+      }
       break;
-
     case VA_Zero:
       ml_.put_integer(0);
       break;
@@ -328,6 +341,7 @@ void PacketSender::put_node(const node_sptr& node,
 {
   differential_count_ = 0;
   in_prev_ = false;
+  in_prev_point_ = false;
   variable_arg_ = variable_arg;
   ignore_prev_ = ignore_prev;
   if(!entailed){
@@ -375,6 +389,7 @@ void PacketSender::clear()
 {
   differential_count_ = 0;
   in_prev_ = false;
+  in_prev_point_ = false;
 
   vars_.clear();
 }

@@ -117,6 +117,9 @@ public:
 
   // 左極限
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+
+  // 直前のPPの値
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PreviousPoint> node);
   // 否定
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
@@ -143,6 +146,9 @@ private:
 
   /// Prevノードの下にいるかどうか
   bool in_prev_;
+  
+  /// PreviousPointノードの下にいるかどうか
+  bool in_prev_point_;
 
   /// 変数の引数として送る物
   VariableArg variable_arg_;

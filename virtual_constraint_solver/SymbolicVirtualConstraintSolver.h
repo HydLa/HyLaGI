@@ -70,6 +70,7 @@ public:
     {
       time_t         time;
       variable_map_t variable_map;
+      parameter_map_t parameter_map;
       bool           is_max_time;
     } next_phase_state_t;
     typedef std::vector<next_phase_state_t> next_phase_state_list_t;
@@ -77,6 +78,18 @@ public:
     next_phase_state_list_t states;
     changed_asks_t          changed_asks;
   } integrate_result_t;
+  
+  
+  typedef struct CreateResult
+  {
+    typedef struct Maps
+    {
+      variable_map_t variable_map;
+      parameter_map_t parameter_map;
+    } maps_t;
+    typedef std::vector<maps_t> result_maps_t;
+    result_maps_t result_maps;
+  } create_result_t;
 
   SymbolicVirtualConstraintSolver()
   {}
@@ -107,9 +120,9 @@ public:
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0); return false;}
 
   /**
-   * 現在の制約ストアから変数表と定数表を作成する
+   * 現在の制約ストアから数表を作成する
    */
-  virtual bool create_variable_map(variable_map_t& vm, parameter_map_t& pm){assert(0); return false;}
+  virtual bool create_maps(create_result_t & create_result){assert(0); return false;}
   
   /**
    * 制約を追加する

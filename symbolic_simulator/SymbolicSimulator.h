@@ -97,6 +97,11 @@ private:
                      const variable_map_t& variable_map, const parameter_map_t& parameter_map);
 
   void output_point(const time_t& time, const variable_map_t& variable_map, const parameter_map_t& parameter_map);
+  
+  void output_parameter_map(const parameter_map_t& parameter_map);
+  
+  //現状では1回出力すると，木の根以外の部分が無くなるようになっているから注意
+  void output_result_tree();
               
                               
   module_set_container_sptr msc_original_;
@@ -109,7 +114,6 @@ private:
   
   virtual void push_phase_state(const phase_state_sptr& state) 
   {
-    branch_++;
     state_stack_.push(state);
   }
   
@@ -118,10 +122,12 @@ private:
 
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ
   
-  std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列
+  /*std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列
   std::stack<int> branch_stack_;                     //直前に分岐した数を記憶するためのスタック
   int branch_;                                       //今フェーズで何状態に分岐したかを示す変数
-  std::ostringstream output_buffer_;                 //スタックに入れるための，直前の分岐から現在までの出力保持
+  std::ostringstream output_buffer_;                 //スタックに入れるための，直前の分岐から現在までの出力保持*/
+  
+  state_result_sptr_t result_root_;                  //結果を示す解軌道木の根．初期状態なので，子供以外の情報は入れない
 };
 
 } // namespace symbolic_simulator

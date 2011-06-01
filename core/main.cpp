@@ -261,7 +261,7 @@ void hydla_main(int argc, char* argv[])
   if(po.count("input-file")) {
     std::string filename(po.get<std::string>("input-file"));
     std::ifstream in(filename.c_str());
-    if (!in) {    
+    if (!in) {
       throw std::runtime_error(std::string("cannot open \"") + filename + "\"");
     }
     pt->parse<DefaultNodeFactory>(in);

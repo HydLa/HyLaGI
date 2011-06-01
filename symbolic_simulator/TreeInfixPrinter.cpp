@@ -72,6 +72,8 @@ DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
 DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
 //左極限
 DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
+//直前のPPの値
+DEFINE_INFIX_VISIT_UNARY(PreviousPoint, "", "@")
 //否定
 DEFINE_INFIX_VISIT_UNARY(Not, "!(", ")")
 //時相演算子
@@ -100,10 +102,10 @@ void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Plus> node){
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node){
   if(need_par_>=PAR_N_P_S){
     (*output_stream_) << "(";
-     print_binary_node(*node, "-", PAR_NONE, PAR_N);
+     print_binary_node(*node, "-", PAR_NONE, PAR_N_P_S);
     (*output_stream_) << ")";
   }else{
-     print_binary_node(*node, "-", PAR_NONE, PAR_N);
+     print_binary_node(*node, "-", PAR_NONE, PAR_N_P_S);
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::Times> node){
@@ -214,7 +216,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCall
   (*output_stream_) << ") ";
   if(node->get_child()) print_unary_node(*node, "{", "}");
 }
-  
+
 // プログラム呼び出し
 void TreeInfixPrinter::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node){
   (*output_stream_) << node->get_name() << "(";

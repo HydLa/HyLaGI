@@ -47,7 +47,7 @@ public:
   /**
    * 現在の制約ストアから変数表を作成する
    */
-  virtual bool create_variable_map(variable_map_t& vm, parameter_map_t& pm);
+  virtual bool create_maps(create_result_t &create_result);
   
   /**
    * 制約を追加する

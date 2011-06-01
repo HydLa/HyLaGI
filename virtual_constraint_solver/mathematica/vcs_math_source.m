@@ -29,14 +29,18 @@ checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
                         False, {Reduce::nsmet}], {Reduce::nsmet}];
       (* Inf‚ðŽæ‚Á‚Ä0‚É‚È‚ê‚ÎEntailed *)
       If[sol =!= False,
-        minT = Quiet[First[Minimize[{t, sol}, Append[pars,t]]]];
-        If[minT === 0,
-          (* \•ªðŒ‚©‚Ç‚¤‚©”»’è‚µ‚½‚¢ *)
-          (* MinValue‚Å‚Í‚È‚­Minimize‚ðŽg—p‚·‚é *)
-          (* If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False, *)
-          If[Quiet[Reduce[ForAll[pars, And@@otherExpr, First[Minimize[{t, sol}, t]] == 0]]] =!= False,
-            {1},
-            {3}
+        minT = Quiet[Minimize[{t, sol}, Append[pars,t]]];
+        If[Reduce[And@@Map[(Equal@@#)&, minT[[2]]] && And@@otherExpr] =!= False,
+          minT = First[minT];
+          If[minT === 0,
+            (* \•ªðŒ‚©‚ð”»’è *)
+            (* MinValue‚Å‚Í‚È‚­Minimize‚ðŽg‚¤ *)
+            (* If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False, *)
+            If[Quiet[Reduce[ForAll[pars, And@@otherExpr, First[Minimize[{t, sol}, t]] == 0]]] =!= False,
+              {1},
+              {3}
+            ],
+            {2}
           ],
           {2}
         ],
@@ -76,6 +80,8 @@ checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
 
 (* Print[checkEntailment[ht==0, {}, {ht}]] *)
 
+removeP[par_] := First[StringCases[ToString[par], "p" ~~ x__ -> x]];
+
 renameVar[varName_] := Block[
   {renamedVarName, derivativeCount = 0, prevFlag = 0,
    getDerivativeCountPoint, removeUsrVar
@@ -83,7 +89,6 @@ renameVar[varName_] := Block[
 
   getDerivativeCountPoint[Derivative[n_][var_]] := n;
   removeUsrVar[var_] := First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]];
-  removeP[par_] := First[StringCases[ToString[par], "p" ~~ x__ -> x]];
 
   (* •Ï”–¼‚É'‚ª‚Â‚­ê‡‚Ìˆ— *)
   If[MemberQ[{varName}, Derivative[n_][x_], Infinity],
@@ -124,18 +129,20 @@ renameVar[varName_] := Block[
  * 3:LessEqual
  * 4:GreaterEqual
 *)
+
+getExprCode[expr_] := Switch[Head[expr],
+  Equal, 0,
+  Less, 1,
+  Greater, 2,
+  LessEqual, 3,
+  GreaterEqual, 4
+];
+
 convertCSToVM[orExprs_] := Block[
-  {andExprs, inequalityVariable,
-   getExprCode, removeInequality},
-      
-  getExprCode[expr_] := Switch[Head[expr],
-    Equal, 0,
-    Less, 1,
-    Greater, 2,
-    LessEqual, 3,
-    GreaterEqual, 4
-  ];
-   
+  {resultExprs, inequalityVariable,
+   removeInequality},
+  
+  
   (* Inequality[a, relop, x, relop, b]‚ÌŒ`‚ð•ÏŒ` *)
   removeInequality[ret_, expr_] := (
     If[Head[expr] === Inequality,
@@ -146,27 +153,28 @@ convertCSToVM[orExprs_] := Block[
       Append[ret, expr]
     ]
   );
+  
+  
+  formatExprs[exprs_] := (
+    If[Cases[exprs, Except[True]]==={},
+      (* Ž®‚ð–¼‘O{i•Ï”–¼j, iŠÖŒW‰‰ŽZŽqƒR[ƒhj, (’l‚Ìƒtƒ‹•¶Žš—ñ)‚ÌŒ`Ž®‚É•ÏŠ·‚·‚é *)
+      {},
+      
+      DeleteCases[Map[({renameVar[#[[1]]], 
+                        getExprCode[#], 
+                        ToString[FullForm[#[[2]]]]}) &, 
+                      Fold[(removeInequality[#1, #2]) &, {}, exprs]],
+                  {invalidVar, _, _}]
+    ]
+  );
 
-
-  debugPrint["orExprs:", orExprs];
   If[Head[First[orExprs]] === Or,
-    (* Or‚ªŠÜ‚Ü‚ê‚éê‡‚Í1‚Â‚¾‚¯Ì—p *)
-    (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
-    andExprs = First[First[orExprs]],
-    (* Or‚ªŠÜ‚Ü‚ê‚È‚¢ê‡ *)
-    andExprs = First[orExprs]
+    resultExprs = Map[(applyList[#])&, List@@First[orExprs]],
+    resultExprs = Map[(applyList[#])&, orExprs]
   ];
-  andExprs = applyList[andExprs];
-  If[Cases[andExprs, Except[True]]==={},
-    (* ƒXƒgƒA‚ª‹ó‚Ìê‡‚Í‹óW‡‚ð•Ô‚· *)
-    {},
-    andExprs = Fold[(removeInequality[#1, #2]) &, {}, andExprs];
-    DeleteCases[Map[({renameVar[#[[1]]], 
-                      getExprCode[#], 
-                      ToString[FullForm[#[[2]]]]}) &, 
-                    andExprs],
-                {invalidVar, _, _}]]
-
+  resultExprs = Map[formatExprs, resultExprs];
+  debugPrint["resultExprs:", resultExprs];
+  resultExprs
 ];
 
 (*
@@ -216,6 +224,33 @@ createVariableList[True, vars_, result_] := (
 (* Ž®’†‚É•Ï”–¼‚ªoŒ»‚·‚é‚©”Û‚© *)
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
+getInverseRelop[relop_] := Switch[relop,
+                                  Equal, Equal,
+                                  Less, Greater,
+                                  Greater, Less,
+                                  LessEqual, GreaterEqual,
+                                  GreaterEqual, LessEqual];
+
+(* •K‚¸ŠÖŒW‰‰ŽZŽq‚Ì¶‘¤‚É•Ï”–¼‚ª“ü‚é‚æ‚¤‚É‚·‚é *)
+adjustExprs[andExprs_] := 
+  Fold[(If[Not[hasVariable[#2[[1]]]],
+          (* true *)
+          If[hasVariable[#2[[2]]],
+            (* true *)
+            (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰ŽZŽq‚ð‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
+            Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
+            (* false *)
+            (* ƒpƒ‰ƒ[ƒ^§–ñ‚Ìê‡‚É‚±‚±‚É“ü‚é *)
+            If[NumericQ[#2[[1]]],
+              (* true *)
+              (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰ŽZŽq‚ð‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
+              Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
+              (* false *)
+              Append[#1, #2]]],
+          (* false *)
+          Append[#1, #2]]) &,
+       {}, andExprs];
+
 (*
  * §–ñ‚ª–³–µ‚‚Å‚ ‚é‚©‚ðƒ`ƒFƒbƒN‚·‚é
  * Reduce‚Å‰ð‚¢‚½Œ‹‰ÊA‰ð‚ª“¾‚ç‚ê‚ê‚Î–³–µ‚
@@ -228,37 +263,8 @@ hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCha
  *)
 isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
 {
-  sol,
-  getInverseRelOp, adjustExprs
+  sol
 },
-
-  getInverseRelop[relop_] := Switch[relop,
-                                    Equal, Equal,
-                                    Less, Greater,
-                                    Greater, Less,
-                                    LessEqual, GreaterEqual,
-                                    GreaterEqual, LessEqual];
-
-  (* •K‚¸ŠÖŒW‰‰ŽZŽq‚Ì¶‘¤‚É•Ï”–¼‚ª“ü‚é‚æ‚¤‚É‚·‚é *)
-  adjustExprs[andExprs_] := 
-    Fold[(If[Not[hasVariable[#2[[1]]]],
-            (* true *)
-            If[hasVariable[#2[[2]]],
-              (* true *)
-              (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰ŽZŽq‚ð‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
-              Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
-              (* false *)
-              (* ƒpƒ‰ƒ[ƒ^§–ñ‚Ìê‡‚É‚±‚±‚É“ü‚é *)
-              If[NumericQ[#2[[1]]],
-                (* true *)
-                (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰ŽZŽq‚ð‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
-                Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
-                (* false *)
-                Append[#1, #2]]],
-            (* false *)
-            Append[#1, #2]]) &,
-         {}, andExprs];
-
 
   debugPrint["expr:", expr, "pexpr", pexpr, "vars:", vars];
   sol = Reduce[expr, vars, Reals];
@@ -462,8 +468,8 @@ isConsistentInterval[expr_, vars_] :=  Block[
  *)
 calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherExpr_] := Block[
 {
-  calcMinTime,
-  sol, minT, paramVars, compareResult,
+  calcMinTime, addMinTime, selectCondTime, makeListFromPiecewise, removeInequality,
+  sol, minT, paramVars, compareResult, resultList, condTimeList,
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
   calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, askID_}] := (
@@ -517,64 +523,154 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
       ]
     ]
   );
+  
+  (* Piecewise‚ð•ª‰ð‚µ‚ÄƒŠƒXƒg‚É‚·‚é *)
+     makeListFromPiecewise[minT_, others_] := ( Block[
+      {
+       tmpCondition = False
+      },
+      tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
+      tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
+      Append[minT[[1]], {minT[[2]], tmpCondition}]
+   ]
+  );
+  
+  
+  (* Žž‚ÆðŒ‚Ì‘g‚ÌƒŠƒXƒg‚ÅCðŒ‚ª˜_—˜a‚Å‚Â‚È‚ª‚Á‚Ä‚¢‚éê‡‚»‚ê‚¼‚ê‚É•ª‰ð‚·‚é *)
+  divideDisjunction[timeCondList_] := Map[({timeCondList[[1]], #})&, List@@timeCondList[[2]]];
+  
+  
+  (* Žž‚ð”äŠr‚·‚éDðŒ‚É‚æ‚Á‚Ä•Ï‰»‚·‚éê‡‚Í•¡”‚É•ªŠò‚³‚¹‚é *)
+
+  compareTime[{}, time_] := {};
+  compareTime[{currentTimeCond_, t___}, time_] := ( Block[
+      {
+        sol, andCond, 
+        currentMinTime
+      },
+      andCond = currentTimeCond[[2]];
+      If[andCond === False,
+        {},
+        currentMinTime = currentTimeCond[[1]];
+        sol = Quiet[Reduce[And[andCond,currentMinTime > time], Reals]];
+        If[sol === False || Implies[andCond, Not[sol]] === True,
+          Join[{{currentTimeCond[[1]], andCond}}, compareTime[{t}, time]],
+          If[sol === True || Implies[andCond, sol] === True,
+            Join[{{time, andCond}}, compareTime[{t}, time]],
+            Join[{{time, Reduce[And[sol,andCond]]},
+                  {currentMinTime, Reduce[And[Not[sol], andCond]]}}, compareTime[{t}, time]]
+          ]
+        ]
+      ]
+    ]
+  );
+
+  (* ‚ ‚éðŒ‰º‚ÅC‚ ‚éŽž‚Ì‘g‚©‚çÅ¬Žž‚ðŒ©‚Â‚¯‚ÄƒŠƒXƒg‚É‚·‚é *)
+  findMinTimeForEachCase[time_, cond_] := ( Block[
+    {
+      tmpList
+    },
+      tmpList = Fold[(compareTime[#1,#2])&, {{Infinity, cond}}, time];
+      tmpList = Map[({#[[1]],LogicalExpand[#[[2]]]})&,tmpList];
+      tmpList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, tmpList];
+      tmpList = Map[({#[[1]],applyList[#[[2]]]})&,tmpList];
+      tmpList
+    ]
+  );
+  selectEachCase[time_, cond_, {}, list_] := {};
+  selectEachCase[time_, cond_, {h1_, t1___}, {}] := 
+    Join[findMinTimeForEachCase[Append[time, h1[[1]]], And[cond, h1[[2]]]], selectEachCase[time, cond, {t1}, {}]];
+  selectEachCase[time_, cond_, {h1_, t1___}, {h2_, t2___}] := 
+    Join[selectEachCase[Append[time, h1[[1]]], And[cond, h1[[2]]], h2, {t2}], selectEachCase[time, cond, {t1}, {h2, t2}]];
 
 
-  (* Å¬’l‚ÆðŒ‚Ì‘g‚ðƒŠƒXƒgƒAƒbƒv‚·‚éŽž‚ÉŽg‚¤ŠÖ”D‰¼ *)
-  addMinTime[currentList_, {type_, integAsk_, askID_}] := (
+  (* Å¬Žž‚ðƒŠƒXƒgƒAƒbƒv‚·‚é‚½‚ß‚ÌŠÖ” *)
+  addMinTime[currentList_, integAsk_] := (
     If[integAsk=!=False,
       (* true *)
       (* ‰ð‚È‚µ‚Æ‹«ŠE’l‚Ì‰ð‚ð‹æ•Ê‚·‚é *)  
-      sol = Quiet[Check[Reduce[{timeMinCons && (maxTime>=t) && (integAsk) && (And @@ otherExpr)}, t],
+      sol = Quiet[Check[Reduce[{timeMinCons && (maxTime>=t) && (integAsk) && (And @@ otherExpr)}, t, Reals],
                         errorSol,
                         {Reduce::nsmet}],
                   {Reduce::nsmet}];
-      (*  debugPrint["calcMinTime#sol: ", sol]; *)
+      (*  debugPrint["addMinTime#sol: ", sol]; *)
       If[sol=!=False && sol=!=errorSol, 
         (* true *)
         (* ¬‚è—§‚Ât‚ÌÅ¬’l‚ð‹‚ß‚é *)
         minT = First[Quiet[Minimize[{t, timeMinCons && (sol)}, {t}], 
                            Minimize::wksol]],
-
         (* false *)
         minT = error
       ],
       (* false *)
-      minT=0
+      minT=error
     ];
 
-    debugPrint["calcMinTime#minT: ", minT];
-    (* 0•bŒã‚Ì‚ðŠÜ‚ñ‚Å‚Í‚¢‚¯‚È‚¢ *)
-    If[includeZero===False && minT===0, minT=error];
-    (* 0•bŒã‚Ì—£ŽU•Ï‰»‚ªs‚í‚ê‚é‚©‚Ìƒ`ƒFƒbƒN‚È‚Ì‚Å0‚Å‚È‚¯‚ê‚ÎƒGƒ‰[ *)
-    If[includeZero===True && minT=!=0,
-      (* Piecewise‚Ö‚Ì‘Î‰ž *)
-      If[Head[minT] === Piecewise, minT = First[First[First[minT]]]];
-    minT=error];
 
     If[minT === error,
-      (* true *)
       currentList,
-
-      (* false *)
-      Append[currentList,{minT, type, askID}]
+      (* Piecewise‚È‚ç•ª‰ð *)
+      If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, (And @@ otherExpr)], minT = {{minT, True}}];
+      Append[currentList, minT]
+    ]
+  );
+  
+  (*  ƒŠƒXƒg‚©‚çInequality‚ðœ‚­ *)
+  removeInequalityInList[{}] := {};
+  removeInequalityInList[{h_,t___}] := ( Block[
+      {
+        resultList
+      },
+      If[Head[h] === Inequality,
+        resultList = Join[{Reduce[h[[2]][h[[3]], h[[1]]], h[[3]]]},
+             {h[[4]][h[[3]], h[[5]]]}
+        ],
+        If[h === True,(* ‚Â‚¢‚Å‚ÉTrue‚àœ‚­ *)
+          resultList = {},
+          resultList = {h}
+        ];
+      ];
+      Join[resultList, removeInequalityInList[{t}]]
+    ]
+  );
+  
+  (* ƒŠƒXƒg‚ð®Œ`‚·‚éë *)
+  convertExpr[list_] := ( Block[
+    {
+      tmpList
+    },
+      tmpList = removeInequalityInList[list];
+      tmpList = adjustExprs[tmpList];
+      tmpList = Map[({removeP[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]})&, tmpList];
+      tmpList
     ]
   );
 
 
-
-  Fold[calcMinTime,
+  (* ]—ˆ‚ÌCÅ¬Žž‚ð‚P‚Â‚¾‚¯Œ©‚Â‚¯‚é‚½‚ß‚Ìˆ—ý *)
+  (*Fold[calcMinTime,
        {maxTime, {}},
        Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk],
-            Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]]
-  (* ‚Ü‚¸ƒŠƒXƒgƒAƒbƒv *)
-  (*Fold[addMinTime,
-       {},
-       Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
-            Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk],
             Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]]*)
-   
+
+  (* ‚Ü‚¸ƒŠƒXƒgƒAƒbƒv *)
+  resultList = Fold[addMinTime,
+       {},
+       Join[Map[(Not[#[[1]]])&, posAsk],
+            Map[(#[[1]])&, negAsk],
+            Map[(#[[1]])&, NACons]]];
+  (* Žž‚ÆðŒ‚Ì‘g‚Ý‡‚í‚¹‚ð‘S‚ÄŽŽ‚· *)
+  If[resultList =!= {},
+    resultList = selectEachCase[{}, True, {{maxTime, (And @@ otherExpr)}}, resultList],
+    resultList = {{maxTime, otherExpr}}
+  ];
+
+  (* ®Œ`‚µ‚ÄŒ‹‰Ê‚ð•Ô‚· *)
+  resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[#[[1]] === maxTime, 1, 0]})&, resultList];
+  resultList
 ];
+   
 
 (* Print[nextPointPhaseTime[False, 10, {}, {{t*t==2, c3}}]] *)
 
@@ -612,7 +708,6 @@ integrateCalc[cons_,
   tmpNegAsk,
   tmpNACons,
   tmpMinT, 
-  tmpMinAskIDs,
   tmpVarMap,
   endTimeFlag,
   tmpRet,
@@ -645,7 +740,8 @@ integrateCalc[cons_,
     (* true *)
     paramCons = getParamCons[cons];
     paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, paramCons]];
-    tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], Join[vars, paramVars], Reals]]];
+    tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
+    debugPrint["tmpIntegSol: ", tmpIntegSol, "paramVars", paramVars "paramCons", paramCons];
     (* 1‚Â‚¾‚¯Ì—p *)
     (* TODO: •¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
     If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
@@ -653,6 +749,7 @@ integrateCalc[cons_,
     tmpIntegSol = removeTrivialCons[applyList[tmpIntegSol], Join[vars, paramVars]];
 
     {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[tmpIntegSol];
+    (* debugPrint["DExpr ", DExpr, "DExprVars", DExprVars]; *)
 
     If[Cases[DExpr, Except[True]] === {},
       tmpIntegSol = {},
@@ -662,7 +759,6 @@ integrateCalc[cons_,
       (* TODO:•¡”‰ð‚ ‚éê‡‚àl‚¦‚é *)
       tmpIntegSol = First[tmpIntegSol]];
 
-    (* debugPrint["tmpIntegSol: ", tmpIntegSol, "paramVars", paramVars "paramCons", paramCons]; *)
     (* tmpIntegSol‚¨‚æ‚ÑNDExpr“à‚ÉoŒ»‚·‚éND•Ï”‚Ìˆê——‚ð“¾‚é *)
     solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
     (* integrateCalc‚ÌŒvŽZŒ‹‰Ê‚Æ‚µ‚Ä•K—v‚È•Ï”‚Ìˆê—— *)
@@ -670,32 +766,28 @@ integrateCalc[cons_,
 
     tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
                               getNDVars[returnVars]]];
+    
 
-    tmpPosAsk = Map[(# /. tmpIntegSol ) &, posAsk];
+    tmpPosAsk = Map[(# /. tmpIntegSol) &, posAsk];
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
     tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
-    {tmpMinT, tmpMinAskIDs} = 
-      calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, Join[otherExpr, paramCons]];
+    debugPrint["nextpointphase arg:", {False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons}];
+    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons];
 
     tmpVarMap = 
       Map[({getVariableName[#], 
             getDerivativeCount[#], 
             createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
-          returnVars];
-    endTimeFlag = If[Reduce[tmpMinT >= maxTime && (And @@ Join[otherExpr, paramCons]), paramVars] =!= False, 1, 0],
+          returnVars],
 
     (* false *)
-    tmpMinT = maxTime;
+    tmpMinT = {{maxTime, {}, 1}};
     tmpVarMap = {};
-    tmpMinAskIDs = {};
-    endTimeFlag = 1
   ];
   tmpRet = {1,
-            ToString[FullForm[tmpMinT]],
             tmpVarMap,
-            tmpMinAskIDs, 
-            endTimeFlag};
-  debugPrint["tmpRet:", tmpRet];
+            tmpMinT};
+  (*debugPrint["tmpRet:", tmpRet];*)
   tmpRet
 ],
   (* debugPrint["MessageList:", $MessageList]; *)

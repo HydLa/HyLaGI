@@ -45,6 +45,8 @@ typedef enum _RuleID {
   
   // ¶‹ÉŒÀ
   RI_Previous,
+  // ’¼‘O‚ÌPP
+  RI_PreviousPoint,
 
   // ‘Š‰‰Zq (Always = Globally)
   RI_Always,

@@ -253,6 +253,8 @@ private:
     
         // ¶‹ÉŒÀ
       case RI_Previous:     {return create_unary_node<Previous>(ch);}
+        // ’¼ü‚ÌPP‚Ì’l
+      case RI_PreviousPoint:     {return create_unary_node<PreviousPoint>(ch);}
 
         // •Ï”E‘©”›•Ï”
       case RI_BoundVariable:

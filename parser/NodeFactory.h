@@ -81,6 +81,9 @@ protected:
   
   //¶‹ÉŒÀ
   NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Previous)
+  
+  //’¼‘O‚ÌPP‚Ì’l
+  NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(PreviousPoint)
 
   //•Ï”E‘©”›•Ï”
   NODE_FACTORY_DEFILE_NODE_CREATE_FUNC(Variable)

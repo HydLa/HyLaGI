@@ -83,6 +83,9 @@ public:
   // ç∂ã…å¿
   virtual void visit(boost::shared_ptr<Previous> node);
   
+  // ç∂ã…å¿
+  virtual void visit(boost::shared_ptr<PreviousPoint> node);
+  
   // î€íË
   virtual void visit(boost::shared_ptr<Not> node);
   

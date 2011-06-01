@@ -4,7 +4,6 @@
 #include <cassert>
 
 #include "Logger.h"
-#include <iostream>
 
 namespace hydla { 
 namespace parser {
@@ -51,7 +50,6 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
 	HYDLA_LOGGER_DEBUG("remove id: ", *it);
     pt->remove_node(*it);
   }
-  
 }
 
 void NodeIDUpdater::visit(boost::shared_ptr<hydla::parse_tree::FactorNode> node)

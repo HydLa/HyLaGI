@@ -52,6 +52,11 @@ public:
 
     return variables_[var];
   }
+  
+  void clear()
+  {
+    variables_.clear();
+  }
 
   iterator begin()       
   {

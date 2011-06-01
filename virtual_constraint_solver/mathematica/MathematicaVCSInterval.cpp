@@ -692,19 +692,6 @@ VCSResult MathematicaVCSInterval::integrate(
 
   HYDLA_LOGGER_DEBUG(constraint_store_);
 
-//   HYDLA_LOGGER_DEBUG(
-//     "#*** Integrator ***\n",
-//     "--- positive asks ---\n",
-//     positive_asks,
-//     "--- negative asks ---\n",
-//     negative_asks,
-//     "--- current time ---\n",
-//     current_time,
-//     "--- max time ---\n",
-//     max_time,
-//     "--- not_adopted_tells_list ---\n",
-//     not_adopted_tells_list);
-
 ////////////////// 送信処理
   PacketSender ps(*ml_);
   
@@ -737,7 +724,7 @@ VCSResult MathematicaVCSInterval::integrate(
     ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
   }
 
-  
+  //定数条件の送信
   send_parameter_cons();
 
   if(Logger::constflag==11){
@@ -793,9 +780,12 @@ VCSResult MathematicaVCSInterval::integrate(
 //   PacketChecker pc(*ml_);
 //   pc.check();
 
+  MathematicaExpressionConverter mec;
+
   HYDLA_LOGGER_DEBUG(
     "-- integrate math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 //  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
@@ -809,32 +799,15 @@ VCSResult MathematicaVCSInterval::integrate(
   if(PacketErrorHandler::handle(ml_, ret_code)) {
     return VCSR_SOLVER_ERROR;
   }
-
   HYDLA_LOGGER_DEBUG("---integrate calc result---");
-  integrate_result.states.resize(1);
-  virtual_constraint_solver_t::IntegrateResult::NextPhaseState& state = 
-    integrate_result.states.back();
+  virtual_constraint_solver_t::IntegrateResult::NextPhaseState state;
 
-  // next_point_phase_timeを得る
-  MathTime elapsed_time;
-  MathematicaExpressionConverter mec;
-  elapsed_time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
-  if(Logger::timeflag==2){
-  HYDLA_LOGGER_AREA("elapsed_time: ", elapsed_time);  
-  state.time  = elapsed_time;
-  state.time += current_time;
-  HYDLA_LOGGER_AREA("next_phase_time: ", state.time);  
-  }
-  HYDLA_LOGGER_DEBUG("elapsed_time: ", elapsed_time);  
-  state.time  = elapsed_time;
-  state.time += current_time;
-  HYDLA_LOGGER_SUMMARY("next_phase_time: ", state.time);  
-  ml_->MLGetNext(); // Listという関数名
   
   // 変数と値の組を受け取る
+  ml_->MLGetNext(); // Listという関数名
   int variable_list_size = ml_->get_arg_count();
   if(Logger::varflag==8){
-  HYDLA_LOGGER_AREA("variable_list_size : ", variable_list_size);
+    HYDLA_LOGGER_AREA("variable_list_size : ", variable_list_size);
   }
   HYDLA_LOGGER_DEBUG("variable_list_size : ", variable_list_size);  
   ml_->MLGetNext(); ml_->MLGetNext();
@@ -842,132 +815,115 @@ VCSResult MathematicaVCSInterval::integrate(
   {
     ml_->MLGetNext(); 
     ml_->MLGetNext();
-
     variable_t variable;
     value_t    value;
-  if(Logger::varflag==8){
-	HYDLA_LOGGER_AREA("--- add variable ---");
-  }
+    if(Logger::varflag==8){
+      HYDLA_LOGGER_AREA("--- add variable ---");
+    }
     HYDLA_LOGGER_DEBUG("--- add variable ---");
 
-    // 変数名
+      // 変数名
     variable.name = ml_->get_symbol().substr(6);
-	if(Logger::varflag==8){
-		HYDLA_LOGGER_AREA("name  : ", variable.name);
-	}
+    if(Logger::varflag==8){
+      HYDLA_LOGGER_AREA("name  : ", variable.name);
+    }
     HYDLA_LOGGER_DEBUG("name  : ", variable.name);
     ml_->MLGetNext();
 
-    // 微分回数
+      // 微分回数
     variable.derivative_count = ml_->get_integer();
     if(Logger::varflag==8){
-		HYDLA_LOGGER_AREA("derivative : ", variable.derivative_count);
-	}
-	HYDLA_LOGGER_DEBUG("derivative : ", variable.derivative_count);
+      HYDLA_LOGGER_AREA("derivative : ", variable.derivative_count);
+    }
+    HYDLA_LOGGER_DEBUG("derivative : ", variable.derivative_count);
     ml_->MLGetNext();
 
-    // 値
+      // 値
     value = mec.convert_math_string_to_symbolic_value(ml_->get_string());
-  if(Logger::varflag==8){
-	HYDLA_LOGGER_AREA("value : ", value.get_string());
-  }
+    if(Logger::varflag==8){
+      HYDLA_LOGGER_AREA("value : ", value.get_string());
+    }
     HYDLA_LOGGER_DEBUG("value : ", value.get_string());
     ml_->MLGetNext();
 
     state.variable_map.set_variable(variable, value); 
   }
-
-  // askとそのIDの組一覧を得る
-  int changed_asks_size = ml_->get_arg_count();
-  if(Logger::constflag==12){
-	  HYDLA_LOGGER_AREA("changed_asks_size : ", changed_asks_size);
-  }
-  HYDLA_LOGGER_DEBUG("changed_asks_size : ", changed_asks_size);
-  ml_->MLGetNext(); // Listという関数名
-  for(int j=0; j<changed_asks_size; j++)
-  {
-	if(Logger::constflag==12){
-	  HYDLA_LOGGER_AREA("--- add changed ask ---");
-	}
-    HYDLA_LOGGER_DEBUG("--- add changed ask ---");
-
-    ml_->MLGetNext(); // List関数
-    ml_->MLGetNext(); // Listという関数名
+  
+  
+  // 次のPPの時刻と，その場合の条件の組，更に終了時刻かどうかを得る
+  HYDLA_LOGGER_DEBUG("-- receive next PP time --");
+  int next_time_size = ml_->get_arg_count();
+  HYDLA_LOGGER_DEBUG("next_time_size: ", next_time_size);
+  ml_->MLGetNext();
+  for(int time_it = 0; time_it < next_time_size; time_it++){
+    ml_->MLGetNext();ml_->MLGetNext(); ml_->MLGetNext();
+    state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string()) + current_time;
+    HYDLA_LOGGER_SUMMARY("next_phase_time: ", state.time);
     ml_->MLGetNext();
-
-    std::string changed_ask_type_str = ml_->get_symbol(); // pos2negまたはneg2pos
-    if(Logger::constflag==12){
-		HYDLA_LOGGER_AREA("changed_ask_type_str : ", changed_ask_type_str);
-	}
-	HYDLA_LOGGER_DEBUG("changed_ask_type_str : ", changed_ask_type_str);
-
-    hydla::simulator::AskState changed_ask_type;
-    if(changed_ask_type_str == "pos2neg"){
-      changed_ask_type = hydla::simulator::Positive2Negative;
+    int condition_size = ml_->get_arg_count();//条件式の数
+    ml_->MLGetNext(); ml_->MLGetNext();
+    
+    state.parameter_map.clear();
+    parameter_t tmp_param, prev_param;
+    value_range_t tmp_range;
+    for(int cond_it = 0; cond_it < condition_size; cond_it++){
+      ml_->MLGetNext(); ml_->MLGetNext();
+      tmp_param.name = ml_->get_string();
+      HYDLA_LOGGER_DEBUG("returned parameter_name: ", tmp_param.name);
+      ml_->MLGetNext();
+      int relop_code = ml_->get_integer();
+      HYDLA_LOGGER_DEBUG("returned relop_code: ", relop_code);
+      ml_->MLGetNext();
+      std::string parameter_value_string = ml_->get_string();
+      HYDLA_LOGGER_DEBUG("returned value: ", parameter_value_string);
+      ml_->MLGetNext();
+      if(prev_param.name!=tmp_param.name){
+        //直前と同じ名前の定数だったら同じとこに入れる．この処理はあくまで同じ定数についての式が連続するという前提でやってるから危ないかも
+        tmp_range.clear();
+      }
+      tmp_range.add(value_range_t::Element(MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string),
+                                           MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+      state.parameter_map.set_variable(tmp_param, tmp_range);
+      prev_param.name = tmp_param.name;
     }
-    else if(changed_ask_type_str == "neg2pos") {
-      changed_ask_type = hydla::simulator::Negative2Positive;
-    }
-    else {
-      assert(0);
-    }
+    state.is_max_time = ml_->get_integer();
+    HYDLA_LOGGER_DEBUG("is_max_time: ",  state.is_max_time);
+    HYDLA_LOGGER_DEBUG("--parameter map--\n",  state.parameter_map);
+    
+    
 
-    int changed_ask_id = ml_->get_integer();
-    HYDLA_LOGGER_DEBUG("changed_ask_id : ", changed_ask_id);
-
-    integrate_result.changed_asks.push_back(
-      std::make_pair(changed_ask_type, changed_ask_id));
+    // 未定義の変数を変数表に反映
+    // 初期値制約（未定義変数を含む）とvariable_mapとの差分を解消
+    add_undefined_vars_to_vm(state.variable_map);
+    
+    integrate_result.states.push_back(state);
   }
-  if(Logger::timeflag==3){
-  // max timeかどうか
-  HYDLA_LOGGER_AREA("-- receive max time --");
-//   PacketChecker c(*ml_);
-//   c.check2();
-  if(changed_asks_size==0) {
-    ml_->MLGetNext();  
-  }
-  state.is_max_time = ml_->get_integer() == 1;
-  HYDLA_LOGGER_AREA("is_max_time : ", state.is_max_time);
-  }
-
-  // max timeかどうか
-  HYDLA_LOGGER_DEBUG("-- receive max time --");
-//   PacketChecker c(*ml_);
-//   c.check2();
-  if(changed_asks_size==0) {
-    ml_->MLGetNext();  
-  }
-  state.is_max_time = ml_->get_integer() == 1;
-  HYDLA_LOGGER_DEBUG("is_max_time : ", state.is_max_time);
 
 ////////////////// 受信終了
 
+  for(unsigned int state_it = 0; state_it < integrate_result.states.size(); state_it++){
   // 時刻の簡約化。本来は関数使ってやるべきだけど、とりあえずそのままここに
-  HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", state.time);
-  ml_->put_function("ToString", 1);
-  ml_->put_function("FullForm", 1);
-  ml_->put_function("Simplify", 1);
-  ps.put_node(state.time.get_node(), PacketSender::VA_None, true);
-  ml_->skip_pkt_until(RETURNPKT);
-  state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
-
-
-
-  // 時刻の近似
-  if(approx_precision_ > 0) {
+    HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", integrate_result.states[state_it].time);
     ml_->put_function("ToString", 1);
     ml_->put_function("FullForm", 1);
-    ml_->put_function("approxExpr", 2);
-    ml_->put_integer(approx_precision_);
-    send_time(state.time);
+    ml_->put_function("Simplify", 1);
+    ps.put_node(integrate_result.states[state_it].time.get_node(), PacketSender::VA_None, true);
     ml_->skip_pkt_until(RETURNPKT);
-    ml_->MLGetNext(); 
-    state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
-  }
+    integrate_result.states[state_it].time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
 
-  // 未定義の変数を変数表に反映
-  // 初期値制約（未定義変数を含む）とvariable_mapとの差分を解消
-  add_undefined_vars_to_vm(state.variable_map);
+
+    // 時刻の近似
+    if(approx_precision_ > 0) {
+      ml_->put_function("ToString", 1);
+      ml_->put_function("FullForm", 1);
+      ml_->put_function("approxExpr", 2);
+      ml_->put_integer(approx_precision_);
+      send_time(integrate_result.states[state_it].time);
+      ml_->skip_pkt_until(RETURNPKT);
+      ml_->MLGetNext(); 
+      integrate_result.states[state_it].time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
+    }
+  }
 
 
 /*
@@ -1192,29 +1148,29 @@ std::ostream& MathematicaVCSInterval::dump(std::ostream& s) const
 {
   s << "#*** Dump MathematicaVCSInterval ***\n"
     << "--- constraint store ---\n";
+/*
+   std::set<MathVariable>::const_iterator vars_it = 
+     constraint_store_.second.begin();
+   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
+     constraint_store_.first.begin();
+   while((or_cons_it) != constraint_store_.first.end())
+   {
+     std::set<MathValue>::const_iterator and_cons_it = 
+       (*or_cons_it).begin();
+     while((and_cons_it) != (*or_cons_it).end())
+     {
+       s << (*and_cons_it).str << " ";
+       and_cons_it++;
+     }
+     s << "\n";
+     or_cons_it++;
+   }
 
-//   std::set<MathVariable>::const_iterator vars_it = 
-//     constraint_store_.second.begin();
-//   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
-//     constraint_store_.first.begin();
-//   while((or_cons_it) != constraint_store_.first.end())
-//   {
-//     std::set<MathValue>::const_iterator and_cons_it = 
-//       (*or_cons_it).begin();
-//     while((and_cons_it) != (*or_cons_it).end())
-//     {
-//       s << (*and_cons_it).str << " ";
-//       and_cons_it++;
-//     }
-//     s << "\n";
-//     or_cons_it++;
-//   }
-
-//   while((vars_it) != constraint_store_.second.end())
-//   {
-//     s << *(vars_it) << " ";
-//     vars_it++;
-//   }
+   while((vars_it) != constraint_store_.second.end())
+   {
+     s << *(vars_it) << " ";
+     vars_it++;
+   }*/
 
   return s;
 }

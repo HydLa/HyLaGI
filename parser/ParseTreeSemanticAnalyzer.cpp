@@ -396,6 +396,19 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 
   dispatch_child(node); 
 }
+
+
+// 直前のPPの値
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<PreviousPoint> node)
+{  
+  // 子ノードが微分か変数でなかったらエラー
+  if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
+     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+       throw InvalidPreviousPoint(node);
+  }
+
+  dispatch_child(node); 
+}
   
 // 変数
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
