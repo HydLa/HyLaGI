@@ -891,14 +891,18 @@ void SymbolicSimulator::output_result_tree()
   while(1){
     state_result_sptr_t now_node = result_root_->children.back();
     std::cout << "---------------------Case " << i++ << "---------------------" << std::endl;
+    time_t previous_pp_time;
     while(1){
+      variable_map_t vm;
       if(now_node->phase_type==IntervalPhase){
         std::cout << "---------IP---------" << std::endl;
+        vm = shift_variable_map_time(now_node->variable_map, previous_pp_time);
       }else{
         std::cout << "---------PP---------" << std::endl;
+        vm = now_node->variable_map;
+        previous_pp_time = now_node->time;
       }
       std::cout << "time\t: " << now_node->time << "\n";
-      variable_map_t &vm = now_node->variable_map;
       variable_map_t::const_iterator it  = vm.begin();
       variable_map_t::const_iterator end = vm.end();
       for(; it!=end; ++it) {
