@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <iostream>
+
 #include "Logger.h"
 
 namespace hydla {
@@ -11,7 +13,6 @@ namespace symbolic_simulator{
 const std::string SymbolicValueRange::relation_symbol_[RELATION_NUMBER] = {"", "!=", "<=", "<", ">=", ">"};
 
 SymbolicValueRange::SymbolicValueRange(){
- current_or_ = NULL;
 }
 
 SymbolicValueRange::Element::Element(const SymbolicValue& val, const Relation& rel){
@@ -104,29 +105,28 @@ void SymbolicValueRange::set(const std::vector<std::vector<SymbolicValueRange::E
 void SymbolicValueRange::clear()
 {
  value_range_.clear();
- current_or_ = NULL;
 }
 
 void SymbolicValueRange::set(const Element &ele)
 {
  clear();
- go_next_or();
  add(ele);
 }
 
-void SymbolicValueRange::go_next_or()
-{
- std::vector< Element> tmp;
- value_range_.push_back(tmp);
- current_or_ = &value_range_.back();
-}
 
 void SymbolicValueRange::add(const SymbolicValueRange::Element &ele)
 {
- if(!current_or_){
-  go_next_or();
- }
- current_or_->push_back(ele);
+  if(value_range_.size()==0){
+    and_vector tmp;
+    value_range_.push_back(tmp);
+  }
+  value_range_.back().push_back(ele);
+}
+
+
+void SymbolicValueRange::add_vector(const and_vector &clause)
+{
+ value_range_.push_back(clause);
 }
 
 bool operator<(const SymbolicValueRange& lhs, 

@@ -121,12 +121,7 @@ private:
 
 
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ
-  
-  /*std::vector<std::string> output_vector_;           //全解探索で，全経路出力を行うための配列
-  std::stack<int> branch_stack_;                     //直前に分岐した数を記憶するためのスタック
-  int branch_;                                       //今フェーズで何状態に分岐したかを示す変数
-  std::ostringstream output_buffer_;                 //スタックに入れるための，直前の分岐から現在までの出力保持*/
-  
+
   state_result_sptr_t result_root_;                  //結果を示す解軌道木の根．初期状態なので，子供以外の情報は入れない
 };
 

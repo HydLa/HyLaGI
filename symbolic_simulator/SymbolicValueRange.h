@@ -72,7 +72,6 @@ struct SymbolicValueRange {
    * とりあえず最初のrelationの記号を返す
    */
   std::string get_first_symbol() const;
-  
 
   /**
    * 新たなものをセット
@@ -95,9 +94,14 @@ struct SymbolicValueRange {
   void go_next_or();
 
   /**
-   * 新たな要素を追加
+   * 最後節に新たな要素を追加
    */
   void add(const Element &ele);
+  
+  /**
+   * 新たな節を追加
+   */
+  void add_vector(const and_vector &clause);
   
   or_const_iterator or_begin() const {return value_range_.begin();}
   or_iterator or_begin() {return value_range_.begin();}
@@ -116,7 +120,6 @@ struct SymbolicValueRange {
   private:
   
 
-  std::vector <Element> *current_or_;
   std::string visit_all(const std::vector<Element> &vec, const std::string &delimiter) const;
   //配列を走査してデリミタで連結して出力
   

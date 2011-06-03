@@ -35,6 +35,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
                                        time_t>{
     parameter_map_t parameter_map;
     state_result_sptr_t parent_state_result;
+    int step;
   }phase_state_t;
 
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
@@ -67,6 +68,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
     std::string mathlink;
     bool debug_mode;
     std::string max_time; //TODO: time_t‚É‚·‚é
+    int max_step;
     bool nd_mode;
     OutputStyle output_style;
     bool interactive_mode;

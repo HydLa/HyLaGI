@@ -208,9 +208,9 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
   ml_->MLGetNext();
   for(int or_it = 0; or_it < or_size; or_it++){
     create_result_t::maps_t maps;
-    variable_t symbolic_variable, prev_variable;
+    std::set<std::string> added_parameters;  //「今回追加された記号定数」の一覧
+    variable_t symbolic_variable;
     value_t symbolic_value;
-    value_range_t tmp_range;
     parameter_t tmp_param;
     ml_->MLGetNext();
     int and_size = ml_->get_arg_count();
@@ -218,6 +218,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
     ml_->MLGetNext(); // Listという関数名
     for(int i = 0; i < and_size; i++)
     {
+      value_range_t tmp_range;
       ml_->MLGetNext();
       ml_->MLGetNext();
       
@@ -241,15 +242,11 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
       symbolic_variable.derivative_count = variable_derivative_count;
 
       if(prev==-1){//既存の記号定数の場合
-        if(prev_variable.name!=symbolic_variable.name){
-          //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
-          tmp_range.clear();
-        }
+        tmp_param.name = variable_name;
+        tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
         tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
-        tmp_param.name = variable_name;
         maps.parameter_map.set_variable(tmp_param, tmp_range);
-        prev_variable.name = variable_name;
         continue;
       }
       // 関係演算子コードを元に、変数表の対応する部分に代入する
@@ -267,18 +264,17 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
           //とりあえず微分回数分dをつける
           tmp_param.name.append("d");
         }
-        if(prev_variable.name!=symbolic_variable.name||prev_variable.derivative_count!=symbolic_variable.derivative_count){
-          //直前と同じ名前の変数だったら同じとこに入れる．この処理はあくまで同じ変数についての制約は連続してるって前提でやってるから危ないかも
-          tmp_range.clear();
-          while(1){
-           value_range_t &value = maps.parameter_map.get_variable(tmp_param);
-           if(value.is_undefined()){
-             break;
-           }
-            //とりあえず重複回数分iをつける
-           tmp_param.name.append("i");
-           }
+        while(1){
+          if(added_parameters.find(tmp_param.name)!=added_parameters.end())break; //今回追加された記号定数に含まれるなら，同じ場所に入れる
+          value_range_t &value = maps.parameter_map.get_variable(tmp_param);
+          if(value.is_undefined()){
+            added_parameters.insert(tmp_param.name);
+            break;
+          }
+          //とりあえず重複回数分iをつける
+          tmp_param.name.append("i");
         }
+        tmp_range = maps.parameter_map.get_variable(tmp_param);
         MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
         symbolic_value.set_unique(false);
         tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
@@ -286,8 +282,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
       HYDLA_LOGGER_SUMMARY(maps.variable_map);
-      prev_variable.name = variable_name;
-      prev_variable.derivative_count = variable_derivative_count;
+      HYDLA_LOGGER_SUMMARY(maps.parameter_map);
     }
     create_result.result_maps.push_back(maps);
   }

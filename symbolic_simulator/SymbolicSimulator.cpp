@@ -79,6 +79,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   //初期状態を作ってスタックに入れる
   phase_state_sptr state(create_new_phase_state());
   state->phase        = PointPhase;
+  state->step        = 0;
   state->current_time = time_t("0");
   state->variable_map = variable_map_;
   state->module_set_container = msc_original_;
@@ -333,19 +334,21 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   
   SymbolicVirtualConstraintSolver::create_result_t create_result;
   solver_->create_maps(create_result);
+  if( opts_.max_step >= 0 && state->step >= opts_.max_step)
+    return true;
   for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_.nd_mode||create_it==0); create_it++)
   {
-    
     // Interval Phaseへ移行（次状態の生成）
     HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
     phase_state_sptr new_state(create_new_phase_state());
+    new_state->step = state->step+1;
     new_state->phase        = IntervalPhase;
     new_state->current_time = state->current_time;
     expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
     HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
                        new_state->expanded_always_id);
     new_state->module_set_container = msc_no_init_;
-  
+
     new_state->variable_map = create_result.result_maps[create_it].variable_map;
     new_state->parameter_map = create_result.result_maps[create_it].parameter_map;
     
@@ -897,12 +900,13 @@ void SymbolicSimulator::output_result_tree()
       if(now_node->phase_type==IntervalPhase){
         std::cout << "---------IP---------" << std::endl;
         vm = shift_variable_map_time(now_node->variable_map, previous_pp_time);
+        std::cout << "time\t: " << previous_pp_time << " -> " << now_node->time << "\n";
       }else{
         std::cout << "---------PP---------" << std::endl;
         vm = now_node->variable_map;
         previous_pp_time = now_node->time;
+        std::cout << "time\t: " << now_node->time << "\n";
       }
-      std::cout << "time\t: " << now_node->time << "\n";
       variable_map_t::const_iterator it  = vm.begin();
       variable_map_t::const_iterator end = vm.end();
       for(; it!=end; ++it) {

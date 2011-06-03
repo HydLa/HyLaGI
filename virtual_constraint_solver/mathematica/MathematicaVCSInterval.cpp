@@ -865,8 +865,8 @@ VCSResult MathematicaVCSInterval::integrate(
     
     state.parameter_map.clear();
     parameter_t tmp_param, prev_param;
-    value_range_t tmp_range;
     for(int cond_it = 0; cond_it < condition_size; cond_it++){
+      value_range_t tmp_range;
       ml_->MLGetNext(); ml_->MLGetNext();
       tmp_param.name = ml_->get_string();
       HYDLA_LOGGER_DEBUG("returned parameter_name: ", tmp_param.name);
@@ -877,10 +877,7 @@ VCSResult MathematicaVCSInterval::integrate(
       std::string parameter_value_string = ml_->get_string();
       HYDLA_LOGGER_DEBUG("returned value: ", parameter_value_string);
       ml_->MLGetNext();
-      if(prev_param.name!=tmp_param.name){
-        //直前と同じ名前の定数だったら同じとこに入れる．この処理はあくまで同じ定数についての式が連続するという前提でやってるから危ないかも
-        tmp_range.clear();
-      }
+      tmp_range = state.parameter_map.get_variable(tmp_param);
       tmp_range.add(value_range_t::Element(MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string),
                                            MathematicaExpressionConverter::get_relation_from_code(relop_code)));
       state.parameter_map.set_variable(tmp_param, tmp_range);

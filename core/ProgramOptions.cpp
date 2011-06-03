@@ -80,6 +80,10 @@ void ProgramOptions::init_descriptions()
     ("time,t", 
      value<std::string>()->default_value("1"), 
      "simulation time")
+     
+    ("step", 
+     value<int>()->default_value(-1), 
+     "simulation steps. negative value: infinity")
     
     ("interlanguage,i", 
      "show intermediate language")
