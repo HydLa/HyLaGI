@@ -524,12 +524,15 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
     ]
   );
   
-  (* Piecewiseを分解してリストにする *)
+  (* Piecewiseを分解してリストにする．条件がFalseなのは削除 *)
      makeListFromPiecewise[minT_, others_] := ( Block[
       {tmpCondition = False},
       tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
       tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
-      Append[minT[[1]], {minT[[2]], tmpCondition}]
+      If[ tmpCondition === False,
+        minT[[1]],
+        Append[minT[[1]], {minT[[2]], tmpCondition}]
+      ]
    ]
   );
 
@@ -563,7 +566,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
       },
       andCond = Reduce[timeCond1[[2]]&&timeCond2[[2]], Reals];
       If[andCond === False,
-        {timeCond1},
+        {},
         sol = Quiet[Reduce[And[andCond,timeCond1[[1]] > timeCond2[[1]]], Reals]];
         If[ sol === False || Implies[andCond, Not[sol]] === True,
           {{timeCond1[[1]], andCond}},
@@ -601,6 +604,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
         tmpList = compareMinTimeList[timeConditionList, tmpList];
         tmpList = calcMinTimeList[Rest[askList], tmpList, conditionForAll];
         tmpList
+        (*timeConditionList*)
       ]
     ]
   );
