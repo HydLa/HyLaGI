@@ -150,7 +150,7 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
 {  
   HYDLA_LOGGER_DEBUG("#*** create module set list ***\n",
                      "nd_mode=", opts_.nd_mode);
-
+  
   if(opts_.nd_mode||opts_.interactive_mode) {
     //全解探索モードなど
     ModuleSetContainerInitializer::init<ModuleSetGraph>(
@@ -168,6 +168,8 @@ void SymbolicSimulator::simulate()
 
   while(!state_stack_.empty()) {
     phase_state_sptr state(pop_phase_state());
+    if( opts_.max_step >= 0 && state->step > opts_.max_step)
+      break;
     state->module_set_container->dispatch(
     boost::bind(&SymbolicSimulator::simulate_phase_state, 
                this, _1, state));
@@ -334,14 +336,12 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   
   SymbolicVirtualConstraintSolver::create_result_t create_result;
   solver_->create_maps(create_result);
-  if( opts_.max_step >= 0 && state->step >= opts_.max_step)
-    return true;
   for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_.nd_mode||create_it==0); create_it++)
   {
     // Interval Phaseへ移行（次状態の生成）
     HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
     phase_state_sptr new_state(create_new_phase_state());
-    new_state->step = state->step+1;
+    new_state->step         = state->step+1;
     new_state->phase        = IntervalPhase;
     new_state->current_time = state->current_time;
     expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
@@ -505,6 +505,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     if(!integrate_result.states[it].is_max_time) {
       phase_state_sptr new_state(create_new_phase_state());
       new_state->phase        = PointPhase;
+      new_state->step         = state->step;
       expanded_always_sptr2id(expanded_always, new_state->expanded_always_id);
       HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
                        new_state->expanded_always_id);
