@@ -5,7 +5,7 @@
 #include "REDUCEVCSPoint.h"
 
 // TODO RTreeVisitor‚Ìˆø‚Á‰z‚µ
-#include "RTreeVisitor.h"
+#include "../../parser/RTreeVisitor.h"
 
 /*
 #include "mathlink_helper.h"
@@ -13,7 +13,7 @@
 #include "PacketChecker.h"
  */
 
-#include "MathematicaExpressionConverter.h"
+#include "../mathematica/MathematicaExpressionConverter.h"
 
 #include "Logger.h"
 
@@ -132,6 +132,8 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 
 // MathematicaVCSPoint‚æ‚è
 bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map){
+  assert(0);
+  return false;
   if(!reset(variable_map)){
     return false;
   }
