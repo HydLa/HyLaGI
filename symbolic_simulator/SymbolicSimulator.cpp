@@ -28,13 +28,13 @@
 #include "AskTypeAnalyzer.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
-//#include "../virtual_constraint_solver/reduce/REDUCEVCSPoint.h"
-#include "../virtual_constraint_solver/reduce/REDUCEClient.h"
+#include "../virtual_constraint_solver/reduce/REDUCEVCSPoint.h"
+#include "../virtual_constraint_solver/reduce/REDUCELink.h"
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 
-//using namespace hydla::vcs::reduce;
+using namespace hydla::vcs::reduce;
 
 using namespace std;
 using namespace boost;
@@ -60,7 +60,7 @@ namespace symbolic_simulator {
 //sregex rawchar_reg = sregex::compile("\\\\(\\d\\d\\d)");
 //std::ostream_iterator< char > out_iter( std::cout );
 //rawchar_formatter rfmt;
-//regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);	
+//regex_replace( out_iter, str.begin(), str.end(), rawchar_reg, rfmt);
 
 SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
   opts_(opts)
@@ -74,7 +74,7 @@ SymbolicSimulator::~SymbolicSimulator()
 void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
-  
+
   result_root_.reset(new StateResult());
   //初期状態を作ってスタックに入れる
   phase_state_sptr state(create_new_phase_state());
@@ -86,17 +86,6 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   state->parent_state_result = result_root_;
   push_phase_state(state);
 
-  //reduce出力用分岐
-  //20110529 分岐をreduce_simulate()からsolver_によるものに変更(後コメントアウト)
-  if(opts_.solver == "r" || opts_.solver == "Reduce") {
-//    reduce_simulate();
-//    REDUCEClient cl;
-//    solver_.reset(new REDUCEVCSPoint(&cl));   //使用するソルバを決定
-    exit(0);
-  }
-
-
-
   // 変数のラベル
   // TODO: 未定義の値とかのせいでずれる可能性あり?
   if(opts_.output_format == fmtNumeric){
@@ -106,7 +95,12 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     }
     std::cout << std::endl;
   }
-  solver_.reset(new MathematicaVCS(opts_));   //使用するソルバを決定
+  //solver_分岐
+  if(opts_.solver == "r" || opts_.solver == "Reduce") {
+    solver_.reset(new REDUCEVCSPoint(new REDUCELink));   //使用するソルバを決定
+  }else{
+    solver_.reset(new MathematicaVCS(opts_));   //使用するソルバを決定
+  }
 }
 
 namespace {
@@ -117,7 +111,7 @@ struct ModuleSetContainerInitializer {
   template<typename MSCC>
   static void init(
     const parse_tree_sptr& parse_tree,
-    module_set_container_sptr& msc_original, 
+    module_set_container_sptr& msc_original,
     module_set_container_sptr& msc_no_init,
     parse_tree_sptr& member_parse_tree)
   {
@@ -147,7 +141,7 @@ struct ModuleSetContainerInitializer {
 }
 
 void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_tree)
-{  
+{
   HYDLA_LOGGER_DEBUG("#*** create module set list ***\n",
                      "nd_mode=", opts_.nd_mode);
   
@@ -171,7 +165,7 @@ void SymbolicSimulator::simulate()
     if( opts_.max_step >= 0 && state->step > opts_.max_step)
       break;
     state->module_set_container->dispatch(
-    boost::bind(&SymbolicSimulator::simulate_phase_state, 
+    boost::bind(&SymbolicSimulator::simulate_phase_state,
                this, _1, state));
   }
   if(opts_.output_format == fmtTFunction)
@@ -185,7 +179,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 
   //前準備
   TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK |
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
   tells_t         tell_list;
@@ -197,18 +191,18 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     branched_ask=NULL;
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
-                                     &expanded_always, 
+                                     &expanded_always,
                                      &positive_asks);
     if(Logger::constflag==3){
       HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
-                       expanded_always); 
+                       expanded_always);
     }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
-                       expanded_always);  
+                       expanded_always);
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    switch(solver_->add_constraint(tell_list,state->appended_asks)) 
+    switch(solver_->add_constraint(tell_list,state->appended_asks))
     {
       case VCSR_TRUE:
         // do nothing
@@ -226,8 +220,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     }
 
     // ask制約を集める
-    ask_collector.collect_ask(&expanded_always, 
-                              &positive_asks, 
+    ask_collector.collect_ask(&expanded_always,
+                              &positive_asks,
                               &negative_asks);
 
     if(Logger::constflag==3){
@@ -236,7 +230,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_ask: **\n",
-                       expanded_always);  
+                       expanded_always);
 
     // ask制約のエンテール処理
     expanded = false;
@@ -266,7 +260,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
       }
     }
   }while(expanded);
-  
+
   if(branched_ask!=NULL){
     // 分岐先を生成
     HYDLA_LOGGER_DEBUG("#*** create new phase state (branch) ***");
@@ -283,7 +277,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     //cout << "---push_phase_state(not_ask)---" << endl << **branched_ask << endl << new_state_not->current_time << endl << new_state_not->variable_map << endl << new_state_not->parameter_map;
     if(opts_.nd_mode){
       push_phase_state(new_state);
-      //cout << "---push_phase_state(ask)---" << endl << **branched_ask << endl << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; ; 
+      //cout << "---push_phase_state(ask)---" << endl << **branched_ask << endl << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; ;
     }
     return CC_BRANCH;
   }
@@ -291,14 +285,16 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 }
 
 
-bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
+bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                                 const phase_state_const_sptr& state)
 {
   //旧 reduce出力用分岐
+  /*
   if(opts_.solver == "r" || opts_.solver == "Reduce") {
     reduce_output(ms,state);
     return true;
   }
+  */
 
   //前準備
   if(state->changed_asks.size() != 0) {
@@ -313,13 +309,13 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                      expanded_always);
   }
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
-                     expanded_always);  
+                     expanded_always);
   solver_->change_mode(DiscreteMode, opts_.approx_precision);
   solver_->reset(state->variable_map, state->parameter_map);
 
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
-  
+
 
 
   //閉包計算
@@ -327,17 +323,21 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     case CC_TRUE:
     break;
     case CC_FALSE:
-    return false;    
+    return false;
     case CC_BRANCH:
     return true;
   }
 
 
-  
+
   SymbolicVirtualConstraintSolver::create_result_t create_result;
   solver_->create_maps(create_result);
   for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_.nd_mode||create_it==0); create_it++)
   {
+<<<<<<< .mine
+
+=======
+>>>>>>> .r1145
     // Interval Phaseへ移行（次状態の生成）
     HYDLA_LOGGER_DEBUG("#*** create new phase state ***");
     phase_state_sptr new_state(create_new_phase_state());
@@ -351,7 +351,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
 
     new_state->variable_map = create_result.result_maps[create_it].variable_map;
     new_state->parameter_map = create_result.result_maps[create_it].parameter_map;
-    
+
     // 暫定的なフレーム公理の処理
     // 未定義の値や変数表に存在しない場合は以前の値をコピー
     variable_map_t::const_iterator it  = state->variable_map.begin();
@@ -373,9 +373,9 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     output_point(new_state->current_time, new_state->variable_map, new_state->parameter_map);
 
     //状態をスタックに押し込む
-    //cout << "---push_phase_state(point)---" << create_it << endl  << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; 
+    //cout << "---push_phase_state(point)---" << create_it << endl  << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map;
     push_phase_state(new_state);
-    
+
     if(Logger::varflag==3){
     HYDLA_LOGGER_AREA("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                        "time:", new_state->current_time, "\n",
@@ -388,12 +388,12 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                        new_state->variable_map);
     HYDLA_LOGGER_SUMMARY("#*** end point phase ***");
   }
-  
+
 
   return true;
 }
 
-bool SymbolicSimulator::interval_phase(const module_set_sptr& ms, 
+bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                                    const phase_state_const_sptr& state)
 {
 
@@ -417,7 +417,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     case CC_TRUE:
     break;
     case CC_FALSE:
-    return false;    
+    return false;
     case CC_BRANCH:
     return true;
   }
@@ -470,12 +470,12 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     TellCollector not_adopted_tells_collector(*diff_ms_list_it);
     tells_t       not_adopted_tells;
     not_adopted_tells_collector.collect_all_tells(&not_adopted_tells,
-                                                  &expanded_always, 
+                                                  &expanded_always,
                                                   &positive_asks);
     not_adopted_tells_list.push_back(not_adopted_tells);
   }
 
-  
+
   // askの導出状態が変化するまで積分をおこなう
   virtual_constraint_solver_t::IntegrateResult integrate_result;
   solver_->integrate(
@@ -494,8 +494,8 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                   integrate_result.states[it].time-state->current_time,
                   integrate_result.states[it].variable_map,
                   integrate_result.states[it].parameter_map);
-                  
-                  
+
+
     state_result_sptr_t state_result(new StateResult(integrate_result.states[it].variable_map,
                                                        integrate_result.states[it].parameter_map,
                                                        integrate_result.states[it].time,
@@ -514,17 +514,17 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       new_state->parameter_map = integrate_result.states[it].parameter_map;
       //次のフェーズにおける変数の値を導出する
       if(Logger::varflag==5){
-        HYDLA_LOGGER_AREA("--- calc next phase variable map ---");  
+        HYDLA_LOGGER_AREA("--- calc next phase variable map ---");
       }
-      HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
+      HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");
       solver_->apply_time_to_vm(integrate_result.states[it].variable_map, new_state->variable_map, integrate_result.states[it].time-state->current_time);
 
       new_state->parent_state_result = state_result;
-      //cout << "---push_phase_state(interval)---" << it << endl  << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; 
+      //cout << "---push_phase_state(interval)---" << it << endl  << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map;
       push_phase_state(new_state);
     }
-    
-      
+
+
     if(Logger::varflag==4){
     HYDLA_LOGGER_AREA("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
                        "time:", solver_->get_real_val(integrate_result.states[it].time, 5), "\n",
@@ -587,7 +587,7 @@ void SymbolicSimulator::output_point(const time_t& time, const variable_map_t& v
 bool SymbolicSimulator::reduce_simulate()
 {
 /*
-* input: opts_, variable_map_, msc_original_, 
+* input: opts_, variable_map_, msc_original_,
 */
 
 //ファイルストリームを開く
@@ -655,9 +655,9 @@ bool SymbolicSimulator::reduce_simulate()
   std::cout << "msc:={";
 
   phase_state_sptr state;
-  
+
   msc_original_->dispatch(
-  boost::bind(&SymbolicSimulator::reduce_simulate_phase_state, 
+  boost::bind(&SymbolicSimulator::reduce_simulate_phase_state,
              this, _1));
 
   std::cout << "\b\b \n};" << std::endl;
@@ -669,7 +669,7 @@ bool SymbolicSimulator::reduce_simulate()
   ofs       << ";end;" << std::endl;
 
   return true;
-} 
+}
 
 /*
 * dispatch用コールバック関数
@@ -709,12 +709,12 @@ bool SymbolicSimulator::reduce_simulate_phase_state(const module_set_sptr& ms)
 * Reduce用のファイル出力関数 中間発表までに作った物
 * svn Rev: 1062
 */
-bool SymbolicSimulator::reduce_output(const module_set_sptr& ms, 
+bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
                                 const phase_state_const_sptr& state)
 {
   TellCollector tell_collector(ms);
 
-  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
+  AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK |
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
 
@@ -784,7 +784,7 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
 // 制約
   // tell制約を集める
   tell_collector.collect_new_tells(&tell_list,
-                                   &expanded_always, 
+                                   &expanded_always,
                                    &positive_asks);
   tells_t::const_iterator tells_it  = tell_list.begin();
   tells_t::const_iterator tells_end = tell_list.end();
@@ -799,24 +799,24 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   }
   count = 0;
 
-  
+
   // ask制約を集める
   std::cout << "%negative_asks_t" << std::endl;
   ofs       << "%negative_asks_t" << std::endl;
-  ask_collector.collect_ask(&expanded_always, 
-                            &positive_asks, 
+  ask_collector.collect_ask(&expanded_always,
+                            &positive_asks,
                             &negative_asks);
   // ask制約のエンテール処理
 //    expanded = false;
   negative_asks_t::iterator it  = negative_asks.begin();
   negative_asks_t::iterator end = negative_asks.end();
-  
+
   while(it!=end) {
     std::cout << "map" << count << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
     ofs       << "map" << count << ":= "<< rtv.get_ask_rhs(*it) << ";" << std::endl;
     std::cout << "guard" << count << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
     ofs       << "guard" << count << ":= "<< rtv.get_guard(*it) << ";" << std::endl;
-  
+
     count++;
     it++;
   }
@@ -828,12 +828,12 @@ bool SymbolicSimulator::reduce_output(const module_set_sptr& ms,
   ofs       << "MaxT:= " << opts_.max_time << ";" << std::endl;
   std::cout << ";end;" << std::endl;
   ofs       << ";end;" << std::endl;
-  
+
 
   return true;
-} 
+}
 
-void SymbolicSimulator::output(const time_t& time, 
+void SymbolicSimulator::output(const time_t& time,
                            const variable_map_t& vm)
 {
   std::cout << std::endl;
@@ -866,7 +866,7 @@ std::string SymbolicSimulator::range_to_string(const value_range_t& val){
   return tmp;
 }
 
-void SymbolicSimulator::output(const time_t& time, 
+void SymbolicSimulator::output(const time_t& time,
                            const variable_map_t& vm,const parameter_map_t& pm)
 {
   if(opts_.output_format == fmtNumeric){
