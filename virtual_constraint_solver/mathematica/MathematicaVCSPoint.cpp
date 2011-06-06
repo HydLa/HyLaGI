@@ -197,6 +197,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   ml_->skip_pkt_until(RETURNPKT);
   
 
@@ -546,6 +547,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
 
   ml_->skip_pkt_until(RETURNPKT);

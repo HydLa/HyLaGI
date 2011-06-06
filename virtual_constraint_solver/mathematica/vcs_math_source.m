@@ -168,6 +168,7 @@ convertCSToVM[orExprs_] := Block[
     ]
   );
 
+  debugPrint["orExprs:", orExprs];
   If[Head[First[orExprs]] === Or,
     resultExprs = Map[(applyList[#])&, List@@First[orExprs]],
     resultExprs = Map[(applyList[#])&, orExprs]
@@ -263,7 +264,7 @@ adjustExprs[andExprs_] :=
  *)
 isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
 {
-  sol
+  sol, ret
 },
 
   debugPrint["expr:", expr, "pexpr", pexpr, "vars:", vars];
@@ -282,12 +283,15 @@ isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
       sol = removeNotEqual[Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol]];
       (* debugPrint["sol after Apply And List:", sol];*)
       (* 一番内側の要素 （レベル2）を文字列にする *)
-      {1, Map[(ToString[FullForm[#]]) &, 
+      ret={1, Map[(ToString[FullForm[#]]) &, 
               Map[(adjustExprs[#])&, sol], {2}]},
-      {2}
+      ret={2}
     ],
     (* false *)
-    {2}]
+    ret={2}
+  ];
+  debugPrint["ret:", ret];
+  ret
 ],
   {0, $MessageList}
 ]];
