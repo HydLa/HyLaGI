@@ -37,7 +37,7 @@ private:
     boost::program_options::options_description cmdline_desc_;
 };
 
-} //namespace hydala
+} //namespace hydla
 
 #endif //_INCLUDED_HTDLA_PROGRAM_OPTIONS_H_
 

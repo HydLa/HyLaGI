@@ -111,7 +111,16 @@ void BPSimulator::do_initialize(const parse_tree_sptr& parse_tree)
     std::cerr << "can not link" << std::endl;
     exit(-1);
   }
-  // HydLa.mの内容送信
+
+  // デバッグプリント
+  ml_.MLPutFunction("Set", 2);
+  ml_.MLPutSymbol("optUseDebugPrint");
+  ml_.MLPutSymbol(opts_.debug_mode ? "True" : "False");
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+
+  // vcs_math_source.mの内容送信
   //   ml_.MLPutFunction("Get", 1);
   //   ml_.MLPutString("symbolic_simulator/HydLa.m");
   ml_.MLPutFunction("ToExpression", 1);

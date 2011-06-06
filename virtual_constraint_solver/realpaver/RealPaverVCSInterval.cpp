@@ -168,11 +168,9 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
 //  PacketChecker pc(*ml_);
 //  pc.check();
 
-/*
   HYDLA_LOGGER_DEBUG(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
-*/
 
   ml_->skip_pkt_until(RETURNPKT);
 

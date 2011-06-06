@@ -253,7 +253,7 @@ adjustExprs[andExprs_] :=
 
 (*
  * §–ñ‚ª–³–µ‚‚Å‚ ‚é‚©‚ğƒ`ƒFƒbƒN‚·‚é
- * Reduce‚Å‰ğ‚¢‚½Œ‹‰ÊAğ‚ª“¾‚ç‚ê‚ê‚Î–³–µ‚
+ * Reduce‚Å‰ğ‚¢‚½Œ‹‰ÊAë‚ƒF“¾‚ç‚ê‚ê‚Î–³–µ‚
  * “¾‚ç‚ê‚½Œ‹‰Ê‚ğ—p‚¢‚ÄAŠe•Ï”‚ÉŠÖ‚µ‚Ä {•Ï”–¼, ’l}@‚Æ‚¢‚¤Œ`®‚Å•\‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·
  *
  * –ß‚è’l‚ÌƒŠƒXƒg‚Ìæ“ªF
@@ -552,7 +552,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
     ];
     If[minT === error,
       {},
-      (* Piecewise‚È‚ç•ª‰ğğ *)
+      (* Piecewise‚È‚ç•ª‰ğ*)
       If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, {condition}}}];
       minT
     ]
@@ -628,7 +628,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
     ]
   );
   
-  (* ƒŠƒXƒg‚ğ®Œ`‚·‚éë *)
+  (* ƒŠƒXƒg‚ğ®Œ`‚·‚é*)
   convertExpr[list_] := ( Block[
     {
       tmpList
@@ -641,7 +641,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
   );
 
 
-  (* ]—ˆ‚ÌCÅ¬‚ğ‚P‚Â‚¾‚¯Œ©‚Â‚¯‚é‚½‚ß‚Ìˆ—ı *)
+  (* ]—ˆ‚ÌCÅ¬‚ğ‚P‚Â‚¾‚¯Œ©‚Â‚¯‚é‚½‚ß‚Ìˆ—*)
   (*Fold[calcMinTime,
        {maxTime, {}},
        Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
@@ -860,7 +860,7 @@ createOutputTimeList[from_, to_, interval_] :=
 integrateExpr[cons_, vars_] := Quiet[Check[Block[
 { sol },
 
-(*  debugPrint["cons:", cons, "vars:", vars]; *)
+  debugPrint["cons:", cons, "vars:", vars]; 
  
   sol = exDSolve[cons, vars];
   Switch[sol,
@@ -872,7 +872,7 @@ integrateExpr[cons_, vars_] := Quiet[Check[Block[
       {1,         
        Map[({getVariableName[#], 
              getDerivativeCount[#], 
-             ToString[createIntegratedValue[#, sol], InputForm]})&, 
+             ToString[createIntegratedValue[#, sol[[1]]], InputForm]})&, 
            vars]}]
 ],
   {0, $MessageList}
