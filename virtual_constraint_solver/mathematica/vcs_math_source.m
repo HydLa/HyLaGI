@@ -781,6 +781,7 @@ integrateCalc[cons_,
           returnVars],
 
     (* false *)
+    debugPrint["nextpointphase arg: no next point phase"];
     tmpMinT = {{maxTime, {}, 1}};
     tmpVarMap = {};
   ];

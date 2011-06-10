@@ -59,7 +59,7 @@ void PacketSender::visit(boost::shared_ptr<Equal> node)
 void PacketSender::visit(boost::shared_ptr<UnEqual> node)               
 {
   HYDLA_LOGGER_DEBUG("put: UnEqual");
-  ml_.put_function("UnEqual", 2);
+  ml_.put_function("Unequal", 2);
 
   accept(node->get_lhs());
   accept(node->get_rhs());
