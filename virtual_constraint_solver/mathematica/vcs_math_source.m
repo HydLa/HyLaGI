@@ -565,18 +565,20 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
   (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
   compareMinTime[timeCond1_, timeCond2_] := ( Block[
       {
-        sol, andCond, 
+        sol, notSol,
+        andCond, 
         currentMinTime
       },
       andCond = Reduce[timeCond1[[2]]&&timeCond2[[2]], Reals];
       If[andCond === False,
         {},
         sol = Quiet[Reduce[And[andCond,timeCond1[[1]] > timeCond2[[1]]], Reals]];
-        If[ sol === False || Implies[andCond, Not[sol]] === True,
+        If[ sol === False,
           {{timeCond1[[1]], andCond}},
-          If[sol === True || Implies[andCond, sol] === True,
+          notSol = Reduce[andCond&&!sol];
+          If[ notSol === False, (* Impliesだと完全に同型じゃないと無理っぽいので *)
             {{timeCond2[[1]], andCond}},
-            {{timeCond1[[1]],  Reduce[And[Not[sol],andCond]]}, {timeCond2[[1]], Reduce[And[sol,andCond]]}}
+            {{timeCond1[[1]],  notSol}, {timeCond2[[1]], sol}}
           ]
         ]
       ]
@@ -646,16 +648,17 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
 
 
   (* 従来の，最小時刻を１つだけ見つけるための処理*)
-  (*Fold[calcMinTime,
+  (* Fold[calcMinTime,
        {maxTime, {}},
        Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk],
-            Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]]*)
+            Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]] *)
 
   (* 最小時刻と条件の組のリストを求める *)
-  resultList = calcMinTimeList[ Join[Map[(Not[#[[1]]])&, posAsk], Map[(#[[1]])&, negAsk], Map[(#[[1]])&, NACons]],
+  resultList = calcMinTimeList[ Join[Map[(Not[#[[1]]])&, posAsk], Map[(#[[1]])&, negAsk],
+                                Fold[(Join[#1, Map[(#[[1]])&, #2]])&, {}, NACons]],
                                 {{maxTime, And@@otherExpr}}, otherExpr];
-                                
+
 
 
   (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
