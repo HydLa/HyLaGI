@@ -785,7 +785,7 @@ integrateCalc[cons_,
 
     (* false *)
     debugPrint["nextpointphase arg: no next point phase"];
-    tmpMinT = {{maxTime, {}, 1}};
+    tmpMinT = {{maxTime // FullForm // ToString, {}, 1}};
     tmpVarMap = {};
   ];
   tmpRet = {1,
