@@ -50,22 +50,12 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
 {
 
   node_factory_ = node_factory;
-  //局所的出力モード
-  if(Logger::enflag>=0||Logger::conflag>=0||Logger::ptflag>=0){
-     HYDLA_LOGGER_AREA("############ Area Output mode ############");
-   }
 
-  
+
   // ASTの構築
   HydLaAST ast;
   ast.parse(stream);
-  if(Logger::ptflag==0){
-  HYDLA_LOGGER_AREA("#*** AST Tree ***\n", ast);
-  }
-  HYDLA_LOGGER_DEBUG("#*** AST Tree ***\n", ast);
-  //大局的出力モード
-  HYDLA_LOGGER_SUMMARY("############ Comprehensive output mode ############");
-  
+  HYDLA_LOGGER_PARSING("#*** AST Tree ***\n", ast);
   
 
   // ParseTreeの構築
@@ -73,22 +63,14 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
-  if(Logger::ptflag==0){
-  HYDLA_LOGGER_AREA("#*** Parse Tree ***\n", *this);
-  HYDLA_LOGGER_AREA("#*** Constraint Definition ***\n", constraint_definition);
-  HYDLA_LOGGER_AREA("#*** Program Definition ***\n",    program_definition);
-  }
-  HYDLA_LOGGER_DEBUG("#*** Parse Tree ***\n", *this);
-  HYDLA_LOGGER_DEBUG("#*** Constraint Definition ***\n", constraint_definition);
-  HYDLA_LOGGER_DEBUG("#*** Program Definition ***\n",    program_definition);
+  HYDLA_LOGGER_PARSING("#*** Parse Tree ***\n", *this);
+  HYDLA_LOGGER_PARSING("#*** Constraint Definition ***\n", constraint_definition);
+  HYDLA_LOGGER_PARSING("#*** Program Definition ***\n",    program_definition);
   // 意味解析
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
   update_node_id_list();
-  if(Logger::ptflag==0){
-  HYDLA_LOGGER_AREA("#*** Analyzed Parse Tree ***\n", *this);
-  }
-  HYDLA_LOGGER_DEBUG("#*** Analyzed Parse Tree ***\n", *this);
+  HYDLA_LOGGER_PARSING("#*** Analyzed Parse Tree ***\n", *this);
 }
 
 void ParseTree::rebuild_node_id_list()

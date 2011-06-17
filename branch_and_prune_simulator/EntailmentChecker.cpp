@@ -56,7 +56,7 @@ Trivalent EntailmentChecker::check_entailment(
   // 作成できたか確認
   rp_vector_variable vec = this->to_rp_vector();
   {
-    HYDLA_LOGGER_SUMMARY("#**** entailment check: constraints ****");
+    HYDLA_LOGGER_DEBUG("#**** entailment check: constraints ****");
     std::stringstream ss;
     std::set<rp_constraint>::iterator it = this->constraints_.begin();
     while(it != this->constraints_.end()){
@@ -64,7 +64,7 @@ Trivalent EntailmentChecker::check_entailment(
       ss << "\n";
       it++;
     }
-    HYDLA_LOGGER_SUMMARY(ss.str());
+    HYDLA_LOGGER_DEBUG(ss.str());
   }
   rp_vector_destroy(&vec);
 
@@ -74,7 +74,7 @@ Trivalent EntailmentChecker::check_entailment(
   // 作成できたか確認
   vec = this->to_rp_vector();
   {
-    HYDLA_LOGGER_SUMMARY("#**** entailment check: guards ****");
+    HYDLA_LOGGER_DEBUG("#**** entailment check: guards ****");
     std::stringstream ss;
     std::set<rp_constraint>::iterator it = this->guards_.begin();
     while(it != this->guards_.end()){
@@ -82,24 +82,24 @@ Trivalent EntailmentChecker::check_entailment(
       ss << "\n";
       it++;
     }
-    HYDLA_LOGGER_SUMMARY(ss.str());
+    HYDLA_LOGGER_DEBUG(ss.str());
     ss.str("");
-    HYDLA_LOGGER_SUMMARY("#**** entailment check: not_guards ****");
+    HYDLA_LOGGER_DEBUG("#**** entailment check: not_guards ****");
     it = this->not_guards_.begin();
     while(it != this->not_guards_.end()){
       if(*it != NULL) rp::dump_constraint(ss, *it, vec, DISPLAY_DIGITS);
       ss << "\n";
       it++;
     }
-    HYDLA_LOGGER_SUMMARY(ss.str());
+    HYDLA_LOGGER_DEBUG(ss.str());
     ss.str("");
-    HYDLA_LOGGER_SUMMARY("#**** entailment check: prevs_in_guard ****");
+    HYDLA_LOGGER_DEBUG("#**** entailment check: prevs_in_guard ****");
     std::set<std::string>::iterator it2 = this->prevs_in_guard_.begin();
     while(it2 != this->prevs_in_guard_.end()){
-      HYDLA_LOGGER_SUMMARY(*it2);
+      HYDLA_LOGGER_DEBUG(*it2);
       it2++;
     }
-    HYDLA_LOGGER_SUMMARY("\n");
+    HYDLA_LOGGER_DEBUG("\n");
   }
   rp_vector_destroy(&vec);
 

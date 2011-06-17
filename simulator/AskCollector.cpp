@@ -56,14 +56,7 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   assert(negative_asks);
   assert(positive_asks);
 
-  if(Logger::constflag==1||Logger::constflag==0){
-  HYDLA_LOGGER_AREA(
-    "#*** ask collector ***\n", 
-    "--- expanded always from previous phase ---\n",
-    NodeDumper(expanded_always->begin(), expanded_always->end()));
-  }
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_CC(
     "#*** ask collector ***\n", 
     "--- expanded always from previous phase ---\n",
     NodeDumper(expanded_always->begin(), expanded_always->end()));
@@ -95,18 +88,7 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   expanded_always->insert(new_expanded_always_.begin(), 
                           new_expanded_always_.end());
 
-  if(Logger::constflag==1||Logger::constflag==0){
-    HYDLA_LOGGER_AREA(
-	"#*** ask collector ***\n", 
-    "--- positive asks ---\n", 
-    NodeDumper(positive_asks->begin(), positive_asks->end()),
-    "--- negative asks ---\n",
-    NodeDumper(negative_asks->begin(), negative_asks->end()),
-    "--- expanded always ---\n",
-    NodeDumper(expanded_always->begin(), expanded_always->end()));
-   }
-
-  HYDLA_LOGGER_SUMMARY(
+  HYDLA_LOGGER_CC(
     "#*** ask collector ***\n", 
     "--- positive asks ---\n", 
     NodeDumper(positive_asks->begin(), positive_asks->end()),

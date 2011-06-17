@@ -23,11 +23,7 @@ namespace parse_tree {
 
 std::ostream& operator<<(std::ostream& s, const Node& node)
 {
-	if(Logger::ptflag==0){
-    return node.dump(s);
-  }else{
-    return node.dump(s);
-  }
+  return node.dump(s);
 }
 
 bool Node::is_same_struct(const Node& n, bool exactly_same) const

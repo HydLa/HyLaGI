@@ -25,15 +25,9 @@ void setup_symbolic_simulator_opts(Opts& opts)
     std::cerr << "invalid option - output format" << std::endl;
     exit(-1);
   }
-  
-  if(po.get<std::string>("nd-out") == "l"){
-    opts.output_style = styleList;
-  }else{
-    opts.output_style = styleTree;
-  }
 
   opts.mathlink      = po.get<std::string>("mathlink");
-  opts.debug_mode    = po.count("debug")>0;
+  opts.debug_mode    = po.count("debug")>0||po.get<std::string>("area").find('e')!=std::string::npos;
   opts.max_time      = po.get<std::string>("time");
   opts.max_step      = po.get<int>("step");
   opts.nd_mode       = po.count("nd")>0;

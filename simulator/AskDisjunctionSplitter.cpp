@@ -21,14 +21,7 @@ void AskDisjunctionSplitter::split(hydla::parse_tree::ParseTree* pt)
   pt->dispatch(this);
   pt->update_node_id_list();
   
-
-  if(Logger::ptflag==4){
-	  HYDLA_LOGGER_AREA("#*** ask disjunction split result ***\n",
-                   *pt, "\n",
-                   pt->to_graphviz());
-  }
-
-  HYDLA_LOGGER_DEBUG("#*** ask disjunction split result ***\n",
+  HYDLA_LOGGER_PARSING("#*** ask disjunction split result ***\n",
                      *pt, "\n",
                      pt->to_graphviz());
 }

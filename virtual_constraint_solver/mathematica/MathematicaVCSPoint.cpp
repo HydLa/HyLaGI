@@ -36,25 +36,15 @@ bool MathematicaVCSPoint::reset()
 
 bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 {
-  if(Logger::varflag==6){
-  HYDLA_LOGGER_AREA("#*** Reset Constraint Store ***");
+
+  HYDLA_LOGGER_VCS_SUMMARY("#*** Reset Constraint Store ***");
 
   if(variable_map.size() == 0)
   {
-    HYDLA_LOGGER_AREA("no Variables");
+    HYDLA_LOGGER_VCS_SUMMARY("no Variables");
     return true;
   }
-  HYDLA_LOGGER_AREA("------Variable map------\n", variable_map);
-  }
-
-  HYDLA_LOGGER_SUMMARY("#*** Reset Constraint Store ***");
-
-  if(variable_map.size() == 0)
-  {
-    HYDLA_LOGGER_SUMMARY("no Variables");
-    return true;
-  }
-  HYDLA_LOGGER_SUMMARY("------Variable map------\n", variable_map);
+  HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);
 
   std::set<MathValue> and_cons_set;
   
@@ -108,7 +98,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map)
 
   constraint_store_.first.insert(and_cons_set);
 
-  HYDLA_LOGGER_DEBUG(*this);
+  HYDLA_LOGGER_VCS(*this);
 
   return true;
 }
@@ -120,10 +110,10 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
 
   if(parameter_map.size() == 0)
   {
-    HYDLA_LOGGER_SUMMARY("no Parameters");
+    HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
     return true;
   }
-  HYDLA_LOGGER_SUMMARY("------Parameter map------\n", parameter_map);
+  HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
 
 
   std::set<MathValue> and_cons_set;
@@ -166,14 +156,8 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
 
 bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
 {
-	if(Logger::varflag==7){
-	HYDLA_LOGGER_AREA(
-    "#*** MathematicaVCSPoint::create_variable_map ***\n",
-    "--- constraint_store ---\n",
-    *this);
-	}
 	
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     "#*** MathematicaVCSPoint::create_variable_map ***\n",
     "--- constraint_store ---\n",
     *this);
@@ -194,10 +178,10 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
 //  pc.check();
 
   
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_EXTERN((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   ml_->skip_pkt_until(RETURNPKT);
   
 
@@ -205,7 +189,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
 
   // List関数の要素数（式の個数）を得る
   int or_size = ml_->get_arg_count();
-  HYDLA_LOGGER_DEBUG("or_size: ", or_size);
+  HYDLA_LOGGER_VCS("or_size: ", or_size);
   ml_->MLGetNext();
   for(int or_it = 0; or_it < or_size; or_it++){
     create_result_t::maps_t maps;
@@ -215,7 +199,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
     parameter_t tmp_param;
     ml_->MLGetNext();
     int and_size = ml_->get_arg_count();
-    HYDLA_LOGGER_DEBUG("and_size: ", and_size);
+    HYDLA_LOGGER_VCS("and_size: ", and_size);
     ml_->MLGetNext(); // Listという関数名
     for(int i = 0; i < and_size; i++)
     {
@@ -282,8 +266,8 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
         maps.parameter_map.set_variable(tmp_param, tmp_range);
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
-      HYDLA_LOGGER_SUMMARY(maps.variable_map);
-      HYDLA_LOGGER_SUMMARY(maps.parameter_map);
+      HYDLA_LOGGER_VCS_SUMMARY(maps.variable_map);
+      HYDLA_LOGGER_VCS_SUMMARY(maps.parameter_map);
     }
     create_result.result_maps.push_back(maps);
   }
@@ -330,7 +314,7 @@ void MathematicaVCSPoint::create_max_diff_map(
     }    
   }
 
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     "-- max diff map --\n",
     MaxDiffMapDumper(max_diff_map.begin(), 
                      max_diff_map.end()).s.str());
@@ -340,11 +324,7 @@ void MathematicaVCSPoint::create_max_diff_map(
 void MathematicaVCSPoint::add_left_continuity_constraint(
   PacketSender& ps, max_diff_map_t& max_diff_map)
 {
-  if(Logger::mathsendflag==1){
-	  HYDLA_LOGGER_AREA("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
-  }
-
-  HYDLA_LOGGER_DEBUG("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
+  HYDLA_LOGGER_VCS("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
 
   // 送信する制約の個数を求める
   int left_cont_vars_count = 0;
@@ -361,11 +341,8 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
       left_cont_vars_count++;
     }
   }
-  if(Logger::mathsendflag==1){
-	  HYDLA_LOGGER_AREA("left_cont_vars_count(in cs_var): ", left_cont_vars_count);
-  }
 
-  HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var): ", left_cont_vars_count);  
+  HYDLA_LOGGER_VCS("left_cont_vars_count(in cs_var): ", left_cont_vars_count);  
 
 
   // 時刻0では制約ストアが空なため、集めたtell制約内の変数について調べる
@@ -378,18 +355,10 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
       }
     }
   }
-  if(Logger::mathsendflag==1){
-	    HYDLA_LOGGER_AREA("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
-  }
-
-  HYDLA_LOGGER_DEBUG("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
+  HYDLA_LOGGER_VCS("left_cont_vars_count(in cs_var + in vars): ", left_cont_vars_count);  
 
 
-  if(Logger::mathsendflag==1){
-	    HYDLA_LOGGER_AREA("--- in cs_var ---");  
-  }
-
-  HYDLA_LOGGER_DEBUG("--- in cs_var ---");  
+  HYDLA_LOGGER_VCS("--- in cs_var ---");  
 
   // Mathematicaへ送信
   ml_->put_function("List", left_cont_vars_count);
@@ -421,11 +390,8 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
         PacketSender::VA_None);
     }
   }
-  if(Logger::mathsendflag==1){
-	    HYDLA_LOGGER_AREA("--- in vars ---");  
-  }
 
-  HYDLA_LOGGER_DEBUG("--- in vars ---");  
+  HYDLA_LOGGER_VCS("--- in vars ---");  
 
   // max_diff_mapについてつくる
   md_it = max_diff_map.begin();
@@ -469,12 +435,7 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
 
 VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
-	if(Logger::constflag==9){
-		HYDLA_LOGGER_AREA(
-    "#*** Begin MathematicaVCSPoint::add_constraint ***");
-	}
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
 
   PacketSender ps(*ml_);
@@ -491,22 +452,14 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   ml_->put_function("Join", 3);
   int tells_size = collected_tells.size() + appended_asks.size();
   ml_->put_function("List", tells_size);
-	if(Logger::constflag==9){
-		HYDLA_LOGGER_AREA(
-    "tells_size:", tells_size);
-	}
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     "tells_size:", tells_size);
 
   // tell制約の集合からexprを得てMathematicaに渡す
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; tells_it!=tells_end; ++tells_it) {
-    if(Logger::constflag==9){
-	  HYDLA_LOGGER_AREA("put node: ", *(*tells_it)->get_child());
-	}
-	  HYDLA_LOGGER_DEBUG("put node: ", *(*tells_it)->get_child());
+	  HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_None);
   }
   
@@ -514,7 +467,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
   for(; append_it!=append_end; ++append_it) {
-    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
     ps.put_node(append_it->ask->get_guard(), PacketSender::VA_None, false, append_it->entailed);
   }
 
@@ -539,15 +492,15 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
 
 /////////////////// 受信処理
-  HYDLA_LOGGER_DEBUG( "--- receive ---");
+  HYDLA_LOGGER_VCS( "--- receive ---");
  
   //PacketChecker pc(*ml_);
   //pc.check();
 
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-  HYDLA_LOGGER_DEBUG((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_EXTERN((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
 
   ml_->skip_pkt_until(RETURNPKT);
@@ -564,20 +517,14 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   else if(ret_code==1) {
     // 充足
     result = VCSR_TRUE;
-    if(Logger::conflag==1||Logger::conflag==0){
-     HYDLA_LOGGER_AREA("consistent");
-    }
-    HYDLA_LOGGER_SUMMARY("consistent");
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
     //無矛盾性判定
     // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
     // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
     // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
     // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
     // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
-	if(Logger::constflag==10){
-		HYDLA_LOGGER_AREA( "---build constraint store---");
-	}
-	HYDLA_LOGGER_DEBUG( "---build constraint store---");
+	HYDLA_LOGGER_VCS( "---build constraint store---");
     ml_->MLGetNext();
 
     // 制約ストアをリセット
@@ -586,10 +533,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
     // List関数の要素数（Orで結ばれた解の個数）を得る
     int or_size = ml_->get_arg_count();
-  if(Logger::constflag==10){
-	  HYDLA_LOGGER_AREA( "or_size: ", or_size);
-  }
-    HYDLA_LOGGER_DEBUG( "or_size: ", or_size);
+    HYDLA_LOGGER_VCS( "or_size: ", or_size);
     ml_->MLGetNext(); // Listという関数名
 
     for(int i=0; i<or_size; i++)
@@ -598,10 +542,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
       // List関数の要素数（Andで結ばれた解の個数）を得る
       int and_size = ml_->get_arg_count();
-	  if(Logger::constflag==10){
-		  HYDLA_LOGGER_AREA( "and_size: ", and_size);
-	  }
-      HYDLA_LOGGER_DEBUG( "and_size: ", and_size);
+      HYDLA_LOGGER_VCS( "and_size: ", and_size);
       ml_->MLGetNext(); // Listという関数名
       if(and_size > 0) ml_->MLGetNext(); // Listの中の先頭要素
 
@@ -621,18 +562,9 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   else {
     assert(ret_code==2);
     result = VCSR_FALSE;
-	if(Logger::conflag==1||Logger::conflag==0){
-     HYDLA_LOGGER_AREA("inconsistent");
-    }
-    HYDLA_LOGGER_SUMMARY("inconsistent");//矛盾
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");//矛盾
   }
-  if(Logger::constflag==9){
-	  HYDLA_LOGGER_AREA(
-    *this,
-    "\n#*** End MathematicaVCSPoint::add_constraint ***");
-  }
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     *this,
     "\n#*** End MathematicaVCSPoint::add_constraint ***");
 
@@ -641,13 +573,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   
 VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
 {
-  if(Logger::enflag==1||Logger::enflag==0){
-     HYDLA_LOGGER_AREA(	"#*** MathematicaVCSPoint::check_entailment ***\n", 
-	"ask: ");
-	 (negative_ask)->dump(std::cout);
-	 HYDLA_LOGGER_AREA("\n");
-	}
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     "#*** MathematicaVCSPoint::check_entailment ***\n", 
     "ask: ", *negative_ask);
 
@@ -672,13 +598,7 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   
   send_pars();
 
-  /*if(hydla::logger::Logger::flag==2||hydla::logger::Logger::flag==0){
-     HYDLA_LOGGER_AREA(
-		 "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-    }*/
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
@@ -699,20 +619,11 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   }
   else if(ret_code==1) {
     result = VCSR_TRUE;
-	if(Logger::enflag==1||Logger::enflag==0){
-     HYDLA_LOGGER_AREA("entailed");
-	}
-	if(Logger::conflag==1||Logger::conflag==0){
-     HYDLA_LOGGER_AREA("Because entailed,isConsistency judgment is done again");
-    }
-    HYDLA_LOGGER_SUMMARY("entailed");
+    HYDLA_LOGGER_VCS_SUMMARY("entailed");
   }
   else if(ret_code==2) {
     result = VCSR_FALSE;
-    if(Logger::enflag==1||Logger::enflag==0){
-      HYDLA_LOGGER_AREA("not entailed");
-    }
-    HYDLA_LOGGER_SUMMARY("not entailed");
+    HYDLA_LOGGER_VCS_SUMMARY("not entailed");
   }
   else {
     assert(ret_code==3);
@@ -738,29 +649,19 @@ VCSResult MathematicaVCSPoint::integrate(
 
 void MathematicaVCSPoint::send_cs() const
 {
-	if(Logger::mathsendflag==3){
-		HYDLA_LOGGER_AREA("---- Send Constraint Store -----");
-	}
-
-  HYDLA_LOGGER_DEBUG("---- Send Constraint Store -----");
+  HYDLA_LOGGER_VCS("---- Send Constraint Store -----");
 
   int or_cons_size = constraint_store_.first.size();
   if(or_cons_size <= 0)
   {
-	  if(Logger::mathsendflag==3){
-		  HYDLA_LOGGER_AREA("no Constraints");
-	  }
-    HYDLA_LOGGER_DEBUG("no Constraints");
+    HYDLA_LOGGER_VCS("no Constraints");
     ml_->put_function("List", 0);
     return;
   }
 
   ml_->put_function("List", 1);
   ml_->put_function("Or", or_cons_size);
-  if(Logger::mathsendflag==3){
-	  HYDLA_LOGGER_AREA("or cons size: ", or_cons_size);
-  }
-  HYDLA_LOGGER_DEBUG("or cons size: ", or_cons_size);
+  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
 
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
@@ -770,10 +671,7 @@ void MathematicaVCSPoint::send_cs() const
   {
     int and_cons_size = (*or_cons_it).size();
     ml_->put_function("And", and_cons_size);
-  if(Logger::mathsendflag==3){
-	  HYDLA_LOGGER_AREA("and cons size: ", and_cons_size);
-  }
-    HYDLA_LOGGER_DEBUG("and cons size: ", and_cons_size);
+    HYDLA_LOGGER_VCS("and cons size: ", and_cons_size);
 
     std::set<MathValue>::const_iterator and_cons_it = 
       (*or_cons_it).begin();
@@ -784,10 +682,7 @@ void MathematicaVCSPoint::send_cs() const
       ml_->put_function("ToExpression", 1);
       std::string str = (*and_cons_it).get_string();
       ml_->put_string(str);
-   if(Logger::mathsendflag==3){
-	   HYDLA_LOGGER_AREA("put cons: ", str);
-   }
-      HYDLA_LOGGER_DEBUG("put cons: ", str);
+      HYDLA_LOGGER_VCS("put cons: ", str);
     }
   }
 }
@@ -795,19 +690,19 @@ void MathematicaVCSPoint::send_cs() const
 
 void MathematicaVCSPoint::send_ps() const
 {
-  HYDLA_LOGGER_DEBUG("---- Send Parameter Store -----");
+  HYDLA_LOGGER_VCS("---- Send Parameter Store -----");
 
   int or_cons_size = parameter_store_.first.size();
   if(or_cons_size <= 0)
   {
-    HYDLA_LOGGER_DEBUG("no Parameters");
+    HYDLA_LOGGER_VCS("no Parameters");
     ml_->put_function("List", 0);
     return;
   }
 
   ml_->put_function("List", 1);
   ml_->put_function("Or", or_cons_size);
-  HYDLA_LOGGER_DEBUG("or cons size: ", or_cons_size);
+  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
 
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     parameter_store_.first.begin();
@@ -817,7 +712,7 @@ void MathematicaVCSPoint::send_ps() const
   {
     int and_cons_size = (*or_cons_it).size();
     ml_->put_function("And", and_cons_size);
-    HYDLA_LOGGER_DEBUG("and cons size: ", and_cons_size);
+    HYDLA_LOGGER_VCS("and cons size: ", and_cons_size);
 
     std::set<MathValue>::const_iterator and_cons_it = 
       (*or_cons_it).begin();
@@ -828,7 +723,7 @@ void MathematicaVCSPoint::send_ps() const
       ml_->put_function("ToExpression", 1);
       std::string str = (*and_cons_it).get_string();
       ml_->put_string(str);
-      HYDLA_LOGGER_DEBUG("put cons: ", str);
+      HYDLA_LOGGER_VCS("put cons: ", str);
     }
   }
 }
@@ -845,13 +740,8 @@ void MathematicaVCSPoint::send_cs_vars() const
 {
   int vars_size = constraint_store_.second.size();
 
-  if(Logger::mathsendflag==1){
-	    HYDLA_LOGGER_AREA(
-    "---- Send Constraint Store Vars -----\n",
-    "vars_size: ", vars_size);
-  }
 
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_VCS(
     "---- Send Constraint Store Vars -----\n",
     "vars_size: ", vars_size);
 

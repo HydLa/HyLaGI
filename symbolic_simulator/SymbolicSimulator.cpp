@@ -196,10 +196,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     tell_collector.collect_new_tells(&tell_list,
                                      &expanded_always, 
                                      &positive_asks);
-    if(Logger::constflag==3){
-      HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_new_tells: **\n",
-                       expanded_always); 
-    }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always);  
@@ -227,10 +223,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                               &positive_asks, 
                               &negative_asks);
 
-    if(Logger::constflag==3){
-      HYDLA_LOGGER_AREA("#** calculate_closure: expanded always after collect_ask: **\n",
-                       expanded_always);
-    }
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_ask: **\n",
                        expanded_always);  
@@ -278,9 +270,11 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     //状態をスタックに押し込む
     push_phase_state(new_state_not);
     //cout << "---push_phase_state(not_ask)---" << endl << **branched_ask << endl << new_state_not->current_time << endl << new_state_not->variable_map << endl << new_state_not->parameter_map;
+    HYDLA_LOGGER_DEBUG("---push_phase_state(not_ask)---\n", **branched_ask,"\n", new_state_not->current_time,"\n",new_state_not->variable_map,"\n", new_state_not->parameter_map);
     if(opts_.nd_mode){
       push_phase_state(new_state);
-      //cout << "---push_phase_state(ask)---" << endl << **branched_ask << endl << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; ; 
+      HYDLA_LOGGER_DEBUG("---push_phase_state(ask)---\n", **branched_ask,"\n", new_state->current_time,"\n",new_state->variable_map,"\n", new_state->parameter_map);
+      //cout << "---push_phase_state(ask)---" << endl << **branched_ask << endl << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; 
     }
     return CC_BRANCH;
   }
@@ -306,10 +300,6 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   }
   expanded_always_t expanded_always;
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
-  if(Logger::constflag==5){
-  HYDLA_LOGGER_AREA("#** point_phase: expanded always from IP: **\n",
-                     expanded_always);
-  }
   HYDLA_LOGGER_DEBUG("#** point_phase: expanded always from IP: **\n",
                      expanded_always);  
   solver_->change_mode(DiscreteMode, opts_.approx_precision);
@@ -373,18 +363,11 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     //状態をスタックに押し込む
     //cout << "---push_phase_state(point)---" << create_it << endl  << new_state->current_time << endl << new_state->variable_map << endl << new_state->parameter_map; 
     push_phase_state(new_state);
-    
-    if(Logger::varflag==3){
-    HYDLA_LOGGER_AREA("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
-                       "time:", new_state->current_time, "\n",
-                       new_state->variable_map);
-    HYDLA_LOGGER_AREA("#*** end point phase ***");
-    }
 
-    HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
+    HYDLA_LOGGER_REST_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                        "time:", new_state->current_time, "\n",
                        new_state->variable_map);
-    HYDLA_LOGGER_SUMMARY("#*** end point phase ***");
+    HYDLA_LOGGER_REST_SUMMARY("#*** end point phase ***");
   }
   
 
@@ -398,10 +381,6 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   //前準備
   expanded_always_t expanded_always;
   expanded_always_id2sptr(state->expanded_always_id, expanded_always);
-  if(Logger::constflag==5){
-	  HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
-                     expanded_always);
-  }
   HYDLA_LOGGER_DEBUG("#** interval_phase: expanded always from PP: **\n",
                      expanded_always);
 
@@ -418,14 +397,6 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     return false;    
     case CC_BRANCH:
     return true;
-  }
-  if(Logger::constflag==4){
-  // MaxModuleの導出
-  module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
-  HYDLA_LOGGER_AREA("#** interval_phase: ms: **\n",
-                     *ms,
-                     "\n#** interval_phase: max_module_set: ##\n",
-                     *max_module_set);
   }
   // MaxModuleの導出
   module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
@@ -511,9 +482,6 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       new_state->current_time = integrate_result.states[it].time;
       new_state->parameter_map = integrate_result.states[it].parameter_map;
       //次のフェーズにおける変数の値を導出する
-      if(Logger::varflag==5){
-        HYDLA_LOGGER_AREA("--- calc next phase variable map ---");  
-      }
       HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
       solver_->apply_time_to_vm(integrate_result.states[it].variable_map, new_state->variable_map, integrate_result.states[it].time-state->current_time);
 
@@ -523,12 +491,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     }
     
       
-    if(Logger::varflag==4){
-    HYDLA_LOGGER_AREA("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
-                       "time:", solver_->get_real_val(integrate_result.states[it].time, 5), "\n",
-                       integrate_result.states[it].variable_map);
-    }
-    HYDLA_LOGGER_SUMMARY("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
+    HYDLA_LOGGER_REST_SUMMARY("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
                        "time:", solver_->get_real_val(integrate_result.states[it].time, 5), "\n",
                        integrate_result.states[it].variable_map);
   }

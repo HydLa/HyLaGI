@@ -11,7 +11,7 @@ namespace mathematica {
 
 bool PacketErrorHandler::handle(MathLink* ml, int ret_code) 
 {  
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_REST(
     "-- PacketErrorHandler::handle --\n", 
     "ret_code: ", ret_code);
 

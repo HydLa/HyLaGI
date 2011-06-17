@@ -5,14 +5,13 @@
 namespace hydla {
 namespace logger {
 
-int	Logger::enflag=-1;//entailflag
-int Logger::conflag=-1;//consistentflag
-int Logger::ptflag=-1;//parse_treeflag
-int Logger::constflag=-1;//constraintflag制約
-int Logger::varflag=-1;//variablesflag
-int Logger::mathsendflag=-1;//mathematicaflag
-int Logger::mathcalcflag=-1;//mathematicacalculationflag
-int Logger::timeflag=-1;//時間出力
+bool Logger::parsing_area_;
+bool Logger::calculate_closure_area_;
+bool Logger::module_set_area_;
+bool Logger::vcs_area_;
+bool Logger::external_area_; //MathematicaとかREDUCEとかの外部ソフトからの出力
+bool Logger::output_area_;
+bool Logger::rest_area_;  //どこで出したら良いか分からないようなの
 
 Logger::Logger() :
   log_level_(Warn)

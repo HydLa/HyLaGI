@@ -77,15 +77,8 @@ void TellCollector::collect(tells_t*                 tells,
       accept((*it)->get_child());
     }
   }
-  
-  if(Logger::constflag==2||Logger::constflag==0){
-	HYDLA_LOGGER_AREA(
-    "#*** tell collector ***\n", 
-    "--- collected tells ---\n", 
-    NodeDumper(tells->begin(), tells->end()));
-  }
 
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_CC(
     "#*** tell collector ***\n", 
     "--- collected tells ---\n", 
     NodeDumper(tells->begin(), tells->end()));

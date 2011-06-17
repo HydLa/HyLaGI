@@ -49,7 +49,7 @@ void PacketSender::visit(boost::shared_ptr<Tell> node)
 // î‰ärââéZéq
 void PacketSender::visit(boost::shared_ptr<Equal> node)                 
 {
-  HYDLA_LOGGER_DEBUG("put: Equal");
+  HYDLA_LOGGER_REST("put: Equal");
   ml_.put_function("Equal", 2);
 
   accept(node->get_lhs());
@@ -58,7 +58,7 @@ void PacketSender::visit(boost::shared_ptr<Equal> node)
 
 void PacketSender::visit(boost::shared_ptr<UnEqual> node)               
 {
-  HYDLA_LOGGER_DEBUG("put: UnEqual");
+  HYDLA_LOGGER_REST("put: UnEqual");
   ml_.put_function("Unequal", 2);
 
   accept(node->get_lhs());
@@ -67,7 +67,7 @@ void PacketSender::visit(boost::shared_ptr<UnEqual> node)
 
 void PacketSender::visit(boost::shared_ptr<Less> node)                  
 {
-  HYDLA_LOGGER_DEBUG("put: Less");
+  HYDLA_LOGGER_REST("put: Less");
   ml_.put_function("Less", 2);
 
   accept(node->get_lhs());
@@ -76,7 +76,7 @@ void PacketSender::visit(boost::shared_ptr<Less> node)
 
 void PacketSender::visit(boost::shared_ptr<LessEqual> node)             
 {
-  HYDLA_LOGGER_DEBUG("put: LessEqual");
+  HYDLA_LOGGER_REST("put: LessEqual");
   ml_.put_function("LessEqual", 2);
 
   accept(node->get_lhs());    
@@ -85,7 +85,7 @@ void PacketSender::visit(boost::shared_ptr<LessEqual> node)
 
 void PacketSender::visit(boost::shared_ptr<Greater> node)               
 {
-  HYDLA_LOGGER_DEBUG("put: Greater");
+  HYDLA_LOGGER_REST("put: Greater");
   ml_.put_function("Greater", 2);
 
   accept(node->get_lhs());
@@ -94,7 +94,7 @@ void PacketSender::visit(boost::shared_ptr<Greater> node)
 
 void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)          
 {
-  HYDLA_LOGGER_DEBUG("put: GreaterEqual");
+  HYDLA_LOGGER_REST("put: GreaterEqual");
   ml_.put_function("GreaterEqual", 2);
 
   accept(node->get_lhs());
@@ -104,7 +104,7 @@ void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)
 // ò_óùââéZéq
 void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)            
 {
-  HYDLA_LOGGER_DEBUG("put: And");
+  HYDLA_LOGGER_REST("put: And");
   ml_.put_function("And", 2);
 
   accept(node->get_lhs());
@@ -113,7 +113,7 @@ void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)
 
 void PacketSender::visit(boost::shared_ptr<LogicalOr> node)             
 {
-  HYDLA_LOGGER_DEBUG("put: Or");
+  HYDLA_LOGGER_REST("put: Or");
   ml_.put_function("Or", 2);
 
   accept(node->get_lhs());
@@ -123,7 +123,7 @@ void PacketSender::visit(boost::shared_ptr<LogicalOr> node)
 // éZèpìÒçÄââéZéq
 void PacketSender::visit(boost::shared_ptr<Plus> node)                  
 {
-  HYDLA_LOGGER_DEBUG("put: Plus");
+  HYDLA_LOGGER_REST("put: Plus");
   ml_.put_function("Plus", 2);
 
   accept(node->get_lhs());
@@ -132,7 +132,7 @@ void PacketSender::visit(boost::shared_ptr<Plus> node)
 
 void PacketSender::visit(boost::shared_ptr<Subtract> node)              
 {
-  HYDLA_LOGGER_DEBUG("put: Subtract");
+  HYDLA_LOGGER_REST("put: Subtract");
   ml_.put_function("Subtract", 2);
 
   accept(node->get_lhs());
@@ -141,7 +141,7 @@ void PacketSender::visit(boost::shared_ptr<Subtract> node)
 
 void PacketSender::visit(boost::shared_ptr<Times> node)                 
 {
-  HYDLA_LOGGER_DEBUG("put: Times");
+  HYDLA_LOGGER_REST("put: Times");
   ml_.put_function("Times", 2);
 
   accept(node->get_lhs());
@@ -150,7 +150,7 @@ void PacketSender::visit(boost::shared_ptr<Times> node)
 
 void PacketSender::visit(boost::shared_ptr<Divide> node)                
 {
-  HYDLA_LOGGER_DEBUG("put: Divide");
+  HYDLA_LOGGER_REST("put: Divide");
   ml_.put_function("Divide", 2);
 
   accept(node->get_lhs());
@@ -160,7 +160,7 @@ void PacketSender::visit(boost::shared_ptr<Divide> node)
 
 void PacketSender::visit(boost::shared_ptr<Power> node)                
 {
-  HYDLA_LOGGER_DEBUG("put: Power");
+  HYDLA_LOGGER_REST("put: Power");
   ml_.put_function("Power", 2);
 
   accept(node->get_lhs());
@@ -170,7 +170,7 @@ void PacketSender::visit(boost::shared_ptr<Power> node)
 // éZèpíPçÄââéZéq
 void PacketSender::visit(boost::shared_ptr<Negative> node)              
 {
-  HYDLA_LOGGER_DEBUG("put: Minus");
+  HYDLA_LOGGER_REST("put: Minus");
   ml_.put_function("Minus", 1);
 
   accept(node->get_child());
@@ -210,7 +210,7 @@ void PacketSender::visit(boost::shared_ptr<PreviousPoint> node)
 // î€íË
 void PacketSender::visit(boost::shared_ptr<Not> node)              
 {
-  HYDLA_LOGGER_DEBUG("put: Not");
+  HYDLA_LOGGER_REST("put: Not");
   ml_.put_function("Not", 1);
   accept(node->get_child());
 }
@@ -230,7 +230,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
 // êîéö
 void PacketSender::visit(boost::shared_ptr<Number> node)                
 {
-  HYDLA_LOGGER_DEBUG("put: Number : ", node->get_number());
+  HYDLA_LOGGER_REST("put: Number : ", node->get_number());
   // ml_.MLPutInteger(atoi(node->get_number().c_str())); //êîílÇ™Ç≈Ç©Ç¢Ç∆ÉIÅ[ÉoÅ[ÉtÉçÅ[Ç∑ÇÈ
 
   ml_.put_function("ToExpression", 1);
@@ -242,7 +242,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 // ãLçÜíËêî
 void PacketSender::visit(boost::shared_ptr<Parameter> node)
 {    
-  HYDLA_LOGGER_DEBUG("put: Parameter : ", node->get_name());
+  HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
   ml_.put_symbol(par_prefix + node->get_name());
 }
 
@@ -250,7 +250,7 @@ void PacketSender::visit(boost::shared_ptr<Parameter> node)
 // t
 void PacketSender::visit(boost::shared_ptr<SymbolicT> node)                
 {    
-  HYDLA_LOGGER_DEBUG("put: t");
+  HYDLA_LOGGER_REST("put: t");
   ml_.put_symbol("t");
 }
 
@@ -260,18 +260,9 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
   int diff_count = var.get<1>();
   bool prev      = var.get<2>();
   
-  if(Logger::mathsendflag==1){
-	    HYDLA_LOGGER_AREA(
-    "PacketSender::put_var: ",
-    "name: ", name,
-    "\tdiff_count: ", diff_count,
-    "\tprev: ", prev,
-    "\tvariable_arg: ", variable_arg);
-  }
 
 
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_REST(
     "PacketSender::put_var: ",
     "name: ", name,
     "\tdiff_count: ", diff_count,
@@ -345,7 +336,7 @@ void PacketSender::put_node(const node_sptr& node,
   variable_arg_ = variable_arg;
   ignore_prev_ = ignore_prev;
   if(!entailed){
-    HYDLA_LOGGER_DEBUG("put: Not");
+    HYDLA_LOGGER_REST("put: Not");
     ml_.put_function("Not", 1);
   }
   accept(node);
@@ -357,13 +348,7 @@ void PacketSender::put_node(const node_sptr& node,
 void PacketSender::put_vars(VariableArg variable_arg, 
                             bool ignore_prev)
 {
-  if(Logger::mathsendflag==1){
-	    HYDLA_LOGGER_AREA(
-    "---- PacketSender::put_vars ----\n",
-    "var size:", vars_.size());
-  }
-
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_REST(
     "---- PacketSender::put_vars ----\n",
     "var size:", vars_.size());
   
@@ -432,7 +417,7 @@ void PacketSender::create_max_diff_map(max_diff_map_t& max_diff_map)
     }    
   }
 
-  HYDLA_LOGGER_DEBUG(
+  HYDLA_LOGGER_REST(
     "-- max diff map --\n",
     MaxDiffMapDumper(max_diff_map.begin(), 
                      max_diff_map.end()).s.str());

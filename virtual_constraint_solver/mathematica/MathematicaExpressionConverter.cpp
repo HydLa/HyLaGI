@@ -31,13 +31,13 @@ void MathematicaExpressionConverter::initialize(){
 
 MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_math_string_to_symbolic_value(const std::string &expr){
 
-  HYDLA_LOGGER_DEBUG("#*** convert string to value ***\n",
+  HYDLA_LOGGER_REST("#*** convert string to value ***\n",
                      expr);
 
   value_t value;
   std::string::size_type now = 0;
   value.set(convert_math_string_to_symbolic_tree(expr, now));
-  HYDLA_LOGGER_DEBUG("#*** convert result value ***\n",
+  HYDLA_LOGGER_REST("#*** convert result value ***\n",
                      value.get_string());
   return value;
 }

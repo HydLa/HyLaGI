@@ -6,8 +6,18 @@
 
 //下記はIPでのガード条件判定に分岐が起きるもの．
 //最初のIPでyが1となるか2となるか（2回目のPPに入るか否か）
-/*
+
 INIT <=> x >= 0 & x <= 1.
+CONST <=> [](x' = 1).
+SUB <=> y = 1 & [](y' = 0).
+GUARD <=> [](x > 1 => y = 2).
+
+INIT, CONST, SUB << GUARD.
+
+/*
+//分岐しないはずなのに分岐してしまう例
+
+INIT <=> x >= 0 & x < 1.
 CONST <=> [](x' = 1).
 SUB <=> y = 1 & [](y' = 0).
 GUARD <=> [](x >= 1 => y = 2).
@@ -15,9 +25,11 @@ GUARD <=> [](x >= 1 => y = 2).
 INIT, CONST, SUB << GUARD.
 */
 
+/*
 INIT <=> x >= 0 & x <= 1 & t = 0.
 CONST <=> [](x' = 1 & t' = 1).
 SUB <=> y = 2 & [](y' = 0).
 GUARD <=> [](t- >= 1 & x- >= 3/2 => y = 3).
 
 INIT, CONST, SUB << GUARD.
+*/

@@ -5,11 +5,16 @@ If[optUseDebugPrint,
   debugPrint[arg___] := Print[InputForm[{arg}]],
   debugPrint[arg___] := Null];
 
+
+(* ルールのリストを受けて，tについてのルールを除いたものを返す関数 *)
+removeRuleForTime[ruleList_] := DeleteCases[ruleList, t -> _];
+
 (*
  * checkEntailmentのIPバージョン
  * 0 : Solver Error
  * 1 : 導出可能
  * 2 : 導出不可能
+ * 3 : 要分岐
  *)
 checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
   {tStore, sol, integGuard, otherExpr, minT},
@@ -22,27 +27,21 @@ checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
     (* guardとotherExprにtStoreを適用する *)
     integGuard = guard /. tStore;
     otherExpr = otherExpr /. tStore;
-    If[integGuard =!= False,
-      (* その結果とt>0とを連立 *)
-      (*debugPrint["integGuard:", integGuard];*)
-      sol = Quiet[Check[Reduce[{integGuard && t > 0 && (And@@otherExpr)}, t],
-                        False, {Reduce::nsmet}], {Reduce::nsmet}];
-      (* Infを取って0になればEntailed *)
-      If[sol =!= False,
-        minT = Quiet[Minimize[{t, sol}, Append[pars,t]]];
-        If[Reduce[And@@Map[(Equal@@#)&, minT[[2]]] && And@@otherExpr] =!= False,
-          minT = First[minT];
-          If[minT === 0,
-            (* 十分条件かを判定 *)
-            (* MinValueではなくMinimizeを使う *)
-            (* If[Reduce[ForAll[pars, And@@otherExpr, MinValue[{t, sol}, t] == 0]] =!= False, *)
-            If[Quiet[Reduce[ForAll[pars, And@@otherExpr, First[Minimize[{t, sol}, t]] == 0]]] =!= False,
-              {1},
-              {3}
-            ],
-            {2}
-          ],
-          {2}
+    (* その結果とt>0とを連立 *)
+    (*debugPrint["integGuard:", integGuard];*)
+    sol = Quiet[Check[Reduce[{integGuard && t > 0 && (And@@otherExpr)}, t, Reals],
+                      False, {Reduce::nsmet}], {Reduce::nsmet}];
+    If[sol =!= False,
+      (* Infを取って0になれば，導出できる可能性がある *)
+      minT = Quiet[Minimize[{t, sol}, Append[pars,t]]];
+      If[First[minT] === 0 && Quiet[Reduce[And@@Map[(Equal@@#)&, removeRuleForTime[minT[[2]]]] && And@@otherExpr]] =!= False,
+        (* 上の2番目の条件は一見すると不要だが，Minimizeが時間の境界に触れている場合と定数の境界に触れている場合を区別できないらしいので必要． *)
+        (* 時間の境界はＯＫだが，定数が境界に乗ってるのは本来ありえない場合のため *)
+        
+        (* 必ず導出できるかどうかを判定 *)
+        If[Quiet[Reduce[ForAll[pars, And@@otherExpr, First[Minimize[{t, sol}, t]] == 0]]] =!= False,
+          {1},
+          {3}
         ],
         {2}
       ],
@@ -64,7 +63,6 @@ checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
 checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
   {sol, nsol},
   debugPrint["guard:", guard, "store:", store, "vars:", vars];
-
   sol = Reduce[Append[store, guard], vars, Reals];
   If[sol=!=False, 
     nsol = Reduce[Append[store, Not[sol]], vars, Reals];
@@ -467,12 +465,26 @@ isConsistentInterval[expr_, vars_] :=  Block[
 (*   usrVarv[0] == Derivative[1][usrVarht]},  *)
 (*   {Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}]]; *)
 
+
+
+(* Piecewiseを分解してリストにする．条件がFalseなのは削除 *)
+makeListFromPiecewise[minT_, others_] := Block[
+  {tmpCondition = False},
+  tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
+  tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
+  If[ tmpCondition === False,
+    minT[[1]],
+    Append[minT[[1]], {minT[[2]], tmpCondition}]
+  ]
+];
+
+
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
 calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherExpr_] := Block[
 {
-  calcMinTime, addMinTime, selectCondTime, makeListFromPiecewise, removeInequality,
+  calcMinTime, addMinTime, selectCondTime, removeInequality,
   sol, minT, paramVars, compareResult, resultList, condTimeList,
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
@@ -528,21 +540,11 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
     ]
   );
   
-  (* Piecewiseを分解してリストにする．条件がFalseなのは削除 *)
-     makeListFromPiecewise[minT_, others_] := ( Block[
-      {tmpCondition = False},
-      tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
-      tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
-      If[ tmpCondition === False,
-        minT[[1]],
-        Append[minT[[1]], {minT[[2]], tmpCondition}]
-      ]
-   ]
-  );
 
   (* 条件を満たす最小の時刻と，その条件の組を求める *)
-  findMinTime[ask_, condition_] := (
-    sol = Quiet[Check[Reduce[ask&&condition&&t>0, t, Reals],
+  (* maxTは理想的には無くても可能だが，あった方が事故がおきにくいのと高速化が見込めるかもしれないため追加 *)
+  findMinTime[ask_, condition_, maxT_] := (
+    sol = Quiet[Check[Reduce[ask&&condition&&t>0&&maxT>=t, t, Reals],
                       errorSol,
                       {Reduce::nsmet}],
                 {Reduce::nsmet}];
@@ -575,8 +577,8 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
         sol = Quiet[Reduce[And[andCond,timeCond1[[1]] > timeCond2[[1]]], Reals]];
         If[ sol === False,
           {{timeCond1[[1]], andCond}},
-          notSol = Reduce[andCond&&!sol];
-          If[ notSol === False, (* Impliesだと完全に同型じゃないと無理っぽいので *)
+          notSol = Reduce[andCond&&!sol];(* Impliesだと完全に同型じゃないと無理っぽいので *)
+          If[ notSol === False,
             {{timeCond2[[1]], andCond}},
             {{timeCond1[[1]],  notSol}, {timeCond2[[1]], sol}}
           ]
@@ -600,15 +602,15 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
   );
 
   (* 最小時刻と条件の組をリストアップする関数 *)
-  calcMinTimeList[askList_, timeConditionList_, conditionForAll_] := ( Block[
+  calcMinTimeList[askList_, timeConditionList_, conditionForAll_, maxT_] := ( Block[
       {
         tmpList
       },
       If[askList === {},
         timeConditionList,
-        tmpList = findMinTime[First[askList], (And @@ conditionForAll)];
+        tmpList = findMinTime[First[askList], (And @@ conditionForAll), maxT];
         tmpList = compareMinTimeList[timeConditionList, tmpList];
-        tmpList = calcMinTimeList[Rest[askList], tmpList, conditionForAll];
+        tmpList = calcMinTimeList[Rest[askList], tmpList, conditionForAll, maxT];
         tmpList
         (*timeConditionList*)
       ]
@@ -648,16 +650,16 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
 
 
   (* 従来の，最小時刻を１つだけ見つけるための処理*)
-  (* Fold[calcMinTime,
+  (*resultList = Fold[calcMinTime,
        {maxTime, {}},
        Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk],
-            Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]] *)
+            Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]];*)
 
   (* 最小時刻と条件の組のリストを求める *)
   resultList = calcMinTimeList[ Join[Map[(Not[#[[1]]])&, posAsk], Map[(#[[1]])&, negAsk],
                                 Fold[(Join[#1, Map[(#[[1]])&, #2]])&, {}, NACons]],
-                                {{maxTime, And@@otherExpr}}, otherExpr];
+                                {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
 
 
 
@@ -744,7 +746,7 @@ integrateCalc[cons_,
     paramCons = getParamCons[cons];
     paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, paramCons]];
     tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
-    (* debugPrint["tmpIntegSol: ", tmpIntegSol, "paramVars", paramVars "paramCons", paramCons]; *)
+    (*debugPrint["tmpIntegSol: ", tmpIntegSol, "paramVars", paramVars "paramCons", paramCons]; *)
     (* 1つだけ採用 *)
     (* TODO: 複数解ある場合も考える *)
     If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
@@ -754,6 +756,7 @@ integrateCalc[cons_,
     {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[tmpIntegSol];
     (* debugPrint["DExpr ", DExpr, "DExprVars", DExprVars]; *)
 
+
     If[Cases[DExpr, Except[True]] === {},
       tmpIntegSol = {},
       tmpIntegSol = Quiet[DSolve[DExpr, DExprVars, t],
@@ -761,7 +764,6 @@ integrateCalc[cons_,
       (* 1つだけ採用 *)
       (* TODO:複数解ある場合も考える *)
       tmpIntegSol = First[tmpIntegSol]];
-
     (* tmpIntegSolおよびNDExpr内に出現するND変数の一覧を得る *)
     solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
     (* integrateCalcの計算結果として必要な変数の一覧 *)
@@ -770,6 +772,9 @@ integrateCalc[cons_,
     tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
                               getNDVars[returnVars]]];
     
+    (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
+    tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
+    debugPrint["tmpIntegSol", tmpIntegSol];
 
     tmpPosAsk = Map[(# /. tmpIntegSol) &, posAsk];
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
@@ -785,6 +790,7 @@ integrateCalc[cons_,
 
     (* false *)
     debugPrint["nextpointphase arg: no next point phase"];
+    debugPrint["tmpIntegSol", tmpIntegSol];
     tmpMinT = {{maxTime // FullForm // ToString, {}, 1}};
     tmpVarMap = {};
   ];

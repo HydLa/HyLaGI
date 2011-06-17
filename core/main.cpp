@@ -75,177 +75,25 @@ void hydla_main(int argc, char* argv[])
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
   
-    if(po.get<std::string>("ar") == "test") {		//局部的出力entail
-	  Logger::enflag=6; //テスト用に常に出力するものを作る
-	Logger::instance().set_log_level(Logger::Area);
-	} else/* if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=2;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else */if(po.get<std::string>("ar") == "const_co1") {		//条件付制約
-	  Logger::constflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co2") {		//tell制約
-	  Logger::constflag=2;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co3") {		//制約集めた後のalways制約
-	  Logger::constflag=3;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co4") {		//maxmoduleなどの導出
-	  Logger::constflag=4;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co5") {		//always制約fromIP/PP
-	  Logger::constflag=5;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co6") {		//consraint_store_t
-	  Logger::constflag=6;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co7") {		//Begin Interval add_constraint 情報不足
-	  Logger::constflag=7;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co8") {		//PP変数表
-	  Logger::constflag=8;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co9") {		//Begin MathematicaVCSPoint::add_constraint(情報不足)
-	  Logger::constflag=9;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co10") {		//制約ストアの構築　List関数の要素数(Or/Andで結ばれた解の個数)を得る
-	  Logger::constflag=10;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co11") {		//posAsk,negAsk,NACons(採用していないモジュール内のtell制約)＞動かない
-	  Logger::constflag=11;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "const_co12") {		//changed askに関して
-	  Logger::constflag=12;
-	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "mat_s1") {		//mathematicaの通信(sendのs)左連続制約
-	  Logger::mathsendflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "mat_s2") {		//通信・intervalでの
-	  Logger::mathsendflag=2;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "mat_s3") {		//制約ストアの送信PP
-	  Logger::mathsendflag=3;
-	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "mat_c1") {		//局部的出力entail
-	  Logger::mathcalcflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力entail
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v1") {		//IP変数表
-	  Logger::varflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v2") {		//左連続制約について
-	  Logger::varflag=2;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v3") {		//pointphaseの結果
-	  Logger::varflag=3;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v4") {		//intervalphaseの結果
-	  Logger::varflag=4;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v5") {		//次のフェーズにおける変数の値の導出
-	  Logger::varflag=5;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v6") {		//PP変数表
-	  Logger::varflag=6;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v7") {		//Point::create_variable_map
-	  Logger::varflag=7;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v8") {		//変数と値の組を受取るIP
-	  Logger::varflag=8;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "var_v9") {		//変数表に登録されている変数名一覧or登録されていないもの
-	  Logger::varflag=9;
-	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t1") {		//シミュレーションにおける該当時間・送信時間
-	  Logger::timeflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t2") {		//経過時間・次のフェーズの始まる時間
-	  Logger::timeflag=2;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t3") {		//maxtime(動作せず)
-	  Logger::timeflag=3;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "time_t4") {		//apply_time_to_vm>>Symbolictime
-	  Logger::timeflag=4;
-	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "pt_p1") {		//ASTtree
-	  Logger::ptflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	//} else if(po.get<std::string>("ar") == "") {		//局部的出力
-	  //Logger::flag=3;
-	//Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "pt_p4") {		//AskDisjunction
-	  Logger::ptflag=4;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "pt_p5") {		//remove id
-	  Logger::ptflag=5;
-	Logger::instance().set_log_level(Logger::Area);
-    } else if(po.get<std::string>("ar") == "parse_tree"||po.get<std::string>("ar") == "pt") {		//parse_tree
-	  Logger::ptflag=0;
-	  	Logger::instance().set_log_level(Logger::Area);
-    } else if(po.get<std::string>("ar") == "ent_e1") {			//局部的出力entail_pp_
-	  Logger::enflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "ent_e2") {			//局部的出力entail_??_
-	  Logger::enflag=2;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "ent_e3") {			//局部的出力entail_ip_
-	  Logger::enflag=3;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "ent_e4") {			//局部的出力entail_??_
-	  Logger::enflag=4;
-	Logger::instance().set_log_level(Logger::Area);
-    } else if(po.get<std::string>("ar") == "ent_e5") {			//局部的出力entail_??_
-	  Logger::enflag=5;
-	Logger::instance().set_log_level(Logger::Area);
-    } else if(po.get<std::string>("ar") == "entail"||po.get<std::string>("ar") == "ent") {	//局部的出力entail判定
-	  Logger::enflag=0;
-	Logger::instance().set_log_level(Logger::Area);
-    } else if(po.get<std::string>("ar") == "inco"||po.get<std::string>("ar") == "inconsistent") {	//局部的出力無矛盾性判定
-	  Logger::conflag=0;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "inco_c1") {		//局部的出力inconsistent_pp_
-	  Logger::conflag=1;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "inco_c2") {		//局部的出力inconsistent_ip_
-	  Logger::conflag=2;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "inco_c3") {		//局部的出力inconsistent_??_
-	  Logger::conflag=3;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "inco_c4") {		//局部的出力inconsistent_??_
-	  Logger::conflag=4;
-	Logger::instance().set_log_level(Logger::Area);
-	} else if(po.get<std::string>("ar") == "inco_ent_"||po.get<std::string>("ar") == "ent_inco_") {		//局部的出力inconsistent
-	  Logger::conflag=0;Logger::enflag=0;
-	Logger::instance().set_log_level(Logger::Area);
-	}else if(po.count("debug")>0) {
-	  Logger::ptflag=0;
-      Logger::instance().set_log_level(Logger::Debug);
+  std::string area_string(po.get<std::string>("area"));
+  if(area_string!=""){
+    Logger::instance().set_log_level(Logger::Area);
+    Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
+    Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
+    Logger::module_set_area_ = (area_string.find('m') != std::string::npos);
+    Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
+    Logger::external_area_ = (area_string.find('e') != std::string::npos);
+    Logger::output_area_ = (area_string.find('o') != std::string::npos);
+    Logger::rest_area_ = (area_string.find('r') != std::string::npos);
+  }
+  else if(po.count("debug")>0) {
+    Logger::instance().set_log_level(Logger::Debug);
   } else if(po.count("comprehensive")>0){					//大局的出力モード
-	Logger::instance().set_log_level(Logger::Summary);
+    Logger::instance().set_log_level(Logger::Summary);
   } else {
     Logger::instance().set_log_level(Logger::Warn);
   }
-	
+  
   if(po.count("help")) {
     po.help_msg(std::cout);
     return;

@@ -53,25 +53,15 @@ bool REDUCEVCSPoint::reset()
 // MathematicaVCSPoint‚æ‚è
 bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 {
-  if(Logger::varflag==6){
-  HYDLA_LOGGER_AREA("#*** Reset Constraint Store ***");
+
+  HYDLA_LOGGER_VCS_SUMMARY("#*** Reset Constraint Store ***");
 
   if(variable_map.size() == 0)
   {
-    HYDLA_LOGGER_AREA("no Variables");
+    HYDLA_LOGGER_VCS_SUMMARY("no Variables");
     return true;
   }
-  HYDLA_LOGGER_AREA("------Variable map------\n", variable_map);
-  }
-
-  HYDLA_LOGGER_SUMMARY("#*** Reset Constraint Store ***");
-
-  if(variable_map.size() == 0)
-  {
-    HYDLA_LOGGER_SUMMARY("no Variables");
-    return true;
-  }
-  HYDLA_LOGGER_SUMMARY("------Variable map------\n", variable_map);
+  HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);
 
   std::set<MathValue> and_cons_set;
 
@@ -125,7 +115,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 
   constraint_store_.first.insert(and_cons_set);
 
-  HYDLA_LOGGER_DEBUG(*this);
+  HYDLA_LOGGER_VCS(*this);
 
   return true;
 }
@@ -140,10 +130,10 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
 
   if(parameter_map.size() == 0)
   {
-    HYDLA_LOGGER_SUMMARY("no Parameters");
+    HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
     return true;
   }
-  HYDLA_LOGGER_SUMMARY("------Parameter map------\n", parameter_map);
+  HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
 
 
   std::set<MathValue> and_cons_set;
@@ -216,10 +206,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; tells_it!=tells_end; ++tells_it) {
-    if(Logger::constflag==9){
-      HYDLA_LOGGER_AREA("put node: ", *(*tells_it)->get_child());
-    }
-    HYDLA_LOGGER_DEBUG("put node: ", *(*tells_it)->get_child());
+    HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
     std::cout << rtv.get_expr((*tells_it)->get_child()) << std::endl;
   }
 
@@ -229,7 +216,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
   for(; append_it!=append_end; ++append_it) {
-    HYDLA_LOGGER_DEBUG("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
     std::cout << rtv.get_expr(append_it->ask->get_guard()) << std::endl;
   }
 

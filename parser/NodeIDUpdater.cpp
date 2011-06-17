@@ -17,10 +17,7 @@ NodeIDUpdater::~NodeIDUpdater()
 
 void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
 {
-	if(Logger::ptflag==5){
-		HYDLA_LOGGER_AREA("#*** NodeIDUpdater::update ***");
-	}
-  HYDLA_LOGGER_DEBUG("#*** NodeIDUpdater::update ***");
+  HYDLA_LOGGER_PARSING("#*** NodeIDUpdater::update ***");
 
   parse_tree_ = pt;
   node_id_list_.clear();
@@ -44,10 +41,7 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
   std::vector<hydla::parse_tree::node_id_t>::const_iterator it  = diff_id.begin();
   std::vector<hydla::parse_tree::node_id_t>::const_iterator end = diff_id.end();
   for(; it!=end; ++it) {
-	if(Logger::ptflag==5){
-		HYDLA_LOGGER_AREA("remove id: ", *it);
-	}
-	HYDLA_LOGGER_DEBUG("remove id: ", *it);
+    HYDLA_LOGGER_PARSING("remove id: ", *it);
     pt->remove_node(*it);
   }
 }
