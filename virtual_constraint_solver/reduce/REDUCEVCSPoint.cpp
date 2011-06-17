@@ -5,7 +5,8 @@
 #include "REDUCEVCSPoint.h"
 
 // TODO RTreeVisitorの引っ越し
-#include "../../parser/RTreeVisitor.h"
+//#include "../../parser/RTreeVisitor.h"
+#include "REDUCEStringSender.h"
 
 /*
 #include "mathlink_helper.h"
@@ -122,8 +123,8 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 
 // MathematicaVCSPointより
 bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map){
-  assert(0);
-  return false;
+//  assert(0);
+//  return false;
   if(!reset(variable_map)){
     return false;
   }
@@ -197,47 +198,70 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
 //TODO 定数返しの修正
 VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
-  std::cout << "Begin REDUCEVCSPoint::add_constraint" << std::endl;
-  RTreeVisitor rtv = RTreeVisitor(1);
+
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::add_constraint ***");
+  REDUCEStringSender rss = REDUCEStringSender(*cl_);
+
+
+//////////////////// 送信処理
+
+  // send_stringのstringはどのように区切って送信してもOK
 
   // tell制約の集合からexprを得てREDUCEに渡す
   std::cout << "collected_tells" << std::endl;
+  cl_->send_string("expr_:={");
+//  cl_->send_string("expr_:={df(y,t,2) = -10,");
+//  cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
 
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; tells_it!=tells_end; ++tells_it) {
+    if(tells_it != collected_tells.begin()) cl_->send_string(",");
     HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
-    std::cout << rtv.get_expr((*tells_it)->get_child()) << std::endl;
+//    std::cout << rtv.get_expr((*tells_it)->get_child()) << std::endl;
+    rss.put_node((*tells_it)->get_child());
   }
+  cl_->send_string("};");
+
 
   // appended_asksからガード部分を得てREDUCEに渡す
   std::cout << "appended_asks" << std::endl;
+  cl_->send_string("pexpr_:={");
+//  cl_->send_string("{}");
 
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
   for(; append_it!=append_end; ++append_it) {
+    if(append_it != appended_asks.begin()) cl_->send_string(",");
     HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
-    std::cout << rtv.get_expr(append_it->ask->get_guard()) << std::endl;
+    rss.put_node(append_it->ask->get_child());
   }
+  cl_->send_string("};");
 
 
+  // varsを渡す
+  // vars_に関して一番外側の"{}"部分は、put_vars内で送っている
+  cl_->send_string("vars_:=");
+//  cl_->send_string("vars_:={y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)};");
+  rss.put_vars();
+  cl_->send_string(";");
 
-  //////////////////// 送信処理
 
-  // send_stringのstringはどのように区切って送信してもOK
-  cl_->send_string("expr_:={df(y,t,2) = -10,");
-  cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
-  cl_->send_string("pexpr_:= {};");
-  cl_->send_string("vars_:={y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)};");
   cl_->send_string("symbolic redeval '(isconsistent vars_ pexpr_ expr_);");
+
+
+/////////////////// 受信処理
+  HYDLA_LOGGER_VCS("--- receive ---");
+
   cl_->read_until_redeval();
 
   std::string ans = cl_->get_s_expr();
-  std::cout << "add_constraint_ans: " << ans << std::endl;
+  HYDLA_LOGGER_VCS("add_constraint_ans: ",
+                   ans);
 
 
   // VCSR_FALSE後終了
-  std::cout << "End REDUCEVCSPoint::add_constraint" << std::endl;
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::add_constraint ***");
 
   assert(0);
 
