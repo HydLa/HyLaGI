@@ -1,7 +1,7 @@
 #include "SExpParser.h"
 
 #include <iostream>
-//#include <string>
+#include <cstring>
 
 #include "SExpGrammar.h"
 #include "CommentGrammar.h"
@@ -20,7 +20,7 @@ SExpParser::~SExpParser()
 {
 }
 
-void SExpParser::dump_tree(boost::spirit::classic::tree_match<char const *>::tree_iterator const &iter, int nest){
+void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
 
   for(int i = 0; i < nest; ++i)
     cout << "  ";
@@ -47,16 +47,16 @@ void SExpParser::dump_tree(boost::spirit::classic::tree_match<char const *>::tre
 
 int SExpParser::parse_main(const char* input_str){
   SExpGrammar                   sg;
-  CommentGrammar cg;
-  tree_parse_info<>             info;
+  CommentGrammar                cg;
   cout << "input_str: " << input_str << "\n";
-//  char const                    *inputString;
-//  inputString = input_str;
-//  info = ast_parse(inputString, sg, cg);
-  info = ast_parse(input_str, sg, cg);
+
+  pos_iter_t positBegin(input_str, input_str + strlen(input_str));
+  pos_iter_t positEnd;
+
+  ast_tree_ = ast_parse(positBegin, positEnd, sg, cg);
   cout << "--------------------------\n";
-  if(info.full){
-    dump_tree(info.trees.begin(), 0);
+  if(ast_tree_.full){
+    dump_tree(get_tree_iterator(), 0);
   }else{
     cout << "Ž¸”s\n";
   }

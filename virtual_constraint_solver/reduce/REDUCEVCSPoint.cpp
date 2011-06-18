@@ -8,6 +8,8 @@
 //#include "../../parser/RTreeVisitor.h"
 #include "REDUCEStringSender.h"
 
+#include "../../parser/SExpParser.h"
+
 /*
 #include "mathlink_helper.h"
 #include "PacketErrorHandler.h"
@@ -21,6 +23,7 @@
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
+using namespace hydla::parser;
 
 namespace hydla {
 namespace vcs {
@@ -207,6 +210,11 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
   // send_stringのstringはどのように区切って送信してもOK
 
+  // depend文
+  // TODO:処理の一般化
+  cl_->send_string("depend ht,t;");
+  cl_->send_string("depend v,t;");
+
   // tell制約の集合からexprを得てREDUCEに渡す
   std::cout << "collected_tells" << std::endl;
   cl_->send_string("expr_:={");
@@ -258,6 +266,18 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
                    ans);
+
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
+
+  // {コード, {{変数, 関係演算子コード, 値},...}}の構造
+  SExpParser::const_tree_iter_t ct_it = sp.get_tree_iterator();
+  int size = ct_it->children.size();
+  std::cout << "children size: " << size << "\n";
+
+
+
 
 
   // VCSR_FALSE後終了
