@@ -27,7 +27,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   }
 
   opts.mathlink      = po.get<std::string>("mathlink");
-  opts.debug_mode    = po.count("debug")>0||po.get<std::string>("area").find('e')!=std::string::npos;
+  opts.debug_mode    = po.count("debug")>0||po.get<std::string>("area")!="";
   opts.max_time      = po.get<std::string>("time");
   opts.max_step      = po.get<int>("step");
   opts.nd_mode       = po.count("nd")>0;
