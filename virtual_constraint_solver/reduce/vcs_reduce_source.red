@@ -125,7 +125,7 @@ on nat;
 
 operator prev;
 %TODO dependを破棄
-depend y,t;
+depend {y, ht, v}, t;
 
 rettrue___ := "RETTRUE___";
 retfalse___ := "RETFALSE___";
@@ -165,6 +165,7 @@ write "isConsistent: ";
 %  tmp_:=rlatl(rlqe(mymkand(expr_)));
 %  write "tmp_: ", tmp_;
 
+%  ans_:=solve(expr_, vars_);
   ans_:=solve(expr_, vars_);
 write "ans_: ", ans_;
   flag_:= if(ans_ <> {}) then rettrue___ else retfalse___;
@@ -195,7 +196,7 @@ write "nsol_: ", nsol_;
 % 冗長かも
     if(nsol_ = false) then
       return CCP_ENTAILED___
-    else return CCP_UNKNOWN___
+    else return {CCP_UNKNOWN___}
   else return CCP_NOT_ENTAILED___;
 % Solver Error
   return CCP_SOLVER_ERROR___;
@@ -222,8 +223,70 @@ begin;
 end;
 
 
+% in "/home/yysaki/workspace/HydLa/virtual_constraint_solver/reduce/vcs_reduce_source.red";
 
+load_package "laplace";
 
+%vars_:={y,v};
+
+%ケンシロウさんの式の関数化
+procedure exDSolve(fv, v_0, fy, y_0)$
+begin;
+  scalar flag_, ans_, tmp_;
+operator v, LAPv;
+operator y, LAPy;
+
+%STEP1. load, let, operator宣言
+
+let{
+laplace(df(v(~x),x),x) => il!&*laplace(v(x),x) - INITvlhs,
+laplace(df(v(~x),x,~n),x) => il!&**n*laplace(v(x),x) -
+ for i:=n-1 step -1 until 0 sum
+  sub(x=0, df(v(x),x,n-1-i)) * il!&**i
+   when fixp n,
+laplace(v(~x),x) =>LAPv(il!&)
+};
+
+let{
+laplace(df(y(~x),x),x) => il!&*laplace(y(x),x) - INITylhs,
+laplace(df(y(~x),x,~n),x) => il!&**n*laplace(y(x),x) -
+ for i:=n-1 step -1 until 0 sum
+  sub(x=0, df(y(x),x,n-1-i)) * il!&**i
+   when fixp n,
+laplace(y(~x),x) =>LAPy(il!&)
+};
+
+%STEP2. ラプラス変換
+	%memo: foreachとmkidで一般化出来る
+LAPEXPRv:= laplace(fv,t,s);
+write "LAPEXPRv: ", LAPEXPRv;
+
+INITv   := INITvlhs - v_0;
+write "INITv: ", INITv;
+LAPEXPRy:= laplace(fy,t,s);
+write "LAPEXPRy: ", LAPEXPRy;
+INITy   := INITylhs - y_0;
+write "INITy: ", INITy;
+
+%STEP3. sに関して解く、逆ラプラス
+	%memo: lapv(s)の表記がネック
+x := solve({LAPEXPRv, LAPEXPRy, INITv, INITy}, {lapv(s),lapy(s),INITvlhs,INITylhs,s});
+write "solve: ", x;
+tmp := lgetf(lapv(s), x);
+vexp := invlap(tmp,s,t);
+
+tmp := lgetf(lapy(s), x);
+yexp := invlap(tmp,s,t);
+
+return {v(t)=vexp, y(t)=yexp};
+end;
+
+fv := (df(v(t),t) - (-10)); v_0:=0;
+fy := (df(y(t),t) - v(t));  y_0:=10;
+
+exDSolve(fv, v_0, fy, y_0);
+
+clear fv, v_0, fy, y_0;
 
 
 
@@ -232,7 +295,7 @@ end;
 %%%%%%%%%%%%%%%%
 expr_:= {yyy = -10, y = 10, yy = 0, z = y, zz = yy}; vars_:={y, z, yy, zz, yyy, y, z, yy, zz};
 symbolic redeval '(isconsistent vars_ pexpr_ expr_);
-
+clear expr_, pexpr_, vars_;
 
 ;end;
 
