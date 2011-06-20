@@ -227,34 +227,32 @@ end;
 
 load_package "laplace";
 
-%vars_:={y,v};
+%args_:={{v,lapv},...}
+procedure LaplaceLetUnit(args_)$
+  begin;
+    scalar arg_, LAParg_;
+  arg_:= first args_;
+  LAParg_:= second args_;
+  operator arg_, LAParg_;
+
+  let{
+    laplace(df(arg_(~x),x),x) => il!&*laplace(arg_(x),x) - mkid(mkid(INIT,arg_),lhs),
+    laplace(df(arg_(~x),x,~n),x) => il!&**n*laplace(arg_(x),x) -
+    for i:=n-1 step -1 until 0 sum
+      sub(x=0, df(arg_(x),x,n-1-i)) * il!&**i,
+    laplace(arg_(~x),x) =>LAParg_(il!&)
+  }
+end;
 
 %ケンシロウさんの式の関数化
 procedure exDSolve(fv, v_0, fy, y_0)$
 begin;
   scalar flag_, ans_, tmp_;
-operator v, LAPv;
-operator y, LAPy;
 
 %STEP1. load, let, operator宣言
-
-let{
-laplace(df(v(~x),x),x) => il!&*laplace(v(x),x) - INITvlhs,
-laplace(df(v(~x),x,~n),x) => il!&**n*laplace(v(x),x) -
- for i:=n-1 step -1 until 0 sum
-  sub(x=0, df(v(x),x,n-1-i)) * il!&**i
-   when fixp n,
-laplace(v(~x),x) =>LAPv(il!&)
-};
-
-let{
-laplace(df(y(~x),x),x) => il!&*laplace(y(x),x) - INITylhs,
-laplace(df(y(~x),x,~n),x) => il!&**n*laplace(y(x),x) -
- for i:=n-1 step -1 until 0 sum
-  sub(x=0, df(y(x),x,n-1-i)) * il!&**i
-   when fixp n,
-laplace(y(~x),x) =>LAPy(il!&)
-};
+vars_:={y,v};
+tmp_:= for each x in vars_ collect {x,mkid(lap,x)};
+map(LaplaceLetUnit, tmp_);
 
 %STEP2. ラプラス変換
 	%memo: foreachとmkidで一般化出来る
@@ -281,9 +279,10 @@ yexp := invlap(tmp,s,t);
 return {v(t)=vexp, y(t)=yexp};
 end;
 
+operator y,v;
 fv := (df(v(t),t) - (-10)); v_0:=0;
 fy := (df(y(t),t) - v(t));  y_0:=10;
-
+%fv := (df(v(t),t,2) - (-10));
 exDSolve(fv, v_0, fy, y_0);
 
 clear fv, v_0, fy, y_0;
