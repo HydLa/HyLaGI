@@ -12,6 +12,22 @@ using namespace hydla::parse_error;
 namespace hydla { 
 namespace parser {
 
+
+#define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)        \
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
+{                                                     \
+  dispatch_lhs(node);                                 \
+  dispatch_rhs(node);                                 \
+}
+
+#define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)        \
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
+{ dispatch_child(node);}
+
+#define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)        \
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node){}
+
+
 ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
@@ -198,105 +214,31 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)
 
 }
 
+
 // TellêßñÒ
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Tell> node)                  
-{
-  dispatch_child(node);
-
-
-}
+DEFINE_DEFAULT_VISIT_UNARY(Tell)
 
 // éZèpíPçÄââéZéq
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Negative> node)
-{
-  dispatch_child(node);
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Positive> node)
-{
-  dispatch_child(node);
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Equal> node)                 
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<UnEqual> node)               
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Less> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LessEqual> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Greater> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<GreaterEqual> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Plus> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Subtract> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Times> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
-
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Divide> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
-
-}
+DEFINE_DEFAULT_VISIT_UNARY(Negative)
+DEFINE_DEFAULT_VISIT_UNARY(Positive)
 
 
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Power> node)
-{
-  dispatch_lhs(node);
-  dispatch_rhs(node); 
+// î‰ärââéZéq
+DEFINE_DEFAULT_VISIT_BINARY(Equal)
+DEFINE_DEFAULT_VISIT_BINARY(UnEqual)
+DEFINE_DEFAULT_VISIT_BINARY(Less)
+DEFINE_DEFAULT_VISIT_BINARY(LessEqual)
+DEFINE_DEFAULT_VISIT_BINARY(Greater)
+DEFINE_DEFAULT_VISIT_BINARY(GreaterEqual)
 
-}
+// éZèpìÒçÄââéZéq
+DEFINE_DEFAULT_VISIT_BINARY(Plus)
+DEFINE_DEFAULT_VISIT_BINARY(Subtract)
+DEFINE_DEFAULT_VISIT_BINARY(Times)
+DEFINE_DEFAULT_VISIT_BINARY(Divide)
+DEFINE_DEFAULT_VISIT_BINARY(Power)
 
+// ò_óùââéZéq
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 {
   if(!state_stack_.top().in_constraint) {
@@ -306,7 +248,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 
   dispatch_lhs(node);
   dispatch_rhs(node); 
-
 }
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
@@ -398,18 +339,33 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 }
 
 
-// íºëOÇÃPPÇÃíl
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<PreviousPoint> node)
-{  
-  // éqÉmÅ[ÉhÇ™î˜ï™Ç©ïœêîÇ≈Ç»Ç©Ç¡ÇΩÇÁÉGÉâÅ[
-  if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
-     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
-       throw InvalidPreviousPoint(node);
-  }
 
-  dispatch_child(node); 
-}
-  
+// éOäpä÷êî
+DEFINE_DEFAULT_VISIT_UNARY(Sin)
+DEFINE_DEFAULT_VISIT_UNARY(Cos)
+DEFINE_DEFAULT_VISIT_UNARY(Tan)
+
+// ãtéOäpä÷êî
+DEFINE_DEFAULT_VISIT_UNARY(Asin)
+DEFINE_DEFAULT_VISIT_UNARY(Acos)
+DEFINE_DEFAULT_VISIT_UNARY(Atan)
+
+// â~é¸ó¶
+DEFINE_DEFAULT_VISIT_FACTOR(Pi)
+
+// ëŒêî
+DEFINE_DEFAULT_VISIT_BINARY(Log)
+DEFINE_DEFAULT_VISIT_UNARY(Ln)
+
+// é©ëRëŒêîÇÃíÍ
+DEFINE_DEFAULT_VISIT_FACTOR(E)
+
+// îCà”ÇÃï∂éöóÒ
+DEFINE_DEFAULT_VISIT_FACTOR(ArbitraryFactor)
+DEFINE_DEFAULT_VISIT_UNARY(ArbitraryUnary)
+DEFINE_DEFAULT_VISIT_BINARY(ArbitraryBinary)
+
+
 // ïœêî
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 {
@@ -429,10 +385,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 }
 
 // êîéö
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Number> node)
-{
-  //do nothing
-}
+DEFINE_DEFAULT_VISIT_FACTOR(Number)
 
 
 } //namespace parser

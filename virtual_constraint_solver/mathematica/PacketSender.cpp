@@ -46,136 +46,55 @@ void PacketSender::visit(boost::shared_ptr<Tell> node)
   assert(0);
 }
 
-// ”äŠr‰‰Zq
-void PacketSender::visit(boost::shared_ptr<Equal> node)                 
-{
-  HYDLA_LOGGER_REST("put: Equal");
-  ml_.put_function("Equal", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
+#define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
+void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
+{                                                                       \
+  HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
+  ml_.put_function(#FUNC_NAME, 2);                                      \
+  accept(node->get_lhs());                                              \
+  accept(node->get_rhs());                                              \
 }
 
-void PacketSender::visit(boost::shared_ptr<UnEqual> node)               
-{
-  HYDLA_LOGGER_REST("put: UnEqual");
-  ml_.put_function("Unequal", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
+#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
+void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
+{                                                                       \
+  HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
+  ml_.put_function(#FUNC_NAME, 1);                                      \
+  accept(node->get_child());                                            \
 }
 
-void PacketSender::visit(boost::shared_ptr<Less> node)                  
-{
-  HYDLA_LOGGER_REST("put: Less");
-  ml_.put_function("Less", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
+#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                       \
+void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
+{                                                                       \
+  HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
+  ml_.put_symbol(#FUNC_NAME);                                           \
 }
 
-void PacketSender::visit(boost::shared_ptr<LessEqual> node)             
-{
-  HYDLA_LOGGER_REST("put: LessEqual");
-  ml_.put_function("LessEqual", 2);
+DEFINE_VISIT_BINARY(Equal, Equal)
+DEFINE_VISIT_BINARY(UnEqual, Unequal)
+DEFINE_VISIT_BINARY(Less, Less)
+DEFINE_VISIT_BINARY(LessEqual, LessEqual)
+DEFINE_VISIT_BINARY(Greater, Greater)
+DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
 
-  accept(node->get_lhs());    
-  accept(node->get_rhs());
-}
 
-void PacketSender::visit(boost::shared_ptr<Greater> node)               
-{
-  HYDLA_LOGGER_REST("put: Greater");
-  ml_.put_function("Greater", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-void PacketSender::visit(boost::shared_ptr<GreaterEqual> node)          
-{
-  HYDLA_LOGGER_REST("put: GreaterEqual");
-  ml_.put_function("GreaterEqual", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
 
 // ˜_—‰‰Zq
-void PacketSender::visit(boost::shared_ptr<LogicalAnd> node)            
-{
-  HYDLA_LOGGER_REST("put: And");
-  ml_.put_function("And", 2);
+DEFINE_VISIT_BINARY(LogicalAnd, And)
+DEFINE_VISIT_BINARY(LogicalOr, Or)
 
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-void PacketSender::visit(boost::shared_ptr<LogicalOr> node)             
-{
-  HYDLA_LOGGER_REST("put: Or");
-  ml_.put_function("Or", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
   
 // Zp“ñ€‰‰Zq
-void PacketSender::visit(boost::shared_ptr<Plus> node)                  
-{
-  HYDLA_LOGGER_REST("put: Plus");
-  ml_.put_function("Plus", 2);
+DEFINE_VISIT_BINARY(Plus, Plus)
+DEFINE_VISIT_BINARY(Subtract, Subtract)
+DEFINE_VISIT_BINARY(Times, Times)
+DEFINE_VISIT_BINARY(Divide, Divide)
+DEFINE_VISIT_BINARY(Power, Power)
 
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-void PacketSender::visit(boost::shared_ptr<Subtract> node)              
-{
-  HYDLA_LOGGER_REST("put: Subtract");
-  ml_.put_function("Subtract", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-void PacketSender::visit(boost::shared_ptr<Times> node)                 
-{
-  HYDLA_LOGGER_REST("put: Times");
-  ml_.put_function("Times", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-void PacketSender::visit(boost::shared_ptr<Divide> node)                
-{
-  HYDLA_LOGGER_REST("put: Divide");
-  ml_.put_function("Divide", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-
-void PacketSender::visit(boost::shared_ptr<Power> node)                
-{
-  HYDLA_LOGGER_REST("put: Power");
-  ml_.put_function("Power", 2);
-
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
   
 // Zp’P€‰‰Zq
-void PacketSender::visit(boost::shared_ptr<Negative> node)              
-{
-  HYDLA_LOGGER_REST("put: Minus");
-  ml_.put_function("Minus", 1);
 
-  accept(node->get_child());
-}
-
+DEFINE_VISIT_UNARY(Negative, Minus)
 void PacketSender::visit(boost::shared_ptr<Positive> node)              
 {
   accept(node->get_child());
@@ -198,23 +117,51 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
 }
 
 
-// ¶‹ÉŒÀ
-void PacketSender::visit(boost::shared_ptr<PreviousPoint> node)              
-{
-  in_prev_point_ = true;
-  accept(node->get_child());
-  in_prev_point_ = false;
-}
-
-
 // ”Û’è
-void PacketSender::visit(boost::shared_ptr<Not> node)              
-{
-  HYDLA_LOGGER_REST("put: Not");
-  ml_.put_function("Not", 1);
+DEFINE_VISIT_UNARY(Not, Not)
+
+
+// OŠpŠÖ”
+DEFINE_VISIT_UNARY(Sin, Sin)
+DEFINE_VISIT_UNARY(Cos, Cos)
+DEFINE_VISIT_UNARY(Tan, Tan)
+// ‹tOŠpŠÖ”
+DEFINE_VISIT_UNARY(Asin, ArcSin)
+DEFINE_VISIT_UNARY(Acos, ArcCos)
+DEFINE_VISIT_UNARY(Atan, ArcTan)
+// ‰~ü—¦
+DEFINE_VISIT_FACTOR(Pi, Pi)
+// ‘Î”
+DEFINE_VISIT_BINARY(Log, Log)
+DEFINE_VISIT_UNARY(Ln, Log)
+// ©‘R‘Î”‚Ì’ê
+DEFINE_VISIT_FACTOR(E, E)
+
+//”CˆÓ‚Ì•¶š—ñ
+
+void PacketSender::visit(boost::shared_ptr<ArbitraryBinary> node)
+{    
+  HYDLA_LOGGER_REST("put: ArbitraryFactor : ", node->get_string());
+  ml_.put_function(node->get_string(),2);
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
+
+void PacketSender::visit(boost::shared_ptr<ArbitraryUnary> node)
+{    
+  HYDLA_LOGGER_REST("put: ArbitraryUnary : ", node->get_string());
+  ml_.put_function(node->get_string(),1);
   accept(node->get_child());
 }
-  
+
+void PacketSender::visit(boost::shared_ptr<ArbitraryFactor> node)
+{    
+  HYDLA_LOGGER_REST("put: ArbitraryFactor : ", node->get_string());
+  ml_.put_symbol(node->get_string());
+}
+
+
+
 // •Ï”
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
 {

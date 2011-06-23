@@ -134,14 +134,6 @@ void REDUCEStringSender::visit(boost::shared_ptr<Previous> node)              {
   in_prev_ = false;
 }
 
-// ç∂ã…å¿
-void REDUCEStringSender::visit(boost::shared_ptr<PreviousPoint> node)
-{
-  in_prev_point_ = true;
-  accept(node->get_child());
-  in_prev_point_ = false;
-}
-
 // î€íË
 void REDUCEStringSender::visit(boost::shared_ptr<Not> node)
 {

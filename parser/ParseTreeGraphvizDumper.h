@@ -74,7 +74,7 @@ public:
   // §–ñŠK‘w’è‹`‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
-
+  
   // ‘Š‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
   
@@ -84,9 +84,27 @@ public:
   // ¶‹ÉŒÀ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
-  // ˆÈ‘O‚ÌPP‚Ì’l
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PreviousPoint> node);
   
+  // OŠpŠÖ”
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Sin> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Cos> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tan> node);
+  // ‹tOŠpŠÖ”
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Asin> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Acos> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Atan> node);
+  // ‰~ü—¦
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
+  // ‘Î”
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Log> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ln> node);
+  // ©‘R‘Î”‚Ì’ê
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
+  // ”CˆÓ‚Ì•¶š—ñ
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
+
   // •Ï”
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
@@ -95,6 +113,7 @@ public:
 
 
 private:
+  void dump_node(boost::shared_ptr<hydla::parse_tree::FactorNode> node);
   void dump_node(boost::shared_ptr<hydla::parse_tree::UnaryNode> node);
   void dump_node(boost::shared_ptr<hydla::parse_tree::BinaryNode> node);
 

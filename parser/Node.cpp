@@ -231,6 +231,25 @@ bool Number::is_same_struct(const Node& n, bool exactly_same) const
     number_ == static_cast<const Number*>(&n)->number_;          
 }
 
+bool ArbitraryBinary::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same) && 
+          string_ == static_cast<const ArbitraryBinary *>(&n)->string_;
+}
+
+
+bool ArbitraryUnary::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_same_struct(n, exactly_same) && 
+          string_ == static_cast<const ArbitraryUnary*>(&n)->string_;
+}
+
+bool ArbitraryFactor::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const ArbitraryFactor*>(&n)->string_;
+}
+
 bool Variable::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
@@ -390,11 +409,30 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Differential)
 
 //ç∂ã…å¿
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Previous)
-//ç∂ã…å¿
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(PreviousPoint)
 
 //î€íË
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Not)
+
+//éOäpä÷êî
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Sin)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Cos)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Tan)
+//ãtéOäpä÷êî
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Asin)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Acos)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Atan)
+//â~é¸ó¶
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
+//ëŒêî
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Log)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ln)
+//é©ëRëŒêîÇÃíÍ
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
+
+//îCà”ÇÃï∂éöóÒ
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryBinary)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryUnary)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryFactor)
 
 //ïœêîÅEë©îõïœêî
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)

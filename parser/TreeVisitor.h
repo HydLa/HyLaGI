@@ -83,12 +83,32 @@ public:
   // 左極限
   virtual void visit(boost::shared_ptr<Previous> node);
   
-  // 左極限
-  virtual void visit(boost::shared_ptr<PreviousPoint> node);
   
   // 否定
   virtual void visit(boost::shared_ptr<Not> node);
   
+  // 三角関数
+  virtual void visit(boost::shared_ptr<Sin> node);
+  virtual void visit(boost::shared_ptr<Cos> node);
+  virtual void visit(boost::shared_ptr<Tan> node);
+  // 逆三角関数
+  virtual void visit(boost::shared_ptr<Asin> node);
+  virtual void visit(boost::shared_ptr<Acos> node);
+  virtual void visit(boost::shared_ptr<Atan> node);
+  // 円周率
+  virtual void visit(boost::shared_ptr<Pi> node);
+  // 対数
+  virtual void visit(boost::shared_ptr<Log> node);
+  virtual void visit(boost::shared_ptr<Ln> node);
+  // 自然対数の底
+  virtual void visit(boost::shared_ptr<E> node);
+  
+  //任意の文字列
+  virtual void visit(boost::shared_ptr<ArbitraryBinary> node);
+  virtual void visit(boost::shared_ptr<ArbitraryUnary> node);
+  virtual void visit(boost::shared_ptr<ArbitraryFactor> node);
+
+
   // 変数
   virtual void visit(boost::shared_ptr<Variable> node);
 
@@ -98,7 +118,7 @@ public:
   // 記号定数
   virtual void visit(boost::shared_ptr<Parameter> node);
   
-  // t（時間）．実験も兼ねて
+  // t（時間）
   virtual void visit(boost::shared_ptr<SymbolicT> node);
 };
 

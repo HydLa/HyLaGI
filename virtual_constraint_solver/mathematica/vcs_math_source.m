@@ -391,7 +391,7 @@ exDSolve[expr_, vars_] := Block[
                           (* TODO: 複数解ある場合も考える *)
                           sol = First[sol]];
 
-                        sol = Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]];
+                        sol = Quiet[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]]];
                         If[sol =!= {}, 
                           {First[sol], Join[otherExpr, paramCons]},
                           overconstraint],
@@ -661,8 +661,6 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
                                 Fold[(Join[#1, Map[(#[[1]])&, #2]])&, {}, NACons]],
                                 {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
 
-
-
   (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
   divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
 
@@ -769,8 +767,8 @@ integrateCalc[cons_,
     (* integrateCalcの計算結果として必要な変数の一覧 *)
     returnVars = Select[vars, (MemberQ[solVars, removeDash[#]]) &];
 
-    tmpIntegSol = First[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
-                              getNDVars[returnVars]]];
+    tmpIntegSol = First[Quiet[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
+                              getNDVars[returnVars]], {Solve::incnst, Solve::ifun}]];
     
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];

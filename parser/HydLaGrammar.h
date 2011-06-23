@@ -25,7 +25,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 #define defRuleID(ID) rule<S, parser_context<>, parser_tag<ID> >
 
     defRuleID(RI_Identifier)     identifier; 
-    defRuleID(RI_Number)         number; 
+    defRuleID(RI_Number)         number;
+    defRuleID(RI_Pi)              pi;
+    defRuleID(RI_E)              e;
     defRuleID(RI_PrevVariable)   prev_val;
     defRuleID(RI_BoundVariable)  bound_variable;
     defRuleID(RI_Variable)       variable; 
@@ -38,7 +40,6 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Parallel)      parallel; 
     defRuleID(RI_Differential)  differential; 
     defRuleID(RI_Previous)      previous;     
-    defRuleID(RI_PreviousPoint)      previous_point;     
 
     defRuleID(RI_Plus)     add; 
     defRuleID(RI_Subtract) sub; 
@@ -48,6 +49,20 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     defRuleID(RI_Positive)   positive; 
     defRuleID(RI_Negative)   negative;
+
+    defRuleID(RI_Sin)        sin;
+    defRuleID(RI_Cos)        cos;
+    defRuleID(RI_Tan)        tan;
+    defRuleID(RI_Asin)       asin;
+    defRuleID(RI_Acos)        acos;
+    defRuleID(RI_Atan)        atan;
+    
+    defRuleID(RI_Log)        log;
+    defRuleID(RI_Ln)        ln;
+    
+    defRuleID(RI_ArbitraryBinary)        arbitrary_binary;
+    defRuleID(RI_ArbitraryUnary)         arbitrary_unary;
+    defRuleID(RI_ArbitraryFactor)        arbitrary_factor;
 
     defRuleID(RI_CompOp)       comp_op; 
     defRuleID(RI_Less)         less; 
@@ -91,7 +106,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Unary)         unary; 
     defRuleID(RI_Arithmetic)    arithmetic;
     defRuleID(RI_Arith_term)    arith_term;
-    defRuleID(RI_Logical)        logical; 
+    defRuleID(RI_Logical)       logical; 
     defRuleID(RI_Logical_term)  logical_term; 
 
 
@@ -190,22 +205,28 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       
       //単項演算子
       unary = !(root_node_d[positive | negative]) >> limit;
+      
 
-      //極限か直前のPP
+      //極限
       //factor以外の物が後ろにあったらprev
-      limit = diff >> !((root_node_d[previous] >> eps_p(eps_p - factor)) | root_node_d[previous_point]);
+      limit = diff >> !(root_node_d[previous] >> eps_p(eps_p - factor));
       
 
       //微分
       diff = factor >> *(root_node_d[differential]);
 
       //因子
-      factor =  
-        variable
+      factor =
+          root_node_d[sin | cos | tan | asin | acos | atan | ln | arbitrary_unary] >>  no_node_d[ch_p('(')] >> expression  >> no_node_d[ch_p(')')]
+        | root_node_d[log|arbitrary_binary] >>  no_node_d[ch_p('(')] >> expression >> no_node_d[ch_p(',')] >> expression >> no_node_d[ch_p(')')]
+        | arbitrary_factor
+        | pi
+        | e
+        | variable
         | number
         | no_node_d[ch_p('(')] >> expression >> no_node_d[ch_p(')')];
 
-      // ---- ask ----      
+      // ---- ask ----
       //論理和
       ask_logical = ask_logical_term % root_node_d[logical_or];
 
@@ -217,7 +238,17 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         expression >> root_node_d[comp_op] >> expression
         | gen_pt_node_d[constraint_caller]
         | no_node_d[ch_p('(')] >> ask_logical >> no_node_d[ch_p(')')];
-
+      
+      //円周率
+      pi = str_p("Pi");
+      
+      //自然対数の底
+      e = str_p("E");
+      
+      arbitrary_binary = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
+      arbitrary_unary = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
+      arbitrary_factor = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
+      
       //数字
       number = 
         lexeme_d[leaf_node_d[
@@ -257,7 +288,6 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       always       = str_p("[]"); 
       differential = ch_p("'");
       previous     = ch_p('-');
-      previous_point     = ch_p('@');
 
       //半順序定義演算子
       weaker       = str_p("<<");
@@ -293,6 +323,16 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //算術単項演算子
       positive    = ch_p('+');
       negative    = ch_p('-');
+      
+      //三角関数
+      sin         = str_p("sin");
+      cos         = str_p("cos");
+      tan         = str_p("tan");
+      asin        = str_p("arcsin");
+      acos        = str_p("arccos");
+      atan        = str_p("arctan");
+      log         = str_p("log");
+      ln          = str_p("ln");
     }
 
     // 開始ルール

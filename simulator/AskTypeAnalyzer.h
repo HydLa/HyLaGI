@@ -71,9 +71,6 @@ public:
   // ¶‹ÉŒÀ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
-  // ’¼‘O‚ÌPP‚Ì’l
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PreviousPoint> node);
-  
   // •Ï”
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 

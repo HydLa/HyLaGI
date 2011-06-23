@@ -188,12 +188,6 @@ void AskTypeAnalyzer::visit(boost::shared_ptr<Previous> node)
 }
   
   
-// ˆÈ‘O‚ÌPP‚Ì’l
-void AskTypeAnalyzer::visit(boost::shared_ptr<PreviousPoint> node)
-{  
-  dispatch(node);
-}
-  
 // •Ï”
 void AskTypeAnalyzer::visit(boost::shared_ptr<Variable> node)
 {

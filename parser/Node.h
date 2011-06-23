@@ -820,22 +820,218 @@ DEFINE_UNARY_NODE(Negative);
 DEFINE_UNARY_NODE(Differential);
 
 
-
 /**
  * 左極限「-」
  */
 DEFINE_UNARY_NODE(Previous);
-
-/**
- * 直前のPPの値「@」（仮）
- */
-DEFINE_UNARY_NODE(PreviousPoint);
 
 
 /**
  * 否定「!」
  */
 DEFINE_UNARY_NODE(Not);
+
+
+/**
+ * 三角関数
+ */
+DEFINE_UNARY_NODE(Sin);
+DEFINE_UNARY_NODE(Cos);
+DEFINE_UNARY_NODE(Tan);
+
+/**
+ * 逆三角関数
+ */
+DEFINE_UNARY_NODE(Asin);
+DEFINE_UNARY_NODE(Acos);
+DEFINE_UNARY_NODE(Atan);
+
+
+/**
+ * 円周率
+ */
+class Pi : public FactorNode {
+public:
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Pi> n(new Pi());
+    return n;
+  }  
+  virtual std::string get_node_type_name() const {
+    return "Pi";
+  }
+};
+
+/**
+ * 対数
+ */
+ 
+DEFINE_BINARY_NODE(Log);
+DEFINE_UNARY_NODE(Ln);
+
+/**
+ * 自然対数の底
+ */
+class E : public FactorNode {
+public:
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<E> n(new E());
+    return n;
+  }
+  virtual std::string get_node_type_name() const {
+    return "E";
+  }
+};
+
+
+
+/**
+ * 任意の文字列データを持つノード
+ */
+ 
+ 
+class ArbitraryBinary : public BinaryNode{
+public:
+  ArbitraryBinary()
+  {}
+
+  ArbitraryBinary(const node_sptr &lhs, const node_sptr &rhs):BinaryNode(lhs, rhs)
+  {}
+  
+  virtual ~ArbitraryBinary()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<ArbitraryBinary> n(new ArbitraryBinary());
+    n->string_ = string_;
+    return BinaryNode::clone(n);
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "ArbitraryBinary";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    s << "[" << string_ << "]";
+    return s << "[" << *lhs_ << "," << *rhs_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+
+private:
+  std::string string_;
+};
+
+class ArbitraryUnary : public UnaryNode{
+public:
+  ArbitraryUnary()
+  {}
+
+  ArbitraryUnary(const node_sptr &child):UnaryNode(child)
+  {}
+  
+  virtual ~ArbitraryUnary()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<ArbitraryUnary> n(new ArbitraryUnary());
+    n->string_ = string_;
+    return UnaryNode::clone(n);
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "ArbitraryUnary";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s << "[" << string_ << "]" << "[" << *child_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+
+private:
+  std::string string_;
+};
+
+
+class ArbitraryFactor : public FactorNode{
+public:
+  
+  ArbitraryFactor()
+  {}
+  
+  virtual ~ArbitraryFactor()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<ArbitraryFactor> n(new ArbitraryFactor());
+    n->string_ = string_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "ArbitraryFactor";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << string_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+
+private:
+  std::string string_;
+};
 
 /**
  * 数字
@@ -905,7 +1101,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
-
+  
   virtual node_sptr clone()
   {
     boost::shared_ptr<Variable> n(new Variable());
@@ -1001,8 +1197,6 @@ public:
   {}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual bool is_same_struct(const Node& n, bool exactly_same) const{return typeid(*this) == typeid(n);}
 
   virtual node_sptr clone()
   {

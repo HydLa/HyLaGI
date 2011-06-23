@@ -6,6 +6,8 @@ namespace grammer_rule {
 
 typedef enum _RuleID {
   RI_Number = 1, 
+  RI_Pi,
+  RI_E,
   RI_PrevVariable,
   RI_BoundVariable,
   RI_Variable,
@@ -28,6 +30,18 @@ typedef enum _RuleID {
   // Zp’P€‰‰Zq
   RI_Negative,
   RI_Positive,
+  
+  // OŠpŠÖ”
+  RI_Sin,
+  RI_Cos,
+  RI_Tan,
+  RI_Asin,
+  RI_Acos,
+  RI_Atan,
+  
+  // ‘Î”
+  RI_Log,
+  RI_Ln,
 
   // Zp“ñ€‰‰Zq
   RI_Plus,
@@ -39,14 +53,17 @@ typedef enum _RuleID {
   // §–ñŠK‘w’è‹`‰‰Zq
   RI_Weaker,
   RI_Parallel,
+  
+  // ”CˆÓ‚Ì•¶š—ñ
+  RI_ArbitraryFactor,
+  RI_ArbitraryUnary,
+  RI_ArbitraryBinary,
 
   // ”÷•ª
   RI_Differential,
   
   // ¶‹ÉŒÀ
   RI_Previous,
-  // ’¼‘O‚ÌPP
-  RI_PreviousPoint,
 
   // ‘Š‰‰Zq (Always = Globally)
   RI_Always,

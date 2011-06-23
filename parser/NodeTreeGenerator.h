@@ -253,8 +253,61 @@ private:
     
         // ¶‹ÉŒÀ
       case RI_Previous:     {return create_unary_node<Previous>(ch);}
-        // ’¼ü‚ÌPP‚Ì’l
-      case RI_PreviousPoint:     {return create_unary_node<PreviousPoint>(ch);}
+      
+        // OŠpŠÖ”
+      case RI_Sin:          {return create_unary_node<Sin>(ch);}
+      case RI_Cos:          {return create_unary_node<Cos>(ch);}
+      case RI_Tan:          {return create_unary_node<Tan>(ch);}
+        // ‹tOŠpŠÖ”
+      case RI_Asin:          {return create_unary_node<Asin>(ch);}
+      case RI_Acos:          {return create_unary_node<Acos>(ch);}
+      case RI_Atan:          {return create_unary_node<Atan>(ch);}
+
+        // ‰~ü—¦
+      case RI_Pi:
+      {
+        boost::shared_ptr<Pi> node(node_factory_->create<Pi>());
+        return node;
+      }
+      
+      
+        // ‘Î”
+      case RI_Log:          {return create_binary_node<Log>(ch);}
+      case RI_Ln:           {return create_unary_node<Ln>(ch);}
+
+        // ©‘R‘Î”‚Ì’ê
+      case RI_E:          
+      {
+        boost::shared_ptr<E> node(node_factory_->create<E>());
+        return node;
+      }
+      
+      
+        // ”CˆÓ‚Ì•¶š—ñ
+      case RI_ArbitraryBinary:          
+      {
+        boost::shared_ptr<ArbitraryBinary> node = create_binary_node<ArbitraryBinary>(ch);
+        node->set_string(
+          std::string(tree_iter->value.begin(), tree_iter->value.end()));
+        return node;
+      }
+
+      case RI_ArbitraryUnary:
+      {
+        boost::shared_ptr<ArbitraryUnary> node = create_unary_node<ArbitraryUnary>(ch);
+        node->set_string(
+          std::string(tree_iter->value.begin(), tree_iter->value.end()));
+        return node;
+      }
+
+      case RI_ArbitraryFactor:
+      {
+        boost::shared_ptr<ArbitraryFactor> node(node_factory_->create<ArbitraryFactor>());
+        node->set_string(
+          std::string(tree_iter->value.begin(), tree_iter->value.end()));
+        return node;
+      }
+      
 
         // •Ï”E‘©”›•Ï”
       case RI_BoundVariable:

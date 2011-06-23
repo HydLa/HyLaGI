@@ -241,136 +241,60 @@ std::string MathematicaExpressionConverter::convert_symbolic_value_to_math_strin
   return string_for_math_string_;
 }
 
+#define START_P "["
+
+#define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                             \
+void MathematicaExpressionConverter::visit(boost::shared_ptr<NODE_NAME> node) \
+{                                                                         \
+  string_for_math_string_.append(#FUNC_NAME START_P);                             \
+  accept(node->get_lhs());                                                \
+  string_for_math_string_.append(", ");                                   \
+  accept(node->get_rhs());                                                \
+  string_for_math_string_.append("]");                                    \
+}
+
+#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                             \
+void MathematicaExpressionConverter::visit(boost::shared_ptr<NODE_NAME> node) \
+{                                                                         \
+  string_for_math_string_.append(#FUNC_NAME START_P);                             \
+  accept(node->get_child());                                              \
+  string_for_math_string_.append("]");                                    \
+}
+
+#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                             \
+void MathematicaExpressionConverter::visit(boost::shared_ptr<NODE_NAME> node) \
+{                                                                         \
+  string_for_math_string_.append(#FUNC_NAME);                       \
+}
+
+
 // î‰ärââéZéq
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Equal> node)                 
-{
-  string_for_math_string_.append("Equal[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
 
-void MathematicaExpressionConverter::visit(boost::shared_ptr<UnEqual> node)               
-{
-  string_for_math_string_.append("UnEqual[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
+DEFINE_VISIT_BINARY(Equal, Equal)
+DEFINE_VISIT_BINARY(UnEqual, Unequal)
+DEFINE_VISIT_BINARY(Less, Less)
+DEFINE_VISIT_BINARY(LessEqual, LessEqual)
+DEFINE_VISIT_BINARY(Greater, Greater)
+DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
 
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Less> node)                  
-{
-  string_for_math_string_.append("Less[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
 
-void MathematicaExpressionConverter::visit(boost::shared_ptr<LessEqual> node)             
-{
-  string_for_math_string_.append("LessEqual[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
-
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Greater> node)               
-{
-  string_for_math_string_.append("Greater[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
-
-void MathematicaExpressionConverter::visit(boost::shared_ptr<GreaterEqual> node)          
-{
-  string_for_math_string_.append("GreaterEqual[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
 
 // ò_óùââéZéq
-void MathematicaExpressionConverter::visit(boost::shared_ptr<LogicalAnd> node)            
-{
-  string_for_math_string_.append("And[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
+DEFINE_VISIT_BINARY(LogicalAnd, And)
+DEFINE_VISIT_BINARY(LogicalOr, Or)
 
-void MathematicaExpressionConverter::visit(boost::shared_ptr<LogicalOr> node)             
-{
-  string_for_math_string_.append("Or[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
   
 // éZèpìÒçÄââéZéq
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Plus> node)                  
-{
-  string_for_math_string_.append("Plus[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
+DEFINE_VISIT_BINARY(Plus, Plus)
+DEFINE_VISIT_BINARY(Subtract, Subtract)
+DEFINE_VISIT_BINARY(Times, Times)
+DEFINE_VISIT_BINARY(Divide, Divide)
+DEFINE_VISIT_BINARY(Power, Power)
 
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Subtract> node)              
-{
-  string_for_math_string_.append("Subtract[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
-
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Times> node)                 
-{
-  string_for_math_string_.append("Times[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
-
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Divide> node)                
-{
-  string_for_math_string_.append("Divide[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
-
-
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Power> node)                
-{
-  string_for_math_string_.append("Power[");
-  accept(node->get_lhs());
-  string_for_math_string_.append(", ");
-  accept(node->get_rhs());
-  string_for_math_string_.append("]");
-}
   
 // éZèpíPçÄââéZéq
-void MathematicaExpressionConverter::visit(boost::shared_ptr<Negative> node)              
-{
-  string_for_math_string_.append("Minus[");
 
-  accept(node->get_child());
-  string_for_math_string_.append("]");
-}
-
+DEFINE_VISIT_UNARY(Negative, Minus)
 void MathematicaExpressionConverter::visit(boost::shared_ptr<Positive> node)              
 {
   accept(node->get_child());
@@ -392,13 +316,40 @@ void MathematicaExpressionConverter::visit(boost::shared_ptr<Previous> node)
   in_prev_--;
 }
 
+// î€íË
+DEFINE_VISIT_UNARY(Not, Not)
+  
+// éOäpä÷êî
+DEFINE_VISIT_UNARY(Sin, Sin)
+DEFINE_VISIT_UNARY(Cos, Cos)
+DEFINE_VISIT_UNARY(Tan, Tan)
+// ãtéOäpä÷êî
+DEFINE_VISIT_UNARY(Asin, ArcSin)
+DEFINE_VISIT_UNARY(Acos, ArcCos)
+DEFINE_VISIT_UNARY(Atan, ArcTan)
+// â~é¸ó¶
+DEFINE_VISIT_FACTOR(Pi, Pi)
+// ëŒêî
+DEFINE_VISIT_BINARY(Log, Log)
+DEFINE_VISIT_UNARY(Ln, Log)
+// é©ëRëŒêîÇÃíÍ
+DEFINE_VISIT_FACTOR(E, E)
 
-// íºëOÇÃPPÇÃíl
-void MathematicaExpressionConverter::visit(boost::shared_ptr<PreviousPoint> node)              
-{
-  in_prev_point_++;
-  accept(node->get_child());
-  in_prev_point_--;
+// îCà”ÇÃï∂éöóÒ
+void MathematicaExpressionConverter::visit(boost::shared_ptr<ArbitraryBinary> node){
+  string_for_math_string_.append(node->get_string() + "[");
+  accept(node->get_lhs());                                              
+  string_for_math_string_.append(", ");                                   
+  accept(node->get_rhs());                                                
+  string_for_math_string_.append("]");                                    
+}
+void MathematicaExpressionConverter::visit(boost::shared_ptr<ArbitraryUnary> node){
+  string_for_math_string_.append(node->get_string() + "[");
+  accept(node->get_child());                                              
+  string_for_math_string_.append("]");                                    
+}
+void MathematicaExpressionConverter::visit(boost::shared_ptr<ArbitraryFactor> node){
+  string_for_math_string_.append(node->get_string());
 }
   
 // ïœêî
@@ -436,11 +387,7 @@ void MathematicaExpressionConverter::visit(boost::shared_ptr<Parameter> node)
 }
 
 // t
-void MathematicaExpressionConverter::visit(boost::shared_ptr<SymbolicT> node)                
-{    
-  string_for_math_string_.append("t");
-}
-
+DEFINE_VISIT_FACTOR(SymbolicT, t)
 
 } // namespace mathematica
 } // namespace vcs

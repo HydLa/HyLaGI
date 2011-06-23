@@ -72,8 +72,6 @@ DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
 DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
 //ç∂ã…å¿
 DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
-//íºëOÇÃPPÇÃíl
-DEFINE_INFIX_VISIT_UNARY(PreviousPoint, "", "@")
 //î€íË
 DEFINE_INFIX_VISIT_UNARY(Not, "!(", ")")
 //éûëäââéZéq

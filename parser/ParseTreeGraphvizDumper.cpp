@@ -71,6 +71,14 @@ std::ostream& ParseTreeGraphvizDumper::dump(std::ostream& s, const node_sptr& no
   return s;
 }
 
+
+
+void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<FactorNode> node)
+{
+  graph_node_id_t own_id = node_id_;
+  nodes_.insert(make_pair(own_id, node->get_node_type_name()));
+}
+
 void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<UnaryNode> node)
 {
   graph_node_id_t own_id = node_id_;
@@ -239,12 +247,71 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Previous> node)
   dump_node(node);
 }
 
-// ˆÈ‘O‚ÌPP‚Ì’l
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<PreviousPoint> node)
+// OŠpŠÖ”
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Sin> node)
 {
   dump_node(node);
 }
-  
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Cos> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Tan> node)
+{
+  dump_node(node);
+}
+
+// ‹tOŠpŠÖ”
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Asin> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Acos> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Atan> node)
+{
+  dump_node(node);
+}
+
+// ‰~ü—¦
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Pi> node)
+{
+  dump_node(node);
+}
+
+// ‘Î”
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Log> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Ln> node)
+{
+  dump_node(node);
+}
+
+// ©‘R‘Î”‚Ì’ê
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<E> node)
+{
+  dump_node(node);
+}
+
+// ”CˆÓ‚Ì•¶š—ñ
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ArbitraryBinary> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ArbitraryUnary> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ArbitraryFactor> node)
+{
+  dump_node(node);
+}
+
+
 // •Ï”
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Variable> node)
 {
