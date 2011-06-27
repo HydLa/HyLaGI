@@ -1,7 +1,7 @@
 procedure myif(x,op,y,approx_precision)$
-%“ü—Í: ˜_—®(ex. sqrt(2), greaterp_, sin(2)), ¸“x
-%o—Í: t or nil or -1
-%      (x‚Æy‚ª‚Ù‚Ú“™‚µ‚¢ -1)
+%ÆşÎÏ: ÏÀÍı¼°(ex. sqrt(2), greaterp_, sin(2)), ÀºÅÙ
+%½ĞÎÏ: t or nil or -1
+%      (x¤Èy¤¬¤Û¤ÜÅù¤·¤¤»ş -1)
 %geq_= >=, geq; greaterp_= >, greaterp; leq_= <=, leq; lessp_= <, lessp;
 begin;
   scalar bak_precision, ans, margin;
@@ -17,7 +17,7 @@ begin;
   bak_precision := precision 0;
   on rounded$ precision approx_precision$
 
-% 10^(3 + y‚©x‚Ìw”•”‚Ì’l - —LŒøŒ…”)
+% 10^(3 + y¤«x¤Î»Ø¿ôÉô¤ÎÃÍ - Í­¸ú·å¿ô)
   if(min(x,y)=0) then
     margin:=10 ^ (3 + floor log10 max(x, y) - approx_precision)
   else if(min(x,y)>0) then 
@@ -30,7 +30,7 @@ begin;
   write "x:= ", x;
   write "y:= ", y;
   write "abs(x-y):= ", abs(x-y);
-%x‚Æy‚ª‚Ù‚Ú“™‚µ‚¢
+%x¤Èy¤¬¤Û¤ÜÅù¤·¤¤»ş
   if(abs(x-y)<margin) then <<off rounded$ precision bak_precision$ write -1; return -1>>;
 
 if (op = geq_) then
@@ -53,8 +53,8 @@ if(lst={}) then nil
 	else if(x=lhs(first(lst))) then rhs(first(lst))
 		else getf(x,rest(lst))$
 procedure lgetf(x,llst)$
-%“ü—Í: •Ï”–¼, “™®‚ÌƒŠƒXƒg‚ÌƒŠƒXƒg(ex. {{x=1,y=2},{x=3,y=4},...})
-%o—Í: •Ï”‚É‘Î‰‚·‚é’l‚ÌƒŠƒXƒg
+%ÆşÎÏ: ÊÑ¿ôÌ¾, Åù¼°¤Î¥ê¥¹¥È¤Î¥ê¥¹¥È(ex. {{x=1,y=2},{x=3,y=4},...})
+%½ĞÎÏ: ÊÑ¿ô¤ËÂĞ±ş¤¹¤ëÃÍ¤Î¥ê¥¹¥È
 if(llst={}) then {}
 	else if(rest(llst)={}) then getf(x,first(llst))
 		else getf(x,first(llst)) . {lgetf(x,rest(llst))}$
@@ -66,15 +66,15 @@ if(x={}) then
 	else if(myif(x,greaterp_,y,30)) then y else x$
 
 procedure myfind(x,lst)$
-%“ü—Í: IPŠJn‚Ìt, Ÿ‚ÌŒó•â‚ÌƒŠƒXƒg
-%o—Í: Ÿ‚ÌPPŠJn‚Ì
+%ÆşÎÏ: IP³«»Ï»ş¤Î»ş¹ït, ¼¡¤Î»ş¹ï¸õÊä¤Î¥ê¥¹¥È
+%½ĞÎÏ: ¼¡¤ÎPP³«»Ï»ş¤Î»ş¹ï
 if(rest(lst)={}) then
   if(myif(x,lessp_,first(lst),30)) then first(lst) else {}
 else if(myif(x,lessp_,first(lst),30))
     then mymin(first(lst),myfind(x,rest(lst)))
 else myfind(x,rest(lst))$
 
-%‘Ò‚¿s—ñIŠÖŒW
+%ÂÔ¤Á¹ÔÎóI´Ø·¸
 procedure enq(state,queue);
   begin;
     return append(queue,{state});
@@ -90,7 +90,7 @@ procedure deq queue;
 
 load_package redlog; rlset R;
 
-%”®‚ÌƒŠƒXƒg‚ğand‚ÅŒq‚¢‚¾˜_—®‚É•ÏŠ·‚·‚é
+%¿ô¼°¤Î¥ê¥¹¥È¤òand¤Ç·Ò¤¤¤ÀÏÀÍı¼°¤ËÊÑ´¹¤¹¤ë
 procedure mymkand(lst)$
 for i:=1:length(lst) mkand part(lst,i);
 
@@ -102,8 +102,8 @@ rlqe all(var, mymkand(lst));
 
 
 procedure bball_out()$
-% gnuplot—po—Í, –¢Š®¬
-% ³‹K•\Œ» {|}|\n
+% gnuplotÍÑ½ĞÎÏ, Ì¤´°À®
+% Àµµ¬É½¸½ {|}|\n
 <<
 off nat; 
 out "out";
@@ -120,18 +120,18 @@ on nat;
 %procegure myout(x,t)$
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”
+% HydLa¸ş¤±´Ø¿ô
 %---------------------------------------------------------------
 
 operator prev;
-%TODO depend‚ğ”jŠü
+%TODO depend¤òÇË´ş
 depend {y, ht, v}, t;
 
 rettrue___ := "RETTRUE___";
 retfalse___ := "RETFALSE___";
 
-% ŠÖ”ŒÄ‚Ño‚µ‚Íredeval‚ğŒo—R‚³‚¹‚é
-% <redeval> end:‚ÌŸ‚ªÅIs
+% ´Ø¿ô¸Æ¤Ó½Ğ¤·¤Ïredeval¤ò·ĞÍ³¤µ¤»¤ë
+% <redeval> end:¤Î¼¡¤¬ºÇ½ª¹Ô
 
 symbolic procedure redeval(foo_)$
 begin scalar ans_;
@@ -144,23 +144,23 @@ begin scalar ans_;
 end;
 
 
-% PP‚É‚¨‚¯‚é–³–µ‚«‚Ì”»’è
-% •Ô‚è’l‚Í{ans, {{•Ï”–¼ = ’l},...}} ‚ÌŒ`®
-% d—l QE–¢g—p % (g—p‚·‚é‚È‚ç, •Ï”‚ÍŠî–{–½‘è“I‚É’u‚«Š·‚¦)
+% PP¤Ë¤ª¤±¤ëÌµÌ·½âÀ­¤ÎÈ½Äê
+% ÊÖ¤êÃÍ¤Ï{ans, {{ÊÑ¿ôÌ¾ = ÃÍ},...}} ¤Î·Á¼°
+% »ÅÍÍ QEÌ¤»ÈÍÑ % (»ÈÍÑ¤¹¤ë¤Ê¤é, ÊÑ¿ô¤Ï´ğËÜÌ¿ÂêÅª¤ËÃÖ¤­´¹¤¨)
 
-% (§ŒÀ and‚ğó‚¯•t‚¯‚È‚¢) TODO §ŒÀ‚Ö‚Ì‘Î‰
-% (§ŒÀ true‚ğó‚¯•t‚¯‚È‚¢) TODO §ŒÀ‚Ö‚Ì‘Î‰
+% (À©¸Â and¤ò¼õ¤±ÉÕ¤±¤Ê¤¤) TODO À©¸Â¤Ø¤ÎÂĞ±ş
+% (À©¸Â true¤ò¼õ¤±ÉÕ¤±¤Ê¤¤) TODO À©¸Â¤Ø¤ÎÂĞ±ş
 
 procedure isConsistent(vars_,pexpr_,expr_)$
 begin;
   scalar flag_, ans_, tmp_;
 write "isConsistent: ";
 
-% TODO sqrt(2)<>0‚ğ‚æ‚è”Ä—p“I‚È’l‚É“K—p‚·‚é
+% TODO sqrt(2)<>0¤ò¤è¤êÈÆÍÑÅª¤ÊÃÍ¤ËÅ¬ÍÑ¤¹¤ë
 % tmp_:=rlqe(ex(vars_, mymkand(expr_) and sqrt(2)<>0));
 % write "tmp_: ", tmp_;
 %  flag_:= if(tmp_ = true) then rettrue___ else if(tmp_ = false) then retfalse___;
-% •ÊˆÄ trueˆÈŠO‚Ì‰ğ‚Í‘S‚Äfalse‚Æ”»’è
+% ÊÌ°Æ true°Ê³°¤Î²ò¤ÏÁ´¤Æfalse¤ÈÈ½Äê
 % flag_:= if(ws = true) then rettrue___ else retfalse___;
 %  tmp_:=rlatl(rlqe(mymkand(expr_)));
 %  write "tmp_: ", tmp_;
@@ -175,8 +175,8 @@ write "flag_: ", flag_;
 end;
 
 
-%TODO •s“™®
-%TODO ƒpƒ‰ƒ[ƒ^‚ª•ª•ê‚É—ˆ‚½‚Æ‚«
+%TODO ÉÔÅù¼°
+%TODO ¥Ñ¥é¥á¡¼¥¿¤¬Ê¬Êì¤ËÍè¤¿¤È¤­
 
 % CCP_SOLVER_ERROR___:= {0};
 % CCP_ENTAILED___:= {1};
@@ -193,7 +193,7 @@ write "sol_: ", sol_;
 write "nsol_: ", nsol_;
 
   if(sol_ neq false) then
-% ç’·‚©‚à
+% ¾éÄ¹¤«¤â
     if(nsol_ = false) then
       return CCP_ENTAILED___
     else return {CCP_UNKNOWN___}
@@ -209,7 +209,7 @@ end;
 
 
 % createCStoVM
-% TODO ~’è”‚ğ•Ô‚·‚¾‚¯
+% TODO ¡ßÄê¿ô¤òÊÖ¤¹¤À¤±
 
 % orexqr_:={df(prev(y),t,1) = 0 and df(y,t,1) = 0 and df(y,t,2) = -10 and prev(y) = 10 and y = 10};
 % symbolic reval '(createcstovm orexpr_);
@@ -223,9 +223,16 @@ begin;
 end;
 
 
-% in "/home/yysaki/workspace/HydLa/virtual_constraint_solver/reduce/vcs_reduce_source.red";
+
+
+
+
+
 
 load_package "laplace";
+
+% ÊÑ¿ô¤È¤½¤Î¥é¥×¥é¥¹ÊÑ´¹ÂĞ¤ÎÂĞ±şÉ½
+table_:={};
 
 %args_:={{v,lapv},...}
 procedure LaplaceLetUnit(args_)$
@@ -241,51 +248,74 @@ procedure LaplaceLetUnit(args_)$
     for i:=n-1 step -1 until 0 sum
       sub(x=0, df(arg_(x),x,n-1-i)) * il!&**i,
     laplace(arg_(~x),x) =>LAParg_(il!&)
-  }
+  };
+
+% {{v,lapv(s)},...}¤ÎÂĞ±şÉ½
+  table_:= {arg_, LAParg_(s)} . table_;
+  write("table_: ", table_);
 end;
 
-%ƒPƒ“ƒVƒƒE‚³‚ñ‚Ì®‚ÌŠÖ”‰»
-procedure exDSolve(fv, v_0, fy, y_0)$
+% vars_¤«¤édf¤ò½ü¤¤¤¿¤â¤Î¤òÊÖ¤¹
+procedure removedf(vars_)$
 begin;
-  scalar flag_, ans_, tmp_;
-
-%STEP1. load, let, operatoréŒ¾
-vars_:={y,v};
-tmp_:= for each x in vars_ collect {x,mkid(lap,x)};
-map(LaplaceLetUnit, tmp_);
-
-%STEP2. ƒ‰ƒvƒ‰ƒX•ÏŠ·
-	%memo: foreach‚Æmkid‚Åˆê”Ê‰»o—ˆ‚é
-LAPEXPRv:= laplace(fv,t,s);
-write "LAPEXPRv: ", LAPEXPRv;
-
-INITv   := INITvlhs - v_0;
-write "INITv: ", INITv;
-LAPEXPRy:= laplace(fy,t,s);
-write "LAPEXPRy: ", LAPEXPRy;
-INITy   := INITylhs - y_0;
-write "INITy: ", INITy;
-
-%STEP3. s‚ÉŠÖ‚µ‚Ä‰ğ‚­A‹tƒ‰ƒvƒ‰ƒX
-	%memo: lapv(s)‚Ì•\‹L‚ªƒlƒbƒN
-x := solve({LAPEXPRv, LAPEXPRy, INITv, INITy}, {lapv(s),lapy(s),INITvlhs,INITylhs,s});
-write "solve: ", x;
-tmp := lgetf(lapv(s), x);
-vexp := invlap(tmp,s,t);
-
-tmp := lgetf(lapy(s), x);
-yexp := invlap(tmp,s,t);
-
-return {v(t)=vexp, y(t)=yexp};
+  exceptdfvars_:={};
+  for each x in vars_ collect
+    if(freeof(x,df)) then exceptdfvars_:=x . exceptdfvars_;
+  return exceptdfvars_;
 end;
 
-operator y,v;
-fv := (df(v(t),t) - (-10)); v_0:=0;
-fy := (df(y(t),t) - v(t));  y_0:=10;
-%fv := (df(v(t),t,2) - (-10));
-exDSolve(fv, v_0, fy, y_0);
+procedure exDSolve(expr_, init_, vars_)$
+  begin;
+    scalar flag_, ans_, tmp_;
+ 
+  exceptdfvars_:= removedf(vars_);
+ 
+  tmp_:= for each x in exceptdfvars_ collect {x,mkid(lap,x)};
+  map(LaplaceLetUnit, tmp_);
 
-clear fv, v_0, fy, y_0;
+
+  diffexpr_:={};
+  for each x in expr_ do 
+    if(not freeof(x, equal)) then diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)})
+      else write("ERROR: ",x, "is not equation");
+
+
+  LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
+  write "LAPexpr_: ", LAPexpr_;
+
+  % s¤Ë´Ø¤·¤Æ²ò¤¯¡¢µÕ¥é¥×¥é¥¹
+
+  % init_À©Ìó¤òLaplaceLetUnit¤Ë¸½¤ì¤ëÊÑ¿ôÌ¾¤ÈÂĞ±ş¤µ¤»¤ë
+  solveexpr_:= append(LAPexpr_, init_);
+  write("solveexpr_:", solveexpr_);
+
+  solvevars_:= append(append(map(second, table_), map(lhs, init_)), {s});
+  write("solvevars_:", solvevars_);
+
+  solveans_ := solve(solveexpr_, solvevars_);
+  write "solve: ", solveans_;
+  % solve¤¬²òÌµ¤·¤Î»ş(overconstraint?)
+  if(solveans_={}) then return "SOLVEERROR_";
+
+  % solve·ë²Ìx¤Ë´Ş¤Ş¤ì¤ë¥é¥×¥é¥¹ÊÑ´¹ÂĞ¤«¤é¡¢¤½¤ì¤¾¤ì¤ÎÊÑ¿ô¤ËÂĞ¤¹¤ëÊıÄø¼°¤ò¼è¤ê½Ğ¤¹¡£
+  ans_:= for each table in table_ collect
+      (first table) = invlap(lgetf((second table), solveans_),s,t);
+  write("ans expr?: ", ans_);
+
+  table_:={};
+  return ans_;
+end;
+
+%operator ht,v;
+%expr_:={df(ht(t),t) = v(t),
+%        df(v(t),t) = -10
+%       };
+%init_:={inithtlhs = 10,
+%        initvlhs = 0
+%       };
+%vars_:={ht,v,df(ht,t),df(v,t)};
+%exDSolve(expr_, init_, vars_);
+
 
 
 
@@ -295,6 +325,7 @@ clear fv, v_0, fy, y_0;
 expr_:= {yyy = -10, y = 10, yy = 0, z = y, zz = yy}; vars_:={y, z, yy, zz, yyy, y, z, yy, zz};
 symbolic redeval '(isconsistent vars_ pexpr_ expr_);
 clear expr_, pexpr_, vars_;
+
 
 ;end;
 
