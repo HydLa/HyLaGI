@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SExpParser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TreeVisitor.cpp"
 				>
 			</File>
@@ -258,6 +262,14 @@
 			</File>
 			<File
 				RelativePath=".\RTreeVisitor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SExpGrammar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SExpParser.h"
 				>
 			</File>
 			<File

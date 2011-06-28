@@ -195,6 +195,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reduce\REDUCELink.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEStringSender.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCSPoint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\realpaver\RPConstraintBuilder.cpp"
 				>
 			</File>
@@ -286,6 +298,18 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RealPaverVCSPoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCELink.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEStringSender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCSPoint.h"
 				>
 			</File>
 			<File
