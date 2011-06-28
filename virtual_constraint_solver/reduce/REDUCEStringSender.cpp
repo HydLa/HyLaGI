@@ -188,11 +188,11 @@ void REDUCEStringSender::put_var(const var_info_t var)
   std::ostringstream var_str;
 
   if (diff_count > 0 && prev){
-    var_str << "df(prev("
+    var_str << "prev(df("
             << name
-            << "),t,"    
+            << ",t,"    
             << diff_count
-            << ")";
+            << "))";
   }
   else if (diff_count > 0){
     var_str << "df("

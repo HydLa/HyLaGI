@@ -8,7 +8,6 @@
 //#include "../../parser/RTreeVisitor.h"
 #include "REDUCEStringSender.h"
 
-#include "../../parser/SExpParser.h"
 
 /*
 #include "mathlink_helper.h"
@@ -23,7 +22,6 @@
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
-using namespace hydla::parser;
 
 namespace hydla {
 namespace vcs {
@@ -117,7 +115,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
     }
   }
 
-  constraint_store_.first.insert(and_cons_set);
+//  constraint_store_.first.insert(and_cons_set);
 
   HYDLA_LOGGER_VCS(*this);
 
@@ -174,7 +172,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
       }
     }
   }
-  parameter_store_.first.insert(and_cons_set);
+//  parameter_store_.first.insert(and_cons_set);
   return true;
 }
 //TODO 定数返しの修正
@@ -198,7 +196,6 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
   assert(0);
 }
 
-//TODO 定数返しの修正
 VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
 {
 
@@ -226,7 +223,6 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   for(; tells_it!=tells_end; ++tells_it) {
     if(tells_it != collected_tells.begin()) cl_->send_string(",");
     HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
-//    std::cout << rtv.get_expr((*tells_it)->get_child()) << std::endl;
     rss.put_node((*tells_it)->get_child());
   }
   cl_->send_string("};");
@@ -248,9 +244,9 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
 
   // varsを渡す
+  //   ex) {y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)}
   // vars_に関して一番外側の"{}"部分は、put_vars内で送っている
   cl_->send_string("vars_:=");
-//  cl_->send_string("vars_:={y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)};");
   rss.put_vars();
   cl_->send_string(";");
 
@@ -267,25 +263,65 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
                    ans);
 
-  // S式パーサで読み取る
-  SExpParser sp;
-  sp.parse_main(ans.c_str());
+  VCSResult result;
 
-  // {コード, {{変数, 関係演算子コード, 値},...}}の構造
-  SExpParser::const_tree_iter_t ct_it = sp.get_tree_iterator();
-  int size = ct_it->children.size();
+  // S式パーサで読み取る
+  sp_.parse_main(ans.c_str());
+
+  // {コード, {{{変数, 関係演算子コード, 値},...}, ...}}の構造
+  const_tree_iter_t ct_it = sp_.get_tree_iterator();
+
+  // コードを取得
+  const_tree_iter_t ret_code_it = ct_it->children.begin();
+  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  HYDLA_LOGGER_VCS("ret_code_str: ",
+                   ret_code_str);
+
+  if(ret_code_str=="RETERROR___"){
+    // ソルバエラー
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code_str==" \"RETTRUE___\"") {
+    // 充足
+    // TODO: スペースや""が残らないようにパーサを修正
+    HYDLA_LOGGER_VCS( "---build constraint store---");
+
+    // 制約ストアをリセット
+    //    reset();
+//    constraint_store_.first.clear();
+    //     constraint_store_.first = NULL;
+
+    // 制約ストア構築
+    constraint_store_.first = ret_code_it+1;
+    constraint_store_.second.insert(rss.vars_begin(), rss.vars_end());
+
+  }
+  else {
+    assert(ret_code_str == " \"RETFALSE___\"");
+    result = VCSR_FALSE;
+  }
+
+  HYDLA_LOGGER_VCS(
+    *this,
+    "\n#*** End REDUCEVCSPoint::add_constraint ***");
+
+
+
+
+/*
+  size_t size = ct_it->children.size();
   std::cout << "children size: " << size << "\n";
 
 
+  for(size_t j=0; j<size; j++) {
+    SExpParser::const_tree_iter_t child_it = ct_it->children.begin()+j;
+    std::cout << j << "th child\n";
+    std::cout << "ID: " << child_it->value.id().to_long() << "\n";
+    std::cout << "Node:" << std::string(child_it->value.begin(), child_it->value.end()) << "\n";
+  }
+*/ 
 
-
-
-  // VCSR_FALSE後終了
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::add_constraint ***");
-
-  assert(0);
-
-  return VCSR_FALSE;
+  return result;
 
 }
 
@@ -293,12 +329,67 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
 {
 
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::check_entailment ***",
+                   "ask: ", *negative_ask);
+  REDUCEStringSender rss = REDUCEStringSender(*cl_);
+
+
+/////////////////// 送信処理
+
+  // ask制約のガードの式を得てMathematicaに渡す
+  cl_->send_string("guard_:=");
+  rss.put_node(negative_ask->get_guard());
+  cl_->send_string(";");  
+
+
+  // 制約ストアとpsから式を得てMathematicaに渡す
+  cl_->send_string("store_:=append(");
+  send_cs();
+  cl_->send_string(",");
+  send_ps();
+  cl_->send_string(");");
+
+
+  // varsを渡す
+  cl_->send_string("vars_:=append(");
+  rss.put_vars();
+  cl_->send_string(",");
+  // 制約ストア内に出現する変数も渡す
+  send_cs_vars();
+  cl_->send_string(");");
+
+
+  cl_->send_string("symbolic redeval '(checkentailment guard_ store_ vars_);");
+
+
+/////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
+
+  cl_->read_until_redeval();
+
+  std::string ans = cl_->get_s_expr();
+  HYDLA_LOGGER_VCS("check_entailment_ans: ",
+                   ans);
+
+  // S式パーサで読み取る
+  sp_.parse_main(ans.c_str());
+
+  // {コード}の構造
+  const_tree_iter_t ct_it = sp_.get_tree_iterator();
+  size_t size = ct_it->children.size();
+  std::cout << "children size: " << size << "\n";
+
+
+
+
+
+
   assert(0);
 
   return VCSR_FALSE;
 }
 
-//TODO 定数返しの修正
+
 VCSResult REDUCEVCSPoint::integrate(
     integrate_result_t& integrate_result,
     const positive_asks_t& positive_asks,
@@ -308,21 +399,55 @@ VCSResult REDUCEVCSPoint::integrate(
     const not_adopted_tells_list_t& not_adopted_tells_list,
     const appended_asks_t& appended_asks)
 {
-
+  // Pointではintegrate関数無効
   assert(0);
   return VCSR_FALSE;
 }
 
-//TODO 定数返しの修正
 void REDUCEVCSPoint::send_cs() const
 {
-  assert(0);
+
+
+  HYDLA_LOGGER_VCS("---- Send Constraint Store -----");
+
+  size_t or_cons_size = constraint_store_.first->children.size();
+  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
+
+  if(or_cons_size <= 0)
+  {
+    HYDLA_LOGGER_VCS("no Constraints");
+    cl_->send_string("{}");
+    return;
+  }
+
+  // TODO: 複数解（or_cons_size>1）の場合の対処を考える
+  for(size_t i=0; i<or_cons_size; i++){
+    const_tree_iter_t or_cons_it = constraint_store_.first->children.begin()+i;
+    size_t and_cons_size = or_cons_it->children.size();
+    HYDLA_LOGGER_VCS("and cons size: ", and_cons_size);
+    for(size_t j=0; j<and_cons_size; j++){
+      const_tree_iter_t and_cons_it = or_cons_it->children.begin()+j;
+      std::string relop = std::string(and_cons_it->value.begin(), and_cons_it->value.end());
+      std::cout << "relop: " << relop << "\n";
+      size_t var_info_size = and_cons_it->children.size();
+      std::cout << "var info size: " << var_info_size << "\n";
+      cl_->send_string("vars_:=");
+
+
+    }
+  }
+
+
+
+
 }
 
-//TODO 定数返しの修正
 void REDUCEVCSPoint::send_ps() const
 {
-  assert(0);
+  HYDLA_LOGGER_VCS("---- Send Parameter Store -----");
+
+  // TODO: ちゃんと送る
+  cl_->send_string("{}");
 }
 
 //TODO 定数返しの修正
@@ -343,6 +468,7 @@ std::ostream& REDUCEVCSPoint::dump(std::ostream& s) const
       << "--- constraint store ---\n";
 
   //
+/*
   std::set<std::set<MathValue> >::const_iterator or_cons_it =
       constraint_store_.first.begin();
   while((or_cons_it) != constraint_store_.first.end())
@@ -357,6 +483,7 @@ std::ostream& REDUCEVCSPoint::dump(std::ostream& s) const
     s << "\n";
     or_cons_it++;
   }
+*/
 
   // 制約ストア内に存在する変数のダンプ
   s << "-- vars --\n";

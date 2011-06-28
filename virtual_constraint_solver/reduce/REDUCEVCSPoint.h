@@ -8,9 +8,13 @@
 
 //TODO MathVCSType, PacketSender‚ÌˆË‘¶‚ğ‰ğÁ‚·‚é
 #include "MathVCSType.h"
-#include "PacketSender.h"
+//#include "PacketSender.h"
+#include "REDUCEStringSender.h"
+
+#include "../../parser/SExpParser.h"
 
 using namespace hydla::vcs::mathematica;
+using namespace hydla::parser;
 
 namespace hydla {
 namespace vcs {
@@ -20,10 +24,14 @@ class REDUCEVCSPoint :
 public virtual_constraint_solver_t
 {
 public:
-  typedef std::set<PacketSender::var_info_t> constraint_store_vars_t;
+  typedef SExpParser::const_tree_iter_t const_tree_iter_t;
+
+  typedef std::set<REDUCEStringSender::var_info_t> constraint_store_vars_t;
+
+  typedef std::pair<const_tree_iter_t, constraint_store_vars_t> constraint_store_t;
 
   typedef std::pair<std::set<std::set<MathValue> >,
-      constraint_store_vars_t> constraint_store_t;
+      constraint_store_vars_t> parameter_store_t;
 
   //  MathematicaVCSPoint(MathLink* ml);
   REDUCEVCSPoint(REDUCELink* cl);
@@ -99,19 +107,20 @@ private:
   /**
    * §–ñƒXƒgƒA‚ªtrue‚Å‚ ‚é‚©‚Ç‚¤‚©
    */
-  bool cs_is_true()
-  {
-    return constraint_store_.first.size()==1 &&
-        (*constraint_store_.first.begin()).size()==1 &&
-        (*(*constraint_store_.first.begin()).begin()).get_string()=="True";
-  }
+//  bool cs_is_true()
+//  {
+//    return constraint_store_.first.size()==1 &&
+//        (*constraint_store_.first.begin()).size()==1 &&
+//        (*(*constraint_store_.first.begin()).begin()).get_string()=="True";
+//  }
 
 
   //  mutable MathLink* ml_;
   mutable REDUCELink* cl_;
   constraint_store_t constraint_store_;
-  constraint_store_t parameter_store_;
+  parameter_store_t parameter_store_;
   std::set<std::string> par_names_; //ˆê‚µ‚Ì‚¬
+  SExpParser sp_;
 };
 
 std::ostream& operator<<(std::ostream& s, const REDUCEVCSPoint& m);
