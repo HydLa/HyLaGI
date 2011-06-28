@@ -20,6 +20,13 @@ SExpParser::~SExpParser()
 {
 }
 
+std::string SExpParser::get_string_from_tree(const_tree_iter_t iter){
+  std::string ret_str;
+
+
+  return ret_str;
+}
+
 void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
 
   for(int i = 0; i < nest; ++i)

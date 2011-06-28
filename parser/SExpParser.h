@@ -3,6 +3,7 @@
 
 #include <boost/spirit/include/classic_ast.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
+#include <string>
 
 namespace hydla {
 namespace parser {
@@ -17,6 +18,8 @@ public:
   SExpParser();
   ~SExpParser();
 
+
+  std::string get_string_from_tree(const_tree_iter_t iter);
 
   void dump_tree(const_tree_iter_t iter, int nest);
 

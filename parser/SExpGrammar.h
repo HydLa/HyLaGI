@@ -5,7 +5,7 @@
 #include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/spirit/include/classic_confix.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
-
+#include <boost/spirit/include/classic_lists.hpp>
 
 namespace hydla {
 namespace parser {
@@ -20,6 +20,7 @@ struct SExpGrammar : public grammar<SExpGrammar> {
   static const int RI_List        = 4;
   static const int RI_SExpression = 5;
   static const int RI_Data        = 6;
+  static const int RI_Header      = 7;
 
   template<typename S>
   struct definition {
@@ -32,6 +33,7 @@ struct SExpGrammar : public grammar<SExpGrammar> {
     defRuleID(RI_List)           list;
     defRuleID(RI_SExpression)    s_expression;
     defRuleID(RI_Data)           data; 
+    defRuleID(RI_Header)         header;
 
     // 構文定義
     definition(const SExpGrammar& self) {
@@ -48,12 +50,27 @@ struct SExpGrammar : public grammar<SExpGrammar> {
       identifier = leaf_node_d[alpha_p >> lexeme_d[*(alpha_p | int_p | ch_p('-') | ch_p('_') | ch_p(':'))]];
 
       // 文字列
-      string = leaf_node_d[inner_node_d[lexeme_d[confix_p('"', *c_escape_ch_p, '"')]]];
+      string = leaf_node_d[inner_node_d[lexeme_d[confix_p(ch_p('"'), *c_escape_ch_p, ch_p('"'))]]];
+//      string = no_node_d[ch_p('"')] >> leaf_node_d[lexeme_d[*c_escape_ch_p]] >> no_node_d[ch_p('"')];
+//      string = discard_node_d[ch_p('"')] >> leaf_node_d[lexeme_d[*c_escape_ch_p]] >> discard_node_d[ch_p('"')];
+//      string = leaf_node_d[inner_node_d[confix_p('"', lexeme_d[*c_escape_ch_p], '"')]];
+
+      // リストのヘッダ
+      header = identifier;
 
       // リスト構造
+//      list =
+//        discard_node_d[ch_p('(')] >> root_node_d[header] >> *(s_expression) >> discard_node_d[ch_p(')')]
+//        | discard_node_d[ch_p('[')] >> root_node_d[header] >> *(s_expression) >> discard_node_d[ch_p(']')];
+
+//      list =
+//        no_node_d[ch_p('(')] >> root_node_d[header] >> *(s_expression) >> no_node_d[ch_p(')')]
+//        | no_node_d[ch_p('[')] >> root_node_d[header] >> *(s_expression) >> no_node_d[ch_p(']')];
+
       list =
-        discard_node_d[ch_p('(')] >> +(s_expression) >> discard_node_d[ch_p(')')]
-        | discard_node_d[ch_p('[')] >> +(s_expression) >> discard_node_d[ch_p(']')];
+        discard_node_d[ch_p('(')] >> root_node_d[header] >> list_p(*(s_expression), space_p) >> discard_node_d[ch_p(')')]
+        | discard_node_d[ch_p('[')] >> root_node_d[header] >> list_p(*(s_expression), space_p) >> discard_node_d[ch_p(']')];
+
     }
 
     // 開始ルール
