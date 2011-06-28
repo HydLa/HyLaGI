@@ -265,7 +265,7 @@ isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
   sol, ret
 },
 
-  debugPrint["expr:", expr, "pexpr", pexpr, "vars:", vars];
+  debugPrint["pexpr:", pexpr, "expr", expr, "vars:", vars];
   sol = Reduce[expr, vars, Reals];
   (*  debugPrint["sol after Reduce:", sol];*)
   If[sol =!= False,

@@ -446,7 +446,10 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   // isConsistent[ pexpr, expr, vars]を渡したい
   ml_->put_function("isConsistent", 3);
 
+
+  // pexprを送る
   send_ps();
+
 
   // exprは3つの部分から成る
   ml_->put_function("Join", 3);
@@ -462,7 +465,6 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 	  HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_None);
   }
-  
   // appended_asksからガード部分を得てMathematicaに渡す
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
@@ -473,7 +475,6 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
   // 制約ストアからもexprを得てMathematicaに渡す
 	send_cs();
-
 
   // 左連続性に関する制約を渡す
   // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
@@ -652,6 +653,7 @@ void MathematicaVCSPoint::send_cs() const
   HYDLA_LOGGER_VCS("---- Send Constraint Store -----");
 
   int or_cons_size = constraint_store_.first.size();
+  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
   if(or_cons_size <= 0)
   {
     HYDLA_LOGGER_VCS("no Constraints");
@@ -661,7 +663,6 @@ void MathematicaVCSPoint::send_cs() const
 
   ml_->put_function("List", 1);
   ml_->put_function("Or", or_cons_size);
-  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
 
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();
