@@ -1,0 +1,10 @@
+//circle.hydla
+//bouncing particle in an circle
+
+INIT   <=> x=3/4 /\ y=0 /\ vx=2 /\ vy=1.
+RUN    <=> [](x'=vx /\ y'=vy /\ vx'=0 /\ vy'=0).
+BOUNCE <=> [](x-*x-+y-*y-=1 => 
+                vx = vx- - (x-*vx- + y-*vy-)*(1+1)*(x-) /\
+                vy = vy- - (x-*vx- + y-*vy-)*(1+1)*(y-)
+).
+INIT, RUN<<BOUNCE.
