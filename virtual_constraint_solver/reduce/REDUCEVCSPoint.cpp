@@ -65,9 +65,10 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   }
   HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);
 
-  std::set<MathValue> and_cons_set;
 
-  MathematicaExpressionConverter mec;
+  // まず、変数表の中身を表すようなS式の文字列を作る
+  std::ostringstream vm_str;
+  vm_str << "(list ";
 
   variable_map_t::variable_list_t::const_iterator it =
     variable_map.begin();
@@ -75,39 +76,37 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
     variable_map.end();
   for(; it!=end; ++it)
   {
+    if(it!=variable_map.begin()) vm_str << " ";
+
     const MathVariable& variable = (*it).first;
     const value_t&    value = it->second;
 
     if(!value.is_undefined()) {
-      std::ostringstream val_str;
-      val_str << "Equal[";
+      vm_str << "(equal ";
 
+      // variable部分
       if(variable.derivative_count > 0)
       {
-        val_str << "Derivative["
-                << variable.derivative_count
-                << "][prev["
-                << PacketSender::var_prefix
-                << variable.name
-                << "]]";
+        vm_str << "(prev (df "
+               << variable.name
+               << " t "
+               << variable.derivative_count
+               << "))";
       }
       else
       {
-        val_str << "prev["
-                << PacketSender::var_prefix
-                << variable.name
-                << "]";
+        vm_str << "(prev "
+               << variable.name
+               << ")";
       }
 
-      val_str << ","
-              << mec.convert_symbolic_value_to_math_string(value)
-              << "]"; // Equalの閉じ括弧
+      // value部分
+      vm_str << " "
+             << value // TODO:正しい処理を行うように。現在は中置記法になってしまう？ので、S式の形式にしたい
+             << ")"; // equalの閉じ括弧
 
-      MathValue new_math_value;
-      new_math_value.set(val_str.str());
-      and_cons_set.insert(new_math_value);
 
-      // 制約ストア内の変数一覧を作成
+      // 制約ストア内の変数一覧にvariableを追加
       constraint_store_.second.insert(
         boost::make_tuple(variable.name,
                           variable.derivative_count,
@@ -115,7 +114,14 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
     }
   }
 
-//  constraint_store_.first.insert(and_cons_set);
+  vm_str << ")"; // listの閉じ括弧
+  HYDLA_LOGGER_VCS("vm_str: ", vm_str.str());  
+  
+  // sp_にvm_strを読み込ませて、S式のパースツリーを構築し、先頭のポインタを得る
+  sp_.parse_main((vm_str.str()).c_str());
+  const_tree_iter_t ct_it = sp_.get_tree_iterator();
+  constraint_store_.first = ct_it;
+
 
   HYDLA_LOGGER_VCS(*this);
 
@@ -231,12 +237,87 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
     REDUCEStringSender& rss, max_diff_map_t& max_diff_map)
 {
   HYDLA_LOGGER_VCS("---- Begin REDUCEVCSPoint::add_left_continuity_constraint ----");
-  
-  // TODO:ちゃんと送る
-  cl_->send_string("{}");
 
 
-  
+  cl_->send_string("append({");
+  // 制約ストア中の変数のうち、集めたtell制約に出現する最大微分回数より小さい微分回数であるもののみ追加
+  HYDLA_LOGGER_VCS("--- in cs_var ---");
+
+  constraint_store_vars_t::const_iterator cs_vars_it  = constraint_store_.second.begin();
+  constraint_store_vars_t::const_iterator cs_vars_end = constraint_store_.second.end();
+  bool first_element = true;
+  for(; cs_vars_it!=cs_vars_end; ++cs_vars_it) {
+    max_diff_map_t::const_iterator md_it =
+      max_diff_map.find(cs_vars_it->get<0>());
+    if(md_it!=max_diff_map.end() &&
+       md_it->second  > cs_vars_it->get<1>())
+    {
+      if(!first_element) cl_->send_string(",");
+      // Prev変数側
+      // 変数名
+      rss.put_var(
+        boost::make_tuple(cs_vars_it->get<0>(),
+                          cs_vars_it->get<1>(),
+                          true));
+
+      cl_->send_string("=");
+
+      // Now変数側
+      // 変数名
+      rss.put_var(
+        boost::make_tuple(cs_vars_it->get<0>(),
+                          cs_vars_it->get<1>(),
+                          false));
+      first_element = false;
+    }
+  }
+  cl_->send_string("},{");
+
+
+  // 集めたtell制約内の変数についても調べる
+  // 時刻0（制約ストアが空）対策のため
+  HYDLA_LOGGER_VCS("--- in vars ---");
+
+  // max_diff_mapについてつくる
+  max_diff_map_t::const_iterator md_it = max_diff_map.begin();
+  max_diff_map_t::const_iterator md_end = max_diff_map.end();
+  first_element = true;
+  for(; md_it!=md_end; ++md_it) {
+    if(constraint_store_.second.find(md_it->first)==constraint_store_.second.end()){
+      for(int i=0; i<md_it->second; ++i){
+        if(!first_element) cl_->send_string(",");
+        // Prev変数側
+        // 変数名
+        rss.put_var(
+          boost::make_tuple(md_it->first,
+                            i,
+                            true));
+
+        cl_->send_string("=");
+
+        // Now変数側
+        // 変数名
+        rss.put_var(
+          boost::make_tuple(md_it->first,
+                            i,
+                            false));
+
+        // 制約ストア内の変数扱いする
+        // こうしないと後でvars_を送る際にprev変数達を送れない（時刻0のPPのみでの話）
+        // TODO:要検討
+        constraint_store_.second.insert(boost::make_tuple(md_it->first,
+                                                          i,
+                                                          true));
+
+        constraint_store_.second.insert(boost::make_tuple(md_it->first,
+                                                          i,
+                                                          false));
+        first_element = false;
+      }
+    }
+  }  
+  cl_->send_string("})");
+
 }
 
 VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
@@ -257,6 +338,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
   // expr_を渡す（collected_tells、appended_asks、constraint_store、left_continuityの4つから成る）
   cl_->send_string("expr_:=append(append(append(");
+//  cl_->send_string("expr_:=append(append(append(append(");
 
   // tell制約の集合からexprを得てREDUCEに渡す
   std::cout << "collected_tells" << std::endl;
@@ -285,9 +367,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   cl_->send_string("}),");
 
   // 制約ストアからも渡す
-  // TODO:フェーズ開始時における制約ストアのリセットを正しく行うようにする（reset関数）
-//  send_cs();
-  cl_->send_string("{}");
+  send_cs();
   cl_->send_string("),");
 
   // 左連続性に関する制約を渡す
@@ -295,7 +375,8 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   max_diff_map_t max_diff_map;
   create_max_diff_map(rss, max_diff_map);
   add_left_continuity_constraint(rss, max_diff_map);
-  cl_->send_string(")};");
+  cl_->send_string(");");
+//  cl_->send_string("),{prev(df(v,t))=1, prev(v)=2});");
 
 
   // pexprを渡す
@@ -308,8 +389,10 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   //   ex) {y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)}
   // vars_に関して一番外側の"{}"部分は、put_vars内で送っている
   cl_->send_string("vars_:=");
+//  cl_->send_string("vars_:=append(");
   rss.put_vars();
   cl_->send_string(";");
+//  cl_->send_string(",{prev(df(v,t)), prev(v)});");
 
 
   cl_->send_string("symbolic redeval '(isconsistent vars_ pexpr_ expr_);");
@@ -436,13 +519,31 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
   HYDLA_LOGGER_VCS("check_entailment_ans: ",
                    ans);
 
+  VCSResult result;
+  
   // S式パーサで読み取る
   sp_.parse_main(ans.c_str());
 
   // {コード}の構造
   const_tree_iter_t ct_it = sp_.get_tree_iterator();
-  size_t size = ct_it->children.size();
-  std::cout << "children size: " << size << "\n";
+
+  // コードを取得
+  const_tree_iter_t ret_code_it = ct_it->children.begin();
+  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  HYDLA_LOGGER_VCS("ret_code_str: ",
+                   ret_code_str);
+  
+  if(ret_code_str=="RETERROR___"){
+    // ソルバエラー
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code_str==" \"RETTRUE___\"") {
+    result = VCSR_TRUE;
+  }
+  else if(ret_code_str==" \"RETTRUE___\"") {
+    result = VCSR_TRUE;
+  }
+    
 
 
 

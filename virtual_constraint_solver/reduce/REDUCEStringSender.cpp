@@ -201,7 +201,7 @@ void REDUCEStringSender::put_var(const var_info_t var)
             << diff_count
             << ")";
   }
-  else if (in_prev_) {
+  else if (prev) {
     var_str << "prev("
             << name
             << ")";
