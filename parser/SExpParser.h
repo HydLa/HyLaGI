@@ -19,7 +19,7 @@ public:
   ~SExpParser();
 
 
-  std::string get_string_from_tree(const_tree_iter_t iter);
+  std::string get_string_from_tree(const_tree_iter_t iter) const;
 
   void dump_tree(const_tree_iter_t iter, int nest);
 

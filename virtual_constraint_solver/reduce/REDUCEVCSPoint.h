@@ -97,12 +97,12 @@ private:
   /**
    * 変数の最大微分回数をもとめる
    */
-  void create_max_diff_map(PacketSender& ps, max_diff_map_t& max_diff_map);
+  void create_max_diff_map(REDUCEStringSender& rss, max_diff_map_t& max_diff_map);
 
   /**
    * 左連続性に関する制約を加える
    */
-  void add_left_continuity_constraint(PacketSender& ps, max_diff_map_t& max_diff_map);
+  void add_left_continuity_constraint(REDUCEStringSender& rss, max_diff_map_t& max_diff_map);
 
   /**
    * 制約ストアがtrueであるかどうか

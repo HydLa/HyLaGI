@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <sstream>
 
 #include "SExpGrammar.h"
 #include "CommentGrammar.h"
@@ -20,11 +21,23 @@ SExpParser::~SExpParser()
 {
 }
 
-std::string SExpParser::get_string_from_tree(const_tree_iter_t iter){
-  std::string ret_str;
+std::string SExpParser::get_string_from_tree(const_tree_iter_t iter) const{
 
+  std::ostringstream ret_str;
 
-  return ret_str;
+  ret_str << std::string(iter->value.begin(), iter->value.end());
+  if(iter->children.size()>0){
+    ret_str << "(";
+    for(size_t i=0; i<iter->children.size();i++){
+      if(i!=0) ret_str << ",";
+      ret_str << get_string_from_tree(iter->children.begin()+i);
+    }
+    ret_str << ")";
+  }
+
+//  std::cout << "ret_str.str(): " << ret_str.str() << "\n";
+
+  return ret_str.str();
 }
 
 void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
