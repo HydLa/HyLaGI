@@ -230,6 +230,8 @@ end;
 
 
 load_package "laplace";
+% 逆ラプラス変換後の値をsin, cosで表示するスイッチ
+on ltrig;
 
 % 変数とそのラプラス変換対の対応表
 table_:={};
@@ -250,8 +252,8 @@ procedure LaplaceLetUnit(args_)$
     laplace(arg_(~x),x) =>LAParg_(il!&)
   };
 
-% {{v,lapv(s)},...}の対応表
-  table_:= {arg_, LAParg_(s)} . table_;
+% {{v, v(t), lapv(s)},...}の対応表
+  table_:= {arg_, arg_(t), LAParg_(s)} . table_;
   write("table_: ", table_);
 end;
 
@@ -264,6 +266,8 @@ begin;
   return exceptdfvars_;
 end;
 
+retsolvererror___ := "RETSOLVERERROR___";
+
 procedure exDSolve(expr_, init_, vars_)$
   begin;
     scalar flag_, ans_, tmp_;
@@ -273,14 +277,28 @@ procedure exDSolve(expr_, init_, vars_)$
   tmp_:= for each x in exceptdfvars_ collect {x,mkid(lap,x)};
   map(LaplaceLetUnit, tmp_);
 
+  %TODO ht => ht(t)置換
+  tmp_:=map(first(~w)=second(~w), table_);
+  write("MAP: ", tmp_);
 
+  tmp_:= sub(tmp_, expr_);
+  write("SUB: ", tmp_);
+  % expr_を等式から差式形式に
+  
   diffexpr_:={};
-  for each x in expr_ do 
-    if(not freeof(x, equal)) then diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)})
-      else write("ERROR: ",x, "is not equation");
-
-
+  for each x in tmp_ do 
+    if(not freeof(x, equal))
+      then diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)})
+    % not contained equal case
+    else diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)});
+    
+    
   LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
+  
+  % laplace演算子でエラー時、laplace演算子込みの式が返ると想定
+  if(not freeof(LAPexpr_, laplace)) then return retsolvererror___;
+
+%  LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
   write "LAPexpr_: ", LAPexpr_;
 
   % sに関して解く、逆ラプラス
@@ -289,7 +307,7 @@ procedure exDSolve(expr_, init_, vars_)$
   solveexpr_:= append(LAPexpr_, init_);
   write("solveexpr_:", solveexpr_);
 
-  solvevars_:= append(append(map(second, table_), map(lhs, init_)), {s});
+  solvevars_:= append(append(map(third, table_), map(lhs, init_)), {s});
   write("solvevars_:", solvevars_);
 
   solveans_ := solve(solveexpr_, solvevars_);
@@ -299,16 +317,16 @@ procedure exDSolve(expr_, init_, vars_)$
 
   % solve結果xに含まれるラプラス変換対から、それぞれの変数に対する方程式を取り出す。
   ans_:= for each table in table_ collect
-      (first table) = invlap(lgetf((second table), solveans_),s,t);
+      (first table) = invlap(lgetf((third table), solveans_),s,t);
   write("ans expr?: ", ans_);
 
   table_:={};
   return ans_;
 end;
 
-%operator ht,v;
-%expr_:={df(ht(t),t) = v(t),
-%        df(v(t),t) = -10
+%depend ht,v;
+%expr_:={df(ht,t) = v,
+%        df(v,t) = -10
 %       };
 %init_:={inithtlhs = 10,
 %        initvlhs = 0
