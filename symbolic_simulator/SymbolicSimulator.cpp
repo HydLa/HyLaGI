@@ -101,7 +101,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   }
   //solver_分岐
   if(opts_.solver == "r" || opts_.solver == "Reduce") {
-    solver_.reset(new REDUCEVCSPoint(new REDUCELink));   //使用するソルバを決定
+    solver_.reset(new REDUCEVCS(opts_, variable_map_));   //使用するソルバを決定
   }else{
     solver_.reset(new MathematicaVCS(opts_));   //使用するソルバを決定
   }

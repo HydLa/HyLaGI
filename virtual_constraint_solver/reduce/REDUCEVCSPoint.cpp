@@ -353,10 +353,6 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
   // send_stringのstringはどのように区切って送信してもOK
 
-  // depend文
-  // TODO:処理の一般化
-  cl_->send_string("depend ht,t;");
-  cl_->send_string("depend v,t;");
 
   // expr_を渡す（collected_tells、appended_asks、constraint_store、left_continuityの4つから成る）
   cl_->send_string("expr_:=append(append(append(");

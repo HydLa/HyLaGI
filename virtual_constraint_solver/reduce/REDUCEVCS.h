@@ -8,7 +8,7 @@
 #include "REDUCELink.h"
 
 // TODO:vcs_reduce_source
-//#include "vcs_math_source.h"
+//#include "vcs_reduce_source.h"
 
 
 namespace hydla {
@@ -22,7 +22,7 @@ public:
 
 
   //REDUCEVCS(Mode m, REDUCELink* cl, int approx_precision);
-  REDUCEVCS(const hydla::symbolic_simulator::Opts &opts);
+  REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t &vm);
 
   virtual ~REDUCEVCS();
   

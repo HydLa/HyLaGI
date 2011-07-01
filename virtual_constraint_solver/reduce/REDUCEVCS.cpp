@@ -31,10 +31,33 @@ void REDUCEVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_precis
 
 
 
-REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts)
+REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t &vm)
 {
  
 
+  HYDLA_LOGGER_VCS("#*** send depend statements of variables ***");
+
+  std::ostringstream depend_str;
+  depend_str << "depend {";
+  variable_map_t::variable_list_t::const_iterator it =
+    vm.begin();
+  variable_map_t::variable_list_t::const_iterator end =
+    vm.end();
+  bool first_element = true;
+  for(; it!=end; ++it)
+  {
+    const REDUCEVariable& variable = it->first;
+    // ”÷•ª‰ñ”‚ª0‚Ì‚à‚Ì‚¾‚¯depend•¶‚ğì¬
+    if(variable.derivative_count == 0){
+      if(!first_element) depend_str << ",";
+      depend_str << variable.name;
+      first_element = false;
+    }
+  }
+  depend_str << "},t;";
+
+  HYDLA_LOGGER_VCS("depend_str: ", depend_str.str()); 
+  cl_.send_string((depend_str.str()).c_str());
 }
 
 REDUCEVCS::~REDUCEVCS()

@@ -4,15 +4,11 @@
 #include <ostream>
 
 #include "REDUCELink.h"
-//#include "mathlink_helper.h"
-
-//TODO MathVCSType, PacketSender‚ÌˆË‘¶‚ğ‰ğÁ‚·‚é
 #include "REDUCEVCSType.h"
 #include "REDUCEStringSender.h"
 
 #include "../../parser/SExpParser.h"
 
-using namespace hydla::vcs::mathematica;
 using namespace hydla::parser;
 
 namespace hydla {
