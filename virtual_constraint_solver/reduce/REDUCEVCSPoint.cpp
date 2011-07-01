@@ -120,7 +120,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   // sp_にvm_strを読み込ませて、S式のパースツリーを構築し、先頭のポインタを得る
   sp_.parse_main((vm_str.str()).c_str());
   const_tree_iter_t ct_it = sp_.get_tree_iterator();
-  constraint_store_.first = ct_it;
+  constraint_store_.first.insert(ct_it);
 
 
   HYDLA_LOGGER_VCS(*this);
@@ -181,11 +181,36 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
 //  parameter_store_.first.insert(and_cons_set);
   return true;
 }
-//TODO 定数返しの修正
-bool REDUCEVCSPoint::create_variable_map(variable_map_t& variable_map, parameter_map_t& parameter_map)
+
+bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 {
-  assert(0);
-  return false;
+
+  HYDLA_LOGGER_VCS(
+    "#*** REDUCEVCSPoint::create_variable_map ***\n",
+    "--- constraint_store ---\n",
+    *this);
+
+  size_t or_size = constraint_store_.first.size();
+  HYDLA_LOGGER_VCS("or_size: ", or_size);  
+  for(size_t i = 0; i < or_size; i++){
+    const_tree_iter_t or_it = (*constraint_store_.first.begin())+i; 
+    create_result_t::maps_t maps;
+    variable_t symbolic_variable;
+    value_t symbolic_value;
+    size_t and_size = or_it->children.size();
+    for(size_t j = 0; j < and_size; j++){
+      const_tree_iter_t and_it = or_it->children.begin()+j;
+      
+
+
+
+    }
+
+  }
+
+
+
+  return true;
 }
 
 namespace {
@@ -367,6 +392,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   cl_->send_string("}),");
 
   // 制約ストアからも渡す
+//  cl_->send_string("{}");
   send_cs();
   cl_->send_string("),");
 
@@ -433,13 +459,21 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
     // 制約ストアをリセット
     //    reset();
-//    constraint_store_.first.clear();
-    //     constraint_store_.first = NULL;
+    constraint_store_.first.clear();
 
     // 制約ストア構築
-    constraint_store_.first = ret_code_it+1;
-    constraint_store_.second.insert(rss.vars_begin(), rss.vars_end());
+    // 制約間のOrに関してはsetで保持
+    // TODO:出来ればvectorあたりで扱いたいがその場合resetあたりでもう少し適切な処理が必要か
+    size_t or_size = (ret_code_it+1)->children.size();
+    HYDLA_LOGGER_VCS( "or_size: ", or_size);
 
+    for(size_t i=0; i<or_size; i++)
+    {
+      const_tree_iter_t or_cons_it = (ret_code_it+1)->children.begin()+i;
+      constraint_store_.first.insert(or_cons_it);
+    }
+
+    constraint_store_.second.insert(rss.vars_begin(), rss.vars_end()); 
   }
   else {
     assert(ret_code_str == " \"RETFALSE___\"");
@@ -550,7 +584,6 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 
 
 
-  assert(0);
 
   return VCSR_FALSE;
 }
@@ -574,9 +607,10 @@ void REDUCEVCSPoint::send_cs() const
 {
 
 
+  HYDLA_LOGGER_VCS("---- Begin REDUCEVCSPoint::send_cs ----");
   HYDLA_LOGGER_VCS("---- Send Constraint Store -----");
 
-  size_t or_cons_size = constraint_store_.first->children.size();
+  size_t or_cons_size = constraint_store_.first.size();
   HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
 
   if(or_cons_size <= 0)
@@ -589,8 +623,9 @@ void REDUCEVCSPoint::send_cs() const
   // TODO: 複数解（or_cons_size>1）の場合の対処を考える
   assert(or_cons_size==1);
 
-  for(size_t i=0; i<or_cons_size; i++){
-    const_tree_iter_t or_cons_it = constraint_store_.first->children.begin()+i;
+  std::set<const_tree_iter_t>::const_iterator or_cons_it = constraint_store_.first.begin();
+  std::set<const_tree_iter_t>::const_iterator or_cons_end = constraint_store_.first.end();
+  for(; or_cons_it!=or_cons_end; or_cons_it++){
 
 /*
     size_t and_cons_size = or_cons_it->children.size();
@@ -604,9 +639,12 @@ void REDUCEVCSPoint::send_cs() const
     }
 */
 
-    std::string or_string = sp_.get_string_from_tree(or_cons_it);
+    std::string or_string = sp_.get_string_from_tree(*or_cons_it);
     std::cout << "or_string: " << or_string << "\n";
-    cl_->send_string(or_string);
+
+    // 文字列が"list"のみであるとき、空集合を意味する
+    if (or_string == "list") cl_->send_string("{}");
+    else cl_->send_string(or_string);
   }
 }
 
