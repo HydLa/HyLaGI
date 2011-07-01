@@ -203,6 +203,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reduce\REDUCEValue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCS.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCSInterval.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\reduce\REDUCEVCSPoint.cpp"
 				>
 			</File>
@@ -309,7 +321,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reduce\REDUCETime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEValue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVariable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCS.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCSInterval.h"
+				>
+			</File>
+			<File
 				RelativePath=".\reduce\REDUCEVCSPoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\REDUCEVCSType.h"
 				>
 			</File>
 			<File
