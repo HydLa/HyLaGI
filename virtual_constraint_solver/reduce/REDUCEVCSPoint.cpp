@@ -9,12 +9,6 @@
 #include "REDUCEStringSender.h"
 
 
-/*
-#include "mathlink_helper.h"
-#include "PacketErrorHandler.h"
-#include "PacketChecker.h"
- */
-
 #include "../mathematica/MathematicaExpressionConverter.h"
 
 #include "Logger.h"
@@ -27,7 +21,6 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
-//REDUCEVCSPoint::REDUCEVCSPoint(MathLink* ml) :ml_(ml)
 REDUCEVCSPoint::REDUCEVCSPoint(REDUCELink* cl) :
   cl_(cl)
 {
@@ -78,7 +71,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   {
     if(it!=variable_map.begin()) vm_str << " ";
 
-    const MathVariable& variable = (*it).first;
+    const REDUCEVariable& variable = (*it).first;
     const value_t&    value = it->second;
 
     if(!value.is_undefined()) {
@@ -144,13 +137,15 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
   HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
 
 
-  std::set<MathValue> and_cons_set;
+  std::set<REDUCEValue> and_cons_set;
   par_names_.clear();
 
   parameter_map_t::variable_list_t::const_iterator it =
     parameter_map.begin();
   parameter_map_t::variable_list_t::const_iterator end =
     parameter_map.end();
+
+/*
   for(; it!=end; ++it)
   {
     const value_range_t&    value = it->second;
@@ -161,7 +156,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
         for(; and_it != and_end; and_it++){
           std::ostringstream val_str;
 
-          // MathVariable‘¤‚ÉŠÖ‚·‚é•¶š—ñ‚ğì¬
+          // REDUCEVariable‘¤‚ÉŠÖ‚·‚é•¶š—ñ‚ğì¬
           val_str << MathematicaExpressionConverter::get_relation_math_string(and_it->relation) << "[" ;
 
           val_str << PacketSender::par_prefix
@@ -178,6 +173,8 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
       }
     }
   }
+*/
+
 //  parameter_store_.first.insert(and_cons_set);
   return true;
 }

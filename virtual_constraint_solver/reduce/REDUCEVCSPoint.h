@@ -7,8 +7,7 @@
 //#include "mathlink_helper.h"
 
 //TODO MathVCSType, PacketSender‚ÌˆË‘¶‚ğ‰ğÁ‚·‚é
-#include "MathVCSType.h"
-//#include "PacketSender.h"
+#include "REDUCEVCSType.h"
 #include "REDUCEStringSender.h"
 
 #include "../../parser/SExpParser.h"
@@ -30,7 +29,7 @@ public:
 
   typedef std::pair<std::set<const_tree_iter_t>, constraint_store_vars_t> constraint_store_t;
 
-  typedef std::pair<std::set<std::set<MathValue> >,
+  typedef std::pair<std::set<std::set<REDUCEValue> >,
       constraint_store_vars_t> parameter_store_t;
 
   //  MathematicaVCSPoint(MathLink* ml);

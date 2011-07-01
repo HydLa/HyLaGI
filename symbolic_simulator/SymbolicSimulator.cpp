@@ -27,6 +27,7 @@
 #include "DiscreteAskRemover.h"
 #include "AskTypeAnalyzer.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 
 #include "../virtual_constraint_solver/reduce/REDUCEVCSPoint.h"
 #include "../virtual_constraint_solver/reduce/REDUCELink.h"
@@ -446,7 +447,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
 
   
   // ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
-  virtual_constraint_solver_t::IntegrateResult integrate_result;
+  SymbolicVirtualConstraintSolver::IntegrateResult integrate_result;
   solver_->integrate(
     integrate_result,
     positive_asks,

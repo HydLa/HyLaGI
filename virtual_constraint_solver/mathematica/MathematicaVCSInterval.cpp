@@ -4,12 +4,9 @@
 #include <cassert>
 #include <boost/foreach.hpp>
 
-#include "mathlink_helper.h"
 #include "Logger.h"
-#include "PacketSender.h"
 #include "PacketChecker.h"
 #include "PacketErrorHandler.h"
-#include "Types.h"
 #include "MathematicaExpressionConverter.h"
 
 using namespace hydla::vcs;
