@@ -1,16 +1,8 @@
 
 #include <cassert>
-#include <boost/algorithm/string/predicate.hpp>
 
 #include "REDUCEVCSPoint.h"
-
-// TODO RTreeVisitorの引っ越し
-//#include "../../parser/RTreeVisitor.h"
 #include "REDUCEStringSender.h"
-
-
-#include "../mathematica/MathematicaExpressionConverter.h"
-
 #include "Logger.h"
 
 using namespace hydla::vcs;
@@ -34,7 +26,6 @@ REDUCEVCSPoint::~REDUCEVCSPoint()
 
 }
 
-// MathematicaVCSPointより
 bool REDUCEVCSPoint::reset()
 {
   std::cout << "Begin REDUCEVCSPoint::reset()" << std::endl;
@@ -45,7 +36,6 @@ bool REDUCEVCSPoint::reset()
   return true;
 }
 
-// MathematicaVCSPointより
 bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 {
 
@@ -121,7 +111,6 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   return true;
 }
 
-// MathematicaVCSPointより
 bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map){
 //  assert(0);
 //  return false;
@@ -182,30 +171,85 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map, const parameter_m
 bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 {
 
+  // TODO: 不等式及び記号定数への対応
+
   HYDLA_LOGGER_VCS(
     "#*** REDUCEVCSPoint::create_variable_map ***\n",
     "--- constraint_store ---\n",
     *this);
 
   size_t or_size = constraint_store_.first.size();
-  HYDLA_LOGGER_VCS("or_size: ", or_size);  
+  HYDLA_LOGGER_VCS("or_size: ", or_size);
+  // TODO: 複数解に対応
+  assert(or_size==1);
+
   for(size_t i = 0; i < or_size; i++){
     const_tree_iter_t or_it = (*constraint_store_.first.begin())+i; 
     create_result_t::maps_t maps;
     variable_t symbolic_variable;
     value_t symbolic_value;
     size_t and_size = or_it->children.size();
+    HYDLA_LOGGER_VCS("and_size: ", and_size);  
     for(size_t j = 0; j < and_size; j++){
       const_tree_iter_t and_it = or_it->children.begin()+j;
+
+      std::string and_cons_string =  sp_.get_string_from_tree(and_it);
+      HYDLA_LOGGER_VCS("and_cons_string: ", and_cons_string);
+
+
+      // 変数側
+      const_tree_iter_t var_it = and_it->children.begin();
+      std::string var_head_str = std::string(var_it->value.begin(),var_it->value.end());
+
+      // prev変数は処理しない
+      if(var_head_str=="prev") continue;
+
+      std::string var_name;
+      int var_derivative_count;
+
+      // 微分を含む変数
+      if(var_head_str=="df"){
+        size_t df_child_size = var_it->children.size();
+
+        // 1回微分の場合は微分回数部分が省略されている
+        if(df_child_size==2){
+          var_name = std::string(var_it->children.begin()->value.begin(), 
+                                 var_it->children.begin()->value.end());
+          symbolic_variable.name = var_name;
+          symbolic_variable.derivative_count = 1;
+        }
+        else{
+          assert(df_child_size==3);
+          var_name = std::string(var_it->children.begin()->value.begin(), 
+                                 var_it->children.begin()->value.end());
+          symbolic_variable.name = var_name;
+          std::stringstream dc_ss;
+          std::string dc_str = std::string((var_it->children.begin()+2)->value.begin(), 
+                                           (var_it->children.begin()+2)->value.end());
+          dc_ss << dc_str;
+          dc_ss >> var_derivative_count;
+          symbolic_variable.derivative_count = var_derivative_count;
+        }
+      }
+      // 微分を含まない変数
+      else{
+        var_name = var_head_str;
+        symbolic_variable.name = var_name;
+        symbolic_variable.derivative_count = 0;          
+      }
+
+      // 値側
+      const_tree_iter_t value_it = and_it->children.begin()+1;
+//      symbolic_value = 
+      symbolic_value.set_unique(true);
       
-
-
-
+      maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }
 
+    HYDLA_LOGGER_VCS_SUMMARY(maps.variable_map);
+    HYDLA_LOGGER_VCS_SUMMARY(maps.parameter_map);
+    create_result.result_maps.push_back(maps);
   }
-
-
 
   return true;
 }
@@ -497,7 +541,6 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
 }
 
-//TODO 定数返しの修正
 VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
 {
 
@@ -548,6 +591,8 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 
   VCSResult result;
   
+  // TODO:S式パーサを使う→？
+/*  
   // S式パーサで読み取る
   sp_.parse_main(ans.c_str());
 
@@ -559,25 +604,30 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
   std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
+*/
+
+
+//  HYDLA_LOGGER_VCS(*this);
+//  sp_.dump_tree(*(constraint_store_.first.begin()), 0);
   
-  if(ret_code_str=="RETERROR___"){
+  if(ans == "(list ccp_solver_error___)"){
     // ソルバエラー
     result = VCSR_SOLVER_ERROR;
   }
-  else if(ret_code_str==" \"RETTRUE___\"") {
+  else if(ans == "ccp_entailed___") {
     result = VCSR_TRUE;
   }
-  else if(ret_code_str==" \"RETTRUE___\"") {
-    result = VCSR_TRUE;
+  else if(ans == "ccp_not_entailed___") {
+    result = VCSR_FALSE;
   }
+  else if(ans == "(list ccp_unknown___)"){
+//    assert(ans == "(list ccp_unknown___)");
+    result = VCSR_UNKNOWN;
+  }
+  else result = VCSR_FALSE;
     
 
-
-
-
-
-
-
+  //return result;
   return VCSR_FALSE;
 }
 
@@ -680,29 +730,18 @@ void REDUCEVCSPoint::send_cs_vars() const
 
 }
 
-// MathematicaVCSPointより
 std::ostream& REDUCEVCSPoint::dump(std::ostream& s) const
 {
   s << "#*** Dump REDUCEVCSPoint ***\n"
       << "--- constraint store ---\n";
 
-  //
-/*
-  std::set<std::set<MathValue> >::const_iterator or_cons_it =
+  std::set<const_tree_iter_t>::const_iterator or_cons_it =
       constraint_store_.first.begin();
   while((or_cons_it) != constraint_store_.first.end())
   {
-    std::set<MathValue>::const_iterator and_cons_it =
-        (*or_cons_it).begin();
-    while((and_cons_it) != (*or_cons_it).end())
-    {
-      s << (*and_cons_it).get_string() << " ";
-      and_cons_it++;
-    }
-    s << "\n";
+    s << sp_.get_string_from_tree(*or_cons_it) << "\n";
     or_cons_it++;
   }
-*/
 
   // 制約ストア内に存在する変数のダンプ
   s << "-- vars --\n";
@@ -717,10 +756,9 @@ std::ostream& REDUCEVCSPoint::dump(std::ostream& s) const
   return s;
 }
 
-// MathematicaVCSPointより
-std::ostream& operator<<(std::ostream& s, const REDUCEVCSPoint& m)
+std::ostream& operator<<(std::ostream& s, const REDUCEVCSPoint& r)
 {
-  return m.dump(s);
+  return r.dump(s);
 }
 
 
