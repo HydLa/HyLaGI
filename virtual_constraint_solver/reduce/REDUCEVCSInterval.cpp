@@ -153,80 +153,44 @@ void REDUCEVCSInterval::send_init_cons(
 {
   HYDLA_LOGGER_VCS("---- Begin REDUCEVCSInterval::send_init_cons ----");
     
-  // 送信する制約の個数を求める
   constraint_store_t::init_vars_t::const_iterator init_vars_it;
   constraint_store_t::init_vars_t::const_iterator init_vars_end;
   init_vars_it  = constraint_store_.init_vars.begin();
   init_vars_end = constraint_store_.init_vars.end();
-  int init_vars_count = 0;
 
-  // 送る必要のある初期値制約をカウント
-  for(; init_vars_it!=init_vars_end; ++init_vars_it) {
-    
-    max_diff_map_t::const_iterator md_it = 
-      max_diff_map.find(init_vars_it->first.name);
-
-
-    // 初期値制約のうち、集めたtell制約に出現する際の最大微分回数よりも小さい微分回数のものをカウントする
-    if(md_it!=max_diff_map.end() && 
-       md_it->second  > init_vars_it->first.derivative_count)
-    {
-      init_vars_count++;
-    }
-
-
-/*
-    // 初期値制約のうち、集めたtell制約に出現しないものをカウント
-    if(md_it==max_diff_map.end())
-    {
-      init_vars_count++;
-    }
-    // 初期値制約のうち、集めたtell制約に出現する際の最大微分回数よりも小さい微分回数のものをカウントする
-    else if(md_it->second  > init_vars_it->first.derivative_count)
-    {
-      init_vars_count++;
-    }
-*/
-
-
-  }
-
-
-  HYDLA_LOGGER_VCS("init_vars_count: ", init_vars_count);
-
-
-/*
-  // 制約をMathematicaへ送信
-  ml_->put_function("List", init_vars_count);
-  init_vars_it  = constraint_store_.init_vars.begin();
-  init_vars_end = constraint_store_.init_vars.end();
+  cl_->send_string("{");
+  bool first_element = true;
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
 
-
+    // 初期値制約のうち、集めたtell制約に出現する際の最大微分回数よりも小さい微分回数のもののみ送る
     if(md_it!=max_diff_map.end() &&
        md_it->second  > init_vars_it->first.derivative_count) 
     {
-       ml_->put_function("Equal", 2);
-        // 変数名
-        ps.put_var(
-         boost::make_tuple(init_vars_it->first.name, 
-                            init_vars_it->first.derivative_count, 
-                            false),
-          PacketSender::VA_Zero);
+      if(!first_element) cl_->send_string(",");
+      cl_->send_string("{t=0, ");
+      // 変数名
+      rss.put_var(
+        boost::make_tuple(init_vars_it->first.name, 
+                          init_vars_it->first.derivative_count, 
+                          false));
 
-        // 値
-        if(use_approx && approx_precision_ > 0) {
-          // 近似して送信
-          ml_->put_function("approxExpr", 2);
-          ml_->put_integer(approx_precision_);
-        }
-        ps.put_node(init_vars_it->second.get_node(), PacketSender::VA_None, false);
+      cl_->send_string("=");
+  
+      // 値
+      if(use_approx && approx_precision_ > 0) {
+        // 近似して送信
+        // TODO:何とかする
+//        ml_->put_function("approxExpr", 2);
+//        ml_->put_integer(approx_precision_);
+      }
+      rss.put_node(init_vars_it->second.get_node(), false);
+      cl_->send_string("}");
+      first_element = false;
     }
-
   }
-*/
+  cl_->send_string("}");
 
 }
 
@@ -250,30 +214,8 @@ void REDUCEVCSInterval::send_parameter_cons() const{
   HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", 
                      parameter_map_);
 
-/*  
-  // 制約をMathematicaへ送信
-  ml_->put_function("List", para_size);
-  
-  for(par_it = parameter_map_.begin(); par_it!=par_end; ++par_it) {
-    value_range_t::or_vector::const_iterator or_it = par_it->second.or_begin(), or_end = par_it->second.or_end();
-    for(;or_it != or_end; or_it++){
-      value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
-      for(; and_it != and_end; and_it++){
-      
-        ml_->put_function(
-          MathematicaExpressionConverter::get_relation_math_string(and_it->relation), 2);
-
-        // 変数名
-        ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
-
-        // 値
-        ml_->put_function("ToExpression", 1);
-        ml_->put_string(and_it->value.get_string());
-      }
-    }
-  }
-*/
-
+  // TODO: ちゃんと送る
+  cl_->send_string("{}");
 }
 
 
@@ -284,15 +226,8 @@ void REDUCEVCSInterval::send_pars() const{
   parameter_map_t::const_iterator par_it = parameter_map_.begin();
   parameter_map_t::const_iterator par_end = parameter_map_.end();
 
-/*  
-  // 制約をMathematicaへ送信
-  ml_->put_function("List", parameter_map_.size());
-  
-  for(par_it = parameter_map_.begin(); par_it!=par_end; ++par_it) {
-    ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
-  }
-*/
-
+  // TODO: ちゃんと送る
+  cl_->send_string("{}");
 }
 
 
@@ -313,16 +248,71 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
   REDUCEStringSender rss(*cl_);
 
 
+//////////////////// 送信処理
 
+  // expr_を渡す（collected_tells、appended_asks、constraint_store、parameter_cons、init_consの5つから成る）
+  cl_->send_string("expr_:=append(append(append(append(");
+
+  // tell制約の集合からtellsを得てREDUCEに渡す
+  cl_->send_string("{");
+  tells_t::const_iterator tells_it  = collected_tells.begin();
+  tells_t::const_iterator tells_end = collected_tells.end();
+  for(; (tells_it) != tells_end; ++tells_it) {
+    rss.put_node((*tells_it)->get_child(), true);
+  }
+  cl_->send_string("},");  
+
+  // appended_asksからガード部分を得てREDUCEに渡す
+  cl_->send_string("{");
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()),
+                     "  entailed:", append_it->entailed);
+    rss.put_node(append_it->ask->get_guard(), true, append_it->entailed);
+  }
+  cl_->send_string("}),");
+
+  // 制約ストアconstraintsをREDUCEに渡す
+  send_cs(rss);
+  cl_->send_string("),");
+
+  // パラメタ制約parameter_consをREDUCEに渡す
+  send_parameter_cons();
+  cl_->send_string("),");
+
+  // max_diff_mapをもとに、初期値制約init_consを渡す
+  max_diff_map_t max_diff_map;
+  // 変数の最大微分回数をもとめる
+  create_max_diff_map(rss, max_diff_map);
+  // 初期値制約の送信
+  send_init_cons(rss, max_diff_map, false);
+  cl_->send_string(");");
+
+
+  // varsを渡す
+  cl_->send_string("vars_:=");
+  rss.put_vars(true);
+
+
+  cl_->send_string("symbolic redeval '(isconsistentinterval expr_ vars_);");
 
 
 ////////// 受信処理
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
+  cl_->read_until_redeval();
 
-
+  std::string ans = cl_->get_s_expr();
+  HYDLA_LOGGER_VCS("add_constraint_ans: ",
+                   ans);
   
   VCSResult result;
+
+
+
+
+
 
   assert(0);
 
@@ -338,11 +328,74 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   REDUCEStringSender rss(*cl_);
 
 
+//////////////////// 送信処理
 
-////////// 受信処理
+  // guard_部分
+  // ask制約のガードの式を得てREDUCEに渡す
+  cl_->send_string("guard_:=");
+  rss.put_node(negative_ask->get_guard(), true);
 
   
+  // store_を渡す（constraint_store、appended_asks、init_cons、parameter_storeの4つから成る）
+  cl_->send_string("store_:=append(append(append(");
+
+  // 制約ストアconstraintsをREDUCEに渡す
+  send_cs(rss);
+  cl_->send_string(",");
+
+  // appended_asksからガード部分を得てMathematicaに渡す
+  cl_->send_string("{");
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()),
+                     "  entailed:", append_it->entailed);
+    rss.put_node(append_it->ask->get_guard(), true, append_it->entailed);
+  }
+  cl_->send_string("}),");
+
+  // max_diff_mapをもとに、初期値制約init_consを渡す
+  max_diff_map_t max_diff_map;
+  // 変数の最大微分回数をもとめる
+  create_max_diff_map(rss, max_diff_map);
+  // 初期値制約の送信
+  send_init_cons(rss, max_diff_map, false);
+  cl_->send_string("),");
+
+  // parameter_storeを渡す
+  send_parameter_cons();
+  cl_->send_string(");");
+
+
+  // 変数のリストvars_を渡す
+  cl_->send_string("vars_:=");
+  send_vars(rss, max_diff_map);
+  cl_->send_string(";");
+
+
+  // 記号定数のリストpars_を渡す
+  cl_->send_string("pars_:=");
+  send_pars();
+  cl_->send_string(";");
+
+
+  cl_->send_string("symbolic redeval '(checkentailmentinterval guard_ store_ vars_ pars_);");
+
+
+/////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
+
+  cl_->read_until_redeval();
+
+  std::string ans = cl_->get_s_expr();
+  HYDLA_LOGGER_VCS("check_entailment_ans: ",
+                   ans);
+
   VCSResult result;
+    
+
+  
+
 
   assert(0);
 

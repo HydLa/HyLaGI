@@ -462,7 +462,7 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
   PacketSender ps(*ml_);
 
-  // checkEntailment[guard, store, vars, pars]‚ð“n‚µ‚½‚¢
+  // checkEntailmentInterval[guard, store, vars, pars]‚ð“n‚µ‚½‚¢
   ml_->put_function("checkEntailmentInterval", 4);
 
   // guard•”•ª

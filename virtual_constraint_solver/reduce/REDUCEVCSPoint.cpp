@@ -396,16 +396,15 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 //////////////////// 送信処理
 
   // send_stringのstringはどのように区切って送信してもOK
+  //   ex) cl_->send_string("expr_:={df(y,t,2) = -10,");
+  //       cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
 
 
   // expr_を渡す（collected_tells、appended_asks、constraint_store、left_continuityの4つから成る）
   cl_->send_string("expr_:=append(append(append(");
-//  cl_->send_string("expr_:=append(append(append(append(");
 
   // tell制約の集合からexprを得てREDUCEに渡す
   std::cout << "collected_tells" << std::endl;
-//  cl_->send_string("expr_:={df(y,t,2) = -10,");
-//  cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
   cl_->send_string("{");
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
@@ -423,13 +422,13 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   appended_asks_t::const_iterator append_end = appended_asks.end();
   for(; append_it!=append_end; ++append_it) {
     if(append_it != appended_asks.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()),
+                     "  entailed:", append_it->entailed);
     rss.put_node(append_it->ask->get_child());
   }
   cl_->send_string("}),");
 
   // 制約ストアからも渡す
-//  cl_->send_string("{}");
   send_cs();
   cl_->send_string("),");
 
@@ -439,7 +438,6 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   create_max_diff_map(rss, max_diff_map);
   add_left_continuity_constraint(rss, max_diff_map);
   cl_->send_string(");");
-//  cl_->send_string("),{prev(df(v,t))=1, prev(v)=2});");
 
 
   // pexprを渡す
@@ -451,11 +449,13 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   // varsを渡す
   //   ex) {y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)}
   // vars_に関して一番外側の"{}"部分は、put_vars内で送っている
-  cl_->send_string("vars_:=");
-//  cl_->send_string("vars_:=append(");
+  cl_->send_string("vars_:=append(");
   rss.put_vars();
-  cl_->send_string(";");
-//  cl_->send_string(",{prev(df(v,t)), prev(v)});");
+  cl_->send_string(",");
+  // 制約ストア内に出現する変数も渡す
+//  send_cs_vars();
+  cl_->send_string("{}");
+  cl_->send_string(");");
 
 
   cl_->send_string("symbolic redeval '(isconsistent vars_ pexpr_ expr_);");
@@ -569,11 +569,18 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 
   // varsを渡す
   std::cout << "vars" << std::endl;
-  cl_->send_string("vars_:=append(");
+  cl_->send_string("vars_:=append(append(");
+
+  // collected_tells内の変数一覧を渡す
   rss.put_vars();
   cl_->send_string(",");
-  // 制約ストア内に出現する変数も渡す
+
+  // 制約ストア内に出現する変数一覧も渡す
   send_cs_vars();
+  cl_->send_string("),");
+
+  // パラメタ一覧も渡す
+  send_pars();
   cl_->send_string(");");
 
 
@@ -701,7 +708,8 @@ void REDUCEVCSPoint::send_ps() const
 
 //TODO 定数返しの修正
 void REDUCEVCSPoint::send_pars() const{
-  assert(0);
+  // TODO: ちゃんと送る
+  cl_->send_string("{}");
 }
 
 void REDUCEVCSPoint::send_cs_vars() const
