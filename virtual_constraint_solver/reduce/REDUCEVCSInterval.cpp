@@ -408,8 +408,29 @@ void REDUCEVCSInterval::send_ask_guards(
 {
   // {ガードの式、askのID}のリスト形式で送信する
 
-  assert(0);
+  cl_->send_string("{");
+  hydla::simulator::ask_set_t::const_iterator it  = asks.begin();
+  hydla::simulator::ask_set_t::const_iterator end = asks.end();
+  for(; it!=end; ++it)
+  {
+    if(it!=asks.begin()) cl_->send_string(",");
+    HYDLA_LOGGER_VCS("send ask : ", **it);
+    cl_->send_string("{");
 
+    // guard条件を送る
+    rss.put_node((*it)->get_guard(), true);
+
+    cl_->send_string(",");
+
+    // IDを送る
+    std::stringstream id_ss;
+    int ask_id = (*it)->get_id();
+    id_ss << ask_id;
+    cl_->send_string(id_ss.str());
+
+    cl_->send_string("}");
+  }
+  cl_->send_string("}");
 }
 
 VCSResult REDUCEVCSInterval::integrate(
@@ -499,8 +520,37 @@ void REDUCEVCSInterval::send_not_adopted_tells(REDUCEStringSender& rss, const no
 {
   // {tellの式、tellのID}のリストのリスト形式で送信する
 
-  assert(0);
+  // 採用していないモジュール
+  cl_->send_string("{");
+  not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
+  not_adopted_tells_list_t::const_iterator na_tells_list_end = na_tells_list.end();
+  for(; na_tells_list_it!=na_tells_list_end; ++na_tells_list_it){
+    if(na_tells_list_it!=na_tells_list.begin()) cl_->send_string(",");
+    cl_->send_string("{");
+    // 採用していない、あるモジュール内のtell制約
+    tells_t::const_iterator na_tells_it  = (*na_tells_list_it).begin();
+    tells_t::const_iterator na_tells_end = (*na_tells_list_it).end();
+    for(; na_tells_it!=na_tells_end; ++na_tells_it) {
+      if(na_tells_it!=(*na_tells_list_it).begin()) cl_->send_string(",");
+      HYDLA_LOGGER_VCS("send not adopted tell : ", **na_tells_it);
+      cl_->send_string("{");
 
+      // tell制約を送る
+      rss.put_node((*na_tells_it)->get_child(), true);
+
+      cl_->send_string(",");
+
+      // IDを送る
+      std::stringstream id_ss;
+      int tell_id = (*na_tells_it)->get_id();
+      id_ss << tell_id;
+      cl_->send_string(id_ss.str());
+
+      cl_->send_string("}");      
+    }
+    cl_->send_string("}");
+  }
+  cl_->send_string("}");
 }
 
 void REDUCEVCSInterval::send_cs(REDUCEStringSender& rss) const
@@ -509,8 +559,16 @@ void REDUCEVCSInterval::send_cs(REDUCEStringSender& rss) const
     "---- Send Constraint Store -----\n",
     "cons size: ", constraint_store_.constraints.size());
 
-  assert(0);
-
+  cl_->send_string("{");
+  constraint_store_t::constraints_t::const_iterator
+    cons_it  = constraint_store_.constraints.begin();
+  constraint_store_t::constraints_t::const_iterator
+    cons_end = constraint_store_.constraints.end();
+  for(; (cons_it) != cons_end; ++cons_it) {
+    if(cons_it!=constraint_store_.constraints.begin()) cl_->send_string(",");
+    rss.put_node((*cons_it)->get_child(), true);
+  }
+  cl_->send_string("}");
 }
 
 void REDUCEVCSInterval::send_cs_vars() const
@@ -522,29 +580,7 @@ std::ostream& REDUCEVCSInterval::dump(std::ostream& s) const
 {
   s << "#*** Dump REDUCEVCSInterval ***\n"
     << "--- constraint store ---\n";
-/*
-   std::set<MathVariable>::const_iterator vars_it = 
-     constraint_store_.second.begin();
-   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
-     constraint_store_.first.begin();
-   while((or_cons_it) != constraint_store_.first.end())
-   {
-     std::set<MathValue>::const_iterator and_cons_it = 
-       (*or_cons_it).begin();
-     while((and_cons_it) != (*or_cons_it).end())
-     {
-       s << (*and_cons_it).str << " ";
-       and_cons_it++;
-     }
-     s << "\n";
-     or_cons_it++;
-   }
 
-   while((vars_it) != constraint_store_.second.end())
-   {
-     s << *(vars_it) << " ";
-     vars_it++;
-   }*/
 
   return s;
 }
