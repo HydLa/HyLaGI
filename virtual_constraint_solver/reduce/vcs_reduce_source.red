@@ -1,3 +1,5 @@
+load_package sets;
+
 procedure myif(x,op,y,approx_precision)$
 %ì¸óÕ: ò_óùéÆ(ex. sqrt(2), greaterp_, sin(2)), ê∏ìx
 %èoóÕ: t or nil or -1
@@ -124,8 +126,6 @@ on nat;
 %---------------------------------------------------------------
 
 operator prev;
-%TODO dependÇîjä¸
-depend {y, ht, v}, t;
 
 rettrue___ := "RETTRUE___";
 retfalse___ := "RETFALSE___";
@@ -267,6 +267,9 @@ begin;
 end;
 
 retsolvererror___ := "RETSOLVERERROR___";
+% TODO over, underÇÃï™äÚ
+retoverconstraint___ := "RETOVERCONSTRAINT___";
+retunderconstraint___ := "RETUNDERCONSTRAINT___";
 
 procedure exDSolve(expr_, init_, vars_)$
   begin;
@@ -324,7 +327,7 @@ procedure exDSolve(expr_, init_, vars_)$
   return ans_;
 end;
 
-%depend ht,v;
+%depend {ht,v}, t;
 %expr_:={df(ht,t) = v,
 %        df(v,t) = -10
 %       };
@@ -333,6 +336,33 @@ end;
 %       };
 %vars_:={ht,v,df(ht,t),df(v,t)};
 %exDSolve(expr_, init_, vars_);
+
+
+% 20110705 overconstraint___ñ≥Çµ
+%ICI_SOLVER_ERROR___:= {0};
+%ICI_ENTAILED___:= {1};
+%ICI_CONSTRAINT_ERROR___:= {2};
+
+procedure isConsistentInterval(expr_, init_, vars_)$
+begin;
+  scalar tmp_;
+  tmp_:= exDSolve(expr_, init_, vars_);
+  
+  if(tmp_ = retsolvererror___) then return {0}
+  else if(tmp_ = retoverconstraint___) then return {2}
+  else return {2};
+end;
+
+%depend {ht,v}, t;
+%expr_:={df(ht,t) = v,
+%        df(v,t) = -10
+%       };
+%init_:={inithtlhs = 10,
+%        initvlhs = 0
+%       };
+%vars_:={ht,v,df(ht,t),df(v,t)};
+%symbolic redeval '(isConsistentInterval expr_ init_ vars_);
+
 
 
 
