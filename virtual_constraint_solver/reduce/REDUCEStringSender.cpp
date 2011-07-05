@@ -240,7 +240,7 @@ void REDUCEStringSender::put_node(const node_sptr& node,
     cl_.send_string("}");
 */
   }
-  else accept(node);
+  accept(node);
 }
 
 /**
