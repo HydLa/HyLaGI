@@ -157,7 +157,6 @@ void REDUCEVCSInterval::send_init_cons(
   init_vars_end = constraint_store_.init_vars.end();
 
   cl_->send_string("{");
-//  std::cout << "{";
   bool first_element = true;
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
     max_diff_map_t::const_iterator md_it = 
@@ -168,19 +167,23 @@ void REDUCEVCSInterval::send_init_cons(
        md_it->second  > init_vars_it->first.derivative_count) 
     {
       if(!first_element) cl_->send_string(",");
-//      if(!first_element) std::cout << ",";
-      cl_->send_string("init");
-//      std::cout << "init";
       // 変数名
+      // 変数名の途中でsend_stringすると改行が入ってしまい正しく認識できないので、まとめて送る？
+      // TODO: 1回微分以上への対応
+      std::stringstream var_name_ss;
+      var_name_ss << "init";
+
+/*
       rss.put_var(boost::make_tuple(init_vars_it->first.name, 
                                     init_vars_it->first.derivative_count, 
                                     false));
-//      std::cout << init_vars_it->first.name;
-      cl_->send_string("lhs");
-//      std::cout << "lhs";
+*/
+
+      var_name_ss << init_vars_it->first.name;
+      var_name_ss << "lhs";
+      cl_->send_string(var_name_ss.str());
 
       cl_->send_string("=");
-//      std::cout << "=";
   
       // 値
       if(use_approx && approx_precision_ > 0) {
@@ -190,12 +193,10 @@ void REDUCEVCSInterval::send_init_cons(
 //        ml_->put_integer(approx_precision_);
       }
       rss.put_node(init_vars_it->second.get_node(), false);
-//      std::cout << init_vars_it->second.get_string();
       first_element = false;
     }
   }
   cl_->send_string("}");
-//  std::cout << "}";
 
 }
 
