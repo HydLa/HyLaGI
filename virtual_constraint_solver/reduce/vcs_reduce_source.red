@@ -365,6 +365,38 @@ end;
 
 
 
+%CCI_SOLVER_ERROR___:= {0};
+%CCI_ENTAILED___:= {1};
+%CCI_NOT_ENTAILED___:= {2};
+%CCI_UNKNOWN___:= {3};
+
+%TODO exDSolveà»ç~ÇÃçÏê¨
+
+procedure checkEntailmentInterval(guard_, store_, init_, vars_, pars_)$
+begin;
+  scalar tmp_, solvevars_, table_;
+  tmp_:= exDSolve(store_, init_, vars_);
+  
+  return tmp_;
+end;
+
+
+%IC_SOLVER_ERROR___:= {0};
+%IC_NORMAL_END___:= {1};
+
+%TODO exDSolveà»ç~ÇÃçÏê¨
+
+procedure integrateCalc(cons_, init_, posAsk_, negAsk_, NACons_, vars_, maxTime_)$
+begin;
+  scalar tmp_, solvevars_, table_;
+  tmp_:= exDSolve(cons_, init_, vars_);
+  
+  return tmp_;
+end;
+
+
+
+
 
 
 
