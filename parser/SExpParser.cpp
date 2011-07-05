@@ -4,7 +4,6 @@
 #include <cstring>
 #include <sstream>
 
-#include "SExpGrammar.h"
 #include "CommentGrammar.h"
 
 using namespace std;
@@ -61,7 +60,7 @@ void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
 
   cout << endl;
 
-  for(int j = 0; j < iter->children.size(); ++j)
+  for(size_t j = 0; j < iter->children.size(); ++j)
     dump_tree(iter->children.begin()+j, nest+1);
 }
 
@@ -81,6 +80,13 @@ int SExpParser::parse_main(const char* input_str){
     cout << "Ž¸”s\n";
   }
   return(0);
+}
+
+std::ostream& operator<<(std::ostream& s, const SExpParser::const_tree_iter_t& iter)
+{
+  SExpParser sp;
+  s << sp.get_string_from_tree(iter);
+  return s;
 }
 
 } //namespace parser

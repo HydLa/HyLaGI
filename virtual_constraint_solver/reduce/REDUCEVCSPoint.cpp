@@ -4,6 +4,7 @@
 #include "REDUCEVCSPoint.h"
 #include "REDUCEStringSender.h"
 #include "Logger.h"
+#include "SExpConverter.h"
 
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
@@ -240,7 +241,8 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
       // ’l‘¤
       const_tree_iter_t value_it = and_it->children.begin()+1;
-//      symbolic_value = 
+      SExpConverter sc;
+      symbolic_value = sc.convert_s_exp_to_symbolic_value(value_it);
       symbolic_value.set_unique(true);
       
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
