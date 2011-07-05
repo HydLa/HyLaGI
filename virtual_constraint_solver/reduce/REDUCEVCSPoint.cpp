@@ -216,28 +216,31 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
         if(df_child_size==2){
           var_name = std::string(var_it->children.begin()->value.begin(), 
                                  var_it->children.begin()->value.end());
-          symbolic_variable.name = var_name;
-          symbolic_variable.derivative_count = 1;
+          var_derivative_count = 1;
         }
         else{
           assert(df_child_size==3);
           var_name = std::string(var_it->children.begin()->value.begin(), 
                                  var_it->children.begin()->value.end());
-          symbolic_variable.name = var_name;
           std::stringstream dc_ss;
           std::string dc_str = std::string((var_it->children.begin()+2)->value.begin(), 
                                            (var_it->children.begin()+2)->value.end());
           dc_ss << dc_str;
           dc_ss >> var_derivative_count;
-          symbolic_variable.derivative_count = var_derivative_count;
         }
       }
       // 微分を含まない変数
       else{
         var_name = var_head_str;
-        symbolic_variable.name = var_name;
-        symbolic_variable.derivative_count = 0;          
+        var_derivative_count = 0;          
       }
+      
+      // 変数名の先頭にスペースが入ることがあるので除去する
+      // TODO:S式パーサを修正してスペース入らないようにする
+      if(var_name.at(0) == ' ') var_name.erase(0,1);
+
+      symbolic_variable.name = var_name;
+      symbolic_variable.derivative_count = var_derivative_count;
 
       // 値側
       const_tree_iter_t value_it = and_it->children.begin()+1;
@@ -307,7 +310,7 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
   HYDLA_LOGGER_VCS("---- Begin REDUCEVCSPoint::add_left_continuity_constraint ----");
 
 
-  cl_->send_string("append({");
+  cl_->send_string("union({");
   // 制約ストア中の変数のうち、集めたtell制約に出現する最大微分回数より小さい微分回数であるもののみ追加
   HYDLA_LOGGER_VCS("--- in cs_var ---");
 
@@ -401,12 +404,15 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   //   ex) cl_->send_string("expr_:={df(y,t,2) = -10,");
   //       cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
 
+  // isConsistent(vars_,pexpr_,expr_)を渡したい
+  // TODO:引数の送る順番と対応させた方が分かりやすいかも
 
   // expr_を渡す（collected_tells、appended_asks、constraint_store、left_continuityの4つから成る）
-  cl_->send_string("expr_:=append(append(append(");
+  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  cl_->send_string("expr_:=union(union(union(");
 
   // tell制約の集合からexprを得てREDUCEに渡す
-  std::cout << "collected_tells" << std::endl;
+  HYDLA_LOGGER_VCS("--- send collected_tells ---");
   cl_->send_string("{");
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
@@ -418,7 +424,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   cl_->send_string("},");
 
   // appended_asksからガード部分を得てREDUCEに渡す
-  std::cout << "appended_asks" << std::endl;
+  HYDLA_LOGGER_VCS("--- send appended_asks ---");
   cl_->send_string("{");
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
@@ -431,11 +437,13 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   cl_->send_string("}),");
 
   // 制約ストアからも渡す
+  HYDLA_LOGGER_VCS("--- send constraint_store ---");
   send_cs();
   cl_->send_string("),");
 
   // 左連続性に関する制約を渡す
   // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
+  HYDLA_LOGGER_VCS("--- send left_continuity ---");
   max_diff_map_t max_diff_map;
   create_max_diff_map(rss, max_diff_map);
   add_left_continuity_constraint(rss, max_diff_map);
@@ -443,6 +451,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 
 
   // pexprを渡す
+  HYDLA_LOGGER_VCS("----- send pexpr_ -----");
   cl_->send_string("pexpr_:=");
   send_ps();
   cl_->send_string(";");
@@ -451,12 +460,12 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   // varsを渡す
   //   ex) {y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)}
   // vars_に関して一番外側の"{}"部分は、put_vars内で送っている
-  cl_->send_string("vars_:=append(");
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=union(");
   rss.put_vars();
   cl_->send_string(",");
   // 制約ストア内に出現する変数も渡す
-//  send_cs_vars();
-  cl_->send_string("{}");
+  send_cs_vars();
   cl_->send_string(");");
 
 
@@ -494,6 +503,7 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
     // 充足
     // TODO: スペースや""が残らないようにパーサを修正
     result = VCSR_TRUE;
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
     HYDLA_LOGGER_VCS( "---build constraint store---");
 
     // 制約ストアをリセット
@@ -523,22 +533,6 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
     *this,
     "\n#*** End REDUCEVCSPoint::add_constraint ***");
 
-
-
-
-/*
-  size_t size = ct_it->children.size();
-  std::cout << "children size: " << size << "\n";
-
-
-  for(size_t j=0; j<size; j++) {
-    SExpParser::const_tree_iter_t child_it = ct_it->children.begin()+j;
-    std::cout << j << "th child\n";
-    std::cout << "ID: " << child_it->value.id().to_long() << "\n";
-    std::cout << "Node:" << std::string(child_it->value.begin(), child_it->value.end()) << "\n";
-  }
-*/ 
-
   return result;
 
 }
@@ -553,7 +547,9 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 
 /////////////////// 送信処理
 
-  std::cout << "guard" << std::endl;
+  // checkentailment(guard_, store_, vars_)を渡したい
+
+  HYDLA_LOGGER_VCS("----- send guard_ -----");
   // ask制約のガードの式を得てMathematicaに渡す
   cl_->send_string("guard_:=");
   rss.put_node(negative_ask->get_guard());
@@ -561,8 +557,8 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 
 
   // 制約ストアとパラメタストアから式を得てMathematicaに渡す
-  std::cout << "constraint store and parameter store" << std::endl;
-  cl_->send_string("store_:=append(");
+  HYDLA_LOGGER_VCS("----- send store_ -----");
+  cl_->send_string("store_:=union(");
   send_cs();
   cl_->send_string(",");
   send_ps();
@@ -570,8 +566,8 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 
 
   // varsを渡す
-  std::cout << "vars" << std::endl;
-  cl_->send_string("vars_:=append(append(");
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=union(union(");
 
   // collected_tells内の変数一覧を渡す
   rss.put_vars();
@@ -625,9 +621,11 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
   }
   else if(ans == "ccp_entailed___") {
     result = VCSR_TRUE;
+    HYDLA_LOGGER_VCS_SUMMARY("entailed");
   }
   else if(ans == "ccp_not_entailed___") {
     result = VCSR_FALSE;
+    HYDLA_LOGGER_VCS_SUMMARY("not entailed");
   }
   else if(ans == "(list ccp_unknown___)"){
 //    assert(ans == "(list ccp_unknown___)");

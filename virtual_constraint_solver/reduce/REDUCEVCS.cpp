@@ -35,6 +35,9 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
 {
  
 
+  // setsパッケージのロード（union用）
+  // TODO:vcs_reduce_sourceで行う
+  cl_.send_string("load_package sets;");
   HYDLA_LOGGER_VCS("#*** send depend statements of variables ***");
 
   std::ostringstream depend_str;

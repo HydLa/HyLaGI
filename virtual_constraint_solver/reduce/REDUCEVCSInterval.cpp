@@ -5,8 +5,6 @@
 #include <boost/foreach.hpp>
 
 #include "Logger.h"
-#include "PacketChecker.h"
-#include "PacketErrorHandler.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
@@ -232,13 +230,23 @@ void REDUCEVCSInterval::send_pars() const{
 
 
 
-void REDUCEVCSInterval::send_vars(
-  REDUCEStringSender& rss, const max_diff_map_t& max_diff_map)
+void REDUCEVCSInterval::send_vars(REDUCEStringSender& rss, const max_diff_map_t& max_diff_map)
 {
   HYDLA_LOGGER_VCS("---- REDUCEVCSInterval::send_vars ----");
 
-  assert(0);
+  cl_->send_string("{");
+  max_diff_map_t::const_iterator md_it = max_diff_map.begin();
+  max_diff_map_t::const_iterator md_end = max_diff_map.end();
+  for(md_it=max_diff_map.begin(); md_it!=md_end; ++md_it) {
+    for(int i=0; i<=md_it->second; i++) {
+      rss.put_var(boost::make_tuple(md_it->first, i, false));
 
+      HYDLA_LOGGER_VCS("put: ",
+                       "  name: ", md_it->first,
+                       "  diff: ", i);
+    }
+  }
+  cl_->send_string("}");
 }
 
 VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks)
@@ -247,11 +255,12 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
 
   REDUCEStringSender rss(*cl_);
 
+  assert(0);
 
 //////////////////// 送信処理
 
   // expr_を渡す（collected_tells、appended_asks、constraint_store、parameter_cons、init_consの5つから成る）
-  cl_->send_string("expr_:=append(append(append(append(");
+  cl_->send_string("expr_:=union(union(union(union(");
 
   // tell制約の集合からtellsを得てREDUCEに渡す
   cl_->send_string("{");
@@ -298,7 +307,7 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
   cl_->send_string("symbolic redeval '(isconsistentinterval expr_ vars_);");
 
 
-////////// 受信処理
+/////////////////// 受信処理
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
   cl_->read_until_redeval();
@@ -310,11 +319,55 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
   VCSResult result;
 
 
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
 
+  // {コード}の構造
+  const_tree_iter_t ct_it = sp.get_tree_iterator();
 
+  // コードを取得
+  const_tree_iter_t ret_code_it = ct_it->children.begin();
+  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  HYDLA_LOGGER_VCS("ret_code_str: ",
+                   ret_code_str);
 
+  if(ret_code_str=="RETERROR___"){
+    // ソルバエラー
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code_str==" \"RETTRUE___\"") {
+    // 充足
+    // TODO: スペースや""が残らないようにパーサを修正
+    result = VCSR_TRUE;
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
 
-  assert(0);
+    HYDLA_LOGGER_VCS( "---build constraint store---");
+    constraint_store_.constraints.insert(
+      constraint_store_.constraints.end(),
+      collected_tells.begin(),
+      collected_tells.end());
+
+    // 制約ストア中で使用される変数の一覧の更新
+    REDUCEStringSender::vars_const_iterator rss_vars_it  = rss.vars_begin();
+    REDUCEStringSender::vars_const_iterator rss_vars_end = rss.vars_end();
+    for(; rss_vars_it!=rss_vars_end; ++rss_vars_it) {
+      REDUCEVariable rv;
+      rv.name             = rss_vars_it->get<0>();
+      rv.derivative_count = rss_vars_it->get<1>();
+      constraint_store_.cons_vars.insert(rv);
+    }
+  }
+  else {
+    // 制約エラー
+    assert(ret_code_str == " \"RETFALSE___\"");
+    result = VCSR_FALSE;
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+  }
+
+  HYDLA_LOGGER_VCS(
+    constraint_store_,
+    "\n#*** End REDUCEVCSInterval::add_constraint ***");
 
   return result;
 }
@@ -337,7 +390,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 
   
   // store_を渡す（constraint_store、appended_asks、init_cons、parameter_storeの4つから成る）
-  cl_->send_string("store_:=append(append(append(");
+  cl_->send_string("store_:=union(union(union(");
 
   // 制約ストアconstraintsをREDUCEに渡す
   send_cs(rss);
@@ -393,11 +446,35 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 
   VCSResult result;
     
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
 
+  // {コード}の構造
+  const_tree_iter_t ct_it = sp.get_tree_iterator();
+
+  // コードを取得
+  const_tree_iter_t ret_code_it = ct_it->children.begin();
+  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  HYDLA_LOGGER_VCS("ret_code_str: ",
+                   ret_code_str);
   
-
-
-  assert(0);
+  if(ret_code_str == "(list ccp_solver_error___)"){
+    // ソルバエラー
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code_str == "ccp_entailed___") {
+    result = VCSR_TRUE;
+    HYDLA_LOGGER_VCS_SUMMARY("entailed");
+  }
+  else if(ret_code_str == "ccp_not_entailed___") {
+    result = VCSR_FALSE;
+    HYDLA_LOGGER_VCS_SUMMARY("not entailed");
+  }
+  else{
+    assert(ret_code_str == "(list ccp_unknown___)");
+    result = VCSR_UNKNOWN;
+  }
 
   return result;
 }
@@ -448,6 +525,13 @@ VCSResult REDUCEVCSInterval::integrate(
 
 ////////////////// 送信処理
   REDUCEStringSender rss(*cl_);
+
+
+
+
+
+
+
   
 
 
