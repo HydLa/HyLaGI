@@ -516,6 +516,8 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
 
 ////////// ŽóMˆ—
 
+//  PacketChecker pc(*ml_);
+//  pc.check();
 
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLGetNext();

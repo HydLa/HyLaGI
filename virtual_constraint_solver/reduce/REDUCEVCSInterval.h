@@ -6,9 +6,12 @@
 #include <vector>
 
 #include "REDUCELink.h"
-
 #include "REDUCEVCSType.h"
 #include "REDUCEStringSender.h"
+
+#include "../../parser/SExpParser.h"
+
+using namespace hydla::parser;
 
 namespace hydla {
 namespace vcs {
@@ -18,11 +21,13 @@ class REDUCEVCSInterval :
     public virtual_constraint_solver_t
 {
 public:
+  typedef SExpParser::const_tree_iter_t const_tree_iter_t;
+
   struct ConstraintStore 
   {
     typedef std::map<REDUCEVariable, value_t>      init_vars_t;
     typedef hydla::simulator::tells_t              constraints_t;
-    typedef std::set<REDUCEVariable>                 cons_vars_t;
+    typedef std::set<REDUCEVariable>               cons_vars_t;
     typedef std::map<std::string, int>             init_vars_max_diff_map_t;
 
     init_vars_t   init_vars;
