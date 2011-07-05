@@ -243,6 +243,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reduce\SExpConverter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\vcs_math_source.cpp"
 				>
 			</File>
@@ -378,6 +382,10 @@
 			</File>
 			<File
 				RelativePath=".\realpaver\RPVCSType.h"
+				>
+			</File>
+			<File
+				RelativePath=".\reduce\SExpConverter.h"
 				>
 			</File>
 			<File
