@@ -1,0 +1,22 @@
+INIT <=> time1=0&time3=0&y=-1&x=-1&r=0&h1=-1&sw=0&y'=0&x'=0&h2=-1.
+
+RBEF <=> []( sw=0 => r' = 1/10 ). 
+RAF <=> []( sw=3 => r'= -1/17 ).
+CONST <=> []( sw'=0 & h1'=0 & h2'=0).
+
+TIME <=> []( time1'=1 & time3'=1 ).
+
+YBEF <=> []( sw=0  => y= r*sin(time1)+h1 ).
+XBEF <=> []( sw=0  => x= r*cos(time1)+h2 ).
+
+X <=> []( sw=1 => x'=1 ).
+Y <=> []( sw=1 => y'=0 ).
+
+YAF <=> []( sw=3 => y= r*cos(time1)+h1 ).
+XAF <=> []( sw=3 => x= r*sin(time1)+h2 ).
+
+C1 <=> []( time3-=17 => sw=1&time1=0).
+C2 <=> []( time3-=20 => h=1&time1=0&r=1&sw=3&h1=y- -1&h2=x-).
+
+INIT<<RBEF<<RAF<<CONST<<TIME<<YBEF<<XBEF<<X<<Y<<YAF<<XAF<<C1<<C2. 
+ 
