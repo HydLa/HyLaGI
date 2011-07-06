@@ -397,7 +397,17 @@ end;
 
 
 
+procedure getRealVal(value_, prec_)$
+begin;
+  scalar tmp_;
+  on rounded;
+  precision(prec_);
+  tmp_:= value_;
+  write("tmp_:", tmp_);
+  off rounded;
 
+  return tmp_;
+end;
 
 
 %%%%%%%%%%%%%%%%

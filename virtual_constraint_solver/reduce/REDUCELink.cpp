@@ -24,13 +24,6 @@ REDUCELink::REDUCELink(){
   TODO tcp::socketに変更してhost_not_found判定
   */
   s.connect("localhost", "1206");
-
-  // REDUCEの関数定義を送信
-  // TODO 絶対パスを変更する 相対パスかreduce_source_converter
-  send_string("in \"/home/yysaki/workspace/HydLa_v0.5.x/virtual_constraint_solver/reduce/vcs_reduce_source.red\";");
-  // 入力ファイルのredeval実行で終端行判定
-
-  skip_until_redeval();
 }
 
 REDUCELink::~REDUCELink(){

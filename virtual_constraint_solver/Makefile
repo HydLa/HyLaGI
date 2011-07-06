@@ -11,9 +11,9 @@ CXX_OPT  +=
 SRC_DIR += mathematica realpaver reduce
 
 SRC         += mathematica/vcs_math_source.cpp
-# SRC         += reduce/vcs_reduce_source.cpp
+SRC         += reduce/vcs_reduce_source.cpp
 CLEAN_FILES += mathematica/vcs_math_source.cpp
-# CLEAN_FILES += reduce/vcs_reduce_source.cpp
+CLEAN_FILES += reduce/vcs_reduce_source.cpp
 
 include ../Makefile.common
 
@@ -22,8 +22,8 @@ mathematica/vcs_math_source.cpp: mathematica/vcs_math_source.m
 		../math_source_converter/msc vcs_math_source > \
 		mathematica/vcs_math_source.cpp
 
-# reduce/vcs_reduce_source.cpp: reduce/vcs_reduce_source.red
-#	cat reduce/vcs_reduce_source.red | \
-#		../reduce_source_converter/rsc vcs_reduce_source > \
-#		reduce/vcs_reduce_source.cpp
+reduce/vcs_reduce_source.cpp: reduce/vcs_reduce_source.red
+	cat reduce/vcs_reduce_source.red | \
+		../reduce_source_converter/rsc vcs_reduce_source > \
+		reduce/vcs_reduce_source.cpp
 

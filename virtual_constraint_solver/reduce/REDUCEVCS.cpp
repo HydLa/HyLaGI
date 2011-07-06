@@ -35,9 +35,6 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
 {
  
 
-  // setsパッケージのロード（union用）
-  // TODO:vcs_reduce_sourceで行う
-  cl_.send_string("load_package sets;");
   HYDLA_LOGGER_VCS("#*** send depend statements of variables ***");
 
   std::ostringstream depend_str;
@@ -61,6 +58,11 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
 
   HYDLA_LOGGER_VCS("depend_str: ", depend_str.str()); 
   cl_.send_string((depend_str.str()).c_str());
+
+
+  // REDUCEの関数定義を送信
+  cl_.send_string(vcs_reduce_source());
+  cl_.skip_until_redeval();
 }
 
 REDUCEVCS::~REDUCEVCS()
@@ -146,8 +148,33 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& ou
   //value_tを指定された精度で数値に変換する
 std::string REDUCEVCS::get_real_val(const value_t &val, int precision){
   std::string ret;
+  REDUCEStringSender rss(cl_);
 
-  assert(0);
+  if(!val.is_undefined()) {
+
+    // getRealVal(value_, prec_)を渡したい
+
+    cl_.send_string("value_:=");
+    rss.put_node(val.get_node(), true);
+    cl_.send_string(";");
+
+
+    cl_.send_string("prec_:=");
+    std::stringstream precision_str;
+    precision_str << precision;
+    cl_.send_string(precision_str.str());
+    cl_.send_string(";");
+
+
+    cl_.send_string("symbolic redeval '(getRealVal value_ prec_);");
+
+
+    cl_.read_until_redeval();
+    ret = cl_.get_s_expr();
+  }
+  else {
+    ret = "UNDEF";
+  }
 
   return ret;
 }

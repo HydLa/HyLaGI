@@ -6,9 +6,8 @@
 
 #include "REDUCEVCSType.h"
 #include "REDUCELink.h"
+#include "vcs_reduce_source.h"
 
-// TODO:vcs_reduce_source
-//#include "vcs_reduce_source.h"
 
 
 namespace hydla {
