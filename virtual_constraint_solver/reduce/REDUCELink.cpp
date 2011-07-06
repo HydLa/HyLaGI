@@ -75,9 +75,8 @@ std::string REDUCELink::get_s_expr(){
 }
 
 int REDUCELink::send_string(string cmd){
-  std::cout << "Begin REDUCELink::send_string" << std::endl;
+//  std::cout << "Begin REDUCELink::send_string" << std::endl;
   s << cmd;
-  s << "\r\n";
 
   return 0;
 }
