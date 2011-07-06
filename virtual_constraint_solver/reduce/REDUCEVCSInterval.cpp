@@ -168,20 +168,19 @@ void REDUCEVCSInterval::send_init_cons(
     {
       if(!first_element) cl_->send_string(",");
       // 変数名
-      // 変数名の途中でsend_stringすると改行が入ってしまい正しく認識できないので、まとめて送る？
-      // TODO: 1回微分以上への対応
+      // TODO: 1回微分以上への対応（形式を"initht_1lhs"のようにする、rss.vars_に何とかして入れる）
       std::stringstream var_name_ss;
       var_name_ss << "init";
+      cl_->send_string("init");
 
-/*
       rss.put_var(boost::make_tuple(init_vars_it->first.name, 
                                     init_vars_it->first.derivative_count, 
                                     false));
-*/
 
       var_name_ss << init_vars_it->first.name;
       var_name_ss << "lhs";
-      cl_->send_string(var_name_ss.str());
+      cl_->send_string("lhs");
+//      cl_->send_string(var_name_ss.str());
 
       cl_->send_string("=");
   
