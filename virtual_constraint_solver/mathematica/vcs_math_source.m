@@ -767,9 +767,29 @@ integrateCalc[cons_,
     (* integrateCalcの計算結果として必要な変数の一覧 *)
     returnVars = Select[vars, (MemberQ[solVars, removeDash[#]]) &];
 
-    tmpIntegSol = First[Quiet[Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], NDExpr], 
-                              getNDVars[returnVars]], {Solve::incnst, Solve::ifun}]];
-    
+     debugPrint["tmpIntegSol before Solve: ",tmpIntegSol];
+     debugPrint["NDExpr before Solve: ",NDExpr];
+     debugPrint["returnVars before Solve: ",returnVars];
+
+     (*improve by takeguchi*)
+     tmpIntegSol = If[Length[NDExpr] == 0, tmpIntegSol,
+        DeleteDuplicates[Flatten[Table[
+          First[FullSimplify[ExpToTrig[Quiet[  
+             Solve[Join[Map[(Equal @@ #) &,tmpIntegSol], {TrigToExp[NDExpr[[i]]]}],getNDVars[returnVars]], 
+             {Solve::incnst, Solve::ifun,Solve::svars}]
+          ]]],
+	  {i, 1, Length[NDExpr], 1}]]]
+	];
+     
+     (*before improve :*)
+     (* 
+        tmpIntegSol=First[Quiet[Solve[Join[Map[(Equal@@#)&,tmpIntegSol],
+                 NDExpr],getNDVars[returnVars]],{Solve::incnst,Solve::ifun}]];
+      *)
+
+
+     debugPrint["tmpIntegSol after Solve: ",tmpIntegSol];
+
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
     debugPrint["tmpIntegSol", tmpIntegSol];
