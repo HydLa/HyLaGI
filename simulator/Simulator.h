@@ -54,10 +54,13 @@ public:
   {
     while(!state_stack_.empty()) {
       phase_state_sptr state(pop_phase_state());
-
-      state->module_set_container->dispatch(
-          boost::bind(&Simulator<phase_state_t>::simulate_phase_state, 
-                      this, _1, state));
+      state->module_set_container->reset();
+      do{
+        if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
+          state->module_set_container->mark_nodes();
+          break;
+        }
+      }while(state->module_set_container->go_next());
     }
   }
 
@@ -132,7 +135,7 @@ public:
   virtual bool simulate_phase_state(const module_set_sptr& ms, 
                                     const phase_state_const_sptr& state)
   {      
-    bool ret =false;
+    bool ret = false;
     switch(state->phase) 
     {
     case PointPhase:

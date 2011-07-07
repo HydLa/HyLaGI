@@ -94,7 +94,6 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
   return (*(it->second.function))(expr, now, it->second.node);
 }
 
-
 //これ以降のfor～については，列挙型使わず，もっと楽にできそうな気もする
 MathematicaExpressionConverter::node_sptr 
   MathematicaExpressionConverter::for_derivative(
@@ -127,6 +126,7 @@ MathematicaExpressionConverter::node_sptr
   switch(nt){
     default:
     assert(0);
+    return node_sptr(new hydla::parse_tree::Previous(tmp_node));
     
     case NODE_PREVIOUS:
     return node_sptr(new hydla::parse_tree::Previous(tmp_node));
@@ -180,6 +180,7 @@ MathematicaExpressionConverter::node_sptr
 
      default:
      assert(0);
+     return node_sptr(new hydla::parse_tree::Power(lhs, rhs));
    }
   }
 }
@@ -200,6 +201,7 @@ std::string MathematicaExpressionConverter::get_relation_math_string(value_range
       return "Less";
     default:
       assert(0);
+      return "";
   }
 }
 
@@ -225,6 +227,7 @@ MathematicaExpressionConverter::value_range_t::Relation MathematicaExpressionCon
       return value_range_t::GREATER_EQUAL;
     default:
       assert(0);
+      return value_range_t::GREATER_EQUAL;
   }
 }
 

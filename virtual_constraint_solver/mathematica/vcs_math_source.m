@@ -1,82 +1,179 @@
 (*
- * デバック用メッセージ出力V数
+ * デバッグ用メッセージ出力V数
  *)
 If[optUseDebugPrint,
   debugPrint[arg___] := Print[InputForm[{arg}]],
   debugPrint[arg___] := Null];
 
-
 (* ルールのリストを受けて，tについてのルールを除いたものを返す関数 *)
 removeRuleForTime[ruleList_] := DeleteCases[ruleList, t -> _];
 
-(*
- * checkEntailmentのIPバージョン
- * 0 : Solver Error
- * 1 : 導出可能
- * 2 : 導出不可能
- * 3 : 要分岐
+getInverseRelop[relop_] := Switch[relop,
+                                  Equal, Equal,
+                                  Less, Greater,
+                                  Greater, Less,
+                                  LessEqual, GreaterEqual,
+                                  GreaterEqual, LessEqual];
+
+(* Inequality[a, relop, x, relop, b]の形を変形する関数 *)
+removeInequality[ret_, expr_] := (
+  If[Head[expr] === Inequality,
+    Join[ret,
+         {Reduce[expr[[2]][expr[[1]], expr[[3]]], expr[[3]]]},
+         {expr[[4]][expr[[3]], expr[[5]]]}
+    ],
+    Append[ret, expr]
+  ]
+);
+
+
+(* 与えられた式の中の，Cに関する制約と，tの下限となる式を抜き出す関数．
+ * 全部Andでつながれてるものという前提．
+ * Inequalityは無視．
+ * IPなのでtに関する等式も無視する．もしCを連続的な値としてtとの等式にしてきた場合は駄目な気がするけど，多分それは無いはず．
+ * あと，Cやtに関する制約は，それぞれについて解かれているという前提．こっちは結構怪しいか．
  *)
-checkEntailmentInterval[guard_, store_, vars_, pars_] := Quiet[Check[Block[
-  {tStore, sol, integGuard, otherExpr, minT},
-  debugPrint["guard:", guard, "store:", store, "vars:", vars, "pars:", pars];
-  sol = exDSolve[store, vars];
-  (*debugPrint["sol:", sol];*)
-  If[sol =!= overconstraint && sol =!= underconstraint,
-    tStore = sol[[1]];
-    otherExpr = sol[[2]];
-    (* guardとotherExprにtStoreを適用する *)
-    integGuard = guard /. tStore;
-    otherExpr = otherExpr /. tStore;
-    (* その結果とt>0とを連立 *)
-    (*debugPrint["integGuard:", integGuard];*)
-    sol = Quiet[Check[Reduce[{integGuard && t > 0 && (And@@otherExpr)}, t, Reals],
-                      False, {Reduce::nsmet}], {Reduce::nsmet}];
-    If[sol =!= False,
-      (* Infを取って0になれば，導出できる可能性がある *)
-      minT = Quiet[Minimize[{t, sol}, Append[pars,t]]];
-      If[First[minT] === 0 && Quiet[Reduce[And@@Map[(Equal@@#)&, removeRuleForTime[minT[[2]]]] && And@@otherExpr]] =!= False,
-        (* 上の2番目の条件は一見すると不要だが，Minimizeが時間の境界に触れている場合と定数の境界に触れている場合を区別できないらしいので必要． *)
-        (* 時間の境界はＯＫだが，定数が境界に乗ってるのは本来ありえない場合のため *)
-        
-        (* 必ず導出できるかどうかを判定 *)
-        If[Quiet[Reduce[ForAll[pars, And@@otherExpr, First[Minimize[{t, sol}, t]] == 0]]] =!= False,
-          {1},
-          {3}
-        ],
-        {2}
+
+getValidExpression[expr_] := Block[
+  {underBounds, constraintsForC, listOfC, tmpExpr},
+  underBounds = {};
+  constraintsForC = {};
+  listOfC = {};
+  For[i=1, i <= Length[expr], i++,
+    tmpExpr = expr[[i]];
+    (* まず，不等式は全部LessもしくはLessEqualにする． *)
+    If[Head[tmpExpr] === Greater || Head[tmpExpr] === GreaterEqual,
+      tmpExpr = getInverseRelop[Head[tmpExpr] ] [tmpExpr[[2]], tmpExpr[[1]] ]
+    ];
+    (* 右辺がtなら下限リストに追加．そうでないならCについての制約かをチェックする *)
+    If[tmpExpr[[2]] === t,
+      (* tについては不等式のみを受け付ける *)
+      If[Head[tmpExpr] === Less || Head[tmpExpr] === LessEqual,
+        underBounds = Append[underBounds, tmpExpr[[1]] ]
       ],
-      {2}
-    ],
-    {2}
-  ]
-],
-  {0, $MessageList}
-]];
+      If[Head[ tmpExpr[[1]] ] === C,
+        constraintsForC = Append[constraintsForC, tmpExpr];
+        listOfC = Union[listOfC, {tmpExpr[[1]] } ],
+        If[Head[ tmpExpr[[2]] ] === C,
+          constraintsForC = Append[constraintsForC, tmpExpr];
+          listOfC = Union[listOfC, {tmpExpr[[2]] } ]
+        ]
+      ]
+    ]
+  ];
+  {underBounds, constraintsForC, listOfC}
+];
 
 (*
- * ある1つのask制約に関して、そのガードが制約ストアからentailできるかどうかをチェック
- *  0 : Solver Error
- *  1 : 導出可能
- *  2 : 導出不可能
- *  3 : 不明 （要分岐）
+ * 論理積でつながれた各tの下限リストを，再帰で1つずつ調べていく関数．
+ * 1つでも定数値に関係なく0以下にできないものがあれば2を返す．
+ * そうでないなら1を返す．
  *)
-checkEntailment[guard_, store_, vars_] := Quiet[Check[Block[
-  {sol, nsol},
-  debugPrint["guard:", guard, "store:", store, "vars:", vars];
-  sol = Reduce[Append[store, guard], vars, Reals];
-  If[sol=!=False, 
-    nsol = Reduce[Append[store, Not[sol]], vars, Reals];
-    If[nsol === False, 
-      {1}, 
-      {3}
-    ],
-    {2}
+checkInfForEach[underBounds_, constraintsForC_, otherConstraints_, pars_, listOfC_] := Block[
+  {ret, tmp, expr},
+  If[underBounds === {},
+    1,
+    expr = underBounds[[1]];
+    If[pars==={}&&listOfC==={},
+      (* パラメータが無いなら単純に下限で決まる *)
+      If[expr>0,
+        2,
+        1
+      ],
+      (* 0にできるなら，導出できる可能性がある *)
+      tmp = Quiet[Reduce[Join[constraintsForC, otherConstraints, {expr == 0}] , Join[pars,listOfC] ] ];
+      If[tmp === False,
+        2,
+        (* 必ず導出できるかどうかを判定 *)
+        If[Quiet[Reduce[ForAll[pars, And@@otherConstraints, Reduce[Join[constraintsForC, {expr == 0}] ] ] ] ] =!= False,
+          checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC],
+          If[checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC] === 2,
+            2,
+            3
+          ]
+        ]
+      ]
+    ]
   ]
-],
-  {0, $MessageList}
-]];
+];
 
-(* Print[checkEntailment[ht==0, {}, {ht}]] *)
+
+(*
+ * 論理和でつながれた各tの下限候補を，再帰で1つずつ調べていく関数．
+ * 1つでも定数値に関係なく0以下にできるものがあれば{1}を返す．
+ * そうでないなら，1つでも定数値によっては0以下にできるものがあれば{3}を返す．
+ * いずれでもないなら{2}を返す．
+ *)
+checkInf[candidates_, constraints_, pars_] := Block[
+  {ret, underBounds, constraintsForC, listOfC},
+  If[Length[candidates] == 0,
+    {2},
+    ret = Fold[removeInequality, {}, candidates[[1]] ];
+    (* tの最小値候補を調べるため，tの下限とt以外の変数についての制約と出現する変数のリストを抽出する． *)
+    {underBounds,  constraintsForC, listOfC} = getValidExpression[ret];
+    If[underBounds === {},
+      (* 候補が存在しなければ導出不可能 *)
+      {2},
+      ret = checkInfForEach[underBounds, constraintsForC, constraints, pars, listOfC ];
+      Switch[ret,
+        1, {1},
+          (* 無理なら，次を試す． *)
+        2, checkInf[Rest[candidates], constraints, pars ],
+        3,
+          (* 定数値によっては可能な場合，次以降で{1}があれば{1}を．そうでなければ{3}を返す． *)
+          If[checkInf[Rest[candidates], constraints, pars] === {1},
+            {1},
+            {3}
+          ]
+      ]
+    ]
+  ]
+];
+
+
+(*
+ * 戻り値のリストの先頭：
+ *  0 : Solver Error
+ *  1 : 充足
+ *  2 : 矛盾
+ *)
+checkConsistencyInterval[expr_, vars_, pars_] :=  
+Quiet[
+  Check[
+    Block[
+      {tStore, sol, integGuard, otherExpr},
+      debugPrint["expr:", expr, "vars:", vars, "pars:", pars, "all", expr, vars, pars];
+      sol = exDSolve[expr, vars];
+      If[sol === overconstraint,
+        {2},
+        If[sol === underconstraint,
+          (* 警告出したりした方が良いかも？ *)
+          {1},
+          tStore = sol[[1]];
+          otherExpr = sol[[2]];
+          (* otherExprにtStoreを適用する *)
+          otherExpr = otherExpr /. tStore;
+          (* まず，t>0で条件を満たす可能性があるかを調べる *)
+          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0}, t, Reals],
+                        False, {Reduce::nsmet}], {Reduce::nsmet}]];
+          If[sol === False,
+            {2},
+            (* リストのリストにする *)
+            sol = applyList[sol];
+            sol = Map[applyList, sol];
+            (* tの最大下界を0とできる可能性を調べる． *)
+            If[checkInf[sol, otherExpr, pars] === {2}]
+              {2},
+              (* {3}が返ってきたとしても現状では{1}を返すことにする *)
+              {1}
+            ]
+          ]
+        ]
+      ]
+    ],
+    {0, $MessageList}
+  ]
+];
 
 removeP[par_] := First[StringCases[ToString[par], "p" ~~ x__ -> x]];
 
@@ -120,14 +217,7 @@ renameVar[varName_] := Block[
   ]
 ];
 
-(* 変数とその値に関する式のリストを、変数表的形式に変換
- * 0:Equal
- * 1:Less
- * 2:Greater
- * 3:LessEqual
- * 4:GreaterEqual
-*)
-
+(* 変数とその値に関する式のリストを、変数表的形式に変換 *)
 getExprCode[expr_] := Switch[Head[expr],
   Equal, 0,
   Less, 1,
@@ -137,20 +227,7 @@ getExprCode[expr_] := Switch[Head[expr],
 ];
 
 convertCSToVM[orExprs_] := Block[
-  {resultExprs, inequalityVariable,
-   removeInequality},
-  
-  
-  (* Inequality[a, relop, x, relop, b]の形を変形 *)
-  removeInequality[ret_, expr_] := (
-    If[Head[expr] === Inequality,
-      Join[ret,
-           {Reduce[expr[[2]][expr[[1]], expr[[3]]], expr[[3]]]},
-           {expr[[4]][expr[[3]], expr[[5]]]}
-      ],
-      Append[ret, expr]
-    ]
-  );
+  {resultExprs, inequalityVariable},
   
   
   formatExprs[exprs_] := (
@@ -176,9 +253,7 @@ convertCSToVM[orExprs_] := Block[
   resultExprs
 ];
 
-(*
- * isConsistent内のReduceの結果得られた解を{変数名, 値}のリスト形式にする
- *)
+(* checkConsistency内のReduceの結果得られた解を{変数名, 値}のリスト形式にする *)
 createVariableList[Rule[varName_, varValue_], result_] := Block[{
   name
 },
@@ -223,12 +298,7 @@ createVariableList[True, vars_, result_] := (
 (* 式中に変数名が出現するか否か *)
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
-getInverseRelop[relop_] := Switch[relop,
-                                  Equal, Equal,
-                                  Less, Greater,
-                                  Greater, Less,
-                                  LessEqual, GreaterEqual,
-                                  GreaterEqual, LessEqual];
+
 
 (* 必ず関係演算子の左側に変数名が入るようにする *)
 adjustExprs[andExprs_] := 
@@ -260,41 +330,33 @@ adjustExprs[andExprs_] :=
  *  1 : 充足
  *  2 : 制約エラー
  *)
-isConsistent[pexpr_, expr_, vars_] := Quiet[Check[Block[
-{
-  sol, ret
-},
-
-  debugPrint["pexpr:", pexpr, "expr", expr, "vars:", vars];
-  sol = Reduce[expr, vars, Reals];
-  (*  debugPrint["sol after Reduce:", sol];*)
-  If[sol =!= False,
-    sol = Reduce[Append[pexpr,sol],vars, Reals];
-    If[sol =!= False,
-      (* true *)
-      (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
-      sol = LogicalExpand[sol];
-      (* debugPrint["sol after LogicalExpand:", sol];*)
-      sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
-      (* debugPrint["sol after Apply Or List:", sol];*)
-      (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
-      sol = removeNotEqual[Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol]];
-      (* debugPrint["sol after Apply And List:", sol];*)
-      (* 一番内側の要素 （レベル2）を文字列にする *)
-      ret={1, Map[(ToString[FullForm[#]]) &, 
-              Map[(adjustExprs[#])&, sol], {2}]},
-      ret={2}
+checkConsistency[expr_, vars_] := 
+Quiet[
+  Check[
+    Block[
+      {
+        sol, ret
+      },
+      debugPrint["expr:", expr, "vars:", vars];
+      sol = Reduce[expr, vars, Reals];
+      If[sol === False,
+        ret={2},
+        (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
+        sol = LogicalExpand[sol];
+        sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
+        (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
+        sol = removeNotEqual[Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol]];
+        (* 一番内側の要素 （レベル2）を文字列にする *)
+        ret={1, Map[(ToString[FullForm[#]]) &, 
+                Map[(adjustExprs[#])&, sol], {2}]}
+      ];
+      debugPrint["ret:", ret];
+      ret
     ],
-    (* false *)
-    ret={2}
-  ];
-  debugPrint["ret:", ret];
-  ret
-],
-  {0, $MessageList}
-]];
+    {0, $MessageList}
+  ]
+];
 
-(* Print[isConsistent[s[x==2, 7==x*x], {x,y}]] *)
 
 (* 変数名から 「\[CloseCurlyQuote]」を取る *)
 removeDash[var_] := (
@@ -323,8 +385,7 @@ removeNotEqual[sol_] :=
 
 getNDVars[vars_] := Union[Map[(removeDash[#])&, vars]];
 
-(* ある変数xについて、 *)
-(* x[t]==a と x[0]==a があった場合は、x'[t]==0を消去 （あれば） *)
+(* ある変数xについて、x[t]==a と x[0]==a があった場合は、x'[t]==0を消去 （あれば） *)
 removeTrivialCons[cons_, consVars_] := Block[
   {exprRule, varSol, removedExpr,
    removeTrivialConsUnit, getRequiredVars},
@@ -354,12 +415,12 @@ removeTrivialCons[cons_, consVars_] := Block[
 ];
 
 (* Reduceで得られた結果をリスト形式にする *)
-(* AndではなくListでくくる *)
+(* AndやOrではなくListでくくる *)
 applyList[reduceSol_] :=
-  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
+  If[Head[reduceSol] === And || Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
 (* パラメータの制約を得る *)
-getParamCons[cons_] := 
+getParamCons[cons_] :=
   Fold[(If[Not[hasVariable[#2]], Append[#1, #2], #1]) &, {}, cons];
 
 exDSolve[expr_, vars_] := Block[
@@ -383,26 +444,35 @@ exDSolve[expr_, vars_] := Block[
 
       {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
 
-      Quiet[Check[Check[If[Cases[DExpr, Except[True]] === {},
-                          (* ストアが空の場合はDSolveが解けないので空集合を返す *)
-                          sol = {},
-                          sol = DSolve[DExpr, DExprVars, t];
-                          (* 1つだけ採用 *)
-                          (* TODO: 複数解ある場合も考える *)
-                          sol = First[sol]];
+      Quiet[
+        Check[
+          Check[
+            
+            If[Cases[DExpr, Except[True]] === {},
+              (* ストアが空の場合はDSolveが解けないので空集合を返す *)
+              sol = {},
+              sol = DSolve[DExpr, DExprVars, t];
+              (* 1つだけ採用 *)
+              (* TODO: 複数解ある場合も考える *)
+              sol = First[sol]
+            ];
 
-                        sol = Quiet[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]]];
-                        If[sol =!= {}, 
-                          {First[sol], Join[otherExpr, paramCons]},
-                          overconstraint],
-                        underconstraint,
-                        {DSolve::underdet, Solve::svars, DSolve::deqx, 
-                         DSolve::bvnr, DSolve::bvsing}],
+            sol = Quiet[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]]];
+            If[sol =!= {},
+              {First[sol], Join[otherExpr, paramCons]},
+              overconstraint
+            ],
+            underconstraint,
+            {DSolve::underdet, Solve::svars, DSolve::deqx, 
+             DSolve::bvnr, DSolve::bvsing}],
                   overconstraint,
                   {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
             {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
              Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-             DSolve::bvnul, DSolve::dsmsm, Solve::incnst}]]]
+             DSolve::bvnul, DSolve::dsmsm, Solve::incnst}
+          ]
+        ]
+      ]
 ];
 
 (* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
@@ -418,52 +488,6 @@ splitExprs[expr_] := Block[
   {DExpr, DExprVars, NDExpr, otherExpr}
 ];
 
-(* isConsistentInterval[tells_, store_, tellsVars_, storeVars_] := ( *)
-(*   If[store =!= {}, *)
-(*      (\* 制約ストアが空でない場合、不要な初期値制約を取り除く必要がある *\) *)
-(*      newTellVars = Map[removeDash, Map[(# /. x_[t] -> x) &, tellsVars]]; *)
-(*      (\* storeがList[And[]]の形になっている場合は、一旦、中のAndを取り出す *\) *)
-(*      newStore = If[Head[First[store]] === And, Apply[List, First[store]], store]; *)
-(*      removedStore = {Apply[And, Select[newStore, (isRequiredConstraint[#, newTellVars]) &]]}; *)
-(*      newStoreVars = Map[removeDash, Map[(# /. x_[t] -> x) &, storeVars]]; *)
-(*      removedStoreVars = Map[(#[t])&, Select[newStoreVars, (isRequiredVariable[#, newTellVars])&]], *)
-
-(*      (\* 制約ストアが空の場合 *\) *)
-(*      removedStore = store; *)
-(*      removedStoreVars = storeVars]; *)
-
-(*   If[sol =!= overconstraint, *)
-(*      cons = Map[(ToString[FullForm[#]]) &, Join[tells, removedStore]]; *)
-(*      vars = Join[tellsVars, removedStoreVars]; *)
-(*      If[sol =!= underconstraint, {1, cons, vars}, {2, cons, vars}], *)
-(*      0] *)
-(* ); *)
-
-(*
- * 戻り値のリストの先頭：
- *  0 : Solver Error
- *  1 : 充足
- *  2 : 制約エラー
- *)
-isConsistentInterval[expr_, vars_] :=  Block[
-  {sol},
-  Quiet[Check[
-    debugPrint["expr:", expr, "vars:", vars];
-    sol = exDSolve[expr, vars];
-    If[sol=!=overconstraint,
-      {1},
-      {2}],
-  {0, $MessageList}
-]]];
-
-(* Print[exDSolve[{True, True, Derivative[1][usrVarht][t] == usrVarv[t], Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0},  *)
-(* {usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}]]; *)
-
-(* Print[isConsistentInterval[ *)
-(* {Derivative[1][usrVarht][t] == usrVarv[t],  *)
-(*   Derivative[1][usrVarv][t] == -10,  *)
-(*   usrVarv[0] == Derivative[1][usrVarht]},  *)
-(*   {Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}]]; *)
 
 
 
@@ -484,7 +508,7 @@ makeListFromPiecewise[minT_, others_] := Block[
  *)
 calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherExpr_] := Block[
 {
-  calcMinTime, addMinTime, selectCondTime, removeInequality,
+  calcMinTime, addMinTime, selectCondTime,
   sol, minT, paramVars, compareResult, resultList, condTimeList,
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
@@ -647,6 +671,10 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
       tmpList
     ]
   );
+  
+  
+  (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
+  divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
 
 
   (* 従来の，最小時刻を１つだけ見つけるための処理*)
@@ -655,14 +683,12 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
        Join[Map[({pos2neg, Not[#[[1]]], #[[2]]})&, posAsk],
             Map[({neg2pos,     #[[1]],  #[[2]]})&, negAsk],
             Fold[(Join[#1, Map[({neg2pos, #[[1]], #[[2]]})&, #2]])&, {}, NACons]]];*)
+            
 
   (* 最小時刻と条件の組のリストを求める *)
   resultList = calcMinTimeList[ Join[Map[(Not[#[[1]]])&, posAsk], Map[(#[[1]])&, negAsk],
                                 Fold[(Join[#1, Map[(#[[1]])&, #2]])&, {}, NACons]],
                                 {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
-
-  (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
-  divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
 
   (* 整形して結果を返す *)
   
@@ -674,8 +700,6 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
   resultList
 ];
 
-
-(* Print[nextPointPhaseTime[False, 10, {}, {{t*t==2, c3}}]] *)
 
 getVariableName[variable_[_]] := variable;
 getVariableName[Derivative[n_][f_][_]] := f;
@@ -722,16 +746,7 @@ integrateCalc[cons_,
   solVars,
   paramCons,
   paramVars
-(*   applyTime2VarMap *)
 },
-(*   applyTime2VarMap[{name_, derivative_, expr_}, time_, extrafunc_] := *)
-(*     {name,  *)
-(*      derivative,  *)
-(*      extrafunc[expr /. t->time]}; *)
-(* Map[(applyTime2VarMap[#,  *)
-(*                                   tmpMinT,  *)
-(*                                   Function[{expr}, ToString[FullForm[Simplify[expr]]]]])&,  *)
-
   debugPrint["cons:", cons, 
              "posAsk:", posAsk, 
              "negAsk:", negAsk, 
@@ -744,7 +759,6 @@ integrateCalc[cons_,
     paramCons = getParamCons[cons];
     paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, paramCons]];
     tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
-    (*debugPrint["tmpIntegSol: ", tmpIntegSol, "paramVars", paramVars "paramCons", paramCons]; *)
     (* 1つだけ採用 *)
     (* TODO: 複数解ある場合も考える *)
     If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
@@ -752,7 +766,6 @@ integrateCalc[cons_,
     tmpIntegSol = removeTrivialCons[applyList[tmpIntegSol], Join[vars, paramVars]];
 
     {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[tmpIntegSol];
-    (* debugPrint["DExpr ", DExpr, "DExprVars", DExprVars]; *)
 
 
     If[Cases[DExpr, Except[True]] === {},
@@ -787,9 +800,8 @@ integrateCalc[cons_,
                  NDExpr],getNDVars[returnVars]],{Solve::incnst,Solve::ifun}]];
       *)
 
-
      debugPrint["tmpIntegSol after Solve: ",tmpIntegSol];
-
+    
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
     debugPrint["tmpIntegSol", tmpIntegSol];
@@ -797,8 +809,9 @@ integrateCalc[cons_,
     tmpPosAsk = Map[(# /. tmpIntegSol) &, posAsk];
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
     tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
-    debugPrint["nextpointphase arg:", {False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons}];
-    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons];
+    otherExpr = Join[paramCons, Map[(# /. tmpIntegSol) &, otherExpr] ];
+    debugPrint["nextpointphase arg:", {False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, otherExpr}];
+    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons,otherExpr ];
 
     tmpVarMap = 
       Map[({getVariableName[#], 
@@ -841,7 +854,7 @@ applyTime2Expr[expr_, time_] := Block[
  * 最後の間隔のみintervalよりも短くなる可能性がある
  *)
 createValueList[from_, to_, interval_] := Block[
-{sol},
+  {sol},
   sol = NestWhileList[((#) + (interval))&, from, (# <= to)&, 1, Infinity, -1];
   If[Last[sol] =!= to, 
       Append[sol, to], 

@@ -17,6 +17,8 @@
 namespace hydla {
 namespace ch {
 
+
+
 /**
  * Container型のモジュール集合の集合を表すクラスを構築するためのクラス
  */
@@ -27,7 +29,8 @@ public:
   typedef typename boost::shared_ptr<Container> container_sptr;
   typedef std::deque<container_sptr>            container_stack_t;
   typedef std::map<std::string, int>            mod_name_map_t;
-
+ 
+ 
 
   ModuleSetContainerCreator()
   {}

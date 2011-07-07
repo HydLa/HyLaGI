@@ -11,9 +11,6 @@
  */
 
 #include <iostream>
-
-
-
 #include <vector>
 
 #include <boost/function.hpp>

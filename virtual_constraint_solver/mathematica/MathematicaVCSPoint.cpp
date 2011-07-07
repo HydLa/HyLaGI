@@ -29,8 +29,6 @@ bool MathematicaVCSPoint::reset()
 {
   // TODO: チョイ考える
   assert(0);
-//   constraint_store_.first.clear();
-//   constraint_store_.second.clear();
   return true;
 }
 
@@ -443,16 +441,11 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
 /////////////////// 送信処理
 
-  // isConsistent[ pexpr, expr, vars]を渡したい
-  ml_->put_function("isConsistent", 3);
+  // checkConsistency[ expr, vars]を渡したい
+  ml_->put_function("checkConsistency", 2);
 
-
-  // pexprを送る
-  send_ps();
-
-
-  // exprは3つの部分から成る
-  ml_->put_function("Join", 3);
+  // exprは4つの部分から成る
+  ml_->put_function("Join", 4);
   int tells_size = collected_tells.size() + appended_asks.size();
   ml_->put_function("List", tells_size);
   HYDLA_LOGGER_VCS(
@@ -465,6 +458,7 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 	  HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
     ps.put_node((*tells_it)->get_child(), PacketSender::VA_None);
   }
+  
   // appended_asksからガード部分を得てMathematicaに渡す
   appended_asks_t::const_iterator append_it  = appended_asks.begin();
   appended_asks_t::const_iterator append_end = appended_asks.end();
@@ -474,7 +468,10 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
   }
 
   // 制約ストアからもexprを得てMathematicaに渡す
-	send_cs();
+  send_cs();
+  // 定数値に関する制約も送る
+  send_ps();
+
 
   // 左連続性に関する制約を渡す
   // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
@@ -571,24 +568,24 @@ VCSResult MathematicaVCSPoint::add_constraint(const tells_t& collected_tells, co
 
   return result;
 }
-  
-VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
-{
-  HYDLA_LOGGER_VCS(
-    "#*** MathematicaVCSPoint::check_entailment ***\n", 
-    "ask: ", *negative_ask);
 
+VCSResult MathematicaVCSPoint::check_entailment_with_consistency(
+  const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks, const bool &entail){
+
+  /////////////////// 送信処理
   PacketSender ps(*ml_);
+  
 
-  // checkEntailment[guard, store, vars]を渡したい
-  ml_->put_function("checkEntailment", 3);
+  ml_->put_function("checkConsistency", 2);
+  
+  
+  ml_->put_function("Join", 3);
+  ml_->put_function("List", 1);
+  ps.put_node(negative_ask->get_guard(), PacketSender::VA_None, false, entail);
 
-  // ask制約のガードの式を得てMathematicaに渡す
-  ps.put_node(negative_ask->get_guard(), PacketSender::VA_None);
-
-  ml_->put_function("Join", 2);
-  // 制約ストアとpsから式を得てMathematicaに渡す
+  // 制約ストアからもexprを得てMathematicaに渡す
   send_cs();
+  // 定数値に関する制約も送る
   send_ps();
 
   // varsを渡す
@@ -599,16 +596,20 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
   
   send_pars();
 
+/////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
+  
+  //PacketChecker pc(*ml_);
+  //pc.check();
+
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+  HYDLA_LOGGER_EXTERN((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
 
-////////// 受信処理
-
-  // PacketChecker pc(*ml_);
-  // pc.check();
 
   ml_->skip_pkt_until(RETURNPKT);
+
   ml_->MLGetNext();
   ml_->MLGetNext();
   ml_->MLGetNext();
@@ -619,17 +620,62 @@ VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_as
     result = VCSR_SOLVER_ERROR;
   }
   else if(ret_code==1) {
+    // 充足
     result = VCSR_TRUE;
-    HYDLA_LOGGER_VCS_SUMMARY("entailed");
-  }
-  else if(ret_code==2) {
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
+    //無矛盾性判定
+    // 解けた場合は解が「文字列で」返ってくるのでそれを制約ストアに入れる
+    // List[List[List["Equal[x, 1]"], List["Equal[x, -1]"]], List[x]]や
+    // List[List[List["Equal[x, 1]", "Equal[y, 1]"], List["Equal[x, -1]", "Equal[y, -1]"]], List[x, y, z]]や
+    // List[List[List["Equal[x,1]", "Equal[Derivative[1][x],1]", "Equal[prev[x],1]", "Equal[prev[Derivative[2][x]],1]"]],
+    // List[x, Derivative[1][x], prev[x], prev[Derivative[2][x]]]]  やList[List["True"], List[]]など
+    ml_->MLNewPacket();
+  }else{
+    assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("not entailed");
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
   }
-  else {
-    assert(ret_code==3);
-    // TODO: VCSR_UNKNOWNを返し、分岐処理
-    result = VCSR_UNKNOWN;
+  return result;
+}
+
+
+
+VCSResult MathematicaVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
+{
+  HYDLA_LOGGER_VCS(
+    "#*** MathematicaVCSPoint::check_entailment ***\n", 
+    "ask: ", *negative_ask);
+
+  VCSResult result;
+  switch(check_entailment_with_consistency(negative_ask, appended_asks, true)){
+    case VCSR_TRUE:
+      switch(check_entailment_with_consistency(negative_ask, appended_asks, false)){
+        case VCSR_TRUE:
+          result = VCSR_UNKNOWN;
+          HYDLA_LOGGER_VCS_SUMMARY("branched");
+          break;
+        case VCSR_FALSE:
+          result = VCSR_TRUE;
+          HYDLA_LOGGER_VCS_SUMMARY("entailed");
+          break;
+        case VCSR_SOLVER_ERROR:
+          result = VCSR_SOLVER_ERROR;
+          break;
+        default:
+          assert(0);
+          break;
+      }
+      break;
+    case VCSR_FALSE:
+      result = VCSR_FALSE;
+      HYDLA_LOGGER_VCS_SUMMARY("not entailed");
+      break;
+    case VCSR_SOLVER_ERROR:
+      result = VCSR_SOLVER_ERROR;
+      break;
+    default:
+      assert(0);
+      break;
   }
   return result;
 }
@@ -653,7 +699,6 @@ void MathematicaVCSPoint::send_cs() const
   HYDLA_LOGGER_VCS("---- Send Constraint Store -----");
 
   int or_cons_size = constraint_store_.first.size();
-  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
   if(or_cons_size <= 0)
   {
     HYDLA_LOGGER_VCS("no Constraints");
@@ -663,6 +708,7 @@ void MathematicaVCSPoint::send_cs() const
 
   ml_->put_function("List", 1);
   ml_->put_function("Or", or_cons_size);
+  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
 
   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
     constraint_store_.first.begin();

@@ -13,7 +13,7 @@ ModuleSetList::ModuleSetList()
 {}
 
 ModuleSetList::ModuleSetList(module_set_sptr m) :
-  module_set_list_(1, m)
+  ModuleSetContainer(m)
 {}
 
 ModuleSetList::~ModuleSetList()
@@ -123,9 +123,9 @@ std::ostream& ModuleSetList::dump_node_names(std::ostream& s) const
   module_set_list_t::const_iterator end = module_set_list_.end();
 
   s << "{";
-  if(it!=end) s << (*it++)->get_name();
+  if(it!=end) s << (*(it++))->get_name();
   while(it!=end) {
-    s << ", " << (*it++)->get_name();
+    s << ", " << (*(it++))->get_name();
   }
   s << "}";
 
@@ -138,28 +138,20 @@ std::ostream& ModuleSetList::dump_node_trees(std::ostream& s) const
   module_set_list_t::const_iterator end = module_set_list_.end();
 
   s << "{";
-  if(it!=end) s << **it++;
+  if(it!=end) s << **(it++);
   while(it!=end) {
-    s << ", " << **it++;
+    s << ", " << **(it++);
   }
   s << "}";
 
   return s;
 }
 
-bool ModuleSetList::dispatch(
-  boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
-  int threads)
-{
-  module_set_list_t::iterator it  = module_set_list_.begin();
-  module_set_list_t::iterator end = module_set_list_.end();
-  for(; it!=end; ++it) {
-    if(callback_func(*it)) {
-      return true;
-    }
-  }
-  return false;
+
+void ModuleSetList::mark_nodes(){
+  visited_module_sets_.insert(*current_module_set_);
 }
+
 
 } // namespace ch
 } // namespace hydla

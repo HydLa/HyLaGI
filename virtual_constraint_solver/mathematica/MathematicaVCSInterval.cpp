@@ -105,7 +105,6 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map,  const pa
     return false;
   }
 
-
   if(parameter_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
@@ -174,20 +173,6 @@ void MathematicaVCSInterval::send_init_cons(
     {
       init_vars_count++;
     }
-
-
-/*
-    // 初期値制約のうち、集めたtell制約に出現しないものをカウント
-    if(md_it==max_diff_map.end())
-    {
-      init_vars_count++;
-    }
-    // 初期値制約のうち、集めたtell制約に出現する際の最大微分回数よりも小さい微分回数のものをカウントする
-    else if(md_it->second  > init_vars_it->first.derivative_count)
-    {
-      init_vars_count++;
-    }
-*/
 
 
   }
@@ -276,7 +261,6 @@ void MathematicaVCSInterval::send_parameter_cons() const{
 void MathematicaVCSInterval::send_pars() const{
   HYDLA_LOGGER_VCS("---- Begin MathematicaVCSInterval::send_pars ----");
 
-
   parameter_map_t::const_iterator par_it = parameter_map_.begin();
   parameter_map_t::const_iterator par_end = parameter_map_.end();
   
@@ -295,8 +279,6 @@ void MathematicaVCSInterval::send_vars(
 {
   HYDLA_LOGGER_VCS("---- MathematicaVCSInterval::send_vars ----");
 
-  ml_->put_function("Join", 2);
-    
   max_diff_map_t::const_iterator md_it = max_diff_map.begin();
   max_diff_map_t::const_iterator md_end = max_diff_map.end();
 
@@ -321,30 +303,6 @@ void MathematicaVCSInterval::send_vars(
                          "  diff: ", i);
     }
   }
-
-
-  ml_->put_function("List", 0);
-
-
-/*
-  // 制約ストア中の変数のうち、集めたtell制約中に含まれないものも追加で送信
-  constraint_store_t::cons_vars_t::const_iterator cs_vars_it = constraint_store_.cons_vars.begin();
-  constraint_store_t::cons_vars_t::const_iterator cs_vars_end = constraint_store_.cons_vars.end();
-
-  ml_->put_function("List",  constraint_store_.cons_vars.size());
-
-  HYDLA_LOGGER_VCS("cs_vars_count:",  constraint_store_.cons_vars.size());
-
-  for(; cs_vars_it!=cs_vars_end; ++cs_vars_it){
-      ps.put_var(boost::make_tuple(cs_vars_it->name, cs_vars_it->derivative_count, false), 
-                 PacketSender::VA_Time);
-
-      HYDLA_LOGGER_VCS("put: ", 
-                         "  name: ", cs_vars_it->name,
-                         "  diff: ", cs_vars_it->derivative_count);
-  }
-*/
-
 }
 
 VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks)
@@ -353,8 +311,8 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
 
   PacketSender ps(*ml_);
 
-  // isConsistentInterval[expr, vars]を渡したい
-  ml_->put_function("isConsistentInterval", 2);
+  // checkConsistencyInterval[expr, vars, pars]を渡したい
+  ml_->put_function("checkConsistencyInterval", 3);
 
   // expr部分
   ml_->put_function("Join", 4);
@@ -390,13 +348,13 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, false);
 
-  // vars部分
-  // 変数のリストを渡す
-//  send_vars(ps, max_diff_map);
 
 
   // varsを渡す
   ps.put_vars(PacketSender::VA_Time, true);
+  
+  // 定数を渡す
+  send_pars();
 
 ////////// 受信処理
   HYDLA_LOGGER_EXTERN("--- receive  ---");
@@ -426,12 +384,6 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
       collected_tells.begin(), 
       collected_tells.end());
 
-    // appended_asksも追加
-    /*constraint_store_.constraints.insert(
-      constraint_store_.constraints.end(),
-      collected_tells.begin(), 
-      collected_tells.end());*/
-
     // 制約ストア中で使用される変数の一覧の更新
     PacketSender::vars_const_iterator ps_vars_it  = ps.vars_begin();
     PacketSender::vars_const_iterator ps_vars_end = ps.vars_end();
@@ -453,30 +405,38 @@ VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells,
 
   return result;
 }
-  
-VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
+
+
+VCSResult MathematicaVCSInterval::check_entailment_with_consistency(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks, const bool &entail)
 {
-  HYDLA_LOGGER_VCS_SUMMARY(
-    "#*** MathematicaVCSInterval::check_entailment ***\n", 
-    "ask: ", *negative_ask);
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::add_constraint ***");
 
   PacketSender ps(*ml_);
 
-  // checkEntailmentInterval[guard, store, vars, pars]を渡したい
-  ml_->put_function("checkEntailmentInterval", 4);
+  // checkConsistencyInterval[expr, vars, pars]を渡したい
+  ml_->put_function("checkConsistencyInterval", 3);
 
+  // expr部分
+  ml_->put_function("Join", 5);
+
+  ml_->put_function("List", 1);
   // guard部分
   // ask制約のガードの式を得てMathematicaに渡す
-  ps.put_node(negative_ask->get_guard(), PacketSender::VA_Time, true);
-//  ps.put_node(negative_ask->get_guard(), PacketSender::VA_Zero, true);
+  ps.put_node(negative_ask->get_guard(), PacketSender::VA_Time, true, entail);
 
-
-  // store部分
-  ml_->put_function("Join", 4);
+  ml_->put_function("List", appended_asks.size());
+  
+  // appended_asksからガード部分を得てMathematicaに渡す
+  appended_asks_t::const_iterator append_it  = appended_asks.begin();
+  appended_asks_t::const_iterator append_end = appended_asks.end();
+  for(; append_it!=append_end; ++append_it) {
+    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
+    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
+  }
 
   // 制約ストアconstraintsをMathematicaに渡す
-
   send_cs(ps);
+  send_parameter_cons();
 
   max_diff_map_t max_diff_map;
 
@@ -486,38 +446,18 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, false);
 
-  ml_->put_function("List", appended_asks.size());
-  // appended_asksからガード部分を得てMathematicaに渡す
-  appended_asks_t::const_iterator append_it  = appended_asks.begin();
-  appended_asks_t::const_iterator append_end = appended_asks.end();
-  for(; append_it!=append_end; ++append_it) {
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
-    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
-  }
+  // varsを渡す
+  ps.put_vars(PacketSender::VA_Time, true);
 
-  // pstoreを渡す
-  send_parameter_cons();
-
-  // 変数のリストを渡す
-  send_vars(ps, max_diff_map);
-
-  // 記号定数のリストを渡す
+  // 定数を渡す
   send_pars();
 
-  // varsを渡す
-  //ps.put_vars(PacketSender::VA_Time, true);
-  
-
-  ml_->MLEndPacket();
+////////// 受信処理
+  HYDLA_LOGGER_EXTERN("--- receive  ---");
 
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
     (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
-
-////////// 受信処理
-
-//  PacketChecker pc(*ml_);
-//  pc.check();
 
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLGetNext();
@@ -529,16 +469,59 @@ VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative
   if(PacketErrorHandler::handle(ml_, ret_code)) {
     result = VCSR_SOLVER_ERROR;
   }
-  else if(ret_code==1) {
+  else if(ret_code==1) { 
+    // 充足
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
     result = VCSR_TRUE;
-    HYDLA_LOGGER_VCS_SUMMARY("entailed");
   }
-  else if(ret_code==2){
+  else { 
+    // 制約エラー
+    assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("not entailed");
-  }else{
-    assert(ret_code==3);
-    result = VCSR_UNKNOWN;
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+  }
+  HYDLA_LOGGER_VCS(constraint_store_);
+
+  return result;
+}
+  
+  
+VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
+{
+  HYDLA_LOGGER_VCS_SUMMARY(
+    "#*** MathematicaVCSInterval::check_entailment ***\n", 
+    "ask: ", *negative_ask);
+
+  VCSResult result;
+  switch(check_entailment_with_consistency(negative_ask, appended_asks, true)){
+    case VCSR_TRUE:
+      switch(check_entailment_with_consistency(negative_ask, appended_asks, false)){
+        case VCSR_TRUE:
+          result = VCSR_UNKNOWN;
+          HYDLA_LOGGER_VCS_SUMMARY("branched");
+          break;
+        case VCSR_FALSE:
+          result = VCSR_TRUE;
+          HYDLA_LOGGER_VCS_SUMMARY("entailed");
+          break;
+        case VCSR_SOLVER_ERROR:
+          result = VCSR_SOLVER_ERROR;
+          break;
+        default:
+          assert(0);
+          break;
+      }
+      break;
+    case VCSR_FALSE:
+      result = VCSR_FALSE;
+      HYDLA_LOGGER_VCS_SUMMARY("not entailed");
+      break;
+    case VCSR_SOLVER_ERROR:
+      result = VCSR_SOLVER_ERROR;
+      break;
+    default:
+      assert(0);
+      break;
   }
   return result;
 }

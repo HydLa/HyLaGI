@@ -54,7 +54,8 @@ public:
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks);
-
+  
+  
   /**
    * askの導出状態が変化するまで積分をおこなう
    */
@@ -79,6 +80,9 @@ private:
   void send_ps() const;
   void send_cs_vars() const;
   void send_pars() const;
+
+  VCSResult check_entailment_with_consistency(const ask_node_sptr& negative_ask,
+                          const appended_asks_t &appended_asks, const bool& entail);
 
   /**
    * 変数の最大微分回数をもとめる

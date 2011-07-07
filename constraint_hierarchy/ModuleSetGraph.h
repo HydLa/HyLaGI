@@ -14,40 +14,19 @@ namespace ch {
 
 class ModuleSetGraph : public ModuleSetContainer {
 public:
-  struct Node {
-    /// モジュール集合
-    module_set_sptr mod;
-
-    /// ノードの訪問フラグ
-    bool            visited;
-  };
-
-  struct NodeComp {
-    bool operator()(const Node& lhs, const Node& rhs) const
-    {      
-      return ModuleSetComparator()(lhs.mod, rhs.mod);
-    }
-     
-    bool operator()(const Node* lhs, const Node* rhs) const
-    {      
-      return ModuleSetComparator()(lhs->mod, rhs->mod);
-    }
-  };
-
-  typedef std::vector<Node> nodes_t;
 
   struct superset {};
   struct subset {};
   
   typedef boost::bimaps::bimap<
     boost::bimaps::multiset_of<
-      boost::bimaps::tags::tagged<Node*, superset>,
-      NodeComp>,
+      boost::bimaps::tags::tagged<module_set_sptr, superset>,
+      ModuleSetComparator>,
     boost::bimaps::multiset_of<
-      boost::bimaps::tags::tagged<Node*, subset>,
-      NodeComp>
+      boost::bimaps::tags::tagged<module_set_sptr, subset>,
+      ModuleSetComparator>
   > edges_t;
-
+  
 
   ModuleSetGraph();
   ModuleSetGraph(module_set_sptr m);
@@ -78,7 +57,7 @@ public:
    * ノードの情報の名前表現によるダンプ
    */
   std::ostream& dump_node_names(std::ostream& s) const;
-  
+
   /**
    * ノードの情報のツリー表現によるダンプ
    */
@@ -94,26 +73,20 @@ public:
    */
   std::ostream& dump_graphviz(std::ostream& s) const;
 
-  /**
-   * 要素数最大であるモジュール集合を得る
-   */
-  module_set_sptr get_max_module_set() const
-  {
-    return nodes_.front().mod;
-  };
 
   /**
-   * 
+   * そのノードと子ノードをマーキングし，以降探索しないようにする
    */
-  virtual bool dispatch(boost::function<bool (hydla::ch::module_set_sptr)> callback_func, 
-                        int threads = 1);
+  virtual void mark_nodes();
+  
+
 
 private:
   /**
    * 与えられたノードおよび，
    * それに包含されるノードに対して訪問フラグを立てる
    */
-  void mark_visited_flag(Node* node);
+  void mark_visited_flag(const module_set_sptr& ms);
 
   /**
    * グラフの辺を構築する
@@ -125,10 +98,6 @@ private:
    */
   edges_t edges_;
 
-  /**
-   * ノード
-   */
-  nodes_t nodes_;
 };
 
 

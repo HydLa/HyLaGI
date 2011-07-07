@@ -53,24 +53,6 @@ public:
                               const phase_state_const_sptr& state);
 
 
-  /*
-  * 与えられた解候補モジュール集合のリストをreduceのためにファイル出力する関数。initialize前で分岐
-  */
-    virtual bool reduce_simulate();
-
-  /*
-  * reduce出力用関数。現在はpoint_phase関数から分岐
-  * svn Rev: 1062
-  */
-    virtual bool reduce_output(const module_set_sptr& ms, 
-                             const phase_state_const_sptr& state);
-  
-  /*
-  * dispatch関数に渡してModuleSetのpair<name,node>を取得
-  */
-
-  virtual bool reduce_simulate_phase_state(const module_set_sptr& ms);
-
 private:
   /**
    * 初期化処理
@@ -102,7 +84,7 @@ private:
   
   //現状では1回出力すると，木の根以外の部分が無くなるようになっているから注意
   void output_result_tree();
-              
+
                               
   module_set_container_sptr msc_original_;
 

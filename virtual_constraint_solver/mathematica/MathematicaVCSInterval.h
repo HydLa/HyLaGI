@@ -68,6 +68,8 @@ public:
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
+  
+  
 
   /**
    * askの導出状態が変化するまで積分をおこなう
@@ -104,6 +106,9 @@ private:
   void create_max_diff_map(PacketSender& ps, max_diff_map_t& max_diff_map);
 
   void send_vars(PacketSender& ps, const max_diff_map_t& max_diff_map);
+  
+  VCSResult check_entailment_with_consistency(const ask_node_sptr& negative_ask,
+                          const appended_asks_t &appended_asks, const bool& entail);
 
   /**
    * 初期値制約をMathematicaに渡す
