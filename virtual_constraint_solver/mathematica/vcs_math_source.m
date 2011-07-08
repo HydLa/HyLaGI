@@ -162,7 +162,7 @@ Quiet[
             sol = applyList[sol];
             sol = Map[applyList, sol];
             (* t‚ÌÅ‘å‰ºŠE‚ğ0‚Æ‚Å‚«‚é‰Â”\«‚ğ’²‚×‚éD *)
-            If[checkInf[sol, otherExpr, pars] === {2}]
+	     If[checkInf[sol, otherExpr, pars] === {2},
               {2},
               (* {3}‚ª•Ô‚Á‚Ä‚«‚½‚Æ‚µ‚Ä‚àŒ»ó‚Å‚Í{1}‚ğ•Ô‚·‚±‚Æ‚É‚·‚é *)
               {1}
