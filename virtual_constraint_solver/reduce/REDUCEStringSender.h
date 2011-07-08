@@ -57,7 +57,7 @@ public:
   /**
    * •Ï”‚Ì‘—M
    */
-  void put_var(const var_info_t var);
+  void put_var(const var_info_t var, bool init_var = false);
 
   /**
    * put_node‚ÌÛ‚É‘—M‚³‚ê‚½•Ï”ŒQ‚Ì‘—M‚ğ‚¨‚±‚È‚¤

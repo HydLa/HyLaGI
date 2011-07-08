@@ -172,7 +172,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 }
 
 
-void REDUCEStringSender::put_var(const var_info_t var)
+void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
 {
   std::string name(var.get<0>());
   int diff_count = var.get<1>();
@@ -182,10 +182,13 @@ void REDUCEStringSender::put_var(const var_info_t var)
     "REDUCEStringSender::put_var: ",
     "name: ", name,
     "\tdiff_count: ", diff_count,
-    "\tprev: ", prev);
+    "\tprev: ", prev,
+    "\tinit_var: ", init_var);
 
 
   std::ostringstream var_str;
+
+  if(init_var) var_str << "init";
 
   if (diff_count > 0 && prev){
     var_str << "prev(df("
@@ -195,11 +198,18 @@ void REDUCEStringSender::put_var(const var_info_t var)
             << "))";
   }
   else if (diff_count > 0){
-    var_str << "df("
-            << name
-            << ",t,"    
-            << diff_count
-            << ")";
+    if(init_var) {
+      var_str << name
+              << "_"
+              << diff_count;
+    }
+    else {
+      var_str << "df("
+              << name
+              << ",t,"    
+              << diff_count
+              << ")";
+    }
   }
   else if (prev) {
     var_str << "prev("
@@ -209,6 +219,8 @@ void REDUCEStringSender::put_var(const var_info_t var)
   else {
     var_str << name;
   }
+
+  if(init_var) var_str << "lhs";
 
   cl_.send_string(var_str.str());
   HYDLA_LOGGER_REST("var_str: ", var_str.str());

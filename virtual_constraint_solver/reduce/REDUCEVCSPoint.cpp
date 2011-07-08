@@ -17,19 +17,16 @@ namespace reduce {
 REDUCEVCSPoint::REDUCEVCSPoint(REDUCELink* cl) :
   cl_(cl)
 {
-  std::cout << "Begin REDUCEVCSPoint::REDUCEVCSPoint(REDUCEClient* cl)" << std::endl;
 
 }
 
 REDUCEVCSPoint::~REDUCEVCSPoint()
 {
-  std::cout << "Begin REDUCEVCSPoint::~REDUCEVCSPoint()" << std::endl;
 
 }
 
 bool REDUCEVCSPoint::reset()
 {
-  std::cout << "Begin REDUCEVCSPoint::reset()" << std::endl;
   // TODO: チョイ考える
   assert(0);
   //   constraint_store_.first.clear();
@@ -475,7 +472,8 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS("--- receive ---");
 
-  cl_->read_until_redeval();
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
@@ -588,7 +586,8 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-  cl_->read_until_redeval();
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("check_entailment_ans: ",
@@ -677,20 +676,8 @@ void REDUCEVCSPoint::send_cs() const
   std::set<const_tree_iter_t>::const_iterator or_cons_end = constraint_store_.first.end();
   for(; or_cons_it!=or_cons_end; or_cons_it++){
 
-/*
-    size_t and_cons_size = or_cons_it->children.size();
-    HYDLA_LOGGER_VCS("and cons size: ", and_cons_size);
-    for(size_t j=0; j<and_cons_size; j++){
-      const_tree_iter_t and_cons_it = or_cons_it->children.begin()+j;
-      std::string relop = std::string(and_cons_it->value.begin(), and_cons_it->value.end());
-      std::cout << "relop: " << relop << "\n";
-      size_t var_info_size = and_cons_it->children.size();
-      std::cout << "var info size: " << var_info_size << "\n";
-    }
-*/
-
     std::string or_string = sp_.get_string_from_tree(*or_cons_it);
-    std::cout << "or_string: " << or_string << "\n";
+    HYDLA_LOGGER_VCS("or_string: ", or_string);
 
     // 文字列が"list"のみであるとき、空集合を意味する
     if (or_string == "list") cl_->send_string("{}");

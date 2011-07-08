@@ -18,7 +18,7 @@ namespace vcs {
 namespace reduce {
 
 REDUCELink::REDUCELink(){
-  std::cout << "Begin REDUCELink::REDUCELink()" << std::endl;
+//  std::cout << "Begin REDUCELink::REDUCELink()" << std::endl;
   /*
   host_not_foundなどのエラー検知はtcp::iostreamでは出来ないみたい
   TODO tcp::socketに変更してhost_not_found判定
@@ -27,7 +27,7 @@ REDUCELink::REDUCELink(){
 }
 
 REDUCELink::~REDUCELink(){
-  std::cout << "Begin REDUCELink::~REDUCELink()" << std::endl;
+//  std::cout << "Begin REDUCELink::~REDUCELink()" << std::endl;
 }
 
 REDUCELink::REDUCELink(const REDUCELink& old_cl){
@@ -36,7 +36,7 @@ REDUCELink::REDUCELink(const REDUCELink& old_cl){
 }
 
 int REDUCELink::read_until_redeval(){
-  std::cout << "Begin REDUCELink::read_until_redeval" << std::endl;
+//  std::cout << "Begin REDUCELink::read_until_redeval" << std::endl;
   std::string line;
   while(getline(s, line)){
     cout << line << endl;
@@ -46,7 +46,7 @@ int REDUCELink::read_until_redeval(){
 }
 
 int REDUCELink::skip_until_redeval(){
-  std::cout << "Begin REDUCELink::skip_until_redeval" << std::endl;
+//  std::cout << "Begin REDUCELink::skip_until_redeval" << std::endl;
   std::string line;
   while(getline(s, line)){
     if(line=="<redeval> end:") break;
@@ -55,7 +55,7 @@ int REDUCELink::skip_until_redeval(){
 }
 
 std::string REDUCELink::get_s_expr(){
-  std::cout << "Begin REDUCELink::get_s_expr" << std::endl;
+//  std::cout << "Begin REDUCELink::get_s_expr" << std::endl;
   std::string line;
   getline(s, line);
   while(count_char(line, '(')!=count_char(line, ')')){

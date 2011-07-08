@@ -350,7 +350,7 @@ begin;
   
   if(tmp_ = retsolvererror___) then return {0}
   else if(tmp_ = retoverconstraint___) then return {2}
-  else return {2};
+  else return {1};
 end;
 
 %depend {ht,v}, t;

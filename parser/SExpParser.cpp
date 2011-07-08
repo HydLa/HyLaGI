@@ -67,18 +67,22 @@ void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
 int SExpParser::parse_main(const char* input_str){
   SExpGrammar                   sg;
   CommentGrammar                cg;
-  cout << "input_str: " << input_str << "\n";
+//  cout << "input_str: " << input_str << "\n";
 
   pos_iter_t positBegin(input_str, input_str + strlen(input_str));
   pos_iter_t positEnd;
 
   ast_tree_ = ast_parse(positBegin, positEnd, sg, cg);
+
+/*
   cout << "--------------------------\n";
   if(ast_tree_.full){
     dump_tree(get_tree_iterator(), 0);
   }else{
     cout << "Ž¸”s\n";
   }
+*/
+
   return(0);
 }
 

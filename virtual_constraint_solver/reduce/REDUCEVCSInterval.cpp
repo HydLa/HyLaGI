@@ -168,19 +168,10 @@ void REDUCEVCSInterval::send_init_cons(
     {
       if(!first_element) cl_->send_string(",");
       // 変数名
-      // TODO: 1回微分以上への対応（形式を"initht_1lhs"のようにする、rss.vars_に何とかして入れる）
-      std::stringstream var_name_ss;
-      var_name_ss << "init";
-      cl_->send_string("init");
-
       rss.put_var(boost::make_tuple(init_vars_it->first.name, 
                                     init_vars_it->first.derivative_count, 
-                                    false));
-
-      var_name_ss << init_vars_it->first.name;
-      var_name_ss << "lhs";
-      cl_->send_string("lhs");
-//      cl_->send_string(var_name_ss.str());
+                                    false),
+                  true);
 
       cl_->send_string("=");
   
@@ -353,11 +344,11 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
 
-  if(ret_code_str=="RETERROR___"){
+  if(ret_code_str=="0"){
     // ソルバエラー
     result = VCSR_SOLVER_ERROR;
   }
-  else if(ret_code_str==" \"RETTRUE___\"") {
+  else if(ret_code_str=="1") {
     // 充足
     // TODO: スペースや""が残らないようにパーサを修正
     result = VCSR_TRUE;
@@ -381,7 +372,7 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
   }
   else {
     // 制約エラー
-    assert(ret_code_str == " \"RETFALSE___\"");
+    assert(ret_code_str == "2");
     result = VCSR_FALSE;
     HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
   }
@@ -401,6 +392,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 
   REDUCEStringSender rss(*cl_);
 
+  assert(0);
 
 //////////////////// 送信処理
 

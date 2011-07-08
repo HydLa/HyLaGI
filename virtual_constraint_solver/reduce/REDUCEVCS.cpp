@@ -169,7 +169,8 @@ std::string REDUCEVCS::get_real_val(const value_t &val, int precision){
     cl_.send_string("symbolic redeval '(getRealVal value_ prec_);");
 
 
-    cl_.read_until_redeval();
+//    cl_.read_until_redeval();
+    cl_.skip_until_redeval();
     ret = cl_.get_s_expr();
   }
   else {
