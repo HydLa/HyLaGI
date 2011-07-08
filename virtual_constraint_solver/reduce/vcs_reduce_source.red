@@ -410,6 +410,56 @@ begin;
 end;
 
 
+
+%TODO エラー検出（適用した結果実数以外になった場合等）
+
+procedure applyTime2Expr(expr_, time_)$
+begin;
+  scalar appliedExpr_;
+  appliedExpr_:= sub(t=time_, expr_);
+  write("appliedExpr_:", appliedExpr_);
+
+  return {1, appliedExpr_};
+end;
+
+
+
+procedure exprTimeShift(expr_, time_)$
+begin;
+  scalar shiftedExpr_;
+  shiftedExpr_:= sub(t=t-time_, expr_);
+  write("shiftedExpr_:", shiftedExpr_);
+
+  return shiftedExpr_;
+end;
+
+
+
+load_package assist;
+
+procedure simplifyExpr(expr_)$
+begin;
+  scalar simplifiedExpr_;
+  simplifiedExpr_:= simplify(expr_);
+  write("simplifiedExpr_:", simplifiedExpr_);
+
+  return simplifiedExpr_;
+end;
+
+
+
+%TODO trueまたはfalseを返すようにする
+
+procedure checkLessThan(lhs_, rhs_)$
+begin;
+  scalar ret_;
+  ret_:= lhs_ < rhs_;
+  write("ret_:", ret_);
+
+  return ret_;
+end;
+
+
 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%
 expr_:= {yyy = -10, y = 10, yy = 0, z = y, zz = yy}; vars_:={y, z, yy, zz, yyy, y, z, yy, zz};

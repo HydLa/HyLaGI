@@ -4,7 +4,8 @@
 
 #include "REDUCEVCSPoint.h"
 #include "REDUCEVCSInterval.h"
-//#include "REDUCEStringSender.h"
+#include "REDUCEStringSender.h"
+#include "SExpConverter.h"
 
 using namespace hydla::vcs;
 
@@ -184,18 +185,61 @@ std::string REDUCEVCS::get_real_val(const value_t &val, int precision){
 bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 {
 
-  assert(0);
+  REDUCEStringSender rss(cl_);
 
-  return  false;
+  // checkLessThan(lhs_, rhs_)を渡したい
+
+  cl_.send_string("lhs_:=");
+  rss.put_node(lhs.get_node(), true);
+  cl_.send_string(";");
+
+
+  cl_.send_string("rhs_:=");
+  rss.put_node(rhs.get_node(), true);
+  cl_.send_string(";");
+
+
+  cl_.send_string("symbolic redeval '(checkLessThan lhs_ rhs_);");
+
+
+  ////////////////// 受信処理
+
+  cl_.read_until_redeval();
+
+  std::string ans = cl_.get_s_expr();
+  HYDLA_LOGGER_VCS("check_less_than_ans: ", ans);
+  return  ans == "True";
 }
 
 
 void REDUCEVCS::simplify(time_t &time) 
 {
   HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
+  REDUCEStringSender rss(cl_);
 
-  assert(0);
+  // simplifyExpr(expr_)を渡したい
 
+  cl_.send_string("expr_:=");
+  rss.put_node(time.get_node(), true);
+  cl_.send_string(";");
+
+
+  cl_.send_string("symbolic redeval '(simplifyExpr expr_);");
+
+
+  ////////////////// 受信処理
+
+  cl_.read_until_redeval();
+
+  std::string ans = cl_.get_s_expr();
+  HYDLA_LOGGER_VCS("expr_time_shift_ans: ", ans);
+
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
+  SExpParser::const_tree_iter_t time_it = sp.get_tree_iterator();
+  SExpConverter sc;
+  time = sc.convert_s_exp_to_symbolic_value(time_it);
 }
 
 
@@ -203,9 +247,36 @@ void REDUCEVCS::simplify(time_t &time)
   //SymbolicValueの時間をずらす
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(const value_t& val, const time_t& time){
   value_t tmp_val;
+  REDUCEStringSender rss(cl_);
 
-  assert(0);
+  // exprTimeShift(expr_, time_)を渡したい
 
+  cl_.send_string("expr_:=");
+  rss.put_node(val.get_node(), true);
+  cl_.send_string(";");
+
+
+  cl_.send_string("time_:=");
+  rss.put_node(time.get_node(), true);
+  cl_.send_string(";");
+
+
+  cl_.send_string("symbolic redeval '(exprTimeShift expr_ time_);");
+
+
+  ////////////////// 受信処理
+
+  cl_.read_until_redeval();
+
+  std::string ans = cl_.get_s_expr();
+  HYDLA_LOGGER_VCS("expr_time_shift_ans: ", ans);
+
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
+  SExpParser::const_tree_iter_t value_it = sp.get_tree_iterator();
+  SExpConverter sc;
+  tmp_val = sc.convert_s_exp_to_symbolic_value(value_it);
   return  tmp_val;
 }
 

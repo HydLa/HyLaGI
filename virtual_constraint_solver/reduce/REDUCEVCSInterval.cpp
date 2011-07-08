@@ -5,6 +5,7 @@
 #include <boost/foreach.hpp>
 
 #include "Logger.h"
+#include "SExpConverter.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
@@ -648,6 +649,9 @@ VCSResult REDUCEVCSInterval::integrate(
   HYDLA_LOGGER_VCS("integrate_ans: ",
                    ans);
   
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
 
 
 
@@ -680,8 +684,68 @@ void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
 
   REDUCEStringSender rss(*cl_);
 
-  assert(0);
+  variable_map_t::const_iterator it  = in_vm.begin();
+  variable_map_t::const_iterator end = in_vm.end();
+  for(; it!=end; ++it) {
+    HYDLA_LOGGER_VCS("variable : ", it->first);
 
+    // 値
+    value_t    value;
+
+    if(it->second.is_undefined()) {
+      out_vm.set_variable(it->first, value);
+      continue;
+    }
+
+    // applyTime2Expr(expr_, time_)を渡したい
+
+    cl_->send_string("expr_:=");
+    rss.put_node(it->second.get_node(), true);
+    cl_->send_string(";");
+
+
+    cl_->send_string("time_:=");
+    send_time(time);
+    cl_->send_string(";");
+
+
+    cl_->send_string("symbolic redeval '(applyTime2Expr expr_ time_);");
+
+    
+    ////////////////// 受信処理
+
+    cl_->read_until_redeval();
+
+    std::string ans = cl_->get_s_expr();
+    HYDLA_LOGGER_VCS("apply_time_to_expr_ans: ", ans);
+
+    // S式パーサで読み取る
+    SExpParser sp;
+    sp.parse_main(ans.c_str());
+
+    // {コード, 値}の構造
+    const_tree_iter_t ct_it = sp.get_tree_iterator();
+
+    // コードを取得
+    const_tree_iter_t ret_code_it = ct_it->children.begin();
+    std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+    HYDLA_LOGGER_VCS("ret_code_str: ",
+                     ret_code_str);
+
+    if(ret_code_str=="0") {
+      // TODO: 適用に失敗（実数以外になる等）した場合。適切な処理をする
+      assert(0);
+    }
+    else {
+      assert(ret_code_str=="1");
+      const_tree_iter_t value_it = ct_it->children.begin()+1;
+      SExpConverter sc;
+      value = sc.convert_s_exp_to_symbolic_value(value_it);
+      HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
+    }
+
+    out_vm.set_variable(it->first, value);
+  }
 }
 
 void REDUCEVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
