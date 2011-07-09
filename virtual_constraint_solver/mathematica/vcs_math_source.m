@@ -787,11 +787,12 @@ integrateCalc[cons_,
     (* integrateCalc‚ÌŒvZŒ‹‰Ê‚Æ‚µ‚Ä•K—v‚È•Ï”‚Ìˆê—— *)
     returnVars = Select[vars, (MemberQ[solVars, removeDash[#]]) &];
 
-     debugPrint["tmpIntegSol before Solve: ",tmpIntegSol];
-     debugPrint["NDExpr before Solve: ",NDExpr];
-     debugPrint["returnVars before Solve: ",returnVars];
+     debugPrint["tmpIntegSol before Solve: ", tmpIntegSol];
+     debugPrint["NDExpr before Solve: ", NDExpr];
+     debugPrint["returnVars before Solve: ", returnVars];
 
      (*improve by takeguchi*)
+     (*
      tmpIntegSol = If[Length[NDExpr] == 0, tmpIntegSol,
         DeleteDuplicates[Flatten[Table[
           First[FullSimplify[ExpToTrig[Quiet[  
@@ -800,12 +801,13 @@ integrateCalc[cons_,
           ]]],
     {i, 1, Length[NDExpr], 1}]]]
     ];
+      *)
      
      (*before improve :*)
-     (* 
+     
         tmpIntegSol=First[Quiet[Solve[Join[Map[(Equal@@#)&,tmpIntegSol],
                  NDExpr],getNDVars[returnVars]],{Solve::incnst,Solve::ifun}]];
-      *)
+      
 
      debugPrint["tmpIntegSol after Solve: ", tmpIntegSol];
     
