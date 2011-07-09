@@ -1,5 +1,5 @@
 #include "SymbolicValue.h"
-#include "TreeInfixPrinter.h"
+#include "../parser/TreeInfixPrinter.h"
 
 #include <cassert>
 #include <sstream>
@@ -43,7 +43,7 @@ std::ostream& SymbolicValue::dump(std::ostream& s) const
 std::string SymbolicValue::get_string() const
 {
   if(is_undefined()) return "";
-  TreeInfixPrinter printer;
+  hydla::parse_tree::TreeInfixPrinter printer;
   std::ostringstream os;
   printer.print_infix(node_,os);
   return os.str();

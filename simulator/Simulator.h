@@ -19,6 +19,7 @@
 #include "VariableMap.h"
 #include "PhaseState.h"
 #include "InitNodeRemover.h"
+#include "TreeInfixPrinter.h"
 
 namespace hydla {
 namespace simulator {
@@ -136,6 +137,7 @@ public:
                                     const phase_state_const_sptr& state)
   {      
     bool ret = false;
+    hydla::parse_tree::TreeInfixPrinter printer;
     switch(state->phase) 
     {
     case PointPhase:
@@ -145,12 +147,8 @@ public:
           "#***** begin point phase *****",
           "\n#** module set **\n",
           ms->get_name(),
-          "\n");
-
-        HYDLA_LOGGER_MS(
-          *ms,
-          "\n#*** variable map ***\n",
-          variable_map_);
+          "\n",
+          ms);
 
         ret = point_phase(ms, state);
         break;
@@ -163,12 +161,8 @@ public:
           "#***** begin interval phase *****",
           "\n#** module set **\n",
           ms->get_name(),
-          "\n");
-
-        HYDLA_LOGGER_MS(
-          *ms,
-          "\n#*** variable map ***\n",
-          variable_map_);
+          "\n",
+          ms);
 
         ret = interval_phase(ms, state);
         break;            

@@ -67,7 +67,8 @@ getValidExpression[expr_] := Block[
 (*
  * 論理積でつながれた各tの下限リストを，再帰で1つずつ調べていく関数．
  * 1つでも定数値に関係なく0以下にできないものがあれば2を返す．
- * そうでないなら1を返す．
+ * そうでなく，1つでも定数値によっては0以下にできないものがあれば3を返す．
+ * いずれでもないなら1を返す．
  *)
 checkInfForEach[underBounds_, constraintsForC_, otherConstraints_, pars_, listOfC_] := Block[
   {ret, tmp, expr},
@@ -80,12 +81,12 @@ checkInfForEach[underBounds_, constraintsForC_, otherConstraints_, pars_, listOf
         2,
         1
       ],
-      (* 0にできるなら，導出できる可能性がある *)
-      tmp = Quiet[Reduce[Join[constraintsForC, otherConstraints, {expr == 0}] , Join[pars,listOfC] ] ];
+      (* 0以下にできるなら，導出できる可能性がある *)
+      tmp = Quiet[Reduce[Join[constraintsForC, otherConstraints, {expr <= 0}] , Join[pars,listOfC] ] ];
       If[tmp === False,
         2,
         (* 必ず導出できるかどうかを判定 *)
-        If[Quiet[Reduce[ForAll[pars, And@@otherConstraints, Reduce[Join[constraintsForC, {expr == 0}] ] ] ] ] =!= False,
+        If[Quiet[Reduce[ForAll[pars, And@@otherConstraints, Reduce[Join[constraintsForC, {expr <= 0}] ] ] ] ] =!= False,
           checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC],
           If[checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC] === 2,
             2,
@@ -112,8 +113,10 @@ checkInf[candidates_, constraints_, pars_] := Block[
     (* tの最小値候補を調べるため，tの下限とt以外の変数についての制約と出現する変数のリストを抽出する． *)
     {underBounds,  constraintsForC, listOfC} = getValidExpression[ret];
     If[underBounds === {},
-      (* 候補が存在しなければ導出不可能 *)
-      {2},
+      (* 候補が存在しなければ導出不可能なので，次を試す *)
+      checkInf[Rest[candidates], constraints, pars ],
+      
+      (* 候補が存在するなら，それを試す．*)
       ret = checkInfForEach[underBounds, constraintsForC, constraints, pars, listOfC ];
       Switch[ret,
         1, {1},
@@ -146,7 +149,7 @@ Quiet[
       sol = exDSolve[expr, vars];
       If[sol === overconstraint,
         {2},
-        If[sol === underconstraint,
+        If[sol === underconstraint || sol[[1]] === {} ,
           (* 警告出したりした方が良いかも？ *)
           {1},
           tStore = sol[[1]];
@@ -159,10 +162,10 @@ Quiet[
           If[sol === False,
             {2},
             (* リストのリストにする *)
-            sol = applyList[sol];
+            sol = applyListToOr[sol];
             sol = Map[applyList, sol];
             (* tの最大下界を0とできる可能性を調べる． *)
-	     If[checkInf[sol, otherExpr, pars] === {2},
+            If[checkInf[sol, otherExpr, pars] === {2},
               {2},
               (* {3}が返ってきたとしても現状では{1}を返すことにする *)
               {1}
@@ -415,9 +418,13 @@ removeTrivialCons[cons_, consVars_] := Block[
 ];
 
 (* Reduceで得られた結果をリスト形式にする *)
-(* AndやOrではなくListでくくる *)
+(* AndではなくListでくくる *)
 applyList[reduceSol_] :=
-  If[Head[reduceSol] === And || Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
+  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
+  
+(* OrではなくListでくくる *)
+applyListToOr[reduceSol_] :=
+  If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
 (* パラメータの制約を得る *)
 getParamCons[cons_] :=
@@ -791,8 +798,8 @@ integrateCalc[cons_,
              Solve[Join[Map[(Equal @@ #) &,tmpIntegSol], {TrigToExp[NDExpr[[i]]]}],getNDVars[returnVars]], 
              {Solve::incnst, Solve::ifun,Solve::svars}]
           ]]],
-	  {i, 1, Length[NDExpr], 1}]]]
-	];
+    {i, 1, Length[NDExpr], 1}]]]
+    ];
      
      (*before improve :*)
      (* 
@@ -800,7 +807,7 @@ integrateCalc[cons_,
                  NDExpr],getNDVars[returnVars]],{Solve::incnst,Solve::ifun}]];
       *)
 
-     debugPrint["tmpIntegSol after Solve: ",tmpIntegSol];
+     debugPrint["tmpIntegSol after Solve: ", tmpIntegSol];
     
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
@@ -809,9 +816,9 @@ integrateCalc[cons_,
     tmpPosAsk = Map[(# /. tmpIntegSol) &, posAsk];
     tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
     tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
-    otherExpr = Join[paramCons, Map[(# /. tmpIntegSol) &, otherExpr] ];
-    debugPrint["nextpointphase arg:", {False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, otherExpr}];
-    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons,otherExpr ];
+    
+    debugPrint["nextpointphase arg:", {False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons}];
+    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons];
 
     tmpVarMap = 
       Map[({getVariableName[#], 
@@ -820,6 +827,10 @@ integrateCalc[cons_,
           returnVars],
 
     (* false *)
+    debugPrint["tmpIntegSol before Solve: false"];
+    debugPrint["NDExpr before Solve: false"];
+    debugPrint["returnVars before Solve: false"];
+    debugPrint["tmpIntegSol after Solve: false"];
     debugPrint["nextpointphase arg: no next point phase"];
     debugPrint["tmpIntegSol", tmpIntegSol];
     tmpMinT = {{maxTime // FullForm // ToString, {}, 1}};
@@ -831,7 +842,6 @@ integrateCalc[cons_,
   debugPrint["tmpRet:", tmpRet];
   tmpRet
 ],
-  (* debugPrint["MessageList:", $MessageList]; *)
   {0, $MessageList}
 ]];
 
