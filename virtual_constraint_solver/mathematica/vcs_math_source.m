@@ -792,22 +792,17 @@ integrateCalc[cons_,
      debugPrint["returnVars before Solve: ", returnVars];
 
      (*improve by takeguchi*)
-     (*
      tmpIntegSol = If[Length[NDExpr] == 0, tmpIntegSol,
-        DeleteDuplicates[Flatten[Table[
-          First[FullSimplify[ExpToTrig[Quiet[  
-             Solve[Join[Map[(Equal @@ #) &,tmpIntegSol], {TrigToExp[NDExpr[[i]]]}],getNDVars[returnVars]], 
-             {Solve::incnst, Solve::ifun,Solve::svars}]
-          ]]],
-    {i, 1, Length[NDExpr], 1}]]]
-    ];
-      *)
-     
+          First[FullSimplify[ExpToTrig[Quiet[
+              Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], TrigToExp[NDExpr]], getNDVars[returnVars]],
+          {Solve::incnst, Solve::ifun, Solve::svars}]]]]
+     ];
+    
      (*before improve :*)
-     
+     (*     
         tmpIntegSol=First[Quiet[Solve[Join[Map[(Equal@@#)&,tmpIntegSol],
                  NDExpr],getNDVars[returnVars]],{Solve::incnst,Solve::ifun}]];
-      
+     *)
 
      debugPrint["tmpIntegSol after Solve: ", tmpIntegSol];
     
