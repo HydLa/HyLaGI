@@ -315,9 +315,16 @@ procedure exDSolve(expr_, init_, vars_)$
 
   solveans_ := solve(solveexpr_, solvevars_);
   write "solve: ", solveans_;
-  % solveが解無しの時(overconstraint?)
-  if(solveans_={}) then return "SOLVEERROR_";
+  % solveが解無しの時 overconstraintと想定
+  if(solveans_={}) then return retoverconstraint___;
 
+  % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
+  for each x in table_ do 
+    if(freeof(solveans_, third(x))) then tmp_:=true;
+  if(tmp_=true) then return retunderconstraint___;
+  
+  % write("solvevars is not Free");
+  
   % solve結果xに含まれるラプラス変換対から、それぞれの変数に対する方程式を取り出す。
   ans_:= for each table in table_ collect
       (first table) = invlap(lgetf((third table), solveans_),s,t);
