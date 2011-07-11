@@ -168,10 +168,6 @@
 				RelativePath=".\SymbolicValueRange.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\TreeInfixPrinter.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -192,10 +188,6 @@
 			</File>
 			<File
 				RelativePath=".\SymbolicValueRange.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeInfixPrinter.h"
 				>
 			</File>
 		</Filter>

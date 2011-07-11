@@ -200,6 +200,16 @@
 						Outputs="$(ProjectDir)sls_math_source.cpp"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="sls_math_source.mに対するカスタム ビルド ステップを実行しています。"
+						CommandLine="$(SolutionDir)msc.exe sls_math_source &lt; $(InputPath) &gt; $(ProjectDir)sls_math_source.cpp"
+						Outputs="$(ProjectDir)sls_math_source.cpp"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>

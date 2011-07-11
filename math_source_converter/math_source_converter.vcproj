@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)\msc.exe"
+				OutputFile="$(SolutionDir)msc.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -133,7 +133,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)\msc.exe"
+				OutputFile="$(SolutionDir)msc.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"

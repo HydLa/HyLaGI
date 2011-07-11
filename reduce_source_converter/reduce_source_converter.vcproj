@@ -2,10 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="parser"
-	ProjectGUID="{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}"
-	RootNamespace="parser"
-	Keyword="Win32Proj"
+	Name="reduce_source_converter"
+	ProjectGUID="{A70F486E-9DEF-4E92-8EB4-CD32F76D63E1}"
+	RootNamespace="reduce_source_converter"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -20,7 +19,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,12 +40,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\common"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -60,10 +57,18 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)rsc.exe"
+				LinkIncremental="2"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -75,6 +80,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -82,7 +90,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -105,11 +113,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -123,10 +129,20 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)rsc.exe"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -136,6 +152,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -151,43 +170,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\BaseNodeVisitor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaAST.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Node.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeIDUpdater.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeGraphvizDumper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeSemanticAnalyzer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SExpParser.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeInfixPrinter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeVisitor.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -196,86 +179,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\BaseNodeVisitor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CommentGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DefaultNodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DefinitionContainer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaAST.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HydLaGrammarRule.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Node.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeIDRebuilder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeIDUpdater.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NodeTreeGenerator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseError.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTree.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeGraphvizDumper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseTreeSemanticAnalyzer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SExpGrammar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SExpParser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeInfixPrinter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeVisitor.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"
