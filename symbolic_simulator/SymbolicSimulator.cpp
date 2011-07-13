@@ -29,9 +29,6 @@
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 #include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 
-#include "../virtual_constraint_solver/reduce/REDUCEVCSPoint.h"
-#include "../virtual_constraint_solver/reduce/REDUCELink.h"
-
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 

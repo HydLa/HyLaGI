@@ -442,7 +442,7 @@ end;
 
 
 
-load_package assist;
+%load_package "assist";
 
 procedure simplifyExpr(expr_)$
 begin;
