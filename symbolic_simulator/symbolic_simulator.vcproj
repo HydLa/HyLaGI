@@ -175,6 +175,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\StateResult.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicParameter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SymbolicSimulator.h"
 				>
 			</File>
