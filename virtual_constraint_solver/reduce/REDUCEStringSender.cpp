@@ -10,6 +10,9 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
+/** ‹óW‡‚ğ•\‚·REDUCE“ü—Í—p•¶š—ñ "{}" */
+const std::string REDUCEStringSender::empty_list_string("{}");
+
 REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
   cl_(cl),
   differential_count_(0),

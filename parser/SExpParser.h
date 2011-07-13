@@ -16,6 +16,9 @@ public:
   typedef boost::spirit::classic::tree_parse_info<pos_iter_t>                 tree_info_t;
   typedef boost::spirit::classic::tree_match<pos_iter_t>::tree_iterator       tree_iter_t;
   typedef boost::spirit::classic::tree_match<pos_iter_t>::const_tree_iterator const_tree_iter_t;
+
+  // ‹óW‡‚ğ•\‚·S® "list"
+  static const std::string empty_list_s_exp;
   
   SExpParser();
   ~SExpParser();

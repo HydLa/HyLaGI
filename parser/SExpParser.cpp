@@ -12,6 +12,9 @@ using namespace boost::spirit::classic;
 namespace hydla {
 namespace parser {
 
+/** ‹óW‡‚ğ•\‚·S®"list" */
+const std::string SExpParser::empty_list_s_exp("list");
+
 SExpParser::SExpParser()
 {
 }

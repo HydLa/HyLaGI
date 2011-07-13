@@ -37,6 +37,8 @@ public:
   typedef PacketSender::vars_const_iterator vars_const_iterator;
   typedef PacketSender::node_sptr           node_sptr;
 
+  // ‹óW‡‚ğ•\‚·REDUCE“ü—Í—p•¶š—ñ "{}"
+  static const std::string empty_list_string;
 
   REDUCEStringSender(REDUCELink& cl);
 

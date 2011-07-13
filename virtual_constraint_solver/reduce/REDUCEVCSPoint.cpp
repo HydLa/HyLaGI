@@ -472,8 +472,8 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS("--- receive ---");
 
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
+  cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
@@ -586,8 +586,8 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
+  cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("check_entailment_ans: ",
@@ -680,7 +680,7 @@ void REDUCEVCSPoint::send_cs() const
     HYDLA_LOGGER_VCS("or_string: ", or_string);
 
     // 文字列が"list"のみであるとき、空集合を意味する
-    if (or_string == "list") cl_->send_string("{}");
+    if (or_string == hydla::parser::SExpParser::empty_list_s_exp) cl_->send_string("{}");
     else cl_->send_string(or_string);
   }
 }

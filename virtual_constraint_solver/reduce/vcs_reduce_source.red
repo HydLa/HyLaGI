@@ -460,7 +460,7 @@ end;
 procedure checkLessThan(lhs_, rhs_)$
 begin;
   scalar ret_;
-  ret_:= lhs_ < rhs_;
+  ret_:= if(lhs_ < rhs_) then rettrue___ else retfalse___;
   write("ret_:", ret_);
 
   return ret_;
