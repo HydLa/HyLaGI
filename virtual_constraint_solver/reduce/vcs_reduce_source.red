@@ -1,5 +1,10 @@
 load_package sets;
 
+%MathematicaでいうFold関数
+procedure myFoldLeft(func_, init_, list_)$
+  if(list_ = {}) then init_
+  else myFoldLeft(func_, func_(init_, first(list_)), rest(list_))$
+
 procedure myif(x,op,y,approx_precision)$
 %入力: 論理式(ex. sqrt(2), greaterp_, sin(2)), 精度
 %出力: t or nil or -1
@@ -391,16 +396,62 @@ end;
 %IC_SOLVER_ERROR___:= {0};
 %IC_NORMAL_END___:= {1};
 
-%TODO exDSolve以降の作成
-
 procedure integrateCalc(cons_, init_, posAsk_, negAsk_, NACons_, vars_, maxTime_)$
 begin;
-  scalar tmp_, solvevars_, table_;
-  tmp_:= exDSolve(cons_, init_, vars_);
+  scalar tmpSol_, tmpPosAsk_, tmpNegAsk_, tmpNACons_, 
+         tmpVarMap_, tmpMinT_, integAns_;
+  tmpSol_:= exDSolve(cons_, init_, vars_);
+  write("tmpSol_:", tmpSol_);
+
+  % TODO:Solver error処理
+
+  let{tmpSol_};
+  tmpPosAsk_:= posAsk_;
+  tmpNegAsk_:= negAsk_;
+  tmpNACons_:= NACons_;
+  write("tmpPosAsk_:", tmpPosAsk_, "tmpNegAsk_:", tmpNegAsk_, "tmpNACons_:", tmpNACons_);
+
+  tmpVarMap_:=tmpSol_;
+  write("tmpVarMap_:", tmpVarMap_);
+
+  tmpMinT_:= calcNextPointPhaseTime(maxTime_, tmpPosAsk_, tmpNegAsk_, tmpNACons_);
+  write("tmpMinT_:", tmpMinT_);
+
+  integAns_:= {1, tmpVarMap_, tmpMinT_};
+  write("integAns_", integAns_);
   
-  return tmp_;
+  return integAns_;
 end;
 
+
+
+procedure calcNextPointPhaseTime(maxTime_, posAsk_, negAsk_, NACons_)$
+begin;
+  scalar minTList_, ans_;
+
+
+%  % TODO:list部分をなんとかする
+%  ans_:= fold(calcMinTime, {maxTime_, {}}, {posAsk_, negAsk_,
+%  NACons_});
+
+  minTList_:= map(calcMinTime, {posAsk_, negAsk_, NACons_});
+  ans_:= myfind(0, minTList_);
+  write("ans_", ans_);
+
+  return ans_;
+end;
+
+
+
+% Fold用
+
+procedure calcMinTime(currentMinPair_, newTriple_)$
+begin;
+  scalar currentMinT_, currentMinTriple_, sol_, minT_;
+
+
+
+end;
 
 
 

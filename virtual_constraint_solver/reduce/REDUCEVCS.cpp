@@ -63,6 +63,7 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
 
   // REDUCE‚ÌŠÖ”’è‹`‚ğ‘—M
   cl_.send_string(vcs_reduce_source());
+//  cl_.read_until_redeval();
   cl_.skip_until_redeval();
 }
 

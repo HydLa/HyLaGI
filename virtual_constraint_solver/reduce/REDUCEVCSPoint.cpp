@@ -472,8 +472,8 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
 /////////////////// ŽóMˆ—
   HYDLA_LOGGER_VCS("--- receive ---");
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
@@ -586,8 +586,8 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
 /////////////////// ŽóMˆ—
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("check_entailment_ans: ",

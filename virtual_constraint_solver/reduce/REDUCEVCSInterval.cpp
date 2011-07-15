@@ -323,7 +323,8 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
 /////////////////// ŽóMˆ—
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
-  cl_->read_until_redeval();
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
@@ -464,6 +465,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   HYDLA_LOGGER_VCS( "--- receive ---");
 
   cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("check_entailment_ans: ",
