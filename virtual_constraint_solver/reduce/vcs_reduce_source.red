@@ -272,7 +272,6 @@ begin;
 end;
 
 retsolvererror___ := "RETSOLVERERROR___";
-% TODO over, underの分岐
 retoverconstraint___ := "RETOVERCONSTRAINT___";
 retunderconstraint___ := "RETUNDERCONSTRAINT___";
 
@@ -377,21 +376,44 @@ end;
 
 
 
-%CCI_SOLVER_ERROR___:= {0};
-%CCI_ENTAILED___:= {1};
-%CCI_NOT_ENTAILED___:= {2};
-%CCI_UNKNOWN___:= {3};
+%%CEI_SOLVER_ERROR___:= {0};
+%CEI_ENTAILED___:= {1};
+%CEI_NOT_ENTAILED___:= {2};
+%CEI_UNKNOWN___:= {3};
 
-%TODO exDSolve以降の作成
 
 procedure checkEntailmentInterval(guard_, store_, init_, vars_, pars_)$
 begin;
   scalar tmp_, solvevars_, table_;
   tmp_:= exDSolve(store_, init_, vars_);
-  
-  return tmp_;
-end;
 
+  write("tmp_: ", tmp_);
+  
+  otherExpr_:={};
+
+  % "=" が無い => 等式以外の制約 と想定
+  for each x in store_ do
+    if(freeof(x, equal))
+      then otherExpr_:= append(otherExpr_, {x});
+  
+  % tGuard かつ otherExpr かつ t>0 の導出
+  example_:=sub(tmp_, guard_) and mymkand sub(tmp_, otherExpr_) and t > 0;
+  %  - 5*t**2 + 10 = 0 and true and t > 0$
+
+  % bballPP一回目に関してOK, 2回目以降は解が冗長になりERROR
+  ans_:=rlqe ex(t,example_);
+
+  write("rlqe ex(t,example_): ",rlqe ex(t,example_));
+  
+  if(ans_=true) then return CEI_ENTAILED___
+  else if(ans_=false) then return CEI_NOT_ENTAILED___
+  else 
+    << 
+     write("rlqe ans: ", ans_);
+     return CEI_UNKNOWN___;
+    >>;
+
+end;
 
 %IC_SOLVER_ERROR___:= {0};
 %IC_NORMAL_END___:= {1};
@@ -526,4 +548,42 @@ clear expr_, pexpr_, vars_;
 
 
 ;end;
+%%CEI_SOLVER_ERROR___:= {0};
+%CEI_ENTAILED___:= {1};
+%CEI_NOT_ENTAILED___:= {2};
+%CEI_UNKNOWN___:= {3};
+
+
+procedure checkEntailmentInterval(guard_, store_, init_, vars_, pars_)$
+begin;
+  scalar tmp_, solvevars_, table_;
+  tmp_:= exDSolve(store_, init_, vars_);
+
+  write("tmp_: ", tmp_);
+  
+  otherExpr_:={};
+
+  % "=" が無い => 等式以外の制約 と想定
+  for each x in store_ do
+    if(freeof(x, equal))
+      then otherExpr_:= append(otherExpr_, {x});
+  
+  % tGuard かつ otherExpr かつ t>0 の導出
+  example_:=sub(tmp_, guard_) and mymkand sub(tmp_, otherExpr_) and t > 0;
+  %  - 5*t**2 + 10 = 0 and true and t > 0$
+
+  % bballPP一回目に関してOK, 2回目以降は解が冗長になりERROR
+  ans_:=rlqe ex(t,example_);
+
+  write("rlqe ex(t,example_): ",rlqe ex(t,example_));
+  
+  if(ans_=true) then return CEI_ENTAILED___
+  else if(ans_=false) then return CEI_NOT_ENTAILED___
+  else 
+    << 
+     write("rlqe ans: ", ans_);
+     return CEI_UNKNOWN___;
+    >>;
+
+end;
 
