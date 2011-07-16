@@ -394,7 +394,6 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 
   REDUCEStringSender rss(*cl_);
 
-  assert(0);
 
 //////////////////// 送信処理
 
@@ -405,6 +404,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   HYDLA_LOGGER_VCS("----- send guard_ -----");
   cl_->send_string("guard_:=");
   rss.put_node(negative_ask->get_guard(), true);
+  cl_->send_string(";");
 
   
   // store_を渡す（constraint_store、appended_asks、parameter_consの3つから成る）
@@ -473,6 +473,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 
   VCSResult result;
     
+/*    
   // S式パーサで読み取る
   SExpParser sp;
   sp.parse_main(ans.c_str());
@@ -485,22 +486,25 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
+*/
+  std::string ret_code_str = ans;
   
-  if(ret_code_str == "(list ccp_solver_error___)"){
+  if(ret_code_str == "cei_solver_error___"){
     // ソルバエラー
     result = VCSR_SOLVER_ERROR;
   }
-  else if(ret_code_str == "ccp_entailed___") {
+  else if(ret_code_str == "cei_entailed___") {
     result = VCSR_TRUE;
     HYDLA_LOGGER_VCS_SUMMARY("entailed");
   }
-  else if(ret_code_str == "ccp_not_entailed___") {
+  else if(ret_code_str == "cei_not_entailed___") {
     result = VCSR_FALSE;
     HYDLA_LOGGER_VCS_SUMMARY("not entailed");
   }
   else{
-    assert(ret_code_str == "(list ccp_unknown___)");
-    result = VCSR_UNKNOWN;
+    assert(ret_code_str == "cei_unknown___");
+//    result = VCSR_UNKNOWN;
+    result = VCSR_FALSE;
   }
 
   return result;
@@ -550,6 +554,7 @@ VCSResult REDUCEVCSInterval::integrate(
 
   HYDLA_LOGGER_VCS(constraint_store_);
 
+  assert(0);
 /////////////////// 送信処理
   REDUCEStringSender rss(*cl_);
 
