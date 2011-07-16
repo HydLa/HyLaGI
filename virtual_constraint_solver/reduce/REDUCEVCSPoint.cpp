@@ -627,14 +627,11 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
     HYDLA_LOGGER_VCS_SUMMARY("not entailed");
   }
   else if(ans == "(list ccp_unknown___)"){
-//    assert(ans == "(list ccp_unknown___)");
+    assert(ans == "(list ccp_unknown___)");
     result = VCSR_UNKNOWN;
   }
-  else result = VCSR_FALSE;
-    
 
-  //return result;
-  return VCSR_FALSE;
+  return result;
 }
 
 

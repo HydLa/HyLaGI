@@ -191,9 +191,9 @@ end;
 procedure checkentailment(guard_, store_, vars_)$
 begin;
   scalar flag_, ans_, sol_, nsol_;
-  sol_:=rlqe(guard_ and first store_);
-%  nsol_:=rlqe(not guard_ and first store_);
-   nsol_:=rlqe(not sol_ and first store_);
+  sol_:=rlqe(guard_ and mymkand store_);
+%  nsol_:=rlqe(not guard_ and mymkand store_);
+   nsol_:=rlqe(not sol_ and mymkand store_);
 write "sol_: ", sol_;
 write "nsol_: ", nsol_;
 
