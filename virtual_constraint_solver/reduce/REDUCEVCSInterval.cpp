@@ -514,6 +514,20 @@ void REDUCEVCSInterval::send_ask_guards(
   REDUCEStringSender& rss, 
   const hydla::simulator::ask_set_t& asks) const
 {
+  // ただ単にガードの式のリスト形式で送信する
+  cl_->send_string("{");
+  hydla::simulator::ask_set_t::const_iterator it  = asks.begin();
+  hydla::simulator::ask_set_t::const_iterator end = asks.end();
+  for(; it!=end; ++it)
+  {
+    if(it!=asks.begin()) cl_->send_string(",");
+    HYDLA_LOGGER_VCS("send ask : ", **it);
+    // guard条件を送る
+    rss.put_node((*it)->get_guard(), true);
+  }
+  cl_->send_string("}");
+
+/*
   // {ガードの式、askのID}のリスト形式で送信する
 
   cl_->send_string("{");
@@ -539,6 +553,7 @@ void REDUCEVCSInterval::send_ask_guards(
     cl_->send_string("}");
   }
   cl_->send_string("}");
+*/
 }
 
 VCSResult REDUCEVCSInterval::integrate(
@@ -789,9 +804,27 @@ void REDUCEVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
 
 void REDUCEVCSInterval::send_not_adopted_tells(REDUCEStringSender& rss, const not_adopted_tells_list_t& na_tells_list) const
 {
-  // {tellの式、tellのID}のリストのリスト形式で送信する
   HYDLA_LOGGER_VCS("----- send not adopted constraint -----");
+  // ただ単にtellの式のリスト形式で送信する
+  // 採用していないモジュール
+  cl_->send_string("{");
+  not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
+  not_adopted_tells_list_t::const_iterator na_tells_list_end = na_tells_list.end();
+  for(; na_tells_list_it!=na_tells_list_end; ++na_tells_list_it){
+    if(na_tells_list_it!=na_tells_list.begin()) cl_->send_string(",");
+    // 採用していない、あるモジュール内のtell制約
+    tells_t::const_iterator na_tells_it  = (*na_tells_list_it).begin();
+    tells_t::const_iterator na_tells_end = (*na_tells_list_it).end();
+    for(; na_tells_it!=na_tells_end; ++na_tells_it) {
+      HYDLA_LOGGER_VCS("send not adopted tell : ", **na_tells_it);
+      // tell制約を送る
+      rss.put_node((*na_tells_it)->get_child(), true);
+    }
+  }
+  cl_->send_string("}");
 
+/*
+  // {tellの式、tellのID}のリストのリスト形式で送信する
   // 採用していないモジュール
   cl_->send_string("{");
   not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
@@ -823,6 +856,7 @@ void REDUCEVCSInterval::send_not_adopted_tells(REDUCEStringSender& rss, const no
     cl_->send_string("}");
   }
   cl_->send_string("}");
+*/
 }
 
 void REDUCEVCSInterval::send_cs(REDUCEStringSender& rss) const

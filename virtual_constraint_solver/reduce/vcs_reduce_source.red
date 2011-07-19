@@ -384,7 +384,7 @@ end;
 
 procedure checkEntailmentInterval(guard_, store_, init_, vars_, pars_)$
 begin;
-  scalar tmp_, solvevars_, table_;
+  scalar tmp_, otherExpr_, tGuard_, tGuardQE_, tGuardSol_, infList_, ans_;
   tmp_:= exDSolve(store_, init_, vars_);
 
   write("tmp_: ", tmp_);
@@ -395,16 +395,43 @@ begin;
   for each x in store_ do
     if(freeof(x, equal))
       then otherExpr_:= append(otherExpr_, {x});
-  
-  % tGuard かつ otherExpr かつ t>0 の導出
-  example_:=sub(tmp_, guard_) and mymkand sub(tmp_, otherExpr_) and t > 0;
-  %  - 5*t**2 + 10 = 0 and true and t > 0$
 
-  % bballPP一回目に関してOK, 2回目以降は解が冗長になりERROR
-  ans_:=rlqe ex(t,example_);
+  tGuard_:= sub(tmp_,guard_);
+  write("tGuard_: ", tGuard_);
 
-  write("rlqe ex(t,example_): ",rlqe ex(t,example_));
-  
+  tGuardQE_:= rlqe (tGuard_);
+  write("tGuardQE_: ", tGuardQE_);
+
+  % ただのtrueやfalseはそのまま判定結果となる
+  if(tGuardQE_ = true) then return CEI_ENTAILED___
+  else if(tGuardQE_ = false) then return CEI_NOT_ENTAILED___;
+
+  % とりあえずtに関して解く
+  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要があ
+  % る
+  % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
+  tGuardSol_:= solve(tGuardQE_,t);
+
+  infList_:= union(for each x in tGuardSol_ join checkInfUnit(x));
+  write("infList_: ", infList_);
+
+  % パラメタ無しなら解は1つになるはず
+  if(length(infList_) neq 1) then return CEI_SOLVER_ERROR___;
+  ans_:= first(infList_);
+  write("ans_: ", ans_);
+
+
+  %% tGuard かつ otherExpr かつ t>0 の導出
+  %example_:=sub(tmp_, guard_) and mymkand sub(tmp_, otherExpr_) and t
+  %> 0;
+  %%  - 5*t**2 + 10 = 0 and true and t > 0$
+
+  %% bballPP一回目に関してOK, 2回目以降は解が冗長になりERROR
+  %ans_:=rlqe ex(t,example_);
+
+  %write("rlqe ex(t,example_): ",rlqe ex(t,example_));
+
+
   if(ans_=true) then return CEI_ENTAILED___
   else if(ans_=false) then return CEI_NOT_ENTAILED___
   else 
@@ -414,6 +441,24 @@ begin;
     >>;
 
 end;
+
+
+
+procedure checkInfUnit(tExpr_)$
+begin;
+  scalar infCheckAns_;
+  write("tExpr_: ", tExpr_);
+%  if(mymin(part(tExpr_,2),0) = 0) then return {};
+  % 等式の場合はfalse
+  if(part(tExpr_,0)=equal) then infCheckAns_:= {false}
+  % TODO:不等式の場合への対応
+  else infCheckAns_:= {false};
+  write("infCheckAns_: ", infCheckAns_);
+
+  return infCheckAns_;
+end;
+
+
 
 %IC_SOLVER_ERROR___:= {0};
 %IC_NORMAL_END___:= {1};
@@ -431,7 +476,9 @@ begin;
   tmpPosAsk_:= posAsk_;
   tmpNegAsk_:= negAsk_;
   tmpNACons_:= NACons_;
-  write("tmpPosAsk_:", tmpPosAsk_, "tmpNegAsk_:", tmpNegAsk_, "tmpNACons_:", tmpNACons_);
+  write("tmpPosAsk_:", tmpPosAsk_, 
+        "tmpNegAsk_:", tmpNegAsk_,
+        "tmpNACons_:", tmpNACons_);
 
   tmpVarMap_:=tmpSol_;
   write("tmpVarMap_:", tmpVarMap_);
@@ -453,10 +500,9 @@ begin;
 
 
 %  % TODO:list部分をなんとかする
-%  ans_:= fold(calcMinTime, {maxTime_, {}}, {posAsk_, negAsk_,
-%  NACons_});
+%  ans_:= fold(calcMinTime, {maxTime_, {}}, {posAsk_, negAsk_, NACons_});
 
-  minTList_:= map(calcMinTime, {posAsk_, negAsk_, NACons_});
+  minTList_:= map(calcMinTime, union(union(posAsk_, negAsk_), NACons_));
   ans_:= myfind(0, minTList_);
   write("ans_", ans_);
 

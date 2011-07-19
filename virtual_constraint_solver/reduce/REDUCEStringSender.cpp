@@ -43,7 +43,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Equal> node)                 {
 }
 void REDUCEStringSender::visit(boost::shared_ptr<UnEqual> node)               {
 	accept(node->get_lhs());
-  cl_.send_string("!=");
+  cl_.send_string(" neq ");
 	accept(node->get_rhs());
 }
 void REDUCEStringSender::visit(boost::shared_ptr<Less> node)                  {
