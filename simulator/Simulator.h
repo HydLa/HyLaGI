@@ -148,7 +148,7 @@ public:
           "\n#** module set **\n",
           ms->get_name(),
           "\n",
-          ms);
+          *ms);
 
         ret = point_phase(ms, state);
         break;
@@ -162,7 +162,7 @@ public:
           "\n#** module set **\n",
           ms->get_name(),
           "\n",
-          ms);
+          *ms);
 
         ret = interval_phase(ms, state);
         break;            

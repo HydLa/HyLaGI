@@ -122,61 +122,41 @@ bool MathematicaVCS::reset(const variable_map_t& vm, const parameter_map_t& pm)
   return vcs_->reset(vm, pm);
 }
 
+
 bool MathematicaVCS::create_maps(create_result_t &create_result)
 {
   return vcs_->create_maps(create_result);
 }
 
 
-VCSResult MathematicaVCS::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
+void MathematicaVCS::add_constraint(const constraints_t& constraints)
 {
-  return vcs_->add_constraint(collected_tells, appended_asks);
+  vcs_->add_constraint(constraints);
 }
-  
-VCSResult MathematicaVCS::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
+
+
+VCSResult MathematicaVCS::check_consistency()
 {
-  return vcs_->check_entailment(negative_ask, appended_asks);
+  return vcs_->check_consistency();
+}
+
+
+VCSResult MathematicaVCS::check_consistency(const constraints_t& constraints)
+{
+  return vcs_->check_consistency(constraints);
 }
 
 VCSResult MathematicaVCS::integrate(
   integrate_result_t& integrate_result,
-  const positive_asks_t& positive_asks,
-  const negative_asks_t& negative_asks,
+  const constraints_t &constraints,
   const time_t& current_time,
-  const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list,
-  const appended_asks_t& appended_asks)
+  const time_t& max_time)
 {
   return vcs_->integrate(integrate_result, 
-                         positive_asks, 
-                         negative_asks, 
+                         constraints,
                          current_time, 
-                         max_time,
-                         not_adopted_tells_list,
-                         appended_asks);
+                         max_time);
 }
-
-// void MathematicaVCS::change_mode(Mode m)
-// {
-//   if(mode_ == m) {
-//     vcs_->reset();
-//   }
-//   else {
-//     mode_ = m;
-//     switch(m) {
-//       case DiscreteMode:
-//         vcs_.reset(new MathematicaVCSPoint(ml_));
-//         break;
-
-//       case ContinuousMode:
-//         vcs_.reset(new MathematicaVCSInterval(ml_));
-//         break;
-
-//       default:
-//         assert(0);
-//     }
-//   }
-// }
 
 
 void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){
@@ -184,7 +164,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_
 }
 
 
-  //value_tを指定された精度で数値に変換する
+//value_tを指定された精度で数値に変換する
 std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
   std::string ret;
   PacketSender ps(ml_);

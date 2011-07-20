@@ -236,12 +236,17 @@ void MathematicaExpressionConverter::set_parameter_on_value(MathematicaExpressio
   return;
 }
 
-std::string MathematicaExpressionConverter::convert_symbolic_value_to_math_string(const value_t &val){
+
+std::string MathematicaExpressionConverter::convert_node_to_math_string(const node_sptr &node){
   string_for_math_string_.clear();
   differential_count_=0;
   in_prev_=0;
-  accept(val.get_node());
+  accept(node);
   return string_for_math_string_;
+}
+
+std::string MathematicaExpressionConverter::convert_symbolic_value_to_math_string(const value_t &val){
+  return convert_node_to_math_string(val.get_node());
 }
 
 #define START_P "["
@@ -364,15 +369,20 @@ void MathematicaExpressionConverter::visit(boost::shared_ptr<Variable> node)
   }
   
   if(in_prev_){
-    tmp << "prev[" << node->get_name() << "]";
+    tmp << "prev[" << PacketSender::var_prefix << node->get_name() << "]";
   }else{
-    tmp << node->get_name();
+    tmp << PacketSender::var_prefix << node->get_name();
   }
   
   if(differential_count_){
    tmp << "]";
   }
 
+  var_info_t new_var = 
+    boost::make_tuple(node->get_name(), 
+                      differential_count_, 
+                      in_prev_ && !ignore_prev_);
+  vars_.insert(new_var);
   string_for_math_string_.append(tmp.str());
 }
 

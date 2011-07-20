@@ -16,25 +16,6 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-namespace {
-
-struct MaxDiffMapDumper
-{
-  template<typename T>
-  MaxDiffMapDumper(T it, T end)
-  {
-    for(; it!=end; ++it) {
-      s << "name: " << it->first
-        << "  diff: " << it->second
-        << "\n";      
-    }
-  }
-
-  std::stringstream s;
-};
-
-}
-
 
 MathematicaVCSInterval::MathematicaVCSInterval(MathLink* ml, int approx_precision) :
   ml_(ml),
@@ -58,93 +39,30 @@ bool MathematicaVCSInterval::reset(const variable_map_t& variable_map)
   if(variable_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Variables");
-    return true;
   }
-  HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", 
-                     variable_map);
-
   variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
   variable_map_t::variable_list_t::const_iterator end = variable_map.end();
   for(; it!=end; ++it) {
-    if(!it->second.is_undefined()) {
-      constraint_store_.init_vars.insert(
-        std::make_pair(it->first, it->second));
-    }
-
-    else {
-      value_t value;
-      constraint_store_.init_vars.insert(
-        std::make_pair(it->first, value));
-    }
-
-    // 初期値制約に関するmax_diff_mapに追加
-    constraint_store_t::init_vars_max_diff_map_t::iterator ivmd_it = 
-      constraint_store_.init_vars_max_diff_map.find(it->first.name);
-    if(ivmd_it==constraint_store_.init_vars_max_diff_map.end()) 
-    {
-      constraint_store_.init_vars_max_diff_map.insert(
-        std::make_pair(it->first.name, it->first.derivative_count));
-    }
-    else if(it->first.derivative_count > ivmd_it->second)
-    {
-      ivmd_it->second = it->first.derivative_count;
-    }
-
+    constraint_store_.init_vars.insert(
+      std::make_pair(it->first, it->second));
   }
-
-  HYDLA_LOGGER_VCS(constraint_store_);
-
   return true;
 }
-
-
 
 bool MathematicaVCSInterval::reset(const variable_map_t& variable_map,  const parameter_map_t& parameter_map)
 {
   if(!reset(variable_map)){
     return false;
   }
-
   if(parameter_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
-    return true;
   }
-  HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", 
-                     parameter_map);
-
   parameter_map_=parameter_map;
-
+  HYDLA_LOGGER_VCS(constraint_store_);
   return true;
 }
 
-
-
-void MathematicaVCSInterval::create_max_diff_map(
-  PacketSender& ps, max_diff_map_t& max_diff_map)
-{
-  PacketSender::vars_const_iterator vars_it  = ps.vars_begin();
-  PacketSender::vars_const_iterator vars_end = ps.vars_end();
-  for(; vars_it!=vars_end; ++vars_it) {
-    std::string name(vars_it->get<0>());
-    int derivative_count = vars_it->get<1>();
-
-    max_diff_map_t::iterator it = max_diff_map.find(name);
-    if(it==max_diff_map.end()) {
-      max_diff_map.insert(
-        std::make_pair(name, derivative_count));
-    }
-    else if(it->second < derivative_count) {
-      it->second = derivative_count;
-    }    
-  }
-
-  HYDLA_LOGGER_VCS(
-    "-- max diff map --\n",
-    MaxDiffMapDumper(max_diff_map.begin(), 
-                     max_diff_map.end()).s.str());
-
-}
 
 void MathematicaVCSInterval::send_init_cons(
   PacketSender& ps, 
@@ -162,25 +80,17 @@ void MathematicaVCSInterval::send_init_cons(
 
   // 送る必要のある初期値制約をカウント
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
-    
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
-
-
-    // 初期値制約のうち、集めたtell制約に出現する際の最大微分回数よりも小さい微分回数のものをカウントする
     if(md_it!=max_diff_map.end() && 
-       md_it->second  > init_vars_it->first.derivative_count)
+       md_it->second  > init_vars_it->first.derivative_count &&
+       !init_vars_it->second.is_undefined())
     {
       init_vars_count++;
     }
-
-
   }
 
-
   HYDLA_LOGGER_VCS("init_vars_count: ", init_vars_count);
-
-
   // 制約をMathematicaへ送信
   ml_->put_function("List", init_vars_count);
   init_vars_it  = constraint_store_.init_vars.begin();
@@ -188,10 +98,9 @@ void MathematicaVCSInterval::send_init_cons(
   for(; init_vars_it!=init_vars_end; ++init_vars_it) {
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
-
-
     if(md_it!=max_diff_map.end() &&
-       md_it->second  > init_vars_it->first.derivative_count) 
+       md_it->second  > init_vars_it->first.derivative_count &&
+       !init_vars_it->second.is_undefined()) 
     {
        ml_->put_function("Equal", 2);
         // 変数名
@@ -209,16 +118,12 @@ void MathematicaVCSInterval::send_init_cons(
         }
         ps.put_node(init_vars_it->second.get_node(), PacketSender::VA_None, false);
     }
-
   }
-
 }
-
 
 
 void MathematicaVCSInterval::send_parameter_cons() const{
   HYDLA_LOGGER_VCS("---- Begin MathematicaVCSInterval::send_parameter_cons ----");
-
 
   parameter_map_t::const_iterator par_it = parameter_map_.begin();
   parameter_map_t::const_iterator par_end = parameter_map_.end();
@@ -229,7 +134,6 @@ void MathematicaVCSInterval::send_parameter_cons() const{
       para_size += or_it->size();
     }
   }
-
   HYDLA_LOGGER_VCS("parameter_cons_count: ", para_size);
   HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", 
                      parameter_map_);
@@ -257,7 +161,6 @@ void MathematicaVCSInterval::send_parameter_cons() const{
   }
 }
 
-
 void MathematicaVCSInterval::send_pars() const{
   HYDLA_LOGGER_VCS("---- Begin MathematicaVCSInterval::send_pars ----");
 
@@ -271,8 +174,6 @@ void MathematicaVCSInterval::send_pars() const{
     ml_->put_symbol(PacketSender::par_prefix + par_it->first.get_name());
   }
 }
-
-
 
 void MathematicaVCSInterval::send_vars(
   PacketSender& ps, const max_diff_map_t& max_diff_map)
@@ -305,306 +206,205 @@ void MathematicaVCSInterval::send_vars(
   }
 }
 
-VCSResult MathematicaVCSInterval::add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks)
+void MathematicaVCSInterval::add_constraint(const constraints_t& constraints)
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::add_constraint ***");
 
-  PacketSender ps(*ml_);
-
-  // checkConsistencyInterval[expr, vars, pars]を渡したい
-  ml_->put_function("checkConsistencyInterval", 3);
-
-  // expr部分
-  ml_->put_function("Join", 4);
-  ml_->put_function("List", collected_tells.size() + appended_asks.size());
-
-  HYDLA_LOGGER_VCS(
-    "tells_size:", collected_tells.size() + appended_asks.size());
-
-  // tell制約の集合からtellsを得てMathematicaに渡す
-  tells_t::const_iterator tells_it  = collected_tells.begin();
-  tells_t::const_iterator tells_end = collected_tells.end();
-  for(; (tells_it) != tells_end; ++tells_it) {
-    ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time, true);
-  }
-  
-  // appended_asksからガード部分を得てMathematicaに渡す
-  appended_asks_t::const_iterator append_it  = appended_asks.begin();
-  appended_asks_t::const_iterator append_end = appended_asks.end();
-  for(; append_it!=append_end; ++append_it) {
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
-    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
-  }
-
-  // 制約ストアconstraintsをMathematicaに渡す
-  send_cs(ps);
-  send_parameter_cons();
-
-  max_diff_map_t max_diff_map;
-
-  // 変数の最大微分回数をもとめる
-  create_max_diff_map(ps, max_diff_map);
-  
-  // 初期値制約の送信
-  send_init_cons(ps, max_diff_map, false);
-
-
-
-  // varsを渡す
-  ps.put_vars(PacketSender::VA_Time, true);
-  
-  // 定数を渡す
-  send_pars();
-
-////////// 受信処理
-  HYDLA_LOGGER_EXTERN("--- receive  ---");
-
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
-
-  ml_->skip_pkt_until(RETURNPKT);
-  ml_->MLGetNext();
-  ml_->MLGetNext();
-  ml_->MLGetNext();  
-  
-  VCSResult result;
-  int ret_code = ml_->get_integer();
-  if(PacketErrorHandler::handle(ml_, ret_code)) {
-    result = VCSR_SOLVER_ERROR;
-  }
-  else if(ret_code==1) { 
-    // 充足
-    HYDLA_LOGGER_VCS_SUMMARY("consistent");
-    result = VCSR_TRUE;
-
-    // 制約ストアにtell制約の追加
-    constraint_store_.constraints.insert(
-      constraint_store_.constraints.end(),
-      collected_tells.begin(), 
-      collected_tells.end());
-
-    // 制約ストア中で使用される変数の一覧の更新
-    PacketSender::vars_const_iterator ps_vars_it  = ps.vars_begin();
-    PacketSender::vars_const_iterator ps_vars_end = ps.vars_end();
-    for(; ps_vars_it!=ps_vars_end; ++ps_vars_it) {
-      MathVariable mv;
-      mv.name             = ps_vars_it->get<0>();
-      mv.derivative_count = ps_vars_it->get<1>();
-      constraint_store_.cons_vars.insert(mv);
-    }
-  }
-  else { 
-    // 制約エラー
-    assert(ret_code==2);
-    result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
-  }
+  // 制約ストアにtell制約の追加
+  constraint_store_.constraints.insert(
+    constraint_store_.constraints.end(),
+    constraints.begin(), 
+    constraints.end()
+  );
 
   HYDLA_LOGGER_VCS(constraint_store_);
 
-  return result;
+  return;
 }
 
 
-VCSResult MathematicaVCSInterval::check_entailment_with_consistency(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks, const bool &entail)
+VCSResult MathematicaVCSInterval::check_consistency(const constraints_t& constraints)
 {
-  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::add_constraint ***");
-
-  PacketSender ps(*ml_);
-
-  // checkConsistencyInterval[expr, vars, pars]を渡したい
-  ml_->put_function("checkConsistencyInterval", 3);
-
-  // expr部分
-  ml_->put_function("Join", 5);
-
-  ml_->put_function("List", 1);
-  // guard部分
-  // ask制約のガードの式を得てMathematicaに渡す
-  ps.put_node(negative_ask->get_guard(), PacketSender::VA_Time, true, entail);
-
-  ml_->put_function("List", appended_asks.size());
-  
-  // appended_asksからガード部分を得てMathematicaに渡す
-  appended_asks_t::const_iterator append_it  = appended_asks.begin();
-  appended_asks_t::const_iterator append_end = appended_asks.end();
-  for(; append_it!=append_end; ++append_it) {
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
-    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
-  }
-
-  // 制約ストアconstraintsをMathematicaに渡す
-  send_cs(ps);
-  send_parameter_cons();
-
-  max_diff_map_t max_diff_map;
-
-  // 変数の最大微分回数をもとめる
-  create_max_diff_map(ps, max_diff_map);
-  
-  // 初期値制約の送信
-  send_init_cons(ps, max_diff_map, false);
-
-  // varsを渡す
-  ps.put_vars(PacketSender::VA_Time, true);
-
-  // 定数を渡す
-  send_pars();
-
-////////// 受信処理
-  HYDLA_LOGGER_EXTERN("--- receive  ---");
-
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
-
-  ml_->skip_pkt_until(RETURNPKT);
-  ml_->MLGetNext();
-  ml_->MLGetNext();
-  ml_->MLGetNext();  
-  
-  VCSResult result;
-  int ret_code = ml_->get_integer();
-  if(PacketErrorHandler::handle(ml_, ret_code)) {
-    result = VCSR_SOLVER_ERROR;
-  }
-  else if(ret_code==1) { 
-    // 充足
-    HYDLA_LOGGER_VCS_SUMMARY("consistent");
-    result = VCSR_TRUE;
-  }
-  else { 
-    // 制約エラー
-    assert(ret_code==2);
-    result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
-  }
-  HYDLA_LOGGER_VCS(constraint_store_);
-
-  return result;
-}
-  
-  
-VCSResult MathematicaVCSInterval::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
-{
-  HYDLA_LOGGER_VCS_SUMMARY(
-    "#*** MathematicaVCSInterval::check_entailment ***\n", 
-    "ask: ", *negative_ask);
-
-  VCSResult result;
-  switch(check_entailment_with_consistency(negative_ask, appended_asks, true)){
+  tmp_constraints_ = constraints;
+  VCSResult result = check_consistency_sub();
+  switch(result){
     case VCSR_TRUE:
-      switch(check_entailment_with_consistency(negative_ask, appended_asks, false)){
-        case VCSR_TRUE:
-          result = VCSR_UNKNOWN;
-          HYDLA_LOGGER_VCS_SUMMARY("branched");
-          break;
-        case VCSR_FALSE:
-          result = VCSR_TRUE;
-          HYDLA_LOGGER_VCS_SUMMARY("entailed");
-          break;
-        case VCSR_SOLVER_ERROR:
-          result = VCSR_SOLVER_ERROR;
-          break;
-        default:
-          assert(0);
-          break;
-      }
-      break;
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
+    break;
+    
     case VCSR_FALSE:
-      result = VCSR_FALSE;
-      HYDLA_LOGGER_VCS_SUMMARY("not entailed");
-      break;
-    case VCSR_SOLVER_ERROR:
-      result = VCSR_SOLVER_ERROR;
-      break;
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+    break;
+    
     default:
-      assert(0);
-      break;
+    assert(0);
+    break;
+    
+    case VCSR_UNKNOWN:
+    // とりあえず
+    HYDLA_LOGGER_VCS_SUMMARY("consistent in some case");
+    result = VCSR_TRUE;
+    ml_->MLNewPacket();
+    break;
+  }
+  tmp_constraints_.clear();
+  return result;
+}
+
+
+VCSResult MathematicaVCSInterval::check_consistency()
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::check_consistency ***");
+  VCSResult result = check_consistency_sub();
+  switch(result){
+    case VCSR_TRUE:
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
+    break;
+    
+    case VCSR_FALSE:
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+    break;
+    
+    default:
+    assert(0);
+    break;
+    
+    case VCSR_UNKNOWN:
+    // とりあえず
+    HYDLA_LOGGER_VCS_SUMMARY("consistent in some case");
+    result = VCSR_TRUE;
+    HYDLA_LOGGER_VCS( "--- receive added condition ---");
+    {
+      std::string str = ml_->get_string();
+      added_condition_.set(str);
+      HYDLA_LOGGER_VCS(str);
+    }
+    break;
   }
   return result;
 }
 
-void MathematicaVCSInterval::send_ask_guards(
-  PacketSender& ps, 
-  const hydla::simulator::ask_set_t& asks) const
+
+
+VCSResult MathematicaVCSInterval::check_consistency_sub()
 {
-  // {ガードの式、askのID}のリスト形式で送信する
+  PacketSender ps(*ml_);
 
-  ml_->put_function("List", asks.size());
-  hydla::simulator::ask_set_t::const_iterator it  = asks.begin();
-  hydla::simulator::ask_set_t::const_iterator end = asks.end();
-  for(; it!=end; ++it)
-  {
-    HYDLA_LOGGER_VCS("send ask : ", **it);
+  // checkConsistencyInterval[expr, pexpr, vars, pars]を渡したい
+  ml_->put_function("checkConsistencyInterval", 4);
 
-    ml_->put_function("List", 2);    
+  // expr部分
+  ml_->put_function("Join", 3);
 
-    // guard条件を送る
-    ps.put_node((*it)->get_guard(), PacketSender::VA_Time, true);
+  int tmp_size = tmp_constraints_.size();
+  ml_->put_function("List", tmp_size);
+  HYDLA_LOGGER_VCS(
+    "tmp_size:", tmp_size);
 
-    // IDを送る
-    ml_->MLPutInteger((*it)->get_id());
+  // 一時的な制約ストアを送信する
+  constraints_t::const_iterator tmp_it  = tmp_constraints_.begin();
+  constraints_t::const_iterator tmp_end = tmp_constraints_.end();
+  for(; tmp_it!= tmp_end; ++tmp_it) {
+	  HYDLA_LOGGER_VCS("put node: ", (**tmp_it));
+    ps.put_node(*tmp_it, PacketSender::VA_Time, true);
   }
+  
+
+  // 制約ストアconstraintsをMathematicaに渡す
+  send_cs(ps);
+
+
+  // 変数の最大微分回数をもとめる
+  ps.create_max_diff_map(max_diff_map_);
+
+  // 初期値制約の送信
+  send_init_cons(ps, max_diff_map_, false);
+
+  send_parameter_cons();
+  
+  // varsを渡す
+  ps.put_vars(PacketSender::VA_Time, true);
+  
+  // 定数を渡す
+  send_pars();
+
+////////// 受信処理
+  HYDLA_LOGGER_EXTERN("--- receive  ---");
+
+  HYDLA_LOGGER_EXTERN(
+    "-- math debug print -- \n",
+    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+
+  ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLGetNext();
+  ml_->MLGetNext();
+  ml_->MLGetNext();  
+  
+  VCSResult result;
+  int ret_code = ml_->get_integer();
+  if(PacketErrorHandler::handle(ml_, ret_code)) {
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code==1) { 
+    // 充足
+    result = VCSR_TRUE;
+  }
+  else if(ret_code==3){
+    // 定数値によっては充足可能
+    result = VCSR_UNKNOWN;
+  }
+  else { 
+    // 制約エラー
+    assert(ret_code==2);
+    result = VCSR_FALSE;
+  }
+  return result;
 }
+
 
 VCSResult MathematicaVCSInterval::integrate(
   integrate_result_t& integrate_result,
-  const positive_asks_t& positive_asks,
-  const negative_asks_t& negative_asks,
+  const constraints_t& disc_cause,
   const time_t& current_time,
-  const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list,
-  const appended_asks_t& appended_asks)
+  const time_t& max_time)
 {
   HYDLA_LOGGER_VCS("#*** MathematicaVCSInterval::integrate ***");
-
-  HYDLA_LOGGER_VCS(constraint_store_);
+  HYDLA_LOGGER_VCS(*this);
 
 ////////////////// 送信処理
   PacketSender ps(*ml_);
   
-  // integrateCalc[cons, posAsk, negAsk, NACons, vars, maxTime]を渡したい
-  ml_->put_function("integrateCalc", 6);
+  // integrateCalc[cons, discCause, vars, maxTime]を渡したい
+  ml_->put_function("integrateCalc", 4);
 
   // 制約consを渡す
   ml_->put_function("Join", 4);
 
-
-  // 制約ストアから式storeを得てMathematicaに渡す
   send_cs(ps);
-
   // 変数の最大微分回数をもとめる
   max_diff_map_t max_diff_map;
-  create_max_diff_map(ps, max_diff_map);
+  ps.create_max_diff_map(max_diff_map);
   // 初期値制約の送信
   send_init_cons(ps, max_diff_map, true);
   
-
-  ml_->put_function("List", appended_asks.size());  
-  // appended_asksからガード部分を得てMathematicaに渡す
-  appended_asks_t::const_iterator append_it  = appended_asks.begin();
-  appended_asks_t::const_iterator append_end = appended_asks.end();
-  for(; append_it!=append_end; ++append_it) {
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()), "  entailed:", append_it->entailed);
-    ps.put_node(append_it->ask->get_guard(), PacketSender::VA_Time, true, append_it->entailed);
-  }
-
   //定数条件の送信
   send_parameter_cons();
+  //追加された条件を渡す
+  ml_->put_function("List", 1);
+  HYDLA_LOGGER_VCS("send added_condition:");
+  ml_->put_function("ToExpression", 1);
+  if(added_condition_.get_string() == ""){
+    ml_->put_string("True");
+  }else{
+    ml_->put_string(added_condition_.get_string());
+  }
 
-  // posAskを渡す（{ガードの式、askのID}をそれぞれ）
-  HYDLA_LOGGER_VCS("-- send positive ask -- ");
-  send_ask_guards(ps, positive_asks);
-
-  // negAskを渡す（{ガードの式、askのID}をそれぞれ）
-  HYDLA_LOGGER_VCS("-- send negative ask -- ");
-  send_ask_guards(ps, negative_asks);
-
-  // 採用していないモジュール内のtell制約NAConsを渡す（{{式、ID}, {式、ID}, ...}をそれぞれのモジュールに関して）
-  HYDLA_LOGGER_VCS("-- send not adopted constraint -- ");
-  send_not_adopted_tells(ps, not_adopted_tells_list);
+  ml_->put_function("List", disc_cause.size());
+  //離散変化の条件を渡す
+  for(constraints_t::const_iterator it = disc_cause.begin(); it != disc_cause.end();it++){
+    HYDLA_LOGGER_VCS("send discCause:");
+    ps.put_node(*it, PacketSender::VA_Time, true);
+  }
 
   // 変数のリストを渡す
   send_vars(ps, max_diff_map);
@@ -695,6 +495,7 @@ VCSResult MathematicaVCSInterval::integrate(
   ml_->MLGetNext();
   for(int time_it = 0; time_it < next_time_size; time_it++){
     ml_->MLGetNext();ml_->MLGetNext(); ml_->MLGetNext();
+    // 時刻を受け取る
     state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string()) + current_time;
     HYDLA_LOGGER_VCS_SUMMARY("next_phase_time: ", state.time);
     ml_->MLGetNext();
@@ -703,6 +504,7 @@ VCSResult MathematicaVCSInterval::integrate(
     
     state.parameter_map.clear();
     parameter_t tmp_param, prev_param;
+    // 条件を受け取る
     for(int cond_it = 0; cond_it < condition_size; cond_it++){
       value_range_t tmp_range;
       ml_->MLGetNext(); ml_->MLGetNext();
@@ -721,16 +523,11 @@ VCSResult MathematicaVCSInterval::integrate(
       state.parameter_map.set_variable(tmp_param, tmp_range);
       prev_param.name = tmp_param.name;
     }
+    
+    // 終了時刻かどうかを受け取る
     state.is_max_time = ml_->get_integer();
     HYDLA_LOGGER_VCS("is_max_time: ",  state.is_max_time);
     HYDLA_LOGGER_VCS("--parameter map--\n",  state.parameter_map);
-    
-    
-
-    // 未定義の変数を変数表に反映
-    // 初期値制約（未定義変数を含む）とvariable_mapとの差分を解消
-    add_undefined_vars_to_vm(state.variable_map);
-    
     integrate_result.states.push_back(state);
   }
 
@@ -797,9 +594,7 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
         (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
 
       ml_->skip_pkt_until(RETURNPKT);
-      ml_->MLGetNext();
-      ml_->MLGetNext();
-      ml_->MLGetNext(); 
+      ml_->MLGetNext();ml_->MLGetNext();ml_->MLGetNext();
 
       int ret_code = ml_->get_integer();
       if(ret_code==0) {
@@ -814,71 +609,10 @@ void MathematicaVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
         HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
       }
     }
-
     out_vm.set_variable(it->first, value);   
   }
 }
 
-void MathematicaVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
-{
-  HYDLA_LOGGER_VCS("--- add undefined vars to vm ---");  
-
-  // 変数表に登録されている変数名一覧
-  HYDLA_LOGGER_VCS("-- variable_name_list --");
-  std::set<MathVariable> variable_name_list;
-  variable_map_t::const_iterator vm_it = vm.begin();
-  variable_map_t::const_iterator vm_end = vm.end();
-  for(; vm_it!=vm_end; ++vm_it){
-    variable_name_list.insert(vm_it->first);
-    HYDLA_LOGGER_VCS(vm_it->first);
-  }
-
-  constraint_store_t::init_vars_t::const_iterator init_vars_it;
-  constraint_store_t::init_vars_t::const_iterator init_vars_end;
-  init_vars_it  = constraint_store_.init_vars.begin();
-  init_vars_end = constraint_store_.init_vars.end();
-  HYDLA_LOGGER_VCS("-- search undefined variable --");
-  // 初期値制約変数のうち、変数表に登録されている変数名一覧内にないものを抽出？
-  for(; init_vars_it!=init_vars_end; ++init_vars_it) {
-    variable_t variable = init_vars_it->first;
-    std::set<MathVariable>::const_iterator vlist_it = variable_name_list.find(variable);
-    if(vlist_it==variable_name_list.end()){      
-      value_t value;
-      HYDLA_LOGGER_VCS("variable : ", variable);
-      HYDLA_LOGGER_VCS("value : ", value);
-      vm.set_variable(variable, value);
-    }
-  }
-}
-
-void MathematicaVCSInterval::send_not_adopted_tells(PacketSender& ps, const not_adopted_tells_list_t& na_tells_list) const
-{
-  // {tellの式、tellのID}のリストのリスト形式で送信する
-
-  // 採用していないモジュールの数
-  ml_->put_function("List", na_tells_list.size());
-
-  not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
-  not_adopted_tells_list_t::const_iterator na_tells_list_end = na_tells_list.end();
-  for(; na_tells_list_it!=na_tells_list_end; ++na_tells_list_it){
-    // 採用していない、あるモジュール内のtell制約の数
-    ml_->put_function("List", (*na_tells_list_it).size());
-
-    tells_t::const_iterator na_tells_it  = (*na_tells_list_it).begin();
-    tells_t::const_iterator na_tells_end = (*na_tells_list_it).end();
-    for(; na_tells_it!=na_tells_end; ++na_tells_it) {
-      HYDLA_LOGGER_VCS("send not adopted tell : ", **na_tells_it);
-
-      ml_->put_function("List", 2);
-
-      // tell制約を送る
-      ps.put_node((*na_tells_it)->get_child(), PacketSender::VA_Time, true);
-      
-      // IDを送る
-      ml_->MLPutInteger((*na_tells_it)->get_id());
-    }
-  }
-}
 
 void MathematicaVCSInterval::send_cs(PacketSender& ps) const
 {
@@ -894,44 +628,36 @@ void MathematicaVCSInterval::send_cs(PacketSender& ps) const
   constraint_store_t::constraints_t::const_iterator 
     cons_end = constraint_store_.constraints.end();
   for(; (cons_it) != cons_end; ++cons_it) {
-    ps.put_node((*cons_it)->get_child(), PacketSender::VA_Time, true);
+    ps.put_node((*cons_it), PacketSender::VA_Time, true);
   }
-}
-
-void MathematicaVCSInterval::send_cs_vars() const
-{
-  HYDLA_LOGGER_VCS("---- Send Constraint Store Vars -----");
 }
 
 std::ostream& MathematicaVCSInterval::dump(std::ostream& s) const
 {
   s << "#*** Dump MathematicaVCSInterval ***\n"
     << "--- constraint store ---\n";
-/*
-   std::set<MathVariable>::const_iterator vars_it = 
-     constraint_store_.second.begin();
-   std::set<std::set<MathValue> >::const_iterator or_cons_it = 
-     constraint_store_.first.begin();
-   while((or_cons_it) != constraint_store_.first.end())
-   {
-     std::set<MathValue>::const_iterator and_cons_it = 
-       (*or_cons_it).begin();
-     while((and_cons_it) != (*or_cons_it).end())
-     {
-       s << (*and_cons_it).str << " ";
-       and_cons_it++;
-     }
-     s << "\n";
-     or_cons_it++;
-   }
-
-   while((vars_it) != constraint_store_.second.end())
-   {
-     s << *(vars_it) << " ";
-     vars_it++;
-   }*/
-
+    
+  s << "-- init_vars --\n";
+  constraint_store_t::init_vars_t::const_iterator init_vars_it = constraint_store_.init_vars.begin(),
+                                                  init_vars_end = constraint_store_.init_vars.end();
+  for(;init_vars_it != init_vars_end; init_vars_it++){
+    s << init_vars_it->first << " <=> " << init_vars_it->second << "\n";
+  }
+  
+  s << "-- constraints --\n";
+  constraint_store_t::constraints_t::const_iterator constraints_it = constraint_store_.constraints.begin(),
+                                                    constraints_end = constraint_store_.constraints.end();
+  for(; constraints_it != constraints_end; constraints_it++){
+    s << **constraints_it << "\n";
+  }
   return s;
+}
+
+
+std::ostream& operator<<(std::ostream& s, 
+                         const MathematicaVCSInterval& vcs)
+{
+  return vcs.dump(s);
 }
 
 std::ostream& operator<<(std::ostream& s, 
@@ -948,7 +674,6 @@ std::ostream& operator<<(std::ostream& s,
       << "   value: " << i.second
       << "\n";
   }
-
   s << "-- constraints --\n";
   BOOST_FOREACH(
     const MathematicaVCSInterval::constraint_store_t::constraints_t::value_type& i, 
@@ -956,17 +681,6 @@ std::ostream& operator<<(std::ostream& s,
   {
     s << *i;
   }
-
-  s << "-- init vars max diff map --\n";
-  BOOST_FOREACH(
-    const MathematicaVCSInterval::constraint_store_t::init_vars_max_diff_map_t::value_type& i, 
-    c.init_vars_max_diff_map)
-  {
-    s << "name: " << i.first
-      << "  diff: " << i.second
-      << "\n";
-  }
-  
   return s;
 }
 

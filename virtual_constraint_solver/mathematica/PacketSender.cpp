@@ -23,10 +23,15 @@ const std::string PacketSender::par_prefix("p");
  * @param ml Mathlinkインスタンスの参照
  */
 PacketSender::PacketSender(MathLink& ml) :
-  ml_(ml),
+  ml_(&ml),
   differential_count_(0),
-  in_prev_(false),
-  in_prev_point_(false)
+  in_prev_(false)
+{}
+
+PacketSender::PacketSender() :
+  ml_(NULL),
+  differential_count_(0),
+  in_prev_(false)
 {}
 
 PacketSender::~PacketSender(){}
@@ -42,6 +47,7 @@ void PacketSender::visit(boost::shared_ptr<Ask> node)
 // Tell制約
 void PacketSender::visit(boost::shared_ptr<Tell> node)                  
 {
+  
   // tell制約は送れない
   assert(0);
 }
@@ -50,7 +56,7 @@ void PacketSender::visit(boost::shared_ptr<Tell> node)
 void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
 {                                                                       \
   HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
-  ml_.put_function(#FUNC_NAME, 2);                                      \
+  ml_->put_function(#FUNC_NAME, 2);                                      \
   accept(node->get_lhs());                                              \
   accept(node->get_rhs());                                              \
 }
@@ -59,7 +65,7 @@ void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
 void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
 {                                                                       \
   HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
-  ml_.put_function(#FUNC_NAME, 1);                                      \
+  ml_->put_function(#FUNC_NAME, 1);                                      \
   accept(node->get_child());                                            \
 }
 
@@ -67,7 +73,7 @@ void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
 void PacketSender::visit(boost::shared_ptr<NODE_NAME> node)             \
 {                                                                       \
   HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
-  ml_.put_symbol(#FUNC_NAME);                                           \
+  ml_->put_symbol(#FUNC_NAME);                                           \
 }
 
 DEFINE_VISIT_BINARY(Equal, Equal)
@@ -142,7 +148,7 @@ DEFINE_VISIT_FACTOR(E, E)
 void PacketSender::visit(boost::shared_ptr<ArbitraryBinary> node)
 {    
   HYDLA_LOGGER_REST("put: ArbitraryFactor : ", node->get_string());
-  ml_.put_function(node->get_string(),2);
+  ml_->put_function(node->get_string(),2);
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
@@ -150,14 +156,14 @@ void PacketSender::visit(boost::shared_ptr<ArbitraryBinary> node)
 void PacketSender::visit(boost::shared_ptr<ArbitraryUnary> node)
 {    
   HYDLA_LOGGER_REST("put: ArbitraryUnary : ", node->get_string());
-  ml_.put_function(node->get_string(),1);
+  ml_->put_function(node->get_string(),1);
   accept(node->get_child());
 }
 
 void PacketSender::visit(boost::shared_ptr<ArbitraryFactor> node)
 {    
   HYDLA_LOGGER_REST("put: ArbitraryFactor : ", node->get_string());
-  ml_.put_symbol(node->get_string());
+  ml_->put_symbol(node->get_string());
 }
 
 
@@ -178,11 +184,11 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
 void PacketSender::visit(boost::shared_ptr<Number> node)                
 {
   HYDLA_LOGGER_REST("put: Number : ", node->get_number());
-  // ml_.MLPutInteger(atoi(node->get_number().c_str())); //数値がでかいとオーバーフローする
+  // ml_->MLPutInteger(atoi(node->get_number().c_str())); //数値がでかいとオーバーフローする
 
-  ml_.put_function("ToExpression", 1);
+  ml_->put_function("ToExpression", 1);
 
-  ml_.put_string(node->get_number());
+  ml_->put_string(node->get_number());
 }
 
 
@@ -190,7 +196,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 void PacketSender::visit(boost::shared_ptr<Parameter> node)
 {    
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
-  ml_.put_symbol(par_prefix + node->get_name());
+  ml_->put_symbol(par_prefix + node->get_name());
 }
 
 
@@ -198,7 +204,7 @@ void PacketSender::visit(boost::shared_ptr<Parameter> node)
 void PacketSender::visit(boost::shared_ptr<SymbolicT> node)                
 {    
   HYDLA_LOGGER_REST("put: t");
-  ml_.put_symbol("t");
+  ml_->put_symbol("t");
 }
 
 void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
@@ -218,28 +224,28 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
   
   // 変数名の最後に必ず[t]がつく分
   if(variable_arg != VA_None) {
-    ml_.MLPutNext(MLTKFUNC);
-    ml_.MLPutArgCount(1);
+    ml_->MLPutNext(MLTKFUNC);
+    ml_->MLPutArgCount(1);
   }
 
   // 変数のput
   if(diff_count > 0){
     // 微分変数なら (Derivative[回数])[変数名]をput
-    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-    ml_.MLPutArgCount(1);      // this 1 is for the 'f'
-    ml_.MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-    ml_.MLPutArgCount(1);      // this 1 is for the '*number*'
-    ml_.put_symbol("Derivative");
-    ml_.MLPutInteger(diff_count);
+    ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+    ml_->MLPutArgCount(1);      // this 1 is for the 'f'
+    ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+    ml_->MLPutArgCount(1);      // this 1 is for the '*number*'
+    ml_->put_symbol("Derivative");
+    ml_->MLPutInteger(diff_count);
   }
    
   // prev変数として送るかどうか
   if(prev) {
-    ml_.put_function("prev", 1);
-    ml_.put_symbol(name);
+    ml_->put_function("prev", 1);
+    ml_->put_symbol(name);
   }
   else {
-    ml_.put_symbol(name);
+    ml_->put_symbol(name);
   }
 
   switch(variable_arg) {
@@ -248,14 +254,10 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
       break;
       
     case VA_Time:
-      if(in_prev_point_){
-       ml_.put_integer(0);
-      }else{
-       ml_.put_symbol("t");
-      }
+      ml_->put_symbol("t");
       break;
     case VA_Zero:
-      ml_.put_integer(0);
+      ml_->put_integer(0);
       break;
       
     default:
@@ -279,12 +281,11 @@ void PacketSender::put_node(const node_sptr& node,
 {
   differential_count_ = 0;
   in_prev_ = false;
-  in_prev_point_ = false;
   variable_arg_ = variable_arg;
   ignore_prev_ = ignore_prev;
   if(!entailed){
     HYDLA_LOGGER_REST("put: Not");
-    ml_.put_function("Not", 1);
+    ml_->put_function("Not", 1);
   }
   accept(node);
 }
@@ -299,7 +300,7 @@ void PacketSender::put_vars(VariableArg variable_arg,
     "---- PacketSender::put_vars ----\n",
     "var size:", vars_.size());
   
-  ml_.put_function("List", vars_.size());
+  ml_->put_function("List", vars_.size());
 
   PacketSender::vars_const_iterator it  = vars_begin();
   PacketSender::vars_const_iterator end = vars_end();
@@ -310,7 +311,6 @@ void PacketSender::put_vars(VariableArg variable_arg,
               it->get<2>() && !ignore_prev), 
             variable_arg);
   }
-  
 }
 
 /**
@@ -321,7 +321,6 @@ void PacketSender::clear()
 {
   differential_count_ = 0;
   in_prev_ = false;
-  in_prev_point_ = false;
 
   vars_.clear();
 }

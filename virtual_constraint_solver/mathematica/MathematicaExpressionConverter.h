@@ -6,7 +6,7 @@
 
 
 #include "../SymbolicVirtualConstraintSolver.h"
-#include "Node.h"
+#include "PacketSender.h"
 #include <map>
 #include "TreeVisitor.h"
 #include "ParseTree.h"
@@ -17,7 +17,7 @@ namespace mathematica {
 
 
 class MathematicaExpressionConverter:
-  public hydla::parse_tree::TreeVisitor
+  public PacketSender
 {
   private:
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t value_t;
@@ -33,6 +33,9 @@ class MathematicaExpressionConverter:
     NODE_PREVIOUS,
     NODE_SQRT
   }nodeType;
+  
+  MathematicaExpressionConverter(){}
+  virtual ~MathematicaExpressionConverter(){}
 
   typedef hydla::parse_tree::node_sptr node_sptr;
   typedef node_sptr (function_for_node)(const std::string &expr, std::string::size_type &now, const nodeType &);
@@ -66,22 +69,17 @@ class MathematicaExpressionConverter:
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
   
-  //valueとってmathematica用の文字列に変換する．(t)とか(0)とかつけないので，PP専用としておく
+  //nodeとってmathematica用の文字列に変換する．(t)とか(0)とかつけないので，PP専用としておく
+  std::string convert_node_to_math_string(const node_sptr&);
+  //valueとってmathematica用の文字列に変換する．同上
   std::string convert_symbolic_value_to_math_string(const value_t&);
 
   private:
   //再帰で呼び出していく方
   static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
 
-  //変換時に使う文字列変数
+  //変換時に使う文字列記憶場所
   std::string string_for_math_string_;
-  //変換時に使う微分回数
-  int differential_count_;
-  //変換時に使う左極限判定
-  int in_prev_;
-  //変換時に使う前PP判定
-  int in_prev_point_;
-
 
 
   // 比較演算子

@@ -6,6 +6,7 @@
 #include "mathlink_helper.h"
 #include "MathVCSType.h"
 #include "PacketSender.h"
+#include "MathematicaExpressionConverter.h"
 
 namespace hydla {
 namespace vcs {
@@ -34,7 +35,6 @@ public:
    */
   virtual bool reset(const variable_map_t& variable_map);
 
-
   /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
@@ -46,27 +46,27 @@ public:
   virtual bool create_maps(create_result_t & create_result);
 
   /**
-   * 制約を追加する
+   * 制約を追加する．ついでに制約ストアが無矛盾かを判定する．
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks);
+  virtual void add_constraint(const constraints_t& constraints);
   
   /**
-   * 現在の制約ストアから与えたaskが導出可能かどうか
+   * 制約ストアが無矛盾かを判定する．
+   * 引数で制約を渡された場合は一時的に制約ストアに追加する．
    */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks);
+  virtual VCSResult check_consistency();
+  virtual VCSResult check_consistency(const constraints_t& constraints);
   
-  
+
+
   /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(
     integrate_result_t& integrate_result,
-    const positive_asks_t& positive_asks,
-    const negative_asks_t& negative_asks,
+    const constraints_t &constraints,
     const time_t& current_time,
-    const time_t& max_time,
-    const not_adopted_tells_list_t& not_adopted_tells_list,
-    const appended_asks_t& appended_asks);
+    const time_t& max_time);
 
   /**
    * 内部状態の出力をおこなう
@@ -76,18 +76,18 @@ public:
 private:
   typedef std::map<std::string, int> max_diff_map_t;
 
+  void reset_sub(const variable_map_t& vm, std::set<MathValue>& and_cons_set,
+    MathematicaExpressionConverter& mec, const bool& is_current);
   void send_cs() const;
   void send_ps() const;
+  void send_store(const constraint_store_t& store) const;
   void send_cs_vars() const;
   void send_pars() const;
-
-  VCSResult check_entailment_with_consistency(const ask_node_sptr& negative_ask,
-                          const appended_asks_t &appended_asks, const bool& entail);
-
+  void receive_constraint_store(constraint_store_t& store);
   /**
-   * 変数の最大微分回数をもとめる
+   * check_consistency の共通部分
    */
-  void create_max_diff_map(PacketSender& ps, max_diff_map_t& max_diff_map);
+  VCSResult check_consistency_sub();
 
   /**
    * 左連続性に関する制約を加える
@@ -100,14 +100,15 @@ private:
   bool cs_is_true()
   {
     return constraint_store_.first.size()==1 && 
-      (*constraint_store_.first.begin()).size()==1 &&
+      (*constraint_store_.first.begin()).size() == 1 &&
       (*(*constraint_store_.first.begin()).begin()).get_string()=="True";
   }
-  
 
   mutable MathLink* ml_;
+  max_diff_map_t max_diff_map_;          //現在の制約ストアに出現する中で最大の微分回数を記録しておく表．
   constraint_store_t constraint_store_;
   constraint_store_t parameter_store_;
+  constraints_t tmp_constraints_;  //一時的に制約を追加する対象
   std::set<std::string> par_names_; //一時しのぎ
 };
 

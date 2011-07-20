@@ -26,6 +26,11 @@ removeInequality[ret_, expr_] := (
   ]
 );
 
+(* 条件1から条件2を引き，変数表形式にして返す *)
+getComplementCondition[cond1_, cond2_] := (
+  debugPrint["cond1:", cond1, "cond2:", cond2];
+  convertCSToVM[Complement[applyList[cond1[[1]] ], applyList[cond2[[1]] ] ] ]
+);
 
 (* 与えられた式の中の，Cに関する制約と，tの下限となる式を抜き出す関数．
  * 全部Andでつながれてるものという前提．
@@ -34,10 +39,11 @@ removeInequality[ret_, expr_] := (
  * あと，Cやtに関する制約は，それぞれについて解かれているという前提．こっちは結構怪しいか．
  *)
 
-getValidExpression[expr_] := Block[
-  {underBounds, constraintsForC, listOfC, tmpExpr},
+getValidExpression[expr_, pars_] := Block[
+  {underBounds, constraintsForC, listOfC, tmpExpr, parameterConstraints},
   underBounds = {};
   constraintsForC = {};
+  parameterConstraints = {};
   listOfC = {};
   For[i=1, i <= Length[expr], i++,
     tmpExpr = expr[[i]];
@@ -45,23 +51,26 @@ getValidExpression[expr_] := Block[
     If[Head[tmpExpr] === Greater || Head[tmpExpr] === GreaterEqual,
       tmpExpr = getInverseRelop[Head[tmpExpr] ] [tmpExpr[[2]], tmpExpr[[1]] ]
     ];
-    (* 右辺がtなら下限リストに追加．そうでないならCについての制約かをチェックする *)
+    (* 右辺がtなら下限リストに追加．そうでないなら定数か，そうでないならCについての制約かをチェックする *)
     If[tmpExpr[[2]] === t,
       (* tについては不等式のみを受け付ける *)
       If[Head[tmpExpr] === Less || Head[tmpExpr] === LessEqual,
         underBounds = Append[underBounds, tmpExpr[[1]] ]
       ],
-      If[Head[ tmpExpr[[1]] ] === C,
-        constraintsForC = Append[constraintsForC, tmpExpr];
-        listOfC = Union[listOfC, {tmpExpr[[1]] } ],
-        If[Head[ tmpExpr[[2]] ] === C,
+      If[MemberQ[pars, tmpExpr[[1]] ] || MemberQ[pars, tmpExpr[[2]] ], 
+        parameterConstraints = Append[parameterConstraints, tmpExpr],
+        If[Head[ tmpExpr[[1]] ] === C,
           constraintsForC = Append[constraintsForC, tmpExpr];
-          listOfC = Union[listOfC, {tmpExpr[[2]] } ]
+          listOfC = Union[listOfC, {tmpExpr[[1]] } ],
+          If[Head[ tmpExpr[[2]] ] === C,
+            constraintsForC = Append[constraintsForC, tmpExpr];
+            listOfC = Union[listOfC, {tmpExpr[[2]] } ]
+          ]
         ]
       ]
     ]
   ];
-  {underBounds, constraintsForC, listOfC}
+  {underBounds, constraintsForC, listOfC, parameterConstraints}
 ];
 
 (*
@@ -71,26 +80,28 @@ getValidExpression[expr_] := Block[
  * いずれでもないなら1を返す．
  *)
 checkInfForEach[underBounds_, constraintsForC_, otherConstraints_, pars_, listOfC_] := Block[
-  {ret, tmp, expr},
+  {ret, restRet, tmp, expr},
   If[underBounds === {},
-    1,
+    {1},
     expr = underBounds[[1]];
     If[pars==={}&&listOfC==={},
       (* パラメータが無いなら単純に下限で決まる *)
       If[expr>0,
-        2,
-        1
+        {2},
+        {1}
       ],
       (* 0以下にできるなら，導出できる可能性がある *)
-      tmp = Quiet[Reduce[Join[constraintsForC, otherConstraints, {expr <= 0}] , Join[pars,listOfC] ] ];
+      tmp = Quiet[Reduce[Join[constraintsForC, otherConstraints, {expr <= 0}] , pars ] ];
       If[tmp === False,
-        2,
+        {2},
         (* 必ず導出できるかどうかを判定 *)
         If[Quiet[Reduce[ForAll[pars, And@@otherConstraints, Reduce[Join[constraintsForC, {expr <= 0}] ] ] ] ] =!= False,
           checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC],
-          If[checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC] === 2,
-            2,
-            3
+          restRet = checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC];
+          Switch[restRet[[1]],
+            1, {3, tmp},
+            2, {2},
+            3, {3, Reduce[restRet[[2]]&&tmp, Reals]}
           ]
         ]
       ]
@@ -98,35 +109,45 @@ checkInfForEach[underBounds_, constraintsForC_, otherConstraints_, pars_, listOf
   ]
 ];
 
-
 (*
  * 論理和でつながれた各tの下限候補を，再帰で1つずつ調べていく関数．
  * 1つでも定数値に関係なく0以下にできるものがあれば{1}を返す．
  * そうでないなら，1つでも定数値によっては0以下にできるものがあれば{3}を返す．
  * いずれでもないなら{2}を返す．
  *)
+
 checkInf[candidates_, constraints_, pars_] := Block[
-  {ret, underBounds, constraintsForC, listOfC},
+  {ret, restRet, underBounds, constraintsForC, listOfC},
   If[Length[candidates] == 0,
     {2},
     ret = Fold[removeInequality, {}, candidates[[1]] ];
     (* tの最小値候補を調べるため，tの下限とt以外の変数についての制約と出現する変数のリストを抽出する． *)
-    {underBounds,  constraintsForC, listOfC} = getValidExpression[ret];
+    {underBounds, constraintsForC, listOfC, otherConstraints} = getValidExpression[ret, pars];
+    otherConstraints = applyList[Reduce[Join[otherConstraints, constraints], Reals]];
+    otherConstraints = Fold[removeInequality, {}, otherConstraints ];
+
     If[underBounds === {},
       (* 候補が存在しなければ導出不可能なので，次を試す *)
-      checkInf[Rest[candidates], constraints, pars ],
-      
+      checkInf[Rest[candidates], constraints, pars],
       (* 候補が存在するなら，それを試す．*)
-      ret = checkInfForEach[underBounds, constraintsForC, constraints, pars, listOfC ];
-      Switch[ret,
+      ret = checkInfForEach[underBounds, constraintsForC, otherConstraints, pars, listOfC ];
+      If[ret[[1]] != 2 && Quiet[Reduce[ForAll[pars, And@@constraints, Reduce[otherConstraints] ] ] ] === False,
+        If[ret[[1]] == 1,
+          ret = {3, And@@otherConstraints},
+          ret = {3, Reduce[ret[[2]] && And@@otherConstraints, Reals]}
+        ]
+      ];
+      Switch[ret[[1]],
         1, {1},
           (* 無理なら，次を試す． *)
         2, checkInf[Rest[candidates], constraints, pars ],
         3,
           (* 定数値によっては可能な場合，次以降で{1}があれば{1}を．そうでなければ{3}を返す． *)
-          If[checkInf[Rest[candidates], constraints, pars] === {1},
-            {1},
-            {3}
+          restRet = checkInf[Rest[candidates], constraints, pars];
+          Switch[restRet[[1]],
+            1, {1},
+            2, {3, ret[[2]] },
+            3, {3, Reduce[ ret[[2]] || restRet[[2]], Reals ] }
           ]
       ]
     ]
@@ -140,12 +161,13 @@ checkInf[candidates_, constraints_, pars_] := Block[
  *  1 : 充足
  *  2 : 矛盾
  *)
-checkConsistencyInterval[expr_, vars_, pars_] :=  
+
+checkConsistencyInterval[expr_, pexpr_, vars_, pars_] :=  
 Quiet[
   Check[
     Block[
-      {tStore, sol, integGuard, otherExpr},
-      debugPrint["expr:", expr, "vars:", vars, "pars:", pars, "all", expr, vars, pars];
+      {tStore, sol, integGuard, otherExpr, condition},
+      debugPrint["expr:", expr, "pexpr", pexpr, "vars:", vars, "pars:", pars, "all", expr, pexpr, vars, pars];
       sol = exDSolve[expr, vars];
       If[sol === overconstraint,
         {2},
@@ -153,23 +175,25 @@ Quiet[
           (* 警告出したりした方が良いかも？ *)
           {1},
           tStore = sol[[1]];
-          otherExpr = sol[[2]];
+          tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
+          otherExpr = Select[Simplify[expr], (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
+
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
-          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0}, t, Reals],
+          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && And@@pexpr}, t, Reals],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
+
+           Print["sol", sol];
           If[sol === False,
             {2},
             (* リストのリストにする *)
             sol = applyListToOr[sol];
             sol = Map[applyList, sol];
             (* tの最大下界を0とできる可能性を調べる． *)
-            If[checkInf[sol, otherExpr, pars] === {2},
-              {2},
-              (* {3}が返ってきたとしても現状では{1}を返すことにする *)
-              {1}
-            ]
+            sol = checkInf[sol, pexpr, pars];
+            If[sol[[1]] == 3, sol[[2]] = ToString[FullForm[sol[[2]] ] ] ];
+            sol
           ]
         ]
       ]
@@ -213,7 +237,7 @@ renameVar[varName_] := Block[
     If[StringMatchQ[ToString[renamedVarName], "p" ~~ x__],
      (*定数名の頭についている "p"を取り除く 名前の頭がpじゃないのはinvalidVar． *)
       renamedVarName = removeP[renamedVarName];
-      (* prevが-1のものは定数として扱うことにする *)
+      (* 定数はprev_flagを-1にすることで表す *)
       {renamedVarName, derivativeCount, -1},
       invalidVar
     ]
@@ -231,8 +255,6 @@ getExprCode[expr_] := Switch[Head[expr],
 
 convertCSToVM[orExprs_] := Block[
   {resultExprs, inequalityVariable},
-  
-  
   formatExprs[exprs_] := (
     If[Cases[exprs, Except[True]]==={},
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
@@ -426,24 +448,19 @@ applyList[reduceSol_] :=
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
-(* パラメータの制約を得る *)
-getParamCons[cons_] :=
-  Fold[(If[Not[hasVariable[#2]], Append[#1, #2], #1]) &, {}, cons];
-
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   paramCons = getParamCons[expr];
-  sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons], Except[True] | Except[False]], vars, Reals]]];
+  sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons],Except[True]], vars, Reals]]];
+  sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons],Except[True]], vars, Reals]]];
 
-  If[sol===False,
+  If[sol===False || Reduce[expr, vars, Reals] === False,
     overconstraint,
     If[sol===True,
       {{}, {}},
-
       (* 1つだけ採用 *)
       (* TODO: 複数解ある場合も考える *)
       If[Head[sol]===Or, sol = First[sol]];
-
       sol = applyList[sol];
 
       (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
@@ -496,8 +513,6 @@ splitExprs[expr_] := Block[
 ];
 
 
-
-
 (* Piecewiseを分解してリストにする．条件がFalseなのは削除 *)
 makeListFromPiecewise[minT_, others_] := Block[
   {tmpCondition = False},
@@ -513,10 +528,12 @@ makeListFromPiecewise[minT_, others_] := Block[
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
-calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherExpr_] := Block[
+calcNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
 {
   calcMinTime, addMinTime, selectCondTime,
   sol, minT, paramVars, compareResult, resultList, condTimeList,
+  calcMinTimeList, convertExpr, removeInequalityInList, findMinTime, compareMinTime,
+  compareMinTimeList, divideDisjunction, 
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
   calcMinTime[{currentMinT_, currentMinAsk_}, {type_, integAsk_, askID_}] := (
@@ -590,7 +607,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
     If[minT === error,
       {},
       (* Piecewiseなら分解*)
-      If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, {condition}}}];
+      If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, condition}}];
       minT
     ]
   );
@@ -693,9 +710,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, posAsk_, negAsk_, NACons_, otherE
             
 
   (* 最小時刻と条件の組のリストを求める *)
-  resultList = calcMinTimeList[ Join[Map[(Not[#[[1]]])&, posAsk], Map[(#[[1]])&, negAsk],
-                                Fold[(Join[#1, Map[(#[[1]])&, #2]])&, {}, NACons]],
-                                {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
+  resultList = calcMinTimeList[discCause, {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
 
   (* 整形して結果を返す *)
   
@@ -733,14 +748,12 @@ getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
  * askの導出状態が変化するまで積分をおこなう
  *)
 integrateCalc[cons_, 
-              posAsk_, negAsk_, NACons_,
+              discCause_,
               vars_, 
               maxTime_] := Quiet[Check[Block[
 {
   tmpIntegSol,
-  tmpPosAsk,
-  tmpNegAsk,
-  tmpNACons,
+  tmpDiscCause,
   tmpMinT, 
   tmpVarMap,
   endTimeFlag,
@@ -755,11 +768,10 @@ integrateCalc[cons_,
   paramVars
 },
   debugPrint["cons:", cons, 
-             "posAsk:", posAsk, 
-             "negAsk:", negAsk, 
-             "NACons:", NACons,
+             "discCause:", discCause,
              "vars:", vars, 
-             "maxTime:", maxTime];
+             "maxTime:", maxTime,
+             "all", cons, discCause, vars, maxTime];
 
   If[Cases[cons, Except[True]]=!={},
     (* true *)
@@ -810,12 +822,12 @@ integrateCalc[cons_,
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
     debugPrint["tmpIntegSol", tmpIntegSol];
 
-    tmpPosAsk = Map[(# /. tmpIntegSol) &, posAsk];
-    tmpNegAsk = Map[(# /. tmpIntegSol) &, negAsk];
-    tmpNACons = Map[(# /. tmpIntegSol) &, NACons];
+    tmpDiscCause = Map[(# /. tmpIntegSol) &, discCause];
     
-    debugPrint["nextpointphase arg:", {False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons}];
-    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpPosAsk, tmpNegAsk, tmpNACons, paramCons];
+    paramCons = {Reduce[paramCons]};
+    
+    debugPrint["nextpointphase arg:", {False, maxTime, tmpDiscCause, paramCons}];
+    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpDiscCause, paramCons];
 
     tmpVarMap = 
       Map[({getVariableName[#], 

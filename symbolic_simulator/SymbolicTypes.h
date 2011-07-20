@@ -34,6 +34,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
                                        value_t, 
                                        time_t>{
     parameter_map_t parameter_map;
+    constraints_t added_constraints;  //フェーズ内でのみ追加される制約．フェーズが切り替わったらリセット
     state_result_sptr_t parent_state_result;
     int step;
   }phase_state_t;

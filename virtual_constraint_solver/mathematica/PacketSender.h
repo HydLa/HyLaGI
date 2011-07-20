@@ -48,6 +48,7 @@ public:
   // Mathematicaに送る際に定数名につける接頭語
   static const std::string par_prefix;
 
+  PacketSender();
   PacketSender(MathLink& ml);
 
   virtual ~PacketSender();
@@ -155,8 +156,9 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
 
 private:
-  MathLink& ml_;
+  MathLink* ml_;
 
+protected:
   /// 送信された変数の一覧
   var_info_list_t vars_;
 
@@ -164,10 +166,7 @@ private:
   int differential_count_;
 
   /// Prevノードの下にいるかどうか
-  bool in_prev_;
-  
-  /// PreviousPointノードの下にいるかどうか
-  bool in_prev_point_;
+  int in_prev_;
 
   /// 変数の引数として送る物
   VariableArg variable_arg_;
