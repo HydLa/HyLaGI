@@ -238,24 +238,35 @@ load_package "laplace";
 % 逆ラプラス変換後の値をsin, cosで表示するスイッチ
 on ltrig;
 
-% 変数とそのラプラス変換対の対応表
+% {{v, v(t), lapv(s)},...}の対応表、グローバル変数
+% exDSolveのexceptdfvars_に対応させるため、exDSolve最後で空集合を代入し初期化している
+% TODO prevは？
 table_:={};
 
-%args_:={{v,lapv},...}
+% operator宣言されたargs_を記憶するグローバル変数
+loadedOperator:={};
+
+%args_:={v,lapv}
 procedure LaplaceLetUnit(args_)$
-  begin;
-    scalar arg_, LAParg_;
+begin;
+  scalar arg_, LAParg_;
   arg_:= first args_;
   LAParg_:= second args_;
-  operator arg_, LAParg_;
 
-  let{
-    laplace(df(arg_(~x),x),x) => il!&*laplace(arg_(x),x) - mkid(mkid(INIT,arg_),lhs),
-    laplace(df(arg_(~x),x,~n),x) => il!&**n*laplace(arg_(x),x) -
-    for i:=n-1 step -1 until 0 sum
-      sub(x=0, df(arg_(x),x,n-1-i)) * il!&**i,
-    laplace(arg_(~x),x) =>LAParg_(il!&)
-  };
+  % 重複の判定
+  if(freeof(loadedOperator,arg_)) then 
+    << 
+     operator arg_, LAParg_;
+     loadedOperator:= arg_ . loadedOperator;
+
+     let{
+       laplace(df(arg_(~x),x),x) => il!&*laplace(arg_(x),x) - mkid(mkid(INIT,arg_),lhs),
+       laplace(df(arg_(~x),x,~n),x) => il!&**n*laplace(arg_(x),x) -
+       for i:=n-1 step -1 until 0 sum
+         sub(x=0, df(arg_(x),x,n-1-i)) * il!&**i,
+       laplace(arg_(~x),x) =>LAParg_(il!&)
+     };
+    >>;
 
 % {{v, v(t), lapv(s)},...}の対応表
   table_:= {arg_, arg_(t), LAParg_(s)} . table_;
