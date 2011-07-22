@@ -82,6 +82,9 @@ private:
   
   void output_parameter_map(const parameter_map_t& parameter_map);
   
+  // fromに出現する変数を全てtoに引き継ぐ．値はUNDEF
+  void take_all_variables(const variable_map_t& from, variable_map_t& to);
+  
   //現状では1回出力すると，木の根以外の部分が無くなるようになっているから注意
   void output_result_tree();
 

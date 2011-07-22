@@ -368,21 +368,13 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     HYDLA_LOGGER_DEBUG("--- expanded always ID ---\n",
                        new_state->expanded_always_id);
     new_state->module_set_container = msc_no_init_;
-
+ 
+    take_all_variables(state->variable_map, new_state->variable_map);
+    
     new_state->variable_map = create_result.result_maps[create_it].variable_map;
     new_state->parameter_map = create_result.result_maps[create_it].parameter_map;
     
-    // 暫定的なフレーム公理の処理
-    // 未定義の値や変数表に存在しない場合は以前の値をコピー
-    // これが同時に未定義変数が変数表から削除されることの防止もしているらしい
-    variable_map_t::const_iterator it  = state->variable_map.begin();
-    variable_map_t::const_iterator end = state->variable_map.end();
-    for(; it!=end; ++it) {
-      if(new_state->variable_map.get_variable(it->first).is_undefined())
-      {
-        new_state->variable_map.set_variable(it->first, it->second);
-      }
-    }
+    
     
     state_result_sptr_t state_result(new StateResult(new_state->variable_map,
                                                      new_state->parameter_map,
@@ -508,14 +500,13 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     state->current_time,
     time_t(node_sptr(new hydla::parse_tree::Number(opts_.max_time))));
 
-
   //to next pointphase
   for(int it=0;it<(int)integrate_result.states.size()&&(opts_.nd_mode||it==0);it++){
+    take_all_variables(state->variable_map, integrate_result.states[it].variable_map);
     output_interval(state->current_time,
                   integrate_result.states[it].time-state->current_time,
                   integrate_result.states[it].variable_map,
                   integrate_result.states[it].parameter_map);
-                  
                   
     state_result_sptr_t state_result(new StateResult(integrate_result.states[it].variable_map,
                                                        integrate_result.states[it].parameter_map,
@@ -534,7 +525,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       new_state->current_time = integrate_result.states[it].time;
       new_state->parameter_map = integrate_result.states[it].parameter_map;
       //次のフェーズにおける変数の値を導出する
-      HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");  
+      HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");
       solver_->apply_time_to_vm(integrate_result.states[it].variable_map, new_state->variable_map, integrate_result.states[it].time-state->current_time);
 
       new_state->parent_state_result = state_result;
@@ -636,6 +627,7 @@ void SymbolicSimulator::output(const time_t& time,
   }
 }
 
+
 void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
 {
   parameter_map_t::const_iterator it  = pm.begin();
@@ -644,6 +636,18 @@ void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
     std::cout << "p" << it->first << "\t: " << range_to_string(it->second) << "\n";
   }
 }
+
+void SymbolicSimulator::take_all_variables(const variable_map_t& from, variable_map_t& to)
+{
+  variable_map_t::const_iterator it  = from.begin();
+  variable_map_t::const_iterator end = from.end();
+  value_t undef_value;
+  for(; it!=end; ++it) {
+    // getして，存在しない場合はUNDEFのものが新しく追加されるのでこれでおｋ
+    to.get_variable(it->first);
+  }
+}
+    
 
 void SymbolicSimulator::output_result_tree()
 {
