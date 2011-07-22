@@ -179,6 +179,7 @@ Quiet[
           otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {},Simplify[expr]];
           otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
 
+
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
@@ -451,7 +452,6 @@ applyListToOr[reduceSol_] :=
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   paramCons = getParamCons[expr];
-  sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons],Except[True]], vars, Reals]]];
   sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons],Except[True]], vars, Reals]]];
 
   If[sol===False || Reduce[expr, vars, Reals] === False,

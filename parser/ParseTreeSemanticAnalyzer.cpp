@@ -259,8 +259,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
 
   dispatch_lhs(node);
   dispatch_rhs(node); 
+}
 
-}  
+DEFINE_DEFAULT_VISIT_UNARY(Not)
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 {

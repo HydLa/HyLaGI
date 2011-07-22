@@ -74,6 +74,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     defRuleID(RI_LogicalAnd)   logical_and; 
     defRuleID(RI_LogicalOr)    logical_or; 
+    defRuleID(RI_LogicalNot)    logical_not; 
 
     defRuleID(RI_Program)          program; 
     defRuleID(RI_ProgramParallel)  program_parallel; 
@@ -106,10 +107,11 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Unary)         unary; 
     defRuleID(RI_Arithmetic)    arithmetic;
     defRuleID(RI_Arith_term)    arith_term;
-    defRuleID(RI_Logical)       logical; 
+    defRuleID(RI_Logical)       logical;
     defRuleID(RI_Logical_term)  logical_term; 
 
 
+    defRuleID(RI_Ask_Logical_Literal)  ask_logical_literal; //!Ç™Ç¬Ç≠Ç‡ÇÃ
     defRuleID(RI_Ask_Logical_Term)  ask_logical_term; 
     defRuleID(RI_Ask_Logical)       ask_logical;
     defRuleID(RI_Comparison)        comparison; 
@@ -235,7 +237,10 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       ask_logical = ask_logical_term % root_node_d[logical_or];
 
       //ò_óùêœ
-      ask_logical_term = comparison % root_node_d[logical_and];
+      ask_logical_term = ask_logical_literal % root_node_d[logical_and];
+      
+      //î€íË
+      ask_logical_literal = !(root_node_d[logical_not]) >> comparison;
 
       //î‰är
       comparison = 
@@ -315,6 +320,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //ò_óùââéZéq
       logical_and     = str_p("&") | str_p("/\\");
       logical_or      = str_p("|") | str_p("\\/");
+      logical_not     = ch_p('!');
 
       //éZèpìÒçÄââéZéq
       add          = ch_p('+');

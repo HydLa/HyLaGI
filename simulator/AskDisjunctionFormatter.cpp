@@ -153,6 +153,12 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Logical
   dispatch_binary_node(node);
 }
 
+
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Not> node)
+{
+  dispatch_unary_node(node);
+}
+
 // §–ñŠK‘w’è‹`‰‰Zq
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
 {

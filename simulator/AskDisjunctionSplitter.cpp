@@ -138,6 +138,13 @@ void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::parse_tree::LogicalO
   }
 }
 
+
+// §–ñŠK‘w’è‹`‰‰Zq
+void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::parse_tree::Not> node)
+{
+  dispatch_unary_node(node);
+}
+
 // §–ñŠK‘w’è‹`‰‰Zq
 void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
 {

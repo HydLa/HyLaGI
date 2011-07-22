@@ -219,6 +219,12 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<LogicalOr> node)
   dump_node(node);
 }  
 
+
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Not> node)
+{
+  dump_node(node);
+}  
+
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Weaker> node)
 {
   dump_node(node);

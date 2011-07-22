@@ -83,7 +83,6 @@ public:
 
   void create_max_diff_map(max_diff_map_t& max_diff_map);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
   // AskêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);

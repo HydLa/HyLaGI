@@ -22,10 +22,12 @@ public:
   NodeTreeGenerator(
     DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
     DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
+    node_sptr&    assertion_node,
     const boost::shared_ptr<NodeFactory>& node_factory) :
     
     constraint_definition_(constraint_definition),
     program_definition_(program_definition),
+    assertion_node_(assertion_node),
     node_factory_(node_factory)
   {}
 
@@ -41,13 +43,6 @@ public:
     return create_parse_tree(tree_iter);
   }
   
-  /**
-   * ASSERT•¶‚É‘Š“–‚·‚éƒm[ƒh‚ğ•Ô‚·
-   */
-  node_sptr get_assertion_node(){
-    return assertion_node_;
-  }
-
 private:
 
   /**
@@ -236,6 +231,7 @@ private:
         // ˜_—‰‰Zq
       case RI_LogicalAnd:   {return create_binary_node<LogicalAnd>(ch);}
       case RI_LogicalOr:    {return create_binary_node<LogicalOr>(ch);}
+      case RI_LogicalNot:    {return create_unary_node<Not>(ch);}
       
         // Zp“ñ€‰‰Zq
       case RI_Plus:         {return create_binary_node<Plus>(ch);}
@@ -352,7 +348,7 @@ private:
   }
   
   
-  node_sptr assertion_node_;
+  node_sptr& assertion_node_;
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition_;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition_;
 

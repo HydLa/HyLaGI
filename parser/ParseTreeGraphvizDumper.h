@@ -59,6 +59,7 @@ public:
   // ˜_—‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
   // Zp“ñ€‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);

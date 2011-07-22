@@ -60,6 +60,8 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
+
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
   // §–ñŠK‘w’è‹`‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);

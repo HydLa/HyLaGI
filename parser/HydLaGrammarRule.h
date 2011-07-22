@@ -17,6 +17,7 @@ typedef enum _RuleID {
   // ò_óùââéZéq
   RI_LogicalAnd,
   RI_LogicalOr,
+  RI_LogicalNot,
 
   // î‰ärââéZéq
   RI_CompOp,
@@ -88,6 +89,7 @@ typedef enum _RuleID {
   RI_Logical_term,
   RI_Logical,
 
+  RI_Ask_Logical_Literal,
   RI_Ask_Logical_Term,
   RI_Ask_Logical,
   RI_Comparison,
