@@ -103,6 +103,8 @@ private:
 
 
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ
+  
+  bool is_safe_;
 
   state_result_sptr_t result_root_;                  //結果を示す解軌道木の根．初期状態なので，子供以外の情報は入れない
 };

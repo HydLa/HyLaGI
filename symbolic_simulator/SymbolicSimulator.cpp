@@ -47,7 +47,7 @@ namespace hydla {
 namespace symbolic_simulator {
 
 SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
-  opts_(opts)
+  opts_(opts), is_safe_(true)
 {
 }
 
@@ -144,7 +144,7 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
 
 void SymbolicSimulator::simulate()
 {
-  while(!state_stack_.empty()) {
+  while(!state_stack_.empty() && is_safe_) {
     phase_state_sptr state(pop_phase_state());
     if( opts_.max_step >= 0 && state->step > opts_.max_step)
       continue;
@@ -158,7 +158,7 @@ void SymbolicSimulator::simulate()
         state->module_set_container->mark_current_node();
       }
       state->positive_asks.clear();
-    }while(state->module_set_container->go_next());
+    }while(state->module_set_container->go_next() && is_safe_);
   }
   if(opts_.output_format == fmtTFunction)
     output_result_tree();
@@ -312,7 +312,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     HYDLA_LOGGER_CC("#** SymbolicSimulator::check_assertion **\n");
     if(solver_->check_consistency(constraints_t(1, opts_.assertion) ) == VCSR_FALSE ){
       std::cout << "Assertion Failed!" << std::endl;
-      exit(-1);
+      is_safe_ = false;
+      return CC_TRUE;
     }
   }
   return CC_TRUE;
@@ -476,7 +477,6 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                                                   &positive_asks);
     not_adopted_tells_list.push_back(not_adopted_tells);
   }
-
 
   // ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ð‚¨‚±‚È‚¤
   SymbolicVirtualConstraintSolver::IntegrateResult integrate_result;
