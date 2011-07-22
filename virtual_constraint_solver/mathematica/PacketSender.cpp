@@ -44,12 +44,19 @@ void PacketSender::visit(boost::shared_ptr<Ask> node)
   assert(0);
 }
 
+void PacketSender::visit(boost::shared_ptr<Constraint> node)                  
+{
+  //assert(0);
+  accept(node->get_child());
+}
+
 // TellêßñÒ
 void PacketSender::visit(boost::shared_ptr<Tell> node)                  
 {
   
   // tellêßñÒÇÕëóÇÍÇ»Ç¢
-  assert(0);
+  //assert(0);
+  accept(node->get_child());
 }
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \

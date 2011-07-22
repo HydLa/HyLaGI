@@ -176,7 +176,8 @@ Quiet[
           {1},
           tStore = sol[[1]];
           tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
-          otherExpr = Select[Simplify[expr], (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
+          otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {},Simplify[expr]];
+          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
 
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
@@ -184,7 +185,6 @@ Quiet[
           sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && And@@pexpr}, t, Reals],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
 
-           Print["sol", sol];
           If[sol === False,
             {2},
             (* リストのリストにする *)

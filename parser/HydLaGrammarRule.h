@@ -67,6 +67,7 @@ typedef enum _RuleID {
 
   // Žž‘Š‰‰ŽZŽq (Always = Globally)
   RI_Always,
+  
 
   RI_Implies,
   RI_Equivalent,
@@ -110,7 +111,8 @@ typedef enum _RuleID {
   RI_ProgramDef,
   RI_ModuleDef,
   RI_ConstraintDef,
-
+  
+  RI_Assert,
   RI_Statements,
   RI_HydLaProgram,
 

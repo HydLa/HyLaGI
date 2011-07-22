@@ -22,7 +22,7 @@ namespace logger {
  * 指定された値の数の引数をもつログ出力関数を生成
  */
 
-//dの要素 => (関数名, デバッグレベル, フィルタ変数)
+//dの要素 => (関数名, フィルタ変数)
 #define HYDLA_LOGGER_DEF_LOG_WRITE_GEN(z, n, d)                   \
   template< BOOST_PP_ENUM_PARAMS(n, typename A) >                 \
   void BOOST_PP_TUPLE_ELEM(2, 0, d)(                              \

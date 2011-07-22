@@ -24,7 +24,7 @@ class TreeInfixPrinter:
 
 
   
-  //value‚Æ‚Á‚Ä•¶š—ñ‚É•ÏŠ·‚·‚é
+  //value‚Æ‚Á‚Ä•¶š—ñ‚É•ÏŠ·‚µ‚Äo—Í‚·‚é
   std::ostream& print_infix(const node_sptr &, std::ostream&);
 
   private:

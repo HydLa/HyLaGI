@@ -5,6 +5,9 @@
 
 #include <boost/lambda/lambda.hpp>
 
+#include "TreeInfixPrinter.h"
+#include <sstream>
+
 namespace hydla {
 namespace ch {
 
@@ -41,6 +44,20 @@ std::string ModuleSet::get_name() const
   }
   str += "}";
   return str;
+}
+
+
+std::string ModuleSet::get_infix_string() const 
+{
+  hydla::parse_tree::TreeInfixPrinter printer;
+  std::ostringstream ostr;
+  module_list_t::const_iterator it  = module_list_.begin();    
+  module_list_t::const_iterator end = module_list_.end();
+
+  for(; it!=end; ++it) {
+    printer.print_infix(it->second, ostr);
+  }
+  return ostr.str();
 }
 
 std::ostream& ModuleSet::dump(std::ostream& s) const

@@ -59,6 +59,8 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
   
+  opts_.assertion = parse_tree->get_assertion_node();
+  
   result_root_.reset(new StateResult());
   //初期状態を作ってスタックに入れる
   phase_state_sptr state(create_new_phase_state());
@@ -305,6 +307,14 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     HYDLA_LOGGER_CC("---push_phase_state(ask)---\n", **branched_ask,"\n");
     return CC_BRANCH;
   }
+  
+  if(opts_.assertion){
+    HYDLA_LOGGER_CC("#** SymbolicSimulator::check_assertion **\n");
+    if(solver_->check_consistency(constraints_t(1, opts_.assertion) ) == VCSR_FALSE ){
+      std::cout << "Assertion Failed!" << std::endl;
+      exit(-1);
+    }
+  }
   return CC_TRUE;
 }
 
@@ -340,7 +350,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     return true;
   }
 
-
+  
 
   SymbolicVirtualConstraintSolver::create_result_t create_result;
   HYDLA_LOGGER_MS("#** SymbolicSimulator::create_map: **\n");  
@@ -486,6 +496,10 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     for(tells_t::const_iterator na_it = (*it).begin(); na_it != (*it).end(); na_it++){
       disc_cause.push_back((*na_it)->get_child());
     }
+  }
+  //assertionの否定を追加
+  if(opts_.assertion){
+    disc_cause.push_back(node_sptr(new Not(opts_.assertion)));
   }
   
   solver_->integrate(

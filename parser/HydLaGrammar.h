@@ -113,6 +113,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Ask_Logical_Term)  ask_logical_term; 
     defRuleID(RI_Ask_Logical)       ask_logical;
     defRuleID(RI_Comparison)        comparison; 
+    defRuleID(RI_Assert)           assert;
 
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
@@ -124,7 +125,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       hydla_program = gen_pt_node_d[statements];
             
       //文の集合
-      statements  = gen_ast_node_d[*((def_statement | program) 
+      statements  = gen_ast_node_d[*((assert | def_statement | program) 
                                      >> discard_node_d[ch_p('.')]) >> end_p];
 
       //プログラム
@@ -141,6 +142,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       
       // 定義
       def_statement = gen_pt_node_d[constraint_def | program_def];
+      
+      // assert文
+      assert = root_node_d[str_p("ASSERT")] >> no_node_d[ch_p('(')] >> ask_logical >> no_node_d[ch_p(')')];
 
       //program定義
       program_def = 

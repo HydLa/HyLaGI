@@ -3,9 +3,13 @@
 #include "ProgramOptions.h"
 #include "SymbolicSimulator.h"
 
+// parser
+#include "DefaultNodeFactory.h"
 
+// namespace
 using namespace hydla;
 using namespace hydla::parse_tree;
+using namespace hydla::parser;
 using namespace hydla::ch;
 using namespace hydla::symbolic_simulator;
 
@@ -38,8 +42,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.output_precision = po.get<int>("output-precision");
   opts.approx_precision = po.get<int>("approx");
   opts.solver        = po.get<std::string>("solver");
-
-
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)

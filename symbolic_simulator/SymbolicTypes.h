@@ -10,6 +10,7 @@
 #include "SymbolicParameter.h"
 #include "SymbolicValueRange.h"
 
+
 #include "Types.h"
 
 using namespace hydla::simulator;
@@ -80,6 +81,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
     int output_precision;
     int approx_precision;
     std::string solver;
+    hydla::parse_tree::node_sptr assertion;
   } Opts;
 
 } // namespace symbolic_simulator

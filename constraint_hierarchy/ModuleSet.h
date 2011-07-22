@@ -45,6 +45,11 @@ public:
   std::string get_name() const;
   
   /**
+   * 中値記法で出力
+   */ 
+  std::string get_infix_string() const;
+  
+  /**
    * 集合の最初の要素
    */
   module_list_const_iterator begin() const 

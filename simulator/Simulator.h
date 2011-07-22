@@ -137,7 +137,6 @@ public:
                                     const phase_state_const_sptr& state)
   {      
     bool ret = false;
-    hydla::parse_tree::TreeInfixPrinter printer;
     switch(state->phase) 
     {
     case PointPhase:
@@ -148,7 +147,7 @@ public:
           "\n#** module set **\n",
           ms->get_name(),
           "\n",
-          *ms);
+          ms->get_infix_string() );
 
         ret = point_phase(ms, state);
         break;
@@ -162,7 +161,7 @@ public:
           "\n#** module set **\n",
           ms->get_name(),
           "\n",
-          *ms);
+          ms->get_infix_string());
 
         ret = interval_phase(ms, state);
         break;            

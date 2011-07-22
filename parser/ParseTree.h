@@ -202,6 +202,23 @@ public:
 
     return node_sptr();
   }  
+  
+  /**
+   * トップノードを得る
+   */  
+  node_sptr get_node() const
+  {
+    return node_tree_;
+  }  
+  
+  /**
+   * assertノードを得る
+   */
+  node_sptr get_assertion_node() const
+  {
+    return assertion_node_tree_;
+  }
+  
   /*
   node_sptr get_node(node_id_t id) const
   {
@@ -301,6 +318,8 @@ private:
   node_factory_sptr    node_factory_;
 
   node_sptr            node_tree_;
+  node_sptr            assertion_node_tree_;
+  
   variable_map_t       variable_map_;
 
   node_map_t           node_map_;

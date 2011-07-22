@@ -79,7 +79,7 @@ DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
 // TellêßñÒ
 DEFINE_INFIX_VISIT_UNARY(Tell, "", "")
 // êßñÒéÆ
-DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".")
+DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".\n")
 
 //ï¿óÒçáê¨
 void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){

@@ -40,6 +40,13 @@ public:
 
     return create_parse_tree(tree_iter);
   }
+  
+  /**
+   * ASSERT•¶‚É‘Š“–‚·‚éƒm[ƒh‚ð•Ô‚·
+   */
+  node_sptr get_assertion_node(){
+    return assertion_node_;
+  }
 
 private:
 
@@ -308,7 +315,6 @@ private:
         return node;
       }
       
-
         // •Ï”E‘©”›•Ï”
       case RI_BoundVariable:
       case RI_Variable:
@@ -327,15 +333,26 @@ private:
           std::string(tree_iter->value.begin(), tree_iter->value.end()));     
         return node;
       }
+      
+      case RI_Assert:
+      {
+        //assertion‚Í‚P‚Â‚¾‚¯
+        assert(!assertion_node_);
+        
+        assertion_node_ = create_parse_tree(ch);
+        return node_sptr();
+      }
 
       default:
       {
         assert(0);
         return node_sptr();
       }  
-    }  
+    }
   }
-
+  
+  
+  node_sptr assertion_node_;
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition_;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition_;
 
