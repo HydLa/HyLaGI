@@ -369,11 +369,10 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                        new_state->expanded_always_id);
     new_state->module_set_container = msc_no_init_;
  
-    take_all_variables(state->variable_map, new_state->variable_map);
+    take_all_variables(state->variable_map, create_result.result_maps[create_it].variable_map);
     
     new_state->variable_map = create_result.result_maps[create_it].variable_map;
     new_state->parameter_map = create_result.result_maps[create_it].parameter_map;
-    
     
     
     state_result_sptr_t state_result(new StateResult(new_state->variable_map,
