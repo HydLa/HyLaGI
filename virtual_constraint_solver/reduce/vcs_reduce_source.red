@@ -417,13 +417,13 @@ begin;
   if(tGuardQE_ = true) then return CEI_ENTAILED___
   else if(tGuardQE_ = false) then return CEI_NOT_ENTAILED___;
 
-  % とりあえずtに関して解く
-  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要があ
-  % る
+  % とりあえずtに関して解く（等式の形式を前提としている）
+  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
   % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
+  % TODO:論理積でつながった形への対応
   tGuardSol_:= solve(tGuardQE_,t);
 
-  infList_:= union(for each x in tGuardSol_ join checkInfUnit(x));
+  infList_:= union(for each x in tGuardSol_ join checkInfUnit(x, ENTAILMENT___));
   write("infList_: ", infList_);
 
   % パラメタ無しなら解は1つになるはず
@@ -455,15 +455,22 @@ end;
 
 
 
-procedure checkInfUnit(tExpr_)$
+procedure checkInfUnit(tExpr_, mode_)$
 begin;
   scalar infCheckAns_;
+  % 前提：relop(t, 値)の形式
   write("tExpr_: ", tExpr_);
-%  if(mymin(part(tExpr_,2),0) = 0) then return {};
-  % 等式の場合はfalse
-  if(part(tExpr_,0)=equal) then infCheckAns_:= {false}
+
+  if(part(tExpr_,0)=equal) then 
+    % ガード条件判定においては等式の場合はfalse
+    if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
+    else if(mode_ = MINTIME___) then
+      if(mymin(part(tExpr_,2),0) neq part(tExpr_,2)) then infCheckAns_:= {part(tExpr_, 2)}
+      else infCheckAns_:= {}
   % TODO:不等式の場合への対応
-  else infCheckAns_:= {false};
+  else 
+    if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
+    else if(mode_ = MINTIME___) then infCheckAns_:= {};
   write("infCheckAns_: ", infCheckAns_);
 
   return infCheckAns_;
@@ -471,33 +478,35 @@ end;
 
 
 
-%IC_SOLVER_ERROR___:= {0};
-%IC_NORMAL_END___:= {1};
+IC_SOLVER_ERROR___:= 0;
+IC_NORMAL_END___:= 1;
 
 procedure integrateCalc(cons_, init_, posAsk_, negAsk_, NACons_, vars_, maxTime_)$
 begin;
   scalar tmpSol_, tmpPosAsk_, tmpNegAsk_, tmpNACons_, 
-         tmpVarMap_, tmpMinT_, integAns_;
+         retCode_, tmpVarMap_, tmpMinT_, integAns_;
   tmpSol_:= exDSolve(cons_, init_, vars_);
   write("tmpSol_:", tmpSol_);
 
   % TODO:Solver error処理
 
-  let{tmpSol_};
-  tmpPosAsk_:= posAsk_;
-  tmpNegAsk_:= negAsk_;
-  tmpNACons_:= NACons_;
+  tmpPosAsk_:= sub(tmpSol_, posAsk_);
+  tmpNegAsk_:= sub(tmpSol_, negAsk_);
+  tmpNACons_:= sub(tmpSol_, NACons_);
   write("tmpPosAsk_:", tmpPosAsk_, 
         "tmpNegAsk_:", tmpNegAsk_,
         "tmpNACons_:", tmpNACons_);
 
-  tmpVarMap_:=tmpSol_;
+  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, vars_)); 
   write("tmpVarMap_:", tmpVarMap_);
 
   tmpMinT_:= calcNextPointPhaseTime(maxTime_, tmpPosAsk_, tmpNegAsk_, tmpNACons_);
   write("tmpMinT_:", tmpMinT_);
+  if(tmpMinT_ = error) then retCode_:= IC_SOLVER_ERROR___
+  else retCode_:= IC_NORMAL_END___;
 
-  integAns_:= {1, tmpVarMap_, tmpMinT_};
+  % TODO:tmpMinT_は複数時刻扱えるようにする
+  integAns_:= {retCode_, tmpVarMap_, {tmpMinT_}};
   write("integAns_", integAns_);
   
   return integAns_;
@@ -505,17 +514,42 @@ end;
 
 
 
+procedure createIntegratedValue(pairInfo_, variable_)$
+begin;
+  scalar retList_, integRule_, integExpr_, newRetList_;
+  retList_:= first(pairInfo_);
+  integRule_:= second(pairInfo_);
+
+  integExpr_:= {variable_, sub(integRule_, variable_)};
+  write("integExpr_: ", integExpr_);
+
+  newRetList_:= cons(integExpr_, retList_);
+  write("newRetList_: ", newRetList_);
+
+  return {newRetList_, integRule_};
+end;
+
+
+
 procedure calcNextPointPhaseTime(maxTime_, posAsk_, negAsk_, NACons_)$
 begin;
-  scalar minTList_, ans_;
+  scalar minTList_, minT_, ans_;
 
 
 %  % TODO:list部分をなんとかする
 %  ans_:= fold(calcMinTime, {maxTime_, {}}, {posAsk_, negAsk_, NACons_});
 
-  minTList_:= map(calcMinTime, union(union(posAsk_, negAsk_), NACons_));
-  ans_:= myfind(0, minTList_);
-  write("ans_", ans_);
+  minTList_:= union(for each x in union(union(map(not,posAsk_), negAsk_), NACons_) join calcMinTime(x));
+  write("minTList_: ", minTList_);
+
+  if(not freeof(minTList_, error)) then return error;
+
+  minT_:= myfind(0, minTList_);
+  write("minT_: ", minT_);
+
+  if(mymin(minT_, maxTime_) = minT_) then ans_:= {minT_, 0}
+  else ans_:= {maxTime_, 1}; 
+  write("ans_: ", ans_);
 
   return ans_;
 end;
@@ -529,6 +563,32 @@ begin;
   scalar currentMinT_, currentMinTriple_, sol_, minT_;
 
 
+end;
+
+
+
+% Map用
+
+procedure calcMinTime(integAsk_)$
+begin;
+  scalar sol_, minTList_;
+  write("in calcMinTime");
+  write("integAsk_: ", integAsk_);
+
+  if(integAsk_ = false) then return {}; % ∞を返すべきか？
+
+  % とりあえずtに関して解く（等式の形式を前提としている）
+  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
+  % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
+  % TODO:論理積でつながった形への対応
+  sol_:= solve(integAsk_, t);
+
+  minTList_:= union(for each x in sol_ join checkInfUnit(x, MINTIME___));  
+  write("minTList_: ", minTList_);
+
+  % パラメタ無しなら解は1つになるはず
+  if(length(minTList_) neq 1) then return {error};
+  return minTList_;
 
 end;
 
@@ -536,12 +596,14 @@ end;
 
 procedure getRealVal(value_, prec_)$
 begin;
-  scalar tmp_;
-  on rounded;
+  scalar tmp_, defaultPrec_;
+  defaultPrec:= precision(0)$
+  on rounded$
   precision(prec_);
   tmp_:= value_;
   write("tmp_:", tmp_);
-  off rounded;
+  precision(defaultPrec_)$
+%  off rounded$
 
   return tmp_;
 end;
@@ -577,7 +639,9 @@ end;
 procedure simplifyExpr(expr_)$
 begin;
   scalar simplifiedExpr_;
-  simplifiedExpr_:= simplify(expr_);
+  % TODO:simplify関数を使う
+%  simplifiedExpr_:= simplify(expr_);
+  simplifiedExpr_:= expr_;
   write("simplifiedExpr_:", simplifiedExpr_);
 
   return simplifiedExpr_;
@@ -585,15 +649,24 @@ end;
 
 
 
-%TODO trueまたはfalseを返すようにする
-
 procedure checkLessThan(lhs_, rhs_)$
 begin;
   scalar ret_;
-  ret_:= if(lhs_ < rhs_) then rettrue___ else retfalse___;
+  ret_:= if(mymin(lhs_, rhs_) = lhs_) then rettrue___ else retfalse___;
   write("ret_:", ret_);
 
   return ret_;
+end;
+
+
+
+procedure getVMFromString(vmStr_)$
+begin;
+  scalar retVM_;
+  retVM_:= vmStr_;
+  write("retVM_:", retVM_);
+
+  return retVM_;
 end;
 
 

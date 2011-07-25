@@ -46,44 +46,47 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   }
   HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);
 
+  SExpConverter sc;
 
-  // まず、変数表の中身を表すようなS式の文字列を作る
+  // 変数表の中身を表すようなS式の文字列vm_s_exp_strを得たい
+  // まずは、REDUCEへ送る文字列vm_strを作成する
   std::ostringstream vm_str;
-  vm_str << "(list ";
+  vm_str << "{";
 
   variable_map_t::variable_list_t::const_iterator it =
     variable_map.begin();
   variable_map_t::variable_list_t::const_iterator end =
     variable_map.end();
+  bool first_element = true;
   for(; it!=end; ++it)
   {
-    if(it!=variable_map.begin()) vm_str << " ";
-
     const REDUCEVariable& variable = (*it).first;
     const value_t&    value = it->second;
 
     if(!value.is_undefined()) {
-      vm_str << "(equal ";
+      if(!first_element) vm_str << ", ";
+
+      vm_str << "equal(";
 
       // variable部分
       if(variable.derivative_count > 0)
       {
-        vm_str << "(prev (df "
+        vm_str << "prev(df("
                << variable.name
-               << " t "
+               << ", t, "
                << variable.derivative_count
                << "))";
       }
       else
       {
-        vm_str << "(prev "
+        vm_str << "prev("
                << variable.name
                << ")";
       }
 
       // value部分
-      vm_str << " "
-             << value // TODO:正しい処理を行うように。現在は中置記法になってしまう？ので、S式の形式にしたい
+      vm_str << ", "
+             << sc.convert_symbolic_value_to_string(value)
              << ")"; // equalの閉じ括弧
 
 
@@ -92,16 +95,29 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
         boost::make_tuple(variable.name,
                           variable.derivative_count,
                           true));
+      first_element = false;
     }
   }
 
-  vm_str << ")"; // listの閉じ括弧
+  vm_str << "}"; // listの閉じ括弧
   HYDLA_LOGGER_VCS("vm_str: ", vm_str.str());  
+
+  cl_->send_string("vmStr_:=");
+  cl_->send_string(vm_str.str());
+  cl_->send_string(";");
+  cl_->send_string("symbolic redeval '(getVMFromString vmStr_);");
+
+
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
+
+  std::string vm_s_exp_str = cl_->get_s_expr();
+  HYDLA_LOGGER_VCS("vm_s_exp_str: ", vm_s_exp_str);
   
-  // sp_にvm_strを読み込ませて、S式のパースツリーを構築し、先頭のポインタを得る
-  sp_.parse_main((vm_str.str()).c_str());
-  const_tree_iter_t ct_it = sp_.get_tree_iterator();
-  constraint_store_.first.insert(ct_it);
+  // sp_にvm_s_exp_strを読み込ませて、S式のパースツリーを構築し、先頭のポインタを得る
+  sp_.parse_main(vm_s_exp_str.c_str());
+  const_tree_iter_t tree_root_ptr = sp_.get_tree_iterator();
+  constraint_store_.first.insert(tree_root_ptr);
 
 
   HYDLA_LOGGER_VCS(*this);
@@ -196,40 +212,24 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
 
       // 変数側
-      const_tree_iter_t var_it = and_it->children.begin();
-      std::string var_head_str = std::string(var_it->value.begin(),var_it->value.end());
+      const_tree_iter_t var_ptr = and_it->children.begin();
+      std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
 
       // prev変数は処理しない
       if(var_head_str=="prev") continue;
 
       std::string var_name;
-      int var_derivative_count;
+      int var_derivative_count = sp_.get_derivative_count(var_ptr);
 
       // 微分を含む変数
-      if(var_head_str=="df"){
-        size_t df_child_size = var_it->children.size();
-
-        // 1回微分の場合は微分回数部分が省略されている
-        if(df_child_size==2){
-          var_name = std::string(var_it->children.begin()->value.begin(), 
-                                 var_it->children.begin()->value.end());
-          var_derivative_count = 1;
-        }
-        else{
-          assert(df_child_size==3);
-          var_name = std::string(var_it->children.begin()->value.begin(), 
-                                 var_it->children.begin()->value.end());
-          std::stringstream dc_ss;
-          std::string dc_str = std::string((var_it->children.begin()+2)->value.begin(), 
-                                           (var_it->children.begin()+2)->value.end());
-          dc_ss << dc_str;
-          dc_ss >> var_derivative_count;
-        }
+      if(var_derivative_count > 0){
+          var_name = std::string(var_ptr->children.begin()->value.begin(), 
+                                 var_ptr->children.begin()->value.end());
       }
       // 微分を含まない変数
       else{
+        assert(var_derivative_count == 0);
         var_name = var_head_str;
-        var_derivative_count = 0;          
       }
       
       // 変数名の先頭にスペースが入ることがあるので除去する
@@ -240,9 +240,9 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       symbolic_variable.derivative_count = var_derivative_count;
 
       // 値側
-      const_tree_iter_t value_it = and_it->children.begin()+1;
+      const_tree_iter_t value_ptr = and_it->children.begin()+1;
       SExpConverter sc;
-      symbolic_value = sc.convert_s_exp_to_symbolic_value(value_it);
+      symbolic_value = sc.convert_s_exp_to_symbolic_value(sp_, value_ptr);
       symbolic_value.set_unique(true);
       
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
@@ -485,11 +485,11 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   sp_.parse_main(ans.c_str());
 
   // {コード, {{{変数, 関係演算子コード, 値},...}, ...}}の構造
-  const_tree_iter_t ct_it = sp_.get_tree_iterator();
+  const_tree_iter_t tree_root_ptr = sp_.get_tree_iterator();
 
   // コードを取得
-  const_tree_iter_t ret_code_it = ct_it->children.begin();
-  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
 
@@ -511,12 +511,13 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
     // 制約ストア構築
     // 制約間のOrに関してはsetで保持
     // TODO:出来ればvectorあたりで扱いたいがその場合resetあたりでもう少し適切な処理が必要か
-    size_t or_size = (ret_code_it+1)->children.size();
+    const_tree_iter_t cons_list_ptr = ret_code_ptr+1;
+    size_t or_size = cons_list_ptr->children.size();
     HYDLA_LOGGER_VCS( "or_size: ", or_size);
 
     for(size_t i=0; i<or_size; i++)
     {
-      const_tree_iter_t or_cons_it = (ret_code_it+1)->children.begin()+i;
+      const_tree_iter_t or_cons_it = cons_list_ptr->children.begin()+i;
       constraint_store_.first.insert(or_cons_it);
     }
 
@@ -524,6 +525,12 @@ VCSResult REDUCEVCSPoint::add_constraint(const tells_t& collected_tells, const a
   }
   else {
     assert(ret_code_str == " \"RETFALSE___\"");
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");//矛盾
+
+    // 制約ストアをリセット
+    //    reset();
+    constraint_store_.first.clear();
+
     result = VCSR_FALSE;
   }
 
@@ -601,11 +608,11 @@ VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, co
   sp_.parse_main(ans.c_str());
 
   // {コード}の構造
-  const_tree_iter_t ct_it = sp_.get_tree_iterator();
+  const_tree_iter_t tree_root_ptr = sp_.get_tree_iterator();
 
   // コードを取得
-  const_tree_iter_t ret_code_it = ct_it->children.begin();
-  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
 */

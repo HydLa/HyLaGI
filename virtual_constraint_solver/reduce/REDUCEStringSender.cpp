@@ -69,18 +69,18 @@ void REDUCEStringSender::visit(boost::shared_ptr<GreaterEqual> node)          {
 
 // ˜_—‰‰Zq
 void REDUCEStringSender::visit(boost::shared_ptr<LogicalAnd> node)            {
-  cl_.send_string("{LogicalAnd, ");
+  cl_.send_string("and(");
 	accept(node->get_lhs());
   cl_.send_string(", ");
 	accept(node->get_rhs());
-  cl_.send_string("}");
+  cl_.send_string(")");
 }
 void REDUCEStringSender::visit(boost::shared_ptr<LogicalOr> node)             {
-  cl_.send_string("{LogicalOr, ");
+  cl_.send_string("or(");
 	accept(node->get_lhs());
   cl_.send_string(", ");
 	accept(node->get_rhs());
-  cl_.send_string("}");
+  cl_.send_string(")");
 }
   
 // Zp“ñ€‰‰Zq BINARY_NODE
@@ -99,14 +99,18 @@ void REDUCEStringSender::visit(boost::shared_ptr<Subtract> node)              {
   cl_.send_string(")");
 }
 void REDUCEStringSender::visit(boost::shared_ptr<Times> node)                 {
+  cl_.send_string("(");  
 	accept(node->get_lhs());
   cl_.send_string("*");
 	accept(node->get_rhs());
+  cl_.send_string(")");
 }
 void REDUCEStringSender::visit(boost::shared_ptr<Divide> node)                {
+  cl_.send_string("(");
 	accept(node->get_lhs());
   cl_.send_string("/");
 	accept(node->get_rhs());
+  cl_.send_string(")");
 }
 void REDUCEStringSender::visit(boost::shared_ptr<Power> node)                {
 	accept(node->get_lhs());
@@ -140,11 +144,9 @@ void REDUCEStringSender::visit(boost::shared_ptr<Previous> node)              {
 // ”Û’è
 void REDUCEStringSender::visit(boost::shared_ptr<Not> node)
 {
-  // TODO
-
-// cl_.send_string("{Not, ");
+  cl_.send_string("not(");
   accept(node->get_child());
-// cl_.send_string("}");
+  cl_.send_string(")");
 }
   
 // •Ï” FactorNode

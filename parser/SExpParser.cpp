@@ -27,7 +27,11 @@ std::string SExpParser::get_string_from_tree(const_tree_iter_t iter) const{
 
   std::ostringstream ret_str;
 
-  ret_str << std::string(iter->value.begin(), iter->value.end());
+  // サーバーモードではminus使用不可
+  std::string str = std::string(iter->value.begin(), iter->value.end());
+  if(str == "minus") ret_str << "-";
+  else ret_str << str;
+
   if(iter->children.size()>0){
     ret_str << "(";
     for(size_t i=0; i<iter->children.size();i++){
@@ -40,6 +44,35 @@ std::string SExpParser::get_string_from_tree(const_tree_iter_t iter) const{
 //  std::cout << "ret_str.str(): " << ret_str.str() << "\n";
 
   return ret_str.str();
+}
+
+int SExpParser::get_derivative_count(const_tree_iter_t var_iter) const{
+
+  int var_derivative_count;
+  std::string var_str = std::string(var_iter->value.begin(), var_iter->value.end());
+
+  // 微分を含む変数
+  if(var_str=="df"){
+    size_t df_child_size = var_iter->children.size();
+
+    // 1回微分の場合は微分回数部分が省略されている
+    if(df_child_size==2){
+      var_derivative_count = 1;
+    }
+    else{
+      assert(df_child_size==3);
+      std::stringstream dc_ss;
+      std::string dc_str = std::string((var_iter->children.begin()+2)->value.begin(),
+                                       (var_iter->children.begin()+2)->value.end());
+      dc_ss << dc_str;
+      dc_ss >> var_derivative_count;
+    }
+  }
+  else {
+    var_derivative_count = 0;
+  }
+
+  return var_derivative_count;
 }
 
 void SExpParser::dump_tree(const_tree_iter_t iter, int nest){

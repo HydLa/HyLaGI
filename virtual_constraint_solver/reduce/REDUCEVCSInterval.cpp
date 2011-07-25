@@ -236,13 +236,16 @@ void REDUCEVCSInterval::send_vars(REDUCEStringSender& rss, const max_diff_map_t&
   cl_->send_string("{");
   max_diff_map_t::const_iterator md_it = max_diff_map.begin();
   max_diff_map_t::const_iterator md_end = max_diff_map.end();
+  bool first_element = true;
   for(md_it=max_diff_map.begin(); md_it!=md_end; ++md_it) {
     for(int i=0; i<=md_it->second; i++) {
+      if(!first_element) cl_->send_string(",");
       rss.put_var(boost::make_tuple(md_it->first, i, false));
 
       HYDLA_LOGGER_VCS("put: ",
                        "  name: ", md_it->first,
                        "  diff: ", i);
+      first_element = false;
     }
   }
   cl_->send_string("}");
@@ -338,11 +341,11 @@ VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, cons
   sp.parse_main(ans.c_str());
 
   // {コード}の構造
-  const_tree_iter_t ct_it = sp.get_tree_iterator();
+  const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
   // コードを取得
-  const_tree_iter_t ret_code_it = ct_it->children.begin();
-  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
 
@@ -479,11 +482,11 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   sp.parse_main(ans.c_str());
 
   // {コード}の構造
-  const_tree_iter_t ct_it = sp.get_tree_iterator();
+  const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
   // コードを取得
-  const_tree_iter_t ret_code_it = ct_it->children.begin();
-  std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
+  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
   HYDLA_LOGGER_VCS("ret_code_str: ",
                    ret_code_str);
 */
@@ -569,7 +572,6 @@ VCSResult REDUCEVCSInterval::integrate(
 
   HYDLA_LOGGER_VCS(constraint_store_);
 
-  assert(0);
 /////////////////// 送信処理
   REDUCEStringSender rss(*cl_);
 
@@ -666,6 +668,7 @@ VCSResult REDUCEVCSInterval::integrate(
   HYDLA_LOGGER_VCS( "--- receive ---");
 
   cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("integrate_ans: ",
@@ -674,20 +677,165 @@ VCSResult REDUCEVCSInterval::integrate(
   // S式パーサで読み取る
   SExpParser sp;
   sp.parse_main(ans.c_str());
+  SExpConverter sc;
+
+  // {コード, {tの式で表される変数表}, IP終了時刻}の構造
+  // TODO:IP終了の条件も返して、終了時刻の集合を返せるようにする
+  const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
+
+  // コードを取得
+  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
+  HYDLA_LOGGER_VCS("ret_code_str: ",
+                   ret_code_str);
+
+  if(ret_code_str=="0"){
+    // ソルバエラー
+    return VCSR_SOLVER_ERROR;
+  }
+  assert(ret_code_str=="1");
+
+  HYDLA_LOGGER_VCS("---integrate calc result---");
+  virtual_constraint_solver_t::IntegrateResult::NextPhaseState state;
+
+
+  // 変数と値の組を受け取る
+  const_tree_iter_t variable_pair_list_ptr = ret_code_ptr+1;
+  size_t variable_pair_size = variable_pair_list_ptr->children.size();
+  HYDLA_LOGGER_VCS( "variable_pair_size: ", variable_pair_size);
+
+  for(size_t i=0; i<variable_pair_size; i++)
+  {
+    const_tree_iter_t variable_pair_it = variable_pair_list_ptr->children.begin()+i;
+    variable_t variable;
+    value_t    value;
+    HYDLA_LOGGER_VCS("--- add variable ---");
+
+
+    // 変数側
+    const_tree_iter_t var_ptr = variable_pair_it->children.begin();
+    std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
+
+    std::string var_name;
+    int var_derivative_count = sp.get_derivative_count(var_ptr);
+
+    // 微分を含む変数
+    if(var_derivative_count > 0){
+      var_name = std::string(var_ptr->children.begin()->value.begin(), 
+                             var_ptr->children.begin()->value.end());
+    }
+    // 微分を含まない変数
+    else{
+      assert(var_derivative_count == 0);
+      var_name = var_head_str;
+    }
+
+    // 変数名の先頭にスペースが入ることがあるので除去する
+    // TODO:S式パーサを修正してスペース入らないようにする
+    if(var_name.at(0) == ' ') var_name.erase(0,1);
+
+    variable.name = var_name;
+    variable.derivative_count = var_derivative_count;
+    HYDLA_LOGGER_VCS("name  : ", variable.name);
+    HYDLA_LOGGER_VCS("derivative : ", variable.derivative_count);
+
+    // 値側
+    const_tree_iter_t value_ptr = variable_pair_it->children.begin()+1;
+    value = sc.convert_s_exp_to_symbolic_value(sp, value_ptr);
+    HYDLA_LOGGER_VCS("value : ", value.get_string());
+
+    state.variable_map.set_variable(variable, value); 
+  }
+
+
+  // 次のPPの時刻と，その場合の条件の組，更に終了時刻かどうかを得る
+  HYDLA_LOGGER_VCS("-- receive next PP time --");
+  const_tree_iter_t next_pp_time_list_ptr = variable_pair_list_ptr+1;
+  size_t next_time_size = next_pp_time_list_ptr->children.size();
+  HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
+  for(size_t time_it = 0; time_it < next_time_size; time_it++){
+    const_tree_iter_t next_time_info_ptr = next_pp_time_list_ptr->children.begin()+time_it;
+    // IP終了時刻
+    const_tree_iter_t next_time_ptr = next_time_info_ptr->children.begin();
+    state.time = sc.convert_s_exp_to_symbolic_value(sp, next_time_ptr) + current_time;
+    HYDLA_LOGGER_VCS_SUMMARY("next_phase_time: ", state.time);
+
+/*
+    // 条件式
+    const_tree_iter_t pp_condition_list_ptr = next_time_ptr+1;
+    size_t pp_condition_size = pp_condition_list_ptr->children.size();
+
+    state.parameter_map.clear();
+    parameter_t tmp_param, prev_param;
+    for(int cond_it = 0; cond_it < condition_size; cond_it++){
+      value_range_t tmp_range;
+      ml_->MLGetNext(); ml_->MLGetNext();
+      tmp_param.name = ml_->get_string();
+      HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.name);
+      ml_->MLGetNext();
+      int relop_code = ml_->get_integer();
+      HYDLA_LOGGER_VCS("returned relop_code: ", relop_code);
+      ml_->MLGetNext();
+      std::string parameter_value_string = ml_->get_string();
+      HYDLA_LOGGER_VCS("returned value: ", parameter_value_string);
+      ml_->MLGetNext();
+      tmp_range = state.parameter_map.get_variable(tmp_param);
+      tmp_range.add(value_range_t::Element(MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string),
+                                           MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+      state.parameter_map.set_variable(tmp_param, tmp_range);
+      prev_param.name = tmp_param.name;
+    }
+*/
+
+    // シミュレーション終了時刻に達したかどうか
+    const_tree_iter_t max_time_flag_ptr = next_time_ptr+1;
+    // const_tree_iter_t max_time_flag_ptr = next_time_ptr+2;
+    int max_time_flag;
+    std::stringstream max_time_flag_ss;
+    std::string max_time_flag_str = std::string(max_time_flag_ptr->value.begin(), max_time_flag_ptr->value.end());
+    max_time_flag_ss << max_time_flag_str;
+    max_time_flag_ss >> max_time_flag;
+    state.is_max_time = (max_time_flag == 1);
+    HYDLA_LOGGER_VCS("is_max_time: ",  state.is_max_time);
+    HYDLA_LOGGER_VCS("--parameter map--\n",  state.parameter_map);
 
 
 
+    // 未定義の変数を変数表に反映
+    // 初期値制約（未定義変数を含む）とvariable_mapとの差分を解消
+    add_undefined_vars_to_vm(state.variable_map);
 
-
-
-
-
-
-
+    integrate_result.states.push_back(state);
+  }
 
 /////////////////// 受信終了
 
-  assert(0);
+/*
+  for(unsigned int state_it = 0; state_it < integrate_result.states.size(); state_it++){
+    // 時刻の簡約化。本来は関数使ってやるべきだけど、とりあえずそのままここに
+    HYDLA_LOGGER_VCS("SymbolicTime::send_time : ", integrate_result.states[state_it].time);
+    ml_->put_function("ToString", 1);
+    ml_->put_function("FullForm", 1);
+    ml_->put_function("Simplify", 1);
+    ps.put_node(integrate_result.states[state_it].time.get_node(), PacketSender::VA_None, true);
+    ml_->skip_pkt_until(RETURNPKT);
+    integrate_result.states[state_it].time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
+
+
+    // 時刻の近似
+    if(approx_precision_ > 0) {
+
+      ml_->put_function("ToString", 1);
+      ml_->put_function("FullForm", 1);
+      ml_->put_function("approxExpr", 2);
+      ml_->put_integer(approx_precision_);
+      send_time(integrate_result.states[state_it].time);
+      ml_->skip_pkt_until(RETURNPKT);
+      ml_->MLGetNext();
+      integrate_result.states[state_it].time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
+    }
+  }
+*/
 
   return VCSR_TRUE;
 }
@@ -710,6 +858,8 @@ void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
   variable_map_t::const_iterator end = in_vm.end();
   for(; it!=end; ++it) {
     HYDLA_LOGGER_VCS("variable : ", it->first);
+    HYDLA_LOGGER_VCS("value : ", it->second);
+    HYDLA_LOGGER_VCS("time : ", time);
 
     // 値
     value_t    value;
@@ -762,7 +912,7 @@ void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       assert(ret_code_str=="1");
       const_tree_iter_t value_it = ct_it->children.begin()+1;
       SExpConverter sc;
-      value = sc.convert_s_exp_to_symbolic_value(value_it);
+      value = sc.convert_s_exp_to_symbolic_value(sp, value_it);
       HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
     }
 

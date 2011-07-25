@@ -65,6 +65,8 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
   cl_.send_string(vcs_reduce_source());
 //  cl_.read_until_redeval();
   cl_.skip_until_redeval();
+
+  SExpConverter::initialize();
 }
 
 REDUCEVCS::~REDUCEVCS()
@@ -209,7 +211,7 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 
   std::string ans = cl_.get_s_expr();
   HYDLA_LOGGER_VCS("check_less_than_ans: ", ans);
-  return  ans == "True";
+  return  ans == "\"RETTRUE___\"";
 }
 
 
@@ -240,7 +242,7 @@ void REDUCEVCS::simplify(time_t &time)
   sp.parse_main(ans.c_str());
   SExpParser::const_tree_iter_t time_it = sp.get_tree_iterator();
   SExpConverter sc;
-  time = sc.convert_s_exp_to_symbolic_value(time_it);
+  time = sc.convert_s_exp_to_symbolic_value(sp, time_it);
 }
 
 
@@ -277,7 +279,7 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   sp.parse_main(ans.c_str());
   SExpParser::const_tree_iter_t value_it = sp.get_tree_iterator();
   SExpConverter sc;
-  tmp_val = sc.convert_s_exp_to_symbolic_value(value_it);
+  tmp_val = sc.convert_s_exp_to_symbolic_value(sp, value_it);
   return  tmp_val;
 }
 
