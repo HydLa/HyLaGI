@@ -165,12 +165,16 @@ SExpConverter::node_sptr SExpConverter::for_binary_node(
   }
 }
 
-std::string SExpConverter::convert_symbolic_value_to_string(const value_t &val){
+std::string SExpConverter::convert_node_to_reduce_string(const node_sptr &node){
   string_for_reduce_.clear();
   differential_count_=0;
   in_prev_=0;
-  accept(val.get_node());
+  accept(node);
   return string_for_reduce_;
+}
+
+std::string SExpConverter::convert_symbolic_value_to_reduce_string(const value_t &val){
+  return convert_node_to_reduce_string(val.get_node());
 }
 
 #define START_P "("
@@ -302,6 +306,12 @@ void SExpConverter::visit(boost::shared_ptr<Variable> node)
   if(in_prev_){
     tmp << ")";
   }
+
+  var_info_t new_var =
+    boost::make_tuple(node->get_name(),
+                      differential_count_,
+                      in_prev_ && !ignore_prev_);
+  vars_.insert(new_var);
 
   string_for_reduce_.append(tmp.str());
 }

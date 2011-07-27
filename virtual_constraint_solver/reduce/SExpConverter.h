@@ -7,6 +7,7 @@
 
 #include "../SymbolicVirtualConstraintSolver.h"
 #include "../../parser/SExpParser.h"
+#include "REDUCEStringSender.h"
 
 using namespace hydla::parser;
 
@@ -16,7 +17,7 @@ namespace reduce {
 
 
 class SExpConverter:
-  public hydla::parse_tree::TreeVisitor
+  public REDUCEStringSender
 {
   public:
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t       value_t;
@@ -61,6 +62,7 @@ class SExpConverter:
 
   // S式とってvalueに変換する
   static value_t convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter);
+  static value_t convert_s_exp_str_to_symbolic_value(const std::string &expr, std::string::size_type &now);
 
 /*
   //関係演算子の文字列表現を返す
@@ -72,8 +74,10 @@ class SExpConverter:
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
 */  
-  //valueとってREDUCE用の文字列に変換する．(t)とか(0)とかつけないので，PP専用としておく
-  std::string convert_symbolic_value_to_string(const value_t&);
+  //nodeとってREDUCE用の文字列に変換する．(t)とか(0)とかつけないので，PP専用としておく
+  std::string convert_node_to_reduce_string(const node_sptr&);
+  //valueとってREDUCE用の文字列に変換する．同上
+  std::string convert_symbolic_value_to_reduce_string(const value_t&);
 
 
   private:

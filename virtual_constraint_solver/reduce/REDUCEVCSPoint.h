@@ -23,7 +23,8 @@ public:
 
   typedef std::set<REDUCEStringSender::var_info_t> constraint_store_vars_t;
 
-  typedef std::pair<std::set<const_tree_iter_t>, constraint_store_vars_t> constraint_store_t;
+  typedef std::pair<std::set<std::set<REDUCEValue> >, constraint_store_vars_t> constraint_store_t;
+//  typedef std::pair<std::set<const_tree_iter_t>, constraint_store_vars_t> constraint_store_t;
 
   typedef std::pair<std::set<std::set<REDUCEValue> >,
       constraint_store_vars_t> parameter_store_t;
@@ -57,7 +58,7 @@ public:
   /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks);
+  virtual void add_constraint(const constraints_t& constraints);
 
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
@@ -65,16 +66,20 @@ public:
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks);
 
   /**
+   * 制約ストアが無矛盾かを判定する．
+   * 引数で制約を渡された場合は一時的に制約ストアに追加する．
+   */
+  virtual VCSResult check_consistency();
+  virtual VCSResult check_consistency(const constraints_t& constraints);
+
+  /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(
       integrate_result_t& integrate_result,
-      const positive_asks_t& positive_asks,
-      const negative_asks_t& negative_asks,
+      const constraints_t &constraints,
       const time_t& current_time,
-      const time_t& max_time,
-      const not_adopted_tells_list_t& not_adopted_tells_list,
-      const appended_asks_t& appended_asks);
+      const time_t& max_time);
 
   /**
    * 内部状態の出力をおこなう
@@ -82,17 +87,18 @@ public:
   std::ostream& dump(std::ostream& s) const;
 
 private:
-  typedef std::map<std::string, int> max_diff_map_t;
+  typedef REDUCEStringSender::max_diff_map_t max_diff_map_t;
 
   void send_cs() const;
   void send_ps() const;
   void send_cs_vars() const;
   void send_pars() const;
+  void receive_constraint_store(constraint_store_t& store);
 
   /**
-   * 変数の最大微分回数をもとめる
+   * check_consistency の共通部分
    */
-  void create_max_diff_map(REDUCEStringSender& rss, max_diff_map_t& max_diff_map);
+  VCSResult check_consistency_sub();
 
   /**
    * 左連続性に関する制約を加える
@@ -110,10 +116,11 @@ private:
 //  }
 
 
-  //  mutable MathLink* ml_;
   mutable REDUCELink* cl_;
+  max_diff_map_t max_diff_map_;          //現在の制約ストアに出現する中で最大の微分回数を記録しておく表．
   constraint_store_t constraint_store_;
   parameter_store_t parameter_store_;
+  constraints_t tmp_constraints_;  //一時的に制約を追加する対象
   std::set<std::string> par_names_; //一時しのぎ
   SExpParser sp_;
 };

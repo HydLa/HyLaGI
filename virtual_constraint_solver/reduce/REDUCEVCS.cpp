@@ -92,10 +92,9 @@ bool REDUCEVCS::create_maps(create_result_t &create_result)
   return vcs_->create_maps(create_result);
 }
 
-
-VCSResult REDUCEVCS::add_constraint(const tells_t& collected_tells, const appended_asks_t &appended_asks)
+void REDUCEVCS::add_constraint(const constraints_t& constraints)
 {
-  return vcs_->add_constraint(collected_tells, appended_asks);
+  vcs_->add_constraint(constraints);
 }
   
 VCSResult REDUCEVCS::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
@@ -103,46 +102,27 @@ VCSResult REDUCEVCS::check_entailment(const ask_node_sptr& negative_ask, const a
   return vcs_->check_entailment(negative_ask, appended_asks);
 }
 
-VCSResult REDUCEVCS::integrate(
-  integrate_result_t& integrate_result,
-  const positive_asks_t& positive_asks,
-  const negative_asks_t& negative_asks,
-  const time_t& current_time,
-  const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list,
-  const appended_asks_t& appended_asks)
+VCSResult REDUCEVCS::check_consistency()
 {
-  return vcs_->integrate(integrate_result, 
-                         positive_asks, 
-                         negative_asks, 
-                         current_time, 
-                         max_time,
-                         not_adopted_tells_list,
-                         appended_asks);
+  return vcs_->check_consistency();
 }
 
-// void REDUCEVCS::change_mode(Mode m)
-// {
-//   if(mode_ == m) {
-//     vcs_->reset();
-//   }
-//   else {
-//     mode_ = m;
-//     switch(m) {
-//       case DiscreteMode:
-//         vcs_.reset(new REDUCEVCSPoint(ml_));
-//         break;
+VCSResult REDUCEVCS::check_consistency(const constraints_t& constraints)
+{
+  return vcs_->check_consistency(constraints);
+}
 
-//       case ContinuousMode:
-//         vcs_.reset(new REDUCEVCSInterval(ml_));
-//         break;
-
-//       default:
-//         assert(0);
-//     }
-//   }
-// }
-
+VCSResult REDUCEVCS::integrate(
+  integrate_result_t& integrate_result,
+  const constraints_t &constraints,
+  const time_t& current_time,
+  const time_t& max_time)
+{
+  return vcs_->integrate(integrate_result, 
+                         constraints, 
+                         current_time, 
+                         max_time);
+}
 
 void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){
   vcs_->apply_time_to_vm(in_vm, out_vm, time);

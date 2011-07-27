@@ -13,11 +13,18 @@ namespace reduce {
 /** ãÛèWçáÇï\Ç∑REDUCEì¸óÕópï∂éöóÒ "{}" */
 const std::string REDUCEStringSender::empty_list_string("{}");
 
-REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
-  cl_(cl),
+REDUCEStringSender::REDUCEStringSender() :
+  cl_(NULL),
   differential_count_(0),
   in_prev_(false),
-  in_prev_point_(false)
+  apply_not_(false)
+{}
+
+REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
+  cl_(&cl),
+  differential_count_(0),
+  in_prev_(false),
+  apply_not_(false)
 {}
 
 REDUCEStringSender::~REDUCEStringSender(){}
@@ -35,94 +42,68 @@ void REDUCEStringSender::visit(boost::shared_ptr<Tell> node)                  {
   assert(0);
 }
 
-// î‰ärââéZéq ASYMMETRIC_BINARY_NODE
-void REDUCEStringSender::visit(boost::shared_ptr<Equal> node)                 {
-	accept(node->get_lhs());
-  cl_.send_string("=");
-	accept(node->get_rhs());
-}
-void REDUCEStringSender::visit(boost::shared_ptr<UnEqual> node)               {
-	accept(node->get_lhs());
-  cl_.send_string(" neq ");
-	accept(node->get_rhs());
-}
-void REDUCEStringSender::visit(boost::shared_ptr<Less> node)                  {
-	accept(node->get_lhs());
-  cl_.send_string("<");
-	accept(node->get_rhs());
-}
-void REDUCEStringSender::visit(boost::shared_ptr<LessEqual> node)             {
-	accept(node->get_lhs());
-  cl_.send_string("<=");
-	accept(node->get_rhs());
-}
-void REDUCEStringSender::visit(boost::shared_ptr<Greater> node)               {
-	accept(node->get_lhs());
-  cl_.send_string(">");
-	accept(node->get_rhs());
-}
-void REDUCEStringSender::visit(boost::shared_ptr<GreaterEqual> node)          {
-	accept(node->get_lhs());
-  cl_.send_string(">=");
-	accept(node->get_rhs());
+#define START_P "("
+#define END_P   ")"
+
+#define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
+  void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)     \
+  {                                                                     \
+  cl_->send_string(#FUNC_NAME START_P);                                 \
+  accept(node->get_lhs());                                              \
+  cl_->send_string(", ");                                               \
+  accept(node->get_rhs());                                              \
+  cl_->send_string(END_P);                                              \
 }
 
+#define DEFINE_VISIT_BINARY_WITH_NOT_FUNC(NODE_NAME, FUNC_NAME, NOT_FUNC_NAME)     \
+  void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)                \
+  {                                                                                \
+  if(!apply_not_) cl_->send_string(#FUNC_NAME START_P);                            \
+  else cl_->send_string(#NOT_FUNC_NAME START_P);                                   \
+  accept(node->get_lhs());                                                         \
+  cl_->send_string(", ");                                                          \
+  accept(node->get_rhs());                                                         \
+  cl_->send_string(END_P);                                                         \
+}
+
+#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
+  void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)     \
+  {                                                                     \
+  cl_->send_string(#FUNC_NAME START_P);                                 \
+  accept(node->get_child());                                            \
+  cl_->send_string(END_P);                                              \
+}
+
+#define DEFINE_VISIT_FACTOR(NODE_NAME, FACTOR_NAME)                     \
+  void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)     \
+  {                                                                     \
+  cl_->send_string(#FACTOR_NAME);                                       \
+}
+
+// î‰ärââéZéq ASYMMETRIC_BINARY_NODE
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(Equal, equal, neq)
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(UnEqual, neq, equal)
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(Less, lessp, geq)
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(LessEqual, leq, greaterp)
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(Greater, greaterp, leq)
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(GreaterEqual, geq, lessp)
+
+
 // ò_óùââéZéq
-void REDUCEStringSender::visit(boost::shared_ptr<LogicalAnd> node)            {
-  cl_.send_string("and(");
-	accept(node->get_lhs());
-  cl_.send_string(", ");
-	accept(node->get_rhs());
-  cl_.send_string(")");
-}
-void REDUCEStringSender::visit(boost::shared_ptr<LogicalOr> node)             {
-  cl_.send_string("or(");
-	accept(node->get_lhs());
-  cl_.send_string(", ");
-	accept(node->get_rhs());
-  cl_.send_string(")");
-}
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(LogicalAnd, and, or)
+DEFINE_VISIT_BINARY_WITH_NOT_FUNC(LogicalOr, or, and)
+
   
 // éZèpìÒçÄââéZéq BINARY_NODE
-void REDUCEStringSender::visit(boost::shared_ptr<Plus> node)                  {
-  cl_.send_string("(");
-	accept(node->get_lhs());
-  cl_.send_string("+");
-	accept(node->get_rhs());
-  cl_.send_string(")");
-}
-void REDUCEStringSender::visit(boost::shared_ptr<Subtract> node)              {
-  cl_.send_string("(");
-	accept(node->get_lhs());
-  cl_.send_string("-");
-	accept(node->get_rhs());
-  cl_.send_string(")");
-}
-void REDUCEStringSender::visit(boost::shared_ptr<Times> node)                 {
-  cl_.send_string("(");  
-	accept(node->get_lhs());
-  cl_.send_string("*");
-	accept(node->get_rhs());
-  cl_.send_string(")");
-}
-void REDUCEStringSender::visit(boost::shared_ptr<Divide> node)                {
-  cl_.send_string("(");
-	accept(node->get_lhs());
-  cl_.send_string("/");
-	accept(node->get_rhs());
-  cl_.send_string(")");
-}
-void REDUCEStringSender::visit(boost::shared_ptr<Power> node)                {
-	accept(node->get_lhs());
-  cl_.send_string("^");
-	accept(node->get_rhs());
-}
+DEFINE_VISIT_BINARY(Plus, plus)
+DEFINE_VISIT_BINARY(Subtract, difference)
+DEFINE_VISIT_BINARY(Times, times)
+DEFINE_VISIT_BINARY(Divide, quotient)
+DEFINE_VISIT_BINARY(Power, expt)
+
   
 // éZèpíPçÄââéZéq UNARYNODE
-void REDUCEStringSender::visit(boost::shared_ptr<Negative> node)              {
-  cl_.send_string("-");
-  accept(node->get_child());
-}
+DEFINE_VISIT_UNARY(Negative, -)
 void REDUCEStringSender::visit(boost::shared_ptr<Positive> node)              {
   accept(node->get_child());
 }
@@ -141,13 +122,57 @@ void REDUCEStringSender::visit(boost::shared_ptr<Previous> node)              {
   in_prev_ = false;
 }
 
+DEFINE_VISIT_UNARY(Not, not)
+
+/*
 // î€íË
-void REDUCEStringSender::visit(boost::shared_ptr<Not> node)
-{
-  cl_.send_string("not(");
+void REDUCEStringSender::visit(boost::shared_ptr<Not> node)                   {
+  apply_not_ = !apply_not_;
   accept(node->get_child());
-  cl_.send_string(")");
+  apply_not_ = !apply_not_;
 }
+*/
+
+// éOäpä÷êî
+DEFINE_VISIT_UNARY(Sin, sin)
+DEFINE_VISIT_UNARY(Cos, cos)
+DEFINE_VISIT_UNARY(Tan, tan)
+// ãtéOäpä÷êî
+DEFINE_VISIT_UNARY(Asin, asin)
+DEFINE_VISIT_UNARY(Acos, acos)
+DEFINE_VISIT_UNARY(Atan, atan)
+// â~é¸ó¶
+DEFINE_VISIT_FACTOR(Pi, pi)
+// ëŒêî
+DEFINE_VISIT_BINARY(Log, logb) // égÇ¶Ç»Ç¢ÅH
+DEFINE_VISIT_UNARY(Ln, log)
+// é©ëRëŒêîÇÃíÍ
+DEFINE_VISIT_FACTOR(E, e)
+
+//îCà”ÇÃï∂éöóÒ
+
+void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryBinary> node)
+{
+  cl_->send_string(node->get_string() + "(");
+  accept(node->get_lhs());
+  cl_->send_string(", ");
+  accept(node->get_rhs());
+  cl_->send_string(")");
+}
+
+void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryUnary> node)
+{
+  cl_->send_string(node->get_string() + "(");
+  accept(node->get_child());
+  cl_->send_string(")");
+}
+
+void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryFactor> node)
+{
+  cl_->send_string(node->get_string());
+}
+
+
   
 // ïœêî FactorNode
 void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
@@ -161,19 +186,20 @@ void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
 
 // êîéö FactorNode
 void REDUCEStringSender::visit(boost::shared_ptr<Number> node)                {
-  cl_.send_string(node->get_number());
+  cl_->send_string(node->get_number());
 }
 
 // ãLçÜíËêî
 void REDUCEStringSender::visit(boost::shared_ptr<Parameter> node)
 {
-  cl_.send_string(node->get_name());
+  // TODO
+//  cl_->send_string(node->get_name());
 }
 
 // t
 void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 {
-  cl_.send_string("t");
+  cl_->send_string("t");
 }
 
 
@@ -227,7 +253,7 @@ void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
 
   if(init_var) var_str << "lhs";
 
-  cl_.send_string(var_str.str());
+  cl_->send_string(var_str.str());
   HYDLA_LOGGER_REST("var_str: ", var_str.str());
 
   // putÇµÇΩïœêîÇÃèÓïÒÇï€éù
@@ -246,15 +272,14 @@ void REDUCEStringSender::put_node(const node_sptr& node,
 {
   differential_count_ = 0;
   in_prev_ = false;
-  in_prev_point_ = false;
   ignore_prev_ = ignore_prev;
   if(!entailed){
     // TODO
 /*
     HYDLA_LOGGER_REST("put: Not");
-    cl_.send_string("{Not, ");
+    cl_->send_string("{Not, ");
     accept(node);
-    cl_.send_string("}");
+    cl_->send_string("}");
 */
   }
   accept(node);
@@ -269,17 +294,17 @@ void REDUCEStringSender::put_vars(bool ignore_prev)
     "---- REDUCEStringSender::put_vars ----\n",
     "var size:", vars_.size());
 
-  cl_.send_string("{");
+  cl_->send_string("{");
   vars_const_iterator it  = vars_begin();
   vars_const_iterator end = vars_end();
   for(; it!=end; ++it) {
-    if(it!=vars_begin()) cl_.send_string(",");
+    if(it!=vars_begin()) cl_->send_string(",");
     put_var(boost::make_tuple(
               it->get<0>(),
               it->get<1>(),
               it->get<2>() && !ignore_prev));
   }
-  cl_.send_string("}");
+  cl_->send_string("}");
 
 }
 
@@ -291,11 +316,53 @@ void REDUCEStringSender::clear()
 {
   differential_count_ = 0;
   in_prev_ = false;
-  in_prev_point_ = false;
 
   vars_.clear();
 }
 
+namespace {
+
+struct MaxDiffMapDumper
+{
+  template<typename T>
+  MaxDiffMapDumper(T it, T end)
+  {
+    for(; it!=end; ++it) {
+      s << "name: " << it->first
+        << "diff: " << it->second
+        << "\n";
+    }
+  }
+
+  std::stringstream s;
+};
+
+}
+
+void REDUCEStringSender::create_max_diff_map(max_diff_map_t& max_diff_map) 
+{
+  vars_const_iterator vars_it  = vars_begin();
+  vars_const_iterator vars_end_it = vars_end();
+  for(; vars_it!=vars_end_it; ++vars_it) {
+    std::string name(vars_it->get<0>());
+    int derivative_count = vars_it->get<1>();
+
+    max_diff_map_t::iterator it = max_diff_map.find(name);
+    if(it==max_diff_map.end()) {
+      max_diff_map.insert(
+        std::make_pair(name, derivative_count));
+    }
+    else if(it->second < derivative_count) {
+      it->second = derivative_count;
+    }
+  }
+
+  HYDLA_LOGGER_VCS(
+    "-- max diff map --\n",
+    MaxDiffMapDumper(max_diff_map.begin(),
+                     max_diff_map.end()).s.str());
+  
+}
 
 } //namespace reduce
 } //namespace vcs

@@ -5,9 +5,6 @@
 #include <string>
 #include <ostream>
 
-#include "Node.h"
-#include "TreeVisitor.h"
-#include "ParseTree.h"
 #include "REDUCELink.h"
 
 // TODO:なんとかする
@@ -27,6 +24,8 @@ class REDUCEStringSender :
 {
 public:
 
+  typedef std::map<std::string, int> max_diff_map_t;
+
   // TODO:何とかする
   /**
    * 変数データ
@@ -40,6 +39,7 @@ public:
   // 空集合を表すREDUCE入力用文字列 "{}"
   static const std::string empty_list_string;
 
+  REDUCEStringSender();
   REDUCEStringSender(REDUCELink& cl);
 
   virtual ~REDUCEStringSender();
@@ -70,6 +70,11 @@ public:
    * put_nodeの際に送信された変数群のデータを消去し，初期化する
    */
   void clear();
+
+  /**
+   * 変数の最大微分回数をもとめる
+   */
+  void create_max_diff_map(max_diff_map_t& max_diff_map);
 
 
   // Ask制約
@@ -110,6 +115,26 @@ public:
   // 否定
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
 
+  // 三角関数
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Sin> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Cos> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tan> node);
+  // 逆三角関数
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Asin> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Acos> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Atan> node);
+  // 円周率
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
+  // 対数
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Log> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ln> node);
+  // 自然対数の底
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
+  // 任意の文字列
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
+
   // 変数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
@@ -124,8 +149,9 @@ public:
 
 
 private:
-  REDUCELink& cl_;
+  REDUCELink* cl_;
 
+protected:
   /// 送信された変数の一覧
   var_info_list_t vars_;
 
@@ -133,14 +159,13 @@ private:
   int differential_count_;
 
   /// Prevノードの下にいるかどうか
-  bool in_prev_;
-
-  /// PreviousPointノードの下にいるかどうか
-  bool in_prev_point_;
+  int in_prev_;
 
   // prev制約を無視するかどうか
   bool ignore_prev_;
-  
+
+  // notを適用するかどうか
+  bool apply_not_;
 
 };
 

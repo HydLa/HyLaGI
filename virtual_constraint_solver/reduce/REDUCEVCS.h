@@ -52,24 +52,28 @@ public:
   /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks);
-  
+  virtual void add_constraint(const constraints_t& constraints);
+
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
 
   /**
+   * 制約ストアが無矛盾かを判定する．
+   * 引数で制約を渡された場合は一時的に制約ストアに追加する．
+   */
+  virtual VCSResult check_consistency(const constraints_t& constraints);
+  virtual VCSResult check_consistency();
+
+  /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(
     integrate_result_t& integrate_result,
-    const positive_asks_t& positive_asks,
-    const negative_asks_t& negative_asks,
+    const constraints_t &constraints,
     const time_t& current_time,
-    const time_t& max_time,
-    const not_adopted_tells_list_t& not_adopted_tells_list,
-    const appended_asks_t& appended_asks);
+    const time_t& max_time);
 
 
 

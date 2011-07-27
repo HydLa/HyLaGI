@@ -61,6 +61,8 @@ std::string REDUCELink::get_s_expr(){
   while(count_char(line, '(')!=count_char(line, ')')){
     std::string tmp;
     getline(s, tmp);
+    // 次の行の文字列tmpを結合する前に、改行地点でスペースを入れておく
+    line = line + " ";
     line = line + tmp;
   }
 

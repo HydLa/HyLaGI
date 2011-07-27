@@ -26,14 +26,10 @@ public:
   struct ConstraintStore 
   {
     typedef std::map<REDUCEVariable, value_t>      init_vars_t;
-    typedef hydla::simulator::tells_t              constraints_t;
-    typedef std::set<REDUCEVariable>               cons_vars_t;
-    typedef std::map<std::string, int>             init_vars_max_diff_map_t;
+    typedef hydla::simulator::constraints_t        constraints_t;
 
     init_vars_t   init_vars;
     constraints_t constraints;
-    cons_vars_t   cons_vars;
-    init_vars_max_diff_map_t init_vars_max_diff_map;
   };
   
   typedef ConstraintStore constraint_store_t;
@@ -64,7 +60,7 @@ public:
   /**
    * 制約を追加する
    */
-  virtual VCSResult add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks);
+  virtual void add_constraint(const constraints_t& constraints);
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
@@ -72,16 +68,20 @@ public:
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
 
   /**
+   * 制約ストアが無矛盾かを判定する．
+   * 引数で制約を渡された場合は一時的に制約ストアに追加する．
+   */
+  virtual VCSResult check_consistency();
+  virtual VCSResult check_consistency(const constraints_t& constraints);
+
+  /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(
     integrate_result_t& integrate_result,
-    const positive_asks_t& positive_asks,
-    const negative_asks_t& negative_asks,
+    const constraints_t &constraints,
     const time_t& current_time,
-    const time_t& max_time,
-    const not_adopted_tells_list_t& not_adopted_tells_list,
-    const appended_asks_t& appended_asks);
+    const time_t& max_time);
 
   /**
    * 内部状態の出力をおこなう
@@ -95,17 +95,14 @@ public:
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
 private:
-  typedef std::map<std::string, int> max_diff_map_t;
+  typedef REDUCEStringSender::max_diff_map_t max_diff_map_t;
 
   void send_cs(REDUCEStringSender& rss) const;
-  void send_cs_vars() const;
-
-  /**
-   * 変数の最大微分回数をもとめる
-   */
-  void create_max_diff_map(REDUCEStringSender& rss, max_diff_map_t& max_diff_map);
 
   void send_vars(REDUCEStringSender& rss, const max_diff_map_t& max_diff_map);
+
+  // check_consistencyの共通部分
+  VCSResult check_consistency_sub();
 
   /**
    * 初期値制約をMathematicaに渡す
@@ -147,8 +144,11 @@ private:
   void send_pars() const;
 
   mutable REDUCELink* cl_;
+  max_diff_map_t max_diff_map_;
   constraint_store_t constraint_store_;
+  constraints_t tmp_constraints_;  //一時的に制約を追加する対象
   parameter_map_t parameter_map_;
+  REDUCEValue added_condition_;  //check_consistencyで追加される条件
   int approx_precision_;
 };
 

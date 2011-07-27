@@ -14,25 +14,6 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
-namespace {
-
-struct MaxDiffMapDumper
-{
-  template<typename T>
-  MaxDiffMapDumper(T it, T end)
-  {
-    for(; it!=end; ++it) {
-      s << "name: " << it->first
-        << "  diff: " << it->second
-        << "\n";      
-    }
-  }
-
-  std::stringstream s;
-};
-
-}
-
 
 REDUCEVCSInterval::REDUCEVCSInterval(REDUCELink* cl, int approx_precision) :
   cl_(cl),
@@ -56,7 +37,6 @@ bool REDUCEVCSInterval::reset(const variable_map_t& variable_map)
   if(variable_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Variables");
-    return true;
   }
   HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", 
                      variable_map);
@@ -68,30 +48,12 @@ bool REDUCEVCSInterval::reset(const variable_map_t& variable_map)
       constraint_store_.init_vars.insert(
         std::make_pair(it->first, it->second));
     }
-
     else {
       value_t value;
       constraint_store_.init_vars.insert(
         std::make_pair(it->first, value));
     }
-
-    // 初期値制約に関するmax_diff_mapに追加
-    constraint_store_t::init_vars_max_diff_map_t::iterator ivmd_it = 
-      constraint_store_.init_vars_max_diff_map.find(it->first.name);
-    if(ivmd_it==constraint_store_.init_vars_max_diff_map.end()) 
-    {
-      constraint_store_.init_vars_max_diff_map.insert(
-        std::make_pair(it->first.name, it->first.derivative_count));
-    }
-    else if(it->first.derivative_count > ivmd_it->second)
-    {
-      ivmd_it->second = it->first.derivative_count;
-    }
-
   }
-
-  HYDLA_LOGGER_VCS(constraint_store_);
-
   return true;
 }
 
@@ -102,47 +64,15 @@ bool REDUCEVCSInterval::reset(const variable_map_t& variable_map,  const paramet
   if(!reset(variable_map)){
     return false;
   }
-
-
   if(parameter_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
-    return true;
   }
   HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", 
                      parameter_map);
-
   parameter_map_=parameter_map;
-
+  HYDLA_LOGGER_VCS(constraint_store_);
   return true;
-}
-
-
-
-void REDUCEVCSInterval::create_max_diff_map(
-  REDUCEStringSender& rss, max_diff_map_t& max_diff_map)
-{
-  PacketSender::vars_const_iterator vars_it  = rss.vars_begin();
-  PacketSender::vars_const_iterator vars_end = rss.vars_end();
-  for(; vars_it!=vars_end; ++vars_it) {
-    std::string name(vars_it->get<0>());
-    int derivative_count = vars_it->get<1>();
-
-    max_diff_map_t::iterator it = max_diff_map.find(name);
-    if(it==max_diff_map.end()) {
-      max_diff_map.insert(
-        std::make_pair(name, derivative_count));
-    }
-    else if(it->second < derivative_count) {
-      it->second = derivative_count;
-    }    
-  }
-
-  HYDLA_LOGGER_VCS(
-    "-- max diff map --\n",
-    MaxDiffMapDumper(max_diff_map.begin(), 
-                     max_diff_map.end()).s.str());
-
 }
 
 void REDUCEVCSInterval::send_init_cons(
@@ -251,142 +181,21 @@ void REDUCEVCSInterval::send_vars(REDUCEStringSender& rss, const max_diff_map_t&
   cl_->send_string("}");
 }
 
-VCSResult REDUCEVCSInterval::add_constraint(const tells_t& collected_tells, const appended_asks_t& appended_asks)
+void REDUCEVCSInterval::add_constraint(const constraints_t& constraints)
 {
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::add_constraint ***");
 
-  REDUCEStringSender rss(*cl_);
-
-
-//////////////////// 送信処理
-
-  // isConsistentInterval(expr_, init_, vars_)を渡したい
-
-  // expr_を渡す（collected_tells、appended_asks、constraint_store、parameter_consの4つから成る）
-  HYDLA_LOGGER_VCS("----- send expr_ -----");
-  cl_->send_string("expr_:=union(union(union(");
-
-  // tell制約の集合からtellsを得てREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send collected_tells ---");
-  cl_->send_string("{");
-  tells_t::const_iterator tells_it  = collected_tells.begin();
-  tells_t::const_iterator tells_end = collected_tells.end();
-  for(; (tells_it) != tells_end; ++tells_it) {
-    if(tells_it != collected_tells.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("put node: ", *(*tells_it)->get_child());
-    rss.put_node((*tells_it)->get_child(), true);
-  }
-  cl_->send_string("},");  
-
-  // appended_asksからガード部分を得てREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send appended_asks ---");
-  cl_->send_string("{");
-  appended_asks_t::const_iterator append_it  = appended_asks.begin();
-  appended_asks_t::const_iterator append_end = appended_asks.end();
-  for(; append_it!=append_end; ++append_it) {
-    if(append_it != appended_asks.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()),
-                     "  entailed:", append_it->entailed);
-    rss.put_node(append_it->ask->get_guard(), true, append_it->entailed);
-  }
-  cl_->send_string("}),");
-
-  // 制約ストアconstraintsをREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send constraint_store ---");
-  send_cs(rss);
-  cl_->send_string("),");
-
-  // パラメタ制約parameter_consをREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send parameter_cons ---");
-  send_parameter_cons();
-  cl_->send_string(");");
-
-
-  // max_diff_mapをもとに、初期値制約init_consを渡す
-  HYDLA_LOGGER_VCS("----- send init_ -----");  
-  cl_->send_string("init_:=");
-  max_diff_map_t max_diff_map;
-  // 変数の最大微分回数をもとめる
-  create_max_diff_map(rss, max_diff_map);
-  // 初期値制約の送信
-  send_init_cons(rss, max_diff_map, false);
-  cl_->send_string(";");
-
-
-  // varsを渡す
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=");
-  rss.put_vars(true);
-  cl_->send_string(";");
-
-
-  cl_->send_string("symbolic redeval '(isConsistentInterval expr_ init_ vars_);");
-
-
-/////////////////// 受信処理
-  HYDLA_LOGGER_EXTERN("--- receive  ---");
-
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
-
-  std::string ans = cl_->get_s_expr();
-  HYDLA_LOGGER_VCS("add_constraint_ans: ",
-                   ans);
-  
-  VCSResult result;
-
-
-  // S式パーサで読み取る
-  SExpParser sp;
-  sp.parse_main(ans.c_str());
-
-  // {コード}の構造
-  const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
-
-  // コードを取得
-  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
-  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
-  HYDLA_LOGGER_VCS("ret_code_str: ",
-                   ret_code_str);
-
-  if(ret_code_str=="0"){
-    // ソルバエラー
-    result = VCSR_SOLVER_ERROR;
-  }
-  else if(ret_code_str=="1") {
-    // 充足
-    // TODO: スペースや""が残らないようにパーサを修正
-    result = VCSR_TRUE;
-    HYDLA_LOGGER_VCS_SUMMARY("consistent");
-
-    HYDLA_LOGGER_VCS( "---build constraint store---");
-    constraint_store_.constraints.insert(
-      constraint_store_.constraints.end(),
-      collected_tells.begin(),
-      collected_tells.end());
-
-    // 制約ストア中で使用される変数の一覧の更新
-    REDUCEStringSender::vars_const_iterator rss_vars_it  = rss.vars_begin();
-    REDUCEStringSender::vars_const_iterator rss_vars_end = rss.vars_end();
-    for(; rss_vars_it!=rss_vars_end; ++rss_vars_it) {
-      REDUCEVariable rv;
-      rv.name             = rss_vars_it->get<0>();
-      rv.derivative_count = rss_vars_it->get<1>();
-      constraint_store_.cons_vars.insert(rv);
-    }
-  }
-  else {
-    // 制約エラー
-    assert(ret_code_str == "2");
-    result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
-  }
+  // 制約ストアにtell制約の追加
+  constraint_store_.constraints.insert(
+    constraint_store_.constraints.end(),
+    constraints.begin(),
+    constraints.end()
+    );
 
   HYDLA_LOGGER_VCS(
     constraint_store_,
     "\n#*** End REDUCEVCSInterval::add_constraint ***");
 
-  return result;
 }
   
 VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
@@ -443,7 +252,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   cl_->send_string("init_:=");
   max_diff_map_t max_diff_map;
   // 変数の最大微分回数をもとめる
-  create_max_diff_map(rss, max_diff_map);
+  rss.create_max_diff_map(max_diff_map);
   // 初期値制約の送信
   send_init_cons(rss, max_diff_map, false);
   cl_->send_string(";");
@@ -513,71 +322,188 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
   return result;
 }
 
-void REDUCEVCSInterval::send_ask_guards(
-  REDUCEStringSender& rss, 
-  const hydla::simulator::ask_set_t& asks) const
+VCSResult REDUCEVCSInterval::check_consistency(const constraints_t& constraints)
 {
-  // ただ単にガードの式のリスト形式で送信する
-  cl_->send_string("{");
-  hydla::simulator::ask_set_t::const_iterator it  = asks.begin();
-  hydla::simulator::ask_set_t::const_iterator end = asks.end();
-  for(; it!=end; ++it)
-  {
-    if(it!=asks.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("send ask : ", **it);
-    // guard条件を送る
-    rss.put_node((*it)->get_guard(), true);
-  }
-  cl_->send_string("}");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::check_consistency(tmp) ***");
+  tmp_constraints_ = constraints;
+  VCSResult result = check_consistency_sub();
+  switch(result){
+    case VCSR_TRUE:
+      HYDLA_LOGGER_VCS_SUMMARY("consistent");
+      break;
 
+    case VCSR_FALSE:
+      HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+      break;
+
+    default:
+      assert(0);
+      break;
+
+    case VCSR_UNKNOWN:
+      // とりあえず
+      HYDLA_LOGGER_VCS_SUMMARY("consistent in some case");
+      result = VCSR_TRUE;
+//      ml_->MLNewPacket();
+      break;
+  }
+  tmp_constraints_.clear();
+  return result;
+}
+
+
+VCSResult REDUCEVCSInterval::check_consistency()
+{
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::check_consistency() ***");
+  VCSResult result = check_consistency_sub();
+  switch(result){
+    case VCSR_TRUE:
+      HYDLA_LOGGER_VCS_SUMMARY("consistent");
+      break;
+
+    case VCSR_FALSE:
+      HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+      break;
+
+    default:
+      assert(0);
+      break;
+
+    case VCSR_UNKNOWN:
+      // とりあえず
+      HYDLA_LOGGER_VCS_SUMMARY("consistent in some case");
+      result = VCSR_TRUE;
+      HYDLA_LOGGER_VCS( "--- receive added condition ---");
 /*
-  // {ガードの式、askのID}のリスト形式で送信する
-
-  cl_->send_string("{");
-  hydla::simulator::ask_set_t::const_iterator it  = asks.begin();
-  hydla::simulator::ask_set_t::const_iterator end = asks.end();
-  for(; it!=end; ++it)
-  {
-    if(it!=asks.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("send ask : ", **it);
-    cl_->send_string("{");
-
-    // guard条件を送る
-    rss.put_node((*it)->get_guard(), true);
-
-    cl_->send_string(",");
-
-    // IDを送る
-    std::stringstream id_ss;
-    int ask_id = (*it)->get_id();
-    id_ss << ask_id;
-    cl_->send_string(id_ss.str());
-
-    cl_->send_string("}");
-  }
-  cl_->send_string("}");
+      {
+        std::string str = ml_->get_string();
+        added_condition_.set(str);
+        HYDLA_LOGGER_VCS(str);
+      }
 */
+      break;
+  }
+  return result;
+}
+
+VCSResult REDUCEVCSInterval::check_consistency_sub()
+{
+
+  REDUCEStringSender rss(*cl_);
+
+
+//////////////////// 送信処理
+
+  // isConsistentInterval(expr_, pexpr_, init_, vars_)を渡したい
+
+  // expr_を渡す（tmp_constraints、constraint_storeの2つから成る）
+  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  cl_->send_string("expr_:=union(");
+
+  // 一時的な制約ストア(新しく追加された制約の集合)からexprを得てREDUCEに渡す
+  HYDLA_LOGGER_VCS("--- send tmp_constraints ---");
+  cl_->send_string("{");
+  constraints_t::const_iterator tmp_it  = tmp_constraints_.begin();
+  constraints_t::const_iterator tmp_end = tmp_constraints_.end();
+  for(; tmp_it!= tmp_end; ++tmp_it) {
+    if(tmp_it != tmp_constraints_.begin()) cl_->send_string(",");
+    HYDLA_LOGGER_VCS("put node: ", (**tmp_it));
+    rss.put_node(*tmp_it);
+  }
+  cl_->send_string("},");  
+
+  // 制約ストアconstraintsをREDUCEに渡す
+  HYDLA_LOGGER_VCS("--- send constraint_store ---");
+  send_cs(rss);
+  cl_->send_string(");");
+
+
+  // パラメタ制約parameter_consをREDUCEに渡す
+  HYDLA_LOGGER_VCS("--- send pexpr_ ---");
+  cl_->send_string("pexpr_:=");
+  send_parameter_cons();
+  cl_->send_string(";");
+
+
+  // max_diff_mapをもとに、初期値制約init_consを渡す
+  HYDLA_LOGGER_VCS("----- send init_ -----");  
+  cl_->send_string("init_:=");
+  max_diff_map_t max_diff_map;
+  // 変数の最大微分回数をもとめる
+  rss.create_max_diff_map(max_diff_map);
+  // 初期値制約の送信
+  send_init_cons(rss, max_diff_map, false);
+  cl_->send_string(";");
+
+
+  // varsを渡す
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=");
+  rss.put_vars(true);
+  cl_->send_string(";");
+
+
+  cl_->send_string("symbolic redeval '(isConsistentInterval expr_ pexpr_ init_ vars_);");
+
+
+/////////////////// 受信処理
+  HYDLA_LOGGER_EXTERN("--- receive  ---");
+
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
+
+  std::string ans = cl_->get_s_expr();
+  HYDLA_LOGGER_VCS("add_constraint_ans: ",
+                   ans);
+  
+  VCSResult result;
+
+
+  // S式パーサで読み取る
+  SExpParser sp;
+  sp.parse_main(ans.c_str());
+
+  // {コード}の構造
+  const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
+
+  // コードを取得
+  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
+  HYDLA_LOGGER_VCS("ret_code_str: ",
+                   ret_code_str);
+
+  if(ret_code_str=="0"){
+    // ソルバエラー
+    result = VCSR_SOLVER_ERROR;
+  }
+  else if(ret_code_str=="1") {
+    // 充足
+    // TODO: スペースや""が残らないようにパーサを修正
+    result = VCSR_TRUE;
+  }
+  else {
+    // 制約エラー
+    assert(ret_code_str == "2");
+    result = VCSR_FALSE;
+  }
+  return result;
 }
 
 VCSResult REDUCEVCSInterval::integrate(
   integrate_result_t& integrate_result,
-  const positive_asks_t& positive_asks,
-  const negative_asks_t& negative_asks,
+  const constraints_t &disc_cause,
   const time_t& current_time,
-  const time_t& max_time,
-  const not_adopted_tells_list_t& not_adopted_tells_list,
-  const appended_asks_t& appended_asks)
+  const time_t& max_time)
 {
   HYDLA_LOGGER_VCS("#*** REDUCEVCSInterval::integrate ***");
-
-  HYDLA_LOGGER_VCS(constraint_store_);
+//  HYDLA_LOGGER_VCS(*this);
 
 /////////////////// 送信処理
   REDUCEStringSender rss(*cl_);
 
-  // integrateCalc(cons_, init_, posAsk_, negAsk_, NACons_, vars_, maxTime_]を渡したい
+  // integrateCalc(cons_, init_, discCause_, vars_, maxTime_]を渡したい
 
-  // cons_を渡す（constraint_store、appended_asks、parameter_consの3つから成る）
+  // cons_を渡す（constraint_store、parameter_cons、added_conditionの3つから成る）
   HYDLA_LOGGER_VCS("----- send cons_ -----");
   cl_->send_string("cons_:=union(union(");
 
@@ -586,23 +512,16 @@ VCSResult REDUCEVCSInterval::integrate(
   send_cs(rss);
   cl_->send_string(",");
 
-  // appended_asksからガード部分を得てMathematicaに渡す
-  HYDLA_LOGGER_VCS("--- send appended_asks ---");
-  cl_->send_string("{");
-  appended_asks_t::const_iterator append_it  = appended_asks.begin();
-  appended_asks_t::const_iterator append_end = appended_asks.end();
-  for(; append_it!=append_end; ++append_it) {
-    if(append_it != appended_asks.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("put node (guard): ", *(append_it->ask->get_guard()),
-                     "  entailed:", append_it->entailed);
-    rss.put_node(append_it->ask->get_guard(), true, append_it->entailed);
-  }
-  cl_->send_string("}),");
-
   // parameter_consを渡す
   HYDLA_LOGGER_VCS("--- send parameter_cons ---");
   send_parameter_cons();
-  cl_->send_string(");");
+  cl_->send_string("),");
+
+  // added_conditionを渡す
+  HYDLA_LOGGER_VCS("--- send added_condition ---");
+  cl_->send_string("{");
+  cl_->send_string(added_condition_.get_string());
+  cl_->send_string("});");
 
 
   // max_diff_mapをもとに、初期値制約init_consを渡す
@@ -610,31 +529,21 @@ VCSResult REDUCEVCSInterval::integrate(
   cl_->send_string("init_:=");
   max_diff_map_t max_diff_map;
   // 変数の最大微分回数をもとめる
-  create_max_diff_map(rss, max_diff_map);
+  rss.create_max_diff_map(max_diff_map);
   // 初期値制約の送信
   send_init_cons(rss, max_diff_map, false);
   cl_->send_string(";");
 
 
-  // posAskを渡す（{ガードの式、askのID}をそれぞれ）
-  HYDLA_LOGGER_VCS("----- send posAsk_ -----");
-  cl_->send_string("posAsk_:=");
-  send_ask_guards(rss, positive_asks);
-  cl_->send_string(";");
-
-
-  // negAskを渡す（{ガードの式、askのID}をそれぞれ）
-  HYDLA_LOGGER_VCS("----- send negAsk_ -----");
-  cl_->send_string("negAsk_:=");
-  send_ask_guards(rss, negative_asks);
-  cl_->send_string(";");
-
-
-  // 採用していないモジュール内のtell制約NAConsを渡す（{{式、ID}, {式、ID}, ...}をそれぞれのモジュールに関して）
-  HYDLA_LOGGER_VCS("----- send NACons_ -----");
-  cl_->send_string("NACons_:=");
-  send_not_adopted_tells(rss, not_adopted_tells_list);
-  cl_->send_string(";");
+  // 離散変化の条件を渡す
+  HYDLA_LOGGER_VCS("----- send discCause_ -----");
+  cl_->send_string("discCause_:={");
+  for(constraints_t::const_iterator it = disc_cause.begin(); it != disc_cause.end();it++){
+    if(it!=disc_cause.begin()) cl_->send_string(",");
+    HYDLA_LOGGER_VCS("send discCause:");
+    rss.put_node(*it, true);
+  }
+  cl_->send_string("};");
 
 
   // 変数のリストを渡す
@@ -661,7 +570,7 @@ VCSResult REDUCEVCSInterval::integrate(
   cl_->send_string(";");
 
 
-  cl_->send_string("symbolic redeval '(integrateCalc cons_ init_ posAsk_ negAsk_ NACons_ vars_ maxTime_);");
+  cl_->send_string("symbolic redeval '(integrateCalc cons_ init_ discCause_ vars_ maxTime_);");
 
 
 /////////////////// 受信処理
@@ -952,63 +861,6 @@ void REDUCEVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
   }
 }
 
-void REDUCEVCSInterval::send_not_adopted_tells(REDUCEStringSender& rss, const not_adopted_tells_list_t& na_tells_list) const
-{
-  HYDLA_LOGGER_VCS("----- send not adopted constraint -----");
-  // ただ単にtellの式のリスト形式で送信する
-  // 採用していないモジュール
-  cl_->send_string("{");
-  not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
-  not_adopted_tells_list_t::const_iterator na_tells_list_end = na_tells_list.end();
-  for(; na_tells_list_it!=na_tells_list_end; ++na_tells_list_it){
-    if(na_tells_list_it!=na_tells_list.begin()) cl_->send_string(",");
-    // 採用していない、あるモジュール内のtell制約
-    tells_t::const_iterator na_tells_it  = (*na_tells_list_it).begin();
-    tells_t::const_iterator na_tells_end = (*na_tells_list_it).end();
-    for(; na_tells_it!=na_tells_end; ++na_tells_it) {
-      HYDLA_LOGGER_VCS("send not adopted tell : ", **na_tells_it);
-      // tell制約を送る
-      rss.put_node((*na_tells_it)->get_child(), true);
-    }
-  }
-  cl_->send_string("}");
-
-/*
-  // {tellの式、tellのID}のリストのリスト形式で送信する
-  // 採用していないモジュール
-  cl_->send_string("{");
-  not_adopted_tells_list_t::const_iterator na_tells_list_it = na_tells_list.begin();
-  not_adopted_tells_list_t::const_iterator na_tells_list_end = na_tells_list.end();
-  for(; na_tells_list_it!=na_tells_list_end; ++na_tells_list_it){
-    if(na_tells_list_it!=na_tells_list.begin()) cl_->send_string(",");
-    cl_->send_string("{");
-    // 採用していない、あるモジュール内のtell制約
-    tells_t::const_iterator na_tells_it  = (*na_tells_list_it).begin();
-    tells_t::const_iterator na_tells_end = (*na_tells_list_it).end();
-    for(; na_tells_it!=na_tells_end; ++na_tells_it) {
-      if(na_tells_it!=(*na_tells_list_it).begin()) cl_->send_string(",");
-      HYDLA_LOGGER_VCS("send not adopted tell : ", **na_tells_it);
-      cl_->send_string("{");
-
-      // tell制約を送る
-      rss.put_node((*na_tells_it)->get_child(), true);
-
-      cl_->send_string(",");
-
-      // IDを送る
-      std::stringstream id_ss;
-      int tell_id = (*na_tells_it)->get_id();
-      id_ss << tell_id;
-      cl_->send_string(id_ss.str());
-
-      cl_->send_string("}");      
-    }
-    cl_->send_string("}");
-  }
-  cl_->send_string("}");
-*/
-}
-
 void REDUCEVCSInterval::send_cs(REDUCEStringSender& rss) const
 {
   HYDLA_LOGGER_VCS(
@@ -1022,14 +874,9 @@ void REDUCEVCSInterval::send_cs(REDUCEStringSender& rss) const
     cons_end = constraint_store_.constraints.end();
   for(; (cons_it) != cons_end; ++cons_it) {
     if(cons_it!=constraint_store_.constraints.begin()) cl_->send_string(",");
-    rss.put_node((*cons_it)->get_child(), true);
+    rss.put_node(*cons_it, true);
   }
   cl_->send_string("}");
-}
-
-void REDUCEVCSInterval::send_cs_vars() const
-{
-  HYDLA_LOGGER_VCS("---- Send Constraint Store Vars -----");
 }
 
 std::ostream& REDUCEVCSInterval::dump(std::ostream& s) const
@@ -1037,8 +884,27 @@ std::ostream& REDUCEVCSInterval::dump(std::ostream& s) const
   s << "#*** Dump REDUCEVCSInterval ***\n"
     << "--- constraint store ---\n";
 
+  s << "-- init_vars --\n";
+  constraint_store_t::init_vars_t::const_iterator init_vars_it = constraint_store_.init_vars.begin(),
+    init_vars_end = constraint_store_.init_vars.end();
+  for(;init_vars_it != init_vars_end; init_vars_it++){
+    s << init_vars_it->first << " <=> " << init_vars_it->second << "\n";
+  }
+
+  s << "-- constraints --\n";
+  constraint_store_t::constraints_t::const_iterator constraints_it = constraint_store_.constraints.begin(),
+    constraints_end = constraint_store_.constraints.end();
+  for(; constraints_it != constraints_end; constraints_it++){
+    s << **constraints_it << "\n";
+  }
 
   return s;
+}
+
+std::ostream& operator<<(std::ostream& s,
+                         const REDUCEVCSInterval& vcs)
+{
+  return vcs.dump(s);
 }
 
 std::ostream& operator<<(std::ostream& s, 
@@ -1062,16 +928,6 @@ std::ostream& operator<<(std::ostream& s,
     c.constraints)
   {
     s << *i;
-  }
-
-  s << "-- init vars max diff map --\n";
-  BOOST_FOREACH(
-    const REDUCEVCSInterval::constraint_store_t::init_vars_max_diff_map_t::value_type& i, 
-    c.init_vars_max_diff_map)
-  {
-    s << "name: " << i.first
-      << "  diff: " << i.second
-      << "\n";
   }
   
   return s;

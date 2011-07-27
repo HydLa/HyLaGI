@@ -365,7 +365,7 @@ end;
 %ICI_ENTAILED___:= {1};
 %ICI_CONSTRAINT_ERROR___:= {2};
 
-procedure isConsistentInterval(expr_, init_, vars_)$
+procedure isConsistentInterval(expr_, pexpr_, init_, vars_)$
 begin;
   scalar tmp_;
   tmp_:= exDSolve(expr_, init_, vars_);
@@ -481,7 +481,7 @@ end;
 IC_SOLVER_ERROR___:= 0;
 IC_NORMAL_END___:= 1;
 
-procedure integrateCalc(cons_, init_, posAsk_, negAsk_, NACons_, vars_, maxTime_)$
+procedure integrateCalc(cons_, init_, discCause_, vars_, maxTime_)$
 begin;
   scalar tmpSol_, tmpPosAsk_, tmpNegAsk_, tmpNACons_, 
          retCode_, tmpVarMap_, tmpMinT_, integAns_;
@@ -660,13 +660,13 @@ end;
 
 
 
-procedure getVMFromString(vmStr_)$
+procedure getSExpFromString(str_)$
 begin;
-  scalar retVM_;
-  retVM_:= vmStr_;
-  write("retVM_:", retVM_);
+  scalar retSExp_;
+  retSExp_:= str_;
+  write("retSExp_:", retSExp_);
 
-  return retVM_;
+  return retSExp_;
 end;
 
 
