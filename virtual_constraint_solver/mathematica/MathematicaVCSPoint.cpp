@@ -314,7 +314,7 @@ void MathematicaVCSPoint::add_constraint(const constraints_t& constraints)
   }
   constraint_store_.first.insert(and_cons_set);
   constraint_store_.second.insert(mec.vars_begin(), mec.vars_end());
-  
+    
   mec.create_max_diff_map(max_diff_map_);
   HYDLA_LOGGER_VCS(*this, "\n#*** End MathematicaVCSPoint::add_constraint ***");
 

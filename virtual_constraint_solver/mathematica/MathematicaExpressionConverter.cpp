@@ -16,6 +16,7 @@ using namespace hydla::parse_tree;
 
 //名前としては，SymbolicValue→symbolic，Mathematicaの文字列→matheくらいで統一すべきかも．どっちもExpressionなわけだし．
 
+
 void MathematicaExpressionConverter::initialize(){
   //ノードと文字列の対応関係を作っておく．
   string_map_.insert(std::make_pair("Plus", function_and_node(for_binary_node, NODE_PLUS)));

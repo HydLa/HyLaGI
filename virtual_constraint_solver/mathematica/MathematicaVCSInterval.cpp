@@ -83,8 +83,7 @@ void MathematicaVCSInterval::send_init_cons(
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
     if(md_it!=max_diff_map.end() && 
-       md_it->second  > init_vars_it->first.derivative_count &&
-       !init_vars_it->second.is_undefined())
+       md_it->second  > init_vars_it->first.derivative_count)
     {
       init_vars_count++;
     }
@@ -99,24 +98,39 @@ void MathematicaVCSInterval::send_init_cons(
     max_diff_map_t::const_iterator md_it = 
       max_diff_map.find(init_vars_it->first.name);
     if(md_it!=max_diff_map.end() &&
-       md_it->second  > init_vars_it->first.derivative_count &&
-       !init_vars_it->second.is_undefined()) 
+       md_it->second  > init_vars_it->first.derivative_count) 
     {
-       ml_->put_function("Equal", 2);
-        // 変数名
-        ps.put_var(
-         boost::make_tuple(init_vars_it->first.name, 
-                            init_vars_it->first.derivative_count, 
-                            false),
-          PacketSender::VA_Zero);
-
-        // 値
+     ml_->put_function("Equal", 2);
+      // 変数名
+      ps.put_var(
+       boost::make_tuple(init_vars_it->first.name, 
+                          init_vars_it->first.derivative_count, 
+                          false),
+        PacketSender::VA_Zero);
+      if(!init_vars_it->second.is_undefined()){
+        // 値があるなら値を送信
         if(use_approx && approx_precision_ > 0) {
           // 近似して送信
           ml_->put_function("approxExpr", 2);
           ml_->put_integer(approx_precision_);
         }
         ps.put_node(init_vars_it->second.get_node(), PacketSender::VA_None, false);
+      }
+      else
+      {
+        parameter_t tmp_param;
+        tmp_param.name = PacketSender::par_prefix + init_vars_it->first.name;
+        for(int i=0;i<init_vars_it->first.derivative_count;i++){
+          //とりあえず微分回数分dをつける
+          tmp_param.name.append("d");
+        }
+        while(!parameter_map_.get_variable(tmp_param).is_undefined()){
+          //とりあえず重複回数分iをつける
+          tmp_param.name.append("i");
+        }
+        // 値がないなら何かしらの定数を作って送信．
+        ml_->put_symbol(tmp_param.name);
+      }
     }
   }
 }

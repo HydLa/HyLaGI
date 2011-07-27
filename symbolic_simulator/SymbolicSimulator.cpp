@@ -646,7 +646,7 @@ void SymbolicSimulator::take_all_variables(const variable_map_t& from, variable_
     to.get_variable(it->first);
   }
 }
-    
+
 
 void SymbolicSimulator::output_result_tree()
 {
