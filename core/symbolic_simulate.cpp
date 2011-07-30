@@ -35,6 +35,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.max_time      = po.get<std::string>("time");
   opts.max_step      = po.get<int>("step");
   opts.nd_mode       = po.count("nd")>0;
+  opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;

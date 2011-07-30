@@ -67,21 +67,14 @@ private:
                         const module_set_sptr& ms, expanded_always_t &expanded_always,
                          positive_asks_t &positive_asks, negative_asks_t &negative_asks);
 
-  void output(const time_t& time, 
-              const variable_map_t& vm);
-  
-  void output(const time_t& time, 
-              const variable_map_t& vm,
-              const parameter_map_t& pm);
-  
-
-  void output_interval(const time_t& current_time, const time_t& limit_time,
-                     const variable_map_t& variable_map, const parameter_map_t& parameter_map);
-
-  void output_point(const time_t& time, const variable_map_t& variable_map, const parameter_map_t& parameter_map);
   
   void output_parameter_map(const parameter_map_t& parameter_map);
   
+  void output_variable_map(const variable_map_t& variable_map, const time_t& time,  const bool& numeric);
+  
+  void output_state_result(const StateResult& result, const bool& need_parameter, const bool& numeric);
+  void output_variable_labels(const variable_map_t variable_map);
+
   // fromに出現する変数を全てtoに引き継ぐ．値はUNDEF
   void take_all_variables(const variable_map_t& from, variable_map_t& to);
   
@@ -101,13 +94,13 @@ private:
   {
     state_stack_.push(state);
   }
-  
+
   std::string range_to_string(const value_range_t& val);
 
-
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ
-  
+
   bool is_safe_;
+  
 
   state_result_sptr_t result_root_;                  //結果を示す解軌道木の根．初期状態なので，子供以外の情報は入れない
 };

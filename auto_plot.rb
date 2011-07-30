@@ -28,9 +28,8 @@ open(OUT_DATA, "w") do |f|
 end
 puts data
 
-data =~ /^#(.+)$/
+data =~ /^# time(.+)$/
 vars = $1.split
-vars.shift
 
 open(OUT_PLOT, "w") do |f|
   f.puts <<EOS

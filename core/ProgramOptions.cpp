@@ -38,6 +38,8 @@ void ProgramOptions::init_descriptions()
      "output set of module sets which might be solution by graph representation")
     ("dump-module-set-graph-noinit", 
      "output set of non initial module sets which might be solution by graph representation")
+    ("dump-in-progress,p", 
+     "output result of each phase in progress")
 
     ("graphviz", 
      "dump tree by dot language representation")

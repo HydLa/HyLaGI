@@ -60,7 +60,6 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   init_module_set_container(parse_tree);
   
   opts_.assertion = parse_tree->get_assertion_node();
-  
   result_root_.reset(new StateResult());
   //初期状態を作ってスタックに入れる
   phase_state_sptr state(create_new_phase_state());
@@ -73,15 +72,6 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   push_phase_state(state);
 
 
-  // 変数のラベル
-  // TODO: 未定義の値とかのせいでずれる可能性あり?
-  if(opts_.output_format == fmtNumeric){
-    std::cout << "# time\t";
-    BOOST_FOREACH(variable_map_t::value_type& i, variable_map_) {
-     std::cout << i.first << "\t";
-    }
-    std::cout << std::endl;
-  }
   //solver_分岐
   if(opts_.solver == "r" || opts_.solver == "Reduce") {
     solver_.reset(new REDUCEVCS(opts_, variable_map_));   //使用するソルバを決定
@@ -146,22 +136,23 @@ void SymbolicSimulator::simulate()
 {
   while(!state_stack_.empty() && is_safe_) {
     phase_state_sptr state(pop_phase_state());
+    bool has_next = false;
     if( opts_.max_step >= 0 && state->step > opts_.max_step)
       continue;
     state->module_set_container->reset(state->visited_module_sets);
     do{
       if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
         state->module_set_container->mark_nodes();
+        has_next = true;
         if(!opts_.nd_mode)break;
       }
       else{
         state->module_set_container->mark_current_node();
       }
       state->positive_asks.clear();
-    }while(state->module_set_container->go_next() && is_safe_);
+    }while( state->module_set_container->go_next() && is_safe_);
   }
-  if(opts_.output_format == fmtTFunction)
-    output_result_tree();
+  output_result_tree();
 }
 
 
@@ -382,12 +373,13 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                                                      state->parent_state_result));
     state_result->parent->children.push_back(state_result);
     new_state->parent_state_result = state_result;
-    //出力
-    output_point(new_state->current_time, new_state->variable_map, new_state->parameter_map);
 
     //状態をスタックに押し込む
     HYDLA_LOGGER_DEBUG("---push_phase_state---\n", new_state->current_time,"\n",new_state->variable_map,"\n", new_state->parameter_map);
     push_phase_state(new_state);
+    
+    if(opts_.dump_in_progress)
+      output_state_result(*state_result, true, false);
 
     HYDLA_LOGGER_MS_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                        "time:", new_state->current_time, "\n",
@@ -502,16 +494,12 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   //to next pointphase
   for(int it=0;it<(int)integrate_result.states.size()&&(opts_.nd_mode||it==0);it++){
     take_all_variables(state->variable_map, integrate_result.states[it].variable_map);
-    output_interval(state->current_time,
-                  integrate_result.states[it].time-state->current_time,
-                  integrate_result.states[it].variable_map,
-                  integrate_result.states[it].parameter_map);
-                  
     state_result_sptr_t state_result(new StateResult(integrate_result.states[it].variable_map,
                                                        integrate_result.states[it].parameter_map,
                                                        integrate_result.states[it].time,
                                                        IntervalPhase,
-                                                       state->parent_state_result));
+                                                       state->parent_state_result,
+                                                       integrate_result.states[it].is_max_time));
     state_result->parent->children.push_back(state_result);
     if(!integrate_result.states[it].is_max_time) {
       phase_state_sptr new_state(create_new_phase_state());
@@ -530,6 +518,9 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       new_state->parent_state_result = state_result;
       HYDLA_LOGGER_MS("---push_phase_state(interval)---", it, "\n", new_state->current_time, "\n", new_state->variable_map, "\n", new_state->parameter_map, "\n"); 
       push_phase_state(new_state);
+      if(opts_.dump_in_progress){
+        output_state_result(*state_result, true, false);
+      }
     }
     
       
@@ -555,47 +546,7 @@ variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& 
     return shifted_vm;
 }
 
-void SymbolicSimulator::output_interval(const time_t& current_time, const time_t& limit_time,
-                                        const variable_map_t& variable_map, const parameter_map_t& parameter_map){
-  if(opts_.output_format == fmtNumeric){
-    time_t tmp_time = limit_time+current_time;
-    solver_->simplify(tmp_time);
-    variable_map_t output_vm;
-    time_t elapsed_time("0");
 
-    do{
-      solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
-      output((elapsed_time+current_time),output_vm);
-      elapsed_time += time_t(opts_.output_interval);
-      solver_->simplify(elapsed_time);
-    }while(solver_->less_than(elapsed_time, limit_time));
-    elapsed_time = limit_time;
-    solver_->apply_time_to_vm(variable_map, output_vm, elapsed_time);
-    output(tmp_time,output_vm, parameter_map);
-
-    std::cout << std::endl << std::endl;
-  }
-}
-
-
-void SymbolicSimulator::output_point(const time_t& time, const variable_map_t& variable_map,const parameter_map_t& parameter_map){
-  output(time, variable_map, parameter_map);
-}
-
-
-void SymbolicSimulator::output(const time_t& time, 
-                           const variable_map_t& vm)
-{
-  std::cout << std::endl;
-  if(opts_.output_format == fmtNumeric){
-    std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
-    variable_map_t::const_iterator it  = vm.begin();
-    variable_map_t::const_iterator end = vm.end();
-    for(; it!=end; ++it) {
-      std::cout << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
-    }
-  }
-}
 
 std::string SymbolicSimulator::range_to_string(const value_range_t& val){
   std::string tmp;
@@ -616,16 +567,6 @@ std::string SymbolicSimulator::range_to_string(const value_range_t& val){
   return tmp;
 }
 
-void SymbolicSimulator::output(const time_t& time, 
-                           const variable_map_t& vm,const parameter_map_t& pm)
-{
-  if(opts_.output_format == fmtNumeric){
-    output(time,vm);
-    output_parameter_map(pm);
-    std::cout << std::endl;
-  }
-}
-
 
 void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
 {
@@ -633,6 +574,23 @@ void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
   parameter_map_t::const_iterator end = pm.end();
   for(; it!=end; ++it) {
     std::cout << "p" << it->first << "\t: " << range_to_string(it->second) << "\n";
+  }
+}
+
+void SymbolicSimulator::output_variable_map(const variable_map_t& vm, const time_t& time, const bool& numeric)
+{
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  if(numeric){
+    std::cout << std::endl;
+    std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
+    for(; it!=end; ++it) {
+      std::cout << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
+    }
+  }else{
+    for(; it!=end; ++it) {
+      std::cout << it->first << "\t: " << it->second << "\n";
+    }
   }
 }
 
@@ -650,34 +608,20 @@ void SymbolicSimulator::take_all_variables(const variable_map_t& from, variable_
 
 void SymbolicSimulator::output_result_tree()
 {
-  if(result_root_->children.size()==0){
-    std::cout << "no result" << std::endl;
+  if(result_root_->children.size() == 0){
+    std::cout << "No Result." << std::endl;
     return;
   }
-  int i=1;
+  int i = 1;
   while(1){
     state_result_sptr_t now_node = result_root_->children.back();
-    std::cout << "---------------------Case " << i++ << "---------------------" << std::endl;
-    time_t previous_pp_time;
+    std::cout << "#---------------------Case " << i++ << "---------------------" << std::endl;
     while(1){
-      variable_map_t vm;
-      if(now_node->phase_type==IntervalPhase){
-        std::cout << "---------IP---------" << std::endl;
-        vm = shift_variable_map_time(now_node->variable_map, previous_pp_time);
-        std::cout << "time\t: " << previous_pp_time << " -> " << now_node->time << "\n";
-      }else{
-        std::cout << "---------PP---------" << std::endl;
-        vm = now_node->variable_map;
-        previous_pp_time = now_node->time;
-        std::cout << "time\t: " << now_node->time << "\n";
-      }
-      variable_map_t::const_iterator it  = vm.begin();
-      variable_map_t::const_iterator end = vm.end();
-      for(; it!=end; ++it) {
-        std::cout << it->first << "\t: " << it->second << "\n" ;
-      }
-      output_parameter_map(now_node->parameter_map);
-      if(now_node->children.size() == 0){//葉まで来た
+      output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
+      if(now_node->children.size() == 0){
+        if(!now_node->is_at_max_time){
+          std::cout << "---------execution stacked---------\n" ;
+        }
         while(now_node->children.size() == 0){
           if(now_node->parent != NULL){
             now_node = now_node->parent;
@@ -694,6 +638,62 @@ void SymbolicSimulator::output_result_tree()
     }
     std::cout << std::endl;
   }
+}
+
+void SymbolicSimulator::output_state_result(const StateResult& result, const bool& need_parameter,const bool& numeric){
+  if(!numeric){
+    variable_map_t vm;
+    if(result.phase_type==IntervalPhase){
+      std::cout << "---------IP---------" << std::endl;
+      vm = shift_variable_map_time(result.variable_map, result.parent->time);
+      std::cout << "time\t: " << result.parent->time << " -> " << result.time << "\n";
+    }else{
+      std::cout << "---------PP---------" << std::endl;
+      vm = result.variable_map;
+      std::cout << "time\t: " << result.time << "\n";
+    }
+    output_variable_map(vm, result.time, false);
+  }else{
+    if(result.phase_type==IntervalPhase){
+      std::cout << "#---------IP---------" << std::endl;
+      output_variable_labels(result.variable_map);
+      variable_map_t output_vm;
+      time_t elapsed_time("0");
+      time_t limit_time = result.time-result.parent->time;
+      solver_->simplify(limit_time);
+      do{
+        solver_->apply_time_to_vm(result.variable_map, output_vm, elapsed_time);
+        output_variable_map(output_vm, (elapsed_time+result.parent->time), true);
+        elapsed_time += time_t(opts_.output_interval);
+        solver_->simplify(elapsed_time);
+      }while(solver_->less_than(elapsed_time, limit_time));
+      solver_->apply_time_to_vm(result.variable_map, output_vm, limit_time);
+      output_variable_map(output_vm, result.time, true);
+
+      std::cout << std::endl;
+    }else{
+      std::cout << "#---------PP---------" << std::endl;
+      output_variable_labels(result.variable_map);
+      output_variable_map(result.variable_map, result.time, true);
+    }
+    
+    // 変数のラベル
+    // TODO: 未定義の値とかのせいでずれる可能性あり?
+    
+    std::cout << std::endl;
+  }
+  
+  if(need_parameter){
+      output_parameter_map(result.parameter_map);
+  }
+}
+
+void SymbolicSimulator::output_variable_labels(const variable_map_t variable_map){
+  std::cout << "# time\t";
+  BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
+   std::cout << i.first << "\t";
+  }
+  std::cout << std::endl;
 }
 
 } //namespace symbolic_simulator

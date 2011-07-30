@@ -15,6 +15,7 @@ struct StateResult {
   variable_map_t variable_map;
   parameter_map_t parameter_map;
   time_t time;
+  bool is_at_max_time;
   hydla::simulator::Phase phase_type;
   state_result_sptr_t parent;
   std::vector<state_result_sptr_t> children;
@@ -24,8 +25,9 @@ struct StateResult {
               const parameter_map_t& pm,
               const time_t & t,
               const hydla::simulator::Phase phase,
-              const state_result_sptr_t& p = state_result_sptr_t()):
-    variable_map(vm), parameter_map(pm), time(t), phase_type(phase), parent(p){}
+              const state_result_sptr_t& p = state_result_sptr_t(),
+              const bool& max = false):
+    variable_map(vm), parameter_map(pm), time(t), is_at_max_time(max), phase_type(phase), parent(p){}
   
 };
 
