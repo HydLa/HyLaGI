@@ -5,6 +5,13 @@ If[optUseDebugPrint,
   debugPrint[arg___] := Print[InputForm[{arg}]],
   debugPrint[arg___] := Null];
 
+(*
+ * グローバル変数
+ * constraints: 現在扱っている制約集合
+ * vars: 制約集合に出現する変数のリスト
+ * pars: 制約集合に出現する定数のリスト
+ *)
+
 (* ルールのリストを受けて，tについてのルールを除いたものを返す関数 *)
 removeRuleForTime[ruleList_] := DeleteCases[ruleList, t -> _];
 
@@ -254,7 +261,7 @@ getExprCode[expr_] := Switch[Head[expr],
   GreaterEqual, 4
 ];
 
-convertCSToVM[orExprs_] := Block[
+convertCSToVM[] := Block[
   {resultExprs, inequalityVariable},
   formatExprs[exprs_] := (
     If[Cases[exprs, Except[True]]==={},
@@ -269,10 +276,10 @@ convertCSToVM[orExprs_] := Block[
     ]
   );
 
-  debugPrint["orExprs:", orExprs];
-  If[Head[First[orExprs]] === Or,
-    resultExprs = Map[(applyList[#])&, List@@First[orExprs]],
-    resultExprs = Map[(applyList[#])&, orExprs]
+  debugPrint["constraints:", constraints];
+  If[Head[First[constraints]] === Or,
+    resultExprs = Map[(applyList[#])&, List@@First[constraints]],
+    resultExprs = Map[(applyList[#])&, constraints]
   ];
   resultExprs = Map[formatExprs, resultExprs];
   debugPrint["resultExprs:", resultExprs];
@@ -346,43 +353,46 @@ adjustExprs[andExprs_] :=
           Append[#1, #2]]) &,
        {}, andExprs];
 
-(*
- * 制約が無矛盾であるかをチェックする
- * Reduceで解いた結果、�ｃF得られれば無矛盾
- * 得られた結果を用いて、各変数に関して {変数名, 値}　という形式で表したリストを返す
- *
- * 戻り値のリストの先頭：
- *  0 : Solver Error
- *  1 : 充足
- *  2 : 制約エラー
- *)
-checkConsistency[expr_, vars_] := 
+
+resetConstraint := (
+  constraints = {True};
+  variables = {};
+);
+
+addConstraint[cons_, vars_] := (
+  debugPrint["cons:", cons, "vars:", vars];
+  constraints = Union[constraints, cons];
+  variables = Union[variables, vars];
+  debugPrint["constraints:", constraints, "variables:", variables];
+);
+
+checkConsistency[] := Block[
+  {sol},
+  debugPrint["constraints:", constraints, "variables:", variables];
+  sol = checkConsistencyByReduce[constraints, variables];
+  If[sol[[1]] == 1, constraints = sol[[2]]; sol = {1}  ];
+  sol
+];
+
+checkConsistencyWithTemporaryConstraint[expr_, vars_] := (
+  debugPrint["constraints:", constraints, "variables:", variables, "expr:", expr, "vars", vars];
+  { checkConsistencyByReduce[Union[constraints, expr], Union[variables, vars] ] [[1]] }
+);
+
+checkConsistencyByReduce[expr_, vars_] := 
 Quiet[
   Check[
     Block[
-      {
-        sol, ret
-      },
-      debugPrint["expr:", expr, "vars:", vars];
+      {sol},
       sol = Reduce[expr, vars, Reals];
-      If[sol === False,
-        ret={2},
-        (* 外側にOr[]のある場合はListで置き換える。ない場合もListで囲む *)
-        sol = LogicalExpand[sol];
-        sol = If[Head[sol] === Or, Apply[List, sol], {sol}];
-        (* 得られたリストの要素のヘッドがAndである場合はListで置き換える。ない場合もListで囲む *)
-        sol = removeNotEqual[Map[(If[Head[#] === And, Apply[List, #], {#}]) &, sol]];
-        (* 一番内側の要素 （レベル2）を文字列にする *)
-        ret={1, Map[(ToString[FullForm[#]]) &, 
-                Map[(adjustExprs[#])&, sol], {2}]}
-      ];
-      debugPrint["ret:", ret];
-      ret
+    If[sol === False,
+      {2},
+      {1, {sol}}
+      ]
     ],
     {0, $MessageList}
   ]
 ];
-
 
 (* 変数名から 「\[CloseCurlyQuote]」を取る *)
 removeDash[var_] := (

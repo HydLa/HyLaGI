@@ -26,16 +26,6 @@ public:
   virtual ~MathematicaVCSPoint();
 
   /**
-   * 制約ストアの初期化をおこなう
-   */
-  virtual bool reset();
-
-  /**
-   * 与えられた変数表を元に，制約ストアの初期化をおこなう
-   */
-  virtual bool reset(const variable_map_t& variable_map);
-
-  /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
@@ -68,51 +58,29 @@ public:
     const time_t& current_time,
     const time_t& max_time);
 
-  /**
-   * 内部状態の出力をおこなう
-   */
-  std::ostream& dump(std::ostream& s) const;
 
 private:
   typedef std::map<std::string, int> max_diff_map_t;
-
-  void reset_sub(const variable_map_t& vm, std::set<MathValue>& and_cons_set,
-    MathematicaExpressionConverter& mec, const bool& is_current);
-  void send_cs() const;
-  void send_ps() const;
-  void send_store(const constraint_store_t& store) const;
-  void send_cs_vars() const;
-  void send_pars() const;
   void receive_constraint_store(constraint_store_t& store);
+  
   /**
-   * check_consistency の共通部分
+   * 制約を出現する変数や左連続制約とともに送信する
    */
-  VCSResult check_consistency_sub();
+  void send_constraint(const constraints_t& constraints);
+  
+  /**
+   * check_consistency の受信部分
+   */
+  VCSResult check_consistency_receive();
 
   /**
    * 左連続性に関する制約を加える
    */
   void add_left_continuity_constraint(PacketSender& ps, max_diff_map_t& max_diff_map);
 
-  /**
-   * 制約ストアがtrueであるかどうか
-   */
-  bool cs_is_true()
-  {
-    return constraint_store_.first.size()==1 && 
-      (*constraint_store_.first.begin()).size() == 1 &&
-      (*(*constraint_store_.first.begin()).begin()).get_string()=="True";
-  }
-
   mutable MathLink* ml_;
-  max_diff_map_t max_diff_map_;          //現在の制約ストアに出現する中で最大の微分回数を記録しておく表．
-  constraint_store_t constraint_store_;
-  constraint_store_t parameter_store_;
-  constraints_t tmp_constraints_;  //一時的に制約を追加する対象
-  std::set<std::string> par_names_; //一時しのぎ
 };
 
-std::ostream& operator<<(std::ostream& s, const MathematicaVCSPoint& m);
 
 } // namespace mathematica
 } // namespace simulator

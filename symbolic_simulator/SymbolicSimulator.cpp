@@ -618,7 +618,9 @@ void SymbolicSimulator::output_result_tree()
     std::cout << "#---------------------Case " << i++ << "---------------------" << std::endl;
     while(1){
       output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
-      if(now_node->children.size() == 0){
+      if(now_node->children.size() == 0){//葉に到達
+        std::cout << std::endl;
+        output_parameter_map(now_node->parameter_map);
         if(!now_node->is_at_max_time){
           std::cout << "---------execution stacked---------\n" ;
         }
@@ -676,10 +678,6 @@ void SymbolicSimulator::output_state_result(const StateResult& result, const boo
       output_variable_labels(result.variable_map);
       output_variable_map(result.variable_map, result.time, true);
     }
-    
-    // 変数のラベル
-    // TODO: 未定義の値とかのせいでずれる可能性あり?
-    
     std::cout << std::endl;
   }
   
@@ -689,6 +687,8 @@ void SymbolicSimulator::output_state_result(const StateResult& result, const boo
 }
 
 void SymbolicSimulator::output_variable_labels(const variable_map_t variable_map){
+    // 変数のラベル
+    // TODO: 未定義の値とかのせいでずれる可能性あり?
   std::cout << "# time\t";
   BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
    std::cout << i.first << "\t";

@@ -367,7 +367,6 @@ void PacketSender::create_max_diff_map(max_diff_map_t& max_diff_map)
     "-- max diff map --\n",
     MaxDiffMapDumper(max_diff_map.begin(), 
                      max_diff_map.end()).s.str());
-
 }
 
 } // namespace mathematica
