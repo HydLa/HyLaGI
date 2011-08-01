@@ -36,7 +36,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   ml_->MLNewPacket();
 
   ml_->put_function("addConstraint", 2);
-  ml_->put_function("Join", 2);
+  ml_->put_function("And", 2);
 
   std::set<std::string> names;
   PacketSender ps(*ml_);
@@ -44,7 +44,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   if(parameter_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
-    ml_->put_function("List", 0);
+    ml_->put_function("And", 0);
   }else{
     HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
 
@@ -66,7 +66,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
       }
     }
     HYDLA_LOGGER_VCS("size:", constraints_size);
-    ml_->put_function("List", constraints_size);
+    ml_->put_function("And", constraints_size);
     
     for(it = parameter_map.begin(); it!=end; ++it)
     {
@@ -89,7 +89,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   if(variable_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Variables");
-    ml_->put_function("List", 0);
+    ml_->put_function("And", 0);
   }else{
     HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);
 
@@ -107,7 +107,7 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
       }
     }
     HYDLA_LOGGER_VCS_SUMMARY("size:", constraints_size);
-    ml_->put_function("List", constraints_size );
+    ml_->put_function("And", constraints_size );
     PacketSender ps(*ml_);
     
     for(it = variable_map.begin(); it!=end; ++it)
@@ -280,7 +280,7 @@ void MathematicaVCSPoint::add_left_continuity_constraint(
 
   HYDLA_LOGGER_VCS("left_cont_vars_count: ", left_cont_vars_count);
   
-  ml_->put_function("List", left_cont_vars_count);
+  ml_->put_function("And", left_cont_vars_count);
   // ÀÛ‚É‘—M‚·‚é
   md_it = max_diff_map.begin();
   md_end = max_diff_map.end();
@@ -335,8 +335,8 @@ void MathematicaVCSPoint::send_constraint(const constraints_t& constraints)
 
   PacketSender ps(*ml_);
 
-  ml_->put_function("Join", 2);
-  ml_->put_function("List", constraints.size());
+  ml_->put_function("And", 2);
+  ml_->put_function("And", constraints.size());
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
   for(; it!=end; ++it)

@@ -271,18 +271,18 @@ convertCSToVM[] := Block[
       DeleteCases[Map[({renameVar[#[[1]]], 
                         getExprCode[#], 
                         ToString[FullForm[#[[2]]]]}) &, 
-                      Fold[(removeInequality[#1, #2]) &, {}, exprs]],
+                        adjustExprs[exprs] ],
                   {invalidVar, _, _}]
     ]
   );
-
-  debugPrint["constraints:", constraints];
-  If[Head[First[constraints]] === Or,
-    resultExprs = Map[(applyList[#])&, List@@First[constraints]],
-    resultExprs = Map[(applyList[#])&, constraints]
+  debugPrint["@convertCSToVM constraints:", constraints];
+  constraints = LogicalExpand[constraints];
+  If[Head[constraints] === Or,
+    resultExprs = Map[(applyList[#])&, List@@constraints],
+    resultExprs = Map[(applyList[#])&, {constraints}]
   ];
   resultExprs = Map[formatExprs, resultExprs];
-  debugPrint["resultExprs:", resultExprs];
+  debugPrint["@convertCSToVM resultExprs:", resultExprs];
   resultExprs
 ];
 
@@ -355,28 +355,28 @@ adjustExprs[andExprs_] :=
 
 
 resetConstraint := (
-  constraints = {True};
+  constraints = True;
   variables = {};
 );
 
 addConstraint[cons_, vars_] := (
-  debugPrint["cons:", cons, "vars:", vars];
-  constraints = Union[constraints, cons];
+  debugPrint["@addConstraint cons:", cons, "vars:", vars];
+  constraints = constraints && cons;
   variables = Union[variables, vars];
-  debugPrint["constraints:", constraints, "variables:", variables];
+  debugPrint["@addConstraint constraints:", constraints, "variables:", variables];
 );
 
 checkConsistency[] := Block[
   {sol},
-  debugPrint["constraints:", constraints, "variables:", variables];
+  debugPrint["@checkConsistency constraints:", constraints, "variables:", variables];
   sol = checkConsistencyByReduce[constraints, variables];
   If[sol[[1]] == 1, constraints = sol[[2]]; sol = {1}  ];
   sol
 ];
 
 checkConsistencyWithTemporaryConstraint[expr_, vars_] := (
-  debugPrint["constraints:", constraints, "variables:", variables, "expr:", expr, "vars", vars];
-  { checkConsistencyByReduce[Union[constraints, expr], Union[variables, vars] ] [[1]] }
+  debugPrint["@checkConsistencyWTC constraints:", constraints, "variables:", variables, "expr:", expr, "vars", vars];
+  { checkConsistencyByReduce[constraints && expr, Union[variables, vars] ] [[1]] }
 );
 
 checkConsistencyByReduce[expr_, vars_] := 
@@ -387,7 +387,7 @@ Quiet[
       sol = Reduce[expr, vars, Reals];
     If[sol === False,
       {2},
-      {1, {sol}}
+      {1, sol}
       ]
     ],
     {0, $MessageList}
@@ -538,11 +538,11 @@ makeListFromPiecewise[minT_, others_] := Block[
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
-calcNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
+calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
 {
   calcMinTime, addMinTime, selectCondTime,
   sol, minT, paramVars, compareResult, resultList, condTimeList,
-  calcMinTimeList, convertExpr, removeInequalityInList, findMinTime, compareMinTime,
+  calculateMinTimeList, convertExpr, removeInequalityInList, findMinTime, compareMinTime,
   compareMinTimeList, divideDisjunction, 
   timeMinCons = If[includeZero===True, (t>=0), (t>0)]
 },
@@ -660,7 +660,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
   );
 
   (* 最小時刻と条件の組をリストアップする関数 *)
-  calcMinTimeList[askList_, timeConditionList_, conditionForAll_, maxT_] := ( Block[
+  calculateMinTimeList[askList_, timeConditionList_, conditionForAll_, maxT_] := ( Block[
       {
         tmpList
       },
@@ -668,7 +668,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
         timeConditionList,
         tmpList = findMinTime[First[askList], (And @@ conditionForAll), maxT];
         tmpList = compareMinTimeList[timeConditionList, tmpList];
-        tmpList = calcMinTimeList[Rest[askList], tmpList, conditionForAll, maxT];
+        tmpList = calculateMinTimeList[Rest[askList], tmpList, conditionForAll, maxT];
         tmpList
         (*timeConditionList*)
       ]
@@ -720,7 +720,7 @@ calcNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
             
 
   (* 最小時刻と条件の組のリストを求める *)
-  resultList = calcMinTimeList[discCause, {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
+  resultList = calculateMinTimeList[discCause, {{maxTime, And@@otherExpr}}, otherExpr, maxTime];
 
   (* 整形して結果を返す *)
   
@@ -837,7 +837,7 @@ integrateCalc[cons_,
     paramCons = {Reduce[paramCons]};
     
     debugPrint["nextpointphase arg:", {False, maxTime, tmpDiscCause, paramCons}];
-    tmpMinT = calcNextPointPhaseTime[False, maxTime, tmpDiscCause, paramCons];
+    tmpMinT = calculateNextPointPhaseTime[False, maxTime, tmpDiscCause, paramCons];
 
     tmpVarMap = 
       Map[({getVariableName[#], 

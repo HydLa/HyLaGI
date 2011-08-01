@@ -103,14 +103,13 @@ public:
   /**
    * 制約ストアの初期化をおこなう
    */
-  virtual bool reset() = 0;
+  virtual bool reset(){assert(0); return false;}
 
 
   /**
    * 与えられた変数表を元に，制約ストアの初期化をおこなう
    */
-  virtual bool reset(const variable_map_t& vm) = 0;
-
+  virtual bool reset(const variable_map_t& vm){assert(0); return false;}
 
   /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
