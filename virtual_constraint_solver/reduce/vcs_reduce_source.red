@@ -156,9 +156,9 @@ end;
 % (制限 andを受け付けない) TODO 制限への対応
 % (制限 trueを受け付けない) TODO 制限への対応
 
-procedure isConsistent(vars_,pexpr_,expr_)$
+procedure isConsistent(expr_,vars_)$
 begin;
-  scalar flag_, ans_, tmp_;
+  scalar flag_, ans_, tmp_, mode_;
 write "isConsistent: ";
 
 % TODO sqrt(2)<>0をより汎用的な値に適用する
@@ -170,14 +170,39 @@ write "isConsistent: ";
 %  tmp_:=rlatl(rlqe(mymkand(expr_)));
 %  write "tmp_: ", tmp_;
 
-%  ans_:=solve(expr_, vars_);
-  ans_:=solve(expr_, vars_);
-write "ans_: ", ans_;
-  flag_:= if(ans_ <> {}) then rettrue___ else retfalse___;
-write "flag_: ", flag_;
+  % 等式が入っているかどうかにより、解くのに使用する関数を決定
+  % TODO: ROQEモードでも制約ストアを返す必要がある場合への対応
 
-  return {flag_, ans_};
+  if(hasInequality(expr_)) then mode_:= RLQE else mode_:= SOLVE;
+  write("mode_:", mode_);
+
+  if(mode_=SOLVE) then
+  <<
+    write("expr_:", expr_);
+    write("vars_:", vars_);
+    ans_:=solve(expr_, vars_);
+    write "ans_: ", ans_;
+    flag_:= if(ans_ <> {}) then rettrue___ else retfalse___;
+    write "flag_: ", flag_;
+
+    return {flag_, ans_};
+  >> else
+  <<    
+    write("expr_:", expr_);
+    ans_:= rlqe(mymkand(expr_));
+    write "ans_: ", ans_;
+    flag_:= if(ans_ <> false) then rettrue___ else retfalse___;
+    write "flag_: ", flag_;
+
+    return {flag_};
+  >>;
 end;
+
+
+procedure hasInequality(expr_)$
+  if(freeof(expr_, neq) and freeof(expr_, not) and
+    freeof(expr_, geq) and freeof(expr_,greaterp) and
+    freeof(expr_, leq) and freeof(expr_, lessp)) then nil else t$
 
 
 %TODO 不等式
@@ -365,14 +390,50 @@ end;
 %ICI_ENTAILED___:= {1};
 %ICI_CONSTRAINT_ERROR___:= {2};
 
-procedure isConsistentInterval(expr_, pexpr_, init_, vars_)$
+procedure isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
 begin;
-  scalar tmp_;
-  tmp_:= exDSolve(expr_, init_, vars_);
+  scalar tmpSol_, integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
+  tmpSol_:= exDSolve(expr_, init_, vars_);
+  write("tmpSol_: ", tmpSol_);
   
-  if(tmp_ = retsolvererror___) then return {0}
-  else if(tmp_ = retoverconstraint___) then return {2}
-  else return {1};
+  if(tmpSol_ = retsolvererror___) then return {0}
+  else if(tmpSol_ = retoverconstraint___) then return {2};
+
+  % tmpCons_がない場合は無矛盾と判定して良い
+  if(tmpCons_ = {}) then return {1};
+
+  integTmp_:= sub(tmpSol_, tmpCons_);
+  write("integTmp_: ", integTmp_);
+
+  integTmpQE_:= rlqe (mymkand(integTmp_));
+  write("integTmpQE_: ", integTmpQE_);
+
+  % ただのtrueやfalseはそのまま判定結果となる
+  if(integTmpQE_ = true) then return {1}
+  else if(integTmpQE_ = false) then return {2};
+
+  % とりあえずtに関して解く（等式の形式を前提としている）
+  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
+  % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
+  % TODO:論理積でつながった形への対応
+  integTmpSol_:= solve(integTmpQE_,t);
+
+  infList_:= union(for each x in integTmpSol_ join checkInfUnit(x, ENTAILMENT___));
+  write("infList_: ", infList_);
+
+  % パラメタ無しなら解は1つになるはず
+  if(length(infList_) neq 1) then return {0};
+  ans_:= first(infList_);
+  write("ans_: ", ans_);
+
+  if(ans_=true) then return {1}
+  else if(ans_=false) then return {2}
+  else 
+  <<
+    write("rlqe ans: ", ans_);
+    return CEI_UNKNOWN___;
+  >>;
+
 end;
 
 %depend {ht,v}, t;
@@ -483,24 +544,20 @@ IC_NORMAL_END___:= 1;
 
 procedure integrateCalc(cons_, init_, discCause_, vars_, maxTime_)$
 begin;
-  scalar tmpSol_, tmpPosAsk_, tmpNegAsk_, tmpNACons_, 
+  scalar tmpSol_, tmpDiscCause_, 
          retCode_, tmpVarMap_, tmpMinT_, integAns_;
   tmpSol_:= exDSolve(cons_, init_, vars_);
   write("tmpSol_:", tmpSol_);
 
   % TODO:Solver error処理
 
-  tmpPosAsk_:= sub(tmpSol_, posAsk_);
-  tmpNegAsk_:= sub(tmpSol_, negAsk_);
-  tmpNACons_:= sub(tmpSol_, NACons_);
-  write("tmpPosAsk_:", tmpPosAsk_, 
-        "tmpNegAsk_:", tmpNegAsk_,
-        "tmpNACons_:", tmpNACons_);
+  tmpDiscCause_:= sub(tmpSol_, discCause_);
+  write("tmpDiscCause_:", tmpDiscCause);
 
   tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, vars_)); 
   write("tmpVarMap_:", tmpVarMap_);
 
-  tmpMinT_:= calcNextPointPhaseTime(maxTime_, tmpPosAsk_, tmpNegAsk_, tmpNACons_);
+  tmpMinT_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_);
   write("tmpMinT_:", tmpMinT_);
   if(tmpMinT_ = error) then retCode_:= IC_SOLVER_ERROR___
   else retCode_:= IC_NORMAL_END___;
@@ -531,15 +588,11 @@ end;
 
 
 
-procedure calcNextPointPhaseTime(maxTime_, posAsk_, negAsk_, NACons_)$
+procedure calcNextPointPhaseTime(maxTime_, discCause_)$
 begin;
   scalar minTList_, minT_, ans_;
 
-
-%  % TODO:list部分をなんとかする
-%  ans_:= fold(calcMinTime, {maxTime_, {}}, {posAsk_, negAsk_, NACons_});
-
-  minTList_:= union(for each x in union(union(map(not,posAsk_), negAsk_), NACons_) join calcMinTime(x));
+  minTList_:= union(for each x in discCause_ join calcMinTime(x));
   write("minTList_: ", minTList_);
 
   if(not freeof(minTList_, error)) then return error;
@@ -603,7 +656,7 @@ begin;
   tmp_:= value_;
   write("tmp_:", tmp_);
   precision(defaultPrec_)$
-%  off rounded$
+  off rounded$
 
   return tmp_;
 end;
@@ -673,7 +726,7 @@ end;
 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%
 expr_:= {yyy = -10, y = 10, yy = 0, z = y, zz = yy}; vars_:={y, z, yy, zz, yyy, y, z, yy, zz};
-symbolic redeval '(isconsistent vars_ pexpr_ expr_);
+symbolic redeval '(isconsistent expr_ vars_);
 clear expr_, pexpr_, vars_;
 
 

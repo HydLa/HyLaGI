@@ -276,8 +276,8 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+//  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("check_entailment_ans: ",
@@ -394,28 +394,26 @@ VCSResult REDUCEVCSInterval::check_consistency_sub()
 
 //////////////////// 送信処理
 
-  // isConsistentInterval(expr_, pexpr_, init_, vars_)を渡したい
-
-  // expr_を渡す（tmp_constraints、constraint_storeの2つから成る）
-  HYDLA_LOGGER_VCS("----- send expr_ -----");
-  cl_->send_string("expr_:=union(");
+  // isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)を渡したい
 
   // 一時的な制約ストア(新しく追加された制約の集合)からexprを得てREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send tmp_constraints ---");
-  cl_->send_string("{");
+  HYDLA_LOGGER_VCS("----- send tmpCons_ -----");
+  cl_->send_string("tmpCons_:={");
   constraints_t::const_iterator tmp_it  = tmp_constraints_.begin();
   constraints_t::const_iterator tmp_end = tmp_constraints_.end();
   for(; tmp_it!= tmp_end; ++tmp_it) {
     if(tmp_it != tmp_constraints_.begin()) cl_->send_string(",");
     HYDLA_LOGGER_VCS("put node: ", (**tmp_it));
-    rss.put_node(*tmp_it);
+    rss.put_node(*tmp_it, true);
   }
-  cl_->send_string("},");  
+  cl_->send_string("};");  
+
 
   // 制約ストアconstraintsをREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send constraint_store ---");
+  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  cl_->send_string("expr_:=");
   send_cs(rss);
-  cl_->send_string(");");
+  cl_->send_string(";");
 
 
   // パラメタ制約parameter_consをREDUCEに渡す
@@ -443,14 +441,14 @@ VCSResult REDUCEVCSInterval::check_consistency_sub()
   cl_->send_string(";");
 
 
-  cl_->send_string("symbolic redeval '(isConsistentInterval expr_ pexpr_ init_ vars_);");
+  cl_->send_string("symbolic redeval '(isConsistentInterval tmpCons_ expr_ pexpr_ init_ vars_);");
 
 
 /////////////////// 受信処理
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
+  cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",

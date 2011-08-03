@@ -108,8 +108,8 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   cl_->send_string("symbolic redeval '(getSExpFromString str_);");
 
 
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
+  cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string vm_s_exp_str = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("vm_s_exp_str: ", vm_s_exp_str);
@@ -214,8 +214,8 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
   cl_->send_string("symbolic redeval '(getSExpFromString str_);");
 
 
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
+  cl_->read_until_redeval();
+//  cl_->skip_until_redeval();
 
   std::string cs_s_exp_str = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("cs_s_exp_str: ", cs_s_exp_str);
@@ -644,8 +644,7 @@ VCSResult REDUCEVCSPoint::check_consistency_sub()
   //   ex) cl_->send_string("expr_:={df(y,t,2) = -10,");
   //       cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
 
-  // isConsistent(vars_,pexpr_,expr_)を渡したい
-  // TODO:引数の送る順番と対応させた方が分かりやすいかも
+  // isConsistent(expr_,vars_)を渡したい
 
   // expr_を渡す（tmp_constraints、constraint_store、parameter_store、left_continuityの4つから成る）
   HYDLA_LOGGER_VCS("----- send expr_ -----");
@@ -676,9 +675,9 @@ VCSResult REDUCEVCSPoint::check_consistency_sub()
   // 左連続性に関する制約を渡す
   // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
   HYDLA_LOGGER_VCS("--- send left_continuity ---");
-  max_diff_map_t max_diff_map;
-  rss.create_max_diff_map(max_diff_map);
-  add_left_continuity_constraint(rss, max_diff_map);
+  max_diff_map_t tmp_max_diff_map = max_diff_map_;
+  rss.create_max_diff_map(tmp_max_diff_map);
+  add_left_continuity_constraint(rss, tmp_max_diff_map);
   cl_->send_string(");");
 
 
@@ -694,7 +693,7 @@ VCSResult REDUCEVCSPoint::check_consistency_sub()
   cl_->send_string(");");
 
 
-  cl_->send_string("symbolic redeval '(isconsistent vars_ pexpr_ expr_);");
+  cl_->send_string("symbolic redeval '(isconsistent expr_ vars_);");
 
 
 /////////////////// 受信処理
