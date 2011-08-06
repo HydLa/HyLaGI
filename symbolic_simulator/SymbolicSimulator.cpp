@@ -474,9 +474,27 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   for(negative_asks_t::const_iterator it = negative_asks.begin(); it != negative_asks.end(); it++){
     disc_cause.push_back((*it)->get_guard());
   }
+  /*
+  // モジュールの各制約をANDでつなげる場合
+  for(not_adopted_tells_list_t::const_iterator it = not_adopted_tells_list.begin(); it != not_adopted_tells_list.end(); it++){
+    node_sptr tmp_and_node;
+    tells_t::const_iterator na_it = it -> begin();
+    tells_t::const_iterator na_end = it -> end();
+    if(na_it != na_end ){
+      tmp_and_node = (*na_it)->get_child();
+      na_it++;
+      for(; na_it != na_end; na_it++){
+        tmp_and_node.reset(new LogicalAnd(tmp_and_node, (*na_it)->get_child() ) ); 
+      }
+    }
+    if(tmp_and_node)disc_cause.push_back(tmp_and_node);
+  }*/
+  
   //現在採用されていない制約を離散変化条件として追加
   for(not_adopted_tells_list_t::const_iterator it = not_adopted_tells_list.begin(); it != not_adopted_tells_list.end(); it++){
-    for(tells_t::const_iterator na_it = (*it).begin(); na_it != (*it).end(); na_it++){
+    tells_t::const_iterator na_it = it -> begin();
+    tells_t::const_iterator na_end = it -> end();
+    for(; na_it != na_end; na_it++){
       disc_cause.push_back((*na_it)->get_child());
     }
   }
