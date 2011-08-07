@@ -589,7 +589,7 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   
   (* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
   compareMinTimeList[list1_, list2_] := ( Block[
-      {resultList},
+      {resultList, i, j},
       If[list2 === {}, Return[list1] ];
       resultList = {};
       For[i = 1, i <= Length[list1], i++,
@@ -605,7 +605,7 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   (* 最小時刻と条件の組をリストアップする関数 *)
   calculateMinTimeList[guardList_, condition_, maxT_] := (
     Block[
-      {findResult},
+      {findResult, i},
       timeCaseList = {{maxT, And@@condition}};
       For[i = 1, i <= Length[guardList], i++,
         findResult = findMinTime[guardList[[i]], (And @@ condition), maxT];

@@ -633,7 +633,8 @@ void SymbolicSimulator::output_result_tree()
   int i = 1;
   while(1){
     state_result_sptr_t now_node = result_root_->children.back();
-    std::cout << "#---------------------Case " << i++ << "---------------------" << std::endl;
+    if(opts_.nd_mode)
+      std::cout << "#---------Case " << i++ << "---------" << std::endl;
     while(1){
       output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
       if(now_node->children.size() == 0){//—t‚É“ž’B
