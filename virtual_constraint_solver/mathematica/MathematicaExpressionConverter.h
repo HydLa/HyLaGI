@@ -16,8 +16,7 @@ namespace vcs {
 namespace mathematica {
 
 
-class MathematicaExpressionConverter:
-  public PacketSender
+class MathematicaExpressionConverter
 {
   private:
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t value_t;
@@ -69,82 +68,9 @@ class MathematicaExpressionConverter:
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
   
-  //nodeとってmathematica用の文字列に変換する．(t)とか(0)とかつけないので，PP専用としておく
-  std::string convert_node_to_math_string(const node_sptr&);
-  //valueとってmathematica用の文字列に変換する．同上
-  std::string convert_symbolic_value_to_math_string(const value_t&);
-
   private:
   //再帰で呼び出していく方
   static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
-
-  //変換時に使う文字列記憶場所
-  std::string string_for_math_string_;
-
-
-  // 比較演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
-
-  // 論理演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
-
-  // 算術二項演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
-
-  // 算術単項演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
-
-  // 微分
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
-
-  // 左極限
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
-  
-  // 否定
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
-  
-  // 三角関数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Sin> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Cos> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tan> node);
-  // 逆三角関数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Asin> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Acos> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Atan> node);
-  // 円周率
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  // 対数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Log> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ln> node);
-  // 自然対数の底
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
-  // 任意の文字列
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
-  
-  // 変数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
-
-  // 数字
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
-
-  // 記号定数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
-
-  // t
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
 };
 
 } // namespace mathematica

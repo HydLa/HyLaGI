@@ -114,7 +114,7 @@ void MathematicaVCSInterval::send_init_cons(
           ml_->put_function("approxExpr", 2);
           ml_->put_integer(approx_precision_);
         }
-        ps.put_node(init_vars_it->second.get_node(), PacketSender::VA_None, false);
+        ps.put_node(init_vars_it->second.get_node(), PacketSender::VA_Zero, false);
       }
       else
       {
