@@ -118,6 +118,7 @@ void MathematicaVCSInterval::send_init_cons(
       }
       else
       {
+        // 値がないなら何かしらの定数を作って送信．
         parameter_t tmp_param;
         tmp_param.name = PacketSender::par_prefix + init_vars_it->first.name;
         for(int i=0;i<init_vars_it->first.derivative_count;i++){
@@ -128,7 +129,6 @@ void MathematicaVCSInterval::send_init_cons(
           //とりあえず重複回数分iをつける
           tmp_param.name.append("i");
         }
-        // 値がないなら何かしらの定数を作って送信．
         ml_->put_symbol(tmp_param.name);
       }
     }
@@ -323,10 +323,8 @@ VCSResult MathematicaVCSInterval::check_consistency_sub()
     ps.put_node(*tmp_it, PacketSender::VA_Time, true);
   }
   
-
   // 制約ストアconstraintsをMathematicaに渡す
   send_cs(ps);
-
 
   // 変数の最大微分回数をもとめる
   ps.create_max_diff_map(max_diff_map_);

@@ -209,7 +209,7 @@ Quiet[
   ]
 ];
 
-removeP[par_] := First[StringCases[ToString[par], "p" ~~ x__ -> x]];
+removeP[par_] := First[StringCases[ToString[par], StartOfString ~~ "p" ~~ x__ -> x]];
 
 renameVar[varName_] := Block[
   {renamedVarName, derivativeCount = 0, prevFlag = 0,
@@ -330,6 +330,9 @@ createVariableList[True, vars_, result_] := (
 (* 式中に変数名が出現するか否か *)
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
+(* 式が定数そのものか否か *)
+isParameter[exprs_] := StringMatchQ[ToString[exprs], "p" ~~ __];
+
 
 
 (* 必ず関係演算子の左側に変数名が入るようにする *)
@@ -342,7 +345,7 @@ adjustExprs[andExprs_] :=
             Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
             (* false *)
             (* パラメータ制約の場合にここに入る *)
-            If[NumericQ[#2[[1]]],
+            If[isParameter[#2[[2]]],
               (* true *)
               (* 逆になってるので、演算子を逆にして追加する *)
               Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
@@ -351,6 +354,9 @@ adjustExprs[andExprs_] :=
           (* false *)
           Append[#1, #2]]) &,
        {}, andExprs];
+
+
+
 
 
 resetConstraint := (
@@ -653,11 +659,9 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   resultList = calculateMinTimeList[discCause, otherExpr, maxTime];
 
   (* 整形して結果を返す *)
-  
   resultList = Map[({#[[1]],LogicalExpand[#[[2]]]})&, resultList];
   resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
   resultList = Map[({#[[1]], applyList[#[[2]]]})&, resultList];
-  
   resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[#[[1]] === maxTime, 1, 0]})&, resultList];
   resultList
 ];

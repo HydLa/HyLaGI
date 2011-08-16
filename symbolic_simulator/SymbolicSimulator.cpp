@@ -150,6 +150,11 @@ void SymbolicSimulator::simulate()
         state->module_set_container->mark_current_node();
       }
       state->positive_asks.clear();
+      
+      //無矛盾な解候補モジュール集合が存在しない場合
+      if(!state->module_set_container->go_next()){
+        state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
+      }
     }while( state->module_set_container->go_next() && is_safe_);
   }
   output_result_tree();
@@ -370,7 +375,8 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
                                                      new_state->parameter_map,
                                                      new_state->current_time,
                                                      PointPhase,
-                                                     state->parent_state_result));
+                                                     state->parent_state_result,
+                                                     is_safe_?StateResult::NONE:StateResult::ASSERTION));
     state_result->parent->children.push_back(state_result);
     new_state->parent_state_result = state_result;
 
@@ -517,7 +523,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
                                                        integrate_result.states[it].time,
                                                        IntervalPhase,
                                                        state->parent_state_result,
-                                                       integrate_result.states[it].is_max_time));
+                                                       is_safe_?(integrate_result.states[it].is_max_time?StateResult::TIME_LIMIT:StateResult::NONE):StateResult::ASSERTION));
     state_result->parent->children.push_back(state_result);
     if(!integrate_result.states[it].is_max_time) {
       phase_state_sptr new_state(create_new_phase_state());
@@ -590,6 +596,9 @@ void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
 {
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
+  if(it != end){
+    std::cout << "\n#---------parameter condition---------\n";
+  }
   for(; it!=end; ++it) {
     std::cout << "p" << it->first << "\t: " << range_to_string(it->second) << "\n";
   }
@@ -635,14 +644,35 @@ void SymbolicSimulator::output_result_tree()
     state_result_sptr_t now_node = result_root_->children.back();
     if(opts_.nd_mode)
       std::cout << "#---------Case " << i++ << "---------" << std::endl;
+    int phase_num = 0;
     while(1){
+      std::cout << "\n#Phase No." << ++phase_num << std::endl;
       output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
       if(now_node->children.size() == 0){//葉に到達
-        std::cout << std::endl;
         output_parameter_map(now_node->parameter_map);
-        if(!now_node->is_at_max_time){
-          std::cout << "---------execution stacked---------\n" ;
+        std::cout << std::endl;
+        std::cout << "#";
+        switch(now_node->cause_of_termination){
+          case StateResult::INCONSISTENCY:
+            std::cout << "execution stacked\n";
+          break;
+          case StateResult::TIME_LIMIT:
+            std::cout << "time ended\n" ;
+          break;
+          
+          case StateResult::ERROR:
+            std::cout << "some error occured\n" ;
+          break;
+          
+          case StateResult::ASSERTION:
+            std::cout << "assertion failed\n" ;
+          break;
+          
+          case StateResult::NONE:
+            std::cout << "unknown termination occured\n" ;
+          break;
         }
+        std::cout << std::endl;
         while(now_node->children.size() == 0){
           if(now_node->parent != NULL){
             now_node = now_node->parent;
