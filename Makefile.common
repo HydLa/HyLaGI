@@ -9,7 +9,8 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lboost_system-gcc43-mt-1_38
+LIBS += -lboost_system
+#-gcc43-mt-1_38
 
 CXX_OPT  += -Wall --input-charset=cp932 -O2 #-pg
 

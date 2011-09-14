@@ -616,7 +616,8 @@ void SymbolicSimulator::output_variable_map(const variable_map_t& vm, const time
     }
   }else{
     for(; it!=end; ++it) {
-      std::cout << it->first << "\t: " << it->second << "\n";
+      //      std::cout << it->first << "\t: " << it->second << "\n";
+      std::cout << it->first << ":" << it->second << ",";
     }
   }
 }
@@ -640,24 +641,27 @@ void SymbolicSimulator::output_result_tree()
     return;
   }
   int i = 1;
+  int j = 1;
   while(1){
     state_result_sptr_t now_node = result_root_->children.back();
     if(opts_.nd_mode)
-      std::cout << "#---------Case " << i++ << "---------" << std::endl;
+      //      std::cout << "#---------Case " << i++ << "---------" << std::endl;
+      std::cout << "case" << i++ << "" << std::endl;
     int phase_num = 0;
     while(1){
-      std::cout << "\n#Phase No." << ++phase_num << std::endl;
+      //      std::cout << "\n#Phase No." << ++phase_num << std::endl;
       output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
       if(now_node->children.size() == 0){//—t‚É“ž’B
         output_parameter_map(now_node->parameter_map);
-        std::cout << std::endl;
-        std::cout << "#";
+	//        std::cout << std::endl;
+	//        std::cout << "#";
         switch(now_node->cause_of_termination){
           case StateResult::INCONSISTENCY:
             std::cout << "execution stacked\n";
           break;
           case StateResult::TIME_LIMIT:
-            std::cout << "time ended\n" ;
+	    //            std::cout << "time ended\n" ;
+	    std::cout << "end" << j++ ;
           break;
           
           case StateResult::ERROR:
@@ -672,7 +676,7 @@ void SymbolicSimulator::output_result_tree()
             std::cout << "unknown termination occured\n" ;
           break;
         }
-        std::cout << std::endl;
+	//        std::cout << std::endl;
         while(now_node->children.size() == 0){
           if(now_node->parent != NULL){
             now_node = now_node->parent;
@@ -687,7 +691,7 @@ void SymbolicSimulator::output_result_tree()
         now_node = now_node->children.back();
       }
     }
-    std::cout << std::endl;
+        std::cout << std::endl;
   }
 }
 
@@ -695,15 +699,20 @@ void SymbolicSimulator::output_state_result(const StateResult& result, const boo
   if(!numeric){
     variable_map_t vm;
     if(result.phase_type==IntervalPhase){
-      std::cout << "---------IP---------" << std::endl;
+      //      std::cout << "---------IP---------" << std::endl;
+      std::cout << "IP " ;//<< std::endl;
       vm = shift_variable_map_time(result.variable_map, result.parent->time);
-      std::cout << "time\t: " << result.parent->time << " -> " << result.time << "\n";
+      //      std::cout << "time\t: " << result.parent->time << " -> " << result.time << "\n";
+      std::cout << "time:" << result.parent->time << "->" << result.time << ",";
     }else{
-      std::cout << "---------PP---------" << std::endl;
+      //      std::cout << "---------PP---------" << std::endl;
+      std::cout << "PP " ;//<< std::endl;
       vm = result.variable_map;
-      std::cout << "time\t: " << result.time << "\n";
+      //      std::cout << "time\t: " << result.time << "\n";
+      std::cout << "time:" << result.time << ",";  
     }
     output_variable_map(vm, result.time, false);
+        std::cout << "\n" ;
   }else{
     if(result.phase_type==IntervalPhase){
       std::cout << "#---------IP---------" << std::endl;
