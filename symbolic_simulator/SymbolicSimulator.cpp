@@ -696,17 +696,18 @@ void SymbolicSimulator::output_result_tree()
 }
 
 void SymbolicSimulator::output_state_result(const StateResult& result, const bool& need_parameter,const bool& numeric){
+  static int p_num=0;
   if(!numeric){
     variable_map_t vm;
     if(result.phase_type==IntervalPhase){
       //      std::cout << "---------IP---------" << std::endl;
-      std::cout << "IP " ;//<< std::endl;
+      std::cout << "IP" << p_num++ << " ";//<< std::endl;
       vm = shift_variable_map_time(result.variable_map, result.parent->time);
       //      std::cout << "time\t: " << result.parent->time << " -> " << result.time << "\n";
       std::cout << "time:" << result.parent->time << "->" << result.time << ",";
     }else{
       //      std::cout << "---------PP---------" << std::endl;
-      std::cout << "PP " ;//<< std::endl;
+      std::cout << "PP" << p_num << " " ;//<< std::endl;
       vm = result.variable_map;
       //      std::cout << "time\t: " << result.time << "\n";
       std::cout << "time:" << result.time << ",";  
