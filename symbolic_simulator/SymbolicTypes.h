@@ -18,7 +18,7 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
-class StateResult;
+struct StateResult;
 typedef boost::shared_ptr<StateResult> state_result_sptr_t;
 
   typedef simulator::DefaultVariable            variable_t;
@@ -54,6 +54,8 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
   typedef enum OutputFormat_ {
     fmtTFunction,
     fmtNumeric,
+    fmtGUI,
+    fmtMathematica,
   } OutputFormat;
   
   typedef enum OutputStyle_ {
@@ -65,6 +67,12 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
     ContinuousMode,
     DiscreteMode,
   } Mode;
+  
+  typedef enum DefaultContinuity_{
+    CONT_NONE,
+    CONT_WEAK,
+    CONT_STRONG
+  } DefaultContinuity;
 
   typedef struct Opts_ {
     std::string mathlink;
@@ -83,6 +91,8 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
     int approx_precision;
     std::string solver;
     hydla::parse_tree::node_sptr assertion;
+    DefaultContinuity default_continuity;
+    std::set<std::string> output_variables;
   } Opts;
 
 } // namespace symbolic_simulator

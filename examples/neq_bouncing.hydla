@@ -17,8 +17,8 @@ INIT, FALL << BOUNCE.
 */
 
 
-INIT <=> ht = 10 & v = 0.
-FALL <=> [](ht'=v & v'=g & g'=0).
-BOUNCE <=> []( ht- = 0 => v= -(4/5)*v-).
+INIT <=> y > 5 & y < 15 & y' > -10 & y' < 10.
+FALL <=> [](y''=-10).
+BOUNCE <=> [](y-=0 => y' = -(4/5)*y'-).
 
 INIT, FALL << BOUNCE.

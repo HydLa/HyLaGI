@@ -58,7 +58,7 @@ public:
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
-   * §–ñ‚ğ’Ç‰Á‚·‚é
+   * §–ñ‚ğ’Ç‰Á‚·‚éD
    */
   virtual void add_constraint(const constraints_t& constraints);
   

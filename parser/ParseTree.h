@@ -125,6 +125,13 @@ public:
   {
     return variable_map_.end();
   }
+  
+  
+  variable_map_t get_variable_map() const
+  {
+    return variable_map_;
+  }
+
 
   /**
    * パースされたノードツリーの設定

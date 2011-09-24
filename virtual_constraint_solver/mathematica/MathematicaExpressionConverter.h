@@ -71,6 +71,7 @@ class MathematicaExpressionConverter
   private:
   //Ä‹A‚ÅŒÄ‚Ño‚µ‚Ä‚¢‚­•û
   static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
+  
 };
 
 } // namespace mathematica

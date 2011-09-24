@@ -30,6 +30,13 @@ struct DefaultVariable {
     for(int i=0; i<derivative_count; i++) s << "'";
     return s;
   }
+  
+  std::string get_string() const
+  {
+    std::string ret = name;
+    ret.append(derivative_count, '\'');
+    return ret;
+  }
 
   friend bool operator<(const DefaultVariable& lhs, 
                         const DefaultVariable& rhs)

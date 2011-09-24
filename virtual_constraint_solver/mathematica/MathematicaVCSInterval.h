@@ -52,11 +52,11 @@ public:
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
-  
   /**
-   * 制約を追加する．ついでに制約ストアが無矛盾かを判定する．
+   * 制約を追加する．
    */
   virtual void add_constraint(const constraints_t& constraints);
+  
   
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -84,13 +84,16 @@ public:
    * 変数表に対して与えられた時刻を適用する
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
+  
+  /**
+   * 与えられたmapを元に，各変数の連続性を設定する．
+   */
+  virtual void set_continuity(const continuity_map_t& continuity_map);
 
 private:
-  typedef std::map<std::string, int> max_diff_map_t;
-
   void send_cs(PacketSender& ps) const;
 
-  void send_vars(PacketSender& ps, const max_diff_map_t& max_diff_map);
+  void send_vars(PacketSender& ps);
   
   // check_consistencyの共通部分
   VCSResult check_consistency_sub();
@@ -99,15 +102,12 @@ private:
   /**
    * 初期値制約をMathematicaに渡す
    * 
-   * Mathematicaに送る制約の中に出現する変数の
-   * 最大微分回数未満の初期値制約のみ送信をおこなう
    */
-  void send_init_cons(PacketSender& ps, 
-                      const max_diff_map_t& max_diff_map, 
-                      bool use_approx);
-  /**
-  * 時刻を送信する
-  */
+  void send_init_cons(PacketSender& ps, const continuity_map_t& continuity_map);
+
+  /*
+   * 時刻を送信する
+   */
   void send_time(const time_t& time);
 
   /**
@@ -119,7 +119,7 @@ private:
   void send_pars() const;
 
   mutable MathLink* ml_;
-  max_diff_map_t       max_diff_map_;
+  continuity_map_t continuity_map_;
   constraint_store_t constraint_store_;
   constraints_t tmp_constraints_;  //一時的に制約を追加する対象
   parameter_map_t parameter_map_;

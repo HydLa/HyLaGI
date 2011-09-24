@@ -38,8 +38,11 @@ void ProgramOptions::init_descriptions()
      "output set of module sets which might be solution by graph representation")
     ("dump-module-set-graph-noinit", 
      "output set of non initial module sets which might be solution by graph representation")
-    ("dump-in-progress,p", 
+    ("dump-in-progress", 
      "output result of each phase in progress")
+    ("output-variables,v", 
+     value<std::string>()->default_value(""), 
+     "variables to output")
 
     ("graphviz", 
      "dump tree by dot language representation")
@@ -63,7 +66,7 @@ void ProgramOptions::init_descriptions()
     
     ("output-format,f", 
      value<std::string>()->default_value("n"), 
-     "output format:\n  t - time function\n  n - numeric")
+     "output format:\n  t - time function\n  n - numeric\n g - for GUI m - for Mathematica Plot")
     
     ("output-interval", 
      value<std::string>()->default_value("1/10"), 
@@ -72,6 +75,10 @@ void ProgramOptions::init_descriptions()
     ("output-precision", 
      value<int>()->default_value(5), 
      "precision of output message")
+     
+    ("continuity", 
+     value<int>()->default_value(1), 
+     "default continuity level")
 
     ("time,t", 
      value<std::string>()->default_value("1"), 

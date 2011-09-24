@@ -195,7 +195,7 @@ void REDUCEVCSInterval::add_constraint(const constraints_t& constraints)
   HYDLA_LOGGER_VCS(
     constraint_store_,
     "\n#*** End REDUCEVCSInterval::add_constraint ***");
-
+  return;
 }
   
 VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)

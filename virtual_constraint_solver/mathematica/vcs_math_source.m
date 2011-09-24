@@ -7,9 +7,10 @@ If[optUseDebugPrint,
 
 (*
  * グローバル変数
- * constraints: 現在扱っている制約集合
- * vars: 制約集合に出現する変数のリスト
- * pars: 制約集合に出現する定数のリスト
+ * constraints: 現在扱っている制約集合（IPでは変数についてのみ）
+ * pconstraints: IPで現在扱っている定数についての条件の集合
+ * variables: 制約集合に出現する変数のリスト（PPでは定数も含む）
+ * parameters: 制約集合に出現する定数のリスト
  *)
 
 (* ルールのリストを受けて，tについてのルールを除いたものを返す関数 *)
@@ -359,9 +360,11 @@ adjustExprs[andExprs_] :=
 
 
 
-resetConstraint := (
+resetConstraint[] := (
   constraints = True;
+  pconstraints = True;
   variables = {};
+  parameters = {};
 );
 
 addConstraint[cons_, vars_] := (

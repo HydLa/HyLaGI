@@ -143,6 +143,9 @@ bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parame
   }
 
 /////////////////// 受信処理
+  //PacketChecker pc(*ml_);
+  //pc.check();
+
   HYDLA_LOGGER_VCS( "--- receive ---");
 
   HYDLA_LOGGER_EXTERN(
@@ -166,6 +169,16 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
     
 /////////////////// 送信処理
 
+  PacketSender ps(*ml_);
+  ml_->put_function("addConstraint", 2);
+  add_left_continuity_constraint(continuity_map_, ps);
+  ps.put_vars(PacketSender::VA_None);
+  ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLNewPacket();
+  ml_->put_function("checkConsistency", 0);
+  ml_->skip_pkt_until(RETURNPKT);
+  ml_->MLNewPacket();
+  
   ml_->put_function("convertCSToVM", 0);
 
 /////////////////// 受信処理                        
@@ -266,26 +279,31 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
   return true;
 }
 
-void MathematicaVCSPoint::add_left_continuity_constraint(
-  PacketSender& ps, max_diff_map_t& max_diff_map)
+void MathematicaVCSPoint::set_continuity(const continuity_map_t& continuity_map)
+{
+  continuity_map_ = continuity_map;
+}
+
+
+void MathematicaVCSPoint::add_left_continuity_constraint(const continuity_map_t& continuity_map, PacketSender& ps)
 {
   HYDLA_LOGGER_VCS("---- Begin MathematicaVCSPoint::add_left_continuity_constraint ----");
   // 送信する制約の個数を求める
   int left_cont_vars_count = 0;
-  max_diff_map_t::const_iterator md_it = max_diff_map.begin();
-  max_diff_map_t::const_iterator md_end = max_diff_map.end();
+  continuity_map_t::const_iterator md_it = continuity_map.begin();
+  continuity_map_t::const_iterator md_end = continuity_map.end();
   for(; md_it!=md_end; ++md_it) {
-    left_cont_vars_count += md_it->second;
+    left_cont_vars_count += abs(md_it->second);
   }
 
   HYDLA_LOGGER_VCS("left_cont_vars_count: ", left_cont_vars_count);
   
   ml_->put_function("And", left_cont_vars_count);
   // 実際に送信する
-  md_it = max_diff_map.begin();
-  md_end = max_diff_map.end();
+  md_it = continuity_map.begin();
+  md_end = continuity_map.end();
   for(; md_it!=md_end; ++md_it) {
-    for(int i=0; i<md_it->second; ++i){
+    for(int i=0; i < abs(md_it->second); ++i){
       ml_->put_function("Equal", 2);
       
       // Prev変数側
@@ -308,7 +326,21 @@ void MathematicaVCSPoint::add_constraint(const constraints_t& constraints)
     "#*** Begin MathematicaVCSPoint::add_constraint ***");
 
   ml_->put_function("addConstraint", 2);
-  send_constraint(constraints);
+  
+  
+  PacketSender ps(*ml_);
+
+  ml_->put_function("And", constraints.size());
+  constraints_t::const_iterator it = constraints.begin();
+  constraints_t::const_iterator end = constraints.end();
+  for(; it!=end; ++it)
+  {
+    ps.put_node(*it, PacketSender::VA_None);
+  }
+  
+  // varsを渡す
+  ps.put_vars(PacketSender::VA_None);
+  
 
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
@@ -323,7 +355,6 @@ void MathematicaVCSPoint::add_constraint(const constraints_t& constraints)
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLNewPacket();
   
-
   HYDLA_LOGGER_VCS("\n#*** End MathematicaVCSPoint::add_constraint ***");
   return;
 }
@@ -344,14 +375,15 @@ void MathematicaVCSPoint::send_constraint(const constraints_t& constraints)
     ps.put_node(*it, PacketSender::VA_None);
   }
   
-  max_diff_map_t max_diff_map;
-  ps.create_max_diff_map(max_diff_map);
-  add_left_continuity_constraint(ps, max_diff_map);
+  add_left_continuity_constraint(continuity_map_, ps);
   
   // varsを渡す
   ps.put_vars(PacketSender::VA_None);
   
   HYDLA_LOGGER_VCS("#*** End MathematicaVCSPoint::send_constraint ***");
+  continuity_map_t continuity_map;
+  ps.create_max_diff_map(continuity_map);
+  return;
 }
 
 VCSResult MathematicaVCSPoint::check_consistency(const constraints_t& constraints)
@@ -360,6 +392,7 @@ VCSResult MathematicaVCSPoint::check_consistency(const constraints_t& constraint
 
   ml_->put_function("checkConsistencyWithTemporaryConstraint", 2);
   send_constraint(constraints);
+  
   VCSResult result = check_consistency_receive();
   
   HYDLA_LOGGER_VCS("#*** End MathematicaVCSPoint::check_consistency(tmp) ***");
@@ -369,7 +402,8 @@ VCSResult MathematicaVCSPoint::check_consistency(const constraints_t& constraint
 VCSResult MathematicaVCSPoint::check_consistency()
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSPoint::check_consistency() ***");
-  ml_->put_function("checkConsistency", 0);
+  ml_->put_function("checkConsistencyWithTemporaryConstraint", 2);
+  send_constraint(constraints_t());
 
   VCSResult result = check_consistency_receive();
   
@@ -382,8 +416,8 @@ VCSResult MathematicaVCSPoint::check_consistency_receive()
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
   
-  //PacketChecker pc(*ml_);
-  //pc.check();
+  // PacketChecker pc(*ml_);
+  // pc.check();
  
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",

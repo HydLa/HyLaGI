@@ -54,12 +54,12 @@ public:
    * 現在の制約ストアから変数表を作成する
    */
   virtual bool create_maps(create_result_t & create_result);
-
+  
   /**
-   * 制約を追加する
+   * 制約を追加する．
    */
   virtual void add_constraint(const constraints_t& constraints);
-
+  
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */

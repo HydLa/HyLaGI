@@ -70,7 +70,7 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   state->module_set_container = msc_original_;
   state->parent_state_result = result_root_;
   push_phase_state(state);
-
+  variable_derivative_map_ = parse_tree->get_variable_map();
 
   //solver_分岐
   if(opts_.solver == "r" || opts_.solver == "Reduce") {
@@ -157,7 +157,13 @@ void SymbolicSimulator::simulate()
       }
     }while( state->module_set_container->go_next() && is_safe_);
   }
-  output_result_tree();
+  if(opts_.output_format == fmtGUI){
+    output_result_tree_GUI();
+  }else if(opts_.output_format == fmtMathematica){
+    output_result_tree(); 
+  }else{
+    output_result_tree(); 
+  }
 }
 
 
@@ -166,7 +172,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                                           positive_asks_t &positive_asks, negative_asks_t &negative_asks){
 
   //前準備
-  TellCollector tell_collector(ms);
+  TellCollector tell_collector(ms, state->phase == IntervalPhase);
   AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
@@ -190,17 +196,21 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     HYDLA_LOGGER_CC("#** SymbolicSimulator::check_consistency in calculate_closure: **\n");
 
     
+    //tellじゃなくて制約部分のみ送る
     constraint_list.clear();
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       constraint_list.push_back((*it)->get_child());
     }
- 
     for(constraints_t::const_iterator it = state->added_constraints.begin(); it != state->added_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
-    
-    //tellじゃなくて制約部分のみ送る
     solver_->add_constraint(constraint_list);
+    
+    
+    continuity_map_t continuity_map = tell_collector.get_variables();
+    
+    solver_->set_continuity(continuity_map);
+
     
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
     switch(solver_->check_consistency()) 
@@ -226,24 +236,37 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                               &positive_asks, 
                               &negative_asks);
 
-
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_ask: **\n",
                        expanded_always);
 
-    HYDLA_LOGGER_CC("#** SymbolicSimulator::check_entailment in calculate_closure: **\n");
     // ask制約のエンテール処理
+    HYDLA_LOGGER_CC("#** SymbolicSimulator::check_entailment in calculate_closure: **\n");
+    
+    //デフォルト連続性の処理
+    if(opts_.default_continuity == CONT_STRONG){
+      for(continuity_map_t::const_iterator it  = variable_derivative_map_.begin(); it!=variable_derivative_map_.end(); ++it) {
+        continuity_map_t::iterator find_result = continuity_map.find(it->first);
+        if( find_result == continuity_map.end()){
+          continuity_map.insert(std::make_pair(it->first, -(it->second + 1)));
+        }
+      }
+    }
+    solver_->set_continuity(continuity_map);
+    
     expanded = false;
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
     constraints_t tmp_constraints;
     while(it!=end) {
-      tmp_constraints.clear();
+      if(opts_.default_continuity != CONT_STRONG){
+        tmp_constraints.clear();
+      }
       tmp_constraints.push_back((*it)->get_guard());
       switch(solver_->check_consistency(tmp_constraints))
       {
         case VCSR_TRUE:
         {
-          tmp_constraints.clear();
+          tmp_constraints.pop_back();
           tmp_constraints.push_back(node_sptr(new Not((*it)->get_guard())));
           switch(solver_->check_consistency(tmp_constraints)){
             case VCSR_TRUE:
@@ -251,9 +274,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                 branched_ask = &(*it);
               }
               it++;
+              tmp_constraints.pop_back();
               break;
               
             case VCSR_FALSE:
+              tmp_constraints.pop_back();
+              tmp_constraints.push_back((*it)->get_guard());
               positive_asks.insert(*it);
               negative_asks.erase(it++);
               expanded = true;
@@ -267,6 +293,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           break;
         }
         case VCSR_FALSE:
+          tmp_constraints.pop_back();
           it++;
           break;
         default:
@@ -384,8 +411,16 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     HYDLA_LOGGER_DEBUG("---push_phase_state---\n", new_state->current_time,"\n",new_state->variable_map,"\n", new_state->parameter_map);
     push_phase_state(new_state);
     
+    //出力変数無指定な場合の出力制御（全部出力）．本来ここに置くべきではない．
+    if(opts_.output_variables.empty()){
+      BOOST_FOREACH(const variable_map_t::value_type& i, new_state->variable_map) {
+        opts_.output_variables.insert(i.first.get_string());
+      }
+    }
+    
     if(opts_.dump_in_progress)
       output_state_result(*state_result, true, false);
+      
 
     HYDLA_LOGGER_MS_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                        "time:", new_state->current_time, "\n",
@@ -480,6 +515,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   for(negative_asks_t::const_iterator it = negative_asks.begin(); it != negative_asks.end(); it++){
     disc_cause.push_back((*it)->get_guard());
   }
+  
   /*
   // モジュールの各制約をANDでつなげる場合
   for(not_adopted_tells_list_t::const_iterator it = not_adopted_tells_list.begin(); it != not_adopted_tells_list.end(); it++){
@@ -612,12 +648,17 @@ void SymbolicSimulator::output_variable_map(const variable_map_t& vm, const time
     std::cout << std::endl;
     std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
     for(; it!=end; ++it) {
-      std::cout << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
+      if(opts_.output_variables.find(it->first.get_string()) != opts_.output_variables.end())
+        std::cout << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
     }
   }else{
     for(; it!=end; ++it) {
-      //      std::cout << it->first << "\t: " << it->second << "\n";
-      std::cout << it->first << ":" << it->second << ",";
+      if(opts_.output_variables.find(it->first.get_string()) != opts_.output_variables.end()){
+        if(opts_.output_format == fmtGUI)
+          std::cout << it->first << ":" << it->second << ",";
+        else
+          std::cout << it->first << "\t: " << it->second << "\n";
+        }
     }
   }
 }
@@ -641,26 +682,79 @@ void SymbolicSimulator::output_result_tree()
     return;
   }
   int i = 1;
-  int j = 1;
   while(1){
     state_result_sptr_t now_node = result_root_->children.back();
     if(opts_.nd_mode)
-      //      std::cout << "#---------Case " << i++ << "---------" << std::endl;
-      std::cout << "case" << i++ << "" << std::endl;
-    int phase_num = 0;
+      std::cout << "#---------Case " << i++ << "---------" << std::endl;
+
     while(1){
-      //      std::cout << "\n#Phase No." << ++phase_num << std::endl;
       output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
       if(now_node->children.size() == 0){//葉に到達
         output_parameter_map(now_node->parameter_map);
-	//        std::cout << std::endl;
-	//        std::cout << "#";
+        std::cout << std::endl;
+        std::cout << "#";
         switch(now_node->cause_of_termination){
           case StateResult::INCONSISTENCY:
             std::cout << "execution stacked\n";
           break;
           case StateResult::TIME_LIMIT:
-	    //            std::cout << "time ended\n" ;
+	          std::cout << "time ended\n" ;
+          break;
+          
+          case StateResult::ERROR:
+            std::cout << "some error occured\n" ;
+          break;
+          
+          case StateResult::ASSERTION:
+            std::cout << "assertion failed\n" ;
+          break;
+          
+          case StateResult::NONE:
+            std::cout << "unknown termination occured\n" ;
+          break;
+        }
+        
+        std::cout << std::endl;
+        while(now_node->children.size() == 0){
+          if(now_node->parent != NULL){
+            now_node = now_node->parent;
+          }else{
+            return;//親がいないということは根まで来たということなので終了．
+          }
+          now_node->children.pop_back();
+        }
+        break;
+      }
+      else{
+        now_node = now_node->children.back();
+      }
+    }
+      std::cout << std::endl;
+  }
+}
+
+
+void SymbolicSimulator::output_result_tree_GUI()
+{
+  if(result_root_->children.size() == 0){
+    std::cout << "No Result." << std::endl;
+    return;
+  }
+  int i = 1;
+  int j = 1;
+  while(1){
+    state_result_sptr_t now_node = result_root_->children.back();
+    if(opts_.nd_mode)
+      std::cout << "case" << i++ << "" << std::endl;
+    while(1){
+      output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
+      if(now_node->children.size() == 0){//葉に到達
+        output_parameter_map(now_node->parameter_map);
+        switch(now_node->cause_of_termination){
+          case StateResult::INCONSISTENCY:
+            std::cout << "execution stacked\n";
+          break;
+          case StateResult::TIME_LIMIT:
 	    std::cout << "end" << j++ ;
           break;
           
@@ -676,7 +770,6 @@ void SymbolicSimulator::output_result_tree()
             std::cout << "unknown termination occured\n" ;
           break;
         }
-	//        std::cout << std::endl;
         while(now_node->children.size() == 0){
           if(now_node->parent != NULL){
             now_node = now_node->parent;
@@ -691,7 +784,7 @@ void SymbolicSimulator::output_result_tree()
         now_node = now_node->children.back();
       }
     }
-        std::cout << std::endl;
+      std::cout << std::endl;
   }
 }
 
@@ -700,17 +793,30 @@ void SymbolicSimulator::output_state_result(const StateResult& result, const boo
   if(!numeric){
     variable_map_t vm;
     if(result.phase_type==IntervalPhase){
-      //      std::cout << "---------IP---------" << std::endl;
-      std::cout << "IP" << p_num++ << " ";//<< std::endl;
+      if(opts_.output_format == fmtGUI){
+        std::cout << "IP" << p_num++ << " ";
+      }else{
+        std::cout << "---------IP---------" << std::endl;
+      }
       vm = shift_variable_map_time(result.variable_map, result.parent->time);
-      //      std::cout << "time\t: " << result.parent->time << " -> " << result.time << "\n";
-      std::cout << "time:" << result.parent->time << "->" << result.time << ",";
+      if(opts_.output_format == fmtGUI){
+        std::cout << "time:" << result.parent->time << "->" << result.time << ",";
+      }else{
+        std::cout << "time\t: " << result.parent->time << " -> " << result.time << "\n";
+      }
     }else{
-      //      std::cout << "---------PP---------" << std::endl;
-      std::cout << "PP" << p_num << " " ;//<< std::endl;
+      if(opts_.output_format == fmtGUI){
+        std::cout << "PP" << p_num << " " ;
+      }else{
+        std::cout << "---------PP---------" << std::endl;
+      }
       vm = result.variable_map;
-      //      std::cout << "time\t: " << result.time << "\n";
-      std::cout << "time:" << result.time << ",";  
+      
+      if(opts_.output_format == fmtGUI){
+        std::cout << "time:" << result.time << ",";  
+      }else{
+        std::cout << "time\t: " << result.time << "\n";
+      }
     }
     output_variable_map(vm, result.time, false);
         std::cout << "\n" ;
@@ -749,8 +855,12 @@ void SymbolicSimulator::output_variable_labels(const variable_map_t variable_map
     // 変数のラベル
     // TODO: 未定義の値とかのせいでずれる可能性あり?
   std::cout << "# time\t";
+  
+  
   BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
-   std::cout << i.first << "\t";
+    if(opts_.output_variables.find(i.first.get_string()) != opts_.output_variables.end()){
+      std::cout << i.first << "\t";
+    }
   }
   std::cout << std::endl;
 }

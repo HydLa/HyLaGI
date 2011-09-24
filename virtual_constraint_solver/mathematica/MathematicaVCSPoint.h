@@ -36,7 +36,7 @@ public:
   virtual bool create_maps(create_result_t & create_result);
 
   /**
-   * 制約を追加する．ついでに制約ストアが無矛盾かを判定する．
+   * 制約を追加する．
    */
   virtual void add_constraint(const constraints_t& constraints);
   
@@ -58,10 +58,14 @@ public:
     const time_t& current_time,
     const time_t& max_time);
 
+  /**
+   * 与えられたmapを元に，各変数の連続性を設定する．
+   */
+  virtual void set_continuity(const continuity_map_t& continuity_map);
 
 private:
-  typedef std::map<std::string, int> max_diff_map_t;
   void receive_constraint_store(constraint_store_t& store);
+  virtual void add_left_continuity_constraint(const continuity_map_t& continuity_map, PacketSender &ps);
   
   /**
    * 制約を出現する変数や左連続制約とともに送信する
@@ -73,12 +77,9 @@ private:
    */
   VCSResult check_consistency_receive();
 
-  /**
-   * 左連続性に関する制約を加える
-   */
-  void add_left_continuity_constraint(PacketSender& ps, max_diff_map_t& max_diff_map);
-
+  
   mutable MathLink* ml_;
+  continuity_map_t continuity_map_;
 };
 
 

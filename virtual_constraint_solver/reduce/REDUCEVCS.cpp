@@ -96,7 +96,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
 {
   vcs_->add_constraint(constraints);
 }
-  
+
 VCSResult REDUCEVCS::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
 {
   return vcs_->check_entailment(negative_ask, appended_asks);

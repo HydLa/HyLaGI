@@ -30,8 +30,8 @@ struct NodeDumper {
 };
 }
   
-TellCollector::TellCollector(const module_set_sptr& module_set) :
-  module_set_(module_set)
+TellCollector::TellCollector(const module_set_sptr& module_set, bool in_IP) :
+  module_set_(module_set), in_interval_(in_IP)
 {}
 
 TellCollector::~TellCollector()
@@ -57,6 +57,8 @@ void TellCollector::collect(tells_t*                 tells,
   tells_          = tells;
   positive_asks_  = positive_asks;
   visited_always_.clear();
+  //variables_.clear();
+  differential_count_ = 0;
 
 
   // ModuleSetÇÃÉmÅ[ÉhÇÃíTçı
@@ -115,6 +117,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
     {
       tells_->push_back(node);
       collected_tells_.insert(node);
+      accept(node->get_child());
     }
   }
 }
@@ -164,6 +167,90 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> no
 {
   accept(node->get_child());
 }
+
+// ïœêî
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+{
+  continuity_map_t::iterator find = variables_.find(node->get_name());
+  if(find == variables_.end() || find->second < differential_count_){
+    variables_[node->get_name()] = differential_count_;
+  }
+}
+
+
+// î˜ï™
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+{
+  differential_count_++;
+  accept(node->get_child());
+  differential_count_--;
+}
+
+
+// ç∂ã…å¿
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
+{
+  if(in_interval_){
+    accept(node->get_child());
+  }
+}
+
+
+
+#define DEFINE_DEFAULT_BINARY(NODE_NAME)                       \
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::NODE_NAME> node)             \
+{                                                                       \
+  accept(node->get_lhs());                                              \
+  accept(node->get_rhs());                                              \
+}
+
+#define DEFINE_DEFAULT_UNARY(NODE_NAME)                        \
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::NODE_NAME> node)             \
+{                                                                       \
+  accept(node->get_child());                                            \
+}
+
+#define DEFINE_DEFAULT_FACTOR(NODE_NAME)                       \
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::NODE_NAME> node)             \
+{                                                                       \
+}
+
+DEFINE_DEFAULT_BINARY(Equal)
+DEFINE_DEFAULT_BINARY(UnEqual)
+DEFINE_DEFAULT_BINARY(Less)
+DEFINE_DEFAULT_BINARY(LessEqual)
+DEFINE_DEFAULT_BINARY(Greater)
+DEFINE_DEFAULT_BINARY(GreaterEqual)
+DEFINE_DEFAULT_BINARY(LogicalOr)
+DEFINE_DEFAULT_BINARY(Plus)
+DEFINE_DEFAULT_BINARY(Subtract)
+DEFINE_DEFAULT_BINARY(Times)
+DEFINE_DEFAULT_BINARY(Divide)
+DEFINE_DEFAULT_BINARY(Power)
+DEFINE_DEFAULT_BINARY(ArbitraryBinary)
+DEFINE_DEFAULT_BINARY(Log)
+
+DEFINE_DEFAULT_UNARY(Positive)
+DEFINE_DEFAULT_UNARY(Negative)
+DEFINE_DEFAULT_UNARY(Not)
+DEFINE_DEFAULT_UNARY(Sin)
+DEFINE_DEFAULT_UNARY(Cos)
+DEFINE_DEFAULT_UNARY(Tan)
+DEFINE_DEFAULT_UNARY(Asin)
+DEFINE_DEFAULT_UNARY(Acos)
+DEFINE_DEFAULT_UNARY(Atan)
+DEFINE_DEFAULT_UNARY(ArbitraryUnary)
+DEFINE_DEFAULT_UNARY(Ln)
+
+DEFINE_DEFAULT_FACTOR(E)
+DEFINE_DEFAULT_FACTOR(Pi)
+DEFINE_DEFAULT_FACTOR(ArbitraryFactor)
+DEFINE_DEFAULT_FACTOR(Number)
+DEFINE_DEFAULT_FACTOR(Parameter)
+DEFINE_DEFAULT_FACTOR(SymbolicT)
+
+
+
 
 } //namespace simulator
 } //namespace hydla 

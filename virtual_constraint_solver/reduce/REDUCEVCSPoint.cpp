@@ -441,7 +441,7 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
   HYDLA_LOGGER_VCS(
     *this,
     "\n#*** End REDUCEVCSPoint::add_constraint ***");
-
+  return;
 }
 
 VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)

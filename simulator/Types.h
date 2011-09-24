@@ -43,6 +43,7 @@ typedef ask_set_t                                                positive_asks_t
 typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
+typedef std::map<std::string, int>                               continuity_map_t;
 
 typedef struct{
   boost::shared_ptr<hydla::parse_tree::Ask> ask;

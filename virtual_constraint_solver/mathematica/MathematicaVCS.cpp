@@ -122,16 +122,18 @@ bool MathematicaVCS::reset(const variable_map_t& vm, const parameter_map_t& pm)
   return vcs_->reset(vm, pm);
 }
 
+void MathematicaVCS::set_continuity(const continuity_map_t& continuity_map){
+  vcs_->set_continuity(continuity_map);
+}
 
 bool MathematicaVCS::create_maps(create_result_t &create_result)
 {
   return vcs_->create_maps(create_result);
 }
 
-
 void MathematicaVCS::add_constraint(const constraints_t& constraints)
 {
-  vcs_->add_constraint(constraints);
+  return vcs_->add_constraint(constraints);
 }
 
 

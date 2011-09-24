@@ -80,8 +80,10 @@ private:
   
   //Œ»ó‚Å‚Í1‰ño—Í‚·‚é‚ÆC–Ø‚ÌªˆÈŠO‚Ì•”•ª‚ª–³‚­‚È‚é‚æ‚¤‚É‚È‚Á‚Ä‚¢‚é‚©‚ç’ˆÓ
   void output_result_tree();
+  
+  void output_result_tree_GUI();
 
-                              
+  continuity_map_t variable_derivative_map_;
   module_set_container_sptr msc_original_;
 
   module_set_container_sptr msc_no_init_;

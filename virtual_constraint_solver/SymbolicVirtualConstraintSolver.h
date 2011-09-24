@@ -63,6 +63,7 @@ public:
   typedef hydla::simulator::module_set_sptr                  module_set_sptr;
   typedef std::vector<module_set_sptr>                       module_set_list_t;
 
+  typedef hydla::simulator::continuity_map_t                 continuity_map_t;
 
   typedef struct IntegrateResult 
   {
@@ -122,7 +123,7 @@ public:
   virtual bool create_maps(create_result_t & create_result){assert(0); return false;}
   
   /**
-   * 制約を追加する．ついでに制約ストアが無矛盾かを判定する．
+   * 制約を追加する．そしてその制約に出現する変数（とその微分値）のうち，最大の微分回数をあらわすmapを返す
    */
   virtual void add_constraint(const constraints_t& constraints){assert(0); return;}
   
@@ -136,6 +137,11 @@ public:
   virtual VCSResult check_consistency(const constraints_t& constraints){assert(0); return VCSR_FALSE;}
   virtual VCSResult check_consistency(){assert(0); return VCSR_FALSE;}
   
+  
+  /**
+   * 与えられたmapを元に，各変数の連続性を設定する．
+   */
+  virtual void set_continuity(const continuity_map_t& continuity_map){assert(0);}
   
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか

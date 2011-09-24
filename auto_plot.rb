@@ -42,7 +42,7 @@ EOS
   f.print "plot "
   index = 2
   vars.each do |v|
-    f.print "\"#{OUT_DATA}\" u 1:#{index} title \"#{v}\" w l"
+    f.print "\"#{OUT_DATA}\" u 1:#{index} title \"#{v}\" w l lw 5"
     f.print ", \\\n     " if vars.size != index-1
     index += 1
   end
