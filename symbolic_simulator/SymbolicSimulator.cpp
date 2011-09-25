@@ -182,6 +182,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 
   
   bool expanded;
+  constraints_t tmp_constraints;
   do{
     branched_ask=NULL;
     // tell制約を集める
@@ -213,7 +214,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 
     
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    switch(solver_->check_consistency()) 
+    switch(solver_->check_consistency(tmp_constraints)) 
     {
       case VCSR_TRUE:
         // do nothing
@@ -256,7 +257,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     expanded = false;
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
-    constraints_t tmp_constraints;
     while(it!=end) {
       if(opts_.default_continuity != CONT_STRONG){
         tmp_constraints.clear();
@@ -701,7 +701,7 @@ void SymbolicSimulator::output_result_tree()
 	          std::cout << "time ended\n" ;
           break;
           
-          case StateResult::ERROR:
+          case StateResult::SOME_ERROR:
             std::cout << "some error occured\n" ;
           break;
           
@@ -758,7 +758,7 @@ void SymbolicSimulator::output_result_tree_GUI()
 	    std::cout << "end" << j++ ;
           break;
           
-          case StateResult::ERROR:
+          case StateResult::SOME_ERROR:
             std::cout << "some error occured\n" ;
           break;
           

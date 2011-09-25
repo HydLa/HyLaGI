@@ -13,7 +13,7 @@ struct StateResult {
 
   typedef enum{
     TIME_LIMIT,
-    ERROR,
+    SOME_ERROR,
     INCONSISTENCY,
     ASSERTION,
     NONE
