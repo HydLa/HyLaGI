@@ -86,6 +86,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
     bool parallel_mode;
     OutputFormat output_format;
     bool dump_in_progress;
+    bool exclude_error;
     time_t output_interval;
     int output_precision;
     int approx_precision;

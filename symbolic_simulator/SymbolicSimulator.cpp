@@ -141,6 +141,7 @@ void SymbolicSimulator::simulate()
       continue;
     state->module_set_container->reset(state->visited_module_sets);
     do{
+      is_safe_ = true;
       if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
         state->module_set_container->mark_nodes();
         has_next = true;
@@ -155,7 +156,7 @@ void SymbolicSimulator::simulate()
       if(!state->module_set_container->go_next()){
         state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
       }
-    }while( state->module_set_container->go_next() && is_safe_);
+    }while( state->module_set_container->go_next() && (is_safe_ || opts_.exclude_error));
   }
   if(opts_.output_format == fmtGUI){
     output_result_tree_GUI();
@@ -407,10 +408,11 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     state_result->parent->children.push_back(state_result);
     new_state->parent_state_result = state_result;
 
-    //状態をスタックに押し込む
-    HYDLA_LOGGER_DEBUG("---push_phase_state---\n", new_state->current_time,"\n",new_state->variable_map,"\n", new_state->parameter_map);
-    push_phase_state(new_state);
-    
+    if(is_safe_){
+      //状態をスタックに押し込む
+      HYDLA_LOGGER_DEBUG("---push_phase_state---\n", new_state->current_time,"\n",new_state->variable_map,"\n", new_state->parameter_map);
+      push_phase_state(new_state);
+    }
     //出力変数無指定な場合の出力制御（全部出力）．本来ここに置くべきではない．
     if(opts_.output_variables.empty()){
       BOOST_FOREACH(const variable_map_t::value_type& i, new_state->variable_map) {
@@ -574,10 +576,11 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       //次のフェーズにおける変数の値を導出する
       HYDLA_LOGGER_DEBUG("--- calc next phase variable map ---");
       solver_->apply_time_to_vm(integrate_result.states[it].variable_map, new_state->variable_map, integrate_result.states[it].time-state->current_time);
-
-      new_state->parent_state_result = state_result;
-      HYDLA_LOGGER_MS("---push_phase_state(interval)---", it, "\n", new_state->current_time, "\n", new_state->variable_map, "\n", new_state->parameter_map, "\n"); 
-      push_phase_state(new_state);
+      if(is_safe_){
+        new_state->parent_state_result = state_result;
+        HYDLA_LOGGER_MS("---push_phase_state(interval)---", it, "\n", new_state->current_time, "\n", new_state->variable_map, "\n", new_state->parameter_map, "\n"); 
+        push_phase_state(new_state);
+      }
       if(opts_.dump_in_progress){
         output_state_result(*state_result, true, false);
       }

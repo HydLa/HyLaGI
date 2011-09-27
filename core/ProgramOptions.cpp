@@ -40,6 +40,9 @@ void ProgramOptions::init_descriptions()
      "output set of non initial module sets which might be solution by graph representation")
     ("dump-in-progress", 
      "output result of each phase in progress")
+     
+    ("exclude-error, e",  
+     "exlude cases where assertion fails")
     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")
