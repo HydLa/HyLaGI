@@ -21,10 +21,14 @@ class SymbolicValue:
 
 
   SymbolicValue();
-  //’P‚È‚é•¶š—ñ‚Í”’l‚ÆŒ©‚È‚µ‚Äó‚¯æ‚éD
+  /**
+   * ’P‚È‚é•¶š—ñ‚Í”’l‚ÆŒ©‚È‚µ‚Äó‚¯æ‚é
+   */
   SymbolicValue(const std::string &str);
   
-  //“n‚³‚ê‚½ƒm[ƒh‚ğQÆ‚·‚éSymbolicValue‚ğì‚é
+  /**
+   * “n‚³‚ê‚½ƒm[ƒh‚ğQÆ‚·‚éSymbolicValue‚ğì‚é
+   */
   SymbolicValue(const node_sptr & node);
   
   /**
@@ -54,13 +58,13 @@ class SymbolicValue:
   void set(const node_sptr&);
 
   /**
-   * SymbolicValue“¯m‚Ì‰ÁZ. 
+   * SymbolicValue“¯m‚Ì‰ÁZ
    */
   SymbolicValue& operator+=(const SymbolicValue& rhs);
   
 
   /**
-   * SymbolicValue“¯m‚ÌŒ¸Z. 
+   * SymbolicValue“¯m‚ÌŒ¸Z
    */
   SymbolicValue& operator-=(const SymbolicValue& rhs);
   
