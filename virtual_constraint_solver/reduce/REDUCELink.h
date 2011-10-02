@@ -41,33 +41,12 @@ public:
   int count_char(std::string str, char query);
 
   /*
-   * 端末上で"solve({x+y=2,3x+2y=5},{x,y});" などと入力
-   */
-  void scanf_test();
-
-  /*
-     Goal 以下の3命令を送り計算を成功させ答えをrecv
-     recvのwhileの抜ける条件を、line[0]=='('とする
-     '('の数と')'の数を数え、それぞれが一致するテキストを返り値とする
-
-
-    1: vars_:={y,yy,yyy,z,zz};
-    2: expr_:={zz - yy = 0, yyy + 10 = 0, yy = 0, True, z - y = 0, y - 10 = 0};
-    3: symbolic reval '(isconsistent vars_ expr_);
-   */
-  std::string isConsistent_test();
-
-
-  /*
    * ";end;"を終端行と判定して、ファイル入力のログを読み飛ばす
    */
   void skip_until_file_end();
 
-  void func_test(const char* filename);
-
 private:
-  boost::asio::ip::tcp::iostream s;
-  boost::asio::io_service io_service;
+  boost::asio::ip::tcp::iostream s_;
 
 };
 
