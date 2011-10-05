@@ -87,6 +87,10 @@ bool REDUCEVCS::reset(const variable_map_t& vm, const parameter_map_t& pm)
   return vcs_->reset(vm, pm);
 }
 
+void REDUCEVCS::set_continuity(const continuity_map_t& continuity_map){
+  vcs_->set_continuity(continuity_map);
+}
+
 bool REDUCEVCS::create_maps(create_result_t &create_result)
 {
   return vcs_->create_maps(create_result);

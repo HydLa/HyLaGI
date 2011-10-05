@@ -76,6 +76,10 @@ public:
     const time_t& current_time,
     const time_t& max_time);
 
+  /**
+   * 
+   */
+  virtual void set_continuity(const continuity_map_t& continuity_map);
 
 
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);

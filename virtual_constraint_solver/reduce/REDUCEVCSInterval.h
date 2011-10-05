@@ -94,6 +94,11 @@ public:
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
+  /**
+   * 
+   */
+  virtual void set_continuity(const continuity_map_t& continuity_map);
+
 private:
   typedef REDUCEStringSender::max_diff_map_t max_diff_map_t;
 
@@ -144,6 +149,7 @@ private:
   void send_pars() const;
 
   mutable REDUCELink* cl_;
+  continuity_map_t continuity_map_;
   max_diff_map_t max_diff_map_;
   constraint_store_t constraint_store_;
   constraints_t tmp_constraints_;  //ˆê“I‚É§–ñ‚ğ’Ç‰Á‚·‚é‘ÎÛ

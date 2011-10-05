@@ -75,6 +75,10 @@ bool REDUCEVCSInterval::reset(const variable_map_t& variable_map,  const paramet
   return true;
 }
 
+void REDUCEVCSInterval::set_continuity(const continuity_map_t &continuity_map){
+  continuity_map_ = continuity_map;
+}
+
 void REDUCEVCSInterval::send_init_cons(
   REDUCEStringSender& rss, 
   const max_diff_map_t& max_diff_map,

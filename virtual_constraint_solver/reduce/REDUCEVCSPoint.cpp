@@ -282,6 +282,10 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
   return true;
 }
 
+void REDUCEVCSPoint::set_continuity(const continuity_map_t& continuity_map)
+{
+  continuity_map_ = continuity_map;
+}
 
 void REDUCEVCSPoint::add_left_continuity_constraint(
     REDUCEStringSender& rss, max_diff_map_t& max_diff_map)

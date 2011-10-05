@@ -82,6 +82,11 @@ public:
       const time_t& max_time);
 
   /**
+   * 
+   */
+  virtual void set_continuity(const continuity_map_t& continuity_map);
+
+  /**
    * 内部状態の出力をおこなう
    */
   std::ostream& dump(std::ostream& s) const;
@@ -117,6 +122,7 @@ private:
 
 
   mutable REDUCELink* cl_;
+  continuity_map_t continuity_map_;
   max_diff_map_t max_diff_map_;          //現在の制約ストアに出現する中で最大の微分回数を記録しておく表．
   constraint_store_t constraint_store_;
   parameter_store_t parameter_store_;
