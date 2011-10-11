@@ -1,6 +1,6 @@
-INIT   <=> bx=1/2 /\ by=20 /\ bx'=1 /\ by'=0.
-X_MOVE <=> [](bx' = bvx /\ bvx' =   0).
-FALL   <=> [](by' = bvy /\ bvy' = -10).
+INIT   <=> bx=1/2 /\ by=20 /\ bx'=1 /\ by'=0 /\ [](bx' = bvx /\ by' = bvy).
+X_MOVE <=> [](bvx' =   0).
+FALL   <=> [](bvy' = -10).
 
 CONST  <=> [](e = 9/10).
 
