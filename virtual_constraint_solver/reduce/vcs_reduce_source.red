@@ -231,13 +231,10 @@ begin;
     if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
   >> else
   <<    
-    write("expr_:", expr_);
-    ans_:= rlqe(mymkand(expr_));
+    write("union(constraintStore_, expr_):", union(constraintStore_, expr_));
+    ans_:= rlqe(mymkand(union(constraintStore_, expr_)));
     write "ans_: ", ans_;
-    flag_:= if(ans_ <> false) then rettrue___ else retfalse___;
-    write "flag_: ", flag_;
-
-    return {flag_};
+    if(ans_ <> false) then return {rettrue___} else return {retfalse___};
   >>;
 end;
 
@@ -262,6 +259,16 @@ begin;
 
 
 end;
+
+
+procedure returnCS()$
+begin;
+  write("constraintStore_:", constraintStore_);
+  % ‰ğ‚ğ1‚Â‚¾‚¯“¾‚é
+  % TODO: Or‚Å‚Â‚È‚ª‚Á‚½•¡”‰ğ‚Ö‚Ì‘Î‰
+  return part(constraintStore_, 1);
+end;
+
 
 procedure hasInequality(expr_)$
   if(freeof(expr_, neq) and freeof(expr_, not) and

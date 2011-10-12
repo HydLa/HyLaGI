@@ -191,7 +191,8 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 
   ////////////////// óMˆ—
 
-  cl_.read_until_redeval();
+  // cl_.read_until_redeval();
+  cl_.skip_until_redeval();
 
   std::string ans = cl_.get_s_expr();
   HYDLA_LOGGER_VCS("check_less_than_ans: ", ans);
@@ -216,7 +217,8 @@ void REDUCEVCS::simplify(time_t &time)
 
   ////////////////// óMˆ—
 
-  cl_.read_until_redeval();
+  // cl_.read_until_redeval();
+  cl_.skip_until_redeval();
 
   std::string ans = cl_.get_s_expr();
   HYDLA_LOGGER_VCS("expr_time_shift_ans: ", ans);
@@ -253,7 +255,8 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
 
   ////////////////// óMˆ—
 
-  cl_.read_until_redeval();
+  // cl_.read_until_redeval();
+  cl_.skip_until_redeval();
 
   std::string ans = cl_.get_s_expr();
   HYDLA_LOGGER_VCS("expr_time_shift_ans: ", ans);

@@ -40,7 +40,8 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   HYDLA_LOGGER_VCS_SUMMARY("#*** Reset Constraint Store ***");
   
   cl_->send_string("symbolic redeval '(resetConstraintStore);");
-  cl_->read_until_redeval();
+  //  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   if(variable_map.size() == 0)
   {
@@ -123,8 +124,8 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   cl_->send_string("symbolic redeval '(addConstraint vm_str_ vars_str_);");
 
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+  //  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
 /*
   std::string vm_s_exp_str = cl_->get_s_expr();
@@ -232,22 +233,24 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
 
   cl_->send_string("symbolic redeval '(addConstraint expr_ vars_);");
-  cl_->read_until_redeval();
-  //  cl_->skip_until_redeval();
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
 
   cl_->send_string("symbolic redeval '(checkConsistency);");
-  cl_->read_until_redeval();
-  //  cl_->skip_until_redeval();
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
 
-  cl_->send_string("symbolic redeval '(convertCSToVM);");
+  // TODO:本来はexprCode付きの形式で返す関数を使うようにしたい
+  //  cl_->send_string("symbolic redeval '(convertCSToVM);");
+  cl_->send_string("symbolic redeval '(returnCS);");
 
 
   /////////////////// 受信処理                     
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+  //  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   // S式パーサを用いて、制約ストア全体を表すような木構造を得る
   std::string cs_s_exp_str = cl_->get_s_expr();
@@ -257,6 +260,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
 
   // TODO:以下のコードはor_size==1が前提
+  // TODO:不等式への対応(exprCodeを使う)
   {
     create_result_t::maps_t maps;
     variable_t symbolic_variable;
@@ -382,8 +386,8 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
   
   cl_->send_string("symbolic redeval '(addConstraint cons_ vars_);");
 
-  cl_->read_until_redeval();
-  //  cl_->skip_until_redeval();
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
 
   //  sc.create_max_diff_map(max_diff_map_);
@@ -462,8 +466,8 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
   /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",

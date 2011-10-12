@@ -451,8 +451,8 @@ VCSResult REDUCEVCSInterval::check_consistency_sub()
 /////////////////// ŽóMˆ—
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+  //  cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("add_constraint_ans: ",
@@ -578,8 +578,8 @@ VCSResult REDUCEVCSInterval::integrate(
 /////////////////// ŽóMˆ—
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-  cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("integrate_ans: ",
@@ -797,7 +797,8 @@ void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
     
     ////////////////// ŽóMˆ—
 
-    cl_->read_until_redeval();
+    // cl_->read_until_redeval();
+    cl_->skip_until_redeval();
 
     std::string ans = cl_->get_s_expr();
     HYDLA_LOGGER_VCS("apply_time_to_expr_ans: ", ans);
