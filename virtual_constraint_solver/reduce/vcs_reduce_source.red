@@ -2,7 +2,8 @@ load_package sets;
 
 % グローバル変数
 % constraintStore_: 現在扱っている制約集合（リスト形式）
-constraintStore_ = {};
+% csVariables_: 制約ストア内に出現する変数の一覧（定数未対応）
+%
 
 
 %MathematicaでいうFold関数
@@ -154,6 +155,34 @@ begin scalar ans_;
 end;
 
 
+
+% PPにおける制約ストアのリセット
+
+procedure resetConstraintStore()$
+begin;
+  constraintStore_ := {};
+  csVariables_ := {};
+  write("constraintStore_: ", constraintStore_);
+  write("csVariables_: ", csVariables_);
+
+end;
+
+% PPにおける制約ストアへの制約の追加
+
+procedure addConstraint(cons_, vars_)$
+begin;
+  write("in addConstraint");
+  write("cons_: ", cons_);
+  write("vars_:", vars_);
+
+  constraintStore_ := union(constraintStore_, cons_);
+  csVariables_ := union(csVariables_, vars_);
+  write("constraintStore_: ", constraintStore_);
+  write("csVariables_: ", csVariables_);
+
+end;
+
+
 % PPにおける無矛盾性の判定
 % 返り値は{ans, {{変数名 = 値},...}} の形式
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
@@ -164,7 +193,7 @@ end;
 procedure isConsistent(expr_,vars_)$
 begin;
   scalar flag_, ans_, tmp_, mode_;
-write "isConsistent: ";
+  write "isConsistent: ";
 
 % TODO sqrt(2)<>0をより汎用的な値に適用する
 % tmp_:=rlqe(ex(vars_, mymkand(expr_) and sqrt(2)<>0));

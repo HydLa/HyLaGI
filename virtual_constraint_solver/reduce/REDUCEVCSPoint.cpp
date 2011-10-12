@@ -38,6 +38,9 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 {
 
   HYDLA_LOGGER_VCS_SUMMARY("#*** Reset Constraint Store ***");
+  
+  cl_->send_string("symbolic redeval '(resetConstraintStore);");
+  cl_->read_until_redeval();
 
   if(variable_map.size() == 0)
   {
@@ -48,10 +51,11 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 
   SExpConverter sc;
 
-  // 変数表の中身を表すようなS式の文字列vm_s_exp_strを得たい
-  // まずは、REDUCEへ送る文字列vm_strを作成する
+  // まずは、REDUCEへ送る文字列vm_strとvars_strを作成する
   std::ostringstream vm_str;
+  std::ostringstream vars_str;
   vm_str << "{";
+  vars_str << "{";
 
   variable_map_t::variable_list_t::const_iterator it =
     variable_map.begin();
@@ -64,7 +68,10 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
     const value_t&    value = it->second;
 
     if(!value.is_undefined()) {
-      if(!first_element) vm_str << ", ";
+      if(!first_element){
+        vm_str << ", ";
+        vars_str << ",";
+      }
 
       vm_str << "equal(";
 
@@ -76,12 +83,20 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
                << ", t, "
                << variable.derivative_count
                << "))";
+        vars_str << "prev(df("
+                 << variable.name
+                 << ", t, "
+                 << variable.derivative_count
+                 << "))";
       }
       else
       {
         vm_str << "prev("
                << variable.name
                << ")";
+        vars_str << "prev("
+                 << variable.name
+                 << ")";
       }
 
       // value部分
@@ -89,28 +104,29 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
              << sc.convert_symbolic_value_to_reduce_string(value)
              << ")"; // equalの閉じ括弧
 
-
-      // 制約ストア内の変数一覧にvariableを追加
-      constraint_store_.second.insert(
-        boost::make_tuple(variable.name,
-                          variable.derivative_count,
-                          true));
       first_element = false;
     }
   }
 
   vm_str << "}"; // listの閉じ括弧
+  vars_str << "}"; // listの閉じ括弧
   HYDLA_LOGGER_VCS("vm_str: ", vm_str.str());  
+  HYDLA_LOGGER_VCS("vars_str: ", vars_str.str());  
 
-  cl_->send_string("str_:=");
+
+  cl_->send_string("vm_str_:=");
   cl_->send_string(vm_str.str());
   cl_->send_string(";");
-  cl_->send_string("symbolic redeval '(getSExpFromString str_);");
+  cl_->send_string("vars_str_:=");
+  cl_->send_string(vars_str.str());
+  cl_->send_string(";");
+  cl_->send_string("symbolic redeval '(addConstraint vm_str_ vars_str_);");
 
 
   cl_->read_until_redeval();
 //  cl_->skip_until_redeval();
 
+/*
   std::string vm_s_exp_str = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("vm_s_exp_str: ", vm_s_exp_str);
   
@@ -129,6 +145,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
     and_cons_set.insert(new_reduce_value);
   }
   constraint_store_.first.insert(and_cons_set);
+*/
 
   HYDLA_LOGGER_VCS(*this);
 
@@ -404,52 +421,39 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
 
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::add_constraint ***");
 
-  SExpConverter sc;
+  //  SExpConverter sc;
 
-/*
-  // TODO: いちいち送るのも非効率なので、文字列化してストアに入れることを検討する？
-  std::stringstream added_constraints_str;
-  added_constraints_str << "{";
+  // TODO: Orへの対応？
+
+  REDUCEStringSender rss(*cl_);
+
+  // cons_を渡す
+  HYDLA_LOGGER_VCS("----- send cons_ -----");
+  cl_->send_string("cons_:={");
+  bool first_element = true;
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
   for(; it!=end; ++it)
-  {
-    if(it != constraints.begin()) added_constraints_str << ",";
-    added_constraints_str << sc.convert_node_to_reduce_string(*it);
-  }
-  added_constraints_str << "}";
-  HYDLA_LOGGER_VCS("added_constraints_str: ", added_constraints_str.str());  
+    {
+      if(!first_element) cl_->send_string(",");
+      rss.put_node(*it);
+      first_element = false;
+    }
+  cl_->send_string("};");
 
-  cl_->send_string("str_:=union(");
-  send_cs();
-  cl_->send_string(",");
-  cl_->send_string(added_constraints_str.str());
-  cl_->send_string(");");
-  cl_->send_string("symbolic redeval '(getSExpFromString str_);");
+  // vars_を渡す
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=");
+  rss.put_vars();
+  cl_->send_string(";");
 
+  
+  cl_->send_string("symbolic redeval '(addConstraint cons_ vars_);");
 
   cl_->read_until_redeval();
-//  cl_->skip_until_redeval();
+  //  cl_->skip_until_redeval();
 
-  std::string new_cs_s_exp_str = cl_->get_s_expr();
-  HYDLA_LOGGER_VCS("new_cs_s_exp_str: ", new_cs_s_exp_str);
-
-  // sp_にnew_cs_s_exp_strを読み込ませて、S式のパースツリーを構築し、先頭のポインタを得る
-  // TODO: Orへの対応？
-  sp_.parse_main(new_cs_s_exp_str.c_str());
-  const_tree_iter_t tree_root_ptr = sp_.get_tree_iterator();
-
-  for(int i=0; i<tree_root_ptr->children.size(); i++){
-    const_tree_iter_t and_cons_ptr = tree_root_ptr->children.begin()+i;
-    std::string and_cons_str = sp_.get_string_from_tree(and_cons_ptr);
-
-    REDUCEValue new_reduce_value;
-    new_reduce_value.set(and_cons_str);
-    and_cons_set.insert(new_reduce_value);
-  }
-*/
-
-  // TODO: Orへの対応？
+  /*
   std::set<REDUCEValue> and_cons_set = *(constraint_store_.first.begin());
   constraint_store_.first.erase(constraint_store_.first.begin());
 
@@ -464,8 +468,9 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
 
   constraint_store_.first.insert(and_cons_set);
   constraint_store_.second.insert(sc.vars_begin(), sc.vars_end());
+  */
 
-  sc.create_max_diff_map(max_diff_map_);
+  //  sc.create_max_diff_map(max_diff_map_);
 
   HYDLA_LOGGER_VCS(
     *this,
