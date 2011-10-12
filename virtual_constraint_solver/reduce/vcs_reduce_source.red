@@ -138,8 +138,10 @@ on nat;
 
 operator prev;
 
-rettrue___ := "RETTRUE___";
-retfalse___ := "RETFALSE___";
+%rettrue___ := "RETTRUE___";
+%retfalse___ := "RETFALSE___";
+rettrue___ := 1;
+retfalse___ := 2;
 
 % 関数呼び出しはredevalを経由させる
 % <redeval> end:の次が最終行
@@ -183,17 +185,27 @@ begin;
 end;
 
 
+% (制限 andを受け付けない) TODO 制限への対応
+% (制限 trueを受け付けない) TODO 制限への対応
+
+procedure checkConsistencyWithTmpCons(expr_,vars_)$
+begin;
+  scalar ans_;
+  ans_:= {part(checkConsistencyBySolveOrRlqe(expr_, vars_), 1)};
+  write("ans_ in checkConsistencyWithTmpCons: ", ans_);
+
+  return ans_;
+end;
+
+
 % PPにおける無矛盾性の判定
 % 返り値は{ans, {{変数名 = 値},...}} の形式
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
 
-% (制限 andを受け付けない) TODO 制限への対応
-% (制限 trueを受け付けない) TODO 制限への対応
-
-procedure isConsistent(expr_,vars_)$
+procedure checkConsistencyBySolveOrRlqe(expr_, vars_)$
 begin;
   scalar flag_, ans_, tmp_, mode_;
-  write "isConsistent: ";
+  write "checkConsistencyBySolveOrRlqe: ";
 
 % TODO sqrt(2)<>0をより汎用的な値に適用する
 % tmp_:=rlqe(ex(vars_, mymkand(expr_) and sqrt(2)<>0));
@@ -215,11 +227,8 @@ begin;
     write("union(constraintStore_, expr_):", union(constraintStore_, expr_));
     write("union(csVariables_, vars_):", union(csVariables_, vars_));
     ans_:=solve(union(constraintStore_, expr_), union(csVariables_, vars_));
-    write "ans_: ", ans_;
-    flag_:= if(ans_ <> {}) then rettrue___ else retfalse___;
-    write "flag_: ", flag_;
-
-    return {flag_, ans_};
+    write "ans_ in checkConsistencyBySolveOrRlqe: ", ans_;
+    if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
   >> else
   <<    
     write("expr_:", expr_);
@@ -232,6 +241,27 @@ begin;
   >>;
 end;
 
+
+procedure checkConsistency()$
+begin;
+  scalar sol_;
+  sol_:= checkConsistencyBySolveOrRlqe(constraintStore_, csVariables_);
+  write("sol_ in checkConsistency: ", sol_);
+  % ret_codeがrettrue___、つまり1であるかどうかをチェック
+  if(part(sol_, 1) = 1) then constraintStore_:= part(sol_, 2);
+  write("constraintStore_: ", constraintStore_);
+
+end;
+
+
+% 式を{(変数名), (関係演算子コード), (値のフル文字列)}の形式に変換する
+
+procedure convertCSToVM()$
+begin;
+  write("constraintStore_:", constraintStore_);
+
+
+end;
 
 procedure hasInequality(expr_)$
   if(freeof(expr_, neq) and freeof(expr_, not) and
@@ -760,7 +790,7 @@ end;
 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%
 expr_:= {yyy = -10, y = 10, yy = 0, z = y, zz = yy}; vars_:={y, z, yy, zz, yyy, y, z, yy, zz};
-symbolic redeval '(isconsistent expr_ vars_);
+symbolic redeval '(checkConsistencyBySolveOrRlqe expr_ vars_);
 clear expr_, pexpr_, vars_;
 
 

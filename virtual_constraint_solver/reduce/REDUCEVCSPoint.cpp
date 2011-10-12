@@ -214,18 +214,42 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
   HYDLA_LOGGER_VCS("#*** REDUCEVCSPoint::create_variable_map ***\n");
 
-  /*
-  // S式パーサを用いて、制約ストア全体を表すような木構造を再び得る
-  cl_->send_string("str_:=");
-  send_cs();
-  cl_->send_string(";");
-  cl_->send_string("symbolic redeval '(getSExpFromString str_);");
-  */
+  REDUCEStringSender rss(*cl_);
 
+  /////////////////// 送信処理
+
+  // expr_を渡す
+  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  cl_->send_string("expr_:=");
+  add_left_continuity_constraint(continuity_map_, rss);
+  cl_->send_string(";");
+
+  // vars_を渡す
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=");
+  rss.put_vars();
+  cl_->send_string(";");
+
+
+  cl_->send_string("symbolic redeval '(addConstraint expr_ vars_);");
+  cl_->read_until_redeval();
+  //  cl_->skip_until_redeval();
+
+
+  cl_->send_string("symbolic redeval '(checkConsistency);");
+  cl_->read_until_redeval();
+  //  cl_->skip_until_redeval();
+
+
+  cl_->send_string("symbolic redeval '(convertCSToVM);");
+
+
+  /////////////////// 受信処理                     
 
   cl_->read_until_redeval();
 //  cl_->skip_until_redeval();
 
+  // S式パーサを用いて、制約ストア全体を表すような木構造を得る
   std::string cs_s_exp_str = cl_->get_s_expr();
   HYDLA_LOGGER_VCS("cs_s_exp_str: ", cs_s_exp_str);
   sp_.parse_main(cs_s_exp_str.c_str());
@@ -324,88 +348,6 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
   }
   cl_->send_string("}");  
 
-  /*
-  cl_->send_string("union({");
-  // 制約ストア中の変数のうち、集めたtell制約に出現する最大微分回数より小さい微分回数であるもののみ追加
-  HYDLA_LOGGER_VCS("--- in cs_var ---");
-
-  constraint_store_vars_t::const_iterator cs_vars_it  = constraint_store_.second.begin();
-  constraint_store_vars_t::const_iterator cs_vars_end = constraint_store_.second.end();
-  bool first_element = true;
-  for(; cs_vars_it!=cs_vars_end; ++cs_vars_it) {
-    max_diff_map_t::const_iterator md_it =
-      max_diff_map.find(cs_vars_it->get<0>());
-    if(md_it!=max_diff_map.end() &&
-       md_it->second  > cs_vars_it->get<1>())
-    {
-      if(!first_element) cl_->send_string(",");
-      // Prev変数側
-      // 変数名
-      rss.put_var(
-        boost::make_tuple(cs_vars_it->get<0>(),
-                          cs_vars_it->get<1>(),
-                          true));
-
-      cl_->send_string("=");
-
-      // Now変数側
-      // 変数名
-      rss.put_var(
-        boost::make_tuple(cs_vars_it->get<0>(),
-                          cs_vars_it->get<1>(),
-                          false));
-      first_element = false;
-    }
-  }
-  cl_->send_string("},{");
-
-
-  // 集めたtell制約内の変数についても調べる
-  // 時刻0（制約ストアが空）対策のため
-  HYDLA_LOGGER_VCS("--- in vars ---");
-
-  // max_diff_mapについてつくる
-  max_diff_map_t::const_iterator md_it = max_diff_map.begin();
-  max_diff_map_t::const_iterator md_end = max_diff_map.end();
-  first_element = true;
-  for(; md_it!=md_end; ++md_it) {
-    if(constraint_store_.second.find(md_it->first)==constraint_store_.second.end()){
-      for(int i=0; i<md_it->second; ++i){
-        if(!first_element) cl_->send_string(",");
-        // Prev変数側
-        // 変数名
-        rss.put_var(
-          boost::make_tuple(md_it->first,
-                            i,
-                            true));
-
-        cl_->send_string("=");
-
-        // Now変数側
-        // 変数名
-        rss.put_var(
-          boost::make_tuple(md_it->first,
-                            i,
-                            false));
-
-        // 制約ストア内の変数扱いする
-        // こうしないと後でvars_を送る際にprev変数達を送れない（時刻0のPPのみでの話）
-        // TODO:要検討
-        constraint_store_.second.insert(boost::make_tuple(md_it->first,
-                                                          i,
-                                                          true));
-
-        constraint_store_.second.insert(boost::make_tuple(md_it->first,
-                                                          i,
-                                                          false));
-        first_element = false;
-      }
-    }
-  }  
-  cl_->send_string("})");
-
-  */
-
 }
 
 void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
@@ -414,8 +356,6 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::add_constraint ***");
 
   //  SExpConverter sc;
-
-  // TODO: Orへの対応？
 
   REDUCEStringSender rss(*cl_);
 
@@ -445,22 +385,6 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
   cl_->read_until_redeval();
   //  cl_->skip_until_redeval();
 
-  /*
-  std::set<REDUCEValue> and_cons_set = *(constraint_store_.first.begin());
-  constraint_store_.first.erase(constraint_store_.first.begin());
-
-  constraints_t::const_iterator it = constraints.begin();
-  constraints_t::const_iterator end = constraints.end();
-  for(; it!=end; ++it)
-  {
-    REDUCEValue new_reduce_value;
-    new_reduce_value.set(sc.convert_symbolic_value_to_reduce_string(*it));
-    and_cons_set.insert(new_reduce_value);
-  }
-
-  constraint_store_.first.insert(and_cons_set);
-  constraint_store_.second.insert(sc.vars_begin(), sc.vars_end());
-  */
 
   //  sc.create_max_diff_map(max_diff_map_);
 
@@ -510,7 +434,7 @@ VCSResult REDUCEVCSPoint::check_consistency(const constraints_t& constraints)
 
   send_constraint(constraints);
 
-  cl_->send_string("symbolic redeval '(isconsistent expr_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ vars_);");
 
   VCSResult result = check_consistency_receive();
 
@@ -525,7 +449,7 @@ VCSResult REDUCEVCSPoint::check_consistency()
 
   send_constraint(constraints_t());
 
-  cl_->send_string("symbolic redeval '(isconsistent expr_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ vars_);");
 
   VCSResult result = check_consistency_receive();
 
@@ -563,13 +487,13 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
     // ソルバエラー
     result = VCSR_SOLVER_ERROR;
   }
-  else if(ret_code_str==" \"RETTRUE___\"") {
+  else if(ret_code_str=="1") {
     // 充足
     // TODO: スペースや""が残らないようにパーサを修正
     result = VCSR_TRUE;
   }
   else {
-    assert(ret_code_str == " \"RETFALSE___\"");
+    assert(ret_code_str == "2");
     result = VCSR_FALSE;
   }
 
