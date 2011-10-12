@@ -1,5 +1,10 @@
 load_package sets;
 
+% グローバル変数
+% constraintStore_: 現在扱っている制約集合（リスト形式）
+constraintStore_ = {};
+
+
 %MathematicaでいうFold関数
 procedure myFoldLeft(func_, init_, list_)$
   if(list_ = {}) then init_

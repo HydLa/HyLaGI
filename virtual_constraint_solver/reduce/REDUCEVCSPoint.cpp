@@ -288,11 +288,34 @@ void REDUCEVCSPoint::set_continuity(const continuity_map_t& continuity_map)
 }
 
 void REDUCEVCSPoint::add_left_continuity_constraint(
-    REDUCEStringSender& rss, max_diff_map_t& max_diff_map)
+    const continuity_map_t& continuity_map, REDUCEStringSender& rss)
 {
   HYDLA_LOGGER_VCS("---- Begin REDUCEVCSPoint::add_left_continuity_constraint ----");
 
+  cl_->send_string("{");
+  continuity_map_t::const_iterator cm_it = continuity_map.begin();
+  continuity_map_t::const_iterator cm_end = continuity_map.end();
+  bool first_element = true;
+  for(; cm_it!=cm_end; ++cm_it) {
+    for(int i=0; i < abs(cm_it->second); ++i){
+      if(!first_element) cl_->send_string(",");
 
+      // Prev変数側
+      // 変数名
+      rss.put_var(boost::make_tuple(cm_it->first, i, true));
+
+      cl_->send_string("=");
+
+      // Now変数側
+      // 変数名
+      rss.put_var(boost::make_tuple(cm_it->first, i, false));
+
+      first_element = false;
+    }
+  }
+  cl_->send_string("}");  
+
+  /*
   cl_->send_string("union({");
   // 制約ストア中の変数のうち、集めたtell制約に出現する最大微分回数より小さい微分回数であるもののみ追加
   HYDLA_LOGGER_VCS("--- in cs_var ---");
@@ -372,6 +395,8 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
   }  
   cl_->send_string("})");
 
+  */
+
 }
 
 void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
@@ -448,103 +473,33 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
   return;
 }
 
-VCSResult REDUCEVCSPoint::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks)
+void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
 {
+  HYDLA_LOGGER_VCS(
+                   "#*** Begin REDUCEVCSPoint::send_constraint ***");
 
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::check_entailment ***",
-                   "ask: ", *negative_ask);
-  REDUCEStringSender rss = REDUCEStringSender(*cl_);
+  REDUCEStringSender rss(*cl_);
 
+  /*
+  cl_->put_function("And", 2);
+  cl_->put_function("And", constraints.size());
+  constraints_t::const_iterator it = constraints.begin();
+  constraints_t::const_iterator end = constraints.end();
+  for(; it!=end; ++it)
+    {
+      rss.put_node(*it, PacketSender::VA_None);
+    }
 
-/////////////////// 送信処理
-
-  // checkentailment(guard_, store_, vars_)を渡したい
-
-  HYDLA_LOGGER_VCS("----- send guard_ -----");
-  // ask制約のガードの式を得てMathematicaに渡す
-  cl_->send_string("guard_:=");
-  rss.put_node(negative_ask->get_guard());
-  cl_->send_string(";");  
-
-
-  // 制約ストアとパラメタストアから式を得てMathematicaに渡す
-  HYDLA_LOGGER_VCS("----- send store_ -----");
-  cl_->send_string("store_:=union(");
-  send_cs();
-  cl_->send_string(",");
-  send_ps();
-  cl_->send_string(");");
-
+  add_left_continuity_constraint(continuity_map_, rss);
 
   // varsを渡す
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=union(union(");
-
-  // collected_tells内の変数一覧を渡す
   rss.put_vars();
-  cl_->send_string(",");
 
-  // 制約ストア内に出現する変数一覧も渡す
-  send_cs_vars();
-  cl_->send_string("),");
-
-  // パラメタ一覧も渡す
-  send_pars();
-  cl_->send_string(");");
-
-
-  cl_->send_string("symbolic redeval '(checkentailment guard_ store_ vars_);");
-
-
-/////////////////// 受信処理
-  HYDLA_LOGGER_VCS( "--- receive ---");
-
-//  cl_->read_until_redeval();
-  cl_->skip_until_redeval();
-
-  std::string ans = cl_->get_s_expr();
-  HYDLA_LOGGER_VCS("check_entailment_ans: ",
-                   ans);
-
-  VCSResult result;
-  
-  // TODO:S式パーサを使う→？
-/*  
-  // S式パーサで読み取る
-  sp_.parse_main(ans.c_str());
-
-  // {コード}の構造
-  const_tree_iter_t tree_root_ptr = sp_.get_tree_iterator();
-
-  // コードを取得
-  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
-  std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
-  HYDLA_LOGGER_VCS("ret_code_str: ",
-                   ret_code_str);
-*/
-
-
-//  HYDLA_LOGGER_VCS(*this);
-//  sp_.dump_tree(*(constraint_store_.first.begin()), 0);
-  
-  if(ans == "(list ccp_solver_error___)"){
-    // ソルバエラー
-    result = VCSR_SOLVER_ERROR;
-  }
-  else if(ans == "ccp_entailed___") {
-    result = VCSR_TRUE;
-    HYDLA_LOGGER_VCS_SUMMARY("entailed");
-  }
-  else if(ans == "ccp_not_entailed___") {
-    result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("not entailed");
-  }
-  else if(ans == "(list ccp_unknown___)"){
-    assert(ans == "(list ccp_unknown___)");
-    result = VCSR_UNKNOWN;
-  }
-
-  return result;
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::send_constraint ***");
+  continuity_map_t continuity_map;
+  rss.create_max_diff_map(continuity_map);
+  */
+  return;
 }
 
 VCSResult REDUCEVCSPoint::check_consistency(const constraints_t& constraints)
@@ -681,7 +636,7 @@ VCSResult REDUCEVCSPoint::check_consistency_sub()
   HYDLA_LOGGER_VCS("--- send left_continuity ---");
   max_diff_map_t tmp_max_diff_map = max_diff_map_;
   rss.create_max_diff_map(tmp_max_diff_map);
-  add_left_continuity_constraint(rss, tmp_max_diff_map);
+  add_left_continuity_constraint(continuity_map_, rss);
   cl_->send_string(");");
 
 
@@ -740,6 +695,18 @@ VCSResult REDUCEVCSPoint::check_consistency_sub()
 
   return result;
   
+}
+
+VCSResult REDUCEVCSPoint::check_consistency_receive()
+{
+  /////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
+
+  VCSResult result;
+
+
+
+  return result;  
 }
 
 VCSResult REDUCEVCSPoint::integrate(

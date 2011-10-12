@@ -61,11 +61,6 @@ public:
   virtual void add_constraint(const constraints_t& constraints);
   
   /**
-   * 現在の制約ストアから与えたaskが導出可能かどうか
-   */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t &appended_asks);
-
-  /**
    * 制約ストアが無矛盾かを判定する．
    * 引数で制約を渡された場合は一時的に制約ストアに追加する．
    */
@@ -108,7 +103,17 @@ private:
   /**
    * 左連続性に関する制約を加える
    */
-  void add_left_continuity_constraint(REDUCEStringSender& rss, max_diff_map_t& max_diff_map);
+  void add_left_continuity_constraint(const continuity_map_t& continuity_map, REDUCEStringSender &rss);
+
+  /**
+   * 制約を出現する変数や左連続制約とともに送信する
+   */
+  void send_constraint(const constraints_t& constraints);
+
+  /**
+   * check_consistency の受信部分
+   */
+  VCSResult check_consistency_receive();
 
   /**
    * 制約ストアがtrueであるかどうか
