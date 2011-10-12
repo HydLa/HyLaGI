@@ -20,11 +20,18 @@ begin;
   scalar bak_precision, ans, margin;
 
   write "-----myif-----";
+  write("x: ", x, " op: ", op, " y: ", y);
 
   if(x=y) then <<
     write "x=y= ", x;
     if(op = geq_ or op = leq_) then return t
     else return nil
+  >>;
+
+  if(not freeof({x,y}, INFINITY)) then <<
+    ans:= myInfinityIf(x, op, y);
+    write("ans after myInfinityIf: ", ans);
+    return ans;
   >>;
   
   bak_precision := precision 0;
@@ -61,6 +68,17 @@ else if (op = lessp_) then
 end;
 
 
+procedure myInfinityIf(x, op, y)$
+begin;
+  scalar ans;
+  if(x=INFINITY) then 
+    (if (op = geq_ or op = greaterp_) then ans:=t else ans:=nil)
+  else
+    (if (op = leq_ or op = lessp_) then ans:=t else ans:=nil);
+  return ans;
+end;
+
+
 procedure getf(x,lst)$
 if(lst={}) then nil
 	else if(x=lhs(first(lst))) then rhs(first(lst))
@@ -78,14 +96,26 @@ if(x={}) then
   else	if(y={}) then x
 	else if(myif(x,greaterp_,y,30)) then y else x$
 
-procedure myfind(x,lst)$
-%入力: IP開始時の時刻t, 次の時刻候補のリスト
+procedure myFindMinimumNatPPTime(x,lst)$
+%入力: 現段階での最小PP時刻x, 次の時刻候補のリスト
 %出力: 次のPP開始時の時刻
+% 0より小さい値はlstに渡されないという前提（他の処理で実現されている）
 if(rest(lst)={}) then
-  if(myif(x,lessp_,first(lst),30)) then first(lst) else {}
-else if(myif(x,lessp_,first(lst),30))
-    then mymin(first(lst),myfind(x,rest(lst)))
-else myfind(x,rest(lst))$
+<<
+  if(myif(x,lessp_,first(lst),30)) then x else first(lst)
+>>
+else 
+<<
+  if(myif(x,lessp_,first(lst),30)) then 
+  <<
+    myFindMinimumNatPPTime(x,rest(lst))
+  >>
+  else 
+  <<
+    myFindMinimumNatPPTime(first(lst),rest(lst))
+  >>
+>>$
+
 
 %待ち行列I関係
 procedure enq(state,queue);
@@ -598,7 +628,7 @@ begin;
     if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
     else if(mode_ = MINTIME___) then
       if(mymin(part(tExpr_,2),0) neq part(tExpr_,2)) then infCheckAns_:= {part(tExpr_, 2)}
-      else infCheckAns_:= {}
+      else infCheckAns_:= {INFINITY}
   % TODO:不等式の場合への対応
   else 
     if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
@@ -623,7 +653,7 @@ begin;
   % TODO:Solver error処理
 
   tmpDiscCause_:= sub(tmpSol_, discCause_);
-  write("tmpDiscCause_:", tmpDiscCause);
+  write("tmpDiscCause_:", tmpDiscCause_);
 
   tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, vars_)); 
   write("tmpVarMap_:", tmpVarMap_);
@@ -664,14 +694,14 @@ begin;
   scalar minTList_, minT_, ans_;
 
   minTList_:= union(for each x in discCause_ join calcMinTime(x));
-  write("minTList_: ", minTList_);
+  write("minTList_ in calcNextPointPhaseTime: ", minTList_);
 
   if(not freeof(minTList_, error)) then return error;
 
-  minT_:= myfind(0, minTList_);
+  minT_:= myFindMinimumNatPPTime(maxTime_, minTList_);
   write("minT_: ", minT_);
 
-  if(mymin(minT_, maxTime_) = minT_) then ans_:= {minT_, 0}
+  if(mymin(minT_, maxTime_) neq maxTime_) then ans_:= {minT_, 0}
   else ans_:= {maxTime_, 1}; 
   write("ans_: ", ans_);
 
@@ -695,7 +725,7 @@ end;
 
 procedure calcMinTime(integAsk_)$
 begin;
-  scalar sol_, minTList_;
+  scalar sol_, minTList_, singletonMinTList_;
   write("in calcMinTime");
   write("integAsk_: ", integAsk_);
 
@@ -708,11 +738,14 @@ begin;
   sol_:= solve(integAsk_, t);
 
   minTList_:= union(for each x in sol_ join checkInfUnit(x, MINTIME___));  
-  write("minTList_: ", minTList_);
+  write("minTList_ in calcMinTime: ", minTList_);
+
+  singletonMinTList_:= {myFindMinimumNatPPTime(Infinity, minTList_)};
+  write("singletonMinTList_: ", singletonMinTList_);
 
   % パラメタ無しなら解は1つになるはず
-  if(length(minTList_) neq 1) then return {error};
-  return minTList_;
+  if(length(singletonMinTList_) neq 1) then return {error};
+  return singletonMinTList_;
 
 end;
 
