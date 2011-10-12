@@ -212,9 +212,9 @@ begin;
 
   if(mode_=SOLVE) then
   <<
-    write("expr_:", expr_);
-    write("vars_:", vars_);
-    ans_:=solve(expr_, vars_);
+    write("union(constraintStore_, expr_):", union(constraintStore_, expr_));
+    write("union(csVariables_, vars_):", union(csVariables_, vars_));
+    ans_:=solve(union(constraintStore_, expr_), union(csVariables_, vars_));
     write "ans_: ", ans_;
     flag_:= if(ans_ <> {}) then rettrue___ else retfalse___;
     write "flag_: ", flag_;

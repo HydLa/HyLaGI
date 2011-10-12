@@ -147,8 +147,6 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   constraint_store_.first.insert(and_cons_set);
 */
 
-  HYDLA_LOGGER_VCS(*this);
-
   return true;
 }
 
@@ -214,21 +212,15 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
   // TODO: 不等式及び記号定数への対応
 
-  HYDLA_LOGGER_VCS(
-    "#*** REDUCEVCSPoint::create_variable_map ***\n",
-    "--- constraint_store ---\n",
-    *this);
+  HYDLA_LOGGER_VCS("#*** REDUCEVCSPoint::create_variable_map ***\n");
 
-  size_t or_size = constraint_store_.first.size();
-  HYDLA_LOGGER_VCS("or_size: ", or_size);
-  // TODO: 複数解に対応
-  assert(or_size==1);
-
+  /*
   // S式パーサを用いて、制約ストア全体を表すような木構造を再び得る
   cl_->send_string("str_:=");
   send_cs();
   cl_->send_string(";");
   cl_->send_string("symbolic redeval '(getSExpFromString str_);");
+  */
 
 
   cl_->read_until_redeval();
@@ -472,9 +464,7 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
 
   //  sc.create_max_diff_map(max_diff_map_);
 
-  HYDLA_LOGGER_VCS(
-    *this,
-    "\n#*** End REDUCEVCSPoint::add_constraint ***");
+  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSPoint::add_constraint ***");
   return;
 }
 
@@ -485,48 +475,46 @@ void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
 
   REDUCEStringSender rss(*cl_);
 
-  /*
-  cl_->put_function("And", 2);
-  cl_->put_function("And", constraints.size());
+  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  cl_->send_string("expr_:=union({");
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
+  bool first_element = true;
   for(; it!=end; ++it)
     {
-      rss.put_node(*it, PacketSender::VA_None);
+      if(!first_element) cl_->send_string(",");
+      rss.put_node(*it);
+      first_element = false;
     }
+  cl_->send_string("},");
 
   add_left_continuity_constraint(continuity_map_, rss);
+  cl_->send_string(");");
+
 
   // varsを渡す
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=");
   rss.put_vars();
+  cl_->send_string(";");
 
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::send_constraint ***");
   continuity_map_t continuity_map;
   rss.create_max_diff_map(continuity_map);
-  */
   return;
 }
 
 VCSResult REDUCEVCSPoint::check_consistency(const constraints_t& constraints)
 {
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::check_consistency(tmp) ***");
-  tmp_constraints_ = constraints;
 
-  VCSResult result = check_consistency_sub();
-  switch(result){
-    default: assert(0); break;
-    case VCSR_TRUE:
-      HYDLA_LOGGER_VCS_SUMMARY("consistent");
-      break;
-    case VCSR_FALSE:
-      HYDLA_LOGGER_VCS_SUMMARY("inconsistent");//矛盾
-    case VCSR_SOLVER_ERROR:
-      break;
-  }
-  tmp_constraints_.clear();
+  send_constraint(constraints);
+
+  cl_->send_string("symbolic redeval '(isconsistent expr_ vars_);");
+
+  VCSResult result = check_consistency_receive();
+
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::check_consistency(tmp) ***");
-  HYDLA_LOGGER_VCS(
-    *this);
   return result;
 }
 
@@ -535,133 +523,20 @@ VCSResult REDUCEVCSPoint::check_consistency()
   HYDLA_LOGGER_VCS(
     "#*** Begin REDUCEVCSPoint::check_consistency() ***");
 
-  VCSResult result = check_consistency_sub();
-
-  switch(result){
-    default: assert(0); break;
-    case VCSR_TRUE:
-    {
-      HYDLA_LOGGER_VCS_SUMMARY("consistent");
-      // 制約ストアをリセット
-      //    reset();
-      constraint_store_.first.clear();
-
-      receive_constraint_store(constraint_store_);
-    }
-    break;
-    case VCSR_FALSE:
-    {
-      HYDLA_LOGGER_VCS_SUMMARY("inconsistent");//矛盾
-      // 制約ストアをリセット
-      //    reset();
-      constraint_store_.first.clear();
-    }
-    break;
-    case VCSR_SOLVER_ERROR:
-      break;
-  }
-  HYDLA_LOGGER_VCS(
-    *this,
-    "\n#*** End REDUCEVCSPoint::check_consistency() ***");
-  return result;
-}
-
-void REDUCEVCSPoint::receive_constraint_store(constraint_store_t& constraint_store){
-
-  HYDLA_LOGGER_VCS( "--- REDUCEVCSPoint::receive constraint store---");
-  // 制約ストア構築
-  // 制約間のOrに関してはsetで保持
-  // TODO:出来ればvectorあたりで扱いたいがその場合resetあたりでもう少し適切な処理が必要か
-  const_tree_iter_t tree_root_ptr = sp_.get_tree_iterator();
-  const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
-  const_tree_iter_t or_list_ptr = ret_code_ptr+1;
-  size_t or_size = or_list_ptr->children.size();
-  HYDLA_LOGGER_VCS( "or_size: ", or_size);
-
-  for(size_t i=0; i<or_size; i++)
-  {
-    const_tree_iter_t and_list_ptr = or_list_ptr->children.begin()+i;
-    size_t and_size = and_list_ptr->children.size();
-
-    std::set<REDUCEValue> and_cons_set;
-    for(size_t j=0; j<and_size; j++){
-      const_tree_iter_t and_cons_ptr = and_list_ptr->children.begin()+j;
-      std::string and_cons_str = sp_.get_string_from_tree(and_cons_ptr);
-      
-      REDUCEValue new_reduce_value;
-      new_reduce_value.set(and_cons_str);
-      and_cons_set.insert(new_reduce_value);
-    }
-    constraint_store.first.insert(and_cons_set);
-  }
-}
-
-VCSResult REDUCEVCSPoint::check_consistency_sub()
-{
-
-  REDUCEStringSender rss = REDUCEStringSender(*cl_);
-
-
-//////////////////// 送信処理
-
-  // send_stringのstringはどのように区切って送信してもOK
-  //   ex) cl_->send_string("expr_:={df(y,t,2) = -10,");
-  //       cl_->send_string("y = 10, df(y,t,1) = 0, prev(y) = y, df(prev(y),t,1) = df(y,t,1)};");
-
-  // isConsistent(expr_,vars_)を渡したい
-
-  // expr_を渡す（tmp_constraints、constraint_store、parameter_store、left_continuityの4つから成る）
-  HYDLA_LOGGER_VCS("----- send expr_ -----");
-  cl_->send_string("expr_:=union(union(union(");
-
-  // 一時的な制約ストア(新しく追加された制約の集合)からexprを得てREDUCEに渡す
-  HYDLA_LOGGER_VCS("--- send tmp_constraints ---");
-  cl_->send_string("{");
-  constraints_t::const_iterator tmp_it  = tmp_constraints_.begin();
-  constraints_t::const_iterator tmp_end = tmp_constraints_.end();
-  for(; tmp_it!= tmp_end; ++tmp_it) {
-    if(tmp_it != tmp_constraints_.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("put node: ", (**tmp_it));
-    rss.put_node(*tmp_it);
-  }
-  cl_->send_string("},");
-
-  // 制約ストアからも渡す
-  HYDLA_LOGGER_VCS("--- send constraint_store ---");
-  send_cs();
-  cl_->send_string("),");
-
-  // パラメタストアを渡す
-  HYDLA_LOGGER_VCS("--- send parameter_store ---");
-  send_ps();
-  cl_->send_string("),");
-
-  // 左連続性に関する制約を渡す
-  // 現在採用している制約に出現する変数の最大微分回数よりも小さい微分回数のものについてprev(x)=x追加
-  HYDLA_LOGGER_VCS("--- send left_continuity ---");
-  max_diff_map_t tmp_max_diff_map = max_diff_map_;
-  rss.create_max_diff_map(tmp_max_diff_map);
-  add_left_continuity_constraint(continuity_map_, rss);
-  cl_->send_string(");");
-
-
-  // varsを渡す
-  //   ex) {y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2), y, prev(y), df(y,t,1), df(prev(y),t,1)}
-  // vars_に関して一番外側の"{}"部分は、put_vars内で送っている
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=union(");
-  rss.put_vars();
-  cl_->send_string(",");
-  // 制約ストア内に出現する変数も渡す
-  send_cs_vars();
-  cl_->send_string(");");
-
+  send_constraint(constraints_t());
 
   cl_->send_string("symbolic redeval '(isconsistent expr_ vars_);");
 
+  VCSResult result = check_consistency_receive();
 
-/////////////////// 受信処理
-  HYDLA_LOGGER_VCS("--- receive ---");
+  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSPoint::check_consistency() ***");
+  return result;
+}
+
+VCSResult REDUCEVCSPoint::check_consistency_receive()
+{
+  /////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
 
   cl_->read_until_redeval();
 //  cl_->skip_until_redeval();
@@ -698,19 +573,6 @@ VCSResult REDUCEVCSPoint::check_consistency_sub()
     result = VCSR_FALSE;
   }
 
-  return result;
-  
-}
-
-VCSResult REDUCEVCSPoint::check_consistency_receive()
-{
-  /////////////////// 受信処理
-  HYDLA_LOGGER_VCS( "--- receive ---");
-
-  VCSResult result;
-
-
-
   return result;  
 }
 
@@ -724,122 +586,6 @@ VCSResult REDUCEVCSPoint::integrate(
   assert(0);
   return VCSR_FALSE;
 }
-
-void REDUCEVCSPoint::send_cs() const
-{
-
-
-  HYDLA_LOGGER_VCS("---- Begin REDUCEVCSPoint::send_cs ----");
-  HYDLA_LOGGER_VCS("---- Send Constraint Store -----");
-
-  size_t or_cons_size = constraint_store_.first.size();
-  HYDLA_LOGGER_VCS("or cons size: ", or_cons_size);
-
-  if(or_cons_size <= 0)
-  {
-    HYDLA_LOGGER_VCS("no Constraints");
-    cl_->send_string("{}");
-    return;
-  }
-
-  // TODO: 複数解（or_cons_size>1）の場合の対処を考える
-  assert(or_cons_size==1);
-
-  std::set<std::set<REDUCEValue> >::const_iterator or_cons_it = constraint_store_.first.begin();
-  std::set<std::set<REDUCEValue> >::const_iterator or_cons_end = constraint_store_.first.end();
-  for(; or_cons_it!=or_cons_end; ++or_cons_it){
-    int and_cons_size = or_cons_it->size();
-    HYDLA_LOGGER_VCS("and cons size: ", and_cons_size);
-
-    cl_->send_string("{");
-    std::set<REDUCEValue>::const_iterator and_cons_it = or_cons_it->begin();
-    std::set<REDUCEValue>::const_iterator and_cons_end = or_cons_it->end();
-    for(; and_cons_it!=and_cons_end; ++and_cons_it)
-    {
-      if(and_cons_it!=or_cons_it->begin()) cl_->send_string(",");
-      std::string str = and_cons_it->get_string();
-      HYDLA_LOGGER_VCS("put cons: ", str);
-      cl_->send_string(str);
-    }
-    cl_->send_string("}");
-  }
-}
-
-void REDUCEVCSPoint::send_ps() const
-{
-  HYDLA_LOGGER_VCS("---- Send Parameter Store -----");
-
-  // TODO: ちゃんと送る
-  cl_->send_string("{}");
-}
-
-//TODO 定数返しの修正
-void REDUCEVCSPoint::send_pars() const{
-  // TODO: ちゃんと送る
-  cl_->send_string("{}");
-}
-
-void REDUCEVCSPoint::send_cs_vars() const
-{
-  int vars_size = constraint_store_.second.size();
-
-
-  HYDLA_LOGGER_VCS(
-    "---- Send Constraint Store Vars -----\n",
-    "vars_size: ", vars_size);
-
-
-  REDUCEStringSender rss(*cl_);
-
-  cl_->send_string("{");
-
-  constraint_store_vars_t::const_iterator it =
-    constraint_store_.second.begin();
-  constraint_store_vars_t::const_iterator end =
-    constraint_store_.second.end();
-  for(; it!=end; ++it) {
-    if(it!=constraint_store_.second.begin()) cl_->send_string(",");
-    rss.put_var(*it);
-  }
-  cl_->send_string("}");
-
-}
-
-std::ostream& REDUCEVCSPoint::dump(std::ostream& s) const
-{
-  s << "#*** Dump REDUCEVCSPoint ***\n"
-      << "--- constraint store ---\n";
-
-  std::set<std::set<REDUCEValue> >::const_iterator or_cons_it = constraint_store_.first.begin();
-  while(or_cons_it != constraint_store_.first.end())
-  {
-    std::set<REDUCEValue>::const_iterator and_cons_it = or_cons_it->begin();
-    while(and_cons_it != or_cons_it->end())
-    {
-      s << and_cons_it->get_string() << " ";
-      and_cons_it++;
-    }
-    s << "\n";
-    or_cons_it++;
-  }
-
-  // 制約ストア内に存在する変数のダンプ
-  s << "-- vars --\n";
-  constraint_store_vars_t::const_iterator vars_it = constraint_store_.second.begin();
-  while((vars_it) != constraint_store_.second.end())
-  {
-    s << *(vars_it) << "\n";
-    vars_it++;
-  }
-
-  return s;
-}
-
-std::ostream& operator<<(std::ostream& s, const REDUCEVCSPoint& r)
-{
-  return r.dump(s);
-}
-
 
 } // namespace reduce
 } // namespace simulator

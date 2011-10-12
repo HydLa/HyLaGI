@@ -81,24 +81,8 @@ public:
    */
   virtual void set_continuity(const continuity_map_t& continuity_map);
 
-  /**
-   * 内部状態の出力をおこなう
-   */
-  std::ostream& dump(std::ostream& s) const;
-
 private:
   typedef REDUCEStringSender::max_diff_map_t max_diff_map_t;
-
-  void send_cs() const;
-  void send_ps() const;
-  void send_cs_vars() const;
-  void send_pars() const;
-  void receive_constraint_store(constraint_store_t& store);
-
-  /**
-   * check_consistency の共通部分
-   */
-  VCSResult check_consistency_sub();
 
   /**
    * 左連続性に関する制約を加える
@@ -129,14 +113,10 @@ private:
   mutable REDUCELink* cl_;
   continuity_map_t continuity_map_;
   max_diff_map_t max_diff_map_;          //現在の制約ストアに出現する中で最大の微分回数を記録しておく表．
-  constraint_store_t constraint_store_;
-  parameter_store_t parameter_store_;
   constraints_t tmp_constraints_;  //一時的に制約を追加する対象
   std::set<std::string> par_names_; //一時しのぎ
   SExpParser sp_;
 };
-
-std::ostream& operator<<(std::ostream& s, const REDUCEVCSPoint& m);
 
 } // namespace reduce
 } // namespace simulator
