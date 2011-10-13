@@ -412,9 +412,9 @@ begin;
   return exceptdfvars_;
 end;
 
-retsolvererror___ := "RETSOLVERERROR___";
-retoverconstraint___ := "RETOVERCONSTRAINT___";
-retunderconstraint___ := "RETUNDERCONSTRAINT___";
+retsolvererror___ := 0;
+retoverconstraint___ := 2;
+retunderconstraint___ := 3;
 
 procedure exDSolve(expr_, init_, vars_)$
   begin;
@@ -491,9 +491,10 @@ end;
 
 
 % 20110705 overconstraint___無し
-%ICI_SOLVER_ERROR___:= {0};
-%ICI_ENTAILED___:= {1};
-%ICI_CONSTRAINT_ERROR___:= {2};
+ICI_SOLVER_ERROR___:= 0;
+ICI_CONSISTENT:= 1;
+ICI_INCONSISTENT___:= 2;
+ICI_UNKNOWN___:= 3; % 不要？
 
 procedure isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
 begin;
@@ -501,11 +502,11 @@ begin;
   tmpSol_:= exDSolve(expr_, init_, vars_);
   write("tmpSol_: ", tmpSol_);
   
-  if(tmpSol_ = retsolvererror___) then return {0}
-  else if(tmpSol_ = retoverconstraint___) then return {2};
+  if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
+  else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   % tmpCons_がない場合は無矛盾と判定して良い
-  if(tmpCons_ = {}) then return {1};
+  if(tmpCons_ = {}) then return {ICI_CONSISTENT};
 
   integTmp_:= sub(tmpSol_, tmpCons_);
   write("integTmp_: ", integTmp_);
@@ -514,8 +515,8 @@ begin;
   write("integTmpQE_: ", integTmpQE_);
 
   % ただのtrueやfalseはそのまま判定結果となる
-  if(integTmpQE_ = true) then return {1}
-  else if(integTmpQE_ = false) then return {2};
+  if(integTmpQE_ = true) then return {ICI_CONSISTENT}
+  else if(integTmpQE_ = false) then return {ICI_INCONSISTENT___};
 
   % とりあえずtに関して解く（等式の形式を前提としている）
   % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
@@ -527,16 +528,16 @@ begin;
   write("infList_: ", infList_);
 
   % パラメタ無しなら解は1つになるはず
-  if(length(infList_) neq 1) then return {0};
+  if(length(infList_) neq 1) then return {ICI_SOLVER_ERROR};
   ans_:= first(infList_);
   write("ans_: ", ans_);
 
-  if(ans_=true) then return {1}
-  else if(ans_=false) then return {2}
+  if(ans_=true) then return {ICI_CONSISTENT}
+  else if(ans_=false) then return {ICI_INCONSISTENT___}
   else 
   <<
     write("rlqe ans: ", ans_);
-    return CEI_UNKNOWN___;
+    return {ICI_UNKNOWN___};
   >>;
 
 end;
@@ -697,12 +698,15 @@ procedure calcNextPointPhaseTime(maxTime_, discCause_)$
 begin;
   scalar minTList_, minT_, ans_;
 
+  % 離散変化が起きえない場合は、maxTime_まで実行して終わり
+  if(discCause_ = {}) then return {maxTime_, 1};
+
   minTList_:= union(for each x in discCause_ join calcMinTime(x));
   write("minTList_ in calcNextPointPhaseTime: ", minTList_);
 
   if(not freeof(minTList_, error)) then return error;
 
-  minT_:= myFindMinimumNatPPTime(maxTime_, minTList_);
+  minT_:= myFindMinimumNatPPTime(INFINITY, minTList_);
   write("minT_: ", minT_);
 
   if(mymin(minT_, maxTime_) neq maxTime_) then ans_:= {minT_, 0}
