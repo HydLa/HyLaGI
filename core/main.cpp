@@ -2,6 +2,7 @@
 #include <exception>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -14,67 +15,36 @@
 #include "version.h"
 #include "ProgramOptions.h"
 
-// parser
-#include "HydLaParser.h"
+// common
+#include "Logger.h"
+
+// constraint hierarchy
+#include "ModuleSetContainerCreator.h"
+#include "ModuleSetList.h"
 #include "ModuleSetGraph.h"
 
-// symbolic_simulator
-#include "SSNodeFactory.h"
-#include "MathSimulator.h"
-#include "mathlink_helper.h"
+// parser
+#include "DefaultNodeFactory.h"
 
-using namespace hydla;
-using namespace hydla::parse_tree;
-using namespace hydla::symbolic_simulator;
+// namespace
 using namespace boost;
+using namespace hydla;
+using namespace hydla::logger;
+using namespace hydla::parser;
+using namespace hydla::parse_tree;
+using namespace hydla::ch;
 
-void hydla_main(int argc, char* argv[])
-{
-  ProgramOptions &po = ProgramOptions::instance();
-  po.parse(argc, argv);
+// prototype declarations
+int main(int argc, char* argv[]);
+void hydla_main(int argc, char* argv[]);
+void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+void symbolic_legacy_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+bool dump(boost::shared_ptr<ParseTree> pt);
 
-  if(po.count("help")) {
-    po.help_msg(std::cout);
-    return;
-  }
-
-  if(po.count("version")) {
-    std::cout << Version::description() << std::endl;
-    return;
-  }
-
-  bool debug_mode = po.count("debug")>0;
-
-  shared_ptr<NodeFactory> nf(new NodeFactory());
-  HydLaParser hp(nf, debug_mode);
-  
-  if(po.count("input-file")) {
-    hp.parse_flie(po.get<std::string>("input-file"));
-  } else {
-    hp.parse(std::cin);
-  }
-
-  MathSimulator::OutputFormat output_format;
-  if(po.get<std::string>("output-format") == "t") {
-    output_format = MathSimulator::fmtTFunction;
-  } else if(po.get<std::string>("output-format") == "n"){
-    output_format = MathSimulator::fmtNumeric; 
-  } else {
-    std::cerr << "invalid option - output format" << std::endl;
-    return;
-  }
-
-  MathSimulator ms;
-  ms.simulate(po.get<std::string>("mathlink").c_str(), 
-    hp,
-    debug_mode,
-    po.get<std::string>("simulation-time"),
-    po.count("profile")>0,
-    po.count("parallel")>0,
-    output_format);
-  
-}
-
+/**
+ * エントリポイント
+ */
 int main(int argc, char* argv[]) 
 {
 #ifdef _MSC_VER
@@ -100,4 +70,120 @@ int main(int argc, char* argv[])
 #endif
 
   return ret;
+}
+
+void hydla_main(int argc, char* argv[])
+{
+  ProgramOptions &po = ProgramOptions::instance();
+  po.parse(argc, argv);
+  
+  std::string area_string(po.get<std::string>("area"));
+  if(area_string!=""){                 // デバッグ出力の範囲指定
+    Logger::instance().set_log_level(Logger::Area);
+    Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
+    Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
+    Logger::module_set_area_ = (area_string.find('m') != std::string::npos);
+    Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
+    Logger::external_area_ = (area_string.find('e') != std::string::npos);
+    Logger::output_area_ = (area_string.find('o') != std::string::npos);
+    Logger::rest_area_ = (area_string.find('r') != std::string::npos);
+  }
+  else if(po.count("debug")>0) {        // 全部デバッグ出力
+    Logger::instance().set_log_level(Logger::Debug);
+  } else if(po.count("comprehensive")>0){					//大局的出力モード
+    Logger::instance().set_log_level(Logger::Summary);
+  } else {                              // 警告のみ出力
+    Logger::instance().set_log_level(Logger::Warn);
+  }
+  
+  if(po.count("help")) {     // ヘルプ表示して終了
+    po.help_msg(std::cout);
+    return;
+  }
+
+  if(po.count("version")) {  // バージョン表示して終了
+    std::cout << Version::description() << std::endl;
+    return;
+  }
+
+  // ParseTreeの構築
+  // ファイルがを指定されたらファイルから
+  // そうでなければ標準入力から受け取る
+  boost::shared_ptr<ParseTree> pt(new ParseTree);
+  if(po.count("input-file")) {
+    std::string filename(po.get<std::string>("input-file"));
+    std::ifstream in(filename.c_str());
+    if (!in) {
+      throw std::runtime_error(std::string("cannot open \"") + filename + "\"");
+    }
+    pt->parse<DefaultNodeFactory>(in);
+  } else {
+    pt->parse<DefaultNodeFactory>(std::cin);
+  }
+  
+  // いろいろと表示
+  if(dump(pt)) {
+    return;
+  }
+  
+  // シミュレーション開始
+  std::string method(po.get<std::string>("method"));
+  if(method == "s" || method == "SymbolicSimulator") {
+    symbolic_simulate(pt);
+  } 
+  else if(method == "b" || method == "BandPSimulator") {
+    branch_and_prune_simulate(pt);
+  } 
+  else if(method == "l" || method == "SymbolicLegacySimulator") {
+    symbolic_legacy_simulate(pt);
+  } 
+  else {
+    // TODO: 例外を投げるようにする
+    std::cerr << "invalid method" << std::endl;
+    return;
+  }
+}
+
+/**
+ * ProgramOptionとParseTreeを元に出力
+ * 何か出力したらtrueを返す
+ */
+bool dump(boost::shared_ptr<ParseTree> pt)
+{
+  ProgramOptions &po = ProgramOptions::instance();
+
+  if(po.count("dump-parse-tree")>0) {
+    pt->to_graphviz(std::cout);
+    return true;
+  }    
+
+  if(po.count("dump-module-set-list")>0) {
+    ModuleSetContainerCreator<ModuleSetList> mcc;
+    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
+    msc->dump_node_names(std::cout);
+    return true;
+  }
+
+//   if(po.count("dump-module-set-list-noinit")>0) {
+//     ModuleSetContainerCreator<ModuleSetList> mcc;
+//     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
+//     msc->dump_node_names(std::cout);
+//     return true;
+//   }
+
+  if(po.count("dump-module-set-graph")>0) {
+    ModuleSetContainerCreator<ModuleSetGraph> mcc;
+    boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
+    msc->dump_graphviz(std::cout);
+    return true;
+  }
+
+//   if(po.count("dump-module-set-graph-noinit")>0) {
+//     ModuleSetContainerCreator<ModuleSetGraph> mcc;
+//     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
+//     msc->dump_graphviz(std::cout);
+//     return true;
+//   }
+
+  return false;
 }

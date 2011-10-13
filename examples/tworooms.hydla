@@ -1,30 +1,50 @@
 // tworooms.hydla
-OFFOFFA(tempA) <=> [](ta-=tempA /\ s-=1 => s=0 /\ timer=0).
-OFFONA(tempA,tempB)  <=> [](ta-=tempA /\ (tb-<tempB | tb-<=tempB) /\
-s-=1 => s=2 /\ timer=0).
+S0 <=> [](
+   ta'=-9/10*ta +   1/2*tb + 4/10*4  
+/\ tb'=  1/2*ta + -9/10*tb + 4/10*4
+).
 
-OFFOFFB(tempB) <=> [](tb-=tempB /\ s-=2 => s=0 /\ timer=0).
-ONOFFB(tempB,tempA)  <=> [](tb-=tempB /\ (ta-<tempA | ta-<=tempA) /\
-s-=2 => s=1 /\ timer=0).
+S1 <=> [](s-=1 /\ (timer- >= 1/100 \/ timer- > 1/100) =>
+   ta'=-9/10*ta +   1/2*tb + 4/10*4 + 8
+/\ tb'=  1/2*ta + -9/10*tb + 4/10*4
+).
 
-ONOFFC(tempA)  <=> [](ta-=tempA /\ s-=0 => s=1 /\ timer=0).
-OFFONC(tempB)  <=> [](tb-=tempB /\ s-=0 => s=2 /\ timer=0).
+S2 <=> [](s-=2 /\ (timer->=1/100 \/ timer->1/100) =>
+   ta'=-9/10*ta +   1/2*tb + 4/10*4  
+/\ tb'=  1/2*ta + -9/10*tb + 4/10*4 + 8 - 1
+).
 
-CC <=> [](ta'=-1/2 /\ tb'=-1).
-HC <=> [](s-=1 /\ (timer->1 | timer->=1) => ta'=3 /\ tb'=-1).
-CH <=> [](s-=2 /\ (timer->1 | timer->=1) => ta'= -1/2 /\ tb'=4).
+S01(tempA) <=> []((ta-<=tempA \/ ta-<tempA) /\ s-=0 => s=1 /\ timer=0).
+S21(tempA) <=> []((ta-<=tempA \/ ta-<tempA) 
+               /\ (tb--ta->1 \/ tb--ta->=1) /\ s-=2 => s=1 /\ timer=0).
 
-ROOM(20,20),THERMO(0,10).
-ROOM(initTempA,initTempB){
-        ta=initTempA,
-        tb=initTempB,
-        CC<<(HC/\CH)
+S02(tempB) <=> []((tb-<=tempB \/ tb-<tempB) /\ s-=0 => s=2 /\ timer=0).
+S12(tempB) <=> []((tb-<=tempB \/ tb-<tempB) 
+               /\ (ta--tb->1 \/ ta--tb->=1) /\ s-=1 => s=2 /\ timer=0).
+
+S10(tempA) <=> []((ta->=tempA \/ ta->tempA) /\ s-=1 => s=0 /\ timer=0).
+S20(tempB) <=> []((tb->=tempB \/ tb->tempB) /\ s-=2 => s=0 /\ timer=0).
+
+ROOM(20,20),THERMO(0,0).
+ROOM(tmpA,tmpB){
+        ta=tmpA,
+        tb=tmpB,
+        [](ta=ta-),[](tb=tb-),
+        S0<<(S1/\S2)
 }.
 THERMO(initSwitch,initTimer){
         s=initSwitch,
         timer=initTimer,
-        OFFOFFA(22)<<OFFONA(22,18),
-        OFFOFFB(22)<<ONOFFB(22,18),
-        ONOFFC(18),OFFONC(18),
-        [](timer'=1)
+        [](timer'=1),
+        S01(18),S21(18),
+        S02(18),S12(18),
+        S10(22),S20(22)
 }.
+
+FLAG(15).
+FLAG(temp){
+        flag=0,
+        [](flag'=0),
+        [](ta-<temp \/ ta-<=temp => flag=1)
+}.
+

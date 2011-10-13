@@ -1,19 +1,23 @@
 .SUFFIXES: 
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-CXX      := g++
+CC       := gcc
+CXX      := g++44
 SED      := sed #@SED@
 MV       := mv #@MV@
 AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-ARFLAGS  := crus
+LIBS += -lboost_system
+
+CXX_OPT  += -Wall --input-charset=cp932 -O2 #-pg
+
+ARFLAGS  := cru
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
 
-CXX_OPT  += -O2 -Wall
-
-SRC      += $(wildcard *.c) $(wildcard *.cc) $(wildcard *.cpp) 
+SRC_DIR  += .
+SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 
 OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
 	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
 	    $(subst .cpp,.o,$(filter %.cpp,$(SRC)))
@@ -29,6 +33,7 @@ clean:
 $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
+	ranlib $@
 else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
 endif
@@ -40,8 +45,11 @@ ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)
 endif
 
-.c.o .cc.o .cpp.o: 
-	$(CXX) $(CXXFLAGS) -c $<
+.c.o:
+	$(CC) $(CXXFLAGS) -c -o $@ $<
+
+.cc.o .cpp.o: 
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 .c.d .cc.d .cpp.d:
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \

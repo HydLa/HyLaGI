@@ -41,10 +41,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\common"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -104,8 +105,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -149,15 +151,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\HydLaParser.cpp"
+				RelativePath=".\BaseNodeVisitor.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\HydLaParser_parse.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetGraph.cpp"
+				RelativePath=".\HydLaAST.cpp"
 				>
 			</File>
 			<File
@@ -165,7 +163,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodeIDUpdater.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ParseTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseTreeGraphvizDumper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseTreeSemanticAnalyzer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SExpParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeInfixPrinter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeVisitor.cpp"
 				>
 			</File>
 		</Filter>
@@ -175,7 +197,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\BaseNodeVisitor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CommentGrammar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DefaultNodeFactory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DefinitionContainer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HydLaAST.h"
 				>
 			</File>
 			<File
@@ -187,14 +225,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HydLaParser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ModuleSetGraph.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Node.h"
 				>
 			</File>
@@ -203,11 +233,43 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodeIDRebuilder.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NodeIDUpdater.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NodeTreeGenerator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ParseError.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ParseTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseTreeGraphvizDumper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseTreeSemanticAnalyzer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SExpGrammar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SExpParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeInfixPrinter.h"
 				>
 			</File>
 			<File

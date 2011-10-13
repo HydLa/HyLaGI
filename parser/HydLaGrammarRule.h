@@ -6,6 +6,8 @@ namespace grammer_rule {
 
 typedef enum _RuleID {
   RI_Number = 1, 
+  RI_Pi,
+  RI_E,
   RI_PrevVariable,
   RI_BoundVariable,
   RI_Variable,
@@ -15,6 +17,7 @@ typedef enum _RuleID {
   // ˜_—‰‰Zq
   RI_LogicalAnd,
   RI_LogicalOr,
+  RI_LogicalNot,
 
   // ”äŠr‰‰Zq
   RI_CompOp,
@@ -28,16 +31,34 @@ typedef enum _RuleID {
   // Zp’P€‰‰Zq
   RI_Negative,
   RI_Positive,
+  
+  // OŠpŠÖ”
+  RI_Sin,
+  RI_Cos,
+  RI_Tan,
+  RI_Asin,
+  RI_Acos,
+  RI_Atan,
+  
+  // ‘Î”
+  RI_Log,
+  RI_Ln,
 
   // Zp“ñ€‰‰Zq
   RI_Plus,
   RI_Subtract,
   RI_Times,
   RI_Divide,
+  RI_Power,
 
   // §–ñŠK‘w’è‹`‰‰Zq
   RI_Weaker,
   RI_Parallel,
+  
+  // ”CˆÓ‚Ì•¶š—ñ
+  RI_ArbitraryFactor,
+  RI_ArbitraryUnary,
+  RI_ArbitraryBinary,
 
   // ”÷•ª
   RI_Differential,
@@ -47,6 +68,7 @@ typedef enum _RuleID {
 
   // ‘Š‰‰Zq (Always = Globally)
   RI_Always,
+  
 
   RI_Implies,
   RI_Equivalent,
@@ -67,6 +89,7 @@ typedef enum _RuleID {
   RI_Logical_term,
   RI_Logical,
 
+  RI_Ask_Logical_Literal,
   RI_Ask_Logical_Term,
   RI_Ask_Logical,
   RI_Comparison,
@@ -90,7 +113,8 @@ typedef enum _RuleID {
   RI_ProgramDef,
   RI_ModuleDef,
   RI_ConstraintDef,
-
+  
+  RI_Assert,
   RI_Statements,
   RI_HydLaProgram,
 

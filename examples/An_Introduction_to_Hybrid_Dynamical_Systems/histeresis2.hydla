@@ -1,0 +1,15 @@
+//hysteresis.hydla
+//user:shun
+//a control system with a hysteresis element in the feedback loop
+//from "A Unified Framework for Hybrid Control: Model and Optimal Control Theory"
+
+INIT <=> h=1 & x=-3 & [](x'=1) .
+CON <=> [](h'=0).
+
+GAB <=> [](h-= 1 & x->= 2 => h=-1).
+GBA <=> [](h-=-1 & x-<=-2 => h= 1).
+
+STB <=> [](h=-1 => [](x'=-1)).
+STA <=> [](h= 1 => [](x'= 1)).
+
+CON,INIT<<(GAB&GBA)<<(STA&STB).

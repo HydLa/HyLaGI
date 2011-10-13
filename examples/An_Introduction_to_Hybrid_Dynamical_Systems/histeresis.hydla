@@ -1,0 +1,25 @@
+//hysteresis.hydla
+//user:shun
+//a control system with a hysteresis element in the feedback loop
+//A Unified Framework for Hybrid Control: Model and Optimal Control Theory
+//Michael S. Branicky, Member, IEEE, Vivek S. Borkar, Senior Member,IEEE, and Sanjoy K. Mitter, Fellow
+//IEEE TRANSACTIONS ON AUTOMATIC CONTROL, VOL. 43, NO. 1, JANUARY 1998
+
+//INIT <=> H=1 & x=-3 & u=0 & delta=2 & state=1 &
+// [](H'=0 & x'=10+u & u'=0 & delta'=0 & state'=0 ) .
+INIT <=> h=1 & x=-3 & state=1 & [](x'=10) .
+CON <=> [](h'=0 & state'=0).
+//GAB <=> [](state=1 & x-=delta => state=0).
+GAB <=> [](x-=2 => state=0).
+STB <=> [](state=0 => H=0 & [](x'=-1+u)).
+
+/*
+STA <=> [](state-=1 => H=1 & [](x'=1+u)).
+STB <=> [](state=0 => H=0 & [](x'=-1+u)).
+
+GAB <=> [](state=1 & x>=delta => state=0).
+GBA <=> [](state=0 & x<=delta => state=1).
+
+INIT <<(STA,STB,GAB,GBA).
+*/
+CON,INIT<<(GAB,STB).

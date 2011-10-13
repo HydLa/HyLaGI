@@ -1,0 +1,8 @@
+// -*- coding: utf-8 -*-
+// ノコギリ波 (sawtooth wave)
+
+INIT     <=> f=0&a>5&a<10.
+INCREASE <=> [](f'=3).
+CONST <=> [](a'=0).
+DROP     <=> [](f- = a => f=0).
+INIT, CONST, INCREASE << DROP.

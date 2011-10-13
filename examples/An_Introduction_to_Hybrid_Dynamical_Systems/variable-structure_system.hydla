@@ -1,0 +1,36 @@
+//variable-structure system.hydla
+//user:shun
+//a mass colliding with an elastic wall
+//from "Characterization of Well-Posedness of Piecewise-Linear Systems"
+
+
+CON  <=> [](st'=0).
+StateA <=> [](st=1 => [](x''=-13*x- - 1*x'-)).
+StateB <=> [](st=0 => [](x''=0)).
+STATE{
+  st=0,x=-1,x'=1,x''=0,
+  CON,StateA,StateB
+}.
+STATE.
+StateAtoB <=> [](st-=0 & x->=0 => st=1).
+StateBtoA <=> [](st-=1 & x-<=0 => st=0).
+GUARD{
+  StateAtoB,StateBtoA
+}.
+GUARD.
+
+
+
+/*
+INIT <=> st=0 & x=1 & vx=-2 & vx'=0.
+CON  <=> [](st'=0 & x'=vx-).
+
+GAB <=> [](st-=0 & x-<=0 => st=1).
+GBA <=> [](st-=1 & x->=0 => st=0).
+
+STA <=> [](st=1 => [](vx'=-13*x- - 5*vx-)).
+STB <=> [](st=0 => [](vx'=0)).
+
+CON,INIT<<(GAB,GBA)<<(STA,STB).
+*/
+

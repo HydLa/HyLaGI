@@ -1,0 +1,12 @@
+INIT(ren) <=> time1=0  & y=0 & x=ren & r=1.
+
+R <=> []( r' = -1/30 ). 
+
+TIME <=> []( time1'=1 ).
+
+YSIN <=> []( y= r*sin(time1) ).
+
+XCOS <=> []( x= r*cos(time1) ).
+
+
+INIT(1)<<R,TIME,YSIN,XCOS. 

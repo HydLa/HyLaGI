@@ -1,27 +1,16 @@
-
-
-WALL(pos) <=> 
- [](bx- = pos => bx' = -e*bx'-).
-FLOOR(pos) <=> 
- [](by- = pos => by' = -e*by'-).
-
-BOX(x1,y1,x2,y2) <=> 
-  []((x1 <= bx- /\ bx- <= x2 
-     /\ (by- = y1 \/ by- = y2)  
-                 => by' = -e*by'-)
-  /\ (y1 <= by- /\ by- <= y2 
-     /\ (bx- = x1 \/ bx- = x2) 
-                 => bx' = -e*bx'-)).
+INIT   <=> bx=4/3 /\ by=20 /\ bx'=1  /\ by'=0 & [](by' = bvy & bx' = bvx) .
+FALL   <=> [](bvy' = -10).
+X_MOVE <=> [](bvx' =   0).
 
 CONST  <=> [](e = 77/100).
-INIT   <=> bx=4/3 /\ by=20 
-        /\ bx'=1  /\ by'=0.
-FALL   <=> [](by'=bvy /\ bvy' = -10).
-X_MOVE <=> [](bx'=bvx /\ bvx' =   0).
 
-INIT, CONST,
-(FALL /\ X_MOVE)
- << (BOX(5,   6, 6, 14)
-  /\ BOX(1, 9/2, 4, 15)
-  /\ WALL(0) /\ WALL(6)
-  /\ FLOOR(0)). 
+WALL(pos)  <=> [](bx- = pos => bvx = -e*bvx-).
+FLOOR(pos) <=> [](by- = pos => bvy = -e*bvy-).
+
+BOX(x1,y1,x2,y2) <=> []((x1 <= bx- /\ bx- <= x2 /\ (by- = y1 \/ by- = y2)  
+                          => bvy = -e*bvy-)
+                     /\ (y1 <= by- /\ by- <= y2 /\ (bx- = x1 \/ bx- = x2) 
+                          => bvx = -e*bvx-)).
+
+
+INIT, CONST, (FALL, X_MOVE) << (BOX(5, 6, 6, 14), BOX(1, 9/2, 4, 15), WALL(0), WALL(6), FLOOR(0)). 

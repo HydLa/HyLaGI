@@ -2,9 +2,9 @@
 // 引数付きモジュールを使わないと悲惨な事になる例でもある
 //
 
-INIT   <=> y=20 & x=4/3 & vy=0 & vx=1.
-FALL   <=> [](y' = vy  & vy' = -10).
-X_MOVE <=> [](x'  = vx & vx'=0).
+INIT   <=> y=20 & x=4/3 & vy=0 & vx=1 & [](x'=vx) & [](y' = vy).
+FALL   <=> [](vy' = -10).
+X_MOVE <=> [](vx'=0).
 
 CONST <=> [](e=77/100).
 
@@ -21,5 +21,5 @@ BOX2   <=> []((1 <= x- & x- <= 4  & y- = 15  => vy = -e * vy-) &
               (9/2 <= y- & y- <= 15 & x- = 4   => vx = -e * vx-)).
 
 
-INIT, CONST, (FALL, X_MOVE) << (BOX1, BOX2, WALL_L, WALL_R, FLOOR). 
+(FALL, X_MOVE) << (INIT & CONST & BOX1 & BOX2 & WALL_L & WALL_R & FLOOR). 
 

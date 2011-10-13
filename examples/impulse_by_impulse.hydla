@@ -1,0 +1,8 @@
+INIT   <=> a=0 & b=0 & c=0.
+TIMER  <=> [](a'=1).
+BFLAT  <=> [](b=0).
+BPULSE <=> [](a- = 2 => b=1).
+CFLAT  <=> [](c=0).
+CPULSE <=> [](b=1 => c=1).
+
+INIT, TIMER, (BFLAT << BPULSE), (CFLAT << CPULSE).

@@ -1,0 +1,23 @@
+/*
+INIT(ren) <=> time1=0 & time2=0 &time3=0&time4=0& y=0 & x=1.
+
+TIME <=> []( time1'=1 & time2'=1 &time3'=1&time4'=1).
+
+Y <=> []( y= 4/5*sin(time1)-1/5*sin(4*time2) ).
+
+X <=> []( x= 4/5*cos(time3)+1/5*cos(4*time4) ).
+
+
+INIT(1)<<TIME,Y,X. 
+*/
+
+INIT <=> time1=0 & y=0 & x=1.
+
+TIME <=> []( time1'=1 ).
+
+Y <=> []( y= 4/5*sin(time1)-1/5*sin(4*time1) ).
+
+X <=> []( x= 4/5*cos(time1)+1/5*cos(4*time1) ).
+
+
+INIT,TIME,Y,X.

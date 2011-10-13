@@ -5,6 +5,7 @@
 #include <boost/spirit/include/classic_confix.hpp>
 
 namespace hydla {
+namespace parser {
 
 using namespace boost::spirit;
 
@@ -23,7 +24,8 @@ struct CommentGrammar : public grammar<CommentGrammar> {
   };
 };
 
-}
+} // namespace parser
+} // namespace hydla
 
 #endif //_INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
 

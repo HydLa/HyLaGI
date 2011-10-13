@@ -1,0 +1,62 @@
+//water-level_monitor.hydla
+//user:shun
+//the modeling of a water-level control system
+//from "The Algorithmic Analysis of Hybrid Systems"
+/*
+INIT <=> st=0 & timer=0 & y=0 & y'=10.
+CON <=> [](st'=0 & timer'=1).
+
+StateAtoB <=> [](st-=0 & y->=10     => st=1 & timer=0).
+StateBtoC <=> [](st-=1 & timer->= 2 => st=2).
+StateCtoD <=> [](st-=2 & y-<= 5     => st=3 & timer=0).
+StateDtoA <=> [](st-=3 & timer->= 2 => st=0).
+
+StateA <=> [](st=0 => [](y'= 10)).
+StateB <=> [](st=1 => [](y'= 10)).
+StateC <=> [](st=2 => [](y'=-20)).
+StateD <=> [](st=3 => [](y'=-20)).
+
+INIT,CON<<(StateAtoB,StateBtoC,StateCtoD,StateDtoA),
+  StateA,StateB,StateC,StateD.
+*/
+/*
+INIT <=> st=0 & x=0 & y=0 & [](y'=10) .
+CON <=> [](st'=0 & x'=1).
+
+GAB <=> [](st-=0 & y->=10 => st=1 & x=0).
+GBC <=> [](st-=1 & x->= 2 => st=2).
+GCD <=> [](st-=2 & y-<= 5 => st=3 & x=0).
+GDA <=> [](st-=3 & x->= 2 => st=0).
+
+STB <=> [](st=1 => [](y'= 10)).
+STC <=> [](st=2 => [](y'=-20)).
+STD <=> [](st=3 => [](y'=-20)).
+STA <=> [](st=0 => [](y'= 10)).
+
+CON,INIT<<(GAB&GBC&GCD&GDA)<<(STA&STB&STC&STD).
+*/
+
+
+StateA <=> [](st=0 => [](y'= 10)).
+StateB <=> [](st=1 => [](y'= 10)).
+StateC <=> [](st=2 => [](y'=-20)).
+StateD <=> [](st=3 => [](y'=-20)).
+
+STATE{
+  st=0,y=0,y'=10,[](st'=0),
+  StateA,StateB,StateC,StateD
+}.
+STATE.
+
+StateAtoB <=> [](st-=0 & y->=10     => st=1 & timer=0).
+StateBtoC <=> [](st-=1 & timer->= 2 => st=2).
+StateCtoD <=> [](st-=2 & y-<= 5     => st=3 & timer=0).
+StateDtoA <=> [](st-=3 & timer->= 2 => st=0).
+
+GUARD{
+  timer=0,[](timer'=1),
+  StateAtoB,StateBtoC,StateCtoD,StateDtoA
+}.
+GUARD.
+
+

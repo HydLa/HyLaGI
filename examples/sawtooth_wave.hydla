@@ -4,4 +4,5 @@
 INIT     <=> f=0.
 INCREASE <=> [](f'=3).
 DROP     <=> [](f- = 10 => f=0).
+
 INIT, INCREASE << DROP.

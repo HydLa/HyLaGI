@@ -1,0 +1,6 @@
+//manual_transmission.hydla
+//user:shun
+//a simple model of a manual transmission
+INIT <=> x1=0,x2=0.
+CON <=> [](x1'=x2 & x2'=(-a*x2+u)/1+v).
+INIT,CON.

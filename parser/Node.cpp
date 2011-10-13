@@ -1,101 +1,310 @@
 #include "Node.h"
 
+#include <assert.h>
 #include <algorithm>
+#include <typeinfo>
+
 #include <boost/bind.hpp>
 
 #include "ParseError.h"
+#include "BaseNodeVisitor.h"
 #include "TreeVisitor.h"
+#include "Logger.h"
 
 using namespace std;
 using namespace boost;
 using namespace hydla::parse_error;
+using namespace hydla::logger;
 
 namespace hydla { 
 namespace parse_tree {
-  
-std::ostream& operator<< (std::ostream& s, Node& node)
+
+
+
+std::ostream& operator<<(std::ostream& s, const Node& node)
 {
-  s << node.to_string();
+  return node.dump(s);
+}
+
+bool Node::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n);
+}
+
+bool UnaryNode::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          child_->is_same_struct(*static_cast<const UnaryNode*>(&n)->child_.get(), 
+                                 exactly_same);
+}
+
+bool BinaryNode::is_exactly_same(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+    lhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->lhs_.get(), exactly_same) &&
+    rhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->rhs_.get(), exactly_same);
+}
+
+void BinaryNode::create_child_node_list(child_node_list_t& cnl, 
+                                        const Node* n) const
+{
+  const BinaryNode* binnode = dynamic_cast<const BinaryNode*>(n);
+
+  if(binnode != NULL) {
+    const Node* lhs = binnode->lhs_.get();
+    const Node* rhs = binnode->rhs_.get();
+
+
+    // 左辺ノード
+    if(typeid(*n) == typeid(*lhs)) {
+      create_child_node_list(cnl, lhs);
+    }
+    else {
+      cnl.push_back(make_pair(lhs, false));
+    }
+
+    // 右辺ノード
+    if(typeid(*n) == typeid(*rhs)) {
+      create_child_node_list(cnl, rhs);
+    }
+    else {
+      cnl.push_back(make_pair(rhs, false));
+    }
+  }
+}
+
+struct BinaryNode::CheckInclude
+{
+  CheckInclude(const Node* n) :
+    node(n)
+  {}
+
+  template<typename T>
+  bool operator()(T& it)
+  {
+    if(!it.second && node->is_same_struct(*it.first, false)) {
+      it.second = true;
+      return true;
+    }
+    return false;
+  }
+  
+  const Node* node;
+};
+
+bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
+{
+  if(exactly_same) {
+    return is_exactly_same(n, exactly_same);
+  }
+
+  if(typeid(*this) == typeid(n)) {
+    // 双方の子ノードの集合が同一かどうか調べる
+
+    child_node_list_t this_node;
+    child_node_list_t target_node;
+    create_child_node_list(this_node,   this);
+    create_child_node_list(target_node, static_cast<const BinaryNode*>(&n));
+    if(this_node.size() != target_node.size()) return false;
+
+    child_node_list_t::const_iterator it  = this_node.begin();
+    child_node_list_t::const_iterator end = this_node.end();
+    for(; it!=end; ++it) {
+      if(std::find_if(target_node.begin(), 
+                      target_node.end(), 
+                      CheckInclude(it->first)) == target_node.end()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+
+
+
+
+    /*
+    const Node& n_lhs = *(static_cast<const BinaryNode*>(&n))->lhs_.get();
+    const Node& n_rhs = *(static_cast<const BinaryNode*>(&n))->rhs_.get();
+
+    // 対象性
+    ret = 
+      ((lhs_->is_same_struct(n_lhs, false) &&
+      rhs_->is_same_struct(n_rhs, false)) ||
+      (lhs_->is_same_struct(n_rhs, false) &&
+      rhs_->is_same_struct(n_lhs, false)));
+
+
+    // node1
+    //      &
+    //    /   \  
+    //   &     c
+    //  /  \  
+    // a    b
+    //
+    // と
+    //
+    // node2
+    //   &
+    //  / \  
+    // a   &
+    //    / \  
+    //   b   c
+    //
+    // の同一視
+
+    // このノードがnode1で，比較ノードがnode2だった場合
+    if(!ret && typeid(*this)==typeid(*lhs_) && typeid(n)==typeid(n_rhs)) {
+      const BinaryNode* b_lhs = static_cast<const BinaryNode*>(lhs_.get());
+      const BinaryNode* b_n_rhs = static_cast<const BinaryNode*>(&n_rhs);
+
+      ret = 
+        b_lhs->lhs_->is_same_struct(n_lhs, false) &&
+        b_lhs->rhs_->is_same_struct(*b_n_rhs->lhs_.get(), false) &&
+        rhs_->is_same_struct(*b_n_rhs->rhs_.get(), false);
+    }
+     
+
+    // このノードがnode2で，比較ノードがnode1だった場合
+    if(!ret && typeid(*this)==typeid(*rhs_) && typeid(n)==typeid(n_lhs)) {
+      const BinaryNode* b_rhs = static_cast<const BinaryNode*>(rhs_.get());
+      const BinaryNode* b_n_lhs = static_cast<const BinaryNode*>(&n_lhs);
+
+      ret = 
+        b_rhs->lhs_->is_same_struct(*b_n_lhs->rhs_.get(), false) &&
+        b_rhs->rhs_->is_same_struct(n_rhs, false) &&
+        lhs_->is_same_struct(*b_n_lhs->lhs_.get(), false);
+    }
+    */
+
+bool Ask::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Less::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool LessEqual::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Greater::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool GreaterEqual::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Subtract::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Divide::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Power::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Weaker::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool Number::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+    number_ == static_cast<const Number*>(&n)->number_;          
+}
+
+bool ArbitraryBinary::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same) && 
+          string_ == static_cast<const ArbitraryBinary *>(&n)->string_;
+}
+
+
+bool ArbitraryUnary::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_same_struct(n, exactly_same) && 
+          string_ == static_cast<const ArbitraryUnary*>(&n)->string_;
+}
+
+bool ArbitraryFactor::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const ArbitraryFactor*>(&n)->string_;
+}
+
+bool Variable::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          name_ == static_cast<const Variable*>(&n)->name_;          
+}
+
+
+bool Parameter::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          name_ == static_cast<const Parameter*>(&n)->name_;          
+}
+
+std::ostream& Caller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "call<" 
+    << get_id()
+    << ","
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
   return s;
 }
 
-void ProgramCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
+std::ostream& Definition::dump(std::ostream& s) const 
 {
-  shared_ptr<Definition> defnode;
+  bound_variables_t::const_iterator it  = bound_variables_.begin();
+  bound_variables_t::const_iterator end = bound_variables_.end();
 
-  difinition_type_t def_type(name_, actual_arg_list_.size());
+  s << name_
+    << "<"
+    << get_id()
+    << ">(";
 
-  // 制約定義から探す
-  constraint_def_map_t::iterator cons_it = arg.cons_def_map_.find(def_type);
-  if(cons_it!=arg.cons_def_map_.end()) {
-    defnode = (*cons_it).second;
-  } else {
-    // プログラム定義から探す
-    program_def_map_t::iterator prog_it = arg.prog_def_map_.find(def_type);
-    if(prog_it!=arg.prog_def_map_.end()) {
-      defnode = (*prog_it).second;
-    } else {
-      throw UndefinedReference(to_string());
-    }
-  }
-
-  //循環参照のチェック
-  if (arg.refered_def_.find(def_type) != arg.refered_def_.end()) {
-    throw CircularReference(to_string());
-  }
-
-  // 実引数に対しpreprocess適用
-  for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
-           bind(&Node::preprocess, _1, _1, arg));
-
-  defnode->preprocess(child_, arg, actual_arg_list_);
-}
-
-void ConstraintCaller::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  difinition_type_t def_type(name_, actual_arg_list_.size());
-
-  // 制約定義から探す
-  constraint_def_map_t::iterator it = arg.cons_def_map_.find(def_type);
-  if(it==arg.cons_def_map_.end()) {
-    throw UndefinedReference(to_string());
-  }
-
-  //循環参照のチェック
-  if (arg.refered_def_.find(def_type) != arg.refered_def_.end()) {
-    throw CircularReference(to_string());
-  }
-
-
-  // 実引数に対しpreprocess適用
-  for_each(actual_arg_list_.begin(), actual_arg_list_.end(), 
-           bind(&Node::preprocess, _1, _1, arg));
-
-  (*it).second->preprocess(child_, arg, actual_arg_list_);
-}
-
-std::string Caller::to_string() const
-{
-  actual_arg_list_t::const_iterator it  = actual_arg_list_.begin();
-  actual_arg_list_t::const_iterator end = actual_arg_list_.end();
-
-  std::string s;
-  s += "call<";
-  s += name_;
-  s += "(";
-
-  if(it!=end) s += (*it++)->to_string();
+  if(it!=end) s << *(it++);
   while(it!=end) {
-    s += ",";
-    s += (*it++)->to_string();
+    s << "," << *(it++);
   }
+  s << "):=" << *child_;
 
-  s += ")>";
-  if(child_) {
-    s +=  "[";
-    s += child_->to_string();
-    s += "]";
-  }
   return s;
 }
 
@@ -103,59 +312,20 @@ node_sptr Caller::clone()
 {
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
-  n->actual_arg_list_.resize(actual_arg_list_.size());
-  copy(actual_arg_list_.begin(), actual_arg_list_.end(),  n->actual_arg_list_.begin());
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
   if(child_) n->child_ = child_->clone();
   
   return n;
-}
-
-void Definition::preprocess(node_sptr& own, 
-                            preprocess_arg_t& arg,
-                            actual_arg_list_t& actual_arg_list) 
-{
-  formal_arg_map_t fam;
-
-  // 仮引数と実引数の対応付け
-  bound_variables_t::iterator bv_it = bound_variables_.begin();
-  actual_arg_list_t::iterator aa_it = actual_arg_list.begin();
-  for(; aa_it!=actual_arg_list.end(); ++bv_it, ++aa_it) {
-    (*aa_it)->preprocess(*aa_it, arg);
-    fam.insert(make_pair(*bv_it, *aa_it));
-  }
-
-  // 循環参照検出用リストに登録
-  preprocess_arg_t narg(arg, fam);
-  narg.refered_def_.insert(make_pair(name_, bound_variables_.size()));
-
-  own = child_->clone(); 
-  own->preprocess(own, narg);
-}
-
-std::string Definition::to_string() const
-{
-  bound_variables_t::const_iterator it  = bound_variables_.begin();
-  bound_variables_t::const_iterator end = bound_variables_.end();
-
-  std::string s;
-  s += name_;
-  s += "(";
-
-  if(it!=end) s += *(it++);
-  while(it!=end) {
-    s += ",";
-    s += *(it++);
-  }
-
-  s += "):=";
-  s += child_->to_string();
-  return s;
 }
 
 node_sptr Definition::clone()
 {
   boost::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());
   n->name_ = name_;
+
   n->bound_variables_.resize(bound_variables_.size());
   copy(bound_variables_.begin(), bound_variables_.end(),  n->bound_variables_.begin());
   n->child_ = child_->clone();
@@ -163,146 +333,118 @@ node_sptr Definition::clone()
   return n;
 }
 
-void LogicalAnd::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  if(!arg.in_constraint_) {
-    throw InvalidConjunction(lhs_->to_string(), rhs_->to_string());
-  }
-
-  lhs_->preprocess(lhs_, arg);
-  rhs_->preprocess(rhs_, arg);
-}
-
-void LogicalOr::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  if(!arg.in_guard_) {
-    throw InvalidDisjunction(lhs_->to_string(), rhs_->to_string());
-  }
-
-  lhs_->preprocess(lhs_, arg);
-  rhs_->preprocess(rhs_, arg);
-}
-
-void Parallel::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  if(arg.in_constraint_) {
-    throw InvalidParallelComposition(lhs_->to_string(), rhs_->to_string());
-  }
-    
-  lhs_->preprocess(lhs_, arg);
-  rhs_->preprocess(rhs_, arg);
-}
-
-void Weaker::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  if(arg.in_constraint_) {
-    throw InvalidWeakComposition(lhs_->to_string(), rhs_->to_string());
-  }
-    
-  lhs_->preprocess(lhs_, arg);
-  rhs_->preprocess(rhs_, arg);
-}
-
-void Always::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  if(arg.in_guard_) {
-    throw InvalidAlways(child_->to_string());
-  }
-
-  preprocess_arg_t narg(arg);
-  narg.in_always_ = true;    
-  child_->preprocess(child_, narg);
-
-    
-  // すでにalways制約内であった場合このノードははずす
-  if(arg.in_always_) {
-    own = child_;
-  }
-}
-
-void Variable::preprocess(node_sptr& own, preprocess_arg_t& arg)
-{
-  formal_arg_map_t::iterator it = arg.formal_arg_map_.find(name_);
-  if(it != arg.formal_arg_map_.end()) {
-    // 自身が仮引数であった場合、書き換える
-    own = (*it).second;
-  } else {
-    // 実引数であった場合、自身のすでに登録済みの微分回数よりも
-    // 大きかったら変数のリストに登録する
-    variable_map_t::iterator it = arg.variable_map_.find(name_);
-    if(it == arg.variable_map_.end() ||
-      it->second < arg.differential_count_) {
-
-        arg.variable_map_.insert(
-          make_pair(name_, arg.differential_count_));
-    }
-  }
-}
-
 /**
  * 各ノードのaccept関数定義
  */
 
-#define DEFINE_ACCEPT_FUNC(CLASS) \
-  void CLASS::accept(TreeVisitor* visitor) { visitor->visit(this); }
+#define DEFINE_ACCEPT_FUNC(CLASS, VISITOR) \
+  void CLASS::accept(node_sptr own, \
+                     VISITOR* visitor) \
+  { \
+    assert(this == own.get()); \
+    visitor->visit(boost::shared_static_cast<CLASS>(own)); \
+  }
+
+/// BaseNodeVisitorのaccept関数定義
+#define DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(CLASS) \
+  DEFINE_ACCEPT_FUNC(CLASS, BaseNodeVisitor)
+
+DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(FactorNode)
+DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(UnaryNode)
+DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(BinaryNode)
+
+/// TreeVisitorのaccept関数定義
+#define DEFINE_TREE_VISITOR_ACCEPT_FUNC(CLASS) \
+  DEFINE_ACCEPT_FUNC(CLASS, TreeVisitor)
 
 //定義
-DEFINE_ACCEPT_FUNC(ProgramDefinition)
-DEFINE_ACCEPT_FUNC(ConstraintDefinition)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramDefinition)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintDefinition)
 
 //呼び出し
-DEFINE_ACCEPT_FUNC(ProgramCaller)
-DEFINE_ACCEPT_FUNC(ConstraintCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
 
  //制約式
-DEFINE_ACCEPT_FUNC(Constraint);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
 
 //Tell制約
-DEFINE_ACCEPT_FUNC(Tell)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Tell)
 
 //Ask制約
-DEFINE_ACCEPT_FUNC(Ask)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ask)
 
 //比較演算子
-DEFINE_ACCEPT_FUNC(Equal)
-DEFINE_ACCEPT_FUNC(UnEqual)
-DEFINE_ACCEPT_FUNC(Less)
-DEFINE_ACCEPT_FUNC(LessEqual)
-DEFINE_ACCEPT_FUNC(Greater)
-DEFINE_ACCEPT_FUNC(GreaterEqual)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Equal)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnEqual)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Less)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(LessEqual)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Greater)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(GreaterEqual)
 
 //論理演算子
-DEFINE_ACCEPT_FUNC(LogicalAnd)
-DEFINE_ACCEPT_FUNC(LogicalOr)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalAnd)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalOr)
 
 //算術二項演算子
-DEFINE_ACCEPT_FUNC(Plus)
-DEFINE_ACCEPT_FUNC(Subtract)
-DEFINE_ACCEPT_FUNC(Times)
-DEFINE_ACCEPT_FUNC(Divide)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Plus)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Subtract)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Times)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Divide)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Power)
 
 //算術単項演算子
-DEFINE_ACCEPT_FUNC(Negative)
-DEFINE_ACCEPT_FUNC(Positive)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Negative)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Positive)
 
 //制約階層定義演算子
-DEFINE_ACCEPT_FUNC(Weaker)
-DEFINE_ACCEPT_FUNC(Parallel)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Weaker)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parallel)
 
 // 時相演算子
-DEFINE_ACCEPT_FUNC(Always)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Always)
 
 //微分
-DEFINE_ACCEPT_FUNC(Differential)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Differential)
 
 //左極限
-DEFINE_ACCEPT_FUNC(Previous)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Previous)
+
+//否定
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Not)
+
+//三角関数
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Sin)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Cos)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Tan)
+//逆三角関数
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Asin)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Acos)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Atan)
+//円周率
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
+//対数
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Log)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ln)
+//自然対数の底
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
+
+//任意の文字列
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryBinary)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryUnary)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryFactor)
 
 //変数・束縛変数
-DEFINE_ACCEPT_FUNC(Variable)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
 //数字
-DEFINE_ACCEPT_FUNC(Number)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
+
+//記号定数
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)
+
+//t
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SymbolicT)
 
 } //namespace parse_tree
 } //namespace hydla

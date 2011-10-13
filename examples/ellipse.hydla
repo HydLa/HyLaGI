@@ -1,0 +1,11 @@
+//ellipse.hydla
+//bouncing particle in an ellipse
+//(x/a)^2+(y/b)^2=1 (a=4,b=3)
+
+INIT   <=> x=3/4 /\ y=0 /\ vx=2 /\ vy=1.
+RUN    <=> [](x'=vx /\ y'=vy /\ vx'=0 /\ vy'=0).
+BOUNCE <=> []((x-*x-)/(4*4)+(y-*y-)/(3*3)=1 =>
+                vx = vx- - ((x-/4)*vx- + (y-/3)*vy-)*(1+1)*(x-/4) /\
+                vy = vy- - ((x-/4)*vx- + (y-/3)*vy-)*(1+1)*(y-/3)
+).
+INIT, RUN<<BOUNCE.

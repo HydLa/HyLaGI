@@ -41,11 +41,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\symbolic_simulator;..\symbolic_legacy_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator;..\librealpaverbasic;..\common"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;RP_SYSTEM_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -116,9 +116,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\parser"
+				AdditionalIncludeDirectories="..\symbolic_simulator;..\symbolic_legacy_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator;..\librealpaverbasic;..\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -175,11 +175,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\branch_and_prune_simulate.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ProgramOptions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\symbolic_legacy_simulate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\symbolic_simulate.cpp"
 				>
 			</File>
 			<File

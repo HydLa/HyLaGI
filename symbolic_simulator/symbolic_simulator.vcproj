@@ -28,6 +28,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine=""
+				AdditionalDependencies=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -41,11 +44,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;..\virtual_constraint_solver;..\virtual_constraint_solver\mathematica"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -91,6 +94,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine=""
+				AdditionalDependencies=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -105,9 +111,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;..\virtual_constraint_solver;..\virtual_constraint_solver\mathematica"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -151,11 +157,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\math_source.cpp"
+				RelativePath=".\SymbolicSimulator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\MathSimulator.cpp"
+				RelativePath=".\SymbolicValue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicValueRange.cpp"
 				>
 			</File>
 		</Filter>
@@ -165,27 +175,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\InterlanguageSender.h"
+				RelativePath=".\StateResult.h"
 				>
 			</File>
 			<File
-				RelativePath=".\math_source.h"
+				RelativePath=".\SymbolicParameter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\mathlink_helper.h"
+				RelativePath=".\SymbolicSimulator.h"
 				>
 			</File>
 			<File
-				RelativePath=".\MathSimulator.h"
+				RelativePath=".\SymbolicTypes.h"
 				>
 			</File>
 			<File
-				RelativePath=".\SSNodeFactory.h"
+				RelativePath=".\SymbolicValue.h"
 				>
 			</File>
 			<File
-				RelativePath=".\SSParseTree.h"
+				RelativePath=".\SymbolicValueRange.h"
 				>
 			</File>
 		</Filter>

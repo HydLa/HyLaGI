@@ -1,0 +1,67 @@
+//hysteresis.hydla
+//user:shun
+//a control system with a hysteresis element in the feedback loop
+//from "A Unified Framework for Hybrid Control: Model and Optimal Control Theory"
+/*
+INIT <=> h=1 & x=-3 & x'=1 .
+CON <=> [](h'=0).
+
+StateAtoB <=> [](h-= 1 & x->= 2 => h=-1).
+StateBtoA <=> [](h-=-1 & x-<=-2 => h= 1).
+
+StateA <=> [](h= 1 => [](x'= 1)).
+StateB <=> [](h=-1 => [](x'=-1)).
+
+INIT,CON<<(StateAtoB,StateBtoA),StateA,StateB.
+*/
+/*
+STATE{
+  h=1,x=-3,x'=1,[](h'=0),
+  [](h-= 1 & x->= 2 => h=-1),
+  [](h-=-1 & x-<=-2 => h= 1)
+}.
+STATE.
+
+GUARD{
+  [](h= 1 => [](x'= 1)),
+  [](h=-1 => [](x'=-1))
+}.
+GUARD.
+*/
+/*
+StateA <=> [](st=1 => [](x'= 1+u-) &h= 1).
+StateB <=> [](st=2 => [](x'=-1+u-) &h=-1).
+
+STATE{
+  st=1,u=1/2,x=-3,h=1,[](st'=0 & u'=0),
+  [](h'=0)<<(StateA,StateB)
+}.
+STATE.
+
+
+StateAtoB <=> [](st-=1 & x->= 2 => st=2).
+StateBtoA <=> [](st-=2 & x-<=-2 => st=1).
+
+GUARD{
+  StateAtoB,StateBtoA
+}.
+GUARD.
+*/
+
+StateA <=> [](st=1 => h= 1 & [](x'= 1+u-)).
+StateB <=> [](st=2 => h=-1 & [](x'=-1+u-)).
+
+STATE{
+  st=1,u=1/2,x=-3,[](st'=0 & u'=0),
+  [](h'=0)<<(StateA,StateB)
+}.
+STATE.
+
+
+StateAtoB <=> [](st-=1 & x->= 2 => st=2).
+StateBtoA <=> [](st-=2 & x-<=-2 => st=1).
+
+GUARD{
+  StateAtoB,StateBtoA
+}.
+GUARD.
