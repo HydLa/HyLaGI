@@ -13,6 +13,12 @@ namespace reduce {
 /** ‹óW‡‚ğ•\‚·REDUCE“ü—Í—p•¶š—ñ "{}" */
 const std::string REDUCEStringSender::empty_list_string("{}");
 
+/** Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrvar" */
+const std::string REDUCEStringSender::var_prefix("usrvar");
+
+/** Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê */
+const std::string REDUCEStringSender::par_prefix("p");
+
 REDUCEStringSender::REDUCEStringSender() :
   cl_(NULL),
   differential_count_(0),
@@ -205,7 +211,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 
 void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
 {
-  std::string name(var.get<0>());
+  std::string name(REDUCEStringSender::var_prefix + var.get<0>());
   int diff_count = var.get<1>();
   bool prev      = var.get<2>();
 

@@ -36,6 +36,10 @@ public:
   typedef PacketSender::vars_const_iterator vars_const_iterator;
   typedef PacketSender::node_sptr           node_sptr;
 
+  // REDUCE‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrvar"
+  static const std::string var_prefix;
+  // REDUCE‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê
+  static const std::string par_prefix;
   // ‹óW‡‚ğ•\‚·REDUCE“ü—Í—p•¶š—ñ "{}"
   static const std::string empty_list_string;
 

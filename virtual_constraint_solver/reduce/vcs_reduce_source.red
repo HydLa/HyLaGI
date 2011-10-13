@@ -294,9 +294,13 @@ end;
 procedure returnCS()$
 begin;
   write("constraintStore_:", constraintStore_);
+  if(constraintStore_={}) then return {};
+
   % 解を1つだけ得る
   % TODO: Orでつながった複数解への対応
-  return part(constraintStore_, 1);
+  % 2重リスト状態なら1レベル内側を返す。1重リストならそのまま返す
+  if(part(part(constraintStore_, 1), 0)=list) then return part(constraintStore_, 1)
+  else return constraintStore_;
 end;
 
 
@@ -729,7 +733,8 @@ begin;
   write("in calcMinTime");
   write("integAsk_: ", integAsk_);
 
-  if(integAsk_ = false) then return {}; % ∞を返すべきか？
+  % falseになるような場合はMinTimeを考える必要がない
+  if(rlqe(integAsk_) = false) then return {INFINITY};
 
   % とりあえずtに関して解く（等式の形式を前提としている）
   % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある

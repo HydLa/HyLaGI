@@ -40,7 +40,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   HYDLA_LOGGER_VCS_SUMMARY("#*** Reset Constraint Store ***");
   
   cl_->send_string("symbolic redeval '(resetConstraintStore);");
-  //  cl_->read_until_redeval();
+  // cl_->read_until_redeval();
   cl_->skip_until_redeval();
 
   if(variable_map.size() == 0)
@@ -80,11 +80,13 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
       if(variable.derivative_count > 0)
       {
         vm_str << "prev(df("
+               << REDUCEStringSender::var_prefix
                << variable.name
                << ", t, "
                << variable.derivative_count
                << "))";
         vars_str << "prev(df("
+                 << REDUCEStringSender::var_prefix
                  << variable.name
                  << ", t, "
                  << variable.derivative_count
@@ -93,9 +95,11 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
       else
       {
         vm_str << "prev("
+               << REDUCEStringSender::var_prefix
                << variable.name
                << ")";
         vars_str << "prev("
+                 << REDUCEStringSender::var_prefix
                  << variable.name
                  << ")";
       }
@@ -124,7 +128,7 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
   cl_->send_string("symbolic redeval '(addConstraint vm_str_ vars_str_);");
 
 
-  //  cl_->read_until_redeval();
+  // cl_->read_until_redeval();
   cl_->skip_until_redeval();
 
 /*
@@ -243,13 +247,13 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
 
   // TODO:本来はexprCode付きの形式で返す関数を使うようにしたい
-  //  cl_->send_string("symbolic redeval '(convertCSToVM);");
+  // cl_->send_string("symbolic redeval '(convertCSToVM);");
   cl_->send_string("symbolic redeval '(returnCS);");
 
 
   /////////////////// 受信処理                     
 
-  //  cl_->read_until_redeval();
+  // cl_->read_until_redeval();
   cl_->skip_until_redeval();
 
   // S式パーサを用いて、制約ストア全体を表すような木構造を得る
@@ -298,6 +302,10 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       // 変数名の先頭にスペースが入ることがあるので除去する
       // TODO:S式パーサを修正してスペース入らないようにする
       if(var_name.at(0) == ' ') var_name.erase(0,1);
+
+      // "usrVar"を取り除く
+      assert(var_name.find(REDUCEStringSender::var_prefix, 0) == 0);
+      var_name.erase(0, REDUCEStringSender::var_prefix.length());
 
       symbolic_variable.name = var_name;
       symbolic_variable.derivative_count = var_derivative_count;

@@ -280,7 +280,7 @@ VCSResult REDUCEVCSInterval::check_entailment(const ask_node_sptr& negative_ask,
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
-//  cl_->read_until_redeval();
+  // cl_->read_until_redeval();
   cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
@@ -451,7 +451,7 @@ VCSResult REDUCEVCSInterval::check_consistency_sub()
 /////////////////// 受信処理
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
-  //  cl_->read_until_redeval();
+  // cl_->read_until_redeval();
   cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
@@ -645,7 +645,8 @@ VCSResult REDUCEVCSInterval::integrate(
     // TODO:S式パーサを修正してスペース入らないようにする
     if(var_name.at(0) == ' ') var_name.erase(0,1);
 
-    variable.name = var_name;
+    assert(var_name.find(REDUCEStringSender::var_prefix, 0) == 0);
+    variable.name = var_name.substr(REDUCEStringSender::var_prefix.length());
     variable.derivative_count = var_derivative_count;
     HYDLA_LOGGER_VCS("name  : ", variable.name);
     HYDLA_LOGGER_VCS("derivative : ", variable.derivative_count);
