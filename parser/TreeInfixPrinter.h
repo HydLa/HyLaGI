@@ -22,8 +22,6 @@ class TreeInfixPrinter:
     PAR_N_P_S_T_D_P,
   }needParenthesis;
 
-
-  
   //value‚Æ‚Á‚Ä•¶š—ñ‚É•ÏŠ·‚µ‚Äo—Í‚·‚é
   std::ostream& print_infix(const node_sptr &, std::ostream&);
 
@@ -35,8 +33,6 @@ class TreeInfixPrinter:
   void print_binary_node(const BinaryNode &, const std::string &symbol,
                           const needParenthesis &pre_par = PAR_NONE, const needParenthesis &post_par = PAR_NONE);
   void print_unary_node(const UnaryNode &, const std::string &pre, const std::string &post);
-
-
 
   // §–ñ’è‹`
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
@@ -98,7 +94,6 @@ class TreeInfixPrinter:
   // ¶‹ÉŒÀ
   virtual void visit(boost::shared_ptr<Previous> node);
   
-  
   // ”Û’è
   virtual void visit(boost::shared_ptr<Not> node);
   
@@ -113,6 +108,12 @@ class TreeInfixPrinter:
 
   // t
   virtual void visit(boost::shared_ptr<SymbolicT> node);
+  
+  // ©‘R‘Î”‚Ì’ê
+  virtual void visit(boost::shared_ptr<E> node);
+  
+  // ‰~ü—¦
+  virtual void visit(boost::shared_ptr<Pi> node);
 };
 
 } // namespace parse_tree

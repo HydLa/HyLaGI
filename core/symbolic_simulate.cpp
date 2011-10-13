@@ -51,10 +51,12 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.exclude_error = po.count("exclude-error") > 0;
   opts.solver        = po.get<std::string>("solver");
   int level = po.get<int>("continuity");
-  if(level >= 2){
+  if(level >= 3){
     opts.default_continuity = CONT_STRONG;
   }else if(level <= 0){
     opts.default_continuity = CONT_NONE;
+  }else if(level == 2){
+    opts.default_continuity = CONT_STRONG_IP;
   }else{
     opts.default_continuity = CONT_WEAK;
   }

@@ -61,8 +61,14 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
     if(expr.substr(prev,now-prev)=="t"){//
       return node_sptr(new hydla::parse_tree::SymbolicT());
     }
+    if(expr.length() >= prev + 1 && expr.substr(prev, 2) =="Pi"){ // ‰~ü—¦
+      return node_sptr(new hydla::parse_tree::Pi());
+    }
     if(expr[prev]=='p'){//’è”–¼
       return node_sptr(new hydla::parse_tree::Parameter(expr.substr(prev+1,now-prev-1)));
+    }
+    if(expr[prev]=='E'){//©‘R‘Î”‚Ì’ê
+      return node_sptr(new hydla::parse_tree::E());
     }
     if(now-prev > 6 && expr.substr(prev, 6) == PacketSender::var_prefix){//•Ï”–¼
       return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev + 6, now-(prev+6))));

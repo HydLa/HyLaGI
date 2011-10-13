@@ -9,6 +9,10 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
+  /**
+   * シミュレーションの実行結果としてのクラス
+   * 変数や定数の値，状態の遷移などの情報を保持する
+   */
 struct StateResult {
 
   typedef enum{

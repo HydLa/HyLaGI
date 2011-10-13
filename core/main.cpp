@@ -42,7 +42,9 @@ void symbolic_legacy_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> pa
 void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
 
-//
+/**
+ * エントリポイント
+ */
 int main(int argc, char* argv[]) 
 {
 #ifdef _MSC_VER
@@ -76,7 +78,7 @@ void hydla_main(int argc, char* argv[])
   po.parse(argc, argv);
   
   std::string area_string(po.get<std::string>("area"));
-  if(area_string!=""){
+  if(area_string!=""){                 // デバッグ出力の範囲指定
     Logger::instance().set_log_level(Logger::Area);
     Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
     Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
@@ -86,25 +88,27 @@ void hydla_main(int argc, char* argv[])
     Logger::output_area_ = (area_string.find('o') != std::string::npos);
     Logger::rest_area_ = (area_string.find('r') != std::string::npos);
   }
-  else if(po.count("debug")>0) {
+  else if(po.count("debug")>0) {        // 全部デバッグ出力
     Logger::instance().set_log_level(Logger::Debug);
   } else if(po.count("comprehensive")>0){					//大局的出力モード
     Logger::instance().set_log_level(Logger::Summary);
-  } else {
+  } else {                              // 警告のみ出力
     Logger::instance().set_log_level(Logger::Warn);
   }
   
-  if(po.count("help")) {
+  if(po.count("help")) {     // ヘルプ表示して終了
     po.help_msg(std::cout);
     return;
   }
 
-  if(po.count("version")) {
+  if(po.count("version")) {  // バージョン表示して終了
     std::cout << Version::description() << std::endl;
     return;
   }
 
   // ParseTreeの構築
+  // ファイルがを指定されたらファイルから
+  // そうでなければ標準入力から受け取る
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   if(po.count("input-file")) {
     std::string filename(po.get<std::string>("input-file"));
@@ -140,6 +144,10 @@ void hydla_main(int argc, char* argv[])
   }
 }
 
+/**
+ * ProgramOptionとParseTreeを元に出力
+ * 何か出力したらtrueを返す
+ */
 bool dump(boost::shared_ptr<ParseTree> pt)
 {
   ProgramOptions &po = ProgramOptions::instance();

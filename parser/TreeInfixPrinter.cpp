@@ -166,6 +166,18 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 }
 
 
+// ©‘R‘Î”‚Ì’ê
+void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
+  (*output_stream_) << "e";
+}
+
+
+// ‰~ü—¦
+void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
+  (*output_stream_) << "Pi";
+}
+
+
 // §–ñ’è‹`
 void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintDefinition> node){
   (*output_stream_) << node->get_name() << "(";

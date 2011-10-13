@@ -193,8 +193,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always);
-    
-    
+        
     HYDLA_LOGGER_CC("#** SymbolicSimulator::check_consistency in calculate_closure: **\n");
 
     
@@ -209,8 +208,10 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     solver_->add_constraint(constraint_list);
     
     
-    continuity_map_t continuity_map = tell_collector.get_variables();
-    
+    continuity_map_t continuity_map;
+    if(opts_.default_continuity > CONT_NONE){
+      continuity_map = tell_collector.get_variables();
+    }
     solver_->set_continuity(continuity_map);
 
     
@@ -245,7 +246,10 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     HYDLA_LOGGER_CC("#** SymbolicSimulator::check_entailment in calculate_closure: **\n");
     
     //デフォルト連続性の処理
-    if(opts_.default_continuity == CONT_STRONG){
+    
+    bool strong_continuity = (opts_.default_continuity >= CONT_STRONG ||
+      opts_.default_continuity == CONT_STRONG_IP && state->phase == IntervalPhase);
+    if(strong_continuity){
       for(continuity_map_t::const_iterator it  = variable_derivative_map_.begin(); it!=variable_derivative_map_.end(); ++it) {
         continuity_map_t::iterator find_result = continuity_map.find(it->first);
         if( find_result == continuity_map.end()){
@@ -259,7 +263,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
     while(it!=end) {
-      if(opts_.default_continuity != CONT_STRONG){
+      if(strong_continuity){
         tmp_constraints.clear();
       }
       tmp_constraints.push_back((*it)->get_guard());

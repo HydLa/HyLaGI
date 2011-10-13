@@ -184,7 +184,7 @@ Quiet[
           {1},
           tStore = sol[[1]];
           tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
-          otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {},Simplify[expr]];
+          otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
           otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
 
 
@@ -643,6 +643,7 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
     ]
   );
   
+  
   (* ƒŠƒXƒg‚ð®Œ`‚·‚é*)
   convertExpr[list_] := ( Block[
     {
@@ -665,7 +666,7 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   resultList = Map[({#[[1]],LogicalExpand[#[[2]]]})&, resultList];
   resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
   resultList = Map[({#[[1]], applyList[#[[2]]]})&, resultList];
-  resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[#[[1]] === maxTime, 1, 0]})&, resultList];
+  resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[#[[1]] >= maxTime, 1, 0]})&, resultList];
   resultList
 ];
 

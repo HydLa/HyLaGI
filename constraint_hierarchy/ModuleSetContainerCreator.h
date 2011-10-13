@@ -106,6 +106,10 @@ public:
 
   }
 
+  
+  /**
+  * •À—ñ‡¬u,v
+   */
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
   {    
     container_name_.clear();
