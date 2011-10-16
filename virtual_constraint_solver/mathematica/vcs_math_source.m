@@ -666,9 +666,10 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   resultList = Map[({#[[1]],LogicalExpand[#[[2]]]})&, resultList];
   resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
   resultList = Map[({#[[1]], applyList[#[[2]]]})&, resultList];
-  resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[#[[1]] >= maxTime, 1, 0]})&, resultList];
+  resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[Simplify[#[[1]]] === Simplify[maxTime], 1, 0]})&, resultList];
   resultList
 ];
+
 
 
 getVariableName[variable_[_]] := variable;

@@ -1,6 +1,0 @@
-INIT  <=> x=2, vx=-1, y=2, vy=-1.
-MOVE  <=> [](x'=vx, y'=vx).
-WALLX <=> [](x-=0 => vx = -vx-).
-WALLY <=> [](y-=0 => vy = -vy-).
-
-INIT, MOVE << (WALLX, WALLY).
