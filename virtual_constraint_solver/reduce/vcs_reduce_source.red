@@ -370,35 +370,59 @@ on ltrig;
 
 % {{v, v(t), lapv(s)},...}の対応表、グローバル変数
 % exDSolveのexceptdfvars_に対応させるため、exDSolve最後で空集合を代入し初期化している
-% TODO prevは？
 table_:={};
 
 % operator宣言されたargs_を記憶するグローバル変数
 loadedOperator:={};
 
-%args_:={v,lapv}
+% 初期条件init○_○lhsを作成
+procedure makeInitId(f,i)$
+if(i=0) then
+  mkid(mkid(INIT,f),lhs)
+else
+  mkid(mkid(mkid(mkid(INIT,f),_),i),lhs);
+
+%laprule用、mkidしたｆを演算子とする
+procedure setMkidOperator(f,x)$
+  f(x);
+
+% ラプラス変換の変換規則の作成
+% {{v, v(t), lapv(s)},...}の対応表table_の作成
 procedure LaplaceLetUnit(args_)$
 begin;
-  scalar arg_, LAParg_;
+  scalar arg_, LAParg_, laprule_;
+
   arg_:= first args_;
   LAParg_:= second args_;
 
-  % 重複の判定
+  % arg_が重複してないか判定
   if(freeof(loadedOperator,arg_)) then 
     << 
      operator arg_, LAParg_;
      loadedOperator:= arg_ . loadedOperator;
+     operator !~f;
 
-     let{
-       laplace(df(arg_(~x),x),x) => il!&*laplace(arg_(x),x) - mkid(mkid(INIT,arg_),lhs),
-       laplace(df(arg_(~x),x,~n),x) => il!&**n*laplace(arg_(x),x) -
-       for i:=n-1 step -1 until 0 sum
-         sub(x=0, df(arg_(x),x,n-1-i)) * il!&**i,
-       laplace(arg_(~x),x) =>LAParg_(il!&)
+     % makeInitId(f,i)版
+     laprule_ :={
+       laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - makeInitId(f,0),
+       laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
+         for i:=n-1 step -1 until 0 sum
+	   makeInitId(f,n-1-i) * il!&**i,
+       laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
      };
+%     % sub版
+%     laprule_ :={
+%       laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - sub(x=0,f(x)),
+%       laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
+%       for i:=n-1 step -1 until 0 sum
+%         sub(~x=0, df(f(~x),x,n-1-i)) * il!&**i,
+%       laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
+%     };
+     
+     let laprule_;
     >>;
 
-% {{v, v(t), lapv(s)},...}の対応表
+  % {{v, v(t), lapv(s)},...}の対応表
   table_:= {arg_, arg_(t), LAParg_(s)} . table_;
   write("table_: ", table_);
 end;
@@ -419,58 +443,56 @@ retunderconstraint___ := 3;
 procedure exDSolve(expr_, init_, vars_)$
   begin;
     scalar flag_, ans_, tmp_;
+    scalar exceptdfvars_, diffexpr_, LAPexpr_, solveexpr_, solvevars_, solveans_, ans_;
  
   exceptdfvars_:= removedf(vars_);
- 
   tmp_:= for each x in exceptdfvars_ collect {x,mkid(lap,x)};
+  % ラプラス変換規則の作成
   map(LaplaceLetUnit, tmp_);
 
-  %TODO ht => ht(t)置換
+  %ht => ht(t)置換
   tmp_:=map(first(~w)=second(~w), table_);
   write("MAP: ", tmp_);
 
   tmp_:= sub(tmp_, expr_);
   write("SUB: ", tmp_);
+
   % expr_を等式から差式形式に
-  
   diffexpr_:={};
   for each x in tmp_ do 
     if(not freeof(x, equal))
       then diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)})
-    % not contained equal case
     else diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)});
-    
-    
-  LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
-  
+      
   % laplace演算子でエラー時、laplace演算子込みの式が返ると想定
   if(not freeof(LAPexpr_, laplace)) then return retsolvererror___;
 
-%  LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
+  % ラプラス変換
+  LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
   write "LAPexpr_: ", LAPexpr_;
 
-  % sに関して解く、逆ラプラス
-
-  % init_制約をLaplaceLetUnitに現れる変数名と対応させる
+  % init_制約をLAPexpr_に適応
   solveexpr_:= append(LAPexpr_, init_);
   write("solveexpr_:", solveexpr_);
 
+  % 逆ラプラス変換の対象
   solvevars_:= append(append(map(third, table_), map(lhs, init_)), {s});
   write("solvevars_:", solvevars_);
 
+  % 変換対と初期条件を連立して解く
   solveans_ := solve(solveexpr_, solvevars_);
-  write "solve: ", solveans_;
+  write "solveans_: ", solveans_;
+
   % solveが解無しの時 overconstraintと想定
   if(solveans_={}) then return retoverconstraint___;
-
+  % sがarbcomplexでない値を持つ時 overconstraintと想定
+  if(freeof(lgetf(s, solveans_), arbcomplex)) then  return retoverconstraint___;
   % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
   for each x in table_ do 
     if(freeof(solveans_, third(x))) then tmp_:=true;
   if(tmp_=true) then return retunderconstraint___;
   
-  % write("solvevars is not Free");
-  
-  % solve結果xに含まれるラプラス変換対から、それぞれの変数に対する方程式を取り出す。
+  % solveans_の逆ラプラス変換
   ans_:= for each table in table_ collect
       (first table) = invlap(lgetf((third table), solveans_),s,t);
   write("ans expr?: ", ans_);
