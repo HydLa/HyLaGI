@@ -7,9 +7,8 @@
 #include "DefaultVariable.h"
 
 #include "SymbolicValue.h"
-#include "SymbolicParameter.h"
 #include "SymbolicValueRange.h"
-
+#include "SymbolicParameter.h"
 
 #include "Types.h"
 
@@ -24,7 +23,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
   typedef simulator::DefaultVariable            variable_t;
   typedef SymbolicParameter                     parameter_t;
   typedef SymbolicValue                         value_t;
-  typedef SymbolicValue                          time_t;
+  typedef SymbolicValue                         time_t;
   typedef SymbolicValueRange                    value_range_t;
   typedef hydla::simulator::VariableMap<variable_t, 
                                         value_t> variable_map_t;

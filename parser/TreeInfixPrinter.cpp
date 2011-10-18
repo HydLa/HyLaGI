@@ -15,7 +15,6 @@ std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream&
 
 
 void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const std::string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
-
   //(*output_stream_) << "binary_node\n";
   need_par_ = pre_par;
   accept(node.get_lhs());
@@ -80,6 +79,21 @@ DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
 DEFINE_INFIX_VISIT_UNARY(Tell, "", "")
 // §–ñ®
 DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".\n")
+  
+  
+// ‘Î”
+DEFINE_INFIX_VISIT_UNARY(Ln, "Ln(", ")")
+void TreeInfixPrinter::visit(boost::shared_ptr<Log> node){
+  
+  (*output_stream_) << "Log(";
+  print_binary_node(*node, ",");
+  (*output_stream_) << ")";
+}
+
+
+// OŠpŠÖ”
+DEFINE_INFIX_VISIT_UNARY(Sin, "Sin(", ")")
+DEFINE_INFIX_VISIT_UNARY(Cos, "Cos(", ")")
 
 //•À—ñ‡¬
 void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){
@@ -168,7 +182,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 
 // ©‘R‘Î”‚Ì’ê
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
-  (*output_stream_) << "e";
+  (*output_stream_) << "E";
 }
 
 
@@ -176,6 +190,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
 void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
   (*output_stream_) << "Pi";
 }
+
 
 
 // §–ñ’è‹`

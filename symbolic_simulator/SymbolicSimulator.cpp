@@ -134,7 +134,7 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
 
 void SymbolicSimulator::simulate()
 {
-  while(!state_stack_.empty() && is_safe_) {
+  while(!state_stack_.empty() && (is_safe_ || opts_.exclude_error)) {
     phase_state_sptr state(pop_phase_state());
     bool has_next = false;
     if( opts_.max_step >= 0 && state->step > opts_.max_step)
@@ -338,7 +338,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
   
   if(opts_.assertion){
     HYDLA_LOGGER_CC("#** SymbolicSimulator::check_assertion **\n");
-    if(solver_->check_consistency(constraints_t(1, opts_.assertion) ) == VCSR_FALSE ){
+    if(solver_->check_consistency(constraints_t(1, node_sptr(new Not(opts_.assertion))) ) == VCSR_TRUE ){
       std::cout << "Assertion Failed!" << std::endl;
       is_safe_ = false;
       return CC_TRUE;
@@ -843,7 +843,6 @@ void SymbolicSimulator::output_state_result(const StateResult& result, const boo
       }while(solver_->less_than(elapsed_time, limit_time));
       solver_->apply_time_to_vm(result.variable_map, output_vm, limit_time);
       output_variable_map(output_vm, result.time, true);
-
       std::cout << std::endl;
     }else{
       std::cout << "#---------PP---------" << std::endl;

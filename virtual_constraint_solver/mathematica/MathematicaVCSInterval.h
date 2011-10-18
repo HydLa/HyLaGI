@@ -80,10 +80,6 @@ public:
    */
   std::ostream& dump(std::ostream& s) const;
   
-  /**
-   * 変数表に対して与えられた時刻を適用する
-   */
-  virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
   
   /**
    * 与えられたmapを元に，各変数の連続性を設定する．

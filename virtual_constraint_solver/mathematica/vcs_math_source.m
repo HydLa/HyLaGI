@@ -177,6 +177,7 @@ Quiet[
       {tStore, sol, integGuard, otherExpr, condition},
       debugPrint["expr:", expr, "pexpr", pexpr, "vars:", vars, "pars:", pars, "all", expr, pexpr, vars, pars];
       sol = exDSolve[expr, vars];
+      Print["sol:", sol];
       If[sol === overconstraint,
         {2},
         If[sol === underconstraint || sol[[1]] === {} ,
@@ -185,14 +186,18 @@ Quiet[
           tStore = sol[[1]];
           tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
           otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
+      Print["otherExpr:", otherExpr];
+          
           otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
 
 
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
+      Print["otherExpr:", otherExpr];
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
           sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && And@@pexpr}, t, Reals],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
+      Print["sol:", sol];
           If[sol === False,
             {2},
             (* リストのリストにする *)
@@ -470,9 +475,7 @@ applyListToOr[reduceSol_] :=
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   paramCons = getParamCons[expr];
-          Print["sol:", expr, paramCons];
   sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons],Except[True]], vars, Reals]]];
-          Print["sol:", sol];
 
   If[sol===False || Reduce[expr, vars, Reals] === False,
     overconstraint,

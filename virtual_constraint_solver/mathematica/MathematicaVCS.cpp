@@ -161,8 +161,50 @@ VCSResult MathematicaVCS::integrate(
 }
 
 
-void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){
-  vcs_->apply_time_to_vm(in_vm, out_vm, time);
+void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, 
+                                              variable_map_t& out_vm, 
+                                              const time_t& time)
+{
+  HYDLA_LOGGER_VCS("--- apply_time_to_vm ---");
+
+  PacketSender ps(ml_);
+
+  variable_map_t::const_iterator it  = in_vm.begin();
+  variable_map_t::const_iterator end = in_vm.end();
+  for(; it!=end; ++it) {
+    HYDLA_LOGGER_VCS("variable : ", it->first);
+
+    // ’l
+    value_t    value;
+    if(!it->second.is_undefined()) {
+      ml_.put_function("applyTime2Expr", 2);
+      ps.put_node(it->second.get_node(), PacketSender::VA_Time, true);
+      ps.put_node(time.get_node(), PacketSender::VA_None, false);
+
+    ////////////////// ŽóMˆ—
+
+      HYDLA_LOGGER_OUTPUT(
+        "-- math debug print -- \n",
+        (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));  
+
+      ml_.skip_pkt_until(RETURNPKT);
+      ml_.MLGetNext();ml_.MLGetNext();ml_.MLGetNext();
+
+      int ret_code = ml_.get_integer();
+      if(ret_code==0) {
+        // TODO: “KØ‚Èˆ—‚ð‚·‚é
+        assert(0);
+      }
+      else {
+        assert(ret_code==1);
+        std::string tmp = ml_.get_string();
+        MathematicaExpressionConverter mec;
+        value = mec.convert_math_string_to_symbolic_value(tmp);
+        HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
+      }
+    }
+    out_vm.set_variable(it->first, value);   
+  }
 }
 
 

@@ -40,7 +40,7 @@ set xlabel "x"
 set ylabel "y"
 #set xrange [-5:5]
 #set yrange [-2:2]
-plot "out.data" u #{vars.index("x")+2}:#{vars.index("y")+2} title "x-y" w l
+plot "out.data" u 2:3 title "x-y" w l
 EOS
 end
 
