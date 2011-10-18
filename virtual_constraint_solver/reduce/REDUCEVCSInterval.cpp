@@ -722,18 +722,27 @@ VCSResult REDUCEVCSInterval::integrate(
 
 /////////////////// 受信終了
 
-/*
   for(unsigned int state_it = 0; state_it < integrate_result.states.size(); state_it++){
     // 時刻の簡約化。本来は関数使ってやるべきだけど、とりあえずそのままここに
     HYDLA_LOGGER_VCS("SymbolicTime::send_time : ", integrate_result.states[state_it].time);
-    ml_->put_function("ToString", 1);
-    ml_->put_function("FullForm", 1);
-    ml_->put_function("Simplify", 1);
-    ps.put_node(integrate_result.states[state_it].time.get_node(), PacketSender::VA_None, true);
-    ml_->skip_pkt_until(RETURNPKT);
-    integrate_result.states[state_it].time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
+
+    cl_->send_string("expr_:=");
+    rss.put_node(integrate_result.states[state_it].time.get_node(), true);
+    cl_->send_string(";");
+    cl_->send_string("symbolic redeval '(simplifyExpr expr_);");
 
 
+    // cl_->read_until_redeval();
+    cl_->skip_until_redeval();
+
+    std::string simpl_time_str = cl_->get_s_expr();
+    HYDLA_LOGGER_VCS("simpl_time_str: ", simpl_time_str);
+    sp.parse_main(simpl_time_str.c_str());
+
+    const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
+    integrate_result.states[state_it].time = sc.convert_s_exp_to_symbolic_value(sp, tree_root_ptr);
+
+    /*
     // 時刻の近似
     if(approx_precision_ > 0) {
 
@@ -746,8 +755,8 @@ VCSResult REDUCEVCSInterval::integrate(
       ml_->MLGetNext();
       integrate_result.states[state_it].time = mec.convert_math_string_to_symbolic_value(ml_->get_string());
     }
+    */
   }
-*/
 
   return VCSR_TRUE;
 }
