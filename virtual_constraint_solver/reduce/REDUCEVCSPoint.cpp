@@ -282,6 +282,10 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       const_tree_iter_t var_ptr = and_ptr->children.begin();
       std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
 
+      // prevの先頭にスペースが入ることがあるので除去する
+      // TODO:S式パーサを修正してスペース入らないようにする
+      if(var_head_str.at(0) == ' ') var_head_str.erase(0,1);
+
       // prev変数は処理しない
       if(var_head_str=="prev") continue;
 
