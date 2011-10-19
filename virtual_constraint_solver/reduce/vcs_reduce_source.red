@@ -487,10 +487,10 @@ procedure exDSolve(expr_, init_, vars_)$
   if(solveans_={}) then return retoverconstraint___;
   % sがarbcomplexでない値を持つ時 overconstraintと想定
   if(freeof(lgetf(s, solveans_), arbcomplex)) then  return retoverconstraint___;
-  % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
-  for each x in table_ do 
-    if(freeof(solveans_, third(x))) then tmp_:=true;
-  if(tmp_=true) then return retunderconstraint___;
+%  % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
+%  for each x in table_ do 
+%    if(freeof(solveans_, third(x))) then tmp_:=true;
+%  if(tmp_=true) then return retunderconstraint___;
   
   % solveans_の逆ラプラス変換
   ans_:= for each table in table_ collect
@@ -512,23 +512,61 @@ end;
 %exDSolve(expr_, init_, vars_);
 
 
+% NDExpr（exDSolveで扱えないような制約式）であるかどうかを調べる
+% 式の中にsinもcosも入っていなければfalse
+procedure isNDExpr(expr_)$
+  if(freeof(expr_, sin) and freeof(expr_, cos)) then nil else t$
+
+
+procedure splitExprs(exprs_, vars_)$
+begin;
+  scalar NDExpr_, DExpr_, DExprVars_;
+
+  NDExpr_ := union(for each x in exprs_ join if(isNDExpr(x)) then {x} else {});
+  DExpr_ := setdiff(expr_, ndExpr_);
+  DExprVars_:= union(for each x in vars_ join if(not freeof(DExpr_, x)) then {x} else {});
+  return {NDExpr_, DExpr_, DExprVars_};
+end;
+
+
+procedure getNoDifferentialVars(vars_)$
+  union(for each x in vars_ join if(freeof(x, df)) then {x} else {})$
+
+
 % 20110705 overconstraint___無し
 ICI_SOLVER_ERROR___:= 0;
-ICI_CONSISTENT:= 1;
+ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
 ICI_UNKNOWN___:= 3; % 不要？
 
 procedure isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
 begin;
-  scalar tmpSol_, integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
-  tmpSol_:= exDSolve(expr_, init_, vars_);
+  scalar tmpSol_, splitExprsResult_, NDExpr_, DExpr_, DExprVars_,
+         integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
+
+  % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
+  % TODO:なんとかしたいところ？
+  splitExprsResult_ := splitExprs(expr_, vars_);
+  NDExpr_ := part(splitExprsResult_, 1);
+  write("NDExpr_: ", NDExpr_);
+  DExpr_ := part(splitExprsResult_, 2);
+  write("DExpr_: ", DExpr_);
+  DExprVars_ := part(splitExprsResult_, 3);
+  write("DExprVars_: ", DExprVars_);
+
+%  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
+  tmpSol_:= exDSolve(DExpr_, init_, DExprVars_);
   write("tmpSol_: ", tmpSol_);
   
   if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
+  % NDExpr_を連立
+  tmpSol_:= solve(union(tmpSol_, NDExpr_), getNoDifferentialVars(vars_));
+  write("tmpSol_ after solve: ", tmpSol_);
+
   % tmpCons_がない場合は無矛盾と判定して良い
-  if(tmpCons_ = {}) then return {ICI_CONSISTENT};
+  if(tmpCons_ = {}) then return {ICI_CONSISTENT___};
 
   integTmp_:= sub(tmpSol_, tmpCons_);
   write("integTmp_: ", integTmp_);
@@ -537,7 +575,7 @@ begin;
   write("integTmpQE_: ", integTmpQE_);
 
   % ただのtrueやfalseはそのまま判定結果となる
-  if(integTmpQE_ = true) then return {ICI_CONSISTENT}
+  if(integTmpQE_ = true) then return {ICI_CONSISTENT___}
   else if(integTmpQE_ = false) then return {ICI_INCONSISTENT___};
 
   % とりあえずtに関して解く（等式の形式を前提としている）
@@ -672,10 +710,26 @@ IC_NORMAL_END___:= 1;
 
 procedure integrateCalc(cons_, init_, discCause_, vars_, maxTime_)$
 begin;
-  scalar tmpSol_, tmpDiscCause_, 
+  scalar ndExpr_, tmpSol_, tmpDiscCause_, 
          retCode_, tmpVarMap_, tmpMinT_, integAns_;
-  tmpSol_:= exDSolve(cons_, init_, vars_);
-  write("tmpSol_:", tmpSol_);
+
+  % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
+  % TODO:なんとかしたいところ？
+  splitExprsResult_ := splitExprs(expr_, vars_);
+  NDExpr_ := part(splitExprsResult_, 1);
+  write("NDExpr_: ", NDExpr_);
+  DExpr_ := part(splitExprsResult_, 2);
+  write("DExpr_: ", DExpr_);
+  DExprVars_ := part(splitExprsResult_, 3);
+  write("DExprVars_: ", DExprVars_);
+
+%  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
+  tmpSol_:= exDSolve(DExpr_, init_, DExprVars_);
+  write("tmpSol_: ", tmpSol_);
+
+  % NDExpr_を連立
+  tmpSol_:= solve(union(tmpSol_, NDExpr_), getNoDifferentialVars(vars_));
+  write("tmpSol_ after solve: ", tmpSol_);
 
   % TODO:Solver error処理
 

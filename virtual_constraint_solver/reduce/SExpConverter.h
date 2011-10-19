@@ -34,7 +34,13 @@ class SExpConverter:
     NODE_DIFFERENTIAL,
     NODE_PREVIOUS,
     NODE_SQRT,
-    NODE_NEGATIVE
+    NODE_NEGATIVE,
+    NODE_SIN,
+    NODE_COS,
+    NODE_TAN,
+    NODE_ASIN,
+    NODE_ACOS,
+    NODE_ATAN
   }nodeType;
 
   typedef node_sptr (function_for_node)(SExpParser &sp, const_tree_iter_t iter, const nodeType &);
