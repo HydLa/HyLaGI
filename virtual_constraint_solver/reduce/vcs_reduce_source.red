@@ -487,10 +487,10 @@ procedure exDSolve(expr_, init_, vars_)$
   if(solveans_={}) then return retoverconstraint___;
   % sがarbcomplexでない値を持つ時 overconstraintと想定
   if(freeof(lgetf(s, solveans_), arbcomplex)) then  return retoverconstraint___;
-%  % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
-%  for each x in table_ do 
-%    if(freeof(solveans_, third(x))) then tmp_:=true;
-%  if(tmp_=true) then return retunderconstraint___;
+  % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
+  for each x in table_ do 
+    if(freeof(solveans_, third(x))) then tmp_:=true;
+  if(tmp_=true) then return retunderconstraint___;
   
   % solveans_の逆ラプラス変換
   ans_:= for each table in table_ collect
