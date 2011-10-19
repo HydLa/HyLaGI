@@ -121,10 +121,10 @@ bool REDUCEVCSPoint::reset(const variable_map_t& variable_map)
 
   cl_->send_string("vm_str_:=");
   cl_->send_string(vm_str.str());
-  cl_->send_string(";");
+  cl_->send_string("$");
   cl_->send_string("vars_str_:=");
   cl_->send_string(vars_str.str());
-  cl_->send_string(";");
+  cl_->send_string("$");
   cl_->send_string("symbolic redeval '(addConstraint vm_str_ vars_str_);");
 
 
@@ -227,13 +227,13 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
   HYDLA_LOGGER_VCS("----- send expr_ -----");
   cl_->send_string("expr_:=");
   add_left_continuity_constraint(continuity_map_, rss);
-  cl_->send_string(";");
+  cl_->send_string("$");
 
   // vars_‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
   cl_->send_string("vars_:=");
   rss.put_vars();
-  cl_->send_string(";");
+  cl_->send_string("$");
 
 
   cl_->send_string("symbolic redeval '(addConstraint expr_ vars_);");
@@ -387,13 +387,13 @@ void REDUCEVCSPoint::add_constraint(const constraints_t& constraints)
       rss.put_node(*it);
       first_element = false;
     }
-  cl_->send_string("};");
+  cl_->send_string("}$");
 
   // vars_‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
   cl_->send_string("vars_:=");
   rss.put_vars();
-  cl_->send_string(";");
+  cl_->send_string("$");
 
   
   cl_->send_string("symbolic redeval '(addConstraint cons_ vars_);");
@@ -429,14 +429,14 @@ void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
   cl_->send_string("},");
 
   add_left_continuity_constraint(continuity_map_, rss);
-  cl_->send_string(");");
+  cl_->send_string(")$");
 
 
   // vars‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
   cl_->send_string("vars_:=");
   rss.put_vars();
-  cl_->send_string(";");
+  cl_->send_string("$");
 
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::send_constraint ***");
   continuity_map_t continuity_map;

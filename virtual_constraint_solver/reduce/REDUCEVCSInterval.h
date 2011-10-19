@@ -63,11 +63,6 @@ public:
   virtual void add_constraint(const constraints_t& constraints);
   
   /**
-   * 現在の制約ストアから与えたaskが導出可能かどうか
-   */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
-
-  /**
    * 制約ストアが無矛盾かを判定する．
    * 引数で制約を渡された場合は一時的に制約ストアに追加する．
    */

@@ -35,6 +35,12 @@ void REDUCEVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_precis
 REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t &vm)
 {
  
+  // デバッグプリントの設定
+  std::stringstream debug_print_opt_str;
+  debug_print_opt_str << "optUseDebugPrint_:=";
+  debug_print_opt_str << (opts.debug_mode ? "t" : "nil");
+  debug_print_opt_str << ";";
+  cl_.send_string((debug_print_opt_str.str()).c_str());
 
   HYDLA_LOGGER_VCS("#*** send depend statements of variables ***");
 
@@ -63,7 +69,7 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
 
   // REDUCEの関数定義を送信
   cl_.send_string(vcs_reduce_source());
-//  cl_.read_until_redeval();
+  // cl_.read_until_redeval();
   cl_.skip_until_redeval();
 
   SExpConverter::initialize();
@@ -144,14 +150,14 @@ std::string REDUCEVCS::get_real_val(const value_t &val, int precision){
 
     cl_.send_string("value_:=");
     rss.put_node(val.get_node(), true);
-    cl_.send_string(";");
+    cl_.send_string("$");
 
 
     cl_.send_string("prec_:=");
     std::stringstream precision_str;
     precision_str << precision;
     cl_.send_string(precision_str.str());
-    cl_.send_string(";");
+    cl_.send_string("$");
 
 
     cl_.send_string("symbolic redeval '(getRealVal value_ prec_);");
@@ -178,12 +184,12 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 
   cl_.send_string("lhs_:=");
   rss.put_node(lhs.get_node(), true);
-  cl_.send_string(";");
+  cl_.send_string("$");
 
 
   cl_.send_string("rhs_:=");
   rss.put_node(rhs.get_node(), true);
-  cl_.send_string(";");
+  cl_.send_string("$");
 
 
   cl_.send_string("symbolic redeval '(checkLessThan lhs_ rhs_);");
@@ -209,7 +215,7 @@ void REDUCEVCS::simplify(time_t &time)
 
   cl_.send_string("expr_:=");
   rss.put_node(time.get_node(), true);
-  cl_.send_string(";");
+  cl_.send_string("$");
 
 
   cl_.send_string("symbolic redeval '(simplifyExpr expr_);");
@@ -242,12 +248,12 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
 
   cl_.send_string("expr_:=");
   rss.put_node(val.get_node(), true);
-  cl_.send_string(";");
+  cl_.send_string("$");
 
 
   cl_.send_string("time_:=");
   rss.put_node(time.get_node(), true);
-  cl_.send_string(";");
+  cl_.send_string("$");
 
 
   cl_.send_string("symbolic redeval '(exprTimeShift expr_ time_);");

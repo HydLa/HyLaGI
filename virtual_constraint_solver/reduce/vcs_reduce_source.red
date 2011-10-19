@@ -4,6 +4,18 @@ load_package sets;
 % constraintStore_: 現在扱っている制約集合（リスト形式）
 % csVariables_: 制約ストア内に出現する変数の一覧（定数未対応）
 %
+% optUseDebugPrint_: デバッグ出力をするかどうか
+%
+
+% デバッグ用メッセージ出力関数
+% TODO:任意長の引数に対応したい
+procedure debugWrite(arg1_, arg2_)$
+  if(optUseDebugPrint_) then <<
+    write(arg1_, arg2_);
+  >> 
+  else <<
+    1$
+  >>$
 
 
 %MathematicaでいうFold関数
@@ -19,18 +31,20 @@ procedure myif(x,op,y,approx_precision)$
 begin;
   scalar bak_precision, ans, margin;
 
-  write "-----myif-----";
-  write("x: ", x, " op: ", op, " y: ", y);
+  debugWrite("-----myif-----", " ");
+  debugWrite("x: ", x);
+  debugWrite(" op: ", op);
+  debugWrite(" y: ", y);
 
   if(x=y) then <<
-    write "x=y= ", x;
+    debugWrite("x=y= ", x);
     if(op = geq_ or op = leq_) then return t
     else return nil
   >>;
 
   if(not freeof({x,y}, INFINITY)) then <<
     ans:= myInfinityIf(x, op, y);
-    write("ans after myInfinityIf: ", ans);
+    debugWrite("ans after myInfinityIf: ", ans);
     return ans;
   >>;
   
@@ -45,13 +59,13 @@ begin;
   else
     margin:=10 ^ (3 - floor log10 abs min(x, y) - approx_precision);
 
-  write "margin:= ", margin;
+  debugWrite("margin:= ", margin);
 
-  write "x:= ", x;
-  write "y:= ", y;
-  write "abs(x-y):= ", abs(x-y);
+  debugWrite("x:= ", x);
+  debugWrite("y:= ", y);
+  debugWrite("abs(x-y):= ", abs(x-y));
 %xとyがほぼ等しい時
-  if(abs(x-y)<margin) then <<off rounded$ precision bak_precision$ write -1; return -1>>;
+  if(abs(x-y)<margin) then <<off rounded$ precision bak_precision$ write(-1); return -1>>;
 
 if (op = geq_) then
   (if (x >= y) then ans:=t else ans:=nil)
@@ -150,12 +164,12 @@ procedure bball_out()$
 <<
 off nat; 
 out "out";
-write t=lt;
-write y=ly;
-write v=lv;
-write fy=lfy;
-write fv=lfv;
-write ";end;";
+write(t=lt);
+write(y=ly);
+write(v=lv);
+write(fy=lfy);
+write(fv=lfv);
+write(";end;");
 shut "out";
 on nat;
 >>$
@@ -179,9 +193,9 @@ retfalse___ := 2;
 symbolic procedure redeval(foo_)$
 begin scalar ans_;
 
-  write "<redeval> reval ", (car foo_), ":";
+  write("<redeval> reval ", (car foo_), ":");
   ans_ :=(reval foo_);
-  write "<redeval> end:";
+  write("<redeval> end:");
 
   return ans_;
 end;
@@ -192,10 +206,12 @@ end;
 
 procedure resetConstraintStore()$
 begin;
+  putLineFeed();
+
   constraintStore_ := {};
   csVariables_ := {};
-  write("constraintStore_: ", constraintStore_);
-  write("csVariables_: ", csVariables_);
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
 
 end;
 
@@ -203,14 +219,16 @@ end;
 
 procedure addConstraint(cons_, vars_)$
 begin;
-  write("in addConstraint");
-  write("cons_: ", cons_);
-  write("vars_:", vars_);
+  putLineFeed();
+
+  debugWrite("in addConstraint", " ");
+  debugWrite("cons_: ", cons_);
+  debugWrite("vars_:", vars_);
 
   constraintStore_ := union(constraintStore_, cons_);
   csVariables_ := union(csVariables_, vars_);
-  write("constraintStore_: ", constraintStore_);
-  write("csVariables_: ", csVariables_);
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
 
 end;
 
@@ -221,8 +239,10 @@ end;
 procedure checkConsistencyWithTmpCons(expr_,vars_)$
 begin;
   scalar ans_;
+  putLineFeed();
+
   ans_:= {part(checkConsistencyBySolveOrRlqe(expr_, vars_), 1)};
-  write("ans_ in checkConsistencyWithTmpCons: ", ans_);
+  debugWrite("ans_ in checkConsistencyWithTmpCons: ", ans_);
 
   return ans_;
 end;
@@ -235,35 +255,36 @@ end;
 procedure checkConsistencyBySolveOrRlqe(expr_, vars_)$
 begin;
   scalar flag_, ans_, tmp_, mode_;
-  write "checkConsistencyBySolveOrRlqe: ";
+
+  debugWrite("checkConsistencyBySolveOrRlqe: ", " ");
 
 % TODO sqrt(2)<>0をより汎用的な値に適用する
 % tmp_:=rlqe(ex(vars_, mymkand(expr_) and sqrt(2)<>0));
-% write "tmp_: ", tmp_;
-%  flag_:= if(tmp_ = true) then rettrue___ else if(tmp_ = false) then retfalse___;
+% debugWrite("tmp_: ", tmp_);
+% flag_:= if(tmp_ = true) then rettrue___ else if(tmp_ = false) then retfalse___;
 % 別案 true以外の解は全てfalseと判定
 % flag_:= if(ws = true) then rettrue___ else retfalse___;
-%  tmp_:=rlatl(rlqe(mymkand(expr_)));
-%  write "tmp_: ", tmp_;
+% tmp_:=rlatl(rlqe(mymkand(expr_)));
+% debugWrite("tmp_: ", tmp_);
 
   % 等式が入っているかどうかにより、解くのに使用する関数を決定
   % TODO: ROQEモードでも制約ストアを返す必要がある場合への対応
 
   if(hasInequality(expr_)) then mode_:= RLQE else mode_:= SOLVE;
-  write("mode_:", mode_);
+  debugWrite("mode_:", mode_);
 
   if(mode_=SOLVE) then
   <<
-    write("union(constraintStore_, expr_):", union(constraintStore_, expr_));
-    write("union(csVariables_, vars_):", union(csVariables_, vars_));
+    debugWrite("union(constraintStore_, expr_):", union(constraintStore_, expr_));
+    debugWrite("union(csVariables_, vars_):", union(csVariables_, vars_));
     ans_:=solve(union(constraintStore_, expr_), union(csVariables_, vars_));
-    write "ans_ in checkConsistencyBySolveOrRlqe: ", ans_;
+    debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
     if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
   >> else
   <<    
-    write("union(constraintStore_, expr_):", union(constraintStore_, expr_));
+    debugWrite("union(constraintStore_, expr_):", union(constraintStore_, expr_));
     ans_:= rlqe(mymkand(union(constraintStore_, expr_)));
-    write "ans_: ", ans_;
+    debugWrite("ans_: ", ans_);
     if(ans_ <> false) then return {rettrue___} else return {retfalse___};
   >>;
 end;
@@ -272,11 +293,13 @@ end;
 procedure checkConsistency()$
 begin;
   scalar sol_;
+  putLineFeed();
+
   sol_:= checkConsistencyBySolveOrRlqe(constraintStore_, csVariables_);
-  write("sol_ in checkConsistency: ", sol_);
+  debugWrite("sol_ in checkConsistency: ", sol_);
   % ret_codeがrettrue___、つまり1であるかどうかをチェック
   if(part(sol_, 1) = 1) then constraintStore_:= part(sol_, 2);
-  write("constraintStore_: ", constraintStore_);
+  debugWrite("constraintStore_: ", constraintStore_);
 
 end;
 
@@ -285,7 +308,9 @@ end;
 
 procedure convertCSToVM()$
 begin;
-  write("constraintStore_:", constraintStore_);
+  putLineFeed();
+
+  debugWrite("constraintStore_:", constraintStore_);
 
 
 end;
@@ -293,7 +318,9 @@ end;
 
 procedure returnCS()$
 begin;
-  write("constraintStore_:", constraintStore_);
+  putLineFeed();
+
+  debugWrite("constraintStore_:", constraintStore_);
   if(constraintStore_={}) then return {};
 
   % 解を1つだけ得る
@@ -321,11 +348,13 @@ procedure hasInequality(expr_)$
 procedure checkentailment(guard_, store_, vars_)$
 begin;
   scalar flag_, ans_, sol_, nsol_;
+  putLineFeed();
+
   sol_:=rlqe(guard_ and mymkand store_);
 %  nsol_:=rlqe(not guard_ and mymkand store_);
    nsol_:=rlqe(not sol_ and mymkand store_);
-write "sol_: ", sol_;
-write "nsol_: ", nsol_;
+  debugWrite("sol_: ", sol_);
+  debugWrite("nsol_: ", nsol_);
 
   if(sol_ neq false) then
 % 冗長かも
@@ -424,7 +453,7 @@ begin;
 
   % {{v, v(t), lapv(s)},...}の対応表
   table_:= {arg_, arg_(t), LAParg_(s)} . table_;
-  write("table_: ", table_);
+  debugWrite("table_: ", table_);
 end;
 
 % vars_からdfを除いたものを返す
@@ -441,9 +470,9 @@ retoverconstraint___ := 2;
 retunderconstraint___ := 3;
 
 procedure exDSolve(expr_, init_, vars_)$
-  begin;
-    scalar flag_, ans_, tmp_;
-    scalar exceptdfvars_, diffexpr_, LAPexpr_, solveexpr_, solvevars_, solveans_, ans_;
+begin;
+  scalar flag_, ans_, tmp_;
+  scalar exceptdfvars_, diffexpr_, LAPexpr_, solveexpr_, solvevars_, solveans_, ans_;
  
   exceptdfvars_:= removedf(vars_);
   tmp_:= for each x in exceptdfvars_ collect {x,mkid(lap,x)};
@@ -452,10 +481,10 @@ procedure exDSolve(expr_, init_, vars_)$
 
   %ht => ht(t)置換
   tmp_:=map(first(~w)=second(~w), table_);
-  write("MAP: ", tmp_);
+  debugWrite("MAP: ", tmp_);
 
   tmp_:= sub(tmp_, expr_);
-  write("SUB: ", tmp_);
+  debugWrite("SUB: ", tmp_);
 
   % expr_を等式から差式形式に
   diffexpr_:={};
@@ -469,19 +498,19 @@ procedure exDSolve(expr_, init_, vars_)$
 
   % ラプラス変換
   LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
-  write "LAPexpr_: ", LAPexpr_;
+  debugWrite("LAPexpr_: ", LAPexpr_);
 
   % init_制約をLAPexpr_に適応
   solveexpr_:= append(LAPexpr_, init_);
-  write("solveexpr_:", solveexpr_);
+  debugWrite("solveexpr_:", solveexpr_);
 
   % 逆ラプラス変換の対象
   solvevars_:= append(append(map(third, table_), map(lhs, init_)), {s});
-  write("solvevars_:", solvevars_);
+  debugWrite("solvevars_:", solvevars_);
 
   % 変換対と初期条件を連立して解く
   solveans_ := solve(solveexpr_, solvevars_);
-  write "solveans_: ", solveans_;
+  debugWrite("solveans_: ", solveans_);
 
   % solveが解無しの時 overconstraintと想定
   if(solveans_={}) then return retoverconstraint___;
@@ -495,7 +524,7 @@ procedure exDSolve(expr_, init_, vars_)$
   % solveans_の逆ラプラス変換
   ans_:= for each table in table_ collect
       (first table) = invlap(lgetf((third table), solveans_),s,t);
-  write("ans expr?: ", ans_);
+  debugWrite("ans expr?: ", ans_);
 
   table_:={};
   return ans_;
@@ -543,36 +572,37 @@ procedure isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExpr_, DExpr_, DExprVars_,
          integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
+  putLineFeed();
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
   % TODO:なんとかしたいところ？
   splitExprsResult_ := splitExprs(expr_, vars_);
   NDExpr_ := part(splitExprsResult_, 1);
-  write("NDExpr_: ", NDExpr_);
+  debugWrite("NDExpr_: ", NDExpr_);
   DExpr_ := part(splitExprsResult_, 2);
-  write("DExpr_: ", DExpr_);
+  debugWrite("DExpr_: ", DExpr_);
   DExprVars_ := part(splitExprsResult_, 3);
-  write("DExprVars_: ", DExprVars_);
+  debugWrite("DExprVars_: ", DExprVars_);
 
 %  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
   tmpSol_:= exDSolve(DExpr_, init_, DExprVars_);
-  write("tmpSol_: ", tmpSol_);
+  debugWrite("tmpSol_: ", tmpSol_);
   
   if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   % NDExpr_を連立
   tmpSol_:= solve(union(tmpSol_, NDExpr_), getNoDifferentialVars(vars_));
-  write("tmpSol_ after solve: ", tmpSol_);
+  debugWrite("tmpSol_ after solve: ", tmpSol_);
 
   % tmpCons_がない場合は無矛盾と判定して良い
   if(tmpCons_ = {}) then return {ICI_CONSISTENT___};
 
   integTmp_:= sub(tmpSol_, tmpCons_);
-  write("integTmp_: ", integTmp_);
+  debugWrite("integTmp_: ", integTmp_);
 
   integTmpQE_:= rlqe (mymkand(integTmp_));
-  write("integTmpQE_: ", integTmpQE_);
+  debugWrite("integTmpQE_: ", integTmpQE_);
 
   % ただのtrueやfalseはそのまま判定結果となる
   if(integTmpQE_ = true) then return {ICI_CONSISTENT___}
@@ -585,18 +615,18 @@ begin;
   integTmpSol_:= solve(integTmpQE_,t);
 
   infList_:= union(for each x in integTmpSol_ join checkInfUnit(x, ENTAILMENT___));
-  write("infList_: ", infList_);
+  debugWrite("infList_: ", infList_);
 
   % パラメタ無しなら解は1つになるはず
   if(length(infList_) neq 1) then return {ICI_SOLVER_ERROR};
   ans_:= first(infList_);
-  write("ans_: ", ans_);
+  debugWrite("ans_: ", ans_);
 
   if(ans_=true) then return {ICI_CONSISTENT}
   else if(ans_=false) then return {ICI_INCONSISTENT___}
   else 
   <<
-    write("rlqe ans: ", ans_);
+    debugWrite("rlqe ans: ", ans_);
     return {ICI_UNKNOWN___};
   >>;
 
@@ -623,9 +653,10 @@ end;
 procedure checkEntailmentInterval(guard_, store_, init_, vars_, pars_)$
 begin;
   scalar tmp_, otherExpr_, tGuard_, tGuardQE_, tGuardSol_, infList_, ans_;
-  tmp_:= exDSolve(store_, init_, vars_);
+  putLineFeed();
 
-  write("tmp_: ", tmp_);
+  tmp_:= exDSolve(store_, init_, vars_);
+  debugWrite("tmp_: ", tmp_);
   
   otherExpr_:={};
 
@@ -635,10 +666,10 @@ begin;
       then otherExpr_:= append(otherExpr_, {x});
 
   tGuard_:= sub(tmp_,guard_);
-  write("tGuard_: ", tGuard_);
+  debugWrite("tGuard_: ", tGuard_);
 
   tGuardQE_:= rlqe (tGuard_);
-  write("tGuardQE_: ", tGuardQE_);
+  debugWrite("tGuardQE_: ", tGuardQE_);
 
   % ただのtrueやfalseはそのまま判定結果となる
   if(tGuardQE_ = true) then return CEI_ENTAILED___
@@ -651,12 +682,12 @@ begin;
   tGuardSol_:= solve(tGuardQE_,t);
 
   infList_:= union(for each x in tGuardSol_ join checkInfUnit(x, ENTAILMENT___));
-  write("infList_: ", infList_);
+  debugWrite("infList_: ", infList_);
 
   % パラメタ無しなら解は1つになるはず
   if(length(infList_) neq 1) then return CEI_SOLVER_ERROR___;
   ans_:= first(infList_);
-  write("ans_: ", ans_);
+  debugWrite("ans_: ", ans_);
 
 
   %% tGuard かつ otherExpr かつ t>0 の導出
@@ -667,14 +698,14 @@ begin;
   %% bballPP一回目に関してOK, 2回目以降は解が冗長になりERROR
   %ans_:=rlqe ex(t,example_);
 
-  %write("rlqe ex(t,example_): ",rlqe ex(t,example_));
+  %debugWrite("rlqe ex(t,example_): ",rlqe ex(t,example_));
 
 
   if(ans_=true) then return CEI_ENTAILED___
   else if(ans_=false) then return CEI_NOT_ENTAILED___
   else 
     << 
-     write("rlqe ans: ", ans_);
+     debugWrite("rlqe ans: ", ans_);
      return CEI_UNKNOWN___;
     >>;
 
@@ -685,8 +716,9 @@ end;
 procedure checkInfUnit(tExpr_, mode_)$
 begin;
   scalar infCheckAns_;
+
   % 前提：relop(t, 値)の形式
-  write("tExpr_: ", tExpr_);
+  debugWrite("tExpr_: ", tExpr_);
 
   if(part(tExpr_,0)=equal) then 
     % ガード条件判定においては等式の場合はfalse
@@ -698,7 +730,7 @@ begin;
   else 
     if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
     else if(mode_ = MINTIME___) then infCheckAns_:= {};
-  write("infCheckAns_: ", infCheckAns_);
+  debugWrite("infCheckAns_: ", infCheckAns_);
 
   return infCheckAns_;
 end;
@@ -712,41 +744,42 @@ procedure integrateCalc(cons_, init_, discCause_, vars_, maxTime_)$
 begin;
   scalar ndExpr_, tmpSol_, tmpDiscCause_, 
          retCode_, tmpVarMap_, tmpMinT_, integAns_;
+  putLineFeed();
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
   % TODO:なんとかしたいところ？
   splitExprsResult_ := splitExprs(expr_, vars_);
   NDExpr_ := part(splitExprsResult_, 1);
-  write("NDExpr_: ", NDExpr_);
+  debugWrite("NDExpr_: ", NDExpr_);
   DExpr_ := part(splitExprsResult_, 2);
-  write("DExpr_: ", DExpr_);
+  debugWrite("DExpr_: ", DExpr_);
   DExprVars_ := part(splitExprsResult_, 3);
-  write("DExprVars_: ", DExprVars_);
+  debugWrite("DExprVars_: ", DExprVars_);
 
 %  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
   tmpSol_:= exDSolve(DExpr_, init_, DExprVars_);
-  write("tmpSol_: ", tmpSol_);
+  debugWrite("tmpSol_: ", tmpSol_);
 
   % NDExpr_を連立
   tmpSol_:= solve(union(tmpSol_, NDExpr_), getNoDifferentialVars(vars_));
-  write("tmpSol_ after solve: ", tmpSol_);
+  debugWrite("tmpSol_ after solve: ", tmpSol_);
 
   % TODO:Solver error処理
 
   tmpDiscCause_:= sub(tmpSol_, discCause_);
-  write("tmpDiscCause_:", tmpDiscCause_);
+  debugWrite("tmpDiscCause_:", tmpDiscCause_);
 
   tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, vars_)); 
-  write("tmpVarMap_:", tmpVarMap_);
+  debugWrite("tmpVarMap_:", tmpVarMap_);
 
   tmpMinT_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_);
-  write("tmpMinT_:", tmpMinT_);
+  debugWrite("tmpMinT_:", tmpMinT_);
   if(tmpMinT_ = error) then retCode_:= IC_SOLVER_ERROR___
   else retCode_:= IC_NORMAL_END___;
 
   % TODO:tmpMinT_は複数時刻扱えるようにする
   integAns_:= {retCode_, tmpVarMap_, {tmpMinT_}};
-  write("integAns_", integAns_);
+  debugWrite("integAns_", integAns_);
   
   return integAns_;
 end;
@@ -756,14 +789,15 @@ end;
 procedure createIntegratedValue(pairInfo_, variable_)$
 begin;
   scalar retList_, integRule_, integExpr_, newRetList_;
+
   retList_:= first(pairInfo_);
   integRule_:= second(pairInfo_);
 
   integExpr_:= {variable_, sub(integRule_, variable_)};
-  write("integExpr_: ", integExpr_);
+  debugWrite("integExpr_: ", integExpr_);
 
   newRetList_:= cons(integExpr_, retList_);
-  write("newRetList_: ", newRetList_);
+  debugWrite("newRetList_: ", newRetList_);
 
   return {newRetList_, integRule_};
 end;
@@ -778,16 +812,16 @@ begin;
   if(discCause_ = {}) then return {maxTime_, 1};
 
   minTList_:= union(for each x in discCause_ join calcMinTime(x));
-  write("minTList_ in calcNextPointPhaseTime: ", minTList_);
+  debugWrite("minTList_ in calcNextPointPhaseTime: ", minTList_);
 
   if(not freeof(minTList_, error)) then return error;
 
   minT_:= myFindMinimumNatPPTime(INFINITY, minTList_);
-  write("minT_: ", minT_);
+  debugWrite("minT_: ", minT_);
 
   if(mymin(minT_, maxTime_) neq maxTime_) then ans_:= {minT_, 0}
   else ans_:= {maxTime_, 1}; 
-  write("ans_: ", ans_);
+  debugWrite("ans_: ", ans_);
 
   return ans_;
 end;
@@ -810,8 +844,9 @@ end;
 procedure calcMinTime(integAsk_)$
 begin;
   scalar sol_, minTList_, singletonMinTList_;
-  write("in calcMinTime");
-  write("integAsk_: ", integAsk_);
+
+  debugWrite("in calcMinTime", " ");
+  debugWrite("integAsk_: ", integAsk_);
 
   % falseになるような場合はMinTimeを考える必要がない
   if(rlqe(integAsk_) = false) then return {INFINITY};
@@ -823,10 +858,10 @@ begin;
   sol_:= solve(integAsk_, t);
 
   minTList_:= union(for each x in sol_ join checkInfUnit(x, MINTIME___));  
-  write("minTList_ in calcMinTime: ", minTList_);
+  debugWrite("minTList_ in calcMinTime: ", minTList_);
 
   singletonMinTList_:= {myFindMinimumNatPPTime(Infinity, minTList_)};
-  write("singletonMinTList_: ", singletonMinTList_);
+  debugWrite("singletonMinTList_: ", singletonMinTList_);
 
   % パラメタ無しなら解は1つになるはず
   if(length(singletonMinTList_) neq 1) then return {error};
@@ -839,11 +874,13 @@ end;
 procedure getRealVal(value_, prec_)$
 begin;
   scalar tmp_, defaultPrec_;
+  putLineFeed();
+
   defaultPrec:= precision(0)$
   on rounded$
   precision(prec_);
   tmp_:= value_;
-  write("tmp_:", tmp_);
+  debugWrite("tmp_:", tmp_);
   precision(defaultPrec_)$
   off rounded$
 
@@ -857,8 +894,10 @@ end;
 procedure applyTime2Expr(expr_, time_)$
 begin;
   scalar appliedExpr_;
+  putLineFeed();
+
   appliedExpr_:= sub(t=time_, expr_);
-  write("appliedExpr_:", appliedExpr_);
+  debugWrite("appliedExpr_:", appliedExpr_);
 
   return {1, appliedExpr_};
 end;
@@ -868,8 +907,10 @@ end;
 procedure exprTimeShift(expr_, time_)$
 begin;
   scalar shiftedExpr_;
+  putLineFeed();
+
   shiftedExpr_:= sub(t=t-time_, expr_);
-  write("shiftedExpr_:", shiftedExpr_);
+  debugWrite("shiftedExpr_:", shiftedExpr_);
 
   return shiftedExpr_;
 end;
@@ -881,10 +922,12 @@ end;
 procedure simplifyExpr(expr_)$
 begin;
   scalar simplifiedExpr_;
+  putLineFeed();
+
   % TODO:simplify関数を使う
 %  simplifiedExpr_:= simplify(expr_);
   simplifiedExpr_:= expr_;
-  write("simplifiedExpr_:", simplifiedExpr_);
+  debugWrite("simplifiedExpr_:", simplifiedExpr_);
 
   return simplifiedExpr_;
 end;
@@ -894,8 +937,10 @@ end;
 procedure checkLessThan(lhs_, rhs_)$
 begin;
   scalar ret_;
+  putLineFeed();
+
   ret_:= if(mymin(lhs_, rhs_) = lhs_) then rettrue___ else retfalse___;
-  write("ret_:", ret_);
+  debugWrite("ret_:", ret_);
 
   return ret_;
 end;
@@ -905,18 +950,26 @@ end;
 procedure getSExpFromString(str_)$
 begin;
   scalar retSExp_;
+  putLineFeed();
+
   retSExp_:= str_;
-  write("retSExp_:", retSExp_);
+  debugWrite("retSExp_:", retSExp_);
 
   return retSExp_;
 end;
 
 
-%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%
-expr_:= {yyy = -10, y = 10, yy = 0, z = y, zz = yy}; vars_:={y, z, yy, zz, yyy, y, z, yy, zz};
-symbolic redeval '(checkConsistencyBySolveOrRlqe expr_ vars_);
-clear expr_, pexpr_, vars_;
+procedure putLineFeed()$
+begin;
+  write("");
+end;
 
+
+
+
+%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%
+
+symbolic redeval '(putLineFeed);
 
 ;end;

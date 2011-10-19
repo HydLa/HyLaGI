@@ -51,6 +51,10 @@ int SExpParser::get_derivative_count(const_tree_iter_t var_iter) const{
   int var_derivative_count;
   std::string var_str = std::string(var_iter->value.begin(), var_iter->value.end());
 
+  // dfの先頭にスペースが入ることがあるので除去する
+  // TODO:S式パーサを修正してスペース入らないようにする
+  if(var_str.at(0) == ' ') var_str.erase(0,1);
+
   // 微分を含む変数
   if(var_str=="df"){
     size_t df_child_size = var_iter->children.size();
