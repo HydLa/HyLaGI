@@ -7,9 +7,8 @@
 （衝撃は2台の速度の差に比例するはずなので，調べたい条件は速度によって記述している）
 */
 
-INIT <=> ca = 0 & cb > 0 & ca' = 50 & cb' = 50 & erapse = 0 & [](erapse'= 1).
+INIT <=> ca = 0 & cb = 300 & ca' = 40 & cb' = 40 & elapse = 0 & [](elapse'= 1).
 CONST(x) <=> [](x'' = 0).
-BRAKE(x, time) <=> [](erapse- >= time & x'- > 0 => x'' = -10).
-ASSERT(!(ca = cb & ca' > cb' + 40) ).
+BRAKE(x, time) <=> [](elapse- >= time & x'- > 0 => x'' = -10).
 
-INIT, CONST(ca) << BRAKE(ca, 10), CONST(cb) << BRAKE(cb, 5).
+INIT, CONST(ca) << BRAKE(ca, 8), CONST(cb) << BRAKE(cb, 5).

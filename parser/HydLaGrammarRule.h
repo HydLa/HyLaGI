@@ -82,6 +82,7 @@ typedef enum _RuleID {
   RI_Diff,
   RI_Unary,
   RI_Arith_term,
+  RI_Power_term,
   RI_Arithmetic,
   RI_AlwaysTerm,
   RI_Ask,

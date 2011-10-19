@@ -107,6 +107,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Unary)         unary; 
     defRuleID(RI_Arithmetic)    arithmetic;
     defRuleID(RI_Arith_term)    arith_term;
+    defRuleID(RI_Power_term)    power_term;
     defRuleID(RI_Logical)       logical;
     defRuleID(RI_Logical_term)  logical_term; 
 
@@ -204,14 +205,18 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //éZèpéÆ
       arithmetic =
         arith_term % root_node_d[add | sub];
-
+      
       //éZèpçÄ
       arith_term =  
-        unary % root_node_d[mul | div | pow];
+        unary % root_node_d[mul | div];
+      
       
       //íPçÄââéZéq
-      unary = !(root_node_d[positive | negative]) >> limit;
+      unary = !(root_node_d[positive | negative]) >> power_term;
       
+      //Ç◊Ç´èÊ
+      power_term =  
+        limit % root_node_d[pow];
 
       //ã…å¿
       //factorà»äOÇÃï®Ç™å„ÇÎÇ…Ç†Ç¡ÇΩÇÁprev

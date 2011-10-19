@@ -115,17 +115,17 @@ void MathematicaVCSInterval::send_init_cons(PacketSender &ps, const continuity_m
       else
       {
         // 値がないなら何かしらの定数を作って送信．
-        parameter_t tmp_param;
-        tmp_param.name = PacketSender::par_prefix + init_vars_it->first.name;
+        std::string name;
+        name = PacketSender::par_prefix + init_vars_it->first.name;
         for(int i=0;i<init_vars_it->first.derivative_count;i++){
           //とりあえず微分回数分dをつける
-          tmp_param.name.append("d");
+          name.append("d");
         }
-        while(!parameter_map_.get_variable(tmp_param).is_undefined()){
+        while(!parameter_map_.get_variable(parameter_t(name)).is_undefined()){
           //とりあえず重複回数分iをつける
-          tmp_param.name.append("i");
+          name.append("i");
         }
-        ml_->put_symbol(tmp_param.name);
+        ml_->put_symbol(name);
       }
     }
   }

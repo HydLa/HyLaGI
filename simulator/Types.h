@@ -56,6 +56,7 @@ std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
 std::ostream& operator<<(std::ostream& s, const expanded_always_t& a);
 std::ostream& operator<<(std::ostream& s, const expanded_always_id_t& a);
+std::ostream& operator<<(std::ostream& s, const continuity_map_t& continuity_map);
 
 } //namespace simulator
 } //namespace hydla 

@@ -16,6 +16,8 @@ struct SymbolicParameter {
   boost::shared_ptr<SymbolicValue> introduced_time_;
   int id;*/
 
+  SymbolicParameter(const std::string &n):name(n){}
+  SymbolicParameter(){}
   std::string get_name() const;
   /**
    * 構造体の値をダンプする
