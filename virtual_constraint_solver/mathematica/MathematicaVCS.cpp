@@ -212,7 +212,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
 std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
   std::string ret;
   PacketSender ps(ml_);
-  
+
   if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  

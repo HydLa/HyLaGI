@@ -186,9 +186,8 @@ Quiet[
           tStore = sol[[1]];
           tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
           otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
-          otherExpr = List@@LogicalExpand[And@@otherExpr];
-          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual}, Head[#] ] || # === False)&];
-
+          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual, Inequality}, Head[#] ] || # === False)&];
+          
 
           (* otherExpr‚ÉtStore‚ð“K—p‚·‚é *)
           otherExpr = otherExpr /. tStore;
@@ -395,9 +394,9 @@ Quiet[
     Block[
       {sol},
       sol = Reduce[expr, vars, Reals];
-    If[sol === False,
-      {2},
-      {1, sol}
+      If[sol === False,
+        {2},
+        {1, sol}
       ]
     ],
     {0, $MessageList}

@@ -16,12 +16,12 @@ bool Logger::rest_area_;  //どこで出したら良いか分からないようなの
 Logger::Logger() :
   log_level_(Warn)
 {
-  area_.push(std::cout);
-  debug_.push(std::cout);
-  summary_.push(std::cout);//大局的デバッグモード
-  warn_.push(std::cout);
-  error_.push(std::cout);
-  fatal_.push(std::cout);
+  area_.push(std::cerr);
+  debug_.push(std::cerr);
+  summary_.push(std::cerr);//大局的デバッグモード
+  warn_.push(std::cerr);
+  error_.push(std::cerr);
+  fatal_.push(std::cerr);
 }
 
 Logger::~Logger()
