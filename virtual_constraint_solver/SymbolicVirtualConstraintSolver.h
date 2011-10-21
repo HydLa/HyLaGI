@@ -172,7 +172,7 @@ public:
     {assert(0); return VCSR_SOLVER_ERROR;}
 
   //SymbolicValue‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
-  virtual std::string get_real_val(const value_t &val, int precision){return "get_real_val is unavailable";}
+  virtual std::string get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){return "get_real_val is unavailable";}
   //SymbolicTime‚ğŠÈ–ñ‚·‚é
   virtual void simplify(time_t &time){assert(0);}
   //SymbolicTime‚ğ”äŠr‚·‚é

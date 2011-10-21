@@ -207,13 +207,113 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
   }
 }
 
+std::string upward(std::string str){
+  if(str.at(str.length()-1) == '.'){
+    str = upward(str.substr(0,str.length()-1)) + '.';
+  }else if(str.at(str.length()-1) != '9'){
+    str = str.substr(0,str.length()-1)+(char)(str.at(str.length()-1)+1);
+  }else {
+    str = upward(str.substr(0,str.length()-1)) + '0';
+  }
+  return str;
+}
 
 //value_tを指定された精度で数値に変換する
-std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
+  std::string MathematicaVCS::get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){
   std::string ret;
   PacketSender ps(ml_);
 
-  if(!val.is_undefined()) {
+  if(!val.is_undefined() && opfmt == symbolic_simulator::fmtNInterval) {
+    ml_.put_function("ToString", 2);
+    ml_.put_function("Interval", 1);    
+    ml_.put_function("N", 2);  
+    ps.put_node(val.get_node(), PacketSender::VA_None, true);
+    ml_.put_integer(precision+1);     
+    ml_.put_symbol("InputForm");
+    ml_.skip_pkt_until(RETURNPKT);
+    ret = ml_.get_string();
+    
+    int loc;
+    int pre = precision;
+    char sign = 'p';
+    std::string lower = "";
+    std::string upper = "";
+    //指定された精度に合わせる
+    if(ret.find("-")!=-1) {
+      ret.erase(ret.find("-"),1);
+      if(ret.find("-")!=-1) {
+	ret.erase(ret.find("-"),1);
+	sign = 'n';
+      }else{
+	sign = 'c';
+      }
+    }
+    //std::cout<<ret<<std::endl;
+    if(ret.find("}")-ret.find("{")-2>precision*2){
+      for(int i=ret.find("{")+1;i<ret.find(",")-1;i++){
+	if(ret.at(i)!='0' &&  ret.at(i)!='.') {
+	  if(ret.substr(ret.find("{")+1,pre).find(".")!=-1) pre++;
+	  lower = ret.substr(ret.find("{")+1,pre);
+	  break;
+	}else if(ret.at(i) == '0') pre++;
+      }
+      pre = precision;
+      for(int i=ret.find(",")+2;i<ret.length();i++){
+	if(ret.at(i)!='0' &&  ret.at(i)!='.') {
+	  if(ret.substr(ret.find("{")+1,pre).find(".")!=-1) pre++;
+	  upper = ret.substr(ret.find(",")+2,pre);
+	  break;
+	}else if(ret.at(i) == '0') pre++;
+      }
+    }else{
+      lower = ret.substr(ret.find("{")+1,ret.find(",")-(ret.find("{")+1));
+      upper = ret.substr(ret.find(",")+2,ret.find("}")-(ret.find(",")+2));
+    }
+    //化学表記法(ex:*10^6)の対応
+    std::string lowex = "";
+    std::string upex = "";
+    if((loc=ret.find("*^")) != -1){
+      lowex = ret.substr(loc,ret.find(",")-loc);
+      loc=ret.find_last_of("*^");
+      upex = ret.substr(loc-1,lowex.length());
+    }
+    loc=0;
+
+    //一致していたら(正なら)upperの最後の桁をひとつ繰り上げる
+    if(lower.compare(upper)==0 && lower != "0"){
+      switch (sign) {
+      case 'n' : lower = upward(lower); break;
+      case 'p' : upper = upward(upper); break;
+      case 'c' : lower = "-" + upward(lower); upper = upward(upper); break;
+      }
+    }
+    //一致している部分を省略して表示する
+    while(true){
+      if(lower.at(loc)!=upper.at(loc)) {
+	ret = lower.substr(0,loc);
+	lower = lower.substr(loc);
+	upper = upper.substr(loc);
+
+	if(lowex.compare(upex)==0){
+	  ret = ret + "[" + lower + "," + upper + "]" + lowex;
+	  break;
+	}else ret = ret + "[" + lower + lowex + "," + upper + upex + "]";
+	break;
+      }
+      loc++;
+      //もしも全て一致している場合はどちらか表示
+      if(loc > lower.length()-1){
+	ret = lower;
+	break;
+      }else if(loc > upper.length()-1) {
+	ret = upper;
+	break;
+      }
+    }
+
+    if(sign == 'n') ret = "-"+ret;
+       
+  } else  if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  
     ps.put_node(val.get_node(), PacketSender::VA_None, true);
@@ -221,10 +321,10 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision){
     ml_.put_symbol("CForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
-  }
-  else {
+  }  else {
     ret = "UNDEF";
   }
+
   return ret;
 }
 
