@@ -232,7 +232,7 @@ std::string upward(std::string str){
     ml_.put_symbol("InputForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
-    
+    /*
     int loc;
     int pre = precision;
     char sign = 'p';
@@ -265,6 +265,13 @@ std::string upward(std::string str){
 	  break;
 	}else if(ret.at(i) == '0') pre++;
       }
+      //precision{‚PŒ…–Ú‚ğ‰º’[‚ÍØ‚èÌ‚ÄAã’[‚ÍØ‚èã‚°
+      switch (sign) {
+      case 'n' : lower = upward(lower); break;
+      case 'p' : upper = upward(upper); break;
+      case 'c' : lower = "-" + upward(lower); upper = upward(upper); break;
+      }
+    
     }else{
       lower = ret.substr(ret.find("{")+1,ret.find(",")-(ret.find("{")+1));
       upper = ret.substr(ret.find(",")+2,ret.find("}")-(ret.find(",")+2));
@@ -278,14 +285,7 @@ std::string upward(std::string str){
       upex = ret.substr(loc-1,lowex.length());
     }
     loc=0;
-    //precision{‚PŒ…–Ú‚ğ‰º’[‚ÍØ‚èÌ‚ÄAã’[‚ÍØ‚èã‚°
-    if(lower != "0"){
-      switch (sign) {
-      case 'n' : lower = upward(lower); break;
-      case 'p' : upper = upward(upper); break;
-      case 'c' : lower = "-" + upward(lower); upper = upward(upper); break;
-      }
-    }
+    
     //ˆê’v‚µ‚Ä‚¢‚é•”•ª‚ğÈ—ª‚µ‚Ä•\¦‚·‚é
     while(true){
       if(lower.at(loc)!=upper.at(loc)) {
@@ -311,7 +311,7 @@ std::string upward(std::string str){
     }
 
     if(sign == 'n') ret = "-"+ret;
-     
+    */
   } else  if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  
