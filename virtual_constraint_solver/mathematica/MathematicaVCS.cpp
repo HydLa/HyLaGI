@@ -232,7 +232,7 @@ std::string upward(std::string str){
     ml_.put_symbol("InputForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
-    /*
+    
     int loc;
     int pre = precision;
     char sign = 'p';
@@ -311,7 +311,7 @@ std::string upward(std::string str){
     }
 
     if(sign == 'n') ret = "-"+ret;
-    */
+    
   } else  if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  
