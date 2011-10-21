@@ -592,7 +592,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     
       
     HYDLA_LOGGER_MS_SUMMARY("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
-                       "time:", solver_->get_real_val(integrate_result.states[it].time, 5), "\n",
+		       "time:", solver_->get_real_val(integrate_result.states[it].time, 5, opts_.output_format), "\n",
                        integrate_result.states[it].variable_map,
                        integrate_result.states[it].parameter_map);
 
@@ -653,10 +653,10 @@ void SymbolicSimulator::output_variable_map(const variable_map_t& vm, const time
   variable_map_t::const_iterator end = vm.end();
   if(numeric){
     std::cout << std::endl;
-    std::cout << solver_->get_real_val(time, opts_.output_precision) << "\t";
+    std::cout << solver_->get_real_val(time, opts_.output_precision, opts_.output_format) << "\t";
     for(; it!=end; ++it) {
       if(opts_.output_variables.find(it->first.get_string()) != opts_.output_variables.end())
-        std::cout << solver_->get_real_val(it->second, opts_.output_precision) << "\t";
+        std::cout << solver_->get_real_val(it->second, opts_.output_precision, opts_.output_format) << "\t";
     }
   }else{
     for(; it!=end; ++it) {
@@ -695,7 +695,7 @@ void SymbolicSimulator::output_result_tree()
       std::cout << "#---------Case " << i++ << "---------" << std::endl;
 
     while(1){
-      output_state_result(*now_node, false, opts_.output_format == fmtNumeric);
+      output_state_result(*now_node, false, ((opts_.output_format==fmtNumeric)||(opts_.output_format==fmtNInterval)) );
       if(now_node->children.size() == 0){//—t‚É“ž’B
         output_parameter_map(now_node->parameter_map);
         std::cout << std::endl;

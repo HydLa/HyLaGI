@@ -55,6 +55,7 @@ typedef boost::shared_ptr<StateResult> state_result_sptr_t;
     fmtNumeric,
     fmtGUI,
     fmtMathematica,
+    fmtNInterval,
   } OutputFormat;
   
   typedef enum OutputStyle_ {
