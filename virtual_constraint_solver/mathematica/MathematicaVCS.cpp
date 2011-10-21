@@ -228,7 +228,7 @@ std::string upward(std::string str){
     ml_.put_function("Interval", 1);    
     ml_.put_function("N", 2);  
     ps.put_node(val.get_node(), PacketSender::VA_None, true);
-    ml_.put_integer(precision+1);     
+    ml_.put_integer(precision+5);     
     ml_.put_symbol("InputForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
@@ -278,9 +278,8 @@ std::string upward(std::string str){
       upex = ret.substr(loc-1,lowex.length());
     }
     loc=0;
-
-    //ˆê’v‚µ‚Ä‚¢‚½‚ç(³‚È‚ç)upper‚ÌÅŒã‚ÌŒ…‚ð‚Ð‚Æ‚ÂŒJ‚èã‚°‚é
-    if(lower.compare(upper)==0 && lower != "0"){
+    //precision{‚PŒ…–Ú‚ð‰º’[‚ÍØ‚èŽÌ‚ÄAã’[‚ÍØ‚èã‚°
+    if(lower != "0"){
       switch (sign) {
       case 'n' : lower = upward(lower); break;
       case 'p' : upper = upward(upper); break;
@@ -301,7 +300,7 @@ std::string upward(std::string str){
 	break;
       }
       loc++;
-      //‚à‚µ‚à‘S‚Äˆê’v‚µ‚Ä‚¢‚éê‡‚Í‚Ç‚¿‚ç‚©•\Ž¦
+      //‚à‚µ‚à‘S‚Äˆê’v‚µ‚Ä‚¢‚éê‡‚Í‚Ç‚¿‚ç‚©•\Ž¦(‚ ‚è‚¦‚È‚¢‚Í‚¸)
       if(loc > lower.length()-1){
 	ret = lower;
 	break;
@@ -312,7 +311,7 @@ std::string upward(std::string str){
     }
 
     if(sign == 'n') ret = "-"+ret;
-       
+     
   } else  if(!val.is_undefined()) {
     ml_.put_function("ToString", 2);  
     ml_.put_function("N", 2);  
