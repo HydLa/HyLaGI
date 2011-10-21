@@ -69,7 +69,7 @@ void ProgramOptions::init_descriptions()
     
     ("output-format,f", 
      value<std::string>()->default_value("n"), 
-     "output format:\n  t - time function\n  n - numeric\n g - for GUI m - for Mathematica Plot")
+     "output format:\n  t - time function\n  n - numeric\n  i - numeric interval\n  g - for GUI m - for Mathematica Plot")
     
     ("output-interval", 
      value<std::string>()->default_value("1/10"), 

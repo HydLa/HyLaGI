@@ -30,7 +30,9 @@ void setup_symbolic_simulator_opts(Opts& opts)
     opts.output_format = fmtMathematica; 
   } else if(po.get<std::string>("output-format") == "g"){
     opts.output_format = fmtGUI; 
-  }  else {
+  } else if(po.get<std::string>("output-format") == "i"){
+    opts.output_format = fmtNInterval;
+  } else {
     // TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
     std::cerr << "invalid option - output format" << std::endl;
     exit(-1);
