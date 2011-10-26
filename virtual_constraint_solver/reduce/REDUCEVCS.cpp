@@ -140,7 +140,7 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& ou
 
 
   //value_t‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
-std::string REDUCEVCS::get_real_val(const value_t &val, int precision){
+  std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt){
   std::string ret;
   REDUCEStringSender rss(cl_);
 

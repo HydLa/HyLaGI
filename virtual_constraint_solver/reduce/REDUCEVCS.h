@@ -85,7 +85,7 @@ public:
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
   //SymbolicValue‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
-  virtual std::string get_real_val(const value_t &val, int precision);
+  virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
   //SymbolicTime‚ğŠÈ–ñ‚·‚é
   virtual void simplify(time_t &time);
   //SymbolicTime‚ğ”äŠr‚·‚é

@@ -128,16 +128,12 @@ void REDUCEStringSender::visit(boost::shared_ptr<Previous> node)              {
   in_prev_ = false;
 }
 
-DEFINE_VISIT_UNARY(Not, not)
-
-/*
 // î€íË
 void REDUCEStringSender::visit(boost::shared_ptr<Not> node)                   {
   apply_not_ = !apply_not_;
   accept(node->get_child());
   apply_not_ = !apply_not_;
 }
-*/
 
 // éOäpä÷êî
 DEFINE_VISIT_UNARY(Sin, sin)
