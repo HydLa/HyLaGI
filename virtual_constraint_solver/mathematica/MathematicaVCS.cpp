@@ -207,11 +207,14 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
   }
 }
 
+//丸めを行う関数 get_real_val()で使う
 std::string upward(std::string str){
   if(str.at(str.length()-1) == '.'){
     str = upward(str.substr(0,str.length()-1)) + '.';
   }else if(str.at(str.length()-1) != '9'){
     str = str.substr(0,str.length()-1)+(char)(str.at(str.length()-1)+1);
+  }else if(str == "9"){
+    str = "10";   
   }else {
     str = upward(str.substr(0,str.length()-1)) + '0';
   }
@@ -224,6 +227,10 @@ std::string upward(std::string str){
   PacketSender ps(ml_);
 
   if(!val.is_undefined() && opfmt == symbolic_simulator::fmtNInterval) {
+    
+    //precisionは2より大きいとする
+    if(precision<2) precision=2;
+
     ml_.put_function("ToString", 2);
     ml_.put_function("Interval", 1);    
     ml_.put_function("N", 2);  
@@ -232,7 +239,25 @@ std::string upward(std::string str){
     ml_.put_symbol("InputForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
-    
+
+    //usrVarの場合はそのまま
+    if(ret.find(PacketSender::var_prefix) != -1) 
+      return ret.substr(ret.find("[")+1,ret.find("]")-ret.find("[")-1);
+
+    //parameterがある場合の対応 ex:Interval[1.6666666666666667`5.*pa]   Interval[pa]（不完全）
+    //TODO:Interval[-5.`5.*(-6.`5. + pa)]などへの対応 ./hydla examples/sawtooth_wave_param.hydla -m s -t 10
+    std::string parameter = "";
+    if(ret.find("{") == -1){
+      parameter = ret.substr(ret.find("[")+1,ret.find("]")-ret.find("[")-1);
+      if(parameter.find("`") == -1) {
+	return parameter;
+      }else{
+	//処理できる形式に変形
+	ret = "Interval[{"+parameter.substr(0,precision+5)+", "+parameter.substr(0,precision+5)+"}]";
+	parameter = parameter.substr(parameter.find_last_of(".")+1);
+      }
+    }
+
     int loc;
     int pre = precision;
     char sign = 'p';
@@ -243,12 +268,14 @@ std::string upward(std::string str){
       ret.erase(ret.find("-"),1);
       if(ret.find("-")!=-1) {
 	ret.erase(ret.find("-"),1);
+	//負の区間 上端と下端のどちらを丸めるか
 	sign = 'n';
       }else{
+	//[負,正]の区間
 	sign = 'c';
       }
     }
-    //std::cout<<ret<<std::endl;
+    //下端を取り出す
     if(ret.find("}")-ret.find("{")-2>precision*2){
       for(int i=ret.find("{")+1;i<ret.find(",")-1;i++){
 	if(ret.at(i)!='0' &&  ret.at(i)!='.') {
@@ -258,13 +285,15 @@ std::string upward(std::string str){
 	}else if(ret.at(i) == '0') pre++;
       }
       pre = precision;
+      //上端を取り出す
       for(int i=ret.find(",")+2;i<ret.length();i++){
 	if(ret.at(i)!='0' &&  ret.at(i)!='.') {
-	  if(ret.substr(ret.find("{")+1,pre).find(".")!=-1) pre++;
+	  if(ret.substr(ret.find(",")+2,pre).find(".")!=-1) pre++;
 	  upper = ret.substr(ret.find(",")+2,pre);
 	  break;
 	}else if(ret.at(i) == '0') pre++;
       }
+
       //precision＋１桁目を下端は切り捨て、上端は切り上げ
       switch (sign) {
       case 'n' : lower = upward(lower); break;
@@ -273,6 +302,7 @@ std::string upward(std::string str){
       }
     
     }else{
+      //ex:[0,0]などの場合に対応させる
       lower = ret.substr(ret.find("{")+1,ret.find(",")-(ret.find("{")+1));
       upper = ret.substr(ret.find(",")+2,ret.find("}")-(ret.find(",")+2));
     }
@@ -287,6 +317,7 @@ std::string upward(std::string str){
     loc=0;
     
     //一致している部分を省略して表示する
+    //TODO:"[0.9999,1.000]"を"0.999[9,10]"のように表示させる
     while(true){
       if(lower.at(loc)!=upper.at(loc)) {
 	ret = lower.substr(0,loc);
@@ -311,13 +342,18 @@ std::string upward(std::string str){
     }
 
     if(sign == 'n') ret = "-"+ret;
+    ret = ret+parameter;
     
   } else  if(!val.is_undefined()) {
-    ml_.put_function("ToString", 2);  
+    ml_.put_function("ToString", 2);
+
+    //ml_.put_function("Interval",1);
+
     ml_.put_function("N", 2);  
     ps.put_node(val.get_node(), PacketSender::VA_None, true);
     ml_.put_integer(precision);
     ml_.put_symbol("CForm");
+    //ml_.put_symbol("InputForm");
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
   }  else {
