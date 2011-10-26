@@ -23,6 +23,12 @@ procedure myFoldLeft(func_, init_, list_)$
   if(list_ = {}) then init_
   else myFoldLeft(func_, func_(init_, first(list_)), rest(list_))$
 
+%MathematicaでいうApply関数
+procedure myApply(func_, expr_)$
+begin;
+  % TODO:便利そうなので作る
+end;
+
 procedure myif(x,op,y,approx_precision)$
 %入力: 論理式(ex. sqrt(2), greaterp_, sin(2)), 精度
 %出力: t or nil or -1
@@ -222,13 +228,15 @@ begin;
   putLineFeed();
 
   debugWrite("in addConstraint", " ");
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
   debugWrite("cons_: ", cons_);
   debugWrite("vars_:", vars_);
 
   constraintStore_ := union(constraintStore_, cons_);
   csVariables_ := union(csVariables_, vars_);
-  debugWrite("constraintStore_: ", constraintStore_);
-  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("new constraintStore_: ", constraintStore_);
+  debugWrite("new csVariables_: ", csVariables_);
 
 end;
 
@@ -248,44 +256,194 @@ begin;
 end;
 
 
+% expr_中に等式以外や論理演算子が含まれる場合に用いる置換関数
+
+procedure exSub(patternList_, expr_)$
+begin;
+  scalar subAppliedExpr_, head_, subAppliedLeft_, subAppliedRight_, 
+         argCount_, subAppliedExprList_, test_;
+
+  debugWrite("in exSub", " ");
+  debugWrite("expr_:", expr_);
+  
+  % 引数を持たない場合
+  if(arglength(expr_)=-1) then <<
+    subAppliedExpr_:= sub(patternList_, expr_);
+    return subAppliedExpr_;
+  >>;
+
+  head_:= part(expr_, 0);
+
+  % orで結合されるもの同士を括弧でくくらないと、neqとかが違う結合のしかたをする可能性あり
+  if((head_=neq) or (head_=geq) or (head_=greaterp) or (head_=leq) or (head_=lessp)) then <<
+    % 等式以外の関係演算子の場合
+    subAppliedLeft_:= exSub(patternList_, part(expr_, 1));
+    debugWrite("subAppliedLeft_:", subAppliedLeft_);
+    subAppliedRight_:= exSub(patternList_, part(expr_, 2));
+    debugWrite("subAppliedRight_:", subAppliedRight_);
+
+    % できない
+    %subAppliedExpr_:= head_(subAppliedLeft_, subAppliedRight_);
+ 
+    subAppliedExpr_:= if(head_=neq) then neq(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=geq) then geq(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=greaterp) then greaterp(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=leq) then leq(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=lessp) then lessp(subAppliedLeft_, subAppliedRight_);
+  >> else if((head_=and) or (head_=or)) then <<
+    % 論理演算子の場合
+    argCount_:= arglength(expr_);
+    debugWrite("argCount_: ", argCount_);
+    subAppliedExprList_:= for i:=1 : argCount_ collect exSub(patternList_, part(expr_, i));
+    debugWrite("subAppliedExprList_:", subAppliedExprList_);    
+
+    % できない
+    %subAppliedExpr_:= myApply(head_, subAppliedExprList_);
+
+    % 引数は2つと仮定
+    % TODO: なんとかする
+    subAppliedExpr_:= if(head_=and) then 
+                        and(part(subAppliedExprList_, 1), part(subAppliedExprList_, 2))
+                      else if(head_=or) then 
+                        or(part(subAppliedExprList_, 1), part(subAppliedExprList_, 2));
+  >> else <<
+    % 等式や、変数名などのfactorの場合
+    subAppliedExpr_:= sub(patternList_, expr_);
+  >>;
+
+  debugWrite("subAppliedExpr_:", subAppliedExpr_);
+  return subAppliedExpr_;
+end;
+
+
+procedure convertEqToRule(expr_)$
+begin;
+  scalar convertedRule_, lhs_, rhs_;
+  lhs_:= part(expr_, 1);
+  convertedRule_:= replaceby(part(expr_, 1), part(expr_, 2));
+  return convertedRule_;
+
+end;
+
+% 等式で表されるルールeqRule_を式exprs_に適用する
+procedure applyEqRuleLet(exprs_, eqRule_)$
+begin;
+  scalar appliedExprs_, ruleRhs_, letEq_;
+  debugWrite("in applyEqRuleLet", " ");
+  debugWrite("exprs_: ", exprs_);
+  debugWrite("eqRule_: ", eqRule_);
+
+  ruleRhs_:= part(eqRule_, 2);
+  letEq_:= equal(part(eqRule_, 1), ruleRhs_);
+  debugWrite("letEq_: ", letEq_);
+  let letEq_;
+  appliedExprs_:= exprs_;
+  debugWrite("appliedExprs_: ", appliedExprs_);
+  debugWrite("part(eqRule_, 1): ", part(eqRule_, 1));
+  clear part(eqRule_, 1);
+  debugWrite("appliedExprs_ after clear: ", appliedExprs_);
+
+  return appliedExprs_;
+end;
+
+procedure applyEqRuleWhere(exprs_, eqRuleLhs_, eqRuleRhs_)$
+begin;
+  scalar appliedExprs_;
+  debugWrite("in applyEqRuleWhere", " ");
+  debugWrite("exprs_: ", exprs_);
+  debugWrite("eqRuleLhs_: ", eqRuleLhs_);
+  debugWrite("eqRuleRhs_: ", eqRuleRhs_);
+
+  appliedExprs_:= exprs_ where (eqRuleLhs_ => eqRuleRhs_);
+  debugWrite("appliedExprs_: ", appliedExprs_);
+  return appliedExprs_;
+end;
+
+procedure applyEqRuleWhere(exprs_, eqRule_)$
+begin;
+  scalar appliedExprs_;
+  debugWrite("in applyEqRuleWhere", " ");
+  debugWrite("exprs_: ", exprs_);
+  debugWrite("eqRule_: ", eqRule_);
+
+  appliedExprs_:= exprs_ where eqRule_;
+  debugWrite("appliedExprs_: ", appliedExprs_);
+  return appliedExprs_;
+end;
+
+procedure applyEqRuleSet(exprs_, eqRuleLhs_, eqRuleRhs_)$
+begin;
+  scalar appliedExprs_;
+  debugWrite("in applyEqRuleSet", " ");
+  debugWrite("exprs_: ", exprs_);
+  debugWrite("eqRuleLhs_: ", eqRuleLhs_);
+
+  eqRuleLhs_:=eqRuleRhs_;
+  appliedExprs_:= exprs_;
+  debugWrite("appliedExprs_: ", appliedExprs_);
+  return appliedExprs_;
+end;
+
 % PPにおける無矛盾性の判定
 % 返り値は{ans, {{変数名 = 値},...}} の形式
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
 
-procedure checkConsistencyBySolveOrRlqe(expr_, vars_)$
+procedure checkConsistencyBySolveOrRlqe(exprs_, vars_)$
 begin;
-  scalar flag_, ans_, tmp_, mode_;
+  scalar flag_, ans_, modeFlagList_, mode_, csRule_, solvedExprs_;
 
   debugWrite("checkConsistencyBySolveOrRlqe: ", " ");
+  debugWrite("exprs_: ", exprs_);
+  debugWrite("vars_: ", vars_);
 
 % TODO sqrt(2)<>0をより汎用的な値に適用する
-% tmp_:=rlqe(ex(vars_, mymkand(expr_) and sqrt(2)<>0));
+% tmp_:=rlqe(ex(vars_, mymkand(exprs_) and sqrt(2)<>0));
 % debugWrite("tmp_: ", tmp_);
 % flag_:= if(tmp_ = true) then rettrue___ else if(tmp_ = false) then retfalse___;
 % 別案 true以外の解は全てfalseと判定
 % flag_:= if(ws = true) then rettrue___ else retfalse___;
-% tmp_:=rlatl(rlqe(mymkand(expr_)));
+% tmp_:=rlatl(rlqe(mymkand(exprs_)));
 % debugWrite("tmp_: ", tmp_);
 
-  % 等式が入っているかどうかにより、解くのに使用する関数を決定
+  % 等式以外が入っているかどうかにより、解くのに使用する関数を決定
   % TODO: ROQEモードでも制約ストアを返す必要がある場合への対応
-
-  if(hasInequality(expr_)) then mode_:= RLQE else mode_:= SOLVE;
+  modeFlagList_:= for each x in exprs_ join 
+    if(hasInequality(x) or hasLogicalOp(x)) then {false} else {true};
+  debugWrite("modeFlagList_:", modeFlagList_);
+  mode_:= if(rlqe(mymkand(modeFlagList_))=false) then RLQE else SOLVE;
   debugWrite("mode_:", mode_);
 
   if(mode_=SOLVE) then
   <<
-    debugWrite("union(constraintStore_, expr_):", union(constraintStore_, expr_));
+    debugWrite("union(constraintStore_, exprs_):", union(constraintStore_, exprs_));
     debugWrite("union(csVariables_, vars_):", union(csVariables_, vars_));
-    ans_:=solve(union(constraintStore_, expr_), union(csVariables_, vars_));
+    ans_:=solve(union(constraintStore_, exprs_), union(csVariables_, vars_));
     debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
     if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
   >> else
-  <<    
-    debugWrite("union(constraintStore_, expr_):", union(constraintStore_, expr_));
-    ans_:= rlqe(mymkand(union(constraintStore_, expr_)));
-    debugWrite("ans_: ", ans_);
-    if(ans_ <> false) then return {rettrue___} else return {retfalse___};
+  <<
+    % subの拡張版を用いる手法
+    solvedExprs_:= union(for each x in exprs_ join {exSub(constraintStore_, x)});
+
+    % 制約ストアの等式をルールに変換（不要？）
+    % csRule_:= map(convertEqToRule, constraintStore_);
+    % debugWrite("csRule_:", csRule_);
+    % solvedExprs_:= where(exprs_, csRule_);
+
+    %solvedExprs_:= where(exprs_, constraintStore_);
+    %solvedExprs_:= union(for each x in constraintStore_ join exprs_ where x);
+    %solvedExprs_:= union(for each x in constraintStore_ join applyEqRuleLet(exprs_, x));
+    %solvedExprs_:= union(for each x in constraintStore_ join
+    %                 applyEqRuleWhere(exprs_, part(x, 1),part(x, 2)));
+    %solvedExprs_:= union(for each x in constraintStore_ join applyEqRuleWhere(exprs_, x));
+    %solvedExprs_:= union(for each x in constraintStore_ join
+    %                 applyEqRuleSet(exprs_, part(x, 1), part(x, 2)));
+
+    debugWrite("solvedExprs_:", solvedExprs_);
+    debugWrite("union(constraintStore_, solvedExprs_):", union(constraintStore_, solvedExprs_));
+    ans_:= rlqe(mymkand(union(constraintStore_, solvedExprs_)));
+    debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
+    if(ans_ <> false) then return {rettrue___, ans_} else return {retfalse___};
   >>;
 end;
 
@@ -333,43 +491,11 @@ end;
 
 procedure hasInequality(expr_)$
   if(freeof(expr_, neq) and freeof(expr_, not) and
-    freeof(expr_, geq) and freeof(expr_,greaterp) and
+    freeof(expr_, geq) and freeof(expr_, greaterp) and
     freeof(expr_, leq) and freeof(expr_, lessp)) then nil else t$
 
-
-%TODO 不等式
-%TODO パラメータが分母に来たとき
-
-% CCP_SOLVER_ERROR___:= {0};
-% CCP_ENTAILED___:= {1};
-% CCP_NOT_ENTAILED___:= {2};
-% CCP_UNKNOWN___:= {3};
-
-procedure checkentailment(guard_, store_, vars_)$
-begin;
-  scalar flag_, ans_, sol_, nsol_;
-  putLineFeed();
-
-  sol_:=rlqe(guard_ and mymkand store_);
-%  nsol_:=rlqe(not guard_ and mymkand store_);
-   nsol_:=rlqe(not sol_ and mymkand store_);
-  debugWrite("sol_: ", sol_);
-  debugWrite("nsol_: ", nsol_);
-
-  if(sol_ neq false) then
-% 冗長かも
-    if(nsol_ = false) then
-      return CCP_ENTAILED___
-    else return {CCP_UNKNOWN___}
-  else return CCP_NOT_ENTAILED___;
-% Solver Error
-  return CCP_SOLVER_ERROR___;
-end;
-
-% guard_:=prev(y) = 0;
-% store_:={df(prev(y),t,1) = 0 and df(y,t,1) = 0 and df(y,t,2) = -10 and prev(y) = 10 and y = 10};
-% vars_:={prev(y), y, prev(y), df(y,t,1), df(prev(y),t,1), df(y,t,2)};
-% checkentailment(guard_, store_, vars_);
+procedure hasLogicalOp(expr_)$
+  if(freeof(expr_, and) and freeof(expr_, or)) then nil else t$
 
 
 % createCStoVM
@@ -568,7 +694,7 @@ ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
 ICI_UNKNOWN___:= 3; % 不要？
 
-procedure isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
+procedure checkConsistencyInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExpr_, DExpr_, DExprVars_,
          integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
@@ -640,7 +766,7 @@ end;
 %        initvlhs = 0
 %       };
 %vars_:={ht,v,df(ht,t),df(v,t)};
-%symbolic redeval '(isConsistentInterval expr_ init_ vars_);
+%symbolic redeval '(checkConsistencyInterval expr_ init_ vars_);
 
 
 

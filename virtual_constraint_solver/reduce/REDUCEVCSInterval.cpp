@@ -274,7 +274,7 @@ VCSResult REDUCEVCSInterval::check_consistency_sub()
 
 //////////////////// 送信処理
 
-  // isConsistentInterval(tmpCons_, expr_, pexpr_, init_, vars_)を渡したい
+  // checkConsistencyInterval(tmpCons_, expr_, pexpr_, init_, vars_)を渡したい
 
   // 一時的な制約ストア(新しく追加された制約の集合)からexprを得てREDUCEに渡す
   HYDLA_LOGGER_VCS("----- send tmpCons_ -----");
@@ -321,7 +321,7 @@ VCSResult REDUCEVCSInterval::check_consistency_sub()
   cl_->send_string("$");
 
 
-  cl_->send_string("symbolic redeval '(isConsistentInterval tmpCons_ expr_ pexpr_ init_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyInterval tmpCons_ expr_ pexpr_ init_ vars_);");
 
 
 /////////////////// 受信処理
