@@ -27,8 +27,8 @@ public:
   };
 
   enum VariableArg {
-    VA_None,
-    VA_Time,
+    VA_None,  
+    VA_Time,  //自動でprevが無効になる
     VA_Zero,
   };
 
@@ -63,7 +63,12 @@ public:
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  void put_node(const node_sptr& node, VariableArg variable_arg, bool ignore_prev = false, bool entailed = true);
+
+  void put_node(const node_sptr& node, VariableArg variable_arg);
+  /**
+   * リスト形式で送信する
+   */
+  void put_nodes(const std::vector<node_sptr> &constraints, VariableArg variable_arg);
 
   /**
    * 変数の送信
@@ -73,7 +78,15 @@ public:
   /**
    * put_nodeの際に送信された変数群の送信をおこなう
    */
-  void put_vars(VariableArg variable_arg, bool ignore_prev = false);
+  void put_vars(VariableArg variable_arg);
+  
+  
+  /**
+   * 上2つの記号定数版
+   */
+  void put_par(const std::string &name);
+  void put_pars();
+
 
 
   /**
@@ -161,6 +174,7 @@ private:
 protected:
   /// 送信された変数の一覧
   var_info_list_t vars_;
+  std::set<std::string> pars_;
 
   // Differentialノードを何回通ったか
   int differential_count_;

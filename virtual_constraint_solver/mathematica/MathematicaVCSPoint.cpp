@@ -14,6 +14,7 @@
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
+using namespace hydla::parser;
 
 namespace hydla {
 namespace vcs {
@@ -26,141 +27,6 @@ MathematicaVCSPoint::MathematicaVCSPoint(MathLink* ml) :
 
 MathematicaVCSPoint::~MathematicaVCSPoint()
 {}
-
-bool MathematicaVCSPoint::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map){
-  HYDLA_LOGGER_VCS(
-    "#*** MathematicaVCSPoint::reset ***\n");
-
-  ml_->put_function("resetConstraint", 0);
-  ml_->skip_pkt_until(RETURNPKT);
-  ml_->MLNewPacket();
-
-  ml_->put_function("addConstraint", 2);
-  ml_->put_function("And", 2);
-
-  std::set<std::string> names;
-  PacketSender ps(*ml_);
-
-  if(parameter_map.size() == 0)
-  {
-    HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
-    ml_->put_function("And", 0);
-  }else{
-    HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
-
-    parameter_map_t::variable_list_t::const_iterator it = 
-      parameter_map.begin();
-    parameter_map_t::variable_list_t::const_iterator end = 
-      parameter_map.end();
-
-    int constraints_size = 0;
-    //先に送信する必要のある制約の個数を数える
-    for(; it!=end; ++it)
-    {
-      const value_range_t&    value = it->second;
-      if(!value.is_undefined()) {
-        value_range_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
-        for(;or_it != or_end; or_it++){
-          constraints_size += or_it->size();
-        }
-      }
-    }
-    HYDLA_LOGGER_VCS("size:", constraints_size);
-    ml_->put_function("And", constraints_size);
-    
-    for(it = parameter_map.begin(); it!=end; ++it)
-    {
-      const value_range_t&    value = it->second;
-      if(!value.is_undefined()) {
-        value_range_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
-        for(;or_it != or_end; or_it++){
-          value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
-          for(; and_it != and_end; and_it++){
-            ml_->put_function(MathematicaExpressionConverter::get_relation_math_string(and_it->relation), 2);
-            ml_->put_symbol(PacketSender::par_prefix + it->first.get_name());
-            ps.put_node(and_it->get_value().get_node(), PacketSender::VA_None);
-          }
-        }
-      }
-      names.insert(PacketSender::par_prefix + it->first.get_name());
-    }
-  }
-  
-  if(variable_map.size() == 0)
-  {
-    HYDLA_LOGGER_VCS_SUMMARY("no Variables");
-    ml_->put_function("And", 0);
-  }else{
-    HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);
-
-    variable_map_t::variable_list_t::const_iterator it = 
-      variable_map.begin();
-    variable_map_t::variable_list_t::const_iterator end = 
-      variable_map.end();
-      
-    int constraints_size = 0;
-    //先に送信する必要のある制約の個数を数える
-    for(; it!=end; ++it){
-      const value_t&    value = it->second;
-      if(!value.is_undefined()){
-        constraints_size++;
-      }
-    }
-    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints_size);
-    ml_->put_function("And", constraints_size );
-    PacketSender ps(*ml_);
-    
-    for(it = variable_map.begin(); it!=end; ++it)
-    {
-      const MathVariable& variable = it->first;
-      const value_t&    value = it->second;
-      if(!value.is_undefined()){
-        ml_->put_function("Equal", 2);
-        ps.put_var(boost::make_tuple(variable.name,
-                               variable.derivative_count,
-                               true), PacketSender::VA_None);
-        ps.put_node(value.get_node(), PacketSender::VA_None);
-      }
-      if(variable.derivative_count > 0){
-        std::stringstream sstr;
-        sstr << variable.derivative_count;
-        names.insert("Derivative[" + sstr.str() + "][prev[" + PacketSender::var_prefix + variable.name + "]]");
-      }else{
-        names.insert("prev[" + PacketSender::var_prefix + variable.name + "]");
-      }
-    }
-  }
-  
-  ml_->put_function("List", names.size() );
-  HYDLA_LOGGER_VCS("send ", names.size(), " names");
-  // 変数や定数の一覧を送信
-  std::set<std::string>::iterator it = names.begin();
-  std::set<std::string>::iterator end = names.end();
-  for(;it!=end;it++){
-    HYDLA_LOGGER_VCS("name: ", *it);
-    ml_->put_function("ToExpression", 1);
-    ml_->put_string(*it);
-  }
-
-/////////////////// 受信処理
-  //PacketChecker pc(*ml_);
-  //pc.check();
-
-  HYDLA_LOGGER_VCS( "--- receive ---");
-
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-  HYDLA_LOGGER_EXTERN(
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-///////////////////
-
-  ml_->skip_pkt_until(RETURNPKT);
-  ml_->MLNewPacket();
-
-  HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::reset ***\n");
-  return true;
-}
 
 bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
 {
@@ -178,7 +44,6 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
   ml_->put_function("checkConsistency", 0);
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLNewPacket();
-  
   ml_->put_function("convertCSToVM", 0);
 
 /////////////////// 受信処理                        
@@ -319,46 +184,6 @@ void MathematicaVCSPoint::add_left_continuity_constraint(const continuity_map_t&
   }
 }
 
-void MathematicaVCSPoint::add_constraint(const constraints_t& constraints)
-{
-  
-  HYDLA_LOGGER_VCS(
-    "#*** Begin MathematicaVCSPoint::add_constraint ***");
-
-  ml_->put_function("addConstraint", 2);
-  
-  
-  PacketSender ps(*ml_);
-
-  ml_->put_function("And", constraints.size());
-  constraints_t::const_iterator it = constraints.begin();
-  constraints_t::const_iterator end = constraints.end();
-  for(; it!=end; ++it)
-  {
-    ps.put_node(*it, PacketSender::VA_None);
-  }
-  
-  // varsを渡す
-  ps.put_vars(PacketSender::VA_None);
-  
-
-/////////////////// 受信処理
-  HYDLA_LOGGER_VCS( "--- receive ---");
-
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-  HYDLA_LOGGER_EXTERN(
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
-///////////////////
-
-  ml_->skip_pkt_until(RETURNPKT);
-  ml_->MLNewPacket();
-  
-  HYDLA_LOGGER_VCS("\n#*** End MathematicaVCSPoint::add_constraint ***");
-  return;
-}
-
 void MathematicaVCSPoint::send_constraint(const constraints_t& constraints)
 {
   HYDLA_LOGGER_VCS(
@@ -390,7 +215,7 @@ VCSResult MathematicaVCSPoint::check_consistency(const constraints_t& constraint
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSPoint::check_consistency(tmp) ***");
 
-  ml_->put_function("checkConsistencyWithTemporaryConstraint", 2);
+  ml_->put_function("checkConsistencyTemporary", 2);
   send_constraint(constraints);
   
   VCSResult result = check_consistency_receive();
@@ -402,7 +227,7 @@ VCSResult MathematicaVCSPoint::check_consistency(const constraints_t& constraint
 VCSResult MathematicaVCSPoint::check_consistency()
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSPoint::check_consistency() ***");
-  ml_->put_function("checkConsistencyWithTemporaryConstraint", 2);
+  ml_->put_function("checkConsistencyTemporary", 2);
   send_constraint(constraints_t());
 
   VCSResult result = check_consistency_receive();
@@ -416,8 +241,8 @@ VCSResult MathematicaVCSPoint::check_consistency_receive()
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
   
-  // PacketChecker pc(*ml_);
-  // pc.check();
+  //  PacketChecker pc(*ml_);
+  //  pc.check();
  
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
@@ -443,14 +268,8 @@ VCSResult MathematicaVCSPoint::check_consistency_receive()
     result = VCSR_FALSE;
     HYDLA_LOGGER_VCS_SUMMARY("inconsistent");//矛盾
   }
+  
   return result;
-}
-
-VCSResult MathematicaVCSPoint::integrate(integrate_result_t& integrate_result,
-  const constraints_t& constraints, const time_t& current_time, const time_t& max_time)
-{
-  assert(0); // Pointではintegrate関数無効
-  return VCSR_FALSE;
 }
 
 } // namespace mathematica

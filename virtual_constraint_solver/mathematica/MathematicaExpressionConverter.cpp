@@ -43,6 +43,23 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
   return value;
 }
 
+/**
+ * （vairable）＝（node）の形のノードを返す
+ */
+MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev){
+  HYDLA_LOGGER_REST("*** Begin:MathematicaExpressionConverter::make_equal ***\n");
+  node_sptr new_node(new Variable(variable.get_name()));
+  for(int i=0;i<variable.get_derivative_count();i++){
+    new_node = node_sptr(new Differential(new_node));
+  }
+  if(prev){
+    std::cout << "prev" << std::endl;
+    new_node = node_sptr(new Previous(new_node));
+  }
+  HYDLA_LOGGER_REST("*** End:MathematicaExpressionConverter::make_equal ***\n");
+  return node_sptr(new Equal(new_node, node));
+}
+
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now){
   now = expr.find_first_not_of(" ", now);
   std::string::size_type prev = now;

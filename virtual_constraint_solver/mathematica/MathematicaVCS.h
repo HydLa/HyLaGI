@@ -29,16 +29,6 @@ public:
   virtual void change_mode(hydla::symbolic_simulator::Mode m, int approx_precision);
 
   /**
-   * 制約ストアの初期化をおこなう
-   */
-  virtual bool reset();
-
-  /**
-   * 与えられた変数表を元に，制約ストアの初期化をおこなう
-   */
-  virtual bool reset(const variable_map_t& vm);
- 
-  /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);

@@ -3,7 +3,6 @@
 
 TIMER <=> [](s'=0)&[](timer'=1).
 SWITCH <=> [](timer- =1 => timer = 0 & s = 1-s-).
-
 INIT <=> vc = 0 & il = 0 & s = 0 & timer=0.
 //STATE0 <=> [](il' = -il + 5 & vc'=-1/2*vc-).
 STATE1 <=> [](il' = -il + 5 & vc'=-1/2*vc).
@@ -14,9 +13,6 @@ INIT, STATE1 << TIMER << (STATE2, SWITCH).
 
 /*
 //思ったとおりの解が得られなくもないけど，全解探索じゃないと得られないプログラム
-
-
-
 INIT     <=> i=0 & v=0 & sw=0 & t=0 & t'=1 & sw'=0.
 S1I      <=> [](i' = -i- + 5).
 S1V      <=> [](v' = -1/2 + v-).

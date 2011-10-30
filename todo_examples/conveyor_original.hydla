@@ -1,8 +1,8 @@
 //conbeyor_original.hydla
 // -*- coding:utf-8 -*-
 // 
-// ベルトコンベアの上で物体が静止摩擦から動摩擦に切り替わる例題
-// m:質量
+// �x���g�R���x�A�̏�ŕ��̂��Î~���C���瓮���C�ɐ؂�ւ����
+// m:����
 // 
 INIT <=> x=0 & vx=10 & f=0 & fk=0.
 LAWS <=> [] (vx=x' & m=5 & fn=m*(98/10) & mu0=(2/10) & mu=(1/10) & k=50 & fk=k*x & f=m*vx'+fk).

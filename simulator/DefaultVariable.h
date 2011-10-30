@@ -10,6 +10,9 @@ namespace simulator {
 struct DefaultVariable {
   std::string  name;
   int derivative_count;
+  
+  DefaultVariable(const std::string& n, const int& d):name(n), derivative_count(d){}
+  DefaultVariable(){}
 
   std::string get_name() const
   {

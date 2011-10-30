@@ -45,12 +45,21 @@ public:
    */
   value_t& get_variable(const variable_t& var)
   {
+  
 //     iterator it = variables_.find(var);
 //     if(it != variables_.end()) {
 //       return it->second;
 //     }
 
     return variables_[var];
+  }
+
+  bool has_variable(const variable_t& var) const
+  {
+     if(variables_.find(var) != variables_.end()) {
+       return true;
+     }
+     return false;
   }
   
   void clear()
