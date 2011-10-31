@@ -201,7 +201,7 @@ retfalse___ := 2;
 symbolic procedure redeval(foo_)$
 begin scalar ans_;
 
-  write("<redeval> reval ", (car foo_), ":");
+  debugWrite("<redeval> reval :", (car foo_));
   ans_ :=(reval foo_);
   write("<redeval> end:");
 
