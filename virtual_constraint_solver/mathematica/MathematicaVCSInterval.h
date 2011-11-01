@@ -18,7 +18,18 @@ class MathematicaVCSInterval :
     public virtual_constraint_solver_t
 {
 public:
-  typedef hydla::simulator::constraints_t        constraints_t;
+  struct ConstraintStore 
+  {
+  
+    typedef std::map<MathVariable, value_t>        init_vars_t;
+    typedef hydla::simulator::constraints_t        constraints_t;
+
+    init_vars_t   init_vars;
+    constraints_t constraints;
+  };
+  
+  typedef ConstraintStore constraint_store_t;
+
   /**
    * @param approx_precision 近似する精度 値が負の場合は近似を行わない
    */
@@ -26,6 +37,26 @@ public:
 
   virtual ~MathematicaVCSInterval();
 
+  /**
+   * 制約ストアの初期化をおこなう
+   */
+  virtual bool reset();
+
+  /**
+   * 与えられた変数表を元に，制約ストアの初期化をおこなう
+   */
+  virtual bool reset(const variable_map_t& variable_map);
+  
+  /**
+   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
+   */
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
+
+  /**
+   * 制約を追加する．
+   */
+  virtual void add_constraint(const constraints_t& constraints);
+  
   
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -56,8 +87,12 @@ public:
   virtual void set_continuity(const continuity_map_t& continuity_map);
 
 private:
+  void send_cs(PacketSender& ps) const;
+
+  void send_vars(PacketSender& ps);
+  
   // check_consistencyの共通部分
-  VCSResult check_consistency_sub(const constraints_t &);
+  VCSResult check_consistency_sub();
   
 
   /**
@@ -70,14 +105,27 @@ private:
    * 時刻を送信する
    */
   void send_time(const time_t& time);
+
+  /**
+   * 定数制約を送る
+   */
+  void send_parameter_cons() const;
   
   //記号定数のリストを送る
   void send_pars() const;
 
   mutable MathLink* ml_;
   continuity_map_t continuity_map_;
+  constraint_store_t constraint_store_;
+  constraints_t tmp_constraints_;  //一時的に制約を追加する対象
+  parameter_map_t parameter_map_;
+  MathValue added_condition_;  //check_consistencyで追加される条件
   int approx_precision_;
 };
+
+
+std::ostream& operator<<(std::ostream& s, 
+                         const MathematicaVCSInterval::constraint_store_t& c);
 
 } // namespace mathematica
 } // namespace simulator

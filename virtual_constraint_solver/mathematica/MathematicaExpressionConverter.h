@@ -21,7 +21,6 @@ class MathematicaExpressionConverter
   private:
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t value_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_range_t value_range_t;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::variable_t variable_t;
   public:
   typedef enum{
     NODE_PLUS,
@@ -59,11 +58,6 @@ class MathematicaExpressionConverter
 
   //文字列とってvalueに変換する
   static value_t convert_math_string_to_symbolic_value(const std::string &expr);
-  /**
-   * （vairable）＝（node）の形のノードを返す
-   */
-  static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
-
 
   //関係演算子の文字列表現を返す
   static std::string get_relation_math_string(value_range_t::Relation rel);

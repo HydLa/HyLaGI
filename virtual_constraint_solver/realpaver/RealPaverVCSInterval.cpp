@@ -98,7 +98,7 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
   tells_t::const_iterator tells_it  = collected_tells.begin();
   tells_t::const_iterator tells_end = collected_tells.end();
   for(; (tells_it) != tells_end; ++tells_it) {
-    ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time);
+    ps.put_node((*tells_it)->get_child(), PacketSender::VA_Time, true);
   }
   // 制約ストア内にあるtell制約も渡す
   int cs_exprs_size = constraint_store_.nodes_.size();
@@ -106,7 +106,7 @@ VCSResult RealPaverVCSInterval::add_constraint(const tells_t& collected_tells)
   tells_t::const_iterator cs_tells_it  = constraint_store_.nodes_.begin();
   tells_t::const_iterator cs_tells_end = constraint_store_.nodes_.end();
   for(; (cs_tells_it) != cs_tells_end; ++cs_tells_it) {
-    ps.put_node((*cs_tells_it)->get_child(), PacketSender::VA_Time);
+    ps.put_node((*cs_tells_it)->get_child(), PacketSender::VA_Time, true);
   }
   // 初期値制約も渡す（必要なもののみ）
   // tellsと制約ストア内のtell制約それぞれに関して、出現する変数の最大微分回数未満までが必要

@@ -25,11 +25,20 @@ public:
 
   virtual ~MathematicaVCSPoint();
 
+  /**
+   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
+   */
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
    * 現在の制約ストアから変数表を作成する
    */
   virtual bool create_maps(create_result_t & create_result);
+
+  /**
+   * 制約を追加する．
+   */
+  virtual void add_constraint(const constraints_t& constraints);
   
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -38,6 +47,16 @@ public:
   virtual VCSResult check_consistency();
   virtual VCSResult check_consistency(const constraints_t& constraints);
   
+
+
+  /**
+   * askの導出状態が変化するまで積分をおこなう
+   */
+  virtual VCSResult integrate(
+    integrate_result_t& integrate_result,
+    const constraints_t &constraints,
+    const time_t& current_time,
+    const time_t& max_time);
 
   /**
    * 与えられたmapを元に，各変数の連続性を設定する．

@@ -3,8 +3,6 @@ load_package sets;
 % グローバル変数
 % constraintStore_: 現在扱っている制約集合（リスト形式）
 % csVariables_: 制約ストア内に出現する変数の一覧（定数未対応）
-% loadedOperator_: operator宣言された識別子の一覧（リスト形式）
-% table_: ラプラス変換対の対応表（リストのリスト）
 %
 % optUseDebugPrint_: デバッグ出力をするかどうか
 %
@@ -201,7 +199,7 @@ retfalse___ := 2;
 symbolic procedure redeval(foo_)$
 begin scalar ans_;
 
-  debugWrite("<redeval> reval :", (car foo_));
+  write("<redeval> reval ", (car foo_), ":");
   ans_ :=(reval foo_);
   write("<redeval> end:");
 
@@ -530,7 +528,7 @@ on ltrig;
 table_:={};
 
 % operator宣言されたargs_を記憶するグローバル変数
-loadedOperator_:={};
+loadedOperator:={};
 
 % 初期条件init○_○lhsを作成
 procedure makeInitId(f,i)$
@@ -539,36 +537,44 @@ if(i=0) then
 else
   mkid(mkid(mkid(mkid(INIT,f),_),i),lhs);
 
-%laprule_用、mkidしたｆを演算子として返す
+%laprule用、mkidしたｆを演算子とする
 procedure setMkidOperator(f,x)$
   f(x);
 
-%laprule_用の自由演算子
-operator !~f$
-
-% 微分に関する変換規則laprule_, letは一度で
-let {
-  laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - makeInitId(f,0),
-  laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
-    for i:=n-1 step -1 until 0 sum
-      makeInitId(f,n-1-i) * il!&**i,
-  laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
-}$
-
-% ラプラス変換対の作成, オペレータ宣言
+% ラプラス変換の変換規則の作成
 % {{v, v(t), lapv(s)},...}の対応表table_の作成
 procedure LaplaceLetUnit(args_)$
 begin;
-  scalar arg_, LAParg_;
+  scalar arg_, LAParg_, laprule_;
 
   arg_:= first args_;
   LAParg_:= second args_;
 
   % arg_が重複してないか判定
-  if(freeof(loadedOperator_,arg_)) then 
+  if(freeof(loadedOperator,arg_)) then 
     << 
      operator arg_, LAParg_;
-     loadedOperator_:= arg_ . loadedOperator_;
+     loadedOperator:= arg_ . loadedOperator;
+     operator !~f;
+
+     % makeInitId(f,i)版
+     laprule_ :={
+       laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - makeInitId(f,0),
+       laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
+         for i:=n-1 step -1 until 0 sum
+	   makeInitId(f,n-1-i) * il!&**i,
+       laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
+     };
+%     % sub版
+%     laprule_ :={
+%       laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - sub(x=0,f(x)),
+%       laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
+%       for i:=n-1 step -1 until 0 sum
+%         sub(~x=0, df(f(~x),x,n-1-i)) * il!&**i,
+%       laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
+%     };
+     
+     let laprule_;
     >>;
 
   % {{v, v(t), lapv(s)},...}の対応表

@@ -175,7 +175,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   var_info_t new_var = 
     boost::make_tuple(node->get_name(), 
                       differential_count_, 
-                      in_prev_ && (variable_arg_ != VA_Time));
+                      in_prev_ && !ignore_prev_);
 
     put_var(new_var, variable_arg_);
 }
@@ -196,7 +196,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 void PacketSender::visit(boost::shared_ptr<Parameter> node)
 {    
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
-  put_par(par_prefix + node->get_name());
+  ml_->put_symbol(par_prefix + node->get_name());
 }
 
 
@@ -250,14 +250,14 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
 
   switch(variable_arg) {
     case VA_None:
+      // do nothing
       break;
       
     case VA_Time:
       ml_->put_symbol("t");
       break;
     case VA_Zero:
-      if(!prev)
-        ml_->put_integer(0);
+      ml_->put_integer(0);
       break;
       
     default:
@@ -269,56 +269,32 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
 }
 
 
-void PacketSender::put_par(const std::string &name)
-{
-  HYDLA_LOGGER_REST(
-    "PacketSender::put_par: ",
-    "name: ", name);
-
-  ml_->put_symbol(name);
-
-
-  // putした変数の情報を保持
-  pars_.insert(name);
-}
-
 
 /**
  * ある式(ノード)をputする
  * @param node putしたい式(ノード)
  */
 void PacketSender::put_node(const node_sptr& node, 
-                            VariableArg variable_arg)
+                            VariableArg variable_arg, 
+                            bool ignore_prev,
+                            bool entailed)
 {
-  HYDLA_LOGGER_REST("*** Begin PacketSender::put_node ***");
-  HYDLA_LOGGER_REST("node:", *node);
   differential_count_ = 0;
   in_prev_ = false;
   variable_arg_ = variable_arg;
-  accept(node);
-  HYDLA_LOGGER_REST("*** END PacketSender::put_node ***");
-}
-
-
-/**
- * ある式のリストをputする
- */
-void PacketSender::put_nodes(const std::vector<node_sptr>& constraints,
-                            VariableArg variable_arg)
-{
-  
-  HYDLA_LOGGER_REST("*** Begin PacketSender::put_nodes ***");
-  ml_->put_function("And", constraints.size());
-  for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
-    put_node(*it, variable_arg);
+  ignore_prev_ = ignore_prev;
+  if(!entailed){
+    HYDLA_LOGGER_REST("put: Not");
+    ml_->put_function("Not", 1);
   }
-  HYDLA_LOGGER_REST("*** End PacketSender::put_nodes: ***");
+  accept(node);
 }
 
 /**
  * 変数の一覧を送信．
  */
-void PacketSender::put_vars(VariableArg variable_arg)
+void PacketSender::put_vars(VariableArg variable_arg, 
+                            bool ignore_prev)
 {
   HYDLA_LOGGER_REST(
     "---- PacketSender::put_vars ----\n",
@@ -329,24 +305,13 @@ void PacketSender::put_vars(VariableArg variable_arg)
   PacketSender::vars_const_iterator it  = vars_begin();
   PacketSender::vars_const_iterator end = vars_end();
   for(; it!=end; ++it) {
-    put_var(*it, variable_arg);
+    put_var(boost::make_tuple(
+              it->get<0>(),
+              it->get<1>(),
+              it->get<2>() && !ignore_prev), 
+            variable_arg);
   }
 }
-
-
-void PacketSender::put_pars()
-{
-  HYDLA_LOGGER_REST(
-    "---- PacketSender::put_pars ----\n",
-    "par size:", pars_.size());
-  
-  ml_->put_function("List", pars_.size());
-
-  for(std::set<std::string>::iterator it = pars_.begin(); it!=pars_.end(); ++it) {
-    put_par(*it);
-  }
-}
-
 
 /**
  * 内部情報(特に変数情報)をリセットする．
@@ -358,7 +323,6 @@ void PacketSender::clear()
   in_prev_ = false;
 
   vars_.clear();
-  pars_.clear();
 }
 
 namespace {
