@@ -416,7 +416,7 @@ void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
   REDUCEStringSender rss(*cl_);
 
   HYDLA_LOGGER_VCS("----- send expr_ -----");
-  cl_->send_string("expr_:=union({");
+  cl_->send_string("expr_:={");
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
   bool first_element = true;
@@ -426,10 +426,12 @@ void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
       rss.put_node(*it);
       first_element = false;
     }
-  cl_->send_string("},");
+  cl_->send_string("}$");
 
+  HYDLA_LOGGER_VCS("----- send lcont_ -----");
+  cl_->send_string("lcont_:=");
   add_left_continuity_constraint(continuity_map_, rss);
-  cl_->send_string(")$");
+  cl_->send_string("$");
 
 
   // vars‚ð“n‚·
@@ -450,7 +452,7 @@ VCSResult REDUCEVCSPoint::check_consistency(const constraints_t& constraints)
 
   send_constraint(constraints);
 
-  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ lcont_ vars_);");
 
   VCSResult result = check_consistency_receive();
 
@@ -465,7 +467,7 @@ VCSResult REDUCEVCSPoint::check_consistency()
 
   send_constraint(constraints_t());
 
-  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ lcont_ vars_);");
 
   VCSResult result = check_consistency_receive();
 

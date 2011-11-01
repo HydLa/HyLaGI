@@ -65,7 +65,7 @@ begin;
 
   if(x=y) then <<
     debugWrite("x=y= ", x);
-    if(op = geq_ or op = leq_) then return t
+    if((op = geq) or (op = leq)) then return t
     else return nil
   >>;
 
@@ -94,13 +94,13 @@ begin;
 %xとyがほぼ等しい時
   if(abs(x-y)<margin) then <<off rounded$ precision bak_precision$ write(-1); return -1>>;
 
-if (op = geq_) then
+if (op = geq) then
   (if (x >= y) then ans:=t else ans:=nil)
-else if (op = greaterp_) then
+else if (op = greaterp) then
   (if (x > y) then ans:=t else ans:=nil)
-else if (op = leq_) then
+else if (op = leq) then
   (if (x <= y) then ans:=t else ans:=nil)
-else if (op = lessp_) then
+else if (op = lessp) then
   (if (x < y) then ans:=t else ans:=nil);
 
   off rounded$ precision bak_precision$
@@ -113,9 +113,9 @@ procedure myInfinityIf(x, op, y)$
 begin;
   scalar ans;
   if(x=INFINITY) then 
-    (if (op = geq_ or op = greaterp_) then ans:=t else ans:=nil)
+    (if ((op = geq) or (op = greaterp)) then ans:=t else ans:=nil)
   else
-    (if (op = leq_ or op = lessp_) then ans:=t else ans:=nil);
+    (if ((op = leq) or (op = lessp)) then ans:=t else ans:=nil);
   return ans;
 end;
 
@@ -135,7 +135,7 @@ procedure mymin(x,y)$
 if(x={}) then
 	if(y={}) then {} else y
   else	if(y={}) then x
-	else if(myif(x,greaterp_,y,30)) then y else x$
+	else if(myif(x,greaterp,y,30)) then y else x$
 
 procedure myFindMinimumNatPPTime(x,lst)$
 %入力: 現段階での最小PP時刻x, 次の時刻候補のリスト
@@ -143,11 +143,11 @@ procedure myFindMinimumNatPPTime(x,lst)$
 % 0より小さい値はlstに渡されないという前提（他の処理で実現されている）
 if(rest(lst)={}) then
 <<
-  if(myif(x,lessp_,first(lst),30)) then x else first(lst)
+  if(myif(x,lessp,first(lst),30)) then x else first(lst)
 >>
 else 
 <<
-  if(myif(x,lessp_,first(lst),30)) then 
+  if(myif(x,lessp,first(lst),30)) then 
   <<
     myFindMinimumNatPPTime(x,rest(lst))
   >>
@@ -192,6 +192,12 @@ begin;
   scalar appliedFormula_, header_, argsCount_, appliedArgsList_;
   debugWrite("formula_: ", formula_);
 
+  % 引数を持たない場合（trueなど）
+  if(arglength(formula_)=-1) then <<
+    appliedFormula_:= rlqe(formula_);
+    return appliedFormula_;
+  >>;
+
   header_:= part(formula_, 0);
   debugWrite("header_: ", header_);
   argsCount_:= arglength(formula_);
@@ -199,13 +205,18 @@ begin;
   if((header_=and) or (header_=or)) then <<
     argsList_:= for i:=1 : argsCount_ collect part(formula_, i);
     appliedArgsList_:= for each x in argsList_ collect exRlqe(x);
-    if(header_= and) then appliedFormula_:= mymkand(appliedArgsList_);
-    if(header_= or) then appliedFormula_:= mymkor(appliedArgsList_);
-  >> else <<
+    if(header_= and) then appliedFormula_:= rlqe(mymkand(appliedArgsList_));
+    if(header_= or) then appliedFormula_:= rlqe(mymkor(appliedArgsList_));
+  >> else if(not freeof(formula_, sqrt)) then <<
+    % 数式内にsqrtが入っている時のみ、myif関数による大小比較が有効となる
+    % TODO:当該の数式内に変数が入った際にも正しく処理ができるようにする
     if(myif(part(formula_, 1), getInverseRelop(header_), part(formula_, 2), 30)) then appliedFormula_:= false 
     else appliedFormula_:= rlqe(formula_)
+  >> else <<
+    appliedFormula_:= rlqe(formula_)
   >>;
 
+  debugWrite("appliedFormula_: ", appliedFormula_);
   return appliedFormula_;
 
 end;
@@ -291,12 +302,12 @@ end;
 % (制限 andを受け付けない) TODO 制限への対応
 % (制限 trueを受け付けない) TODO 制限への対応
 
-procedure checkConsistencyWithTmpCons(expr_,vars_)$
+procedure checkConsistencyWithTmpCons(expr_, lcont_, vars_)$
 begin;
   scalar ans_;
   putLineFeed();
 
-  ans_:= {part(checkConsistencyBySolveOrRlqe(expr_, vars_), 1)};
+  ans_:= {part(checkConsistencyBySolveOrRlqe(expr_, lcont_, vars_), 1)};
   debugWrite("ans_ in checkConsistencyWithTmpCons: ", ans_);
 
   return ans_;
@@ -347,6 +358,7 @@ begin;
                         or(part(subAppliedExprList_, 1), part(subAppliedExprList_, 2));
   >> else <<
     % 等式や、変数名などのfactorの場合
+    % TODO:expr_を見て、制約ストア（あるいはcsvars）内にあるようなら、それと対をなす値（等式の右辺）を適用
     subAppliedExpr_:= sub(patternList_, expr_);
   >>;
 
@@ -427,24 +439,28 @@ end;
 % 返り値は{ans, {{変数名 = 値},...}} の形式
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
 
-procedure checkConsistencyBySolveOrRlqe(exprs_, vars_)$
+procedure checkConsistencyBySolveOrRlqe(exprs_, lcont_, vars_)$
 begin;
-  scalar flag_, ans_, modeFlagList_, mode_, csRule_, solvedExprs_;
+  scalar flag_, ans_, modeFlagList_, mode_, csRule_, tmpSol_,
+         solvedExprs_, solvedExprsQE_;
 
   debugWrite("checkConsistencyBySolveOrRlqe: ", " ");
   debugWrite("exprs_: ", exprs_);
+  debugWrite("lcont_: ", lcont_);
   debugWrite("vars_: ", vars_);
 
-% TODO sqrt(2)<>0をより汎用的な値に適用する
-% tmp_:=rlqe(ex(vars_, mymkand(exprs_) and sqrt(2)<>0));
-% debugWrite("tmp_: ", tmp_);
-% flag_:= if(tmp_ = true) then rettrue___ else if(tmp_ = false) then retfalse___;
-% 別案 true以外の解は全てfalseと判定
-% flag_:= if(ws = true) then rettrue___ else retfalse___;
-% tmp_:=rlatl(rlqe(mymkand(exprs_)));
-% debugWrite("tmp_: ", tmp_);
 
-  % 等式以外が入っているかどうかにより、解くのに使用する関数を決定
+  debugWrite("union(constraintStore_, lcont_):",  union(constraintStore_, lcont_));
+  debugWrite("union(csVariables_, vars_):", union(csVariables_, vars_));
+  tmpSol_:= solve(union(constraintStore_, lcont_),  union(csVariables_, vars_));
+  debugWrite("tmpSol_: ", tmpSol_);
+
+  if(tmpSol_={}) then return {retfalse___};
+  % TODO:複数解得られた場合への対応
+  tmpSol_:= first(tmpSol_);
+
+
+  % exprs_に等式以外が入っているかどうかにより、解くのに使用する関数を決定
   % TODO: ROQEモードでも制約ストアを返す必要がある場合への対応
   modeFlagList_:= for each x in exprs_ join 
     if(hasInequality(x) or hasLogicalOp(x)) then {false} else {true};
@@ -454,15 +470,15 @@ begin;
 
   if(mode_=SOLVE) then
   <<
-    debugWrite("union(constraintStore_, exprs_):", union(constraintStore_, exprs_));
+    debugWrite("union(tmpSol_, exprs_):",  union(tmpSol_, exprs_));
     debugWrite("union(csVariables_, vars_):", union(csVariables_, vars_));
-    ans_:=solve(union(constraintStore_, exprs_), union(csVariables_, vars_));
+    ans_:=solve(union(tmpSol_, exprs_), union(csVariables_, vars_));
     debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
     if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
   >> else
   <<
     % subの拡張版を用いる手法
-    solvedExprs_:= union(for each x in exprs_ join {exSub(constraintStore_, x)});
+    solvedExprs_:= union(for each x in exprs_ join {exSub(tmpSol_, x)});
 
     % 制約ストアの等式をルールに変換（不要？）
     % csRule_:= map(convertEqToRule, constraintStore_);
@@ -479,9 +495,11 @@ begin;
     %                 applyEqRuleSet(exprs_, part(x, 1), part(x, 2)));
 
     debugWrite("solvedExprs_:", solvedExprs_);
-    debugWrite("union(constraintStore_, solvedExprs_):", union(constraintStore_, solvedExprs_));
-    ans_:= exRlqe(mymkand(union(constraintStore_, solvedExprs_)));
-    %ans_:= rlqe(mymkand(union(constraintStore_, solvedExprs_)));
+    solvedExprsQE_:= exRlqe(mymkand(solvedExprs_));
+    debugWrite("solvedExprsQE_:", solvedExprsQE_);
+    debugWrite("union(tmpSol_, solvedExprsQE_):", union(tmpSol_, {solvedExprsQE_}));
+%    ans_:= exRlqe(mymkand(union(tmpSol_, {solvedExprs_})));
+    ans_:= rlqe(mymkand(union(tmpSol_, {solvedExprsQE_})));
     debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
     if(ans_ <> false) then return {rettrue___, ans_} else return {retfalse___};
   >>;
@@ -493,7 +511,7 @@ begin;
   scalar sol_;
   putLineFeed();
 
-  sol_:= checkConsistencyBySolveOrRlqe(constraintStore_, csVariables_);
+  sol_:= checkConsistencyBySolveOrRlqe({}, {}, {});
   debugWrite("sol_ in checkConsistency: ", sol_);
   % ret_codeがrettrue___、つまり1であるかどうかをチェック
   if(part(sol_, 1) = 1) then constraintStore_:= part(sol_, 2);
