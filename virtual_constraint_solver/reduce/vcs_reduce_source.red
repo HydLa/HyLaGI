@@ -801,7 +801,7 @@ begin;
 %  % t>0を連立させてtrue/false判定
 %  ans_:= rlqe(integTmpQE_ and t>0);
 %  debugWrite("ans_:", ans_);
-%  if(ans_=false) then return {ICI_INCONSISTENT___} else return {ICI_CONSISTENT};
+%  if(ans_=false) then return {ICI_INCONSISTENT___} else return {ICI_CONSISTENT___};
 
 
   if(not hasLogicalOp(integTmpQE_)) then <<
@@ -823,10 +823,11 @@ begin;
 
     % それぞれについて、等式ならばsolveしてintegTmpSolList_とする。不等式ならば後回し。
     integTmpSolList_:= union(for each x in integTmpQEList_ join 
-                         if(not hasInequality(x)) then solve(x, t) else {x});
+                         if(not hasInequality(x) and not hasLogicalOp(x)) then solve(x, t) else {x});
     debugWrite("integTmpSolList_:", integTmpSolList_);
 
     % integTmpSolList_の各要素について、checkInfUnitして、infList_を得る
+    % TODO:integTmpQEList_の要素内にorが入っている場合を考える
     infList_:= union(for each x in integTmpSolList_ join checkInfUnit(x, ENTAILMENT___));
     debugWrite("infList_: ", infList_);
 
@@ -834,7 +835,7 @@ begin;
   >>;
 
   debugWrite("ans_: ", ans_);
-  if(ans_=true) then return {ICI_CONSISTENT}
+  if(ans_=true) then return {ICI_CONSISTENT___}
   else if(ans_=false) then return {ICI_INCONSISTENT___}
   else 
   <<
@@ -859,7 +860,7 @@ end;
 
 procedure checkInfUnit(tExpr_, mode_)$
 begin;
-  scalar head_, infCheckAns_, exprLhs_, solveAns_;
+  scalar head_, infCheckAns_, exprLhs_, solveAns_, orArgsAnsList_;
 
   % 前提：relop(t, 値)の形式
   debugWrite("tExpr_: ", tExpr_);
@@ -868,7 +869,17 @@ begin;
   head_:= part(tExpr_, 0);
   debugWrite("head_: ", head_);
 
-  if(head_=equal) then <<
+  if(head_=or) then <<
+    if(mode_ = ENTAILMENT___) then <<
+      orArgsAnsList_:= for i:=1 : arglength(tExpr_) join
+        checkInfUnit(part(tExpr_, i), mode_);
+      debugWrite("orArgsAnsList_: ", orArgsAnsList_);
+      infCheckAns_:= {rlqe(mymkor(orArgsAnsList_))};
+    >> else if(mode_ = MINTIME___) then <<
+      % TODO: ちゃんと作る
+      infCheckAns_:= hoge
+    >>
+  >> else if(head_=equal) then <<
     % ガード条件判定においては等式の場合はfalse
     if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
     else if(mode_ = MINTIME___) then
