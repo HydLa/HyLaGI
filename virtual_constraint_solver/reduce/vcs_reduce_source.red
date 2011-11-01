@@ -23,11 +23,32 @@ procedure myFoldLeft(func_, init_, list_)$
   if(list_ = {}) then init_
   else myFoldLeft(func_, func_(init_, first(list_)), rest(list_))$
 
+procedure applyUnitAndFlatten(funcName_, appliedExpr_, newArg_)$
+  if(neqArg_ = {}) then appliedExpr_
+  else if(part(appliedExpr_, 0) neq funcName_) then funcName_(appliedExpr_, newArg_)
+  else applyUnitAndFlatten(funcName_, funcName_(part(appliedExpr_, 1), part(appliedExpr_, 2), first(newArg_)), rest(newArg_))$
+
 %MathematicaでいうApply関数
 procedure myApply(func_, expr_)$
 begin;
+  scalar argsCount_, argsList_, ret_;
+  argsCount_:= arglength(expr_);
+  if(argsCount_=1) then return func_(part(expr_, 1));
+
+  argsList_:= for i:=1 : argsCount_ collect part(expr_, i);
+  ret_:= applyUnitAndFlatten(func_, first(argsList_), rest(argsList_));
+  
   % TODO:便利そうなので作る
 end;
+
+procedure getInverseRelop(relop_)$
+  if(relop_=equal) then neq
+  else if(relop_=neq) then equal
+  else if(relop_=geq) then lessp
+  else if(relop_=greaterp) then leq
+  else if(relop_=leq) then greaterp
+  else if(relop_=lessp) then geq
+  else nil$
 
 procedure myif(x,op,y,approx_precision)$
 %入力: 論理式(ex. sqrt(2), greaterp_, sin(2)), 精度
@@ -157,11 +178,37 @@ load_package redlog; rlset R;
 procedure mymkand(lst)$
 for i:=1:length(lst) mkand part(lst,i);
 
+procedure mymkor(lst)$
+for i:=1:length(lst) mkor part(lst, i);
+
 procedure myex(lst,var)$
 rlqe ex(var, mymkand(lst));
 
 procedure myall(lst,var)$
 rlqe all(var, mymkand(lst));
+
+procedure exRlqe(formula_)$
+begin;
+  scalar appliedFormula_, header_, argsCount_, appliedArgsList_;
+  debugWrite("formula_: ", formula_);
+
+  header_:= part(formula_, 0);
+  debugWrite("header_: ", header_);
+  argsCount_:= arglength(formula_);
+
+  if((header_=and) or (header_=or)) then <<
+    argsList_:= for i:=1 : argsCount_ collect part(formula_, i);
+    appliedArgsList_:= for each x in argsList_ collect exRlqe(x);
+    if(header_= and) then appliedFormula_:= mymkand(appliedArgsList_);
+    if(header_= or) then appliedFormula_:= mymkor(appliedArgsList_);
+  >> else <<
+    if(myif(part(formula_, 1), getInverseRelop(header_), part(formula_, 2), 30)) then appliedFormula_:= false 
+    else appliedFormula_:= rlqe(formula_)
+  >>;
+
+  return appliedFormula_;
+
+end;
 
 
 procedure bball_out()$
@@ -281,15 +328,7 @@ begin;
     debugWrite("subAppliedLeft_:", subAppliedLeft_);
     subAppliedRight_:= exSub(patternList_, part(expr_, 2));
     debugWrite("subAppliedRight_:", subAppliedRight_);
-
-    % できない
-    %subAppliedExpr_:= head_(subAppliedLeft_, subAppliedRight_);
- 
-    subAppliedExpr_:= if(head_=neq) then neq(subAppliedLeft_, subAppliedRight_)
-                      else if(head_=geq) then geq(subAppliedLeft_, subAppliedRight_)
-                      else if(head_=greaterp) then greaterp(subAppliedLeft_, subAppliedRight_)
-                      else if(head_=leq) then leq(subAppliedLeft_, subAppliedRight_)
-                      else if(head_=lessp) then lessp(subAppliedLeft_, subAppliedRight_);
+    subAppliedExpr_:= head_(subAppliedLeft_, subAppliedRight_);
   >> else if((head_=and) or (head_=or)) then <<
     % 論理演算子の場合
     argCount_:= arglength(expr_);
@@ -441,7 +480,8 @@ begin;
 
     debugWrite("solvedExprs_:", solvedExprs_);
     debugWrite("union(constraintStore_, solvedExprs_):", union(constraintStore_, solvedExprs_));
-    ans_:= rlqe(mymkand(union(constraintStore_, solvedExprs_)));
+    ans_:= exRlqe(mymkand(union(constraintStore_, solvedExprs_)));
+    %ans_:= rlqe(mymkand(union(constraintStore_, solvedExprs_)));
     debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
     if(ans_ <> false) then return {rettrue___, ans_} else return {retfalse___};
   >>;
@@ -675,12 +715,15 @@ procedure isNDExpr(expr_)$
 
 procedure splitExprs(exprs_, vars_)$
 begin;
-  scalar NDExpr_, DExpr_, DExprVars_;
+  scalar otherExprs_, NDExprs_, DExprs_, DExprVars_;
 
-  NDExpr_ := union(for each x in exprs_ join if(isNDExpr(x)) then {x} else {});
-  DExpr_ := setdiff(expr_, ndExpr_);
-  DExprVars_:= union(for each x in vars_ join if(not freeof(DExpr_, x)) then {x} else {});
-  return {NDExpr_, DExpr_, DExprVars_};
+  otherExprs_:= union(for each x in exprs_ join 
+                  if(hasInequality(x) or hasLogicalOp(x)) then {x} else {});
+  NDExprs_ := union(for each x in setdiff(exprs_, otherExprs_) join 
+                if(isNDExpr(x)) then {x} else {});
+  DExprs_ := setdiff(setdiff(exprs_, otherExprs_), NDExprs_);
+  DExprVars_:= union(for each x in vars_ join if(not freeof(DExprs_, x)) then {x} else {});
+  return {NDExprs_, DExprs_, DExprVars_, otherExprs_};
 end;
 
 
@@ -694,31 +737,33 @@ ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
 ICI_UNKNOWN___:= 3; % 不要？
 
-procedure checkConsistencyInterval(tmpCons_, expr_, pexpr_, init_, vars_)$
+procedure checkConsistencyInterval(tmpCons_, exprs_, pexpr_, init_, vars_)$
 begin;
-  scalar tmpSol_, splitExprsResult_, NDExpr_, DExpr_, DExprVars_,
-         integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
+  scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_,
+         integTmp_, integTmpQE_, andArgsCount_, integTmpSol_, infList_, ans_;
   putLineFeed();
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
   % TODO:なんとかしたいところ？
-  splitExprsResult_ := splitExprs(expr_, vars_);
-  NDExpr_ := part(splitExprsResult_, 1);
-  debugWrite("NDExpr_: ", NDExpr_);
-  DExpr_ := part(splitExprsResult_, 2);
-  debugWrite("DExpr_: ", DExpr_);
+  splitExprsResult_ := splitExprs(exprs_, vars_);
+  NDExprs_ := part(splitExprsResult_, 1);
+  debugWrite("NDExprs_: ", NDExprs_);
+  DExprs_ := part(splitExprsResult_, 2);
+  debugWrite("DExprs_: ", DExprs_);
   DExprVars_ := part(splitExprsResult_, 3);
   debugWrite("DExprVars_: ", DExprVars_);
+  otherExprs_:= part(splitExprsResult_, 4);
+  debugWrite("otherExprs_: ", otherExprs_);
 
 %  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
-  tmpSol_:= exDSolve(DExpr_, init_, DExprVars_);
+  tmpSol_:= exDSolve(DExprs_, init_, DExprVars_);
   debugWrite("tmpSol_: ", tmpSol_);
   
   if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   % NDExpr_を連立
-  tmpSol_:= solve(union(tmpSol_, NDExpr_), getNoDifferentialVars(vars_));
+  tmpSol_:= solve(union(tmpSol_, NDExprs_), getNoDifferentialVars(vars_));
   debugWrite("tmpSol_ after solve: ", tmpSol_);
 
   % tmpCons_がない場合は無矛盾と判定して良い
@@ -734,20 +779,43 @@ begin;
   if(integTmpQE_ = true) then return {ICI_CONSISTENT___}
   else if(integTmpQE_ = false) then return {ICI_INCONSISTENT___};
 
-  % とりあえずtに関して解く（等式の形式を前提としている）
-  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
-  % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
-  % TODO:論理積でつながった形への対応
-  integTmpSol_:= solve(integTmpQE_,t);
 
-  infList_:= union(for each x in integTmpSol_ join checkInfUnit(x, ENTAILMENT___));
-  debugWrite("infList_: ", infList_);
+%  % t>0を連立させてtrue/false判定
+%  ans_:= rlqe(integTmpQE_ and t>0);
+%  debugWrite("ans_:", ans_);
+%  if(ans_=false) then return {ICI_INCONSISTENT___} else return {ICI_CONSISTENT};
 
-  % パラメタ無しなら解は1つになるはず
-  if(length(infList_) neq 1) then return {ICI_SOLVER_ERROR};
-  ans_:= first(infList_);
+
+  if(not hasLogicalOp(integTmpQE_)) then <<
+    % とりあえずtに関して解く（等式の形式を前提としている）
+    integTmpSol_:= solve(integTmpQE_,t);
+
+    infList_:= union(for each x in integTmpSol_ join checkInfUnit(x, ENTAILMENT___));
+    debugWrite("infList_: ", infList_);
+
+    % パラメタ無しなら解は1つになるはず
+    if(length(infList_) neq 1) then return {ICI_SOLVER_ERROR};
+    ans_:= first(infList_);
+
+  >> else <<
+    % まず、andでつながったtmp制約をリストに変換
+    andArgsCount_:= arglength(integTmpQE_);
+    integTmpQEList_:= for i:=1 : andArgsCount_ collect part(integTmpQE_, i);
+    debugWrite("integTmpQEList_:", integTmpQEList_);
+
+    % それぞれについて、等式ならばsolveしてintegTmpSolList_とする。不等式ならば後回し。
+    integTmpSolList_:= union(for each x in integTmpQEList_ join 
+                         if(not hasInequality(x)) then solve(x, t) else {x});
+    debugWrite("integTmpSolList_:", integTmpSolList_);
+
+    % integTmpSolList_の各要素について、checkInfUnitして、infList_を得る
+    infList_:= union(for each x in integTmpSolList_ join checkInfUnit(x, ENTAILMENT___));
+    debugWrite("infList_: ", infList_);
+
+    ans_:= rlqe(mymkand(infList_));
+  >>;
+
   debugWrite("ans_: ", ans_);
-
   if(ans_=true) then return {ICI_CONSISTENT}
   else if(ans_=false) then return {ICI_INCONSISTENT___}
   else 
@@ -770,92 +838,41 @@ end;
 
 
 
-%%CEI_SOLVER_ERROR___:= {0};
-%CEI_ENTAILED___:= {1};
-%CEI_NOT_ENTAILED___:= {2};
-%CEI_UNKNOWN___:= {3};
-
-
-procedure checkEntailmentInterval(guard_, store_, init_, vars_, pars_)$
-begin;
-  scalar tmp_, otherExpr_, tGuard_, tGuardQE_, tGuardSol_, infList_, ans_;
-  putLineFeed();
-
-  tmp_:= exDSolve(store_, init_, vars_);
-  debugWrite("tmp_: ", tmp_);
-  
-  otherExpr_:={};
-
-  % "=" が無い => 等式以外の制約 と想定
-  for each x in store_ do
-    if(freeof(x, equal))
-      then otherExpr_:= append(otherExpr_, {x});
-
-  tGuard_:= sub(tmp_,guard_);
-  debugWrite("tGuard_: ", tGuard_);
-
-  tGuardQE_:= rlqe (tGuard_);
-  debugWrite("tGuardQE_: ", tGuardQE_);
-
-  % ただのtrueやfalseはそのまま判定結果となる
-  if(tGuardQE_ = true) then return CEI_ENTAILED___
-  else if(tGuardQE_ = false) then return CEI_NOT_ENTAILED___;
-
-  % とりあえずtに関して解く（等式の形式を前提としている）
-  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
-  % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
-  % TODO:論理積でつながった形への対応
-  tGuardSol_:= solve(tGuardQE_,t);
-
-  infList_:= union(for each x in tGuardSol_ join checkInfUnit(x, ENTAILMENT___));
-  debugWrite("infList_: ", infList_);
-
-  % パラメタ無しなら解は1つになるはず
-  if(length(infList_) neq 1) then return CEI_SOLVER_ERROR___;
-  ans_:= first(infList_);
-  debugWrite("ans_: ", ans_);
-
-
-  %% tGuard かつ otherExpr かつ t>0 の導出
-  %example_:=sub(tmp_, guard_) and mymkand sub(tmp_, otherExpr_) and t
-  %> 0;
-  %%  - 5*t**2 + 10 = 0 and true and t > 0$
-
-  %% bballPP一回目に関してOK, 2回目以降は解が冗長になりERROR
-  %ans_:=rlqe ex(t,example_);
-
-  %debugWrite("rlqe ex(t,example_): ",rlqe ex(t,example_));
-
-
-  if(ans_=true) then return CEI_ENTAILED___
-  else if(ans_=false) then return CEI_NOT_ENTAILED___
-  else 
-    << 
-     debugWrite("rlqe ans: ", ans_);
-     return CEI_UNKNOWN___;
-    >>;
-
-end;
-
-
 
 procedure checkInfUnit(tExpr_, mode_)$
 begin;
-  scalar infCheckAns_;
+  scalar head_, infCheckAns_, exprLhs_, solveAns_;
 
   % 前提：relop(t, 値)の形式
   debugWrite("tExpr_: ", tExpr_);
+  debugWrite("mode_: ", mode_);
 
-  if(part(tExpr_,0)=equal) then 
+  head_:= part(tExpr_, 0);
+  debugWrite("head_: ", head_);
+
+  if(head_=equal) then <<
     % ガード条件判定においては等式の場合はfalse
     if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
     else if(mode_ = MINTIME___) then
       if(mymin(part(tExpr_,2),0) neq part(tExpr_,2)) then infCheckAns_:= {part(tExpr_, 2)}
       else infCheckAns_:= {INFINITY}
-  % TODO:不等式の場合への対応
-  else 
-    if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
-    else if(mode_ = MINTIME___) then infCheckAns_:= {};
+  >> else <<
+    if(mode_ = ENTAILMENT___) then
+      if(rlqe(tExpr_ and t>0) = false) then infCheckAns_:= {false} 
+      else infCheckAns_:= {true}
+    else if(mode_ = MINTIME___) then
+      % >および>=の場合は処理しない
+      % TODO:パラメタ対応
+      if((head_ = geq) or (head_ = greaterp)) then infCheckAns_:= {INFINITY}
+
+      % (t - value) op 0  の形を想定
+      % TODO:2次式以上への対応
+      else <<
+        exprLhs_:= part(tExpr_, 1);
+        solveAns_:= part(solve(exprLhs_=0, t), 1);
+        infCheckAns_:= {part(solveAns_, 2)};
+      >>
+  >>;
   debugWrite("infCheckAns_: ", infCheckAns_);
 
   return infCheckAns_;
@@ -969,7 +986,8 @@ end;
 
 procedure calcMinTime(integAsk_)$
 begin;
-  scalar sol_, minTList_, singletonMinTList_;
+  scalar andArgsCount_, integAskList_, integAskSolList_, 
+         minTList_, singletonMinTList_;
 
   debugWrite("in calcMinTime", " ");
   debugWrite("integAsk_: ", integAsk_);
@@ -977,13 +995,18 @@ begin;
   % falseになるような場合はMinTimeを考える必要がない
   if(rlqe(integAsk_) = false) then return {INFINITY};
 
-  % とりあえずtに関して解く（等式の形式を前提としている）
-  % TODO:ガード条件が不等式の場合はsolveでなく適切な関数で解く必要がある
-  % TODO:ガード条件に等式と不等式が混在していたら、分解してからか？
-  % TODO:論理積でつながった形への対応
-  sol_:= solve(integAsk_, t);
+  % まず、andでつながったtmp制約をリストに変換
+  andArgsCount_:= arglength(integAsk_);
+  integAskList_:= for i:=1 : andArgsCount_ collect part(integAsk_, i);
+  debugWrite("integAskList_:", integAskList_);
 
-  minTList_:= union(for each x in sol_ join checkInfUnit(x, MINTIME___));  
+  % それぞれについて、等式ならばsolveしてintegAskSolList_とする。不等式ならば後回し。
+  integAskSolList_:= union(for each x in integAskList_ join
+                         if(not hasInequality(x)) then solve(x, t) else {x});
+  debugWrite("integAskSolList_:", integAskSolList_);
+
+  % integAskSolList_の各要素について、checkInfUnitして、minTList_を得る
+  minTList_:= union(for each x in integAskSolList_ join checkInfUnit(x, MINTIME___));  
   debugWrite("minTList_ in calcMinTime: ", minTList_);
 
   singletonMinTList_:= {myFindMinimumNatPPTime(Infinity, minTList_)};
