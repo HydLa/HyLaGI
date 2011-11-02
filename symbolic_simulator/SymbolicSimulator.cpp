@@ -689,12 +689,17 @@ void SymbolicSimulator::output_result_tree()
     return;
   }
   int i = 1;
+  int j = 1;
   while(1){
     state_result_sptr_t now_node = result_root_->children.back();
-    if(opts_.nd_mode)
+    if(opts_.nd_mode){
       std::cout << "#---------Case " << i++ << "---------" << std::endl;
-
+j = 1;
+    }
     while(1){
+       if(now_node->phase_type==PointPhase){
+        std::cout << "#---------" << j++ << "---------" << std::endl;
+       }
       output_state_result(*now_node, false, ((opts_.output_format==fmtNumeric)||(opts_.output_format==fmtNInterval)) );
       if(now_node->children.size() == 0){//—t‚É“ž’B
         output_parameter_map(now_node->parameter_map);
