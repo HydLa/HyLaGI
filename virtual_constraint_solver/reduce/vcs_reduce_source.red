@@ -23,6 +23,10 @@ procedure myFoldLeft(func_, init_, list_)$
   if(list_ = {}) then init_
   else myFoldLeft(func_, func_(init_, first(list_)), rest(list_))$
 
+procedure getArgsList(expr_)$
+  if(arglength(expr_)=-1) then {}
+  else for i:=1 : arglength(expr_) collect part(expr_, i)$
+
 procedure applyUnitAndFlatten(funcName_, appliedExpr_, newArg_)$
   if(neqArg_ = {}) then appliedExpr_
   else if(part(appliedExpr_, 0) neq funcName_) then funcName_(appliedExpr_, newArg_)
@@ -31,11 +35,10 @@ procedure applyUnitAndFlatten(funcName_, appliedExpr_, newArg_)$
 %MathematicaでいうApply関数
 procedure myApply(func_, expr_)$
 begin;
-  scalar argsCount_, argsList_, ret_;
-  argsCount_:= arglength(expr_);
-  if(argsCount_=1) then return func_(part(expr_, 1));
+  scalar argsList_, ret_;
+  if(arglength(expr_)_=1) then return func_(part(expr_, 1));
 
-  argsList_:= for i:=1 : argsCount_ collect part(expr_, i);
+  argsList_:= getArgsList(expr_);
   ret_:= applyUnitAndFlatten(func_, first(argsList_), rest(argsList_));
   
   % TODO:便利そうなので作る
@@ -112,10 +115,11 @@ end;
 procedure myInfinityIf(x, op, y)$
 begin;
   scalar ans;
-  if(x=INFINITY) then 
-    (if ((op = geq) or (op = greaterp)) then ans:=t else ans:=nil)
-  else
-    (if ((op = leq) or (op = lessp)) then ans:=t else ans:=nil);
+  % INFINITY > -INFINITYとかの対応
+  if(x=INFINITY or y=-INFINITY) then 
+    if((op = geq) or (op = greaterp)) then ans:=t else ans:=nil
+  else 
+    if((op = leq) or (op = lessp)) then ans:=t else ans:=nil;
   return ans;
 end;
 
@@ -132,30 +136,26 @@ if(llst={}) then {}
 		else getf(x,first(llst)) . {lgetf(x,rest(llst))}$
 
 procedure mymin(x,y)$
-if(x={}) then
-	if(y={}) then {} else y
-  else	if(y={}) then x
-	else if(myif(x,greaterp,y,30)) then y else x$
+%入力: 数値という前提
+if(myif(x,lessp,y,30)) then x else y$
 
-procedure myFindMinimumNatPPTime(x,lst)$
-%入力: 現段階での最小PP時刻x, 次の時刻候補のリスト
-%出力: 次のPP開始時の時刻
-% 0より小さい値はlstに渡されないという前提（他の処理で実現されている）
-if(rest(lst)={}) then
-<<
-  if(myif(x,lessp,first(lst),30)) then x else first(lst)
->>
-else 
-<<
-  if(myif(x,lessp,first(lst),30)) then 
-  <<
-    myFindMinimumNatPPTime(x,rest(lst))
-  >>
-  else 
-  <<
-    myFindMinimumNatPPTime(first(lst),rest(lst))
-  >>
->>$
+procedure mymax(x,y)$
+%入力: 数値という前提
+if(myif(x,greaterp,y,30)) then x else y$
+
+procedure myFindMinimumValue(x,lst)$
+%入力: 現段階での最小値x, 最小値を見つけたい対象のリスト
+%出力: リスト中の最小値
+if(lst={}) then x
+else if(mymin(x, first(lst)) = x) then myFindMinimumValue(x,rest(lst))
+else myFindMinimumValue(first(lst),rest(lst))$
+
+procedure myFindMaximumValue(x,lst)$
+%入力: 現段階での最大値x, 最大値を見つけたい対象のリスト
+%出力: リスト中の最大値
+if(lst={}) then x
+else if(mymax(x, first(lst)) = x) then myFindMaximumValue(x,rest(lst))
+else myFindMaximumValue(first(lst),rest(lst))$
 
 
 %待ち行列I関係
@@ -758,7 +758,7 @@ ICI_UNKNOWN___:= 3; % 不要？
 procedure checkConsistencyInterval(tmpCons_, exprs_, pexpr_, init_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_,
-         integTmp_, integTmpQE_, andArgsCount_, integTmpSol_, infList_, ans_;
+         integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
   putLineFeed();
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
@@ -817,8 +817,7 @@ begin;
 
   >> else <<
     % まず、andでつながったtmp制約をリストに変換
-    andArgsCount_:= arglength(integTmpQE_);
-    integTmpQEList_:= for i:=1 : andArgsCount_ collect part(integTmpQE_, i);
+    integTmpQEList_:= getArgsList(integTmpQE_);
     debugWrite("integTmpQEList_:", integTmpQEList_);
 
     % それぞれについて、等式ならばsolveしてintegTmpSolList_とする。不等式ならば後回し。
@@ -860,9 +859,9 @@ end;
 
 procedure checkInfUnit(tExpr_, mode_)$
 begin;
-  scalar head_, infCheckAns_, exprLhs_, solveAns_, orArgsAnsList_;
+  scalar head_, infCheckAns_, exprLhs_, solveAns_, tExprSol_,
+         orArgsAnsList_, andArgsAnsList_;
 
-  % 前提：relop(t, 値)の形式
   debugWrite("tExpr_: ", tExpr_);
   debugWrite("mode_: ", mode_);
 
@@ -876,31 +875,41 @@ begin;
       debugWrite("orArgsAnsList_: ", orArgsAnsList_);
       infCheckAns_:= {rlqe(mymkor(orArgsAnsList_))};
     >> else if(mode_ = MINTIME___) then <<
-      % TODO: ちゃんと作る
-      infCheckAns_:= hoge
+      orArgsAnsList_:= union(for i:=1 : arglength(tExpr_) collect
+        checkInfUnit(part(tExpr_, i), mode_));
+      debugWrite("orArgsAnsList_: ", orArgsAnsList_);
+      infCheckAns_:= cons(or, orArgsAnsList_);
+    >>
+  >> else if(head_=and) then <<
+    if(mode_ = ENTAILMENT___) then <<
+      andArgsAnsList_:= for i:=1 : arglength(tExpr_) join
+        checkInfUnit(part(tExpr_, i), mode_);
+      debugWrite("andArgsAnsList_: ", andArgsAnsList_);
+      infCheckAns_:= {rlqe(mymkand(andArgsAnsList_))};
+    >> else if(mode_ = MINTIME___) then <<
+      andArgsAnsList_:= union(for i:=1 : arglength(tExpr_) collect
+        checkInfUnit(part(tExpr_, i), mode_));
+      debugWrite("andArgsAnsList_: ", andArgsAnsList_);
+      infCheckAns_:= cons(and, andArgsAnsList_);
     >>
   >> else if(head_=equal) then <<
     % ガード条件判定においては等式の場合はfalse
     if(mode_ = ENTAILMENT___) then infCheckAns_:= {false}
-    else if(mode_ = MINTIME___) then
-      if(mymin(part(tExpr_,2),0) neq part(tExpr_,2)) then infCheckAns_:= {part(tExpr_, 2)}
-      else infCheckAns_:= {INFINITY}
+    else if(mode_ = MINTIME___) then <<
+      % TODO:2次式以上への対応？
+      tExprSol_:= first(solve(tExpr_, t));
+      debugWrite("tExprSol_:", tExprSol_);
+      if(mymin(part(tExprSol_,2),0) neq part(tExprSol_,2)) then infCheckAns_:= part(tExprSol_, 2)
+      else infCheckAns_:= INFINITY;
+    >>
   >> else <<
     if(mode_ = ENTAILMENT___) then
       if(rlqe(tExpr_ and t>0) = false) then infCheckAns_:= {false} 
       else infCheckAns_:= {true}
-    else if(mode_ = MINTIME___) then
-      % >および>=の場合は処理しない
-      % TODO:パラメタ対応
-      if((head_ = geq) or (head_ = greaterp)) then infCheckAns_:= {INFINITY}
-
-      % (t - value) op 0  の形を想定
-      % TODO:2次式以上への対応
-      else <<
-        exprLhs_:= part(tExpr_, 1);
-        solveAns_:= part(solve(exprLhs_=0, t), 1);
-        infCheckAns_:= {part(solveAns_, 2)};
-      >>
+    else if(mode_ = MINTIME___) then <<
+      % 不等式の場合はそのまま返す
+      infCheckAns_:= tExpr_;
+    >>
   >>;
   debugWrite("infCheckAns_: ", infCheckAns_);
 
@@ -988,12 +997,12 @@ begin;
 
   if(not freeof(minTList_, error)) then return error;
 
-  minT_:= myFindMinimumNatPPTime(INFINITY, minTList_);
+  minT_:= myFindMinimumValue(INFINITY, minTList_);
   debugWrite("minT_: ", minT_);
 
   if(mymin(minT_, maxTime_) neq maxTime_) then ans_:= {minT_, 0}
   else ans_:= {maxTime_, 1}; 
-  debugWrite("ans_: ", ans_);
+  debugWrite("ans_ in calcNextPointPhaseTime: ", ans_);
 
   return ans_;
 end;
@@ -1015,39 +1024,147 @@ end;
 
 procedure calcMinTime(integAsk_)$
 begin;
-  scalar andArgsCount_, integAskList_, integAskSolList_, 
-         minTList_, singletonMinTList_;
+  scalar integAskList_, integAskSolList_, integAskSolFormula_,
+         minTList_, singletonMinTList_, tmpSol_;
 
   debugWrite("in calcMinTime", " ");
   debugWrite("integAsk_: ", integAsk_);
 
-  % falseになるような場合はMinTimeを考える必要がない
-  if(rlqe(integAsk_) = false) then return {INFINITY};
+  % t>0と連立してfalseになるような場合はMinTimeを考える必要がない
+  if(rlqe(integAsk_ and t>0) = false) then return {INFINITY};
 
+  %%%%%%%%%%%% TODO:この辺から、%%%%%%%%%%%%%%
   % まず、andでつながったtmp制約をリストに変換
-  andArgsCount_:= arglength(integAsk_);
-  integAskList_:= for i:=1 : andArgsCount_ collect part(integAsk_, i);
+  if(part(integAsk_, 0)=and) then integAskList_:= getArgsList(integAsk_)
+  else integAskList_:= {integAsk_};
   debugWrite("integAskList_:", integAskList_);
 
   % それぞれについて、等式ならばsolveしてintegAskSolList_とする。不等式ならば後回し。
   integAskSolList_:= union(for each x in integAskList_ join
-                         if(not hasInequality(x)) then solve(x, t) else {x});
+                       if(not hasInequality(x)) then <<
+                         tmpSol_:= solve(x, t);
+                         if(length(tmpSol_)>1) then {tmpSol_} else tmpSol_
+                       >> else <<
+                         {x}
+                       >>
+                     );
   debugWrite("integAskSolList_:", integAskSolList_);
 
-  % integAskSolList_の各要素について、checkInfUnitして、minTList_を得る
-  minTList_:= union(for each x in integAskSolList_ join checkInfUnit(x, MINTIME___));  
+  % 論理式形式に変換
+  integAskSolFormula_:= rlqe(mymkand(for each x in integAskSolList_ collect
+                          if(part(x, 0)=list) then rlqe(mymkor(x)) else x
+                        ));
+  debugWrite("integAskSolFormula_: ", integAskSolFormula_);
+  %%%%%%%%%%%% TODO:この辺までを1つの処理にまとめたい%%%%%%%%%%%%
+
+  minTList_:= checkInfUnit(integAskSolFormula_, MINTIME___);
   debugWrite("minTList_ in calcMinTime: ", minTList_);
 
-  singletonMinTList_:= {myFindMinimumNatPPTime(Infinity, minTList_)};
+  % minTList_の整理
+  singletonMinTList_:= {regulateMinTExpr(minTList_)};
   debugWrite("singletonMinTList_: ", singletonMinTList_);
 
   % パラメタ無しなら解は1つになるはず
   if(length(singletonMinTList_) neq 1) then return {error};
+  % ERRORが返ってもerror
+  if(singletonMinList_ = {ERROR}) then return {error};
   return singletonMinTList_;
 
 end;
 
+procedure regulateMinTExpr(minTExpr_)$
+begin;
+  scalar head_, ineqList_, eqList_, argsList_, regulatedMinTList_, andEqArgsCount_,
+         lbList_, ubList_, maxLb_, minUb_, exprLhs_, solveAns_;
 
+  debugWrite("in regulateMinTExpr", " ");
+  debugWrite("minTExpr_: ", minTExpr_);
+
+  % 引数を持たない場合
+  if(arglength(minTExpr_)=-1) then return minTExpr_;
+
+  head_:= part(minTExpr_, 0);
+  debugWrite("head_: ", head_);
+  ineqList_:={};
+  eqList_:={};
+
+  if(head_=list) then <<
+    % orまたはandを表す要素
+
+    argsList_:= getArgsList(minTExpr_) \ {and, or};
+    debugWrite("argsList_: ", argsList_);
+    % 長さ1のリストならその要素を返す
+    if(length(argsList_)=1) then return first(argsList_);
+
+    for each x in argsList_ do 
+      if(hasInequality(x)) then ineqList_:= cons(x, ineqList_);
+    debugWrite("ineqList_: ", ineqList_);
+    eqList_:= argsList_ \ ineqList_;
+    debugWrite("eqList_: ", eqList_);
+
+    if(part(minTExpr_, 1)=or) then <<
+
+      if(ineqList_ neq {}) then return ERROR;
+
+      % INFINITY消去
+      eqList_:= eqList_ \ {INFINITY};
+
+      regulatedMinTList_:= for each x in eqList_ collect regulateMinTExpr(x);
+      debugWrite("regulatedMinTList_: ", regulatedMinTList_);
+      minTValue_:= myFindMinimumValue(INFINITY, regulatedMinTList_);
+    >> else if(part(minTExpr_, 1)=and) then <<
+      % INFINITY消去
+      eqList_:= eqList_ \ {INFINITY};
+
+      regulatedMinTList_:= for each x in eqList_ collect regulateMinTExpr(x);
+      debugWrite("regulatedMinTList_: ", regulatedMinTList_);
+      andEqArgsCount_:= length(regulatedMinTList_);
+      debugWrite("andEqArgsCount_:", andEqArgsCount_);
+      if(andEqArgsCount_ > 1) then return ERROR;
+      % lbとubとで分ける
+      lbList_:= {};
+      ubList_:= {};
+
+      for each x in ineqList_ do <<
+        % (t - value) op 0  の形を想定
+        % TODO:パラメタ対応
+        % TODO:2次式以上への対応？
+        exprLhs_:= part(x, 1);
+        solveAns_:= part(solve(exprLhs_=0, t), 1);
+
+        if((not freeof(x, geq)) or (not freeof(x, greaterp))) then
+          lbList_:= cons(part(solveAns_, 2), lbList_)
+        else ubList_:= cons(part(solveAns_, 2), ubList_);
+      >>;
+      debugWrite("lbList_: ", lbList_);
+      debugWrite("ubList_: ", ubList_);
+      % lbの最大値とubの最小値を求める
+      maxLb_:= myfindMaximumValue(0, lbList_);
+      minUB_:= myfindMinimumValue(INFINITY, ubList_);
+      debugWrite("maxLb_: ", maxLb_);
+      debugWrite("minUb_: ", minUb_);
+
+      if(andEqArgsCount_ = 1) then <<
+        % minTValue_が存在するので、lb<ptかつpt<ubであることを確かめる
+        minTValue_:= first(regulatedMinTList_);
+        debugWrite("minTValue_: ", minTValue_);
+        if(mymin(maxLb_, minTValue_) neq maxLb_ or 
+          mymin(minTValue_, minUb_) neq minTValue_) then minTValue_:= INFINITY;
+      >> else <<
+        % 不等式だけなので、lb<ubかつlb>0を確かめる
+        if(mymin(maxLb_, minUb_) = maxLb_ and mymin(0, maxLb_) = 0) then minTValue_:= maxLb_ 
+        else minTValue_:= INFINITY;
+      >>;
+    >>;
+    debugWrite("minTValue_: ", minTValue_);
+    return minTValue_;
+  >> else <<
+    % andやorにつながらずに、<および<=にたどり着いた場合はERROR扱い
+    if((not freeof(minTExpr_, leq)) or (not freeof(minTExpr_, lessp))) then return ERROR
+    else return minTExpr_;
+  >>;
+  
+end;
 
 procedure getRealVal(value_, prec_)$
 begin;
