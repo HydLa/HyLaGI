@@ -456,8 +456,9 @@ begin;
   debugWrite("tmpSol_: ", tmpSol_);
 
   if(tmpSol_={}) then return {retfalse___};
+  % 2重リストの時のみfirstで得る
   % TODO:複数解得られた場合への対応
-  tmpSol_:= first(tmpSol_);
+  if(part(first(tmpSol_), 0)=list) then tmpSol_:= first(tmpSol_);
 
 
   % exprs_に等式以外が入っているかどうかにより、解くのに使用する関数を決定
