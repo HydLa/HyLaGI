@@ -175,7 +175,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   var_info_t new_var = 
     boost::make_tuple(node->get_name(), 
                       differential_count_, 
-                      in_prev_ && !ignore_prev_);
+                      in_prev_ && (variable_arg_ != VA_Time));
 
     put_var(new_var, variable_arg_);
 }
@@ -196,7 +196,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 void PacketSender::visit(boost::shared_ptr<Parameter> node)
 {    
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
-  ml_->put_symbol(par_prefix + node->get_name());
+  put_par(par_prefix + node->get_name());
 }
 
 
@@ -221,13 +221,14 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
     "\tdiff_count: ", diff_count,
     "\tprev: ", prev,
     "\tvariable_arg: ", variable_arg);
-  
-  // 変数名の最後に必ず[t]がつく分
-  if(variable_arg != VA_None) {
+    
+
+  // 変数名の[t]や[0]がつく分
+  if(variable_arg == VA_Time ||  variable_arg == VA_Zero && !prev) {
     ml_->MLPutNext(MLTKFUNC);
     ml_->MLPutArgCount(1);
   }
-
+  
   // 変数のput
   if(diff_count > 0){
     // 微分変数なら (Derivative[回数])[変数名]をput
@@ -238,36 +239,51 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
     ml_->put_symbol("Derivative");
     ml_->MLPutInteger(diff_count);
   }
-   
+  
   // prev変数として送るかどうか
   if(prev) {
     ml_->put_function("prev", 1);
-    ml_->put_symbol(name);
   }
-  else {
-    ml_->put_symbol(name);
-  }
+  
+  ml_->put_symbol(name);
+  
 
   switch(variable_arg) {
     case VA_None:
-      // do nothing
       break;
       
     case VA_Time:
       ml_->put_symbol("t");
       break;
     case VA_Zero:
-      ml_->put_integer(0);
+      if(!prev)
+        ml_->put_integer(0);
       break;
-      
     default:
       assert(0);
   }
 
   // putした変数の情報を保持
   vars_.insert(var);
+  
+  HYDLA_LOGGER_REST(
+    "PacketSender::put_var: vars_size()",
+    vars_.size());
 }
 
+
+void PacketSender::put_par(const std::string &name)
+{
+  HYDLA_LOGGER_REST(
+    "PacketSender::put_par: ",
+    "name: ", name);
+
+  ml_->put_symbol(name);
+
+
+  // putした変数の情報を保持
+  pars_.insert(name);
+}
 
 
 /**
@@ -275,29 +291,39 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
  * @param node putしたい式(ノード)
  */
 void PacketSender::put_node(const node_sptr& node, 
-                            VariableArg variable_arg, 
-                            bool ignore_prev,
-                            bool entailed)
+                            VariableArg variable_arg)
 {
+  HYDLA_LOGGER_REST("*** Begin PacketSender::put_node ***");
+  HYDLA_LOGGER_REST("node:", *node);
   differential_count_ = 0;
   in_prev_ = false;
   variable_arg_ = variable_arg;
-  ignore_prev_ = ignore_prev;
-  if(!entailed){
-    HYDLA_LOGGER_REST("put: Not");
-    ml_->put_function("Not", 1);
-  }
   accept(node);
+  HYDLA_LOGGER_REST("*** END PacketSender::put_node ***");
+}
+
+
+/**
+ * ある式のリストをputする
+ */
+void PacketSender::put_nodes(const std::vector<node_sptr>& constraints,
+                            VariableArg variable_arg)
+{
+  
+  HYDLA_LOGGER_REST("*** Begin PacketSender::put_nodes ***");
+  ml_->put_function("And", constraints.size());
+  for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
+    put_node(*it, variable_arg);
+  }
+  HYDLA_LOGGER_REST("*** End PacketSender::put_nodes: ***");
 }
 
 /**
  * 変数の一覧を送信．
  */
-void PacketSender::put_vars(VariableArg variable_arg, 
-                            bool ignore_prev)
+void PacketSender::put_vars(VariableArg variable_arg)
 {
-  HYDLA_LOGGER_REST(
-    "---- PacketSender::put_vars ----\n",
+  HYDLA_LOGGER_REST("*** Begin PacketSender::put_vars ***",
     "var size:", vars_.size());
   
   ml_->put_function("List", vars_.size());
@@ -305,13 +331,25 @@ void PacketSender::put_vars(VariableArg variable_arg,
   PacketSender::vars_const_iterator it  = vars_begin();
   PacketSender::vars_const_iterator end = vars_end();
   for(; it!=end; ++it) {
-    put_var(boost::make_tuple(
-              it->get<0>(),
-              it->get<1>(),
-              it->get<2>() && !ignore_prev), 
-            variable_arg);
+    put_var(*it, variable_arg);
+  }
+  HYDLA_LOGGER_REST("*** End PacketSender::put_vars: ***");
+}
+
+
+void PacketSender::put_pars()
+{
+  HYDLA_LOGGER_REST(
+    "---- PacketSender::put_pars ----\n",
+    "par size:", pars_.size());
+  
+  ml_->put_function("List", pars_.size());
+
+  for(std::set<std::string>::iterator it = pars_.begin(); it!=pars_.end(); ++it) {
+    put_par(*it);
   }
 }
+
 
 /**
  * 内部情報(特に変数情報)をリセットする．
@@ -323,6 +361,7 @@ void PacketSender::clear()
   in_prev_ = false;
 
   vars_.clear();
+  pars_.clear();
 }
 
 namespace {

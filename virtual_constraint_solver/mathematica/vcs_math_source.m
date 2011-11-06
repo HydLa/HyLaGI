@@ -23,22 +23,6 @@ getInverseRelop[relop_] := Switch[relop,
                                   LessEqual, GreaterEqual,
                                   GreaterEqual, LessEqual];
 
-(* Inequality[a, relop, x, relop, b]の形を変形する関数 *)
-removeInequality[ret_, expr_] := (
-  If[Head[expr] === Inequality,
-    Join[ret,
-         {Reduce[expr[[2]][expr[[1]], expr[[3]]], expr[[3]]]},
-         {expr[[4]][expr[[3]], expr[[5]]]}
-    ],
-    Append[ret, expr]
-  ]
-);
-
-(* 条件1から条件2を引き，変数表形式にして返す *)
-getComplementCondition[cond1_, cond2_] := (
-  debugPrint["cond1:", cond1, "cond2:", cond2];
-  convertCSToVM[Complement[applyList[cond1[[1]] ], applyList[cond2[[1]] ] ] ]
-);
 
 (* 与えられた式の中の，Cに関する制約と，tの下限となる式を抜き出す関数．
  * 全部Andでつながれてるものという前提．
@@ -128,11 +112,11 @@ checkInf[candidates_, constraints_, pars_] := Block[
   {ret, restRet, underBounds, constraintsForC, listOfC},
   If[Length[candidates] == 0,
     {2},
-    ret = Fold[removeInequality, {}, candidates[[1]] ];
+    ret = Map[LogicalExpand, candidates[[1]]];
     (* tの最小値候補を調べるため，tの下限とt以外の変数についての制約と出現する変数のリストを抽出する． *)
     {underBounds, constraintsForC, listOfC, otherConstraints} = getValidExpression[ret, pars];
-    otherConstraints = applyList[Reduce[Join[otherConstraints, constraints], Reals]];
-    otherConstraints = Fold[removeInequality, {}, otherConstraints ];
+    otherConstraints = applyList[Reduce[And[And@@otherConstraints, constraints], Reals]];
+    otherConstraints = Map[LogicalExpand, otherConstraints];
 
     If[underBounds === {},
       (* 候補が存在しなければ導出不可能なので，次を試す *)
@@ -170,14 +154,29 @@ checkInf[candidates_, constraints_, pars_] := Block[
  *  2 : 矛盾
  *)
 
-checkConsistencyInterval[expr_, pexpr_, vars_, pars_] :=  
+checkConsistencyInterval[] :=  (
+  checkConsistencyIntervalMain[constraints, variables, pconstraints, parameters]
+);
+
+
+checkConsistencyTemporaryInterval[expr_, vars_, pexpr_, pars_] :=  (
+  checkConsistencyIntervalMain[constraints && expr, Union[vars, variables], pconstraints && pexpr, Union[pars, parameters] ]
+);
+
+
+checkConsistencyTemporaryInterval[expr_, vars_] :=  (
+  checkConsistencyIntervalMain[constraints && expr, Union[vars, variables], pconstraints, parameters]
+);
+
+
+
+checkConsistencyIntervalMain[expr_, vars_, pexpr_, pars_] :=  
 Quiet[
   Check[
     Block[
       {tStore, sol, integGuard, otherExpr, condition},
-      debugPrint["expr:", expr, "pexpr", pexpr, "vars:", vars, "pars:", pars, "all", expr, pexpr, vars, pars];
+      debugPrint["expr:", expr, "vars:", vars, "pexpr", pexpr, "pars:", pars, "all", expr, vars, pexpr, pars];
       sol = exDSolve[expr, vars];
-      Print["sol:", sol];
       If[sol === overconstraint,
         {2},
         If[sol === underconstraint || sol[[1]] === {} ,
@@ -186,13 +185,12 @@ Quiet[
           tStore = sol[[1]];
           tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
           otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
-          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual, Inequality}, Head[#] ] || # === False)&];
+          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual, Inequality, Unequal}, Head[#] ] || # === False)&];
           
-
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
-          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && And@@pexpr}, t, Reals],
+          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && pexpr}, t, Reals],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
           If[sol === False,
             {2},
@@ -201,8 +199,7 @@ Quiet[
             sol = Map[applyList, sol];
             (* tの最大下界を0とできる可能性を調べる． *)
             sol = checkInf[sol, pexpr, pars];
-            If[sol[[1]] == 3, sol[[2]] = ToString[FullForm[sol[[2]] ] ] ];
-            sol
+            {sol[[1]]}
           ]
         ]
       ]
@@ -210,6 +207,8 @@ Quiet[
     {0, $MessageList}
   ]
 ];
+
+
 
 removeP[par_] := First[StringCases[ToString[par], StartOfString ~~ "p" ~~ x__ -> x]];
 
@@ -263,7 +262,7 @@ getExprCode[expr_] := Switch[Head[expr],
 ];
 
 convertCSToVM[] := Block[
-  {resultExprs, inequalityVariable},
+  {resultExprs},
   formatExprs[exprs_] := (
     If[Cases[exprs, Except[True]]==={},
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
@@ -287,54 +286,11 @@ convertCSToVM[] := Block[
   resultExprs
 ];
 
-(* checkConsistency内のReduceの結果得られた解を{変数名, 値}のリスト形式にする *)
-createVariableList[Rule[varName_, varValue_], result_] := Block[{
-  name
-},
-  name = renameVar[varName];
-  Append[result, pair[name, varValue]]
-];
-
-createVariableList[{expr_}, result_] := (
-  createVariableList[expr, result]
-);
-
-createVariableList[{expr_, others__}, result_] := Block[{
-  variableList
-},
-  variableList = createVariableList[expr, result];
-  createVariableList[{others}, variableList]
-];
-
-createVariableList[And[expr__], vars_, result_] := Block[
-  {sol},
-  sol = (Solve[expr, vars])[[1]];
-  createVariableList[sol, result]
-];
-
-(* Orでつながっている （複数解がある）場合は、そのうちの1つのみを返す？ *)
-createVariableList[Or[expr_, others__], vars_, result_] := (
-  createVariableList[expr, vars, result]
-);
-
-createVariableList[Equal[varName_, varValue_], vars_, result_] := Block[{
-  sol
-},
-  sol = (Solve[Equal[varName, varValue], vars])[[1]];
-  createVariableList[sol, result]
-];
-
-(* Reduce[{}, {}]のとき *)
-createVariableList[True, vars_, result_] := (
-  Return[result]
-);
-
 (* 式中に変数名が出現するか否か *)
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
 (* 式が定数そのものか否か *)
 isParameter[exprs_] := StringMatchQ[ToString[exprs], "p" ~~ __];
-
 
 
 (* 必ず関係演算子の左側に変数名が入るようにする *)
@@ -358,9 +314,6 @@ adjustExprs[andExprs_] :=
        {}, andExprs];
 
 
-
-
-
 resetConstraint[] := (
   constraints = True;
   pconstraints = True;
@@ -369,34 +322,54 @@ resetConstraint[] := (
 );
 
 addConstraint[cons_, vars_] := (
-  debugPrint["@addConstraint cons:", cons, "vars:", vars];
   constraints = constraints && cons;
   variables = Union[variables, vars];
-  debugPrint["@addConstraint constraints:", constraints, "variables:", variables];
+  debugPrint["constraints:", constraints, "variables:", variables];
 );
 
+addConstraint[cons_, vars_, pcons_, pars_] := (
+  pconstraints = pconstraints && pcons;
+  parameters = Union[parameters, pars];
+  addConstraint[cons, vars];
+  debugPrint["pconstraints:", pconstraints, "parameters:", parameters];
+);
+
+
+(* 制約がすべてインクリメンタルに増えていく実装ならこっちだけ使いたい．毎回解いた結果に更新していくからたぶん高速 *)
 checkConsistency[] := Block[
   {sol},
-  debugPrint["@checkConsistency constraints:", constraints, "variables:", variables];
-  sol = checkConsistencyByReduce[constraints, variables];
+  sol = checkConsistencyByReduce[constraints, pconstraints, variables, parameters];
   If[sol[[1]] == 1, constraints = sol[[2]]; sol = {1}  ];
   sol
 ];
 
-checkConsistencyWithTemporaryConstraint[expr_, vars_] := (
-  debugPrint["@checkConsistencyWTC constraints:", constraints, "variables:", variables, "expr:", expr, "vars", vars];
-  { checkConsistencyByReduce[constraints && expr, Union[variables, vars] ] [[1]] }
+(* 一時的に制約を追加して充足可能性判定 *)
+checkConsistencyTemporary[expr_, pexpr_, vars_, pars_] := (
+  {checkConsistencyByReduce[constraints && expr, pconstraints && pexpr, Union[variables, vars], Union[parameters, pars][[1]] ]}
 );
 
-checkConsistencyByReduce[expr_, vars_] := 
+checkConsistencyTemporary[expr_, vars_] := (
+ {checkConsistencyByReduce[constraints && expr, pconstraints, Union[variables, vars], parameters ][[1]] }
+);
+
+checkConsistencyByReduce[expr_, pexpr_, vars_, pars_] := 
 Quiet[
   Check[
     Block[
       {sol},
-      sol = Reduce[expr, vars, Reals];
+      debugPrint["@checkConsistencyReduce", "expr:", expr, "pexpr", pexpr, "vars", vars, "pars", pars, "all:", expr, pexpr, vars, pars];
+      sol = Reduce[expr&&pexpr, vars, Reals];
       If[sol === False,
         {2},
         {1, sol}
+        (*
+        If[pars === {},
+          {1, sol},
+          If[ Reduce[ForAll[pars, pexpr, Exists[vars, sol]], Reals] === False,
+            {3},
+            {1, sol}
+          ]
+        ]*)
       ]
     ],
     {0, $MessageList}
@@ -425,8 +398,6 @@ isRequiredVariable[var_, tellVars_] := (
    If[MemberQ[tellVars, var], True, False]
 );
 
-removeNotEqual[sol_] := 
-   DeleteCases[sol, Unequal[lhs_, rhs_], Infinity];
 
 getNDVars[vars_] := Union[Map[(removeDash[#])&, vars]];
 
@@ -456,7 +427,6 @@ removeTrivialCons[cons_, consVars_] := Block[
 
   Fold[(Intersection[#1, removeTrivialConsUnit[cons, #2]]) &,
        cons, getRequiredVars[consVars]]
-
 ];
 
 (* Reduceで得られた結果をリスト形式にする *)
@@ -467,70 +437,17 @@ applyList[reduceSol_] :=
 (* OrではなくListでくくる *)
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
-
-exDSolve[expr_, vars_] := Block[
-{sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
-  paramCons = getParamCons[expr];
-  sol = LogicalExpand[removeNotEqual[Reduce[Cases[Complement[expr, paramCons],Except[True]], vars, Reals]]];
-
-  If[sol===False || Reduce[expr, vars, Reals] === False,
-    overconstraint,
-    If[sol===True,
-      {{}, {}},
-      (* 1つだけ採用 *)
-      (* TODO: 複数解ある場合も考える *)
-      If[Head[sol]===Or, sol = First[sol]];
-      sol = applyList[sol];
-
-      (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
-      sol = removeTrivialCons[sol, vars];
-
-      {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
-
-      Quiet[
-        Check[
-          Check[
-            
-            If[Cases[DExpr, Except[True]] === {},
-              (* ストアが空の場合はDSolveが解けないので空集合を返す *)
-              sol = {},
-              sol = DSolve[DExpr, DExprVars, t];
-              (* 1つだけ採用 *)
-              (* TODO: 複数解ある場合も考える *)
-              sol = First[sol]
-            ];
-
-            sol = Quiet[Solve[Join[Map[(Equal @@ #) &, sol], NDExpr], getNDVars[vars]]];
-            If[sol =!= {},
-              {First[sol], Join[otherExpr, paramCons]},
-              overconstraint
-            ],
-            underconstraint,
-            {DSolve::underdet, Solve::svars, DSolve::deqx, 
-             DSolve::bvnr, DSolve::bvsing}],
-                  overconstraint,
-                  {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
-            {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-             Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-             DSolve::bvnul, DSolve::dsmsm, Solve::incnst}
-          ]
-        ]
-      ]
-];
-
-(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
-(* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
-splitExprs[expr_] := Block[
-  {NDExpr, DExpr, DExprVars, otherExpr},
-  otherExpr = Select[expr, (Head[#] =!= Equal) &];
-  NDExpr = Select[Complement[expr, otherExpr], 
-                  (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
-  DExpr = Complement[expr, Join[otherExpr, NDExpr]];
-  DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
-                         {}, DExpr]];
-  {DExpr, DExprVars, NDExpr, otherExpr}
-];
-
+  
+hasPrevVariableAtLeft[expr_] := MemberQ[{expr[[1]]}, prev[x_], Infinity];
+reducePrevVariable[{}, {r___}] := {r};
+reducePrevVariable[{h_, t___}, {r___}] :=
+  If[hasPrevVariableAtLeft[h],
+    lhs = Map[( # /. (Equal[x_, h[[1]] ] -> Equal[x, h[[2]] ] ) )&, {t}];
+    rhs = Map[( # /. (Equal[x_, h[[1]] ] -> Equal[x, h[[2]] ] ) )&, {r}];
+    reducePrevVariable[lhs, rhs],
+    reducePrevVariable[{t}, Append[{r}, h] ]
+  ];
+reducePrevVariable[{h_, t___}] := reducePrevVariable[{h, t}, {}];
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 *)
 makeListFromPiecewise[minT_, others_] := Block[
@@ -690,14 +607,97 @@ getParamCons[cons_] := Cases[cons, x_ /; Not[hasVariable[x]], {1}];
 (* 式中のパラメータ変数を得る *)
 getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
 
+
+exDSolve[expr_, vars_] := Block[
+{sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
+  sol = And@@reducePrevVariable[applyList[expr]];
+  paramCons = getParamCons[sol];
+  sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]];
+  If[sol===False || Reduce[expr, vars, Reals] === False,
+    overconstraint,
+    If[sol===True,
+      {{}, {}},
+      (* 1つだけ採用 *)
+      (* TODO: 複数解ある場合も考える *)
+      If[Head[sol]===Or, sol = First[sol]];
+      sol = applyList[sol];
+      
+      {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
+      (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
+      DExpr = removeTrivialCons[DExpr, DExprVars];
+
+
+      Quiet[
+        Check[
+          Check[
+            
+            If[Cases[DExpr, Except[True]] === {},
+              (* ストアが空の場合はDSolveが解けないので空集合を返す *)
+              sol = {},
+              sol = DSolve[DExpr, DExprVars, t];
+              (* 1つだけ採用 *)
+              (* TODO: 複数解ある場合も考える *)
+              sol = First[sol]
+            ];
+
+            (*improve by takeguchi*)
+
+            sol = If[Length[NDExpr] == 0, {sol},
+                 FullSimplify[ExpToTrig[Quiet[
+                     Solve[Join[Map[(Equal @@ #) &, sol], TrigToExp[NDExpr]], getNDVars[vars]],
+                 {Solve::incnst, Solve::ifun, Solve::svars}]]]
+            ];
+            If[sol =!= {},
+              {sol[[1]], Join[otherExpr, paramCons]},
+              overconstraint
+            ],
+            underconstraint,
+            {DSolve::underdet, Solve::svars, DSolve::deqx, 
+             DSolve::bvnr, DSolve::bvsing}],
+                  overconstraint,
+                  {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
+            {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
+             Solve::svars, DSolve::bvnr, DSolve::bvsing, 
+             DSolve::bvnul, DSolve::dsmsm, Solve::incnst}
+          ]
+        ]
+      ]
+];
+
+(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
+(* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
+splitExprs[expr_] := Block[
+  {NDExpr, DExpr, DExprVars, otherExpr},
+  otherExpr = Select[expr, (Head[#] =!= Equal) &];
+  NDExpr = Select[Complement[expr, otherExpr], 
+                  (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
+  DExpr = Complement[expr, Join[otherExpr, NDExpr]];
+  DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
+                         {}, DExpr]];
+  {DExpr, DExprVars, NDExpr, otherExpr}
+];
+
+
+
+
+(* 変数[0]を変数[t]に変える*)
+changeZeroTot[var_] := (
+   var /. x_[0] -> x[t]
+);
+
+
+isPrevVariable[expr_] := MemberQ[{expr}, prev[x_], Infinity];
+isTimeVariable[expr_] := MemberQ[{expr}, x_[t], Infinity];
+
 (*
  * askの導出状態が変化するまで積分をおこなう
  *)
-integrateCalc[cons_, 
+integrateCalc[expr_, 
               discCause_,
               vars_, 
               maxTime_] := Quiet[Check[Block[
 {
+  cons,
   tmpIntegSol,
   tmpDiscCause,
   tmpMinT, 
@@ -710,66 +710,26 @@ integrateCalc[cons_,
   otherExpr,
   returnVars,
   solVars,
-  paramCons,
-  paramVars
+  paramCons
 },
+  cons = expr&&constraints&&pconstraints;
+  cons = And@@reducePrevVariable[List@@cons];
+  returnVars = Join[vars, variables];
+  returnVars = Map[changeZeroTot, returnVars];
+  returnVars = Select[returnVars, isTimeVariable];
   debugPrint["@Integrate cons:", cons, 
              "discCause:", discCause,
-             "vars:", vars, 
+             "returnvars:", returnVars, 
              "maxTime:", maxTime,
-             "all", cons, discCause, vars, maxTime];
-
-  If[Cases[cons, Except[True]]=!={},
-    (* true *)
-    paramCons = getParamCons[cons];
-    paramVars = Union[Fold[(Join[#1, getParamVar[#2]]) &, {}, paramCons]];
-    tmpIntegSol = LogicalExpand[removeNotEqual[Reduce[Complement[cons, paramCons], vars, Reals]]];
-    (* 1つだけ採用 *)
-    (* TODO: 複数解ある場合も考える *)
-    If[Head[tmpIntegSol]===Or, tmpIntegSol = First[tmpIntegSol]];
-
-    tmpIntegSol = removeTrivialCons[applyList[tmpIntegSol], Join[vars, paramVars]];
-
-    {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[tmpIntegSol];
-
-
-    If[Cases[DExpr, Except[True]] === {},
-      tmpIntegSol = {},
-      tmpIntegSol = Quiet[DSolve[DExpr, DExprVars, t],
-                        {Solve::incnst}];
-      (* 1つだけ採用 *)
-      (* TODO:複数解ある場合も考える *)
-      tmpIntegSol = First[tmpIntegSol]];
-    (* tmpIntegSolおよびNDExpr内に出現するND変数の一覧を得る *)
-    solVars = getNDVars[Union[Cases[Join[tmpIntegSol, NDExpr], _[t], Infinity]]];
-    (* integrateCalcの計算結果として必要な変数の一覧 *)
-    returnVars = Select[vars, (MemberQ[solVars, removeDash[#]]) &];
-
-     debugPrint["@Integrate tmpIntegSol before Solve: ", tmpIntegSol];
-     debugPrint["@Integrate NDExpr before Solve: ", NDExpr];
-     debugPrint["@Integrate returnVars before Solve: ", returnVars];
-
-     (*improve by takeguchi*)
-     tmpIntegSol = If[Length[NDExpr] == 0, tmpIntegSol,
-          First[FullSimplify[ExpToTrig[Quiet[
-              Solve[Join[Map[(Equal @@ #) &, tmpIntegSol], TrigToExp[NDExpr]], getNDVars[returnVars]],
-          {Solve::incnst, Solve::ifun, Solve::svars}]]]]
-     ];
-    
-     (*before improve :*)
-     (*     
-        tmpIntegSol=First[Quiet[Solve[Join[Map[(Equal@@#)&,tmpIntegSol],
-                 NDExpr],getNDVars[returnVars]],{Solve::incnst,Solve::ifun}]];
-     *)
-
-     debugPrint["@Integrate tmpIntegSol after Solve: ", tmpIntegSol];
-    
+             "all", cons, discCause, returnVars, maxTime];
+  If[cons =!= True,
+    paramCons = getParamCons[applyList[cons]];
+    tmpIntegSol = exDSolve[cons, returnVars][[1]];
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
     debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
 
     tmpDiscCause = Map[(# /. tmpIntegSol) &, discCause];
-    
     paramCons = {Reduce[paramCons]};
     
     debugPrint["@Integrate nextpointphase arg:", {False, maxTime, tmpDiscCause, paramCons}];
@@ -782,12 +742,8 @@ integrateCalc[cons_,
           returnVars],
 
     (* false *)
-    debugPrint["@Integrate tmpIntegSol before Solve: false"];
-    debugPrint["@Integrate NDExpr before Solve: false"];
-    debugPrint["@Integrate returnVars before Solve: false"];
-    debugPrint["@Integrate tmpIntegSol after Solve: false"];
+    debugPrint["@Integrate tmpIntegSol: false"];
     debugPrint["@Integrate nextpointphase arg: no next point phase"];
-    debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
     tmpMinT = {{maxTime // FullForm // ToString, {}, 1}};
     tmpVarMap = {};
   ];
@@ -829,68 +785,6 @@ createValueList[from_, to_, interval_] := Block[
 createOutputTimeList[from_, to_, interval_] :=
   Map[(ToString[#, InputForm])&, createValueList[from, to, interval]];
 
-(* Print[createOutputTimeList[0, 5, 1/3]] *)
-
-(* Print[integrateCalc[ *)
-(* {True, Derivative[1][usrVarht][t] == usrVarv[t], *)
-(* Derivative[1][usrVarv][t] == -10, usrVarht[0] == 10, usrVarv[0] == 0}, *)
-(* {}, *)
-(* {{usrVarht[t] == 0, 26}}, *)
-(* {usrVarht[t], Derivative[1][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t]}, *)
-(* 1]]; *)
-
-(*  Print[integrateCalc[ *)
-(* {True, True, True, Derivative[2][usrVarht][t] == 0, Derivative[2][usrVarv][t] == 0, usrVarht[0] == 10, usrVarv[0] == 0, Derivative[1][usrVarht][0] == 0, Derivative[1][usrVarv][0] == -10}, *)
-(* {}, *)
-(* {{usrVarht[t] == 0, 73}}, *)
-(* {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t], usrVarv[t], Derivative[1][usrVarv][t], Derivative[2][usrVarv][t]}, *)
-(* 4]]; *)
-
-(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[usrVarv[0], 0], *)
-(*     Equal[Derivative[1][usrVarht][t], usrVarv[t]], Equal[Derivative[1][usrVarv][t], -10]}, *)
-(*   {}, *)
-(*   {{usrVarht[t]==0, 10}}, *)
-(*   {usrVarht[t], usrVarv[t], Derivative[1][usrVarht][t], Derivative[1][usrVarv][t]}, 10]]; *)
-
-(* Print[integrateCalc[{Equal[usrVarht[0], 10], Equal[Derivative[1][usrVarht][0], 0], *)
-(*     Equal[Derivative[2][usrVarht][t], -10]}, *)
-(*   {}, *)
-(*   {{usrVarht[t]==0, 10}}, *)
-(*   {usrVarht[t], Derivative[1][usrVarht][t], Derivative[2][usrVarht][t]}, 10] // FullForm]; *)
-
-(*
- * 与えられた式を積分し，返す
- *
- * 0: Solver Error
- * 1: Solved Successfully
- * 2: Under Constraint
- * 3: Over Constraint
- * 
- *)
-integrateExpr[cons_, vars_] := Quiet[Check[Block[
-{ sol },
-
-  debugPrint["cons:", cons, "vars:", vars]; 
- 
-  sol = exDSolve[cons, vars];
-  Switch[sol,
-    underconstraint, 
-      {2},
-    overconstraint,
-      {3},
-    _,
-      {1,         
-       Map[({getVariableName[#], 
-             getDerivativeCount[#], 
-             ToString[createIntegratedValue[#, sol[[1]]], InputForm]})&, 
-           vars]}]
-],
-  {0, $MessageList}
-]];
-
-(* Print["integ:", integrateExpr[{ht'[t]==v[t], v'[t]==-10, ht[0]==a, v[0]==b}, {ht[t], ht'[t], v[t], v'[t]}]]; *)
-(* Print["integ:", integrateExpr[{ht'[t]==v[t], v'[t]==-10, v'[t]==-20, ht[0]==a, v[0]==b}, {ht[t], ht'[t], v[t], v'[t]}]]; *)
-(* Print["integ:", integrateExpr[{ht'[t]==x[t], v'[t]==-10, ht[0]==a, v[0]==b}, {x[t], ht[t], ht'[t], v[t], v'[t]}]]; *)
 
 (*
  * 与えられた式を近似する

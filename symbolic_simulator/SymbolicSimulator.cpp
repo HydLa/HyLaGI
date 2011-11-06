@@ -764,7 +764,7 @@ void SymbolicSimulator::output_result_tree_GUI()
         output_parameter_map(now_node->parameter_map);
         switch(now_node->cause_of_termination){
           case StateResult::INCONSISTENCY:
-            std::cout << "execution stacked\n";
+            std::cout << "execution stuck\n";
           break;
           case StateResult::TIME_LIMIT:
 	    std::cout << "end" << j++ ;

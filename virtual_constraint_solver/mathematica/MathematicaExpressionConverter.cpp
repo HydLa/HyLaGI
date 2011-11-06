@@ -43,6 +43,22 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
   return value;
 }
 
+/**
+ * （vairable）＝（node）の形のノードを返す
+ */
+MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev){
+  HYDLA_LOGGER_REST("*** Begin:MathematicaExpressionConverter::make_equal ***\n");
+  node_sptr new_node(new Variable(variable.get_name()));
+  for(int i=0;i<variable.get_derivative_count();i++){
+    new_node = node_sptr(new Differential(new_node));
+  }
+  if(prev){
+    new_node = node_sptr(new Previous(new_node));
+  }
+  HYDLA_LOGGER_REST("*** End:MathematicaExpressionConverter::make_equal ***\n");
+  return node_sptr(new Equal(new_node, node));
+}
+
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now){
   now = expr.find_first_not_of(" ", now);
   std::string::size_type prev = now;
@@ -212,6 +228,26 @@ std::string MathematicaExpressionConverter::get_relation_math_string(value_range
   }
 }
 
+MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::get_relation_node(value_range_t::Relation rel, const node_sptr& lhs, const node_sptr& rhs){
+  switch(rel){
+    case value_range_t::EQUAL:
+      return node_sptr(new Equal(lhs, rhs));
+    case value_range_t::NOT_EQUAL:
+      return node_sptr(new UnEqual(lhs, rhs));
+    case value_range_t::GREATER_EQUAL:
+      return node_sptr(new GreaterEqual(lhs, rhs));
+    case value_range_t::LESS_EQUAL:
+      return node_sptr(new LessEqual(lhs, rhs));
+    case value_range_t::GREATER:
+      return node_sptr(new Greater(lhs, rhs));
+    case value_range_t::LESS:
+      return node_sptr(new Less(lhs, rhs));
+    default:
+      assert(0);
+    return node_sptr();
+  }
+}
+  
 MathematicaExpressionConverter::value_range_t::Relation MathematicaExpressionConverter::get_relation_from_code(const int &relop_code){
   switch(relop_code){
     case 0: // Equal
