@@ -257,7 +257,7 @@ retfalse___ := 2;
 symbolic procedure redeval(foo_)$
 begin scalar ans_;
 
-  write("<redeval> reval ", (car foo_), ":");
+  debugWrite("<redeval> reval :", (car foo_));
   ans_ :=(reval foo_);
   write("<redeval> end:");
 
@@ -587,7 +587,7 @@ on ltrig;
 table_:={};
 
 % operator宣言されたargs_を記憶するグローバル変数
-loadedOperator:={};
+loadedOperator_:={};
 
 % 初期条件init○_○lhsを作成
 procedure makeInitId(f,i)$
@@ -596,44 +596,36 @@ if(i=0) then
 else
   mkid(mkid(mkid(mkid(INIT,f),_),i),lhs);
 
-%laprule用、mkidしたｆを演算子とする
+%laprule_用、mkidしたｆを演算子として返す
 procedure setMkidOperator(f,x)$
   f(x);
 
-% ラプラス変換の変換規則の作成
+%laprule_用の自由演算子
+operator !~f$
+
+% 微分に関する変換規則laprule_, letは一度で
+let {
+  laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - makeInitId(f,0),
+  laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
+    for i:=n-1 step -1 until 0 sum
+      makeInitId(f,n-1-i) * il!&**i,
+  laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
+}$
+
+% ラプラス変換対の作成, オペレータ宣言
 % {{v, v(t), lapv(s)},...}の対応表table_の作成
 procedure LaplaceLetUnit(args_)$
 begin;
-  scalar arg_, LAParg_, laprule_;
+  scalar arg_, LAParg_;
 
   arg_:= first args_;
   LAParg_:= second args_;
 
   % arg_が重複してないか判定
-  if(freeof(loadedOperator,arg_)) then 
+  if(freeof(loadedOperator_,arg_)) then 
     << 
      operator arg_, LAParg_;
-     loadedOperator:= arg_ . loadedOperator;
-     operator !~f;
-
-     % makeInitId(f,i)版
-     laprule_ :={
-       laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - makeInitId(f,0),
-       laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
-         for i:=n-1 step -1 until 0 sum
-	   makeInitId(f,n-1-i) * il!&**i,
-       laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
-     };
-%     % sub版
-%     laprule_ :={
-%       laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - sub(x=0,f(x)),
-%       laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
-%       for i:=n-1 step -1 until 0 sum
-%         sub(~x=0, df(f(~x),x,n-1-i)) * il!&**i,
-%       laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
-%     };
-     
-     let laprule_;
+     loadedOperator_:= arg_ . loadedOperator_;
     >>;
 
   % {{v, v(t), lapv(s)},...}の対応表
