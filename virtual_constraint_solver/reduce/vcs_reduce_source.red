@@ -17,6 +17,10 @@ procedure debugWrite(arg1_, arg2_)$
     1$
   >>$
 
+%MathematicaでいうHead関数
+procedure myHead(expr_)$
+  if(arglength(expr_)=-1) then nil
+  else part(expr_, 0)$
 
 %MathematicaでいうFold関数
 procedure myFoldLeft(func_, init_, list_)$
@@ -34,15 +38,7 @@ procedure applyUnitAndFlatten(funcName_, appliedExpr_, newArg_)$
 
 %MathematicaでいうApply関数
 procedure myApply(func_, expr_)$
-begin;
-  scalar argsList_, ret_;
-  if(arglength(expr_)_=1) then return func_(part(expr_, 1));
-
-  argsList_:= getArgsList(expr_);
-  ret_:= applyUnitAndFlatten(func_, first(argsList_), rest(argsList_));
-  
-  % TODO:便利そうなので作る
-end;
+part(expr_, 0):= func_$
 
 procedure getInverseRelop(relop_)$
   if(relop_=equal) then neq
@@ -221,6 +217,52 @@ begin;
 
 end;
 
+procedure rationalise(expr_)$
+begin;
+  scalar head_, denominator_, numerator_, denominatorHead_, conjugate_, 
+         rationalisedArgsList_, rationalisedExpr_, flag_;
+
+  debugWrite("expr_: ", expr_);
+  if(getArgsList(expr_)={}) then return expr_;
+
+  % 想定する対象：分母の項数が2まで
+  % TODO:より一般的な形への対応→分母がsqrt(a)+sqrt(b)+cの形(a,b>0)とか
+  % TODO:3乗根以上への対応
+
+  head_:= part(expr_, 0);
+  debugWrite("head_: ", head_);
+
+  if(head_=quotient) then <<
+    numerator_:= part(expr_, 1);
+    denominator_:= part(expr_, 2);
+    % 分母に無理数がなければ有理化必要なし
+    if(numberp(denominator_)) then return expr_;
+
+    denominatorHead_:= part(denominator_, 0);
+    if((denominatorHead_=plus) or (denominatorHead_=difference)) then <<
+      conjugate_:= denominatorHead_(part(denominator_, 1), -1*part(denominator_, 2));
+    >> else <<
+      conjugate_:= -1*denominator_;
+    >>;
+    % 共役数を分母子にかける
+    numerator_:= numerator_ * conjugate_;
+    denominator_:= denominator_ * conjugate_;
+    rationalisedExpr_:= numerator_ / denominator_;
+    flag_:= true;
+  >> else if(length(expr_)>1) then <<
+    rationalisedArgsList_:= map(rationalise, getArgsList(expr_));
+    debugWrite("rationalisedArgsList_: ", rationalisedArgsList_);
+    rationalisedExpr_:= myApply(head_, rationalisedArgsList_);
+  >> else <<
+    rationalisedExpr_:= expr_;
+  >>;
+
+  debugWrite("rationalisedExpr_: ", rationalisedExpr_);
+  debugWrite("flag_; ", flag_);
+  if(flag_=true) then rationalisedExpr_:= rationalise(rationalisedExpr_);
+  return rationalisedExpr_;
+
+end;
 
 procedure bball_out()$
 % gnuplot用出力, 未完成
@@ -345,17 +387,9 @@ begin;
     argCount_:= arglength(expr_);
     debugWrite("argCount_: ", argCount_);
     subAppliedExprList_:= for i:=1 : argCount_ collect exSub(patternList_, part(expr_, i));
-    debugWrite("subAppliedExprList_:", subAppliedExprList_);    
+    debugWrite("subAppliedExprList_:", subAppliedExprList_);
+    subAppliedExpr_:= myApply(head_, subAppliedExprList_);
 
-    % できない
-    %subAppliedExpr_:= myApply(head_, subAppliedExprList_);
-
-    % 引数は2つと仮定
-    % TODO: なんとかする
-    subAppliedExpr_:= if(head_=and) then 
-                        and(part(subAppliedExprList_, 1), part(subAppliedExprList_, 2))
-                      else if(head_=or) then 
-                        or(part(subAppliedExprList_, 1), part(subAppliedExprList_, 2));
   >> else <<
     % 等式や、変数名などのfactorの場合
     % TODO:expr_を見て、制約ストア（あるいはcsvars）内にあるようなら、それと対をなす値（等式の右辺）を適用
@@ -366,74 +400,6 @@ begin;
   return subAppliedExpr_;
 end;
 
-
-procedure convertEqToRule(expr_)$
-begin;
-  scalar convertedRule_, lhs_, rhs_;
-  lhs_:= part(expr_, 1);
-  convertedRule_:= replaceby(part(expr_, 1), part(expr_, 2));
-  return convertedRule_;
-
-end;
-
-% 等式で表されるルールeqRule_を式exprs_に適用する
-procedure applyEqRuleLet(exprs_, eqRule_)$
-begin;
-  scalar appliedExprs_, ruleRhs_, letEq_;
-  debugWrite("in applyEqRuleLet", " ");
-  debugWrite("exprs_: ", exprs_);
-  debugWrite("eqRule_: ", eqRule_);
-
-  ruleRhs_:= part(eqRule_, 2);
-  letEq_:= equal(part(eqRule_, 1), ruleRhs_);
-  debugWrite("letEq_: ", letEq_);
-  let letEq_;
-  appliedExprs_:= exprs_;
-  debugWrite("appliedExprs_: ", appliedExprs_);
-  debugWrite("part(eqRule_, 1): ", part(eqRule_, 1));
-  clear part(eqRule_, 1);
-  debugWrite("appliedExprs_ after clear: ", appliedExprs_);
-
-  return appliedExprs_;
-end;
-
-procedure applyEqRuleWhere(exprs_, eqRuleLhs_, eqRuleRhs_)$
-begin;
-  scalar appliedExprs_;
-  debugWrite("in applyEqRuleWhere", " ");
-  debugWrite("exprs_: ", exprs_);
-  debugWrite("eqRuleLhs_: ", eqRuleLhs_);
-  debugWrite("eqRuleRhs_: ", eqRuleRhs_);
-
-  appliedExprs_:= exprs_ where (eqRuleLhs_ => eqRuleRhs_);
-  debugWrite("appliedExprs_: ", appliedExprs_);
-  return appliedExprs_;
-end;
-
-procedure applyEqRuleWhere(exprs_, eqRule_)$
-begin;
-  scalar appliedExprs_;
-  debugWrite("in applyEqRuleWhere", " ");
-  debugWrite("exprs_: ", exprs_);
-  debugWrite("eqRule_: ", eqRule_);
-
-  appliedExprs_:= exprs_ where eqRule_;
-  debugWrite("appliedExprs_: ", appliedExprs_);
-  return appliedExprs_;
-end;
-
-procedure applyEqRuleSet(exprs_, eqRuleLhs_, eqRuleRhs_)$
-begin;
-  scalar appliedExprs_;
-  debugWrite("in applyEqRuleSet", " ");
-  debugWrite("exprs_: ", exprs_);
-  debugWrite("eqRuleLhs_: ", eqRuleLhs_);
-
-  eqRuleLhs_:=eqRuleRhs_;
-  appliedExprs_:= exprs_;
-  debugWrite("appliedExprs_: ", appliedExprs_);
-  return appliedExprs_;
-end;
 
 % PPにおける無矛盾性の判定
 % 返り値は{ans, {{変数名 = 値},...}} の形式
@@ -462,7 +428,6 @@ begin;
 
 
   % exprs_に等式以外が入っているかどうかにより、解くのに使用する関数を決定
-  % TODO: ROQEモードでも制約ストアを返す必要がある場合への対応
   modeFlagList_:= for each x in exprs_ join 
     if(hasInequality(x) or hasLogicalOp(x)) then {false} else {true};
   debugWrite("modeFlagList_:", modeFlagList_);
@@ -480,21 +445,6 @@ begin;
   <<
     % subの拡張版を用いる手法
     solvedExprs_:= union(for each x in exprs_ join {exSub(tmpSol_, x)});
-
-    % 制約ストアの等式をルールに変換（不要？）
-    % csRule_:= map(convertEqToRule, constraintStore_);
-    % debugWrite("csRule_:", csRule_);
-    % solvedExprs_:= where(exprs_, csRule_);
-
-    %solvedExprs_:= where(exprs_, constraintStore_);
-    %solvedExprs_:= union(for each x in constraintStore_ join exprs_ where x);
-    %solvedExprs_:= union(for each x in constraintStore_ join applyEqRuleLet(exprs_, x));
-    %solvedExprs_:= union(for each x in constraintStore_ join
-    %                 applyEqRuleWhere(exprs_, part(x, 1),part(x, 2)));
-    %solvedExprs_:= union(for each x in constraintStore_ join applyEqRuleWhere(exprs_, x));
-    %solvedExprs_:= union(for each x in constraintStore_ join
-    %                 applyEqRuleSet(exprs_, part(x, 1), part(x, 2)));
-
     debugWrite("solvedExprs_:", solvedExprs_);
     solvedExprsQE_:= exRlqe(mymkand(solvedExprs_));
     debugWrite("solvedExprsQE_:", solvedExprsQE_);
@@ -783,7 +733,7 @@ begin;
   integTmp_:= sub(tmpSol_, tmpCons_);
   debugWrite("integTmp_: ", integTmp_);
 
-  integTmpQE_:= rlqe (mymkand(integTmp_));
+  integTmpQE_:= rlqe(mymkand(integTmp_));
   debugWrite("integTmpQE_: ", integTmpQE_);
 
   % ただのtrueやfalseはそのまま判定結果となる
@@ -792,9 +742,10 @@ begin;
 
 
 %  % t>0を連立させてtrue/false判定
-%  ans_:= rlqe(integTmpQE_ and t>0);
+%  ans_:= rlqe(rlex(integTmpQE_ and t>0));
 %  debugWrite("ans_:", ans_);
-%  if(ans_=false) then return {ICI_INCONSISTENT___} else return {ICI_CONSISTENT___};
+%  if(ans_=false) then return {ICI_INCONSISTENT___};
+%%  if(ans_=false) then return {ICI_INCONSISTENT___} else return {ICI_CONSISTENT___};
 
 
   if(not hasLogicalOp(integTmpQE_)) then <<
