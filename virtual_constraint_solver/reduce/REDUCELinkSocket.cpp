@@ -4,7 +4,7 @@
 #include <boost/asio.hpp>
 #include <cassert>
 
-#include "REDUCELink.h"
+#include "REDUCELinkSocket.h"
 #include "Logger.h"
 
 
