@@ -50,7 +50,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
   opts.approx_precision = po.get<int>("approx");
-  opts.exclude_error = po.count("exclude-error") > 0;
+  opts.exclude_error = po.count("fail-stop") == 0;
   opts.solver        = po.get<std::string>("solver");
   int level = po.get<int>("continuity");
   if(level >= 3){

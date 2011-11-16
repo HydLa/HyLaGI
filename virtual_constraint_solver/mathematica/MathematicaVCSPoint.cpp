@@ -70,6 +70,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
     int and_size = ml_->get_arg_count();
     HYDLA_LOGGER_VCS("and_size: ", and_size);
     ml_->MLGetNext(); // List‚Æ‚¢‚¤ŠÖ”–¼
+    MathematicaExpressionConverter::clear_parameter_name();
     for(int i = 0; i < and_size; i++)
     {
       value_range_t tmp_range;
@@ -94,6 +95,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
       
       symbolic_variable.name = variable_name;
       symbolic_variable.derivative_count = variable_derivative_count;
+      
 
       if(prev==-1){//Šù‘¶‚Ì‹L†’è”‚Ìê‡
         tmp_param.name = variable_name;
@@ -133,12 +135,13 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
         symbolic_value.set_unique(false);
         tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
         maps.parameter_map.set_variable(tmp_param, tmp_range);
+        MathematicaExpressionConverter::add_parameter_name(variable_name, tmp_param.name);
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }
     create_result.result_maps.push_back(maps);
   }
-  
+  MathematicaExpressionConverter::clear_parameter_name();
   
   HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::create_variable_map ***\n");
   return true;

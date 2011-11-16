@@ -262,25 +262,56 @@ getExprCode[expr_] := Switch[Head[expr],
 ];
 
 convertCSToVM[] := Block[
-  {resultExprs},
-  formatExprs[exprs_] := (
+  {formatExprs, applyParameter, resultExprs},
+  applyEqualityRule[expr_, undeterminedVariables_, rules_] := Block[
+    {tmp, complement},
+    tmp = expr;
+    complement = Complement[getVariables[tmp[[2]] ], undeterminedVariables];
+    If[Head[tmp] === Equal,
+      While[ tmp =!= True && Length[ complement ] > 0,
+        tmp[[2]] = tmp[[2]] /. rules;
+        complement = Complement[getVariables[tmp[[2]] ], undeterminedVariables];
+      ]
+    ];
+    tmp
+  ];
+  
+  formatExprs[exprs_] := Block[
+    {determinedVariables, undeterminedVariables, undeterminedExprs, rhsVariables, retExprs, rules, tmp},
     If[Cases[exprs, Except[True]]==={},
-      (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
       {},
       
-      DeleteCases[Map[({renameVar[#[[1]]], 
+      retExprs = adjustExprs[exprs];
+      
+      (* 値が定まらないもののリストを作る *)
+      rules = Fold[(If[Head[#2] === Equal, Append[#1, Rule@@#2], #1])&, {}, retExprs];
+      determinedVariables = Fold[(Union[#1, {#2[[1]]} ])&, {}, rules];
+      undeterminedVariables = Complement[Join[variables, parameters], determinedVariables];
+      
+      undeterminedExprs = Select[retExprs, (MemberQ[undeterminedVariables, #[[1]] ])& ];
+      Print[undeterminedExprs, undeterminedVariables];
+      retExprs = Join[undeterminedExprs, Complement[retExprs, undeterminedExprs] ];
+      
+      retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];
+      
+      
+      (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
+      retExprs = DeleteCases[Map[({renameVar[#[[1]]], 
                         getExprCode[#], 
-                        ToString[FullForm[#[[2]]]]}) &, 
-                        adjustExprs[exprs] ],
-                  {invalidVar, _, _}]
+                        ToString[FullForm[#[[2]]]] }) &, 
+                        retExprs],
+                  {invalidVar, _, _}];
+      retExprs
     ]
-  );
-  debugPrint["@convertCSToVM constraints:", constraints];
+  ];
+  
+  debugPrint["@convertCSToVM: constraints", constraints, "variables", variables, "parameters", parameters];
   constraints = LogicalExpand[constraints];
   If[Head[constraints] === Or,
     resultExprs = Map[(applyList[#])&, List@@constraints],
     resultExprs = Map[(applyList[#])&, {constraints}]
   ];
+  determinedVariables = gerLhs[resultExprs];
   resultExprs = Map[formatExprs, resultExprs];
   debugPrint["@convertCSToVM resultExprs:", resultExprs];
   resultExprs
@@ -288,6 +319,12 @@ convertCSToVM[] := Block[
 
 (* 式中に変数名が出現するか否か *)
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
+
+(* 式中に出現する変数を取得 *)
+getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter..]];
+
+(* 式が変数そのものか否か *)
+isVariable[exprs_] := StringMatchQ[ToString[exprs], "usrVar" ~~ __];
 
 (* 式が定数そのものか否か *)
 isParameter[exprs_] := StringMatchQ[ToString[exprs], "p" ~~ __];
@@ -625,7 +662,6 @@ exDSolve[expr_, vars_] := Block[
       {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
       (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
       DExpr = removeTrivialCons[DExpr, DExprVars];
-
 
       Quiet[
         Check[

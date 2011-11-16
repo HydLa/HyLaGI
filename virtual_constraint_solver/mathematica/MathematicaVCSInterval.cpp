@@ -58,7 +58,7 @@ void MathematicaVCSInterval::send_init_cons(PacketSender &ps, const continuity_m
   ps.put_nodes(constraints, PacketSender::VA_Zero);
 }
 
-  
+
 
 VCSResult MathematicaVCSInterval::check_consistency(const constraints_t& constraints)
 {

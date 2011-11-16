@@ -132,7 +132,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
       }else if(mode_ == hydla::symbolic_simulator::ContinuousMode){
         // ’l‚ª‚È‚¢‚È‚ç‰½‚©‚µ‚ç‚Ì’è”‚ğì‚Á‚Ä‘—MD
         std::string name;
-        name = PacketSender::par_prefix + it->first.name;
+        name = it->first.name;
         for(int i=0;i<it->first.derivative_count;i++){
           //‚Æ‚è‚ ‚¦‚¸”÷•ª‰ñ”•ªd‚ğ‚Â‚¯‚é
           name.append("d");
@@ -148,7 +148,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     ps.put_nodes(constraints, PacketSender::VA_None);
   }
   ps.put_vars(PacketSender::VA_None);
-  
+
+
   {
     constraints_t constraints;
     HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);

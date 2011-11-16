@@ -707,7 +707,7 @@ j = 1;
         std::cout << "#";
         switch(now_node->cause_of_termination){
           case StateResult::INCONSISTENCY:
-            std::cout << "execution stacked\n";
+            std::cout << "execution stuck\n";
           break;
           case StateResult::TIME_LIMIT:
 	          std::cout << "time ended\n" ;

@@ -22,6 +22,8 @@ class MathematicaExpressionConverter
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t value_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_range_t value_range_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::variable_t variable_t;
+  typedef hydla::vcs::SymbolicVirtualConstraintSolver::parameter_t parameter_t;
+  
   public:
   typedef enum{
     NODE_PLUS,
@@ -52,18 +54,17 @@ class MathematicaExpressionConverter
   //初期化
   static void initialize();
 
-  //各ノードに対応する処理．（注：関数）
-  static function_for_node for_derivative;
-  static function_for_node for_unary_node;
-  static function_for_node for_binary_node;
 
   //文字列とってvalueに変換する
   static value_t convert_math_string_to_symbolic_value(const std::string &expr);
+  
+  static void add_parameter_name(std::string variable_name, std::string parameter_name);
+  static void clear_parameter_name();
+
   /**
-   * （vairable）＝（node）の形のノードを返す
+   * （vairable）=（node）の形のノードを返す
    */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
-
 
   //関係演算子の文字列表現を返す
   static std::string get_relation_math_string(value_range_t::Relation rel);
@@ -77,10 +78,18 @@ class MathematicaExpressionConverter
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
   
+  
   private:
+  
+  //各ノードに対応する処理．（注：関数）
+  static function_for_node for_derivative;
+  static function_for_node for_unary_node;
+  static function_for_node for_binary_node;
+  
   //再帰で呼び出していく方
   static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
   
+  static std::map<std::string, std::string> variable_parameter_map_;
 };
 
 } // namespace mathematica

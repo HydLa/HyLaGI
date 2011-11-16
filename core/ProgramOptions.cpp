@@ -41,8 +41,8 @@ void ProgramOptions::init_descriptions()
     ("dump-in-progress", 
      "output result of each phase in progress")
      
-    ("exclude-error, e",  
-     "exlude cases where assertion fails")
+    ("fail-stop",  
+     "stop right away when any assertion fails")
     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")
@@ -51,7 +51,7 @@ void ProgramOptions::init_descriptions()
      "dump tree by dot language representation")
 
     ("method,m", 
-     value<std::string>()->default_value("l"), 
+     value<std::string>()->default_value("s"), 
      "simulation method:\n"
      "  b or BandPSimulator\n"
      "  s or SymbolicSimulator\n"
@@ -68,7 +68,7 @@ void ProgramOptions::init_descriptions()
     ("in", "interactive mode")
     
     ("output-format,f", 
-     value<std::string>()->default_value("n"), 
+     value<std::string>()->default_value("t"), 
      "output format:\n  t - time function\n  n - numeric\n  i - numeric interval\n  g - for GUI m - for Mathematica Plot")
     
     ("output-interval", 
@@ -80,7 +80,7 @@ void ProgramOptions::init_descriptions()
      "precision of output message")
      
     ("continuity", 
-     value<int>()->default_value(1), 
+     value<int>()->default_value(3), 
      "default continuity level")
 
     ("time,t", 

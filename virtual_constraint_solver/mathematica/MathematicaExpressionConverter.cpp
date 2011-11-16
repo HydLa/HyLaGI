@@ -12,6 +12,8 @@ namespace mathematica {
 
 MathematicaExpressionConverter::string_map_t MathematicaExpressionConverter::string_map_;
 
+std::map<std::string, std::string> MathematicaExpressionConverter::variable_parameter_map_;
+
 using namespace hydla::parse_tree;
 
 //名前としては，SymbolicValue→symbolic，Mathematicaの文字列→matheくらいで統一すべきかも．どっちもExpressionなわけだし．
@@ -34,7 +36,6 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
 
   HYDLA_LOGGER_REST("#*** convert string to value ***\n",
                      expr);
-
   value_t value;
   std::string::size_type now = 0;
   value.set(convert_math_string_to_symbolic_tree(expr, now));
@@ -42,6 +43,16 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
                      value.get_string());
   return value;
 }
+
+void MathematicaExpressionConverter::add_parameter_name(std::string variable_name, std::string parameter_name){
+  variable_parameter_map_.insert(std::make_pair(variable_name, parameter_name));
+}
+
+
+void MathematicaExpressionConverter::clear_parameter_name(){
+  variable_parameter_map_.clear();
+}
+
 
 /**
  * （vairable）＝（node）の形のノードを返す
@@ -87,6 +98,12 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
       return node_sptr(new hydla::parse_tree::E());
     }
     if(now-prev > 6 && expr.substr(prev, 6) == PacketSender::var_prefix){//変数名
+      std::string variable_name = expr.substr(prev + 6, now-(prev+6));
+      std::map<std::string, std::string>::iterator it = variable_parameter_map_.find(variable_name); 
+
+      if(it != variable_parameter_map_.end()){
+        return node_sptr(new hydla::parse_tree::Parameter(it->second));
+      }
       return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev + 6, now-(prev+6))));
     }
     
@@ -247,7 +264,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::get_re
     return node_sptr();
   }
 }
-  
+
 MathematicaExpressionConverter::value_range_t::Relation MathematicaExpressionConverter::get_relation_from_code(const int &relop_code){
   switch(relop_code){
     case 0: // Equal
