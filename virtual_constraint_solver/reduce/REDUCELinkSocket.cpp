@@ -99,16 +99,20 @@ int REDUCELinkSocket::read_until_redeval(){
 }
 
 int REDUCELinkSocket::skip_until_redeval(){
+  tl_.get_dtime(TimeLogger::begin);
   try{
     for(;;){
       ++count_;
       boost::array<char, 128> buf;  //boost::arrayへの受信
       boost::system::error_code error;
 
+      tl_.get_dtime(TimeLogger::begin_read_some);
       size_t len = socket_.read_some(boost::asio::buffer(buf), error);
+      tl_.get_dtime(TimeLogger::end_read_some);
 
       std::string tmp = std::string(buf.data()).substr(0,len); //len前のbuf取り出し
 
+      tl_.get_dtime(TimeLogger::begin_if);
       //通信終了
       if(tmp.find(REDUCE_EOF)!=std::string::npos){
         //<s>後の改行を取り出す
@@ -126,10 +130,12 @@ int REDUCELinkSocket::skip_until_redeval(){
       }else if(error){
         throw boost::system::system_error(error); // 何らかのエラー
       }
+      tl_.get_dtime(TimeLogger::end_if);
     }
   }catch(std::exception& e){
     std::cerr << e.what() << std::endl;
   }
+  tl_.get_dtime(TimeLogger::end);
 
   return 0;
 }
