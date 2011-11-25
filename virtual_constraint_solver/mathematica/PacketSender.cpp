@@ -173,7 +173,6 @@ void PacketSender::visit(boost::shared_ptr<ArbitraryNode> node)
   if(node->arguments_.size() == 0){
     ml_->put_symbol(node->get_string());
   }else{
-    std::cout << node->get_string() << ", " << node->arguments_.size() << std::endl;
     ml_->put_function(node->get_string(), node->arguments_.size());
     for(int i=0; i < node->arguments_.size();i++){
       accept(node->arguments_[i]);
@@ -212,7 +211,6 @@ void PacketSender::visit(boost::shared_ptr<Parameter> node)
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
   put_par(par_prefix + node->get_name());
 }
-
 
 // t
 void PacketSender::visit(boost::shared_ptr<SymbolicT> node)                
