@@ -180,6 +180,37 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 }
 
 
+// ”CˆÓ
+void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryFactor> node){
+  (*output_stream_) << node->get_string();
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryUnary> node){
+  (*output_stream_) << node->get_string() << "(";
+  accept(node->get_child());
+  (*output_stream_) << ")";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryBinary> node){
+  (*output_stream_) << node->get_string() << "(";
+  accept(node->get_lhs());
+  (*output_stream_) << ",";
+  accept(node->get_rhs());
+  (*output_stream_) << ")";
+}
+
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryNode> node){
+  (*output_stream_) << node->get_string() << "(";
+  int i=0;
+  while(node->arguments_.size()){
+    accept(node->arguments_[i]);
+    if(++i >= node->arguments_.size())break;
+    (*output_stream_) << ",";
+  }
+  (*output_stream_) << ")";
+}
+
 // Ž©‘R‘Î”‚Ì’ê
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
   (*output_stream_) << "E";

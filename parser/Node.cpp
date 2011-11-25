@@ -308,6 +308,59 @@ std::ostream& Definition::dump(std::ostream& s) const
   return s;
 }
 
+
+node_sptr ArbitraryNode::clone(){
+  node_type_sptr n(new ArbitraryNode());
+  for(int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+
+void ArbitraryNode::accept(node_sptr own, 
+                   BaseNodeVisitor* visitor) 
+{
+  assert(this == own.get()); 
+  visitor->visit(boost::shared_static_cast<ArbitraryNode>(own));
+}
+
+
+void ArbitraryNode::accept(node_sptr own, 
+                   TreeVisitor* visitor) 
+{
+  assert(this == own.get()); 
+  visitor->visit(boost::shared_static_cast<ArbitraryNode>(own));
+}
+
+
+std::ostream& ArbitraryNode::dump(std::ostream& s) const 
+{
+  Node::dump(s);
+  s << "[" << string_ << "]";
+  s << "[";
+  for(int i=0;i<arguments_.size();i++){
+     s << *arguments_[i] << ",";
+  }
+  s << "]";
+  return s;
+}
+
+void ArbitraryNode::set_string(const std::string& str) 
+{
+  string_ = str;
+}
+
+
+void ArbitraryNode::add_argument(node_sptr node){
+  arguments_.push_back(node);
+}
+
+std::string ArbitraryNode::get_string() const
+{
+  return string_;
+}
+
 node_sptr Caller::clone()
 {
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());

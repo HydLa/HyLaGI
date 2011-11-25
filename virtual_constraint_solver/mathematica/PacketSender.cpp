@@ -167,6 +167,20 @@ void PacketSender::visit(boost::shared_ptr<ArbitraryFactor> node)
 }
 
 
+void PacketSender::visit(boost::shared_ptr<ArbitraryNode> node)
+{
+  HYDLA_LOGGER_REST("put: ArbitraryNode : ", node->get_string());
+  if(node->arguments_.size() == 0){
+    ml_->put_symbol(node->get_string());
+  }else{
+    std::cout << node->get_string() << ", " << node->arguments_.size() << std::endl;
+    ml_->put_function(node->get_string(), node->arguments_.size());
+    for(int i=0; i < node->arguments_.size();i++){
+      accept(node->arguments_[i]);
+    }
+  }
+}
+
 
 // ïœêî
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
@@ -175,7 +189,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   var_info_t new_var = 
     boost::make_tuple(node->get_name(), 
                       differential_count_, 
-                      in_prev_ && (variable_arg_ != VA_Time));
+                      in_prev_ && (variable_arg_ != VA_Time) || variable_arg_ == VA_Prev);
 
     put_var(new_var, variable_arg_);
 }
@@ -250,6 +264,7 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
 
   switch(variable_arg) {
     case VA_None:
+    case VA_Prev:
       break;
       
     case VA_Time:

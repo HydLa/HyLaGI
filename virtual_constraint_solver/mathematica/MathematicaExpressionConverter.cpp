@@ -73,7 +73,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_e
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now){
   now = expr.find_first_not_of(" ", now);
   std::string::size_type prev = now;
-  if((expr[now]>='0'&&expr[now]<='9')){//正の数値の場合
+  if(expr[now]>='0' && expr[now]<='9'){//正の数値の場合
     now = expr.find_first_of("],", now);
     return node_sptr(new hydla::parse_tree::Number(expr.substr(prev,now-prev)));
   }
@@ -99,34 +99,35 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
     }
     if(now-prev > 6 && expr.substr(prev, 6) == PacketSender::var_prefix){//変数名
       std::string variable_name = expr.substr(prev + 6, now-(prev+6));
-      std::map<std::string, std::string>::iterator it = variable_parameter_map_.find(variable_name); 
-
+      std::map<std::string, std::string>::iterator it = variable_parameter_map_.find(variable_name);
+      int end = now;
+      if(expr[now] == '['){
+        // [t] や [0]がついていれば読みとばす
+        now = expr.find_first_of("]", now);
+        now++;
+      }
       if(it != variable_parameter_map_.end()){
         return node_sptr(new hydla::parse_tree::Parameter(it->second));
       }
-      return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev + 6, now-(prev+6))));
+      return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev + 6, end-(prev+6))));
     }
     
-    //謎ノード．Numberノードに入れておけば，ソルバがMathematicaである限り処理を継続することはできるはずだが・・・将来的には全対応したい
-    int depth = 0;
-    while(1){
-      if(expr[now]=='['){
-        depth++;
-      }else{
-        depth--;
-        if(depth<=0){
-          if(now == std::string::npos){
-            now = expr.length() - 1;
-          }else if(depth<0){
-            now--;
-          }
+    //未対応ノード．ソルバがMathematicaで有る限り処理を継続できるようにする
+    boost::shared_ptr<hydla::parse_tree::ArbitraryNode> new_node(new hydla::parse_tree::ArbitraryNode(expr.substr(prev, (now)-prev)));
+    if(expr[now]!='['){
+      now++;
+      return new_node;
+    }else{
+      now++;
+      while(1){
+        new_node->add_argument(convert_math_string_to_symbolic_tree(expr, now));
+        if(expr[now] == ']')
           break;
-        }
+        now++; // ','の分
       }
-      now = expr.find_first_of("[]", now+1);
-      assert(now != std::string::npos);
+      now++;
+      return new_node;
     }
-    return node_sptr(new hydla::parse_tree::Number(expr.substr(prev, (now++)-prev+1)));
   }
   
   //何か子ノードがあるはず．Derivativeの場合は少し特別か  
@@ -145,13 +146,13 @@ MathematicaExpressionConverter::node_sptr
   int derivative_count;
   now = expr.find("]", 0);
   derivative_count = atoi(expr.substr(prev,now-prev).c_str());
-  now+=2;//][
+  now+=2;// ']' や'['の分
   //次に中身
   node_sptr tmp_node = convert_math_string_to_symbolic_tree(expr, now);
   for(int i=0;i<derivative_count-1;i++){
     tmp_node.reset(new hydla::parse_tree::Differential(tmp_node));
   }
-  now++;//]
+  now++;// ']'の分
   return node_sptr(new hydla::parse_tree::Differential(tmp_node));
 }
 
@@ -162,7 +163,7 @@ MathematicaExpressionConverter::node_sptr
     const MathematicaExpressionConverter::nodeType &nt){
   //中身
   node_sptr tmp_node = convert_math_string_to_symbolic_tree(expr, now);
-  now++;//]
+  now++;// ']'の分
   switch(nt){
     default:
     assert(0);
@@ -189,11 +190,11 @@ MathematicaExpressionConverter::node_sptr
 
   //左
   node_sptr lhs = convert_math_string_to_symbolic_tree(expr, now);
-  now++;//,
+  now++; // ','の分
   while(1){
    //右
    node_sptr rhs = convert_math_string_to_symbolic_tree(expr, now);
-   now++;//]や,
+   now++; // ']' や','の分
    switch(nt){
      case NODE_PLUS:
      if(expr[now-1]==']'){//ここで終了

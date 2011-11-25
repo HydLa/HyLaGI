@@ -107,6 +107,8 @@ public:
   virtual void visit(boost::shared_ptr<ArbitraryBinary> node);
   virtual void visit(boost::shared_ptr<ArbitraryUnary> node);
   virtual void visit(boost::shared_ptr<ArbitraryFactor> node);
+  
+  virtual void visit(boost::shared_ptr<ArbitraryNode> node);
 
 
   // •Ï”

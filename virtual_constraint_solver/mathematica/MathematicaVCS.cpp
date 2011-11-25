@@ -145,9 +145,9 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
       }
     }
     HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
-    ps.put_nodes(constraints, PacketSender::VA_None);
+    ps.put_nodes(constraints, PacketSender::VA_Prev);
   }
-  ps.put_vars(PacketSender::VA_None);
+  ps.put_vars(PacketSender::VA_Prev);
 
 
   {

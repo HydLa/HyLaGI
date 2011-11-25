@@ -77,6 +77,7 @@ void TreeVisitor::visit(boost::shared_ptr<Ln> node)                {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<ArbitraryBinary> node)                {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<ArbitraryUnary> node)                {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<ArbitraryFactor> node)                {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<ArbitraryNode> node)                {assert(0);}
   
 // ”÷•ª
 void TreeVisitor::visit(boost::shared_ptr<Differential> node)          {assert(0);}

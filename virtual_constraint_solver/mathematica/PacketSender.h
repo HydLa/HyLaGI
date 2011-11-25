@@ -27,6 +27,7 @@ public:
   };
 
   enum VariableArg {
+    VA_Prev,
     VA_None,  
     VA_Time,  //©“®‚Åprev‚ª–³Œø‚É‚È‚é
     VA_Zero,
@@ -154,6 +155,7 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryNode> node);
   
     
   // •Ï”

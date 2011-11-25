@@ -284,15 +284,15 @@ convertCSToVM[] := Block[
       retExprs = adjustExprs[exprs];
       
       (* 値が定まらないもののリストを作る *)
+      (*
       rules = Fold[(If[Head[#2] === Equal, Append[#1, Rule@@#2], #1])&, {}, retExprs];
       determinedVariables = Fold[(Union[#1, {#2[[1]]} ])&, {}, rules];
       undeterminedVariables = Complement[Join[variables, parameters], determinedVariables];
       
       undeterminedExprs = Select[retExprs, (MemberQ[undeterminedVariables, #[[1]] ])& ];
-      Print[undeterminedExprs, undeterminedVariables];
       retExprs = Join[undeterminedExprs, Complement[retExprs, undeterminedExprs] ];
       
-      retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];
+      retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];*)
       
       
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
@@ -648,9 +648,10 @@ getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
+  
   paramCons = getParamCons[sol];
   sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]];
-  If[sol===False || Reduce[expr, vars, Reals] === False,
+  If[sol===False,
     overconstraint,
     If[sol===True,
       {{}, {}},
@@ -677,12 +678,12 @@ exDSolve[expr_, vars_] := Block[
             ];
 
             (*improve by takeguchi*)
-
             sol = If[Length[NDExpr] == 0, {sol},
                  FullSimplify[ExpToTrig[Quiet[
                      Solve[Join[Map[(Equal @@ #) &, sol], TrigToExp[NDExpr]], getNDVars[vars]],
                  {Solve::incnst, Solve::ifun, Solve::svars}]]]
             ];
+            
             If[sol =!= {},
               {sol[[1]], Join[otherExpr, paramCons]},
               overconstraint
@@ -750,7 +751,7 @@ integrateCalc[expr_,
 },
   cons = expr&&constraints&&pconstraints;
   cons = And@@reducePrevVariable[List@@cons];
-  returnVars = Join[vars, variables];
+  returnVars = Union[vars, variables];
   returnVars = Map[changeZeroTot, returnVars];
   returnVars = Select[returnVars, isTimeVariable];
   debugPrint["@Integrate cons:", cons, 
@@ -761,6 +762,9 @@ integrateCalc[expr_,
   If[cons =!= True,
     paramCons = getParamCons[applyList[cons]];
     tmpIntegSol = exDSolve[cons, returnVars][[1]];
+    If[tmpIntegSol === underconstraint, Return[{0, "under_constraint"}] ];
+    debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
+      
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
     debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
@@ -777,8 +781,8 @@ integrateCalc[expr_,
             createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
           returnVars],
 
-    (* false *)
-    debugPrint["@Integrate tmpIntegSol: false"];
+    (* cons === True *)
+    debugPrint["@Integrate tmpIntegSol:"];
     debugPrint["@Integrate nextpointphase arg: no next point phase"];
     tmpMinT = {{maxTime // FullForm // ToString, {}, 1}};
     tmpVarMap = {};
@@ -791,6 +795,7 @@ integrateCalc[expr_,
 ],
   {0, $MessageList}
 ]];
+
 
 (*
  * 式に対して与えられた時間を適用する

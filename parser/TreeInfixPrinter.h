@@ -122,6 +122,13 @@ class TreeInfixPrinter:
   // ëŒêî
   virtual void visit(boost::shared_ptr<Ln> node);
   virtual void visit(boost::shared_ptr<Log> node);
+  
+  
+  // îCà”
+  virtual void visit(boost::shared_ptr<ArbitraryFactor> node);
+  virtual void visit(boost::shared_ptr<ArbitraryUnary> node);
+  virtual void visit(boost::shared_ptr<ArbitraryBinary> node);
+  virtual void visit(boost::shared_ptr<ArbitraryNode> node);
 };
 
 } // namespace parse_tree

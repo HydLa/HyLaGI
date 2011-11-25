@@ -1218,6 +1218,45 @@ public:
 
 
 
+class ArbitraryNode : public Node {
+public:
+  typedef boost::shared_ptr<ArbitraryNode> node_type_sptr;
+
+  ArbitraryNode()
+  {}
+  
+  ArbitraryNode(const std::string& str) : 
+    string_(str)
+  {}
+
+  virtual ~ArbitraryNode()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+  virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
+  
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ArbitraryNode";
+  }
+  
+  void add_argument(node_sptr node);
+  
+  
+  virtual std::ostream& dump(std::ostream& s) const;
+  
+  void set_string(const std::string& str);
+  
+  std::string get_string() const;
+
+  std::vector<node_sptr> arguments_;
+private:
+  std::string string_;
+};
+
+
+
 } //namespace parse_tree
 } //namespace hydla
 
