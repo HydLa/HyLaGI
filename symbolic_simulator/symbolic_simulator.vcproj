@@ -157,6 +157,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\SymbolicParameter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SymbolicSimulator.cpp"
 				>
 			</File>
