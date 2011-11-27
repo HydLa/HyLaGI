@@ -43,11 +43,6 @@ public:
   virtual ~REDUCEVCSInterval();
 
   /**
-   * 制約ストアの初期化をおこなう
-   */
-  virtual bool reset();
-
-  /**
    * 与えられた変数表を元に，制約ストアの初期化をおこなう
    */
   virtual bool reset(const variable_map_t& variable_map);
@@ -76,13 +71,7 @@ public:
     integrate_result_t& integrate_result,
     const constraints_t &constraints,
     const time_t& current_time,
-    const time_t& max_time);
-
-  /**
-   * 内部状態の出力をおこなう
-   */
-  std::ostream& dump(std::ostream& s) const;
-  
+    const time_t& max_time);  
   
   /**
    * 変数表に対して与えられた時刻を適用する
@@ -115,12 +104,6 @@ private:
                       bool use_approx);
 
   /**
-   * 与えられたaskのガード制約を送信する
-   */
-  void send_ask_guards(REDUCEStringSender& rss, 
-                       const hydla::simulator::ask_set_t& asks) const;
-
-  /**
   * 時刻を送信する
   */
   void send_time(const time_t& time);
@@ -129,11 +112,6 @@ private:
    * 変数表に未定義の変数を追加する
    */
   void add_undefined_vars_to_vm(variable_map_t& vm);
-
-  /**
-   * 採用していないモジュール内にある制約を送信する
-   */
-  void send_not_adopted_tells(REDUCEStringSender& rss, const not_adopted_tells_list_t& na_tells_list) const;
   
   /**
    * 定数制約を送る
@@ -145,7 +123,6 @@ private:
 
   mutable REDUCELink* cl_;
   continuity_map_t continuity_map_;
-  max_diff_map_t max_diff_map_;
   constraint_store_t constraint_store_;
   constraints_t tmp_constraints_;  //一時的に制約を追加する対象
   parameter_map_t parameter_map_;
@@ -153,9 +130,6 @@ private:
   int approx_precision_;
 };
 
-
-std::ostream& operator<<(std::ostream& s, 
-                         const REDUCEVCSInterval::constraint_store_t& c);
 
 } // namespace reduce
 } // namespace simulator

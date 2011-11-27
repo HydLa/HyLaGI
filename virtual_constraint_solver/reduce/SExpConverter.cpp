@@ -47,6 +47,19 @@ SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(SExpParser
   return value;
 }
 
+SExpConverter::node_sptr SExpConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev){
+    HYDLA_LOGGER_REST("*** Begin:SExpConverter::make_equal ***\n");
+    node_sptr new_node(new Variable(variable.get_name()));
+    for(int i=0;i<variable.get_derivative_count();i++){
+      new_node = node_sptr(new Differential(new_node));
+    }
+    if(prev){
+      new_node = node_sptr(new Previous(new_node));
+    }
+    HYDLA_LOGGER_REST("*** End:SExpConverter::make_equal ***\n");
+    return node_sptr(new Equal(new_node, node));
+  }
+
 SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(SExpParser &sp, const_tree_iter_t iter){
 
   switch(iter->value.id().to_long()) {

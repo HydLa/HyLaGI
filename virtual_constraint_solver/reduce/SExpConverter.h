@@ -22,6 +22,7 @@ class SExpConverter:
   public:
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t       value_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_range_t value_range_t;
+  typedef hydla::vcs::SymbolicVirtualConstraintSolver::variable_t    variable_t;
   typedef hydla::parser::SExpParser::const_tree_iter_t               const_tree_iter_t;
   typedef hydla::parse_tree::node_sptr                               node_sptr;
 
@@ -69,6 +70,11 @@ class SExpConverter:
   // S式とってvalueに変換する
   static value_t convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter);
   static value_t convert_s_exp_str_to_symbolic_value(const std::string &expr, std::string::size_type &now);
+
+  /**
+   * （vairable）=（node）の形のノードを返す
+   */
+  static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
 
 /*
   //関係演算子の文字列表現を返す

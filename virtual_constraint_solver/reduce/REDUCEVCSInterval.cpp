@@ -9,6 +9,7 @@
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
+using namespace hydla::parse_tree; // reset移したら不要
 
 namespace hydla {
 namespace vcs {
@@ -24,42 +25,69 @@ REDUCEVCSInterval::REDUCEVCSInterval(REDUCELink* cl, int approx_precision) :
 REDUCEVCSInterval::~REDUCEVCSInterval()
 {}
 
-bool REDUCEVCSInterval::reset()
-{
-  constraint_store_ = constraint_store_t();
-  return true;
-}
-
 bool REDUCEVCSInterval::reset(const variable_map_t& variable_map)
 {
 
   HYDLA_LOGGER_VCS_SUMMARY("#*** Reset Constraint Store ***");
+
+  cl_->send_string("symbolic redeval '(resetConstraintStore);");
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
+
   if(variable_map.size() == 0)
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Variables");
+    return true;
   }
-  HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", 
-                     variable_map);
+  REDUCEStringSender rss(*cl_);
+  constraints_t constraints;
 
+  HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);
+  cl_->send_string("vm_str_:={");
+  
   variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
   variable_map_t::variable_list_t::const_iterator end = variable_map.end();
   for(; it!=end; ++it) {
+    if(it!=variable_map.begin()) cl_->send_string(",");
     if(!it->second.is_undefined()) {
-      constraint_store_.init_vars.insert(
-        std::make_pair(it->first, it->second));
+      constraints.push_back(SExpConverter::make_equal(it->first, it->second.get_node(), true));
+    } else {
+//    } else if(mode_ == hydla::symbolic_simulator::ContinuousMode){
+      // 値がないなら何かしらの定数を作って送信．
+      std::string name;
+      name = it->first.name;
+      for(int i=0;i<it->first.derivative_count;i++){
+        //とりあえず微分回数分dをつける
+        name.append("d");
+      }
+      /*
+      while(parameter_map.has_variable(parameter_t(name))){
+        //とりあえず重複回数分iをつける
+        name.append("i");
+      }
+      */
+      constraints.push_back(SExpConverter::make_equal(it->first, node_sptr(new Parameter(name)), true));
     }
-    else {
-      value_t value;
-      constraint_store_.init_vars.insert(
-        std::make_pair(it->first, value));
-    }
+    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    rss.put_nodes(constraints);
   }
+  cl_->send_string("}$");
+
+  cl_->send_string("vars_str_:=");
+  rss.put_vars();
+  cl_->send_string("$");
+
+  cl_->send_string("symbolic redeval '(addConstraint vm_str_ vars_str_);");
+
+
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
+
+
   return true;
 }
 
-
-
-bool REDUCEVCSInterval::reset(const variable_map_t& variable_map,  const parameter_map_t& parameter_map)
+bool REDUCEVCSInterval::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
   if(!reset(variable_map)){
     return false;
@@ -68,10 +96,8 @@ bool REDUCEVCSInterval::reset(const variable_map_t& variable_map,  const paramet
   {
     HYDLA_LOGGER_VCS_SUMMARY("no Parameters");
   }
-  HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", 
-                     parameter_map);
+  HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
   parameter_map_=parameter_map;
-  HYDLA_LOGGER_VCS(constraint_store_);
   return true;
 }
 
@@ -189,16 +215,50 @@ void REDUCEVCSInterval::add_constraint(const constraints_t& constraints)
 {
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::add_constraint ***");
 
+
+  REDUCEStringSender rss(*cl_);
+
+  // cons_を渡す
+  HYDLA_LOGGER_VCS("----- send cons_ -----");
+  cl_->send_string("cons_:={");
+  bool first_element = true;
+  constraints_t::const_iterator it = constraints.begin();
+  constraints_t::const_iterator end = constraints.end();
+  for(; it!=end; ++it)
+    {
+      if(!first_element) cl_->send_string(",");
+      rss.put_node(*it);
+      first_element = false;
+    }
+  cl_->send_string("}$");
+
+  // vars_を渡す
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_->send_string("vars_:=");
+  rss.put_vars();
+  cl_->send_string("$");
+
+
+  cl_->send_string("symbolic redeval '(addConstraint cons_ vars_);");
+
+  // cl_->read_until_redeval();
+  cl_->skip_until_redeval();
+
+
+  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSInterval::add_constraint ***");
+
+  /*
   // 制約ストアにtell制約の追加
   constraint_store_.constraints.insert(
     constraint_store_.constraints.end(),
     constraints.begin(),
     constraints.end()
     );
-
+  
   HYDLA_LOGGER_VCS(
     constraint_store_,
     "\n#*** End REDUCEVCSInterval::add_constraint ***");
+  */
   return;
 }
   
@@ -766,60 +826,6 @@ void REDUCEVCSInterval::send_cs(REDUCEStringSender& rss) const
     rss.put_node(*cons_it, true);
   }
   cl_->send_string("}");
-}
-
-std::ostream& REDUCEVCSInterval::dump(std::ostream& s) const
-{
-  s << "#*** Dump REDUCEVCSInterval ***\n"
-    << "--- constraint store ---\n";
-
-  s << "-- init_vars --\n";
-  constraint_store_t::init_vars_t::const_iterator init_vars_it = constraint_store_.init_vars.begin(),
-    init_vars_end = constraint_store_.init_vars.end();
-  for(;init_vars_it != init_vars_end; init_vars_it++){
-    s << init_vars_it->first << " <=> " << init_vars_it->second << "\n";
-  }
-
-  s << "-- constraints --\n";
-  constraint_store_t::constraints_t::const_iterator constraints_it = constraint_store_.constraints.begin(),
-    constraints_end = constraint_store_.constraints.end();
-  for(; constraints_it != constraints_end; constraints_it++){
-    s << **constraints_it << "\n";
-  }
-
-  return s;
-}
-
-std::ostream& operator<<(std::ostream& s,
-                         const REDUCEVCSInterval& vcs)
-{
-  return vcs.dump(s);
-}
-
-std::ostream& operator<<(std::ostream& s, 
-                         const REDUCEVCSInterval::constraint_store_t& c)
-{
-  s << "---- REDUCEVCSInterval::consraint_store_t ----\n"
-    << "-- init vars --\n";
-
-  BOOST_FOREACH(
-    const REDUCEVCSInterval::constraint_store_t::init_vars_t::value_type& i, 
-    c.init_vars)
-  {
-    s << "variable: " << i.first
-      << "   value: " << i.second
-      << "\n";
-  }
-
-  s << "-- constraints --\n";
-  BOOST_FOREACH(
-    const REDUCEVCSInterval::constraint_store_t::constraints_t::value_type& i, 
-    c.constraints)
-  {
-    s << *i;
-  }
-  
-  return s;
 }
 
 
