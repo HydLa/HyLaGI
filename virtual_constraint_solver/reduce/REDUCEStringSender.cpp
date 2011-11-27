@@ -23,14 +23,16 @@ REDUCEStringSender::REDUCEStringSender() :
   cl_(NULL),
   differential_count_(0),
   in_prev_(false),
-  apply_not_(false)
+  apply_not_(false),
+  init_var_(false)
 {}
 
 REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
   cl_(&cl),
   differential_count_(0),
   in_prev_(false),
-  apply_not_(false)
+  apply_not_(false),
+  init_var_(false)
 {}
 
 REDUCEStringSender::~REDUCEStringSender(){}
@@ -205,7 +207,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 }
 
 
-void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
+void REDUCEStringSender::put_var(const var_info_t var)
 {
   std::string name(REDUCEStringSender::var_prefix + var.get<0>());
   int diff_count = var.get<1>();
@@ -216,12 +218,12 @@ void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
     "name: ", name,
     "\tdiff_count: ", diff_count,
     "\tprev: ", prev,
-    "\tinit_var: ", init_var);
+    "\tinit_var_: ", init_var_);
 
 
   std::ostringstream var_str;
 
-  if(init_var) var_str << "init";
+  if(init_var_) var_str << "init";
 
   if (diff_count > 0 && prev){
     var_str << "prev(df("
@@ -231,7 +233,7 @@ void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
             << "))";
   }
   else if (diff_count > 0){
-    if(init_var) {
+    if(init_var_) {
       var_str << name
               << "_"
               << diff_count;
@@ -253,7 +255,7 @@ void REDUCEStringSender::put_var(const var_info_t var, bool init_var)
     var_str << name;
   }
 
-  if(init_var) var_str << "lhs";
+  if(init_var_) var_str << "lhs";
 
   cl_->send_string(var_str.str());
   HYDLA_LOGGER_REST("var_str: ", var_str.str());
@@ -281,13 +283,13 @@ void REDUCEStringSender::put_par(const std::string &name)
  * @param node putしたい式(ノード)
  */
 
-void REDUCEStringSender::put_node(const node_sptr& node,
-                            bool ignore_prev)
+void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool init_var)
 {
   HYDLA_LOGGER_REST("*** Begin REDUCEStringSender::put_node ***");
   differential_count_ = 0;
   in_prev_ = false;
   ignore_prev_ = ignore_prev;
+  init_var_ = init_var;
   accept(node);
   HYDLA_LOGGER_REST("*** END REDUCEStringSender::put_node ***");
 }
@@ -295,13 +297,13 @@ void REDUCEStringSender::put_node(const node_sptr& node,
 /**
  * ある式のリストをputする
  */
-void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
+void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints, bool init_var)
 {
   HYDLA_LOGGER_REST("*** Begin REDUCEStringSender::put_nodes ***");
   cl_->send_string("{");
   for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
     if(it!=constraints.begin()) cl_->send_string(",");
-    put_node(*it);
+    put_node(*it, init_var);
   }
   cl_->send_string("}");
   HYDLA_LOGGER_REST("*** End REDUCEStringSender::put_nodes: ***");

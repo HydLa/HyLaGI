@@ -704,7 +704,7 @@ ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
 ICI_UNKNOWN___:= 3; % ïsóvÅH
 
-procedure checkConsistencyInterval(tmpCons_, exprs_, pexpr_, init_, vars_)$
+procedure checkConsistencyInterval(tmpCons_, init_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_,
          integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;

@@ -43,21 +43,6 @@ public:
   virtual ~REDUCEVCSInterval();
 
   /**
-   * 与えられた変数表を元に，制約ストアの初期化をおこなう
-   */
-  virtual bool reset(const variable_map_t& variable_map);
-  
-  /**
-   * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
-   */
-  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
-
-  /**
-   * 制約を追加する．
-   */
-  virtual void add_constraint(const constraints_t& constraints);
-  
-  /**
    * 制約ストアが無矛盾かを判定する．
    * 引数で制約を渡された場合は一時的に制約ストアに追加する．
    */
@@ -84,24 +69,18 @@ public:
   virtual void set_continuity(const continuity_map_t& continuity_map);
 
 private:
-  typedef REDUCEStringSender::max_diff_map_t max_diff_map_t;
-
-  void send_cs(REDUCEStringSender& rss) const;
-
-  void send_vars(REDUCEStringSender& rss, const max_diff_map_t& max_diff_map);
-
-  // check_consistencyの共通部分
-  VCSResult check_consistency_sub();
+  // check_consistencyの受信部分
+  VCSResult check_consistency_receive();
 
   /**
-   * 初期値制約をMathematicaに渡す
-   * 
-   * Mathematicaに送る制約の中に出現する変数の
-   * 最大微分回数未満の初期値制約のみ送信をおこなう
+   * 初期値制約をREDUCEに渡す
    */
-  void send_init_cons(REDUCEStringSender& rss, 
-                      const max_diff_map_t& max_diff_map, 
-                      bool use_approx);
+  void send_init_cons(REDUCEStringSender& rss, const continuity_map_t& continuity_map);
+
+  /**
+   * 制約を出現する変数や初期値制約とともに送信する
+   */
+  void send_constraint(const constraints_t& constraints);
 
   /**
   * 時刻を送信する
@@ -113,19 +92,9 @@ private:
    */
   void add_undefined_vars_to_vm(variable_map_t& vm);
   
-  /**
-   * 定数制約を送る
-   */
-  void send_parameter_cons() const;
-  
-  //記号定数のリストを送る
-  void send_pars() const;
-
   mutable REDUCELink* cl_;
   continuity_map_t continuity_map_;
-  constraint_store_t constraint_store_;
   constraints_t tmp_constraints_;  //一時的に制約を追加する対象
-  parameter_map_t parameter_map_;
   REDUCEValue added_condition_;  //check_consistencyで追加される条件
   int approx_precision_;
 };

@@ -58,17 +58,17 @@ public:
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  void put_node(const node_sptr& node, bool ignore_prev = false);
+  void put_node(const node_sptr& node, bool ignore_prev = false, bool init_var = false);
 
   /**
    * リスト形式で送信する
    */
-  void put_nodes(const std::vector<node_sptr> &constraints);
+  void put_nodes(const std::vector<node_sptr> &constraints, bool init_var = false);
 
   /**
    * 変数の送信
    */
-  void put_var(const var_info_t var, bool init_var = false);
+  void put_var(const var_info_t var);
 
   /**
    * put_nodeの際に送信された変数群の送信をおこなう
@@ -183,6 +183,8 @@ protected:
   // notを適用するかどうか
   bool apply_not_;
 
+  // 変数ノードを通る際に、初期値を表す変数として扱うかどうか
+  bool init_var_;
 };
 
 } //namespace reduce

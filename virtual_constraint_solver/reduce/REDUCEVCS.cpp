@@ -8,6 +8,7 @@
 #include "SExpConverter.h"
 
 using namespace hydla::vcs;
+using namespace hydla::parse_tree;
 
 namespace hydla {
 namespace vcs {
@@ -78,19 +79,87 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
 REDUCEVCS::~REDUCEVCS()
 {}
 
-bool REDUCEVCS::reset()
-{
-  return vcs_->reset();
-}
 
-bool REDUCEVCS::reset(const variable_map_t& vm)
+bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
-  return vcs_->reset(vm);
-}
 
-bool REDUCEVCS::reset(const variable_map_t& vm, const parameter_map_t& pm)
-{
-  return vcs_->reset(vm, pm);
+  HYDLA_LOGGER_VCS("#*** REDUCEVCS::reset ***\n");
+
+  cl_.send_string("symbolic redeval '(resetConstraintStore);");
+  // cl_.read_until_redeval();
+  cl_.skip_until_redeval();
+
+
+  REDUCEStringSender rss(cl_);
+  {
+    constraints_t constraints;
+
+    HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);  
+    variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
+    variable_map_t::variable_list_t::const_iterator end = variable_map.end();
+    for(; it!=end; ++it) {
+      if(!it->second.is_undefined()) {
+        constraints.push_back(SExpConverter::make_equal(it->first, it->second.get_node(), true));
+      } else if(mode_ == hydla::symbolic_simulator::ContinuousMode){
+        // ’l‚ª‚È‚¢‚È‚ç‰½‚©‚µ‚ç‚Ì’è”‚ðì‚Á‚Ä‘—MD
+        std::string name;
+        name = it->first.name;
+        for(int i=0;i<it->first.derivative_count;i++){
+          //‚Æ‚è‚ ‚¦‚¸”÷•ª‰ñ”•ªd‚ð‚Â‚¯‚é
+          name.append("d");
+        }
+        while(parameter_map.has_variable(parameter_t(name))){
+          //‚Æ‚è‚ ‚¦‚¸d•¡‰ñ”•ªi‚ð‚Â‚¯‚é
+          name.append("i");
+        }
+        constraints.push_back(SExpConverter::make_equal(it->first, node_sptr(new Parameter(name)), true));
+      }
+    }
+    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    cl_.send_string("vm_str_:=");
+    rss.put_nodes(constraints);
+    cl_.send_string("$");
+  }
+  cl_.send_string("vars_str_:=");
+  rss.put_vars();
+  cl_.send_string("$");
+
+
+  {
+    constraints_t constraints;
+
+    HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
+    parameter_map_t::variable_list_t::const_iterator it =
+      parameter_map.begin();
+    parameter_map_t::variable_list_t::const_iterator end =
+      parameter_map.end();
+    for(; it!=end; ++it){
+      const value_range_t&    value = it->second;
+      if(!value.is_undefined()) {
+        value_range_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
+        for(;or_it != or_end; or_it++){
+          value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
+          for(; and_it != and_end; and_it++){
+            //            node_sptr rel = SExpConverter::get_relation_node(and_it->relation, node_sptr(new Parameter(it->first.get_name())), and_it->get_value().get_node());
+            //            constraints.push_back(rel);
+          }
+        }
+      }
+    }
+    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    //    rss.put_nodes(constraints);
+  }
+  //  rss.put_pars();
+  
+
+  cl_.send_string("symbolic redeval '(addConstraint vm_str_ vars_str_);");
+
+
+  // cl_.read_until_redeval();
+  cl_.skip_until_redeval();
+
+  HYDLA_LOGGER_VCS("#*** END REDUCEVCS::reset ***\n");
+  return true;
 }
 
 void REDUCEVCS::set_continuity(const continuity_map_t& continuity_map){
@@ -104,12 +173,37 @@ bool REDUCEVCS::create_maps(create_result_t &create_result)
 
 void REDUCEVCS::add_constraint(const constraints_t& constraints)
 {
-  vcs_->add_constraint(constraints);
-}
 
-VCSResult REDUCEVCS::check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks)
-{
-  return vcs_->check_entailment(negative_ask, appended_asks);
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::add_constraint ***");
+
+  REDUCEStringSender rss(cl_);
+
+  // cons_‚ð“n‚·
+  HYDLA_LOGGER_VCS("----- send cons_ -----");
+  cl_.send_string("cons_:={");
+  constraints_t::const_iterator it = constraints.begin();
+  constraints_t::const_iterator end = constraints.end();
+  for(; it!=end; ++it){
+    if(it!=constraints.begin()) cl_.send_string(",");
+    rss.put_node(*it);
+  }
+  cl_.send_string("}$");
+
+  // vars_‚ð“n‚·
+  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  cl_.send_string("vars_:=");
+  rss.put_vars();
+  cl_.send_string("$");
+
+  
+  cl_.send_string("symbolic redeval '(addConstraint cons_ vars_);");
+
+  // cl_.read_until_redeval();
+  cl_.skip_until_redeval();
+
+
+  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCS::add_constraint ***");
+  return;
 }
 
 VCSResult REDUCEVCS::check_consistency()
@@ -163,7 +257,7 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& ou
     cl_.send_string("symbolic redeval '(getRealVal value_ prec_);");
 
 
-//    cl_.read_until_redeval();
+    // cl_.read_until_redeval();
     cl_.skip_until_redeval();
     ret = cl_.get_s_expr();
   }

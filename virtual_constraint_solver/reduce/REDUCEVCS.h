@@ -27,16 +27,6 @@ public:
   
   //ソルバのモードを変更する
   virtual void change_mode(hydla::symbolic_simulator::Mode m, int approx_precision);
-
-  /**
-   * 制約ストアの初期化をおこなう
-   */
-  virtual bool reset();
-
-  /**
-   * 与えられた変数表を元に，制約ストアの初期化をおこなう
-   */
-  virtual bool reset(const variable_map_t& vm);
  
   /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
@@ -54,12 +44,6 @@ public:
    */
   virtual void add_constraint(const constraints_t& constraints);
   
-
-  /**
-   * 現在の制約ストアから与えたaskが導出可能かどうか
-   */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks);
-
   /**
    * 制約ストアが無矛盾かを判定する．
    * 引数で制約を渡された場合は一時的に制約ストアに追加する．
