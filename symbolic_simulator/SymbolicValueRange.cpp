@@ -82,6 +82,14 @@ std::string SymbolicValueRange::get_first_symbol() const{
   return relation_symbol_[value_range_.front().front().relation];
 }
 
+std::string SymbolicValueRange::get_lower_bound() const{
+  return lower_.get_string();
+}
+
+
+std::string SymbolicValueRange::get_upper_bound() const{
+  return upper_.get_string();
+}
 
 std::string SymbolicValueRange::visit_all(const std::vector<Element> &vec, const std::string &delimiter) const{
   if(vec.empty()) return "";
@@ -121,6 +129,21 @@ void SymbolicValueRange::add(const SymbolicValueRange::Element &ele)
     value_range_.push_back(tmp);
   }
   value_range_.back().push_back(ele);
+  switch(ele.get_relation()){
+    case EQUAL:
+    upper_ = lower_ = ele.value;
+    break;
+    case NOT_EQUAL:
+    break;
+    case LESS_EQUAL:
+    case LESS:
+    upper_  = ele.value;
+    break;
+    case GREATER_EQUAL:
+    case GREATER:
+    lower_  = ele.value;
+    break;
+  }
 }
 
 

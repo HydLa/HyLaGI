@@ -82,6 +82,8 @@ private:
   void output_result_tree();
   
   void output_result_tree_GUI();
+  
+  void output_result_tree_mathematica();
 
   continuity_map_t variable_derivative_map_;
   module_set_container_sptr msc_original_;

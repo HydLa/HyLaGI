@@ -161,7 +161,7 @@ void SymbolicSimulator::simulate()
   if(opts_.output_format == fmtGUI){
     output_result_tree_GUI();
   }else if(opts_.output_format == fmtMathematica){
-    output_result_tree(); 
+    output_result_tree_mathematica(); 
   }else{
     output_result_tree(); 
   }
@@ -248,7 +248,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     //デフォルト連続性の処理
     
     bool strong_continuity = (opts_.default_continuity >= CONT_STRONG ||
-      opts_.default_continuity == CONT_STRONG_IP && state->phase == IntervalPhase);
+      (opts_.default_continuity == CONT_STRONG_IP && state->phase == IntervalPhase));
     if(strong_continuity){
       for(continuity_map_t::const_iterator it  = variable_derivative_map_.begin(); it!=variable_derivative_map_.end(); ++it) {
         continuity_map_t::iterator find_result = continuity_map.find(it->first);
@@ -694,7 +694,7 @@ void SymbolicSimulator::output_result_tree()
     state_result_sptr_t now_node = result_root_->children.back();
     if(opts_.nd_mode){
       std::cout << "#---------Case " << i++ << "---------" << std::endl;
-j = 1;
+      j = 1;
     }
     while(1){
        if(now_node->phase_type==PointPhase){
@@ -744,6 +744,70 @@ j = 1;
       std::cout << std::endl;
   }
 }
+
+
+
+void SymbolicSimulator::output_result_tree_mathematica()
+{
+  if(result_root_->children.size() == 0){
+    std::cout << "No Result." << std::endl;
+    return;
+  }
+  std::cout << "Show[";
+  while(1){
+    std::string prev_node_time = "0";
+    std::cout << "Table[";
+    bool is_first = true;
+    state_result_sptr_t now_node = result_root_->children.back();
+    while(1){
+      if(now_node->phase_type==IntervalPhase){
+        variable_map_t vm = shift_variable_map_time(now_node->variable_map, prev_node_time);
+        if(is_first){
+          is_first = false;
+          std::cout << "{";
+        }else{
+          std::cout << ",";
+        }
+        variable_map_t::const_iterator it = vm.begin();
+        std::cout << "Plot[";
+        std::cout << it->second;
+        std::cout << ", {t, ";
+        std::cout << prev_node_time;
+        std::cout << ", ";
+        std::cout << now_node->time;
+        std::cout << "} ";
+        std::cout << "]"; //Plot
+        prev_node_time = now_node->time.get_string();
+        //式と時間を出力
+      }
+      if(now_node->children.size() == 0){//葉に到達
+        std::cout << "}, "; //式のリストここまで
+        std::cout << "{";
+        parameter_map_t::const_iterator it = now_node->parameter_map.begin();
+        std::cout << "p" <<it->first.get_name() << ", " << it->second.get_lower_bound() << ", " << it->second.get_upper_bound() << ", step}";
+        // 定数の条件
+        
+        std::cout << "], "; //Table
+        std::cout << std::endl;
+        while(now_node->children.size() == 0){
+          if(now_node->parent != NULL){
+            now_node = now_node->parent;
+          }else{//親がいないということは根と葉が同じ、つまり「空になった」ということなので終了．
+            std::cout << "PlotRange -> {{0, " << prev_node_time << "}, {lb, ub}}";
+            std::cout << "]" << std::endl; //Show
+            return;
+          }
+          now_node->children.pop_back();
+        }
+        break;
+      }
+      else{
+        now_node = now_node->children.back();
+      }
+    }
+  }
+}
+
 
 
 void SymbolicSimulator::output_result_tree_GUI()

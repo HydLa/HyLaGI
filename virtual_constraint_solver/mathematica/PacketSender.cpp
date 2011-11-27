@@ -173,7 +173,12 @@ void PacketSender::visit(boost::shared_ptr<ArbitraryNode> node)
   if(node->arguments_.size() == 0){
     ml_->put_symbol(node->get_string());
   }else{
-    ml_->put_function(node->get_string(), node->arguments_.size());
+    if(node->get_string() == "Function"){ //Function‚ÍHoldAll‚ÈŠÖ”‚Ì‚½‚ßCEvaluate‚µ‚È‚¢‚ÆNumber‚ÌToExpression‚ª“­‚©‚È‚¢
+      ml_->put_function(node->get_string(), 1);
+      ml_->put_function("Evaluate", node->arguments_.size());
+    }else{
+      ml_->put_function(node->get_string(), node->arguments_.size());
+    }
     for(int i=0; i < node->arguments_.size();i++){
       accept(node->arguments_[i]);
     }
@@ -188,7 +193,7 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   var_info_t new_var = 
     boost::make_tuple(node->get_name(), 
                       differential_count_, 
-                      in_prev_ && (variable_arg_ != VA_Time) || variable_arg_ == VA_Prev);
+                      (in_prev_ && variable_arg_ != VA_Time) || variable_arg_ == VA_Prev);
 
     put_var(new_var, variable_arg_);
 }
@@ -225,55 +230,52 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
   int diff_count = var.get<1>();
   bool prev      = var.get<2>();
   
-
-
   HYDLA_LOGGER_REST(
     "PacketSender::put_var: ",
     "name: ", name,
     "\tdiff_count: ", diff_count,
     "\tprev: ", prev,
     "\tvariable_arg: ", variable_arg);
-    
 
-  // •Ï”–¼‚Ì[t]‚â[0]‚ª‚Â‚­•ª
-  if(variable_arg == VA_Time ||  variable_arg == VA_Zero && !prev) {
-    ml_->MLPutNext(MLTKFUNC);
-    ml_->MLPutArgCount(1);
-  }
-  
-  // •Ï”‚Ìput
-  if(diff_count > 0){
-    // ”÷•ª•Ï”‚È‚ç (Derivative[‰ñ”])[•Ï”–¼]‚ğput
-    ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
-    ml_->MLPutArgCount(1);      // this 1 is for the 'f'
-    ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
-    ml_->MLPutArgCount(1);      // this 1 is for the '*number*'
-    ml_->put_symbol("Derivative");
-    ml_->MLPutInteger(diff_count);
-  }
-  
   // prev•Ï”‚Æ‚µ‚Ä‘—‚é‚©‚Ç‚¤‚©
   if(prev) {
-    ml_->put_function("prev", 1);
-  }
+    ml_->put_function("prev", 2);
+    ml_->put_symbol(name);
+    ml_->MLPutInteger(diff_count);
+  }else{
   
-  ml_->put_symbol(name);
-  
+    // •Ï”–¼‚Ì[t]‚â[0]‚ª‚Â‚­•ª
+    if(variable_arg == VA_Time ||  variable_arg == VA_Zero) {
+      ml_->MLPutNext(MLTKFUNC);
+      ml_->MLPutArgCount(1);
+    }
 
-  switch(variable_arg) {
-    case VA_None:
-    case VA_Prev:
-      break;
-      
-    case VA_Time:
-      ml_->put_symbol("t");
-      break;
-    case VA_Zero:
-      if(!prev)
+    // •Ï”‚Ìput
+    if(diff_count > 0){
+      // ”÷•ª•Ï”‚È‚ç (Derivative[‰ñ”])[•Ï”–¼]‚ğput
+      ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
+      ml_->MLPutArgCount(1);      // this 1 is for the 'f'
+      ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
+      ml_->MLPutArgCount(1);      // this 1 is for the '*number*'
+      ml_->put_symbol("Derivative");
+      ml_->MLPutInteger(diff_count);
+    }
+    ml_->put_symbol(name);
+  
+    switch(variable_arg) {
+      case VA_None:
+      case VA_Prev:
+        break;
+        
+      case VA_Time:
+        ml_->put_symbol("t");
+        break;
+      case VA_Zero:
         ml_->put_integer(0);
-      break;
-    default:
-      assert(0);
+        break;
+      default:
+        assert(0);
+    }
   }
 
   // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û

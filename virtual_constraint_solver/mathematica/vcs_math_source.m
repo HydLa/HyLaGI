@@ -293,6 +293,7 @@ convertCSToVM[] := Block[
       retExprs = Join[undeterminedExprs, Complement[retExprs, undeterminedExprs] ];
       
       retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];*)
+      retExprs = reducePrevVariable[retExprs];
       
       
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
@@ -311,7 +312,6 @@ convertCSToVM[] := Block[
     resultExprs = Map[(applyList[#])&, List@@constraints],
     resultExprs = Map[(applyList[#])&, {constraints}]
   ];
-  determinedVariables = gerLhs[resultExprs];
   resultExprs = Map[formatExprs, resultExprs];
   debugPrint["@convertCSToVM resultExprs:", resultExprs];
   resultExprs
@@ -475,16 +475,8 @@ applyList[reduceSol_] :=
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
   
-hasPrevVariableAtLeft[expr_] := MemberQ[{expr[[1]]}, prev[x_], Infinity];
-reducePrevVariable[{}, {r___}] := {r};
-reducePrevVariable[{h_, t___}, {r___}] :=
-  If[hasPrevVariableAtLeft[h],
-    lhs = Map[( # /. (Equal[x_, h[[1]] ] -> Equal[x, h[[2]] ] ) )&, {t}];
-    rhs = Map[( # /. (Equal[x_, h[[1]] ] -> Equal[x, h[[2]] ] ) )&, {r}];
-    reducePrevVariable[lhs, rhs],
-    reducePrevVariable[{t}, Append[{r}, h] ]
-  ];
-reducePrevVariable[{h_, t___}] := reducePrevVariable[{h, t}, {}];
+hasPrevVariableAtLeft[expr_] := MemberQ[{expr[[1]]}, prev[x_, y_], Infinity];
+
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 *)
 makeListFromPiecewise[minT_, others_] := Block[
@@ -638,6 +630,19 @@ createIntegratedValue[variable_, integRule_] := (
              /. x_[t] -> x]
 );
 
+(* prev変数に関するルールのリストを作り，その後prev変数がなくなるまでルール適用を繰り返す *)
+reducePrevVariable[{}, {r___}] := {r};
+reducePrevVariable[{h_, t___}, {r___}] :=
+  Block[
+    {lhs, rhgs},
+    If[hasPrevVariableAtLeft[h],
+      lhs = Map[( # /. h[[1]] -> h[[2]] )&, {t}];
+      rhs = Map[( # /. h[[1]] -> h[[2]] )&, {r}];
+      reducePrevVariable[lhs, rhs],
+      reducePrevVariable[{t}, Append[{r}, h] ]
+    ]
+  ];
+reducePrevVariable[{h_, t___}] := reducePrevVariable[{h, t}, {}];
 
 (* パラメータ制約を得る *)
 getParamCons[cons_] := Cases[cons, x_ /; Not[hasVariable[x]], {1}];
@@ -645,10 +650,12 @@ getParamCons[cons_] := Cases[cons, x_ /; Not[hasVariable[x]], {1}];
 getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
 
 
+
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
   
+  Print["ex", sol];
   paramCons = getParamCons[sol];
   sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]];
   If[sol===False,
@@ -667,7 +674,6 @@ exDSolve[expr_, vars_] := Block[
       Quiet[
         Check[
           Check[
-            
             If[Cases[DExpr, Except[True]] === {},
               (* ストアが空の場合はDSolveが解けないので空集合を返す *)
               sol = {},

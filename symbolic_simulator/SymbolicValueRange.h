@@ -72,6 +72,9 @@ struct SymbolicValueRange {
    * とりあえず最初のrelationの記号を返す
    */
   std::string get_first_symbol() const;
+  
+  std::string get_lower_bound() const;
+  std::string get_upper_bound() const;
 
   /**
    * 新たなものをセット
@@ -118,7 +121,7 @@ struct SymbolicValueRange {
   or_vector value_range_; //値との関係の列の列（DNF形式．∧でつながれたものを∨でつなぐ）
 
   private:
-  
+  SymbolicValue lower_, upper_;
 
   std::string visit_all(const std::vector<Element> &vec, const std::string &delimiter) const;
   //配列を走査してデリミタで連結して出力
