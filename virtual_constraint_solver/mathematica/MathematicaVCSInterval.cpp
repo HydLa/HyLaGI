@@ -40,9 +40,9 @@ void MathematicaVCSInterval::send_init_cons(PacketSender &ps, const continuity_m
   continuity_map_t::const_iterator md_it = continuity_map.begin(), md_end = continuity_map.end(); 
   for(; md_it != md_end; ++md_it) {
     if(md_it->second < 0){
-      t_continuity_constraints.push_back(MathematicaExpressionConverter::make_equal(variable_t(md_it->first, abs(md_it->second)+1), node_sptr(new Number("0")), false)); 
+      t_continuity_constraints.push_back(MathematicaExpressionConverter::make_equal(variable_t(md_it->first, abs(md_it->second)+1), node_sptr(new Number("0")), false));
     }
-    for(int i=0; i < abs(md_it->second); i++)
+    for(int i=0; i < abs(md_it->second) + (md_it->second < 0); i++)
     {
       node_sptr rhs = node_sptr(new Previous(node_sptr(new Variable(md_it->first))));
         for(int j=0; j < i; j++){

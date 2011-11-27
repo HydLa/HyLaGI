@@ -253,7 +253,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
       for(continuity_map_t::const_iterator it  = variable_derivative_map_.begin(); it!=variable_derivative_map_.end(); ++it) {
         continuity_map_t::iterator find_result = continuity_map.find(it->first);
         if( find_result == continuity_map.end()){
-          continuity_map.insert(std::make_pair(it->first, -(it->second + 1)));
+          continuity_map.insert(std::make_pair(it->first, -(it->second)));
         }
       }
     }

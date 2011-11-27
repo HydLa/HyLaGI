@@ -655,7 +655,6 @@ exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
   
-  Print["ex", sol];
   paramCons = getParamCons[sol];
   sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]];
   If[sol===False,

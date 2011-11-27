@@ -287,7 +287,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 
 
 }
-  
+
 // 時相演算子
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 {
@@ -377,6 +377,11 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
   if(it != state.formal_arg_map.end()) {
     // 自身が仮引数であった場合、書き換える
     new_child_ = (*it).second->clone();
+    boost::shared_ptr<hydla::parse_tree::Variable> v_ptr = boost::dynamic_pointer_cast<Variable>(new_child_);
+    if(v_ptr){
+      //変数だった場合、登録する
+      parse_tree_->register_variable(v_ptr->get_name(), state.differential_count);
+    }
   } 
   else {
     // 自身が実引数であった場合
