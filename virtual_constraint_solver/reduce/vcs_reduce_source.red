@@ -217,10 +217,10 @@ begin;
 
 end;
 
-procedure rationalise(expr_)$
+procedure rationalisation(expr_)$
 begin;
-  scalar head_, denominator_, numerator_, denominatorHead_, conjugate_, 
-         rationalisedArgsList_, rationalisedExpr_, flag_;
+  scalar head_, denominator_, numerator_, denominatorHead_, denominatorArgsList_,
+         conjugate_, rationalisedArgsList_, rationalisedExpr_, flag_;
 
   debugWrite("expr_: ", expr_);
   if(getArgsList(expr_)={}) then return expr_;
@@ -229,7 +229,7 @@ begin;
   % TODO:より一般的な形への対応→分母がsqrt(a)+sqrt(b)+cの形(a,b>0)とか
   % TODO:3乗根以上への対応
 
-  head_:= part(expr_, 0);
+  head_:= myHead(expr_);
   debugWrite("head_: ", head_);
 
   if(head_=quotient) then <<
@@ -238,19 +238,25 @@ begin;
     % 分母に無理数がなければ有理化必要なし
     if(numberp(denominator_)) then return expr_;
 
-    denominatorHead_:= part(denominator_, 0);
-    if((denominatorHead_=plus) or (denominatorHead_=difference)) then <<
-      conjugate_:= denominatorHead_(part(denominator_, 1), -1*part(denominator_, 2));
+    denominatorHead_:= myHead(denominator_);
+    if(denominatorHead_=plus) then <<
+      denominatorArgsList_:= getArgsList(denominator_);
+      if(length(denominatorArgsList_)>2) then
+        conjugate_:= plus(first(denominatorArgsList_), -1*(myApply(plus, rest(denominatorArgsList_))))
+      else conjugate_:= plus(part(denominator_, 1), -1*part(denominator_, 2));
+    >> else if(denominatorHead_=difference) then <<
+      conjugate_:= difference(part(denominator_, 1), -1*part(denominator_, 2));
     >> else <<
       conjugate_:= -1*denominator_;
     >>;
+    debugWrite("conjugate_: ", conjugate_);
     % 共役数を分母子にかける
     numerator_:= numerator_ * conjugate_;
     denominator_:= denominator_ * conjugate_;
     rationalisedExpr_:= numerator_ / denominator_;
     flag_:= true;
   >> else if(length(expr_)>1) then <<
-    rationalisedArgsList_:= map(rationalise, getArgsList(expr_));
+    rationalisedArgsList_:= map(rationalisation, getArgsList(expr_));
     debugWrite("rationalisedArgsList_: ", rationalisedArgsList_);
     rationalisedExpr_:= myApply(head_, rationalisedArgsList_);
   >> else <<
@@ -258,8 +264,8 @@ begin;
   >>;
 
   debugWrite("rationalisedExpr_: ", rationalisedExpr_);
-  debugWrite("flag_; ", flag_);
-  if(flag_=true) then rationalisedExpr_:= rationalise(rationalisedExpr_);
+  debugWrite("flag_: ", flag_);
+  if(flag_=true) then rationalisedExpr_:= rationalisation(rationalisedExpr_);
   return rationalisedExpr_;
 
 end;
@@ -372,7 +378,7 @@ begin;
     return subAppliedExpr_;
   >>;
 
-  head_:= part(expr_, 0);
+  head_:= myHead(expr_);
 
   % orで結合されるもの同士を括弧でくくらないと、neqとかが違う結合のしかたをする可能性あり
   if((head_=neq) or (head_=geq) or (head_=greaterp) or (head_=leq) or (head_=lessp)) then <<
@@ -424,7 +430,7 @@ begin;
   if(tmpSol_={}) then return {retfalse___};
   % 2重リストの時のみfirstで得る
   % TODO:複数解得られた場合への対応
-  if(part(first(tmpSol_), 0)=list) then tmpSol_:= first(tmpSol_);
+  if(myHead(first(tmpSol_))=list) then tmpSol_:= first(tmpSol_);
 
 
   % exprs_に等式以外が入っているかどうかにより、解くのに使用する関数を決定
@@ -493,7 +499,7 @@ begin;
   % 解を1つだけ得る
   % TODO: Orでつながった複数解への対応
   % 2重リスト状態なら1レベル内側を返す。1重リストならそのまま返す
-  if(part(part(constraintStore_, 1), 0)=list) then return part(constraintStore_, 1)
+  if(myHead(part(constraintStore_, 1))=list) then return part(constraintStore_, 1)
   else return constraintStore_;
 end;
 
@@ -742,7 +748,7 @@ begin;
 
 
 %  % t>0を連立させてtrue/false判定
-%  ans_:= rlqe(rlex(integTmpQE_ and t>0));
+%  ans_:= rlqe(ex(t, integTmpQE_ and t>0));
 %  debugWrite("ans_:", ans_);
 %  if(ans_=false) then return {ICI_INCONSISTENT___};
 %%  if(ans_=false) then return {ICI_INCONSISTENT___} else return {ICI_CONSISTENT___};
@@ -809,7 +815,7 @@ begin;
   debugWrite("tExpr_: ", tExpr_);
   debugWrite("mode_: ", mode_);
 
-  head_:= part(tExpr_, 0);
+  head_:= myHead(tExpr_);
   debugWrite("head_: ", head_);
 
   if(head_=or) then <<
@@ -979,7 +985,7 @@ begin;
 
   %%%%%%%%%%%% TODO:この辺から、%%%%%%%%%%%%%%
   % まず、andでつながったtmp制約をリストに変換
-  if(part(integAsk_, 0)=and) then integAskList_:= getArgsList(integAsk_)
+  if(myHead(integAsk_)=and) then integAskList_:= getArgsList(integAsk_)
   else integAskList_:= {integAsk_};
   debugWrite("integAskList_:", integAskList_);
 
@@ -996,7 +1002,7 @@ begin;
 
   % 論理式形式に変換
   integAskSolFormula_:= rlqe(mymkand(for each x in integAskSolList_ collect
-                          if(part(x, 0)=list) then rlqe(mymkor(x)) else x
+                          if(myHead(x)=list) then rlqe(mymkor(x)) else x
                         ));
   debugWrite("integAskSolFormula_: ", integAskSolFormula_);
   %%%%%%%%%%%% TODO:この辺までを1つの処理にまとめたい%%%%%%%%%%%%
@@ -1027,7 +1033,7 @@ begin;
   % 引数を持たない場合
   if(arglength(minTExpr_)=-1) then return minTExpr_;
 
-  head_:= part(minTExpr_, 0);
+  head_:= myHead(minTExpr_);
   debugWrite("head_: ", head_);
   ineqList_:={};
   eqList_:={};
