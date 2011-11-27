@@ -75,14 +75,17 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
   std::string::size_type prev = now;
   if(expr[now]>='0' && expr[now]<='9'){//正の数値の場合
     now = expr.find_first_of("],", now);
+    if(now == std::string::npos)now = expr.length();
     return node_sptr(new hydla::parse_tree::Number(expr.substr(prev,now-prev)));
   }
   if(expr[now]=='-'){ //負の数値の場合
     now = expr.find_first_of("],", now);
+    if(now == std::string::npos)now = expr.length();
     return node_sptr(new hydla::parse_tree::Negative(node_sptr(new hydla::parse_tree::Number(expr.substr(prev+1,now-prev-1)))));
   }
 
   now = expr.find_first_of("[],", prev);
+  if(now == std::string::npos)now = expr.length();
   string_map_t::iterator it = string_map_.find(expr.substr(prev,now-prev));
   if(it == string_map_.end()){
     if(expr.substr(prev,now-prev)=="t"){//時刻
@@ -98,18 +101,23 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
       return node_sptr(new hydla::parse_tree::E());
     }
     if(now-prev > 6 && expr.substr(prev, 6) == PacketSender::var_prefix){//変数名
-      std::string variable_name = expr.substr(prev + 6, now-(prev+6));
-      std::map<std::string, std::string>::iterator it = variable_parameter_map_.find(variable_name);
-      int end = now;
-      if(expr[now] == '['){
-        // [t] や [0]がついていれば読みとばす
-        now = expr.find_first_of("]", now);
-        now++;
+      std::string variable_name;
+	    if(now != std::string::npos){
+        variable_name = expr.substr(prev + 6, now-(prev+6));
+		    if(expr[now] == '['){
+          // [t] や [0]がついていれば読みとばす
+			    now = expr.find_first_of("]", now);
+			    now++;
+        }
+	    }else{
+        variable_name = expr.substr(prev + 6, std::string::npos);
       }
-      if(it != variable_parameter_map_.end()){
-        return node_sptr(new hydla::parse_tree::Parameter(it->second));
+      
+	    std::map<std::string, std::string>::iterator it = variable_parameter_map_.find(variable_name);
+	    if(it != variable_parameter_map_.end()){
+		    return node_sptr(new hydla::parse_tree::Parameter(it->second));
       }
-      return node_sptr(new hydla::parse_tree::Variable(expr.substr(prev + 6, end-(prev+6))));
+      return node_sptr(new hydla::parse_tree::Variable(variable_name));
     }
     
     //未対応ノード．ソルバがMathematicaで有る限り処理を継続できるようにする
