@@ -1,11 +1,12 @@
 //ellipse.hydla
 //bouncing particle in an ellipse
-//(x/a)^2+(y/b)^2=1 (a=4,b=3)
+//a,b:(x/a)^2+(y/b)^2=1
+//e  :coefficient of restitution
 
-INIT   <=> x=3/4 /\ y=0 /\ vx=2 /\ vy=1.
+INIT   <=> x=3 /\ y=0 /\ vx=2 /\ vy=1.
 RUN    <=> [](x'=vx /\ y'=vy /\ vx'=0 /\ vy'=0).
-BOUNCE <=> []((x-*x-)/(4*4)+(y-*y-)/(3*3)=1 =>
-                vx = vx- - ((x-/4)*vx- + (y-/3)*vy-)*(1+1)*(x-/4) /\
-                vy = vy- - ((x-/4)*vx- + (y-/3)*vy-)*(1+1)*(y-/3)
+BOUNCE(a,b,e) <=> []((x-*x-)/(a*a)+(y-*y-)/(b*b)=1 =>
+  vx = vx- - ((x-*b*b)*vx- + (y-*a*a)*vy-)*(1+e)*(x-*b*b)/((x-*b*b)^2 + (y-*a*a)^2) /\
+  vy = vy- - ((x-*b*b)*vx- + (y-*a*a)*vy-)*(1+e)*(y-*a*a)/((x-*b*b)^2 + (y-*a*a)^2)
 ).
-INIT, RUN<<BOUNCE.
+INIT, RUN<<BOUNCE(5,4,1).
