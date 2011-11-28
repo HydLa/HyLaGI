@@ -560,11 +560,24 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     disc_cause.push_back(node_sptr(new Not(opts_.assertion)));
   }
   
-  solver_->integrate(
+  switch(solver_->integrate(
     integrate_result,
     disc_cause,
     state->current_time,
-    time_t(node_sptr(new hydla::parse_tree::Number(opts_.max_time))));
+    time_t(node_sptr(new hydla::parse_tree::Number(opts_.max_time))))) 
+  {
+    case VCSR_TRUE:
+      break;
+    case VCSR_FALSE:
+    case VCSR_SOLVER_ERROR:
+      throw hydla::simulator::SimulateError("integrate error");
+      break;
+    default:
+      throw hydla::simulator::SimulateError("unknown result in integrate");
+      break;
+  }
+  
+  
 
   //to next pointphase
   for(int it=0;it<(int)integrate_result.states.size()&&(opts_.nd_mode||it==0);it++){

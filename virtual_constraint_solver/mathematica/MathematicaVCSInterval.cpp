@@ -173,8 +173,8 @@ VCSResult MathematicaVCSInterval::integrate(
 
 ////////////////// éÛêMèàóù
 
-//   PacketChecker pc(*ml_);
-//   pc.check();
+  // PacketChecker pc(*ml_);
+  // pc.check();
 
   MathematicaExpressionConverter mec;
 
@@ -195,6 +195,7 @@ VCSResult MathematicaVCSInterval::integrate(
   if(PacketErrorHandler::handle(ml_, ret_code)) {
     return VCSR_SOLVER_ERROR;
   }
+  
   HYDLA_LOGGER_VCS("---integrate calc result---");
   virtual_constraint_solver_t::IntegrateResult::NextPhaseState state;
 
