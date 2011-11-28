@@ -200,7 +200,7 @@ class InvalidDifferential : public ParseError {
 public:
   InvalidDifferential(const hydla::parse_tree::node_sptr& own, 
                           int line = -1) :
-    ParseError("Sorry, applying differential operator to expression is not supported on this solver", 
+    ParseError("Sorry, applying differential operator to expression is not supported", 
                  own, 
                  line)    
   {}
@@ -213,25 +213,13 @@ class InvalidPrevious : public ParseError {
 public:
   InvalidPrevious(const hydla::parse_tree::node_sptr& own, 
                           int line = -1) :
-    ParseError("Sorry, applying previous operator to expression is not supported on this solver", 
+    ParseError("Sorry, applying previous operator to expression is not supported", 
                  own, 
                  line)    
   {}
 };
 
 
-/**
- * 式に対してprevious_pointを適用した際に発生する例外クラス
- */
-class InvalidPreviousPoint : public ParseError {
-public:
-  InvalidPreviousPoint(const hydla::parse_tree::node_sptr& own, 
-                          int line = -1) :
-    ParseError("Sorry, applying previous_point operator to expression is not supported on this solver", 
-                 own, 
-                 line)    
-  {}
-};
 
 } //namespace parse_error
 } //namespace hydla

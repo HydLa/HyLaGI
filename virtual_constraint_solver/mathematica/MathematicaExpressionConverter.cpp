@@ -174,7 +174,7 @@ MathematicaExpressionConverter::node_sptr
   now++;// ']'‚Ì•ª
   switch(nt){
     default:
-    assert(0);
+      assert(0);
     return node_sptr(new hydla::parse_tree::Previous(tmp_node));
     
     case NODE_PREVIOUS:
@@ -228,7 +228,7 @@ MathematicaExpressionConverter::node_sptr
      return node_sptr(new hydla::parse_tree::Power(lhs, rhs));
 
      default:
-     assert(0);
+      assert(0);
      return node_sptr(new hydla::parse_tree::Power(lhs, rhs));
    }
   }

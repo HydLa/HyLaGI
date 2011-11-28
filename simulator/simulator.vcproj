@@ -221,6 +221,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimulateError.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Simulator.h"
 				>
 			</File>

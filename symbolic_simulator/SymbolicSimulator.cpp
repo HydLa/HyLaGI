@@ -29,6 +29,8 @@
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 #include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 
+#include "SimulateError.h"
+
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 
@@ -134,29 +136,33 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
 
 void SymbolicSimulator::simulate()
 {
-  while(!state_stack_.empty() && (is_safe_ || opts_.exclude_error)) {
-    phase_state_sptr state(pop_phase_state());
-    bool has_next = false;
-    if( opts_.max_step >= 0 && state->step > opts_.max_step)
-      continue;
-    state->module_set_container->reset(state->visited_module_sets);
-    do{
-      is_safe_ = true;
-      if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
-        state->module_set_container->mark_nodes();
-        has_next = true;
-        if(!opts_.nd_mode)break;
-      }
-      else{
-        state->module_set_container->mark_current_node();
-      }
-      state->positive_asks.clear();
-      
-      //無矛盾な解候補モジュール集合が存在しない場合
-      if(!state->module_set_container->go_next()){
-        state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
-      }
-    }while( state->module_set_container->go_next() && (is_safe_ || opts_.exclude_error));
+  try{
+    while(!state_stack_.empty() && (is_safe_ || opts_.exclude_error)) {
+      phase_state_sptr state(pop_phase_state());
+      bool has_next = false;
+      if( opts_.max_step >= 0 && state->step > opts_.max_step)
+        continue;
+      state->module_set_container->reset(state->visited_module_sets);
+      do{
+        is_safe_ = true;
+        if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
+          state->module_set_container->mark_nodes();
+          has_next = true;
+          if(!opts_.nd_mode)break;
+        }
+        else{
+          state->module_set_container->mark_current_node();
+        }
+        state->positive_asks.clear();
+        
+        //無矛盾な解候補モジュール集合が存在しない場合
+        if(!state->module_set_container->go_next()){
+          state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
+        }
+      }while( state->module_set_container->go_next() && (is_safe_ || opts_.exclude_error));
+    }
+  }catch(const SimulateError &se){
+    std::cout << "error occured while simulating:" << se.what() << std::endl;
   }
   if(opts_.output_format == fmtGUI){
     output_result_tree_GUI();
@@ -225,12 +231,10 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
         return CC_FALSE;
         break;
       case VCSR_SOLVER_ERROR:
-        // TODO: 例外とかなげたり、BPシミュレータに移行したり
-        assert(0);
+        throw hydla::simulator::SimulateError("check_consistency error");
         break;
       default:
-        // TODO: 例外とかなげたり、BPシミュレータに移行したり
-        assert(0);
+        throw hydla::simulator::SimulateError("unknown result in check_consistency");
         break;
     }
 
@@ -290,10 +294,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
               expanded = true;
               break;
             
+            case VCSR_SOLVER_ERROR:
+              throw hydla::simulator::SimulateError("check_entailment error");
+              break;
             default:
-            // TODO: 例外とかなげたり、BPシミュレータに移行したり
-            assert(0);
-            break;
+              throw hydla::simulator::SimulateError("unknown result in check_entailment");
+              break;
           }
           break;
         }
@@ -301,10 +307,13 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           tmp_constraints.pop_back();
           it++;
           break;
-        default:
-          // TODO: 例外とかなげたり、BPシミュレータに移行したり
-          assert(0);
-          break;
+
+          case VCSR_SOLVER_ERROR:
+            throw hydla::simulator::SimulateError("check_entailment error");
+            break;
+          default:
+            throw hydla::simulator::SimulateError("unknown result in check_entailment");
+            break;
       }
     }
   }while(expanded);
@@ -800,7 +809,7 @@ void SymbolicSimulator::output_result_tree_mathematica()
           if(now_node->parent != NULL){
             now_node = now_node->parent;
           }else{//親がいないということは根と葉が同じ、つまり「空になった」ということなので終了．
-            std::cout << "PlotRange -> {{0, " << prev_node_time << "}, {lb, ub}}";
+            std::cout << "PlotRange -> {{0, " << opts_.max_time << "}, {lb, ub}}";
             std::cout << "]" << std::endl; //Show
             return;
           }

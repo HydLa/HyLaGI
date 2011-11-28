@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+# Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "parser", "parser\parser.vcproj", "{C37DA84E-F258-44FC-A914-B19AE6C0FB2E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{21D7CEA2-6255-428C-85E3-268EFF5FE36E} = {21D7CEA2-6255-428C-85E3-268EFF5FE36E}
@@ -101,7 +101,6 @@ Global
 		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Debug|Win32.ActiveCfg = Debug|Win32
 		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Debug|Win32.Build.0 = Debug|Win32
 		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Release|Win32.ActiveCfg = Release|Win32
-		{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}.Release|Win32.Build.0 = Release|Win32
 		{985BE36E-C416-4E28-8974-70BAAD004FA9}.Debug|Win32.ActiveCfg = Debug|Win32
 		{985BE36E-C416-4E28-8974-70BAAD004FA9}.Debug|Win32.Build.0 = Debug|Win32
 		{985BE36E-C416-4E28-8974-70BAAD004FA9}.Release|Win32.ActiveCfg = Release|Win32
