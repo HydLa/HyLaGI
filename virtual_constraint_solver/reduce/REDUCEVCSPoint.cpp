@@ -164,13 +164,13 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
 
       // Prev•Ï”‘¤
       // •Ï”–¼
-      rss.put_var(boost::make_tuple(cm_it->first, i, true));
+      rss.put_var(boost::make_tuple(cm_it->first, i, true, false));
 
       cl_->send_string("=");
 
       // Now•Ï”‘¤
       // •Ï”–¼
-      rss.put_var(boost::make_tuple(cm_it->first, i, false));
+      rss.put_var(boost::make_tuple(cm_it->first, i, false, false));
 
       first_element = false;
     }

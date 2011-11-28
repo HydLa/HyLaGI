@@ -23,16 +23,14 @@ REDUCEStringSender::REDUCEStringSender() :
   cl_(NULL),
   differential_count_(0),
   in_prev_(false),
-  apply_not_(false),
-  init_var_(false)
+  apply_not_(false)
 {}
 
 REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
   cl_(&cl),
   differential_count_(0),
   in_prev_(false),
-  apply_not_(false),
-  init_var_(false)
+  apply_not_(false)
 {}
 
 REDUCEStringSender::~REDUCEStringSender(){}
@@ -180,10 +178,10 @@ void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryFactor> node)
   
 // 変数 FactorNode
 void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
-  var_info_t new_var =
-    boost::make_tuple(node->get_name(),
-                      differential_count_,
-                      in_prev_ && !ignore_prev_);
+  var_info_t new_var = boost::make_tuple(node->get_name(),
+                                         differential_count_,
+                                         in_prev_ && !ignore_prev_,
+                                         node->get_init_var());
 
   put_var(new_var);
 }
@@ -212,50 +210,50 @@ void REDUCEStringSender::put_var(const var_info_t var)
   std::string name(REDUCEStringSender::var_prefix + var.get<0>());
   int diff_count = var.get<1>();
   bool prev      = var.get<2>();
+  bool init_var  = var.get<3>();
 
   HYDLA_LOGGER_REST(
     "REDUCEStringSender::put_var: ",
     "name: ", name,
     "\tdiff_count: ", diff_count,
     "\tprev: ", prev,
-    "\tinit_var_: ", init_var_);
+    "\tinit_var: ", init_var);
 
 
   std::ostringstream var_str;
 
-  if(init_var_) var_str << "init";
-
-  if (diff_count > 0 && prev){
-    var_str << "prev(df("
-            << name
-            << ",t,"    
-            << diff_count
-            << "))";
-  }
-  else if (diff_count > 0){
-    if(init_var_) {
-      var_str << name
-              << "_"
+  if(init_var){
+    var_str << "init";
+    var_str << name;
+    if(diff_count > 0){
+      var_str << "_"
               << diff_count;
     }
-    else {
+    var_str << "lhs";
+  }else{
+    if (diff_count > 0 && prev){
+      var_str << "prev(df("
+              << name
+              << ",t,"    
+              << diff_count
+              << "))";
+    }
+    else if (diff_count > 0){
       var_str << "df("
               << name
               << ",t,"    
               << diff_count
               << ")";
     }
+    else if (prev) {
+      var_str << "prev("
+              << name
+              << ")";
+    }
+    else {
+      var_str << name;
+    }
   }
-  else if (prev) {
-    var_str << "prev("
-            << name
-            << ")";
-  }
-  else {
-    var_str << name;
-  }
-
-  if(init_var_) var_str << "lhs";
 
   cl_->send_string(var_str.str());
   HYDLA_LOGGER_REST("var_str: ", var_str.str());
@@ -283,13 +281,12 @@ void REDUCEStringSender::put_par(const std::string &name)
  * @param node putしたい式(ノード)
  */
 
-void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool init_var)
+void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev)
 {
   HYDLA_LOGGER_REST("*** Begin REDUCEStringSender::put_node ***");
   differential_count_ = 0;
   in_prev_ = false;
   ignore_prev_ = ignore_prev;
-  init_var_ = init_var;
   accept(node);
   HYDLA_LOGGER_REST("*** END REDUCEStringSender::put_node ***");
 }
@@ -297,13 +294,13 @@ void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool 
 /**
  * ある式のリストをputする
  */
-void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints, bool init_var)
+void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
 {
   HYDLA_LOGGER_REST("*** Begin REDUCEStringSender::put_nodes ***");
   cl_->send_string("{");
   for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
     if(it!=constraints.begin()) cl_->send_string(",");
-    put_node(*it, init_var);
+    put_node(*it);
   }
   cl_->send_string("}");
   HYDLA_LOGGER_REST("*** End REDUCEStringSender::put_nodes: ***");
@@ -322,10 +319,11 @@ void REDUCEStringSender::put_vars(bool ignore_prev)
   vars_const_iterator end = vars_end();
   for(; it!=end; ++it) {
     if(it!=vars_begin()) cl_->send_string(",");
-    put_var(boost::make_tuple(
-              it->get<0>(),
-              it->get<1>(),
-              it->get<2>() && !ignore_prev));
+    //    put_var(*it);
+    put_var(boost::make_tuple(it->get<0>(),
+                              it->get<1>(),
+                              it->get<2>() && !ignore_prev,
+                              it->get<3>()));
   }
   cl_->send_string("}");
 

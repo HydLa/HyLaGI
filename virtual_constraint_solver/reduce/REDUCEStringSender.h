@@ -2,15 +2,13 @@
 #define _INCLUDED_HYDLA_VCS_REDUCE_REDUCE_STRING_SENDER_H_
 
 #include <boost/shared_ptr.hpp>
-#include <string>
-#include <ostream>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+#include <boost/tuple/tuple_io.hpp>
 
+#include "TreeVisitor.h"
 #include "REDUCELink.h"
-
-// TODO:なんとかする
-#include "../mathematica/PacketSender.h"
-using namespace hydla::vcs::mathematica;
-
+#include "ParseTree.h"
 
 namespace hydla {
 namespace vcs {
@@ -29,12 +27,13 @@ public:
   // TODO:何とかする
   /**
    * 変数データ
-   * (変数名， 微分回数,  prev変数かどうか)
+   * (変数名， 微分回数,  prev変数かどうか,  初期値変数扱いするかどうか)
    */
-  typedef PacketSender::var_info_t          var_info_t;
-  typedef PacketSender::var_info_list_t     var_info_list_t;
-  typedef PacketSender::vars_const_iterator vars_const_iterator;
-  typedef PacketSender::node_sptr           node_sptr;
+  typedef boost::tuple<std::string, int, bool, bool> var_info_t;
+
+  typedef std::set<var_info_t>                       var_info_list_t;
+  typedef var_info_list_t::const_iterator            vars_const_iterator;
+  typedef hydla::parse_tree::node_sptr               node_sptr;
 
   // REDUCEに送る際に変数名につける接頭語 "usrvar"
   static const std::string var_prefix;
@@ -58,12 +57,12 @@ public:
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  void put_node(const node_sptr& node, bool ignore_prev = false, bool init_var = false);
+  void put_node(const node_sptr& node, bool ignore_prev = false);
 
   /**
    * リスト形式で送信する
    */
-  void put_nodes(const std::vector<node_sptr> &constraints, bool init_var = false);
+  void put_nodes(const std::vector<node_sptr> &constraints);
 
   /**
    * 変数の送信
@@ -182,9 +181,6 @@ protected:
 
   // notを適用するかどうか
   bool apply_not_;
-
-  // 変数ノードを通る際に、初期値を表す変数として扱うかどうか
-  bool init_var_;
 };
 
 } //namespace reduce

@@ -1089,11 +1089,16 @@ private:
  */ 
 class Variable : public FactorNode {
 public:
-  Variable()
+  Variable() :
+    init_var_(false)
   {}  
   
   Variable(const std::string& name) : 
-    name_(name)
+    name_(name), init_var_(false)
+  {}
+
+  Variable(const std::string& name, const bool& init_var) : 
+    name_(name), init_var_(init_var)
   {}
     
   virtual ~Variable(){}
@@ -1130,8 +1135,14 @@ public:
     return name_;
   }
 
+  bool get_init_var() const
+  {
+    return init_var_;
+  }
+
 private:
   std::string name_;
+  bool init_var_;
 };
 
 /**

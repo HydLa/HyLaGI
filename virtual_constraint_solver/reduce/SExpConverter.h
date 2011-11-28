@@ -72,7 +72,7 @@ class SExpConverter
   /**
    * （vairable）=（node）の形のノードを返す
    */
-  static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
+  static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
 
 /*
   //関係演算子の文字列表現を返す

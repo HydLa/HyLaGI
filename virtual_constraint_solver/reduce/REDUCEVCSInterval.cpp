@@ -49,14 +49,14 @@ void REDUCEVCSInterval::send_init_cons(REDUCEStringSender& rss, const continuity
         for(int j=0; j < i; j++){
           rhs = node_sptr(new Differential(rhs));
         }
-        constraints.push_back(SExpConverter::make_equal(variable_t(cm_it->first, i), rhs, false));
+        constraints.push_back(SExpConverter::make_equal(variable_t(cm_it->first, i), rhs, false, true));
       }
   }
 
   cl_->send_string("union(");
   rss.put_nodes(t_continuity_constraints);
   cl_->send_string(",");
-  rss.put_nodes(constraints, true);
+  rss.put_nodes(constraints);
   cl_->send_string(")");
 
 }
