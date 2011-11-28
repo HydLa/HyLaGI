@@ -295,7 +295,6 @@ convertCSToVM[] := Block[
       retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];*)
       retExprs = reducePrevVariable[retExprs];
       
-      
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
       retExprs = DeleteCases[Map[({renameVar[#[[1]]], 
                         getExprCode[#], 
@@ -654,6 +653,8 @@ getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
+  
+  Print["sol:", sol];
   
   paramCons = getParamCons[sol];
   sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]];

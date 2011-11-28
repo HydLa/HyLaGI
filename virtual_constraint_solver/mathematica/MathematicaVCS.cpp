@@ -302,7 +302,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
         HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
       }
     }
-    out_vm.set_variable(it->first, value);   
+    out_vm.set_variable(it->first, value);
   }
 }
 

@@ -769,6 +769,10 @@ void SymbolicSimulator::output_result_tree_mathematica()
           std::cout << ",";
         }
         variable_map_t::const_iterator it = vm.begin();
+        while(opts_.output_variables.find(it->first.get_string()) == opts_.output_variables.end()){
+          it++;
+          if(it == vm.end()) return;
+        }
         std::cout << "Plot[";
         std::cout << it->second;
         std::cout << ", {t, ";
@@ -782,11 +786,14 @@ void SymbolicSimulator::output_result_tree_mathematica()
       }
       if(now_node->children.size() == 0){//葉に到達
         std::cout << "}, "; //式のリストここまで
-        std::cout << "{";
-        parameter_map_t::const_iterator it = now_node->parameter_map.begin();
-        std::cout << "p" <<it->first.get_name() << ", " << it->second.get_lower_bound() << ", " << it->second.get_upper_bound() << ", step}";
-        // 定数の条件
-        
+        if(now_node->parameter_map.size() > 0){
+          // 定数の条件
+          std::cout << "{";
+          parameter_map_t::const_iterator it = now_node->parameter_map.begin();
+          std::cout << "p" <<it->first.get_name() << ", " << it->second.get_lower_bound() << ", " << it->second.get_upper_bound() << " - step, step}";
+        }else{
+          std::cout << "{1}";
+        }
         std::cout << "], "; //Table
         std::cout << std::endl;
         while(now_node->children.size() == 0){

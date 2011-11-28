@@ -117,7 +117,8 @@ VCSResult MathematicaVCSInterval::check_consistency_sub(const constraints_t& con
   }
   else if(ret_code==3){
     // 定数値によっては充足可能
-    result = VCSR_UNKNOWN;
+    result = VCSR_TRUE;
+    //result = VCSR_UNKNOWN;
   }
   else { 
     // 制約エラー
