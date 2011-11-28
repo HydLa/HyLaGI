@@ -136,9 +136,9 @@ void SymbolicSimulator::init_module_set_container(const parse_tree_sptr& parse_t
 
 void SymbolicSimulator::simulate()
 {
-  try{
-    while(!state_stack_.empty() && (is_safe_ || opts_.exclude_error)) {
-      phase_state_sptr state(pop_phase_state());
+  while(!state_stack_.empty() && (is_safe_ || opts_.exclude_error)) {
+    phase_state_sptr state(pop_phase_state());
+    try{
       bool has_next = false;
       if( opts_.max_step >= 0 && state->step > opts_.max_step)
         continue;
@@ -160,9 +160,9 @@ void SymbolicSimulator::simulate()
           state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
         }
       }while( state->module_set_container->go_next() && (is_safe_ || opts_.exclude_error));
+    }catch(const SimulateError &se){
+      std::cout << "error occured while simulating:" << se.what() << std::endl;
     }
-  }catch(const SimulateError &se){
-    std::cout << "error occured while simulating:" << se.what() << std::endl;
   }
   if(opts_.output_format == fmtGUI){
     output_result_tree_GUI();
