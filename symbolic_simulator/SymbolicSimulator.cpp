@@ -803,14 +803,11 @@ void SymbolicSimulator::output_result_tree_mathematica()
         std::cout << now_node->time;
         std::cout << "} ";
         prev_node_time = now_node->time.get_string();
-        if(now_node->children.size())
-          std::cout << "]"; //Plot
-        //式と時間を出力
+        if(now_node->cause_of_termination == StateResult::ASSERTION)
+          std::cout << ", PlotStyle -> Dashed";
+        std::cout << "]"; //Plot
       }
       if(now_node->children.size() == 0){//葉に到達
-        if(now_node->cause_of_termination == StateResult::ASSERTION)
-          std::cout << "PlotStyle -> {RGBColor[1, 0, 0]}";
-        std::cout << "]"; //Plot
         std::cout << "}, "; //式のリストここまで
         if(now_node->parameter_map.size() > 0){
           // 定数の条件
