@@ -201,14 +201,14 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryBinary> node){
 
 
 void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryNode> node){
-  (*output_stream_) << node->get_string() << "(";
+  (*output_stream_) << node->get_string() << "[";
   int i=0;
   while(node->arguments_.size()){
     accept(node->arguments_[i]);
     if(++i >= node->arguments_.size())break;
     (*output_stream_) << ",";
   }
-  (*output_stream_) << ")";
+  (*output_stream_) << "]";
 }
 
 // Ž©‘R‘Î”‚Ì’ê

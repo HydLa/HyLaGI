@@ -18,7 +18,7 @@ bool PacketErrorHandler::handle(MathLink* ml, int ret_code)
     "ret_code: ", ret_code);
 
   if(ret_code == 0) {
-    ml->MLGetNext(); 
+    //ml->MLGetNext();
     // TODO: エラーを取得し，表示する
     /*
      int error_size = ml->get_arg_count();
@@ -31,8 +31,7 @@ bool PacketErrorHandler::handle(MathLink* ml, int ret_code)
        std::cout << ml->MLGetNext() << "\n";      
        HYDLA_LOGGER_ERROR("err msg:", ml->get_symbol());
      }*/
-
-    ml->MLNextPacket();
+    //ml->MLNextPacket();
 
     return true;
   }

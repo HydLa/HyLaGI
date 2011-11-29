@@ -113,10 +113,13 @@ checkInf[candidates_, constraints_, pars_] := Block[
   If[Length[candidates] == 0,
     {2},
     ret = Map[LogicalExpand, candidates[[1]]];
+    
+
     (* tの最小値候補を調べるため，tの下限とt以外の変数についての制約と出現する変数のリストを抽出する． *)
     {underBounds, constraintsForC, listOfC, otherConstraints} = getValidExpression[ret, pars];
     otherConstraints = applyList[Reduce[And[And@@otherConstraints, constraints], Reals]];
     otherConstraints = Map[LogicalExpand, otherConstraints];
+    
 
     If[underBounds === {},
       (* 候補が存在しなければ導出不可能なので，次を試す *)
@@ -190,7 +193,7 @@ Quiet[
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
-          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && pexpr}, t, Reals],
+          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && pexpr}, t],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
           If[sol === False,
             {2},
@@ -293,6 +296,7 @@ convertCSToVM[] := Block[
       retExprs = Join[undeterminedExprs, Complement[retExprs, undeterminedExprs] ];
       
       retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];*)
+      
       retExprs = reducePrevVariable[retExprs];
       
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
@@ -394,14 +398,16 @@ Quiet[
     Block[
       {sol},
       debugPrint["@checkConsistencyReduce", "expr:", expr, "pexpr", pexpr, "vars", vars, "pars", pars, "all:", expr, pexpr, vars, pars];
-      sol = Reduce[expr&&pexpr, vars, Reals];
+      Quiet[
+        sol = Reduce[expr&&pexpr, vars], {Reduce::useq}
+      ];
       If[sol === False,
         {2},
         {1, sol}
         (*
         If[pars === {},
           {1, sol},
-          If[ Reduce[ForAll[pars, pexpr, Exists[vars, sol]], Reals] === False,
+          If[ Reduce[ForAll[pars, pexpr, Exists[vars, sol]]] === False,
             {3},
             {1, sol}
           ]
@@ -633,14 +639,24 @@ createIntegratedValue[variable_, integRule_] := (
 reducePrevVariable[{}, {r___}] := {r};
 reducePrevVariable[{h_, t___}, {r___}] :=
   Block[
-    {lhs, rhgs},
+    {lhs, rhs, cRule},
     If[hasPrevVariableAtLeft[h],
       lhs = Map[( # /. h[[1]] -> h[[2]] )&, {t}];
       rhs = Map[( # /. h[[1]] -> h[[2]] )&, {r}];
       reducePrevVariable[lhs, rhs],
-      reducePrevVariable[{t}, Append[{r}, h] ]
+      If[ !MemberQ[h, C[k_], Infinity],
+          reducePrevVariable[{t}, Append[{r}, h]],
+        If[ Head[h] === Element,
+          reducePrevVariable[{t}, {r}],
+          cRule = Rule@@Reduce[h, {C[1]}];
+          lhs = Map[( # /. cRule )&, {t}];
+          rhs = Map[( # /. cRule )&, {r}];
+          reducePrevVariable[lhs, rhs]
+        ]
+      ]
     ]
   ];
+
 reducePrevVariable[{h_, t___}] := reducePrevVariable[{h, t}, {}];
 
 (* パラメータ制約を得る *)
@@ -653,18 +669,26 @@ getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
 exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
-  
-  Print["sol:", sol];
-  
   paramCons = getParamCons[sol];
-  sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]];
+  sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars]];
   If[sol===False,
     overconstraint,
     If[sol===True,
       {{}, {}},
       (* 1つだけ採用 *)
       (* TODO: 複数解ある場合も考える *)
-      If[Head[sol]===Or, sol = First[sol]];
+      If[Head[sol]===Or, 
+        
+        (*
+        sol = List@@sol;
+        For[i=1, i<=Length[sol],
+          If[Reduce[sol[[i]] && And@@pexprs, vars] === False,
+            sol = Complement[sol, {sol[[i]]} ]
+          ];
+          i = i + 1
+        ];*)
+        sol = First[sol] 
+      ];
       sol = applyList[sol];
       
       {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
@@ -682,7 +706,6 @@ exDSolve[expr_, vars_] := Block[
               (* TODO: 複数解ある場合も考える *)
               sol = First[sol]
             ];
-
             (*improve by takeguchi*)
             sol = If[Length[NDExpr] == 0, {sol},
                  FullSimplify[ExpToTrig[Quiet[
@@ -701,7 +724,7 @@ exDSolve[expr_, vars_] := Block[
                   {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
             {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
              Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-             DSolve::bvnul, DSolve::dsmsm, Solve::incnst}
+             DSolve::bvnul, DSolve::dsmsm, Solve::incnst, Solve::ifun}
           ]
         ]
       ]
