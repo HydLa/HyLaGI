@@ -793,6 +793,8 @@ integrateCalc[expr_,
     tmpIntegSol = exDSolve[cons, returnVars][[1]];
     If[tmpIntegSol === underconstraint, Return[{0, "under_constraint"}] ];
     debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
+    tmpIntegSol = Map[(#[[1]] -> FullSimplify[#[[2]] ])&, tmpIntegSol];
+    debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
       
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
