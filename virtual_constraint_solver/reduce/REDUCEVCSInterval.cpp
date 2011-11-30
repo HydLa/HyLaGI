@@ -70,7 +70,7 @@ void REDUCEVCSInterval::send_constraint(const constraints_t& constraints)
 
 //////////////////// ‘—Mˆ—
 
-  // checkConsistencyInterval(tmpCons_, init_, vars_)‚ð“n‚µ‚½‚¢
+  // checkConsistencyInterval(tmpCons_, rcont_, vars_)‚ð“n‚µ‚½‚¢
 
   // §–ñ‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send tmpCons_ -----");
@@ -85,9 +85,9 @@ void REDUCEVCSInterval::send_constraint(const constraints_t& constraints)
   cl_->send_string("}$");
 
 
-  // ‰Šú’l§–ñinit_cons‚ð“n‚·
-  HYDLA_LOGGER_VCS("----- send init_ -----");  
-  cl_->send_string("init_:=");
+  // ‰E˜A‘±«§–ñrcont_‚ð“n‚·
+  HYDLA_LOGGER_VCS("----- send rcont_ -----");  
+  cl_->send_string("rcont_:=");
   send_init_cons(rss, continuity_map_);
   cl_->send_string("$");
 
@@ -106,7 +106,7 @@ VCSResult REDUCEVCSInterval::check_consistency(const constraints_t& constraints)
 {
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::check_consistency(tmp) ***");
   send_constraint(constraints);
-  cl_->send_string("symbolic redeval '(checkConsistencyInterval tmpCons_ init_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyInterval tmpCons_ rcont_ vars_);");
   VCSResult result = check_consistency_receive();
 
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::check_consistency(tmp) ***");
@@ -118,7 +118,7 @@ VCSResult REDUCEVCSInterval::check_consistency()
 {
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::check_consistency() ***");
   send_constraint(constraints_t());
-  cl_->send_string("symbolic redeval '(checkConsistencyInterval tmpCons_ init_ vars_);");
+  cl_->send_string("symbolic redeval '(checkConsistencyInterval tmpCons_ rcont_ vars_);");
   VCSResult result = check_consistency_receive();
 
   HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSInterval::check_consistency() ***");

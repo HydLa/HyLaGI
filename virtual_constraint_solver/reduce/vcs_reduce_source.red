@@ -387,7 +387,13 @@ begin;
     debugWrite("subAppliedLeft_:", subAppliedLeft_);
     subAppliedRight_:= exSub(patternList_, part(expr_, 2));
     debugWrite("subAppliedRight_:", subAppliedRight_);
-    subAppliedExpr_:= head_(subAppliedLeft_, subAppliedRight_);
+    % なぜかエラーが起きるようになった？？
+    % subAppliedExpr_:= head_(subAppliedLeft_, subAppliedRight_);
+    subAppliedExpr_:= if(head_=neq) then neq(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=geq) then geq(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=greaterp) then greaterp(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=leq) then leq(subAppliedLeft_, subAppliedRight_)
+                      else if(head_=lessp) then lessp(subAppliedLeft_, subAppliedRight_);
   >> else if((head_=and) or (head_=or)) then <<
     % 論理演算子の場合
     argCount_:= arglength(expr_);
@@ -607,8 +613,14 @@ begin;
   scalar flag_, ans_, tmp_;
   scalar exceptdfvars_, diffexpr_, LAPexpr_, solveexpr_, solvevars_, solveans_, ans_;
  
+  debugWrite("in exDSolve", " ");
+  debugWrite("expr_: ", expr_);
+  debugWrite("init_: ", init_);
+  debugWrite("vars_: ", vars_);
+
   exceptdfvars_:= removedf(vars_);
   tmp_:= for each x in exceptdfvars_ collect {x,mkid(lap,x)};
+  debugWrite("tmp_ before LaplaceLetUnit: ", tmp_);
   % ラプラス変換規則の作成
   map(LaplaceLetUnit, tmp_);
 
@@ -697,6 +709,19 @@ end;
 procedure getNoDifferentialVars(vars_)$
   union(for each x in vars_ join if(freeof(x, df)) then {x} else {})$
 
+procedure removePrev(var_)$
+  if(myHead(var_)=prev) then part(var_, 1) else var_$
+
+procedure removePrevVars(varsList_)$
+  select(freeof(~x, prev), varsList_)$
+
+procedure removePrevCons(consList_)$
+  select(freeof(~x, prev), consList_)$
+
+% 前提：initxlhs=prev(x)の形
+% TODO：なんとかする
+procedure getInitVars(rcont_)$
+  part(rcont_, 1)$
 
 % 20110705 overconstraint___無し
 ICI_SOLVER_ERROR___:= 0;
@@ -704,15 +729,22 @@ ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
 ICI_UNKNOWN___:= 3; % 不要？
 
-procedure checkConsistencyInterval(tmpCons_, init_, vars_)$
+procedure checkConsistencyInterval(tmpCons_, rconts_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_,
+         initCons_, initVars_,
          integTmp_, integTmpQE_, integTmpSol_, infList_, ans_;
   putLineFeed();
 
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("tmpCons_: ", tmpCons_);
+  debugWrite("rconts_: ", rconts_);
+  debugWrite("vars_: ", vars_);
+
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
   % TODO:なんとかしたいところ？
-  splitExprsResult_ := splitExprs(exprs_, vars_);
+  splitExprsResult_ := splitExprs(removePrevCons(constraintStore_), csVariables_);
   NDExprs_ := part(splitExprsResult_, 1);
   debugWrite("NDExprs_: ", NDExprs_);
   DExprs_ := part(splitExprsResult_, 2);
@@ -722,15 +754,20 @@ begin;
   otherExprs_:= part(splitExprsResult_, 4);
   debugWrite("otherExprs_: ", otherExprs_);
 
-%  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
-  tmpSol_:= exDSolve(DExprs_, init_, DExprVars_);
+  initCons_:= union(for each x in rconts_ join {exSub(constraintStore_, x)});
+  debugWrite("initCons_: ", initCons_);
+  initVars_:= map(getInitVars, rconts_);
+  debugWrite("initVars_: ", initVars_);
+
+  tmpSol_:= exDSolve(DExprs_, initCons_, union(DExprVars_, (vars_ \ initVars_)));
   debugWrite("tmpSol_: ", tmpSol_);
   
   if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   % NDExpr_を連立
-  tmpSol_:= solve(union(tmpSol_, NDExprs_), getNoDifferentialVars(vars_));
+  tmpSol_:= solve(union(tmpSol_, NDExprs_), 
+                  getNoDifferentialVars(union(csVariables_, vars_)));
   debugWrite("tmpSol_ after solve: ", tmpSol_);
 
   % tmpCons_がない場合は無矛盾と判定して良い
@@ -871,28 +908,41 @@ end;
 IC_SOLVER_ERROR___:= 0;
 IC_NORMAL_END___:= 1;
 
-procedure integrateCalc(cons_, init_, discCause_, vars_, maxTime_)$
+
+procedure integrateCalc(cons_, rconts_, discCause_, vars_, maxTime_)$
 begin;
-  scalar ndExpr_, tmpSol_, tmpDiscCause_, 
-         retCode_, tmpVarMap_, tmpMinT_, integAns_;
+  scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_,
+         tmpDiscCause_, retCode_, tmpVarMap_, tmpMinT_, integAns_;
   putLineFeed();
+
+  debugWrite("cons_: ", cons_);
+  debugWrite("rconts_: ", rconts_);
+  debugWrite("discCause_: ", discCause_);
+  debugWrite("vars_: ", vars_);
+  debugWrite("maxTime_: ", maxTime_);
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
   % TODO:なんとかしたいところ？
-  splitExprsResult_ := splitExprs(expr_, vars_);
-  NDExpr_ := part(splitExprsResult_, 1);
-  debugWrite("NDExpr_: ", NDExpr_);
-  DExpr_ := part(splitExprsResult_, 2);
-  debugWrite("DExpr_: ", DExpr_);
+  splitExprsResult_ := splitExprs(removePrevCons(constraintStore_), csVariables_);
+  NDExprs_ := part(splitExprsResult_, 1);
+  debugWrite("NDExprs_: ", NDExprs_);
+  DExprs_ := part(splitExprsResult_, 2);
+  debugWrite("DExprs_: ", DExprs_);
   DExprVars_ := part(splitExprsResult_, 3);
   debugWrite("DExprVars_: ", DExprVars_);
+  otherExprs_:= part(splitExprsResult_, 4);
+  debugWrite("otherExprs_: ", otherExprs_);
 
-%  tmpSol_:= exDSolve(DExpr_, init_, getNoDifferentialVars(DExprVars_));
-  tmpSol_:= exDSolve(DExpr_, init_, DExprVars_);
+  initCons_:= union(for each x in rconts_ join {exSub(constraintStore_, x)});
+  debugWrite("initCons_: ", initCons_);
+  initVars_:= map(getInitVars, rconts_);
+  debugWrite("initVars_: ", initVars_);
+
+  tmpSol_:= exDSolve(DExprs_, initCons_, union(DExprVars_, (vars_ \ initVars_)));
   debugWrite("tmpSol_: ", tmpSol_);
 
-  % NDExpr_を連立
-  tmpSol_:= solve(union(tmpSol_, NDExpr_), getNoDifferentialVars(vars_));
+  % NDExprs_を連立
+  tmpSol_:= solve(union(tmpSol_, NDExprs_), getNoDifferentialVars(vars_ \ initVars_));
   debugWrite("tmpSol_ after solve: ", tmpSol_);
 
   % TODO:Solver error処理
@@ -900,7 +950,7 @@ begin;
   tmpDiscCause_:= sub(tmpSol_, discCause_);
   debugWrite("tmpDiscCause_:", tmpDiscCause_);
 
-  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, vars_)); 
+  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (vars_ \ initVars_)))); 
   debugWrite("tmpVarMap_:", tmpVarMap_);
 
   tmpMinT_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_);
