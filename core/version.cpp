@@ -18,7 +18,7 @@ namespace hydla {
   }
   
   std::string Version::copyright() {
-    return "Copyright (C) 2008-2010 uedalab HydLa project";
+    return "Copyright (C) 2008-2011 uedalab HydLa project";
   }
   
   std::string Version::description() {

@@ -180,6 +180,7 @@ Quiet[
       {tStore, sol, integGuard, otherExpr, condition},
       debugPrint["expr:", expr, "vars:", vars, "pexpr", pexpr, "pars:", pars, "all", expr, vars, pexpr, pars];
       sol = exDSolve[expr, vars];
+      Print["sol:", sol, $MessageList];
       If[sol === overconstraint,
         {2},
         If[sol === underconstraint || sol[[1]] === {} ,
@@ -193,8 +194,10 @@ Quiet[
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
+      Print["sol:", sol, $MessageList];
           sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && pexpr}, t],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
+      Print["sol:", sol, $MessageList];
           If[sol === False,
             {2},
             (* リストのリストにする *)
@@ -481,6 +484,7 @@ applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
   
 hasPrevVariableAtLeft[expr_] := MemberQ[{expr[[1]]}, prev[x_, y_], Infinity];
+hasPrevVariableAtRight[expr_] := MemberQ[{expr[[2]]}, prev[x_, y_], Infinity];
 
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 *)
@@ -644,6 +648,7 @@ reducePrevVariable[{h_, t___}, {r___}] :=
       lhs = Map[( # /. h[[1]] -> h[[2]] )&, {t}];
       rhs = Map[( # /. h[[1]] -> h[[2]] )&, {r}];
       reducePrevVariable[lhs, rhs],
+      If[hasPrevVariableAtRight[h], Return[reducePrevVariable[Append[{t}, getInverseRelop[Head[h] ] [h[[2]], h[[1]] ] ], {r} ] ] ];
       If[ !MemberQ[h, C[k_], Infinity],
           reducePrevVariable[{t}, Append[{r}, h]],
         If[ Head[h] === Element,
@@ -670,7 +675,9 @@ exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
   paramCons = getParamCons[sol];
+      Print["sol:", sol, $MessageList];
   sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars]];
+      Print["sol:", sol, $MessageList];
   If[sol===False,
     overconstraint,
     If[sol===True,
@@ -712,6 +719,7 @@ exDSolve[expr_, vars_] := Block[
                      Solve[Join[Map[(Equal @@ #) &, sol], TrigToExp[NDExpr]], getNDVars[vars]],
                  {Solve::incnst, Solve::ifun, Solve::svars}]]]
             ];
+      Print["sol:", sol, $MessageList];
             
             If[sol =!= {},
               {sol[[1]], Join[otherExpr, paramCons]},

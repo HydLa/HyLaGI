@@ -32,7 +32,7 @@ bool PacketErrorHandler::handle(MathLink* ml, int ret_code)
        HYDLA_LOGGER_ERROR("err msg:", ml->get_symbol());
      }*/
     //ml->MLNextPacket();
-
+    ml->MLNewPacket();
     return true;
   }
 

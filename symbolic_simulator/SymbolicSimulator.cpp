@@ -143,7 +143,7 @@ void SymbolicSimulator::simulate()
       if( opts_.max_step >= 0 && state->step > opts_.max_step)
         continue;
       state->module_set_container->reset(state->visited_module_sets);
-      do{
+      while(state->module_set_container->go_next() && (is_safe_ || opts_.exclude_error)){
         is_safe_ = true;
         if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
           state->module_set_container->mark_nodes();
@@ -154,16 +154,16 @@ void SymbolicSimulator::simulate()
           state->module_set_container->mark_current_node();
         }
         state->positive_asks.clear();
-        
+      }
         //–³–µ‚‚È‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ª‘¶Ý‚µ‚È‚¢ê‡
-        if(!state->module_set_container->go_next()){
-          state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
-        }
-      }while( state->module_set_container->go_next() && (is_safe_ || opts_.exclude_error));
+      if(!has_next){
+        state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
+      }
     }catch(const SimulateError &se){
       std::cout << "error occured while simulating:" << se.what() << std::endl;
     }
   }
+  
   if(opts_.output_format == fmtGUI){
     output_result_tree_GUI();
   }else if(opts_.output_format == fmtMathematica){
