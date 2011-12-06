@@ -16,7 +16,7 @@ If[optUseDebugPrint,
 (* ルールのリストを受けて，tについてのルールを除いたものを返す関数 *)
 removeRuleForTime[ruleList_] := DeleteCases[ruleList, t -> _];
 
-getInverseRelop[relop_] := Switch[relop,
+getReverseRelop[relop_] := Switch[relop,
                                   Equal, Equal,
                                   Less, Greater,
                                   Greater, Less,
@@ -41,7 +41,7 @@ getValidExpression[expr_, pars_] := Block[
     tmpExpr = expr[[i]];
     (* まず，不等式は全部LessもしくはLessEqualにする． *)
     If[Head[tmpExpr] === Greater || Head[tmpExpr] === GreaterEqual,
-      tmpExpr = getInverseRelop[Head[tmpExpr] ] [tmpExpr[[2]], tmpExpr[[1]] ]
+      tmpExpr = getReverseRelop[Head[tmpExpr] ] [tmpExpr[[2]], tmpExpr[[1]] ]
     ];
     (* 右辺がtなら下限リストに追加．そうでないなら定数か，そうでないならCについての制約かをチェックする *)
     If[tmpExpr[[2]] === t,
@@ -180,7 +180,6 @@ Quiet[
       {tStore, sol, integGuard, otherExpr, condition},
       debugPrint["expr:", expr, "vars:", vars, "pexpr", pexpr, "pars:", pars, "all", expr, vars, pexpr, pars];
       sol = exDSolve[expr, vars];
-      Print["sol:", sol, $MessageList];
       If[sol === overconstraint,
         {2},
         If[sol === underconstraint || sol[[1]] === {} ,
@@ -194,10 +193,8 @@ Quiet[
           (* otherExprにtStoreを適用する *)
           otherExpr = otherExpr /. tStore;
           (* まず，t>0で条件を満たす可能性があるかを調べる *)
-      Print["sol:", sol, $MessageList];
           sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && pexpr}, t],
                         False, {Reduce::nsmet}], {Reduce::nsmet}]];
-      Print["sol:", sol, $MessageList];
           If[sol === False,
             {2},
             (* リストのリストにする *)
@@ -343,13 +340,13 @@ adjustExprs[andExprs_] :=
           If[hasVariable[#2[[2]]],
             (* true *)
             (* 逆になってるので、演算子を逆にして追加する *)
-            Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
+            Append[#1, getReverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
             (* false *)
             (* パラメータ制約の場合にここに入る *)
             If[isParameter[#2[[2]]],
               (* true *)
               (* 逆になってるので、演算子を逆にして追加する *)
-              Append[#1, getInverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
+              Append[#1, getReverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
               (* false *)
               Append[#1, #2]]],
           (* false *)
@@ -648,7 +645,7 @@ reducePrevVariable[{h_, t___}, {r___}] :=
       lhs = Map[( # /. h[[1]] -> h[[2]] )&, {t}];
       rhs = Map[( # /. h[[1]] -> h[[2]] )&, {r}];
       reducePrevVariable[lhs, rhs],
-      If[hasPrevVariableAtRight[h], Return[reducePrevVariable[Append[{t}, getInverseRelop[Head[h] ] [h[[2]], h[[1]] ] ], {r} ] ] ];
+      If[hasPrevVariableAtRight[h], Return[reducePrevVariable[Append[{t}, getReverseRelop[Head[h] ] [h[[2]], h[[1]] ] ], {r} ] ] ];
       If[ !MemberQ[h, C[k_], Infinity],
           reducePrevVariable[{t}, Append[{r}, h]],
         If[ Head[h] === Element,
@@ -675,9 +672,7 @@ exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
   paramCons = getParamCons[sol];
-      Print["sol:", sol, $MessageList];
-  sol = LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars]];
-      Print["sol:", sol, $MessageList];
+  sol = Quiet[LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars]], Reduce::useq];
   If[sol===False,
     overconstraint,
     If[sol===True,
@@ -719,7 +714,6 @@ exDSolve[expr_, vars_] := Block[
                      Solve[Join[Map[(Equal @@ #) &, sol], TrigToExp[NDExpr]], getNDVars[vars]],
                  {Solve::incnst, Solve::ifun, Solve::svars}]]]
             ];
-      Print["sol:", sol, $MessageList];
             
             If[sol =!= {},
               {sol[[1]], Join[otherExpr, paramCons]},

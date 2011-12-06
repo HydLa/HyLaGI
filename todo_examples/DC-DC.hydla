@@ -4,7 +4,7 @@
 
 TIMER <=> [](s'=0)&[](timer'=1).
 SWITCH <=> [](timer- =1 => timer = 0 & s = 1-s-).
-INIT <=> vc > 0 & vc < 2 & il = 0 & s = 0 & timer=0.
+INIT <=> vc > 0 & vc < 5 & il = 0 & s = 0 & timer=0.
 //STATE0 <=> [](il' = -il + 5 & vc'=-1/2*vc-).
 STATE1 <=> [](s- = 0 => il' = -il + 5 & vc'=-1/2*vc).
 STATE2 <=> [](s- = 1 => il' = -3/2*il - 1/2*vc + 5 & vc' = 1/2*il - 1/2*vc).
