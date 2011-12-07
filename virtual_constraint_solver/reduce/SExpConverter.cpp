@@ -9,6 +9,7 @@ namespace reduce {
 
 SExpConverter::string_map_t SExpConverter::string_map_;
 
+std::map<std::string, std::string> SExpConverter::variable_parameter_map_;
 
 SExpConverter::SExpConverter() 
 {}
@@ -47,17 +48,26 @@ SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(SExpParser
   return value;
 }
 
+void SExpConverter::add_parameter_name(std::string variable_name, std::string parameter_name){
+  variable_parameter_map_.insert(std::make_pair(variable_name, parameter_name));
+}
+
+
+void SExpConverter::clear_parameter_name(){
+  variable_parameter_map_.clear();
+}
+
 SExpConverter::node_sptr SExpConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var){
-    HYDLA_LOGGER_REST("*** Begin:SExpConverter::make_equal ***\n");
-    node_sptr new_node(new Variable(variable.get_name(), init_var));
-    for(int i=0;i<variable.get_derivative_count();i++){
-      new_node = node_sptr(new Differential(new_node));
-    }
-    if(prev){
-      new_node = node_sptr(new Previous(new_node));
-    }
-    HYDLA_LOGGER_REST("*** End:SExpConverter::make_equal ***\n");
-    return node_sptr(new Equal(new_node, node));
+  HYDLA_LOGGER_REST("*** Begin:SExpConverter::make_equal ***\n");
+  node_sptr new_node(new Variable(variable.get_name(), init_var));
+  for(int i=0;i<variable.get_derivative_count();i++){
+    new_node = node_sptr(new Differential(new_node));
+  }
+  if(prev){
+    new_node = node_sptr(new Previous(new_node));
+  }
+  HYDLA_LOGGER_REST("*** End:SExpConverter::make_equal ***\n");
+  return node_sptr(new Equal(new_node, node));
 }
 
 SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(SExpParser &sp, const_tree_iter_t iter){
@@ -91,7 +101,17 @@ SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(SExpParse
         if(value_str=="t"){//時刻
           return node_sptr(new hydla::parse_tree::SymbolicT());
         }
-        // TODO:パラメタや変数名やそれ以外のfactorへの対応
+        if(value_str=="pi"){ // 円周率
+          return node_sptr(new hydla::parse_tree::Pi());
+        }
+        if(value_str.at(0)=='p'){//定数名
+          return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
+        }
+        if(value_str=="e"){//自然対数の底
+          return node_sptr(new hydla::parse_tree::E());
+        }
+        
+        // TODO:変数名やそれ以外のfactorへの対応
         assert(0);
       }
 
@@ -200,6 +220,37 @@ SExpConverter::node_sptr SExpConverter::for_binary_node(
         return node_sptr(new hydla::parse_tree::Power(lhs, rhs));
     }
   }
+}
+
+SExpConverter::value_range_t::Relation SExpConverter::get_relation_from_code(const int &relop_code){
+  switch(relop_code){
+    case 0: // Equal
+      return value_range_t::EQUAL;
+      break;
+
+    case 1: // Less
+      return value_range_t::LESS;
+      break;
+
+    case 2: // Greater
+      return value_range_t::GREATER;
+      break;
+
+    case 3: // LessEqual
+      return value_range_t::LESS_EQUAL;
+      break;
+
+    case 4: // GreaterEqual
+      return value_range_t::GREATER_EQUAL;
+    default:
+      assert(0);
+      return value_range_t::GREATER_EQUAL;
+  }
+}
+
+void SExpConverter::set_parameter_on_value(SExpConverter::value_t &val,const std::string &par_name){
+  val.set(node_sptr(new hydla::parse_tree::Parameter(par_name)));
+  return;
 }
 
 } // namespace reduce

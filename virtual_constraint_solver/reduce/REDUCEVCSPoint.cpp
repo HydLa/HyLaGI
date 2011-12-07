@@ -59,9 +59,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
   cl_->skip_until_redeval();
 
 
-  // TODO:本来はexprCode付きの形式で返す関数を使うようにしたい
-  // cl_->send_string("symbolic redeval '(convertCSToVM);");
-  cl_->send_string("symbolic redeval '(returnCS);");
+  cl_->send_string("symbolic redeval '(convertCSToVM);");
 
 
   /////////////////// 受信処理                     
@@ -77,11 +75,15 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
 
   // TODO:以下のコードはor_size==1が前提
-  // TODO:不等式への対応(exprCodeを使う)
+  //  for(int or_it = 0; or_it < or_size; or_it++){
   {
     create_result_t::maps_t maps;
+    std::set<std::string> added_parameters;  //「今回追加された記号定数」の一覧
     variable_t symbolic_variable;
     value_t symbolic_value;
+    parameter_t tmp_param;
+    value_range_t tmp_range;
+    SExpConverter::clear_parameter_name();
     size_t and_cons_size = tree_root_ptr->children.size();
 
     for(size_t i=0; i<and_cons_size; i++){
@@ -91,9 +93,22 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       HYDLA_LOGGER_VCS("and_cons_string: ", and_cons_string);
 
 
-      // 変数側
+      // 変数名
       const_tree_iter_t var_ptr = and_ptr->children.begin();
       std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
+
+      // 関係演算子のコード
+      const_tree_iter_t relop_code_ptr = and_ptr->children.begin()+1;      
+      std::string relop_code_str = std::string(relop_code_ptr->value.begin(),relop_code_ptr->value.end());
+      std::stringstream relop_code_ss;
+      int relop_code;
+      relop_code_ss << relop_code_str;
+      relop_code_ss >> relop_code;
+      assert(relop_code>=0 && relop_code<=4);
+
+      // 値
+      const_tree_iter_t value_ptr = and_ptr->children.begin()+2;
+
 
       // prevの先頭にスペースが入ることがあるので除去する
       // TODO:S式パーサを修正してスペース入らないようにする
@@ -107,8 +122,8 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
       // 微分を含む変数
       if(var_derivative_count > 0){
-          var_name = std::string(var_ptr->children.begin()->value.begin(), 
-                                 var_ptr->children.begin()->value.end());
+        var_name = std::string(var_ptr->children.begin()->value.begin(), 
+                               var_ptr->children.begin()->value.end());
       }
       // 微分を含まない変数
       else{
@@ -120,6 +135,16 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       // TODO:S式パーサを修正してスペース入らないようにする
       if(var_name.at(0) == ' ') var_name.erase(0,1);
 
+      // 既存の記号定数の場合
+      if(var_name.find(REDUCEStringSender::var_prefix, 0) != 0){
+        tmp_param.name = var_name;
+        tmp_range = maps.parameter_map.get_variable(tmp_param);
+        value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
+        tmp_range.add(value_range_t::Element(tmp_value,SExpConverter::get_relation_from_code(relop_code)));
+        maps.parameter_map.set_variable(tmp_param, tmp_range);
+        continue;
+      }
+
       // "usrVar"を取り除く
       assert(var_name.find(REDUCEStringSender::var_prefix, 0) == 0);
       var_name.erase(0, REDUCEStringSender::var_prefix.length());
@@ -127,20 +152,49 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       symbolic_variable.name = var_name;
       symbolic_variable.derivative_count = var_derivative_count;
 
-      // 値側
-      const_tree_iter_t value_ptr = and_ptr->children.begin()+1;
-      SExpConverter sc;
-      symbolic_value = sc.convert_s_exp_to_symbolic_value(sp_, value_ptr);
-      symbolic_value.set_unique(true);
-      
+
+
+      // 関係演算子コードを元に、変数表の対応する部分に代入する
+      // TODO: Orの扱い
+      if(!relop_code){
+        //等号
+        symbolic_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
+        symbolic_value.set_unique(true);
+      }else{
+        //不等号．この変数の値の範囲を表現するための記号定数を作成
+        tmp_param.name = var_name;
+        value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
+
+        for(int i=0;i<var_derivative_count;i++){
+          //とりあえず微分回数分dをつける
+          tmp_param.name.append("d");
+        }
+        while(1){
+          if(added_parameters.find(tmp_param.name)!=added_parameters.end())break; //今回追加された記号定数に含まれるなら，同じ場所に入れる
+          value_range_t &value = maps.parameter_map.get_variable(tmp_param);
+          if(value.is_undefined()){
+            added_parameters.insert(tmp_param.name);
+            break;
+          }
+          //とりあえず重複回数分iをつける
+          tmp_param.name.append("i");
+        }
+        tmp_range = maps.parameter_map.get_variable(tmp_param);
+        SExpConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
+        symbolic_value.set_unique(false);
+        tmp_range.add(value_range_t::Element(tmp_value,SExpConverter::get_relation_from_code(relop_code)));
+        maps.parameter_map.set_variable(tmp_param, tmp_range);
+        SExpConverter::add_parameter_name(var_name, tmp_param.name);
+      }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }
-
-    HYDLA_LOGGER_VCS_SUMMARY(maps.variable_map);
-    HYDLA_LOGGER_VCS_SUMMARY(maps.parameter_map);
+    HYDLA_LOGGER_VCS_SUMMARY("variable_map: ", maps.variable_map);
+    HYDLA_LOGGER_VCS_SUMMARY("parameter_map: ", maps.parameter_map);
     create_result.result_maps.push_back(maps);
   }
+  SExpConverter::clear_parameter_name();
 
+  HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::create_maps ***\n");
   return true;
 }
 

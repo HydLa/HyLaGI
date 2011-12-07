@@ -67,14 +67,15 @@ class SExpConverter
 
   // S式とってvalueに変換する
   static value_t convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter);
-  static value_t convert_s_exp_str_to_symbolic_value(const std::string &expr, std::string::size_type &now);
+
+  static void add_parameter_name(std::string variable_name, std::string parameter_name);
+  static void clear_parameter_name();
 
   /**
    * （vairable）=（node）の形のノードを返す
    */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
 
-/*
   //関係演算子の文字列表現を返す
   static std::string get_relation_math_string(value_range_t::Relation rel);
   
@@ -83,11 +84,13 @@ class SExpConverter
   
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
-*/  
+
 
   private:
   //再帰で呼び出していく方
   static node_sptr convert_s_exp_to_symbolic_tree(SExpParser &sp, const_tree_iter_t iter);
+
+  static std::map<std::string, std::string> variable_parameter_map_;
 };
 
 } // namespace reduce
