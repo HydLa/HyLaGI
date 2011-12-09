@@ -77,8 +77,11 @@ class SExpConverter
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
 
   //ŠÖŒW‰‰Zq‚Ì•¶š—ñ•\Œ»‚ğ•Ô‚·
-  static std::string get_relation_math_string(value_range_t::Relation rel);
-  
+  static std::string get_relation_reduce_string(value_range_t::Relation rel);
+
+  //ŠÖŒW‰‰Zq‚Ìƒm[ƒh
+  static node_sptr get_relation_node(value_range_t::Relation rel, const node_sptr& lhs, const node_sptr& rhs);
+
   //”š‚É‘Î‰•t‚¯‚ç‚ê‚½ŠÖŒW‚ğ•Ô‚·
   static value_range_t::Relation get_relation_from_code(const int &relop_code);
   

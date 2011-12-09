@@ -138,8 +138,8 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
         for(;or_it != or_end; or_it++){
           value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
           for(; and_it != and_end; and_it++){
-            //            node_sptr rel = SExpConverter::get_relation_node(and_it->relation, node_sptr(new Parameter(it->first.get_name())), and_it->get_value().get_node());
-            //            constraints.push_back(rel);
+            node_sptr rel = SExpConverter::get_relation_node(and_it->relation, node_sptr(new Parameter(it->first.get_name())), and_it->get_value().get_node());
+            constraints.push_back(rel);
           }
         }
       }
