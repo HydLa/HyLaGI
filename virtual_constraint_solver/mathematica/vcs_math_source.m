@@ -531,6 +531,19 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
     ]
   );
   
+  
+  unifyCases[{}] := {};
+  (* 時刻と条件の組のリストを見て，時刻が重複しているものは結合する *)
+  unifyCases[{h_, t___}] := ( Block[
+      {select, result, next},
+      select = Select[{t}, (#[[1]] === h[[1]])&];
+      next = Complement[{t}, select];
+      select = Or@@Map[(#[[2]])&, select];
+      result = {h[[1]], Reduce[Or[h[[2]], select]]};
+      Append[unifyCases[next], result]
+    ]
+  );
+  
   (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
   compareMinTime[timeCond1_, timeCond2_] := ( Block[
       {
@@ -569,7 +582,8 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
       timeCaseList = {{maxT, And@@condition}};
       For[i = 1, i <= Length[guardList], i++,
         findResult = findMinTime[guardList[[i]], (And @@ condition), maxT];
-        timeCaseList = compareMinTimeList[timeCaseList, findResult]
+        timeCaseList = compareMinTimeList[timeCaseList, findResult];
+        timeCaseList = unifyCases[timeCaseList]
       ];
       timeCaseList
     ]
@@ -612,6 +626,9 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   
   (* 最小時刻と条件の組のリストを求める *)
   resultList = calculateMinTimeList[discCause, otherExpr, maxTime];
+  
+  
+  
 
   (* 整形して結果を返す *)
   resultList = Map[({#[[1]],LogicalExpand[#[[2]]]})&, resultList];
@@ -794,9 +811,7 @@ integrateCalc[expr_,
     paramCons = getParamCons[applyList[cons]];
     tmpIntegSol = exDSolve[cons, returnVars][[1]];
     If[tmpIntegSol === underconstraint, Return[{0, "under_constraint"}] ];
-    debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
     tmpIntegSol = Map[(#[[1]] -> FullSimplify[#[[2]] ])&, tmpIntegSol];
-    debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
       
     (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
     tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
