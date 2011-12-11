@@ -10,6 +10,6 @@ NORMAL <=> [](timer-<interval => break=0).
 
 RESET <=> [](timer- >= interval + fix => timer = 0). 
 
-//ASSERT(h >= 0).
+ASSERT(h >= 0).
 
 INIT, CONST, FLOAT, SINK, NORMAL, BREAK, TIMER << RESET.

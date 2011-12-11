@@ -579,9 +579,9 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   calculateMinTimeList[guardList_, condition_, maxT_] := (
     Block[
       {findResult, i},
-      timeCaseList = {{maxT, And@@condition}};
+      timeCaseList = {{maxT, condition}};
       For[i = 1, i <= Length[guardList], i++,
-        findResult = findMinTime[guardList[[i]], (And @@ condition), maxT];
+        findResult = findMinTime[guardList[[i]], (condition), maxT];
         timeCaseList = compareMinTimeList[timeCaseList, findResult];
         timeCaseList = unifyCases[timeCaseList]
       ];
@@ -627,7 +627,12 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   (* 最小時刻と条件の組のリストを求める *)
   resultList = calculateMinTimeList[discCause, otherExpr, maxTime];
   
+  (*
+  resultList = First[Quiet[Minimize[{t, (Or@@discCause || t == maxTime) && otherExpr && t>0}, {t}], 
+                         Minimize::wksol]];
+  If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, otherExpr], resultList = {{resultList, otherExpr}}];
   
+  Print["result", resultList];*)
   
 
   (* 整形して結果を返す *)
@@ -818,7 +823,7 @@ integrateCalc[expr_,
     debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
 
     tmpDiscCause = Map[(# /. tmpIntegSol) &, discCause];
-    paramCons = {Reduce[paramCons]};
+    paramCons = Reduce[paramCons];
     
     debugPrint["@Integrate nextpointphase arg:", {False, maxTime, tmpDiscCause, paramCons}];
     tmpMinT = calculateNextPointPhaseTime[False, maxTime, tmpDiscCause, paramCons];

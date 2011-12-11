@@ -262,8 +262,8 @@ VCSResult MathematicaVCSInterval::integrate(
       HYDLA_LOGGER_VCS("returned value: ", parameter_value_string);
       ml_->MLGetNext();
       tmp_range = state.parameter_map.get_variable(tmp_param);
-      tmp_range.add(value_range_t::Element(MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string),
-                                           MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+      value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string);
+      MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
       state.parameter_map.set_variable(tmp_param, tmp_range);
       prev_param.name = tmp_param.name;
     }

@@ -44,6 +44,29 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::convert_
   return value;
 }
 
+
+void MathematicaExpressionConverter::set_range(const value_t &val, value_range_t &range, const int& relop){
+  switch(relop){
+    case 0://Equal
+    range.set_lower_bound(val, true);
+    range.set_upper_bound(val, true);
+    break;
+    
+    case 1://Less
+    range.set_upper_bound(val, false);
+    break;
+    case 2://Greater
+    range.set_lower_bound(val, false);
+    break;
+    case 3://LessEqual
+    range.set_upper_bound(val, true);
+    break;
+    case 4://GreaterEqual
+    range.set_lower_bound(val, true);
+    break;
+  }
+}
+
 void MathematicaExpressionConverter::add_parameter_name(std::string variable_name, std::string parameter_name){
   variable_parameter_map_.insert(std::make_pair(variable_name, parameter_name));
 }
@@ -234,71 +257,6 @@ MathematicaExpressionConverter::node_sptr
   }
 }
 
-std::string MathematicaExpressionConverter::get_relation_math_string(value_range_t::Relation rel){
-  switch(rel){
-    case value_range_t::EQUAL:
-      return "Equal";
-    case value_range_t::NOT_EQUAL:
-      return "UnEqual";
-    case value_range_t::GREATER_EQUAL:
-      return "GreaterEqual";
-    case value_range_t::LESS_EQUAL:
-      return "LessEqual";
-    case value_range_t::GREATER:
-      return "Greater";
-    case value_range_t::LESS:
-      return "Less";
-    default:
-      assert(0);
-      return "";
-  }
-}
-
-MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::get_relation_node(value_range_t::Relation rel, const node_sptr& lhs, const node_sptr& rhs){
-  switch(rel){
-    case value_range_t::EQUAL:
-      return node_sptr(new Equal(lhs, rhs));
-    case value_range_t::NOT_EQUAL:
-      return node_sptr(new UnEqual(lhs, rhs));
-    case value_range_t::GREATER_EQUAL:
-      return node_sptr(new GreaterEqual(lhs, rhs));
-    case value_range_t::LESS_EQUAL:
-      return node_sptr(new LessEqual(lhs, rhs));
-    case value_range_t::GREATER:
-      return node_sptr(new Greater(lhs, rhs));
-    case value_range_t::LESS:
-      return node_sptr(new Less(lhs, rhs));
-    default:
-      assert(0);
-    return node_sptr();
-  }
-}
-
-MathematicaExpressionConverter::value_range_t::Relation MathematicaExpressionConverter::get_relation_from_code(const int &relop_code){
-  switch(relop_code){
-    case 0: // Equal
-      return value_range_t::EQUAL;
-      break;
-
-    case 1: // Less
-      return value_range_t::LESS;    
-      break;
-
-    case 2: // Greater
-      return value_range_t::GREATER;
-      break;
-
-    case 3: // LessEqual
-      return value_range_t::LESS_EQUAL;
-      break;
-
-    case 4: // GreaterEqual
-      return value_range_t::GREATER_EQUAL;
-    default:
-      assert(0);
-      return value_range_t::GREATER_EQUAL;
-  }
-}
 
 void MathematicaExpressionConverter::set_parameter_on_value(MathematicaExpressionConverter::value_t &val,const std::string &par_name){
   val.set(node_sptr(new hydla::parse_tree::Parameter(par_name)));

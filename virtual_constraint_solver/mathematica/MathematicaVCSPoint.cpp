@@ -101,7 +101,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
         tmp_param.name = variable_name;
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
-        tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+        MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
         maps.parameter_map.set_variable(tmp_param, tmp_range);
         continue;
       }
@@ -133,7 +133,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
         symbolic_value.set_unique(false);
-        tmp_range.add(value_range_t::Element(tmp_value,MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+        MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
         maps.parameter_map.set_variable(tmp_param, tmp_range);
         MathematicaExpressionConverter::add_parameter_name(variable_name, tmp_param.name);
       }

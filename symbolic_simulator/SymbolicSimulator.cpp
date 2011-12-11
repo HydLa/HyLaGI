@@ -471,94 +471,83 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     case CC_BRANCH:
     return true;
   }
-  // MaxModuleの導出
-  module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
-  HYDLA_LOGGER_DEBUG("#** interval_phase: ms: **\n",
-                     *ms,
-                     "\n#** interval_phase: max_module_set: ##\n",
-                     *max_module_set);
+  
+  constraints_t disc_cause;
+  
+  if(is_safe_){
+    // MaxModuleの導出
+    module_set_sptr max_module_set = (*msc_no_init_).get_max_module_set();
+    HYDLA_LOGGER_DEBUG("#** interval_phase: ms: **\n",
+                       *ms,
+                       "\n#** interval_phase: max_module_set: ##\n",
+                       *max_module_set);
 
 
-  // 採用していないモジュールのリスト導出
-  hydla::ch::ModuleSet::module_list_t diff_module_list(max_module_set->size() - ms->size());
+    // 採用していないモジュールのリスト導出
+    hydla::ch::ModuleSet::module_list_t diff_module_list(max_module_set->size() - ms->size());
 
-  std::set_difference(
-    max_module_set->begin(),
-    max_module_set->end(),
-    ms->begin(),
-    ms->end(),
-    diff_module_list.begin());
+    std::set_difference(
+      max_module_set->begin(),
+      max_module_set->end(),
+      ms->begin(),
+      ms->end(),
+      diff_module_list.begin());
 
 
-  // それぞれのモジュールをsingletonなモジュール集合とする
-  std::vector<module_set_sptr> diff_module_set_list;
+    // それぞれのモジュールをsingletonなモジュール集合とする
+    std::vector<module_set_sptr> diff_module_set_list;
 
-  hydla::ch::ModuleSet::module_list_const_iterator diff_it = diff_module_list.begin();
-  hydla::ch::ModuleSet::module_list_const_iterator diff_end = diff_module_list.end();
-  for(; diff_it!=diff_end; ++diff_it){
-    module_set_sptr diff_ms(new ModuleSet((*diff_it).first, (*diff_it).second));
-    diff_module_set_list.push_back(diff_ms);
+    hydla::ch::ModuleSet::module_list_const_iterator diff_it = diff_module_list.begin();
+    hydla::ch::ModuleSet::module_list_const_iterator diff_end = diff_module_list.end();
+    for(; diff_it!=diff_end; ++diff_it){
+      module_set_sptr diff_ms(new ModuleSet((*diff_it).first, (*diff_it).second));
+      diff_module_set_list.push_back(diff_ms);
+    }
+
+    assert(diff_module_list.size() == diff_module_set_list.size());
+
+
+    // diff_module_set_list内の各モジュール集合内にある条件なし制約をそれぞれ得る
+    not_adopted_tells_list_t not_adopted_tells_list;
+
+    std::vector<module_set_sptr>::const_iterator diff_ms_list_it = diff_module_set_list.begin();
+    std::vector<module_set_sptr>::const_iterator diff_ms_list_end = diff_module_set_list.end();
+    for(; diff_ms_list_it!=diff_ms_list_end; ++diff_ms_list_it){
+      TellCollector not_adopted_tells_collector(*diff_ms_list_it);
+      tells_t       not_adopted_tells;
+      not_adopted_tells_collector.collect_all_tells(&not_adopted_tells,
+                                                    &expanded_always, 
+                                                    &positive_asks);
+      not_adopted_tells_list.push_back(not_adopted_tells);
+    }
+
+    
+    //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
+    for(positive_asks_t::const_iterator it = positive_asks.begin(); it != positive_asks.end(); it++){
+      disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
+    }
+    //現在導出されていないガード条件を離散変化条件として追加
+    for(negative_asks_t::const_iterator it = negative_asks.begin(); it != negative_asks.end(); it++){
+      disc_cause.push_back((*it)->get_guard());
+    }
+
+    //現在採用されていない制約を離散変化条件として追加
+    for(not_adopted_tells_list_t::const_iterator it = not_adopted_tells_list.begin(); it != not_adopted_tells_list.end(); it++){
+      tells_t::const_iterator na_it = it -> begin();
+      tells_t::const_iterator na_end = it -> end();
+      for(; na_it != na_end; na_it++){
+        disc_cause.push_back((*na_it)->get_child());
+      }
+    }
+    //assertionの否定を追加
+    if(opts_.assertion){
+      disc_cause.push_back(node_sptr(new Not(opts_.assertion)));
+    }
   }
-
-  assert(diff_module_list.size() == diff_module_set_list.size());
-
-
-  // diff_module_set_list内の各モジュール集合内にある条件なし制約をそれぞれ得る
-  not_adopted_tells_list_t not_adopted_tells_list;
-
-  std::vector<module_set_sptr>::const_iterator diff_ms_list_it = diff_module_set_list.begin();
-  std::vector<module_set_sptr>::const_iterator diff_ms_list_end = diff_module_set_list.end();
-  for(; diff_ms_list_it!=diff_ms_list_end; ++diff_ms_list_it){
-    TellCollector not_adopted_tells_collector(*diff_ms_list_it);
-    tells_t       not_adopted_tells;
-    not_adopted_tells_collector.collect_all_tells(&not_adopted_tells,
-                                                  &expanded_always, 
-                                                  &positive_asks);
-    not_adopted_tells_list.push_back(not_adopted_tells);
-  }
-
+  
   // askの導出状態が変化するまで積分をおこなう
   SymbolicVirtualConstraintSolver::IntegrateResult integrate_result;
   HYDLA_LOGGER_MS("#** SymbolicSimulator::integrate: **\n");  
-  constraints_t disc_cause;
-  
-  //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
-  for(positive_asks_t::const_iterator it = positive_asks.begin(); it != positive_asks.end(); it++){
-    disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
-  }
-  //現在導出されていないガード条件を離散変化条件として追加
-  for(negative_asks_t::const_iterator it = negative_asks.begin(); it != negative_asks.end(); it++){
-    disc_cause.push_back((*it)->get_guard());
-  }
-  
-  /*
-  // モジュールの各制約をANDでつなげる場合
-  for(not_adopted_tells_list_t::const_iterator it = not_adopted_tells_list.begin(); it != not_adopted_tells_list.end(); it++){
-    node_sptr tmp_and_node;
-    tells_t::const_iterator na_it = it -> begin();
-    tells_t::const_iterator na_end = it -> end();
-    if(na_it != na_end ){
-      tmp_and_node = (*na_it)->get_child();
-      na_it++;
-      for(; na_it != na_end; na_it++){
-        tmp_and_node.reset(new LogicalAnd(tmp_and_node, (*na_it)->get_child() ) ); 
-      }
-    }
-    if(tmp_and_node)disc_cause.push_back(tmp_and_node);
-  }*/
-  
-  //現在採用されていない制約を離散変化条件として追加
-  for(not_adopted_tells_list_t::const_iterator it = not_adopted_tells_list.begin(); it != not_adopted_tells_list.end(); it++){
-    tells_t::const_iterator na_it = it -> begin();
-    tells_t::const_iterator na_end = it -> end();
-    for(; na_it != na_end; na_it++){
-      disc_cause.push_back((*na_it)->get_child());
-    }
-  }
-  //assertionの否定を追加
-  if(opts_.assertion){
-    disc_cause.push_back(node_sptr(new Not(opts_.assertion)));
-  }
   
   switch(solver_->integrate(
     integrate_result,
@@ -636,27 +625,6 @@ variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& 
 }
 
 
-
-std::string SymbolicSimulator::range_to_string(const value_range_t& val){
-  std::string tmp;
-  if(val.is_undefined()||val.is_unique())
-    return val.get_first_value().get_string();
-  value_range_t::or_const_iterator or_it = val.or_begin(), or_end  = val.or_end();
-  while(1){
-    value_range_t::and_const_iterator and_it = or_it->begin(), and_end  = or_it->end();
-    while(1){
-      tmp.append(and_it->get_symbol());
-      tmp.append(and_it->get_value().get_string());
-      if(++and_it==and_end)break;
-      tmp.append("&");
-    }
-    if(++or_it==or_end)break;
-    tmp.append("|");
-  }
-  return tmp;
-}
-
-
 void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
 {
   parameter_map_t::const_iterator it  = pm.begin();
@@ -665,7 +633,7 @@ void SymbolicSimulator::output_parameter_map(const parameter_map_t& pm)
     std::cout << "\n#---------parameter condition---------\n";
   }
   for(; it!=end; ++it) {
-    std::cout << "p" << it->first << "\t: " << range_to_string(it->second) << "\n";
+    std::cout << "p" << it->first << "\t: " << it->second << "\n";
   }
 }
 
@@ -813,7 +781,7 @@ void SymbolicSimulator::output_result_tree_mathematica()
           // 定数の条件
           std::cout << "{";
           parameter_map_t::const_iterator it = now_node->parameter_map.begin();
-          std::cout << "p" <<it->first.get_name() << ", " << it->second.get_lower_bound() << ", " << it->second.get_upper_bound() << " - step, step}";
+          std::cout << "p" <<it->first.get_name() << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << " - step, step}";
         }else{
           std::cout << "{1}";
         }

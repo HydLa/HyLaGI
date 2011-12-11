@@ -132,15 +132,19 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
     parameter_map_t::variable_list_t::const_iterator it = parameter_map.begin();
     parameter_map_t::variable_list_t::const_iterator end = parameter_map.end();
     for(; it!=end; ++it){
-      const value_range_t& value = it->second;
-      if(!value.is_undefined()) {
-        value_range_t::or_vector::const_iterator or_it = value.or_begin(), or_end = value.or_end();
-        for(;or_it != or_end; or_it++){
-          value_range_t::and_vector::const_iterator and_it = or_it->begin(), and_end = or_it->end();
-          for(; and_it != and_end; and_it++){
-            node_sptr rel = SExpConverter::get_relation_node(and_it->relation, node_sptr(new Parameter(it->first.get_name())), and_it->get_value().get_node());
-            constraints.push_back(rel);
-          }
+      const value_range_t&    value = it->second;
+      if(!value.get_lower_bound().value.is_undefined()){
+        if(value.get_lower_bound().include_bound){
+          constraints.push_back(node_sptr(new GreaterEqual(node_sptr(new Parameter(it->first.get_name())), value.get_lower_bound().value.get_node())));
+        }else{
+          constraints.push_back(node_sptr(new Greater(node_sptr(new Parameter(it->first.get_name())), value.get_lower_bound().value.get_node())));
+        }
+      }
+      if(!value.get_upper_bound().value.is_undefined()){
+        if(value.get_upper_bound().include_bound){
+          constraints.push_back(node_sptr(new LessEqual(node_sptr(new Parameter(it->first.get_name())), value.get_upper_bound().value.get_node())));
+        }else{
+          constraints.push_back(node_sptr(new Less(node_sptr(new Parameter(it->first.get_name())), value.get_upper_bound().value.get_node())));
         }
       }
     }

@@ -99,8 +99,6 @@ private:
     state_stack_.push(state);
   }
 
-  std::string range_to_string(const value_range_t& val);
-
   boost::scoped_ptr<solver_t> solver_;               //使用するソルバ
 
   bool is_safe_;

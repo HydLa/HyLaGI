@@ -222,49 +222,27 @@ SExpConverter::node_sptr SExpConverter::for_binary_node(
   }
 }
 
-SExpConverter::node_sptr SExpConverter::get_relation_node(value_range_t::Relation rel, const node_sptr& lhs, const node_sptr& rhs){
-  switch(rel){
-    case value_range_t::EQUAL:
-      return node_sptr(new Equal(lhs, rhs));
-    case value_range_t::NOT_EQUAL:
-      return node_sptr(new UnEqual(lhs, rhs));
-    case value_range_t::GREATER_EQUAL:
-      return node_sptr(new GreaterEqual(lhs, rhs));
-    case value_range_t::LESS_EQUAL:
-      return node_sptr(new LessEqual(lhs, rhs));
-    case value_range_t::GREATER:
-      return node_sptr(new Greater(lhs, rhs));
-    case value_range_t::LESS:
-      return node_sptr(new Less(lhs, rhs));
-    default:
-      assert(0);
-      return node_sptr();
-  }
-}
 
-SExpConverter::value_range_t::Relation SExpConverter::get_relation_from_code(const int &relop_code){
-  switch(relop_code){
-    case 0: // Equal
-      return value_range_t::EQUAL;
-      break;
 
-    case 1: // Less
-      return value_range_t::LESS;
-      break;
-
-    case 2: // Greater
-      return value_range_t::GREATER;
-      break;
-
-    case 3: // LessEqual
-      return value_range_t::LESS_EQUAL;
-      break;
-
-    case 4: // GreaterEqual
-      return value_range_t::GREATER_EQUAL;
-    default:
-      assert(0);
-      return value_range_t::GREATER_EQUAL;
+void SExpConverter::set_range(const value_t &val, value_range_t &range, const int& relop){
+  switch(relop){
+    case 0://Equal
+    range.set_lower_bound(val, true);
+    range.set_upper_bound(val, true);
+    break;
+    
+    case 1://Less
+    range.set_upper_bound(val, false);
+    break;
+    case 2://Greater
+    range.set_lower_bound(val, false);
+    break;
+    case 3://LessEqual
+    range.set_upper_bound(val, true);
+    break;
+    case 4://GreaterEqual
+    range.set_lower_bound(val, true);
+    break;
   }
 }
 

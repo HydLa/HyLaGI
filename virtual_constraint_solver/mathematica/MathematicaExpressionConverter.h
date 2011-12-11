@@ -66,17 +66,13 @@ class MathematicaExpressionConverter
    */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
 
-  //関係演算子の文字列表現を返す
-  static std::string get_relation_math_string(value_range_t::Relation rel);
-  
-  //関係演算子のノード
-  static node_sptr get_relation_node(value_range_t::Relation rel, const node_sptr& lhs, const node_sptr& rhs);
-  
-  //数字に対応付けられた関係を返す
-  static value_range_t::Relation get_relation_from_code(const int &relop_code);
   
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const std::string &par_name);
+  
+  
+  //valと関係演算子を元に、rangeを設定する
+  static void set_range(const value_t &val, value_range_t &range, const int& relop);
   
   
   private:

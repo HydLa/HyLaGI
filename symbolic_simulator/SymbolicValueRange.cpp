@@ -10,39 +10,20 @@ namespace hydla {
 namespace symbolic_simulator{
 
 
-const std::string SymbolicValueRange::relation_symbol_[RELATION_NUMBER] = {"", "!=", "<=", "<", ">=", ">"};
-
 SymbolicValueRange::SymbolicValueRange(){
 }
 
-SymbolicValueRange::Element::Element(const SymbolicValue& val, const Relation& rel){
-  value = val;
-  relation = rel;
-}
-
-SymbolicValueRange::Relation SymbolicValueRange::Element::get_relation() const{
-  return relation;
-}
-
-std::string SymbolicValueRange::Element::get_symbol() const{
-  return SymbolicValueRange::relation_symbol_[relation];
-}
-
-SymbolicValue SymbolicValueRange::Element::get_value() const{
-  return value;
-}
 
 bool SymbolicValueRange::is_undefined() const
 {
-  return value_range_.empty();
+  return (lower_.value.is_undefined() && upper_.value.is_undefined());
 }
 
 //定量的に一意に定まるかどうか．
-//複数の不等号から値が一意に決定する場合は考慮しない
+//上限と下限が文字列として同じなら、ということで。文字列表現はいくらでも考えられるはずなので不完全
 bool SymbolicValueRange::is_unique() const
 {
-  if(value_range_.empty()) return false;
-  return value_range_.front().size()==1&&value_range_.front().front().relation == EQUAL;
+  return (lower_.value.get_string() == upper_.value.get_string());
 }
 
 
@@ -55,107 +36,60 @@ std::ostream& SymbolicValueRange::dump(std::ostream& s) const
 
 std::string SymbolicValueRange::get_string() const
 {
-  //return str_;
-  if(value_range_.empty()||value_range_.front().empty())return "";
   std::string tmp_str;
-  std::vector< std::vector<Element> >::const_iterator out_it = value_range_.begin();
-  tmp_str.append(visit_all(*out_it++, "&&"));
-  for(;out_it != value_range_.end();out_it++){
-    tmp_str.append("||");
-    tmp_str.append(visit_all(*out_it, "&&"));
+  if(!lower_.value.is_undefined() || !upper_.value.is_undefined()){
+    if(lower_.include_bound){
+      tmp_str += "[";
+    }
+    else{
+      tmp_str += "(";
+    }
+    if(!lower_.value.is_undefined()){
+      tmp_str += lower_.value.get_string();
+    }else{
+      tmp_str += "-inf";
+    }
+    
+    tmp_str += ", ";
+    
+    if(!upper_.value.is_undefined()){
+      tmp_str += upper_.value.get_string();
+    }else{
+      tmp_str += "inf";
+    }
+    
+    if(upper_.include_bound){
+      tmp_str += "]";
+    }
+    else{
+      tmp_str += ")";
+    }
   }
   return tmp_str;
 }
 
-SymbolicValue SymbolicValueRange::get_first_value() const{
-  if(value_range_.empty()||value_range_.front().empty())return SymbolicValue();
-  return value_range_.front().front().value;
-}
 
-SymbolicValueRange::Relation SymbolicValueRange::get_first_relation() const{
-  if(value_range_.empty()||value_range_.front().empty())return EQUAL;
-  return value_range_.front().front().relation;
-}
-
-std::string SymbolicValueRange::get_first_symbol() const{
-  if(value_range_.empty()||value_range_.front().empty())return "?";
-  return relation_symbol_[value_range_.front().front().relation];
-}
-
-std::string SymbolicValueRange::get_lower_bound() const{
-  return lower_.get_string();
+const SymbolicValueRange::bound_t& SymbolicValueRange::get_lower_bound() const{
+  return lower_;
 }
 
 
-std::string SymbolicValueRange::get_upper_bound() const{
-  return upper_.get_string();
+const SymbolicValueRange::bound_t& SymbolicValueRange::get_upper_bound() const{
+  return upper_;
 }
 
-std::string SymbolicValueRange::visit_all(const std::vector<Element> &vec, const std::string &delimiter) const{
-  if(vec.empty()) return "";
-  std::string tmp;
-  std::vector<Element>::const_iterator it = vec.begin();
-  tmp.append(relation_symbol_[it->relation]);
-  tmp.append((it++)->value.get_string());
-  for(;it != vec.end();it++){
-    tmp.append(delimiter);
-    tmp.append(relation_symbol_[it->relation]);
-    tmp.append(it->value.get_string());
-  }
-  return tmp;
-}
 
-void SymbolicValueRange::set(const std::vector<std::vector<SymbolicValueRange::Element> > &vec)
+void SymbolicValueRange::set_upper_bound(const SymbolicValue& val, const bool& include)
 {
- value_range_ = vec;
-}
-
-void SymbolicValueRange::clear()
-{
- value_range_.clear();
-}
-
-void SymbolicValueRange::set(const Element &ele)
-{
- clear();
- add(ele);
+  upper_.value = val;
+  upper_.include_bound = include;
 }
 
 
-void SymbolicValueRange::add(const SymbolicValueRange::Element &ele)
+void SymbolicValueRange::set_lower_bound(const SymbolicValue& val, const bool& include)
 {
-  if(value_range_.size()==0){
-    and_vector tmp;
-    value_range_.push_back(tmp);
-  }
-  value_range_.back().push_back(ele);
-  switch(ele.get_relation()){
-    case EQUAL:
-    upper_ = lower_ = ele.value;
-    break;
-    case NOT_EQUAL:
-    break;
-    case LESS_EQUAL:
-    case LESS:
-    upper_  = ele.value;
-    break;
-    case GREATER_EQUAL:
-    case GREATER:
-    lower_  = ele.value;
-    break;
-  }
-}
-
-
-void SymbolicValueRange::add_vector(const and_vector &clause)
-{
- value_range_.push_back(clause);
-}
-
-bool operator<(const SymbolicValueRange& lhs, 
-               const SymbolicValueRange& rhs)
-{
-  return lhs.get_string() < rhs.get_string();
+  lower_.value = val;
+  lower_.include_bound = include;
 }
 
 

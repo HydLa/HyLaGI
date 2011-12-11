@@ -140,7 +140,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
         tmp_param.name = var_name;
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
-        tmp_range.add(value_range_t::Element(tmp_value,SExpConverter::get_relation_from_code(relop_code)));
+        SExpConverter::set_range(tmp_value, tmp_range, relop_code);
         maps.parameter_map.set_variable(tmp_param, tmp_range);
         continue;
       }
@@ -182,7 +182,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         SExpConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
         symbolic_value.set_unique(false);
-        tmp_range.add(value_range_t::Element(tmp_value,SExpConverter::get_relation_from_code(relop_code)));
+        SExpConverter::set_range(tmp_value, tmp_range, relop_code);
         maps.parameter_map.set_variable(tmp_param, tmp_range);
         SExpConverter::add_parameter_name(var_name, tmp_param.name);
       }
