@@ -49,6 +49,7 @@ int REDUCELink::skip_until_redeval(){
 //  std::cout << "Begin REDUCELink::skip_until_redeval" << std::endl;
   std::string line;
   while(getline(s_, line)){
+    HYDLA_LOGGER_DEBUG(line);
     if(line=="<redeval> end:") break;
   }
   return 0;
