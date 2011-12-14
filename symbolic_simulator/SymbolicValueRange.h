@@ -14,6 +14,7 @@ struct SymbolicValueRange {
   typedef struct Bound{
     bool include_bound;
     SymbolicValue value;
+    Bound():include_bound(false){}
   }bound_t;
   
 

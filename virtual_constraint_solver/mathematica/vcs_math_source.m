@@ -509,7 +509,7 @@ calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := B
   (* 条件を満たす最小の時刻と，その条件の組を求める *)
   (* maxTは理想的には無くても可能だが，あった方が事故がおきにくいのと高速化が見込めるかもしれないため追加 *)
   findMinTime[ask_, condition_, maxT_] := (
-    sol = Quiet[Check[Reduce[ask&&condition&&t>0&&maxT>=t, t, Reals],
+    sol = Quiet[Check[Reduce[ask&&condition&&t>0&&maxT>t, t, Reals],
                       errorSol,
                       {Reduce::nsmet}],
                 {Reduce::nsmet}];

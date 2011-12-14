@@ -1,4 +1,5 @@
-INIT <=> h=10&h'=0&break=0&timer=0&fix=3&interval>1&interval<3.
+//INIT <=>h=10&h'=0&break=0&timer=0&fix>2&fix<4&interval>1&interval<3.
+INIT <=> h=10&h'=0&break=0&timer=0&fix=3&interval>3&interval<10.
 CONST <=> [](fix' = 0 & interval' = 0).
 
 TIMER <=> [](timer' = 1).
