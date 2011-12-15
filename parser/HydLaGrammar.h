@@ -215,8 +215,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       unary = !(root_node_d[positive | negative]) >> power_term;
       
       //‚×‚«æ
-      power_term =  
-        limit % root_node_d[pow];
+      power_term = limit >> !(root_node_d[pow] >> power_term);
 
       //‹ÉŒÀ
       //factorˆÈŠO‚Ì•¨‚ªŒã‚ë‚É‚ ‚Á‚½‚çprev
