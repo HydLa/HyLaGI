@@ -113,6 +113,12 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   
 
   ml_.put_function("resetConstraint", 0);
+  
+/////////////////// óMˆ—
+  // PacketChecker pc(ml_);
+  // pc.check();
+///////////////////
+  
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
@@ -181,11 +187,6 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   }
   ps.put_pars();
   
-
-/////////////////// óMˆ—
-  //PacketChecker pc(ml_);
-  //pc.check();
-///////////////////
 
   HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
   

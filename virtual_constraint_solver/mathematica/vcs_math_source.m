@@ -286,17 +286,6 @@ convertCSToVM[] := Block[
       
       retExprs = adjustExprs[exprs];
       
-      (* 値が定まらないもののリストを作る *)
-      (*
-      rules = Fold[(If[Head[#2] === Equal, Append[#1, Rule@@#2], #1])&, {}, retExprs];
-      determinedVariables = Fold[(Union[#1, {#2[[1]]} ])&, {}, rules];
-      undeterminedVariables = Complement[Join[variables, parameters], determinedVariables];
-      
-      undeterminedExprs = Select[retExprs, (MemberQ[undeterminedVariables, #[[1]] ])& ];
-      retExprs = Join[undeterminedExprs, Complement[retExprs, undeterminedExprs] ];
-      
-      retExprs = Map[(applyEqualityRule[#, undeterminedVariables, rules])&, retExprs];*)
-      
       retExprs = reducePrevVariable[retExprs];
       
       (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
@@ -399,7 +388,7 @@ Quiet[
       {sol},
       debugPrint["@checkConsistencyReduce", "expr:", expr, "pexpr", pexpr, "vars", vars, "pars", pars, "all:", expr, pexpr, vars, pars];
       Quiet[
-        sol = Reduce[expr&&pexpr, vars], {Reduce::useq}
+        sol = Reduce[expr&&pexpr, vars, Reals], {Reduce::useq}
       ];
       If[sol === False,
         {2},

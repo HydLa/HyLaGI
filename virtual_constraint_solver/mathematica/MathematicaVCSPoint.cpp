@@ -141,6 +141,7 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
     }
     create_result.result_maps.push_back(maps);
   }
+  ml_->MLNewPacket();
   MathematicaExpressionConverter::clear_parameter_name();
   
   HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::create_variable_map ***\n");
