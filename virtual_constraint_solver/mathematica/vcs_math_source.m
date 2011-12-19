@@ -683,7 +683,7 @@ exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
   paramCons = getParamCons[sol];
-  sol = Quiet[LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars]], Reduce::useq];
+  sol = Quiet[LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]], Reduce::useq];
   If[sol===False,
     overconstraint,
     If[sol===True,
@@ -691,15 +691,6 @@ exDSolve[expr_, vars_] := Block[
       (* 1つだけ採用 *)
       (* TODO: 複数解ある場合も考える *)
       If[Head[sol]===Or, 
-        
-        (*
-        sol = List@@sol;
-        For[i=1, i<=Length[sol],
-          If[Reduce[sol[[i]] && And@@pexprs, vars] === False,
-            sol = Complement[sol, {sol[[i]]} ]
-          ];
-          i = i + 1
-        ];*)
         sol = First[sol] 
       ];
       sol = applyList[sol];
@@ -713,12 +704,14 @@ exDSolve[expr_, vars_] := Block[
           Check[
             If[Cases[DExpr, Except[True]] === {},
               (* ストアが空の場合はDSolveが解けないので空集合を返す *)
-              sol = {},
+              sol = {},           
               sol = DSolve[DExpr, DExprVars, t];
               (* 1つだけ採用 *)
               (* TODO: 複数解ある場合も考える *)
               sol = First[sol]
             ];
+            
+            
             (*improve by takeguchi*)
             sol = If[Length[NDExpr] == 0, {sol},
                  FullSimplify[ExpToTrig[Quiet[
