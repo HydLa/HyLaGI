@@ -46,10 +46,7 @@ void ProgramOptions::init_descriptions()
     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")
-
-    ("graphviz", 
-     "dump tree by dot language representation")
-
+     
     ("method,m", 
      value<std::string>()->default_value("s"), 
      "simulation method:\n"
