@@ -652,6 +652,7 @@ reducePrevVariable[{}, {r___}] := {r};
 reducePrevVariable[{h_, t___}, {r___}] :=
   Block[
     {lhs, rhs, cRule},
+    If[Head[h] =!= Equal, Return[reducePrevVariable[{t}, Append[{r}, h] ] ] ];
     If[hasPrevVariableAtLeft[h],
       lhs = Map[( # /. h[[1]] -> h[[2]] )&, {t}];
       rhs = Map[( # /. h[[1]] -> h[[2]] )&, {r}];
@@ -683,6 +684,7 @@ exDSolve[expr_, vars_] := Block[
 {sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
   sol = And@@reducePrevVariable[applyList[expr]];
   paramCons = getParamCons[sol];
+  
   sol = Quiet[LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]], Reduce::useq];
   If[sol===False,
     overconstraint,
