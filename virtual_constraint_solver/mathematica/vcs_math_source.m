@@ -705,14 +705,12 @@ exDSolve[expr_, vars_] := Block[
             If[Cases[DExpr, Except[True]] === {},
               (* ストアが空の場合はDSolveが解けないので空集合を返す *)
               sol = {},           
-              sol = DSolve[DExpr, DExprVars, t];
+	      sol = DSolve[DExpr, DExprVars, t];
               (* 1つだけ採用 *)
               (* TODO: 複数解ある場合も考える *)
               sol = First[sol]
             ];
             
-            
-            (*improve by takeguchi*)
             sol = If[Length[NDExpr] == 0, {sol},
                  FullSimplify[ExpToTrig[Quiet[
                      Solve[Join[Map[(Equal @@ #) &, sol], TrigToExp[NDExpr]], getNDVars[vars]],
