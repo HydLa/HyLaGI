@@ -333,36 +333,42 @@ VCSResult REDUCEVCSInterval::integrate(
     state.time = sc.convert_s_exp_to_symbolic_value(sp, next_time_ptr) + current_time;
     HYDLA_LOGGER_VCS_SUMMARY("next_phase_time: ", state.time);
 
-/*
+
     // 条件式
     const_tree_iter_t pp_condition_list_ptr = next_time_ptr+1;
     size_t pp_condition_size = pp_condition_list_ptr->children.size();
 
     state.parameter_map.clear();
     parameter_t tmp_param, prev_param;
-    for(int cond_it = 0; cond_it < condition_size; cond_it++){
+    for(int cond_it = 0; cond_it < pp_condition_size; cond_it++){
+      const_tree_iter_t param_condition_ptr = pp_condition_list_ptr->children.begin()+cond_it;
+
+      const_tree_iter_t param_name_ptr = param_condition_ptr->children.begin();
       value_range_t tmp_range;
-      ml_->MLGetNext(); ml_->MLGetNext();
-      tmp_param.name = ml_->get_string();
+      tmp_param.name = std::string(param_name_ptr->value.begin(), param_name_ptr->value.end());
       HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.name);
-      ml_->MLGetNext();
-      int relop_code = ml_->get_integer();
+
+      const_tree_iter_t relop_code_ptr = param_name_ptr+1;
+      std::string relop_code_str = std::string(relop_code_ptr->value.begin(), param_name_ptr->value.end());
+      std::stringstream relop_code_ss;
+      int relop_code;
+      relop_code_ss << relop_code_str;
+      relop_code_ss >> relop_code;
       HYDLA_LOGGER_VCS("returned relop_code: ", relop_code);
-      ml_->MLGetNext();
-      std::string parameter_value_string = ml_->get_string();
-      HYDLA_LOGGER_VCS("returned value: ", parameter_value_string);
-      ml_->MLGetNext();
+      assert(relop_code>=0 && relop_code<=4);
+
+      const_tree_iter_t param_value_ptr = relop_code_ptr+1;
+
       tmp_range = state.parameter_map.get_variable(tmp_param);
-      tmp_range.add(value_range_t::Element(MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string),
-                                           MathematicaExpressionConverter::get_relation_from_code(relop_code)));
+      value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp, param_value_ptr);
+      SExpConverter::set_range(tmp_value, tmp_range, relop_code);
       state.parameter_map.set_variable(tmp_param, tmp_range);
       prev_param.name = tmp_param.name;
     }
-*/
+
 
     // シミュレーション終了時刻に達したかどうか
-    const_tree_iter_t max_time_flag_ptr = next_time_ptr+1;
-    // const_tree_iter_t max_time_flag_ptr = next_time_ptr+2;
+    const_tree_iter_t max_time_flag_ptr = pp_condition_list_ptr+1;
     int max_time_flag;
     std::stringstream max_time_flag_ss;
     std::string max_time_flag_str = std::string(max_time_flag_ptr->value.begin(), max_time_flag_ptr->value.end());
