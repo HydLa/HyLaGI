@@ -10,7 +10,7 @@ namespace hydla {
   }
 
   std::string Version::version()  {
-    return "0.5.0";
+    return "0.6.0";
   }
   
   std::string Version::revision() {
@@ -23,7 +23,7 @@ namespace hydla {
   
   std::string Version::description() {
     std::stringstream s;
-    s << "hydla v" << version() << "\n\n" 
+    s << "Hyrose v" << version() << "\n\n" 
       //      << " (r" << revision() << ")\n\n" 
       << copyright();
 
