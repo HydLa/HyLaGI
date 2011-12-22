@@ -13,15 +13,12 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
-const std::string end_of_redeval_ = "<redeval> end:";
+const std::string REDUCELink::end_of_redeval_ = "<redeval> end:";
 
 REDUCELink::REDUCELink(){
   s_.connect("localhost", "1206");
-  if(!s_){
-        throw REDUCELinkError("fail to connect");
-// TODO        throw REDUCELinkError("fail to connect", s_.error().message());
-
-  }
+  // TODO        throw REDUCELinkError("fail to connect", s_.error().message());
+  if(!s_){ throw REDUCELinkError("fail to connect"); }
 }
 
 REDUCELink::~REDUCELink(){
@@ -34,12 +31,9 @@ REDUCELink::REDUCELink(const REDUCELink& old_cl){
 
 int REDUCELink::read_until_redeval(){
   std::string line;
-  while(getline(s_, line)){
+  while(getline_with_throw("read_until_redeval", line)){
     std::cout << line << std::endl;
     if(line==end_of_redeval_){
-      break;
-    }else if(line.substr(0,std::min((int)line.size(),3))=="***"){ // "***** 1 invalid as list"のようなエラー判定
-      throw REDUCELinkError("read_until_redeval", line);
       break;
     }
   }
@@ -48,12 +42,9 @@ int REDUCELink::read_until_redeval(){
 
 int REDUCELink::skip_until_redeval(){
   std::string line;
-  while(getline(s_, line)){
+  while(getline_with_throw("skip_until_redeval", line)){
     HYDLA_LOGGER_DEBUG(line);
     if(line==end_of_redeval_){
-      break;
-    }else if(line.substr(0,std::min((int)line.size(),3))=="***"){ // "***** 1 invalid as list"のようなエラー判定
-      throw REDUCELinkError("skip_until_redeval", line);
       break;
     }
   }
@@ -62,10 +53,10 @@ int REDUCELink::skip_until_redeval(){
 
 std::string REDUCELink::get_s_expr(){
   std::string line;
-  getline(s_, line);
+  getline_with_throw("get_s_expr", line);
   while(count_char(line, '(')!=count_char(line, ')')){
     std::string tmp;
-    getline(s_, tmp);
+    getline_with_throw("get_s_expr", tmp);
     // 次の行の文字列tmpを結合する前に、改行地点でスペースを入れておく
     line = line + " ";
     line = line + tmp;
@@ -74,16 +65,28 @@ std::string REDUCELink::get_s_expr(){
   return line;
 }
 
-int REDUCELink::send_string(std::string cmd){
+int REDUCELink::send_string(const std::string cmd){
   s_ << cmd;
+  if(!s_){ throw REDUCELinkError("fail to send_string"); }
 
   return 0;
+}
+std::istream& REDUCELink::getline_with_throw(const std::string& cmd, std::string& line){
+  std::istream& is = getline(s_, line);
+
+  if(!s_){
+    throw REDUCELinkError("fail to　" + cmd);
+  }else if(line.substr(0,std::min((int)line.size(),3))=="***"){ // "***** 1 invalid as list"のような論理エラー出力の判定
+    throw REDUCELinkError(cmd, line);
+  }
+
+  return is;
 }
 
 /*
  * string中に指定したcharの数を数える
  */
-int REDUCELink::count_char(std::string str, char query){
+int REDUCELink::count_char(const std::string str, const char query) const {
   int count = 0;
   std::string::size_type i = 0;
   while(true){

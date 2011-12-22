@@ -48,13 +48,16 @@ public:
   /*
    * stringの送信
    */
-  int send_string(std::string cmd);
-
-  int count_char(std::string str, char query);
+  int send_string(const std::string cmd);
+  /*
+   * getlineを行い、またこの時にs_.badや受信文字列がエラーを見つけた場合REDUCELinkErrorをthrowする
+   */
+  std::istream& getline_with_throw(const std::string& cmd, std::string& line);
+  int count_char(const std::string str, const char query) const;
 
 private:
   boost::asio::ip::tcp::iostream s_;
-  const std::string end_of_redeval_;
+  static const std::string end_of_redeval_;
 };
 
 } // namespace reduce
