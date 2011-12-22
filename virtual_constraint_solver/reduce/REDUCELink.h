@@ -1,6 +1,8 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
 
+#include <stdexcept>
+#include <sstream>
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/system/error_code.hpp>
@@ -11,6 +13,21 @@
 namespace hydla {
 namespace vcs {
 namespace reduce {
+
+class REDUCELinkError : public std::runtime_error {
+public:
+  REDUCELinkError(const std::string& msg, const std::string& line = "") :
+    std::runtime_error(init(msg,line))
+  {}
+
+private:
+  std::string init(const std::string& msg, const std::string& line ="")
+  {
+    std::stringstream s;
+    s << "reducelink error: " << msg << " : " << line;
+    return s.str();
+  }
+};
 
 /*
  * REDUCEサーバとの接続クライアント、サーバ接続とstringの送受信を行う

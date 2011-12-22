@@ -1,16 +1,12 @@
-//コンパイル: g++ -o main main.cpp -lboost_system-gcc43-mt-1_38
-///
 #include <iostream>
 #include <fstream>
+#include <string>
 
 #include "REDUCELink.h"
 #include "Logger.h"
 
-#include <string>
 #include <boost/asio.hpp>
 
-
-using namespace std;
 using namespace boost::asio;
 
 namespace hydla {
@@ -21,8 +17,7 @@ REDUCELink::REDUCELink(){
   s_.connect("localhost", "1206");
 
   if(!s_){
-	  HYDLA_LOGGER_ERROR("REDUCELink: fail to connect reduce server");
-	  assert(0);
+    throw REDUCELinkError("fail to connect reduce server");
   }
 }
 
@@ -39,8 +34,13 @@ int REDUCELink::read_until_redeval(){
 //  std::cout << "Begin REDUCELink::read_until_redeval" << std::endl;
   std::string line;
   while(getline(s_, line)){
-    cout << line << endl;
-    if(line=="<redeval> end:") break;
+    std::cout << line << std::endl;
+    if(line=="<redeval> end:"){
+      break;
+    }else if(line.substr(0,std::min((int)line.size(),3))=="***"){ // エラー判定
+      throw REDUCELinkError("read_until_redeval", line);
+      break;
+    }
   }
   return 0;
 }
@@ -50,7 +50,12 @@ int REDUCELink::skip_until_redeval(){
   std::string line;
   while(getline(s_, line)){
     HYDLA_LOGGER_DEBUG(line);
-    if(line=="<redeval> end:") break;
+    if(line=="<redeval> end:"){
+      break;
+    }else if(line.substr(0,std::min((int)line.size(),3))=="***"){ // エラー判定
+      throw REDUCELinkError("skip_until_redeval", line);
+      break;
+    }
   }
   return 0;
 }
@@ -70,7 +75,7 @@ std::string REDUCELink::get_s_expr(){
   return line;
 }
 
-int REDUCELink::send_string(string cmd){
+int REDUCELink::send_string(std::string cmd){
 //  std::cout << "Begin REDUCELink::send_string" << std::endl;
   s_ << cmd;
 
@@ -89,7 +94,7 @@ std::string REDUCELink::get_line(){
  */
 int REDUCELink::count_char(std::string str, char query){
   int count = 0;
-  string::size_type i = 0;
+  std::string::size_type i = 0;
   while(true){
     i = str.find(query, i);
     if(i==std::string::npos) break;
