@@ -7,13 +7,13 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/system/error_code.hpp>
 
-#define END_TST "endtst___"
-#define END_TST_OFFNAT "endtst___$"
-
 namespace hydla {
 namespace vcs {
 namespace reduce {
 
+/*
+ * REDUCEサーバとのsocket通信時のエラー、またはREDUCE側に論理的なエラーを表す
+ */
 class REDUCELinkError : public std::runtime_error {
 public:
   REDUCELinkError(const std::string& msg, const std::string& line = "") :
@@ -21,10 +21,11 @@ public:
   {}
 
 private:
-  std::string init(const std::string& msg, const std::string& line ="")
+  std::string init(const std::string& msg, const std::string& line)
   {
     std::stringstream s;
-    s << "reducelink error: " << msg << " : " << line;
+    std::string comma = (line=="") ? " : " : "";
+    s << "reducelink error: " << msg << comma << line;
     return s.str();
   }
 };
@@ -33,38 +34,27 @@ private:
  * REDUCEサーバとの接続クライアント、サーバ接続とstringの送受信を行う
  */
 class REDUCELink {
-
 public:
   REDUCELink();
-
   ~REDUCELink();
-
   REDUCELink(const REDUCELink& old_cl);
 
   int read_until_redeval();
   int skip_until_redeval();
-
-
+  /*
+   * 受信した複数行のstringを結合して破損のないLisp式を作る
+   */
   std::string get_s_expr();
-
   /*
    * stringの送信
    */
   int send_string(std::string cmd);
 
-  std::string get_line();
-
-
   int count_char(std::string str, char query);
-
-  /*
-   * ";end;"を終端行と判定して、ファイル入力のログを読み飛ばす
-   */
-  void skip_until_file_end();
 
 private:
   boost::asio::ip::tcp::iostream s_;
-
+  const std::string end_of_redeval_;
 };
 
 } // namespace reduce
