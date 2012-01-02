@@ -31,18 +31,26 @@ void ProgramOptions::init_descriptions()
     ("dump-parse-tree", 
      "output parse tree")
     ("dump-module-set-list", 
-     "output set of module sets which might be solution by list representation")
+     "output set of module sets\n"
+     "  which might be solution\n"
+     "  by list representation")
     ("dump-module-set-list-noinit", 
-     "output set of non initial module sets which might be solution by list representation")
+     "output set of non initial module sets\n"
+     "  which might be solution\n"
+     "  by list representation")
     ("dump-module-set-graph", 
-     "output set of module sets which might be solution by graph representation")
+     "output set of module sets\n"
+     "  which might be solution\n"
+     "  by graph representation")
     ("dump-module-set-graph-noinit", 
-     "output set of non initial module sets which might be solution by graph representation")
+     "output set of non initial module sets\n"
+     "  which might be solution\n"
+     "  by graph representation")
     ("dump-in-progress", 
-     "output result of each phase in progress")
+     "output each phase in progress")
      
-    ("fail-stop",  
-     "stop right away when any assertion fails")
+    ("fail-stop", 
+     "stop all when any assertion fails")
     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")
@@ -66,7 +74,11 @@ void ProgramOptions::init_descriptions()
     
     ("output-format,f", 
      value<std::string>()->default_value("t"), 
-     "output format:\n  t - time function\n  n - numeric\n  i - numeric interval\n  g - for GUI m - for Mathematica Plot")
+     "output format:\n"
+     "  t - time function\n"
+     "  n - numeric\n  i - numeric interval\n"
+     "  g - for GUI\n"
+     "  m - for Mathematica Plot")
     
     ("output-interval", 
      value<std::string>()->default_value("1/10"), 
@@ -86,18 +98,20 @@ void ProgramOptions::init_descriptions()
      
     ("step", 
      value<int>()->default_value(-1), 
-     "simulation steps. negative value: infinity")
+     "simulation steps\n"
+     "  positive value: steps\n"
+     "  negative value: infinity")
     
     ("interlanguage,i", 
      "show intermediate language")
 
     ("approx,a", 
      value<int>()->default_value(-1), 
-     "approximate mode:\n negative value: no approx\n positive value: presicion")
+     "approximate mode:\n  negative value: no approx\n  positive value: presicion")
 
     ("mathlink", 
-     value<std::string>()->default_value("-linkmode launch -linkname 'math -mathlink'"), 
-     "mathlink option")
+     value<std::string>()->default_value("math"), 
+     "name of mathematica command")
     ;
 
   options_description hidden_desc("Hidden options");
