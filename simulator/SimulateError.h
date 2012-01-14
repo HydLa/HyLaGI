@@ -6,15 +6,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <boost/lexical_cast.hpp>
-
 namespace hydla {
 namespace simulator {
 
 class SimulateError : public std::runtime_error {
 public:
   SimulateError(const std::string& msg) : 
-    std::runtime_error(msg)
+    std::runtime_error("error occured while simulating: " + msg)
   {}
 };
     

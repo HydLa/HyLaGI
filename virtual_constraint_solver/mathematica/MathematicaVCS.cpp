@@ -137,17 +137,9 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
         constraints.push_back(MathematicaExpressionConverter::make_equal(it->first, it->second.get_node(), true));
       }else if(mode_ == hydla::symbolic_simulator::ContinuousMode){
         // 値がないなら何かしらの定数を作って送信．
-        std::string name;
-        name = it->first.name;
-        for(int i=0;i<it->first.derivative_count;i++){
-          //とりあえず微分回数分dをつける
-          name.append("d");
-        }
-        while(parameter_map.has_variable(parameter_t(name))){
-          //とりあえず重複回数分iをつける
-          name.append("i");
-        }
-        constraints.push_back(MathematicaExpressionConverter::make_equal(it->first, node_sptr(new Parameter(name)), true));
+        parameter_t::increment_id(it->first);
+        parameter_t param(it->first);
+        constraints.push_back(MathematicaExpressionConverter::make_equal(it->first, node_sptr(new Parameter(param.get_name())), true));
       }
     }
     HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
@@ -241,6 +233,11 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
 }
 
 
+VCSResult MathematicaVCS::check_entailment(const node_sptr &node)
+{
+  return vcs_->check_entailment(node);
+}
+
 VCSResult MathematicaVCS::check_consistency()
 {
   return vcs_->check_consistency();
@@ -311,6 +308,22 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
   }
 }
 
+
+std::string MathematicaVCS::get_constraint_store(){
+  std::string ret;
+  
+  // 並列モード
+  ml_.MLPutFunction("printConstraintStore", 0);
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(TEXTPKT);
+  ret = ml_.get_string();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+  return ret;
+}
+
+
+
 //丸めを行う関数 get_real_val()で使う
 std::string upward(std::string str){
   if(str.at(str.length()-1) == '.'){
@@ -326,7 +339,7 @@ std::string upward(std::string str){
 }
 
 //value_tを指定された精度で数値に変換する
-  std::string MathematicaVCS::get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){
+std::string MathematicaVCS::get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){
   std::string ret;
   PacketSender ps(ml_);
 

@@ -49,9 +49,9 @@ public:
   typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
   typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
   typedef hydla::simulator::tells_t                          tells_t;
+  typedef hydla::parse_tree::node_sptr                        node_sptr;
   typedef hydla::simulator::constraints_t                    constraints_t;
 
-  typedef hydla::simulator::appended_asks_t                  appended_asks_t;
   typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
@@ -127,9 +127,6 @@ public:
    */
   virtual void add_constraint(const constraints_t& constraints){assert(0); return;}
   
-  
-  virtual VCSResult add_constraint(const tells_t& tells, const appended_asks_t& appended_asks){assert(0); return VCSR_FALSE;}
-  
   /**
    * 制約ストアが無矛盾かを判定する．
    * 引数で制約を渡された場合は一時的に制約ストアに追加する．
@@ -146,7 +143,7 @@ public:
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
-  virtual VCSResult check_entailment(const ask_node_sptr& negative_ask, const appended_asks_t& appended_asks){return VCSR_SOLVER_ERROR;}
+  virtual VCSResult check_entailment(const node_sptr &node){return VCSR_SOLVER_ERROR;}
 
   /**
    * askの導出状態が変化するまで積分をおこなう
@@ -157,22 +154,13 @@ public:
     const time_t& current_time,
     const time_t& max_time){assert(0);return VCSR_FALSE;}
     
-    
-  /**
-   * askの導出状態が変化するまで積分をおこなう
-   */
-  virtual VCSResult integrate(
-    integrate_result_t& integrate_result,
-    const positive_asks_t& positive_asks,
-    const negative_asks_t& negative_asks,
-    const time_t& current_time,
-    const time_t& max_time,
-    const not_adopted_tells_list_t& not_adopted_tells_list,
-    const appended_asks_t& appended_asks)
-    {assert(0); return VCSR_SOLVER_ERROR;}
 
   //SymbolicValueを指定された精度で数値に変換する
   virtual std::string get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){return "get_real_val is unavailable";}
+  
+  // 現在の制約ストアを文字列で取得する
+  virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}
+  
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time){assert(0);}
   //SymbolicTimeを比較する

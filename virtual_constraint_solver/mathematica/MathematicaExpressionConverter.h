@@ -58,8 +58,8 @@ class MathematicaExpressionConverter
   //文字列とってvalueに変換する
   static value_t convert_math_string_to_symbolic_value(const std::string &expr);
   
-  static void add_parameter_name(std::string variable_name, std::string parameter_name);
-  static void clear_parameter_name();
+  static void add_parameter(variable_t &variable, parameter_t &parameter);
+  static void clear_parameter_map();
 
   /**
    * （vairable）=（node）の形のノードを返す
@@ -68,7 +68,7 @@ class MathematicaExpressionConverter
 
   
   //値を記号定数を用いた表現にする
-  static void set_parameter_on_value(value_t &val, const std::string &par_name);
+  static void set_parameter_on_value(value_t &val, const parameter_t &par);
   
   
   //valと関係演算子を元に、rangeを設定する
@@ -85,7 +85,7 @@ class MathematicaExpressionConverter
   //再帰で呼び出していく方
   static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
   
-  static std::map<std::string, std::string> variable_parameter_map_;
+  static std::map<variable_t, parameter_t> variable_parameter_map_;
 };
 
 } // namespace mathematica

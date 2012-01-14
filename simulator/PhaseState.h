@@ -28,7 +28,6 @@ struct PhaseState {
   variable_map_t            variable_map;
   expanded_always_id_t      expanded_always_id;
   positive_asks_t           positive_asks;
-  appended_asks_t           appended_asks;
   changed_asks_t            changed_asks;
   module_set_container_sptr module_set_container;
   std::set<module_set_sptr> visited_module_sets;

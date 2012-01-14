@@ -11,10 +11,12 @@
 #include "Logger.h"
 #include "PacketChecker.h"
 #include "MathematicaExpressionConverter.h"
+#include "SolveError.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
 using namespace hydla::parser;
+
 
 namespace hydla {
 namespace vcs {
@@ -62,15 +64,14 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
   ml_->MLGetNext();
   for(int or_it = 0; or_it < or_size; or_it++){
     create_result_t::maps_t maps;
-    std::set<std::string> added_parameters;  //「今回追加された記号定数」の一覧
+    std::set<variable_t> p_added_variables;  //「今回記号定数を追加された変数」の一覧
     variable_t symbolic_variable;
     value_t symbolic_value;
-    parameter_t tmp_param;
     ml_->MLGetNext();
     int and_size = ml_->get_arg_count();
     HYDLA_LOGGER_VCS("and_size: ", and_size);
     ml_->MLGetNext(); // Listという関数名
-    MathematicaExpressionConverter::clear_parameter_name();
+    MathematicaExpressionConverter::clear_parameter_map();
     for(int i = 0; i < and_size; i++)
     {
       value_range_t tmp_range;
@@ -95,10 +96,9 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
       
       symbolic_variable.name = variable_name;
       symbolic_variable.derivative_count = variable_derivative_count;
-      
 
       if(prev==-1){//既存の記号定数の場合
-        tmp_param.name = variable_name;
+        parameter_t tmp_param(parameter_t::get_variable(symbolic_variable.name));
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
         MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
@@ -106,43 +106,33 @@ bool MathematicaVCSPoint::create_maps(create_result_t& create_result)
         continue;
       }
       // 関係演算子コードを元に、変数表の対応する部分に代入する
-      // TODO: Orの扱い
       else if(!relop_code){
         //等号
         symbolic_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
         symbolic_value.set_unique(true);
       }else{
         //不等号．この変数の値の範囲を表現するための記号定数を作成
-        tmp_param.name = variable_name;
         value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(value_str);
-
-        for(int i=0;i<variable_derivative_count;i++){
-          //とりあえず微分回数分dをつける
-          tmp_param.name.append("d");
+        if(p_added_variables.find(symbolic_variable) == p_added_variables.end()){
+          //今回追加された記号定数に含まれない場合のみ，新規作成
+          parameter_t::increment_id(symbolic_variable);
+          p_added_variables.insert(symbolic_variable);
         }
-        while(1){
-          if(added_parameters.find(tmp_param.name)!=added_parameters.end())break; //今回追加された記号定数に含まれるなら，同じ場所に入れる
-          value_range_t &value = maps.parameter_map.get_variable(tmp_param);
-          if(value.is_undefined()){
-            added_parameters.insert(tmp_param.name);
-            break;
-          }
-          //とりあえず重複回数分iをつける
-          tmp_param.name.append("i");
-        }
+        parameter_t tmp_param(symbolic_variable);
         tmp_range = maps.parameter_map.get_variable(tmp_param);
-        MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
-        symbolic_value.set_unique(false);
         MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
+        MathematicaExpressionConverter::add_parameter(symbolic_variable, tmp_param);
         maps.parameter_map.set_variable(tmp_param, tmp_range);
-        MathematicaExpressionConverter::add_parameter_name(variable_name, tmp_param.name);
+        symbolic_value.set_unique(false);
+        MathematicaExpressionConverter::set_parameter_on_value(symbolic_value, tmp_param);
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }
     create_result.result_maps.push_back(maps);
+
   }
   ml_->MLNewPacket();
-  MathematicaExpressionConverter::clear_parameter_name();
+  MathematicaExpressionConverter::clear_parameter_map();
   
   HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::create_variable_map ***\n");
   return true;
@@ -204,16 +194,17 @@ void MathematicaVCSPoint::send_constraint(const constraints_t& constraints)
     ps.put_node(*it, PacketSender::VA_None);
   }
   
+  
   add_left_continuity_constraint(continuity_map_, ps);
   
   // varsを渡す
   ps.put_vars(PacketSender::VA_None);
-  
   HYDLA_LOGGER_VCS("#*** End MathematicaVCSPoint::send_constraint ***");
   continuity_map_t continuity_map;
   ps.create_max_diff_map(continuity_map);
   return;
 }
+
 
 VCSResult MathematicaVCSPoint::check_consistency(const constraints_t& constraints)
 {
@@ -240,6 +231,21 @@ VCSResult MathematicaVCSPoint::check_consistency()
   return result;
 }
 
+
+VCSResult MathematicaVCSPoint::check_entailment(const node_sptr &node)
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSPoint::check_entailment() ***");
+  ml_->put_function("checkConsistencyTemporary", 2);
+  constraints_t constraints;
+  constraints.push_back(node);
+  send_constraint(constraints);
+
+  VCSResult result = check_consistency_receive();
+  
+  HYDLA_LOGGER_VCS("\n#*** End MathematicaVCSPoint::check_entailment() ***");
+  return result;
+}
+
 VCSResult MathematicaVCSPoint::check_consistency_receive()
 {
 /////////////////// 受信処理
@@ -247,10 +253,13 @@ VCSResult MathematicaVCSPoint::check_consistency_receive()
   
   //  PacketChecker pc(*ml_);
   //  pc.check();
- 
+  
+  ml_->skip_pkt_until(TEXTPKT);
+  std::string input_string = ml_->get_string();
+  
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+    input_string);
 
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLGetNext();
@@ -261,16 +270,23 @@ VCSResult MathematicaVCSPoint::check_consistency_receive()
   int ret_code = ml_->get_integer();
   if(PacketErrorHandler::handle(ml_, ret_code)) {
     result = VCSR_SOLVER_ERROR;
+    throw hydla::vcs::SolveError(input_string);
   }
-  else if(ret_code==1 || ret_code == 3) {
-    // 充足（TODO:本来ret_code == 3は別扱いしなければいけない）
+  else if(ret_code==1) {
+    // 充足
     result = VCSR_TRUE;
-    HYDLA_LOGGER_VCS_SUMMARY("consistent"); //無矛盾
+    HYDLA_LOGGER_VCS_SUMMARY("consistent");
+  }
+  else if(ret_code==3){
+    // 充足可能だが，記号定数の値によってはそうでない場合もありうる
+    result = VCSR_UNKNOWN;
+    HYDLA_LOGGER_VCS_SUMMARY("undetermined"); 
   }
   else {
+    // 充足不能
     assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");//矛盾
+    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
   }
   
   return result;

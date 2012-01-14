@@ -159,8 +159,8 @@ void SymbolicSimulator::simulate()
       if(!has_next){
         state->parent_state_result->cause_of_termination = StateResult::INCONSISTENCY;
       }
-    }catch(const SimulateError &se){
-      std::cout << "error occured while simulating:" << se.what() << std::endl;
+    }catch(const std::runtime_error &se){
+      std::cout << se.what() << std::endl;
     }
   }
   
@@ -189,7 +189,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 
   
   bool expanded;
-  constraints_t tmp_constraints;
   do{
     branched_ask=NULL;
     // tell制約を集める
@@ -222,19 +221,32 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
 
     
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか
-    switch(solver_->check_consistency(tmp_constraints)) 
+    switch(solver_->check_consistency()) 
     {
       case VCSR_TRUE:
         // do nothing
+        break;
+      case VCSR_UNKNOWN:
+        if(opts_.nd_mode){
+          HYDLA_LOGGER_CC("#*** create new phase state (branch_consistency) ***");
+          // 分岐先を生成（導出されない方）
+          phase_state_sptr new_state(create_new_phase_state(state));
+          new_state->module_set_container = state->module_set_container;
+          new_state->visited_module_sets = state->module_set_container->get_visited_module_sets();
+          new_state->parent_state_result = state->parent_state_result;
+          new_state->phase = state->phase;
+          push_phase_state(new_state);
+          HYDLA_LOGGER_CC("---push_phase_state(not_ask)---\n", **branched_ask,"\n");
+        }
         break;
       case VCSR_FALSE:
         return CC_FALSE;
         break;
       case VCSR_SOLVER_ERROR:
-        throw hydla::simulator::SimulateError("check_consistency error");
+        throw hydla::simulator::SimulateError("check_consistency error\n" + solver_->get_constraint_store());
         break;
       default:
-        throw hydla::simulator::SimulateError("unknown result in check_consistency");
+        throw hydla::simulator::SimulateError("unknown result in check_consistency" + solver_->get_constraint_store());
         break;
     }
 
@@ -267,59 +279,36 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
     while(it!=end) {
-      if(strong_continuity){
-        tmp_constraints.clear();
-      }
-      tmp_constraints.push_back((*it)->get_guard());
-      switch(solver_->check_consistency(tmp_constraints))
+      switch(solver_->check_entailment((*it)->get_guard()))
       {
         case VCSR_TRUE:
-        {
-          tmp_constraints.pop_back();
-          tmp_constraints.push_back(node_sptr(new Not((*it)->get_guard())));
-          switch(solver_->check_consistency(tmp_constraints)){
-            case VCSR_TRUE:
-              if(!expanded&&!branched_ask){
-                branched_ask = &(*it);
-              }
-              it++;
-              tmp_constraints.pop_back();
-              break;
-              
-            case VCSR_FALSE:
-              tmp_constraints.pop_back();
-              tmp_constraints.push_back((*it)->get_guard());
-              positive_asks.insert(*it);
-              negative_asks.erase(it++);
-              expanded = true;
-              break;
-            
-            case VCSR_SOLVER_ERROR:
-              throw hydla::simulator::SimulateError("check_entailment error");
-              break;
-            default:
-              throw hydla::simulator::SimulateError("unknown result in check_entailment");
-              break;
+          positive_asks.insert(*it);
+          negative_asks.erase(it);
+          expanded = true;
+        case VCSR_FALSE:
+          break;
+        
+        //真偽両方がありうる場合
+        case VCSR_UNKNOWN:
+          if(!expanded&&!branched_ask){
+            branched_ask = &(*it);
           }
           break;
-        }
-        case VCSR_FALSE:
-          tmp_constraints.pop_back();
-          it++;
+          
+        case VCSR_SOLVER_ERROR:
+          throw hydla::simulator::SimulateError("check_entailment error\n" + solver_->get_constraint_store());
           break;
 
-          case VCSR_SOLVER_ERROR:
-            throw hydla::simulator::SimulateError("check_entailment error");
-            break;
-          default:
-            throw hydla::simulator::SimulateError("unknown result in check_entailment");
-            break;
+        default:
+          throw hydla::simulator::SimulateError("unknown result in check_entailment\n" + solver_->get_constraint_store());
+          break;
       }
+      it++;
     }
   }while(expanded);
   
   if(branched_ask!=NULL){
-    HYDLA_LOGGER_CC("#*** create new phase state (branch) ***");
+    HYDLA_LOGGER_CC("#*** create new phase state (branch_entailment) ***");
     if(opts_.nd_mode){
       // 分岐先を生成（導出されない方）
       phase_state_sptr new_state(create_new_phase_state(state));
@@ -347,7 +336,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
   
   if(opts_.assertion){
     HYDLA_LOGGER_CC("#** SymbolicSimulator::check_assertion **\n");
-    if(solver_->check_consistency(constraints_t(1, node_sptr(new Not(opts_.assertion))) ) == VCSR_TRUE ){
+    switch(solver_->check_entailment(node_sptr(new Not(opts_.assertion)))){
+      case VCSR_TRUE:
+      std::cout << "Assertion Failed!" << std::endl;
+      is_safe_ = false;
+      return CC_TRUE;
+      case VCSR_UNKNOWN:
       std::cout << "Assertion Failed!" << std::endl;
       is_safe_ = false;
       return CC_TRUE;
@@ -559,10 +553,10 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       break;
     case VCSR_FALSE:
     case VCSR_SOLVER_ERROR:
-      throw hydla::simulator::SimulateError("integrate error");
+      throw hydla::simulator::SimulateError("integrate error" + solver_->get_constraint_store());
       break;
     default:
-      throw hydla::simulator::SimulateError("unknown result in integrate");
+      throw hydla::simulator::SimulateError("unknown result in integrate" + solver_->get_constraint_store());
       break;
   }
   

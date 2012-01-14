@@ -40,6 +40,12 @@ public:
   
 
   /**
+   * 現在の制約ストアから与えたaskが導出可能かどうか
+   */
+  virtual VCSResult check_entailment(const node_sptr &node);
+
+
+  /**
    * 与えられたmapを元に，各変数の連続性を設定する．
    */
   virtual void set_continuity(const continuity_map_t& continuity_map);

@@ -36,6 +36,12 @@ public:
 
 
   /**
+   * 現在の制約ストアから与えたaskが導出可能かどうか
+   */
+  virtual VCSResult check_entailment(const node_sptr &node);
+
+
+  /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(
@@ -56,10 +62,11 @@ public:
   virtual void set_continuity(const continuity_map_t& continuity_map);
 
 private:
-  // check_consistencyの共通部分
+  /**
+   * check_consistencyの共通部分
+   */
   VCSResult check_consistency_sub(const constraints_t &);
   
-
   /**
    * 初期値制約をMathematicaに渡す
    * 
@@ -71,7 +78,9 @@ private:
    */
   void send_time(const time_t& time);
   
-  //記号定数のリストを送る
+  /**
+   * 記号定数のリストを送る
+   */
   void send_pars() const;
 
   mutable MathLink* ml_;

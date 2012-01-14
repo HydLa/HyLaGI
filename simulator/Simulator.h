@@ -232,11 +232,17 @@ protected:
    * シミュレーション対象となるパースツリー
    */
   parse_tree_sptr parse_tree_;
-
+  
+  
   /**
-   * シミュレーション中で使用されるすべての変数を格納した表
+   * シミュレーション中で使用されるすべての変数を格納する表
    */
   variable_map_t variable_map_;
+
+  /**
+   * シミュレーション中で使用されるすべての変数を持つ配列
+   */
+  //std::vector<variable_t> variable_set_;
 
   /**
    * 各状態を保存しておくためのスタック

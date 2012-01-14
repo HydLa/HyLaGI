@@ -137,7 +137,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
       // 既存の記号定数の場合
       if(var_name.find(REDUCEStringSender::var_prefix, 0) != 0){
-        tmp_param.name = var_name;
+        tmp_param.set_variable(parameter_t::get_variable(var_name));
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
         SExpConverter::set_range(tmp_value, tmp_range, relop_code);
@@ -155,16 +155,17 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
 
       // 関係演算子コードを元に、変数表の対応する部分に代入する
-      // TODO: Orの扱い
       if(!relop_code){
         //等号
         symbolic_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
         symbolic_value.set_unique(true);
       }else{
         //不等号．この変数の値の範囲を表現するための記号定数を作成
+        /*
+
         tmp_param.name = var_name;
         value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
-
+        
         for(int i=0;i<var_derivative_count;i++){
           //とりあえず微分回数分dをつける
           tmp_param.name.append("d");
@@ -185,6 +186,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
         SExpConverter::set_range(tmp_value, tmp_range, relop_code);
         maps.parameter_map.set_variable(tmp_param, tmp_range);
         SExpConverter::add_parameter_name(var_name, tmp_param.name);
+        */
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }

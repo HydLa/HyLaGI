@@ -12,7 +12,7 @@ struct DefaultVariable {
   int derivative_count;
   
   DefaultVariable(const std::string& n, const int& d):name(n), derivative_count(d){}
-  DefaultVariable(){}
+  DefaultVariable():name(""), derivative_count(0){}
 
   std::string get_name() const
   {

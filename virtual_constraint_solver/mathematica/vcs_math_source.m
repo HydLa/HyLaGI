@@ -6,6 +6,15 @@ If[optUseDebugPrint,
   debugPrint[arg___] := Null];
 
 (*
+ * 関数呼び出しを再現するための文字列出力を行う
+ *)
+inputPrint[name_, arg___] := Print[StringJoin[name, "[", delimiterString[",", Map[InputForm,{arg}] ], "]" ] ];
+
+delimiterString[del_, {h_}] := ToString[h];
+delimiterString[del_, {h_, t__}] := StringJoin[ToString[h], del, delimiterString[del, {t}] ];
+
+
+(*
  * グローバル変数
  * constraints: 現在扱っている制約集合（IPでは変数についてのみ）
  * pconstraints: IPで現在扱っている定数についての条件の集合
@@ -157,6 +166,49 @@ checkInf[candidates_, constraints_, pars_] := Block[
  *  2 : 矛盾
  *)
 
+checkEntailmentInterval[guard_, guardVars_, expr_, vars_] := (
+  checkEntailmentIntervalMain[guard, guardVars, expr&&constraints, Union[vars, variables], pconstraints, parameters]
+);
+
+checkEntailmentIntervalMain[guard_, guardVars_, expr_, vars_, pexpr_, pars_] := 
+Quiet[
+  Check[
+    Block[
+      {tStore, sol, otherExpr, condition},
+      inputPrint["checkEntailmentIntervalMain", guard,  gaurdVars, expr, vars, pexpr,  pars];
+      sol = exDSolve[expr, vars];
+      If[sol === overconstraint,
+        {2},
+        If[sol === underconstraint || sol[[1]] === {} ,
+          (* 警告出したりした方が良いかも？ *)
+          {1},
+          tStore = sol[[1]];
+          tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
+          otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
+          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual, Inequality, Unequal}, Head[#] ] || # === False)&];
+          
+          (* otherExprにtStoreを適用する *)
+          otherExpr = otherExpr /. tStore;
+          condition = guard /. tStore;
+          (* まず，t>0で条件を満たす可能性があるかを調べる *)
+          sol = LogicalExpand[Quiet[Check[Reduce[{(And@@otherExpr) && condition && t > 0 && pexpr}, t],
+                        False, {Reduce::nsmet}], {Reduce::nsmet}]];
+          If[sol === False,
+            {2},
+            (* リストのリストにする *)
+            sol = applyListToOr[sol];
+            sol = Map[applyList, sol];
+            (* tの最大下界を0とできる可能性を調べる． *)
+            sol = checkInf[sol, pexpr, pars];
+            {sol[[1]]}
+          ]
+        ]
+      ]
+    ],
+    {0, $MessageList}
+  ]
+];
+
 checkConsistencyInterval[] :=  (
   checkConsistencyIntervalMain[constraints, variables, pconstraints, parameters]
 );
@@ -177,8 +229,8 @@ checkConsistencyIntervalMain[expr_, vars_, pexpr_, pars_] :=
 Quiet[
   Check[
     Block[
-      {tStore, sol, integGuard, otherExpr, condition},
-      debugPrint["expr:", expr, "vars:", vars, "pexpr", pexpr, "pars:", pars, "all", expr, vars, pexpr, pars];
+      {tStore, sol, otherExpr, condition},
+      inputPrint["checkConsistencyIntervalMain", expr, vars, pexpr,  pars];
       sol = exDSolve[expr, vars];
       If[sol === overconstraint,
         {2},
@@ -263,6 +315,11 @@ getExprCode[expr_] := Switch[Head[expr],
   LessEqual, 3,
   GreaterEqual, 4
 ];
+
+printConstraintStore[] := (
+  Print[InputForm[{"constraints:", constraints, "pconstraints:", pconstraints}]];
+  {}
+);
 
 convertCSToVM[] := Block[
   {formatExprs, applyParameter, resultExprs},
@@ -386,21 +443,19 @@ Quiet[
   Check[
     Block[
       {sol},
-      debugPrint["@checkConsistencyReduce", "expr:", expr, "pexpr", pexpr, "vars", vars, "pars", pars, "all:", expr, pexpr, vars, pars];
+      inputPrint["checkConsistencyByReduce", expr,  pexpr, vars, pars];
       Quiet[
         sol = Reduce[expr&&pexpr, vars, Reals], {Reduce::useq}
       ];
       If[sol === False,
         {2},
-        {1, sol}
-        (*
         If[pars === {},
           {1, sol},
-          If[ Reduce[ForAll[pars, pexpr, Exists[vars, sol]]] === False,
+          If[ Reduce[Exists[pars, pexpr, sol === False]] === True,
             {3},
             {1, sol}
           ]
-        ]*)
+        ]
       ]
     ],
     {0, $MessageList}
@@ -707,7 +762,8 @@ exDSolve[expr_, vars_] := Block[
             If[Cases[DExpr, Except[True]] === {},
               (* ストアが空の場合はDSolveが解けないので空集合を返す *)
               sol = {},           
-	      sol = DSolve[DExpr, DExprVars, t];
+              sol = DSolve[DExpr, DExprVars, t];
+              
               (* 1つだけ採用 *)
               (* TODO: 複数解ある場合も考える *)
               sol = First[sol]
@@ -761,10 +817,17 @@ changeZeroTot[var_] := (
 isPrevVariable[expr_] := MemberQ[{expr}, prev[x_], Infinity];
 isTimeVariable[expr_] := MemberQ[{expr}, x_[t], Infinity];
 
+
+
 (*
  * askの導出状態が変化するまで積分をおこなう
  *)
 integrateCalc[expr_, 
+              discCause_,
+              vars_, 
+              maxTime_] := integrateCalcMain[expr&&constraints&&pconstraints, discCause, Union[vars, variables], maxTime];
+
+integrateCalcMain[expr_, 
               discCause_,
               vars_, 
               maxTime_] := Quiet[Check[Block[
@@ -784,16 +847,11 @@ integrateCalc[expr_,
   solVars,
   paramCons
 },
-  cons = expr&&constraints&&pconstraints;
-  cons = And@@reducePrevVariable[List@@cons];
-  returnVars = Union[vars, variables];
+  cons = And@@reducePrevVariable[List@@expr];
+  returnVars = vars;
   returnVars = Map[changeZeroTot, returnVars];
   returnVars = Select[returnVars, isTimeVariable];
-  debugPrint["@Integrate cons:", cons, 
-             "discCause:", discCause,
-             "returnvars:", returnVars, 
-             "maxTime:", maxTime,
-             "all", cons, discCause, returnVars, maxTime];
+  inputPrint["integrateCalcMain", expr, discCause, vars, maxTime];
   If[cons =!= True,
     paramCons = getParamCons[applyList[cons]];
     tmpIntegSol = exDSolve[cons, returnVars][[1]];

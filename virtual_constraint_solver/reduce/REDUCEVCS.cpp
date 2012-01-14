@@ -102,17 +102,9 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
         constraints.push_back(SExpConverter::make_equal(it->first, it->second.get_node(), true));
       } else if(mode_ == hydla::symbolic_simulator::ContinuousMode){
         // 値がないなら何かしらの定数を作って送信．
-        std::string name;
-        name = it->first.name;
-        for(int i=0;i<it->first.derivative_count;i++){
-          //とりあえず微分回数分dをつける
-          name.append("d");
-        }
-        while(parameter_map.has_variable(parameter_t(name))){
-          //とりあえず重複回数分iをつける
-          name.append("i");
-        }
-        constraints.push_back(SExpConverter::make_equal(it->first, node_sptr(new Parameter(name)), true));
+        parameter_t::increment_id(it->first);
+        parameter_t param(it->first);
+        constraints.push_back(SExpConverter::make_equal(it->first, node_sptr(new Parameter(param.get_name())), true));
       }
     }
     HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());

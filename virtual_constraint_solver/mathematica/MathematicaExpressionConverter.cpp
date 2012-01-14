@@ -12,7 +12,7 @@ namespace mathematica {
 
 MathematicaExpressionConverter::string_map_t MathematicaExpressionConverter::string_map_;
 
-std::map<std::string, std::string> MathematicaExpressionConverter::variable_parameter_map_;
+std::map<MathematicaExpressionConverter::variable_t, MathematicaExpressionConverter::parameter_t> MathematicaExpressionConverter::variable_parameter_map_;
 
 using namespace hydla::parse_tree;
 
@@ -67,12 +67,12 @@ void MathematicaExpressionConverter::set_range(const value_t &val, value_range_t
   }
 }
 
-void MathematicaExpressionConverter::add_parameter_name(std::string variable_name, std::string parameter_name){
-  variable_parameter_map_.insert(std::make_pair(variable_name, parameter_name));
+void MathematicaExpressionConverter::add_parameter(variable_t &variable, parameter_t &parameter){
+  variable_parameter_map_.insert(std::make_pair(variable, parameter));
 }
 
 
-void MathematicaExpressionConverter::clear_parameter_name(){
+void MathematicaExpressionConverter::clear_parameter_map(){
   variable_parameter_map_.clear();
 }
 
@@ -123,22 +123,23 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
     if(expr[prev]=='E'){//©‘R‘Î”‚Ì’ê
       return node_sptr(new hydla::parse_tree::E());
     }
-    if(now-prev > 6 && expr.substr(prev, 6) == PacketSender::var_prefix){//•Ï”–¼
+    if(now-prev > 6 && expr.substr(prev, 6) == PacketSender::var_prefix){//•Ï”–¼ TODO:Derivative‚É‘Î‰‚Å‚«‚È‚¢‹C‚ª‚·‚é
       std::string variable_name;
-	    if(now != std::string::npos){
+      if(now != std::string::npos){
         variable_name = expr.substr(prev + 6, now-(prev+6));
-		    if(expr[now] == '['){
+        if(expr[now] == '['){
           // [t] ‚â [0]‚ª‚Â‚¢‚Ä‚¢‚ê‚Î“Ç‚İ‚Æ‚Î‚·
-			    now = expr.find_first_of("]", now);
-			    now++;
+          now = expr.find_first_of("]", now);
+          now++;
         }
-	    }else{
+      }else{
         variable_name = expr.substr(prev + 6, std::string::npos);
       }
-      
-	    std::map<std::string, std::string>::iterator it = variable_parameter_map_.find(variable_name);
-	    if(it != variable_parameter_map_.end()){
-		    return node_sptr(new hydla::parse_tree::Parameter(it->second));
+      variable_t tmp_variable;
+      tmp_variable.name = variable_name;
+      std::map<variable_t, parameter_t>::iterator it = variable_parameter_map_.find(tmp_variable);
+      if(it != variable_parameter_map_.end()){
+        return node_sptr(new hydla::parse_tree::Parameter(it->second.get_name()));
       }
       return node_sptr(new hydla::parse_tree::Variable(variable_name));
     }
@@ -258,8 +259,8 @@ MathematicaExpressionConverter::node_sptr
 }
 
 
-void MathematicaExpressionConverter::set_parameter_on_value(MathematicaExpressionConverter::value_t &val,const std::string &par_name){
-  val.set(node_sptr(new hydla::parse_tree::Parameter(par_name)));
+void MathematicaExpressionConverter::set_parameter_on_value(MathematicaExpressionConverter::value_t &val, const parameter_t &par){
+  val.set(node_sptr(new hydla::parse_tree::Parameter(par.get_name())));
   return;
 }
 

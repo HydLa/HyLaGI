@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <iostream>
 
 #include "Logger.h"
 
@@ -9,9 +10,61 @@
 namespace hydla {
 namespace symbolic_simulator{
 
+  std::map<const simulator::DefaultVariable, int> SymbolicParameter::id_map_;
+
   std::string SymbolicParameter::get_name() const
   {
-    return name;//original_variable_->get_string();
+    std::string ret(original_variable_.name);
+    for(int i=0; i<original_variable_.derivative_count; i++){
+      ret += "d";
+    }
+    for(int i=0; i<id_; i++){
+      ret += "i";
+    }
+    return ret;
+  }
+ 
+  
+  SymbolicParameter::SymbolicParameter(const simulator::DefaultVariable variable, const SymbolicValue time): original_variable_(variable), introduced_time_(time){
+    id_ = id_map_[variable];
+  }
+  
+  
+  simulator::DefaultVariable SymbolicParameter::get_variable(const std::string &name){
+    // åªèÛÇæÇ∆IDñ≥éãÇ≥ÇÍÇÈÇ©ÇÁèCê≥Ç™ïKóv
+    std::string ret_name;
+    int derivative_count;
+    std::string::size_type pos = name.find_last_of('d');
+    if(pos == std::string::npos)
+    {
+      derivative_count = 0;
+      pos = name.length();
+    }
+    else
+    {
+      std::string::size_type prev_pos = pos;
+      while(pos > 0 && name[pos] == 'd'){
+        pos--;
+      }
+      derivative_count = prev_pos - pos;
+    }
+    ret_name = name.substr(0, pos + 1);
+    
+    
+    return simulator::DefaultVariable(ret_name, derivative_count);
+  }
+  
+  void SymbolicParameter::set_variable(simulator::DefaultVariable variable){
+    original_variable_ = variable;
+  }
+  
+  void SymbolicParameter::increment_id(const simulator::DefaultVariable &variable){
+    // ä‘Ç…çáÇÌÇπä¥Ç™î€ÇﬂÇ»Ç¢ä÷êî
+    if(id_map_.find(variable) == id_map_.end()){
+      id_map_[variable] = 0;
+    }else{
+      id_map_[variable]++;
+    }
   }
 
   /**

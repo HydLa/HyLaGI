@@ -17,8 +17,8 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace symbolic_simulator {
 
-struct StateResult;
-typedef boost::shared_ptr<StateResult> state_result_sptr_t;
+  struct StateResult;
+  typedef boost::shared_ptr<StateResult> state_result_sptr_t;
 
   typedef simulator::DefaultVariable            variable_t;
   typedef SymbolicParameter                     parameter_t;

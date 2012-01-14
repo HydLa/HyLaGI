@@ -339,14 +339,14 @@ VCSResult REDUCEVCSInterval::integrate(
     size_t pp_condition_size = pp_condition_list_ptr->children.size();
 
     state.parameter_map.clear();
-    parameter_t tmp_param, prev_param;
+    parameter_t tmp_param;
     for(int cond_it = 0; cond_it < pp_condition_size; cond_it++){
       const_tree_iter_t param_condition_ptr = pp_condition_list_ptr->children.begin()+cond_it;
 
       const_tree_iter_t param_name_ptr = param_condition_ptr->children.begin();
       value_range_t tmp_range;
-      tmp_param.name = std::string(param_name_ptr->value.begin(), param_name_ptr->value.end());
-      HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.name);
+      tmp_param.set_variable(parameter_t::get_variable(std::string(param_name_ptr->value.begin(), param_name_ptr->value.end())));
+      HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.get_name());
 
       const_tree_iter_t relop_code_ptr = param_name_ptr+1;
       std::string relop_code_str = std::string(relop_code_ptr->value.begin(), param_name_ptr->value.end());
@@ -363,7 +363,6 @@ VCSResult REDUCEVCSInterval::integrate(
       value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp, param_value_ptr);
       SExpConverter::set_range(tmp_value, tmp_range, relop_code);
       state.parameter_map.set_variable(tmp_param, tmp_range);
-      prev_param.name = tmp_param.name;
     }
 
 

@@ -8,6 +8,7 @@
 #include "PacketChecker.h"
 #include "PacketErrorHandler.h"
 #include "MathematicaExpressionConverter.h"
+#include "SolveError.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
@@ -59,6 +60,19 @@ void MathematicaVCSInterval::send_init_cons(PacketSender &ps, const continuity_m
 }
 
 
+VCSResult MathematicaVCSInterval::check_entailment(const node_sptr &node)
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::check_entailment ***");
+  ml_->put_function("checkEntailmentInterval", 4);
+  PacketSender ps(*ml_);
+  ps.put_node(node, PacketSender::VA_Time);
+  ps.put_vars(PacketSender::VA_Time);
+  
+  VCSResult result = check_consistency_sub(constraints_t());
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCSInterval::check_entailment ***");
+  return result;
+}
+
 
 VCSResult MathematicaVCSInterval::check_consistency(const constraints_t& constraints)
 {
@@ -96,10 +110,12 @@ VCSResult MathematicaVCSInterval::check_consistency_sub(const constraints_t& con
   
   // PacketChecker pc(*ml_);
   // pc.check();
-
+  ml_->skip_pkt_until(TEXTPKT);
+  std::string input_string(ml_->get_string());
+  
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));  
+    input_string);  
 
   ml_->skip_pkt_until(RETURNPKT);
   ml_->MLGetNext();
@@ -109,6 +125,7 @@ VCSResult MathematicaVCSInterval::check_consistency_sub(const constraints_t& con
   VCSResult result;
   int ret_code = ml_->get_integer();
   if(PacketErrorHandler::handle(ml_, ret_code)) {
+    throw hydla::vcs::SolveError(input_string);
     result = VCSR_SOLVER_ERROR;
   }
   else if(ret_code==1) { 
@@ -117,8 +134,7 @@ VCSResult MathematicaVCSInterval::check_consistency_sub(const constraints_t& con
   }
   else if(ret_code==3){
     // 定数値によっては充足可能
-    result = VCSR_TRUE;
-    //result = VCSR_UNKNOWN;
+    result = VCSR_UNKNOWN;
   }
   else { 
     // 制約エラー
@@ -178,9 +194,11 @@ VCSResult MathematicaVCSInterval::integrate(
 
   MathematicaExpressionConverter mec;
 
+  ml_->skip_pkt_until(TEXTPKT);
+  std::string input_string(ml_->get_string());
   HYDLA_LOGGER_EXTERN(
     "-- integrate math debug print -- \n",
-    (ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
+    input_string);
   HYDLA_LOGGER_EXTERN((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   HYDLA_LOGGER_EXTERN((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
   HYDLA_LOGGER_EXTERN((ml_->skip_pkt_until(TEXTPKT), ml_->get_string()));
@@ -193,6 +211,7 @@ VCSResult MathematicaVCSInterval::integrate(
   // 求解に成功したかどうか
   int ret_code = ml_->get_integer();
   if(PacketErrorHandler::handle(ml_, ret_code)) {
+    throw hydla::vcs::SolveError(input_string);
     return VCSR_SOLVER_ERROR;
   }
   
@@ -228,7 +247,7 @@ VCSResult MathematicaVCSInterval::integrate(
     HYDLA_LOGGER_VCS("value : ", value.get_string());
     ml_->MLGetNext();
 
-    state.variable_map.set_variable(variable, value); 
+    state.variable_map.set_variable(variable, value);
   }
   
   
@@ -247,13 +266,13 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext(); ml_->MLGetNext();
     
     state.parameter_map.clear();
-    parameter_t tmp_param, prev_param;
+    parameter_t tmp_param;
     // 条件を受け取る
     for(int cond_it = 0; cond_it < condition_size; cond_it++){
       value_range_t tmp_range;
       ml_->MLGetNext(); ml_->MLGetNext();
-      tmp_param.name = ml_->get_string();
-      HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.name);
+      tmp_param.set_variable(parameter_t::get_variable(ml_->get_string()));
+      HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.get_name());
       ml_->MLGetNext();
       int relop_code = ml_->get_integer();
       HYDLA_LOGGER_VCS("returned relop_code: ", relop_code);
@@ -265,7 +284,6 @@ VCSResult MathematicaVCSInterval::integrate(
       value_t tmp_value = MathematicaExpressionConverter::convert_math_string_to_symbolic_value(parameter_value_string);
       MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
       state.parameter_map.set_variable(tmp_param, tmp_range);
-      prev_param.name = tmp_param.name;
     }
     
     // 終了時刻かどうかを受け取る
