@@ -68,11 +68,16 @@ namespace symbolic_simulator {
     DiscreteMode,
   } Mode;
   
+  /*
+   * デフォルト連続性
+   */
   typedef enum DefaultContinuity_{
-    CONT_NONE,      // 連続性を仮定しない（現状ではIPの連続性を明示する方法が無いため，ほぼ使用不能）
+    CONT_NONE = 0,  // 連続性を仮定しない（現状ではIPの連続性を明示する方法が無いため，ほぼ使用不能）
     CONT_WEAK,      // 制約ストアに微分値に関する制約が入っていたら，その微分回数未満についてはすべて連続
+    CONT_GUARD,       // WEAKに加え，ガード条件の後件までを見て連続性制約を追加する
     CONT_STRONG_IP, // WEAKに加え，「何も言及されていなければ全部そのまま(最大微分回数＋１ = ０）」をIP限定で
-    CONT_STRONG     // 上記をIPでもPPでも有効にする
+    CONT_STRONG,    // 上記をIPでもPPでも有効にする
+    CONT_NUM        // デフォルト連続性の種類の総数
   } DefaultContinuity;
 
   typedef struct Opts_ {

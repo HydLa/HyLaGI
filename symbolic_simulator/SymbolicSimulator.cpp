@@ -28,6 +28,7 @@
 #include "AskTypeAnalyzer.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 #include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
+#include "ContinuityMapMaker.h"
 
 #include "SimulateError.h"
 
@@ -179,7 +180,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                                           positive_asks_t &positive_asks, negative_asks_t &negative_asks){
 
   //‘O€”õ
-  TellCollector tell_collector(ms, state->phase == IntervalPhase);
+  TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
                               AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
                               AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
@@ -187,6 +188,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
   constraints_t   constraint_list;
   boost::shared_ptr<hydla::parse_tree::Ask>  const *branched_ask;                           //UNKNOWN•Ô‚³‚ê‚½Ask“ü‚ê‚é
 
+  continuity_map_t continuity_map;
+  ContinuityMapMaker maker;
   
   bool expanded;
   do{
@@ -204,19 +207,21 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     
     //tell‚¶‚á‚È‚­‚Ä§–ñ•”•ª‚Ì‚Ý‘—‚é
     constraint_list.clear();
+    
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       constraint_list.push_back((*it)->get_child());
+      if(opts_.default_continuity > CONT_NONE){
+        maker.visit_node((*it), state->phase == IntervalPhase, false);
+      }
+    }
+    if(opts_.default_continuity > CONT_NONE){
+      continuity_map = maker.get_continuity_map();
     }
     for(constraints_t::const_iterator it = state->added_constraints.begin(); it != state->added_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
     solver_->add_constraint(constraint_list);
     
-    
-    continuity_map_t continuity_map;
-    if(opts_.default_continuity > CONT_NONE){
-      continuity_map = tell_collector.get_variables();
-    }
     solver_->set_continuity(continuity_map);
 
     
@@ -273,18 +278,26 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
         }
       }
     }
-    solver_->set_continuity(continuity_map);
+    if(opts_.default_continuity != CONT_GUARD){
+      solver_->set_continuity(continuity_map);
+    }
     
     expanded = false;
     negative_asks_t::iterator it  = negative_asks.begin();
     negative_asks_t::iterator end = negative_asks.end();
     while(it!=end) {
+      if(opts_.default_continuity == CONT_GUARD){
+        maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
+        solver_->set_continuity(maker.get_continuity_map());
+      }
       switch(solver_->check_entailment((*it)->get_guard()))
       {
         case VCSR_TRUE:
           positive_asks.insert(*it);
           negative_asks.erase(it);
           expanded = true;
+          break;
+
         case VCSR_FALSE:
           break;
         
@@ -294,7 +307,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
             branched_ask = &(*it);
           }
           break;
-          
+
         case VCSR_SOLVER_ERROR:
           throw hydla::simulator::SimulateError("check_entailment error\n" + solver_->get_constraint_store());
           break;
@@ -304,8 +317,16 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           break;
       }
       it++;
+      
+      if(opts_.default_continuity == CONT_GUARD){
+        maker.set_continuity_map(continuity_map);
+      }
     }
   }while(expanded);
+  
+  if(opts_.default_continuity == CONT_GUARD){
+    solver_->set_continuity(continuity_map);
+  }
   
   if(branched_ask!=NULL){
     HYDLA_LOGGER_CC("#*** create new phase state (branch_entailment) ***");

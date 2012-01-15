@@ -166,16 +166,16 @@ checkInf[candidates_, constraints_, pars_] := Block[
  *  2 : –µ‚
  *)
 
-checkEntailmentInterval[guard_, guardVars_, expr_, vars_] := (
-  checkEntailmentIntervalMain[guard, guardVars, expr&&constraints, Union[vars, variables], pconstraints, parameters]
+checkEntailmentInterval[guard_, expr_, vars_] := (
+  checkEntailmentIntervalMain[guard, expr&&constraints, Union[vars, variables], pconstraints, parameters]
 );
 
-checkEntailmentIntervalMain[guard_, guardVars_, expr_, vars_, pexpr_, pars_] := 
+checkEntailmentIntervalMain[guard_, expr_, vars_, pexpr_, pars_] := 
 Quiet[
   Check[
     Block[
       {tStore, sol, otherExpr, condition},
-      inputPrint["checkEntailmentIntervalMain", guard,  gaurdVars, expr, vars, pexpr,  pars];
+      inputPrint["checkEntailmentIntervalMain", guard, expr, vars, pexpr,  pars];
       sol = exDSolve[expr, vars];
       If[sol === overconstraint,
         {2},
@@ -755,7 +755,6 @@ exDSolve[expr_, vars_] := Block[
       {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
       (* ’è”ŠÖ”‚Ìê‡‚É‰ßèŒˆ’èŒn‚ÌŒ´ˆö‚Æ‚È‚é”÷•ª§–ñ‚ğæ‚èœ‚­ *)
       DExpr = removeTrivialCons[DExpr, DExprVars];
-
       Quiet[
         Check[
           Check[
@@ -780,16 +779,18 @@ exDSolve[expr_, vars_] := Block[
               overconstraint
             ],
             underconstraint,
-            {DSolve::underdet, Solve::svars, DSolve::deqx, 
-             DSolve::bvnr, DSolve::bvsing}],
-                  overconstraint,
-                  {DSolve::overdet, DSolve::bvnul, DSolve::dsmsm}],
-            {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-             Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-             DSolve::bvnul, DSolve::dsmsm, Solve::incnst, Solve::ifun}
-          ]
-        ]
+            {DSolve::underdet, Solve::svars, DSolve::dsmsm, DSolve::deqx, 
+             DSolve::bvnr, DSolve::bvsing}
+          ],
+          overconstraint,
+          {DSolve::overdet, DSolve::bvnul}
+        ],
+        {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
+         Solve::svars, DSolve::bvnr, DSolve::bvsing, 
+         DSolve::bvnul, DSolve::dsmsm, Solve::incnst, Solve::ifun}
       ]
+    ]
+  ]
 ];
 
 (* DSolve‚Åˆµ‚¦‚é® (DExpr)‚Æ‚»‚¤‚Å‚È‚¢® (NDExpr)‚Æ‚»‚êˆÈŠO iotherExprj‚É•ª‚¯‚é *)

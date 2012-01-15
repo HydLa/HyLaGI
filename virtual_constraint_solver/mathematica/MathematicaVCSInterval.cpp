@@ -63,10 +63,9 @@ void MathematicaVCSInterval::send_init_cons(PacketSender &ps, const continuity_m
 VCSResult MathematicaVCSInterval::check_entailment(const node_sptr &node)
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::check_entailment ***");
-  ml_->put_function("checkEntailmentInterval", 4);
+  ml_->put_function("checkEntailmentInterval", 3);
   PacketSender ps(*ml_);
   ps.put_node(node, PacketSender::VA_Time);
-  ps.put_vars(PacketSender::VA_Time);
   
   VCSResult result = check_consistency_sub(constraints_t());
   HYDLA_LOGGER_VCS("#*** End MathematicaVCSInterval::check_entailment ***");

@@ -89,7 +89,7 @@ void ProgramOptions::init_descriptions()
      "precision of output message")
      
     ("continuity", 
-     value<int>()->default_value(3), 
+     value<int>()->default_value(2), 
      "default continuity level")
 
     ("time,t", 

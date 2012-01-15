@@ -23,7 +23,7 @@ namespace simulator {
 class TellCollector : public parse_tree::TreeVisitor {
 public:
   
-  TellCollector(const module_set_sptr& module_set, bool in_IP = false);
+  TellCollector(const module_set_sptr& module_set);
 
   virtual ~TellCollector();
 
@@ -72,11 +72,6 @@ public:
   void reset()
   {
     collected_tells_.clear();
-    variables_.clear();
-  }
-  
-  continuity_map_t get_variables(){
-    return variables_;
   }
 
   // §–ñ®
@@ -106,67 +101,6 @@ public:
   // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
   
-
-
-
-    // ”äŠr‰‰Zq
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
-
-  // ˜_—‰‰Zq
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
-
-  // Zp“ñ€‰‰Zq
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
-
-  // Zp’P€‰‰Zq
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
-
-  // ”÷•ª
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
-
-  // ¶‹ÉŒÀ
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
-
-  // ”Û’è
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
-  
-  // OŠpŠÖ”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Sin> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Cos> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tan> node);
-  // ‹tOŠpŠÖ”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Asin> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Acos> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Atan> node);
-  // ‰~ü—¦
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  // ‘Î”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Log> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ln> node);
-  // ©‘R‘Î”‚Ì’ê
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
-  // ”CˆÓ‚Ì•¶š—ñ
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
-  // •Ï”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
-  // ”š
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
-  // ‹L†’è”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
-  // t
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
 
 
 
@@ -200,11 +134,6 @@ private:
 
   /// “WŠJÏ‚İalwaysƒm[ƒh‚ÌƒŠƒXƒg‚©‚ç‚Ì’Tõ‚©‚Ç‚¤‚©
   bool               in_expanded_always_;
-  
-  // W‚ß‚½§–ñ’†‚ÉoŒ»‚·‚é•Ï”‚Æ‚»‚Ì”÷•ª‰ñ”‚Ìƒ}ƒbƒv
-  continuity_map_t  variables_;
-  int differential_count_;
-  bool in_interval_;
 
   /// ’Tõ‚µ‚½alwaysƒm[ƒh‚ÌƒŠƒXƒg
   visited_always_t   visited_always_;
