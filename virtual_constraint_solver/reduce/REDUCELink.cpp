@@ -76,7 +76,7 @@ std::istream& REDUCELink::getline_with_throw(const std::string& cmd, std::string
 
   if(!s_){
     throw REDUCELinkError("fail to　" + cmd);
-  }else if(line.substr(0,std::min((int)line.size(),3))=="***"){ // "***** 1 invalid as list"のような論理エラー出力の判定
+  }else if(line.find("***")!=std::string::npos){ // "***** 1 invalid as list"のような論理エラー出力の判定
     throw REDUCELinkError(cmd, line);
   }
 
