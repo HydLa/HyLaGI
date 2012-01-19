@@ -9,7 +9,7 @@ namespace reduce {
 
 SExpConverter::string_map_t SExpConverter::string_map_;
 
-std::map<std::string, std::string> SExpConverter::variable_parameter_map_;
+std::map<SExpConverter::variable_t, SExpConverter::parameter_t> SExpConverter::variable_parameter_map_;
 
 SExpConverter::SExpConverter() 
 {}
@@ -48,12 +48,12 @@ SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(SExpParser
   return value;
 }
 
-void SExpConverter::add_parameter_name(std::string variable_name, std::string parameter_name){
-  variable_parameter_map_.insert(std::make_pair(variable_name, parameter_name));
+void SExpConverter::add_parameter(variable_t &variable, parameter_t &parameter){
+  variable_parameter_map_.insert(std::make_pair(variable, parameter));
 }
 
 
-void SExpConverter::clear_parameter_name(){
+void SExpConverter::clear_parameter_map(){
   variable_parameter_map_.clear();
 }
 
@@ -246,8 +246,8 @@ void SExpConverter::set_range(const value_t &val, value_range_t &range, const in
   }
 }
 
-void SExpConverter::set_parameter_on_value(SExpConverter::value_t &val,const std::string &par_name){
-  val.set(node_sptr(new hydla::parse_tree::Parameter(par_name)));
+void SExpConverter::set_parameter_on_value(value_t &val,const parameter_t &par){
+  val.set(node_sptr(new hydla::parse_tree::Parameter(par.get_name())));
   return;
 }
 

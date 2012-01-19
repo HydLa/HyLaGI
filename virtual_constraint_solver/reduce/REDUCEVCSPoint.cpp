@@ -78,12 +78,11 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
   //  for(int or_it = 0; or_it < or_size; or_it++){
   {
     create_result_t::maps_t maps;
-    std::set<std::string> added_parameters;  //「今回追加された記号定数」の一覧
+    std::set<variable_t> p_added_variables;  //「今回記号定数を追加された変数」の一覧
     variable_t symbolic_variable;
     value_t symbolic_value;
-    parameter_t tmp_param;
     value_range_t tmp_range;
-    SExpConverter::clear_parameter_name();
+    SExpConverter::clear_parameter_map();
     size_t and_cons_size = tree_root_ptr->children.size();
 
     for(size_t i=0; i<and_cons_size; i++){
@@ -137,7 +136,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
       // 既存の記号定数の場合
       if(var_name.find(REDUCEStringSender::var_prefix, 0) != 0){
-        tmp_param.set_variable(parameter_t::get_variable(var_name));
+        parameter_t tmp_param(parameter_t::get_variable(var_name));
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
         SExpConverter::set_range(tmp_value, tmp_range, relop_code);
@@ -161,32 +160,19 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
         symbolic_value.set_unique(true);
       }else{
         //不等号．この変数の値の範囲を表現するための記号定数を作成
-        /*
-
-        tmp_param.name = var_name;
         value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);
-        
-        for(int i=0;i<var_derivative_count;i++){
-          //とりあえず微分回数分dをつける
-          tmp_param.name.append("d");
-        }
-        while(1){
-          if(added_parameters.find(tmp_param.name)!=added_parameters.end())break; //今回追加された記号定数に含まれるなら，同じ場所に入れる
-          value_range_t &value = maps.parameter_map.get_variable(tmp_param);
-          if(value.is_undefined()){
-            added_parameters.insert(tmp_param.name);
-            break;
-          }
-          //とりあえず重複回数分iをつける
-          tmp_param.name.append("i");
-        }
-        tmp_range = maps.parameter_map.get_variable(tmp_param);
-        SExpConverter::set_parameter_on_value(symbolic_value, tmp_param.name);
-        symbolic_value.set_unique(false);
-        SExpConverter::set_range(tmp_value, tmp_range, relop_code);
-        maps.parameter_map.set_variable(tmp_param, tmp_range);
-        SExpConverter::add_parameter_name(var_name, tmp_param.name);
-        */
+	if(p_added_variables.find(symbolic_variable) == p_added_variables.end()){
+	  //今回追加された記号定数に含まれない場合のみ，新規作成
+	  parameter_t::increment_id(symbolic_variable);
+	  p_added_variables.insert(symbolic_variable);
+	}
+	parameter_t tmp_param(symbolic_variable);
+	tmp_range = maps.parameter_map.get_variable(tmp_param);
+	SExpConverter::set_range(tmp_value, tmp_range, relop_code);
+	SExpConverter::add_parameter(symbolic_variable, tmp_param);
+	maps.parameter_map.set_variable(tmp_param, tmp_range);
+	symbolic_value.set_unique(false);
+	SExpConverter::set_parameter_on_value(symbolic_value, tmp_param);
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }
@@ -194,7 +180,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
     HYDLA_LOGGER_VCS_SUMMARY("parameter_map: ", maps.parameter_map);
     create_result.result_maps.push_back(maps);
   }
-  SExpConverter::clear_parameter_name();
+  SExpConverter::clear_parameter_map();
 
   HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::create_maps ***\n");
   return true;
