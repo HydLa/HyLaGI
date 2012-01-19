@@ -24,7 +24,7 @@ private:
   std::string init(const std::string& msg, const std::string& line)
   {
     std::stringstream s;
-    std::string comma = (line=="") ? " : " : "";
+    std::string comma = (line!="") ? " : " : "";
     s << "reducelink error: " << msg << comma << line;
     return s.str();
   }

@@ -17,12 +17,12 @@ const std::string REDUCELink::end_of_redeval_ = "<redeval> end:";
 
 REDUCELink::REDUCELink(){
   s_.connect("localhost", "1206");
-  // TODO        throw REDUCELinkError("fail to connect", s_.error().message());
   if(!s_){ throw REDUCELinkError("fail to connect"); }
 }
 
 REDUCELink::~REDUCELink(){
   s_.close();
+  if(!s_){ throw REDUCELinkError("fail to close"); }
 }
 
 REDUCELink::REDUCELink(const REDUCELink& old_cl){
@@ -73,10 +73,9 @@ int REDUCELink::send_string(const std::string cmd){
 }
 std::istream& REDUCELink::getline_with_throw(const std::string& cmd, std::string& line){
   std::istream& is = getline(s_, line);
+  if(!s_){ throw REDUCELinkError(cmd, "fail to getline"); }
 
-  if(!s_){
-    throw REDUCELinkError("fail to　" + cmd);
-  }else if(line.find("***")!=std::string::npos){ // "***** 1 invalid as list"のような論理エラー出力の判定
+  if(line.find("***")!=std::string::npos){ // "***** 1 invalid as list"のような論理エラー出力の判定
     throw REDUCELinkError(cmd, line);
   }
 
