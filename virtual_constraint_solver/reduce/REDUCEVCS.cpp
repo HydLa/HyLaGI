@@ -214,6 +214,11 @@ VCSResult REDUCEVCS::check_consistency(const constraints_t& constraints)
   return vcs_->check_consistency(constraints);
 }
 
+VCSResult REDUCEVCS::check_entailment(const node_sptr &node)
+{
+  return vcs_->check_entailment(node);
+}
+
 VCSResult REDUCEVCS::integrate(
   integrate_result_t& integrate_result,
   const constraints_t &constraints,
@@ -230,9 +235,18 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& ou
   vcs_->apply_time_to_vm(in_vm, out_vm, time);
 }
 
+std::string REDUCEVCS::get_constraint_store(){
+  std::string ret;
 
-  //value_tを指定された精度で数値に変換する
-  std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt){
+  cl_.send_string("symbolic redeval '(getConstraintStore);");
+  cl_.skip_until_redeval();
+
+  ret = cl_.get_s_expr();
+  return ret;
+}
+
+//value_tを指定された精度で数値に変換する
+std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt){
   std::string ret;
   REDUCEStringSender rss(cl_);
 

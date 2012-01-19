@@ -301,6 +301,21 @@ VCSResult REDUCEVCSPoint::check_consistency()
   return result;
 }
 
+VCSResult REDUCEVCSPoint::check_entailment(const node_sptr &node)
+{
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::check_entailment() ***");
+
+  constraints_t constraints;
+  constraints.push_back(node);
+  send_constraint(constraints);
+  cl_->send_string("symbolic redeval '(checkConsistencyWithTmpCons expr_ lcont_ vars_);");
+
+  VCSResult result = check_consistency_receive();
+
+  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSPoint::check_entailment() ***");
+  return result;
+}
+
 VCSResult REDUCEVCSPoint::check_consistency_receive()
 {
   /////////////////// óMˆ—

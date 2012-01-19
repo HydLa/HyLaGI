@@ -137,7 +137,7 @@ end;
 
 procedure myInfinityIf(x, op, y)$
 begin;
-  scalar ans, tmpAns_, adjustRet_;
+  scalar ans, tmpAns_, tupleDNF_, retTuple_;
 
   debugWrite("in myInfinityIf", " ");
   % INFINITY > -INFINITYとかの対応
@@ -147,9 +147,12 @@ begin;
     if((op = leq) or (op = lessp)) then ans:=t else ans:=nil
   else <<
     % 係数等への対応として、まずinfinity relop valueの形にしてから解きなおす
-    adjustRet_:= adjustIneqExpr(op(x, y));
-    debugWrite("adjustRet_: ", adjustRet_);
-    ans:= myInfinityIf(part(adjustRet_, 1), part(adjustRet_, 2), part(adjustRet_, 3));
+    tupleDNF_:= exIneqSolve(op(x, y));
+    debugWrite("tupleDNF_: ", tupleDNF_);
+    % 1次式であるときは、解は1つなはず
+    % TODO：INFINITY^2などへの対応
+    retTuple_:= first(first(tupleDNF_));
+    ans:= myInfinityIf(part(retTuple_, 1), part(retTuple_, 2), part(retTuple_, 3));
   >>;
 
   return ans;
@@ -189,34 +192,28 @@ if(lst={}) then x
 else if(mymax(x, first(lst)) = x) then myFindMaximumValue(x,rest(lst))
 else myFindMaximumValue(first(lst),rest(lst))$
 
-procedure compareValueAndParameter(val_, paramExpr_, condition_)$
+procedure compareValueAndParameter(val_, paramExpr_, condDNF_)$
 %入力: 比較する対象の値, パラメータを含む式, パラメータに関する条件
 %出力: {「値」側が小さくなるためのパラメータの条件, 「パラメータを含む式」が小さくなるためのパラメータの条件}
 begin;
-  scalar valueLeqParamCond_, leqIneqSol_, valueGreaterParamCond_, greaterIneqSol_,
+  scalar valueLeqParamCondSol_, valueGreaterParamCondSol_, 
          ret_;
 
   debugWrite("in compareValueAndParameter", " ");
   debugWrite("val_: ", val_);
   debugWrite("paramExpr_: ", paramExpr_);
-  debugWrite("condition_: ", condition_);
+  debugWrite("condDNF_: ", condDNF_);
 
 
-  % minValue_≦paramの場合
-  valueLeqParamCond_:= removeTrueFormula(mymkand(union({leq(val_, paramExpr_)}, getArgsList(condition_))));
-  debugWrite("valueLeqParamCond_: ", valueLeqParamCond_);
-  if(rlqe(ex(paramName_, valueLeqParamCond_))=false) then leqIneqSol_:= {}
-  else leqIneqSol_:= solveParameterIneq(getArgsList(valueLeqParamCond_));
-  debugWrite("leqIneqSol_: ", leqIneqSol_);
+  % minValue_≦paramの場合の条件式
+  valueLeqParamCondSol_:= addCondTupleToCondDNF({val_, leq, paramExpr_}, condDNF_);
+  debugWrite("valueLeqParamCondSol_: ", valueLeqParamCondSol_);
 
-  % minValue_＞paramの場合
-  valueGreaterParamCond_:= removeTrueFormula(mymkand(union({greaterp(val_, paramExpr_)}, getArgsList(condition_))));
-  debugWrite("valueGreaterParamCond_: ", valueGreaterParamCond_);
-  if(rlqe(ex(paramName_, valueGreaterParamCond_))=false) then greaterIneqSol_:= {}
-  else greaterIneqSol_:= solveParameterIneq(getArgsList(valueGreaterParamCond_));
-  debugWrite("greaterIneqSol_: ", greaterIneqSol_);
+  % minValue_＞paramの場合の条件式
+  valueGreaterParamCondSol_:= addCondTupleToCondDNF({val_, greaterp, paramExpr_}, condDNF_);
+  debugWrite("valueGreaterParamCondSol_: ", valueGreaterParamCondSol_);
 
-  return {leqIneqSol_, greaterIneqSol_};
+  return {valueLeqParamCondSol_, valueGreaterParamCondSol_};
 end;
 
 % 入力：デフォルトの最小値に関する「tの式と条件の組」defaultTC_, 候補となる「tの式と条件の組」のリストTCList_
@@ -493,6 +490,16 @@ begin;
 
 end;
 
+procedure getConstraintStore()$
+begin;
+  scalar ret_;
+  putLineFeed();
+
+  ret_:= {constraintStore_, parameterStore_};
+  debugWrite("ret_: ", ret_);
+  return ret_;
+end;
+
 % 制約ストアへの制約の追加
 
 procedure addConstraint(cons_, vars_)$
@@ -611,6 +618,13 @@ begin;
   return subAppliedExpr_;
 end;
 
+
+procedure exSolve(exprs_, vars_)$
+begin;
+  % 実数解のみを返すようにする
+
+
+end;
 
 % PPにおける無矛盾性の判定
 % 返り値は{ans, {{変数名 = 値},...}} の形式
@@ -731,74 +745,10 @@ begin;
   else return nil;
 end;
 
-% 不等式を、左辺に正の変数名のみがある形式に整形する
-% 出力：{左辺, relop, 右辺}
-% (不等式の場合、必ず右辺が0になってしまう（自動的に移項してしまう）ことがあるため)
-procedure adjustIneqExpr(ineqExpr_)$
-begin;
-  scalar lhs_, relop_, rhs_, adjustedLhs_, adjustedRelop_, adjustedRhs_, 
-         reverseRelop_, adjustedIneqExpr_, sol_, adjustedEqExpr_,
-         ret_, exprVarList_, exprVar_;
-
-  debugWrite("in adjustIneqExpr", " ");
-
-  lhs_:= part(ineqExpr_, 1);
-  relop_:= myHead(ineqExpr_);
-  rhs_:= part(ineqExpr_, 2);
-  % 右辺を左辺に移項する
-  adjustedIneqExpr_:= myApply(relop_, {lhs_+(-1)*rhs_, 0});
-  adjustedLhs_:= part(adjustedIneqExpr_, 1);
-  debugWrite("adjustedIneqExpr_: ", adjustedIneqExpr_);
-  debugWrite("adjustedLhs_: ", adjustedLhs_);
-  adjustedRelop_:= myHead(adjustedIneqExpr_);
-
-
-  % この時点でx+value relop 0または-x+value relop 0の形式になっているので、
-  % -x+value≦0の場合はx-value≧0の形にする
-  % サーバーモードだと≧を使った式表現は保持できないようなので、reverseするかどうかだけ分かれば良い
-  % minusがなぜか使えないので、式に出現する変数名を調べて、「-x」の形がないかどうか調べる
-  exprVarList_:= union(for each x in union(union(csVariables_, psParameters_), {INFINITY}) join
-    if(not freeof(adjustedLhs_, x)) then {x} else {});
-  debugWrite("exprVarList_: ", exprVarList_);
-  % TODO：複数の変数が入っている場合への対応？
-  exprVar_:= first(exprVarList_);
-  if(not freeof(adjustedLhs_, -1*exprVar_)) then <<
-    adjustedRelop_:= getReverseRelop(myHead(adjustedIneqExpr_));
-%    reverseRelop_:= getReverseRelop(myHead(adjustedIneqExpr_));
-%    adustedIneqExpr_:= myApply(reverseRelop_, {-1*adjustedLhs_, 0});
-%    adjustedLhs_:= part(adjustedIneqExpr_, 1);
-%    debugWrite("adjustedIneqExpr_ after transposition: ", adjustedIneqExpr_);
-%    debugWrite("adjustedLhs_ after transposition: ", adjustedLhs_);
-%    adjustedRelop_:= myHead(adjustedIneqExpr_);
-  >>;
-
-  
-  % ubまたはlbを求める
-  off arbvars;
-  % INFINITYのときは変数としてinfinityを指定し、それ以外は制約ストアの変数を指定する
-  % TODO：変数部分をちゃんと指定する
-  if(not freeof(adjustedLhs_, INFINITY)) then 
-    sol_:= solve(equal(adjustedLhs_, 0), {INFINITY})
-  else sol_:= solve(equal(adjustedLhs_, 0), csVariables_);
-  debugWrite("sol_: ", sol_);
-  on arbvars;
-  % 2重リストの時のみfirstで得る
-  % TODO:複数解得られた場合への対応
-  if(myHead(first(sol_))=list) then adjustedEqExpr_:= first(first(sol_))
-  else adjustedEqExpr_:= first(sol_);
-  debugWrite("adjustedEqExpr_: ", adjustedEqExpr_);
-
-  adjustedLhs_:= part(adjustedEqExpr_, 1);
-  adjustedRhs_:= part(adjustedEqExpr_, 2);
-  ret_:= {adjustedLhs_, adjustedRelop_, adjustedRhs_};
-  debugWrite("ret_: ", ret_);
-  return ret_;
-end;
-
 % convertCSToVM内で使う、整形用関数
 procedure makeConsTuple(cons_)$
 begin;
-  scalar varName_, relopCode_, value_, adjustRet_, adjustedCons_, sol_;
+  scalar varName_, relopCode_, value_, tupleDNF_, retTuple_, adjustedCons_, sol_;
 
   debugWrite("in makeConsTuple", " ");
   debugWrite("cons_: ", cons_);
@@ -810,12 +760,14 @@ begin;
     relopCode_:= getExprCode(cons_);
     value_:= part(cons_, 2);
   >> else <<
-    adjustedRet_:= adjustIneqExpr(cons_);
-    debugWrite("adjustedRet_: ", adjustRet_);
+    tupleDNF_:= exIneqSolve(cons_);
+    debugWrite("tupleDNF_: ", tupleDNF_);
+    % 1次式になってるはずなので、解は1つなはず
+    retTuple_:= first(first(tupleDNF_));
     
-    varName_:= part(adjustedRet_, 1);
-    relopCode_:= getExprCode(part(adjustedRet_, 2));
-    value_:= part(adjustedRet_, 3);
+    varName_:= part(retTuple_, 1);
+    relopCode_:= getExprCode(part(retTuple_, 2));
+    value_:= part(retTuple_, 3);
   >>;
   debugWrite("varName_: ", varName_);
   debugWrite("relopCode_: ", relopCode_);
@@ -1257,7 +1209,7 @@ end;
 % 出力：時刻と条件の組（TC）のリスト
 % 前提：tExpr_は等式も不等式もtの1次式になっている
 % TODO：ERROR処理
-procedure checkInfMinTime(tExpr_, condition_)$
+procedure checkInfMinTime(tExpr_, condDNF_)$
 begin;
   scalar head_, tExprSol_, argsAnsTCList_, ineqTCList_, ineqList_, eqTCList_,
          minTCList_, andEqTCArgsCount_,
@@ -1265,10 +1217,10 @@ begin;
 
   debugWrite("in checkInfMinTime", " ");
   debugWrite("tExpr_: ", tExpr_);
-  debugWrite("condition_: ", condition_);
+  debugWrite("condDNF_: ", condDNF_);
 
   % 引数を持たない場合
-  if(arglength(tExpr_)=-1) then return {{tExpr_, condition_}};
+  if(arglength(tExpr_)=-1) then return {{tExpr_, condDNF_}};
 
   head_:= myHead(tExpr_);
   debugWrite("head_: ", head_);
@@ -1277,7 +1229,7 @@ begin;
 
   if(hasLogicalOp(head_)) then <<
     argsAnsTCList_:= union(for i:=1 : arglength(tExpr_) join
-      checkInfMinTime(part(tExpr_, i), condition_));
+      checkInfMinTime(part(tExpr_, i), condDNF_));
     debugWrite("argsAnsTCList_: ", argsAnsTCList_);
     % 長さ1のリストならそのまま返す
     if(length(argsAnsTCList_)=1) then return argsAnsTCList_;
@@ -1292,7 +1244,7 @@ begin;
       if(freeof(part(x, 1), INFINITY)) then {x} else {};
 
     if(head_=or) then <<
-      minTCList_:= myFindMinimumValueCond({INFINITY, condition_}, eqTCList_);
+      minTCList_:= myFindMinimumValueCond({INFINITY, condDNF_}, eqTCList_);
     >> else if(head_=and) then <<
       andEqTCArgsCount_:= length(eqTCList_);
       debugWrite("andEqTCArgsCount_:", andEqTCArgsCount_);
@@ -1317,13 +1269,13 @@ begin;
         minTValue_:= part(first(eqTCList_), 1);
         debugWrite("minTValue_: ", minTValue_);
         if((mymin(maxLb_, minTValue_) neq maxLb_) or (mymin(minTValue_, minUb_) neq minTValue_)) then
-          minTCList_:= {{INFINITY, condition_}}
+          minTCList_:= {{INFINITY, condDNF_}}
         else minTCList_:= {{minTValue_, part(first(eqTCList_), 2)}};
       >> else <<
         % 不等式だけなので、lb<ubかつlb>0を確かめる
         if((mymin(maxLb_, minUb_) = maxLb_) and (mymin(0, maxLb_) = 0)) then 
-          minTCList_:= {{maxLb_, condition_}}
-        else minTCList_:= {{INFINITY, condition_}};
+          minTCList_:= {{maxLb_, condDNF_}}
+        else minTCList_:= {{INFINITY, condDNF_}};
       >>;
     >>;
   >> else if(head_=equal) then <<
@@ -1332,16 +1284,16 @@ begin;
     % t>0でなければ（連立してfalseなら）、INFINITYを返す
     if(not hasParameter(tExprSol_)) then <<
       if(mymin(part(tExprSol_,2),0) neq part(tExprSol_,2)) then 
-        minTCList_:= {{part(tExprSol_, 2), condition_}}
-      else minTCList_:= {{INFINITY, condition_}};
+        minTCList_:= {{part(tExprSol_, 2), condDNF_}}
+      else minTCList_:= {{INFINITY, condDNF_}};
     >> else <<
-      compareRet_:= compareValueAndParameter(0, part(tExprSol_, 2), condition_);
-      if(part(compareRet_, 1)={}) then minTCList_:= {{INFINITY, condition_}}
+      compareRet_:= compareValueAndParameter(0, part(tExprSol_, 2), condDNF_);
+      if(isFalseDNF(part(compareRet_, 1))) then minTCList_:= {{INFINITY, condDNF_}}
       else minTCList_:= {{part(tExprSol_, 2), part(compareRet_, 1)}};
     >>;
   >> else <<
     % 不等式の場合はそのまま返す
-    minTCList_:= {{tExpr_, condition_}};
+    minTCList_:= {{tExpr_, condDNF_}};
   >>;
 
   debugWrite("minTCList_: ", minTCList_);
@@ -1376,6 +1328,8 @@ begin;
   DExprVars_ := part(splitExprsResult_, 3);
   debugWrite("DExprVars_: ", DExprVars_);
   otherExprs_:= union(part(splitExprsResult_, 4), parameterStore_);
+  % 空集合なら、{{true}}として扱う（trueを表すDNF）
+  if(otherExprs_={}) then otherExprs_:= {{true}};
   debugWrite("otherExprs_: ", otherExprs_);
 
   initCons_:= union(for each x in rconts_ join {exSub(constraintStore_, x)});
@@ -1397,9 +1351,8 @@ begin;
 
   tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (vars_ \ initVars_)))); 
   debugWrite("tmpVarMap_:", tmpVarMap_);
-  debugWrite("mymkand(otherExprs_): ", mymkand(otherExprs_));
 
-  tmpMinTList_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_, removeTrueFormula(mymkand(otherExprs_)));
+  tmpMinTList_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_, otherExprs_);
   debugWrite("tmpMinTList_:", tmpMinTList_);
   if(tmpMinTList_ = {error}) then retCode_:= IC_SOLVER_ERROR___
   else retCode_:= IC_NORMAL_END___;
@@ -1430,31 +1383,33 @@ end;
 
 
 
-procedure calcNextPointPhaseTime(maxTime_, discCauseList_, condition_)$
+procedure calcNextPointPhaseTime(maxTime_, discCauseList_, condDNF_)$
 begin;
   scalar minTCondListList_, comparedMinTCondList_, 
          minTTime_, minTCond_, ans_;
 
   debugWrite("in calcNextPointPhaseTime", " ");
-  debugWrite("in calcNextPointPhaseTime", " ");
-  debugWrite("condition_: ", condition_);
+  debugWrite("condDNF_: ", condDNF_);
 
   % 離散変化が起きえない場合は、maxTime_まで実行して終わり
-  if(discCauseList_ = {}) then return {{maxTime_, condition_, 1}};
+  if(discCauseList_ = {}) then return {{maxTime_, condDNF_, 1}};
 
-  minTCondListList_:= union(for each x in discCauseList_ collect findMinTime(x, condition_));
+  minTCondListList_:= union(for each x in discCauseList_ collect findMinTime(x, condDNF_));
   debugWrite("minTCondListList_ in calcNextPointPhaseTime: ", minTCondListList_);
 
   if(not freeof(minTCondListList_, error)) then return {error};
 
-  comparedMinTCondList_:= myFoldLeft(compareMinTimeList, {{maxTime_, condition_}}, minTCondListList_);
+  comparedMinTCondList_:= myFoldLeft(compareMinTimeList, {{maxTime_, condDNF_}}, minTCondListList_);
   debugWrite("comparedMinTCondList_ in calcNextPointPhaseTime: ", comparedMinTCondList_);
 
   ans_:= union(for each x in comparedMinTCondList_ collect <<
     minTTime_:= part(x, 1);
     minTCond_:= part(x, 2);
     % Condがtrueの場合は空集合として扱う
-    if(minTCond_={true}) then minTCond_:= {};
+    if(isTrueDNF(minTCond_)) then minTCond_:= {};
+    % 演算子部分をコードに置き換える
+    minTCond_:= for each conj in minTCond_ collect
+      for each term in conj collect {part(term, 1), getExprCode(part(term, 2)), part(term, 3)};
     if(mymin(minTTime_, maxTime_) neq maxTime_) then {minTTime_, minTCond_, 0}
     else {minTTime_, minTCond_, 1}
   >>);
@@ -1466,46 +1421,104 @@ end;
 load_package "ineq";
 load_package "numeric";
 
-% 1つの不等式に関して、上下限を正しく扱った上で解ける
-% ＜と≦を区別できるような区間を出力する
+% 不等式を、左辺に正の変数名のみがある形式に整形し、それを表すタプルを作る
+% (不等式の場合、必ず右辺が0になってしまう（自動的に移項してしまう）ことや、
+% 不等式の向きが限定されてしまったりすることがあるため)
+% 前提：入力される不等式も変数も1つ
 % TODO：複数の不等式が渡された場合への対応？
-% TODO：無理数が含まれる際の処理
-procedure exIneqSolve(ineqs_, vars_)$
+% 2次不等式までは解ける
+% TODO：3次以上への対応？
+% 入力：1変数の2次以下の不等式1つ
+% 出力：{左辺, relop, 右辺}の形式によるDNFリスト
+procedure exIneqSolve(ineqExpr_)$
 begin;
-  scalar ineq_, relop_, lhs_, rhs_, ineqSol_, ret_, squaredIneq_;
+  scalar lhs_, relop_, rhs_, adjustedLhs_, adjustedRelop_, 
+         reverseRelop_, adjustedIneqExpr_, sol_, adjustedEqExpr_,
+         retTuple_, exprVarList_, exprVar_, retTupleDNF_,
+         boundList_, ub_, lb_;
 
   debugWrite("in exIneqSolve", " ");
-  debugWrite("ineqs_: ", ineqs_);
-  debugWrite("vars_: ", vars_);
 
-  if(myHead(ineqs_)=list) then ineq_:= first(ineqs_)
-  else ineq_:= ineqs_;
-  debugWrite("ineq_: ", ineq_);
+  lhs_:= part(ineqExpr_, 1);
+  relop_:= myHead(ineqExpr_);
+  rhs_:= part(ineqExpr_, 2);
+  % 右辺を左辺に移項する
+  adjustedIneqExpr_:= myApply(relop_, {lhs_+(-1)*rhs_, 0});
+  adjustedLhs_:= lhs(adjustedIneqExpr_);
+  debugWrite("adjustedIneqExpr_: ", adjustedIneqExpr_);
+  debugWrite("adjustedLhs_: ", adjustedLhs_);
+  adjustedRelop_:= myHead(adjustedIneqExpr_);
 
-  % 演算子を取得
-  % 前提：解く前と後とで演算子の向きが変わることがない
-  % TODO：なんとかする
-  relop_:= part(ineq_, 0);
-  lhs_:= part(ineq_, 1);
-  rhs_:= part(ineq_, 2);
 
-  % 変数にsqrtがついてる場合は両辺を2乗して解く
-  % TODO：もっとちゃんと考える
-  if(not freeof(ineq_, sqrt)) then <<
-    squaredIneq_:= myApply(relop_, {lhs_*lhs_, rhs_*rhs_});
-    debugWrite("squaredIneq_: ", squaredIneq_);
-    ineqSol_:= ineq_solve(squaredIneq_, vars_);
-  >>else <<
-    ineqSol_:= ineq_solve(ineqs_, vars_);
+  % この時点でx+value relop 0または-x+value relop 0の形式になっているので、
+  % -x+value≦0の場合はx-value≧0の形にする必要がある（relopとして逆のものを得る必要がある）
+  % サーバーモードだと≧を使った式表現は保持できないようなので、reverseするかどうかだけ分かれば良い
+  % minusがなぜか使えないので、式に出現する変数名を調べて、「-x」の形がないかどうか調べる
+  exprVarList_:= union(for each x in union(union(csVariables_, psParameters_), {INFINITY}) join
+    if(not freeof(adjustedLhs_, x)) then {x} else {});
+  debugWrite("exprVarList_: ", exprVarList_);
+  % TODO：複数の変数が入っている場合への対応？
+  exprVar_:= first(exprVarList_);
+  debugWrite("exprVar_: ", exprVar_);
+  if(not freeof(adjustedLhs_, -1*exprVar_)) then <<
+    adjustedRelop_:= getReverseRelop(myHead(adjustedIneqExpr_));
   >>;
 
-  ret_:= adjustIneqSol(ineqSol_, relop_);
-  debugWrite("ret_ in exIneqSolve: ", ret_);
-  return ret_;
+  % 変数にsqrtがついてる場合は2乗しておく
+  if(not freeof(adjustedLhs_, sqrt(exprVar_))) then <<
+    adjustedLhs_:= adjustedLhs_*adjustedLhs_;
+    debugWrite("adjustedLhs_ after squaring: ", adjustedLhs_);
+  >>;
+
+  
+  % ubまたはlbを求める
+  off arbvars;
+  % INFINITYのときは変数としてinfinityを指定し、それ以外は制約ストアの変数を指定する
+  % TODO：elseのときの変数部分をちゃんと指定する
+  if(not freeof(adjustedLhs_, INFINITY)) then 
+    sol_:= solve(equal(adjustedLhs_, 0), INFINITY)
+  else sol_:= solve(equal(adjustedLhs_, 0), exprVar_);
+  debugWrite("sol_: ", sol_);
+  on arbvars;
+
+  % TODO：複数変数への対応？
+  % 複数変数が入ると2重リストになるはずだが、1変数なら不要か？
+%  if(length(sol_)>1 and myHead(first(sol_))=list) then <<
+%    % orでつながった中にandが入っている関係を表している
+%      
+%    adjustedEqExpr_:= first(first(sol_))
+%
+%  >> 
+  if(length(sol_)>1) then <<
+    % 2次方程式を解いた場合。厳密には長さ2のはず
+    % TODO：3次以上への一般化？
+
+    boundList_:= {rhs(part(sol_, 1)), rhs(part(sol_, 2))};
+    lb_:= myFindMinimumValue(INFINITY, boundList_);
+    ub_:= first(boundList_ \ {lb_});
+    
+    % relopによって、tupleDNFの構成を変える
+    if((adjustedRelop_ = geq) or (adjustedRelop_ = greaterp)) then <<
+      % ≧および＞の場合はorの関係になる
+      retTupleDNF_:= {{ {lb_, adjustedRelop_, exprVar_} }, { {exprVar_, adjustedRelop_, ub_} }};
+    >> else <<
+      % ≦および＜の場合はandの関係になる
+      retTupleDNF_:= {{ {lb_, adjustedRelop_, exprVar_},     {exprVar_, adjustedRelop_, ub_} }};
+    >>;
+  >> else <<
+    adjustedEqExpr_:= first(sol_);
+    debugWrite("adjustedEqExpr_: ", adjustedEqExpr_);
+    retTuple_:= {lhs(adjustedEqExpr_), adjustedRelop_, rhs(adjustedEqExpr_)};
+    debugWrite("retTuple_: ", retTuple_);
+    retTupleDNF_:= {{retTuple_}};
+  >>;
+
+  debugWrite("retTupleDNF_: ", retTupleDNF_);
+  return retTupleDNF_;
 end;
 
-% リスト形式の出力や区間形式の出力を整形し、orやandでつながった形式にする
-% TODO：orやandで良いのか？？
+% ineq_solveで得られたリスト形式の出力や区間形式の出力を整形し、orやandでつながった形式にする
+% TODO：orやandで良いのか？？→良くない。なので使わない
 procedure adjustIneqSol(ineqSolExpr_, relop_)$
 begin;
   scalar head_, rhs_, adjustedIneq_, lb_, ub_;
@@ -1525,7 +1538,6 @@ begin;
     lb_:= part(rhs_, 1);
     ub_:= part(rhs_, 2);
     adjustedIneq_:= mymkand({myApply(relop_, {lb_, t}), myApply(relop_, {t, ub_})});
-    % ↑ほんとにorやandで良いのか？？←ここらへん
   >> else <<
     adjustedIneq_:= ineqSolExpr_;
   >>;
@@ -1535,17 +1547,17 @@ begin;
 end;
 
 
-procedure findMinTime(integAsk_, condition_)$
+procedure findMinTime(integAsk_, condDNF_)$
 begin;
   scalar integAskList_, integAskSolList_, integAskSolFormula_,
-         minTCList_, tmpSol_, ineqSol_;
+         minTCList_, tmpSol_, ineqSolDNF_;
 
   debugWrite("in findMinTime", " ");
   debugWrite("integAsk_: ", integAsk_);
-  debugWrite("condition_: ", condition_);
+  debugWrite("condDNF_: ", condDNF_);
 
   % t>0と連立してfalseになるような場合はMinTimeを考える必要がない
-  if(rlqe(integAsk_ and t>0) = false) then return {{INFINITY, condition_}};
+  if(rlqe(integAsk_ and t>0) = false) then return {{INFINITY, condDNF_}};
 
   %%%%%%%%%%%% TODO:この辺から、%%%%%%%%%%%%%%
   % まず、andでつながったtmp制約をリストに変換
@@ -1560,9 +1572,10 @@ begin;
                          if(length(tmpSol_)>1) then {map(rationalisation, tmpSol_)} 
                          else map(rationalisation, tmpSol_)
                        >> else <<
-                         ineqSol_:= exIneqSolve(x, t);
-                         debugWrite("ineqSol_: ", ineqSol_);
-                         {ineqSol_}
+                         ineqSolDNF_:= exIneqSolve(x);
+                         debugWrite("ineqSolDNF_: ", ineqSolDNF_);
+                         % DNF形式からただのor形式に直す
+                         for each x in ineqSolDNF_ collect first(x)
                        >>
                      );
   debugWrite("integAskSolList_:", integAskSolList_);
@@ -1574,7 +1587,7 @@ begin;
   debugWrite("integAskSolFormula_: ", integAskSolFormula_);
   %%%%%%%%%%%% TODO:この辺までを1つの処理にまとめたい%%%%%%%%%%%%
 
-  minTCList_:= checkInfMinTime(integAskSolFormula_, condition_);
+  minTCList_:= checkInfMinTime(integAskSolFormula_, condDNF_);
   debugWrite("minTCList_ in findMinTime: ", minTCList_);
 
   % ERRORが返っていたらerror
@@ -1633,8 +1646,8 @@ end;
 procedure compareMinTime(TC1_, TC2_)$
 begin;
   scalar TC1Time_, TC1Cond_, TC2Time_, TC2Cond_,
-         intersectionCond_, intersectionCondList_, TC1LeqTC2Cond_, TC1GreaterTC2Cond_,
-         TC1LeqTC2Sol_, TC1GreaterTC2Sol_, retTCList_;
+         intersectionCondDNF_, TC1LeqTC2CondDNF_, TC1GreaterTC2CondDNF_,
+         retTCList_;
 
   debugWrite("in compareMinTime", " ");
   debugWrite("TC1_: ", TC1_);
@@ -1647,70 +1660,125 @@ begin;
   TC2Time_:= part(TC2_, 1);
   TC2Cond_:= part(TC2_, 2);
   % それぞれの条件部分について論理積を取り、falseなら空集合
-  intersectionCondList_:= union({TC1Cond_, TC2Cond_});
-  intersectionCond_:= mymkand(intersectionCondList_);
-  debugWrite("intersectionCond_: ", intersectionCond_);
-  if(rlqe(intersectionCond_)=false) then return retTCList_;
+  intersectionCondDNF_:= addCondDNFToCondDNF(TC1Cond_, TC2Cond_);
+  debugWrite("intersectionCondDNF_: ", intersectionCondDNF_);
+  if(isFalseDNF(intersectionCondDNF_)) then return retTCList_;
 
   % 条件の共通部分と時間に関する条件との論理積を取る
   % TC1Time_≦TC2Time_という条件
-  TC1LeqTC2Cond_:= removeTrueFormula(mymkand(cons(leq(TC1Time_, TC2Time_), intersectionCondList_)));
-  debugWrite("TC1LeqTC2Cond_: ", TC1LeqTC2Cond_);
+  TC1LeqTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, leq, TC2Time_}, intersectionCondDNF_);
+  debugWrite("TC1LeqTC2CondDNF_: ", TC1LeqTC2CondDNF_);
   % TC1Time_＞TC2Time_という条件
-  TC1GreaterTC2Cond_:= removeTrueFormula(mymkand(cons(greaterp(TC1Time_, TC2Time_), intersectionCondList_)));
-  debugWrite("TC1GreaterTC2Cond_: ", TC1GreaterTC2Cond_);
+  TC1GreaterTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, greaterp, TC2Time_}, intersectionCondDNF_);
+  debugWrite("TC1GreaterTC2CondDNF_: ", TC1GreaterTC2CondDNF_);
 
 
   % それぞれ、falseでなければretTCList_に追加
-  if(rlqe(TC1LeqTC2Cond_) neq false) then <<
-    if(hasParameter(TC1LeqTC2Cond_)) then <<
-      TC1LeqTC2Sol_:= solveParameterIneq(getArgsList(TC1LeqTC2Cond_));
-      debugWrite("TC1LeqTC2Sol_ before adjust: ", TC1LeqTC2Sol_);
-      TC1LeqTC2Sol_:= map(makeParamTuple, TC1LeqTC2Sol_);
-      debugWrite("TC1LeqTC2Sol_ after adjust: ", TC1LeqTC2Sol_);
-    >> else <<
-      TC1LeqTC2Sol_:= union({}, for each x in getArgsList(TC1LeqTC2Cond_) join 
-        if(checkOrderingFormula(x)) then {} else {false});
-    >>;
-    debugWrite("TC1LeqTC2Sol_: ", TC1LeqTC2Sol_);
-    % 厳密な大小判定を行ってもfalseでなければretTCList_に追加
-    if(freeof(TC1LeqTC2Sol_, false)) then retTCList_:= cons({TC1Time_, TC1LeqTC2Sol_}, retTCList_);
-  >>;
-
-  if(rlqe(TC1GreaterTC2Cond_) neq false) then <<
-    if(hasParameter(TC1GreaterTC2Cond_)) then <<
-      TC1GreaterTC2Sol_:= solveParameterIneq(getArgsList(TC1GreaterTC2Cond_));
-      debugWrite("TC1GreaterTC2Sol_ before adjust: ", TC1GreaterTC2Sol_);
-      TC1GreaterTC2Sol_:= map(makeParamTuple, TC1GreaterTC2Sol_);
-      debugWrite("TC1GreaterTC2Sol_ after adjust: ", TC1GreaterTC2Sol_);
-    >> else <<
-      TC1GreaterTC2Sol_:= union({}, for each x in getArgsList(TC1GreaterTC2Cond_) join 
-        if(checkOrderingFormula(x)) then {} else {false});
-    >>;
-    debugWrite("TC1LeqTC2Sol_: ", TC1LeqTC2Sol_);
-    % 厳密な大小判定を行ってもfalseでなければretTCList_に追加
-    if(freeof(TC1GreaterTC2Sol_, false)) then retTCList_:= cons({TC2Time_, TC1GreaterTC2Sol_}, retTCList_);
-  >>;
-
+  if(not isFalseDNF(TC1LeqTC2CondDNF_)) then retTCList_:= cons({TC1Time_, TC1LeqTC2CondDNF_}, retTCList_);
+  if(not isFalseDNF(TC1GreaterTC2CondDNF_)) then retTCList_:= cons({TC2Time_, TC1GreaterTC2CondDNF_}, retTCList_);
 
   debugWrite("retTCList_ in compareMinTime: ", retTCList_);
   return retTCList_;
 end;
 
-procedure addConditionToCondList(condition_, condList_)$
-%入力：追加する（パラメタの）条件condition_, （パラメタの）条件を表す論理式のリストcondList_
-%出力：（パラメタの）条件を表す論理式のリスト
-%注意：リストの要素1つ1つは論理和でつながり、要素内は論理積でつながっている？？
+procedure isFalseDNF(DNF_)$
+  if(DNF_={}) then t else nil;
+
+procedure isTrueDNF(DNF_)$
+  if(DNF_={{true}}) then t else nil;
+
+procedure addCondDNFToCondDNF(newCondDNF_, condDNF_)$
 begin;
-  %falseになったらその要素は消すとかしたい
+  scalar addedCondDNF_;
 
+  debugWrite("in addCondDNFToCondDNF", " ");
+  debugWrite("newCondDNF_: ", newCondDNF_);
+  debugWrite("condDNF_: ", condDNF_);
 
+  addedCondDNF_:= for each x in newCondDNF_ join
+    for each y in x join addCondTupleToCondDNF(y, condDNF_);
+
+  debugWrite("addedCondDNF_ in addCondDNFToCondDNF: ", addedCondDNF_);
+  return addedCondDNF_;
 end;
 
-  %convertCondListToFormula･･･rlqeする前とかによく使う
-  %convertFormulaToCondList･･･adjustIneqSolveの結果に対して使う
+procedure addCondTupleToCondDNF(newCondTuple_, condDNF_)$
+%入力：追加する（パラメタの）条件タプルnewCondTuple_, （パラメタの）条件を表す論理式のリストcondDNF_
+%出力：（パラメタの）条件を表す論理式のリスト
+%注意：リストの要素1つ1つは論理和でつながり、要素内は論理積でつながっていることを表す。
+begin;
+  scalar addedCondDNF_, addedCondConj_;
+
+  %追加した結果、要素（andでつながった式）がfalseになったら、その要素は消す
+  addedCondDNF_:= for each x in condDNF_ join <<
+    addedCondConj_:= addCondTupleToCondConj(newCondTuple_, x);
+    debugWrite("addedCondConj_ in loop in addCondTupleToCondDNF: ", addedCondConj_);
+    if(addedCondConj_=false) then {} else {addedCondConj_}
+  >>;
+
+  %%空集合になってしまったらfalseを返す
+  %if(addedCondDNF_={}) then addedCondDNF_:= false;
+
+  debugWrite("addedCondDNF_ in addCondTupleToCondDNF: ", addedCondDNF_);
+  return addedCondDNF_;
+end;
+
+% {左辺, relop, 右辺}のタプルから、式を作って返す
+procedure makeFormulaFromTuple(tuple_)$
+  myApply(part(tuple_, 2), {part(tuple_, 1), part(tuple_, 3)});
+
+procedure addCondTupleToCondConj(newCondTuple_, condConj_)$
+begin;
+  scalar addedCondConj_, varName_, relop_, value_,
+         varTerms_, ubTuple_, lbTuple_, ub_, lb_;
+
+  debugWrite("in addCondTupleToCondConj", " ");
+  debugWrite("newCondTuple_: ", newCondTuple_);
+  debugWrite("condConj_: ", condConj_);
+
+  % trueを追加しようとする場合、追加しないのと同じ
+  if(newCondTuple_=true) then return condConj_;
+  % パラメタが入らない場合、単に大小判定をした結果が残る
+  if(not hasParameter(newCondTuple_)) then 
+    if(checkOrderingFormula(makeFormulaFromTuple(newCondTuple_))) then return condConj_
+    else return false;
+  % trueに追加しようとする場合
+  if(condConj_={true}) then return {newCondTuple_};
 
 
+  varName_:= part(newCondTuple_, 1);
+  relop_:= part(newCondTuple_, 2);
+  value_:= part(newCondTuple_, 3);
+
+  % 論理積の中から、追加する変数と同じ変数の項を探す
+  varTerms_:= union(for each x in condConj_ join
+    if(not freeof(x, varName_)) then {x} else {});
+
+  % 下限・上限を得る
+  % length(varTerms_)<=2を想定
+  ubTuple_:= first(for each x in varTerms_ join
+    if((not freeof(x, leq)) or (not freeof(x, lessp))) then {x} else {});
+  lbTuple_:= first(varTerms_ \ {ubTuple_});
+  ub_:= part(ubTuple_, 3);
+  lb_:= part(lbTuple_, 3);
+
+  % 追加する不等式と上下限とを比較し、更新する
+  if((relop_=leq) or (relop_=lessp)) then <<
+    if(mymin(value_, ub_)=value_) then ub_:= value_
+  >> else <<
+    if(mymin(value_, lb_)=lb_) then lb_:= value_
+  >>;
+
+  % lb<ubを確かめる
+  if((mymin(lb_, ub_) = lb_)) then addedCondConj_:= {}
+  else addedCondConj_:= false;
+				  
+  debugWrite("addedCondConj_: ", addedCondConj_);
+  return addedCondConj_;
+end;
+
+% パラメタに関する不等式を、タプル形式に変換する
+% exIneqSolveで代用できるので、使わない
 procedure makeParamTuple(paramCons_)$
 begin;
   scalar parName_, relopCode_, parValue_, lhs_, adjustedCons_,
@@ -1720,7 +1788,7 @@ begin;
   debugWrite("paramCons_: ", paramCons_);
 
   parName_:= part(paramCons_, 1);
-  relopCode_:= getRelopCode(paramCons_);
+  relopCode_:= getExprCode(paramCons_);
   parValue_:= part(paramCons_, 2);
 
 
@@ -1730,6 +1798,8 @@ begin;
   return {parName_, relopCode_, parValue_};
 end;
 
+% 不等式内にパラメタ変数が含まれる場合に使う関数
+% exIneqSolveの仕様変更（変数指定が不要となった）により、使わない
 procedure solveParameterIneq(ineqList_)$
 begin;
   scalar paramNameList_, paramName_, ret_;
@@ -1745,7 +1815,7 @@ begin;
   paramName_:= first(paramNameList_);
 
   % exIneqSolveでは1つずつしか不等式を扱えないので、別々に解く
-  ret_:= exIneqSolve(ineqList_, paramName_);
+  ret_:= exIneqSolve(ineqList_);
   return ret_;
 end;
 

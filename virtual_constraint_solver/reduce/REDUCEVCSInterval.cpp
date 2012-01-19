@@ -125,6 +125,20 @@ VCSResult REDUCEVCSInterval::check_consistency()
   return result;
 }
 
+VCSResult REDUCEVCSInterval::check_entailment(const node_sptr &node)
+{
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::check_entailment ***");
+
+  constraints_t constraints;
+  constraints.push_back(node);
+  send_constraint(constraints);
+  cl_->send_string("symbolic redeval '(checkConsistencyInterval tmpCons_ rcont_ vars_);");
+  VCSResult result = check_consistency_receive();
+
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::check_entailment ***");
+  return result;
+}
+
 VCSResult REDUCEVCSInterval::check_consistency_receive()
 {
 /////////////////// óMˆ—

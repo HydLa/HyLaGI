@@ -50,6 +50,11 @@ public:
   virtual VCSResult check_consistency(const constraints_t& constraints);
 
   /**
+   * 現在の制約ストアから与えたaskが導出可能かどうか
+   */
+  virtual VCSResult check_entailment(const node_sptr &node);
+
+  /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(

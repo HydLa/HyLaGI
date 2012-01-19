@@ -52,6 +52,11 @@ public:
   virtual VCSResult check_consistency();
 
   /**
+   * 現在の制約ストアから与えたaskが導出可能かどうか
+   */
+  virtual VCSResult check_entailment(const node_sptr &node);
+
+  /**
    * askの導出状態が変化するまで積分をおこなう
    */
   virtual VCSResult integrate(
@@ -70,6 +75,8 @@ public:
 
   //SymbolicValueを指定された精度で数値に変換する
   virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
+  // 現在の制約ストアを文字列で取得する
+  virtual std::string get_constraint_store();
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time);
   //SymbolicTimeを比較する
