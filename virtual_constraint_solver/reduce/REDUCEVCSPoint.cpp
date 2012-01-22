@@ -136,6 +136,9 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
       // Šù‘¶‚Ì‹L†’è”‚Ìê‡
       if(var_name.find(REDUCEStringSender::var_prefix, 0) != 0){
+	// 'p'‚Íæ‚Á‚Ä‚¨‚­•K—v‚ª‚ ‚é
+	assert(var_name.at(0) == REDUCEStringSender::par_prefix.at(0));
+	var_name.erase(0, 1);
         parameter_t tmp_param(parameter_t::get_variable(var_name));
         tmp_range = maps.parameter_map.get_variable(tmp_param);
         value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp_, value_ptr);

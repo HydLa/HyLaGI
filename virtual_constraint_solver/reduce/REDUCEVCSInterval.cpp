@@ -349,21 +349,30 @@ VCSResult REDUCEVCSInterval::integrate(
 
 
     // 条件式
-    const_tree_iter_t pp_condition_list_ptr = next_time_ptr+1;
-    size_t pp_condition_size = pp_condition_list_ptr->children.size();
+    const_tree_iter_t pp_condition_or_ptr = next_time_ptr+1;
+    // 前提：Orでつながれた論理積は1つのみ
+    // TODO：2つ目以降も受信できるようにする
+    const_tree_iter_t pp_condition_and_ptr = pp_condition_or_ptr->children.begin();
+    size_t pp_condition_size = pp_condition_and_ptr->children.size();
 
     state.parameter_map.clear();
     parameter_t tmp_param;
     for(int cond_it = 0; cond_it < pp_condition_size; cond_it++){
-      const_tree_iter_t param_condition_ptr = pp_condition_list_ptr->children.begin()+cond_it;
+      const_tree_iter_t param_condition_ptr = pp_condition_and_ptr->children.begin()+cond_it;
 
       const_tree_iter_t param_name_ptr = param_condition_ptr->children.begin();
-      value_range_t tmp_range;
-      tmp_param.set_variable(parameter_t::get_variable(std::string(param_name_ptr->value.begin(), param_name_ptr->value.end())));
+      std::string param_name = std::string(param_name_ptr->value.begin(), param_name_ptr->value.end());
+      // 定数名の先頭にスペースが入ることがあるので除去する
+      // TODO:S式パーサを修正してスペース入らないようにする
+      if(param_name.at(0) == ' ') param_name.erase(0,1);
+      // 'p'は取っておく必要がある
+      assert(param_name.at(0) == REDUCEStringSender::par_prefix.at(0));
+      param_name.erase(0, 1);
+      tmp_param.set_variable(parameter_t::get_variable(param_name));
       HYDLA_LOGGER_VCS("returned parameter_name: ", tmp_param.get_name());
 
       const_tree_iter_t relop_code_ptr = param_name_ptr+1;
-      std::string relop_code_str = std::string(relop_code_ptr->value.begin(), param_name_ptr->value.end());
+      std::string relop_code_str = std::string(relop_code_ptr->value.begin(), relop_code_ptr->value.end());
       std::stringstream relop_code_ss;
       int relop_code;
       relop_code_ss << relop_code_str;
@@ -373,7 +382,7 @@ VCSResult REDUCEVCSInterval::integrate(
 
       const_tree_iter_t param_value_ptr = relop_code_ptr+1;
 
-      tmp_range = state.parameter_map.get_variable(tmp_param);
+      value_range_t tmp_range = state.parameter_map.get_variable(tmp_param);
       value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp, param_value_ptr);
       SExpConverter::set_range(tmp_value, tmp_range, relop_code);
       state.parameter_map.set_variable(tmp_param, tmp_range);
@@ -381,7 +390,7 @@ VCSResult REDUCEVCSInterval::integrate(
 
 
     // シミュレーション終了時刻に達したかどうか
-    const_tree_iter_t max_time_flag_ptr = pp_condition_list_ptr+1;
+    const_tree_iter_t max_time_flag_ptr = pp_condition_or_ptr+1;
     int max_time_flag;
     std::stringstream max_time_flag_ss;
     std::string max_time_flag_str = std::string(max_time_flag_ptr->value.begin(), max_time_flag_ptr->value.end());
