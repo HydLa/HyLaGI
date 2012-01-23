@@ -685,7 +685,8 @@ begin;
 
   % 未知変数を追加しないようにする
   off arbvars;
-  tmpSol_:= solve(union(eqExprs_, lcont_),  union(csVariables_, vars_));  on arbvars;
+  tmpSol_:= exSolve(union(eqExprs_, lcont_),  union(csVariables_, vars_));
+  on arbvars;
   debugWrite("tmpSol_: ", tmpSol_);
 
   if(tmpSol_={}) then return {retfalse___};
@@ -1064,15 +1065,16 @@ procedure isNDExpr(expr_)$
 
 procedure splitExprs(exprs_, vars_)$
 begin;
-  scalar otherExprs_, NDExprs_, DExprs_, DExprVars_;
+  scalar otherExprs_, NDExprs_, NDExprVars_, DExprs_, DExprVars_;
 
   otherExprs_:= union(for each x in exprs_ join 
                   if(hasInequality(x) or hasLogicalOp(x)) then {x} else {});
   NDExprs_ := union(for each x in setdiff(exprs_, otherExprs_) join 
                 if(isNDExpr(x)) then {x} else {});
+  NDExprVars_ := union(for each x in vars_ join if(not freeof(NDExprs_, x)) then {x} else {});
   DExprs_ := setdiff(setdiff(exprs_, otherExprs_), NDExprs_);
   DExprVars_:= union(for each x in vars_ join if(not freeof(DExprs_, x)) then {x} else {});
-  return {NDExprs_, DExprs_, DExprVars_, otherExprs_};
+  return {NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_};
 end;
 
 
@@ -1101,7 +1103,7 @@ ICI_UNKNOWN___:= 3; % 不要？
 
 procedure checkConsistencyInterval(tmpCons_, rconts_, vars_)$
 begin;
-  scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_,
+  scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_,
          initCons_, initVars_,
          integTmp_, integTmpQE_, integTmpQEList_, integTmpSolList_, infList_, ans_;
   putLineFeed();
@@ -1117,11 +1119,13 @@ begin;
   splitExprsResult_ := splitExprs(removePrevCons(constraintStore_), csVariables_);
   NDExprs_ := part(splitExprsResult_, 1);
   debugWrite("NDExprs_: ", NDExprs_);
-  DExprs_ := part(splitExprsResult_, 2);
+  NDExprVars_:= part(splitExprsResult_, 2);
+  debugWrite("NDExprVars_: ", NDExprVars_);
+  DExprs_ := part(splitExprsResult_, 3);
   debugWrite("DExprs_: ", DExprs_);
-  DExprVars_ := part(splitExprsResult_, 3);
+  DExprVars_ := part(splitExprsResult_, 4);
   debugWrite("DExprVars_: ", DExprVars_);
-  otherExprs_:= part(splitExprsResult_, 4);
+  otherExprs_:= part(splitExprsResult_, 5);
   debugWrite("otherExprs_: ", otherExprs_);
 
   initCons_:= union(for each x in rconts_ join {exSub(constraintStore_, x)});
@@ -1136,11 +1140,12 @@ begin;
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   % NDExpr_を連立
-  debugWrite("getNoDifferentialVars(union(DExprVars_, (vars_ \ initVars_))): ", 
-             getNoDifferentialVars(union(DExprVars_, (vars_ \ initVars_))));
+  debugWrite("getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))): ", 
+             getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
   tmpSol_:= solve(union(tmpSol_, NDExprs_), 
-                  getNoDifferentialVars(union(DExprVars_, (vars_ \ initVars_))));
+                  getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
   debugWrite("tmpSol_ after solve: ", tmpSol_);
+  if(tmpSol_ = {}) then return {ICI_INCONSISTENT___};
 
   % tmpCons_がない場合は無矛盾と判定して良い
   if(tmpCons_ = {}) then return {ICI_CONSISTENT___};
@@ -1355,7 +1360,7 @@ IC_NORMAL_END___:= 1;
 
 procedure integrateCalc(cons_, rconts_, discCause_, vars_, maxTime_)$
 begin;
-  scalar tmpSol_, splitExprsResult_, NDExprs_, DExprs_, DExprVars_, otherExprs_, paramCondDNF_,
+  scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_, paramCondDNF_,
          tmpDiscCause_, retCode_, tmpVarMap_, tmpMinTList_, integAns_, tmpIneqSolDNF_;
   putLineFeed();
 
@@ -1370,11 +1375,13 @@ begin;
   splitExprsResult_ := splitExprs(removePrevCons(constraintStore_), csVariables_);
   NDExprs_ := part(splitExprsResult_, 1);
   debugWrite("NDExprs_: ", NDExprs_);
-  DExprs_ := part(splitExprsResult_, 2);
+  NDExprVars_ := part(splitExprsResult_, 2);
+  debugWrite("NDExprVars_: ", NDExprVars_);
+  DExprs_ := part(splitExprsResult_, 3);
   debugWrite("DExprs_: ", DExprs_);
-  DExprVars_ := part(splitExprsResult_, 3);
+  DExprVars_ := part(splitExprsResult_, 4);
   debugWrite("DExprVars_: ", DExprVars_);
-  otherExprs_:= union(part(splitExprsResult_, 4), parameterStore_);
+  otherExprs_:= union(part(splitExprsResult_, 5), parameterStore_);
   % DNF形式にする
   % 空集合なら、{{true}}として扱う（trueを表すDNF）
   if(otherExprs_={}) then paramCondDNF_:= {{true}}
@@ -1397,7 +1404,7 @@ begin;
   debugWrite("tmpSol_: ", tmpSol_);
 
   % NDExprs_を連立
-  tmpSol_:= solve(union(tmpSol_, NDExprs_), getNoDifferentialVars(vars_ \ initVars_));
+  tmpSol_:= solve(union(tmpSol_, NDExprs_), getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, vars_ \ initVars_))));
   debugWrite("tmpSol_ after solve: ", tmpSol_);
 
   % TODO:Solver error処理
@@ -1405,7 +1412,7 @@ begin;
   tmpDiscCause_:= sub(tmpSol_, discCause_);
   debugWrite("tmpDiscCause_:", tmpDiscCause_);
 
-  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (vars_ \ initVars_)))); 
+  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
   debugWrite("tmpVarMap_:", tmpVarMap_);
 
   tmpMinTList_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_, paramCondDNF_);
