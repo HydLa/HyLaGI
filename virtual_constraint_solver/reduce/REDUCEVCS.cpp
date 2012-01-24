@@ -175,6 +175,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::add_constraint ***");
 
   REDUCEStringSender rss(cl_);
+  bool ignore_prev = (mode_==hydla::symbolic_simulator::ContinuousMode);
 
   // cons_‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send cons_ -----");
@@ -183,7 +184,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   constraints_t::const_iterator end = constraints.end();
   for(; it!=end; ++it){
     if(it!=constraints.begin()) cl_.send_string(",");
-    rss.put_node(*it);
+    rss.put_node(*it, ignore_prev);
   }
   cl_.send_string("}$");
 

@@ -241,7 +241,8 @@ procedure getCondDNFFromTC(TC_)$
 procedure myFindMinimumValueCond(defaultTC_, TCList_)$
 begin;
   scalar ineqTCList_, ineqList_, valueTCList_, paramTCList_, numberTCList_,
-         minValueTCList_, ineqTC_, splitIneqTCResult_, ubTCList_, lbTCList_, maxUb_, minLbTCList_,
+         minValueTCList_, ineqTC_, splitIneqTCResult_, ubTCList_, lbTCList_, 
+         ubList_, maxUb_, minLbTCList_,
          retTCList_, defaultCond_, comparTCListList_;
 
   debugWrite("in myFindMinimumValueCond", " ");
@@ -272,6 +273,9 @@ begin;
   maxUb_:= myfindMaximumValue(0, ubList_);
   debugWrite("maxUb_: ", maxUb_);
   if(maxUb_ neq 0) then return {{ERROR, defaultCond_}};
+
+  % 0より小さい下限はt>0との連立で矛盾するので取り除く
+  lbTCList_:= for each x in lbTCList_ join if(mymin(getTimeFromTC(x), 0) neq 0) then {} else {x};
 
   % valueとdefault_と不等式の中での最小値を求める
   compareTCListList_:= for each x in union(lbTCList_, numberTCList_) collect {x};
@@ -1069,10 +1073,10 @@ begin;
 
   otherExprs_:= union(for each x in exprs_ join 
                   if(hasInequality(x) or hasLogicalOp(x)) then {x} else {});
-  NDExprs_ := union(for each x in setdiff(exprs_, otherExprs_) join 
+  NDExprs_ := union(for each x in (exprs_ \ otherExprs_) join 
                 if(isNDExpr(x)) then {x} else {});
   NDExprVars_ := union(for each x in vars_ join if(not freeof(NDExprs_, x)) then {x} else {});
-  DExprs_ := setdiff(setdiff(exprs_, otherExprs_), NDExprs_);
+  DExprs_ := (exprs_ \ otherExprs_) \ NDExprs_;
   DExprVars_:= union(for each x in vars_ join if(not freeof(DExprs_, x)) then {x} else {});
   return {NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_};
 end;
@@ -1085,10 +1089,10 @@ procedure removePrev(var_)$
   if(myHead(var_)=prev) then part(var_, 1) else var_$
 
 procedure removePrevVars(varsList_)$
-  select(freeof(~x, prev), varsList_)$
+  union(for each x in varsList_ join if(freeof(x, prev)) then {x} else {})$
 
 procedure removePrevCons(consList_)$
-  select(freeof(~x, prev), consList_)$
+  union(for each x in consList_ join if(freeof(x, prev)) then {x} else {})$
 
 % 前提：initxlhs=prev(x)の形
 % TODO：なんとかする
@@ -1133,17 +1137,22 @@ begin;
   initVars_:= map(getInitVars, rconts_);
   debugWrite("initVars_: ", initVars_);
 
-  tmpSol_:= exDSolve(DExprs_, initCons_, union(DExprVars_, (vars_ \ initVars_)));
+  if(DExprs_ = {}) then tmpSol_:= {}
+  else tmpSol_:= exDSolve(DExprs_, initCons_, union(DExprVars_, (vars_ \ initVars_)));
   debugWrite("tmpSol_: ", tmpSol_);
   
   if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   % NDExpr_を連立
-  debugWrite("getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))): ", 
-             getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
-  tmpSol_:= solve(union(tmpSol_, NDExprs_), 
+  % 連立しても解く前から空集合な場合は制約がないので無矛盾
+  if(union(tmpSol_, NDExprs_)={}) then return {ICI_CONSISTENT___}
+  else <<
+    debugWrite("getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))): ", 
+               getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
+    tmpSol_:= solve(union(tmpSol_, NDExprs_), 
                   getNoDifferentialVars(union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
+  >>;
   debugWrite("tmpSol_ after solve: ", tmpSol_);
   if(tmpSol_ = {}) then return {ICI_INCONSISTENT___};
 
@@ -1282,18 +1291,18 @@ begin;
     % 長さ1のリストならそのまま返す
     if(length(argsAnsTCList_)=1) then return argsAnsTCList_;
 
-    for each x in argsAnsTCList_ do
-      if(hasInequality(getTimeFromTC(x))) then ineqTCList_:= cons(x, ineqTCList_);
-    debugWrite("ineqTCList_: ", ineqTCList_);
-    eqTCList_:= argsAnsTCList_ \ ineqTCList_;
-    debugWrite("eqTCList_: ", eqTCList_);
-    % INFINITY消去
-    eqTCList_:= for each x in eqTCList_ join 
-      if(freeof(part(x, 1), INFINITY)) then {x} else {};
-
     if(head_=or) then <<
-      minTCList_:= myFindMinimumValueCond({INFINITY, condDNF_}, eqTCList_);
+      minTCList_:= myFindMinimumValueCond({INFINITY, condDNF_}, argsAnsTCList_);
     >> else if(head_=and) then <<
+      for each x in argsAnsTCList_ do
+        if(hasInequality(getTimeFromTC(x))) then ineqTCList_:= cons(x, ineqTCList_);
+      debugWrite("ineqTCList_: ", ineqTCList_);
+      eqTCList_:= argsAnsTCList_ \ ineqTCList_;
+      debugWrite("eqTCList_: ", eqTCList_);
+%      % INFINITY消去
+%      eqTCList_:= for each x in eqTCList_ join 
+%        if(freeof(getTimeFromTC(x), INFINITY)) then {x} else {};
+
       andEqTCArgsCount_:= length(eqTCList_);
       debugWrite("andEqTCArgsCount_:", andEqTCArgsCount_);
       % 2つ以上の等式が論理積でつながっていたらエラー
@@ -1400,7 +1409,8 @@ begin;
   initVars_:= map(getInitVars, rconts_);
   debugWrite("initVars_: ", initVars_);
 
-  tmpSol_:= exDSolve(DExprs_, initCons_, union(DExprVars_, (vars_ \ initVars_)));
+  if(DExprs_ = {}) then tmpSol_:= {}
+  else tmpSol_:= exDSolve(DExprs_, initCons_, union(DExprVars_, (vars_ \ initVars_)));
   debugWrite("tmpSol_: ", tmpSol_);
 
   % NDExprs_を連立
@@ -1687,8 +1697,10 @@ begin;
                        >> else <<
                          ineqSolDNF_:= exIneqSolve(x);
                          debugWrite("ineqSolDNF_: ", ineqSolDNF_);
-                         % DNF形式からただのor形式に直す
-                         for each x in ineqSolDNF_ collect makeExprFromTuple(first(x))
+                         % タプル形式から通常の不等式形式に直す
+                         % TODO：なんとかする？
+                         for each conj in ineqSolDNF_ collect 
+                           for each term in conj collect makeExprFromTuple(term)
                        >>
                      );
   debugWrite("integAskSolList_:", integAskSolList_);
