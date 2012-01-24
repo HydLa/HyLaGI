@@ -5,6 +5,7 @@
 #include "REDUCEStringSender.h"
 #include "Logger.h"
 #include "SExpConverter.h"
+#include "../SolveError.h"
 
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
@@ -333,6 +334,7 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
 
   if(ret_code_str=="RETERROR___"){
     // ソルバエラー
+    throw hydla::vcs::SolveError(ans);
     result = VCSR_SOLVER_ERROR;
   }
   else if(ret_code_str=="1") {

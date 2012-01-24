@@ -167,6 +167,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ContinuityMapMaker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DiscreteAskRemover.cpp"
 				>
 			</File>
@@ -202,6 +206,10 @@
 			</File>
 			<File
 				RelativePath=".\AskTypeAnalyzer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ContinuityMapMaker.h"
 				>
 			</File>
 			<File

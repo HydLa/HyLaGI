@@ -8,7 +8,7 @@
 #include "PacketChecker.h"
 #include "PacketErrorHandler.h"
 #include "MathematicaExpressionConverter.h"
-#include "SolveError.h"
+#include "../SolveError.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;

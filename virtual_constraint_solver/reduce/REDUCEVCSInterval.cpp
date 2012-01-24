@@ -6,6 +6,7 @@
 
 #include "Logger.h"
 #include "SExpConverter.h"
+#include "../SolveError.h"
 
 using namespace hydla::vcs;
 using namespace hydla::logger;
@@ -169,6 +170,7 @@ VCSResult REDUCEVCSInterval::check_consistency_receive()
 
   if(ret_code_str=="0"){
     // ソルバエラー
+    throw hydla::vcs::SolveError(ans);
     result = VCSR_SOLVER_ERROR;
   }
   else if(ret_code_str=="1") {
@@ -277,6 +279,7 @@ VCSResult REDUCEVCSInterval::integrate(
 
   if(ret_code_str=="0"){
     // ソルバエラー
+    throw hydla::vcs::SolveError(ans);
     return VCSR_SOLVER_ERROR;
   }
   assert(ret_code_str=="1");
