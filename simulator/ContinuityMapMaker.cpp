@@ -77,6 +77,7 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::ProgramCalle
 // •Ï”
 void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
+  if(!differential_count_) return;
   continuity_map_t::iterator find = variables_.find(node->get_name());
   if(find == variables_.end() || find->second < differential_count_){
     if(negative_)
