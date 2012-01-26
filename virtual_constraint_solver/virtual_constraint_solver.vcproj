@@ -436,8 +436,8 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="vcs_math_source.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)msc.exe vcs_math_source &lt; $(InputPath) &gt; $(ProjectDir)mathematica\vcs_math_source.cpp&#x0D;&#x0A;"
+						Description="vcs_math_source.mに対するカスタム ビルド ステップを実行しています。 &quot;$(SolutionDir)msc.exe&quot; vcs_math_source &lt; &quot;$(InputPath)&quot; &gt; &quot;$(ProjectDir)mathematica\vcs_math_source.cpp&quot;"
+						CommandLine="&quot;$(SolutionDir)msc.exe&quot; vcs_math_source &lt; &quot;$(InputPath)&quot; &gt; &quot;$(ProjectDir)mathematica\vcs_math_source.cpp&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)vcs_math_source.cpp"
 					/>
 				</FileConfiguration>
@@ -460,8 +460,8 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="vcs_reduce_source.redに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)rsc.exe vcs_reduce_source &lt; $(InputPath) &gt; $(ProjectDir)\reduce\vcs_reduce_source.cpp&#x0D;&#x0A;"
+						Description="vcs_reduce_source.redに対するカスタム ビルド ステップを実行しています。&quot;$(SolutionDir)rsc.exe&quot; vcs_reduce_source &lt; &quot;$(InputPath)&quot; &gt; &quot;$(ProjectDir)\reduce\vcs_reduce_source.cpp&quot;"
+						CommandLine="&quot;$(SolutionDir)rsc.exe&quot; vcs_reduce_source &lt; &quot;$(InputPath)&quot; &gt; &quot;$(ProjectDir)\reduce\vcs_reduce_source.cpp"
 						Outputs="$(ProjectDir)\reduce\vcs_reduce_source.cpp"
 					/>
 				</FileConfiguration>

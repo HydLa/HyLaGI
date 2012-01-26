@@ -205,8 +205,8 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="sls_math_source.mに対するカスタム ビルド ステップを実行しています。"
-						CommandLine="$(SolutionDir)msc.exe sls_math_source &lt; $(InputPath) &gt; $(ProjectDir)sls_math_source.cpp"
+						Description="sls_math_source.mに対するカスタム ビルド ステップを実行しています。 &quot;$(SolutionDir)msc.exe&quot; sls_math_source &lt; &quot;$(InputPath)&quot; &gt; &quot;$(ProjectDir)sls_math_source.cpp&quot;"
+						CommandLine="&quot;$(SolutionDir)msc.exe&quot; sls_math_source &lt; &quot;$(InputPath)&quot; &gt; &quot;$(ProjectDir)sls_math_source.cpp"
 						Outputs="$(ProjectDir)sls_math_source.cpp"
 					/>
 				</FileConfiguration>
