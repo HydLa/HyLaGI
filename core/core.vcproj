@@ -135,7 +135,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)\HydLa.exe"
+				AdditionalOptions="/DELAYLOAD:ml32i1.dll /DELAYLOAD:ml32i3.dll"
+				OutputFile="$(SolutionDir)\Hyrose.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"

@@ -10,6 +10,7 @@
 #pragma comment(lib, "ml32i1m.lib")
 #pragma comment(lib, "ml32i2m.lib")
 #pragma comment(lib, "ml32i3m.lib")
+#pragma comment(lib, "delayimp.lib")
 #endif
 
 class MathLinkError : public std::runtime_error {
