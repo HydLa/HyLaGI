@@ -232,6 +232,7 @@ Quiet[
       {tStore, sol, otherExpr, condition},
       inputPrint["checkConsistencyIntervalMain", expr, vars, pexpr,  pars];
       sol = exDSolve[expr, vars];
+      Print["sol: ", sol];
       If[sol === overconstraint,
         {2},
         If[sol === underconstraint || sol[[1]] === {} ,
