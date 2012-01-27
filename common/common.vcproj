@@ -122,7 +122,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions="/link /DELAYLOAD:ml32i1.dll /DELAYLOAD:ml32i2.dll /DELAYLOAD:ml32i3.dll"
 			/>
 			<Tool
 				Name="VCALinkTool"
