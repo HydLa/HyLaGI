@@ -45,9 +45,9 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
   // vars_‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=");
+  cl_->send_string("vars_:=union(");
   rss.put_vars();
-  cl_->send_string("$");
+  cl_->send_string(")$");
 
 
   cl_->send_string("symbolic redeval '(addConstraint expr_ vars_);");
@@ -254,9 +254,9 @@ void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
 
   // vars‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=");
+  cl_->send_string("vars_:=union(");
   rss.put_vars();
-  cl_->send_string("$");
+  cl_->send_string(")$");
 
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::send_constraint ***");
   return;

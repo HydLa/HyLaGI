@@ -334,7 +334,7 @@ void REDUCEVCS::simplify(time_t &time)
   cl_.skip_until_redeval();
 
   std::string ans = cl_.get_s_expr();
-  HYDLA_LOGGER_VCS("expr_time_shift_ans: ", ans);
+  HYDLA_LOGGER_VCS("simplify_ans: ", ans);
 
   // SéÆÉpÅ[ÉTÇ≈ì«Ç›éÊÇÈ
   SExpParser sp;

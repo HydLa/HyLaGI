@@ -95,9 +95,9 @@ void REDUCEVCSInterval::send_constraint(const constraints_t& constraints)
 
   // vars‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=");
+  cl_->send_string("vars_:=union(");
   rss.put_vars(true);
-  cl_->send_string("$");
+  cl_->send_string(")$");
 
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::send_constraint ***");
   return;
@@ -227,9 +227,9 @@ VCSResult REDUCEVCSInterval::integrate(
 
   // •Ï”‚ÌƒŠƒXƒg‚ð“n‚·
   HYDLA_LOGGER_VCS("----- send vars_ -----");
-  cl_->send_string("vars_:=");
+  cl_->send_string("vars_:=union(");
   rss.put_vars(true);
-  cl_->send_string("$");
+  cl_->send_string(")$");
 
 
   // maxTime‚ð“n‚·
@@ -360,7 +360,7 @@ VCSResult REDUCEVCSInterval::integrate(
 
     state.parameter_map.clear();
     parameter_t tmp_param;
-    for(int cond_it = 0; cond_it < pp_condition_size; cond_it++){
+    for(size_t cond_it = 0; cond_it < pp_condition_size; cond_it++){
       const_tree_iter_t param_condition_ptr = pp_condition_and_ptr->children.begin()+cond_it;
 
       const_tree_iter_t param_name_ptr = param_condition_ptr->children.begin();
