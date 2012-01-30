@@ -99,8 +99,6 @@ private:
   
   mutable REDUCELink* cl_;
   continuity_map_t continuity_map_;
-  constraints_t tmp_constraints_;  //ˆê“I‚É§–ñ‚ğ’Ç‰Á‚·‚é‘ÎÛ
-  REDUCEValue added_condition_;  //check_consistency‚Å’Ç‰Á‚³‚ê‚éğŒ
   int approx_precision_;
 };
 

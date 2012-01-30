@@ -198,14 +198,7 @@ VCSResult REDUCEVCSInterval::integrate(
 /////////////////// ‘—Mˆ—
   REDUCEStringSender rss(*cl_);
 
-  // integrateCalc(cons_, init_, discCause_, vars_, maxTime_]‚ğ“n‚µ‚½‚¢
-
-  // cons_‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send cons_ -----");
-  cl_->send_string("cons_:={");
-  cl_->send_string(added_condition_.get_string());
-  cl_->send_string("}$");
-
+  // integrateCalc(init_, discCause_, vars_, maxTime_]‚ğ“n‚µ‚½‚¢
 
   // ‰Šú’l§–ñinit_cons‚ğ“n‚·
   HYDLA_LOGGER_VCS("----- send init_ -----");  
@@ -249,7 +242,7 @@ VCSResult REDUCEVCSInterval::integrate(
   cl_->send_string("$");
 
 
-  cl_->send_string("symbolic redeval '(integrateCalc cons_ init_ discCause_ vars_ maxTime_);");
+  cl_->send_string("symbolic redeval '(integrateCalc init_ discCause_ vars_ maxTime_);");
 
 
 /////////////////// óMˆ—
