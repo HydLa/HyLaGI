@@ -3,6 +3,6 @@
 
 #include <iostream>
 
-const char* vcs_reduce_source();
+const std::string vcs_reduce_source();
 
 #endif //_INCLUDED_VCS_REDUCE_SOURCE_H_
