@@ -531,11 +531,11 @@ begin;
   >> else if((head_=plus) or (head_=times)) then <<
     flagList_:= union(for each x in getArgsList(value_) join
       if(hasIndefinableNum(x)) then {t} else {});
-    debugWrite("flagList_: ", flagList_);
+%    debugWrite("flagList_: ", flagList_);
     retFlag_:= if(flagList_={}) then nil else t;
   >> else if(isInvTrigonometricFunc(head_)) then <<
     insideInvTrigonometricFunc_:= part(value_, 1);
-    retFlag_:= if((insideInvTrigonometricFunc_>=-1) and (insideInvTrigonometricFunc_<=1)) then nil else t;
+    retFlag_:= if(checkOrderingFormula(insideInvTrigonometricFunc_>=-1) and checkOrderingFormula(insideInvTrigonometricFunc_<=1)) then nil else t;
   >> else <<
     retFlag_:= nil;
   >>;
@@ -578,6 +578,9 @@ end;
 % 大小判定関連の関数（定数式のみ、パラメタなし）
 %---------------------------------------------------------------
 
+checkOrderingFormulaCount_:= 0;
+checkOrderingFormulaIrrationalNumberCount_:= 0;
+
 procedure checkOrderingFormula(orderingFormula_)$
 %入力: 論理式(特にsqrt(2), greaterp_, sin(2)などを含むようなもの), 精度
 %出力: t or nil or -1
@@ -588,6 +591,8 @@ begin;
 
   debugWrite("in checkOrderingFormula", " ");
   debugWrite("orderingFormula_: ", orderingFormula_);
+  checkOrderingFormulaCount_:= checkOrderingFormulaCount_+1;
+  debugWrite("checkOrderingFormulaCount_: ", checkOrderingFormulaCount_);
 
   head_:= myHead(orderingFormula_);
   % 大小に関する論理式以外が入力されたらエラー
@@ -617,6 +622,8 @@ begin;
   
 
   if(not numberp(x) or not(numberp(y))) then <<
+    checkOrderingFormulaIrrationalNumberCount_:= checkOrderingFormulaIrrationalNumberCount_+1;
+    debugWrite("checkOrderingFormulaIrrationalNumberCount_: ", checkOrderingFormulaIrrationalNumberCount_);
     % 無理数が含まれる場合
     if(optUseApproximateCompare_) then <<
       % 近似値を用いた大小比較
@@ -774,70 +781,6 @@ begin;
   return {valueLeqParamCondSol_, valueGreaterParamCondSol_};
 end;
 
-% 入力：デフォルトの最小値に関する「時刻の式と条件の組」defaultTC_, 候補となる「時刻の式と条件の組」のリストTCList_
-% 出力：(最小値, それを与える定数の条件)の組のリスト
-% 返す値は必ず0より大きいものになるようにしている点に注意（0以下はエラー扱い）
-% TCList_中のそれぞれの要素はorの関係でつながっていると考える
-% checkInfMinTimeの仕様変更により不要に
-procedure myFindMinimumValueCond(defaultTC_, TCList_)$
-begin;
-  scalar ineqTCList_, ineqList_, valueTCList_, paramTCList_, numberTCList_,
-         minValueTCList_, ineqTC_, splitIneqTCResult_, ubTCList_, lbTCList_, 
-         ubList_, maxUb_, minLbTCList_,
-         retTCList_, defaultCond_, comparTCListList_;
-
-  debugWrite("in myFindMinimumValueCond", " ");
-  debugWrite("defaultTC_: ", defaultTC_);
-  debugWrite("TCList_: ", TCList_);
-
-  defaultCond_:= getCondDNFFromTC(defaultTC_);
-
-  ineqTCList_:= for each x in TCList_ join 
-    if(hasIneqRelop(getTimeFromTC(x)) or hasLogicalOp(getTimeFromTC(x))) then {x} else {};
-  valueTCList_:= TCList_ \ ineqTCList_;
-  paramTCList_:= union(for each x in valueTCList_ join 
-    if(hasParameter(getTimeFromTC(x))) then {x} else {});
-  numberTCList_:= valueTCList_ \ paramTCList_;
-  debugWrite("ineqTCList_: ", ineqTCList_);
-  debugWrite("valueTCList_: ", valueTCList_);
-  debugWrite("paramTCList_: ", paramTCList_);
-  debugWrite("numberTCList_: ", numberTCList_);
-
-
-  % 不等式の集合から、最小値を求めるために、下限と上限とで分ける
-  splitIneqTCResult_:= getIneqBoundTCLists(ineqTCList_);
-  lbTCList_:= part(splitIneqTCResult_, 1);
-  ubTCList_:= part(splitIneqTCResult_, 2);
-
-  % すべての上限は0より小さくなくてはならない（そうでないとt>0との連立で矛盾する）
-  ubList_:= for each x in ubTCList_ collect getTimeFromTC(x);
-  maxUb_:= myfindMaximumValue(0, ubList_);
-  debugWrite("maxUb_: ", maxUb_);
-  if(maxUb_ neq 0) then return {{ERROR, defaultCond_}};
-
-  % 0より小さい下限はt>0との連立で矛盾するので取り除く
-  lbTCList_:= for each x in lbTCList_ join if(mymin(getTimeFromTC(x), 0) neq 0) then {} else {x};
-
-  % valueとdefault_と不等式の中での最小値を求める
-  compareTCListList_:= for each x in union(lbTCList_, numberTCList_) collect {x};
-  minValueTCList_:= myFoldLeft(compareMinTimeList, {defaultTC_}, compareTCListList_);
-  debugWrite("minValueTCList_: ", minValueTCList_);
-
-  % paramがない場合はこの後の処理は不要
-  if(paramTCList_={}) then return minValueTCList_;
-
-
-  % paramTCとminValueTCとの比較（condition_によって結果が変わることがある）
-  % 前提：condition_内の定数の種類は1つまで？
-  % TODO：なんとかする
-  compareTCListList_:= for each x in union(rest(paramTCList_), minValueTCList_) collect {x};
-  debugWrite("compareTCListList_: ", compareTCListList_);
-  retTCList_:= myFoldLeft(compareMinTimeList, {first(paramTCList_)}, compareTCListList_);
-
-  debugWrite("retTCList_: ", retTCList_);
-  return retTCList_;
-end;
-
 %---------------------------------------------------------------
 % 不等式タプル関連の関数
 %---------------------------------------------------------------
@@ -945,6 +888,9 @@ begin;
   debugWrite("in addCondDNFToCondDNF", " ");
   debugWrite("newCondDNF_: ", newCondDNF_);
   debugWrite("condDNF_: ", condDNF_);
+
+  % Falseを追加しようとする場合はFalseを返す
+  if(isFalseDNF(newCondDNF_)) then return {{}};
 
   addedCondDNF_:= simplifyDNF(for each conj in newCondDNF_ join <<
     i_:= 1;
@@ -1521,10 +1467,15 @@ begin;
   if(solveans_={}) then return retoverconstraint___;
   % sがarbcomplexでない値を持つ時 overconstraintと想定
   if(freeof(lgetf(s, solveans_), arbcomplex)) then  return retoverconstraint___;
+
+  debugWrite("table_: ", table_);
   % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
   for each x in table_ do 
     if(freeof(solveans_, third(x))) then tmp_:=true;
+  debugWrite("is under-constraint?: ", tmp_);
   if(tmp_=true) then return retunderconstraint___;
+
+  debugWrite("table_: ", table_);
   
   % solveans_の逆ラプラス変換
   ans_:= for each table in table_ collect
@@ -1976,6 +1927,7 @@ procedure checkConsistencyInterval(tmpCons_, rconts_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_,
          initCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
+         DExprRconts_, DExprRcontsVars_,
          integTmp_, integTmpQE_, integTmpQEList_, integTmpEqualList_, integTmpIneqSolDNFList_, integTmpIneqSolDNF_, ans_;
   putLineFeed();
 
@@ -1999,45 +1951,29 @@ begin;
   otherExprs_:= part(splitExprsResult_, 5);
   debugWrite("otherExprs_: ", otherExprs_);
 
-  initCons_:= union(for each x in rconts_ collect exSub(constraintStore_, x));
+  DExprRconts_:= removePrevCons(rconts_);
+  debugWrite("DExprRconts_: ", DExprRconts_);
+  if(DExprRconts_ neq {}) then <<
+    prevVars_:= for each x in csVariables_ join if(isPrevVariable(x)) then {x} else {};
+    debugWrite("prevVars_: ", prevVars_);
+    noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
+    debugWrite("noPrevVars_: ", noPrevVars_);
+    DExprRcontsVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprRconts_, x)) then {x} else {});
+    debugWrite("DExprRcontsVars_: ", DExprRcontsVars_);
+    DExprs_:= union(DExprs_, DExprRconts_);
+    DExprVars_:= union(DExprVars_, DExprRcontsVars_);
+  >>;
+
+  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(constraintStore_, x));
   debugWrite("initCons_: ", initCons_);
-  initVars_:= map(getInitVars, rconts_);
+  initVars_:= map(getInitVars, initCons_);
   debugWrite("initVars_: ", initVars_);
 
+  noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
+  debugWrite("noDifferentialVars_: ", noDifferentialVars_);
+  tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
+  debugWrite("tmpSol_ solved with exDSolve: ", tmpSol_);
 
-  if(DExprs_ = {}) then <<
-    % DExprs_が無い場合は、rcons_を解く
-    if(rconts_ neq {}) then <<
-      % 通常変数（usrVar変数）を含む制約を取り出す（微分方程式になっているはずなので）
-      % DExpr_を作り直す
-      DExprs_:= removePrevCons(rconts_);
-      debugWrite("new DExprs_: ", DExprs_);
-      % DExprVars_を作り直す
-      prevVars_:= for each x in csVariables_ join if(isPrevVariable(x)) then {x} else {};
-      debugWrite("prevVars_: ", prevVars_);
-      noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
-      debugWrite("noPrevVars_: ", noPrevVars_);
-      DExprVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprs_, x)) then {x} else {});
-      debugWrite("new DExprVars_: ", DExprVars_);
-      % initCons_を作り直す
-      initCons_:= union(for each x in (rconts_ \ DExprs_) collect exSub(constraintStore_, x));
-      debugWrite("new initCons_: ", initCons_);
-      % initVars_を作り直す
-      initVars_:= map(getInitVars, initCons_);
-      debugWrite("new initVars_: ", initVars_);
-      noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
-      debugWrite("noDifferentialVars_: ", noDifferentialVars_);
-      tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
-    >> else <<
-      tmpSol_:= {};
-    >>;
-    debugWrite("tmpSol_ made from rcont_: ", tmpSol_);
-  >> else <<
-    noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
-    debugWrite("noDifferentialVars_: ", noDifferentialVars_);
-    tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
-    debugWrite("tmpSol_ solved with exDSolve: ", tmpSol_);
-  >>;
   
   if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
@@ -2059,7 +1995,7 @@ begin;
 
   tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
   debugWrite("tmpVarMap_:", tmpVarMap_);
-  tmpSol_:= for each x in tmpVarMap_ collect (part(x, 1)=part(x, 2));
+  tmpSol_:= for each x in tmpVarMap_ collect (first(x)=second(x));
   debugWrite("tmpSol_:", tmpSol_);
 
 
@@ -2078,8 +2014,8 @@ begin;
 
   % まず、andでつながったtmp制約をリストに変換
   % 前提：ParseTree構築時に分割されているはずなのでガードにorが入ることは考えない
-  integTmpList_:= if(myHead(first(integTmp_))=and) then getArgsList(first(integTmp_))
-                    else integTmp_;
+  integTmpList_:= if(myHead(integTmpQE_)=and) then getArgsList(integTmpQE_)
+                  else {integTmpQE_};
   debugWrite("integTmpList_:", integTmpList_);
 
   integTmpEqualList_:= for each x in integTmpList_ join if(myHead(x)=equal) then {x} else {};
@@ -2103,9 +2039,9 @@ begin;
   debugWrite("integTmpIneqSolDNF_:", integTmpIneqSolDNF_);
 
   % 不等式の場合、ここで初めて矛盾が見つかり、integTmpIneqSolDNF_がfalseになることがある
-  if(isFalseDNF(first(integTmpIneqSolDNF_))) then return {ICI_INCONSISTENT___}
+  if(isFalseDNF(integTmpIneqSolDNF_)) then return {ICI_INCONSISTENT___}
   % trueになったら無矛盾
-  else if(isTrueDNF(first(integTmpIneqSolDNF_))) then return {ICI_CONSISTENT___};
+  else if(isTrueDNF(integTmpIneqSolDNF_)) then return {ICI_CONSISTENT___};
 
 
   ans_:= checkInfUnitDNF(integTmpIneqSolDNF_);
@@ -2133,7 +2069,7 @@ end;
 
 procedure checkInfUnitDNF(tDNF_)$
 begin;
-  scalar conj_, infCheckAns_, orArgsAnsList_, lbTuple_;
+  scalar conj_, infCheckAns_, orArgsAnsList_, lbTupleList_, lbTuple_;
 
   conj_:= first(tDNF_);
   if(length(tDNF_)>1) then <<
@@ -2188,8 +2124,15 @@ begin;
     else <<
       % パラメタの場合、その値が0以下ならば結果はINFINITYになる
       minValue_:= getValueFromTuple(first(conj_));
+%      checkDNF_:= addCondTupleToCondDNF({minValue_, greaterp, 0}, condDNF_);
+%      debugWrite("checkDNF_: ", checkDNF_);
+%      if(not isFalseDNF(checkDNF_)) then << 
+%        minTCList_:= {{minValue_, checkDNF_}}; % ←？
+%      >> else <<
+%        minTCList_:= {{INFINITY, condDNF_}};
+%      >>;
       minTCList_:= { {minValue_, addCondTupleToCondDNF({minValue_, greaterp, 0}, condDNF_)},
-                     {INFINITY,  addCondTupleToCondDNF({minValue_, leq,      0}, condDNF_)} };
+                     {INFINITY,  addCondTupleToCondDNF({minValue_, leq,      0}, condDNF_)} }; % ←？
     >>;
   >> else <<
     if(not hasParameter(conj_)) then minTCList_:= {{getValueFromTuple(first(getLbTupleListFromConj(conj_))), condDNF_}}
@@ -2217,19 +2160,12 @@ begin;
         checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, 0}, condDNF_);
         debugWrite("checkDNF_: ", checkDNF_);
         if(not isFalseDNF(checkDNF_)) then <<
-
           minTCList_:= union(compareParamTime({getValueFromTuple(x), condDNF_}, {lbValue_, condDNF_}, MAX), minTCList_);
           debugWrite("minTCList_: ", minTCList_);
-%          debugWrite("========== make paramLeqValueCondDNF_ ==========", " ");
-%          paramLeqValueCondDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), leq, lbValue_}, condDNF_);
-%          if(not isFalseDNF(paramLeqValueCondDNF_)) then     minTCList_:= cons({lbValue_,             paramLeqValueCondDNF_}, minTCList_);
-%          debugWrite("minTCList_: ", minTCList_);
-%          debugWrite("========== make paramGreaterValueCondDNF_ ==========", " ");
-%          paramGreaterValueCondDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), greaterp, lbValue_}, condDNF_);
-%          if(not isFalseDNF(paramGreaterValueCondDNF_)) then minTCList_:= cons({getValueFromTuple(x), paramGreaterValueCondDNF_}, minTCList_);
         >>;
       >>;
       debugWrite("minTCList_ after add: ", minTCList_);
+
 
       if(minTCList_ neq {}) then <<
         debugWrite("========== check param-ub ==========", " ");
@@ -2364,6 +2300,7 @@ procedure integrateCalc(rconts_, discCause_, vars_, maxTime_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_, paramCondDNF_,
          initCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_,
+         DExprRconts_, DExprRcontsVars_,
          tmpDiscCause_, retCode_, tmpVarMap_, tmpMinTList_, integAns_, tmpIneqSolDNF_;
   putLineFeed();
 
@@ -2397,49 +2334,34 @@ begin;
   >>;
   debugWrite("paramCondDNF_: ", paramCondDNF_);
 
-  initCons_:= union(for each x in rconts_ collect exSub(constraintStore_, x));
+
+  DExprRconts_:= removePrevCons(rconts_);
+  debugWrite("DExprRconts_: ", DExprRconts_);
+  if(DExprRconts_ neq {}) then <<
+    prevVars_:= for each x in csVariables_ join if(isPrevVariable(x)) then {x} else {};
+    debugWrite("prevVars_: ", prevVars_);
+    noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
+    debugWrite("noPrevVars_: ", noPrevVars_);
+    DExprRcontsVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprRconts_, x)) then {x} else {});
+    debugWrite("DExprRcontsVars_: ", DExprRcontsVars_);
+    DExprs_:= union(DExprs_, DExprRconts_);
+    DExprVars_:= union(DExprVars_, DExprRcontsVars_);
+  >>;
+
+  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(constraintStore_, x));
   debugWrite("initCons_: ", initCons_);
-  initVars_:= map(getInitVars, rconts_);
+  initVars_:= map(getInitVars, initCons_);
   debugWrite("initVars_: ", initVars_);
 
+  noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
+  debugWrite("noDifferentialVars_: ", noDifferentialVars_);
+  tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
+  debugWrite("tmpSol_ solved with exDSolve: ", tmpSol_);
 
-  if(DExprs_ = {}) then <<
-    % DExprs_が無い場合は、rconts_を解く
-    if(rconts_ neq {}) then <<
-      % 通常変数（usrVar変数）を含む制約を取り出す（微分方程式になっているはずなので）
-      % DExpr_を作り直す
-      DExprs_:= removePrevCons(rconts_);
-      debugWrite("new DExprs_: ", DExprs_);
-      % DExprVars_を作り直す
-      prevVars_:= for each x in csVariables_ join if(isPrevVariable(x)) then {x} else {};
-      debugWrite("prevVars_: ", prevVars_);
-      noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
-      debugWrite("noPrevVars_: ", noPrevVars_);
-      DExprVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprs_, x)) then {x} else {});
-      debugWrite("new DExprVars_: ", DExprVars_);
-      % initCons_を作り直す
-      initCons_:= union(for each x in (rconts_ \ DExprs_) collect exSub(constraintStore_, x));
-      debugWrite("new initCons_: ", initCons_);
-      % initVars_を作り直す
-      initVars_:= map(getInitVars, initCons_);
-      debugWrite("new initVars_: ", initVars_);
-      noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
-      debugWrite("noDifferentialVars_: ", noDifferentialVars_);
-      tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
-    >> else <<
-      tmpSol_:= {};
-    >>;
-    debugWrite("tmpSol_ made from rcont_: ", tmpSol_);
-  >> else <<
-    noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
-    debugWrite("noDifferentialVars_: ", noDifferentialVars_);
-    tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
-    debugWrite("tmpSol_ solved with exDSolve: ", tmpSol_);
-  >>;
 
   tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (vars_ \ initVars_))));
   debugWrite("tmpVarMap_:", tmpVarMap_);
-  tmpSol_:= for each x in tmpVarMap_ collect (part(x, 1)=part(x, 2));
+  tmpSol_:= for each x in tmpVarMap_ collect (first(x)=second(x));
   debugWrite("tmpSol_:", tmpSol_);
 
 
@@ -2497,6 +2419,7 @@ begin;
          minTTime_, minTCondDNF_, maxTimeFlag_, ans_;
 
   debugWrite("in calcNextPointPhaseTime", " ");
+  debugWrite("discCauseList_: ", discCauseList_);
   debugWrite("condDNF_: ", condDNF_);
 
   minTCondListList_:= union(for each x in discCauseList_ collect findMinTime(x, condDNF_));
@@ -2519,12 +2442,13 @@ begin;
     {minTTime_, minTCondDNF_, maxTimeFlag_}
   >>);
   debugWrite("ans_ in calcNextPointPhaseTime: ", ans_);
+  debugWrite("=================== end of calcNextPointPhaseTime ====================", " ");
   return ans_;
 end;
 
 procedure findMinTime(integAsk_, condDNF_)$
 begin;
-  scalar integAskList_, integAskIneqSolDNFList_, integAskIneqSolDNF_,
+  scalar integAskQE_, integAskList_, integAskIneqSolDNFList_, integAskIneqSolDNF_,
          minTCList_, tmpSol_, ineqSolDNF_;
 
   debugWrite("in findMinTime", " ");
@@ -2534,10 +2458,13 @@ begin;
   % t>0と連立してfalseになるような場合はMinTimeを考える必要がない
   if(rlqe(integAsk_ and t>0) = false) then return {{INFINITY, condDNF_}};
 
+  integAskQE_:= rlqe(integAsk_);
+  debugWrite("integAskQE_: ", integAskQE_);
+
   %%%%%%%%%%%% TODO:この辺から、%%%%%%%%%%%%%%
   % まず、andでつながったtmp制約をリストに変換
-  if(myHead(integAsk_)=and) then integAskList_:= getArgsList(integAsk_)
-  else integAskList_:= {integAsk_};
+  if(myHead(integAskQE_)=and) then integAskList_:= getArgsList(integAskQE_)
+  else integAskList_:= {integAskQE_};
   debugWrite("integAskList_:", integAskList_);
 
   integAskIneqSolDNFList_:= union(for each x in integAskList_ collect
@@ -2554,6 +2481,7 @@ begin;
                               >>
                             );
   debugWrite("integAskIneqSolDNFList_:", integAskIneqSolDNFList_);
+  if(not freeof(integAskIneqSolDNFList_, unknown)) then return {error};
 
   debugWrite("========== add t>0 ==========", " ");
   integAskIneqSolDNF_:= myFoldLeft(addCondDNFToCondDNF, {{{t, greaterp, 0}}}, integAskIneqSolDNFList_);
