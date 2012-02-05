@@ -202,26 +202,60 @@ begin;
 end;
 
 % expr_中に出現する、sqrt(var_)に関する項の係数を得る
-procedure getSqrtCoeff(expr_, var_)$
+% 複数項存在する場合も考慮し、リスト形式で返す
+procedure getSqrtList(expr_, var_, mode_)$
 begin;
-  scalar coefficient_, coefficientList_, retCoeff_;
+  scalar head_, argsAnsList_, coefficientList_, exprList_, insideSqrt_;
 
-  if(freeof(expr_, sqrt(var_))) then return 0;
-  if((myHead(expr_)=plus) and (arglength(expr_)>1)) then <<
+%  debugWrite("in getSqrtList", " ");
+%  debugWrite("expr_: ", expr_);
+%  debugWrite("var_: ", var_);
+%  debugWrite("mode_: ", mode_);
+
+
+  % 変数やsqrtが含まれなければ考える必要なし
+  if(freeof(expr_, var_) or freeof(expr_, sqrt)) then return {};
+
+  head_:= myHead(expr_);
+%  debugWrite("head_: ", head_);
+  if(hasMinusHead(expr_)) then <<
+    % TODO：負号の中にvar_が複数個ある場合への対応？
+    coefficientList_:= {-1*first(getSqrtList(part(expr_, 1), var_, mode_))};
+    exprList_:= getSqrtList(part(expr_, 1), var_, mode_);
+  >> else if(head_=plus) then <<
     % 多項式の場合
-    coefficientList_:= for each x in getArgsList(expr_) join <<
-      retCoeff_:= getSqrtCoeff(x, var_);
-      if(retCoeff_=0) then {} else {retCoeff_}
+    argsAnsList_:= for each x in getArgsList(expr_) join getSqrtList(x, var_, mode_);
+    coefficientList_:= argsAnsList_;
+    exprList_:= argsAnsList_;
+  >> else if(head_=times) then <<
+    argsAnsList_:= for each x in getArgsList(expr_) join getSqrtList(x, var_, mode_);
+%    debugWrite("argsAnsList_: ", argsAnsList_);
+    coefficientList_:= {myFoldLeft(times, 1, argsAnsList_)};
+    exprList_:= argsAnsList_;
+  >> else if(head_=sqrt) then <<
+    insideSqrt_:= part(expr_, 1);
+    exprList_:= {insideSqrt_};
+
+    if(freeof(insideSqrt_, sqrt)) then <<
+      % lcofで係数を求める
+      coefficientList_:= {lcof(insideSqrt_, var_)};
+    >> else <<
+      % 根号の中がさらにsqrtを含む多項式になっている場合
+      argsAnsList_:= for each x in getArgsList(insideSqrt_) join getSqrtList(x, var_, mode_);
+%      debugWrite("argsAnsList_: ", argsAnsList_);
+      % TODO：複数個ある場合への対応？
+      coefficientList_:= {first(argsAnsList_)};
+      exprList_:= union(exprList_, argsAnsList_);
     >>;
-    debugWrite("coefficientList_: ", coefficientList_);
-    % 前提：sqrt(var_)の形を含む項は1つだけ
-    coefficient_:= first(coefficientList_);
   >> else <<
-    coefficient_:= expr_ / sqrt(var_);
+    coefficientList_:= hogehoge;
+    exprList_:= fugafuga;
   >>;
 
-  debugWrite("coefficient_: ", coefficient_);
-  return coefficient_;
+%  debugWrite("coefficientList_: ", coefficientList_);
+%  debugWrite("exprList_: ", exprList_);
+  if(mode_=COEFF) then return coefficientList_
+  else if(mode_=INSIDE) then return exprList_;
 end;
 
 %---------------------------------------------------------------
@@ -957,31 +991,34 @@ begin;
 
   % 場合によっては、タプルのVarName部分とValue部分の両方に変数名が入っていることもある
   % そのため、たとえ1次であっても一旦exIneqSolveで解く必要がある
-  ineqSolDNF_:= exIneqSolve(makeExprFromTuple(newCondTuple_));
-  debugWrite("ineqSolDNF_: ", ineqSolDNF_);
-  debugWrite("(newCondTuple_: )", newCondTuple_);
-  debugWrite("(condConj_: )", condConj_);
-  if(isFalseDNF(ineqSolDNF_)) then <<
-    % falseを表すタプルを論理積に追加しようとした場合はfalseを表す論理積を返す
-    addedCondConj_:= {};
-    debugWrite("addedCondConj_: ", addedCondConj_);
-    return addedCondConj_;
-  >> else if(isTrueDNF(ineqSolDNF_)) then <<
-    % trueを表すタプルを論理積に追加しようとした場合はcondConj_を返す
-    addedCondConj_:= condConj_;
-    debugWrite("addedCondConj_: ", addedCondConj_);
-    return addedCondConj_;
-  >>;
-  % DNF形式で返るので、改めてタプルを取り出す
-  if(length(first(ineqSolDNF_))>1) then <<
-    % 「=」を表す形式の場合はgeqとleqの2つのタプルの論理積が返る
-    tmpConj_:= condConj_;
-    for i:=1 : length(first(ineqSolDNF_)) do <<
-      tmpConj_:= addCondTupleToCondConj(part(first(ineqSolDNF_), i), condConj_);
+  if((arglength(getVarNameFromTuple(newCondTuple_)) neq -1) or not numberp(getValueFromTuple(newCondTuple_))) then <<
+    % VarName部分が1次の変数名で、かつ、Value部分が数値ならこの処理は不要
+    ineqSolDNF_:= exIneqSolve(makeExprFromTuple(newCondTuple_));
+    debugWrite("ineqSolDNF_: ", ineqSolDNF_);
+    debugWrite("(newCondTuple_: )", newCondTuple_);
+    debugWrite("(condConj_: )", condConj_);
+    if(isFalseDNF(ineqSolDNF_)) then <<
+      % falseを表すタプルを論理積に追加しようとした場合はfalseを表す論理積を返す
+      addedCondConj_:= {};
+      debugWrite("addedCondConj_: ", addedCondConj_);
+      return addedCondConj_;
+    >> else if(isTrueDNF(ineqSolDNF_)) then <<
+      % trueを表すタプルを論理積に追加しようとした場合はcondConj_を返す
+      addedCondConj_:= condConj_;
+      debugWrite("addedCondConj_: ", addedCondConj_);
+      return addedCondConj_;
     >>;
-    return tmpConj_;
-  >> else <<
-    newCondTuple_:= first(first(ineqSolDNF_));
+    % DNF形式で返るので、改めてタプルを取り出す
+    if(length(first(ineqSolDNF_))>1) then <<
+      % 「=」を表す形式の場合はgeqとleqの2つのタプルの論理積が返る
+      tmpConj_:= condConj_;
+      for i:=1 : length(first(ineqSolDNF_)) do <<
+        tmpConj_:= addCondTupleToCondConj(part(first(ineqSolDNF_), i), condConj_);
+      >>;
+      return tmpConj_;
+    >> else <<
+      newCondTuple_:= first(first(ineqSolDNF_));
+    >>
   >>;
 
 
@@ -1138,7 +1175,8 @@ begin;
   scalar lhs_, relop_, rhs_, adjustedLhs_, adjustedRelop_, 
          reverseRelop_, adjustedIneqExpr_, sol_, adjustedEqExpr_,
          retTuple_, exprVarList_, exprVar_, retTupleDNF_,
-         boundList_, ub_, lb_, eqSol_, eqSolValue_, sqrtCondTuple_, lcofRet_, sqrtCoeff_;
+         boundList_, ub_, lb_, eqSol_, eqSolValue_, sqrtCondTuple_, lcofRet_, sqrtCoeffList_,
+         sqrtCoeff_, insideSqrtExprs_;
 
   debugWrite("========== in exIneqSolve ==========", " ");
   debugWrite("ineqExpr_: ", ineqExpr_);
@@ -1176,6 +1214,7 @@ begin;
   debugWrite("adjustedIneqExpr_: ", adjustedIneqExpr_);
   debugWrite("adjustedLhs_: ", adjustedLhs_);
   adjustedRelop_:= myHead(adjustedIneqExpr_);
+  debugWrite("adjustedRelop_: ", adjustedRelop_);
 
   % 三角関数を含む場合、特別な符号判定が必要
   if(hasTrigonometricFunc(adjustedLhs_)) then <<
@@ -1206,7 +1245,11 @@ begin;
   % minusで条件判定を行うことがなぜかできないので、式に出現する変数名xを調べて、その係数の正負を調べる
   lcofRet_:= lcof(adjustedLhs_, exprVar_);
   if(not numberp(lcofRet_)) then lcofRet_:= 0;
-  sqrtCoeff_:= getSqrtCoeff(adjustedLhs_, exprVar_);
+  sqrtCoeffList_:= getSqrtList(adjustedLhs_, exprVar_, COEFF);
+  % 前提：根号の中にパラメタがある項は多くても1つ
+  % TODO：なんとかする
+  if(sqrtCoeffList_={}) then sqrtCoeff_:= 0
+  else if(length(sqrtCoeffList_)=1) then sqrtCoeff_:= first(sqrtCoeffList_);
   % TODO：厳密にはxorを使うべきか？
   if(checkOrderingFormula(lcofRet_<0) or checkOrderingFormula(sqrtCoeff_<0)) then <<
     adjustedRelop_:= getReverseRelop(adjustedRelop_);
@@ -1215,8 +1258,12 @@ begin;
 
   % 変数にsqrtがついてる場合は、変数は0以上であるという条件を最後に追加する必要がある
   % TODO: sqrt(x-1)とかへの対応
-  if(not freeof(adjustedLhs_, sqrt(exprVar_))) then sqrtCondTuple_:= {exprVar_, geq, 0}
-  else sqrtCondTuple_:= true;
+  insideSqrtExprs_:= getSqrtList(adjustedLhs_, exprVar_, INSIDE);
+  debugWrite("insideSqrtExprs_: ", insideSqrtExprs_);
+  sqrtCondTupleList_:= for each x in insideSqrtExprs_ collect
+    first(first(exIneqSolve(myApply(geq, {x, 0}))));
+  debugWrite("sqrtCondTupleList_: ", sqrtCondTupleList_);
+  if(sqrtCondTupleList_={}) then sqrtCondTupleList_:= {true};
 
   
   % ubまたはlbを求める
@@ -1287,8 +1334,12 @@ begin;
   >>;
 
   debugWrite("retTupleDNF_ before adding sqrtCondTuple_: ", retTupleDNF_);
-  debugWrite("sqrtCondTuple_: ", sqrtCondTuple_);
-  retTupleDNF_:= addCondTupleToCondDNF(sqrtCondTuple_, retTupleDNF_);
+  debugWrite("sqrtCondTupleList_: ", sqrtCondTupleList_);
+  for i:=1 : length(sqrtCondTupleList_) do <<
+    debugWrite("add : ", part(sqrtCondTupleList_, i));
+    retTupleDNF_:= addCondTupleToCondDNF(part(sqrtCondTupleList_, i), retTupleDNF_);
+    debugWrite("retTupleDNF_ in loop of adding sqrtCondTuple: ", retTupleDNF_);
+  >>;
   debugWrite("retTupleDNF_ after adding sqrtCondTuple_: ", retTupleDNF_);
   debugWrite("(ineqExpr_: )", ineqExpr_);
   debugWrite("========== end exIneqSolve ==========", " ");
