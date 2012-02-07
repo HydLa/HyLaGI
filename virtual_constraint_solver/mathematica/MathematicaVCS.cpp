@@ -284,7 +284,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
 
     ////////////////// ŽóMˆ—
 
-      HYDLA_LOGGER_OUTPUT(
+      HYDLA_LOGGER_REST(
         "-- math debug print -- \n",
         (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));  
 
@@ -301,7 +301,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
         std::string tmp = ml_.get_string();
         MathematicaExpressionConverter mec;
         value = mec.convert_math_string_to_symbolic_value(tmp);
-        HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
+        HYDLA_LOGGER_REST("value : ", value.get_string());
       }
     }
     out_vm.set_variable(it->first, value);

@@ -78,15 +78,23 @@ void hydla_main(int argc, char* argv[])
   po.parse(argc, argv);
   
   std::string area_string(po.get<std::string>("debug"));
-  if(area_string!=""){                 // デバッグ出力の範囲指定
-    Logger::instance().set_log_level(Logger::Area);
-    Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
-    Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
-    Logger::module_set_area_ = (area_string.find('m') != std::string::npos);
-    Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
-    Logger::external_area_ = (area_string.find('e') != std::string::npos);
-    Logger::output_area_ = (area_string.find('o') != std::string::npos);
-    Logger::rest_area_ = (area_string.find('r') != std::string::npos);
+  if(area_string!=""){                 // デバッグ出力
+    Logger::instance().set_log_level(Logger::Debug);
+    if(area_string.find('a') != std::string::npos){
+      Logger::parsing_area_ = true;
+      Logger::calculate_closure_area_ = true;
+      Logger::phase_area_ = true;
+      Logger::vcs_area_ = true;
+      Logger::extern_area_ = true;
+      Logger::rest_area_ = true;
+    }else{
+      Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
+      Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
+      Logger::phase_area_ = (area_string.find('m') != std::string::npos);
+      Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
+      Logger::extern_area_ = (area_string.find('e') != std::string::npos);
+      Logger::rest_area_ = (area_string.find('r') != std::string::npos);
+    }
   }else {                              // 警告のみ出力
     Logger::instance().set_log_level(Logger::Warn);
   }

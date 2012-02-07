@@ -202,7 +202,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     HYDLA_LOGGER_DEBUG("#** calculate_closure: expanded always after collect_new_tells: **\n",
                        expanded_always);
         
-    HYDLA_LOGGER_CC("#** SymbolicSimulator::check_consistency in calculate_closure: **\n");
+    HYDLA_LOGGER_CLOSURE("#** SymbolicSimulator::check_consistency in calculate_closure: **\n");
 
     
     //tellじゃなくて制約部分のみ送る
@@ -233,7 +233,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
         break;
       case VCSR_UNKNOWN:
         if(opts_.nd_mode){
-          HYDLA_LOGGER_CC("#*** create new phase state (branch_consistency) ***");
+          HYDLA_LOGGER_CLOSURE("#*** create new phase state (branch_consistency) ***");
           // 分岐先を生成（導出されない方）
           phase_state_sptr new_state(create_new_phase_state(state));
           new_state->module_set_container = state->module_set_container;
@@ -241,7 +241,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           new_state->parent_state_result = state->parent_state_result;
           new_state->phase = state->phase;
           push_phase_state(new_state);
-          HYDLA_LOGGER_CC("---push_phase_state(not_ask)---\n", **branched_ask,"\n");
+          HYDLA_LOGGER_CLOSURE("---push_phase_state(not_ask)---\n", **branched_ask,"\n");
         }
         break;
       case VCSR_FALSE:
@@ -264,7 +264,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
                        expanded_always);
 
     // ask制約のエンテール処理
-    HYDLA_LOGGER_CC("#** SymbolicSimulator::check_entailment in calculate_closure: **\n");
+    HYDLA_LOGGER_CLOSURE("#** SymbolicSimulator::check_entailment in calculate_closure: **\n");
     
     //デフォルト連続性の処理
     
@@ -330,7 +330,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
   }
   
   if(branched_ask!=NULL){
-    HYDLA_LOGGER_CC("#*** create new phase state (branch_entailment) ***");
+    HYDLA_LOGGER_CLOSURE("#*** create new phase state (branch_entailment) ***");
     if(opts_.nd_mode){
       // 分岐先を生成（導出されない方）
       phase_state_sptr new_state(create_new_phase_state(state));
@@ -341,7 +341,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
       new_state->added_constraints = state->added_constraints;
       new_state->added_constraints.push_back(node_sptr(new Not((*branched_ask)->get_guard())));
       push_phase_state(new_state);
-      HYDLA_LOGGER_CC("---push_phase_state(not_ask)---\n", **branched_ask,"\n");
+      HYDLA_LOGGER_CLOSURE("---push_phase_state(not_ask)---\n", **branched_ask,"\n");
     }
     // 分岐先を生成（導出される方）
     phase_state_sptr new_state(create_new_phase_state(state));
@@ -352,12 +352,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
     new_state->added_constraints = state->added_constraints;
     new_state->added_constraints.push_back((*branched_ask)->get_guard());
     push_phase_state(new_state);
-    HYDLA_LOGGER_CC("---push_phase_state(ask)---\n", **branched_ask,"\n");
+    HYDLA_LOGGER_CLOSURE("---push_phase_state(ask)---\n", **branched_ask,"\n");
     return CC_BRANCH;
   }
   
   if(opts_.assertion){
-    HYDLA_LOGGER_CC("#** SymbolicSimulator::check_assertion **\n");
+    HYDLA_LOGGER_CLOSURE("#** SymbolicSimulator::check_assertion **\n");
     switch(solver_->check_entailment(node_sptr(new Not(opts_.assertion)))){
       case VCSR_TRUE:
       std::cout << "Assertion Failed!" << std::endl;
@@ -407,7 +407,7 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   
 
   SymbolicVirtualConstraintSolver::create_result_t create_result;
-  HYDLA_LOGGER_MS("#** SymbolicSimulator::create_map: **\n");  
+  HYDLA_LOGGER_PHASE("#** SymbolicSimulator::create_map: **\n");  
   solver_->create_maps(create_result);
   for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_.nd_mode||create_it==0); create_it++)
   {
@@ -453,13 +453,13 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
       output_state_result(*state_result, true, false);
       
 
-    HYDLA_LOGGER_MS("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
+    HYDLA_LOGGER_PHASE("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                        "time:", new_state->current_time, "\n",
                        new_state->variable_map,
                        new_state->parameter_map);
   }
   
-  HYDLA_LOGGER_MS("#*** end point phase ***");
+  HYDLA_LOGGER_PHASE("#*** end point phase ***");
 
   return true;
 }
@@ -563,7 +563,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   
   // askの導出状態が変化するまで積分をおこなう
   SymbolicVirtualConstraintSolver::IntegrateResult integrate_result;
-  HYDLA_LOGGER_MS("#** SymbolicSimulator::integrate: **\n");  
+  HYDLA_LOGGER_PHASE("#** SymbolicSimulator::integrate: **\n");  
   
   switch(solver_->integrate(
     integrate_result,
@@ -609,7 +609,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       solver_->apply_time_to_vm(integrate_result.states[it].variable_map, new_state->variable_map, integrate_result.states[it].time-state->current_time);
       if(is_safe_){
         new_state->parent_state_result = state_result;
-        HYDLA_LOGGER_MS("---push_phase_state(interval)---", it, "\n", new_state->current_time, "\n", new_state->variable_map, "\n", new_state->parameter_map, "\n"); 
+        HYDLA_LOGGER_PHASE("---push_phase_state(interval)---", it, "\n", new_state->current_time, "\n", new_state->variable_map, "\n", new_state->parameter_map, "\n"); 
         push_phase_state(new_state);
       }
       if(opts_.dump_in_progress){
@@ -618,7 +618,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     }
     
       
-    HYDLA_LOGGER_MS("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
+    HYDLA_LOGGER_PHASE("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
 		       "time:", solver_->get_real_val(integrate_result.states[it].time, 5, opts_.output_format), "\n",
                        integrate_result.states[it].variable_map,
                        integrate_result.states[it].parameter_map);

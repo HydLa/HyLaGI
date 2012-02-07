@@ -50,35 +50,34 @@ class Logger
 public:
   /// プログラム読み込みの処理
   static bool parsing_area_;
-  /// 
-  static bool calculate_closure_area_;
-  /// 外部ソフトでの処理
-  static bool module_set_area_;
   
-/**
- * VirtualConstraintSolver内での処理．主に外部ソフトとの通信処理
- */
+  /// 制約階層の作成や管理
+  static bool constraint_hierarchy_area_;
+  
+  /// 閉包計算の処理
+  static bool calculate_closure_area_;
+  
+  /// PPやIPの全体的な処理の流れ
+  static bool phase_area_; 
+  
+  /// VirtualConstraintSolver内での処理．主に外部ソフトとの通信処理
   static bool vcs_area_;
   
   /// 外部ソフトでの処理
-  static bool external_area_; 
+  static bool extern_area_; 
 
-  /// 外部へ出力する際の処理
-  static bool output_area_;
-  
   /// どこにも該当しないが，出力したいもの．極力使わないように
   static bool rest_area_;
 
   enum LogLevel {
-    Debug,
     ParsingArea,
+    ConstraintHierarchyArea,
     CalculateClosureArea,
-    ModuleSetArea,
+    PhaseArea,
     VCSArea,
-    ExternalArea,
-    OutputArea,
+    ExternArea,
     RestArea,
-    Area,   //局所的出力モード
+    Debug,
     Warn,
     Error,
     Fatal,
@@ -101,20 +100,20 @@ public:
 
   bool is_valid_level(LogLevel level)
   {
-    if(log_level_ == Area){
+    if(log_level_ == Debug){
       switch(level){
         case ParsingArea:
           return parsing_area_;
+        case ConstraintHierarchyArea:
+          return constraint_hierarchy_area_;
         case CalculateClosureArea:
           return calculate_closure_area_;
-        case ModuleSetArea:
-          return module_set_area_;
+        case PhaseArea:
+          return phase_area_;
         case VCSArea:
           return vcs_area_;
-        case ExternalArea:
-          return external_area_;
-        case OutputArea:
-          return output_area_;
+        case ExternArea:
+          return extern_area_;
         case RestArea:
           return rest_area_;
         default:
@@ -127,22 +126,11 @@ public:
   
   /// LoggerのSingletonなインスタンス
   static Logger& instance();
-  
-
-  /**
-   * ログレベルareaとしてログの出力をおこなう
-   */
-  HYDLA_LOGGER_DEF_LOG_WRITE(area_write, Area, area_)
 
   /**
    * ログレベルdebugとしてログの出力をおこなう
    */
   HYDLA_LOGGER_DEF_LOG_WRITE(debug_write, Debug, debug_)
-
-  /**
-   * ログレベルsummary_debugとしてログの出力をおこなう
-   */
-  HYDLA_LOGGER_DEF_LOG_WRITE(summary_write, Summary, summary_)
 
   /**
    * ログレベルwarnとしてログの出力をおこなう
@@ -166,9 +154,7 @@ private:
 
   LogLevel log_level_;
 
-  boost::iostreams::filtering_ostream area_; //局所的出力モード
   boost::iostreams::filtering_ostream debug_;
-  boost::iostreams::filtering_ostream summary_; //大局的出力モード
   boost::iostreams::filtering_ostream warn_;
   boost::iostreams::filtering_ostream error_;
   boost::iostreams::filtering_ostream fatal_;
@@ -194,52 +180,44 @@ private:
  * 構文解析時のdebugログの出力
  */
 #define HYDLA_LOGGER_PARSING(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ParsingArea, area_write, (__VA_ARGS__))
+  HYDLA_LOGGER_LOG_WRITE_MACRO(ParsingArea, debug_write, (__VA_ARGS__))
 
+/**
+ * 制約階層関係のdebugログの出力
+ */
+#define HYDLA_LOGGER_HIERARCHY(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(ConstraintHierarchyArea, debug_write, (__VA_ARGS__))
 
 /**
  * 閉包計算時のdebugログの出力
  */
-#define HYDLA_LOGGER_CC(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(CalculateClosureArea, area_write, (__VA_ARGS__))
+#define HYDLA_LOGGER_CLOSURE(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(CalculateClosureArea, debug_write, (__VA_ARGS__))
   
 /**
  * モジュール集合選択時のdebugログの出力
  */
-#define HYDLA_LOGGER_MS(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ModuleSetArea, area_write, (__VA_ARGS__))
+#define HYDLA_LOGGER_PHASE(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(PhaseArea, debug_write, (__VA_ARGS__))
   
 /**
  * VCSを継承したクラスのdebugログの出力
  */
 #define HYDLA_LOGGER_VCS(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(VCSArea, area_write, (__VA_ARGS__))
+  HYDLA_LOGGER_LOG_WRITE_MACRO(VCSArea, debug_write, (__VA_ARGS__))
 
 /**
  * 外部ソフトウェアによるdebugログの出力
  */
 #define HYDLA_LOGGER_EXTERN(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ExternalArea, area_write, (__VA_ARGS__))
+  HYDLA_LOGGER_LOG_WRITE_MACRO(ExternArea, debug_write, (__VA_ARGS__))
 
-
-/**
- * HydLa出力処理関連のdebugログの出力
- */
-#define HYDLA_LOGGER_OUTPUT(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(OutputArea, area_write, (__VA_ARGS__))
-
-
-/**
- * その他のdebugログの出力with Summary
- */
-#define HYDLA_LOGGER_REST_SUMMARY(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO_SUMMARY(RestArea, area_write, (__VA_ARGS__))
 
 /**
  * その他のdebugログの出力
  */
 #define HYDLA_LOGGER_REST(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(RestArea, area_write, (__VA_ARGS__))
+  HYDLA_LOGGER_LOG_WRITE_MACRO(RestArea, debug_write, (__VA_ARGS__))
 
 /**
  * ログレベルwarnでのログの出力

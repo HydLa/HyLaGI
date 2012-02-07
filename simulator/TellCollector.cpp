@@ -77,7 +77,7 @@ void TellCollector::collect(tells_t*                 tells,
     }
   }
 
-  HYDLA_LOGGER_CC(
+  HYDLA_LOGGER_CLOSURE(
     "#*** tell collector ***\n", 
     "--- collected tells ---\n", 
     NodeDumper(tells->begin(), tells->end()));

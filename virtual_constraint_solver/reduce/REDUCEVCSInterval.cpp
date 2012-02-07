@@ -520,7 +520,7 @@ void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
       const_tree_iter_t value_it = ct_it->children.begin()+1;
       SExpConverter sc;
       value = sc.convert_s_exp_to_symbolic_value(sp, value_it);
-      HYDLA_LOGGER_OUTPUT("value : ", value.get_string());
+      HYDLA_LOGGER_REST("value : ", value.get_string());
     }
 
     out_vm.set_variable(it->first, value);
