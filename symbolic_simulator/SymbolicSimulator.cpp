@@ -294,11 +294,12 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
       {
         case VCSR_TRUE:
           positive_asks.insert(*it);
-          negative_asks.erase(it);
+          negative_asks.erase(it++);
           expanded = true;
           break;
 
         case VCSR_FALSE:
+          it++;
           break;
         
         //^‹U—¼•û‚ª‚ ‚è‚¤‚éê‡
@@ -306,6 +307,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           if(!expanded&&!branched_ask){
             branched_ask = &(*it);
           }
+          it++;
           break;
 
         case VCSR_SOLVER_ERROR:
@@ -316,7 +318,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
           throw hydla::simulator::SimulateError("unknown result in check_entailment\n" + solver_->get_constraint_store());
           break;
       }
-      it++;
       
       if(opts_.default_continuity == CONT_GUARD){
         maker.set_continuity_map(continuity_map);
@@ -452,13 +453,13 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
       output_state_result(*state_result, true, false);
       
 
-    HYDLA_LOGGER_MS_SUMMARY("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
+    HYDLA_LOGGER_MS("%%%%%%%%%%%%% point phase result  %%%%%%%%%%%%%\n",
                        "time:", new_state->current_time, "\n",
                        new_state->variable_map,
                        new_state->parameter_map);
   }
   
-  HYDLA_LOGGER_MS_SUMMARY("#*** end point phase ***");
+  HYDLA_LOGGER_MS("#*** end point phase ***");
 
   return true;
 }
@@ -617,7 +618,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     }
     
       
-    HYDLA_LOGGER_MS_SUMMARY("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
+    HYDLA_LOGGER_MS("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
 		       "time:", solver_->get_real_val(integrate_result.states[it].time, 5, opts_.output_format), "\n",
                        integrate_result.states[it].variable_map,
                        integrate_result.states[it].parameter_map);

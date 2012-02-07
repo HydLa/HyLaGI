@@ -77,7 +77,7 @@ void hydla_main(int argc, char* argv[])
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
   
-  std::string area_string(po.get<std::string>("area"));
+  std::string area_string(po.get<std::string>("debug"));
   if(area_string!=""){                 // デバッグ出力の範囲指定
     Logger::instance().set_log_level(Logger::Area);
     Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
@@ -87,12 +87,7 @@ void hydla_main(int argc, char* argv[])
     Logger::external_area_ = (area_string.find('e') != std::string::npos);
     Logger::output_area_ = (area_string.find('o') != std::string::npos);
     Logger::rest_area_ = (area_string.find('r') != std::string::npos);
-  }
-  else if(po.count("debug")>0) {        // 全部デバッグ出力
-    Logger::instance().set_log_level(Logger::Debug);
-  } else if(po.count("comprehensive")>0){					//大局的出力モード
-    Logger::instance().set_log_level(Logger::Summary);
-  } else {                              // 警告のみ出力
+  }else {                              // 警告のみ出力
     Logger::instance().set_log_level(Logger::Warn);
   }
   

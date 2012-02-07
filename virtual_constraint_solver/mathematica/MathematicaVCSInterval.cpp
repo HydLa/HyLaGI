@@ -259,7 +259,7 @@ VCSResult MathematicaVCSInterval::integrate(
     ml_->MLGetNext();ml_->MLGetNext(); ml_->MLGetNext();
     // Žž‚ðŽó‚¯Žæ‚é
     state.time = mec.convert_math_string_to_symbolic_value(ml_->get_string()) + current_time;
-    HYDLA_LOGGER_VCS_SUMMARY("next_phase_time: ", state.time);
+    HYDLA_LOGGER_VCS("next_phase_time: ", state.time);
     ml_->MLGetNext();
     int condition_size = ml_->get_arg_count();//ðŒŽ®‚Ì”
     ml_->MLGetNext(); ml_->MLGetNext();

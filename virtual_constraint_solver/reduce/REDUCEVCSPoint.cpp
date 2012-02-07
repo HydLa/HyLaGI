@@ -180,8 +180,8 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       }
       maps.variable_map.set_variable(symbolic_variable, symbolic_value);
     }
-    HYDLA_LOGGER_VCS_SUMMARY("variable_map: ", maps.variable_map);
-    HYDLA_LOGGER_VCS_SUMMARY("parameter_map: ", maps.parameter_map);
+    HYDLA_LOGGER_VCS("variable_map: ", maps.variable_map);
+    HYDLA_LOGGER_VCS("parameter_map: ", maps.parameter_map);
     create_result.result_maps.push_back(maps);
   }
   SExpConverter::clear_parameter_map();

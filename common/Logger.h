@@ -48,13 +48,26 @@ namespace logger {
 class Logger
 {
 public:
+  /// プログラム読み込みの処理
   static bool parsing_area_;
+  /// 
   static bool calculate_closure_area_;
+  /// 外部ソフトでの処理
   static bool module_set_area_;
+  
+/**
+ * VirtualConstraintSolver内での処理．主に外部ソフトとの通信処理
+ */
   static bool vcs_area_;
-  static bool external_area_; //MathematicaとかREDUCEとかの外部ソフトからの出力
+  
+  /// 外部ソフトでの処理
+  static bool external_area_; 
+
+  /// 外部へ出力する際の処理
   static bool output_area_;
-  static bool rest_area_;  //どこで出したら良いか分からないようなの
+  
+  /// どこにも該当しないが，出力したいもの．極力使わないように
+  static bool rest_area_;
 
   enum LogLevel {
     Debug,
@@ -66,7 +79,6 @@ public:
     OutputArea,
     RestArea,
     Area,   //局所的出力モード
-    Summary,//大局的出力モード
     Warn,
     Error,
     Fatal,
@@ -106,14 +118,16 @@ public:
         case RestArea:
           return rest_area_;
         default:
-          return level != Summary && log_level_ <= level;
+          return log_level_ <= level;
       }
     } else {
       return log_level_ <= level;
     }
   }
-
+  
+  /// LoggerのSingletonなインスタンス
   static Logger& instance();
+  
 
   /**
    * ログレベルareaとしてログの出力をおこなう
@@ -168,13 +182,6 @@ private:
     }                                                                 \
   }
 
-#define HYDLA_LOGGER_LOG_WRITE_MACRO_SUMMARY(LEVEL, FUNC, ARGS) {     \
-    hydla::logger::Logger& logger=hydla::logger::Logger::instance();  \
-    if(logger.is_valid_level(hydla::logger::Logger::Summary)||        \
-    logger.is_valid_level(hydla::logger::Logger::LEVEL)) {            \
-      logger. FUNC ARGS;                                              \
-    }                                                                 \
-  }
 
 /**
  * ログレベルdebugでのログの出力
@@ -202,19 +209,6 @@ private:
 #define HYDLA_LOGGER_MS(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ModuleSetArea, area_write, (__VA_ARGS__))
   
-/**
- * モジュール集合選択時のdebugログの出力with Summary
- */
-#define HYDLA_LOGGER_MS_SUMMARY(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO_SUMMARY(ModuleSetArea, area_write, (__VA_ARGS__))
-
-
-/**
- * VCSを継承したクラスのdebugログの出力with Summary
- */
-#define HYDLA_LOGGER_VCS_SUMMARY(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO_SUMMARY(VCSArea, area_write, (__VA_ARGS__))
-
 /**
  * VCSを継承したクラスのdebugログの出力
  */

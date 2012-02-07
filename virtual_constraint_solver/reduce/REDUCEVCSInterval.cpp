@@ -341,7 +341,7 @@ VCSResult REDUCEVCSInterval::integrate(
     // IPI—¹
     const_tree_iter_t next_time_ptr = next_time_info_ptr->children.begin();
     state.time = sc.convert_s_exp_to_symbolic_value(sp, next_time_ptr) + current_time;
-    HYDLA_LOGGER_VCS_SUMMARY("next_phase_time: ", state.time);
+    HYDLA_LOGGER_VCS("next_phase_time: ", state.time);
 
 
     // ğŒ®

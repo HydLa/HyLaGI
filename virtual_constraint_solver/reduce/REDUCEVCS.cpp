@@ -94,7 +94,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   {
     constraints_t constraints;
 
-    HYDLA_LOGGER_VCS_SUMMARY("------Variable map------\n", variable_map);  
+    HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);  
     variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
     variable_map_t::variable_list_t::const_iterator end = variable_map.end();
     for(; it!=end; ++it) {
@@ -107,7 +107,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
         constraints.push_back(SExpConverter::make_equal(it->first, node_sptr(new Parameter(param.get_name())), true));
       }
     }
-    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    HYDLA_LOGGER_VCS("size:", constraints.size());
     cl_.send_string("vm_str_:=");
     rss.put_nodes(constraints);
     cl_.send_string("$");
@@ -120,7 +120,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   {
     constraints_t constraints;
 
-    HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
+    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
     parameter_map_t::variable_list_t::const_iterator it = parameter_map.begin();
     parameter_map_t::variable_list_t::const_iterator end = parameter_map.end();
     for(; it!=end; ++it){
@@ -140,7 +140,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
         }
       }
     }
-    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    HYDLA_LOGGER_VCS("size:", constraints.size());
     cl_.send_string("pm_str_:=");
     rss.put_nodes(constraints);
     cl_.send_string("$");

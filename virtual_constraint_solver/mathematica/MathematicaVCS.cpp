@@ -142,7 +142,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
         constraints.push_back(MathematicaExpressionConverter::make_equal(it->first, node_sptr(new Parameter(param.get_name())), true));
       }
     }
-    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    HYDLA_LOGGER_VCS("size:", constraints.size());
     ps.put_nodes(constraints, PacketSender::VA_Prev);
   }
   ps.put_vars(PacketSender::VA_Prev);
@@ -150,7 +150,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
 
   {
     constraints_t constraints;
-    HYDLA_LOGGER_VCS_SUMMARY("------Parameter map------\n", parameter_map);
+    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
 
     parameter_map_t::variable_list_t::const_iterator it = 
       parameter_map.begin();
@@ -174,7 +174,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
         }
       }
     }
-    HYDLA_LOGGER_VCS_SUMMARY("size:", constraints.size());
+    HYDLA_LOGGER_VCS("size:", constraints.size());
     ps.put_nodes(constraints, PacketSender::VA_None);
   }
   ps.put_pars();

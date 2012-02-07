@@ -275,18 +275,18 @@ VCSResult MathematicaVCSPoint::check_consistency_receive()
   else if(ret_code==1) {
     // 充足
     result = VCSR_TRUE;
-    HYDLA_LOGGER_VCS_SUMMARY("consistent");
+    HYDLA_LOGGER_VCS("consistent");
   }
   else if(ret_code==3){
     // 充足可能だが，記号定数の値によってはそうでない場合もありうる
     result = VCSR_UNKNOWN;
-    HYDLA_LOGGER_VCS_SUMMARY("undetermined"); 
+    HYDLA_LOGGER_VCS("undetermined"); 
   }
   else {
     // 充足不能
     assert(ret_code==2);
     result = VCSR_FALSE;
-    HYDLA_LOGGER_VCS_SUMMARY("inconsistent");
+    HYDLA_LOGGER_VCS("inconsistent");
   }
   
   return result;

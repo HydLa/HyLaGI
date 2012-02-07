@@ -22,9 +22,7 @@ void ProgramOptions::init_descriptions()
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "version")
-    ("debug,d", "enable debug mode")
-    ("comprehensive,c","enable comprehensive debug mode")
-    ("area", value<std::string>()->default_value(""), "enable area debug mode")//局所的出力モード
+    ("debug,d", value<std::string>()->default_value(""), "enable debug mode\n")
     ("profile", "enable profile mode")
     ("parallel,p", "enable parallel execution")
 
