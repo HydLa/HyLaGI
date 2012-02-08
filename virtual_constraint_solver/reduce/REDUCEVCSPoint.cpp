@@ -31,20 +31,20 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
   // TODO: 不等式及び記号定数への対応
 
-  HYDLA_LOGGER_VCS("#*** REDUCEVCSPoint::create_variable_map ***\n");
+  HYDLA_LOGGER_VCS("#*** REDUCEVCSPoint::create_variable_map ***");
 
   REDUCEStringSender rss(*cl_);
 
   /////////////////// 送信処理
 
   // expr_を渡す
-  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  HYDLA_LOGGER_VCS("--- send expr_ ---");
   cl_->send_string("expr_:=");
   add_left_continuity_constraint(continuity_map_, rss);
   cl_->send_string("$");
 
   // vars_を渡す
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_->send_string("vars_:=union(");
   rss.put_vars();
   cl_->send_string(")$");
@@ -186,7 +186,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
   }
   SExpConverter::clear_parameter_map();
 
-  HYDLA_LOGGER_VCS("#*** END MathematicaVCSPoint::create_maps ***\n");
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::create_maps ***");
   return true;
 }
 
@@ -198,7 +198,7 @@ void REDUCEVCSPoint::set_continuity(const continuity_map_t& continuity_map)
 void REDUCEVCSPoint::add_left_continuity_constraint(
     const continuity_map_t& continuity_map, REDUCEStringSender& rss)
 {
-  HYDLA_LOGGER_VCS("---- Begin REDUCEVCSPoint::add_left_continuity_constraint ----");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::add_left_continuity_constraint ***");
 
   cl_->send_string("{");
   continuity_map_t::const_iterator cm_it = continuity_map.begin();
@@ -223,17 +223,18 @@ void REDUCEVCSPoint::add_left_continuity_constraint(
   }
   cl_->send_string("}");  
 
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::add_left_continuity_constraint ***");
+
 }
 
 void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
 {
-  HYDLA_LOGGER_VCS(
-                   "#*** Begin REDUCEVCSPoint::send_constraint ***");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::send_constraint ***");
 
   REDUCEStringSender rss(*cl_);
 
   // 制約を渡す
-  HYDLA_LOGGER_VCS("----- send expr_ -----");
+  HYDLA_LOGGER_VCS("--- send expr_ ---");
   cl_->send_string("expr_:={");
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
@@ -246,14 +247,14 @@ void REDUCEVCSPoint::send_constraint(const constraints_t& constraints)
 
 
   // 左連続性制約を渡す
-  HYDLA_LOGGER_VCS("----- send lcont_ -----");
+  HYDLA_LOGGER_VCS("--- send lcont_ ---");
   cl_->send_string("lcont_:=");
   add_left_continuity_constraint(continuity_map_, rss);
   cl_->send_string("$");
 
 
   // varsを渡す
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_->send_string("vars_:=union(");
   rss.put_vars();
   cl_->send_string(")$");
@@ -278,8 +279,7 @@ VCSResult REDUCEVCSPoint::check_consistency(const constraints_t& constraints)
 
 VCSResult REDUCEVCSPoint::check_consistency()
 {
-  HYDLA_LOGGER_VCS(
-    "#*** Begin REDUCEVCSPoint::check_consistency() ***");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::check_consistency() ***");
 
   send_constraint(constraints_t());
 
@@ -287,7 +287,7 @@ VCSResult REDUCEVCSPoint::check_consistency()
 
   VCSResult result = check_consistency_receive();
 
-  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSPoint::check_consistency() ***");
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::check_consistency() ***");
   return result;
 }
 
@@ -302,12 +302,13 @@ VCSResult REDUCEVCSPoint::check_entailment(const node_sptr &node)
 
   VCSResult result = check_consistency_receive();
 
-  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCSPoint::check_entailment() ***");
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::check_entailment() ***");
   return result;
 }
 
 VCSResult REDUCEVCSPoint::check_consistency_receive()
 {
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::check_consistency_receive ***");
   /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
@@ -315,8 +316,7 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
   cl_->skip_until_redeval();
 
   std::string ans = cl_->get_s_expr();
-  HYDLA_LOGGER_VCS("add_constraint_ans: ",
-                   ans);
+  HYDLA_LOGGER_VCS("add_constraint_ans: ", ans);
 
   VCSResult result;
 
@@ -329,8 +329,7 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
   // コードを取得
   const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
   std::string ret_code_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
-  HYDLA_LOGGER_VCS("ret_code_str: ",
-                   ret_code_str);
+  HYDLA_LOGGER_VCS("ret_code_str: ", ret_code_str);
 
   if(ret_code_str=="RETERROR___"){
     // ソルバエラー
@@ -346,6 +345,8 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
     assert(ret_code_str == "2");
     result = VCSR_FALSE;
   }
+
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::check_consistency_receive ***");
 
   return result;  
 }

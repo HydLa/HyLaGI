@@ -32,7 +32,7 @@ void REDUCEVCSInterval::set_continuity(const continuity_map_t &continuity_map){
 
 void REDUCEVCSInterval::send_init_cons(REDUCEStringSender& rss, const continuity_map_t& continuity_map)
 {
-  HYDLA_LOGGER_VCS("---- Begin REDUCEVCSInterval::send_init_cons ----");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::send_init_cons ***");
 
   constraints_t constraints;
   constraints_t t_continuity_constraints;
@@ -60,6 +60,8 @@ void REDUCEVCSInterval::send_init_cons(REDUCEStringSender& rss, const continuity
   rss.put_nodes(constraints);
   cl_->send_string(")");
 
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::send_init_cons ***");
+
 }
 
 void REDUCEVCSInterval::send_constraint(const constraints_t& constraints)
@@ -74,7 +76,7 @@ void REDUCEVCSInterval::send_constraint(const constraints_t& constraints)
   // checkConsistencyInterval(tmpCons_, rcont_, vars_)‚ğ“n‚µ‚½‚¢
 
   // §–ñ‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send tmpCons_ -----");
+  HYDLA_LOGGER_VCS("--- send tmpCons_ ---");
   cl_->send_string("tmpCons_:={");
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
@@ -87,14 +89,14 @@ void REDUCEVCSInterval::send_constraint(const constraints_t& constraints)
 
 
   // ‰E˜A‘±«§–ñrcont_‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send rcont_ -----");  
+  HYDLA_LOGGER_VCS("--- send rcont_ ---");
   cl_->send_string("rcont_:=");
   send_init_cons(rss, continuity_map_);
   cl_->send_string("$");
 
 
   // vars‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_->send_string("vars_:=union(");
   rss.put_vars(true);
   cl_->send_string(")$");
@@ -142,6 +144,8 @@ VCSResult REDUCEVCSInterval::check_entailment(const node_sptr &node)
 
 VCSResult REDUCEVCSInterval::check_consistency_receive()
 {
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::check_consistency_receive ***");
+
 /////////////////// óMˆ—
   HYDLA_LOGGER_EXTERN("--- receive  ---");
 
@@ -183,6 +187,8 @@ VCSResult REDUCEVCSInterval::check_consistency_receive()
     assert(ret_code_str == "2");
     result = VCSR_FALSE;
   }
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::check_consistency_receive ***");
+
   return result;
 }
 
@@ -192,7 +198,7 @@ VCSResult REDUCEVCSInterval::integrate(
   const time_t& current_time,
   const time_t& max_time)
 {
-  HYDLA_LOGGER_VCS("#*** REDUCEVCSInterval::integrate ***");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::integrate ***");
 //  HYDLA_LOGGER_VCS(*this);
 
 /////////////////// ‘—Mˆ—
@@ -201,32 +207,32 @@ VCSResult REDUCEVCSInterval::integrate(
   // integrateCalc(init_, discCause_, vars_, maxTime_]‚ğ“n‚µ‚½‚¢
 
   // ‰Šú’l§–ñinit_cons‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send init_ -----");  
+  HYDLA_LOGGER_VCS("--- send init_ ---");
   cl_->send_string("init_:=");
   send_init_cons(rss, continuity_map_);
   cl_->send_string("$");
 
 
   // —£U•Ï‰»‚ÌğŒ‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send discCause_ -----");
+  HYDLA_LOGGER_VCS("--- send discCause_ ---");
   cl_->send_string("discCause_:={");
   for(constraints_t::const_iterator it = disc_cause.begin(); it != disc_cause.end();it++){
     if(it!=disc_cause.begin()) cl_->send_string(",");
-    HYDLA_LOGGER_VCS("send discCause:");
+    HYDLA_LOGGER_VCS("--- send discCause ---");
     rss.put_node(*it, true);
   }
   cl_->send_string("}$");
 
 
   // •Ï”‚ÌƒŠƒXƒg‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_->send_string("vars_:=union(");
   rss.put_vars(true);
   cl_->send_string(")$");
 
 
   // maxTime‚ğ“n‚·
-  HYDLA_LOGGER_VCS("----- send maxTime_ -----");
+  HYDLA_LOGGER_VCS("--- send maxTime_ ---");
   cl_->send_string("maxTime_:=");
   time_t tmp_time(max_time);
   tmp_time -= current_time;
@@ -277,7 +283,7 @@ VCSResult REDUCEVCSInterval::integrate(
   }
   assert(ret_code_str=="1");
 
-  HYDLA_LOGGER_VCS("---integrate calc result---");
+  HYDLA_LOGGER_VCS("--- integrate calc result ---");
   virtual_constraint_solver_t::IntegrateResult::NextPhaseState state;
 
 
@@ -332,7 +338,7 @@ VCSResult REDUCEVCSInterval::integrate(
 
 
   // Ÿ‚ÌPP‚Ì‚ÆC‚»‚Ìê‡‚ÌğŒ‚Ì‘gCX‚ÉI—¹‚©‚Ç‚¤‚©‚ğ“¾‚é
-  HYDLA_LOGGER_VCS("-- receive next PP time --");
+  HYDLA_LOGGER_VCS("--- receive next PP time ---");
   const_tree_iter_t next_pp_time_list_ptr = variable_pair_list_ptr+1;
   size_t next_time_size = next_pp_time_list_ptr->children.size();
   HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
@@ -394,7 +400,7 @@ VCSResult REDUCEVCSInterval::integrate(
     max_time_flag_ss >> max_time_flag;
     state.is_max_time = (max_time_flag == 1);
     HYDLA_LOGGER_VCS("is_max_time: ",  state.is_max_time);
-    HYDLA_LOGGER_VCS("--parameter map--\n",  state.parameter_map);
+    HYDLA_LOGGER_VCS("--- parameter map ---\n", state.parameter_map);
 
 
 
@@ -443,20 +449,25 @@ VCSResult REDUCEVCSInterval::integrate(
     */
   }
 
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::integrate ***");
+
   return VCSR_TRUE;
 }
 
 void REDUCEVCSInterval::send_time(const time_t& time){
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::send_time ***");
   HYDLA_LOGGER_VCS("SymbolicTime::send_time : ", time);
   REDUCEStringSender rss(*cl_);
   rss.put_node(time.get_node(), false);
+
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::send_time ***");
 }
 
 void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm, 
                                               variable_map_t& out_vm, 
                                               const time_t& time)
 {
-  HYDLA_LOGGER_VCS("--- apply_time_to_vm ---");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::apply_time_to_vm ***");
 
   REDUCEStringSender rss(*cl_);
 
@@ -525,11 +536,14 @@ void REDUCEVCSInterval::apply_time_to_vm(const variable_map_t& in_vm,
 
     out_vm.set_variable(it->first, value);
   }
+
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::apply_time_to_vm ***");
+
 }
 
 void REDUCEVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
 {
-  HYDLA_LOGGER_VCS("--- add undefined vars to vm ---");  
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSInterval::add_undefined_vars_to_vm ***");
 
   /*
   // •Ï”•\‚É“o˜^‚³‚ê‚Ä‚¢‚é•Ï”–¼ˆê——
@@ -559,6 +573,9 @@ void REDUCEVCSInterval::add_undefined_vars_to_vm(variable_map_t& vm)
     }
   }
   */
+
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::add_undefined_vars_to_vm ***");
+
 }
 
 

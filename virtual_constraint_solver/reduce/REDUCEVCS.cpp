@@ -35,7 +35,8 @@ void REDUCEVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_precis
 
 REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t &vm)
 {
- 
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::REDUCEVCS ***");
+
   // デバッグプリントの設定
   std::stringstream debug_print_opt_str;
   debug_print_opt_str << "optUseDebugPrint_:=";
@@ -43,7 +44,7 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
   debug_print_opt_str << ";";
   cl_.send_string((debug_print_opt_str.str()).c_str());
 
-  HYDLA_LOGGER_VCS("#*** send depend statements of variables ***");
+  HYDLA_LOGGER_VCS("--- send depend statements of variables ---");
 
   std::ostringstream depend_str;
   depend_str << "depend {";
@@ -74,6 +75,8 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
   cl_.skip_until_redeval();
 
   SExpConverter::initialize();
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::REDUCEVCS ***");
+
 }
 
 REDUCEVCS::~REDUCEVCS()
@@ -83,7 +86,7 @@ REDUCEVCS::~REDUCEVCS()
 bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
 
-  HYDLA_LOGGER_VCS("#*** REDUCEVCS::reset ***\n");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::reset ***");
 
   cl_.send_string("symbolic redeval '(resetConstraintStore);");
   // cl_.read_until_redeval();
@@ -94,7 +97,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   {
     constraints_t constraints;
 
-    HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);  
+    HYDLA_LOGGER_VCS("--- Variable map ---\n", variable_map);
     variable_map_t::variable_list_t::const_iterator it  = variable_map.begin();
     variable_map_t::variable_list_t::const_iterator end = variable_map.end();
     for(; it!=end; ++it) {
@@ -156,7 +159,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   // cl_.read_until_redeval();
   cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("#*** END REDUCEVCS::reset ***\n");
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::reset ***");
   return true;
 }
 
@@ -178,7 +181,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   bool ignore_prev = (mode_==hydla::symbolic_simulator::ContinuousMode);
 
   // cons_を渡す
-  HYDLA_LOGGER_VCS("----- send cons_ -----");
+  HYDLA_LOGGER_VCS("--- send cons_ ---");
   cl_.send_string("cons_:={");
   constraints_t::const_iterator it = constraints.begin();
   constraints_t::const_iterator end = constraints.end();
@@ -189,7 +192,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   cl_.send_string("}$");
 
   // vars_を渡す
-  HYDLA_LOGGER_VCS("----- send vars_ -----");
+  HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_.send_string("vars_:=");
   rss.put_vars();
   cl_.send_string("$");
@@ -201,7 +204,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   cl_.skip_until_redeval();
 
 
-  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCS::add_constraint ***");
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::add_constraint ***");
   return;
 }
 
@@ -284,6 +287,7 @@ std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::sy
 
 bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 {
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::less_than ***");
 
   REDUCEStringSender rss(cl_);
 
@@ -309,12 +313,15 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 
   std::string ans = cl_.get_s_expr();
   HYDLA_LOGGER_VCS("check_less_than_ans: ", ans);
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::less_than ***");
+
   return  ans == "\"RETTRUE___\"";
 }
 
 
 void REDUCEVCS::simplify(time_t &time) 
 {
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::simplify ***");
   HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
   REDUCEStringSender rss(cl_);
 
@@ -342,12 +349,15 @@ void REDUCEVCS::simplify(time_t &time)
   SExpParser::const_tree_iter_t time_it = sp.get_tree_iterator();
   SExpConverter sc;
   time = sc.convert_s_exp_to_symbolic_value(sp, time_it);
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::simplify ***");
+
 }
 
 
 
   //SymbolicValueの時間をずらす
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(const value_t& val, const time_t& time){
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::shift_expr_time ***");
   value_t tmp_val;
   REDUCEStringSender rss(cl_);
 
@@ -380,6 +390,7 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   SExpParser::const_tree_iter_t value_it = sp.get_tree_iterator();
   SExpConverter sc;
   tmp_val = sc.convert_s_exp_to_symbolic_value(sp, value_it);
+  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::shift_expr_time ***");
   return  tmp_val;
 }
 

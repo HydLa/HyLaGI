@@ -25,10 +25,6 @@ REDUCELink::~REDUCELink(){
   if(!s_){ throw REDUCELinkError("fail to close"); }
 }
 
-REDUCELink::REDUCELink(const REDUCELink& old_cl){
-  std::cout << "Begin REDUCELink::REDUCELink(const REDUCELink& old_cl)" << std::endl;
-}
-
 int REDUCELink::read_until_redeval(){
   std::string line;
   while(getline_with_throw("read_until_redeval", line)){
@@ -43,7 +39,7 @@ int REDUCELink::read_until_redeval(){
 int REDUCELink::skip_until_redeval(){
   std::string line;
   while(getline_with_throw("skip_until_redeval", line)){
-    HYDLA_LOGGER_DEBUG(line);
+    HYDLA_LOGGER_EXTERN(line);
     if(line==end_of_redeval_){
       break;
     }

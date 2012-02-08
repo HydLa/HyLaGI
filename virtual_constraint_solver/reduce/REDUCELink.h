@@ -37,9 +37,15 @@ class REDUCELink {
 public:
   REDUCELink();
   ~REDUCELink();
-  REDUCELink(const REDUCELink& old_cl);
 
+  /*
+   * end_of_redeval_行まで文字列をgetlineする
+   * skip_until_redevalを推奨
+   */
   int read_until_redeval();
+  /*
+   * end_of_redeval_行まで文字列をgetlineする
+   */
   int skip_until_redeval();
   /*
    * 受信した複数行のstringを結合して破損のないLisp式を作る
