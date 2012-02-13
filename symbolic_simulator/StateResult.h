@@ -29,6 +29,7 @@ struct StateResult {
   time_t time;
   CauseOfTermination cause_of_termination;
   hydla::simulator::Phase phase_type;
+  //case step counter ms
   state_result_sptr_t parent;
   std::vector<state_result_sptr_t> children;
   

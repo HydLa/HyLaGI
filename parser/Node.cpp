@@ -249,6 +249,38 @@ bool ArbitraryFactor::is_same_struct(const Node& n, bool exactly_same) const
   return typeid(*this) == typeid(n) &&
           string_ == static_cast<const ArbitraryFactor*>(&n)->string_;
 }
+//Print
+bool Print::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const Print*>(&n)->string_;
+}
+bool PrintPP::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const PrintPP*>(&n)->string_;
+}
+bool PrintIP::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const PrintIP*>(&n)->string_;
+}
+bool Scan::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const Scan*>(&n)->string_;
+}
+bool Exit::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const Exit*>(&n)->string_;
+}
+bool Abort::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+          string_ == static_cast<const Abort*>(&n)->string_;
+}
+
 
 bool Variable::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -492,6 +524,14 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
 //êîéö
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
+
+//Print
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Print)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(PrintPP)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(PrintIP)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Scan)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Exit)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Abort)
 
 //ãLçÜíËêî
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)

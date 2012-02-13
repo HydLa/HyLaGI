@@ -74,6 +74,20 @@ public:
     collected_tells_.clear();
   }
 
+    std::vector<std::string> get_print(){
+    return v_print;
+  }
+  std::vector<std::string> get_print_pp(){
+    return v_print_pp;
+  }
+  std::vector<std::string> get_print_ip(){
+    return v_print_ip;
+  }
+  std::vector<std::string> get_scan(){
+    return v_scan;
+  }
+
+
   // 制約式
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
@@ -102,6 +116,13 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
   
 
+  // Print
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
 
 
 private:
@@ -137,6 +158,12 @@ private:
 
   /// 探索したalwaysノードのリスト
   visited_always_t   visited_always_;
+  //print
+  std::vector<std::string> v_print; 
+  std::vector<std::string> v_print_pp; 
+  std::vector<std::string> v_print_ip; 
+  std::vector<std::string> v_scan;
+ 
 };
 
 } //namespace simulator

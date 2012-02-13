@@ -143,6 +143,38 @@ DEFINE_VISIT_UNARY(Ln, Log)
 // ©‘R‘Î”‚Ì’ê
 DEFINE_VISIT_FACTOR(E, E)
 
+// Print
+void PacketSender::visit(boost::shared_ptr<Print> node)
+{    
+ //do nothing 
+  ml_->put_symbol("True");
+}
+void PacketSender::visit(boost::shared_ptr<PrintPP> node)
+{    
+ //do nothing 
+  ml_->put_symbol("True");
+}
+void PacketSender::visit(boost::shared_ptr<PrintIP> node)
+{    
+ //do nothing 
+  ml_->put_symbol("True");
+}
+    
+void PacketSender::visit(boost::shared_ptr<Scan> node)
+{    
+ //do nothing 
+  ml_->put_symbol("True");
+}
+void PacketSender::visit(boost::shared_ptr<Exit> node)
+{    
+ //do nothing 
+  ml_->put_symbol("True");
+}
+void PacketSender::visit(boost::shared_ptr<Abort> node)
+{    
+ //do nothing 
+  ml_->put_symbol("True");
+}
 //”CˆÓ‚Ì•¶š—ñ
 
 void PacketSender::visit(boost::shared_ptr<ArbitraryBinary> node)

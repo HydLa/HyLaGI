@@ -202,5 +202,32 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> nod
   accept(node->get_child());
 }
 
+// Print 
+void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
+{
+        //do nothing
+  //accept(node->get_child());
+}
+
+// ”CˆÓ‚Ì•¶Žš—ñ 
+void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node)
+{
+        //do nothing
+}
+void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node)
+{
+  accept(node->get_child());
+}
+void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node)
+{
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
+
+
+
+
+
+
 } //namespace simulator
 } //namespace hydla 

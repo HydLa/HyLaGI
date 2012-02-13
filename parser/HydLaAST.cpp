@@ -35,8 +35,10 @@ void HydLaAST::parse(std::istream& stream)
   HydLaGrammar hg;
   CommentGrammar cg;
   ast_tree_ = ast_parse<node_val_data_factory_t>(positBegin, positEnd, hg, cg);
+  
+  
 
-  if(!ast_tree_.full) {
+ if(!ast_tree_.full) {
     throw SyntaxError("", ast_tree_.stop.get_position().line);
   }
 }

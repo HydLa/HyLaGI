@@ -49,7 +49,6 @@ void ParseTreeSemanticAnalyzer::analyze(node_sptr& n/*, variable_map_t& variable
     state.in_constraint      = false;
     state.differential_count = 0;
     state_stack_.push(state);
-
   //  variable_map_ = &variable_map;
 
     accept(n);
@@ -393,6 +392,12 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 // êîéö
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 
+DEFINE_DEFAULT_VISIT_FACTOR(Print)
+DEFINE_DEFAULT_VISIT_FACTOR(PrintPP)
+DEFINE_DEFAULT_VISIT_FACTOR(PrintIP)
+DEFINE_DEFAULT_VISIT_FACTOR(Scan)
+DEFINE_DEFAULT_VISIT_FACTOR(Exit)
+DEFINE_DEFAULT_VISIT_FACTOR(Abort)
 
 } //namespace parser
 } //namespace hydla

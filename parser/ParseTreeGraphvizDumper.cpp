@@ -253,6 +253,31 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Previous> node)
   dump_node(node);
 }
 
+//Print 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Print> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<PrintPP> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<PrintIP> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Scan> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Exit> node)
+{
+  dump_node(node);
+}
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Abort> node)
+{
+  dump_node(node);
+}
 // éOäpä÷êî
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Sin> node)
 {

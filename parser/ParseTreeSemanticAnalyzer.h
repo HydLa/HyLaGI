@@ -111,6 +111,14 @@ public:
   // êîéö
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
+  // Print
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
+
 private:
   typedef hydla::parser::DefinitionContainer<
     hydla::parse_tree::Definition>::definition_map_key_t referenced_definition_t;

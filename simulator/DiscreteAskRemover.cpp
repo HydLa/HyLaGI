@@ -202,5 +202,12 @@ void DiscreteAskRemover::visit(boost::shared_ptr<Number> node)
   child_ = node;
 }
 
+//Print 
+void DiscreteAskRemover::visit(boost::shared_ptr<Print> node)
+{
+  child_ = node;
+}
+
+
 } //namespace simulator
 } //namespace hydla 

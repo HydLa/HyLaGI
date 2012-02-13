@@ -29,12 +29,20 @@ void TreeInfixPrinter::print_unary_node(const UnaryNode &node, const std::string
   (*output_stream_) << post;
 }
 
+void TreeInfixPrinter::print_factor_node(const FactorNode &node, const std::string &pre, const std::string &post){
+  //(*output_stream_) << "dactor_node\n";
+  (*output_stream_) << pre;
+  (*output_stream_) << post;
+}
+#define DEFINE_INFIX_VISIT_FACTOR(NAME, PRE, POST) \
+void TreeInfixPrinter::visit(boost::shared_ptr<NAME> node){\
+  print_factor_node(*node, PRE, POST);\
+}
+
 #define DEFINE_INFIX_VISIT_BINARY(NAME, SYMBOL)  \
 void TreeInfixPrinter::visit(boost::shared_ptr<NAME> node){\
   print_binary_node(*node, #SYMBOL);\
 }
-
-
 
 //é„çáê¨
 DEFINE_INFIX_VISIT_BINARY(Weaker, <<)
@@ -94,6 +102,14 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Log> node){
 // éOäpä÷êî
 DEFINE_INFIX_VISIT_UNARY(Sin, "Sin(", ")")
 DEFINE_INFIX_VISIT_UNARY(Cos, "Cos(", ")")
+
+// Print
+DEFINE_INFIX_VISIT_FACTOR(Print, "Print(", ")")
+DEFINE_INFIX_VISIT_FACTOR(PrintPP, "PrintPP(", ")")
+DEFINE_INFIX_VISIT_FACTOR(PrintIP, "PrintIP(", ")")
+DEFINE_INFIX_VISIT_FACTOR(Scan, "Scan(", ")")
+DEFINE_INFIX_VISIT_FACTOR(Exit, "Exit(", ")")
+DEFINE_INFIX_VISIT_FACTOR(Abort, "Abort(", ")")
 
 //ï¿óÒçáê¨
 void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){

@@ -34,6 +34,9 @@ class TreeInfixPrinter:
                           const needParenthesis &pre_par = PAR_NONE, const needParenthesis &post_par = PAR_NONE);
   void print_unary_node(const UnaryNode &, const std::string &pre, const std::string &post);
 
+
+  void print_factor_node(const FactorNode &, const std::string &pre, const std::string &post);
+
   // êßñÒíËã`
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
   
@@ -94,6 +97,14 @@ class TreeInfixPrinter:
   // ç∂ã…å¿
   virtual void visit(boost::shared_ptr<Previous> node);
   
+  //Print 
+  virtual void visit(boost::shared_ptr<Print> node);
+  virtual void visit(boost::shared_ptr<PrintPP> node);
+  virtual void visit(boost::shared_ptr<PrintIP> node);
+  virtual void visit(boost::shared_ptr<Scan> node);
+  virtual void visit(boost::shared_ptr<Exit> node);
+  virtual void visit(boost::shared_ptr<Abort> node);
+
   // î€íË
   virtual void visit(boost::shared_ptr<Not> node);
   

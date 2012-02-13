@@ -100,5 +100,14 @@ void TreeVisitor::visit(boost::shared_ptr<Parameter> node)                {asser
 // t
 void TreeVisitor::visit(boost::shared_ptr<SymbolicT> node)                {assert(0);}
 
+// Print
+void TreeVisitor::visit(boost::shared_ptr<Print> node)              {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<PrintPP> node)              {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<PrintIP> node)              {assert(0);}
+    
+void TreeVisitor::visit(boost::shared_ptr<Scan> node)              {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<Exit> node)              {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<Abort> node)              {assert(0);}
+
 } //namespace parse_tree
 } //namespace hydla

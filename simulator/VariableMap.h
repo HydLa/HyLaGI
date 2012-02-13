@@ -62,6 +62,19 @@ public:
      return false;
   }
   
+  std::map<std::string, std::string> get_stdmap()
+  { 
+    iterator it = variables_.begin();
+    std::map<std::string, std::string> s;
+/*
+    for(;it != variables_.end();it++){
+            ss << it->first
+            s.insert();
+    }
+*/
+
+    return s; 
+          }
   void clear()
   {
     variables_.clear();

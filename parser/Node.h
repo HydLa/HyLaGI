@@ -1227,6 +1227,347 @@ public:
   
 };
 
+class Print : public FactorNode{
+public:
+  
+  Print()
+  {}
+  
+  virtual ~Print()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Print> n(new Print());
+    n->string_ = string_;
+    n->args_ = args_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "Print";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << string_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+
+private:
+  std::string string_;
+  std::string args_;
+};
+
+class PrintPP : public FactorNode{
+public:
+  
+  PrintPP()
+  {}
+  
+  virtual ~PrintPP()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<PrintPP> n(new PrintPP());
+    n->string_ = string_;
+    n->args_ = args_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "PrintPP";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << string_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+
+private:
+  std::string string_;
+  std::string args_;
+};
+
+class PrintIP : public FactorNode{
+public:
+  
+  PrintIP()
+  {}
+  
+  virtual ~PrintIP()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<PrintIP> n(new PrintIP());
+    n->string_ = string_;
+    n->args_ = args_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "PrintIP";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << string_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+
+private:
+  std::string string_;
+  std::string args_;
+};
+
+class Scan : public FactorNode{
+public:
+  
+  Scan()
+  {}
+  
+  virtual ~Scan()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Scan> n(new Scan());
+    n->string_ = string_;
+    n->args_ = args_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "Scan";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << args_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+
+private:
+  std::string string_;
+  std::string args_;
+};
+    
+class Exit : public FactorNode{
+public:
+  
+  Exit()
+  {}
+  
+  virtual ~Exit()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Exit> n(new Exit());
+    n->string_ = string_;
+    n->args_ = args_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "Exit";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << string_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+
+private:
+  std::string string_;
+  std::string args_;
+};
+
+class Abort : public FactorNode{
+public:
+  
+  Abort()
+  {}
+  
+  virtual ~Abort()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Abort> n(new Abort());
+    n->string_ = string_;
+    n->args_ = args_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "Abort";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << string_ << "]";
+  }
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+
+private:
+  std::string string_;
+  std::string args_;
+};
 
 
 class ArbitraryNode : public Node {

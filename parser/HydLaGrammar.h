@@ -117,6 +117,12 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Ask_Logical)       ask_logical;
     defRuleID(RI_Comparison)        comparison; 
     defRuleID(RI_Assert)           assert;
+    defRuleID(RI_Print)            print;
+    defRuleID(RI_Print_PP)            print_pp;
+    defRuleID(RI_Print_IP)            print_ip;
+    defRuleID(RI_Scan)            scan;
+    defRuleID(RI_Exit)            exit;
+    defRuleID(RI_Abort)            abort;
 
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
@@ -128,7 +134,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       hydla_program = gen_pt_node_d[statements];
             
       //文の集合
-      statements  = gen_ast_node_d[*((assert | def_statement | program) 
+      statements  = gen_ast_node_d[*(( assert | def_statement | program) 
                                      >> discard_node_d[ch_p('.')]) >> end_p];
 
       //プログラム
@@ -148,6 +154,28 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       
       // assert文
       assert = root_node_d[str_p("ASSERT")] >> no_node_d[ch_p('(')] >> ask_logical >> no_node_d[ch_p(')')];
+
+      //print文
+      //print = root_node_d[str_p("PRINT")] >> no_node_d[ch_p("(")] >> arbitrary_factor >>no_node_d[ch_p(")")];
+      print = no_node_d[str_p("PRINT")] >>  no_node_d[ch_p("(")] >> no_node_d[ch_p('"')] 
+             >> leaf_node_d[*(anychar_p - '"') >> ch_p('"') >> *(ch_p(',') | (anychar_p - ")"))]
+             >> no_node_d[ch_p(")")];
+
+      print_pp = no_node_d[str_p("PRINTPP")] >>  no_node_d[ch_p("(")] >> no_node_d[ch_p('"')] 
+             >> leaf_node_d[*(anychar_p - '"') >> ch_p('"') >> *(ch_p(',') | (anychar_p - ")"))]
+             >> no_node_d[ch_p(")")];
+      print_ip = no_node_d[str_p("PRINTIP")] >>  no_node_d[ch_p("(")] >> no_node_d[ch_p('"')] 
+             >> leaf_node_d[*(anychar_p - '"') >> ch_p('"') >> *(ch_p(',') | (anychar_p - ")"))]
+             >> no_node_d[ch_p(")")];
+
+      scan = no_node_d[str_p("SCAN")] >>  no_node_d[ch_p("(")] >> 
+             leaf_node_d[*(ch_p(',') | (anychar_p - ")"))]
+             >> no_node_d[ch_p(")")];
+
+      exit = no_node_d[str_p("EXIT")] >>  no_node_d[ch_p("(")]  >> no_node_d[ch_p(")")];
+
+      abort = no_node_d[str_p("ABORT")] >>  no_node_d[ch_p("(")]  >> no_node_d[ch_p(")")];
+      
 
       //program定義
       program_def = 
@@ -197,7 +225,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //tell
       tell = gen_ast_node_d[
-        expression >> root_node_d[comp_op] >> expression];
+        expression >> root_node_d[comp_op] >> expression] || print | print_pp | print_ip | scan | abort| exit;
 
       //式
       expression = arithmetic;
@@ -260,7 +288,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       
       arbitrary_binary = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
       arbitrary_unary = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
-      arbitrary_factor = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
+      //arbitrary_factor = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
       
       //数字
       number = 

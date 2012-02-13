@@ -73,6 +73,14 @@ public:
   // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
+  //Print
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
+
+  // ”CˆÓ‚Ì•¶š—ñ
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
+
 private:
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
 

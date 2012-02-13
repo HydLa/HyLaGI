@@ -165,6 +165,228 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> no
 }
 
 
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
+{
+  std::string str =  node->get_string();
+  std::string args = node->get_args();
+
+  args.erase(0,2);
+  std::string sb(" ");
+  std::string sa("");
+  std::string::size_type n, nb = 0;
+  //スペースの削除
+  while ((n = args.find(sb,nb)) != std::string::npos)
+  {
+    args.replace(n, sb.size(), sa);
+    nb = n + sa.size();
+  }
+  //引数の分解
+  int i = 0;
+  std::string key(",");
+  v_print.push_back(str);
+  
+  while(i <  (int)args.length())
+  {
+    int old_i = i;
+    i = args.find(key, i);
+    if( i != std::string::npos)
+    {
+      std::string item = args.substr(old_i, i - old_i);
+      v_print.push_back(item);
+    }else{
+      std::string item = args.substr(old_i);
+      v_print.push_back(item);
+      break;
+    }
+    i += key.length();
+  }
+
+}
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node)
+{
+  std::string str =  node->get_string();
+  std::string args = node->get_args();
+
+  args.erase(0,2);
+  std::string sb(" ");
+  std::string sa("");
+  std::string::size_type n, nb = 0;
+  //スペースの削除
+  while ((n = args.find(sb,nb)) != std::string::npos)
+  {
+    args.replace(n, sb.size(), sa);
+    nb = n + sa.size();
+  }
+  //引数の分解
+  int i = 0;
+  std::string key(",");
+  v_print_pp.push_back(str);
+  
+  while(i <  (int)args.length())
+  {
+    int old_i = i;
+    i = args.find(key, i);
+    if( i != std::string::npos)
+    {
+      std::string item = args.substr(old_i, i - old_i);
+      v_print_pp.push_back(item);
+    }else{
+      std::string item = args.substr(old_i);
+      v_print_pp.push_back(item);
+      break;
+    }
+    i += key.length();
+  }
+
+}
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node)
+{
+  std::string str =  node->get_string();
+  std::string args = node->get_args();
+
+  args.erase(0,2);
+  std::string sb(" ");
+  std::string sa("");
+  std::string::size_type n, nb = 0;
+  //スペースの削除
+  while ((n = args.find(sb,nb)) != std::string::npos)
+  {
+    args.replace(n, sb.size(), sa);
+    nb = n + sa.size();
+  }
+  //引数の分解
+  int i = 0;
+  std::string key(",");
+  v_print_ip.push_back(str);
+  
+  while(i <  (int)args.length())
+  {
+    int old_i = i;
+    i = args.find(key, i);
+    if( i != std::string::npos)
+    {
+      std::string item = args.substr(old_i, i - old_i);
+      v_print_ip.push_back(item);
+    }else{
+      std::string item = args.substr(old_i);
+      v_print_ip.push_back(item);
+      break;
+    }
+    i += key.length();
+  }
+
+}
+
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Scan> node)
+{
+  std::string str =  node->get_string();
+  std::string args = node->get_args();
+
+  std::string sb(" ");
+  std::string sa("");
+  std::string::size_type n, nb = 0;
+  //スペースの削除
+  while ((n = args.find(sb,nb)) != std::string::npos)
+  {
+    args.replace(n, sb.size(), sa);
+    nb = n + sa.size();
+  }
+  //引数の分解
+  int i = 0;
+  std::string key(",");
+  
+  while(i <  (int)args.length())
+  {
+    int old_i = i;
+    i = args.find(key, i);
+    if( i != std::string::npos)
+    {
+      std::string item = args.substr(old_i, i - old_i);
+      v_scan.push_back(item);
+    }else{
+      std::string item = args.substr(old_i);
+      v_scan.push_back(item);
+      break;
+    }
+    i += key.length();
+  }
+}
+
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Exit> node)
+{
+  std::string str =  node->get_string();
+  std::string args = node->get_args();
+
+  args.erase(0,2);
+  std::string sb(" ");
+  std::string sa("");
+  std::string::size_type n, nb = 0;
+  //スペースの削除
+  while ((n = args.find(sb,nb)) != std::string::npos)
+  {
+    args.replace(n, sb.size(), sa);
+    nb = n + sa.size();
+  }
+  //引数の分解
+  int i = 0;
+  std::string key(",");
+  v_print_ip.push_back(str);
+  
+  while(i <  (int)args.length())
+  {
+    int old_i = i;
+    i = args.find(key, i);
+    if( i != std::string::npos)
+    {
+      std::string item = args.substr(old_i, i - old_i);
+      v_print_ip.push_back(item);
+    }else{
+      std::string item = args.substr(old_i);
+      v_print_ip.push_back(item);
+      break;
+    }
+    i += key.length();
+  }
+
+}
+    
+void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Abort> node)
+{
+  std::string str =  node->get_string();
+  std::string args = node->get_args();
+
+  args.erase(0,2);
+  std::string sb(" ");
+  std::string sa("");
+  std::string::size_type n, nb = 0;
+  //スペースの削除
+  while ((n = args.find(sb,nb)) != std::string::npos)
+  {
+    args.replace(n, sb.size(), sa);
+    nb = n + sa.size();
+  }
+  //引数の分解
+  int i = 0;
+  std::string key(",");
+  v_print_ip.push_back(str);
+  
+  while(i <  (int)args.length())
+  {
+    int old_i = i;
+    i = args.find(key, i);
+    if( i != std::string::npos)
+    {
+      std::string item = args.substr(old_i, i - old_i);
+      v_print_ip.push_back(item);
+    }else{
+      std::string item = args.substr(old_i);
+      v_print_ip.push_back(item);
+      break;
+    }
+    i += key.length();
+  }
+
+}
 
 
 

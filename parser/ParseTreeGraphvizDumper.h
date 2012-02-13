@@ -84,8 +84,15 @@ public:
 
   // ç∂ã…å¿
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
-  
-  
+ 
+  //Print 
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
+    
   // éOäpä÷êî
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Sin> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Cos> node);

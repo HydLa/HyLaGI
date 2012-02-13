@@ -176,6 +176,12 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Always>
   dispatch_unary_node(node);
 }
 
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
+{
+  //dispatch_unary_node(node);
+}
+
+
 
 } //namespace simulator
 } //namespace hydla 

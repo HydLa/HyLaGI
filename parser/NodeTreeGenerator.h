@@ -338,8 +338,73 @@ private:
         assertion_node_ = create_parse_tree(ch);
         return node_sptr();
       }
-
-      default:
+      case RI_Print://wada
+      {
+        boost::shared_ptr<Print> node(node_factory_->create<Print>());
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        node->set_string(
+        std::string(str, 0, str.find("\",", 0)));
+        node->set_args(
+        std::string(str, str.find("\",", 0), str.length()));
+       return node;
+       // return create_unary_node<Print>(ch);
+      }
+      case RI_Print_PP://wada
+      {
+        boost::shared_ptr<PrintPP> node(node_factory_->create<PrintPP>());
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        node->set_string(
+        std::string(str, 0, str.find("\",", 0)));
+        node->set_args(
+        std::string(str, str.find("\",", 0), str.length()));
+       return node;
+       // return create_unary_node<Print>(ch);
+      }
+      case RI_Print_IP://wada
+      {
+        boost::shared_ptr<PrintIP> node(node_factory_->create<PrintIP>());
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        node->set_string(
+        std::string(str, 0, str.find("\",", 0)));
+        node->set_args(
+        std::string(str, str.find("\",", 0), str.length()));
+       return node;
+       // return create_unary_node<Print>(ch);
+      }
+      case RI_Scan://wada
+      {
+        boost::shared_ptr<Scan> node(node_factory_->create<Scan>());
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        node->set_string(
+        std::string(str));
+        node->set_args(
+        std::string(str));
+       return node;
+       // return create_unary_node<Print>(ch);
+      }
+      case RI_Exit://wada
+      {
+        boost::shared_ptr<Exit> node(node_factory_->create<Exit>());
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        node->set_string(
+        std::string(str));
+        node->set_args(
+        std::string(str));
+       return node;
+       // return create_unary_node<Print>(ch);
+      }
+      case RI_Abort://wada
+      {
+        boost::shared_ptr<Abort> node(node_factory_->create<Abort>());
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        node->set_string(
+        std::string(str, 0, str.find("\",", 0)));
+        node->set_args(
+        std::string(str, str.find("\",", 0), str.length()));
+       return node;
+       // return create_unary_node<Print>(ch);
+      }
+      default://a
       {
         assert(0);
         return node_sptr();

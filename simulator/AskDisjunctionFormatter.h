@@ -64,6 +64,8 @@ public:
 
   // Žž‘Š‰‰ŽZŽq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
+  // Print
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
 
 private:   
   template<class NodeType>

@@ -225,7 +225,13 @@ public:
   {
     return assertion_node_tree_;
   }
-  
+  /*wada
+  node_sptr get_print_node() const
+  {
+    return print_node_tree_;
+  }
+*/
+
   /*
   node_sptr get_node(node_id_t id) const
   {

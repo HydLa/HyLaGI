@@ -151,6 +151,13 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ln> node);
   // ©‘R‘Î”‚Ì’ê
   virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
+  // Print
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
   // ”CˆÓ‚Ì•¶š—ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);

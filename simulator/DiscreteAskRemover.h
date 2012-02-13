@@ -79,6 +79,10 @@ public:
   // ”š
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
+  // Print 
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
+
+
 private:  
   void dispatch(boost::shared_ptr<hydla::parse_tree::UnaryNode> node);
   void dispatch(boost::shared_ptr<hydla::parse_tree::BinaryNode> node);

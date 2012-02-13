@@ -1,5 +1,5 @@
 #include "AskTypeAnalyzer.h"
-
+#include "iostream"
 #include <boost/make_shared.hpp>
 
 using namespace hydla::parse_tree;
@@ -15,9 +15,11 @@ AskTypeAnalyzer::~AskTypeAnalyzer()
 
 void AskTypeAnalyzer::analyze(hydla::parse_tree::ParseTree* pt)
 {
+  std::cout << "d" << std::endl;
   new_child_.reset();
-
+  std::cout << "d" << std::endl;
   pt->dispatch(this);
+  std::cout << "d" << std::endl;
 
   if(new_child_) {
     pt->swap_tree(new_child_);
@@ -199,6 +201,14 @@ void AskTypeAnalyzer::visit(boost::shared_ptr<Number> node)
 {
   //do nothing
 }
+
+// Print
+void AskTypeAnalyzer::visit(boost::shared_ptr<Print> node)
+{
+  //do nothing
+  //dispatch(node);
+}
+
 
 } //namespace simulator
 } //namespace hydla 

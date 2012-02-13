@@ -116,6 +116,12 @@ typedef enum _RuleID {
   RI_ConstraintDef,
   
   RI_Assert,
+  RI_Print,
+  RI_Print_PP,
+  RI_Print_IP,
+  RI_Scan,
+  RI_Exit,
+  RI_Abort,
   RI_Statements,
   RI_HydLaProgram,
 

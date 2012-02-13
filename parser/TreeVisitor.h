@@ -83,6 +83,14 @@ public:
   // ç∂ã…å¿
   virtual void visit(boost::shared_ptr<Previous> node);
   
+  //Print
+  virtual void visit(boost::shared_ptr<Print> node);
+  virtual void visit(boost::shared_ptr<PrintPP> node);
+  virtual void visit(boost::shared_ptr<PrintIP> node);
+    
+  virtual void visit(boost::shared_ptr<Scan> node);
+  virtual void visit(boost::shared_ptr<Exit> node);
+  virtual void visit(boost::shared_ptr<Abort> node);
   
   // î€íË
   virtual void visit(boost::shared_ptr<Not> node);

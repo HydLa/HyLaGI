@@ -372,6 +372,102 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(const phase_state_co
   return CC_TRUE;
 }
 
+//print_pp書式文字列に対応する値を挿入
+void print_pp(std::vector<std::string> v, variable_map_t v_map, int step, std::string ms_set_name, time_t time, std::string _case)
+{
+  //variable_map_t v_map = state->variable_map;
+  variable_map_t::iterator va_itr;
+  std::map<std::string, std::string> s_map;
+  std::ostringstream f;
+  std::ostringstream s;
+  //variable_mapをstringに変換しs_mapにいれる
+  for (va_itr = v_map.begin(); va_itr != v_map.end(); va_itr++)
+  {
+      f << va_itr->first;
+      s << va_itr->second;
+      s_map.insert(pair<std::string, std::string>(f.str(), s.str()));
+      f.str("");
+      s.str("");
+     
+  }
+  s_map.insert(pair<std::string, std::string>("MODULE", ms_set_name));
+  s << step+1;
+  s_map.insert(pair<std::string, std::string>("STEP", s.str()));
+  s.str("");
+  s << time;
+  s_map.insert(pair<std::string, std::string>("TIME", s.str()));
+  s.str("");
+  s<< "PP";
+  s_map.insert(pair<std::string, std::string>("PHASE", s.str()));
+  s.str("");
+  s << _case;
+  s_map.insert(pair<std::string, std::string>("CASE", s.str()));
+
+    //書式文字列の取り出し
+    std::string output_str(*v.begin());
+    std::vector<std::string>::iterator v_it = v.begin();
+    ++v_it;
+    //vの引数を変換して、代入
+      while(v_it != v.end())
+      { //++v_it;
+        std::string sb("%d");
+        std::string sa( s_map.find(*v_it)->second );
+        std::string::size_type n, nb = 0;
+        if ((n = output_str.find(sb,nb)) != std::string::npos)
+        {
+          output_str.replace(n, sb.size(), sa);
+          nb = n + sa.size();
+        }
+        ++v_it;
+      }
+}
+
+void print_ip(std::vector<std::string> v, variable_map_t v_map, int step, std::string ms_set_name, time_t start_time, time_t end_time, std::string _case)
+{
+  variable_map_t::iterator va_itr;
+  std::map<std::string, std::string> s_map;
+  std::ostringstream f;
+  std::ostringstream s;
+  for (va_itr = v_map.begin(); va_itr != v_map.end(); va_itr++)
+  {
+      f << va_itr->first;
+      s << va_itr->second;
+      s_map.insert(pair<std::string, std::string>(f.str(), s.str()));
+      f.str("");
+      s.str("");
+     
+  }
+  s_map.insert(pair<std::string, std::string>("MODULE", ms_set_name));
+  s << step;
+  s_map.insert(pair<std::string, std::string>("STEP", s.str()));
+  s.str("");
+  s << start_time << "->" << end_time;
+  s_map.insert(pair<std::string, std::string>("TIME", s.str()));
+  s_map.insert(pair<std::string, std::string>("PHASE", "IP"));
+  s.str("");
+  s << _case;
+  s_map.insert(pair<std::string, std::string>("CASE", s.str()));
+
+    //書式文字列の取り出し
+    std::string output_str(*v.begin());
+    std::vector<std::string>::iterator v_it = v.begin();
+    ++v_it;
+    //vの引数を変換して、代入
+      while(v_it != v.end())
+      { //++v_it;
+        std::string sb("%d");
+        std::string sa( s_map.find(*v_it)->second );
+        std::string::size_type n, nb = 0;
+        if ((n = output_str.find(sb,nb)) != std::string::npos)
+        {
+          output_str.replace(n, sb.size(), sa);
+          nb = n + sa.size();
+        }
+        ++v_it;
+      }
+      std::cout << output_str <<std::endl;
+}
+
 
 bool SymbolicSimulator::point_phase(const module_set_sptr& ms, 
                                 const phase_state_const_sptr& state)
@@ -437,6 +533,58 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
     state_result->parent->children.push_back(state_result);
     new_state->parent_state_result = state_result;
 
+//TellCollector tell_collector(ms, state->phase == IntervalPhase);
+    TellCollector tell_collector(ms);
+    tells_t         tell_list;
+    tell_collector.collect_new_tells(&tell_list,
+                                     &expanded_always, 
+                                     &positive_asks);
+    std::vector<std::string> v_print_pp = tell_collector.get_print_pp();
+    std::vector<std::string> v_scan = tell_collector.get_scan();
+    // プリント出力
+   
+    if(v_print_pp.size()!=0)
+    {
+      print_pp(v_print_pp, new_state->variable_map, state->step, ms->get_name(), state->current_time, "1");
+//      print_pp(v_print_pp, new_state->variable_map, state->step, ms->get_name(), state->current_time, state->_case);
+      std::cout << std::endl;
+    }
+    //Scan入力
+    if(v_scan.size()!=0)
+    {
+      std::cout << "test scan" << std::endl;
+      variable_map_t vm = new_state->variable_map;
+      variable_map_t::iterator vm_itr;
+      variable_map_t::iterator vm_itr_copy = vm_itr;
+      std::vector<std::string>::iterator v_it = v_scan.begin();
+      for(;v_it != v_scan.end(); v_it++)
+      {
+        std::cout << *v_it << std::endl;
+        std::string s;
+        std::cin >> s;
+        SymbolicValue n(s);
+           int derivative_count = 0;
+       std::string name = *v_it;
+       std::string::iterator n_it;
+       std::string sb("'");
+       std::string sa("");
+       std::string::size_type na, nb = 0;
+  //'の削除
+  while ((na = name.find(sb,nb)) != std::string::npos)
+  {
+    name.replace(na, sb.size(), sa);
+    nb = na + sa.size();
+    derivative_count++;
+
+  }
+        DefaultVariable m(name, derivative_count);
+        vm.set_variable(m, n);
+      }
+      new_state->variable_map = vm;
+      std::cout << "end scan" << std::endl;
+    }
+
+
     if(is_safe_){
       //状態をスタックに押し込む
       HYDLA_LOGGER_DEBUG("---push_phase_state---\n", new_state->current_time,"\n",new_state->variable_map,"\n", new_state->parameter_map);
@@ -488,6 +636,18 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
     return true;
   }
   
+  TellCollector tell_collector(ms);
+  //TellCollector tell_collector(ms, state->phase == IntervalPhase);
+  tells_t         tell_list;
+  tell_collector.collect_new_tells(&tell_list,
+                                     &expanded_always, 
+                                     &positive_asks);
+
+   std::vector<std::string> v_print_ip = tell_collector.get_print_ip();
+   int print_ip_flag = 0;
+   if(v_print_ip.size() !=0)  print_ip_flag =1;
+
+
   constraints_t disc_cause;
   
   if(is_safe_){
@@ -617,7 +777,14 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       }
     }
     
-      
+       if(print_ip_flag!=0)
+      {
+        variable_map_t print_variable = shift_variable_map_time(integrate_result.states[it].variable_map,state->current_time);
+        print_ip(v_print_ip, print_variable, state->step, ms->get_name(), state->current_time, integrate_result.states[it].time, "1");
+        //print_ip(v_print_ip, print_variable, state->step, ms->get_name(), state->current_time, integrate_result.states[it].time, state->_case);
+        std::cout <<  std::endl;
+      }
+
     HYDLA_LOGGER_PHASE("%%%%%%%%%%%%% interval phase result  %%%%%%%%%%%%%\n",
 		       "time:", solver_->get_real_val(integrate_result.states[it].time, 5, opts_.output_format), "\n",
                        integrate_result.states[it].variable_map,
