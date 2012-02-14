@@ -11,7 +11,7 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
-/*
+/**
  * REDUCEサーバとのsocket通信時のエラー、またはREDUCE側に論理的なエラーを表す
  */
 class REDUCELinkError : public std::runtime_error {
@@ -30,35 +30,58 @@ private:
   }
 };
 
-/*
+/**
  * REDUCEサーバとの接続クライアント、サーバ接続とstringの送受信を行う
  */
 class REDUCELink {
 public:
+
+  /**
+   * localhost:1206 に接続する
+   */
   REDUCELink();
   ~REDUCELink();
 
-  /*
+  /**
    * end_of_redeval_行まで文字列をgetlineする
    * skip_until_redevalを推奨
+   * \return 0
    */
   int read_until_redeval();
-  /*
+
+  /**
    * end_of_redeval_行まで文字列をgetlineする
+   * \return 0
    */
   int skip_until_redeval();
-  /*
+
+  /**
    * 受信した複数行のstringを結合して破損のないLisp式を作る
+   * \return REDUCEから受け取るS式
    */
   std::string get_s_expr();
-  /*
+
+  /**
    * stringの送信
+   * \param cmd REDUCEへ送信する文字列
+   * \return 0
    */
   int send_string(const std::string cmd);
-  /*
-   * getlineを行い、またこの時にs_.badや受信文字列がエラーを見つけた場合REDUCELinkErrorをthrowする
+
+  /**
+   * getlineを行い、異常を見つけた場合throwする
+   * \param cmd 呼び出し元の関数名, デバッグ用
+   * \param line REDUCEへ送信する文字列
+   * \return getlineの戻り値
    */
   std::istream& getline_with_throw(const std::string& cmd, std::string& line);
+
+  /**
+   * 文字列中に含まれるqueryをカウントする
+   * \param str 調べる文字列
+   * \param query '(' または ')'
+   * \return queryのカウント数
+   */
   int count_char(const std::string str, const char query) const;
 
 private:
