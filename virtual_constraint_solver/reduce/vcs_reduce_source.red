@@ -972,7 +972,7 @@ begin;
   % Falseを追加しようとする場合はFalseを返す
   if(isFalseDNF(newCondDNF_)) then return {{}};
 
-  addedCondDNF_:= simplifyDNF(for each conj in newCondDNF_ join <<
+  addedCondDNF_:= for each conj in newCondDNF_ join <<
     i_:= 1;
     tmpAddedCondDNF_:= condDNF_;
     while (i_<=length(conj) and not isFalseDNF(tmpAddedCondDNF_)) do <<
@@ -980,8 +980,8 @@ begin;
       debugWrite("tmpAddedCondDNF_ in loop in addCondDNFToCondDNF: ", tmpAddedCondDNF_);
       i_:= i_+1;
     >>;
-    simplifyDNF(tmpAddedCondDNF_)
-  >>);
+    if(not isFalseDNF(tmpAddedCondDNF_)) then simplifyDNF(tmpAddedCondDNF_) else {}
+  >>;
 
   debugWrite("addedCondDNF_ in addCondDNFToCondDNF: ", addedCondDNF_);
   debugWrite("(newCondDNF_: )", newCondDNF_);
@@ -1129,11 +1129,14 @@ begin;
   debugWrite("lbTuple_: ", lbTuple_);
 
   % 最後にlb≦ubを確かめ、矛盾する場合は{}を返す（falseを表す論理積）
-  if(mymin(lb_, ub_)=lb_) then <<
-    % lb=ubの場合、関係演算子がgeqとleqでなければならない
-    if((lb_=ub_) and not isEqualConj({ubTuple_, lbTuple_})) then addedCondConj_:= {};
-  >> else <<
-    addedCondConj_:= {};
+  % ubがデフォルト（INFINITY）のままなら確認不要
+  if(ub_ neq INFINITY) then << 
+    if(mymin(lb_, ub_)=lb_) then <<
+      % lb=ubの場合、関係演算子がgeqとleqでなければならない
+      if((lb_=ub_) and not isEqualConj({ubTuple_, lbTuple_})) then addedCondConj_:= {};
+    >> else <<
+      addedCondConj_:= {};
+    >>;
   >>;
 
 
@@ -2196,7 +2199,7 @@ end;
 % TODO：ERROR処理
 procedure checkInfMinTimeDNF(tDNF_, condDNF_)$
 begin;
-  scalar minTCList_, conj_, argsAnsTCList_, minValue_, compareTCListList_, lbTuplelist_, ubTupleList_,
+  scalar minTCList_, conj_, argsAnsTCListList_, minValue_, compareTCListList_, lbTuplelist_, ubTupleList_,
          lbParamTupleList_, ubParamTupleList_, lbValueTupleList_, ubValueTupleList_, lbValue_, ubValue_, 
          paramLeqValueCondDNF_, paramGreaterValueCondDNF_, checkDNF_, diffCondDNF_;
   debugWrite("in checkInfMinTimeDNF", " ");
@@ -2205,16 +2208,10 @@ begin;
 
   conj_:= first(tDNF_);
   if(length(tDNF_)>1) then <<
-    argsAnsTCList_:= union(for i:=1 : length(tDNF_) join
+    argsAnsTCListList_:= union(for i:=1 : length(tDNF_) collect
       checkInfMinTimeDNF({part(tDNF_, i)}, condDNF_));
-    debugWrite("argsAnsTCList_: ", argsAnsTCList_);
-    % 長さ1のリストならそのまま返す
-    if(length(argsAnsTCList_)=1) then minTCList_:= argsAnsTCList_
-    else <<
-      compareTCListList_:= for each x in rest(argsAnsTCList_) collect {x};
-      debugWrite("compareTCListList_: ", compareTCListList_);
-      minTCList_:= myFoldLeft(compareMinTimeList, {first(argsAnsTCList_)}, compareTCListList_);
-    >>;
+    debugWrite("argsAnsTCListList_: ", argsAnsTCListList_);
+    minTCList_:= myFoldLeft(compareMinTimeList, first(argsAnsTCListList_), rest(argsAnsTCListList_));
   >> else if(isEqualConj(conj_)) then <<
     % Equalを表す論理積の場合
     if(not hasParameter(conj_)) then minTCList_:= {{getValueFromTuple(first(conj_)), condDNF_}}
@@ -2252,24 +2249,27 @@ begin;
       lbValue_:= getValueFromTuple(first(lbValueTupleList_));
       ubValue_:= getValueFromTuple(first(ubValueTupleList_));
 
+
       minTCList_:= {};
       % パラメタを含む下限がlbValue_より大きいかどうかを調べる
-      % ただし0より大きくなくてはならない
       % TODO：パラメタを含む下限同士の大小判定
       debugWrite("lbParamTupleList_: ", lbParamTupleList_);
+      debugWrite("lbValue_: ", lbValue_);
       for each x in lbParamTupleList_ do <<
         debugWrite("x (lbParamTuple): ", x);
-        checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), greaterp, 0}, condDNF_);
+        checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, lbValue_}, condDNF_);
         debugWrite("checkDNF_: ", checkDNF_);
         if(not isFalseDNF(checkDNF_)) then <<
           if(isSameDNF(checkDNF_, condDNF_)) then <<
             minTCList_:= cons({getValueFromTuple(x), checkDNF_}, minTCList_);
-          >> else if(checkOrderingFormula(lbValue_ >0)) then <<
+          >> else <<
             diffCondDNF_:= addCondDNFToCondDNF(getNotDNF(checkDNF_), condDNF_);
             debugWrite("diffCondDNF_: ", diffCondDNF_);
-            minTCList_:= cons({getValueFromTuple(x), checkDNF_}, cons({lbValue_, diffCondDNF_}, minTCList_));
-          >> else <<
-            minTCList_:= cons({getValueFromTuple(x), checkDNF_}, minTCList_);
+            if(checkOrderingFormula(lbValue_ >0)) then <<
+              minTCList_:= cons({getValueFromTuple(x), checkDNF_}, cons({lbValue_, diffCondDNF_}, minTCList_));
+            >> else <<
+              minTCList_:= cons({getValueFromTuple(x), checkDNF_}, cons({INFINITY, diffCondDNF_}, minTCList_));
+            >>;
           >>;
           debugWrite("minTCList_: ", minTCList_);
         >>;
@@ -2277,28 +2277,31 @@ begin;
       debugWrite("minTCList_ after add: ", minTCList_);
 
 
+      debugWrite("========== check param-ub ==========", " ");
+      % パラメタを含む上限は下限以上でなくてはならない
+      debugWrite("ubParamTupleList_: ", ubParamTupleList_);
       if(minTCList_ neq {}) then <<
-        debugWrite("========== check param-ub ==========", " ");
-        % パラメタを含む上限は下限以上でなくてはならない
-        debugWrite("ubParamTupleList_: ", ubParamTupleList_);
-        if(minTCList_ neq {}) then <<
-          for each x in ubParamTupleList_ do <<
-            minTCList_:= union(for each y in minTCList_ join <<
+        for each x in ubParamTupleList_ do <<
+          minTCList_:= union(for each y in minTCList_ join <<
+            if(getTimeFromTC(y) neq INFINITY) then <<
               checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, getTimeFromTC(y)}, getCondDNFFromTC(y));
+              debugWrite("checkDNF_: ", checkDNF_);
               if(not isFalseDNF(checkDNF_)) then {y} else {}
-            >>);
-          >>;
-          if(minTCList_={}) then minTCList_:= {{INFINITY, condDNF_}};
-        >> else <<
-          % パラメタの下限がなかった（lbParamTupleList_が空集合）ときはlbValue_とだけ比較
-          for each x in ubParamTupleList_ do <<
-            checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, lbValue_}, condDNF_);
-            if(not isFalseDNF(checkDNF_)) then minTCList_:= {{lbValue_, condDNF_}}
-            else minTCList_:= {{INFINITY, condDNF_}};
-          >>;
+            >> else <<
+              % 下限がINFINITYのとき（ある特定の範囲のパラメタによって離散変化が起きないパターン）は上下限確認不要
+              % TODO：本当？
+              {y}
+            >>
+          >>);
         >>;
+        if(minTCList_={}) then minTCList_:= {{INFINITY, condDNF_}};
       >> else <<
-        minTCList_:= {{INFINITY, condDNF_}};
+        % パラメタの下限がなかった（lbParamTupleList_が空集合）ときはlbValue_とだけ比較
+        for each x in ubParamTupleList_ do <<
+          checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, lbValue_}, condDNF_);
+          if(not isFalseDNF(checkDNF_)) then minTCList_:= {{lbValue_, condDNF_}}
+          else minTCList_:= {{INFINITY, condDNF_}};
+        >>;
       >>;
     >>;
   >>;
@@ -2337,6 +2340,7 @@ begin;
   DExprVars_ := part(splitExprsResult_, 4);
   debugWrite("DExprVars_: ", DExprVars_);
   otherExprs_:= union(part(splitExprsResult_, 5), parameterStore_);
+  debugWrite("otherExprs_: ", otherExprs_);
   % DNF形式にする
   % 空集合なら、{{true}}として扱う（trueを表すDNF）
   if(otherExprs_={}) then paramCondDNF_:= {{true}}
@@ -2558,7 +2562,7 @@ begin;
   debugWrite("retTCList_: ", retTCList_);
   debugWrite("newTC_: ", newTC_);
 
-  % Mapではなく、Joinを使う方が正しいか？
+  % Mapではなく、Joinを使う方が正しそうなのでそうしている
 %  comparedList_:= for each x in candidateTCList_ collect compareParamTime(newTC_, x, MIN);
   comparedList_:= for each x in candidateTCList_ join compareParamTime(newTC_, x, MIN);
   debugWrite("comparedList_ in makeMapAndUnion: ", comparedList_);
