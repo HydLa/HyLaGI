@@ -848,6 +848,11 @@ procedure getValueFromTuple(tuple_)$
 % 不等式タプルによるDNF関連の関数
 %---------------------------------------------------------------
 
+% 論理積にNotをつけてDNFにする
+procedure getNotConjDNF(conj_)$
+  for each tuple in conj_ collect
+    {{getVarNameFromTuple(tuple), getInverseRelop(getRelopFromTuple(tuple)), getValueFromTuple(tuple)}};
+
 % Equalを表す論理積になっているかどうか
 procedure isEqualConj(conj_)$
 begin;
@@ -875,7 +880,6 @@ begin;
 
   if(length(conj1_) neq length(conj2_)) then return nil;
 
-  if(length(conj1_)=0) then return t;
   flag_:= t;
   for each x in conj1_ do 
     if(freeof(conj2_, x)) then flag_:= nil;
@@ -884,6 +888,48 @@ end;
 
 procedure isFalseConj(conj_)$
   if(conj_={}) then t else nil;
+
+procedure getNotDNF(DNF_)$
+begin;
+  scalar retDNF_, i_;
+
+  debugWrite("in getNotDNF", " ");
+  debugWrite("DNF_: ", DNF_);
+
+  retDNF_:= {{true}};
+  i_:= 1;
+  while (not isFalseDNF(retDNF_) and i_<=length(DNF_)) do <<
+    retDNF_:= addCondDNFToCondDNF(getNotConjDNF(part(DNF_, i_)), retDNF_);
+    debugWrite("retDNF_ in loop in getNotDNF: ", retDNF_);
+    i_:= i_+1;
+  >>;
+
+  debugWrite("retDNF_ in getNotDNF: ", retDNF_);
+  debugWrite("(DNF_: )", DNF_);
+  return retDNF_;
+end;
+
+procedure isSameDNF(DNF1_, DNF2_)$
+begin;
+  scalar flag_, i_, conj1, flagList_;
+
+  debugWrite("in isSameDNF", " ");
+  debugWrite("DNF1_: ", DNF1_);
+  debugWrite("DNF2_: ", DNF2_);
+
+  if(length(DNF1_) neq length(DNF2_)) then return nil;
+
+  flag_:= t;
+  i_:= 1;
+  while (flag_=t and i_<=length(DNF1_)) do <<
+    conj1:= part(DNF1_, i_);
+    flagList_:= for each conj2 in DNF2_ join
+      if(isSameConj(conj1, conj2)) then {true} else {};
+    if(flagList_={}) then flag_:= nil;
+    i_:= i_+1;
+  >>;
+  return flag_;
+end;
 
 procedure isFalseDNF(DNF_)$
   if(DNF_={{}}) then t else nil;
@@ -1013,7 +1059,7 @@ begin;
       % 「=」を表す形式の場合はgeqとleqの2つのタプルの論理積が返る
       tmpConj_:= condConj_;
       for i:=1 : length(first(ineqSolDNF_)) do <<
-        tmpConj_:= addCondTupleToCondConj(part(first(ineqSolDNF_), i), condConj_);
+        tmpConj_:= addCondTupleToCondConj(part(first(ineqSolDNF_), i), tmpConj_);
       >>;
       return tmpConj_;
     >> else <<
@@ -2152,7 +2198,7 @@ procedure checkInfMinTimeDNF(tDNF_, condDNF_)$
 begin;
   scalar minTCList_, conj_, argsAnsTCList_, minValue_, compareTCListList_, lbTuplelist_, ubTupleList_,
          lbParamTupleList_, ubParamTupleList_, lbValueTupleList_, ubValueTupleList_, lbValue_, ubValue_, 
-         paramLeqValueCondDNF_, paramGreaterValueCondDNF_, checkDNF_;
+         paramLeqValueCondDNF_, paramGreaterValueCondDNF_, checkDNF_, diffCondDNF_;
   debugWrite("in checkInfMinTimeDNF", " ");
   debugWrite("tDNF_: ", tDNF_);
   debugWrite("condDNF_: ", condDNF_);
@@ -2175,15 +2221,19 @@ begin;
     else <<
       % パラメタの場合、その値が0以下ならば結果はINFINITYになる
       minValue_:= getValueFromTuple(first(conj_));
-%      checkDNF_:= addCondTupleToCondDNF({minValue_, greaterp, 0}, condDNF_);
-%      debugWrite("checkDNF_: ", checkDNF_);
-%      if(not isFalseDNF(checkDNF_)) then << 
-%        minTCList_:= {{minValue_, checkDNF_}}; % ←？
-%      >> else <<
-%        minTCList_:= {{INFINITY, condDNF_}};
-%      >>;
-      minTCList_:= { {minValue_, addCondTupleToCondDNF({minValue_, greaterp, 0}, condDNF_)},
-                     {INFINITY,  addCondTupleToCondDNF({minValue_, leq,      0}, condDNF_)} }; % ←？
+      checkDNF_:= addCondTupleToCondDNF({minValue_, greaterp, 0}, condDNF_);
+      debugWrite("checkDNF_: ", checkDNF_);
+      if(not isFalseDNF(checkDNF_)) then << 
+        if(isSameDNF(checkDNF_, condDNF_)) then <<
+          minTCList_:= {{minValue_, checkDNF_}};
+        >> else <<
+          diffCondDNF_:= addCondDNFToCondDNF(getNotDNF(checkDNF_), condDNF_);
+          debugWrite("diffCondDNF_: ", diffCondDNF_);
+          minTCList_:= {{minValue_, checkDNF_}, {INFINITY, diffCondDNF_}};
+        >>;
+      >> else <<
+        minTCList_:= {{INFINITY, condDNF_}};
+      >>;
     >>;
   >> else <<
     if(not hasParameter(conj_)) then minTCList_:= {{getValueFromTuple(first(getLbTupleListFromConj(conj_))), condDNF_}}
@@ -2204,14 +2254,23 @@ begin;
 
       minTCList_:= {};
       % パラメタを含む下限がlbValue_より大きいかどうかを調べる
-      % ただし0以上でなくてはならない
+      % ただし0より大きくなくてはならない
+      % TODO：パラメタを含む下限同士の大小判定
       debugWrite("lbParamTupleList_: ", lbParamTupleList_);
       for each x in lbParamTupleList_ do <<
         debugWrite("x (lbParamTuple): ", x);
-        checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, 0}, condDNF_);
+        checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), greaterp, 0}, condDNF_);
         debugWrite("checkDNF_: ", checkDNF_);
         if(not isFalseDNF(checkDNF_)) then <<
-          minTCList_:= union(compareParamTime({getValueFromTuple(x), condDNF_}, {lbValue_, condDNF_}, MAX), minTCList_);
+          if(isSameDNF(checkDNF_, condDNF_)) then <<
+            minTCList_:= cons({getValueFromTuple(x), checkDNF_}, minTCList_);
+          >> else if(checkOrderingFormula(lbValue_ >0)) then <<
+            diffCondDNF_:= addCondDNFToCondDNF(getNotDNF(checkDNF_), condDNF_);
+            debugWrite("diffCondDNF_: ", diffCondDNF_);
+            minTCList_:= cons({getValueFromTuple(x), checkDNF_}, cons({lbValue_, diffCondDNF_}, minTCList_));
+          >> else <<
+            minTCList_:= cons({getValueFromTuple(x), checkDNF_}, minTCList_);
+          >>;
           debugWrite("minTCList_: ", minTCList_);
         >>;
       >>;
@@ -2245,102 +2304,8 @@ begin;
   >>;
 
   debugWrite("minTCList_ in checkInfMinTimeDNF: ", minTCList_);
-  return minTCList_;
-end;
-
-% 出力：時刻と条件の組（TC）のリスト
-% 前提：tExpr_は等式も不等式もtの1次式になっている
-% TODO：ERROR処理
-procedure checkInfMinTime(tExpr_, condDNF_)$
-begin;
-  scalar head_, tExprSol_, tExprSolValue_, argsAnsTCList_, ineqTCList_, eqTCList_,
-         minTCList_, andEqTCArgsCount_, lbTCList_, ubTCList_,
-         lbTC_, compareTCListList_, maxLbTCList_, maxLb_, ubList_, minUb_, minTValue_, compareRet_;
-
-  debugWrite("in checkInfMinTime", " ");
-  debugWrite("tExpr_: ", tExpr_);
-  debugWrite("condDNF_: ", condDNF_);
-
-  % 引数を持たない場合
-  if(arglength(tExpr_)=-1) then return {{tExpr_, condDNF_}};
-
-  head_:= myHead(tExpr_);
-  debugWrite("head_: ", head_);
-  ineqTCList_:={};
-  eqTCList_:={};
-
-  if(hasLogicalOp(head_)) then <<
-    argsAnsTCList_:= union(for i:=1 : arglength(tExpr_) join
-      checkInfMinTime(part(tExpr_, i), condDNF_));
-    debugWrite("argsAnsTCList_: ", argsAnsTCList_);
-    % 長さ1のリストならそのまま返す
-    if(length(argsAnsTCList_)=1) then return argsAnsTCList_;
-
-    if(head_=or) then <<
-      minTCList_:= myFindMinimumValueCond({INFINITY, condDNF_}, argsAnsTCList_);
-    >> else if(head_=and) then <<
-      for each x in argsAnsTCList_ do
-        if(hasIneqRelop(getTimeFromTC(x))) then ineqTCList_:= cons(x, ineqTCList_);
-      debugWrite("ineqTCList_: ", ineqTCList_);
-      eqTCList_:= argsAnsTCList_ \ ineqTCList_;
-      debugWrite("eqTCList_: ", eqTCList_);
-
-      andEqTCArgsCount_:= length(eqTCList_);
-      debugWrite("andEqTCArgsCount_:", andEqTCArgsCount_);
-      % 2つ以上の等式が論理積でつながっていたらエラー
-      if(andEqTCArgsCount_ > 1) then return {{ERROR}};
-
-      % lbとubとで分ける
-      splitIneqsResult_:= getIneqBoundTCLists(ineqTCList_);
-      lbTCList_:= part(splitIneqsResult_, 1);
-      ubTCList_:= part(splitIneqsResult_, 2);
-      % lbの最大値とubの最小値を求める
-      maxLb_:= if(lbTCList_={}) then 0
-      else <<
-        compareTCListList_:= for each x in rest(lbTCList_) collect {x};
-        maxLbTCList_:= myFoldLeft(compareMinTimeList, {first(lbTCList_)}, compareTCListList_); % ←
-        % 前提：maxLbTCList_の長さは1
-        getTimeFromTC(first(maxLbTCList_))
-      >>;
-      ubList_:= for each x in ubTCList_ collect getTimeFromTC(x);
-      minUb_:= myfindMinimumValue(INFINITY, ubList_);
-      debugWrite("maxLb_: ", maxLb_);
-      debugWrite("minUb_: ", minUb_);
-
-      if(andEqTCArgsCount_ = 1) then <<
-        % minTValue_が存在するので、lb<ptかつpt<ubであることを確かめる
-        minTValue_:= getTimeFromTC(first(eqTCList_));
-        debugWrite("minTValue_: ", minTValue_);
-        if((mymin(maxLb_, minTValue_) neq maxLb_) or (mymin(minTValue_, minUb_) neq minTValue_)) then
-          minTCList_:= {{INFINITY, condDNF_}}
-        else minTCList_:= {{minTValue_, getCondDNFFromTC(first(eqTCList_))}};
-      >> else <<
-        % 不等式だけなので、lb<ubかつlb>0を確かめる
-        if((mymin(maxLb_, minUb_) = maxLb_) and (mymin(0, maxLb_) = 0)) then 
-          minTCList_:= maxLbTCList_
-        else minTCList_:= {{INFINITY, condDNF_}};
-      >>;
-    >>;
-  >> else if(head_=equal) then <<
-    tExprSol_:= first(solve(tExpr_, t));
-    debugWrite("tExprSol_:", tExprSol_);
-    tExprSolValue_:= rhs(tExprSol_);
-    % t>0でなければ（連立してfalseなら）、INFINITYを返す
-    if(not hasParameter(tExprSol_)) then <<
-      if(mymin(tExprSolValue_,0) neq tExprSolValue_) then 
-        minTCList_:= {{tExprSolValue_, condDNF_}}
-      else minTCList_:= {{INFINITY, condDNF_}};
-    >> else <<
-      compareRet_:= compareValueAndParameter(0, tExprSolValue_, condDNF_);
-      if(isFalseDNF(part(compareRet_, 1))) then minTCList_:= {{INFINITY, condDNF_}}
-      else minTCList_:= {{tExprSolValue_, part(compareRet_, 1)}};
-    >>;
-  >> else <<
-    % 不等式の場合はそのまま返す
-    minTCList_:= {{tExpr_, condDNF_}};
-  >>;
-
-  debugWrite("minTCList_ in checkInfMinTime: ", minTCList_);
+  debugWrite("(tDNF_: )", tDNF_);
+  debugWrite("(condDNF_: )", condDNF_);
   return minTCList_;
 end;
 
@@ -2478,6 +2443,7 @@ begin;
 
   if(not freeof(minTCondListList_, error)) then return {error};
 
+  debugWrite("============================== before compareMinTimeList ==============================", " ");
   comparedMinTCondList_:= myFoldLeft(compareMinTimeList, {{maxTime_, condDNF_}}, minTCondListList_);
   debugWrite("comparedMinTCondList_ in calcNextPointPhaseTime: ", comparedMinTCondList_);
 
@@ -2493,7 +2459,7 @@ begin;
     {minTTime_, minTCondDNF_, maxTimeFlag_}
   >>);
   debugWrite("ans_ in calcNextPointPhaseTime: ", ans_);
-  debugWrite("=================== end of calcNextPointPhaseTime ====================", " ");
+  debugWrite("============================= end of calcNextPointPhaseTime ==============================", " ");
   return ans_;
 end;
 
