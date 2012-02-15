@@ -889,6 +889,9 @@ end;
 procedure isFalseConj(conj_)$
   if(conj_={}) then t else nil;
 
+procedure isTrueConj(conj_)$
+  if(conj_={true}) then t else nil;
+
 procedure getNotDNF(DNF_)$
 begin;
   scalar retDNF_, i_;
@@ -1013,7 +1016,6 @@ begin;
   return addedCondDNF_;
 end;
 
-% 式から、{左辺, relop, 右辺}のタプルを作って返す
 procedure addCondTupleToCondConj(newCondTuple_, condConj_)$
 begin;
   scalar addedCondConj_, varName_, relop_, value_,
@@ -1031,8 +1033,10 @@ begin;
   if(not hasParameter(makeExprFromTuple(newCondTuple_)) and freeof(makeExprFromTuple(newCondTuple_), t)) then 
     if(checkOrderingFormula(makeExprFromTuple(newCondTuple_))) then return condConj_
     else return {};
+  % falseに追加しようとする場合
+  if(isFalseConj(condConj_)) then return {};
   % trueに追加しようとする場合
-  if(condConj_={true}) then return {newCondTuple_};
+  if(isTrueConj(condConj_)) then return {newCondTuple_};
 
 
   % 場合によっては、タプルのVarName部分とValue部分の両方に変数名が入っていることもある
@@ -1335,7 +1339,7 @@ begin;
   if(sol_={}) then <<
     % adjustedLhs_=0に対する実数解がない場合
     % adjustedIneqExpr_が-t^2-1<0やt^2+5<0などのとき
-    if((adjustedRelop_=geq) or (adjustedRelop_=greater) or (adjustedRelop_=neq)) then retTupleDNF_:= {{true}}
+    if((adjustedRelop_=geq) or (adjustedRelop_=greaterp) or (adjustedRelop_=neq)) then retTupleDNF_:= {{true}}
     else retTupleDNF_:= {{}};
   >> else if(length(sol_)>1) then <<
     % 2次方程式を解いた場合。厳密には長さ2のはず
@@ -1383,11 +1387,14 @@ begin;
   >>;
 
   debugWrite("retTupleDNF_ before adding sqrtCondTuple_: ", retTupleDNF_);
-  debugWrite("sqrtCondTupleList_: ", sqrtCondTupleList_);
-  for i:=1 : length(sqrtCondTupleList_) do <<
-    debugWrite("add : ", part(sqrtCondTupleList_, i));
-    retTupleDNF_:= addCondTupleToCondDNF(part(sqrtCondTupleList_, i), retTupleDNF_);
-    debugWrite("retTupleDNF_ in loop of adding sqrtCondTuple: ", retTupleDNF_);
+
+  if(not isFalseDNF(retTupleDNF_)) then <<
+    debugWrite("sqrtCondTupleList_: ", sqrtCondTupleList_);
+    for i:=1 : length(sqrtCondTupleList_) do <<
+      debugWrite("add : ", part(sqrtCondTupleList_, i));
+      retTupleDNF_:= addCondTupleToCondDNF(part(sqrtCondTupleList_, i), retTupleDNF_);
+      debugWrite("retTupleDNF_ in loop of adding sqrtCondTuple: ", retTupleDNF_);
+    >>;
   >>;
   debugWrite("retTupleDNF_ after adding sqrtCondTuple_: ", retTupleDNF_);
   debugWrite("(ineqExpr_: )", ineqExpr_);
@@ -2257,7 +2264,7 @@ begin;
       debugWrite("lbValue_: ", lbValue_);
       for each x in lbParamTupleList_ do <<
         debugWrite("x (lbParamTuple): ", x);
-        checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, lbValue_}, condDNF_);
+        checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), greaterp, lbValue_}, condDNF_);
         debugWrite("checkDNF_: ", checkDNF_);
         if(not isFalseDNF(checkDNF_)) then <<
           if(isSameDNF(checkDNF_, condDNF_)) then <<
@@ -2299,7 +2306,7 @@ begin;
         % パラメタの下限がなかった（lbParamTupleList_が空集合）ときはlbValue_とだけ比較
         for each x in ubParamTupleList_ do <<
           checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, lbValue_}, condDNF_);
-          if(not isFalseDNF(checkDNF_)) then minTCList_:= {{lbValue_, condDNF_}}
+          if(not isFalseDNF(checkDNF_) and checkOrderingFormula(lbValue_ >0)) then minTCList_:= {{lbValue_, condDNF_}}
           else minTCList_:= {{INFINITY, condDNF_}};
         >>;
       >>;
@@ -2575,7 +2582,7 @@ end;
 procedure compareParamTime(TC1_, TC2_, mode_)$
 begin;
   scalar TC1Time_, TC1Cond_, TC2Time_, TC2Cond_,
-         intersectionCondDNF_, TC1LeqTC2CondDNF_, TC1GreaterTC2CondDNF_,
+         intersectionCondDNF_, TC1LessTC2CondDNF_, TC1GeqTC2CondDNF_,
          retTCList_;
 
   debugWrite("in compareParamTime", " ");
@@ -2593,24 +2600,24 @@ begin;
   if(isFalseDNF(intersectionCondDNF_)) then return {};
 
   % 条件の共通部分と時間に関する条件との論理積を取る
-  % TC1Time_≦TC2Time_という条件
-  debugWrite("========== make TC1LeqTC2CondDNF_ ==========", " ");
-  TC1LeqTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, leq, TC2Time_}, intersectionCondDNF_);
-  debugWrite("TC1LeqTC2CondDNF_: ", TC1LeqTC2CondDNF_);
-  % TC1Time_＞TC2Time_という条件
-  debugWrite("========== make TC1GreaterTC2CondDNF_ ==========", " ");
-  TC1GreaterTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, greaterp, TC2Time_}, intersectionCondDNF_);
-  debugWrite("TC1GreaterTC2CondDNF_: ", TC1GreaterTC2CondDNF_);
+  % TC1Time_＜TC2Time_という条件
+  debugWrite("========== make TC1LessTC2CondDNF_ ==========", " ");
+  TC1LessTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, lessp, TC2Time_}, intersectionCondDNF_);
+  debugWrite("TC1LessTC2CondDNF_: ", TC1LessTC2CondDNF_);
+  % TC1Time_≧TC2Time_という条件
+  debugWrite("========== make TC1GeqTC2CondDNF_ ==========", " ");
+  TC1GeqTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, geq, TC2Time_}, intersectionCondDNF_);
+  debugWrite("TC1GeqTC2CondDNF_: ", TC1GeqTC2CondDNF_);
 
 
   retTCList_:= {};
   % それぞれ、falseでなければretTCList_に追加
-  if(not isFalseDNF(TC1LeqTC2CondDNF_)) then 
-    if(mode_=MIN) then retTCList_:= cons({TC1Time_, TC1LeqTC2CondDNF_}, retTCList_)
-    else if(mode_=MAX) then retTCList_:= cons({TC2Time_, TC1LeqTC2CondDNF_}, retTCList_);
-  if(not isFalseDNF(TC1GreaterTC2CondDNF_)) then 
-    if(mode_=MIN) then retTCList_:= cons({TC2Time_, TC1GreaterTC2CondDNF_}, retTCList_)
-    else if(mode_=MAX) then retTCList_:= cons({TC1Time_, TC1GreaterTC2CondDNF_}, retTCList_);
+  if(not isFalseDNF(TC1LessTC2CondDNF_)) then 
+    if(mode_=MIN) then retTCList_:= cons({TC1Time_, TC1LessTC2CondDNF_}, retTCList_)
+    else if(mode_=MAX) then retTCList_:= cons({TC2Time_, TC1LessTC2CondDNF_}, retTCList_);
+  if(not isFalseDNF(TC1GeqTC2CondDNF_)) then 
+    if(mode_=MIN) then retTCList_:= cons({TC2Time_, TC1GeqTC2CondDNF_}, retTCList_)
+    else if(mode_=MAX) then retTCList_:= cons({TC1Time_, TC1GeqTC2CondDNF_}, retTCList_);
 
   debugWrite("retTCList_ in compareParamTime: ", retTCList_);
   return retTCList_;
