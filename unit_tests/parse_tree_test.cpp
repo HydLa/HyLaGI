@@ -331,8 +331,10 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/bouncing_particle.hydla");
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box1.hydla");
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box_mod.hydla");
-  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/impulse_function.hydla");
-  PARSE_TREE_TEST_EXAMPLE_FILE("../examples/navigation.hydla");
+
+  // åªç› examples/ Ç…ë∂ç›ÇµÇ»Ç¢ó·ëË
+  // PARSE_TREE_TEST_EXAMPLE_FILE("../examples/impulse_function.hydla");
+  // PARSE_TREE_TEST_EXAMPLE_FILE("../examples/navigation.hydla");
 }
 
 #endif // DISABLE_PARSE_TREE_BUILD_TEST
