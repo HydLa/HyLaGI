@@ -135,6 +135,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Not> node)                   {
   apply_not_ = !apply_not_;
 }
 
+/*
 // 三角関数
 DEFINE_VISIT_UNARY(Sin, sin)
 DEFINE_VISIT_UNARY(Cos, cos)
@@ -143,36 +144,15 @@ DEFINE_VISIT_UNARY(Tan, tan)
 DEFINE_VISIT_UNARY(Asin, asin)
 DEFINE_VISIT_UNARY(Acos, acos)
 DEFINE_VISIT_UNARY(Atan, atan)
-// 円周率
-DEFINE_VISIT_FACTOR(Pi, pi)
 // 対数
 DEFINE_VISIT_BINARY(Log, logb) // 使えない？
 DEFINE_VISIT_UNARY(Ln, log)
+*/
+
+// 円周率
+DEFINE_VISIT_FACTOR(Pi, pi)
 // 自然対数の底
 DEFINE_VISIT_FACTOR(E, e)
-
-//任意の文字列
-
-void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryBinary> node)
-{
-  cl_->send_string(node->get_string() + "(");
-  accept(node->get_lhs());
-  cl_->send_string(", ");
-  accept(node->get_rhs());
-  cl_->send_string(")");
-}
-
-void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryUnary> node)
-{
-  cl_->send_string(node->get_string() + "(");
-  accept(node->get_child());
-  cl_->send_string(")");
-}
-
-void REDUCEStringSender::visit(boost::shared_ptr<ArbitraryFactor> node)
-{
-  cl_->send_string(node->get_string());
-}
 
 
   

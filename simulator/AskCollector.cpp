@@ -99,11 +99,6 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
     NodeDumper(expanded_always->begin(), expanded_always->end()));
 }
 
-// 制約式
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
-{
-  accept(node->get_child());
-}
 
 // Ask制約
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
@@ -151,13 +146,6 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
   // do nothing
 }
 
-// 論理積
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
-{
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
 // 時相演算子
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
@@ -174,57 +162,6 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
     visited_always_.insert(node);
   }
 }
-
-
-// モジュールの弱合成
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
-{
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-// モジュールの並列合成
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
-{
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-// 制約呼び出し
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
-{
-  accept(node->get_child());
-}
-
-// プログラム呼び出し
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
-{
-  accept(node->get_child());
-}
-
-// Print 
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
-{
-        //do nothing
-  //accept(node->get_child());
-}
-
-// 任意の文字列 
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node)
-{
-        //do nothing
-}
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node)
-{
-  accept(node->get_child());
-}
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node)
-{
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-
 
 
 

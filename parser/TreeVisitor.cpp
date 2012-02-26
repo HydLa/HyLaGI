@@ -58,25 +58,11 @@ void TreeVisitor::visit(boost::shared_ptr<Parallel> node)              {assert(0
 // ‘Š‰‰Zq
 void TreeVisitor::visit(boost::shared_ptr<Always> node)                {assert(0);}
 
-// OŠpŠÖ”
-void TreeVisitor::visit(boost::shared_ptr<Sin> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<Cos> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<Tan> node)                {assert(0);}
-// ‹tOŠpŠÖ”
-void TreeVisitor::visit(boost::shared_ptr<Asin> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<Acos> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<Atan> node)                {assert(0);}
 // ‰~ü—¦
 void TreeVisitor::visit(boost::shared_ptr<Pi> node)                {assert(0);}
 // ©‘R‘Î”‚Ì’ê
 void TreeVisitor::visit(boost::shared_ptr<E> node)                {assert(0);}
-// ‘Î”
-void TreeVisitor::visit(boost::shared_ptr<Log> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<Ln> node)                {assert(0);}
 // ”CˆÓ‚Ì•¶š—ñ
-void TreeVisitor::visit(boost::shared_ptr<ArbitraryBinary> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<ArbitraryUnary> node)                {assert(0);}
-void TreeVisitor::visit(boost::shared_ptr<ArbitraryFactor> node)                {assert(0);}
 void TreeVisitor::visit(boost::shared_ptr<ArbitraryNode> node)                {assert(0);}
   
 // ”÷•ª
@@ -99,6 +85,10 @@ void TreeVisitor::visit(boost::shared_ptr<Parameter> node)                {asser
 
 // t
 void TreeVisitor::visit(boost::shared_ptr<SymbolicT> node)                {assert(0);}
+	
+// ŠÖ”
+void TreeVisitor::visit(boost::shared_ptr<Function> node)                {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<UnsupportedFunction> node)                {assert(0);}
 
 // Print
 void TreeVisitor::visit(boost::shared_ptr<Print> node)              {assert(0);}

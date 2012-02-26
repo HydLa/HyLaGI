@@ -27,12 +27,6 @@ void SExpConverter::initialize(){
   string_map_.insert(std::make_pair("prev", function_and_node(for_unary_node, NODE_PREVIOUS)));
   string_map_.insert(std::make_pair("sqrt", function_and_node(for_unary_node, NODE_SQRT)));
   string_map_.insert(std::make_pair("minus", function_and_node(for_unary_node, NODE_NEGATIVE)));
-  string_map_.insert(std::make_pair("sin", function_and_node(for_unary_node, NODE_SIN)));
-  string_map_.insert(std::make_pair("cos", function_and_node(for_unary_node, NODE_COS)));
-  string_map_.insert(std::make_pair("tan", function_and_node(for_unary_node, NODE_TAN)));
-  string_map_.insert(std::make_pair("asin", function_and_node(for_unary_node, NODE_ASIN)));
-  string_map_.insert(std::make_pair("acos", function_and_node(for_unary_node, NODE_ACOS)));
-  string_map_.insert(std::make_pair("atan", function_and_node(for_unary_node, NODE_ATAN)));
 }
 
 SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter){
@@ -158,24 +152,6 @@ SExpConverter::node_sptr SExpConverter::for_unary_node(
 
     case NODE_NEGATIVE:
       return node_sptr(new hydla::parse_tree::Negative(tmp_node));
-
-    case NODE_SIN:
-      return node_sptr(new hydla::parse_tree::Sin(tmp_node));
-
-    case NODE_COS:
-      return node_sptr(new hydla::parse_tree::Cos(tmp_node));
-
-    case NODE_TAN:
-      return node_sptr(new hydla::parse_tree::Tan(tmp_node));
-
-    case NODE_ASIN:
-      return node_sptr(new hydla::parse_tree::Asin(tmp_node));
-
-    case NODE_ACOS:
-      return node_sptr(new hydla::parse_tree::Acos(tmp_node));
-
-    case NODE_ATAN:
-      return node_sptr(new hydla::parse_tree::Atan(tmp_node));
   }
 }
 

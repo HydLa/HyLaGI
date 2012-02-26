@@ -231,24 +231,6 @@ bool Number::is_same_struct(const Node& n, bool exactly_same) const
     number_ == static_cast<const Number*>(&n)->number_;          
 }
 
-bool ArbitraryBinary::is_same_struct(const Node& n, bool exactly_same) const
-{
-  return is_exactly_same(n, exactly_same) && 
-          string_ == static_cast<const ArbitraryBinary *>(&n)->string_;
-}
-
-
-bool ArbitraryUnary::is_same_struct(const Node& n, bool exactly_same) const
-{
-  return is_same_struct(n, exactly_same) && 
-          string_ == static_cast<const ArbitraryUnary*>(&n)->string_;
-}
-
-bool ArbitraryFactor::is_same_struct(const Node& n, bool exactly_same) const
-{
-  return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const ArbitraryFactor*>(&n)->string_;
-}
 //Print
 bool Print::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -341,8 +323,17 @@ std::ostream& Definition::dump(std::ostream& s) const
 }
 
 
-node_sptr ArbitraryNode::clone(){
-  node_type_sptr n(new ArbitraryNode());
+node_sptr Function::clone(){
+  node_type_sptr n(new Function(string_));
+  for(int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+
+node_sptr UnsupportedFunction::clone(){
+  node_type_sptr n(new UnsupportedFunction(string_));
   for(int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
@@ -369,7 +360,7 @@ void ArbitraryNode::accept(node_sptr own,
 std::ostream& ArbitraryNode::dump(std::ostream& s) const 
 {
   Node::dump(s);
-  s << "[" << string_ << "]";
+  s << "[" << get_string() << "]";
   s << "[";
   for(int i=0;i<arguments_.size();i++){
      s << *arguments_[i] << ",";
@@ -378,19 +369,23 @@ std::ostream& ArbitraryNode::dump(std::ostream& s) const
   return s;
 }
 
-void ArbitraryNode::set_string(const std::string& str) 
-{
-  string_ = str;
-}
-
 
 void ArbitraryNode::add_argument(node_sptr node){
   arguments_.push_back(node);
 }
 
-std::string ArbitraryNode::get_string() const
-{
-  return string_;
+
+void ArbitraryNode::set_argument(node_sptr node, int i){
+  arguments_[i] = node;
+}
+
+
+int ArbitraryNode::get_arguments_size(){
+  return arguments_.size();
+}
+
+node_sptr ArbitraryNode::get_argument(int i){
+  return arguments_[i];
 }
 
 node_sptr Caller::clone()
@@ -498,26 +493,14 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Previous)
 //”Û’è
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Not)
 
-//ŽOŠpŠÖ”
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Sin)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Cos)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Tan)
-//‹tŽOŠpŠÖ”
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Asin)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Acos)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Atan)
 //‰~Žü—¦
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
-//‘Î”
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Log)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ln)
 //Ž©‘R‘Î”‚Ì’ê
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
 
 //”CˆÓ‚Ì•¶Žš—ñ
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryBinary)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryUnary)
-DEFINE_TREE_VISITOR_ACCEPT_FUNC(ArbitraryFactor)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Function)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnsupportedFunction)
 
 //•Ï”E‘©”›•Ï”
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)

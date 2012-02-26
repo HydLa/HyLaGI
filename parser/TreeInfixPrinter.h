@@ -5,14 +5,14 @@
 //ツリーを中置記法で出力するクラス
 
 #include "Node.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 namespace hydla {
 namespace parse_tree {
 
 
 class TreeInfixPrinter:
-  public TreeVisitor
+  public DefaultTreeVisitor
 {
   public:
   typedef enum{
@@ -126,20 +126,10 @@ class TreeInfixPrinter:
   // 円周率
   virtual void visit(boost::shared_ptr<Pi> node);
   
-  // 三角関数
-  virtual void visit(boost::shared_ptr<Sin> node);
-  virtual void visit(boost::shared_ptr<Cos> node);
-  
-  // 対数
-  virtual void visit(boost::shared_ptr<Ln> node);
-  virtual void visit(boost::shared_ptr<Log> node);
-  
   
   // 任意
-  virtual void visit(boost::shared_ptr<ArbitraryFactor> node);
-  virtual void visit(boost::shared_ptr<ArbitraryUnary> node);
-  virtual void visit(boost::shared_ptr<ArbitraryBinary> node);
-  virtual void visit(boost::shared_ptr<ArbitraryNode> node);
+  virtual void visit(boost::shared_ptr<Function> node);
+  virtual void visit(boost::shared_ptr<UnsupportedFunction> node);
 };
 
 } // namespace parse_tree

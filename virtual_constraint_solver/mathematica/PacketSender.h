@@ -7,7 +7,7 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
 
@@ -16,7 +16,7 @@ namespace vcs {
 namespace mathematica {
 
 class PacketSender : 
-  public hydla::parse_tree::TreeVisitor
+  public hydla::parse_tree::DefaultTreeVisitor
 {
 public:
   
@@ -53,6 +53,10 @@ public:
   PacketSender(MathLink& ml);
 
   virtual ~PacketSender();
+  
+  
+  /// Ã“Iƒƒ“ƒo‚Ì‰Šú‰»‚ğs‚¤
+  static void initialize();
 
   vars_const_iterator vars_begin() const { return vars_.begin(); }
 
@@ -122,6 +126,11 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
+  
+  // ƒRƒ}ƒ“ƒh•¶
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
 
   // Zp’P€‰‰Zq
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
@@ -136,33 +145,15 @@ public:
   // ”Û’è
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
-  // OŠpŠÖ”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Sin> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Cos> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tan> node);
-  // ‹tOŠpŠÖ”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Asin> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Acos> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Atan> node);
+  // ŠÖ”
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> node);
+  
+  
   // ‰~ü—¦
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  // ‘Î”
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Log> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ln> node);
   // ©‘R‘Î”‚Ì’ê
   virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
-  // Print
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
-  // ”CˆÓ‚Ì•¶š—ñ
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryNode> node);
   
     
   // •Ï”
@@ -179,6 +170,7 @@ public:
 
 private:
   MathLink* ml_;
+  static std::map<std::string, std::pair<std::string, int> > function_name_map_;
 
 protected:
   /// ‘—M‚³‚ê‚½•Ï”‚Ìˆê——

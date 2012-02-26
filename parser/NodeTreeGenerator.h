@@ -20,14 +20,14 @@ public:
   typedef hydla::parse_tree::node_sptr node_sptr;
 
   NodeTreeGenerator(
+    node_sptr&    assertion_node,
     DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
     DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
-    node_sptr&    assertion_node,
     const boost::shared_ptr<NodeFactory>& node_factory) :
     
+    assertion_node_(assertion_node),
     constraint_definition_(constraint_definition),
     program_definition_(program_definition),
-    assertion_node_(assertion_node),
     node_factory_(node_factory)
   {}
 
@@ -68,7 +68,25 @@ private:
     n->set_lhs(create_parse_tree(tree_iter)); 
     n->set_rhs(create_parse_tree(tree_iter+1)); 
     return n; 
-  } 
+  }
+  
+  
+  /**
+   * ˆø”‚ğ”CˆÓ”æ‚éw’è‚µ‚½Œ^‚Ìƒm[ƒh‚ğì¬‚·‚é
+   */
+  template<typename NodeType, typename TreeIter> 
+  boost::shared_ptr<NodeType>  
+  create_arbitrary_node(const TreeIter& tree_iter)
+  { 
+    boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
+    node->set_string(std::string(tree_iter->value.begin(), tree_iter->value.end()));
+    TreeIter it  = tree_iter->children.begin();
+    TreeIter end = tree_iter->children.end();
+    while(it != end) {
+      node->add_argument(create_parse_tree(it++));
+    }
+    return node;
+  }
 
   /**
    * w’è‚µ‚½Œ^‚Ì’è‹`ƒm[ƒh‚ğì¬‚·‚é
@@ -122,6 +140,29 @@ private:
       }
     }
     return node;
+  }
+  
+  /**
+   * ”äŠr‰‰Zq‚ğ•Ô‚·
+   */
+  template<typename TreeIter>
+  boost::shared_ptr<hydla::parse_tree::BinaryNode>
+  get_comp_node(const TreeIter& tree_iter)
+  {
+    using namespace hydla::grammer_rule;
+    using namespace hydla::parse_tree;
+    long node_id = tree_iter->value.id().to_long();
+    switch(node_id) 
+    {
+        // ”äŠr‰‰Zq
+      case RI_Equal:        {return node_factory_->create<Equal>();}
+      case RI_UnEqual:      {return node_factory_->create<UnEqual>();}
+      case RI_Less:         {return node_factory_->create<Less>();}
+      case RI_LessEqual:    {return node_factory_->create<LessEqual>();}
+      case RI_Greater:      {return node_factory_->create<Greater>();}
+      case RI_GreaterEqual: {return node_factory_->create<GreaterEqual>();}
+      default: assert(0);
+    }
   }
   
   /**
@@ -210,6 +251,37 @@ private:
       {
         return create_caller<ProgramCaller>(tree_iter);
       }
+      
+      
+      // i˜A½j§–ñ
+      case RI_Chain:
+      {
+        node_sptr node_tree;
+        TreeIter it  = tree_iter->children.begin();
+        TreeIter end = tree_iter->children.end();
+        node_sptr lhs_exp, rhs_exp;
+        assert(it!=end);
+        lhs_exp = create_parse_tree(it++);
+        while(it != end) {
+          boost::shared_ptr<BinaryNode> comp_op = get_comp_node(it++);
+          assert(it!=end);
+          rhs_exp = create_parse_tree(it++);
+          comp_op->set_lhs(lhs_exp);
+          comp_op->set_rhs(rhs_exp);
+
+          // 2‚ÂˆÈã‚Ì”äŠr‰‰Zq‚Å‚Â‚È‚ª‚Á‚Ä‚¢‚éê‡‚ÍA˜_—Ï‚Å‚Â‚È‚°‚é
+          if(node_tree) {
+            boost::shared_ptr<LogicalAnd> and_node(node_factory_->create<LogicalAnd>());
+            and_node->set_lhs(node_tree);
+            and_node->set_rhs(comp_op);
+            node_tree = and_node;
+          } else {
+            node_tree = comp_op;
+          }
+          lhs_exp = rhs_exp;
+        }
+        return node_tree;
+      }
 
       // Tell§–ñ
       case RI_Tell:         {return create_unary_node<Tell>(ch);}
@@ -257,14 +329,19 @@ private:
         // ¶‹ÉŒÀ
       case RI_Previous:     {return create_unary_node<Previous>(ch);}
       
-        // OŠpŠÖ”
-      case RI_Sin:          {return create_unary_node<Sin>(ch);}
-      case RI_Cos:          {return create_unary_node<Cos>(ch);}
-      case RI_Tan:          {return create_unary_node<Tan>(ch);}
-        // ‹tOŠpŠÖ”
-      case RI_Asin:          {return create_unary_node<Asin>(ch);}
-      case RI_Acos:          {return create_unary_node<Acos>(ch);}
-      case RI_Atan:          {return create_unary_node<Atan>(ch);}
+        // ŠÖ”
+      case RI_Function:
+      {
+        boost::shared_ptr<Function> node = create_arbitrary_node<Function>(tree_iter);
+        return node;
+      }
+        // ƒTƒ|[ƒgŠOŠÖ”
+      case RI_UnsupportedFunction:          
+      {
+        boost::shared_ptr<UnsupportedFunction> node = create_arbitrary_node<UnsupportedFunction>(tree_iter);
+        return node;
+      }
+      
 
         // ‰~ü—¦
       case RI_Pi:
@@ -273,41 +350,11 @@ private:
         return node;
       }
       
-      
-        // ‘Î”
-      case RI_Log:          {return create_binary_node<Log>(ch);}
-      case RI_Ln:           {return create_unary_node<Ln>(ch);}
-
+     
         // ©‘R‘Î”‚Ì’ê
       case RI_E:          
       {
         boost::shared_ptr<E> node(node_factory_->create<E>());
-        return node;
-      }
-      
-      
-        // ”CˆÓ‚Ì•¶š—ñ
-      case RI_ArbitraryBinary:          
-      {
-        boost::shared_ptr<ArbitraryBinary> node = create_binary_node<ArbitraryBinary>(ch);
-        node->set_string(
-          std::string(tree_iter->value.begin(), tree_iter->value.end()));
-        return node;
-      }
-
-      case RI_ArbitraryUnary:
-      {
-        boost::shared_ptr<ArbitraryUnary> node = create_unary_node<ArbitraryUnary>(ch);
-        node->set_string(
-          std::string(tree_iter->value.begin(), tree_iter->value.end()));
-        return node;
-      }
-
-      case RI_ArbitraryFactor:
-      {
-        boost::shared_ptr<ArbitraryFactor> node(node_factory_->create<ArbitraryFactor>());
-        node->set_string(
-          std::string(tree_iter->value.begin(), tree_iter->value.end()));
         return node;
       }
       
@@ -338,73 +385,40 @@ private:
         assertion_node_ = create_parse_tree(ch);
         return node_sptr();
       }
-      case RI_Print://wada
+      
+      case RI_Command://wada
       {
-        boost::shared_ptr<Print> node(node_factory_->create<Print>());
-        std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        node->set_string(
-        std::string(str, 0, str.find("\",", 0)));
-        node->set_args(
-        std::string(str, str.find("\",", 0), str.length()));
-       return node;
-       // return create_unary_node<Print>(ch);
+        std::string command_name(tree_iter->value.begin(), tree_iter->value.end());
+        boost::shared_ptr<IONode> io_node;
+        if(command_name == "PRINTPP"){
+          io_node = node_factory_->create<PrintPP>();
+          assert(ch != tree_iter->children.end());
+          std::string str(ch->value.begin(), ch->value.end());
+          io_node->set_string(
+          std::string(str, 0, str.find(",", 0)));
+          io_node->set_args(
+          std::string(str, str.find(",", 0), str.length()));
+        } else if( command_name == "PRINTIP"){
+          io_node = node_factory_->create<PrintIP>();
+          assert(ch != tree_iter->children.end());
+          std::string str(ch->value.begin(), ch->value.end());
+          io_node->set_string(
+          std::string(str, 0, str.find(",", 0)));
+          io_node->set_args(
+          std::string(str, str.find(",", 0), str.length()));
+        }else if( command_name == "SCAN"){
+          io_node = node_factory_->create<Scan>();
+          assert(ch != tree_iter->children.end());
+          std::string str(ch->value.begin(), ch->value.end());
+          io_node->set_string(str);
+          io_node->set_args(str);
+        }else{
+            throw hydla::parse_error::InvalidCommand(command_name); 
+        }
+        return io_node;
       }
-      case RI_Print_PP://wada
-      {
-        boost::shared_ptr<PrintPP> node(node_factory_->create<PrintPP>());
-        std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        node->set_string(
-        std::string(str, 0, str.find("\",", 0)));
-        node->set_args(
-        std::string(str, str.find("\",", 0), str.length()));
-       return node;
-       // return create_unary_node<Print>(ch);
-      }
-      case RI_Print_IP://wada
-      {
-        boost::shared_ptr<PrintIP> node(node_factory_->create<PrintIP>());
-        std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        node->set_string(
-        std::string(str, 0, str.find("\",", 0)));
-        node->set_args(
-        std::string(str, str.find("\",", 0), str.length()));
-       return node;
-       // return create_unary_node<Print>(ch);
-      }
-      case RI_Scan://wada
-      {
-        boost::shared_ptr<Scan> node(node_factory_->create<Scan>());
-        std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        node->set_string(
-        std::string(str));
-        node->set_args(
-        std::string(str));
-       return node;
-       // return create_unary_node<Print>(ch);
-      }
-      case RI_Exit://wada
-      {
-        boost::shared_ptr<Exit> node(node_factory_->create<Exit>());
-        std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        node->set_string(
-        std::string(str));
-        node->set_args(
-        std::string(str));
-       return node;
-       // return create_unary_node<Print>(ch);
-      }
-      case RI_Abort://wada
-      {
-        boost::shared_ptr<Abort> node(node_factory_->create<Abort>());
-        std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        node->set_string(
-        std::string(str, 0, str.find("\",", 0)));
-        node->set_args(
-        std::string(str, str.find("\",", 0), str.length()));
-       return node;
-       // return create_unary_node<Print>(ch);
-      }
-      default://a
+      
+      default:
       {
         assert(0);
         return node_sptr();

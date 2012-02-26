@@ -34,6 +34,9 @@ public:
 
   /// 2つの子ノードを持つノードの呼び出し
   virtual void visit(boost::shared_ptr<hydla::parse_tree::BinaryNode> node);
+  
+  /// 任意数の子ノードを持つノードの呼び出し
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryNode> node);
 
 private:  
 

@@ -1,30 +1,22 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_TREE_VISITOR_H_
+#ifndef _INCLUDED_HYDLA_PARSE_TREE_DEFAULT_TREE_VISITOR_H_
+#define _INCLUDED_HYDLA_PARSE_TREE_DEFAULT_TREE_VISITOR_H_
 
-#include <boost/shared_ptr.hpp>
 
-#include "Node.h"
+#include "TreeVisitor.h"
 
 namespace hydla { 
 namespace parse_tree {
   
 /**
- * ParseTreeのノード集合に対するVisitorクラス
+ * 各ノードに対してデフォルトの動作（全ノード走査するが，何も変更しない）を行うヘルパクラス．
+ * このクラスを継承することで，「一部のノードに対してのみ処理を行うクラス」が作りやすくなるはず．
+ * ただしこれが望ましい実装なのかはよく分かっていない by matsusho
  */
-class TreeVisitor {
+class DefaultTreeVisitor: public TreeVisitor {
 public:
-  TreeVisitor();
+  DefaultTreeVisitor();
 
-  virtual ~TreeVisitor();
-
-  /**
-   * Nodeクラスのaccept関数呼び出し用ヘルパ関数
-   */
-  template<class T>
-  void accept(const T& n)
-  {
-    n->accept(n, this);
-  }
+  virtual ~DefaultTreeVisitor();
 
   // 制約定義
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
@@ -100,12 +92,10 @@ public:
   // 自然対数の底
   virtual void visit(boost::shared_ptr<E> node);
   
-  //任意の文字列
-  virtual void visit(boost::shared_ptr<ArbitraryNode> node);
-
-  // 関数
+  //関数
   virtual void visit(boost::shared_ptr<Function> node);
   virtual void visit(boost::shared_ptr<UnsupportedFunction> node);
+
 
   // 変数
   virtual void visit(boost::shared_ptr<Variable> node);
@@ -123,4 +113,4 @@ public:
 } //namespace parse_tree
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_TREE_VISITOR_H_
+#endif //_INCLUDED_HYDLA_PARSE_TREE_DEFAULT_TREE_VISITOR_H_

@@ -102,6 +102,7 @@ MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
   ml_.MLNewPacket();
   
   MathematicaExpressionConverter::initialize();
+  PacketSender::initialize();
 }
 
 MathematicaVCS::~MathematicaVCS()

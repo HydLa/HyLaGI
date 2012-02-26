@@ -87,21 +87,7 @@ DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
 DEFINE_INFIX_VISIT_UNARY(Tell, "", "")
 // êßñÒéÆ
 DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".\n")
-  
-  
-// ëŒêî
-DEFINE_INFIX_VISIT_UNARY(Ln, "Ln(", ")")
-void TreeInfixPrinter::visit(boost::shared_ptr<Log> node){
-  
-  (*output_stream_) << "Log(";
-  print_binary_node(*node, ",");
-  (*output_stream_) << ")";
-}
 
-
-// éOäpä÷êî
-DEFINE_INFIX_VISIT_UNARY(Sin, "Sin(", ")")
-DEFINE_INFIX_VISIT_UNARY(Cos, "Cos(", ")")
 
 // Print
 DEFINE_INFIX_VISIT_FACTOR(Print, "Print(", ")")
@@ -196,36 +182,29 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 }
 
 
-// îCà”
-void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryFactor> node){
-  (*output_stream_) << node->get_string();
-}
-
-void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryUnary> node){
-  (*output_stream_) << node->get_string() << "(";
-  accept(node->get_child());
-  (*output_stream_) << ")";
-}
-
-void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryBinary> node){
-  (*output_stream_) << node->get_string() << "(";
-  accept(node->get_lhs());
-  (*output_stream_) << ",";
-  accept(node->get_rhs());
-  (*output_stream_) << ")";
-}
-
-
-void TreeInfixPrinter::visit(boost::shared_ptr<ArbitraryNode> node){
+//ä÷êî
+void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
   (*output_stream_) << node->get_string() << "[";
   int i=0;
-  while(node->arguments_.size()){
-    accept(node->arguments_[i]);
-    if(++i >= node->arguments_.size())break;
+  while(true){
+    accept(node->get_argument(i));
+    if(++i >= node->get_arguments_size())break;
     (*output_stream_) << ",";
   }
   (*output_stream_) << "]";
 }
+
+void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
+  (*output_stream_) << "\"" << node->get_string() << "\"" << "[";
+  int i=0;
+  while(true){
+    accept(node->get_argument(i));
+    if(++i >= node->get_arguments_size())break;
+    (*output_stream_) << ",";
+  }
+  (*output_stream_) << "]";
+}
+
 
 // é©ëRëŒêîÇÃíÍ
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){

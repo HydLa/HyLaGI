@@ -13,6 +13,18 @@ namespace hydla {
 namespace parser {
 
 
+#define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)        \
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
+{                                                     \
+  for(int i=0;i<node->get_arguments_size();i++){      \
+    accept(node->get_argument(i));                    \
+    if(new_child_) {                                  \
+      node->set_argument((new_child_), i);            \
+      new_child_.reset();                             \
+    }                                                 \
+  }                                                   \
+}
+
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)        \
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
 {                                                     \
@@ -340,30 +352,15 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 
 
 
-// éOäpä÷êî
-DEFINE_DEFAULT_VISIT_UNARY(Sin)
-DEFINE_DEFAULT_VISIT_UNARY(Cos)
-DEFINE_DEFAULT_VISIT_UNARY(Tan)
-
-// ãtéOäpä÷êî
-DEFINE_DEFAULT_VISIT_UNARY(Asin)
-DEFINE_DEFAULT_VISIT_UNARY(Acos)
-DEFINE_DEFAULT_VISIT_UNARY(Atan)
+// ä÷êî
+DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
+DEFINE_DEFAULT_VISIT_ARBITRARY(UnsupportedFunction)
 
 // â~é¸ó¶
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 
-// ëŒêî
-DEFINE_DEFAULT_VISIT_BINARY(Log)
-DEFINE_DEFAULT_VISIT_UNARY(Ln)
-
 // é©ëRëŒêîÇÃíÍ
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-
-// îCà”ÇÃï∂éöóÒ
-DEFINE_DEFAULT_VISIT_FACTOR(ArbitraryFactor)
-DEFINE_DEFAULT_VISIT_UNARY(ArbitraryUnary)
-DEFINE_DEFAULT_VISIT_BINARY(ArbitraryBinary)
 
 
 // ïœêî

@@ -100,6 +100,19 @@ void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<BinaryNode> node)
   accept(node->get_rhs());
 }
 
+
+void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<ArbitraryNode> node)
+{
+  graph_node_id_t own_id = node_id_;
+  nodes_.insert(make_pair(own_id, node->get_string()));
+
+  for(int i=0; i< node->get_arguments_size();i++){
+    edges_.insert(make_pair(own_id, ++node_id_));
+    accept(node->get_argument(i));
+  }
+}
+
+
 // êßñÒíËã`
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConstraintDefinition> node)  
 {
@@ -278,30 +291,12 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Abort> node)
 {
   dump_node(node);
 }
-// éOäpä÷êî
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Sin> node)
+// ä÷êî
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Function> node)
 {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Cos> node)
-{
-  dump_node(node);
-}
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Tan> node)
-{
-  dump_node(node);
-}
-
-// ãtéOäpä÷êî
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Asin> node)
-{
-  dump_node(node);
-}
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Acos> node)
-{
-  dump_node(node);
-}
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Atan> node)
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<UnsupportedFunction> node)
 {
   dump_node(node);
 }
@@ -312,32 +307,8 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Pi> node)
   dump_node(node);
 }
 
-// ëŒêî
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Log> node)
-{
-  dump_node(node);
-}
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Ln> node)
-{
-  dump_node(node);
-}
-
 // é©ëRëŒêîÇÃíÍ
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<E> node)
-{
-  dump_node(node);
-}
-
-// îCà”ÇÃï∂éöóÒ
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ArbitraryBinary> node)
-{
-  dump_node(node);
-}
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ArbitraryUnary> node)
-{
-  dump_node(node);
-}
-void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ArbitraryFactor> node)
 {
   dump_node(node);
 }

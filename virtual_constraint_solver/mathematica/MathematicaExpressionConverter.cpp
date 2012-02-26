@@ -145,7 +145,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::conver
     }
     
     //未対応ノード．ソルバがMathematicaで有る限り処理を継続できるようにする
-    boost::shared_ptr<hydla::parse_tree::ArbitraryNode> new_node(new hydla::parse_tree::ArbitraryNode(expr.substr(prev, (now)-prev)));
+    boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> new_node(new hydla::parse_tree::UnsupportedFunction(expr.substr(prev, (now)-prev)));
     if(expr[now]!='['){
       now++;
       return new_node;

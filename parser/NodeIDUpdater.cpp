@@ -65,5 +65,14 @@ void NodeIDUpdater::visit(boost::shared_ptr<hydla::parse_tree::BinaryNode> node)
 }
 
 
+void NodeIDUpdater::visit(boost::shared_ptr<hydla::parse_tree::ArbitraryNode> node)
+{    
+  update_node_id(node);
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+  }
+}
+
+
 } //namespace parser
 } //namespace hydla

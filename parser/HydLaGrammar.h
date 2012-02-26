@@ -49,20 +49,12 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     defRuleID(RI_Positive)   positive; 
     defRuleID(RI_Negative)   negative;
+    
+    defRuleID(RI_Function)   function;
 
-    defRuleID(RI_Sin)        sin;
-    defRuleID(RI_Cos)        cos;
-    defRuleID(RI_Tan)        tan;
-    defRuleID(RI_Asin)       asin;
-    defRuleID(RI_Acos)        acos;
-    defRuleID(RI_Atan)        atan;
     
-    defRuleID(RI_Log)        log;
-    defRuleID(RI_Ln)        ln;
     
-    defRuleID(RI_ArbitraryBinary)        arbitrary_binary;
-    defRuleID(RI_ArbitraryUnary)         arbitrary_unary;
-    defRuleID(RI_ArbitraryFactor)        arbitrary_factor;
+    defRuleID(RI_UnsupportedFunction)        unsupported_function;
 
     defRuleID(RI_CompOp)       comp_op; 
     defRuleID(RI_Less)         less; 
@@ -116,13 +108,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Ask_Logical_Term)  ask_logical_term; 
     defRuleID(RI_Ask_Logical)       ask_logical;
     defRuleID(RI_Comparison)        comparison; 
+    defRuleID(RI_Chain)            chain; 
+    defRuleID(RI_Command)          command;
     defRuleID(RI_Assert)           assert;
-    defRuleID(RI_Print)            print;
-    defRuleID(RI_Print_PP)            print_pp;
-    defRuleID(RI_Print_IP)            print_ip;
-    defRuleID(RI_Scan)            scan;
-    defRuleID(RI_Exit)            exit;
-    defRuleID(RI_Abort)            abort;
 
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
@@ -155,27 +143,6 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       // assert文
       assert = root_node_d[str_p("ASSERT")] >> no_node_d[ch_p('(')] >> ask_logical >> no_node_d[ch_p(')')];
 
-      //print文
-      //print = root_node_d[str_p("PRINT")] >> no_node_d[ch_p("(")] >> arbitrary_factor >>no_node_d[ch_p(")")];
-      print = no_node_d[str_p("PRINT")] >>  no_node_d[ch_p("(")] >> no_node_d[ch_p('"')] 
-             >> leaf_node_d[*(anychar_p - '"') >> ch_p('"') >> *(ch_p(',') | (anychar_p - ")"))]
-             >> no_node_d[ch_p(")")];
-
-      print_pp = no_node_d[str_p("PRINTPP")] >>  no_node_d[ch_p("(")] >> no_node_d[ch_p('"')] 
-             >> leaf_node_d[*(anychar_p - '"') >> ch_p('"') >> *(ch_p(',') | (anychar_p - ")"))]
-             >> no_node_d[ch_p(")")];
-      print_ip = no_node_d[str_p("PRINTIP")] >>  no_node_d[ch_p("(")] >> no_node_d[ch_p('"')] 
-             >> leaf_node_d[*(anychar_p - '"') >> ch_p('"') >> *(ch_p(',') | (anychar_p - ")"))]
-             >> no_node_d[ch_p(")")];
-
-      scan = no_node_d[str_p("SCAN")] >>  no_node_d[ch_p("(")] >> 
-             leaf_node_d[*(ch_p(',') | (anychar_p - ")"))]
-             >> no_node_d[ch_p(")")];
-
-      exit = no_node_d[str_p("EXIT")] >>  no_node_d[ch_p("(")]  >> no_node_d[ch_p(")")];
-
-      abort = no_node_d[str_p("ABORT")] >>  no_node_d[ch_p("(")]  >> no_node_d[ch_p(")")];
-      
 
       //program定義
       program_def = 
@@ -224,9 +191,14 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         | no_node_d[ch_p('(')] >> logical_term >> no_node_d[ch_p(')')];
 
       //tell
-      tell = gen_ast_node_d[
-        expression >> root_node_d[comp_op] >> expression] || print | print_pp | print_ip | scan | abort| exit;
-
+      tell = gen_pt_node_d[chain] | command;
+      
+      //コマンド文
+      command = 
+             no_node_d[ch_p('@')] >> root_node_d[leaf_node_d[identifier]] >>  no_node_d[ch_p('(')]
+             >> leaf_node_d[!(identifier % ch_p(','))]
+             >> no_node_d[ch_p(')')];
+             
       //式
       expression = arithmetic;
 
@@ -255,9 +227,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //因子
       factor =
-          root_node_d[sin | cos | tan | asin | acos | atan | ln | arbitrary_unary] >>  no_node_d[ch_p('(')] >> expression  >> no_node_d[ch_p(')')]
-        | root_node_d[log|arbitrary_binary] >>  no_node_d[ch_p('(')] >> expression >> no_node_d[ch_p(',')] >> expression >> no_node_d[ch_p(')')]
-        | arbitrary_factor
+          root_node_d[function|unsupported_function] >>  no_node_d[ch_p('(')] >> !(expression %  no_node_d[ch_p(',')])  >> no_node_d[ch_p(')')]
         | pi
         | e
         | variable
@@ -276,9 +246,12 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //比較
       comparison = 
-        expression >> root_node_d[comp_op] >> expression
+        gen_pt_node_d[chain]
         | gen_pt_node_d[constraint_caller]
         | no_node_d[ch_p('(')] >> ask_logical >> no_node_d[ch_p(')')];
+        
+      chain = 
+        gen_ast_node_d[expression >> +(comp_op >> expression)];
       
       //円周率
       pi = str_p("Pi");
@@ -286,9 +259,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //自然対数の底
       e = str_p("E");
       
-      arbitrary_binary = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
-      arbitrary_unary = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
-      //arbitrary_factor = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
+      unsupported_function = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
       
       //数字
       number = 
@@ -366,15 +337,8 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       positive    = ch_p('+');
       negative    = ch_p('-');
       
-      //三角関数
-      sin         = str_p("sin");
-      cos         = str_p("cos");
-      tan         = str_p("tan");
-      asin        = str_p("arcsin");
-      acos        = str_p("arccos");
-      atan        = str_p("arctan");
-      log         = str_p("log");
-      ln          = str_p("ln");
+      //関数
+      function         = leaf_node_d[+alpha_p];
     }
 
     // 開始ルール

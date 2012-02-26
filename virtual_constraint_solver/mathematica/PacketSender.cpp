@@ -18,6 +18,22 @@ const std::string PacketSender::var_prefix("usrVar");
 /** Mathematicaに送る際に定数名につける接頭語 */
 const std::string PacketSender::par_prefix("p");
 
+std::map<std::string, std::pair<std::string, int> > PacketSender::function_name_map_;
+
+
+void PacketSender::initialize(){
+  //HydLaとMathematicaの関数名の対応関係を作っておく．
+  function_name_map_.insert(std::make_pair("Sin", std::make_pair("Sin", 1)));
+  function_name_map_.insert(std::make_pair("Cos", std::make_pair("Cos", 1)));
+  function_name_map_.insert(std::make_pair("Tan", std::make_pair("Tan", 1)));
+  function_name_map_.insert(std::make_pair("Asin", std::make_pair("ArcSin", 1)));
+  function_name_map_.insert(std::make_pair("Acos", std::make_pair("ArcCos", 1)));
+  function_name_map_.insert(std::make_pair("Atan", std::make_pair("ArcTan", 1)));
+  function_name_map_.insert(std::make_pair("Log", std::make_pair("Log", 2)));
+  function_name_map_.insert(std::make_pair("Ln", std::make_pair("Log", 1)));
+}
+
+
 /**
  * 式(ノード)をMathematicaへ送信するクラス．
  * @param ml Mathlinkインスタンスの参照
@@ -37,14 +53,14 @@ PacketSender::PacketSender() :
 PacketSender::~PacketSender(){}
 
 
-// Ask制約
+/// Ask制約
 void PacketSender::visit(boost::shared_ptr<Ask> node)                   
 {
   // ask制約は送れない
   assert(0);
 }
 
-// Tell制約
+/// Tell制約
 void PacketSender::visit(boost::shared_ptr<Tell> node)                  
 {
   
@@ -85,12 +101,12 @@ DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
 
 
 
-// 論理演算子
+/// 論理演算子
 DEFINE_VISIT_BINARY(LogicalAnd, And)
 DEFINE_VISIT_BINARY(LogicalOr, Or)
 
   
-// 算術二項演算子
+/// 算術二項演算子
 DEFINE_VISIT_BINARY(Plus, Plus)
 DEFINE_VISIT_BINARY(Subtract, Subtract)
 DEFINE_VISIT_BINARY(Times, Times)
@@ -98,7 +114,7 @@ DEFINE_VISIT_BINARY(Divide, Divide)
 DEFINE_VISIT_BINARY(Power, Power)
 
   
-// 算術単項演算子
+/// 算術単項演算子
 
 DEFINE_VISIT_UNARY(Negative, Minus)
 void PacketSender::visit(boost::shared_ptr<Positive> node)              
@@ -106,7 +122,7 @@ void PacketSender::visit(boost::shared_ptr<Positive> node)
   accept(node->get_child());
 }
 
-// 微分
+/// 微分
 void PacketSender::visit(boost::shared_ptr<Differential> node)          
 {
   differential_count_++;
@@ -114,7 +130,7 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
   differential_count_--;
 }
 
-// 左極限
+/// 左極限
 void PacketSender::visit(boost::shared_ptr<Previous> node)              
 {
   in_prev_ = true;
@@ -123,99 +139,36 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
 }
 
 
-// 否定
+/// 否定
 DEFINE_VISIT_UNARY(Not, Not)
 
 
-// 三角関数
-DEFINE_VISIT_UNARY(Sin, Sin)
-DEFINE_VISIT_UNARY(Cos, Cos)
-DEFINE_VISIT_UNARY(Tan, Tan)
-// 逆三角関数
-DEFINE_VISIT_UNARY(Asin, ArcSin)
-DEFINE_VISIT_UNARY(Acos, ArcCos)
-DEFINE_VISIT_UNARY(Atan, ArcTan)
-// 円周率
-DEFINE_VISIT_FACTOR(Pi, Pi)
-// 対数
-DEFINE_VISIT_BINARY(Log, Log)
-DEFINE_VISIT_UNARY(Ln, Log)
-// 自然対数の底
-DEFINE_VISIT_FACTOR(E, E)
-
-// Print
-void PacketSender::visit(boost::shared_ptr<Print> node)
-{    
- //do nothing 
-  ml_->put_symbol("True");
-}
-void PacketSender::visit(boost::shared_ptr<PrintPP> node)
-{    
- //do nothing 
-  ml_->put_symbol("True");
-}
-void PacketSender::visit(boost::shared_ptr<PrintIP> node)
-{    
- //do nothing 
-  ml_->put_symbol("True");
-}
-    
-void PacketSender::visit(boost::shared_ptr<Scan> node)
-{    
- //do nothing 
-  ml_->put_symbol("True");
-}
-void PacketSender::visit(boost::shared_ptr<Exit> node)
-{    
- //do nothing 
-  ml_->put_symbol("True");
-}
-void PacketSender::visit(boost::shared_ptr<Abort> node)
-{    
- //do nothing 
-  ml_->put_symbol("True");
-}
-//任意の文字列
-
-void PacketSender::visit(boost::shared_ptr<ArbitraryBinary> node)
-{    
-  HYDLA_LOGGER_REST("put: ArbitraryFactor : ", node->get_string());
-  ml_->put_function(node->get_string(),2);
-  accept(node->get_lhs());
-  accept(node->get_rhs());
-}
-
-void PacketSender::visit(boost::shared_ptr<ArbitraryUnary> node)
-{    
-  HYDLA_LOGGER_REST("put: ArbitraryUnary : ", node->get_string());
-  ml_->put_function(node->get_string(),1);
-  accept(node->get_child());
-}
-
-void PacketSender::visit(boost::shared_ptr<ArbitraryFactor> node)
-{    
-  HYDLA_LOGGER_REST("put: ArbitraryFactor : ", node->get_string());
-  ml_->put_symbol(node->get_string());
-}
-
-
-void PacketSender::visit(boost::shared_ptr<ArbitraryNode> node)
+/// 関数
+void PacketSender::visit(boost::shared_ptr<Function> node)              
 {
-  HYDLA_LOGGER_REST("put: ArbitraryNode : ", node->get_string());
-  if(node->arguments_.size() == 0){
-    ml_->put_symbol(node->get_string());
-  }else{
-    if(node->get_string() == "Function"){ //FunctionはHoldAllな関数のため，EvaluateしないとNumberのToExpressionが働かない
-      ml_->put_function(node->get_string(), 1);
-      ml_->put_function("Evaluate", node->arguments_.size());
-    }else{
-      ml_->put_function(node->get_string(), node->arguments_.size());
-    }
-    for(int i=0; i < node->arguments_.size();i++){
-      accept(node->arguments_[i]);
-    }
+  std::map<std::string, std::pair<std::string, int> >::iterator it = function_name_map_.find(node->get_string());
+  assert(it != function_name_map_.end());
+  assert(it->second.second == node->get_arguments_size());
+  ml_->put_function(it->second.first, 1);
+  for(int i=0; i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
   }
 }
+
+
+void PacketSender::visit(boost::shared_ptr<UnsupportedFunction> node)              
+{
+  ml_->put_function(node->get_string(), 1);
+  for(int i=0; i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+  }
+}
+
+/// 円周率
+DEFINE_VISIT_FACTOR(Pi, Pi)
+/// 自然対数の底
+DEFINE_VISIT_FACTOR(E, E)
+
 
 
 // 変数
@@ -327,7 +280,6 @@ void PacketSender::put_par(const std::string &name)
 
   ml_->put_symbol(name);
 
-
   // putした変数の情報を保持
   pars_.insert(name);
 }
@@ -397,6 +349,12 @@ void PacketSender::put_pars()
   }
 }
 
+
+
+  // コマンド文
+void PacketSender::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node){ml_->put_symbol("True");}
+void PacketSender::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node){ml_->put_symbol("True");}
+void PacketSender::visit(boost::shared_ptr<hydla::parse_tree::Scan> node){ml_->put_symbol("True");}
 
 /**
  * 内部情報(特に変数情報)をリセットする．

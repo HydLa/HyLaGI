@@ -98,6 +98,18 @@ public:
   {}
 };
 
+
+/**
+ * 無効なコマンドが指定されたときに発生するクラス
+ */
+class InvalidCommand : public ParseError {
+public:
+  InvalidCommand(const std::string& name, 
+                    int line = -1) :
+    ParseError("InvalidCommand", line)
+  {}
+};
+
 class BinNodeError : public ParseError {
 public:
   BinNodeError(const std::string& tag,

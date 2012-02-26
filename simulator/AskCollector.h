@@ -8,7 +8,7 @@
 
 #include "Node.h"
 #include "ModuleSet.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 #include "./Types.h"
 
@@ -18,7 +18,7 @@ namespace simulator {
 /**
  * askノードを集めるビジタークラス
  */
-class AskCollector : public parse_tree::TreeVisitor {
+class AskCollector : public parse_tree::DefaultTreeVisitor {
 public:
   typedef unsigned int collect_flag_t;
   static const collect_flag_t ENABLE_COLLECT_NON_TYPED_ASK  = 0x01;
@@ -45,42 +45,15 @@ public:
                    positive_asks_t*   positive_asks,
                    negative_asks_t*   negative_asks);
 
-
-  // 制約式
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
-
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
   // Tell制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
-
-  // 論理積
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   
   // 時相演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
   
-  // モジュールの弱合成
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
-
-  // モジュールの並列合成
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
-   
-  // 制約呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
-  
-  // プログラム呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
-
-  //Print
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
-
-  // 任意の文字列
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryFactor> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryUnary> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryBinary> node);
-
 private:
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
 

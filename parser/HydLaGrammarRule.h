@@ -32,17 +32,13 @@ typedef enum _RuleID {
   RI_Negative,
   RI_Positive,
   
-  // 三角関数
-  RI_Sin,
-  RI_Cos,
-  RI_Tan,
-  RI_Asin,
-  RI_Acos,
-  RI_Atan,
+  // 関数
+  RI_Function,
+  // サポート外関数
+  RI_UnsupportedFunction,
   
-  // 対数
-  RI_Log,
-  RI_Ln,
+  // コマンド文
+  RI_Command,
 
   // 算術二項演算子
   RI_Plus,
@@ -55,10 +51,6 @@ typedef enum _RuleID {
   RI_Weaker,
   RI_Parallel,
   
-  // 任意の文字列
-  RI_ArbitraryFactor,
-  RI_ArbitraryUnary,
-  RI_ArbitraryBinary,
 
   // 微分
   RI_Differential,
@@ -72,9 +64,6 @@ typedef enum _RuleID {
 
   RI_Implies,
   RI_Equivalent,
-
-  RI_FuncCall,
-  RI_Function,
 
   RI_Expression,
   RI_Factor,
@@ -94,6 +83,7 @@ typedef enum _RuleID {
   RI_Ask_Logical_Term,
   RI_Ask_Logical,
   RI_Comparison,
+  RI_Chain,
 
   RI_Program,
   RI_ProgramParallel,
@@ -116,12 +106,6 @@ typedef enum _RuleID {
   RI_ConstraintDef,
   
   RI_Assert,
-  RI_Print,
-  RI_Print_PP,
-  RI_Print_IP,
-  RI_Scan,
-  RI_Exit,
-  RI_Abort,
   RI_Statements,
   RI_HydLaProgram,
 

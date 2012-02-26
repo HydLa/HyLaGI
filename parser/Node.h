@@ -831,22 +831,6 @@ DEFINE_UNARY_NODE(Previous);
  */
 DEFINE_UNARY_NODE(Not);
 
-
-/**
- * 三角関数
- */
-DEFINE_UNARY_NODE(Sin);
-DEFINE_UNARY_NODE(Cos);
-DEFINE_UNARY_NODE(Tan);
-
-/**
- * 逆三角関数
- */
-DEFINE_UNARY_NODE(Asin);
-DEFINE_UNARY_NODE(Acos);
-DEFINE_UNARY_NODE(Atan);
-
-
 /**
  * 円周率
  */
@@ -864,12 +848,6 @@ public:
   }
 };
 
-/**
- * 対数
- */
- 
-DEFINE_BINARY_NODE(Log);
-DEFINE_UNARY_NODE(Ln);
 
 /**
  * 自然対数の底
@@ -888,150 +866,6 @@ public:
   }
 };
 
-
-
-/**
- * 任意の文字列データを持つノード
- */
- 
- 
-class ArbitraryBinary : public BinaryNode{
-public:
-  ArbitraryBinary()
-  {}
-
-  ArbitraryBinary(const node_sptr &lhs, const node_sptr &rhs):BinaryNode(lhs, rhs)
-  {}
-  
-  virtual ~ArbitraryBinary()
-  {}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
-
-  virtual node_sptr clone()
-  {
-    boost::shared_ptr<ArbitraryBinary> n(new ArbitraryBinary());
-    n->string_ = string_;
-    return BinaryNode::clone(n);
-  }
-  
-  virtual std::string get_node_type_name() const {
-    return "ArbitraryBinary";
-  }
-
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    Node::dump(s);
-    s << "[" << string_ << "]";
-    return s << "[" << *lhs_ << "," << *rhs_ << "]";
-  }
-  
-  void set_string(const std::string& str) 
-  {
-    string_ = str;
-  }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
-
-private:
-  std::string string_;
-};
-
-class ArbitraryUnary : public UnaryNode{
-public:
-  ArbitraryUnary()
-  {}
-
-  ArbitraryUnary(const node_sptr &child):UnaryNode(child)
-  {}
-  
-  virtual ~ArbitraryUnary()
-  {}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
-
-  virtual node_sptr clone()
-  {
-    boost::shared_ptr<ArbitraryUnary> n(new ArbitraryUnary());
-    n->string_ = string_;
-    return UnaryNode::clone(n);
-  }
-  
-  virtual std::string get_node_type_name() const {
-    return "ArbitraryUnary";
-  }
-
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    Node::dump(s);
-    return s << "[" << string_ << "]" << "[" << *child_ << "]";
-  }
-  
-  void set_string(const std::string& str) 
-  {
-    string_ = str;
-  }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
-
-private:
-  std::string string_;
-};
-
-
-class ArbitraryFactor : public FactorNode{
-public:
-  
-  ArbitraryFactor()
-  {}
-  
-  virtual ~ArbitraryFactor()
-  {}
-
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
-
-  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
-
-  virtual node_sptr clone()
-  {
-    boost::shared_ptr<ArbitraryFactor> n(new ArbitraryFactor());
-    n->string_ = string_;
-    return n;
-  }
-  
-  virtual std::string get_node_type_name() const {
-    return "ArbitraryFactor";
-  }
-
-  virtual std::ostream& dump(std::ostream& s) const 
-  {
-    Node::dump(s);
-    return s <<"[" << string_ << "]";
-  }
-  
-  void set_string(const std::string& str) 
-  {
-    string_ = str;
-  }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
-
-private:
-  std::string string_;
-};
 
 /**
  * 数字
@@ -1284,7 +1118,43 @@ private:
   std::string args_;
 };
 
-class PrintPP : public FactorNode{
+
+class IONode : public FactorNode{
+public:
+  
+  IONode()
+  {}
+  
+  virtual ~IONode()
+  {}
+  
+  void set_string(const std::string& str) 
+  {
+    string_ = str;
+  }
+  
+  std::string get_string() const
+  {
+    return string_;
+  }
+ 
+  void set_args(const std::string& str) 
+  {
+    args_ = str;
+  }
+  
+  std::string get_args() const
+  {
+    return args_;
+  }
+
+protected:
+  std::string string_;
+  std::string args_;
+};
+
+
+class PrintPP : public IONode{
 public:
   
   PrintPP()
@@ -1314,34 +1184,9 @@ public:
     Node::dump(s);
     return s <<"[" << string_ << "]";
   }
-  
-  void set_string(const std::string& str) 
-  {
-    string_ = str;
-  }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
- 
-  void set_args(const std::string& str) 
-  {
-    args_ = str;
-  }
-  
-  std::string get_args() const
-  {
-    return args_;
-  }
-
-
-private:
-  std::string string_;
-  std::string args_;
 };
 
-class PrintIP : public FactorNode{
+class PrintIP : public IONode{
 public:
   
   PrintIP()
@@ -1371,34 +1216,9 @@ public:
     Node::dump(s);
     return s <<"[" << string_ << "]";
   }
-  
-  void set_string(const std::string& str) 
-  {
-    string_ = str;
-  }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
- 
-  void set_args(const std::string& str) 
-  {
-    args_ = str;
-  }
-  
-  std::string get_args() const
-  {
-    return args_;
-  }
-
-
-private:
-  std::string string_;
-  std::string args_;
 };
 
-class Scan : public FactorNode{
+class Scan : public IONode{
 public:
   
   Scan()
@@ -1428,31 +1248,6 @@ public:
     Node::dump(s);
     return s <<"[" << args_ << "]";
   }
-  
-  void set_string(const std::string& str) 
-  {
-    string_ = str;
-  }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
- 
-  void set_args(const std::string& str) 
-  {
-    args_ = str;
-  }
-  
-  std::string get_args() const
-  {
-    return args_;
-  }
-
-
-private:
-  std::string string_;
-  std::string args_;
 };
     
 class Exit : public FactorNode{
@@ -1570,15 +1365,15 @@ private:
 };
 
 
+/**
+ * 任意個の引数を持つノード
+ */
+
 class ArbitraryNode : public Node {
 public:
   typedef boost::shared_ptr<ArbitraryNode> node_type_sptr;
 
   ArbitraryNode()
-  {}
-  
-  ArbitraryNode(const std::string& str) : 
-    string_(str)
   {}
 
   virtual ~ArbitraryNode()
@@ -1586,27 +1381,97 @@ public:
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
-  
-  virtual node_sptr clone();
 
   virtual std::string get_node_type_name() const {
     return "ArbitraryNode";
   }
   
   void add_argument(node_sptr node);
-  
+  void set_argument(node_sptr node, int i);
   
   virtual std::ostream& dump(std::ostream& s) const;
   
-  void set_string(const std::string& str);
+  int get_arguments_size();
+  virtual std::string get_string() const = 0;
+  node_sptr get_argument(int number);
   
-  std::string get_string() const;
-
+  protected:
   std::vector<node_sptr> arguments_;
+};
+
+
+
+/*
+ * 関数
+ */
+
+class Function : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<Function> node_type_sptr;
+
+  Function()
+  {}
+  
+  Function(const std::string& str) : 
+    string_(str)
+  {}
+
+  virtual ~Function()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+  
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "Function";
+  }
+  
+  void set_string(const std::string& str){string_ = str;}
+  
+  virtual std::string get_string() const{return string_;}
+
 private:
   std::string string_;
 };
 
+
+/*
+ * サポート外関数．
+ * ソルバ間差異などに対応できないが，一応ソルバ特有の関数を任意で呼び出せるようにしておく．
+ * 動作保証はできない．
+ */
+
+class UnsupportedFunction : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<UnsupportedFunction> node_type_sptr;
+
+  UnsupportedFunction()
+  {}
+  
+  UnsupportedFunction(const std::string& str) : 
+    string_(str)
+  {}
+
+  virtual ~UnsupportedFunction()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+  
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "UnsupportedFunction";
+  }
+  
+  
+  void set_string(const std::string& str){string_ = str;}
+  
+  virtual std::string get_string() const{return string_;}
+
+private:
+  std::string string_;
+};
 
 
 } //namespace parse_tree
