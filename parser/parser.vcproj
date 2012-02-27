@@ -155,6 +155,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DefaultTreeVisitor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HydLaAST.cpp"
 				>
 			</File>
@@ -206,6 +210,10 @@
 			</File>
 			<File
 				RelativePath=".\DefaultNodeFactory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DefaultTreeVisitor.h"
 				>
 			</File>
 			<File
