@@ -39,7 +39,6 @@ int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 void symbolic_legacy_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
-void branch_and_prune_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
 
 /**
@@ -133,12 +132,6 @@ void hydla_main(int argc, char* argv[])
   std::string method(po.get<std::string>("method"));
   if(method == "s" || method == "SymbolicSimulator") {
     symbolic_simulate(pt);
-  } 
-  else if(method == "b" || method == "BandPSimulator") {
-    branch_and_prune_simulate(pt);
-  } 
-  else if(method == "l" || method == "SymbolicLegacySimulator") {
-    symbolic_legacy_simulate(pt);
   } 
   else {
     // TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é

@@ -183,18 +183,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\realpaver\RealPaverVCS.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RealPaverVCSInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RealPaverVCSPoint.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\reduce\REDUCELink.cpp"
 				>
 			</File>
@@ -216,30 +204,6 @@
 			</File>
 			<File
 				RelativePath=".\reduce\REDUCEVCSPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintBuilder.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintSolver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintStore.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintStoreInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPTime.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPValue.cpp"
 				>
 			</File>
 			<File
@@ -305,22 +269,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\realpaver\RealPaverBaseVCS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RealPaverVCS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RealPaverVCSInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RealPaverVCSPoint.h"
-				>
-			</File>
-			<File
 				RelativePath=".\reduce\REDUCELink.h"
 				>
 			</File>
@@ -354,38 +302,6 @@
 			</File>
 			<File
 				RelativePath=".\reduce\REDUCEVCSType.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintBuilder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintSolver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintStore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPConstraintStoreInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPTime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPVariable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\realpaver\RPVCSType.h"
 				>
 			</File>
 			<File
