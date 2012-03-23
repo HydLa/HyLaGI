@@ -1250,19 +1250,9 @@ begin;
   exprVarList_:= if(exprVarList_ neq {}) then exprVarList_ else {INFINITY}
   >>;
   debugWrite("exprVarList_: ", exprVarList_);
-
-
   exprVar_:= first(exprVarList_);
   debugWrite("exprVar_: ", exprVar_);
 
-  % 等式の場合の処理
-  if(relop_=equal) then <<
-    eqSol_:= exSolve(ineqExpr_, exprVar_);
-    eqSolValue_:= rhs(first(eqSol_));          % 2次以上は考えなくて良いのか？
-    debugWrite("eqSolValue_: ", eqSolValue_);
-    return hogegege;
-%    return makeTupleDNFFromEq(exprVar_, eqSolValue_);
-  >>;
 
   % 右辺を左辺に移項する
   adjustedIneqExpr_:= myApply(relop_, {lhs_+(-1)*rhs_, 0});
@@ -1371,7 +1361,7 @@ begin;
         retTupleDNF_:= {{ {exprVar_, getReverseRelop(adjustedRelop_), lb_},     {exprVar_, adjustedRelop_, ub_} }};
       >> else <<
         % ≠の場合
-        retTupleDNF_:= {{ {exprVar_, lessp, lb_}, {exprVar_, greaterp, lb_}, {exprVar_, lessp, ub_}, {exprVar_, greaterp, ub_} }};
+        retTupleDNF_:= {{ {exprVar_, lessp, lb_} }, { {exprVar_, greaterp, lb_}, {exprVar_, lessp, ub_} }, { {exprVar_, greaterp, ub_} }};
       >>;
     >> else <<
       % パラメタの解が得られた場合
@@ -2514,7 +2504,7 @@ begin;
     integAskQE_:= rlqe(integAsk_);
     if(integAskQE_=true) then {error}
     else if(integAskQE_=false) then {false}
-    else integAsk_
+    else {integAsk_}
   >>;
   debugWrite("integAskList_: ", integAskList_);
 
