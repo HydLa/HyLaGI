@@ -923,18 +923,13 @@ private:
  */ 
 class Variable : public FactorNode {
 public:
-  Variable() :
-    init_var_(false)
-  {}  
+  Variable()
+  {} 
   
   Variable(const std::string& name) : 
-    name_(name), init_var_(false)
+    name_(name)
   {}
 
-  Variable(const std::string& name, const bool& init_var) : 
-    name_(name), init_var_(init_var)
-  {}
-    
   virtual ~Variable(){}
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
@@ -969,14 +964,9 @@ public:
     return name_;
   }
 
-  bool get_init_var() const
-  {
-    return init_var_;
-  }
 
 private:
   std::string name_;
-  bool init_var_;
 };
 
 /**
@@ -984,11 +974,8 @@ private:
  */ 
 class Parameter : public FactorNode {
 public:
-  Parameter()
-  {}  
-  
-  Parameter(const std::string& name) : 
-    name_(name)
+  Parameter(const std::string& name, const int& derivative_count, const int& id) : 
+    name_(name), derivative_count_(derivative_count), phase_id_(id)
   {}
     
   virtual ~Parameter(){}
@@ -1003,7 +990,7 @@ public:
     n->name_ = name_;
     return n;
   }
-    
+
   virtual std::string get_node_type_name() const {
     return "Parameter";
   }
@@ -1024,8 +1011,38 @@ public:
     return name_;
   }
 
+  
+  void set_derivative_count(const int& dc)
+  {
+    derivative_count_ = dc;
+  }
+
+  
+  int get_derivative_count() const
+  {
+    return derivative_count_;
+  }
+
+  
+  void set_phase_id(const int& id)
+  {
+    phase_id_ = id;
+  }
+
+  
+  int get_phase_id() const
+  {
+    return phase_id_;
+  }
+
+
 private:
+  Parameter()
+  {} 
+  
   std::string name_;
+  int derivative_count_;
+  int phase_id_;
 };
 
 

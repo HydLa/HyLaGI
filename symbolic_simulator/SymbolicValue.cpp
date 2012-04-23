@@ -14,22 +14,13 @@ bool SymbolicValue::is_undefined() const
   return (node_==NULL);
 }
 
-SymbolicValue::SymbolicValue():is_unique_(true){}
+SymbolicValue::SymbolicValue(){}
 
 SymbolicValue::SymbolicValue(const std::string &str){
   node_.reset((new hydla::parse_tree::Number(str)));
-  is_unique_=true;
 }
 SymbolicValue::SymbolicValue(const SymbolicValue::node_sptr & node){
   node_ = node;
-  is_unique_=true;
-}
-
-//定量的に一意に定まるかどうか．
-//複数の不等号から値が一意に決定する場合は考慮しない？
-bool SymbolicValue::is_unique() const
-{
-  return is_unique_;
 }
 
 

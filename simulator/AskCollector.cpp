@@ -56,11 +56,6 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   assert(negative_asks);
   assert(positive_asks);
 
-  HYDLA_LOGGER_CLOSURE(
-    "#*** ask collector ***\n", 
-    "--- expanded always from previous phase ---\n",
-    NodeDumper(expanded_always->begin(), expanded_always->end()));
-
   expanded_always_ = expanded_always;
   negative_asks_   = negative_asks;
   positive_asks_   = positive_asks;
@@ -87,16 +82,6 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   // 展開済みalwaysノードのリストの更新
   expanded_always->insert(new_expanded_always_.begin(), 
                           new_expanded_always_.end());
-
-  HYDLA_LOGGER_CLOSURE(
-    "#*** ask collector ***\n", 
-    "--- positive asks ---\n", 
-    NodeDumper(positive_asks->begin(), positive_asks->end()),
-    "--- negative asks ---\n",
-    NodeDumper(negative_asks->begin(), negative_asks->end()));
-  HYDLA_LOGGER_DEBUG(
-	"--- expanded always ---\n",
-    NodeDumper(expanded_always->begin(), expanded_always->end()));
 }
 
 

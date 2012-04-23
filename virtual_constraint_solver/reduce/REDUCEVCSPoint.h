@@ -21,12 +21,6 @@ public virtual_constraint_solver_t
 public:
   typedef SExpParser::const_tree_iter_t const_tree_iter_t;
 
-  typedef std::set<REDUCEStringSender::var_info_t> constraint_store_vars_t;
-
-  typedef std::pair<std::set<std::set<REDUCEValue> >, constraint_store_vars_t> constraint_store_t;
-//  typedef std::pair<std::set<const_tree_iter_t>, constraint_store_vars_t> constraint_store_t;
-
-
   REDUCEVCSPoint(REDUCELink* cl);
 
   virtual ~REDUCEVCSPoint();
@@ -41,21 +35,11 @@ public:
    * 引数で制約を渡された場合は一時的に制約ストアに追加する．
    */
   virtual VCSResult check_consistency();
-  virtual VCSResult check_consistency(const constraints_t& constraints);
 
   /**
    * 現在の制約ストアから与えたaskが導出可能かどうか
    */
   virtual VCSResult check_entailment(const node_sptr &node);
-
-  /**
-   * askの導出状態が変化するまで積分をおこなう
-   */
-  virtual VCSResult integrate(
-      integrate_result_t& integrate_result,
-      const constraints_t &constraints,
-      const time_t& current_time,
-      const time_t& max_time);
 
   /**
    * 

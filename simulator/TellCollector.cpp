@@ -1,5 +1,6 @@
 #include "TellCollector.h"
 #include "Logger.h"
+#include "TreeInfixPrinter.h"
 
 #include <assert.h>
 #include <iostream>
@@ -16,7 +17,7 @@ struct NodeDumper {
   NodeDumper(T it, T end) 
   {
     for(; it!=end; ++it) {
-      ss << **it << "\n";
+      ss << hydla::parse_tree::TreeInfixPrinter().get_infix_string(*it) << "\n";
     }
   }
 
@@ -49,6 +50,7 @@ void TellCollector::collect(tells_t*                 tells,
                             const expanded_always_t* expanded_always,                   
                             const positive_asks_t*   positive_asks)
 {
+  HYDLA_LOGGER_CLOSURE("#*** Begin TellCollector::collect ***\n");
   assert(expanded_always);
   assert(tells);
   assert(positive_asks);
@@ -81,6 +83,8 @@ void TellCollector::collect(tells_t*                 tells,
     "#*** tell collector ***\n", 
     "--- collected tells ---\n", 
     NodeDumper(tells->begin(), tells->end()));
+    
+  HYDLA_LOGGER_CLOSURE("#*** End TellCollector::collect ***\n");
 }
 
 // êßñÒéÆ

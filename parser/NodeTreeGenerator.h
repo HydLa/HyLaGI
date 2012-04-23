@@ -161,7 +161,7 @@ private:
       case RI_LessEqual:    {return node_factory_->create<LessEqual>();}
       case RI_Greater:      {return node_factory_->create<Greater>();}
       case RI_GreaterEqual: {return node_factory_->create<GreaterEqual>();}
-      default: assert(0);
+      default: assert(0); return node_factory_->create<Equal>();
     }
   }
   

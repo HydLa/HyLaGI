@@ -25,67 +25,27 @@ class MathematicaExpressionConverter
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::parameter_t parameter_t;
   
   public:
-  typedef enum{
-    NODE_PLUS,
-    NODE_SUBTRACT,
-    NODE_TIMES,
-    NODE_DIVIDE,
-    NODE_POWER,
-    NODE_DIFFERENTIAL,
-    NODE_PREVIOUS,
-    NODE_SQRT
-  }nodeType;
   
   MathematicaExpressionConverter(){}
   virtual ~MathematicaExpressionConverter(){}
 
   typedef hydla::parse_tree::node_sptr node_sptr;
-  typedef node_sptr (function_for_node)(const std::string &expr, std::string::size_type &now, const nodeType &);
-  typedef function_for_node *p_function_for_node;
-  typedef struct tag_function_and_node{
-    p_function_for_node function;
-    nodeType node;
-    tag_function_and_node(p_function_for_node func, nodeType nod):function(func), node(nod){}
-  }function_and_node;
-  //Mathematica文字列と処理&ノードの対応関係
-  typedef std::map<std::string, function_and_node> string_map_t;
-  static string_map_t string_map_;
 
   //初期化
   static void initialize();
 
-
-  //文字列とってvalueに変換する
-  static value_t convert_math_string_to_symbolic_value(const std::string &expr);
-  
-  static void add_parameter(variable_t &variable, parameter_t &parameter);
-  static void clear_parameter_map();
+  /**
+   * 受信してvalueに変換する
+   */
+  static node_sptr receive_and_make_symbolic_value(MathLink &ml);
 
   /**
    * （vairable）=（node）の形のノードを返す
    */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
 
-  
-  //値を記号定数を用いた表現にする
-  static void set_parameter_on_value(value_t &val, const parameter_t &par);
-  
-  
   //valと関係演算子を元に、rangeを設定する
   static void set_range(const value_t &val, value_range_t &range, const int& relop);
-  
-  
-  private:
-  
-  //各ノードに対応する処理．（注：関数）
-  static function_for_node for_derivative;
-  static function_for_node for_unary_node;
-  static function_for_node for_binary_node;
-  
-  //再帰で呼び出していく方
-  static node_sptr convert_math_string_to_symbolic_tree(const std::string &expr, std::string::size_type &now);
-  
-  static std::map<variable_t, parameter_t> variable_parameter_map_;
 };
 
 } // namespace mathematica

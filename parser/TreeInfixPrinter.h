@@ -22,8 +22,14 @@ class TreeInfixPrinter:
     PAR_N_P_S_T_D_P,
   }needParenthesis;
 
-  //valueとって文字列に変換して出力する
+  /**
+   * ノードを引数に取り，中値記法形式で出力する
+   */
   std::ostream& print_infix(const node_sptr &, std::ostream&);
+  /**
+   * ノードを引数に取り，中値記法形式にして返す
+   */
+  std::string get_infix_string(const node_sptr &);
 
   private:
   
@@ -33,7 +39,6 @@ class TreeInfixPrinter:
   void print_binary_node(const BinaryNode &, const std::string &symbol,
                           const needParenthesis &pre_par = PAR_NONE, const needParenthesis &post_par = PAR_NONE);
   void print_unary_node(const UnaryNode &, const std::string &pre, const std::string &post);
-
 
   void print_factor_node(const FactorNode &, const std::string &pre, const std::string &post);
 

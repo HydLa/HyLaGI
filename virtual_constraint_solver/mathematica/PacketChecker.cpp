@@ -13,7 +13,6 @@ PacketChecker::~PacketChecker()
 void PacketChecker::check(){
   int pkt;
   // 結果を受け取る（受け取るまで待ち続ける）
-  std::cout << "in check()" << std::endl;
   while(true){
     if((pkt = ml_.MLNextPacket()) == ILLEGALPKT){
       std::cout << "illegal packet" << std::endl;
@@ -85,9 +84,8 @@ void PacketChecker::check(){
 
 }
 
-void PacketChecker::check2(){
+void PacketChecker::check_after_return(){
   // Returnパケット以降のチェック
-  std::cout << "in check2()" << std::endl;
   switch(ml_.MLGetType()){ // 現行オブジェクトの型を得る
   case MLTKSTR: // 文字列
     strCase();
@@ -126,17 +124,14 @@ void PacketChecker::check2(){
 }
 
 void PacketChecker::strCase(){
-  std::cout << "str" << std::endl;
   std::cout << "#string:\"" << ml_.get_string() << "\"" << std::endl;
 }
 
 void PacketChecker::symCase(){
-  std::cout << "symbol" << std::endl;
-  std::cout << "#symname:" << ml_.get_string() << std::endl;
+  std::cout << "#symbol name:" << ml_.get_string() << std::endl;
 }
 
 void PacketChecker::intCase(){
-  std::cout << "int" << std::endl;
   int n;
   if(! ml_.MLGetInteger(&n)){
     std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
@@ -146,22 +141,18 @@ void PacketChecker::intCase(){
 }
 
 void PacketChecker::funcCase(){
-  std::cout << "func" << std::endl;
   int funcarg;
   if(! ml_.MLGetArgCount(&funcarg)){
     std::cout << "#funcCase:MLGetArgCount:unable to get the number of arguments from ml" << std::endl;
     throw MathLinkError("MLGetArgCount", ml_.MLError());
   }
-  std::cout << "#funcarg:" << funcarg << std::endl;
+  std::cout << "#function argc:" << funcarg << std::endl;
   switch(ml_.MLGetNext()){ //
   case MLTKFUNC: // 関数（Derivative[1][f]におけるDerivative[1]のように）
-    std::cout << "#funcCase:case MLTKFUNC" << std::endl;
-    
     funcCase();
     break;
   case MLTKSYM: // シンボル（記号）
-    std::cout << "#funcCase:case MLTKSYM" << std::endl;
-    std::cout << "#funcname:" << ml_.get_symbol() << std::endl;
+    std::cout << "#function name:" << ml_.get_string() << std::endl;
     break;
   default:
     ;

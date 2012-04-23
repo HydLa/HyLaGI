@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdexcept>
 #include <sstream>
+#include "Logger.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "ml32i1m.lib")
@@ -139,6 +140,7 @@ public:
       throw MathLinkError("get_symbol", MLError());
     }
     std::string sym(s);
+    HYDLA_LOGGER_VCS("%% get_symbol:", sym);
     MLReleaseSymbol(s);
     return sym;
   }
@@ -158,6 +160,7 @@ public:
       throw MathLinkError("get_string", MLError());
     }
     std::string str(s);
+    HYDLA_LOGGER_VCS("%% get_string:", str);
     MLReleaseString(s);
     return str;
   }
@@ -172,6 +175,7 @@ public:
     if(!MLGetInteger(&i)) {
       throw MathLinkError("get_integer", MLError());      
     }
+    HYDLA_LOGGER_VCS("%% get_integer:", i);
     return i;
   }
 
@@ -202,7 +206,24 @@ public:
   void MLReleaseString(const char *s)     {return ::MLReleaseString(link_, s);}
 
   int MLPutNext(int type)                 {return ::MLPutNext(link_, type);}
-  int MLGetNext()                         {return ::MLGetNext(link_);}
+  int MLGetNext()                         {
+    int ret = ::MLGetNext(link_);
+    switch (ret){
+      case MLTKSTR:
+        HYDLA_LOGGER_VCS("%% MLTKSTR(MLGetNext)");
+        break;
+      case MLTKSYM:
+        HYDLA_LOGGER_VCS("%% MLTKSYM(MLGetNext)");
+        break;
+      case MLTKINT:
+        HYDLA_LOGGER_VCS("%% MLTKINT(MLGetNext)");
+        break;
+      case MLTKFUNC:
+        HYDLA_LOGGER_VCS("%% MLTKFUNC(MLGetNext)");
+        break;
+    }
+    return ret;
+  }
 
   int MLPutArgCount(int n)                {return ::MLPutArgCount(link_, n);}
   int MLGetArgCount(int *n)               {return ::MLGetArgCount(link_, n);}

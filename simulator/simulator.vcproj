@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DefaultParameter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\DefaultVariable.h"
 				>
 			</File>
@@ -246,6 +250,10 @@
 			</File>
 			<File
 				RelativePath=".\Types.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ValueRange.h"
 				>
 			</File>
 			<File

@@ -29,7 +29,7 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Variable> no
   continuity_map_t::iterator find = variables_.find(node->get_name());
   if(find == variables_.end() || find->second < differential_count_){
     if(negative_)
-      variables_[node->get_name()] = -differential_count_ + 1;
+      variables_[node->get_name()] = -differential_count_;
     else
       variables_[node->get_name()] = differential_count_;
   }

@@ -1,29 +1,47 @@
+(* 再帰回数上限を上げてみる *)
+$RecursionLimit = 1000;
+
+
 (*
- * デバッグ用メッセージ出力V数
+ * デバッグ用メッセージ出力関数
  *)
+ 
+SetAttributes[debugPrint, HoldAll];
+
 If[optUseDebugPrint,
   debugPrint[arg___] := Print[InputForm[{arg}]],
+  (* delimiterAddedString[", ", Map[(StringJoin[ToString[Unevaluated[#]], ": ", ToString[InputForm[Evaluate[#] ] ] ])&, {Unevaluated[arg] } ] ] ], *)
   debugPrint[arg___] := Null];
+
+
 
 (*
  * 関数呼び出しを再現するための文字列出力を行う
  *)
-inputPrint[name_, arg___] := Print[StringJoin[name, "[", delimiterString[",", Map[InputForm,{arg}] ], "]" ] ];
+ 
+inputPrint[name_, arg___] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
 
-delimiterString[del_, {h_}] := ToString[h];
-delimiterString[del_, {h_, t__}] := StringJoin[ToString[h], del, delimiterString[del, {t}] ];
+
+delimiterAddedString[del_, {h_}] := h;
+
+delimiterAddedString[del_, {h_, t__}] := StringJoin[h, del, delimiterAddedString[del, {t}] ];
 
 
 (*
  * グローバル変数
- * constraints: 現在扱っている制約集合（IPでは変数についてのみ）
- * pconstraints: IPで現在扱っている定数についての条件の集合
- * variables: 制約集合に出現する変数のリスト（PPでは定数も含む）
- * parameters: 制約集合に出現する定数のリスト
+ * constraint: 現在のフェーズでの制約
+ * pConstraint: 定数についての制約
+ * variables: 制約に出現する変数のリスト
+ * parameters: 記号定数のリスト
+ * isTemporary：制約の追加を一時的なものとするか．
+ * tmpConstraint: 一時的に追加された制約
+ * tmpVariables: 一時制約に出現する変数のリスト
+ * guard:
+ * guardVars:
  *)
 
-(* ルールのリストを受けて，tについてのルールを除いたものを返す関数 *)
-removeRuleForTime[ruleList_] := DeleteCases[ruleList, t -> _];
+
+(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
 
 getReverseRelop[relop_] := Switch[relop,
                                   Equal, Equal,
@@ -33,502 +51,248 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 
-(* 与えられた式の中の，Cに関する制約と，tの下限となる式を抜き出す関数．
- * 全部Andでつながれてるものという前提．
- * Inequalityは無視．
- * IPなのでtに関する等式も無視する．もしCを連続的な値としてtとの等式にしてきた場合は駄目な気がするけど，多分それは無いはず．
- * あと，Cやtに関する制約は，それぞれについて解かれているという前提．こっちは結構怪しいか．
- *)
+(* ポイントフェーズにおける無矛盾性判定 *)
 
-getValidExpression[expr_, pars_] := Block[
-  {underBounds, constraintsForC, listOfC, tmpExpr, parameterConstraints},
-  underBounds = {};
-  constraintsForC = {};
-  parameterConstraints = {};
-  listOfC = {};
-  For[i=1, i <= Length[expr], i++,
-    tmpExpr = expr[[i]];
-    (* まず，不等式は全部LessもしくはLessEqualにする． *)
-    If[Head[tmpExpr] === Greater || Head[tmpExpr] === GreaterEqual,
-      tmpExpr = getReverseRelop[Head[tmpExpr] ] [tmpExpr[[2]], tmpExpr[[1]] ]
-    ];
-    (* 右辺がtなら下限リストに追加．そうでないなら定数か，そうでないならCについての制約かをチェックする *)
-    If[tmpExpr[[2]] === t,
-      (* tについては不等式のみを受け付ける *)
-      If[Head[tmpExpr] === Less || Head[tmpExpr] === LessEqual,
-        underBounds = Append[underBounds, tmpExpr[[1]] ]
-      ],
-      If[MemberQ[pars, tmpExpr[[1]] ] || MemberQ[pars, tmpExpr[[2]] ], 
-        parameterConstraints = Append[parameterConstraints, tmpExpr],
-        If[Head[ tmpExpr[[1]] ] === C,
-          constraintsForC = Append[constraintsForC, tmpExpr];
-          listOfC = Union[listOfC, {tmpExpr[[1]] } ],
-          If[Head[ tmpExpr[[2]] ] === C,
-            constraintsForC = Append[constraintsForC, tmpExpr];
-            listOfC = Union[listOfC, {tmpExpr[[2]] } ]
-          ]
-        ]
-      ]
-    ]
-  ];
-  {underBounds, constraintsForC, listOfC, parameterConstraints}
-];
-
-(*
- * 論理積でつながれた各tの下限リストを，再帰で1つずつ調べていく関数．
- * 1つでも定数値に関係なく0以下にできないものがあれば2を返す．
- * そうでなく，1つでも定数値によっては0以下にできないものがあれば3を返す．
- * いずれでもないなら1を返す．
- *)
-checkInfForEach[underBounds_, constraintsForC_, otherConstraints_, pars_, listOfC_] := Block[
-  {ret, restRet, tmp, expr},
-  If[underBounds === {},
-    {1},
-    expr = underBounds[[1]];
-    If[pars==={}&&listOfC==={},
-      (* パラメータが無いなら単純に下限で決まる *)
-      If[expr>0,
-        {2},
-        {1}
-      ],
-      (* 0以下にできるなら，導出できる可能性がある *)
-      tmp = Quiet[Reduce[Join[constraintsForC, otherConstraints, {expr <= 0}] , pars ] ];
-      If[tmp === False,
-        {2},
-        (* 必ず導出できるかどうかを判定 *)
-        If[Quiet[Reduce[ForAll[pars, And@@otherConstraints, Reduce[Join[constraintsForC, {expr <= 0}] ] ] ] ] =!= False,
-          checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC],
-          restRet = checkInfForEach[Rest[underBounds], constraintsForC, otherConstraints, pars, listOfC];
-          Switch[restRet[[1]],
-            1, {3, tmp},
-            2, {2},
-            3, {3, Reduce[restRet[[2]]&&tmp, Reals]}
-          ]
-        ]
-      ]
-    ]
-  ]
-];
-
-(*
- * 論理和でつながれた各tの下限候補を，再帰で1つずつ調べていく関数．
- * 1つでも定数値に関係なく0以下にできるものがあれば{1}を返す．
- * そうでないなら，1つでも定数値によっては0以下にできるものがあれば{3}を返す．
- * いずれでもないなら{2}を返す．
- *)
-
-checkInf[candidates_, constraints_, pars_] := Block[
-  {ret, restRet, underBounds, constraintsForC, listOfC},
-  If[Length[candidates] == 0,
-    {2},
-    ret = Map[LogicalExpand, candidates[[1]]];
-    
-
-    (* tの最小値候補を調べるため，tの下限とt以外の変数についての制約と出現する変数のリストを抽出する． *)
-    {underBounds, constraintsForC, listOfC, otherConstraints} = getValidExpression[ret, pars];
-    otherConstraints = applyList[Reduce[And[And@@otherConstraints, constraints], Reals]];
-    otherConstraints = Map[LogicalExpand, otherConstraints];
-    
-
-    If[underBounds === {},
-      (* 候補が存在しなければ導出不可能なので，次を試す *)
-      checkInf[Rest[candidates], constraints, pars],
-      (* 候補が存在するなら，それを試す．*)
-      ret = checkInfForEach[underBounds, constraintsForC, otherConstraints, pars, listOfC ];
-      If[ret[[1]] != 2 && Quiet[Reduce[ForAll[pars, And@@constraints, Reduce[otherConstraints] ] ] ] === False,
-        If[ret[[1]] == 1,
-          ret = {3, And@@otherConstraints},
-          ret = {3, Reduce[ret[[2]] && And@@otherConstraints, Reals]}
-        ]
-      ];
-      Switch[ret[[1]],
-        1, {1},
-          (* 無理なら，次を試す． *)
-        2, checkInf[Rest[candidates], constraints, pars ],
-        3,
-          (* 定数値によっては可能な場合，次以降で{1}があれば{1}を．そうでなければ{3}を返す． *)
-          restRet = checkInf[Rest[candidates], constraints, pars];
-          Switch[restRet[[1]],
-            1, {1},
-            2, {3, ret[[2]] },
-            3, {3, Reduce[ ret[[2]] || restRet[[2]], Reals ] }
-          ]
-      ]
-    ]
-  ]
-];
-
-
-(*
- * 戻り値のリストの先頭：
- *  0 : Solver Error
- *  1 : 充足
- *  2 : 矛盾
- *)
-
-checkEntailmentInterval[guard_, expr_, vars_] := (
-  checkEntailmentIntervalMain[guard, expr&&constraints, Union[vars, variables], pconstraints, parameters]
+checkConsistencyPoint[] := (
+  checkConsistencyPoint[constraint && tmpConstraint && guard, pConstraint, Union[variables, tmpVariables, guardVars]]
 );
 
-checkEntailmentIntervalMain[guard_, expr_, vars_, pexpr_, pars_] := 
-Quiet[
+checkConsistencyPoint[cons_, pcons_, vars_] := (
   Check[
     Block[
-      {tStore, sol, otherExpr, condition},
-      inputPrint["checkEntailmentIntervalMain", guard, expr, vars, pexpr,  pars];
-      sol = exDSolve[expr, vars];
-      If[sol === overconstraint,
-        {2},
-        If[sol === underconstraint || sol[[1]] === {} ,
-          (* 警告出したりした方が良いかも？ *)
-          {1},
-          tStore = sol[[1]];
-          tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
-          otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
-          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual, Inequality, Unequal}, Head[#] ] || # === False)&];
-          
-          (* otherExprにtStoreを適用する *)
-          otherExpr = otherExpr /. tStore;
-          condition = guard /. tStore;
-          (* まず，t>0で条件を満たす可能性があるかを調べる *)
-          sol = LogicalExpand[Quiet[Check[Reduce[{(And@@otherExpr) && condition && t > 0 && pexpr}, t],
-                        False, {Reduce::nsmet}], {Reduce::nsmet}]];
-          If[sol === False,
-            {2},
-            (* リストのリストにする *)
-            sol = applyListToOr[sol];
-            sol = Map[applyList, sol];
-            (* tの最大下界を0とできる可能性を調べる． *)
-            sol = checkInf[sol, pexpr, pars];
-            {sol[[1]]}
-          ]
-        ]
-      ]
+      {cpTrue, cpFalse},
+      inputPrint["checkConsistencyPoint", cons, pcons, vars];
+      Quiet[
+        cpTrue = Reduce[Exists[vars, cons && pcons], Reals], {Reduce::useq}
+      ];
+      Quiet[
+        cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
+      ];
+      {cpTrue, cpFalse} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
+      {cpTrue, cpFalse}
     ],
-    {0, $MessageList}
+    {0, $MessageList, ToString[{cpTrue, cpFalse}]}
   ]
-];
+);
+
+(* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyIntervalMain[constraints, variables, pconstraints, parameters]
+  checkConsistencyInterval[constraint && tmpConstraint, pConstraint, guard, guardVars, Union[variables, tmpVariables]]
 );
 
+appendZeroVars[vars_] := Join[vars, vars /. x_[t] -> x[0]];
 
-checkConsistencyTemporaryInterval[expr_, vars_, pexpr_, pars_] :=  (
-  checkConsistencyIntervalMain[constraints && expr, Union[vars, variables], pconstraints && pexpr, Union[pars, parameters] ]
-);
-
-
-checkConsistencyTemporaryInterval[expr_, vars_] :=  (
-  checkConsistencyIntervalMain[constraints && expr, Union[vars, variables], pconstraints, parameters]
-);
-
-
-
-checkConsistencyIntervalMain[expr_, vars_, pexpr_, pars_] :=  
-Quiet[
+(* TODO 微分方程式を解いたら，その結果を再利用する *)
+checkConsistencyInterval[cons_, pcons_, gua_, gVars_, vars_] :=  
+Block[
+  {tStore, sol, otherCons, originalOther, tCons, dVars, otherVars, i, cpTrue, cpFalse},
   Check[
-    Block[
-      {tStore, sol, otherExpr, condition},
-      inputPrint["checkConsistencyIntervalMain", expr, vars, pexpr,  pars];
-      sol = exDSolve[expr, vars];
-      If[sol === overconstraint,
-        {2},
-        If[sol === underconstraint || sol[[1]] === {} ,
-          (* 警告出したりした方が良いかも？ *)
-          {1},
-          tStore = sol[[1]];
-          tStore = Map[(# -> createIntegratedValue[#, tStore])&, vars];
-          otherExpr = Fold[(If[Head[#2] === And, Join[#1, List@@#2], Append[#1, #2]])&, {}, Simplify[expr]];
-          otherExpr = Select[otherExpr, (MemberQ[{Or, Less, LessEqual, Greater, GreaterEqual, Inequality, Unequal}, Head[#] ] || # === False)&];
-          
-          (* otherExprにtStoreを適用する *)
-          otherExpr = otherExpr /. tStore;
-          (* まず，t>0で条件を満たす可能性があるかを調べる *)
-          sol = LogicalExpand[Quiet[Check[Reduce[{And@@otherExpr && t > 0 && pexpr}, t],
-                        False, {Reduce::nsmet}], {Reduce::nsmet}]];
-          If[sol === False,
-            {2},
-            (* リストのリストにする *)
-            sol = applyListToOr[sol];
-            sol = Map[applyList, sol];
-            (* tの最大下界を0とできる可能性を調べる． *)
-            sol = checkInf[sol, pexpr, pars];
-            {sol[[1]]}
-          ]
-        ]
-      ]
-    ],
-    {0, $MessageList}
-  ]
-];
-
-
-
-removeP[par_] := First[StringCases[ToString[par], StartOfString ~~ "p" ~~ x__ -> x]];
-
-renameVar[varName_] := Block[
-  {renamedVarName, derivativeCount = 0, prevFlag = 0,
-   getDerivativeCountPoint, removeUsrVar
-  },  
-
-  getDerivativeCountPoint[Derivative[n_][var_]] := n;
-  removeUsrVar[var_] := First[StringCases[ToString[var], "usrVar" ~~ x__ -> x]];
-
-  (* 変数名に'がつく場合の処理 *)
-  If[MemberQ[{varName}, Derivative[n_][x_], Infinity],
-    derivativeCount = getDerivativeCountPoint[varName];
-    renamedVarName = removeDash[varName],
-    renamedVarName = varName
-  ];
-  (* 変数名にprevがつく場合の処理 *)
-  If[Head[renamedVarName] === prev,
-    renamedVarName = First[renamedVarName];
-    prevFlag = 1
-  ];
-
-  (*変数名の頭についている "usrVar"を取り除く （名前の頭がusrVarじゃないのはinvalidVarか定数名） *)
-  If[StringMatchQ[ToString[renamedVarName], "usrVar" ~~ x__],
-    (* true *)
-    renamedVarName = removeUsrVar[renamedVarName];
-    (* この時点で単体の変数名のはず． *)
-    If[Length[renamedVarName] === 0,
-      {renamedVarName, derivativeCount, prevFlag},
-      (* 式形式のものはハネる *)
-      invalidVar],
-    (* false *)
-    If[StringMatchQ[ToString[renamedVarName], "p" ~~ x__],
-     (*定数名の頭についている "p"を取り除く 名前の頭がpじゃないのはinvalidVar． *)
-      renamedVarName = removeP[renamedVarName];
-      (* 定数はprev_flagを-1にすることで表す *)
-      {renamedVarName, derivativeCount, -1},
-      invalidVar
-    ]
-  ]
-];
-
-(* 変数とその値に関する式のリストを、変数表的形式に変換 *)
-getExprCode[expr_] := Switch[Head[expr],
-  Equal, 0,
-  Less, 1,
-  Greater, 2,
-  LessEqual, 3,
-  GreaterEqual, 4
-];
-
-printConstraintStore[] := (
-  Print[InputForm[{"constraints:", constraints, "pconstraints:", pconstraints}]];
-  {}
-);
-
-convertCSToVM[] := Block[
-  {formatExprs, applyParameter, resultExprs},
-  applyEqualityRule[expr_, undeterminedVariables_, rules_] := Block[
-    {tmp, complement},
-    tmp = expr;
-    complement = Complement[getVariables[tmp[[2]] ], undeterminedVariables];
-    If[Head[tmp] === Equal,
-      While[ tmp =!= True && Length[ complement ] > 0,
-        tmp[[2]] = tmp[[2]] /. rules;
-        complement = Complement[getVariables[tmp[[2]] ], undeterminedVariables];
+    inputPrint["checkConsistencyInterval", cons, pcons, gua, gVars, vars];
+    sol = exDSolve[cons, vars];
+    If[sol[[1]] === overConstraint,
+      Return[{False, pcons}]
+    ];
+    
+    If[sol[[1]] === underConstraint,
+      (* 制約不足で微分方程式が解けない場合は，単純に各変数値およびその微分値が矛盾しないかを調べる *)
+      tStore = {};
+      otherVars = vars;
+      otherCons = cons,
+      
+      (* 微分方程式が解けた場合は，微分方程式を解くのに使われなかった式との整合性を調べる *)
+      originalOther = And[And@@sol[[2]], gua];
+      otherCons = False;
+      dVars = sol[[3]];
+      otherVars = sol[[4]];
+      For[i = 1, i <= Length[sol[[1]] ], i++,
+        tStore = Map[(# -> createIntegratedValue[#, sol[[1]] [[i]]])&, dVars];
+        otherCons = Or[otherCons, originalOther /. tStore ]
       ]
     ];
-    tmp
-  ];
-  
-  formatExprs[exprs_] := Block[
-    {determinedVariables, undeterminedVariables, undeterminedExprs, rhsVariables, retExprs, rules, tmp},
-    If[Cases[exprs, Except[True]]==={},
-      {},
-      
-      retExprs = adjustExprs[exprs];
-      
-      retExprs = reducePrevVariable[retExprs];
-      
-      (* 式を{（変数名）, （関係演算子コード）, (値のフル文字列)｝の形式に変換する *)
-      retExprs = DeleteCases[Map[({renameVar[#[[1]]], 
-                        getExprCode[#], 
-                        ToString[FullForm[#[[2]]]] }) &, 
-                        retExprs],
-                  {invalidVar, _, _}];
-      retExprs
-    ]
-  ];
-  
-  debugPrint["@convertCSToVM: constraints", constraints, "variables", variables, "parameters", parameters];
-  constraints = LogicalExpand[constraints];
-  If[Head[constraints] === Or,
-    resultExprs = Map[(applyList[#])&, List@@constraints],
-    resultExprs = Map[(applyList[#])&, {constraints}]
-  ];
-  resultExprs = Map[formatExprs, resultExprs];
-  debugPrint["@convertCSToVM resultExprs:", resultExprs];
-  resultExprs
+    (* Existsの第一引数はHold（HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある（気がする） *)
+    tCons = Reduce[Exists[Evaluate[Union[appendZeroVars[otherVars], gVars]], otherCons && pcons], Reals];
+    If[tCons === False, Return[{False, pcons}] ];
+    
+    cpTrue = Reduce[Quiet[Minimize[{t, tCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
+    
+    cpFalse = Reduce[pcons && !cpTrue, Reals];
+    {cpTrue, cpFalse} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
+    {cpTrue, cpFalse}
+    ,
+    {0, $MessageList, {tStore, sol, otherCons, originalOther, tCons, dVars, otherVars, i, cpTrue, cpFalse}}
+  ]
+]
+
+(* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
+
+
+
+createVariableMap[] := createVariableMap[constraint, variables];
+
+
+createVariableMap[cons_, vars_] := Block[
+  {ret},
+  inputPrint["createVariableMap", cons, vars];
+  ret = createMap[cons, hasVariable, vars];
+  ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
+  debugPrint[ret];
+  ret
 ];
 
+
+createVariableMapInterval[] := createVariableMapInterval[constraint, variables, parameters];
+
+createVariableMapInterval[cons_, vars_, pars_] := Block[
+  {sol, originalOther, otherCons, dVars, tStore, cStore, i, ret},
+  inputPrint["createVariableMapInterval", cons, vars, pars];
+  sol = exDSolve[cons, vars];
+  (* 微分方程式が解けた場合は，微分方程式を解くのに使われなかった式との整合性を調べる *)
+  originalOther = And@@sol[[2]];
+  cStore = False;
+  dVars = sol[[3]];
+  otherVars = sol[[4]];
+  For[i = 1, i <= Length[sol[[1]] ], i++,
+    tStore = Map[(# -> createIntegratedValue[#, sol[[1]] [[i]]])&, dVars];
+    cStore = Or[cStore, (originalOther /. tStore) && And@@Map[(Equal@@#)&, tStore] ]
+  ];
+  ret = createMap[cStore, hasVariable, vars];
+  ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
+  debugPrint[ret];
+  ret
+];
+
+createParameterMap[] := createMap[pConstraint, hasParameter, {}];
+
+createMap[cons_, judge_, vars_] := Block[
+  {map},
+  inputPrint["createMap", cons, judge, vars];
+  If[cons === True || cons === False, Return[cons]];
+  
+  map = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], cons], vars, Reals];
+  
+  map = LogicalExpand[map];
+  map = applyListToOr[map];
+  map = Map[(applyList[#])&, map];
+  
+  map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
+  debugPrint[map];
+  map
+];
+
+
 (* 式中に変数名が出現するか否か *)
+
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
 (* 式中に出現する変数を取得 *)
+
 getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter..]];
 
-(* 式が変数そのものか否か *)
-isVariable[exprs_] := StringMatchQ[ToString[exprs], "usrVar" ~~ __];
 
-(* 式が定数そのものか否か *)
-isParameter[exprs_] := StringMatchQ[ToString[exprs], "p" ~~ __];
+(* 式中に定数名が出現するか否か *)
+
+hasParameter[exprs_] := Length[StringCases[ToString[exprs], "parameter[" ~~ LetterCharacter]] > 0;
 
 
-(* 必ず関係演算子の左側に変数名が入るようにする *)
-adjustExprs[andExprs_] := 
-  Fold[(If[Not[hasVariable[#2[[1]]]],
-          (* true *)
-          If[hasVariable[#2[[2]]],
-            (* true *)
-            (* 逆になってるので、演算子を逆にして追加する *)
-            Append[#1, getReverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
-            (* false *)
-            (* パラメータ制約の場合にここに入る *)
-            If[isParameter[#2[[2]]],
-              (* true *)
-              (* 逆になってるので、演算子を逆にして追加する *)
-              Append[#1, getReverseRelop[Head[#2]][#2[[2]], #2[[1]]]],
-              (* false *)
-              Append[#1, #2]]],
-          (* false *)
-          Append[#1, #2]]) &,
-       {}, andExprs];
+(* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
+
+adjustExprs[andExprs_, judgeFunction_] := 
+  Fold[
+    (If[Not[judgeFunction[#2[[1]] ] ] && judgeFunction[#2[[2]] ],
+       (* 逆になってるので、演算子を逆にして追加する *)
+       Append[#1, getReverseRelop[Head[#2] ][#2[[2]], #2[[1]] ] ],
+       Append[#1, #2]]) &,
+    {},
+    andExprs
+  ];
 
 
 resetConstraint[] := (
-  constraints = True;
-  pconstraints = True;
-  variables = {};
+  constraint = True;
+  pConstraint = True;
+  tmpConstraint = True;
+  variables = tmpVariables = prevVariables = {};
+  isTemporary = False;
+  guard = True;
+  guardVars = {};
   parameters = {};
 );
 
+
 addConstraint[cons_, vars_] := (
-  constraints = constraints && cons;
-  variables = Union[variables, vars];
-  debugPrint["constraints:", constraints, "variables:", variables];
+  If[isTemporary,
+    tmpVariables = Union[tmpVariables, vars];
+    tmpConstraint = Reduce[tmpConstraint && cons, tmpVariables, Reals],
+	variables = Union[variables, vars];
+	constraint = Reduce[constraint && cons, variables, Reals]
+  ];
+  debugPrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
 );
 
-addConstraint[cons_, vars_, pcons_, pars_] := (
-  pconstraints = pconstraints && pcons;
+addVariables[vars_] := (
+  If[isTemporary,
+    tmpVariables = Union[tmpVariables, vars],
+	variables = Union[variables, vars]
+  ];
+  debugPrint[vars, variables, tmpVariables];
+);
+
+setGuard[gu_, vars_] := (
+  guard = gu;
+  guardVars = vars;
+  debugPrint[ gu, vars, guard, guardVars];
+);
+
+startTemporary[] := (
+  isTemporary = True;
+);
+
+endTemporary[] := (
+  isTemporary = False;
+  resetTemporaryConstraint[];
+);
+
+resetTemporaryConstraint[] := (
+  tmpConstraint = True;
+  tmpVariables = {};
+  guard = True;
+  guardVars = {};
+);
+
+
+addParameterConstraint[pcons_, pars_] := (
+  pConstraint = Reduce[pConstraint && pcons, Reals];
   parameters = Union[parameters, pars];
-  addConstraint[cons, vars];
-  debugPrint["pconstraints:", pconstraints, "parameters:", parameters];
+  debugPrint[pConstraint, pars];
 );
 
 
-(* 制約がすべてインクリメンタルに増えていく実装ならこっちだけ使いたい．毎回解いた結果に更新していくからたぶん高速 *)
-checkConsistency[] := Block[
-  {sol},
-  sol = checkConsistencyByReduce[constraints, pconstraints, variables, parameters];
-  If[sol[[1]] == 1, constraints = sol[[2]]; sol = {1}  ];
-  sol
+(* 変数名からDerivativeやtを取り，微分回数とともに返す *)
+removeDash[var_] := Block[
+   {ret},
+   If[Head[var] === parameter, Return[var]];
+   ret = var /. x_[t] -> x;
+   If[MatchQ[Head[ret], Derivative[_]],
+     ret /. Derivative[d_][x_] -> {x, d},
+     {ret, 0}
+   ]
 ];
 
-(* 一時的に制約を追加して充足可能性判定 *)
-checkConsistencyTemporary[expr_, pexpr_, vars_, pars_] := (
-  {checkConsistencyByReduce[constraints && expr, pconstraints && pexpr, Union[variables, vars], Union[parameters, pars][[1]] ]}
-);
-
-checkConsistencyTemporary[expr_, vars_] := (
- {checkConsistencyByReduce[constraints && expr, pconstraints, Union[variables, vars], parameters ][[1]] }
-);
-
-checkConsistencyByReduce[expr_, pexpr_, vars_, pars_] := 
-Quiet[
-  Check[
-    Block[
-      {sol},
-      inputPrint["checkConsistencyByReduce", expr,  pexpr, vars, pars];
-      Quiet[
-        sol = Reduce[expr&&pexpr, vars, Reals], {Reduce::useq}
-      ];
-      If[sol === False,
-        {2},
-        If[pars === {},
-          {1, sol},
-          If[ Reduce[Exists[pars, pexpr, sol === False]] === True,
-            {3},
-            {1, sol}
-          ]
-        ]
-      ]
-    ],
-    {0, $MessageList}
-  ]
-];
-
-(* 変数名から 「\[CloseCurlyQuote]」を取る *)
-removeDash[var_] := (
-   var /. Derivative[_][x_] -> x
-);
-
-(* 
- * tellVarsを元に、その初期値制約が必要かどうかを調べる
- * 初期値制約中に出現する変数がvars内になければ不要
- *)
-isRequiredConstraint[cons_, tellVars_] := Block[{
-   consVar
-},
-   consVar = cons /. x_[0] == y_ -> x;
-   removeDash[consVar];
-   If[MemberQ[tellVars, consVar], True, False]
-];
-
-(* tellVarsを元に、その変数が必要かどうかを調べる *)
-isRequiredVariable[var_, tellVars_] := (
-   If[MemberQ[tellVars, var], True, False]
-);
-
-
-getNDVars[vars_] := Union[Map[(removeDash[#])&, vars]];
-
-(* ある変数xについて、x[t]==a と x[0]==a があった場合は、x'[t]==0を消去 （あれば） *)
-removeTrivialCons[cons_, consVars_] := Block[
-  {exprRule, varSol, removedExpr,
-   removeTrivialConsUnit, getRequiredVars},
-
-  removeTrivialConsUnit[expr_, var_]:=(
-    (* 方程式をルール化する *)
-    exprRule = Map[(Rule @@ #) &, expr];
-    varSol = var[t] /. exprRule;
-    If[MemberQ[expr, var[0] == varSol] && MemberQ[expr, var'[t] == 0],
-      (* true *)
-      removedExpr = DeleteCases[expr, var'[t] == 0],
-
-      (* false *)
-      removedExpr = expr
-    ];
-    removedExpr
-  );
-
-  getRequiredVars[vars_] := (
-    Union[Map[(# /. Derivative[n_][x_][t] -> Derivative[n - 1][x]
-                         /.  Derivative[0][x_][t] -> x) &, vars]]
-  );
-
-  Fold[(Intersection[#1, removeTrivialConsUnit[cons, #2]]) &,
-       cons, getRequiredVars[consVars]]
-];
-
-(* Reduceで得られた結果をリスト形式にする *)
 (* AndではなくListでくくる *)
+
 applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
-  
+
+
 (* OrではなくListでくくる *)
+
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
-  
-hasPrevVariableAtLeft[expr_] := MemberQ[{expr[[1]]}, prev[x_, y_], Infinity];
-hasPrevVariableAtRight[expr_] := MemberQ[{expr[[2]]}, prev[x_, y_], Infinity];
 
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 *)
+
 makeListFromPiecewise[minT_, others_] := Block[
   {tmpCondition = False},
   tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
@@ -543,157 +307,84 @@ makeListFromPiecewise[minT_, others_] := Block[
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
-calculateNextPointPhaseTime[includeZero_, maxTime_, discCause_, otherExpr_] := Block[
-{
-  addMinTime, selectCondTime,
-  sol, minT, paramVars, compareResult, resultList, condTimeList,
-  calculateMinTimeList, convertExpr, removeInequalityInList, findMinTime, compareMinTime,
-  compareMinTimeList, divideDisjunction
-},
-  (* 条件を満たす最小の時刻と，その条件の組を求める *)
-  (* maxTは理想的には無くても可能だが，あった方が事故がおきにくいのと高速化が見込めるかもしれないため追加 *)
-  findMinTime[ask_, condition_, maxT_] := (
-    sol = Quiet[Check[Reduce[ask&&condition&&t>0&&maxT>t, t, Reals],
-                      errorSol,
-                      {Reduce::nsmet}],
-                {Reduce::nsmet}];
-    If[sol=!=False && sol=!=errorSol, 
-      (* true *)
-      (* 成り立つtの最小値を求める *)
-      minT = First[Quiet[Minimize[{t, sol}, {t}], 
-                         Minimize::wksol]],
-      (* false *)
-      minT = error
-    ];
-    If[minT === error,
-      {},
-      (* Piecewiseなら分解*)
-      If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, condition}}];
-      (* 時刻が0となる場合を取り除く．安全のためにあった方が良いが，理想的には無くても動くはず？ *)
-      minT = Select[minT, (#[[1]] =!= 0)&];
-      minT
-    ]
-  );
-  
-  
-  unifyCases[{}] := {};
-  (* 時刻と条件の組のリストを見て，時刻が重複しているものは結合する *)
-  unifyCases[{h_, t___}] := ( Block[
-      {select, result, next},
-      select = Select[{t}, (#[[1]] === h[[1]])&];
-      next = Complement[{t}, select];
-      select = Or@@Map[(#[[2]])&, select];
-      result = {h[[1]], Reduce[Or[h[[2]], select]]};
-      Append[unifyCases[next], result]
-    ]
-  );
-  
-  (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
-  compareMinTime[timeCond1_, timeCond2_] := ( Block[
-      {
-        case1, case2,
-        andCond
-      },
-      andCond = Reduce[timeCond1[[2]]&&timeCond2[[2]], Reals];
-      If[andCond === False, Return[{}] ];
-      case1 = Quiet[Reduce[And[andCond,timeCond1[[1]] < timeCond2[[1]]], Reals]];
-      If[ case1 === False, Return[{{timeCond2[[1]], andCond}} ] ];
-      case2 = Reduce[andCond&&!case1];
-      If[ case2 === False, Return[{{timeCond1[[1]], andCond}} ] ];
-      Return[ {{timeCond2[[1]],  case2}, {timeCond1[[1]], case1}} ];
-    ]
-  );
-  
-  (* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
-  compareMinTimeList[list1_, list2_] := ( Block[
-      {resultList, i, j},
-      If[list2 === {}, Return[list1] ];
-      resultList = {};
-      For[i = 1, i <= Length[list1], i++,
-        For[j = 1, j <= Length[list2], j++,
-          resultList = Join[resultList, compareMinTime[list1[[i]], list2[[j]] ] ]
-        ]
-      ];
-      resultList
-    ]
-  );
+ 
+calculateNextPointPhaseTime[maxTime_, discCause_] := 
+  calculateNextPointPhaseTime[maxTime, discCause, constraint, pConstraint, variables];
 
-  
-  (* 最小時刻と条件の組をリストアップする関数 *)
-  calculateMinTimeList[guardList_, condition_, maxT_] := (
-    Block[
-      {findResult, i},
-      timeCaseList = {{maxT, condition}};
-      For[i = 1, i <= Length[guardList], i++,
-        findResult = findMinTime[guardList[[i]], (condition), maxT];
-        timeCaseList = compareMinTimeList[timeCaseList, findResult];
-        timeCaseList = unifyCases[timeCaseList]
-      ];
-      timeCaseList
-    ]
-  );
-  
-  (*  リストからInequalityを除く *)
-  removeInequalityInList[{}] := {};
-  removeInequalityInList[{h_,t___}] := ( Block[
-      {
-        resultList
-      },
-      If[Head[h] === Inequality,
-        resultList = Join[{Reduce[h[[2]][h[[3]], h[[1]]], h[[3]]]},
-             {h[[4]][h[[3]], h[[5]]]}
-        ],
-        If[h === True,(* ついでにTrueも除く *)
-          resultList = {},
-          resultList = {h}
-        ];
-      ];
-      Join[resultList, removeInequalityInList[{t}]]
-    ]
-  );
-  
-  
-  (* リストを整形する*)
-  convertExpr[list_] := ( Block[
-    {
-      tmpList
-    },
-      tmpList = removeInequalityInList[list];
-      tmpList = adjustExprs[tmpList];
-      tmpList = Map[({removeP[#[[1]]], getExprCode[#], ToString[FullForm[#[[2]]]]})&, tmpList];
-      tmpList
-    ]
-  );
-  
-  (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
-  divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
-  
-  (* 最小時刻と条件の組のリストを求める *)
-  resultList = calculateMinTimeList[discCause, otherExpr, maxTime];
-  
-  (*
-  resultList = First[Quiet[Minimize[{t, (Or@@discCause || t == maxTime) && otherExpr && t>0}, {t}], 
-                         Minimize::wksol]];
-  If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, otherExpr], resultList = {{resultList, otherExpr}}];
-  
-  Print["result", resultList];*)
-  
 
-  (* 整形して結果を返す *)
-  resultList = Map[({#[[1]],LogicalExpand[#[[2]]]})&, resultList];
-  resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-  resultList = Map[({#[[1]], applyList[#[[2]]]})&, resultList];
-  resultList = Map[({ToString[FullForm[#[[1]]]], convertExpr[#[[2]]], If[Simplify[#[[1]]] === Simplify[maxTime], 1, 0]})&, resultList];
-  resultList
+(* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
+
+divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
+
+(* 変数とその値に関する式のリストを、変数表的形式に変換 *)
+getExprCode[expr_] := Switch[Head[expr],
+  Equal, 0,
+  Less, 1,
+  Greater, 2,
+  LessEqual, 3,
+  GreaterEqual, 4
 ];
 
 
+replaceIntegerToString[num_] := If[num < 0, minus[IntegerString[num]], IntegerString[num] ];
+integerString[expr_] := (
+  expr /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ])
+       /. (x_Integer :> replaceIntegerToString[x])
+);
 
-getVariableName[variable_[_]] := variable;
-getVariableName[Derivative[n_][f_][_]] := f;
+(* リストを整形する *)
+(* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
+(* TODO:複素数の要素に対しても，任意精度への対応（文字列への変換とか）を行う *)
+convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list];
+
+calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check[
+  Block[
+    {
+      dSol,
+      timeAppliedCauses,
+      resultList,
+      originalOther
+    },
+    
+    inputPrint["calculateNextPointPhaseTime", maxTime, discCause, cons, pCons, vars];
+    
+    (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果(tStore)をそのまま引き継ぐこともできるはず *)
+    dSol = exDSolve[cons, vars];
+    
+    
+    (* 次にそれらをdiscCauseに適用する *)
+    dVars = dSol[[3]];
+    timeAppliedCauses = False;
+    For[i = 1, i <= Length[dSol[[1]] ], i++,
+      tStore = Map[(# -> createIntegratedValue[#, dSol[[1]] [[i]]])&, dVars];
+      timeAppliedCauses = Or[timeAppliedCauses, Or@@discCause /. tStore ]
+    ];
+    
+    
+    (* 最後に，あらかじめ求められているはずのotherConsとpconsを付加してMinimize *)  
+    
+    resultList = Quiet[Minimize[{t, (timeAppliedCauses || t == maxTime) && pCons && t>0}, {t}], 
+                           {Minimize::wksol, Minimize::infeas}];
+    resultList = First[resultList];
+
+    If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
+    
+    
+    (* 整形して結果を返す *)
+    resultList = Map[({#[[1]],LogicalExpand[#[[2]] ]})&, resultList];
+    resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+    resultList = Map[({#[[1]], Cases[applyList[#[[2]] ], Except[True]] })&, resultList];
+    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], hasParameter ] ], If[FullSimplify[#[[1]] ] === FullSimplify[maxTime], 1, 0]})&, resultList];
+    {1, resultList}
+  ],
+  {0, $MessageList}
+];
+
 
 getDerivativeCount[variable_[_]] := 0;
+
 getDerivativeCount[Derivative[n_][f_][_]] := n;
+
 
 createIntegratedValue[variable_, integRule_] := (
   Simplify[
@@ -702,233 +393,105 @@ createIntegratedValue[variable_, integRule_] := (
              /. x_[t] -> x]
 );
 
-(* prev変数に関するルールのリストを作り，その後prev変数がなくなるまでルール適用を繰り返す *)
-reducePrevVariable[{}, {r___}] := {r};
-reducePrevVariable[{h_, t___}, {r___}] :=
+
+(* 変数についての制約のうち，微分方程式を解ければ解く． 
+   微分方程式を解くにあたって邪魔になる式は解かずに，返り値の要素の第2要素とする
+   制約が多すぎて微分方程式が解けない場合は，Falseを
+   制約が少なすぎて値が決定できない場合は，Trueを返すものとする
+   デフォルト連続性を信頼して，dvnulの可能性は考えないことにする
+   @return 考えられる解と，無視した式の組のリスト
+    *)
+
+exDSolve[expr_, vars_] := 
+Quiet[
   Block[
-    {lhs, rhs, cRule},
-    If[Head[h] =!= Equal, Return[reducePrevVariable[{t}, Append[{r}, h] ] ] ];
-    If[hasPrevVariableAtLeft[h],
-      lhs = Map[( # /. h[[1]] -> h[[2]] )&, {t}];
-      rhs = Map[( # /. h[[1]] -> h[[2]] )&, {r}];
-      reducePrevVariable[lhs, rhs],
-      If[hasPrevVariableAtRight[h], Return[reducePrevVariable[Append[{t}, getReverseRelop[Head[h] ] [h[[2]], h[[1]] ] ], {r} ] ] ];
-      If[ !MemberQ[h, C[k_], Infinity],
-          reducePrevVariable[{t}, Append[{r}, h]],
-        If[ Head[h] === Element,
-          reducePrevVariable[{t}, {r}],
-          cRule = Rule@@Reduce[h, {C[1]}];
-          lhs = Map[( # /. cRule )&, {t}];
-          rhs = Map[( # /. cRule )&, {r}];
-          reducePrevVariable[lhs, rhs]
-        ]
-      ]
-    ]
-  ];
-
-reducePrevVariable[{h_, t___}] := reducePrevVariable[{h, t}, {}];
-
-(* パラメータ制約を得る *)
-getParamCons[cons_] := Cases[cons, x_ /; Not[hasVariable[x]], {1}];
-(* 式中のパラメータ変数を得る *)
-getParamVar[paramCons_] := Cases[paramCons, x_ /; Not[NumericQ[x]], Infinity];
-
-
-
-exDSolve[expr_, vars_] := Block[
-{sol, DExpr, DExprVars, NDExpr, otherExpr, paramCons},
-  sol = And@@reducePrevVariable[applyList[expr]];
-  paramCons = getParamCons[sol];
-  
-  sol = Quiet[LogicalExpand[Reduce[Cases[Complement[applyList[sol], paramCons],Except[True]], vars, Reals]], Reduce::useq];
-  If[sol===False,
-    overconstraint,
-    If[sol===True,
-      {{}, {}},
-      (* 1つだけ採用 *)
-      (* TODO: 複数解ある場合も考える *)
-      If[Head[sol]===Or, 
-        sol = First[sol] 
-      ];
-      sol = applyList[sol];
-      
-      {DExpr, DExprVars, NDExpr, otherExpr} = splitExprs[sol];
-      (* 定数関数の場合に過剰決定系の原因となる微分制約を取り除く *)
-      DExpr = removeTrivialCons[DExpr, DExprVars];
-      Quiet[
-        Check[
-          Check[
-            If[Cases[DExpr, Except[True]] === {},
-              (* ストアが空の場合はDSolveが解けないので空集合を返す *)
-              sol = {},           
-              sol = DSolve[DExpr, DExprVars, t];
-              
-              (* 1つだけ採用 *)
-              (* TODO: 複数解ある場合も考える *)
-              sol = First[sol]
-            ];
-            
-            sol = If[Length[NDExpr] == 0, {sol},
-                 FullSimplify[ExpToTrig[Quiet[
-                     Solve[Join[Map[(Equal @@ #) &, sol], TrigToExp[NDExpr]], getNDVars[vars]],
-                 {Solve::incnst, Solve::ifun, Solve::svars}]]]
-            ];
-            
-            If[sol =!= {},
-              {sol[[1]], Join[otherExpr, paramCons]},
-              overconstraint
-            ],
-            underconstraint,
-            {DSolve::underdet, Solve::svars, DSolve::dsmsm, DSolve::deqx, 
-             DSolve::bvnr, DSolve::bvsing}
-          ],
-          overconstraint,
-          {DSolve::overdet, DSolve::bvnul}
-        ],
-        {DSolve::underdet, DSolve::overdet, DSolve::deqx, 
-         Solve::svars, DSolve::bvnr, DSolve::bvsing, 
-         DSolve::bvnul, DSolve::dsmsm, Solve::incnst, Solve::ifun}
-      ]
+    {sol, dExpr, dVars, otherExpr, otherVars},
+    
+    sol = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], expr], vars, Reals];
+    {dExpr, dVars, otherExpr, otherVars} = splitExprs[sol];
+    
+    
+    If[dExpr === {},
+      (* 微分方程式が存在しない *)
+      Return[{underConstraint, otherExpr}]
+    ];
+    Check[
+      Check[
+        sol = DSolve[dExpr, dVars, t];
+        {sol, otherExpr, dVars, otherVars},
+        {underConstraint, otherExpr},
+        {DSolve::underdet, Solve::svars}
+      ],
+      {overConstraint, otherExpr},
+      {DSolve::overdet}
     ]
   ]
 ];
 
-(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
-(* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
+
+(* 微分方程式を解くにあたり，邪魔になる式（下記）を除く
+   ・不等式
+   ・同じ変数についての，初期値で無い言及のうち，重複するもの（例：x[t] == 1 && x'[t] == 0のx'[t] == 0）
+     ※ただし，他に新規変数が出現している場合は省かない（例：x[t] == 1 && x'[t] == y'[t]）
+   除いた式は第3要素として返す．
+   第2要素と第4要素はそれぞれ，必要な式と邪魔な式に含まれる変数のリスト *)
+
 splitExprs[expr_] := Block[
-  {NDExpr, DExpr, DExprVars, otherExpr},
-  otherExpr = Select[expr, (Head[#] =!= Equal) &];
-  NDExpr = Select[Complement[expr, otherExpr], 
-                  (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
-  DExpr = Complement[expr, Join[otherExpr, NDExpr]];
-  DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
-                         {}, DExpr]];
-  {DExpr, DExprVars, NDExpr, otherExpr}
-];
-
-
-
-
-(* 変数[0]を変数[t]に変える*)
-changeZeroTot[var_] := (
-   var /. x_[0] -> x[t]
-);
-
-
-isPrevVariable[expr_] := MemberQ[{expr}, prev[x_], Infinity];
-isTimeVariable[expr_] := MemberQ[{expr}, x_[t], Infinity];
-
-
-
-(*
- * askの導出状態が変化するまで積分をおこなう
- *)
-integrateCalc[expr_, 
-              discCause_,
-              vars_, 
-              maxTime_] := integrateCalcMain[expr&&constraints&&pconstraints, discCause, Union[vars, variables], maxTime];
-
-integrateCalcMain[expr_, 
-              discCause_,
-              vars_, 
-              maxTime_] := Quiet[Check[Block[
-{
-  cons,
-  tmpIntegSol,
-  tmpDiscCause,
-  tmpMinT, 
-  tmpVarMap,
-  endTimeFlag,
-  tmpRet,
-  NDExpr,
-  DExpr,
-  DExprVars,
-  otherExpr,
-  returnVars,
-  solVars,
-  paramCons
-},
-  cons = And@@reducePrevVariable[List@@expr];
-  returnVars = vars;
-  returnVars = Map[changeZeroTot, returnVars];
-  returnVars = Select[returnVars, isTimeVariable];
-  inputPrint["integrateCalcMain", expr, discCause, vars, maxTime];
-  If[cons =!= True,
-    paramCons = getParamCons[applyList[cons]];
-    tmpIntegSol = exDSolve[cons, returnVars][[1]];
-    If[tmpIntegSol === underconstraint, Return[{0, "under_constraint"}] ];
-    tmpIntegSol = Map[(#[[1]] -> FullSimplify[#[[2]] ])&, tmpIntegSol];
-      
-    (* DSolveの結果には，y'[t]など微分値についてのルールが含まれていないのでreturnVars全てに対してルールを作る *)
-    tmpIntegSol = Map[(# -> createIntegratedValue[#, tmpIntegSol])&, returnVars];
-    debugPrint["@Integrate tmpIntegSol", tmpIntegSol];
-
-    tmpDiscCause = Map[(# /. tmpIntegSol) &, discCause];
-    paramCons = Reduce[paramCons];
-    
-    debugPrint["@Integrate nextpointphase arg:", {False, maxTime, tmpDiscCause, paramCons}];
-    tmpMinT = calculateNextPointPhaseTime[False, maxTime, tmpDiscCause, paramCons];
-
-    tmpVarMap = 
-      Map[({getVariableName[#], 
-            getDerivativeCount[#], 
-            createIntegratedValue[#, tmpIntegSol] // FullForm // ToString})&, 
-          returnVars],
-
-    (* cons === True *)
-    debugPrint["@Integrate tmpIntegSol:"];
-    debugPrint["@Integrate nextpointphase arg: no next point phase"];
-    tmpMinT = {{maxTime // FullForm // ToString, {}, 1}};
-    tmpVarMap = {};
+  {dExprs, appendedTimeVars, dVars, iter, otherExprs, otherVars, getTimeVars, getNoInitialTimeVars, timeVars, exprStack},
+  
+  getTimeVars[list1_, list2_] := Union[list1, Cases[list2, _[t] | _[0], Infinity] /. x_[0] -> x[t]];
+  getNoInitialTimeVars[list_] := Union[Cases[list, _[t], Infinity] /. Derivative[_][f_][_] -> f[t]];
+  
+  (* TODO: iterとか使っちゃダメ *)
+  otherExprs = dExprs = appendedTimeVars = {};
+  exprStack = List@@expr;
+  iter = 0;
+  While[Length[exprStack] > 0,
+    iter++;
+    timeVars = getNoInitialTimeVars[exprStack[[1]] ];
+    (* Print["exprStack:", exprStack, ", otherExprs:", otherExprs, ", dExprs:", dExprs, ", timeVars:", timeVars, ", appendedTimeVars:", appendedTimeVars]; *)
+    If[Length[Select[timeVars, (FreeQ[appendedTimeVars, #])& ] ] > 1 && iter<Length[exprStack] ,
+      exprStack = Append[exprStack, exprStack[[1]] ],
+      iter = 0;
+      If[Head[exprStack[[1]] ] =!= Equal || (Length[timeVars] > 0 && Length[Select[timeVars, (FreeQ[appendedTimeVars, #])& ] ] == 0),
+        otherExprs = Append[otherExprs, exprStack[[1]] ],
+        dExprs = Append[dExprs, exprStack[[1]] ];
+        appendedTimeVars = Union[appendedTimeVars, timeVars]
+      ];
+    ];
+    exprStack = Delete[exprStack, 1]
   ];
-  tmpRet = {1,
-            tmpVarMap,
-            tmpMinT};
-  debugPrint["tmpRet:", tmpRet];
-  tmpRet
-],
-  {0, $MessageList}
-]];
+  
+  (* Print["dExprs:", dExprs, ", otherExprs:", otherExprs]; *)
+  dVars = Fold[(getTimeVars[#1,#2])&, {}, dExprs];
+  otherVars = Fold[(getTimeVars[#1,#2])&, {}, otherExprs];
+  {dExprs, dVars, otherExprs, otherVars}
+];
 
 
 (*
  * 式に対して与えられた時間を適用する
  *)
+
 applyTime2Expr[expr_, time_] := Block[
   {appliedExpr},
-  debugPrint["expr:", expr,
-             "time:", time];
+  debugPrint[expr, time];
   appliedExpr = Simplify[(expr /. t -> time)];
   If[Element[appliedExpr, Reals] =!= False,
-    {1, appliedExpr  // FullForm // ToString},
+    {1, integerString[appliedExpr]},
     {0}]
 ];
-
-(*
- * formからtoまでのリストをinterval間隔で作成する
- * 最後に必ずtoが来るために，
- * 最後の間隔のみintervalよりも短くなる可能性がある
- *)
-createValueList[from_, to_, interval_] := Block[
-  {sol},
-  sol = NestWhileList[((#) + (interval))&, from, (# <= to)&, 1, Infinity, -1];
-  If[Last[sol] =!= to, 
-      Append[sol, to], 
-      sol]
-];
-
-createOutputTimeList[from_, to_, interval_] :=
-  Map[(ToString[#, InputForm])&, createValueList[from, to, interval]];
-
 
 (*
  * 与えられた式を近似する
  *)
 approxExpr[precision_, expr_] :=
-  Rationalize[N[Simplify[expr], precision + 3], 
-              Divide[1, Power[10, precision]]];
+  integerString[Rationalize[N[Simplify[expr], precision + 3], 
+              Divide[1, Power[10, precision]]]];
+
 
 (* 
  * 与えられたtの式をタイムシフト
  *)
-exprTimeShift[expr_, time_] := ToString[FullForm[Simplify[expr /. t -> t - time ]]];
+
+exprTimeShift[expr_, time_] := integerString[Simplify[expr /. t -> t - time ]];

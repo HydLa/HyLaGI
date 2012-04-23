@@ -10,6 +10,7 @@
 #include "DefaultTreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
+#include "MathematicaVCS.h"
 
 namespace hydla {
 namespace vcs {
@@ -29,18 +30,25 @@ public:
   enum VariableArg {
     VA_Prev,
     VA_None,  
-    VA_Time,  //自動でprevが無効になる
+    VA_Time,
     VA_Zero,
   };
 
   typedef std::map<std::string, int> max_diff_map_t;
   /**
    * 変数データ
-   * (変数名， 微分回数,  prev変数かどうか)
+   * (変数名， 微分回数，送信形式)
    */
-  typedef boost::tuple<std::string, int, bool> var_info_t;
-
+  typedef boost::tuple<std::string, int, VariableArg>       var_info_t;
   typedef std::set<var_info_t>                 var_info_list_t;
+
+  /**
+   * 記号定数データ
+   * (元の変数名， 微分回数，id)
+   */
+  typedef boost::tuple<std::string, int, int>       par_info_t;
+  typedef std::set<par_info_t>                 par_info_list_t;
+  typedef par_info_list_t::const_iterator      pars_const_iterator;
   typedef var_info_list_t::const_iterator      vars_const_iterator;
   typedef hydla::parse_tree::node_sptr         node_sptr;
 
@@ -49,7 +57,6 @@ public:
   // Mathematicaに送る際に定数名につける接頭語
   static const std::string par_prefix;
 
-  PacketSender();
   PacketSender(MathLink& ml);
 
   virtual ~PacketSender();
@@ -78,18 +85,20 @@ public:
   /**
    * 変数の送信
    */
-  void put_var(const var_info_t var, VariableArg variable_arg);
+  void put_var(const var_info_t var);
+  void put_var(const std::string& variable_name, const int& diff_count, VariableArg variable_arg);
 
   /**
    * put_nodeの際に送信された変数群の送信をおこなう
    */
-  void put_vars(VariableArg variable_arg);
+  void put_vars();
   
   
   /**
    * 上2つの記号定数版
    */
-  void put_par(const std::string &name);
+  void put_par(const par_info_t par);
+  void put_par(const std::string& name, const int& diff_count, const int& id);
   void put_pars();
 
 
@@ -175,7 +184,7 @@ private:
 protected:
   /// 送信された変数の一覧
   var_info_list_t vars_;
-  std::set<std::string> pars_;
+  par_info_list_t pars_;
 
   // Differentialノードを何回通ったか
   int differential_count_;

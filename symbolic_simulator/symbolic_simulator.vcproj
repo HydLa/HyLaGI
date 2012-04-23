@@ -157,19 +157,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\SymbolicParameter.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SymbolicSimulator.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\SymbolicValue.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicValueRange.cpp"
 				>
 			</File>
 		</Filter>
@@ -178,14 +170,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\StateResult.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicParameter.h"
-				>
-			</File>
 			<File
 				RelativePath=".\SymbolicSimulator.h"
 				>
@@ -196,10 +180,6 @@
 			</File>
 			<File
 				RelativePath=".\SymbolicValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolicValueRange.h"
 				>
 			</File>
 		</Filter>

@@ -34,6 +34,7 @@ public:
 
   typedef typename phase_state_t::variable_map_t variable_map_t;
   typedef typename phase_state_t::variable_t     variable_t;
+  typedef typename phase_state_t::parameter_t     parameter_t;
   typedef typename phase_state_t::value_t        value_t;
 
   typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
@@ -41,6 +42,8 @@ public:
   typedef boost::shared_ptr<hydla::ch::ModuleSet>          module_set_sptr;
   typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
   typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
+  typedef std::set<variable_t>                             variable_set_t;
+  typedef std::set<parameter_t>                            parameter_set_t;
 
   Simulator()
   {}
@@ -53,16 +56,7 @@ public:
    */
   virtual void simulate()
   {
-    while(!state_stack_.empty()) {
-      phase_state_sptr state(pop_phase_state());
-      state->module_set_container->reset();
-      do{
-        if(simulate_phase_state(state->module_set_container->get_module_set(), state)){
-          state->module_set_container->mark_nodes();
-          break;
-        }
-      }while(state->module_set_container->go_next());
-    }
+    assert(0);
   }
 
   /**
@@ -70,6 +64,11 @@ public:
    */
   virtual void push_phase_state(const phase_state_sptr& state) 
   {
+    HYDLA_LOGGER_PHASE("%% Simulator::push_phase_state\n");
+    HYDLA_LOGGER_PHASE("%% state id", state->id);
+    HYDLA_LOGGER_PHASE("%% state time", state->current_time);
+    HYDLA_LOGGER_PHASE("--- parent state parameter map ---\n", state->parent->variable_map);
+    HYDLA_LOGGER_PHASE("--- state parameter map ---\n", state->parameter_map);
     state_stack_.push(state);
   }
 
@@ -124,7 +123,8 @@ public:
         variable_t v;
         v.name             = it->first;
         v.derivative_count = d;
-        variable_map_.set_variable(v, value_t());
+        variable_set_.insert(v);
+        variable_map_.set_variable(&(*variable_set_.find(v)), value_t());
       }
     }
 
@@ -134,20 +134,24 @@ public:
   }
 
   virtual bool simulate_phase_state(const module_set_sptr& ms, 
-                                    const phase_state_const_sptr& state)
-  {      
+                                    phase_state_sptr& state)
+  {
+    HYDLA_LOGGER_PHASE("#*** Begin Simulator::simulate_phase_state ***");
+    HYDLA_LOGGER_PHASE("%% current time:", state->current_time);
+    HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->parent->variable_map);
+    HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->parameter_map);
+    HYDLA_LOGGER_PHASE("--- module set ---\n",
+          ms->get_name(),
+          "\n",
+          ms->get_infix_string() );
+          
     bool ret = false;
     switch(state->phase) 
     {
     case PointPhase:
 
       { 
-      HYDLA_LOGGER_PHASE(
-          "#***** begin point phase *****",
-          "\n#** module set **\n",
-          ms->get_name(),
-          "\n",
-          ms->get_infix_string() );
+      HYDLA_LOGGER_PHASE("%% begin point phase");
 
         ret = point_phase(ms, state);
         break;
@@ -155,13 +159,7 @@ public:
 
     case IntervalPhase: 
       {
-
-          HYDLA_LOGGER_PHASE(
-          "#***** begin interval phase *****",
-          "\n#** module set **\n",
-          ms->get_name(),
-          "\n",
-          ms->get_infix_string());
+      HYDLA_LOGGER_PHASE("%% begin interval phase");
 
         ret = interval_phase(ms, state);
         break;            
@@ -171,6 +169,7 @@ public:
       assert(0);
     }
 
+    HYDLA_LOGGER_PHASE("#*** End Simulator::simulate_phase_state ***");
     return ret;
   }
 
@@ -216,13 +215,13 @@ public:
    * Point Phaseの処理
    */
   virtual bool point_phase(const module_set_sptr& ms, 
-                           const phase_state_const_sptr& state) = 0;
+                           phase_state_sptr& state) = 0;
 
   /**
    * Interval Phaseの処理
    */
   virtual bool interval_phase(const module_set_sptr& ms, 
-                              const phase_state_const_sptr& state) = 0;
+                              phase_state_sptr& state) = 0;
 
 protected:
   virtual void do_initialize(const parse_tree_sptr& parse_tree)
@@ -235,14 +234,16 @@ protected:
   
   
   /**
-   * シミュレーション中で使用されるすべての変数を格納する表
+   * シミュレーション中で使用される変数表の原型
    */
   variable_map_t variable_map_;
 
-  /**
-   * シミュレーション中で使用されるすべての変数を持つ配列
+  
+  /*
+   * シミュレーション中に使用される変数と記号定数の集合
    */
-  //std::vector<variable_t> variable_set_;
+  variable_set_t variable_set_;
+  parameter_set_t parameter_set_;
 
   /**
    * 各状態を保存しておくためのスタック

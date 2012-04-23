@@ -325,7 +325,7 @@ std::ostream& Definition::dump(std::ostream& s) const
 
 node_sptr Function::clone(){
   node_type_sptr n(new Function(string_));
-  for(int i=0;i<arguments_.size();i++){
+  for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
   return n;
@@ -334,7 +334,7 @@ node_sptr Function::clone(){
 
 node_sptr UnsupportedFunction::clone(){
   node_type_sptr n(new UnsupportedFunction(string_));
-  for(int i=0;i<arguments_.size();i++){
+  for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
   return n;
@@ -362,7 +362,7 @@ std::ostream& ArbitraryNode::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << get_string() << "]";
   s << "[";
-  for(int i=0;i<arguments_.size();i++){
+  for(unsigned int i=0;i<arguments_.size();i++){
      s << *arguments_[i] << ",";
   }
   s << "]";

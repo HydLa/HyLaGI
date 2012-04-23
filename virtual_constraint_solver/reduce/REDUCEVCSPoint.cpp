@@ -18,7 +18,6 @@ namespace reduce {
 REDUCEVCSPoint::REDUCEVCSPoint(REDUCELink* cl) :
   cl_(cl)
 {
-
 }
 
 REDUCEVCSPoint::~REDUCEVCSPoint()
@@ -31,7 +30,7 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
 
   // TODO: •s“™®‹y‚Ñ‹L†’è”‚Ö‚Ì‘Î‰
 
-  HYDLA_LOGGER_VCS("#*** REDUCEVCSPoint::create_variable_map ***");
+  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCSPoint::create_variable_map ***");
 
   REDUCEStringSender rss(*cl_);
 
@@ -349,17 +348,6 @@ VCSResult REDUCEVCSPoint::check_consistency_receive()
   HYDLA_LOGGER_VCS("#*** End REDUCEVCSPoint::check_consistency_receive ***");
 
   return result;  
-}
-
-VCSResult REDUCEVCSPoint::integrate(
-    integrate_result_t& integrate_result,
-    const constraints_t &constraints,
-    const time_t& current_time,
-    const time_t& max_time)
-{
-  // Point‚Å‚ÍintegrateŠÖ”–³Œø
-  assert(0);
-  return VCSR_FALSE;
 }
 
 } // namespace reduce

@@ -2,10 +2,9 @@
 
 #include <cassert>
 
-#include "MathematicaVCSPoint.h"
-#include "MathematicaVCSInterval.h"
 #include "MathematicaExpressionConverter.h"
 #include "PacketSender.h"
+#include "PacketErrorHandler.h"
 #include "PacketChecker.h"
 
 using namespace hydla::vcs;
@@ -20,11 +19,9 @@ void MathematicaVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_p
   mode_ = m;
   switch(m) {
     case hydla::symbolic_simulator::DiscreteMode:
-      vcs_.reset(new MathematicaVCSPoint(&ml_));
       break;
 
     case hydla::symbolic_simulator::ContinuousMode:
-      vcs_.reset(new MathematicaVCSInterval(&ml_, approx_precision));
       break;
 
     default:
@@ -108,10 +105,29 @@ MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
 MathematicaVCS::~MathematicaVCS()
 {}
 
+
+void MathematicaVCS::start_temporary(){
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::start_temporary ***\n");
+  ml_.put_function("startTemporary", 0);
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+  HYDLA_LOGGER_VCS("#*** END MathematicaVCS::start_temporary ***\n");
+}
+
+void MathematicaVCS::end_temporary(){
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::end_temporary ***\n");
+  ml_.put_function("endTemporary", 0);
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+  HYDLA_LOGGER_VCS("#*** END MathematicaVCS::end_temporary ***\n");
+}
+
+
 bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
-  HYDLA_LOGGER_VCS("#*** MathematicaVCS::reset ***\n");
-  
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::reset ***\n");
+
+  is_temporary_ = false;
 
   ml_.put_function("resetConstraint", 0);
   
@@ -119,36 +135,118 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   // PacketChecker pc(ml_);
   // pc.check();
 ///////////////////
-  
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  ml_.put_function("addConstraint", 4);
-  PacketSender ps(ml_);
   {
-    constraints_t constraints;
-    HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);
-    variable_map_t::variable_list_t::const_iterator it = 
-      variable_map.begin();
-    variable_map_t::variable_list_t::const_iterator end = 
-      variable_map.end();
-    //先に送信する必要のある制約の個数を数える
-    for(; it!=end; ++it){
-      if(!it->second.is_undefined()){
-        constraints.push_back(MathematicaExpressionConverter::make_equal(it->first, it->second.get_node(), true));
-      }else if(mode_ == hydla::symbolic_simulator::ContinuousMode){
-        // 値がないなら何かしらの定数を作って送信．
-        parameter_t::increment_id(it->first);
-        parameter_t param(it->first);
-        constraints.push_back(MathematicaExpressionConverter::make_equal(it->first, node_sptr(new Parameter(param.get_name())), true));
+    PacketSender ps(ml_);
+    ml_.put_function("addVariables", 1);
+    ml_.put_function("List", variable_set_->size());
+    for(variable_set_t::const_iterator it = variable_set_->begin(); it != variable_set_->end(); it++){
+      ps.put_var(it->get_name(), it->get_derivative_count(), mode_==hydla::symbolic_simulator::DiscreteMode?PacketSender::VA_None:PacketSender::VA_Time);
+    }
+    HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
+    HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
+    
+    ml_.skip_pkt_until(RETURNPKT);
+    ml_.MLNewPacket();
+  }
+
+  {
+    PacketSender ps(ml_);
+    ml_.put_function("addParameterConstraint", 2);
+    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
+    parameter_map_t::const_iterator it = 
+      parameter_map.begin();
+    int size=0;
+    for(; it!=parameter_map.end(); ++it)
+    {
+      if(!it->second.get_lower_bound().value.is_undefined()){
+        size++;
+      }
+      if(!it->second.get_upper_bound().value.is_undefined()){
+        size++;
       }
     }
-    HYDLA_LOGGER_VCS("size:", constraints.size());
-    ps.put_nodes(constraints, PacketSender::VA_Prev);
+    ml_.put_function("And", size);
+    it = parameter_map.begin();
+    for(; it!=parameter_map.end(); ++it)
+    {
+      {
+        const value_t &value = it->second.get_lower_bound().value;
+        parameter_t& param = *it->first;
+        if(!value.is_undefined()){
+          if(it->second.get_lower_bound().include_bound){
+            ml_.put_function("Greater", 2);
+          }
+          else{
+            ml_.put_function("GreaterEqual", 2);
+          }
+          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+          ps.put_node(value.get_node(), PacketSender::VA_Prev);
+        }
+      }
+      {
+        
+        const value_t &value = it->second.get_upper_bound().value;
+        parameter_t& param = *it->first;
+        if(!value.is_undefined()){
+          if(it->second.get_upper_bound().include_bound){
+            ml_.put_function("Less", 2);
+          }
+          else{
+            ml_.put_function("LessEqual", 2);
+          }
+          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+          ps.put_node(value.get_node(), PacketSender::VA_Prev);
+        }
+      }
+    }
+    ps.put_pars();
+    HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
+    HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
+    
+    ml_.skip_pkt_until(RETURNPKT);
+    ml_.MLNewPacket();
+  
   }
-  ps.put_vars(PacketSender::VA_Prev);
+  
+  
 
 
+  {
+    PacketSender ps(ml_);
+    ml_.put_function("addConstraint", 2);
+    HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);
+    variable_map_t::const_iterator it = 
+      variable_map.begin();
+    int size=0;
+    for(; it!=variable_map.end(); ++it)
+    {
+      if(!it->second.is_undefined()){
+        size++;
+      }
+    }
+    ml_.put_function("And", size);
+    it = variable_map.begin();
+    for(; it!=variable_map.end(); ++it)
+    {
+      if(!it->second.is_undefined()){
+        ml_.put_function("Equal", 2);
+        ps.put_var(it->first->get_name(), it->first->get_derivative_count(), PacketSender::VA_Prev);
+        ps.put_node(it->second.get_node(), PacketSender::VA_Prev);
+      }
+    }
+    ps.put_vars();
+    HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
+    HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
+    
+    ml_.skip_pkt_until(RETURNPKT);
+    ml_.MLNewPacket();
+  
+  }
+
+/*
   {
     constraints_t constraints;
     HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
@@ -178,6 +276,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     HYDLA_LOGGER_VCS("size:", constraints.size());
     ps.put_nodes(constraints, PacketSender::VA_None);
   }
+  
   ps.put_pars();
   
 
@@ -188,80 +287,351 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
+  */
 
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::reset ***\n");
   return true;
 }
 
-void MathematicaVCS::set_continuity(const continuity_map_t& continuity_map){
-  vcs_->set_continuity(continuity_map);
-}
 
-bool MathematicaVCS::create_maps(create_result_t &create_result)
+MathematicaVCS::create_result_t MathematicaVCS::create_maps()
 {
-  return vcs_->create_maps(create_result);
+  
+  HYDLA_LOGGER_VCS(
+    "#*** Begin MathematicaVCS::create_maps ***\n");
+    
+/////////////////// 送信処理
+  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+    ml_.put_function("createVariableMap", 0);
+  }else{
+    ml_.put_function("createVariableMapInterval", 0);
+  }
+
+/////////////////// 受信処理                        
+
+  //PacketChecker pc(ml_);
+  //pc.check();
+
+  HYDLA_LOGGER_EXTERN(
+    "-- math debug print -- \n",
+    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
+  HYDLA_LOGGER_EXTERN((ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
+  ml_.skip_pkt_until(RETURNPKT);
+
+  ml_.MLGetNext();
+
+  // List関数の要素数（式の個数）を得る
+  int or_size = ml_.get_arg_count();
+  HYDLA_LOGGER_VCS("or_size: ", or_size);
+  ml_.MLGetNext();// Listという関数名
+  create_result_t create_result;
+  for(int or_it = 0; or_it < or_size; or_it++){
+    variable_range_map_t map;
+    value_t symbolic_value;
+    ml_.MLGetNext();// 関数であるということと，その引数の数
+    int and_size = ml_.get_arg_count();
+    HYDLA_LOGGER_VCS("and_size: ", and_size);
+    ml_.MLGetNext();// Listという関数名
+    value_range_t tmp_range;
+    for(int i = 0; i < and_size; i++)
+    {
+      //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
+
+      //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
+
+      ml_.MLGetNext();// 関数であるということと，その引数の数
+      ml_.MLGetNext();// Listという関数名
+
+      ml_.MLGetNext();// 関数であるということと，その引数の数
+      ml_.MLGetNext();// Listという関数名
+      
+      ml_.MLGetNext();// 変数名
+      std::string variable_name = ml_.get_symbol();
+      HYDLA_LOGGER_VCS("%% name", variable_name);
+      int variable_derivative_count;
+      variable_derivative_count = ml_.get_integer();
+      HYDLA_LOGGER_VCS("%% derivative_count: ", variable_derivative_count);
+      // 関係演算子のコード
+      int relop_code = ml_.get_integer();
+
+      variable_t* variable_sptr = get_variable(variable_name.substr(6), variable_derivative_count);
+      symbolic_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+      MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
+      HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
+      map.set_variable(variable_sptr, tmp_range);
+    }
+    create_result.result_maps.push_back(map);
+  }
+
+  ml_.MLNewPacket();
+  
+  HYDLA_LOGGER_VCS("#*** END MathematicaVCS::create_maps ***\n");
+  return create_result;
 }
 
 void MathematicaVCS::add_constraint(const constraints_t& constraints)
 {
+  HYDLA_LOGGER_VCS(
+    "#*** Begin MathematicaVCS::add_constraint ***\n");
   
   PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode)?PacketSender::VA_None:PacketSender::VA_Time;
-  HYDLA_LOGGER_VCS(
-    "#*** Begin MathematicaVCS::add_constraint ***");
 
+
+  HYDLA_LOGGER_VCS("%% addConstraint");
   ml_.put_function("addConstraint", 2);
-  
-  
   PacketSender ps(ml_);
+
+  /*
+  for( constraints_t::const_iterator it = constraints.begin();it!=constraints.end();it++){
+    HYDLA_LOGGER_VCS(**it);
+  }
+  */
 
   ps.put_nodes(constraints, arg);
   // varsを渡す
-  ps.put_vars(arg);
+  ps.put_vars();
+  
 
-/////////////////// 受信処理
+  ///////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
 
   HYDLA_LOGGER_EXTERN(
     "-- math debug print -- \n",
     (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
-///////////////////
-
+  /////////////////
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
+
+  HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_constraint ***\n");
+  return;
+}
+
+void MathematicaVCS::add_constraint(const node_sptr& constraint)
+{
+  return add_constraint(constraints_t(1, constraint));
+}
+
+// TODO: add_guardなのかset_guardなのかとか，仕様とかをはっきりさせる
+void MathematicaVCS::add_guard(const node_sptr& guard)
+{
+  HYDLA_LOGGER_VCS(
+    "#*** Begin MathematicaVCS::add_guard ***\n");
   
-  HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_constraint ***");
+  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode)?PacketSender::VA_None:PacketSender::VA_Time;
+
+  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+    ml_.put_function("addConstraint", 2);
+  }else{
+    ml_.put_function("setGuard", 2);
+  }
+  PacketSender ps(ml_);
+
+  ps.put_node(guard, arg);
+  // varsを渡す
+  ps.put_vars();
+  
+
+  ///////////////// 受信処理
+  HYDLA_LOGGER_EXTERN(
+    "-- math debug print -- \n",
+    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
+  HYDLA_LOGGER_VCS( "--- receive ---");
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+
+  HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_guard ***\n");
   return;
 }
 
 
-VCSResult MathematicaVCS::check_entailment(const node_sptr &node)
+
+MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
 {
-  return vcs_->check_entailment(node);
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::check_consistency ***");
+
+  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+    ml_.put_function("checkConsistencyPoint", 0);
+  }else{
+    ml_.put_function("checkConsistencyInterval", 0);
+  }
+  
+/////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
+  
+  // PacketChecker pc(ml_);
+  // pc.check();
+  
+  
+  HYDLA_LOGGER_EXTERN(
+    "-- math debug print -- \n",
+    (ml_.skip_pkt_until(TEXTPKT),
+     ml_.get_string()));
+
+  ml_.skip_pkt_until(RETURNPKT);
+  
+  //まずListが来るはず
+  int token = ml_.MLGetNext();
+  assert(token == MLTKFUNC);
+  token = ml_.MLGetNext();
+  assert(token == MLTKSYM);
+  std::string symbol = ml_.get_symbol();
+  
+  check_consistency_result_t ret;
+
+  token = ml_.MLGetNext();
+  
+  if(token == MLTKSYM){
+    //TrueかFalseのはず
+    symbol = ml_.get_symbol();
+    if(symbol == "True"){
+      ret.true_parameter_maps.push_back(parameter_map_t());
+    }else{
+      ret.false_parameter_maps.push_back(parameter_map_t());
+    }
+  }else if(token == MLTKINT){
+    HYDLA_LOGGER_VCS("illegal integer:", ml_.get_integer());
+  }else{
+    //更に二重リストが来るはず
+    int map_size = ml_.get_arg_count();
+    ml_.MLGetNext();
+    ml_.MLGetNext();
+
+    for(int i=0; i < map_size; i++){
+      parameter_map_t tmp_map;
+      receive_parameter_map(tmp_map);
+      ret.true_parameter_maps.push_back(tmp_map);
+    }
+    
+    token = ml_.MLGetType();
+    if(token == MLTKSYM){
+      //TrueかFalseのはず
+      symbol = ml_.get_symbol();
+      if(symbol != "False"){
+        assert(0);
+      }
+    }else{
+      map_size = ml_.get_arg_count();
+      ml_.MLGetNext();    
+      ml_.MLGetNext();
+      for(int i=0; i < map_size; i++){
+        parameter_map_t tmp_map;
+        receive_parameter_map(tmp_map);
+        ret.false_parameter_maps.push_back(tmp_map);
+      }
+    }
+  }
+  //終わりなのでパケットの最後尾までスキップ
+  ml_.MLNewPacket();
+  
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::check_consistency ***");
+  return ret;
 }
 
-VCSResult MathematicaVCS::check_consistency()
-{
-  return vcs_->check_consistency();
-}
-
-
-VCSResult MathematicaVCS::check_consistency(const constraints_t& constraints)
-{
-  return vcs_->check_consistency(constraints);
-}
-
-VCSResult MathematicaVCS::integrate(
-  integrate_result_t& integrate_result,
-  const constraints_t &constraints,
+MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
+  const constraints_t& discrete_cause,
   const time_t& current_time,
   const time_t& max_time)
 {
-  return vcs_->integrate(integrate_result, 
-                         constraints,
-                         current_time, 
-                         max_time);
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCSInterval::calculate_next_PP_time ***");
+
+////////////////// 送信処理
+  PacketSender ps(ml_);
+  
+  // calculateNextPointPhaseTime[maxTime, discCause]を渡したい
+  ml_.put_function("calculateNextPointPhaseTime", 2);
+
+
+  // maxTimeを渡す
+  time_t tmp_time(max_time);
+  tmp_time -= current_time;
+  HYDLA_LOGGER_VCS("%% current time:", current_time);
+  HYDLA_LOGGER_VCS("%% send time:", tmp_time);
+  ps.put_node(tmp_time.get_node(), PacketSender::VA_Time);
+
+  //離散変化の条件を渡す
+  ml_.put_function("List", discrete_cause.size());
+  for(constraints_t::const_iterator it = discrete_cause.begin(); it != discrete_cause.end();it++){
+    ps.put_node(*it, PacketSender::VA_Time);
+  }
+
+////////////////// 受信処理
+
+  // PacketChecker pc(ml_);
+  // pc.check();
+
+  MathematicaExpressionConverter mec;
+  HYDLA_LOGGER_EXTERN(
+    "--- math debug print --- \n",
+    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
+
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLGetNext(); 
+  ml_.MLGetNext(); // Listという関数名
+  ml_.MLGetNext(); // Listの中の先頭要素
+
+  // 求解に成功したかどうか
+  int ret_code = ml_.get_integer();
+
+  //TODO: 例外処理
+  /*
+  if(PacketErrorHandler::handle(&ml_, ret_code)) {
+    throw hydla::vcs::SolveError(input_string);
+  }
+  */
+
+  ml_.MLGetNext();
+  // 次のPPの時刻と，その場合の条件の組，更に終了時刻かどうかを得る
+  HYDLA_LOGGER_VCS("-- receive next PP time --");
+  int next_time_size = ml_.get_arg_count();
+  HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
+  ml_.MLGetNext();
+  PP_time_result_t result;
+  for(int time_it = 0; time_it < next_time_size; time_it++){
+    PP_time_result_t::candidate_t candidate;
+    ml_.MLGetNext();ml_.MLGetNext(); ml_.MLGetNext();
+    // 時刻を受け取る
+    candidate.time = time_t(mec.receive_and_make_symbolic_value(ml_)) + current_time;
+    HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
+    ml_.MLGetNext();
+    receive_parameter_map(candidate.parameter_map);
+    // 条件を受け取る
+    
+    // 終了時刻かどうかを受け取る
+    candidate.is_max_time = ml_.get_integer();
+    HYDLA_LOGGER_VCS("is_max_time: ",  candidate.is_max_time);
+    HYDLA_LOGGER_VCS("--parameter map--\n",  candidate.parameter_map);
+    result.candidates.push_back(candidate);
+  }
+
+  return result;
 }
 
+void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_parameter_map ***");
+  int condition_size = ml_.get_arg_count(); //条件式の数
+  HYDLA_LOGGER_VCS("%% map size:", condition_size);
+  ml_.MLGetNext(); ml_.MLGetNext();
+  value_range_t tmp_range;
+  for(int cond_it = 0; cond_it < condition_size; cond_it++){
+    //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
+    // 最初，Listの引数の数(MLTKFUNC）
+    ml_.MLGetNext(); ml_.MLGetNext(); // これでListの先頭要素まで来る
+    ml_.MLGetNext(); ml_.MLGetNext(); // 先頭要素のparameterを読み飛ばす
+    std::string name = ml_.get_string();
+    int derivative_count = ml_.get_integer();
+    int id = ml_.get_integer();
+    parameter_t* tmp_param = get_parameter(name, derivative_count, id);
+    HYDLA_LOGGER_VCS("%% returned parameter_name: ", *tmp_param);
+    int relop_code = ml_.get_integer();
+    HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
+    value_t tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+    HYDLA_LOGGER_VCS("%% returned value: ", tmp_value.get_string());
+    MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
+    map.set_variable(tmp_param, tmp_range);
+    ml_.MLGetNext();
+  }
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
+}
 
 void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, 
                                               variable_map_t& out_vm, 
@@ -274,8 +644,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
   variable_map_t::const_iterator it  = in_vm.begin();
   variable_map_t::const_iterator end = in_vm.end();
   for(; it!=end; ++it) {
-    HYDLA_LOGGER_VCS("variable : ", it->first);
-
+    HYDLA_LOGGER_VCS("variable : ", *(it->first));
     // 値
     value_t    value;
     if(!it->second.is_undefined()) {
@@ -299,9 +668,8 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
       }
       else {
         assert(ret_code==1);
-        std::string tmp = ml_.get_string();
         MathematicaExpressionConverter mec;
-        value = mec.convert_math_string_to_symbolic_value(tmp);
+        value = value_t(mec.receive_and_make_symbolic_value(ml_));
         HYDLA_LOGGER_REST("value : ", value.get_string());
       }
     }
@@ -497,17 +865,49 @@ bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
 
 void MathematicaVCS::simplify(time_t &time) 
 {
-  HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
-  ml_.put_function("ToString", 1);
-  ml_.put_function("FullForm", 1);
+  ml_.put_function("integerString", 1);
   ml_.put_function("Simplify", 1);
   PacketSender ps(ml_);
   ps.put_node(time.get_node(), PacketSender::VA_None);
   ml_.skip_pkt_until(RETURNPKT);
   MathematicaExpressionConverter mec;
-  time = mec.convert_math_string_to_symbolic_value(ml_.get_string());
+  time = time_t(mec.receive_and_make_symbolic_value(ml_));
+  ml_.MLNewPacket();
 }
 
+
+void MathematicaVCS::set_continuity(const std::string& name, const int& derivative_count)
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::set_continuity ***");
+  PacketSender ps(ml_);
+
+  ml_.put_function("addConstraint", 2);
+  ml_.put_function("Equal", 2);
+
+  ps.put_var(name, derivative_count, PacketSender::VA_Prev);
+  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+    ps.put_var(name, derivative_count, PacketSender::VA_None);
+    ps.put_vars();
+  }
+  else{
+    ps.put_var(name, derivative_count, PacketSender::VA_Zero);
+    ps.put_vars();
+  }
+
+
+  ///////////////// 受信処理
+  HYDLA_LOGGER_VCS( "%%receive");
+
+  HYDLA_LOGGER_EXTERN("--- math debug print ---\n",
+    (ml_.skip_pkt_until(TEXTPKT),ml_.get_string()));
+  
+
+  /////////////////
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::set_init_value ***");
+}
 
 
   //SymbolicValueの時間をずらす
@@ -518,8 +918,10 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_
   ps.put_node(val.get_node(), PacketSender::VA_None);
   ps.put_node(time.get_node(), PacketSender::VA_None);
   ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLGetNext();
   MathematicaExpressionConverter mec;
-  tmp_val = mec.convert_math_string_to_symbolic_value(ml_.get_string());
+  tmp_val = value_t(mec.receive_and_make_symbolic_value(ml_));
+  ml_.MLNewPacket();
   return  tmp_val;
 }
 

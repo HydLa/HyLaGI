@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "Logger.h"
+#include "TreeInfixPrinter.h"
 
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
@@ -15,8 +16,8 @@ namespace mathematica {
 /** Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar" */
 const std::string PacketSender::var_prefix("usrVar");
 
-/** Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê */
-const std::string PacketSender::par_prefix("p");
+/** Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éŠÖ”–¼ */
+const std::string PacketSender::par_prefix("parameter");
 
 std::map<std::string, std::pair<std::string, int> > PacketSender::function_name_map_;
 
@@ -40,12 +41,6 @@ void PacketSender::initialize(){
  */
 PacketSender::PacketSender(MathLink& ml) :
   ml_(&ml),
-  differential_count_(0),
-  in_prev_(false)
-{}
-
-PacketSender::PacketSender() :
-  ml_(NULL),
   differential_count_(0),
   in_prev_(false)
 {}
@@ -158,7 +153,7 @@ void PacketSender::visit(boost::shared_ptr<Function> node)
 
 void PacketSender::visit(boost::shared_ptr<UnsupportedFunction> node)              
 {
-  ml_->put_function(node->get_string(), 1);
+  ml_->put_function(node->get_string(), node->get_arguments_size());
   for(int i=0; i<node->get_arguments_size();i++){
     accept(node->get_argument(i));
   }
@@ -175,12 +170,16 @@ DEFINE_VISIT_FACTOR(E, E)
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
 {
   // •Ï”‚Ì‘—M
+  VariableArg va;
+  if(variable_arg_==VA_None&&in_prev_)
+    va = VA_Prev;
+  else{
+    va = variable_arg_;
+  }
   var_info_t new_var = 
-    boost::make_tuple(node->get_name(), 
-                      differential_count_, 
-                      (in_prev_ && variable_arg_ != VA_Time) || variable_arg_ == VA_Prev);
+    boost::make_tuple(node->get_name(), differential_count_, va);
 
-    put_var(new_var, variable_arg_);
+  put_var(new_var);
 }
 
 // ”š
@@ -199,7 +198,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 void PacketSender::visit(boost::shared_ptr<Parameter> node)
 {    
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
-  put_par(par_prefix + node->get_name());
+  put_par(node->get_name(), node->get_derivative_count(), node->get_phase_id());
 }
 
 // t
@@ -209,26 +208,25 @@ void PacketSender::visit(boost::shared_ptr<SymbolicT> node)
   ml_->put_symbol("t");
 }
 
-void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
+void PacketSender::put_var(const var_info_t var)
 {
-  std::string name(PacketSender::var_prefix + var.get<0>());
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_var ***");
+  std::string name = var.get<0>();;
   int diff_count = var.get<1>();
-  bool prev      = var.get<2>();
-  
+  VariableArg variable_arg = var.get<2>();
+
   HYDLA_LOGGER_REST(
     "PacketSender::put_var: ",
     "name: ", name,
     "\tdiff_count: ", diff_count,
-    "\tprev: ", prev,
     "\tvariable_arg: ", variable_arg);
 
-  // prev•Ï”‚Æ‚µ‚Ä‘—‚é‚©‚Ç‚¤‚©
-  if(prev) {
+  if(variable_arg == VA_Prev){
     ml_->put_function("prev", 2);
     ml_->put_symbol(name);
     ml_->MLPutInteger(diff_count);
   }else{
-  
+    name = PacketSender::var_prefix + name;
     // •Ï”–¼‚Ì[t]‚â[0]‚ª‚Â‚­•ª
     if(variable_arg == VA_Time ||  variable_arg == VA_Zero) {
       ml_->MLPutNext(MLTKFUNC);
@@ -246,12 +244,10 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
       ml_->MLPutInteger(diff_count);
     }
     ml_->put_symbol(name);
-  
+
     switch(variable_arg) {
       case VA_None:
-      case VA_Prev:
         break;
-        
       case VA_Time:
         ml_->put_symbol("t");
         break;
@@ -262,26 +258,44 @@ void PacketSender::put_var(const var_info_t var, VariableArg variable_arg)
         assert(0);
     }
   }
-
   // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
   vars_.insert(var);
   
-  HYDLA_LOGGER_REST(
-    "PacketSender::put_var: vars_size()",
-    vars_.size());
+  HYDLA_LOGGER_REST("#*** End PacketSender::put_var ***");
 }
 
 
-void PacketSender::put_par(const std::string &name)
+void PacketSender::put_var(const std::string& variable_name, const int &diff_count, VariableArg variable_arg)
 {
+  put_var(boost::make_tuple(variable_name, diff_count, variable_arg));
+}
+
+
+void PacketSender::put_par(const par_info_t par)
+{
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_var ***");
+  std::string name = par.get<0>();;
+  int diff_count = par.get<1>(), id = par.get<2>();
+
   HYDLA_LOGGER_REST(
     "PacketSender::put_par: ",
-    "name: ", name);
-
+    "name: ", name,
+    "\tdiff_count: ", diff_count,
+    "\tid: ", id);
+  
+  ml_->put_function(par_prefix, 3);
   ml_->put_symbol(name);
+  ml_->put_integer(diff_count);
+  ml_->put_integer(id);
 
   // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
-  pars_.insert(name);
+  pars_.insert(par);
+}
+
+
+void PacketSender::put_par(const std::string &name, const int &diff_count, const int &id)
+{
+  put_par(boost::make_tuple(name, diff_count, id));
 }
 
 
@@ -292,13 +306,13 @@ void PacketSender::put_par(const std::string &name)
 void PacketSender::put_node(const node_sptr& node, 
                             VariableArg variable_arg)
 {
-  HYDLA_LOGGER_REST("*** Begin PacketSender::put_node ***");
-  HYDLA_LOGGER_REST("node:", *node);
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_node ***");
+  HYDLA_LOGGER_REST("node:", TreeInfixPrinter().get_infix_string(node));
   differential_count_ = 0;
   in_prev_ = false;
   variable_arg_ = variable_arg;
   accept(node);
-  HYDLA_LOGGER_REST("*** END PacketSender::put_node ***");
+  HYDLA_LOGGER_REST("#*** END PacketSender::put_node ***");
 }
 
 
@@ -308,21 +322,20 @@ void PacketSender::put_node(const node_sptr& node,
 void PacketSender::put_nodes(const std::vector<node_sptr>& constraints,
                             VariableArg variable_arg)
 {
-  
-  HYDLA_LOGGER_REST("*** Begin PacketSender::put_nodes ***");
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_nodes ***");
   ml_->put_function("And", constraints.size());
   for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
     put_node(*it, variable_arg);
   }
-  HYDLA_LOGGER_REST("*** End PacketSender::put_nodes: ***");
+  HYDLA_LOGGER_REST("#*** End PacketSender::put_nodes: ***");
 }
 
 /**
  * •Ï”‚Ìˆê——‚ğ‘—MD
  */
-void PacketSender::put_vars(VariableArg variable_arg)
+void PacketSender::put_vars()
 {
-  HYDLA_LOGGER_REST("*** Begin PacketSender::put_vars ***",
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_vars ***",
     "var size:", vars_.size());
   
   ml_->put_function("List", vars_.size());
@@ -330,23 +343,22 @@ void PacketSender::put_vars(VariableArg variable_arg)
   PacketSender::vars_const_iterator it  = vars_begin();
   PacketSender::vars_const_iterator end = vars_end();
   for(; it!=end; ++it) {
-    put_var(*it, variable_arg);
+    put_var(*it);
   }
-  HYDLA_LOGGER_REST("*** End PacketSender::put_vars: ***");
+  HYDLA_LOGGER_REST("#*** End PacketSender::put_vars: ***");
 }
 
 
 void PacketSender::put_pars()
 {
-  HYDLA_LOGGER_REST(
-    "---- PacketSender::put_pars ----\n",
-    "par size:", pars_.size());
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_pars ***");
   
   ml_->put_function("List", pars_.size());
 
-  for(std::set<std::string>::iterator it = pars_.begin(); it!=pars_.end(); ++it) {
+  for(PacketSender::pars_const_iterator it = pars_.begin(); it!=pars_.end(); ++it) {
     put_par(*it);
   }
+  HYDLA_LOGGER_REST("#*** End PacketSender::put_pars ***");
 }
 
 

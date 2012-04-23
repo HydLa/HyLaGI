@@ -29,9 +29,22 @@ typedef enum AskState_ {
   Negative2Positive,
 } AskState;
 
+/**
+ * 
+ */
+typedef enum{
+  TIME_LIMIT,
+  SOME_ERROR,
+  INCONSISTENCY,
+  ASSERTION,
+  NONE
+}CauseOfTermination;
+
 typedef hydla::parse_tree::node_id_t                      node_id_t;
 typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
-typedef boost::shared_ptr<hydla::ch::ModuleSetContainer>  module_set_container_sptr;
+typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
+typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
+typedef hydla::ch::ModuleSetContainer::module_set_list_t  module_set_list_t;
 
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Node> > constraints_t;
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
@@ -44,6 +57,7 @@ typedef ask_set_t                                                negative_asks_t
 typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
 typedef std::map<std::string, int>                               continuity_map_t;
+
 
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);

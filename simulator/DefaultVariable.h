@@ -47,7 +47,13 @@ struct DefaultVariable {
     if(lhs.derivative_count == rhs.derivative_count) {
       return lhs.name < rhs.name;
     }
-    return lhs.derivative_count - rhs.derivative_count < 0;
+    return lhs.derivative_count < rhs.derivative_count;
+  }
+  
+  friend bool operator==(const DefaultVariable& lhs, 
+                        const DefaultVariable& rhs)
+  {
+    return (lhs.name == rhs.name) && (lhs.derivative_count == rhs.derivative_count);
   }
 
   friend std::ostream& operator<<(std::ostream& s, 

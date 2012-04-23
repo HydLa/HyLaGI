@@ -74,7 +74,8 @@ public:
 */
 
     return s; 
-          }
+  }
+
   void clear()
   {
     variables_.clear();
@@ -116,7 +117,7 @@ public:
     const_iterator it  = variables_.begin();
     const_iterator end = variables_.end();
     for(; it!=end; ++it) {
-      s << it->first << " <=> " << it->second << "\n";
+      s << *(it->first) << "(" << it->first << ") " << " <=> " << it->second << "\n";
     }
     return s;
   }

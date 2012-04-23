@@ -35,13 +35,6 @@ class SymbolicValue:
    * 未定義値かどうか
    */
   bool is_undefined() const;
-  
-  /**
-   * 値が（定量的に）一意に定まるか
-   */
-  bool is_unique() const;
-  
-  void set_unique(const bool &u){is_unique_=u;}
 
   /**
    * 文字列表現を取得する
@@ -76,9 +69,6 @@ class SymbolicValue:
   private:
   
   node_sptr node_;  //値はnode_sptr
-  bool is_unique_;  //値が一意かどうかを示す変数．とりあえず外部から設定する．デフォルトではtrue
-  bool uni;
-
 };
 
 bool operator<(const SymbolicValue& lhs, const SymbolicValue& rhs);

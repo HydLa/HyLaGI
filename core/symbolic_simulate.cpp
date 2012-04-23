@@ -28,8 +28,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
     opts.output_format = fmtNumeric; 
   } else if(po.get<std::string>("output-format") == "m"){
     opts.output_format = fmtMathematica; 
-  } else if(po.get<std::string>("output-format") == "g"){
-    opts.output_format = fmtGUI; 
   } else if(po.get<std::string>("output-format") == "i"){
     opts.output_format = fmtNInterval;
   } else {

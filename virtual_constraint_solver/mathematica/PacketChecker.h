@@ -10,7 +10,7 @@ public:
   virtual ~PacketChecker();
 
   virtual void check();
-  virtual void check2();
+  virtual void check_after_return();
 
   virtual void strCase();
   virtual void symCase();

@@ -7,41 +7,51 @@
 #include "DefaultVariable.h"
 
 #include "SymbolicValue.h"
-#include "SymbolicValueRange.h"
-#include "SymbolicParameter.h"
+#include "ValueRange.h"
+#include "DefaultParameter.h"
 
 #include "Types.h"
-
-using namespace hydla::simulator;
 
 namespace hydla {
 namespace symbolic_simulator {
 
-  struct StateResult;
-  typedef boost::shared_ptr<StateResult> state_result_sptr_t;
+  
+  typedef simulator::node_id_t                   node_id_t;
+  typedef simulator::module_set_sptr             module_set_sptr;
+  typedef simulator::module_set_container_sptr   module_set_container_sptr;
+  typedef simulator::module_set_list_t           module_set_list_t;
 
-  typedef simulator::DefaultVariable            variable_t;
-  typedef SymbolicParameter                     parameter_t;
-  typedef SymbolicValue                         value_t;
-  typedef SymbolicValue                         time_t;
-  typedef SymbolicValueRange                    value_range_t;
-  typedef hydla::simulator::VariableMap<variable_t, 
+  typedef SymbolicValue                          value_t;
+  typedef SymbolicValue                          time_t;
+  typedef simulator::PhaseState<value_t>         phase_state_t;
+  typedef phase_state_t::phase_state_sptr_t      phase_state_sptr_t;
+  typedef std::vector<phase_state_sptr_t>        phase_state_sptrs_t;
+  typedef simulator::DefaultVariable             variable_t;
+  typedef simulator::DefaultParameter<value_t>   parameter_t;
+  typedef simulator::ValueRange<value_t>         value_range_t;
+  typedef simulator::VariableMap<variable_t*, 
                                         value_t> variable_map_t;
-  typedef hydla::simulator::VariableMap<parameter_t, 
+  typedef simulator::VariableMap<parameter_t*, 
                                         value_range_t> parameter_map_t;
+  typedef simulator::continuity_map_t            continuity_map_t;
+  typedef simulator::constraints_t               constraints_t;
+  typedef simulator::tells_t                     tells_t;
+  typedef simulator::collected_tells_t           collected_tells_t;
+  typedef simulator::expanded_always_t           expanded_always_t;
+  typedef simulator::expanded_always_id_t        expanded_always_id_t;
+  typedef simulator::ask_set_t                   ask_set_t;
+  typedef simulator::positive_asks_t             positive_asks_t;
+  typedef simulator::negative_asks_t             negative_asks_t;
+  typedef simulator::not_adopted_tells_list_t    not_adopted_tells_list_t;
+  typedef simulator::continuity_map_t            continuity_map_t;
+  typedef simulator::Simulator<phase_state_t>::variable_set_t  variable_set_t;
+  typedef simulator::Simulator<phase_state_t>::parameter_set_t  parameter_set_t;
 
-  typedef struct SymbolicPhaseState: public hydla::simulator::PhaseState<variable_t, 
-                                       value_t, 
-                                       time_t>{
-    parameter_map_t parameter_map;
-    constraints_t added_constraints;  //フェーズ内でのみ追加される制約．フェーズが切り替わったらリセット
-    state_result_sptr_t parent_state_result;
-    int step;
-  }phase_state_t;
+                                        
 
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
   
-  typedef hydla::simulator::Simulator<phase_state_t> simulator_t;
+  typedef simulator::Simulator<phase_state_t> simulator_t;
   
   
   typedef enum CalculateClosureResult_ {
@@ -53,7 +63,6 @@ namespace symbolic_simulator {
   typedef enum OutputFormat_ {
     fmtTFunction,
     fmtNumeric,
-    fmtGUI,
     fmtMathematica,
     fmtNInterval,
   } OutputFormat;
@@ -83,7 +92,7 @@ namespace symbolic_simulator {
   typedef struct Opts_ {
     std::string mathlink;
     bool debug_mode;
-    std::string max_time; //TODO: time_tにする
+    std::string max_time;
     int max_step;
     bool nd_mode;
     OutputStyle output_style;

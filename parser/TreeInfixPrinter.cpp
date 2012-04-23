@@ -1,4 +1,5 @@
 #include "TreeInfixPrinter.h"
+#include <sstream>
 
 namespace hydla {
 namespace parse_tree{
@@ -13,6 +14,13 @@ std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream&
   return s;
 }
 
+std::string TreeInfixPrinter::get_infix_string(const hydla::parse_tree::node_sptr &node){
+  need_par_ = PAR_NONE;
+  std::stringstream sstr;
+  output_stream_ = &sstr;
+  accept(node);
+  return sstr.str();
+}
 
 void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const std::string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
   //(*output_stream_) << "binary_node\n";
@@ -173,7 +181,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Number> node){
 
 // ‹L†’è”
 void TreeInfixPrinter::visit(boost::shared_ptr<Parameter> node){
-  (*output_stream_) << "p" << node->get_name();
+  (*output_stream_) << "parameter(" << node->get_name() << ", d:" << node->get_derivative_count() << ", id:" << node->get_phase_id() << ")";
 }
 
 // t

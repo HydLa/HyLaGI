@@ -159,14 +159,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mathematica\MathematicaVCSInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCSPoint.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\mathematica\MathValue.cpp"
 				>
 			</File>
@@ -183,31 +175,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\reduce\REDUCELink.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEStringSender.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEValue.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCS.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCSInterval.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCSPoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\SExpConverter.cpp"
+				RelativePath=".\SymbolicVirtualConstraintSolver.cpp"
 				>
 			</File>
 			<File
@@ -230,14 +198,6 @@
 			</File>
 			<File
 				RelativePath=".\mathematica\MathematicaVCS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCSInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCSPoint.h"
 				>
 			</File>
 			<File
@@ -269,46 +229,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\reduce\REDUCELink.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEStringSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCETime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVariable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCSInterval.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCSPoint.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\REDUCEVCSType.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\SExpConverter.h"
-				>
-			</File>
-			<File
 				RelativePath=".\SolveError.h"
 				>
 			</File>
@@ -318,10 +238,6 @@
 			</File>
 			<File
 				RelativePath=".\mathematica\vcs_math_source.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduce\vcs_reduce_source.h"
 				>
 			</File>
 			<File
