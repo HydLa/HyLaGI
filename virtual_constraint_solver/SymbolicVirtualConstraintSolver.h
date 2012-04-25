@@ -192,8 +192,8 @@ public:
   
   variable_t* get_variable(const std::string &name, int derivative_count){
     variable_t variable(name, derivative_count);
-    variable_set_t::iterator it = variable_set_->find(variable);
-    return &(*variable_set_->find(variable));
+    variable_set_t::iterator it = std::find(variable_set_->begin(), variable_set_->end(), variable);
+    return &(*it);
   }
 
   parameter_t* get_parameter(const std::string &name, int derivative_count, int id){

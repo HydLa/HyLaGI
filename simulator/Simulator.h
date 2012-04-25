@@ -42,8 +42,8 @@ public:
   typedef boost::shared_ptr<hydla::ch::ModuleSet>          module_set_sptr;
   typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
   typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
-  typedef std::set<variable_t>                             variable_set_t;
-  typedef std::set<parameter_t>                            parameter_set_t;
+  typedef std::list<variable_t>                             variable_set_t;
+  typedef std::list<parameter_t>                            parameter_set_t;
 
   Simulator()
   {}
@@ -123,8 +123,8 @@ public:
         variable_t v;
         v.name             = it->first;
         v.derivative_count = d;
-        variable_set_.insert(v);
-        variable_map_.set_variable(&(*variable_set_.find(v)), value_t());
+        variable_set_.push_front(v);
+        variable_map_.set_variable(&(variable_set_.front()), value_t());
       }
     }
 

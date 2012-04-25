@@ -159,6 +159,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mathlink_helper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\MathValue.cpp"
 				>
 			</File>
@@ -198,6 +202,10 @@
 			</File>
 			<File
 				RelativePath=".\mathematica\MathematicaVCS.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\mathlink_helper.h"
 				>
 			</File>
 			<File

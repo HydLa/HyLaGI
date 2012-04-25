@@ -42,7 +42,7 @@ class DefaultParameter{
   /**
    * 導入されたフェーズを設定する
    */
-  void set_phase(const phase_state_sptr_t &)
+  void set_phase(const phase_state_sptr_t &phase)
   {
     introduced_phase_ = phase;
   }

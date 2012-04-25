@@ -74,7 +74,10 @@ public:
     if(!MLActivate(link_)) return false;
     return true;
   }
-
+  
+  bool receive();
+  
+  
   void clean()
   {
     if(link_) {

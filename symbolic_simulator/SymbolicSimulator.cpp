@@ -727,8 +727,8 @@ SymbolicSimulator::variable_map_t SymbolicSimulator::range_map_to_value_map(
       ret.set_variable(variable, r_it->second.get_lower_bound().value);
     }else{
       parameter_t param(r_it->first, state);
-      std::pair<parameter_set_t::iterator, bool> p_it = parameter_set_.insert(param);
-      parameter_map.set_variable(&(*(p_it.first)), r_it->second);
+      parameter_set_.push_front(param);
+      parameter_map.set_variable(&(parameter_set_.front()), r_it->second);
       ret.set_variable(variable, value_t(node_sptr(new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
       // TODO:記号定数導入後，各変数の数式に出現する変数を記号定数に置き換える
     }
