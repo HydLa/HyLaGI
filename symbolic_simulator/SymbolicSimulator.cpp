@@ -582,7 +582,7 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
   
   // TODO:変数表が複数ある場合に，findPPTimeをどう扱うべきか．とりあえず変数表は１つしか出てこないものとする．
   // 区分的連続の前提を置くなら，これが正しい？
-  assert(resuts.size()==1);
+  assert(results.size()==1);
   
   phase_state_sptr new_state_original(create_new_phase_state());
 
