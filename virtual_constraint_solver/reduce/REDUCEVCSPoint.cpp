@@ -7,6 +7,8 @@
 #include "SExpConverter.h"
 #include "../SolveError.h"
 
+#include "VariableNameEncoder.h"
+
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
@@ -150,6 +152,10 @@ bool REDUCEVCSPoint::create_maps(create_result_t & create_result)
       // "usrVar"‚ğæ‚èœ‚­
       assert(var_name.find(REDUCEStringSender::var_prefix, 0) == 0);
       var_name.erase(0, REDUCEStringSender::var_prefix.length());
+
+      // ‘å•¶š¬•¶š•\‹L‚É•ÏŠ·
+      VariableNameEncoder vne;
+      var_name = vne.UpperDecode(var_name);
 
       symbolic_variable.name = var_name;
       symbolic_variable.derivative_count = var_derivative_count;

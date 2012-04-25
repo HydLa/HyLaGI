@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <iostream>
 
+#include "VariableNameEncoder.h"
+
 using namespace hydla::parse_tree;
 
 namespace hydla {
@@ -190,7 +192,8 @@ void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 void REDUCEStringSender::put_var(const var_info_t var)
 {
   HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_var ***");
-  std::string name(REDUCEStringSender::var_prefix + var.get<0>());
+  VariableNameEncoder vne;
+  std::string name(REDUCEStringSender::var_prefix + vne.LowerEncode(var.get<0>()));
   int diff_count = var.get<1>();
   bool prev      = var.get<2>();
   bool init_var  = var.get<3>();

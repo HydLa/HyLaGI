@@ -8,6 +8,8 @@
 #include "SExpConverter.h"
 #include "../SolveError.h"
 
+#include "VariableNameEncoder.h"
+
 using namespace hydla::vcs;
 using namespace hydla::logger;
 using namespace hydla::parse_tree;
@@ -324,6 +326,11 @@ VCSResult REDUCEVCSInterval::integrate(
 
     assert(var_name.find(REDUCEStringSender::var_prefix, 0) == 0);
     variable.name = var_name.substr(REDUCEStringSender::var_prefix.length());
+
+    // ‘å•¶š¬•¶š•\‹L‚É•ÏŠ·
+    VariableNameEncoder vne;
+    variable.name = vne.UpperDecode(variable.name);
+
     variable.derivative_count = var_derivative_count;
     HYDLA_LOGGER_VCS("name  : ", variable.name);
     HYDLA_LOGGER_VCS("derivative : ", variable.derivative_count);

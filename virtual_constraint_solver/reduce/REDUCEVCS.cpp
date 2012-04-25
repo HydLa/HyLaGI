@@ -7,6 +7,8 @@
 #include "REDUCEStringSender.h"
 #include "SExpConverter.h"
 
+#include "VariableNameEncoder.h"
+
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
 
@@ -58,8 +60,9 @@ REDUCEVCS::REDUCEVCS(const hydla::symbolic_simulator::Opts &opts, variable_map_t
     const REDUCEVariable& variable = it->first;
     // ”÷•ª‰ñ”‚ª0‚Ì‚à‚Ì‚¾‚¯depend•¶‚ğì¬
     if(variable.derivative_count == 0){
+      VariableNameEncoder vne;
       if(!first_element) depend_str << ",";
-      depend_str << REDUCEStringSender::var_prefix << variable.name;
+      depend_str << REDUCEStringSender::var_prefix << vne.LowerEncode(variable.name);
       first_element = false;
     }
   }
