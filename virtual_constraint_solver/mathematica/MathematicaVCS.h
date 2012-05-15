@@ -91,12 +91,6 @@ public:
    */
   virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
   
-
-  /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚ğ•¶š—ñ‚Åæ“¾‚·‚é
-   */
-  virtual std::string get_constraint_store();
-
   /**
    * SymbolicTime‚ğŠÈ–ñ‚·‚é
    */

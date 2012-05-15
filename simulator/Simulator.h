@@ -65,8 +65,8 @@ public:
   virtual void push_phase_state(const phase_state_sptr& state) 
   {
     HYDLA_LOGGER_PHASE("%% Simulator::push_phase_state\n");
-    HYDLA_LOGGER_PHASE("%% state id", state->id);
-    HYDLA_LOGGER_PHASE("%% state time", state->current_time);
+    HYDLA_LOGGER_PHASE("%% state id: ", state->id);
+    HYDLA_LOGGER_PHASE("%% state time: ", state->current_time);
     HYDLA_LOGGER_PHASE("--- parent state parameter map ---\n", state->parent->variable_map);
     HYDLA_LOGGER_PHASE("--- state parameter map ---\n", state->parameter_map);
     state_stack_.push(state);

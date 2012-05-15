@@ -39,11 +39,6 @@ class MathematicaExpressionConverter
    */
   static node_sptr receive_and_make_symbolic_value(MathLink &ml);
 
-  /**
-   * （vairable）=（node）の形のノードを返す
-   */
-  static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev);
-
   //valと関係演算子を元に、rangeを設定する
   static void set_range(const value_t &val, value_range_t &range, const int& relop);
 };

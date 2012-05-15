@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 #include "Logger.h"
 
 #ifdef _MSC_VER
@@ -75,8 +76,20 @@ public:
     return true;
   }
   
+  
+  /**
+   * 次のリターンパケットまでデータを受信しておく．
+   * 以前受信したデータは，開始時にすべて破棄する
+   */
   bool receive();
   
+  
+  
+  void strCase();
+  void symCase();
+  void intCase();
+  void funcCase();
+
   
   void clean()
   {
@@ -93,7 +106,7 @@ public:
   }  
 
   /** 
-   * 指定されたタイプのパケット返ってくるまでスキップする
+   * 指定されたタイプのパケットが返ってくるまでスキップする
    */ 
   void skip_pkt_until(int pkt_name) 
   {
@@ -116,7 +129,7 @@ public:
     return MLPutFunction(s.c_str(), n);
   }
 
-  std::pair<std::string, int> get_function()
+  std::pair<std::string, int> get_function_()
   {
     const char *s;
     int n;
@@ -138,14 +151,16 @@ public:
 
   std::string get_symbol()
   {
-    const char *s;
-    if(!MLGetSymbol(&s)) {
-      throw MathLinkError("get_symbol", MLError());
+    if(token_list_.front()!=MLTKSYM){
+      throw MathLinkError("illegal token in get_symbol", token_list_.front());
     }
-    std::string sym(s);
-    HYDLA_LOGGER_VCS("%% get_symbol:", sym);
-    MLReleaseSymbol(s);
-    return sym;
+    if(string_list_.size() <= 0){
+      throw MathLinkError("empty list in get_symbol", MLError());
+    }
+    std::string str = string_list_.front();
+    string_list_.pop_front();
+    token_list_.pop_front();
+    return str;
   }
 
   int put_string(const char* s) {
@@ -158,15 +173,30 @@ public:
 
   std::string get_string()
   {
+    if(token_list_.front()!=MLTKSTR){
+      throw MathLinkError("illegal token in get_string", token_list_.front());
+    }
+    if(string_list_.size()<=0){
+      throw MathLinkError("empty list in get_string", 0);
+    }
+    std::string str = string_list_.front();
+    string_list_.pop_front();
+    token_list_.pop_front();
+    return str;
+  }
+  
+  
+  std::string get_string_()
+  {
     const char *s;
     if(!MLGetString(&s)) {
       throw MathLinkError("get_string", MLError());
     }
     std::string str(s);
-    HYDLA_LOGGER_VCS("%% get_string:", str);
     MLReleaseString(s);
     return str;
   }
+
 
   int put_integer(int i) {
     return MLPutInteger(i);
@@ -174,15 +204,43 @@ public:
 
   int get_integer()
   {
+    if(token_list_.front() != MLTKINT){
+      throw MathLinkError("illegal token in get_integer", token_list_.front());
+    }
+    if(int_list_.size() <= 0){
+      throw MathLinkError("empty list in get_integer", 0);
+    }
+    int i = int_list_.front();
+    int_list_.pop_front();
+    token_list_.pop_front();
+    return i;
+  }
+  
+  
+  int get_integer_()
+  {
     int i;
     if(!MLGetInteger(&i)) {
       throw MathLinkError("get_integer", MLError());      
     }
-    HYDLA_LOGGER_VCS("%% get_integer:", i);
     return i;
   }
 
   int get_arg_count()
+  {
+    if(token_list_.front()!=MLTKFUNC){
+      throw MathLinkError("illegal token in get_arg_count", token_list_.front());
+    }
+    if(int_list_.size()<=0){
+      throw MathLinkError("empty list in get_arg_count", 0);
+    }
+    int count = int_list_.front();
+    int_list_.pop_front();
+    token_list_.pop_front();
+    return count;
+  }
+
+  int get_arg_count_()
   {
     int count;
     if(!MLGetArgCount(&count)){
@@ -190,7 +248,40 @@ public:
     }
     return count;
   }
-
+  
+  int get_type(){
+    if(token_list_.size() <= 0){
+      throw MathLinkError("empty list in get_type", 0);
+    }
+    return token_list_.front();
+  }
+  
+  int get_next(){
+    if(token_list_.size() <= 0){
+      throw MathLinkError("empty list in get_next", 0);
+    }
+    switch(token_list_.front()){
+      case MLTKFUNC:
+      case MLTKINT:
+        if(int_list_.size() <= 0){
+          throw MathLinkError("empty int list in get_next", 0);
+        }
+        int_list_.pop_front();
+        break;
+      case MLTKSYM:
+      case MLTKSTR:
+        if(string_list_.size() <= 0){
+          throw MathLinkError("empty string list in get_next", 0);
+        }
+        string_list_.pop_front();
+        break;
+      default:
+        throw MathLinkError("illegal element in get_next", 0);
+        break;
+    }
+    token_list_.pop_front();
+    return token_list_.front();
+  }
 
 
   /////////// Mathematica Function /////////////
@@ -209,24 +300,8 @@ public:
   void MLReleaseString(const char *s)     {return ::MLReleaseString(link_, s);}
 
   int MLPutNext(int type)                 {return ::MLPutNext(link_, type);}
-  int MLGetNext()                         {
-    int ret = ::MLGetNext(link_);
-    switch (ret){
-      case MLTKSTR:
-        HYDLA_LOGGER_VCS("%% MLTKSTR(MLGetNext)");
-        break;
-      case MLTKSYM:
-        HYDLA_LOGGER_VCS("%% MLTKSYM(MLGetNext)");
-        break;
-      case MLTKINT:
-        HYDLA_LOGGER_VCS("%% MLTKINT(MLGetNext)");
-        break;
-      case MLTKFUNC:
-        HYDLA_LOGGER_VCS("%% MLTKFUNC(MLGetNext)");
-        break;
-    }
-    return ret;
-  }
+  int MLGetNext()                         {return ::MLGetNext(link_);}
+
 
   int MLPutArgCount(int n)                {return ::MLPutArgCount(link_, n);}
   int MLGetArgCount(int *n)               {return ::MLGetArgCount(link_, n);}
@@ -241,6 +316,9 @@ public:
   int MLError()                           {return ::MLError(link_);}
 
 private:
+  std::list<std::string> string_list_;
+  std::list<int>         int_list_;
+  std::list<int>         token_list_;
   MLENV env_;
   MLINK link_;
 };

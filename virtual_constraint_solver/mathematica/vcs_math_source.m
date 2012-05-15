@@ -1,6 +1,8 @@
 (* 再帰回数上限を上げてみる *)
 $RecursionLimit = 1000;
 
+(* 内部で用いる精度も上げてみる *)
+$MaxExtraPrecision = 1000;
 
 (*
  * デバッグ用メッセージ出力関数
@@ -9,7 +11,7 @@ $RecursionLimit = 1000;
 SetAttributes[debugPrint, HoldAll];
 
 If[optUseDebugPrint,
-  debugPrint[arg___] := Print[InputForm[{arg}]],
+  debugPrint[arg___] := Print[InputForm[{arg}]], 
   (* delimiterAddedString[", ", Map[(StringJoin[ToString[Unevaluated[#]], ": ", ToString[InputForm[Evaluate[#] ] ] ])&, {Unevaluated[arg] } ] ] ], *)
   debugPrint[arg___] := Null];
 
@@ -156,7 +158,7 @@ createVariableMapInterval[cons_, vars_, pars_] := Block[
     tStore = Map[(# -> createIntegratedValue[#, sol[[1]] [[i]]])&, dVars];
     cStore = Or[cStore, (originalOther /. tStore) && And@@Map[(Equal@@#)&, tStore] ]
   ];
-  ret = createMap[cStore, hasVariable, vars];
+  ret = createMap[cStore && t>0, hasVariable, vars];
   ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
   debugPrint[ret];
   ret

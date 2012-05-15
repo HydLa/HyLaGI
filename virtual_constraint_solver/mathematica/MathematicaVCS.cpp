@@ -109,16 +109,14 @@ MathematicaVCS::~MathematicaVCS()
 void MathematicaVCS::start_temporary(){
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::start_temporary ***\n");
   ml_.put_function("startTemporary", 0);
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
+  ml_.receive();
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::start_temporary ***\n");
 }
 
 void MathematicaVCS::end_temporary(){
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::end_temporary ***\n");
   ml_.put_function("endTemporary", 0);
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
+  ml_.receive();
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::end_temporary ***\n");
 }
 
@@ -135,8 +133,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   // PacketChecker pc(ml_);
   // pc.check();
 ///////////////////
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
+  ml_.receive();
 
   {
     PacketSender ps(ml_);
@@ -145,11 +142,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     for(variable_set_t::const_iterator it = variable_set_->begin(); it != variable_set_->end(); it++){
       ps.put_var(it->get_name(), it->get_derivative_count(), mode_==hydla::symbolic_simulator::DiscreteMode?PacketSender::VA_None:PacketSender::VA_Time);
     }
-    HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
-    HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
     
-    ml_.skip_pkt_until(RETURNPKT);
-    ml_.MLNewPacket();
+    ml_.receive();
   }
 
   {
@@ -203,14 +197,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
       }
     }
     ps.put_pars();
-    HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
-    HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
-    
-    ml_.skip_pkt_until(RETURNPKT);
-    ml_.MLNewPacket();
-  
+    ml_.receive();  
   }
-  
   
 
 
@@ -238,56 +226,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
       }
     }
     ps.put_vars();
-    HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
-    HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
-    
-    ml_.skip_pkt_until(RETURNPKT);
-    ml_.MLNewPacket();
-  
+    ml_.receive();  
   }
-
-/*
-  {
-    constraints_t constraints;
-    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
-
-    parameter_map_t::variable_list_t::const_iterator it = 
-      parameter_map.begin();
-    parameter_map_t::variable_list_t::const_iterator end = 
-      parameter_map.end();
-    for(; it!=end; ++it)
-    {
-      const value_range_t&    value = it->second;
-      if(!value.get_lower_bound().value.is_undefined()){
-        if(value.get_lower_bound().include_bound){
-          constraints.push_back(node_sptr(new GreaterEqual(node_sptr(new Parameter(it->first.get_name())), value.get_lower_bound().value.get_node())));
-        }else{
-          constraints.push_back(node_sptr(new Greater(node_sptr(new Parameter(it->first.get_name())), value.get_lower_bound().value.get_node())));
-        }
-      }
-      if(!value.get_upper_bound().value.is_undefined()){
-        if(value.get_upper_bound().include_bound){
-          constraints.push_back(node_sptr(new LessEqual(node_sptr(new Parameter(it->first.get_name())), value.get_upper_bound().value.get_node())));
-        }else{
-          constraints.push_back(node_sptr(new Less(node_sptr(new Parameter(it->first.get_name())), value.get_upper_bound().value.get_node())));
-        }
-      }
-    }
-    HYDLA_LOGGER_VCS("size:", constraints.size());
-    ps.put_nodes(constraints, PacketSender::VA_None);
-  }
-  
-  ps.put_pars();
-  
-
-  HYDLA_LOGGER_EXTERN("-- math debug print -- \n");
-  
-  HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
-  HYDLA_LOGGER_EXTERN( (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
-  
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-  */
 
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::reset ***\n");
   return true;
@@ -307,31 +247,21 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     ml_.put_function("createVariableMapInterval", 0);
   }
 
-/////////////////// 受信処理                        
-
-  //PacketChecker pc(ml_);
-  //pc.check();
-
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
-  HYDLA_LOGGER_EXTERN((ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
-  ml_.skip_pkt_until(RETURNPKT);
-
-  ml_.MLGetNext();
+/////////////////// 受信処理           
+  HYDLA_LOGGER_VCS("%% receive");             
+  ml_.receive();
 
   // List関数の要素数（式の個数）を得る
   int or_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("or_size: ", or_size);
-  ml_.MLGetNext();// Listという関数名
+  ml_.get_next();// Listという関数名
   create_result_t create_result;
   for(int or_it = 0; or_it < or_size; or_it++){
     variable_range_map_t map;
     value_t symbolic_value;
-    ml_.MLGetNext();// 関数であるということと，その引数の数
     int and_size = ml_.get_arg_count();
     HYDLA_LOGGER_VCS("and_size: ", and_size);
-    ml_.MLGetNext();// Listという関数名
+    ml_.get_next();// Listという関数名
     value_range_t tmp_range;
     for(int i = 0; i < and_size; i++)
     {
@@ -339,13 +269,12 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
 
       //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
 
-      ml_.MLGetNext();// 関数であるということと，その引数の数
-      ml_.MLGetNext();// Listという関数名
+      ml_.get_next();// 関数であるということと，その引数の数
+      ml_.get_next();// Listという関数名
 
-      ml_.MLGetNext();// 関数であるということと，その引数の数
-      ml_.MLGetNext();// Listという関数名
+      ml_.get_next();// 関数であるということと，その引数の数
+      ml_.get_next();// Listという関数名
       
-      ml_.MLGetNext();// 変数名
       std::string variable_name = ml_.get_symbol();
       HYDLA_LOGGER_VCS("%% name", variable_name);
       int variable_derivative_count;
@@ -353,7 +282,10 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       HYDLA_LOGGER_VCS("%% derivative_count: ", variable_derivative_count);
       // 関係演算子のコード
       int relop_code = ml_.get_integer();
-
+      
+      // TODO: ↓の一行消す
+      if(variable_name == "t")continue;
+      
       variable_t* variable_sptr = get_variable(variable_name.substr(6), variable_derivative_count);
       symbolic_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
       MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
@@ -362,8 +294,6 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     }
     create_result.result_maps.push_back(map);
   }
-
-  ml_.MLNewPacket();
   
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::create_maps ***\n");
   return create_result;
@@ -390,17 +320,11 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
   ps.put_nodes(constraints, arg);
   // varsを渡す
   ps.put_vars();
-  
+
 
   ///////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
-
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
-  /////////////////
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
+  ml_.receive();
 
   HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_constraint ***\n");
   return;
@@ -430,14 +354,9 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   // varsを渡す
   ps.put_vars();
   
-
   ///////////////// 受信処理
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));
-  HYDLA_LOGGER_VCS( "--- receive ---");
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
+  HYDLA_LOGGER_VCS("%% receive");
+  ml_.receive();
 
   HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_guard ***\n");
   return;
@@ -456,33 +375,19 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
   }
   
 /////////////////// 受信処理
-  HYDLA_LOGGER_VCS( "--- receive ---");
-  
-  // PacketChecker pc(ml_);
-  // pc.check();
-  
-  
-  HYDLA_LOGGER_EXTERN(
-    "-- math debug print -- \n",
-    (ml_.skip_pkt_until(TEXTPKT),
-     ml_.get_string()));
-
-  ml_.skip_pkt_until(RETURNPKT);
+  HYDLA_LOGGER_VCS( "%%receive");
+  ml_.receive();
   
   //まずListが来るはず
-  int token = ml_.MLGetNext();
-  assert(token == MLTKFUNC);
-  token = ml_.MLGetNext();
-  assert(token == MLTKSYM);
-  std::string symbol = ml_.get_symbol();
+  ml_.get_next();
+  
+  int token = ml_.get_next();
   
   check_consistency_result_t ret;
-
-  token = ml_.MLGetNext();
   
   if(token == MLTKSYM){
     //TrueかFalseのはず
-    symbol = ml_.get_symbol();
+    std::string symbol = ml_.get_symbol();
     if(symbol == "True"){
       ret.true_parameter_maps.push_back(parameter_map_t());
     }else{
@@ -493,8 +398,8 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
   }else{
     //更に二重リストが来るはず
     int map_size = ml_.get_arg_count();
-    ml_.MLGetNext();
-    ml_.MLGetNext();
+    ml_.get_next();
+    ml_.get_next();
 
     for(int i=0; i < map_size; i++){
       parameter_map_t tmp_map;
@@ -505,14 +410,14 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     token = ml_.MLGetType();
     if(token == MLTKSYM){
       //TrueかFalseのはず
-      symbol = ml_.get_symbol();
+      std::string symbol = ml_.get_symbol();
       if(symbol != "False"){
         assert(0);
       }
     }else{
       map_size = ml_.get_arg_count();
-      ml_.MLGetNext();    
-      ml_.MLGetNext();
+      ml_.get_next();    
+      ml_.get_next();
       for(int i=0; i < map_size; i++){
         parameter_map_t tmp_map;
         receive_parameter_map(tmp_map);
@@ -521,7 +426,6 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     }
   }
   //終わりなのでパケットの最後尾までスキップ
-  ml_.MLNewPacket();
   
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::check_consistency ***");
   return ret;
@@ -556,18 +460,11 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
 
 ////////////////// 受信処理
 
-  // PacketChecker pc(ml_);
-  // pc.check();
-
   MathematicaExpressionConverter mec;
-  HYDLA_LOGGER_EXTERN(
-    "--- math debug print --- \n",
-    (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()) );
-
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLGetNext(); 
-  ml_.MLGetNext(); // Listという関数名
-  ml_.MLGetNext(); // Listの中の先頭要素
+  ml_.receive();
+  
+  ml_.get_next(); // Listの引数の個数
+  ml_.get_next(); // Listという関数名
 
   // 求解に成功したかどうか
   int ret_code = ml_.get_integer();
@@ -579,20 +476,18 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
   }
   */
 
-  ml_.MLGetNext();
   // 次のPPの時刻と，その場合の条件の組，更に終了時刻かどうかを得る
-  HYDLA_LOGGER_VCS("-- receive next PP time --");
+  HYDLA_LOGGER_VCS("%% receive next PP time");
   int next_time_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
-  ml_.MLGetNext();
+  ml_.get_next(); // Listという関数名を飛ばす
   PP_time_result_t result;
   for(int time_it = 0; time_it < next_time_size; time_it++){
     PP_time_result_t::candidate_t candidate;
-    ml_.MLGetNext();ml_.MLGetNext(); ml_.MLGetNext();
+    ml_.get_next();ml_.get_next();
     // 時刻を受け取る
     candidate.time = time_t(mec.receive_and_make_symbolic_value(ml_)) + current_time;
     HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
-    ml_.MLGetNext();
     receive_parameter_map(candidate.parameter_map);
     // 条件を受け取る
     
@@ -610,13 +505,13 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_parameter_map ***");
   int condition_size = ml_.get_arg_count(); //条件式の数
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
-  ml_.MLGetNext(); ml_.MLGetNext();
+  ml_.get_next();
   value_range_t tmp_range;
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
     //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
     // 最初，Listの引数の数(MLTKFUNC）
-    ml_.MLGetNext(); ml_.MLGetNext(); // これでListの先頭要素まで来る
-    ml_.MLGetNext(); ml_.MLGetNext(); // 先頭要素のparameterを読み飛ばす
+    ml_.get_next(); ml_.get_next(); // これでListの先頭要素まで来る
+    ml_.get_next(); ml_.get_next(); // 先頭要素のparameterを読み飛ばす
     std::string name = ml_.get_string();
     int derivative_count = ml_.get_integer();
     int id = ml_.get_integer();
@@ -628,7 +523,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     HYDLA_LOGGER_VCS("%% returned value: ", tmp_value.get_string());
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
     map.set_variable(tmp_param, tmp_range);
-    ml_.MLGetNext();
+    ml_.get_next();
   }
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
 }
@@ -654,12 +549,9 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
 
     ////////////////// 受信処理
 
-      HYDLA_LOGGER_REST(
-        "-- math debug print -- \n",
-        (ml_.skip_pkt_until(TEXTPKT), ml_.get_string()));  
-
-      ml_.skip_pkt_until(RETURNPKT);
-      ml_.MLGetNext();ml_.MLGetNext();ml_.MLGetNext();
+      ml_.receive();
+      
+      ml_.get_next();ml_.get_next();
 
       int ret_code = ml_.get_integer();
       if(ret_code==0) {
@@ -676,21 +568,6 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
     out_vm.set_variable(it->first, value);
   }
 }
-
-
-std::string MathematicaVCS::get_constraint_store(){
-  std::string ret;
-  
-  // 並列モード
-  ml_.MLPutFunction("printConstraintStore", 0);
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(TEXTPKT);
-  ret = ml_.get_string();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-  return ret;
-}
-
 
 
 //丸めを行う関数 get_real_val()で使う
@@ -840,7 +717,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, symb
     ml_.put_integer(precision);
     ml_.put_symbol("CForm");
     //ml_.put_symbol("InputForm");
-    ml_.skip_pkt_until(RETURNPKT);
+    ml_.receive();
     ret = ml_.get_string();
   }  else {
     ret = "UNDEF";
@@ -858,7 +735,7 @@ bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
   ps.put_node(lhs.get_node(), PacketSender::VA_None);
   ps.put_node(rhs.get_node(), PacketSender::VA_None);
   
-  ml_.skip_pkt_until(RETURNPKT);
+  ml_.receive();
   std::string ret = ml_.get_string();
   return  ret == "True";
 }
@@ -869,10 +746,9 @@ void MathematicaVCS::simplify(time_t &time)
   ml_.put_function("Simplify", 1);
   PacketSender ps(ml_);
   ps.put_node(time.get_node(), PacketSender::VA_None);
-  ml_.skip_pkt_until(RETURNPKT);
+  ml_.receive();
   MathematicaExpressionConverter mec;
   time = time_t(mec.receive_and_make_symbolic_value(ml_));
-  ml_.MLNewPacket();
 }
 
 
@@ -897,14 +773,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
 
   ///////////////// 受信処理
   HYDLA_LOGGER_VCS( "%%receive");
-
-  HYDLA_LOGGER_EXTERN("--- math debug print ---\n",
-    (ml_.skip_pkt_until(TEXTPKT),ml_.get_string()));
-  
-
-  /////////////////
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
+  ml_.receive();
 
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::set_init_value ***");
 }
@@ -917,11 +786,9 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_
   PacketSender ps(ml_);
   ps.put_node(val.get_node(), PacketSender::VA_None);
   ps.put_node(time.get_node(), PacketSender::VA_None);
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLGetNext();
+  ml_.receive();
   MathematicaExpressionConverter mec;
   tmp_val = value_t(mec.receive_and_make_symbolic_value(ml_));
-  ml_.MLNewPacket();
   return  tmp_val;
 }
 

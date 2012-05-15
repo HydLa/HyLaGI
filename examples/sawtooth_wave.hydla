@@ -3,6 +3,6 @@
 
 INIT     <=> f=0.
 INCREASE <=> [](f'=3).
-DROP     <=> [](f- = 10 => f=0).
+DROP     <=> [](f- = 10 => 0<f<8).
 
 INIT, INCREASE << DROP.

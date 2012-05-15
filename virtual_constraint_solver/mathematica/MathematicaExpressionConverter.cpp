@@ -38,7 +38,7 @@ void MathematicaExpressionConverter::set_range(const value_t &val, value_range_t
 
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receive_and_make_symbolic_value(MathLink &ml){
   node_sptr ret;
-  switch(ml.MLGetType()){ // 現行オブジェクトの型を得る
+  switch(ml.get_type()){ // 現行オブジェクトの型を得る
     case MLTKSTR: // 文字列
     {
       HYDLA_LOGGER_REST("%% MLTKSTR(receive_and_make_symbolic_value)");
@@ -70,7 +70,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
     HYDLA_LOGGER_REST("%% MLTKFUNC(receive_and_make_symbolic_value)");
     {
       int arg_count = ml.get_arg_count();
-      int next_type = ml.MLGetNext();
+      int next_type = ml.get_type();
       if(next_type == MLTKSYM){
         std::string symbol = ml.get_symbol();
         if(symbol == "Sqrt"){//1引数関数
@@ -121,11 +121,11 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
       }else{
         // Derivativeのはず．
         assert(next_type == MLTKFUNC);
-        ml.MLGetNext();
+        ml.get_next();
         assert(ml.get_symbol() == "Derivative");
-        ml.MLGetNext();
+        ml.get_next();
         int variable_derivative_count = ml.get_integer();
-        ml.MLGetNext();
+        ml.get_next();
         std::string variable_name = ml.get_symbol();
         assert(variable_name.substr(0, 6) == "usrVar");
         variable_name = variable_name.substr(6);
@@ -144,22 +144,6 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
       break;
   }
   return ret;
-}
-
-/**
- * （vairable）＝（node）の形のノードを返す
- */
-MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev){
-  HYDLA_LOGGER_REST("*** Begin:MathematicaExpressionConverter::make_equal ***\n");
-  node_sptr new_node(new Variable(variable.get_name()));
-  for(int i=0;i<variable.get_derivative_count();i++){
-    new_node = node_sptr(new Differential(new_node));
-  }
-  if(prev){
-    new_node = node_sptr(new Previous(new_node));
-  }
-  HYDLA_LOGGER_REST("*** End:MathematicaExpressionConverter::make_equal ***\n");
-  return node_sptr(new Equal(new_node, node));
 }
 
 
