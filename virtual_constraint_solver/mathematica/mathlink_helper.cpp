@@ -3,6 +3,7 @@
 
 bool MathLink::receive(){
   HYDLA_LOGGER_VCS("#*** Begin MathLink::receive ***");
+  
   token_list_.clear();
   int_list_.clear();
   string_list_.clear();

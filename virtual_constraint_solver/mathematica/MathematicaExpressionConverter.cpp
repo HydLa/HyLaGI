@@ -73,11 +73,12 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
       int next_type = ml.get_type();
       if(next_type == MLTKSYM){
         std::string symbol = ml.get_symbol();
+        HYDLA_LOGGER_REST("%% symbol_name:", symbol);
         if(symbol == "Sqrt"){//1ˆø”ŠÖ”
           ret = node_sptr(new hydla::parse_tree::Power(receive_and_make_symbolic_value(ml), node_sptr(new hydla::parse_tree::Number("1/2"))));
         }
         else if(symbol == "parameter"){
-          std::string name = ml.get_string();
+          std::string name = ml.get_symbol();
           int derivative_count = boost::lexical_cast<int, std::string>(ml.get_string());
           int id = boost::lexical_cast<int, std::string>(ml.get_string());
           ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
@@ -91,7 +92,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
            || symbol == "Divide"
            || symbol == "Power"
            || symbol == "Rational")        
-        {//ˆø”‚ª2‚ÂˆÈã‚ ‚éŠÖ”
+        { // ‰ÁŒ¸æœ‚È‚ÇC“ñ€‰‰Zq‚Å‘‚©‚ê‚éŠÖ”
           node_sptr lhs, rhs;
           ret = receive_and_make_symbolic_value(ml);
           for(int arg_it=1;arg_it<arg_count;arg_it++){
@@ -110,9 +111,26 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
             else if(symbol == "Rational")
               ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
           }
-        }else{
-          // ‚»‚Ì‘¼“ä‚ÌŠÖ”
-          boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> f(new hydla::parse_tree::UnsupportedFunction(symbol));
+        }
+        else{
+          // ‚»‚Ì‘¼‚ÌŠÖ”
+          boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
+          if(symbol == "Sin"
+           || symbol == "Cos"
+           || symbol == "Tan"
+           || symbol == "ArcSin"
+           || symbol == "ArcCos"
+           || symbol == "ArcTan"
+           || symbol == "Sinh"
+           || symbol == "Cosh"
+           || symbol == "Tanh"){
+            // ‘Î‰‚µ‚Ä‚¢‚éŠÖ”1
+            f.reset(new hydla::parse_tree::Function(symbol));
+          }
+          else{
+            // “ä‚ÌŠÖ”
+            f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
+          }
           for(int arg_it=0;arg_it<arg_count;arg_it++){
             f->add_argument(receive_and_make_symbolic_value(ml));
           }
@@ -121,6 +139,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
       }else{
         // Derivative‚Ì‚Í‚¸D
         assert(next_type == MLTKFUNC);
+        HYDLA_LOGGER_REST("%% derivative");
         ml.get_next();
         assert(ml.get_symbol() == "Derivative");
         ml.get_next();

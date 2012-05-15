@@ -192,14 +192,14 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 
 //ä÷êî
 void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
-  (*output_stream_) << node->get_string() << "[";
+  (*output_stream_) << node->get_string() << "(";
   int i=0;
   while(true){
     accept(node->get_argument(i));
     if(++i >= node->get_arguments_size())break;
     (*output_stream_) << ",";
   }
-  (*output_stream_) << "]";
+  (*output_stream_) << ")";
 }
 
 void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){

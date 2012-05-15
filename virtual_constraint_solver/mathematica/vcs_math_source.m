@@ -478,7 +478,7 @@ splitExprs[expr_] := Block[
 applyTime2Expr[expr_, time_] := Block[
   {appliedExpr},
   debugPrint[expr, time];
-  appliedExpr = Simplify[(expr /. t -> time)];
+  appliedExpr = FullSimplify[(expr /. t -> time)];
   If[Element[appliedExpr, Reals] =!= False,
     {1, integerString[appliedExpr]},
     {0}]

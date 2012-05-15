@@ -151,11 +151,14 @@ public:
 
   std::string get_symbol()
   {
+    if(token_list_.size() <= 0){
+      throw MathLinkError("empty token list in get_symbol", 0);
+    }
     if(token_list_.front()!=MLTKSYM){
       throw MathLinkError("illegal token in get_symbol", token_list_.front());
     }
     if(string_list_.size() <= 0){
-      throw MathLinkError("empty list in get_symbol", MLError());
+      throw MathLinkError("empty string list in get_symbol", 0);
     }
     std::string str = string_list_.front();
     string_list_.pop_front();
@@ -173,11 +176,14 @@ public:
 
   std::string get_string()
   {
+    if(token_list_.size() <= 0){
+      throw MathLinkError("empty token list in get_string", 0);
+    }
     if(token_list_.front()!=MLTKSTR){
       throw MathLinkError("illegal token in get_string", token_list_.front());
     }
     if(string_list_.size()<=0){
-      throw MathLinkError("empty list in get_string", 0);
+      throw MathLinkError("empty string list in get_string", 0);
     }
     std::string str = string_list_.front();
     string_list_.pop_front();
@@ -204,11 +210,14 @@ public:
 
   int get_integer()
   {
+    if(token_list_.size() <= 0){
+      throw MathLinkError("empty token list in get_int", 0);
+    }
     if(token_list_.front() != MLTKINT){
       throw MathLinkError("illegal token in get_integer", token_list_.front());
     }
     if(int_list_.size() <= 0){
-      throw MathLinkError("empty list in get_integer", 0);
+      throw MathLinkError("empty int list in get_integer", 0);
     }
     int i = int_list_.front();
     int_list_.pop_front();
@@ -228,11 +237,14 @@ public:
 
   int get_arg_count()
   {
+    if(token_list_.size() <= 0){
+      throw MathLinkError("empty token list in get_arg_count", 0);
+    }
     if(token_list_.front()!=MLTKFUNC){
       throw MathLinkError("illegal token in get_arg_count", token_list_.front());
     }
     if(int_list_.size()<=0){
-      throw MathLinkError("empty list in get_arg_count", 0);
+      throw MathLinkError("empty int list in get_arg_count", 0);
     }
     int count = int_list_.front();
     int_list_.pop_front();

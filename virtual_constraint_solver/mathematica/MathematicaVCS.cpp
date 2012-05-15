@@ -399,7 +399,6 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     //更に二重リストが来るはず
     int map_size = ml_.get_arg_count();
     ml_.get_next();
-    ml_.get_next();
 
     for(int i=0; i < map_size; i++){
       parameter_map_t tmp_map;
@@ -407,7 +406,7 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
       ret.true_parameter_maps.push_back(tmp_map);
     }
     
-    token = ml_.MLGetType();
+    token = ml_.get_type();
     if(token == MLTKSYM){
       //TrueかFalseのはず
       std::string symbol = ml_.get_symbol();
@@ -512,7 +511,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     // 最初，Listの引数の数(MLTKFUNC）
     ml_.get_next(); ml_.get_next(); // これでListの先頭要素まで来る
     ml_.get_next(); ml_.get_next(); // 先頭要素のparameterを読み飛ばす
-    std::string name = ml_.get_string();
+    std::string name = ml_.get_symbol();
     int derivative_count = ml_.get_integer();
     int id = ml_.get_integer();
     parameter_t* tmp_param = get_parameter(name, derivative_count, id);
@@ -523,7 +522,6 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     HYDLA_LOGGER_VCS("%% returned value: ", tmp_value.get_string());
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
     map.set_variable(tmp_param, tmp_range);
-    ml_.get_next();
   }
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
 }
@@ -532,7 +530,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
                                               variable_map_t& out_vm, 
                                               const time_t& time)
 {
-  HYDLA_LOGGER_VCS("--- apply_time_to_vm ---");
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::apply_time_to_vm ***");
 
   PacketSender ps(ml_);
 
@@ -567,6 +565,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
     }
     out_vm.set_variable(it->first, value);
   }
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::apply_time_to_vm ***");
 }
 
 

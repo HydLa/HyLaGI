@@ -30,6 +30,9 @@ void PacketSender::initialize(){
   function_name_map_.insert(std::make_pair("Asin", std::make_pair("ArcSin", 1)));
   function_name_map_.insert(std::make_pair("Acos", std::make_pair("ArcCos", 1)));
   function_name_map_.insert(std::make_pair("Atan", std::make_pair("ArcTan", 1)));
+  function_name_map_.insert(std::make_pair("Sinh", std::make_pair("Sinh", 1)));
+  function_name_map_.insert(std::make_pair("Cosh", std::make_pair("Cosh", 1)));
+  function_name_map_.insert(std::make_pair("Tanh", std::make_pair("Tanh", 1)));
   function_name_map_.insert(std::make_pair("Log", std::make_pair("Log", 2)));
   function_name_map_.insert(std::make_pair("Ln", std::make_pair("Log", 1)));
 }
