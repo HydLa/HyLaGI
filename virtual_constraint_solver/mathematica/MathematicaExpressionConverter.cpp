@@ -123,7 +123,10 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
            || symbol == "ArcTan"
            || symbol == "Sinh"
            || symbol == "Cosh"
-           || symbol == "Tanh"){
+           || symbol == "Tanh"
+           || symbol == "ArcSinh"
+           || symbol == "ArcCosh"
+           || symbol == "ArcTanh"){
             // ‘Î‰‚µ‚Ä‚¢‚éŠÖ”1
             f.reset(new hydla::parse_tree::Function(symbol));
           }
