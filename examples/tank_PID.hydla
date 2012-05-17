@@ -1,0 +1,29 @@
+
+/* initialization */
+INIT <=>
+	x=0 & y=0 & u=0
+	& [](target=10)
+	& [](C=1) & [](R=10)
+	& t1=0
+	& [](Kp=60/10) & [](Ti=3/10) & [](Td=75/1000)
+	& en=0.
+
+/* dynamics of water tank */
+OUT <=> [](y=(1/R)*x).
+LEVEL <=> [](x'=(1/C)*u + -(1/(C*R))*x).
+
+/* timer */
+TIMER <=> [](t1'=1).
+
+/* constants (invariants) */
+CONST <=> [](u'=0) & [](en'=0).
+
+/* buffer (including PID update) */
+BUFF <=> [](t1-=(1/10)
+	=> en=target - x-
+	   & t1=0
+	   & u=Kp*( en + (1/Ti)*((en + en-)/2)*(1/10) + Td*(en - en-)/(1/10) )
+	   ).
+
+INIT, (TIMER & CONST) << (OUT & LEVEL & BUFF).
+
