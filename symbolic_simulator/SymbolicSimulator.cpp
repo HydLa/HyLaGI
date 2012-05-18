@@ -74,7 +74,6 @@ void SymbolicSimulator::do_initialize(const parse_tree_sptr& parse_tree)
   phase_state_sptr state(create_new_phase_state());
   state->phase        = simulator::PointPhase;
   state->step         = 0;
-  state->id = state_id_++;
   state->current_time = value_t("0");
   state->module_set_container = msc_original_;
   state->parent = result_root_;
@@ -211,13 +210,11 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
 void SymbolicSimulator::push_branch_states(phase_state_sptr &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result){
   for(int i=1; i<(int)result.true_parameter_maps.size();i++){
     phase_state_sptr branch_state(create_new_phase_state(original));
-    branch_state->id = state_id_++;
     branch_state->parameter_map = result.true_parameter_maps[i];
     push_phase_state(branch_state);
   }
   for(int i=0; i<(int)result.false_parameter_maps.size();i++){
     phase_state_sptr branch_state(create_new_phase_state(original));
-    branch_state->id = state_id_++;
     branch_state->parameter_map = result.false_parameter_maps[i];
     push_phase_state(branch_state);
   }
@@ -344,7 +341,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(phase_state_sptr& st
           solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
           check_consistency_result = solver_->check_consistency();
           if(!check_consistency_result.true_parameter_maps.empty()){
-            HYDLA_LOGGER_CLOSURE("%% inevitably entailed");
+            HYDLA_LOGGER_CLOSURE("%% entailment branches");
             // ガード条件による分岐が発生する可能性あり
             if(!check_consistency_result.false_parameter_maps.empty()){
               HYDLA_LOGGER_CLOSURE("%% inevitable entailment depends on conditions of parameters");
@@ -381,7 +378,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(phase_state_sptr& st
   }
   
   if(branched_ask!=NULL){
-    HYDLA_LOGGER_CLOSURE("%% branches_ask:", **branched_ask);
+    HYDLA_LOGGER_CLOSURE("%% branched_ask:", **branched_ask);
     if(opts_.nd_mode){
       // 分岐先を生成（導出されない方）
       phase_state_sptr new_state(create_new_phase_state(state));
@@ -465,7 +462,6 @@ bool SymbolicSimulator::point_phase(const module_set_sptr& ms,
   for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_.nd_mode||create_it==0); create_it++)
   {
     phase_state_sptr new_state(create_new_phase_state(new_state_original)), branch_state(create_new_phase_state(state));
-    new_state->id           = state_id_++;
     branch_state->variable_map = range_map_to_value_map(branch_state, create_result.result_maps[create_it], branch_state->parameter_map);
     new_state->parameter_map = branch_state->parameter_map;
     branch_state->parent->children.push_back(branch_state);
@@ -678,15 +674,11 @@ bool SymbolicSimulator::interval_phase(const module_set_sptr& ms,
       branch_state->parent->children.push_back(branch_state);
       if(!time_result.candidates[time_it].is_max_time) {
         phase_state_sptr new_state(create_new_phase_state(new_state_original));
-        new_state->id = state_id_++;
         new_state->current_time = time_result.candidates[time_it].time;
         solver_->simplify(new_state->current_time);
         new_state->parameter_map = branch_state->parameter_map;
 
         //状態をスタックに押し込む
-        HYDLA_LOGGER_PHASE("%% SymbolicSimulator::push_phase_state");
-        HYDLA_LOGGER_PHASE("%% time:", new_state->current_time, "\n---variable_map---\n",
-          state->variable_map,"\n---parameter_map---\n", new_state->parameter_map);
         new_state->parent = branch_state;
         push_phase_state(new_state);
       }else{

@@ -1,7 +1,5 @@
 #include "PacketErrorHandler.h"
 
-#include "PacketChecker.h"
-
 #include "mathlink_helper.h"
 #include "Logger.h"
 

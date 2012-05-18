@@ -64,10 +64,11 @@ public:
    */
   virtual void push_phase_state(const phase_state_sptr& state) 
   {
+    state->id = state_id_++;
     HYDLA_LOGGER_PHASE("%% Simulator::push_phase_state\n");
     HYDLA_LOGGER_PHASE("%% state id: ", state->id);
     HYDLA_LOGGER_PHASE("%% state time: ", state->current_time);
-    HYDLA_LOGGER_PHASE("--- parent state parameter map ---\n", state->parent->variable_map);
+    HYDLA_LOGGER_PHASE("--- parent state variable map ---\n", state->parent->variable_map);
     HYDLA_LOGGER_PHASE("--- state parameter map ---\n", state->parameter_map);
     state_stack_.push(state);
   }
@@ -244,6 +245,7 @@ protected:
    */
   variable_set_t variable_set_;
   parameter_set_t parameter_set_;
+  int state_id_;
 
   /**
    * 各状態を保存しておくためのスタック

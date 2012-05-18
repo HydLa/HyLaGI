@@ -5,7 +5,6 @@
 #include "MathematicaExpressionConverter.h"
 #include "PacketSender.h"
 #include "PacketErrorHandler.h"
-#include "PacketChecker.h"
 
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
@@ -31,8 +30,7 @@ void MathematicaVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_p
 
 MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
 {
-  
-  HYDLA_LOGGER_DEBUG("#*** init mathlink ***");
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::MathematicaVCS(Constructor) ***\n");
   //std::cout << opts.mathlink << std::endl;
 
   //TODO: 例外を投げるようにする
@@ -100,6 +98,7 @@ MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
   
   MathematicaExpressionConverter::initialize();
   PacketSender::initialize();
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::MathematicaVCS(Constructor) ***\n");
 }
 
 MathematicaVCS::~MathematicaVCS()
@@ -248,7 +247,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   }
 
 /////////////////// 受信処理           
-  HYDLA_LOGGER_VCS("%% receive");             
+  HYDLA_LOGGER_VCS("%% receive\n");             
   ml_.receive();
 
   // List関数の要素数（式の個数）を得る
@@ -497,6 +496,7 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
     result.candidates.push_back(candidate);
   }
 
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCSInterval::calculate_next_PP_time ***");
   return result;
 }
 
@@ -753,7 +753,7 @@ void MathematicaVCS::simplify(time_t &time)
 
 void MathematicaVCS::set_continuity(const std::string& name, const int& derivative_count)
 {
-  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::set_continuity ***");
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::set_continuity ***\n");
   PacketSender ps(ml_);
 
   ml_.put_function("addConstraint", 2);
@@ -771,10 +771,10 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
 
 
   ///////////////// 受信処理
-  HYDLA_LOGGER_VCS( "%%receive");
+  HYDLA_LOGGER_VCS( "%%receive\n");
   ml_.receive();
 
-  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::set_init_value ***");
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::set_init_value ***\n");
 }
 
 

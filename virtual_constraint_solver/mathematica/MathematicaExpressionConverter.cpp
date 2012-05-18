@@ -115,20 +115,11 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
         else{
           // ‚»‚Ì‘¼‚ÌŠÖ”
           boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
-          if(symbol == "Sin"
-           || symbol == "Cos"
-           || symbol == "Tan"
-           || symbol == "ArcSin"
-           || symbol == "ArcCos"
-           || symbol == "ArcTan"
-           || symbol == "Sinh"
-           || symbol == "Cosh"
-           || symbol == "Tanh"
-           || symbol == "ArcSinh"
-           || symbol == "ArcCosh"
-           || symbol == "ArcTanh"){
+          PacketSender::function_map_t::right_const_iterator it = 
+            PacketSender::function_map_.right.find(PacketSender::function_t(symbol, arg_count));
+          if(it != PacketSender::function_map_.right.end() && it->second.second == arg_count){
             // ‘Î‰‚µ‚Ä‚¢‚éŠÖ”1
-            f.reset(new hydla::parse_tree::Function(symbol));
+            f.reset(new hydla::parse_tree::Function(it->second.first));
           }
           else{
             // “ä‚ÌŠÖ”

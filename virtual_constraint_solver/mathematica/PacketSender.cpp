@@ -19,25 +19,26 @@ const std::string PacketSender::var_prefix("usrVar");
 /** MathematicaÇ…ëóÇÈç€Ç…íËêîñºÇ…Ç¬ÇØÇÈä÷êîñº */
 const std::string PacketSender::par_prefix("parameter");
 
-std::map<std::string, std::pair<std::string, int> > PacketSender::function_name_map_;
+PacketSender::function_map_t PacketSender::function_map_;
 
 
 void PacketSender::initialize(){
   //HydLaÇ∆MathematicaÇÃä÷êîñºÇÃëŒâûä÷åWÇçÏÇ¡ÇƒÇ®Ç≠ÅD
-  function_name_map_.insert(std::make_pair("Sin", std::make_pair("Sin", 1)));
-  function_name_map_.insert(std::make_pair("Cos", std::make_pair("Cos", 1)));
-  function_name_map_.insert(std::make_pair("Tan", std::make_pair("Tan", 1)));
-  function_name_map_.insert(std::make_pair("Asin", std::make_pair("ArcSin", 1)));
-  function_name_map_.insert(std::make_pair("Acos", std::make_pair("ArcCos", 1)));
-  function_name_map_.insert(std::make_pair("Atan", std::make_pair("ArcTan", 1)));
-  function_name_map_.insert(std::make_pair("Sinh", std::make_pair("Sinh", 1)));
-  function_name_map_.insert(std::make_pair("Cosh", std::make_pair("Cosh", 1)));
-  function_name_map_.insert(std::make_pair("Tanh", std::make_pair("Tanh", 1)));
-  function_name_map_.insert(std::make_pair("ArcSinh", std::make_pair("ArcSinh", 1)));
-  function_name_map_.insert(std::make_pair("SrcCosh", std::make_pair("ArcCosh", 1)));
-  function_name_map_.insert(std::make_pair("ArcTanh", std::make_pair("ArcTanh", 1)));
-  function_name_map_.insert(std::make_pair("Log", std::make_pair("Log", 2)));
-  function_name_map_.insert(std::make_pair("Ln", std::make_pair("Log", 1)));
+  typedef function_map_t::value_type value_t;
+  function_map_.insert(value_t(function_t("Sin", 1), function_t("Sin", 1)));
+  function_map_.insert(value_t(function_t("Sinh", 1), function_t("Sinh", 1)));
+  function_map_.insert(value_t(function_t("Asin", 1), function_t("ArcSin", 1)));
+  function_map_.insert(value_t(function_t("Asinh", 1), function_t("ArcSinh", 1)));
+  function_map_.insert(value_t(function_t("Cos", 1), function_t("Cos", 1)));
+  function_map_.insert(value_t(function_t("Cosh", 1), function_t("Cosh", 1)));
+  function_map_.insert(value_t(function_t("Acos", 1), function_t("ArcCos", 1)));
+  function_map_.insert(value_t(function_t("Acosh", 1), function_t("ArcCosh", 1)));
+  function_map_.insert(value_t(function_t("Tan", 1), function_t("Tan", 1)));
+  function_map_.insert(value_t(function_t("Tanh", 1), function_t("Tanh", 1)));
+  function_map_.insert(value_t(function_t("Atan", 1), function_t("Arctan", 1)));
+  function_map_.insert(value_t(function_t("Atanh", 1), function_t("ArcTanh", 1)));
+  function_map_.insert(value_t(function_t("Log", 2), function_t("Log", 2)));
+  function_map_.insert(value_t(function_t("Ln", 1), function_t("Log", 1)));
 }
 
 
@@ -147,11 +148,14 @@ DEFINE_VISIT_UNARY(Not, Not)
 /// ä÷êî
 void PacketSender::visit(boost::shared_ptr<Function> node)              
 {
-  std::map<std::string, std::pair<std::string, int> >::iterator it = function_name_map_.find(node->get_string());
-  assert(it != function_name_map_.end());
-  assert(it->second.second == node->get_arguments_size());
-  ml_->put_function(it->second.first, 1);
-  for(int i=0; i<node->get_arguments_size();i++){
+  int size = node->get_arguments_size();
+  function_map_t::left_iterator it = function_map_.left.find(function_t(node->get_string(), size));
+  std::cout << it->second.first << ", " << it->second.second << std::endl;
+  assert(it != function_map_.left.end());
+  assert(it->second.second == size);
+  HYDLA_LOGGER_REST("put: Function : ", it->second.first);
+  ml_->put_function(it->second.first, size);
+  for(int i=0; i<size;i++){
     accept(node->get_argument(i));
   }
 }

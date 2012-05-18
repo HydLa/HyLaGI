@@ -111,7 +111,6 @@ private:
   /// 使用するソルバへのポインタ
   boost::scoped_ptr<solver_t> solver_;
   bool is_safe_;
-  int state_id_;
 
   
   ///解軌道木の根．初期状態なので，子供以外の情報は入れない

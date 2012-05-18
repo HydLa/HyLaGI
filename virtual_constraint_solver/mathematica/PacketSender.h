@@ -7,6 +7,8 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
+#include <boost/bimap/bimap.hpp>
+
 #include "DefaultTreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
@@ -176,10 +178,12 @@ public:
 
   // t
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
-
+  
+  typedef std::pair<std::string, int> function_t;
+  typedef boost::bimaps::bimap<function_t, function_t > function_map_t;
+  static function_map_t function_map_;
 private:
   MathLink* ml_;
-  static std::map<std::string, std::pair<std::string, int> > function_name_map_;
 
 protected:
   /// ‘—M‚³‚ê‚½•Ï”‚Ìˆê——

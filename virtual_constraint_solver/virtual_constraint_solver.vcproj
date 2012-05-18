@@ -167,10 +167,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mathematica\PacketChecker.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\mathematica\PacketErrorHandler.cpp"
 				>
 			</File>
@@ -222,10 +218,6 @@
 			</File>
 			<File
 				RelativePath=".\mathematica\MathVCSType.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\PacketChecker.h"
 				>
 			</File>
 			<File

@@ -4,17 +4,24 @@ $RecursionLimit = 1000;
 (* 内部で用いる精度も上げてみる *)
 $MaxExtraPrecision = 1000;
 
+
 (*
  * デバッグ用メッセージ出力関数
  *)
  
 SetAttributes[debugPrint, HoldAll];
 
-If[optUseDebugPrint,
-  debugPrint[arg___] := Print[InputForm[{arg}]], 
-  (* delimiterAddedString[", ", Map[(StringJoin[ToString[Unevaluated[#]], ": ", ToString[InputForm[Evaluate[#] ] ] ])&, {Unevaluated[arg] } ] ] ], *)
-  debugPrint[arg___] := Null];
+symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputForm[Evaluate[#] ] ] ])&;
 
+SetAttributes[symbolToString, HoldAll];
+
+If[optUseDebugPrint,
+  (* debugPrint[arg___] := Print[InputForm[{arg}]], *)
+  debugPrint[arg___] := Print[delimiterAddedString[", ",
+    List@@Map[symbolToString, Map[Unevaluated, Hold[arg]] ]
+     ] ],
+  debugPrint[arg___] := Null
+];
 
 
 (*
@@ -100,7 +107,7 @@ Block[
       (* 制約不足で微分方程式が解けない場合は，単純に各変数値およびその微分値が矛盾しないかを調べる *)
       tStore = {};
       otherVars = vars;
-      otherCons = cons,
+      otherCons = cons && gua,
       
       (* 微分方程式が解けた場合は，微分方程式を解くのに使われなかった式との整合性を調べる *)
       originalOther = And[And@@sol[[2]], gua];
@@ -222,15 +229,18 @@ resetConstraint[] := (
 );
 
 
-addConstraint[cons_, vars_] := (
+addConstraint[co_, va_] := Block[
+  {cons, vars},
+  cons = co;
+  vars = va;
   If[isTemporary,
     tmpVariables = Union[tmpVariables, vars];
     tmpConstraint = Reduce[tmpConstraint && cons, tmpVariables, Reals],
-	variables = Union[variables, vars];
-	constraint = Reduce[constraint && cons, variables, Reals]
+	  variables = Union[variables, vars];
+	  constraint = Reduce[constraint && cons, variables, Reals]
   ];
   debugPrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
-);
+];
 
 addVariables[vars_] := (
   If[isTemporary,
@@ -328,11 +338,13 @@ getExprCode[expr_] := Switch[Head[expr],
 ];
 
 
-replaceIntegerToString[num_] := If[num < 0, minus[IntegerString[num]], IntegerString[num] ];
+replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 integerString[expr_] := (
-  expr /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ])
+  expr /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
+       /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
        /. (x_Integer :> replaceIntegerToString[x])
 );
+
 
 (* リストを整形する *)
 (* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
@@ -354,6 +366,7 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     dSol = exDSolve[cons, vars];
     
     
+    
     (* 次にそれらをdiscCauseに適用する *)
     dVars = dSol[[3]];
     timeAppliedCauses = False;
@@ -363,20 +376,26 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     ];
     
     
+    
+    
     (* 最後に，あらかじめ求められているはずのotherConsとpconsを付加してMinimize *)  
     
     resultList = Quiet[Minimize[{t, (timeAppliedCauses || t == maxTime) && pCons && t>0}, {t}], 
                            {Minimize::wksol, Minimize::infeas}];
+    debugPrint[resultList];
     resultList = First[resultList];
+    
+    debugPrint[resultList];
 
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
     
+    debugPrint[resultList];
     
     (* 整形して結果を返す *)
     resultList = Map[({#[[1]],LogicalExpand[#[[2]] ]})&, resultList];
     resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
     resultList = Map[({#[[1]], Cases[applyList[#[[2]] ], Except[True]] })&, resultList];
-    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], hasParameter ] ], If[FullSimplify[#[[1]] ] === FullSimplify[maxTime], 1, 0]})&, resultList];
+    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], hasParameter ] ], If[Reduce[#[[1]] == maxTime] === True, 1, 0]})&, resultList];
     {1, resultList}
   ],
   {0, $MessageList}
@@ -477,7 +496,6 @@ splitExprs[expr_] := Block[
 
 applyTime2Expr[expr_, time_] := Block[
   {appliedExpr},
-  debugPrint[expr, time];
   appliedExpr = FullSimplify[(expr /. t -> time)];
   If[Element[appliedExpr, Reals] =!= False,
     {1, integerString[appliedExpr]},
