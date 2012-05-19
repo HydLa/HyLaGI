@@ -31,7 +31,7 @@ void MathematicaVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_p
 MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::MathematicaVCS(Constructor) ***\n");
-  //std::cout << opts.mathlink << std::endl;
+  std::cout << opts.mathlink.c_str() << std::endl;
 
   //TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
   if(!ml_.init(opts.mathlink.c_str())) {

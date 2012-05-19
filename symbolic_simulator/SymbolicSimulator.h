@@ -108,6 +108,8 @@ private:
 
   Opts     opts_;
 
+  std::vector<phase_state_sptr> all_state;
+
   /// 使用するソルバへのポインタ
   boost::scoped_ptr<solver_t> solver_;
   bool is_safe_;
