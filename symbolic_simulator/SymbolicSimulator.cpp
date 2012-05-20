@@ -157,36 +157,36 @@ namespace hydla {
           if(opts_.interactive_mode && state->phase == PointPhase)
           { 
             opts_.max_time = "100";
-            if(all_state.size()==0){
-              std::cout << "read state file ?" << std::endl;
-              if(0){//無理
+            //if(all_state.size()==0){
+            if(0){
+              if(1){
                char *name = "save_data.dat";
                FILE *fp;
                phase_state_sptr tmp;
                 if( ( fp = fopen( name, "rb" ) ) == NULL ) {
                   printf("ファイルオープンエラー\n");
                 }else{
-                  for(int i=0;i<2;i++){
-                    {
-                      fread( &tmp, sizeof(phase_state_sptr), 1, fp ) ;
+                  while(fread( &tmp, sizeof(phase_state_sptr), 1, fp )){
+                     std::cout << tmp->phase << std::endl;
                       all_state.push_back(tmp);
                     }
                   }  
-                } 
                 fclose( fp );
-                for (int i=all_state.size();i<all_state.size();i++){
+                /*for (int i=all_state.size();i<all_state.size();i++){
                   std::cout << get_state_output(*all_state[i], false);
-                }
+                }*/
+                std::cout << "unko" << std::endl;
+                all_state.clear();
               }
             }
             std::cout <<  "size : " << all_state.size() <<std::endl;
             if(all_state.size() > 1){
               for (int i=all_state.size()-2;i<all_state.size();i++){
-                std::cout << get_state_output(*all_state[i], false);
+                std::cout << get_state_output(*all_state[i], false,true);
               }
             }else{
               for (int i=0;i<all_state.size();i++){
-                std::cout << get_state_output(*all_state[i], false);
+                std::cout << get_state_output(*all_state[i], false,true);
               }
             }
             std::cout << "[debug] in mode test" <<std::endl;
@@ -254,6 +254,7 @@ namespace hydla {
                   printf("ファイルオープンエラー\n");
                 }else{
                   for(int i=0;i<all_state.size();i++){
+                    tmp = all_state[i];
                     fwrite( &tmp, sizeof(phase_state_sptr), 1, fp ) ;
                   }
                 }
@@ -604,7 +605,7 @@ namespace hydla {
         }
 
         if(opts_.dump_in_progress)
-          std::cout << get_state_output(*branch_state, false);
+          std::cout << get_state_output(*branch_state, false,true);
 
         /*
            TellCollector   tell_collector(ms);
@@ -626,6 +627,7 @@ namespace hydla {
         */
        
         //Scan入力
+        /*
         if(v_scan.size()!=0)
         {
         std::cout << "test scan" << std::endl;
@@ -659,7 +661,7 @@ namespace hydla {
         new_state->variable_map = vm;
         std::cout << "end scan" << std::endl;
         }
-        
+      */ 
       }
 
 
@@ -806,6 +808,7 @@ namespace hydla {
           if(!time_result.candidates[time_it].is_max_time ) {
             phase_state_sptr new_state(create_new_phase_state(new_state_original));
             new_state->current_time = time_result.candidates[time_it].time;
+            branch_state->end_time = time_result.candidates[time_it].time;
             solver_->simplify(new_state->current_time);
             new_state->parameter_map = branch_state->parameter_map;
 
@@ -817,7 +820,7 @@ namespace hydla {
             branch_state->cause_of_termination = simulator::TIME_LIMIT;
           }
           if(opts_.dump_in_progress){
-            std::cout << get_state_output(*branch_state, false);
+            std::cout << get_state_output(*branch_state, false,true);
           }
         }
       }else{
@@ -928,7 +931,7 @@ namespace hydla {
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
     }
-    result.push_back(get_state_output(*node, false));
+    result.push_back(get_state_output(*node, false,false));
     if(node->children.size() == 0){
       if(opts_.nd_mode){
         std::cout << "#---------Case " << case_num++ << "---------" << std::endl;
@@ -978,19 +981,25 @@ namespace hydla {
     }
   }
 
-  std::string SymbolicSimulator::get_state_output(const phase_state_t& result, const bool& numeric){
+  std::string SymbolicSimulator::get_state_output(const phase_state_t& result, const bool& numeric, const bool& is_in_progress){
     std::stringstream sstr;
     if(!numeric){
       if(result.phase==IntervalPhase){
         sstr << "---------IP---------" << std::endl;
         std::string end_time;
-        if(result.children.empty()){
-          end_time = "";//opts_.max_time;
+        if(is_in_progress){
+          sstr << "time\t: " << result.current_time << "->" << result.end_time << "\n";
         }else{
-          end_time = "";//result.children[0]->current_time.get_string();
+          if(result.children.empty()){
+            end_time = opts_.max_time;
+          }else{
+            end_time = result.children[0]->current_time.get_string();
+          }
+          sstr << "time\t: " << result.current_time << "->" << end_time << "\n";
         }
-        sstr << "time\t: " << result.current_time << "->" << end_time << "\n";
       }else{
+        if(is_in_progress)
+          sstr << "#-------" << result.step +1 << "-------" << std::endl;
         sstr << "---------PP---------" << std::endl;
         sstr << "time\t: " << result.current_time << "\n";
       }

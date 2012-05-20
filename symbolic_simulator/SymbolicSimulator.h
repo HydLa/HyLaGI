@@ -87,7 +87,7 @@ private:
   
   void output_variable_map(std::ostream &, const variable_map_t& variable_map, const time_t& time,  const bool& numeric);
   
-  std::string get_state_output(const phase_state_t& result, const bool& numeric);
+  std::string get_state_output(const phase_state_t& result, const bool& numeric, const bool& is_in_progress);
   void output_variable_labels(std::ostream &, const variable_map_t variable_map);
 
   
