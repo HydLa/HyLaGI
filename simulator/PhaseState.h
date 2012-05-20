@@ -33,6 +33,7 @@ struct PhaseState {
   Phase                     phase;
   int id;
   time_t                    current_time;
+  time_t                    end_time;
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
   expanded_always_id_t      expanded_always_id;
