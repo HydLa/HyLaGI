@@ -108,7 +108,9 @@ private:
 
   Opts     opts_;
 
+  //interactive mode用
   std::vector<phase_state_sptr> all_state;
+  bool change_variable_flag;
 
   /// 使用するソルバへのポインタ
   boost::scoped_ptr<solver_t> solver_;

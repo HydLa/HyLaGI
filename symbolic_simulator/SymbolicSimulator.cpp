@@ -156,6 +156,7 @@ namespace hydla {
             continue;
           if(opts_.interactive_mode && state->phase == PointPhase)
           { 
+            change_variable_flag = false;
             opts_.max_time = "100";
             //if(all_state.size()==0){
             if(0){
@@ -166,7 +167,7 @@ namespace hydla {
                 if( ( fp = fopen( name, "rb" ) ) == NULL ) {
                   printf("ファイルオープンエラー\n");
                 }else{
-                  while(fread( &tmp, sizeof(phase_state_sptr), 1, fp )){
+                  while(fread( &*tmp, sizeof(368), 1, fp )){
                      std::cout << tmp->phase << std::endl;
                       all_state.push_back(tmp);
                     }
@@ -179,7 +180,7 @@ namespace hydla {
                 all_state.clear();
               }
             }
-            std::cout <<  "size : " << all_state.size() <<std::endl;
+            //std::cout <<  "size : " << all_state.size() <<std::endl;
             if(all_state.size() > 1){
               for (int i=all_state.size()-2;i<all_state.size();i++){
                 std::cout << get_state_output(*all_state[i], false,true);
@@ -199,7 +200,7 @@ namespace hydla {
             //rewind(stdin);
             while (getchar() != '\n'){ }
             key = getchar();
-            std::cout << key << std::endl;
+            //std::cout << key << std::endl;
             switch(key){
               case 'j':
                 int target_step;
@@ -255,7 +256,7 @@ namespace hydla {
                 }else{
                   for(int i=0;i<all_state.size();i++){
                     tmp = all_state[i];
-                    fwrite( &tmp, sizeof(phase_state_sptr), 1, fp ) ;
+                    fwrite( &*tmp, sizeof(*tmp), 1, fp ) ;
                   }
                 }
                 fclose( fp );
@@ -267,7 +268,7 @@ namespace hydla {
                 break;
               case 'w':
                 std::cout << "change variable" << std::endl;
-                //change_variable_flag = 1;
+                change_variable_flag = 1;
                 break;
             }
 
@@ -627,7 +628,7 @@ namespace hydla {
         */
        
         //Scan入力
-        /*
+        
         if(v_scan.size()!=0)
         {
         std::cout << "test scan" << std::endl;
@@ -640,8 +641,8 @@ namespace hydla {
         std::cout << *v_it << std::endl;
         std::string s;
         std::cin >> s;
-        value_t n(s);
-        //value_t n = s;
+        //value_t n(s);
+        value_t n = s;
         int derivative_count = 0;
         std::string name = *v_it;
         std::string::iterator n_it;
@@ -655,13 +656,34 @@ namespace hydla {
         nb = na + sa.size();
         derivative_count++;
         }
-        variable_t m(name, derivative_count);
+        const int& dc = derivative_count;
+        const std::string& _name = name;
+        //variable_t* m(name, derivative_count);
+        //DefaultVariable* m(name, derivative_count);
+        hydla::simulator::DefaultVariable* m = get_variable(_name, dc);
         vm.set_variable(m, n);
         }
         new_state->variable_map = vm;
         std::cout << "end scan" << std::endl;
         }
-      */ 
+
+      if(change_variable_flag&&opts_.interactive_mode){
+        std::cout << "select variable" << std::endl;
+        std::cout << get_state_output(*branch_state, false, true);
+        variable_map_t vm = branch_state->variable_map;
+        std::string s; //number
+        std::cin >> s;
+        value_t n = s;
+        int derivative_count = 0;
+        std::string name = "ht";
+        const int& dc = derivative_count;
+        const std::string& _name = name;
+        hydla::simulator::DefaultVariable* m = get_variable(_name, dc);
+vm.set_variable(m,n); 
+
+        branch_state->variable_map = vm;
+        change_variable_flag = false;
+      } 
       }
 
 
