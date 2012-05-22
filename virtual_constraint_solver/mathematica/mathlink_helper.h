@@ -79,18 +79,9 @@ public:
   
   
   /**
-   * 次のリターンパケットまでデータを受信しておく．
-   * 以前受信したデータは，開始時にすべて破棄する
+   * 次のリターンパケットの直前までtextpktなどを受信しておく．
    */
   bool receive();
-  
-  
-  
-  void strCase();
-  void symCase();
-  void intCase();
-  void funcCase();
-
   
   void clean()
   {
@@ -152,19 +143,13 @@ public:
 
   std::string get_symbol()
   {
-    if(token_list_.size() <= 0){
-      throw MathLinkError("empty token list in get_symbol", 0);
-    }
-    if(token_list_.front()!=MLTKSYM){
-      throw MathLinkError("illegal token in get_symbol", token_list_.front());
-    }
-    if(string_list_.size() <= 0){
-      throw MathLinkError("empty string list in get_symbol", 0);
-    }
-    std::string str = string_list_.front();
-    string_list_.pop_front();
-    token_list_.pop_front();
-    return str;
+    const char *s;
+	  if(!MLGetSymbol(&s)){
+	    throw MathLinkError("get_symbol", MLError());
+	  }
+	  std::string sym(s);
+	  MLReleaseSymbol(s);
+	  return sym;
   }
 
   int put_string(const char* s) {
@@ -174,26 +159,8 @@ public:
   int put_string(const std::string& s) {
     return MLPutString(s.c_str());
   }
-
+  
   std::string get_string()
-  {
-    if(token_list_.size() <= 0){
-      throw MathLinkError("empty token list in get_string", 0);
-    }
-    if(token_list_.front()!=MLTKSTR){
-      throw MathLinkError("illegal token in get_string", token_list_.front());
-    }
-    if(string_list_.size()<=0){
-      throw MathLinkError("empty string list in get_string", 0);
-    }
-    std::string str = string_list_.front();
-    string_list_.pop_front();
-    token_list_.pop_front();
-    return str;
-  }
-  
-  
-  std::string get_string_()
   {
     const char *s;
     if(!MLGetString(&s)) {
@@ -207,27 +174,9 @@ public:
 
   int put_integer(int i) {
     return MLPutInteger(i);
-  }
-
+  } 
+  
   int get_integer()
-  {
-    if(token_list_.size() <= 0){
-      throw MathLinkError("empty token list in get_int", 0);
-    }
-    if(token_list_.front() != MLTKINT){
-      throw MathLinkError("illegal token in get_integer", token_list_.front());
-    }
-    if(int_list_.size() <= 0){
-      throw MathLinkError("empty int list in get_integer", 0);
-    }
-    int i = int_list_.front();
-    int_list_.pop_front();
-    token_list_.pop_front();
-    return i;
-  }
-  
-  
-  int get_integer_()
   {
     int i;
     if(!MLGetInteger(&i)) {
@@ -238,23 +187,6 @@ public:
 
   int get_arg_count()
   {
-    if(token_list_.size() <= 0){
-      throw MathLinkError("empty token list in get_arg_count", 0);
-    }
-    if(token_list_.front()!=MLTKFUNC){
-      throw MathLinkError("illegal token in get_arg_count", token_list_.front());
-    }
-    if(int_list_.size()<=0){
-      throw MathLinkError("empty int list in get_arg_count", 0);
-    }
-    int count = int_list_.front();
-    int_list_.pop_front();
-    token_list_.pop_front();
-    return count;
-  }
-
-  int get_arg_count_()
-  {
     int count;
     if(!MLGetArgCount(&count)){
       throw MathLinkError("get_arg_count", MLError());
@@ -263,37 +195,11 @@ public:
   }
   
   int get_type(){
-    if(token_list_.size() <= 0){
-      throw MathLinkError("empty list in get_type", 0);
-    }
-    return token_list_.front();
+    return MLGetType();
   }
   
   int get_next(){
-    if(token_list_.size() <= 0){
-      throw MathLinkError("empty list in get_next", 0);
-    }
-    switch(token_list_.front()){
-      case MLTKFUNC:
-      case MLTKINT:
-        if(int_list_.size() <= 0){
-          throw MathLinkError("empty int list in get_next", 0);
-        }
-        int_list_.pop_front();
-        break;
-      case MLTKSYM:
-      case MLTKSTR:
-        if(string_list_.size() <= 0){
-          throw MathLinkError("empty string list in get_next", 0);
-        }
-        string_list_.pop_front();
-        break;
-      default:
-        throw MathLinkError("illegal element in get_next", 0);
-        break;
-    }
-    token_list_.pop_front();
-    return token_list_.front();
+    return MLGetNext();
   }
 
 
@@ -329,9 +235,6 @@ public:
   int MLError()                           {return ::MLError(link_);}
 
 private:
-  std::list<std::string> string_list_;
-  std::list<int>         int_list_;
-  std::list<int>         token_list_;
   MLENV env_;
   MLINK link_;
 };

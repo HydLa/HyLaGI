@@ -99,6 +99,7 @@ Block[
   Check[
     inputPrint["checkConsistencyInterval", cons, pcons, gua, gVars, vars];
     sol = exDSolve[cons, vars];
+    debugPrint[sol];
     If[sol[[1]] === overConstraint,
       Return[{False, pcons}]
     ];
@@ -429,8 +430,17 @@ Quiet[
     {sol, dExpr, dVars, otherExpr, otherVars},
     
     sol = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], expr], vars, Reals];
+    
+    
+    
+    If[Head[sol]===Or, 
+      sol = First[sol] 
+    ];
+    sol = applyList[sol];
+    
     {dExpr, dVars, otherExpr, otherVars} = splitExprs[sol];
     
+    debugPrint[dExpr, dVars, otherExpr, otherVars];
     
     If[dExpr === {},
       (* 微分方程式が存在しない *)
@@ -457,6 +467,7 @@ Quiet[
    除いた式は第3要素として返す．
    第2要素と第4要素はそれぞれ，必要な式と邪魔な式に含まれる変数のリスト *)
 
+(*
 splitExprs[expr_] := Block[
   {dExprs, appendedTimeVars, dVars, iter, otherExprs, otherVars, getTimeVars, getNoInitialTimeVars, timeVars, exprStack},
   
@@ -488,6 +499,21 @@ splitExprs[expr_] := Block[
   otherVars = Fold[(getTimeVars[#1,#2])&, {}, otherExprs];
   {dExprs, dVars, otherExprs, otherVars}
 ];
+*)
+
+(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
+(* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
+splitExprs[expr_] := Block[
+  {NDExpr, DExpr, DExprVars, otherExpr},
+  otherExpr = Select[expr, (Head[#] =!= Equal) &];
+  NDExpr = Select[Complement[expr, otherExpr], 
+                  (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
+  DExpr = Complement[expr, Join[otherExpr, NDExpr]];
+  DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
+                         {}, DExpr]];
+  {DExpr, DExprVars, NDExpr, otherExpr}
+];
+
 
 
 (*

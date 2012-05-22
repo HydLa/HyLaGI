@@ -109,6 +109,7 @@ void MathematicaVCS::start_temporary(){
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::start_temporary ***\n");
   ml_.put_function("startTemporary", 0);
   ml_.receive();
+  ml_.MLNewPacket();
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::start_temporary ***\n");
 }
 
@@ -116,6 +117,7 @@ void MathematicaVCS::end_temporary(){
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::end_temporary ***\n");
   ml_.put_function("endTemporary", 0);
   ml_.receive();
+  ml_.MLNewPacket();
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::end_temporary ***\n");
 }
 
@@ -133,6 +135,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   // pc.check();
 ///////////////////
   ml_.receive();
+  ml_.MLNewPacket();
 
   {
     PacketSender ps(ml_);
@@ -143,6 +146,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     }
     
     ml_.receive();
+    ml_.MLNewPacket();
   }
 
   {
@@ -197,8 +201,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     }
     ps.put_pars();
     ml_.receive();  
+    ml_.MLNewPacket();
   }
-  
 
 
   {
@@ -225,7 +229,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
       }
     }
     ps.put_vars();
-    ml_.receive();  
+    ml_.receive(); 
+    ml_.MLNewPacket(); 
   }
 
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::reset ***\n");
@@ -254,6 +259,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   int or_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("or_size: ", or_size);
   ml_.get_next();// Listという関数名
+  ml_.get_next();
   create_result_t create_result;
   for(int or_it = 0; or_it < or_size; or_it++){
     variable_range_map_t map;
@@ -268,6 +274,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
 
       //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
 
+      ml_.get_next();
       ml_.get_next();// 関数であるということと，その引数の数
       ml_.get_next();// Listという関数名
 
@@ -293,6 +300,8 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     }
     create_result.result_maps.push_back(map);
   }
+  
+  ml_.MLNewPacket();
   
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::create_maps ***\n");
   return create_result;
@@ -324,6 +333,7 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
   ///////////////// 受信処理
   HYDLA_LOGGER_VCS( "--- receive ---");
   ml_.receive();
+  ml_.MLNewPacket();
 
   HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_constraint ***\n");
   return;
@@ -356,6 +366,7 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   ///////////////// 受信処理
   HYDLA_LOGGER_VCS("%% receive");
   ml_.receive();
+  ml_.MLNewPacket();
 
   HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::add_guard ***\n");
   return;
@@ -398,6 +409,7 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     //更に二重リストが来るはず
     int map_size = ml_.get_arg_count();
     ml_.get_next();
+    ml_.get_next();
 
     for(int i=0; i < map_size; i++){
       parameter_map_t tmp_map;
@@ -424,6 +436,7 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     }
   }
   //終わりなのでパケットの最後尾までスキップ
+  ml_.MLNewPacket();
   
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::check_consistency ***");
   return ret;
@@ -476,9 +489,11 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
 
   // 次のPPの時刻と，その場合の条件の組，更に終了時刻かどうかを得る
   HYDLA_LOGGER_VCS("%% receive next PP time");
+  ml_.get_next();
   int next_time_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
   ml_.get_next(); // Listという関数名を飛ばす
+  ml_.get_next();
   PP_time_result_t result;
   for(int time_it = 0; time_it < next_time_size; time_it++){
     PP_time_result_t::candidate_t candidate;
@@ -486,16 +501,18 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
     // 時刻を受け取る
     candidate.time = time_t(mec.receive_and_make_symbolic_value(ml_)) + current_time;
     HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
-    receive_parameter_map(candidate.parameter_map);
+    ml_.get_next();
     // 条件を受け取る
+    receive_parameter_map(candidate.parameter_map);
     
     // 終了時刻かどうかを受け取る
     candidate.is_max_time = ml_.get_integer();
     HYDLA_LOGGER_VCS("is_max_time: ",  candidate.is_max_time);
-    HYDLA_LOGGER_VCS("--parameter map--\n",  candidate.parameter_map);
+    HYDLA_LOGGER_VCS("--- parameter map ---\n",  candidate.parameter_map);
     result.candidates.push_back(candidate);
   }
 
+  ml_.MLNewPacket();
   HYDLA_LOGGER_VCS("#*** End MathematicaVCSInterval::calculate_next_PP_time ***");
   return result;
 }
@@ -504,6 +521,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_parameter_map ***");
   int condition_size = ml_.get_arg_count(); //条件式の数
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
+  ml_.get_next();
   ml_.get_next();
   value_range_t tmp_range;
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
@@ -522,6 +540,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     HYDLA_LOGGER_VCS("%% returned value: ", tmp_value.get_string());
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
     map.set_variable(tmp_param, tmp_range);
+    ml_.get_next();
   }
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
 }
@@ -565,6 +584,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
     }
     out_vm.set_variable(it->first, value);
   }
+  ml_.MLNewPacket();
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::apply_time_to_vm ***");
 }
 
@@ -773,6 +793,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
   ///////////////// 受信処理
   HYDLA_LOGGER_VCS( "%%receive\n");
   ml_.receive();
+  ml_.MLNewPacket();
 
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::set_init_value ***\n");
 }

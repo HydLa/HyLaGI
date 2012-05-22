@@ -118,7 +118,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
           PacketSender::function_map_t::right_const_iterator it = 
             PacketSender::function_map_.right.find(PacketSender::function_t(symbol, arg_count));
           if(it != PacketSender::function_map_.right.end() && it->second.second == arg_count){
-            // ‘Î‰ž‚µ‚Ä‚¢‚éŠÖ”1
+            // ‘Î‰ž‚µ‚Ä‚¢‚éŠÖ”
             f.reset(new hydla::parse_tree::Function(it->second.first));
           }
           else{

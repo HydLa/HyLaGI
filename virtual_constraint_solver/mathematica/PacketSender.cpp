@@ -150,7 +150,6 @@ void PacketSender::visit(boost::shared_ptr<Function> node)
 {
   int size = node->get_arguments_size();
   function_map_t::left_iterator it = function_map_.left.find(function_t(node->get_string(), size));
-  std::cout << it->second.first << ", " << it->second.second << std::endl;
   assert(it != function_map_.left.end());
   assert(it->second.second == size);
   HYDLA_LOGGER_REST("put: Function : ", it->second.first);

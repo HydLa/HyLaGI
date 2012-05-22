@@ -371,10 +371,28 @@ private:
       // ”š
       case RI_Number:
       {
-        boost::shared_ptr<Number> node(node_factory_->create<Number>());
-        node->set_number(
-          std::string(tree_iter->value.begin(), tree_iter->value.end()));     
-        return node;
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        std::string::size_type sz = str.find(".");
+        if(sz == std::string::npos){
+          boost::shared_ptr<Number> node(node_factory_->create<Number>());
+          node->set_number(str);
+          return node;
+        }else{
+          //¬”‚È‚çC•ª”‚É•ÏŠ·‚·‚é
+          std::string denominator("1");
+          for(unsigned int i=0; i<str.size()-(sz+1);i++){
+            denominator += "0";
+          }
+          str = str.substr(0, sz) + str.substr(sz+1);
+          boost::shared_ptr<Number> num_node(node_factory_->create<Number>());
+          num_node->set_number(str);
+          boost::shared_ptr<Number> den_node(node_factory_->create<Number>());
+          den_node->set_number(denominator);
+          boost::shared_ptr<Divide> node(node_factory_->create<Divide>());
+          node->set_lhs(num_node);
+          node->set_rhs(den_node);
+          return node;
+        }
       }
       
       case RI_Assert:
