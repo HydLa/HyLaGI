@@ -9,33 +9,22 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-bool PacketErrorHandler::handle(MathLink* ml, int ret_code) 
-{  
-  HYDLA_LOGGER_REST(
-    "-- PacketErrorHandler::handle --\n", 
-    "ret_code: ", ret_code);
-
+bool PacketErrorHandler::handle(MathLink* ml) 
+{
+  HYDLA_LOGGER_VCS("#*** Begin PacketErrorHandler::handle ***");
+  ml->get_next();
+  ml->get_next();
+  int ret_code = ml->get_integer();
   if(ret_code == 0) {
-    //ml->MLGetNext();
-    // TODO: エラーを取得し，表示する
-    /*
-     int error_size = ml->get_arg_count();
-     HYDLA_LOGGER_DEBUG("error_size: ", error_size);
-     ml->MLGetNext();
-     for(int i=0; i<error_size; i++) {
-       ml->MLGetNext();
-       std::cout << ml->MLGetNext() << "\n";      
-       HYDLA_LOGGER_ERROR("err msg:", ml->get_symbol());
-       std::cout << ml->MLGetNext() << "\n";      
-       HYDLA_LOGGER_ERROR("err msg:", ml->get_symbol());
-     }*/
-    //ml->MLNextPacket();
     ml->MLNewPacket();
+    HYDLA_LOGGER_VCS("#*** End PacketErrorHandler::handle with return true ***");
     return true;
   }
-
+  ml->get_next();
+  HYDLA_LOGGER_VCS("#*** End PacketErrorHandler::handle ***");
   return false;
 }
+
 
 } // namespace mathematica
 } // namespace simulator

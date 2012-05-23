@@ -9,18 +9,20 @@ $MaxExtraPrecision = 1000;
  * デバッグ用メッセージ出力関数
  *)
  
-SetAttributes[debugPrint, HoldAll];
+SetAttributes[simplePrint, HoldAll];
 
 symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputForm[Evaluate[#] ] ] ])&;
 
 SetAttributes[symbolToString, HoldAll];
 
 If[optUseDebugPrint,
-  (* debugPrint[arg___] := Print[InputForm[{arg}]], *)
-  debugPrint[arg___] := Print[delimiterAddedString[", ",
+  debugPrint[arg___] := Print[InputForm[{arg}]];
+  simplePrint[arg___] := Print[delimiterAddedString[", ",
     List@@Map[symbolToString, Map[Unevaluated, Hold[arg]] ]
      ] ],
-  debugPrint[arg___] := Null
+  
+  debugPrint[arg___] := Null;
+  simplePrint[arg___] := Null
 ];
 
 
@@ -69,18 +71,21 @@ checkConsistencyPoint[] := (
 checkConsistencyPoint[cons_, pcons_, vars_] := (
   Check[
     Block[
-      {cpTrue, cpFalse},
+      {trueMap, falseMap, cpTrue, cpFalse},
       inputPrint["checkConsistencyPoint", cons, pcons, vars];
       Quiet[
         cpTrue = Reduce[Exists[vars, cons && pcons], Reals], {Reduce::useq}
       ];
+      simplePrint[cpTrue];
       Quiet[
         cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
       ];
-      {cpTrue, cpFalse} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
-      {cpTrue, cpFalse}
+      simplePrint[cpFalse];
+      {trueMap, falseMap} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
+      simplePrint[trueMap, falseMap];
+      {1, {trueMap, falseMap}}
     ],
-    {0, $MessageList, ToString[{cpTrue, cpFalse}]}
+    debugPrint[$MessageList]; {0}
   ]
 );
 
@@ -93,13 +98,14 @@ checkConsistencyInterval[] :=  (
 appendZeroVars[vars_] := Join[vars, vars /. x_[t] -> x[0]];
 
 (* TODO 微分方程式を解いたら，その結果を再利用する *)
+
 checkConsistencyInterval[cons_, pcons_, gua_, gVars_, vars_] :=  
-Block[
-  {tStore, sol, otherCons, originalOther, tCons, dVars, otherVars, i, cpTrue, cpFalse},
-  Check[
+Check[
+  Block[
+    {tStore, sol, otherCons, originalOther, tCons, dVars, otherVars, i, cpTrue, cpFalse, trueMap, falseMap},
     inputPrint["checkConsistencyInterval", cons, pcons, gua, gVars, vars];
     sol = exDSolve[cons, vars];
-    debugPrint[sol];
+    debugPrint["sol after exDSolve", sol];
     If[sol[[1]] === overConstraint,
       Return[{False, pcons}]
     ];
@@ -120,19 +126,28 @@ Block[
         otherCons = Or[otherCons, originalOther /. tStore ]
       ]
     ];
+    
+    simplePrint[tStore, otherCons];
+    
     (* Existsの第一引数はHold（HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある（気がする） *)
     tCons = Reduce[Exists[Evaluate[Union[appendZeroVars[otherVars], gVars]], otherCons && pcons], Reals];
+
+    simplePrint[tCons];
+
     If[tCons === False, Return[{False, pcons}] ];
     
-    cpTrue = Reduce[Quiet[Minimize[{t, tCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
-    
+    cpTrue = Reduce[Quiet[Minimize[{t, tCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];        
     cpFalse = Reduce[pcons && !cpTrue, Reals];
-    {cpTrue, cpFalse} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
-    {cpTrue, cpFalse}
-    ,
-    {0, $MessageList, {tStore, sol, otherCons, originalOther, tCons, dVars, otherVars, i, cpTrue, cpFalse}}
-  ]
+
+    simplePrint[cpTrue, cpFalse];
+
+    {trueMap, falseMap} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
+    simplePrint[trueMap, falseMap];
+    {1, {trueMap, falseMap}}
+  ],
+  debugPrint[$MessageList]; {0}
 ]
+
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
@@ -141,22 +156,30 @@ Block[
 createVariableMap[] := createVariableMap[constraint, variables];
 
 
-createVariableMap[cons_, vars_] := Block[
-  {ret},
-  inputPrint["createVariableMap", cons, vars];
-  ret = createMap[cons, hasVariable, vars];
-  ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
-  debugPrint[ret];
-  ret
+createVariableMap[cons_, vars_] :=  
+Check[
+  Block[
+    {ret},
+    inputPrint["createVariableMap", cons, vars];
+    ret = createMap[cons, hasVariable, vars];
+    debugPrint["ret after CreateMap", ret];
+    ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
+    simplePrint[ret];
+    {1, ret}
+  ],
+  debugPrint[$MessageList]; {0}
 ];
 
 
 createVariableMapInterval[] := createVariableMapInterval[constraint, variables, parameters];
 
-createVariableMapInterval[cons_, vars_, pars_] := Block[
+createVariableMapInterval[cons_, vars_, pars_] := 
+Check[
+  Block[
   {sol, originalOther, otherCons, dVars, tStore, cStore, i, ret},
   inputPrint["createVariableMapInterval", cons, vars, pars];
   sol = exDSolve[cons, vars];
+  debugPrint["sol after exDSolve", sol];
   (* 微分方程式が解けた場合は，微分方程式を解くのに使われなかった式との整合性を調べる *)
   originalOther = And@@sol[[2]];
   cStore = False;
@@ -166,10 +189,14 @@ createVariableMapInterval[cons_, vars_, pars_] := Block[
     tStore = Map[(# -> createIntegratedValue[#, sol[[1]] [[i]]])&, dVars];
     cStore = Or[cStore, (originalOther /. tStore) && And@@Map[(Equal@@#)&, tStore] ]
   ];
+  simplePrint[cStore];
   ret = createMap[cStore && t>0, hasVariable, vars];
+  debugPrint["ret after CreateMap", ret];
   ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
-  debugPrint[ret];
-  ret
+  simplePrint[ret];
+  {1, ret}
+  ],
+  debugPrint[$MessageList]; {0}
 ];
 
 createParameterMap[] := createMap[pConstraint, hasParameter, {}];
@@ -180,13 +207,14 @@ createMap[cons_, judge_, vars_] := Block[
   If[cons === True || cons === False, Return[cons]];
   
   map = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], cons], vars, Reals];
+  debugPrint["@createMap map after Reduce", map];
   
   map = LogicalExpand[map];
   map = applyListToOr[map];
   map = Map[(applyList[#])&, map];
+  debugPrint["@createMap map after applyList", map];
   
   map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
-  debugPrint[map];
   map
 ];
 
@@ -240,7 +268,7 @@ addConstraint[co_, va_] := Block[
 	  variables = Union[variables, vars];
 	  constraint = Reduce[constraint && cons, variables, Reals]
   ];
-  debugPrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
+  simplePrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
 ];
 
 addVariables[vars_] := (
@@ -248,13 +276,13 @@ addVariables[vars_] := (
     tmpVariables = Union[tmpVariables, vars],
 	variables = Union[variables, vars]
   ];
-  debugPrint[vars, variables, tmpVariables];
+  simplePrint[vars, variables, tmpVariables];
 );
 
 setGuard[gu_, vars_] := (
   guard = gu;
   guardVars = vars;
-  debugPrint[ gu, vars, guard, guardVars];
+  simplePrint[ gu, vars, guard, guardVars];
 );
 
 startTemporary[] := (
@@ -277,7 +305,7 @@ resetTemporaryConstraint[] := (
 addParameterConstraint[pcons_, pars_] := (
   pConstraint = Reduce[pConstraint && pcons, Reals];
   parameters = Union[parameters, pars];
-  debugPrint[pConstraint, pars];
+  simplePrint[pConstraint, pars];
 );
 
 
@@ -366,7 +394,7 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果(tStore)をそのまま引き継ぐこともできるはず *)
     dSol = exDSolve[cons, vars];
     
-    
+    debugPrint["dSol after exDSolve", dSol];
     
     (* 次にそれらをdiscCauseに適用する *)
     dVars = dSol[[3]];
@@ -376,6 +404,7 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
       timeAppliedCauses = Or[timeAppliedCauses, Or@@discCause /. tStore ]
     ];
     
+    simplePrint[timeAppliedCauses];
     
     
     
@@ -383,23 +412,21 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     
     resultList = Quiet[Minimize[{t, (timeAppliedCauses || t == maxTime) && pCons && t>0}, {t}], 
                            {Minimize::wksol, Minimize::infeas}];
-    debugPrint[resultList];
+    debugPrint["resultList after Minimize", resultList];
     resultList = First[resultList];
-    
-    debugPrint[resultList];
-
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
-    
-    debugPrint[resultList];
-    
+       
     (* 整形して結果を返す *)
     resultList = Map[({#[[1]],LogicalExpand[#[[2]] ]})&, resultList];
     resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
     resultList = Map[({#[[1]], Cases[applyList[#[[2]] ], Except[True]] })&, resultList];
-    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], hasParameter ] ], If[Reduce[#[[1]] == maxTime] === True, 1, 0]})&, resultList];
+    
+    debugPrint["resultList after Format", resultList];
+    
+    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], hasParameter ] ], If[Quiet[Reduce[#[[1]] == maxTime], {Reduce::useq}] === True, 1, 0]})&, resultList];
     {1, resultList}
   ],
-  {0, $MessageList}
+  debugPrint[$MessageList]; {0}
 ];
 
 
@@ -504,14 +531,18 @@ splitExprs[expr_] := Block[
 (* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
 (* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
 splitExprs[expr_] := Block[
-  {NDExpr, DExpr, DExprVars, otherExpr},
-  otherExpr = Select[expr, (Head[#] =!= Equal) &];
-  NDExpr = Select[Complement[expr, otherExpr], 
-                  (MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];  
-  DExpr = Complement[expr, Join[otherExpr, NDExpr]];
-  DExprVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
-                         {}, DExpr]];
-  {DExpr, DExprVars, NDExpr, otherExpr}
+  {dExprs, dVars, otherExprs, otherVars},
+  
+  getTimeVars[list1_, list2_] := Union[list1, Cases[list2, _[t] | _[0], Infinity] /. x_[0] -> x[t]];
+
+  otherExprs = Select[expr, 
+                  (Head[#] =!= Equal || MemberQ[#, Derivative[n_][x_][t], Infinity] =!= True && Length[Union[Cases[#, _[t], Infinity]]] > 1) &];      
+  otherVars = Fold[(getTimeVars[#1,#2])&, {}, otherExprs];
+
+  dExprs = Complement[expr, otherExprs];
+  dVars = Union[Fold[(Join[#1, Cases[#2, _[t] | _[0], Infinity] /. x_[0] -> x[t]]) &, 
+                         {}, dExprs]];
+  {dExprs, dVars, otherExprs, otherVars}
 ];
 
 

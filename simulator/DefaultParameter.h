@@ -70,6 +70,13 @@ class DefaultParameter{
     return s;
   }
   
+  
+  bool operator==(const DefaultParameter& rhs)
+  {
+    return get_variable() == rhs.get_variable() && get_phase() == rhs.get_phase();
+  }
+  
+  
   friend bool operator<(const DefaultParameter& lhs, 
                         const DefaultParameter& rhs)
   {

@@ -11,7 +11,7 @@ namespace mathematica {
 class PacketErrorHandler
 {
 public:
-  static bool handle(MathLink* ml, int ret_code);
+  static bool handle(MathLink* ml);
 };
 
 } // namespace mathematica

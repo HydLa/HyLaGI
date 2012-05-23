@@ -592,6 +592,7 @@ namespace hydla {
       for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_.nd_mode||create_it==0); create_it++)
       {
         phase_state_sptr new_state(create_new_phase_state(new_state_original)), branch_state(create_new_phase_state(state));
+        
         branch_state->variable_map = range_map_to_value_map(branch_state, create_result.result_maps[create_it], branch_state->parameter_map);
         new_state->parameter_map = branch_state->parameter_map;
         branch_state->parent->children.push_back(branch_state);

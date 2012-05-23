@@ -254,20 +254,22 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
 /////////////////// 受信処理           
   HYDLA_LOGGER_VCS("%% receive\n");             
   ml_.receive();
+  PacketErrorHandler::handle(&ml_);
 
   // List関数の要素数（式の個数）を得る
   int or_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("or_size: ", or_size);
   ml_.get_next();// Listという関数名
-  ml_.get_next();
   create_result_t create_result;
   for(int or_it = 0; or_it < or_size; or_it++){
+    ml_.get_next();
     variable_range_map_t map;
     value_t symbolic_value;
     int and_size = ml_.get_arg_count();
     HYDLA_LOGGER_VCS("and_size: ", and_size);
     ml_.get_next();// Listという関数名
     value_range_t tmp_range;
+    std::string prev_name;
     for(int i = 0; i < and_size; i++)
     {
       //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
@@ -282,7 +284,8 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       ml_.get_next();// Listという関数名
       
       std::string variable_name = ml_.get_symbol();
-      HYDLA_LOGGER_VCS("%% name", variable_name);
+      HYDLA_LOGGER_VCS("%% name: ", variable_name);
+      if(variable_name != prev_name) tmp_range = value_range_t();
       int variable_derivative_count;
       variable_derivative_count = ml_.get_integer();
       HYDLA_LOGGER_VCS("%% derivative_count: ", variable_derivative_count);
@@ -297,6 +300,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
       HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
       map.set_variable(variable_sptr, tmp_range);
+      prev_name = variable_name;
     }
     create_result.result_maps.push_back(map);
   }
@@ -387,6 +391,7 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "%%receive");
   ml_.receive();
+  PacketErrorHandler::handle(&ml_);
   
   //まずListが来るはず
   ml_.get_next();
@@ -473,23 +478,10 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
 
   MathematicaExpressionConverter mec;
   ml_.receive();
+  PacketErrorHandler::handle(&ml_);
   
-  ml_.get_next(); // Listの引数の個数
-  ml_.get_next(); // Listという関数名
-
-  // 求解に成功したかどうか
-  int ret_code = ml_.get_integer();
-
-  //TODO: 例外処理
-  /*
-  if(PacketErrorHandler::handle(&ml_, ret_code)) {
-    throw hydla::vcs::SolveError(input_string);
-  }
-  */
-
   // 次のPPの時刻と，その場合の条件の組，更に終了時刻かどうかを得る
   HYDLA_LOGGER_VCS("%% receive next PP time");
-  ml_.get_next();
   int next_time_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
   ml_.get_next(); // Listという関数名を飛ばす
@@ -524,6 +516,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   ml_.get_next();
   ml_.get_next();
   value_range_t tmp_range;
+  parameter_t* prev_param = NULL;
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
     //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
     // 最初，Listの引数の数(MLTKFUNC）
@@ -533,6 +526,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     int derivative_count = ml_.get_integer();
     int id = ml_.get_integer();
     parameter_t* tmp_param = get_parameter(name, derivative_count, id);
+    if(tmp_param != prev_param) tmp_range = value_range_t();
     HYDLA_LOGGER_VCS("%% returned parameter_name: ", *tmp_param);
     int relop_code = ml_.get_integer();
     HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
@@ -540,6 +534,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     HYDLA_LOGGER_VCS("%% returned value: ", tmp_value.get_string());
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
     map.set_variable(tmp_param, tmp_range);
+    prev_param = tmp_param;
     ml_.get_next();
   }
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
@@ -567,20 +562,11 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
     ////////////////// 受信処理
 
       ml_.receive();
+      PacketErrorHandler::handle(&ml_);
       
-      ml_.get_next();ml_.get_next();
-
-      int ret_code = ml_.get_integer();
-      if(ret_code==0) {
-        // TODO: 適切な処理をする
-        assert(0);
-      }
-      else {
-        assert(ret_code==1);
-        MathematicaExpressionConverter mec;
-        value = value_t(mec.receive_and_make_symbolic_value(ml_));
-        HYDLA_LOGGER_REST("value : ", value.get_string());
-      }
+      MathematicaExpressionConverter mec;
+      value = value_t(mec.receive_and_make_symbolic_value(ml_));
+      HYDLA_LOGGER_REST("value : ", value.get_string());
     }
     out_vm.set_variable(it->first, value);
   }
