@@ -1794,21 +1794,6 @@ begin;
   else return {constraintStore_, parameterStore_};
 end;
 
-procedure getRealVal(value_, prec_)$
-begin;
-  scalar tmp_, defaultPrec_;
-  putLineFeed();
-
-  defaultPrec:= precision(0)$
-  on rounded$
-  precision(prec_);
-  tmp_:= value_;
-  debugWrite("tmp_:", tmp_);
-  precision(defaultPrec_)$
-  off rounded$
-
-  return tmp_;
-end;
 
 procedure checkLessThan(lhs_, rhs_)$
 begin;
@@ -2651,6 +2636,40 @@ begin;
   debugWrite("retTCList_ in compareParamTime: ", retTCList_);
   return retTCList_;
 end;
+
+procedure solveParameterIneq(ineqList_)$
+begin;
+  scalar paramNameList_, paramName_, ret_;
+
+  paramNameList_:= collectParameters(ineqList_);
+  debugWrite("paramNameList_: ", paramNameList_);
+
+  % 2種類以上のパラメタが含まれていると扱えない
+  % TODO：なんとかする？
+  if(length(paramNameList_)>1) then return ERROR;
+  paramName_:= first(paramNameList_);
+
+  ret_:= exIneqSolve(ineqList_, paramName_);
+  return ret_;
+end;
+
+defaultPrec_ := 0;
+
+procedure getRealVal(value_, prec_)$
+begin;
+  scalar tmp_;
+  putLineFeed();
+
+  defaultPrec:= precision(0)$
+  precision(prec_);
+  tmp_:= value_;
+  debugWrite("tmp_:", tmp_);
+  precision(defaultPrec_)$
+  write("<redeval> end:");
+  return tmp_;
+end;
+
+
 
 %TODO エラー検出（適用した結果実数以外になった場合等）
 procedure applyTime2Expr(expr_, time_)$

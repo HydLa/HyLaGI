@@ -258,32 +258,33 @@ std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::sy
   REDUCEStringSender rss(cl_);
 
   if(!val.is_undefined()) {
+    
+    cl_.send_string("on rounded$");
 
     // getRealVal(value_, prec_)を渡したい
-
     cl_.send_string("value_:=");
     rss.put_node(val.get_node(), true);
     cl_.send_string("$");
-
-
-    cl_.send_string("prec_:=");
+    
     std::stringstream precision_str;
     precision_str << precision;
-    cl_.send_string(precision_str.str());
-    cl_.send_string("$");
-
-
-    cl_.send_string("symbolic redeval '(getRealVal value_ prec_);");
-
-
-    // cl_.read_until_redeval();
+    cl_.send_string("prec_:="+ precision_str.str() +"$");
+    // 計算に用いる精度は6ケタ未満にできない（？）ようなので，表示桁を下げる
+    if(precision < 6){
+      cl_.send_string("print_precision(" + precision_str.str() + ")$");
+    }
+    cl_.send_string("getRealVal(value_, prec_);");
+    
     cl_.skip_until_redeval();
-    ret = cl_.get_s_expr();
+    cl_.get_line();
+    ret = cl_.get_line();
+    cl_.send_string("off rounded$");
+    // 精度を元に戻しておく
+    cl_.send_string("precision(defaultPrec_)$");
   }
   else {
     ret = "UNDEF";
   }
-
   return ret;
 }
 
@@ -295,6 +296,7 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
   REDUCEStringSender rss(cl_);
 
   // checkLessThan(lhs_, rhs_)を渡したい
+  
 
   cl_.send_string("lhs_:=");
   rss.put_node(lhs.get_node(), true);
@@ -304,7 +306,6 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
   cl_.send_string("rhs_:=");
   rss.put_node(rhs.get_node(), true);
   cl_.send_string("$");
-
 
   cl_.send_string("symbolic redeval '(checkLessThan lhs_ rhs_);");
 
@@ -317,8 +318,7 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
   std::string ans = cl_.get_s_expr();
   HYDLA_LOGGER_VCS("check_less_than_ans: ", ans);
   HYDLA_LOGGER_VCS("#*** End REDUCEVCS::less_than ***");
-
-  return  ans == "\"RETTRUE___\"";
+  return  boost::lexical_cast<int>(ans) == 1;
 }
 
 
