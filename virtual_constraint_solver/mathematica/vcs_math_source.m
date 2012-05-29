@@ -439,7 +439,7 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     debugPrint["resultList after Minimize", resultList];
     resultList = First[resultList];
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
-       
+    
     (* êÆå`ÇµÇƒåãâ Çï‘Ç∑ *)
     resultList = Map[({#[[1]],LogicalExpand[#[[2]] ]})&, resultList];
     resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
@@ -447,7 +447,8 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     
     debugPrint["resultList after Format", resultList];
     
-    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], If[Quiet[Reduce[#[[1]] == maxTime && pCons], {Reduce::useq}] =!= False, 1, 0]})&, resultList];
+    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], If[Quiet[Reduce[#[[1]] == maxTime && And@@#[[2]] ], {Reduce::useq}] =!= False, 1, 0]})&, resultList];
+    simplePrint[resultList];
     {1, resultList}
   ],
   debugPrint[$MessageList]; {0}
