@@ -205,7 +205,7 @@ Check[
 
 ruleOutException[list_] := Block[
   {ret},
-  ret = Map[(Cases[#, {{_, _}, _, _} ])&, list];
+  ret = Map[(Cases[#, {{_?isVariable, _}, _, _} ])&, list];
   ret = Map[(Cases[#, Except[{{t, 0}, _, _}] ])&, ret];
   ret = Map[(Cases[#, Except[{{prev[_, _], _}, _, _}] ])&, ret];
   ret

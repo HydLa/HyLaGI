@@ -283,7 +283,6 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     HYDLA_LOGGER_VCS("and_size: ", and_size);
     ml_.get_next();// Listという関数名
     value_range_t tmp_range;
-    std::string prev_name;
     int prev_count = -1;
     for(int i = 0; i < and_size; i++)
     {
@@ -303,7 +302,6 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       int variable_derivative_count;
       variable_derivative_count = ml_.get_integer();
       HYDLA_LOGGER_VCS("%% derivative_count: ", variable_derivative_count);
-      if(variable_name != prev_name || variable_derivative_count != prev_count) tmp_range = value_range_t();
       // 関係演算子のコード
       int relop_code = ml_.get_integer();
       HYDLA_LOGGER_VCS("%% relop_code: ", relop_code);
@@ -312,12 +310,11 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       if(variable_name == "t")continue;
       
       variable_t* variable_sptr = get_variable(variable_name.substr(6), variable_derivative_count);
+      value_range_t tmp_range = map.get_variable(variable_sptr);
       symbolic_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
       MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
       HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
       map.set_variable(variable_sptr, tmp_range);
-      prev_name = variable_name;
-      prev_count = variable_derivative_count;
     }
     create_result.result_maps.push_back(map);
   }
@@ -531,10 +528,8 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   int condition_size = ml_.get_arg_count(); //条件式の数
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
   ml_.get_next();
-  value_range_t tmp_range;
   parameter_t* prev_param = NULL;
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
-    //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
     // 最初，Listの引数の数(MLTKFUNC）
     ml_.get_next();
     ml_.get_next(); ml_.get_next(); // これでListの先頭要素まで来る
@@ -543,7 +538,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     int derivative_count = ml_.get_integer();
     int id = ml_.get_integer();
     parameter_t* tmp_param = get_parameter(name, derivative_count, id);
-    if(tmp_param != prev_param) tmp_range = value_range_t();
+    value_range_t tmp_range = map.get_variable(tmp_param);
     HYDLA_LOGGER_VCS("%% returned parameter_name: ", *tmp_param);
     int relop_code = ml_.get_integer();
     HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
