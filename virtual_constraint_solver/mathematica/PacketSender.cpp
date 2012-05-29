@@ -282,7 +282,7 @@ void PacketSender::put_var(const std::string& variable_name, const int &diff_cou
 
 void PacketSender::put_par(const par_info_t par)
 {
-  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_var ***");
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_par ***");
   std::string name = par.get<0>();;
   int diff_count = par.get<1>(), id = par.get<2>();
 
@@ -299,6 +299,7 @@ void PacketSender::put_par(const par_info_t par)
 
   // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
   pars_.insert(par);
+  HYDLA_LOGGER_REST("#*** End PacketSender::put_par ***");
 }
 
 

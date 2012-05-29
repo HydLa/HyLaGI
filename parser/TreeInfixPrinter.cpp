@@ -181,7 +181,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Number> node){
 
 // ‹L†’è”
 void TreeInfixPrinter::visit(boost::shared_ptr<Parameter> node){
-  (*output_stream_) << "parameter(" << node->get_name() << ", d:" << node->get_derivative_count() << ", id:" << node->get_phase_id() << ")";
+  (*output_stream_) << "parameter[" << node->get_name() << ", " << node->get_derivative_count() << ", " << node->get_phase_id() << "]";
 }
 
 // t

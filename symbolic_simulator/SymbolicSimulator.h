@@ -93,6 +93,7 @@ private:
   
   /// ‰ğ‹O“¹–Ø‚ğo—Í‚·‚é
   void const output_result_tree();
+  void const output_result_tree_mathematica();
   void output_result_node(const phase_state_sptr_t &, std::vector<std::string> &, int &,int &);
   
   /**

@@ -127,6 +127,8 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::reset ***\n");
 
   is_temporary_ = false;
+  
+  ml_.MLNewPacket();
 
   ml_.put_function("resetConstraint", 0);
   
@@ -158,44 +160,56 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     int size=0;
     for(; it!=parameter_map.end(); ++it)
     {
-      if(!it->second.get_lower_bound().value.is_undefined()){
+      if(it->second.is_unique()){
         size++;
-      }
-      if(!it->second.get_upper_bound().value.is_undefined()){
-        size++;
+      }else{
+        if(!it->second.get_lower_bound().value.is_undefined()){
+          size++;
+        }
+        if(!it->second.get_upper_bound().value.is_undefined()){
+          size++;
+        }
       }
     }
     ml_.put_function("And", size);
     it = parameter_map.begin();
     for(; it!=parameter_map.end(); ++it)
     {
-      {
+      if(it->second.is_unique()){
         const value_t &value = it->second.get_lower_bound().value;
         parameter_t& param = *it->first;
-        if(!value.is_undefined()){
-          if(it->second.get_lower_bound().include_bound){
-            ml_.put_function("Greater", 2);
+        ml_.put_function("Equal", 2);
+        ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+        ps.put_node(value.get_node(), PacketSender::VA_Prev);
+      }else{
+        {
+          const value_t &value = it->second.get_lower_bound().value;
+          parameter_t& param = *it->first;
+          if(!value.is_undefined()){
+            if(!it->second.get_lower_bound().include_bound){
+              ml_.put_function("Greater", 2);
+            }
+            else{
+              ml_.put_function("GreaterEqual", 2);
+            }
+            ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+            ps.put_node(value.get_node(), PacketSender::VA_Prev);
           }
-          else{
-            ml_.put_function("GreaterEqual", 2);
-          }
-          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-          ps.put_node(value.get_node(), PacketSender::VA_Prev);
         }
-      }
-      {
-        
-        const value_t &value = it->second.get_upper_bound().value;
-        parameter_t& param = *it->first;
-        if(!value.is_undefined()){
-          if(it->second.get_upper_bound().include_bound){
-            ml_.put_function("Less", 2);
+        {
+          
+          const value_t &value = it->second.get_upper_bound().value;
+          parameter_t& param = *it->first;
+          if(!value.is_undefined()){
+            if(!it->second.get_upper_bound().include_bound){
+              ml_.put_function("Less", 2);
+            }
+            else{
+              ml_.put_function("LessEqual", 2);
+            }
+            ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+            ps.put_node(value.get_node(), PacketSender::VA_Prev);
           }
-          else{
-            ml_.put_function("LessEqual", 2);
-          }
-          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-          ps.put_node(value.get_node(), PacketSender::VA_Prev);
         }
       }
     }
@@ -270,6 +284,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     ml_.get_next();// Listという関数名
     value_range_t tmp_range;
     std::string prev_name;
+    int prev_count = -1;
     for(int i = 0; i < and_size; i++)
     {
       //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
@@ -285,12 +300,13 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       
       std::string variable_name = ml_.get_symbol();
       HYDLA_LOGGER_VCS("%% name: ", variable_name);
-      if(variable_name != prev_name) tmp_range = value_range_t();
       int variable_derivative_count;
       variable_derivative_count = ml_.get_integer();
       HYDLA_LOGGER_VCS("%% derivative_count: ", variable_derivative_count);
+      if(variable_name != prev_name || variable_derivative_count != prev_count) tmp_range = value_range_t();
       // 関係演算子のコード
       int relop_code = ml_.get_integer();
+      HYDLA_LOGGER_VCS("%% relop_code: ", relop_code);
       
       // TODO: ↓の一行消す
       if(variable_name == "t")continue;
@@ -301,6 +317,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
       map.set_variable(variable_sptr, tmp_range);
       prev_name = variable_name;
+      prev_count = variable_derivative_count;
     }
     create_result.result_maps.push_back(map);
   }
@@ -414,15 +431,14 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     //更に二重リストが来るはず
     int map_size = ml_.get_arg_count();
     ml_.get_next();
-    ml_.get_next();
-
     for(int i=0; i < map_size; i++){
+      ml_.get_next();
       parameter_map_t tmp_map;
       receive_parameter_map(tmp_map);
       ret.true_parameter_maps.push_back(tmp_map);
     }
     
-    token = ml_.get_type();
+    token = ml_.get_next();
     if(token == MLTKSYM){
       //TrueかFalseのはず
       std::string symbol = ml_.get_symbol();
@@ -432,8 +448,8 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
     }else{
       map_size = ml_.get_arg_count();
       ml_.get_next();    
-      ml_.get_next();
       for(int i=0; i < map_size; i++){
+        ml_.get_next();
         parameter_map_t tmp_map;
         receive_parameter_map(tmp_map);
         ret.false_parameter_maps.push_back(tmp_map);
@@ -484,11 +500,11 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
   HYDLA_LOGGER_VCS("%% receive next PP time");
   int next_time_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
-  ml_.get_next(); // Listという関数名を飛ばす
   ml_.get_next();
   PP_time_result_t result;
   for(int time_it = 0; time_it < next_time_size; time_it++){
     PP_time_result_t::candidate_t candidate;
+    ml_.get_next();
     ml_.get_next();ml_.get_next();
     // 時刻を受け取る
     candidate.time = time_t(mec.receive_and_make_symbolic_value(ml_)) + current_time;
@@ -496,6 +512,7 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
     ml_.get_next();
     // 条件を受け取る
     receive_parameter_map(candidate.parameter_map);
+    ml_.get_next();
     
     // 終了時刻かどうかを受け取る
     candidate.is_max_time = ml_.get_integer();
@@ -514,12 +531,12 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   int condition_size = ml_.get_arg_count(); //条件式の数
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
   ml_.get_next();
-  ml_.get_next();
   value_range_t tmp_range;
   parameter_t* prev_param = NULL;
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
     //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
     // 最初，Listの引数の数(MLTKFUNC）
+    ml_.get_next();
     ml_.get_next(); ml_.get_next(); // これでListの先頭要素まで来る
     ml_.get_next(); ml_.get_next(); // 先頭要素のparameterを読み飛ばす
     std::string name = ml_.get_symbol();
@@ -535,7 +552,6 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
     map.set_variable(tmp_param, tmp_range);
     prev_param = tmp_param;
-    ml_.get_next();
   }
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
 }

@@ -55,8 +55,9 @@ class DefaultParameter{
   std::string get_name() const
   {
     std::stringstream strstr;
-    std::string ret("parameter(" + original_variable_->name);
-    strstr << ", d:" << original_variable_->derivative_count << ", id:" << introduced_phase_->id<< ")";
+    std::string ret("parameter[" + original_variable_->name);
+    strstr << ", " << original_variable_->derivative_count << ", " << introduced_phase_->id<< "]";
+    //strstr << ", d:" << original_variable_->derivative_count << ", id:" << introduced_phase_->id<< ")";
     ret += strstr.str();
     return ret;
   }

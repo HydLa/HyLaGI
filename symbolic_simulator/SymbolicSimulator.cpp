@@ -145,6 +145,76 @@ namespace hydla {
             parse_tree, msc_original_, msc_no_init_, parse_tree_);
       }
     }
+    
+    
+    void const SymbolicSimulator::output_result_tree_mathematica(){
+      if(result_root_->children.size() == 0){
+        std::cout << "No Result." << std::endl;
+        return;
+      }
+      std::cout << "Show[";
+      while(1){
+        std::string prev_node_time = "0";
+        std::cout << "Table[";
+        bool is_first = true;
+        phase_state_sptr_t now_node = result_root_->children.back();
+        while(1){
+          if(now_node->phase==IntervalPhase){
+            variable_map_t vm = now_node->variable_map;
+            if(is_first){
+              is_first = false;
+              std::cout << "{";
+            }else{
+              std::cout << ",";
+            }
+            variable_map_t::const_iterator it = vm.begin();
+            while(opts_.output_variables.find(it->first->get_string()) == opts_.output_variables.end()){
+              it++;
+              if(it == vm.end()) return;
+            }
+            std::cout << "Plot[";
+            std::cout << it->second;
+            std::cout << ", {t, ";
+            std::cout << prev_node_time;
+            std::cout << ", ";
+            std::cout << now_node->end_time;
+            std::cout << "} ";
+            prev_node_time = now_node->end_time.get_string();
+            if(now_node->cause_of_termination == simulator::ASSERTION)
+              std::cout << ", PlotStyle -> Dashed";
+            std::cout << "]"; //Plot
+          }
+          if(now_node->children.size() == 0){//葉に到達
+            std::cout << "}, "; //式のリストここまで
+            if(now_node->parameter_map.size() > 0){
+              // 定数の条件
+              std::cout << "{";
+              parameter_map_t::const_iterator it = now_node->parameter_map.begin();
+              std::cout << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << " - step, step}";
+            }else{
+              std::cout << "{1}";
+            }
+            std::cout << "], "; //Table
+            std::cout << std::endl;
+            while(now_node->children.size() == 0){
+              if(now_node->parent != NULL){
+                now_node = now_node->parent;
+              }else{//親がいないということは根と葉が同じ、つまり「空になった」ということなので終了．
+                std::cout << "PlotRange -> {{0, " << opts_.max_time << "}, {lb, ub}}";
+                std::cout << "]" << std::endl; //Show
+                return;
+              }
+              now_node->children.pop_back();
+            }
+            break;
+          }
+          else{
+            now_node = now_node->children.back();
+          }
+        }
+      }
+    };
+
 
     void SymbolicSimulator::simulate()
     {
@@ -311,8 +381,14 @@ namespace hydla {
           state->parent->cause_of_termination = simulator::INCONSISTENCY;
         }
       }
-      if(!opts_.interactive_mode) 
-        output_result_tree();
+      if(!opts_.interactive_mode){
+        if(opts_.output_format == fmtMathematica){
+          output_result_tree_mathematica();
+        }
+        else{
+          output_result_tree();
+        }
+      }
     }
 
     void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
@@ -411,7 +487,8 @@ namespace hydla {
             // 記号定数の条件によって充足可能性が変化する場合
             HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
             // 自分以外の場合は別に作ってスタックに入れる
-            push_branch_states(state, check_consistency_result);
+            if(opts_.nd_mode)
+              push_branch_states(state, check_consistency_result);
             // 自分は導出可能な場合のうちの1つとする
             state->parameter_map = check_consistency_result.true_parameter_maps[0];
           }
@@ -461,7 +538,8 @@ namespace hydla {
               if(!check_consistency_result.false_parameter_maps.empty()){
                 HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
                 // 自分以外の場合は別に作ってスタックに入れる
-                push_branch_states(state, check_consistency_result);
+                if(opts_.nd_mode)
+                  push_branch_states(state, check_consistency_result);
                 // 自分は導出可能な場合のうちの1つとする
                 state->parameter_map = check_consistency_result.true_parameter_maps[0];
               }
@@ -476,7 +554,8 @@ namespace hydla {
                 if(!check_consistency_result.false_parameter_maps.empty()){
                   HYDLA_LOGGER_CLOSURE("%% inevitable entailment depends on conditions of parameters");
                   // 自分以外の場合は別に作ってスタックに入れる
-                  push_branch_states(state, check_consistency_result);
+                  if(opts_.nd_mode)
+                    push_branch_states(state, check_consistency_result);
                   // 自分は導出可能な場合のうちの1つとする
                   state->parameter_map = check_consistency_result.true_parameter_maps[0];
                 }else{
@@ -534,7 +613,8 @@ namespace hydla {
             // ガード条件による分岐が発生する可能性あり
             HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
             // 自分以外の場合は別に作ってスタックに入れる
-            push_branch_states(state, result);
+            if(opts_.nd_mode)
+              push_branch_states(state, result);
             // 自分は導出可能な場合のうちの1つとする
             state->parameter_map = result.true_parameter_maps[0];
           }
@@ -606,8 +686,11 @@ namespace hydla {
           branch_state->cause_of_termination = simulator::ASSERTION;
         }
 
-        if(opts_.dump_in_progress)
+        if(opts_.dump_in_progress){
           std::cout << get_state_output(*branch_state, false,true);
+          output_parameter_map(branch_state->parameter_map);
+          std::cout << endl;
+        }
 
         /*
            TellCollector   tell_collector(ms);
@@ -684,7 +767,7 @@ vm.set_variable(m,n);
 
         branch_state->variable_map = vm;
         change_variable_flag = false;
-      } 
+      }
       }
 
 
@@ -828,10 +911,10 @@ vm.set_variable(m,n);
           phase_state_sptr branch_state(create_new_phase_state(state));
           branch_state->parameter_map = time_result.candidates[time_it].parameter_map;
           branch_state->parent->children.push_back(branch_state);
+          branch_state->end_time = time_result.candidates[time_it].time;
           if(!time_result.candidates[time_it].is_max_time ) {
             phase_state_sptr new_state(create_new_phase_state(new_state_original));
             new_state->current_time = time_result.candidates[time_it].time;
-            branch_state->end_time = time_result.candidates[time_it].time;
             solver_->simplify(new_state->current_time);
             new_state->parameter_map = branch_state->parameter_map;
 
@@ -844,6 +927,8 @@ vm.set_variable(m,n);
           }
           if(opts_.dump_in_progress){
             std::cout << get_state_output(*branch_state, false,true);
+            output_parameter_map(branch_state->parameter_map);
+            std::cout << endl;
           }
         }
       }else{
@@ -946,7 +1031,6 @@ vm.set_variable(m,n);
     }
   }
 
-
   void SymbolicSimulator::output_result_node(const phase_state_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num){
 
     if(node->phase==PointPhase){
@@ -1022,7 +1106,7 @@ vm.set_variable(m,n);
         }
       }else{
         if(is_in_progress)
-          sstr << "#-------" << result.step +1 << "-------" << std::endl;
+          sstr << "#-------" << result.step + 1 << "-------" << std::endl;
         sstr << "---------PP---------" << std::endl;
         sstr << "time\t: " << result.current_time << "\n";
       }
@@ -1052,7 +1136,6 @@ vm.set_variable(m,n);
       }
       sstr << std::endl;
     }
-
     return sstr.str();
   }
 

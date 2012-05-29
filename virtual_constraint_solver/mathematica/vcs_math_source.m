@@ -81,7 +81,7 @@ checkConsistencyPoint[cons_, pcons_, vars_] := (
         cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
       ];
       simplePrint[cpFalse];
-      {trueMap, falseMap} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
+      {trueMap, falseMap} = Map[(createMap[#, isParameter, {}])&, {cpTrue, cpFalse}];
       simplePrint[trueMap, falseMap];
       {1, {trueMap, falseMap}}
     ],
@@ -107,7 +107,7 @@ Check[
     sol = exDSolve[cons, vars];
     debugPrint["sol after exDSolve", sol];
     If[sol[[1]] === overConstraint,
-      Return[{False, pcons}]
+      Return[{1, {False, pcons}}]
     ];
     
     If[sol[[1]] === underConstraint,
@@ -134,14 +134,16 @@ Check[
 
     simplePrint[tCons];
 
-    If[tCons === False, Return[{False, pcons}] ];
+    If[tCons === False, Return[{1, {False, pcons}}] ];
     
     cpTrue = Reduce[Quiet[Minimize[{t, tCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];        
     cpFalse = Reduce[pcons && !cpTrue, Reals];
 
     simplePrint[cpTrue, cpFalse];
 
-    {trueMap, falseMap} = Map[(createMap[#, hasParameter, {}])&, {cpTrue, cpFalse}];
+    {trueMap, falseMap} = Map[(createMap[#, isParameter, {}])&, {cpTrue, cpFalse}];
+    trueMap = Map[(Cases[#, Except[{{prev[_, _], _}, _, _}] ])&, trueMap];
+    falseMap = Map[(Cases[#, Except[{{prev[_, _], _}, _, _}] ])&, falseMap];
     simplePrint[trueMap, falseMap];
     {1, {trueMap, falseMap}}
   ],
@@ -161,9 +163,10 @@ Check[
   Block[
     {ret},
     inputPrint["createVariableMap", cons, vars];
-    ret = createMap[cons, hasVariable, vars];
+    ret = createMap[cons, isVariable, vars];
     debugPrint["ret after CreateMap", ret];
     ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
+    ret = ruleOutException[ret];
     simplePrint[ret];
     {1, ret}
   ],
@@ -190,16 +193,26 @@ Check[
     cStore = Or[cStore, (originalOther /. tStore) && And@@Map[(Equal@@#)&, tStore] ]
   ];
   simplePrint[cStore];
-  ret = createMap[cStore && t>0, hasVariable, vars];
+  ret = createMap[cStore && t>0, isVariable, vars];
   debugPrint["ret after CreateMap", ret];
-  ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
+  ret = ruleOutException[ret];
   simplePrint[ret];
   {1, ret}
   ],
   debugPrint[$MessageList]; {0}
 ];
 
-createParameterMap[] := createMap[pConstraint, hasParameter, {}];
+
+ruleOutException[list_] := Block[
+  {ret},
+  ret = Map[(Cases[#, {{_, _}, _, _} ])&, list];
+  ret = Map[(Cases[#, Except[{{t, 0}, _, _}] ])&, ret];
+  ret = Map[(Cases[#, Except[{{prev[_, _], _}, _, _}] ])&, ret];
+  ret
+];
+
+
+createParameterMap[] := createMap[pConstraint, isParameter, {}];
 
 createMap[cons_, judge_, vars_] := Block[
   {map},
@@ -223,6 +236,10 @@ createMap[cons_, judge_, vars_] := Block[
 
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
 
+(* 式が変数もしくはその微分そのものか否か *)
+
+isVariable[exprs_] := StringMatchQ[ToString[exprs], "usrVar" ~~ LetterCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+
 (* 式中に出現する変数を取得 *)
 
 getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter..]];
@@ -231,6 +248,13 @@ getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ Le
 (* 式中に定数名が出現するか否か *)
 
 hasParameter[exprs_] := Length[StringCases[ToString[exprs], "parameter[" ~~ LetterCharacter]] > 0;
+
+isParameter[exprs_] := Head[exprs] === parameter;
+
+(* 式が定数そのものか否か *)
+
+hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCharacter]] > 0;
+
 
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
@@ -423,7 +447,7 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     
     debugPrint["resultList after Format", resultList];
     
-    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], hasParameter ] ], If[Quiet[Reduce[#[[1]] == maxTime], {Reduce::useq}] === True, 1, 0]})&, resultList];
+    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], If[Quiet[Reduce[#[[1]] == maxTime && pCons], {Reduce::useq}] =!= False, 1, 0]})&, resultList];
     {1, resultList}
   ],
   debugPrint[$MessageList]; {0}
@@ -467,7 +491,7 @@ Quiet[
     
     {dExpr, dVars, otherExpr, otherVars} = splitExprs[sol];
     
-    debugPrint[dExpr, dVars, otherExpr, otherVars];
+    debugPrint["@exDSolve after splitExprs", dExpr, dVars, otherExpr, otherVars];
     
     If[dExpr === {},
       (* 微分方程式が存在しない *)
@@ -494,7 +518,7 @@ Quiet[
    除いた式は第3要素として返す．
    第2要素と第4要素はそれぞれ，必要な式と邪魔な式に含まれる変数のリスト *)
 
-(*
+
 splitExprs[expr_] := Block[
   {dExprs, appendedTimeVars, dVars, iter, otherExprs, otherVars, getTimeVars, getNoInitialTimeVars, timeVars, exprStack},
   
@@ -526,8 +550,9 @@ splitExprs[expr_] := Block[
   otherVars = Fold[(getTimeVars[#1,#2])&, {}, otherExprs];
   {dExprs, dVars, otherExprs, otherVars}
 ];
-*)
 
+
+(*
 (* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
 (* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
 splitExprs[expr_] := Block[
@@ -544,7 +569,7 @@ splitExprs[expr_] := Block[
                          {}, dExprs]];
   {dExprs, dVars, otherExprs, otherVars}
 ];
-
+*)
 
 
 (*

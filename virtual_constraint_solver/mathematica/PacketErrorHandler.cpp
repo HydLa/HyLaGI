@@ -16,7 +16,6 @@ bool PacketErrorHandler::handle(MathLink* ml)
   ml->get_next();
   int ret_code = ml->get_integer();
   if(ret_code == 0) {
-    ml->MLNewPacket();
     HYDLA_LOGGER_VCS("#*** End PacketErrorHandler::handle with return true ***");
     return true;
   }
