@@ -306,15 +306,17 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       int relop_code = ml_.get_integer();
       HYDLA_LOGGER_VCS("%% relop_code: ", relop_code);
       
+      symbolic_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
       // TODO: Å´ÇÃàÍçsè¡Ç∑
       if(variable_name == "t")continue;
-      
-      variable_t* variable_sptr = get_variable(variable_name.substr(6), variable_derivative_count);
-      value_range_t tmp_range = map.get_variable(variable_sptr);
-      symbolic_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+      variable_t* variable_ptr = get_variable(variable_name.substr(6), variable_derivative_count);
+      if(!variable_ptr){
+        continue;
+      }
+      value_range_t tmp_range = map.get_variable(variable_ptr);
       MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
       HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
-      map.set_variable(variable_sptr, tmp_range);
+      map.set_variable(variable_ptr, tmp_range);
     }
     create_result.result_maps.push_back(map);
   }

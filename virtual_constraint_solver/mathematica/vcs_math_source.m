@@ -155,7 +155,7 @@ Check[
 
 
 
-createVariableMap[] := createVariableMap[constraint, variables];
+createVariableMap[] := createVariableMap[constraint && pConstraint, variables];
 
 
 createVariableMap[cons_, vars_] :=  
