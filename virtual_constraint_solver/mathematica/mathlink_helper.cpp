@@ -36,9 +36,11 @@ bool MathLink::receive(){
     }
     case ILLEGALPKT:
       HYDLA_LOGGER_EXTERN("%% Mathlink::receive illegalpkt\n");
+      throw MathLinkError("receive illegalpkt", 0);
       break;
     default:
       HYDLA_LOGGER_EXTERN("%% Mathlink::receive unknownpkt: ", pkt, "\n");
+      throw MathLinkError("receive unknownpkt", 0);
       break;
     }
     if(at_end)break;
