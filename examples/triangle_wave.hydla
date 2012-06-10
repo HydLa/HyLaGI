@@ -1,0 +1,40 @@
+// -*- coding: utf-8 -*-
+// 三角波 (triangle wave)
+// モジュール名を小文字に、変数名を大文字にのチェックも兼ねる
+
+/*
+init       <=> TEMP=5 & F=5.
+jackknife1 <=> [](F- = 10 => TEMP = - TEMP-).
+jackknife2 <=> [](F- =  0 => TEMP = - TEMP-).
+line       <=> [](F' = TEMP).
+fa         <=> [](TEMP'=0).
+init, fa << line << (jackknife1, jackknife2).
+*/
+
+/*
+init       <=> TEMP=5 & F=5.
+jackknife1 <=> [](F- = 10 => TEMP = - TEMP-).
+jackknife2 <=> [](F- =  0 => TEMP = - TEMP-).
+line       <=> [](F' = TEMP).
+fa         <=> [](F''=0).
+init, fa << line << (jackknife1, jackknife2).
+*/
+
+
+init       <=> F'=5 /\ F=5.
+jackknife  <=> [](F- = 10 \/ F- = 0 => F' = - F'-).
+fa         <=> [](F''=0).
+init, fa << jackknife.
+
+
+/*
+// for RP
+
+init       <=> TEMP=5 /\ F=5.
+jackknife1 <=> [](F- = 10 => TEMP = - TEMP-).
+jackknife2 <=> [](F- =  0 => TEMP = - TEMP-).
+line       <=> [](F' = TEMP /\ F=F-).
+fa         <=> [](TEMP'=0).
+init, fa << line << (jackknife1, jackknife2).
+*/
+

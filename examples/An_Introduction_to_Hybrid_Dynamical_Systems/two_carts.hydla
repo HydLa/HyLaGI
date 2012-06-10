@@ -1,0 +1,48 @@
+//two_carts.hydla
+//user:shun
+//two carts are connected to each other and to a wall by springs
+//from "The Complementary-Slackness Class of Hybrid Systems"
+/*
+INIT <=> st=0 & xl=0 & xr=-1/2 & xl'=0 & xr'=0 .
+CON  <=> [](st'=0).
+
+StateAtoB <=> [](st-=0 & xr->=0 => st=1).
+StateBtoA <=> [](st-=1 & xr-<=0 => st=0).
+
+StateA <=> [](st=0 => [](xl''=0          & xr''=-xr-   )).
+StateB <=> [](st=1 => [](xl''=-2*xl-+xr- & xr''=xl--xr-)).
+
+INIT,CON<<(StateAtoB,StateBtoA),(StateA,StateB).
+*/
+
+/*
+INIT <=> st=0 & x=1 & x'=-10 & x''=0.
+CON  <=> [](st'=0).
+
+StateAtoB <=> [](st-=0 & x-<=0 => st=1).
+StateBtoA <=> [](st-=1 & x->=0 => st=0).
+
+StateA <=> [](st=1 => [](x''=-13*x- - 5*x'-)).
+StateB <=> [](st=0 => [](x''=0)).
+
+INIT,CON<<(StateAtoB,StateBtoA),(StateA,StateB).
+*/
+
+//[](x''=-x-),x=1,x'=0.
+
+
+StateA <=> [](st=0 => [](xl''=0          & xr''=-xr   )).
+StateB <=> [](st=1 => [](xl''=-2*xl+xr   & xr''=xl-xr)).
+STATE(initst,initxl,initxr){
+  st=initst,xl=initxl,xr=initxr,xl'=0,xr'=0,
+  [](st'=0),StateA,StateB
+}.
+
+StateAtoB <=> [](st-=0 & xr->=0 => st=1).
+StateBtoA <=> [](st-=1 & xr-<=0 => st=0).
+GUARD{
+  StateAtoB,StateBtoA
+}.
+
+STATE(0,0,-1/2),GUARD.
+//STATE(1,1,-1/2),GUARD.

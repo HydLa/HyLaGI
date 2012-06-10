@@ -1,0 +1,114 @@
+#ifndef _INCLUDED_HYDLA_PARSER_NODE_FACTORY_H_
+#define _INCLUDED_HYDLA_PARSER_NODE_FACTORY_H_
+
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+
+#include "Node.h"
+
+namespace hydla { 
+namespace parser {
+
+#define NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(NAME) \
+  virtual boost::shared_ptr<hydla::parse_tree::NAME> \
+  create(hydla::parse_tree::NAME) const = 0;
+
+class NodeFactory 
+{
+public:
+  NodeFactory()
+  {}
+
+  virtual ~NodeFactory()
+  {}
+
+  template<typename NodeType>
+  boost::shared_ptr<NodeType> create() const
+  {
+    return create(NodeType());
+  }
+
+protected:
+  //íËã`
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(ProgramDefinition)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(ConstraintDefinition)
+
+  //åƒÇ—èoÇµ
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(ProgramCaller)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(ConstraintCaller)
+  
+  //êßñÒéÆ
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Constraint)
+
+  //TellêßñÒ
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Tell)
+
+  //AskêßñÒ
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Ask)
+
+  //î‰ärââéZéq
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Equal)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(UnEqual)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Less)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(LessEqual)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Greater)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(GreaterEqual)
+
+  //ò_óùââéZéq
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(LogicalAnd)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(LogicalOr)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Not)
+
+  //éZèpìÒçÄââéZéq
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Plus)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Subtract)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Times)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Divide)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Power)
+  
+  //éZèpíPçÄââéZéq
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Negative)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Positive)
+
+  //êßñÒäKëwíËã`ââéZéq
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Weaker)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Parallel)
+
+  // éûëäââéZéq
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Always)
+
+  //î˜ï™
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Differential)
+  
+  //ç∂ã…å¿
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Previous)
+  
+  //â~é¸ó¶
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Pi)
+  //é©ëRëŒêîÇÃíÍ
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(E)
+  //ä÷êî
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Function)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(UnsupportedFunction)
+  
+  
+
+  //ïœêîÅEë©îõïœêî
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Variable)
+
+  //êîéö
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Number)
+  
+  //Print
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Print)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(PrintPP)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(PrintIP)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Scan)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Exit)
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Abort)
+};                                                     
+
+} //namespace parser
+} //namespace hydla
+
+#endif //_INCLUDED_HYDLA_PARSER_NODE_FACTORY_H_

@@ -1,0 +1,8 @@
+// bouncing particle with air drag
+// @1300 時間がかかるけど，時刻5までのシミュレーションは確認
+
+INIT <=> ht=10&v=0&[](ht'=v).
+FALL <=> [](v'=-10-3/10*v).
+BOUNCE <=> [](ht-=0 => v= -(4/5)*v-).
+
+INIT, FALL << BOUNCE.

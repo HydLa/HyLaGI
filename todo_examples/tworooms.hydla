@@ -1,0 +1,59 @@
+// tworooms.hydla
+// -*- coding: utf-8 -*-
+// ２つの部屋を１つのヒーターで暖める例題
+// SO: ヒーターなし
+// S1: 部屋Aを暖める
+// S2: 部屋Bを暖める
+// ヒーターの移動に1/100秒かかるとする
+// 部屋の温度に上限と下限を設けて一定の範囲の温度に保つ
+
+
+S0 <=> [](
+   ta'=-9/10*ta +   1/2*tb + 4/10*4  
+/\ tb'=  1/2*ta + -9/10*tb + 4/10*4
+).
+
+S1 <=> [](s-=1 /\ (timer- >= 1/100 \/ timer- > 1/100) =>
+   ta'=-9/10*ta +   1/2*tb + 4/10*4 + 8
+/\ tb'=  1/2*ta + -9/10*tb + 4/10*4
+).
+
+S2 <=> [](s-=2 /\ (timer->=1/100 \/ timer->1/100) =>
+   ta'=-9/10*ta +   1/2*tb + 4/10*4  
+/\ tb'=  1/2*ta + -9/10*tb + 4/10*4 + 8 - 1
+).
+
+S01(tempA) <=> []((ta-<=tempA \/ ta-<tempA) /\ s-=0 => s=1 /\ timer=0).
+S21(tempA) <=> []((ta-<=tempA \/ ta-<tempA) 
+               /\ (tb--ta->1 \/ tb--ta->=1) /\ s-=2 => s=1 /\ timer=0).
+
+S02(tempB) <=> []((tb-<=tempB \/ tb-<tempB) /\ s-=0 => s=2 /\ timer=0).
+S12(tempB) <=> []((tb-<=tempB \/ tb-<tempB) 
+               /\ (ta--tb->1 \/ ta--tb->=1) /\ s-=1 => s=2 /\ timer=0).
+
+S10(tempA) <=> []((ta->=tempA \/ ta->tempA) /\ s-=1 => s=0 /\ timer=0).
+S20(tempB) <=> []((tb->=tempB \/ tb->tempB) /\ s-=2 => s=0 /\ timer=0).
+
+ROOM(20,20),THERMO(0,0).
+ROOM(tmpA,tmpB){
+        ta=tmpA,
+        tb=tmpB,
+        [](ta=ta-),[](tb=tb-),
+        S0<<(S1/\S2)
+}.
+THERMO(initSwitch,initTimer){
+        s=initSwitch,
+        timer=initTimer,
+        [](timer'=1),
+        S01(18),S21(18),
+        S02(18),S12(18),
+        S10(22),S20(22)
+}.
+
+FLAG(15).
+FLAG(temp){
+        flag=0,
+        [](flag'=0),
+        [](ta-<temp \/ ta-<=temp => flag=1)
+}.
+

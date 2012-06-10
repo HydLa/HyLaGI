@@ -1,0 +1,30 @@
+INIT <=> px = 1/2 /\ py = 3/2 /\ vx = 1/4 /\ vy = 1/4.
+//LOW2 <=> [](vdx = 0 /\ vdy = 0). // solve incorrectly after py = 1
+//LOW2 <=> [](vdx' = 0 /\ vdy' = 0). // solve incorrectly after py = 1
+
+// can't solve when py = 1
+LOWS <=> [](px' = vx /\ py' = vy
+         /\ vx' = -12/10*(vx+ - vdx)
+         /\ vy' = -12/10*(vy+ - vdy)).
+
+/*
+// always solve incorrectly
+LOWS <=> [](px' = vx /\ py' = vy /\ vdx = 0 /\ vdy = 0
+         /\ vx' = -12/10*(vx+ - vdx)
+         /\ vy' = -12/10*(vy+ - vdy)).
+*/
+/*
+// always solve incorrectly
+LOWS <=> [](px' = vx /\ py' = vy /\ vdx' = 0 /\ vdy' = 0
+         /\ vx' = -12/10*(vx+ - vdx)
+         /\ vy' = -12/10*(vy+ - vdy)).
+*/
+
+L00  <=> [](0 < px /\ px < 1 /\ 0 < py /\ py < 1 => vdx = 1 /\ vdy = 0).
+L01  <=> [](0 < px /\ px < 1 /\ 1 < py /\ py < 2 => vdx = 0 /\ vdy = -1).
+
+L10  <=> [](1 < px /\ px < 2 /\ 0 < py /\ py < 1 => vdx = 0 /\ vdy = 1).
+L11  <=> [](1 < px /\ px < 2 /\ 1 < py /\ py < 2 => vdx = -1 /\ vdy = 0).
+
+INIT, LOWS << (L00, L01, L10, L11).
+//INIT, LOW2 << LOWS << (L00, L01, L10, L11).

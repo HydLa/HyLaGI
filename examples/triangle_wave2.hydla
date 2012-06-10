@@ -1,0 +1,10 @@
+// -*- coding: utf-8 -*-
+// 三角波2 (triangle wave2)
+// モジュール名を小文字に、変数名を大文字にのチェックも兼ねる
+// askの条件によるorのテスト
+
+init      <=> TEMP=5 /\ F=5.
+jackknife <=> []((F- = 10 | F- = 0) => TEMP = - TEMP-).
+line      <=> [](F' = TEMP).
+fa        <=> [](TEMP' = 0).
+init, fa << line << jackknife.

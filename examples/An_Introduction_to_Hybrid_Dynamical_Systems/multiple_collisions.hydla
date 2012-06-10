@@ -1,0 +1,133 @@
+//multiple_collisions.hydla
+//user:shun
+//Newton's cradle with three balls
+
+/*
+//ver.2
+INIT(intqa,intqb,intqc){
+  qa=intqa , va=5,
+  qb=intqb , vb=0,
+  qc=intqc , vc=0
+}.
+CON <=> [](qa'=va & va'=0 & qb'=vb & vb'=0 & qc'=vc & vc'=0).
+
+COLAB(ma,mb,e){
+  [](qa-=qb- =>
+va=-((e*mb*va-)-(e*mb*vb-)-(ma*va-)-(mb*vb-))/(ma+mb) &
+vb=-((-e*ma*va-)+(e*ma*vb-)-(ma*va-)-(mb*vb-))/(ma+mb))
+}.
+
+COLBC(mb,mc,e){
+  [](qb-=qc- =>vb=-((e*mc*vb-)-(e*mc*vc-)-(mb*vb-)-(mc*vc-))/(mb+mc) &
+vc=-((-e*mb*vb-)+(e*mb*vc-)-(mb*vb-)-(mc*vc-))/(mb+mc))
+}. 
+
+CON,INIT(-3,1,1+1/100000000000000)<<(COLAB(1,1,1),COLBC(1,1,1)). 
+*/
+
+/*
+//ver.1
+INIT(intqa,intqb,intqc){
+  qa=intqa , va=5,
+  qb=intqb , vb=0,
+  qc=intqc , vc=0
+}.
+CON <=> [](qa'=va & va'=0 & qb'=vb & vb'=0 & qc'=vc & vc'=0).
+
+COLAB(ma,mb,e){
+  [](qa-=qb- =>va=-((e*mb*va-)-(e*mb*vb-)-(ma*va-)-(mb*vb-))/(ma+mb) &
+vb=-((-e*ma*va-)+(e*ma*vb-)-(ma*va-)-(mb*vb-))/(ma+mb))
+}. 
+COLBC(mb,mc,e){
+  [](qb-=qc- =>vb=-((e*mc*vb-)-(e*mc*vc-)-(mb*vb-)-(mc*vc-))/(mb+mc) &
+vc=-((-e*mb*vb-)+(e*mb*vc-)-(mb*vb-)-(mc*vc-))/(mb+mc))
+}. 
+CON,INIT(-3,1,1+1/100000000000000)<<(COLAB(1,2,1)). 
+*/
+
+/*
+CON <=> [](qa'=va & va'=0 & qb'=vb & vb'=0 & qc'=vc & vc'=0).
+
+INIT(intqa,intqb,intqc){
+  qa=intqa , va=5,
+  qb=intqb , vb=0,
+  qc=intqc , vc=0,
+  CON
+}.
+INIT(-1,1,1+1/1000000000000).
+
+CollisionAandB(ma,mb,e){
+  [](qa-=qb- =>
+       va=-(( e*mb*va-)-(e*mb*vb-)-(ma*va-)-(mb*vb-))/(ma+mb) &
+       vb=-((-e*ma*va-)+(e*ma*vb-)-(ma*va-)-(mb*vb-))/(ma+mb))
+}.
+
+CollisionBandC(mb,mc,e){
+  [](qb-=qc- =>
+       vb=-(( e*mc*vb-)-(e*mc*vc-)-(mb*vb-)-(mc*vc-))/(mb+mc) &
+       vc=-((-e*mb*vb-)+(e*mb*vc-)-(mb*vb-)-(mc*vc-))/(mb+mc))
+}. 
+
+GUARD{
+  CollisionAandB(1,2,1) //ver.1
+//  CollisionAandB(1,1,1),CollisionBandC(1,1,1) //ver.2
+}.
+GUARD.
+*/
+/*
+//ver1
+CON <=> [](qa'=va & va'=0 & qcom'=vcom & vcom'=0).
+
+INIT(intqa,intqcom){
+  qa=intqa , va=5,
+  qcom=intqcom , vcom=0,
+  CON
+}.
+INIT(-1,1).
+
+CollisionAandCOM(ma,mcom,e){
+  [](qa-=qcom- =>
+       va  =-(( e*mcom*va-)-(e*mcom*vcom-)-(ma*va-)-(mcom*vcom-))/(ma+mcom) &
+       vcom=-((-e*ma  *va-)+(e*ma  *vcom-)-(ma*va-)-(mcom*vcom-))/(ma+mcom))
+}.
+
+GUARD{
+  CollisionAandCOM(1,2,1)
+}.
+GUARD.
+*/
+/*
+//ver1
+INIT(intxa,intxbc){
+  xa=intxa , xa'=5,xbc=intxbc , xbc'=0,
+  [](xa''=0 & xbc''=0)
+}.
+CollisionAandBC(ma,mbc,e) <=> [](xa-=xbc- =>
+       xa'  =-((e*mbc *xa'-)-(e*mbc*xbc'-)-(ma*xa'-)-(mbc*xbc'-))/(ma+mbc) &
+       xbc'=-((-e*ma  *xa'-)+(e*ma *xbc'-)-(ma*xa'-)-(mbc*xbc'-))/(ma+mbc)).
+
+INIT(-1,1),CollisionAandBC(1,2,1).
+*/
+
+
+//ver.2
+INIT(intxa,intxb,intxc,intxav,intxbv,intxcv){
+  xa=intxa , xa'=intxav,xb=intxb , xb'=intxbv,xc=intxc , xc'=intxcv,
+  [](xa''=0 & xb''=0 & xc''=0)
+}.
+
+CollisionAandB(ma,mb,e) <=>
+  [](xa-=xb- =>
+       xa'=-(( e*mb*xa'-)-(e*mb*xb'-)-(ma*xa'-)-(mb*xb'-))/(ma+mb) &
+       xb'=-((-e*ma*xa'-)+(e*ma*xb'-)-(ma*xa'-)-(mb*xb'-))/(ma+mb)).
+CollisionBandC(mb,mc,e) <=>
+  [](xb-=xc- =>
+       xb'=-(( e*mc*xb'-)-(e*mc*xc'-)-(mb*xb'-)-(mc*xc'-))/(mb+mc) &
+       xc'=-((-e*mb*xb'-)+(e*mb*xc'-)-(mb*xb'-)-(mc*xc'-))/(mb+mc)).
+GUARD(ma,mb,mc,e){
+  CollisionAandB(ma,mb,e),CollisionBandC(mb,mc,e)
+}.
+
+INIT(-1,1,1+1/1000000000000,5,0,0),GUARD(1,1,1,1).
+
+
