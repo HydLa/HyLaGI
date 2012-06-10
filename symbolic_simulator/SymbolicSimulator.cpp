@@ -246,7 +246,7 @@ namespace hydla {
                 /*for (int i=all_state.size();i<all_state.size();i++){
                   std::cout << get_state_output(*all_state[i], false);
                 }*/
-                std::cout << "unko" << std::endl;
+                std::cout << "" << std::endl;
                 all_state.clear();
               }
             }
@@ -755,11 +755,13 @@ namespace hydla {
         std::cout << "select variable" << std::endl;
         std::cout << get_state_output(*branch_state, false, true);
         variable_map_t vm = branch_state->variable_map;
+        std::string name;// = "ht";
+        std::cin >> name;
+        std::cout << "input value" << std::endl;
         std::string s; //number
         std::cin >> s;
         value_t n = s;
         int derivative_count = 0;
-        std::string name = "ht";
         const int& dc = derivative_count;
         const std::string& _name = name;
         hydla::simulator::DefaultVariable* m = get_variable(_name, dc);
