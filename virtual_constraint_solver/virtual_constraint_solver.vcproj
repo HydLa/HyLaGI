@@ -175,10 +175,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SymbolicVirtualConstraintSolver.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\mathematica\vcs_math_source.cpp"
 				>
 			</File>
