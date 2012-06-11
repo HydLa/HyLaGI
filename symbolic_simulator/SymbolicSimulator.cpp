@@ -261,17 +261,15 @@ namespace hydla {
               }
             }
             std::cout << "[debug] in mode test" <<std::endl;
-            int key;
+            //int key;
+            std::string line;
+            //int ignore_flag=0;
+            //while (getchar() != '\n'){ }
             //key = getchar();
-            //if (std::cin.eof()) {
-            //      std::cin.clear();
-            //            std::cin.seekg(0, std::ios::end);
-            //                }
-            //rewind(stdin);
-            while (getchar() != '\n'){ }
-            key = getchar();
-            //std::cout << key << std::endl;
-            switch(key){
+            //cin.ignore(1024, '\n');
+            getline(cin,line);
+            //switch(key){
+            switch(line[0]){
               case 'j':
                 int target_step;
                 if(all_state.size()!=0)
@@ -281,23 +279,23 @@ namespace hydla {
                   { 
                     if(all_state[i]->phase==PointPhase)
                     {
-                      std::cout <<  "[debug] step" << all_state[i]->step+1 << " pp t:" << all_state[i]-> current_time<< std::endl;
+                      cout <<  "[debug] step" << all_state[i]->step+1 << " pp t:" << all_state[i]-> current_time<< endl;
                     }else if(all_state[i]->phase==IntervalPhase)
                     {
-                      std::cout <<  "[debug] step" << all_state[i]->step+1 << " ip t:" << all_state[i]-> current_time<< "->" <<std::endl;
+                      cout <<  "[debug] step" << all_state[i]->step+1 << " ip t:" << all_state[i]-> current_time<< "->" <<endl;
                     }
                   }
                   //debug}}}                          
-                  std::cout << "in mode jump test input step number" <<std::endl;
-                  std::cin >> target_step;
+                  cout << "in mode jump test input step number" <<endl;
+                  cin >> target_step;
                   int i;
                   for(i=0;i<all_state.size();i++)
                   {
                     //std::cout << all_state[i]->step << std::endl;
                     if(all_state[i]->step+1==target_step && all_state[i]->phase==PointPhase)
                     {
-                      std::cout << "jump to step "<<all_state[i]->step+1 << " time:" << all_state[i]->current_time << std::endl;
-                      std::cout << "[debug] state size"<< all_state.size() << "jump number" << i << std::endl;
+                      cout << "jump to step "<<all_state[i]->step+1 << " time:" << all_state[i]->current_time << endl;
+                      cout << "[debug] state size"<< all_state.size() << "jump number" << i << endl;
                       state = all_state[i];
                       //for(int j=0;j<((all_state.size()/2)-target_step)*2;j++)
                       int j=0;
@@ -305,19 +303,20 @@ namespace hydla {
                       for(j=0;j<delete_size;j++)
                       {
                         all_state.pop_back();
-                        std::cout << "[debug] delete " << j << std::endl;
+                        cout << "[debug] delete " << j << endl;
                       }
-                      break;
-                    }
+                   }
                   }
+                  cin.ignore( 1024, '\n');
+                  break;
                 }else
                 {
-                  std::cout << "0 step" << std::endl;
+                  cout << "0 step" << endl;
                   break;
                 }
                 // default:
               case 's':{
-                std::cout << "save state in file" << std::endl;
+                cout << "save state in file" << endl;
                 char *name = "save_data.dat"; // save_data.dat(セーブデータファイル)
                 FILE *fp;
                 phase_state_sptr tmp;
@@ -334,16 +333,17 @@ namespace hydla {
                   break;
                        }
               case 'h':
-                std::cout << "help" << std::endl;
+                cout << "help" << endl;
                 break;
               case 'w':
-                std::cout << "change variable" << std::endl;
+                cout << "change variable" << endl;
                 change_variable_flag = 1;
                 break;
             }
 
-            if(key == 'q'||key == 's'){
-              std::cout << "exit" << std::endl;
+            //if(key == 'q'||key == 's'){
+            if(line[0] == 'q'||line[0] == 's'){
+              cout << "exit" << endl;
               continue;
             }
             
@@ -358,7 +358,7 @@ namespace hydla {
               if(!opts_.nd_mode)break;
               if(opts_.interactive_mode)
               {
-                std::cout << "in mode test push_back" << state->current_time <<std::endl;
+                cout << "in mode test push_back" << state->current_time <<endl;
                 all_state.push_back(state);
               }
             }
@@ -769,6 +769,7 @@ vm.set_variable(m,n);
 
         branch_state->variable_map = vm;
         change_variable_flag = false;
+        cin.ignore( 1024 , '\n');
       }
       }
 
