@@ -1,6 +1,6 @@
 // bouncing particle rp
 
-INIT   <=>  5<=ht<=15 & v<=0 & [](ht' = v & e=4/5).
+INIT   <=> ht = 10 & v=0 & e > -5 & [](ht' = v & e'=0).
 FALL   <=> [](v'  = -10).
 BOUNCE <=> [](ht- = 0 => v = -e * v-).
 

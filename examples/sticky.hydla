@@ -1,8 +1,21 @@
+/*
+
+INIT <=> y1 < y2 & y1' = 0 & y2' = 0 & isApart = 1 & k1 > 0 & k2 > 0 & m1 > 0 & m2 > 0 & p1 < p2 & s > 0 & [](m1' = m2' = k1' = k2' = p1' = p2' = s' = 0).
+CONT <=> [](isApart' = 0).
+ISAPART <=> [](y1'' = k1*(p1-y1)/m1 & y2'' = k2*(p2-y2)/m2).
+TOGETHER <=> [](isApart = 0 => y1'' = y2'' = (k1*p1 + k2*p2 -(k1+k2)*y1)/(m1+m2)).
+COLLIDE <=> [](isApart- = 1 & y1- = y2- => y1' = y2' = (m1*y1'- + m2*y2'-)/(m1+m2) & isApart = 0).
+APART <=> [](isApart -= 0 & (k1-k2)y + k2*p2 -k1*p1 > s => isApart = 1).
+
+INIT, CONT << (COLLIDE & APART), (ISAPART << TOGETHER).
+
+*/
+
 INIT <=> y1 = 0 & y2 = 8 & y1' = 0 & y2' = 0 & isApart = 1.
-CONST <=> [](isApart' = 0).
+CONT <=> [](isApart' = 0).
 ISAPART <=> [](isApart = 1 => y1'' = (2-y1) & y2'' = 2*(3-y2)).
 TOGETHER <=> [](isApart = 0 => y1'' = y2'' = 8-2*y1).
 COLLIDE <=> [](isApart- = 1 & y1- = y2- => y1' = y2' = (y1'- + y2'-)/2 & isApart = 0).
 APART <=> [](isApart -= 0 & y2- + 1 > 2 => isApart = 1).
 
-INIT, CONST << (COLLIDE, APART), (ISAPART, TOGETHER).
+INIT, CONT << (COLLIDE & APART), (ISAPART, TOGETHER).
