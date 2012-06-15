@@ -1,8 +1,9 @@
 //燃料タンクを交換しながら上昇する気球のモデル
 
 INIT<=>h=10/\h'=0/\fuel=1/\timer=0
-       /\2<exT<4
-       /\1<volume<3.
+       // /\2<exT<4
+       /\ exT = 1
+       /\1/2<volume<10.
 
 CONS<=>[](exT'=0/\volume'=0).
 TIME<=>[](timer'=1).
