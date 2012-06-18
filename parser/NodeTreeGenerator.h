@@ -79,7 +79,8 @@ private:
   create_arbitrary_node(const TreeIter& tree_iter)
   { 
     boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
-    node->set_string(std::string(tree_iter->value.begin(), tree_iter->value.end()));
+    std::string name(tree_iter->value.begin(), tree_iter->value.end());
+    node->set_string(name);
     TreeIter it  = tree_iter->children.begin();
     TreeIter end = tree_iter->children.end();
     while(it != end) {

@@ -25,20 +25,20 @@ PacketSender::function_map_t PacketSender::function_map_;
 void PacketSender::initialize(){
   //HydLaÇ∆MathematicaÇÃä÷êîñºÇÃëŒâûä÷åWÇçÏÇ¡ÇƒÇ®Ç≠ÅD
   typedef function_map_t::value_type value_t;
-  function_map_.insert(value_t(function_t("Sin", 1), function_t("Sin", 1)));
-  function_map_.insert(value_t(function_t("Sinh", 1), function_t("Sinh", 1)));
+  function_map_.insert(value_t(function_t("sin", 1), function_t("Sin", 1)));
+  function_map_.insert(value_t(function_t("sinh", 1), function_t("Sinh", 1)));
   function_map_.insert(value_t(function_t("Asin", 1), function_t("ArcSin", 1)));
   function_map_.insert(value_t(function_t("Asinh", 1), function_t("ArcSinh", 1)));
-  function_map_.insert(value_t(function_t("Cos", 1), function_t("Cos", 1)));
-  function_map_.insert(value_t(function_t("Cosh", 1), function_t("Cosh", 1)));
+  function_map_.insert(value_t(function_t("cos", 1), function_t("Cos", 1)));
+  function_map_.insert(value_t(function_t("cosh", 1), function_t("Cosh", 1)));
   function_map_.insert(value_t(function_t("Acos", 1), function_t("ArcCos", 1)));
   function_map_.insert(value_t(function_t("Acosh", 1), function_t("ArcCosh", 1)));
-  function_map_.insert(value_t(function_t("Tan", 1), function_t("Tan", 1)));
-  function_map_.insert(value_t(function_t("Tanh", 1), function_t("Tanh", 1)));
+  function_map_.insert(value_t(function_t("tan", 1), function_t("Tan", 1)));
+  function_map_.insert(value_t(function_t("tanh", 1), function_t("Tanh", 1)));
   function_map_.insert(value_t(function_t("Atan", 1), function_t("Arctan", 1)));
   function_map_.insert(value_t(function_t("Atanh", 1), function_t("ArcTanh", 1)));
-  function_map_.insert(value_t(function_t("Log", 2), function_t("Log", 2)));
-  function_map_.insert(value_t(function_t("Ln", 1), function_t("Log", 1)));
+  function_map_.insert(value_t(function_t("log", 2), function_t("Log", 2)));
+  function_map_.insert(value_t(function_t("ln", 1), function_t("Log", 1)));
 }
 
 

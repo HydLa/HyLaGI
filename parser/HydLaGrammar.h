@@ -338,7 +338,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       negative    = ch_p('-');
       
       //ŠÖ”
-      function         = leaf_node_d[+alpha_p];
+      function         = lexeme_d[leaf_node_d[+alpha_p]];
     }
 
     // ŠJnƒ‹[ƒ‹
