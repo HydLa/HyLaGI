@@ -454,6 +454,8 @@ namespace hydla {
         HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_consistency in calculate_closure\n");
         //tell‚¶‚á‚È‚­‚Ä§–ñ•”•ª‚Ì‚İ‘—‚é
         constraint_list.clear();
+        
+        maker.reset();
 
         for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
           constraint_list.push_back((*it)->get_child());
@@ -558,12 +560,12 @@ namespace hydla {
                     push_branch_states(state, check_consistency_result);
                   // ©•ª‚Í“±o‰Â”\‚Èê‡‚Ì‚¤‚¿‚Ì1‚Â‚Æ‚·‚é
                   state->parameter_map = check_consistency_result.true_parameter_maps[0];
-                }else{
-                  branched_ask = &(*it);
-                  it++;
-                  solver_->end_temporary();
-                  continue;
                 }
+                HYDLA_LOGGER_CLOSURE("--- branched ask ---\n", *((*it)->get_guard()));
+                branched_ask = &(*it);
+                it++;
+                solver_->end_temporary();
+                continue;
               }
               HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
               positive_asks.insert(*it);
