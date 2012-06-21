@@ -97,6 +97,7 @@ namespace symbolic_simulator {
     bool nd_mode;
     OutputStyle output_style;
     bool interactive_mode;
+    bool time_measurement;
     bool profile_mode;
     bool parallel_mode;
     OutputFormat output_format;

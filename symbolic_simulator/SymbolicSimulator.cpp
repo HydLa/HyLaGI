@@ -11,6 +11,7 @@
 #include <boost/make_shared.hpp>
 
 #include "Logger.h"
+#include "Timer.h"
 
 //仮追加
 #include "RTreeVisitor.h"
@@ -44,6 +45,7 @@ using namespace hydla::ch;
 using namespace hydla::symbolic_simulator;
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
+using namespace hydla::timer;
 
 using hydla::simulator::TellCollector;
 using hydla::simulator::AskCollector;
@@ -389,6 +391,7 @@ namespace hydla {
           output_result_tree();
         }
       }
+
     }
 
     void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
@@ -634,6 +637,7 @@ namespace hydla {
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::point_phase***");
       //前準備
+      Timer pp_timer;
       expanded_always_t expanded_always;
       expanded_always_id2sptr(state->expanded_always_id, expanded_always);
       solver_->change_mode(DiscreteMode, opts_.approx_precision);
@@ -646,6 +650,8 @@ namespace hydla {
       HYDLA_LOGGER_PHASE("--- time_applied_variable_map ---\n", time_applied_map);
       solver_->reset(time_applied_map, state->parameter_map);
 
+      Timer pp_cc_timer;
+
       //閉包計算
       switch(calculate_closure(state,ms,expanded_always,positive_asks,negative_asks, time_applied_map)){
         case CC_TRUE:
@@ -655,7 +661,9 @@ namespace hydla {
         case CC_BRANCH:
           return true;
       }
-
+      if(opts_.time_measurement){
+	pp_cc_timer.push_time("PP-CalculateClosure");
+      }
       // Interval Phaseへ移行（次状態の生成）
       HYDLA_LOGGER_PHASE("%% SymbolicSimulator::create new phase states\n");  
       SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
@@ -775,9 +783,9 @@ vm.set_variable(m,n);
       }
       }
 
-
-
-
+      if(opts_.time_measurement){
+	pp_timer.push_time("PointPhase");
+      }
       HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::point_phase***\n");
       return true;
     }
@@ -787,6 +795,7 @@ vm.set_variable(m,n);
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::interval_phase***");
       //前準備
+      Timer ip_timer;
       expanded_always_t expanded_always;
       expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
@@ -795,6 +804,7 @@ vm.set_variable(m,n);
       positive_asks_t positive_asks(state->positive_asks);
       solver_->reset(state->parent->variable_map, state->parameter_map);
 
+      Timer ip_cc_timer;
 
       //閉包計算
       switch(calculate_closure(state, ms, expanded_always, positive_asks ,negative_asks, state->parent->variable_map)){
@@ -805,7 +815,9 @@ vm.set_variable(m,n);
         case CC_BRANCH:
           return true;
       }
-
+      if(opts_.time_measurement){
+	ip_cc_timer.push_time("IP-CalculateClosure");
+      }
       TellCollector tell_collector(ms);
       tells_t         tell_list;
       tell_collector.collect_new_tells(&tell_list,
@@ -951,7 +963,9 @@ vm.set_variable(m,n);
       }
       }
       */
-
+      if(opts_.time_measurement){
+	ip_timer.push_time("IntervalPhase");
+      }
       HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::interval_phase***");
       return true;
   }

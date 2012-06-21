@@ -69,6 +69,8 @@ void ProgramOptions::init_descriptions()
     ("nd", "nondeterministic mode")
     
     ("in", "interactive mode")
+
+    ("tm", "time measurement")
     
     ("output-format,f", 
      value<std::string>()->default_value("t"), 

@@ -1,0 +1,23 @@
+/**
+ *  bouncing particle in v slope whose degree is s.
+ */
+
+INIT <=> x = 4 & y = 10 & x' = 0 & y' = 0
+    	 & [](s = Pi/4 & s' = 0) 
+     	 & [](k = 8/10 & k' = 0).
+
+A <=> [](x'' = 0 & y'' = -98/10).
+
+BOUNCE_MINUS <=> [](y- = -tan(s) * x- => 
+                       x' = ((-k) * sin(s)^2 + cos(s)^2) * x'-
+                            + ((-1) * (k+1)  * sin(s) * cos(s)) * y'-
+                     & y' = ((-1)*(k+1)  * sin(s) * cos(s)) * x'-
+                            + (sin(s)^2 + (-k) * cos(s)^2) * y'-).
+
+BOUNCE_PLUS <=> [](y- = tan(s) * x- =>
+                       x' = ((-k) * (sin(s)^2) + cos(s)^2) * x'-
+                            + ((k+1)  * sin(s) * cos(s)) * y'-
+                     & y' = ((k+1)  * sin(s) * cos(s)) * x'-
+                            + (sin(-s)^2 + (-k) * cos(s)^2) * y'-).
+
+INIT, A << (BOUNCE_PLUS,BOUNCE_MINUS).

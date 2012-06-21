@@ -17,6 +17,7 @@
 
 // common
 #include "Logger.h"
+#include "Timer.h"
 
 // constraint hierarchy
 #include "ModuleSetContainerCreator.h"
@@ -30,6 +31,7 @@
 using namespace boost;
 using namespace hydla;
 using namespace hydla::logger;
+using namespace hydla::timer;
 using namespace hydla::parser;
 using namespace hydla::parse_tree;
 using namespace hydla::ch;
@@ -75,6 +77,8 @@ void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
+
+  Timer main_timer;
   
   std::string area_string(po.get<std::string>("debug"));
   if(area_string!=""){                 // デバッグ出力
@@ -138,6 +142,14 @@ void hydla_main(int argc, char* argv[])
     std::cerr << "invalid method" << std::endl;
     return;
   }
+
+  if(po.count("tm")){
+    Timer::output_time();
+    std::cout << "[main] Finish Time : ";
+    main_timer.elapsed();
+    std::cout << std::endl;
+  }
+
 }
 
 /**

@@ -18,7 +18,6 @@
 #include "SymbolicTypes.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
 
-
 namespace hydla {
 namespace symbolic_simulator {
 
@@ -115,8 +114,7 @@ private:
 
   /// 使用するソルバへのポインタ
   boost::scoped_ptr<solver_t> solver_;
-  bool is_safe_;
-
+  bool is_safe_; 
   
   ///解軌道木の根．初期状態なので，子供以外の情報は入れない
   phase_state_sptr_t result_root_;
