@@ -22,8 +22,6 @@
 namespace hydla {
 namespace vcs {
 
-
-
 /**
  *  数式処理シミュレーションのために使うソルバー
  *  TODO:VCSを継承しても齟齬が起きないようにする
@@ -155,7 +153,7 @@ public:
     
 
   //SymbolicValueを指定された精度で数値に変換する
-  virtual std::string get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){return "get_real_val is unavailable";}
+  virtual std::string get_real_val(const value_t &val, int precision, simulator::OutputFormat opfmt){return "get_real_val is unavailable";}
   
   // 現在の制約ストアを文字列で取得する
   virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}

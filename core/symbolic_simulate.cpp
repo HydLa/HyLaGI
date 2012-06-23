@@ -2,6 +2,7 @@
 
 #include "ProgramOptions.h"
 #include "SymbolicSimulator.h"
+#include "SequentialSimulator.h"
 
 // parser
 #include "DefaultNodeFactory.h"
@@ -14,6 +15,7 @@ using namespace hydla::parse_tree;
 using namespace hydla::parser;
 using namespace hydla::ch;
 using namespace hydla::symbolic_simulator;
+using namespace hydla::simulator;
 
 /**
  * 記号処理によるシミュレーション
@@ -91,8 +93,11 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   Opts opts;
   setup_symbolic_simulator_opts(opts);
 
-  SymbolicSimulator ms(opts);
-  ms.initialize(parse_tree);
-  ms.simulate();
+  
+  SequentialSimulator<PhaseState<SymbolicValue> > ss(opts);
+  ss.set_phase_simulator(new SymbolicSimulator(opts));
+  ss.initialize(parse_tree);
+  ss.simulate();
+  
 }
 

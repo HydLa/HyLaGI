@@ -46,71 +46,23 @@ namespace symbolic_simulator {
   typedef simulator::continuity_map_t            continuity_map_t;
   typedef simulator::Simulator<phase_state_t>::variable_set_t  variable_set_t;
   typedef simulator::Simulator<phase_state_t>::parameter_set_t  parameter_set_t;
-
+  
+  typedef simulator::parse_tree_sptr  parse_tree_sptr;
                                         
 
   typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
   
-  typedef simulator::Simulator<phase_state_t> simulator_t;
+  typedef simulator::PhaseSimulator<phase_state_t> simulator_t;
   
-  
-  typedef enum CalculateClosureResult_ {
-    CC_TRUE,
-    CC_FALSE,
-    CC_BRANCH
-  } CalculateClosureResult;
+  typedef simulator_t::Phases                    Phases;
 
-  typedef enum OutputFormat_ {
-    fmtTFunction,
-    fmtNumeric,
-    fmtMathematica,
-    fmtNInterval,
-  } OutputFormat;
-  
-  typedef enum OutputStyle_ {
-    styleTree,
-    styleList,
-  } OutputStyle;
-  
+  typedef std::vector<phase_state_sptr> CalculateClosureResult;
+
   typedef enum Mode_{
     ContinuousMode,
     DiscreteMode,
   } Mode;
   
-  /*
-   * デフォルト連続性
-   */
-  typedef enum DefaultContinuity_{
-    CONT_NONE = 0,  // 連続性を仮定しない（現状ではIPの連続性を明示する方法が無いため，ほぼ使用不能）
-    CONT_WEAK,      // 制約ストアに微分値に関する制約が入っていたら，その微分回数未満についてはすべて連続
-    CONT_GUARD,       // WEAKに加え，ガード条件の後件までを見て連続性制約を追加する
-    CONT_STRONG_IP, // WEAKに加え，「何も言及されていなければ全部そのまま(最大微分回数＋１ = ０）」をIP限定で
-    CONT_STRONG,    // 上記をIPでもPPでも有効にする
-    CONT_NUM        // デフォルト連続性の種類の総数
-  } DefaultContinuity;
-
-  typedef struct Opts_ {
-    std::string mathlink;
-    bool debug_mode;
-    std::string max_time;
-    int max_step;
-    bool nd_mode;
-    OutputStyle output_style;
-    bool interactive_mode;
-    bool time_measurement;
-    bool profile_mode;
-    bool parallel_mode;
-    OutputFormat output_format;
-    bool dump_in_progress;
-    bool exclude_error;
-    time_t output_interval;
-    int output_precision;
-    int approx_precision;
-    std::string solver;
-    hydla::parse_tree::node_sptr assertion;
-    DefaultContinuity default_continuity;
-    std::set<std::string> output_variables;
-  } Opts;
 
 } // namespace symbolic_simulator
 } // namespace hydla

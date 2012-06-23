@@ -16,7 +16,8 @@ namespace simulator {
 template<typename value> class DefaultParameter;
 
 /**
- * ある段階での処理の状態を表すクラス
+ * あるフェーズの情報を表すクラス
+ * PhaseStateというよりはPhaseResultという方が正しいかもしれません
  */
 template<typename ValueType>
 struct PhaseState {
@@ -25,8 +26,8 @@ struct PhaseState {
   typedef DefaultVariable                                   variable_t;
   typedef DefaultParameter<value_t>                         parameter_t;
   typedef value_t                                           time_t;
-  typedef VariableMap<variable_t*, value_t>             variable_map_t;
-  typedef VariableMap<parameter_t*, range_t>            parameter_map_t;
+  typedef VariableMap<variable_t*, value_t>                 variable_map_t;
+  typedef VariableMap<parameter_t*, range_t>                parameter_map_t;
   typedef boost::shared_ptr<PhaseState>                     phase_state_sptr_t;
   typedef std::vector<phase_state_sptr_t >                  phase_state_sptrs_t;
 
@@ -47,7 +48,7 @@ struct PhaseState {
   /// シミュレーション実行ステップ数．IP を一度終えるごとに1増加する
   int step;
 
-  /// フェーズの終了状態．次のフェーズが無いときのみ意味を持つ
+  /// フェーズの終了原因を表す．
   CauseOfTermination cause_of_termination;
   /// 次のフェーズ
   phase_state_sptrs_t children;

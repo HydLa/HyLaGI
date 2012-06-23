@@ -3,10 +3,20 @@
 
 #include <vector>
 #include <string>
+
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
+
+#include < time.h >
+#include <windows.h> //I've ommited this line.
+  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+
+
+
+#else
+
 #include <sys/time.h> /// LinuxópÅH
 
-//#include <windows.h>  /// windowsÇæÇ∆
-//#include <stdio.h>    /// Ç±ÇÍÇÁÇincludeÇ∑ÇÍÇŒÇ¢Ç¢ÇÁÇµÇ¢ÅH
+#endif
 
 namespace hydla{
   namespace timer{

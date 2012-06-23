@@ -21,7 +21,7 @@ public:
 
 
   //MathematicaVCS(Mode m, MathLink* ml, int approx_precision);
-  MathematicaVCS(const hydla::symbolic_simulator::Opts &opts);
+  MathematicaVCS(const hydla::simulator::Opts &opts);
 
   virtual ~MathematicaVCS();
 
@@ -89,7 +89,7 @@ public:
   /**
    * ”®‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
    */
-  virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
+  virtual std::string get_real_val(const value_t &val, int precision, hydla::simulator::OutputFormat opfmt);
   
   /**
    * SymbolicTime‚ğŠÈ–ñ‚·‚é

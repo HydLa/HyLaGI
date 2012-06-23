@@ -9,7 +9,6 @@
 #include <boost/iterator/indirect_iterator.hpp>
 
 #include "Logger.h"
-#include "TypedAsk.h"
 
 using namespace std;
 using namespace hydla::parse_tree;
@@ -90,35 +89,19 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
 
   if(!in_negative_ask_){
-    bool collect = false;
-    if(boost::dynamic_pointer_cast<DiscreteAsk>(node)) {
-      // —£ŽU•Ï‰»ASK
-      if(collect_type_ & ENABLE_COLLECT_DISCRETE_ASK) collect = true;
-    }
-    else if(boost::dynamic_pointer_cast<ContinuousAsk>(node)) {
-      // ˜A‘±•Ï‰»ASK
-      if(collect_type_ & ENABLE_COLLECT_CONTINUOUS_ASK) collect = true;
+    if(positive_asks_->find(node) != positive_asks_->end()) 
+    {
+      // Šù‚É“WŠJÏ‚Ý‚Ìaskƒm[ƒh‚Å‚ ‚Á‚½ê‡
+      in_positive_ask_ = true;
+      accept(node->get_child());
+      in_positive_ask_ = false;
     }
     else {
-      // Œ^‚ª‘¶Ý‚µ‚È‚¢ASK
-      if(collect_type_ & ENABLE_COLLECT_NON_TYPED_ASK) collect = true;
-    }
-    
-    if(collect) {
-      if(positive_asks_->find(node) != positive_asks_->end()) 
-      {
-        // Šù‚É“WŠJÏ‚Ý‚Ìaskƒm[ƒh‚Å‚ ‚Á‚½ê‡
-        in_positive_ask_ = true;
-        accept(node->get_child());
-        in_positive_ask_ = false;
-      }
-      else {
-        // ‚Ü‚¾“WŠJ‚³‚ê‚Ä‚¢‚È‚¢askƒm[ƒh‚Å‚ ‚Á‚½ê‡
-        negative_asks_->insert(node);
-        in_negative_ask_ = true;
-        accept(node->get_child());
-        in_negative_ask_ = false;
-      }
+      // ‚Ü‚¾“WŠJ‚³‚ê‚Ä‚¢‚È‚¢askƒm[ƒh‚Å‚ ‚Á‚½ê‡
+      negative_asks_->insert(node);
+      in_negative_ask_ = true;
+      accept(node->get_child());
+      in_negative_ask_ = false;
     }
   } else {
     accept(node->get_child());

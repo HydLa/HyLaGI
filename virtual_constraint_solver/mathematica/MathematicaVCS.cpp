@@ -8,6 +8,7 @@
 
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
+using namespace hydla::simulator;
 
 namespace hydla {
 namespace vcs {
@@ -28,7 +29,7 @@ void MathematicaVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_p
   }
 }
 
-MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
+MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::MathematicaVCS(Constructor) ***\n");
   //std::cout << opts.mathlink.c_str() << std::endl;
@@ -69,23 +70,6 @@ MathematicaVCS::MathematicaVCS(const hydla::symbolic_simulator::Opts &opts)
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optParallel"); 
   ml_.MLPutSymbol(opts.parallel_mode ? "True" : "False");
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-
-  // 出力形式
-  ml_.MLPutFunction("Set", 2);
-  ml_.MLPutSymbol("optOutputFormat"); 
-  switch(opts.output_format) {
-    case hydla::symbolic_simulator::fmtTFunction:
-      ml_.MLPutSymbol("fmtTFunction");
-      break;
-
-    case hydla::symbolic_simulator::fmtNumeric:
-    default:
-      ml_.MLPutSymbol("fmtNumeric");
-      break;
-  }
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
@@ -603,11 +587,11 @@ std::string upward(std::string str){
 }
 
 //value_tを指定された精度で数値に変換する
-std::string MathematicaVCS::get_real_val(const value_t &val, int precision, symbolic_simulator::OutputFormat opfmt){
+std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simulator::OutputFormat opfmt){
   std::string ret;
   PacketSender ps(ml_);
 
-  if(!val.is_undefined() && opfmt == symbolic_simulator::fmtNInterval) {
+  if(!val.is_undefined() && opfmt == fmtNInterval) {
     
     //precisionは2より大きいとする
     if(precision<2) precision=2;
