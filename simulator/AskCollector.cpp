@@ -38,10 +38,8 @@ struct NodeDumper {
 };
 }
 
-AskCollector::AskCollector(const module_set_sptr& module_set, 
-                           collect_flag_t collect_type) :
-  module_set_(module_set),
-  collect_type_(collect_type)
+AskCollector::AskCollector(const module_set_sptr& module_set) :
+  module_set_(module_set)
 {}
 
 AskCollector::~AskCollector()
@@ -77,6 +75,7 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
       accept((*it)->get_child());
     }
   }
+  std::cout << new_expanded_always_.size() << std::endl;
 
   // 展開済みalwaysノードのリストの更新
   expanded_always->insert(new_expanded_always_.begin(), 
@@ -87,14 +86,17 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
 // Ask制約
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
-
   if(!in_negative_ask_){
     if(positive_asks_->find(node) != positive_asks_->end()) 
     {
       // 既に展開済みのaskノードであった場合
-      in_positive_ask_ = true;
-      accept(node->get_child());
-      in_positive_ask_ = false;
+      if(in_positive_ask_){
+        accept(node->get_child());
+      }else{
+        in_positive_ask_ = true;
+        accept(node->get_child());
+        in_positive_ask_ = false;
+      }
     }
     else {
       // まだ展開されていないaskノードであった場合
@@ -123,7 +125,7 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
       accept(node->get_child());
     }
   } else {
-    if(!in_negative_ask_){
+    if(!in_negative_ask_ && in_positive_ask_){
       accept(node->get_child());
       new_expanded_always_.insert(node);
     }

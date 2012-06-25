@@ -66,7 +66,7 @@ namespace hydla {
 
     void SymbolicSimulator::initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m)
     {
-      PhaseSimulator::initialize(parse_tree, v, p, m);
+      simulator_t::initialize(parse_tree, v, p, m);
       variable_derivative_map_ = parse_tree->get_variable_map();
 
       // 使用するソルバの決定
@@ -125,9 +125,7 @@ namespace hydla {
 
       //前準備
       TellCollector tell_collector(ms);
-      AskCollector  ask_collector(ms, AskCollector::ENABLE_COLLECT_NON_TYPED_ASK | 
-          AskCollector::ENABLE_COLLECT_DISCRETE_ASK |
-          AskCollector::ENABLE_COLLECT_CONTINUOUS_ASK);
+      AskCollector  ask_collector(ms);
       tells_t         tell_list;
       constraints_t   constraint_list;
       boost::shared_ptr<hydla::parse_tree::Ask>  const *branched_ask;
@@ -191,7 +189,6 @@ namespace hydla {
         ask_collector.collect_ask(&expanded_always, 
             &positive_asks, 
             &negative_asks);
-
 
         // ask制約のエンテール処理
         HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_entailment in calculate_closure\n");
@@ -348,6 +345,7 @@ namespace hydla {
       if(result.size() != 1){
         return result;
       }
+      
       
       if(opts_->time_measurement){
       	pp_cc_timer.push_time("PP-CalculateClosure");
