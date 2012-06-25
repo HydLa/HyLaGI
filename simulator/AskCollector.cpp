@@ -75,7 +75,6 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
       accept((*it)->get_child());
     }
   }
-  std::cout << new_expanded_always_.size() << std::endl;
 
   // 展開済みalwaysノードのリストの更新
   expanded_always->insert(new_expanded_always_.begin(), 
