@@ -75,10 +75,12 @@ template<typename PhaseStateType>
 class Simulator
 {
 public:  
-  typedef PhaseStateType                                   phase_state_t; 
-  typedef typename boost::shared_ptr<phase_state_t>        phase_state_sptr; 
-  typedef typename boost::shared_ptr<const phase_state_t>  phase_state_const_sptr; 
+  typedef PhaseStateType                                   phase_state_t;
+  typedef typename boost::shared_ptr<phase_state_t>        phase_state_sptr;
+  typedef typename boost::shared_ptr<const phase_state_t>  phase_state_const_sptr;
   typedef PhaseSimulator<PhaseStateType>                   phase_simulator_t;
+  typedef typename phase_state_t::phase_state_sptr_t      phase_state_sptr_t;
+  typedef typename std::vector<phase_state_sptr_t >                  phase_state_sptrs_t;
 
   typedef typename phase_state_t::variable_map_t variable_map_t;
   typedef typename phase_state_t::variable_t     variable_t;
@@ -89,7 +91,6 @@ public:
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
   typedef value_t                                          time_value_t;
-  
 
   Simulator(Opts opts):opts_(opts)
   {}
@@ -120,7 +121,7 @@ public:
   
     //出力変数無指定な場合の出力制御（全部出力）
     if(opts_.output_variables.empty()){
-      BOOST_FOREACH(const variable_set_t::value_type& i, variable_set_) {
+      BOOST_FOREACH(const typename variable_set_t::value_type& i, variable_set_) {
         opts_.output_variables.insert(i.get_string());
       }
     }
@@ -170,7 +171,7 @@ public:
     // TODO: 未定義の値とかのせいでずれる可能性あり?
     stream << "# time\t";
 
-    BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
+    BOOST_FOREACH(const typename variable_map_t::value_type& i, variable_map) {
       if(opts_.output_variables.find(i.first->get_string()) != opts_.output_variables.end()){
         stream << i.first << "\t";
       }
@@ -238,8 +239,8 @@ public:
   
   void output_parameter_map(const parameter_map_t& pm)
   {
-    parameter_map_t::const_iterator it  = pm.begin();
-    parameter_map_t::const_iterator end = pm.end();
+    typename parameter_map_t::const_iterator it  = pm.begin();
+    typename parameter_map_t::const_iterator end = pm.end();
     if(it != end){
       std::cout << "\n#---------parameter condition---------\n";
     }
@@ -250,8 +251,8 @@ public:
 
   void output_variable_map(std::ostream &stream, const variable_map_t& vm, const time_value_t& time, const bool& numeric)
   {
-    variable_map_t::const_iterator it  = vm.begin();
-    variable_map_t::const_iterator end = vm.end();
+    typename variable_map_t::const_iterator it  = vm.begin();
+    typename variable_map_t::const_iterator end = vm.end();
     if(numeric){
     /*
       stream << std::endl;
@@ -275,7 +276,7 @@ public:
       std::cout << "No Result." << std::endl;
       return;
     }
-    phase_state_sptrs_t::iterator it = result_root_->children.begin(), end = result_root_->children.end();
+    typename phase_state_sptrs_t::iterator it = result_root_->children.begin(), end = result_root_->children.end();
     int i=1, j=1;
     for(;it!=end;it++){
       std::vector<std::string> result;
@@ -339,7 +340,7 @@ public:
         result.push_back(sstr.str());
       }
       result.push_back(get_state_output(*node, false,false));
-      phase_state_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
+      typename phase_state_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
       for(;it!=end;it++){
         output_result_node(*it, result, case_num, phase_num);
       }
@@ -377,7 +378,7 @@ public:
       variable_map_);
   }
 
-  void const output_result_tree_mathematica(){
+  void output_result_tree_mathematica(){
     if(result_root_->children.size() == 0){
       std::cout << "No Result." << std::endl;
       return;
@@ -397,7 +398,7 @@ public:
           }else{
             std::cout << ",";
           }
-          variable_map_t::const_iterator it = vm.begin();
+          typename variable_map_t::const_iterator it = vm.begin();
           while(opts_.output_variables.find(it->first->get_string()) == opts_.output_variables.end()){
             it++;
             if(it == vm.end()) return;
@@ -419,7 +420,7 @@ public:
           if(now_node->parameter_map.size() > 0){
             // 定数の条件
             std::cout << "{";
-            parameter_map_t::const_iterator it = now_node->parameter_map.begin();
+            typename parameter_map_t::const_iterator it = now_node->parameter_map.begin();
             std::cout << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << " - step, step}";
           }else{
             std::cout << "{1}";
@@ -472,7 +473,7 @@ protected:
   int state_id_;
   
 
-  typedef struct SimulationState {
+  struct SimulationState {
     phase_state_sptr phase_state;
     /// フェーズ内で一時的に追加する制約．分岐処理などに使用
     constraints_t temporary_constraints;
