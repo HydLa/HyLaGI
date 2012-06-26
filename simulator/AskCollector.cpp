@@ -124,8 +124,8 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
       accept(node->get_child());
     }
   } else {
+    accept(node->get_child());
     if(!in_negative_ask_ && in_positive_ask_){
-      accept(node->get_child());
       new_expanded_always_.insert(node);
     }
     visited_always_.insert(node);

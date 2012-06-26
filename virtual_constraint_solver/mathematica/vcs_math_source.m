@@ -42,6 +42,7 @@ delimiterAddedString[del_, {h_, t__}] := StringJoin[h, del, delimiterAddedString
  * グローバル変数
  * constraint: 現在のフェーズでの制約
  * pConstraint: 定数についての制約
+ * prevConstraint: 左極限値を設定する制約．
  * variables: 制約に出現する変数のリスト
  * parameters: 記号定数のリスト
  * isTemporary：制約の追加を一時的なものとするか．
@@ -273,6 +274,7 @@ adjustExprs[andExprs_, judgeFunction_] :=
 resetConstraint[] := (
   constraint = True;
   pConstraint = True;
+  prevConstraint = True;
   tmpConstraint = True;
   variables = tmpVariables = prevVariables = {};
   isTemporary = False;
@@ -290,15 +292,25 @@ addConstraint[co_, va_] := Block[
     tmpVariables = Union[tmpVariables, vars];
     tmpConstraint = tmpConstraint && cons,
 	  variables = Union[variables, vars];
-	  constraint = Reduce[constraint && cons, variables, Reals]
+	  constraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && constraint && cons], variables, Reals]
   ];
   simplePrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
+];
+
+
+addPrevConstraint[co_, va_] := Block[
+  {cons, vars},
+  cons = co;
+  vars = va;
+  prevConstraint = prevConstraint&&cons;
+  prevVariables = Union[prevVariables, vars];
+  simplePrint[cons, vars, prevConstraint, prevVariables];
 ];
 
 addVariables[vars_] := (
   If[isTemporary,
     tmpVariables = Union[tmpVariables, vars],
-	variables = Union[variables, vars]
+	  variables = Union[variables, vars]
   ];
   simplePrint[vars, variables, tmpVariables];
 );

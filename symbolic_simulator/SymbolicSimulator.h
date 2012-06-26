@@ -35,13 +35,13 @@ public:
    * Point Phase‚Ìˆ—
    */
   virtual Phases point_phase(const module_set_sptr& ms, 
-                           phase_state_sptr& state);
+                           phase_state_sptr& state, bool& consistent);
   
   /**
    * Interval Phase‚Ìˆ—
    */
   virtual Phases interval_phase(const module_set_sptr& ms, 
-                              phase_state_sptr& state);
+                              phase_state_sptr& state, bool& consistent);
 
   /**
    * ‰Šú‰»ˆ—

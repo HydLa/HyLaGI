@@ -43,39 +43,61 @@ public:
   
   virtual ~PhaseSimulator(){}
 
-  virtual phase_state_sptrs_t simulate_phase_state(const module_set_sptr& ms, 
-                                    phase_state_sptr& state)
+  virtual phase_state_sptrs_t simulate_phase_state(phase_state_sptr& state, bool &consistent)
   {
     HYDLA_LOGGER_PHASE("#*** Begin Simulator::simulate_phase_state ***");
     HYDLA_LOGGER_PHASE("%% current time:", state->current_time);
     HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->parent->variable_map);
     HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->parameter_map);
-    HYDLA_LOGGER_PHASE("--- module set ---\n",
-          ms->get_name(),
-          "\n",
-          ms->get_infix_string() );
-    
     
     phase_state_sptrs_t phases; 
-    switch(state->phase) 
-    {
-      case PointPhase:
-      { 
-      HYDLA_LOGGER_PHASE("%% begin point phase");
-
-        phases = point_phase(ms, state);
-        break;
-      }
-
-      case IntervalPhase: 
+    bool has_next = false;
+    //TODO:exclude_error‚ª–³Œø‚É‚È‚Á‚Ä‚é
+    while(state->module_set_container->go_next()){
+      module_set_sptr ms = state->module_set_container->get_module_set();
+ 
+      HYDLA_LOGGER_PHASE("--- next module set ---\n",
+            ms->get_name(),
+            "\n",
+            ms->get_infix_string() );
+      switch(state->phase) 
       {
-      HYDLA_LOGGER_PHASE("%% begin interval phase");
-        phases = interval_phase(ms, state);
-        break;            
-      }
+        case PointPhase:
+        { 
+          HYDLA_LOGGER_PHASE("%% begin point phase");
+          phases = point_phase(ms, state, consistent);
+          break;
+        }
 
-    default:
-      assert(0);
+        case IntervalPhase: 
+        {
+          HYDLA_LOGGER_PHASE("%% begin interval phase");
+          phases = interval_phase(ms, state, consistent);
+          break;            
+        }
+        default:
+          assert(0);
+          break;
+      }
+      
+      if(consistent){
+        state->module_set_container->mark_nodes();
+        has_next = true;
+      }else{
+        state->module_set_container->mark_current_node();
+      }
+      if(phases.size() > 1){
+        return phases;
+      }
+      
+      state->positive_asks.clear();
+    }
+    
+    
+    //–³–µ‚‚È‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ª‘¶İ‚µ‚È‚¢ê‡
+    if(!has_next){
+      state->cause_of_termination = simulator::INCONSISTENCY;
+      state->parent->children.push_back(state);
     }
     
     return phases;
@@ -145,13 +167,13 @@ public:
    * Point Phase‚Ìˆ—
    */
   virtual Phases point_phase(const module_set_sptr& ms, 
-                           phase_state_sptr& state) = 0;
+                           phase_state_sptr& state, bool& consistent) = 0;
 
   /**
    * Interval Phase‚Ìˆ—
    */
   virtual Phases interval_phase(const module_set_sptr& ms, 
-                              phase_state_sptr& state) = 0;
+                              phase_state_sptr& state, bool& consistent) = 0;
 
   virtual void initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m)
   {
@@ -169,7 +191,7 @@ protected:
    */
   parse_tree_sptr parse_tree_;
   
-  
+  bool is_safe_;
   const Opts     *opts_;
   
   variable_set_t *variable_set_;

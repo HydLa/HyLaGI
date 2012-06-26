@@ -205,7 +205,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
 
   {
     PacketSender ps(ml_);
-    ml_.put_function("addConstraint", 2);
+    ml_.put_function("addPrevConstraint", 2);
     HYDLA_LOGGER_VCS("------Variable map------\n", variable_map);
     variable_map_t::const_iterator it = 
       variable_map.begin();

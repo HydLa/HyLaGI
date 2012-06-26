@@ -37,45 +37,37 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
    */
   virtual void simulate()
   {
-  
-    while(!state_stack_.empty() && (is_safe_ || Simulator<phase_state_t>::opts_.exclude_error)) {
+    while(!state_stack_.empty()) {
       phase_state_sptr state(pop_phase_state());
-      bool has_next = false;
+      bool consistent;
       try{
         if( Simulator<phase_state_t>::opts_.max_step >= 0 && state->step > Simulator<phase_state_t>::opts_.max_step)
           continue;
         state->module_set_container->reset(state->visited_module_sets);
-        while(state->module_set_container->go_next() && (is_safe_ || Simulator<phase_state_t>::opts_.exclude_error)){
-          is_safe_ = true;
-          phase_state_sptrs_t phases = Simulator<phase_state_t>::phase_simulator_->simulate_phase_state(state->module_set_container->get_module_set(), state);
-          if(!state->parent->children.empty() || !phases.empty()){
-            state->module_set_container->mark_nodes();
-            if(Simulator<phase_state_t>::opts_.nd_mode){
-              for(typename phase_state_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
-                // TODO:これだと時刻0のPPで場合分けが発生したときにバグる
+        phase_state_sptrs_t phases = Simulator<phase_state_t>::phase_simulator_->simulate_phase_state(state, consistent);
+        if(!phases.empty()){
+          if(Simulator<phase_state_t>::opts_.nd_mode){
+            for(typename phase_state_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
+              if(consistent){
                 (*it)->module_set_container = Simulator<phase_state_t>::msc_no_init_;
-                push_phase_state(*it);
               }
-            }else if(!phases.empty()){
-              phases[0]->module_set_container = Simulator<phase_state_t>::msc_no_init_;
-              push_phase_state(phases[0]);
+              else{
+                (*it)->module_set_container = (*it)->parent->module_set_container;
+              }
+              push_phase_state(*it);
             }
-            has_next = true;
-            break;
+          }else if(!phases.empty()){
+            if(consistent){
+              phases[0]->module_set_container = Simulator<phase_state_t>::msc_no_init_;
+            }else{
+              phases[0]->module_set_container = phases[0]->parent->module_set_container;
+            }
+            push_phase_state(phases[0]);
           }
-          else{
-            state->module_set_container->mark_current_node();
-          }
-          state->positive_asks.clear();
         }
       }catch(const std::runtime_error &se){
         std::cout << se.what() << std::endl;
         HYDLA_LOGGER_REST(se.what());
-      }
-
-      //無矛盾な解候補モジュール集合が存在しない場合
-      if(!has_next){
-        state->cause_of_termination = simulator::INCONSISTENCY;
       }
     }
     if(Simulator<phase_state_t>::opts_.output_format == fmtMathematica){
@@ -89,7 +81,6 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
   virtual void initialize(const parse_tree_sptr& parse_tree){
       Simulator<phase_state_t>::initialize(parse_tree);
       //Simulator::initialize(parse_tree);
-      Simulator<phase_state_t>::result_root_.reset(new phase_state_t());
       Simulator<phase_state_t>::state_id_ = 1;
       //初期状態を作ってスタックに入れる
       phase_state_sptr state(Simulator<phase_state_t>::create_new_phase_state());
@@ -108,7 +99,7 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
   virtual void push_phase_state(const phase_state_sptr& state)
   {
     state->id = Simulator<phase_state_t>::state_id_++;
-    HYDLA_LOGGER_PHASE("%% Simulator::push_phase_state\n");
+    HYDLA_LOGGER_PHASE("%% SequentialSimulator::push_phase_state\n");
     HYDLA_LOGGER_PHASE("%% state Phase: ", state->phase);
     HYDLA_LOGGER_PHASE("%% state id: ", state->id);
     HYDLA_LOGGER_PHASE("%% state time: ", state->current_time);
@@ -126,8 +117,6 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
     state_stack_.pop();
     return state;
   }
-  
-
   
   /**
    * 各PhaseResultに振っていくID

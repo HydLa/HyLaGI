@@ -94,8 +94,6 @@ namespace hydla {
     }
     
 
-    
-
     void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
       HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicSimulator::add_continuity ***\n");
       for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
@@ -179,8 +177,7 @@ namespace hydla {
             HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
             CalculateClosureResult result;
             // 自分以外の場合は別に作ってスタックに入れる
-            if(opts_->nd_mode)
-              push_branch_states(state, check_consistency_result, result);
+            push_branch_states(state, check_consistency_result, result);
             return result;
           }
         }
@@ -320,7 +317,7 @@ namespace hydla {
     }
 
     SymbolicSimulator::Phases SymbolicSimulator::point_phase(const module_set_sptr& ms, 
-        phase_state_sptr& state)
+        phase_state_sptr& state, bool& consistent)
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::point_phase***");
       //前準備
@@ -333,6 +330,7 @@ namespace hydla {
       negative_asks_t negative_asks;
 
       variable_map_t time_applied_map;
+      //TODO:毎回時間適用してるけど，前のフェーズが決まってれば同じになるわけだから1フェーズにつき一回でいいはず．
       solver_->apply_time_to_vm(state->parent->variable_map, time_applied_map, state->current_time);
       HYDLA_LOGGER_PHASE("--- time_applied_variable_map ---\n", time_applied_map);
       solver_->reset(time_applied_map, state->parameter_map);
@@ -343,6 +341,7 @@ namespace hydla {
       CalculateClosureResult result = calculate_closure(state,ms,expanded_always,positive_asks,negative_asks);
       
       if(result.size() != 1){
+        consistent = false;
         return result;
       }
       
@@ -366,7 +365,7 @@ namespace hydla {
       Phases phases;
       
 
-      for(unsigned int create_it = 0; create_it < create_result.result_maps.size()&&(opts_->nd_mode||create_it==0); create_it++)
+      for(unsigned int create_it = 0; create_it < create_result.result_maps.size(); create_it++)
       {
         phase_state_sptr new_state(create_new_phase_state(new_state_original)), branch_state(create_new_phase_state(state));
         
@@ -382,98 +381,18 @@ namespace hydla {
           branch_state->cause_of_termination = simulator::ASSERTION;
         }
         
-        
-        /*
-           TellCollector   tell_collector(ms);
-           tells_t         tell_list;
-           tell_collector.collect_new_tells(&tell_list,
-           &expanded_always, 
-           &positive_asks);
-           std::vector<std::string> v_print_pp = tell_collector.get_print_pp();
-          */
-        std::vector<std::string> v_scan;// = tell_collector.get_scan();
-/*
-        // プリント出力
-        if(v_print_pp.size()!=0)
-        {
-        print_pp(v_print_pp, new_state->variable_map, state->step, ms->get_name(), state->current_time, "1");
-        //      print_pp(v_print_pp, new_state->variable_map, state->step, ms->get_name(), state->current_time, state->_case);
-        std::cout << std::endl;
-        }
-        */
-       
-        //Scan入力
-        
-/*
-        if(v_scan.size()!=0)
-        {
-        std::cout << "test scan" << std::endl;
-        variable_map_t vm = branch_state->variable_map;
-        variable_map_t::iterator vm_itr;
-        variable_map_t::iterator vm_itr_copy = vm_itr;
-        std::vector<std::string>::iterator v_it = v_scan.begin();
-        for(;v_it != v_scan.end(); v_it++)
-        {
-        std::cout << *v_it << std::endl;
-        std::string s;
-        std::cin >> s;
-        //value_t n(s);
-        value_t n = s;
-        int derivative_count = 0;
-        std::string name = *v_it;
-        std::string::iterator n_it;
-        std::string sb("'");
-        std::string sa("");
-        std::string::size_type na, nb = 0;
-        //'の削除
-        while ((na = name.find(sb,nb)) != std::string::npos)
-        {
-        name.replace(na, sb.size(), sa);
-        nb = na + sa.size();
-        derivative_count++;
-        }
-        const int& dc = derivative_count;
-        const std::string& _name = name;
-        //variable_t* m(name, derivative_count);
-        //DefaultVariable* m(name, derivative_count);
-        hydla::simulator::DefaultVariable* m = get_variable(_name, dc);
-        vm.set_variable(m, n);
-        }
-        new_state->variable_map = vm;
-        std::cout << "end scan" << std::endl;
-        }
-      if(change_variable_flag&&opts_->interactive_mode){
-        std::cout << "select variable" << std::endl;
-        std::cout << get_state_output(*branch_state, false, true);
-        variable_map_t vm = branch_state->variable_map;
-        std::string name;// = "ht";
-        std::cin >> name;
-        std::cout << "input value" << std::endl;
-        std::string s; //number
-        std::cin >> s;
-        value_t n = s;
-        int derivative_count = 0;
-        const int& dc = derivative_count;
-        const std::string& _name = name;
-        hydla::simulator::DefaultVariable* m = get_variable(_name, dc);
-vm.set_variable(m,n); 
-
-        branch_state->variable_map = vm;
-        change_variable_flag = false;
-        cin.ignore( 1024 , '\n');
-      }
-      */
       }
 
       if(opts_->time_measurement){
 	      pp_timer.push_time("PointPhase");
       }
       HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::point_phase***\n");
+      consistent = true;
       return phases;
     }
 
     SymbolicSimulator::Phases SymbolicSimulator::interval_phase(const module_set_sptr& ms, 
-        phase_state_sptr& state)
+        phase_state_sptr& state, bool& consistent)
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::interval_phase***");
       //前準備
@@ -492,32 +411,26 @@ vm.set_variable(m,n);
       CalculateClosureResult result = calculate_closure(state,ms,expanded_always,positive_asks,negative_asks);
 
       if(result.size() != 1){
+        consistent = false;
         return result;
       }
 
       if(opts_->time_measurement){
 	      ip_cc_timer.push_time("IP-CalculateClosure");
       }
-      
-      /*
-      TellCollector tell_collector(ms);
-      tells_t         tell_list;
-      tell_collector.collect_new_tells(&tell_list,
-          &expanded_always, 
-          &positive_asks);
-
-      std::vector<std::string> v_print_ip = tell_collector.get_print_ip();
-      int print_ip_flag = 0;
-      if(v_print_ip.size() !=0)  print_ip_flag =1;
-      */
 
 
       SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
       SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
 
-      // TODO:変数表が複数ある場合に，findPPTimeをどう扱うべきか．とりあえず変数表は１つしか出てこないものとする．
-      // 区分的連続の前提を置くなら，これが正しい？
-      assert(results.size()==1);
+      if(results.size() > 1){
+        // 区分的に連続で無い解軌道を含む．中断．
+        phase_state_sptr phase(create_new_phase_state(state));
+        phase->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
+        phase->parent->children.push_back(phase);
+        consistent = true;
+        return Phases();
+      }
 
       phase_state_sptr new_state_original(create_new_phase_state());
 
@@ -609,7 +522,7 @@ vm.set_variable(m,n);
         SymbolicVirtualConstraintSolver::PPTimeResult time_result = solver_->calculate_next_PP_time(disc_cause,
             state->current_time,time_t(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
 
-        for(unsigned int time_it=0; time_it<time_result.candidates.size()&&(opts_->nd_mode||time_it==0); time_it++){
+        for(unsigned int time_it=0; time_it<time_result.candidates.size(); time_it++){
           phase_state_sptr branch_state(create_new_phase_state(state));
           branch_state->parameter_map = time_result.candidates[time_it].parameter_map;
           branch_state->parent->children.push_back(branch_state);
@@ -631,20 +544,11 @@ vm.set_variable(m,n);
         state->cause_of_termination = simulator::ASSERTION;
       }
 
-      /*
-         if(print_ip_flag!=0)
-         {
-         variable_map_t print_variable = shift_variable_map_time(time_result.states[it].variable_map,state->current_time);
-         print_ip(v_print_ip, print_variable, state->step, ms->get_name(), state->current_time, time_result.states[it].time, "1");
-      //print_ip(v_print_ip, print_variable, state->step, ms->get_name(), state->current_time, time_result.states[it].time, state->_case);
-      std::cout <<  std::endl;
-      }
-      }
-      */
       if(opts_->time_measurement){
 	      ip_timer.push_time("IntervalPhase");
       }
       HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::interval_phase***");
+      consistent = true;
       return phases;
   }
 
@@ -681,107 +585,6 @@ vm.set_variable(m,n);
     }
     return shifted_vm;
   }
-
-
-/*
-
-  //print_pp書式文字列に対応する値を挿入
-  void SymbolicSimulator::print_pp(std::vector<std::string> v, variable_map_t v_map, int step, std::string ms_set_name, time_t time, std::string _case)
-  {
-    //variable_map_t v_map = state->variable_map;
-    variable_map_t::iterator va_itr;
-    std::map<std::string, std::string> s_map;
-    std::ostringstream f;
-    std::ostringstream s;
-    //variable_mapをstringに変換しs_mapにいれる
-    for (va_itr = v_map.begin(); va_itr != v_map.end(); va_itr++)
-    {
-      f << va_itr->first;
-      s << va_itr->second;
-      s_map.insert(pair<std::string, std::string>(f.str(), s.str()));
-      f.str("");
-      s.str("");
-
-    }
-    s_map.insert(pair<std::string, std::string>("MODULE", ms_set_name));
-    s << step+1;
-    s_map.insert(pair<std::string, std::string>("STEP", s.str()));
-    s.str("");
-    s << time;
-    s_map.insert(pair<std::string, std::string>("TIME", s.str()));
-    s.str("");
-    s<< "PP";
-    s_map.insert(pair<std::string, std::string>("PHASE", s.str()));
-    s.str("");
-    s << _case;
-    s_map.insert(pair<std::string, std::string>("CASE", s.str()));
-
-    //書式文字列の取り出し
-    std::string output_str(*v.begin());
-    std::vector<std::string>::iterator v_it = v.begin();
-    ++v_it;
-    //vの引数を変換して、代入
-    while(v_it != v.end())
-    { //++v_it;
-      std::string sb("%d");
-      std::string sa( s_map.find(*v_it)->second );
-      std::string::size_type n, nb = 0;
-      if ((n = output_str.find(sb,nb)) != std::string::npos)
-      {
-        output_str.replace(n, sb.size(), sa);
-        nb = n + sa.size();
-      }
-      ++v_it;
-    }
-  }
-
-
-  void SymbolicSimulator::print_ip(std::vector<std::string> v, variable_map_t v_map, int step, std::string ms_set_name, time_t start_time, time_t end_time, std::string _case)
-  {
-    variable_map_t::iterator va_itr;
-    std::map<std::string, std::string> s_map;
-    std::ostringstream f;
-    std::ostringstream s;
-    for (va_itr = v_map.begin(); va_itr != v_map.end(); va_itr++)
-    {
-      f << va_itr->first;
-      s << va_itr->second;
-      s_map.insert(pair<std::string, std::string>(f.str(), s.str()));
-      f.str("");
-      s.str("");
-
-    }
-    s_map.insert(pair<std::string, std::string>("MODULE", ms_set_name));
-    s << step;
-    s_map.insert(pair<std::string, std::string>("STEP", s.str()));
-    s.str("");
-    s << start_time << "->" << end_time;
-    s_map.insert(pair<std::string, std::string>("TIME", s.str()));
-    s_map.insert(pair<std::string, std::string>("PHASE", "IP"));
-    s.str("");
-    s << _case;
-    s_map.insert(pair<std::string, std::string>("CASE", s.str()));
-
-    //書式文字列の取り出し
-    std::string output_str(*v.begin());
-    std::vector<std::string>::iterator v_it = v.begin();
-    ++v_it;
-    //vの引数を変換して、代入
-    while(v_it != v.end())
-    { //++v_it;
-      std::string sb("%d");
-      std::string sa( s_map.find(*v_it)->second );
-      std::string::size_type n, nb = 0;
-      if ((n = output_str.find(sb,nb)) != std::string::npos)
-      {
-        output_str.replace(n, sb.size(), sa);
-        nb = n + sa.size();
-      }
-      ++v_it;
-    }
-    std::cout << output_str <<std::endl;
-  }
-*/
 
 
 

@@ -83,6 +83,7 @@ typedef enum{
   SOME_ERROR,
   INCONSISTENCY,
   ASSERTION,
+  NOT_UNIQUE_IN_INTERVAL,
   NONE
 }CauseOfTermination;
 

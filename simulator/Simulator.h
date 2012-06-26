@@ -71,6 +71,8 @@ namespace {
 namespace hydla {
 namespace simulator {
 
+//TODO:PhaseStateTypeじゃなくて，ValueType入れるテンプレートクラスにできない？というか設計再検討．このクラスは何に対応している？
+//実行アルゴリズムだろうか？
 template<typename PhaseStateType>
 class Simulator
 {
@@ -118,7 +120,10 @@ public:
   {
     init_module_set_container(parse_tree);
     opts_.assertion = parse_tree->get_assertion_node();
-  
+    result_root_.reset(new phase_state_t());
+    
+    result_root_->module_set_container = msc_original_;
+    
     //出力変数無指定な場合の出力制御（全部出力）
     if(opts_.output_variables.empty()){
       BOOST_FOREACH(const typename variable_set_t::value_type& i, variable_set_) {
@@ -211,6 +216,8 @@ public:
         variable_map_t output_vm;
         time_value_t elapsed_time("0");
         time_value_t limit_time = result.current_time-result.parent->current_time;
+        
+        //TODO:できればSimulatorから直接ソルバは見たくないが，そうしないと数値に変換できないのでどうしましょう
         //solver_->simplify(limit_time);
         /*
         do{
@@ -288,7 +295,6 @@ public:
 
     if(node->children.size() == 0){
     
-    
       if(opts_.nd_mode){
         std::cout << "#---------Case " << case_num++ << "---------" << std::endl;
       }
@@ -297,41 +303,40 @@ public:
         std::cout << *r_it;
       }
       
-      
+      if(node->cause_of_termination!=simulator::INCONSISTENCY)
+          std::cout << get_state_output(*node, false,false);
       switch(node->cause_of_termination){
         case simulator::INCONSISTENCY:
-          std::cout << "execution stuck\n";
+          std::cout << "# execution stuck\n";
           output_parameter_map(node->parameter_map);
           break;
 
         case simulator::SOME_ERROR:
-          std::cout << get_state_output(*node, false,false);
           output_parameter_map(node->parameter_map);
-          std::cout << "some error occured\n" ;
+          std::cout << "# some error occured\n" ;
           break;
 
         case simulator::ASSERTION:
-          std::cout << get_state_output(*node, false,false);
           output_parameter_map(node->parameter_map);
-          std::cout << "assertion failed\n" ;
+          std::cout << "# assertion failed\n" ;
           break;
           
         case simulator::TIME_LIMIT:
-          std::cout << get_state_output(*node, false,false);
           output_parameter_map(node->parameter_map);
-          std::cout << "time ended\n" ;
+          std::cout << "# time ended\n" ;
+          break;
+          
+        case simulator::NOT_UNIQUE_IN_INTERVAL:
+          output_parameter_map(node->parameter_map);
+          std::cout << "# some values of variables are not unique in this phase\n" ;
           break;
 
         default:
         case simulator::NONE:
-          std::cout << get_state_output(*node, false,false);
           output_parameter_map(node->parameter_map);
-          std::cout << "unknown termination occured\n" ;
+          std::cout << "# unknown termination occured\n" ;
           break;
       }
-
-      std::cout << std::endl;
-      std::cout << "#";
       std::cout << std::endl;
     }else{
       if(node->phase==PointPhase){
@@ -378,6 +383,7 @@ public:
       variable_map_);
   }
 
+  //TODO:表示すると木が消える仕様になっているので，どうにかする
   void output_result_tree_mathematica(){
     if(result_root_->children.size() == 0){
       std::cout << "No Result." << std::endl;
@@ -448,10 +454,6 @@ public:
 
   
 protected:
-    
-
-  virtual void do_initialize(const parse_tree_sptr& parse_tree)
-  {}
 
   /**
    * シミュレーション対象となるパースツリー
@@ -481,8 +483,6 @@ protected:
     /// 判定済みのモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
     std::set<module_set_sptr> visited_module_sets;
   };
-  
-  
 
   
   
