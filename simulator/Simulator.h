@@ -94,7 +94,7 @@ public:
   typedef std::list<parameter_t>                           parameter_set_t;
   typedef value_t                                          time_value_t;
 
-  Simulator(Opts opts):opts_(opts)
+  Simulator(Opts& opts):opts_(&opts)
   {}
   
   virtual ~Simulator()
@@ -119,15 +119,15 @@ public:
   virtual void initialize(const parse_tree_sptr& parse_tree)
   {
     init_module_set_container(parse_tree);
-    opts_.assertion = parse_tree->get_assertion_node();
+    opts_->assertion = parse_tree->get_assertion_node();
     result_root_.reset(new phase_state_t());
     
     result_root_->module_set_container = msc_original_;
     
     //出力変数無指定な場合の出力制御（全部出力）
-    if(opts_.output_variables.empty()){
+    if(opts_->output_variables.empty()){
       BOOST_FOREACH(const typename variable_set_t::value_type& i, variable_set_) {
-        opts_.output_variables.insert(i.get_string());
+        opts_->output_variables.insert(i.get_string());
       }
     }
     parse_tree_ = parse_tree;
@@ -138,7 +138,7 @@ public:
   
   void init_module_set_container(const parse_tree_sptr& parse_tree)
   {    
-    if(opts_.nd_mode||opts_.interactive_mode) {
+    if(opts_->nd_mode||opts_->interactive_mode) {
       //全解探索モードなど
       ModuleSetContainerInitializer::init<ch::ModuleSetGraph>(
           parse_tree, msc_original_, msc_no_init_, parse_tree_);
@@ -177,7 +177,7 @@ public:
     stream << "# time\t";
 
     BOOST_FOREACH(const typename variable_map_t::value_type& i, variable_map) {
-      if(opts_.output_variables.find(i.first->get_string()) != opts_.output_variables.end()){
+      if(opts_->output_variables.find(i.first->get_string()) != opts_->output_variables.end()){
         stream << i.first << "\t";
       }
     }
@@ -195,7 +195,7 @@ public:
           sstr << "time\t: " << result.current_time << "->" << result.end_time << "\n";
         }else{
           if(result.children.empty() || result.cause_of_termination == TIME_LIMIT){
-            end_time = opts_.max_time;
+            end_time = opts_->max_time;
           }else{
             end_time = result.children[0]->current_time.get_string();
           }
@@ -224,7 +224,7 @@ public:
           //solver_->apply_time_to_vm(result.variable_map, output_vm, elapsed_time);
           output_vm = result.variable_map;
           output_variable_map(sstr, output_vm, (elapsed_time+result.parent->current_time), true);
-          elapsed_time += time_value_t(opts_.output_interval);
+          elapsed_time += time_value_t(opts_->output_interval);
           //solver_->simplify(elapsed_time);
         }while(solver_->less_than(elapsed_time, limit_time));
         */
@@ -263,10 +263,10 @@ public:
     if(numeric){
     /*
       stream << std::endl;
-      stream << solver_->get_real_val(time, opts_.output_precision, opts_.output_format) << "\t";
+      stream << solver_->get_real_val(time, opts_->output_precision, opts_->output_format) << "\t";
       for(; it!=end; ++it) {
-        if(opts_.output_variables.find(it->first->get_string()) != opts_.output_variables.end())
-          stream << solver_->get_real_val(it->second, opts_.output_precision, opts_.output_format) << "\t";
+        if(opts_->output_variables.find(it->first->get_string()) != opts_->output_variables.end())
+          stream << solver_->get_real_val(it->second, opts_->output_precision, opts_->output_format) << "\t";
       }
       */
     }else{
@@ -295,7 +295,7 @@ public:
 
     if(node->children.size() == 0){
     
-      if(opts_.nd_mode){
+      if(opts_->nd_mode){
         std::cout << "#---------Case " << case_num++ << "---------" << std::endl;
       }
       std::vector<std::string>::const_iterator r_it = result.begin(), r_end = result.end();
@@ -405,7 +405,7 @@ public:
             std::cout << ",";
           }
           typename variable_map_t::const_iterator it = vm.begin();
-          while(opts_.output_variables.find(it->first->get_string()) == opts_.output_variables.end()){
+          while(opts_->output_variables.find(it->first->get_string()) == opts_->output_variables.end()){
             it++;
             if(it == vm.end()) return;
           }
@@ -437,7 +437,7 @@ public:
             if(now_node->parent != NULL){
               now_node = now_node->parent;
             }else{//親がいないということは根と葉が同じ、つまり「空になった」ということなので終了．
-              std::cout << "PlotRange -> {{0, " << opts_.max_time << "}, {lb, ub}}";
+              std::cout << "PlotRange -> {{0, " << opts_->max_time << "}, {lb, ub}}";
               std::cout << "]" << std::endl; //Show
               return;
             }
@@ -505,7 +505,7 @@ protected:
   ///解軌道木の根．初期状態なので，子供以外の情報は入れない
   phase_state_sptr result_root_;
   
-  Opts     opts_;
+  Opts*     opts_;
 };
 
 } //namespace simulator

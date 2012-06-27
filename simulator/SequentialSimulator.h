@@ -41,12 +41,12 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
       phase_state_sptr state(pop_phase_state());
       bool consistent;
       try{
-        if( Simulator<phase_state_t>::opts_.max_step >= 0 && state->step > Simulator<phase_state_t>::opts_.max_step)
+        if( Simulator<phase_state_t>::opts_->max_step >= 0 && state->step > Simulator<phase_state_t>::opts_->max_step)
           continue;
         state->module_set_container->reset(state->visited_module_sets);
         phase_state_sptrs_t phases = Simulator<phase_state_t>::phase_simulator_->simulate_phase_state(state, consistent);
         if(!phases.empty()){
-          if(Simulator<phase_state_t>::opts_.nd_mode){
+          if(Simulator<phase_state_t>::opts_->nd_mode){
             for(typename phase_state_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
               if(consistent){
                 (*it)->module_set_container = Simulator<phase_state_t>::msc_no_init_;
@@ -70,7 +70,7 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
         HYDLA_LOGGER_REST(se.what());
       }
     }
-    if(Simulator<phase_state_t>::opts_.output_format == fmtMathematica){
+    if(Simulator<phase_state_t>::opts_->output_format == fmtMathematica){
       Simulator<phase_state_t>::output_result_tree_mathematica();
     }
     else{

@@ -290,7 +290,7 @@ addConstraint[co_, va_] := Block[
   vars = va;
   If[isTemporary,
     tmpVariables = Union[tmpVariables, vars];
-    tmpConstraint = tmpConstraint && cons,
+	  tmpConstraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && tmpConstraint && cons], tmpVariables, Reals],
 	  variables = Union[variables, vars];
 	  constraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && constraint && cons], variables, Reals]
   ];
