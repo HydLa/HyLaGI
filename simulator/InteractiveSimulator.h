@@ -82,7 +82,7 @@ namespace hydla {
                 if(exit)
                 {
                   std::cout << get_state_output(*phases[0],0,1) << std::endl;
-                  std::cout << get_state_output(state_stack_[0],0,1) << std::endl;
+                  //std::cout << get_state_output(state_stack_[0],0,1) << std::endl;
                   break;
                 }
               }catch(const std::runtime_error &se){
