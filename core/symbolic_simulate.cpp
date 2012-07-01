@@ -100,7 +100,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
     ss.simulate();
-  }else if(!opts.interactive_mode){
+  }else{
     SequentialSimulator<PhaseState<SymbolicValue> > ss(opts);
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
