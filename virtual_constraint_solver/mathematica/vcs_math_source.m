@@ -82,7 +82,7 @@ checkConsistencyPoint[cons_, pcons_, vars_] := (
         cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
       ];
       simplePrint[cpFalse];
-      {trueMap, falseMap} = Map[(createMap[#, isParameter, {}])&, {cpTrue, cpFalse}];
+      {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
       simplePrint[trueMap, falseMap];
       {1, {trueMap, falseMap}}
     ],
@@ -142,7 +142,7 @@ Check[
 
     simplePrint[cpTrue, cpFalse];
 
-    {trueMap, falseMap} = Map[(createMap[#, isParameter, {}])&, {cpTrue, cpFalse}];
+    {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
     trueMap = Map[(Cases[#, Except[{{prev[_, _], _}, _, _}] ])&, trueMap];
     falseMap = Map[(Cases[#, Except[{{prev[_, _], _}, _, _}] ])&, falseMap];
     simplePrint[trueMap, falseMap];
@@ -164,7 +164,7 @@ Check[
   Block[
     {ret},
     inputPrint["createVariableMap", cons, vars];
-    ret = createMap[cons, isVariable, vars];
+    ret = createMap[cons, isVariable, hasVariable, vars];
     debugPrint["ret after CreateMap", ret];
     ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
     ret = ruleOutException[ret];
@@ -194,7 +194,7 @@ Check[
     cStore = Or[cStore, (originalOther /. tStore) && And@@Map[(Equal@@#)&, tStore] ]
   ];
   simplePrint[cStore];
-  ret = createMap[cStore && t>0, isVariable, vars];
+  ret = createMap[cStore && t>0, isVariable, hasVariable, vars];
   debugPrint["ret after CreateMap", ret];
   ret = ruleOutException[ret];
   simplePrint[ret];
@@ -213,16 +213,16 @@ ruleOutException[list_] := Block[
 ];
 
 
-createParameterMap[] := createMap[pConstraint, isParameter, {}];
+createParameterMap[] := createMap[pConstraint, isParameter, hasParameter, {}];
 
-createMap[cons_, judge_, vars_] := Block[
+createMap[cons_, judge_, hasJudge_, vars_] := Block[
   {map},
   inputPrint["createMap", cons, judge, vars];
   If[cons === True || cons === False, Return[cons]];
   
   map = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], cons], vars, Reals];
   debugPrint["@createMap map after Reduce", map];
-  
+  map = map /. (expr_ /;((Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && !hasJudge[expr]) -> True);
   map = LogicalExpand[map];
   map = applyListToOr[map];
   map = Map[(applyList[#])&, map];
@@ -274,7 +274,7 @@ adjustExprs[andExprs_, judgeFunction_] :=
 resetConstraint[] := (
   constraint = True;
   pConstraint = True;
-  prevConstraint = True;
+  prevConstraint = {};
   tmpConstraint = True;
   variables = tmpVariables = prevVariables = {};
   isTemporary = False;
@@ -287,12 +287,15 @@ resetConstraint[] := (
 addConstraint[co_, va_] := Block[
   {cons, vars},
   cons = co;
+  cons = cons /. prevConstraint;
   vars = va;
   If[isTemporary,
     tmpVariables = Union[tmpVariables, vars];
-	  tmpConstraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && tmpConstraint && cons], tmpVariables, Reals],
+	  (* tmpConstraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && tmpConstraint && cons], tmpVariables, Reals], *)
+	  tmpConstraint = Reduce[tmpConstraint && cons, tmpVariables, Reals],
 	  variables = Union[variables, vars];
-	  constraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && constraint && cons], variables, Reals]
+	  (* constraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && constraint && cons], variables, Reals] *)
+	  constraint = Reduce[constraint && cons, variables, Reals]
   ];
   simplePrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
 ];
@@ -302,7 +305,9 @@ addPrevConstraint[co_, va_] := Block[
   {cons, vars},
   cons = co;
   vars = va;
-  prevConstraint = prevConstraint&&cons;
+  If[cons =!= True,
+    prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, List@@cons]]
+  ];
   prevVariables = Union[prevVariables, vars];
   simplePrint[cons, vars, prevConstraint, prevVariables];
 ];
@@ -440,6 +445,8 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
       timeAppliedCauses = Or[timeAppliedCauses, Or@@discCause /. tStore ]
     ];
     
+    timeAppliedCauses = Reduce[timeAppliedCauses, {t}, Reals];
+    
     simplePrint[timeAppliedCauses];
     
     
@@ -495,12 +502,16 @@ Quiet[
     
     sol = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], expr], vars, Reals];
     
-    
+    sol = sol /. (expr_ /;((Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && !hasJudge[hasVariable]) -> True);
+    sol = LogicalExpand[sol];
     
     If[Head[sol]===Or, 
       sol = First[sol] 
     ];
+    
     sol = applyList[sol];
+      
+    debugPrint["@exDSolve before splitExprs", sol];
     
     {dExpr, dVars, otherExpr, otherVars} = splitExprs[sol];
     
@@ -532,6 +543,7 @@ Quiet[
    第2要素と第4要素はそれぞれ，必要な式と邪魔な式に含まれる変数のリスト *)
 
 
+(*
 splitExprs[expr_] := Block[
   {dExprs, appendedTimeVars, dVars, iter, otherExprs, otherVars, getTimeVars, getNoInitialTimeVars, timeVars, exprStack},
   
@@ -563,11 +575,11 @@ splitExprs[expr_] := Block[
   otherVars = Fold[(getTimeVars[#1,#2])&, {}, otherExprs];
   {dExprs, dVars, otherExprs, otherVars}
 ];
+*)
 
 
-(*
-(* DSolveで扱える式 (DExpr)とそうでない式 (NDExpr)とそれ以外 （otherExpr）に分ける *)
-(* 微分値を含まず/////変数が2種類以上出る式 (NDExpr)や等式以外 （otherExpr）はDSolveで扱えない *)
+(* DSolveで扱える式 とそれ以外 （otherExpr）に分ける *)
+(* 微分値を含まず/////変数が2種類以上出るや等式以外はDSolveで扱えない *)
 splitExprs[expr_] := Block[
   {dExprs, dVars, otherExprs, otherVars},
   
@@ -582,7 +594,7 @@ splitExprs[expr_] := Block[
                          {}, dExprs]];
   {dExprs, dVars, otherExprs, otherVars}
 ];
-*)
+
 
 
 (*

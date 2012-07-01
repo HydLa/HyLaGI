@@ -365,7 +365,7 @@ namespace hydla {
       Phases phases;
       
 
-      for(unsigned int create_it = 0; create_it < create_result.result_maps.size(); create_it++)
+      for(unsigned int create_it = 0; create_it < create_result.result_maps.size() && (opts_->nd_mode||create_it==0); create_it++)
       {
         phase_state_sptr new_state(create_new_phase_state(new_state_original)), branch_state(create_new_phase_state(state));
         
@@ -522,7 +522,7 @@ namespace hydla {
         SymbolicVirtualConstraintSolver::PPTimeResult time_result = solver_->calculate_next_PP_time(disc_cause,
             state->current_time,time_t(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
 
-        for(unsigned int time_it=0; time_it<time_result.candidates.size(); time_it++){
+        for(unsigned int time_it=0; time_it<time_result.candidates.size() && (opts_->nd_mode||time_it==0); time_it++){
           phase_state_sptr branch_state(create_new_phase_state(state));
           branch_state->parameter_map = time_result.candidates[time_it].parameter_map;
           branch_state->parent->children.push_back(branch_state);

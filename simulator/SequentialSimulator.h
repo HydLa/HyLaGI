@@ -56,7 +56,7 @@ class SequentialSimulator:public Simulator<PhaseStateType>{
               }
               push_phase_state(*it);
             }
-          }else if(!phases.empty()){
+          }else{
             if(consistent){
               phases[0]->module_set_container = Simulator<phase_state_t>::msc_no_init_;
             }else{
