@@ -3,6 +3,7 @@
 #include "ProgramOptions.h"
 #include "SymbolicSimulator.h"
 #include "SequentialSimulator.h"
+#include "InteractiveSimulator.h"
 
 // parser
 #include "DefaultNodeFactory.h"
@@ -93,11 +94,17 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   Opts opts;
   setup_symbolic_simulator_opts(opts);
 
-  
-  SequentialSimulator<PhaseState<SymbolicValue> > ss(opts);
-  ss.set_phase_simulator(new SymbolicSimulator(opts));
-  ss.initialize(parse_tree);
-  ss.simulate();
-  
+    if(opts.interactive_mode){ 
+    //opts->max_time = "100";
+    InteractiveSimulator<PhaseState<SymbolicValue> > ss(opts);
+    ss.set_phase_simulator(new SymbolicSimulator(opts));
+    ss.initialize(parse_tree);
+    ss.simulate();
+  }else if(opts.interactive_mode){
+    SequentialSimulator<PhaseState<SymbolicValue> > ss(opts);
+    ss.set_phase_simulator(new SymbolicSimulator(opts));
+    ss.initialize(parse_tree);
+    ss.simulate();
+  }
 }
 
