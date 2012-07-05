@@ -65,14 +65,16 @@ public:
         case PointPhase:
         { 
           HYDLA_LOGGER_PHASE("%% begin point phase");
-          phases = point_phase(ms, state, consistent);
+          phase_state_sptrs_t tmp = point_phase(ms, state, consistent);
+          phases.insert(phases.begin(), tmp.begin(), tmp.end());
           break;
         }
 
         case IntervalPhase: 
         {
           HYDLA_LOGGER_PHASE("%% begin interval phase");
-          phases = interval_phase(ms, state, consistent);
+          phase_state_sptrs_t tmp = interval_phase(ms, state, consistent);
+          phases.insert(phases.begin(), tmp.begin(), tmp.end());
           break;            
         }
         default:

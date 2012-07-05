@@ -7,6 +7,8 @@ $MaxExtraPrecision = 1000;
 
 (*
  * デバッグ用メッセージ出力関数
+ * debugPrint：引数として与えられた要素要素を文字列にして出力する．（シンボルは評価してから表示）
+ * simplePrint：引数として与えられた式を，「（評価前）:（評価後）」の形式で出力する．
  *)
  
 SetAttributes[simplePrint, HoldAll];
@@ -466,7 +468,7 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
     
     debugPrint["resultList after Format", resultList];
     
-    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], If[Quiet[Reduce[#[[1]] == maxTime && And@@#[[2]] ], {Reduce::useq}] =!= False, 1, 0]})&, resultList];
+    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], If[Quiet[Reduce[ForAll[Evaluate[parameters], And@@#[[2]], #[[1]] >= maxTime]], {Reduce::useq}] =!= False, 1, 0]})&, resultList];
     simplePrint[resultList];
     {1, resultList}
   ],
