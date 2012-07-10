@@ -232,6 +232,7 @@ namespace hydla {
                 */
                 return 0;
               case 's':{
+              //           save_state();
                          /*
                             cout << "save state in file" << endl;
                             char *name = "save_data.dat"; // save_data.dat(セーブデータファイル)
@@ -250,51 +251,17 @@ namespace hydla {
                          return 0;
                        }
               case 'h':
+              //         show_helplist();
                        //              cout << "help" << endl;
                                      return 0;
               case 'w':
+                                     //change_variables();
                        //            cout << "change variable" << endl;
                        //change_variable_flag = 1;
                        return 0;
               case 'd':
-
-                       /*
-                          ProgramOptions &po = ProgramOptions::instance();
-                          char* argv[20];
-                          argv[0] = "./hyrose";
-                          argv[1] = "-da";
-                          po.parse(2, argv);
-                          std::string area_string(po.get<std::string>("debug"));
-                          std::cout << area_string << std::endl;
-                          if(area_string!=""){                 // デバッグ出力
-                          Logger::instance().set_log_level(Logger::Debug);
-                          if(area_string.find('a') != std::string::npos){
-                          */
-                       Logger::instance().set_log_level(Logger::Debug);
-                       Logger::parsing_area_ = true;
-                       Logger::calculate_closure_area_ = true;
-                       Logger::phase_area_ = true;
-                       Logger::vcs_area_ = true;
-                       Logger::extern_area_ = true;
-                       Logger::rest_area_ = true;
-                       /* 
-                          }else{
-                          Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
-                          Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
-                          Logger::phase_area_ = (area_string.find('m') != std::string::npos);
-                          Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
-                          Logger::extern_area_ = (area_string.find('e') != std::string::npos);
-                          Logger::rest_area_ = (area_string.find('r') != std::string::npos);
-                          }
-                          }
-                          else {                              // 警告のみ出力
-                          Logger::instance().set_log_level(Logger::Warn);
-                          }
-
-
-*/
-                       return 0;
-
+                       select_options();
+                                return 0;
             }
 
 
@@ -305,6 +272,54 @@ namespace hydla {
 
             return 0;
 
+          }
+
+          int select_options(){
+            ProgramOptions &po = ProgramOptions::instance();
+            int argc = 0;
+            char input[100], *argv[20], *cp;
+            const char *delim = " \t\n"; 
+            argv[0] = "./hyrose";
+            std::cout << "enter the hyrose option args (only debug options)" << std::endl;
+
+            if (fgets(input, sizeof(input), stdin) != NULL) {
+              cp = input;
+              for (argc = 1; argc < 20; argc++) {
+                if ((argv[argc] = strtok(cp,delim)) == NULL)
+                  break;
+                cp = NULL;
+              }
+            }
+            cp = NULL;
+            po.parse(argc, argv);
+            cp = NULL;
+            std::string area_string(po.get<std::string>("debug"));
+            std::cout << "area_string : " << area_string << std::endl;
+            if(area_string!=""){                 // デバッグ出力
+              Logger::instance().set_log_level(Logger::Debug);
+              if(area_string.find('a') != std::string::npos){
+                Logger::instance().set_log_level(Logger::Debug);
+                Logger::parsing_area_ = true;
+                Logger::calculate_closure_area_ = true;
+                Logger::phase_area_ = true;
+                Logger::vcs_area_ = true;
+                Logger::extern_area_ = true;
+                Logger::rest_area_ = true;
+
+
+              }else{
+                Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
+                Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
+                Logger::phase_area_ = (area_string.find('m') != std::string::npos);
+                Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
+                Logger::extern_area_ = (area_string.find('e') != std::string::npos);
+                Logger::rest_area_ = (area_string.find('r') != std::string::npos);
+              }
+            }
+            else {                              // 警告のみ出力
+              Logger::instance().set_log_level(Logger::Warn);
+            }
+            return 0; 
           }
           /**
            * 各PhaseResultに振っていくID
