@@ -10,6 +10,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 //#include <boost/function.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/xpressive/xpressive.hpp>
 
 #include "Logger.h"
 

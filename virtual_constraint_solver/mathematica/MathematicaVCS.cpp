@@ -267,11 +267,8 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     HYDLA_LOGGER_VCS("and_size: ", and_size);
     ml_.get_next();// Listという関数名
     value_range_t tmp_range;
-    int prev_count = -1;
     for(int i = 0; i < and_size; i++)
     {
-      //TODO: 同じ名前の変数についての結果は連続するものと仮定している（tmp_rangeを使いまわしている）ので，その前提が無くても動くようにしたい
-
       //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
 
       ml_.get_next();
@@ -307,6 +304,11 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   
   ml_.MLNewPacket();
   
+  
+  for(unsigned int i=0; i< create_result.result_maps.size();i++){
+    HYDLA_LOGGER_VCS("--- result map", i, "---\n");
+    HYDLA_LOGGER_VCS(create_result.result_maps[i]);
+  }
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::create_maps ***\n");
   return create_result;
 }
@@ -514,7 +516,6 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   int condition_size = ml_.get_arg_count(); //条件式の数
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
   ml_.get_next();
-  parameter_t* prev_param = NULL;
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
     // 最初，Listの引数の数(MLTKFUNC）
     ml_.get_next();
@@ -532,8 +533,8 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     HYDLA_LOGGER_VCS("%% returned value: ", tmp_value.get_string());
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
     map.set_variable(tmp_param, tmp_range);
-    prev_param = tmp_param;
   }
+  HYDLA_LOGGER_VCS("--- result map---\n", map);
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
 }
 

@@ -52,6 +52,7 @@ public:
     
     phase_state_sptrs_t phases; 
     bool has_next = false;
+    is_safe_ = true;
     //TODO:exclude_error‚ª–³Œø‚É‚È‚Á‚Ä‚é
     while(state->module_set_container->go_next()){
       module_set_sptr ms = state->module_set_container->get_module_set();
@@ -101,7 +102,6 @@ public:
       state->cause_of_termination = simulator::INCONSISTENCY;
       state->parent->children.push_back(state);
     }
-    
     return phases;
   }
     

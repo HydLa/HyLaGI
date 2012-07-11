@@ -19,6 +19,7 @@ ContinuityMapMaker::~ContinuityMapMaker()
 // Ask§–ñ
 void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
+  accept(node->get_child());
 }
 
 

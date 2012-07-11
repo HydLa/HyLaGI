@@ -56,7 +56,7 @@ namespace hydla {
   namespace symbolic_simulator {
 
     SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
-      simulator_t(opts), is_safe_(true)
+      simulator_t(opts)
     {
     }
 
@@ -305,6 +305,7 @@ namespace hydla {
             return ret;
           }else{
             std::cout << "Assertion Failed!" << std::endl;
+            HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
             is_safe_ = false;
             CalculateClosureResult ret;
             ret.push_back(state);

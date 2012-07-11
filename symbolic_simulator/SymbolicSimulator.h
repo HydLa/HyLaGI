@@ -67,42 +67,11 @@ private:
   void push_branch_states(phase_state_sptr &original, hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst);
 
   void add_continuity(const continuity_map_t&);
-
-
-/*
-  void print_pp(std::vector<std::string> v, variable_map_t v_map,
-    int step, std::string ms_set_name, time_t time, std::string _case);
-  
-  void print_ip(std::vector<std::string> v, variable_map_t v_map,
-    int step, std::string ms_set_name, time_t start_time, time_t end_time, std::string _case);
-    
-
-  void output_parameter_map(const parameter_map_t& parameter_map);
-
-  
-  void output_variable_map(std::ostream &, const variable_map_t& variable_map, const time_t& time,  const bool& numeric);
-  
-  std::string get_state_output(const phase_state_t& result, const bool& numeric, const bool& is_in_progress);
-  void output_variable_labels(std::ostream &, const variable_map_t variable_map);
-
-  
-  /// 解軌道木を出力する
-  void const output_result_tree();
-  void const output_result_tree_mathematica();
-  void output_result_node(const phase_state_sptr_t &, std::vector<std::string> &, int &,int &);
-  */
   
   continuity_map_t variable_derivative_map_;
 
-  /*
-  //interactive mode用
-  std::vector<phase_state_sptr> all_state;
-  bool change_variable_flag;
-  */
-  boost::shared_ptr<solver_t> solver_;
-
   /// 使用するソルバへのポインタ
-  bool is_safe_;
+  boost::shared_ptr<solver_t> solver_;
 };
 
 } // namespace symbolic_simulator

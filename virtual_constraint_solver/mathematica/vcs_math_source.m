@@ -264,10 +264,14 @@ hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ LetterCha
 
 adjustExprs[andExprs_, judgeFunction_] := 
   Fold[
-    (If[Not[judgeFunction[#2[[1]] ] ] && judgeFunction[#2[[2]] ],
+    (
+     If[#2 === True,
+      #1,
+      If[Not[judgeFunction[#2[[1]] ] ] && judgeFunction[#2[[2]] ],
        (* 逆になってるので、演算子を逆にして追加する *)
        Append[#1, getReverseRelop[Head[#2] ][#2[[2]], #2[[1]] ] ],
-       Append[#1, #2]]) &,
+       Append[#1, #2]]
+     ]) &,
     {},
     andExprs
   ];
@@ -421,8 +425,10 @@ integerString[expr_] := (
 (* リストを整形する *)
 (* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
 (* TODO:複素数の要素に対しても，任意精度への対応（文字列への変換とか）を行う *)
+
 convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list];
 
+(*
 calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check[
   Block[
     {
@@ -474,7 +480,165 @@ calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check
   ],
   debugPrint[$MessageList]; {0}
 ];
+*)
 
+calculateNextPointPhaseTime[maxTime_, discCause_, cons_, pCons_, vars_] := Check[
+Block[
+{
+  addMinTime, selectCondTime,
+  sol, minT, paramVars, compareResult, resultList, condTimeList,
+  calculateMinTimeList, convertExpr, removeInequalityInList, findMinTime, compareMinTime,
+  compareMinTimeList, divideDisjunction
+},
+  (* 条件を満たす最小の時刻と，その条件の組を求める *)
+  (* maxTは理想的には無くても可能だが，あった方が事故がおきにくいのと高速化が見込めるかもしれないため追加 *)
+  findMinTime[ask_, condition_, maxT_] := (
+  
+    sol = Quiet[Check[Reduce[ask&&condition&&t>0&&maxT>t, t, Reals],
+                      errorSol,
+                      {Reduce::nsmet}],
+                {Reduce::nsmet}];
+    If[sol=!=False && sol=!=errorSol, 
+      (* true *)
+      (* 成り立つtの最小値を求める *)
+      minT = First[Quiet[Minimize[{t, sol}, {t}], 
+                         Minimize::wksol]],
+      (* false *)
+      minT = error
+    ];
+    If[minT === error,
+      {},
+      (* Piecewiseなら分解*)
+      If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, condition}}];
+      (* 時刻が0となる場合を取り除く．安全のためにあった方が良いが，理想的には無くても動くはず？ *)
+      minT = Select[minT, (#[[1]] =!= 0)&];
+      minT
+    ]
+  );
+  
+  
+  unifyCases[{}] := {};
+  (* 時刻と条件の組のリストを見て，時刻が重複しているものは結合する *)
+  unifyCases[{h_, t___}] := ( Block[
+      {select, result, next},
+      select = Select[{t}, (#[[1]] === h[[1]])&];
+      next = Complement[{t}, select];
+      select = Or@@Map[(#[[2]])&, select];
+      result = {h[[1]], Reduce[Or[h[[2]], select]]};
+      Append[unifyCases[next], result]
+    ]
+  );
+  
+  (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
+  compareMinTime[timeCond1_, timeCond2_] := ( Block[
+      {
+        case1, case2,
+        andCond
+      },
+      andCond = Reduce[timeCond1[[2]]&&timeCond2[[2]], Reals];
+      If[andCond === False, Return[{}] ];
+      case1 = Quiet[Reduce[And[andCond,timeCond1[[1]] < timeCond2[[1]]], Reals]];
+      If[ case1 === False, Return[{{timeCond2[[1]], andCond}} ] ];
+      case2 = Reduce[andCond&&!case1];
+      If[ case2 === False, Return[{{timeCond1[[1]], andCond}} ] ];
+      Return[ {{timeCond2[[1]],  case2}, {timeCond1[[1]], case1}} ];
+    ]
+  );
+  
+  (* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
+  compareMinTimeList[list1_, list2_] := ( Block[
+      {resultList, i, j},
+      If[list2 === {}, Return[list1] ];
+      resultList = {};
+      For[i = 1, i <= Length[list1], i++,
+        For[j = 1, j <= Length[list2], j++,
+          resultList = Join[resultList, compareMinTime[list1[[i]], list2[[j]] ] ]
+        ]
+      ];
+      resultList
+    ]
+  );
+
+  
+  (* 最小時刻と条件の組をリストアップする関数 *)
+  calculateMinTimeList[guardList_, condition_, maxT_] := (
+    Block[
+      {findResult, i},
+      timeCaseList = {{maxT, condition}};
+      For[i = 1, i <= Length[guardList], i++,
+        findResult = findMinTime[guardList[[i]], (condition), maxT];
+        timeCaseList = compareMinTimeList[timeCaseList, findResult];
+        timeCaseList = unifyCases[timeCaseList]
+      ];
+      timeCaseList
+    ]
+  );
+  
+  (*  リストからInequalityを除く *)
+  removeInequalityInList[{}] := {};
+  removeInequalityInList[{h_,t___}] := ( Block[
+      {
+        resultList
+      },
+      If[Head[h] === Inequality,
+        resultList = Join[{Reduce[h[[2]][h[[3]], h[[1]]], h[[3]]]},
+             {h[[4]][h[[3]], h[[5]]]}
+        ],
+        If[h === True,(* ついでにTrueも除く *)
+          resultList = {},
+          resultList = {h}
+        ];
+      ];
+      Join[resultList, removeInequalityInList[{t}]]
+    ]
+  );
+  
+  
+  
+  (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
+  divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
+  
+
+  inputPrint["calculateNextPointPhaseTime", maxTime, discCause, cons, pCons, vars];
+  
+  (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果(tStore)をそのまま引き継ぐこともできるはず *)
+  dSol = exDSolve[cons, vars];
+  
+  debugPrint["dSol after exDSolve", dSol];
+  
+  (* 次にそれらをdiscCauseに適用する *)
+  dVars = dSol[[3]];
+  timeAppliedCauses = False;
+  For[i = 1, i <= Length[dSol[[1]] ], i++,
+    tStore = Map[(# -> createIntegratedValue[#, dSol[[1]] [[i]]])&, dVars];
+    timeAppliedCauses = Or[timeAppliedCauses, Or@@discCause /. tStore ]
+  ];
+  
+  timeAppliedCauses = Reduce[timeAppliedCauses, {t}, Reals];
+  timeAppliedCauses = applyListToOr[LogicalExpand[timeAppliedCauses]];
+  
+  simplePrint[timeAppliedCauses];
+  
+  
+  (* 最小時刻と条件の組のリストを求める *)
+  resultList = calculateMinTimeList[timeAppliedCauses, pCons, maxTime];
+  
+
+  (* 整形して結果を返す *)
+  resultList = Map[({#[[1]],LogicalExpand[#[[2]]]})&, resultList];
+  resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+  resultList = Map[({#[[1]], applyList[#[[2]]]})&, resultList];
+  debugPrint["resultList after Format", resultList];
+  resultList = Map[({integerString[FullSimplify[#[[1]] ] ],
+    convertExprs[adjustExprs[#[[2]], isParameter ] ],
+    If[Quiet[Reduce[ForAll[Evaluate[parameters], 
+    And@@#[[2]], #[[1]] >= maxTime]], {Reduce::useq}] =!= False, 1, 0]})&, resultList];
+    
+  simplePrint[resultList];
+  {1, resultList}
+  ],
+  debugPrint[$MessageList]; {0}
+];
 
 getDerivativeCount[variable_[_]] := 0;
 
@@ -512,7 +676,7 @@ Quiet[
     ];
     
     sol = applyList[sol];
-      
+    
     debugPrint["@exDSolve before splitExprs", sol];
     
     {dExpr, dVars, otherExpr, otherVars} = splitExprs[sol];
