@@ -312,7 +312,7 @@ addPrevConstraint[co_, va_] := Block[
   cons = co;
   vars = va;
   If[cons =!= True,
-    prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, List@@cons]]
+    prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, applyList[cons]]]
   ];
   prevVariables = Union[prevVariables, vars];
   simplePrint[cons, vars, prevConstraint, prevVariables];

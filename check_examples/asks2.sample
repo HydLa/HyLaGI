@@ -1,0 +1,16 @@
+./hyrose ./check_examples/asks2.hydla
+#---------1---------
+---------PP---------
+time	: 0
+x	: 1
+y	: 2
+z	: 3
+
+---------IP---------
+time	: 0->1
+x	: 1
+y	: 2
+z	: 3
+
+# time ended
+
