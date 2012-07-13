@@ -28,6 +28,8 @@
 //#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
 
+#include "PrevSearcher.h"
+
 #include "SimulateError.h"
 
 using namespace hydla::vcs;
@@ -212,6 +214,12 @@ namespace hydla {
           negative_asks_t::iterator it  = negative_asks.begin();
           negative_asks_t::iterator end = negative_asks.end();
           while(it!=end) {
+          
+            // Žž0‚Å‚Í¶‹ÉŒÀ’l‚ÉŠÖ‚·‚éðŒ‚ðí‚É‹U‚Æ‚·‚é
+            if(state->phase == PointPhase && state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
+              it++;
+              continue;
+            }
             solver_->start_temporary();
             if(opts_->default_continuity == CONT_GUARD){
               maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
