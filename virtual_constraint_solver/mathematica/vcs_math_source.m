@@ -298,10 +298,10 @@ addConstraint[co_, va_] := Block[
   If[isTemporary,
     tmpVariables = Union[tmpVariables, vars];
 	  (* tmpConstraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && tmpConstraint && cons], tmpVariables, Reals], *)
-	  tmpConstraint = Reduce[tmpConstraint && cons, tmpVariables, Reals],
+	  tmpConstraint = tmpConstraint && cons,
 	  variables = Union[variables, vars];
 	  (* constraint = Reduce[Exists[Evaluate[prevVariables], prevConstraint && constraint && cons], variables, Reals] *)
-	  constraint = Reduce[constraint && cons, variables, Reals]
+	  constraint = constraint && cons
   ];
   simplePrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
 ];
@@ -666,7 +666,7 @@ Quiet[
   Block[
     {sol, dExpr, dVars, otherExpr, otherVars},
     
-    sol = Reduce[Exists[Evaluate[Cases[vars, prev[_,_]]], expr], vars, Reals];
+    sol = expr;
     
     sol = sol /. (expr_ /;((Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && !hasJudge[hasVariable]) -> True);
     sol = LogicalExpand[sol];

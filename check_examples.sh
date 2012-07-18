@@ -2,7 +2,7 @@
 
 no_good=0
 
-for file_name in ./check_examples/*.sample
+for file_name in ./samples/*.sample
 do
     command_name=`head -n 1 $file_name`
     command_result=`$command_name`
