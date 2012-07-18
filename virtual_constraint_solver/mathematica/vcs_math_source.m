@@ -664,15 +664,52 @@ createIntegratedValue[variable_, integRule_] := (
 exDSolve[expr_, vars_] := 
 Quiet[
   Block[
-    {sol, dExpr, dVars, otherExpr, otherVars},
+    {sol, dExpr, dVars, otherExpr, otherVars, tmpSol, lenSol},
     
     sol = expr;
     
     sol = sol /. (expr_ /;((Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && !hasJudge[hasVariable]) -> True);
     sol = LogicalExpand[sol];
     
+    debugPrint["@exDSolve sol before separete", sol];
+
     If[Head[sol]===Or, 
-      sol = First[sol] 
+      
+       lenSol = Length[sol];
+
+       For[i=1,i<=lenSol,i+=1,
+	   tmpSol = applyList[sol[[i]]];
+
+	   debugPrint["@exDSolve i,sol[[i]] before splitExprs",i, sol[[i]]];
+
+	   {dExpr, dVars, otherExpr, otherVars} = splitExprs[tmpSol];
+
+	   debugPrint["@exDSolve i,sol[[i]] after splitExprs",i, dExpr, dVars, otherExpr, otherVars];
+
+	   If[dExpr === {},
+	      (* ”÷•ª•û’öŽ®‚ª‘¶Ý‚µ‚È‚¢ *)
+	      Return[{underConstraint, otherExpr}]
+	   ];
+	   Check[
+	       Check[
+	          tmpSol = DSolve[dExpr, dVars, t];
+		  If[Reduce[(sol[[i]]/.tmpSol)[[1]]&&t>=0,Append[vars,t],Reals] =!= False,
+		     Return[{tmpSol,otherExpr,dVars,otherVars}]
+		  ],
+		  If[i === lenSol,
+		     Return[{underConstraint, otherExpr}]
+		  ],
+	          {DSolve::underdet, Solve::svars}
+	       ],
+	       If[i === lenSol,
+		   Return[{overConstraint, otherExpr}]
+	       ],
+               {DSolve::overdet}
+	   ];
+	   debugPrint["@exDSolve i,tmpSol in Or loop",i,tmpSol]
+       ];
+       
+	(*sol = First[sol]*)
     ];
     
     sol = applyList[sol];
