@@ -1,7 +1,8 @@
-INIT(y) <=> y = 10 & y' = 0.
+INIT(y) <=> 9 < y < 11 & y' = 0.
 FALL(y) <=> [](y'' = -10).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
 BALL(yarg){INIT(yarg), FALL(yarg) << BOUNCE(yarg)}.
 
-BALL(y1), BALL(y2), BALL(y2), BALL(y3), BALL(y4), BALL(y5).
+BALL(y1),BALL(y2).
+// BALL(y2), BALL(y3), BALL(y4), BALL(y5).

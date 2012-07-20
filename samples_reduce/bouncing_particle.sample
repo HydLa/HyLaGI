@@ -1,4 +1,4 @@
-./hyrose ./examples/bouncing_particle.hydla -t 10
+./hyrose ./examples/bouncing_particle.hydla -t 10 -s r
 #---------1---------
 ---------PP---------
 time	: 0

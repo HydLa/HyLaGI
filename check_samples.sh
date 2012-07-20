@@ -2,9 +2,9 @@
 
 no_good=0
 
-for file_name in ./samples/*.sample
-do
-    command_name=`head -n 1 $file_name`
+
+judge(){
+    command_name=`head -n 1 $1`
     command_result=`$command_name`
     sample=`tail -n +2 $file_name`
 #    echo $command_result
@@ -16,6 +16,16 @@ do
     else
         echo "$file_name OK"
     fi
+}
+
+for file_name in ./samples/*.sample
+do
+    judge $file_name
+done
+
+for file_name in ./samples_reduce/*.sample
+do
+    judge $file_name
 done
 
 if test $no_good -eq 0
