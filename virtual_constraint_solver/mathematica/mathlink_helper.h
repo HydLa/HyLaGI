@@ -83,6 +83,9 @@ public:
    */
   bool receive();
   
+  std::string get_debug_print();
+  std::string get_input_print();
+  
   void clean()
   {
     if(link_) {
@@ -95,7 +98,7 @@ public:
       MLDeinitialize(env_);
       env_ = 0;
     }
-  }  
+  }
 
   /** 
    * 指定されたタイプのパケットが返ってくるまでスキップする
@@ -235,6 +238,8 @@ public:
   int MLError()                           {return ::MLError(link_);}
 
 private:
+  std::string input_print_;
+  std::string debug_print_;
   MLENV env_;
   MLINK link_;
 };

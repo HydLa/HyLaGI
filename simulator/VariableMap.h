@@ -39,6 +39,22 @@ public:
       variables_.insert(std::make_pair(var, val));
     }
   }
+  
+  void set_variable(iterator start, iterator end)
+  {
+    for(; start != end; start++){
+      variable_t var = start->first;
+      value_t val = start->second;
+      iterator it = variables_.find(var);
+      if(it != variables_.end()) {
+        it->second = val;
+      }
+      else {
+        variables_.insert(std::make_pair(var, val));
+      }
+    }
+  }
+  
 
   /**
    * 要求された変数に対応する値のリファレンスを返す
@@ -53,6 +69,8 @@ public:
 
     return variables_[var];
   }
+  
+  
 
   bool has_variable(const variable_t& var) const
   {

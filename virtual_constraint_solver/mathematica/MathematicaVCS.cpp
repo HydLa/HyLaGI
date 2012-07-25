@@ -249,8 +249,8 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     ml_.put_function("createVariableMapInterval", 0);
   }
 
-/////////////////// óMˆ—           
-  HYDLA_LOGGER_VCS("%% receive\n");             
+/////////////////// óMˆ—
+  HYDLA_LOGGER_VCS("%% receive\n");
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
 
@@ -261,7 +261,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   create_result_t create_result;
   for(int or_it = 0; or_it < or_size; or_it++){
     ml_.get_next();
-    variable_range_map_t map;
+    variable_range_map_t map(original_range_map_);
     value_t symbolic_value;
     int and_size = ml_.get_arg_count();
     HYDLA_LOGGER_VCS("and_size: ", and_size);
@@ -791,6 +791,8 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_
   ps.put_node(val.get_node(), PacketSender::VA_None);
   ps.put_node(time.get_node(), PacketSender::VA_None);
   ml_.receive();
+  PacketErrorHandler::handle(&ml_);
+  
   MathematicaExpressionConverter mec;
   tmp_val = value_t(mec.receive_and_make_symbolic_value(ml_));
   return  tmp_val;

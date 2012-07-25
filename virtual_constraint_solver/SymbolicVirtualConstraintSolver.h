@@ -119,7 +119,7 @@ public:
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0); return false;}
 
   /**
-   * 現在の制約ストアから変数表と定数表を作成する
+   * 現在の制約ストアから変数表を作成する
    */
   virtual create_result_t create_maps(){assert(0); return create_result_t();}
   
@@ -176,6 +176,10 @@ public:
    */
   void set_variable_set(variable_set_t& v){
     variable_set_=&v;
+    original_range_map_.clear();
+    for(variable_set_t::iterator it = variable_set_->begin(); it != variable_set_->end(); it++){
+      original_range_map_.set_variable(&(*it), value_range_t());
+    }
   }
 
   /* 
@@ -204,6 +208,13 @@ public:
     assert(0);
     return NULL;
   }
+  
+  
+  
+  /**
+   * create_resultの結果の要素の原型
+   */
+  variable_range_map_t original_range_map_;
 
   variable_set_t* variable_set_;
   parameter_set_t* parameter_set_;

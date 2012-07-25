@@ -115,6 +115,7 @@ private:
   void receive_parameter_map(parameter_map_t &map);
   
   hydla::symbolic_simulator::Mode      mode_;
+  
 
   MathLink ml_;
   bool is_temporary_;

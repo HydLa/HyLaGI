@@ -533,7 +533,10 @@ namespace hydla {
 
         for(unsigned int time_it=0; time_it<time_result.candidates.size() && (opts_->nd_mode||time_it==0); time_it++){
           phase_state_sptr branch_state(create_new_phase_state(state));
-          branch_state->parameter_map = time_result.candidates[time_it].parameter_map;
+          
+          // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
+          branch_state->parameter_map.set_variable(time_result.candidates[time_it].parameter_map.begin(), time_result.candidates[time_it].parameter_map.end());
+          
           branch_state->parent->children.push_back(branch_state);
           branch_state->end_time = time_result.candidates[time_it].time;
           phase_state_sptr new_state(create_new_phase_state(new_state_original));
@@ -575,6 +578,8 @@ namespace hydla {
         parameter_set_->push_front(param);
         parameter_map.set_variable(&(parameter_set_->front()), r_it->second);
         ret.set_variable(variable, value_t(node_sptr(new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
+        
+        
         // TODO:記号定数導入後，各変数の数式に出現する変数を記号定数に置き換える
       }
     }

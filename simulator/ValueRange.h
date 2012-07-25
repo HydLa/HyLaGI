@@ -121,8 +121,7 @@ public:
    */
   std::ostream& dump(std::ostream& s) const  
   {
-    if(is_undefined()) s << "UNDEF";
-    else s << get_string();
+    s << get_string();
     return s;
   }
 
