@@ -217,11 +217,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PhaseSimulator.h"
+				RelativePath=".\PhaseResult.h"
 				>
 			</File>
 			<File
-				RelativePath=".\PhaseState.h"
+				RelativePath=".\PhaseSimulator.h"
 				>
 			</File>
 			<File

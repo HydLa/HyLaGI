@@ -82,14 +82,14 @@ namespace hydla {
     }
 
     
-    void SymbolicSimulator::push_branch_states(phase_state_sptr &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
+    void SymbolicSimulator::push_branch_states(phase_result_sptr &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
       for(int i=0; i<(int)result.true_parameter_maps.size();i++){
-        phase_state_sptr branch_state(create_new_phase_state(original));
+        phase_result_sptr branch_state(create_new_phase_result(original));
         branch_state->parameter_map = result.true_parameter_maps[i];
         dst.push_back(branch_state);
       }
       for(int i=0; i<(int)result.false_parameter_maps.size();i++){
-        phase_state_sptr branch_state(create_new_phase_state(original));
+        phase_result_sptr branch_state(create_new_phase_result(original));
         branch_state->parameter_map = result.false_parameter_maps[i];
         dst.push_back(branch_state);
       }
@@ -118,7 +118,7 @@ namespace hydla {
     }
 
 
-    CalculateClosureResult SymbolicSimulator::calculate_closure(phase_state_sptr& state,
+    CalculateClosureResult SymbolicSimulator::calculate_closure(phase_result_sptr& state,
         const module_set_sptr& ms, expanded_always_t &expanded_always,
         positive_asks_t &positive_asks, negative_asks_t &negative_asks){    
       HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicSimulator::calculate_closure ***\n");
@@ -284,13 +284,13 @@ namespace hydla {
         CalculateClosureResult result;
         {
           // 分岐先を生成（導出されない方）
-          phase_state_sptr new_state(create_new_phase_state(state));
+          phase_result_sptr new_state(create_new_phase_result(state));
           new_state->temporary_constraints.push_back(node_sptr(new Not((*branched_ask)->get_guard())));
           result.push_back(new_state);
         }
         {
           // 分岐先を生成（導出される方）
-          phase_state_sptr new_state(create_new_phase_state(state));
+          phase_result_sptr new_state(create_new_phase_result(state));
           new_state->temporary_constraints.push_back((*branched_ask)->get_guard());
           result.push_back(new_state);
         }
@@ -326,7 +326,7 @@ namespace hydla {
     }
 
     SymbolicSimulator::Phases SymbolicSimulator::point_phase(const module_set_sptr& ms, 
-        phase_state_sptr& state, bool& consistent)
+        phase_result_sptr& state, bool& consistent)
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::point_phase***");
       //前準備
@@ -365,7 +365,7 @@ namespace hydla {
       assert(create_result.result_maps.size()>0);
 
 
-      phase_state_sptr new_state_original(create_new_phase_state());
+      phase_result_sptr new_state_original(create_new_phase_result());
       new_state_original->step         = state->step;
       new_state_original->phase        = IntervalPhase;
       new_state_original->current_time = state->current_time;
@@ -376,7 +376,7 @@ namespace hydla {
 
       for(unsigned int create_it = 0; create_it < create_result.result_maps.size() && (opts_->nd_mode||create_it==0); create_it++)
       {
-        phase_state_sptr new_state(create_new_phase_state(new_state_original)), branch_state(create_new_phase_state(state));
+        phase_result_sptr new_state(create_new_phase_result(new_state_original)), branch_state(create_new_phase_result(state));
         
         branch_state->variable_map = range_map_to_value_map(branch_state, create_result.result_maps[create_it], branch_state->parameter_map);
         new_state->parameter_map = branch_state->parameter_map;
@@ -401,7 +401,7 @@ namespace hydla {
     }
 
     SymbolicSimulator::Phases SymbolicSimulator::interval_phase(const module_set_sptr& ms, 
-        phase_state_sptr& state, bool& consistent)
+        phase_result_sptr& state, bool& consistent)
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::interval_phase***");
       //前準備
@@ -434,14 +434,14 @@ namespace hydla {
 
       if(results.size() > 1){
         // 区分的に連続で無い解軌道を含む．中断．
-        phase_state_sptr phase(create_new_phase_state(state));
+        phase_result_sptr phase(create_new_phase_result(state));
         phase->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
         phase->parent->children.push_back(phase);
         consistent = true;
         return Phases();
       }
 
-      phase_state_sptr new_state_original(create_new_phase_state());
+      phase_result_sptr new_state_original(create_new_phase_result());
 
       new_state_original->step         = state->step+1;
       new_state_original->phase        = PointPhase;
@@ -532,14 +532,14 @@ namespace hydla {
             state->current_time,time_t(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
 
         for(unsigned int time_it=0; time_it<time_result.candidates.size() && (opts_->nd_mode||time_it==0); time_it++){
-          phase_state_sptr branch_state(create_new_phase_state(state));
+          phase_result_sptr branch_state(create_new_phase_result(state));
           
           // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
           branch_state->parameter_map.set_variable(time_result.candidates[time_it].parameter_map.begin(), time_result.candidates[time_it].parameter_map.end());
           
           branch_state->parent->children.push_back(branch_state);
           branch_state->end_time = time_result.candidates[time_it].time;
-          phase_state_sptr new_state(create_new_phase_state(new_state_original));
+          phase_result_sptr new_state(create_new_phase_result(new_state_original));
           
           if(!time_result.candidates[time_it].is_max_time ) {
             new_state->current_time = time_result.candidates[time_it].time;
@@ -565,7 +565,7 @@ namespace hydla {
   }
 
   SymbolicSimulator::variable_map_t SymbolicSimulator::range_map_to_value_map(
-      const phase_state_sptr& state,
+      const phase_result_sptr& state,
       const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t& rm,
       parameter_map_t &parameter_map){
     variable_map_t ret = *variable_map_;

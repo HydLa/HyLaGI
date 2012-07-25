@@ -10,28 +10,28 @@ namespace hydla {
   namespace simulator {
 
 
-    template<typename PhaseStateType>
-      class InteractiveSimulator:public Simulator<PhaseStateType>{
+    template<typename PhaseResultType>
+      class InteractiveSimulator:public Simulator<PhaseResultType>{
         public:
-          typedef PhaseStateType                                   phase_state_t;
-          typedef typename boost::shared_ptr<phase_state_t>        phase_state_sptr;
-          typedef typename boost::shared_ptr<const phase_state_t>  phase_state_const_sptr;
-          typedef PhaseSimulator<PhaseStateType>                   phase_simulator_t;
-          typedef typename phase_state_t::phase_state_sptr_t      phase_state_sptr_t;
-          typedef typename std::vector<phase_state_sptr_t >                  phase_state_sptrs_t;
+          typedef PhaseResultType                                   phase_result_t;
+          typedef typename boost::shared_ptr<phase_result_t>        phase_result_sptr;
+          typedef typename boost::shared_ptr<const phase_result_t>  phase_result_const_sptr;
+          typedef PhaseSimulator<PhaseResultType>                   phase_simulator_t;
+          typedef typename phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
+          typedef typename std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
 
-          typedef typename phase_state_t::variable_map_t variable_map_t;
-          typedef typename phase_state_t::variable_t     variable_t;
-          typedef typename phase_state_t::parameter_t     parameter_t;
-          typedef typename phase_state_t::value_t        value_t;
-          typedef typename phase_state_t::parameter_map_t     parameter_map_t;
+          typedef typename phase_result_t::variable_map_t variable_map_t;
+          typedef typename phase_result_t::variable_t     variable_t;
+          typedef typename phase_result_t::parameter_t     parameter_t;
+          typedef typename phase_result_t::value_t        value_t;
+          typedef typename phase_result_t::parameter_map_t     parameter_map_t;
 
           typedef std::list<variable_t>                            variable_set_t;
           typedef std::list<parameter_t>                           parameter_set_t;
           typedef value_t                                          time_value_t;
 
 
-          InteractiveSimulator(Opts &opts):Simulator<phase_state_t>(opts){
+          InteractiveSimulator(Opts &opts):Simulator<phase_result_t>(opts){
           }
 
           virtual ~InteractiveSimulator(){}
@@ -41,11 +41,11 @@ namespace hydla {
           virtual void simulate()
           {
             while(!state_stack_.empty()) {
-              phase_state_sptr state(pop_phase_state());
+              phase_result_sptr state(pop_phase_result());
               bool consistent;
               int exit = 0;
               try{
-                if( Simulator<phase_state_t>::opts_->max_step >= 0 && state->step > Simulator<phase_state_t>::opts_->max_step)
+                if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step)
                   continue;
                 if(state->phase == PointPhase)
                 {
@@ -55,28 +55,28 @@ namespace hydla {
 
                 }
                 state->module_set_container->reset(state->visited_module_sets);
-                phase_state_sptrs_t phases = Simulator<phase_state_t>::phase_simulator_->simulate_phase_state(state, consistent);
+                phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase_result(state, consistent);
                 std::cout << get_state_output(*phases[0]->parent,0,1) << std::endl;
 
 
                 if(!phases.empty()){
-                  if(Simulator<phase_state_t>::opts_->nd_mode){
-                    for(typename phase_state_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
+                  if(Simulator<phase_result_t>::opts_->nd_mode){
+                    for(typename phase_result_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
                       if(consistent){
-                        (*it)->module_set_container = Simulator<phase_state_t>::msc_no_init_;
+                        (*it)->module_set_container = Simulator<phase_result_t>::msc_no_init_;
                       }
                       else{
                         (*it)->module_set_container = (*it)->parent->module_set_container;
                       }
-                      push_phase_state(*it);
+                      push_phase_result(*it);
                     }
                   }else if(!phases.empty()){
                     if(consistent){
-                      phases[0]->module_set_container = Simulator<phase_state_t>::msc_no_init_;
+                      phases[0]->module_set_container = Simulator<phase_result_t>::msc_no_init_;
                     }else{
                       phases[0]->module_set_container = phases[0]->parent->module_set_container;
                     }
-                    push_phase_state(phases[0]);
+                    push_phase_result(phases[0]);
                   }
                 }
                 if(exit)
@@ -90,37 +90,37 @@ namespace hydla {
                 HYDLA_LOGGER_REST(se.what());
               }
             }
-            /*if(Simulator<phase_state_t>::opts_->output_format == fmtMathematica){
-              Simulator<phase_state_t>::output_result_tree_mathematica();
+            /*if(Simulator<phase_result_t>::opts_->output_format == fmtMathematica){
+              Simulator<phase_result_t>::output_result_tree_mathematica();
               }
               else{
-              Simulator<phase_state_t>::output_result_tree();
+              Simulator<phase_result_t>::output_result_tree();
               }
               */
           }
 
           virtual void initialize(const parse_tree_sptr& parse_tree){
-            Simulator<phase_state_t>::initialize(parse_tree);
+            Simulator<phase_result_t>::initialize(parse_tree);
             //Simulator::initialize(parse_tree);
-            Simulator<phase_state_t>::state_id_ = 1;
+            Simulator<phase_result_t>::state_id_ = 1;
             //初期状態を作ってスタックに入れる
-            phase_state_sptr state(Simulator<phase_state_t>::create_new_phase_state());
+            phase_result_sptr state(Simulator<phase_result_t>::create_new_phase_result());
             state->phase        = simulator::PointPhase;
             state->step         = 0;
             state->current_time = value_t("0");
-            state->module_set_container = Simulator<phase_state_t>::msc_original_;
-            state->parent = Simulator<phase_state_t>::result_root_;
-            push_phase_state(state);
+            state->module_set_container = Simulator<phase_result_t>::msc_original_;
+            state->parent = Simulator<phase_result_t>::result_root_;
+            push_phase_result(state);
           }
 
 
           /**
            * 状態キューに新たな状態を追加する
            */
-          virtual void push_phase_state(const phase_state_sptr& state)
+          virtual void push_phase_result(const phase_result_sptr& state)
           {
-            state->id = Simulator<phase_state_t>::state_id_++;
-            HYDLA_LOGGER_PHASE("%% InteractiveSimulator::push_phase_state\n");
+            state->id = Simulator<phase_result_t>::state_id_++;
+            HYDLA_LOGGER_PHASE("%% InteractiveSimulator::push_phase_result\n");
             HYDLA_LOGGER_PHASE("%% state Phase: ", state->phase);
             HYDLA_LOGGER_PHASE("%% state id: ", state->id);
             HYDLA_LOGGER_PHASE("%% state time: ", state->current_time);
@@ -132,27 +132,27 @@ namespace hydla {
           /**
            * 状態キューから状態をひとつ取り出す
            */
-          phase_state_sptr pop_phase_state()
+          phase_result_sptr pop_phase_result()
           {
-            phase_state_sptr state(state_stack_.top());
+            phase_result_sptr state(state_stack_.top());
             state_stack_.pop();
             return state;
           }
 
-          int interactivesimulate(phase_state_sptr& state){
+          int interactivesimulate(phase_result_sptr& state){
             all_state_.push_back(state); 
             //std::cout << all_state_.size() << std::endl;
             /* for(int i=0; i < all_state_.size() ; i++){
                std::cout << get_state_output(*all_state_[i]->parent,0,1) << std::endl;
                }*/
             //  change_variable_flag = false;
-            Simulator<phase_state_t>::opts_->max_time = "100";
+            Simulator<phase_result_t>::opts_->max_time = "100";
             /*
                if(0){
                if(1){
                char *name = "save_data.dat";
                FILE *fp;
-               phase_state_sptr tmp;
+               phase_result_sptr tmp;
                if( ( fp = fopen( name, "rb" ) ) == NULL ) {
                printf("ファイルオープンエラー\n");
                }else{
@@ -237,7 +237,7 @@ namespace hydla {
                             cout << "save state in file" << endl;
                             char *name = "save_data.dat"; // save_data.dat(セーブデータファイル)
                             FILE *fp;
-                            phase_state_sptr tmp;
+                            phase_result_sptr tmp;
                             if( ( fp = fopen( name, "wb" ) ) == NULL ) {
                             printf("ファイルオープンエラー\n");
                             }else{
@@ -341,7 +341,7 @@ namespace hydla {
 
 
           struct SimulationState {
-            phase_state_sptr phase_state;
+            phase_result_sptr phase_result;
             /// フェーズ内で一時的に追加する制約．分岐処理などに使用
             constraints_t temporary_constraints;
             module_set_container_sptr module_set_container;
@@ -353,7 +353,7 @@ namespace hydla {
           /**
            * 各状態を保存しておくためのスタック
            */
-          std::stack<phase_state_sptr> state_stack_;
+          std::stack<phase_result_sptr> state_stack_;
 
 
           /**
@@ -362,7 +362,7 @@ namespace hydla {
           parse_tree_sptr parse_tree_;
 
           bool is_safe_;
-          std::vector<phase_state_sptr> all_state_;
+          std::vector<phase_result_sptr> all_state_;
       };
 
   } // simulator

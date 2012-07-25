@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_PHASE_STATE_H_
-#define _INCLUDED_HYDLA_SIMULATOR_PHASE_STATE_H_
+#ifndef _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_
+#define _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_
 
 #include <vector>
 
@@ -17,10 +17,9 @@ template<typename value> class DefaultParameter;
 
 /**
  * あるフェーズの情報を表すクラス
- * PhaseStateというよりはPhaseResultという方が正しいかもしれません
  */
 template<typename ValueType>
-struct PhaseState {
+struct PhaseResult {
   typedef ValueType                                         value_t;
   typedef ValueRange<value_t>                               range_t;
   typedef DefaultVariable                                   variable_t;
@@ -28,8 +27,8 @@ struct PhaseState {
   typedef value_t                                           time_t;
   typedef VariableMap<variable_t*, value_t>                 variable_map_t;
   typedef VariableMap<parameter_t*, range_t>                parameter_map_t;
-  typedef boost::shared_ptr<PhaseState>                     phase_state_sptr_t;
-  typedef std::vector<phase_state_sptr_t >                  phase_state_sptrs_t;
+  typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
+  typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 
   Phase                     phase;
   int id;
@@ -51,14 +50,14 @@ struct PhaseState {
   /// フェーズの終了原因を表す．
   CauseOfTermination cause_of_termination;
   /// 次のフェーズ
-  phase_state_sptrs_t children;
+  phase_result_sptrs_t children;
   /// 前のフェーズ
-  phase_state_sptr_t parent;
+  phase_result_sptr_t parent;
 };
 
 
 } // namespace simulator
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_PHASE_STATE_H_
+#endif // _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_
 

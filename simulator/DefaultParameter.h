@@ -2,7 +2,7 @@
 #define _DEFAULT_PARAMETER_H_
 
 #include <boost/shared_ptr.hpp>
-#include "PhaseState.h"
+#include "PhaseResult.h"
 
 namespace hydla {
 namespace simulator {
@@ -11,12 +11,12 @@ template<typename ValueType>
 class DefaultParameter{
   public:
   typedef DefaultVariable variable_t;
-  typedef PhaseState<ValueType> phase_state_t;
-  typedef boost::shared_ptr<phase_state_t> phase_state_sptr_t;
+  typedef PhaseResult<ValueType> phase_result_t;
+  typedef boost::shared_ptr<phase_result_t> phase_result_sptr_t;
   const variable_t* original_variable_;
-  const phase_state_sptr_t introduced_phase_;
+  const phase_result_sptr_t introduced_phase_;
 
-  DefaultParameter(const variable_t* variable = NULL, const phase_state_sptr_t& phase = phase_state_sptr_t())
+  DefaultParameter(const variable_t* variable = NULL, const phase_result_sptr_t& phase = phase_result_sptr_t())
     :original_variable_(variable), introduced_phase_(phase)
   {
   }
@@ -42,7 +42,7 @@ class DefaultParameter{
   /**
    * 導入されたフェーズを設定する
    */
-  void set_phase(const phase_state_sptr_t &phase)
+  void set_phase(const phase_result_sptr_t &phase)
   {
     introduced_phase_ = phase;
   }
@@ -50,7 +50,7 @@ class DefaultParameter{
   /**
    * 導入されたフェーズを取得する
    */
-  const phase_state_sptr_t get_phase(){return introduced_phase_;}
+  const phase_result_sptr_t get_phase(){return introduced_phase_;}
   
   std::string get_name() const
   {

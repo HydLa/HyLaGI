@@ -56,15 +56,15 @@ public:
 
   typedef struct IntegrateResult 
   {
-    typedef struct NextPhaseState 
+    typedef struct NextPhaseResult 
     {
       time_t         time;
       variable_map_t variable_map;
       bool           is_max_time;
-    } next_phase_state_t;
-    typedef std::vector<next_phase_state_t> next_phase_state_list_t;
+    } next_phase_result_t;
+    typedef std::vector<next_phase_result_t> next_phase_result_list_t;
     
-    next_phase_state_list_t states;
+    next_phase_result_list_t states;
     changed_asks_t          changed_asks;
   } integrate_result_t;
 
@@ -150,10 +150,10 @@ protected:
   {
   s << "#*** integrate result ***\n";
 
-  next_phase_state_list_t::const_iterator ps_it = 
-  BOOST_FOREACH(next_phase_state_list_t::value_type& i, t.states)
+  next_phase_result_list_t::const_iterator ps_it = 
+  BOOST_FOREACH(next_phase_result_list_t::value_type& i, t.states)
   {
-  s << "---- next_phase_state ----"
+  s << "---- next_phase_result ----"
   s << "- time -\n" 
   << i.time 
   << "\n"

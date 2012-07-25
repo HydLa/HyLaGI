@@ -11,46 +11,46 @@
 
 #include "Logger.h"
 #include "VariableMap.h"
-#include "PhaseState.h"
+#include "PhaseResult.h"
 #include "TreeInfixPrinter.h"
 #include "Simulator.h"
 
 namespace hydla {
 namespace simulator {
 
-template<typename PhaseStateType>
+template<typename PhaseResultType>
 class PhaseSimulator{
 
 public:  
-  typedef PhaseStateType                                   phase_state_t; 
-  typedef typename boost::shared_ptr<phase_state_t>        phase_state_sptr; 
-  typedef typename boost::shared_ptr<const phase_state_t>  phase_state_const_sptr; 
-  typedef std::vector<phase_state_sptr>                    phase_state_sptrs_t;
-  typedef PhaseSimulator<PhaseStateType>                   phase_simulator_t;
+  typedef PhaseResultType                                   phase_result_t; 
+  typedef typename boost::shared_ptr<phase_result_t>        phase_result_sptr; 
+  typedef typename boost::shared_ptr<const phase_result_t>  phase_result_const_sptr; 
+  typedef std::vector<phase_result_sptr>                    phase_result_sptrs_t;
+  typedef PhaseSimulator<PhaseResultType>                   phase_simulator_t;
 
-  typedef typename phase_state_t::variable_map_t variable_map_t;
-  typedef typename phase_state_t::variable_t     variable_t;
-  typedef typename phase_state_t::parameter_t     parameter_t;
-  typedef typename phase_state_t::value_t        value_t;
-  typedef typename phase_state_t::parameter_map_t     parameter_map_t;
+  typedef typename phase_result_t::variable_map_t variable_map_t;
+  typedef typename phase_result_t::variable_t     variable_t;
+  typedef typename phase_result_t::parameter_t     parameter_t;
+  typedef typename phase_result_t::value_t        value_t;
+  typedef typename phase_result_t::parameter_map_t     parameter_map_t;
   
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
-  typedef std::vector<phase_state_sptr>                    Phases;
+  typedef std::vector<phase_result_sptr>                    Phases;
   
   PhaseSimulator(const Opts& opts):opts_(&opts){
   }
   
   virtual ~PhaseSimulator(){}
 
-  virtual phase_state_sptrs_t simulate_phase_state(phase_state_sptr& state, bool &consistent)
+  virtual phase_result_sptrs_t simulate_phase_result(phase_result_sptr& state, bool &consistent)
   {
-    HYDLA_LOGGER_PHASE("#*** Begin Simulator::simulate_phase_state ***");
+    HYDLA_LOGGER_PHASE("#*** Begin Simulator::simulate_phase_result ***");
     HYDLA_LOGGER_PHASE("%% current time:", state->current_time);
     HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->parent->variable_map);
     HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->parameter_map);
     
-    phase_state_sptrs_t phases; 
+    phase_result_sptrs_t phases; 
     bool has_next = false;
     is_safe_ = true;
     //TODO:exclude_errorが無効になってる
@@ -66,7 +66,7 @@ public:
         case PointPhase:
         { 
           HYDLA_LOGGER_PHASE("%% begin point phase");
-          phase_state_sptrs_t tmp = point_phase(ms, state, consistent);
+          phase_result_sptrs_t tmp = point_phase(ms, state, consistent);
           phases.insert(phases.begin(), tmp.begin(), tmp.end());
           break;
         }
@@ -74,7 +74,7 @@ public:
         case IntervalPhase: 
         {
           HYDLA_LOGGER_PHASE("%% begin interval phase");
-          phase_state_sptrs_t tmp = interval_phase(ms, state, consistent);
+          phase_result_sptrs_t tmp = interval_phase(ms, state, consistent);
           phases.insert(phases.begin(), tmp.begin(), tmp.end());
           break;            
         }
@@ -144,38 +144,40 @@ public:
   
   
   /**
-   * 新たなPhaseStateの作成
+   * 新たなPhaseResultの作成
    */
-  phase_state_sptr create_new_phase_state() const
+  phase_result_sptr create_new_phase_result() const
   {
-    phase_state_sptr ph(new phase_state_t());
+    phase_result_sptr ph(new phase_result_t());
     ph->cause_of_termination = NONE;
     return ph;
   }
 
   /**
-   * 与えられたPhaseStateの情報をを引き継いだ，
-   * 新たなPhaseStateの作成
+   * 与えられたPhaseResultの情報をを引き継いだ，
+   * 新たなPhaseResultの作成
    */
-  phase_state_sptr create_new_phase_state(const phase_state_const_sptr& old) const
+  phase_result_sptr create_new_phase_result(const phase_result_const_sptr& old) const
   {
-    phase_state_sptr ph(new phase_state_t(*old));
+    phase_result_sptr ph(new phase_result_t(*old));
     ph->cause_of_termination = NONE;
     return ph;
   }
 
   
   /**
-   * Point Phaseの処理
+   * Point Phase時，モジュール集合の無矛盾性を調べるために使う関数
+   * TODO:名前が変
    */
   virtual Phases point_phase(const module_set_sptr& ms, 
-                           phase_state_sptr& state, bool& consistent) = 0;
+                           phase_result_sptr& state, bool& consistent) = 0;
 
   /**
-   * Interval Phaseの処理
+   * Interval Phase時，モジュール集合の無矛盾性を調べるために使う関数
+   * TODO:名前が変
    */
   virtual Phases interval_phase(const module_set_sptr& ms, 
-                              phase_state_sptr& state, bool& consistent) = 0;
+                              phase_result_sptr& state, bool& consistent) = 0;
 
   virtual void initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m)
   {

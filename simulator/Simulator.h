@@ -28,7 +28,7 @@
 #include "AskDisjunctionFormatter.h"
 
 #include "VariableMap.h"
-#include "PhaseState.h"
+#include "PhaseResult.h"
 #include "InitNodeRemover.h"
 #include "TreeInfixPrinter.h"
 #include "PhaseSimulator.h"
@@ -74,24 +74,24 @@ namespace {
 namespace hydla {
 namespace simulator {
 
-//TODO:PhaseStateTypeじゃなくて，ValueType入れるテンプレートクラスにできない？というか設計再検討．このクラスは何に対応している？
+//TODO:PhaseResultTypeじゃなくて，ValueType入れるテンプレートクラスにできない？というか設計再検討．このクラスは何に対応している？
 //実行アルゴリズムだろうか？
-template<typename PhaseStateType>
+template<typename PhaseResultType>
 class Simulator
 {
 public:  
-  typedef PhaseStateType                                   phase_state_t;
-  typedef typename boost::shared_ptr<phase_state_t>        phase_state_sptr;
-  typedef typename boost::shared_ptr<const phase_state_t>  phase_state_const_sptr;
-  typedef PhaseSimulator<PhaseStateType>                   phase_simulator_t;
-  typedef typename phase_state_t::phase_state_sptr_t      phase_state_sptr_t;
-  typedef typename std::vector<phase_state_sptr_t >                  phase_state_sptrs_t;
+  typedef PhaseResultType                                   phase_result_t;
+  typedef typename boost::shared_ptr<phase_result_t>        phase_result_sptr;
+  typedef typename boost::shared_ptr<const phase_result_t>  phase_result_const_sptr;
+  typedef PhaseSimulator<PhaseResultType>                   phase_simulator_t;
+  typedef typename phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
+  typedef typename std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
 
-  typedef typename phase_state_t::variable_map_t variable_map_t;
-  typedef typename phase_state_t::variable_t     variable_t;
-  typedef typename phase_state_t::parameter_t     parameter_t;
-  typedef typename phase_state_t::value_t        value_t;
-  typedef typename phase_state_t::parameter_map_t     parameter_map_t;
+  typedef typename phase_result_t::variable_map_t variable_map_t;
+  typedef typename phase_result_t::variable_t     variable_t;
+  typedef typename phase_result_t::parameter_t     parameter_t;
+  typedef typename phase_result_t::value_t        value_t;
+  typedef typename phase_result_t::parameter_map_t     parameter_map_t;
   
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
@@ -115,7 +115,7 @@ public:
    * 使用するPhaseSimulatorを設定する．
    * この関数に渡すPhaseSimulatorのインスタンスはnewで作成し，呼び出し側でdeleteしないようにする
    */
-  void set_phase_simulator(PhaseSimulator<PhaseStateType> *ps){
+  void set_phase_simulator(PhaseSimulator<PhaseResultType> *ps){
     phase_simulator_.reset(ps);
   }
 
@@ -123,7 +123,7 @@ public:
   {
     init_module_set_container(parse_tree);
     opts_->assertion = parse_tree->get_assertion_node();
-    result_root_.reset(new phase_state_t());
+    result_root_.reset(new phase_result_t());
     
     result_root_->module_set_container = msc_original_;
     
@@ -155,21 +155,21 @@ public:
     
 
   /**
-   * 新たなPhaseStateの作成
+   * 新たなPhaseResultの作成
    */
-  phase_state_sptr create_new_phase_state() const
+  phase_result_sptr create_new_phase_result() const
   {
-    phase_state_sptr ph(new phase_state_t());
+    phase_result_sptr ph(new phase_result_t());
     return ph;
   }
 
   /**
-   * 与えられたPhaseStateの情報をを引き継いだ，
-   * 新たなPhaseStateの作成
+   * 与えられたPhaseResultの情報をを引き継いだ，
+   * 新たなPhaseResultの作成
    */
-  phase_state_sptr create_new_phase_state(const phase_state_const_sptr& old) const
+  phase_result_sptr create_new_phase_result(const phase_result_const_sptr& old) const
   {
-    phase_state_sptr ph(new phase_state_t(*old));
+    phase_result_sptr ph(new phase_result_t(*old));
     return ph;
   }
 
@@ -188,7 +188,7 @@ public:
   }
   
   
-  std::string get_state_output(const phase_state_t& result, const bool& numeric, const bool& is_in_progress){
+  std::string get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress){
     std::stringstream sstr;
     if(!numeric){
       if(result.phase==IntervalPhase){
@@ -286,7 +286,7 @@ public:
       std::cout << "No Result." << std::endl;
       return;
     }
-    typename phase_state_sptrs_t::iterator it = result_root_->children.begin(), end = result_root_->children.end();
+    typename phase_result_sptrs_t::iterator it = result_root_->children.begin(), end = result_root_->children.end();
     int i=1, j=1;
     for(;it!=end;it++){
       std::vector<std::string> result;
@@ -294,7 +294,7 @@ public:
     }
   }
 
-  void const output_result_node(const phase_state_sptr &node, std::vector<std::string> &result, int &case_num, int &phase_num){
+  void const output_result_node(const phase_result_sptr &node, std::vector<std::string> &result, int &case_num, int &phase_num){
 
     if(node->children.size() == 0){
     
@@ -348,7 +348,7 @@ public:
         result.push_back(sstr.str());
       }
       result.push_back(get_state_output(*node, false,false));
-      typename phase_state_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
+      typename phase_result_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
       for(;it!=end;it++){
         output_result_node(*it, result, case_num, phase_num);
       }
@@ -397,7 +397,7 @@ public:
       std::string prev_node_time = "0";
       std::cout << "Table[";
       bool is_first = true;
-      phase_state_sptr_t now_node = result_root_->children.back();
+      phase_result_sptr_t now_node = result_root_->children.back();
       while(1){
         if(now_node->phase==IntervalPhase){
           variable_map_t vm = now_node->variable_map;
@@ -479,7 +479,7 @@ protected:
   
 
   struct SimulationState {
-    phase_state_sptr phase_state;
+    phase_result_sptr phase_result;
     /// フェーズ内で一時的に追加する制約．分岐処理などに使用
     constraints_t temporary_constraints;
     module_set_container_sptr module_set_container;
@@ -492,7 +492,7 @@ protected:
   /**
    * 使用するPhaseSimulator
    */ 
-  boost::shared_ptr<PhaseSimulator<PhaseStateType> > phase_simulator_;
+  boost::shared_ptr<PhaseSimulator<PhaseResultType> > phase_simulator_;
 
 
   module_set_container_sptr msc_original_;
@@ -501,12 +501,12 @@ protected:
   /**
    * 各状態を保存しておくためのスタック
    */
-  std::stack<phase_state_sptr> state_stack_;
+  std::stack<phase_result_sptr> state_stack_;
   
   parse_tree_sptr parse_tree;
   
   ///解軌道木の根．初期状態なので，子供以外の情報は入れない
-  phase_state_sptr result_root_;
+  phase_result_sptr result_root_;
   
   Opts*     opts_;
 };

@@ -70,7 +70,7 @@ public:
    */
   typedef struct PPTimeResult
   {
-    typedef struct NextPhaseState 
+    typedef struct NextPhaseResult 
     {
       time_t         time;
       parameter_map_t parameter_map;

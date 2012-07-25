@@ -23,9 +23,9 @@ namespace symbolic_simulator {
 
   typedef SymbolicValue                          value_t;
   typedef SymbolicValue                          time_t;
-  typedef simulator::PhaseState<value_t>         phase_state_t;
-  typedef phase_state_t::phase_state_sptr_t      phase_state_sptr_t;
-  typedef std::vector<phase_state_sptr_t>        phase_state_sptrs_t;
+  typedef simulator::PhaseResult<value_t>        phase_result_t;
+  typedef phase_result_t::phase_result_sptr_t    phase_result_sptr_t;
+  typedef std::vector<phase_result_sptr_t>       phase_result_sptrs_t;
   typedef simulator::DefaultVariable             variable_t;
   typedef simulator::DefaultParameter<value_t>   parameter_t;
   typedef simulator::ValueRange<value_t>         value_range_t;
@@ -44,19 +44,19 @@ namespace symbolic_simulator {
   typedef simulator::negative_asks_t             negative_asks_t;
   typedef simulator::not_adopted_tells_list_t    not_adopted_tells_list_t;
   typedef simulator::continuity_map_t            continuity_map_t;
-  typedef simulator::Simulator<phase_state_t>::variable_set_t  variable_set_t;
-  typedef simulator::Simulator<phase_state_t>::parameter_set_t  parameter_set_t;
+  typedef simulator::Simulator<phase_result_t>::variable_set_t  variable_set_t;
+  typedef simulator::Simulator<phase_result_t>::parameter_set_t  parameter_set_t;
   
   typedef simulator::parse_tree_sptr  parse_tree_sptr;
                                         
 
-  typedef boost::shared_ptr<phase_state_t> phase_state_sptr;
+  typedef boost::shared_ptr<phase_result_t> phase_result_sptr;
   
-  typedef simulator::PhaseSimulator<phase_state_t> simulator_t;
+  typedef simulator::PhaseSimulator<phase_result_t> simulator_t;
   
   typedef simulator_t::Phases                    Phases;
 
-  typedef std::vector<phase_state_sptr> CalculateClosureResult;
+  typedef std::vector<phase_result_sptr> CalculateClosureResult;
 
   typedef enum Mode_{
     ContinuousMode,
