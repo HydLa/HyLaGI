@@ -5,6 +5,53 @@ $RecursionLimit = 1000;
 $MaxExtraPrecision = 1000;
 
 
+(*
+ * プロファイリング用関数
+ * timeFuncStart: startTimesに関数の開始時刻を積む
+ * timeFuncEnd: startTimesから開始時刻を取り出し、profileListにプロファイル結果を格納
+ * <使い方>
+ *		プロファイリングしたい関数の定義の先頭にtimeFuncStart[];を
+ *		末尾でtimeFuncEnd["関数名"];を追加する.
+ *		ただしtimeFuncEndの後で値を返すようにしないと返値が変わってしまうので注意.
+ * <プロファイリング結果の見方>
+ *		(現在実行が終了した関数名) took (その関数実行に要した時間), elapsed time:(プログラム実行時間)
+ *			function:(今までに呼び出された関数名)  calls:(呼び出された回数)  total time of this function:(その関数の合計実行時間)  average time:(その関数の平均実行時間)  max time:(その関数の最高実行時間)
+ *		<例>
+ *		calculateNextPointPhaseTime took 0.015635, elapsed time:1.006334
+ *			function:checkConsistencyPoint  calls:1  total time of this function:0.000361  average time:0.000361  max time:0.000361
+ *			function:createMap  calls:2  total time of this function:0.11461  average time:0.057304  max time:0.076988
+ *			...
+ *)
+timeFuncStart[] := (
+	If[Length[startTimes]>0,
+		startTimes = Append[startTimes,SessionTime[]];
+	,
+		startTimes = {SessionTime[]};
+	];
+);
+
+timeFuncEnd[funcname_] := (
+Module[{endTime,startTime,funcidx,i},
+	endTime = SessionTime[];
+	startTime = Last[startTimes];
+	startTimes = Drop[startTimes,-1];
+	If[Length[profileList]===0,profileList={};];
+	If[Position[profileList, funcname] =!= {},
+		funcidx = Flatten[Position[profileList,funcname]][[1]];
+		profileList[[funcidx,2]] = profileList[[funcidx,2]] + 1;
+		profileList[[funcidx,3]] = profileList[[funcidx,3]] + (endTime-startTime);
+		profileList[[funcidx,4]] = profileList[[funcidx,3]] / profileList[[funcidx,2]];
+		profileList[[funcidx,5]] = If[profileList[[funcidx,5]]<(endTime-startTime), endTime-startTime, profileList[[funcidx,5]]];
+	,
+		profileList = Append[profileList, {funcname, 1, endTime-startTime, endTime-startTime, endTime-startTime}];
+	];
+	Print[funcname," took ",endTime-startTime,", elapsed time:",endTime];
+	For[i=1,i<=Length[profileList],i=i+1,
+		Print["    function:",profileList[[i,1]],"  calls:",profileList[[i,2]],"  total time of this function:",profileList[[i,3]],"  average time:",profileList[[i,4]],"  max time:",profileList[[i,5]]];
+	];
+];
+);
+
 
 (*
  * デバッグ用メッセージ出力関数
@@ -75,6 +122,8 @@ publicMethod[name_, args___, define_] := (
  * tmpVariables: 一時制約に出現する変数のリスト
  * guard:
  * guardVars:
+ * startTimes: 呼び出された関数の開始時刻を積むプロファイリング用スタック
+ * profileList: プロファイリング結果のリスト
  *)
 
 
