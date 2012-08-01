@@ -12,7 +12,7 @@ namespace simulator {
 class SimulateError : public std::runtime_error {
 public:
   SimulateError(const std::string& msg) : 
-    std::runtime_error("error occured while simulating: " + msg)
+    std::runtime_error("error occurred while simulating: " + msg)
   {}
 };
     

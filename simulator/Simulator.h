@@ -316,7 +316,7 @@ public:
 
         case simulator::SOME_ERROR:
           output_parameter_map(node->parameter_map);
-          std::cout << "# some error occured\n" ;
+          std::cout << "# some error occurred\n" ;
           break;
 
         case simulator::ASSERTION:
@@ -337,7 +337,7 @@ public:
         default:
         case simulator::NONE:
           output_parameter_map(node->parameter_map);
-          std::cout << "# unknown termination occured\n" ;
+          std::cout << "# unknown termination occurred\n" ;
           break;
       }
       std::cout << std::endl;

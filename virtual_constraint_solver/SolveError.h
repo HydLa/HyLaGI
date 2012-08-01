@@ -12,7 +12,7 @@ namespace vcs {
 class SolveError : public std::runtime_error {
 public:
   SolveError(const std::string& msg) : 
-    std::runtime_error("error occured while solving\n" + msg)
+    std::runtime_error("error occurred while solving\n" + msg)
   {}
 };
     
