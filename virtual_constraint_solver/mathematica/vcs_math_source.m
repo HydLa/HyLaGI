@@ -9,10 +9,6 @@ $MaxExtraPrecision = 1000;
  * プロファイリング用関数
  * timeFuncStart: startTimesに関数の開始時刻を積む
  * timeFuncEnd: startTimesから開始時刻を取り出し、profileListにプロファイル結果を格納
- * <使い方>
- *		プロファイリングしたい関数の定義の先頭にtimeFuncStart[];を
- *		末尾でtimeFuncEnd["関数名"];を追加する.
- *		ただしtimeFuncEndの後で値を返すようにしないと返値が変わってしまうので注意.
  * <プロファイリング結果の見方>
  *		(現在実行が終了した関数名) took (その関数実行に要した時間), elapsed time:(プログラム実行時間)
  *			function:(今までに呼び出された関数名)  calls:(呼び出された回数)  total time of this function:(その関数の合計実行時間)  average time:(その関数の平均実行時間)  max time:(その関数の最高実行時間)
@@ -100,7 +96,9 @@ publicMethod[name_, args___, define_] := (
     inputPrint[ToString[name], args];
     Check[
       Block[{publicRet},
+        timeFuncStart[];
         publicRet = define;
+        timeFuncEnd[name];
         simplePrint[publicRet];
         {1, publicRet}
       ],
