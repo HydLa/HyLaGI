@@ -37,6 +37,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
    */
   virtual void simulate()
   {
+    std::string error_str;
     while(!state_stack_.empty()) {
       phase_result_sptr state(pop_phase_result());
       bool consistent;
@@ -66,8 +67,8 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
           }
         }
       }catch(const std::runtime_error &se){
-        std::cout << se.what() << std::endl;
-        HYDLA_LOGGER_REST(se.what());
+        error_str = se.what();
+        HYDLA_LOGGER_PHASE(se.what());
       }
     }
     if(Simulator<phase_result_t>::opts_->output_format == fmtMathematica){
@@ -76,6 +77,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
     else{
       Simulator<phase_result_t>::output_result_tree();
     }
+    std::cout << error_str;
   }
   
   virtual void initialize(const parse_tree_sptr& parse_tree){
