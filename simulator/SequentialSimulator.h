@@ -49,7 +49,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
         if(!phases.empty()){
           if(Simulator<phase_result_t>::opts_->nd_mode){
             for(typename phase_result_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
-              if(consistent){
+              if((*it)->parent != result_root_){
                 (*it)->module_set_container = Simulator<phase_result_t>::msc_no_init_;
               }
               else{
@@ -58,7 +58,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
               push_phase_result(*it);
             }
           }else{
-            if(consistent){
+            if(phases[0]->parent != result_root_){
               phases[0]->module_set_container = Simulator<phase_result_t>::msc_no_init_;
             }else{
               phases[0]->module_set_container = phases[0]->parent->module_set_container;
