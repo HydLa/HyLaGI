@@ -1,5 +1,6 @@
 #include "MathematicaExpressionConverter.h"
 #include "PacketSender.h"
+#include "../SolveError.h"
 
 #include <stdlib.h>
 #include <cassert>
@@ -140,6 +141,9 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
         int variable_derivative_count = ml.get_integer();
         ml.get_next();
         std::string variable_name = ml.get_symbol();
+        if(variable_name.length() < 6){
+          throw SolveError("invalid symbol name");
+        }
         assert(variable_name.substr(0, 6) == "usrVar");
         variable_name = variable_name.substr(6);
         node_sptr tmp_node = node_sptr(new hydla::parse_tree::Variable(variable_name));
@@ -163,4 +167,3 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
 } // namespace mathematica
 } // namespace vcs
 } // namespace hydla 
-

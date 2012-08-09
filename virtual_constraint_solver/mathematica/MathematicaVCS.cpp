@@ -5,6 +5,7 @@
 #include "MathematicaExpressionConverter.h"
 #include "PacketSender.h"
 #include "PacketErrorHandler.h"
+#include "../SolveError.h"
 
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
@@ -296,6 +297,9 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       }
       value_range_t tmp_range = map.get_variable(variable_ptr);
       MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
+      if(symbolic_value.is_undefined()){
+        throw SolveError("invalid value");
+      }
       HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
       map.set_variable(variable_ptr, tmp_range);
     }
@@ -525,6 +529,9 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     int derivative_count = ml_.get_integer();
     int id = ml_.get_integer();
     parameter_t* tmp_param = get_parameter(name, derivative_count, id);
+    if(tmp_param == NULL){
+      throw SolveError("some unknown form of result");
+    }
     value_range_t tmp_range = map.get_variable(tmp_param);
     HYDLA_LOGGER_VCS("%% returned parameter_name: ", *tmp_param);
     int relop_code = ml_.get_integer();
@@ -760,7 +767,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::set_continuity ***\n");
   PacketSender ps(ml_);
 
-  ml_.put_function("addConstraint", 2);
+  ml_.put_function("addInitConstraint", 2);
   ml_.put_function("Equal", 2);
 
   ps.put_var(name, derivative_count, PacketSender::VA_Prev);
