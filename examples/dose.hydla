@@ -1,0 +1,16 @@
+//定期的な投薬に対する薬の血中濃度
+
+//INIT<=>timer=0/\y=2.
+
+INIT<=>timer=0/\y=2/\1<T<2/\1<dosage<2.
+
+//CONS<=>[](dosage=2/\k=1/2/\T=1/2).
+//CONS<=>[](dosage=2/\k=1/2/\T'=0).
+
+CONS<=>[](k=1/2/\dosage'=0/\T'=0).
+
+TIME<=>[](timer'=1).
+RATE<=>[](y'=-k*y).
+DOSE<=>[](timer-=T=>y=y-+dosage/\timer=0).
+
+INIT, CONS, (TIME, RATE)<<DOSE.
