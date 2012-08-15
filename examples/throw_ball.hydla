@@ -1,0 +1,9 @@
+// throwing ball against head wind
+
+INIT <=> x = 0 & y = 10 & x' = 10 & 5 <= y' <= 15.
+FALL <=> [](y'' = -10).
+WIND <=> []((y- >= 15 => x'' = -3) & (y- < 15 =>  x'' = 0)).
+
+INIT, FALL, WIND.
+
+ASSERT(!(x >= 25 & y > 0)).

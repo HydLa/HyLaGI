@@ -1,3 +1,5 @@
+// many bouncing particles
+
 INIT(y) <=> y = 10 & y' = 0.
 FALL(y) <=> [](y'' = -10).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).

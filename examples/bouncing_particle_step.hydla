@@ -1,0 +1,9 @@
+// bouncing particle with two floors whose height is different
+
+INIT    <=> y=20 & x=0 & y'=0 & x'=1.
+FALL    <=> [](y'' = -10).
+X_MOVE  <=> [](x'' = 0).
+BOUNCE  <=> [](x- < 3 & y- = 10 => y' = -(4/5) * y'-).
+BOUNCE2 <=> [](x- > 3 & y- = 0 => y' = -(4/5) * y'-).
+
+INIT, X_MOVE, FALL << (BOUNCE, BOUNCE2). 

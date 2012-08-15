@@ -55,7 +55,7 @@ namespace hydla {
 
                 }
                 state->module_set_container->reset(state->visited_module_sets);
-                phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase_result(state, consistent);
+                phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase(state, consistent);
                 std::cout << get_state_output(*phases[0]->parent,0,1) << std::endl;
 
 

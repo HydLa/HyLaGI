@@ -325,10 +325,10 @@ namespace hydla {
       return CalculateClosureResult(1, state);
     }
 
-    SymbolicSimulator::Phases SymbolicSimulator::point_phase(const module_set_sptr& ms, 
-        phase_result_sptr& state, bool& consistent)
+    SymbolicSimulator::Phases SymbolicSimulator::simulate_ms_point(const module_set_sptr& ms, 
+        phase_result_sptr& state, variable_map_t& vm, bool& consistent)
     {
-      HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::point_phase***");
+      HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_point***");
       //前準備
       Timer pp_timer;
       expanded_always_t expanded_always;
@@ -342,7 +342,7 @@ namespace hydla {
       //TODO:毎回時間適用してるけど，前のフェーズが決まってれば同じになるわけだから1フェーズにつき一回でいいはず．
       solver_->apply_time_to_vm(state->parent->variable_map, time_applied_map, state->current_time);
       HYDLA_LOGGER_PHASE("--- time_applied_variable_map ---\n", time_applied_map);
-      solver_->reset(time_applied_map, state->parameter_map);
+      solver_->reset(vm, state->parameter_map);
 
       Timer pp_cc_timer;
 
@@ -395,15 +395,15 @@ namespace hydla {
       if(opts_->time_measurement){
 	      pp_timer.push_time("PointPhase");
       }
-      HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::point_phase***\n");
+      HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_point***\n");
       consistent = true;
       return phases;
     }
 
-    SymbolicSimulator::Phases SymbolicSimulator::interval_phase(const module_set_sptr& ms, 
+    SymbolicSimulator::Phases SymbolicSimulator::simulate_ms_interval(const module_set_sptr& ms, 
         phase_result_sptr& state, bool& consistent)
     {
-      HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::interval_phase***");
+      HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_interval***");
       //前準備
       Timer ip_timer;
       expanded_always_t expanded_always;
@@ -427,7 +427,6 @@ namespace hydla {
       if(opts_->time_measurement){
 	      ip_cc_timer.push_time("IP-CalculateClosure");
       }
-
 
       SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
       SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
@@ -559,7 +558,7 @@ namespace hydla {
       if(opts_->time_measurement){
 	      ip_timer.push_time("IntervalPhase");
       }
-      HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::interval_phase***");
+      HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_interval***");
       consistent = true;
       return phases;
   }

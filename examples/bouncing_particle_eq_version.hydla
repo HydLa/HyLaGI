@@ -1,8 +1,0 @@
-// EQ version
-
-INIT <=> ht=10&v=0.
-EQ   <=> [](ht'=v).
-FALL <=> [](v'=-10).
-BOUNCE <=> [](ht=0 => v= -(4/5)*v-).
-
-INIT, EQ, FALL << BOUNCE.

@@ -23,10 +23,10 @@ do
     judge $file_name
 done
 
-for file_name in ./samples_reduce/*.sample
-do
-    judge $file_name
-done
+#for file_name in ./samples_reduce/*.sample
+#do
+#    judge $file_name
+#done
 
 if test $no_good -eq 0
     then

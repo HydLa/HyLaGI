@@ -31,21 +31,12 @@ public:
   SymbolicSimulator(const Opts& opts);
   virtual ~SymbolicSimulator();
 
-  /**
-   * Point Phase‚Ìˆ—
-   */
-  virtual Phases point_phase(const module_set_sptr& ms, 
-                           phase_result_sptr& state, bool& consistent);
+  virtual Phases simulate_ms_point(const module_set_sptr& ms, 
+                           phase_result_sptr& state, variable_map_t &vm, bool& consistent);
   
-  /**
-   * Interval Phase‚Ìˆ—
-   */
-  virtual Phases interval_phase(const module_set_sptr& ms, 
+  virtual Phases simulate_ms_interval(const module_set_sptr& ms, 
                               phase_result_sptr& state, bool& consistent);
 
-  /**
-   * ‰Šú‰»ˆ—
-   */
   virtual void initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m);
 
 private:
@@ -67,6 +58,13 @@ private:
   void push_branch_states(phase_result_sptr &original, hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst);
 
   void add_continuity(const continuity_map_t&);
+  
+  virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm)
+  {
+    variable_map_t ret;
+    solver_->apply_time_to_vm(vm, ret, tm);
+    return ret;
+  }
   
   continuity_map_t variable_derivative_map_;
 

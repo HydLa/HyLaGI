@@ -17,4 +17,4 @@ fi
 hydla=`echo $1 | sed -e  "s/.*\/\([^/]*\)\..*/\1/g"`
 
 output ./samples/$hydla.sample "$@"
-output ./samples_reduce/$hydla.sample "$@ -s r"
+#output ./samples_reduce/$hydla.sample "$@ -s r"

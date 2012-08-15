@@ -477,7 +477,9 @@ protected:
   parameter_set_t parameter_set_;
   int state_id_;
   
-
+  /**
+   * シミュレーションの実行状態をあらわす構造体
+   */
   struct SimulationState {
     phase_result_sptr phase_result;
     /// フェーズ内で一時的に追加する制約．分岐処理などに使用
@@ -487,8 +489,8 @@ protected:
     std::set<module_set_sptr> visited_module_sets;
   };
 
-  
-  
+
+
   /**
    * 使用するPhaseSimulator
    */ 

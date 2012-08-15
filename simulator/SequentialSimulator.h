@@ -45,7 +45,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
         if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step)
           continue;
         state->module_set_container->reset(state->visited_module_sets);
-        phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase_result(state, consistent);
+        phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase(state, consistent);
         if(!phases.empty()){
           if(Simulator<phase_result_t>::opts_->nd_mode){
             for(typename phase_result_sptrs_t::iterator it = phases.begin();it != phases.end();it++){

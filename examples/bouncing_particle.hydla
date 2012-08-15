@@ -4,10 +4,4 @@ INIT <=> y=10 & y' = 0.
 FALL <=> [](y'' = -10).
 BOUNCE <=> [](y- = 0 => y' = -(4/5)*y'-).
 
-//INIT <=> ht=10&v=0&[](ht'=v).
-//FALL <=> [](v'=-10).
-//BOUNCE <=> [](ht- = 0 => v= -(4/5)*v-).
-//ASSERT(ht>1).
-
-
 INIT, FALL << BOUNCE.

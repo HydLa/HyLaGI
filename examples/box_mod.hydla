@@ -1,3 +1,5 @@
+/* bouncing particle with boxes */
+
 INIT   <=> bx=4/3 /\ by=20 /\ bx'=1  /\ by'=0 & [](by' = bvy & bx' = bvx) .
 FALL   <=> [](bvy' = -10).
 X_MOVE <=> [](bvx' =   0).

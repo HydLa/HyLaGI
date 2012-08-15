@@ -1,14 +1,4 @@
-/*
-INIT <=> y = 0 & 0 < y' & sweeping = 0.
-CONST <=> [](y'' = fric).
-FRICTION <=> []((sweeping = 1 & y' > 0 => fric = -1/40) & (y' > 0 & sweeping != 1 => fric = -1/10) & (y' <= 0 => fric = 0)).
-THINKING <=> [](sweeping' = 0).
-STARTSWEEPING <=> [](sweeping- = 0 & 2 < y < 9 & 0 < y' < (10 - y)/20 => sweeping = 1).
-
-INIT, CONST, FRICTION, THINKING << STARTSWEEPING.
-
-*/
-
+/* one dimensional curling model with only one stone */
 
 INIT <=> y = 0 & 0 < y' < 3.
 TIME <=> time = 0 & [](time' = 1).
