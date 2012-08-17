@@ -1,9 +1,9 @@
-devenv HydLa.sln /Build Release
+devenv Hyrose.sln /Build Release
 
-for /F "tokens=1-3 delims=/ " %%a in ('date /t') do SET DT=HydLa_%%a%%b%%c
+for /F "tokens=1-3 delims=/ " %%a in ('date /t') do SET DT=Hyrose_%%a%%b%%c
 md %DT%
 
-copy HydLa.exe %DT%\hydla.exe
+copy Hyrose.exe %DT%\hyrose.exe
 
 md %DT%\examples
 copy examples %DT%\examples

@@ -2,7 +2,7 @@
 $RecursionLimit = 1000;
 
 (* 内部で用いる精度も上げてみる *)
-$MaxExtraPrecision = 10000;
+$MaxExtraPrecision = 1000;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
  想定外の形式の結果になって変な計算を初めてエラーメッセージが爆発することが無いようにするため．
@@ -261,10 +261,10 @@ publicMethod[
     If[Head[sol] =!= List,
       sol,
       tVars = getTimeVars[vars];
-      tStore = And@@Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
+      tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
       simplePrint[tStore];
-      ret = createMap[tStore && t>0, isVariable, hasVariable, tVars];
-      debugPrint["ret after CreateMap", ret];
+      ret = {convertExprs[tStore]};
+      debugPrint["ret after convert", ret];
       ret = ruleOutException[ret];
       simplePrint[ret];
       ret
@@ -297,6 +297,7 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
     (* ここでprevに関する処理は本来なくてもいいはず．時刻0でのprevの扱いさえうまくできればどうにかなる？ *)
     map = Reduce[cons, vars, Reals];
     map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+    map = Reduce[map, vars, Reals];
     simplePrint[map];
     map = LogicalExpand[map];
     map = applyListToOr[map];
@@ -606,6 +607,7 @@ getDerivativeCount[Derivative[n_][f_][_]] := n;
 applyDSolveResult[exprs_, integRule_] := (
   Simplify[
       exprs  /. integRule     (* 単純にルールを適用 *)
+             /. Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule]
              /. (Derivative[n_][f_][t] /; !isVariable[f]) :> D[f, {t, n}] (* 微分値についてもルールを適用 *)
   ]
 );
