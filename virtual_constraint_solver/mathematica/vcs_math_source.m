@@ -294,10 +294,11 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
   {map},
   If[cons === True || cons === False, 
     cons,
-    (* ここでprevに関する処理は本来なくてもいいはず．時刻0でのprevの扱いさえうまくできればどうにかなる？ *)
-    map = Reduce[cons, vars, Reals];
-    map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+    (* TODO: ここでprevに関する処理は本来なくてもいいはず．時刻0でのprevの扱いさえうまくできればどうにかなる？ *)
+    map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
     map = Reduce[map, vars, Reals];
+    (* TODO:2回も同じルール適用をしたくない．場合の重複や，不要な条件の発生を抑えつつ，何かできないか？ *)
+    map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
     simplePrint[map];
     map = LogicalExpand[map];
     map = applyListToOr[map];
