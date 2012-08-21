@@ -34,9 +34,10 @@ void setup_symbolic_simulator_opts(Opts& opts)
   } else if(po.get<std::string>("output-format") == "i"){
     opts.output_format = fmtNInterval;
   } else {
+    throw std::runtime_error(std::string("invalid option - output format"));
     // TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
-    std::cerr << "invalid option - output format" << std::endl;
-    exit(-1);
+    // std::cerr << "invalid option - output format" << std::endl;
+    // exit(-1);
   }
 
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("mathlink") + " -mathlink'";

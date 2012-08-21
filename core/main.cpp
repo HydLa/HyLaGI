@@ -138,9 +138,9 @@ void hydla_main(int argc, char* argv[])
     symbolic_simulate(pt);
   } 
   else {
-    // TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
-    std::cerr << "invalid method" << std::endl;
-    return;
+    throw std::runtime_error(std::string("invalid method"));
+    // std::cerr << "invalid method" << std::endl;
+    // return;
   }
 
   if(po.count("tm")){
