@@ -191,7 +191,7 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, pcons, vars,
   Module[
-    {sol, otherCons, tCons, i, cpTrue, cpFalse, trueMap, falseMap},
+    {sol, otherCons, tCons, hasTCons, necessaryTCons, parList,  cpTrue, cpFalse, trueMap, falseMap},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint,
@@ -205,7 +205,7 @@ publicMethod[
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
         tCons = sol[[1]] /. tCons;
         tCons = Select[applyList[tCons], (!hasVariable[#])&];
-        tCons = And@@tCons && pcons
+        tCons = LogicalExpand[Reduce[And@@tCons && pcons, Reals]]
       ];
       checkMessage;
 
@@ -213,8 +213,14 @@ publicMethod[
 
       If[tCons === False,
         {False, pcons},
-      
-        cpTrue = Reduce[Quiet[Minimize[{t, tCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];        
+        
+        hasTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}])) -> True);
+        parList = getParameters[hasTCons];
+        simplePrint[parList];
+        necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
+        
+        simplePrint[necessaryTCons];
+        cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
         cpFalse = Reduce[pcons && !cpTrue, Reals];
 
         simplePrint[cpTrue, cpFalse];
@@ -323,6 +329,10 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], "u
 
 getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter..]];
 
+(* 式中に出現する記号定数を取得 *)
+
+getParameters[exprs_] := Cases[exprs, parameter[_, _, _], Infinity];
+
 (* 時間変数を取得 *)
 getTimeVars[list_] := Cases[list, _[t], Infinity];
 
@@ -334,8 +344,9 @@ hasParameter[exprs_] := Length[Cases[exprs, parameter[_, _, _], Infinity]] > 0;
 
 isParameter[exprs_] := Head[exprs] === parameter;
 
-(* 式が指定された変数を持つか *)
-hasVariable[exprs_, vars_List] := MemberQ[{exprs}, ele_ /; (MemberQ[vars, ele] || (!AtomQ[ele] && hasVariable[Head[ele], vars]) ), Infinity ];
+(* 式が指定されたシンボルを持つか *)
+hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
+
 
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
@@ -475,15 +486,17 @@ applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
 
-(* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 *)
+(* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 
+   ついでに othersを各条件に対して付加 *)
 
 makeListFromPiecewise[minT_, others_] := Module[
-  {tmpCondition = False},
+  {tmpCondition = False, retMinT = minT[[1]]},
   tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
+  retMinT = Map[({#[[1]], Reduce[others && #[[2]] ]})&, retMinT];
   If[ tmpCondition === False,
-    minT[[1]],
-    Append[minT[[1]], {minT[[2]], tmpCondition}]
+    retMinT,
+    Append[retMinT, {minT[[2]], tmpCondition}]
   ]
 ];
 
@@ -550,9 +563,10 @@ publicMethod[
       dSol,
       timeAppliedCauses,
       resultList,
+      necessaryPCons,
+      parameterList,
       originalOther
     },
-    
     
     (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果(tStore)をそのまま引き継ぐこともできるはず *)
     dSol = exDSolve[cons, initCons];
@@ -567,10 +581,15 @@ publicMethod[
     
     simplePrint[timeAppliedCauses];
     
+    parameterList = getParameters[timeAppliedCauses];
     
-    (* 最後に，あらかじめ求められているはずのotherConsとpconsを付加してMinimize *)  
+    (* 必要なpConsだけを選ぶ．不要なものが入っているとMinimzeの動作がおかしくなる？ *)
     
-    resultList = Quiet[Minimize[{t, (timeAppliedCauses) && pCons && t>0}, {t}], 
+    necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
+    
+    simplePrint[necessaryPCons];
+    
+    resultList = Quiet[Minimize[{t, (timeAppliedCauses) && necessaryPCons && t>0}, {t}], 
                            {Minimize::wksol, Minimize::infeas}];
     debugPrint["resultList after Minimize", resultList];
     If[Head[resultList] === Minimize, Message[calculateNextPointPhaseTime::mnmz]];
@@ -649,7 +668,7 @@ Check[
       subset = subsets[[i]];
       tVars = Union[getVariables[subset]];
       If[Length[tVars] == Length[subset],
-        ini = Select[tmpInitExpr, (hasVariable[#, tVars ])& ];
+        ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
         sol = Check[
           DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
           overConstraint,
