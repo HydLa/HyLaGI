@@ -160,6 +160,9 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
       assert(0);
       break;
   }
+  if(ret == NULL){
+	  throw SolveError("unknown element\n" + "input:\n" + ml.get_input_print() + "\n\ntrace:\n" + ml.get_debug_print());
+  }
   return ret;
 }
 

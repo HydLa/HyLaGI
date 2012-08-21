@@ -18,15 +18,15 @@
 
 class MathLinkError : public std::runtime_error {
 public:
-  MathLinkError(const std::string& msg, int code) : 
-    std::runtime_error(init(msg, code))
+  MathLinkError(const std::string& msg, int code, const std::string &trace = "") : 
+    std::runtime_error(init(msg, code, trace))
   {}
 
 private:
-  std::string init(const std::string& msg, int code)
+	std::string init(const std::string& msg, int code, const std::string &trace)
   {
     std::stringstream s;
-    s << "mathlink error: " << msg << " : " << code;
+    s << "mathlink error: " << msg << " : " << code << "\n" << trace;
     return s.str();
   }
 };
@@ -129,7 +129,7 @@ public:
     const char *s;
     int n;
     if(MLGetFunction(&s, &n) == 0) {
-      throw MathLinkError("get_function", MLError());
+      throw MathLinkError("get_function\n", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
     }
     std::string sym(s);
     MLReleaseSymbol(s);
@@ -148,7 +148,7 @@ public:
   {
     const char *s;
 	  if(!MLGetSymbol(&s)){
-	    throw MathLinkError("get_symbol", MLError());
+	    throw MathLinkError("get_symbol", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
 	  }
 	  std::string sym(s);
 	  MLReleaseSymbol(s);
@@ -167,7 +167,7 @@ public:
   {
     const char *s;
     if(!MLGetString(&s)) {
-      throw MathLinkError("get_string", MLError());
+      throw MathLinkError("get_string", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
     }
     std::string str(s);
     MLReleaseString(s);
@@ -183,7 +183,7 @@ public:
   {
     int i;
     if(!MLGetInteger(&i)) {
-      throw MathLinkError("get_integer", MLError());      
+      throw MathLinkError("get_integer", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());      
     }
     return i;
   }
@@ -192,7 +192,7 @@ public:
   {
     int count;
     if(!MLGetArgCount(&count)){
-      throw MathLinkError("get_arg_count", MLError());
+      throw MathLinkError("get_arg_count", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
     }
     return count;
   }
