@@ -35,7 +35,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
     opts.output_format = fmtNInterval;
   } else {
     throw std::runtime_error(std::string("invalid option - output format"));
-    // TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
     // std::cerr << "invalid option - output format" << std::endl;
     // exit(-1);
   }

@@ -35,10 +35,10 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::MathematicaVCS(Constructor) ***\n");
   //std::cout << opts.mathlink.c_str() << std::endl;
 
-  //TODO: —áŠO‚ð“Š‚°‚é‚æ‚¤‚É‚·‚é
   if(!ml_.init(opts.mathlink.c_str())) {
-    std::cerr << "can not link" << std::endl;
-    exit(-1);
+    throw MathLinkError("can not link",0);
+    // std::cerr << "can not link" << std::endl;
+    // exit(-1);
   }
 
   // o—Í‚·‚é‰æ–Ê‚Ì‰¡•‚ÌÝ’è
