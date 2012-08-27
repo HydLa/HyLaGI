@@ -178,7 +178,6 @@ namespace hydla {
             // 記号定数の条件によって充足可能性が変化する場合
             HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
             CalculateClosureResult result;
-            // 自分以外の場合は別に作ってスタックに入れる
             push_branch_states(state, check_consistency_result, result);
             return result;
           }
@@ -232,10 +231,8 @@ namespace hydla {
               HYDLA_LOGGER_CLOSURE("%% entailable");
               if(!check_consistency_result.false_parameter_maps.empty()){
                 HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
-                // 自分以外の場合は別に作ってスタックに入れる
                 CalculateClosureResult result;
                 push_branch_states(state, check_consistency_result, result);
-                // 自分は導出可能な場合のうちの1つとする
                 return result;
               }
               solver_->end_temporary();
@@ -338,10 +335,6 @@ namespace hydla {
       positive_asks_t positive_asks(state->positive_asks);
       negative_asks_t negative_asks;
 
-      variable_map_t time_applied_map;
-      //TODO:毎回時間適用してるけど，前のフェーズが決まってれば同じになるわけだから1フェーズにつき一回でいいはず．
-      solver_->apply_time_to_vm(state->parent->variable_map, time_applied_map, state->current_time);
-      HYDLA_LOGGER_PHASE("--- time_applied_variable_map ---\n", time_applied_map);
       solver_->reset(vm, state->parameter_map);
 
       Timer pp_cc_timer;

@@ -430,7 +430,17 @@ public:
             // ’è”‚ÌğŒ
             std::cout << "{";
             typename parameter_map_t::const_iterator it = now_node->parameter_map.begin();
-            std::cout << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << " - step, step}";
+            while(it != now_node->parameter_map.end()){
+              if(it->second.is_undefined()){
+                it++;
+              }else{
+                std::cout << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << ", step}";
+                break;
+              }
+            }
+            if(it == now_node->parameter_map.end()){
+              std::cout << "{1}";
+            }
           }else{
             std::cout << "{1}";
           }

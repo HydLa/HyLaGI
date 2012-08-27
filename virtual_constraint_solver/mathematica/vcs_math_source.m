@@ -72,7 +72,7 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 
 SetAttributes[symbolToString, HoldAll];
 
-If[optUseDebugPrint,
+If[optUseDebugPrint || True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく．いずれにしろそんなにコストはかからない？ *)
   debugPrint[arg___] := Print[InputForm[{arg}]];
   simplePrint[arg___] := Print[delimiterAddedString[", ",
     List@@Map[symbolToString, Map[Unevaluated, Hold[arg]] ]

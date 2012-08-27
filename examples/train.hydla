@@ -1,0 +1,39 @@
+INIT <=> x = 0 & x' = 0 & brake = 0 & 10 <= vlim <= 50 & [](vlim' = 0) & [](x1 = 700 & x2 = 3000 & x3 = 5500).
+CONST <=> [](brake' = 0).
+DIST <=> 500 <= d <= 1500 & [](d' = 0).
+BRAKE <=> [](((x'-)^2)/2 >= 6000 - x- => brake = 1).
+ACCEL <=> [](brake = 0 => ((x' >= vlim => x'' = 0) & (x' < vlim => x'' = 1/2))).
+DECEL <=> [](brake = 1 => ((x' > 0 => x'' = -1) & (x' <= 0 => x'' = 0))).
+SENSOR(x0, s) <=> s = 20 & s' = 0 & []((x- >= x0 => s' = -1) & (x- < x0 => s' = 0)).
+
+//ASSERT(!(s1 > 0 & x = x1 | s2 > 0 & x = x2 | s3 > 0 & x = x3)).
+ASSERT(!(s1 > 0 & x = x1)).
+
+//INIT, CONST << BRAKE, ACCEL, DECEL, SENSOR(x1-500, s1), SENSOR(x2-900, s2), SENSOR(x3-700, s3).
+
+
+INIT, CONST << BRAKE, ACCEL, DECEL, SENSOR(x1-d, s1).
+
+//INIT, CONST << STOP, ACCEL, BRAKE, SENSOR(x1-500, s1).
+//INIT, CONST << STOP, ACCEL, BRAKE, SENSOR(x2-900, s2).
+//INIT, CONST << STOP, ACCEL, BRAKE, SENSOR(x3-700, s3).
+//INIT, CONST << STOP, ACCEL, BRAKE.
+//INIT, DIST, CONST << STOP, ACCEL, BRAKE, SENSOR(x1 - d, s1), SENSOR(x2-d, s2), SENSOR(x3-d, s3).
+
+
+//DIST <=> 500 <= d1 <= 1500 & 500 <= d2 <= 1500 & 500 <= d3 <= 1500 & [](d1 ' = d2' = d3' = 0).
+//DIST <=> 500 <= d <= 1500 & [](d' = 0).
+/*
+
+// “dŽÔ‚Ì“®‚«‚Í‚±‚¤‘‚¯‚é‚ÆŠð‚µ‚¢H
+
+INIT <=> x = 0 & x' = 0 & brake = 0 & 10 <= vlim <= 50 & [](vlim' = 0).
+CONST <=> [](brake' = 0).
+STOP <=> [](((x'-)^2)/2 >= 6000 - x- => brake = 1).
+ACCEL <=> [](brake = 0 => (x'' = 1/2 << x'' >= 0) ).
+BRAKE <=> [](brake = 1 => (x'' = -1 << x'' <= 0) ).
+LIMIT <=> [](0 <= x' <= vlim).
+
+INIT, CONST << STOP, (ACCEL & BRAKE) << LIMIT.
+
+*/

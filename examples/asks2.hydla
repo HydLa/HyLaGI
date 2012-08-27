@@ -1,5 +1,0 @@
-/* A program including double guard conditions. */
-
-I <=> [](x=1 & y=2).
-A <=> [](x=1 => y=2 => z=3).
-I,A.
