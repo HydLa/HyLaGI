@@ -1,4 +1,4 @@
-./hyrose ./check_examples/impulse_function.hydla -t 10
+./check_examples/impulse_function.hydla -t 10
 #---------1---------
 ---------PP---------
 time	: 0

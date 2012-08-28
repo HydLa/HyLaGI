@@ -1,4 +1,4 @@
-./hyrose ./examples/balloon_tank.hydla -t 30 --nd
+./examples/balloon_tank.hydla -t 30 --nd
 Assertion Failed!
 Assertion Failed!
 Assertion Failed!

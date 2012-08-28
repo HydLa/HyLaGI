@@ -3,7 +3,7 @@
 output(){
     output_file=$1
     shift
-    echo "./hyrose $@" > $output_file
+    echo "$@" > $output_file
     ./hyrose $@ >> $output_file
     cat $output_file
 }

@@ -1,4 +1,4 @@
-./hyrose ./check_examples/asks.hydla -t 1
+check_examples\asks.hydla -t 1
 #---------1---------
 ---------PP---------
 time	: 0
