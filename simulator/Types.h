@@ -97,7 +97,6 @@ typedef std::vector<boost::shared_ptr<hydla::parse_tree::Node> > constraints_t;
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  expanded_always_t;
-typedef std::vector<node_id_t>                                   expanded_always_id_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
@@ -116,7 +115,6 @@ std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
 std::ostream& operator<<(std::ostream& s, const expanded_always_t& a);
-std::ostream& operator<<(std::ostream& s, const expanded_always_id_t& a);
 std::ostream& operator<<(std::ostream& s, const continuity_map_t& continuity_map);
 
 } //namespace simulator

@@ -135,7 +135,7 @@ public:
     }
     parse_tree_ = parse_tree;
     init_variable_map(parse_tree);
-    phase_simulator_->initialize(parse_tree, variable_set_, parameter_set_, variable_map_);
+    phase_simulator_->initialize(variable_set_, parameter_set_, variable_map_, parse_tree->get_variable_map());
   }
   
   

@@ -66,10 +66,10 @@ namespace hydla {
     {
     }
 
-    void SymbolicSimulator::initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m)
+    void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c)
     {
-      simulator_t::initialize(parse_tree, v, p, m);
-      variable_derivative_map_ = parse_tree->get_variable_map();
+      simulator_t::initialize(v, p, m, c);
+      variable_derivative_map_ = c;
 
       // 使用するソルバの決定
       /*  if(opts_->solver == "r" || opts_->solver == "Reduce") {
@@ -328,19 +328,18 @@ namespace hydla {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_point***");
       //前準備
       Timer pp_timer;
-      expanded_always_t expanded_always;
-      expanded_always_id2sptr(state->expanded_always_id, expanded_always);
       solver_->change_mode(DiscreteMode, opts_->approx_precision);
 
       positive_asks_t positive_asks(state->positive_asks);
       negative_asks_t negative_asks;
+      expanded_always_t ea(state->expanded_always);
 
       solver_->reset(vm, state->parameter_map);
 
       Timer pp_cc_timer;
 
       //閉包計算
-      CalculateClosureResult result = calculate_closure(state,ms,expanded_always,positive_asks,negative_asks);
+      CalculateClosureResult result = calculate_closure(state,ms,ea,positive_asks,negative_asks);
       
       if(result.size() != 1){
         consistent = false;
@@ -362,7 +361,7 @@ namespace hydla {
       new_state_original->step         = state->step;
       new_state_original->phase        = IntervalPhase;
       new_state_original->current_time = state->current_time;
-      expanded_always_sptr2id(expanded_always, new_state_original->expanded_always_id);
+      new_state_original->expanded_always = ea;
 
       Phases phases;
       
@@ -399,18 +398,17 @@ namespace hydla {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_interval***");
       //前準備
       Timer ip_timer;
-      expanded_always_t expanded_always;
-      expanded_always_id2sptr(state->expanded_always_id, expanded_always);
 
       solver_->change_mode(ContinuousMode, opts_->approx_precision);
       negative_asks_t negative_asks;
       positive_asks_t positive_asks(state->positive_asks);
       solver_->reset(state->parent->variable_map, state->parameter_map);
+      expanded_always_t ea(state->expanded_always);
 
       Timer ip_cc_timer;
 
       //閉包計算
-      CalculateClosureResult result = calculate_closure(state,ms,expanded_always,positive_asks,negative_asks);
+      CalculateClosureResult result = calculate_closure(state,ms, ea,positive_asks,negative_asks);
 
       if(result.size() != 1){
         consistent = false;
@@ -437,9 +435,8 @@ namespace hydla {
 
       new_state_original->step         = state->step+1;
       new_state_original->phase        = PointPhase;
+      new_state_original->expanded_always = ea;
       
-      // TODO: expanded_alwaysが大丈夫かどうか考える．変換が必要なのはなぜ？
-      // expanded_always_sptr2id(expanded_always, new_state_original->expanded_always_id);
       state->variable_map = range_map_to_value_map(state, results[0], state->parameter_map);
       state->variable_map = shift_variable_map_time(state->variable_map, state->current_time);
       

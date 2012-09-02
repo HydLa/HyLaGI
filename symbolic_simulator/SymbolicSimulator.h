@@ -37,7 +37,7 @@ public:
   virtual Phases simulate_ms_interval(const module_set_sptr& ms, 
                               phase_result_sptr& state, bool& consistent);
 
-  virtual void initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m);
+  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
 
 private:
 

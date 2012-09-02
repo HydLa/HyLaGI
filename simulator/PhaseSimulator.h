@@ -109,44 +109,6 @@ public:
     }
     return phases;
   }
-    
-  /**
-   * id形式のexpanded_alwaysをshared_ptr形式に変換する
-   */
-  void expanded_always_id2sptr(const expanded_always_id_t& ea_id, 
-                               expanded_always_t& ea_sptr) const
-  {
-    ea_sptr.clear();
-
-    expanded_always_id_t::const_iterator it  = ea_id.begin();
-    expanded_always_id_t::const_iterator end = ea_id.end();
-    for(; it!=end; ++it) {
-      assert(
-        boost::dynamic_pointer_cast<hydla::parse_tree::Always>(
-          parse_tree_->get_node(*it)));
-
-      ea_sptr.insert(
-        boost::static_pointer_cast<hydla::parse_tree::Always>(
-          parse_tree_->get_node(*it)));
-    }
-  }
-
-  /**
-   * shared_ptr形式のexpanded_alwaysをid形式に変換する
-   */
-  void expanded_always_sptr2id(const expanded_always_t& ea_sptr, 
-                               expanded_always_id_t& ea_id) const
-  {
-    ea_id.clear();
-
-    expanded_always_t::const_iterator it  = ea_sptr.begin();
-    expanded_always_t::const_iterator end = ea_sptr.end();
-    for(; it!=end; ++it) {
-      //ea_id.push_back(parse_tree_->get_node_id(*it));
-      ea_id.push_back((*it)->get_id());
-    }
-  }  
-  
   
   /**
    * 新たなPhaseResultの作成
@@ -186,9 +148,8 @@ public:
   virtual Phases simulate_ms_interval(const module_set_sptr& ms, 
                               phase_result_sptr& state, bool& consistent) = 0;
 
-  virtual void initialize(const parse_tree_sptr& parse_tree, variable_set_t &v, parameter_set_t &p, variable_map_t &m)
+  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c)
   {
-    parse_tree_ = parse_tree;
     variable_set_ = &v;
     parameter_set_ = &p;
     variable_map_ = &m;
@@ -197,13 +158,9 @@ public:
   
 protected:
 
-  /**
-   * シミュレーション対象となるパースツリー
-   */
-  parse_tree_sptr parse_tree_;
-  
+  const Opts *opts_;
+
   bool is_safe_;
-  const Opts     *opts_;
   
   variable_set_t *variable_set_;
   parameter_set_t *parameter_set_;

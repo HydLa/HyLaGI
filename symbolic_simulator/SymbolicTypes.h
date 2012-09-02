@@ -38,7 +38,6 @@ namespace symbolic_simulator {
   typedef simulator::tells_t                     tells_t;
   typedef simulator::collected_tells_t           collected_tells_t;
   typedef simulator::expanded_always_t           expanded_always_t;
-  typedef simulator::expanded_always_id_t        expanded_always_id_t;
   typedef simulator::ask_set_t                   ask_set_t;
   typedef simulator::positive_asks_t             positive_asks_t;
   typedef simulator::negative_asks_t             negative_asks_t;

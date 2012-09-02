@@ -36,7 +36,7 @@ struct PhaseResult {
   time_t                    end_time;
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
-  expanded_always_id_t      expanded_always_id;
+  expanded_always_t         expanded_always;
   positive_asks_t           positive_asks;
   changed_asks_t            changed_asks;
   /// フェーズ内で一時的に追加する制約．分岐処理などに使用
