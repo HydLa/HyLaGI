@@ -135,7 +135,8 @@ public:
     }
     parse_tree_ = parse_tree;
     init_variable_map(parse_tree);
-    phase_simulator_->initialize(variable_set_, parameter_set_, variable_map_, parse_tree->get_variable_map());
+    continuity_map_t  cont(parse_tree->get_variable_map());
+    phase_simulator_->initialize(variable_set_, parameter_set_, variable_map_, cont);
   }
   
   
