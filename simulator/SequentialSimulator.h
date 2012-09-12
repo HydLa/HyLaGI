@@ -1,6 +1,7 @@
 #ifndef _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_
 #define _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_
 
+#include "Timer.h"
 #include "Simulator.h"
 
 namespace hydla {
@@ -39,8 +40,11 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
   {
     std::string error_str;
     while(!state_stack_.empty()) {
+      if(Simulator<phase_result_t>::opts_->time_measurement)
+	hydla::timer::Timer::update_phase_time();
       phase_result_sptr state(pop_phase_result());
       bool consistent;
+
       try{
         if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step)
           continue;
@@ -55,6 +59,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
               else{
                 (*it)->module_set_container = (*it)->parent->module_set_container;
               }
+	      if(Simulator<phase_result_t>::opts_->time_measurement) hydla::timer::Timer::push_new_phase_time();
               push_phase_result(*it);
             }
           }else{
@@ -63,6 +68,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
             }else{
               phases[0]->module_set_container = phases[0]->parent->module_set_container;
             }
+	      if(Simulator<phase_result_t>::opts_->time_measurement) hydla::timer::Timer::push_new_phase_time();
             push_phase_result(phases[0]);
           }
         }

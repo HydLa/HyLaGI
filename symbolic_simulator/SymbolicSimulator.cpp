@@ -327,7 +327,7 @@ namespace hydla {
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_point***");
       //前準備
-      Timer pp_timer;
+
       solver_->change_mode(DiscreteMode, opts_->approx_precision);
 
       positive_asks_t positive_asks(state->positive_asks);
@@ -336,20 +336,20 @@ namespace hydla {
 
       solver_->reset(vm, state->parameter_map);
 
-      Timer pp_cc_timer;
+      Timer cc_timer;
 
       //閉包計算
       CalculateClosureResult result = calculate_closure(state,ms,ea,positive_asks,negative_asks);
+      
+      if(opts_->time_measurement){
+      	cc_timer.count_time("CalculateClosure");
+      }
       
       if(result.size() != 1){
         consistent = false;
         return result;
       }
       
-      
-      if(opts_->time_measurement){
-      	pp_cc_timer.push_time("PP-CalculateClosure");
-      }
       // Interval Phaseへ移行（次状態の生成）
       HYDLA_LOGGER_PHASE("%% SymbolicSimulator::create new phase states\n");  
       SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
@@ -384,9 +384,6 @@ namespace hydla {
         
       }
 
-      if(opts_->time_measurement){
-	      pp_timer.push_time("PointPhase");
-      }
       HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_point***\n");
       consistent = true;
       return phases;
@@ -397,7 +394,6 @@ namespace hydla {
     {
       HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_interval***");
       //前準備
-      Timer ip_timer;
 
       solver_->change_mode(ContinuousMode, opts_->approx_precision);
       negative_asks_t negative_asks;
@@ -405,19 +401,20 @@ namespace hydla {
       solver_->reset(state->parent->variable_map, state->parameter_map);
       expanded_always_t ea(state->expanded_always);
 
-      Timer ip_cc_timer;
+      Timer cc_timer;
 
       //閉包計算
       CalculateClosureResult result = calculate_closure(state,ms, ea,positive_asks,negative_asks);
+
+      if(opts_->time_measurement){
+	cc_timer.count_time("CalculateClosure");
+      }
 
       if(result.size() != 1){
         consistent = false;
         return result;
       }
 
-      if(opts_->time_measurement){
-	      ip_cc_timer.push_time("IP-CalculateClosure");
-      }
 
       SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
       SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
@@ -545,9 +542,6 @@ namespace hydla {
         state->cause_of_termination = simulator::ASSERTION;
       }
 
-      if(opts_->time_measurement){
-	      ip_timer.push_time("IntervalPhase");
-      }
       HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_interval***");
       consistent = true;
       return phases;

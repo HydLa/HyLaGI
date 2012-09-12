@@ -1,8 +1,10 @@
 #ifndef _INCLUDED_HYDLA_TIMER_H_
 #define _INCLUDED_HYDLA_TIMER_H_
 
+#include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
+#include <stack>
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 
@@ -23,15 +25,19 @@ namespace hydla{
     
     typedef struct timeval time_point_t;
     typedef double elapsed_time_t;
+    
+    struct PhaseTime {
+      elapsed_time_t phase_time;
+      elapsed_time_t calculate_closure_time;
 
-    /*
-    typedef struct CaseTime_ {
-      std::vector<elapsed_time_t> pp_calculate_closure_time_;
-      std::vector<elapsed_time_t> pp_simulation_time_;
-      std::vector<elapsed_time_t> ip_calculate_closure_time_;
-      std::vector<elapsed_time_t> ip_simulation_time_;
-    } CaseTime;
-    */
+      boost::shared_ptr<PhaseTime> parent;
+      std::vector< boost::shared_ptr<PhaseTime> > children;
+      bool point_phase;
+    };
+
+    typedef boost::shared_ptr<PhaseTime> phase_time_sptr_t;
+    typedef std::vector<phase_time_sptr_t> phase_time_sptrs_t;
+    
 
     class Timer
     {
@@ -39,16 +45,25 @@ namespace hydla{
       Timer();
       ~Timer();
       /**
-       * タイマーを初期化する
+       * 計測開始時刻を現在時刻に設定する
        */
       void restart();
-      
-      
+
       /**
-       * 呼ばれた時点でのタイマー初期化からの経過時刻を
-       * pに対応するsimulation_time_ に追加する
+       * タイマーを初期化する
+       */      
+      static void init_timer();
+
+      /**
+       * 呼ばれた時点での経過時刻を得る
        */
-      void push_time(std::string p);
+      elapsed_time_t get_time();
+
+      /**
+       * 呼ばれた時点での経過時刻を
+       * pに対応する変数に加算する
+       */
+      void count_time(std::string p);
 
 
       /**
@@ -56,19 +71,43 @@ namespace hydla{
        * 表示する
        */
       void elapsed();
+      void elapsed(std::string str);
 
       /**
        * 各timeの値を出力する
        */
-      static void output_time();
-      
-      /**
-       * CaseTimeのベクタに新たなCaseに対応する
-       * CaseTime構造体を追加する
-       * --nd用
-       */
-      //      static void push_next_case_time();
+      static void output_time(bool nd_mode);
 
+      /**
+       * 新たなphase_time_sptr_tをstackにpushする
+       */
+      static void push_new_phase_time();
+
+      /**
+       * current_phase_time_を新しいphaseに更新する
+       */
+      static void update_phase_time();
+    
+      /**
+       * シミュレーションしているphaseがpoint_phaseであることを設定する
+       */  
+      static void is_point_phase();
+
+      /**
+       * output_timeから呼び出される関数
+       */
+      static void output_phase_time_node(phase_time_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num, bool nd_mode);
+
+      /**
+       * 新しいphase_time_sptr_tを作り返す
+       */
+      static phase_time_sptr_t make_new_phase_time();
+
+      /**
+       * phase_timeに保存されている内容を得る
+       */
+      static std::string get_phase_time_output(phase_time_sptr_t &node);
+      
     private:
       /**
        * 測定開始時の値
@@ -76,17 +115,19 @@ namespace hydla{
       time_point_t start_point_;
 
       /**
-       * 1ケースの時間を保持する構造体
+       * phase_timeのroot
        */
-      //      static std::vector<CaseTime> pt_;
+      static phase_time_sptr_t phase_time_root_;
 
+      /**
+       * 次にシミュレーションするphase_time_sptr_tを入れておくスタック
+       */
+      static std::stack< phase_time_sptr_t > phase_time_stack_;
 
-      static std::vector<elapsed_time_t> pp_calculate_closure_time_;
-      static std::vector<elapsed_time_t> pp_simulation_time_;
-      static std::vector<elapsed_time_t> ip_calculate_closure_time_;
-      static std::vector<elapsed_time_t> ip_simulation_time_;
-
-
+      /**
+       * シミュレーション中のPhaseに対応するphase_time_sptr_t
+       */
+      static phase_time_sptr_t current_phase_time_;
 
     };
   }  //  namespace timer

@@ -8,7 +8,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-
+#include "Timer.h"
 #include "Logger.h"
 #include "VariableMap.h"
 #include "PhaseResult.h"
@@ -50,12 +50,15 @@ public:
     HYDLA_LOGGER_PHASE("%% current time:", state->current_time);
     HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->parent->variable_map);
     HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->parameter_map);
+   
+    hydla::timer::Timer phase_timer;
     
     phase_result_sptrs_t phases; 
     bool has_next = false;
     is_safe_ = true;
     variable_map_t time_applied_map;
     if(state->phase == PointPhase){
+      if(opts_->time_measurement) hydla::timer::Timer::is_point_phase();
       time_applied_map = apply_time_to_vm(state->parent->variable_map, state->current_time);
     }
     //TODO:exclude_error‚ª–³Œø‚É‚È‚Á‚Ä‚é
@@ -95,6 +98,7 @@ public:
         state->module_set_container->mark_current_node();
       }
       if(phases.size() > 1){
+	if(opts_->time_measurement) phase_timer.count_time("Phase");
         return phases;
       }
       
@@ -107,6 +111,7 @@ public:
       state->cause_of_termination = simulator::INCONSISTENCY;
       state->parent->children.push_back(state);
     }
+    if(opts_->time_measurement) phase_timer.count_time("Phase");
     return phases;
   }
   

@@ -78,6 +78,7 @@ void hydla_main(int argc, char* argv[])
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
 
+  if(po.count("tm")) Timer::init_timer();
   Timer main_timer;
   
   std::string area_string(po.get<std::string>("debug"));
@@ -144,10 +145,8 @@ void hydla_main(int argc, char* argv[])
   }
 
   if(po.count("tm")){
-    Timer::output_time();
-    std::cout << "[main] Finish Time : ";
-    main_timer.elapsed();
-    std::cout << std::endl;
+    Timer::output_time(po.count("nd"));
+    main_timer.elapsed("Finish Time");
   }
 
 }
