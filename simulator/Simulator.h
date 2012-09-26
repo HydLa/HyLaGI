@@ -198,10 +198,10 @@ public:
         if(is_in_progress){
           sstr << "time\t: " << result.current_time << "->" << result.end_time << "\n";
         }else{
-          if(result.children.empty() || result.cause_of_termination == TIME_LIMIT){
+          if(result.cause_of_termination == TIME_LIMIT){
             end_time = opts_->max_time;
           }else{
-            end_time = result.children[0]->current_time.get_string();
+            end_time = result.end_time.get_string();
           }
           sstr << "time\t: " << result.current_time << "->" << end_time << "\n";
         }
@@ -328,6 +328,11 @@ public:
         case simulator::TIME_LIMIT:
           output_parameter_map(node->parameter_map);
           std::cout << "# time ended\n" ;
+          break;
+          
+        case simulator::STEP_LIMIT:
+          output_parameter_map(node->parameter_map);
+          std::cout << "# step ended\n" ;
           break;
           
         case simulator::NOT_UNIQUE_IN_INTERVAL:

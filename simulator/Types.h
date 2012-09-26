@@ -80,6 +80,7 @@ typedef struct Opts_ {
  */
 typedef enum{
   TIME_LIMIT,
+  STEP_LIMIT,
   SOME_ERROR,
   INCONSISTENCY,
   ASSERTION,
