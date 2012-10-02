@@ -10,6 +10,8 @@
 #include "./VariableMap.h"
 #include "./Types.h"
 
+#include "Timer.h"
+
 namespace hydla {
 namespace simulator {
 
@@ -29,6 +31,7 @@ struct PhaseResult {
   typedef VariableMap<parameter_t*, range_t>                parameter_map_t;
   typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
   typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
+
 
   Phase                     phase;
   int id;
@@ -53,6 +56,12 @@ struct PhaseResult {
   phase_result_sptrs_t children;
   /// 前のフェーズ
   phase_result_sptr_t parent;
+
+  /// フェーズの処理にかかった時間
+  timer::Timer phase_timer;
+  /// フェーズの処理内でcalculate_closureにかかった時間
+  timer::Timer calculate_closure_timer;
+
 };
 
 

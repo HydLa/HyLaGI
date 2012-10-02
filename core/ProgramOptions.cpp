@@ -70,7 +70,12 @@ void ProgramOptions::init_descriptions()
     
     ("in", "interactive mode")
 
-    ("tm", "time measurement")
+    ("tm", 
+     value<std::string>()->default_value("n"),
+     "time measurement:\n"
+     "  n - not measured\n"
+     "  s - output standard format\n"
+     "  c - output csv format\n")
     
     ("output-format,f", 
      value<std::string>()->default_value("t"), 

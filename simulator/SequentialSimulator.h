@@ -40,8 +40,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
   {
     std::string error_str;
     while(!state_stack_.empty()) {
-      if(Simulator<phase_result_t>::opts_->time_measurement)
-	hydla::timer::Timer::update_phase_time();
+
       phase_result_sptr state(pop_phase_result());
       bool consistent;
 
@@ -53,6 +52,7 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
       try{
         state->module_set_container->reset(state->visited_module_sets);
         phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase(state, consistent);
+
         if(!phases.empty()){
           if(Simulator<phase_result_t>::opts_->nd_mode){
             for(typename phase_result_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
@@ -62,7 +62,6 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
               else{
                 (*it)->module_set_container = (*it)->parent->module_set_container;
               }
-	      if(Simulator<phase_result_t>::opts_->time_measurement) hydla::timer::Timer::push_new_phase_time();
               push_phase_result(*it);
             }
           }else{
@@ -71,7 +70,6 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
             }else{
               phases[0]->module_set_container = phases[0]->parent->module_set_container;
             }
-	      if(Simulator<phase_result_t>::opts_->time_measurement) hydla::timer::Timer::push_new_phase_time();
             push_phase_result(phases[0]);
           }
         }
@@ -85,6 +83,9 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
     }
     else{
       Simulator<phase_result_t>::output_result_tree();
+    }
+    if(Simulator<phase_result_t>::opts_->time_measurement){
+      Simulator<phase_result_t>::output_result_tree_time();
     }
     std::cout << error_str;
   }
@@ -100,6 +101,8 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
       state->current_time = value_t("0");
       state->module_set_container = Simulator<phase_result_t>::msc_original_;
       state->parent = Simulator<phase_result_t>::result_root_;
+      state->phase_timer.reset();
+      state->calculate_closure_timer.reset();
       push_phase_result(state);
   }
 

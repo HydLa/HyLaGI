@@ -52,6 +52,11 @@ typedef enum OutputFormat_ {
   fmtNInterval,
 } OutputFormat;
   
+typedef enum TimeOutputFormat_ {
+  tFmtNot = 0,
+  tFmtStd,
+  tFmtCsv,
+} TimeOutputFormat;
 
 typedef struct Opts_ {
   std::string mathlink;
@@ -60,7 +65,7 @@ typedef struct Opts_ {
   int max_step;
   bool nd_mode;
   bool interactive_mode;
-  bool time_measurement;
+  TimeOutputFormat time_measurement;
   bool profile_mode;
   bool parallel_mode;
   OutputFormat output_format;

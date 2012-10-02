@@ -39,12 +39,21 @@ void setup_symbolic_simulator_opts(Opts& opts)
     // exit(-1);
   }
 
+  if(po.get<std::string>("tm") == "n") {
+    opts.time_measurement = tFmtNot;
+  } else if(po.get<std::string>("tm") == "s") {
+    opts.time_measurement = tFmtStd;
+  } else if(po.get<std::string>("tm") == "c") {
+    opts.time_measurement = tFmtCsv;
+  } else {
+    throw std::runtime_error(std::string("invalid option - time measurement"));
+  }
+
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("mathlink") + " -mathlink'";
   opts.debug_mode    = po.get<std::string>("debug")!="";
   opts.max_time      = po.get<std::string>("time");
   opts.max_step      = po.get<int>("step");
   opts.nd_mode       = po.count("nd")>0;
-  opts.time_measurement = po.count("tm")>0;
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.profile_mode  = po.count("profile")>0;
