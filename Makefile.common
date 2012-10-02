@@ -11,7 +11,7 @@ LN       := ln #@LN@
 
 LIBS += -lboost_system
 
-CXX_OPT  += -Wall --input-charset=cp932 -O2 -g #-pg
+CXX_OPT  += -Wall --input-charset=cp932 -O2 #-pg
 
 ARFLAGS  := cru
 CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)

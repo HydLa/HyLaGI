@@ -311,7 +311,7 @@ public:
       case tFmtCsv:
 	if(case_num == 1){
 	  std::cout << "Simulation Time,";
-	  for(int i = 1; i < phase_num-1; i++){
+	  for(int i = 1; i < phase_num; i++){
 	    std::cout << "PP" << i << "-Calculate Closure Time,";
 	    std::cout << "PP" << i << "-Phase Time,";
 	    std::cout << "IP" << i << "-Calculate Closure Time,";
@@ -364,7 +364,7 @@ public:
 	sstr << "Phase Time             : " << node->phase_timer.get_time_string() << " s\n\n";
 	break;
       case tFmtCsv:
-	phase_num++;
+	if(node->phase==PointPhase) phase_num++;
 	sstr << node->calculate_closure_timer.get_time_string() << ",";
 	sstr << node->phase_timer.get_time_string() << ",";
 	break;
