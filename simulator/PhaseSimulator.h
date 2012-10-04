@@ -102,9 +102,8 @@ public:
       }
       if(phases.size() > 1){
 	if(opts_->time_measurement){
-	  typename phase_result_sptrs_t::reverse_iterator rit = state->parent->children.rbegin();
-	  for(; rit != state->parent->children.rend() && (*rit)->phase_timer.is_zero(); rit++){
-	    (*rit)->phase_timer.count_time();
+	  for(typename phase_result_sptrs_t::iterator it = state->parent->children.begin(); it != state->parent->children.end(); it++){
+	    if((*it)->id == state->id) (*it)->phase_timer.count_time();
 	  }
 	}
         return phases;
@@ -119,9 +118,8 @@ public:
       state->parent->children.push_back(state);
     }
     if(opts_->time_measurement){
-      typename phase_result_sptrs_t::reverse_iterator rit = state->parent->children.rbegin();
-      for(; rit != state->parent->children.rend() && (*rit)->phase_timer.is_zero(); rit++){
-	(*rit)->phase_timer.count_time();
+      for(typename phase_result_sptrs_t::iterator it = state->parent->children.begin(); it != state->parent->children.end(); it++){
+	if((*it)->id == state->id) (*it)->phase_timer.count_time();
       }
     }
     return phases;

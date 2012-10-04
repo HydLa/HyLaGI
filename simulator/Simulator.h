@@ -290,6 +290,23 @@ public:
     typename phase_result_sptrs_t::iterator it = result_root_->children.begin(), end = result_root_->children.end();
     int i=1, j=1;
     std::cout << "#------Simulation Time------\n";
+    if(opts_->time_measurement == tFmtCsv){
+      std::stack<std::pair<phase_result_sptr_t,int> > tmp;
+      typename phase_result_sptrs_t::iterator check_it = it;
+      for(;check_it!=end;check_it++) tmp.push(std::pair<phase_result_sptr_t,int>(*it,1));
+      while(!tmp.empty()){
+	std::pair<phase_result_sptr_t,int> check_node = tmp.top();
+	tmp.pop();
+	if(check_node.first->children.size() == 0){
+	  if(j < check_node.second) j = check_node.second;
+	}else{
+	  typename phase_result_sptrs_t::iterator tmp_it = check_node.first->children.begin(), tmp_end = check_node.first->children.end();
+	  int plus = 0;
+	  if(check_node.first->phase == PointPhase) plus = 1;
+	  for(;tmp_it!=tmp_end;tmp_it++) tmp.push(std::pair<phase_result_sptr_t,int>(*tmp_it,check_node.second+plus));
+	}
+      }
+    }
     for(;it!=end;it++){
       std::vector<std::string> result;
       output_result_node_time(*it, result, i, j);
@@ -320,7 +337,7 @@ public:
 	  std::cout << "\n";
 	}
 	if(opts_->nd_mode){
-	  std::cout << "#---------Case " << case_num++ << "---------" << ",";
+	  std::cout << "Case " << case_num++ << ",";
 	} else {
 	  std::cout << ",";
 	}
@@ -364,7 +381,6 @@ public:
 	sstr << "Phase Time             : " << node->phase_timer.get_time_string() << " s\n\n";
 	break;
       case tFmtCsv:
-	if(node->phase==PointPhase) phase_num++;
 	sstr << node->calculate_closure_timer.get_time_string() << ",";
 	sstr << node->phase_timer.get_time_string() << ",";
 	break;
