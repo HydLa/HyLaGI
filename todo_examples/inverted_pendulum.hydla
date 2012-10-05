@@ -1,0 +1,19 @@
+LAW(m,M,L,g)<=>[](
+th'' = m*L*(m+M)*g/(m*L*L/3*(m+M)+m*M*L*L)*th -
+m*L/(m*L*L/3*(m+M)+m*M*L*L)*u
+& x'' = -m*m*L*L*g/(m*L*L/3*(m+M)+m*M*L*L)*th
++(m*L*L/3+m*L*L)/(m*L*L/3*(m+M)+m*M*L*L)*u
+).
+
+SR <=> [](th- =  3/100 & s-=0 => s=1 & t=0).
+SL <=> [](th- = -3/100 & s-=0 => s=2 & t=0).
+SN <=>[]((th- =  3/100 & s-=1) | (th- = -3/100 & s-=2) => s=0 & t=0).
+INIT(iniTH,iniX) <=> th=iniTH &  x=iniX  & th'=0 & x'=0 & t=0 & s=0 &
+u=0.
+S<=> [](s'=0).
+U<=> [](u'=0).
+T<=> [](t'=1).
+TURN1(tempU) <=> [](s-= 1 & (t->=1/100) => u=tempU). 
+TURN2(tempU) <=> [](s-= 2 & (t->=1/100) => u=tempU).  
+TURN0        <=> [](s-= 0 & (t->=1/100) => u= 0).
+LAW(1,1,1,10),(S,T) << (SR,SL,SN),INIT(1/100,0),U << (TURN1(15),TURN2(-15),TURN0).

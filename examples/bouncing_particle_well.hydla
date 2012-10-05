@@ -1,0 +1,13 @@
+// bouncing particle into a well
+
+INIT <=> y = 20 & y' = 0 & x = 0 & 0 < x' & 0 < edge < 10 & [](edge' =
+0).
+FALL <=> [](y'' = -10).
+XMOVE <=> [](x'' = 0).
+XBOUNCE <=> []((x- = edge | x- = 10) & y- < 10 => x' = -x'-). 
+BOUNCE <=> [](y- = 0 | (x- < edge | x- > 10) & y- = 10 => y' =
+-(4/5)*y'-).
+
+ASSERT(!(y > 10 & x > 10)).
+
+INIT, FALL << BOUNCE, XMOVE << XBOUNCE.
