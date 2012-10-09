@@ -264,11 +264,12 @@ publicMethod[
     {sol, tStore, tVars, ret},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
-    If[Head[sol] =!= List,
-      sol,
-      tVars = getTimeVars[vars];
-      tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
-      simplePrint[tStore];
+    tVars = getTimeVars[vars];
+    tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
+    simplePrint[tStore];
+    If[Length[Select[tStore, (hasVariable[ #[[2]] ])&, 1] ] > 0,
+      (* 右辺に変数名が残っている，つまり値が完全にtの式になっていない変数が出現した場合はunderConstraintを返す *)
+      underConstraint,
       ret = {convertExprs[tStore]};
       debugPrint["ret after convert", ret];
       ret = ruleOutException[ret];
