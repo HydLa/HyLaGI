@@ -5,7 +5,10 @@
 #include "Logger.h"
 #include "version.h"
 //#include <ncurses.h>
+
+#ifndef _MSC_VER
 #include <curses.h>
+#endif
 using namespace std;
 using namespace hydla::logger;
 
@@ -331,6 +334,7 @@ namespace hydla {
               "write -- Rewrite selected variable",
               "print -- Display a variety of information"
             };
+#ifndef _MSC_VER
             initscr(); cbreak(); noecho();
             while((ch = getch()) != 'q'){
               mvaddstr(0, 0, "Push [q] to quit.");
@@ -342,6 +346,7 @@ namespace hydla {
               }
             }
             endwin();
+#endif
             return 0;
           }
           /*
