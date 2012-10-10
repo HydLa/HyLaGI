@@ -2,6 +2,7 @@
 #define _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
 
 #include "Simulator.h"
+#include "SymbolicSimulator.h"
 #include "Logger.h"
 #include "version.h"
 //#include <ncurses.h>
@@ -35,6 +36,8 @@ namespace hydla {
           typedef std::list<variable_t>                            variable_set_t;
           typedef std::list<parameter_t>                           parameter_set_t;
           typedef value_t                                          time_value_t;
+          typedef simulator::ValueRange<value_t>         value_range_t;
+          typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
 
 
           InteractiveSimulator(Opts &opts):Simulator<phase_result_t>(opts){
@@ -60,6 +63,7 @@ namespace hydla {
                   exit = interactivesimulate(state);
                 }
 
+                /*{{{ test code ïœêîÇíËêîÇ…ÉJÉGÉã
                 variable_map_t vm = phases[0]->parent->variable_map;
                 phase_result_t result = *phases[0]->parent;
                 vm = result.variable_map;
@@ -74,6 +78,40 @@ namespace hydla {
                 }
                 std::cout << "++++++++++-------"  << std::endl;
                 phases[0]->parent->variable_map = vm;
+                //}}}*/
+                //*/{{{ paramete ì±ì¸
+                if(state->phase == PointPhase){
+                  parameter_map_t pm = phases[0]->parent->parameter_map;
+                  phase_result_sptr &result = phases[0]->parent;
+                  variable_map_t vm = result->variable_map;
+                  typename parameter_map_t::const_iterator it  = pm.begin();
+                  typename parameter_map_t::const_iterator end = pm.end();
+                  typename variable_map_t::const_iterator v_it  = vm.begin();
+                  //typename variable_map_t::const_iterator v_end = vm.end();
+                  value_t lowvalue("9");
+                  value_t upvalue("11");
+                  value_range_t wadarange;
+                  wadarange.set_upper_bound(upvalue,false);
+                  wadarange.set_lower_bound(lowvalue,false);
+                  parameter_set_t parameter_set;
+                  parameter_t param(v_it->first, phases[0]);
+                  parameter_set_.push_front(param);
+                  pm.set_variable(&(parameter_set_.front()), wadarange);
+                  //vm.set_variable(variable, value_t(node_sptr(new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
+                  cout << "parameter change id :" << phases[0]->id << endl;
+                  vm.set_variable(v_it->first, value_t(node_sptr(new Parameter(v_it->first->get_name(), v_it->first->get_derivative_count(), phases[0]->id))));
+                  //phases[0]->parent->variable_map = shift_variable_map_time(vm,phases[0]->current_time);
+                  //phases[0]->parent->variable_map = shift_variable_map_time(result->variable_map, result->current_time);
+                  //phases[0]->parent->variable_map = shift_variable_map_time(result->variable_map, result->current_time);
+                  phases[0]->parent->parameter_map = pm;
+
+                  std::cout << "-------parameter test--------" << std::endl;
+                  for(; it!=end; ++it) {
+                    std::cout << *(it->first) << "\t: " << it->second << std::endl;
+                  }
+                  std::cout << "-------parameter test--------"  << std::endl;
+                }
+                //}}}*/
 
                 std::cout << get_state_output(*phases[0]->parent,0,1) << std::endl;
                 //std::cout << "size" << phases.size() << std::endl;
@@ -116,6 +154,21 @@ namespace hydla {
             }
           }
 
+          /*
+          variable_map_t shift_variable_map_time(const variable_map_t& vm, const time_t &time){
+            variable_map_t shifted_vm;
+            typename variable_map_t::const_iterator it  = vm.begin();
+            typename variable_map_t::const_iterator end = vm.end();
+            for(; it!=end; ++it) {
+              if(it->second.is_undefined())
+                shifted_vm.set_variable(it->first, it->second);
+              else
+                shifted_vm.set_variable(it->first, solver_->shift_expr_time(it->second, time));
+            }
+            return shifted_vm;
+          }
+          */
+
           virtual void initialize(const parse_tree_sptr& parse_tree){
             Simulator<phase_result_t>::initialize(parse_tree);
             //Simulator::initialize(parse_tree);
@@ -154,6 +207,8 @@ namespace hydla {
             return state;
           }
 
+          int change_parameter(){
+          }
           /*
            * interactiveÇ…simulate
            * ì¸óÕÇéÛïtÇØÇªÇÍÇºÇÍÇÃèàóùÇ…îÚÇŒÇ∑
@@ -421,6 +476,7 @@ namespace hydla {
 
           bool is_safe_;
           std::vector<phase_result_sptr> all_state_;
+          boost::shared_ptr<solver_t> solver_;
       };
 
   } // simulator

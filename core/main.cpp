@@ -81,6 +81,8 @@ void hydla_main(int argc, char* argv[])
   Timer main_timer;
   
   std::string area_string(po.get<std::string>("debug"));
+  //std::string area_string("a");
+  std::cout <<  area_string << ":::area_string:::" << std::endl;
   if(area_string!=""){                 // デバッグ出力
     Logger::instance().set_log_level(Logger::Debug);
     if(area_string.find('a') != std::string::npos){
