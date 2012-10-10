@@ -301,7 +301,6 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
         throw SolveError("invalid value");
       }
       HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
-      //std::cout << tmp_range << std::endl;
       map.set_variable(variable_ptr, tmp_range);
     }
     create_result.result_maps.push_back(map);
