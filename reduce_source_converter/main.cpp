@@ -69,13 +69,13 @@ int main(int argc, char *argv[])
   std::cout <<
     "#include <sstream>\n"
     "#include \"" << argv[1] << ".h\"\n\n"
-	"const std::string " << argv[1] << "() {\n"
-	"  std::ostringstream s; \n"
-	"  s\n";
+        "const std::string " << argv[1] << "() {\n"
+        "  std::ostringstream s; \n"
+        "  s\n";
   conv();
   std::cout << 
     ";\n\n"
-	"  return s.str(); \n"
+        "  return s.str(); \n"
     "}";
 
   return 0;
