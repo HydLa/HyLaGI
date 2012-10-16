@@ -337,14 +337,14 @@ namespace hydla {
       solver_->reset(vm, state->parameter_map);
 
       if(opts_->time_measurement){
-	state->calculate_closure_timer.restart();
+        state->calculate_closure_timer.restart();
       }
 
       //•Â•ïŒvŽZ
       CalculateClosureResult result = calculate_closure(state,ms,ea,positive_asks,negative_asks);
       
       if(opts_->time_measurement){
-      	state->calculate_closure_timer.count_time();
+        state->calculate_closure_timer.count_time();
       }
 
       if(result.size() != 1){
@@ -376,8 +376,8 @@ namespace hydla {
         
         branch_state->parent->children.push_back(branch_state);
         new_state->parent = branch_state;
-	new_state->phase_timer.reset();
-	new_state->calculate_closure_timer.reset();
+        new_state->phase_timer.reset();
+        new_state->calculate_closure_timer.reset();
 
         if(is_safe_){
           phases.push_back(new_state);
@@ -405,14 +405,14 @@ namespace hydla {
       expanded_always_t ea(state->expanded_always);
 
       if(opts_->time_measurement){
-	state->calculate_closure_timer.restart();
+        state->calculate_closure_timer.restart();
       }
 
       //•Â•ïŒvŽZ
       CalculateClosureResult result = calculate_closure(state,ms, ea,positive_asks,negative_asks);
 
       if(opts_->time_measurement){
-	state->calculate_closure_timer.count_time();
+        state->calculate_closure_timer.count_time();
       }
 
       if(result.size() != 1){
@@ -537,8 +537,8 @@ namespace hydla {
             solver_->simplify(new_state->current_time);
             new_state->parameter_map = branch_state->parameter_map;
             new_state->parent = branch_state;
-	    new_state->phase_timer.reset();
-	    new_state->calculate_closure_timer.reset();
+            new_state->phase_timer.reset();
+            new_state->calculate_closure_timer.reset();
             phases.push_back(new_state);
           }else{
             branch_state->cause_of_termination = simulator::TIME_LIMIT;

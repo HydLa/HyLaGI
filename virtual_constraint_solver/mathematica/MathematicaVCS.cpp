@@ -623,11 +623,11 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     if(ret.find("{") == -1){
       parameter = ret.substr(ret.find("[")+1,ret.find("]")-ret.find("[")-1);
       if(parameter.find("`") == -1) {
-	return parameter;
+        return parameter;
       }else{
-	//処理できる形式に変形
-	ret = "Interval[{"+parameter.substr(0,precision+5)+", "+parameter.substr(0,precision+5)+"}]";
-	parameter = parameter.substr(parameter.find_last_of(".")+1);
+        //処理できる形式に変形
+        ret = "Interval[{"+parameter.substr(0,precision+5)+", "+parameter.substr(0,precision+5)+"}]";
+        parameter = parameter.substr(parameter.find_last_of(".")+1);
       }
     }
 
@@ -640,31 +640,31 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     if(ret.find("-")!=-1) {
       ret.erase(ret.find("-"),1);
       if(ret.find("-")!=-1) {
-	ret.erase(ret.find("-"),1);
-	//負の区間 上端と下端のどちらを丸めるか
-	sign = 'n';
+        ret.erase(ret.find("-"),1);
+        //負の区間 上端と下端のどちらを丸めるか
+        sign = 'n';
       }else{
-	//[負,正]の区間
-	sign = 'c';
+        //[負,正]の区間
+        sign = 'c';
       }
     }
     //下端を取り出す
     if(ret.find("}")-ret.find("{")-2>precision*2){
       for(int i=ret.find("{")+1;i<ret.find(",")-1;i++){
-	if(ret.at(i)!='0' &&  ret.at(i)!='.') {
-	  if(ret.substr(ret.find("{")+1,pre).find(".")!=-1) pre++;
-	  lower = ret.substr(ret.find("{")+1,pre);
-	  break;
-	}else if(ret.at(i) == '0') pre++;
+        if(ret.at(i)!='0' &&  ret.at(i)!='.') {
+          if(ret.substr(ret.find("{")+1,pre).find(".")!=-1) pre++;
+          lower = ret.substr(ret.find("{")+1,pre);
+          break;
+        }else if(ret.at(i) == '0') pre++;
       }
       pre = precision;
       //上端を取り出す
       for(int i=ret.find(",")+2;i<ret.length();i++){
-	if(ret.at(i)!='0' &&  ret.at(i)!='.') {
-	  if(ret.substr(ret.find(",")+2,pre).find(".")!=-1) pre++;
-	  upper = ret.substr(ret.find(",")+2,pre);
-	  break;
-	}else if(ret.at(i) == '0') pre++;
+        if(ret.at(i)!='0' &&  ret.at(i)!='.') {
+          if(ret.substr(ret.find(",")+2,pre).find(".")!=-1) pre++;
+          upper = ret.substr(ret.find(",")+2,pre);
+          break;
+        }else if(ret.at(i) == '0') pre++;
       }
 
       //precision＋１桁目を下端は切り捨て、上端は切り上げ
@@ -693,24 +693,24 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     //TODO:"[0.9999,1.000]"を"0.999[9,10]"のように表示させる
     while(true){
       if(lower.at(loc)!=upper.at(loc)) {
-	ret = lower.substr(0,loc);
-	lower = lower.substr(loc);
-	upper = upper.substr(loc);
+        ret = lower.substr(0,loc);
+        lower = lower.substr(loc);
+        upper = upper.substr(loc);
 
-	if(lowex.compare(upex)==0){
-	  ret = ret + "[" + lower + "," + upper + "]" + lowex;
-	  break;
-	}else ret = ret + "[" + lower + lowex + "," + upper + upex + "]";
-	break;
+        if(lowex.compare(upex)==0){
+          ret = ret + "[" + lower + "," + upper + "]" + lowex;
+          break;
+        }else ret = ret + "[" + lower + lowex + "," + upper + upex + "]";
+        break;
       }
       loc++;
       //もしも全て一致している場合はどちらか表示(ありえないはず)
       if(loc > lower.length()-1){
-	ret = lower;
-	break;
+        ret = lower;
+        break;
       }else if(loc > upper.length()-1) {
-	ret = upper;
-	break;
+        ret = upper;
+        break;
       }
     }
 

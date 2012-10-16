@@ -295,16 +295,16 @@ public:
       typename phase_result_sptrs_t::iterator check_it = it;
       for(;check_it!=end;check_it++) tmp.push(std::pair<phase_result_sptr_t,int>(*it,1));
       while(!tmp.empty()){
-	std::pair<phase_result_sptr_t,int> check_node = tmp.top();
-	tmp.pop();
-	if(check_node.first->children.size() == 0){
-	  if(j < check_node.second) j = check_node.second;
-	}else{
-	  typename phase_result_sptrs_t::iterator tmp_it = check_node.first->children.begin(), tmp_end = check_node.first->children.end();
-	  int plus = 0;
-	  if(check_node.first->phase == PointPhase) plus = 1;
-	  for(;tmp_it!=tmp_end;tmp_it++) tmp.push(std::pair<phase_result_sptr_t,int>(*tmp_it,check_node.second+plus));
-	}
+        std::pair<phase_result_sptr_t,int> check_node = tmp.top();
+        tmp.pop();
+        if(check_node.first->children.size() == 0){
+          if(j < check_node.second) j = check_node.second;
+        }else{
+          typename phase_result_sptrs_t::iterator tmp_it = check_node.first->children.begin(), tmp_end = check_node.first->children.end();
+          int plus = 0;
+          if(check_node.first->phase == PointPhase) plus = 1;
+          for(;tmp_it!=tmp_end;tmp_it++) tmp.push(std::pair<phase_result_sptr_t,int>(*tmp_it,check_node.second+plus));
+        }
       }
     }
     for(;it!=end;it++){
@@ -321,29 +321,29 @@ public:
     
       switch(opts_->time_measurement){
       case tFmtStd:
-	if(opts_->nd_mode){
-	  std::cout << "#---------Case " << case_num++ << "---------" << std::endl;
-	}
-	break;
+        if(opts_->nd_mode){
+          std::cout << "#---------Case " << case_num++ << "---------" << std::endl;
+        }
+        break;
       case tFmtCsv:
-	if(case_num == 1){
-	  std::cout << "Simulation Time,";
-	  for(int i = 1; i < phase_num; i++){
-	    std::cout << "PP" << i << "-Calculate Closure Time,";
-	    std::cout << "PP" << i << "-Phase Time,";
-	    std::cout << "IP" << i << "-Calculate Closure Time,";
-	    std::cout << "IP" << i << "-Phase Time,";
-	  }
-	  std::cout << "\n";
-	}
-	if(opts_->nd_mode){
-	  std::cout << "Case " << case_num++ << ",";
-	} else {
-	  std::cout << ",";
-	}
-	break;
+        if(case_num == 1){
+          std::cout << "Simulation Time,";
+          for(int i = 1; i < phase_num; i++){
+            std::cout << "PP" << i << "-Calculate Closure Time,";
+            std::cout << "PP" << i << "-Phase Time,";
+            std::cout << "IP" << i << "-Calculate Closure Time,";
+            std::cout << "IP" << i << "-Phase Time,";
+          }
+          std::cout << "\n";
+        }
+        if(opts_->nd_mode){
+          std::cout << "Case " << case_num++ << ",";
+        } else {
+          std::cout << ",";
+        }
+        break;
       default:
-	break;
+        break;
       }
 
       std::vector<std::string>::const_iterator r_it = result.begin(), r_end = result.end();
@@ -353,16 +353,16 @@ public:
 
       switch(opts_->time_measurement){
       case tFmtStd:
-	sstr << "---------IP---------\n";
-	sstr << "Calculate Closure Time : " << node->calculate_closure_timer.get_time_string() << " s\n";
-	sstr << "Phase Time             : " << node->phase_timer.get_time_string() << " s\n";
-	break;
+        sstr << "---------IP---------\n";
+        sstr << "Calculate Closure Time : " << node->calculate_closure_timer.get_time_string() << " s\n";
+        sstr << "Phase Time             : " << node->phase_timer.get_time_string() << " s\n";
+        break;
       case tFmtCsv:
-	sstr << node->calculate_closure_timer.get_time_string() << ",";
-	sstr << node->phase_timer.get_time_string();
-	break;
+        sstr << node->calculate_closure_timer.get_time_string() << ",";
+        sstr << node->phase_timer.get_time_string();
+        break;
       default:
-	break;
+        break;
       }
 
       sstr << std::endl;
@@ -371,21 +371,21 @@ public:
     }else{
       switch(opts_->time_measurement){
       case tFmtStd:
-	if(node->phase==PointPhase) {
-	  sstr << "#---------" << phase_num++ << "---------\n";
-	  sstr << "---------PP---------\n";
-	} else {
-	  sstr << "---------IP---------\n";
-	}
-	sstr << "Calculate Closure Time : " << node->calculate_closure_timer.get_time_string() << " s\n";
-	sstr << "Phase Time             : " << node->phase_timer.get_time_string() << " s\n\n";
-	break;
+        if(node->phase==PointPhase) {
+          sstr << "#---------" << phase_num++ << "---------\n";
+          sstr << "---------PP---------\n";
+        } else {
+          sstr << "---------IP---------\n";
+        }
+        sstr << "Calculate Closure Time : " << node->calculate_closure_timer.get_time_string() << " s\n";
+        sstr << "Phase Time             : " << node->phase_timer.get_time_string() << " s\n\n";
+        break;
       case tFmtCsv:
-	sstr << node->calculate_closure_timer.get_time_string() << ",";
-	sstr << node->phase_timer.get_time_string() << ",";
-	break;
+        sstr << node->calculate_closure_timer.get_time_string() << ",";
+        sstr << node->phase_timer.get_time_string() << ",";
+        break;
       default:
-	break;
+        break;
       }
       result.push_back(sstr.str());
       typename phase_result_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
@@ -536,13 +536,13 @@ public:
       if(now_node->phase==IntervalPhase){
         variable_map_t vm = now_node->variable_map;
         if(out_tmp.str().empty()){
-	  prev_node_time = "0";
+          prev_node_time = "0";
           out_tmp << "Table[";
           out_tmp << "{";
         }else{
-	  phase_result_sptr_t tmp = now_node->parent;
-	  while(tmp->phase!=IntervalPhase) tmp = tmp->parent;
-	  prev_node_time = tmp->end_time.get_string();
+          phase_result_sptr_t tmp = now_node->parent;
+          while(tmp->phase!=IntervalPhase) tmp = tmp->parent;
+          prev_node_time = tmp->end_time.get_string();
           out_tmp << ",";
         }
         typename variable_map_t::const_iterator it = vm.begin();
@@ -557,7 +557,7 @@ public:
         out_tmp << ", ";
         out_tmp << now_node->end_time;
         out_tmp << "} ";
-	//        prev_node_time = now_node->end_time.get_string();
+        //        prev_node_time = now_node->end_time.get_string();
         if(now_node->cause_of_termination == simulator::ASSERTION)
           out_tmp << ", PlotStyle -> Dashed";
         out_tmp << "]"; //Plot
@@ -584,7 +584,7 @@ public:
         }
         out_tmp << "], "; //Table
         out_tmp << std::endl;
-	std::cout << out_tmp.str();
+        std::cout << out_tmp.str();
       }
       else{
         for(typename phase_result_sptrs_t::const_iterator it = now_node->children.begin(); it != now_node->children.end(); it++)

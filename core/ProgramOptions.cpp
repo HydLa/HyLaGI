@@ -18,7 +18,7 @@ ProgramOptions::~ProgramOptions()
 void ProgramOptions::init_descriptions()
 {
   options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:", 
-				   LINE_LENGTH);
+                                   LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "version")
@@ -135,8 +135,8 @@ void ProgramOptions::parse(int argc, char* argv[])
   positional_opt.add("input-file", -1);
 
   store(command_line_parser(argc, argv).
-	    options(cmdline_desc_).
-	    positional(positional_opt).run(), vm_);
+            options(cmdline_desc_).
+            positional(positional_opt).run(), vm_);
   notify(vm_);
 }
 

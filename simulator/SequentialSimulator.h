@@ -45,9 +45,9 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
       bool consistent;
 
         if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step){
-	  state->parent->cause_of_termination = simulator::STEP_LIMIT;
+          state->parent->cause_of_termination = simulator::STEP_LIMIT;
           continue;
-	}
+        }
 
       try{
         state->module_set_container->reset(state->visited_module_sets);

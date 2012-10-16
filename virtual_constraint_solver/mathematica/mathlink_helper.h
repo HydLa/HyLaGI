@@ -23,7 +23,7 @@ public:
   {}
 
 private:
-	std::string init(const std::string& msg, int code, const std::string &trace)
+        std::string init(const std::string& msg, int code, const std::string &trace)
   {
     std::stringstream s;
     s << "mathlink error: " << msg << " : " << code << "\n" << trace;
@@ -147,12 +147,12 @@ public:
   std::string get_symbol()
   {
     const char *s;
-	  if(!MLGetSymbol(&s)){
-	    throw MathLinkError("get_symbol", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
-	  }
-	  std::string sym(s);
-	  MLReleaseSymbol(s);
-	  return sym;
+          if(!MLGetSymbol(&s)){
+            throw MathLinkError("get_symbol", MLError(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
+          }
+          std::string sym(s);
+          MLReleaseSymbol(s);
+          return sym;
   }
 
   int put_string(const char* s) {

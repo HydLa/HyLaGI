@@ -101,11 +101,11 @@ public:
         state->module_set_container->mark_current_node();
       }
       if(phases.size() > 1){
-	if(opts_->time_measurement){
-	  for(typename phase_result_sptrs_t::iterator it = state->parent->children.begin(); it != state->parent->children.end(); it++){
-	    if((*it)->id == state->id) (*it)->phase_timer.count_time();
-	  }
-	}
+        if(opts_->time_measurement){
+          for(typename phase_result_sptrs_t::iterator it = state->parent->children.begin(); it != state->parent->children.end(); it++){
+            if((*it)->id == state->id) (*it)->phase_timer.count_time();
+          }
+        }
         return phases;
       }
       
@@ -119,7 +119,7 @@ public:
     }
     if(opts_->time_measurement){
       for(typename phase_result_sptrs_t::iterator it = state->parent->children.begin(); it != state->parent->children.end(); it++){
-	if((*it)->id == state->id) (*it)->phase_timer.count_time();
+        if((*it)->id == state->id) (*it)->phase_timer.count_time();
       }
     }
     return phases;

@@ -15,9 +15,9 @@ struct CommentGrammar : public grammar<CommentGrammar> {
     rule<S> comment;
 
     definition(CommentGrammar const& self) {
-      comment =	space_p |				// while space
+      comment = space_p |                               // while space
         comment_p("//") |       // '//'
-        comment_p("/*", "*/");	// '/* */'
+        comment_p("/*", "*/");  // '/* */'
     }
 
     rule<S> const& start() const {return comment;}

@@ -1504,15 +1504,15 @@ retunderconstraint___ := 3;
 
 procedure getf(x,lst)$
 if(lst={}) then nil
-	else if(x=lhs(first(lst))) then rhs(first(lst))
-		else getf(x,rest(lst));
+        else if(x=lhs(first(lst))) then rhs(first(lst))
+                else getf(x,rest(lst));
 
 procedure lgetf(x,llst)$
 %入力: 変数名, 等式のリストのリスト(ex. {{x=1,y=2},{x=3,y=4},...})
 %出力: 変数に対応する値のリスト
 if(llst={}) then {}
-	else if(rest(llst)={}) then getf(x,first(llst))
-		else getf(x,first(llst)) . {lgetf(x,rest(llst))};
+        else if(rest(llst)={}) then getf(x,first(llst))
+                else getf(x,first(llst)) . {lgetf(x,rest(llst))};
 
 procedure exDSolve(expr_, init_, vars_)$
 begin;
