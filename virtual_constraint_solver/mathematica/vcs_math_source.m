@@ -191,7 +191,7 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, pcons, vars,
   Module[
-    {sol, otherCons, tCons, hasTCons, necessaryTCons, parList,  cpTrue, cpFalse, trueMap, falseMap},
+    {sol, otherCons, tCons, hasTCons, necessaryTCons, parList, tmpPCons, cpTrue, cpFalse, trueMap, falseMap},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint,
@@ -205,7 +205,8 @@ publicMethod[
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
         tCons = sol[[1]] /. tCons;
         tCons = Select[applyList[tCons], (!hasVariable[#])&];
-        tCons = LogicalExpand[Reduce[And@@tCons && pcons, Reals]]
+        tmpPCons = If[getParameters[tCons] === {}, True, pcons];
+        tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals], Reduce::ztest1]]
       ];
       checkMessage;
 
@@ -220,8 +221,8 @@ publicMethod[
         necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
         
         simplePrint[necessaryTCons];
-        cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
-        cpFalse = Reduce[pcons && !cpTrue, Reals];
+        cpTrue = Quiet[Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas, Minimize::ztest}][[1]] == 0, Reals], Reduce::ztest1];
+        cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
 
         simplePrint[cpTrue, cpFalse];
 
@@ -533,7 +534,8 @@ integerString[expr_] := (
 (* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
 (* TODO:複素数の要素に対しても，任意精度への対応（文字列への変換とか）を行う *)
 
-convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list];
+(* convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list]; *)
+convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[#[[2]] ] } )&, list];
 
 
 (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
@@ -591,7 +593,7 @@ publicMethod[
     simplePrint[necessaryPCons];
     
     resultList = Quiet[Minimize[{t, (timeAppliedCauses) && necessaryPCons && t>0}, {t}], 
-                           {Minimize::wksol, Minimize::infeas}];
+                           {Minimize::wksol, Minimize::infeas, Minimize::ztest}];
     debugPrint["resultList after Minimize", resultList];
     If[Head[resultList] === Minimize, Message[calculateNextPointPhaseTime::mnmz]];
     checkMessage;
@@ -634,10 +636,13 @@ applyDSolveResult[exprs_, integRule_] := (
 );
 
 createIntegratedValue[variable_, integRule_] := (
-  Simplify[
-      variable /. Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule]
-             /. Derivative[n_][f_][t] :> D[f, {t, n}] 
-             /. x_[t] -> x
+  Module[
+    {tRemovedRule, ruleApplied, derivativeExpanded, tRemoved},
+    tRemovedRule = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule];
+    tRemoved = variable /. x_Symbol[t] -> x;
+    ruleApplied = tRemoved /. tRemovedRule;
+    derivativeExpanded = ruleApplied /. Derivative[n_][f_][t] :> D[f, {t, n}];
+    Simplify[derivativeExpanded]
   ]
 );
 
@@ -651,7 +656,7 @@ createIntegratedValue[variable_, integRule_] := (
   @param expr 時刻に関する変数についての制約
   @param initExpr 変数の初期値についての制約
   @return overConstraint | underConstraint | {各変数の値のルール，変数値が満たすべき制約（ルールに含まれているものは除く）} 
-  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．
+  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．そうしないとシミュレーションできない例題がある．
 *)
 
 exDSolve[expr_, initExpr_] :=
@@ -711,7 +716,9 @@ publicMethod[
   expr, time,
   Module[
     {appliedExpr},
-    appliedExpr = FullSimplify[(expr /. t -> time)];
+    (* FullSimplifyだと処理が重いが，SimplifyだとMinimize:ztestが出現しやすい *)
+    appliedExpr = (expr /. t -> time);
+    (* appliedExpr = FullSimplify[(expr /. t -> time)]; *)
     If[Element[appliedExpr, Reals] =!= False,
       integerString[appliedExpr],
       Message[applyTime2Expr::nrls, appliedExpr]
@@ -740,8 +747,16 @@ publicMethod[
  * 与えられたtの式をタイムシフト
  *)
 
+(*
 publicMethod[
   exprTimeShift,
   expr, time,
-  integerString[Simplify[expr /. t -> t - time ]]
+  integerString[FullSimplify[expr /. t -> t - time ]]
+];
+*)
+
+publicMethod[
+  exprTimeShift,
+  expr, time,
+  integerString[expr /. t -> t - time]
 ];
