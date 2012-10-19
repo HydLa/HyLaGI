@@ -87,7 +87,7 @@ public:
           HYDLA_LOGGER_PHASE("%% begin simulate_ms_interval");
           phase_result_sptrs_t tmp = simulate_ms_interval(ms, state, consistent);
           phases.insert(phases.begin(), tmp.begin(), tmp.end());
-          break;            
+          break;
         }
         default:
           assert(0);
@@ -168,6 +168,15 @@ public:
     variable_set_ = &v;
     parameter_set_ = &p;
     variable_map_ = &m;
+  }
+
+  virtual void set_parameter_set(parameter_t param)
+  {
+  }
+  virtual parameter_set_t get_parameter_set()
+  {
+    std::cout << "get param size" << parameter_set_->size() << std::endl;
+    return *parameter_set_;
   }
   
   

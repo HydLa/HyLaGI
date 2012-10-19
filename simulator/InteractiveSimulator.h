@@ -5,6 +5,8 @@
 #include "SymbolicSimulator.h"
 #include "Logger.h"
 #include "version.h"
+#include <sstream>
+#include <boost/algorithm/string.hpp>
 //#include <ncurses.h>
 
 #ifndef _MSC_VER
@@ -14,109 +16,60 @@ using namespace std;
 using namespace hydla::logger;
 
 namespace hydla {
-  namespace simulator {
+namespace simulator {
 
 
-    template<typename PhaseResultType>
-      class InteractiveSimulator:public Simulator<PhaseResultType>{
-        public:
-          typedef PhaseResultType                                   phase_result_t;
-          typedef typename boost::shared_ptr<phase_result_t>        phase_result_sptr;
-          typedef typename boost::shared_ptr<const phase_result_t>  phase_result_const_sptr;
-          typedef PhaseSimulator<PhaseResultType>                   phase_simulator_t;
-          typedef typename phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
-          typedef typename std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
+  template<typename PhaseResultType>
+    class InteractiveSimulator:public Simulator<PhaseResultType>{
+      public:
+        typedef PhaseResultType                                   phase_result_t;
+        typedef typename boost::shared_ptr<phase_result_t>        phase_result_sptr;
+        typedef typename boost::shared_ptr<const phase_result_t>  phase_result_const_sptr;
+        typedef PhaseSimulator<PhaseResultType>                   phase_simulator_t;
+        typedef typename phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
+        typedef typename std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
 
-          typedef typename phase_result_t::variable_map_t variable_map_t;
-          typedef typename phase_result_t::variable_t     variable_t;
-          typedef typename phase_result_t::parameter_t     parameter_t;
-          typedef typename phase_result_t::value_t        value_t;
-          typedef typename phase_result_t::parameter_map_t     parameter_map_t;
+        typedef typename phase_result_t::variable_map_t variable_map_t;
+        typedef typename phase_result_t::variable_t     variable_t;
+        typedef typename phase_result_t::parameter_t     parameter_t;
+        typedef typename phase_result_t::value_t        value_t;
+        typedef typename phase_result_t::parameter_map_t     parameter_map_t;
 
-          typedef std::list<variable_t>                            variable_set_t;
-          typedef std::list<parameter_t>                           parameter_set_t;
-          typedef value_t                                          time_value_t;
-          typedef simulator::ValueRange<value_t>         value_range_t;
-          typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
+        typedef std::list<variable_t>                            variable_set_t;
+        typedef std::list<parameter_t>                           parameter_set_t;
+        typedef value_t                                          time_value_t;
+        typedef simulator::ValueRange<value_t>         value_range_t;
+        typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
 
 
-          InteractiveSimulator(Opts &opts):Simulator<phase_result_t>(opts){
-          }
+        InteractiveSimulator(Opts &opts):Simulator<phase_result_t>(opts){
+        }
 
-          virtual ~InteractiveSimulator(){}
-          /**
-           * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
-           */
-          virtual void simulate(){
-            while(!state_stack_.empty()) {
-              phase_result_sptr state(pop_phase_result());
-              bool consistent;
-              int exit = 0;
-              try{
-                if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step)
-                  continue;
-                all_state_.push_back(state); 
-                state->module_set_container->reset(state->visited_module_sets);
-                phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase(state, consistent);
+        virtual ~InteractiveSimulator(){}
+        /**
+         * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
+         */
+        virtual void simulate(){
+          while(!state_stack_.empty()) {
+            phase_result_sptr state(pop_phase_result());
+            bool consistent;
+            int exit = 0;
+            try{
+              if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step)
+                continue;
+              all_state_.push_back(state); 
+              state->module_set_container->reset(state->visited_module_sets);
+              phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase(state, consistent);
 
-                if(state->phase == PointPhase){
-                  exit = interactivesimulate(state);
-                }
+              if(state->phase == PointPhase){
+                exit = interactivesimulate(state,phases[0]);
+              }
 
-                /*{{{ test code 変数を定数にカエル
-                variable_map_t vm = phases[0]->parent->variable_map;
-                phase_result_t result = *phases[0]->parent;
-                vm = result.variable_map;
-                typename variable_map_t::const_iterator it  = vm.begin();
-                typename variable_map_t::const_iterator end = vm.end();
-
-                value_t wadavalue("(9, 10)");
-                //vm.set_variable(it->first,wadavalue);
-                std::cout << "++++++++--------" << std::endl;
-                for(; it!=end; ++it) {
-                  std::cout << *(it->first) << "\t: " << it->second << std::endl;
-                }
-                std::cout << "++++++++++-------"  << std::endl;
-                phases[0]->parent->variable_map = vm;
-                //}}}*/
-                //*/{{{ paramete 導入
-                if(state->phase == PointPhase){
-                  parameter_map_t pm = phases[0]->parent->parameter_map;
-                  phase_result_sptr &result = phases[0]->parent;
-                  variable_map_t vm = result->variable_map;
-                  typename parameter_map_t::const_iterator it  = pm.begin();
-                  typename parameter_map_t::const_iterator end = pm.end();
-                  typename variable_map_t::const_iterator v_it  = vm.begin();
-                  //typename variable_map_t::const_iterator v_end = vm.end();
-                  value_t lowvalue("9");
-                  value_t upvalue("11");
-                  value_range_t wadarange;
-                  wadarange.set_upper_bound(upvalue,false);
-                  wadarange.set_lower_bound(lowvalue,false);
-                  parameter_set_t parameter_set;
-                  parameter_t param(v_it->first, phases[0]);
-                  parameter_set_.push_front(param);
-                  pm.set_variable(&(parameter_set_.front()), wadarange);
-                  //vm.set_variable(variable, value_t(node_sptr(new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-                  cout << "parameter change id :" << phases[0]->id << endl;
-                  vm.set_variable(v_it->first, value_t(node_sptr(new Parameter(v_it->first->get_name(), v_it->first->get_derivative_count(), phases[0]->id))));
-                  //phases[0]->parent->variable_map = shift_variable_map_time(vm,phases[0]->current_time);
-                  //phases[0]->parent->variable_map = shift_variable_map_time(result->variable_map, result->current_time);
-                  //phases[0]->parent->variable_map = shift_variable_map_time(result->variable_map, result->current_time);
-                  phases[0]->parent->parameter_map = pm;
-
-                  std::cout << "-------parameter test--------" << std::endl;
-                  for(; it!=end; ++it) {
-                    std::cout << *(it->first) << "\t: " << it->second << std::endl;
-                  }
-                  std::cout << "-------parameter test--------"  << std::endl;
-                }
-                //}}}*/
-
+              if(!phases.empty())
                 std::cout << get_state_output(*phases[0]->parent,0,1) << std::endl;
-                //std::cout << "size" << phases.size() << std::endl;
+              //std::cout << "size" << phases.size() << std::endl;
                 int selectcase = 0;
-                /* 変数変更ができるまでいったんコメントアウト できたら順番を考える
+                //* 変数変更ができるまでいったんコメントアウト できたら順番を考える
                 if(phases.size()>1){
                   std::cout << "branch off into "<< phases.size() << "cases" << std::endl;
                   std::cout << "-------------------------------------" << std::endl;
@@ -134,8 +87,10 @@ namespace hydla {
                     std::cin.clear();
                     std::cin.ignore( 1024, '\n' );
                   }
+                  std::cin.clear();
+                  std::cin.ignore( 1024, '\n' );
                 }
-                */
+                //*/
                 if(!phases.empty()){
                   if(consistent){
                     phases[selectcase]->module_set_container = Simulator<phase_result_t>::msc_no_init_;
@@ -144,6 +99,7 @@ namespace hydla {
                   }
                   push_phase_result(phases[selectcase]);
                 }
+
                 if(exit){
                   break;
                 }
@@ -152,6 +108,7 @@ namespace hydla {
                 HYDLA_LOGGER_REST(se.what());
               }
             }
+      Simulator<phase_result_t>::output_result_tree();
           }
 
           /*
@@ -208,6 +165,7 @@ namespace hydla {
           }
 
           int change_parameter(){
+            return 0;
           }
           /*
            * interactiveにsimulate
@@ -215,7 +173,7 @@ namespace hydla {
            * jを別メソッドに
            */
 
-          int interactivesimulate(phase_result_sptr& state){
+          int interactivesimulate(phase_result_sptr& state, phase_result_sptr& phase){
             //  change_variable_flag = false;
             Simulator<phase_result_t>::opts_->max_time = "100";
             std::string line;
@@ -256,7 +214,7 @@ namespace hydla {
                     {
                       cout << "jump to step "<<all_state_[i]->step+1 << " time:" << all_state_[i]->current_time << endl;
                       cout << "[debug] state size"<< all_state_.size() << "jump number" << i << endl;
-                      state = all_state_[i];
+                      phase = all_state_[i];
                       int j=0;
                       int delete_size = all_state_.size()-i;
                       for(j=0;j<delete_size;j++)
@@ -282,7 +240,7 @@ namespace hydla {
                        show_help();
                        return 0;
               case 'w':
-                       change_variables(state);
+                       change_variables(phase);
                        //change_variable_flag = 1;
                        return 0;
               case 'd':
@@ -408,16 +366,72 @@ namespace hydla {
            * 変数の変更
            * 区間値を入れる
            */
-          int change_variables(phase_result_sptr& state){ 
+          int change_variables(phase_result_sptr& phase){ 
             std::cout << "change variable " << std::endl;
-            std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++ " << std::endl;
-            variable_map_t vm = state->variable_map;
-            typename variable_map_t::const_iterator it  = vm.begin();
-            typename variable_map_t::const_iterator end = vm.end();
-            for(; it!=end; ++it) {
-              std::cout << *(it->first) << "\t: " << it->second << std::endl;
+            variable_map_t vm = phase->parent->variable_map;
+            //phase_result_t result = *phase->parent;
+            //vm = result.variable_map;
+            typename variable_map_t::const_iterator v_it  = vm.begin();
+            //v_itを選ぶ
+            string changevariable;
+            ostringstream name;
+            changevariable = excin<string>();
+            cout << changevariable << " : "<< changevariable.substr(0,1) <<endl;
+            for(;v_it!=vm.end();v_it++){
+              name.str("");
+              name << *(v_it->first);
+            cout << name.str() << " : "<< changevariable <<endl;
+              if( name.str() == changevariable)
+                break;
             }
-            std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++ " << std::endl;
+            cout << *(v_it->first) << endl;
+            string strvalue;
+            getline(cin,strvalue);
+            //後で関数化する
+            cout << strvalue << " : "<< strvalue.substr(0,1) <<endl;
+            if(strvalue.substr(0,1)!="(" & strvalue.substr(0,1)!="["){
+              value_t testvalue(strvalue);
+              vm.set_variable(v_it->first,testvalue);
+              std::cout << "--------" << std::endl;
+              for(v_it = vm.begin(); v_it!=vm.end(); ++v_it) {
+                std::cout << *(v_it->first) << "\t: " << v_it->second << std::endl;
+              }
+              std::cout << "--------"  << std::endl;
+              phase->parent->variable_map = vm;
+            }else{
+              std::cout << "parameter change" << std::endl;
+              parameter_map_t pm = phase->parent->parameter_map;
+              typename parameter_map_t::const_iterator it  = pm.begin();
+              bool upperflag = (strvalue.substr(0,0)=="[");
+              bool lowerflag = (strvalue.substr(0,strvalue.size())=="]");
+              string rangevalue = strvalue.substr(1,strvalue.size()-2);
+              vector<string> v;
+              boost::algorithm::split( v, rangevalue, boost::is_any_of(",") );
+              std::cout << v[0] << ":" <<v[1]<<endl;
+              value_t lowvalue(v[0]);
+              value_t upvalue(v[1]);
+              value_range_t testrange;
+              testrange.set_upper_bound(upvalue,upperflag);
+              testrange.set_lower_bound(lowvalue,lowerflag);
+              parameter_t param(v_it->first, phase->parent);
+              Simulator<phase_result_t>::phase_simulator_->set_parameter_set(param);
+              pm.set_variable(&param, testrange);
+              value_t pvalue = node_sptr(new Parameter(v_it->first->get_name(), v_it->first->get_derivative_count(),phase->parent->id));
+              vm.set_variable(v_it->first, pvalue);
+              cout << "parameter change id :" << phase->parent->id << endl;
+              phase->parent->variable_map = vm;
+              phase->parent->parameter_map = pm;
+
+              std::cout << "-------parameter test--------" << std::endl;
+              for(it = pm.begin(); it!=pm.end(); ++it) {
+                std::cout << *(it->first) << "\t: " << it->second << std::endl;
+              }
+              std::cout << "-------variable map  --------"  << std::endl;
+              for(v_it = vm.begin(); v_it!=vm.end(); ++v_it) {
+                std::cout << *(v_it->first) << "\t: " << v_it->second << std::endl;
+              }
+              std::cout << "-------parameter test--------"  << std::endl;
+            }
             return 0;
           }
           /*
@@ -432,6 +446,22 @@ namespace hydla {
            */
           int print(){
             return 0;
+          }
+          /*
+           * template mwthod for input 
+           */
+          template<typename T> T excin(){
+            T text;
+            while(1){
+                    std::cin >> text;
+                    if(!std::cin.fail())
+                      break;
+                    std::cin.clear();
+                    std::cin.ignore( 1024, '\n' );
+                  }
+            std::cin.clear();
+            std::cin.ignore( 1024, '\n' );
+            return text;
           }
 
           /**
@@ -477,7 +507,8 @@ namespace hydla {
           bool is_safe_;
           std::vector<phase_result_sptr> all_state_;
           boost::shared_ptr<solver_t> solver_;
-      };
+          boost::shared_ptr<PhaseSimulator<PhaseResultType> > phase_simulator_;
+    };
 
   } // simulator
 } // hydla

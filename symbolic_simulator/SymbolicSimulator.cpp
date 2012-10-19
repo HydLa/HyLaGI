@@ -80,6 +80,14 @@ namespace hydla {
       solver_->set_variable_set(*variable_set_);
       solver_->set_parameter_set(*parameter_set_);
     }
+    void SymbolicSimulator::set_parameter_set(parameter_t param){
+      parameter_set_->push_front(param);
+      //std::cout << "ss sps size : " << parameter_set_->size() << std::endl;
+      solver_->set_parameter_set(*parameter_set_);
+    }
+    parameter_set_t SymbolicSimulator::get_parameter_set(){
+      return *parameter_set_;
+    }
 
     
     void SymbolicSimulator::push_branch_states(phase_result_sptr &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){

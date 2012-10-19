@@ -38,6 +38,8 @@ public:
                               phase_result_sptr& state, bool& consistent);
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
+  virtual void set_parameter_set(parameter_t param);
+  virtual parameter_set_t get_parameter_set();
 
 private:
 
