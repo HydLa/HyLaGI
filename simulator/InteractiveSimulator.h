@@ -79,16 +79,8 @@ namespace simulator {
                   }
                   std::cout << "-------------------------------------" << std::endl;
                   std::cout << "-------------------------------------" << std::endl;
-                  while(1){
-                    std::cout << "input select case number" << std::endl;
-                    std::cin >> selectcase;
-                    if(!std::cin.fail())
-                      break;
-                    std::cin.clear();
-                    std::cin.ignore( 1024, '\n' );
-                  }
-                  std::cin.clear();
-                  std::cin.ignore( 1024, '\n' );
+                  message_ = "input select case number";
+                  selectcase = excin<int>(message_);
                 }
                 //*/
                 if(!phases.empty()){
@@ -176,7 +168,8 @@ namespace simulator {
           int interactivesimulate(phase_result_sptr& state, phase_result_sptr& phase){
             //  change_variable_flag = false;
             Simulator<phase_result_t>::opts_->max_time = "100";
-            std::string line;
+            string line;
+            cout << ">";
             getline(cin,line);
 
             switch(line[0]){
@@ -198,15 +191,8 @@ namespace simulator {
                     }
                   }
                   //debug}}}
-                  while(1){
-                    cout << "in mode jump test input step number" <<endl;
-                    std::cin >> target_step;
-                    if(!std::cin.fail())
-                      break;
-                    std::cin.clear();    // エラーをリセットします。
-                    std::cin.ignore(1024,'\n');    // 文字列を破棄します。
-                  }
-
+                  message_="input step number to jump";
+                  target_step = excin<int>(message_);
                   int i;
                   for(i=0;i<all_state_.size();i++)
                   {
@@ -224,7 +210,6 @@ namespace simulator {
                       }
                     }
                   }
-                  cin.ignore( 1024, '\n');
                   break;
                 }else
                 {
@@ -386,6 +371,7 @@ namespace simulator {
             }
             cout << *(v_it->first) << endl;
             string strvalue;
+            cout << ">";
             getline(cin,strvalue);
             //後で関数化する
             cout << strvalue << " : "<< strvalue.substr(0,1) <<endl;
@@ -450,19 +436,26 @@ namespace simulator {
           /*
            * template mwthod for input 
            */
-          template<typename T> T excin(){
+          template<typename T> T excin(string message=""){
             T text;
             while(1){
-                    std::cin >> text;
-                    if(!std::cin.fail())
-                      break;
-                    std::cin.clear();
-                    std::cin.ignore( 1024, '\n' );
-                  }
+              if(!message.empty())
+                cout << message << endl;
+              cout << ">" ;
+              std::cin >> text;
+              if(!std::cin.fail())
+                break;
+              std::cin.clear();
+              std::cin.ignore( 1024, '\n' );
+            }
             std::cin.clear();
             std::cin.ignore( 1024, '\n' );
             return text;
           }
+          /*
+           * message string for input
+           */
+          string message_;
 
           /**
            * 各PhaseResultに振っていくID
