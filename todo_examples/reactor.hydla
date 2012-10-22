@@ -1,0 +1,22 @@
+INIT    <=> temp = 510 /\ r1 = r1cool /\ 
+            r2 = r2cool /\ sw = 0 /\ 30 = r1cool.
+CONST   <=> [](r1cool' = 0 /\ r2cool = 50 /\ tmax = 550 /\ tmin = 510).
+//CONST   <=> [](r1cool = 30 /\ r2cool = 50 /\ tmax = 550 /\ tmin = 510).
+
+CTRL1   <=> []((temp- = tmax /\ sw- = 0 /\ r1- >= r1cool => sw = 1) /\ (sw-=1 /\ temp-=tmin => sw = 0 )).
+CTRL2   <=> []((temp- = tmax /\ sw- = 0 /\ r2- >= r2cool => sw = 2) /\ (sw-=2 /\ temp-=tmin => sw = 0 )).
+SW      <=> [](sw'=0).
+
+TIMER1  <=> [](r1'=1).
+TIMER2  <=> [](r2'=1).
+
+NOROD   <=> []((sw- = 0) => temp' = temp / 10 - 50).
+ROD1    <=> []((sw- = 1) => 
+                     (temp' = temp- / 10 - 56 /\ r1 = 0)).
+ROD2    <=> []((sw- = 2) => 
+                     (temp' = temp- / 10 - 60 /\ r2 = 0)).
+
+ASSERT(temp <= tmax /\ temp >= tmin).
+
+INIT, CONST, ((SW << CTRL1),(SW << CTRL2) << [](1=1)), NOROD, (TIMER1 << ROD1),(TIMER2 << ROD2).
+
