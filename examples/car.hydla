@@ -1,0 +1,11 @@
+INIT <=> x=5&y=0&x'=1&y'=1&s=0&timer=0&fallflg=0.
+TIMER<=>[](timer-=1=>timer = 0 & s=s-).
+CONS <=>[](s'=0 & timer'=1).
+F    <=>[](s=0=> x''=1 & y''=1 ).
+R    <=>[](s=1=> x''=-y'- & y''=x').
+L    <=>[](s=2=> x''=y' & y''=-x'-).
+FALL0<=>[](fallflg'=0).
+FALL1<=>[](x-=0 => fallflg=1 ).
+FALL2<=>[](x-=10=> fallflg=1 ).
+
+INIT,F,R,L,CONS<<TIMER,FALL0<<(FALL1,FALL2).
