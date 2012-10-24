@@ -63,6 +63,10 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.approx_precision = po.get<int>("approx");
   opts.exclude_error = po.count("fail-stop") == 0;
   opts.solver        = po.get<std::string>("solver");
+  opts.optimization_level = po.get<int>("optimization-level");
+  if(opts.optimization_level < 0 || opts.optimization_level > 3){
+    throw std::runtime_error(std::string("invalid option - optimization_level"));
+  }
   int level = po.get<int>("continuity");
   if(level <= 0){
     opts.default_continuity = CONT_NONE;

@@ -75,6 +75,14 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
+  // ç≈ìKâªÉåÉxÉã
+  ml_.MLPutFunction("Set",2);
+  ml_.MLPutSymbol("optOptimizationLevel");
+  ml_.MLPutInteger(opts.optimization_level);
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+
   ml_.MLPutFunction("ToExpression", 1);
   ml_.MLPutString(vcs_math_source());  
   ml_.MLEndPacket();

@@ -137,6 +137,7 @@ publicMethod[name_, args___, define_] := (
  * guardVars:
  * startTimes: 呼び出された関数の開始時刻を積むプロファイリング用スタック
  * profileList: プロファイリング結果のリスト
+ * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  *)
 
 
@@ -656,13 +657,13 @@ createIntegratedValue[variable_, integRule_] := (
   @param expr 時刻に関する変数についての制約
   @param initExpr 変数の初期値についての制約
   @return overConstraint | underConstraint | {各変数の値のルール，変数値が満たすべき制約（ルールに含まれているものは除く）} 
-  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．そうしないとシミュレーションできない例題がある．
+  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．そうしないとシミュレーションできない例題がある．'
 *)
 
 exDSolve[expr_, initExpr_] :=
 Check[
   Module[
-    {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, sol, resultCons, resultRule},
+    {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, sol, resultCons, resultRule, idx, generalInitValue, swapValue},
     tmpExpr = applyList[expr];
     resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
     tmpExpr = Complement[tmpExpr, resultCons];
@@ -675,10 +676,48 @@ Check[
       tVars = Union[getVariables[subset]];
       If[Length[tVars] == Length[subset],
         ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
-        sol = Check[
-          DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
-          overConstraint,
-          {DSolve::overdet, DSolve::bvnul}
+        If[optOptimizationLevel == 0, 
+          sol = Check[
+            DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
+            overConstraint,
+            {DSolve::overdet, DSolve::bvnul}
+          ],
+
+          (* 微分方程式の結果を再利用する場合 *)
+
+           For[j=1,j<=Length[dList],j++,
+	       debugPrint["dList",j];
+               debugPrint["  defferential equation", dList[[j]][[1]]];
+               debugPrint["  general solution", dList[[j]][[2]]];
+               debugPrint["  replaced Variable List", dList[[j]][[3]]];
+	   ];
+
+          idx = Position[Map[(Sort[#])&,dList],Sort[subset]];
+          If[idx == {},
+            generalInitValue = ini;
+            For[j=1,j<=Length[generalInitValue],j++,
+              generalInitValue[[j]][[1]] = initValue[j];
+            ];
+            sol = Check[
+              DSolve[Union[subset, generalInitValue], Map[(#[t])&, tVars], t],
+              overConstraint,
+              {DSolve::overdet, DSolve::bvnul}
+            ];
+            For[j=1,j<=Length[generalInitValue],j++,
+              generalInitValue[[j]][[0]] = Rule;
+            ];
+            If[Length[dList] == 0, dList = {}];
+            dList = Append[dList,{subset,sol,generalInitValue}];
+            idx = Position[dList,subset],
+            sol = dList[[idx[[1]][[1]],2]];
+          ];
+          For[j=1,j<=Length[ini],j++,
+            swapValue = ini[[j]][[2]];
+            ini[[j]][[2]] = ini[[j]][[1]];
+            ini[[j]][[1]] = swapValue;
+            ini[[j]][[0]] = Rule;
+          ];
+          sol = sol /. (dList[[idx[[1]][[1]]]][[3]] /. ini);
         ];
         checkMessage;
         If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];

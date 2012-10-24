@@ -78,6 +78,7 @@ typedef struct Opts_ {
   hydla::parse_tree::node_sptr assertion;
   DefaultContinuity default_continuity;
   std::set<std::string> output_variables;
+  int optimization_level;
 } Opts;
 
 /**
