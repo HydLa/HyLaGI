@@ -24,7 +24,6 @@ void ProgramOptions::init_descriptions()
     ("version", "version")
     ("debug,d", value<std::string>()->default_value(""), "enable debug mode\n")
     ("profile", "enable profile mode")
-    ("parallel,p", "enable parallel execution")
 
     ("dump-parse-tree", 
      "output parse tree")
@@ -53,13 +52,6 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""), 
      "variables to output")
      
-    ("method,m", 
-     value<std::string>()->default_value("s"), 
-     "simulation method:\n"
-     "  b or BandPSimulator\n"
-     "  s or SymbolicSimulator\n"
-     "  l or SymbolicLegacySimulator")
-     
      ("solver,s",
      value<std::string>()->default_value("m"), 
      "solver:\n"
@@ -85,8 +77,8 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value("t"), 
      "output format:\n"
      "  t - time function\n"
-     "  n - numeric\n  i - numeric interval\n"
-     "  g - for GUI\n"
+     "  n - numeric\n"
+     "  i - numeric interval\n"
      "  m - for Mathematica Plot")
     
     ("output-interval", 
@@ -96,29 +88,18 @@ void ProgramOptions::init_descriptions()
     ("output-precision", 
      value<int>()->default_value(5), 
      "precision of output message")
-     
-    ("continuity", 
-     value<int>()->default_value(2), 
-     "default continuity level")
 
     ("time,t", 
      value<std::string>()->default_value("1"), 
      "simulation time")
      
-    ("step", 
+    ("phases,p", 
      value<int>()->default_value(-1), 
-     "simulation steps\n"
-     "  positive value: steps\n"
+     "simulation phases\n"
+     "  positive value: number of phases\n"
      "  negative value: infinity")
-    
-    ("interlanguage,i", 
-     "show intermediate language")
 
-    ("approx,a", 
-     value<int>()->default_value(-1), 
-     "approximate mode:\n  negative value: no approx\n  positive value: presicion")
-
-    ("mathlink", 
+    ("math-name", 
      value<std::string>()->default_value("math"), 
      "name of mathematica command")
     ;

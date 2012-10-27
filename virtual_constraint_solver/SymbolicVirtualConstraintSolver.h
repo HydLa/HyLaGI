@@ -152,9 +152,6 @@ public:
     const time_t& max_time){assert(0);return PP_time_result_t();}
     
 
-  //SymbolicValueを指定された精度で数値に変換する
-  virtual std::string get_real_val(const value_t &val, int precision, simulator::OutputFormat opfmt){return "get_real_val is unavailable";}
-  
   // 現在の制約ストアを文字列で取得する
   virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}
   
@@ -192,14 +189,14 @@ public:
 
   protected:
   
-  variable_t* get_variable(const std::string &name, int derivative_count){
+  variable_t* get_variable(const std::string &name, int derivative_count) const{
     variable_t variable(name, derivative_count);
     variable_set_t::iterator it = std::find(variable_set_->begin(), variable_set_->end(), variable);
     if(it == variable_set_->end()) return NULL;
     return &(*it);
   }
 
-  parameter_t* get_parameter(const std::string &name, int derivative_count, int id){
+  parameter_t* get_parameter(const std::string &name, int derivative_count, int id) const {
     for(parameter_set_t::iterator it = parameter_set_->begin(); it != parameter_set_->end();it++){
       if(it->get_variable()->get_name() == name && it->get_variable()->get_derivative_count() == derivative_count && it->get_phase()->id == id){
         return &(*it);

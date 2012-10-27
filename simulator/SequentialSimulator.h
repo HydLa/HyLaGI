@@ -8,76 +8,91 @@ namespace hydla {
 namespace simulator {
 
 
-template<typename PhaseResultType>
-class SequentialSimulator:public Simulator<PhaseResultType>{
+class SequentialSimulator: public Simulator{
   public:
-  typedef PhaseResultType                                   phase_result_t;
-  typedef typename boost::shared_ptr<phase_result_t>        phase_result_sptr;
-  typedef typename boost::shared_ptr<const phase_result_t>  phase_result_const_sptr;
-  typedef PhaseSimulator<PhaseResultType>                   phase_simulator_t;
-  typedef typename phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
-  typedef typename std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
+  typedef PhaseResult                                       phase_result_t;
+  typedef boost::shared_ptr<const phase_result_t>           phase_result_const_sptr_t;
+  typedef PhaseSimulator                                    phase_simulator_t;
+  typedef phase_result_t::phase_result_sptr_t               phase_result_sptr_t;
+  typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
+  
+  typedef SimulationPhase                                   simulation_phase_t;
+  typedef std::vector<SimulationPhase>                      simulation_phases_t;
 
-  typedef typename phase_result_t::variable_map_t variable_map_t;
-  typedef typename phase_result_t::variable_t     variable_t;
-  typedef typename phase_result_t::parameter_t     parameter_t;
-  typedef typename phase_result_t::value_t        value_t;
-  typedef typename phase_result_t::parameter_map_t     parameter_map_t;
+  typedef phase_result_t::variable_map_t variable_map_t;
+  typedef phase_result_t::variable_t     variable_t;
+  typedef phase_result_t::parameter_t    parameter_t;
+  typedef phase_result_t::value_t        value_t;
+  typedef phase_result_t::parameter_map_t     parameter_map_t;
   
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
   typedef value_t                                          time_value_t;
 
 
-  SequentialSimulator(Opts &opts):Simulator<phase_result_t>(opts){
+  SequentialSimulator(Opts &opts):Simulator(opts){
   }
   
   virtual ~SequentialSimulator(){}
   /**
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
-  virtual void simulate()
+  virtual phase_result_const_sptr_t simulate()
   {
     std::string error_str;
     while(!state_stack_.empty()) {
-
-      phase_result_sptr state(pop_phase_result());
+      
+      simulation_phase_t state(pop_phase_result());
+      phase_result_sptr_t pr = state.phase_result;
       bool consistent;
 
-        if( Simulator<phase_result_t>::opts_->max_step >= 0 && state->step > Simulator<phase_result_t>::opts_->max_step){
-          state->parent->cause_of_termination = simulator::STEP_LIMIT;
+        if( opts_->max_step >= 0 && pr->step > opts_->max_step){
+          pr->parent->cause_of_termination = simulator::STEP_LIMIT;
           continue;
         }
 
       try{
-        state->module_set_container->reset(state->visited_module_sets);
-        phase_result_sptrs_t phases = Simulator<phase_result_t>::phase_simulator_->simulate_phase(state, consistent);
+        state.module_set_container->reset(state.visited_module_sets);
+        simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
 
         if(!phases.empty()){
-          if(Simulator<phase_result_t>::opts_->nd_mode){
-            for(typename phase_result_sptrs_t::iterator it = phases.begin();it != phases.end();it++){
-              if((*it)->parent != Simulator<phase_result_t>::result_root_){
-                (*it)->module_set_container = Simulator<phase_result_t>::msc_no_init_;
+          if(opts_->nd_mode){
+            for(simulation_phases_t::iterator it = phases.begin();it != phases.end();it++){
+              if(it->phase_result->parent != result_root_){
+                it->module_set_container = msc_no_init_;
               }
               else{
-                (*it)->module_set_container = (*it)->parent->module_set_container;
+                // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
+                it->module_set_container = msc_original_;
               }
-              push_phase_result(*it);
+              push_simulation_phase(*it);
             }
           }else{
-            if(phases[0]->parent != Simulator<phase_result_t>::result_root_){
-              phases[0]->module_set_container = Simulator<phase_result_t>::msc_no_init_;
+            if(phases[0].phase_result->parent != result_root_){
+              phases[0].module_set_container = msc_no_init_;
             }else{
-              phases[0]->module_set_container = phases[0]->parent->module_set_container;
+                // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
+              phases[0].module_set_container = msc_original_;
             }
-            push_phase_result(phases[0]);
+            push_simulation_phase(phases[0]);
           }
+          
+        }
+        
+        HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
+        for(int i=0; i<phases.size();i++){
+          HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
+          HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
+          HYDLA_LOGGER_PHASE("%% id: ", pr->id);
+          HYDLA_LOGGER_PHASE("%% time: ", pr->current_time);
+          HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
         }
       }catch(const std::runtime_error &se){
         error_str = se.what();
         HYDLA_LOGGER_PHASE(se.what());
       }
     }
+    /*
     if(Simulator<phase_result_t>::opts_->output_format == fmtMathematica){
       Simulator<phase_result_t>::output_result_tree_mathematica();
     }
@@ -87,55 +102,29 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
     if(Simulator<phase_result_t>::opts_->time_measurement){
       Simulator<phase_result_t>::output_result_tree_time();
     }
-    std::cout << error_str;
+    */
+    if(!error_str.empty()){
+      std::cout << error_str;
+    }
+    return result_root_;
   }
   
   virtual void initialize(const parse_tree_sptr& parse_tree){
-      Simulator<phase_result_t>::initialize(parse_tree);
-      //Simulator::initialize(parse_tree);
-      Simulator<phase_result_t>::state_id_ = 1;
+      Simulator::initialize(parse_tree);
       //初期状態を作ってスタックに入れる
-      phase_result_sptr state(Simulator<phase_result_t>::create_new_phase_result());
-      state->phase        = simulator::PointPhase;
-      state->step         = 0;
-      state->current_time = value_t("0");
-      state->module_set_container = Simulator<phase_result_t>::msc_original_;
-      state->parent = Simulator<phase_result_t>::result_root_;
-      state->phase_timer.reset();
-      state->calculate_closure_timer.reset();
-      push_phase_result(state);
+      simulation_phase_t state(create_new_simulation_phase());
+      phase_result_sptr_t pr = state.phase_result;
+      
+      pr->phase        = simulator::PointPhase;
+      pr->step         = 0;
+      pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
+      state.module_set_container = msc_original_;
+      pr->parent = result_root_;
+      pr->phase_timer.reset();
+      pr->calculate_closure_timer.reset();
+      push_simulation_phase(state);
   }
 
-
-  /**
-   * 状態キューに新たな状態を追加する
-   */
-  virtual void push_phase_result(const phase_result_sptr& state)
-  {
-    state->id = Simulator<phase_result_t>::state_id_++;
-    HYDLA_LOGGER_PHASE("%% SequentialSimulator::push_phase_result\n");
-    HYDLA_LOGGER_PHASE("%% state Phase: ", state->phase);
-    HYDLA_LOGGER_PHASE("%% state id: ", state->id);
-    HYDLA_LOGGER_PHASE("%% state time: ", state->current_time);
-    HYDLA_LOGGER_PHASE("--- parent state variable map ---\n", state->parent->variable_map);
-    HYDLA_LOGGER_PHASE("--- state parameter map ---\n", state->parameter_map);
-    state_stack_.push(state);
-  }
-
-  /**
-   * 状態キューから状態をひとつ取り出す
-   */
-  phase_result_sptr pop_phase_result()
-  {
-    phase_result_sptr state(state_stack_.top());
-    state_stack_.pop();
-    return state;
-  }
-  
-  /**
-   * 各PhaseResultに振っていくID
-   */
-  int phase_id_;
   
   /**
    * シミュレーション中で使用される変数表の原型
@@ -148,23 +137,6 @@ class SequentialSimulator:public Simulator<PhaseResultType>{
    */
   variable_set_t variable_set_;
   parameter_set_t parameter_set_;
-  //int state_id_;
-  
-
-  struct SimulationState {
-    phase_result_sptr phase_result;
-    /// フェーズ内で一時的に追加する制約．分岐処理などに使用
-    constraints_t temporary_constraints;
-    module_set_container_sptr module_set_container;
-    /// 判定済みのモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-    std::set<module_set_sptr> visited_module_sets;
-  };
-
-  
-  /**
-   * 各状態を保存しておくためのスタック
-   */
-  std::stack<phase_result_sptr> state_stack_;
   
   
   /**

@@ -24,13 +24,6 @@ SymbolicValue::SymbolicValue(const SymbolicValue::node_sptr & node){
 }
 
 
-std::ostream& SymbolicValue::dump(std::ostream& s) const
-{
-  if(is_undefined()) s << "UNDEF";
-  else s << get_string();
-  return s;
-}
-
 std::string SymbolicValue::get_string() const
 {
   if(is_undefined()) return "";
@@ -48,40 +41,16 @@ SymbolicValue::node_sptr SymbolicValue::get_node() const
 }
 
 
+void SymbolicValue::set_node(node_sptr n)
+{
+  node_ = n;
+}
 
 void SymbolicValue::set(const node_sptr &nod)
 {
  node_=nod;
 }
 
-
-SymbolicValue& SymbolicValue::operator+=(const SymbolicValue& rhs)
-{
-  node_ = node_sptr(new hydla::parse_tree::Plus(node_, rhs.get_node()));
-  return *this;
-}
-
-
-SymbolicValue& SymbolicValue::operator-=(const SymbolicValue& rhs)
-{
-  node_ = node_sptr(new hydla::parse_tree::Subtract(node_, rhs.get_node()));
-  return *this;
-}
-
-
-
-bool operator<(const SymbolicValue& lhs, 
-               const SymbolicValue& rhs)
-{
-  return lhs.get_string() < rhs.get_string();
-}
-
-
-std::ostream& operator<<(std::ostream& s, 
-                         const SymbolicValue & v)
-{
-  return v.dump(s);
-}
 
 
 } // namespace symbolic_simulator

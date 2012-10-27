@@ -13,6 +13,7 @@ namespace mathematica {
 
 using namespace hydla::parse_tree;
 
+
 void MathematicaExpressionConverter::initialize(){
 }
 
@@ -36,20 +37,24 @@ void MathematicaExpressionConverter::set_range(const value_t &val, value_range_t
   }
 }
 
+MathematicaExpressionConverter::value_t MathematicaExpressionConverter::receive_and_make_symbolic_value(MathLink &ml){
+  value_t ret(new hydla::symbolic_simulator::SymbolicValue(make_tree(ml)));
+  return ret;  
+}
 
-MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receive_and_make_symbolic_value(MathLink &ml){
+MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_tree(MathLink &ml){
   node_sptr ret;
   switch(ml.get_type()){ // 現行オブジェクトの型を得る
     case MLTKSTR: // 文字列
     {
-      HYDLA_LOGGER_REST("%% MLTKSTR(receive_and_make_symbolic_value)");
+      HYDLA_LOGGER_REST("%% MLTKSTR(make_tree)");
       std::string str = ml.get_string();
       ret = node_sptr(new hydla::parse_tree::Number(str));
       break;
     }
     case MLTKSYM: // シンボル（記号）
     {
-    HYDLA_LOGGER_REST("%% MLTKSYM(receive_and_make_symbolic_value)");
+    HYDLA_LOGGER_REST("%% MLTKSYM(make_tree)");
       std::string symbol = ml.get_symbol();
       if(symbol=="t")
         ret = node_sptr(new hydla::parse_tree::SymbolicT());
@@ -63,12 +68,12 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
     }
     case MLTKINT: // 整数は文字列形式でのみ受け取るものとする（int型だと限界があるため）
     {
-      HYDLA_LOGGER_REST("%% MLTKINT(receive_and_make_symbolic_value)");
+      HYDLA_LOGGER_REST("%% MLTKINT(make_tree)");
       assert(0);
       break;
     }
     case MLTKFUNC: // 合成関数
-    HYDLA_LOGGER_REST("%% MLTKFUNC(receive_and_make_symbolic_value)");
+    HYDLA_LOGGER_REST("%% MLTKFUNC(make_tree)");
     {
       int arg_count = ml.get_arg_count();
       int next_type = ml.get_type();
@@ -76,7 +81,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
         std::string symbol = ml.get_symbol();
         HYDLA_LOGGER_REST("%% symbol_name:", symbol);
         if(symbol == "Sqrt"){//1引数関数
-          ret = node_sptr(new hydla::parse_tree::Power(receive_and_make_symbolic_value(ml), node_sptr(new hydla::parse_tree::Number("1/2"))));
+          ret = node_sptr(new hydla::parse_tree::Power(make_tree(ml), node_sptr(new hydla::parse_tree::Number("1/2"))));
         }
         else if(symbol == "parameter"){
           std::string name = ml.get_symbol();
@@ -85,7 +90,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
           ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
         }
         else if(symbol == "minus"){
-          ret = node_sptr(new hydla::parse_tree::Negative(receive_and_make_symbolic_value(ml)));
+          ret = node_sptr(new hydla::parse_tree::Negative(make_tree(ml)));
         }
         else if(symbol == "Plus" 
            || symbol == "Subtract"
@@ -95,10 +100,10 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
            || symbol == "Rational")        
         { // 加減乗除など，二項演算子で書かれる関数
           node_sptr lhs, rhs;
-          ret = receive_and_make_symbolic_value(ml);
+          ret = make_tree(ml);
           for(int arg_it=1;arg_it<arg_count;arg_it++){
             lhs = ret;
-            rhs = receive_and_make_symbolic_value(ml);
+            rhs = make_tree(ml);
             if(symbol == "Plus")
               ret = node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
             else if(symbol == "Subtract")
@@ -127,7 +132,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
             f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
           }
           for(int arg_it=0;arg_it<arg_count;arg_it++){
-            f->add_argument(receive_and_make_symbolic_value(ml));
+            f->add_argument(make_tree(ml));
           }
           ret = f;
         }
@@ -156,7 +161,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::receiv
     }
 
     default:
-      HYDLA_LOGGER_REST("%% UNKNOWN(receive_and_make_symbolic_value)");
+      HYDLA_LOGGER_REST("%% UNKNOWN(make_tree)");
       assert(0);
       break;
   }

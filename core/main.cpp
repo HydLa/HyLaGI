@@ -93,7 +93,8 @@ void hydla_main(int argc, char* argv[])
     }else{
       Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
       Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
-      Logger::phase_area_ = (area_string.find('m') != std::string::npos);
+      Logger::module_set_area_ = (area_string.find('m') != std::string::npos);
+      Logger::phase_area_ = (area_string.find('f') != std::string::npos);
       Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
       Logger::extern_area_ = (area_string.find('e') != std::string::npos);
       Logger::rest_area_ = (area_string.find('r') != std::string::npos);
@@ -133,15 +134,8 @@ void hydla_main(int argc, char* argv[])
   }
   
   // シミュレーション開始
-  std::string method(po.get<std::string>("method"));
-  if(method == "s" || method == "SymbolicSimulator") {
-    symbolic_simulate(pt);
-  } 
-  else {
-    throw std::runtime_error(std::string("invalid method"));
-    // std::cerr << "invalid method" << std::endl;
-    // return;
-  }
+  symbolic_simulate(pt);
+
 
   if(po.get<std::string>("tm") != "n"){
     main_timer.elapsed("Finish Time");

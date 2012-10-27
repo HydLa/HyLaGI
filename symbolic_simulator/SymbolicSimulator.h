@@ -15,6 +15,8 @@
 #include "Types.h"
 #include "SymbolicTypes.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
+#include "PhaseSimulator.h"
+#include "../output/Outputter.h"
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -27,15 +29,14 @@ public:
   typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
   typedef simulator::Opts Opts;
 
-
   SymbolicSimulator(const Opts& opts);
   virtual ~SymbolicSimulator();
 
-  virtual Phases simulate_ms_point(const module_set_sptr& ms, 
-                           phase_result_sptr& state, variable_map_t &vm, bool& consistent);
+  virtual simulation_phases_t simulate_ms_point(const module_set_sptr& ms,
+                           simulation_phase_t& state, variable_map_t &vm, bool& consistent);
   
-  virtual Phases simulate_ms_interval(const module_set_sptr& ms, 
-                              phase_result_sptr& state, bool& consistent);
+  virtual simulation_phases_t simulate_ms_interval(const module_set_sptr& ms,
+                              simulation_phase_t& state, bool& consistent);
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
   virtual void set_parameter_set(parameter_t param);
@@ -43,7 +44,9 @@ public:
 
 private:
 
-  variable_map_t range_map_to_value_map(const phase_result_sptr&, const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &, parameter_map_t &);
+  variable_map_t range_map_to_value_map(phase_result_sptr_t&,
+    const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &,
+    parameter_map_t &);
 
   variable_t* get_variable(const std::string &name, const int &derivative_count){
     return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
@@ -53,11 +56,15 @@ private:
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   
-  CalculateClosureResult calculate_closure(phase_result_sptr& state,
-                        const module_set_sptr& ms, expanded_always_t &expanded_always,
-                         positive_asks_t &positive_asks, negative_asks_t &negative_asks);
+  CalculateClosureResult calculate_closure(simulation_phase_t& state,
+    const module_set_sptr& ms,
+    expanded_always_t &expanded_always,
+    positive_asks_t &positive_asks,
+    negative_asks_t &negative_asks);
 
-  void push_branch_states(phase_result_sptr &original, hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst);
+  void push_branch_states(simulation_phase_t &original,
+    hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result,
+    CalculateClosureResult &dst);
 
   void add_continuity(const continuity_map_t&);
   

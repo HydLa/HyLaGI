@@ -1,21 +1,16 @@
 #ifndef _INCLUDED_HYDLA_TIMER_H_
 #define _INCLUDED_HYDLA_TIMER_H_
 
-//#include <boost/shared_ptr.hpp>
-//#include <vector>
 #include <string>
-//#include <stack>
 
 #include <iomanip>
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 
 #include < time.h >
-#include <windows.h> //I've ommited this line.
+#include <windows.h>
   #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
-
-
-
+  
 #else
 
 #include <sys/time.h> /// Linux用？
@@ -27,8 +22,11 @@
 namespace hydla{
   namespace timer{
     
-    typedef struct timeval time_point_t;
     typedef double elapsed_time_t;
+    typedef struct timeval {
+      long tv_sec;
+      long tv_usec;
+    } timeval;
 
     class Timer
     {
@@ -76,7 +74,7 @@ namespace hydla{
       /**
        * 測定開始時の値
        */
-      time_point_t start_point_;
+      struct timeval start_point_;
       elapsed_time_t elapsed_time_;
 
     };

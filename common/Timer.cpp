@@ -88,7 +88,7 @@ namespace hydla{
     }
 
     elapsed_time_t Timer::get_time(){
-      time_point_t temp;
+      timeval temp;
       gettimeofday(&temp,NULL);
       return ( (temp.tv_sec - start_point_.tv_sec) + (temp.tv_usec - start_point_.tv_usec)*0.000001 );
     }

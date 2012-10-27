@@ -274,6 +274,16 @@ void PacketSender::put_var(const var_info_t var)
 }
 
 
+void PacketSender::put_value(value_t val, VariableArg var){
+  variable_arg_ = var;
+  val->accept(*this);
+}
+
+
+void PacketSender::visit(hydla::symbolic_simulator::SymbolicValue& value){
+  put_node(value.get_node(), variable_arg_);
+}
+  
 void PacketSender::put_var(const std::string& variable_name, const int &diff_count, VariableArg variable_arg)
 {
   put_var(boost::make_tuple(variable_name, diff_count, variable_arg));

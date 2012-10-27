@@ -19,7 +19,7 @@ namespace vcs {
 namespace mathematica {
 
 class PacketSender : 
-  public hydla::parse_tree::DefaultTreeVisitor
+  public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
 {
 public:
   
@@ -71,6 +71,9 @@ public:
 
   vars_const_iterator vars_end() const { return vars_.end(); }
 
+
+  void put_value(value_t, VariableArg var);
+
   /**
    * 与えられたノードの送信をおこなう
    *
@@ -112,7 +115,7 @@ public:
 
   void create_max_diff_map(max_diff_map_t& max_diff_map);
 
-
+  virtual void visit(hydla::symbolic_simulator::SymbolicValue& value);
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
@@ -184,8 +187,6 @@ public:
   static function_map_t function_map_;
 private:
   MathLink* ml_;
-
-protected:
   /// 送信された変数の一覧
   var_info_list_t vars_;
   par_info_list_t pars_;

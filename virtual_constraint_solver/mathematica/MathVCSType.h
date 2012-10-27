@@ -12,6 +12,7 @@ namespace vcs {
 namespace mathematica {
 
 typedef hydla::vcs::SymbolicVirtualConstraintSolver virtual_constraint_solver_t;
+typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t value_t;
 
 } // namespace mathematica
 } // namespace simulator

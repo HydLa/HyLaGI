@@ -2,10 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="simulator"
-	ProjectGUID="{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}"
-	RootNamespace="simulator"
-	Keyword="Win32Proj"
+	Name="output"
+	ProjectGUID="{D7DD62AF-E79E-45DA-820D-D835A5069039}"
+	RootNamespace="output"
+	Keyword="ManagedCProj"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -20,8 +20,9 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
+			ManagedExtensions="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -41,14 +42,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				PreprocessorDefinitions="WIN32;_DEBUG"
+				RuntimeLibrary="3"
 				WarningLevel="3"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -60,10 +57,18 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				AdditionalDependencies="$(NoInherit)"
+				LinkIncremental="2"
+				GenerateDebugInformation="true"
+				AssemblyDebug="1"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -75,6 +80,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -84,6 +92,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
+			ManagedExtensions="0"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -103,13 +112,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="..\simulator;..\parser;..\common;..\constraint_hierarchy"
+				PreprocessorDefinitions="WIN32;NDEBUG"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -151,47 +156,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\AskCollector.cpp"
+				RelativePath=".\MathematicaOutputter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\AskDisjunctionFormatter.cpp"
+				RelativePath=".\NumericalOutputter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\AskDisjunctionSplitter.cpp"
+				RelativePath=".\SymbolicOutputter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ContinuityMapMaker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\InitNodeRemover.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PhaseSimulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Simulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TellCollector.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Types.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Value.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ValuRange.cpp"
+				RelativePath=".\TimeOutputter.cpp"
 				>
 			</File>
 		</Filter>
@@ -201,79 +178,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\AskCollector.h"
+				RelativePath=".\IntervalOutputter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\AskDisjunctionFormatter.h"
+				RelativePath=".\MathematicaOutputter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\AskDisjunctionSplitter.h"
+				RelativePath=".\NumericalOutputter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ContinuityMapMaker.h"
+				RelativePath=".\Outputter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DefaultParameter.h"
+				RelativePath=".\SymbolicOutputter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DefaultVariable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InitNodeRemover.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InteractiveSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PhaseResult.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PhaseSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SequentialSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SimulateError.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Simulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TellCollector.h"
+				RelativePath=".\TimeOutputter.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Types.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Value.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ValueRange.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ValueVisitor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\VariableMap.h"
 				>
 			</File>
 		</Filter>

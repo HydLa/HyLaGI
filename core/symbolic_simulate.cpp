@@ -4,6 +4,7 @@
 #include "SymbolicSimulator.h"
 #include "SequentialSimulator.h"
 #include "InteractiveSimulator.h"
+#include "SymbolicOutputter.h"
 
 // parser
 #include "DefaultNodeFactory.h"
@@ -25,20 +26,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
 {  
   ProgramOptions &po = ProgramOptions::instance();
 
-  if(po.get<std::string>("output-format") == "t") {
-    opts.output_format = fmtTFunction;
-  } else if(po.get<std::string>("output-format") == "n"){
-    opts.output_format = fmtNumeric; 
-  } else if(po.get<std::string>("output-format") == "m"){
-    opts.output_format = fmtMathematica; 
-  } else if(po.get<std::string>("output-format") == "i"){
-    opts.output_format = fmtNInterval;
-  } else {
-    throw std::runtime_error(std::string("invalid option - output format"));
-    // std::cerr << "invalid option - output format" << std::endl;
-    // exit(-1);
-  }
-
+  /*
   if(po.get<std::string>("tm") == "n") {
     opts.time_measurement = tFmtNot;
   } else if(po.get<std::string>("tm") == "s") {
@@ -48,33 +36,25 @@ void setup_symbolic_simulator_opts(Opts& opts)
   } else {
     throw std::runtime_error(std::string("invalid option - time measurement"));
   }
+  */
 
-  opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("mathlink") + " -mathlink'";
+  opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math-name") + " -mathlink'";
   opts.debug_mode    = po.get<std::string>("debug")!="";
   opts.max_time      = po.get<std::string>("time");
-  opts.max_step      = po.get<int>("step");
+  opts.max_step      = po.get<int>("phases");
   opts.nd_mode       = po.count("nd")>0;
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.profile_mode  = po.count("profile")>0;
-  opts.parallel_mode = po.count("parallel")>0;
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
-  opts.approx_precision = po.get<int>("approx");
   opts.exclude_error = po.count("fail-stop") == 0;
   opts.solver        = po.get<std::string>("solver");
   opts.optimization_level = po.get<int>("optimization-level");
   if(opts.optimization_level < 0 || opts.optimization_level > 3){
     throw std::runtime_error(std::string("invalid option - optimization_level"));
   }
-  int level = po.get<int>("continuity");
-  if(level <= 0){
-    opts.default_continuity = CONT_NONE;
-  }else if(level >= CONT_NUM){
-    opts.default_continuity = CONT_STRONG;
-  }else{
-    opts.default_continuity = (DefaultContinuity)level;
-  }
+  
   
   std::string output_variables = po.get<std::string>("output-variables");
   std::string::size_type prev = 0, now;
@@ -94,12 +74,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
     name.append(d_count, '\'');
     opts.output_variables.insert(name);
     prev++;
-    //std::cout << prev << "," << now << std::endl;
   }
-  /*
-  for(std::set<std::string>::iterator it = opts.output_variables.begin(); it != opts.output_variables.end(); it++){
-    std::cout << *it << std::endl;
-  }*/
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
@@ -107,17 +82,18 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   Opts opts;
   setup_symbolic_simulator_opts(opts);
 
-    if(opts.interactive_mode){ 
+  if(opts.interactive_mode){ 
     //opts->max_time = "100";
-    InteractiveSimulator<PhaseResult<SymbolicValue> > ss(opts);
+    InteractiveSimulator ss(opts);
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
     ss.simulate();
   }else{
-    SequentialSimulator<PhaseResult<SymbolicValue> > ss(opts);
+    SequentialSimulator ss(opts);
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
-    ss.simulate();
+    hydla::output::SymbolicOutputter outputter(opts.output_variables);
+    outputter.output_result_tree(ss.simulate());
   }
 }
 

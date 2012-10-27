@@ -7,16 +7,15 @@
 namespace hydla {
 namespace simulator {
 
-template<typename ValueType>
 class DefaultParameter{
   public:
   typedef DefaultVariable variable_t;
-  typedef PhaseResult<ValueType> phase_result_t;
+  typedef PhaseResult phase_result_t;
   typedef boost::shared_ptr<phase_result_t> phase_result_sptr_t;
-  const variable_t* original_variable_;
-  const phase_result_sptr_t introduced_phase_;
+  variable_t* original_variable_;
+  phase_result_sptr_t introduced_phase_;
 
-  DefaultParameter(const variable_t* variable = NULL, const phase_result_sptr_t& phase = phase_result_sptr_t())
+  DefaultParameter(variable_t* variable = NULL, phase_result_sptr_t& phase = phase_result_sptr_t())
     :original_variable_(variable), introduced_phase_(phase)
   {
   }
@@ -24,7 +23,7 @@ class DefaultParameter{
   /**
    * 元となる変数を設定する
    */
-  void set_variable(const variable_t* variable)
+  void set_variable(variable_t* const variable)
   {
     original_variable_ = variable;
   }
@@ -32,7 +31,7 @@ class DefaultParameter{
   /**
    * 元となった変数のポインタを取得する
    */
-  const variable_t* get_variable(){return original_variable_;}
+  variable_t* get_variable() const {return original_variable_;}
 
   
   std::string get_name(){return original_variable_->get_name();}
@@ -50,7 +49,7 @@ class DefaultParameter{
   /**
    * 導入されたフェーズを取得する
    */
-  const phase_result_sptr_t get_phase(){return introduced_phase_;}
+  phase_result_sptr_t get_phase() const {return introduced_phase_;}
   
   std::string get_name() const
   {
@@ -74,7 +73,7 @@ class DefaultParameter{
   
   bool operator==(const DefaultParameter& rhs)
   {
-    return get_variable() == rhs.get_variable() && get_phase() == rhs.get_phase();
+    return (get_variable() == rhs.get_variable()) && (get_phase() == rhs.get_phase());
   }
   
   

@@ -23,10 +23,10 @@ class MathematicaExpressionConverter
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_range_t value_range_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::variable_t variable_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::parameter_t parameter_t;
+  MathematicaExpressionConverter(){}
   
   public:
   
-  MathematicaExpressionConverter(){}
   virtual ~MathematicaExpressionConverter(){}
 
   typedef hydla::parse_tree::node_sptr node_sptr;
@@ -37,7 +37,8 @@ class MathematicaExpressionConverter
   /**
    * óM‚µ‚Ävalue‚É•ÏŠ·‚·‚é
    */
-  static node_sptr receive_and_make_symbolic_value(MathLink &ml);
+  static value_t receive_and_make_symbolic_value(MathLink &ml);
+  static node_sptr make_tree(MathLink &ml);
 
   //val‚ÆŠÖŒW‰‰Zq‚ğŒ³‚ÉArange‚ğİ’è‚·‚é
   static void set_range(const value_t &val, value_range_t &range, const int& relop);

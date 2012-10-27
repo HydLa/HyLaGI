@@ -15,6 +15,8 @@
 namespace hydla {
 namespace simulator {
 
+struct PhaseResult;
+
 /**
  * 処理のフェーズ
  */
@@ -45,18 +47,6 @@ typedef enum DefaultContinuity_{
 } DefaultContinuity;
 
 
-typedef enum OutputFormat_ {
-  fmtTFunction,
-  fmtNumeric,
-  fmtMathematica,
-  fmtNInterval,
-} OutputFormat;
-  
-typedef enum TimeOutputFormat_ {
-  tFmtNot = 0,
-  tFmtStd,
-  tFmtCsv,
-} TimeOutputFormat;
 
 typedef struct Opts_ {
   std::string mathlink;
@@ -65,10 +55,8 @@ typedef struct Opts_ {
   int max_step;
   bool nd_mode;
   bool interactive_mode;
-  TimeOutputFormat time_measurement;
   bool profile_mode;
   bool parallel_mode;
-  OutputFormat output_format;
   bool dump_in_progress;
   bool exclude_error;
   std::string output_interval;
@@ -116,6 +104,20 @@ typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
 
 typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
 typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;  
+
+/**
+ * シミュレーションすべきフェーズを表す構造体
+ */
+struct SimulationPhase{
+  /// 実行結果となるフェーズ
+  boost::shared_ptr<PhaseResult> phase_result;
+  /// フェーズ内で一時的に追加する制約．分岐処理などに使用
+  constraints_t temporary_constraints;
+  /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
+  module_set_container_sptr module_set_container;
+  /// 判定済みのモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
+  std::set<module_set_sptr> visited_module_sets;
+};
 
 
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);

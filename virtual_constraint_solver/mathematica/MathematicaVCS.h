@@ -85,12 +85,7 @@ public:
    * 変数に連続性を設定する
    */
   virtual void set_continuity(const std::string &name, const int& dc);
-  
-  /**
-   * 数式を指定された精度で数値に変換する
-   */
-  virtual std::string get_real_val(const value_t &val, int precision, hydla::simulator::OutputFormat opfmt);
-  
+
   /**
    * SymbolicTimeを簡約する
    */

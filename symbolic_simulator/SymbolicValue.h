@@ -5,20 +5,18 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include "Node.h"
+#include "../simulator/Value.h"
 
 #include <boost/operators.hpp>
 
 namespace hydla {
 namespace symbolic_simulator {
 
-class SymbolicValue:
-  public boost::additive<SymbolicValue>
-{
-
-  typedef hydla::parse_tree::node_sptr node_sptr;
-  
+class SymbolicValue: public hydla::simulator::Value
+{  
   public:
 
+  typedef hydla::parse_tree::node_sptr node_sptr;
 
   SymbolicValue();
   /**
@@ -46,35 +44,21 @@ class SymbolicValue:
   node_sptr get_node() const;
   
   /**
+   * ノードを設定する
+   */
+  void set_node(node_sptr);
+  
+  /**
    * 新たなノードをセット
    */
   void set(const node_sptr&);
 
-  /**
-   * SymbolicValue同士の加算
-   */
-  SymbolicValue& operator+=(const SymbolicValue& rhs);
-  
-
-  /**
-   * SymbolicValue同士の減算
-   */
-  SymbolicValue& operator-=(const SymbolicValue& rhs);
-  
-  /**
-   * データをダンプする
-   */
-  std::ostream& dump(std::ostream& s) const;
+  void accept(hydla::simulator::ValueVisitor& v){v.visit(*this);}
   
   private:
   
   node_sptr node_;  //値はnode_sptr
 };
-
-bool operator<(const SymbolicValue& lhs, const SymbolicValue& rhs);
-
-std::ostream& operator<<(std::ostream& s, const SymbolicValue & v);
-
 
 } // namespace simulator
 } // namespace hydla

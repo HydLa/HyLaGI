@@ -3,14 +3,14 @@
 
 #include <string>
 #include <vector>
+#include "Value.h"
 
 namespace hydla {
 namespace simulator {
 
-template <typename ValueType>
 class ValueRange {
 public:
-  typedef ValueType value_t;
+  typedef boost::shared_ptr<Value> value_t;
   typedef struct Bound{
     bool include_bound;
     value_t value;
@@ -25,7 +25,7 @@ public:
    */
   bool is_undefined() const
   {
-    return (lower_.value.is_undefined() && upper_.value.is_undefined());
+    return (lower_.value->is_undefined() && upper_.value->is_undefined());
   }
   
   /**
@@ -53,7 +53,7 @@ public:
   {
     std::string tmp_str;
     if(is_unique()){
-      tmp_str += lower_.value.get_string();
+      tmp_str += lower_.value->get_string();
     }else{
       if(lower_.include_bound){
         tmp_str += "[";
@@ -61,16 +61,16 @@ public:
       else{
         tmp_str += "(";
       }
-      if(!lower_.value.is_undefined()){
-        tmp_str += lower_.value.get_string();
+      if(!lower_.value->is_undefined()){
+        tmp_str += lower_.value->get_string();
       }else{
         tmp_str += "-inf";
       }
       
       tmp_str += ", ";
       
-      if(!upper_.value.is_undefined()){
-        tmp_str += upper_.value.get_string();
+      if(!upper_.value->is_undefined()){
+        tmp_str += upper_.value->get_string();
       }else{
         tmp_str += "inf";
       }
@@ -98,7 +98,7 @@ public:
    * 上限に新たなものをセット
    * この関数を呼び出すと，実際の上限下限に関わらず値が一意に定まらないものとして扱われる
    */
-  void set_upper_bound(const value_t& val, const bool& include)
+  void set_upper_bound(value_t val, const bool& include)
   {
     upper_.value = val;
     upper_.include_bound = include;
@@ -109,7 +109,7 @@ public:
    * 下限に新たなものをセット
    * この関数を呼び出すと，実際の上限下限に関わらず値が一意に定まらないものとして扱われる
    */
-  void set_lower_bound(const value_t& val, const bool& include)
+  void set_lower_bound(value_t val, const bool& include)
   {
     lower_.value = val;
     lower_.include_bound = include;
@@ -130,11 +130,7 @@ public:
   bool is_unique_;
 };
 
-template<typename ValueType>
-std::ostream& operator<<(std::ostream& s, const ValueRange<ValueType> & val)
-{
-  return val.dump(s);
-}
+std::ostream& operator<<(std::ostream& s, const ValueRange & val);
 
 
 } // namespace simulator
