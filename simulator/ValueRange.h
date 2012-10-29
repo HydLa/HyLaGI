@@ -25,7 +25,7 @@ public:
    */
   bool is_undefined() const
   {
-    return (lower_.value->is_undefined() && upper_.value->is_undefined());
+    return (lower_.value.get() && upper_.value.get());
   }
   
   /**
@@ -61,7 +61,7 @@ public:
       else{
         tmp_str += "(";
       }
-      if(!lower_.value->is_undefined()){
+      if(lower_.value.get() && !lower_.value->is_undefined()){
         tmp_str += lower_.value->get_string();
       }else{
         tmp_str += "-inf";
@@ -69,7 +69,7 @@ public:
       
       tmp_str += ", ";
       
-      if(!upper_.value->is_undefined()){
+      if(upper_.value.get() && !upper_.value->is_undefined()){
         tmp_str += upper_.value->get_string();
       }else{
         tmp_str += "inf";

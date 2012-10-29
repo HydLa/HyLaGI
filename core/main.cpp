@@ -87,6 +87,7 @@ void hydla_main(int argc, char* argv[])
       Logger::parsing_area_ = true;
       Logger::calculate_closure_area_ = true;
       Logger::phase_area_ = true;
+      Logger::module_set_area_ = true;
       Logger::vcs_area_ = true;
       Logger::extern_area_ = true;
       Logger::rest_area_ = true;

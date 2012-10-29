@@ -151,13 +151,14 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     int size=0;
     for(; it!=parameter_map.end(); ++it)
     {
-      if(it->second.is_unique()){
+	  const value_range_t &range = it->second;
+      if(range.is_unique()){
         size++;
       }else{
-        if(!it->second.get_lower_bound().value->is_undefined()){
+        if(range.get_lower_bound().value.get() && !range.get_lower_bound().value->is_undefined()){
           size++;
         }
-        if(!it->second.get_upper_bound().value->is_undefined()){
+        if(range.get_upper_bound().value.get() && !range.get_upper_bound().value->is_undefined()){
           size++;
         }
       }
@@ -177,7 +178,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
         {
           const value_t &value = it->second.get_lower_bound().value;
           parameter_t& param = *it->first;
-          if(!value->is_undefined()){
+          if(value.get() && !value->is_undefined()){
             if(!it->second.get_lower_bound().include_bound){
               ml_.put_function("Greater", 2);
             }
@@ -192,7 +193,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
           
           const value_t &value = it->second.get_upper_bound().value;
           parameter_t& param = *it->first;
-          if(!value->is_undefined()){
+          if(value.get() && !value->is_undefined()){
             if(!it->second.get_upper_bound().include_bound){
               ml_.put_function("Less", 2);
             }
@@ -281,7 +282,6 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
       int and_size = ml_.get_arg_count();
       HYDLA_LOGGER_VCS("and_size: ", and_size);
       ml_.get_next();// Listという関数名
-      value_range_t tmp_range;
       for(int i = 0; i < and_size; i++)
       {
         //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
@@ -314,7 +314,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
         if(symbolic_value->is_undefined()){
           throw SolveError("invalid value");
         }
-        HYDLA_LOGGER_VCS("%% symbolic_value: ", symbolic_value);
+        HYDLA_LOGGER_VCS("%% symbolic_value: ", *symbolic_value);
         map.set_variable(variable_ptr, tmp_range);
       }
       create_result.result_maps.push_back(map);
@@ -324,8 +324,8 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   ml_.MLNewPacket();
   
   
-  for(unsigned int i=0; i< create_result.result_maps.size();i++){
-    HYDLA_LOGGER_VCS("--- result map", i, "---\n");
+  for(unsigned int i=0; i < create_result.result_maps.size();i++){
+    HYDLA_LOGGER_VCS("--- result map ", i, "/", create_result.result_maps.size(), "---\n");
     HYDLA_LOGGER_VCS(create_result.result_maps[i]);
   }
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::create_maps ***\n");

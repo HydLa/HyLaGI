@@ -157,25 +157,21 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
     
     maker.reset();
 
+    // 制約を追加し，制約ストアが矛盾をおこしていないかどうか調べる
+    
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       constraint_list.push_back((*it)->get_child());
-      if(opts_->default_continuity > CONT_NONE){
-        maker.visit_node((*it), pr->phase == IntervalPhase, false);
-      }
+      maker.visit_node((*it), pr->phase == IntervalPhase, false);
     }
-    if(opts_->default_continuity > CONT_NONE){
-      continuity_map = maker.get_continuity_map();
-    }
+    continuity_map = maker.get_continuity_map();
+    add_continuity(continuity_map);
+    
     for(constraints_t::const_iterator it = state.temporary_constraints.begin(); it != state.temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
 
-    // 制約を追加し，制約ストアが矛盾をおこしていないかどうか調べる
 
     solver_->add_constraint(constraint_list);
-
-    add_continuity(continuity_map);
-
 
     {
       SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
@@ -202,22 +198,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
     // ask制約のエンテール処理
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_entailment in calculate_closure\n");
 
-    //デフォルト連続性の処理
-
-    bool strong_continuity = (opts_->default_continuity >= CONT_STRONG ||
-        (opts_->default_continuity == CONT_STRONG_IP && pr->phase == IntervalPhase));
-    if(strong_continuity){
-      for(continuity_map_t::const_iterator it  = variable_derivative_map_.begin(); it!=variable_derivative_map_.end(); ++it) {
-        continuity_map_t::iterator find_result = continuity_map.find(it->first);
-        if( find_result == continuity_map.end()){
-          continuity_map.insert(std::make_pair(it->first, -(it->second)));
-        }
-      }
-    }
-    if(opts_->default_continuity != CONT_GUARD){
-      add_continuity(continuity_map);
-    }
-
     {
       expanded = false;
       branched_ask=NULL;
@@ -231,10 +211,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
           continue;
         }
         solver_->start_temporary();
-        if(opts_->default_continuity == CONT_GUARD){
-          maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
-          add_continuity(maker.get_continuity_map());
-        }
+        maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
+        add_continuity(maker.get_continuity_map());
         solver_->add_guard((*it)->get_guard());
 
         SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
@@ -275,17 +253,13 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
           it++;
         }
 
-        if(opts_->default_continuity == CONT_GUARD){
-          maker.set_continuity_map(continuity_map);
-        }
+        maker.set_continuity_map(continuity_map);
         solver_->end_temporary();
       }
     }
   }while(expanded);
 
-  if(opts_->default_continuity == CONT_GUARD){
-    add_continuity(continuity_map);
-  }
+  add_continuity(continuity_map);
 
   if(branched_ask!=NULL){
     HYDLA_LOGGER_CLOSURE("%% branched_ask:", **branched_ask);
@@ -400,7 +374,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
     }
   }
 
-  HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_point***\n");
+  HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_point***\n");
   consistent = true;
   return phases;
 }
@@ -409,7 +383,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     simulation_phase_t& state,
     bool& consistent)
 {
-  HYDLA_LOGGER_PHASE("#*** Begin SymbolicSimulator::simulate_ms_interval***");
+  HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::simulate_ms_interval***");
   //前準備
   phase_result_sptr_t& pr = state.phase_result;
   solver_->change_mode(ContinuousMode, opts_->approx_precision);
@@ -439,7 +413,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     phase.phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
     phase.phase_result->parent->children.push_back(phase.phase_result);
     consistent = true;
-    HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_interval (results.size() != 1)***");
+    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval (results.size() != 1)***");
     return simulation_phases_t();
   }
 
@@ -565,7 +539,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     pr->cause_of_termination = simulator::ASSERTION;
   }
 
-  HYDLA_LOGGER_PHASE("#*** End SymbolicSimulator::simulate_ms_interval***");
+  HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval***");
   consistent = true;
   return phases;
 }

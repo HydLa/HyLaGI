@@ -166,7 +166,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
       break;
   }
   if(ret == NULL){
-          throw SolveError("unknown element\ninput:\n" + ml.get_input_print() + "\n\ntrace:\n" + ml.get_debug_print());
+    throw SolveError("unknown element\ninput:\n" + ml.get_input_print() + "\n\ntrace:\n" + ml.get_debug_print());
   }
   return ret;
 }
