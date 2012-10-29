@@ -342,7 +342,8 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
 
   assert(create_result.result_maps.size()>0);
-
+  
+  pr->module_set = ms;
 
   simulation_phase_t new_state_original(create_new_simulation_phase());
   phase_result_sptr_t& new_pr_original = new_state_original.phase_result;
@@ -350,6 +351,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   new_pr_original->phase        = IntervalPhase;
   new_pr_original->current_time = pr->current_time;
   new_pr_original->expanded_always = ea;
+  new_pr_original->module_set = ms;
 
   simulation_phases_t phases;
 
@@ -426,9 +428,11 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   
   pr->variable_map = range_map_to_value_map(pr, results[0], pr->parameter_map);
   pr->variable_map = shift_variable_map_time(pr->variable_map, pr->current_time);
-  
-  simulation_phases_t phases;
 
+  pr->module_set = ms;
+    
+  simulation_phases_t phases;
+  
   if(is_safe_){
 
     /*

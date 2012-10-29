@@ -519,7 +519,7 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
     ml_.get_next();
     
     // I—¹‚©‚Ç‚¤‚©‚ğó‚¯æ‚é
-    candidate.is_max_time = ml_.get_integer();
+    candidate.is_max_time = (bool)(ml_.get_integer() != 0);
     HYDLA_LOGGER_VCS("is_max_time: ",  candidate.is_max_time);
     HYDLA_LOGGER_VCS("--- parameter map ---\n",  candidate.parameter_map);
     result.candidates.push_back(candidate);

@@ -32,11 +32,11 @@ std::string SymbolicOutputter::get_state_output(const phase_result_t& result, co
     if(!numeric){
       if(result.phase==IntervalPhase){
         sstr << "---------IP---------" << std::endl;
+        sstr << result.module_set->get_name() << endl;
         sstr << "time\t: " << *result.current_time << "->" << *result.end_time << "\n";
       }else{
-        if(is_in_progress)
-          sstr << "#-------" << result.step + 1 << "-------" << std::endl;
         sstr << "---------PP---------" << std::endl;
+        sstr << result.module_set->get_name() << endl;
         sstr << "time\t: " << *result.current_time << "\n";
       }
       output_variable_map(sstr, result.variable_map, result.current_time, false);
@@ -44,7 +44,6 @@ std::string SymbolicOutputter::get_state_output(const phase_result_t& result, co
     }
     return sstr.str();
 }
-  
   
 
 void SymbolicOutputter::output_parameter_map(const parameter_map_t& pm) const

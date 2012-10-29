@@ -9,6 +9,7 @@
 #include "ValueRange.h"
 #include "./VariableMap.h"
 #include "./Types.h"
+#include "ModuleSet.h"
 
 #include "Timer.h"
 
@@ -42,6 +43,7 @@ struct PhaseResult {
   positive_asks_t           positive_asks;
   changed_asks_t            changed_asks;
   int step;
+  hydla::ch::module_set_sptr module_set;
 
   /// フェーズの終了原因を表す．
   CauseOfTermination cause_of_termination;
