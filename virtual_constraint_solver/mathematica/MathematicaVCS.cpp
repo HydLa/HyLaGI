@@ -482,7 +482,7 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
 
 
   // maxTime‚ð“n‚·
-  time_t tmp_time(max_time);
+  time_t tmp_time(max_time->clone());
   *tmp_time -= *current_time;
   HYDLA_LOGGER_VCS("%% current time:", current_time);
   HYDLA_LOGGER_VCS("%% send time:", tmp_time);

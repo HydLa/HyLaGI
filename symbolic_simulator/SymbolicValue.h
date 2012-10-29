@@ -19,6 +19,12 @@ class SymbolicValue: public hydla::simulator::Value
   typedef hydla::parse_tree::node_sptr node_sptr;
 
   SymbolicValue();
+  
+  virtual ~SymbolicValue(){}
+  
+  virtual hydla::simulator::Value* clone() const
+    {return new SymbolicValue(node_->clone());}
+  
   /**
    * ’P‚È‚é•¶Žš—ñ‚Í”’l‚ÆŒ©‚È‚µ‚ÄŽó‚¯Žæ‚é
    */

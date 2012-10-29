@@ -41,7 +41,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math-name") + " -mathlink'";
   opts.debug_mode    = po.get<std::string>("debug")!="";
   opts.max_time      = po.get<std::string>("time");
-  opts.max_step      = po.get<int>("phases");
+  opts.max_phase      = po.get<int>("phases");
   opts.nd_mode       = po.count("nd")>0;
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.interactive_mode = po.count("in")>0;

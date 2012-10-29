@@ -18,10 +18,19 @@ class Value:
   public boost::additive<Value>
 {  
   public:
+  
+  virtual ~Value(){}
+  
   /**
    * 未定義値かどうか
    */
   virtual bool is_undefined() const = 0;
+  
+  /**
+   * 自分自身のクローンを新たに作成し，そのポインタを返す
+   * 返り値のメモリは呼び出した側で解放するように注意する．
+   */
+  virtual Value* clone() const = 0;
 
   /**
    * 文字列表現を取得する

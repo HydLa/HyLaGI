@@ -39,7 +39,7 @@ typedef struct Opts_ {
   std::string mathlink;
   bool debug_mode;
   std::string max_time;
-  int max_step;
+  int max_phase;
   bool nd_mode;
   bool interactive_mode;
   bool profile_mode;

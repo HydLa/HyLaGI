@@ -54,7 +54,7 @@ public:
       bool consistent;
       int exit = 0;
       try{
-        if( opts_->max_step >= 0 && pr->step > opts_->max_step)
+        if( opts_->max_phase >= 0 && pr->step > opts_->max_phase)
           continue;
         all_state_.push_back(state); 
         state.module_set_container->reset(state.visited_module_sets);

@@ -46,10 +46,10 @@ class SequentialSimulator: public Simulator{
       phase_result_sptr_t pr = state.phase_result;
       bool consistent;
 
-        if( opts_->max_step >= 0 && pr->step > opts_->max_step){
-          pr->parent->cause_of_termination = simulator::STEP_LIMIT;
-          continue;
-        }
+      if( opts_->max_phase >= 0 && pr->step >= opts_->max_phase){
+        pr->parent->cause_of_termination = simulator::STEP_LIMIT;
+        continue;
+      }
 
       try{
         state.module_set_container->reset(state.visited_module_sets);

@@ -118,6 +118,11 @@ void SymbolicOutputter::output_result_node(const phase_result_const_sptr_t &node
         std::cout << "# time ended\n" ;
         break;
         
+      case simulator::STEP_LIMIT:
+        output_parameter_map(node->parameter_map);
+        std::cout << "# step ended\n" ;
+        break;
+        
       case simulator::NOT_UNIQUE_IN_INTERVAL:
         output_parameter_map(node->parameter_map);
         std::cout << "# some values of variables are not unique in this phase\n" ;
