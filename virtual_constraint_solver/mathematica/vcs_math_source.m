@@ -730,7 +730,6 @@ Check[
           ];
           sol = sol /. (dList[[idx[[1]][[1]]]][[3]] /. ini);
         ];
-        simplePrint[sol];
         checkMessage;
         If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
         tmpExpr = Complement[tmpExpr, subset];
