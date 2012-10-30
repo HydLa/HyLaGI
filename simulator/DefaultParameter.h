@@ -15,7 +15,7 @@ class DefaultParameter{
   variable_t* original_variable_;
   phase_result_sptr_t introduced_phase_;
 
-  DefaultParameter(variable_t* variable = NULL, phase_result_sptr_t& phase = phase_result_sptr_t())
+  DefaultParameter(variable_t* variable, phase_result_sptr_t& phase)
     :original_variable_(variable), introduced_phase_(phase)
   {
   }

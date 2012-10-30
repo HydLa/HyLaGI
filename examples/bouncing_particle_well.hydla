@@ -1,13 +1,13 @@
 // bouncing particle into a well
 
-INIT <=> y = 20 & y' = 0 & x = 0 & 0 < x' & 0 < edge < 10 & [](edge' =
-0).
+// INIT <=> y = 10 & y' = 0 & x = 0 & 0 < x' < 5 & 0 < edge < 5 &
+[](edge' = 0).
+INIT <=> y = 10 & 0 < y' < 5 & x = 0 & 0 < x' < 5 & edge = 5 & [](edge' = 0).
 FALL <=> [](y'' = -10).
-XMOVE <=> [](x'' = 0).
-XBOUNCE <=> []((x- = edge | x- = 10) & y- < 10 => x' = -x'-). 
-BOUNCE <=> [](y- = 0 | (x- < edge | x- > 10) & y- = 10 => y' =
--(4/5)*y'-).
+XCONST <=> [](x'' = 0).
+XBOUNCE <=> []((x- = edge | x- = 10) & y- < 0 => x' = -x'-). 
+BOUNCE <=> [](y- = -7 | (x- <= edge | x- >= 10) & y- = 0 => y' = -(4/5) * y'-).
 
-ASSERT(!(y > 10 & x > 10)).
+ASSERT(!(x >= 10 & y >= 0)).
 
-INIT, FALL << BOUNCE, XMOVE << XBOUNCE.
+INIT, FALL << BOUNCE, XCONST << XBOUNCE.

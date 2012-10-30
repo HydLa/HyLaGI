@@ -1,14 +1,12 @@
 TARGET	 := ../hyrose
 
-LIB_DIRS := symbolic_simulator virtual_constraint_solver simulator constraint_hierarchy parser common
+LIB_DIRS := symbolic_simulator virtual_constraint_solver simulator constraint_hierarchy parser common output
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
-#INCLUDES += -I../librealpaver -I../librealpaverbasic
 INCLUDES += -I/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 INCLUDES += -I/usr/local/include/boost-1_38
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
-##LDFLAGS  += -L../librealpaver  -L../librealpaverbasic
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/7.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/lib
 

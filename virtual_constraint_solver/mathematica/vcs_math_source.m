@@ -4,6 +4,8 @@ $RecursionLimit = 1000;
 (* 内部で用いる精度も上げてみる *)
 $MaxExtraPrecision = 1000;
 
+dList = {};
+
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
  想定外の形式の結果になって変な計算を初めてエラーメッセージが爆発することが無いようにするため．
  あまり良い形の実装ではなく，publicMethodにだけ書いておく形で実装できるなら多分それが設計的に一番良いはず．
@@ -186,8 +188,6 @@ checkConsistencyInterval[] :=  (
 
 appendZeroVars[vars_] := Join[vars, vars /. x_[t] -> x[0]];
 
-(* TODO 微分方程式を解いたら，その結果を再利用する *)
-
 publicMethod[
   checkConsistencyInterval,
   cons, initCons, pcons, vars,
@@ -197,10 +197,14 @@ publicMethod[
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint,
       {False, pcons},
-      If[sol === underConstraint,
-        (* 制約不足で微分方程式が解けない場合は，単純に各変数値およびその微分値が矛盾しないかを調べる *)
+      If[sol[[1]] === underConstraint,
+        (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
         (* Existsの第一引数はHold（HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある（気がする） *)
-        tCons = Reduce[Exists[Evaluate[appendZeroVars[vars]], initCons && cons && pcons], Reals],
+        tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
+        tCons = sol[[2]] /. tCons;
+        tCons = Select[applyList[tCons], (!hasVariable[#])&];
+        tmpPCons = If[getParameters[tCons] === {}, True, pcons];
+        tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals], Reduce::ztest1]],
         
         (* 微分方程式が解けた場合 *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
@@ -266,17 +270,20 @@ publicMethod[
     {sol, tStore, tVars, ret},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
-    tVars = getTimeVars[vars];
-    tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
-    simplePrint[tStore];
-    If[Length[Select[tStore, (hasVariable[ #[[2]] ])&, 1] ] > 0,
-      (* 右辺に変数名が残っている，つまり値が完全にtの式になっていない変数が出現した場合はunderConstraintを返す *)
+    If[sol[[1]] === underConstraint, 
       underConstraint,
-      ret = {convertExprs[tStore]};
-      debugPrint["ret after convert", ret];
-      ret = ruleOutException[ret];
-      simplePrint[ret];
-      ret
+      tVars = getTimeVars[vars];
+      tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
+      simplePrint[tStore];
+      If[Length[Select[tStore, (hasVariable[ #[[2]] ])&, 1] ] > 0,
+        (* 右辺に変数名が残っている，つまり値が完全にtの式になっていない変数が出現した場合はunderConstraintを返す *)
+        underConstraint,
+        ret = {convertExprs[tStore]};
+        debugPrint["ret after convert", ret];
+        ret = ruleOutException[ret];
+        simplePrint[ret];
+        ret
+      ]
     ]
   ]
 ];
@@ -477,6 +484,10 @@ removeDash[var_] := Module[
    ]
 ];
 
+
+apply[AndreduceSol_] :=
+  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
+
 (* AndではなくListでくくる *)
 
 applyList[reduceSol_] :=
@@ -656,8 +667,8 @@ createIntegratedValue[variable_, integRule_] := (
     理由3: bvnulなどの例外処理を統一したい
   @param expr 時刻に関する変数についての制約
   @param initExpr 変数の初期値についての制約
-  @return overConstraint | underConstraint | {各変数の値のルール，変数値が満たすべき制約（ルールに含まれているものは除く）} 
-  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．そうしないとシミュレーションできない例題がある．'
+  @return overConstraint | underConstraint | {変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} 
+  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．そうしないとシミュレーションできない例題がある．
 *)
 
 exDSolve[expr_, initExpr_] :=
@@ -681,16 +692,17 @@ Check[
             DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
             overConstraint,
             {DSolve::overdet, DSolve::bvnul}
-          ],
+          ]
+          ,
 
           (* 微分方程式の結果を再利用する場合 *)
 
-           For[j=1,j<=Length[dList],j++,
-	       debugPrint["dList",j];
-               debugPrint["  defferential equation", dList[[j]][[1]]];
-               debugPrint["  general solution", dList[[j]][[2]]];
-               debugPrint["  replaced Variable List", dList[[j]][[3]]];
-	   ];
+          For[j=1,j<=Length[dList],j++,
+            debugPrint["dList",j];
+            debugPrint["  defferential equation", dList[[j]][[1]]];
+            debugPrint["  general solution", dList[[j]][[2]]];
+            debugPrint["  replaced Variable List", dList[[j]][[3]]];
+	        ];
 
           idx = Position[Map[(Sort[#])&,dList],Sort[subset]];
           If[idx == {},
@@ -706,7 +718,6 @@ Check[
             For[j=1,j<=Length[generalInitValue],j++,
               generalInitValue[[j]][[0]] = Rule;
             ];
-            If[Length[dList] == 0, dList = {}];
             dList = Append[dList,{subset,sol,generalInitValue}];
             idx = Position[dList,subset],
             sol = dList[[idx[[1]][[1]],2]];
@@ -719,6 +730,7 @@ Check[
           ];
           sol = sol /. (dList[[idx[[1]][[1]]]][[3]] /. ini);
         ];
+        simplePrint[sol];
         checkMessage;
         If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
         tmpExpr = Complement[tmpExpr, subset];
@@ -734,7 +746,7 @@ Check[
       ]
     ];
     If[Length[subsets] > 1,
-      underConstraint,
+      {underConstraint, And@@resultCons && And@@Map[(And@@#)&, subsets], resultRule},
       {resultCons, resultRule}
     ]
   ],

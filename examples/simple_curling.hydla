@@ -1,11 +1,11 @@
 /* one dimensional curling model with only one stone */
 
-INIT <=> y = 0 & 0 < y' < 3.
-TIME <=> time = 0 & [](time' = 1).
+INIT <=> y = 0 & y' = 1 & 0 < border < 1 & [](border' = 0) & -1/20 < swept < -1/100 & [](swept' = 0).
+//INIT <=> y = 0 & y' = 1 & -1/20 < swept < -1/100 & [](swept' = 0).
 FRICTION <=> []((y' > 0 => y'' = -1/10) & (y' <= 0 => y'' = 0)).
-SWEEPING <=> [](time > 1 & y < 9 & 0 < y' < 1/2 => y'' = -1/40).
+SWEEPING <=> [](y < 9 & 0 < y' < border => y'' = -1/40). // 判断に幅を持たせる場合
+//SWEEPING <=> [](y < 9 & 0 < y' < 3/4 => y'' = swept). // スウィーピングの効果に幅を持たせる場合
 
-INIT, TIME, FRICTION << SWEEPING.
-//INIT,FRICTION.
+INIT, FRICTION << SWEEPING.
 
-ASSERT(y' != 0 | 9 < y < 11 ).
+ASSERT(y' != 0 | 9 < y < 11).

@@ -1,13 +1,9 @@
+// boost DC-DC converter
 
-//L=1, RL=1, vs=5, RC=1, R0=1, C=1, il，vcの初期値は0
-
-TIMER <=> [](s'=0)&[](timer'=1).
+TIMER <=> [](s'=0) & [](timer'=1).
 SWITCH <=> [](timer- = 1 => timer = 0 & s = 1-s-).
-INIT <=> 0 < vc < 5 & il = 0 & s = 0 & timer=0 & time = 0 & [](time' = 1).
-//STATE0 <=> [](il' = -il + 5 & vc'=-1/2*vc-).
-STATE1 <=> [](s- = 0 => il' = -il + 5 & vc'=-1/2*vc).
-STATE2 <=> [](s- = 1 => il' = -3/2*il - 1/2*vc + 5 & vc' = 1/2*il - 1/2*vc).
-
-//ASSERT(time < 2 | 2 < vc).
+INIT <=> vc = 2 & il = 0 & s = 0 & timer=0 & [](L = 10 & RL = 11 & VS = 5 & RC = 10 & R0 = 1 & C=1) .
+STATE1 <=> [](s = 0 => il' = -RL/L*il + VS/L & vc'=-vc/(C*(RC+R0))).
+STATE2 <=> [](s = 1 => il' = -(RL+RC*R0/(RC+R0))*il -R0/(L*(RC+R0))*vc + VS/L & vc' = R0/(C*(RC+R0))*il - 1/(C*(RC+R0))*vc).
 
 INIT, TIMER << SWITCH, STATE1, STATE2.

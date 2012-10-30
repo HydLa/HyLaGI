@@ -15,7 +15,7 @@ namespace hydla{
     };
 
      
-    int gettimeofday(struct timeval *tv, struct timezone *tz)
+    int gettimeofday(timeval *tv, struct timezone *tz)
     {
       FILETIME ft;
       unsigned __int64 tmpres = 0;

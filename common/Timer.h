@@ -23,10 +23,13 @@ namespace hydla{
   namespace timer{
     
     typedef double elapsed_time_t;
-    typedef struct timeval {
+
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
+    struct timeval {
       long tv_sec;
       long tv_usec;
-    } timeval;
+    };
+#endif
 
     class Timer
     {
