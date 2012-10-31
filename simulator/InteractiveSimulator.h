@@ -7,6 +7,7 @@
 #include "version.h"
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include "SymbolicOutputter.h"
 //#include <ncurses.h>
 
 #ifndef _MSC_VER
@@ -48,8 +49,9 @@ public:
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   virtual phase_result_const_sptr_t simulate(){
+    hydla::output::SymbolicOutputter outputter(opts_->output_variables);
     while(!state_stack_.empty()) {
-      SimulationPhase state(pop_phase_result());
+      simulation_phase_t state(pop_phase_result());
       phase_result_sptr_t& pr = state.phase_result;
       bool consistent;
       int exit = 0;
@@ -63,9 +65,10 @@ public:
         if(pr->phase == PointPhase){
           exit = interactive_simulate(phases[0]);
         }
+        
 
         if(!phases.empty()){
-          // TODO: std::cout << get_state_output(*phases[0].phase_result->parent,0,1) << std::endl;
+          cout << outputter.get_state_output(*phases[0].phase_result->parent,0,1);
           // std::cout << "size" << phases.size() << std::endl;
           int selectcase = 0;
           //* 変数変更ができるまでいったんコメントアウト できたら順番を考える
@@ -74,7 +77,7 @@ public:
             std::cout << "-------------------------------------" << std::endl;
             for(int i=0;i<phases.size();i++){
               std::cout << "-----Case " << i << "--------------------------" << std::endl;
-            // TODO:   std::cout << get_state_output(*phases[i]->parent,0,1) << std::endl;
+              cout << outputter.get_state_output(*phases[i].phase_result->parent,0,1);
             }
             std::cout << "-------------------------------------" << std::endl;
             std::cout << "-------------------------------------" << std::endl;
@@ -87,10 +90,15 @@ public:
             // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
             phases[selectcase].module_set_container = msc_original_;
           }
+
           push_simulation_phase(phases[selectcase]);
         }
-
         if(exit){
+          variable_map_t vm = pr->variable_map;
+          variable_map_t::const_iterator v_it  = vm.begin();
+          for(v_it = vm.begin(); v_it!=vm.end(); ++v_it) {
+            std::cout << *(v_it->first) << "\t: " << *(v_it->second) << std::endl;
+          }
           break;
         }
       }catch(const std::runtime_error &se){
@@ -141,7 +149,6 @@ public:
         if(all_state_.size()!=0)
         {
           //debug{{{
-          
           for(int i=0;i<all_state_.size();i++)
           { 
             phase_result_sptr_t &pr = all_state_[i].phase_result;
@@ -182,22 +189,22 @@ public:
         // default:
         return 0;
       case 's':
-                 //           save_state();
-                 return 0;
+        //           save_state();
+        return 0;
       case 'h':
-               show_help();
-               return 0;
+        show_help();
+        return 0;
       case 'w':
-               change_variables(phase.phase_result);
-               //change_variable_flag = 1;
-               return 0;
+        change_variables(phase.phase_result);
+        //change_variable_flag = 1;
+        return 0;
       case 'd':
-               select_options();
-               return 0;
+        select_options();
+        return 0;
       case 'b':
-               set_breakpoint();
+        set_breakpoint();
       case 'p':
-               print();
+        print();
     }
     if(line[0] == 'q'||line[0] == 's'){
       cout << "exit" << endl;
@@ -344,7 +351,7 @@ public:
       vm.set_variable(v_it->first,testvalue);
       std::cout << "--------" << std::endl;
       for(v_it = vm.begin(); v_it!=vm.end(); ++v_it) {
-        std::cout << *(v_it->first) << "\t: " << v_it->second << std::endl;
+        std::cout << *(v_it->first) << "\t: " << *(v_it->second) << std::endl;
       }
       std::cout << "--------"  << std::endl;
       phase->parent->variable_map = vm;
@@ -386,7 +393,7 @@ public:
       }
       std::cout << "-------variable map  --------"  << std::endl;
       for(v_it = vm.begin(); v_it!=vm.end(); ++v_it) {
-        std::cout << *(v_it->first) << "\t: " << v_it->second << std::endl;
+        std::cout << *(v_it->first) << "\t: " << *(v_it->second) << std::endl;
       }
       std::cout << "-------parameter test--------"  << std::endl;
     }
@@ -450,7 +457,7 @@ public:
   /**
    * 各状態を保存しておくためのスタック
    */
-  std::stack<SimulationPhase> state_stack_;
+  //std::stack<SimulationPhase> state_stack_;
 
 
   /**
@@ -461,7 +468,7 @@ public:
   bool is_safe_;
   std::vector<SimulationPhase> all_state_;
   boost::shared_ptr<solver_t> solver_;
-  boost::shared_ptr<PhaseSimulator > phase_simulator_;
+  //boost::shared_ptr<PhaseSimulator > phase_simulator_;
 };
 
 } // simulator

@@ -24,11 +24,13 @@ public:
   
   void output_result_tree(const phase_result_const_sptr_t&)const;
   
+  std::string get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const;
+
   private:
   
   void output_variable_labels(std::ostream &stream, const variable_map_t variable_map) const;
   
-  std::string get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const;
+  //std::string get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const;
   
   void output_parameter_map(const parameter_map_t& pm) const;
 
