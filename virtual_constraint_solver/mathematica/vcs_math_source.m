@@ -674,7 +674,7 @@ createIntegratedValue[variable_, integRule_] := (
 exDSolve[expr_, initExpr_] :=
 Check[
   Module[
-    {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, sol, resultCons, resultRule, idx, generalInitValue, swapValue},
+    {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, j, sol, resultCons, resultRule, idx, generalInitValue, swapValue},
     tmpExpr = applyList[expr];
     resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
     tmpExpr = Complement[tmpExpr, resultCons];
@@ -687,22 +687,17 @@ Check[
       tVars = Union[getVariables[subset]];
       If[Length[tVars] == Length[subset],
         ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
-        If[optOptimizationLevel == 0, 
-          sol = Check[
-            DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
-            overConstraint,
-            {DSolve::overdet, DSolve::bvnul}
-          ]
-          ,
+        If[optOptimizationLevel == 1, 
 
           (* ”÷•ª•û’ö®‚ÌŒ‹‰Ê‚ğÄ—˜—p‚·‚éê‡ *)
-
+(*
           For[j=1,j<=Length[dList],j++,
             debugPrint["dList",j];
             debugPrint["  defferential equation", dList[[j]][[1]]];
             debugPrint["  general solution", dList[[j]][[2]]];
             debugPrint["  replaced Variable List", dList[[j]][[3]]];
-	        ];
+          ];
+*)
 
           idx = Position[Map[(Sort[#])&,dList],Sort[subset]];
           If[idx == {},
@@ -728,7 +723,13 @@ Check[
             ini[[j]][[1]] = swapValue;
             ini[[j]][[0]] = Rule;
           ];
-          sol = sol /. (dList[[idx[[1]][[1]]]][[3]] /. ini);
+          sol = sol /. (dList[[idx[[1]][[1]]]][[3]] /. ini)
+          ,
+          sol = Check[
+            DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
+            overConstraint,
+            {DSolve::overdet, DSolve::bvnul}
+          ]
         ];
         checkMessage;
         If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
