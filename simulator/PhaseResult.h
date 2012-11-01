@@ -7,7 +7,6 @@
 
 #include "DefaultVariable.h"
 #include "ValueRange.h"
-#include "./VariableMap.h"
 #include "./Types.h"
 #include "ModuleSet.h"
 
@@ -23,16 +22,17 @@ class DefaultParameter;
  */
 
 struct PhaseResult {
+  typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
+  typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
+
+
   typedef boost::shared_ptr<Value>                          value_t;
   typedef ValueRange                                        range_t;
   typedef DefaultVariable                                   variable_t;
   typedef DefaultParameter                                  parameter_t;
   typedef value_t                                           time_t;
-  typedef VariableMap<variable_t*, value_t >                variable_map_t;
-  typedef VariableMap<parameter_t*, range_t>                parameter_map_t;
-  typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
-  typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
-
+  typedef std::map<variable_t*, value_t>                   variable_map_t;
+  typedef std::map<parameter_t*, range_t>                   parameter_map_t;
 
   Phase                     phase;
   int id;
@@ -59,9 +59,10 @@ struct PhaseResult {
 
 };
 
+std::ostream& operator<<(std::ostream& s, const PhaseResult::parameter_map_t& pm);
+std::ostream& operator<<(std::ostream& s, const PhaseResult::variable_map_t& vm);
 
 } // namespace simulator
 } // namespace hydla 
 
 #endif // _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_
-

@@ -30,10 +30,8 @@ namespace symbolic_simulator {
   typedef simulator::Simulator::variable_t       variable_t;
   typedef simulator::DefaultParameter            parameter_t;
   typedef simulator::ValueRange                  value_range_t;
-  typedef simulator::VariableMap<variable_t*, 
-                                        value_t> variable_map_t;
-  typedef simulator::VariableMap<parameter_t*, 
-                                        value_range_t> parameter_map_t;
+  typedef simulator::PhaseResult::variable_map_t  variable_map_t;
+  typedef simulator::PhaseResult::parameter_map_t parameter_map_t;
   typedef simulator::continuity_map_t            continuity_map_t;
   typedef simulator::constraints_t               constraints_t;
   typedef simulator::tells_t                     tells_t;

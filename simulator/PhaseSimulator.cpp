@@ -11,7 +11,7 @@ PhaseSimulator::~PhaseSimulator(){}
 
 PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPhase& state, bool &consistent)
 {
-  HYDLA_LOGGER_PHASE("%% current time:", state.phase_result->current_time);
+  HYDLA_LOGGER_PHASE("%% current time:", *state.phase_result->current_time);
   HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state.phase_result->parent->variable_map);
   HYDLA_LOGGER_PHASE("--- parameter map ---\n", state.phase_result->parameter_map);
 
@@ -37,7 +37,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPha
     switch(state.phase_result->phase) 
     {
       case PointPhase:
-      { 
+      {
         simulation_phases_t tmp = simulate_ms_point(ms, state, time_applied_map, consistent);
         phases.insert(phases.begin(), tmp.begin(), tmp.end());
         break;
@@ -100,7 +100,7 @@ PhaseSimulator::simulation_phase_t PhaseSimulator::create_new_simulation_phase()
 
 PhaseSimulator::simulation_phase_t PhaseSimulator::create_new_simulation_phase(const simulation_phase_t& old) const
 {
-  simulation_phase_t sim;
+  simulation_phase_t sim(old);
   sim.phase_result.reset(new phase_result_t(*old.phase_result));
   sim.phase_result->cause_of_termination = NONE;
   return sim;

@@ -62,13 +62,10 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       v.name             = it->first;
       v.derivative_count = d;
       variable_set_.push_front(v);
-      variable_map_.set_variable(&(variable_set_.front()), value_t());
+      variable_map_[&(variable_set_.front())] = value_t();
     }
   }
 
-  HYDLA_LOGGER_REST(
-    "#*** variable map ***\n",
-    variable_map_);
 }
 
 

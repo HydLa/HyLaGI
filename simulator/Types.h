@@ -74,6 +74,7 @@ typedef hydla::ch::ModuleSetContainer                     module_set_container_t
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
 typedef hydla::ch::ModuleSetContainer::module_set_list_t  module_set_list_t;
 
+
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Node> > constraints_t;
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells_t;
@@ -106,6 +107,7 @@ struct SimulationPhase{
 };
 
 
+std::ostream& operator<<(std::ostream& s, const constraints_t& a);
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);

@@ -26,6 +26,13 @@ namespace {
   };
 }
 
+
+std::ostream& operator<<(std::ostream& s, const constraints_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a)
 {
   s << NodeDumper(a.begin(), a.end());

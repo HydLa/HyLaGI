@@ -92,12 +92,12 @@ parameter_set_t SymbolicSimulator::get_parameter_set(){
 
 void SymbolicSimulator::push_branch_states(simulation_phase_t &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
   for(int i=0; i<(int)result.true_parameter_maps.size();i++){
-    simulation_phase_t branch_state(original);
+    simulation_phase_t branch_state(create_new_simulation_phase(original));
     branch_state.phase_result->parameter_map = result.true_parameter_maps[i];
     dst.push_back(branch_state);
   }
   for(int i=0; i<(int)result.false_parameter_maps.size();i++){
-    simulation_phase_t branch_state(original);
+    simulation_phase_t branch_state(create_new_simulation_phase(original));
     branch_state.phase_result->parameter_map = result.false_parameter_maps[i];
     dst.push_back(branch_state);
   }
@@ -262,7 +262,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
   add_continuity(continuity_map);
 
   if(branched_ask!=NULL){
-    HYDLA_LOGGER_CLOSURE("%% branched_ask:", **branched_ask);
+    HYDLA_LOGGER_CLOSURE("%% branched_ask:", TreeInfixPrinter().get_infix_string(*branched_ask));
     CalculateClosureResult result;
     {
       // 分岐先を生成（導出されない方）
@@ -402,6 +402,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   pr->calculate_closure_timer.count_time();
   
   if(result.size() != 1){
+    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = false)***\n");
     consistent = false;
     return result;
   }
@@ -415,7 +416,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     phase.phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
     phase.phase_result->parent->children.push_back(phase.phase_result);
     consistent = true;
-    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval (results.size() != 1)***");
+    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = true)***\n");
     return simulation_phases_t();
   }
 
@@ -516,17 +517,19 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     for(unsigned int time_it=0; time_it<time_result.candidates.size() && (opts_->nd_mode||time_it==0); time_it++){
       simulation_phase_t branch_state(create_new_simulation_phase(state));
       phase_result_sptr_t &bpr = branch_state.phase_result;
+      SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
-      bpr->parameter_map.set_variable(time_result.candidates[time_it].parameter_map.begin(), time_result.candidates[time_it].parameter_map.end());
-      
+      for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
+        bpr->parameter_map[it->first] = it->second;
+      }
       bpr->parent->children.push_back(bpr);
       simulation_phase_t new_state(create_new_simulation_phase(new_state_original));
       phase_result_sptr_t& npr = new_state.phase_result;
       
-      if(!time_result.candidates[time_it].is_max_time ) {
-        bpr->end_time = time_result.candidates[time_it].time;
-        npr->current_time = time_result.candidates[time_it].time;
+      if(!candidate.is_max_time ) {
+        bpr->end_time = candidate.time;
+        npr->current_time = candidate.time;
         solver_->simplify(npr->current_time);
         npr->parameter_map = bpr->parameter_map;
         npr->parent = bpr;
@@ -556,13 +559,13 @@ variable_map_t ret = *variable_map_;
 for(vcs::SymbolicVirtualConstraintSolver::variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
   variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
   if(r_it->second.is_unique()){
-    ret.set_variable(variable, r_it->second.get_lower_bound().value);
+    ret[variable] = r_it->second.get_lower_bound().value;
   }else{
     parameter_t param(r_it->first, state);
     parameter_set_->push_front(param);
-    parameter_map.set_variable(&(parameter_set_->front()), r_it->second);
-    ret.set_variable(variable, value_t(new SymbolicValue(node_sptr(
-      new Parameter(variable->get_name(), variable->get_derivative_count(), state->id)))));
+    parameter_map[&(parameter_set_->front())] = r_it->second;
+    ret[variable] = value_t(new SymbolicValue(node_sptr(
+      new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
     // TODO:記号定数導入後，各変数の数式に出現する変数を記号定数に置き換える
   }
 }
@@ -576,9 +579,9 @@ variable_map_t::const_iterator it  = vm.begin();
 variable_map_t::const_iterator end = vm.end();
 for(; it!=end; ++it) {
   if(it->second->is_undefined())
-    shifted_vm.set_variable(it->first, it->second);
+    shifted_vm[it->first] = it->second;
   else
-    shifted_vm.set_variable(it->first, solver_->shift_expr_time(it->second, time));
+    shifted_vm[it->first] = solver_->shift_expr_time(it->second, time);
 }
 return shifted_vm;
 }

@@ -11,7 +11,7 @@ namespace symbolic_simulator{
 
 bool SymbolicValue::is_undefined() const
 {
-  return (node_==NULL);
+  return (node_ == NULL);
 }
 
 SymbolicValue::SymbolicValue(){}

@@ -309,13 +309,13 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
         if(!variable_ptr){
           continue;
         }
-        value_range_t tmp_range = map.get_variable(variable_ptr);
+        value_range_t tmp_range = map[variable_ptr];
         MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
         if(symbolic_value->is_undefined()){
           throw SolveError("invalid value");
         }
         HYDLA_LOGGER_VCS("%% symbolic_value: ", *symbolic_value);
-        map.set_variable(variable_ptr, tmp_range);
+        map[variable_ptr] = tmp_range;
       }
       create_result.result_maps.push_back(map);
     }
@@ -484,8 +484,8 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
   // maxTime‚ð“n‚·
   time_t tmp_time(max_time->clone());
   *tmp_time -= *current_time;
-  HYDLA_LOGGER_VCS("%% current time:", current_time);
-  HYDLA_LOGGER_VCS("%% send time:", tmp_time);
+  HYDLA_LOGGER_VCS("%% current time:", *current_time);
+  HYDLA_LOGGER_VCS("%% send time:", *tmp_time);
   ps.put_value(tmp_time, PacketSender::VA_Time);
 
   //—£ŽU•Ï‰»‚ÌðŒ‚ð“n‚·
@@ -547,14 +547,14 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     if(tmp_param == NULL){
       throw SolveError("some unknown form of result");
     }
-    value_range_t tmp_range = map.get_variable(tmp_param);
+    value_range_t tmp_range = map[tmp_param];
     HYDLA_LOGGER_VCS("%% returned parameter_name: ", *tmp_param);
     int relop_code = ml_.get_integer();
     HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
     value_t tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
     HYDLA_LOGGER_VCS("%% returned value: ", tmp_value->get_string());
     MathematicaExpressionConverter::set_range(tmp_value, tmp_range, relop_code);
-    map.set_variable(tmp_param, tmp_range);
+    map[tmp_param] = tmp_range;
   }
   HYDLA_LOGGER_VCS("--- result map---\n", map);
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
@@ -587,7 +587,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
       value = value_t(MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_));
       HYDLA_LOGGER_REST("value : ", value->get_string());
     }
-    out_vm.set_variable(it->first, value);
+    out_vm[it->first] = value;
   }
   ml_.MLNewPacket();
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::apply_time_to_vm ***");

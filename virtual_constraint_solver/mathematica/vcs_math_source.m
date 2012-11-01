@@ -202,10 +202,8 @@ publicMethod[
         (* Existsの第一引数はHold（HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある（気がする） *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
         tCons = sol[[2]] /. tCons;
-        tCons = Select[applyList[tCons], (!hasVariable[#])&];
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
         tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals], Reduce::ztest1]],
-        
         (* 微分方程式が解けた場合 *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
         tCons = sol[[1]] /. tCons;
@@ -245,7 +243,7 @@ publicMethod[
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
 createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
- 
+
 publicMethod[
   createVariableMap,
   cons, vars,
@@ -688,7 +686,6 @@ Check[
       If[Length[tVars] == Length[subset],
         ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
         If[optOptimizationLevel == 1, 
-
           (* 微分方程式の結果を再利用する場合 *)
 (*
           For[j=1,j<=Length[dList],j++,
@@ -731,6 +728,7 @@ Check[
             {DSolve::overdet, DSolve::bvnul}
           ]
         ];
+        simplePrint[sol];
         checkMessage;
         If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
         tmpExpr = Complement[tmpExpr, subset];
@@ -745,8 +743,9 @@ Check[
         i = 1;
       ]
     ];
+    simplePrint[resultCons];
     If[Length[subsets] > 1,
-      {underConstraint, And@@resultCons && And@@Map[(And@@#)&, subsets], resultRule},
+      {underConstraint, resultCons && And@@Map[(And@@#)&, subsets], resultRule},
       {resultCons, resultRule}
     ]
   ],
@@ -755,7 +754,6 @@ Check[
 
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
-
 
 
 (*

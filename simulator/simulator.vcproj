@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common"
+				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\symbolic_simulator"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -167,11 +167,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DefaultParameter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InitNodeRemover.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\PhaseResult.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PhaseSimulator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SequentialSimulator.cpp"
 				>
 			</File>
 			<File
@@ -270,10 +282,6 @@
 			</File>
 			<File
 				RelativePath=".\ValueVisitor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\VariableMap.h"
 				>
 			</File>
 		</Filter>

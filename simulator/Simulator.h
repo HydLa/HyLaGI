@@ -27,7 +27,6 @@
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
 
-#include "VariableMap.h"
 #include "PhaseResult.h"
 #include "InitNodeRemover.h"
 #include "TreeInfixPrinter.h"
@@ -183,8 +182,6 @@ protected:
   variable_set_t variable_set_;
   parameter_set_t parameter_set_;
   int state_id_;
-  
-
 
   /**
    * Žg—p‚·‚éPhaseSimulator

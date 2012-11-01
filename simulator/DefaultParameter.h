@@ -82,13 +82,9 @@ class DefaultParameter{
   {
     return lhs.get_name() < rhs.get_name();
   }
-
-  friend std::ostream& operator<<(std::ostream& s, 
-                                  const DefaultParameter& p)
-  {
-    return p.dump(s);
-  }
 };
+
+std::ostream& operator<<(std::ostream& s, const DefaultParameter& p);
 
 } // namespace simulator
 } // namespace hydla 

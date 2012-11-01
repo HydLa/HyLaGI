@@ -10,7 +10,6 @@
 
 #include "Timer.h"
 #include "Logger.h"
-#include "VariableMap.h"
 #include "PhaseResult.h"
 #include "TreeInfixPrinter.h"
 #include "Simulator.h"

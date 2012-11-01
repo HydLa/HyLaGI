@@ -124,6 +124,7 @@ public:
     s << get_string();
     return s;
   }
+  
 
   private:
   bound_t lower_, upper_;

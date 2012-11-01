@@ -68,16 +68,16 @@ public:
         
 
         if(!phases.empty()){
-          cout << outputter.get_state_output(*phases[0].phase_result->parent,0,1);
+          outputter.output_one_phase(phases[0].phase_result->parent);
           // std::cout << "size" << phases.size() << std::endl;
           int selectcase = 0;
           //* 変数変更ができるまでいったんコメントアウト できたら順番を考える
           if(phases.size()>1){
             std::cout << "branch off into "<< phases.size() << "cases" << std::endl;
             std::cout << "-------------------------------------" << std::endl;
-            for(int i=0;i<phases.size();i++){
+            for(unsigned int i=0;i<phases.size();i++){
               std::cout << "-----Case " << i << "--------------------------" << std::endl;
-              cout << outputter.get_state_output(*phases[i].phase_result->parent,0,1);
+              outputter.output_one_phase(phases[i].phase_result->parent);
             }
             std::cout << "-------------------------------------" << std::endl;
             std::cout << "-------------------------------------" << std::endl;
@@ -149,7 +149,7 @@ public:
         if(all_state_.size()!=0)
         {
           //debug{{{
-          for(int i=0;i<all_state_.size();i++)
+          for(unsigned int i=0;i<all_state_.size();i++)
           { 
             phase_result_sptr_t &pr = all_state_[i].phase_result;
             if(pr->phase==PointPhase)
@@ -163,7 +163,7 @@ public:
           //debug}}}
           message_="input step number to jump";
           target_step = excin<int>(message_);
-          for(int i=0;i<all_state_.size();i++)
+          for(unsigned int i=0;i<all_state_.size();i++)
           {
             phase_result_sptr_t &pr = all_state_[i].phase_result;
             if(pr->step+1==target_step && pr->phase==PointPhase)
@@ -348,7 +348,7 @@ public:
     if(strvalue.substr(0,1)!="(" & strvalue.substr(0,1)!="["){
     
       value_t testvalue(new hydla::symbolic_simulator::SymbolicValue(strvalue));
-      vm.set_variable(v_it->first,testvalue);
+      vm[v_it->first] = testvalue;
       std::cout << "--------" << std::endl;
       for(v_it = vm.begin(); v_it!=vm.end(); ++v_it) {
         std::cout << *(v_it->first) << "\t: " << *(v_it->second) << std::endl;
@@ -376,12 +376,12 @@ public:
       testrange.set_lower_bound(lowvalue,lowerflag);
       parameter_t param(v_it->first, phase->parent);
       phase_simulator_->set_parameter_set(param);
-      pm.set_variable(&param, testrange);
+      pm[&param] = testrange;
       value_t pvalue(new hydla::symbolic_simulator::SymbolicValue(
         node_sptr(new Parameter(v_it->first->get_name(),
         v_it->first->get_derivative_count(),
         phase->parent->id))));
-      vm.set_variable(v_it->first, pvalue);
+      vm[v_it->first] = pvalue;
       
       cout << "parameter change id :" << phase->parent->id << endl;
       phase->parent->variable_map = vm;

@@ -16,7 +16,6 @@
 #include <boost/function.hpp>
 
 #include "Types.h"
-#include "VariableMap.h"
 #include "../symbolic_simulator/SymbolicTypes.h"
 
 namespace hydla {
@@ -37,7 +36,7 @@ public:
   typedef hydla::symbolic_simulator::value_range_t           value_range_t;
   typedef hydla::symbolic_simulator::time_t                  time_t;
   typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
-  typedef hydla::simulator::VariableMap<variable_t*, value_range_t>      variable_range_map_t;
+  typedef std::map<variable_t*, value_range_t>               variable_range_map_t;
   typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
   typedef std::vector<parameter_map_t>                       parameter_maps_t;
   typedef hydla::simulator::tells_t                          tells_t;
@@ -175,7 +174,7 @@ public:
     variable_set_=&v;
     original_range_map_.clear();
     for(variable_set_t::iterator it = variable_set_->begin(); it != variable_set_->end(); it++){
-      original_range_map_.set_variable(&(*it), value_range_t());
+      original_range_map_[&(*it)] = value_range_t();
     }
   }
 
@@ -217,7 +216,7 @@ public:
   parameter_set_t* parameter_set_;
 };
 
-
+std::ostream& operator<<(std::ostream& s, const SymbolicVirtualConstraintSolver::variable_range_map_t& vm);
 } //namespace vcs
 } //namespace hydla 
 
