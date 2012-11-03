@@ -5,6 +5,7 @@ $RecursionLimit = 1000;
 $MaxExtraPrecision = 1000;
 
 dList = {};
+createMapList = {};
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
  想定外の形式の結果になって変な計算を初めてエラーメッセージが爆発することが無いようにするため．
@@ -140,6 +141,7 @@ publicMethod[name_, args___, define_] := (
  * startTimes: 呼び出された関数の開始時刻を積むプロファイリング用スタック
  * profileList: プロファイリング結果のリスト
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
+ * createMapList: createMap関数への入力と出力の組のリスト
  *)
 
 
@@ -305,21 +307,29 @@ publicMethod[
 ]
 
 createMap[cons_, judge_, hasJudge_, vars_] := Module[
-  {map},
+  {map, idx},
   If[cons === True || cons === False, 
     cons,
-    (* TODO: ここでprevに関する処理は本来なくてもいいはず．時刻0でのprevの扱いさえうまくできればどうにかなる？ *)
-    map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
-    map = Reduce[map, vars, Reals];
-    (* TODO:2回も同じルール適用をしたくない．場合の重複や，不要な条件の発生を抑えつつ，何かできないか？ *)
-    map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
-    simplePrint[map];
-    map = LogicalExpand[map];
-    map = applyListToOr[map];
-    map = Map[(applyList[#])&, map];
-    debugPrint["@createMap map after applyList", map];
+    idx = {};
+    If[optOptimizationLevel == 1,
+      idx = Position[createMapList,{cons,judge,hasJudge,vars}];
+      If[idx != {}, map = createMapList[[idx[[1]][[1]]]][[2]]];
+    ];
+    If[idx == {},
+      (* TODO: ここでprevに関する処理は本来なくてもいいはず．時刻0でのprevの扱いさえうまくできればどうにかなる？ *)
+      map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+      map = Reduce[map, vars, Reals];
+      (* TODO:2回も同じルール適用をしたくない．場合の重複や，不要な条件の発生を抑えつつ，何かできないか？ *)
+      map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+      simplePrint[map];
+      map = LogicalExpand[map];
+      map = applyListToOr[map];
+      map = Map[(applyList[#])&, map];
+      debugPrint["@createMap map after applyList", map];
     
-    map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
+      map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
+      If[optOptimizationLevel == 1, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
+    ];
     map
   ]
 ];
