@@ -1,5 +1,5 @@
-#ifndef _HYDLA_OUTPUT_OUTPUTTER_H_
-#define _HYDLA_OUTPUT_OUTPUTTER_H_
+#ifndef _HYDLA_OUTPUT_TRAJECTORY_OUTPUTTER_H_
+#define _HYDLA_OUTPUT_TRAJECTORY_OUTPUTTER_H_
 
 #include <iostream>
 #include <sstream>
@@ -12,7 +12,7 @@ namespace hydla{
 namespace output{
 
 /**
- * 処理系の結果の出力を担当するクラス
+ * 解軌道の出力を担当するクラス
  */
 
 class Outputter{
@@ -33,4 +33,4 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_OUTPUTTER_H_
+#endif // _HYDLA_OUTPUT_TRAJECTORY_OUTPUTTER_H_

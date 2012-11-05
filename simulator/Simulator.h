@@ -125,8 +125,6 @@ public:
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
-
-
  
   /**
    * 新たなSimulationPhaseの作成
@@ -141,8 +139,6 @@ public:
   simulation_phase_t create_new_simulation_phase(const simulation_phase_t& old) const;
 
 protected:
-
-
 
   /**
    * 状態キューに新たな状態を追加する
@@ -160,6 +156,8 @@ protected:
   {
     simulation_phase_t state(state_stack_.top());
     state_stack_.pop();
+    simulated_phases_.push_back(state);
+    // とりあえず，この関数で取りだしたものは必ずシミュレーションを行うことを前提にする．
     return state;
   }
   
@@ -199,8 +197,11 @@ protected:
   
   parse_tree_sptr parse_tree;
   
-  ///解軌道木の根．初期状態なので，子供以外の情報は入れない
+  /// 解軌道木の根．初期状態なので，子供以外の情報は入れない
   phase_result_sptr_t result_root_;
+  
+  /// 実際にシミュレータが閉包計算などを行ったフェーズの集合．主にプロファイリングのために取っておく．
+  std::vector<SimulationPhase> simulated_phases_;
   
   Opts*     opts_;
   private:

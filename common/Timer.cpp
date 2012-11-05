@@ -48,7 +48,6 @@ namespace hydla{
         tz->tz_minuteswest /= 60;
         _get_daylight(& tz->tz_dsttime);
       }
-     
       return 0;
     }
 
@@ -62,7 +61,7 @@ namespace hydla{
   namespace timer{
     
     Timer::Timer(){
-      restart();
+      reset();
     }
     
     Timer::~Timer(){}

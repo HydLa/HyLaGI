@@ -114,8 +114,6 @@ void SequentialSimulator::initialize(const parse_tree_sptr& parse_tree){
     pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
     state.module_set_container = msc_original_;
     pr->parent = result_root_;
-    pr->phase_timer.reset();
-    pr->calculate_closure_timer.reset();
     push_simulation_phase(state);
 }
 

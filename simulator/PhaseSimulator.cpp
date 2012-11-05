@@ -15,7 +15,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPha
   HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state.phase_result->parent->variable_map);
   HYDLA_LOGGER_PHASE("--- parameter map ---\n", state.phase_result->parameter_map);
 
-  state.phase_result->phase_timer.restart();
+  state.profile_results["Phase"].restart();
 
   simulation_phases_t phases; 
   bool has_next = false;
@@ -61,9 +61,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPha
       state.module_set_container->mark_current_node();
     }
     if(phases.size() > 1){
-      for(phase_result_sptrs_t::iterator it = state.phase_result->parent->children.begin(); it != state.phase_result->parent->children.end(); it++){
-        if((*it)->id == state.phase_result->id) (*it)->phase_timer.count_time();
-      }
+      state.profile_results["Phase"].count_time();
       return phases;
     }
     
@@ -75,9 +73,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPha
     state.phase_result->cause_of_termination = simulator::INCONSISTENCY;
     state.phase_result->parent->children.push_back(state.phase_result);
   }
-  for(phase_result_sptrs_t::iterator it = state.phase_result->parent->children.begin(); it != state.phase_result->parent->children.end(); it++){
-    if((*it)->id == state.phase_result->id) (*it)->phase_timer.count_time();
-  }
+  state.profile_results["Phase"].count_time();
   return phases;
 }
 

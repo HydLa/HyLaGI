@@ -5,6 +5,7 @@ $RecursionLimit = 1000;
 $MaxExtraPrecision = 1000;
 
 dList = {};
+profileList = {};
 createMapList = {};
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
@@ -44,7 +45,6 @@ Module[{endTime,startTime,funcidx,i},
   endTime = SessionTime[];
   startTime = Last[startTimes];
   startTimes = Drop[startTimes,-1];
-  If[Length[profileList]===0,profileList={};];
   If[Position[profileList, funcname] =!= {},
     funcidx = Flatten[Position[profileList,funcname]][[1]];
     profileList[[funcidx,2]] = profileList[[funcidx,2]] + 1;
@@ -700,9 +700,9 @@ Check[
 (*
           For[j=1,j<=Length[dList],j++,
             debugPrint["dList",j];
-            debugPrint["  defferential equation", dList[[j]][[1]]];
-            debugPrint["  general solution", dList[[j]][[2]]];
-            debugPrint["  replaced Variable List", dList[[j]][[3]]];
+            debugPrint["  defferential equation", dList[[j, 1]]];
+            debugPrint["  general solution", dList[[j, 2]]];
+            debugPrint["  replaced Variable List", dList[[j, 3]]];
           ];
 *)
 
@@ -710,7 +710,7 @@ Check[
           If[idx == {},
             generalInitValue = ini;
             For[j=1,j<=Length[generalInitValue],j++,
-              generalInitValue[[j]][[1]] = initValue[j];
+              generalInitValue[[j, 1]] = initValue[j];
             ];
             sol = Check[
               DSolve[Union[subset, generalInitValue], Map[(#[t])&, tVars], t],
@@ -718,19 +718,19 @@ Check[
               {DSolve::overdet, DSolve::bvnul}
             ];
             For[j=1,j<=Length[generalInitValue],j++,
-              generalInitValue[[j]][[0]] = Rule;
+              generalInitValue[[j, 0]] = Rule;
             ];
             dList = Append[dList,{subset,sol,generalInitValue}];
             idx = Position[dList,subset],
-            sol = dList[[idx[[1]][[1]],2]];
+            sol = dList[[idx[[1,1]],2]];
           ];
           For[j=1,j<=Length[ini],j++,
-            swapValue = ini[[j]][[2]];
-            ini[[j]][[2]] = ini[[j]][[1]];
-            ini[[j]][[1]] = swapValue;
-            ini[[j]][[0]] = Rule;
+            swapValue = ini[[j, 2]];
+            ini[[j, 2]] = ini[[j, 1]];
+            ini[[j, 1]] = swapValue;
+            ini[[j, 0]] = Rule;
           ];
-          sol = sol /. (dList[[idx[[1]][[1]]]][[3]] /. ini)
+          sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
           ,
           sol = Check[
             DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],

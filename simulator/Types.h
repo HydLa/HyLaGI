@@ -11,6 +11,7 @@
 #include "ModuleSet.h"
 #include "ModuleSetContainer.h"
 #include "ParseTree.h"
+#include "Timer.h"
 
 namespace hydla {
 namespace simulator {
@@ -104,6 +105,8 @@ struct SimulationPhase{
   module_set_container_sptr module_set_container;
   /// 判定済みのモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   std::set<module_set_sptr> visited_module_sets;
+  /// プロファイリング結果 名前と時間のマップ
+  std::map<std::string, timer::Timer> profile_results;
 };
 
 

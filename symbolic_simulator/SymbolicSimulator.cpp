@@ -325,12 +325,13 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
   solver_->reset(vm, pr->parameter_map);
 
-  pr->calculate_closure_timer.restart();
+  state.profile_results["CalculateClosure"].restart();
 
   //•Â•ïŒvŽZ
   CalculateClosureResult result = calculate_closure(state, ms, ea,positive_asks,negative_asks);
   
-  pr->calculate_closure_timer.count_time();
+  state.profile_results["CalculateClosure"].count_time();
+
 
   if(result.size() != 1){
     consistent = false;
@@ -366,8 +367,6 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
     
     bpr->parent->children.push_back(bpr);
     npr->parent = bpr;
-    npr->phase_timer.reset();
-    npr->calculate_closure_timer.reset();
 
     if(is_safe_){
       phases.push_back(new_state);
@@ -394,12 +393,12 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   solver_->reset(pr->parent->variable_map, pr->parameter_map);
   expanded_always_t ea(pr->expanded_always);
 
-  pr->calculate_closure_timer.restart();
+  state.profile_results["CalculateClosure"].restart();
 
   //•Â•ïŒvŽZ
   CalculateClosureResult result = calculate_closure(state, ms, ea,positive_asks,negative_asks);
 
-  pr->calculate_closure_timer.count_time();
+  state.profile_results["CalculateClosure"].count_time();
   
   if(result.size() != 1){
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = false)***\n");
@@ -533,8 +532,6 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
         solver_->simplify(npr->current_time);
         npr->parameter_map = bpr->parameter_map;
         npr->parent = bpr;
-        npr->phase_timer.reset();
-        npr->calculate_closure_timer.reset();
         phases.push_back(new_state);
       }else{
         bpr->cause_of_termination = simulator::TIME_LIMIT;

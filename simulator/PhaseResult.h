@@ -51,12 +51,6 @@ struct PhaseResult {
   phase_result_sptrs_t children;
   /// 前のフェーズ
   phase_result_sptr_t parent;
-
-  /// フェーズの処理にかかった時間
-  timer::Timer phase_timer;
-  /// フェーズの処理内でcalculate_closureにかかった時間
-  timer::Timer calculate_closure_timer;
-
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult::parameter_map_t& pm);
