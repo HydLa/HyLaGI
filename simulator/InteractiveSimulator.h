@@ -7,7 +7,7 @@
 #include "version.h"
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include "SymbolicOutputter.h"
+#include "SymbolicTrajPrinter.h"
 //#include <ncurses.h>
 
 #ifndef _MSC_VER
@@ -27,7 +27,7 @@ public:
   typedef PhaseSimulator                                    phase_simulator_t;
   typedef phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
   typedef std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
-  typedef std::vector<SimulationPhase>             simulation_phases_t;
+  typedef std::vector<simulation_phase_sptr_t>             simulation_phases_t;
 
   typedef phase_result_t::variable_map_t variable_map_t;
   typedef phase_result_t::variable_t     variable_t;
@@ -49,17 +49,17 @@ public:
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   virtual phase_result_const_sptr_t simulate(){
-    hydla::output::SymbolicOutputter outputter(opts_->output_variables);
+    hydla::output::SymbolicTrajPrinter Printer(opts_->output_variables);
     while(!state_stack_.empty()) {
-      simulation_phase_t state(pop_phase_result());
-      phase_result_sptr_t& pr = state.phase_result;
+      simulation_phase_sptr_t state(pop_simulation_phase());
+      phase_result_sptr_t& pr = state->phase_result;
       bool consistent;
       int exit = 0;
       try{
         if( opts_->max_phase >= 0 && pr->step > opts_->max_phase)
           continue;
         all_state_.push_back(state); 
-        state.module_set_container->reset(state.visited_module_sets);
+        state->module_set_container->reset(state->visited_module_sets);
         simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
 
         if(pr->phase == PointPhase){
@@ -68,7 +68,7 @@ public:
         
 
         if(!phases.empty()){
-          outputter.output_one_phase(phases[0].phase_result->parent);
+          Printer.output_one_phase(phases[0]->phase_result->parent);
           // std::cout << "size" << phases.size() << std::endl;
           int selectcase = 0;
           //* 変数変更ができるまでいったんコメントアウト できたら順番を考える
@@ -77,7 +77,7 @@ public:
             std::cout << "-------------------------------------" << std::endl;
             for(unsigned int i=0;i<phases.size();i++){
               std::cout << "-----Case " << i << "--------------------------" << std::endl;
-              outputter.output_one_phase(phases[i].phase_result->parent);
+              Printer.output_one_phase(phases[i]->phase_result->parent);
             }
             std::cout << "-------------------------------------" << std::endl;
             std::cout << "-------------------------------------" << std::endl;
@@ -85,10 +85,10 @@ public:
             selectcase = excin<int>(message_);
           }
           if(consistent){
-            phases[selectcase].module_set_container = msc_no_init_;
+            phases[selectcase]->module_set_container = msc_no_init_;
           }else{
             // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-            phases[selectcase].module_set_container = msc_original_;
+            phases[selectcase]->module_set_container = msc_original_;
           }
 
           push_simulation_phase(phases[selectcase]);
@@ -114,12 +114,14 @@ public:
     Simulator::initialize(parse_tree);
     state_id_ = 1;
     //初期状態を作ってスタックに入れる
-    simulation_phase_t state(create_new_simulation_phase());
-    phase_result_sptr_t pr = state.phase_result;
+    simulation_phase_sptr_t state(new simulation_phase_t());
+    phase_result_sptr_t& pr = state->phase_result;
+    pr.reset(new phase_result_t());
+    pr->cause_of_termination = NONE;
     pr->phase        = simulator::PointPhase;
     pr->step         = 0;
     pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
-    state.module_set_container = msc_original_;
+    state->module_set_container = msc_original_;
     pr->parent = result_root_;
     push_simulation_phase(state);
   }
@@ -134,7 +136,7 @@ public:
    * jを別メソッドに
    */
 
-  int interactive_simulate(simulation_phase_t& phase){
+  int interactive_simulate(simulation_phase_sptr_t& phase){
     //  change_variable_flag = false;
     opts_->max_time = "100";
     string line;
@@ -151,7 +153,7 @@ public:
           //debug{{{
           for(unsigned int i=0;i<all_state_.size();i++)
           { 
-            phase_result_sptr_t &pr = all_state_[i].phase_result;
+            phase_result_sptr_t &pr = all_state_[i]->phase_result;
             if(pr->phase==PointPhase)
             {
               cout <<  "[debug] step" << pr->step+1 << " pp t:" << pr-> current_time<< endl;
@@ -165,12 +167,12 @@ public:
           target_step = excin<int>(message_);
           for(unsigned int i=0;i<all_state_.size();i++)
           {
-            phase_result_sptr_t &pr = all_state_[i].phase_result;
+            phase_result_sptr_t &pr = all_state_[i]->phase_result;
             if(pr->step+1==target_step && pr->phase==PointPhase)
             {
               cout << "jump to step "<<pr->step+1 << " time:" << pr->current_time << endl;
               cout << "[debug] state size"<< all_state_.size() << "jump number" << i << endl;
-              phase.phase_result = pr;
+              phase->phase_result = pr;
               int j=0;
               int delete_size = all_state_.size()-i;
               for(j=0;j<delete_size;j++)
@@ -195,7 +197,7 @@ public:
         show_help();
         return 0;
       case 'w':
-        change_variables(phase.phase_result);
+        change_variables(phase->phase_result);
         //change_variable_flag = 1;
         return 0;
       case 'd':
@@ -466,7 +468,7 @@ public:
   parse_tree_sptr parse_tree_;
 
   bool is_safe_;
-  std::vector<SimulationPhase> all_state_;
+  std::vector<simulation_phase_sptr_t> all_state_;
   boost::shared_ptr<solver_t> solver_;
   //boost::shared_ptr<PhaseSimulator > phase_simulator_;
 };

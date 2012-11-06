@@ -1,5 +1,5 @@
-#ifndef _HYDLA_OUTPUT_TRAJECTORY_OUTPUTTER_H_
-#define _HYDLA_OUTPUT_TRAJECTORY_OUTPUTTER_H_
+#ifndef _HYDLA_OUTPUT_TRAJ_PRINTER_H_
+#define _HYDLA_OUTPUT_TRAJ_PRINTER_H_
 
 #include <iostream>
 #include <sstream>
@@ -15,7 +15,7 @@ namespace output{
  * âãOìπÇÃèoóÕÇíSìñÇ∑ÇÈÉNÉâÉX
  */
 
-class Outputter{
+class TrajPrinter{
 public:
   typedef hydla::simulator::PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
@@ -33,4 +33,4 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_TRAJECTORY_OUTPUTTER_H_
+#endif // _HYDLA_OUTPUT_TRAJECTORY_PRINTER_H_

@@ -59,7 +59,7 @@ namespace hydla{
       /**
        * 計測した時間を文字列で返す
        */
-      std::string get_time_string();
+      std::string get_time_string() const;
 
       /**
        * 呼ばれた時点でのタイマー初期化からの経過時刻を

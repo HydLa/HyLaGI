@@ -4,7 +4,9 @@
 #include "SymbolicSimulator.h"
 #include "SequentialSimulator.h"
 #include "InteractiveSimulator.h"
-#include "SymbolicOutputter.h"
+#include "SymbolicTrajPrinter.h"
+#include "StdProfilePrinter.h"
+#include "CsvProfilePrinter.h"
 
 // parser
 #include "DefaultNodeFactory.h"
@@ -26,17 +28,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
 {  
   ProgramOptions &po = ProgramOptions::instance();
 
-  /*
-  if(po.get<std::string>("tm") == "n") {
-    opts.time_measurement = tFmtNot;
-  } else if(po.get<std::string>("tm") == "s") {
-    opts.time_measurement = tFmtStd;
-  } else if(po.get<std::string>("tm") == "c") {
-    opts.time_measurement = tFmtCsv;
-  } else {
-    throw std::runtime_error(std::string("invalid option - time measurement"));
-  }
-  */
 
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math-name") + " -mathlink'";
   opts.debug_mode    = po.get<std::string>("debug")!="";
@@ -81,6 +72,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
 {
   Opts opts;
   setup_symbolic_simulator_opts(opts);
+  ProgramOptions &po = ProgramOptions::instance();
 
   if(opts.interactive_mode){ 
     //opts->max_time = "100";
@@ -92,8 +84,13 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     SequentialSimulator ss(opts);
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
-    hydla::output::SymbolicOutputter outputter(opts.output_variables);
-    outputter.output_result_tree(ss.simulate());
+    hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
+    Printer.output_result_tree(ss.simulate());
+    if(po.get<std::string>("tm") == "s") {
+      hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
+    } else if(po.get<std::string>("tm") == "c") {
+      hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+    }
   }
 }
 

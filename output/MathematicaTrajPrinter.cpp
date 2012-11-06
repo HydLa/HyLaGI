@@ -1,4 +1,4 @@
-#include "MathematicaOutputter.h"
+#include "MathematicaTrajPrinter.h"
 
 #include <stack>
 
@@ -8,7 +8,7 @@ using namespace hydla::simulator;
 namespace hydla{
 namespace output{
 /*
-void MathematicaOutputter::output_result_tree(const phase_result_const_sptr_t& result_root) const{
+void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& result_root) const{
   if(result_root->children.size() == 0){
     std::cout << "No Result." << std::endl;
     return;

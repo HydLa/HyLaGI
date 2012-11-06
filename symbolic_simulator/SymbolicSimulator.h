@@ -16,7 +16,7 @@
 #include "SymbolicTypes.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
 #include "PhaseSimulator.h"
-#include "../output/Outputter.h"
+#include "../output/TrajPrinter.h"
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -33,10 +33,10 @@ public:
   virtual ~SymbolicSimulator();
 
   virtual simulation_phases_t simulate_ms_point(const module_set_sptr& ms,
-                           simulation_phase_t& state, variable_map_t &vm, bool& consistent);
+                           simulation_phase_sptr_t& state, variable_map_t &vm, bool& consistent);
   
   virtual simulation_phases_t simulate_ms_interval(const module_set_sptr& ms,
-                              simulation_phase_t& state, bool& consistent);
+                              simulation_phase_sptr_t& state, bool& consistent);
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
   virtual void set_parameter_set(parameter_t param);
@@ -56,13 +56,13 @@ private:
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   
-  CalculateClosureResult calculate_closure(simulation_phase_t& state,
+  CalculateClosureResult calculate_closure(simulation_phase_sptr_t& state,
     const module_set_sptr& ms,
     expanded_always_t &expanded_always,
     positive_asks_t &positive_asks,
     negative_asks_t &negative_asks);
 
-  void push_branch_states(simulation_phase_t &original,
+  void push_branch_states(simulation_phase_sptr_t &original,
     hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result,
     CalculateClosureResult &dst);
 

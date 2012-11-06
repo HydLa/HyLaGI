@@ -91,6 +91,7 @@ public:
   typedef PhaseSimulator                                 phase_simulator_t;
   
   typedef SimulationPhase                                simulation_phase_t;
+  typedef boost::shared_ptr<SimulationPhase>             simulation_phase_sptr_t;
 
   typedef phase_result_t::variable_map_t      variable_map_t;
   typedef phase_result_t::variable_t          variable_t;
@@ -125,42 +126,37 @@ public:
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
- 
-  /**
-   * 新たなSimulationPhaseの作成
-   */
-  simulation_phase_t create_new_simulation_phase() const;
   
-
   /**
-   * 与えられたPhaseResultの情報をを引き継いだ，
-   * 新たなPhaseResultの作成
+   * プロファイリングの結果を取得
    */
-  simulation_phase_t create_new_simulation_phase(const simulation_phase_t& old) const;
+  entire_profile_t get_profile(){return profile_vector_;}
 
 protected:
 
   /**
    * 状態キューに新たな状態を追加する
    */
-  virtual void push_simulation_phase(const simulation_phase_t& state)
+  virtual void push_simulation_phase(const simulation_phase_sptr_t& state)
   {
-    state.phase_result->id = phase_id_++;
+    state->phase_result->id = phase_id_++;
     state_stack_.push(state);
   }
 
   /**
    * 状態キューから状態をひとつ取り出す
    */
-  simulation_phase_t pop_phase_result()
+  simulation_phase_sptr_t pop_simulation_phase()
   {
-    simulation_phase_t state(state_stack_.top());
+    simulation_phase_sptr_t state(state_stack_.top());
     state_stack_.pop();
-    simulated_phases_.push_back(state);
+    profile_vector_.push_back(state);
     // とりあえず，この関数で取りだしたものは必ずシミュレーションを行うことを前提にする．
     return state;
   }
   
+  /// 実際にシミュレータが閉包計算などを行ったフェーズの集合．主にプロファイリングのために取っておく．
+  entire_profile_t profile_vector_;
 
   /**
    * シミュレーション対象となるパースツリー
@@ -193,15 +189,13 @@ protected:
   /**
    * 各状態を保存しておくためのスタック
    */
-  std::stack<SimulationPhase> state_stack_;
+  std::stack<simulation_phase_sptr_t> state_stack_;
   
   parse_tree_sptr parse_tree;
   
   /// 解軌道木の根．初期状態なので，子供以外の情報は入れない
   phase_result_sptr_t result_root_;
   
-  /// 実際にシミュレータが閉包計算などを行ったフェーズの集合．主にプロファイリングのために取っておく．
-  std::vector<SimulationPhase> simulated_phases_;
   
   Opts*     opts_;
   private:

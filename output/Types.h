@@ -1,21 +1,14 @@
 #ifndef _INCLUDED_HYDLA_OUTPUT_TYPES_H_
 #define _INCLUDED_HYDLA_OUTPUT_TYPES_H_
 
+#include "../simulator/Types.h"
+
 namespace hydla{
 namespace output{
 
-typedef enum OutputFormat_ {
-  fmtTFunction,
-  fmtNumeric,
-  fmtMathematica,
-  fmtNInterval,
-} OutputFormat;
-  
-typedef enum TimeOutputFormat_ {
-  tFmtNot = 0,
-  tFmtStd,
-  tFmtCsv,
-} TimeOutputFormat;
+typedef simulator::entire_profile_t entire_profile_t;
+typedef simulator::profile_t profile_t;
+typedef simulator::PhaseResult phase_result_t;
 
 }// output
 }// hydla

@@ -26,7 +26,8 @@ public:
   typedef std::vector<phase_result_sptr_t>                      phase_result_sptrs_t;
   
   typedef SimulationPhase                                       simulation_phase_t;
-  typedef std::vector<simulation_phase_t>                       simulation_phases_t;
+  typedef boost::shared_ptr<simulation_phase_t>                 simulation_phase_sptr_t;
+  typedef std::vector<simulation_phase_sptr_t>                  simulation_phases_t;
   
   
   typedef PhaseSimulator                                    phase_simulator_t;
@@ -45,21 +46,21 @@ public:
   
   virtual ~PhaseSimulator();
 
-  virtual simulation_phases_t simulate_phase(SimulationPhase& state, bool &consistent);
+  virtual simulation_phases_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
   
   /**
-   * 新たなSimulationPhaseの作成
+   * 新たなsimulation_phase_sptr_tの作成
    */
-  simulation_phase_t create_new_simulation_phase() const;
+  simulation_phase_sptr_t create_new_simulation_phase() const;
 
   /**
    * 与えられたPhaseResultの情報を引き継いだ，
    * 新たなPhaseResultの作成
    */
-  simulation_phase_t create_new_simulation_phase(const simulation_phase_t& old) const;
+  simulation_phase_sptr_t create_new_simulation_phase(const simulation_phase_sptr_t& old) const;
   
   
   /**
@@ -67,14 +68,14 @@ public:
    * @return 次にシミュレーションするべきフェーズの集合
    */
   virtual simulation_phases_t simulate_ms_point(const module_set_sptr& ms,
-                           simulation_phase_t& state, variable_map_t &, bool& consistent) = 0;
+                           simulation_phase_sptr_t& state, variable_map_t &, bool& consistent) = 0;
 
   /**
    * モジュール集合の無矛盾性を確かめる関数．Interval Phase版
    * @return 次にシミュレーションするべきフェーズの集合
    */
   virtual simulation_phases_t simulate_ms_interval(const module_set_sptr& ms,
-                              simulation_phase_t& state, bool& consistent) = 0;
+                              simulation_phase_sptr_t& state, bool& consistent) = 0;
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
 

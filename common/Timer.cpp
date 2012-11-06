@@ -79,7 +79,7 @@ namespace hydla{
       elapsed_time_ += get_time();
     }
 
-    std::string Timer::get_time_string(){
+    std::string Timer::get_time_string() const{
       std::stringstream sstr;
       sstr << std::fixed;
       sstr << std::setprecision(TIMER_PLACES) << elapsed_time_;

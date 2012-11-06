@@ -91,7 +91,9 @@ typedef std::map<std::string, int>                               continuity_map_
 typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
 
 typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
-typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;  
+typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
+
+typedef std::map<std::string, timer::Timer> profile_t;
 
 /**
  * シミュレーションすべきフェーズを表す構造体
@@ -105,10 +107,15 @@ struct SimulationPhase{
   module_set_container_sptr module_set_container;
   /// 判定済みのモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   std::set<module_set_sptr> visited_module_sets;
-  /// プロファイリング結果 名前と時間のマップ
-  std::map<std::string, timer::Timer> profile_results;
+  /// プロファイリング結果
+  profile_t profile;
 };
 
+typedef boost::shared_ptr<SimulationPhase>     simulation_phase_sptr_t;
+typedef std::vector<simulation_phase_sptr_t>   simulation_phases_t;
+
+/// プロファイリングの結果 名前と時間のマップ
+typedef std::vector<simulation_phase_sptr_t> entire_profile_t;
 
 std::ostream& operator<<(std::ostream& s, const constraints_t& a);
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);

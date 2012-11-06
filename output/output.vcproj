@@ -156,19 +156,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\MathematicaOutputter.cpp"
+				RelativePath=".\CsvProfilePrinter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NumericalOutputter.cpp"
+				RelativePath=".\MathematicaTrajPrinter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SymbolicOutputter.cpp"
+				RelativePath=".\NumericTrajPrinter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\TimeOutputter.cpp"
+				RelativePath=".\ProfilePrinter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\StdProfilePrinter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicTrajPrinter.cpp"
 				>
 			</File>
 		</Filter>
@@ -178,27 +186,35 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\IntervalOutputter.h"
+				RelativePath=".\CsvProfilePrinter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\MathematicaOutputter.h"
+				RelativePath=".\IntervalTrajPrinter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\NumericalOutputter.h"
+				RelativePath=".\MathematicaTrajPrinter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Outputter.h"
+				RelativePath=".\NumericTrajPrinter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\SymbolicOutputter.h"
+				RelativePath=".\ProfilePrinter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\TimeOutputter.h"
+				RelativePath=".\StdProfilePrinter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicTrajPrinter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TrajPrinter.h"
 				>
 			</File>
 			<File

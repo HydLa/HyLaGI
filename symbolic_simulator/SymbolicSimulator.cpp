@@ -90,15 +90,15 @@ parameter_set_t SymbolicSimulator::get_parameter_set(){
 }
 
 
-void SymbolicSimulator::push_branch_states(simulation_phase_t &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
+void SymbolicSimulator::push_branch_states(simulation_phase_sptr_t &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
   for(int i=0; i<(int)result.true_parameter_maps.size();i++){
-    simulation_phase_t branch_state(create_new_simulation_phase(original));
-    branch_state.phase_result->parameter_map = result.true_parameter_maps[i];
+    simulation_phase_sptr_t branch_state(create_new_simulation_phase(original));
+    branch_state->phase_result->parameter_map = result.true_parameter_maps[i];
     dst.push_back(branch_state);
   }
   for(int i=0; i<(int)result.false_parameter_maps.size();i++){
-    simulation_phase_t branch_state(create_new_simulation_phase(original));
-    branch_state.phase_result->parameter_map = result.false_parameter_maps[i];
+    simulation_phase_sptr_t branch_state(create_new_simulation_phase(original));
+    branch_state->phase_result->parameter_map = result.false_parameter_maps[i];
     dst.push_back(branch_state);
   }
 }
@@ -126,7 +126,7 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
 }
 
 
-CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& state,
+CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_sptr_t& state,
     const module_set_sptr& ms,
     expanded_always_t &expanded_always,
     positive_asks_t &positive_asks,
@@ -139,7 +139,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
   tells_t         tell_list;
   constraints_t   constraint_list;
   boost::shared_ptr<hydla::parse_tree::Ask>  const *branched_ask;
-  phase_result_sptr_t &pr = state.phase_result;
+  phase_result_sptr_t &pr = state->phase_result;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -166,7 +166,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
     continuity_map = maker.get_continuity_map();
     add_continuity(continuity_map);
     
-    for(constraints_t::const_iterator it = state.temporary_constraints.begin(); it != state.temporary_constraints.end(); it++){
+    for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
 
@@ -266,14 +266,14 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
     CalculateClosureResult result;
     {
       // 分岐先を生成（導出されない方）
-      simulation_phase_t new_state(create_new_simulation_phase(state));
-      new_state.temporary_constraints.push_back(node_sptr(new Not((*branched_ask)->get_guard())));
+      simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
+      new_state->temporary_constraints.push_back(node_sptr(new Not((*branched_ask)->get_guard())));
       result.push_back(new_state);
     }
     {
       // 分岐先を生成（導出される方）
-      simulation_phase_t new_state(create_new_simulation_phase(state));
-      new_state.temporary_constraints.push_back((*branched_ask)->get_guard());
+      simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
+      new_state->temporary_constraints.push_back((*branched_ask)->get_guard());
       result.push_back(new_state);
     }
     return result;
@@ -308,14 +308,14 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_t& 
 }
 
 SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(const module_set_sptr& ms, 
-    simulation_phase_t& state,
+    simulation_phase_sptr_t& state,
     variable_map_t& vm,
     bool& consistent)
 {
   HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::simulate_ms_point***");
   //前準備
   
-  phase_result_sptr_t& pr = state.phase_result;
+  phase_result_sptr_t& pr = state->phase_result;
 
   solver_->change_mode(DiscreteMode, opts_->approx_precision);
 
@@ -325,12 +325,12 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
   solver_->reset(vm, pr->parameter_map);
 
-  state.profile_results["CalculateClosure"].restart();
+  state->profile["CalculateClosure"].restart();
 
   //閉包計算
   CalculateClosureResult result = calculate_closure(state, ms, ea,positive_asks,negative_asks);
   
-  state.profile_results["CalculateClosure"].count_time();
+  state->profile["CalculateClosure"].count_time();
 
 
   if(result.size() != 1){
@@ -346,8 +346,8 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   
   pr->module_set = ms;
 
-  simulation_phase_t new_state_original(create_new_simulation_phase());
-  phase_result_sptr_t& new_pr_original = new_state_original.phase_result;
+  simulation_phase_sptr_t new_state_original(create_new_simulation_phase());
+  phase_result_sptr_t& new_pr_original = new_state_original->phase_result;
   new_pr_original->step         = pr->step+1;
   new_pr_original->phase        = IntervalPhase;
   new_pr_original->current_time = pr->current_time;
@@ -358,9 +358,9 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
   for(unsigned int create_it = 0; create_it < create_result.result_maps.size() && (opts_->nd_mode||create_it==0); create_it++)
   {
-    simulation_phase_t new_state(create_new_simulation_phase(new_state_original));
-    simulation_phase_t branch_state(create_new_simulation_phase(state));
-    phase_result_sptr_t& npr = new_state.phase_result, &bpr = branch_state.phase_result;
+    simulation_phase_sptr_t new_state(create_new_simulation_phase(new_state_original));
+    simulation_phase_sptr_t branch_state(create_new_simulation_phase(state));
+    phase_result_sptr_t& npr = new_state->phase_result, &bpr = branch_state->phase_result;
 
     bpr->variable_map = range_map_to_value_map(bpr, create_result.result_maps[create_it], bpr->parameter_map);
     npr->parameter_map = bpr->parameter_map;
@@ -381,24 +381,24 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 }
 
 SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(const module_set_sptr& ms, 
-    simulation_phase_t& state,
+    simulation_phase_sptr_t& state,
     bool& consistent)
 {
   HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::simulate_ms_interval***");
   //前準備
-  phase_result_sptr_t& pr = state.phase_result;
+  phase_result_sptr_t& pr = state->phase_result;
   solver_->change_mode(ContinuousMode, opts_->approx_precision);
   negative_asks_t negative_asks;
   positive_asks_t positive_asks(pr->positive_asks);
   solver_->reset(pr->parent->variable_map, pr->parameter_map);
   expanded_always_t ea(pr->expanded_always);
 
-  state.profile_results["CalculateClosure"].restart();
+  state->profile["CalculateClosure"].restart();
 
   //閉包計算
   CalculateClosureResult result = calculate_closure(state, ms, ea,positive_asks,negative_asks);
 
-  state.profile_results["CalculateClosure"].count_time();
+  state->profile["CalculateClosure"].count_time();
   
   if(result.size() != 1){
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = false)***\n");
@@ -411,16 +411,16 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
 
   if(results.size() != 1){
     // 区分的に連続で無い解軌道を含む．中断．
-    simulation_phase_t phase(create_new_simulation_phase(state));
-    phase.phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
-    phase.phase_result->parent->children.push_back(phase.phase_result);
+    simulation_phase_sptr_t phase(create_new_simulation_phase(state));
+    phase->phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
+    phase->phase_result->parent->children.push_back(phase->phase_result);
     consistent = true;
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = true)***\n");
     return simulation_phases_t();
   }
 
-  simulation_phase_t new_state_original(create_new_simulation_phase());
-  phase_result_sptr_t &npr_original = new_state_original.phase_result;
+  simulation_phase_sptr_t new_state_original(create_new_simulation_phase());
+  phase_result_sptr_t &npr_original = new_state_original->phase_result;
 
   npr_original->step         = pr->step+1;
   npr_original->phase        = PointPhase;
@@ -514,8 +514,8 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
       time_result = solver_->calculate_next_PP_time(disc_cause, pr->current_time, max_time);
 
     for(unsigned int time_it=0; time_it<time_result.candidates.size() && (opts_->nd_mode||time_it==0); time_it++){
-      simulation_phase_t branch_state(create_new_simulation_phase(state));
-      phase_result_sptr_t &bpr = branch_state.phase_result;
+      simulation_phase_sptr_t branch_state(create_new_simulation_phase(state));
+      phase_result_sptr_t &bpr = branch_state->phase_result;
       SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
@@ -523,8 +523,8 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
         bpr->parameter_map[it->first] = it->second;
       }
       bpr->parent->children.push_back(bpr);
-      simulation_phase_t new_state(create_new_simulation_phase(new_state_original));
-      phase_result_sptr_t& npr = new_state.phase_result;
+      simulation_phase_sptr_t new_state(create_new_simulation_phase(new_state_original));
+      phase_result_sptr_t& npr = new_state->phase_result;
       
       if(!candidate.is_max_time ) {
         bpr->end_time = candidate.time;

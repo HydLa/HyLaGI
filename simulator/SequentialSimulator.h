@@ -15,7 +15,8 @@ class SequentialSimulator: public Simulator{
   typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
   
   typedef SimulationPhase                                   simulation_phase_t;
-  typedef std::vector<SimulationPhase>                      simulation_phases_t;
+  typedef boost::shared_ptr<SimulationPhase>                simulation_phase_sptr_t;
+  typedef std::vector<simulation_phase_sptr_t>              simulation_phases_t;
 
   typedef phase_result_t::variable_map_t variable_map_t;
   typedef phase_result_t::variable_t     variable_t;

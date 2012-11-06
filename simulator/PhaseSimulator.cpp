@@ -4,37 +4,37 @@ using namespace hydla::simulator;
 
 
 
-PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){
-}
+PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 
 PhaseSimulator::~PhaseSimulator(){}
 
-PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPhase& state, bool &consistent)
+PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
 {
-  HYDLA_LOGGER_PHASE("%% current time:", *state.phase_result->current_time);
-  HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state.phase_result->parent->variable_map);
-  HYDLA_LOGGER_PHASE("--- parameter map ---\n", state.phase_result->parameter_map);
+  HYDLA_LOGGER_PHASE("%% current time:", *state->phase_result->current_time);
+  HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->phase_result->parent->variable_map);
+  HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->phase_result->parameter_map);
 
-  state.profile_results["Phase"].restart();
+  state->profile["Phase"].restart();
 
   simulation_phases_t phases; 
   bool has_next = false;
   is_safe_ = true;
   variable_map_t time_applied_map;
-  if(state.phase_result->phase == PointPhase){
-    time_applied_map = apply_time_to_vm(state.phase_result->parent->variable_map, state.phase_result->current_time);
+  if(state->phase_result->phase == PointPhase)
+  {
+    time_applied_map = apply_time_to_vm(state->phase_result->parent->variable_map, state->phase_result->current_time);
   }
 
   //TODO:exclude_error‚ª–³Œø‚É‚È‚Á‚Ä‚é
-  while(state.module_set_container->go_next()){
-
-    module_set_sptr ms = state.module_set_container->get_module_set();
+  while(state->module_set_container->go_next())
+  {
+    module_set_sptr ms = state->module_set_container->get_module_set();
 
     HYDLA_LOGGER_MS("--- next module set ---\n",
           ms->get_name(),
           "\n",
           ms->get_infix_string() );
-    switch(state.phase_result->phase) 
+    switch(state->phase_result->phase) 
     {
       case PointPhase:
       {
@@ -54,26 +54,31 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(SimulationPha
         break;
     }
 
-    if(consistent){
-      state.module_set_container->mark_nodes();
+    if(consistent)
+    {
+      state->module_set_container->mark_nodes();
       has_next = true;
-    }else{
-      state.module_set_container->mark_current_node();
     }
-    if(phases.size() > 1){
-      state.profile_results["Phase"].count_time();
+    else
+    {
+      state->module_set_container->mark_current_node();
+    }
+    if(phases.size() > 1)
+    {
+      state->profile["Phase"].count_time();
       return phases;
     }
     
-    state.phase_result->positive_asks.clear();
+    state->phase_result->positive_asks.clear();
   }
   
   //–³–µ‚‚È‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ª‘¶Ý‚µ‚È‚¢ê‡
-  if(!has_next){
-    state.phase_result->cause_of_termination = simulator::INCONSISTENCY;
-    state.phase_result->parent->children.push_back(state.phase_result);
+  if(!has_next)
+  {
+    state->phase_result->cause_of_termination = simulator::INCONSISTENCY;
+    state->phase_result->parent->children.push_back(state->phase_result);
   }
-  state.profile_results["Phase"].count_time();
+  state->profile["Phase"].count_time();
   return phases;
 }
 
@@ -86,18 +91,18 @@ void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_
 }
 
 
-PhaseSimulator::simulation_phase_t PhaseSimulator::create_new_simulation_phase() const
+PhaseSimulator::simulation_phase_sptr_t PhaseSimulator::create_new_simulation_phase() const
 {
-  simulation_phase_t ph;
-  ph.phase_result.reset(new phase_result_t);
-  ph.phase_result->cause_of_termination = NONE;
+  simulation_phase_sptr_t ph(new simulation_phase_t());
+  ph->phase_result.reset(new phase_result_t);
+  ph->phase_result->cause_of_termination = NONE;
   return ph;
 }
 
-PhaseSimulator::simulation_phase_t PhaseSimulator::create_new_simulation_phase(const simulation_phase_t& old) const
+PhaseSimulator::simulation_phase_sptr_t PhaseSimulator::create_new_simulation_phase(const simulation_phase_sptr_t& old) const
 {
-  simulation_phase_t sim(old);
-  sim.phase_result.reset(new phase_result_t(*old.phase_result));
-  sim.phase_result->cause_of_termination = NONE;
+  simulation_phase_sptr_t sim(new simulation_phase_t(*old));
+  sim->phase_result.reset(new phase_result_t(*old->phase_result));
+  sim->phase_result->cause_of_termination = NONE;
   return sim;
 }

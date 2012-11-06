@@ -67,24 +67,3 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
   }
 
 }
-
-
-Simulator::simulation_phase_t Simulator::create_new_simulation_phase() const
-{
-  simulation_phase_t ph;
-  ph.phase_result.reset(new phase_result_t);
-  ph.phase_result->cause_of_termination = NONE;
-  return ph;
-}
-
-/**
- * —^‚¦‚ç‚ê‚½PhaseResult‚Ìî•ñ‚ð‚ðˆø‚«Œp‚¢‚¾C
- * V‚½‚ÈPhaseResult‚Ìì¬
- */
-Simulator::simulation_phase_t Simulator::create_new_simulation_phase(const simulation_phase_t& old) const
-{
-  simulation_phase_t sim;
-  sim.phase_result.reset(new phase_result_t(*old.phase_result));
-  sim.phase_result->cause_of_termination = NONE;
-  return sim;
-}

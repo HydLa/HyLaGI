@@ -1,5 +1,5 @@
 /*
-#include "TimeOutputter.h"
+#include "ProfilePrinter.h"
 #include <boost/foreach.hpp>
 #include <stack>
 #include "DefaultParameter.h"
@@ -9,22 +9,8 @@ using namespace hydla::simulator;
 
 namespace hydla{
 namespace output{
-
-void Outputter::output_variable_labels(std::ostream &stream, const variable_map_t variable_map) const{
-  // 変数のラベルの出力
-  // TODO: 未定義の値とかのせいでずれる可能性あり?
-  stream << "# time\t";
-
-  BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
-    if(output_variables_.find(i.first->get_string()) != output_variables_.end()){
-      stream << i.first << "\t";
-    }
-  }
-  stream << std::endl;
-}
-
   
-std::string Outputter::get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const{
+std::string Printer::get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const{
   std::stringstream sstr;
     if(!numeric){
       if(result.phase==IntervalPhase){
@@ -48,7 +34,7 @@ std::string Outputter::get_state_output(const phase_result_t& result, const bool
         value_t* limit_time = result.end_time-result.current_time;
         
         
-        //TODO:できればOutputterからソルバは見たくないが，そうしないと数値に変換できないのでどうしましょう
+        //TODO:できればPrinterからソルバは見たくないが，そうしないと数値に変換できないのでどうしましょう
         //solver_->simplify(limit_time);
         
         do{
@@ -75,7 +61,7 @@ std::string Outputter::get_state_output(const phase_result_t& result, const bool
   
   
 
-void Outputter::output_parameter_map(const parameter_map_t& pm) const
+void Printer::output_parameter_map(const parameter_map_t& pm) const
 {
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
@@ -87,7 +73,7 @@ void Outputter::output_parameter_map(const parameter_map_t& pm) const
   }
 }
 
-void Outputter::output_variable_map(std::ostream &stream, const variable_map_t& vm, const value_t& time, const bool& numeric) const
+void Printer::output_variable_map(std::ostream &stream, const variable_map_t& vm, const value_t& time, const bool& numeric) const
 {
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
@@ -108,7 +94,7 @@ void Outputter::output_variable_map(std::ostream &stream, const variable_map_t& 
 }
 
 
-void Outputter::output_result_tree(const phase_result_const_sptr_t& root) const
+void Printer::output_result_tree(const phase_result_const_sptr_t& root) const
 {
     if(root->children.size() == 0){
       std::cout << "No Result." << std::endl;
@@ -144,7 +130,7 @@ void Outputter::output_result_tree(const phase_result_const_sptr_t& root) const
 
 
 
-void Outputter::output_result_node_time(const phase_result_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
+void Printer::output_result_node_time(const phase_result_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
 
   std::stringstream sstr;
 
@@ -224,7 +210,7 @@ void Outputter::output_result_node_time(const phase_result_sptr_t &node, std::ve
   }
 }
 
-void Outputter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
+void Printer::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
   

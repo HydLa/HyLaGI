@@ -1,7 +1,7 @@
-#ifndef _HYDLA_OUTPUT_SYMBOLIC_OUTPUTTER_H_
-#define _HYDLA_OUTPUT_SYMBOLIC_OUTPUTTER_H_
+#ifndef _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_
+#define _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_
 
-#include "Outputter.h"
+#include "TrajPrinter.h"
 
 namespace hydla{
 namespace output{
@@ -10,7 +10,7 @@ namespace output{
  * êîéÆÇ…ÇÊÇÈèoóÕÇçsÇ§
  */
 
-class SymbolicOutputter: public Outputter{
+class SymbolicTrajPrinter: public TrajPrinter{
 public:
   typedef hydla::simulator::PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
@@ -20,8 +20,8 @@ public:
   typedef phase_result_t::parameter_map_t parameter_map_t;
   typedef hydla::simulator::PhaseResult::value_t value_t;
 
-  SymbolicOutputter(const std::set<std::string>& output_variables);
-  SymbolicOutputter();
+  SymbolicTrajPrinter(const std::set<std::string>& output_variables);
+  SymbolicTrajPrinter();
   
   void output_result_tree(const phase_result_const_sptr_t&)const;
   void output_one_phase(const phase_result_const_sptr_t&)const;
@@ -43,4 +43,4 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_SYMBOLIC_OUTPUTTER_H_
+#endif // _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_

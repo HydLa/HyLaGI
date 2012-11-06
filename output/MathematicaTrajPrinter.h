@@ -1,7 +1,7 @@
-#ifndef _HYDLA_OUTPUT_MATHEMATICA_OUTPUTTER_H_
-#define _HYDLA_OUTPUT_MATHEMATICA_OUTPUTTER_H_
+#ifndef _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_
+#define _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_
 
-#include "Outputter.h"
+#include "TrajPrinter.h"
 
 namespace hydla{
 namespace output{
@@ -10,7 +10,7 @@ namespace output{
  * Mathematicaå`éÆÇ≈ÇÃèoóÕÇçsÇ§
  */
 
-class MathematicaOutputter: public Outputter{
+class MathematicaTrajPrinter: public TrajPrinter{
 public:
   typedef hydla::simulator::PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
@@ -20,7 +20,7 @@ public:
   typedef phase_result_t::parameter_map_t parameter_map_t;
   typedef hydla::simulator::PhaseResult::value_t value_t;
 
-  MathematicaOutputter(
+  MathematicaTrajPrinter(
             const std::string& max_time,
             const std::set<std::string> output_variables_);
             
@@ -37,4 +37,4 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_MATHEMATICA_OUTPUTTER_H_
+#endif // _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_

@@ -1,4 +1,4 @@
-#include "SymbolicOutputter.h"
+#include "SymbolicTrajPrinter.h"
 #include <boost/foreach.hpp>
 #include <stack>
 #include "DefaultParameter.h"
@@ -9,31 +9,28 @@ using namespace hydla::simulator;
 namespace hydla{
 namespace output{
 
-SymbolicOutputter::SymbolicOutputter(const std::set<std::string> &output_variables):
+SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables):
    output_variables_(output_variables){
 }
 
-SymbolicOutputter::SymbolicOutputter(){}
+SymbolicTrajPrinter::SymbolicTrajPrinter(){}
 
-  
-std::string SymbolicOutputter::get_state_output(const phase_result_t& result) const{
+std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   std::stringstream sstr;
     if(result.phase==IntervalPhase){
-      sstr << "---------IP---------" << endl;
+      sstr << "---------IP " << result.id << "---------" << endl;
       sstr << result.module_set->get_name() << endl;
       sstr << "time\t: " << *result.current_time << "->" << *result.end_time << "\n";
     }else{
-      sstr << "---------PP---------" << endl;
+      sstr << "---------PP " << result.id << "---------" << endl;
       sstr << result.module_set->get_name() << endl;
       sstr << "time\t: " << *result.current_time << "\n";
     }
     output_variable_map(sstr, result.variable_map);
-    sstr << "\n" ;
     return sstr.str();
 }
-  
 
-void SymbolicOutputter::output_parameter_map(const parameter_map_t& pm) const
+void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
 {
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
@@ -45,7 +42,7 @@ void SymbolicOutputter::output_parameter_map(const parameter_map_t& pm) const
   }
 }
 
-void SymbolicOutputter::output_variable_map(std::ostream &stream, const variable_map_t& vm) const
+void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
@@ -55,15 +52,13 @@ void SymbolicOutputter::output_variable_map(std::ostream &stream, const variable
 }
 
 
-void SymbolicOutputter::output_one_phase(const phase_result_const_sptr_t& phase) const
+void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
 {
-  cout << "---------IP" << phase->step << "---------" << endl;
-  cout << phase->module_set->get_name() << endl;
-  cout << "time\t: " << *phase->current_time << "->" << *phase->end_time << "\n";
+    cout << get_state_output(*phase);
 }
 
 
-void SymbolicOutputter::output_result_tree(const phase_result_const_sptr_t& root) const
+void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& root) const
 {
     if(root->children.size() == 0){
       cout << "No Result." << endl;
@@ -79,7 +74,7 @@ void SymbolicOutputter::output_result_tree(const phase_result_const_sptr_t& root
 
 
 
-void SymbolicOutputter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
+void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
   

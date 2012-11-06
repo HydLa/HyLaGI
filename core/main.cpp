@@ -156,7 +156,7 @@ bool dump(boost::shared_ptr<ParseTree> pt)
   if(po.count("dump-parse-tree")>0) {
     pt->to_graphviz(std::cout);
     return true;
-  }    
+  }
 
   if(po.count("dump-module-set-list")>0) {
     ModuleSetContainerCreator<ModuleSetList> mcc;
