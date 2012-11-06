@@ -30,7 +30,7 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
     for(profile_t::const_iterator it = result[0]->profile.begin(); it != result[0]->profile.end(); it++){ 
       cout << it->first << ", ";
       for(unsigned int i = 0; i < result.size(); i++){
-        cout << result[i]->profile[it->first].get_time_string() << ", ";
+        cout << result[i]->profile[it->first] << ", ";
       }
       cout << "\n";
     }

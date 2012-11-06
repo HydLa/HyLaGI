@@ -93,7 +93,7 @@ typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
 typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
 typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
-typedef std::map<std::string, timer::Timer> profile_t;
+typedef std::map<std::string, unsigned int> profile_t;
 
 /**
  * シミュレーションすべきフェーズを表す構造体

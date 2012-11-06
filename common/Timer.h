@@ -60,6 +60,11 @@ namespace hydla{
        * 計測した時間を文字列で返す
        */
       std::string get_time_string() const;
+      
+      /**
+       * 経過時刻をマイクロ秒で返す
+       */ 
+      unsigned int Timer::get_elapsed_us();
 
       /**
        * 呼ばれた時点でのタイマー初期化からの経過時刻を

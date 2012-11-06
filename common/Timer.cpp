@@ -92,6 +92,12 @@ namespace hydla{
       return ( (temp.tv_sec - start_point_.tv_sec) + (temp.tv_usec - start_point_.tv_usec)*0.000001 );
     }
     
+    unsigned int Timer::get_elapsed_us(){
+        timeval temp;
+        gettimeofday(&temp,NULL);
+        return ( (temp.tv_sec - start_point_.tv_sec)*1000000 + (temp.tv_usec - start_point_.tv_usec));
+    }
+    
     void Timer::elapsed(){
       std::cout << std::fixed;
       std::cout << std::setprecision(TIMER_PLACES) << get_time() << " s" << std::endl;

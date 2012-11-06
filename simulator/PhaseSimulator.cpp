@@ -13,8 +13,8 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
   HYDLA_LOGGER_PHASE("%% current time:", *state->phase_result->current_time);
   HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->phase_result->parent->variable_map);
   HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->phase_result->parameter_map);
-
-  state->profile["Phase"].restart();
+  
+  timer::Timer phase_timer;
 
   simulation_phases_t phases; 
   bool has_next = false;
@@ -34,6 +34,8 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
           ms->get_name(),
           "\n",
           ms->get_infix_string() );
+    
+    timer::Timer ms_timer;
     switch(state->phase_result->phase) 
     {
       case PointPhase:
@@ -53,6 +55,8 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
         assert(0);
         break;
     }
+    std::string module_sim_string = "ModuleSimulation" + ms->get_name() + ", ";
+    state->profile[module_sim_string] += ms_timer.get_elapsed_us();
 
     if(consistent)
     {
@@ -65,7 +69,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
     }
     if(phases.size() > 1)
     {
-      state->profile["Phase"].count_time();
+      state->profile["Phase"] += phase_timer.get_elapsed_us();
       return phases;
     }
     
@@ -78,7 +82,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
     state->phase_result->cause_of_termination = simulator::INCONSISTENCY;
     state->phase_result->parent->children.push_back(state->phase_result);
   }
-  state->profile["Phase"].count_time();
+  state->profile["Phase"] += phase_timer.get_elapsed_us();
   return phases;
 }
 
