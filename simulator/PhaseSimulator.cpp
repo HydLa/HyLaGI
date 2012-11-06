@@ -55,7 +55,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
         assert(0);
         break;
     }
-    std::string module_sim_string = "ModuleSimulation" + ms->get_name() + ", ";
+    std::string module_sim_string = "ModuleSet" + ms->get_name();
     state->profile[module_sim_string] += ms_timer.get_elapsed_us();
 
     if(consistent)

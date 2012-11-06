@@ -152,6 +152,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
         &positive_asks);
 
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_consistency in calculate_closure\n");
+    timer::Timer consistency_timer;
     //tellじゃなくて制約部分のみ送る
     constraint_list.clear();
     
@@ -189,6 +190,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
         return result;
       }
     }
+    
+    state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
     // ask制約を集める
     ask_collector.collect_ask(&expanded_always, 
@@ -197,7 +200,9 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
     // ask制約のエンテール処理
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_entailment in calculate_closure\n");
-
+    
+    timer::Timer entailment_timer;
+    
     {
       expanded = false;
       branched_ask=NULL;
@@ -257,6 +262,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
         solver_->end_temporary();
       }
     }
+    state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
   }while(expanded);
 
   add_continuity(continuity_map);
@@ -339,8 +345,10 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
     return result;
   }
   
+  timer::Timer create_timer;
   // Interval Phaseへ移行（次状態の生成）
   SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
+  state->profile["CreateMap"] += create_timer.get_elapsed_us();
 
   assert(create_result.result_maps.size()>0);
   
@@ -406,7 +414,9 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     return result;
   }
 
+  timer::Timer create_timer;
   SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
+  state->profile["CreateMap"] += create_timer.get_elapsed_us();
   SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
 
   if(results.size() != 1){
@@ -492,7 +502,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     }
     }
     */
-
+    timer::Timer next_pp_timer;
     constraints_t disc_cause;
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
     for(positive_asks_t::const_iterator it = positive_asks.begin(); it != positive_asks.end(); it++){
@@ -538,6 +548,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
         bpr->end_time = max_time;
       }
     }
+    state->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }else{
     pr->parent->children.push_back(pr);
     pr->cause_of_termination = simulator::ASSERTION;
