@@ -155,18 +155,6 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 
-printConstraint[] := (
-  debugPrint["constraint", constraint];
-  debugPrint["tmpConstraint", tmpConstraint];
-  debugPrint["guard", guard];
-  debugPrint["initConstraint", initConstraint];
-  debugPrint["initTmpConstraint", initTmpConstraint];
-  debugPrint["pConstraint", pConstraint];
-  debugPrint["variables", variables];
-  debugPrint["tmpVariables", tmpVariables];
-  debugPrint["guardVars", guardVars];
-);
-
 checkEasyConsistency[] := (
   checkEasyConsistency[constraint, variables]
 );
