@@ -46,6 +46,20 @@ public:
   
   virtual ~PhaseSimulator();
 
+
+  /**
+   * ガード条件やその貢献を考慮せずに簡単に無矛盾性判定をする
+   * 矛盾した場合はfalse、それ以外はtrueを返す
+   */
+  virtual bool simple_test(const module_set_sptr& ms) = 0;
+
+  /**
+   * Alwaysが無い制約を除いたモジュール集合の集合を全て
+   * 簡易チェックし、明らかな矛盾が生じる場合は
+   * それを解候補モジュール集合の集合から取り除く
+   */
+  virtual void check_all_module_set(module_set_container_sptr& msc_no_init);
+
   virtual simulation_phases_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;

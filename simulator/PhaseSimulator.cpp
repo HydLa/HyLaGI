@@ -8,6 +8,18 @@ PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 
 PhaseSimulator::~PhaseSimulator(){}
 
+void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
+  msc_no_init->reset();
+  while(true){
+    if(simple_test(msc_no_init->get_module_set())){
+      msc_no_init->mark_current_node();
+      if(!msc_no_init->go_next()) break;
+    }else{
+      if(!msc_no_init->eliminate_current_module_set()) break;
+    }
+  }
+}
+
 PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
 {
   HYDLA_LOGGER_PHASE("%% current time:", *state->phase_result->current_time);

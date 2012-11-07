@@ -397,7 +397,16 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   return;
 }
 
-
+bool MathematicaVCS::check_easy_consistency(){
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::check_easy_consistency ***");
+  ml_.put_function("checkEasyConsistency",0);
+  HYDLA_LOGGER_VCS("%%receive");
+  ml_.receive();
+  PacketErrorHandler::handle(&ml_);
+  std::string tf = ml_.get_symbol();
+  ml_.MLNewPacket();
+  if(tf == "True") return true; else return false;
+}
 
 MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
 {

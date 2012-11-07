@@ -125,6 +125,38 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
   HYDLA_LOGGER_CLOSURE("#*** End SymbolicSimulator::add_continuity ***\n");
 }
 
+bool SymbolicSimulator::simple_test(const module_set_sptr& ms){
+  TellCollector tell_collector(ms);
+  tells_t tell_list;
+  constraints_t constraint_list;
+  expanded_always_t expanded_always;
+  positive_asks_t positive_asks;
+  continuity_map_t continuity_map;
+  ContinuityMapMaker maker;
+  variable_map_t vm;
+  parameter_map_t parameter_map;
+  solver_->reset(vm, parameter_map);
+
+  tell_collector.collect_new_tells(&tell_list,
+      &expanded_always, 
+      &positive_asks);
+
+  constraint_list.clear();
+    
+  maker.reset();
+    
+  for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
+    constraint_list.push_back((*it)->get_child());
+    maker.visit_node((*it), false, false);
+  }
+  continuity_map = maker.get_continuity_map();
+  add_continuity(continuity_map);
+
+  solver_->add_constraint(constraint_list);
+
+  return solver_->check_easy_consistency();
+
+}
 
 CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_sptr_t& state,
     const module_set_sptr& ms,
@@ -173,6 +205,8 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
 
     solver_->add_constraint(constraint_list);
+
+    if(!solver_->check_easy_consistency()) return CalculateClosureResult();
 
     {
       SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();

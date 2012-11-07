@@ -60,6 +60,8 @@ public:
 
   virtual void add_guard(const node_sptr&);
   
+  virtual bool check_easy_consistency();
+
   /**
    * 制約ストアが無矛盾かを判定する．
    * @return 充足可能な場合の記号定数条件列，充足不可能な場合の記号定数条件列（それぞれ存在しない場合は空の列を返す）

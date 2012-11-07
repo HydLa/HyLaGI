@@ -155,6 +155,36 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 
+printConstraint[] := (
+  debugPrint["constraint", constraint];
+  debugPrint["tmpConstraint", tmpConstraint];
+  debugPrint["guard", guard];
+  debugPrint["initConstraint", initConstraint];
+  debugPrint["initTmpConstraint", initTmpConstraint];
+  debugPrint["pConstraint", pConstraint];
+  debugPrint["variables", variables];
+  debugPrint["tmpVariables", tmpVariables];
+  debugPrint["guardVars", guardVars];
+);
+
+checkEasyConsistency[] := (
+  checkEasyConsistency[constraint, variables]
+);
+
+publicMethod[
+  checkEasyConsistency,
+  cons, vars,
+  Module[
+    {ret},
+    Quiet[
+      ret = Reduce[Exists[vars, cons], Reals], {Reduce::useq}
+    ];
+    checkMessage;
+    If[ret =!= False, ret = True];
+    ret
+  ]
+];
+
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (

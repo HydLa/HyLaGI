@@ -42,6 +42,12 @@ public:
    * 探索する必要の無いモジュール集合の集合を得る
    */
   std::set<module_set_sptr> get_visited_module_sets() const;
+
+  /**
+   * 現在の注目ノードを
+   * 解候補モジュール集合の集合から取り除く
+   */
+  virtual bool eliminate_current_module_set();
   
   /**
    * 次に探索すべきモジュール集合に進む

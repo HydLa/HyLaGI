@@ -64,7 +64,7 @@ namespace hydla{
       /**
        * 経過時刻をマイクロ秒で返す
        */ 
-      unsigned int Timer::get_elapsed_us();
+      unsigned int get_elapsed_us();
 
       /**
        * 呼ばれた時点でのタイマー初期化からの経過時刻を

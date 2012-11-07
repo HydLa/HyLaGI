@@ -14,7 +14,10 @@ ModuleSetContainer::ModuleSetContainer(module_set_sptr m) :
   module_set_list_(1, m)
 {}
 
-
+bool ModuleSetContainer::eliminate_current_module_set(){
+  current_module_set_ = module_set_list_.erase(current_module_set_);
+  return current_module_set_ != module_set_list_.end();  
+}
 
 bool ModuleSetContainer::go_next(){
   while(current_module_set_ != module_set_list_.end() && visited_module_sets_.find(*current_module_set_) != visited_module_sets_.end()){
