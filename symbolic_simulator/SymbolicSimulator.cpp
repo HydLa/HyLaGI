@@ -206,8 +206,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
     solver_->add_constraint(constraint_list);
 
-    if(!solver_->check_easy_consistency()) return CalculateClosureResult();
-
     {
       SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
       if(check_consistency_result.true_parameter_maps.empty()){
