@@ -85,6 +85,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
     
     if(node->cause_of_termination==simulator::ASSERTION ||
+      node->cause_of_termination==simulator::OTHER_ASSERTION ||
       node->cause_of_termination==simulator::TIME_LIMIT ||
       node->cause_of_termination==simulator::STEP_LIMIT)
         cout << get_state_output(*node);
@@ -102,6 +103,11 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       case simulator::ASSERTION:
         output_parameter_map(node->parameter_map);
         cout << "# assertion failed\n" ;
+        break;
+        
+      case simulator::OTHER_ASSERTION:
+        output_parameter_map(node->parameter_map);
+        cout << "# terminated by failure of assertion in another case\n" ;
         break;
         
       case simulator::TIME_LIMIT:

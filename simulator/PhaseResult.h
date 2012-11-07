@@ -41,6 +41,7 @@ struct PhaseResult {
   parameter_map_t           parameter_map;
   expanded_always_t         expanded_always;
   positive_asks_t           positive_asks;
+  negative_asks_t           negative_asks;
   changed_asks_t            changed_asks;
   int step;
   hydla::ch::module_set_sptr module_set;

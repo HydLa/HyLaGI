@@ -467,7 +467,6 @@ public:
    */
   parse_tree_sptr parse_tree_;
 
-  bool is_safe_;
   std::vector<simulation_phase_sptr_t> all_state_;
   boost::shared_ptr<solver_t> solver_;
   //boost::shared_ptr<PhaseSimulator > phase_simulator_;

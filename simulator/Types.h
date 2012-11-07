@@ -46,7 +46,7 @@ typedef struct Opts_ {
   bool profile_mode;
   bool parallel_mode;
   bool dump_in_progress;
-  bool exclude_error;
+  bool stop_at_failure;
   std::string output_interval;
   int output_precision;
   int approx_precision;
@@ -65,6 +65,7 @@ typedef enum{
   SOME_ERROR,
   INCONSISTENCY,
   ASSERTION,
+  OTHER_ASSERTION,
   NOT_UNIQUE_IN_INTERVAL,
   NONE
 }CauseOfTermination;

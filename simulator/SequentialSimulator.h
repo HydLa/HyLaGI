@@ -60,11 +60,6 @@ class SequentialSimulator: public Simulator{
    * シミュレーション対象となるパースツリー
    */
   parse_tree_sptr parse_tree_;
-  
-  /**
-   * whether assertion has already failed or not
-   */
-  bool is_safe_;
 };
 
 } // simulator

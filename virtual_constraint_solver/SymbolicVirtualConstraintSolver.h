@@ -130,7 +130,7 @@ public:
 
   virtual void add_guard(const node_sptr&){assert(0);}
   
-  virtual bool check_easy_consistency(){assert(0);}
+  virtual bool check_easy_consistency(){assert(0);return false;}
 
   /**
    * 制約ストアが無矛盾かを判定する．

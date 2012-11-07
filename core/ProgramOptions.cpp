@@ -47,7 +47,7 @@ void ProgramOptions::init_descriptions()
      "output each phase in progress")
      
     ("fail-stop", 
-     "stop all when any assertion fails")
+     "stop all simulation cases when assertion fails")
     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")

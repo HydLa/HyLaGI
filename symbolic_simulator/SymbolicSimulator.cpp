@@ -159,19 +159,20 @@ bool SymbolicSimulator::simple_test(const module_set_sptr& ms){
 }
 
 CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_sptr_t& state,
-    const module_set_sptr& ms,
-    expanded_always_t &expanded_always,
-    positive_asks_t &positive_asks,
-    negative_asks_t &negative_asks){    
+    const module_set_sptr& ms)
+{    
   HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicSimulator::calculate_closure ***\n");
 
+  phase_result_sptr_t &pr = state->phase_result;
   //‘O€”õ
+  positive_asks_t& positive_asks = pr->positive_asks;
+  negative_asks_t& negative_asks = pr->negative_asks;
+  expanded_always_t& expanded_always = pr->expanded_always;
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
   constraints_t   constraint_list;
   boost::shared_ptr<hydla::parse_tree::Ask>  const *branched_ask;
-  phase_result_sptr_t &pr = state->phase_result;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -351,22 +352,17 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
     bool& consistent)
 {
   HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::simulate_ms_point***");
-  //‘O€”õ
-  
-  phase_result_sptr_t& pr = state->phase_result;
-
   solver_->change_mode(DiscreteMode, opts_->approx_precision);
 
-  positive_asks_t positive_asks(pr->positive_asks);
-  negative_asks_t negative_asks;
-  expanded_always_t ea(pr->expanded_always);
+  //‘O€”õ
+  phase_result_sptr_t& pr = state->phase_result;
 
   solver_->reset(vm, pr->parameter_map);
   
   timer::Timer cc_timer;
 
   //•Â•ïŒvŽZ
-  CalculateClosureResult result = calculate_closure(state, ms, ea,positive_asks,negative_asks);
+  CalculateClosureResult result = calculate_closure(state, ms);
   
   state->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
 
@@ -391,7 +387,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   new_pr_original->step         = pr->step+1;
   new_pr_original->phase        = IntervalPhase;
   new_pr_original->current_time = pr->current_time;
-  new_pr_original->expanded_always = ea;
+  new_pr_original->expanded_always = pr->expanded_always;
   new_pr_original->module_set = ms;
 
   simulation_phases_t phases;
@@ -428,15 +424,12 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   //‘O€”õ
   phase_result_sptr_t& pr = state->phase_result;
   solver_->change_mode(ContinuousMode, opts_->approx_precision);
-  negative_asks_t negative_asks;
-  positive_asks_t positive_asks(pr->positive_asks);
   solver_->reset(pr->parent->variable_map, pr->parameter_map);
-  expanded_always_t ea(pr->expanded_always);
 
   timer::Timer cc_timer;
 
   //•Â•ïŒvŽZ
-  CalculateClosureResult result = calculate_closure(state, ms, ea,positive_asks,negative_asks);
+  CalculateClosureResult result = calculate_closure(state, ms);
 
   state->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   
@@ -466,7 +459,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
 
   npr_original->step         = pr->step+1;
   npr_original->phase        = PointPhase;
-  npr_original->expanded_always = ea;
+  npr_original->expanded_always = pr->expanded_always;
   
   pr->variable_map = range_map_to_value_map(pr, results[0], pr->parameter_map);
   pr->variable_map = shift_variable_map_time(pr->variable_map, pr->current_time);
@@ -537,11 +530,11 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     timer::Timer next_pp_timer;
     constraints_t disc_cause;
     //Œ»Ý“±o‚³‚ê‚Ä‚¢‚éƒK[ƒhðŒ‚ÉNot‚ð‚Â‚¯‚½‚à‚Ì‚ð—£ŽU•Ï‰»ðŒ‚Æ‚µ‚Ä’Ç‰Á
-    for(positive_asks_t::const_iterator it = positive_asks.begin(); it != positive_asks.end(); it++){
+    for(positive_asks_t::const_iterator it = pr->positive_asks.begin(); it != pr->positive_asks.end(); it++){
       disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
     }
     //Œ»Ý“±o‚³‚ê‚Ä‚¢‚È‚¢ƒK[ƒhðŒ‚ð—£ŽU•Ï‰»ðŒ‚Æ‚µ‚Ä’Ç‰Á
-    for(negative_asks_t::const_iterator it = negative_asks.begin(); it != negative_asks.end(); it++){
+    for(negative_asks_t::const_iterator it = pr->negative_asks.begin(); it != pr->negative_asks.end(); it++){
       disc_cause.push_back((*it)->get_guard());
     }
 

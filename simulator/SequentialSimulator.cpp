@@ -66,9 +66,7 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
           }
           push_simulation_phase(phases[0]);
         }
-        
       }
-      
       
       HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
       for(unsigned int i=0; i<phases.size();i++){
@@ -83,6 +81,16 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
         HYDLA_LOGGER_PHASE("%% step: ", pr->step);
         HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
         HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
+      }
+      
+      
+      if(!phase_simulator_->is_safe() && opts_->stop_at_failure){
+        HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
+        // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
+        while(!state_stack_.empty()) {
+          simulation_phase_sptr_t tmp_state(pop_simulation_phase());
+          tmp_state->phase_result->parent->cause_of_termination = OTHER_ASSERTION;
+        }
       }
     }catch(const std::runtime_error &se){
       error_str = se.what();

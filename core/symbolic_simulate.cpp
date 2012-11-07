@@ -39,7 +39,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.profile_mode  = po.count("profile")>0;
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
-  opts.exclude_error = po.count("fail-stop") == 0;
+  opts.stop_at_failure = po.count("fail-stop") == 1;
   opts.solver        = po.get<std::string>("solver");
   opts.optimization_level = po.get<int>("optimization-level");
   if(opts.optimization_level < 0 || opts.optimization_level > 3){

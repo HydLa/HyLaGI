@@ -102,6 +102,7 @@ public:
     return *parameter_set_;
   }
   
+  virtual bool is_safe() const{return is_safe_;}
   
 protected:
 
