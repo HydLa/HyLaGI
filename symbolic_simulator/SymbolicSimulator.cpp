@@ -211,6 +211,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
       SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
       if(check_consistency_result.true_parameter_maps.empty()){
         // 必ず矛盾する場合
+        state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return CalculateClosureResult();
       }else if (check_consistency_result.false_parameter_maps.empty()){
         // 必ず充足可能な場合
@@ -220,6 +221,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
         HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
         CalculateClosureResult result;
         push_branch_states(state, check_consistency_result, result);
+        state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return result;
       }
     }
@@ -260,6 +262,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
             CalculateClosureResult result;
             push_branch_states(state, check_consistency_result, result);
+            state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
             return result;
           }
           solver_->end_temporary();
@@ -274,6 +277,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
               HYDLA_LOGGER_CLOSURE("%% inevitable entailment depends on conditions of parameters");
               CalculateClosureResult ret;
               push_branch_states(state, check_consistency_result, ret);
+              state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
               return ret;
             }
             HYDLA_LOGGER_CLOSURE("--- branched ask ---\n", *((*it)->get_guard()));
@@ -587,22 +591,23 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
 SymbolicSimulator::variable_map_t SymbolicSimulator::range_map_to_value_map(
   phase_result_sptr_t& state,
   const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t& rm,
-  parameter_map_t &parameter_map){
-variable_map_t ret = *variable_map_;
-for(vcs::SymbolicVirtualConstraintSolver::variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
-  variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
-  if(r_it->second.is_unique()){
-    ret[variable] = r_it->second.get_lower_bound().value;
-  }else{
-    parameter_t param(r_it->first, state);
-    parameter_set_->push_front(param);
-    parameter_map[&(parameter_set_->front())] = r_it->second;
-    ret[variable] = value_t(new SymbolicValue(node_sptr(
-      new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-    // TODO:記号定数導入後，各変数の数式に出現する変数を記号定数に置き換える
+  parameter_map_t &parameter_map)
+{
+  variable_map_t ret = *variable_map_;
+  for(vcs::SymbolicVirtualConstraintSolver::variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
+    variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
+    if(r_it->second.is_unique()){
+      ret[variable] = r_it->second.get_lower_bound().value;
+    }else{
+      parameter_t param(r_it->first, state);
+      parameter_set_->push_front(param);
+      parameter_map[&(parameter_set_->front())] = r_it->second;
+      ret[variable] = value_t(new SymbolicValue(node_sptr(
+        new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
+      // TODO:記号定数導入後，各変数の数式に出現する変数を記号定数に置き換える
+    }
   }
-}
-return ret;
+  return ret;
 }
 
 

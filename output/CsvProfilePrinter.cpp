@@ -30,13 +30,16 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
         //フェーズによってシミュレーションしないモジュール集合などもあるため，必要なラベルをすべて列挙しておく．
       }
     }
+    output_stream_ << "Sum";
     output_stream_ << "\n";
     for(std::set<std::string>::const_iterator it = label_set.begin(); it != label_set.end(); it++){ 
       output_stream_ << *it << ", ";
+      int sum = 0;
       for(unsigned int i = 0; i < result.size(); i++){
         output_stream_ << result[i]->profile[*it] << ", ";
+        sum += result[i]->profile[*it];
       }
-      output_stream_ << "\n";
+      output_stream_ << sum << "\n";
     }
   }
 }

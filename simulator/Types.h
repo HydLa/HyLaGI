@@ -110,6 +110,16 @@ struct SimulationPhase{
   std::set<module_set_sptr> visited_module_sets;
   /// プロファイリング結果
   profile_t profile;
+  
+  SimulationPhase(){}
+  /// コピーコンストラクタ
+  SimulationPhase(const SimulationPhase& phase):
+    phase_result(phase.phase_result), 
+    temporary_constraints(phase.temporary_constraints),
+    module_set_container(phase.module_set_container),
+    visited_module_sets(phase.visited_module_sets)
+  {
+  }
 };
 
 typedef boost::shared_ptr<SimulationPhase>     simulation_phase_sptr_t;
