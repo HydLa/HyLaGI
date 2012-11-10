@@ -68,6 +68,11 @@ void ProgramOptions::init_descriptions()
      "  n - not measured\n"
      "  s - output standard format\n"
      "  c - output csv format\n")
+     
+    ("csv", 
+     value<std::string>()->default_value(""),
+     "csv file name:\n"
+     " empty - standard out\n")
 
     ("optimization-level,O",
      value<int>()->default_value(0),

@@ -17,17 +17,22 @@ SymbolicTrajPrinter::SymbolicTrajPrinter(){}
 
 std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   std::stringstream sstr;
-    if(result.phase==IntervalPhase){
-      sstr << "---------IP " << result.id << "---------" << endl;
-      sstr << result.module_set->get_name() << endl;
+  
+  if(result.phase==IntervalPhase){
+    sstr << "---------IP " << result.id << "---------" << endl;
+    sstr << result.module_set->get_name() << endl;
+    if(result.end_time.get()){
       sstr << "time\t: " << *result.current_time << "->" << *result.end_time << "\n";
     }else{
-      sstr << "---------PP " << result.id << "---------" << endl;
-      sstr << result.module_set->get_name() << endl;
-      sstr << "time\t: " << *result.current_time << "\n";
+      sstr << "time\t: " << *result.current_time << "->" << "???" << "\n";
     }
-    output_variable_map(sstr, result.variable_map);
-    return sstr.str();
+  }else{
+    sstr << "---------PP " << result.id << "---------" << endl;
+    sstr << result.module_set->get_name() << endl;
+    sstr << "time\t: " << *result.current_time << "\n";
+  }
+  output_variable_map(sstr, result.variable_map);
+  return sstr.str();
 }
 
 void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
@@ -79,8 +84,8 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
   if(node->children.size() == 0){
   
     cout << "#---------Case " << case_num++ << "---------" << endl;
-    std::vector<std::string>::const_iterator r_it = result.begin(), r_end = result.end();
-    for(;r_it!=r_end;r_it++){
+    std::vector<std::string>::const_iterator r_it = result.begin();
+    for(;r_it != result.end(); r_it++){
       cout << *r_it;
     }
     
@@ -88,7 +93,10 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       node->cause_of_termination==simulator::OTHER_ASSERTION ||
       node->cause_of_termination==simulator::TIME_LIMIT ||
       node->cause_of_termination==simulator::STEP_LIMIT)
-        cout << get_state_output(*node);
+    {
+      cout << get_state_output(*node);
+    }
+    
     switch(node->cause_of_termination){
       case simulator::INCONSISTENCY:
         cout << "# execution stuck\n";

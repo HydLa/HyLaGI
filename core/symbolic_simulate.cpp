@@ -89,7 +89,15 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     if(po.get<std::string>("tm") == "s") {
       hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
     } else if(po.get<std::string>("tm") == "c") {
-      hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+      std::string csv_name = po.get<std::string>("csv");
+      if(csv_name == ""){
+        hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+      }else{
+        std::ofstream ofs;
+        ofs.open(csv_name.c_str());
+        hydla::output::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
+        ofs.close();
+      }
     }
   }
 }
