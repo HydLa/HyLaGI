@@ -247,6 +247,7 @@ void ModuleSetGraph::mark_nodes(){
 
 void ModuleSetGraph::mark_visited_flag(const module_set_sptr& ms)
 {
+  if(visited_module_sets_.find(ms) != visited_module_sets_.end()) return;
   visited_module_sets_.insert(ms);
 
   std::pair<edges_t::map_by<superset>::const_iterator, 

@@ -189,14 +189,17 @@ publicMethod[
     ];
     simplePrint[cpTrue];
     checkMessage;
-    Quiet[
-      cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
-    ];
-    checkMessage;
-    simplePrint[cpFalse];
-    {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
-    simplePrint[trueMap, falseMap];
-    {trueMap, falseMap}
+    If[optOptimizationLevel == 2 && cpTrue === True,
+      {True, False},
+      Quiet[
+        cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
+      ];
+      checkMessage;
+      simplePrint[cpFalse];
+      {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
+      simplePrint[trueMap, falseMap];
+      {trueMap, falseMap}
+    ]
   ]
 ];
 
@@ -245,14 +248,17 @@ publicMethod[
         
         simplePrint[necessaryTCons];
         cpTrue = Quiet[Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas, Minimize::ztest}][[1]] == 0, Reals], Reduce::ztest1];
-        cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
+        If[optOptimizationLevel == 2 && cpTrue === True,
+          {True, False},
+          cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
 
-        simplePrint[cpTrue, cpFalse];
+          simplePrint[cpTrue, cpFalse];
 
-        checkMessage;
-        {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
-        simplePrint[trueMap, falseMap];
-        {trueMap, falseMap}
+          checkMessage;
+          {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
+          simplePrint[trueMap, falseMap];
+          {trueMap, falseMap}
+        ]
       ]
     ]
   ]
