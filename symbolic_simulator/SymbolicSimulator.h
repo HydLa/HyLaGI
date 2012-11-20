@@ -46,6 +46,13 @@ public:
 
 private:
 
+  typedef enum{
+    ENTAILED,
+    NOT_ENTAILED,
+    BRANCH_VAR,
+    BRANCH_PAR
+  } CheckEntailmentResult;
+
   variable_map_t range_map_to_value_map(phase_result_sptr_t&,
     const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &,
     parameter_map_t &);
@@ -60,6 +67,15 @@ private:
   
   CalculateClosureResult calculate_closure(simulation_phase_sptr_t& state,
     const module_set_sptr& ms);
+  /**
+   * Check whether a guard is entailed or not.
+   * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
+   * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
+   */
+  CheckEntailmentResult SymbolicSimulator::check_entailment(
+    hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &cc_result,
+    const node_sptr& guard,
+    const continuity_map_t& cont_map);
 
   void push_branch_states(simulation_phase_sptr_t &original,
     hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result,

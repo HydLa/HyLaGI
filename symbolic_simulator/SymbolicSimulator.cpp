@@ -158,6 +158,48 @@ bool SymbolicSimulator::simple_test(const module_set_sptr& ms){
 
 }
 
+
+SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
+  SymbolicVirtualConstraintSolver::check_consistency_result_t &cc_result,
+  const node_sptr& guard,
+  const continuity_map_t& cont_map
+  )
+{
+  CheckEntailmentResult ce_result;
+  solver_->start_temporary();
+  add_continuity(cont_map);
+  solver_->add_guard(guard);
+  cc_result = solver_->check_consistency();
+  if(!cc_result.true_parameter_maps.empty()){
+    HYDLA_LOGGER_CLOSURE("%% entailable");
+    if(!cc_result.false_parameter_maps.empty()){
+      HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
+      ce_result = BRANCH_PAR;
+    }else
+    {
+      solver_->end_temporary();
+      solver_->start_temporary();
+      add_continuity(cont_map);
+      solver_->add_guard(node_sptr(new Not(guard)));
+      cc_result = solver_->check_consistency();
+      if(!cc_result.true_parameter_maps.empty()){
+        HYDLA_LOGGER_CLOSURE("%% entailment branches");
+        if(!cc_result.false_parameter_maps.empty()){
+          HYDLA_LOGGER_CLOSURE("%% inevitable entailment depends on conditions of parameters");
+          ce_result = BRANCH_PAR;
+        }
+        ce_result = BRANCH_VAR;
+      }else{
+        ce_result = ENTAILED;
+      }
+    }
+  }else{
+    ce_result = NOT_ENTAILED;
+  }
+  solver_->end_temporary();
+  return ce_result;
+}
+
 CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_sptr_t& state,
     const module_set_sptr& ms)
 {    
@@ -250,53 +292,35 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
           it++;
           continue;
         }
-        solver_->start_temporary();
         maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
-        add_continuity(maker.get_continuity_map());
-        solver_->add_guard((*it)->get_guard());
-
-        SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
-        if(!check_consistency_result.true_parameter_maps.empty()){
-          HYDLA_LOGGER_CLOSURE("%% entailable");
-          if(!check_consistency_result.false_parameter_maps.empty()){
+        
+        SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result;
+        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map())){
+          case ENTAILED:
+            HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
+            positive_asks.insert(*it);
+            //eraseと後置インクリメントは同時にやらないとイテレータが壊れるので，注意
+            negative_asks.erase(it++);
+            expanded = true;
+            break;
+          case NOT_ENTAILED:
+            it++;
+            break;
+          case BRANCH_VAR:
+            HYDLA_LOGGER_CLOSURE("--- branched ask ---\n", *((*it)->get_guard()));
+            branched_ask = &(*it);
+            it++;
+            break;
+          case BRANCH_PAR:
             HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
             CalculateClosureResult result;
             push_branch_states(state, check_consistency_result, result);
             state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
             return result;
-          }
-          solver_->end_temporary();
-          solver_->start_temporary();
-          add_continuity(maker.get_continuity_map());
-          solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
-          check_consistency_result = solver_->check_consistency();
-          if(!check_consistency_result.true_parameter_maps.empty()){
-            HYDLA_LOGGER_CLOSURE("%% entailment branches");
-            // ガード条件による分岐が発生する可能性あり
-            if(!check_consistency_result.false_parameter_maps.empty()){
-              HYDLA_LOGGER_CLOSURE("%% inevitable entailment depends on conditions of parameters");
-              CalculateClosureResult ret;
-              push_branch_states(state, check_consistency_result, ret);
-              state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-              return ret;
-            }
-            HYDLA_LOGGER_CLOSURE("--- branched ask ---\n", *((*it)->get_guard()));
-            branched_ask = &(*it);
-            it++;
-            solver_->end_temporary();
-            continue;
-          }
-          HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
-          positive_asks.insert(*it);
-          //eraseと後置インクリメントは同時にやらないとイテレータが壊れるので，注意
-          negative_asks.erase(it++);
-          expanded = true;
-        }else{
-          it++;
+            break;
         }
 
         maker.set_continuity_map(continuity_map);
-        solver_->end_temporary();
       }
     }
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
@@ -324,31 +348,45 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
   if(opts_->assertion){
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_assertion");
-    solver_->start_temporary();
-    solver_->add_constraint(node_sptr(new Not(opts_->assertion)));
-    SymbolicVirtualConstraintSolver::check_consistency_result_t result = solver_->check_consistency();
-    solver_->end_temporary();
-    if(!result.true_parameter_maps.empty()){
-      if(!result.false_parameter_maps.empty()){
-        // TODO:assertion失敗なので，本来ならやり直す必要はない．trueがassertion failedで，falseはこのまま続行すべき
-        // ガード条件による分岐が発生する可能性あり
-        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
-        CalculateClosureResult ret;
-        push_branch_states(state, result, ret);
-        return ret;
-      }else{
+    SymbolicVirtualConstraintSolver::check_consistency_result_t cc_result;
+    CalculateClosureResult ret;
+    switch(check_entailment(cc_result, node_sptr(new Not(opts_->assertion)), continuity_map_t())){
+      case ENTAILED:
         std::cout << "Assertion Failed!" << std::endl;
         HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
         is_safe_ = false;
-        CalculateClosureResult ret;
         ret.push_back(state);
         return ret;
-      }
+        break;
+      case NOT_ENTAILED:
+        break;
+      case BRANCH_VAR:
+        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
+          // 分岐先を生成
+        {
+          simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
+          new_state->temporary_constraints.push_back(opts_->assertion);
+          ret.push_back(new_state);
+        }
+        {
+          simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
+          new_state->temporary_constraints.push_back(node_sptr(new Not(opts_->assertion)));
+          ret.push_back(new_state);
+        }
+        return ret;
+        break;
+      case BRANCH_PAR:
+        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
+        push_branch_states(state, cc_result, ret);
+        return ret;
+        break;
     }
   }
   HYDLA_LOGGER_CLOSURE("#*** End SymbolicSimulator::calculate_closure ***\n");
   return CalculateClosureResult(1, state);
 }
+
+
 
 SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(const module_set_sptr& ms, 
     simulation_phase_sptr_t& state,
