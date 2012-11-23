@@ -155,24 +155,6 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 
-checkEasyConsistency[] := (
-  checkEasyConsistency[constraint, variables]
-);
-
-publicMethod[
-  checkEasyConsistency,
-  cons, vars,
-  Module[
-    {ret},
-    Quiet[
-      ret = Reduce[Exists[vars, cons], Reals], {Reduce::useq}
-    ];
-    checkMessage;
-    If[ret =!= False, ret = True];
-    ret
-  ]
-];
-
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
@@ -189,17 +171,14 @@ publicMethod[
     ];
     simplePrint[cpTrue];
     checkMessage;
-    If[optOptimizationLevel == 2 && cpTrue === True,
-      {True, False},
-      Quiet[
-        cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
-      ];
-      checkMessage;
-      simplePrint[cpFalse];
-      {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
-      simplePrint[trueMap, falseMap];
-      {trueMap, falseMap}
-    ]
+    Quiet[
+      cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
+    ];
+    checkMessage;
+    simplePrint[cpFalse];
+    {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
+    simplePrint[trueMap, falseMap];
+    {trueMap, falseMap}
   ]
 ];
 
@@ -229,8 +208,7 @@ publicMethod[
         tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals], Reduce::ztest1]],
         (* 微分方程式が解けた場合 *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
-        tCons = sol[[1]] /. tCons;
-        tCons = Select[applyList[tCons], (!hasVariable[#])&];
+        tCons = applyList[sol[[1]] /. tCons];
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
         tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals], Reduce::ztest1]]
       ];
@@ -248,17 +226,14 @@ publicMethod[
         
         simplePrint[necessaryTCons];
         cpTrue = Quiet[Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas, Minimize::ztest}][[1]] == 0, Reals], Reduce::ztest1];
-        If[optOptimizationLevel == 2 && cpTrue === True,
-          {True, False},
-          cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
+        cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
 
-          simplePrint[cpTrue, cpFalse];
+        simplePrint[cpTrue, cpFalse];
 
-          checkMessage;
-          {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
-          simplePrint[trueMap, falseMap];
-          {trueMap, falseMap}
-        ]
+        checkMessage;
+        {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
+        simplePrint[trueMap, falseMap];
+        {trueMap, falseMap}
       ]
     ]
   ]
@@ -699,8 +674,9 @@ createIntegratedValue[variable_, integRule_] := (
     理由3: bvnulなどの例外処理を統一したい
   @param expr 時刻に関する変数についての制約
   @param initExpr 変数の初期値についての制約
-  @return overConstraint | underConstraint | {変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} 
-  TODO: underConstraintの場合も，解けるところまでは解いて返すべき．そうしないとシミュレーションできない例題がある．
+  @return overConstraint | 
+    {underConstraint, 変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} |
+    {変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} 
 *)
 
 exDSolve[expr_, initExpr_] :=
