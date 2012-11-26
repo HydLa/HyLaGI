@@ -48,7 +48,7 @@ private:
 
   typedef enum{
     ENTAILED,
-    NOT_ENTAILED,
+    CONFLICTING,
     BRANCH_VAR,
     BRANCH_PAR
   } CheckEntailmentResult;

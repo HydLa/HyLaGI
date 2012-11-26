@@ -105,7 +105,6 @@ void SymbolicSimulator::push_branch_states(simulation_phase_sptr_t &original, Sy
 
 
 void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
-  HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicSimulator::add_continuity ***\n");
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
     if(it->second>=0){
       for(int i=0; i<it->second;i++){
@@ -122,7 +121,6 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
       solver_->add_constraint(cons);
     }
   }
-  HYDLA_LOGGER_CLOSURE("#*** End SymbolicSimulator::add_continuity ***\n");
 }
 
 bool SymbolicSimulator::simple_test(const module_set_sptr& ms){
@@ -194,7 +192,7 @@ SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
       }
     }
   }else{
-    ce_result = NOT_ENTAILED;
+    ce_result = CONFLICTING;
   }
   solver_->end_temporary();
   return ce_result;
@@ -209,17 +207,23 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
   //前準備
   positive_asks_t& positive_asks = pr->positive_asks;
   negative_asks_t& negative_asks = pr->negative_asks;
+  ask_set_t unknown_asks;
   expanded_always_t& expanded_always = pr->expanded_always;
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
   constraints_t   constraint_list;
-  boost::shared_ptr<hydla::parse_tree::Ask>  const *branched_ask;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
 
   bool expanded;
+  
+  // ask制約を集める
+  ask_collector.collect_ask(&expanded_always, 
+      &positive_asks, 
+      &unknown_asks);
+  
   do{
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
@@ -234,18 +238,17 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     maker.reset();
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか調べる
-    
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       constraint_list.push_back((*it)->get_child());
       maker.visit_node((*it), pr->phase == IntervalPhase, false);
     }
+
     continuity_map = maker.get_continuity_map();
     add_continuity(continuity_map);
     
     for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
-
 
     solver_->add_constraint(constraint_list);
 
@@ -270,10 +273,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
-    // ask制約を集める
-    ask_collector.collect_ask(&expanded_always, 
-        &positive_asks, 
-        &negative_asks);
 
     // ask制約のエンテール処理
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_entailment in calculate_closure\n");
@@ -282,14 +281,13 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     
     {
       expanded = false;
-      branched_ask=NULL;
-      negative_asks_t::iterator it  = negative_asks.begin();
-      negative_asks_t::iterator end = negative_asks.end();
+      ask_set_t::iterator it  = unknown_asks.begin();
+      ask_set_t::iterator end = unknown_asks.end();
       while(it!=end) {
       
         // 時刻0では左極限値に関する条件を常に偽とする
         if(pr->phase == PointPhase && pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
-          it++;
+          unknown_asks.erase(it++);
           continue;
         }
         maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
@@ -300,15 +298,16 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
             //eraseと後置インクリメントは同時にやらないとイテレータが壊れるので，注意
-            negative_asks.erase(it++);
+            unknown_asks.erase(it++);
             expanded = true;
             break;
-          case NOT_ENTAILED:
-            it++;
+          case CONFLICTING:
+            HYDLA_LOGGER_CLOSURE("--- conflicted ask ---\n", *((*it)->get_guard()));
+            negative_asks.insert(*it);
+            unknown_asks.erase(it++);
             break;
           case BRANCH_VAR:
             HYDLA_LOGGER_CLOSURE("--- branched ask ---\n", *((*it)->get_guard()));
-            branched_ask = &(*it);
             it++;
             break;
           case BRANCH_PAR:
@@ -319,7 +318,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             return result;
             break;
         }
-
         maker.set_continuity_map(continuity_map);
       }
     }
@@ -328,19 +326,21 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
   add_continuity(continuity_map);
 
-  if(branched_ask!=NULL){
-    HYDLA_LOGGER_CLOSURE("%% branched_ask:", TreeInfixPrinter().get_infix_string(*branched_ask));
+  if(!unknown_asks.empty()){
+    boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
+    // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
+    HYDLA_LOGGER_CLOSURE("%% branched_ask:", TreeInfixPrinter().get_infix_string(branched_ask));
     CalculateClosureResult result;
     {
       // 分岐先を生成（導出されない方）
       simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
-      new_state->temporary_constraints.push_back(node_sptr(new Not((*branched_ask)->get_guard())));
+      new_state->temporary_constraints.push_back(node_sptr(new Not((branched_ask)->get_guard())));
       result.push_back(new_state);
     }
     {
       // 分岐先を生成（導出される方）
       simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
-      new_state->temporary_constraints.push_back((*branched_ask)->get_guard());
+      new_state->temporary_constraints.push_back((branched_ask)->get_guard());
       result.push_back(new_state);
     }
     return result;
@@ -358,7 +358,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
         ret.push_back(state);
         return ret;
         break;
-      case NOT_ENTAILED:
+      case CONFLICTING:
         break;
       case BRANCH_VAR:
         HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
