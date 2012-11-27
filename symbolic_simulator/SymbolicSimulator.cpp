@@ -123,6 +123,7 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
   }
 }
 
+
 bool SymbolicSimulator::simple_test(const module_set_sptr& ms){
   TellCollector tell_collector(ms);
   tells_t tell_list;

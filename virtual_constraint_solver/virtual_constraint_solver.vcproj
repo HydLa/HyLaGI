@@ -237,6 +237,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TimeOutError.h"
+				>
+			</File>
+			<File
 				RelativePath=".\mathematica\vcs_math_source.h"
 				>
 			</File>

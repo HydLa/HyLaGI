@@ -69,6 +69,11 @@ void ProgramOptions::init_descriptions()
      "  s - output standard format\n"
      "  c - output csv format\n")
      
+    ("time_out", 
+     value<int>()->default_value(-1),
+     "time out (second)"
+     " negative or zero - infinity")
+     
     ("csv", 
      value<std::string>()->default_value(""),
      "csv file name:\n"

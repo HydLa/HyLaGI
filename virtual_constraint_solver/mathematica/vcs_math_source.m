@@ -4,9 +4,33 @@ $RecursionLimit = 1000;
 (* 内部で用いる精度も上げてみる *)
 $MaxExtraPrecision = 1000;
 
+
+(*
+ * グローバル変数
+ * constraint: 現在のフェーズでの制約
+ * pConstraint: 定数についての制約
+ * prevConstraint: 左極限値を設定する制約
+ * initConstraint: 初期値制約
+ * variables: 制約に出現する変数のリスト
+ * parameters: 記号定数のリスト
+ * isTemporary：制約の追加を一時的なものとするか
+ * tmpConstraint: 一時的に追加された制約
+ * initTmpConstraint: 一時的に追加された初期値制約
+ * tmpVariables: 一時制約に出現する変数のリスト
+ * guard:
+ * guardVars:
+ * startTimes: 呼び出された関数の開始時刻を積むプロファイリング用スタック
+ * profileList: プロファイリング結果のリスト
+ * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
+ * createMapList: createMap関数への入力と出力の組のリスト
+ * timeOutS: タイムアウトまでの時間．秒単位．
+ *)
+
+
 dList = {};
 profileList = {};
 createMapList = {};
+
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
  想定外の形式の結果になって変な計算を初めてエラーメッセージが爆発することが無いようにするため．
@@ -14,6 +38,7 @@ createMapList = {};
  現状では，危ないと思った個所に逐一挟んでおくことになる． *)
 checkMessage := (If[Length[$MessageList] > 0, Abort[] ]);
 
+publicMethod::timeout = "Calculation has reached to timeout";
 
 (*
  * プロファイリング用関数
@@ -110,39 +135,23 @@ publicMethod[name_, args___, define_] := (
   name[Sequence@@Map[(Pattern[#, Blank[]])&, {args}]] := (
     inputPrint[ToString[name], args];
     CheckAbort[
-      timeFuncStart[];
-      Module[{publicRet},
-        publicRet = define;
-        simplePrint[publicRet];
-        timeFuncEnd[name];
-        checkMessage;
-        {1, publicRet}
+      TimeConstrained[
+        timeFuncStart[];
+        Module[{publicRet},
+          publicRet = define;
+          simplePrint[publicRet];
+          timeFuncEnd[name];
+          checkMessage;
+          {1, publicRet}
+        ],
+        Evaluate[timeOutS],
+        {-1}
       ],
       debugPrint[$MessageList]; {0}
     ]
   )
 );
 
-
-(*
- * グローバル変数
- * constraint: 現在のフェーズでの制約
- * pConstraint: 定数についての制約
- * prevConstraint: 左極限値を設定する制約
- * initConstraint: 初期値制約
- * variables: 制約に出現する変数のリスト
- * parameters: 記号定数のリスト
- * isTemporary：制約の追加を一時的なものとするか
- * tmpConstraint: 一時的に追加された制約
- * initTmpConstraint: 一時的に追加された初期値制約
- * tmpVariables: 一時制約に出現する変数のリスト
- * guard:
- * guardVars:
- * startTimes: 呼び出された関数の開始時刻を積むプロファイリング用スタック
- * profileList: プロファイリング結果のリスト
- * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
- * createMapList: createMap関数への入力と出力の組のリスト
- *)
 
 
 (* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)

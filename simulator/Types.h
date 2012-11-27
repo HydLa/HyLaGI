@@ -54,6 +54,7 @@ typedef struct Opts_ {
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;
   int optimization_level;
+  int time_out;
 } Opts;
 
 /**
@@ -66,6 +67,7 @@ typedef enum{
   INCONSISTENCY,
   ASSERTION,
   OTHER_ASSERTION,
+  TIME_OUT_REACHED,
   NOT_UNIQUE_IN_INTERVAL,
   NONE
 }CauseOfTermination;

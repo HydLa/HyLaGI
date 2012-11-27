@@ -15,7 +15,7 @@ public:
     std::runtime_error("error occurred while solving\n" + msg)
   {}
 };
-    
+
 } //namespace vcs
 } //namespace hydla 
 

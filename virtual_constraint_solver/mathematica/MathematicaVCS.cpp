@@ -80,6 +80,18 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
+  
+  // タイムアウト時間
+  ml_.MLPutFunction("Set",2);
+  ml_.MLPutSymbol("timeOutS"); 
+  if(opts.time_out > 0){
+    ml_.MLPutInteger(opts.time_out);
+  }else{
+    ml_.MLPutSymbol("Infinity");
+  }
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
 
   ml_.MLPutFunction("ToExpression", 1);
   ml_.MLPutString(vcs_math_source());  
