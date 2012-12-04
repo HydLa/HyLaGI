@@ -48,8 +48,8 @@ public:
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
   typedef hydla::simulator::changed_asks_t                   changed_asks_t;
   typedef hydla::simulator::not_adopted_tells_list_t         not_adopted_tells_list_t;
-  typedef hydla::symbolic_simulator::variable_set_t                   variable_set_t;
-  typedef hydla::symbolic_simulator::parameter_set_t                   parameter_set_t;
+  typedef hydla::symbolic_simulator::variable_set_t          variable_set_t;
+  typedef hydla::symbolic_simulator::parameter_set_t         parameter_set_t;
   
   typedef boost::function<void (const time_t& time, 
                                 const variable_map_t& vm)>   output_function_t;
@@ -58,11 +58,15 @@ public:
 
   typedef hydla::simulator::continuity_map_t                 continuity_map_t;
 
-
+  typedef enum{
+    TEST_TRUE,
+    TEST_FALSE,
+    TEST_UNKNOWN
+  } TestResult;
+  
   typedef struct CheckConsistencyResult{
     parameter_maps_t true_parameter_maps, false_parameter_maps; 
   }check_consistency_result_t;
-
   
   /**
    * calculate_next_PP_timeで返す構造体
@@ -129,8 +133,21 @@ public:
   virtual void add_constraint(const node_sptr& constraint){assert(0);}
 
   virtual void add_guard(const node_sptr&){assert(0);}
-  
-  virtual bool check_easy_consistency(){assert(0);return false;}
+
+  /**
+   * 制約モジュール集合が矛盾する条件をセットする
+   */
+  virtual void set_false_conditions(const node_sptr& constraint){assert(0);}
+
+  /**
+   * 矛盾する条件をあらかじめ調べる関数
+   * 引数に得た矛盾する条件を入れる
+   * @return
+   * TEST_TRUE    : 必ず矛盾              条件 : 何も入れない
+   * TEST_FALSE   : 矛盾しない            条件 : 何も入れない
+   * TEST_UNKNOWN : 条件によって矛盾する  条件 : 条件を入れる
+   */
+  virtual TestResult test_consistency(node_sptr& node){assert(0); return TEST_FALSE;}
 
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -206,9 +223,7 @@ public:
     assert(0);
     return NULL;
   }
-  
-  
-  
+
   /**
    * create_resultの結果の要素の原型
    */

@@ -164,6 +164,100 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 
+
+checkFalseConditions[] := (
+  checkFalseConditions[prevConstraint, falseConditions, prevVariables]
+);
+
+publicMethod[
+  checkFalseConditions,
+  pCons, fCond, vars,
+  Module[
+    {trueMap, falseMap, cpTrue, cpFalse},
+    prevCons = pCons;
+    prevCons = prevCons /. Rule->Equal;
+    If[prevCons[[0]] == List, prevCons[[0]] = And;];
+    Quiet[
+      cpFalse = Reduce[Exists[vars, prevCons && fCond], Reals], {Reduce::useq}
+    ];
+    simplePrint[cpFalse];
+    checkMessage;
+    Quiet[
+      cpTrue = Reduce[!cpFalse, Reals], {Reduce::useq}
+    ];
+    checkMessage;
+    simplePrint[cpTrue];
+    {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
+    simplePrint[trueMap, falseMap];
+    {trueMap, falseMap}
+  ]
+];
+
+
+(* 制約モジュールが矛盾する条件をセットする *)
+setFalseConditions[co_, va_] := Module[
+  {cons, vars},
+  cons = co;
+  falseConditions = cons;
+  simplePrint[cons, falseConditions];
+];
+
+(* 変数のリストからprev変数を取り除く *)
+removePrevVariables[vars_] := Module[
+  {ret,i},
+  ret = {};
+  For[i=1,i<=Length[vars],i++,
+    If[!isPrevVariable[vars[[i]]], ret=Append[ret,vars[[i]]]];
+  ];
+  ret
+];
+
+(* 矛盾する条件を整形して返す *)
+createTestMap[cons_, vars_] := Module[
+  {map},
+  If[cons === True || cons === False, 
+    cons,
+
+    map = cons /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
+    map = Reduce[map, vars, Reals];
+    map = cons /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
+
+    simplePrint[map];
+    If[map =!= False, 
+      map = LogicalExpand[map];
+      map = applyListToOr[map];
+      map = Map[(applyList[#])&, map];
+      debugPrint["@createMap map after applyList", map];
+ 
+      map = Map[(convertExprs[ adjustExprs[#, isPrevVariable] ])&, map];
+    ];
+    map
+  ]
+];
+
+
+(* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
+testConsistency[] := (
+  testConsistency[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
+);
+
+publicMethod[
+  testConsistency,
+  cons, gua, vars,
+  Module[
+    {i, falseMap, cpFalse},
+    Quiet[
+      cpFalse = Reduce[!Reduce[Exists[vars, cons],Reals] && gua, Reals], {Reduce::useq}
+    ];
+    simplePrint[cpFalse];
+    checkMessage;
+    falseMap = createTestMap[cpFalse, {}];
+    simplePrint[falseMap];
+    {falseMap}
+  ]
+];
+
+
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
@@ -373,6 +467,8 @@ isParameter[exprs_] := Head[exprs] === parameter;
 (* 式が指定されたシンボルを持つか *)
 hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
 
+(* 式がprev変数そのものか否か *)
+isPrevVariable[exprs_] := Head[exprs] === prev;
 
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
@@ -409,6 +505,11 @@ resetConstraint[] := (
   parameters = {};
 );
 
+addGuard[gu_, vars_] := (
+  guard = guard && gu;
+  guardVars = Union[guardVars,vars];
+  simplePrint[gu, vars, guard, guradVars];
+);
 
 addConstraint[co_, va_] := Module[
   {cons, vars},
@@ -492,7 +593,7 @@ addParameterConstraint[pcons_, pars_] := (
 (* 変数名からDerivativeやtを取り，微分回数とともに返す *)
 removeDash[var_] := Module[
    {ret},
-   If[Head[var] === parameter, Return[var]];
+   If[Head[var] === parameter || Head[var] === prev, Return[var]];
    ret = var /. x_[t] -> x;
    If[MatchQ[Head[ret], Derivative[_]],
      ret /. Derivative[d_][x_] -> {x, d},

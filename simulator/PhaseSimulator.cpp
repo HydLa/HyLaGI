@@ -9,15 +9,36 @@ PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 PhaseSimulator::~PhaseSimulator(){}
 
 void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
-  msc_no_init->reset();
-  while(true){
-    if(simple_test(msc_no_init->get_module_set())){
-      msc_no_init->mark_current_node();
-      if(!msc_no_init->go_next()) break;
-    }else{
-      if(!msc_no_init->eliminate_current_module_set()) break;
+  msc_no_init->reverse_reset();
+  while(msc_no_init->reverse_go_next()){
+    module_set_sptr ms_tmp = msc_no_init->get_reverse_module_set();
+    //    std::cout << ms_tmp->get_name() << std::endl;
+    switch(simple_test(ms_tmp)){
+      case TEST_TRUE:
+        msc_no_init->eliminate_r_current_module_set();
+        break;
+      case TEST_FALSE:
+        msc_no_init->mark_r_current_node();
+        break;
+      case TEST_UNKNOWN:
+        msc_no_init->add_conditions_to_super_set();
+        msc_no_init->mark_r_current_node();
+        break;
+      default:
+        assert(0);
+        break;
     }
   }
+  /*
+  msc_no_init->reset();
+  while(msc_no_init->go_next()){
+    std::cout << msc_no_init->get_module_set()->get_name() << std::endl;
+    if(msc_no_init->get_module_set()->get_false_conditions() != NULL){
+      std::cout << "  " << *msc_no_init->get_module_set()->get_false_conditions() << std::endl;
+    }
+    msc_no_init->mark_current_node();
+  }
+  */
 }
 
 PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)

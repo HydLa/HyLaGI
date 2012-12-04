@@ -25,6 +25,9 @@ void MathematicaVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_p
     case hydla::symbolic_simulator::ContinuousMode:
       break;
 
+    case hydla::symbolic_simulator::TestMode:
+      break;
+
     default:
       assert(0);//assert発見
   }
@@ -124,6 +127,29 @@ void MathematicaVCS::end_temporary(){
   HYDLA_LOGGER_VCS("#*** END MathematicaVCS::end_temporary ***\n");
 }
 
+void MathematicaVCS::set_false_conditions(const node_sptr& constraint)
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::set_false_conditions ***\n");
+  
+  PacketSender::VariableArg arg = PacketSender::VA_Prev;
+
+  HYDLA_LOGGER_VCS("%% setFalseConditions");
+  ml_.put_function("setFalseConditions", 2);
+  PacketSender ps(ml_);
+
+  ps.put_node(constraint, arg);
+  // varsを渡す
+  ps.put_vars();
+
+  ///////////////// 受信処理
+  HYDLA_LOGGER_VCS( "--- receive ---");
+  ml_.receive();
+  ml_.MLNewPacket();
+
+  HYDLA_LOGGER_VCS("\n#*** End MathematicaVCS::set_false_conditions ***\n");
+  return;
+}
+
 
 bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
@@ -147,7 +173,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     ml_.put_function("addVariables", 1);
     ml_.put_function("List", variable_set_->size());
     for(variable_set_t::const_iterator it = variable_set_->begin(); it != variable_set_->end(); it++){
-      ps.put_var(it->get_name(), it->get_derivative_count(), mode_==hydla::symbolic_simulator::DiscreteMode?PacketSender::VA_None:PacketSender::VA_Time);
+      ps.put_var(it->get_name(), it->get_derivative_count(), (mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::TestMode)?PacketSender::VA_None:PacketSender::VA_Time);
     }
     
     ml_.receive();
@@ -163,7 +189,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     int size=0;
     for(; it!=parameter_map.end(); ++it)
     {
-	  const value_range_t &range = it->second;
+      const value_range_t &range = it->second;
       if(range.is_unique()){
         size++;
       }else{
@@ -264,7 +290,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     "#*** Begin MathematicaVCS::create_maps ***\n");
     
 /////////////////// 送信処理
-  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+  if(mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::TestMode){
     ml_.put_function("createVariableMap", 0);
   }else{
     ml_.put_function("createVariableMapInterval", 0);
@@ -349,7 +375,7 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
   HYDLA_LOGGER_VCS(
     "#*** Begin MathematicaVCS::add_constraint ***\n");
   
-  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode)?PacketSender::VA_None:PacketSender::VA_Time;
+  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode || mode_== hydla::symbolic_simulator::TestMode)?PacketSender::VA_None:PacketSender::VA_Time;
 
 
   HYDLA_LOGGER_VCS("%% addConstraint");
@@ -387,13 +413,20 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   HYDLA_LOGGER_VCS(
     "#*** Begin MathematicaVCS::add_guard ***\n");
   
-  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode)?PacketSender::VA_None:PacketSender::VA_Time;
+  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::TestMode)?PacketSender::VA_None:PacketSender::VA_Time;
 
-  if(mode_==hydla::symbolic_simulator::DiscreteMode){
-    ml_.put_function("addConstraint", 2);
-  }else{
-    ml_.put_function("setGuard", 2);
+  switch(mode_){
+    case hydla::symbolic_simulator::DiscreteMode:
+      ml_.put_function("addConstraint", 2);
+      break;
+    case hydla::symbolic_simulator::TestMode:
+      ml_.put_function("addGuard",2);
+      break;
+    default:
+      ml_.put_function("setGuard", 2);
+      break;
   }
+
   PacketSender ps(ml_);
 
   ps.put_node(guard, arg);
@@ -409,25 +442,66 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   return;
 }
 
-bool MathematicaVCS::check_easy_consistency(){
-  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::check_easy_consistency ***");
-  ml_.put_function("checkEasyConsistency",0);
-  HYDLA_LOGGER_VCS("%%receive");
+MathematicaVCS::TestResult MathematicaVCS::test_consistency(node_sptr& node)
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::test_consistency ***");
+
+  ml_.put_function("testConsistency",0);
+
+/////////////////// 受信処理
+  HYDLA_LOGGER_VCS( "%%receive");
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
-  std::string tf = ml_.get_symbol();
+
+  //まずListが来るはず
+  ml_.get_next();
+  
+  int token = ml_.get_next();
+  
+  if(token == MLTKSYM){
+    //TrueかFalseのはず
+    std::string symbol = ml_.get_symbol();
+    if(symbol == "True"){
+      return TEST_TRUE;
+    }else{
+      return TEST_FALSE;
+    }
+  }else if(token == MLTKINT){
+    HYDLA_LOGGER_VCS("illegal integer:", ml_.get_integer());
+  }else{
+    //更に二重リストが来るはず
+    int map_size = ml_.get_arg_count();
+    ml_.get_next();
+    for(int i=0; i < map_size; i++){
+      ml_.get_next();
+      if(node == NULL) node = receive_condition_node();
+      else node = node_sptr(new LogicalOr(node,receive_condition_node()));
+    }
+  }
+  //終わりなのでパケットの最後尾までスキップ
   ml_.MLNewPacket();
-  if(tf == "True") return true; else return false;
+  if(node != NULL){
+    HYDLA_LOGGER_VCS("false_condition : ", *node);
+  }
+  
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::test_consistency ***");
+  return TEST_UNKNOWN;
 }
 
 MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::check_consistency ***");
 
-  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+  switch(mode_){ 
+  case hydla::symbolic_simulator::DiscreteMode:
     ml_.put_function("checkConsistencyPoint", 0);
-  }else{
+    break;
+  case hydla::symbolic_simulator::TestMode:
+    ml_.put_function("checkFalseConditions", 0);
+    break;
+  default:
     ml_.put_function("checkConsistencyInterval", 0);
+    break;
   }
   
 /////////////////// 受信処理
@@ -549,6 +623,59 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
   ml_.MLNewPacket();
   HYDLA_LOGGER_VCS("#*** End MathematicaVCSInterval::calculate_next_PP_time ***");
   return result;
+}
+
+node_sptr MathematicaVCS::receive_condition_node(){
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_condition_map ***");
+  int condition_size = ml_.get_arg_count(); //条件式の数
+  HYDLA_LOGGER_VCS("%% map size:", condition_size);
+  ml_.get_next();
+
+  node_sptr ret;
+
+  for(int cond_it = 0; cond_it < condition_size; cond_it++){
+    // 最初，Listの引数の数(MLTKFUNC）
+    ml_.get_next();
+    ml_.get_next(); ml_.get_next(); // これでListの先頭要素まで来る
+    ml_.get_next(); ml_.get_next(); // 先頭要素のprevを読み飛ばす
+
+    std::string name = ml_.get_symbol();
+    int derivative_count = ml_.get_integer();
+     if(get_variable(name, derivative_count) == NULL){
+      throw SolveError("some unknown form of result");
+    }
+    int relop_code = ml_.get_integer();
+    HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
+    node_sptr tmp_var = node_sptr(new Variable(name));
+    for(int i = 0; i < derivative_count; i++){
+      tmp_var = node_sptr(new Differential(tmp_var));
+    }
+    switch(relop_code){
+      case 0: // Equal
+        tmp_var = node_sptr(new Equal(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
+        break;
+      case 1: // Less
+        tmp_var = node_sptr(new Less(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
+        break;
+      case 2: // Greater
+        tmp_var = node_sptr(new Greater(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
+        break;
+      case 3: // LessEqual
+        tmp_var = node_sptr(new LessEqual(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
+        break;
+      case 4: // GreaterEqual
+        tmp_var = node_sptr(new GreaterEqual(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
+        break;
+      default:
+        assert(0);
+        break;
+    }
+    if(ret == NULL) ret = tmp_var; 
+    else ret = node_sptr(new LogicalAnd(ret,tmp_var));
+  }
+  //  HYDLA_LOGGER_VCS("--- result map---\n", map);
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_condition_map ***");
+  return ret;
 }
 
 void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
@@ -806,7 +933,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
   ml_.put_function("Equal", 2);
 
   ps.put_var(name, derivative_count, PacketSender::VA_Prev);
-  if(mode_==hydla::symbolic_simulator::DiscreteMode){
+  if(mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::TestMode){
     ps.put_var(name, derivative_count, PacketSender::VA_None);
     ps.put_vars();
   }

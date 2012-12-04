@@ -80,6 +80,7 @@ void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variab
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
 }
+
 void SymbolicSimulator::set_parameter_set(parameter_t param){
   parameter_set_->push_front(param);
   //std::cout << "ss sps size : " << parameter_set_->size() << std::endl;
@@ -123,38 +124,93 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
   }
 }
 
+SymbolicSimulator::TestResult SymbolicSimulator::simple_test(const module_set_sptr& ms){
 
-bool SymbolicSimulator::simple_test(const module_set_sptr& ms){
-  TellCollector tell_collector(ms);
-  tells_t tell_list;
-  constraints_t constraint_list;
-  expanded_always_t expanded_always;
+  solver_->change_mode(TestMode, opts_->approx_precision);
+
+  SymbolicSimulator::TestResult ret = TEST_FALSE;
   positive_asks_t positive_asks;
+  negative_asks_t negative_asks;
+  expanded_always_t expanded_always;
+  TellCollector tell_collector(ms);
+  AskCollector  ask_collector(ms);
+  tells_t         tell_list;
+  constraints_t   constraint_list;
+
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
+
   variable_map_t vm;
-  parameter_map_t parameter_map;
-  solver_->reset(vm, parameter_map);
+  parameter_map_t pm;
+  solver_->reset(vm,pm);
 
-  tell_collector.collect_new_tells(&tell_list,
-      &expanded_always, 
-      &positive_asks);
+  // ask制約を集める 
+  ask_collector.collect_ask(&expanded_always, 
+      &positive_asks, 
+      &negative_asks);
 
-  constraint_list.clear();
-    
-  maker.reset();
-    
-  for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-    constraint_list.push_back((*it)->get_child());
-    maker.visit_node((*it), false, false);
+  for(int i = 0; i < (1 << negative_asks.size()); i++){
+    positive_asks_t tmp_positive_asks;
+    solver_->start_temporary();
+
+    negative_asks_t::iterator it = negative_asks.begin();
+    for(int j = 0; j < (int)negative_asks.size(); j++, it++){
+      if((i & (1 << j)) != 0){
+        solver_->add_guard((*it)->get_guard());
+	//	std::cout << "guard on : " << (*(*it)->get_guard()) << std::endl;
+        tmp_positive_asks.insert(*it);
+      }else{
+	//	std::cout << "guard off : " << (*(*it)->get_guard()) << std::endl;
+        solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
+      }
+    }
+    //    continuity_map = maker.get_continuity_map();
+    //    add_continuity(continuity_map);
+
+    tell_collector.collect_all_tells(&tell_list,
+        &expanded_always, 
+        &tmp_positive_asks);
+
+    maker.reset();
+    constraint_list.clear();
+
+    for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
+      constraint_list.push_back((*it)->get_child());
+      maker.visit_node((*it), false, false);
+    }
+
+    solver_->add_constraint(constraint_list);
+    continuity_map = maker.get_continuity_map();
+    add_continuity(continuity_map);
+
+    {
+      HYDLA_LOGGER_CLOSURE("--in_simple_test_check_consistency");
+      HYDLA_LOGGER_CLOSURE(ms->get_name());
+      node_sptr tmp_node;
+      switch(solver_->test_consistency(tmp_node)){
+        case SymbolicVirtualConstraintSolver::TEST_TRUE:
+          // この制約モジュール集合は必ず矛盾
+          return TEST_TRUE;
+          break;
+        case SymbolicVirtualConstraintSolver::TEST_FALSE:
+          break;
+        case SymbolicVirtualConstraintSolver::TEST_UNKNOWN:
+          // この制約モジュール集合は矛盾する場合がある
+          HYDLA_LOGGER_CLOSURE("receive false conditions : ", *tmp_node);
+          ret = TEST_UNKNOWN;
+          break;
+        default:
+          assert(0);
+          break;
+      }
+      ms->set_false_conditions(tmp_node);
+    }
+    //    std::cout << std::endl;
+    solver_->end_temporary();
+    //    std::cout << std::endl;
   }
-  continuity_map = maker.get_continuity_map();
-  add_continuity(continuity_map);
-
-  solver_->add_constraint(constraint_list);
-
-  return solver_->check_easy_consistency();
-
+  //  std::cout << std::endl;
+  return ret;
 }
 
 
@@ -395,13 +451,44 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
     bool& consistent)
 {
   HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::simulate_ms_point***");
-  solver_->change_mode(DiscreteMode, opts_->approx_precision);
 
   //前準備
   phase_result_sptr_t& pr = state->phase_result;
 
   solver_->reset(vm, pr->parameter_map);
   
+  if(opts_->optimization_level == 3){
+    //   std::cout << ms->get_name() << " : " << std::endl;
+    if(ms->get_false_conditions() != NULL){
+      solver_->change_mode(TestMode, opts_->approx_precision);
+      HYDLA_LOGGER_MS("#*** check_false_conditions***");
+      HYDLA_LOGGER_MS(ms->get_name() , " : " , *ms->get_false_conditions());
+
+      //      std::cout << ms->get_name() << " : " << *ms->get_false_conditions() << std::endl;
+      
+      solver_->set_false_conditions(ms->get_false_conditions());
+      
+      SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
+      if(check_consistency_result.true_parameter_maps.empty()){
+        // 必ず矛盾する場合
+        consistent = false;
+        return CalculateClosureResult();
+      }else if (check_consistency_result.false_parameter_maps.empty()){
+        // 必ず充足可能な場合
+        // 何もしない
+      }else{
+        // 記号定数の条件によって充足可能性が変化する場合
+        consistent = false;
+        CalculateClosureResult result;
+        push_branch_states(state, check_consistency_result, result);
+        return result;
+      }
+      
+    }
+  }
+
+  solver_->change_mode(DiscreteMode, opts_->approx_precision);
+
   timer::Timer cc_timer;
 
   //閉包計算

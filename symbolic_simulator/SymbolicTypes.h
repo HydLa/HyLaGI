@@ -54,6 +54,7 @@ namespace symbolic_simulator {
   typedef enum Mode_{
     ContinuousMode,
     DiscreteMode,
+    TestMode,
   } Mode;
   
 

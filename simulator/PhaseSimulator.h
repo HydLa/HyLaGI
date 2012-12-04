@@ -41,6 +41,12 @@ public:
   
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
+
+  typedef enum{
+    TEST_TRUE,
+    TEST_FALSE,
+    TEST_UNKNOWN
+  } TestResult;
   
   PhaseSimulator(const Opts& opts);
   
@@ -48,15 +54,21 @@ public:
 
 
   /**
-   * ガード条件やその貢献を考慮せずに簡単に無矛盾性判定をする
-   * 矛盾した場合はfalse、それ以外はtrueを返す
+   * msが矛盾するような条件を予め調べる関数
+   * 得た条件はmsのfalse_conditions_に追加される
+   * @return
+   * TEST_TRUE    : 必ず矛盾
+   * TEST_FALSE   : 矛盾しない
+   * TEST_UNKNOWN : 条件によって矛盾する
    */
-  virtual bool simple_test(const module_set_sptr& ms) = 0;
+  virtual TestResult simple_test(const module_set_sptr& ms) = 0;
 
   /**
-   * Alwaysが無い制約を除いたモジュール集合の集合を全て
-   * 簡易チェックし、明らかな矛盾が生じる場合は
-   * それを解候補モジュール集合の集合から取り除く
+   * Alwaysが無い制約を除いたモジュール集合の集合の小さい方から矛盾する条件を調べる
+   * 矛盾する条件が見つかった場合には、
+   * 現在のモジュール集合を包含するモジュール集合に同じ条件を追加する
+   * 必ず矛盾する場合は現在のモジュール集合および、
+   * それを包含するモジュール集合を解候補モジュール集合の集合から取り除く
    */
   virtual void check_all_module_set(module_set_container_sptr& msc_no_init);
 

@@ -31,7 +31,7 @@ struct PhaseResult {
   typedef DefaultVariable                                   variable_t;
   typedef DefaultParameter                                  parameter_t;
   typedef value_t                                           time_t;
-  typedef std::map<variable_t*, value_t>                   variable_map_t;
+  typedef std::map<variable_t*, value_t>                    variable_map_t;
   typedef std::map<parameter_t*, range_t>                   parameter_map_t;
 
   Phase                     phase;

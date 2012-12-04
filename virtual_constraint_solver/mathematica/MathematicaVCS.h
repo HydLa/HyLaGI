@@ -19,7 +19,6 @@ class MathematicaVCS :
 {
 public:
 
-
   //MathematicaVCS(Mode m, MathLink* ml, int approx_precision);
   MathematicaVCS(const hydla::simulator::Opts &opts);
 
@@ -59,8 +58,10 @@ public:
   virtual void add_constraint(const node_sptr& constraint);
 
   virtual void add_guard(const node_sptr&);
+
+  virtual void set_false_conditions(const node_sptr& constraint);
   
-  virtual bool check_easy_consistency();
+  virtual TestResult test_consistency(node_sptr& node);
 
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -110,6 +111,12 @@ private:
    * 終了時，ml_はマップの次のオブジェクトに移動する
    */
   void receive_parameter_map(parameter_map_t &map);
+
+  /**
+   * test_consistencyで得た矛盾する条件をnode_sprt形式で返す
+   * 事前条件や終了時の状態はreceive_parameter_mapと同じ
+   */
+  node_sptr receive_condition_node();
   
   hydla::symbolic_simulator::Mode      mode_;
   
