@@ -628,8 +628,7 @@ publicMethod[
     resultList = First[resultList];
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
     
-    
-    resultList = Fold[(Join[#1, compareWithMaxTime[maxTime, #2] ])&,{}, resultList];
+    resultList = Fold[(Join[#1, compareWithMaxTime[If[maxTime > 0, maxTime, 0], #2] ])&,{}, resultList];
     simplePrint[resultList];
     
     (* ®Œ`‚µ‚ÄŒ‹‰Ê‚ğ•Ô‚· *)

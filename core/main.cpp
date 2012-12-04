@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <signal.h>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -35,6 +36,7 @@ using namespace hydla::timer;
 using namespace hydla::parser;
 using namespace hydla::parse_tree;
 using namespace hydla::ch;
+using namespace std;
 
 // prototype declarations
 int main(int argc, char* argv[]);
@@ -73,10 +75,33 @@ int main(int argc, char* argv[])
   return ret;
 }
 
+#ifdef _MSC_VER
+void CALLBACK timeout(HWND,
+   UINT,
+   UINT_PTR,
+   DWORD){
+   // cout << "timeout" << endl;
+}
+ 
+#else
+void timeout(int sig){
+  // exit(-1);
+}
+#endif
+
 void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
+  
+/*
+#ifdef _MSC_VER
+  SetTimer(0, 0, 1000, timeout);
+#else
+  signal(SIGALRM,timeout);
+  alarm(1);
+#endif
+*/
 
   Timer main_timer;
   
@@ -115,7 +140,7 @@ void hydla_main(int argc, char* argv[])
   }
 
   // ParseTreeの構築
-  // ファイルがを指定されたらファイルから
+  // ファイルを指定されたらファイルから
   // そうでなければ標準入力から受け取る
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   if(po.count("input-file")) {

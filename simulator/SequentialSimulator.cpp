@@ -29,7 +29,6 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
         continue;
       }
       
-      
       HYDLA_LOGGER_PHASE("--- Next Phase---");
       HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
       HYDLA_LOGGER_PHASE("%% id: ", pr->id);
@@ -43,6 +42,13 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
       try{
         state->module_set_container->reset(state->visited_module_sets);
         simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
+        
+        if(opts_->dump_in_progress){
+          hydla::output::SymbolicTrajPrinter printer;
+          for(unsigned int i=0;i<state->phase_result->parent->children.size();i++){
+            printer.output_one_phase(state->phase_result->parent->children[i]);
+          }
+        }
 
         if(!phases.empty()){
           if(opts_->nd_mode){
@@ -70,10 +76,6 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
         HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
         for(unsigned int i=0; i<phases.size();i++){
           phase_result_sptr_t& pr = phases[i]->phase_result;
-          if(opts_->dump_in_progress){
-            hydla::output::SymbolicTrajPrinter printer;
-            printer.output_one_phase(phases[i]->phase_result);
-          }
           HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
           HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
           HYDLA_LOGGER_PHASE("%% id: ", pr->id);
@@ -94,15 +96,11 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
       }
       catch(const hydla::vcs::TimeOutError &te)
       {
+        // タイムアウト発生
         phase_result_sptr_t& pr = state->phase_result;
         HYDLA_LOGGER_PHASE(te.what());
-        if(pr->children.empty()){
-          pr->cause_of_termination = TIME_OUT_REACHED;
-        }else{
-          for(unsigned int i=0;i<pr->children.size();i++){
-            pr->children[i]->cause_of_termination = TIME_OUT_REACHED;
-          }
-        }
+        pr->cause_of_termination = TIME_OUT_REACHED;
+        pr->parent->children.push_back(pr);
       }
     }catch(const std::runtime_error &se)
     {

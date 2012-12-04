@@ -128,6 +128,11 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
         cout << "# step ended\n" ;
         break;
         
+      case simulator::TIME_OUT_REACHED:
+        output_parameter_map(node->parameter_map);
+        cout << "# time out\n" ;
+        break;
+        
       case simulator::NOT_UNIQUE_IN_INTERVAL:
         output_parameter_map(node->parameter_map);
         cout << "# some values of variables are not unique in IP\n" ;

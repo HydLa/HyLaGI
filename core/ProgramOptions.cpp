@@ -69,9 +69,9 @@ void ProgramOptions::init_descriptions()
      "  s - output standard format\n"
      "  c - output csv format\n")
      
-    ("time_out", 
+    ("timeout", 
      value<int>()->default_value(-1),
-     "time out (second)"
+     "timeout (second)"
      " negative or zero - infinity")
      
     ("csv", 
@@ -100,8 +100,9 @@ void ProgramOptions::init_descriptions()
      "precision of output message")
 
     ("time,t", 
-     value<std::string>()->default_value("1"), 
-     "simulation time")
+     value<std::string>()->default_value(""), 
+     "simulation time\n"
+     "  empty: infinity")
      
     ("phases,p", 
      value<int>()->default_value(-1), 

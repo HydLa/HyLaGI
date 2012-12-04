@@ -604,8 +604,8 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
       simulation_phase_sptr_t new_state(create_new_simulation_phase(new_state_original));
       phase_result_sptr_t& npr = new_state->phase_result;
       
+      bpr->end_time = candidate.time;
       if(!candidate.is_max_time ) {
-        bpr->end_time = candidate.time;
         npr->current_time = candidate.time;
         solver_->simplify(npr->current_time);
         npr->parameter_map = bpr->parameter_map;
@@ -613,7 +613,6 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
         phases.push_back(new_state);
       }else{
         bpr->cause_of_termination = simulator::TIME_LIMIT;
-        bpr->end_time = max_time;
       }
     }
     state->profile["NextPP"] += next_pp_timer.get_elapsed_us();
