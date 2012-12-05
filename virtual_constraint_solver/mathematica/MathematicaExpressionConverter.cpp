@@ -89,6 +89,13 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
           int id = boost::lexical_cast<int, std::string>(ml.get_string());
           ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
         }
+        else if(symbol == "prev"){
+          std::string name = ml.get_symbol();
+          int derivative_count = boost::lexical_cast<int, std::string>(ml.get_string());
+	  hydla::parse_tree::node_sptr tmp_var = node_sptr(new hydla::parse_tree::Variable(name));
+          for(int i = 0; i < derivative_count; i++) tmp_var = node_sptr(new hydla::parse_tree::Differential(tmp_var));
+          ret = node_sptr(new hydla::parse_tree::Previous(tmp_var));
+        }
         else if(symbol == "minus"){
           ret = node_sptr(new hydla::parse_tree::Negative(make_tree(ml)));
         }
