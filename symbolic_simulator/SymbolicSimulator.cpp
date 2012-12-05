@@ -197,13 +197,13 @@ SymbolicSimulator::TestResult SymbolicSimulator::simple_test(const module_set_sp
         case SymbolicVirtualConstraintSolver::TEST_UNKNOWN:
           // ‚±‚Ì§–ñƒ‚ƒWƒ…[ƒ‹W‡‚Í–µ‚‚·‚éê‡‚ª‚ ‚é
           HYDLA_LOGGER_CLOSURE("receive false conditions : ", *tmp_node);
+          ms->set_false_conditions(tmp_node);
           ret = TEST_UNKNOWN;
           break;
         default:
           assert(0);
           break;
       }
-      ms->set_false_conditions(tmp_node);
     }
     //    std::cout << std::endl;
     solver_->end_temporary();
