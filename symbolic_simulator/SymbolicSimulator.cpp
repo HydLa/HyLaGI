@@ -457,7 +457,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
   solver_->reset(vm, pr->parameter_map);
   
-  if(opts_->optimization_level == 3){
+  if(opts_->optimization_level >= 3){
     //   std::cout << ms->get_name() << " : " << std::endl;
     if(ms->get_false_conditions() != NULL){
       solver_->change_mode(TestMode, opts_->approx_precision);

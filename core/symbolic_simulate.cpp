@@ -44,7 +44,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.optimization_level = po.get<int>("optimization-level");
   opts.timeout = po.get<int>("timeout");
   
-  if(opts.optimization_level < 0 || opts.optimization_level > 3){
+  if(opts.optimization_level < 0 || opts.optimization_level > 4){
     throw std::runtime_error(std::string("invalid option - optimization_level"));
   }
   

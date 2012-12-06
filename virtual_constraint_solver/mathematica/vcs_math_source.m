@@ -173,13 +173,16 @@ publicMethod[
   checkFalseConditions,
   pCons, fCond, vars,
   Module[
-    {trueMap, falseMap, cpTrue, cpFalse},
+    {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse},
     prevCons = pCons;
     prevCons = prevCons /. Rule->Equal;
+    falseCond = applyListToOr[LogicalExpand[fCond]];
     If[prevCons[[0]] == List, prevCons[[0]] = And;];
     Quiet[
-      cpFalse = Reduce[Exists[vars, prevCons && fCond], Reals], {Reduce::useq}
+      cpFalse = Map[Reduce[Exists[vars, prevCons && #], Reals]&, falseCond], {Reduce::useq}
     ];
+    If[cpFalse[[0]] == List, cpFalse[[0]] = Or;];
+    cpFalse = Reduce[cpFalse,Reals];
     simplePrint[cpFalse];
     checkMessage;
     Quiet[
@@ -413,7 +416,7 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
   If[cons === True || cons === False, 
     cons,
     idx = {};
-    If[optOptimizationLevel == 1,
+    If[optOptimizationLevel == 1 || optOptimizationLevel == 4,
       idx = Position[createMapList,{cons,judge,hasJudge,vars}];
       If[idx != {}, map = createMapList[[idx[[1]][[1]]]][[2]]];
     ];
@@ -430,7 +433,7 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       debugPrint["@createMap map after applyList", map];
     
       map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
-      If[optOptimizationLevel == 1, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
+      If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
     ];
     map
   ]
@@ -804,7 +807,7 @@ Check[
       tVars = Union[getVariables[subset]];
       If[Length[tVars] == Length[subset],
         ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
-        If[optOptimizationLevel == 1, 
+        If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
           (* ”÷•ª•û’ö®‚ÌŒ‹‰Ê‚ğÄ—˜—p‚·‚éê‡ *)
 (*
           For[j=1,j<=Length[dList],j++,
