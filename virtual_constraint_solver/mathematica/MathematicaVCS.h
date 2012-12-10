@@ -61,7 +61,7 @@ public:
 
   virtual void set_false_conditions(const node_sptr& constraint);
   
-  virtual TestResult test_consistency(node_sptr& node);
+  virtual FalseConditionsResult find_false_conditions(node_sptr& node);
 
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -113,7 +113,8 @@ private:
   void receive_parameter_map(parameter_map_t &map);
 
   /**
-   * test_consistencyで得た矛盾する条件をnode_sprt形式で返す
+   * find_false_conditionsで得た矛盾する条件を
+   * node_sprt形式で返す
    * 事前条件や終了時の状態はreceive_parameter_mapと同じ
    */
   node_sptr receive_condition_node();

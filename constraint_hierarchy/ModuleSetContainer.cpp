@@ -34,30 +34,11 @@ bool ModuleSetContainer::eliminate_r_current_module_set(){
 }
 
 void ModuleSetContainer::add_conditions_to_super_set(){
-  /*
-1. まずModuleSetクラスに変数の値を保持するメンバ変数を用意する
-   (mapかvectorでいいと思う)
-2. module_set_list_のreverse_iteratorを使ってr_current_module_set_以下の
-   module_setに
-   if(module_set.is_super_set(*current_module_set)){
-     // r_current_module_set_が探索済みならこの関数は呼ばない
-     // 他の子ノードから尋ねられたときに重複するが、
-     // 変数表の中身が違えば、それだけ矛盾の候補の条件が追加されるので、
-     // 特に省いたりしない
-     // この方式なら、そこまですごく多いものを
-     // チェックすることにはならないと思う
-     変数表追加
-     visited_module_sets_.insert(*module_set);
-   }
-   のような処理を追加
-   */
   module_set_list_t::reverse_iterator it = r_current_module_set_;
   it++;
-  //  std::cout << (*r_current_module_set_)->get_name() << " : " << std::endl;
   for(; it != module_set_list_.rend(); it++){
     if((*it)->is_super_set(*(*r_current_module_set_))){
-      //      std::cout << "   " << (*it)->get_name() << std::endl;
-      (*it)->set_false_conditions((*r_current_module_set_)->get_false_conditions());
+      (*it)->add_false_conditions((*r_current_module_set_)->get_false_conditions());
       visited_module_sets_.insert(*it);
     }
   }

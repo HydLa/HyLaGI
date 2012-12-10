@@ -59,10 +59,10 @@ public:
   typedef hydla::simulator::continuity_map_t                 continuity_map_t;
 
   typedef enum{
-    TEST_TRUE,
-    TEST_FALSE,
-    TEST_UNKNOWN
-  } TestResult;
+    FALSE_CONDITIONS_TRUE,
+    FALSE_CONDITIONS_FALSE,
+    FALSE_CONDITIONS_VARIABLE_CONDITIONS
+  } FalseConditionsResult;
   
   typedef struct CheckConsistencyResult{
     parameter_maps_t true_parameter_maps, false_parameter_maps; 
@@ -143,11 +143,11 @@ public:
    * 矛盾する条件をあらかじめ調べる関数
    * 引数に得た矛盾する条件を入れる
    * @return
-   * TEST_TRUE    : 必ず矛盾              条件 : 何も入れない
-   * TEST_FALSE   : 矛盾しない            条件 : 何も入れない
-   * TEST_UNKNOWN : 条件によって矛盾する  条件 : 条件を入れる
+   * FALSE_CONDITIONS_TRUE                : 必ず矛盾              条件 : 何も入れない
+   * FALSE_CONDITIONS_FALSE               : 矛盾しない            条件 : 何も入れない
+   * FALSE_CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する  条件 : 条件を入れる
    */
-  virtual TestResult test_consistency(node_sptr& node){assert(0); return TEST_FALSE;}
+  virtual FalseConditionsResult find_false_conditions(node_sptr& node){assert(0); return FALSE_CONDITIONS_FALSE;}
 
   /**
    * 制約ストアが無矛盾かを判定する．

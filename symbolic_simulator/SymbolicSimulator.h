@@ -32,7 +32,7 @@ public:
   SymbolicSimulator(const Opts& opts);
   virtual ~SymbolicSimulator();
 
-  virtual TestResult simple_test(const module_set_sptr& ms);
+  virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
 
   virtual simulation_phases_t simulate_ms_point(const module_set_sptr& ms,
                            simulation_phase_sptr_t& state, variable_map_t &vm, bool& consistent);

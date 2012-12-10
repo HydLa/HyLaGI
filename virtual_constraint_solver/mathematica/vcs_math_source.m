@@ -166,30 +166,35 @@ getReverseRelop[relop_] := Switch[relop,
 
 
 checkFalseConditions[] := (
-  checkFalseConditions[prevConstraint, falseConditions, prevVariables]
+  checkFalseConditions[prevConstraint, falseConditions, pConstraint, prevVariables]
 );
 
 publicMethod[
   checkFalseConditions,
-  pCons, fCond, vars,
+  pCons, fCond, paramCons, vars,
   Module[
-    {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse},
+   {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse, cpTmp},
     prevCons = pCons;
     prevCons = prevCons /. Rule->Equal;
-    falseCond = applyListToOr[LogicalExpand[fCond]];
     If[prevCons[[0]] == List, prevCons[[0]] = And;];
+    falseCond = applyListToOr[LogicalExpand[fCond]];
     Quiet[
-      cpFalse = Map[Reduce[Exists[vars, prevCons && #], Reals]&, falseCond], {Reduce::useq}
+      cpTmp = Map[Reduce[Exists[vars, prevCons && #], Reals]&, falseCond], {Reduce::useq}
     ];
-    If[cpFalse[[0]] == List, cpFalse[[0]] = Or;];
-    cpFalse = Reduce[cpFalse,Reals];
-    simplePrint[cpFalse];
+    If[cpTmp[[0]] == List, cpTmp[[0]] = Or;];
+    cpTmp = Reduce[cpTmp,Reals];
+    simplePrint[cpTmp];
     checkMessage;
     Quiet[
-      cpTrue = Reduce[!cpFalse, Reals], {Reduce::useq}
+      cpTrue = Reduce[!cpTmp && paramCons, Reals], {Reduce::useq}
     ];
     checkMessage;
     simplePrint[cpTrue];
+    Quiet[
+      cpFalse = Reduce[cpTmp && paramCons, Reals], {Reduce::useq}
+    ];
+    checkMessage;
+    simplePrint[cpFalse];
     {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
     simplePrint[trueMap, falseMap];
     {trueMap, falseMap}
@@ -216,7 +221,7 @@ removePrevVariables[vars_] := Module[
 ];
 
 (* 矛盾する条件を整形して返す *)
-createTestMap[cons_, vars_] := Module[
+createPrevMap[cons_, vars_] := Module[
   {map},
   If[cons === True || cons === False, 
     cons,
@@ -240,12 +245,12 @@ createTestMap[cons_, vars_] := Module[
 
 
 (* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
-testConsistency[] := (
-  testConsistency[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
+findFalseConditions[] := (
+  findFalseConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
 );
 
 publicMethod[
-  testConsistency,
+  findFalseConditions,
   cons, gua, vars,
   Module[
     {i, falseMap, cpFalse},
@@ -254,7 +259,7 @@ publicMethod[
     ];
     simplePrint[cpFalse];
     checkMessage;
-    falseMap = createTestMap[cpFalse, {}];
+    falseMap = createPrevMap[cpFalse, {}];
     simplePrint[falseMap];
     {falseMap}
   ]
@@ -700,7 +705,8 @@ publicMethod[
       resultList,
       necessaryPCons,
       parameterList,
-      originalOther
+      originalOther,
+      tmpMaxTime
     },
     
     (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果(tStore)をそのまま引き継ぐこともできるはず *)
@@ -732,7 +738,17 @@ publicMethod[
     resultList = First[resultList];
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
     
+    (*
+       TODO:
+       次の文は maxTime に parameterが入っていたときに
+       If 文の条件が True, False にならなくて
+       If 文のまま残ってしまい, MathematicaVCSで受け取るとき,
+       0 が残ってたりする理由で assert に引っかかるため一旦コメントアウトし, 変更前を書いておく
+    *)
+    (*
     resultList = Fold[(Join[#1, compareWithMaxTime[If[maxTime > 0, maxTime, 0], #2] ])&,{}, resultList];
+     *)
+    resultList = Fold[(Join[#1, compareWithMaxTime[maxTime, #2] ])&,{}, resultList];
     simplePrint[resultList];
     
     (* 整形して結果を返す *)

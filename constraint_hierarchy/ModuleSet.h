@@ -110,7 +110,7 @@ public:
   /**
    * W‡‚ª–µ‚‚·‚éğŒ‚ğ‰Á‚¦‚é
    */
-  void set_false_conditions(const hydla::parse_tree::node_sptr& node)
+  void add_false_conditions(const hydla::parse_tree::node_sptr& node)
   {
     if(false_conditions_ == NULL){
       false_conditions_ = hydla::parse_tree::node_sptr(node);

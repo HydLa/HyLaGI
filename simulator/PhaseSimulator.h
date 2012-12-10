@@ -43,10 +43,10 @@ public:
   typedef std::list<parameter_t>                           parameter_set_t;
 
   typedef enum{
-    TEST_TRUE,
-    TEST_FALSE,
-    TEST_UNKNOWN
-  } TestResult;
+    FALSE_CONDITIONS_TRUE,
+    FALSE_CONDITIONS_FALSE,
+    FALSE_CONDITIONS_VARIABLE_CONDITIONS
+  } FalseConditionsResult;
   
   PhaseSimulator(const Opts& opts);
   
@@ -57,11 +57,11 @@ public:
    * msが矛盾するような条件を予め調べる関数
    * 得た条件はmsのfalse_conditions_に追加される
    * @return
-   * TEST_TRUE    : 必ず矛盾
-   * TEST_FALSE   : 矛盾しない
-   * TEST_UNKNOWN : 条件によって矛盾する
+   * FALSE_CONDITIONS_TRUE                : 必ず矛盾
+   * FALSE_CONDITIONS_FALSE               : 矛盾しない
+   * FALSE_CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する
    */
-  virtual TestResult simple_test(const module_set_sptr& ms) = 0;
+  virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms) = 0;
 
   /**
    * Alwaysが無い制約を除いたモジュール集合の集合の小さい方から矛盾する条件を調べる

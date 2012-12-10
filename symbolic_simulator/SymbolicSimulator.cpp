@@ -124,11 +124,14 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
   }
 }
 
-SymbolicSimulator::TestResult SymbolicSimulator::simple_test(const module_set_sptr& ms){
+SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_conditions(const module_set_sptr& ms){
 
-  solver_->change_mode(TestMode, opts_->approx_precision);
+  HYDLA_LOGGER_CLOSURE("#*** SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_CLOSURE(ms->get_name());
 
-  SymbolicSimulator::TestResult ret = TEST_FALSE;
+  solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
+
+  SymbolicSimulator::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
   expanded_always_t expanded_always;
@@ -157,15 +160,11 @@ SymbolicSimulator::TestResult SymbolicSimulator::simple_test(const module_set_sp
     for(int j = 0; j < (int)negative_asks.size(); j++, it++){
       if((i & (1 << j)) != 0){
         solver_->add_guard((*it)->get_guard());
-	//	std::cout << "guard on : " << (*(*it)->get_guard()) << std::endl;
         tmp_positive_asks.insert(*it);
       }else{
-	//	std::cout << "guard off : " << (*(*it)->get_guard()) << std::endl;
         solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
       }
     }
-    //    continuity_map = maker.get_continuity_map();
-    //    add_continuity(continuity_map);
 
     tell_collector.collect_all_tells(&tell_list,
         &expanded_always, 
@@ -184,32 +183,32 @@ SymbolicSimulator::TestResult SymbolicSimulator::simple_test(const module_set_sp
     add_continuity(continuity_map);
 
     {
-      HYDLA_LOGGER_CLOSURE("--in_simple_test_check_consistency");
-      HYDLA_LOGGER_CLOSURE(ms->get_name());
       node_sptr tmp_node;
-      switch(solver_->test_consistency(tmp_node)){
-        case SymbolicVirtualConstraintSolver::TEST_TRUE:
+      switch(solver_->find_false_conditions(tmp_node)){
+        case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
           // この制約モジュール集合は必ず矛盾
-          return TEST_TRUE;
+          return FALSE_CONDITIONS_TRUE;
           break;
-        case SymbolicVirtualConstraintSolver::TEST_FALSE:
+        case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
           break;
-        case SymbolicVirtualConstraintSolver::TEST_UNKNOWN:
+        case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
           // この制約モジュール集合は矛盾する場合がある
-          HYDLA_LOGGER_CLOSURE("receive false conditions : ", *tmp_node);
-          ms->set_false_conditions(tmp_node);
-          ret = TEST_UNKNOWN;
+          ms->add_false_conditions(tmp_node);
+          ret = FALSE_CONDITIONS_VARIABLE_CONDITIONS;
           break;
         default:
           assert(0);
           break;
       }
     }
-    //    std::cout << std::endl;
     solver_->end_temporary();
-    //    std::cout << std::endl;
   }
-  //  std::cout << std::endl;
+  if(ret == FALSE_CONDITIONS_VARIABLE_CONDITIONS){
+    HYDLA_LOGGER_CLOSURE("found false conditions :", TreeInfixPrinter().get_infix_string(ms->get_false_conditions()));
+  }else{
+    HYDLA_LOGGER_CLOSURE("not found false conditions");
+  }
+  HYDLA_LOGGER_CLOSURE("#*** end SymbolicSimulator::find_false_conditions ***");
   return ret;
 }
 
@@ -460,7 +459,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   if(opts_->optimization_level >= 3){
     //   std::cout << ms->get_name() << " : " << std::endl;
     if(ms->get_false_conditions() != NULL){
-      solver_->change_mode(TestMode, opts_->approx_precision);
+      solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
       HYDLA_LOGGER_MS("#*** check_false_conditions***");
       HYDLA_LOGGER_MS(ms->get_name() , " : " , *ms->get_false_conditions());
 

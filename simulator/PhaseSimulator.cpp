@@ -13,14 +13,14 @@ void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init
   while(msc_no_init->reverse_go_next()){
     module_set_sptr ms_tmp = msc_no_init->get_reverse_module_set();
     //    std::cout << ms_tmp->get_name() << std::endl;
-    switch(simple_test(ms_tmp)){
-      case TEST_TRUE:
+    switch(find_false_conditions(ms_tmp)){
+      case FALSE_CONDITIONS_TRUE:
         msc_no_init->eliminate_r_current_module_set();
         break;
-      case TEST_FALSE:
+      case FALSE_CONDITIONS_FALSE:
         msc_no_init->mark_r_current_node();
         break;
-      case TEST_UNKNOWN:
+      case FALSE_CONDITIONS_VARIABLE_CONDITIONS:
         msc_no_init->add_conditions_to_super_set();
         msc_no_init->mark_r_current_node();
         break;
