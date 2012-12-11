@@ -666,6 +666,9 @@ node_sptr MathematicaVCS::receive_condition_node(){
       case 4: // GreaterEqual
         tmp_var = node_sptr(new GreaterEqual(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
         break;
+      case 5: // Unequal
+        tmp_var = node_sptr(new UnEqual(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
+        break;
       default:
         assert(0);
         break;
