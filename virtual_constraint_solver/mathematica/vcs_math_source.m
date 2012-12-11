@@ -161,8 +161,7 @@ getReverseRelop[relop_] := Switch[relop,
                                   Less, Greater,
                                   Greater, Less,
                                   LessEqual, GreaterEqual,
-                                  GreaterEqual, LessEqual,
-                                  Unequal, Unequal];
+                                  GreaterEqual, LessEqual];
 
 
 
@@ -258,7 +257,6 @@ publicMethod[
     Quiet[
       cpFalse = Reduce[!Reduce[Exists[vars, cons],Reals] && gua, Reals], {Reduce::useq}
     ];
-    cpFalse = FullSimplify[cpFalse];
     simplePrint[cpFalse];
     checkMessage;
     falseMap = createPrevMap[cpFalse, {}];
@@ -657,8 +655,7 @@ getExprCode[expr_] := Switch[Head[expr],
   Less, 1,
   Greater, 2,
   LessEqual, 3,
-  GreaterEqual, 4,
-  Unequal, 5
+  GreaterEqual, 4
 ];
 
 
