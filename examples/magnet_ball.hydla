@@ -6,7 +6,7 @@
 
 INIT <=> y=10 & y'=0 & mag=0 & timer=0.
 FALL <=> [](y''=-10+mag).
-BOUNCE <=> [](y-=0=>y'=-y'-*4/5).
+BOUNCE <=> [](y-=0=>y'=-y'-).
 TRUE <=> [](1=1).
 TIMER <=> [](mag'=0&timer'=1).
 SWITCHON <=> [](timer-=1=>mag=12&timer=0).

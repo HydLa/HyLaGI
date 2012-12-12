@@ -167,6 +167,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\virtual_constraint_solver\TimeOutError.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Timer.h"
 				>
 			</File>

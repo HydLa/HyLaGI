@@ -62,6 +62,8 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         ret = node_sptr(new hydla::parse_tree::Pi());
       else if(symbol=="E")
         ret = node_sptr(new hydla::parse_tree::E());
+      else if(symbol=="inf")
+        ret = node_sptr(new hydla::parse_tree::Infinity());
       else if(symbol.length() > PacketSender::var_prefix.length() && symbol.substr(0, 6) == PacketSender::var_prefix)
         ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(6)));
       break;

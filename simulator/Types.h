@@ -36,11 +36,16 @@ typedef enum AskState_ {
 
 
 
+typedef enum{
+  DFS,
+  BFS
+}SearchMethod;
+
+
 typedef struct Opts_ {
   std::string mathlink;
   bool debug_mode;
   std::string max_time;
-  int max_phase;
   bool nd_mode;
   bool interactive_mode;
   bool profile_mode;
@@ -55,6 +60,12 @@ typedef struct Opts_ {
   std::set<std::string> output_variables;
   int optimization_level;
   int timeout;
+  int timeout_phase;
+  int timeout_case;
+  int timeout_calc;
+  int max_phase;
+  int max_phase_expanded;
+  SearchMethod search_method;
 } Opts;
 
 /**
@@ -112,6 +123,8 @@ struct SimulationPhase{
   std::set<module_set_sptr> visited_module_sets;
   /// プロファイリング結果
   profile_t profile;
+  /// 所属するケースの計算時間
+  int elapsed_time;
   
   SimulationPhase(){}
   /// コピーコンストラクタ

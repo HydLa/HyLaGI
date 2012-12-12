@@ -3,11 +3,12 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <signal.h>
 
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
+
+#include <signal.h>
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -28,6 +29,8 @@
 // parser
 #include "DefaultNodeFactory.h"
 
+#include "SequentialSimulator.h"
+
 // namespace
 using namespace boost;
 using namespace hydla;
@@ -44,6 +47,10 @@ void hydla_main(int argc, char* argv[]);
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 void symbolic_legacy_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
+void output_result(hydla::simulator::SequentialSimulator& ss, hydla::simulator::Opts& opts);
+
+extern hydla::simulator::SequentialSimulator* simulator_;
+extern hydla::simulator::Opts opts;
 
 /**
  * エントリポイント
@@ -89,10 +96,16 @@ void timeout(int sig){
 }
 #endif
 
+
+void interrupt_handler(int sig){
+}
+
 void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
+  
+  signal(SIGINT,interrupt_handler);
   
 /*
 #ifdef _MSC_VER

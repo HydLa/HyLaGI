@@ -140,7 +140,7 @@ protected:
   virtual void push_simulation_phase(const simulation_phase_sptr_t& state)
   {
     state->phase_result->id = phase_id_++;
-    state_stack_.push(state);
+    state_stack_.push_front(state);
   }
 
   /**
@@ -148,8 +148,14 @@ protected:
    */
   simulation_phase_sptr_t pop_simulation_phase()
   {
-    simulation_phase_sptr_t state(state_stack_.top());
-    state_stack_.pop();
+    simulation_phase_sptr_t state;
+    if(opts_->search_method == simulator::DFS){
+      state = state_stack_.front();
+      state_stack_.pop_front();
+    }else{
+      state = state_stack_.back();
+      state_stack_.pop_back();
+    }
     profile_vector_.push_back(state);
     // とりあえず，この関数で取りだしたものは必ずシミュレーションを行うことを前提にする．
     return state;
@@ -189,7 +195,7 @@ protected:
   /**
    * 各状態を保存しておくためのスタック
    */
-  std::stack<simulation_phase_sptr_t> state_stack_;
+  std::deque<simulation_phase_sptr_t> state_stack_;
   
   parse_tree_sptr parse_tree;
   
@@ -198,7 +204,6 @@ protected:
   
   
   Opts*     opts_;
-  private:
   /**
    * 各PhaseResultに振っていくID
    */

@@ -41,6 +41,8 @@ class SequentialSimulator: public Simulator{
    */
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
+  phase_result_const_sptr_t get_result_root();
+  
   private:
   
   /**

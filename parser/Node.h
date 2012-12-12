@@ -1046,6 +1046,38 @@ private:
 };
 
 
+
+/**
+ * 正の無限大を表すノード
+ */
+
+class Infinity : public FactorNode {
+public:
+  Infinity()
+  {}
+    
+  virtual ~Infinity()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Infinity> n(new Infinity());
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "Infinity";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s;
+  }
+};
+
 /**
  * ｔ（時間）を表すノード．変数の時刻に対する式の中に出現するやつ．数式処理用
  */
@@ -1075,7 +1107,6 @@ public:
     Node::dump(s);
     return s;
   }
-  
 };
 
 class Print : public FactorNode{

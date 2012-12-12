@@ -87,8 +87,8 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   // タイムアウト時間
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("timeOutS"); 
-  if(opts.timeout > 0){
-    ml_.MLPutInteger(opts.timeout);
+  if(opts.timeout_calc > 0){
+    ml_.MLPutInteger(opts.timeout_calc);
   }else{
     ml_.MLPutSymbol("Infinity");
   }

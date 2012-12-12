@@ -225,6 +225,10 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
   (*output_stream_) << "Pi";
 }
 
+// ‰~Žü—¦
+void TreeInfixPrinter::visit(boost::shared_ptr<Infinity> node){
+  (*output_stream_) << "‡";
+}
 
 
 // §–ñ’è‹`

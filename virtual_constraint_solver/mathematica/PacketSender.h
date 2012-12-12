@@ -182,6 +182,9 @@ public:
   // t
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
   
+  // –³ŒÀ‘å
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
+  
   typedef std::pair<std::string, int> function_t;
   typedef boost::bimaps::bimap<function_t, function_t > function_map_t;
   static function_map_t function_map_;

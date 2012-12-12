@@ -81,7 +81,7 @@ public:
                          subset_mod.module_list_.end(),
                          ModuleComp());
   }
- 
+
   /**
    * 集合のパースツリーの内容出力
    */

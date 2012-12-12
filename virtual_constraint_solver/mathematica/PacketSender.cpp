@@ -169,6 +169,8 @@ void PacketSender::visit(boost::shared_ptr<UnsupportedFunction> node)
 }
 
 /// ‰~ü—¦
+DEFINE_VISIT_FACTOR(Infinity, Infinity)
+/// ‰~ü—¦
 DEFINE_VISIT_FACTOR(Pi, Pi)
 /// ©‘R‘Î”‚Ì’ê
 DEFINE_VISIT_FACTOR(E, E)

@@ -85,6 +85,9 @@ void TreeVisitor::visit(boost::shared_ptr<Parameter> node)                {asser
 
 // t
 void TreeVisitor::visit(boost::shared_ptr<SymbolicT> node)                {assert(0);}
+
+// ñ≥å¿ëÂ
+void TreeVisitor::visit(boost::shared_ptr<Infinity> node)                {assert(0);}
         
 // ä÷êî
 void TreeVisitor::visit(boost::shared_ptr<Function> node)                {assert(0);}

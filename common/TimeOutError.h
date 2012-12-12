@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 namespace hydla {
-namespace vcs {
+namespace timeout {
 
 class TimeOutError : public std::runtime_error {
 public:
@@ -16,7 +16,7 @@ public:
   {}
 };
 
-} //namespace vcs
+} //namespace timeout
 } //namespace hydla 
 
 #endif

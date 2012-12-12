@@ -46,11 +46,16 @@ void ProgramOptions::init_descriptions()
     ("dump-in-progress", 
      "output each phase in progress")
      
-    ("fail-stop", 
-     "stop all simulation cases when assertion fails")
     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")
+     
+    ("search",
+     value<std::string>()->default_value("d"), 
+     "search method:\n"
+     "  d: Depth First Search\n"
+     "  b: Breadth First Search")
+
      
      ("solver,s",
      value<std::string>()->default_value("m"), 
@@ -68,11 +73,6 @@ void ProgramOptions::init_descriptions()
      "  n - not measured\n"
      "  s - output standard format\n"
      "  c - output csv format\n")
-     
-    ("timeout", 
-     value<int>()->default_value(-1),
-     "timeout (second)"
-     " negative or zero - infinity")
      
     ("csv", 
      value<std::string>()->default_value(""),
@@ -101,14 +101,44 @@ void ProgramOptions::init_descriptions()
 
     ("time,t", 
      value<std::string>()->default_value(""), 
-     "simulation time\n"
+     "simulation time for the model\n"
      "  empty: infinity")
      
-    ("phases,p", 
+    ("phase,p", 
      value<int>()->default_value(-1), 
-     "simulation phases\n"
+     "simulation limit for number of phases in model\n"
      "  positive value: number of phases\n"
      "  negative value: infinity")
+     
+    ("phase_expanded", 
+     value<int>()->default_value(-1), 
+     "simulation limit for number of phases expanded in simulation\n"
+     " (equivalent to \"phase\" if \"nd\" is invalid)"
+     "  positive value: number of phases\n"
+     "  negative value: infinity")
+     
+    ("timeout", 
+     value<int>()->default_value(-1),
+     "timeout (not implemented)"
+     " negative or zero - infinity")
+     
+    ("timeout_phase", 
+     value<int>()->default_value(-1),
+     "timeout for each phase(not implemented)"
+     " negative or zero - infinity")
+     
+    ("timeout_case", 
+     value<int>()->default_value(-1),
+     "timeout for each case(not implemented)"
+     " negative or zero - infinity")
+     
+    ("timeout_calc", 
+     value<int>()->default_value(-1),
+     "timeout for each calculation in backend(second)"
+     " negative or zero - infinity")
+     
+    ("fail-stop", 
+     "stop all simulation cases when assertion fails")
 
     ("math-name", 
      value<std::string>()->default_value("math"), 

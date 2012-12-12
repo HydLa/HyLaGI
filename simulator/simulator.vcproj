@@ -206,6 +206,10 @@
 				RelativePath=".\ValuRange.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\VariableFinder.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -282,6 +286,10 @@
 			</File>
 			<File
 				RelativePath=".\ValueVisitor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableFinder.h"
 				>
 			</File>
 		</Filter>

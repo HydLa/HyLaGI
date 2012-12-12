@@ -521,6 +521,8 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)
 
 //t
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(SymbolicT)
+//–³ŒÀ‘å
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 
 } //namespace parse_tree
 } //namespace hydla

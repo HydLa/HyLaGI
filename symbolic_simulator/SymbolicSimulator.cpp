@@ -672,7 +672,12 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
       disc_cause.push_back(node_sptr(new Not(opts_->assertion)));
     }
     
-    time_t max_time(new SymbolicValue(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
+    time_t max_time;
+    if(opts_->max_time != ""){
+      max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
+    }else{
+      max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
+    }
 
     SymbolicVirtualConstraintSolver::PPTimeResult 
       time_result = solver_->calculate_next_PP_time(disc_cause, pr->current_time, max_time);

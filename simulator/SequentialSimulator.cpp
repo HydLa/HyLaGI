@@ -3,7 +3,7 @@
 #include "SymbolicTrajPrinter.h"
 #include "SymbolicValue.h"
 #include "PhaseSimulator.h"
-#include "../virtual_constraint_solver/TimeOutError.h"
+#include "../common/TimeOutError.h"
 
 namespace hydla {
 namespace simulator {
@@ -39,70 +39,61 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
     }
 
     try{
-      try{
-        state->module_set_container->reset(state->visited_module_sets);
-        simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
-        
-        if(opts_->dump_in_progress){
-          hydla::output::SymbolicTrajPrinter printer;
-          for(unsigned int i=0;i<state->phase_result->parent->children.size();i++){
-            printer.output_one_phase(state->phase_result->parent->children[i]);
-          }
+      state->module_set_container->reset(state->visited_module_sets);
+      timer::Timer phase_timer;
+      simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
+      if(opts_->dump_in_progress){
+        hydla::output::SymbolicTrajPrinter printer;
+        for(unsigned int i=0;i<state->phase_result->parent->children.size();i++){
+          printer.output_one_phase(state->phase_result->parent->children[i]);
         }
+      }
 
-        if(!phases.empty()){
-          if(opts_->nd_mode){
-            for(simulation_phases_t::iterator it = phases.begin();it != phases.end();it++){
-              if((*it)->phase_result->parent != result_root_){
-                (*it)->module_set_container = msc_no_init_;
-              }
-              else{
-                // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-                (*it)->module_set_container = msc_original_;
-              }
-              push_simulation_phase(*it);
-            }
-          }else{
-            if(phases[0]->phase_result->parent != result_root_){
-              phases[0]->module_set_container = msc_no_init_;
-            }else{
-                // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-              phases[0]->module_set_container = msc_original_;
-            }
-            push_simulation_phase(phases[0]);
+      if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
+        for(simulation_phases_t::iterator it = phases.begin();it != phases.end();it++){
+          if((*it)->phase_result->parent != result_root_){
+            (*it)->module_set_container = msc_no_init_;
           }
-        }
-        
-        HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
-        for(unsigned int i=0; i<phases.size();i++){
-          phase_result_sptr_t& pr = phases[i]->phase_result;
-          HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
-          HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
-          HYDLA_LOGGER_PHASE("%% id: ", pr->id);
-          HYDLA_LOGGER_PHASE("%% step: ", pr->step);
-          HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
-          HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
-        }
-        
-        
-        if(!phase_simulator_->is_safe() && opts_->stop_at_failure){
-          HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
-          // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
-          while(!state_stack_.empty()) {
-            simulation_phase_sptr_t tmp_state(pop_simulation_phase());
-            tmp_state->phase_result->parent->cause_of_termination = OTHER_ASSERTION;
+          else{
+            // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
+            (*it)->module_set_container = msc_original_;
           }
+          (*it)->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
+          push_simulation_phase(*it);
+          if(!opts_->nd_mode)break;
         }
       }
-      catch(const hydla::vcs::TimeOutError &te)
-      {
-        // タイムアウト発生
-        phase_result_sptr_t& pr = state->phase_result;
-        HYDLA_LOGGER_PHASE(te.what());
-        pr->cause_of_termination = TIME_OUT_REACHED;
-        pr->parent->children.push_back(pr);
+      
+      HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
+      for(unsigned int i=0; i<phases.size();i++){
+        phase_result_sptr_t& pr = phases[i]->phase_result;
+        HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
+        HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
+        HYDLA_LOGGER_PHASE("%% id: ", pr->id);
+        HYDLA_LOGGER_PHASE("%% step: ", pr->step);
+        HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
+        HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
       }
-    }catch(const std::runtime_error &se)
+      
+      
+      if(!phase_simulator_->is_safe() && opts_->stop_at_failure){
+        HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
+        // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
+        while(!state_stack_.empty()) {
+          simulation_phase_sptr_t tmp_state(pop_simulation_phase());
+          tmp_state->phase_result->parent->cause_of_termination = OTHER_ASSERTION;
+        }
+      }
+    }
+    catch(const hydla::timeout::TimeOutError &te)
+    {
+      // タイムアウト発生
+      phase_result_sptr_t& pr = state->phase_result;
+      HYDLA_LOGGER_PHASE(te.what());
+      pr->cause_of_termination = TIME_OUT_REACHED;
+      pr->parent->children.push_back(pr);
+    }
+    catch(const std::runtime_error &se)
     {
       error_str = se.what();
       HYDLA_LOGGER_PHASE(se.what());
@@ -126,10 +117,18 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
   return result_root_;
 }
 
+
+
+SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::get_result_root()
+{
+  return result_root_;
+}
+
 void SequentialSimulator::initialize(const parse_tree_sptr& parse_tree){
     Simulator::initialize(parse_tree);
     //初期状態を作ってスタックに入れる
     simulation_phase_sptr_t state(new simulation_phase_t());
+    state->elapsed_time = 0;
     phase_result_sptr_t &pr = state->phase_result;
     pr.reset(new phase_result_t());
     pr->cause_of_termination = NONE;

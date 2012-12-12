@@ -2,7 +2,7 @@
 
 #include "mathlink_helper.h"
 #include "Logger.h"
-#include "../TimeOutError.h"
+#include "TimeOutError.h"
 #include "../SolveError.h"
 
 #include <iostream>
@@ -24,7 +24,7 @@ bool PacketErrorHandler::handle(MathLink* ml)
   }
   if(ret_code == -1) {
     HYDLA_LOGGER_VCS("#*** End PacketErrorHandler::handle with time out ***");
-    throw TimeOutError("input:\n" + ml->get_input_print() + "\n\ntrace:\n" + ml->get_debug_print());
+    throw hydla::timeout::TimeOutError("input:\n" + ml->get_input_print() + "\n\ntrace:\n" + ml->get_debug_print());
     return true;
   }
   ml->get_next();

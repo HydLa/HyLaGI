@@ -118,6 +118,9 @@ public:
   
   // tiŠÔj
   virtual void visit(boost::shared_ptr<SymbolicT> node);
+  
+  // –³ŒÀ‘å
+  virtual void visit(boost::shared_ptr<Infinity> node);
 };
 
 } //namespace parse_tree

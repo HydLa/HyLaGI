@@ -1,4 +1,5 @@
 #include "PhaseSimulator.h"
+#include "VariableFinder.h"
 
 using namespace hydla::simulator;
 
@@ -57,8 +58,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
   {
     time_applied_map = apply_time_to_vm(state->phase_result->parent->variable_map, state->phase_result->current_time);
   }
-
-  //TODO:exclude_error‚ª–³Œø‚É‚È‚Á‚Ä‚é
+  
   while(state->module_set_container->go_next())
   {
     module_set_sptr ms = state->module_set_container->get_module_set();

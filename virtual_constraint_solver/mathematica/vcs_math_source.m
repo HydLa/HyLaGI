@@ -661,7 +661,8 @@ getExprCode[expr_] := Switch[Head[expr],
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 integerString[expr_] := (
-  expr /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
+  expr /. (Infinity :> inf)
+       /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
        /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
        /. (x_Integer :> replaceIntegerToString[x])
 );
@@ -738,17 +739,8 @@ publicMethod[
     resultList = First[resultList];
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
     
-    (*
-       TODO:
-       次の文は maxTime に parameterが入っていたときに
-       If 文の条件が True, False にならなくて
-       If 文のまま残ってしまい, MathematicaVCSで受け取るとき,
-       0 が残ってたりする理由で assert に引っかかるため一旦コメントアウトし, 変更前を書いておく
-    *)
-    (*
-    resultList = Fold[(Join[#1, compareWithMaxTime[If[maxTime > 0, maxTime, 0], #2] ])&,{}, resultList];
-     *)
-    resultList = Fold[(Join[#1, compareWithMaxTime[maxTime, #2] ])&,{}, resultList];
+    resultList = Fold[(Join[#1, compareWithMaxTime[If[Reduce[maxTime > 0] === True, maxTime, 0], #2] ])&,{}, resultList];
+    (* resultList = Fold[(Join[#1, compareWithMaxTime[maxTime, #2] ])&,{}, resultList]; *)
     simplePrint[resultList];
     
     (* 整形して結果を返す *)

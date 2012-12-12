@@ -8,6 +8,10 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 
+
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
 // parser
 #include "DefaultNodeFactory.h"
 
@@ -21,19 +25,43 @@ using namespace hydla::ch;
 using namespace hydla::symbolic_simulator;
 using namespace hydla::simulator;
 
+SequentialSimulator* simulator_;
+Opts opts;
+
+
+void output_result(SequentialSimulator& ss, Opts& opts){
+  ProgramOptions &po = ProgramOptions::instance();
+  hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
+  Printer.output_result_tree(ss.get_result_root());
+  if(po.get<std::string>("tm") == "s") {
+    hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
+  } else if(po.get<std::string>("tm") == "c") {
+    std::string csv_name = po.get<std::string>("csv");
+    if(csv_name == ""){
+      hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+    }else{
+      std::ofstream ofs;
+      ofs.open(csv_name.c_str());
+      hydla::output::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
+      ofs.close();
+    }
+  }
+}
+
+
+
 /**
  * 記号処理によるシミュレーション
  */
 void setup_symbolic_simulator_opts(Opts& opts)
 {  
   ProgramOptions &po = ProgramOptions::instance();
-
-
+  
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math-name") + " -mathlink'";
   opts.debug_mode    = po.get<std::string>("debug")!="";
   opts.max_time      = po.get<std::string>("time");
-  opts.max_phase      = po.get<int>("phases");
-  opts.nd_mode       = po.count("nd")>0;
+  opts.max_phase      = po.get<int>("phase");
+  opts.nd_mode       = po.count("nd") > 0;
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.profile_mode  = po.count("profile")>0;
@@ -43,6 +71,17 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.solver        = po.get<std::string>("solver");
   opts.optimization_level = po.get<int>("optimization-level");
   opts.timeout = po.get<int>("timeout");
+  opts.timeout_case = po.get<int>("timeout_case");
+  opts.timeout_phase = po.get<int>("timeout_phase");
+  opts.timeout_calc= po.get<int>("timeout_calc");
+  opts.max_phase_expanded = po.get<int>("phase_expanded");
+  if(po.get<std::string>("search") == "d"){
+    opts.search_method = simulator::DFS;
+  }else if(po.get<std::string>("search") == "b"){
+    opts.search_method = simulator::BFS;
+  }else{
+    throw std::runtime_error(std::string("invalid option - search"));
+  }
   
   if(opts.optimization_level < 0 || opts.optimization_level > 4){
     throw std::runtime_error(std::string("invalid option - optimization_level"));
@@ -59,7 +98,8 @@ void setup_symbolic_simulator_opts(Opts& opts)
     //std::cout << output_variables.substr(now, prev-now) << std::endl;
     if(prev == std::string::npos) prev = output_variables.length();
     int d_count;
-    try{ d_count = boost::lexical_cast<int>(output_variables.substr(now, prev-now));
+    try{ 
+      d_count = boost::lexical_cast<int>(output_variables.substr(now, prev-now));
     }catch(boost::bad_lexical_cast e){
       std::cerr << "invalid option format - output variables" << std::endl;
       exit(-1);
@@ -72,7 +112,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  Opts opts;
+  simulator_ = new SequentialSimulator(opts);
   setup_symbolic_simulator_opts(opts);
   ProgramOptions &po = ProgramOptions::instance();
 
@@ -83,24 +123,10 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ss.initialize(parse_tree);
     ss.simulate();
   }else{
-    SequentialSimulator ss(opts);
+    SequentialSimulator& ss = *simulator_;
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
-    hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
-    Printer.output_result_tree(ss.simulate());
-    if(po.get<std::string>("tm") == "s") {
-      hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
-    } else if(po.get<std::string>("tm") == "c") {
-      std::string csv_name = po.get<std::string>("csv");
-      if(csv_name == ""){
-        hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
-      }else{
-        std::ofstream ofs;
-        ofs.open(csv_name.c_str());
-        hydla::output::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
-        ofs.close();
-      }
-    }
+    ss.simulate();
+    output_result(ss, opts);
   }
 }
-
