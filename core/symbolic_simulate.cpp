@@ -7,6 +7,7 @@
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
+#include "HAConverter.h"
 
 
 #ifdef _MSC_VER
@@ -64,6 +65,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.nd_mode       = po.count("nd") > 0;
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.interactive_mode = po.count("in")>0;
+  opts.ha_convert_mode = po.count("ha")>0;
   opts.profile_mode  = po.count("profile")>0;
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
@@ -122,6 +124,12 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
     ss.simulate();
+  }else if(opts.ha_convert_mode){
+  	opts.nd_mode = true;
+  	HAConverter ha_converter(opts);
+    ha_converter.set_phase_simulator(new SymbolicSimulator(opts));
+    ha_converter.initialize(parse_tree);
+    ha_converter.simulate();
   }else{
     SequentialSimulator& ss = *simulator_;
     ss.set_phase_simulator(new SymbolicSimulator(opts));

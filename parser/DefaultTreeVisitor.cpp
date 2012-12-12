@@ -97,5 +97,9 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Scan> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Exit> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Abort> node)              {}
 
+//SystemVariable
+void DefaultTreeVisitor::visit(boost::shared_ptr<SVtimer> node)              {}
+
+
 } //namespace parse_tree
 } //namespace hydla

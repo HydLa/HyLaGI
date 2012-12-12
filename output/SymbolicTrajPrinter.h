@@ -26,7 +26,7 @@ public:
   void output_result_tree(const phase_result_const_sptr_t&)const;
   void output_one_phase(const phase_result_const_sptr_t&)const;
   
-  private:
+  public:
   
   std::string get_state_output(const phase_result_t& result) const;
   

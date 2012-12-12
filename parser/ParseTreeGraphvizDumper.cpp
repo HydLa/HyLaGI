@@ -291,6 +291,11 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Abort> node)
 {
   dump_node(node);
 }
+// SystemVariable
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SVtimer> node)
+{
+  dump_node(node);
+}
 // ä÷êî
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Function> node)
 {

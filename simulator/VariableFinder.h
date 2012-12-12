@@ -20,7 +20,7 @@ namespace simulator {
 class VariableFinder : public parse_tree::DefaultTreeVisitor {
 public:
 
-  typedef std::set<std::pair<std::string, int>> variable_set_t;
+  typedef std::set< std::pair<std::string, int> > variable_set_t;
 
   VariableFinder();
 

@@ -105,6 +105,9 @@ DEFINE_INFIX_VISIT_FACTOR(Scan, "Scan(", ")")
 DEFINE_INFIX_VISIT_FACTOR(Exit, "Exit(", ")")
 DEFINE_INFIX_VISIT_FACTOR(Abort, "Abort(", ")")
 
+void TreeInfixPrinter::visit(boost::shared_ptr<SVtimer> node){
+  (*output_stream_) << "$timer";
+}
 //•À—ñ‡¬
 void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){
   print_binary_node(*node, ",");

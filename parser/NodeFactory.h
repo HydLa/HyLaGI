@@ -106,6 +106,10 @@ protected:
   NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Scan)
   NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Exit)
   NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(Abort)
+
+  //SystemVariable
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(SVtimer)
+
 };                                                     
 
 } //namespace parser

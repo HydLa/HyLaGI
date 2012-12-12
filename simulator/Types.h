@@ -48,6 +48,7 @@ typedef struct Opts_ {
   std::string max_time;
   bool nd_mode;
   bool interactive_mode;
+  bool ha_convert_mode;
   bool profile_mode;
   bool parallel_mode;
   bool dump_in_progress;

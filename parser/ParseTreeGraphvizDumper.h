@@ -92,6 +92,9 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
+
+  //SystemVariable
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
   
   //ä÷êî
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);

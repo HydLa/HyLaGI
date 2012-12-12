@@ -91,6 +91,9 @@ public:
   virtual void visit(boost::shared_ptr<Scan> node);
   virtual void visit(boost::shared_ptr<Exit> node);
   virtual void visit(boost::shared_ptr<Abort> node);
+
+  //SystemVariable
+  virtual void visit(boost::shared_ptr<SVtimer> node);
   
   // ”Û’è
   virtual void visit(boost::shared_ptr<Not> node);

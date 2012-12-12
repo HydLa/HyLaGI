@@ -393,6 +393,5 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Abort> node)
 }
 
 
-
 } //namespace simulator
 } //namespace hydla 

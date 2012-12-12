@@ -436,6 +436,13 @@ private:
         }
         return io_node;
       }
+
+	  //SystemVarible
+	  case RI_SVtimer: 
+	  {
+        boost::shared_ptr<SVtimer> node(node_factory_->create<SVtimer>());
+        return node;
+	  }
       
       default:
       {

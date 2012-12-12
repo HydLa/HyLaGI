@@ -1412,6 +1412,49 @@ private:
   std::string args_;
 };
 
+/**
+ * システム変数のノード
+ */
+class SystemVariableNode : public FactorNode{
+public:
+  
+  SystemVariableNode()
+  {}
+  
+  virtual ~SystemVariableNode()
+  {}
+  
+};
+
+/**
+ * timer変数　
+ * シミュレーション開始からの時刻を保持しているシステム変数
+ */
+class SVtimer : public SystemVariableNode{
+public:
+  SVtimer()
+  {}
+
+  virtual ~SVtimer()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<SVtimer> n(new SVtimer());
+    return n;
+  }
+
+  virtual std::string get_node_type_name() const {
+    return "$timer";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const {
+    Node::dump(s);
+    return s;
+  }
+};
 
 /**
  * 任意個の引数を持つノード

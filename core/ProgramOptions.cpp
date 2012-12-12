@@ -67,6 +67,8 @@ void ProgramOptions::init_descriptions()
     
     ("in", "interactive mode")
 
+	("ha", "convert to HA")
+
     ("tm", 
      value<std::string>()->default_value("n"),
      "time measurement:\n"

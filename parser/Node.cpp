@@ -263,7 +263,6 @@ bool Abort::is_same_struct(const Node& n, bool exactly_same) const
           string_ == static_cast<const Abort*>(&n)->string_;
 }
 
-
 bool Variable::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
@@ -515,6 +514,9 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(PrintIP)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Scan)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Exit)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Abort)
+
+//SystemVariable
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SVtimer)
 
 //ãLçÜíËêî
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)

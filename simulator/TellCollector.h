@@ -124,7 +124,6 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
 
-
 private:
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
 

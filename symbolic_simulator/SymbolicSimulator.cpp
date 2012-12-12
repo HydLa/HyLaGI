@@ -509,7 +509,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
   if(result.size() != 1){
     consistent = false;
-    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_point(result.size() != 1)***\n");
+    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_point(result.size() != 1 : ",result.size() ,")***\n");
     return result;
   }
   

@@ -109,6 +109,9 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
 
+  //SystemVariable
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
+
 private:
   typedef hydla::parser::DefinitionContainer<
     hydla::parse_tree::Definition>::definition_map_key_t referenced_definition_t;

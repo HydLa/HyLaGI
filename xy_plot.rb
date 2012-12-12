@@ -38,9 +38,9 @@ set terminal #{terminal_type}
 set output "out.#{output_ext}"
 set xlabel "x"
 set ylabel "y"
-#set xrange [-5:5]
-#set yrange [-2:2]
-plot "out.data" u 4:5 title "x-y" w l
+set xrange [0:20]
+set yrange [0:20]
+plot "out.data" u 2:3 title "x-y" w l
 EOS
 end
 

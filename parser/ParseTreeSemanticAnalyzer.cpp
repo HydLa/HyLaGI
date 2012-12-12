@@ -220,9 +220,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)
   state_stack_.top().in_always = false;
   dispatch<Ask, &Ask::get_child, &Ask::set_child>(node.get());
   state_stack_.pop();
-
-
-
 }
 
 
@@ -389,12 +386,17 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 // êîéö
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 
+// Print
 DEFINE_DEFAULT_VISIT_FACTOR(Print)
 DEFINE_DEFAULT_VISIT_FACTOR(PrintPP)
 DEFINE_DEFAULT_VISIT_FACTOR(PrintIP)
 DEFINE_DEFAULT_VISIT_FACTOR(Scan)
 DEFINE_DEFAULT_VISIT_FACTOR(Exit)
 DEFINE_DEFAULT_VISIT_FACTOR(Abort)
+
+// SystemVariable
+DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
+
 
 } //namespace parser
 } //namespace hydla
