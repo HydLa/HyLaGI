@@ -10,6 +10,12 @@ PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 PhaseSimulator::~PhaseSimulator(){}
 
 void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
+  msc_no_init->reset();
+  while(msc_no_init->go_next()){
+    false_conditions_.insert(false_map_t::value_type(msc_no_init->get_module_set(),node_sptr()));
+    msc_no_init->mark_current_node();
+  }
+
   msc_no_init->reverse_reset();
   while(msc_no_init->reverse_go_next()){
     module_set_sptr ms_tmp = msc_no_init->get_reverse_module_set();
@@ -22,7 +28,7 @@ void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init
         msc_no_init->mark_r_current_node();
         break;
       case FALSE_CONDITIONS_VARIABLE_CONDITIONS:
-        msc_no_init->add_conditions_to_super_set();
+        msc_no_init->mark_super_module_set();
         msc_no_init->mark_r_current_node();
         break;
       default:

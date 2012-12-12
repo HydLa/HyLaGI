@@ -100,11 +100,10 @@ public:
   virtual void reset(const std::set<module_set_sptr> &mss);
   
   /**
-   * 現在のモジュール集合が矛盾する条件を
-   * 包含するモジュール集合にも追加し、
-   * 包含するモジュール集合は探索済みとする
+   * 現在のモジュール集合を
+   * 包含するモジュール集合を探索済みとする
    */
-  virtual void add_conditions_to_super_set();
+  virtual void mark_super_module_set();
 
   protected:
   module_set_list_t module_set_list_;

@@ -42,6 +42,8 @@ public:
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
 
+  typedef std::map<module_set_sptr, node_sptr> false_map_t;
+
   typedef enum{
     FALSE_CONDITIONS_TRUE,
     FALSE_CONDITIONS_FALSE,
@@ -125,6 +127,7 @@ protected:
   variable_set_t *variable_set_;
   parameter_set_t *parameter_set_;
   variable_map_t *variable_map_;
+  false_map_t false_conditions_;
 };
 
 

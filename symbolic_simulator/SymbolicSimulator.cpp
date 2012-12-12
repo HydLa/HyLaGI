@@ -70,7 +70,6 @@ void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variab
 {
   simulator_t::initialize(v, p, m, c);
   variable_derivative_map_ = c;
-
   // 使用するソルバの決定
   /*  if(opts_->solver == "r" || opts_->solver == "Reduce") {
       solver_.reset(new REDUCEVCS(opts_, variable_map_));
@@ -126,8 +125,8 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
 
 SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_conditions(const module_set_sptr& ms){
 
-  HYDLA_LOGGER_CLOSURE("#*** SymbolicSimulator::find_false_conditions ***");
-  HYDLA_LOGGER_CLOSURE(ms->get_name());
+  HYDLA_LOGGER_HIERARCHY("#*** SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_HIERARCHY(ms->get_name());
 
   solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
 
@@ -151,6 +150,8 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
   ask_collector.collect_ask(&expanded_always, 
       &positive_asks, 
       &negative_asks);
+
+  node_sptr condition_node;
 
   for(int i = 0; i < (1 << negative_asks.size()); i++){
     positive_asks_t tmp_positive_asks;
@@ -193,7 +194,9 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
           break;
         case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
           // この制約モジュール集合は矛盾する場合がある
-          ms->add_false_conditions(tmp_node);
+          if(condition_node != NULL) condition_node = node_sptr(tmp_node);
+          else condition_node = node_sptr(new LogicalOr(condition_node, tmp_node));
+	  //          ms->add_false_conditions(tmp_node);
           ret = FALSE_CONDITIONS_VARIABLE_CONDITIONS;
           break;
         default:
@@ -204,11 +207,22 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
     solver_->end_temporary();
   }
   if(ret == FALSE_CONDITIONS_VARIABLE_CONDITIONS){
-    HYDLA_LOGGER_CLOSURE("found false conditions :", TreeInfixPrinter().get_infix_string(ms->get_false_conditions()));
+    false_conditions_[ms] = condition_node;
+    false_map_t::iterator it = false_conditions_.begin();
+    for(;it != false_conditions_.end();it++){
+      if((*it).first->is_super_set(*ms)){
+        node_sptr tmp = (*it).second;
+        if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp,condition_node));
+        else tmp = node_sptr(condition_node);
+	// tmp = Simplify(tmp);
+        (*it).second = tmp;
+      }
+    }
+    HYDLA_LOGGER_HIERARCHY("found false conditions :", TreeInfixPrinter().get_infix_string(condition_node));
   }else{
-    HYDLA_LOGGER_CLOSURE("not found false conditions");
+    HYDLA_LOGGER_HIERARCHY("not found false conditions");
   }
-  HYDLA_LOGGER_CLOSURE("#*** end SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_HIERARCHY("#*** end SymbolicSimulator::find_false_conditions ***");
   return ret;
 }
 
@@ -457,15 +471,12 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   solver_->reset(vm, pr->parameter_map);
   
   if(opts_->optimization_level >= 3){
-    //   std::cout << ms->get_name() << " : " << std::endl;
-    if(ms->get_false_conditions() != NULL){
+    if(false_conditions_[ms] != NULL){
       solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
       HYDLA_LOGGER_MS("#*** check_false_conditions***");
-      HYDLA_LOGGER_MS(ms->get_name() , " : " , *ms->get_false_conditions());
-
-      //      std::cout << ms->get_name() << " : " << *ms->get_false_conditions() << std::endl;
-      
-      solver_->set_false_conditions(ms->get_false_conditions());
+      HYDLA_LOGGER_MS(ms->get_name() , " : " , false_conditions_[ms]);
+    
+      solver_->set_false_conditions(false_conditions_[ms]);
       
       SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
       if(check_consistency_result.true_parameter_maps.empty()){

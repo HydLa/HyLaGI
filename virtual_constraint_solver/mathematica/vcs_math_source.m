@@ -259,9 +259,15 @@ publicMethod[
     ];
     simplePrint[cpFalse];
     checkMessage;
-    falseMap = createPrevMap[cpFalse, {}];
-    simplePrint[falseMap];
-    {falseMap}
+    cpFalse = cpFalse /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
+
+    (*    falseMap = createPrevMap[cpFalse, {}]; *)
+    If[cpFalse =!= False && cpFalse =!= True,
+      cpFalse = integerString[cpFalse];
+      cpFalse = Simplify[cpFalse];
+    ];
+    simplePrint[cpFalse];
+    cpFalse
   ]
 ];
 

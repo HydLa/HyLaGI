@@ -202,7 +202,6 @@ protected:
   /// 解軌道木の根．初期状態なので，子供以外の情報は入れない
   phase_result_sptr_t result_root_;
   
-  
   Opts*     opts_;
   /**
    * 各PhaseResultに振っていくID

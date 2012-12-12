@@ -25,7 +25,6 @@ namespace symbolic_simulator {
 class SymbolicSimulator : public simulator_t
 {
 public:
-
   typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
   typedef simulator::Opts Opts;
 

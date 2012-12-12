@@ -19,13 +19,9 @@ bool ModuleSetContainer::eliminate_r_current_module_set(){
   it++;
   while(it != module_set_list_.rend()){
     if((*it)->is_super_set(*(*r_current_module_set_))){
-      //      std::cout << "current      : " << *(*r_current_module_set_) << std::endl;
-      //      std::cout << "  eliminated : " << *(*it) << std::endl;
       module_set_list_.erase(--(it.base()));
       r_current_module_set_++;
     }else{
-      //      std::cout << "current    : " << *(*r_current_module_set_) << std::endl;
-      //      std::cout << "  remained : " << *(*it) << std::endl;
       it++;
     }
   }
@@ -33,12 +29,11 @@ bool ModuleSetContainer::eliminate_r_current_module_set(){
   return r_current_module_set_ != module_set_list_.rend();  
 }
 
-void ModuleSetContainer::add_conditions_to_super_set(){
+void ModuleSetContainer::mark_super_module_set(){
   module_set_list_t::reverse_iterator it = r_current_module_set_;
   it++;
   for(; it != module_set_list_.rend(); it++){
     if((*it)->is_super_set(*(*r_current_module_set_))){
-      (*it)->add_false_conditions((*r_current_module_set_)->get_false_conditions());
       visited_module_sets_.insert(*it);
     }
   }

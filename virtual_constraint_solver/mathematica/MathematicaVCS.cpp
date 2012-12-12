@@ -452,40 +452,17 @@ MathematicaVCS::FalseConditionsResult MathematicaVCS::find_false_conditions(node
   HYDLA_LOGGER_VCS( "%%receive");
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
-
-  //まずListが来るはず
-  ml_.get_next();
-  
-  int token = ml_.get_next();
-  
-  if(token == MLTKSYM){
-    //TrueかFalseのはず
-    std::string symbol = ml_.get_symbol();
-    if(symbol == "True"){
-      return FALSE_CONDITIONS_TRUE;
-    }else{
-      return FALSE_CONDITIONS_FALSE;
-    }
-  }else if(token == MLTKINT){
-    HYDLA_LOGGER_VCS("illegal integer:", ml_.get_integer());
-  }else{
-    //更に二重リストが来るはず
-    int map_size = ml_.get_arg_count();
-    ml_.get_next();
-    for(int i=0; i < map_size; i++){
-      ml_.get_next();
-      if(node == NULL) node = receive_condition_node();
-      else node = node_sptr(new LogicalOr(node,receive_condition_node()));
-    }
-  }
+  FalseConditionsResult node_type = FALSE_CONDITIONS_FALSE;
+  node = receive_condition_node(node_type);
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::find_false_conditions ***");
   //終わりなのでパケットの最後尾までスキップ
   ml_.MLNewPacket();
   if(node != NULL){
     HYDLA_LOGGER_VCS("false_condition : ", *node);
   }
-  
+
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::find_false_conditions ***");
-  return FALSE_CONDITIONS_VARIABLE_CONDITIONS;
+  return node_type; 
 }
 
 MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
@@ -625,56 +602,177 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
   return result;
 }
 
-node_sptr MathematicaVCS::receive_condition_node(){
-  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_condition_map ***");
-  int condition_size = ml_.get_arg_count(); //条件式の数
-  HYDLA_LOGGER_VCS("%% map size:", condition_size);
-  ml_.get_next();
-
+node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_type){
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_condition_node ***");
   node_sptr ret;
+  switch(ml_.get_type()){ // 現行オブジェクトの型を得る
+    case MLTKSTR: // 文字列
+    {
+      HYDLA_LOGGER_REST("%% MLTKSTR(receive_condition_node)");
+      ret = node_sptr(new hydla::parse_tree::Number(ml_.get_string()));
+      break;
+    }
+    case MLTKSYM: // シンボル（記号）
+    {
+    HYDLA_LOGGER_REST("%% MLTKSYM(receive_condition_node)");
+      std::string symbol = ml_.get_symbol();
+      if(symbol=="False"){
+        node_type = FALSE_CONDITIONS_FALSE;
+        return node_sptr();
+      }else if(symbol=="True"){
+        node_type = FALSE_CONDITIONS_TRUE;
+        return node_sptr();
+      }else if(symbol=="t")
+        ret = node_sptr(new hydla::parse_tree::SymbolicT());
+      else if(symbol=="Pi")
+        ret = node_sptr(new hydla::parse_tree::Pi());
+      else if(symbol=="E")
+        ret = node_sptr(new hydla::parse_tree::E());
+      else if(symbol.length() > PacketSender::var_prefix.length() && symbol.substr(0, 6) == PacketSender::var_prefix)
+        ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(6)));
+      break;
+    }
+    case MLTKINT: // 整数は文字列形式でのみ受け取るものとする（int型だと限界があるため）
+    {
+      HYDLA_LOGGER_REST("%% MLTKINT(receive_condition_node)");
+      assert(0);
+      break;
+    }
+    case MLTKFUNC: // 合成関数
+    HYDLA_LOGGER_REST("%% MLTKFUNC(receive_condition_node)");
+    {
+      int arg_count = ml_.get_arg_count();
+      int next_type = ml_.get_type();
+      if(next_type == MLTKSYM){
+        std::string symbol = ml_.get_symbol();
+        HYDLA_LOGGER_REST("%% symbol_name:", symbol);
+        if(symbol == "Sqrt"){//1引数関数
+          ret = node_sptr(new hydla::parse_tree::Power(receive_condition_node(node_type), node_sptr(new hydla::parse_tree::Number("1/2"))));
+        }
+        else if(symbol == "prev"){
+          std::string name = ml_.get_symbol();
+          int derivative_count = boost::lexical_cast<int, std::string>(ml_.get_string());
+	  hydla::parse_tree::node_sptr tmp_var = node_sptr(new hydla::parse_tree::Variable(name));
+          for(int i = 0; i < derivative_count; i++) tmp_var = node_sptr(new hydla::parse_tree::Differential(tmp_var));
+          ret = node_sptr(new hydla::parse_tree::Previous(tmp_var));
+        }
+        else if(symbol == "minus"){
+          ret = node_sptr(new hydla::parse_tree::Negative(receive_condition_node(node_type)));
+        }
+        else if(symbol == "Plus" 
+           || symbol == "Subtract"
+           || symbol == "Times"
+           || symbol == "Divide"
+           || symbol == "Power"
+           || symbol == "Rational"
+           || symbol == "And"
+           || symbol == "Or"
+           || symbol == "Equal"
+           || symbol == "Unequal"
+           || symbol == "Less"
+           || symbol == "LessEqual"
+           || symbol == "Greater"
+           || symbol == "GreaterEqual")      
+        { // 加減乗除など，二項演算子で書かれる関数
+          node_sptr lhs, rhs;
+          ret = receive_condition_node(node_type);
+          for(int arg_it=1;arg_it<arg_count;arg_it++){
+            lhs = ret;
+            rhs = receive_condition_node(node_type);
+            if(symbol == "Plus")
+              ret = node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
+            else if(symbol == "Subtract")
+              ret = node_sptr(new hydla::parse_tree::Subtract(lhs, rhs));
+            else if(symbol == "Times")
+              ret = node_sptr(new hydla::parse_tree::Times(lhs, rhs));
+            else if(symbol == "Divide")
+              ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
+            else if(symbol == "Power")
+              ret = node_sptr(new hydla::parse_tree::Power(lhs, rhs));
+            else if(symbol == "Rational")
+              ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
+            else if(symbol == "And")
+              ret = node_sptr(new hydla::parse_tree::LogicalAnd(lhs, rhs));
+            else if(symbol == "Or")
+              ret = node_sptr(new hydla::parse_tree::LogicalOr(lhs, rhs));
+            else if(symbol == "Equal")
+              ret = node_sptr(new hydla::parse_tree::Equal(lhs, rhs));
+            else if(symbol == "Unequal")
+              ret = node_sptr(new hydla::parse_tree::UnEqual(lhs, rhs));
+            else if(symbol == "Less")
+              ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
+            else if(symbol == "LessEqual")
+              ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
+            else if(symbol == "Greater")
+              ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
+            else if(symbol == "GreaterEqual")
+              ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
 
-  for(int cond_it = 0; cond_it < condition_size; cond_it++){
-    // 最初，Listの引数の数(MLTKFUNC）
-    ml_.get_next();
-    ml_.get_next(); ml_.get_next(); // これでListの先頭要素まで来る
-    ml_.get_next(); ml_.get_next(); // 先頭要素のprevを読み飛ばす
+          }
+        }
+        else if(symbol == "Inequality"){
+          node_sptr lhs, rhs;
+          rhs = receive_condition_node(node_type);
+          for(int arg_it=1;arg_it<arg_count;arg_it++){
+            if(arg_it % 2){
+              symbol = ml_.get_symbol();
+            }else{
+              lhs = rhs;
+              rhs = receive_condition_node(node_type);
+              if(symbol == "Less"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
+ 	        else
+                  ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::Less(lhs, rhs))));
+              }else if(symbol == "LessEqual"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
+                else
+                  ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs))));
+              }else if(symbol == "Greater"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
+                else
+	          ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::Greater(lhs, rhs))));
+              }else if(symbol == "GreaterEqual"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
+                else
+	          ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs))));
+              }
+            }
+          }
+	}
+        else{
+          // その他の関数
+          boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
+          PacketSender::function_map_t::right_const_iterator it = 
+            PacketSender::function_map_.right.find(PacketSender::function_t(symbol, arg_count));
+          if(it != PacketSender::function_map_.right.end() && it->second.second == arg_count){
+            // 対応している関数
+            f.reset(new hydla::parse_tree::Function(it->second.first));
+          }
+          else{
+            // 謎の関数
+            f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
+          }
+          for(int arg_it=0;arg_it<arg_count;arg_it++){
+            f->add_argument(receive_condition_node(node_type));
+          }
+          ret = f;
+        }
+      }
+      break;
+    }
 
-    std::string name = ml_.get_symbol();
-    int derivative_count = ml_.get_integer();
-     if(get_variable(name, derivative_count) == NULL){
-      throw SolveError("some unknown form of result");
-    }
-    int relop_code = ml_.get_integer();
-    HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
-    node_sptr tmp_var = node_sptr(new Variable(name));
-    for(int i = 0; i < derivative_count; i++){
-      tmp_var = node_sptr(new Differential(tmp_var));
-    }
-    switch(relop_code){
-      case 0: // Equal
-        tmp_var = node_sptr(new Equal(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
-        break;
-      case 1: // Less
-        tmp_var = node_sptr(new Less(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
-        break;
-      case 2: // Greater
-        tmp_var = node_sptr(new Greater(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
-        break;
-      case 3: // LessEqual
-        tmp_var = node_sptr(new LessEqual(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
-        break;
-      case 4: // GreaterEqual
-        tmp_var = node_sptr(new GreaterEqual(tmp_var, MathematicaExpressionConverter::make_tree(ml_)));
-        break;
-      default:
-        assert(0);
-        break;
-    }
-    if(ret == NULL) ret = tmp_var; 
-    else ret = node_sptr(new LogicalAnd(ret,tmp_var));
+    default:
+      HYDLA_LOGGER_REST("%% UNKNOWN(receive_condition_node)");
+      assert(0);
+      break;
   }
-  //  HYDLA_LOGGER_VCS("--- result map---\n", map);
-  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_condition_map ***");
+  if(ret != NULL){
+    node_type = FALSE_CONDITIONS_VARIABLE_CONDITIONS;
+  }
   return ret;
 }
 

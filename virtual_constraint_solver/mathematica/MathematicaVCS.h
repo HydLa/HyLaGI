@@ -117,7 +117,7 @@ private:
    * node_sprtŒ`®‚Å•Ô‚·
    * –‘OğŒ‚âI—¹‚Ìó‘Ô‚Íreceive_parameter_map‚Æ“¯‚¶
    */
-  node_sptr receive_condition_node();
+  node_sptr receive_condition_node(FalseConditionsResult& node_type);
   
   hydla::symbolic_simulator::Mode      mode_;
   
