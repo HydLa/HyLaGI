@@ -9,6 +9,8 @@ namespace hydla {
 namespace simulator {
 
 
+using namespace std;
+
 SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts){
 }
 
@@ -41,7 +43,8 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
     try{
       state->module_set_container->reset(state->visited_module_sets);
       timer::Timer phase_timer;
-      simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
+      PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
+      
       if(opts_->dump_in_progress){
         hydla::output::SymbolicTrajPrinter printer;
         for(unsigned int i=0;i<state->phase_result->parent->children.size();i++){
@@ -50,29 +53,36 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
       }
 
       if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
-        for(simulation_phases_t::iterator it = phases.begin();it != phases.end();it++){
-          if((*it)->phase_result->parent != result_root_){
-            (*it)->module_set_container = msc_no_init_;
+        for(unsigned int i = 0;i < phases.size();i++){
+          PhaseSimulator::TodoAndResult& tr = phases[i];
+          if(tr.todo.get() != NULL){
+            if(tr.todo->phase_result->parent != result_root_){
+              tr.todo->module_set_container = msc_no_init_;
+            }
+            else{
+              // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
+              tr.todo->module_set_container = msc_original_;
+            }
+            tr.todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
+            push_simulation_phase(tr.todo);
+          }if(tr.result.get() != NULL){
+            state->phase_result->parent->children.push_back(tr.result);
           }
-          else{
-            // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-            (*it)->module_set_container = msc_original_;
-          }
-          (*it)->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
-          push_simulation_phase(*it);
           if(!opts_->nd_mode)break;
         }
       }
       
       HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
       for(unsigned int i=0; i<phases.size();i++){
-        phase_result_sptr_t& pr = phases[i]->phase_result;
-        HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
-        HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
-        HYDLA_LOGGER_PHASE("%% id: ", pr->id);
-        HYDLA_LOGGER_PHASE("%% step: ", pr->step);
-        HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
-        HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
+        if(phases[i].todo.get() != NULL){
+          phase_result_sptr_t& pr = phases[i].todo->phase_result;
+          HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
+          HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
+          HYDLA_LOGGER_PHASE("%% id: ", pr->id);
+          HYDLA_LOGGER_PHASE("%% step: ", pr->step);
+          HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
+          HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
+        }
       }
       
       
@@ -99,18 +109,6 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
       HYDLA_LOGGER_PHASE(se.what());
     }
   }
-  /*
-  TODO: 以前の状態に戻すべき
-  if(Simulator<phase_result_t>::opts_->output_format == fmtMathematica){
-    Simulator<phase_result_t>::output_result_tree_mathematica();
-  }
-  else{
-    Simulator<phase_result_t>::output_result_tree();
-  }
-  if(Simulator<phase_result_t>::opts_->time_measurement){
-    Simulator<phase_result_t>::output_result_tree_time();
-  }
-  */
   if(!error_str.empty()){
     std::cout << error_str;
   }

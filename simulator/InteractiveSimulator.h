@@ -55,6 +55,8 @@ public:
       phase_result_sptr_t& pr = state->phase_result;
       bool consistent;
       int exit = 0;
+      /*
+      // TODO:comment out for phase_simulator
       try{
         if( opts_->max_phase >= 0 && pr->step > opts_->max_phase)
           continue;
@@ -105,6 +107,7 @@ public:
         std::cout << se.what() << std::endl;
         HYDLA_LOGGER_REST(se.what());
       }
+      */
     }
     return result_root_;
   }
@@ -459,7 +462,7 @@ public:
   /**
    * 各状態を保存しておくためのスタック
    */
-  //std::stack<SimulationPhase> state_stack_;
+  //std::stack<SimulationTodo> state_stack_;
 
 
   /**

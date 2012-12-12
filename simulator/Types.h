@@ -113,7 +113,7 @@ typedef std::map<std::string, unsigned int> profile_t;
 /**
  * シミュレーションすべきフェーズを表す構造体
  */
-struct SimulationPhase{
+struct SimulationTodo{
   /// 実行結果となるフェーズ
   boost::shared_ptr<PhaseResult> phase_result;
   /// フェーズ内で一時的に追加する制約．分岐処理などに使用
@@ -127,9 +127,9 @@ struct SimulationPhase{
   /// 所属するケースの計算時間
   int elapsed_time;
   
-  SimulationPhase(){}
+  SimulationTodo(){}
   /// コピーコンストラクタ
-  SimulationPhase(const SimulationPhase& phase):
+  SimulationTodo(const SimulationTodo& phase):
     phase_result(phase.phase_result), 
     temporary_constraints(phase.temporary_constraints),
     module_set_container(phase.module_set_container),
@@ -138,7 +138,7 @@ struct SimulationPhase{
   }
 };
 
-typedef boost::shared_ptr<SimulationPhase>     simulation_phase_sptr_t;
+typedef boost::shared_ptr<SimulationTodo>     simulation_phase_sptr_t;
 typedef std::vector<simulation_phase_sptr_t>   simulation_phases_t;
 
 /// プロファイリングの結果 名前と時間のマップ

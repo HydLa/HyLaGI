@@ -20,14 +20,26 @@ namespace simulator {
 class PhaseSimulator{
 
 public:  
+
+
   typedef PhaseResult                                           phase_result_t; 
   typedef boost::shared_ptr<phase_result_t>                     phase_result_sptr_t;
   typedef boost::shared_ptr<const phase_result_t>               phase_result_const_sptr_t;
   typedef std::vector<phase_result_sptr_t>                      phase_result_sptrs_t;
   
-  typedef SimulationPhase                                       simulation_phase_t;
+  typedef SimulationTodo                                        simulation_phase_t;
   typedef boost::shared_ptr<simulation_phase_t>                 simulation_phase_sptr_t;
-  typedef std::vector<simulation_phase_sptr_t>                  simulation_phases_t;
+  
+  
+  struct TodoAndResult{
+    simulation_phase_sptr_t todo;
+    phase_result_sptr_t result;
+    TodoAndResult(const simulation_phase_sptr_t& t, const phase_result_sptr_t &r):todo(t), result(r){
+    }
+    TodoAndResult(){}
+  };
+  
+  typedef std::vector<TodoAndResult>                            todo_and_results_t;
   
   
   typedef PhaseSimulator                                    phase_simulator_t;
@@ -74,7 +86,7 @@ public:
    */
   virtual void check_all_module_set(module_set_container_sptr& msc_no_init);
 
-  virtual simulation_phases_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
+  virtual todo_and_results_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
@@ -95,14 +107,14 @@ public:
    * モジュール集合の無矛盾性を確かめる関数．Point Phase版
    * @return 次にシミュレーションするべきフェーズの集合
    */
-  virtual simulation_phases_t simulate_ms_point(const module_set_sptr& ms,
+  virtual todo_and_results_t simulate_ms_point(const module_set_sptr& ms,
                            simulation_phase_sptr_t& state, variable_map_t &, bool& consistent) = 0;
 
   /**
    * モジュール集合の無矛盾性を確かめる関数．Interval Phase版
    * @return 次にシミュレーションするべきフェーズの集合
    */
-  virtual simulation_phases_t simulate_ms_interval(const module_set_sptr& ms,
+  virtual todo_and_results_t simulate_ms_interval(const module_set_sptr& ms,
                               simulation_phase_sptr_t& state, bool& consistent) = 0;
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);

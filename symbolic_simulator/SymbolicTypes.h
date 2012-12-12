@@ -25,7 +25,7 @@ namespace symbolic_simulator {
   typedef boost::shared_ptr<Value>               value_t;
   typedef value_t                                time_t;
   typedef simulator::simulation_phase_sptr_t     simulation_phase_sptr_t;
-  typedef simulator::simulation_phases_t         simulation_phases_t;
+  typedef simulator::PhaseSimulator::todo_and_results_t          todo_and_results_t;
   typedef std::vector<simulator::PhaseResult>    phase_result_sptr_t;
   typedef simulator::Simulator::variable_t       variable_t;
   typedef simulator::DefaultParameter            parameter_t;

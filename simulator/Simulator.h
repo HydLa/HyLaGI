@@ -90,8 +90,8 @@ public:
   typedef std::vector<phase_result_const_sptr_t >        phase_result_const_sptrs_t;
   typedef PhaseSimulator                                 phase_simulator_t;
   
-  typedef SimulationPhase                                simulation_phase_t;
-  typedef boost::shared_ptr<SimulationPhase>             simulation_phase_sptr_t;
+  typedef SimulationTodo                                simulation_phase_t;
+  typedef boost::shared_ptr<SimulationTodo>             simulation_phase_sptr_t;
 
   typedef phase_result_t::variable_map_t      variable_map_t;
   typedef phase_result_t::variable_t          variable_t;

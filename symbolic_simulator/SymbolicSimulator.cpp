@@ -458,7 +458,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
 
 
-SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(const module_set_sptr& ms, 
+SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_point(const module_set_sptr& ms, 
     simulation_phase_sptr_t& state,
     variable_map_t& vm,
     bool& consistent)
@@ -470,6 +470,8 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
   solver_->reset(vm, pr->parameter_map);
   
+  /*
+  // TODO:comment out for phase_simulator
   if(opts_->optimization_level >= 3){
     if(false_conditions_[ms] != NULL){
       solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
@@ -496,6 +498,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
       
     }
   }
+  */
 
   solver_->change_mode(DiscreteMode, opts_->approx_precision);
 
@@ -510,7 +513,11 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   if(result.size() != 1){
     consistent = false;
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_point(result.size() != 1 : ",result.size() ,")***\n");
-    return result;
+    todo_and_results_t ret;
+    for(unsigned int i=0;i<result.size();i++){
+      ret.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
+    }
+    return ret;
   }
   
   timer::Timer create_timer;
@@ -530,9 +537,9 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   new_pr_original->expanded_always = pr->expanded_always;
   new_pr_original->module_set = ms;
 
-  simulation_phases_t phases;
+  todo_and_results_t phases;
 
-  for(unsigned int create_it = 0; create_it < create_result.result_maps.size() && (opts_->nd_mode||create_it==0); create_it++)
+  for(unsigned int create_it = 0; create_it < create_result.result_maps.size(); create_it++)
   {
     simulation_phase_sptr_t new_state(create_new_simulation_phase(new_state_original));
     simulation_phase_sptr_t branch_state(create_new_simulation_phase(state));
@@ -540,15 +547,17 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
 
     bpr->variable_map = range_map_to_value_map(bpr, create_result.result_maps[create_it], bpr->parameter_map);
     npr->parameter_map = bpr->parameter_map;
-    
-    bpr->parent->children.push_back(bpr);
     npr->parent = bpr;
+    
+    PhaseSimulator::TodoAndResult tr;
+    tr.result = bpr;
 
     if(is_safe_){
-      phases.push_back(new_state);
+      tr.todo = new_state;
     }else{
       bpr->cause_of_termination = simulator::ASSERTION;
     }
+    phases.push_back(tr);
   }
 
   HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_point***\n");
@@ -556,7 +565,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_point(cons
   return phases;
 }
 
-SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(const module_set_sptr& ms, 
+SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_interval(const module_set_sptr& ms, 
     simulation_phase_sptr_t& state,
     bool& consistent)
 {
@@ -565,6 +574,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   phase_result_sptr_t& pr = state->phase_result;
   solver_->change_mode(ContinuousMode, opts_->approx_precision);
   solver_->reset(pr->parent->variable_map, pr->parameter_map);
+  todo_and_results_t ret;
 
   timer::Timer cc_timer;
 
@@ -576,7 +586,10 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   if(result.size() != 1){
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = false)***\n");
     consistent = false;
-    return result;
+    for(unsigned int i=0;i<result.size();i++){
+      ret.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
+    }
+    return ret;
   }
 
   timer::Timer create_timer;
@@ -586,12 +599,11 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
 
   if(results.size() != 1){
     // ‹æ•ª“I‚É˜A‘±‚Å–³‚¢‰ð‹O“¹‚ðŠÜ‚ÞD’†’fD
-    simulation_phase_sptr_t phase(create_new_simulation_phase(state));
-    phase->phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
-    phase->phase_result->parent->children.push_back(phase->phase_result);
+    state->phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
+    ret.push_back(PhaseSimulator::TodoAndResult(simulation_phase_sptr_t(), state->phase_result));
     consistent = true;
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval(result.size() != 1 && consistent = true)***\n");
-    return simulation_phases_t();
+    return ret;
   }
 
   simulation_phase_sptr_t new_state_original(create_new_simulation_phase());
@@ -605,8 +617,6 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
   pr->variable_map = shift_variable_map_time(pr->variable_map, pr->current_time);
 
   pr->module_set = ms;
-    
-  simulation_phases_t phases;
   
   if(is_safe_){
 
@@ -693,7 +703,7 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
     SymbolicVirtualConstraintSolver::PPTimeResult 
       time_result = solver_->calculate_next_PP_time(disc_cause, pr->current_time, max_time);
 
-    for(unsigned int time_it=0; time_it<time_result.candidates.size() && (opts_->nd_mode||time_it==0); time_it++){
+    for(unsigned int time_it=0; time_it<time_result.candidates.size(); time_it++){
       simulation_phase_sptr_t branch_state(create_new_simulation_phase(state));
       phase_result_sptr_t &bpr = branch_state->phase_result;
       SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
@@ -702,9 +712,10 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         bpr->parameter_map[it->first] = it->second;
       }
-      bpr->parent->children.push_back(bpr);
       simulation_phase_sptr_t new_state(create_new_simulation_phase(new_state_original));
       phase_result_sptr_t& npr = new_state->phase_result;
+      
+      PhaseSimulator::TodoAndResult tr;
       
       bpr->end_time = candidate.time;
       if(!candidate.is_max_time ) {
@@ -712,20 +723,22 @@ SymbolicSimulator::simulation_phases_t SymbolicSimulator::simulate_ms_interval(c
         solver_->simplify(npr->current_time);
         npr->parameter_map = bpr->parameter_map;
         npr->parent = bpr;
-        phases.push_back(new_state);
+        tr.todo = new_state;
       }else{
         bpr->cause_of_termination = simulator::TIME_LIMIT;
       }
+      tr.result = bpr;
+      ret.push_back(tr);
     }
     state->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }else{
-    pr->parent->children.push_back(pr);
+    ret.push_back(PhaseSimulator::TodoAndResult(simulation_phase_sptr_t(), pr));
     pr->cause_of_termination = simulator::ASSERTION;
   }
 
   HYDLA_LOGGER_MS("#*** End SymbolicSimulator::simulate_ms_interval***");
   consistent = true;
-  return phases;
+  return ret;
 }
 
 SymbolicSimulator::variable_map_t SymbolicSimulator::range_map_to_value_map(

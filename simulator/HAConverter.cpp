@@ -31,7 +31,8 @@ namespace simulator {
             continue;
           }
         }
-        
+        /*
+        // TODO:comment out for phase_simulator
         try{
           try{
             state->module_set_container->reset(state->visited_module_sets);
@@ -155,6 +156,7 @@ namespace simulator {
           error_str = se.what();
           HYDLA_LOGGER_PHASE(se.what());
         }
+      */
       }//while(!state_stack_.empty())
 
       if(!error_str.empty()){

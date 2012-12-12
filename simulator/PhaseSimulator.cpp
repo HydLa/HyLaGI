@@ -48,7 +48,7 @@ void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init
   */
 }
 
-PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
+PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
 {
   HYDLA_LOGGER_PHASE("%% current time:", *state->phase_result->current_time);
   HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->phase_result->parent->variable_map);
@@ -56,7 +56,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
   
   timer::Timer phase_timer;
 
-  simulation_phases_t phases; 
+  todo_and_results_t phases; 
   bool has_next = false;
   is_safe_ = true;
   variable_map_t time_applied_map;
@@ -75,18 +75,18 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
           ms->get_infix_string() );
     
     timer::Timer ms_timer;
-    switch(state->phase_result->phase) 
+    switch(state->phase_result->phase)
     {
       case PointPhase:
       {
-        simulation_phases_t tmp = simulate_ms_point(ms, state, time_applied_map, consistent);
+        todo_and_results_t tmp = simulate_ms_point(ms, state, time_applied_map, consistent);
         phases.insert(phases.begin(), tmp.begin(), tmp.end());
         break;
       }
 
       case IntervalPhase: 
       {
-        simulation_phases_t tmp = simulate_ms_interval(ms, state, consistent);
+        todo_and_results_t tmp = simulate_ms_interval(ms, state, consistent);
         phases.insert(phases.begin(), tmp.begin(), tmp.end());
         break;            
       }
@@ -119,7 +119,7 @@ PhaseSimulator::simulation_phases_t PhaseSimulator::simulate_phase(simulation_ph
   if(!has_next)
   {
     state->phase_result->cause_of_termination = simulator::INCONSISTENCY;
-    state->phase_result->parent->children.push_back(state->phase_result);
+    phases.push_back(TodoAndResult(simulation_phase_sptr_t(), state->phase_result));
   }
   state->profile["Phase"] += phase_timer.get_elapsed_us();
   return phases;
