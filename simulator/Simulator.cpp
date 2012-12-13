@@ -35,7 +35,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   phase_simulator_->initialize(variable_set_, parameter_set_, variable_map_, cont);
   if(opts_->optimization_level >= 2){
     phase_simulator_->init_false_conditions(msc_no_init_);
-    if(opts_->optimization_level == 3){
+    if(opts_->optimization_level >= 3){
       phase_simulator_->check_all_module_set(msc_no_init_);
     }
   }
