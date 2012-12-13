@@ -125,8 +125,8 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
 
 SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_conditions(const module_set_sptr& ms){
 
-  HYDLA_LOGGER_HIERARCHY("#*** SymbolicSimulator::find_false_conditions ***");
-  HYDLA_LOGGER_HIERARCHY(ms->get_name());
+  HYDLA_LOGGER_MS("#*** SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_MS(ms->get_name());
 
   solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
 
@@ -144,7 +144,7 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
 
   variable_map_t vm;
   parameter_map_t pm;
-  solver_->reset(vm,pm);
+  if(opts_->optimization_level >= 3) solver_->reset(vm,pm);
 
   // ask制約を集める 
   ask_collector.collect_ask(&expanded_always, 
@@ -188,15 +188,14 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
       switch(solver_->find_false_conditions(tmp_node)){
         case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
           // この制約モジュール集合は必ず矛盾
-          return FALSE_CONDITIONS_TRUE;
+          ret = FALSE_CONDITIONS_TRUE;
           break;
         case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
           break;
         case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
           // この制約モジュール集合は矛盾する場合がある
-          if(condition_node != NULL) condition_node = node_sptr(tmp_node);
+          if(condition_node == NULL) condition_node = node_sptr(tmp_node);
           else condition_node = node_sptr(new LogicalOr(condition_node, tmp_node));
-	  //          ms->add_false_conditions(tmp_node);
           ret = FALSE_CONDITIONS_VARIABLE_CONDITIONS;
           break;
         default:
@@ -207,22 +206,50 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
     solver_->end_temporary();
   }
   if(ret == FALSE_CONDITIONS_VARIABLE_CONDITIONS){
+    solver_->node_simplify(condition_node);
     false_conditions_[ms] = condition_node;
     false_map_t::iterator it = false_conditions_.begin();
-    for(;it != false_conditions_.end();it++){
-      if((*it).first->is_super_set(*ms)){
+    while(it != false_conditions_.end() && opts_->optimization_level >= 3){
+      if((*it).first->is_super_set(*ms) && (*it).first != ms){
         node_sptr tmp = (*it).second;
         if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp,condition_node));
         else tmp = node_sptr(condition_node);
-	// tmp = Simplify(tmp);
-        (*it).second = tmp;
+        switch(solver_->node_simplify(tmp)){
+          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
+            // この制約モジュール集合は必ず矛盾
+            false_conditions_.erase(it++);
+            break;
+          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
+            it++;
+            break;
+          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
+            // この制約モジュール集合は矛盾する場合がある
+            (*it).second = tmp;
+            it++;
+            break;
+          default:
+            assert(0);
+            break;
+        }
+      }else{
+        it++;
       }
     }
-    HYDLA_LOGGER_HIERARCHY("found false conditions :", TreeInfixPrinter().get_infix_string(condition_node));
+    HYDLA_LOGGER_MS("found false conditions :", TreeInfixPrinter().get_infix_string(condition_node));
+  }else if(ret == FALSE_CONDITIONS_TRUE && opts_->optimization_level >= 3){
+    false_map_t::iterator it = false_conditions_.begin();
+    while(it != false_conditions_.end()){
+      if((*it).first->is_super_set(*ms)){
+        false_conditions_.erase(it++);
+      }else{
+        it++;
+      }
+    }
   }else{
-    HYDLA_LOGGER_HIERARCHY("not found false conditions");
+    false_conditions_[ms] = node_sptr();
+    HYDLA_LOGGER_MS("not found false conditions");
   }
-  HYDLA_LOGGER_HIERARCHY("#*** end SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_MS("#*** end SymbolicSimulator::find_false_conditions ***");
   return ret;
 }
 
@@ -469,14 +496,30 @@ SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_point(const
   phase_result_sptr_t& pr = state->phase_result;
 
   solver_->reset(vm, pr->parameter_map);
-  
+
   /*
-  // TODO:comment out for phase_simulator
-  if(opts_->optimization_level >= 3){
+  for(false_map_t::iterator it = false_conditions_.begin(); it != false_conditions_.end(); it++){
+    std::cout << (*it).first->get_name() << " : ";
+    if((*it).second != NULL){
+      std::cout << TreeInfixPrinter().get_infix_string((*it).second);
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  */
+  if(opts_->optimization_level >= 2 && pr->current_time->get_string() != "0"){
+    if(opts_->optimization_level == 2){
+      if(false_conditions_.find(ms) == false_conditions_.end()){
+        if(find_false_conditions(ms) == FALSE_CONDITIONS_TRUE){
+          return todo_and_results_t();
+	}
+      }
+    }
+    
     if(false_conditions_[ms] != NULL){
       solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
       HYDLA_LOGGER_MS("#*** check_false_conditions***");
-      HYDLA_LOGGER_MS(ms->get_name() , " : " , false_conditions_[ms]);
+      HYDLA_LOGGER_MS(ms->get_name() , " : " , TreeInfixPrinter().get_infix_string(false_conditions_[ms]));
     
       solver_->set_false_conditions(false_conditions_[ms]);
       
@@ -484,21 +527,24 @@ SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_point(const
       if(check_consistency_result.true_parameter_maps.empty()){
         // 必ず矛盾する場合
         consistent = false;
-        return CalculateClosureResult();
+        return todo_and_results_t();
       }else if (check_consistency_result.false_parameter_maps.empty()){
         // 必ず充足可能な場合
         // 何もしない
       }else{
         // 記号定数の条件によって充足可能性が変化する場合
         consistent = false;
+        todo_and_results_t ret;
         CalculateClosureResult result;
         push_branch_states(state, check_consistency_result, result);
-        return result;
+        for(unsigned int i=0; i<result.size();i++){
+          ret.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
+        }
+        return ret;
       }
       
     }
   }
-  */
 
   solver_->change_mode(DiscreteMode, opts_->approx_precision);
 

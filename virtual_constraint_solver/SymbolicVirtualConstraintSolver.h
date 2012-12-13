@@ -173,6 +173,9 @@ public:
   // Œ»İ‚Ì§–ñƒXƒgƒA‚ğ•¶š—ñ‚Åæ“¾‚·‚é
   virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}
   
+  //node‚ğŠÈ–ñ‚·‚é
+  virtual FalseConditionsResult node_simplify(node_sptr &node){assert(0);return FALSE_CONDITIONS_FALSE;}
+
   //SymbolicTime‚ğŠÈ–ñ‚·‚é
   virtual void simplify(time_t &time){assert(0);}
   //SymbolicTime‚ğ”äŠr‚·‚é

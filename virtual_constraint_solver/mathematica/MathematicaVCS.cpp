@@ -454,7 +454,6 @@ MathematicaVCS::FalseConditionsResult MathematicaVCS::find_false_conditions(node
   PacketErrorHandler::handle(&ml_);
   FalseConditionsResult node_type = FALSE_CONDITIONS_FALSE;
   node = receive_condition_node(node_type);
-  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::find_false_conditions ***");
   //終わりなのでパケットの最後尾までスキップ
   ml_.MLNewPacket();
   if(node != NULL){
@@ -1009,6 +1008,27 @@ bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
   ml_.receive();
   std::string ret = ml_.get_string();
   return  ret == "True";
+}
+
+MathematicaVCS::FalseConditionsResult MathematicaVCS::node_simplify(node_sptr &node)
+{
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::node_simplify ***");
+  ml_.put_function("integerString", 1);
+  ml_.put_function("Simplify", 1);
+  PacketSender ps(ml_);
+  ps.put_node(node, PacketSender::VA_Prev);
+
+  ml_.receive();
+  FalseConditionsResult node_type = FALSE_CONDITIONS_FALSE;
+  node = receive_condition_node(node_type);
+  //終わりなのでパケットの最後尾までスキップ
+  ml_.MLNewPacket();
+  if(node != NULL){
+    HYDLA_LOGGER_VCS("false_condition : ", *node);
+  }
+
+  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::node_simplify ***");
+  return node_type; 
 }
 
 void MathematicaVCS::simplify(time_t &time) 

@@ -14,19 +14,9 @@ ModuleSetContainer::ModuleSetContainer(module_set_sptr m) :
   module_set_list_(1, m)
 {}
 
-bool ModuleSetContainer::eliminate_r_current_module_set(){
-  module_set_list_t::reverse_iterator it = r_current_module_set_;
-  it++;
-  while(it != module_set_list_.rend()){
-    if((*it)->is_super_set(*(*r_current_module_set_))){
-      module_set_list_.erase(--(it.base()));
-      r_current_module_set_++;
-    }else{
-      it++;
-    }
-  }
-  module_set_list_.erase(--(r_current_module_set_.base()));
-  return r_current_module_set_ != module_set_list_.rend();  
+bool ModuleSetContainer::eliminate_current_node(){
+  module_set_list_.erase(current_module_set_++);
+  return current_module_set_ != module_set_list_.end();
 }
 
 void ModuleSetContainer::mark_super_module_set(){

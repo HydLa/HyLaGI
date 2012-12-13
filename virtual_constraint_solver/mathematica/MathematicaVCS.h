@@ -90,6 +90,11 @@ public:
   virtual void set_continuity(const std::string &name, const int& dc);
 
   /**
+   * node‚ðŠÈ–ñ‚·‚é
+   */
+  virtual FalseConditionsResult node_simplify(node_sptr &node);
+
+  /**
    * SymbolicTime‚ðŠÈ–ñ‚·‚é
    */
   virtual void simplify(time_t &time);

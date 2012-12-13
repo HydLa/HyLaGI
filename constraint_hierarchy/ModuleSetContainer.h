@@ -49,10 +49,9 @@ public:
   std::set<module_set_sptr> get_visited_module_sets() const;
 
   /**
-   * 現在のモジュール集合と、それを包含するモジュール集合を
-   * 解候補モジュール集合の集合から取り除く
+   * 現在のモジュール集合を解候補モジュール集合の集合から取り除く
    */
-  virtual bool eliminate_r_current_module_set();
+  virtual bool eliminate_current_node();
 
   /**
    * 次に探索すべきモジュール集合に進む
