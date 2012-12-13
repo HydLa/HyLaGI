@@ -529,7 +529,6 @@ SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_point(const
   if(opts_->optimization_level >= 2 && pr->current_time->get_string() != "0"){
     if(opts_->optimization_level == 2){
       if(false_conditions_.find(ms) == false_conditions_.end()){
-	std::cout << ms->get_name() << " is eliminated" << std::endl;
         consistent = false;
         return todo_and_results_t();
       }
