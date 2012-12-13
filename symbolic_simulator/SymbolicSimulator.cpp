@@ -144,7 +144,7 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
 
   variable_map_t vm;
   parameter_map_t pm;
-  if(opts_->optimization_level >= 3) solver_->reset(vm,pm);
+  solver_->reset(vm,pm);
 
   // ask制約を集める 
   ask_collector.collect_ask(&expanded_always, 
@@ -153,7 +153,7 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
 
   node_sptr condition_node;
 
-  for(int i = 0; i < (1 << negative_asks.size()); i++){
+  for(int i = 0; i < (1 << negative_asks.size()) && ret != FALSE_CONDITIONS_TRUE; i++){
     positive_asks_t tmp_positive_asks;
     solver_->start_temporary();
 
@@ -207,42 +207,61 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
   }
   if(ret == FALSE_CONDITIONS_VARIABLE_CONDITIONS){
     solver_->node_simplify(condition_node);
-    false_conditions_[ms] = condition_node;
-    false_map_t::iterator it = false_conditions_.begin();
-    while(it != false_conditions_.end() && opts_->optimization_level >= 3){
-      if((*it).first->is_super_set(*ms) && (*it).first != ms){
-        node_sptr tmp = (*it).second;
-        if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp,condition_node));
-        else tmp = node_sptr(condition_node);
-        switch(solver_->node_simplify(tmp)){
-          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
-            // この制約モジュール集合は必ず矛盾
+    if(condition_node == NULL){
+      // 条件が出てきたが、簡約したら実は TRUE だった場合
+      false_conditions_.erase(ms);
+      if(opts_->optimization_level >= 3){
+        false_map_t::iterator it = false_conditions_.begin();
+        while(it != false_conditions_.end()){
+          if((*it).first->is_super_set(*ms)){
             false_conditions_.erase(it++);
-            break;
-          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
+          }else{
             it++;
-            break;
-          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
-            // この制約モジュール集合は矛盾する場合がある
-            (*it).second = tmp;
-            it++;
-            break;
-          default:
-            assert(0);
-            break;
+          }
         }
-      }else{
-        it++;
       }
+      ret = FALSE_CONDITIONS_TRUE;
+    }else{
+      false_conditions_[ms] = condition_node;
+      false_map_t::iterator it = false_conditions_.begin();
+      while(it != false_conditions_.end() && opts_->optimization_level >= 3){
+        if((*it).first->is_super_set(*ms) && (*it).first != ms){
+          node_sptr tmp = (*it).second;
+          if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp,condition_node));
+          else tmp = node_sptr(condition_node);
+          switch(solver_->node_simplify(tmp)){
+            case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
+              // この制約モジュール集合は必ず矛盾
+              false_conditions_.erase(it++);
+              break;
+            case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
+              it++;
+              break;
+            case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
+              // この制約モジュール集合は矛盾する場合がある
+              (*it).second = tmp;
+              it++;
+              break;
+            default:
+              assert(0);
+              break;
+          }
+        }else{
+          it++;
+        }
+      }
+      HYDLA_LOGGER_MS("found false conditions :", TreeInfixPrinter().get_infix_string(condition_node));
     }
-    HYDLA_LOGGER_MS("found false conditions :", TreeInfixPrinter().get_infix_string(condition_node));
-  }else if(ret == FALSE_CONDITIONS_TRUE && opts_->optimization_level >= 3){
-    false_map_t::iterator it = false_conditions_.begin();
-    while(it != false_conditions_.end()){
-      if((*it).first->is_super_set(*ms)){
-        false_conditions_.erase(it++);
-      }else{
-        it++;
+  }else if(ret == FALSE_CONDITIONS_TRUE){
+    false_conditions_.erase(ms);
+    if(opts_->optimization_level >= 3){
+      false_map_t::iterator it = false_conditions_.begin();
+      while(it != false_conditions_.end()){
+        if((*it).first->is_super_set(*ms)){
+          false_conditions_.erase(it++);
+        }else{
+          it++;
+        }
       }
     }
   }else{
@@ -510,13 +529,21 @@ SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_point(const
   if(opts_->optimization_level >= 2 && pr->current_time->get_string() != "0"){
     if(opts_->optimization_level == 2){
       if(false_conditions_.find(ms) == false_conditions_.end()){
+	std::cout << ms->get_name() << " is eliminated" << std::endl;
+        consistent = false;
+        return todo_and_results_t();
+      }
+      if(checkd_module_set_.find(ms) == checkd_module_set_.end()){
         if(find_false_conditions(ms) == FALSE_CONDITIONS_TRUE){
+          checkd_module_set_.insert(ms);
+          consistent = false;
           return todo_and_results_t();
-	}
+        }
       }
     }
-    
+    solver_->reset(vm, pr->parameter_map);
     if(false_conditions_[ms] != NULL){
+    
       solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
       HYDLA_LOGGER_MS("#*** check_false_conditions***");
       HYDLA_LOGGER_MS(ms->get_name() , " : " , TreeInfixPrinter().get_infix_string(false_conditions_[ms]));

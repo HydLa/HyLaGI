@@ -52,6 +52,8 @@ private:
     BRANCH_PAR
   } CheckEntailmentResult;
 
+
+  std::set<module_set_sptr> checkd_module_set_;
   variable_map_t range_map_to_value_map(phase_result_sptr_t&,
     const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &,
     parameter_map_t &);

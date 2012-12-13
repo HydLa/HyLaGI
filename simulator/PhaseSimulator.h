@@ -86,6 +86,8 @@ public:
    */
   virtual void check_all_module_set(module_set_container_sptr& msc_no_init);
 
+  virtual void init_false_conditions(module_set_container_sptr& msc_no_init);
+
   virtual todo_and_results_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;

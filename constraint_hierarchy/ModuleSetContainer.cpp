@@ -15,7 +15,7 @@ ModuleSetContainer::ModuleSetContainer(module_set_sptr m) :
 {}
 
 bool ModuleSetContainer::eliminate_current_node(){
-  module_set_list_.erase(current_module_set_++);
+  current_module_set_ = module_set_list_.erase(current_module_set_);
   return current_module_set_ != module_set_list_.end();
 }
 

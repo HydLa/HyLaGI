@@ -9,13 +9,14 @@ PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 
 PhaseSimulator::~PhaseSimulator(){}
 
-void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
+void PhaseSimulator::init_false_conditions(module_set_container_sptr& msc_no_init){
   msc_no_init->reset();
   while(msc_no_init->go_next()){
     false_conditions_.insert(false_map_t::value_type(msc_no_init->get_module_set(),node_sptr()));
     msc_no_init->mark_current_node();
   }
-
+}
+void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
   msc_no_init->reverse_reset();
   while(msc_no_init->reverse_go_next()){
     //    std::cout << "check : " << ms_tmp->get_name() << std::endl;
@@ -25,17 +26,6 @@ void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init
     }
     msc_no_init->mark_r_current_node();
   }
-  
-  msc_no_init->reset();
-  while(true){
-    if(false_conditions_.find(msc_no_init->get_module_set()) == false_conditions_.end()){
-      msc_no_init->eliminate_current_node();
-    }else{
-      msc_no_init->mark_current_node();
-      if(!msc_no_init->go_next()) break;
-    }
-  }
-  
 }
 
 PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
