@@ -533,8 +533,8 @@ SymbolicSimulator::todo_and_results_t SymbolicSimulator::simulate_ms_point(const
         return todo_and_results_t();
       }
       if(checkd_module_set_.find(ms) == checkd_module_set_.end()){
+        checkd_module_set_.insert(ms);
         if(find_false_conditions(ms) == FALSE_CONDITIONS_TRUE){
-          checkd_module_set_.insert(ms);
           consistent = false;
           return todo_and_results_t();
         }
