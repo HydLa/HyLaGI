@@ -13,6 +13,7 @@ bool Logger::module_set_area_;
 bool Logger::vcs_area_;
 bool Logger::extern_area_;
 bool Logger::rest_area_;
+bool Logger::ha_converter_area_;
 
 Logger::Logger() :
   log_level_(Warn)

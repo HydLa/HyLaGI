@@ -137,6 +137,7 @@ void hydla_main(int argc, char* argv[])
       Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
       Logger::extern_area_ = (area_string.find('e') != std::string::npos);
       Logger::rest_area_ = (area_string.find('r') != std::string::npos);
+      Logger::ha_converter_area_ = (area_string.find('h') != std::string::npos);
     }
   }else {                              // Œx‚Ì‚İo—Í
     Logger::instance().set_log_level(Logger::Warn);
