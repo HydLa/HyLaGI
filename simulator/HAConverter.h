@@ -69,8 +69,11 @@ private:
 	bool is_loop_step_;
 	phase_result_sptrs_t phase_results_;
 	std::vector<phase_result_sptrs_t> ls_;
+	std::vector<phase_result_sptrs_t> ha_results_;
 	phase_result_sptrs_t loop_;
 	std::map<int, phase_result_sptr_t> phase_result_map_;
+	
+	int loop_start_id_;
 	
 
 	// ループ判定ステップを続けるか（lsの要素にloopを部分集合とするものがあるか）
@@ -95,6 +98,15 @@ private:
 	void viewLs();
 	// phase_result_sptrs_tの中身表示
 	void viewPrs(phase_result_sptrs_t results);
+	
+	// 生成された全てのHAを出力（dot言語）
+	void output_ha();
+	
+	// phase_resultsをhaのdot言語に変換する
+	void convert_phase_results_to_ha(phase_result_sptrs_t result);
+	
+	// ha_resultにHA変換に必要な情報をpushする
+	void push_result();
 	
 };
 	

@@ -10,8 +10,7 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-  HAConverter::HAConverter(Opts &opts):Simulator(opts){
-  }
+  HAConverter::HAConverter(Opts &opts):Simulator(opts){}
 
   HAConverter::~HAConverter(){}
 
@@ -31,134 +30,143 @@ namespace simulator {
             continue;
           }
         }
-        /*
-        // TODO:comment out for phase_simulator
+        
         try{
-          try{
-            state->module_set_container->reset(state->visited_module_sets);
-            simulation_phases_t phases = phase_simulator_->simulate_phase(state, consistent);
+          state->module_set_container->reset(state->visited_module_sets);
+		      timer::Timer phase_timer;
+		      PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
 
-            cout << "parent_id : " << state->phase_result->parent->id << endl;          
-            for(unsigned int i=0;i<state->phase_result->parent->children.size();i++){
-                cout << "********" << i << "*******  " << endl;
-	              cout << "PhaseType: " << state->phase_result->parent->children[i]->phase << endl;
-	              cout << "id: " <<  state->phase_result->parent->children[i]->id << endl;
-                printer.output_one_phase(state->phase_result->parent->children[i]);
-                cout << "***************" << endl;
-            }
-            
-            cout << "%% Result: " << phases.size() << "Phases" << endl;
-            for(unsigned int i=0; i<phases.size();i++){
-              phase_result_sptr_t& pr = phases[i]->phase_result;
-              cout << "--- Phase"<< i << " ---" << endl;
-              cout << "%% PhaseType: " << pr->phase << endl;
-              cout << "%% id: " <<  pr->id << endl;
-              cout << "%% step: " << pr->step << endl;
-              cout << "%% time: " << *pr->current_time << endl;
-              cout << "--- parameter map ---\n" << pr->parameter_map << endl;
-            }
-          	
-          	// とりあえずnd_modeは無視
-          	phase_result_sptr_t result_ = state->phase_result->parent->children[0];
-          	switch (state->phase_result->phase)
+        	cout << "%% Phases size: " << phases.size() << endl;
+          cout << "%% Result PHASE: " << endl;
+          cout << "parent_id : " << state->phase_result->parent->id << endl;          
+          for(unsigned int i=0;i<phases.size();i++){
+		        if(phases[i].result.get() != NULL){
+	            phase_result_sptr_t& pr = phases[i].result;
+	            cout << "--- Phase"<< i << " ---" << endl;
+	            cout << "%% PhaseType: " << pr->phase << endl;
+	            cout << "%% id: " <<  pr->id << endl;
+              printer.output_one_phase(pr);
+		        }
+          }
+        	
+          cout << endl;
+        	
+          cout << "%% Result TODO:" << endl;
+          for(unsigned int i=0; i<phases.size();i++){
+		        if(phases[i].todo.get() != NULL){
+		            phase_result_sptr_t& pr = phases[i].todo->phase_result;
+		            cout << "--- Phase"<< i << " ---" << endl;
+		            cout << "%% PhaseType: " << pr->phase << endl;
+		            cout << "%% id: " <<  pr->id << endl;
+		            cout << "%% step: " << pr->step << endl;
+		            cout << "%% time: " << *pr->current_time << endl;
+		            cout << "--- parameter map ---\n" << pr->parameter_map << endl;
+		        }
+          }
+       	
+        	// とりあえずnd_modeは無視
+        	phase_result_sptr_t result_ = phases[0].result;
+        	switch (state->phase_result->phase)
+        	{
+          	case PointPhase:
           	{
-	          	case PointPhase:
-	          	{
-          			cout << "～・～・～ PP ～・～・～" << endl;
-	          		if(is_loop_step_){
-		         			phase_results_.push_back(result_);
-	          			loop_.push_back(result_);
-	          			if (!check_continue()){
-	          				// ループ判定ステップを抜ける
-		          			cout << "-------- end loop step ----------" << endl;
-		          			is_loop_step_ = false;
-	          			}
-		         			break;
-	          		}else{
-		         			phase_results_.push_back(result_);
-		         			break;
-	          		}
-	          	}
-	          	case IntervalPhase:
-	          	{
-          			cout << "～・～・～ IP ～・～・～" << endl;
-	          		if(is_loop_step_){
-		         			phase_results_.push_back(result_);
-	          			loop_.push_back(result_);
-	          			if (!check_continue()) {
-	          				// ループ判定ステップを抜ける
-		          			cout << "-------- end loop step ----------" << endl;
-		          			is_loop_step_ = false;
-	          				break;
-	          			}
-	          			if (loop_eq_max_ls()){
-	          				// エッジ判定ステップへ
-	          				check_edge_step();
-	          				continue; //while(!state_stack_.empty()) 
-	          			}
-		         			break;	          		
-	          		}else{
-		          		if(check_contain(result_)){
-		          			cout << "-------- change loop step ----------" << endl;
-		          			is_loop_step_ = true;
-	          				loop_.clear();
-	          				ls_.clear();
-			         			phase_results_.push_back(result_);
-		          			set_possible_loops(result_);
-		          			loop_.push_back(result_);
-		          			break;
-		          		}
-		         			phase_results_.push_back(result_);
-		         			break;	
-	          		}
-	          	}
+        			cout << "～・～・～ PP ～・～・～" << endl;
+          		if(is_loop_step_){
+	         			phase_results_.push_back(result_);
+          			loop_.push_back(result_);
+          			cout << "******* loop *******" << endl;
+          			viewPrs(loop_);
+          			cout << "******* **** *******" << endl;
+          			if (!check_continue()){
+          				// ループ判定ステップを抜ける
+	          			cout << "-------- end loop step ----------" << endl;
+	          			is_loop_step_ = false;
+          			}
+	         			break;
+          		}else{
+	         			phase_results_.push_back(result_);
+	         			break;
+          		}
           	}
-          	          	
-          	
-            if(!phases.empty()){
-              // とりあえずnd_modeは無視
-              if(opts_->nd_mode){
-                for(simulation_phases_t::iterator it = phases.begin();it != phases.end();it++){
-                  if((*it)->phase_result->parent != result_root_){
-                    (*it)->module_set_container = msc_no_init_;
-                  }
-                  else{
-                    // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-                    (*it)->module_set_container = msc_original_;
-                  }
-                  push_simulation_phase(*it);
-                }
-              }else{
-                if(phases[0]->phase_result->parent != result_root_){
-                  phases[0]->module_set_container = msc_no_init_;
-                }else{
-                    // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-                  phases[0]->module_set_container = msc_original_;
-                }
-                push_simulation_phase(phases[0]);
-              }
-            }
-          }
-          catch(const hydla::timeout::TimeOutError &te)
-          {
-            phase_result_sptr_t& pr = state->phase_result;
-            HYDLA_LOGGER_PHASE(te.what());
-            if(pr->children.empty()){
-              pr->cause_of_termination = TIME_OUT_REACHED;
-            }else{
-              for(unsigned int i=0;i<pr->children.size();i++){
-                pr->children[i]->cause_of_termination = TIME_OUT_REACHED;
-              }
-            }
-          }
-        }catch(const std::runtime_error &se)
+          	case IntervalPhase:
+          	{
+        			cout << "～・～・～ IP ～・～・～" << endl;
+          		if(is_loop_step_){
+	         			phase_results_.push_back(result_);
+          			loop_.push_back(result_);
+          			cout << "******* loop *******" << endl;
+          			viewPrs(loop_);
+          			cout << "******* **** *******" << endl;
+          			if (!check_continue()) {
+          				// ループ判定ステップを抜ける
+	          			cout << "-------- end loop step ----------" << endl;
+	          			is_loop_step_ = false;
+          				break;
+          			}
+          			if (loop_eq_max_ls()){
+          				// エッジ判定ステップへ
+          				check_edge_step();
+          				// ここではls_の要素は１つになっている（loopと等しい最大のもののみ残っている）
+          				push_result();
+          				output_ha();
+          				continue; //while(!state_stack_.empty()) 
+          			}
+	         			break;	          		
+          		}else{
+	          		if(check_contain(result_)){
+	          			cout << "-------- change loop step ----------" << endl;
+	          			is_loop_step_ = true;
+          				loop_.clear();
+          				ls_.clear();
+		         			phase_results_.push_back(result_);
+	          			set_possible_loops(result_);
+	          			loop_.push_back(result_);
+	          			loop_start_id_ = result_->id;
+	          			break;
+	          		}
+	         			phase_results_.push_back(result_);
+	         			break;	
+          		}
+          	}
+        	}
+        	
+		      if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
+		        for(unsigned int i = 0;i < phases.size();i++){
+		          PhaseSimulator::TodoAndResult& tr = phases[i];
+		          if(tr.todo.get() != NULL){
+		            if(tr.todo->phase_result->parent != result_root_){
+		              tr.todo->module_set_container = msc_no_init_;
+		            }
+		            else{
+		              // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
+		              tr.todo->module_set_container = msc_original_;
+		            }
+		            tr.todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
+		            push_simulation_phase(tr.todo);
+		          }if(tr.result.get() != NULL){
+		            state->phase_result->parent->children.push_back(tr.result);
+		          }
+		          if(!opts_->nd_mode)break;
+		        }
+		      }
+
+        	cout << "***************" << endl << endl;
+        	
+        }//try
+        catch(const hydla::timeout::TimeOutError &te)
+        {
+		      // タイムアウト発生
+		      phase_result_sptr_t& pr = state->phase_result;
+		      HYDLA_LOGGER_PHASE(te.what());
+		      pr->cause_of_termination = TIME_OUT_REACHED;
+		      pr->parent->children.push_back(pr);
+        }
+      	catch(const std::runtime_error &se)
         {
           error_str = se.what();
           HYDLA_LOGGER_PHASE(se.what());
         }
-      */
       }//while(!state_stack_.empty())
-
       if(!error_str.empty()){
         std::cout << error_str;
       }
@@ -188,33 +196,44 @@ namespace simulator {
 	bool HAConverter::check_continue()
 	{
 		cout << "****** check_continue ******" << endl;		
+		viewLs();
 		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = ls_.begin();		
+		std::vector< std::vector<phase_result_sptrs_t>::iterator > remove_itr;
 		while(it_ls_vec != ls_.end()){
 			phase_result_sptrs_t::iterator it_ls = (*it_ls_vec).begin();
 			phase_result_sptrs_t::iterator it_loop = loop_.begin();
 			while(it_ls != (*it_ls_vec).end() && it_loop != loop_.end()) {
 				// 等しくない状態遷移列だったらlsから削除
 				if(!compare_phase_result(*it_ls, *it_loop)){
-					ls_.erase(it_ls_vec);
+					cout << "delete ls element : not equal loop" << endl;
+					// whileでイテレート中にls_の中身をeraseできないので、eraseするitrを保存して後でls_の要素を削除する
+					remove_itr.push_back(it_ls_vec);
 					break;
 				}
 				it_ls++;
 				it_loop++;
 				// loopより短い状態遷移列はlsから削除
 				if(it_ls == (*it_ls_vec).end() && it_loop != loop_.end()){
-					ls_.erase(it_ls_vec);
-					break;					
+					cout << "delete ls element : less than loop" << endl;
+					// whileでイテレート中にls_の中身をeraseできないので、eraseするitrを保存して後でls_の要素を削除する
+					remove_itr.push_back(it_ls_vec);
 				}
 			}	
 			it_ls_vec++;
 			cout << "*************************" << endl;		
 		}
 		
+		for (unsigned int i = 0 ; i < remove_itr.size() ; i++){
+			ls_.erase(remove_itr[i]);
+		}
+		
+		viewLs();
+		
 		if(ls_.empty()) {
-			cout << "****** check_continue : false ******" << endl;		
+			cout << "****** end check_continue : false ******" << endl;		
 			return false;
 		}
-		cout << "****** check_continue : true ******" << endl;		
+		cout << "****** end check_continue : true ******" << endl;		
 
 		return true;
 	}
@@ -239,23 +258,33 @@ namespace simulator {
   	
 	bool HAConverter::loop_eq_max_ls()
 	{
+		cout << "****** loop_eq_max_ls ******" << endl;
 		// とりあえずlsの最初の要素が最大のものと仮定
 		phase_result_sptrs_t::iterator it_ls = ls_[0].begin();
 		phase_result_sptrs_t::iterator it_loop = loop_.begin();
 		while(it_ls != ls_[0].end() && it_loop != loop_.end()) {
-			if(!compare_phase_result(*it_ls, *it_loop)) return false;
+			if(!compare_phase_result(*it_ls, *it_loop)) {
+				cout << "****** end loop_eq_max_ls : false ******" << endl;
+				return false;
+			}
 			it_ls++;
 			it_loop++;
 		}
 		// どちらかのイテレータが最後まで達していなかったら等しくない
-		if(it_ls != ls_[0].end() || it_loop != loop_.end()) return false;
+		if(it_ls != ls_[0].end() || it_loop != loop_.end()) {
+			cout << "****** end loop_eq_max_ls : false ******" << endl;
+			return false;
+		}
 		
+		cout << "****** end loop_eq_max_ls : true ******" << endl;
 		return true;
 	}
   	
 	void HAConverter::check_edge_step()
 	{
 		//とりあえず何もしない
+		cout << "****** check_edge_step ******" << endl;
+		cout << "****** end check_edge_step ******" << endl;
 	}
   	
 	bool HAConverter::check_contain(phase_result_sptr_t result)
@@ -294,7 +323,46 @@ namespace simulator {
 		}	
 	}
 	
-  void HAConverter::initialize(const parse_tree_sptr& parse_tree)
+	void HAConverter::push_result()
+	{
+		phase_result_sptrs_t result;
+		for(unsigned int i = 0 ; i < phase_results_.size() ; i++){
+			result.push_back(phase_results_[i]);
+			if(phase_results_[i]->id == loop_start_id_) break;
+		}
+		
+		cout << "・・・・・ result " << ha_results_.size() << " ・・・・・" << endl;
+		viewPrs(result);
+		cout << "・・・・・・・・・・・・" << endl;
+		ha_results_.push_back(result);
+	}
+	
+	void HAConverter::output_ha()
+	{
+		cout << "-・-・-・-・Result Convert・-・-・-・-" << endl;
+		std::vector<phase_result_sptrs_t>::iterator it_ha_res = ha_results_.begin();		
+		while(it_ha_res != ha_results_.end()){
+			convert_phase_results_to_ha(*it_ha_res);
+			it_ha_res++;
+		}
+		cout << "-・-・-・-・-・-・-・-・-・-・-・-・-" << endl;
+	}
+	
+	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
+	{
+		cout << "digraph g{" << endl;
+		cout << "edge [dir=forward];" << endl;
+		cout << "\"start\" [shape=point];" << endl;
+			cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\" [label=\"" << result[0]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
+		for(unsigned int i = 2 ; i < result.size() ; i++){
+			if(result[i]->phase == IntervalPhase){
+				cout << "\"" << result[i-2]->module_set->get_name() << "\"->\"" << result[i]->module_set->get_name() << "\" [label=\"" << result[i-1]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
+			}
+		}
+		cout << "}" << endl;
+	}
+  
+		void HAConverter::initialize(const parse_tree_sptr& parse_tree)
   {
     Simulator::initialize(parse_tree);
     //初期状態を作ってスタックに入れる
