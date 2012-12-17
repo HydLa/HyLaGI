@@ -19,14 +19,31 @@ namespace simulator {
   {
       hydla::output::SymbolicTrajPrinter printer;
       std::string error_str;
-  		is_loop_step_ = false;
-      while(!state_stack_.empty()) {
+  	  current_condition_t cc_;
+  		current_condition_t tmp_cc_;
+  		cc_.is_loop_step = false;
+  		cc_.loop_start_id = -1;
+  		push_current_condition(cc_);
+  		while(!state_stack_.empty()) {
         simulation_phase_sptr_t state(pop_simulation_phase());
+      	// current conditionはtodoと同様にstuckに積まれるため、同じようにpopすれば、現phaseのcc_が取得できる
+  			if(cc_vec_.empty()) break;
+  			// シミュレーション結果が複数ある場合、これをもとにconditionを変更する
+      	tmp_cc_ = pop_current_condition();
+  			
+  			HYDLA_LOGGER_HA("%% Current Condition");
+  			HYDLA_LOGGER_HA("%% phase_results.size():", tmp_cc_.phase_results.size());
+  			HYDLA_LOGGER_HA("%% ls.size():", tmp_cc_.ls.size());
+  			HYDLA_LOGGER_HA("%% loop.size():", tmp_cc_.loop.size());
+  			HYDLA_LOGGER_HA("%% is_loop_step:", tmp_cc_.is_loop_step);
+  			HYDLA_LOGGER_HA("%% loop_start_id:", tmp_cc_.loop_start_id);
+  			HYDLA_LOGGER_HA("");
+  			
         bool consistent;
         
         {
           phase_result_sptr_t& pr = state->phase_result;
-          if( opts_->max_phase >= 0 && pr->step >= opts_->max_phase){
+          if(opts_->max_phase >= 0 && pr->step >= opts_->max_phase){
             pr->parent->cause_of_termination = simulator::STEP_LIMIT;
             continue;
           }
@@ -63,72 +80,89 @@ namespace simulator {
 		          HYDLA_LOGGER_HA("--- parameter map ---\n", pr->parameter_map);
 		        }
           }
-       	
-        	// とりあえずnd_modeは無視
-        	phase_result_sptr_t result_ = phases[0].result;
-        	switch (state->phase_result->phase)
-        	{
-          	case PointPhase:
-          	{
-          		HYDLA_LOGGER_HA("～・～・～ PP ～・～・～");
-          		if(is_loop_step_){
-	         			phase_results_.push_back(result_);
-          			loop_.push_back(result_);
-          			HYDLA_LOGGER_HA("******* loop *******");
-          			viewPrs(loop_);
-          			HYDLA_LOGGER_HA("******* **** *******");
-          			if (!check_continue()){
-          				// ループ判定ステップを抜ける
-          				HYDLA_LOGGER_HA("-------- end loop step ----------");
-	          			is_loop_step_ = false;
-          			}
-	         			break;
-          		}else{
-	         			phase_results_.push_back(result_);
-	         			break;
-          		}
-          	}
-          	case IntervalPhase:
-          	{
-          		HYDLA_LOGGER_HA("～・～・～ IP ～・～・～");
-          		if(is_loop_step_){
-	         			phase_results_.push_back(result_);
-          			loop_.push_back(result_);
-          			HYDLA_LOGGER_HA("******* loop *******");
-          			viewPrs(loop_);
-          			HYDLA_LOGGER_HA("******* **** *******");
-          			if (!check_continue()) {
-          				// ループ判定ステップを抜ける
-          				HYDLA_LOGGER_HA("-------- end loop step ----------");
-	          			is_loop_step_ = false;
-          				break;
-          			}
-          			if (loop_eq_max_ls()){
-          				// エッジ判定ステップへ
-          				check_edge_step();
-          				// ここではls_の要素は１つになっている（loopと等しい最大のもののみ残っている）
-          				push_result();
-          				output_ha();
-          				continue; //while(!state_stack_.empty()) 
-          			}
-	         			break;	          		
-          		}else{
-	          		if(check_contain(result_)){
-	          			HYDLA_LOGGER_HA("-------- change loop step ----------");
-	          			is_loop_step_ = true;
-          				loop_.clear();
-          				ls_.clear();
-		         			phase_results_.push_back(result_);
-	          			set_possible_loops(result_);
-	          			loop_.push_back(result_);
-	          			loop_start_id_ = result_->id;
-	          			break;
+        	
+        	// ******* start HA変換処理 ******* 
+          for(unsigned int i=0; i<phases.size();i++){
+          	cc_ = tmp_cc_;
+	        	phase_result_sptr_t result_ = phases[i].result;
+          	// resultがなければ、current_conditionをそのままpushして次へ
+          	if(result_ == NULL) {
+	           	push_current_condition(cc_);
+	         		continue;
+	          }
+	        	switch (state->phase_result->phase)
+	        	{
+	          	case PointPhase:
+	          	{
+	          		HYDLA_LOGGER_HA("～・～・～ PP ～・～・～");
+	          		if(cc_.is_loop_step){
+		         			cc_.phase_results.push_back(result_);
+	          			cc_.loop.push_back(result_);
+	          			HYDLA_LOGGER_HA("******* loop *******");
+	          			viewPrs(cc_.loop);
+	          			HYDLA_LOGGER_HA("* * * * * * * * * *");
+	          			if (!check_continue(cc_)){
+	          				// ループ判定ステップを抜ける
+	          				HYDLA_LOGGER_HA("-------- end loop step ----------");
+		          			cc_.is_loop_step = false;
+	          			}
+		         			break;
+	          		}else{
+		         			cc_.phase_results.push_back(result_);
+		         			break;
 	          		}
-	         			phase_results_.push_back(result_);
-	         			break;	
-          		}
-          	}
-        	}
+	          	}
+	          	case IntervalPhase:
+	          	{
+	          		HYDLA_LOGGER_HA("～・～・～ IP ～・～・～");
+	          		if(cc_.is_loop_step){
+		         			cc_.phase_results.push_back(result_);
+	          			cc_.loop.push_back(result_);
+	          			HYDLA_LOGGER_HA("******* loop *******");
+	          			viewPrs(cc_.loop);
+	          			HYDLA_LOGGER_HA("* * * * * * * * * *");
+	          			if (!check_continue(cc_)) {
+	          				// ループ判定ステップを抜ける
+	          				HYDLA_LOGGER_HA("-------- end loop step ----------");
+		          			cc_.is_loop_step = false;
+	          				break;
+	          			}
+	          			if (loop_eq_max_ls(cc_)){
+	          				// エッジ判定ステップへ
+	          				check_edge_step();
+	          				// ここではls_の要素は１つになっている（loopと等しい最大のもののみ残っている）
+	          				push_result(cc_);
+	          				continue;  
+	          			}
+		         			break;	          		
+	          		}else{
+		          		if(check_contain(result_, cc_)){
+		          			HYDLA_LOGGER_HA("-------- change loop step ----------");
+		          			cc_.is_loop_step = true;
+	          				cc_.loop.clear();
+	          				cc_.ls.clear();
+			         			cc_.phase_results.push_back(result_);
+		          			set_possible_loops(result_, &cc_);
+		          			cc_.loop.push_back(result_);
+		          			cc_.loop_start_id = result_->id;
+		          			break;
+		          		}
+		         			cc_.phase_results.push_back(result_);
+		         			break;	
+	          		}
+	          	}
+	        	}
+	        	
+	        	if(result_->cause_of_termination == simulator::TIME_LIMIT) {
+	        		// シミュレーション終了時刻は∞を想定しており、TIME_LIMITである場合、現在のphase_resultsがそのままha_results_に入る
+	        		HYDLA_LOGGER_HA("TIME_LIMIT : Infinity");
+	        		push_result(cc_);
+	        		continue;
+	        	}
+          	
+          	push_current_condition(cc_);
+          }
+        	// ******* end HA変換処理 ******* 
         	
 		      if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
 		        for(unsigned int i = 0;i < phases.size();i++){
@@ -146,10 +180,11 @@ namespace simulator {
 		          }if(tr.result.get() != NULL){
 		            state->phase_result->parent->children.push_back(tr.result);
 		          }
-		          if(!opts_->nd_mode)break;
+		          if(!opts_->nd_mode) break;
 		        }
 		      }
-        	HYDLA_LOGGER_HA("***************");
+        	HYDLA_LOGGER_HA("");        	
+        	HYDLA_LOGGER_HA("***************************");
         	HYDLA_LOGGER_HA("");        	
         }//try
         catch(const hydla::timeout::TimeOutError &te)
@@ -169,6 +204,9 @@ namespace simulator {
       if(!error_str.empty()){
         std::cout << error_str;
       }
+
+  		output_ha();
+
       return result_root_;
   }
 	
@@ -192,16 +230,16 @@ namespace simulator {
 		return true;
 	} 
 	
-	bool HAConverter::check_continue()
+	bool HAConverter::check_continue(current_condition_t cc)
 	{
 		HYDLA_LOGGER_HA("****** check_continue ******");
-		viewLs();
-		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = ls_.begin();		
+		viewLs(cc);
+		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = cc.ls.begin();		
 		std::vector< std::vector<phase_result_sptrs_t>::iterator > remove_itr;
-		while(it_ls_vec != ls_.end()){
+		while(it_ls_vec != cc.ls.end()){
 			phase_result_sptrs_t::iterator it_ls = (*it_ls_vec).begin();
-			phase_result_sptrs_t::iterator it_loop = loop_.begin();
-			while(it_ls != (*it_ls_vec).end() && it_loop != loop_.end()) {
+			phase_result_sptrs_t::iterator it_loop = cc.loop.begin();
+			while(it_ls != (*it_ls_vec).end() && it_loop != cc.loop.end()) {
 				// 等しくない状態遷移列だったらlsから削除
 				if(!compare_phase_result(*it_ls, *it_loop)){
 					HYDLA_LOGGER_HA("delete ls element : not equal loop");
@@ -212,23 +250,23 @@ namespace simulator {
 				it_ls++;
 				it_loop++;
 				// loopより短い状態遷移列はlsから削除
-				if(it_ls == (*it_ls_vec).end() && it_loop != loop_.end()){
+				if(it_ls == (*it_ls_vec).end() && it_loop != cc.loop.end()){
 					HYDLA_LOGGER_HA("delete ls element : less than loop");
 					// whileでイテレート中にls_の中身をeraseできないので、eraseするitrを保存して後でls_の要素を削除する
 					remove_itr.push_back(it_ls_vec);
 				}
 			}	
 			it_ls_vec++;
-			HYDLA_LOGGER_HA("*************************");
+			HYDLA_LOGGER_HA("* * * * * * * * * * * * *");
 		}
 		
 		for (unsigned int i = 0 ; i < remove_itr.size() ; i++){
-			ls_.erase(remove_itr[i]);
+			cc.ls.erase(remove_itr[i]);
 		}
 		
-		viewLs();
+		viewLs(cc);
 		
-		if(ls_.empty()) {
+		if(cc.ls.empty()) {
 			HYDLA_LOGGER_HA("****** end check_continue : false ******");
 			return false;
 		}
@@ -237,31 +275,32 @@ namespace simulator {
 		return true;
 	}
   	
-	void HAConverter::set_possible_loops(phase_result_sptr_t result)
+	void HAConverter::set_possible_loops(phase_result_sptr_t result, current_condition_t *cc)
 	{
 		HYDLA_LOGGER_HA("****** set_possible_loops ******");
-		phase_result_sptrs_t::iterator it_prs = phase_results_.begin();
-		while(it_prs != phase_results_.end()){
+		phase_result_sptrs_t::iterator it_prs = cc->phase_results.begin();
+		while(it_prs != cc->phase_results.end()){
 			if(compare_phase_result(result, *it_prs)){
 				phase_result_sptrs_t candidate_loop;
-				copy(it_prs, phase_results_.end(), back_inserter(candidate_loop));
-				ls_.push_back(candidate_loop);
+				copy(it_prs, cc->phase_results.end(), back_inserter(candidate_loop));
+				cc->ls.push_back(candidate_loop);
 			}
 			it_prs++;
 		}
 		
 		// lsの中身を表示
-		viewLs();
+		viewLs(*cc);
 		HYDLA_LOGGER_HA("****** end set_possible_loops ******");
 	}
   	
-	bool HAConverter::loop_eq_max_ls()
+	bool HAConverter::loop_eq_max_ls(current_condition_t cc)
 	{
 		HYDLA_LOGGER_HA("****** loop_eq_max_ls ******");
-		// とりあえずlsの最初の要素が最大のものと仮定
-		phase_result_sptrs_t::iterator it_ls = ls_[0].begin();
-		phase_result_sptrs_t::iterator it_loop = loop_.begin();
-		while(it_ls != ls_[0].end() && it_loop != loop_.end()) {
+		// とりあえずlsの最初の要素が最大のものと仮定←たぶんこれで正しい
+		// loopより短い状態遷移列と、loopと等しくない状態遷移列はcheck_continueでls_から削除しているため
+		phase_result_sptrs_t::iterator it_ls = cc.ls[0].begin();
+		phase_result_sptrs_t::iterator it_loop = cc.loop.begin();
+		while(it_ls != cc.ls[0].end() && it_loop != cc.loop.end()) {
 			if(!compare_phase_result(*it_ls, *it_loop)) {
 				HYDLA_LOGGER_HA("****** end loop_eq_max_ls : false ******");
 				return false;
@@ -270,7 +309,7 @@ namespace simulator {
 			it_loop++;
 		}
 		// どちらかのイテレータが最後まで達していなかったら等しくない
-		if(it_ls != ls_[0].end() || it_loop != loop_.end()) {
+		if(it_ls != cc.ls[0].end() || it_loop != cc.loop.end()) {
 			HYDLA_LOGGER_HA("****** end loop_eq_max_ls : false ******");
 			return false;
 		}
@@ -280,30 +319,34 @@ namespace simulator {
   	
 	void HAConverter::check_edge_step()
 	{
-		//とりあえず何もしない
+		//TODO エッジ判定ステップの実装
 		HYDLA_LOGGER_HA("****** check_edge_step ******");
 		HYDLA_LOGGER_HA("****** end check_edge_step ******");
 	}
   	
-	bool HAConverter::check_contain(phase_result_sptr_t result)
+	bool HAConverter::check_contain(phase_result_sptr_t result, current_condition_t cc)
 	{
-		HYDLA_LOGGER_HA("～・～・～ check_contain ～・～・～");
+		HYDLA_LOGGER_HA("****** check_contain ******");
 		HYDLA_LOGGER_HA("・・・・・phase_result・・・・・");
-		viewPrs(phase_results_);
+		viewPrs(cc.phase_results);
 		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・・・");
-		phase_result_sptrs_t::iterator it_prs = phase_results_.begin();
-		while(it_prs != phase_results_.end()){
-			if(compare_phase_result(result, *it_prs)) return true;
+		phase_result_sptrs_t::iterator it_prs = cc.phase_results.begin();
+		while(it_prs != cc.phase_results.end()){
+			if(compare_phase_result(result, *it_prs)) {
+				HYDLA_LOGGER_HA("****** end check_contain : true ******");				
+				return true;
+			}
 			it_prs++;
 		}
+		HYDLA_LOGGER_HA("****** end check_contain : false ******");				
 		return false;
 	}
 	
-	void HAConverter::viewLs()
+	void HAConverter::viewLs(current_condition_t cc)
 	{
 		HYDLA_LOGGER_HA("・・・・・ ls ・・・・・");
-		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = ls_.begin();		
-		while(it_ls_vec != ls_.end()){
+		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = cc.ls.begin();		
+		while(it_ls_vec != cc.ls.end()){
 			viewPrs(*it_ls_vec);
 			HYDLA_LOGGER_HA("・・・・・・・・・・・・");
 			it_ls_vec++;
@@ -320,28 +363,28 @@ namespace simulator {
 		}	
 	}
 	
-	void HAConverter::push_result()
+	void HAConverter::push_result(current_condition_t cc)
 	{
 		phase_result_sptrs_t result;
-		for(unsigned int i = 0 ; i < phase_results_.size() ; i++){
-			result.push_back(phase_results_[i]);
-			if(phase_results_[i]->id == loop_start_id_) break;
+		for(unsigned int i = 0 ; i < cc.phase_results.size() ; i++){
+			result.push_back(cc.phase_results[i]);
+			if(cc.phase_results[i]->id == cc.loop_start_id) break;
 		}
-		HYDLA_LOGGER_HA("・・・・・ result ", ha_results_.size(), " ・・・・・");
+		HYDLA_LOGGER_HA("・・・・・ ha_result ", ha_results_.size(), " ・・・・・");
 		viewPrs(result);
-		HYDLA_LOGGER_HA("・・・・・・・・・・・・");
+		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・");
 		ha_results_.push_back(result);
 	}
 	
 	void HAConverter::output_ha()
 	{
-		HYDLA_LOGGER_HA("-・-・-・-・Result Convert・-・-・-・-");
+		cout << "-・-・-・-・Result Convert・-・-・-・-" << endl;
 		std::vector<phase_result_sptrs_t>::iterator it_ha_res = ha_results_.begin();		
 		while(it_ha_res != ha_results_.end()){
 			convert_phase_results_to_ha(*it_ha_res);
+			cout << "-・-・-・-・-・-・-・-・-・-・-・-・-" << endl;
 			it_ha_res++;
 		}
-		HYDLA_LOGGER_HA("-・-・-・-・-・-・-・-・-・-・-・-・-");
 	}
 	
 	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
@@ -349,7 +392,7 @@ namespace simulator {
 		cout << "digraph g{" << endl;
 		cout << "edge [dir=forward];" << endl;
 		cout << "\"start\" [shape=point];" << endl;
-			cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\" [label=\"" << result[0]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
+		cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\" [label=\"" << result[0]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
 		for(unsigned int i = 2 ; i < result.size() ; i++){
 			if(result[i]->phase == IntervalPhase){
 				cout << "\"" << result[i-2]->module_set->get_name() << "\"->\"" << result[i]->module_set->get_name() << "\" [label=\"" << result[i-1]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
@@ -373,6 +416,9 @@ namespace simulator {
     state->module_set_container = msc_original_;
     pr->parent = result_root_;
     push_simulation_phase(state);
+  	
+  	// HA変換のための初期化
+  	
   }
 
 } // simulator

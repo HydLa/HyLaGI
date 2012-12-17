@@ -28,8 +28,7 @@ public:
   typedef std::list<variable_t>                            variable_set_t;
   typedef std::list<parameter_t>                           parameter_set_t;
   typedef value_t                                          time_value_t;
-
-
+	
   HAConverter(Opts &opts);
 
   virtual ~HAConverter();
@@ -65,37 +64,54 @@ private:
 	
 	/**
 	 * 変換に用いる変数の定義
-	*/
-	bool is_loop_step_;
-	phase_result_sptrs_t phase_results_;
-	std::vector<phase_result_sptrs_t> ls_;
-	std::vector<phase_result_sptrs_t> ha_results_;
-	phase_result_sptrs_t loop_;
-	std::map<int, phase_result_sptr_t> phase_result_map_;
-	
-	int loop_start_id_;
-	
+	 * その構造体
+ 	*/
+	struct CurrentCondition
+	{
+		phase_result_sptrs_t phase_results;
+		std::vector<phase_result_sptrs_t> ls;
+		phase_result_sptrs_t loop;
+		bool is_loop_step;
+		int loop_start_id;	
+		CurrentCondition(
+			phase_result_sptrs_t phase_results, 
+			std::vector<phase_result_sptrs_t> ls, 
+			phase_result_sptrs_t loop,
+			bool is_loop_step,
+			int loop_start_id
+		): phase_results(phase_results), ls(ls), loop(loop), is_loop_step(is_loop_step), loop_start_id(loop_start_id){}
+		CurrentCondition(){}
+	};
 
+	typedef CurrentCondition															 current_condition_t;
+	typedef std::deque<current_condition_t> 					 		 current_conditions_t;
+	
+	//current_condition_sptr_t cc_;
+	
+	current_conditions_t cc_vec_;
+		
+	std::vector<phase_result_sptrs_t> ha_results_;
+	
 	// ループ判定ステップを続けるか（lsの要素にloopを部分集合とするものがあるか）
-	bool check_continue();
+	bool check_continue(current_condition_t cc);
 	
 	// lsにループ候補をset
-	void set_possible_loops(phase_result_sptr_t result);
+	void set_possible_loops(phase_result_sptr_t result, current_condition_t *cc);
 	
 	// loopがlsの最大要素と同じかどうか
-	bool loop_eq_max_ls();
+	bool loop_eq_max_ls(current_condition_t cc);
 	
 	// エッジ判定ステップ
 	void check_edge_step();
 	
 	// 現phase_resultがphase_resultsに含まれるか
-	bool check_contain(phase_result_sptr_t result);
+	bool check_contain(phase_result_sptr_t result, current_condition_t cc);
 
 	// ２つのphase_resultのphase、モジュール集合、positive_askが等しいかどうか判定
 	bool compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2);
  
 	// lsの中身表示
-	void viewLs();
+	void viewLs(current_condition_t cc);
 	// phase_result_sptrs_tの中身表示
 	void viewPrs(phase_result_sptrs_t results);
 	
@@ -106,7 +122,31 @@ private:
 	void convert_phase_results_to_ha(phase_result_sptrs_t result);
 	
 	// ha_resultにHA変換に必要な情報をpushする
-	void push_result();
+	void push_result(current_condition_t cc);
+	
+	// 状態キューに新たな状態を追加する
+	// push_simulation_phaseと会わせる必要あり
+	void push_current_condition(const current_condition_t cc)
+	{
+		HYDLA_LOGGER_HA("push cc");
+		cc_vec_.push_front(cc);
+	}
+
+	// 状態キューから状態をひとつ取り出す
+	// pop_simulation_phase()と合わせる必要あり
+	current_condition_t pop_current_condition()
+	{
+    current_condition_t cc;
+    if(opts_->search_method == simulator::DFS){
+      cc = cc_vec_.front();
+      cc_vec_.pop_front();
+    }else{
+      cc = cc_vec_.back();
+      cc_vec_.pop_back();
+    }
+    return cc;
+
+	}
 	
 };
 	
