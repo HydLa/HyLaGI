@@ -72,14 +72,16 @@ private:
 		std::vector<phase_result_sptrs_t> ls;
 		phase_result_sptrs_t loop;
 		bool is_loop_step;
+		int loop_count;
 		int loop_start_id;	
 		CurrentCondition(
 			phase_result_sptrs_t phase_results, 
 			std::vector<phase_result_sptrs_t> ls, 
 			phase_result_sptrs_t loop,
 			bool is_loop_step,
+			int loop_count,
 			int loop_start_id
-		): phase_results(phase_results), ls(ls), loop(loop), is_loop_step(is_loop_step), loop_start_id(loop_start_id){}
+		): phase_results(phase_results), ls(ls), loop(loop), is_loop_step(is_loop_step), loop_count(loop_count), loop_start_id(loop_start_id){}
 		CurrentCondition(){}
 	};
 
@@ -93,7 +95,7 @@ private:
 	std::vector<phase_result_sptrs_t> ha_results_;
 	
 	// ループ判定ステップを続けるか（lsの要素にloopを部分集合とするものがあるか）
-	bool check_continue(current_condition_t cc);
+	bool check_continue(current_condition_t *cc);
 	
 	// lsにループ候補をset
 	void set_possible_loops(phase_result_sptr_t result, current_condition_t *cc);

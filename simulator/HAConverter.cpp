@@ -5,6 +5,7 @@
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
+#include "../parser/TreeInfixPrinter.h"
 
 using namespace std;
 
@@ -23,7 +24,9 @@ namespace simulator {
   		current_condition_t tmp_cc_;
   		cc_.is_loop_step = false;
   		cc_.loop_start_id = -1;
+  		cc_.loop_count = 0;
   		push_current_condition(cc_);
+  	HYDLA_LOGGER_HA("mlc:", opts_->max_loop_count);
   		while(!state_stack_.empty()) {
         simulation_phase_sptr_t state(pop_simulation_phase());
       	// current conditionはtodoと同様にstuckに積まれるため、同じようにpopすれば、現phaseのcc_が取得できる
@@ -36,6 +39,7 @@ namespace simulator {
   			HYDLA_LOGGER_HA("%% ls.size():", tmp_cc_.ls.size());
   			HYDLA_LOGGER_HA("%% loop.size():", tmp_cc_.loop.size());
   			HYDLA_LOGGER_HA("%% is_loop_step:", tmp_cc_.is_loop_step);
+  			HYDLA_LOGGER_HA("%% loop_count:", tmp_cc_.loop_count);
   			HYDLA_LOGGER_HA("%% loop_start_id:", tmp_cc_.loop_start_id);
   			HYDLA_LOGGER_HA("");
   			
@@ -101,10 +105,12 @@ namespace simulator {
 	          			HYDLA_LOGGER_HA("******* loop *******");
 	          			viewPrs(cc_.loop);
 	          			HYDLA_LOGGER_HA("* * * * * * * * * *");
-	          			if (!check_continue(cc_)){
+	          			if (!check_continue(&cc_)){
 	          				// ループ判定ステップを抜ける
 	          				HYDLA_LOGGER_HA("-------- end loop step ----------");
-		          			cc_.is_loop_step = false;
+							  		cc_.is_loop_step = false;
+							  		cc_.loop_start_id = -1;
+							  		cc_.loop_count = 0;
 	          			}
 		         			break;
 	          		}else{
@@ -121,18 +127,26 @@ namespace simulator {
 	          			HYDLA_LOGGER_HA("******* loop *******");
 	          			viewPrs(cc_.loop);
 	          			HYDLA_LOGGER_HA("* * * * * * * * * *");
-	          			if (!check_continue(cc_)) {
+	          			if (!check_continue(&cc_)) {
 	          				// ループ判定ステップを抜ける
 	          				HYDLA_LOGGER_HA("-------- end loop step ----------");
-		          			cc_.is_loop_step = false;
+							  		cc_.is_loop_step = false;
+							  		cc_.loop_start_id = -1;
+							  		cc_.loop_count = 0;
 	          				break;
 	          			}
 	          			if (loop_eq_max_ls(cc_)){
-	          				// エッジ判定ステップへ
-	          				check_edge_step();
-	          				// ここではls_の要素は１つになっている（loopと等しい最大のもののみ残っている）
-	          				push_result(cc_);
-	          				continue;  
+	          				cc_.loop_count++;
+	          				cc_.loop.clear();
+	          				cc_.loop.push_back(result_);
+	          				if(cc_.loop_count >= opts_->max_loop_count){
+		          				// エッジ判定ステップへ
+		          				check_edge_step();
+		          				// ここではls_の要素は１つになっている（loopと等しい最大のもののみ残っている）
+		          				push_result(cc_);
+		          				continue;  
+	          				}
+	          				HYDLA_LOGGER_HA("loop_count < max_loop_count");
 	          			}
 		         			break;	          		
 	          		}else{
@@ -141,6 +155,7 @@ namespace simulator {
 		          			cc_.is_loop_step = true;
 	          				cc_.loop.clear();
 	          				cc_.ls.clear();
+		          			cc_.loop_count = 0;
 			         			cc_.phase_results.push_back(result_);
 		          			set_possible_loops(result_, &cc_);
 		          			cc_.loop.push_back(result_);
@@ -230,16 +245,16 @@ namespace simulator {
 		return true;
 	} 
 	
-	bool HAConverter::check_continue(current_condition_t cc)
+	bool HAConverter::check_continue(current_condition_t *cc)
 	{
 		HYDLA_LOGGER_HA("****** check_continue ******");
-		viewLs(cc);
-		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = cc.ls.begin();		
+		viewLs(*cc);
+		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = cc->ls.begin();		
 		std::vector< std::vector<phase_result_sptrs_t>::iterator > remove_itr;
-		while(it_ls_vec != cc.ls.end()){
+		while(it_ls_vec != cc->ls.end()){
 			phase_result_sptrs_t::iterator it_ls = (*it_ls_vec).begin();
-			phase_result_sptrs_t::iterator it_loop = cc.loop.begin();
-			while(it_ls != (*it_ls_vec).end() && it_loop != cc.loop.end()) {
+			phase_result_sptrs_t::iterator it_loop = cc->loop.begin();
+			while(it_ls != (*it_ls_vec).end() && it_loop != cc->loop.end()) {
 				// 等しくない状態遷移列だったらlsから削除
 				if(!compare_phase_result(*it_ls, *it_loop)){
 					HYDLA_LOGGER_HA("delete ls element : not equal loop");
@@ -250,7 +265,7 @@ namespace simulator {
 				it_ls++;
 				it_loop++;
 				// loopより短い状態遷移列はlsから削除
-				if(it_ls == (*it_ls_vec).end() && it_loop != cc.loop.end()){
+				if(it_ls == (*it_ls_vec).end() && it_loop != cc->loop.end()){
 					HYDLA_LOGGER_HA("delete ls element : less than loop");
 					// whileでイテレート中にls_の中身をeraseできないので、eraseするitrを保存して後でls_の要素を削除する
 					remove_itr.push_back(it_ls_vec);
@@ -261,12 +276,12 @@ namespace simulator {
 		}
 		
 		for (unsigned int i = 0 ; i < remove_itr.size() ; i++){
-			cc.ls.erase(remove_itr[i]);
+			cc->ls.erase(remove_itr[i]);
 		}
 		
-		viewLs(cc);
+		viewLs(*cc);
 		
-		if(cc.ls.empty()) {
+		if(cc->ls.empty()) {
 			HYDLA_LOGGER_HA("****** end check_continue : false ******");
 			return false;
 		}
@@ -389,13 +404,31 @@ namespace simulator {
 	
 	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
 	{
+		std::vector<std::string> guards;
+		std::string guard = "";
+		hydla::parse_tree::TreeInfixPrinter tree_printer;
+		// TODO: ガード条件が成立している制約名を出力したい
+		for(unsigned int i = 0 ; i < result.size() ; i++){
+			std::set<boost::shared_ptr<hydla::parse_tree::Ask> >::iterator it = result[i]->positive_asks.begin();
+			while(it != result[i]->positive_asks.end()){
+				guard += tree_printer.get_infix_string((*it)->get_guard()) + " ";
+				it++;
+			}
+			guards.push_back(guard);
+			guard = "";
+		}
 		cout << "digraph g{" << endl;
 		cout << "edge [dir=forward];" << endl;
 		cout << "\"start\" [shape=point];" << endl;
-		cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\" [label=\"" << result[0]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
+		cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\\n" << guards[1] 
+			   << "\" [label=\"" << result[0]->module_set->get_name() << "\\n" << guards[0] 
+			   << "\", labelfloat=false,arrowtail=dot];" << endl;
 		for(unsigned int i = 2 ; i < result.size() ; i++){
 			if(result[i]->phase == IntervalPhase){
-				cout << "\"" << result[i-2]->module_set->get_name() << "\"->\"" << result[i]->module_set->get_name() << "\" [label=\"" << result[i-1]->module_set->get_name() << "\", labelfloat=false,arrowtail=dot];" << endl;
+				cout << "\"" << result[i-2]->module_set->get_name() << "\\n" << guards[i-2] 
+						 << "\"->\"" << result[i]->module_set->get_name() << "\\n" << guards[i] 
+				     << "\" [label=\"" << result[i-1]->module_set->get_name() << "\\n" << guards[i-1] 
+				     << "\", labelfloat=false,arrowtail=dot];" << endl;
 			}
 		}
 		cout << "}" << endl;

@@ -142,6 +142,10 @@ void ProgramOptions::init_descriptions()
     ("fail-stop", 
      "stop all simulation cases when assertion fails")
 
+		("mlc", 
+     value<int>()->default_value(1),
+     "HAConverter: Max Loop Count")
+
     ("math-name", 
      value<std::string>()->default_value("math"), 
      "name of mathematica command")

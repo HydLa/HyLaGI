@@ -76,6 +76,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.timeout_case = po.get<int>("timeout_case");
   opts.timeout_phase = po.get<int>("timeout_phase");
   opts.timeout_calc= po.get<int>("timeout_calc");
+  opts.max_loop_count= po.get<int>("mlc");
   opts.max_phase_expanded = po.get<int>("phase_expanded");
   if(po.get<std::string>("search") == "d"){
     opts.search_method = simulator::DFS;
