@@ -457,13 +457,6 @@ public:
    */
   variable_set_t variable_set_;
   parameter_set_t parameter_set_;
-  
-
-  /**
-   * 各状態を保存しておくためのスタック
-   */
-  //std::stack<SimulationTodo> state_stack_;
-
 
   /**
    * シミュレーション対象となるパースツリー

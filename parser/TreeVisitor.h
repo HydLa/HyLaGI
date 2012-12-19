@@ -20,8 +20,8 @@ public:
   /**
    * Nodeクラスのaccept関数呼び出し用ヘルパ関数
    */
-  template<class T>
-  void accept(const T& n)
+
+  virtual void accept(const boost::shared_ptr<Node>& n)
   {
     n->accept(n, this);
   }

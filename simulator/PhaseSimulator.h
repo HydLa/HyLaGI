@@ -55,6 +55,7 @@ public:
   typedef std::list<parameter_t>                           parameter_set_t;
 
   typedef std::map<module_set_sptr, node_sptr> false_map_t;
+  typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
 
   typedef enum{
     FALSE_CONDITIONS_TRUE,
@@ -119,7 +120,7 @@ public:
   virtual todo_and_results_t simulate_ms_interval(const module_set_sptr& ms,
                               simulation_phase_sptr_t& state, bool& consistent) = 0;
 
-  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
+  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
 
   virtual void set_parameter_set(parameter_t param)
   {
@@ -135,13 +136,17 @@ public:
 protected:
 
   const Opts *opts_;
-
   bool is_safe_;
   
   variable_set_t *variable_set_;
   parameter_set_t *parameter_set_;
   variable_map_t *variable_map_;
+  entailed_prev_map_t judged_prev_map_;
+  negative_asks_t prev_guards_;
+  
+  
   false_map_t false_conditions_;
+  
 };
 
 

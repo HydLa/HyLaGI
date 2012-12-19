@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NonPrevSearcher.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PhaseResult.cpp"
 				>
 			</File>
@@ -254,6 +258,10 @@
 			</File>
 			<File
 				RelativePath=".\InteractiveSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NonPrevSearcher.h"
 				>
 			</File>
 			<File

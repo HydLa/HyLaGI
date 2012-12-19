@@ -1,9 +1,9 @@
 #include "PhaseSimulator.h"
 #include "VariableFinder.h"
+#include "AskCollector.h"
+#include "NonPrevSearcher.h"
 
 using namespace hydla::simulator;
-
-
 
 PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 
@@ -16,6 +16,7 @@ void PhaseSimulator::init_false_conditions(module_set_container_sptr& msc_no_ini
     msc_no_init->mark_current_node();
   }
 }
+
 void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
   msc_no_init->reverse_reset();
   while(msc_no_init->reverse_go_next()){
@@ -33,13 +34,15 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
   HYDLA_LOGGER_PHASE("%% current time:", *state->phase_result->current_time);
   HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->phase_result->parent->variable_map);
   HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->phase_result->parameter_map);
-  
   timer::Timer phase_timer;
 
   todo_and_results_t phases; 
   bool has_next = false;
   is_safe_ = true;
   variable_map_t time_applied_map;
+  
+  judged_prev_map_.clear();
+  
   if(state->phase_result->phase == PointPhase)
   {
     time_applied_map = apply_time_to_vm(state->phase_result->parent->variable_map, state->phase_result->current_time);
@@ -106,11 +109,24 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
 }
 
 
-void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c)
+void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const hydla::simulator::module_set_sptr& ms, continuity_map_t& c)
 {
   variable_set_ = &v;
   parameter_set_ = &p;
   variable_map_ = &m;
+  AskCollector ac(ms);
+  
+  ac.collect_ask(&expanded_always_t(),
+    &positive_asks_t(),
+    &prev_guards_);
+  NonPrevSearcher searcher;
+  for(negative_asks_t::iterator it = prev_guards_.begin(); it != prev_guards_.end();){
+    if(searcher.judge_non_prev((*it)->get_guard())){
+      prev_guards_.erase(it++);
+    }else{
+      it++;
+    }
+  }
 }
 
 

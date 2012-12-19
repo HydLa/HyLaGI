@@ -66,9 +66,9 @@ SymbolicSimulator::~SymbolicSimulator()
 {
 }
 
-void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c)
+void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c)
 {
-  simulator_t::initialize(v, p, m, c);
+  simulator_t::initialize(v, p, m, ms, c);
   variable_derivative_map_ = c;
   // 使用するソルバの決定
   /*  if(opts_->solver == "r" || opts_->solver == "Reduce") {
@@ -339,18 +339,45 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
   ask_collector.collect_ask(&expanded_always, 
       &positive_asks, 
       &unknown_asks);
+      
+  
+  if(pr->phase == PointPhase){
+    for(ask_set_t::iterator it = unknown_asks.begin(); it != unknown_asks.end();){
+      if(pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
+        // 時刻0では左極限値に関する条件を常に偽とする
+        negative_asks.insert(*it);
+        unknown_asks.erase(it++);
+      }else if(opts_->optimization_level >= 2 && prev_guards_.find(*it) != prev_guards_.end() && 
+        judged_prev_map_.find(*it) != judged_prev_map_.end())
+      {
+        // 判定済みのprev条件だった場合
+        bool entailed = judged_prev_map_.find(*it)->second;
+        HYDLA_LOGGER_CLOSURE("%% ommitted guard: ", **it, ", entailed: ", entailed);
+        if(entailed)
+        {
+          positive_asks.insert(*it);
+        }else
+        {
+          negative_asks.insert(*it);
+        }
+        unknown_asks.erase(it++);
+      }else{
+        it++;
+      }
+    }
+  }
   
   do{
     // tell制約を集める
     tell_collector.collect_new_tells(&tell_list,
-        &expanded_always, 
+        &expanded_always,
         &positive_asks);
 
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_consistency in calculate_closure\n");
     timer::Timer consistency_timer;
     //tellじゃなくて制約部分のみ送る
     constraint_list.clear();
-    
+
     maker.reset();
 
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか調べる
@@ -361,7 +388,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
     continuity_map = maker.get_continuity_map();
     add_continuity(continuity_map);
-    
+
     for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
@@ -400,12 +427,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
       ask_set_t::iterator it  = unknown_asks.begin();
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end) {
-      
-        // 時刻0では左極限値に関する条件を常に偽とする
-        if(pr->phase == PointPhase && pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
-          unknown_asks.erase(it++);
-          continue;
-        }
         maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
         
         SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result;
@@ -413,6 +434,9 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
           case ENTAILED:
             HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
+            if(prev_guards_.find(*it) != prev_guards_.end()){
+              judged_prev_map_.insert(std::make_pair(*it, true));
+            }
             //eraseと後置インクリメントは同時にやらないとイテレータが壊れるので，注意
             unknown_asks.erase(it++);
             expanded = true;
@@ -420,6 +444,9 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
           case CONFLICTING:
             HYDLA_LOGGER_CLOSURE("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
+            if(prev_guards_.find(*it) != prev_guards_.end()){
+              judged_prev_map_.insert(std::make_pair(*it, false));
+            }
             unknown_asks.erase(it++);
             break;
           case BRANCH_VAR:
@@ -463,6 +490,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
   }
 
   if(opts_->assertion){
+    timer::Timer entailment_timer;
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_assertion");
     SymbolicVirtualConstraintSolver::check_consistency_result_t cc_result;
     CalculateClosureResult ret;
@@ -472,7 +500,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
         HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
         is_safe_ = false;
         ret.push_back(state);
-        return ret;
         break;
       case CONFLICTING:
         break;
@@ -489,14 +516,15 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
           new_state->temporary_constraints.push_back(node_sptr(new Not(opts_->assertion)));
           ret.push_back(new_state);
         }
-        return ret;
         break;
       case BRANCH_PAR:
         HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
         push_branch_states(state, cc_result, ret);
-        return ret;
         break;
     }
+    state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
+    if(!ret.empty())
+      return ret;
   }
   HYDLA_LOGGER_CLOSURE("#*** End SymbolicSimulator::calculate_closure ***\n");
   return CalculateClosureResult(1, state);

@@ -726,7 +726,6 @@ publicMethod[
     
     tStore = Map[(# -> createIntegratedValue[#, dSol[[2]] ])&, getTimeVars[vars]];
     timeAppliedCauses = Or@@(discCause /. tStore );
-    
     simplePrint[timeAppliedCauses];
     
     parameterList = getParameters[timeAppliedCauses];
@@ -745,7 +744,7 @@ publicMethod[
     resultList = First[resultList];
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
     
-    resultList = Fold[(Join[#1, compareWithMaxTime[If[Reduce[maxTime > 0] === True, maxTime, 0], #2] ])&,{}, resultList];
+    resultList = Fold[(Join[#1, compareWithMaxTime[If[Quiet[Reduce[maxTime <= 0, Reals]] === True, 0, maxTime], #2] ])&,{}, resultList];
     (* resultList = Fold[(Join[#1, compareWithMaxTime[maxTime, #2] ])&,{}, resultList]; *)
     simplePrint[resultList];
     

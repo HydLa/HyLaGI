@@ -32,7 +32,8 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
   continuity_map_t  cont(parse_tree->get_variable_map());
-  phase_simulator_->initialize(variable_set_, parameter_set_, variable_map_, cont);
+  phase_simulator_->initialize(variable_set_, parameter_set_,
+   variable_map_, msc_no_init_->get_max_module_set(), cont);
   if(opts_->optimization_level >= 2){
     phase_simulator_->init_false_conditions(msc_no_init_);
     if(opts_->optimization_level >= 3){

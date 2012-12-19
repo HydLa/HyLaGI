@@ -39,7 +39,7 @@ public:
   virtual todo_and_results_t simulate_ms_interval(const module_set_sptr& ms,
                               simulation_phase_sptr_t& state, bool& consistent);
 
-  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c);
+  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
   virtual void set_parameter_set(parameter_t param);
   virtual parameter_set_t get_parameter_set();
 
