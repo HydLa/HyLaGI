@@ -335,13 +335,13 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
   bool expanded;
   
-  // ask制約を集める
-  ask_collector.collect_ask(&expanded_always, 
-      &positive_asks, 
-      &unknown_asks);
       
   
   if(pr->phase == PointPhase){
+    // ask制約を集める
+    ask_collector.collect_ask(&expanded_always, 
+        &positive_asks, 
+        &unknown_asks);
     for(ask_set_t::iterator it = unknown_asks.begin(); it != unknown_asks.end();){
       if(pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
         // 時刻0では左極限値に関する条件を常に偽とする
@@ -419,6 +419,11 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
     // ask制約のエンテール処理
     HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_entailment in calculate_closure\n");
+    
+    // ask制約を集める
+    ask_collector.collect_ask(&expanded_always, 
+        &positive_asks, 
+        &unknown_asks);
     
     timer::Timer entailment_timer;
     
