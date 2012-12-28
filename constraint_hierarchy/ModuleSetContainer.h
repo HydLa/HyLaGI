@@ -12,7 +12,6 @@ namespace ch {
 class ModuleSetContainer {
 public:
 
- 
   typedef std::set<module_set_sptr> module_set_set_t;
   typedef std::vector<module_set_sptr> module_set_list_t;
 

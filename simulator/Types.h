@@ -49,6 +49,7 @@ typedef struct Opts_ {
   bool nd_mode;
   bool interactive_mode;
   bool ha_convert_mode;
+  bool dump_relation;
   bool profile_mode;
   bool parallel_mode;
   bool dump_in_progress;

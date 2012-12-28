@@ -64,6 +64,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
   opts.dump_in_progress = po.count("dump-in-progress")>0;
+  opts.dump_relation = po.count("dump-module-relation-graph")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.ha_convert_mode = po.count("ha")>0;
   opts.profile_mode  = po.count("profile")>0;
@@ -115,8 +116,8 @@ void setup_symbolic_simulator_opts(Opts& opts)
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  simulator_ = new SequentialSimulator(opts);
   setup_symbolic_simulator_opts(opts);
+  simulator_ = new SequentialSimulator(opts);
   ProgramOptions &po = ProgramOptions::instance();
 
   if(opts.interactive_mode){ 

@@ -335,38 +335,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
 
   bool expanded;
   
-      
-  
-  if(pr->phase == PointPhase){
-    // ask§–ñ‚ðW‚ß‚é
-    ask_collector.collect_ask(&expanded_always, 
-        &positive_asks, 
-        &unknown_asks);
-    for(ask_set_t::iterator it = unknown_asks.begin(); it != unknown_asks.end();){
-      if(pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
-        // Žž0‚Å‚Í¶‹ÉŒÀ’l‚ÉŠÖ‚·‚éðŒ‚ðí‚É‹U‚Æ‚·‚é
-        negative_asks.insert(*it);
-        unknown_asks.erase(it++);
-      }else if(opts_->optimization_level >= 2 && prev_guards_.find(*it) != prev_guards_.end() && 
-        judged_prev_map_.find(*it) != judged_prev_map_.end())
-      {
-        // ”»’èÏ‚Ý‚ÌprevðŒ‚¾‚Á‚½ê‡
-        bool entailed = judged_prev_map_.find(*it)->second;
-        HYDLA_LOGGER_CLOSURE("%% ommitted guard: ", **it, ", entailed: ", entailed);
-        if(entailed)
-        {
-          positive_asks.insert(*it);
-        }else
-        {
-          negative_asks.insert(*it);
-        }
-        unknown_asks.erase(it++);
-      }else{
-        it++;
-      }
-    }
-  }
-  
   do{
     // tell§–ñ‚ðW‚ß‚é
     tell_collector.collect_new_tells(&tell_list,
@@ -431,7 +399,30 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
       expanded = false;
       ask_set_t::iterator it  = unknown_asks.begin();
       ask_set_t::iterator end = unknown_asks.end();
-      while(it!=end) {
+      while(it!=end){
+        if(pr->phase == PointPhase){
+          if(pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
+            // Žž0‚Å‚Í¶‹ÉŒÀ’l‚ÉŠÖ‚·‚éðŒ‚ðí‚É‹U‚Æ‚·‚é
+            negative_asks.insert(*it);
+            unknown_asks.erase(it++);
+            continue;
+          }else if(opts_->optimization_level >= 2 && prev_guards_.find(*it) != prev_guards_.end() && 
+            judged_prev_map_.find(*it) != judged_prev_map_.end())
+          {
+            // ”»’èÏ‚Ý‚ÌprevðŒ‚¾‚Á‚½ê‡
+            bool entailed = judged_prev_map_.find(*it)->second;
+            HYDLA_LOGGER_CLOSURE("%% ommitted guard: ", **it, ", entailed: ", entailed);
+            if(entailed)
+            {
+              positive_asks.insert(*it);
+            }else
+            {
+              negative_asks.insert(*it);
+            }
+            unknown_asks.erase(it++);
+            continue;
+          }
+        }
         maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
         
         SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result;

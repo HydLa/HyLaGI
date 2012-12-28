@@ -45,7 +45,9 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
   if(in_prev_){
     prev_variables_.insert(std::make_pair(node->get_name(), differential_count_));
   }else{
-    variables_.insert(std::make_pair(node->get_name(), differential_count_));
+    for(int i=0; i <= differential_count_; i++){
+      variables_.insert(std::make_pair(node->get_name(), i));
+    }
   }
 }
 

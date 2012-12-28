@@ -191,6 +191,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RelationGraph.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SequentialSimulator.cpp"
 				>
 			</File>
@@ -270,6 +274,10 @@
 			</File>
 			<File
 				RelativePath=".\PhaseSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RelationGraph.h"
 				>
 			</File>
 			<File

@@ -58,9 +58,6 @@ private:
     const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &,
     parameter_map_t &);
 
-  variable_t* get_variable(const std::string &name, const int &derivative_count){
-    return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
-  }
   
   variable_map_t shift_variable_map_time(const variable_map_t& vm,const time_t &time);
 

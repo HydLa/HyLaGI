@@ -1,7 +1,8 @@
 #include "PhaseSimulator.h"
-#include "VariableFinder.h"
 #include "AskCollector.h"
 #include "NonPrevSearcher.h"
+#include "RelationGraph.h"
+#include "VariableFinder.h"
 
 using namespace hydla::simulator;
 
@@ -114,6 +115,35 @@ void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_
   variable_set_ = &v;
   parameter_set_ = &p;
   variable_map_ = &m;
+  
+  if(opts_->dump_relation){
+    RelationGraph::relation_set_t relations;
+    for(ModuleSet::module_list_const_iterator it = ms->begin();it != ms->end(); it++){
+      VariableFinder finder;
+      finder.visit_node(it->second, false);
+      VariableFinder::variable_set_t variables = finder.get_variable_set(),
+        prev_variables = finder.get_prev_variable_set();
+        
+      for(VariableFinder::variable_set_t::const_iterator v_it = variables.begin(); v_it != variables.end(); v_it++)
+      {
+        relations.push_back(std::make_pair(&(*it), 
+          RelationGraph::variable_t(get_variable(v_it->first, v_it->second), false)));
+      }
+      
+      for(VariableFinder::variable_set_t::const_iterator v_it = prev_variables.begin(); v_it != prev_variables.end(); v_it++)
+      {
+        relations.push_back(std::make_pair(&(*it), 
+          RelationGraph::variable_t(get_variable(v_it->first, v_it->second), true)));
+      }
+    }
+    
+    RelationGraph graph(relations);
+    
+    graph.dump_graph(std::cout);
+    exit(0);
+  }
+  
+  
   AskCollector ac(ms);
   
   ac.collect_ask(&expanded_always_t(),

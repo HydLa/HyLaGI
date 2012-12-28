@@ -160,6 +160,13 @@ protected:
     // とりあえず，この関数で取りだしたものは必ずシミュレーションを行うことを前提にする．
     return state;
   }
+  /**
+   * @return maximum module set without initial constraint
+   */
+  module_set_sptr get_max_ms_no_init()const
+  {
+    return msc_no_init_->get_max_module_set();
+  }
   
   /// 実際にシミュレータが閉包計算などを行ったフェーズの集合．主にプロファイリングのために取っておく．
   entire_profile_t profile_vector_;

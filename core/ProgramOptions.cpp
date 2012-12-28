@@ -43,6 +43,9 @@ void ProgramOptions::init_descriptions()
      "output set of non initial module sets\n"
      "  which might be solution\n"
      "  by graph representation")
+    ("dump-module-relation-graph", 
+     "output relation of module and variables\n"
+     "  by graph representation")
     ("dump-in-progress", 
      "output each phase in progress")
      

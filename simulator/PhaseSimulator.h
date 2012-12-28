@@ -133,7 +133,12 @@ public:
   
   virtual bool is_safe() const{return is_safe_;}
   
+  
 protected:
+
+  variable_t* get_variable(const std::string &name, const int &derivative_count){
+    return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
+  }
 
   const Opts *opts_;
   bool is_safe_;
