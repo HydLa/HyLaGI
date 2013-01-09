@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
-#define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
+#ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
+#define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
 
 #include "Simulator.h"
 #include <boost/thread.hpp>
@@ -8,9 +8,9 @@ using namespace boost;
 namespace hydla {
 namespace simulator {
 
-class ParallelSimulatorWorker;
+class ParallelSimulator;
 
-class ParallelSimulator: public Simulator{
+class ParallelSimulatorWorker: public Simulator{
   public:
   typedef PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<const phase_result_t>           phase_result_const_sptr_t;
@@ -33,26 +33,30 @@ class ParallelSimulator: public Simulator{
   typedef value_t                                          time_value_t;
 
 
-  ParallelSimulator(Opts &opts);
+  ParallelSimulatorWorker(Opts &opts);
   
-  virtual ~ParallelSimulator();
+  virtual ~ParallelSimulatorWorker();
 
-  void push_phase(const simulation_phase_sptr_t& state);
-  simulation_phase_sptr_t pop_phase();
+  virtual void initialize(const parse_tree_sptr& parse_tree,int id,ParallelSimulator *master);
   /**
-   * スレッドを立ち上げ、シミュレーションを開始する
+   * 各スレッドが与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   virtual phase_result_const_sptr_t simulate();
-
   /**
-   * シミュレータの初期化を行う
+   * 待機スレッドにあるスレッドのシミュレーション終了を通知
    */
-  virtual void initialize(const parse_tree_sptr& parse_tree);
+  void notify_simulation_end();
+  /**
+   * stateのpop
+   */  
+  simulation_phase_sptr_t worker_pop_phase();
+  /**
+   * stateのpush
+   */  
+  void worker_push_phase(const simulation_phase_sptr_t& state);
+
+  void set_thread_state(std::string str);
   
-  phase_result_const_sptr_t get_result_root();
-
-  bool state_stack_is_empty();
-
   private:
   
   /**
@@ -73,13 +77,22 @@ class ParallelSimulator: public Simulator{
    */
   parse_tree_sptr parse_tree_;
 
-  thread_group thread_group_;
+  boost::shared_ptr<ParallelSimulator> master_;
 
-  std::vector<boost::shared_ptr<ParallelSimulatorWorker> > workers_;
+  static mutex mutex_;
 
+  static condition condition_;
+
+  static bool end_flag_;
+
+  static int running_thread_count_;
+
+  static std::vector<std::string> thread_state_;
+
+  int thr_id_;
 };
 
 } // simulator
 } // hydla
 
-#endif // _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
+#endif // _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
