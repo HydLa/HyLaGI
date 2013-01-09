@@ -72,6 +72,12 @@ void ProgramOptions::init_descriptions()
 
 	("ha", "convert to HA")
 
+    ("parallel", "parallel mode")
+
+    ("pn", 
+     value<int>()->default_value(2),
+     "parallel number")
+
     ("tm", 
      value<std::string>()->default_value("n"),
      "time measurement:\n"

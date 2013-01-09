@@ -52,6 +52,7 @@ typedef struct Opts_ {
   bool dump_relation;
   bool profile_mode;
   bool parallel_mode;
+  int parallel_number;
   bool dump_in_progress;
   bool stop_at_failure;
   std::string output_interval;

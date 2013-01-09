@@ -8,6 +8,7 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
+#include "ParallelSimulator.h"
 
 
 #ifdef _MSC_VER
@@ -49,6 +50,24 @@ void output_result(SequentialSimulator& ss, Opts& opts){
   }
 }
 
+void output_result(ParallelSimulator& ss, Opts& opts){
+  ProgramOptions &po = ProgramOptions::instance();
+  hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
+  Printer.output_result_tree(ss.get_result_root());
+  if(po.get<std::string>("tm") == "s") {
+    hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
+  } else if(po.get<std::string>("tm") == "c") {
+    std::string csv_name = po.get<std::string>("csv");
+    if(csv_name == ""){
+      hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+    }else{
+      std::ofstream ofs;
+      ofs.open(csv_name.c_str());
+      hydla::output::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
+      ofs.close();
+    }
+  }
+}
 
 
 /**
@@ -68,6 +87,8 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.interactive_mode = po.count("in")>0;
   opts.ha_convert_mode = po.count("ha")>0;
   opts.profile_mode  = po.count("profile")>0;
+  opts.parallel_mode = po.count("parallel")>0;
+  opts.parallel_number   = po.get<int>("pn");
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
   opts.stop_at_failure = po.count("fail-stop") == 1;
@@ -126,6 +147,12 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
     ss.simulate();
+  }else if(opts.parallel_mode){
+    ParallelSimulator ps(opts);
+    ps.set_phase_simulator(new SymbolicSimulator(opts));
+    ps.initialize(parse_tree);
+    ps.simulate();
+    output_result(ps, opts);
   }else if(opts.ha_convert_mode){
   	opts.nd_mode = true;
   	HAConverter ha_converter(opts);
