@@ -50,7 +50,7 @@ ParallelSimulatorWorker::phase_result_const_sptr_t ParallelSimulatorWorker::simu
   while(!end_flag_) {
     simulation_phase_sptr_t state(worker_pop_phase());
     if(end_flag_) break;
-    if(state->phase_result->parent != result_root_){
+    if(state->phase_result->parent.get() != result_root_.get()){
       state->module_set_container = msc_no_init_;
     }
     else{

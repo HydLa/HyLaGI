@@ -54,6 +54,8 @@ class ParallelSimulatorWorker: public Simulator{
    * state‚Ìpush
    */  
   void worker_push_phase(const simulation_phase_sptr_t& state);
+  
+  void set_result_root(phase_result_sptr_t r){result_root_ = r;}
 
   void set_thread_state(std::string str);
   

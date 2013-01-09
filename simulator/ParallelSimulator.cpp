@@ -51,6 +51,7 @@ void ParallelSimulator::initialize(const parse_tree_sptr& parse_tree){
   for(int i=0;i<opts_->parallel_number; i++){
     boost::shared_ptr<ParallelSimulatorWorker> psw(new ParallelSimulatorWorker(*opts_));
     psw->ParallelSimulatorWorker::initialize(parse_tree,i,this);
+    psw->set_result_root(result_root_);
     workers_.push_back(psw);
   }
   //初期状態を作ってスタックに入れる
