@@ -9,7 +9,7 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lboost_system -lncurses -lboost_thread
+LIBS += -lboost_system -lncurses -lboost_thread-mt
 
 CXX_OPT  += -Wall --input-charset=cp932 -pg
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
