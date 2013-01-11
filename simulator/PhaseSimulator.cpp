@@ -90,7 +90,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
     {
       state->module_set_container->mark_current_node();
     }
-    if(phases.size() > 1)
+    if(!consistent && phases.size() > 1)
     {
       state->profile["Phase"] += phase_timer.get_elapsed_us();
       return phases;
