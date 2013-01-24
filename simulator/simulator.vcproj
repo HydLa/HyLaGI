@@ -183,6 +183,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ParallelSimulator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulatorWorker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PhaseResult.cpp"
 				>
 			</File>
@@ -266,6 +274,14 @@
 			</File>
 			<File
 				RelativePath=".\NonPrevSearcher.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulatorWorker.h"
 				>
 			</File>
 			<File

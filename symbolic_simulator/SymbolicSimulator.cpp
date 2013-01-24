@@ -145,10 +145,13 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
   variable_map_t vm;
   parameter_map_t pm;
   solver_->reset(vm,pm);
+  
+  negative_asks_t tmp_negative;
 
   // ask§–ñ‚ğW‚ß‚é 
   ask_collector.collect_ask(&expanded_always, 
       &positive_asks, 
+      &tmp_negative,
       &negative_asks);
 
   node_sptr condition_node;
@@ -391,6 +394,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     // ask§–ñ‚ğW‚ß‚é
     ask_collector.collect_ask(&expanded_always, 
         &positive_asks, 
+        &negative_asks,
         &unknown_asks);
     
     timer::Timer entailment_timer;
@@ -406,7 +410,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
             continue;
-          }else if(opts_->optimization_level >= 2 && prev_guards_.find(*it) != prev_guards_.end() && 
+          }else if(prev_guards_.find(*it) != prev_guards_.end() && 
             judged_prev_map_.find(*it) != judged_prev_map_.end())
           {
             // ”»’èÏ‚İ‚ÌprevğŒ‚¾‚Á‚½ê‡
@@ -415,6 +419,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             if(entailed)
             {
               positive_asks.insert(*it);
+              expanded = true;
             }else
             {
               negative_asks.insert(*it);

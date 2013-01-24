@@ -34,7 +34,8 @@ public:
    */
   void collect_ask(expanded_always_t* expanded_always,                   
                    positive_asks_t*   positive_asks,
-                   negative_asks_t*   negative_asks);
+                   negative_asks_t*   negative_asks,
+                   ask_set_t*        unknown_asks);
 
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
@@ -53,19 +54,16 @@ private:
 
   expanded_always_t*       expanded_always_;                   
   
-  /// 無効となっているaskのリスト
+  /// 制約ストアと矛盾するaskのリスト
   negative_asks_t*         negative_asks_;
 
   /// 有効となっているaskのリスト
   positive_asks_t*         positive_asks_;
-
-  /// 展開済みalwaysノードのリストからの探索かどうか
-  bool               in_expanded_always_;
   
-  /// 無効となっているaskの中かどうか
-  bool                in_negative_ask_;
-
-  /// 無効となっているaskの中かどうか
+  /// askのリスト
+  ask_set_t*              unknown_asks_;
+  
+  /// 有効になったaskの中かどうか
   bool                in_positive_ask_;
   
   /// 探索したalwaysノードのリスト

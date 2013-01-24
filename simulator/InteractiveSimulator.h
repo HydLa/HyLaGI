@@ -520,7 +520,9 @@ public:
     simulation_phase_sptr_t temp_phase(phase_simulator_->create_new_simulation_phase());
     phase_result_sptr_t temp = temp_phase->phase_result;
 
+    
     for(int i = 0;i<1;i++){
+    /*
       Phase                     phase;
       int                       id;
       hydla::simulator::PhaseResult::time_t                    current_time, end_time;
@@ -569,6 +571,7 @@ public:
         v_second = buf;
         cout << "second " << v_second << " size "<< endl;
       }
+      */
       //ifs >> pm_size;;
       //for(int i=0;i<pm_size;i++){
       //ifs >> v_first;

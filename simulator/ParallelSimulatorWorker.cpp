@@ -180,7 +180,7 @@ void ParallelSimulatorWorker::worker_push_phase(const simulation_phase_sptr_t& s
 }
 
 void ParallelSimulatorWorker::notify_simulation_end(){
-  mutex::scoped_lock lk(mutex);
+  mutex::scoped_lock lk(mutex_);
   running_thread_count_--;
   set_thread_state("simulation finished");
   condition_.notify_all();

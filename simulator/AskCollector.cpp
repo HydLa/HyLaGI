@@ -47,26 +47,25 @@ AskCollector::~AskCollector()
 
 void AskCollector::collect_ask(expanded_always_t* expanded_always,                   
                                positive_asks_t*   positive_asks,
-                               negative_asks_t*   negative_asks)
+                               negative_asks_t*   negative_asks,
+                               ask_set_t*         unknown_asks)
 {
   assert(expanded_always);
   assert(negative_asks);
   assert(positive_asks);
+  assert(unknown_asks);
 
   expanded_always_ = expanded_always;
   negative_asks_   = negative_asks;
   positive_asks_   = positive_asks;
+  unknown_asks_    = unknown_asks;
 
   // ModuleSet‚Ìƒm[ƒh‚Ì’Tõ
   in_positive_ask_    = false;
-  in_negative_ask_    = false;
-  in_expanded_always_ = false;
   module_set_->dispatch(this);
 
   // “WŠJÏ‚İalwaysƒm[ƒh‚Ì’Tõ
   in_positive_ask_    = false;
-  in_negative_ask_    = false;
-  in_expanded_always_ = true;
   expanded_always_t::const_iterator it  = expanded_always->begin();
   expanded_always_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
@@ -85,27 +84,22 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
 // Ask§–ñ
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
-  if(!in_negative_ask_){
-    if(positive_asks_->find(node) != positive_asks_->end()) 
-    {
-      // Šù‚É“WŠJÏ‚İ‚Ìaskƒm[ƒh‚Å‚ ‚Á‚½ê‡
-      if(in_positive_ask_){
-        accept(node->get_child());
-      }else{
-        in_positive_ask_ = true;
-        accept(node->get_child());
-        in_positive_ask_ = false;
-      }
-    }
-    else {
-      // ‚Ü‚¾“WŠJ‚³‚ê‚Ä‚¢‚È‚¢askƒm[ƒh‚Å‚ ‚Á‚½ê‡
-      negative_asks_->insert(node);
-      in_negative_ask_ = true;
+  
+  if(positive_asks_->find(node) != positive_asks_->end()) 
+  {
+    // Šù‚É“WŠJÏ‚İ‚Ìaskƒm[ƒh‚Å‚ ‚Á‚½ê‡
+    if(in_positive_ask_){
       accept(node->get_child());
-      in_negative_ask_ = false;
+    }else{
+      in_positive_ask_ = true;
+      accept(node->get_child());
+      in_positive_ask_ = false;
     }
-  } else {
-    accept(node->get_child());
+  }
+  else if(negative_asks_->find(node) == negative_asks_->end())
+  {
+    // “±o‚³‚ê‚é‚Æ‚à–µ‚‚·‚é‚Æ‚à”»’è‚³‚ê‚Ä‚¢‚È‚¢askƒm[ƒh‚Å‚ ‚Á‚½ê‡
+    unknown_asks_->insert(node);
   }
 }
 
@@ -118,22 +112,13 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 // ‘Š‰‰Zq
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
-  if(in_expanded_always_) {
-    if(visited_always_.find(node) != visited_always_.end() && (!in_negative_ask_)) {
-      new_expanded_always_.insert(node);
-      accept(node->get_child());
-    }
-  } else {
-    accept(node->get_child());
-    if(!in_negative_ask_ && in_positive_ask_){
-      new_expanded_always_.insert(node);
-    }
-    visited_always_.insert(node);
+  accept(node->get_child());
+  if(in_positive_ask_){
+    new_expanded_always_.insert(node);
   }
+  visited_always_.insert(node);
 }
 
 
-
-
 } //namespace simulator
-} //namespace hydla 
+} //namespace hydla

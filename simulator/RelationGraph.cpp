@@ -59,10 +59,12 @@ std::string RelationGraph::VariableRelationNode::get_name() const
 
 int RelationGraph::get_connected_count() const
 {
+  return 0;
 }
 
 module_set_sptr RelationGraph::get_component(int index) const
 {
+  return module_set_sptr();
 }
 
 

@@ -145,10 +145,11 @@ void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_
   
   
   AskCollector ac(ms);
-  expanded_always_t *eat = new expanded_always_t();
-  positive_asks_t *pat = new positive_asks_t();
+  expanded_always_t eat;
+  positive_asks_t pat;
+  negative_asks_t nat;
 
-  ac.collect_ask(eat, pat, &prev_guards_);
+  ac.collect_ask(&eat, &pat, &nat, &prev_guards_);
   NonPrevSearcher searcher;
   for(negative_asks_t::iterator it = prev_guards_.begin(); it != prev_guards_.end();){
     if(searcher.judge_non_prev((*it)->get_guard())){
