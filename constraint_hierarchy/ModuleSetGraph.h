@@ -52,6 +52,8 @@ public:
    * 集合の集合のダンプ
    */
   virtual std::ostream& dump(std::ostream& s) const;
+  
+  virtual void reset(const module_set_list_t &mss);
 
   /**
    * ノードの情報の名前表現によるダンプ
@@ -80,7 +82,6 @@ public:
   virtual void mark_nodes();
   
 
-
 private:
   /**
    * 与えられたノードおよび，
@@ -97,6 +98,13 @@ private:
    * 辺
    */
   edges_t edges_;
+  
+  /**
+   * 特定のモジュール集合を含むことによる枝刈と，
+   * 極大性を満たさないことによる枝刈とを区別する必要がありそうなので，
+   * 極大性を満たさない枝刈のためにms_to_visitとは別に使用する変数．
+   */
+  std::set<module_set_sptr> visited_module_sets_;
 
 };
 

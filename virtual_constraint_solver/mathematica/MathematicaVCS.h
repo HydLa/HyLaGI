@@ -56,6 +56,8 @@ public:
    */
   virtual void add_constraint(const constraints_t& constraints);
   virtual void add_constraint(const node_sptr& constraint);
+  
+  virtual void reset_constraint(const variable_map_t& vm);
 
   virtual void add_guard(const node_sptr&);
 

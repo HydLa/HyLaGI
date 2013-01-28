@@ -1,8 +1,8 @@
 #include "PhaseSimulator.h"
 #include "AskCollector.h"
 #include "NonPrevSearcher.h"
-#include "RelationGraph.h"
 #include "VariableFinder.h"
+#include "SymbolicValue.h"
 
 using namespace hydla::simulator;
 
@@ -21,7 +21,6 @@ void PhaseSimulator::init_false_conditions(module_set_container_sptr& msc_no_ini
 void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
   msc_no_init->reverse_reset();
   while(msc_no_init->reverse_go_next()){
-    //    std::cout << "check : " << ms_tmp->get_name() << std::endl;
     FalseConditionsResult result = find_false_conditions(msc_no_init->get_reverse_module_set());
     if(result != FALSE_CONDITIONS_FALSE){
         msc_no_init->mark_super_module_set();
@@ -29,6 +28,7 @@ void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init
     msc_no_init->mark_r_current_node();
   }
 }
+
 
 PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
 {
@@ -44,58 +44,37 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
   
   judged_prev_map_.clear();
   
+  boost::shared_ptr<RelationGraph> graph;
+  
   if(state->phase_result->phase == PointPhase)
   {
     time_applied_map = apply_time_to_vm(state->phase_result->parent->variable_map, state->phase_result->current_time);
+    graph = pp_relation_graph_;
+    set_simulation_mode(PointPhase);
+  }else{
+    time_applied_map = state->phase_result->parent->variable_map;
+    graph = ip_relation_graph_;
+    set_simulation_mode(IntervalPhase);
   }
   
   while(state->module_set_container->go_next())
   {
     module_set_sptr ms = state->module_set_container->get_module_set();
-
-    HYDLA_LOGGER_MS("--- next module set ---\n",
-          ms->get_name(),
-          "\n",
-          ms->get_infix_string() );
     
-    timer::Timer ms_timer;
-    switch(state->phase_result->phase)
-    {
-      case PointPhase:
-      {
-        todo_and_results_t tmp = simulate_ms_point(ms, state, time_applied_map, consistent);
-        phases.insert(phases.begin(), tmp.begin(), tmp.end());
-        break;
-      }
-
-      case IntervalPhase: 
-      {
-        todo_and_results_t tmp = simulate_ms_interval(ms, state, consistent);
-        phases.insert(phases.begin(), tmp.begin(), tmp.end());
-        break;            
-      }
-      default:
-        assert(0);
-        break;
-    }
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
+    timer::Timer ms_timer;
+    todo_and_results_t tmp_phases = simulate_ms(ms, graph, time_applied_map, state, consistent);
     state->profile[module_sim_string] += ms_timer.get_elapsed_us();
-
+    phases.insert(phases.begin(), tmp_phases.begin(), tmp_phases.end());
     if(consistent)
     {
-      state->module_set_container->mark_nodes();
       has_next = true;
     }
-    else
-    {
-      state->module_set_container->mark_current_node();
-    }
-    if(!consistent && phases.size() > 1)
+    else if(phases.size() > 1)
     {
       state->profile["Phase"] += phase_timer.get_elapsed_us();
       return phases;
     }
-    
     state->phase_result->positive_asks.clear();
   }
   
@@ -110,39 +89,132 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
 }
 
 
+PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms,
+  boost::shared_ptr<RelationGraph>& graph, const variable_map_t& time_applied_map, simulation_phase_sptr_t& state, bool &consistent)
+{
+  HYDLA_LOGGER_MS("--- next module set ---\n",
+        ms->get_name(),
+        "\n",
+        ms->get_infix_string() );
+  graph->set_valid(ms.get());
+  todo_and_results_t phases; 
+  
+  consistent = false;
+  
+  // TODO:•Ï”•\‚ª•¡”ì‚ç‚ê‚é‚æ‚¤‚È•ªŠò‚ð–³Ž‹‚µ‚Ä‚¢‚é
+  
+  variable_map_t vm;
+  
+  if(state->phase_result->current_time->get_string() == "0" && state->phase_result->phase == PointPhase)
+  {
+    CalculateVariableMapResult cvm_res =
+      calculate_variable_map(ms, state, time_applied_map, vm, phases);
+    switch(cvm_res)
+    {
+      case CVM_CONSISTENT:
+      HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n", vm);
+      break;
+      
+      case CVM_INCONSISTENT:
+      HYDLA_LOGGER_MS("%% CVM_INCONSISTENT");
+      state->module_set_container->mark_nodes(*ms);
+      return phases;
+      break;
+      
+      case CVM_ERROR:
+      HYDLA_LOGGER_MS("%% CVM_ERROR");
+      consistent = true;
+      return phases;
+      break;
+              
+      case CVM_BRANCH:
+      HYDLA_LOGGER_MS("%% CVM_BRANCH");
+      return phases;
+      break;
+    }
+  }
+  else
+  {
+    for(int i = 0; i < graph->get_connected_count(); i++){
+      module_set_sptr connected_ms = graph->get_component(i);
+      HYDLA_LOGGER_MS("--- next connected module set ---\n",
+            connected_ms->get_name(),
+            "\n",
+            connected_ms->get_infix_string() );
+      SimulationTodo::ms_cache_t::iterator ms_it = state->ms_cache.find(*connected_ms);
+      if(ms_it != state->ms_cache.end())
+      {
+        merge_variable_map(vm, ms_it->second);
+      }
+      else
+      {
+        variable_map_t tmp_vm;
+        CalculateVariableMapResult cvm_res =
+          calculate_variable_map(connected_ms, state, time_applied_map, tmp_vm, phases);
+        switch(cvm_res)
+        {
+          case CVM_CONSISTENT:
+          HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n", tmp_vm);
+          state->ms_cache.insert(std::make_pair(*connected_ms, tmp_vm) );
+          HYDLA_LOGGER_MS("%%merge");
+          merge_variable_map(vm, tmp_vm);
+          break;
+          
+          case CVM_INCONSISTENT:
+          HYDLA_LOGGER_MS("%% CVM_INCONSISTENT");
+          state->module_set_container->mark_nodes(*connected_ms);
+          return phases;
+          break;
+          
+          case CVM_ERROR:
+          HYDLA_LOGGER_MS("%% CVM_ERROR");
+          consistent = true;
+          return phases;
+          break;
+                  
+          case CVM_BRANCH:
+          HYDLA_LOGGER_MS("%% CVM_BRANCH");
+          return phases;
+          break;
+        }
+      }
+    }
+  }
+  state->module_set_container->mark_nodes();
+  
+  todo_and_results_t tmp_phases = make_next_todo(ms, state, vm);
+  phases.insert(phases.begin(), tmp_phases.begin(), tmp_phases.end());
+  consistent = true;
+
+  return phases;
+}
+
+void PhaseSimulator::merge_variable_map(variable_map_t& lhs, variable_map_t& rhs)
+{
+  variable_map_t::iterator it = rhs.begin();
+  for(;it != rhs.end(); it++)
+  {
+    if(it->second.get() && !it->second->is_undefined())
+    {
+      lhs[it->first] = it->second;
+    }
+  }
+}
+
 void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const hydla::simulator::module_set_sptr& ms, continuity_map_t& c)
 {
   variable_set_ = &v;
   parameter_set_ = &p;
   variable_map_ = &m;
   
-  if(opts_->dump_relation){
-    RelationGraph::relation_set_t relations;
-    for(ModuleSet::module_list_const_iterator it = ms->begin();it != ms->end(); it++){
-      VariableFinder finder;
-      finder.visit_node(it->second, false);
-      VariableFinder::variable_set_t variables = finder.get_variable_set(),
-        prev_variables = finder.get_prev_variable_set();
-        
-      for(VariableFinder::variable_set_t::const_iterator v_it = variables.begin(); v_it != variables.end(); v_it++)
-      {
-        relations.push_back(std::make_pair(&(*it), 
-          RelationGraph::variable_t(get_variable(v_it->first, v_it->second), false)));
-      }
-      
-      for(VariableFinder::variable_set_t::const_iterator v_it = prev_variables.begin(); v_it != prev_variables.end(); v_it++)
-      {
-        relations.push_back(std::make_pair(&(*it), 
-          RelationGraph::variable_t(get_variable(v_it->first, v_it->second), true)));
-      }
-    }
-    
-    RelationGraph graph(relations);
-    
-    graph.dump_graph(std::cout);
-    exit(0);
-  }
+  pp_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, false);
+  ip_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, true);
   
+  if(opts_->dump_relation){
+    pp_relation_graph_->dump_graph(std::cout);
+    ip_relation_graph_->dump_graph(std::cout);
+    exit(EXIT_SUCCESS);
+  }
   
   AskCollector ac(ms);
   expanded_always_t eat;

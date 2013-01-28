@@ -149,10 +149,8 @@ std::ostream& ModuleSetList::dump_node_trees(std::ostream& s) const
 
 
 void ModuleSetList::mark_nodes(){
-  //visited_module_sets_.insert(*current_module_set_);
-  current_module_set_ = module_set_list_.end();
+  ms_to_visit_.clear();
 }
-
 
 } // namespace ch
 } // namespace hydla

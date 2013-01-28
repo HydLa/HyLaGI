@@ -24,8 +24,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbolic_simulator", "symbo
 		{C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5} = {C9AA2BDD-7B96-44E3-ABC4-55B72072EEA5}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FF9B5F1F-F0A5-4441-9D11-6E381AA1F61D}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_tests", "unit_tests\unit_tests.vcproj", "{FECB0762-D969-4C5F-AFA3-2BB522CA1CCC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2C310513-2A25-46EB-BE63-0FB67CFA9D7E} = {2C310513-2A25-46EB-BE63-0FB67CFA9D7E}

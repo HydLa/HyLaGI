@@ -59,15 +59,7 @@ public:
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
-
-  
-  /**
-   * そのノードと子ノードをマーキングし，以降探索しないようにする
-   */
-  virtual void mark_nodes();
-  
-  
-  
+  void mark_nodes();
 };
 
 } // namespace ch

@@ -141,7 +141,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   simulator_ = new SequentialSimulator(opts);
   ProgramOptions &po = ProgramOptions::instance();
 
-  if(opts.interactive_mode){ 
+  if(opts.interactive_mode){
     //opts->max_time = "100";
     InteractiveSimulator ss(opts);
     ss.set_phase_simulator(new SymbolicSimulator(opts));

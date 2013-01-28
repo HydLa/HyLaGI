@@ -13,6 +13,7 @@
 #include "PhaseResult.h"
 #include "TreeInfixPrinter.h"
 #include "Simulator.h"
+#include "RelationGraph.h"
 
 namespace hydla {
 namespace simulator {
@@ -21,16 +22,14 @@ class PhaseSimulator{
 
 public:  
 
-
   typedef PhaseResult                                           phase_result_t; 
   typedef boost::shared_ptr<phase_result_t>                     phase_result_sptr_t;
   typedef boost::shared_ptr<const phase_result_t>               phase_result_const_sptr_t;
   typedef std::vector<phase_result_sptr_t>                      phase_result_sptrs_t;
-  
+
   typedef SimulationTodo                                        simulation_phase_t;
   typedef boost::shared_ptr<simulation_phase_t>                 simulation_phase_sptr_t;
-  
-  
+
   struct TodoAndResult{
     simulation_phase_sptr_t todo;
     phase_result_sptr_t result;
@@ -40,7 +39,6 @@ public:
   };
   
   typedef std::vector<TodoAndResult>                            todo_and_results_t;
-  
   
   typedef PhaseSimulator                                    phase_simulator_t;
 
@@ -63,10 +61,16 @@ public:
     FALSE_CONDITIONS_VARIABLE_CONDITIONS
   } FalseConditionsResult;
   
+  typedef enum{
+    CVM_INCONSISTENT,
+    CVM_CONSISTENT,
+    CVM_BRANCH,
+    CVM_ERROR
+  } CalculateVariableMapResult;
+
   PhaseSimulator(const Opts& opts);
   
   virtual ~PhaseSimulator();
-
 
   /**
    * msが矛盾するような条件を予め調べる関数
@@ -88,12 +92,14 @@ public:
   virtual void check_all_module_set(module_set_container_sptr& msc_no_init);
 
   virtual void init_false_conditions(module_set_container_sptr& msc_no_init);
-
-  virtual todo_and_results_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
-  
+  /**
+   * merge rhs to lhs
+   */
+  virtual void merge_variable_map(variable_map_t& lhs, variable_map_t& rhs);
+
   /**
    * 新たなsimulation_phase_sptr_tの作成
    */
@@ -104,30 +110,35 @@ public:
    * 新たなPhaseResultの作成
    */
   simulation_phase_sptr_t create_new_simulation_phase(const simulation_phase_sptr_t& old) const;
-  
-  
-  /**
-   * モジュール集合の無矛盾性を確かめる関数．Point Phase版
-   * @return 次にシミュレーションするべきフェーズの集合
-   */
-  virtual todo_and_results_t simulate_ms_point(const module_set_sptr& ms,
-                           simulation_phase_sptr_t& state, variable_map_t &, bool& consistent) = 0;
 
   /**
-   * モジュール集合の無矛盾性を確かめる関数．Interval Phase版
-   * @return 次にシミュレーションするべきフェーズの集合
+   * PPモードとIPモードを切り替える
    */
-  virtual todo_and_results_t simulate_ms_interval(const module_set_sptr& ms,
-                              simulation_phase_sptr_t& state, bool& consistent) = 0;
+  virtual void set_simulation_mode(const Phase& phase) = 0;
+
+  todo_and_results_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
+  
+  todo_and_results_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
+                                  const variable_map_t& time_applied_map, simulation_phase_sptr_t& state, bool &consistent);
+
+
+  /**
+   * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
+   */
+
+  virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
+                           simulation_phase_sptr_t& state, const variable_map_t &, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
+
+  /**
+   * 与えられたフェーズの次のTODOを返す．
+   */ 
+  virtual todo_and_results_t make_next_todo(const module_set_sptr& ms, simulation_phase_sptr_t& state, variable_map_t &) = 0;
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
 
-  virtual void set_parameter_set(parameter_t param)
-  {
-  }
+  virtual void set_parameter_set(parameter_t param) = 0;
   virtual parameter_set_t get_parameter_set()
   {
-    // std::cout << "get param size" << parameter_set_->size() << std::endl;
     return *parameter_set_;
   }
   
@@ -149,8 +160,12 @@ protected:
   entailed_prev_map_t judged_prev_map_;
   negative_asks_t prev_guards_;
   
-  
   false_map_t false_conditions_;
+  
+  /**
+   * graph of relation between module_set for IP and PP
+   */
+  boost::shared_ptr<RelationGraph> pp_relation_graph_, ip_relation_graph_;
   
 };
 

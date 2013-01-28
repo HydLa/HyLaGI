@@ -73,8 +73,6 @@ namespace simulator {
 
 class PhaseSimulator;
 
-//TODO:PhaseResultTypeじゃなくて，ValueType入れるテンプレートクラスにできない？というか設計再検討．このクラスは何に対応している？
-//実行アルゴリズムだろうか？
 /**
  * シミュレーション全体の進行を担当するクラス
  * ・制約モジュール集合の半順序集合を入力とし，解軌道群を出力する

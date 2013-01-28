@@ -72,6 +72,17 @@ public:
   {
     return module_list_.size();
   }
+  
+  /**
+   * find module
+   */
+  module_list_const_iterator find(const module_t& mod) const;
+  
+  
+  /**
+   * モジュールを追加
+   */
+  void add_module(const module_t& mod){module_list_.push_back(mod);}
 
   bool is_super_set(const ModuleSet& subset_mod) const
   {
@@ -94,6 +105,11 @@ public:
    * モジュール数が同一の時は含まれているモジュール名により判断をおこなう
    */ 
   int compare(const ModuleSet& rhs) const;
+  
+  /**
+   * return whether this module_set includes given module_set or not
+   */
+  bool including(const ModuleSet& ms) const;
 
   /**
    * 集合の各制約モジュールに対してTreeVisitorの適用
@@ -106,6 +122,8 @@ public:
       (it->second)->accept(it->second, visitor);
     }
   }
+  
+  bool operator<(const ModuleSet& rhs) const{return (compare(rhs) < 0);}
 
 private:
   module_list_t module_list_;

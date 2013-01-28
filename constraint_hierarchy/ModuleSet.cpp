@@ -46,6 +46,16 @@ std::string ModuleSet::get_name() const
   return str;
 }
 
+ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
+{
+  module_list_t::const_iterator it  = module_list_.begin();    
+  module_list_t::const_iterator end = module_list_.end();
+
+  for(; it != end; ++it) {
+    if(it->first == mod.first && it->second->get_id() == mod.second->get_id()) return it;
+  }
+  return this->end();
+}
 
 std::string ModuleSet::get_infix_string() const 
 {
@@ -86,6 +96,23 @@ int ModuleSet::compare(const ModuleSet& rhs) const
     comp = (this_it++)->first.compare((rhs_it++)->first);
   }
   return comp;
+}
+
+
+bool ModuleSet::including(const ModuleSet& ms) const
+{
+  module_list_t::const_iterator ms_it   = ms.module_list_.begin();
+  module_list_t::const_iterator ms_end   = ms.module_list_.end();
+  
+  for(;ms_it != ms_end; ms_it++)
+  {
+    if(std::find(module_list_.begin(), module_list_.end(), *ms_it) == module_list_.end())
+    {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 std::ostream& operator<<(std::ostream& s, const ModuleSet& m)

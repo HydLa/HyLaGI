@@ -12,6 +12,8 @@
 #include "ModuleSetContainer.h"
 #include "ParseTree.h"
 #include "Timer.h"
+#include "DefaultVariable.h"
+#include "Value.h"
 
 namespace hydla {
 namespace simulator {
@@ -25,16 +27,6 @@ typedef enum Phase_ {
   PointPhase,
   IntervalPhase,
 } Phase;
-
-/**
- * 変化したask制約の状態
- */
-typedef enum AskState_ {
-  Positive2Negative,
-  Negative2Positive,
-} AskState;
-
-
 
 typedef enum{
   DFS,
@@ -101,7 +93,6 @@ typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  expanded_always
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
-typedef std::vector<std::pair<AskState, node_id_t> >             changed_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
 typedef std::map<std::string, int>                               continuity_map_t;
 
@@ -117,18 +108,21 @@ typedef std::map<std::string, unsigned int> profile_t;
  * シミュレーションすべきフェーズを表す構造体
  */
 struct SimulationTodo{
+  typedef std::map<hydla::ch::ModuleSet, std::map<DefaultVariable*, boost::shared_ptr<Value> > > ms_cache_t;
   /// 実行結果となるフェーズ
   boost::shared_ptr<PhaseResult> phase_result;
   /// フェーズ内で一時的に追加する制約．分岐処理などに使用
   constraints_t temporary_constraints;
   /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
   module_set_container_sptr module_set_container;
-  /// 判定済みのモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-  std::set<module_set_sptr> visited_module_sets;
+  /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
+  module_set_list_t ms_to_visit;
   /// プロファイリング結果
   profile_t profile;
   /// 所属するケースの計算時間
   int elapsed_time;
+  /// map to cache result of calculation for each module_set
+  ms_cache_t ms_cache;
   
   SimulationTodo(){}
   /// コピーコンストラクタ
@@ -136,7 +130,7 @@ struct SimulationTodo{
     phase_result(phase.phase_result), 
     temporary_constraints(phase.temporary_constraints),
     module_set_container(phase.module_set_container),
-    visited_module_sets(phase.visited_module_sets)
+    ms_to_visit(phase.ms_to_visit)
   {
   }
 };

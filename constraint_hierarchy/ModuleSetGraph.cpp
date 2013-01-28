@@ -239,16 +239,21 @@ std::ostream& ModuleSetGraph::dump_graphviz(std::ostream& s) const
   return s;
 }
 
-
-void ModuleSetGraph::mark_nodes(){
-  mark_visited_flag(*current_module_set_);
+void ModuleSetGraph::reset(const module_set_list_t &mss){
+  ms_to_visit_ = mss;
+  visited_module_sets_.clear();
 }
 
+void ModuleSetGraph::mark_nodes()
+{
+  mark_visited_flag(ms_to_visit_.front());
+}
 
 void ModuleSetGraph::mark_visited_flag(const module_set_sptr& ms)
 {
   if(visited_module_sets_.find(ms) != visited_module_sets_.end()) return;
   visited_module_sets_.insert(ms);
+  
 
   std::pair<edges_t::map_by<superset>::const_iterator, 
             edges_t::map_by<superset>::const_iterator>
@@ -256,6 +261,22 @@ void ModuleSetGraph::mark_visited_flag(const module_set_sptr& ms)
 
   for(; superset_range.first!=superset_range.second; ++superset_range.first) {
     mark_visited_flag(superset_range.first->get<subset>());
+  }
+  
+  {
+    module_set_list_t::iterator it = ms_to_visit_.begin();
+    for(; it != ms_to_visit_.end(); it++)
+    {
+      if((*it).get() == ms.get())
+      {
+        break;
+      }
+    }
+    
+    if(it != ms_to_visit_.end())
+    {
+      it = ms_to_visit_.erase(it++);
+    }
   }
 }
 

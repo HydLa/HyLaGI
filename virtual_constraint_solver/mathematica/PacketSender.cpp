@@ -352,20 +352,28 @@ void PacketSender::put_nodes(const std::vector<node_sptr>& constraints,
   HYDLA_LOGGER_REST("#*** End PacketSender::put_nodes: ***");
 }
 
-/**
- * 変数の一覧を送信．
- */
+// TODO 多分変数の送信の重複が多い
 void PacketSender::put_vars()
 {
-  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_vars ***",
-    "var size:", vars_.size());
+  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_vars ***");
   
-  ml_->put_function("List", vars_.size());
-
+  
   PacketSender::vars_const_iterator it  = vars_begin();
   PacketSender::vars_const_iterator end = vars_end();
+
+  int send_size = 0;
+  
   for(; it!=end; ++it) {
-    put_var(*it);
+    send_size += it->get<1>()+1;
+  }
+
+  ml_->put_function("List", send_size);
+  it  = vars_begin();
+  for(; it!=end; ++it) {
+    for(int i = 0; i <= it->get<1>(); i++)
+    {
+      put_var(boost::make_tuple(it->get<0>(), i, it->get<2>()));
+    }
   }
   HYDLA_LOGGER_REST("#*** End PacketSender::put_vars: ***");
 }

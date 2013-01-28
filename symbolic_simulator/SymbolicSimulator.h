@@ -33,12 +33,6 @@ public:
 
   virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
 
-  virtual todo_and_results_t simulate_ms_point(const module_set_sptr& ms,
-                           simulation_phase_sptr_t& state, variable_map_t &vm, bool& consistent);
-  
-  virtual todo_and_results_t simulate_ms_interval(const module_set_sptr& ms,
-                              simulation_phase_sptr_t& state, bool& consistent);
-
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
   virtual void set_parameter_set(parameter_t param);
   virtual parameter_set_t get_parameter_set();
@@ -58,13 +52,33 @@ private:
     const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &,
     parameter_map_t &);
 
-  
+
   variable_map_t shift_variable_map_time(const variable_map_t& vm,const time_t &time);
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
   
+  /**
+   * PPモードとIPモードを切り替える
+   */
+
+  virtual void set_simulation_mode(const Phase& phase);
+  
+
+  /**
+   * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
+   */
+
+  virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
+                           simulation_phase_sptr_t& state, const variable_map_t &, variable_map_t& result_vm, todo_and_results_t& result_todo);
+
+  /**
+   * 与えられたフェーズの次のTODOを返す．
+   */
+  virtual todo_and_results_t make_next_todo(const module_set_sptr& ms, simulation_phase_sptr_t& state, variable_map_t &);
+
   CalculateClosureResult calculate_closure(simulation_phase_sptr_t& state,
     const module_set_sptr& ms);
+
   /**
    * Check whether a guard is entailed or not.
    * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
@@ -89,6 +103,8 @@ private:
   }
   
   continuity_map_t variable_derivative_map_;
+  
+  Phase current_phase_;
 
   /// 使用するソルバへのポインタ
   boost::shared_ptr<solver_t> solver_;

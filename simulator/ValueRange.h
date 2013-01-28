@@ -21,11 +21,11 @@ public:
   ValueRange():is_unique_(false){}
 
   /**
-   * 未定義値かどうか
+   * 完全な未定義値かどうか
    */
   bool is_undefined() const
   {
-    return (lower_.value.get() && upper_.value.get());
+    return ((!lower_.value.get() || lower_.value->is_undefined()) && (!upper_.value.get() || upper_.value->is_undefined()));
   }
   
   /**

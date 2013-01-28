@@ -59,7 +59,7 @@ public:
         if( opts_->max_phase >= 0 && pr->step > opts_->max_phase)
           continue;
         all_state_.push_back(state); 
-        state->module_set_container->reset(state->visited_module_sets);
+        state->module_set_container->reset(state->ms_to_visit);
         PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
 
         if(pr->phase == PointPhase){
@@ -428,7 +428,6 @@ public:
       parameter_map_t           parameter_map;
       expanded_always_t         expanded_always;
       positive_asks_t           positive_asks;
-      changed_asks_t            changed_asks;
       int                       step;
       //hydla::ch::ModuleSet module_set;
       CauseOfTermination         cause_of_termination;
@@ -447,7 +446,6 @@ public:
       parameter_map_t::const_iterator p_it  = parameter_map.begin();
       expanded_always = temp->expanded_always;
       positive_asks   = temp->positive_asks;
-      changed_asks    = temp->changed_asks;
       step            = temp->step;
       //module_set           = *(temp->module_set);
       cause_of_termination = temp->cause_of_termination;
@@ -532,7 +530,6 @@ public:
       parameter_map_t           parameter_map;
       expanded_always_t         expanded_always;
       positive_asks_t           positive_asks;
-      changed_asks_t            changed_asks;
       int                       step;
       //hydla::ch::ModuleSet module_set;
       CauseOfTermination         cause_of_termination;
@@ -555,9 +552,9 @@ public:
       for(int i=0;i<vm_size;i++){
         //ifs >> v_first;
         ifs.read((char *) &v_first_size, sizeof(int));
-        char buf[v_first_size+1];
+        char* buf = new char[v_first_size+1];
         ifs.read(buf, v_first_size);
-        buf[v_first_size]=0; 
+        buf[v_first_size]=0;
         cout << 1 << endl;
         v_first = buf;
         cout << 1 << endl;
@@ -565,11 +562,13 @@ public:
         cout << 1 << endl;
         //ifs >> v_second;
         ifs.read((char *) &v_second_size, sizeof(int));
-        char buf2[v_second_size+1];
+        char* buf2 = new char[v_second_size+1];
         ifs.read(buf, v_second_size);
         buf2[v_second_size]=0; 
         v_second = buf;
         cout << "second " << v_second << " size "<< endl;
+        delete []buf;
+        delete []buf2;
       }
       */
       //ifs >> pm_size;;

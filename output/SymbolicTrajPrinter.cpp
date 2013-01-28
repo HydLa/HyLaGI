@@ -32,6 +32,7 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << "time\t: " << *result.current_time << "\n";
   }
   output_variable_map(sstr, result.variable_map);
+  
   return sstr.str();
 }
 
@@ -53,6 +54,7 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
     stream << *(it->first) << "\t: " << *it->second << "\n";
+    
   }
 }
 
@@ -65,16 +67,16 @@ void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phas
 
 void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& root) const
 {
-    if(root->children.size() == 0){
-      cout << "No Result." << endl;
-      return;
-    }
-    int i=1, j=1;
-    phase_result_sptrs_t::const_iterator it = root->children.begin(), end = root->children.end();
-    for(;it!=end;it++){
-      std::vector<std::string> result;
-      output_result_node(*it, result, i, j);
-    }
+  if(root->children.size() == 0){
+    cout << "No Result." << endl;
+    return;
+  }
+  int i=1, j=1;
+  phase_result_sptrs_t::const_iterator it = root->children.begin(), end = root->children.end();
+  for(;it!=end;it++){
+    std::vector<std::string> result;
+    output_result_node(*it, result, i, j);
+  }
 }
 
 

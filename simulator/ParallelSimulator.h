@@ -69,12 +69,12 @@ class ParallelSimulator: public Simulator{
   
   
   /**
-   * シミュレーション対象となるパースツリー
+   * parse tree to simulate
    */
   parse_tree_sptr parse_tree_;
 
   thread_group thread_group_;
-
+  
   std::vector<boost::shared_ptr<ParallelSimulatorWorker> > workers_;
 
 };

@@ -16,6 +16,7 @@
 #include <boost/function.hpp>
 
 #include "Types.h"
+#include "PhaseSimulator.h"
 #include "../symbolic_simulator/SymbolicTypes.h"
 
 namespace hydla {
@@ -36,7 +37,7 @@ public:
   typedef hydla::symbolic_simulator::value_range_t           value_range_t;
   typedef hydla::symbolic_simulator::time_t                  time_t;
   typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
-  typedef std::map<variable_t*, value_range_t>               variable_range_map_t;
+  typedef std::map<variable_t*, simulator::ValueRange>       variable_range_map_t;
   typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
   typedef std::vector<parameter_map_t>                       parameter_maps_t;
   typedef hydla::simulator::tells_t                          tells_t;
@@ -46,7 +47,6 @@ public:
   typedef boost::shared_ptr<hydla::parse_tree::Ask>          ask_node_sptr;
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
-  typedef hydla::simulator::changed_asks_t                   changed_asks_t;
   typedef hydla::simulator::not_adopted_tells_list_t         not_adopted_tells_list_t;
   typedef hydla::symbolic_simulator::variable_set_t          variable_set_t;
   typedef hydla::symbolic_simulator::parameter_set_t         parameter_set_t;
@@ -131,6 +131,11 @@ public:
    */
   virtual void add_constraint(const constraints_t& constraints){assert(0);}
   virtual void add_constraint(const node_sptr& constraint){assert(0);}
+  
+  /**
+   * 変数表を用いて制約ストアを上書きする．
+   */
+  virtual void reset_constraint(const variable_map_t& vm){assert(0);}
 
   virtual void add_guard(const node_sptr&){assert(0);}
 

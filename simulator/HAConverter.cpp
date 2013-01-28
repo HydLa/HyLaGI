@@ -54,7 +54,7 @@ namespace simulator {
         }
         
         try{
-          state->module_set_container->reset(state->visited_module_sets);
+          state->module_set_container->reset(state->ms_to_visit);
 		      timer::Timer phase_timer;
 		      PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
 

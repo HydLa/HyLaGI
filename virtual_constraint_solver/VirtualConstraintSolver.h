@@ -46,7 +46,6 @@ public:
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
-  typedef hydla::simulator::changed_asks_t                   changed_asks_t;
   typedef boost::function<void (const time_t& time, 
                                 const variable_map_t& vm)>   output_function_t;
   typedef hydla::simulator::module_set_sptr                  module_set_sptr;
@@ -65,7 +64,6 @@ public:
     typedef std::vector<next_phase_result_t> next_phase_result_list_t;
     
     next_phase_result_list_t states;
-    changed_asks_t          changed_asks;
   } integrate_result_t;
 
   VirtualConstraintSolver()

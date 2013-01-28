@@ -106,7 +106,7 @@ public:
     return log_level_;
   }
 
-  bool is_valid_level(LogLevel level)
+  bool valid_level(LogLevel level)
   {
     if(log_level_ == Debug){
       switch(level){
@@ -175,7 +175,7 @@ private:
 
 #define HYDLA_LOGGER_LOG_WRITE_MACRO(LEVEL, FUNC, ARGS) {             \
     hydla::logger::Logger& logger=hydla::logger::Logger::instance();  \
-    if(logger.is_valid_level(hydla::logger::Logger::LEVEL)) {         \
+    if(logger.valid_level(hydla::logger::Logger::LEVEL)) {         \
       logger. FUNC ARGS;                                              \
     }                                                                 \
   }

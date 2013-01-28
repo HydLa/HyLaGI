@@ -11,7 +11,9 @@ namespace simulator {
 class RelationGraph{
 
 public:
+  typedef hydla::ch::ModuleSet module_set_t;
   typedef hydla::ch::ModuleSet::module_t module_t;
+  typedef std::list<DefaultVariable> variable_set_t;
   
   typedef struct Variable_{
     hydla::simulator::DefaultVariable* variable;
@@ -27,16 +29,20 @@ public:
   }variable_t;
   
   struct RelationNode;
-  typedef std::vector<RelationNode* > edges_t;
-  typedef std::vector<RelationNode* > nodes_t;
+  struct ModuleRelationNode;
+  struct VariableRelationNode;
+  typedef std::vector<ModuleRelationNode* > mod_nodes_t;
+  typedef std::vector<VariableRelationNode* > var_nodes_t;
 
   struct RelationNode{
-    edges_t edges;
+    bool valid, visited;
     virtual std::string get_name() const = 0;
+    RelationNode():valid(true), visited(false){}
   };
 
   struct ModuleRelationNode:public RelationNode{
     const module_t* module;
+    var_nodes_t edges;
     ModuleRelationNode():module(NULL)
     {}
     ModuleRelationNode(const module_t* mod):module(mod)
@@ -44,24 +50,22 @@ public:
     virtual std::string get_name() const
     {return module->first;}
   };
-
+  
+  /**
+   * VariableRelationNode has members 'valid' and 'visited' too, but they are currently ignored.
+   */
   struct VariableRelationNode:public RelationNode{
     variable_t variable;
+    mod_nodes_t edges;
     VariableRelationNode(variable_t var):variable(var)
     {}
     virtual std::string get_name() const;
   };
   
-  typedef std::vector<std::pair<const module_t *, variable_t > > relation_set_t;
-
-  RelationGraph(const relation_set_t& rel);
+  static boost::shared_ptr<RelationGraph> new_graph(const module_set_t &ms, variable_set_t &vm, bool in_IP);
 
   virtual ~RelationGraph();
   
-  /**
-   * Add nodes and edges to the graph.
-   */
-  void add(const relation_set_t &rel);
 
   /**
    * Print the structure of the graph in graphviz format.
@@ -69,17 +73,47 @@ public:
   std::ostream& dump_graph(std::ostream & os) const;
   
   /**
+   * set a module valid or invalid
+   */
+  void set_valid(const module_t *mod, bool valid);
+  
+  /**
+   * set modules in ms to argument valid
+   * set modules not in ms negation of argument invalid
+   */
+  void set_valid(const module_set_t *ms);
+  
+  /**
    * Get the number of connected component in the graph.
    */
-  int get_connected_count() const;
+  int get_connected_count();
   
   /**
    * Get the module_set corresponding to the connected component specified by index.
    */
-  module_set_sptr get_component(int index) const;  
+  boost::shared_ptr<module_set_t> get_component(unsigned int index);  
 
 private:
-  nodes_t node_list_;
+  typedef std::map<const module_t *, ModuleRelationNode*> module_map_t;
+  typedef std::map<variable_t, VariableRelationNode*> variable_map_t;  
+  typedef std::vector<std::pair<const module_t *, variable_t > > relation_set_t;
+
+  RelationGraph(const relation_set_t& rel);
+  
+  /**
+   * Add nodes and edges to the graph.
+   */
+  void add(const relation_set_t &rel);
+  
+  void check_connected_components();
+  void visit_node(ModuleRelationNode* node, module_set_t &ms);
+  void visit_edges(ModuleRelationNode* node, module_set_t &ms);
+  
+  mod_nodes_t mod_list_;
+  var_nodes_t var_list_;
+  
+  std::vector<module_set_t> connected_components_;
+  bool check_completed;
   std::map<const module_t *, ModuleRelationNode*> module_map_;
   std::map<variable_t, VariableRelationNode*> variable_map_;
 };

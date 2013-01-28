@@ -15,32 +15,34 @@ ModuleSetContainer::ModuleSetContainer(module_set_sptr m) :
 {}
 
 bool ModuleSetContainer::eliminate_current_node(){
-  current_module_set_ = module_set_list_.erase(current_module_set_);
-  return current_module_set_ != module_set_list_.end();
+  for(module_set_list_t::iterator it = module_set_list_.begin(); it != module_set_list_.end(); it++)
+  {
+    if((*it)->get_name() == ms_to_visit_.front()->get_name())
+    {
+      module_set_list_.erase(it);
+      break;
+    }
+  }
+  ms_to_visit_.erase(ms_to_visit_.begin());
+  return !ms_to_visit_.empty();
 }
 
 void ModuleSetContainer::mark_super_module_set(){
-  module_set_list_t::reverse_iterator it = r_current_module_set_;
+  module_set_list_t::reverse_iterator it = r_ms_to_visit_.rbegin();
   it++;
-  for(; it != module_set_list_.rend(); it++){
-    if((*it)->is_super_set(*(*r_current_module_set_))){
-      visited_module_sets_.insert(*it);
+  for(; it != r_ms_to_visit_.rend();it++){
+    if((*it)->is_super_set(*r_ms_to_visit_.front())){
+      r_ms_to_visit_.erase(--it.base());
     }
   }
 }
 
 bool ModuleSetContainer::reverse_go_next(){
-  while(r_current_module_set_ != module_set_list_.rend() && visited_module_sets_.find(*r_current_module_set_) != visited_module_sets_.end()){
-    r_current_module_set_++;
-  }
-  return r_current_module_set_ != module_set_list_.rend();
+  return !r_ms_to_visit_.empty();
 }
 
 bool ModuleSetContainer::go_next(){
-  while(current_module_set_ != module_set_list_.end() && visited_module_sets_.find(*current_module_set_) != visited_module_sets_.end()){
-    current_module_set_++;
-  }
-  return current_module_set_ != module_set_list_.end();
+  return !ms_to_visit_.empty();
 }
 
 module_set_sptr ModuleSetContainer::get_max_module_set() const{
@@ -48,45 +50,58 @@ module_set_sptr ModuleSetContainer::get_max_module_set() const{
 }
 
 module_set_sptr ModuleSetContainer::get_reverse_module_set() const{ 
-  return *r_current_module_set_;
+  return r_ms_to_visit_.back();
 }
 
 module_set_sptr ModuleSetContainer::get_module_set()const{
-  return *current_module_set_;
+  return ms_to_visit_.front();
 }
 
+ModuleSetContainer::module_set_list_t ModuleSetContainer::get_ms_to_visit()const{
+  return ms_to_visit_;
+}
 
-std::set<module_set_sptr> ModuleSetContainer::get_visited_module_sets()const{
-  return visited_module_sets_;
+ModuleSetContainer::module_set_list_t ModuleSetContainer::get_full_ms_list()const{
+  return module_set_list_;
 }
 
 void ModuleSetContainer::mark_r_current_node(){
-  visited_module_sets_.insert(*r_current_module_set_);
+  r_ms_to_visit_.erase(r_ms_to_visit_.rbegin().base());
 }
 
 void ModuleSetContainer::mark_current_node(){
-  visited_module_sets_.insert(*current_module_set_);
+  ms_to_visit_.erase(ms_to_visit_.begin());
 }
 
 void ModuleSetContainer::reverse_reset(){
-  r_current_module_set_ = module_set_list_.rbegin();
-  visited_module_sets_.clear();
+  r_ms_to_visit_ = module_set_list_;
 }
-
 
 void ModuleSetContainer::reset(){
-  //module_set_list_t::iterator it  = current_module_set_ = module_set_list_.begin();
-  //module_set_list_t::iterator end = module_set_list_.end();
-  current_module_set_ = module_set_list_.begin();
-  // ëSÉmÅ[ÉhÇñ¢íTçıèÛë‘Ç…Ç∑ÇÈ
-  visited_module_sets_.clear();
+  reset(module_set_list_);
 }
 
 
-void ModuleSetContainer::reset(const std::set<module_set_sptr> &mss){
-  visited_module_sets_ = mss;
-  current_module_set_ = module_set_list_.begin();
-  go_next();
+void ModuleSetContainer::reset(const module_set_list_t &mss){
+  ms_to_visit_ = mss;
+}
+
+void ModuleSetContainer::mark_nodes(const ModuleSet& ms){
+  unsigned int diff;
+  
+  module_set_list_t::iterator it = ms_to_visit_.begin();
+  do
+  {
+    diff = (*it)->size() - ms.size();
+    if((*it)->including(ms))
+    {
+      it = ms_to_visit_.erase(it);
+    }
+    else
+    {
+      it++;
+    }
+  }while(diff > 0 && it != ms_to_visit_.end());
 }
 
 } // namespace ch

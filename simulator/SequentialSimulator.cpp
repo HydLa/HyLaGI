@@ -41,7 +41,7 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
     }
 
     try{
-      state->module_set_container->reset(state->visited_module_sets);
+      state->module_set_container->reset(state->ms_to_visit);
       timer::Timer phase_timer;
       PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
       
@@ -60,12 +60,13 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
               tr.todo->module_set_container = msc_no_init_;
             }
             else{
-              // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
               tr.todo->module_set_container = msc_original_;
             }
+            tr.todo->ms_to_visit = tr.todo->module_set_container->get_full_ms_list();
             tr.todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
             push_simulation_phase(tr.todo);
           }if(tr.result.get() != NULL){
+            HYDLA_LOGGER_PHASE("%% push result");
             state->phase_result->parent->children.push_back(tr.result);
           }
           if(!opts_->nd_mode)break;
@@ -84,7 +85,6 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
           HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
         }
       }
-      
       
       if(!phase_simulator_->is_safe() && opts_->stop_at_failure){
         HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
@@ -112,6 +112,8 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
   if(!error_str.empty()){
     std::cout << error_str;
   }
+  
+  HYDLA_LOGGER_PHASE("%% simulation ended");
   return result_root_;
 }
 
@@ -135,6 +137,7 @@ void SequentialSimulator::initialize(const parse_tree_sptr& parse_tree){
     pr->step         = 0;
     pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
     state->module_set_container = msc_original_;
+    state->ms_to_visit = msc_original_->get_full_ms_list();
     pr->parent = result_root_;
     push_simulation_phase(state);
 }
