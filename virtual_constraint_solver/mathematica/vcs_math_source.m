@@ -519,6 +519,12 @@ resetConstraint[] := (
   parameters = {};
 );
 
+
+resetConstraintForVariable[] := (
+  constraint = True;
+  variables = tmpVariables = prevVariables = {};
+);
+
 addGuard[gu_, vars_] := (
   guard = guard && gu;
   guardVars = Union[guardVars,vars];
@@ -764,8 +770,6 @@ publicMethod[
 
 calculateNextPointPhaseTime::mnmz = "Failed to minimize in calculateNextPointPhaseTime";
 
-
-
 getDerivativeCount[variable_[_]] := 0;
 
 getDerivativeCount[Derivative[n_][f_][_]] := n;
@@ -789,7 +793,6 @@ createIntegratedValue[variable_, integRule_] := (
     Simplify[derivativeExpanded]
   ]
 );
-
 
 (* 微分方程式系を解く．
   単にDSolveをそのまま使用しない理由は以下．
@@ -889,7 +892,6 @@ Check[
 
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
-
 
 (*
  * 式に対して与えられた時間を適用する

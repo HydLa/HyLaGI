@@ -278,7 +278,15 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   create_result_t create_result;
   if(token == MLTKSYM){
     std::string name = ml_.get_symbol();
-    assert(name == "underConstraint");
+    if(name == "True")
+    {
+      variable_range_map_t map(original_range_map_);
+      create_result.result_maps.push_back(map);
+    }
+    else
+    {
+      assert(name == "underConstraint");
+    }
   }
   else{
     // List関数の要素数（式の個数）を得る
@@ -374,11 +382,12 @@ void MathematicaVCS::add_constraint(const node_sptr& constraint)
 }
 
 
+// TODO: 現状，制約に関しては変数自体を送り，変数リストは全部送るという，CalculateNextPPTime専用の仕様になってしまっているので，どうにかする．
 void MathematicaVCS::reset_constraint(const variable_map_t& vm)
 {
   PacketSender ps(ml_);
   
-  ml_.put_function("resetConstraint", 0);
+  ml_.put_function("resetConstraintForVariable", 0);
   ml_.receive();
   ml_.MLNewPacket();
   
@@ -404,7 +413,14 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm)
       ps.put_value(it->second, arg);
     }
   }
-  ps.put_vars();
+  
+  it = vm.begin();
+  ml_.put_function("List", vm.size());
+  for(; it!=vm.end(); ++it)
+  {
+    ps.put_var(it->first->get_name(), it->first->get_derivative_count(), arg);
+  }
+  
   ml_.receive(); 
   ml_.MLNewPacket(); 
 }

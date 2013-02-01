@@ -3,6 +3,7 @@
 #include "NonPrevSearcher.h"
 #include "VariableFinder.h"
 #include "SymbolicValue.h"
+#include "SimulateError.h"
 
 using namespace hydla::simulator;
 
@@ -36,7 +37,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
   HYDLA_LOGGER_PHASE("--- parent variable map ---\n", state->phase_result->parent->variable_map);
   HYDLA_LOGGER_PHASE("--- parameter map ---\n", state->phase_result->parameter_map);
   timer::Timer phase_timer;
-
+  
   todo_and_results_t phases; 
   bool has_next = false;
   is_safe_ = true;
@@ -76,6 +77,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_pha
       return phases;
     }
     state->phase_result->positive_asks.clear();
+    state->phase_result->negative_asks.clear();
   }
   
   //–³–µ‚‚È‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ª‘¶Ý‚µ‚È‚¢ê‡
@@ -123,8 +125,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_ms(const hydla::ch::
       
       case CVM_ERROR:
       HYDLA_LOGGER_MS("%% CVM_ERROR");
-      consistent = true;
-      return phases;
+      throw SimulateError("CalculateVariableMap for " + ms->get_name());
       break;
               
       case CVM_BRANCH:
@@ -135,6 +136,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_ms(const hydla::ch::
   }
   else
   {
+    HYDLA_LOGGER_MS("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){
       module_set_sptr connected_ms = graph->get_component(i);
       HYDLA_LOGGER_MS("--- next connected module set ---\n",
@@ -168,8 +170,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_ms(const hydla::ch::
           
           case CVM_ERROR:
           HYDLA_LOGGER_MS("%% CVM_ERROR");
-          consistent = true;
-          return phases;
+          throw SimulateError("CalculateVariableMap for " + connected_ms->get_name());
           break;
                   
           case CVM_BRANCH:
