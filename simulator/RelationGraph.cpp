@@ -164,7 +164,7 @@ boost::shared_ptr<RelationGraph::module_set_t> RelationGraph::get_component(unsi
   if(!check_completed){
     check_connected_components();
   }
-  assert(index < connected_components_);
+  assert(index < connected_components_.size());
   return boost::shared_ptr<module_set_t>(new module_set_t(connected_components_[index]));
 }
 

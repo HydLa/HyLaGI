@@ -619,7 +619,7 @@ SymbolicSimulator::calculate_variable_map(
   
   if(results.size() != 1){
     // TODO:現状，ここで変数表が複数現れる場合は考えていない．
-    assert(current_phase_ != PoinPhase);
+    assert(current_phase_ != PointPhase);
     state->phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
     result_todo.push_back(PhaseSimulator::TodoAndResult(simulation_phase_sptr_t(), state->phase_result));
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::calculate_variable_map(result.size() != 1 && consistent = true)***\n");
