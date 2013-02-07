@@ -1,18 +1,18 @@
 /* A program for a collision of two balls */
+/* m1 = m2. e = 1. rad = sqrt(2). */
 
-
-INIT <=> x=0 & y=0 & x1=2 & y1=4 & x'=1 & y'=2 & x1'=0 & y1'=0  .
-CONST <=>[]( x''=0 & y''=0 & x1''=0 & y1''=0 ).
-BOUNCE <=>[]((x1- - x-)^2 + (y1- - y-)^2 = 4 =>
-  x1'= ((x'-*(x1- - x-) + y'-*(y1- - y-))*(x1- - x-))/((x1- -
-  x-)^2 + (y1- - y-)^2)
-& y1'= ((x'-*(x1- - x-) + y'-*(y1- - y-))*(y1- - y-))/((x1- -
-  x-)^2 + (y1- - y-)^2)
-& x'= ((x'-*(y- - y1-) + y'-*(x1- - x-))*(y- - y1-))/((x1- -
-  x-)^2 + (y- - y1-)^2)
-& y'= ((x'-*(y- - y1-) + y'-*(x1- - x-))*(x1- - x-))/((x1- -
-  x-)^2 + (y- - y1-)^2)
-
+INIT(x, y, ix, iy, ixd, iyd) <=> x=ix & y=iy & x'=ixd & y'=iyd.
+CONST(x, y) <=>[](x''=0 & y''=0).
+COLLISION(xa, ya, xb, yb) <=>[]((xa- - xb-)^2 + (ya- - yb-)^2 = 4 =>
+  xa'= ((xb'-*(xa- - xb-) + yb'-*(ya- - yb-))*(xa- - xb-))/((xa- -
+  xb-)^2 + (ya- - yb-)^2)
+& ya'= ((xb'-*(xa- - xb-) + yb'-*(ya- - yb-))*(ya- - yb-))/((xa- -
+  xb-)^2 + (ya- - yb-)^2)
+& xb'= ((xb'-*(yb- - ya-) + yb'-*(xa- - xb-))*(yb- - ya-))/((xa- -
+  xb-)^2 + (yb- - ya-)^2)
+& yb'= ((xb'-*(yb- - ya-) + yb'-*(xa- - xb-))*(xa- - xb-))/((xa- -
+  xb-)^2 + (yb- - ya-)^2)
 ).
 
-INIT,CONST <<BOUNCE.
+INIT(x1, y1, 0, 0, 1, 5/2), INIT(x2, y2, 2, 4, 0, 0).
+(CONST(x1, y1) & CONST(x2, y2)) << COLLISION(x2, y2, x1, y1).
