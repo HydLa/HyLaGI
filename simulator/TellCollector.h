@@ -10,11 +10,11 @@
 #include "Node.h"
 #include "ModuleSet.h"
 #include "TreeVisitor.h"
-
-#include "./Types.h"
+#include "AskCollector.h"
 
 namespace hydla {
 namespace simulator {
+
 
 /**
  * tellノードを集めるビジタークラス

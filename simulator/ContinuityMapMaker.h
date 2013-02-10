@@ -10,10 +10,10 @@
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 
-#include "./Types.h"
-
 namespace hydla {
 namespace simulator {
+
+typedef std::map<std::string, int>                               continuity_map_t;
 
 /**
  * Tellノードを調べ，連続性の根拠となる変数（とその微分値）の出現を数えるクラス
@@ -75,6 +75,9 @@ private:
   // 負数を追加するかどうか
   bool negative_;
 };
+
+
+std::ostream& operator<<(std::ostream& s, const continuity_map_t& continuity_map);
 
 } //namespace simulator
 } //namespace hydla 

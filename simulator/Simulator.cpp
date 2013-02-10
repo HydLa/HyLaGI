@@ -1,7 +1,67 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
 
-using namespace hydla::simulator;
+
+namespace {
+  struct NodeDumper {
+      
+    template<typename T>
+    NodeDumper(T it, T end) 
+    {
+      for(; it!=end; ++it) {
+        ss << **it << "\n";
+      }
+    }
+
+    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+    {
+      s << nd.ss.str();
+      return s;
+    }
+
+    std::stringstream ss;
+  };
+}
+
+
+
+
+namespace hydla {
+namespace simulator {
+
+
+std::ostream& operator<<(std::ostream& s, const constraints_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const ask_set_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const tells_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const collected_tells_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
+std::ostream& operator<<(std::ostream& s, const expanded_always_t& a)
+{
+  s << NodeDumper(a.begin(), a.end());
+  return s;
+}
+
+
+
 
 Simulator::Simulator(Opts& opts):opts_(&opts){}
 
@@ -21,14 +81,6 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   opts_->assertion = parse_tree->get_assertion_node();
   result_root_.reset(new phase_result_t());
   
-  //出力変数無指定な場合の出力制御（全部出力）
-  /*
-  if(opts_->output_variables.empty()){
-    BOOST_FOREACH(const variable_set_t::value_type& i, variable_set_) {
-      opts_->output_variables.insert(i.get_string());
-    }
-  }
-  */
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
   continuity_map_t  cont(parse_tree->get_variable_map());
@@ -73,5 +125,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       variable_map_[&(variable_set_.front())] = value_t();
     }
   }
+}
 
+}
 }

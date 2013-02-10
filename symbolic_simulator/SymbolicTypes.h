@@ -11,8 +11,6 @@
 #include "DefaultParameter.h"
 #include "PhaseSimulator.h"
 
-#include "Types.h"
-
 namespace hydla {
 namespace symbolic_simulator {
 
@@ -27,7 +25,7 @@ namespace symbolic_simulator {
   typedef simulator::simulation_phase_sptr_t     simulation_phase_sptr_t;
   typedef simulator::PhaseSimulator::todo_and_results_t          todo_and_results_t;
   typedef std::vector<simulator::PhaseResult>    phase_result_sptr_t;
-  typedef simulator::Simulator::variable_t       variable_t;
+  typedef simulator::variable_t       variable_t;
   typedef simulator::DefaultParameter            parameter_t;
   typedef simulator::ValueRange                  value_range_t;
   typedef simulator::PhaseResult::variable_map_t  variable_map_t;
@@ -42,8 +40,8 @@ namespace symbolic_simulator {
   typedef simulator::negative_asks_t             negative_asks_t;
   typedef simulator::not_adopted_tells_list_t    not_adopted_tells_list_t;
   typedef simulator::continuity_map_t            continuity_map_t;
-  typedef simulator::Simulator::variable_set_t   variable_set_t;
-  typedef simulator::Simulator::parameter_set_t  parameter_set_t;
+  typedef simulator::variable_set_t   variable_set_t;
+  typedef simulator::parameter_set_t  parameter_set_t;
   
   typedef simulator::parse_tree_sptr  parse_tree_sptr;
   

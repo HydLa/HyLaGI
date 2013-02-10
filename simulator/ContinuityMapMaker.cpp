@@ -55,5 +55,13 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Previous> no
 }
 
 
+std::ostream& operator<<(std::ostream& s, const continuity_map_t& continuity_map)
+{
+  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end(); it++){
+    s << it->first << "," << it->second << "\n";
+  }
+  return s;
+}
+
 } //namespace simulator
 } //namespace hydla 

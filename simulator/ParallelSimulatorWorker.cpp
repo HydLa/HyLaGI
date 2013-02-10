@@ -44,7 +44,7 @@ void ParallelSimulatorWorker::set_thread_state(string str){
 /**
  * 各スレッドが与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
  */
-ParallelSimulatorWorker::phase_result_const_sptr_t ParallelSimulatorWorker::simulate()
+phase_result_const_sptr_t ParallelSimulatorWorker::simulate()
 {
   std::string error_str;
   while(!end_flag_) {

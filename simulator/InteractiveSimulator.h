@@ -17,28 +17,13 @@ using namespace hydla::logger;
 namespace hydla {
 namespace simulator {
 
+typedef PhaseSimulator::TodoAndResult                   todo_and_result_t;
+typedef hydla::vcs::SymbolicVirtualConstraintSolver     solver_t;
+typedef ValueRange                                      value_range_t;
+
+
 class InteractiveSimulator:public Simulator{
 public:
-  typedef PhaseResult                                       phase_result_t;
-  typedef boost::shared_ptr<phase_result_t>        phase_result_sptr;
-  typedef boost::shared_ptr<const phase_result_t>  phase_result_const_sptr;
-  typedef PhaseSimulator                                    phase_simulator_t;
-  typedef phase_result_t::phase_result_sptr_t      phase_result_sptr_t;
-  typedef std::vector<phase_result_sptr_t >                  phase_result_sptrs_t;
-  typedef std::vector<simulation_phase_sptr_t>             simulation_phases_t;
-
-  typedef phase_result_t::variable_map_t variable_map_t;
-  typedef phase_result_t::variable_t     variable_t;
-  typedef phase_result_t::parameter_t     parameter_t;
-  typedef phase_result_t::value_t        value_t;
-  typedef phase_result_t::parameter_map_t     parameter_map_t;
-
-  typedef std::list<variable_t>                            variable_set_t;
-  typedef std::list<parameter_t>                           parameter_set_t;
-  typedef simulator::ValueRange                            value_range_t;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
-  typedef PhaseSimulator::TodoAndResult                   todo_and_result_t;
-
 
   InteractiveSimulator(Opts &opts):Simulator(opts){
   }
@@ -317,7 +302,7 @@ public:
    * •Ï”‚Ì•ÏX
    * ‹æŠÔ’l‚ğ“ü‚ê‚é
    */
-  int change_variables(phase_result_sptr& phase){
+  int change_variables(phase_result_sptr_t& phase){
     cout << "(change variable mode)" << endl;
     variable_map_t vm = phase->parent->variable_map;
     //phase_result_t result = *phase->parent;

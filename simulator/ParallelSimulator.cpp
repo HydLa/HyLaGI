@@ -32,7 +32,7 @@ simulation_phase_sptr_t ParallelSimulator::pop_phase(){
 /**
  * スレッドを立ち上げ、シミュレーションを開始する
  */
-ParallelSimulator::phase_result_const_sptr_t ParallelSimulator::simulate()
+phase_result_const_sptr_t ParallelSimulator::simulate()
 {
   for(int i=0; i<opts_->parallel_number; i++){
     thread_group_.create_thread(boost::bind(&ParallelSimulatorWorker::simulate,*workers_[i]));
@@ -41,7 +41,7 @@ ParallelSimulator::phase_result_const_sptr_t ParallelSimulator::simulate()
   return result_root_;
 }
 
-ParallelSimulator::phase_result_const_sptr_t ParallelSimulator::get_result_root()
+phase_result_const_sptr_t ParallelSimulator::get_result_root()
 {
   return result_root_;
 }

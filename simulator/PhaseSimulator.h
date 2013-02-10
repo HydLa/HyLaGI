@@ -11,9 +11,8 @@
 #include "Timer.h"
 #include "Logger.h"
 #include "PhaseResult.h"
-#include "TreeInfixPrinter.h"
-#include "Simulator.h"
 #include "RelationGraph.h"
+#include "Simulator.h"
 
 namespace hydla {
 namespace simulator {

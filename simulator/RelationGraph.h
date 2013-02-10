@@ -1,8 +1,8 @@
 #ifndef _INCLUDED_HYDLA_RELATION_GRAPH_H_
 #define _INCLUDED_HYDLA_RELATION_GRAPH_H_
 
-#include "Types.h"
 #include "DefaultVariable.h"
+#include "ModuleSetContainer.h"
 
 namespace hydla {
 namespace simulator {

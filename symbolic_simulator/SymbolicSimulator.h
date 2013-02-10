@@ -12,7 +12,6 @@
 
 #include "Simulator.h"
 
-#include "Types.h"
 #include "SymbolicTypes.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
 #include "PhaseSimulator.h"

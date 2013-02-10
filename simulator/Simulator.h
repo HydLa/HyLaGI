@@ -31,6 +31,115 @@
 #include "InitNodeRemover.h"
 #include "TreeInfixPrinter.h"
 #include "DefaultParameter.h"
+#include "ContinuityMapMaker.h"
+
+
+
+namespace hydla {
+namespace simulator {
+
+
+
+typedef enum{
+  DFS,
+  BFS
+}SearchMethod;
+
+
+typedef struct Opts_ {
+  std::string mathlink;
+  bool debug_mode;
+  std::string max_time;
+  bool nd_mode;
+  bool interactive_mode;
+  bool ha_convert_mode;
+  bool dump_relation;
+  bool profile_mode;
+  bool parallel_mode;
+  int parallel_number;
+  bool dump_in_progress;
+  bool stop_at_failure;
+  std::string output_interval;
+  int output_precision;
+  int approx_precision;
+  std::string solver;
+  hydla::parse_tree::node_sptr assertion;
+  std::set<std::string> output_variables;
+  int optimization_level;
+  int timeout;
+  int timeout_phase;
+  int timeout_case;
+  int timeout_calc;
+  int max_loop_count;
+  int max_phase;
+  int max_phase_expanded;
+  SearchMethod search_method;
+} Opts;
+
+
+
+typedef hydla::parse_tree::node_id_t                      node_id_t;
+typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
+typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
+typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
+typedef hydla::ch::ModuleSetContainer::module_set_list_t  module_set_list_t;
+typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
+typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
+typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
+
+
+
+
+typedef std::map<std::string, unsigned int> profile_t;
+
+
+
+
+/**
+ * シミュレーションすべきフェーズを表す構造体
+ */
+struct SimulationTodo{
+  typedef std::map<hydla::ch::ModuleSet, std::map<DefaultVariable*, boost::shared_ptr<Value> , VariableComparator> > ms_cache_t;
+  /// 実行結果となるフェーズ
+  boost::shared_ptr<PhaseResult> phase_result;
+  /// フェーズ内で一時的に追加する制約．分岐処理などに使用
+  constraints_t temporary_constraints;
+  /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
+  module_set_container_sptr module_set_container;
+  /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
+  module_set_list_t ms_to_visit;
+  /// プロファイリング結果
+  profile_t profile;
+  /// 所属するケースの計算時間
+  int elapsed_time;
+  /// map to cache result of calculation for each module_set
+  ms_cache_t ms_cache;
+  
+  SimulationTodo(){}
+  /// コピーコンストラクタ
+  SimulationTodo(const SimulationTodo& phase):
+    phase_result(phase.phase_result), 
+    temporary_constraints(phase.temporary_constraints),
+    module_set_container(phase.module_set_container),
+    ms_to_visit(phase.ms_to_visit)
+  {
+  }
+};
+
+
+typedef boost::shared_ptr<SimulationTodo>     simulation_phase_sptr_t;
+typedef std::vector<simulation_phase_sptr_t>   simulation_phases_t;
+/// プロファイリングの結果 名前と時間のマップ
+typedef std::vector<simulation_phase_sptr_t> entire_profile_t;
+
+
+std::ostream& operator<<(std::ostream& s, const constraints_t& a);
+std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
+std::ostream& operator<<(std::ostream& s, const tells_t& a);
+std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
+std::ostream& operator<<(std::ostream& s, const expanded_always_t& a);
+}
+}
 
 namespace {
   using namespace hydla::ch;
@@ -68,10 +177,34 @@ namespace {
   };
 }
 
+
 namespace hydla {
 namespace simulator {
 
+
+
 class PhaseSimulator;
+
+
+typedef PhaseResult                                       phase_result_t;
+typedef boost::shared_ptr<const phase_result_t>           phase_result_const_sptr_t;
+typedef PhaseSimulator                                    phase_simulator_t;
+typedef phase_result_t::phase_result_sptr_t               phase_result_sptr_t;
+typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
+
+typedef SimulationTodo                                   simulation_phase_t;
+typedef boost::shared_ptr<SimulationTodo>                simulation_phase_sptr_t;
+typedef std::vector<simulation_phase_sptr_t>              simulation_phases_t;
+
+typedef phase_result_t::variable_map_t variable_map_t;
+typedef phase_result_t::variable_t     variable_t;
+typedef phase_result_t::parameter_t    parameter_t;
+typedef phase_result_t::value_t        value_t;
+typedef phase_result_t::parameter_map_t     parameter_map_t;
+
+typedef std::list<variable_t>                            variable_set_t;
+typedef std::list<parameter_t>                           parameter_set_t;
+typedef value_t                                          time_value_t;
 
 /**
  * シミュレーション全体の進行を担当するクラス
@@ -81,25 +214,6 @@ class PhaseSimulator;
 class Simulator
 {
 public:  
-  typedef PhaseResult                                    phase_result_t;
-  typedef boost::shared_ptr<const phase_result_t>        phase_result_const_sptr_t;
-  typedef phase_result_t::phase_result_sptr_t            phase_result_sptr_t;
-  typedef std::vector<phase_result_sptr_t >              phase_result_sptrs_t;
-  typedef std::vector<phase_result_const_sptr_t >        phase_result_const_sptrs_t;
-  typedef PhaseSimulator                                 phase_simulator_t;
-  
-  typedef SimulationTodo                                simulation_phase_t;
-  typedef boost::shared_ptr<SimulationTodo>             simulation_phase_sptr_t;
-
-  typedef phase_result_t::variable_map_t      variable_map_t;
-  typedef phase_result_t::variable_t          variable_t;
-  typedef phase_result_t::parameter_t         parameter_t;
-  typedef phase_result_t::value_t             value_t;
-  typedef phase_result_t::parameter_map_t     parameter_map_t;
-  
-  typedef std::list<variable_t>                            variable_set_t;
-  typedef std::list<parameter_t>                           parameter_set_t;
-  typedef value_t                                          time_value_t;
 
   Simulator(Opts& opts);
   

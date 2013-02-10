@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_HYDLA_OUTPUT_TYPES_H_
 #define _INCLUDED_HYDLA_OUTPUT_TYPES_H_
 
-#include "../simulator/Types.h"
+#include "../simulator/Simulator.h"
 
 namespace hydla{
 namespace output{

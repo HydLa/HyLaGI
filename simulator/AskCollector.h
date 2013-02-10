@@ -9,11 +9,20 @@
 #include "Node.h"
 #include "ModuleSet.h"
 #include "DefaultTreeVisitor.h"
-
-#include "./Types.h"
+#include "ModuleSetContainer.h"
+#include "PhaseResult.h"
 
 namespace hydla {
 namespace simulator {
+
+
+typedef hydla::parse_tree::node_id_t                      node_id_t;
+typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
+typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
+typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
+typedef hydla::ch::ModuleSetContainer::module_set_list_t  module_set_list_t;
+typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
+typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
 /**
  * askノードを集めるビジタークラス

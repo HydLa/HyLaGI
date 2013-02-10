@@ -215,10 +215,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Types.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Value.cpp"
 				>
 			</File>
@@ -310,10 +306,6 @@
 			</File>
 			<File
 				RelativePath=".\TellCollector.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Types.h"
 				>
 			</File>
 			<File

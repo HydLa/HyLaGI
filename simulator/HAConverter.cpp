@@ -16,7 +16,7 @@ namespace simulator {
 
   HAConverter::~HAConverter(){}
 
-  HAConverter::phase_result_const_sptr_t HAConverter::simulate()
+  phase_result_const_sptr_t HAConverter::simulate()
   {
       hydla::output::SymbolicTrajPrinter printer;
       std::string error_str;

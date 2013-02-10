@@ -2,12 +2,14 @@
 #define _DEFAULT_PARAMETER_H_
 
 #include <boost/shared_ptr.hpp>
+#include <sstream>
 #include "PhaseResult.h"
+#include "DefaultVariable.h"
 
 namespace hydla {
 namespace simulator {
 
-class DefaultParameter{
+struct DefaultParameter{
   public:
   typedef DefaultVariable variable_t;
   typedef PhaseResult phase_result_t;
@@ -56,7 +58,6 @@ class DefaultParameter{
     std::stringstream strstr;
     std::string ret("parameter[" + original_variable_->name);
     strstr << ", " << original_variable_->derivative_count << ", " << introduced_phase_->id<< "]";
-    //strstr << ", d:" << original_variable_->derivative_count << ", id:" << introduced_phase_->id<< ")";
     ret += strstr.str();
     return ret;
   }

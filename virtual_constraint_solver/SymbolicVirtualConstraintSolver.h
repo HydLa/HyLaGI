@@ -15,7 +15,6 @@
 
 #include <boost/function.hpp>
 
-#include "Types.h"
 #include "PhaseSimulator.h"
 #include "../symbolic_simulator/SymbolicTypes.h"
 
