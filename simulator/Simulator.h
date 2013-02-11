@@ -38,8 +38,6 @@
 namespace hydla {
 namespace simulator {
 
-
-
 typedef enum{
   DFS,
   BFS
@@ -238,6 +236,11 @@ public:
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
+  
+  /**
+   * push the initial state of simulation into the stack
+   */
+  virtual void push_initial_state();
   
   /**
    * プロファイリングの結果を取得

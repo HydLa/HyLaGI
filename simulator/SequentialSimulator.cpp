@@ -124,25 +124,5 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::get_result_r
   return result_root_;
 }
 
-void SequentialSimulator::initialize(const parse_tree_sptr& parse_tree){
-    Simulator::initialize(parse_tree);
-    //初期状態を作ってスタックに入れる
-    simulation_phase_sptr_t state(new simulation_phase_t());
-    state->elapsed_time = 0;
-    phase_result_sptr_t &pr = state->phase_result;
-    pr.reset(new phase_result_t());
-    pr->cause_of_termination = NONE;
-    
-    pr->phase        = simulator::PointPhase;
-    pr->step         = 0;
-    pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
-    state->module_set_container = msc_original_;
-    state->ms_to_visit = msc_original_->get_full_ms_list();
-    pr->parent = result_root_;
-    push_simulation_phase(state);
-}
-
-
-
 } // simulator
 } // hydla

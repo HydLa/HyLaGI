@@ -54,19 +54,6 @@ void ParallelSimulator::initialize(const parse_tree_sptr& parse_tree){
     psw->set_result_root(result_root_);
     workers_.push_back(psw);
   }
-  //初期状態を作ってスタックに入れる
-  simulation_phase_sptr_t state(new simulation_phase_t());
-  state->elapsed_time = 0;
-  phase_result_sptr_t &pr = state->phase_result;
-  pr.reset(new phase_result_t());
-  pr->cause_of_termination = NONE;
-    
-  pr->phase        = simulator::PointPhase;
-  pr->step         = 0;
-  pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
-//  state->module_set_container = msc_original_;
-  pr->parent = result_root_;
-  push_simulation_phase(state);
 }
 
 bool ParallelSimulator::state_stack_is_empty(){

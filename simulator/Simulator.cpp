@@ -1,5 +1,6 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
+#include "SymbolicValue.h"
 
 
 namespace {
@@ -92,6 +93,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
       phase_simulator_->check_all_module_set(msc_no_init_);
     }
   }
+  push_initial_state();
 }
 
 
@@ -125,6 +127,25 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       variable_map_[&(variable_set_.front())] = value_t();
     }
   }
+}
+
+
+void Simulator::push_initial_state()
+{
+  //初期状態を作ってスタックに入れる
+  simulation_phase_sptr_t state(new simulation_phase_t());
+  state->elapsed_time = 0;
+  phase_result_sptr_t &pr = state->phase_result;
+  pr.reset(new phase_result_t());
+  pr->cause_of_termination = NONE;
+    
+  pr->phase        = simulator::PointPhase;
+  pr->step         = 0;
+  pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
+  state->module_set_container = msc_original_;
+  state->ms_to_visit = msc_original_->get_full_ms_list();
+  pr->parent = result_root_;
+  push_simulation_phase(state);
 }
 
 }

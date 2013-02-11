@@ -92,23 +92,6 @@ public:
     return result_root_;
   }
 
-
-  virtual void initialize(const parse_tree_sptr& parse_tree){
-    Simulator::initialize(parse_tree);
-    state_id_ = 1;
-    //初期状態を作ってスタックに入れる
-    simulation_phase_sptr_t state(new simulation_phase_t());
-    phase_result_sptr_t& pr = state->phase_result;
-    pr.reset(new phase_result_t());
-    pr->cause_of_termination = NONE;
-    pr->phase        = simulator::PointPhase;
-    pr->step         = 0;
-    pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
-    state->module_set_container = msc_original_;
-    pr->parent = result_root_;
-    push_simulation_phase(state);
-  }
-
   int change_parameter(){
     return 0;
   }
