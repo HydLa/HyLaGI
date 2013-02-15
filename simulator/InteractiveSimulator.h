@@ -341,7 +341,7 @@ public:
       testrange.set_upper_bound(upvalue,upperflag);
       testrange.set_lower_bound(lowvalue,lowerflag);
       parameter_t param(v_it->first, phase->parent);
-      phase_simulator_->set_parameter_set(param);
+      parameter_set_.push_front(ParameterAndRange(param, testrange));
       pm[&param] = testrange;
       value_t pvalue(new hydla::symbolic_simulator::SymbolicValue(
         node_sptr(new Parameter(v_it->first->get_name(),
@@ -391,7 +391,7 @@ public:
     for(int i = temp->id;i>0; i--){
       Phase                     phase;
       int                       id;
-      hydla::simulator::PhaseResult::time_t                    current_time, end_time;
+      hydla::simulator::time_t                    current_time, end_time;
       variable_map_t            variable_map;
       parameter_map_t           parameter_map;
       expanded_always_t         expanded_always;
@@ -622,13 +622,6 @@ public:
    * シミュレーション中で使用される変数表の原型
    */
   variable_map_t variable_map_;
-
-
-  /*
-   * シミュレーション中に使用される変数と記号定数の集合
-   */
-  variable_set_t variable_set_;
-  parameter_set_t parameter_set_;
 
   /**
    * シミュレーション対象となるパースツリー

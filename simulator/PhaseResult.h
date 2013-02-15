@@ -15,7 +15,7 @@ namespace hydla {
 namespace simulator {
 
 struct DefaultParameter;
-
+struct PhaseResult;
 
 /**
  * type for cause of termination of simulation
@@ -51,24 +51,26 @@ typedef ask_set_t                                                positive_asks_t
 typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
 
+
+typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
+typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
+
+typedef boost::shared_ptr<Value>                          value_t;
+typedef ValueRange                                        range_t;
+typedef DefaultVariable                                   variable_t;
+typedef DefaultParameter                                  parameter_t;
+typedef value_t                                           time_t;
+
+typedef std::map<variable_t*, value_t, VariableComparator>                    variable_map_t;
+
+typedef std::map<parameter_t*, range_t>                   parameter_map_t;
+
 /**
  * あるフェーズのシミュレーション結果を表すクラス
  * 解軌道木上のノードに対応する
  */
 
 struct PhaseResult {
-  typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
-  typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
-
-  typedef boost::shared_ptr<Value>                          value_t;
-  typedef ValueRange                                        range_t;
-  typedef DefaultVariable                                   variable_t;
-  typedef DefaultParameter                                  parameter_t;
-  typedef value_t                                           time_t;
-  
-  typedef std::map<variable_t*, value_t, VariableComparator>                    variable_map_t;
-
-  typedef std::map<parameter_t*, range_t>                   parameter_map_t;
 
   Phase                     phase;
   int id;
@@ -89,8 +91,8 @@ struct PhaseResult {
   phase_result_sptr_t parent;
 };
 
-std::ostream& operator<<(std::ostream& s, const PhaseResult::parameter_map_t& pm);
-std::ostream& operator<<(std::ostream& s, const PhaseResult::variable_map_t& vm);
+std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
+std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
 
 } // namespace simulator
 } // namespace hydla 

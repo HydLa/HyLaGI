@@ -11,9 +11,6 @@ namespace simulator {
 
 struct DefaultParameter{
   public:
-  typedef DefaultVariable variable_t;
-  typedef PhaseResult phase_result_t;
-  typedef boost::shared_ptr<phase_result_t> phase_result_sptr_t;
   variable_t* original_variable_;
   phase_result_sptr_t introduced_phase_;
 

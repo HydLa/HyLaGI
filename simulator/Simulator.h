@@ -187,21 +187,21 @@ class PhaseSimulator;
 typedef PhaseResult                                       phase_result_t;
 typedef boost::shared_ptr<const phase_result_t>           phase_result_const_sptr_t;
 typedef PhaseSimulator                                    phase_simulator_t;
-typedef phase_result_t::phase_result_sptr_t               phase_result_sptr_t;
-typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 
 typedef SimulationTodo                                   simulation_phase_t;
 typedef boost::shared_ptr<SimulationTodo>                simulation_phase_sptr_t;
 typedef std::vector<simulation_phase_sptr_t>              simulation_phases_t;
 
-typedef phase_result_t::variable_map_t variable_map_t;
-typedef phase_result_t::variable_t     variable_t;
-typedef phase_result_t::parameter_t    parameter_t;
-typedef phase_result_t::value_t        value_t;
-typedef phase_result_t::parameter_map_t     parameter_map_t;
-
 typedef std::list<variable_t>                            variable_set_t;
-typedef std::list<parameter_t>                           parameter_set_t;
+
+struct ParameterAndRange
+{
+  parameter_t parameter;
+  range_t     range;
+  ParameterAndRange(const parameter_t& p, const range_t& r):parameter(p), range(r){}
+};
+
+typedef std::list<ParameterAndRange>                     parameter_set_t;
 typedef value_t                                          time_value_t;
 
 /**
@@ -246,6 +246,11 @@ public:
    * プロファイリングの結果を取得
    */
   entire_profile_t get_profile(){return profile_vector_;}
+  
+  /**
+   * get set of introduced parameters and their values
+   */
+  parameter_set_t get_parameter_set(){return parameter_set_;}
 
 protected:
 
@@ -283,6 +288,8 @@ protected:
     return msc_no_init_->get_max_module_set();
   }
   
+  
+  
   /// 実際にシミュレータが閉包計算などを行ったフェーズの集合．主にプロファイリングのために取っておく．
   entire_profile_t profile_vector_;
 
@@ -299,9 +306,12 @@ protected:
 
   
   /*
-   * シミュレーション中に使用される変数と記号定数の集合
+   * シミュレーション中に使用される変数の集合
    */
   variable_set_t variable_set_;
+  /*
+   * シミュレーション中に使用される記号定数とその値の集合
+   */
   parameter_set_t parameter_set_;
   int state_id_;
 

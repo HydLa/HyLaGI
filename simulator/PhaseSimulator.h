@@ -20,15 +20,6 @@ namespace simulator {
 class PhaseSimulator{
 
 public:  
-
-  typedef PhaseResult                                           phase_result_t; 
-  typedef boost::shared_ptr<phase_result_t>                     phase_result_sptr_t;
-  typedef boost::shared_ptr<const phase_result_t>               phase_result_const_sptr_t;
-  typedef std::vector<phase_result_sptr_t>                      phase_result_sptrs_t;
-
-  typedef SimulationTodo                                        simulation_phase_t;
-  typedef boost::shared_ptr<simulation_phase_t>                 simulation_phase_sptr_t;
-
   struct TodoAndResult{
     simulation_phase_sptr_t todo;
     phase_result_sptr_t result;
@@ -37,19 +28,7 @@ public:
     TodoAndResult(){}
   };
   
-  typedef std::vector<TodoAndResult>                            todo_and_results_t;
-  
-  typedef PhaseSimulator                                    phase_simulator_t;
-
-  typedef phase_result_t::variable_map_t      variable_map_t;
-  typedef phase_result_t::variable_t          variable_t;
-  typedef phase_result_t::parameter_t         parameter_t;
-  typedef phase_result_t::value_t             value_t;
-  typedef phase_result_t::parameter_map_t     parameter_map_t;
-  typedef value_t                             time_t;
-  
-  typedef std::list<variable_t>                            variable_set_t;
-  typedef std::list<parameter_t>                           parameter_set_t;
+  typedef std::vector<TodoAndResult> todo_and_results_t;
 
   typedef std::map<module_set_sptr, node_sptr> false_map_t;
   typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
@@ -135,7 +114,6 @@ public:
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
 
-  virtual void set_parameter_set(parameter_t param) = 0;
   virtual parameter_set_t get_parameter_set()
   {
     return *parameter_set_;

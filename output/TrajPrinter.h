@@ -7,9 +7,20 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include "PhaseResult.h"
+#include "Simulator.h"
 
 namespace hydla{
 namespace output{
+
+
+typedef hydla::simulator::PhaseResult                                       phase_result_t;
+typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
+using hydla::simulator::phase_result_sptr_t;
+typedef std::vector<phase_result_sptr_t >                                   phase_result_sptrs_t;
+using hydla::simulator::variable_map_t; 
+using hydla::simulator::parameter_map_t;
+using hydla::simulator::parameter_set_t;
+using hydla::simulator::value_t;
 
 /**
  * ‰ğ‹O“¹‚Ìo—Í‚ğ’S“–‚·‚éƒNƒ‰ƒX

@@ -47,12 +47,6 @@ public:
    */
   variable_map_t variable_map_;
   
-  /*
-   * シミュレーション中に使用される変数と記号定数の集合
-   */
-  variable_set_t variable_set_;
-  parameter_set_t parameter_set_;
-  
   
   /**
    * シミュレーション対象となるパースツリー

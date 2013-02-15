@@ -209,7 +209,7 @@ public:
    * reset‚µ‚Ä‚à‰Šú‰»‚³‚ê‚È‚¢D
    */
   void set_parameter_set(parameter_set_t& p){
-    parameter_set_=&p;
+    parameter_set_ = &p;
   }
 
   protected:
@@ -223,8 +223,9 @@ public:
 
   parameter_t* get_parameter(const std::string &name, int derivative_count, int id) const {
     for(parameter_set_t::iterator it = parameter_set_->begin(); it != parameter_set_->end();it++){
-      if(it->get_variable()->get_name() == name && it->get_variable()->get_derivative_count() == derivative_count && it->get_phase()->id == id){
-        return &(*it);
+      parameter_t& param = it->parameter;
+      if(param.get_variable()->get_name() == name && param.get_variable()->get_derivative_count() == derivative_count && param.get_phase()->id == id){
+        return &param;
       }
     }
     assert(0);

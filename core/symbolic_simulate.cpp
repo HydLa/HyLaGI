@@ -34,6 +34,9 @@ Opts opts;
 void output_result(SequentialSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
+  
+  Printer.output_parameter_set(ss.get_parameter_set());
+  
   Printer.output_result_tree(ss.get_result_root());
   if(po.get<std::string>("tm") == "s") {
     hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
@@ -120,7 +123,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
     if(now == output_variables.length()-1)break;
     now++;
     prev = output_variables.find('_', now);
-    //std::cout << output_variables.substr(now, prev-now) << std::endl;
     if(prev == std::string::npos) prev = output_variables.length();
     int d_count;
     try{ 

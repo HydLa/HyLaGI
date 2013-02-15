@@ -2,9 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <stack>
 #include <boost/xpressive/xpressive.hpp>
-//#include <boost/thread.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
@@ -18,12 +16,7 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 
-#include "ModuleSetList.h"
-#include "ModuleSetGraph.h"
-#include "ModuleSetContainerCreator.h"
 #include "InitNodeRemover.h"
-#include "AskDisjunctionSplitter.h"
-#include "AskDisjunctionFormatter.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 //#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
@@ -79,11 +72,6 @@ void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variab
 void SymbolicSimulator::set_simulation_mode(const Phase& phase)
 {
   current_phase_ = phase;
-}
-
-void SymbolicSimulator::set_parameter_set(parameter_t param){
-  parameter_set_->push_front(param);
-  solver_->set_parameter_set(*parameter_set_);
 }
 
 parameter_set_t SymbolicSimulator::get_parameter_set(){
@@ -711,10 +699,10 @@ SymbolicSimulator::todo_and_results_t
         
         PhaseSimulator::TodoAndResult tr;
         
+        solver_->simplify(candidate.time);
         bpr->end_time = candidate.time;
         if(!candidate.is_max_time ) {
           npr->current_time = candidate.time;
-          solver_->simplify(npr->current_time);
           npr->parameter_map = bpr->parameter_map;
           npr->parent = bpr;
           tr.todo = new_state;
@@ -735,7 +723,7 @@ SymbolicSimulator::todo_and_results_t
   return phases;
 }
 
-SymbolicSimulator::variable_map_t SymbolicSimulator::range_map_to_value_map(
+variable_map_t SymbolicSimulator::range_map_to_value_map(
   phase_result_sptr_t& state,
   const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t& rm,
   parameter_map_t &parameter_map)
@@ -748,20 +736,25 @@ SymbolicSimulator::variable_map_t SymbolicSimulator::range_map_to_value_map(
     }
     else if(!r_it->second.is_undefined())
     {
-      // TODO: 変数の値が完全に不明な場合，無視するものとしている
       parameter_t param(r_it->first, state);
-      parameter_set_->push_front(param);
-      parameter_map[&(parameter_set_->front())] = r_it->second;
+      parameter_set_->push_front(simulator::ParameterAndRange(param, r_it->second));
+      parameter_map[&(parameter_set_->front().parameter)] = r_it->second;
       ret[variable] = value_t(new SymbolicValue(node_sptr(
         new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-      // TODO:記号定数導入後，各変数の数式に出現する変数を記号定数に置き換える
+      // TODO:記号定数導入後，各変数の数式中に出現する変数を記号定数に置き換える
+    }
+    else
+    {
+      // TODO: 変数の値が完全に不明な場合，無視するものとしている
+      // ただしここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
+      // 解軌道木上で一度しか出現しないUNDEFに対しては，記号定数を導入する必要が無いはずなので，どうにかそれを実現したい？
     }
   }
   return ret;
 }
 
 
-SymbolicSimulator::variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
+variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
   variable_map_t shifted_vm;
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();

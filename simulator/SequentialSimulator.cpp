@@ -8,7 +8,6 @@
 namespace hydla {
 namespace simulator {
 
-
 using namespace std;
 
 SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts){
@@ -18,7 +17,7 @@ SequentialSimulator::~SequentialSimulator(){}
 /**
  * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
  */
-SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
+phase_result_const_sptr_t SequentialSimulator::simulate()
 {
   std::string error_str;
   while(!state_stack_.empty()) {
@@ -117,9 +116,7 @@ SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::simulate()
   return result_root_;
 }
 
-
-
-SequentialSimulator::phase_result_const_sptr_t SequentialSimulator::get_result_root()
+phase_result_const_sptr_t SequentialSimulator::get_result_root()
 {
   return result_root_;
 }

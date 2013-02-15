@@ -33,7 +33,6 @@ public:
   virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
-  virtual void set_parameter_set(parameter_t param);
   virtual parameter_set_t get_parameter_set();
 
 private:

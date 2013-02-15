@@ -234,7 +234,7 @@ void PhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_
 }
 
 
-PhaseSimulator::simulation_phase_sptr_t PhaseSimulator::create_new_simulation_phase() const
+simulation_phase_sptr_t PhaseSimulator::create_new_simulation_phase() const
 {
   simulation_phase_sptr_t ph(new simulation_phase_t());
   ph->phase_result.reset(new phase_result_t);
@@ -242,7 +242,7 @@ PhaseSimulator::simulation_phase_sptr_t PhaseSimulator::create_new_simulation_ph
   return ph;
 }
 
-PhaseSimulator::simulation_phase_sptr_t PhaseSimulator::create_new_simulation_phase(const simulation_phase_sptr_t& old) const
+simulation_phase_sptr_t PhaseSimulator::create_new_simulation_phase(const simulation_phase_sptr_t& old) const
 {
   simulation_phase_sptr_t sim(new simulation_phase_t(*old));
   sim->phase_result.reset(new phase_result_t(*old->phase_result));
