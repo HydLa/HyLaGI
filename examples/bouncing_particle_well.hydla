@@ -1,7 +1,7 @@
 // bouncing particle into a well
 
-// INIT <=> y = 10 & y' = 0 & x = 0 & 0 < x' < 5 & 0 < edge < 5 & [](edge' = 0).
- INIT <=> y = 10 & 0 < y' < 5 & x = 0 & 0 < x' < 5 & edge = 5 & [](edge' = 0).
+INIT <=> y = 10 & y' = 0 & x = 0 & 0 < x' < 5 & 0 < edge < 5 & [](edge' = 0).
+// INIT <=> y = 10 & 0 < y' < 5 & x = 0 & 0 < x' < 5 & edge = 5 & [](edge' = 0).
 FALL <=> [](y'' = -10).
 XCONST <=> [](x'' = 0).
 XBOUNCE <=> []((x- = edge | x- = 10) & y- < 0 => x' = -x'-). 

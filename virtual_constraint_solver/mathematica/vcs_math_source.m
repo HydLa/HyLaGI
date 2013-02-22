@@ -860,9 +860,12 @@ Check[
           ];
           sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
           ,
-          sol = Check[
-            DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
-            overConstraint,
+          simplePrint[subset, ini];
+          sol = Quiet[Check[
+              DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
+              overConstraint,
+              {DSolve::overdet, DSolve::bvnul}
+            ],
             {DSolve::overdet, DSolve::bvnul}
           ]
         ];
@@ -932,14 +935,6 @@ publicMethod[
 (* 
  * 与えられたtの式をタイムシフト
  *)
-
-(*
-publicMethod[
-  exprTimeShift,
-  expr, time,
-  integerString[FullSimplify[expr /. t -> t - time ]]
-];
-*)
 
 publicMethod[
   exprTimeShift,

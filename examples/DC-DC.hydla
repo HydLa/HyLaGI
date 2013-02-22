@@ -6,6 +6,6 @@ INIT <=> 0 < vc < 5 & il = 0 & s = 0 & timer=0 & [](L = 1 & RL = 1 & VS = 1 & RC
 STATE1 <=> [](s = 0 => il' = -RL/L*il + VS/L & vc'=-vc/(C*(RC+R0))).
 STATE2 <=> [](s = 1 => il' = -(RL+RC*R0/(RC+R0))*il -R0/(L*(RC+R0))*vc + VS/L & vc' = R0/(C*(RC+R0))*il - 1/(C*(RC+R0))*vc).
 
-ASSERT(vc > 1).
+// ASSERT(vc > 1).
 
 INIT, TIMER << SWITCH, STATE1, STATE2.
