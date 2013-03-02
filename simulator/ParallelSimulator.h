@@ -17,8 +17,8 @@ public:
   
   virtual ~ParallelSimulator();
 
-  void push_phase(const simulation_phase_sptr_t& state);
-  simulation_phase_sptr_t pop_phase();
+  void push_phase(const simulation_todo_sptr_t& state);
+  simulation_todo_sptr_t pop_phase();
   /**
    * スレッドを立ち上げ、シミュレーションを開始する
    */

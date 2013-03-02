@@ -1,67 +1,16 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
 #include "SymbolicValue.h"
+#include "ModuleSetContainerInitializer.h"
 
 
-namespace {
-  struct NodeDumper {
-      
-    template<typename T>
-    NodeDumper(T it, T end) 
-    {
-      for(; it!=end; ++it) {
-        ss << **it << "\n";
-      }
-    }
+#include <iostream>
+#include <string>
+#include <stack>
+#include <cassert>
 
-    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
-    {
-      s << nd.ss.str();
-      return s;
-    }
-
-    std::stringstream ss;
-  };
-}
-
-
-
-
-namespace hydla {
-namespace simulator {
-
-
-std::ostream& operator<<(std::ostream& s, const constraints_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
-
-std::ostream& operator<<(std::ostream& s, const ask_set_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
-
-std::ostream& operator<<(std::ostream& s, const tells_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
-
-std::ostream& operator<<(std::ostream& s, const collected_tells_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
-
-std::ostream& operator<<(std::ostream& s, const expanded_always_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
-
-
+namespace hydla{
+namespace simulator{
 
 
 Simulator::Simulator(Opts& opts):opts_(&opts){}
@@ -78,21 +27,17 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
 
-  phase_id_ = 1;
+  todo_id_ = 0;
   opts_->assertion = parse_tree->get_assertion_node();
   result_root_.reset(new phase_result_t());
+  result_root_->step = -1;
+  result_root_->id = 0;
   
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
   continuity_map_t  cont(parse_tree->get_variable_map());
   phase_simulator_->initialize(variable_set_, parameter_set_,
-   variable_map_, msc_no_init_->get_max_module_set(), cont);
-  if(opts_->optimization_level >= 2){
-    phase_simulator_->init_false_conditions(msc_no_init_);
-    if(opts_->optimization_level >= 3){
-      phase_simulator_->check_all_module_set(msc_no_init_);
-    }
-  }
+   variable_map_, cont, msc_no_init_);
   push_initial_state();
 }
 
@@ -124,7 +69,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       v.name             = it->first;
       v.derivative_count = d;
       variable_set_.push_front(v);
-      variable_map_[&(variable_set_.front())] = value_t();
+      variable_map_[&(variable_set_.front())] = value_t(new symbolic_simulator::SymbolicValue());
     }
   }
 }
@@ -133,19 +78,39 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 void Simulator::push_initial_state()
 {
   //初期状態を作ってスタックに入れる
-  simulation_phase_sptr_t state(new simulation_phase_t());
-  state->elapsed_time = 0;
-  phase_result_sptr_t &pr = state->phase_result;
-  pr.reset(new phase_result_t());
-  pr->cause_of_termination = NONE;
-    
-  pr->phase        = simulator::PointPhase;
-  pr->step         = 0;
-  pr->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
-  state->module_set_container = msc_original_;
-  state->ms_to_visit = msc_original_->get_full_ms_list();
-  pr->parent = result_root_;
-  push_simulation_phase(state);
+  simulation_todo_sptr_t todo(new SimulationTodo());
+  todo->elapsed_time = 0;
+  todo->phase        = simulator::PointPhase;
+  todo->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
+  todo->module_set_container = msc_original_;
+  todo->ms_to_visit = msc_original_->get_full_ms_list();
+  todo->parent = result_root_;
+  push_simulation_todo(todo);
+}
+
+void Simulator::push_simulation_todo(const simulation_todo_sptr_t& todo)
+{
+  todo->id = todo_id_++;
+  todo_stack_.push_front(todo);
+}
+
+simulation_todo_sptr_t Simulator::pop_simulation_phase()
+{
+  simulation_todo_sptr_t state;
+  if(opts_->search_method == simulator::DFS){
+    state = todo_stack_.front();
+    todo_stack_.pop_front();
+  }else{
+    state = todo_stack_.back();
+    todo_stack_.pop_back();
+  }
+  profile_vector_.push_back(state);
+  return state;
+}
+
+module_set_sptr Simulator::get_max_ms_no_init() const
+{
+  return msc_no_init_->get_max_module_set();
 }
 
 }

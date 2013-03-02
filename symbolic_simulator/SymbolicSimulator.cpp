@@ -23,7 +23,8 @@
 
 #include "PrevSearcher.h"
 
-#include "SimulateError.h"
+#include "Exceptions.h"
+#include "TreeInfixPrinter.h"
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
@@ -46,6 +47,7 @@ using hydla::simulator::AskCollector;
 using hydla::simulator::ContinuityMapMaker;
 using hydla::simulator::IntervalPhase;
 using hydla::simulator::PointPhase;
+using hydla::parse_tree::TreeInfixPrinter;
 
 namespace hydla {
 namespace symbolic_simulator {
@@ -59,9 +61,9 @@ SymbolicSimulator::~SymbolicSimulator()
 {
 }
 
-void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c)
+void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
-  simulator_t::initialize(v, p, m, ms, c);
+  simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
   solver_.reset(new MathematicaVCS(*opts_));
   solver_->set_variable_set(*variable_set_);
@@ -78,19 +80,6 @@ parameter_set_t SymbolicSimulator::get_parameter_set(){
   return *parameter_set_;
 }
 
-
-void SymbolicSimulator::push_branch_states(simulation_phase_sptr_t &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
-  for(int i=0; i<(int)result.true_parameter_maps.size();i++){
-    simulation_phase_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->phase_result->parameter_map = result.true_parameter_maps[i];
-    dst.push_back(branch_state);
-  }
-  for(int i=0; i<(int)result.false_parameter_maps.size();i++){
-    simulation_phase_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->phase_result->parameter_map = result.false_parameter_maps[i];
-    dst.push_back(branch_state);
-  }
-}
 
 
 void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
@@ -263,9 +252,8 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
   return ret;
 }
 
-
 SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
-  SymbolicVirtualConstraintSolver::check_consistency_result_t &cc_result,
+  CheckConsistencyResult &cc_result,
   const node_sptr& guard,
   const continuity_map_t& cont_map
   )
@@ -305,17 +293,16 @@ SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
   return ce_result;
 }
 
-CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_sptr_t& state,
+bool SymbolicSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms)
-{    
+{
   HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicSimulator::calculate_closure ***\n");
 
-  phase_result_sptr_t &pr = state->phase_result;
   //前準備
-  positive_asks_t& positive_asks = pr->positive_asks;
-  negative_asks_t& negative_asks = pr->negative_asks;
+  positive_asks_t& positive_asks = state->positive_asks;
+  negative_asks_t& negative_asks = state->negative_asks;
   ask_set_t unknown_asks;
-  expanded_always_t& expanded_always = pr->expanded_always;
+  expanded_always_t& expanded_always = state->expanded_always;
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
@@ -342,7 +329,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     // 制約を追加し，制約ストアが矛盾をおこしていないかどうか調べる
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       constraint_list.push_back((*it)->get_child());
-      maker.visit_node((*it), pr->phase == IntervalPhase, false);
+      maker.visit_node((*it), state->phase == IntervalPhase, false);
     }
 
     continuity_map = maker.get_continuity_map();
@@ -355,21 +342,18 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     solver_->add_constraint(constraint_list);
 
     {
-      SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
+      CheckConsistencyResult check_consistency_result = solver_->check_consistency();
       if(check_consistency_result.true_parameter_maps.empty()){
         // 必ず矛盾する場合
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-        return CalculateClosureResult();
+        return false;
       }else if (check_consistency_result.false_parameter_maps.empty()){
         // 必ず充足可能な場合
         // 何もしない
       }else{
         // 記号定数の条件によって充足可能性が変化する場合
         HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
-        CalculateClosureResult result;
-        push_branch_states(state, check_consistency_result, result);
-        state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-        return result;
+        push_branch_states(state, check_consistency_result);
       }
     }
     
@@ -392,20 +376,20 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
       ask_set_t::iterator it  = unknown_asks.begin();
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end){
-        if(pr->phase == PointPhase){
-          if(pr->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
+        if(state->phase == PointPhase){
+          if(state->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // 時刻0では左極限値に関する条件を常に偽とする
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
             continue;
           }else if(prev_guards_.find(*it) != prev_guards_.end() && 
-            judged_prev_map_.find(*it) != judged_prev_map_.end())
+            state->judged_prev_map.find(*it) != state->judged_prev_map.end())
           {
             // 判定済みのprev条件だった場合
-            bool entailed = judged_prev_map_.find(*it)->second;
+            bool entailed = state->judged_prev_map.find(*it)->second;
             HYDLA_LOGGER_CLOSURE("%% ommitted guard: ", **it, ", entailed: ", entailed);
             if(entailed)
-            {
+              {
               positive_asks.insert(*it);
               expanded = true;
             }else
@@ -416,15 +400,15 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             continue;
           }
         }
-        maker.visit_node((*it)->get_child(), pr->phase == IntervalPhase, true);
+        maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
         
-        SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result;
+        CheckConsistencyResult check_consistency_result;
         switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map())){
           case ENTAILED:
             HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
-              judged_prev_map_.insert(std::make_pair(*it, true));
+              state->judged_prev_map.insert(std::make_pair(*it, true));
             }
             //eraseと後置インクリメントは同時にやらないとイテレータが壊れるので，注意
             unknown_asks.erase(it++);
@@ -434,7 +418,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             HYDLA_LOGGER_CLOSURE("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
-              judged_prev_map_.insert(std::make_pair(*it, false));
+              state->judged_prev_map.insert(std::make_pair(*it, false));
             }
             unknown_asks.erase(it++);
             break;
@@ -444,10 +428,7 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
             break;
           case BRANCH_PAR:
             HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
-            CalculateClosureResult result;
-            push_branch_states(state, check_consistency_result, result);
-            state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-            return result;
+            push_branch_states(state, check_consistency_result);
             break;
         }
         maker.set_continuity_map(continuity_map);
@@ -462,78 +443,36 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
     boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
     // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
     HYDLA_LOGGER_CLOSURE("%% branched_ask:", TreeInfixPrinter().get_infix_string(branched_ask));
-    CalculateClosureResult result;
-    {
-      // 分岐先を生成（導出されない方）
-      simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
-      new_state->temporary_constraints.push_back(node_sptr(new Not((branched_ask)->get_guard())));
-      result.push_back(new_state);
-    }
     {
       // 分岐先を生成（導出される方）
-      simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
-      new_state->temporary_constraints.push_back((branched_ask)->get_guard());
-      result.push_back(new_state);
+      simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
+      new_todo->temporary_constraints.push_back((branched_ask)->get_guard());
+      todo_container_->push_back(new_todo);
     }
-    return result;
-  }
-
-  if(opts_->assertion){
-    timer::Timer entailment_timer;
-    HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_assertion");
-    SymbolicVirtualConstraintSolver::check_consistency_result_t cc_result;
-    CalculateClosureResult ret;
-    switch(check_entailment(cc_result, node_sptr(new Not(opts_->assertion)), continuity_map_t())){
-      case ENTAILED:
-        std::cout << "Assertion Failed!" << std::endl;
-        HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
-        is_safe_ = false;
-        ret.push_back(state);
-        break;
-      case CONFLICTING:
-        break;
-      case BRANCH_VAR:
-        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
-          // 分岐先を生成
-        {
-          simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
-          new_state->temporary_constraints.push_back(opts_->assertion);
-          ret.push_back(new_state);
-        }
-        {
-          simulation_phase_sptr_t new_state(create_new_simulation_phase(state));
-          new_state->temporary_constraints.push_back(node_sptr(new Not(opts_->assertion)));
-          ret.push_back(new_state);
-        }
-        break;
-      case BRANCH_PAR:
-        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
-        push_branch_states(state, cc_result, ret);
-        break;
+    {
+      // 分岐先を生成（導出されない方）
+      state->temporary_constraints.push_back(node_sptr(new Not((branched_ask)->get_guard())));
+      negative_asks.insert(branched_ask);
+      return calculate_closure(state, ms);
     }
-    state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-    if(!ret.empty())
-      return ret;
   }
+  
   HYDLA_LOGGER_CLOSURE("#*** End SymbolicSimulator::calculate_closure ***\n");
-  return CalculateClosureResult(1, state);
+  return true;
 }
-
 
 SymbolicSimulator::CalculateVariableMapResult 
 SymbolicSimulator::calculate_variable_map(
   const module_set_sptr& ms,
-  simulation_phase_sptr_t& state,
+  simulation_todo_sptr_t& todo,
   const variable_map_t & vm,
-  variable_map_t& result_vm,
-  todo_and_results_t& result_todo)
+  variable_range_map_t& result_vm)
 {
   HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::calculate_variable_map***");
   //前準備
-  phase_result_sptr_t& pr = state->phase_result;
   
   if(current_phase_ == PointPhase){
-    if(opts_->optimization_level >= 2 && pr->current_time->get_string() != "0"){
+    if(opts_->optimization_level >= 2 && todo->current_time->get_string() != "0"){
       if(opts_->optimization_level == 2){
         if(false_conditions_.find(ms) == false_conditions_.end()){
           return CVM_INCONSISTENT;
@@ -545,7 +484,7 @@ SymbolicSimulator::calculate_variable_map(
           }
         }
       }
-      solver_->reset(vm, pr->parameter_map);
+      solver_->reset(vm, todo->parameter_map);
       if(false_conditions_[ms] != NULL){
         solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
         HYDLA_LOGGER_CLOSURE("#*** check_false_conditions***");
@@ -553,7 +492,7 @@ SymbolicSimulator::calculate_variable_map(
       
         solver_->set_false_conditions(false_conditions_[ms]);
         
-        SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
+        CheckConsistencyResult check_consistency_result = solver_->check_consistency();
         if(check_consistency_result.true_parameter_maps.empty()){
           // 必ず矛盾する場合
           return CVM_INCONSISTENT;
@@ -562,12 +501,7 @@ SymbolicSimulator::calculate_variable_map(
           // 何もしない
         }else{
           // 記号定数の条件によって充足可能性が変化する場合
-          CalculateClosureResult result;
-          push_branch_states(state, check_consistency_result, result);
-          for(unsigned int i=0; i<result.size();i++){
-            result_todo.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
-          }
-          return CVM_BRANCH;
+          push_branch_states(todo, check_consistency_result);
         }
       }
     }
@@ -577,159 +511,136 @@ SymbolicSimulator::calculate_variable_map(
   {
     solver_->change_mode(ContinuousMode, opts_->approx_precision);
   }
-  solver_->reset(vm, pr->parameter_map);
+  solver_->reset(vm, todo->parameter_map); //TODO: 左極限値と記号定数の初期化処理はもっと上でやった方が無駄が少ないはず
 
   timer::Timer cc_timer;
   
   //閉包計算
-  CalculateClosureResult result = calculate_closure(state, ms);
+  bool result = calculate_closure(todo, ms);
   
-  state->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
+  todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
 
-  if(result.size() == 0)
+  if(!result)
   {
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::calculate_variable_map(result.size() ==0)***\n");
     return CVM_INCONSISTENT;
   }
-  else if(result.size() > 1){
-    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::calculate_variable_map(result.size() != 1 : ",result.size() ,")***\n");
-    for(unsigned int i=0;i<result.size();i++){
-      result_todo.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
-    }
-    return CVM_BRANCH;
-  }
-  
   
   timer::Timer create_timer;
   SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
-  state->profile["CreateMap"] += create_timer.get_elapsed_us();
+  todo->profile["CreateMap"] += create_timer.get_elapsed_us();
   SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
   
   if(results.size() != 1){
     // TODO:現状，ここで変数表が複数現れる場合は考えていない．
     assert(current_phase_ != PointPhase);
-    state->phase_result->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
-    result_todo.push_back(PhaseSimulator::TodoAndResult(simulation_phase_sptr_t(), state->phase_result));
+    todo->parent->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
     HYDLA_LOGGER_MS("#*** End SymbolicSimulator::calculate_variable_map(result.size() != 1 && consistent = true)***\n");
     return CVM_ERROR;
   }
   
   assert(results.size()>0);
-  result_vm = range_map_to_value_map(pr, results[0], pr->parameter_map);
+  
+  result_vm = results[0];
 
   return CVM_CONSISTENT;
 }
 
-SymbolicSimulator::todo_and_results_t 
-  SymbolicSimulator::make_next_todo(const module_set_sptr& ms, simulation_phase_sptr_t& state, variable_map_t &vm)
+SymbolicSimulator::todo_list_t 
+  SymbolicSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
   HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::make_next_todo***");
   
-  solver_->reset_constraint(vm);
+  solver_->reset_constraint(phase->variable_map, false);
   
-  phase_result_sptr_t& pr = state->phase_result;
-  todo_and_results_t phases;
+  todo_list_t ret;
   
-  simulation_phase_sptr_t new_state_original(create_new_simulation_phase());
-  phase_result_sptr_t& new_pr_original = new_state_original->phase_result;
-  new_pr_original->step         = pr->step+1;
-  new_pr_original->expanded_always = pr->expanded_always;
-  new_pr_original->parameter_map = pr->parameter_map;
-  new_pr_original->parent = pr;
-
-  pr->module_set         = ms;
+  simulation_todo_sptr_t next_todo(new SimulationTodo());
+  next_todo->module_set_container = msc_no_init_;
+  next_todo->parent = phase;
+  next_todo->ms_to_visit = next_todo->module_set_container->get_full_ms_list();
+  next_todo->expanded_always = phase->expanded_always;
+  next_todo->parameter_map = phase->parameter_map;
   
   if(current_phase_ == PointPhase)
   {
-    new_pr_original->phase        = IntervalPhase;
-    new_pr_original->current_time = pr->current_time;
-    pr->variable_map = vm;
-    PhaseSimulator::TodoAndResult tr;
-    tr.result = pr;
-    if(is_safe_){
-      tr.todo = new_state_original;
-    }else{
-      pr->cause_of_termination = simulator::ASSERTION;
-    }
-    phases.push_back(tr);
+    next_todo->phase = IntervalPhase;
+    next_todo->current_time = phase->current_time;
+    ret.push_back(next_todo);
   }
   else
   {
-    new_pr_original->phase        = PointPhase;
-    pr->variable_map = shift_variable_map_time(vm, pr->current_time);
-    
-    if(is_safe_){
-      timer::Timer next_pp_timer;
-      constraints_t disc_cause;
-      //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
-      for(positive_asks_t::const_iterator it = pr->positive_asks.begin(); it != pr->positive_asks.end(); it++){
-        disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
-      }
-      //現在導出されていないガード条件を離散変化条件として追加
-      for(negative_asks_t::const_iterator it = pr->negative_asks.begin(); it != pr->negative_asks.end(); it++){
-        disc_cause.push_back((*it)->get_guard());
-      }
+    assert(curent_phase_ == IntervalPhase);
+    next_todo->phase = PointPhase;
+    phase->variable_map = shift_variable_map_time(phase->variable_map, phase->current_time);
 
-      //assertionの否定を追加
-      if(opts_->assertion){
-        disc_cause.push_back(node_sptr(new Not(opts_->assertion)));
+    timer::Timer next_pp_timer;
+    constraints_t disc_cause;
+    //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
+    for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
+      disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
+    }
+    //現在導出されていないガード条件を離散変化条件として追加
+    for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
+      disc_cause.push_back((*it)->get_guard());
+    }
+
+    //assertionの否定を追加
+    if(opts_->assertion){
+      disc_cause.push_back(node_sptr(new Not(opts_->assertion)));
+    }
+
+    time_t max_time;
+    if(opts_->max_time != ""){
+      max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
+    }else{
+      max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
+    }
+
+    SymbolicVirtualConstraintSolver::PPTimeResult 
+      time_result = solver_->calculate_next_PP_time(disc_cause, phase->current_time, max_time);
+
+    unsigned int time_it = 0;
+    phase_result_sptr_t pr = next_todo->parent;
+    while(true)
+    {
+      SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
+      solver_->simplify(candidate.time);
+      
+      // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
+      for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
+        next_todo->parameter_map[it->first] = it->second;
       }
       
-      time_t max_time;
-      if(opts_->max_time != ""){
-        max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
+      pr->end_time = candidate.time;
+      pr->parameter_map = next_todo->parameter_map;
+      
+      if(!candidate.is_max_time ) {
+        next_todo->current_time = candidate.time;
+        ret.push_back(next_todo);
       }else{
-        max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
+        pr->cause_of_termination = simulator::TIME_LIMIT;
       }
-
-      SymbolicVirtualConstraintSolver::PPTimeResult 
-        time_result = solver_->calculate_next_PP_time(disc_cause, pr->current_time, max_time);
-
-      for(unsigned int time_it=0; time_it<time_result.candidates.size(); time_it++){
-        simulation_phase_sptr_t branch_state(create_new_simulation_phase(state));
-        phase_result_sptr_t &bpr = branch_state->phase_result;
-        SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
-        
-        // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
-        for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
-          bpr->parameter_map[it->first] = it->second;
-        }
-        simulation_phase_sptr_t new_state(create_new_simulation_phase(new_state_original));
-        phase_result_sptr_t& npr = new_state->phase_result;
-        
-        PhaseSimulator::TodoAndResult tr;
-        
-        solver_->simplify(candidate.time);
-        bpr->end_time = candidate.time;
-        if(!candidate.is_max_time ) {
-          npr->current_time = candidate.time;
-          npr->parameter_map = bpr->parameter_map;
-          npr->parent = bpr;
-          tr.todo = new_state;
-        }else{
-          bpr->cause_of_termination = simulator::TIME_LIMIT;
-        }
-        tr.result = bpr;
-        phases.push_back(tr);
-      }
-      state->profile["NextPP"] += next_pp_timer.get_elapsed_us();
-    }else{
-      phases.push_back(PhaseSimulator::TodoAndResult(simulation_phase_sptr_t(), pr));
-      pr->cause_of_termination = simulator::ASSERTION;
+      
+      if(++time_it >= time_result.candidates.size())break;
+      next_todo = create_new_simulation_phase(next_todo);
+      next_todo->parent = make_new_phase(pr);
+      pr = next_todo->parent;
     }
+    current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
   HYDLA_LOGGER_MS("#*** End SymbolicSimulator::make_next_todo***");
   
-  return phases;
+  return ret;
 }
 
 variable_map_t SymbolicSimulator::range_map_to_value_map(
   phase_result_sptr_t& state,
-  const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t& rm,
+  const variable_range_map_t& rm,
   parameter_map_t &parameter_map)
 {
   variable_map_t ret = *variable_map_;
-  for(vcs::SymbolicVirtualConstraintSolver::variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
+  for(variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
     variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
     if(r_it->second.is_unique()){
       ret[variable] = r_it->second.get_lower_bound().value;
@@ -742,6 +653,8 @@ variable_map_t SymbolicSimulator::range_map_to_value_map(
       ret[variable] = value_t(new SymbolicValue(node_sptr(
         new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
       // TODO:記号定数導入後，各変数の数式中に出現する変数を記号定数に置き換える
+      // TODO:ここで，Parameter(variable->get_name(), variable->get_derivative_count(), state->id)))はPhaseResult自体を参照していないので，
+      // もしPhaseResultをこの処理以降に変更するような実装に変更した場合，整合性が取れなくなるのでどうにかする
     }
     else
     {

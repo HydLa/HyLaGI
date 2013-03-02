@@ -30,11 +30,11 @@ public:
   /**
    * state‚Ìpop
    */  
-  simulation_phase_sptr_t worker_pop_phase();
+  simulation_todo_sptr_t worker_pop_phase();
   /**
    * state‚Ìpush
    */  
-  void worker_push_phase(const simulation_phase_sptr_t& state);
+  void worker_push_phase(const simulation_todo_sptr_t& state);
   
   void set_result_root(phase_result_sptr_t r){result_root_ = r;}
 

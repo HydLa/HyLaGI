@@ -104,69 +104,70 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       cout << *r_it;
     }
     
+    
     if(node->cause_of_termination==simulator::ASSERTION ||
       node->cause_of_termination==simulator::OTHER_ASSERTION ||
       node->cause_of_termination==simulator::TIME_LIMIT ||
+      node->cause_of_termination==simulator::NOT_SELECTED ||
+      node->cause_of_termination==simulator::NONE ||
       node->cause_of_termination==simulator::STEP_LIMIT)
     {
       cout << get_state_output(*node);
     }
     
+    output_parameter_map(node->parameter_map);
     switch(node->cause_of_termination){
       case simulator::INCONSISTENCY:
         cout << "# execution stuck\n";
-        output_parameter_map(node->parameter_map);
         break;
 
       case simulator::SOME_ERROR:
-        output_parameter_map(node->parameter_map);
         cout << "# some error occurred\n" ;
         break;
 
       case simulator::ASSERTION:
-        output_parameter_map(node->parameter_map);
         cout << "# assertion failed\n" ;
         break;
         
       case simulator::OTHER_ASSERTION:
-        output_parameter_map(node->parameter_map);
         cout << "# terminated by failure of assertion in another case\n" ;
         break;
         
       case simulator::TIME_LIMIT:
-        output_parameter_map(node->parameter_map);
         cout << "# time ended\n" ;
         break;
         
       case simulator::STEP_LIMIT:
-        output_parameter_map(node->parameter_map);
         cout << "# step ended\n" ;
         break;
         
       case simulator::TIME_OUT_REACHED:
-        output_parameter_map(node->parameter_map);
         cout << "# time out\n" ;
         break;
         
       case simulator::NOT_UNIQUE_IN_INTERVAL:
-        output_parameter_map(node->parameter_map);
         cout << "# some values of variables are not unique in IP\n" ;
+        break;
+
+      case simulator::NOT_SELECTED:
+        cout << "# this case is not selected to be simulated\n" ;
         break;
 
       default:
       case simulator::NONE:
-        output_parameter_map(node->parameter_map);
         cout << "# unknown termination occurred\n" ;
         break;
     }
     cout << endl;
   }else{
+  
     if(node->phase==hydla::simulator::PointPhase){
       std::stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
     }
     result.push_back(get_state_output(*node));
+    
     phase_result_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
     for(;it!=end;it++){
       output_result_node(*it, result, case_num, phase_num);

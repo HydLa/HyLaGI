@@ -16,7 +16,6 @@ namespace hydla {
 namespace simulator {
 
 
-typedef hydla::parse_tree::node_id_t                      node_id_t;
 typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
 typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;

@@ -18,13 +18,13 @@ ParallelSimulator::ParallelSimulator(Opts &opts):Simulator(opts){
 
 ParallelSimulator::~ParallelSimulator(){}
 
-void ParallelSimulator::push_phase(const simulation_phase_sptr_t& state){
+void ParallelSimulator::push_phase(const simulation_todo_sptr_t& state){
   Simulator::push_simulation_phase(state);
   cout<<"pushed. stack size:"<<state_stack_.size()<<endl;
 }
 
-simulation_phase_sptr_t ParallelSimulator::pop_phase(){
-  simulation_phase_sptr_t spp = Simulator::pop_simulation_phase();
+simulation_todo_sptr_t ParallelSimulator::pop_phase(){
+  simulation_todo_sptr_t spp = Simulator::pop_simulation_phase();
   cout<<"popped. stack size:"<<state_stack_.size()<<endl;
   return spp;
 }

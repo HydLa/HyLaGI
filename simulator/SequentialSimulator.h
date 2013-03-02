@@ -15,20 +15,6 @@ public:
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   virtual phase_result_const_sptr_t simulate();
-  
-  phase_result_const_sptr_t get_result_root();
-  
-  private:
-  
-  /**
-   * シミュレーション中で使用される変数表の原型
-   */
-  variable_map_t variable_map_;  
-  
-  /**
-   * シミュレーション対象となるパースツリー
-   */
-  parse_tree_sptr parse_tree_;
 };
 
 } // simulator

@@ -522,7 +522,6 @@ resetConstraint[] := (
 
 resetConstraintForVariable[] := (
   constraint = True;
-  variables = tmpVariables = prevVariables = {};
 );
 
 addGuard[gu_, vars_] := (
@@ -603,6 +602,12 @@ resetTemporaryConstraint[] := (
 );
 
 
+resetConstraintForParameter[pcons_, pars_] := (
+  pConstraint = True;
+  parameters = {};
+  addParameterConstraint[pcons, pars];
+);
+
 addParameterConstraint[pcons_, pars_] := (
   pConstraint = Reduce[pConstraint && pcons, Reals];
   parameters = Union[parameters, pars];
@@ -655,7 +660,7 @@ makeListFromPiecewise[minT_, others_] := Module[
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
- 
+
 calculateNextPointPhaseTime[maxTime_, discCause_] := 
   calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, variables];
 
@@ -805,6 +810,7 @@ createIntegratedValue[variable_, integRule_] := (
   @return overConstraint | 
     {underConstraint, 変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} |
     {変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} 
+    TODO: Subsetsとか使ってるから式の数で簡単に爆発する
 *)
 
 exDSolve[expr_, initExpr_] :=

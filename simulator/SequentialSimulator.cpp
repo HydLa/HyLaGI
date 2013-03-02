@@ -4,6 +4,7 @@
 #include "SymbolicValue.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
+#include "Dumpers.h"
 
 namespace hydla {
 namespace simulator {
@@ -20,91 +21,89 @@ SequentialSimulator::~SequentialSimulator(){}
 phase_result_const_sptr_t SequentialSimulator::simulate()
 {
   std::string error_str;
-  while(!state_stack_.empty()) {
-    simulation_phase_sptr_t state(pop_simulation_phase());
-    bool consistent;
+  int error_sum = 0;
+  bool is_safe = true;
+  while(!todo_stack_.empty()) {
+    simulation_todo_sptr_t todo(pop_simulation_phase());
     {
-      phase_result_sptr_t& pr = state->phase_result;
-      if( opts_->max_phase >= 0 && pr->step >= opts_->max_phase){
-        pr->parent->cause_of_termination = simulator::STEP_LIMIT;
+      if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase){
+        todo->parent->cause_of_termination = simulator::STEP_LIMIT;
         continue;
       }
-      
-      HYDLA_LOGGER_PHASE("--- Next Phase---");
-      HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
-      HYDLA_LOGGER_PHASE("%% id: ", pr->id);
-      HYDLA_LOGGER_PHASE("%% step: ", pr->step);
-      HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
-      HYDLA_LOGGER_PHASE("--- temporary_constraints ---\n", state->temporary_constraints);
-      HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
+      HYDLA_LOGGER_PHASE("--- Current Todo ---");
+      HYDLA_LOGGER_PHASE(todo);
     }
 
     try{
-      state->module_set_container->reset(state->ms_to_visit);
       timer::Timer phase_timer;
-      PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
+      PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
       
-      if(opts_->dump_in_progress){
-        hydla::output::SymbolicTrajPrinter printer;
-        for(unsigned int i=0;i<state->phase_result->parent->children.size();i++){
-          printer.output_one_phase(state->phase_result->parent->children[i]);
-        }
-      }
+      hydla::output::SymbolicTrajPrinter printer;
+      if((opts_->max_phase_expanded <= 0 || phase_simulator_->get_phase_sum() < opts_->max_phase_expanded)){
+        for(unsigned int i = 0; i < phases.size(); i++)
+        {
+          phase_result_sptr_t& phase = phases[i];
+          HYDLA_LOGGER_PHASE("--- Result Phase", i+1 , "/", phases.size(), " ---");
+          HYDLA_LOGGER_PHASE(phase);
 
-      if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
-        for(unsigned int i = 0;i < phases.size();i++){
-          PhaseSimulator::TodoAndResult& tr = phases[i];
-          if(tr.todo.get() != NULL){
-            if(tr.todo->phase_result->parent != result_root_){
-              tr.todo->module_set_container = msc_no_init_;
-            }
-            else{
-              tr.todo->module_set_container = msc_original_;
-            }
-            tr.todo->ms_to_visit = tr.todo->module_set_container->get_full_ms_list();
-            tr.todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
-            push_simulation_phase(tr.todo);
-          }if(tr.result.get() != NULL){
-            HYDLA_LOGGER_PHASE("%% push result");
-            state->phase_result->parent->children.push_back(tr.result);
+          if(!opts_->nd_mode && i > 0)
+          {
+            phase->cause_of_termination = NOT_SELECTED;
+            continue;
           }
-          if(!opts_->nd_mode)break;
+          
+          if(phase->cause_of_termination == ASSERTION)
+          {
+            is_safe = false;
+            if(opts_->stop_at_failure)break;
+            else continue;
+          }
+          
+          PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
+          for(unsigned int j = 0; j < next_todos.size(); j++)
+          {
+            simulation_todo_sptr_t& n_todo = next_todos[j];
+            n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
+            if(opts_->dump_in_progress){
+              printer.output_one_phase(n_todo->parent);
+            }
+            if(!opts_->nd_mode && j > 0)
+            {
+              n_todo->parent->cause_of_termination = NOT_SELECTED;
+            }
+            else
+            {
+              push_simulation_todo(n_todo);
+              HYDLA_LOGGER_PHASE("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
+              HYDLA_LOGGER_PHASE(n_todo);
+            }
+          }
         }
       }
       
-      HYDLA_LOGGER_PHASE("%% Result: ", phases.size(), "Phases\n");
-      for(unsigned int i=0; i<phases.size();i++){
-        if(phases[i].todo.get() != NULL){
-          phase_result_sptr_t& pr = phases[i].todo->phase_result;
-          HYDLA_LOGGER_PHASE("--- Phase", i ," ---");
-          HYDLA_LOGGER_PHASE("%% PhaseType: ", pr->phase);
-          HYDLA_LOGGER_PHASE("%% id: ", pr->id);
-          HYDLA_LOGGER_PHASE("%% step: ", pr->step);
-          HYDLA_LOGGER_PHASE("%% time: ", *pr->current_time);
-          HYDLA_LOGGER_PHASE("--- parameter map ---\n", pr->parameter_map);
-        }
-      }
-      
-      if(!phase_simulator_->is_safe() && opts_->stop_at_failure){
+      if(!is_safe && opts_->stop_at_failure){
         HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
         // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
-        while(!state_stack_.empty()) {
-          simulation_phase_sptr_t tmp_state(pop_simulation_phase());
-          tmp_state->phase_result->parent->cause_of_termination = OTHER_ASSERTION;
+        while(!todo_stack_.empty()) {
+          simulation_todo_sptr_t tmp_state(pop_simulation_phase());
+          tmp_state->parent->cause_of_termination = OTHER_ASSERTION;
         }
       }
     }
     catch(const hydla::timeout::TimeOutError &te)
     {
       // タイムアウト発生
-      phase_result_sptr_t& pr = state->phase_result;
       HYDLA_LOGGER_PHASE(te.what());
-      pr->cause_of_termination = TIME_OUT_REACHED;
-      pr->parent->children.push_back(pr);
+      todo->parent->cause_of_termination = TIME_OUT_REACHED;
+      todo->parent->parent->children.push_back(todo->parent);
     }
     catch(const std::runtime_error &se)
     {
-      error_str = se.what();
+      error_str += "error ";
+      error_str += ('0' + (++error_sum));
+      error_str += ": ";
+      error_str += se.what();
+      error_str += "\n";
       HYDLA_LOGGER_PHASE(se.what());
     }
   }
@@ -116,10 +115,6 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
   return result_root_;
 }
 
-phase_result_const_sptr_t SequentialSimulator::get_result_root()
-{
-  return result_root_;
-}
 
 } // simulator
 } // hydla

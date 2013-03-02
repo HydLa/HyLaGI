@@ -17,6 +17,8 @@ namespace symbolic_simulator {
  */
 class PrevSearcher : public parse_tree::DefaultTreeVisitor {
 public:
+  typedef hydla::parse_tree::node_sptr node_sptr;
+
   PrevSearcher(){}
 
   virtual ~PrevSearcher(){}

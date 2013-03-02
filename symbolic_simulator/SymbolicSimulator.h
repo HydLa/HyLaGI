@@ -24,30 +24,25 @@ namespace symbolic_simulator {
 class SymbolicSimulator : public simulator_t
 {
 public:
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver solver_t;
   typedef simulator::Opts Opts;
+  typedef simulator::FalseConditionsResult FalseConditionsResult;
+  typedef simulator::Phase                 Phase;
+  typedef simulator::phase_result_sptr_t   phase_result_sptr_t;
+  typedef ch::module_set_sptr              modulse_set_sptr;
 
   SymbolicSimulator(const Opts& opts);
   virtual ~SymbolicSimulator();
 
   virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
 
-  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
+  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
   virtual parameter_set_t get_parameter_set();
 
 private:
 
-  typedef enum{
-    ENTAILED,
-    CONFLICTING,
-    BRANCH_VAR,
-    BRANCH_PAR
-  } CheckEntailmentResult;
-
-
   std::set<module_set_sptr> checkd_module_set_;
   variable_map_t range_map_to_value_map(phase_result_sptr_t&,
-    const hydla::vcs::SymbolicVirtualConstraintSolver::variable_range_map_t &,
+    const variable_range_map_t &,
     parameter_map_t &);
 
 
@@ -67,14 +62,14 @@ private:
    */
 
   virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_phase_sptr_t& state, const variable_map_t &, variable_map_t& result_vm, todo_and_results_t& result_todo);
+                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_map_t& result_vm);
 
   /**
-   * 与えられたフェーズの次のTODOを返す．
+   * 与えられたフェーズの次のTodoを返す．
    */
-  virtual todo_and_results_t make_next_todo(const module_set_sptr& ms, simulation_phase_sptr_t& state, variable_map_t &);
+  virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
 
-  CalculateClosureResult calculate_closure(simulation_phase_sptr_t& state,
+  bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
 
   /**
@@ -83,13 +78,9 @@ private:
    * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
    */
   CheckEntailmentResult check_entailment(
-    hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &cc_result,
+    hydla::vcs::CheckConsistencyResult &cc_result,
     const node_sptr& guard,
     const continuity_map_t& cont_map);
-
-  void push_branch_states(simulation_phase_sptr_t &original,
-    hydla::vcs::SymbolicVirtualConstraintSolver::check_consistency_result_t &result,
-    CalculateClosureResult &dst);
 
   void add_continuity(const continuity_map_t&);
   
@@ -103,9 +94,6 @@ private:
   continuity_map_t variable_derivative_map_;
   
   Phase current_phase_;
-
-  /// 使用するソルバへのポインタ
-  boost::shared_ptr<solver_t> solver_;
 };
 
 } // namespace symbolic_simulator

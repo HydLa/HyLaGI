@@ -3,12 +3,12 @@
 #include "ProgramOptions.h"
 #include "SymbolicSimulator.h"
 #include "SequentialSimulator.h"
-#include "InteractiveSimulator.h"
+//#include "InteractiveSimulator.h"
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
-#include "HAConverter.h"
-#include "ParallelSimulator.h"
+//#include "HAConverter.h"
+//#include "ParallelSimulator.h"
 
 
 #ifdef _MSC_VER
@@ -53,6 +53,7 @@ void output_result(SequentialSimulator& ss, Opts& opts){
   }
 }
 
+/*
 void output_result(ParallelSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
@@ -71,6 +72,7 @@ void output_result(ParallelSimulator& ss, Opts& opts){
     }
   }
 }
+*/
 
 
 /**
@@ -144,11 +146,12 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   ProgramOptions &po = ProgramOptions::instance();
 
   if(opts.interactive_mode){
-    //opts->max_time = "100";
+    /*
     InteractiveSimulator ss(opts);
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);
     ss.simulate();
+    
   }else if(opts.parallel_mode){
     ParallelSimulator ps(opts);
     ps.set_phase_simulator(new SymbolicSimulator(opts));
@@ -161,7 +164,9 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ha_converter.set_phase_simulator(new SymbolicSimulator(opts));
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
-  }else{
+    */
+  }
+  else{
     SequentialSimulator& ss = *simulator_;
     ss.set_phase_simulator(new SymbolicSimulator(opts));
     ss.initialize(parse_tree);

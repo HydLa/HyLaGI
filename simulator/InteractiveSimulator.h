@@ -35,17 +35,16 @@ public:
   virtual phase_result_const_sptr_t simulate(){
     hydla::output::SymbolicTrajPrinter Printer(opts_->output_variables);
     while(!state_stack_.empty()) {
-      simulation_phase_sptr_t state(pop_simulation_phase());
+      simulation_todo_sptr_t state(pop_simulation_phase());
       phase_result_sptr_t& pr = state->phase_result;
       bool consistent;
       int exit = 0;
-      // TODO:comment out for phase_simulator
       try{
         if( opts_->max_phase >= 0 && pr->step > opts_->max_phase)
           continue;
         all_state_.push_back(state); 
         state->module_set_container->reset(state->ms_to_visit);
-        PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
+        PhaseSimulator::todo_list_t phases = phase_simulator_->simulate_phase(state, consistent);
 
         if(pr->phase == PointPhase){
           exit = interactive_simulate(phases[0]);
@@ -483,7 +482,7 @@ public:
     //fp = fopen("save.dat", "rb+");
     ifstream ifs( "test.txt" ,ios::in | ios::binary);
     //fseek(fp, 0L, SEEK_SET);
-    simulation_phase_sptr_t temp_phase(phase_simulator_->create_new_simulation_phase());
+    simulation_todo_sptr_t temp_phase(phase_simulator_->create_new_simulation_phase());
     phase_result_sptr_t temp = temp_phase->phase_result;
 
     
@@ -628,7 +627,7 @@ public:
    */
   parse_tree_sptr parse_tree_;
 
-  std::vector<simulation_phase_sptr_t> all_state_;
+  std::vector<simulation_todo_sptr_t> all_state_;
   boost::shared_ptr<solver_t> solver_;
 };
 

@@ -14,6 +14,8 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
+class PacketSender;
+
 class MathematicaVCS : 
     public virtual_constraint_solver_t
 {
@@ -45,6 +47,7 @@ public:
    * 出現する変数と定数の集合の情報も記憶する
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
+  
 
   /**
    * 現在の制約ストアから変数表と定数表を作成する
@@ -57,7 +60,8 @@ public:
   virtual void add_constraint(const constraints_t& constraints);
   virtual void add_constraint(const node_sptr& constraint);
   
-  virtual void reset_constraint(const variable_map_t& vm);
+  virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives);
+  virtual bool reset_parameters(const parameter_map_t& pm);
 
   virtual void add_guard(const node_sptr&);
 
@@ -69,7 +73,7 @@ public:
    * 制約ストアが無矛盾かを判定する．
    * @return 充足可能な場合の記号定数条件列，充足不可能な場合の記号定数条件列（それぞれ存在しない場合は空の列を返す）
    */
-  virtual check_consistency_result_t check_consistency();
+  virtual CheckConsistencyResult check_consistency();
 
 
   /**
@@ -118,6 +122,8 @@ private:
    * 終了時，ml_はマップの次のオブジェクトに移動する
    */
   void receive_parameter_map(parameter_map_t &map);
+
+  void send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps);
 
   /**
    * find_false_conditionsで得た矛盾する条件を

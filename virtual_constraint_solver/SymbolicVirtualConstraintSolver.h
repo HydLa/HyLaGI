@@ -26,6 +26,11 @@ namespace vcs {
  *  TODO:VCSを継承しても齟齬が起きないようにする
  */
 
+typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
+typedef std::vector<parameter_map_t>                       parameter_maps_t;
+struct CheckConsistencyResult{
+  parameter_maps_t true_parameter_maps, false_parameter_maps; 
+};
 
 class SymbolicVirtualConstraintSolver
 {
@@ -36,9 +41,7 @@ public:
   typedef hydla::symbolic_simulator::value_range_t           value_range_t;
   typedef hydla::symbolic_simulator::time_t                  time_t;
   typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
-  typedef std::map<variable_t*, simulator::ValueRange>       variable_range_map_t;
-  typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
-  typedef std::vector<parameter_map_t>                       parameter_maps_t;
+  typedef hydla::symbolic_simulator::variable_range_map_t    variable_range_map_t;
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::parse_tree::node_sptr                       node_sptr;
   typedef hydla::simulator::constraints_t                    constraints_t;
@@ -63,9 +66,6 @@ public:
     FALSE_CONDITIONS_VARIABLE_CONDITIONS
   } FalseConditionsResult;
   
-  typedef struct CheckConsistencyResult{
-    parameter_maps_t true_parameter_maps, false_parameter_maps; 
-  }check_consistency_result_t;
   
   /**
    * calculate_next_PP_timeで返す構造体
@@ -120,6 +120,7 @@ public:
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0); return false;}
 
+
   /**
    * 現在の制約ストアから変数表を作成する
    */
@@ -134,7 +135,12 @@ public:
   /**
    * 変数表を用いて制約ストアを上書きする．
    */
-  virtual void reset_constraint(const variable_map_t& vm){assert(0);}
+  virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives){assert(0);}
+  
+  /**
+   * reset the condition of parameters based on the given parameter map
+   */
+  virtual bool reset_parameters(const parameter_map_t& pm){assert(0); return false;}
 
   virtual void add_guard(const node_sptr&){assert(0);}
 
@@ -157,7 +163,7 @@ public:
    * 制約ストアが無矛盾かを判定する．
    * @return 充足可能な場合の記号定数条件列，充足不可能な場合の記号定数条件列（それぞれ存在しない場合は空の列を返す）
    */
-  virtual check_consistency_result_t check_consistency(){assert(0); return CheckConsistencyResult();}
+  virtual CheckConsistencyResult check_consistency(){assert(0); return CheckConsistencyResult();}
   
   /**
    * 変数に連続性を設定する
@@ -241,7 +247,6 @@ public:
   parameter_set_t* parameter_set_;
 };
 
-std::ostream& operator<<(std::ostream& s, const SymbolicVirtualConstraintSolver::variable_range_map_t& vm);
 } //namespace vcs
 } //namespace hydla 
 

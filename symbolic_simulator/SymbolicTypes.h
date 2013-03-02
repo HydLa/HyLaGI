@@ -13,22 +13,20 @@
 
 namespace hydla {
 namespace symbolic_simulator {
-
-  
-  typedef simulator::node_id_t                   node_id_t;
   typedef simulator::module_set_sptr             module_set_sptr;
   typedef simulator::module_set_container_sptr   module_set_container_sptr;
   typedef simulator::module_set_list_t           module_set_list_t;
 
-  typedef boost::shared_ptr<Value>               value_t;
+  typedef boost::shared_ptr<simulator::Value>               value_t;
   typedef value_t                                time_t;
-  typedef simulator::simulation_phase_sptr_t     simulation_phase_sptr_t;
-  typedef simulator::PhaseSimulator::todo_and_results_t          todo_and_results_t;
+  typedef simulator::simulation_todo_sptr_t     simulation_todo_sptr_t;
+  typedef simulator::PhaseSimulator::todo_list_t          todo_list_t;
   typedef std::vector<simulator::PhaseResult>    phase_result_sptrs_t;
   typedef simulator::variable_t       variable_t;
   typedef simulator::DefaultParameter            parameter_t;
   typedef simulator::ValueRange                  value_range_t;
   typedef simulator::variable_map_t              variable_map_t;
+  typedef simulator::variable_range_map_t        variable_range_map_t;
   typedef simulator::parameter_map_t             parameter_map_t;
   typedef simulator::continuity_map_t            continuity_map_t;
   typedef simulator::constraints_t               constraints_t;
@@ -46,8 +44,6 @@ namespace symbolic_simulator {
   typedef simulator::parse_tree_sptr  parse_tree_sptr;
   
   typedef simulator::PhaseSimulator              simulator_t;
-
-  typedef simulation_phases_t CalculateClosureResult;
 
   typedef enum Mode_{
     ContinuousMode,

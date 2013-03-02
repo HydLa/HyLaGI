@@ -6,6 +6,7 @@
 #include "PacketSender.h"
 #include "PacketErrorHandler.h"
 #include "../SolveError.h"
+#include "Dumpers.h"
 
 using namespace hydla::vcs;
 using namespace hydla::parse_tree;
@@ -155,68 +156,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   {
     PacketSender ps(ml_);
     ml_.put_function("addParameterConstraint", 2);
-    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
-    parameter_map_t::const_iterator it = 
-      parameter_map.begin();
-    int size=0;
-    for(; it!=parameter_map.end(); ++it)
-    {
-      const value_range_t &range = it->second;
-      if(range.is_unique()){
-        size++;
-      }else{
-        if(range.get_lower_bound().value.get() && !range.get_lower_bound().value->is_undefined()){
-          size++;
-        }
-        if(range.get_upper_bound().value.get() && !range.get_upper_bound().value->is_undefined()){
-          size++;
-        }
-      }
-    }
-    
-    ml_.put_function("And", size);
-    it = parameter_map.begin();
-    for(; it!=parameter_map.end(); ++it)
-    {
-      if(it->second.is_unique()){
-        const value_t &value = it->second.get_lower_bound().value;
-        parameter_t& param = *it->first;
-        ml_.put_function("Equal", 2);
-        ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-        ps.put_value(value, PacketSender::VA_Prev);
-      }else{
-        {
-          const value_t &value = it->second.get_lower_bound().value;
-          parameter_t& param = *it->first;
-          if(value.get() && !value->is_undefined()){
-            if(!it->second.get_lower_bound().include_bound){
-              ml_.put_function("Greater", 2);
-            }
-            else{
-              ml_.put_function("GreaterEqual", 2);
-            }
-            ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-            ps.put_value(value, PacketSender::VA_Prev);
-          }
-        }
-        {
-          
-          const value_t &value = it->second.get_upper_bound().value;
-          parameter_t& param = *it->first;
-          if(value.get() && !value->is_undefined()){
-            if(!it->second.get_upper_bound().include_bound){
-              ml_.put_function("Less", 2);
-            }
-            else{
-              ml_.put_function("LessEqual", 2);
-            }
-            ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-            ps.put_value(value, PacketSender::VA_Prev);
-          }
-        }
-      }
-    }
-    ps.put_pars();
+    send_parameter_map(parameter_map, ps);
     ml_.receive();  
     ml_.MLNewPacket();
   }
@@ -382,8 +322,8 @@ void MathematicaVCS::add_constraint(const node_sptr& constraint)
 }
 
 
-// TODO: 現状，制約に関しては変数自体を送り，変数リストは全部送るという，CalculateNextPPTime専用の仕様になってしまっているので，どうにかする．
-void MathematicaVCS::reset_constraint(const variable_map_t& vm)
+
+void MathematicaVCS::reset_constraint(const variable_map_t& vm, const bool& send_derivatives)
 {
   PacketSender ps(ml_);
   
@@ -399,7 +339,7 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm)
    PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode || mode_== hydla::symbolic_simulator::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
   for(; it!=vm.end(); ++it)
   {
-    if(it->first->get_derivative_count() == 0 && !it->second->is_undefined()){
+    if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->is_undefined()){
       size++;
     }
   }
@@ -407,7 +347,7 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm)
   it = vm.begin();
   for(; it!=vm.end(); ++it)
   {
-    if(it->first->get_derivative_count() == 0 && !it->second->is_undefined()){
+    if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->is_undefined()){
       ml_.put_function("Equal", 2);
       ps.put_var(it->first->get_name(), it->first->get_derivative_count(), arg);
       ps.put_value(it->second, arg);
@@ -423,6 +363,19 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm)
   
   ml_.receive(); 
   ml_.MLNewPacket(); 
+}
+
+bool MathematicaVCS::reset_parameters(const parameter_map_t& pm)
+{
+  PacketSender ps(ml_);
+  
+  ml_.put_function("resetConstraintForParameter", 2);
+  send_parameter_map(pm, ps);
+  
+  ml_.receive(); 
+  ml_.MLNewPacket();
+
+  return true;
 }
 
 // TODO: add_guardなのかset_guardなのかとか，仕様とかをはっきりさせる
@@ -482,7 +435,7 @@ MathematicaVCS::FalseConditionsResult MathematicaVCS::find_false_conditions(node
   return node_type; 
 }
 
-MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
+CheckConsistencyResult MathematicaVCS::check_consistency()
 {
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::check_consistency ***");
 
@@ -508,7 +461,7 @@ MathematicaVCS::check_consistency_result_t MathematicaVCS::check_consistency()
   
   int token = ml_.get_next();
   
-  check_consistency_result_t ret;
+  CheckConsistencyResult ret;
   
   if(token == MLTKSYM){
     //TrueかFalseのはず
@@ -1078,7 +1031,6 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
     ps.put_vars();
   }
 
-
   ///////////////// 受信処理
   HYDLA_LOGGER_VCS( "%%receive\n");
   ml_.receive();
@@ -1087,8 +1039,71 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
   HYDLA_LOGGER_VCS("#*** End MathematicaVCS::set_init_value ***\n");
 }
 
+void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps)
+{
+  HYDLA_LOGGER_VCS("------Parameter map in send_parameter_map------\n", parameter_map);
+  parameter_map_t::const_iterator it = parameter_map.begin();
+  int size=0;
+  for(; it!=parameter_map.end(); ++it)
+  {
+    const value_range_t &range = it->second;
+    if(range.is_unique()){
+      size++;
+    }else{
+      if(range.get_lower_bound().value.get() && !range.get_lower_bound().value->is_undefined()){
+        size++;
+      }
+      if(range.get_upper_bound().value.get() && !range.get_upper_bound().value->is_undefined()){
+        size++;
+      }
+    }
+  }
+  
+  ml_.put_function("And", size);
+  it = parameter_map.begin();
+  for(; it!=parameter_map.end(); ++it)
+  {
+    if(it->second.is_unique()){
+      const value_t &value = it->second.get_lower_bound().value;
+      parameter_t& param = *it->first;
+      ml_.put_function("Equal", 2);
+      ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+      ps.put_value(value, PacketSender::VA_Prev);
+    }else{
+      {
+        const value_t &value = it->second.get_lower_bound().value;
+        parameter_t& param = *it->first;
+        if(value.get() && !value->is_undefined()){
+          if(!it->second.get_lower_bound().include_bound){
+            ml_.put_function("Greater", 2);
+          }
+          else{
+            ml_.put_function("GreaterEqual", 2);
+          }
+          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+          ps.put_value(value, PacketSender::VA_Prev);
+        }
+      }
+      {
+        
+        const value_t &value = it->second.get_upper_bound().value;
+        parameter_t& param = *it->first;
+        if(value.get() && !value->is_undefined()){
+          if(!it->second.get_upper_bound().include_bound){
+            ml_.put_function("Less", 2);
+          }
+          else{
+            ml_.put_function("LessEqual", 2);
+          }
+          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+          ps.put_value(value, PacketSender::VA_Prev);
+        }
+      }
+    }
+  }
+  ps.put_pars();
+}
 
-  //SymbolicValueの時間をずらす
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_time(const value_t& val, const time_t& time){
   value_t tmp_val;
   ml_.put_function("exprTimeShift", 2);

@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\symbolic_simulator"
+				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\virtual_constraint_solver;..\symbolic_simulator"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -171,7 +171,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HAConverter.cpp"
+				RelativePath=".\Dumpers.cpp"
 				>
 			</File>
 			<File
@@ -180,14 +180,6 @@
 			</File>
 			<File
 				RelativePath=".\NonPrevSearcher.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParallelSimulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParallelSimulatorWorker.cpp"
 				>
 			</File>
 			<File
@@ -257,7 +249,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HAConverter.h"
+				RelativePath=".\Dumpers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Exceptions.h"
 				>
 			</File>
 			<File
@@ -269,15 +265,11 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ModuleSetContainerInitializer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\NonPrevSearcher.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParallelSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParallelSimulatorWorker.h"
 				>
 			</File>
 			<File
@@ -294,10 +286,6 @@
 			</File>
 			<File
 				RelativePath=".\SequentialSimulator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SimulateError.h"
 				>
 			</File>
 			<File

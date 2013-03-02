@@ -29,6 +29,7 @@ typedef enum{
   OTHER_ASSERTION,
   TIME_OUT_REACHED,
   NOT_UNIQUE_IN_INTERVAL,
+  NOT_SELECTED,
   NONE
 }CauseOfTermination;
 
@@ -53,6 +54,7 @@ typedef std::vector<tells_t>                                     not_adopted_tel
 
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
+typedef boost::shared_ptr<const PhaseResult>              phase_result_const_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 
 typedef boost::shared_ptr<Value>                          value_t;
@@ -71,7 +73,6 @@ typedef std::map<parameter_t*, range_t>                   parameter_map_t;
  */
 
 struct PhaseResult {
-
   Phase                     phase;
   int id;
   time_t                    current_time, end_time;
@@ -89,10 +90,10 @@ struct PhaseResult {
   phase_result_sptrs_t children;
   /// 前のフェーズ
   phase_result_sptr_t parent;
+
+  PhaseResult();
 };
 
-std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
-std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
 
 } // namespace simulator
 } // namespace hydla 
