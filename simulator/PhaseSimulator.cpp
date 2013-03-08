@@ -4,32 +4,13 @@
 #include "VariableFinder.h"
 #include "SymbolicValue.h"
 #include "SimulateError.h"
+#include "ConstraintAnalyzer.h"
 
 using namespace hydla::simulator;
 
 PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
 
 PhaseSimulator::~PhaseSimulator(){}
-
-void PhaseSimulator::init_false_conditions(module_set_container_sptr& msc_no_init){
-  msc_no_init->reset();
-  while(msc_no_init->go_next()){
-    false_conditions_.insert(false_map_t::value_type(msc_no_init->get_module_set(),node_sptr()));
-    msc_no_init->mark_current_node();
-  }
-}
-
-void PhaseSimulator::check_all_module_set(module_set_container_sptr& msc_no_init){
-  msc_no_init->reverse_reset();
-  while(msc_no_init->reverse_go_next()){
-    FalseConditionsResult result = find_false_conditions(msc_no_init->get_reverse_module_set());
-    if(result != FALSE_CONDITIONS_FALSE){
-        msc_no_init->mark_super_module_set();
-    }
-    msc_no_init->mark_r_current_node();
-  }
-}
-
 
 PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_phase(simulation_phase_sptr_t& state, bool &consistent)
 {
@@ -136,6 +117,22 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_ms(const hydla::ch::
   }
   else
   {
+    if(state->phase_result->phase == PointPhase && opts_->optimization_level >= 2){
+      CalculateVariableMapResult cvm_res = check_false_conditions(ms,state,time_applied_map,vm,phases);
+      switch(cvm_res){
+      case CVM_CONSISTENT:
+	break;
+      case CVM_INCONSISTENT:
+        state->module_set_container->mark_nodes(*ms);
+      case CVM_BRANCH:
+	return phases;
+	break;
+      case CVM_ERROR:
+        break;
+      default:
+        break;
+      }
+    }
     HYDLA_LOGGER_MS("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){
       module_set_sptr connected_ms = graph->get_component(i);

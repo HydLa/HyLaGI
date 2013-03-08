@@ -20,6 +20,7 @@
 namespace hydla {
 namespace symbolic_simulator {
 
+class ConstraintAnalyzer;
 
 class SymbolicSimulator : public simulator_t
 {
@@ -30,11 +31,9 @@ public:
   SymbolicSimulator(const Opts& opts);
   virtual ~SymbolicSimulator();
 
-  virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
-
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
   virtual parameter_set_t get_parameter_set();
-
+ 
 private:
 
   typedef enum{
@@ -60,7 +59,10 @@ private:
    */
 
   virtual void set_simulation_mode(const Phase& phase);
-  
+
+  virtual void set_constraint_analyzer(module_set_container_sptr& msc_no_init);
+
+  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo);
 
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
@@ -106,6 +108,8 @@ private:
 
   /// 使用するソルバへのポインタ
   boost::shared_ptr<solver_t> solver_;
+
+  boost::shared_ptr<ConstraintAnalyzer > constraint_analyzer_;
 };
 
 } // namespace symbolic_simulator

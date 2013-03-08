@@ -2,6 +2,7 @@
 #include "PhaseSimulator.h"
 #include "SymbolicValue.h"
 
+#include "ConstraintAnalyzer.h"
 
 namespace {
   struct NodeDumper {
@@ -87,12 +88,11 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   continuity_map_t  cont(parse_tree->get_variable_map());
   phase_simulator_->initialize(variable_set_, parameter_set_,
    variable_map_, msc_no_init_->get_max_module_set(), cont);
+
   if(opts_->optimization_level >= 2){
-    phase_simulator_->init_false_conditions(msc_no_init_);
-    if(opts_->optimization_level >= 3){
-      phase_simulator_->check_all_module_set(msc_no_init_);
-    }
+    phase_simulator_->set_constraint_analyzer(msc_no_init_);
   }
+
   push_initial_state();
 }
 

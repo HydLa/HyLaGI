@@ -23,7 +23,6 @@
 #include "ModuleSetGraph.h"
 #include "ModuleSetList.h"
 
-
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"
 
@@ -32,8 +31,6 @@
 #include "TreeInfixPrinter.h"
 #include "DefaultParameter.h"
 #include "ContinuityMapMaker.h"
-
-
 
 namespace hydla {
 namespace simulator {
@@ -174,15 +171,10 @@ namespace {
       }
   };
 }
-
-
 namespace hydla {
 namespace simulator {
 
-
-
 class PhaseSimulator;
-
 
 typedef PhaseResult                                       phase_result_t;
 typedef boost::shared_ptr<const phase_result_t>           phase_result_const_sptr_t;
@@ -319,7 +311,6 @@ protected:
    * Žg—p‚·‚éPhaseSimulator
    */ 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
-
 
   module_set_container_sptr msc_original_;
   module_set_container_sptr msc_no_init_;

@@ -30,15 +30,8 @@ public:
   
   typedef std::vector<TodoAndResult> todo_and_results_t;
 
-  typedef std::map<module_set_sptr, node_sptr> false_map_t;
   typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
 
-  typedef enum{
-    FALSE_CONDITIONS_TRUE,
-    FALSE_CONDITIONS_FALSE,
-    FALSE_CONDITIONS_VARIABLE_CONDITIONS
-  } FalseConditionsResult;
-  
   typedef enum{
     CVM_INCONSISTENT,
     CVM_CONSISTENT,
@@ -50,27 +43,6 @@ public:
   
   virtual ~PhaseSimulator();
 
-  /**
-   * msが矛盾するような条件を予め調べる関数
-   * 得た条件はmsのfalse_conditions_に追加される
-   * @return
-   * FALSE_CONDITIONS_TRUE                : 必ず矛盾
-   * FALSE_CONDITIONS_FALSE               : 矛盾しない
-   * FALSE_CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する
-   */
-  virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms) = 0;
-
-  /**
-   * Alwaysが無い制約を除いたモジュール集合の集合の小さい方から矛盾する条件を調べる
-   * 矛盾する条件が見つかった場合には、
-   * 現在のモジュール集合を包含するモジュール集合に同じ条件を追加する
-   * 必ず矛盾する場合は現在のモジュール集合および、
-   * それを包含するモジュール集合を解候補モジュール集合の集合から取り除く
-   */
-  virtual void check_all_module_set(module_set_container_sptr& msc_no_init);
-
-  virtual void init_false_conditions(module_set_container_sptr& msc_no_init);
-  
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
   /**
@@ -99,6 +71,9 @@ public:
   todo_and_results_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
                                   const variable_map_t& time_applied_map, simulation_phase_sptr_t& state, bool &consistent);
 
+  virtual void set_constraint_analyzer(module_set_container_sptr& msc_no_init) = 0;
+
+  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
 
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
@@ -121,7 +96,6 @@ public:
   
   virtual bool is_safe() const{return is_safe_;}
   
-  
 protected:
 
   variable_t* get_variable(const std::string &name, const int &derivative_count){
@@ -136,8 +110,6 @@ protected:
   variable_map_t *variable_map_;
   entailed_prev_map_t judged_prev_map_;
   negative_asks_t prev_guards_;
-  
-  false_map_t false_conditions_;
   
   /**
    * graph of relation between module_set for IP and PP

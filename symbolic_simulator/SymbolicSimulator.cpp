@@ -25,6 +25,8 @@
 
 #include "SimulateError.h"
 
+#include "ConstraintAnalyzer.h"
+
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 
@@ -59,6 +61,10 @@ SymbolicSimulator::~SymbolicSimulator()
 {
 }
 
+SymbolicSimulator::CalculateVariableMapResult SymbolicSimulator::check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo){
+  return constraint_analyzer_->check_false_conditions(*opts_,ms,state,vm,result_vm,result_todo);
+}
+
 void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c)
 {
   simulator_t::initialize(v, p, m, ms, c);
@@ -76,6 +82,14 @@ void SymbolicSimulator::set_simulation_mode(const Phase& phase)
 
 parameter_set_t SymbolicSimulator::get_parameter_set(){
   return *parameter_set_;
+}
+
+void SymbolicSimulator::set_constraint_analyzer(module_set_container_sptr& msc_no_init){
+  constraint_analyzer_.reset(new ConstraintAnalyzer());
+  constraint_analyzer_->initialize(msc_no_init, solver_);
+  if(opts_->optimization_level >= 3){
+    constraint_analyzer_->check_all_module_set(msc_no_init,*opts_);
+  }
 }
 
 
@@ -111,158 +125,6 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
     }
   }
 }
-
-SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_conditions(const module_set_sptr& ms){
-
-  HYDLA_LOGGER_MS("#*** SymbolicSimulator::find_false_conditions ***");
-  HYDLA_LOGGER_MS(ms->get_name());
-
-  solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
-
-  SymbolicSimulator::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
-  positive_asks_t positive_asks;
-  negative_asks_t negative_asks;
-  expanded_always_t expanded_always;
-  TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
-  tells_t         tell_list;
-  constraints_t   constraint_list;
-
-  continuity_map_t continuity_map;
-  ContinuityMapMaker maker;
-  negative_asks_t tmp_negative; 
-
-  variable_map_t vm;
-  parameter_map_t pm;
-  solver_->reset(vm,pm);
-
-  // ask制約を集める 
-  ask_collector.collect_ask(&expanded_always, 
-      &positive_asks, 
-      &tmp_negative, 
-      &negative_asks);
-
-  node_sptr condition_node;
-
-  for(int i = 0; i < (1 << negative_asks.size()) && ret != FALSE_CONDITIONS_TRUE; i++){
-    positive_asks_t tmp_positive_asks;
-    solver_->start_temporary();
-
-    negative_asks_t::iterator it = negative_asks.begin();
-    for(int j = 0; j < (int)negative_asks.size(); j++, it++){
-      if((i & (1 << j)) != 0){
-        solver_->add_guard((*it)->get_guard());
-        tmp_positive_asks.insert(*it);
-      }else{
-        solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
-      }
-    }
-
-    tell_collector.collect_all_tells(&tell_list,
-        &expanded_always, 
-        &tmp_positive_asks);
-
-    maker.reset();
-    constraint_list.clear();
-
-    for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      constraint_list.push_back((*it)->get_child());
-      maker.visit_node((*it), false, false);
-    }
-
-    solver_->add_constraint(constraint_list);
-    continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map);
-
-    {
-      node_sptr tmp_node;
-      switch(solver_->find_false_conditions(tmp_node)){
-        case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
-          // この制約モジュール集合は必ず矛盾
-          ret = FALSE_CONDITIONS_TRUE;
-          break;
-        case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
-          break;
-        case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
-          // この制約モジュール集合は矛盾する場合がある
-          if(condition_node == NULL) condition_node = node_sptr(tmp_node);
-          else condition_node = node_sptr(new LogicalOr(condition_node, tmp_node));
-          ret = FALSE_CONDITIONS_VARIABLE_CONDITIONS;
-          break;
-        default:
-          assert(0);
-          break;
-      }
-    }
-    solver_->end_temporary();
-  }
-  if(ret == FALSE_CONDITIONS_VARIABLE_CONDITIONS){
-    solver_->node_simplify(condition_node);
-    if(condition_node == NULL){
-      // 条件が出てきたが、簡約したら実は TRUE だった場合
-      false_conditions_.erase(ms);
-      if(opts_->optimization_level >= 3){
-        false_map_t::iterator it = false_conditions_.begin();
-        while(it != false_conditions_.end()){
-          if((*it).first->is_super_set(*ms)){
-            false_conditions_.erase(it++);
-          }else{
-            it++;
-          }
-        }
-      }
-      ret = FALSE_CONDITIONS_TRUE;
-    }else{
-      false_conditions_[ms] = condition_node;
-      false_map_t::iterator it = false_conditions_.begin();
-      while(it != false_conditions_.end() && opts_->optimization_level >= 3){
-        if((*it).first->is_super_set(*ms) && (*it).first != ms){
-          node_sptr tmp = (*it).second;
-          if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp,condition_node));
-          else tmp = node_sptr(condition_node);
-          switch(solver_->node_simplify(tmp)){
-            case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
-              // この制約モジュール集合は必ず矛盾
-              false_conditions_.erase(it++);
-              break;
-            case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
-              it++;
-              break;
-            case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
-              // この制約モジュール集合は矛盾する場合がある
-              (*it).second = tmp;
-              it++;
-              break;
-            default:
-              assert(0);
-              break;
-          }
-        }else{
-          it++;
-        }
-      }
-      HYDLA_LOGGER_MS("found false conditions :", TreeInfixPrinter().get_infix_string(condition_node));
-    }
-  }else if(ret == FALSE_CONDITIONS_TRUE){
-    false_conditions_.erase(ms);
-    if(opts_->optimization_level >= 3){
-      false_map_t::iterator it = false_conditions_.begin();
-      while(it != false_conditions_.end()){
-        if((*it).first->is_super_set(*ms)){
-          false_conditions_.erase(it++);
-        }else{
-          it++;
-        }
-      }
-    }
-  }else{
-    false_conditions_[ms] = node_sptr();
-    HYDLA_LOGGER_MS("not found false conditions");
-  }
-  HYDLA_LOGGER_MS("#*** end SymbolicSimulator::find_false_conditions ***");
-  return ret;
-}
-
 
 SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
   SymbolicVirtualConstraintSolver::check_consistency_result_t &cc_result,
@@ -519,7 +381,6 @@ CalculateClosureResult SymbolicSimulator::calculate_closure(simulation_phase_spt
   return CalculateClosureResult(1, state);
 }
 
-
 SymbolicSimulator::CalculateVariableMapResult 
 SymbolicSimulator::calculate_variable_map(
   const module_set_sptr& ms,
@@ -533,44 +394,6 @@ SymbolicSimulator::calculate_variable_map(
   phase_result_sptr_t& pr = state->phase_result;
   
   if(current_phase_ == PointPhase){
-    if(opts_->optimization_level >= 2 && pr->current_time->get_string() != "0"){
-      if(opts_->optimization_level == 2){
-        if(false_conditions_.find(ms) == false_conditions_.end()){
-          return CVM_INCONSISTENT;
-        }
-        if(checkd_module_set_.find(ms) == checkd_module_set_.end()){
-          checkd_module_set_.insert(ms);
-          if(find_false_conditions(ms) == FALSE_CONDITIONS_TRUE){
-            return CVM_INCONSISTENT;
-          }
-        }
-      }
-      solver_->reset(vm, pr->parameter_map);
-      if(false_conditions_[ms] != NULL){
-        solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
-        HYDLA_LOGGER_CLOSURE("#*** check_false_conditions***");
-        HYDLA_LOGGER_CLOSURE(ms->get_name() , " : " , TreeInfixPrinter().get_infix_string(false_conditions_[ms]));
-      
-        solver_->set_false_conditions(false_conditions_[ms]);
-        
-        SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
-        if(check_consistency_result.true_parameter_maps.empty()){
-          // 必ず矛盾する場合
-          return CVM_INCONSISTENT;
-        }else if (check_consistency_result.false_parameter_maps.empty()){
-          // 必ず充足可能な場合
-          // 何もしない
-        }else{
-          // 記号定数の条件によって充足可能性が変化する場合
-          CalculateClosureResult result;
-          push_branch_states(state, check_consistency_result, result);
-          for(unsigned int i=0; i<result.size();i++){
-            result_todo.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
-          }
-          return CVM_BRANCH;
-        }
-      }
-    }
     solver_->change_mode(DiscreteMode, opts_->approx_precision);
   }
   else
