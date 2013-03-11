@@ -9,7 +9,7 @@
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
 #include "ParallelSimulator.h"
-
+#include "ConstraintAnalyzer.h"
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -97,6 +97,8 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.stop_at_failure = po.count("fail-stop") == 1;
   opts.solver        = po.get<std::string>("solver");
   opts.optimization_level = po.get<int>("optimization-level");
+  opts.analysis_mode = po.get<std::string>("analysis-mode");
+  opts.analysis_file = po.get<std::string>("analysis-file");
   opts.timeout = po.get<int>("timeout");
   opts.timeout_case = po.get<int>("timeout_case");
   opts.timeout_phase = po.get<int>("timeout_phase");
@@ -161,6 +163,11 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ha_converter.set_phase_simulator(new SymbolicSimulator(opts));
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
+  }else if(opts.analysis_mode == "output"){
+    ConstraintAnalyzer ca(opts);
+    ca.initialize(parse_tree);
+    ca.check_all_module_set();
+    ca.output_false_conditions();
   }else{
     SequentialSimulator& ss = *simulator_;
     ss.set_phase_simulator(new SymbolicSimulator(opts));

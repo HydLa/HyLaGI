@@ -25,7 +25,7 @@
 
 #include "SimulateError.h"
 
-#include "ConstraintAnalyzer.h"
+#include "AnalysisResultChecker.h"
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
@@ -60,9 +60,11 @@ SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
 SymbolicSimulator::~SymbolicSimulator()
 {
 }
-
-SymbolicSimulator::CalculateVariableMapResult SymbolicSimulator::check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo){
-  return constraint_analyzer_->check_false_conditions(*opts_,ms,state,vm,result_vm,result_todo);
+ 
+SymbolicSimulator::CalculateVariableMapResult
+SymbolicSimulator::check_false_conditions
+(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo){
+  return analysis_result_checker_->check_false_conditions(ms,state,vm,result_vm,result_todo);
 }
 
 void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c)
@@ -72,6 +74,11 @@ void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variab
   solver_.reset(new MathematicaVCS(*opts_));
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
+
+  if(opts_->analysis_mode == "use" || opts_->analysis_mode == "simulate"){
+    analysis_result_checker_.reset(new AnalysisResultChecker(*opts_));
+    analysis_result_checker_->set_solver(solver_);
+  }
 }
 
 
@@ -83,15 +90,6 @@ void SymbolicSimulator::set_simulation_mode(const Phase& phase)
 parameter_set_t SymbolicSimulator::get_parameter_set(){
   return *parameter_set_;
 }
-
-void SymbolicSimulator::set_constraint_analyzer(module_set_container_sptr& msc_no_init){
-  constraint_analyzer_.reset(new ConstraintAnalyzer());
-  constraint_analyzer_->initialize(msc_no_init, solver_);
-  if(opts_->optimization_level >= 3){
-    constraint_analyzer_->check_all_module_set(msc_no_init,*opts_);
-  }
-}
-
 
 void SymbolicSimulator::push_branch_states(simulation_phase_sptr_t &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
   for(int i=0; i<(int)result.true_parameter_maps.size();i++){

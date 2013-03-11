@@ -93,6 +93,19 @@ void ProgramOptions::init_descriptions()
     ("optimization-level,O",
      value<int>()->default_value(0),
      "optimization level:\n")
+
+    ("analysis-mode",
+     value<std::string>()->default_value(""),
+     "analysis mode\n"
+     "  empty - don't analyze constraint\n"
+     "  use - use analysis file\n"
+     "  output - analyze constraint and output to file\n"
+     "  simulate - analyze constraint and simulate using analysis result\n")
+
+    ("analysis-file",
+     value<std::string>()->default_value(""),
+     "analysis file name\n"
+     "  empty - standard out or standard in\n")
     
     ("output-format,f", 
      value<std::string>()->default_value("t"), 

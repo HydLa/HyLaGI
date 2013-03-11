@@ -61,6 +61,8 @@ typedef struct Opts_ {
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;
   int optimization_level;
+  std::string analysis_mode;
+  std::string analysis_file;
   int timeout;
   int timeout_phase;
   int timeout_case;

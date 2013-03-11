@@ -71,10 +71,6 @@ public:
   todo_and_results_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
                                   const variable_map_t& time_applied_map, simulation_phase_sptr_t& state, bool &consistent);
 
-  virtual void set_constraint_analyzer(module_set_container_sptr& msc_no_init) = 0;
-
-  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
-
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
    */
@@ -95,6 +91,8 @@ public:
   }
   
   virtual bool is_safe() const{return is_safe_;}
+
+  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t &, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
   
 protected:
 

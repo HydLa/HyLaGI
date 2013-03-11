@@ -1,3 +1,7 @@
+#include <iostream>
+#include <ostream>
+#include <fstream>
+
 #include "ConstraintAnalyzer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -15,61 +19,80 @@ using namespace hydla::vcs::mathematica;
 namespace hydla{
 namespace symbolic_simulator{
 
-ConstraintAnalyzer::ConstraintAnalyzer(){}
+ConstraintAnalyzer::ConstraintAnalyzer(Opts& opts):Simulator(opts){}
 
 ConstraintAnalyzer::~ConstraintAnalyzer(){}
 
 void ConstraintAnalyzer::output_false_conditions(){
   false_map_t::iterator it = false_conditions_.begin();
+  std::ofstream ofs;
+  if(opts_->analysis_file != ""){
+    ofs.open(opts_->analysis_file.c_str());
+  }
   for(;it != false_conditions_.end();it++){
-    std::cout << (*it).first << " : ";
-    if((*it).second != NULL){
-      std::cout << TreeInfixPrinter().get_infix_string((*it).second);
+    if(opts_->analysis_file != ""){
+      ofs << (*it).first << ":";
+      if((*it).second != NULL){
+        ofs << TreeInfixPrinter().get_infix_string((*it).second);
+      }
+      ofs << std::endl;
+    }else{
+      std::cout << (*it).first << ":";
+      if((*it).second != NULL){
+	std::cout << TreeInfixPrinter().get_infix_string((*it).second);
+      }
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
+  }
+  if(opts_->analysis_file != ""){
+    ofs.close();
   }
 }
 
-
-simulation_phase_sptr_t ConstraintAnalyzer::create_new_simulation_phase(const simulation_phase_sptr_t& old) const
+void ConstraintAnalyzer::initialize(const parse_tree_sptr& parse_tree)
 {
-  simulation_phase_sptr_t sim(new simulation_phase_t(*old));
-  sim->phase_result.reset(new phase_result_t(*old->phase_result));
-  sim->phase_result->cause_of_termination = NONE;
-  return sim;
-}
+  init_module_set_container(parse_tree);
 
+  init_variable_map(parse_tree);
+  //  continuity_map_t cont(parse_tree->get_variable_map());
 
-void ConstraintAnalyzer::initialize(module_set_container_sptr msc_no_init, boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver)
-{
-  solver_ = solver;
+  solver_.reset(new MathematicaVCS(*opts_));
+  solver_->set_variable_set(variable_set_);
+  solver_->set_parameter_set(parameter_set_);
+  /*
+  msc_no_init_->reset();
 
-  msc_no_init->reset();
-
-  while(msc_no_init->go_next()){
-    false_conditions_.insert(false_map_t::value_type(msc_no_init->get_module_set()->get_name(),node_sptr()));
-    msc_no_init->mark_current_node();
+  while(msc_no_init_->go_next()){
+    false_conditions_.insert(false_map_t::value_type(msc_no_init_->get_module_set(),node_sptr()));
+    msc_no_init_->mark_current_node();
   }
+  */
 }
 
-void ConstraintAnalyzer::check_all_module_set(module_set_container_sptr& msc_no_init, const Opts& opts){
-  msc_no_init->reverse_reset();
-  while(msc_no_init->reverse_go_next()){
-    FalseConditionsResult result = find_false_conditions(msc_no_init->get_reverse_module_set(), opts);
-    /*
+void ConstraintAnalyzer::check_all_module_set(){
+  msc_no_init_->reset();
+  while(msc_no_init_->go_next()){
+    // FalseConditionsResult result = 
+    find_false_conditions(msc_no_init_->get_module_set());
+    msc_no_init_->mark_current_node();
+  }
+  /*
+  msc_no_init_->reverse_reset();
+  while(msc_no_init_->reverse_go_next()){
+    FalseConditionsResult result = find_false_conditions(msc_no_init_->get_reverse_module_set());
     if(result != FALSE_CONDITIONS_FALSE){
-        msc_no_init->mark_super_module_set();
+        msc_no_init_->mark_super_module_set();
     }
-    */
-    msc_no_init->mark_r_current_node();
+    msc_no_init_->mark_r_current_node();
   }
+  */
 }
 
-  ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditions(const module_set_sptr& ms, const Opts& opts){
-  solver_->change_mode(FalseConditionsMode, opts.approx_precision);
+  ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditions(const module_set_sptr& ms){
+  solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
   ConstraintAnalyzer::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
 
-  map<module_set_sptr, node_sptr> tmp_false_conditions;
+  //  map<module_set_sptr, node_sptr> false_conditions_;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
   expanded_always_t expanded_always;
@@ -121,7 +144,22 @@ void ConstraintAnalyzer::check_all_module_set(module_set_container_sptr& msc_no_
 
     solver_->add_constraint(constraint_list);
     continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map);
+    for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
+      if(it->second>=0){
+        for(int i=0; i<it->second;i++){
+          solver_->set_continuity(it->first, i);
+        }
+      }else{
+        node_sptr lhs(new Variable(it->first));
+        for(int i=0; i<=-it->second;i++){
+          solver_->set_continuity(it->first, i);
+          lhs = node_sptr(new Differential(lhs));
+        }
+        node_sptr rhs(new Number("0"));
+        node_sptr cons(new Equal(lhs, rhs));
+        solver_->add_constraint(cons);
+      }
+    }
 
     {
       node_sptr tmp_node;
@@ -147,34 +185,34 @@ void ConstraintAnalyzer::check_all_module_set(module_set_container_sptr& msc_no_
   case FALSE_CONDITIONS_VARIABLE_CONDITIONS:
     solver_->node_simplify(condition_node);
     if(condition_node == NULL){
-      false_conditions_.erase(ms->get_name());
+      //      false_conditions_.erase(ms->get_name());
       /*
-      if(opts.optmization_level >= 3){
-        false_map_t::iterator it = tmp_false_conditions.begin();
-        while(it != tmp_false_conditions.end()){
+      if(opts_->optimization_level >= 3){
+        false_map_t::iterator it = false_conditions_.begin();
+        while(it != false_conditions_.end()){
           if((*it).first->is_super_set(*ms)){
-            tmp_false_conditions.erase(it++);
+            false_conditions_.erase(it++);
           }else{
             it++;
           }
         }
       }
-       */
+    */
       ret = FALSE_CONDITIONS_TRUE;
     }else{
       false_conditions_[ms->get_name()] = condition_node;
       /*
-      false_map_t::iterator it = tmp_false_conditions.begin();
-      while(it != tmp_false_conditions.end() && opts.optimization_level >= 3){
+      false_map_t::iterator it = false_conditions_.begin();
+      while(it != false_conditions_.end() && opts_->optimization_level >= 3){
         if((*it).first->is_super_set(*ms) && (*it).first != ms){
           node_sptr tmp = (*it).second;
           if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp, condition_node));
           else tmp = node_sptr(condition_node);
-          switch(solver_->node_simplify(tmp){
-	  case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE;
-            tmp_false_conditions.erase(it++);
+          switch(solver_->node_simplify(tmp)){
+	  case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
+            false_conditions_.erase(it++);
             break;
-          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE;
+          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
             it++;
             break;
           case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
@@ -189,23 +227,23 @@ void ConstraintAnalyzer::check_all_module_set(module_set_container_sptr& msc_no_
           it++;
         }
       }
-       */
+      */
     }
     break;
   case FALSE_CONDITIONS_TRUE:
-    false_conditions_.erase(ms->get_name());
+    //    false_conditions_.erase(ms->get_name());
     /*
-    if(opts.optimization_level >= 3){ 
-      false_map_t::iterator it = tmp_false_conditions.begin();
-      while(it != tmp_false_conditions.end()){
+    if(opts_->optimization_level >= 3){ 
+      false_map_t::iterator it = false_conditions_.begin();
+      while(it != false_conditions_.end()){
         if((*it).first->is_super_set(*ms)){
-          tmp_false_conditions.erase(it++);
+          false_conditions_.erase(it++);
         }else{
           it++;
         }
       }
-     }
-     */
+    }
+    */
     break;
   case FALSE_CONDITIONS_FALSE:
     false_conditions_[ms->get_name()] = node_sptr();
@@ -217,79 +255,8 @@ void ConstraintAnalyzer::check_all_module_set(module_set_container_sptr& msc_no_
   return ret;
 }
 
-SymbolicSimulator::CalculateVariableMapResult
-ConstraintAnalyzer::check_false_conditions(
-  const Opts& opts,
-  const module_set_sptr& ms,
-  simulation_phase_sptr_t& state,
-  const variable_map_t& vm,
-  variable_map_t& result_vm,
-  todo_and_results_t& result_todo)
-{
-  phase_result_sptr_t& pr = state->phase_result;
-  if(pr->current_time->get_string() != "0"){
-    if(opts.optimization_level == 2){
-      if(false_conditions_.find(ms->get_name()) == false_conditions_.end()){
-        return SymbolicSimulator::CVM_INCONSISTENT;
-      }
-      if(checkd_module_set_.find(ms) == checkd_module_set_.end()){
-        checkd_module_set_.insert(ms);
-        if(find_false_conditions(ms,opts) == FALSE_CONDITIONS_TRUE){
-          return SymbolicSimulator::CVM_INCONSISTENT;
-        }
-      }
-    }
-    solver_->reset(vm, pr->parameter_map);
-    if(false_conditions_[ms->get_name()] != NULL){
-      solver_->change_mode(FalseConditionsMode, opts.approx_precision);
-      solver_->set_false_conditions(false_conditions_[ms->get_name()]);
-
-      SymbolicVirtualConstraintSolver::check_consistency_result_t check_consistency_result = solver_->check_consistency();
-      if(check_consistency_result.true_parameter_maps.empty()){
-        return SymbolicSimulator::CVM_INCONSISTENT;
-      }else if(check_consistency_result.false_parameter_maps.empty()){
-      }else{
-        CalculateClosureResult result;
-        push_branch_states(state, check_consistency_result, result);
-        for(unsigned int i = 0; i < result.size(); i++){
-          result_todo.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
-        }
-        return SymbolicSimulator::CVM_BRANCH;
-      }
-    }
-  }
-  return SymbolicSimulator::CVM_CONSISTENT;
-}
-
-void ConstraintAnalyzer::push_branch_states(simulation_phase_sptr_t &original, SymbolicVirtualConstraintSolver::check_consistency_result_t &result, CalculateClosureResult &dst){
-  for(int i=0; i<(int)result.true_parameter_maps.size();i++){
-    simulation_phase_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->phase_result->parameter_map = result.true_parameter_maps[i];
-    dst.push_back(branch_state);
-  }
-  for(int i=0; i<(int)result.false_parameter_maps.size();i++){
-    simulation_phase_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->phase_result->parameter_map = result.false_parameter_maps[i];
-    dst.push_back(branch_state);
-  }
-}
-void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map){
-  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
-    if(it->second>=0){
-      for(int i=0; i<it->second;i++){
-        solver_->set_continuity(it->first, i);
-      }
-    }else{
-      node_sptr lhs(new Variable(it->first));
-      for(int i=0; i<=-it->second;i++){
-        solver_->set_continuity(it->first, i);
-        lhs = node_sptr(new Differential(lhs));
-      }
-      node_sptr rhs(new Number("0"));
-      node_sptr cons(new Equal(lhs, rhs));
-      solver_->add_constraint(cons);
-    }
-  }
+phase_result_const_sptr_t ConstraintAnalyzer::simulate(){
+  return phase_result_const_sptr_t();
 }
 
 

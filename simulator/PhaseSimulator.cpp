@@ -117,7 +117,7 @@ PhaseSimulator::todo_and_results_t PhaseSimulator::simulate_ms(const hydla::ch::
   }
   else
   {
-    if(state->phase_result->phase == PointPhase && opts_->optimization_level >= 2){
+    if(state->phase_result->phase == PointPhase && (opts_->analysis_mode == "use" || opts_->analysis_mode == "simulate")){
       CalculateVariableMapResult cvm_res = check_false_conditions(ms,state,time_applied_map,vm,phases);
       switch(cvm_res){
       case CVM_CONSISTENT:
