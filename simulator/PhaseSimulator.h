@@ -68,6 +68,8 @@ public:
   
   int get_phase_sum()const{return phase_sum_;}
   
+  void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
+  
 protected:
   
   typedef enum{
@@ -175,6 +177,9 @@ protected:
     
   /// 使用するソルバへのポインタ
   boost::shared_ptr<solver_t> solver_;
+  
+  /// ケースの選択時に使用する関数ポインタ
+  int (*select_phase_)(result_list_t&);
 
   private:
 

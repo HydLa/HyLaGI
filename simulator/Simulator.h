@@ -85,7 +85,7 @@ struct SimulationTodo{
   /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
   module_set_container_sptr module_set_container;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-  /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている
+  /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
   module_set_list_t ms_to_visit;
   /// プロファイリング結果
   profile_t profile;
@@ -93,6 +93,20 @@ struct SimulationTodo{
   int elapsed_time;
   /// map to cache result of calculation for each module_set
   ms_cache_t ms_cache;
+  
+  /**
+   * reset members to calculate from the start of the phase
+   * TODO: expanded_alwaysどうしよう．
+   * TODO: 記号定数も元に戻すべき？こちらは現状ではそこまで問題ないはず
+   */
+  void reset_from_start_of_phase(){
+    ms_cache.clear();
+    temporary_constraints.clear();
+    ms_to_visit = module_set_container->get_full_ms_list();
+    positive_asks.clear();
+    negative_asks.clear();
+    judged_prev_map.clear();
+  }
 };
 
 
@@ -148,10 +162,6 @@ public:
   
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
-  /**
-   * @return the result of profiling
-   */
-  entire_profile_t get_profile(){return profile_vector_;}
   
   /**
    * @return set of introduced parameters and their ranges of values
@@ -168,19 +178,6 @@ protected:
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
 
   /**
-   * Todoキューに新たなTodoを追加する
-   * TODO: この関数が，PhaseSimulator内部から呼ばれるようにする（TodoのIDの整合性のため）
-   */
-  virtual void push_simulation_todo(const simulation_todo_sptr_t& todo);
-
-  /**
-   * 状態キューから状態をひとつ取り出す
-   * この関数で取りだしたsimulation_todo_sptr_tについては必ずシミュレーションを行うことを前提としている．
-   * (プロファイリング結果の整合性のため）
-   */
-  simulation_todo_sptr_t pop_simulation_phase();
-
-  /**
    * @return maximum module set without initial constraint
    */
   module_set_sptr get_max_ms_no_init() const;
@@ -188,15 +185,10 @@ protected:
   /**
    * push the initial state of simulation into the stack
    */
-  virtual void push_initial_state();
+  virtual simulation_todo_sptr_t make_initial_todo();
 
   parse_tree_sptr parse_tree_;
   
-  /**
-   * 各Todoに対応するプロファイリングの結果
-   */
-  entire_profile_t profile_vector_;
-
   /**
    * シミュレーション中で使用される変数表の原型
    */
@@ -228,23 +220,15 @@ protected:
    */
   module_set_container_sptr msc_no_init_;
 
-  /**
-   * シミュレーション上のTodoを入れておくコンテナ
-   */
-  todo_container_t todo_stack_;
-  
-  /** 解軌道木の根．
+  /** 
+   * 解軌道木の根．
    * 根自体は，解軌道のどの部分にも対応しない．
    * 単純に根としてのみ扱う．
    */
   phase_result_sptr_t result_root_;
-  
+
   Opts*     opts_;
 
-  /**
-   * 各Todoに振っていくID
-   */
-  int todo_id_;
 
   private:
 

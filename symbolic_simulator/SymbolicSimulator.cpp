@@ -25,6 +25,7 @@
 
 #include "Exceptions.h"
 #include "TreeInfixPrinter.h"
+#include "Dumpers.h"
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
@@ -601,34 +602,52 @@ SymbolicSimulator::todo_list_t
       time_result = solver_->calculate_next_PP_time(disc_cause, phase->current_time, max_time);
 
     unsigned int time_it = 0;
+    result_list_t results;
     phase_result_sptr_t pr = next_todo->parent;
+
     while(true)
     {
       SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       solver_->simplify(candidate.time);
-      
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
-        next_todo->parameter_map[it->first] = it->second;
+        pr->parameter_map[it->first] = it->second;
       }
-      
       pr->end_time = candidate.time;
-      pr->parameter_map = next_todo->parameter_map;
-      
-      if(!candidate.is_max_time ) {
-        next_todo->current_time = candidate.time;
-        ret.push_back(next_todo);
-      }else{
+      if(candidate.is_max_time) {
         pr->cause_of_termination = simulator::TIME_LIMIT;
       }
-      
+      results.push_back(pr);
       if(++time_it >= time_result.candidates.size())break;
+      pr = make_new_phase(pr);
+    }
+    
+    unsigned int result_it = 0;
+    bool one_phase = false;
+    
+    if(time_result.candidates.size() > 0 && select_phase_)
+    {
+      result_it = select_phase_(results);
+      one_phase = true;
+    }
+    
+    while(true)
+    {
+      pr = results[result_it];
+      if(pr->cause_of_termination != TIME_LIMIT)
+      {
+        next_todo->current_time = pr->end_time;
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->parent = pr;
+        ret.push_back(next_todo);
+      }
+      if(one_phase || ++result_it >= results.size())break;
       next_todo = create_new_simulation_phase(next_todo);
-      next_todo->parent = make_new_phase(pr);
-      pr = next_todo->parent;
     }
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
+  
+  
   HYDLA_LOGGER_MS("#*** End SymbolicSimulator::make_next_todo***");
   
   return ret;

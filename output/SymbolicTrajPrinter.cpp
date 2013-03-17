@@ -71,12 +71,11 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
   }
 }
 
-
 void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
 {
-    cout << get_state_output(*phase);
+  cout << get_state_output(*phase);
+  output_parameter_map(phase->parameter_map);
 }
-
 
 void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& root) const
 {
@@ -92,19 +91,16 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
   }
 }
 
-
-
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
-  
+
     cout << "#---------Case " << case_num++ << "---------" << endl;
     std::vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
       cout << *r_it;
     }
-    
-    
+
     if(node->cause_of_termination==simulator::ASSERTION ||
       node->cause_of_termination==simulator::OTHER_ASSERTION ||
       node->cause_of_termination==simulator::TIME_LIMIT ||
@@ -114,7 +110,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     {
       cout << get_state_output(*node);
     }
-    
+
     output_parameter_map(node->parameter_map);
     switch(node->cause_of_termination){
       case simulator::INCONSISTENCY:
@@ -160,7 +156,6 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
     cout << endl;
   }else{
-  
     if(node->phase==hydla::simulator::PointPhase){
       std::stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";

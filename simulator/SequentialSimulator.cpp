@@ -12,6 +12,7 @@ namespace simulator {
 using namespace std;
 
 SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts){
+  todo_id_ = 0;
 }
 
 SequentialSimulator::~SequentialSimulator(){}
@@ -22,65 +23,65 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
 {
   std::string error_str;
   int error_sum = 0;
+  hydla::output::SymbolicTrajPrinter printer;
+  todo_stack_.push_back(make_initial_todo());
   bool is_safe = true;
   while(!todo_stack_.empty()) {
     simulation_todo_sptr_t todo(pop_simulation_phase());
-    {
-      if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase){
-        todo->parent->cause_of_termination = simulator::STEP_LIMIT;
-        continue;
-      }
-      HYDLA_LOGGER_PHASE("--- Current Todo ---");
-      HYDLA_LOGGER_PHASE(todo);
+    if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase){
+      todo->parent->cause_of_termination = simulator::STEP_LIMIT;
+      continue;
     }
+
+    HYDLA_LOGGER_PHASE("--- Current Todo ---\n", todo);
 
     try{
       timer::Timer phase_timer;
       PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
       
-      hydla::output::SymbolicTrajPrinter printer;
-      if((opts_->max_phase_expanded <= 0 || phase_simulator_->get_phase_sum() < opts_->max_phase_expanded)){
-        for(unsigned int i = 0; i < phases.size(); i++)
-        {
-          phase_result_sptr_t& phase = phases[i];
-          HYDLA_LOGGER_PHASE("--- Result Phase", i+1 , "/", phases.size(), " ---");
-          HYDLA_LOGGER_PHASE(phase);
+      if((opts_->max_phase_expanded > 0 && phase_simulator_->get_phase_sum() >= opts_->max_phase_expanded))
+      {
+        break;
+      }
+      for(unsigned int i = 0; i < phases.size(); i++)
+      {
+        phase_result_sptr_t& phase = phases[i];
+        HYDLA_LOGGER_PHASE("--- Result Phase", i+1 , "/", phases.size(), " ---\n", phase);
 
-          if(!opts_->nd_mode && i > 0)
-          {
-            phase->cause_of_termination = NOT_SELECTED;
-            continue;
+        if(!opts_->nd_mode && i > 0)
+        {
+          phase->cause_of_termination = NOT_SELECTED;
+          continue;
+        }
+
+        if(phase->cause_of_termination == ASSERTION)
+        {
+          is_safe = false;
+          if(opts_->stop_at_failure)break;
+          else continue;
+        }
+
+        PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
+        for(unsigned int j = 0; j < next_todos.size(); j++)
+        {
+          simulation_todo_sptr_t& n_todo = next_todos[j];
+          n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
+          if(opts_->dump_in_progress){
+            printer.output_one_phase(n_todo->parent);
           }
-          
-          if(phase->cause_of_termination == ASSERTION)
+          if(!opts_->nd_mode && j > 0)
           {
-            is_safe = false;
-            if(opts_->stop_at_failure)break;
-            else continue;
+            n_todo->parent->cause_of_termination = NOT_SELECTED;
           }
-          
-          PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
-          for(unsigned int j = 0; j < next_todos.size(); j++)
+          else
           {
-            simulation_todo_sptr_t& n_todo = next_todos[j];
-            n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
-            if(opts_->dump_in_progress){
-              printer.output_one_phase(n_todo->parent);
-            }
-            if(!opts_->nd_mode && j > 0)
-            {
-              n_todo->parent->cause_of_termination = NOT_SELECTED;
-            }
-            else
-            {
-              push_simulation_todo(n_todo);
-              HYDLA_LOGGER_PHASE("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
-              HYDLA_LOGGER_PHASE(n_todo);
-            }
+            push_simulation_todo(n_todo);
+            HYDLA_LOGGER_PHASE("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
+            HYDLA_LOGGER_PHASE(n_todo);
           }
         }
       }
-      
+
       if(!is_safe && opts_->stop_at_failure){
         HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
         // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
@@ -107,6 +108,7 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
       HYDLA_LOGGER_PHASE(se.what());
     }
   }
+  
   if(!error_str.empty()){
     std::cout << error_str;
   }
@@ -115,6 +117,26 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
   return result_root_;
 }
 
+
+void SequentialSimulator::push_simulation_todo(const simulation_todo_sptr_t& todo)
+{
+  todo->id = todo_id_++;
+  todo_stack_.push_front(todo);
+}
+
+simulation_todo_sptr_t SequentialSimulator::pop_simulation_phase()
+{
+  simulation_todo_sptr_t state;
+  if(opts_->search_method == DFS){
+    state = todo_stack_.front();
+    todo_stack_.pop_front();
+  }else{
+    state = todo_stack_.back();
+    todo_stack_.pop_back();
+  }
+  profile_vector_.push_back(state);
+  return state;
+}
 
 } // simulator
 } // hydla

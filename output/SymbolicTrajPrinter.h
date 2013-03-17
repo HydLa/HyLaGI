@@ -29,6 +29,10 @@ public:
   void output_result_node(const phase_result_const_sptr_t &node,
     std::vector<std::string> &result, int &case_num, int &phase_num) const;
   
+  void set_output_variables(const std::set<std::string>& ovs){output_variables_ = ovs;}
+  
+private:
+  
   std::set<std::string> output_variables_;
 };
 

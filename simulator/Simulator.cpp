@@ -15,7 +15,7 @@ namespace simulator{
 
 Simulator::Simulator(Opts& opts):opts_(&opts){}
 
-/**
+/**W
  * 使用するPhaseSimulatorを設定する．
  * この関数に渡すPhaseSimulatorのインスタンスはnewで作成し，呼び出し側でdeleteしないようにする
  */
@@ -27,18 +27,16 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
 
-  todo_id_ = 0;
   opts_->assertion = parse_tree->get_assertion_node();
   result_root_.reset(new phase_result_t());
   result_root_->step = -1;
   result_root_->id = 0;
-  
+
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
   continuity_map_t  cont(parse_tree->get_variable_map());
   phase_simulator_->initialize(variable_set_, parameter_set_,
    variable_map_, cont, msc_no_init_);
-  push_initial_state();
 }
 
 
@@ -75,7 +73,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 }
 
 
-void Simulator::push_initial_state()
+simulation_todo_sptr_t Simulator::make_initial_todo()
 {
   //初期状態を作ってスタックに入れる
   simulation_todo_sptr_t todo(new SimulationTodo());
@@ -85,28 +83,9 @@ void Simulator::push_initial_state()
   todo->module_set_container = msc_original_;
   todo->ms_to_visit = msc_original_->get_full_ms_list();
   todo->parent = result_root_;
-  push_simulation_todo(todo);
+  return todo;
 }
 
-void Simulator::push_simulation_todo(const simulation_todo_sptr_t& todo)
-{
-  todo->id = todo_id_++;
-  todo_stack_.push_front(todo);
-}
-
-simulation_todo_sptr_t Simulator::pop_simulation_phase()
-{
-  simulation_todo_sptr_t state;
-  if(opts_->search_method == simulator::DFS){
-    state = todo_stack_.front();
-    todo_stack_.pop_front();
-  }else{
-    state = todo_stack_.back();
-    todo_stack_.pop_back();
-  }
-  profile_vector_.push_back(state);
-  return state;
-}
 
 module_set_sptr Simulator::get_max_ms_no_init() const
 {

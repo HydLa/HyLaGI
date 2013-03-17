@@ -3,7 +3,7 @@
 #include "ProgramOptions.h"
 #include "SymbolicSimulator.h"
 #include "SequentialSimulator.h"
-//#include "InteractiveSimulator.h"
+#include "InteractiveSimulator.h"
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
@@ -34,9 +34,7 @@ Opts opts;
 void output_result(SequentialSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
-  
   Printer.output_parameter_set(ss.get_parameter_set());
-  
   Printer.output_result_tree(ss.get_result_root());
   if(po.get<std::string>("tm") == "s") {
     hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
@@ -90,21 +88,33 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.dump_relation = po.count("dump-module-relation-graph")>0;
   opts.interactive_mode = po.count("in")>0;
-  opts.ha_convert_mode = po.count("ha")>0;
-  opts.profile_mode  = po.count("profile")>0;
-  opts.parallel_mode = po.count("parallel")>0;
-  opts.parallel_number   = po.get<int>("pn");
+  //opts.ha_convert_mode = po.count("ha")>0;
+  //opts.profile_mode  = po.count("profile")>0;
+  //opts.parallel_mode = po.count("parallel")>0;
+  //opts.parallel_number   = po.get<int>("pn");
+  /*
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
+  */
   opts.stop_at_failure = po.count("fail-stop") == 1;
-  opts.solver        = po.get<std::string>("solver");
-  opts.optimization_level = po.get<int>("optimization-level");
+  //opts.solver        = po.get<std::string>("solver");
+  /*opts.optimization_level = po.get<int>("optimization-level");
+  if(opts.optimization_level < 0 || opts.optimization_level > 4){
+    throw std::runtime_error(std::string("invalid option - optimization_level"));
+  }
+  */
+  
+  /*
   opts.timeout = po.get<int>("timeout");
   opts.timeout_case = po.get<int>("timeout_case");
   opts.timeout_phase = po.get<int>("timeout_phase");
+  */
   opts.timeout_calc= po.get<int>("timeout_calc");
-  opts.max_loop_count= po.get<int>("mlc");
+  
+  
+  /*opts.max_loop_count= po.get<int>("mlc");
   opts.max_phase_expanded = po.get<int>("phase_expanded");
+  */
   if(po.get<std::string>("search") == "d"){
     opts.search_method = simulator::DFS;
   }else if(po.get<std::string>("search") == "b"){
@@ -113,12 +123,9 @@ void setup_symbolic_simulator_opts(Opts& opts)
     throw std::runtime_error(std::string("invalid option - search"));
   }
   
-  if(opts.optimization_level < 0 || opts.optimization_level > 4){
-    throw std::runtime_error(std::string("invalid option - optimization_level"));
-  }
   
   
-  std::string output_variables = po.get<std::string>("output-variables");
+  /* std::string output_variables = po.get<std::string>("output-variables");
   std::string::size_type prev = 0, now;
   while( (now = output_variables.find('_', prev)) != std::string::npos){
     std::string name = output_variables.substr(prev, now-prev);
@@ -137,6 +144,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
     opts.output_variables.insert(name);
     prev++;
   }
+  */
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
@@ -146,12 +154,14 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   ProgramOptions &po = ProgramOptions::instance();
 
   if(opts.interactive_mode){
+    InteractiveSimulator is(opts);
+    is.set_phase_simulator(new SymbolicSimulator(opts));
+    is.initialize(parse_tree);
+    is.simulate();
     /*
-    InteractiveSimulator ss(opts);
-    ss.set_phase_simulator(new SymbolicSimulator(opts));
-    ss.initialize(parse_tree);
-    ss.simulate();
-    
+    hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
+    Printer.output_parameter_set(is.get_parameter_set());
+    Printer.output_result_tree(is.get_result_root());
   }else if(opts.parallel_mode){
     ParallelSimulator ps(opts);
     ps.set_phase_simulator(new SymbolicSimulator(opts));

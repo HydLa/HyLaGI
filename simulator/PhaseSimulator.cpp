@@ -9,7 +9,7 @@
 
 using namespace hydla::simulator;
 
-PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts){}
+PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts), select_phase_(NULL){}
 
 PhaseSimulator::~PhaseSimulator(){}
 
@@ -276,6 +276,7 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
   phase_result_sptr_t phase(new PhaseResult(*original));
   phase->id = ++phase_sum_;
   phase->parent->children.push_back(phase);
+  phase->cause_of_termination = simulator::NONE;
   return phase;
 }
 

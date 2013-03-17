@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\InteractiveSimulator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NonPrevSearcher.cpp"
 				>
 			</File>
