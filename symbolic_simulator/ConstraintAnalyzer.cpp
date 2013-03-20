@@ -33,13 +33,15 @@ void ConstraintAnalyzer::output_false_conditions(){
     if(opts_->analysis_file != ""){
       ofs << (*it).first << ":";
       if((*it).second != NULL){
-        ofs << TreeInfixPrinter().get_infix_string((*it).second);
+        ofs << *((*it).second);
+	//        ofs << TreeInfixPrinter().get_infix_string((*it).second);
       }
       ofs << std::endl;
     }else{
       std::cout << (*it).first << ":";
       if((*it).second != NULL){
-	std::cout << TreeInfixPrinter().get_infix_string((*it).second);
+	std::cout << *((*it).second);
+	//	std::cout << TreeInfixPrinter().get_infix_string((*it).second);
       }
       std::cout << std::endl;
     }

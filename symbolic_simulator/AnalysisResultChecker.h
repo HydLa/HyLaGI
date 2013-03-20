@@ -20,10 +20,15 @@ public:
 
   virtual SymbolicSimulator::CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t&, variable_map_t& result_vm, todo_and_results_t& result_todo);
 
+  virtual void parse();
+
 //  virtual void parse();
 
 private:
   std::set<module_set_sptr> checkd_module_set_;
+
+  virtual node_sptr string2node(std::string s);
+
 };
 
 }

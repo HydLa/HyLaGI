@@ -78,6 +78,9 @@ void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variab
   if(opts_->analysis_mode == "use" || opts_->analysis_mode == "simulate"){
     analysis_result_checker_.reset(new AnalysisResultChecker(*opts_));
     analysis_result_checker_->set_solver(solver_);
+    if(opts_->analysis_mode == "use"){
+      analysis_result_checker_->parse();
+    }
   }
 }
 
