@@ -77,14 +77,14 @@ void ProgramOptions::init_descriptions()
     
     ("in", "interactive mode")
 
-	  /*("ha", "convert to HA")
+	  //("ha", "convert to HA")
 
     ("parallel", "parallel mode")
 
     ("pn", 
      value<int>()->default_value(2),
      "parallel number")
-     */
+     
 
     ("tm", 
      value<std::string>()->default_value("n"),

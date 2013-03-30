@@ -188,11 +188,9 @@ protected:
    */
   void merge_variable_map(variable_range_map_t& lhs, variable_range_map_t& rhs);
 
-  result_list_t process_todo(simulation_todo_sptr_t& todo);
+  result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
   
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const variable_range_map_t& vm);
-  
-
 };
 
 

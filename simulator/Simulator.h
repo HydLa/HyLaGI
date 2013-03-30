@@ -62,6 +62,7 @@ typedef std::map<variable_t*, simulator::ValueRange, VariableComparator>      va
 
 typedef std::map<std::string, unsigned int> profile_t;
 
+
 /**
  * シミュレーションすべきフェーズを表す構造体
  */
@@ -122,7 +123,37 @@ typedef PhaseSimulator                                    phase_simulator_t;
 
 typedef boost::shared_ptr<SimulationTodo>                simulation_todo_sptr_t;
 
-typedef std::deque<simulation_todo_sptr_t>               todo_container_t;
+
+
+struct TodoContainer
+{
+  virtual void push_todo(simulation_todo_sptr_t& todo)
+  {
+    container_.push_back(todo);
+  }
+  
+  virtual simulation_todo_sptr_t pop_todo()
+  {
+    simulation_todo_sptr_t todo = container_.back();
+    container_.pop_back();
+    return todo;
+  }
+  
+  virtual bool empty()
+  {
+    return container_.empty();
+  }
+  
+  virtual int size()
+  {
+    return container_.size();
+  }
+  
+  protected:
+  std::deque<simulation_todo_sptr_t> container_;
+};
+
+typedef TodoContainer                                    todo_container_t;
 
 typedef std::list<variable_t>                            variable_set_t;
 
@@ -135,11 +166,6 @@ struct ParameterAndRange
 
 typedef std::list<ParameterAndRange>                     parameter_set_t;
 
-/**
- * シミュレーション全体の進行を担当するクラス
- * ・制約モジュール集合の半順序集合を入力とし，解軌道群を出力する
- * ・各解軌道は，時刻0からPPとIPを時刻が進む方向にのみ繰り返して進めることで得られるものとする
- */
 class Simulator
 {
 public:  
@@ -154,21 +180,42 @@ public:
    */
   virtual phase_result_const_sptr_t simulate() = 0;
   
-  /**
-   * set the phase simulator which this simulator uses in each phase
-   * @param ps a pointer to an instance of phase_simlulator_t (caller must not delete the instance)
-   */
-  void set_phase_simulator(phase_simulator_t *ps);
-  
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
   
   /**
+   * set the phase simulator which this simulator uses in each phase
+   * @param ps a pointer to an instance of phase_simlulator_t (caller must not delete the instance)
+   */
+  virtual void set_phase_simulator(phase_simulator_t *ps);
+  
+  /**
    * @return set of introduced parameters and their ranges of values
    */
-  parameter_set_t get_parameter_set(){return parameter_set_;}
+  parameter_set_t get_parameter_set(){return *parameter_set_;}
   
-  phase_result_const_sptr_t get_result_root(){return result_root_;}
+  phase_result_sptr_t get_result_root(){return result_root_;}
+  
+  /**
+   * push the initial state of simulation into the stack
+   */
+  virtual simulation_todo_sptr_t make_initial_todo();
+  
+  /**
+   * template of variable maps
+   */
+  boost::shared_ptr<variable_map_t> variable_map_;
+  
+  /*
+   * set of variables
+   */
+  boost::shared_ptr<variable_set_t> variable_set_;
+
+  /*
+   * set of pairs of introduced parameters and their ranges of values
+   */
+  boost::shared_ptr<parameter_set_t> parameter_set_;
+
 
 protected:
   
@@ -176,63 +223,38 @@ protected:
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
-
-  /**
-   * @return maximum module set without initial constraint
-   */
-  module_set_sptr get_max_ms_no_init() const;
   
-  /**
-   * push the initial state of simulation into the stack
-   */
-  virtual simulation_todo_sptr_t make_initial_todo();
+  void init_module_set_container(const parse_tree_sptr& parse_tree);
+  
+  void reset_result_root();
+
 
   parse_tree_sptr parse_tree_;
   
   /**
-   * シミュレーション中で使用される変数表の原型
-   */
-  variable_map_t variable_map_;
-  
-  /*
-   * シミュレーション中に使用される変数の集合
-   */
-  variable_set_t variable_set_;
-
-  /*
-   * シミュレーション中に使用される記号定数とその値の集合
-   */
-  parameter_set_t parameter_set_;
-
-  /**
-   * 使用するPhaseSimulator
+   * PhaseSimulator to use
    */ 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
 
   /**
    * 解候補モジュール集合のコンテナ
-   * （非always制約も含んでいるバージョン）
    */
   module_set_container_sptr msc_original_;
+  
   /**
-   * 解候補モジュール集合のコンテナ
-   * （非always制約を除いたバージョン）
+   * mcs_original_から非always制約を除いたもの
    */
   module_set_container_sptr msc_no_init_;
 
   /** 
-   * 解軌道木の根．
-   * 根自体は，解軌道のどの部分にも対応しない．
-   * 単純に根としてのみ扱う．
+   * root of the tree of result trajectories
    */
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
 
-
   private:
 
-  void init_module_set_container(const parse_tree_sptr& parse_tree);
 };
 
 } //namespace simulator

@@ -1,7 +1,7 @@
 #include "ParallelSimulator.h"
 #include "ParallelSimulatorWorker.h"
 #include "Timer.h"
-#include "SymbolicSimulator.h"
+#include "SymbolicPhaseSimulator.h"
 #include "SymbolicTrajPrinter.h"
 #include "SymbolicValue.h"
 #include "PhaseSimulator.h"
@@ -13,52 +13,51 @@ namespace simulator {
 
 using namespace std;
 
-ParallelSimulator::ParallelSimulator(Opts &opts):Simulator(opts){
-}
-
-ParallelSimulator::~ParallelSimulator(){}
-
-void ParallelSimulator::push_phase(const simulation_todo_sptr_t& state){
-  Simulator::push_simulation_phase(state);
-  cout<<"pushed. stack size:"<<state_stack_.size()<<endl;
-}
-
-simulation_todo_sptr_t ParallelSimulator::pop_phase(){
-  simulation_todo_sptr_t spp = Simulator::pop_simulation_phase();
-  cout<<"popped. stack size:"<<state_stack_.size()<<endl;
-  return spp;
-}
-
-/**
- * スレッドを立ち上げ、シミュレーションを開始する
- */
-phase_result_const_sptr_t ParallelSimulator::simulate()
+ParallelSimulator::ParallelSimulator(Opts &opts):NoninteractiveSimulator(opts)
 {
-  for(int i=0; i<opts_->parallel_number; i++){
-    thread_group_.create_thread(boost::bind(&ParallelSimulatorWorker::simulate,*workers_[i]));
-  }
-  thread_group_.join_all();
-  return result_root_;
-}
 
-phase_result_const_sptr_t ParallelSimulator::get_result_root()
-{
-  return result_root_;
-}
-
-void ParallelSimulator::initialize(const parse_tree_sptr& parse_tree){
-  Simulator::initialize(parse_tree);
-  for(int i=0;i<opts_->parallel_number; i++){
-    boost::shared_ptr<ParallelSimulatorWorker> psw(new ParallelSimulatorWorker(*opts_));
-    psw->ParallelSimulatorWorker::initialize(parse_tree,i,this);
-    psw->set_result_root(result_root_);
+  for(int i = 0;i < opts_->parallel_number; i++)
+  {
+    boost::shared_ptr<ParallelSimulatorWorker> psw(new ParallelSimulatorWorker(*opts_, this));
     workers_.push_back(psw);
   }
 }
 
-bool ParallelSimulator::state_stack_is_empty(){
-  return state_stack_.empty();
+ParallelSimulator::~ParallelSimulator(){}
+
+
+phase_result_const_sptr_t ParallelSimulator::simulate()
+{
+  
+  for(unsigned int i = 0; i < workers_.size(); i++){
+    thread_group_.create_thread(boost::bind(&ParallelSimulatorWorker::simulate,*workers_[i]));
+  }
+  thread_group_.join_all();
+  
+  return result_root_;
 }
+
+void ParallelSimulator::initialize(const parse_tree_sptr& parse_tree)
+{
+  reset_result_root();
+
+  opts_->assertion = parse_tree->get_assertion_node();
+
+  parse_tree_ = parse_tree;
+  init_variable_map(parse_tree);
+  
+  profile_vector_.reset(new entire_profile_t());
+  
+  todo_stack_.reset(new ParallelTodoContainer(opts_->search_method, profile_vector_, &mutex_));
+
+  for(unsigned int i = 0; i < workers_.size(); i++)
+  {
+    workers_[i]->initialize(parse_tree, i);
+  }
+  todo_stack_->push_todo(workers_[0]->make_initial_todo());
+  
+}
+
 
 } // simulator
 } // hydla

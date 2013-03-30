@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common"
+				AdditionalIncludeDirectories="..\parser;..\virtual_constraint_solver;..\constraint_hierarchy;..\common;..\output;..\symbolic_simulator"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -183,7 +183,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NoninteractiveSimulator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NonPrevSearcher.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulatorWorker.cpp"
 				>
 			</File>
 			<File
@@ -216,10 +228,6 @@
 			</File>
 			<File
 				RelativePath=".\ValuRange.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\VariableFinder.cpp"
 				>
 			</File>
 		</Filter>
@@ -273,7 +281,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NoninteractiveSimulator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\NonPrevSearcher.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParallelSimulatorWorker.h"
 				>
 			</File>
 			<File
@@ -313,15 +333,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VariableFinder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VariableFinder.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="リソース ファイル"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
+			<Filter
+				Name="リソース ファイル"
+				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+				UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+				>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

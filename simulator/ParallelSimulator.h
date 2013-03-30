@@ -1,24 +1,51 @@
 #ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
 #define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
 
-#include "Simulator.h"
+#include "NoninteractiveSimulator.h"
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
-using namespace boost;
+
+
 namespace hydla {
 namespace simulator {
 
 class ParallelSimulatorWorker;
 
-class ParallelSimulator: public Simulator{
+struct ParallelTodoContainer: public NoninteractiveTodoContainer
+{
+  ParallelTodoContainer(SearchMethod& method, boost::shared_ptr<entire_profile_t> vec, boost::recursive_mutex* mut)
+    : NoninteractiveTodoContainer(method, vec){mutex_ = mut;}
+
+  virtual void push_todo(simulation_todo_sptr_t& todo)
+  {
+    boost::recursive_mutex::scoped_lock lk(*mutex_);
+    NoninteractiveTodoContainer::push_todo(todo);
+  }
+  
+  virtual simulation_todo_sptr_t pop_todo()
+  {
+    boost::recursive_mutex::scoped_lock lk(*mutex_);
+    return NoninteractiveTodoContainer::pop_todo();
+  }
+  
+  virtual bool empty()
+  {
+    boost::recursive_mutex::scoped_lock lk(*mutex_);
+    return NoninteractiveTodoContainer::empty();
+  }
+
+  private:
+  boost::recursive_mutex* mutex_;
+};
+
+
+class ParallelSimulator: public NoninteractiveSimulator{
 
 public:
   ParallelSimulator(Opts &opts);
   
   virtual ~ParallelSimulator();
 
-  void push_phase(const simulation_todo_sptr_t& state);
-  simulation_todo_sptr_t pop_phase();
   /**
    * スレッドを立ち上げ、シミュレーションを開始する
    */
@@ -29,23 +56,17 @@ public:
    */
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
-  phase_result_const_sptr_t get_result_root();
-
-  bool state_stack_is_empty();
+  boost::shared_ptr<todo_container_t> get_todo_stack(){return todo_stack_;}
+  
+  boost::shared_ptr<entire_profile_t> get_profile_vector(){return profile_vector_;}
+  
+  boost::recursive_mutex& get_mutex(){return mutex_;}
 
   private:
   
-  /**
-   * シミュレーション中で使用される変数表の原型
-   */
-  variable_map_t variable_map_;  
+  boost::recursive_mutex mutex_;
   
-  /**
-   * parse tree to simulate
-   */
-  parse_tree_sptr parse_tree_;
-
-  thread_group thread_group_;
+  boost::thread_group thread_group_;
   
   std::vector<boost::shared_ptr<ParallelSimulatorWorker> > workers_;
 

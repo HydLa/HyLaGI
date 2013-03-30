@@ -49,25 +49,24 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
     simulation_todo_sptr_t tmp_todo = todo;
     while(true)
     {
-      result_list_t tmp_result = process_todo(tmp_todo);
+      result_list_t tmp_result = make_results_from_todo(tmp_todo);
       result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
       if(tmp_cont.empty())break;
-      tmp_todo = tmp_cont.back();
-      tmp_cont.pop_back();
+      tmp_todo = tmp_cont.pop_todo();
       tmp_todo->module_set_container->reset(tmp_todo->ms_to_visit);
     }
   }
   else
   {
     todo_container_ = todo_cont;
-    result = process_todo(todo);
+    result = make_results_from_todo(todo);
   }
 
   todo->profile["Phase"] += phase_timer.get_elapsed_us();
   return result;
 }
 
-PhaseSimulator::result_list_t PhaseSimulator::process_todo(simulation_todo_sptr_t& todo)
+PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_todo_sptr_t& todo)
 {
   result_list_t result; 
   bool has_next = false;
@@ -240,12 +239,12 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, hydla:
   for(int i=1; i<(int)result.true_parameter_maps.size();i++){
     simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
     branch_state->parameter_map = result.true_parameter_maps[i];
-    todo_container_->push_back(branch_state);
+    todo_container_->push_todo(branch_state);
   }
   for(int i=0; i<(int)result.false_parameter_maps.size();i++){
     simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
     branch_state->parameter_map = result.false_parameter_maps[i];
-    todo_container_->push_back(branch_state);
+    todo_container_->push_todo(branch_state);
   }
   original->parameter_map = result.true_parameter_maps[0];
   solver_->reset_parameters(original->parameter_map);
@@ -304,7 +303,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   phase_sum_ = 0;
 
   msc_no_init_ = msc_no_init;
-  const hydla::simulator::module_set_sptr& ms = msc_no_init->get_max_module_set();
+  const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
   
   // TODO:RelationGraph上では，ASSERT文を無視しているため，制約モジュール中では独立でもASSERT文の中で関係している変数があった場合に正しく動作しない
   // RelationGraphを作る上では，ASSERTを特殊な「モジュールのようなもの」として扱う必要がある．

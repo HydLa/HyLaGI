@@ -747,7 +747,7 @@ node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_typ
 }
 
 void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
-  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::receive_parameter_map ***");
+  HYDLA_LOGGER_VCS("#*** Begin ", __FUNCTION__, " ***");
   int condition_size = ml_.get_arg_count(); //èåèéÆÇÃêî
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
   ml_.get_next();
@@ -773,7 +773,7 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
     map[tmp_param] = tmp_range;
   }
   HYDLA_LOGGER_VCS("--- result map---\n", map);
-  HYDLA_LOGGER_VCS("#*** End MathematicaVCS::receive_parameter_map ***");
+  HYDLA_LOGGER_VCS("#*** End ", __FUNCTION__, " ***");
 }
 
 void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, 

@@ -245,8 +245,8 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
     parameter_t param(v_it->first, todo->parent);
-    parameter_set_.push_front(ParameterAndRange(param, range));
-    pm[&(parameter_set_.front().parameter)] = range;
+    parameter_set_->push_front(ParameterAndRange(param, range));
+    pm[&(parameter_set_->front().parameter)] = range;
     value_t pvalue(new hydla::symbolic_simulator::SymbolicValue(
       hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first->get_name(),
       v_it->first->get_derivative_count(),
