@@ -14,6 +14,27 @@ using namespace hydla::logger;
 namespace hydla {
 namespace simulator {
 
+
+/*
+ * template method for input 
+ */
+template<typename T> T excin(string message="")
+{
+  T ret;
+  while(1)
+  {
+    if(!message.empty()) cout << message << endl;
+    cout << '>' ;
+    cin >> ret;
+    if(!cin.fail()) break;
+    cin.clear();
+    cin.ignore( 1024, '\n' );
+  }
+  cin.clear();
+  cin.ignore( 1024, '\n' );
+  return ret;
+}
+
 typedef hydla::vcs::SymbolicVirtualConstraintSolver     solver_t;
 
 class InteractiveSimulator:public Simulator{

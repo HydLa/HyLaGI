@@ -9,25 +9,6 @@ namespace simulator {
 using namespace std;
 hydla::output::SymbolicTrajPrinter InteractiveSimulator::printer_;
 
-/*
- * template method for input 
- */
-template<typename T> T excin(string message="")
-{
-  T ret;
-  while(1)
-  {
-    if(!message.empty()) cout << message << endl;
-    cout << '>' ;
-    cin >> ret;
-    if(!cin.fail()) break;
-    cin.clear();
-    cin.ignore( 1024, '\n' );
-  }
-  cin.clear();
-  cin.ignore( 1024, '\n' );
-  return ret;
-}
 
 void InteractiveSimulator::print_end(phase_result_sptr_t& p)
 {
