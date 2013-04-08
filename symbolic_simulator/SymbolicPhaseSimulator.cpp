@@ -1,4 +1,4 @@
-#include "SymbolicSimulator.h"
+#include "SymbolicPhaseSimulator.h"
 
 #include <iostream>
 #include <fstream>
@@ -53,16 +53,16 @@ using hydla::parse_tree::TreeInfixPrinter;
 namespace hydla {
 namespace symbolic_simulator {
 
-SymbolicSimulator::SymbolicSimulator(const Opts& opts) :
+SymbolicPhaseSimulator::SymbolicPhaseSimulator(const Opts& opts) :
   simulator_t(opts)
 {
 }
 
-SymbolicSimulator::~SymbolicSimulator()
+SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 {
 }
 
-void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
+void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
@@ -72,18 +72,18 @@ void SymbolicSimulator::initialize(variable_set_t &v, parameter_set_t &p, variab
 }
 
 
-void SymbolicSimulator::set_simulation_mode(const Phase& phase)
+void SymbolicPhaseSimulator::set_simulation_mode(const Phase& phase)
 {
   current_phase_ = phase;
 }
 
-parameter_set_t SymbolicSimulator::get_parameter_set(){
+parameter_set_t SymbolicPhaseSimulator::get_parameter_set(){
   return *parameter_set_;
 }
 
 
 
-void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
+void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map){
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
     if(it->second>=0){
       for(int i=0; i<it->second;i++){
@@ -102,14 +102,14 @@ void SymbolicSimulator::add_continuity(const continuity_map_t& continuity_map){
   }
 }
 
-SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_conditions(const module_set_sptr& ms){
+SymbolicPhaseSimulator::FalseConditionsResult SymbolicPhaseSimulator::find_false_conditions(const module_set_sptr& ms){
 
-  HYDLA_LOGGER_MS("#*** SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_MS("#*** SymbolicPhaseSimulator::find_false_conditions ***");
   HYDLA_LOGGER_MS(ms->get_name());
 
   solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
 
-  SymbolicSimulator::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
+  SymbolicPhaseSimulator::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
   expanded_always_t expanded_always;
@@ -249,11 +249,11 @@ SymbolicSimulator::FalseConditionsResult SymbolicSimulator::find_false_condition
     false_conditions_[ms] = node_sptr();
     HYDLA_LOGGER_MS("not found false conditions");
   }
-  HYDLA_LOGGER_MS("#*** end SymbolicSimulator::find_false_conditions ***");
+  HYDLA_LOGGER_MS("#*** end SymbolicPhaseSimulator::find_false_conditions ***");
   return ret;
 }
 
-SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
+SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_entailment(
   CheckConsistencyResult &cc_result,
   const node_sptr& guard,
   const continuity_map_t& cont_map
@@ -294,10 +294,10 @@ SymbolicSimulator::CheckEntailmentResult SymbolicSimulator::check_entailment(
   return ce_result;
 }
 
-bool SymbolicSimulator::calculate_closure(simulation_todo_sptr_t& state,
+bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms)
 {
-  HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicSimulator::calculate_closure ***\n");
+  HYDLA_LOGGER_CLOSURE("#*** Begin SymbolicPhaseSimulator::calculate_closure ***\n");
 
   //前準備
   positive_asks_t& positive_asks = state->positive_asks;
@@ -320,7 +320,7 @@ bool SymbolicSimulator::calculate_closure(simulation_todo_sptr_t& state,
         &expanded_always,
         &positive_asks);
 
-    HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_consistency in calculate_closure\n");
+    HYDLA_LOGGER_CLOSURE("%% SymbolicPhaseSimulator::check_consistency in calculate_closure\n");
     timer::Timer consistency_timer;
     //tellじゃなくて制約部分のみ送る
     constraint_list.clear();
@@ -362,7 +362,7 @@ bool SymbolicSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
 
     // ask制約のエンテール処理
-    HYDLA_LOGGER_CLOSURE("%% SymbolicSimulator::check_entailment in calculate_closure\n");
+    HYDLA_LOGGER_CLOSURE("%% SymbolicPhaseSimulator::check_entailment in calculate_closure\n");
     
     // ask制約を集める
     ask_collector.collect_ask(&expanded_always, 
@@ -448,7 +448,7 @@ bool SymbolicSimulator::calculate_closure(simulation_todo_sptr_t& state,
       // 分岐先を生成（導出される方）
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
       new_todo->temporary_constraints.push_back((branched_ask)->get_guard());
-      todo_container_->push_back(new_todo);
+      todo_container_->push_todo(new_todo);
     }
     {
       // 分岐先を生成（導出されない方）
@@ -458,18 +458,18 @@ bool SymbolicSimulator::calculate_closure(simulation_todo_sptr_t& state,
     }
   }
   
-  HYDLA_LOGGER_CLOSURE("#*** End SymbolicSimulator::calculate_closure ***\n");
+  HYDLA_LOGGER_CLOSURE("#*** End SymbolicPhaseSimulator::calculate_closure ***\n");
   return true;
 }
 
-SymbolicSimulator::CalculateVariableMapResult 
-SymbolicSimulator::calculate_variable_map(
+SymbolicPhaseSimulator::CalculateVariableMapResult 
+SymbolicPhaseSimulator::calculate_variable_map(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& todo,
   const variable_map_t & vm,
   variable_range_map_t& result_vm)
 {
-  HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::calculate_variable_map***");
+  HYDLA_LOGGER_MS("#*** Begin SymbolicPhaseSimulator::calculate_variable_map***");
   //前準備
   
   if(current_phase_ == PointPhase){
@@ -523,7 +523,7 @@ SymbolicSimulator::calculate_variable_map(
 
   if(!result)
   {
-    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::calculate_variable_map(result.size() ==0)***\n");
+    HYDLA_LOGGER_MS("#*** End SymbolicPhaseSimulator::calculate_variable_map(result.size() ==0)***\n");
     return CVM_INCONSISTENT;
   }
   
@@ -536,7 +536,7 @@ SymbolicSimulator::calculate_variable_map(
     // TODO:現状，ここで変数表が複数現れる場合は考えていない．
     assert(current_phase_ != PointPhase);
     todo->parent->cause_of_termination = simulator::NOT_UNIQUE_IN_INTERVAL;
-    HYDLA_LOGGER_MS("#*** End SymbolicSimulator::calculate_variable_map(result.size() != 1 && consistent = true)***\n");
+    HYDLA_LOGGER_MS("#*** End SymbolicPhaseSimulator::calculate_variable_map(result.size() != 1 && consistent = true)***\n");
     return CVM_ERROR;
   }
   
@@ -547,10 +547,10 @@ SymbolicSimulator::calculate_variable_map(
   return CVM_CONSISTENT;
 }
 
-SymbolicSimulator::todo_list_t 
-  SymbolicSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
+SymbolicPhaseSimulator::todo_list_t 
+  SymbolicPhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
-  HYDLA_LOGGER_MS("#*** Begin SymbolicSimulator::make_next_todo***");
+  HYDLA_LOGGER_MS("#*** Begin SymbolicPhaseSimulator::make_next_todo***");
   
   solver_->reset_constraint(phase->variable_map, false);
   
@@ -571,7 +571,7 @@ SymbolicSimulator::todo_list_t
   }
   else
   {
-    assert(curent_phase_ == IntervalPhase);
+    assert(current_phase_ == IntervalPhase);
     next_todo->phase = PointPhase;
     phase->variable_map = shift_variable_map_time(phase->variable_map, phase->current_time);
 
@@ -648,12 +648,12 @@ SymbolicSimulator::todo_list_t
   }
   
   
-  HYDLA_LOGGER_MS("#*** End SymbolicSimulator::make_next_todo***");
+  HYDLA_LOGGER_MS("#*** End SymbolicPhaseSimulator::make_next_todo***");
   
   return ret;
 }
 
-variable_map_t SymbolicSimulator::range_map_to_value_map(
+variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   phase_result_sptr_t& state,
   const variable_range_map_t& rm,
   parameter_map_t &parameter_map)
@@ -686,7 +686,7 @@ variable_map_t SymbolicSimulator::range_map_to_value_map(
 }
 
 
-variable_map_t SymbolicSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
+variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
   variable_map_t shifted_vm;
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();

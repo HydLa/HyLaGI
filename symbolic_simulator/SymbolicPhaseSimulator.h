@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_SYMBOLIC_SIMULATOR_H_
-#define _INCLUDED_SYMBOLIC_SIMULATOR_H_
+#ifndef _INCLUDED_SYMBOLIC_PHASE_SIMULATOR_H_
+#define _INCLUDED_SYMBOLIC_PHASE_SIMULATOR_H_
 
 #include <string>
 #include <iostream>
@@ -21,7 +21,7 @@ namespace hydla {
 namespace symbolic_simulator {
 
 
-class SymbolicSimulator : public simulator_t
+class SymbolicPhaseSimulator : public simulator_t
 {
 public:
   typedef simulator::Opts Opts;
@@ -30,8 +30,8 @@ public:
   typedef simulator::phase_result_sptr_t   phase_result_sptr_t;
   typedef ch::module_set_sptr              modulse_set_sptr;
 
-  SymbolicSimulator(const Opts& opts);
-  virtual ~SymbolicSimulator();
+  SymbolicPhaseSimulator(const Opts& opts);
+  virtual ~SymbolicPhaseSimulator();
 
   virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
 
@@ -47,8 +47,6 @@ private:
 
 
   variable_map_t shift_variable_map_time(const variable_map_t& vm,const time_t &time);
-
-  void init_module_set_container(const parse_tree_sptr& parse_tree);
   
   /**
    * PPモードとIPモードを切り替える
@@ -99,4 +97,4 @@ private:
 } // namespace symbolic_simulator
 } // namespace hydla
 
-#endif //_INCLUDED_SYMBOLIC_SIMULATOR_H_
+#endif //_INCLUDED_SYMBOLIC_PHASE_SIMULATOR_H_
