@@ -102,7 +102,7 @@ private:
 	// push_simulation_phase‚Æ‰ï‚í‚¹‚é•K—v‚ ‚è
 	void push_current_condition(const current_condition_t cc)
 	{
-		HYDLA_LOGGER_HA("push cc");
+	  //HYDLA_LOGGER_HA("push cc");
 		cc_vec_.push_front(cc);
 	}
 

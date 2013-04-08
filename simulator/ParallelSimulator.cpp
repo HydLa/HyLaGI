@@ -54,8 +54,8 @@ void ParallelSimulator::initialize(const parse_tree_sptr& parse_tree)
   {
     workers_[i]->initialize(parse_tree, i);
   }
-  todo_stack_->push_todo(workers_[0]->make_initial_todo());
-  
+  simulation_todo_sptr_t todo = workers_[0]->make_initial_todo();
+  todo_stack_->push_todo(todo);
 }
 
 

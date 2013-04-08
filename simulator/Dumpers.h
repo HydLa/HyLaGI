@@ -24,4 +24,4 @@ std::ostream& operator<<(std::ostream& s, const module_set_sptr& m);
 
 
 
-#endif _INCLUDED_HYDLA_DUMPERS_H_
+#endif // _INCLUDED_HYDLA_DUMPERS_H_

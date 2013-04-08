@@ -22,7 +22,8 @@ SequentialSimulator::~SequentialSimulator()
 phase_result_const_sptr_t SequentialSimulator::simulate()
 {
   std::string error_str;
-  todo_stack_->push_todo(make_initial_todo());
+  simulation_todo_sptr_t init_todo = make_initial_todo();
+  todo_stack_->push_todo(init_todo);
   int error_sum = 0;
   while(!todo_stack_->empty()) 
   {

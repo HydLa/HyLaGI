@@ -6,6 +6,8 @@
 #include "../common/Logger.h"
 #include "../parser/TreeInfixPrinter.h"
 
+/*
+
 using namespace std;
 
 namespace hydla {
@@ -432,4 +434,4 @@ namespace simulator {
 
 } // simulator
 } // hydla
-
+*/

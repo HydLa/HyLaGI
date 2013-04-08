@@ -28,8 +28,9 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
+  hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
   phase_simulator_->initialize(*variable_set_, *parameter_set_,
-   *variable_map_, parse_tree_->get_variable_map(), msc_no_init_);
+   *variable_map_, vm, msc_no_init_);
 }
 
 void Simulator::reset_result_root()
