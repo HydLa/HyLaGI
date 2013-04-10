@@ -2,7 +2,7 @@
 .SUFFIXES: .o .c .cc .cpp .h .d
 
 CC       := gcc
-CXX      := g++44
+CXX      := g++
 SED      := sed #@SED@
 MV       := mv #@MV@
 AR       := ar #@AR@
