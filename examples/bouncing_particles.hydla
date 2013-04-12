@@ -1,9 +1,14 @@
 // many bouncing particles
 
-INIT(y) <=> y = 10 & y' = 0.
+INIT(y, y0) <=> y = y0 & y' = 0.
 FALL(y) <=> [](y'' = -10).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
-BALL(yarg){INIT(yarg), FALL(yarg) << BOUNCE(yarg)}.
+BALL(yarg, y0){INIT(yarg, y0), FALL(yarg) << BOUNCE(yarg)}.
 
-BALL(y1), BALL(y2), BALL(y3), BALL(y4), BALL(y5), BALL(y6), BALL(y7), BALL(y8), BALL(y9), BALL(y10).
+BALL(y1,20), BALL(y2,20), BALL(y3,18),
+BALL(y4,18), BALL(y5,15), BALL(y6,15),
+BALL(y7,15), BALL(y8,13), BALL(y9,13), BALL(y10,
+13),
+BALL(y11, 10), BALL(y12, 10), BALL(y13, 10).
+//BALL(y14, 8), BALL(y15, 8).
