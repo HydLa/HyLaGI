@@ -87,6 +87,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.dump_relation = po.count("dump-module-relation-graph")>0;
   opts.interactive_mode = po.count("in")>0;
+  opts.ignore_warnings = po.count("ignore_warnings")>0;
   //opts.ha_convert_mode = po.count("ha")>0;
   //opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;

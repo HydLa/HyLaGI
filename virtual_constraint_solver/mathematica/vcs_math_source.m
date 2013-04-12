@@ -24,6 +24,7 @@ $MaxExtraPrecision = 1000;
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
  * timeOutS: タイムアウトまでの時間．秒単位．
+ * opt...: 各種オプションのON/OFF
  *)
 
 
@@ -36,7 +37,10 @@ createMapList = {};
  想定外の形式の結果になって変な計算を始めてエラーメッセージが爆発することが無いようにするため．
  あまり良い形の実装ではなく，publicMethodにだけ書いておく形で実装できるなら多分それが設計的に一番良いはず．
  現状では，危ないと思った個所に逐一挟んでおくことになる． *)
-checkMessage := (If[Length[$MessageList] > 0, Abort[] ]);
+If[optIgnoreWarnings,
+  checkMessage := (If[Length[Cases[$MessageList, Except[HoldForm[Minimize::ztest1], Except[HoldForm[Reduce::ztest1] ] ] ] ] > 0, Print[FullForm[$MessageList]];Abort[]]),
+  checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
+];
 
 publicMethod::timeout = "Calculation has reached to timeout";
 
@@ -322,12 +326,12 @@ publicMethod[
         tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
         tCons = sol[[2]] /. tCons;
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-        tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals], Reduce::ztest1]],
+        tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals]]],
         (* 微分方程式が解けた場合 *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
         tCons = applyList[sol[[1]] /. tCons];
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-        tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals], Reduce::ztest1]]
+        tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals]]]
       ];
       checkMessage;
 
@@ -342,8 +346,8 @@ publicMethod[
         necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
         
         simplePrint[necessaryTCons];
-        cpTrue = Quiet[Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas, Minimize::ztest}][[1]] == 0, Reals], Reduce::ztest1];
-        cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
+        cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
+        cpFalse = Reduce[pcons && !cpTrue, Reals];
 
         simplePrint[cpTrue, cpFalse];
 

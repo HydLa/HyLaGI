@@ -62,6 +62,14 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
+  // åxçêñ≥éã
+  ml_.MLPutFunction("Set", 2);
+  ml_.MLPutSymbol("optIgnoreWarnings"); 
+  ml_.MLPutSymbol(opts.ignore_warnings ? "True" : "False");
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+
   // ç≈ìKâªÉåÉxÉã
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("optOptimizationLevel");

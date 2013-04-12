@@ -126,6 +126,9 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""), 
      "simulation time for the model\n"
      "  empty: infinity")
+
+    ("ignore_warnings", "ignore warnings. \n"
+     "Warnings are mainly caused by errors of calculations")
      
     ("phase,p", 
      value<int>()->default_value(-1), 

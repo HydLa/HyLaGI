@@ -32,6 +32,7 @@ typedef struct Opts_ {
   int parallel_number;
   bool dump_in_progress;
   bool stop_at_failure;
+  bool ignore_warnings;
   std::string output_interval;
   int output_precision;
   int approx_precision;
