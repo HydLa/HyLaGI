@@ -93,8 +93,6 @@ Module[{endTime,startTime,funcidx,i},
 ];
 );
 
-
-
 (*
  * デバッグ用メッセージ出力関数
  * debugPrint：引数として与えられた要素要素を文字列にして出力する．（シンボルは評価してから表示）

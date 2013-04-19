@@ -151,22 +151,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCS.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\mathlink_helper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathValue.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\mathematica\PacketErrorHandler.cpp"
 				>
 			</File>
@@ -176,10 +160,6 @@
 			</File>
 			<File
 				RelativePath=".\SymbolicVirtualConstraintSolver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\vcs_math_source.cpp"
 				>
 			</File>
 			<File
@@ -193,51 +173,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\mathematica\MathematicaExpressionConverter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\mathlink_helper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathTime.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathValue.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathVariable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathVCSType.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\PacketErrorHandler.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\PacketSender.h"
-				>
-			</File>
-			<File
 				RelativePath=".\SolveError.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SymbolicVirtualConstraintSolver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\vcs_math_source.h"
 				>
 			</File>
 			<File
@@ -274,6 +214,78 @@
 					/>
 				</FileConfiguration>
 			</File>
+		</Filter>
+		<Filter
+			Name="mathematica"
+			>
+			<File
+				RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mathematica\MathematicaVCS.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mathematica\mathlink_helper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mathematica\MathValue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mathematica\vcs_math_source.cpp"
+				>
+			</File>
+			<Filter
+				Name="ヘッダー ファイル"
+				>
+				<File
+					RelativePath=".\mathematica\MathematicaExpressionConverter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathematicaVCS.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\mathlink_helper.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathTime.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathValue.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathVariable.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathVCSType.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\PacketErrorHandler.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\PacketSender.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\vcs_math_source.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="ソース ファイル"
+				>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
