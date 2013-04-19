@@ -453,11 +453,15 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       
       map = Map[(adjustExprs[#, judge])&, map];
       If[approximationMode === numerical, 
-        map = Map[(If[LeafCount[#[[2]] ] >= approximationThreshold,
-            Head[#][#[[1]], approxExprInternal[approximationPrecision, #[[2]] ] ],
-            #])&,
-          map
-        ]
+        map = 
+          Map[
+            (Map[(If[LeafCount[#[[2]] ] >= approximationThreshold, 
+                Head[#][#[[1]], approxExprInternal[approximationPrecision, #[[2]] ] ],
+                #])&,
+              #
+            ])&,
+            map
+          ]
       ];
       map = Map[(convertExprs[#])&, map];
       If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
