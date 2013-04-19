@@ -134,7 +134,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
         break;
         
       case simulator::STEP_LIMIT:
-        cout << "# step ended\n" ;
+        cout << "# number of phases ended\n" ;
         break;
         
       case simulator::TIME_OUT_REACHED:

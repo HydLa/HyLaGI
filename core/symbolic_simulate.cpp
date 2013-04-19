@@ -124,6 +124,16 @@ void setup_symbolic_simulator_opts(Opts& opts)
     throw std::runtime_error(std::string("invalid option - search"));
   }
   
+  opts.approx_precision = po.get<int>("approx_precision");
+  if(po.get<std::string>("approx_mode") == ""){
+    opts.approx_mode = simulator::NO_APPROX;
+  }else if(po.get<std::string>("approx_mode") == "n"){
+    opts.approx_mode = simulator::NUMERICAL_APPROX;
+  }else if(po.get<std::string>("approx_mode") == "i"){
+    opts.approx_mode = simulator::INTERVAL_APPROX;
+  }else{
+    throw std::runtime_error(std::string("invalid option - approx_mode"));
+  }
   
   
   /* std::string output_variables = po.get<std::string>("output-variables");

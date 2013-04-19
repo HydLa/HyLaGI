@@ -78,6 +78,37 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
   
+  
+  
+  // 近似モード
+  ml_.MLPutFunction("Set",2);
+  ml_.MLPutSymbol("approximationMode");
+  if(opts.approx_mode == NO_APPROX)ml_.MLPutSymbol("none");
+  else if(opts.approx_mode == NUMERICAL_APPROX)ml_.MLPutSymbol("numerical");
+  else if(opts.approx_mode == INTERVAL_APPROX)ml_.MLPutSymbol("interval");
+  else assert(0);
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+  
+  
+  ml_.MLPutFunction("Set",2);
+  ml_.MLPutSymbol("approximationThreshold");
+  ml_.MLPutInteger(opts.approx_precision);
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+  
+  
+  ml_.MLPutFunction("Set",2);
+  ml_.MLPutSymbol("approximationPrecision");
+  ml_.MLPutInteger(opts.approx_precision);
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+  
+  
+  
   // タイムアウト時間
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("timeOutS"); 

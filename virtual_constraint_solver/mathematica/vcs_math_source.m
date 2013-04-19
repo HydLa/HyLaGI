@@ -24,7 +24,10 @@ $MaxExtraPrecision = 1000;
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
  * timeOutS: タイムアウトまでの時間．秒単位．
- * opt...: 各種オプションのON/OFF
+ * opt...: 各種オプションのON/OFF．
+ * approximationMode: 近似モード．
+ * approximationThreshold: 近似閾値．現在はLeafCountの値で判断している．
+ * approximationPrecision: 近似精度．
  *)
 
 
@@ -424,7 +427,8 @@ publicMethod[
   createParameterMap,
   pcons,
   createMap[pcons, isParameter, hasParameter, {}];
-]
+];
+
 
 createMap[cons_, judge_, hasJudge_, vars_] := Module[
   {map, idx},
@@ -446,8 +450,16 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       map = applyListToOr[map];
       map = Map[(applyList[#])&, map];
       debugPrint["@createMap map after applyList", map];
-    
-      map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
+      
+      map = Map[(adjustExprs[#, judge])&, map];
+      If[approximationMode === numerical, 
+        map = Map[(If[LeafCount[#[[2]] ] >= approximationThreshold,
+            Head[#][#[[1]], approxExprInternal[approximationPrecision, #[[2]] ] ],
+            #])&,
+          map
+        ]
+      ];
+      map = Map[(convertExprs[#])&, map];
       If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
     ];
     map
@@ -933,14 +945,16 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   approxExpr,
   precision, expr,
-  integerString[
-    Rationalize[
-      N[Simplify[expr], precision + 3],
-      Divide[1, Power[10, precision]]
-    ]
-  ]
+  integerString[approxExprInternal[precision, expr] ]
 ];
 
+
+approxExprInternal[precision_, expr_] := (
+  Rationalize[
+    N[Simplify[expr], precision + 3],
+    Divide[1, Power[10, precision] ]
+  ]
+);
 
 (* 
  * 与えられたtの式をタイムシフト

@@ -15,6 +15,12 @@ namespace hydla {
 namespace simulator {
 
 typedef enum{
+  NO_APPROX,
+  NUMERICAL_APPROX,
+  INTERVAL_APPROX
+}ApproximationMode;
+
+typedef enum{
   DFS,
   BFS
 }SearchMethod;
@@ -35,7 +41,9 @@ typedef struct Opts_ {
   bool ignore_warnings;
   std::string output_interval;
   int output_precision;
+  ApproximationMode approx_mode;
   int approx_precision;
+  int approx_threshold;
   std::string solver;
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;

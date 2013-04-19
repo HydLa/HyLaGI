@@ -21,7 +21,7 @@ void ProgramOptions::init_descriptions()
   options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:", 
                                    LINE_LENGTH);
   generic_desc.add_options()
-    ("help, h", "produce help message")
+    ("help,h", "produce help message")
     ("version", "display version")
     ("debug,d", value<std::string>()->default_value(""), "enable debug mode\n")
    // ("profile", "enable profile mode")
@@ -64,6 +64,22 @@ void ProgramOptions::init_descriptions()
      "  d: Depth First Search\n"
      "  b: Breadth First Search")
 
+    
+    ("approx_mode,a",
+     value<std::string>()->default_value(""), 
+     "mode of approximation:\n"
+     "  empty: no approximation \n"
+     "  n    : numerical (simple, but not validated!)\n"
+     "  i    : interval (validated)\n")
+    
+    ("approx_precision",
+     value<int>()->default_value(5),
+     "precision of approximation")
+     
+     
+    ("approx_threshold",
+     value<int>()->default_value(30),
+     "threshold of approximation")
      
      /*
      ("solver,s",
@@ -164,7 +180,7 @@ void ProgramOptions::init_descriptions()
      
     ("timeout_calc", 
      value<int>()->default_value(-1),
-     "timeout for each calculation in backend(second)"
+     "timeout for each calculation in backend(second)\n"
      " negative or zero - infinity")
      
     ("fail-stop", 
