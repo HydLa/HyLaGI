@@ -3,10 +3,6 @@
 
 #include "../SymbolicVirtualConstraintSolver.h"
 
-#include "MathVariable.h"
-#include "MathValue.h"
-#include "MathTime.h"
-
 namespace hydla {
 namespace vcs {
 namespace mathematica {

@@ -218,26 +218,6 @@
 		<Filter
 			Name="mathematica"
 			>
-			<File
-				RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCS.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\mathlink_helper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathValue.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\vcs_math_source.cpp"
-				>
-			</File>
 			<Filter
 				Name="ヘッダー ファイル"
 				>
@@ -251,18 +231,6 @@
 				</File>
 				<File
 					RelativePath=".\mathematica\mathlink_helper.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mathematica\MathTime.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mathematica\MathValue.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mathematica\MathVariable.h"
 					>
 				</File>
 				<File
@@ -285,6 +253,22 @@
 			<Filter
 				Name="ソース ファイル"
 				>
+				<File
+					RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathematicaVCS.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\mathlink_helper.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\vcs_math_source.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>
