@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\output;..\symbolic_legacy_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator;..\librealpaverbasic;..\common"
+				AdditionalIncludeDirectories="..\simulator\symbolic;..\output;..\parser;..\constraint_hierarchy;..\simulator;..\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"

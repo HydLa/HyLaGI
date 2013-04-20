@@ -151,14 +151,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\mathematica\PacketErrorHandler.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\PacketSender.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SymbolicVirtualConstraintSolver.cpp"
 				>
 			</File>
@@ -218,26 +210,6 @@
 		<Filter
 			Name="mathematica"
 			>
-			<File
-				RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathematicaVCS.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\mathlink_helper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\MathValue.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mathematica\vcs_math_source.cpp"
-				>
-			</File>
 			<Filter
 				Name="ヘッダー ファイル"
 				>
@@ -285,6 +257,34 @@
 			<Filter
 				Name="ソース ファイル"
 				>
+				<File
+					RelativePath=".\mathematica\MathematicaExpressionConverter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathematicaVCS.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\mathlink_helper.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\MathValue.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\PacketErrorHandler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\PacketSender.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\vcs_math_source.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>

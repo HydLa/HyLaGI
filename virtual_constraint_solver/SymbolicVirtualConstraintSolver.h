@@ -16,7 +16,7 @@
 #include <boost/function.hpp>
 
 #include "PhaseSimulator.h"
-#include "../symbolic_simulator/SymbolicTypes.h"
+#include "../simulator/symbolic/SymbolicTypes.h"
 
 namespace hydla {
 namespace vcs {

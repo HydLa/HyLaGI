@@ -17,8 +17,7 @@
 #include "AskCollector.h"
 
 #include "InitNodeRemover.h"
-#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
-//#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
+#include "MathematicaVCS.h"
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
@@ -70,7 +69,6 @@ void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, v
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
 }
-
 
 void SymbolicPhaseSimulator::set_simulation_mode(const Phase& phase)
 {
