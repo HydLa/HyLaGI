@@ -10,7 +10,8 @@
 #include "DefaultTreeVisitor.h"
 
 namespace hydla {
-namespace symbolic_simulator {
+namespace simulator {
+namespace symbolic {
 
 /**
  * prevを含むかを調べるビジタークラス．
@@ -40,7 +41,8 @@ private:
   bool include_prev_;
 };
 
-} //namespace symbolic_simulator
+} //namespace symbolic
+} //namespace simulator
 } //namespace hydla 
 
 #endif // _INCLUDED_HYDLA_PREV_SERACHER_H_

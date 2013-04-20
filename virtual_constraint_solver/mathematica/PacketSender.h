@@ -116,7 +116,7 @@ public:
 
   void create_max_diff_map(max_diff_map_t& max_diff_map);
 
-  virtual void visit(hydla::symbolic_simulator::SymbolicValue& value);
+  virtual void visit(hydla::simulator::symbolic::SymbolicValue& value);
   // AskêßñÒ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 

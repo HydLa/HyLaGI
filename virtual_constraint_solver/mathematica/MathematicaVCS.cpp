@@ -16,7 +16,7 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-void MathematicaVCS::change_mode(hydla::symbolic_simulator::Mode m, int approx_precision)
+void MathematicaVCS::change_mode(hydla::simulator::symbolic::Mode m, int approx_precision)
 {
   mode_ = m;
 }
@@ -241,7 +241,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     "#*** Begin MathematicaVCS::create_maps ***\n");
     
 /////////////////// ‘—Mˆ—
-  if(mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::FalseConditionsMode){
+  if(mode_==hydla::simulator::symbolic::DiscreteMode || mode_==hydla::simulator::symbolic::FalseConditionsMode){
     ml_.put_function("createVariableMap", 0);
   }else{
     ml_.put_function("createVariableMapInterval", 0);
@@ -334,7 +334,7 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
   HYDLA_LOGGER_VCS(
     "#*** Begin MathematicaVCS::add_constraint ***\n");
   
-  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode || mode_== hydla::symbolic_simulator::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
+  PacketSender::VariableArg arg = (mode_==hydla::simulator::symbolic::DiscreteMode || mode_== hydla::simulator::symbolic::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
 
 
   HYDLA_LOGGER_VCS("%% addConstraint");
@@ -375,7 +375,7 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm, const bool& send
   variable_map_t::const_iterator it = 
     vm.begin();
   int size=0;
-   PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode || mode_== hydla::symbolic_simulator::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
+   PacketSender::VariableArg arg = (mode_==hydla::simulator::symbolic::DiscreteMode || mode_== hydla::simulator::symbolic::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
   for(; it!=vm.end(); ++it)
   {
     if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->is_undefined()){
@@ -423,13 +423,13 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   HYDLA_LOGGER_VCS(
     "#*** Begin MathematicaVCS::add_guard ***\n");
   
-  PacketSender::VariableArg arg = (mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
+  PacketSender::VariableArg arg = (mode_==hydla::simulator::symbolic::DiscreteMode || mode_==hydla::simulator::symbolic::FalseConditionsMode)?PacketSender::VA_None:PacketSender::VA_Time;
 
   switch(mode_){
-    case hydla::symbolic_simulator::DiscreteMode:
+    case hydla::simulator::symbolic::DiscreteMode:
       ml_.put_function("addConstraint", 2);
       break;
-    case hydla::symbolic_simulator::FalseConditionsMode:
+    case hydla::simulator::symbolic::FalseConditionsMode:
       ml_.put_function("addGuard",2);
       break;
     default:
@@ -479,10 +479,10 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
   HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::check_consistency ***");
 
   switch(mode_){ 
-  case hydla::symbolic_simulator::DiscreteMode:
+  case hydla::simulator::symbolic::DiscreteMode:
     ml_.put_function("checkConsistencyPoint", 0);
     break;
-  case hydla::symbolic_simulator::FalseConditionsMode:
+  case hydla::simulator::symbolic::FalseConditionsMode:
     ml_.put_function("checkFalseConditions", 0);
     break;
   default:
@@ -1061,7 +1061,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
   ml_.put_function("Equal", 2);
 
   ps.put_var(name, derivative_count, PacketSender::VA_Prev);
-  if(mode_==hydla::symbolic_simulator::DiscreteMode || mode_==hydla::symbolic_simulator::FalseConditionsMode){
+  if(mode_==hydla::simulator::symbolic::DiscreteMode || mode_==hydla::simulator::symbolic::FalseConditionsMode){
     ps.put_var(name, derivative_count, PacketSender::VA_None);
     ps.put_vars();
   }

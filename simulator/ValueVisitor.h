@@ -3,15 +3,15 @@
 
 
 namespace hydla {
-
-namespace symbolic_simulator{
+namespace simulator {
+namespace symbolic
+{
 class SymbolicValue;
 }
-namespace simulator {
 
 class ValueVisitor{
   public:
-  virtual void visit(hydla::symbolic_simulator::SymbolicValue&) = 0;
+  virtual void visit(hydla::simulator::symbolic::SymbolicValue&) = 0;
 };
 
 } // namespace simulator

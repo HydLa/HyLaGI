@@ -24,7 +24,7 @@ using namespace hydla;
 using namespace hydla::parse_tree;
 using namespace hydla::parser;
 using namespace hydla::ch;
-using namespace hydla::symbolic_simulator;
+using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 
 NoninteractiveSimulator* simulator_;

@@ -7,7 +7,7 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-  typedef hydla::symbolic_simulator::time_t MathTime;
+  typedef hydla::simulator::symbolic::time_t MathTime;
 
 } // namespace mathematica
 } // namespace vcs

@@ -7,14 +7,15 @@
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
 using namespace std;
-using namespace hydla::symbolic_simulator;
+using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 using namespace hydla::parse_tree;
 
 namespace hydla{
-namespace symbolic_simulator{
+namespace simulator{
+namespace symbolic{
 
 AnalysisResultChecker::AnalysisResultChecker(const Opts& opts):ConstraintAnalyzer(const_cast<Opts&>(opts)){}
 
@@ -202,5 +203,6 @@ AnalysisResultChecker::check_false_conditions(
 }
 
 
+}
 }
 }

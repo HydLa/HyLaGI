@@ -10,7 +10,8 @@
 #include <boost/operators.hpp>
 
 namespace hydla {
-namespace symbolic_simulator {
+namespace simulator {
+namespace symbolic {
 
 class SymbolicValue: public hydla::simulator::Value
 {  
@@ -66,6 +67,7 @@ class SymbolicValue: public hydla::simulator::Value
   node_sptr node_;  //’l‚Ínode_sptr
 };
 
+}
 } // namespace simulator
 } // namespace hydla
 

@@ -203,7 +203,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   getline(cin, value_str);
   
   if(value_str.substr(0,1)!="(" && value_str.substr(0,1)!="["){
-    value_t value(new hydla::symbolic_simulator::SymbolicValue(value_str));
+    value_t value(new hydla::simulator::symbolic::SymbolicValue(value_str));
     // TODO: stringでvalue作ると，バックエンド変えた時に対応できないので何とかする
     // 　　　（これはSymbolicValueのコンストラクタ側の問題かもしれない）
     //       あとこれだと不正な式入力された場合も対応できない
@@ -219,8 +219,8 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     vector<string> v;
     boost::algorithm::split( v, rangevalue, boost::is_any_of(",") );
     
-    value_t lowvalue(new hydla::symbolic_simulator::SymbolicValue(v[0]));
-    value_t upvalue(new hydla::symbolic_simulator::SymbolicValue(v[1]));
+    value_t lowvalue(new hydla::simulator::symbolic::SymbolicValue(v[0]));
+    value_t upvalue(new hydla::simulator::symbolic::SymbolicValue(v[1]));
     
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
@@ -228,7 +228,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     parameter_t param(v_it->first, todo->parent);
     parameter_set_->push_front(ParameterAndRange(param, range));
     pm[&(parameter_set_->front().parameter)] = range;
-    value_t pvalue(new hydla::symbolic_simulator::SymbolicValue(
+    value_t pvalue(new hydla::simulator::symbolic::SymbolicValue(
       hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first->get_name(),
       v_it->first->get_derivative_count(),
       todo->parent->id))));

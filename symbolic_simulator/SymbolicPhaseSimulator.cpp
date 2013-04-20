@@ -51,7 +51,8 @@ using hydla::simulator::PointPhase;
 using hydla::parse_tree::TreeInfixPrinter;
 
 namespace hydla {
-namespace symbolic_simulator {
+namespace simulator {
+namespace symbolic {
 
 CalculateVariableMapResult
 SymbolicPhaseSimulator::check_false_conditions
@@ -523,5 +524,6 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
   return shifted_vm;
 }
 
-} //namespace symbolic_simulator
+} //namespace symbolic
+} //namespace simulator
 } //namespace hydla

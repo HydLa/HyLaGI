@@ -282,7 +282,7 @@ void PacketSender::put_value(value_t val, VariableArg var){
 }
 
 
-void PacketSender::visit(hydla::symbolic_simulator::SymbolicValue& value){
+void PacketSender::visit(hydla::simulator::symbolic::SymbolicValue& value){
   put_node(value.get_node(), variable_arg_);
 }
   

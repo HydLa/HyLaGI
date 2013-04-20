@@ -12,7 +12,8 @@
 #include "PhaseSimulator.h"
 
 namespace hydla {
-namespace symbolic_simulator {
+namespace simulator {
+namespace symbolic {
   typedef simulator::module_set_sptr             module_set_sptr;
   typedef simulator::module_set_container_sptr   module_set_container_sptr;
   typedef simulator::module_set_list_t           module_set_list_t;
@@ -51,8 +52,8 @@ namespace symbolic_simulator {
     FalseConditionsMode,
   } Mode;
   
-
-} // namespace symbolic_simulator
+} // namespace symbolic
+} // namespace simulator
 } // namespace hydla
 
 #endif //_INCLUDED_SYMBOLIC_TYPES_H_

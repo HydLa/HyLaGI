@@ -27,7 +27,7 @@ ParallelSimulatorWorker::~ParallelSimulatorWorker(){}
 void ParallelSimulatorWorker::initialize(const parse_tree_sptr& parse_tree, int id)
 {
   init_module_set_container(parse_tree);
-  set_phase_simulator(new hydla::symbolic_simulator::SymbolicPhaseSimulator(*opts_));
+  set_phase_simulator(new hydla::simulator::symbolic::SymbolicPhaseSimulator(*opts_));
   thr_id_ = id;
   end_flag_ = false;
   running_thread_count_ = 0;

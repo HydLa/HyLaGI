@@ -29,7 +29,7 @@ public:
   /**
    * 離散変化モード，連続変化モードの切り替えをおこなう
    */
-  virtual void change_mode(hydla::symbolic_simulator::Mode m, int approx_precision);
+  virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision);
 
   /**
    * 一時的な制約の追加を開始する
@@ -132,7 +132,7 @@ private:
    */
   node_sptr receive_condition_node(FalseConditionsResult& node_type);
   
-  hydla::symbolic_simulator::Mode      mode_;
+  hydla::simulator::symbolic::Mode      mode_;
   
 
   MathLink ml_;

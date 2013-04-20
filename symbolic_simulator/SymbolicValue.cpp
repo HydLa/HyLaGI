@@ -7,7 +7,8 @@
 #include "Logger.h"
 
 namespace hydla {
-namespace symbolic_simulator{
+namespace simulator{
+namespace symbolic {
 
 bool SymbolicValue::is_undefined() const
 {
@@ -52,6 +53,6 @@ void SymbolicValue::set(const node_sptr &nod)
 }
 
 
-
-} // namespace symbolic_simulator
+} // namespace symbolic
+} // namespace simulator
 } // namespace hydla

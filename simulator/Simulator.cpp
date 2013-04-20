@@ -73,7 +73,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       v.name             = it->first;
       v.derivative_count = d;
       variable_set_->push_front(v);
-      (*variable_map_)[&(variable_set_->front())] = value_t(new symbolic_simulator::SymbolicValue());
+      (*variable_map_)[&(variable_set_->front())] = value_t(new simulator::symbolic::SymbolicValue());
     }
   }
 }
@@ -84,7 +84,7 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   simulation_todo_sptr_t todo(new SimulationTodo());
   todo->elapsed_time = 0;
   todo->phase        = simulator::PointPhase;
-  todo->current_time = value_t(new hydla::symbolic_simulator::SymbolicValue("0"));
+  todo->current_time = value_t(new hydla::simulator::symbolic::SymbolicValue("0"));
   todo->module_set_container = msc_original_;
   todo->ms_to_visit = msc_original_->get_full_ms_list();
   todo->parent = result_root_;

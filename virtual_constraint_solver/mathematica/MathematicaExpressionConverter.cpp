@@ -38,7 +38,7 @@ void MathematicaExpressionConverter::set_range(const value_t &val, value_range_t
 }
 
 MathematicaExpressionConverter::value_t MathematicaExpressionConverter::receive_and_make_symbolic_value(MathLink &ml){
-  value_t ret(new hydla::symbolic_simulator::SymbolicValue(make_tree(ml)));
+  value_t ret(new hydla::simulator::symbolic::SymbolicValue(make_tree(ml)));
   return ret;  
 }
 

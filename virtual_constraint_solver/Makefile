@@ -1,8 +1,8 @@
 MAKE_TYPE := library
 
 TARGET	 := libhydla_virtual_constraint_solver.a
-INCLUDES += -I. -I./mathematica #-I./realpaver -I./reduce
-INCLUDES += -I../parser -I../constraint_hierarchy -I../simulator -I../common #-I../librealpaver -I../librealpaverbasic
+INCLUDES += -I. -I./mathematica #-I./reduce
+INCLUDES += -I../parser -I../constraint_hierarchy -I../simulator -I../common
 INCLUDES += -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 DEFINES  += -DRP_SYSTEM_LINUX_IX86

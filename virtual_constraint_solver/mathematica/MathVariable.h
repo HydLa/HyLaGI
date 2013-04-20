@@ -7,7 +7,7 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
   
-typedef hydla::symbolic_simulator::variable_t MathVariable;
+typedef hydla::simulator::symbolic::variable_t MathVariable;
 
 } // namespace mathematica
 } // namespace simulator

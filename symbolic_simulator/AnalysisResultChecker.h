@@ -8,7 +8,8 @@
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
 
 namespace hydla{
-namespace symbolic_simulator{
+namespace simulator{
+namespace symbolic {
 
 class AnalysisResultChecker : public ConstraintAnalyzer
 {
@@ -33,6 +34,7 @@ private:
 
 };
 
+}
 }
 }
 #endif //_INCLUDED_CONSTRAINT_ANALYZER_H_

@@ -23,7 +23,7 @@ using namespace hydla;
 using namespace hydla::parser;
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
-using namespace hydla::symbolic_simulator;
+using namespace hydla::simulator::symbolic;
 using namespace hydla::ch;
 using namespace boost;
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   expanded_always_t expanded_always;                              \
   positive_asks_t positive_asks;                                  \
   tc.collect_all_tells(&tells, &expanded_always, &positive_asks); \
-  hydla::symbolic_simulator::ConsistencyChecker cc(ml);           \
+  hydla::simulator::symbolic::ConsistencyChecker cc(ml);           \
   ConstraintStoreBuilderPoint csbp;                               \
   csbp.build_constraint_store();                                  \
 

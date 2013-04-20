@@ -2,7 +2,7 @@
 #include "../symbolic_simulator/SymbolicValue.h"
 
 using namespace hydla::simulator;
-using hydla::symbolic_simulator::SymbolicValue;
+using hydla::simulator::symbolic::SymbolicValue;
 
 bool hydla::simulator::operator<(const Value& lhs, const Value& rhs){
   return lhs.get_string() < rhs.get_string();

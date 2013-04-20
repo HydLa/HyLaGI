@@ -18,7 +18,8 @@
 #include "../output/TrajPrinter.h"
 
 namespace hydla {
-namespace symbolic_simulator {
+namespace simulator {
+namespace symbolic {
 
 class AnalysisResultChecker;
 
@@ -98,7 +99,8 @@ private:
   Phase current_phase_;
 };
 
-} // namespace symbolic_simulator
+} // namespace symbolic
+} // namespace simulator
 } // namespace hydla
 
 #endif //_INCLUDED_SYMBOLIC_PHASE_SIMULATOR_H_

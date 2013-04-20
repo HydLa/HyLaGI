@@ -26,7 +26,7 @@ namespace vcs {
  *  TODO:VCSを継承しても齟齬が起きないようにする
  */
 
-typedef hydla::symbolic_simulator::parameter_map_t         parameter_map_t;
+typedef hydla::simulator::symbolic::parameter_map_t         parameter_map_t;
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 struct CheckConsistencyResult{
   parameter_maps_t true_parameter_maps, false_parameter_maps; 
@@ -35,13 +35,13 @@ struct CheckConsistencyResult{
 class SymbolicVirtualConstraintSolver
 {
 public:
-  typedef hydla::symbolic_simulator::variable_t              variable_t;
-  typedef hydla::symbolic_simulator::value_t                 value_t;
-  typedef hydla::symbolic_simulator::parameter_t             parameter_t;
-  typedef hydla::symbolic_simulator::value_range_t           value_range_t;
-  typedef hydla::symbolic_simulator::time_t                  time_t;
-  typedef hydla::symbolic_simulator::variable_map_t          variable_map_t;
-  typedef hydla::symbolic_simulator::variable_range_map_t    variable_range_map_t;
+  typedef hydla::simulator::symbolic::variable_t              variable_t;
+  typedef hydla::simulator::symbolic::value_t                 value_t;
+  typedef hydla::simulator::symbolic::parameter_t             parameter_t;
+  typedef hydla::simulator::symbolic::value_range_t           value_range_t;
+  typedef hydla::simulator::symbolic::time_t                  time_t;
+  typedef hydla::simulator::symbolic::variable_map_t          variable_map_t;
+  typedef hydla::simulator::symbolic::variable_range_map_t    variable_range_map_t;
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::parse_tree::node_sptr                       node_sptr;
   typedef hydla::simulator::constraints_t                    constraints_t;
@@ -50,8 +50,8 @@ public:
   typedef hydla::simulator::positive_asks_t                  positive_asks_t;
   typedef hydla::simulator::negative_asks_t                  negative_asks_t;
   typedef hydla::simulator::not_adopted_tells_list_t         not_adopted_tells_list_t;
-  typedef hydla::symbolic_simulator::variable_set_t          variable_set_t;
-  typedef hydla::symbolic_simulator::parameter_set_t         parameter_set_t;
+  typedef hydla::simulator::symbolic::variable_set_t          variable_set_t;
+  typedef hydla::simulator::symbolic::parameter_set_t         parameter_set_t;
   
   typedef boost::function<void (const time_t& time, 
                                 const variable_map_t& vm)>   output_function_t;
@@ -101,7 +101,7 @@ public:
   /**
    * 離散変化モード，連続変化モードの切り替えをおこなう
    */
-  virtual void change_mode(hydla::symbolic_simulator::Mode m, int approx_precision){}
+  virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision){}
 
   /**
    * 一時的な制約の追加を開始する

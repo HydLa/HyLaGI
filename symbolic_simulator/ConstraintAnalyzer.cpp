@@ -10,7 +10,7 @@
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
 using namespace std;
-using namespace hydla::symbolic_simulator;
+using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
 using namespace hydla::vcs;
@@ -18,7 +18,8 @@ using namespace hydla::vcs::mathematica;
 
 
 namespace hydla{
-namespace symbolic_simulator{
+namespace simulator{
+namespace symbolic {
 
 ConstraintAnalyzer::ConstraintAnalyzer(Opts& opts):Simulator(opts){}
 
@@ -253,6 +254,6 @@ phase_result_const_sptr_t ConstraintAnalyzer::simulate(){
   return phase_result_const_sptr_t();
 }
 
-
+}
 }
 }
