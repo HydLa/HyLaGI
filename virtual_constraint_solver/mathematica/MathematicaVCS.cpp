@@ -187,6 +187,9 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
   ml_.put_function("resetConstraint", 0);
   
 /////////////////// óMˆ—
+  // PacketChecker pc(ml_);
+  // pc.check();
+///////////////////
   ml_.receive();
   ml_.MLNewPacket();
   {

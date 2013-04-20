@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\virtual_constraint_solver\mathematica;..\virtual_constraint_solver;.\symbolic;..\simulator"
+				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\virtual_constraint_solver;..\symbolic_simulator"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -227,7 +227,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ValueRange.cpp"
+				RelativePath=".\ValuRange.cpp"
 				>
 			</File>
 		</Filter>
@@ -340,41 +340,11 @@
 				RelativePath=".\VariableFinder.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="symbolic"
-			>
 			<Filter
-				Name="ソースファイル"
+				Name="リソース ファイル"
+				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+				UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 				>
-				<File
-					RelativePath=".\symbolic\SymbolicPhaseSimulator.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\symbolic\SymbolicValue.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="ヘッダファイル"
-				>
-				<File
-					RelativePath=".\symbolic\PrevSearcher.h"
-					>
-				</File>
-				<File
-					RelativePath=".\symbolic\SymbolicPhaseSimulator.h"
-					>
-				</File>
-				<File
-					RelativePath=".\symbolic\SymbolicTypes.h"
-					>
-				</File>
-				<File
-					RelativePath=".\symbolic\SymbolicValue.h"
-					>
-				</File>
 			</Filter>
 		</Filter>
 	</Files>

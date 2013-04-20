@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="core"
-	ProjectGUID="{612AC655-3448-425F-B7AE-CB12A41BC630}"
-	RootNamespace="core"
+	Name="symbolic_simulator"
+	ProjectGUID="{5E34BE62-2104-42F3-9E59-CED1ED540932}"
+	RootNamespace="symbolic_simulator"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="1"
 			>
 			<Tool
@@ -28,6 +28,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine=""
+				AdditionalDependencies=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -41,15 +44,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\symbolic_legacy_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator;..\librealpaverbasic;..\output;..\common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;RP_SYSTEM_WIN32"
-				MinimalRebuild="false"
-				BasicRuntimeChecks="0"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;..\virtual_constraint_solver;..\virtual_constraint_solver\mathematica"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -61,19 +63,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/DELAYLOAD:ml32i1.dll /DELAYLOAD:ml32i3.dll"
-				OutputFile="$(SolutionDir)\Hyrose.exe"
-				LinkIncremental="2"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -85,9 +78,6 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -95,7 +85,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -104,6 +94,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine=""
+				AdditionalDependencies=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -116,10 +109,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\symbolic_simulator;..\output;..\symbolic_legacy_simulator;..\parser;..\constraint_hierarchy;..\simulator;..\branch_and_prune_simulator;..\librealpaverbasic;..\common"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;"
+				AdditionalIncludeDirectories="..\parser;..\simulator;..\constraint_hierarchy;..\common;..\virtual_constraint_solver;..\virtual_constraint_solver\mathematica"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -136,21 +129,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/DELAYLOAD:ml32i1.dll /DELAYLOAD:ml32i3.dll"
-				OutputFile="$(SolutionDir)\Hyrose.exe"
-				LinkIncremental="1"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -160,9 +142,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -178,19 +157,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\main.cpp"
+				RelativePath=".\SymbolicPhaseSimulator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ProgramOptions.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\symbolic_simulate.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\version.cpp"
+				RelativePath=".\SymbolicValue.cpp"
 				>
 			</File>
 		</Filter>
@@ -200,11 +171,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ProgramOptions.h"
+				RelativePath=".\PrevSearcher.h"
 				>
 			</File>
 			<File
-				RelativePath=".\version.h"
+				RelativePath=".\SymbolicPhaseSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicTypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolicValue.h"
 				>
 			</File>
 		</Filter>

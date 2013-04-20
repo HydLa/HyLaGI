@@ -1,5 +1,5 @@
 #include "Value.h"
-#include "SymbolicValue.h"
+#include "../symbolic_simulator/SymbolicValue.h"
 
 using namespace hydla::simulator;
 using hydla::symbolic_simulator::SymbolicValue;
