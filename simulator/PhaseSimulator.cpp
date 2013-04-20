@@ -6,7 +6,6 @@
 #include "Dumpers.h"
 #include "Exceptions.h"
 #include "SymbolicVirtualConstraintSolver.h"
-#include "ConstraintAnalyzer.h"
 
 using namespace hydla::simulator;
 
@@ -99,6 +98,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   result_list_t result;
   
   // TODO:CalculateVariableMapの結果，変数表が複数作られるような分岐を無視している
+  // TODO:変数の値による分岐も無視している？
 
   variable_range_map_t vm;
   if(todo->module_set_container != msc_no_init_)
@@ -125,22 +125,23 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   }
   else
   {
-    /*
+    CalculateVariableMapResult cvm_res;
     if(todo->phase == PointPhase && (opts_->analysis_mode == "use" || opts_->analysis_mode == "simulate")){
-      CalculateVariableMapResult cvm_res = check_false_conditions(ms, todo, time_applied_map, vm, phases);
+      cvm_res = check_false_conditions(ms, todo, time_applied_map, vm);
       switch(cvm_res){
-      case CVM_CONSISTENT:
-	break;
-      case CVM_INCONSISTENT:
-        state->module_set_container->mark_nodes(*ms);
-	break;
-      case CVM_ERROR:
-        break;
-      default:
-        break;
+        case CVM_CONSISTENT:
+	        break;
+        case CVM_INCONSISTENT:
+          todo->module_set_container->mark_nodes(*ms);
+          return result;
+        case CVM_ERROR:
+          throw SimulateError("CalculateVariableMap for " + ms->get_name());
+          break;
+        default:
+          assert(0);
+          break;
       }
     }
-    */
     HYDLA_LOGGER_MS("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){
       module_set_sptr connected_ms = graph->get_component(i);
@@ -153,7 +154,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       else
       {
         variable_range_map_t tmp_vm;
-        CalculateVariableMapResult cvm_res =
+        cvm_res =
           calculate_variable_map(connected_ms, todo, time_applied_map, tmp_vm);
         switch(cvm_res)
         {
@@ -171,7 +172,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           break;
           
           case CVM_ERROR:
-          HYDLA_LOGGER_MS("%% CVM_ERROR");
           throw SimulateError("CalculateVariableMap for " + connected_ms->get_name());
           break;
         }
@@ -327,14 +327,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
       it++;
     }
   }
-  /*
-  if(opts_->optimization_level >= 2){
-    init_false_conditions(msc_no_init_);
-    if(opts_->optimization_level >= 3){
-      check_all_module_set(msc_no_init_);
-    }
-  }
-  */
 }
 
 

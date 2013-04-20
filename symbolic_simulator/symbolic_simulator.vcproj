@@ -157,6 +157,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\AnalysisResultChecker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintAnalyzer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SymbolicPhaseSimulator.cpp"
 				>
 			</File>
@@ -170,6 +178,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\AnalysisResultChecker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstraintAnalyzer.h"
+				>
+			</File>
 			<File
 				RelativePath=".\PrevSearcher.h"
 				>

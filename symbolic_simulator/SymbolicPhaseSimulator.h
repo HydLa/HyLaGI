@@ -20,6 +20,7 @@
 namespace hydla {
 namespace symbolic_simulator {
 
+class AnalysisResultChecker;
 
 class SymbolicPhaseSimulator : public simulator_t
 {
@@ -57,7 +58,7 @@ private:
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
    */
 
-  virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
+  virtual simulator::CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
                            simulation_todo_sptr_t& state, const variable_map_t &, variable_range_map_t& result_vm);
 
   /**
@@ -80,6 +81,9 @@ private:
 
   void add_continuity(const continuity_map_t&);
   
+  virtual simulator::CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, variable_range_map_t&);
+
+  
   virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm)
   {
     variable_map_t ret;
@@ -88,6 +92,8 @@ private:
   }
   
   continuity_map_t variable_derivative_map_;
+  
+  boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
   
   Phase current_phase_;
 };

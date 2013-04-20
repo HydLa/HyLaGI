@@ -27,9 +27,9 @@ void ProgramOptions::init_descriptions()
    // ("profile", "enable profile mode")
 
   
-    ("dump-parse-tree", 
+    ("dump_parse_tree", 
      "output parse tree")
-    ("dump-module-set-list", 
+    ("dump_module_set_list", 
      "output set of module sets\n"
      "  which might be solution\n"
      "  by list representation")
@@ -37,7 +37,7 @@ void ProgramOptions::init_descriptions()
      "output set of non initial module sets\n"
      "  which might be solution\n"
      "  by list representation")*/
-    ("dump-module-set-graph", 
+    ("dump_module_set_graph", 
      "output set of module sets\n"
      "  which might be solution\n"
      "  by graph representation")
@@ -46,14 +46,14 @@ void ProgramOptions::init_descriptions()
      "  which might be solution\n"
      "  by graph representation")
      */
-    ("dump-module-relation-graph", 
+    ("dump_module_relation_graph", 
      "output relation of module and variables\n"
      "  by graph representation")
-    ("dump-in-progress", 
+    ("dump_in_progress", 
      "output each phase in progress")
      
      /*
-v    ("output-variables,v", 
+     ("output-variables,v", 
      value<std::string>()->default_value(""), 
      "variables to output")
      */
@@ -117,7 +117,7 @@ v    ("output-variables,v",
      value<int>()->default_value(0),
      "optimization level:\n")
 
-    ("analysis-mode",
+    ("analysis_mode",
      value<std::string>()->default_value(""),
      "analysis mode\n"
      "  empty - don't analyze constraint\n"
@@ -125,13 +125,13 @@ v    ("output-variables,v",
      "  output - analyze constraint and output to file\n"
      "  simulate - analyze constraint and simulate using analysis result\n")
 
-    ("analysis-file",
+    ("analysis_file",
      value<std::string>()->default_value(""),
      "analysis file name\n"
      "  empty - standard out or standard in\n")
 
     /*    
-    ("output-format,f", 
+    ("output_format,f", 
      value<std::string>()->default_value("t"), 
      "output format:\n"
      "  t - time function\n"
@@ -139,11 +139,11 @@ v    ("output-variables,v",
      "  i - numeric interval\n"
      "  m - for Mathematica Plot")
 
-    ("output-interval", 
+    ("output_interval", 
      value<std::string>()->default_value("1/10"), 
      "max time interval of output message")
   
-    ("output-precision", 
+    ("output_precision", 
      value<int>()->default_value(5), 
      "precision of output message")
      */
@@ -193,7 +193,7 @@ v    ("output-variables,v",
      "timeout for each calculation in backend(second)\n"
      " negative or zero - infinity")
      
-    ("fail-stop", 
+    ("fail_stop", 
      "stop all simulation cases when assertion fails")
 
     /*
@@ -202,7 +202,7 @@ v    ("output-variables,v",
      "HAConverter: Max Loop Count")
      */
 
-    ("math-name", 
+    ("math_name", 
      value<std::string>()->default_value("math"), 
      "name of mathematica command")
     ;

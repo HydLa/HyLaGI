@@ -8,7 +8,6 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 //#include "HAConverter.h"
-#include "ConstraintAnalyzer.h"
 #include "ParallelSimulator.h"
 
 
@@ -80,13 +79,13 @@ void setup_symbolic_simulator_opts(Opts& opts)
 {  
   ProgramOptions &po = ProgramOptions::instance();
   
-  opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math-name") + " -mathlink'";
+  opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.get<std::string>("debug")!="";
   opts.max_time      = po.get<std::string>("time");
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
-  opts.dump_in_progress = po.count("dump-in-progress")>0;
-  opts.dump_relation = po.count("dump-module-relation-graph")>0;
+  opts.dump_in_progress = po.count("dump_in_progress")>0;
+  opts.dump_relation = po.count("dump_module_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   //opts.ha_convert_mode = po.count("ha")>0;
@@ -94,14 +93,14 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.parallel_mode = po.count("parallel")>0;
   opts.parallel_number   = po.get<int>("pn");
   /*
-  opts.output_interval = po.get<std::string>("output-interval");
-  opts.output_precision = po.get<int>("output-precision");
+  opts.output_interval = po.get<std::string>("output_interval");
+  opts.output_precision = po.get<int>("output_precision");
   */
-  opts.analysis_mode = po.get<std::string>("analysis-mode");
-  opts.analysis_file = po.get<std::string>("analysis-file");
-  opts.stop_at_failure = po.count("fail-stop") == 1;
+  opts.analysis_mode = po.get<std::string>("analysis_mode");
+  opts.analysis_file = po.get<std::string>("analysis_file");
+  opts.stop_at_failure = po.count("fail_stop") == 1;
   //opts.solver        = po.get<std::string>("solver");
-  /*opts.optimization_level = po.get<int>("optimization-level");
+  /*opts.optimization_level = po.get<int>("optimization_level");
   if(opts.optimization_level < 0 || opts.optimization_level > 4){
     throw std::runtime_error(std::string("invalid option - optimization_level"));
   }
@@ -139,7 +138,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   }
   
   
-  /* std::string output_variables = po.get<std::string>("output-variables");
+  /* std::string output_variables = po.get<std::string>("output_variables");
   std::string::size_type prev = 0, now;
   while( (now = output_variables.find('_', prev)) != std::string::npos){
     std::string name = output_variables.substr(prev, now-prev);

@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_ANALYSIS_RESULT_CHECKER_H_
 
 #include "ParseTree.h"
-#include "SymbolicSimulator.h"
+#include "SymbolicPhaseSimulator.h"
 #include "Simulator.h"
 #include "ConstraintAnalyzer.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
@@ -13,21 +13,23 @@ namespace symbolic_simulator{
 class AnalysisResultChecker : public ConstraintAnalyzer
 {
 public:
-  AnalysisResultChecker(const Opts& opts);
+  AnalysisResultChecker(const simulator::Opts& opts);
   virtual ~AnalysisResultChecker();
 
   virtual void set_solver(boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver);
 
-  virtual SymbolicSimulator::CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t&, variable_map_t& result_vm, todo_and_results_t& result_todo);
+  virtual simulator::CalculateVariableMapResult 
+    check_false_conditions(const hydla::ch::module_set_sptr& ms,
+                           simulator::simulation_todo_sptr_t& state,
+                           const variable_map_t&, 
+                           variable_range_map_t& result_vm);
 
   virtual void parse();
-
-//  virtual void parse();
 
 private:
   std::set<module_set_sptr> checkd_module_set_;
 
-  virtual node_sptr string2node(std::string s);
+  virtual parse_tree::node_sptr string2node(std::string s);
 
 };
 

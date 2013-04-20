@@ -27,7 +27,7 @@ public:
 
   virtual simulator::phase_result_const_sptr_t simulate();
 
-  virtual void output_false_conditions();
+  virtual void print_false_conditions();
 
   virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
 

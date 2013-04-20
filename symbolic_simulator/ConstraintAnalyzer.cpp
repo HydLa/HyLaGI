@@ -1,4 +1,3 @@
-#if 0
 #include <iostream>
 #include <ostream>
 #include <fstream>
@@ -13,6 +12,7 @@
 using namespace std;
 using namespace hydla::symbolic_simulator;
 using namespace hydla::simulator;
+using namespace hydla::parse_tree;
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
 
@@ -24,7 +24,8 @@ ConstraintAnalyzer::ConstraintAnalyzer(Opts& opts):Simulator(opts){}
 
 ConstraintAnalyzer::~ConstraintAnalyzer(){}
 
-void ConstraintAnalyzer::output_false_conditions(){
+void ConstraintAnalyzer::print_false_conditions()
+{
   false_map_t::iterator it = false_conditions_.begin();
   std::ofstream ofs;
   if(opts_->analysis_file != ""){
@@ -35,14 +36,12 @@ void ConstraintAnalyzer::output_false_conditions(){
       ofs << (*it).first << ":";
       if((*it).second != NULL){
         ofs << *((*it).second);
-	//        ofs << TreeInfixPrinter().get_infix_string((*it).second);
       }
       ofs << std::endl;
     }else{
       std::cout << (*it).first << ":";
       if((*it).second != NULL){
-	std::cout << *((*it).second);
-	//	std::cout << TreeInfixPrinter().get_infix_string((*it).second);
+	      std::cout << *((*it).second);
       }
       std::cout << std::endl;
     }
@@ -60,22 +59,14 @@ void ConstraintAnalyzer::initialize(const parse_tree_sptr& parse_tree)
   //  continuity_map_t cont(parse_tree->get_variable_map());
 
   solver_.reset(new MathematicaVCS(*opts_));
-  solver_->set_variable_set(variable_set_);
-  solver_->set_parameter_set(parameter_set_);
-  /*
-  msc_no_init_->reset();
-
-  while(msc_no_init_->go_next()){
-    false_conditions_.insert(false_map_t::value_type(msc_no_init_->get_module_set(),node_sptr()));
-    msc_no_init_->mark_current_node();
-  }
-  */
+  solver_->set_variable_set(*variable_set_);
+  solver_->set_parameter_set(*parameter_set_);
 }
 
-void ConstraintAnalyzer::check_all_module_set(){
+void ConstraintAnalyzer::check_all_module_set()
+{
   msc_no_init_->reset();
   while(msc_no_init_->go_next()){
-    // FalseConditionsResult result = 
     find_false_conditions(msc_no_init_->get_module_set());
     msc_no_init_->mark_current_node();
   }
@@ -91,11 +82,11 @@ void ConstraintAnalyzer::check_all_module_set(){
   */
 }
 
-  ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditions(const module_set_sptr& ms){
+ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditions(const module_set_sptr& ms)
+{
   solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
   ConstraintAnalyzer::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
 
-  //  map<module_set_sptr, node_sptr> false_conditions_;
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
   expanded_always_t expanded_always;
@@ -265,4 +256,3 @@ phase_result_const_sptr_t ConstraintAnalyzer::simulate(){
 
 }
 }
-#endif

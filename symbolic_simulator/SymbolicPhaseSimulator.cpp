@@ -24,6 +24,7 @@
 #include "PrevSearcher.h"
 
 #include "Exceptions.h"
+#include "AnalysisResultChecker.h"
 #include "TreeInfixPrinter.h"
 #include "Dumpers.h"
 
@@ -37,7 +38,6 @@ using namespace boost;
 using namespace boost::xpressive;
 
 using namespace hydla::ch;
-using namespace hydla::symbolic_simulator;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
@@ -53,13 +53,12 @@ using hydla::parse_tree::TreeInfixPrinter;
 namespace hydla {
 namespace symbolic_simulator {
 
-  /*
-SymbolicPhaseSimulator::CalculateVariableMapResult
+CalculateVariableMapResult
 SymbolicPhaseSimulator::check_false_conditions
-(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t& vm, variable_map_t& result_vm, todo_and_results_t& result_todo){
-  return analysis_result_checker_->check_false_conditions(ms,state,vm,result_vm,result_todo);
+(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, variable_range_map_t& result_vm){
+  return analysis_result_checker_->check_false_conditions(ms, state, vm, result_vm);
 }
-  */
+
 
 SymbolicPhaseSimulator::SymbolicPhaseSimulator(const Opts& opts) :
   simulator_t(opts)
@@ -320,7 +319,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   return true;
 }
 
-SymbolicPhaseSimulator::CalculateVariableMapResult 
+CalculateVariableMapResult 
 SymbolicPhaseSimulator::calculate_variable_map(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& todo,

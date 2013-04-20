@@ -31,6 +31,13 @@ typedef enum{
 } FalseConditionsResult;
 
 
+typedef enum{
+  CVM_INCONSISTENT,
+  CVM_CONSISTENT,
+  CVM_ERROR
+} CalculateVariableMapResult;
+ 
+
 class PhaseSimulator{
 
 public:
@@ -72,12 +79,6 @@ public:
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
   
 protected:
-  
-  typedef enum{
-    CVM_INCONSISTENT,
-    CVM_CONSISTENT,
-    CVM_ERROR
-  } CalculateVariableMapResult;
   
   
   typedef enum{
@@ -121,7 +122,8 @@ protected:
   variable_t* get_variable(const std::string &name, const int &derivative_count){
     return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
   }
-  //virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t, &, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
+
+  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, variable_range_map_t&) = 0;
 
   const Opts *opts_;
   
