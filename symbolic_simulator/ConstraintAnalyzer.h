@@ -10,7 +10,7 @@
 namespace hydla{
 namespace symbolic_simulator{
 
-class ConstraintAnalyzer : public Simulator
+  class ConstraintAnalyzer : public hydla::simulator::Simulator
 {
 public:
   typedef enum{
@@ -19,13 +19,13 @@ public:
     FALSE_CONDITIONS_VARIABLE_CONDITIONS
   } FalseConditionsResult;
 
-  typedef std::map<std::string, node_sptr> false_map_t;
+  typedef std::map<std::string, hydla::parse_tree::node_sptr> false_map_t;
   //  typedef std::map<module_set_sptr, node_sptr> false_map_t;
 
-  ConstraintAnalyzer(Opts& opts);
+  ConstraintAnalyzer(simulator::Opts& opts);
   virtual ~ConstraintAnalyzer();
 
-  virtual phase_result_const_sptr_t simulate();
+  virtual simulator::phase_result_const_sptr_t simulate();
 
   virtual void output_false_conditions();
 

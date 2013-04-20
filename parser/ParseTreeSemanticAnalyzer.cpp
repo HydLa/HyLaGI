@@ -60,13 +60,13 @@ void ParseTreeSemanticAnalyzer::analyze(node_sptr& n/*, variable_map_t& variable
     state.in_always          = false;
     state.in_constraint      = false;
     state.differential_count = 0;
-    state_stack_.push(state);
+    todo_stack_.push(state);
   //  variable_map_ = &variable_map;
 
     accept(n);
     if(new_child_) n = new_child_;
 
-    assert(state_stack_.size() == 1);
+    assert(todo_stack_.size() == 1);
   }
 }
 
@@ -87,7 +87,7 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   boost::shared_ptr<hydla::parse_tree::Caller> caller, 
   boost::shared_ptr<Definition> definition)
 {
-  State& state = state_stack_.top();
+  State& state = todo_stack_.top();
 
   definition = boost::shared_static_cast<Definition>(definition->clone());
   
@@ -124,9 +124,9 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   new_state.referenced_definition_list.insert(def_type);
 
   // 定義の子ノードに対しpreprocess適用
-  state_stack_.push(new_state);
+  todo_stack_.push(new_state);
   dispatch_child(definition);
-  state_stack_.pop();
+  todo_stack_.pop();
 
   return definition->get_child();
 }
@@ -187,7 +187,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
 // 制約式
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)            
 {
-  State& state = state_stack_.top();
+  State& state = todo_stack_.top();
 
   // すでに制約式の中であった場合は自分自身を取り除く
   if(state.in_constraint) {
@@ -195,10 +195,10 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)
     new_child_ = node->get_child();
   } 
   else {
-    state_stack_.push(state);
-    state_stack_.top().in_constraint = true;
+    todo_stack_.push(state);
+    todo_stack_.top().in_constraint = true;
     dispatch_child(node);
-    state_stack_.pop();
+    todo_stack_.pop();
   }
 
 
@@ -207,19 +207,19 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)
 // Ask制約
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)                   
 {
-  State& state = state_stack_.top();
+  State& state = todo_stack_.top();
 
   // ガードノードの探索
-  state_stack_.push(state);
-  state_stack_.top().in_guard = true;
+  todo_stack_.push(state);
+  todo_stack_.top().in_guard = true;
   dispatch<Ask, &Ask::get_guard, &Ask::set_guard>(node.get());
-  state_stack_.pop();
+  todo_stack_.pop();
 
   // 子ノードの探索
-  state_stack_.push(state);
-  state_stack_.top().in_always = false;
+  todo_stack_.push(state);
+  todo_stack_.top().in_always = false;
   dispatch<Ask, &Ask::get_child, &Ask::set_child>(node.get());
-  state_stack_.pop();
+  todo_stack_.pop();
 }
 
 
@@ -249,7 +249,7 @@ DEFINE_DEFAULT_VISIT_BINARY(Power)
 // 論理演算子
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 {
-  if(!state_stack_.top().in_constraint) {
+  if(!todo_stack_.top().in_constraint) {
     throw InvalidConjunction(node->get_lhs(), 
                              node->get_rhs());
   }
@@ -260,7 +260,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
 {
-  if(!state_stack_.top().in_guard) {
+  if(!todo_stack_.top().in_guard) {
     throw InvalidDisjunction(node->get_lhs(), 
                              node->get_rhs());
   }
@@ -273,7 +273,7 @@ DEFINE_DEFAULT_VISIT_UNARY(Not)
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 {
-  if(state_stack_.top().in_constraint) {
+  if(todo_stack_.top().in_constraint) {
     throw InvalidWeakComposition(node->get_lhs(), 
                                  node->get_rhs());
   }
@@ -285,7 +285,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 {
-  if(state_stack_.top().in_constraint) {
+  if(todo_stack_.top().in_constraint) {
     throw InvalidParallelComposition(node->get_lhs(), 
                                      node->get_rhs());
   }
@@ -299,7 +299,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 // 時相演算子
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 {
-  State& state = state_stack_.top();
+  State& state = todo_stack_.top();
 
   // ガードの中にはない
   if(state.in_guard) {
@@ -307,10 +307,10 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
   }
 
   // 子ノードの探索
-  state_stack_.push(state);
-  state_stack_.top().in_always = true;
+  todo_stack_.push(state);
+  todo_stack_.top().in_always = true;
   dispatch_child(node);
-  state_stack_.pop();
+  todo_stack_.pop();
     
   // すでにalways制約内であった場合このノードをはずす
   if(state.in_always) {
@@ -330,9 +330,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
   }
 
   // 子ノードの探索
-  state_stack_.top().differential_count++;
+  todo_stack_.top().differential_count++;
   dispatch_child(node);
-  state_stack_.top().differential_count--;
+  todo_stack_.top().differential_count--;
 }
 
 // 左極限
@@ -363,7 +363,7 @@ DEFINE_DEFAULT_VISIT_FACTOR(E)
 // 変数
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 {
-  State& state = state_stack_.top();
+  State& state = todo_stack_.top();
 
   formal_arg_map_t::iterator it = 
     state.formal_arg_map.find(node->get_name());

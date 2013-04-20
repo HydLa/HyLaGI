@@ -257,7 +257,7 @@ void ModuleSetGraph::mark_visited_flag(const module_set_sptr& ms)
 
   std::pair<edges_t::map_by<superset>::const_iterator, 
             edges_t::map_by<superset>::const_iterator>
-    superset_range = edges_.by<superset>().equal_range(ms);
+  superset_range = edges_.by<superset>().equal_range(ms);
 
   for(; superset_range.first!=superset_range.second; ++superset_range.first) {
     mark_visited_flag(superset_range.first->get<subset>());

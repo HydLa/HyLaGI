@@ -6,6 +6,8 @@
 #include "../common/Logger.h"
 #include "../parser/TreeInfixPrinter.h"
 
+/*
+
 using namespace std;
 
 namespace hydla {
@@ -27,7 +29,7 @@ namespace simulator {
   		push_current_condition(cc_);
   	HYDLA_LOGGER_HA("mlc:", opts_->max_loop_count);
   		while(!state_stack_.empty()) {
-        simulation_phase_sptr_t state(pop_simulation_phase());
+        simulation_todo_sptr_t state(pop_simulation_phase());
       	// current conditionはtodoと同様にstuckに積まれるため、同じようにpopすれば、現phaseのcc_が取得できる
   			if(cc_vec_.empty()) break;
   			// シミュレーション結果が複数ある場合、これをもとにconditionを変更する
@@ -45,9 +47,8 @@ namespace simulator {
         bool consistent;
         
         {
-          phase_result_sptr_t& pr = state->phase_result;
-          if(opts_->max_phase >= 0 && pr->step >= opts_->max_phase){
-            pr->parent->cause_of_termination = simulator::STEP_LIMIT;
+          if(opts_->max_phase >= 0 && state->parent->step >= opts_->max_phase){
+            state->parent->parent->cause_of_termination = simulator::STEP_LIMIT;
             continue;
           }
         }
@@ -55,45 +56,41 @@ namespace simulator {
         try{
           state->module_set_container->reset(state->ms_to_visit);
 		      timer::Timer phase_timer;
-		      PhaseSimulator::todo_and_results_t phases = phase_simulator_->simulate_phase(state, consistent);
+		      PhaseSimulator::todo_list_t phases = phase_simulator_->simulate_phase(state, consistent);
 
         	HYDLA_LOGGER_HA("%% Phases size: ", phases.size());
         	HYDLA_LOGGER_HA("%% Result PHASE: ");
-        	HYDLA_LOGGER_HA("parent_id : ", state->phase_result->parent->id);
+        	HYDLA_LOGGER_HA("parent_id : ", state->parent->parent->id);
           for(unsigned int i=0;i<phases.size();i++){
-		        if(phases[i].result.get() != NULL){
-	            phase_result_sptr_t& pr = phases[i].result;
-		        	HYDLA_LOGGER_HA("--- Phase", i, " ---");
-		        	HYDLA_LOGGER_HA("%% PhaseType: ", pr->phase);
-		        	HYDLA_LOGGER_HA("%% id: ", pr->id);
-		        	if(logger::Logger::ha_converter_area_) printer.output_one_phase(pr);
-		        }
+	        	HYDLA_LOGGER_HA("--- Phase", i, " ---");
+	        	HYDLA_LOGGER_HA("%% PhaseType: ", phases[i]->phase);
+	        	HYDLA_LOGGER_HA("%% id: ", phases[i]->id);
+	        	if(logger::Logger::ha_converter_area_) printer.output_one_phase(phases[i]->parent);
           }
         	HYDLA_LOGGER_HA("");
         	
 	       	HYDLA_LOGGER_HA("%% Result TODO:");
           for(unsigned int i=0; i<phases.size();i++){
-		        if(phases[i].todo.get() != NULL){
-		          phase_result_sptr_t& pr = phases[i].todo->phase_result;
-		          HYDLA_LOGGER_HA("--- Phase", i, " ---");
-		          HYDLA_LOGGER_HA("%% PhaseType: ", pr->phase);
-		          HYDLA_LOGGER_HA("%% id: ", pr->id);
-		          HYDLA_LOGGER_HA("%% step: ", pr->step);
-		          HYDLA_LOGGER_HA("%% time: ", *pr->current_time);
-		          HYDLA_LOGGER_HA("--- parameter map ---\n", pr->parameter_map);
-		        }
+		        simulation_todo_sptr_t& todo = phases[i];
+	          HYDLA_LOGGER_HA("--- Phase", i, " ---");
+	          HYDLA_LOGGER_HA("%% PhaseType: ", todo->phase);
+	          HYDLA_LOGGER_HA("%% id: ", todo->id);
+	          HYDLA_LOGGER_HA("%% step: ", todo->parent->step);
+	          HYDLA_LOGGER_HA("%% time: ", *todo->current_time);
+	          HYDLA_LOGGER_HA("--- parameter map ---\n", todo->parameter_map);
           }
         	
         	// ******* start HA変換処理 ******* 
           for(unsigned int i=0; i<phases.size();i++){
           	cc_ = tmp_cc_;
-	        	phase_result_sptr_t result_ = phases[i].result;
+		        simulation_todo_sptr_t& todo = phases[i];
           	// resultがなければ、current_conditionをそのままpushして次へ
-          	if(result_ == NULL) {
+          	if(todo->parent == state->parent) {
 	           	push_current_condition(cc_);
 	         		continue;
 	          }
-	        	switch (state->phase_result->phase)
+            phase_result_sptr_t& result_ = todo->parent;
+	        	switch (state->phase)
 	        	{
 	          	case PointPhase:
 	          	{
@@ -166,36 +163,31 @@ namespace simulator {
 	          		}
 	          	}
 	        	}
-	        	
-	        	if(result_->cause_of_termination == simulator::TIME_LIMIT) {
-	        		// シミュレーション終了時刻は∞を想定しており、TIME_LIMITである場合、現在のphase_resultsがそのままha_results_に入る
-	        		HYDLA_LOGGER_HA("TIME_LIMIT : Infinity");
-	        		push_result(cc_);
-	        		continue;
-	        	}
           	
           	push_current_condition(cc_);
           }
         	// ******* end HA変換処理 ******* 
         	
-		      if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
-		        for(unsigned int i = 0;i < phases.size();i++){
-		          PhaseSimulator::TodoAndResult& tr = phases[i];
-		          if(tr.todo.get() != NULL){
-		            if(tr.todo->phase_result->parent != result_root_){
-		              tr.todo->module_set_container = msc_no_init_;
-		            }
-		            else{
-		              // TODO これだと，最初のPPで分岐が起きた時のモジュール集合がおかしくなるはず
-		              tr.todo->module_set_container = msc_original_;
-		            }
-		            tr.todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
-		            push_simulation_phase(tr.todo);
-		          }if(tr.result.get() != NULL){
-		            state->phase_result->parent->children.push_back(tr.result);
-		          }
-		          if(!opts_->nd_mode) break;
-		        }
+          if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
+            for(unsigned int i = 0;i < phases.size();i++){
+              simulation_todo_sptr_t& todo = phases[i];
+              if(todo->parent != result_root_)
+              {
+                todo->module_set_container = msc_no_init_;
+              }
+              else
+              {
+                todo->module_set_container = msc_original_;
+              }
+              todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
+              todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
+              push_simulation_phase(todo);
+              if(todo->parent != state->parent){
+                HYDLA_LOGGER_PHASE("%% push result");
+                state->parent->children.push_back(todo->parent);
+              }
+              if(!opts_->nd_mode)break;
+            }
 		      }
         	HYDLA_LOGGER_HA("");        	
         	HYDLA_LOGGER_HA("***************************");
@@ -204,10 +196,9 @@ namespace simulator {
         catch(const hydla::timeout::TimeOutError &te)
         {
 		      // タイムアウト発生
-		      phase_result_sptr_t& pr = state->phase_result;
 		      HYDLA_LOGGER_PHASE(te.what());
-		      pr->cause_of_termination = TIME_OUT_REACHED;
-		      pr->parent->children.push_back(pr);
+		      state->parent->cause_of_termination = TIME_OUT_REACHED;
+		      state->parent->parent->children.push_back(state->parent);
         }
       	catch(const std::runtime_error &se)
         {
@@ -437,8 +428,10 @@ namespace simulator {
   {
     Simulator::initialize(parse_tree);
   	// HA変換のための初期化
+    // シミュレーション終了時刻は設けない
+    opts_->max_time = "";
   }
 
 } // simulator
 } // hydla
-
+*/

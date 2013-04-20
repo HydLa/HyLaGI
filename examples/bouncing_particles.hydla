@@ -6,4 +6,10 @@ BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
 BALL(yarg){INIT(yarg), FALL(yarg) << BOUNCE(yarg)}.
 
-BALL(y1), BALL(y2), BALL(y3), BALL(y4), BALL(y5), BALL(y6), BALL(y7), BALL(y8), BALL(y9), BALL(y10).
+BALL(y1), BALL(y2)
+, BALL(y3), BALL(y4)
+, BALL(y5), BALL(y6),
+ BALL(y7), BALL(y8). BALL(y9), BALL(y10),
+ BALL(y11),BALL(y12), BALL(y13), BALL(y14).
+// BALL(y15), BALL(y16).
+

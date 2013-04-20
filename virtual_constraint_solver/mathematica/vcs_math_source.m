@@ -24,6 +24,10 @@ $MaxExtraPrecision = 1000;
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
  * timeOutS: タイムアウトまでの時間．秒単位．
+ * opt...: 各種オプションのON/OFF．
+ * approximationMode: 近似モード．
+ * approximationThreshold: 近似閾値．現在はLeafCountの値で判断している．
+ * approximationPrecision: 近似精度．
  *)
 
 
@@ -33,10 +37,13 @@ createMapList = {};
 
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
- 想定外の形式の結果になって変な計算を初めてエラーメッセージが爆発することが無いようにするため．
+ 想定外の形式の結果になって変な計算を始めてエラーメッセージが爆発することが無いようにするため．
  あまり良い形の実装ではなく，publicMethodにだけ書いておく形で実装できるなら多分それが設計的に一番良いはず．
  現状では，危ないと思った個所に逐一挟んでおくことになる． *)
-checkMessage := (If[Length[$MessageList] > 0, Abort[] ]);
+If[optIgnoreWarnings,
+  checkMessage := (If[Length[Cases[$MessageList, Except[HoldForm[Minimize::ztest1], Except[HoldForm[Reduce::ztest1] ] ] ] ] > 0, Print[FullForm[$MessageList]];Abort[]]),
+  checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
+];
 
 publicMethod::timeout = "Calculation has reached to timeout";
 
@@ -85,8 +92,6 @@ Module[{endTime,startTime,funcidx,i},
   ];
 ];
 );
-
-
 
 (*
  * デバッグ用メッセージ出力関数
@@ -322,12 +327,12 @@ publicMethod[
         tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
         tCons = sol[[2]] /. tCons;
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-        tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals], Reduce::ztest1]],
+        tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals]]],
         (* 微分方程式が解けた場合 *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
         tCons = applyList[sol[[1]] /. tCons];
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-        tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals], Reduce::ztest1]]
+        tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals]]]
       ];
       checkMessage;
 
@@ -342,8 +347,8 @@ publicMethod[
         necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
         
         simplePrint[necessaryTCons];
-        cpTrue = Quiet[Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas, Minimize::ztest}][[1]] == 0, Reals], Reduce::ztest1];
-        cpFalse = Quiet[Reduce[pcons && !cpTrue, Reals], Reduce::ztest1];
+        cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
+        cpFalse = Reduce[pcons && !cpTrue, Reals];
 
         simplePrint[cpTrue, cpFalse];
 
@@ -420,7 +425,8 @@ publicMethod[
   createParameterMap,
   pcons,
   createMap[pcons, isParameter, hasParameter, {}];
-]
+];
+
 
 createMap[cons_, judge_, hasJudge_, vars_] := Module[
   {map, idx},
@@ -442,8 +448,20 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       map = applyListToOr[map];
       map = Map[(applyList[#])&, map];
       debugPrint["@createMap map after applyList", map];
-    
-      map = Map[(convertExprs[ adjustExprs[#, judge] ])&, map];
+      
+      map = Map[(adjustExprs[#, judge])&, map];
+      If[approximationMode === numerical, 
+        map = 
+          Map[
+            (Map[(If[LeafCount[#[[2]] ] >= approximationThreshold, 
+                Head[#][#[[1]], approxExprInternal[approximationPrecision, #[[2]] ] ],
+                #])&,
+              #
+            ])&,
+            map
+          ]
+      ];
+      map = Map[(convertExprs[#])&, map];
       If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
     ];
     map
@@ -522,7 +540,6 @@ resetConstraint[] := (
 
 resetConstraintForVariable[] := (
   constraint = True;
-  variables = tmpVariables = prevVariables = {};
 );
 
 addGuard[gu_, vars_] := (
@@ -603,6 +620,12 @@ resetTemporaryConstraint[] := (
 );
 
 
+resetConstraintForParameter[pcons_, pars_] := (
+  pConstraint = True;
+  parameters = {};
+  addParameterConstraint[pcons, pars];
+);
+
 addParameterConstraint[pcons_, pars_] := (
   pConstraint = Reduce[pConstraint && pcons, Reals];
   parameters = Union[parameters, pars];
@@ -655,7 +678,7 @@ makeListFromPiecewise[minT_, others_] := Module[
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
- 
+
 calculateNextPointPhaseTime[maxTime_, discCause_] := 
   calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, variables];
 
@@ -805,6 +828,7 @@ createIntegratedValue[variable_, integRule_] := (
   @return overConstraint | 
     {underConstraint, 変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} |
     {変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} 
+    TODO: Subsetsとか使ってるから式の数で簡単に爆発する
 *)
 
 exDSolve[expr_, initExpr_] :=
@@ -923,14 +947,16 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   approxExpr,
   precision, expr,
-  integerString[
-    Rationalize[
-      N[Simplify[expr], precision + 3],
-      Divide[1, Power[10, precision]]
-    ]
-  ]
+  integerString[approxExprInternal[precision, expr] ]
 ];
 
+
+approxExprInternal[precision_, expr_] := (
+  Rationalize[
+    N[Simplify[expr], precision + 3],
+    Divide[1, Power[10, precision] ]
+  ]
+);
 
 (* 
  * 与えられたtの式をタイムシフト

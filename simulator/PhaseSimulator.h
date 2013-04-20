@@ -15,105 +15,163 @@
 #include "Simulator.h"
 
 namespace hydla {
+
+namespace vcs{
+  struct CheckConsistencyResult;
+  class SymbolicVirtualConstraintSolver;
+}
+
 namespace simulator {
+
+
+typedef enum{
+  FALSE_CONDITIONS_TRUE,
+  FALSE_CONDITIONS_FALSE,
+  FALSE_CONDITIONS_VARIABLE_CONDITIONS
+} FalseConditionsResult;
+
 
 class PhaseSimulator{
 
-public:  
-  struct TodoAndResult{
-    simulation_phase_sptr_t todo;
-    phase_result_sptr_t result;
-    TodoAndResult(const simulation_phase_sptr_t& t, const phase_result_sptr_t &r):todo(t), result(r){
-    }
-    TodoAndResult(){}
-  };
-  
-  typedef std::vector<TodoAndResult> todo_and_results_t;
+public:
+  typedef vcs::SymbolicVirtualConstraintSolver solver_t;
+  typedef std::vector<simulation_todo_sptr_t> todo_list_t;
+  typedef std::vector<phase_result_sptr_t> result_list_t;
 
-  typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
-
-  typedef enum{
-    CVM_INCONSISTENT,
-    CVM_CONSISTENT,
-    CVM_BRANCH,
-    CVM_ERROR
-  } CalculateVariableMapResult;
+  typedef std::map<module_set_sptr, hydla::parse_tree::node_sptr> false_map_t;
+  typedef hydla::parse_tree::node_sptr node_sptr;
 
   PhaseSimulator(const Opts& opts);
   
   virtual ~PhaseSimulator();
 
+  /**
+   * calculate phase results from given todo
+   * @param todo_cont container of todo into which PhaseSimulator pushes todo if case analyses are needed
+   *                  if it's null, PhaseSimulator uses internal container and handle all cases derived from given todo
+   */
+  result_list_t calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont = NULL);
+
+
+  /**
+   * make todos from given phase_result
+   * this function doesn't change the 'phase' argument except the end time of phase
+   */ 
+  virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo) = 0;
+
+  virtual void initialize(variable_set_t &v,
+    parameter_set_t &p, 
+    variable_map_t &m,
+    continuity_map_t& c,
+    const module_set_container_sptr &msc_no_init);
+
+  virtual parameter_set_t get_parameter_set(){return *parameter_set_;}
+  
+  int get_phase_sum()const{return phase_sum_;}
+  
+  void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
+  
+protected:
+  
+  typedef enum{
+    CVM_INCONSISTENT,
+    CVM_CONSISTENT,
+    CVM_ERROR
+  } CalculateVariableMapResult;
+  
+  
+  typedef enum{
+    ENTAILED,
+    CONFLICTING,
+    BRANCH_VAR,
+    BRANCH_PAR
+  } CheckEntailmentResult;
+  
+  /**
+   * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
+   */
+
+  virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
+                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_map_t& result_vm) = 0;
+
+  result_list_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
+                                  const variable_map_t& time_applied_map, simulation_todo_sptr_t& state);
+                                  
+                                  
+  virtual CheckEntailmentResult check_entailment(
+    vcs::CheckConsistencyResult &cc_result,
+    const node_sptr& guard,
+    const continuity_map_t& cont_map) = 0;
+  
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
   /**
-   * merge rhs to lhs
+   * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
+   * 新たなsimulation_todo_sptr_tの作成
    */
-  virtual void merge_variable_map(variable_map_t& lhs, variable_map_t& rhs);
-
-  /**
-   * 新たなsimulation_phase_sptr_tの作成
-   */
-  simulation_phase_sptr_t create_new_simulation_phase() const;
-
-  /**
-   * 与えられたPhaseResultの情報を引き継いだ，
-   * 新たなPhaseResultの作成
-   */
-  simulation_phase_sptr_t create_new_simulation_phase(const simulation_phase_sptr_t& old) const;
+  simulation_todo_sptr_t create_new_simulation_phase(const simulation_todo_sptr_t& old) const;
 
   /**
    * PPモードとIPモードを切り替える
    */
   virtual void set_simulation_mode(const Phase& phase) = 0;
 
-  todo_and_results_t simulate_phase(simulation_phase_sptr_t& state, bool &consistent);
-  
-  todo_and_results_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
-                                  const variable_map_t& time_applied_map, simulation_phase_sptr_t& state, bool &consistent);
-
-  /**
-   * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
-   */
-
-  virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_phase_sptr_t& state, const variable_map_t &, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
-
-  /**
-   * 与えられたフェーズの次のTODOを返す．
-   */ 
-  virtual todo_and_results_t make_next_todo(const module_set_sptr& ms, simulation_phase_sptr_t& state, variable_map_t &) = 0;
-
-  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, const module_set_sptr& ms, continuity_map_t& c);
-
-  virtual parameter_set_t get_parameter_set()
-  {
-    return *parameter_set_;
-  }
-  
-  virtual bool is_safe() const{return is_safe_;}
-
-  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t &, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
-  
 protected:
 
   variable_t* get_variable(const std::string &name, const int &derivative_count){
     return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
   }
+  //virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_phase_sptr_t& state, const variable_map_t, &, variable_map_t& result_vm, todo_and_results_t& result_todo) = 0;
 
   const Opts *opts_;
-  bool is_safe_;
   
   variable_set_t *variable_set_;
   parameter_set_t *parameter_set_;
   variable_map_t *variable_map_;
-  entailed_prev_map_t judged_prev_map_;
   negative_asks_t prev_guards_;
-  
+
+  int phase_sum_;
+
   /**
    * graph of relation between module_set for IP and PP
    */
   boost::shared_ptr<RelationGraph> pp_relation_graph_, ip_relation_graph_;
   
+  /**
+   * 解候補モジュール集合のコンテナ
+   * （非always制約を除いたバージョン）
+   */
+  module_set_container_sptr msc_no_init_;
+
+  todo_container_t* todo_container_;
+  
+  virtual variable_map_t range_map_to_value_map(phase_result_sptr_t&,
+    const variable_range_map_t &,
+    parameter_map_t &) = 0;
+
+  
+  phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
+  
+  
+  void push_branch_states(simulation_todo_sptr_t &original,
+    hydla::vcs::CheckConsistencyResult &result);
+    
+  /// 使用するソルバへのポインタ
+  boost::shared_ptr<solver_t> solver_;
+  
+  /// ケースの選択時に使用する関数ポインタ
+  int (*select_phase_)(result_list_t&);
+
+  private:
+
+  /**
+   * merge rhs to lhs
+   */
+  void merge_variable_map(variable_range_map_t& lhs, variable_range_map_t& rhs);
+
+  result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
+  
+  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const variable_range_map_t& vm);
 };
 
 

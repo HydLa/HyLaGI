@@ -71,12 +71,11 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
   }
 }
 
-
 void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
 {
-    cout << get_state_output(*phase);
+  cout << get_state_output(*phase);
+  output_parameter_map(phase->parameter_map);
 }
-
 
 void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& root) const
 {
@@ -92,70 +91,66 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
   }
 }
 
-
-
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
-  
+
     cout << "#---------Case " << case_num++ << "---------" << endl;
     std::vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
       cout << *r_it;
     }
-    
+
     if(node->cause_of_termination==simulator::ASSERTION ||
       node->cause_of_termination==simulator::OTHER_ASSERTION ||
       node->cause_of_termination==simulator::TIME_LIMIT ||
+      node->cause_of_termination==simulator::NOT_SELECTED ||
+      node->cause_of_termination==simulator::NONE ||
       node->cause_of_termination==simulator::STEP_LIMIT)
     {
       cout << get_state_output(*node);
     }
-    
+
+    output_parameter_map(node->parameter_map);
     switch(node->cause_of_termination){
       case simulator::INCONSISTENCY:
         cout << "# execution stuck\n";
-        output_parameter_map(node->parameter_map);
         break;
 
       case simulator::SOME_ERROR:
-        output_parameter_map(node->parameter_map);
         cout << "# some error occurred\n" ;
         break;
 
       case simulator::ASSERTION:
-        output_parameter_map(node->parameter_map);
         cout << "# assertion failed\n" ;
         break;
         
       case simulator::OTHER_ASSERTION:
-        output_parameter_map(node->parameter_map);
         cout << "# terminated by failure of assertion in another case\n" ;
         break;
         
       case simulator::TIME_LIMIT:
-        output_parameter_map(node->parameter_map);
         cout << "# time ended\n" ;
         break;
         
       case simulator::STEP_LIMIT:
-        output_parameter_map(node->parameter_map);
-        cout << "# step ended\n" ;
+        cout << "# number of phases ended\n" ;
         break;
         
       case simulator::TIME_OUT_REACHED:
-        output_parameter_map(node->parameter_map);
         cout << "# time out\n" ;
         break;
         
       case simulator::NOT_UNIQUE_IN_INTERVAL:
-        output_parameter_map(node->parameter_map);
         cout << "# some values of variables are not unique in IP\n" ;
+        break;
+
+      case simulator::NOT_SELECTED:
+        cout << "# this case is not selected to be simulated\n" ;
         break;
 
       default:
       case simulator::NONE:
-        output_parameter_map(node->parameter_map);
         cout << "# unknown termination occurred\n" ;
         break;
     }
@@ -167,6 +162,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       result.push_back(sstr.str());
     }
     result.push_back(get_state_output(*node));
+    
     phase_result_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
     for(;it!=end;it++){
       output_result_node(*it, result, case_num, phase_num);

@@ -176,7 +176,6 @@ void hydla_main(int argc, char* argv[])
   // シミュレーション開始
   symbolic_simulate(pt);
 
-
   if(po.get<std::string>("tm") != "n"){
     main_timer.elapsed("Finish Time");
     std::cout << std::endl;

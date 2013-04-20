@@ -46,6 +46,10 @@ bool ModuleSetContainer::go_next(){
 }
 
 module_set_sptr ModuleSetContainer::get_max_module_set() const{
+if(module_set_list_.empty())
+{
+  return module_set_sptr(new ModuleSet());
+}
   return module_set_list_.front();
 }
 

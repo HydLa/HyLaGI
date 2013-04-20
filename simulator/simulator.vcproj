@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common"
+				AdditionalIncludeDirectories="..\parser;..\virtual_constraint_solver;..\constraint_hierarchy;..\common;..\output;..\symbolic_simulator"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\symbolic_simulator"
+				AdditionalIncludeDirectories="..\parser;..\constraint_hierarchy;..\common;..\output;..\virtual_constraint_solver;..\symbolic_simulator"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -171,11 +171,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HAConverter.cpp"
+				RelativePath=".\Dumpers.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\InitNodeRemover.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\InteractiveSimulator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\NoninteractiveSimulator.cpp"
 				>
 			</File>
 			<File
@@ -222,10 +230,6 @@
 				RelativePath=".\ValuRange.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\VariableFinder.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -257,7 +261,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HAConverter.h"
+				RelativePath=".\Dumpers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Exceptions.h"
 				>
 			</File>
 			<File
@@ -266,6 +274,14 @@
 			</File>
 			<File
 				RelativePath=".\InteractiveSimulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ModuleSetContainerInitializer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NoninteractiveSimulator.h"
 				>
 			</File>
 			<File
@@ -297,10 +313,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SimulateError.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Simulator.h"
 				>
 			</File>
@@ -321,15 +333,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VariableFinder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VariableFinder.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="リソース ファイル"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
+			<Filter
+				Name="リソース ファイル"
+				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+				UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+				>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

@@ -1,15 +1,16 @@
 #include "ModuleSetList.h"
 
 #include "ProgramOptions.h"
-#include "SymbolicSimulator.h"
+#include "SymbolicPhaseSimulator.h"
 #include "SequentialSimulator.h"
 #include "InteractiveSimulator.h"
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
-#include "HAConverter.h"
-#include "ParallelSimulator.h"
+//#include "HAConverter.h"
 #include "ConstraintAnalyzer.h"
+#include "ParallelSimulator.h"
+
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -27,16 +28,13 @@ using namespace hydla::ch;
 using namespace hydla::symbolic_simulator;
 using namespace hydla::simulator;
 
-SequentialSimulator* simulator_;
+NoninteractiveSimulator* simulator_;
 Opts opts;
 
-
-void output_result(SequentialSimulator& ss, Opts& opts){
+void output_result(NoninteractiveSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
-  
   Printer.output_parameter_set(ss.get_parameter_set());
-  
   Printer.output_result_tree(ss.get_result_root());
   if(po.get<std::string>("tm") == "s") {
     hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
@@ -53,6 +51,7 @@ void output_result(SequentialSimulator& ss, Opts& opts){
   }
 }
 
+/*
 void output_result(ParallelSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
@@ -71,6 +70,7 @@ void output_result(ParallelSimulator& ss, Opts& opts){
     }
   }
 }
+*/
 
 
 /**
@@ -88,23 +88,37 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.dump_in_progress = po.count("dump-in-progress")>0;
   opts.dump_relation = po.count("dump-module-relation-graph")>0;
   opts.interactive_mode = po.count("in")>0;
-  opts.ha_convert_mode = po.count("ha")>0;
-  opts.profile_mode  = po.count("profile")>0;
+  opts.ignore_warnings = po.count("ignore_warnings")>0;
+  //opts.ha_convert_mode = po.count("ha")>0;
+  //opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;
   opts.parallel_number   = po.get<int>("pn");
+  /*
   opts.output_interval = po.get<std::string>("output-interval");
   opts.output_precision = po.get<int>("output-precision");
-  opts.stop_at_failure = po.count("fail-stop") == 1;
-  opts.solver        = po.get<std::string>("solver");
-  opts.optimization_level = po.get<int>("optimization-level");
+  */
   opts.analysis_mode = po.get<std::string>("analysis-mode");
   opts.analysis_file = po.get<std::string>("analysis-file");
+  opts.stop_at_failure = po.count("fail-stop") == 1;
+  //opts.solver        = po.get<std::string>("solver");
+  /*opts.optimization_level = po.get<int>("optimization-level");
+  if(opts.optimization_level < 0 || opts.optimization_level > 4){
+    throw std::runtime_error(std::string("invalid option - optimization_level"));
+  }
+  */
+  opts.optimization_level = 0;
+  
+  /*
   opts.timeout = po.get<int>("timeout");
   opts.timeout_case = po.get<int>("timeout_case");
   opts.timeout_phase = po.get<int>("timeout_phase");
+  */
   opts.timeout_calc= po.get<int>("timeout_calc");
-  opts.max_loop_count= po.get<int>("mlc");
+  
+  
+  /*opts.max_loop_count= po.get<int>("mlc");
   opts.max_phase_expanded = po.get<int>("phase_expanded");
+  */
   if(po.get<std::string>("search") == "d"){
     opts.search_method = simulator::DFS;
   }else if(po.get<std::string>("search") == "b"){
@@ -113,12 +127,19 @@ void setup_symbolic_simulator_opts(Opts& opts)
     throw std::runtime_error(std::string("invalid option - search"));
   }
   
-  if(opts.optimization_level < 0 || opts.optimization_level > 4){
-    throw std::runtime_error(std::string("invalid option - optimization_level"));
+  opts.approx_precision = po.get<int>("approx_precision");
+  if(po.get<std::string>("approx_mode") == ""){
+    opts.approx_mode = simulator::NO_APPROX;
+  }else if(po.get<std::string>("approx_mode") == "n"){
+    opts.approx_mode = simulator::NUMERICAL_APPROX;
+  }else if(po.get<std::string>("approx_mode") == "i"){
+    opts.approx_mode = simulator::INTERVAL_APPROX;
+  }else{
+    throw std::runtime_error(std::string("invalid option - approx_mode"));
   }
   
   
-  std::string output_variables = po.get<std::string>("output-variables");
+  /* std::string output_variables = po.get<std::string>("output-variables");
   std::string::size_type prev = 0, now;
   while( (now = output_variables.find('_', prev)) != std::string::npos){
     std::string name = output_variables.substr(prev, now-prev);
@@ -137,42 +158,46 @@ void setup_symbolic_simulator_opts(Opts& opts)
     opts.output_variables.insert(name);
     prev++;
   }
+  */
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
+  Opts opts;
   setup_symbolic_simulator_opts(opts);
-  simulator_ = new SequentialSimulator(opts);
-  ProgramOptions &po = ProgramOptions::instance();
 
-  if(opts.interactive_mode){
-    //opts->max_time = "100";
-    InteractiveSimulator ss(opts);
-    ss.set_phase_simulator(new SymbolicSimulator(opts));
-    ss.initialize(parse_tree);
-    ss.simulate();
-  }else if(opts.parallel_mode){
+  if(opts.interactive_mode)
+  {
+    InteractiveSimulator is(opts);
+    is.set_phase_simulator(new SymbolicPhaseSimulator(opts));
+    is.initialize(parse_tree);
+    is.simulate();
+  }
+  else if(opts.parallel_mode)
+  {
     ParallelSimulator ps(opts);
-    ps.set_phase_simulator(new SymbolicSimulator(opts));
+    ps.set_phase_simulator(new SymbolicPhaseSimulator(opts));
     ps.initialize(parse_tree);
     ps.simulate();
     output_result(ps, opts);
-  }else if(opts.ha_convert_mode){
+  }
+  /*
+  else if(opts.ha_convert_mode)
+  {
   	opts.nd_mode = true;
   	HAConverter ha_converter(opts);
-    ha_converter.set_phase_simulator(new SymbolicSimulator(opts));
+    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(opts));
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
-  }else if(opts.analysis_mode == "output"){
-    ConstraintAnalyzer ca(opts);
-    ca.initialize(parse_tree);
-    ca.check_all_module_set();
-    ca.output_false_conditions();
-  }else{
-    SequentialSimulator& ss = *simulator_;
-    ss.set_phase_simulator(new SymbolicSimulator(opts));
-    ss.initialize(parse_tree);
-    ss.simulate();
-    output_result(ss, opts);
+  }
+  */
+  else
+  {
+    SequentialSimulator* ss = new SequentialSimulator(opts);
+    simulator_ = ss;
+    ss->set_phase_simulator(new SymbolicPhaseSimulator(opts));
+    ss->initialize(parse_tree);
+    ss->simulate();
+    output_result(*ss, opts);
   }
 }

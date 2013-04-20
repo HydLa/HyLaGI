@@ -1,3 +1,4 @@
+#if 0
 #include <iostream>
 #include <ostream>
 #include <fstream>
@@ -264,3 +265,4 @@ phase_result_const_sptr_t ConstraintAnalyzer::simulate(){
 
 }
 }
+#endif

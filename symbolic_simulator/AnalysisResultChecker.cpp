@@ -1,3 +1,4 @@
+/*
 #include "ConstraintAnalyzer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -138,16 +139,6 @@ void AnalysisResultChecker::parse(){
     unsigned int index = tmp.find(':',0);
     false_conditions_[tmp.substr(0,index)] = string2node(tmp.substr(index+1));
   }
-  /*
-  false_map_t::iterator it = false_conditions_.begin();
-  for(;it != false_conditions_.end();it++){
-    std::cout << (*it).first << "  ///  ";
-    if((*it).second != NULL){
-      std::cout << TreeInfixPrinter().get_infix_string((*it).second);
-    }
-    std::cout << std::endl;
-  }
-  */
 }
 
 void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver){
@@ -212,3 +203,4 @@ AnalysisResultChecker::check_false_conditions(
 
 }
 }
+*/

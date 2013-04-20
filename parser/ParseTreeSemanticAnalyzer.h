@@ -145,7 +145,7 @@ private:
   };
 
   /// Stateをつむためのスタック
-  std::stack<State> state_stack_;
+  std::stack<State> todo_stack_;
   
   /// プログラム中で使用される変数の一覧
   variable_map_t* variable_map_;

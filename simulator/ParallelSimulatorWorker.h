@@ -1,24 +1,25 @@
 #ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
 #define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
 
-#include "Simulator.h"
+#include "NoninteractiveSimulator.h"
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
-using namespace boost;
+
+
 namespace hydla {
 namespace simulator {
 
 class ParallelSimulator;
 
-class ParallelSimulatorWorker: public Simulator{
+class ParallelSimulatorWorker: public NoninteractiveSimulator{
 
 public:
 
-  ParallelSimulatorWorker(Opts &opts);
+  ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master);
   
   virtual ~ParallelSimulatorWorker();
 
-  virtual void initialize(const parse_tree_sptr& parse_tree,int id,ParallelSimulator *master);
+  virtual void initialize(const parse_tree_sptr& parse_tree,int id);
   /**
    * 各スレッドが与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
@@ -27,37 +28,20 @@ public:
    * 待機スレッドにあるスレッドのシミュレーション終了を通知
    */
   void notify_simulation_end();
-  /**
-   * stateのpop
-   */  
-  simulation_phase_sptr_t worker_pop_phase();
-  /**
-   * stateのpush
-   */  
-  void worker_push_phase(const simulation_phase_sptr_t& state);
+  
+  virtual simulation_todo_sptr_t pop_todo();
   
   void set_result_root(phase_result_sptr_t r){result_root_ = r;}
 
   void set_thread_state(std::string str);
+
+  void print_thread_state();
   
   private:
-  
-  /**
-   * シミュレーション中で使用される変数表の原型
-   */
-  variable_map_t variable_map_;
-  
-  
-  /**
-   * シミュレーション対象となるパースツリー
-   */
-  parse_tree_sptr parse_tree_;
 
-  boost::shared_ptr<ParallelSimulator> master_;
+  ParallelSimulator* master_;
 
-  static mutex mutex_;
-
-  static condition condition_;
+  static boost::condition condition_;
 
   static bool end_flag_;
 

@@ -13,7 +13,7 @@ void StdProfilePrinter::print_profile(const entire_profile_t& result) const
 {
   cout << "#------Simulation Time------\n";
   for(unsigned int i = 0; i < result.size(); i++){
-    cout << "#------Simulation Phase " << result[i]->phase_result->id << "------\n";
+    cout << "#------Simulation Phase " << result[i]->id << "------\n";
     for(profile_t::const_iterator it = result[i]->profile.begin(); it != result[i]->profile.end(); it++){
       cout << it->first << "\t: " << it->second << endl;
     }

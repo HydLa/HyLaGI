@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_EXPRESSION_CONVERTER_H_
 
 
-//Mathematica文字列⇔SymbolicValueという，式の変換を担当するクラス．SymbolicValueRangeも少し．
+//Mathematica文字列⇔SymbolicValueという，式の変換を担当するクラス．ValueRangeも少し．
 
 
 #include "../SymbolicVirtualConstraintSolver.h"
