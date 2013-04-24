@@ -180,6 +180,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   }
   todo->module_set_container->mark_nodes();
   
+  if(todo->phase == PointPhase)
+  {
+    solver_->approx_vm(vm);
+  }
   
   phase_result_sptr_t phase = make_new_phase(todo, vm);
   phase->module_set = ms;

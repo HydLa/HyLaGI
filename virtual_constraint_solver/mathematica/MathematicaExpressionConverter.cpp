@@ -39,6 +39,8 @@ void MathematicaExpressionConverter::set_range(const value_t &val, value_range_t
 
 MathematicaExpressionConverter::value_t MathematicaExpressionConverter::receive_and_make_symbolic_value(MathLink &ml){
   value_t ret(new hydla::simulator::symbolic::SymbolicValue(make_tree(ml)));
+  HYDLA_LOGGER_LOCATION(VCS);
+  HYDLA_LOGGER_VCS("value: ", ret);
   return ret;  
 }
 
@@ -64,7 +66,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         ret = node_sptr(new hydla::parse_tree::E());
       else if(symbol=="inf")
         ret = node_sptr(new hydla::parse_tree::Infinity());
-      else if(symbol.length() > PacketSender::var_prefix.length() && symbol.substr(0, 6) == PacketSender::var_prefix)
+      else if(symbol.length() > var_prefix.length() && symbol.substr(0, 6) == var_prefix)
         ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(6)));
       break;
     }

@@ -54,6 +54,8 @@ public:
    */
   virtual create_result_t create_maps();
   
+  virtual void approx_vm(variable_range_map_t& vm);
+  
   /**
    * §–ñ‚ğ’Ç‰Á‚·‚éD
    */

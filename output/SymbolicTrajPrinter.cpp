@@ -3,17 +3,22 @@
 #include <stack>
 #include "DefaultParameter.h"
 
-using namespace std;
 using namespace hydla::simulator;
+using namespace std;
 
 namespace hydla{
 namespace output{
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables):
-   output_variables_(output_variables){
+SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables, std::ostream& ostream):
+   output_variables_(output_variables), ostream_(ostream){
 }
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(){}
+
+SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables):
+   output_variables_(output_variables), ostream_(cout){
+}
+
+SymbolicTrajPrinter::SymbolicTrajPrinter():ostream_(cout){}
 
 std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   std::stringstream sstr;
@@ -41,10 +46,10 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
   if(it != end){
-    std::cout << "\n#---------parameter condition---------\n";
+    ostream_ << "\n#---------parameter condition---------\n";
   }
   for(; it!=end; ++it) {
-    std::cout << *(it->first) << "\t: " << it->second << "\n";
+    ostream_ << *(it->first) << "\t: " << it->second << "\n";
   }
 }
 
@@ -54,10 +59,10 @@ void SymbolicTrajPrinter::output_parameter_set(const parameter_set_t& ps) const
   parameter_set_t::const_iterator it  = ps.begin();
   parameter_set_t::const_iterator end = ps.end();
   if(it != end){
-    std::cout << "\n#---------parameter set---------\n";
+    ostream_ << "\n#---------parameter set---------\n";
   }
   for(; it!=end; ++it) {
-    std::cout << it->parameter << "\t: " << it->range << "\n";
+    ostream_ << it->parameter << "\t: " << it->range << "\n";
   }
 }
 
@@ -73,14 +78,14 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
 
 void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
 {
-  cout << get_state_output(*phase);
+  ostream_ << get_state_output(*phase);
   output_parameter_map(phase->parameter_map);
 }
 
 void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& root) const
 {
   if(root->children.size() == 0){
-    cout << "No Result." << endl;
+    ostream_ << "No Result." << endl;
     return;
   }
   int i=1, j=1;
@@ -95,10 +100,10 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
 
   if(node->children.size() == 0){
 
-    cout << "#---------Case " << case_num++ << "---------" << endl;
+    ostream_ << "#---------Case " << case_num++ << "---------" << endl;
     std::vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
-      cout << *r_it;
+      ostream_ << *r_it;
     }
 
     if(node->cause_of_termination==simulator::ASSERTION ||
@@ -108,53 +113,53 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       node->cause_of_termination==simulator::NONE ||
       node->cause_of_termination==simulator::STEP_LIMIT)
     {
-      cout << get_state_output(*node);
+      ostream_ << get_state_output(*node);
     }
 
     output_parameter_map(node->parameter_map);
     switch(node->cause_of_termination){
       case simulator::INCONSISTENCY:
-        cout << "# execution stuck\n";
+        ostream_ << "# execution stuck\n";
         break;
 
       case simulator::SOME_ERROR:
-        cout << "# some error occurred\n" ;
+        ostream_ << "# some error occurred\n" ;
         break;
 
       case simulator::ASSERTION:
-        cout << "# assertion failed\n" ;
+        ostream_ << "# assertion failed\n" ;
         break;
         
       case simulator::OTHER_ASSERTION:
-        cout << "# terminated by failure of assertion in another case\n" ;
+        ostream_ << "# terminated by failure of assertion in another case\n" ;
         break;
         
       case simulator::TIME_LIMIT:
-        cout << "# time ended\n" ;
+        ostream_ << "# time reached limit\n" ;
         break;
         
       case simulator::STEP_LIMIT:
-        cout << "# number of phases ended\n" ;
+        ostream_ << "# number of phases reached limit\n" ;
         break;
         
       case simulator::TIME_OUT_REACHED:
-        cout << "# time out\n" ;
+        ostream_ << "# time out\n" ;
         break;
         
       case simulator::NOT_UNIQUE_IN_INTERVAL:
-        cout << "# some values of variables are not unique in IP\n" ;
+        ostream_ << "# some values of variables are not unique in IP\n" ;
         break;
 
       case simulator::NOT_SELECTED:
-        cout << "# this case is not selected to be simulated\n" ;
+        ostream_ << "# this case is not selected to be simulated\n" ;
         break;
 
       default:
       case simulator::NONE:
-        cout << "# unknown termination occurred\n" ;
+        ostream_ << "# unknown termination occurred\n" ;
         break;
     }
-    cout << endl;
+    ostream_ << endl;
   }else{
     if(node->phase==hydla::simulator::PointPhase){
       std::stringstream sstr;

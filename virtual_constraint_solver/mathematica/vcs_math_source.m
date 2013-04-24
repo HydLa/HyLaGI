@@ -1,12 +1,8 @@
-(* 再帰回数上限を上げてみる *)
 $RecursionLimit = 1000;
-
-(* 内部で用いる精度も上げてみる *)
 $MaxExtraPrecision = 1000;
 
-
 (*
- * グローバル変数
+ * global variables
  * constraint: 現在のフェーズでの制約
  * pConstraint: 定数についての制約
  * prevConstraint: 左極限値を設定する制約
@@ -25,16 +21,14 @@ $MaxExtraPrecision = 1000;
  * createMapList: createMap関数への入力と出力の組のリスト
  * timeOutS: タイムアウトまでの時間．秒単位．
  * opt...: 各種オプションのON/OFF．
- * approximationMode: 近似モード．
- * approximationThreshold: 近似閾値．現在はLeafCountの値で判断している．
- * approximationPrecision: 近似精度．
+ * approxMode: 近似モード．
+ * approxThreshold: 近似閾値．現在はLeafCountの値で判断している．
+ * approxPrecision: 近似精度．
  *)
-
 
 dList = {};
 profileList = {};
 createMapList = {};
-
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
  想定外の形式の結果になって変な計算を始めてエラーメッセージが爆発することが無いようにするため．
@@ -95,8 +89,8 @@ Module[{endTime,startTime,funcidx,i},
 
 (*
  * デバッグ用メッセージ出力関数
- * debugPrint：引数として与えられた要素要素を文字列にして出力する．（シンボルは評価してから表示）
- * simplePrint：引数として与えられた式を，「（評価前）:（評価後）」の形式で出力する．
+ * debugPrint：引数として与えられた要素要素を文字列にして出力する． （シンボルは評価してから表示）
+ * simplePrint：引数として与えられた式を， 「（評価前）:（評価後）」の形式で出力する．
  *)
  
 SetAttributes[simplePrint, HoldAll];
@@ -123,17 +117,15 @@ profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
  
 inputPrint[name_, arg___] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
 
-
 delimiterAddedString[del_, {h_}] := h;
 
 delimiterAddedString[del_, {h_, t__}] := StringJoin[h, del, delimiterAddedString[del, {t}] ];
-
 
 SetAttributes[publicMethod, HoldAll];
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
    少しでもメッセージを吐く可能性のある関数は，この関数で定義するようにする．
-   defineにReturnが含まれていると正常に動作しなくなる（Returnの引数がそのまま返ることになる）ので使わないように！
+   defineにReturnが含まれていると正常に動作しなくなる （Returnの引数がそのまま返ることになる）ので使わないように！
 *)
 
 publicMethod[name_, args___, define_] := (
@@ -157,8 +149,6 @@ publicMethod[name_, args___, define_] := (
   )
 );
 
-
-
 (* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
 
 getReverseRelop[relop_] := Switch[relop,
@@ -167,8 +157,6 @@ getReverseRelop[relop_] := Switch[relop,
                                   Greater, Less,
                                   LessEqual, GreaterEqual,
                                   GreaterEqual, LessEqual];
-
-
 
 checkFalseConditions[] := (
   checkFalseConditions[prevConstraint, falseConditions, pConstraint, prevVariables]
@@ -205,7 +193,6 @@ publicMethod[
     {trueMap, falseMap}
   ]
 ];
-
 
 (* 制約モジュールが矛盾する条件をセットする *)
 setFalseConditions[co_, va_] := Module[
@@ -248,7 +235,6 @@ createPrevMap[cons_, vars_] := Module[
   ]
 ];
 
-
 (* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
 findFalseConditions[] := (
   findFalseConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
@@ -275,7 +261,6 @@ publicMethod[
     cpFalse
   ]
 ];
-
 
 (* ポイントフェーズにおける無矛盾性判定 *)
 
@@ -323,7 +308,7 @@ publicMethod[
       {False, pcons},
       If[sol[[1]] === underConstraint,
         (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-        (* Existsの第一引数はHold（HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある（気がする） *)
+        (* Existsの第一引数はHold （HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある （気がする） *)
         tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
         tCons = sol[[2]] /. tCons;
         tmpPCons = If[getParameters[tCons] === {}, True, pcons];
@@ -361,8 +346,6 @@ publicMethod[
   ]
 ];
 
-
-
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
 createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
@@ -380,7 +363,6 @@ publicMethod[
     ret
   ]
 ];
-
 
 createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, variables, parameters];
 
@@ -409,7 +391,6 @@ publicMethod[
   ]
 ];
 
-
 ruleOutException[list_] := Module[
   {ret},
   ret = Map[(Cases[#, {{_?isVariable, _}, _, _} ])&, list];
@@ -418,7 +399,6 @@ ruleOutException[list_] := Module[
   ret
 ];
 
-
 createParameterMap[] := createParameterMap[pConstraint];
 
 publicMethod[
@@ -426,7 +406,6 @@ publicMethod[
   pcons,
   createMap[pcons, isParameter, hasParameter, {}];
 ];
-
 
 createMap[cons_, judge_, hasJudge_, vars_] := Module[
   {map, idx},
@@ -450,24 +429,12 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       debugPrint["@createMap map after applyList", map];
       
       map = Map[(adjustExprs[#, judge])&, map];
-      If[approximationMode === numerical, 
-        map = 
-          Map[
-            (Map[(If[LeafCount[#[[2]] ] >= approximationThreshold, 
-                Head[#][#[[1]], approxExprInternal[approximationPrecision, #[[2]] ] ],
-                #])&,
-              #
-            ])&,
-            map
-          ]
-      ];
       map = Map[(convertExprs[#])&, map];
       If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
     ];
     map
   ]
 ];
-
 
 (* 式中に変数名が出現するか否か *)
 
@@ -505,7 +472,6 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
 
-
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
 
 adjustExprs[andExprs_, judgeFunction_] := 
@@ -522,7 +488,6 @@ Fold[
   andExprs
 ];
 
-
 resetConstraint[] := (
   constraint = True;
   initConstraint = True;
@@ -536,7 +501,6 @@ resetConstraint[] := (
   guardVars = {};
   parameters = {};
 );
-
 
 resetConstraintForVariable[] := (
   constraint = True;
@@ -561,7 +525,6 @@ addConstraint[co_, va_] := Module[
   ];
   simplePrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
 ];
-
 
 addInitConstraint[co_, va_] := Module[
   {cons, vars},
@@ -619,7 +582,6 @@ resetTemporaryConstraint[] := (
   guardVars = {};
 );
 
-
 resetConstraintForParameter[pcons_, pars_] := (
   pConstraint = True;
   parameters = {};
@@ -632,7 +594,6 @@ addParameterConstraint[pcons_, pars_] := (
   simplePrint[pConstraint, pars];
 );
 
-
 (* 変数名からDerivativeやtを取り，微分回数とともに返す *)
 removeDash[var_] := Module[
    {ret},
@@ -644,7 +605,6 @@ removeDash[var_] := Module[
    ]
 ];
 
-
 apply[AndreduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
@@ -653,12 +613,10 @@ apply[AndreduceSol_] :=
 applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
-
 (* OrではなくListでくくる *)
 
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
-
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 
    ついでに othersを各条件に対して付加 *)
@@ -674,15 +632,12 @@ makeListFromPiecewise[minT_, others_] := Module[
   ]
 ];
 
-
 (*
  * 次のポイントフェーズに移行する時刻を求める
  *)
 
 calculateNextPointPhaseTime[maxTime_, discCause_] := 
   calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, variables];
-
-
 
 (* 変数とその値に関する式のリストを、変数表的形式に変換 *)
 getExprCode[expr_] := Switch[Head[expr],
@@ -693,7 +648,6 @@ getExprCode[expr_] := Switch[Head[expr],
   GreaterEqual, 4
 ];
 
-
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 integerString[expr_] := (
   expr /. (Infinity :> inf)
@@ -702,18 +656,15 @@ integerString[expr_] := (
        /. (x_Integer :> replaceIntegerToString[x])
 );
 
-
 (* リストを整形する *)
 (* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
-(* TODO:複素数の要素に対しても，任意精度への対応（文字列への変換とか）を行う *)
+(* TODO:複素数の要素に対しても，任意精度への対応 （文字列への変換とか）を行う *)
 
 (* convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list]; *)
 convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[#[[2]] ] } )&, list];
 
-
 (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], #, timeCond[[3]]})&, List@@timeCond[[2]]];
-
 
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
   そうでない場合は0を末尾に付加して返す．条件によって変化する場合は，条件を絞り込んでそれぞれを返す *)
@@ -745,7 +696,7 @@ publicMethod[
       tmpMaxTime
     },
     
-    (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果(tStore)をそのまま引き継ぐこともできるはず *)
+    (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果 (tStore)をそのまま引き継ぐこともできるはず *)
     dSol = exDSolve[cons, initCons];
     
     debugPrint["dSol after exDSolve", dSol];
@@ -790,13 +741,11 @@ publicMethod[
   ]
 ];
 
-
 calculateNextPointPhaseTime::mnmz = "Failed to minimize in calculateNextPointPhaseTime";
 
 getDerivativeCount[variable_[_]] := 0;
 
 getDerivativeCount[Derivative[n_][f_][_]] := n;
-
 
 applyDSolveResult[exprs_, integRule_] := (
   Simplify[
@@ -826,8 +775,8 @@ createIntegratedValue[variable_, integRule_] := (
   @param expr 時刻に関する変数についての制約
   @param initExpr 変数の初期値についての制約
   @return overConstraint | 
-    {underConstraint, 変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} |
-    {変数値が満たすべき制約（ルールに含まれているものは除く），各変数の値のルール} 
+    {underConstraint, 変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} |
+    {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} 
     TODO: Subsetsとか使ってるから式の数で簡単に爆発する
 *)
 
@@ -917,7 +866,6 @@ Check[
   Message[exDSolve::unkn]
 ];
 
-
 exDSolve::unkn = "unknown error occurred in exDSolve";
 
 (*
@@ -941,17 +889,87 @@ publicMethod[
 
 applyTime2Expr::nrls = "`1` is not a real expression.";
 
+makeIntervalRulesList[pcons_] := makeIntervalRulesList[pcons] = 
+Module[
+  {rules, iter, plist, appearedp = {}, ret = {} var},
+  plist = applyList[LogicalExpand[pcons] ];
+  plist = adjustExprs[plist, isParameter];
+  simplePrint[plist];
+  For[iter = 1, iter <= Length[plist], iter++,
+    var = plist[[iter]][[1]];
+    debugPrint["var:", var];
+    
+    If[Head[rules[var] ] =!= Rule,
+      appearedp = Append[appearedp, var]
+    ];
+    
+    If[ MemberQ[{Less, LessEqual}, Head[ plist[[iter]] ] ],
+      If[Head[rules[var] ] === Rule,
+        rules[var] = var -> Interval[{rules[var][[2]][[1]][[1]], plist[[iter]][[2]] } ],
+        rules[var] = var -> Interval[{-Infinity, plist[[iter]][[2]]}]
+      ]
+    ];
+    If[ MemberQ[{Greater, GreaterEqual}, Head[ plist[[iter]] ] ],
+      If[Head[rules[var] ] === Rule,
+        rules[var] = var -> Interval[{plist[[iter]][[2]], rules[var][[2]][[1]][[2]] }],
+        rules[var] = var -> Interval[{plist[[iter]][[2]], Infinity}]
+      ]
+    ];
+    If[ Head[ plist[[iter]] ]=== Equal,
+      rules[var] = var -> Interval[plist[[iter[[2]] ] ] ]
+    ];
+    debugPrint["rule:", rules[var]]
+  ];
+  simplePrint[appearedp];
+  For[iter = 1, iter <= Length[appearedp], iter++,
+    ret = Append[ret, rules[appearedp[[iter]] ] ]
+  ];
+  ret
+];
+
+approxValue[val_] := approxValue[val, pConstraint, approxMode, approxPrecision, approxThreshold];
+
 (*
- * 与えられた式を近似する
+ * approx given value
+ * approxMode === none: do nothing
+ * approxMode === numeric: numeric->numeric，interval->interval (invalid for expressions with parameters)
+ * approxMode === interval: numeric->interval，interval->interval
  *)
 publicMethod[
-  approxExpr,
-  precision, expr,
-  integerString[approxExprInternal[precision, expr] ]
+  approxValue,
+  val, pcons, mode, precision, threshold,
+  Module[
+    {lb, ub},
+    If[mode === none || LeafCount[val] <= 2*threshold,
+      {0},
+      If[mode === numeric,
+        If[Length[val] == 1,
+          {1, integerString[approxExpr[precision, val[[1]] ] ] },
+          {1, ntegerString[approxExpr[precision, val[[1]] ] ], integerString[approxExpr[precision, val[[2]] ] ] }
+        ],
+        (* if approxMode === interval *)
+        If[Length[val] == 1,
+          Join[{1}, integerString[getInterval[val[[1]], pcons, precision][[1]] ] ],
+          lb = getInterval[val[[1]], pcons, precision];
+          ub = getInterval[val[[2]], pcons, precision];
+          simplePrint[lb, ub];
+          Print[N[lb], N[ub]];
+          Join[{1}, integerString[{Min[lb[[1]][[1]], ub[[1]][[1]] ], Max[lb[[1]][[2]], ub[[1]][[2]] ]}] ]
+        ]
+      ]
+    ]
+  ]
+];
+
+getInterval[expr_, pcons_, precision_] := Module[
+  {tmp},
+  tmp = If[pcons =!= True, expr /. makeIntervalRulesList[pcons], expr ];
+  If[FreeQ[tmp, Interval], tmp = Interval[{tmp, tmp}] ];
+  Rationalize[N[tmp, precision], 0]
 ];
 
 
-approxExprInternal[precision_, expr_] := (
+approxExpr[precision_, expr_] := (
   Rationalize[
     N[Simplify[expr], precision + 3],
     Divide[1, Power[10, precision] ]

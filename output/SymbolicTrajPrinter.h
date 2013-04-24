@@ -13,6 +13,7 @@ namespace output{
 class SymbolicTrajPrinter: public TrajPrinter{
 public:
 
+  SymbolicTrajPrinter(const std::set<std::string>& output_variables, std::ostream& ostream);
   SymbolicTrajPrinter(const std::set<std::string>& output_variables);
   SymbolicTrajPrinter();
   
@@ -33,6 +34,7 @@ public:
   
 private:
   
+  std::ostream& ostream_;
   std::set<std::string> output_variables_;
 };
 

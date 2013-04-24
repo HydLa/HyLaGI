@@ -2,7 +2,7 @@
 
 
 bool MathLink::receive(){
-  HYDLA_LOGGER_EXTERN("#*** Begin MathLink::receive ***\n");
+  HYDLA_LOGGER_FUNC_BEGIN(EXTERN);
   bool at_end = false;
   bool next_is_massage = false;
   debug_print_.clear();
@@ -58,7 +58,7 @@ bool MathLink::receive(){
     if(at_end)break;
     MLNewPacket();
   }
-  HYDLA_LOGGER_EXTERN("#*** End MathLink::receive ***\n");
+  HYDLA_LOGGER_FUNC_END(EXTERN);
   return true;
 }
 

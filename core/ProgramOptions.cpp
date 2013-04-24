@@ -69,7 +69,7 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""), 
      "mode of approximation:\n"
      "  empty: no approximation \n"
-     "  n    : numerical (simple, but not validated!)\n"
+     "  n    : numeric (simple, but not validated!)\n"
      "  i    : interval (validated)\n")
     
     ("approx_precision",

@@ -175,7 +175,7 @@ private:
 
 #define HYDLA_LOGGER_LOG_WRITE_MACRO(LEVEL, FUNC, ARGS) {             \
     hydla::logger::Logger& logger=hydla::logger::Logger::instance();  \
-    if(logger.valid_level(hydla::logger::Logger::LEVEL)) {         \
+    if(logger.valid_level(hydla::logger::Logger::LEVEL)) {            \
       logger. FUNC ARGS;                                              \
     }                                                                 \
   }
@@ -218,12 +218,12 @@ private:
 #define HYDLA_LOGGER_MS(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ModuleSetArea, debug_write, (__VA_ARGS__))
   
-  
 /**
  * VCSを継承したクラスのdebugログの出力
  */
 #define HYDLA_LOGGER_VCS(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(VCSArea, debug_write, (__VA_ARGS__))
+
 
 /**
  * 外部ソフトウェアによるdebugログの出力
@@ -261,6 +261,19 @@ private:
  */
 #define HYDLA_LOGGER_FATAL(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Fatal, fatal_write, (__VA_ARGS__))
+
+
+#define HYDLA_LOGGER_FUNC_BEGIN(LEVEL)                                   \
+  HYDLA_LOGGER_##LEVEL##("*** Begin ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
+  
+#define HYDLA_LOGGER_FUNC_END(LEVEL)                                   \
+  HYDLA_LOGGER_##LEVEL##("*** End ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
+
+/**
+ * print location for this code
+ */
+#define HYDLA_LOGGER_LOCATION(LEVEL)                                   \
+  HYDLA_LOGGER_##LEVEL##("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
 
 
 } // namespace logger

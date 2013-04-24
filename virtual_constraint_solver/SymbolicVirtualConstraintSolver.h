@@ -198,6 +198,8 @@ public:
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
 
+  virtual void approx_vm(variable_range_map_t& vm){assert(0);}
+
   /* 
    * 出現する変数の集合を設定する．
    * resetしても初期化されない．

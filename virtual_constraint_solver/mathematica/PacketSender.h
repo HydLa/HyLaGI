@@ -18,24 +18,28 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
+
+enum now_phase_t 
+{ 
+  NP_POINT_PHASE, 
+  NP_INTERVAL_PHASE,
+};
+
+enum VariableArg {
+  VA_Prev,
+  VA_None,  
+  VA_Time,
+  VA_Zero,
+};
+
+extern const std::string var_prefix;
+extern const std::string par_prefix;
+
 class PacketSender : 
   public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
 {
 public:
   
-  enum now_phase_t 
-  { 
-    NP_POINT_PHASE, 
-    NP_INTERVAL_PHASE,
-  };
-
-  enum VariableArg {
-    VA_Prev,
-    VA_None,  
-    VA_Time,
-    VA_Zero,
-  };
-
   typedef std::map<std::string, int> max_diff_map_t;
   /**
    * •Ï”ƒf[ƒ^
@@ -55,9 +59,7 @@ public:
   typedef hydla::parse_tree::node_sptr         node_sptr;
 
   // Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar"
-  static const std::string var_prefix;
   // Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê
-  static const std::string par_prefix;
 
   PacketSender(MathLink& ml);
 
@@ -117,6 +119,7 @@ public:
   void create_max_diff_map(max_diff_map_t& max_diff_map);
 
   virtual void visit(hydla::simulator::symbolic::SymbolicValue& value);
+
   // Ask§–ñ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 

@@ -14,10 +14,10 @@ namespace vcs {
 namespace mathematica {
 
 /** Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar" */
-const std::string PacketSender::var_prefix("usrVar");
+const std::string var_prefix("usrVar");
 
 /** Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éŠÖ”–¼ */
-const std::string PacketSender::par_prefix("parameter");
+const std::string par_prefix("parameter");
 
 PacketSender::function_map_t PacketSender::function_map_;
 
@@ -237,7 +237,7 @@ void PacketSender::put_var(const var_info_t var)
     ml_->put_symbol(name);
     ml_->MLPutInteger(diff_count);
   }else{
-    name = PacketSender::var_prefix + name;
+    name = var_prefix + name;
     // •Ï”–¼‚Ì[t]‚â[0]‚ª‚Â‚­•ª
     if(variable_arg == VA_Time ||  variable_arg == VA_Zero) {
       ml_->MLPutNext(MLTKFUNC);

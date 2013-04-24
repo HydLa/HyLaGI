@@ -27,7 +27,7 @@ void NoninteractiveSimulator::initialize(const parse_tree_sptr& parse_tree)
 void NoninteractiveSimulator::process_one_todo(simulation_todo_sptr_t& todo)
 {
   bool is_safe = true;
-  hydla::output::SymbolicTrajPrinter printer;
+  hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
   if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase){
     todo->parent->cause_of_termination = simulator::STEP_LIMIT;
     return;

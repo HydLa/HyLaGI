@@ -227,7 +227,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ValuRange.cpp"
+				RelativePath=".\ValueRange.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableFinder.cpp"
 				>
 			</File>
 		</Filter>
@@ -330,10 +334,6 @@
 			</File>
 			<File
 				RelativePath=".\ValueVisitor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\VariableFinder.cpp"
 				>
 			</File>
 			<File

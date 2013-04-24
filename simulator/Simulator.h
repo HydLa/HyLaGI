@@ -16,7 +16,7 @@ namespace simulator {
 
 typedef enum{
   NO_APPROX,
-  NUMERICAL_APPROX,
+  NUMERIC_APPROX,
   INTERVAL_APPROX
 }ApproximationMode;
 
