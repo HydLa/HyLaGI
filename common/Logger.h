@@ -264,16 +264,16 @@ private:
 
 
 #define HYDLA_LOGGER_FUNC_BEGIN(LEVEL)                                   \
-  HYDLA_LOGGER_##LEVEL##("*** Begin ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
+  HYDLA_LOGGER_##LEVEL("*** Begin ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
   
 #define HYDLA_LOGGER_FUNC_END(LEVEL)                                   \
-  HYDLA_LOGGER_##LEVEL##("*** End ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
+  HYDLA_LOGGER_##LEVEL("*** End ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
 
 /**
  * print location for this code
  */
 #define HYDLA_LOGGER_LOCATION(LEVEL)                                   \
-  HYDLA_LOGGER_##LEVEL##("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
+  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
 
 
 } // namespace logger

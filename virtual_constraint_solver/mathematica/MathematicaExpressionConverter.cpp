@@ -41,7 +41,7 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::receive_
   value_t ret(new hydla::simulator::symbolic::SymbolicValue(make_tree(ml)));
   HYDLA_LOGGER_LOCATION(VCS);
   HYDLA_LOGGER_VCS("value: ", ret);
-  return ret;  
+  return ret;
 }
 
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_tree(MathLink &ml){
