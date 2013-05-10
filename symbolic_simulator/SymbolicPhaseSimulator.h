@@ -35,7 +35,7 @@ public:
   SymbolicPhaseSimulator(const Opts& opts);
   virtual ~SymbolicPhaseSimulator();
 
-  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
+  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_range_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
   virtual parameter_set_t get_parameter_set();
 
 private:

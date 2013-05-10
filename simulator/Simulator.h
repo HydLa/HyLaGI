@@ -212,14 +212,15 @@ public:
   virtual simulation_todo_sptr_t make_initial_todo();
   
   /**
-   * template of variable maps
+   * template of variable_range maps
    */
-  boost::shared_ptr<variable_map_t> variable_map_;
+  boost::shared_ptr<variable_range_map_t> original_range_map_;
   
   /*
    * set of variables
    */
   boost::shared_ptr<variable_set_t> variable_set_;
+  
 
   /*
    * set of pairs of introduced parameters and their ranges of values

@@ -70,7 +70,7 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 {
 }
 
-void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
+void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_range_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
@@ -483,7 +483,7 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   const variable_range_map_t& rm,
   parameter_map_t &parameter_map)
 {
-  variable_map_t ret = *variable_map_;
+  variable_map_t ret;
   for(variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
     variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
     if(r_it->second.is_unique()){
@@ -502,9 +502,15 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
     }
     else
     {
+      parameter_t param(r_it->first, state);
+      parameter_set_->push_front(simulator::ParameterAndRange(param, range_t()));
+      parameter_map[&(parameter_set_->front().parameter)] = range_t();
+      ret[variable] = value_t(new SymbolicValue(node_sptr(
+        new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
       // TODO: 変数の値が完全に不明な場合，無視するものとしている
       // ただしここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
       // 解軌道木上で一度しか出現しないUNDEFに対しては，記号定数を導入する必要が無いはずなので，どうにかそれを実現したい？
+      // ここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
     }
   }
   return ret;

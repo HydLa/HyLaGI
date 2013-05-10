@@ -100,7 +100,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   // TODO:CalculateVariableMapの結果，変数表が複数作られるような分岐を無視している
   // TODO:変数の値による分岐も無視している？
 
-  variable_range_map_t vm;
+  variable_range_map_t vm(*variable_map_);
   if(todo->module_set_container != msc_no_init_)
   {
     CalculateVariableMapResult cvm_res =
@@ -108,17 +108,17 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     switch(cvm_res)
     {
       case CVM_CONSISTENT:
-      HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n", vm);
+      HYDLA_LOGGER_LOCATION(MS);
       break;
       
       case CVM_INCONSISTENT:
-      HYDLA_LOGGER_MS("%% CVM_INCONSISTENT");
+      HYDLA_LOGGER_LOCATION(MS);
       todo->module_set_container->mark_nodes(*ms);
       return result;
       break;
       
       case CVM_ERROR:
-      HYDLA_LOGGER_MS("%% CVM_ERROR");
+      HYDLA_LOGGER_LOCATION(MS);
       throw SimulateError("CalculateVariableMap for " + ms->get_name());
       break;
     }
@@ -142,6 +142,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           break;
       }
     }
+    HYDLA_LOGGER_LOCATION(MS);
     HYDLA_LOGGER_MS("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){
       module_set_sptr connected_ms = graph->get_component(i);
@@ -159,14 +160,14 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
         switch(cvm_res)
         {
           case CVM_CONSISTENT:
+          HYDLA_LOGGER_LOCATION(MS);
           HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n", tmp_vm);
           todo->ms_cache.insert(std::make_pair(*connected_ms, tmp_vm) );
-          HYDLA_LOGGER_MS("%% merge");
           merge_variable_map(vm, tmp_vm);
           break;
           
           case CVM_INCONSISTENT:
-          HYDLA_LOGGER_MS("%% CVM_INCONSISTENT");
+          HYDLA_LOGGER_LOCATION(MS);
           todo->module_set_container->mark_nodes(*connected_ms);
           return result;
           break;
@@ -180,10 +181,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   }
   todo->module_set_container->mark_nodes();
   
+  
   if(todo->phase == PointPhase)
   {
     solver_->approx_vm(vm);
   }
+  
   
   phase_result_sptr_t phase = make_new_phase(todo, vm);
   phase->module_set = ms;
@@ -294,7 +297,7 @@ void PhaseSimulator::merge_variable_map(variable_range_map_t& lhs, variable_rang
 
 void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_set_t &p,
-                                variable_map_t &m,
+                                variable_range_map_t &m,
                                 continuity_map_t& c, 
                                 const module_set_container_sptr &msc_no_init)
 {

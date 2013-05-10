@@ -1,6 +1,7 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
 #include "SymbolicValue.h"
+#include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
 
 #include <iostream>
@@ -29,7 +30,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   init_variable_map(parse_tree);
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
   phase_simulator_->initialize(*variable_set_, *parameter_set_,
-   *variable_map_, vm, msc_no_init_);
+   *original_range_map_, vm, msc_no_init_);
 }
 
 void Simulator::reset_result_root()
@@ -60,7 +61,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
   typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
   variable_set_.reset(new variable_set_t());
-  variable_map_.reset(new variable_map_t());
+  original_range_map_.reset(new variable_range_map_t());
   parameter_set_.reset(new parameter_set_t());
 
   vmci it  = parse_tree->variable_map_begin();
@@ -73,7 +74,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       v.name             = it->first;
       v.derivative_count = d;
       variable_set_->push_front(v);
-      (*variable_map_)[&(variable_set_->front())] = value_t(new simulator::symbolic::SymbolicValue());
+      (*original_range_map_)[&(variable_set_->front())] = ValueRange();
     }
   }
 }

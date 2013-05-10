@@ -254,7 +254,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     std::string name = ml_.get_symbol();
     if(name == "True")
     {
-      variable_range_map_t map(original_range_map_);
+      variable_range_map_t map;
       create_result.result_maps.push_back(map);
     }
     else
@@ -269,7 +269,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     ml_.get_next();// ListÇ∆Ç¢Ç§ä÷êîñº
     for(int or_it = 0; or_it < or_size; or_it++){
       ml_.get_next();
-      variable_range_map_t map(original_range_map_);
+      variable_range_map_t map;
       value_t symbolic_value;
       int and_size = ml_.get_arg_count();
       HYDLA_LOGGER_VCS("and_size: ", and_size);
@@ -399,8 +399,10 @@ void MathematicaVCS::approx_vm(variable_range_map_t& vm)
           it->second.set_upper_bound(tmp_value, true);
         }
         else assert(0);
+        
         // break here to avoid too much approximation
         break;
+        
       }
       
       ml_.MLNewPacket();

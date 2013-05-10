@@ -206,12 +206,8 @@ public:
    */
   void set_variable_set(variable_set_t& v){
     variable_set_=&v;
-    original_range_map_.clear();
-    for(variable_set_t::iterator it = variable_set_->begin(); it != variable_set_->end(); it++){
-      original_range_map_[&(*it)] = value_range_t();
-    }
   }
-
+  
   /* 
    * 出現する記号定数の集合を設定する．
    * resetしても初期化されない．
@@ -239,13 +235,9 @@ public:
     assert(0);
     return NULL;
   }
-
-  /**
-   * create_resultの結果の要素の原型
-   */
-  variable_range_map_t original_range_map_;
-
+  
   variable_set_t* variable_set_;
+
   parameter_set_t* parameter_set_;
 };
 

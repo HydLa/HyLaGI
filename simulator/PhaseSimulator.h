@@ -68,7 +68,7 @@ public:
 
   virtual void initialize(variable_set_t &v,
     parameter_set_t &p, 
-    variable_map_t &m,
+    variable_range_map_t &m,
     continuity_map_t& c,
     const module_set_container_sptr &msc_no_init);
 
@@ -129,7 +129,7 @@ protected:
   
   variable_set_t *variable_set_;
   parameter_set_t *parameter_set_;
-  variable_map_t *variable_map_;
+  variable_range_map_t *variable_map_;
   negative_asks_t prev_guards_;
 
   int phase_sum_;
