@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_NONINTERACTIVE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_NONINTERACTIVE_SIMULATOR_H_
+#ifndef _INCLUDED_HYDLA_BATCH_SIMULATOR_H_
+#define _INCLUDED_HYDLA_BATCH_SIMULATOR_H_
 
 #include "Simulator.h"
 #include "Logger.h"
@@ -8,9 +8,9 @@ namespace hydla {
 namespace simulator {
 
 
-struct NoninteractiveTodoContainer: public todo_container_t
+struct BatchTodoContainer: public todo_container_t
 {
-  NoninteractiveTodoContainer(SearchMethod& method, boost::shared_ptr<entire_profile_t> vec)
+  BatchTodoContainer(SearchMethod& method, boost::shared_ptr<entire_profile_t> vec)
     : search_method_(method), todo_id_(0), profile_vector_(vec){}
 
   virtual void push_todo(simulation_todo_sptr_t& todo)
@@ -42,11 +42,11 @@ struct NoninteractiveTodoContainer: public todo_container_t
   boost::shared_ptr<entire_profile_t> profile_vector_;
 };
 
-class NoninteractiveSimulator: public Simulator{
+class BatchSimulator: public Simulator{
 public:
-  NoninteractiveSimulator(Opts &opts);
+  BatchSimulator(Opts &opts);
   
-  virtual ~NoninteractiveSimulator();
+  virtual ~BatchSimulator();
   
   virtual void process_one_todo(simulation_todo_sptr_t& todo);
   
@@ -73,4 +73,4 @@ protected:
 } // simulator
 } // hydla
 
-#endif // _INCLUDED_HYDLA_NONINTERACTIVE_SIMULATOR_H_
+#endif // _INCLUDED_HYDLA_BATCH_SIMULATOR_H_

@@ -18,7 +18,7 @@ bool ParallelSimulatorWorker::end_flag_;
 int ParallelSimulatorWorker::running_thread_count_;
 std::vector<std::string> ParallelSimulatorWorker::thread_state_;
 
-ParallelSimulatorWorker::ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master):NoninteractiveSimulator(opts), master_(master)
+ParallelSimulatorWorker::ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master):BatchSimulator(opts), master_(master)
 {
 }
 

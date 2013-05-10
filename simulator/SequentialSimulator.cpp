@@ -11,7 +11,7 @@ namespace simulator {
 
 using namespace std;
 
-SequentialSimulator::SequentialSimulator(Opts &opts):NoninteractiveSimulator(opts)
+SequentialSimulator::SequentialSimulator(Opts &opts):BatchSimulator(opts)
 {
 }
 

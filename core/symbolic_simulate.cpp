@@ -27,10 +27,10 @@ using namespace hydla::ch;
 using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 
-NoninteractiveSimulator* simulator_;
+BatchSimulator* simulator_;
 Opts opts;
 
-void output_result(NoninteractiveSimulator& ss, Opts& opts){
+void output_result(BatchSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
   Printer.output_parameter_set(ss.get_parameter_set());

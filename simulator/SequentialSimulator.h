@@ -1,12 +1,12 @@
 #ifndef _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_
 #define _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_
 
-#include "NoninteractiveSimulator.h"
+#include "BatchSimulator.h"
 
 namespace hydla {
 namespace simulator {
 
-class SequentialSimulator: public NoninteractiveSimulator{
+class SequentialSimulator: public BatchSimulator{
 public:
   SequentialSimulator(Opts &opts);
   

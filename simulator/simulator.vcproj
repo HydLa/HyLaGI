@@ -163,6 +163,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BatchSimulator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ContinuityMapMaker.cpp"
 				>
 			</File>
@@ -180,10 +184,6 @@
 			</File>
 			<File
 				RelativePath=".\InteractiveSimulator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\NoninteractiveSimulator.cpp"
 				>
 			</File>
 			<File
@@ -253,6 +253,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BatchSimulator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ContinuityMapMaker.h"
 				>
 			</File>
@@ -282,10 +286,6 @@
 			</File>
 			<File
 				RelativePath=".\ModuleSetContainerInitializer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NoninteractiveSimulator.h"
 				>
 			</File>
 			<File

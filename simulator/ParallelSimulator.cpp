@@ -13,7 +13,7 @@ namespace simulator {
 
 using namespace std;
 
-ParallelSimulator::ParallelSimulator(Opts &opts):NoninteractiveSimulator(opts)
+ParallelSimulator::ParallelSimulator(Opts &opts):BatchSimulator(opts)
 {
 
   for(int i = 0;i < opts_->parallel_number; i++)

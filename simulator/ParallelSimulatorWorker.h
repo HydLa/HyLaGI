@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
 #define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_WORKER_H_
 
-#include "NoninteractiveSimulator.h"
+#include "BatchSimulator.h"
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 
@@ -11,7 +11,7 @@ namespace simulator {
 
 class ParallelSimulator;
 
-class ParallelSimulatorWorker: public NoninteractiveSimulator{
+class ParallelSimulatorWorker: public BatchSimulator{
 
 public:
 

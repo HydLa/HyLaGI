@@ -1,4 +1,4 @@
-#include "NoninteractiveSimulator.h"
+#include "BatchSimulator.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
 #include "SymbolicValue.h"
@@ -11,20 +11,20 @@ namespace simulator {
 
 using namespace std;
 
-NoninteractiveSimulator::NoninteractiveSimulator(Opts &opts):Simulator(opts)
+BatchSimulator::BatchSimulator(Opts &opts):Simulator(opts)
 {
 }
 
-NoninteractiveSimulator::~NoninteractiveSimulator(){}
+BatchSimulator::~BatchSimulator(){}
 
-void NoninteractiveSimulator::initialize(const parse_tree_sptr& parse_tree)
+void BatchSimulator::initialize(const parse_tree_sptr& parse_tree)
 {
   Simulator::initialize(parse_tree);
   profile_vector_.reset(new entire_profile_t());
-  todo_stack_.reset(new NoninteractiveTodoContainer(opts_->search_method, profile_vector_));
+  todo_stack_.reset(new BatchTodoContainer(opts_->search_method, profile_vector_));
 }
 
-void NoninteractiveSimulator::process_one_todo(simulation_todo_sptr_t& todo)
+void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
 {
   bool is_safe = true;
   hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);

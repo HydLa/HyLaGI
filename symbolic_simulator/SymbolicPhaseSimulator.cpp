@@ -507,10 +507,9 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       parameter_map[&(parameter_set_->front().parameter)] = range_t();
       ret[variable] = value_t(new SymbolicValue(node_sptr(
         new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-      // TODO: 変数の値が完全に不明な場合，無視するものとしている
-      // ただしここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
+      // TODO: ここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
       // 解軌道木上で一度しか出現しないUNDEFに対しては，記号定数を導入する必要が無いはずなので，どうにかそれを実現したい？
-      // ここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
+      // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
     }
   }
   return ret;

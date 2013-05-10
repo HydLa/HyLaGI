@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
 #define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
 
-#include "NoninteractiveSimulator.h"
+#include "BatchSimulator.h"
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 
@@ -11,27 +11,27 @@ namespace simulator {
 
 class ParallelSimulatorWorker;
 
-struct ParallelTodoContainer: public NoninteractiveTodoContainer
+struct ParallelTodoContainer: public BatchTodoContainer
 {
   ParallelTodoContainer(SearchMethod& method, boost::shared_ptr<entire_profile_t> vec, boost::recursive_mutex* mut)
-    : NoninteractiveTodoContainer(method, vec){mutex_ = mut;}
+    : BatchTodoContainer(method, vec){mutex_ = mut;}
 
   virtual void push_todo(simulation_todo_sptr_t& todo)
   {
     boost::recursive_mutex::scoped_lock lk(*mutex_);
-    NoninteractiveTodoContainer::push_todo(todo);
+    BatchTodoContainer::push_todo(todo);
   }
   
   virtual simulation_todo_sptr_t pop_todo()
   {
     boost::recursive_mutex::scoped_lock lk(*mutex_);
-    return NoninteractiveTodoContainer::pop_todo();
+    return BatchTodoContainer::pop_todo();
   }
   
   virtual bool empty()
   {
     boost::recursive_mutex::scoped_lock lk(*mutex_);
-    return NoninteractiveTodoContainer::empty();
+    return BatchTodoContainer::empty();
   }
 
   private:
@@ -39,7 +39,7 @@ struct ParallelTodoContainer: public NoninteractiveTodoContainer
 };
 
 
-class ParallelSimulator: public NoninteractiveSimulator{
+class ParallelSimulator: public BatchSimulator{
 
 public:
   ParallelSimulator(Opts &opts);
