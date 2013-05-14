@@ -101,6 +101,7 @@ void ProgramOptions::init_descriptions()
      value<int>()->default_value(2),
      "parallel number")
      
+    ("no_laplace", "don't use Laplace transformation")
 
     ("tm", 
      value<std::string>()->default_value("n"),

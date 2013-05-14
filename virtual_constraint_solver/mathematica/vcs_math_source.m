@@ -302,45 +302,48 @@ publicMethod[
   cons, initCons, pcons, vars,
   Module[
     {sol, otherCons, tCons, hasTCons, necessaryTCons, parList, tmpPCons, cpTrue, cpFalse, trueMap, falseMap},
-    sol = exDSolve[cons, initCons];
-    debugPrint["sol after exDSolve", sol];
-    If[sol === overConstraint,
-      {False, pcons},
-      If[sol[[1]] === underConstraint,
-        (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-        (* Existsの第一引数はHold （HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある （気がする） *)
-        tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
-        tCons = sol[[2]] /. tCons;
-        tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-        tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals]]],
-        (* 微分方程式が解けた場合 *)
-        tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
-        tCons = applyList[sol[[1]] /. tCons];
-        tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-        tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals]]]
-      ];
-      checkMessage;
-
-      simplePrint[tCons];
-
-      If[tCons === False,
+    If[cons === True,
+      {pcons, False},
+      sol = exDSolve[cons, initCons];
+      debugPrint["sol after exDSolve", sol];
+      If[sol === overConstraint,
         {False, pcons},
-        
-        hasTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}])) -> True);
-        parList = getParameters[hasTCons];
-        simplePrint[parList];
-        necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
-        
-        simplePrint[necessaryTCons];
-        cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
-        cpFalse = Reduce[pcons && !cpTrue, Reals];
-
-        simplePrint[cpTrue, cpFalse];
-
+        If[sol[[1]] === underConstraint,
+          (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
+          (* Existsの第一引数はHold （HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある （気がする） *)
+          tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
+          tCons = sol[[2]] /. tCons;
+          tmpPCons = If[getParameters[tCons] === {}, True, pcons];
+          tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals]]],
+          (* 微分方程式が解けた場合 *)
+          tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
+          tCons = applyList[sol[[1]] /. tCons];
+          tmpPCons = If[getParameters[tCons] === {}, True, pcons];
+          tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals]]]
+        ];
         checkMessage;
-        {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
-        simplePrint[trueMap, falseMap];
-        {trueMap, falseMap}
+
+        simplePrint[tCons];
+
+        If[tCons === False,
+          {False, pcons},
+          
+          hasTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}])) -> True);
+          parList = getParameters[hasTCons];
+          simplePrint[parList];
+          necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
+          
+          simplePrint[necessaryTCons];
+          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
+          cpFalse = Reduce[pcons && !cpTrue, Reals];
+
+          simplePrint[cpTrue, cpFalse];
+
+          checkMessage;
+          {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
+          simplePrint[trueMap, falseMap];
+          {trueMap, falseMap}
+        ]
       ]
     ]
   ]
@@ -781,89 +784,112 @@ createIntegratedValue[variable_, integRule_] := (
 *)
 
 exDSolve[expr_, initExpr_] :=
-Check[
-  Module[
-    {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, j, sol, resultCons, resultRule, idx, generalInitValue, swapValue},
-    tmpExpr = applyList[expr];
-    resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
-    tmpExpr = Complement[tmpExpr, resultCons];
-    tmpInitExpr = applyList[initExpr];
-    subsets = Subsets[tmpExpr];
-    resultCons = And@@resultCons;
-    resultRule = {};
-    For[i=2,i<=Length[subsets], i++, (* 添え字が2からなのは最初の空集合を無視するため *)
-      subset = subsets[[i]];
-      tVars = Union[getVariables[subset]];
-      If[Length[tVars] == Length[subset],
-        ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
-        If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
-          (* 微分方程式の結果を再利用する場合 *)
-(*
-          For[j=1,j<=Length[dList],j++,
-            debugPrint["dList",j];
-            debugPrint["  defferential equation", dList[[j, 1]]];
-            debugPrint["  general solution", dList[[j, 2]]];
-            debugPrint["  replaced Variable List", dList[[j, 3]]];
-          ];
-*)
 
-          idx = Position[Map[(Sort[#])&,dList],Sort[subset]];
-          If[idx == {},
-            generalInitValue = ini;
-            For[j=1,j<=Length[generalInitValue],j++,
-              generalInitValue[[j, 1]] = initValue[j];
+getLaplaceVariables[exprs_] := Cases[exprs, LaplaceTransform[x_, _, _]/;hasVariable[x], Infinity];
+
+
+If[optNoLaplace === True,
+  exDSolve[expr_, initExpr_] := 
+    Check[
+      Module[
+        {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, j, sol, resultCons, resultRule, idx, generalInitValue, swapValue},
+        tmpExpr = applyList[expr];
+        resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
+        tmpExpr = Complement[tmpExpr, resultCons];
+        tmpInitExpr = applyList[initExpr];
+        subsets = Subsets[tmpExpr];
+        resultCons = And@@resultCons;
+        resultRule = {};
+        For[i=2,i<=Length[subsets], i++, (* 添え字が2からなのは最初の空集合を無視するため *)
+          subset = subsets[[i]];
+          tVars = Union[getVariables[subset]];
+          If[Length[tVars] == Length[subset],
+            ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
+            If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
+              (* 微分方程式の結果を再利用する場合 *)
+
+              idx = Position[Map[(Sort[#])&,dList],Sort[subset]];
+              If[idx == {},
+                generalInitValue = ini;
+                For[j=1,j<=Length[generalInitValue],j++,
+                  generalInitValue[[j, 1]] = initValue[j];
+                ];
+                sol = Check[
+                  DSolve[Union[subset, generalInitValue], Map[(#[t])&, tVars], t],
+                  overConstraint,
+                  {DSolve::overdet, DSolve::bvnul}
+                ];
+                For[j=1,j<=Length[generalInitValue],j++,
+                  generalInitValue[[j, 0]] = Rule;
+                ];
+                dList = Append[dList,{subset,sol,generalInitValue}];
+                idx = Position[dList,subset],
+                sol = dList[[idx[[1,1]],2]];
+              ];
+              For[j=1,j<=Length[ini],j++,
+                swapValue = ini[[j, 2]];
+                ini[[j, 2]] = ini[[j, 1]];
+                ini[[j, 1]] = swapValue;
+                ini[[j, 0]] = Rule;
+              ];
+              sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
+              ,
+              simplePrint[subset, ini];
+              sol = Quiet[Check[
+                  DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
+                  overConstraint,
+                  {DSolve::overdet, DSolve::bvnul}
+                ],
+                {DSolve::overdet, DSolve::bvnul}
+              ]
             ];
-            sol = Check[
-              DSolve[Union[subset, generalInitValue], Map[(#[t])&, tVars], t],
-              overConstraint,
-              {DSolve::overdet, DSolve::bvnul}
-            ];
-            For[j=1,j<=Length[generalInitValue],j++,
-              generalInitValue[[j, 0]] = Rule;
-            ];
-            dList = Append[dList,{subset,sol,generalInitValue}];
-            idx = Position[dList,subset],
-            sol = dList[[idx[[1,1]],2]];
-          ];
-          For[j=1,j<=Length[ini],j++,
-            swapValue = ini[[j, 2]];
-            ini[[j, 2]] = ini[[j, 1]];
-            ini[[j, 1]] = swapValue;
-            ini[[j, 0]] = Rule;
-          ];
-          sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
-          ,
-          simplePrint[subset, ini];
-          sol = Quiet[Check[
-              DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
-              overConstraint,
-              {DSolve::overdet, DSolve::bvnul}
-            ],
-            {DSolve::overdet, DSolve::bvnul}
+            simplePrint[sol];
+            checkMessage;
+            If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
+            tmpExpr = Complement[tmpExpr, subset];
+            tmpExpr = applyDSolveResult[tmpExpr, sol[[1]] ];
+            resultRule = Union[sol[[1]], resultRule];
+            excludingCons = Select[tmpExpr, (Length[getVariables[#]] === 0)&];
+            resultCons = resultCons && And@@excludingCons;
+            If[resultCons === False, Return[overConstraint] ];
+            tmpExpr = Complement[tmpExpr, excludingCons];
+            subsets = Subsets[tmpExpr];
+            i = 1;
           ]
         ];
-        simplePrint[sol];
-        checkMessage;
-        If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
-        tmpExpr = Complement[tmpExpr, subset];
-        tmpExpr = applyDSolveResult[tmpExpr, sol[[1]] ];
-        resultRule = Union[sol[[1]], resultRule];
-        excludingCons = Select[tmpExpr, (Length[getVariables[#]] === 0)&];
-        resultCons = resultCons && And@@excludingCons;
-        If[resultCons === False, Return[overConstraint] ];
-        (* TODO: DSolveの結果が複数ある場合への対応 *)
-        tmpExpr = Complement[tmpExpr, excludingCons];
-        subsets = Subsets[tmpExpr];
-        i = 1;
-      ]
-    ];
-    simplePrint[resultCons];
-    If[Length[subsets] > 1,
-      {underConstraint, resultCons && And@@Map[(And@@#)&, subsets], resultRule},
-      {resultCons, resultRule}
+        simplePrint[resultCons];
+        If[Length[subsets] > 1,
+          {underConstraint, resultCons && And@@Map[(And@@#)&, subsets], resultRule},
+          {resultCons, resultRule}
+        ]
+      ],
+      Message[exDSolve::unkn]
+    ],
+  exDSolve[expr_, initExpr_] :=
+    (* TODO:微分方程式の結果の再利用 *)
+    Check[
+      Module[
+        {tmpInitExpr, tmpExpr, sol, vars, resultCons, unsolvedCons},
+        inputPrint["exDSolve", expr, initExpr];
+        tmpExpr = applyList[expr];
+        resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
+        tmpExpr = Complement[tmpExpr, resultCons];
+        tmpInitExpr = applyList[initExpr];
+        tmpExpr = LaplaceTransform[tmpExpr, t, s];
+        vars = getLaplaceVariables[tmpExpr];
+        (* TODO: Solveの結果が複数ある場合への対応 *)
+        sol = Quiet[Solve[Join[tmpExpr, tmpInitExpr], vars], Solve::svars];
+        If[sol === {}, Return[overConstraint] ];
+        sol = sol[[1]];
+        sol = InverseLaplaceTransform[sol, s, t];
+        unsolvedCons = Cases[sol, Rule[_, rhs_]/;hasVariable[rhs], Infinity];
+        If[ Length[unsolvedCons] > 0,
+          {underConstraint, Join[resultCons, Map[(Equal@@#)&, unsolvedCons] ], Complement[sol, unsolvedCons] },
+          {resultCons, sol}
+        ]
+      ],
+      Message[exDSolve::unkn]
     ]
-  ],
-  Message[exDSolve::unkn]
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";

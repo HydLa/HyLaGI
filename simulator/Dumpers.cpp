@@ -116,6 +116,7 @@ std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
   return s;
 }
 
+
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
