@@ -458,6 +458,11 @@ getParameters[exprs_] := Cases[exprs, parameter[_, _, _], Infinity];
 (* ŽžŠÔ•Ï”‚ðŽæ“¾ *)
 getTimeVars[list_] := Cases[list, _[t], Infinity];
 
+(* ‰Šú’l•Ï”‚ðŽæ“¾ *)
+getInitVars[expr_] := Cases[expr, _[0], Infinity];
+
+hasInitVars[expr_] := (Length[getInitVars[expr] ] > 0);
+
 (* Ž®’†‚É’è”–¼‚ªoŒ»‚·‚é‚©”Û‚© *)
 
 hasParameter[exprs_] := Length[Cases[exprs, parameter[_, _, _], Infinity]] > 0;
@@ -875,12 +880,15 @@ If[optNoLaplace === True,
         tmpExpr = Complement[tmpExpr, resultCons];
         tmpInitExpr = applyList[initExpr];
         tmpExpr = LaplaceTransform[tmpExpr, t, s];
-        vars = getLaplaceVariables[tmpExpr];
+        vars = Join[getLaplaceVariables[tmpExpr], getInitVars[tmpInitExpr] ] ;
         (* TODO: Solve‚ÌŒ‹‰Ê‚ª•¡”‚ ‚éê‡‚Ö‚Ì‘Î‰ž *)
         sol = Quiet[Solve[Join[tmpExpr, tmpInitExpr], vars], Solve::svars];
         simplePrint[sol];
         If[sol === {}, Return[overConstraint] ];
         sol = sol[[1]];
+        simplePrint[sol];
+        sol = Select[sol, (!hasInitVars[#])&, Infinity ];
+        simplePrint[sol];
         sol = InverseLaplaceTransform[sol, s, t];
         unsolvedCons = Cases[sol, Rule[_, rhs_]/;hasVariable[rhs], Infinity];
         If[ Length[unsolvedCons] > 0,
