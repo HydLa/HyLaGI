@@ -783,7 +783,6 @@ createIntegratedValue[variable_, integRule_] := (
     TODO: Subsets‚Æ‚©g‚Á‚Ä‚é‚©‚ç®‚Ì”‚ÅŠÈ’P‚É”š”­‚·‚é
 *)
 
-exDSolve[expr_, initExpr_] :=
 
 getLaplaceVariables[exprs_] := Cases[exprs, LaplaceTransform[x_, _, _]/;hasVariable[x], Infinity];
 
@@ -879,6 +878,7 @@ If[optNoLaplace === True,
         vars = getLaplaceVariables[tmpExpr];
         (* TODO: Solve‚ÌŒ‹‰Ê‚ª•¡”‚ ‚éê‡‚Ö‚Ì‘Î‰ *)
         sol = Quiet[Solve[Join[tmpExpr, tmpInitExpr], vars], Solve::svars];
+        simplePrint[sol];
         If[sol === {}, Return[overConstraint] ];
         sol = sol[[1]];
         sol = InverseLaplaceTransform[sol, s, t];
