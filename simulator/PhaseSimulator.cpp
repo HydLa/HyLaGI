@@ -84,7 +84,12 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   //–³–µ‚‚È‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ª‘¶İ‚µ‚È‚¢ê‡
   if(!has_next)
   {
-    todo->parent->cause_of_termination = simulator::INCONSISTENCY;
+    // make dummy phase and push into tree.
+    phase_result_sptr_t stuck_phase(new PhaseResult());
+    stuck_phase->current_time = todo->current_time;
+    stuck_phase->cause_of_termination = simulator::INCONSISTENCY;
+    stuck_phase->parameter_map = todo->parameter_map;
+    todo->parent->children.push_back(stuck_phase);
   }
   return result;
 }

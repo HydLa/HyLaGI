@@ -99,7 +99,6 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
-
     ostream_ << "#---------Case " << case_num++ << "---------" << endl;
     std::vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
