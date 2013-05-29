@@ -11,6 +11,11 @@ namespace {
       }
     }
 
+    NodeDumper(const NodeDumper& rhs)
+    {
+      ss << rhs.ss.rdbuf();
+    }
+
     friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
     {
       s << nd.ss.str();

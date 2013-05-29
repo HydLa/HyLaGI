@@ -12,13 +12,18 @@ using namespace hydla::logger;
 
 namespace {
 struct NodeDumper {
-      
+
   template<typename T>
   NodeDumper(T it, T end) 
   {
     for(; it!=end; ++it) {
       ss << hydla::parse_tree::TreeInfixPrinter().get_infix_string(*it) << "\n";
     }
+  }
+
+  NodeDumper(const NodeDumper& rhs)
+  {
+    ss << rhs.ss.rdbuf();
   }
 
   friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
