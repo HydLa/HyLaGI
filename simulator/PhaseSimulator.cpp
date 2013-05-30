@@ -85,11 +85,8 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   if(!has_next)
   {
     // make dummy phase and push into tree.
-    phase_result_sptr_t stuck_phase(new PhaseResult());
-    stuck_phase->current_time = todo->current_time;
-    stuck_phase->cause_of_termination = simulator::INCONSISTENCY;
-    stuck_phase->parameter_map = todo->parameter_map;
-    todo->parent->children.push_back(stuck_phase);
+    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::INCONSISTENCY));
+    todo->parent->children.push_back(phase);
   }
   return result;
 }
@@ -262,18 +259,9 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, hydla:
 
 phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo, const variable_range_map_t& vm)
 {
-  phase_result_sptr_t phase(new PhaseResult(*(todo->parent)));
+  phase_result_sptr_t phase(new PhaseResult(*todo));
   phase->id = ++phase_sum_;
   phase->variable_map = range_map_to_value_map(phase, vm, todo->parameter_map);
-  phase->parameter_map = todo->parameter_map;
-  phase->current_time = todo->current_time;
-  phase->expanded_always = todo->expanded_always;
-  phase->positive_asks = todo->positive_asks;
-  phase->negative_asks = todo->negative_asks;
-  phase->children.clear();
-  phase->parent = todo->parent;
-  phase->step = todo->parent->step + 1;
-  phase->phase = todo->phase;
   todo->parent->children.push_back(phase);
   return phase;
 }

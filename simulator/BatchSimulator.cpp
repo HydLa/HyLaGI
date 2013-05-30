@@ -83,16 +83,16 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
       // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
       while(!todo_stack_->empty()) {
         simulation_todo_sptr_t tmp_state(todo_stack_->pop_todo());
-        tmp_state->parent->cause_of_termination = OTHER_ASSERTION;
+        phase_result_sptr_t phase(new PhaseResult(*todo, simulator::OTHER_ASSERTION));
+        todo->parent->children.push_back(phase);
       }
     }
   }
   catch(const hydla::timeout::TimeOutError &te)
   {
-    // タイムアウト発生
     HYDLA_LOGGER_PHASE(te.what());
-    todo->parent->cause_of_termination = TIME_OUT_REACHED;
-    todo->parent->parent->children.push_back(todo->parent);
+    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
+    todo->parent->children.push_back(phase);
   }
 }
 

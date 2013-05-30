@@ -16,6 +16,7 @@ namespace simulator {
 
 struct DefaultParameter;
 struct PhaseResult;
+struct SimulationTodo;
 
 /**
  * type for cause of termination of simulation
@@ -68,10 +69,8 @@ typedef std::map<variable_t*, value_t, VariableComparator>                    va
 typedef std::map<parameter_t*, range_t>                   parameter_map_t;
 
 /**
- * あるフェーズのシミュレーション結果を表すクラス
- * 解軌道木上のノードに対応する
+ * A struct to express the result of each phase.
  */
-
 struct PhaseResult {
   Phase                     phase;
   int id;
@@ -84,15 +83,16 @@ struct PhaseResult {
   int step;
   hydla::ch::module_set_sptr module_set;
 
-  /// フェーズの終了原因を表す．
   CauseOfTermination cause_of_termination;
-  /// 次のフェーズ
+  /// A set of succeeding phases
   phase_result_sptrs_t children;
-  /// 前のフェーズ
+  /// A preceding phase
   phase_result_sptr_t parent;
 
   PhaseResult();
+  PhaseResult(const SimulationTodo& todo, const CauseOfTermination& cause = NONE);
 };
+
 
 
 } // namespace simulator

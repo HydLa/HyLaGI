@@ -270,7 +270,7 @@ private:
   HYDLA_LOGGER_##LEVEL("*** End ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
 
 /**
- * print location for this code
+ * print location where this code is
  */
 #define HYDLA_LOGGER_LOCATION(LEVEL)                                   \
   HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
