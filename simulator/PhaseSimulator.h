@@ -93,7 +93,7 @@ protected:
    */
 
   virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_map_t& result_vm) = 0;
+                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_maps_t& result_vms) = 0;
 
   result_list_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
                                   const variable_map_t& time_applied_map, simulation_todo_sptr_t& state);
@@ -123,7 +123,10 @@ protected:
     return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
   }
 
-  virtual CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, variable_range_map_t&) = 0;
+  virtual CalculateVariableMapResult check_false_conditions(
+    const module_set_sptr& ms,
+    simulation_todo_sptr_t&,
+    const variable_map_t &) = 0;
 
   const Opts *opts_;
   
@@ -169,7 +172,9 @@ protected:
   /**
    * merge rhs to lhs
    */
-  void merge_variable_map(variable_range_map_t& lhs, variable_range_map_t& rhs);
+  void merge_variable_map(variable_range_map_t& lhs, const variable_range_map_t& rhs);
+
+  void merge_variable_maps(variable_range_maps_t& lhs, const variable_range_maps_t& rhs);
 
   result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
   

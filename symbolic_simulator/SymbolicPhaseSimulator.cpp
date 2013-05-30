@@ -54,8 +54,8 @@ namespace symbolic {
 
 CalculateVariableMapResult
 SymbolicPhaseSimulator::check_false_conditions
-(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, variable_range_map_t& result_vm){
-  return analysis_result_checker_->check_false_conditions(ms, state, vm, result_vm);
+(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm){
+  return analysis_result_checker_->check_false_conditions(ms, state, vm);
 }
 
 
@@ -318,7 +318,7 @@ SymbolicPhaseSimulator::calculate_variable_map(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& todo,
   const variable_map_t & vm,
-  variable_range_map_t& result_vm)
+  variable_range_maps_t& result_vms)
 {
   HYDLA_LOGGER_FUNC_BEGIN(MS);
   
@@ -341,7 +341,7 @@ SymbolicPhaseSimulator::calculate_variable_map(
 
   if(!result)
   {
-    HYDLA_LOGGER_MS("#*** End SymbolicPhaseSimulator::calculate_variable_map(result.size() ==0)***\n");
+    HYDLA_LOGGER_FUNC_END(MS);
     return CVM_INCONSISTENT;
   }
   
@@ -350,18 +350,14 @@ SymbolicPhaseSimulator::calculate_variable_map(
   todo->profile["CreateMap"] += create_timer.get_elapsed_us();
   SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
   
-  if(results.size() != 1){
-    // TODO:現状，ここで変数表が複数現れる場合は考えていない．
-    assert(current_phase_ != PointPhase);
+  if(results.size() != 1 && current_phase_ == IntervalPhase){
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
     todo->parent->children.push_back(phase);
     HYDLA_LOGGER_FUNC_END(MS);
     return CVM_ERROR;
   }
   
-  assert(results.size()>0);
-  
-  result_vm = results[0];
+  result_vms = results;
 
   HYDLA_LOGGER_FUNC_END(MS);
   return CVM_CONSISTENT;

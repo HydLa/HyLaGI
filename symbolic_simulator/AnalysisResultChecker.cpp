@@ -149,8 +149,7 @@ CalculateVariableMapResult
 AnalysisResultChecker::check_false_conditions(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& state,
-  const variable_map_t& vm,
-  variable_range_map_t& result_vm)
+  const variable_map_t& vm)
 {
   phase_result_sptr_t& pr = state->parent;
   if(opts_->analysis_mode == "simulate"){

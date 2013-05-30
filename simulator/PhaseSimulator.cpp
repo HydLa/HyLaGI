@@ -99,14 +99,14 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   graph->set_valid(ms.get());
   result_list_t result;
   
-  // TODO:CalculateVariableMapの結果，変数表が複数作られるような分岐を無視している
   // TODO:変数の値による分岐も無視している？
 
-  variable_range_map_t vm(*variable_map_);
+  variable_range_maps_t vms;
+  vms.push_back(*variable_map_);
   if(todo->module_set_container != msc_no_init_)
   {
     CalculateVariableMapResult cvm_res =
-      calculate_variable_map(ms, todo, time_applied_map, vm);
+      calculate_variable_map(ms, todo, time_applied_map, vms);
     switch(cvm_res)
     {
       case CVM_CONSISTENT:
@@ -129,7 +129,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   {
     CalculateVariableMapResult cvm_res;
     if(todo->phase == PointPhase && (opts_->analysis_mode == "use" || opts_->analysis_mode == "simulate")){
-      cvm_res = check_false_conditions(ms, todo, time_applied_map, vm);
+      cvm_res = check_false_conditions(ms, todo, time_applied_map);
       switch(cvm_res){
         case CVM_CONSISTENT:
 	        break;
@@ -152,20 +152,20 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
       if(ms_it != todo->ms_cache.end())
       {
-        merge_variable_map(vm, ms_it->second);
+        merge_variable_maps(vms, ms_it->second);
       }
       else
       {
-        variable_range_map_t tmp_vm;
+        variable_range_maps_t tmp_vms;
         cvm_res =
-          calculate_variable_map(connected_ms, todo, time_applied_map, tmp_vm);
+          calculate_variable_map(connected_ms, todo, time_applied_map, tmp_vms);
         switch(cvm_res)
         {
           case CVM_CONSISTENT:
           HYDLA_LOGGER_LOCATION(MS);
-          HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n", tmp_vm);
-          todo->ms_cache.insert(std::make_pair(*connected_ms, tmp_vm) );
-          merge_variable_map(vm, tmp_vm);
+          HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n");
+          todo->ms_cache.insert(std::make_pair(*connected_ms, tmp_vms) );
+          merge_variable_maps(vms, tmp_vms);
           break;
           
           case CVM_INCONSISTENT:
@@ -182,61 +182,66 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     }
   }
   todo->module_set_container->mark_nodes();
-  
-  
-  if(todo->phase == PointPhase)
+    
+  for(unsigned int i=0; i < vms.size(); i++)
   {
-    solver_->approx_vm(vm);
-  }
-  
-  
-  phase_result_sptr_t phase = make_new_phase(todo, vm);
-  phase->module_set = ms;
-  
-  if(opts_->assertion){
-    timer::Timer entailment_timer;
-    solver_->reset_constraint(phase->variable_map, true);
-    solver_->reset_parameters(phase->parameter_map);
-    HYDLA_LOGGER_MS("%% check_assertion");
-    hydla::vcs::CheckConsistencyResult cc_result;
-    switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t())){
-      case ENTAILED:
-      case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
-        std::cout << "Assertion Failed!" << std::endl;
-        HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
-        phase->cause_of_termination = ASSERTION;
-        break;
-      case CONFLICTING:
-        break;
-        /*
-      case BRANCH_VAR:
-        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
-          // 分岐先を生成
-        {
-          simulation_todo_sptr_t new_state(create_new_simulation_phase(todo));
-          new_state->temporary_constraints.push_back(opts_->assertion);
-          todo_container_->push_back(new_state);
-        }
-        {
-          node_sptr not_cons(new hydla::parse_tree::Not(opts_->assertion));
-          todo->temporary_constraints.push_back(not_cons);
-          solver_->add_constraint(not_cons);
-        }
-        break;
-        */
-      case BRANCH_PAR:
-        HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
-        push_branch_states(todo, cc_result);
-        std::cout << "Assertion Failed!" << std::endl;
-        phase->parameter_map = todo->parameter_map;
-        HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
-        phase->cause_of_termination = ASSERTION;
-        break;
+    variable_range_map_t& vm = vms[i];
+    
+    if(todo->phase == PointPhase)
+    {
+      solver_->approx_vm(vm);
     }
-    todo->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-  }
+    
+    phase_result_sptr_t phase = make_new_phase(todo, vm);
+    phase->module_set = ms;
+    
+    
+    
+    if(opts_->assertion){
+      timer::Timer entailment_timer;
+      solver_->reset_constraint(phase->variable_map, true);
+      solver_->reset_parameters(phase->parameter_map);
+      HYDLA_LOGGER_MS("%% check_assertion");
+      hydla::vcs::CheckConsistencyResult cc_result;
+      switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t())){
+        case ENTAILED:
+        case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
+          std::cout << "Assertion Failed!" << std::endl;
+          HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
+          phase->cause_of_termination = ASSERTION;
+          break;
+        case CONFLICTING:
+          break;
+          /*
+        case BRANCH_VAR:
+          HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
+            // 分岐先を生成
+          {
+            simulation_todo_sptr_t new_state(create_new_simulation_phase(todo));
+            new_state->temporary_constraints.push_back(opts_->assertion);
+            todo_container_->push_back(new_state);
+          }
+          {
+            node_sptr not_cons(new hydla::parse_tree::Not(opts_->assertion));
+            todo->temporary_constraints.push_back(not_cons);
+            solver_->add_constraint(not_cons);
+          }
+          break;
+          */
+        case BRANCH_PAR:
+          HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
+          push_branch_states(todo, cc_result);
+          std::cout << "Assertion Failed!" << std::endl;
+          phase->parameter_map = todo->parameter_map;
+          HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
+          phase->cause_of_termination = ASSERTION;
+          break;
+      }
+      todo->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
+    }
   
   result.push_back(phase);
+  }
   return result;
 }
 
@@ -261,7 +266,7 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo,
 {
   phase_result_sptr_t phase(new PhaseResult(*todo));
   phase->id = ++phase_sum_;
-  phase->variable_map = range_map_to_value_map(phase, vm, todo->parameter_map);
+  phase->variable_map = range_map_to_value_map(phase, vm, phase->parameter_map);
   todo->parent->children.push_back(phase);
   return phase;
 }
@@ -276,9 +281,32 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
   return phase;
 }
 
-void PhaseSimulator::merge_variable_map(variable_range_map_t& lhs, variable_range_map_t& rhs)
+
+void PhaseSimulator::merge_variable_maps(variable_range_maps_t& lhs, const variable_range_maps_t& rhs)
 {
-  variable_range_map_t::iterator it = rhs.begin();
+  unsigned int original_l_size = lhs.size();
+  for(unsigned int r_it = 0; r_it < rhs.size() - 1; r_it++)
+  {
+    for(unsigned int l_it = 0; l_it < original_l_size; l_it++)
+    {
+      variable_range_map_t tmp_map = lhs[l_it];
+      merge_variable_map(tmp_map, rhs[r_it]);
+      lhs.push_back(tmp_map);
+    }
+  }
+  if(rhs.size() > 0)
+  {
+    for(unsigned int l_it = 0; l_it < original_l_size; l_it++)
+    {
+      merge_variable_map(lhs[l_it], rhs[rhs.size() - 1]);
+    }
+  }
+}
+
+
+void PhaseSimulator::merge_variable_map(variable_range_map_t& lhs, const variable_range_map_t& rhs)
+{
+  variable_range_map_t::const_iterator it = rhs.begin();
   for(;it != rhs.end(); it++)
   {
     if(!it->second.is_undefined())

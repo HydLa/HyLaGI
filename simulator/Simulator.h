@@ -71,6 +71,7 @@ typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sp
 
 typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
 typedef std::map<variable_t*, simulator::ValueRange, VariableComparator>      variable_range_map_t;
+typedef std::vector<variable_range_map_t>      variable_range_maps_t;
 
 typedef std::map<std::string, unsigned int> profile_t;
 
@@ -79,7 +80,7 @@ typedef std::map<std::string, unsigned int> profile_t;
  * シミュレーションすべきフェーズを表す構造体
  */
 struct SimulationTodo{
-  typedef std::map<hydla::ch::ModuleSet, variable_range_map_t> ms_cache_t;
+  typedef std::map<hydla::ch::ModuleSet, variable_range_maps_t > ms_cache_t;
 
   Phase                     phase;
   int                       id;

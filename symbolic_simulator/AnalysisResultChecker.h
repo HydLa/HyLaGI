@@ -22,8 +22,7 @@ public:
   virtual simulator::CalculateVariableMapResult 
     check_false_conditions(const hydla::ch::module_set_sptr& ms,
                            simulator::simulation_todo_sptr_t& state,
-                           const variable_map_t&, 
-                           variable_range_map_t& result_vm);
+                           const variable_map_t&);
 
   virtual void parse();
 

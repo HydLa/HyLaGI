@@ -60,7 +60,7 @@ private:
    */
 
   virtual simulator::CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_map_t& result_vm);
+                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_maps_t& result_vm);
 
   /**
    * 与えられたフェーズの次のTodoを返す．
@@ -82,7 +82,7 @@ private:
 
   void add_continuity(const continuity_map_t&);
   
-  virtual simulator::CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, variable_range_map_t&);
+  virtual simulator::CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &);
 
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm)
