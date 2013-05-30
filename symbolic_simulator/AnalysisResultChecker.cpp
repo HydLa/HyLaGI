@@ -199,6 +199,7 @@ AnalysisResultChecker::check_false_conditions(
       return CVM_INCONSISTENT;
     }
   }
+  return CVM_INCONSISTENT;
 }
 
 

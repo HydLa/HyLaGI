@@ -1,6 +1,7 @@
 #include "InteractiveSimulator.h"
 #include "Dumpers.h"
-#pragma warning(disable:4996)
+// surpress warning "C4996: old 'strcpy'" on VC++2005
+#define _CRT_SECURE_NO_DEPRECATE
 #include <boost/algorithm/string.hpp>
 
 namespace hydla {

@@ -10,12 +10,12 @@ namespace hydla{
 namespace output{
 
 SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables, std::ostream& ostream):
-   output_variables_(output_variables), ostream_(ostream){
+   ostream_(ostream), output_variables_(output_variables){
 }
 
 
 SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables):
-   output_variables_(output_variables), ostream_(cout){
+   ostream_(cout), output_variables_(output_variables){
 }
 
 SymbolicTrajPrinter::SymbolicTrajPrinter():ostream_(cout){}
