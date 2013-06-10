@@ -48,7 +48,7 @@ public:
   typedef std::map<module_set_sptr, hydla::parse_tree::node_sptr> false_map_t;
   typedef hydla::parse_tree::node_sptr node_sptr;
 
-  PhaseSimulator(const Opts& opts);
+  PhaseSimulator(Simulator* simulator, const Opts& opts);
   
   virtual ~PhaseSimulator();
 
@@ -118,6 +118,8 @@ protected:
   virtual void set_simulation_mode(const Phase& phase) = 0;
 
 protected:
+
+  Simulator* simulator_;
 
   variable_t* get_variable(const std::string &name, const int &derivative_count){
     return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));

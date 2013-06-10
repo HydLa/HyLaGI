@@ -66,8 +66,9 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         ret = node_sptr(new hydla::parse_tree::E());
       else if(symbol=="inf")
         ret = node_sptr(new hydla::parse_tree::Infinity());
-      else if(symbol.length() > var_prefix.length() && symbol.substr(0, 6) == var_prefix)
-        ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(6)));
+      else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
+        // 変数が来た場合は，後から導入されることを考えて仮に記号定数としておく idが-1なのはParameterReplacer参照
+        ret = node_sptr(new hydla::parse_tree::Parameter(symbol.substr(var_prefix.length()), 0, -1));
       break;
     }
     case MLTKINT: // 整数は文字列形式でのみ受け取るものとする（int型だと限界があるため）
@@ -150,16 +151,13 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         int variable_derivative_count = ml.get_integer();
         ml.get_next();
         std::string variable_name = ml.get_symbol();
-        if(variable_name.length() < 6){
+        if(variable_name.length() < var_prefix.length()){
           throw SolveError("invalid symbol name");
         }
-        assert(variable_name.substr(0, 6) == "usrVar");
-        variable_name = variable_name.substr(6);
-        node_sptr tmp_node = node_sptr(new hydla::parse_tree::Variable(variable_name));
-        for(int i=0;i<variable_derivative_count;i++){
-          tmp_node = node_sptr(new hydla::parse_tree::Differential(tmp_node));
-        }
-        ret = tmp_node;
+        assert(variable_name.substr(0, var_prefix.length) == var_prefix);
+        variable_name = variable_name.substr(var_prefix.length());
+        // 変数が来た場合は，後から導入されることを考えて仮に記号定数としておく idが-1なのはParameterReplacer参照
+        ret = node_sptr(new hydla::parse_tree::Parameter(variable_name.substr(var_prefix.length()), variable_derivative_count, -1));
       }
       break;
     }

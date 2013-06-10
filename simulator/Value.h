@@ -24,7 +24,7 @@ class Value:
   /**
    * 未定義値かどうか
    */
-  virtual bool is_undefined() const = 0;
+  virtual bool undefined() const = 0;
   
   /**
    * 自分自身のクローンを新たに作成し，そのポインタを返す
@@ -53,7 +53,7 @@ class Value:
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const{
-    if(is_undefined()) s << "UNDEF";
+    if(undefined()) s << "UNDEF";
     else s << get_string();
     return s;
   }

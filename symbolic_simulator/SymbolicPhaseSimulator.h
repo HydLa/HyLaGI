@@ -32,7 +32,7 @@ public:
   typedef simulator::phase_result_sptr_t   phase_result_sptr_t;
   typedef ch::module_set_sptr              modulse_set_sptr;
 
-  SymbolicPhaseSimulator(const Opts& opts);
+  SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~SymbolicPhaseSimulator();
 
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_range_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);

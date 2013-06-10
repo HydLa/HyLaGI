@@ -62,6 +62,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
   typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
   variable_set_.reset(new variable_set_t());
   original_range_map_.reset(new variable_range_map_t());
+  original_parameter_map_.reset(new parameter_map_t());
   parameter_set_.reset(new parameter_set_t());
 
   vmci it  = parse_tree->variable_map_begin();
@@ -79,6 +80,14 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
   }
 }
 
+
+parameter_t* Simulator::introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range)
+{
+  parameter_t param(var, phase);
+  parameter_set_->push_front(param);
+  (*original_parameter_map_)[&(parameter_set_->front())] = range;
+  return &(parameter_set_->front());
+}
 
 simulation_todo_sptr_t Simulator::make_initial_todo()
 {

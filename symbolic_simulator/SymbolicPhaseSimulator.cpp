@@ -11,8 +11,7 @@
 #include "Logger.h"
 #include "Timer.h"
 
-//仮追加
-#include "RTreeVisitor.h"
+#include "ParameterReplacer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
 
@@ -59,8 +58,8 @@ SymbolicPhaseSimulator::check_false_conditions
 }
 
 
-SymbolicPhaseSimulator::SymbolicPhaseSimulator(const Opts& opts) :
-  simulator_t(opts)
+SymbolicPhaseSimulator::SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts) :
+  simulator_t(simulator, opts)
 {
 }
 
@@ -475,34 +474,81 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   parameter_map_t &parameter_map)
 {
   variable_map_t ret;
+  ParameterReplacer replacer;
   for(variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
     variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
     if(r_it->second.is_unique()){
       ret[variable] = r_it->second.get_lower_bound().value;
     }
-    else if(!r_it->second.is_undefined())
-    {
-      parameter_t param(r_it->first, state);
-      parameter_set_->push_front(simulator::ParameterAndRange(param, r_it->second));
-      parameter_map[&(parameter_set_->front().parameter)] = r_it->second;
-      ret[variable] = value_t(new SymbolicValue(node_sptr(
-        new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-      // TODO:記号定数導入後，各変数の数式中に出現する変数を記号定数に置き換える
-      // TODO:ここで，Parameter(variable->get_name(), variable->get_derivative_count(), state->id)))はPhaseResult自体を参照していないので，
-      // もしPhaseResultをこの処理以降に変更するような実装に変更した場合，整合性が取れなくなるのでどうにかする
-    }
     else
     {
-      parameter_t param(r_it->first, state);
-      parameter_set_->push_front(simulator::ParameterAndRange(param, range_t()));
-      parameter_map[&(parameter_set_->front().parameter)] = range_t();
+      replacer.add_mapping(variable->get_name(), variable->get_derivative_count(), state->id);
+      value_range_t range = r_it->second;
+      // introduce parameter
+      parameter_t* param = simulator_->introduce_parameter(r_it->first, state, range);
       ret[variable] = value_t(new SymbolicValue(node_sptr(
         new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
+      parameter_map[param] = r_it->second;
+      // TODO:ここで，Parameter(variable->get_name(), variable->get_derivative_count(), state->id)))はPhaseResult自体を参照していないので，
+      // もしPhaseResultをこの処理以降に変更するような実装にした場合，整合性が取れなくなるのでどうにかする
       // TODO: ここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
       // 解軌道木上で一度しか出現しないUNDEFに対しては，記号定数を導入する必要が無いはずなので，どうにかそれを実現したい？
       // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
     }
   }
+  // 仮ID(-1)を設定した記号定数のIDを正しく設定し直す
+  
+  for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
+      it != simulator_->original_parameter_map_->end(); it++)
+  {
+    ValueRange& range = it->second;
+    value_t val = range.get_upper_bound().value;
+    if(val.get() && !val->undefined())
+    {
+      replacer.replace_value(val);
+      range.set_upper_bound(val, range.get_upper_bound().include_bound);
+    }
+    val = range.get_lower_bound().value;
+    if(val.get() && !val->undefined())
+    {
+      replacer.replace_value(val);
+      range.set_lower_bound(val, range.get_lower_bound().include_bound);
+    }
+  }
+  
+  
+  
+  for(parameter_map_t::iterator it = parameter_map.begin();
+      it != parameter_map.end(); it++)
+  {
+    ValueRange& range = it->second;
+    value_t val = range.get_upper_bound().value;
+    if(val.get() && !val->undefined())
+    {
+      replacer.replace_value(val);
+      range.set_upper_bound(val, range.get_upper_bound().include_bound);
+    }
+    val = range.get_lower_bound().value;
+    if(val.get() && !val->undefined())
+    {
+      replacer.replace_value(val);
+      range.set_lower_bound(val, range.get_lower_bound().include_bound);
+    }
+  }
+  
+  
+  for(variable_map_t::iterator it = ret.begin();
+      it != ret.end(); it++)
+  {
+    value_t val = it->second;
+    if( val.get() && !val->undefined())
+    {
+      replacer.replace_value(val);
+      ret[it->first] = val;
+    }
+  }
+  
+  
   return ret;
 }
 
@@ -512,7 +558,7 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    if(it->second->is_undefined())
+    if(it->second->undefined())
       shifted_vm[it->first] = it->second;
     else
       shifted_vm[it->first] = solver_->shift_expr_time(it->second, time);

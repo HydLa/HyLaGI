@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ParameterReplacer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PhaseResult.cpp"
 				>
 			</File>
@@ -298,6 +302,10 @@
 			</File>
 			<File
 				RelativePath=".\ParallelSimulatorWorker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParameterReplacer.h"
 				>
 			</File>
 			<File

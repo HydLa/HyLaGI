@@ -213,7 +213,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     int size=0;
     for(; it!=variable_map.end(); ++it)
     {
-      if(!it->second->is_undefined()){
+      if(!it->second->undefined()){
         size++;
       }
     }
@@ -221,7 +221,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
     it = variable_map.begin();
     for(; it!=variable_map.end(); ++it)
     {
-      if(!it->second->is_undefined()){
+      if(!it->second->undefined()){
         ml_.put_function("Equal", 2);
         ps.put_var(it->first->get_name(), it->first->get_derivative_count(), VA_Prev);
         ps.put_value(it->second, VA_Prev);
@@ -309,7 +309,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
         }
         value_range_t tmp_range = map[variable_ptr];
         MathematicaExpressionConverter::set_range(symbolic_value, tmp_range, relop_code);
-        if(symbolic_value->is_undefined()){
+        if(symbolic_value->undefined()){
           throw SolveError("invalid value");
         }
         HYDLA_LOGGER_VCS("%% symbolic_value: ", *symbolic_value);
@@ -369,7 +369,7 @@ void MathematicaVCS::approx_vm(variable_range_map_t& vm)
   VariableArg arg = VA_None;
   for(; it!=vm.end(); ++it)
   {
-    if(!it->second.is_undefined())
+    if(!it->second.undefined())
     {
       ml_.put_function("approxValue", 1);
       if(it->second.is_unique())
@@ -433,7 +433,7 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm, const bool& send
    VariableArg arg = (mode_==hydla::simulator::symbolic::DiscreteMode || mode_== hydla::simulator::symbolic::FalseConditionsMode)?VA_None:VA_Time;
   for(; it!=vm.end(); ++it)
   {
-    if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->is_undefined()){
+    if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->undefined()){
       size++;
     }
   }
@@ -441,7 +441,7 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm, const bool& send
   it = vm.begin();
   for(; it!=vm.end(); ++it)
   {
-    if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->is_undefined()){
+    if((send_derivatives || it->first->get_derivative_count() == 0) && !it->second->undefined()){
       ml_.put_function("Equal", 2);
       ps.put_var(it->first->get_name(), it->first->get_derivative_count(), arg);
       ps.put_value(it->second, arg);
@@ -883,7 +883,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
     HYDLA_LOGGER_VCS("variable : ", *(it->first));
     // ’l
     value_t    value;
-    if(!it->second->is_undefined()) {
+    if(!it->second->undefined()) {
       ml_.put_function("applyTime2Expr", 2);
       ps.put_value(it->second, VA_Time);
       ps.put_value(time, VA_None);
@@ -923,7 +923,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
   std::string ret;
   PacketSender ps(ml_);
 
-  if(!val->is_undefined() && opfmt == fmtNInterval) {
+  if(!val->undefined() && opfmt == fmtNInterval) {
     
     //precision‚Í2‚æ‚è‘å‚«‚¢‚Æ‚·‚é
     if(precision<2) precision=2;
@@ -1041,7 +1041,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     if(sign == 'n') ret = "-"+ret;
     ret = ret+parameter;
     
-  } else  if(!val->is_undefined()) {
+  } else  if(!val->undefined()) {
     ml_.put_function("ToString", 2);
 
     //ml_.put_function("Interval",1);
@@ -1143,10 +1143,10 @@ void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, Pa
     if(range.is_unique()){
       size++;
     }else{
-      if(range.get_lower_bound().value.get() && !range.get_lower_bound().value->is_undefined()){
+      if(range.get_lower_bound().value.get() && !range.get_lower_bound().value->undefined()){
         size++;
       }
-      if(range.get_upper_bound().value.get() && !range.get_upper_bound().value->is_undefined()){
+      if(range.get_upper_bound().value.get() && !range.get_upper_bound().value->undefined()){
         size++;
       }
     }
@@ -1166,7 +1166,7 @@ void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, Pa
       {
         const value_t &value = it->second.get_lower_bound().value;
         parameter_t& param = *it->first;
-        if(value.get() && !value->is_undefined()){
+        if(value.get() && !value->undefined()){
           if(!it->second.get_lower_bound().include_bound){
             ml_.put_function("Greater", 2);
           }
@@ -1181,7 +1181,7 @@ void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, Pa
         
         const value_t &value = it->second.get_upper_bound().value;
         parameter_t& param = *it->first;
-        if(value.get() && !value->is_undefined()){
+        if(value.get() && !value->undefined()){
           if(!it->second.get_upper_bound().include_bound){
             ml_.put_function("Less", 2);
           }

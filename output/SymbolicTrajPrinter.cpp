@@ -54,18 +54,6 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
 }
 
 
-void SymbolicTrajPrinter::output_parameter_set(const parameter_set_t& ps) const
-{
-  parameter_set_t::const_iterator it  = ps.begin();
-  parameter_set_t::const_iterator end = ps.end();
-  if(it != end){
-    ostream_ << "\n#---------parameter set---------\n";
-  }
-  for(; it!=end; ++it) {
-    ostream_ << it->parameter << "\t: " << it->range << "\n";
-  }
-}
-
 void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();

@@ -33,7 +33,7 @@ Opts opts;
 void output_result(BatchSimulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables);
-  Printer.output_parameter_set(ss.get_parameter_set());
+  Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   if(po.get<std::string>("tm") == "s") {
     hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
@@ -170,14 +170,14 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   if(opts.interactive_mode)
   {
     InteractiveSimulator is(opts);
-    is.set_phase_simulator(new SymbolicPhaseSimulator(opts));
+    is.set_phase_simulator(new SymbolicPhaseSimulator(&is, opts));
     is.initialize(parse_tree);
     is.simulate();
   }
   else if(opts.parallel_mode)
   {
     ParallelSimulator ps(opts);
-    ps.set_phase_simulator(new SymbolicPhaseSimulator(opts));
+    ps.set_phase_simulator(new SymbolicPhaseSimulator(&ps, opts));
     ps.initialize(parse_tree);
     ps.simulate();
     output_result(ps, opts);
@@ -196,7 +196,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   {
     SequentialSimulator* ss = new SequentialSimulator(opts);
     simulator_ = ss;
-    ss->set_phase_simulator(new SymbolicPhaseSimulator(opts));
+    ss->set_phase_simulator(new SymbolicPhaseSimulator(ss, opts));
     ss->initialize(parse_tree);
     ss->simulate();
     output_result(*ss, opts);

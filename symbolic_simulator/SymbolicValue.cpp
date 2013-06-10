@@ -10,7 +10,7 @@ namespace hydla {
 namespace simulator{
 namespace symbolic {
 
-bool SymbolicValue::is_undefined() const
+bool SymbolicValue::undefined() const
 {
   return (node_ == NULL);
 }
@@ -27,7 +27,7 @@ SymbolicValue::SymbolicValue(const SymbolicValue::node_sptr & node){
 
 std::string SymbolicValue::get_string() const
 {
-  if(is_undefined()) return "";
+  if(undefined()) return "";
   hydla::parse_tree::TreeInfixPrinter printer;
   std::ostringstream os;
   printer.print_infix(node_,os);

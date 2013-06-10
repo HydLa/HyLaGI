@@ -39,7 +39,7 @@ class SymbolicValue: public hydla::simulator::Value
   /**
    * –¢’è‹`’l‚©‚Ç‚¤‚©
    */
-  bool is_undefined() const;
+  bool undefined() const;
 
   /**
    * •¶Žš—ñ•\Œ»‚ðŽæ“¾‚·‚é

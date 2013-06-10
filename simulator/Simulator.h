@@ -169,14 +169,7 @@ typedef TodoContainer                                    todo_container_t;
 
 typedef std::list<variable_t>                            variable_set_t;
 
-struct ParameterAndRange
-{
-  parameter_t parameter;
-  range_t     range;
-  ParameterAndRange(const parameter_t& p, const range_t& r):parameter(p), range(r){}
-};
-
-typedef std::list<ParameterAndRange>                     parameter_set_t;
+typedef std::list<parameter_t>                     parameter_set_t;
 
 class Simulator
 {
@@ -204,7 +197,7 @@ public:
   /**
    * @return set of introduced parameters and their ranges of values
    */
-  parameter_set_t get_parameter_set(){return *parameter_set_;}
+  parameter_map_t get_parameter_map(){return *original_parameter_map_;}
   
   phase_result_sptr_t get_result_root(){return result_root_;}
   
@@ -212,6 +205,13 @@ public:
    * push the initial state of simulation into the stack
    */
   virtual simulation_todo_sptr_t make_initial_todo();
+  
+  /**
+   * @return pointer to introduced parameter
+   */
+  parameter_t* introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range);
+  
+  // TODO: publicƒƒ“ƒo‚ª‘½‚·‚¬‚é‹C‚ª‚·‚é
   
   /**
    * template of variable_range maps
@@ -225,9 +225,14 @@ public:
   
 
   /*
-   * set of pairs of introduced parameters and their ranges of values
+   * set of introduced parameters
    */
   boost::shared_ptr<parameter_set_t> parameter_set_;
+  
+  /*
+   * map of introduced parameters and their original ranges of values
+   */
+  boost::shared_ptr<parameter_map_t> original_parameter_map_;
   
 
 protected:
@@ -265,9 +270,6 @@ protected:
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
-
-  private:
-
 };
 
 } //namespace simulator

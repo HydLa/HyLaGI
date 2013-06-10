@@ -227,7 +227,7 @@ public:
 
   parameter_t* get_parameter(const std::string &name, int derivative_count, int id) const {
     for(parameter_set_t::iterator it = parameter_set_->begin(); it != parameter_set_->end();it++){
-      parameter_t& param = it->parameter;
+      parameter_t& param = *it;
       if(param.get_variable()->get_name() == name && param.get_variable()->get_derivative_count() == derivative_count && param.get_phase()->id == id){
         return &param;
       }

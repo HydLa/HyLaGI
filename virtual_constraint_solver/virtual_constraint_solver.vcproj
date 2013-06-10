@@ -155,10 +155,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mathematica\PacketSender.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SymbolicVirtualConstraintSolver.cpp"
 				>
 			</File>
@@ -263,6 +259,10 @@
 				</File>
 				<File
 					RelativePath=".\mathematica\mathlink_helper.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mathematica\PacketSender.cpp"
 					>
 				</File>
 				<File

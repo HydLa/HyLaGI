@@ -9,7 +9,7 @@
 
 using namespace hydla::simulator;
 
-PhaseSimulator::PhaseSimulator(const Opts& opts):opts_(&opts), select_phase_(NULL){}
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts):simulator_(simulator), opts_(&opts), select_phase_(NULL){}
 
 PhaseSimulator::~PhaseSimulator(){}
 
@@ -309,7 +309,7 @@ void PhaseSimulator::merge_variable_map(variable_range_map_t& lhs, const variabl
   variable_range_map_t::const_iterator it = rhs.begin();
   for(;it != rhs.end(); it++)
   {
-    if(!it->second.is_undefined())
+    if(!it->second.undefined())
     {
       lhs[it->first] = it->second;
     }

@@ -66,7 +66,7 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
         out_tmp << "{";
         typename parameter_map_t::const_iterator it = now_node->parameter_map.begin();
         while(it != now_node->parameter_map.end()){
-          if(it->second.is_undefined()){
+          if(it->second.undefined()){
             it++;
           }else{
             out_tmp << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << ", step}";

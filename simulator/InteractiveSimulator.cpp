@@ -26,7 +26,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
   phase_simulator_->set_select_function(select_phase);
   printer_.set_output_variables(opts_->output_variables);
   simulation_todo_sptr_t todo(make_initial_todo());
-  unsigned int todo_num = 1; // 連続して処理する残りTODOの数
+  unsigned int todo_num = 1; // 連続して処理するTODOの残数
 
   while(todo_num)
   {
@@ -190,7 +190,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   variable_map_t& vm = todo->parent->variable_map;
   
   // 変数の選択
-  variable_map_t::const_iterator v_it  = vm.begin();
+  variable_map_t::iterator v_it  = vm.begin();
   cout << "input variable name " << endl;
   cout << '>';
   string variable_str = excin<string>();
@@ -226,9 +226,8 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
-    parameter_t param(v_it->first, todo->parent);
-    parameter_set_->push_front(ParameterAndRange(param, range));
-    pm[&(parameter_set_->front().parameter)] = range;
+    parameter_t* introduced_par = introduce_parameter(v_it->first, todo->parent, range);
+    pm[introduced_par] = range;
     value_t pvalue(new hydla::simulator::symbolic::SymbolicValue(
       hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first->get_name(),
       v_it->first->get_derivative_count(),
