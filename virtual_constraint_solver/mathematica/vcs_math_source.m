@@ -875,13 +875,16 @@ If[optNoLaplace === True,
       Module[
         {tmpInitExpr, tmpExpr, sol, vars, resultCons, unsolvedCons},
         inputPrint["exDSolve", expr, initExpr];
-        tmpExpr = applyList[expr];
+        vars = getTimeVars[expr];
+        tmpExpr = applyList[Reduce[expr, vars]];
+        simplePrint[tmpExpr];
         resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
         tmpExpr = Complement[tmpExpr, resultCons];
         tmpInitExpr = applyList[initExpr];
         tmpExpr = LaplaceTransform[tmpExpr, t, s];
         vars = Join[getLaplaceVariables[tmpExpr], getInitVars[tmpInitExpr] ] ;
         (* TODO: Solve‚ÌŒ‹‰Ê‚ª•¡”‚ ‚éê‡‚Ö‚Ì‘Î‰ž *)
+        simplePrint[tmpExpr, vars];
         sol = Quiet[Solve[Join[tmpExpr, tmpInitExpr], vars], Solve::svars];
         simplePrint[sol];
         If[sol === {}, Return[overConstraint] ];
@@ -890,6 +893,7 @@ If[optNoLaplace === True,
         sol = Select[sol, (!hasInitVars[#])&, Infinity ];
         simplePrint[sol];
         sol = InverseLaplaceTransform[sol, s, t];
+        simplePrint[sol];
         unsolvedCons = Cases[sol, Rule[_, rhs_]/;hasVariable[rhs], Infinity];
         If[ Length[unsolvedCons] > 0,
           {underConstraint, Join[resultCons, Map[(Equal@@#)&, unsolvedCons] ], Complement[sol, unsolvedCons] },
