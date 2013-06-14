@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
   for(; it!=end; ++it) {
-    s << *(it->first) << "(" << it->first << ") " << " <=> " << it->second << "\n";
+    s << *(it->first) << " <=> " << it->second << "\n";
   }
   return s;
 }
@@ -128,9 +128,9 @@ std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
   
   for(; it!=end; ++it) {
     if(it->second.get()){
-      s << *(it->first) << "(" << it->first << ") " << " <=> " << *(it->second) << "\n";
+      s << *(it->first) << " <=> " << *(it->second) << "\n";
     }else{
-      s << *(it->first) << "(" << it->first << ") " << " <=> UNDEF\n";
+      s << *(it->first) << " <=> UNDEF\n";
     }
   }
   
