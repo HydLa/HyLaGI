@@ -889,9 +889,7 @@ If[optNoLaplace === True,
         simplePrint[sol];
         If[sol === {}, Return[overConstraint] ];
         sol = sol[[1]];
-        simplePrint[sol];
         sol = Select[sol, (!hasInitVars[#])&, Infinity ];
-        simplePrint[sol];
         sol = InverseLaplaceTransform[sol, s, t];
         simplePrint[sol];
         unsolvedCons = Cases[sol, Rule[_, rhs_]/;hasVariable[rhs], Infinity];

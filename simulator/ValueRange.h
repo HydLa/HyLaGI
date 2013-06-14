@@ -42,6 +42,7 @@ public:
   void set_unique(const value_t& val)
   {
     lower_.value = upper_.value = val;
+    lower_.include_bound = upper_.include_bound = true;
     is_unique_ = true;
   }
 

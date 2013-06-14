@@ -154,7 +154,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         if(variable_name.length() < var_prefix.length()){
           throw SolveError("invalid symbol name");
         }
-        assert(variable_name.substr(0, var_prefix.length) == var_prefix);
+        assert(variable_name.substr(0, var_prefix.length()) == var_prefix);
         variable_name = variable_name.substr(var_prefix.length());
         // 変数が来た場合は，後から導入されることを考えて仮に記号定数としておく idが-1なのはParameterReplacer参照
         ret = node_sptr(new hydla::parse_tree::Parameter(variable_name.substr(var_prefix.length()), variable_derivative_count, -1));
