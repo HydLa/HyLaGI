@@ -56,8 +56,10 @@ public:
    *
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
+   * @param ignore_prev このノードがprev制約を無視するかどうか, 通常はfalse
+   * @param is_init_var このノードがラプラス変換の初期値として扱われるかどうか, 通常はfalse
    */
-  void put_node(const node_sptr& node, bool ignore_prev = false);
+  void put_node(const node_sptr& node, bool ignore_prev = false, bool is_init_var = false);
 
   /**
    * リスト形式で送信する
@@ -166,6 +168,9 @@ protected:
 
   // notを適用するかどうか
   bool apply_not_;
+
+  // Laplace変換の初期値(init*var)であるかどうか
+  bool is_init_var_;
 };
 
 } //namespace reduce

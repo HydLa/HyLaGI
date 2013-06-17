@@ -7,7 +7,7 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
-  typedef hydla::symbolic_simulator::time_t REDUCETime;
+  typedef hydla::simulator::symbolic::time_t REDUCETime;
 
 } // namespace reduce
 } // namespace vcs

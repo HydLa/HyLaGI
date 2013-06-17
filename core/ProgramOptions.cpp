@@ -81,13 +81,13 @@ void ProgramOptions::init_descriptions()
      value<int>()->default_value(30),
      "threshold of approximation")
      
-     /*
-     ("solver,s",
+     
+    ("solver,s",
      value<std::string>()->default_value("m"), 
      "solver:\n"
      "  m or Mathematica\n"
      "  r or Reduce")
-     */
+     
 
     ("nd", "nondeterministic mode")
     

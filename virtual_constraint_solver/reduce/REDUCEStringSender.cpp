@@ -163,7 +163,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
   var_info_t new_var = boost::make_tuple(node->get_name(),
                                          differential_count_,
                                          in_prev_ && !ignore_prev_,
-                                         node->get_init_var());
+                                         is_init_var_); // old: node->get_init_var()
 
   put_var(new_var);
 }
@@ -271,12 +271,14 @@ void REDUCEStringSender::put_par(const std::string &name)
  * @param node putÇµÇΩÇ¢éÆ(ÉmÅ[Éh)
  */
 
-void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev)
+void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool is_init_var)
 {
   HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_node ***");
+  HYDLA_LOGGER_REST("node : ", *node);
   differential_count_ = 0;
   in_prev_ = false;
   ignore_prev_ = ignore_prev;
+  is_init_var_ = is_init_var;
   accept(node);
   HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_node ***");
 }

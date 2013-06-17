@@ -15,6 +15,19 @@ operator interval;
 % parameterStore_: 現在扱っている、定数制約の集合（リスト形式、IPのみ使用）
 % psParameters_: 定数制約の集合に出現する定数の一覧（リスト形式、IPのみ使用）
 %
+% RCS復旧に向けて新しく追加するグローバル変数
+% isTemporary_：制約の追加を一時的なものとするか
+% tmpConstraint_: 一時的に追加された変数
+% prevConstraint_: 左極限値を設定する制約
+% initConstraint_: 初期値制約
+% initTmpConstraint_: 一時的に追加された初期値制約
+% (variables_: 制約に出現する変数のリスト)
+% tmpVariables_: 一時制約に出現する変数のリスト
+% guard_: ガード制約
+% guardVars_: ガード制約に含まれる変数のリスト
+% 
+% initVariables_: init変数(init◯◯)のリスト 
+%
 % irrationalNumberIntervalList_: 無理数と、区間値による近似表現の組のリスト
 %
 % optUseDebugPrint_: デバッグ出力をするかどうか
@@ -26,6 +39,8 @@ operator interval;
 % piInterval_: 円周率Piを表す区間
 % eInterval_: ネイピア数Eを表す区間
 %
+% 将来使うかもしれないが未実装のグローバル変数
+% prevVariables_: HydLaプログラムの静的解析向け
 
 
 % グローバル変数初期化
@@ -152,6 +167,13 @@ begin;
   if(flag_=true) then rationalisedExpr_:= rationalisation(rationalisedExpr_);
   return rationalisedExpr_;
 end;
+
+
+% exSubの第二引数をリスト形式に対応させた置換関数
+procedure myExSub(patternList_, exprs_)$
+  if(myHead(exprs_) = list) then 
+    for each x in exprs_ collect myExSub(patternList_, x)
+  else exSub(patternList_, exprs_);
 
 % expr_中に等式以外や論理演算子が含まれる場合にも対応できる置換関数
 procedure exSub(patternList_, expr_)$
@@ -1586,16 +1608,6 @@ begin;
   return ans_;
 end;
 
-%depend {ht,v}, t;
-%expr_:={df(ht,t) = v,
-%        df(v,t) = -10
-%       };
-%init_:={inithtlhs = 10,
-%        initvlhs = 0
-%       };
-%vars_:={ht,v,df(ht,t),df(v,t)};
-%exDSolve(expr_, init_, vars_);
-
 %---------------------------------------------------------------
 % 特定の要素を抽出/削除したり複数の要素を分類したりする関数
 %---------------------------------------------------------------
@@ -1716,6 +1728,43 @@ procedure removePrevCons(consList_)$
   union(for each x in consList_ join if(freeof(x, prev)) then {x} else {});
 
 %---------------------------------------------------------------
+% HydLa向け関数（init変数関連）
+%---------------------------------------------------------------
+
+% REDUCEStringSenderから呼び出す
+% @params vars_ init変数のリスト
+procedure addInitVariables(vars_)$
+begin;
+  putLineFeed();
+
+  initVariables_:= union(initVariables_, vars_);
+  debugWrite("initVariables_: ", initVariables_);
+end;
+
+% initVariables_に含まれる変数かどうか調べる
+procedure isInitVariable(var_)$
+begin;
+  scalar ret_;
+  putLineFeed();
+
+  if(arglength(var_) neq -1) then return nil;
+  ret_ := nil;
+  for each x in initVariables_ do if x = var_ then ret_ := t;
+  return ret_;
+end;
+
+procedure removeInitCons(consList_)$
+begin;
+  putLineFeed();
+
+  return union(consList_ \
+    for each initVariable in initVariables_ join
+      for each x in consList_ join 
+        if(freeof(x, initVariable)) then {} else {x}
+  );
+end;
+
+%---------------------------------------------------------------
 % HydLa向け関数（共通して必要）
 %---------------------------------------------------------------
 
@@ -1735,33 +1784,169 @@ begin;
   constraintStore_ := {};
   csVariables_ := {};
   parameterStore_:= {};
+  prevConstraint_:= {};
   psParameters_:= {};
+  isTemporary_:= nil;
+  initConstraint_ := {};
+  initTmpConstraint_:= {};
+  tmpConstraint_:= {};
+  tmpVariables_:= {};
+  prevVariables_:= {};
+  guard_:= {};
+  guardVars_:= {};
+  initVariables_:= {};
   debugWrite("constraintStore_: ", constraintStore_);
   debugWrite("csVariables_: ", csVariables_);
   debugWrite("parameterStore_: ", parameterStore_);
+  debugWrite("prevConstraint_: ", prevConstraint_);
+  debugWrite("prevVariables_: ", prevVariables_);
   debugWrite("psParameters_: ", psParameters_);
-
+  debugWrite("isTemporary_", isTemporary_);
+  debugWrite("initConstraint_", initConstraint_);
+  debugWrite("initTmpConstraint_", initTmpConstraint_);
+  debugWrite("tmpVariables_", tmpVariables_);
+  debugWrite("initVariables_", initVariables_);
 end;
 
-% PP/IPで共通のreset時に行う、制約ストアへの制約の追加
-procedure addConstraintReset(cons_, vars_, pcons_, pars_)$
-  begin;
+procedure resetConstraintForVariable()$
+begin;
   putLineFeed();
 
-  debugWrite("in addConstraintReset", " ");
-  debugWrite("parameterStore_: ", parameterStore_);
-  debugWrite("psParameters_: ", psParameters_);
-  debugWrite("pcons_: ", pcons_);
-  debugWrite("pars_:", pars_);
+  constraintStore_ := {};
+  csVariables_ := {};
+  tmpVariables_:= {};
+  prevVariables_:= {};
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("tmpVariables_", tmpVariables_);
+  debugWrite("prevVariables_: ", prevVariables_);
+end;
+
+% TODO co_にprevConstraint_を適用する
+procedure addInitConstraint(co_, va_)$
+begin;
+  putLineFeed();
+
+  debugWrite("prevConstraint_: ", prevConstraint_);
+  debugWrite("co_: ", co_);
+  debugWrite("va_: ", va_);
+
+  if(isTemporary_) then
+  <<
+    tmpVariables_:= union(tmpVariables_, va_);
+    initTmpConstraint_ := union(initTmpConstraint_, myExSub(prevConstraint_, co_));
+  >> else
+  <<
+    csVariables_ := union(csVariables_, va_);
+    initConstraint_ := union(initConstraint_, myExSub(prevConstraint_, co_));
+  >>;
+
+  debugWrite("tmpVariables_: ", tmpVariables_);
+  debugWrite("initTmpConstraint_: ", initTmpConstraint_);
+  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("initConstraint_: ", initConstraint_);
+end;
+
+procedure addPrevConstraint(cons_, vars_)$
+begin;
+  putLineFeed();
+
+  prevConstraint_:= union(prevConstraint_, cons_);
+  prevVariables_:= union(prevVariables_, vars_);
+
+  debugWrite("prevConstraint_: ", prevConstraint_);
+  debugWrite("prevVariables_: ", prevVariables_);
+end;
+
+procedure addGuard(gu_, vars_)$
+begin;
+  putLineFeed();
+  if(part(gu_,0)=list) then
+  <<
+    guard_:= union(guard_, gu_); 
+  >> else
+  <<
+    guard_:= union(guard_, {gu_}); 
+  >>;
+
+  guardVars_:= union(guardVars_, vars_);
+  debugWrite("guard_: ", guard_);
+  debugWrite("guardVars_: ", guardVars_);
+end;
+
+procedure setGuard(gu_, vars_)$
+begin;
+  putLineFeed();
+  if(part(gu_,0)=list) then
+  <<
+    guard_:= gu_; 
+  >> else
+  <<
+    guard_:= {gu_};
+  >>;
+
+  guardVars_:= vars_;
+  debugWrite("guard_: ", guard_);
+  debugWrite("guardVars_: ", guardVars_);
+end;
+
+procedure startTemporary()$
+begin;
+  putLineFeed();
+  isTemporary_:= t;
+end;
+
+procedure endTemporary()$
+begin;
+  putLineFeed();
+  isTemporary_:= nil;
+  resetTemporaryConstraint();
+end;
+
+procedure resetTemporaryConstraint()$
+begin;
+  putLineFeed();
+  tmpConstraint_:= {};
+  initTmpConstraint_:= {};
+  tmpVariables_:= {};
+  guard_:= {};
+  guardVars_:= {};
+end;
+
+% addConstraintは行わない
+% PP/IPで共通のreset時に行う、制約ストアへの制約の追加
+procedure addParameterConstraint(pcons_, pars_)$
+begin;
+  putLineFeed();
+  debugWrite("in addParameterConstraint", " ");
 
   parameterStore_ := union(parameterStore_, pcons_);
   psParameters_ := union(psParameters_, pars_);
   debugWrite("new parameterStore_: ", parameterStore_);
   debugWrite("new psParameters_: ", psParameters_);
 
-  return addConstraint(cons_, vars_);
-
 end;
+
+%% 現在は代わりにaddParameterConstraintを使う
+%% PP/IPで共通のreset時に行う、制約ストアへの制約の追加
+%procedure addConstraintReset(cons_, vars_, pcons_, pars_)$
+%begin;
+%  putLineFeed();
+%
+%  debugWrite("in addConstraintReset", " ");
+%  debugWrite("parameterStore_: ", parameterStore_);
+%  debugWrite("psParameters_: ", psParameters_);
+%  debugWrite("pcons_: ", pcons_);
+%  debugWrite("pars_:", pars_);
+%
+%  parameterStore_ := union(parameterStore_, pcons_);
+%  psParameters_ := union(psParameters_, pars_);
+%  debugWrite("new parameterStore_: ", parameterStore_);
+%  debugWrite("new psParameters_: ", psParameters_);
+%
+%  return addConstraint(cons_, vars_);
+%
+%end;
 
 % 制約ストアへの制約の追加
 procedure addConstraint(cons_, vars_)$
@@ -1769,16 +1954,27 @@ begin;
   putLineFeed();
 
   debugWrite("in addConstraint", " ");
-  debugWrite("constraintStore_: ", constraintStore_);
-  debugWrite("csVariables_: ", csVariables_);
   debugWrite("cons_: ", cons_);
-  debugWrite("vars_:", vars_);
+  debugWrite("vars_: ", vars_);
+  debugWrite("prevConstraint_: ", prevConstraint_);
 
-  constraintStore_ := union(constraintStore_, cons_);
-  csVariables_ := union(csVariables_, vars_);
-  debugWrite("new constraintStore_: ", constraintStore_);
-  debugWrite("new csVariables_: ", csVariables_);
+  if(isTemporary_) then
+  <<
+    tmpVariables_:= union(tmpVariables_, vars_);
+    tmpConstraint_:= union(tmpConstraint_, myExSub(prevConstraint_, cons_));
+  >> else
+  <<
+    csVariables_:= union(csVariables_, vars_);
+    constraintStore_:= union(constraintStore_, myExSub(prevConstraint_, cons_));
+  >>;
 
+  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("tmpVariables_: ", tmpVariables_);
+  debugWrite("tmpConstraint_: ", tmpConstraint_);
+
+  debugWrite("myExSub(prevConstraint_, cons_): ", myExSub(prevConstraint_, cons_));
+  return if(isTemporary_) then tmpConstraint_ else constraintStore_;
 end;
 
 procedure getConstraintStore()$
@@ -1834,6 +2030,34 @@ end;
 % HydLa向け関数（PPにおいて必要）
 %---------------------------------------------------------------
 
+% TODO!! check_consistency_result_tの要件をしっかり確認すること
+% initConstraint_,  initTmpConstraint_, tmpVariables_ 対応版
+% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] の全変数に対応したい
+% TODO; myLCont_にふるい分けるisInitVariableを正常に稼働させる
+% @return {true, false} または{false, true}
+
+procedure myCheckConsistencyPoint()$
+begin;
+  scalar ans_, tmpExprs_, myExpr_, myLCont_, myVars_;
+  putLineFeed();
+  tmpExprs_ := union(tmpConstraint_, guard_, initConstraint_, initTmpConstraint_);
+  % 条件: tmpExprs_に含まれる連続性制約は必ず initxlhs=(数式) の格好である
+  myExpr_ := for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {} else {x};
+  myLCont_ := for each x in tmpExprs_ join if(isInitVariable (lhs x)) then {x} else {};
+  myVars_ := union(csVariables_, tmpVariables_, guardVars_);
+  
+  if(myExpr_ = {} and myLCont_ = {} and myVars_ = {} and constraintStore_ = {}) then
+    return {true, false};
+
+  ans_:= {part(checkConsistencyBySolveOrRlqe(myExpr_, myLCont_, myVars_), 1)};
+  if(ans_={1}) then ans_:= {true, false}
+    else ans_:= {false, true};
+
+  debugWrite("ans_ in myCheckConsistencyPoint: ", ans_);
+
+  return ans_;
+end;
+
 % (制限 andを受け付けない) TODO 制限への対応
 % (制限 trueを受け付けない) TODO 制限への対応
 procedure checkConsistencyWithTmpCons(expr_, lcont_, vars_)$
@@ -1848,8 +2072,11 @@ begin;
 end;
 
 % PPにおける無矛盾性の判定
-% 返り値は{ans, {{変数名 = 値},...}} の形式
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
+% @param expr_ 一時的な制約集合
+% @param lcont_ 一時的な左連続性制約集合
+% @param vars_ 一時的な変数集合
+% @return {ans, {{変数名 = 値},...}} の形式
 
 procedure checkConsistencyBySolveOrRlqe(exprs_, lcont_, vars_)$
 begin;
@@ -1857,6 +2084,8 @@ begin;
          solvedExprs_, solvedExprsQE_, ans_;
 
   debugWrite("checkConsistencyBySolveOrRlqe: ", " ");
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
   debugWrite("exprs_: ", exprs_);
   debugWrite("lcont_: ", lcont_);
   debugWrite("vars_: ", vars_);
@@ -1972,6 +2201,17 @@ begin;
   return {varName_, relopCode_, value_};
 end;
 
+% constraintStore_にinitConstraint_をunionしてconvertCSToVMに遷移する
+procedure myConvertCSToVM()$
+begin;
+  putLineFeed();
+  debugWrite("removePrevCons(initConstraint_): ", removePrevCons(initConstraint_));
+  debugWrite("old constraintStore_: ", constraintStore_);
+
+  constraintStore_:= union(constraintStore_, removePrevCons(initConstraint_));
+  return convertCSToVM();
+end;
+
 % 前提：Orでつながってはいない
 % TODO：なんとかする
 procedure convertCSToVM()$
@@ -2002,6 +2242,30 @@ end;
 % HydLa向け関数（IPにおいて必要）
 %---------------------------------------------------------------
 
+% TODO!! check_consistency_result_tの要件をしっかり確認すること
+% initConstraint_,  initTmpConstraint_, tmpVariables_ 対応版
+% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] の全変数に対応したい
+% @return {true, false} または{false, true}
+
+procedure myCheckConsistencyInterval()$
+begin;
+  scalar ans_, tmpExprs_, myTmpCons_, myRCont_, myVars_;
+  putLineFeed();
+  tmpExprs_ := union(tmpConstraint_, guard_, initConstraint_, initTmpConstraint_);
+  % 条件: tmpExprs_に含まれる連続性制約は必ず initxlhs=prev(x) の格好である
+  myTmpCons_ := for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {} else {x};
+  myRCont_ :=   for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {x} else {};
+  myVars_ := union(csVariables_, tmpVariables_, guardVars_);
+  
+  ans_:= {part(checkConsistencyInterval(myTmpCons_, myRCont_, myVars_), 1)};
+  if(ans_={1}) then ans_:= {true, false}
+    else ans_:= {false, true};
+
+  debugWrite("ans_ in myCheckConsistencyInterval: ", ans_);
+
+  return ans_;
+end;
+
 % 20110705 overconstraint___無し
 ICI_SOLVER_ERROR___:= 0;
 ICI_CONSISTENT___:= 1;
@@ -2016,8 +2280,8 @@ begin;
          integTmp_, integTmpQE_, integTmpQEList_, integTmpEqualList_, integTmpIneqSolDNFList_, integTmpIneqSolDNF_, ans_;
   putLineFeed();
 
-%  debugWrite("constraintStore_: ", constraintStore_);
-%  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
   debugWrite("tmpCons_: ", tmpCons_);
   debugWrite("rconts_: ", rconts_);
   debugWrite("vars_: ", vars_);
@@ -2036,7 +2300,7 @@ begin;
   otherExprs_:= part(splitExprsResult_, 5);
   debugWrite("otherExprs_: ", otherExprs_);
 
-  DExprRconts_:= removePrevCons(rconts_);
+  DExprRconts_:= removeInitCons(rconts_);
   debugWrite("DExprRconts_: ", DExprRconts_);
   if(DExprRconts_ neq {}) then <<
     prevVars_:= for each x in csVariables_ join if(isPrevVariable(x)) then {x} else {};
@@ -2152,16 +2416,6 @@ begin;
   >>;
 
 end;
-
-%depend {ht,v}, t;
-%expr_:={df(ht,t) = v,
-%        df(v,t) = -10
-%       };
-%init_:={inithtlhs = 10,
-%        initvlhs = 0
-%       };
-%vars_:={ht,v,df(ht,t),df(v,t)};
-%symbolic redeval '(checkConsistencyInterval expr_ init_ vars_);
 
 procedure checkInfUnitDNF(tDNF_)$
 begin;
@@ -2637,21 +2891,22 @@ begin;
   return retTCList_;
 end;
 
-procedure solveParameterIneq(ineqList_)$
-begin;
-  scalar paramNameList_, paramName_, ret_;
-
-  paramNameList_:= collectParameters(ineqList_);
-  debugWrite("paramNameList_: ", paramNameList_);
-
-  % 2種類以上のパラメタが含まれていると扱えない
-  % TODO：なんとかする？
-  if(length(paramNameList_)>1) then return ERROR;
-  paramName_:= first(paramNameList_);
-
-  ret_:= exIneqSolve(ineqList_, paramName_);
-  return ret_;
-end;
+% 未使用かつ文法エラーのためコメントアウト
+%procedure solveParameterIneq(ineqList_)$
+%begin;
+%  scalar paramNameList_, paramName_, ret_;
+%
+%  paramNameList_:= collectParameters(ineqList_);
+%  debugWrite("paramNameList_: ", paramNameList_);
+%
+%  % 2種類以上のパラメタが含まれていると扱えない
+%  % TODO：なんとかする？
+%  if(length(paramNameList_)>1) then return ERROR;
+%  paramName_:= first(paramNameList_);
+%
+%  ret_:= exIneqSolve(ineqList_, paramName_);
+%  return ret_;
+%end;
 
 defaultPrec_ := 0;
 
@@ -2681,6 +2936,118 @@ begin;
   debugWrite("appliedExpr_:", appliedExpr_);
 
   return {1, appliedExpr_};
+end;
+
+% 前提：Orでつながってはいない
+% TODO：exDSolveを含めた実行をする
+procedure convertCSToVMInterval()$
+begin;
+  scalar consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
+  scalar tmpCons_, rconts_;
+  scalar tmpSol_, splitExprsResult_, DExprs_, DExprVars_, 
+         initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
+         DExprRconts_, DExprRcontsVars_;
+
+  putLineFeed();
+
+  tmpCons_ := for each x in initConstraint_ join if(isInitVariable(lhs x)) then {} else {x};
+  if(tmpCons_ neq {}) then return {SOLVER_ERROR___};
+  rconts_ := for each x in initConstraint_ join if(isInitVariable(lhs x)) then {x} else {};
+  
+  splitExprsResult_ := splitExprs(removePrevCons(constraintStore_), csVariables_);
+  DExprs_ := part(splitExprsResult_, 3);
+  DExprVars_ := part(splitExprsResult_, 4);
+
+  DExprRconts_:= removeInitCons(rconts_);
+  if(DExprRconts_ neq {}) then <<
+    prevVars_:= for each x in csVariables_ join if(isPrevVariable(x)) then {x} else {};
+    noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
+    DExprRcontsVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprRconts_, x)) then {x} else {});
+    DExprs_:= union(DExprs_, DExprRconts_);
+    DExprVars_:= union(DExprVars_, DExprRcontsVars_);
+  >>;
+
+  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(constraintStore_, x));
+  initVars_:= map(getInitVars, initCons_);
+  noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
+
+  tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
+  debugWrite("tmpSol_ solved with exDSolve: ", tmpSol_);
+ 
+  if(tmpSol_ = retsolvererror___) then return {SOLVER_ERROR___}
+  else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
+
+  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (csVariables_ \ initVars_))));
+  tmpSol_:= for each x in tmpVarMap_ collect (first(x)=second(x));
+  consTmpRet_:= applyPrevCons(union(constraintStore_, tmpSol_), {});    
+  debugWrite("consTmpRet_: ", consTmpRet_);
+
+  % 式を{(変数名), (関係演算子コード), (値のフル文字列)}の形式に変換する
+  consRet_:= map(makeConsTuple, consTmpRet_);
+  paramDNFList_:= map(exIneqSolve, parameterStore_);
+  paramRet_:= for each x in paramDNFList_ collect <<
+    % 1つの項になっているはず
+    tuple_:= first(first(x));
+    {getVarNameFromTuple(tuple_), getExprCode(getRelopFromTuple(tuple_)), getValueFromTuple(tuple_)}
+  >>;
+  ret_:= union(consRet_, paramRet_);
+
+  debugWrite("ret_: ", ret_);
+  return ret_;
+end;
+% integrateCalcでtmpSol_が定まった後の処理をコピペし戻り値を整形
+% REDUCEVCS::calculate_next_PP_time()から呼び出される
+% 戻り値の形式: {time_t, {}(parameter_map_t), true(bool)},...}
+procedure calculateNextPointPhaseTime(maxTime_, discCause_);
+begin;
+  scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_, paramCondDNF_,
+         initCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_,
+         DExprRconts_, DExprRcontsVars_,
+         tmpDiscCause_, retCode_, tmpVarMap_, tmpMinTList_, integAns_, tmpIneqSolDNF_;
+  putLineFeed();
+
+  debugWrite("constraintStore_: ", constraintStore_);
+  debugWrite("csVariables_: ", csVariables_);
+  debugWrite("parameterStore_: ", parameterStore_);
+  debugWrite("psParameters_: ", psParameters_);
+  debugWrite("isTemporary_", isTemporary_);
+  debugWrite("initConstraint_", initConstraint_);
+  debugWrite("initTmpConstraint_", initTmpConstraint_);
+  debugWrite("tmpVariables_", tmpVariables_);
+
+  debugWrite("maxTime_: ", maxTime_);
+  debugWrite("discCause_: ", discCause_);
+
+  splitExprsResult_ := splitExprs(removePrevCons(constraintStore_), csVariables_);
+  NDExprs_ := part(splitExprsResult_, 1);
+  NDExprVars_ := part(splitExprsResult_, 2);
+  DExprs_ := part(splitExprsResult_, 3);
+  DExprVars_ := part(splitExprsResult_, 4);
+  otherExprs_:= union(part(splitExprsResult_, 5), parameterStore_);
+  % DNF形式にする
+  % 空集合なら、{{true}}として扱う（trueを表すDNF）
+  if(otherExprs_={}) then paramCondDNF_:= {{true}}
+  else <<
+    % paramCondDNF_:= myFoldLeft((addCondDNFToCondDNF(#1, exIneqSolve(#2)))&, {{true}}, otherExprs_);を実現
+    tmpIneqSolDNF_:= {{true}};
+    for i:=1 : length(otherExprs_) do <<
+      tmpIneqSolDNF_:= addCondDNFToCondDNF(tmpIneqSolDNF_, exIneqSolve(part(otherExprs_, i)));
+    >>;
+    paramCondDNF_:= tmpIneqSolDNF_;
+  >>;
+  debugWrite("paramCondDNF_: ", paramCondDNF_);
+
+
+  % TODO DExprs_, NDExprs_の処理
+  tmpDiscCause_:= union(sub(constraintStore_, discCause_));
+  debugWrite("tmpDiscCause_:", tmpDiscCause_);
+
+  tmpMinTList_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_, paramCondDNF_);
+  debugWrite("tmpMinTList_:", tmpMinTList_);
+  if(tmpMinTList_ = {error}) then retCode_:= IC_SOLVER_ERROR___
+
+  putLineFeed();
+  return tmpMinTList_;
 end;
 
 %---------------------------------------------------------------
@@ -2734,7 +3101,7 @@ shut "out";
 on nat;
 >>$
 
-%procegure myout(x,t)$
+%procedure myout(x,t)$
 
 procedure getSExpFromString(str_)$
 begin;

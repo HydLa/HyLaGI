@@ -1,6 +1,6 @@
 TARGET	 := unit_test
 
-LIB_DIRS := symbolic_simulator simulator constraint_hierarchy parser common # branch_and_prune_simulator  
+LIB_DIRS := symbolic_simulator simulator constraint_hierarchy parser common virtual_constraint_solver # branch_and_prune_simulator  
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 #INCLUDES += -I../librealpaver -I../librealpaverbasic

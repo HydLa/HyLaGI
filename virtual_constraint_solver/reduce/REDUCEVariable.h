@@ -7,7 +7,7 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
   
-typedef hydla::symbolic_simulator::variable_t REDUCEVariable;
+typedef hydla::simulator::symbolic::variable_t REDUCEVariable;
 
 } // namespace reduce
 } // namespace simulator

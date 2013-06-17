@@ -6,6 +6,7 @@
 
 
 #include "../SymbolicVirtualConstraintSolver.h"
+#include "../../simulator/DefaultParameter.h"
 #include "../../parser/SExpParser.h"
 
 using namespace hydla::parser;
@@ -70,6 +71,11 @@ class SExpConverter
    * （vairable）=（node）の形のノードを返す
    */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
+
+   /**
+   * （vairable）=（node）の形のノードを返す
+   */
+  static node_sptr make_equal(hydla::simulator::DefaultParameter &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
   
   //値を記号定数を用いた表現にする
   static void set_parameter_on_value(value_t &val, const parameter_t &par);

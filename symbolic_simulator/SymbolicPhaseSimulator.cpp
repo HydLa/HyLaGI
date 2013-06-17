@@ -17,6 +17,7 @@
 
 #include "InitNodeRemover.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
@@ -28,6 +29,7 @@
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
+using namespace hydla::vcs::reduce;
 
 
 using namespace std;
@@ -71,7 +73,13 @@ void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, v
 {
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
-  solver_.reset(new MathematicaVCS(*opts_));
+
+  if(opts_->solver == "m" || opts_->solver == "Mathematica") {
+    solver_.reset(new MathematicaVCS(*opts_));
+  }else{
+    solver_.reset(new REDUCEVCS(*opts_, m));
+  }
+
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
 }
