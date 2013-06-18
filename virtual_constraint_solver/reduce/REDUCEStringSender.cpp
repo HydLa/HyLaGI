@@ -176,10 +176,10 @@ void REDUCEStringSender::visit(boost::shared_ptr<Number> node)                {
 // ãLçÜíËêî
 void REDUCEStringSender::visit(boost::shared_ptr<Parameter> node)
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::visit(boost::shared_ptr<Parameter> node ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
   put_par(par_prefix + node->get_name());
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::visit(boost::shared_ptr<Parameter> node ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 // t
@@ -191,7 +191,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 
 void REDUCEStringSender::put_var(const var_info_t var)
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_var ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   VariableNameEncoder vne;
   std::string name(REDUCEStringSender::var_prefix + vne.LowerEncode(var.get<0>()));
   int diff_count = var.get<1>();
@@ -246,15 +246,14 @@ void REDUCEStringSender::put_var(const var_info_t var)
   // putÇµÇΩïœêîÇÃèÓïÒÇï€éù
   vars_.insert(var);
 
-  HYDLA_LOGGER_REST("vars_size(): ",
-                    vars_.size());
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_var ***");
+  HYDLA_LOGGER_REST("vars_size(): ", vars_.size());
+  HYDLA_LOGGER_FUNC_END(REST);
 
 }
 
 void REDUCEStringSender::put_par(const std::string &name)
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_par ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("put_par: ", "name: ", name);
 
   cl_->send_string(name);
@@ -262,7 +261,7 @@ void REDUCEStringSender::put_par(const std::string &name)
   // putÇµÇΩïœêîÇÃèÓïÒÇï€éù
   pars_.insert(name);
 
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_par ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 
 }
 
@@ -273,14 +272,14 @@ void REDUCEStringSender::put_par(const std::string &name)
 
 void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool is_init_var)
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_node ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("node : ", *node);
   differential_count_ = 0;
   in_prev_ = false;
   ignore_prev_ = ignore_prev;
   is_init_var_ = is_init_var;
   accept(node);
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_node ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 /**
@@ -288,14 +287,14 @@ void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool 
  */
 void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_nodes ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   cl_->send_string("{");
   for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
     if(it!=constraints.begin()) cl_->send_string(",");
     put_node(*it);
   }
   cl_->send_string("}");
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_nodes: ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 /**
@@ -303,7 +302,7 @@ void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
  */
 void REDUCEStringSender::put_vars(bool ignore_prev)
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_vars ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("var size:", vars_.size());
 
   cl_->send_string("{");
@@ -319,12 +318,12 @@ void REDUCEStringSender::put_vars(bool ignore_prev)
   }
   cl_->send_string("}");
 
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_vars ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 void REDUCEStringSender::put_pars()
 {
-  HYDLA_LOGGER_REST("#*** Begin REDUCEStringSender::put_pars ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("par size:", pars_.size());
   cl_->send_string("{");
   for(std::set<std::string>::iterator it = pars_.begin(); it!=pars_.end(); ++it) {
@@ -333,7 +332,7 @@ void REDUCEStringSender::put_pars()
   }
   cl_->send_string("}");
 
-  HYDLA_LOGGER_REST("#*** End REDUCEStringSender::put_pars ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 /**
@@ -369,7 +368,7 @@ struct MaxDiffMapDumper
 
 void REDUCEStringSender::create_max_diff_map(max_diff_map_t& max_diff_map) 
 {
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEStringSender::create_max_diff_map ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   vars_const_iterator vars_it  = vars_begin();
   vars_const_iterator vars_end_it = vars_end();
   for(; vars_it!=vars_end_it; ++vars_it) {
@@ -390,8 +389,8 @@ void REDUCEStringSender::create_max_diff_map(max_diff_map_t& max_diff_map)
     "--- max diff map ---\n",
     MaxDiffMapDumper(max_diff_map.begin(),
                      max_diff_map.end()).s.str());
-  HYDLA_LOGGER_VCS("#*** End REDUCEStringSender::create_max_diff_map ***");
 
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 } //namespace reduce

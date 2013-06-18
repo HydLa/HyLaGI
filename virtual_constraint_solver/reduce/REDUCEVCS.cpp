@@ -1,6 +1,7 @@
 #include "REDUCEVCS.h"
 
 #include "../../parser/SExpParser.h"
+#include "../../simulator/Dumpers.h"
 #include "../SolveError.h"
 #include "Logger.h"
 #include "REDUCEStringSender.h"
@@ -25,7 +26,7 @@ void REDUCEVCS::change_mode(hydla::simulator::symbolic::Mode m, int approx_preci
 
 REDUCEVCS::REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m)
 {
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::REDUCEVCS ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   // デバッグプリントの設定
   std::stringstream debug_print_opt_str;
@@ -64,8 +65,8 @@ REDUCEVCS::REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m
   cl_.skip_until_redeval();
 
   SExpConverter::initialize();
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::REDUCEVCS ***");
 
+  HYDLA_LOGGER_FUNC_END(VCS);
 }
 
 REDUCEVCS::~REDUCEVCS()
@@ -74,7 +75,7 @@ REDUCEVCS::~REDUCEVCS()
 
 bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::reset ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   cl_.send_string("symbolic redeval '(resetConstraintStore);");
   // cl_.read_until_redeval();
@@ -84,7 +85,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   {
     constraints_t constraints;
 
-//  HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
+    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
     parameter_map_t::const_iterator it = parameter_map.begin();
     parameter_map_t::const_iterator end = parameter_map.end();
     for(; it!=end; ++it){
@@ -135,7 +136,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   {
     constraints_t constraints;
 
-//    HYDLA_LOGGER_VCS("--- Variable map ---\n", variable_map);
+    HYDLA_LOGGER_VCS("--- Variable map ---\n", variable_map);
     variable_map_t::const_iterator it  = variable_map.begin();
     variable_map_t::const_iterator end = variable_map.end();
     for(; it!=end; ++it) {
@@ -157,7 +158,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   cl_.send_string("symbolic redeval '(addPrevConstraint cons_ vars_);");
   cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::reset ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return true;
 }
 
@@ -167,7 +168,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
  * put_nodeする際ignore_prevをmode_で設定しない唯一のケース(要確認)
  */
 void REDUCEVCS::set_continuity(const std::string &name, const int& dc){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::set_continuity ***\n");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
@@ -181,7 +182,7 @@ void REDUCEVCS::set_continuity(const std::string &name, const int& dc){
     rss.put_node(var_node, true);
     cl_.send_string("=");
     rss.put_node(prev_node, false);
-}else{ // case hydla::simulator::symbolic::ContinuousMode:
+  }else{ // case hydla::simulator::symbolic::ContinuousMode:
     rss.put_node(var_node, true, true);
     cl_.send_string("=");
     rss.put_node(prev_node, false);
@@ -200,22 +201,22 @@ void REDUCEVCS::set_continuity(const std::string &name, const int& dc){
 
   cl_.skip_until_redeval();
 
-    HYDLA_LOGGER_VCS("--- add_init_variable ---");
-    cl_.send_string("vars_:={");
-    rss.put_node(var_node, true, true);
-    cl_.send_string("}$");
+  HYDLA_LOGGER_VCS("--- add_init_variable ---");
+  cl_.send_string("vars_:={");
+  rss.put_node(var_node, true, true);
+  cl_.send_string("}$");
 
-    cl_.send_string("symbolic redeval '(addInitVariables vars_);");
-    cl_.skip_until_redeval();
+  cl_.send_string("symbolic redeval '(addInitVariables vars_);");
+  cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::set_continuity ***\n");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return;
 }
 
 void REDUCEVCS::add_constraint(const constraints_t& constraints)
 {
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::add_constraint(constraints) ***\n");
   if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
@@ -243,12 +244,12 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
 
   cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::add_constraint(constraints) ***\n");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return;
 }
 
 void REDUCEVCS::add_constraint(const node_sptr& constraint){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::add_constraint(constraint) ***\n");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
@@ -271,12 +272,12 @@ void REDUCEVCS::add_constraint(const node_sptr& constraint){
 
   cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::add_constraint(constraint) ***\n");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return;
 }
 
 CheckConsistencyResult REDUCEVCS::check_consistency(){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::check_consistency ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
 
   switch(mode_){ 
@@ -322,12 +323,12 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
     assert(0);
   }
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::check_consistency ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return ret;
 }
 
 SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::create_maps ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
 
   //// REDUCEVCSPoint::create_maps
@@ -463,10 +464,10 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
 
   for(unsigned int i=0; i < create_result.result_maps.size();i++){
     HYDLA_LOGGER_VCS("--- result map ", i, "/", create_result.result_maps.size(), "---\n");
-//    HYDLA_LOGGER_VCS(create_result.result_maps[i]);
+    HYDLA_LOGGER_VCS(create_result.result_maps[i]);
   }
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::create_maps ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
 
   //TODO 戻り値を設定
   return create_result;
@@ -475,9 +476,9 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
 
 // TODO: 現状，制約に関しては変数自体を送り，変数リストは全部送るという，CalculateNextPPTime専用の仕様になってしまっているので，どうにかする．
 void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_derivatives){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::reset_constraint ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-//  HYDLA_LOGGER_VCS("------Variable map------\n", vm);
+  HYDLA_LOGGER_VCS("------Variable map------\n", vm);
 
   cl_.send_string("symbolic redeval '(resetConstraintForVariable);");
   cl_.skip_until_redeval();
@@ -517,35 +518,33 @@ void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_deri
 
   cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::reset_constraint ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return;
 }
 
 
 void REDUCEVCS::start_temporary(){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::start_temporary ***\n");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   cl_.send_string("symbolic redeval '(startTemporary);");
   cl_.skip_until_redeval();
-  HYDLA_LOGGER_VCS("#*** END REDUCEVCS::start_temporary ***\n");
 
+  HYDLA_LOGGER_FUNC_END(VCS);
   return;
 }
 
 void REDUCEVCS::end_temporary(){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::end_temporary ***\n");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   cl_.send_string("symbolic redeval '(endTemporary);");
   cl_.skip_until_redeval();
-  HYDLA_LOGGER_VCS("#*** END REDUCEVCS::end_temporary ***\n");
 
-  // TODO 無限ループの打ち止め用
-  //assert(0);
+  HYDLA_LOGGER_FUNC_END(VCS);
 
   return;
 }
 
 // TODO: add_guardなのかset_guardなのかとか，仕様とかをはっきりさせる
 void REDUCEVCS::add_guard(const node_sptr& constraint){
-  HYDLA_LOGGER_VCS( "#*** Begin REDUCEVCS::add_guard ***\n");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   REDUCEStringSender rss(cl_);
   const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
@@ -576,7 +575,7 @@ void REDUCEVCS::add_guard(const node_sptr& constraint){
 
   cl_.skip_until_redeval();
 
-  HYDLA_LOGGER_VCS("\n#*** End REDUCEVCS::add_guard ***\n");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return;
 }
 
@@ -585,7 +584,7 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
     const constraints_t& discrete_cause,
     const time_t& current_time,
     const time_t& max_time){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::calculate_next_PP_time ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   ////////////////// 送信処理
   
@@ -648,11 +647,11 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
     candidate.is_max_time = (bool_str.find("1")!=std::string::npos);
 
     HYDLA_LOGGER_VCS("is_max_time: ",  candidate.is_max_time);
-//    HYDLA_LOGGER_VCS("--- parameter map ---\n",  candidate.parameter_map);
+    HYDLA_LOGGER_VCS("--- parameter map ---\n",  candidate.parameter_map);
     result.candidates.push_back(candidate);
   }
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::calculate_next_PP_time ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
 
   return result;
 }
@@ -661,7 +660,7 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
                                               variable_map_t& out_vm, 
                                               const time_t& time)
 {
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::apply_time_to_vm ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   REDUCEStringSender rss(cl_);
 
@@ -728,16 +727,18 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
     out_vm[it->first] = value;
   }
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCSInterval::apply_time_to_vm ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
 }
 
 std::string REDUCEVCS::get_constraint_store(){
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   std::string ret;
 
   cl_.send_string("symbolic redeval '(getConstraintStore);");
   cl_.skip_until_redeval();
 
   ret = cl_.get_s_expr();
+  HYDLA_LOGGER_FUNC_END(VCS);
   return ret;
 }
 
@@ -783,7 +784,7 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 {
   assert(0);
   return true;
-  //HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::less_than ***");
+  //HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   //REDUCEStringSender rss(cl_);
 
@@ -809,14 +810,14 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 
   //std::string ans = cl_.get_s_expr();
   //HYDLA_LOGGER_VCS("check_less_than_ans: ", ans);
-  //HYDLA_LOGGER_VCS("#*** End REDUCEVCS::less_than ***");
+  //HYDLA_LOGGER_FUNC_END(VCS);
   //return  boost::lexical_cast<int>(ans) == 1;
 }
 
 
 void REDUCEVCS::simplify(time_t &time) 
 {
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::simplify ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
   REDUCEStringSender rss(cl_);
 
@@ -844,13 +845,14 @@ void REDUCEVCS::simplify(time_t &time)
   SExpParser::const_tree_iter_t time_it = sp.get_tree_iterator();
   SExpConverter sc;
   time = sc.convert_s_exp_to_symbolic_value(sp, time_it);
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::simplify ***");
+
+  HYDLA_LOGGER_FUNC_END(VCS);
 }
 /*
  * SymbolicValueの時間をずらす
  */
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(const value_t& val, const time_t& time){
-  HYDLA_LOGGER_VCS("#*** Begin REDUCEVCS::shift_expr_time ***");
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
   REDUCEStringSender rss(cl_);
 
   // exprTimeShift(expr_, time_)を渡したい
@@ -882,12 +884,15 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   SExpParser::const_tree_iter_t value_it = sp.get_tree_iterator();
   SExpConverter sc;
 
-  HYDLA_LOGGER_VCS("#*** End REDUCEVCS::shift_expr_time ***");
+  HYDLA_LOGGER_FUNC_END(VCS);
   return  sc.convert_s_exp_to_symbolic_value(sp, value_it);
 }
 
 // TODO なんとかする
-void REDUCEVCS::approx_vm(variable_range_map_t& vm){}
+void REDUCEVCS::approx_vm(variable_range_map_t& vm){
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
+  HYDLA_LOGGER_FUNC_END(VCS);
+}
 
 const REDUCEVCS::symbolic_value_t REDUCEVCS::get_symbolic_value_t(value_t value){
   value->accept(*this);

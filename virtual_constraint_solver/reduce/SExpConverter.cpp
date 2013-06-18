@@ -30,15 +30,13 @@ void SExpConverter::initialize(){
 }
 
 SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter){
-  HYDLA_LOGGER_REST("#*** Begin SExpConverter::convert_s_exp_to_symbolic_value ***");
-  HYDLA_LOGGER_REST("--- convert s-expression to value ---\n",
-                    iter);
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
+  HYDLA_LOGGER_REST("--- convert s-expression to value ---\n", iter);
 
   value_t value(new hydla::simulator::symbolic::SymbolicValue(convert_s_exp_to_symbolic_tree(sp, iter)));
-  HYDLA_LOGGER_REST("--- convert result value ---\n",
-                    value->get_string());
 
-  HYDLA_LOGGER_REST("#*** End SExpConverter::convert_s_exp_to_symbolic_value ***");
+  HYDLA_LOGGER_REST("--- convert result value ---\n", value->get_string());
+  HYDLA_LOGGER_FUNC_END(REST);
   return value;
 }
 
@@ -52,7 +50,7 @@ void SExpConverter::clear_parameter_map(){
 }
 //TODO init_varà¯êîÇÇ»Ç≠Ç∑
 node_sptr SExpConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var){
-  HYDLA_LOGGER_REST("#*** Begin SExpConverter::make_equal ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   node_sptr new_node(new Variable(variable.get_name()));
   for(int i=0;i<variable.get_derivative_count();i++){
     new_node = node_sptr(new Differential(new_node));
@@ -60,12 +58,12 @@ node_sptr SExpConverter::make_equal(const variable_t &variable, const node_sptr&
   if(prev){
     new_node = node_sptr(new Previous(new_node));
   }
-  HYDLA_LOGGER_REST("#*** End SExpConverter::make_equal ***");
+  HYDLA_LOGGER_FUNC_END(REST);
   return node_sptr(new Equal(new_node, node));
 }
 
 node_sptr SExpConverter::make_equal(hydla::simulator::DefaultParameter &variable, const node_sptr& node, const bool& prev, const bool& init_var){
-  HYDLA_LOGGER_REST("#*** Begin SExpConverter::make_equal ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   node_sptr new_node(new Variable(variable.get_name()));
   for(int i=0;i<variable.get_derivative_count();i++){
     new_node = node_sptr(new Differential(new_node));
@@ -73,7 +71,7 @@ node_sptr SExpConverter::make_equal(hydla::simulator::DefaultParameter &variable
   if(prev){
     new_node = node_sptr(new Previous(new_node));
   }
-  HYDLA_LOGGER_REST("#*** End SExpConverter::make_equal ***");
+  HYDLA_LOGGER_FUNC_END(REST);
   return node_sptr(new Equal(new_node, node));
 }
 
