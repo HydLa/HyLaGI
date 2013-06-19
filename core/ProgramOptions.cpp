@@ -93,7 +93,7 @@ void ProgramOptions::init_descriptions()
     
     ("in", "interactive mode")
 
-	  //("ha", "convert to HA")
+	  ("ha", "convert to HA")
 
     ("parallel", "parallel mode")
 

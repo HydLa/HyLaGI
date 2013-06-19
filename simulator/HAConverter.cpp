@@ -1,220 +1,38 @@
+
 #include "HAConverter.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
+#include "SymbolicValue.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
 #include "../parser/TreeInfixPrinter.h"
-
-/*
+#include <limits.h>
+#include <string>
 
 using namespace std;
 
 namespace hydla {
 namespace simulator {
 
-  HAConverter::HAConverter(Opts &opts):Simulator(opts){}
+	HAConverter::HAConverter(Opts &opts):BatchSimulator(opts){}
 
-  HAConverter::~HAConverter(){}
+	HAConverter::~HAConverter(){}
 
-  phase_result_const_sptr_t HAConverter::simulate()
-  {
-      hydla::output::SymbolicTrajPrinter printer;
-      std::string error_str;
-  	  current_condition_t cc_;
-  		current_condition_t tmp_cc_;
-  		cc_.is_loop_step = false;
-  		cc_.loop_start_id = -1;
-  		cc_.loop_count = 0;
-  		push_current_condition(cc_);
-  	HYDLA_LOGGER_HA("mlc:", opts_->max_loop_count);
-  		while(!state_stack_.empty()) {
-        simulation_todo_sptr_t state(pop_simulation_phase());
-      	// current conditionはtodoと同様にstuckに積まれるため、同じようにpopすれば、現phaseのcc_が取得できる
-  			if(cc_vec_.empty()) break;
-  			// シミュレーション結果が複数ある場合、これをもとにconditionを変更する
-      	tmp_cc_ = pop_current_condition();
-  			
-  			HYDLA_LOGGER_HA("%% Current Condition");
-  			HYDLA_LOGGER_HA("%% phase_results.size():", tmp_cc_.phase_results.size());
-  			HYDLA_LOGGER_HA("%% ls.size():", tmp_cc_.ls.size());
-  			HYDLA_LOGGER_HA("%% loop.size():", tmp_cc_.loop.size());
-  			HYDLA_LOGGER_HA("%% is_loop_step:", tmp_cc_.is_loop_step);
-  			HYDLA_LOGGER_HA("%% loop_count:", tmp_cc_.loop_count);
-  			HYDLA_LOGGER_HA("%% loop_start_id:", tmp_cc_.loop_start_id);
-  			HYDLA_LOGGER_HA("");
-  			
-        bool consistent;
-        
-        {
-          if(opts_->max_phase >= 0 && state->parent->step >= opts_->max_phase){
-            state->parent->parent->cause_of_termination = simulator::STEP_LIMIT;
-            continue;
-          }
-        }
-        
-        try{
-          state->module_set_container->reset(state->ms_to_visit);
-		      timer::Timer phase_timer;
-		      PhaseSimulator::todo_list_t phases = phase_simulator_->simulate_phase(state, consistent);
-
-        	HYDLA_LOGGER_HA("%% Phases size: ", phases.size());
-        	HYDLA_LOGGER_HA("%% Result PHASE: ");
-        	HYDLA_LOGGER_HA("parent_id : ", state->parent->parent->id);
-          for(unsigned int i=0;i<phases.size();i++){
-	        	HYDLA_LOGGER_HA("--- Phase", i, " ---");
-	        	HYDLA_LOGGER_HA("%% PhaseType: ", phases[i]->phase);
-	        	HYDLA_LOGGER_HA("%% id: ", phases[i]->id);
-	        	if(logger::Logger::ha_converter_area_) printer.output_one_phase(phases[i]->parent);
-          }
-        	HYDLA_LOGGER_HA("");
-        	
-	       	HYDLA_LOGGER_HA("%% Result TODO:");
-          for(unsigned int i=0; i<phases.size();i++){
-		        simulation_todo_sptr_t& todo = phases[i];
-	          HYDLA_LOGGER_HA("--- Phase", i, " ---");
-	          HYDLA_LOGGER_HA("%% PhaseType: ", todo->phase);
-	          HYDLA_LOGGER_HA("%% id: ", todo->id);
-	          HYDLA_LOGGER_HA("%% step: ", todo->parent->step);
-	          HYDLA_LOGGER_HA("%% time: ", *todo->current_time);
-	          HYDLA_LOGGER_HA("--- parameter map ---\n", todo->parameter_map);
-          }
-        	
-        	// ******* start HA変換処理 ******* 
-          for(unsigned int i=0; i<phases.size();i++){
-          	cc_ = tmp_cc_;
-		        simulation_todo_sptr_t& todo = phases[i];
-          	// resultがなければ、current_conditionをそのままpushして次へ
-          	if(todo->parent == state->parent) {
-	           	push_current_condition(cc_);
-	         		continue;
-	          }
-            phase_result_sptr_t& result_ = todo->parent;
-	        	switch (state->phase)
-	        	{
-	          	case PointPhase:
-	          	{
-	          		HYDLA_LOGGER_HA("～・～・～ PP ～・～・～");
-	          		if(cc_.is_loop_step){
-		         			cc_.phase_results.push_back(result_);
-	          			cc_.loop.push_back(result_);
-	          			HYDLA_LOGGER_HA("******* loop *******");
-	          			viewPrs(cc_.loop);
-	          			HYDLA_LOGGER_HA("* * * * * * * * * *");
-	          			if (!check_continue(&cc_)){
-	          				// ループ判定ステップを抜ける
-	          				HYDLA_LOGGER_HA("-------- end loop step ----------");
-							  		cc_.is_loop_step = false;
-							  		cc_.loop_start_id = -1;
-							  		cc_.loop_count = 0;
-	          			}
-		         			break;
-	          		}else{
-		         			cc_.phase_results.push_back(result_);
-		         			break;
-	          		}
-	          	}
-	          	case IntervalPhase:
-	          	{
-	          		HYDLA_LOGGER_HA("～・～・～ IP ～・～・～");
-	          		if(cc_.is_loop_step){
-		         			cc_.phase_results.push_back(result_);
-	          			cc_.loop.push_back(result_);
-	          			HYDLA_LOGGER_HA("******* loop *******");
-	          			viewPrs(cc_.loop);
-	          			HYDLA_LOGGER_HA("* * * * * * * * * *");
-	          			if (!check_continue(&cc_)) {
-	          				// ループ判定ステップを抜ける
-	          				HYDLA_LOGGER_HA("-------- end loop step ----------");
-							  		cc_.is_loop_step = false;
-							  		cc_.loop_start_id = -1;
-							  		cc_.loop_count = 0;
-	          				break;
-	          			}
-	          			if (loop_eq_max_ls(cc_)){
-	          				cc_.loop_count++;
-	          				cc_.loop.clear();
-	          				cc_.loop.push_back(result_);
-	          				if(cc_.loop_count >= opts_->max_loop_count){
-		          				// エッジ判定ステップへ
-		          				check_edge_step();
-		          				// ここではls_の要素は１つになっている（loopと等しい最大のもののみ残っている）
-		          				push_result(cc_);
-		          				continue;  
-	          				}
-	          				HYDLA_LOGGER_HA("loop_count < max_loop_count");
-	          			}
-		         			break;	          		
-	          		}else{
-		          		if(check_contain(result_, cc_)){
-		          			HYDLA_LOGGER_HA("-------- change loop step ----------");
-		          			cc_.is_loop_step = true;
-	          				cc_.loop.clear();
-	          				cc_.ls.clear();
-		          			cc_.loop_count = 0;
-			         			cc_.phase_results.push_back(result_);
-		          			set_possible_loops(result_, &cc_);
-		          			cc_.loop.push_back(result_);
-		          			cc_.loop_start_id = result_->id;
-		          			break;
-		          		}
-		         			cc_.phase_results.push_back(result_);
-		         			break;	
-	          		}
-	          	}
-	        	}
-          	
-          	push_current_condition(cc_);
-          }
-        	// ******* end HA変換処理 ******* 
-        	
-          if((opts_->max_phase_expanded <= 0 || phase_id_ < opts_->max_phase_expanded) && !phases.empty()){
-            for(unsigned int i = 0;i < phases.size();i++){
-              simulation_todo_sptr_t& todo = phases[i];
-              if(todo->parent != result_root_)
-              {
-                todo->module_set_container = msc_no_init_;
-              }
-              else
-              {
-                todo->module_set_container = msc_original_;
-              }
-              todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
-              todo->elapsed_time = phase_timer.get_elapsed_us() + state->elapsed_time;
-              push_simulation_phase(todo);
-              if(todo->parent != state->parent){
-                HYDLA_LOGGER_PHASE("%% push result");
-                state->parent->children.push_back(todo->parent);
-              }
-              if(!opts_->nd_mode)break;
-            }
-		      }
-        	HYDLA_LOGGER_HA("");        	
-        	HYDLA_LOGGER_HA("***************************");
-        	HYDLA_LOGGER_HA("");        	
-        }//try
-        catch(const hydla::timeout::TimeOutError &te)
-        {
-		      // タイムアウト発生
-		      HYDLA_LOGGER_PHASE(te.what());
-		      state->parent->cause_of_termination = TIME_OUT_REACHED;
-		      state->parent->parent->children.push_back(state->parent);
-        }
-      	catch(const std::runtime_error &se)
-        {
-          error_str = se.what();
-          HYDLA_LOGGER_PHASE(se.what());
-        }
-      }//while(!state_stack_.empty())
-      if(!error_str.empty()){
-        std::cout << error_str;
-      }
-
-  		output_ha();
-
-      return result_root_;
-  }
+	phase_result_const_sptr_t HAConverter::simulate()
+	{
+		HYDLA_LOGGER_HA("* * * * * * * * * * * * *");
+		cout << "This opt is not available." << endl;
+		HYDLA_LOGGER_HA("* * * * * * * * * * * * *");
+		phase_result_const_sptr_t result;
+		return result;
+	}
 	
+	void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
+	{
+	
+	}
+
 	bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2){
 		// フェーズ
 		if(!(r1->phase == r2->phase)) return false;
@@ -322,13 +140,223 @@ namespace simulator {
 		return true;
 	}
   	
-	void HAConverter::check_edge_step()
+	void HAConverter::checkNode(current_condition_t cc)
 	{
 		//TODO エッジ判定ステップの実装
-		HYDLA_LOGGER_HA("****** check_edge_step ******");
-		HYDLA_LOGGER_HA("****** end check_edge_step ******");
+		HYDLA_LOGGER_HA("****** checkNode ******");
+		
+		// 開始からのシミュレーション結果全て
+		phase_result_sptrs_t simulate_result = cc.phase_results;
+		
+		// ls内になるノード(IP)を順に回り、エッジの通過可能性を判定する
+		phase_result_sptrs_t::iterator it_ls = cc.ls[0].begin();
+		// 初めのノードと最後のノードは同じため、初めのノードを飛ばし重複を防ぐ
+		it_ls++;
+		while(it_ls != cc.ls[0].end()) {
+			if ((*it_ls)->phase == IntervalPhase){
+				checkEdge(*it_ls, cc);				
+			}
+			it_ls++;
+		}
+		
+		HYDLA_LOGGER_HA("****** end checkNode ******");
 	}
-  	
+	
+	void HAConverter::checkEdge(phase_result_sptr_t node, current_condition_t cc){
+		HYDLA_LOGGER_HA("****** checkEdge ******");
+		
+		viewNode(node);
+		
+		// まだ通過していないエッジのガード条件を探索し、条件を満たすかどうか判定する
+		// 結果をresult_check_reachable_のreachable, unknownに入れる
+		result_check_reachable_.reachable.clear();
+		result_check_reachable_.unknown.clear();
+		// 通過済みエッジの探索 + 通過済みノードの探索 + 循環ごとの対象nodeのphase_resultを収集
+		// 通過済みエッジと通過済みノードは分けて考える 
+		// エッジは、対象ノードから通過している場合のみを考えるが、ノードは実行中に通過した全てのノードを考える
+		phase_result_sptrs_t node_transition;
+		for(unsigned int i = 0 ; i < cc.phase_results.size() - 1 ; i++){
+			if(cc.phase_results[i]->phase == IntervalPhase) {
+					phase_t n(cc.phase_results[i]->module_set, cc.phase_results[i]->negative_asks, cc.phase_results[i]->positive_asks);
+					passed_node.push_back(n);
+			};
+			if(compare_phase_result(node, cc.phase_results[i])){
+				if(cc.phase_results[i]->id < cc.loop_start_id){
+					// nodeの次のフェーズがそのnodeから出ているエッジ
+					phase_t e(cc.phase_results[i+1]->module_set, cc.phase_results[i+1]->negative_asks, cc.phase_results[i+1]->positive_asks);
+					passed_edge.push_back(e);
+				}
+				node_transition.push_back(cc.phase_results[i]);
+			}
+		}
+		
+		HYDLA_LOGGER_HA("--- node transition ---");
+		viewPrs(node_transition);
+		
+		for(unsigned int i = 0 ; i < passed_edge.size(); i++){
+			HYDLA_LOGGER_HA("--- passed edge", i, " ---");
+			viewEdge(passed_edge[i]);
+		}
+		HYDLA_LOGGER_HA("");
+		
+		// 全てのエッジを探索
+		module_set_container_sptr msc = msc_no_init_;
+		msc->reset();
+		phase_t phase;
+		while(msc->go_next()){
+			vec_negative_asks.clear();
+			vec_positive_asks.clear();
+			module_set_sptr ms = msc->get_module_set();
+			HYDLA_LOGGER_HA("--- Module Set: ",ms->get_name());
+			phase.module_set = ms;
+			
+			GuardGetter gg;
+			ms->dispatch(&gg);
+			HYDLA_LOGGER_HA("- Guards - ");
+			viewAsks(gg.asks);
+			
+			// negative_askは空集合から、positive_askは全てのガード条件を含む状態からスタートし、冪集合を求める
+			// positive_asksに全てのガード条件を追加する
+			ask_set_t::iterator it = gg.asks.begin();
+			positive_asks_t tmp_pos;
+			while(it != gg.asks.end()){
+				tmp_pos.insert((*it));
+				it++;
+			}
+			vec_positive_asks.push_back(tmp_pos);
+			
+			// negative_askは空集合から
+			negative_asks_t tmp_neg;
+			vec_negative_asks.push_back(tmp_neg);
+			
+			it = gg.asks.begin();
+			while(it != gg.asks.end()){
+				create_asks_vec(*it);
+				it++;
+			}
+			
+			// debug print
+			std::vector<negative_asks_t>::iterator it_neg_d = vec_negative_asks.begin();
+			std::vector<positive_asks_t>::iterator it_pos_d = vec_positive_asks.begin();
+			HYDLA_LOGGER_HA("****** beki");
+			while(it_neg_d != vec_negative_asks.end() && it_pos_d != vec_positive_asks.end()){
+				HYDLA_LOGGER_HA("negative ask:");
+				viewAsks((*it_neg_d));
+				HYDLA_LOGGER_HA("positive ask:");
+				viewAsks((*it_pos_d));
+				HYDLA_LOGGER_HA("");
+				it_neg_d++;
+				it_pos_d++;
+			}
+			HYDLA_LOGGER_HA("****** ******");
+			// **
+
+			std::vector<negative_asks_t>::iterator it_neg = vec_negative_asks.begin();
+			std::vector<positive_asks_t>::iterator it_pos = vec_positive_asks.begin();
+			while(it_neg != vec_negative_asks.end() && it_pos != vec_positive_asks.end()){				
+				HYDLA_LOGGER_HA("--------------------");
+				phase.negative_asks = *it_neg;
+				phase.positive_asks = *it_pos;	
+				
+				HYDLA_LOGGER_HA("negative ask:");
+				viewAsks(phase.negative_asks);
+				HYDLA_LOGGER_HA("positive ask:");
+				viewAsks(phase.positive_asks);
+				
+				if (!check_passed_phase(passed_edge, phase) && !check_passed_phase(passed_node, phase)){
+					ResultCheckOccurrence res = check_occurrence(node, phase, cc);
+					if(res == Reachable){						
+						result_check_reachable_.reachable.insert(pair<phase_result_sptr_t, phase_t>(node ,phase));
+					}else if(res == Unknown){
+						result_check_reachable_.unknown.insert(pair<phase_result_sptr_t, phase_t>(node ,phase));
+						
+						HYDLA_LOGGER_HA("***** unknown *****");
+						unknown_map_t::iterator it_unknown = result_check_reachable_.unknown.begin();
+						while(it_unknown != result_check_reachable_.unknown.end()){
+							HYDLA_LOGGER_HA("unknown...");
+							it_unknown++;
+						}
+					}
+					// unreachableは何もしない
+				}
+				
+				it_neg++;
+				it_pos++;
+				HYDLA_LOGGER_HA("--------------------");
+			}
+			
+			msc->mark_current_node();
+		}
+		
+		HYDLA_LOGGER_HA("****** end checkEdge ******");
+	}
+	
+	void HAConverter::create_asks_vec(boost::shared_ptr<parse_tree::Ask> ask){
+		hydla::parse_tree::TreeInfixPrinter tree_printer;
+		// negative_askとpositive_askの冪集合を取得する
+		std::vector<negative_asks_t> tmp_vec_negative_asks;
+		std::vector<positive_asks_t> tmp_vec_positive_asks;
+
+		std::vector<negative_asks_t>::iterator it_neg = vec_negative_asks.begin();
+		std::vector<positive_asks_t>::iterator it_pos = vec_positive_asks.begin();
+		while(it_neg != vec_negative_asks.end() && it_pos != vec_positive_asks.end()){
+			tmp_vec_negative_asks.push_back((*it_neg));
+			(*it_neg).insert(ask);
+			tmp_vec_negative_asks.push_back((*it_neg));
+			
+			tmp_vec_positive_asks.push_back((*it_pos));
+			(*it_pos).erase(ask);
+			tmp_vec_positive_asks.push_back((*it_pos));
+			
+			it_neg++;
+			it_pos++;
+		}
+		vec_negative_asks = tmp_vec_negative_asks;
+		vec_positive_asks = tmp_vec_positive_asks;
+	}
+	
+	HAConverter::ResultCheckOccurrence 
+		HAConverter::check_occurrence(phase_result_sptr_t node, phase_t edge, current_condition_t cc)
+	{
+		HYDLA_LOGGER_HA("****** check_occurrence ******");
+
+		viewNode(node);
+		viewEdge(edge);
+
+		HYDLA_LOGGER_HA("****** end check_occurrence ******");
+		return Unknown;
+	}
+	bool HAConverter::check_passed_phase(phases_t passed_phase, phase_t phase)
+	{
+		//HYDLA_LOGGER_HA("****** check_passed_phase ******");
+		for(unsigned int i = 0 ; i < passed_phase.size(); i++){
+			if(compare_phase(phase, passed_phase[i])){
+				HYDLA_LOGGER_HA("****** check_passed_phase true ******");					
+				return true;
+			}
+		}
+		HYDLA_LOGGER_HA("****** check_passed_phase false ******");
+		return false;
+	}
+	
+	bool HAConverter::compare_phase(phase_t p1, phase_t p2)
+	{
+		// module set
+		if(!(p1.module_set->compare(*p2.module_set) == 0)) return false;
+		// positive_ask
+		ask_set_t::iterator it_1 = p1.positive_asks.begin();
+		ask_set_t::iterator it_2 = p2.positive_asks.begin();
+		while(it_1 != p1.positive_asks.end() && it_2 != p2.positive_asks.end()) {
+			if(!((**it_1).is_same_struct(**it_2, true))) return false;
+			it_1++;
+			it_2++;
+		}
+		// どちらかのイテレータが最後まで達していなかったら等しくない
+		if(it_1 != p1.positive_asks.end() || it_2 != p2.positive_asks.end()) return false;
+		
+		return true;
+	}
+  
 	bool HAConverter::check_contain(phase_result_sptr_t result, current_condition_t cc)
 	{
 		HYDLA_LOGGER_HA("****** check_contain ******");
@@ -347,6 +375,26 @@ namespace simulator {
 		return false;
 	}
 	
+	void HAConverter::viewEdge(phase_t edge)
+	{
+		HYDLA_LOGGER_HA("--- Edge: ");
+		HYDLA_LOGGER_HA(edge.module_set->get_name());
+		HYDLA_LOGGER_HA("negative ask:");
+		viewAsks(edge.negative_asks);
+		HYDLA_LOGGER_HA("positive_ask:");
+		viewAsks(edge.positive_asks);
+	}
+	void HAConverter::viewNode(phase_result_sptr_t node)
+	{
+		HYDLA_LOGGER_HA("--- Node ---");
+		HYDLA_LOGGER_HA(node->module_set->get_name());
+		HYDLA_LOGGER_HA("negative ask:");
+		viewAsks(node->negative_asks);
+		HYDLA_LOGGER_HA("positive_ask:");
+		viewAsks(node->positive_asks);
+		HYDLA_LOGGER_HA("");
+	}
+	
 	void HAConverter::viewLs(current_condition_t cc)
 	{
 		HYDLA_LOGGER_HA("・・・・・ ls ・・・・・");
@@ -357,15 +405,39 @@ namespace simulator {
 			it_ls_vec++;
 		}
 	}
-
+	
 	void HAConverter::viewPrs(phase_result_sptrs_t results)
 	{
-    hydla::output::SymbolicTrajPrinter printer;
 		phase_result_sptrs_t::iterator it_ls = results.begin();
 		while(it_ls != results.end()) {
-			if(logger::Logger::ha_converter_area_) printer.output_one_phase(*it_ls);
+			viewPr(*it_ls);	
 			it_ls++;
 		}	
+	}
+	
+	void HAConverter::viewPr(phase_result_sptr_t result)
+	{
+		if (logger::Logger::ha_converter_area_) {
+	    hydla::output::SymbolicTrajPrinter printer;
+			printer.output_one_phase(result);
+			
+			HYDLA_LOGGER_HA("negative ask:");
+			viewAsks(result->negative_asks);
+			HYDLA_LOGGER_HA("positive ask:");
+			viewAsks(result->positive_asks);
+		}
+	}
+	
+	void HAConverter::viewAsks(ask_set_t asks)
+	{
+		hydla::parse_tree::TreeInfixPrinter tree_printer;
+		ask_set_t::iterator it = asks.begin();
+		string str = "";
+		while(it != asks.end()){
+			str += tree_printer.get_infix_string((*it)->get_guard()) + " ";
+			it++;
+		}
+		HYDLA_LOGGER_HA(str);
 	}
 	
 	void HAConverter::push_result(current_condition_t cc)
@@ -378,60 +450,71 @@ namespace simulator {
 		HYDLA_LOGGER_HA("・・・・・ ha_result ", ha_results_.size(), " ・・・・・");
 		viewPrs(result);
 		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・");
-		ha_results_.push_back(result);
+		ha_results_.insert(pair<phase_result_sptrs_t, unknown_map_t>(result, cc.unknown_map));
 	}
 	
 	void HAConverter::output_ha()
 	{
 		cout << "-・-・-・-・Result Convert・-・-・-・-" << endl;
-		std::vector<phase_result_sptrs_t>::iterator it_ha_res = ha_results_.begin();		
+		ha_result_t::iterator it_ha_res = ha_results_.begin();		
 		while(it_ha_res != ha_results_.end()){
-			convert_phase_results_to_ha(*it_ha_res);
+			convert_phase_results_to_ha((*it_ha_res).first, (*it_ha_res).second);
 			cout << "-・-・-・-・-・-・-・-・-・-・-・-・-" << endl;
 			it_ha_res++;
 		}
 	}
 	
-	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
+	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result, unknown_map_t unknown_map)
 	{
-		std::vector<std::string> guards;
-		std::string guard = "";
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
-		// TODO: ガード条件が成立している制約名を出力したい
-		for(unsigned int i = 0 ; i < result.size() ; i++){
-			std::set<boost::shared_ptr<hydla::parse_tree::Ask> >::iterator it = result[i]->positive_asks.begin();
-			while(it != result[i]->positive_asks.end()){
-				guard += tree_printer.get_infix_string((*it)->get_guard()) + " ";
-				it++;
-			}
-			guards.push_back(guard);
-			guard = "";
-		}
 		cout << "digraph g{" << endl;
 		cout << "edge [dir=forward];" << endl;
 		cout << "\"start\" [shape=point];" << endl;
-		cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\\n" << guards[1] 
-			   << "\" [label=\"" << result[0]->module_set->get_name() << "\\n" << guards[0] 
-			   << "\", labelfloat=false,arrowtail=dot];" << endl;
+			cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\\n(" << get_asks_str(result[1]->positive_asks) 
+			<< ")\" [label=\"" << result[0]->module_set->get_name() << "\\n(" << get_asks_str(result[0]->positive_asks)
+			   << ")\", labelfloat=false,arrowtail=dot];" << endl;
 		for(unsigned int i = 2 ; i < result.size() ; i++){
 			if(result[i]->phase == IntervalPhase){
-				cout << "\"" << result[i-2]->module_set->get_name() << "\\n" << guards[i-2] 
-						 << "\"->\"" << result[i]->module_set->get_name() << "\\n" << guards[i] 
-				     << "\" [label=\"" << result[i-1]->module_set->get_name() << "\\n" << guards[i-1] 
-				     << "\", labelfloat=false,arrowtail=dot];" << endl;
+				cout << "\"" << result[i-2]->module_set->get_name() << "\\n(" << get_asks_str(result[i-2]->positive_asks) 
+					<< ")\"->\"" << result[i]->module_set->get_name() << "\\n(" << get_asks_str(result[i]->positive_asks) 
+						<< ")\" [label=\"" << result[i-1]->module_set->get_name() << "\\n(" << get_asks_str(result[i-1]->positive_asks) 
+				     << ")\", labelfloat=false,arrowtail=dot];" << endl;
 			}
 		}
+		
+		unknown_map_t::iterator it_un_map = unknown_map.begin();
+			while(it_un_map != unknown_map.end()){
+				cout << "\"" << (*it_un_map).first->module_set->get_name() << "\\n(" << get_asks_str((*it_un_map).first->positive_asks) 
+					<< ")\"->\"unknown\" [label=\"" << (*it_un_map).second.module_set->get_name() << "\\n(" << get_asks_str((*it_un_map).second.positive_asks) 
+				     << ")\", labelfloat=false,arrowtail=dot, style=\"dashed\"];" << endl;
+				it_un_map++;
+			}
 		cout << "}" << endl;
 	}
-  
-		void HAConverter::initialize(const parse_tree_sptr& parse_tree)
-  {
-    Simulator::initialize(parse_tree);
-  	// HA変換のための初期化
-    // シミュレーション終了時刻は設けない
-    opts_->max_time = "";
-  }
+	std::string HAConverter::get_asks_str(ask_set_t asks)
+	{
+		std::string res = "";
+		hydla::parse_tree::TreeInfixPrinter tree_printer;
+		ask_set_t::iterator it = asks.begin();
+		while(it != asks.end()){
+			res += tree_printer.get_infix_string((*it)->get_guard()) + " ";
+			it++;
+		}
+		return res;
+	}
+		
+	GuardGetter::GuardGetter(){}
+	GuardGetter::~GuardGetter(){}
+	
+	void GuardGetter::accept(const boost::shared_ptr<parse_tree::Node>& n){
+		n->accept(n, this);
+	}
+	
+	void GuardGetter::visit(boost::shared_ptr<parse_tree::Ask> node){
+		asks.insert(node);
+	}
 
-} // simulator
-} // hydla
-*/
+
+
+}//namespace hydla
+}//namespace simulator 
+

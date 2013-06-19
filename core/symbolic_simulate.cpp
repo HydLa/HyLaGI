@@ -7,7 +7,7 @@
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
-//#include "HAConverter.h"
+#include "HAConverter.h"
 #include "ParallelSimulator.h"
 
 
@@ -89,7 +89,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.interactive_mode = po.count("in")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   opts.no_laplace = po.count("no_laplace")>0;
-  //opts.ha_convert_mode = po.count("ha")>0;
+  opts.ha_convert_mode = po.count("ha")>0;
   //opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;
   opts.parallel_number   = po.get<int>("pn");
@@ -100,7 +100,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.analysis_mode = po.get<std::string>("analysis_mode");
   opts.analysis_file = po.get<std::string>("analysis_file");
   opts.stop_at_failure = po.count("fail_stop") == 1;
-  //opts.solver        = po.get<std::string>("solver");
+  opts.solver        = po.get<std::string>("solver");
   /*opts.optimization_level = po.get<int>("optimization_level");
   if(opts.optimization_level < 0 || opts.optimization_level > 4){
     throw std::runtime_error(std::string("invalid option - optimization_level"));
@@ -182,16 +182,16 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ps.simulate();
     output_result(ps, opts);
   }
-  /*
+  
   else if(opts.ha_convert_mode)
   {
   	opts.nd_mode = true;
   	HAConverter ha_converter(opts);
-    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(opts));
+    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
   }
-  */
+  
   else
   {
     SequentialSimulator* ss = new SequentialSimulator(opts);
