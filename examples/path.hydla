@@ -1,0 +1,34 @@
+/* graph
+
+ (-1)
+  |
+1 |
+  V  1      4      
+  ◎---->①---->②---->(-1)
+  | \    |     ┐
+2 |  \ 4 | 2  /
+  |   \  |   / 1
+  V    ┘ V  /
+  ③---->④
+     3
+*/
+
+INIT <=> now = -1 & rest = 1 & next = 0.
+CONST <=> [](rest- != 0 => rest' = -1 & now' = 0 & next' = 0).
+TIMER <=> timer = -1 & [](timer' = 1).
+
+EDGE(from, to, distance) <=> [](next- = from & rest- = 0 => now = next- & next = to & rest = distance).
+
+TRUE <=> [](1=1).
+
+ASSERT(timer < 5 | now = 2).
+
+GRAPH{
+EDGE(0,1,1),EDGE(0,3,2),EDGE(0,4,4),
+EDGE(1,2,4),EDGE(1,4,2),
+EDGE(3,4,3),
+EDGE(4,2,1),
+EDGE(2,-1,0)
+}.
+
+INIT, CONST, GRAPH << TRUE, TIMER.
