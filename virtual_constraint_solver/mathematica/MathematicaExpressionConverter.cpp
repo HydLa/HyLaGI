@@ -67,8 +67,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
       else if(symbol=="inf")
         ret = node_sptr(new hydla::parse_tree::Infinity());
       else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
-        // 変数が来た場合は，後から導入されることを考えて仮に記号定数としておく idが-1なのはParameterReplacer参照
-        ret = node_sptr(new hydla::parse_tree::Parameter(symbol.substr(var_prefix.length()), 0, -1));
+        ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(var_prefix.length())));
       break;
     }
     case MLTKINT: // 整数は文字列形式でのみ受け取るものとする（int型だと限界があるため）
@@ -156,8 +155,11 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         }
         assert(variable_name.substr(0, var_prefix.length()) == var_prefix);
         variable_name = variable_name.substr(var_prefix.length());
-        // 変数が来た場合は，後から導入されることを考えて仮に記号定数としておく idが-1なのはParameterReplacer参照
-        ret = node_sptr(new hydla::parse_tree::Parameter(variable_name.substr(var_prefix.length()), variable_derivative_count, -1));
+	ret = node_sptr(new hydla::parse_tree::Variable(variable_name.substr(var_prefix.length())));
+        for(int i = 0; i < variable_derivative_count; i++)
+	  {
+	    ret = node_sptr(new hydla::parse_tree::Differential(ret));
+	  }
       }
       break;
     }

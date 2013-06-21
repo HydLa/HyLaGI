@@ -11,7 +11,7 @@
 #include "Logger.h"
 #include "Timer.h"
 
-#include "ParameterReplacer.h"
+#include "VariableReplacer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
 
@@ -482,7 +482,6 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   parameter_map_t &parameter_map)
 {
   variable_map_t ret;
-  ParameterReplacer replacer;
   for(variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
     variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
     if(r_it->second.is_unique()){
@@ -490,7 +489,6 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
     }
     else
     {
-      replacer.add_mapping(variable->get_name(), variable->get_derivative_count(), state->id);
       value_range_t range = r_it->second;
       // introduce parameter
       parameter_t* param = simulator_->introduce_parameter(r_it->first, state, range);
@@ -504,8 +502,10 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
     }
   }
-  // 仮ID(-1)を設定した記号定数のIDを正しく設定し直す
+  // 
   
+  // 記号定数表に出現する変数を変数以外のものに置き換える
+    VariableReplacer replacer(ret);
   for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
       it != simulator_->original_parameter_map_->end(); it++)
   {
@@ -544,19 +544,7 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
     }
   }
   
-  
-  for(variable_map_t::iterator it = ret.begin();
-      it != ret.end(); it++)
-  {
-    value_t val = it->second;
-    if( val.get() && !val->undefined())
-    {
-      replacer.replace_value(val);
-      ret[it->first] = val;
-    }
-  }
-  
-  
+
   return ret;
 }
 

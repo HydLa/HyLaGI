@@ -6,6 +6,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "ValueVisitor.h"
+#include "Node.h"
 
 #include <boost/operators.hpp>
 
@@ -36,6 +37,11 @@ class Value:
    * •¶Žš—ñ•\Œ»‚ðŽæ“¾‚·‚é
    */
   virtual std::string get_string() const = 0;
+
+  /**
+   * Node‚ÌŒ`Ž®‚É‚µ‚½‚à‚Ì‚ðŽæ“¾‚·‚é
+   */
+  virtual hydla::parse_tree::node_sptr get_node() const = 0;
   
   virtual void accept(ValueVisitor &) = 0;
   

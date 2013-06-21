@@ -1,5 +1,6 @@
 INIT   <=> x=3/4 /\ y=0 /\ vx=2 /\ vy=1 /\ [](x' = vx /\ y' = vy).
-RUN    <=> [](vx'=0 /\ vy'=0).
+RUNX    <=> [](vx'=0).
+RUNY    <=> [](vy'=0).
 WALL1 <=> []((x- - 1)^2+(y-)^2=1 & x > 1=> 
     vx = vx- - ((x- -1)*vx- +y*vy-)*(1+1)*(x- -1) /\
     vy = vy- - ((x- -1)*vx- + y-*vy-)*(1+1)*(y-)).
@@ -9,4 +10,4 @@ WALL2 <=> []((x- + 1)^2+(y-)^2=1 & x < -1=>
 WALL3 <=> [](y- = 1 => vy = -vy-).
 WALL4 <=> [](y- =-1 => vy = -vy-).
 
-INIT, RUN<<(WALL1,WALL2,WALL3,WALL4).
+INIT, (RUNX, RUNY)<<(WALL1,WALL2,WALL3,WALL4).

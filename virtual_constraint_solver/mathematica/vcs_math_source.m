@@ -314,7 +314,7 @@ publicMethod[
           tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@tCons && tmpPCons], Reals]]],
+          tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@applyList[tCons] && tmpPCons], Reals]]],
           (* ”÷•ª•û’öŽ®‚ª‰ð‚¯‚½ê‡ *)
           tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
           tCons = applyList[sol[[1]] /. tCons];
@@ -731,9 +731,9 @@ publicMethod[
     checkMessage;
     resultList = First[resultList];
     If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
+    simplePrint[resultList];
     
     resultList = Fold[(Join[#1, compareWithMaxTime[If[Quiet[Reduce[maxTime <= 0, Reals]] === True, 0, maxTime], #2] ])&,{}, resultList];
-    (* resultList = Fold[(Join[#1, compareWithMaxTime[maxTime, #2] ])&,{}, resultList]; *)
     simplePrint[resultList];
     
     (* ®Œ`‚µ‚ÄŒ‹‰Ê‚ð•Ô‚· *)

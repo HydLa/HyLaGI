@@ -190,11 +190,11 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
     nb = n + sa.size();
   }
   //ˆø”‚Ì•ª‰ğ
-  int i = 0;
+  uint i = 0;
   std::string key(",");
   v_print.push_back(str);
   
-  while(i <  (int)args.length())
+  while(i < args.length())
   {
     int old_i = i;
     i = args.find(key, i);
@@ -227,11 +227,11 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node)
     nb = n + sa.size();
   }
   //ˆø”‚Ì•ª‰ğ
-  int i = 0;
+  uint i = 0;
   std::string key(",");
   v_print_pp.push_back(str);
   
-  while(i <  (int)args.length())
+  while(i < args.length())
   {
     int old_i = i;
     i = args.find(key, i);
@@ -264,11 +264,11 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node)
     nb = n + sa.size();
   }
   //ˆø”‚Ì•ª‰ğ
-  int i = 0;
+  uint i = 0;
   std::string key(",");
   v_print_ip.push_back(str);
   
-  while(i <  (int)args.length())
+  while(i < args.length())
   {
     int old_i = i;
     i = args.find(key, i);
@@ -301,10 +301,10 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Scan> node)
     nb = n + sa.size();
   }
   //ˆø”‚Ì•ª‰ğ
-  int i = 0;
+  uint i = 0;
   std::string key(",");
   
-  while(i <  (int)args.length())
+  while(i < args.length())
   {
     int old_i = i;
     i = args.find(key, i);
@@ -337,11 +337,11 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Exit> node)
     nb = n + sa.size();
   }
   //ˆø”‚Ì•ª‰ğ
-  int i = 0;
+  uint i = 0;
   std::string key(",");
   v_print_ip.push_back(str);
   
-  while(i <  (int)args.length())
+  while(i < args.length())
   {
     int old_i = i;
     i = args.find(key, i);
@@ -375,11 +375,11 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Abort> node)
     nb = n + sa.size();
   }
   //ˆø”‚Ì•ª‰ğ
-  int i = 0;
+  uint i = 0;
   std::string key(",");
   v_print_ip.push_back(str);
   
-  while(i <  (int)args.length())
+  while(i < args.length())
   {
     int old_i = i;
     i = args.find(key, i);
