@@ -628,6 +628,8 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
     // ‚ğó‚¯æ‚é
     // TODO segfo
     candidate.time = SExpConverter::convert_s_exp_to_symbolic_value(sp, and_ptr->children.begin());
+    *candidate.time += *current_time;
+    HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
 
     // ğŒ‚ğó‚¯æ‚é
     SExpParser::const_tree_iter_t param_ptr = and_ptr->children.begin()+1;
