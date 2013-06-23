@@ -74,6 +74,8 @@ std::istream& REDUCELink::getline_with_throw(const std::string& cmd, std::string
 
   if(line.find("***")!=std::string::npos){ // "***** 1 invalid as list"のような論理エラー出力の判定
     throw REDUCELinkError(cmd, "[ " + line + " ]");
+  }else if(line.find("Declare")!=std::string::npos){ // 未定義の関数の入力の判定
+    throw REDUCELinkError(cmd, "[ " + line + " ]");
   }
 
   return is;
