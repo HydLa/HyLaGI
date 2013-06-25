@@ -59,7 +59,12 @@ std::string REDUCELink::get_s_expr(){
     line = line + tmp;
   }
 
+  HYDLA_LOGGER_VCS("get s_expr: ", line);
   return line;
+}
+
+const hydla::parser::SExpParser REDUCELink::get_as_s_exp_parser(){
+  return hydla::parser::SExpParser(get_s_expr().c_str());
 }
 
 int REDUCELink::send_string(const std::string cmd){

@@ -29,7 +29,7 @@ void SExpConverter::initialize(){
   string_map_.insert(std::make_pair("minus", function_and_node(for_unary_node, NODE_NEGATIVE)));
 }
 
-SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter){
+SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(const SExpParser& sp, const_tree_iter_t iter){
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("--- convert s-expression to value ---\n", iter);
 
@@ -75,7 +75,7 @@ node_sptr SExpConverter::make_equal(hydla::simulator::DefaultParameter &variable
   return node_sptr(new Equal(new_node, node));
 }
 
-SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(SExpParser &sp, const_tree_iter_t iter){
+SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(const SExpParser& sp, const_tree_iter_t iter){
 
   switch(iter->value.id().to_long()) {
     case SExpGrammar::RI_Number: {
@@ -126,7 +126,7 @@ SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(SExpParse
 }
 
 SExpConverter::node_sptr SExpConverter::for_derivative(
-  SExpParser &sp,
+  const SExpParser &sp,
   const_tree_iter_t iter,
   const SExpConverter::nodeType &nt){
   //まず微分回数
@@ -141,7 +141,7 @@ SExpConverter::node_sptr SExpConverter::for_derivative(
 }
 
 SExpConverter::node_sptr SExpConverter::for_unary_node(
-  SExpParser &sp,
+  const SExpParser &sp,
   const_tree_iter_t iter,
   const SExpConverter::nodeType &nt){
   //中身
@@ -167,7 +167,7 @@ SExpConverter::node_sptr SExpConverter::for_unary_node(
 }
 
 SExpConverter::node_sptr SExpConverter::for_binary_node(
-  SExpParser &sp,
+  const SExpParser &sp,
   const_tree_iter_t iter,
   const SExpConverter::nodeType &nt){
   //BinaryNodeを作るための関数だけど，plusとtimesはリストで複数引数取れるみたいだから特別にループ

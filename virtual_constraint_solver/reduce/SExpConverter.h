@@ -38,7 +38,7 @@ class SExpConverter
     NODE_NEGATIVE,
   }nodeType;
 
-  typedef node_sptr (function_for_node)(SExpParser &sp, const_tree_iter_t iter, const nodeType &);
+  typedef node_sptr (function_for_node)(const SExpParser &sp, const_tree_iter_t iter, const nodeType &);
   typedef function_for_node *p_function_for_node;
   typedef struct tag_function_and_node{
     p_function_for_node function;
@@ -62,7 +62,7 @@ class SExpConverter
   static function_for_node for_binary_node;
 
   // S®‚Æ‚Á‚Ävalue‚É•ÏŠ·‚·‚é
-  static value_t convert_s_exp_to_symbolic_value(SExpParser &sp, const_tree_iter_t iter);
+  static value_t convert_s_exp_to_symbolic_value(const SExpParser &sp, const_tree_iter_t iter);
 
   static void add_parameter(variable_t &variable, parameter_t &parameter);
   static void clear_parameter_map();
@@ -86,7 +86,7 @@ class SExpConverter
 
   private:
   //Ä‹A‚ÅŒÄ‚Ño‚µ‚Ä‚¢‚­•û
-  static node_sptr convert_s_exp_to_symbolic_tree(SExpParser &sp, const_tree_iter_t iter);
+  static node_sptr convert_s_exp_to_symbolic_tree(const SExpParser& sp, const_tree_iter_t iter);
 
   static std::map<variable_t, parameter_t> variable_parameter_map_;
 };

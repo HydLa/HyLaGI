@@ -23,6 +23,14 @@ SExpParser::~SExpParser()
 {
 }
 
+SExpParser::SExpParser(const char* input_str){
+  parse_main(input_str);
+}
+
+SExpParser::SExpParser(const SExpParser& sp) : ast_tree_(sp.ast_tree_)
+{
+}
+
 std::string SExpParser::get_string_from_tree(const_tree_iter_t iter) const{
 
   std::ostringstream ret_str;

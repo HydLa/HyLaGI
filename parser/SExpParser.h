@@ -17,12 +17,19 @@ public:
   typedef boost::spirit::classic::tree_match<pos_iter_t>::tree_iterator       tree_iter_t;
   typedef boost::spirit::classic::tree_match<pos_iter_t>::const_tree_iterator const_tree_iter_t;
 
-  // 空集合を表すS式 "list"
+  /**
+   * 空集合を表すS式 "list"
+   */
   static const std::string empty_list_s_exp;
   
   SExpParser();
   ~SExpParser();
 
+  /**
+   * @param input_str parse_mainするS式の文字列
+   */
+  SExpParser(const char* input_str);
+  SExpParser(const SExpParser& sp);
 
   std::string get_string_from_tree(const_tree_iter_t iter) const;
 

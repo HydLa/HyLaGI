@@ -301,12 +301,8 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
 
   HYDLA_LOGGER_VCS( "--- REDUCEVCS::check_consistency receive ---");
   cl_.skip_until_redeval();
+  const SExpParser sp(cl_.get_as_s_exp_parser());
 
-  std::string ans = cl_.get_s_expr();
-  HYDLA_LOGGER_VCS("add_constraint_ans: ", ans);
-
-  SExpParser sp;
-  sp.parse_main(ans.c_str());
   // {true, false} または {false, true} の構造
   // TODO 記号定数を戻り値に取る場合の対応
   SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
@@ -347,12 +343,9 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   /////////////////// 受信処理                     
 
   cl_.skip_until_redeval();
+  const SExpParser sp(cl_.get_as_s_exp_parser());
 
-  // S式パーサを用いて、制約ストア全体を表すような木構造を得る
-  std::string cs_s_exp_str = cl_.get_s_expr();
-  HYDLA_LOGGER_VCS("cs_s_exp_str: ", cs_s_exp_str);
-  SExpParser sp;
-  sp.parse_main(cs_s_exp_str.c_str());
+  // {true, false} または {false, true} の構造
   SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
   create_result_t create_result;
@@ -607,14 +600,10 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
   ////////////////// 受信処理
 
   cl_.skip_until_redeval();
-  // S式パーサを用いて、制約ストア全体を表すような木構造を得る
-  std::string cs_s_exp_str = cl_.get_s_expr().c_str();
-  HYDLA_LOGGER_VCS("cs_s_exp_str: ", cs_s_exp_str);
-  SExpParser sp;
-  sp.parse_main(cs_s_exp_str.c_str());
-  SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
-
+  const SExpParser sp(cl_.get_as_s_exp_parser());
+  
   // {{value_t(time_t), {}(parameter_map_t), true(bool)},...} のようなものが戻るはず
+  SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
   PP_time_result_t result;
 
   for(SExpParser::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
@@ -689,13 +678,7 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
     ////////////////// 受信処理
 
     cl_.skip_until_redeval();
-
-    std::string ans = cl_.get_s_expr();
-    HYDLA_LOGGER_VCS("apply_time_to_expr_ans: ", ans);
-
-    // S式パーサで読み取る
-    SExpParser sp;
-    sp.parse_main(ans.c_str());
+    const SExpParser sp(cl_.get_as_s_exp_parser());
 
     // {コード, 値}の構造
     SExpParser::const_tree_iter_t ct_it = sp.get_tree_iterator();
@@ -828,19 +811,15 @@ void REDUCEVCS::simplify(time_t &time)
   ////////////////// 受信処理
 
   cl_.skip_until_redeval();
+  const SExpParser sp(cl_.get_as_s_exp_parser());
 
-  std::string ans = cl_.get_s_expr();
-  HYDLA_LOGGER_VCS("simplify_ans: ", ans);
-
-  // S式パーサで読み取る
-  SExpParser sp;
-  sp.parse_main(ans.c_str());
   SExpParser::const_tree_iter_t time_it = sp.get_tree_iterator();
   SExpConverter sc;
   time = sc.convert_s_exp_to_symbolic_value(sp, time_it);
 
   HYDLA_LOGGER_FUNC_END(VCS);
 }
+
 /*
  * SymbolicValueの時間をずらす
  */
@@ -866,13 +845,8 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   ////////////////// 受信処理
 
   cl_.skip_until_redeval();
+  const SExpParser sp(cl_.get_as_s_exp_parser());
 
-  std::string ans = cl_.get_s_expr();
-  HYDLA_LOGGER_VCS("expr_time_shift_ans: ", ans);
-
-  // S式パーサで読み取る
-  SExpParser sp;
-  sp.parse_main(ans.c_str());
   SExpParser::const_tree_iter_t value_it = sp.get_tree_iterator();
   SExpConverter sc;
 

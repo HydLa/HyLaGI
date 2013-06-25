@@ -1,11 +1,12 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
 
-#include <stdexcept>
-#include <sstream>
+#include "../../parser/SExpParser.h"
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/system/error_code.hpp>
+#include <sstream>
+#include <stdexcept>
 
 namespace hydla {
 namespace vcs {
@@ -56,10 +57,16 @@ public:
   int skip_until_redeval();
 
   /**
-   * 受信した複数行のstringを結合して破損のないLisp式を作る
+   * 受信した複数行のstringを結合して破損のないLisp式を戻す
    * \return REDUCEから受け取るS式
    */
   std::string get_s_expr();
+
+  /**
+   * 受信した複数行のstringを結合してSExpParserを戻す
+   * \return REDUCEから受け取るS式をパースしたもの
+   */
+  const hydla::parser::SExpParser get_as_s_exp_parser();
 
   /**
    * stringの送信
