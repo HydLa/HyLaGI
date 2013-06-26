@@ -90,34 +90,32 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
         const value_t &value = it->second.get_lower_bound().value;
         constraints.push_back(SExpConverter::make_equal(*it->first, get_symbolic_value_t(value).get_node(), true));
       }else{
-        {
-          const value_t& value = it->second.get_lower_bound().value;
+        for(uint i=0; i < it->second.get_lower_cnt();i++){
+          const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
+          const value_t &value = bnd.value;
           parameter_t& param = *it->first;
-          if(value.get() && !value->undefined()){
-            if(it->second.get_lower_bound().include_bound){
-              const symbolic_value_t lower_bound = get_symbolic_value_t(value);
-              constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
-                        new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
-            }else{
-              const symbolic_value_t lower_bound = get_symbolic_value_t(value);
-              constraints.push_back(node_sptr(new Greater(node_sptr(
-                        new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
-            }
+          if(!bnd.include_bound){
+            const symbolic_value_t lower_bound = get_symbolic_value_t(value);
+            constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
+                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
+          }else{
+            const symbolic_value_t lower_bound = get_symbolic_value_t(value);
+            constraints.push_back(node_sptr(new Greater(node_sptr(
+                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
           }
         }
-        {
-          const value_t& value = it->second.get_upper_bound().value;
+        for(uint i=0; i < it->second.get_lower_cnt();i++){
+          const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
+          const value_t &value = bnd.value;
           parameter_t& param = *it->first;
-          if(value.get() && !value->undefined()){
-            if(it->second.get_upper_bound().include_bound){
-              const symbolic_value_t upper_bound = get_symbolic_value_t(value);
-              constraints.push_back(node_sptr(new LessEqual(node_sptr(
-                        new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
-            }else{
-              const symbolic_value_t upper_bound = get_symbolic_value_t(value);
-              constraints.push_back(node_sptr(new Less(node_sptr(
-                        new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
-            }
+          if(!bnd.include_bound){
+            const symbolic_value_t upper_bound = get_symbolic_value_t(value);
+            constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
+                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
+          }else{
+            const symbolic_value_t upper_bound = get_symbolic_value_t(value);
+            constraints.push_back(node_sptr(new Greater(node_sptr(
+                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
           }
         }
       }
