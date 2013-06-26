@@ -369,7 +369,7 @@ void MathematicaVCS::approx_vm(variable_range_map_t& vm)
   VariableArg arg = VA_None;
   for(; it!=vm.end(); ++it)
   {
-    if(!it->second.undefined())
+      if(!it->second.undefined() && it->second.get_lower_cnt() > 0 && it -> second.get_upper_cnt() > 0)
     {
       ml_.put_function("approxValue", 1);
       if(it->second.is_unique())
@@ -380,8 +380,8 @@ void MathematicaVCS::approx_vm(variable_range_map_t& vm)
       else
       {
         ml_.put_function("List", 2);
-        ps.put_value(it->second.get_upper_bound().value, arg);
         ps.put_value(it->second.get_lower_bound().value, arg);
+        ps.put_value(it->second.get_upper_bound().value, arg);
       }
       ml_.receive();
       PacketErrorHandler::handle(&ml_);
@@ -1143,12 +1143,7 @@ void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, Pa
     if(range.is_unique()){
       size++;
     }else{
-      if(range.get_lower_bound().value.get() && !range.get_lower_bound().value->undefined()){
-        size++;
-      }
-      if(range.get_upper_bound().value.get() && !range.get_upper_bound().value->undefined()){
-        size++;
-      }
+      size += range.get_lower_cnt() + range.get_upper_cnt();
     }
   }
   
@@ -1163,34 +1158,37 @@ void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, Pa
       ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
       ps.put_value(value, VA_Prev);
     }else{
+      for(uint i=0; i < it->second.get_lower_cnt();i++)
       {
-        const value_t &value = it->second.get_lower_bound().value;
+        const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
+        const value_t &value = bnd.value;
         parameter_t& param = *it->first;
-        if(value.get() && !value->undefined()){
-          if(!it->second.get_lower_bound().include_bound){
-            ml_.put_function("Greater", 2);
-          }
-          else{
-            ml_.put_function("GreaterEqual", 2);
-          }
-          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-          ps.put_value(value, VA_Prev);
+        if(!bnd.include_bound)
+        {
+          ml_.put_function("Greater", 2);
         }
+        else
+        {
+          ml_.put_function("GreaterEqual", 2);
+        }
+        ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+        ps.put_value(value, VA_Prev);
       }
+      for(uint i=0; i < it->second.get_upper_cnt();i++)
       {
-        
-        const value_t &value = it->second.get_upper_bound().value;
+        const value_range_t::bound_t &bnd = it->second.get_upper_bound(i);
+        const value_t &value = bnd.value;
         parameter_t& param = *it->first;
-        if(value.get() && !value->undefined()){
-          if(!it->second.get_upper_bound().include_bound){
-            ml_.put_function("Less", 2);
-          }
-          else{
-            ml_.put_function("LessEqual", 2);
-          }
-          ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
-          ps.put_value(value, VA_Prev);
+        if(!bnd.include_bound)
+        {
+          ml_.put_function("Less", 2);
         }
+        else
+        {
+          ml_.put_function("LessEqual", 2);
+        }
+        ps.put_par(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+        ps.put_value(value, VA_Prev);
       }
     }
   }

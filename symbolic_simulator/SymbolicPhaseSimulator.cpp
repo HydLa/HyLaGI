@@ -502,7 +502,6 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
     }
   }
-  // 
   
   // 記号定数表に出現する変数を変数以外のものに置き換える
     VariableReplacer replacer(ret);
@@ -510,35 +509,36 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       it != simulator_->original_parameter_map_->end(); it++)
   {
     ValueRange& range = it->second;
-    value_t val = range.get_upper_bound().value;
-    if(val.get() && !val->undefined())
+    value_t val;
+    if(range.get_upper_cnt() > 0)
     {
+      val = range.get_upper_bound().value;
       replacer.replace_value(val);
       range.set_upper_bound(val, range.get_upper_bound().include_bound);
     }
-    val = range.get_lower_bound().value;
-    if(val.get() && !val->undefined())
+
+    if(range.get_lower_cnt() > 0)
     {
+      val = range.get_lower_bound().value;
       replacer.replace_value(val);
       range.set_lower_bound(val, range.get_lower_bound().include_bound);
     }
   }
   
-  
-  
   for(parameter_map_t::iterator it = parameter_map.begin();
       it != parameter_map.end(); it++)
   {
     ValueRange& range = it->second;
-    value_t val = range.get_upper_bound().value;
-    if(val.get() && !val->undefined())
+    value_t val;
+    if(range.get_upper_cnt()>0)
     {
+      val = range.get_upper_bound().value;
       replacer.replace_value(val);
       range.set_upper_bound(val, range.get_upper_bound().include_bound);
     }
-    val = range.get_lower_bound().value;
-    if(val.get() && !val->undefined())
+    if(range.get_lower_cnt() > 0)
     {
+      val = range.get_lower_bound().value;
       replacer.replace_value(val);
       range.set_lower_bound(val, range.get_lower_bound().include_bound);
     }

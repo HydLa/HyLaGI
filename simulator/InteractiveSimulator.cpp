@@ -171,7 +171,7 @@ int InteractiveSimulator::show_help(){
     //"run            -- simulate program  until the breakpoint is reached",
     //"save           -- Save state to file",
   };
-  for(int i = 0;i < sizeof(help_list) / sizeof(help_list[0]);i++){
+  for(uint i = 0;i < sizeof(help_list) / sizeof(help_list[0]);i++){
     printf("%s\n",help_list[i]);
   }
   return 0;

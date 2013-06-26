@@ -12,28 +12,36 @@ class ValueRange {
 public:
   typedef boost::shared_ptr<Value> value_t;
   typedef struct Bound{
-    bool include_bound;
     value_t value;
+    bool include_bound;
     Bound():include_bound(false){}
+    Bound(const value_t& val, const bool& in):value(val), include_bound(in){}
   }bound_t;
   
 
-  ValueRange():is_unique_(false){}
+  ValueRange(const value_t& val){set_unique(val);}
+  ValueRange(){}
 
   /**
    * 完全な未定義値かどうか
    */
   bool undefined() const
   {
-    return ((!lower_.value.get() || lower_.value->undefined()) && (!upper_.value.get() || upper_.value->undefined()));
+    return (lower_.size() == 0 && upper_.size() == 0);
   }
   
   /**
    * 一意に値が定まるかどうか
+   * 数式的な比較はしておらず，
+   * 1. 下限と上限がそれぞれ1つずつしかなく，
+   * 2. 下限と上限の元となったvalueが同じものである
+   * 場合のみtrueが返る．
    */
   bool is_unique() const
   {
-    return is_unique_;
+    return lower_.size() == 1 && upper_.size() == 1 &&
+      lower_[0].value.get() == upper_[0].value.get() &&
+      lower_[0].include_bound && upper_[0].include_bound ;
   }
   
   /**
@@ -41,95 +49,60 @@ public:
    */
   void set_unique(const value_t& val)
   {
-    lower_.value = upper_.value = val;
-    lower_.include_bound = upper_.include_bound = true;
-    is_unique_ = true;
+    set_upper_bound(val, true);
+    set_lower_bound(val, true);
   }
 
 
-  /**
-   * 文字列表現を取得する
-   */
-  std::string get_string() const
+  std::string get_string() const;
+
+  uint get_lower_cnt()const{return lower_.size();}
+  const bound_t& get_lower_bound() const{return get_lower_bound(0);}
+  const bound_t& get_lower_bound(const uint& idx) const
+    {assert(idx<lower_.size()); return lower_[idx];}
+
+  uint get_upper_cnt()const{return upper_.size();}
+  const bound_t& get_upper_bound() const{return get_upper_bound(0);}
+  const bound_t& get_upper_bound(const uint& idx) const
+    {assert(idx<upper_.size()); return upper_[idx];}
+
+  void set_upper_bound(const value_t& val, const bool& include)
   {
-    std::string tmp_str;
-    if(is_unique()){
-      tmp_str += lower_.value->get_string();
-    }else{
-      if(lower_.include_bound){
-        tmp_str += "[";
-      }
-      else{
-        tmp_str += "(";
-      }
-      if(lower_.value.get() && !lower_.value->undefined()){
-        tmp_str += lower_.value->get_string();
-      }else{
-        tmp_str += "-inf";
-      }
-      
-      tmp_str += ", ";
-      
-      if(upper_.value.get() && !upper_.value->undefined()){
-        tmp_str += upper_.value->get_string();
-      }else{
-        tmp_str += "inf";
-      }
-      
-      if(upper_.include_bound){
-        tmp_str += "]";
-      }
-      else{
-        tmp_str += ")";
-      }
+    upper_.clear();
+    add_upper_bound(val, include);
+  }
+
+  void set_lower_bound(const value_t& val, const bool& include)
+  {
+    lower_.clear();
+    add_lower_bound(val, include);
+  }
+
+  void add_lower_bound(const value_t& val, const bool& include)
+  {
+
+    if(val && !val->undefined())
+    { 
+      lower_.push_back(bound_t(val, include));
     }
-    return tmp_str;
-  }
-  
-  /**
-   * 下限を取得
-   */
-  const bound_t& get_lower_bound() const{return lower_;}
-  /**
-   * 上限を取得
-   */
-  const bound_t& get_upper_bound() const{return upper_;}
-
-  /**
-   * 上限に新たなものをセット
-   * この関数を呼び出すと，実際の上限下限に関わらず値が一意に定まらないものとして扱われる
-   */
-  void set_upper_bound(value_t val, const bool& include)
-  {
-    upper_.value = val;
-    upper_.include_bound = include;
-    is_unique_ = false;
   }
 
-  /**
-   * 下限に新たなものをセット
-   * この関数を呼び出すと，実際の上限下限に関わらず値が一意に定まらないものとして扱われる
-   */
-  void set_lower_bound(value_t val, const bool& include)
+  void add_upper_bound(const value_t& val, const bool& include)
   {
-    lower_.value = val;
-    lower_.include_bound = include;
-    is_unique_ = false;
+    if(val && !val->undefined())
+    {
+      upper_.push_back(bound_t(val, include));
+    }
   }
   
-  /**
-   * データをダンプする
-   */
   std::ostream& dump(std::ostream& s) const  
   {
     s << get_string();
     return s;
   }
-  
 
   private:
-  bound_t lower_, upper_;
-  bool is_unique_;
+  std::vector<bound_t> lower_, upper_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ValueRange & val);
