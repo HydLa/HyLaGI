@@ -1,4 +1,4 @@
-
+	
 #ifndef _INCLUDED_HYDLA_HAConverter_SIMULATOR_H_
 #define _INCLUDED_HYDLA_HAConverter_SIMULATOR_H_
 
@@ -30,18 +30,7 @@ protected:
 
 	typedef hydla::ch::module_set_sptr 												module_set_sptr_t;
 	typedef std::vector<module_set_sptr_t>					 					module_set_sptrs_t;
-	
-	/**
-	 * 変換に用いる変数の定義
-	 * その構造体
- 	*/
-	enum ResultCheckOccurrence 
-	{
-		Reachable,
-		Unreachable,
-		Unknown
-	};
-	
+		
 	// エッジ構造体 成り立つガード条件＋採用したモジュール集合
 	struct Phase
 	{
@@ -57,105 +46,39 @@ protected:
 	
 	typedef Phase																phase_t;
   typedef std::vector<phase_t>								phases_t;
-	phases_t passed_edge;
-	phases_t passed_node;
 
-
-	typedef Phase																edge_t;
-  typedef std::vector<edge_t>									edges_t;
-
-	typedef Phase																node_t;
-  typedef std::vector<node_t>              		nodes_t;
-	
-	void viewEdge(phase_t edge);
-	void viewNode(phase_result_sptr_t node);
-	typedef std::multimap<phase_result_sptr_t, phase_t>					 unknown_map_t;
-	
-	// エッジ判定ステップの結果
-	struct ResultCheckReachable
-	{
-		// あるnodeから派生するエッジ  ノードとの組で表現
-		unknown_map_t reachable;
-		unknown_map_t unknown;
-		ResultCheckReachable(unknown_map_t reachable, unknown_map_t unknown): reachable(reachable), unknown(unknown){}
-		ResultCheckReachable(){}
-	};
-	typedef ResultCheckReachable																result_check_reachable_t;
-
-	
-	struct CurrentCondition
-	{
-		phase_result_sptrs_t phase_results;
-		std::vector<phase_result_sptrs_t> ls;
-		phase_result_sptrs_t loop;
-		bool is_loop_step;
-		unknown_map_t unknown_map;
-		int loop_count;
-		int loop_start_id;
-		// なぜか警告が出るのでコメントアウト．必要もないので
-		/*
-		CurrentCondition(
-			phase_result_sptrs_t phase_results, 
-			std::vector<phase_result_sptrs_t> ls, 
-			phase_result_sptrs_t loop,
-			bool is_loop_step,
-			int loop_count,
-			int loop_start_id,
-			unknown_map_t unknown_map
-		): phase_results(phase_results), ls(ls), loop(loop), is_loop_step(is_loop_step), loop_count(loop_count), loop_start_id(loop_start_id), unknown_map(unknown_map){}
-		*/
-		CurrentCondition(){}
-	};
-
-	typedef CurrentCondition															 current_condition_t;
+	typedef phase_result_sptrs_t													 current_condition_t;
 	typedef std::deque<current_condition_t> 					 		 current_conditions_t;
 	
-	typedef std::map<phase_result_sptrs_t, unknown_map_t> 	ha_result_t;
+	typedef std::deque<current_condition_t> 	ha_results_t;
 
-	// エッジ通過可能性判定の結果を保持
-	result_check_reachable_t result_check_reachable_;
-	
 	// 状態キュー
 	current_conditions_t cc_vec_;
 	
 	// 変換結果を保持
-	ha_result_t ha_results_;
+	ha_results_t ha_results_;
 	
-	// ループ判定ステップを続けるか（lsの要素にloopを部分集合とするものがあるか）
-	bool check_continue(current_condition_t *cc);
-	
-	// lsにループ候補をset
-	void set_possible_loops(phase_result_sptr_t result, current_condition_t *cc);
-	
-	// loopがlsの最大要素と同じかどうか
-	bool loop_eq_max_ls(current_condition_t cc);
-	
-	// エッジ判定ステップ ノードを回り、それぞれcheckEdgeを行う
-	void checkNode(current_condition_t cc);
-	// ノードごとのエッジ判定
-	void checkEdge(phase_result_sptr_t node, current_condition_t cc);
-	// フェーズがすでに通過したものかどうか判定 通過してたらtrue
-	bool check_passed_phase(phases_t passed_phase, phase_t phase);
-	
-	void create_asks_vec(boost::shared_ptr<parse_tree::Ask> ask);	
-	std::vector<negative_asks_t> vec_negative_asks;
-	std::vector<positive_asks_t> vec_positive_asks;
+	// 実行済みかどうかのチェック
+	bool check_already_exec(phase_result_sptr_t phase, current_condition_t cc);
 
+	// 各パラメータが部分集合となっているかのチェック
+	bool check_subset(phase_result_sptr_t phase, phase_result_sptr_t past_phase);
 
+	// AがBの範囲に含まれる場合trueを返す
+	bool compare_parameter_range(range_t A, range_t B);	
 	
+	// 変数がガード条件に出現するか
+	bool check_guard_variable(phase_result_sptr_t phase, std::string name, int derivative_count);
+	
+	// ２つのphase_resultのphase、モジュール集合、positive_askが等しいかどうか判定
+	bool compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2);
+
 	// フェーズ同士が同じものかどうか判定
 	bool compare_phase(phase_t p1, phase_t p2);
-	// nodeからedgeに遷移する可能性はあるか判定 通過可能性の判定
-	ResultCheckOccurrence check_occurrence(phase_result_sptr_t node, phase_t edge, current_condition_t cc);
 
 	// 現phase_resultがphase_resultsに含まれるか
 	bool check_contain(phase_result_sptr_t result, current_condition_t cc);
-
-	// ２つのphase_resultのphase、モジュール集合、positive_askが等しいかどうか判定
-	bool compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2);
  
-	// lsの中身表示
-	void viewLs(current_condition_t cc);
 	// phase_result_sptrs_tの中身表示
 	void viewPrs(phase_result_sptrs_t results);
 	// phase_result_sptr_tの中身表示
@@ -167,7 +90,7 @@ protected:
 	void output_ha();
 	
 	// phase_resultsをhaのdot言語に変換する
-	void convert_phase_results_to_ha(phase_result_sptrs_t result, unknown_map_t unknown_map);
+	void convert_phase_results_to_ha(phase_result_sptrs_t result);
 	
 	// ha_resultにHA変換に必要な情報をpushする
 	void push_result(current_condition_t cc);
@@ -214,6 +137,48 @@ public:
 	
 	ask_set_t asks;
 };//GuardGetter
+
+class VaribleGetter : public parse_tree::DefaultTreeVisitor {
+public:
+	virtual void accept(const boost::shared_ptr<parse_tree::Node>& n);
+
+	typedef struct GuardVariable
+	{
+		int diff_cnt;
+		std::string name;
+	}guard_variable_t;
+	
+	typedef std::vector<guard_variable_t>  guard_variable_vec_t;
+
+	VaribleGetter();
+	virtual ~VaribleGetter();
+	
+	// 微分
+	virtual void visit(boost::shared_ptr<parse_tree::Differential> node);
+	// 変数
+	virtual void visit(boost::shared_ptr<parse_tree::Variable> node);
+	
+	int tmp_diff_cnt;
+	
+	guard_variable_vec_t  vec_variable;
+	guard_variable_vec_t::iterator it;
+	
+	guard_variable_vec_t::iterator get_iterator()
+	{
+		return it;
+	}
+
+	void guard_variable_vec_t::iterator it_begin()
+	{
+		it = vec_variable.begin();
+	}
+	
+	void inc_it()
+	{
+		it++;
+	}
+	
+};//VaribleGetter
 
 
 }//namespace hydla

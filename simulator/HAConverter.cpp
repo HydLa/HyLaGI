@@ -21,19 +21,218 @@ namespace simulator {
 
 	phase_result_const_sptr_t HAConverter::simulate()
 	{
-		HYDLA_LOGGER_HA("* * * * * * * * * * * * *");
-		cout << "This opt is not available." << endl;
-		HYDLA_LOGGER_HA("* * * * * * * * * * * * *");
-		phase_result_const_sptr_t result;
-		return result;
+	  std::string error_str;
+	  simulation_todo_sptr_t init_todo = make_initial_todo();
+	  todo_stack_->push_todo(init_todo);
+	  int error_sum = 0;
+	  
+	  current_condition_t cc_;
+ 		push_current_condition(cc_);
+
+	  while(!todo_stack_->empty()) 
+	  {
+	    try
+	    {
+	      simulation_todo_sptr_t todo(todo_stack_->pop_todo());
+	      process_one_todo(todo);
+	    }
+	    catch(const std::runtime_error &se)
+	    {
+	      error_str += "error ";
+	      error_str += ('0' + (++error_sum));
+	      error_str += ": ";
+	      error_str += se.what();
+	      error_str += "\n";
+	      HYDLA_LOGGER_HA(se.what());
+	    }
+	  }
+	  
+	  if(!error_str.empty()){
+	    std::cout << error_str;
+	  }
+	  
+	  HYDLA_LOGGER_HA("%% simulation ended");
+	  
+ 		output_ha();
+
+	  return result_root_;
 	}
 	
 	void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
 	{
-	
+	  hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
+
+	  HYDLA_LOGGER_HA("************************\n", todo);
+
+	  HYDLA_LOGGER_HA("--- Current Todo ---\n", todo);
+    current_condition_t cc_;
+    current_condition_t tmp_cc_;
+
+	  try{
+	    timer::Timer phase_timer;	    
+	    cc_ = pop_current_condition();
+	    
+	    PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
+	    
+	    for(unsigned int i = 0; i < phases.size(); i++)
+	    {
+	      phase_result_sptr_t& phase = phases[i];
+	      HYDLA_LOGGER_HA("--- Result Phase", i+1 , "/", phases.size(), " ---\n", phase);
+	    	
+      	tmp_cc_ = cc_;
+      	tmp_cc_.push_back(phase);
+
+	    	if (phase->phase == IntervalPhase) 
+				{
+					if (check_already_exec(phase, cc_))
+					{
+						push_result(tmp_cc_);
+						//todoを生成せずに次へ（HA変換完了）
+						continue;
+					}
+	    	}
+       	push_current_condition(tmp_cc_);
+
+	      PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
+	      for(unsigned int j = 0; j < next_todos.size(); j++)
+	      {
+	        simulation_todo_sptr_t& n_todo = next_todos[j];
+	        n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
+          todo_stack_->push_todo(n_todo);
+          HYDLA_LOGGER_HA("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
+          HYDLA_LOGGER_HA(n_todo);
+	      }
+	    }
+	  }
+	  catch(const hydla::timeout::TimeOutError &te)
+	  {
+	    HYDLA_LOGGER_HA(te.what());
+	    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
+	    todo->parent->children.push_back(phase);
+	  }
 	}
 
-	bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2){
+	bool HAConverter::check_already_exec(phase_result_sptr_t phase, current_condition_t cc)
+	{
+		HYDLA_LOGGER_HA("****** check_already_exec ******");
+		phase_result_sptrs_t::iterator it_prs = cc.begin();
+		while(it_prs != cc.end()){
+			// 同じノードの探索
+			if(compare_phase_result(phase, *it_prs)) {
+				// 全てのパラメータが実行済みノードのパラメータの部分集合だったらtrue
+				if (check_subset(phase, *it_prs)) {
+					HYDLA_LOGGER_HA("****** end check_already_exec : true ******");
+					return true;
+				}
+			}
+			it_prs++;
+		}
+		HYDLA_LOGGER_HA("****** end check_already_exec : false ******");
+		return false;
+	}
+	
+	bool HAConverter::check_subset(phase_result_sptr_t phase, phase_result_sptr_t past_phase)
+	{
+		HYDLA_LOGGER_HA("****** check_subset ******");
+		viewPr(phase);
+		viewPr(past_phase);
+	  parameter_map_t::const_iterator it_phase  = phase->parameter_map.begin();
+	  parameter_map_t::const_iterator end_phase = phase->parameter_map.end();
+
+	  parameter_map_t::const_iterator it_past  = past_phase->parameter_map.begin();
+	  parameter_map_t::const_iterator end_past = past_phase->parameter_map.end();
+	
+
+	  for(; it_phase!=end_phase; ++it_phase) {
+	  	// 途中で導入されたパラメータはみない
+	  	if ( (*(it_phase->first)).get_phase_id() != 1 ) continue;
+
+		  for(; it_past!=end_past; ++it_past) {
+		  	// 途中で導入されたパラメータはみない
+		  	if ( (*(it_past->first)).get_phase_id() != 1 ) continue;
+
+  	    if ( (*(it_phase->first)).get_name() == (*(it_past->first)).get_name() && 
+  	    		 (*(it_phase->first)).get_derivative_count() == (*(it_past->first)).get_derivative_count() )
+  	    {
+  	    	if (!check_guard_variable(phase, (*(it_phase->first)).get_name(), (*(it_phase->first)).get_derivative_count())) continue;
+	  	    cout << *(it_phase->first) << endl;
+	  	    cout << "phase:" << it_phase->second << endl;
+	  	    cout << "past:" << it_past->second << endl;
+	  	    if (compare_parameter_range(it_phase->second, it_past->second)) {
+						HYDLA_LOGGER_HA("****** end check_subset : true ******");		  	
+	  	    	return true;
+	  	    }
+	  	  }
+		  }//for	  
+	  }//for
+
+		HYDLA_LOGGER_HA("****** end check_subset : false ******");		
+		return false;		
+	}
+	
+	bool HAConverter::check_guard_variable(phase_result_sptr_t phase, std::string name, int derivative_count)
+	{
+ 		GuardGetter gg;
+		phase->module_set->dispatch(&gg);
+		
+		VaribleGetter vg;
+		ask_set_t::iterator it = gg.asks.begin();
+		
+		// ガード条件に含まれる変数を集める
+		while(it != gg.asks.end()){
+			vg.tmp_diff_cnt = 0;
+			(*it)->get_guard()->accept((*it)->get_guard(), &vg);		
+			it++;
+		}
+		
+		vg.it_begin();
+   	while(vg.get_iterator() != vg.vec_variable.end()){
+   		if ( (*vg.get_iterator()).name == name && (*vg.get_iterator()).diff_cnt == derivative_count ) {
+				HYDLA_LOGGER_HA("----- check_guard_variable : true ");		
+   			return true;
+   		}
+   		vg.inc_it();
+   	}	
+		HYDLA_LOGGER_HA("----- check_guard_variable : false ");		
+   	return false;
+	}
+	
+	
+	// A in B => true
+	bool HAConverter::compare_parameter_range(range_t A, range_t B)
+	{
+		if(B.get_upper_cnt() > 0){
+			// Bup != inf && Aup = inf
+			if (A.get_upper_cnt() == 0) {
+				HYDLA_LOGGER_HA("****** compare_parameter_range : false ******");		
+				return false;
+			}
+			// Bup < Aup
+			if (B.get_upper_bound().value < A.get_upper_bound().value) {
+				HYDLA_LOGGER_HA("****** compare_parameter_range : false ******");		
+				return false;
+			}
+		}
+		
+		if(B.get_lower_cnt() > 0){
+			// Blow != -inf && Alow = -inf
+			if (A.get_lower_cnt() == 0) {
+				HYDLA_LOGGER_HA("****** compare_parameter_range : false ******");		
+				return false;
+			}
+			// Alow < Blow
+			if (A.get_lower_bound().value < B.get_lower_bound().value) {
+				HYDLA_LOGGER_HA("****** compare_parameter_range : false ******");		
+				return false;
+			}
+		}
+		
+		HYDLA_LOGGER_HA("****** compare_parameter_range : true ******");		
+		return true;
+	}
+
+	bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2)
+	{
 		// フェーズ
 		if(!(r1->phase == r2->phase)) return false;
 		// モジュール集合
@@ -52,292 +251,6 @@ namespace simulator {
 		
 		return true;
 	} 
-	
-	bool HAConverter::check_continue(current_condition_t *cc)
-	{
-		HYDLA_LOGGER_HA("****** check_continue ******");
-		viewLs(*cc);
-		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = cc->ls.begin();		
-		std::vector< std::vector<phase_result_sptrs_t>::iterator > remove_itr;
-		while(it_ls_vec != cc->ls.end()){
-			phase_result_sptrs_t::iterator it_ls = (*it_ls_vec).begin();
-			phase_result_sptrs_t::iterator it_loop = cc->loop.begin();
-			while(it_ls != (*it_ls_vec).end() && it_loop != cc->loop.end()) {
-				// 等しくない状態遷移列だったらlsから削除
-				if(!compare_phase_result(*it_ls, *it_loop)){
-					HYDLA_LOGGER_HA("delete ls element : not equal loop");
-					// whileでイテレート中にls_の中身をeraseできないので、eraseするitrを保存して後でls_の要素を削除する
-					remove_itr.push_back(it_ls_vec);
-					break;
-				}
-				it_ls++;
-				it_loop++;
-				// loopより短い状態遷移列はlsから削除
-				if(it_ls == (*it_ls_vec).end() && it_loop != cc->loop.end()){
-					HYDLA_LOGGER_HA("delete ls element : less than loop");
-					// whileでイテレート中にls_の中身をeraseできないので、eraseするitrを保存して後でls_の要素を削除する
-					remove_itr.push_back(it_ls_vec);
-				}
-			}	
-			it_ls_vec++;
-			HYDLA_LOGGER_HA("* * * * * * * * * * * * *");
-		}
-		
-		for (unsigned int i = 0 ; i < remove_itr.size() ; i++){
-			cc->ls.erase(remove_itr[i]);
-		}
-		
-		viewLs(*cc);
-		
-		if(cc->ls.empty()) {
-			HYDLA_LOGGER_HA("****** end check_continue : false ******");
-			return false;
-		}
-		HYDLA_LOGGER_HA("****** end check_continue : true ******");
-
-		return true;
-	}
-  	
-	void HAConverter::set_possible_loops(phase_result_sptr_t result, current_condition_t *cc)
-	{
-		HYDLA_LOGGER_HA("****** set_possible_loops ******");
-		phase_result_sptrs_t::iterator it_prs = cc->phase_results.begin();
-		while(it_prs != cc->phase_results.end()){
-			if(compare_phase_result(result, *it_prs)){
-				phase_result_sptrs_t candidate_loop;
-				copy(it_prs, cc->phase_results.end(), back_inserter(candidate_loop));
-				cc->ls.push_back(candidate_loop);
-			}
-			it_prs++;
-		}
-		
-		// lsの中身を表示
-		viewLs(*cc);
-		HYDLA_LOGGER_HA("****** end set_possible_loops ******");
-	}
-  	
-	bool HAConverter::loop_eq_max_ls(current_condition_t cc)
-	{
-		HYDLA_LOGGER_HA("****** loop_eq_max_ls ******");
-		// とりあえずlsの最初の要素が最大のものと仮定←たぶんこれで正しい
-		// loopより短い状態遷移列と、loopと等しくない状態遷移列はcheck_continueでls_から削除しているため
-		phase_result_sptrs_t::iterator it_ls = cc.ls[0].begin();
-		phase_result_sptrs_t::iterator it_loop = cc.loop.begin();
-		while(it_ls != cc.ls[0].end() && it_loop != cc.loop.end()) {
-			if(!compare_phase_result(*it_ls, *it_loop)) {
-				HYDLA_LOGGER_HA("****** end loop_eq_max_ls : false ******");
-				return false;
-			}
-			it_ls++;
-			it_loop++;
-		}
-		// どちらかのイテレータが最後まで達していなかったら等しくない
-		if(it_ls != cc.ls[0].end() || it_loop != cc.loop.end()) {
-			HYDLA_LOGGER_HA("****** end loop_eq_max_ls : false ******");
-			return false;
-		}
-		HYDLA_LOGGER_HA("****** end loop_eq_max_ls : true ******");
-		return true;
-	}
-  	
-	void HAConverter::checkNode(current_condition_t cc)
-	{
-		//TODO エッジ判定ステップの実装
-		HYDLA_LOGGER_HA("****** checkNode ******");
-		
-		// 開始からのシミュレーション結果全て
-		phase_result_sptrs_t simulate_result = cc.phase_results;
-		
-		// ls内になるノード(IP)を順に回り、エッジの通過可能性を判定する
-		phase_result_sptrs_t::iterator it_ls = cc.ls[0].begin();
-		// 初めのノードと最後のノードは同じため、初めのノードを飛ばし重複を防ぐ
-		it_ls++;
-		while(it_ls != cc.ls[0].end()) {
-			if ((*it_ls)->phase == IntervalPhase){
-				checkEdge(*it_ls, cc);				
-			}
-			it_ls++;
-		}
-		
-		HYDLA_LOGGER_HA("****** end checkNode ******");
-	}
-	
-	void HAConverter::checkEdge(phase_result_sptr_t node, current_condition_t cc){
-		HYDLA_LOGGER_HA("****** checkEdge ******");
-		
-		viewNode(node);
-		
-		// まだ通過していないエッジのガード条件を探索し、条件を満たすかどうか判定する
-		// 結果をresult_check_reachable_のreachable, unknownに入れる
-		result_check_reachable_.reachable.clear();
-		result_check_reachable_.unknown.clear();
-		// 通過済みエッジの探索 + 通過済みノードの探索 + 循環ごとの対象nodeのphase_resultを収集
-		// 通過済みエッジと通過済みノードは分けて考える 
-		// エッジは、対象ノードから通過している場合のみを考えるが、ノードは実行中に通過した全てのノードを考える
-		phase_result_sptrs_t node_transition;
-		for(unsigned int i = 0 ; i < cc.phase_results.size() - 1 ; i++){
-			if(cc.phase_results[i]->phase == IntervalPhase) {
-					phase_t n(cc.phase_results[i]->module_set, cc.phase_results[i]->negative_asks, cc.phase_results[i]->positive_asks);
-					passed_node.push_back(n);
-			};
-			if(compare_phase_result(node, cc.phase_results[i])){
-				if(cc.phase_results[i]->id < cc.loop_start_id){
-					// nodeの次のフェーズがそのnodeから出ているエッジ
-					phase_t e(cc.phase_results[i+1]->module_set, cc.phase_results[i+1]->negative_asks, cc.phase_results[i+1]->positive_asks);
-					passed_edge.push_back(e);
-				}
-				node_transition.push_back(cc.phase_results[i]);
-			}
-		}
-		
-		HYDLA_LOGGER_HA("--- node transition ---");
-		viewPrs(node_transition);
-		
-		for(unsigned int i = 0 ; i < passed_edge.size(); i++){
-			HYDLA_LOGGER_HA("--- passed edge", i, " ---");
-			viewEdge(passed_edge[i]);
-		}
-		HYDLA_LOGGER_HA("");
-		
-		// 全てのエッジを探索
-		module_set_container_sptr msc = msc_no_init_;
-		msc->reset();
-		phase_t phase;
-		while(msc->go_next()){
-			vec_negative_asks.clear();
-			vec_positive_asks.clear();
-			module_set_sptr ms = msc->get_module_set();
-			HYDLA_LOGGER_HA("--- Module Set: ",ms->get_name());
-			phase.module_set = ms;
-			
-			GuardGetter gg;
-			ms->dispatch(&gg);
-			HYDLA_LOGGER_HA("- Guards - ");
-			viewAsks(gg.asks);
-			
-			// negative_askは空集合から、positive_askは全てのガード条件を含む状態からスタートし、冪集合を求める
-			// positive_asksに全てのガード条件を追加する
-			ask_set_t::iterator it = gg.asks.begin();
-			positive_asks_t tmp_pos;
-			while(it != gg.asks.end()){
-				tmp_pos.insert((*it));
-				it++;
-			}
-			vec_positive_asks.push_back(tmp_pos);
-			
-			// negative_askは空集合から
-			negative_asks_t tmp_neg;
-			vec_negative_asks.push_back(tmp_neg);
-			
-			it = gg.asks.begin();
-			while(it != gg.asks.end()){
-				create_asks_vec(*it);
-				it++;
-			}
-			
-			// debug print
-			std::vector<negative_asks_t>::iterator it_neg_d = vec_negative_asks.begin();
-			std::vector<positive_asks_t>::iterator it_pos_d = vec_positive_asks.begin();
-			HYDLA_LOGGER_HA("****** beki");
-			while(it_neg_d != vec_negative_asks.end() && it_pos_d != vec_positive_asks.end()){
-				HYDLA_LOGGER_HA("negative ask:");
-				viewAsks((*it_neg_d));
-				HYDLA_LOGGER_HA("positive ask:");
-				viewAsks((*it_pos_d));
-				HYDLA_LOGGER_HA("");
-				it_neg_d++;
-				it_pos_d++;
-			}
-			HYDLA_LOGGER_HA("****** ******");
-			// **
-
-			std::vector<negative_asks_t>::iterator it_neg = vec_negative_asks.begin();
-			std::vector<positive_asks_t>::iterator it_pos = vec_positive_asks.begin();
-			while(it_neg != vec_negative_asks.end() && it_pos != vec_positive_asks.end()){				
-				HYDLA_LOGGER_HA("--------------------");
-				phase.negative_asks = *it_neg;
-				phase.positive_asks = *it_pos;	
-				
-				HYDLA_LOGGER_HA("negative ask:");
-				viewAsks(phase.negative_asks);
-				HYDLA_LOGGER_HA("positive ask:");
-				viewAsks(phase.positive_asks);
-				
-				if (!check_passed_phase(passed_edge, phase) && !check_passed_phase(passed_node, phase)){
-					ResultCheckOccurrence res = check_occurrence(node, phase, cc);
-					if(res == Reachable){						
-						result_check_reachable_.reachable.insert(pair<phase_result_sptr_t, phase_t>(node ,phase));
-					}else if(res == Unknown){
-						result_check_reachable_.unknown.insert(pair<phase_result_sptr_t, phase_t>(node ,phase));
-						
-						HYDLA_LOGGER_HA("***** unknown *****");
-						unknown_map_t::iterator it_unknown = result_check_reachable_.unknown.begin();
-						while(it_unknown != result_check_reachable_.unknown.end()){
-							HYDLA_LOGGER_HA("unknown...");
-							it_unknown++;
-						}
-					}
-					// unreachableは何もしない
-				}
-				
-				it_neg++;
-				it_pos++;
-				HYDLA_LOGGER_HA("--------------------");
-			}
-			
-			msc->mark_current_node();
-		}
-		
-		HYDLA_LOGGER_HA("****** end checkEdge ******");
-	}
-	
-	void HAConverter::create_asks_vec(boost::shared_ptr<parse_tree::Ask> ask){
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
-		// negative_askとpositive_askの冪集合を取得する
-		std::vector<negative_asks_t> tmp_vec_negative_asks;
-		std::vector<positive_asks_t> tmp_vec_positive_asks;
-
-		std::vector<negative_asks_t>::iterator it_neg = vec_negative_asks.begin();
-		std::vector<positive_asks_t>::iterator it_pos = vec_positive_asks.begin();
-		while(it_neg != vec_negative_asks.end() && it_pos != vec_positive_asks.end()){
-			tmp_vec_negative_asks.push_back((*it_neg));
-			(*it_neg).insert(ask);
-			tmp_vec_negative_asks.push_back((*it_neg));
-			
-			tmp_vec_positive_asks.push_back((*it_pos));
-			(*it_pos).erase(ask);
-			tmp_vec_positive_asks.push_back((*it_pos));
-			
-			it_neg++;
-			it_pos++;
-		}
-		vec_negative_asks = tmp_vec_negative_asks;
-		vec_positive_asks = tmp_vec_positive_asks;
-	}
-	
-	HAConverter::ResultCheckOccurrence 
-		HAConverter::check_occurrence(phase_result_sptr_t node, phase_t edge, current_condition_t cc)
-	{
-		HYDLA_LOGGER_HA("****** check_occurrence ******");
-
-		viewNode(node);
-		viewEdge(edge);
-
-		HYDLA_LOGGER_HA("****** end check_occurrence ******");
-		return Unknown;
-	}
-	bool HAConverter::check_passed_phase(phases_t passed_phase, phase_t phase)
-	{
-		//HYDLA_LOGGER_HA("****** check_passed_phase ******");
-		for(unsigned int i = 0 ; i < passed_phase.size(); i++){
-			if(compare_phase(phase, passed_phase[i])){
-				HYDLA_LOGGER_HA("****** check_passed_phase true ******");					
-				return true;
-			}
-		}
-		HYDLA_LOGGER_HA("****** check_passed_phase false ******");
-		return false;
-	}
 	
 	bool HAConverter::compare_phase(phase_t p1, phase_t p2)
 	{
@@ -361,10 +274,10 @@ namespace simulator {
 	{
 		HYDLA_LOGGER_HA("****** check_contain ******");
 		HYDLA_LOGGER_HA("・・・・・phase_result・・・・・");
-		viewPrs(cc.phase_results);
+		viewPrs(cc);
 		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・・・");
-		phase_result_sptrs_t::iterator it_prs = cc.phase_results.begin();
-		while(it_prs != cc.phase_results.end()){
+		phase_result_sptrs_t::iterator it_prs = cc.begin();
+		while(it_prs != cc.end()){
 			if(compare_phase_result(result, *it_prs)) {
 				HYDLA_LOGGER_HA("****** end check_contain : true ******");				
 				return true;
@@ -373,37 +286,6 @@ namespace simulator {
 		}
 		HYDLA_LOGGER_HA("****** end check_contain : false ******");				
 		return false;
-	}
-	
-	void HAConverter::viewEdge(phase_t edge)
-	{
-		HYDLA_LOGGER_HA("--- Edge: ");
-		HYDLA_LOGGER_HA(edge.module_set->get_name());
-		HYDLA_LOGGER_HA("negative ask:");
-		viewAsks(edge.negative_asks);
-		HYDLA_LOGGER_HA("positive_ask:");
-		viewAsks(edge.positive_asks);
-	}
-	void HAConverter::viewNode(phase_result_sptr_t node)
-	{
-		HYDLA_LOGGER_HA("--- Node ---");
-		HYDLA_LOGGER_HA(node->module_set->get_name());
-		HYDLA_LOGGER_HA("negative ask:");
-		viewAsks(node->negative_asks);
-		HYDLA_LOGGER_HA("positive_ask:");
-		viewAsks(node->positive_asks);
-		HYDLA_LOGGER_HA("");
-	}
-	
-	void HAConverter::viewLs(current_condition_t cc)
-	{
-		HYDLA_LOGGER_HA("・・・・・ ls ・・・・・");
-		std::vector<phase_result_sptrs_t>::iterator it_ls_vec = cc.ls.begin();		
-		while(it_ls_vec != cc.ls.end()){
-			viewPrs(*it_ls_vec);
-			HYDLA_LOGGER_HA("・・・・・・・・・・・・");
-			it_ls_vec++;
-		}
 	}
 	
 	void HAConverter::viewPrs(phase_result_sptrs_t results)
@@ -443,28 +325,27 @@ namespace simulator {
 	void HAConverter::push_result(current_condition_t cc)
 	{
 		phase_result_sptrs_t result;
-		for(unsigned int i = 0 ; i < cc.phase_results.size() ; i++){
-			result.push_back(cc.phase_results[i]);
-			if(cc.phase_results[i]->id == cc.loop_start_id) break;
+		for(unsigned int i = 0 ; i < cc.size() ; i++){
+			result.push_back(cc[i]);
 		}
 		HYDLA_LOGGER_HA("・・・・・ ha_result ", ha_results_.size(), " ・・・・・");
 		viewPrs(result);
 		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・");
-		ha_results_.insert(pair<phase_result_sptrs_t, unknown_map_t>(result, cc.unknown_map));
+		ha_results_.push_back(result);
 	}
 	
 	void HAConverter::output_ha()
 	{
 		cout << "-・-・-・-・Result Convert・-・-・-・-" << endl;
-		ha_result_t::iterator it_ha_res = ha_results_.begin();		
+		ha_results_t::iterator it_ha_res = ha_results_.begin();		
 		while(it_ha_res != ha_results_.end()){
-			convert_phase_results_to_ha((*it_ha_res).first, (*it_ha_res).second);
+			convert_phase_results_to_ha((*it_ha_res));
 			cout << "-・-・-・-・-・-・-・-・-・-・-・-・-" << endl;
 			it_ha_res++;
 		}
 	}
 	
-	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result, unknown_map_t unknown_map)
+	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
 	{
 		cout << "digraph g{" << endl;
 		cout << "edge [dir=forward];" << endl;
@@ -481,13 +362,6 @@ namespace simulator {
 			}
 		}
 		
-		unknown_map_t::iterator it_un_map = unknown_map.begin();
-			while(it_un_map != unknown_map.end()){
-				cout << "\"" << (*it_un_map).first->module_set->get_name() << "\\n(" << get_asks_str((*it_un_map).first->positive_asks) 
-					<< ")\"->\"unknown\" [label=\"" << (*it_un_map).second.module_set->get_name() << "\\n(" << get_asks_str((*it_un_map).second.positive_asks) 
-				     << ")\", labelfloat=false,arrowtail=dot, style=\"dashed\"];" << endl;
-				it_un_map++;
-			}
 		cout << "}" << endl;
 	}
 	std::string HAConverter::get_asks_str(ask_set_t asks)
@@ -505,16 +379,41 @@ namespace simulator {
 	GuardGetter::GuardGetter(){}
 	GuardGetter::~GuardGetter(){}
 	
-	void GuardGetter::accept(const boost::shared_ptr<parse_tree::Node>& n){
+	void GuardGetter::accept(const boost::shared_ptr<parse_tree::Node>& n)
+	{
 		n->accept(n, this);
 	}
 	
-	void GuardGetter::visit(boost::shared_ptr<parse_tree::Ask> node){
+	void GuardGetter::visit(boost::shared_ptr<parse_tree::Ask> node)
+	{
 		asks.insert(node);
 	}
 
-
-
+	VaribleGetter::VaribleGetter(){}
+	VaribleGetter::~VaribleGetter(){}
+	
+	void VaribleGetter::accept(const boost::shared_ptr<parse_tree::Node>& n)
+	{
+		n->accept(n, this);
+	}
+	
+	void VaribleGetter::visit(boost::shared_ptr<parse_tree::Differential> node)
+	{
+			tmp_diff_cnt++;
+			cout << "DIFF:" << tmp_diff_cnt << endl;
+		  node->get_child()->accept(node->get_child(),this);
+		  tmp_diff_cnt--;
+	}
+	void VaribleGetter::visit(boost::shared_ptr<parse_tree::Variable> node)
+	{
+		cout << "Vari:" << node->get_name() << " " << tmp_diff_cnt << endl;
+		guard_variable_t gv;
+		gv.diff_cnt = tmp_diff_cnt;
+		tmp_diff_cnt = 0;
+		gv.name = node->get_name();
+		vec_variable.push_back(gv);
+	}
+	
 }//namespace hydla
 }//namespace simulator 
 
