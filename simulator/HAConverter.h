@@ -168,7 +168,7 @@ public:
 		return it;
 	}
 
-	void guard_variable_vec_t::iterator it_begin()
+	void it_begin()
 	{
 		it = vec_variable.begin();
 	}
