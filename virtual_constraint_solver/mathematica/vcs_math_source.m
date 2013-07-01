@@ -776,8 +776,8 @@ createIntegratedValue[variable_, integRule_] := (
 
 (* 微分方程式系を解く．
   単にDSolveをそのまま使用しない理由は以下．
-    理由1: 下記のような微分方程式系に対して弱い．
-      DSolve[{usrVarz[t] == usrVarx[t]^2, usrVarx'[t] == usrVarx[t], usrVarx[0] == 1}, {usrVarx[t], usrVarz[t]}, t]
+    理由1: 下記のような入力に対して弱い．
+      DSolve[{z[t] == x[t]^2, Derivative[1][x][t] == x[t], x[0] == 1}, {x[t], z[t]}, t]
     理由2: 不等式に弱い
     理由3: bvnulなどの例外処理を統一したい
   @param expr 時刻に関する変数についての制約
@@ -785,121 +785,162 @@ createIntegratedValue[variable_, integRule_] := (
   @return overConstraint | 
     {underConstraint, 変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} |
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} 
-    TODO: Subsetsとか使ってるから式の数で簡単に爆発する
 *)
 
-
-getLaplaceVariables[exprs_] := Cases[exprs, LaplaceTransform[x_, _, _]/;hasVariable[x], Infinity];
-
-
-If[optNoLaplace === True,
-  exDSolve[expr_, initExpr_] := 
-    Check[
-      Module[
-        {subsets, tmpExpr, excludingCons, tmpInitExpr, subset, tVars, ini, i, j, sol, resultCons, resultRule, idx, generalInitValue, swapValue},
-        tmpExpr = applyList[expr];
-        resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
-        tmpExpr = Complement[tmpExpr, resultCons];
-        tmpInitExpr = applyList[initExpr];
-        subsets = Subsets[tmpExpr];
-        resultCons = And@@resultCons;
-        resultRule = {};
-        For[i=2,i<=Length[subsets], i++, (* 添え字が2からなのは最初の空集合を無視するため *)
-          subset = subsets[[i]];
-          tVars = Union[getVariables[subset]];
-          If[Length[tVars] == Length[subset],
-            ini = Select[tmpInitExpr, (hasSymbol[#, tVars ])& ];
-            If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
-              (* 微分方程式の結果を再利用する場合 *)
-
-              idx = Position[Map[(Sort[#])&,dList],Sort[subset]];
-              If[idx == {},
-                generalInitValue = ini;
-                For[j=1,j<=Length[generalInitValue],j++,
-                  generalInitValue[[j, 1]] = initValue[j];
-                ];
-                sol = Check[
-                  DSolve[Union[subset, generalInitValue], Map[(#[t])&, tVars], t],
-                  overConstraint,
-                  {DSolve::overdet, DSolve::bvnul}
-                ];
-                For[j=1,j<=Length[generalInitValue],j++,
-                  generalInitValue[[j, 0]] = Rule;
-                ];
-                dList = Append[dList,{subset,sol,generalInitValue}];
-                idx = Position[dList,subset],
-                sol = dList[[idx[[1,1]],2]];
-              ];
-              For[j=1,j<=Length[ini],j++,
-                swapValue = ini[[j, 2]];
-                ini[[j, 2]] = ini[[j, 1]];
-                ini[[j, 1]] = swapValue;
-                ini[[j, 0]] = Rule;
-              ];
-              sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
-              ,
-              simplePrint[subset, ini];
-              sol = Quiet[Check[
-                  DSolve[Union[subset, ini], Map[(#[t])&, tVars], t],
-                  overConstraint,
-                  {DSolve::overdet, DSolve::bvnul}
-                ],
-                {DSolve::overdet, DSolve::bvnul}
-              ]
-            ];
-            simplePrint[sol];
-            checkMessage;
-            If[sol === overConstraint || Head[sol] === DSolve || Length[sol] == 0, Return[overConstraint] ];
-            tmpExpr = Complement[tmpExpr, subset];
-            tmpExpr = applyDSolveResult[tmpExpr, sol[[1]] ];
-            resultRule = Union[sol[[1]], resultRule];
-            excludingCons = Select[tmpExpr, (Length[getVariables[#]] === 0)&];
-            resultCons = resultCons && And@@excludingCons;
-            If[resultCons === False, Return[overConstraint] ];
-            tmpExpr = Complement[tmpExpr, excludingCons];
-            subsets = Subsets[tmpExpr];
-            i = 1;
-          ]
-        ];
-        simplePrint[resultCons];
-        If[Length[subsets] > 1,
-          {underConstraint, resultCons && And@@Map[(And@@#)&, subsets], resultRule},
-          {resultCons, resultRule}
-        ]
-      ],
-      Message[exDSolve::unkn]
-    ],
-  exDSolve[expr_, initExpr_] :=
-    (* TODO:微分方程式の結果の再利用 *)
-    Check[
-      Module[
-        {tmpInitExpr, tmpExpr, sol, vars, resultCons, unsolvedCons},
-        inputPrint["exDSolve", expr, initExpr];
-        vars = getTimeVars[expr];
-        tmpExpr = applyList[Reduce[expr, vars]];
+exDSolve[expr_, initExpr_] := 
+Check[
+  Module[
+    {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, exprSet, resultRule, idx, generalInitValue, swapValue, searchResult},
+    inputPrint["exDSolve", expr, initExpr];
+    tmpExpr = applyList[expr];
+    sol = {};
+    resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
+    tmpExpr = Complement[tmpExpr, resultCons];
+    reducedExpr = Quiet[Check[Reduce[tmpExpr, Reals], tmpExpr], {Reduce::nsmet, Reduce::useq}];
+    (* Reduceの結果が使えそうな場合のみ使う *)
+    If[Head[reducedExpr] === And && MemberQ[reducedExpr, Element, Infinity, Heads->True], tmpExpr = applyList[reducedExpr] ];
+    tmpInitExpr = applyList[initExpr];
+    resultRule = {};
+    simplePrint[resultCons, tmpExpr];
+    While[True, 
+      searchResult = searchExprsAndVars[tmpExpr];
+      If[searchResult === unExpandable,
+        Break[],
+        rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
+        If[rules === overConstraint || Head[rules] === DSolve || Length[rules] == 0, Return[overConstraint] ];
+        (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
+        resultRule = Union[resultRule, rules[[1]] ];
+        tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+        If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]) )], Return[overConstraint] ];
+        tmpExpr = Select[tmpExpr, (#=!=True)&];
         simplePrint[tmpExpr];
-        resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
-        tmpExpr = Complement[tmpExpr, resultCons];
-        tmpInitExpr = applyList[initExpr];
-        tmpExpr = LaplaceTransform[tmpExpr, t, s];
-        vars = Join[getLaplaceVariables[tmpExpr], getInitVars[tmpInitExpr] ] ;
-        (* TODO: Solveの結果が複数ある場合への対応 *)
-        simplePrint[tmpExpr, vars];
-        sol = Quiet[Solve[Join[tmpExpr, tmpInitExpr], vars], Solve::svars];
-        simplePrint[sol];
-        If[sol === {}, Return[overConstraint] ];
-        sol = sol[[1]];
-        sol = Select[sol, (!hasInitVars[#])&, Infinity ];
-        sol = InverseLaplaceTransform[sol, s, t];
-        simplePrint[sol];
-        unsolvedCons = Cases[sol, Rule[_, rhs_]/;hasVariable[rhs], Infinity];
-        If[ Length[unsolvedCons] > 0,
-          {underConstraint, Join[resultCons, Map[(Equal@@#)&, unsolvedCons] ], Complement[sol, unsolvedCons] },
-          {resultCons, sol}
-        ]
-      ],
-      Message[exDSolve::unkn]
+        resultCons = applyDSolveResult[resultCons, rules[[1]] ];
+        If[MemberQ[resultCons, False], Return[overConstraint] ];
+        resultCons = Select[resultCons, (#=!=True)&]
+      ]
+    ];
+    
+    resultCons = And@@resultCons;
+    
+    
+    If[Length[getVariables[tmpExpr] ] > 0,
+      {underConstraint, resultCons && And@@tmpExpr, resultRule},
+      {resultCons, resultRule}
     ]
+  ],
+  Message[exDSolve::unkn]
+];
+
+
+
+(* 式の数とそこに出現するが一致するまで再帰的に呼び出す関数
+  @param exprs 探索対象となる式集合
+  @return unExpandable | {(DSolveすべき式の集合）, (残りの式の集合)， （DSolveすべき変数の集合）}
+*)
+searchExprsAndVars[exprs_] :=
+Module[
+  {tmpExprs, droppedExprs, searchResult = unExpandable, tVarsMap, tVars},
+  
+  For[i=1, i<=Length[exprs], i++,
+    tVarsMap[ exprs[[i]] ] = Union[getVariables[exprs[[i]] ] ];
+    tVars = tVarsMap[ exprs[[i]] ];
+    If[Length[tVars] == 1,
+      searchResult = {{ exprs[[i]] }, Drop[exprs, {i}], tVars}
+    ]
+  ];
+  
+  If[searchResult === unExpandable,
+    tmpExprs = Sort[exprs, (Length[tVarsMap[#1] ] < Length[tVarsMap[#2] ])&];
+    For[tmpExprs, Length[tmpExprs] > 0 && searchResult === unExpandable, tmpExprs = droppedExprs,
+      droppedExprs = Drop[tmpExprs, 1];
+      searchResult = searchExprsAndVars[{tmpExprs[[1]]}, tVarsMap[tmpExprs[[1]] ], droppedExprs, tVarsMap]
+    ]
+  ];
+  simplePrint[searchResult];
+  searchResult
+];
+
+(* 再帰的に呼び出す関数
+  @param searchedExpr これまでに見つけた式の集合
+  @param searchedVars これまでに見つけた変数の集合
+  @param exprs 探索対象となる式集合
+  @param tVarsMap exprsの各要素と，そこに出現する変数集合のマップ
+  @return unExpandable | {(DSolveすべき式の集合）, （DSolveすべき変数の集合）}
+*)
+searchExprsAndVars[searchedExprs_, searchedVars_, exprs_, tVarsMap_] :=
+Module[
+  {tVar, tVarsInExpr, unionVars, i, j, k, appendExprs, searchResult},
+  inputPrint["searchExprsAndVars", searchedExprs, searchedVars, exprs, tVarsMap];
+  For[i=1, i<=Min[Length[searchedVars], 2], i++,
+    (* 解けない変数が2つ以上含まれるなら候補には入らないはずなので，2とのMinをとる *)
+    tVar = searchedVars[[i]];
+    simplePrint[tVar];
+    For[j=1, j<=Length[exprs], j++,
+      tVarsInExpr = tVarsMap[ exprs[[j]] ];
+      If[MemberQ[tVarsInExpr, tVar],
+        unionVars = Union[tVarsInExpr, searchedVars];
+        appendExprs = Append[searchedExprs, exprs[[j]] ];
+        If[Length[unionVars] == Length[appendExprs],
+          Return[{appendExprs, Drop[exprs, {j}], unionVars}],
+          searchResult = searchExprsAndVars[appendExprs, unionVars, Drop[exprs, {j}], tVarsMap];
+          If[searchResult =!= unExpandable, Return[searchResult] ]
+        ]
+      ]
+    ]
+  ];
+  unExpandable
+];
+
+(* 渡された式をDSolveで解いて，結果のRuleを返す．
+  @param expr: DSolveに渡す微分方程式系．形式はリスト．
+  @param initExpr: 初期値制約のリスト．余計なものが含まれていてもよい
+  @param tVars: exprに出現する変数のリスト
+*)  
+solveByDSolve[expr_, initExpr_, tVars_] :=
+Module[
+  {tmpExpr, ini, sol, idx, generalInitValue, swapValue, j},
+  tmpExpr = expr;
+  ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
+  simplePrint[tmpExpr, ini];
+  
+  If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
+    (* 微分方程式の結果を再利用する場合 *)
+
+    idx = Position[Map[(Sort[#])&,dList],Sort[tmpExpr]];
+    If[idx == {},
+      generalInitValue = ini;
+      For[j=1,j<=Length[generalInitValue],j++,
+        generalInitValue[[j, 1]] = ini[j];
+      ];
+      sol = Check[
+        DSolve[Union[tmpExpr, generalInitValue], Map[(#[t])&, tVars], t],
+        overConstraint,
+        {DSolve::overdet, DSolve::bvnul}
+      ];
+      For[j=1,j<=Length[generalInitValue],j++,
+        generalInitValue[[j, 0]] = Rule;
+      ];
+      dList = Append[dList,{tmpExpr,sol,generalInitValue}];
+      idx = Position[dList,tmpExpr],
+      sol = dList[[idx[[1,1]],2]];
+    ];
+    For[j=1,j<=Length[ini],j++,
+      swapValue = ini[[j, 2]];
+      ini[[j, 2]] = ini[[j, 1]];
+      ini[[j, 1]] = swapValue;
+      ini[[j, 0]] = Rule;
+    ];
+    sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
+    ,
+    sol = Quiet[Check[
+        DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],
+            overConstraint,
+        {DSolve::overdet, DSolve::bvnul}
+      ],
+     {DSolve::overdet, DSolve::bvnul}
+    ]
+  ];
+  sol
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";

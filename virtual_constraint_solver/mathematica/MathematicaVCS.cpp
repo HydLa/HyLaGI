@@ -107,14 +107,6 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
   
-  
-  ml_.MLPutFunction("Set",2);
-  ml_.MLPutSymbol("optNoLaplace");
-  ml_.MLPutSymbol(opts.no_laplace ? "True" : "False");
-  ml_.MLEndPacket();
-  ml_.skip_pkt_until(RETURNPKT);
-  ml_.MLNewPacket();
-  
   // タイムアウト時間
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("timeOutS"); 

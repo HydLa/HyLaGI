@@ -36,7 +36,6 @@ typedef struct Opts_ {
   bool profile_mode;
   bool parallel_mode;
   int parallel_number;
-  bool no_laplace;
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
