@@ -98,19 +98,21 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   HYDLA_LOGGER_MS("--- next module set ---\n", ms->get_infix_string());
   graph->set_valid(ms.get());
   result_list_t result;
-  
   // TODO:•Ï”‚Ì’l‚É‚æ‚é•ªŠò‚à–³Ž‹‚µ‚Ä‚¢‚éH
 
   variable_range_maps_t vms;
   vms.push_back(*variable_map_);
+
   if(todo->module_set_container != msc_no_init_)
   {
+    variable_range_maps_t tmp_vms;
     CalculateVariableMapResult cvm_res =
-      calculate_variable_map(ms, todo, time_applied_map, vms);
+      calculate_variable_map(ms, todo, time_applied_map, tmp_vms);
     switch(cvm_res)
     {
       case CVM_CONSISTENT:
       HYDLA_LOGGER_LOCATION(MS);
+      merge_variable_maps(vms, tmp_vms);
       break;
       
       case CVM_INCONSISTENT:
@@ -326,7 +328,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   parameter_set_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
-
   msc_no_init_ = msc_no_init;
   const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
   
