@@ -7,7 +7,7 @@ bool MathLink::receive(){
   bool next_is_massage = false;
   debug_print_.clear();
   input_print_.clear();
-  // Œ‹‰Ê‚ğó‚¯æ‚éió‚¯æ‚é‚Ü‚Å‘Ò‚¿‘±‚¯‚éj
+  // çµæœã‚’å—ã‘å–ã‚‹ï¼ˆå—ã‘å–ã‚‹ã¾ã§å¾…ã¡ç¶šã‘ã‚‹ï¼‰
   while(true){
     int pkt = MLNextPacket();
     switch(pkt){
@@ -16,14 +16,14 @@ bool MathLink::receive(){
       MLGetType();
       at_end = true;
       break;
-    case MESSAGEPKT: // Mathematica ƒƒbƒZ[ƒW¯•Êqisymbol::stringj
+    case MESSAGEPKT: // Mathematica ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸è­˜åˆ¥å­ï¼ˆsymbol::stringï¼‰
     {
       std::string str = get_string();
       HYDLA_LOGGER_EXTERN("%% Mathlink::receive messagepkt\n", str, "\n");
       next_is_massage = true;
       break;
     }
-    case TEXTPKT: // Print[]‚Å¶¬‚³‚ê‚é‚æ‚¤‚ÈMathematica ‚©‚ç‚ÌƒeƒLƒXƒgo—Í
+    case TEXTPKT: // Print[]ã§ç”Ÿæˆã•ã‚Œã‚‹ã‚ˆã†ãªMathematica ã‹ã‚‰ã®ãƒ†ã‚­ã‚¹ãƒˆå‡ºåŠ›
     {
       std::string str = get_string();
       HYDLA_LOGGER_EXTERN("%% Mathlink::receive textpkt\n", str, "\n");
@@ -40,7 +40,7 @@ bool MathLink::receive(){
     case SYNTAXPKT:
       HYDLA_LOGGER_EXTERN("%% Mathlink::receive syntaxpkt\n");
       break;
-    case INPUTNAMEPKT: // Ÿ‚Ì“ü—Í‚ÉŠ„‚è“–‚Ä‚ç‚ê‚é–¼‘Oi’Êí In[n]:=j
+    case INPUTNAMEPKT: // æ¬¡ã®å…¥åŠ›ã«å‰²ã‚Šå½“ã¦ã‚‰ã‚Œã‚‹åå‰ï¼ˆé€šå¸¸ In[n]:=ï¼‰
     {
       std::string str = get_string();
       HYDLA_LOGGER_EXTERN("%% Mathlink::receive inputnamepkt\n", str, "\n");

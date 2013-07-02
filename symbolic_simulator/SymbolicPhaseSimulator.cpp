@@ -300,16 +300,16 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   if(!unknown_asks.empty()){
     boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
-    // TODO: ‹É‘å«‚É‘Î‚µ‚ÄŒµ–§‚È‚à‚Ì‚É‚È‚Á‚Ä‚¢‚È‚¢iŽÀsƒAƒ‹ƒSƒŠƒYƒ€‚ðŽÀ‘•‚µ‚«‚ê‚Ä‚È‚¢j
+    // TODO: æ¥µå¤§æ€§ã«å¯¾ã—ã¦åŽ³å¯†ãªã‚‚ã®ã«ãªã£ã¦ã„ãªã„ï¼ˆå®Ÿè¡Œã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã‚’å®Ÿè£…ã—ãã‚Œã¦ãªã„ï¼‰
     HYDLA_LOGGER_CLOSURE("%% branched_ask:", TreeInfixPrinter().get_infix_string(branched_ask));
     {
-      // •ªŠòæ‚ð¶¬i“±o‚³‚ê‚é•ûj
+      // åˆ†å²å…ˆã‚’ç”Ÿæˆï¼ˆå°Žå‡ºã•ã‚Œã‚‹æ–¹ï¼‰
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
       new_todo->temporary_constraints.push_back((branched_ask)->get_guard());
       todo_container_->push_todo(new_todo);
     }
     {
-      // •ªŠòæ‚ð¶¬i“±o‚³‚ê‚È‚¢•ûj
+      // åˆ†å²å…ˆã‚’ç”Ÿæˆï¼ˆå°Žå‡ºã•ã‚Œãªã„æ–¹ï¼‰
       state->temporary_constraints.push_back(node_sptr(new Not((branched_ask)->get_guard())));
       negative_asks.insert(branched_ask);
       return calculate_closure(state, ms);
@@ -337,7 +337,7 @@ SymbolicPhaseSimulator::calculate_variable_map(
   {
     solver_->change_mode(ContinuousMode, opts_->approx_precision);
   }
-  solver_->reset(vm, todo->parameter_map); //TODO: ¶‹ÉŒÀ’l‚Æ‹L†’è”‚Ì‰Šú‰»ˆ—‚Í‚à‚Á‚Æã‚Å‚â‚Á‚½•û‚ª–³‘Ê‚ª­‚È‚¢‚Í‚¸
+  solver_->reset(vm, todo->parameter_map); //TODO: å·¦æ¥µé™å€¤ã¨è¨˜å·å®šæ•°ã®åˆæœŸåŒ–å‡¦ç†ã¯ã‚‚ã£ã¨ä¸Šã§ã‚„ã£ãŸæ–¹ãŒç„¡é§„ãŒå°‘ãªã„ã¯ãš
 
   timer::Timer cc_timer;
   
@@ -400,16 +400,16 @@ SymbolicPhaseSimulator::todo_list_t
 
     timer::Timer next_pp_timer;
     constraints_t disc_cause;
-    //Œ»Ý“±o‚³‚ê‚Ä‚¢‚éƒK[ƒhðŒ‚ÉNot‚ð‚Â‚¯‚½‚à‚Ì‚ð—£ŽU•Ï‰»ðŒ‚Æ‚µ‚Ä’Ç‰Á
+    //ç¾åœ¨å°Žå‡ºã•ã‚Œã¦ã„ã‚‹ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ã«Notã‚’ã¤ã‘ãŸã‚‚ã®ã‚’é›¢æ•£å¤‰åŒ–æ¡ä»¶ã¨ã—ã¦è¿½åŠ 
     for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
       disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
     }
-    //Œ»Ý“±o‚³‚ê‚Ä‚¢‚È‚¢ƒK[ƒhðŒ‚ð—£ŽU•Ï‰»ðŒ‚Æ‚µ‚Ä’Ç‰Á
+    //ç¾åœ¨å°Žå‡ºã•ã‚Œã¦ã„ãªã„ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ã‚’é›¢æ•£å¤‰åŒ–æ¡ä»¶ã¨ã—ã¦è¿½åŠ 
     for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
       disc_cause.push_back((*it)->get_guard());
     }
 
-    //assertion‚Ì”Û’è‚ð’Ç‰Á
+    //assertionã®å¦å®šã‚’è¿½åŠ 
     if(opts_->assertion){
       disc_cause.push_back(node_sptr(new Not(opts_->assertion)));
     }
@@ -432,7 +432,7 @@ SymbolicPhaseSimulator::todo_list_t
     {
       SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       solver_->simplify(candidate.time);
-      // ’¼Ú‘ã“ü‚·‚é‚ÆC’l‚ÌãŒÀ‚à‰ºŒÀ‚à‚È‚¢‹L†’è”‚É‚Â‚¢‚Ä‚Ì˜g‚ª–³‚­‚È‚Á‚Ä‚µ‚Ü‚¤‚Ì‚ÅC’Ç‰Á‚Ì‚Ý‚ðs‚¤D
+      // ç›´æŽ¥ä»£å…¥ã™ã‚‹ã¨ï¼Œå€¤ã®ä¸Šé™ã‚‚ä¸‹é™ã‚‚ãªã„è¨˜å·å®šæ•°ã«ã¤ã„ã¦ã®æž ãŒç„¡ããªã£ã¦ã—ã¾ã†ã®ã§ï¼Œè¿½åŠ ã®ã¿ã‚’è¡Œã†ï¼Ž
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
       }
@@ -495,15 +495,15 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       ret[variable] = value_t(new SymbolicValue(node_sptr(
         new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
       parameter_map[param] = r_it->second;
-      // TODO:‚±‚±‚ÅCParameter(variable->get_name(), variable->get_derivative_count(), state->id)))‚ÍPhaseResultŽ©‘Ì‚ðŽQÆ‚µ‚Ä‚¢‚È‚¢‚Ì‚ÅC
-      // ‚à‚µPhaseResult‚ð‚±‚Ìˆ—ˆÈ~‚É•ÏX‚·‚é‚æ‚¤‚ÈŽÀ‘•‚É‚µ‚½ê‡C®‡«‚ªŽæ‚ê‚È‚­‚È‚é‚Ì‚Å‚Ç‚¤‚É‚©‚·‚é
-      // TODO: ‚±‚±‚Åí‚É‹L†’è”‚ð“±“ü‚·‚é‚æ‚¤‚É‚µ‚Ä‚¨‚­‚ÆC‹L†’è”‚ª‘‚¦‚·‚¬‚ÄŒ©‚Ã‚ç‚­‚È‚é‰Â”\«‚ª‚ ‚éD
-      // ‰ð‹O“¹–Øã‚Åˆê“x‚µ‚©oŒ»‚µ‚È‚¢UNDEF‚É‘Î‚µ‚Ä‚ÍC‹L†’è”‚ð“±“ü‚·‚é•K—v‚ª–³‚¢‚Í‚¸‚È‚Ì‚ÅC‚Ç‚¤‚É‚©‚»‚ê‚ðŽÀŒ»‚µ‚½‚¢H
-      // ‹t‚É‚±‚±‚ÅUNDEF‚É‚·‚é‚ÆCŽŸ‚ÌIP‚Å‚ÌƒfƒtƒHƒ‹ƒg˜A‘±«‚ÆŠš‚Ý‡‚í‚¸ƒoƒO‚ª”­¶‚·‚é‰Â”\«‚ª‚ ‚é‚Ì‚Å’ˆÓ‚·‚éD
+      // TODO:ã“ã“ã§ï¼ŒParameter(variable->get_name(), variable->get_derivative_count(), state->id)))ã¯PhaseResultè‡ªä½“ã‚’å‚ç…§ã—ã¦ã„ãªã„ã®ã§ï¼Œ
+      // ã‚‚ã—PhaseResultã‚’ã“ã®å‡¦ç†ä»¥é™ã«å¤‰æ›´ã™ã‚‹ã‚ˆã†ãªå®Ÿè£…ã«ã—ãŸå ´åˆï¼Œæ•´åˆæ€§ãŒå–ã‚Œãªããªã‚‹ã®ã§ã©ã†ã«ã‹ã™ã‚‹
+      // TODO: ã“ã“ã§å¸¸ã«è¨˜å·å®šæ•°ã‚’å°Žå…¥ã™ã‚‹ã‚ˆã†ã«ã—ã¦ãŠãã¨ï¼Œè¨˜å·å®šæ•°ãŒå¢—ãˆã™ãŽã¦è¦‹ã¥ã‚‰ããªã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ï¼Ž
+      // è§£è»Œé“æœ¨ä¸Šã§ä¸€åº¦ã—ã‹å‡ºç¾ã—ãªã„UNDEFã«å¯¾ã—ã¦ã¯ï¼Œè¨˜å·å®šæ•°ã‚’å°Žå…¥ã™ã‚‹å¿…è¦ãŒç„¡ã„ã¯ãšãªã®ã§ï¼Œã©ã†ã«ã‹ãã‚Œã‚’å®Ÿç¾ã—ãŸã„ï¼Ÿ
+      // é€†ã«ã“ã“ã§UNDEFã«ã™ã‚‹ã¨ï¼Œæ¬¡ã®IPã§ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆé€£ç¶šæ€§ã¨å™›ã¿åˆã‚ãšãƒã‚°ãŒç™ºç”Ÿã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ã®ã§æ³¨æ„ã™ã‚‹ï¼Ž
     }
   }
   
-  // ‹L†’è”•\‚ÉoŒ»‚·‚é•Ï”‚ð•Ï”ˆÈŠO‚Ì‚à‚Ì‚É’u‚«Š·‚¦‚é
+  // è¨˜å·å®šæ•°è¡¨ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã‚’å¤‰æ•°ä»¥å¤–ã®ã‚‚ã®ã«ç½®ãæ›ãˆã‚‹
     VariableReplacer replacer(ret);
   for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
       it != simulator_->original_parameter_map_->end(); it++)

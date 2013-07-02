@@ -28,7 +28,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
     throw MathLinkError("can not link",0);
   }
 
-  // o—Í‚·‚é‰æ–Ê‚Ì‰¡•‚Ìİ’è
+  // å‡ºåŠ›ã™ã‚‹ç”»é¢ã®æ¨ªå¹…ã®è¨­å®š
   ml_.MLPutFunction("SetOptions", 2);
   ml_.MLPutSymbol("$Output"); 
   ml_.MLPutFunction("Rule", 2);
@@ -38,7 +38,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // ƒfƒoƒbƒOƒvƒŠƒ“ƒg
+  // ãƒ‡ãƒãƒƒã‚°ãƒ—ãƒªãƒ³ãƒˆ
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optUseDebugPrint"); 
   ml_.MLPutSymbol(opts.debug_mode ? "True" : "False");
@@ -46,7 +46,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // ƒvƒƒtƒ@ƒCƒ‹ƒ‚[ƒh
+  // ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«ãƒ¢ãƒ¼ãƒ‰
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optUseProfile"); 
   ml_.MLPutSymbol(opts.profile_mode ? "True" : "False");
@@ -54,7 +54,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // •À—ñƒ‚[ƒh
+  // ä¸¦åˆ—ãƒ¢ãƒ¼ãƒ‰
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optParallel"); 
   ml_.MLPutSymbol(opts.parallel_mode ? "True" : "False");
@@ -62,7 +62,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // Œx–³‹
+  // è­¦å‘Šç„¡è¦–
   ml_.MLPutFunction("Set", 2);
   ml_.MLPutSymbol("optIgnoreWarnings"); 
   ml_.MLPutSymbol(opts.ignore_warnings ? "True" : "False");
@@ -70,7 +70,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
 
-  // Å“K‰»ƒŒƒxƒ‹
+  // æœ€é©åŒ–ãƒ¬ãƒ™ãƒ«
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("optOptimizationLevel");
   ml_.MLPutInteger(opts.optimization_level);
@@ -80,7 +80,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   
   
   
-  // ‹ß—ƒ‚[ƒh
+  // è¿‘ä¼¼ãƒ¢ãƒ¼ãƒ‰
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("approxMode");
   if(opts.approx_mode == NO_APPROX)ml_.MLPutSymbol("none");
@@ -107,7 +107,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
   
-  // ƒ^ƒCƒ€ƒAƒEƒgŠÔ
+  // ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆæ™‚é–“
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("timeOutS"); 
   if(opts.timeout_calc > 0){
@@ -161,10 +161,10 @@ void MathematicaVCS::set_false_conditions(const node_sptr& constraint)
   PacketSender ps(ml_);
 
   ps.put_node(constraint, arg);
-  // vars‚ğ“n‚·
+  // varsã‚’æ¸¡ã™
   ps.put_vars();
 
-  ///////////////// óMˆ—
+  ///////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS( "--- receive ---");
   ml_.receive();
   ml_.MLNewPacket();
@@ -233,14 +233,14 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
     
-/////////////////// ‘—Mˆ—
+/////////////////// é€ä¿¡å‡¦ç†
   if(mode_==hydla::simulator::symbolic::DiscreteMode || mode_==hydla::simulator::symbolic::FalseConditionsMode){
     ml_.put_function("createVariableMap", 0);
   }else{
     ml_.put_function("createVariableMapInterval", 0);
   }
 
-/////////////////// óMˆ—
+/////////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS("%% receive\n");
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
@@ -261,39 +261,39 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
     }
   }
   else{
-    // ListŠÖ”‚Ì—v‘f”i®‚ÌŒÂ”j‚ğ“¾‚é
+    // Listé–¢æ•°ã®è¦ç´ æ•°ï¼ˆå¼ã®å€‹æ•°ï¼‰ã‚’å¾—ã‚‹
     int or_size = ml_.get_arg_count();
     HYDLA_LOGGER_VCS("or_size: ", or_size);
-    ml_.get_next();// List‚Æ‚¢‚¤ŠÖ”–¼
+    ml_.get_next();// Listã¨ã„ã†é–¢æ•°å
     for(int or_it = 0; or_it < or_size; or_it++){
       ml_.get_next();
       variable_range_map_t map;
       value_t symbolic_value;
       int and_size = ml_.get_arg_count();
       HYDLA_LOGGER_VCS("and_size: ", and_size);
-      ml_.get_next();// List‚Æ‚¢‚¤ŠÖ”–¼
+      ml_.get_next();// Listã¨ã„ã†é–¢æ•°å
       for(int i = 0; i < and_size; i++)
       {
-        //{{•Ï”–¼C”÷•ª‰ñ”}, ŠÖŒW‰‰ZqƒR[ƒhC”®}‚Å—ˆ‚é‚Í‚¸
+        //{{å¤‰æ•°åï¼Œå¾®åˆ†å›æ•°}, é–¢ä¿‚æ¼”ç®—å­ã‚³ãƒ¼ãƒ‰ï¼Œæ•°å¼}ã§æ¥ã‚‹ã¯ãš
 
         ml_.get_next();
-        ml_.get_next();// ŠÖ”‚Å‚ ‚é‚Æ‚¢‚¤‚±‚Æ‚ÆC‚»‚Ìˆø”‚Ì”
-        ml_.get_next();// List‚Æ‚¢‚¤ŠÖ”–¼
+        ml_.get_next();// é–¢æ•°ã§ã‚ã‚‹ã¨ã„ã†ã“ã¨ã¨ï¼Œãã®å¼•æ•°ã®æ•°
+        ml_.get_next();// Listã¨ã„ã†é–¢æ•°å
 
-        ml_.get_next();// ŠÖ”‚Å‚ ‚é‚Æ‚¢‚¤‚±‚Æ‚ÆC‚»‚Ìˆø”‚Ì”
-        ml_.get_next();// List‚Æ‚¢‚¤ŠÖ”–¼
+        ml_.get_next();// é–¢æ•°ã§ã‚ã‚‹ã¨ã„ã†ã“ã¨ã¨ï¼Œãã®å¼•æ•°ã®æ•°
+        ml_.get_next();// Listã¨ã„ã†é–¢æ•°å
         
         std::string variable_name = ml_.get_symbol();
         HYDLA_LOGGER_VCS("%% name: ", variable_name);
         int variable_derivative_count;
         variable_derivative_count = ml_.get_integer();
         HYDLA_LOGGER_VCS("%% derivative_count: ", variable_derivative_count);
-        // ŠÖŒW‰‰Zq‚ÌƒR[ƒh
+        // é–¢ä¿‚æ¼”ç®—å­ã®ã‚³ãƒ¼ãƒ‰
         int relop_code = ml_.get_integer();
         HYDLA_LOGGER_VCS("%% relop_code: ", relop_code);
         
         symbolic_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
-        // TODO: «‚ÌˆêsÁ‚·
+        // TODO: â†“ã®ä¸€è¡Œæ¶ˆã™
         if(variable_name == "t")continue;
         variable_t* variable_ptr = get_variable(variable_name.substr(var_prefix.length()), variable_derivative_count);
         if(!variable_ptr){
@@ -334,11 +334,11 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
   PacketSender ps(ml_);
 
   ps.put_nodes(constraints, arg);
-  // vars‚ğ“n‚·
+  // varsã‚’æ¸¡ã™
   ps.put_vars();
 
 
-  ///////////////// óMˆ—
+  ///////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS( "--- receive ---");
   ml_.receive();
   ml_.MLNewPacket();
@@ -464,7 +464,7 @@ bool MathematicaVCS::reset_parameters(const parameter_map_t& pm)
   return true;
 }
 
-// TODO: add_guard‚È‚Ì‚©set_guard‚È‚Ì‚©‚Æ‚©Cd—l‚Æ‚©‚ğ‚Í‚Á‚«‚è‚³‚¹‚é
+// TODO: add_guardãªã®ã‹set_guardãªã®ã‹ã¨ã‹ï¼Œä»•æ§˜ã¨ã‹ã‚’ã¯ã£ãã‚Šã•ã›ã‚‹
 void MathematicaVCS::add_guard(const node_sptr& guard)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
@@ -486,10 +486,10 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   PacketSender ps(ml_);
 
   ps.put_node(guard, arg);
-  // vars‚ğ“n‚·
+  // varsã‚’æ¸¡ã™
   ps.put_vars();
   
-  ///////////////// óMˆ—
+  ///////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS("%% receive");
   ml_.receive();
   ml_.MLNewPacket();
@@ -504,13 +504,13 @@ MathematicaVCS::FalseConditionsResult MathematicaVCS::find_false_conditions(node
 
   ml_.put_function("findFalseConditions",0);
 
-/////////////////// óMˆ—
+/////////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS( "%%receive");
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
   FalseConditionsResult node_type = FALSE_CONDITIONS_FALSE;
   node = receive_condition_node(node_type);
-  //I‚í‚è‚È‚Ì‚ÅƒpƒPƒbƒg‚ÌÅŒã”ö‚Ü‚ÅƒXƒLƒbƒv
+  //çµ‚ã‚ã‚Šãªã®ã§ãƒ‘ã‚±ãƒƒãƒˆã®æœ€å¾Œå°¾ã¾ã§ã‚¹ã‚­ãƒƒãƒ—
   ml_.MLNewPacket();
   if(node != NULL){
     HYDLA_LOGGER_VCS("false_condition : ", *node);
@@ -536,12 +536,12 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
     break;
   }
   
-/////////////////// óMˆ—
+/////////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS( "%%receive");
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
   
-  //‚Ü‚¸List‚ª—ˆ‚é‚Í‚¸
+  //ã¾ãšListãŒæ¥ã‚‹ã¯ãš
   ml_.get_next();
   
   int token = ml_.get_next();
@@ -549,7 +549,7 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
   CheckConsistencyResult ret;
   
   if(token == MLTKSYM){
-    //True‚©False‚Ì‚Í‚¸
+    //Trueã‹Falseã®ã¯ãš
     std::string symbol = ml_.get_symbol();
     if(symbol == "True"){
       ret.true_parameter_maps.push_back(parameter_map_t());
@@ -559,7 +559,7 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
   }else if(token == MLTKINT){
     HYDLA_LOGGER_VCS("illegal integer:", ml_.get_integer());
   }else{
-    //X‚É“ñdƒŠƒXƒg‚ª—ˆ‚é‚Í‚¸
+    //æ›´ã«äºŒé‡ãƒªã‚¹ãƒˆãŒæ¥ã‚‹ã¯ãš
     int map_size = ml_.get_arg_count();
     ml_.get_next();
     for(int i=0; i < map_size; i++){
@@ -571,7 +571,7 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
     
     token = ml_.get_next();
     if(token == MLTKSYM){
-      //True‚©False‚Ì‚Í‚¸
+      //Trueã‹Falseã®ã¯ãš
       std::string symbol = ml_.get_symbol();
       if(symbol != "False"){
         assert(0);
@@ -587,7 +587,7 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
       }
     }
   }
-  //I‚í‚è‚È‚Ì‚ÅƒpƒPƒbƒg‚ÌÅŒã”ö‚Ü‚ÅƒXƒLƒbƒv
+  //çµ‚ã‚ã‚Šãªã®ã§ãƒ‘ã‚±ãƒƒãƒˆã®æœ€å¾Œå°¾ã¾ã§ã‚¹ã‚­ãƒƒãƒ—
   ml_.MLNewPacket();
   
   HYDLA_LOGGER_FUNC_END(VCS);
@@ -601,32 +601,32 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-////////////////// ‘—Mˆ—
+////////////////// é€ä¿¡å‡¦ç†
   PacketSender ps(ml_);
   
-  // calculateNextPointPhaseTime[maxTime, discCause]‚ğ“n‚µ‚½‚¢
+  // calculateNextPointPhaseTime[maxTime, discCause]ã‚’æ¸¡ã—ãŸã„
   ml_.put_function("calculateNextPointPhaseTime", 2);
 
 
-  // maxTime‚ğ“n‚·
+  // maxTimeã‚’æ¸¡ã™
   time_t tmp_time(max_time->clone());
   *tmp_time -= *current_time;
   HYDLA_LOGGER_VCS("%% current time:", *current_time);
   HYDLA_LOGGER_VCS("%% send time:", *tmp_time);
   ps.put_value(tmp_time, VA_Time);
 
-  //—£U•Ï‰»‚ÌğŒ‚ğ“n‚·
+  //é›¢æ•£å¤‰åŒ–ã®æ¡ä»¶ã‚’æ¸¡ã™
   ml_.put_function("List", discrete_cause.size());
   for(constraints_t::const_iterator it = discrete_cause.begin(); it != discrete_cause.end();it++){
     ps.put_node(*it, VA_Time);
   }
 
-////////////////// óMˆ—
+////////////////// å—ä¿¡å‡¦ç†
 
   ml_.receive();
   PacketErrorHandler::handle(&ml_);
   
-  // Ÿ‚ÌPP‚Ì‚ÆC‚»‚Ìê‡‚ÌğŒ‚Ì‘gCX‚ÉI—¹‚©‚Ç‚¤‚©‚ğ“¾‚é
+  // æ¬¡ã®PPã®æ™‚åˆ»ã¨ï¼Œãã®å ´åˆã®æ¡ä»¶ã®çµ„ï¼Œæ›´ã«çµ‚äº†æ™‚åˆ»ã‹ã©ã†ã‹ã‚’å¾—ã‚‹
   HYDLA_LOGGER_VCS("%% receive next PP time");
   int next_time_size = ml_.get_arg_count();
   HYDLA_LOGGER_VCS("next_time_size: ", next_time_size);
@@ -636,16 +636,16 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
     PP_time_result_t::candidate_t candidate;
     ml_.get_next();
     ml_.get_next();ml_.get_next();
-    // ‚ğó‚¯æ‚é
+    // æ™‚åˆ»ã‚’å—ã‘å–ã‚‹
     candidate.time = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
     *candidate.time += *current_time;
     HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
     ml_.get_next();
-    // ğŒ‚ğó‚¯æ‚é
+    // æ¡ä»¶ã‚’å—ã‘å–ã‚‹
     receive_parameter_map(candidate.parameter_map);
     ml_.get_next();
     
-    // I—¹‚©‚Ç‚¤‚©‚ğó‚¯æ‚é
+    // çµ‚äº†æ™‚åˆ»ã‹ã©ã†ã‹ã‚’å—ã‘å–ã‚‹
     candidate.is_max_time = (bool)(ml_.get_integer() != 0);
     HYDLA_LOGGER_VCS("is_max_time: ",  candidate.is_max_time);
     HYDLA_LOGGER_VCS("--- parameter map ---\n",  candidate.parameter_map);
@@ -660,14 +660,14 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
 node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_type){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   node_sptr ret;
-  switch(ml_.get_type()){ // Œ»sƒIƒuƒWƒFƒNƒg‚ÌŒ^‚ğ“¾‚é
-    case MLTKSTR: // •¶š—ñ
+  switch(ml_.get_type()){ // ç¾è¡Œã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å‹ã‚’å¾—ã‚‹
+    case MLTKSTR: // æ–‡å­—åˆ—
     {
       HYDLA_LOGGER_REST("%% MLTKSTR(receive_condition_node)");
       ret = node_sptr(new hydla::parse_tree::Number(ml_.get_string()));
       break;
     }
-    case MLTKSYM: // ƒVƒ“ƒ{ƒ‹i‹L†j
+    case MLTKSYM: // ã‚·ãƒ³ãƒœãƒ«ï¼ˆè¨˜å·ï¼‰
     {
     HYDLA_LOGGER_REST("%% MLTKSYM(receive_condition_node)");
       std::string symbol = ml_.get_symbol();
@@ -687,13 +687,13 @@ node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_typ
         ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(6)));
       break;
     }
-    case MLTKINT: // ®”‚Í•¶š—ñŒ`®‚Å‚Ì‚İó‚¯æ‚é‚à‚Ì‚Æ‚·‚éiintŒ^‚¾‚ÆŒÀŠE‚ª‚ ‚é‚½‚ßj
+    case MLTKINT: // æ•´æ•°ã¯æ–‡å­—åˆ—å½¢å¼ã§ã®ã¿å—ã‘å–ã‚‹ã‚‚ã®ã¨ã™ã‚‹ï¼ˆintå‹ã ã¨é™ç•ŒãŒã‚ã‚‹ãŸã‚ï¼‰
     {
       HYDLA_LOGGER_REST("%% MLTKINT(receive_condition_node)");
       assert(0);
       break;
     }
-    case MLTKFUNC: // ‡¬ŠÖ”
+    case MLTKFUNC: // åˆæˆé–¢æ•°
     HYDLA_LOGGER_REST("%% MLTKFUNC(receive_condition_node)");
     {
       int arg_count = ml_.get_arg_count();
@@ -701,7 +701,7 @@ node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_typ
       if(next_type == MLTKSYM){
         std::string symbol = ml_.get_symbol();
         HYDLA_LOGGER_REST("%% symbol_name:", symbol);
-        if(symbol == "Sqrt"){//1ˆø”ŠÖ”
+        if(symbol == "Sqrt"){//1å¼•æ•°é–¢æ•°
           ret = node_sptr(new hydla::parse_tree::Power(receive_condition_node(node_type), node_sptr(new hydla::parse_tree::Number("1/2"))));
         }
         else if(symbol == "prev"){
@@ -728,7 +728,7 @@ node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_typ
            || symbol == "LessEqual"
            || symbol == "Greater"
            || symbol == "GreaterEqual")      
-        { // ‰ÁŒ¸æœ‚È‚ÇC“ñ€‰‰Zq‚Å‘‚©‚ê‚éŠÖ”
+        { // åŠ æ¸›ä¹—é™¤ãªã©ï¼ŒäºŒé …æ¼”ç®—å­ã§æ›¸ã‹ã‚Œã‚‹é–¢æ•°
           node_sptr lhs, rhs;
           ret = receive_condition_node(node_type);
           for(int arg_it=1;arg_it<arg_count;arg_it++){
@@ -799,16 +799,16 @@ node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_typ
           }
 	}
         else{
-          // ‚»‚Ì‘¼‚ÌŠÖ”
+          // ãã®ä»–ã®é–¢æ•°
           boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
           PacketSender::function_map_t::right_const_iterator it = 
             PacketSender::function_map_.right.find(PacketSender::function_t(symbol, arg_count));
           if(it != PacketSender::function_map_.right.end() && it->second.second == arg_count){
-            // ‘Î‰‚µ‚Ä‚¢‚éŠÖ”
+            // å¯¾å¿œã—ã¦ã„ã‚‹é–¢æ•°
             f.reset(new hydla::parse_tree::Function(it->second.first));
           }
           else{
-            // “ä‚ÌŠÖ”
+            // è¬ã®é–¢æ•°
             f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
           }
           for(int arg_it=0;arg_it<arg_count;arg_it++){
@@ -833,14 +833,14 @@ node_sptr MathematicaVCS::receive_condition_node(FalseConditionsResult& node_typ
 
 void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
-  int condition_size = ml_.get_arg_count(); //ğŒ®‚Ì”
+  int condition_size = ml_.get_arg_count(); //æ¡ä»¶å¼ã®æ•°
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
   ml_.get_next();
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
-    // Å‰CList‚Ìˆø”‚Ì”(MLTKFUNCj
+    // æœ€åˆï¼ŒListã®å¼•æ•°ã®æ•°(MLTKFUNCï¼‰
     ml_.get_next();
-    ml_.get_next(); ml_.get_next(); // ‚±‚ê‚ÅList‚Ìæ“ª—v‘f‚Ü‚Å—ˆ‚é
-    ml_.get_next(); ml_.get_next(); // æ“ª—v‘f‚Ìparameter‚ğ“Ç‚İ”ò‚Î‚·
+    ml_.get_next(); ml_.get_next(); // ã“ã‚Œã§Listã®å…ˆé ­è¦ç´ ã¾ã§æ¥ã‚‹
+    ml_.get_next(); ml_.get_next(); // å…ˆé ­è¦ç´ ã®parameterã‚’èª­ã¿é£›ã°ã™
     std::string name = ml_.get_symbol();
     int derivative_count = ml_.get_integer();
     int id = ml_.get_integer();
@@ -873,14 +873,14 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
   variable_map_t::const_iterator end = in_vm.end();
   for(; it!=end; ++it) {
     HYDLA_LOGGER_VCS("variable : ", *(it->first));
-    // ’l
+    // å€¤
     value_t    value;
     if(!it->second->undefined()) {
       ml_.put_function("applyTime2Expr", 2);
       ps.put_value(it->second, VA_Time);
       ps.put_value(time, VA_None);
 
-    ////////////////// óMˆ—
+    ////////////////// å—ä¿¡å‡¦ç†
 
       ml_.receive();
       PacketErrorHandler::handle(&ml_);
@@ -895,7 +895,7 @@ void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm,
 }
 
 
-//ŠÛ‚ß‚ğs‚¤ŠÖ” get_real_val()‚Åg‚¤
+//ä¸¸ã‚ã‚’è¡Œã†é–¢æ•° get_real_val()ã§ä½¿ã†
 std::string upward(std::string str){
   if(str.at(str.length()-1) == '.'){
     str = upward(str.substr(0,str.length()-1)) + '.';
@@ -910,14 +910,14 @@ std::string upward(std::string str){
 }
 
 /*
-//value_t‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
+//value_tã‚’æŒ‡å®šã•ã‚ŒãŸç²¾åº¦ã§æ•°å€¤ã«å¤‰æ›ã™ã‚‹
 std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simulator::OutputFormat opfmt){
   std::string ret;
   PacketSender ps(ml_);
 
   if(!val->undefined() && opfmt == fmtNInterval) {
     
-    //precision‚Í2‚æ‚è‘å‚«‚¢‚Æ‚·‚é
+    //precisionã¯2ã‚ˆã‚Šå¤§ãã„ã¨ã™ã‚‹
     if(precision<2) precision=2;
 
     ml_.put_function("ToString", 2);
@@ -929,19 +929,19 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     ml_.skip_pkt_until(RETURNPKT);
     ret = ml_.get_string();
 
-    //usrVar‚Ìê‡‚Í‚»‚Ì‚Ü‚Ü
+    //usrVarã®å ´åˆã¯ãã®ã¾ã¾
     if(ret.find(var_prefix) != -1) 
       return ret.substr(ret.find("[")+1,ret.find("]")-ret.find("[")-1);
 
-    //parameter‚ª‚ ‚éê‡‚Ì‘Î‰ ex:Interval[1.6666666666666667`5.*pa]   Interval[pa]i•sŠ®‘Sj
-    //TODO:Interval[-5.`5.*(-6.`5. + pa)]‚È‚Ç‚Ö‚Ì‘Î‰ ./hydla examples/sawtooth_wave_param.hydla -m s -t 10
+    //parameterãŒã‚ã‚‹å ´åˆã®å¯¾å¿œ ex:Interval[1.6666666666666667`5.*pa]   Interval[pa]ï¼ˆä¸å®Œå…¨ï¼‰
+    //TODO:Interval[-5.`5.*(-6.`5. + pa)]ãªã©ã¸ã®å¯¾å¿œ ./hydla examples/sawtooth_wave_param.hydla -m s -t 10
     std::string parameter = "";
     if(ret.find("{") == -1){
       parameter = ret.substr(ret.find("[")+1,ret.find("]")-ret.find("[")-1);
       if(parameter.find("`") == -1) {
         return parameter;
       }else{
-        //ˆ—‚Å‚«‚éŒ`®‚É•ÏŒ`
+        //å‡¦ç†ã§ãã‚‹å½¢å¼ã«å¤‰å½¢
         ret = "Interval[{"+parameter.substr(0,precision+5)+", "+parameter.substr(0,precision+5)+"}]";
         parameter = parameter.substr(parameter.find_last_of(".")+1);
       }
@@ -952,19 +952,19 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     char sign = 'p';
     std::string lower = "";
     std::string upper = "";
-    //w’è‚³‚ê‚½¸“x‚É‡‚í‚¹‚é
+    //æŒ‡å®šã•ã‚ŒãŸç²¾åº¦ã«åˆã‚ã›ã‚‹
     if(ret.find("-")!=-1) {
       ret.erase(ret.find("-"),1);
       if(ret.find("-")!=-1) {
         ret.erase(ret.find("-"),1);
-        //•‰‚Ì‹æŠÔ ã’[‚Æ‰º’[‚Ì‚Ç‚¿‚ç‚ğŠÛ‚ß‚é‚©
+        //è² ã®åŒºé–“ ä¸Šç«¯ã¨ä¸‹ç«¯ã®ã©ã¡ã‚‰ã‚’ä¸¸ã‚ã‚‹ã‹
         sign = 'n';
       }else{
-        //[•‰,³]‚Ì‹æŠÔ
+        //[è² ,æ­£]ã®åŒºé–“
         sign = 'c';
       }
     }
-    //‰º’[‚ğæ‚èo‚·
+    //ä¸‹ç«¯ã‚’å–ã‚Šå‡ºã™
     if(ret.find("}")-ret.find("{")-2>precision*2){
       for(int i=ret.find("{")+1;i<ret.find(",")-1;i++){
         if(ret.at(i)!='0' &&  ret.at(i)!='.') {
@@ -974,7 +974,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
         }else if(ret.at(i) == '0') pre++;
       }
       pre = precision;
-      //ã’[‚ğæ‚èo‚·
+      //ä¸Šç«¯ã‚’å–ã‚Šå‡ºã™
       for(int i=ret.find(",")+2;i<ret.length();i++){
         if(ret.at(i)!='0' &&  ret.at(i)!='.') {
           if(ret.substr(ret.find(",")+2,pre).find(".")!=-1) pre++;
@@ -983,7 +983,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
         }else if(ret.at(i) == '0') pre++;
       }
 
-      //precision{‚PŒ…–Ú‚ğ‰º’[‚ÍØ‚èÌ‚ÄAã’[‚ÍØ‚èã‚°
+      //precisionï¼‹ï¼‘æ¡ç›®ã‚’ä¸‹ç«¯ã¯åˆ‡ã‚Šæ¨ã¦ã€ä¸Šç«¯ã¯åˆ‡ã‚Šä¸Šã’
       switch (sign) {
       case 'n' : lower = upward(lower); break;
       case 'p' : upper = upward(upper); break;
@@ -991,11 +991,11 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
       }
     
     }else{
-      //ex:[0,0]‚È‚Ç‚Ìê‡‚É‘Î‰‚³‚¹‚é
+      //ex:[0,0]ãªã©ã®å ´åˆã«å¯¾å¿œã•ã›ã‚‹
       lower = ret.substr(ret.find("{")+1,ret.find(",")-(ret.find("{")+1));
       upper = ret.substr(ret.find(",")+2,ret.find("}")-(ret.find(",")+2));
     }
-    //‰»Šw•\‹L–@(ex:*10^6)‚Ì‘Î‰
+    //åŒ–å­¦è¡¨è¨˜æ³•(ex:*10^6)ã®å¯¾å¿œ
     std::string lowex = "";
     std::string upex = "";
     if((loc=ret.find("*^")) != -1){
@@ -1005,8 +1005,8 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
     }
     loc=0;
     
-    //ˆê’v‚µ‚Ä‚¢‚é•”•ª‚ğÈ—ª‚µ‚Ä•\¦‚·‚é
-    //TODO:"[0.9999,1.000]"‚ğ"0.999[9,10]"‚Ì‚æ‚¤‚É•\¦‚³‚¹‚é
+    //ä¸€è‡´ã—ã¦ã„ã‚‹éƒ¨åˆ†ã‚’çœç•¥ã—ã¦è¡¨ç¤ºã™ã‚‹
+    //TODO:"[0.9999,1.000]"ã‚’"0.999[9,10]"ã®ã‚ˆã†ã«è¡¨ç¤ºã•ã›ã‚‹
     while(true){
       if(lower.at(loc)!=upper.at(loc)) {
         ret = lower.substr(0,loc);
@@ -1020,7 +1020,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
         break;
       }
       loc++;
-      //‚à‚µ‚à‘S‚Äˆê’v‚µ‚Ä‚¢‚éê‡‚Í‚Ç‚¿‚ç‚©•\¦(‚ ‚è‚¦‚È‚¢‚Í‚¸)
+      //ã‚‚ã—ã‚‚å…¨ã¦ä¸€è‡´ã—ã¦ã„ã‚‹å ´åˆã¯ã©ã¡ã‚‰ã‹è¡¨ç¤º(ã‚ã‚Šãˆãªã„ã¯ãš)
       if(loc > lower.length()-1){
         ret = lower;
         break;
@@ -1077,7 +1077,7 @@ MathematicaVCS::FalseConditionsResult MathematicaVCS::node_simplify(node_sptr &n
   ml_.receive();
   FalseConditionsResult node_type = FALSE_CONDITIONS_FALSE;
   node = receive_condition_node(node_type);
-  //I‚í‚è‚È‚Ì‚ÅƒpƒPƒbƒg‚ÌÅŒã”ö‚Ü‚ÅƒXƒLƒbƒv
+  //çµ‚ã‚ã‚Šãªã®ã§ãƒ‘ã‚±ãƒƒãƒˆã®æœ€å¾Œå°¾ã¾ã§ã‚¹ã‚­ãƒƒãƒ—
   ml_.MLNewPacket();
   if(node != NULL){
     HYDLA_LOGGER_VCS("false_condition : ", *node);
@@ -1116,7 +1116,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
     ps.put_vars();
   }
 
-  ///////////////// óMˆ—
+  ///////////////// å—ä¿¡å‡¦ç†
   HYDLA_LOGGER_VCS( "%%receive\n");
   ml_.receive();
   ml_.MLNewPacket();

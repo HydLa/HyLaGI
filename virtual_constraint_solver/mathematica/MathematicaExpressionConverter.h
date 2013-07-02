@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_VCS_MATHEMATICA_EXPRESSION_CONVERTER_H_
 
 
-//Mathematica•¶š—ñÌSymbolicValue‚Æ‚¢‚¤C®‚Ì•ÏŠ·‚ğ’S“–‚·‚éƒNƒ‰ƒXDValueRange‚à­‚µD
+//Mathematicaæ–‡å­—åˆ—â‡”SymbolicValueã¨ã„ã†ï¼Œå¼ã®å¤‰æ›ã‚’æ‹…å½“ã™ã‚‹ã‚¯ãƒ©ã‚¹ï¼ValueRangeã‚‚å°‘ã—ï¼
 
 
 #include "../SymbolicVirtualConstraintSolver.h"
@@ -31,16 +31,16 @@ class MathematicaExpressionConverter
 
   typedef hydla::parse_tree::node_sptr node_sptr;
 
-  //‰Šú‰»
+  //åˆæœŸåŒ–
   static void initialize();
 
   /**
-   * óM‚µ‚Ävalue‚É•ÏŠ·‚·‚é
+   * å—ä¿¡ã—ã¦valueã«å¤‰æ›ã™ã‚‹
    */
   static value_t receive_and_make_symbolic_value(MathLink &ml);
   static node_sptr make_tree(MathLink &ml);
 
-  //val‚ÆŠÖŒW‰‰Zq‚ğŒ³‚ÉArange‚ğİ’è‚·‚é
+  //valã¨é–¢ä¿‚æ¼”ç®—å­ã‚’å…ƒã«ã€rangeã‚’è¨­å®šã™ã‚‹
   static void set_range(const value_t &val, value_range_t &range, const int& relop);
 };
 

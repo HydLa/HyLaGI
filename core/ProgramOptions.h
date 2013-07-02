@@ -7,14 +7,14 @@
 namespace hydla {
 
 /**
- * singleton and noncopyablei1‚Â‚µ‚©ƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚Å‚«‚È‚¢j
- * Às‚Éw’è‚·‚éƒIƒvƒVƒ‡ƒ“‚ğˆ—••Û‚·‚éƒNƒ‰ƒX
+ * singleton and noncopyableï¼ˆ1ã¤ã—ã‹ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã§ããªã„ï¼‰
+ * å®Ÿè¡Œæ™‚ã«æŒ‡å®šã™ã‚‹ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’å‡¦ç†ï¼†ä¿æŒã™ã‚‹ã‚¯ãƒ©ã‚¹
  */
 class ProgramOptions {
 public:
     ~ProgramOptions();
     /**
-     * Às‚É—^‚¦‚ç‚ê‚½ƒIƒvƒVƒ‡ƒ“‚ğ‰ğÍ‚·‚é
+     * å®Ÿè¡Œæ™‚ã«ä¸ãˆã‚‰ã‚ŒãŸã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’è§£æã™ã‚‹
      */
     void parse(int argc, char* argv[]);
 
@@ -25,15 +25,15 @@ public:
     }
 
     /**
-     * —^‚¦‚ç‚ê‚½–¼‘O‚ÌƒIƒvƒVƒ‡ƒ“‚ªCÀs‚Éw’è‚³‚ê‚½”‚ğ•Ô‚·
+     * ä¸ãˆã‚‰ã‚ŒãŸåå‰ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒï¼Œå®Ÿè¡Œæ™‚ã«æŒ‡å®šã•ã‚ŒãŸæ•°ã‚’è¿”ã™
      */
     int count(const char name[]) const {return vm_.count(name);}
 
     void help_msg(std::ostream& os) const {visible_desc_.print(os);}
 
     /**
-     * ƒCƒ“ƒXƒ^ƒ“ƒX‚Ì¶¬
-     * ƒNƒ‰ƒX‘S‘Ì‚Å‹¤’Ê
+     * ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ç”Ÿæˆ
+     * ã‚¯ãƒ©ã‚¹å…¨ä½“ã§å…±é€š
      */
     static ProgramOptions& instance();
 

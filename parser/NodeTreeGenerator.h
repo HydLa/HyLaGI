@@ -32,7 +32,7 @@ public:
   {}
 
   /**
-   * AST‚ğŒ³‚ÉParseTree‚ğ\’z‚·‚é
+   * ASTã‚’å…ƒã«ParseTreeã‚’æ§‹ç¯‰ã™ã‚‹
    */
   template<typename TreeIter>
   node_sptr generate(const TreeIter& tree_iter)
@@ -46,7 +46,7 @@ public:
 private:
 
   /**
-   * ˆø”‚ğ1‚Â‚Æ‚éw’è‚µ‚½Œ^‚Ìƒm[ƒh‚ğì¬‚·‚é
+   * å¼•æ•°ã‚’1ã¤ã¨ã‚‹æŒ‡å®šã—ãŸå‹ã®ãƒãƒ¼ãƒ‰ã‚’ä½œæˆã™ã‚‹
    */
   template<typename NodeType, typename TreeIter>
   boost::shared_ptr<NodeType>
@@ -58,7 +58,7 @@ private:
   }
     
   /**
-   * ˆø”‚ğ2‚Â‚Æ‚éw’è‚µ‚½Œ^‚Ìƒm[ƒh‚ğì¬‚·‚é
+   * å¼•æ•°ã‚’2ã¤ã¨ã‚‹æŒ‡å®šã—ãŸå‹ã®ãƒãƒ¼ãƒ‰ã‚’ä½œæˆã™ã‚‹
    */
   template<typename NodeType, typename TreeIter> 
   boost::shared_ptr<NodeType>  
@@ -72,7 +72,7 @@ private:
   
   
   /**
-   * ˆø”‚ğ”CˆÓ”æ‚éw’è‚µ‚½Œ^‚Ìƒm[ƒh‚ğì¬‚·‚é
+   * å¼•æ•°ã‚’ä»»æ„æ•°å–ã‚‹æŒ‡å®šã—ãŸå‹ã®ãƒãƒ¼ãƒ‰ã‚’ä½œæˆã™ã‚‹
    */
   template<typename NodeType, typename TreeIter> 
   boost::shared_ptr<NodeType>  
@@ -90,7 +90,7 @@ private:
   }
 
   /**
-   * w’è‚µ‚½Œ^‚Ì’è‹`ƒm[ƒh‚ğì¬‚·‚é
+   * æŒ‡å®šã—ãŸå‹ã®å®šç¾©ãƒãƒ¼ãƒ‰ã‚’ä½œæˆã™ã‚‹
    */
   template<typename NodeType, typename TreeIter>
   boost::shared_ptr<NodeType>  
@@ -100,11 +100,11 @@ private:
 
     TreeIter gch = tree_iter->children.begin();
 
-    //’è‹`–¼
+    //å®šç¾©å
     node->set_name(
       std::string(gch->value.begin(), gch->value.end()));
 
-    //‰¼ˆø”
+    //ä»®å¼•æ•°
     if (tree_iter->children.size()>1) {
       TreeIter args = (gch+1)->children.begin();
       size_t bound_variable_count = (gch+1)->children.size();
@@ -119,7 +119,7 @@ private:
   }
   
   /**
-   * w’è‚µ‚½Œ^‚ÌŒÄ‚Ño‚µƒm[ƒh‚ğì¬‚·‚é
+   * æŒ‡å®šã—ãŸå‹ã®å‘¼ã³å‡ºã—ãƒãƒ¼ãƒ‰ã‚’ä½œæˆã™ã‚‹
    */
   template<typename NodeType, typename TreeIter>
   boost::shared_ptr<NodeType>  
@@ -128,11 +128,11 @@ private:
     TreeIter ch = tree_iter->children.begin();
     boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
 
-    //ƒvƒƒOƒ‰ƒ€–¼
+    //ãƒ—ãƒ­ã‚°ãƒ©ãƒ å
     node->set_name(    
       std::string(ch->value.begin(), ch->value.end()));
 
-    //Àˆø”
+    //å®Ÿå¼•æ•°
     if (tree_iter->children.size()==2) {
       TreeIter it  = (ch+1)->children.begin();
       TreeIter end = (ch+1)->children.end();
@@ -144,7 +144,7 @@ private:
   }
   
   /**
-   * ”äŠr‰‰Zq‚ğ•Ô‚·
+   * æ¯”è¼ƒæ¼”ç®—å­ã‚’è¿”ã™
    */
   template<typename TreeIter>
   boost::shared_ptr<hydla::parse_tree::BinaryNode>
@@ -155,7 +155,7 @@ private:
     long node_id = tree_iter->value.id().to_long();
     switch(node_id) 
     {
-        // ”äŠr‰‰Zq
+        // æ¯”è¼ƒæ¼”ç®—å­
       case RI_Equal:        {return node_factory_->create<Equal>();}
       case RI_UnEqual:      {return node_factory_->create<UnEqual>();}
       case RI_Less:         {return node_factory_->create<Less>();}
@@ -167,7 +167,7 @@ private:
   }
   
   /**
-   * ParseTree‚ğ\’z‚·‚é
+   * ParseTreeã‚’æ§‹ç¯‰ã™ã‚‹
    */
   template<typename TreeIter>
   boost::shared_ptr<hydla::parse_tree::Node>
@@ -181,7 +181,7 @@ private:
     long node_id = tree_iter->value.id().to_long();
     switch(node_id) 
     {
-      // ƒvƒƒOƒ‰ƒ€‚ÌW‡
+      // ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®é›†åˆ
       case RI_Statements:
       {
         node_sptr node_tree;
@@ -189,7 +189,7 @@ private:
         TreeIter end = tree_iter->children.end();
         while(it != end) {
           if(node_sptr new_tree = create_parse_tree(it++)) {
-            // §–ñéŒ¾‚ª•¡”‰ñoŒ»‚µ‚½ê‡‚Íu,v‚É‚æ‚Á‚Ä˜AŒ‹‚·‚é
+            // åˆ¶ç´„å®£è¨€ãŒè¤‡æ•°å›å‡ºç¾ã—ãŸå ´åˆã¯ã€Œ,ã€ã«ã‚ˆã£ã¦é€£çµã™ã‚‹
             if(node_tree) {
               boost::shared_ptr<Parallel> rn(node_factory_->create<Parallel>());
               rn->set_lhs(node_tree);
@@ -203,58 +203,58 @@ private:
         return node_tree;
       }
 
-      // §–ñ’è‹`
+      // åˆ¶ç´„å®šç¾©
       case RI_ConstraintDef:
         {
-          // ’è‹`ƒm[ƒh‚Ìì¬
+          // å®šç¾©ãƒãƒ¼ãƒ‰ã®ä½œæˆ
           boost::shared_ptr<ConstraintDefinition> d(
             create_definition<ConstraintDefinition>(ch));
 
-          // Šù‚É§–ñ/ƒvƒƒOƒ‰ƒ€’è‹`‚Æ‚µ‚Ä’è‹`‚³‚ê‚Ä‚¢‚È‚¢‚©‚Ç‚¤‚©
+          // æ—¢ã«åˆ¶ç´„/ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©ã¨ã—ã¦å®šç¾©ã•ã‚Œã¦ã„ãªã„ã‹ã©ã†ã‹
           if(constraint_definition_.is_registered(d) ||
              program_definition_.is_registered(d)) {
             throw hydla::parse_error::MultipleDefinition(d->get_name()); 
           }
 
-          // ’è‹`ƒm[ƒh‚Ì“o˜^
+          // å®šç¾©ãƒãƒ¼ãƒ‰ã®ç™»éŒ²
           constraint_definition_.add_definition(d);
 
           return node_sptr();
         }
 
-      // ƒvƒƒOƒ‰ƒ€’è‹`
+      // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
       case RI_ProgramDef:
       {
-          // ’è‹`ƒm[ƒh‚Ìì¬
+          // å®šç¾©ãƒãƒ¼ãƒ‰ã®ä½œæˆ
           boost::shared_ptr<ProgramDefinition> d(
             create_definition<ProgramDefinition>(ch));
 
-          // Šù‚É§–ñ/ƒvƒƒOƒ‰ƒ€’è‹`‚Æ‚µ‚Ä’è‹`‚³‚ê‚Ä‚¢‚È‚¢‚©‚Ç‚¤‚©
+          // æ—¢ã«åˆ¶ç´„/ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©ã¨ã—ã¦å®šç¾©ã•ã‚Œã¦ã„ãªã„ã‹ã©ã†ã‹
           if(constraint_definition_.is_registered(d) ||
              program_definition_.is_registered(d)) {
             throw hydla::parse_error::MultipleDefinition(d->get_name()); 
           }
 
-          // ’è‹`ƒm[ƒh‚Ì“o˜^
+          // å®šç¾©ãƒãƒ¼ãƒ‰ã®ç™»éŒ²
           program_definition_.add_definition(d);
 
           return node_sptr();
       }
       
-      // §–ñŒÄ‚Ño‚µ
+      // åˆ¶ç´„å‘¼ã³å‡ºã—
       case RI_ConstraintCaller:
       {
         return create_caller<ConstraintCaller>(tree_iter);
       }
       
-      // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+      // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
       case RI_ProgramCaller:
       {
         return create_caller<ProgramCaller>(tree_iter);
       }
       
       
-      // i˜A½j§–ñ
+      // ï¼ˆé€£é–ï¼‰åˆ¶ç´„
       case RI_Chain:
       {
         node_sptr node_tree;
@@ -270,7 +270,7 @@ private:
           comp_op->set_lhs(lhs_exp);
           comp_op->set_rhs(rhs_exp);
 
-          // 2‚ÂˆÈã‚Ì”äŠr‰‰Zq‚Å‚Â‚È‚ª‚Á‚Ä‚¢‚éê‡‚ÍA˜_—Ï‚Å‚Â‚È‚°‚é
+          // 2ã¤ä»¥ä¸Šã®æ¯”è¼ƒæ¼”ç®—å­ã§ã¤ãªãŒã£ã¦ã„ã‚‹å ´åˆã¯ã€è«–ç†ç©ã§ã¤ãªã’ã‚‹
           if(node_tree) {
             boost::shared_ptr<LogicalAnd> and_node(node_factory_->create<LogicalAnd>());
             and_node->set_lhs(node_tree);
@@ -284,16 +284,16 @@ private:
         return node_tree;
       }
 
-      // Tell§–ñ
+      // Tellåˆ¶ç´„
       case RI_Tell:         {return create_unary_node<Tell>(ch);}
 
-      // Ask§–ñ
+      // Askåˆ¶ç´„
       case RI_Implies:      {return create_binary_node<Ask>(ch);}
       
-        // §–ñ®
+        // åˆ¶ç´„å¼
       case RI_Constraint:   {return create_unary_node<Constraint>(ch);}
 
-        // ”äŠr‰‰Zq
+        // æ¯”è¼ƒæ¼”ç®—å­
       case RI_Equal:        {return create_binary_node<Equal>(ch);}
       case RI_UnEqual:      {return create_binary_node<UnEqual>(ch);}
       case RI_Less:         {return create_binary_node<Less>(ch);}
@@ -301,42 +301,42 @@ private:
       case RI_Greater:      {return create_binary_node<Greater>(ch);}
       case RI_GreaterEqual: {return create_binary_node<GreaterEqual>(ch);}
     
-        // ˜_—‰‰Zq
+        // è«–ç†æ¼”ç®—å­
       case RI_LogicalAnd:   {return create_binary_node<LogicalAnd>(ch);}
       case RI_LogicalOr:    {return create_binary_node<LogicalOr>(ch);}
       case RI_LogicalNot:    {return create_unary_node<Not>(ch);}
       
-        // Zp“ñ€‰‰Zq
+        // ç®—è¡“äºŒé …æ¼”ç®—å­
       case RI_Plus:         {return create_binary_node<Plus>(ch);}
       case RI_Subtract:     {return create_binary_node<Subtract>(ch);}
       case RI_Times:        {return create_binary_node<Times>(ch);}
       case RI_Divide:       {return create_binary_node<Divide>(ch);}
       case RI_Power:        {return create_binary_node<Power>(ch);}
 
-        // Zp’P€‰‰Zq
+        // ç®—è¡“å˜é …æ¼”ç®—å­
       case RI_Negative:     {return create_unary_node<Negative>(ch);}
       case RI_Positive:     {return create_unary_node<Positive>(ch);}
 
-        // §–ñŠK‘w’è‹`‰‰Zq
+        // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
       case RI_Weaker:       {return create_binary_node<Weaker>(ch);}
       case RI_Parallel:     {return create_binary_node<Parallel>(ch);}
 
-        // ‘Š‰‰Zq
+        // æ™‚ç›¸æ¼”ç®—å­
       case RI_Always:       {return create_unary_node<Always>(ch);}
 
-        // ”÷•ª
+        // å¾®åˆ†
       case RI_Differential: {return create_unary_node<Differential>(ch);}
     
-        // ¶‹ÉŒÀ
+        // å·¦æ¥µé™
       case RI_Previous:     {return create_unary_node<Previous>(ch);}
       
-        // ŠÖ”
+        // é–¢æ•°
       case RI_Function:
       {
         boost::shared_ptr<Function> node = create_arbitrary_node<Function>(tree_iter);
         return node;
       }
-        // ƒTƒ|[ƒgŠOŠÖ”
+        // ã‚µãƒãƒ¼ãƒˆå¤–é–¢æ•°
       case RI_UnsupportedFunction:          
       {
         boost::shared_ptr<UnsupportedFunction> node = create_arbitrary_node<UnsupportedFunction>(tree_iter);
@@ -344,7 +344,7 @@ private:
       }
       
 
-        // ‰~ü—¦
+        // å††å‘¨ç‡
       case RI_Pi:
       {
         boost::shared_ptr<Pi> node(node_factory_->create<Pi>());
@@ -352,14 +352,14 @@ private:
       }
       
      
-        // ©‘R‘Î”‚Ì’ê
+        // è‡ªç„¶å¯¾æ•°ã®åº•
       case RI_E:          
       {
         boost::shared_ptr<E> node(node_factory_->create<E>());
         return node;
       }
       
-        // •Ï”E‘©”›•Ï”
+        // å¤‰æ•°ãƒ»æŸç¸›å¤‰æ•°
       case RI_BoundVariable:
       case RI_Variable:
       {
@@ -369,7 +369,7 @@ private:
         return node;
       }
 
-      // ”š
+      // æ•°å­—
       case RI_Number:
       {
         std::string str(tree_iter->value.begin(), tree_iter->value.end());
@@ -379,7 +379,7 @@ private:
           node->set_number(str);
           return node;
         }else{
-          //¬”‚È‚çC•ª”‚É•ÏŠ·‚·‚é
+          //å°æ•°ãªã‚‰ï¼Œåˆ†æ•°ã«å¤‰æ›ã™ã‚‹
           std::string denominator("1");
           for(unsigned int i=0; i<str.size()-(sz+1);i++){
             denominator += "0";
@@ -398,7 +398,7 @@ private:
       
       case RI_Assert:
       {
-        //assertion‚Í‚P‚Â‚¾‚¯
+        //assertionã¯ï¼‘ã¤ã ã‘
         assert(!assertion_node_);
         
         assertion_node_ = create_parse_tree(ch);

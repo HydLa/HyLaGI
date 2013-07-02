@@ -11,7 +11,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * tellƒm[ƒh‚ğW‚ß‚éƒrƒWƒ^[ƒNƒ‰ƒX
+ * tellãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹ãƒ“ã‚¸ã‚¿ãƒ¼ã‚¯ãƒ©ã‚¹
  */
 class InitNodeRemover : public parse_tree::TreeVisitor {
 public:
@@ -25,31 +25,31 @@ public:
    */
   void apply(hydla::parse_tree::ParseTree* pt);
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ˜_—Ï
+  // è«–ç†ç©
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
-  // ƒ‚ƒWƒ…[ƒ‹‚Ìã‡¬
+  // ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®å¼±åˆæˆ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
 
-  // ƒ‚ƒWƒ…[ƒ‹‚Ì•À—ñ‡¬
+  // ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ä¸¦åˆ—åˆæˆ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
    
-  // §–ñŒÄ‚Ño‚µ
+  // åˆ¶ç´„å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
   
-  // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
 private:

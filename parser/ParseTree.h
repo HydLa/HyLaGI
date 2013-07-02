@@ -27,17 +27,17 @@ public:
   typedef hydla::parser::NodeFactory        node_factory_t;
   typedef boost::shared_ptr<node_factory_t> node_factory_sptr;
 
-  // •Ï”•\
+  // å¤‰æ•°è¡¨
   typedef std::map<std::string, int>     variable_map_t;
   typedef variable_map_t::const_iterator variable_map_const_iterator;
 
     
-  // ƒm[ƒh•\
+  // ãƒãƒ¼ãƒ‰è¡¨
   typedef std::map<node_id_t, node_sptr> node_map_t;
   typedef node_map_t::value_type         node_map_value_t;
   typedef node_map_t::const_iterator     node_map_const_iterator;
 
-  // ƒm[ƒhID•\
+  // ãƒãƒ¼ãƒ‰IDè¡¨
   typedef std::set<node_id_t>           node_id_list_t;
   typedef node_id_list_t::const_iterator node_id_list_const_iterator;
 
@@ -63,7 +63,7 @@ public:
   virtual ~ParseTree();
 
   /**
-   * ParseTree‚ğ\’z‚·‚é
+   * ParseTreeã‚’æ§‹ç¯‰ã™ã‚‹
    */
   template<typename NodeFactoryT>
   void parse(std::istream& s)
@@ -82,36 +82,36 @@ public:
 
 
   /**
-   * ƒm[ƒhID‚Ì•\‚ÌÄ\’z‚ğ‚¨‚±‚È‚¤
-   * ¡‚Ü‚Å‚Ìƒm[ƒhID‚Í–³Œø‚Æ‚È‚é
+   * ãƒãƒ¼ãƒ‰IDã®è¡¨ã®å†æ§‹ç¯‰ã‚’ãŠã“ãªã†
+   * ä»Šã¾ã§ã®ãƒãƒ¼ãƒ‰IDã¯ç„¡åŠ¹ã¨ãªã‚‹
    */
   void rebuild_node_id_list();
 
   /**
-   * ID‚ÌŠ„‚è“–‚Ä‚ç‚ê‚Ä‚¢‚È‚¢ƒm[ƒh‚É‘Î‚µ‚ÄID‚ğŠ„‚è“–‚Ä‚é
-   * ƒm[ƒh‚ªíœ‚³‚ê‚½ê‡‚ÍCƒm[ƒh•\‚©‚çíœ‚·‚é
+   * IDã®å‰²ã‚Šå½“ã¦ã‚‰ã‚Œã¦ã„ãªã„ãƒãƒ¼ãƒ‰ã«å¯¾ã—ã¦IDã‚’å‰²ã‚Šå½“ã¦ã‚‹
+   * ãƒãƒ¼ãƒ‰ãŒå‰Šé™¤ã•ã‚ŒãŸå ´åˆã¯ï¼Œãƒãƒ¼ãƒ‰è¡¨ã‹ã‚‰å‰Šé™¤ã™ã‚‹
    */
   void update_node_id_list();
 
   /**
-   * •Ï”‚ğ“o˜^‚·‚é
-   * ‚·‚Å‚É“o˜^Ï‚İ‚Ì“¯ˆê•Ï”‚Ì”÷•ª‰ñ”‚æ‚è‚à
-   * ‘å‚«‚©‚Á‚½‚ç•Ï”‚ÌƒŠƒXƒg‚É“o˜^‚³‚ê‚é
+   * å¤‰æ•°ã‚’ç™»éŒ²ã™ã‚‹
+   * ã™ã§ã«ç™»éŒ²æ¸ˆã¿ã®åŒä¸€å¤‰æ•°ã®å¾®åˆ†å›æ•°ã‚ˆã‚Šã‚‚
+   * å¤§ãã‹ã£ãŸã‚‰å¤‰æ•°ã®ãƒªã‚¹ãƒˆã«ç™»éŒ²ã•ã‚Œã‚‹
    *
-   * @param name •Ï”–¼
-   * @param differential_count ”÷•ª‰ñ”
+   * @param name å¤‰æ•°å
+   * @param differential_count å¾®åˆ†å›æ•°
    *
-   * @return “o˜^‚³‚ê‚½‚©‚Ç‚¤‚©
+   * @return ç™»éŒ²ã•ã‚ŒãŸã‹ã©ã†ã‹
    */
   bool register_variable(const std::string& name, int differential_count);
 
   /**
-   * w’è‚µ‚½•Ï”‚ÌÅ‘å”÷•ª‰ñ”‚ğ‹‚ß‚é
+   * æŒ‡å®šã—ãŸå¤‰æ•°ã®æœ€å¤§å¾®åˆ†å›æ•°ã‚’æ±‚ã‚ã‚‹
    */
   int get_differential_count(const std::string& name) const;
 
   /**
-   * •Ï”•\‚Ìæ“ª‚Ì—v‘f‚ğ•Ô‚·
+   * å¤‰æ•°è¡¨ã®å…ˆé ­ã®è¦ç´ ã‚’è¿”ã™
    */
   variable_map_const_iterator variable_map_begin() const
   {
@@ -119,7 +119,7 @@ public:
   }
 
   /**
-   * •Ï”•\‚ÌÅŒã‚ÌŸ‚Ì—v‘f‚ğ•Ô‚·
+   * å¤‰æ•°è¡¨ã®æœ€å¾Œã®æ¬¡ã®è¦ç´ ã‚’è¿”ã™
    */
   variable_map_const_iterator variable_map_end() const
   {
@@ -134,14 +134,14 @@ public:
 
 
   /**
-   * ƒp[ƒX‚³‚ê‚½ƒm[ƒhƒcƒŠ[‚Ìİ’è
-   * İ’è‚³‚ê‚½ŒãCˆÓ–¡‰ğÍ“™‚Ì‘Oˆ—‚Í©“®‚Å‚¨‚±‚È‚í‚ê‚é
+   * ãƒ‘ãƒ¼ã‚¹ã•ã‚ŒãŸãƒãƒ¼ãƒ‰ãƒ„ãƒªãƒ¼ã®è¨­å®š
+   * è¨­å®šã•ã‚ŒãŸå¾Œï¼Œæ„å‘³è§£æç­‰ã®å‰å‡¦ç†ã¯è‡ªå‹•ã§ãŠã“ãªã‚ã‚Œã‚‹
    */
   //void set_tree(const node_sptr& tree);
  
   /**
-   * ƒm[ƒhƒcƒŠ[‚ğŒğŠ·‚·‚é
-   * V‚µ‚¢ƒm[ƒhƒcƒŠ[‚ÍˆÓ–¡‰ğÍ“™‚Ì‘Oˆ—‚ğ‚¨‚±‚È‚Á‚½Œã‚Å‚ ‚é•K—v‚ª‚ ‚é
+   * ãƒãƒ¼ãƒ‰ãƒ„ãƒªãƒ¼ã‚’äº¤æ›ã™ã‚‹
+   * æ–°ã—ã„ãƒãƒ¼ãƒ‰ãƒ„ãƒªãƒ¼ã¯æ„å‘³è§£æç­‰ã®å‰å‡¦ç†ã‚’ãŠã“ãªã£ãŸå¾Œã§ã‚ã‚‹å¿…è¦ãŒã‚ã‚‹
    */
   node_sptr swap_tree(const node_sptr& tree);
 
@@ -150,7 +150,7 @@ public:
   }
 
   /**
-   * dotŒ¾ŒêŒ`®‚Å‚Ì•\¦
+   * dotè¨€èªå½¢å¼ã§ã®è¡¨ç¤º
    */
   std::string to_graphviz() const
   {
@@ -162,7 +162,7 @@ public:
   std::ostream& to_graphviz(std::ostream& s) const;
 
   /**
-   * ƒm[ƒhƒcƒŠ[‚É‘Î‚µ‚ÄƒrƒWƒ^[‚ğ“K—p‚·‚é
+   * ãƒãƒ¼ãƒ‰ãƒ„ãƒªãƒ¼ã«å¯¾ã—ã¦ãƒ“ã‚¸ã‚¿ãƒ¼ã‚’é©ç”¨ã™ã‚‹
    */
   void dispatch(parse_tree::TreeVisitor* visitor)
   {
@@ -170,7 +170,7 @@ public:
   }
 
   /**
-   * ƒm[ƒhƒcƒŠ[‚É‘Î‚µ‚ÄƒrƒWƒ^[‚ğ“K—p‚·‚é
+   * ãƒãƒ¼ãƒ‰ãƒ„ãƒªãƒ¼ã«å¯¾ã—ã¦ãƒ“ã‚¸ã‚¿ãƒ¼ã‚’é©ç”¨ã™ã‚‹
    */
   void dispatch(parse_tree::BaseNodeVisitor* visitor)
   {
@@ -178,27 +178,27 @@ public:
   }
 
   /**
-   * V‚µ‚¢ƒm[ƒh‚ğ’Ç‰Á‚·‚é
+   * æ–°ã—ã„ãƒãƒ¼ãƒ‰ã‚’è¿½åŠ ã™ã‚‹
    */
   node_id_t register_node(const node_sptr& n);
 
   /**
-   * ID‚É‘Î‰•t‚¯‚ç‚ê‚Ä‚¢‚éƒm[ƒh‚Ì•ÏX
+   * IDã«å¯¾å¿œä»˜ã‘ã‚‰ã‚Œã¦ã„ã‚‹ãƒãƒ¼ãƒ‰ã®å¤‰æ›´
    */
   void update_node(node_id_t id, const node_sptr& n);
 
   /**
-   * ƒm[ƒh•\‚©‚çw’è‚³‚ê‚½ƒm[ƒhID‚Ìî•ñ‚ğíœ‚·‚é
+   * ãƒãƒ¼ãƒ‰è¡¨ã‹ã‚‰æŒ‡å®šã•ã‚ŒãŸãƒãƒ¼ãƒ‰IDã®æƒ…å ±ã‚’å‰Šé™¤ã™ã‚‹
    */
   void remove_node(node_id_t id);
     
   /**
-   * ƒm[ƒh‚É‘Î‰•t‚¯‚ç‚ê‚Ä‚¢‚éID‚Ì•ÏX
+   * ãƒãƒ¼ãƒ‰ã«å¯¾å¿œä»˜ã‘ã‚‰ã‚Œã¦ã„ã‚‹IDã®å¤‰æ›´
    */
   //void update_node_id(node_id_t id, const node_sptr& n);
 
   /**
-   * w’è‚³‚ê‚½ID‚É‘Î‰‚·‚éƒm[ƒh‚ğ“¾‚é
+   * æŒ‡å®šã•ã‚ŒãŸIDã«å¯¾å¿œã™ã‚‹ãƒãƒ¼ãƒ‰ã‚’å¾—ã‚‹
    */  
   node_sptr get_node(node_id_t id) const
   {
@@ -211,7 +211,7 @@ public:
   }  
   
   /**
-   * ƒgƒbƒvƒm[ƒh‚ğ“¾‚é
+   * ãƒˆãƒƒãƒ—ãƒãƒ¼ãƒ‰ã‚’å¾—ã‚‹
    */  
   node_sptr get_node() const
   {
@@ -219,7 +219,7 @@ public:
   }  
   
   /**
-   * assertƒm[ƒh‚ğ“¾‚é
+   * assertãƒãƒ¼ãƒ‰ã‚’å¾—ã‚‹
    */
   node_sptr get_assertion_node() const
   {
@@ -246,7 +246,7 @@ public:
 
   
   /**
-   * w’è‚³‚ê‚½ƒm[ƒh‚É‘Î‰‚·‚éID‚ğ“¾‚é
+   * æŒ‡å®šã•ã‚ŒãŸãƒãƒ¼ãƒ‰ã«å¯¾å¿œã™ã‚‹IDã‚’å¾—ã‚‹
    */
   /*
   node_id_t get_node_id(const node_sptr& n) const
@@ -261,7 +261,7 @@ public:
   */
 
   /**
-   * ƒm[ƒh•\‚ÌÅ‰‚Ì—v‘f
+   * ãƒãƒ¼ãƒ‰è¡¨ã®æœ€åˆã®è¦ç´ 
    */
   node_map_const_iterator node_map_begin() const 
   {
@@ -269,7 +269,7 @@ public:
   }
 
   /**
-   * ƒm[ƒh•\‚ÌÅŒã‚ÌŸ‚Ì—v‘f
+   * ãƒãƒ¼ãƒ‰è¡¨ã®æœ€å¾Œã®æ¬¡ã®è¦ç´ 
    */ 
   node_map_const_iterator node_map_end() const 
   {
@@ -277,7 +277,7 @@ public:
   }
 
   /**
-   * ƒm[ƒh•\‚ÌƒTƒCƒY
+   * ãƒãƒ¼ãƒ‰è¡¨ã®ã‚µã‚¤ã‚º
    */
   size_t node_map_size() const
   {
@@ -285,12 +285,12 @@ public:
   }
 
   /**
-   * ƒm[ƒh•\’†‚É‚ ‚éƒm[ƒhID‚ÌƒŠƒXƒg‚ğì¬‚·‚é
+   * ãƒãƒ¼ãƒ‰è¡¨ä¸­ã«ã‚ã‚‹ãƒãƒ¼ãƒ‰IDã®ãƒªã‚¹ãƒˆã‚’ä½œæˆã™ã‚‹
    */
   void make_node_id_list();
 
   /**
-   * ƒm[ƒhIDƒŠƒXƒg‚ÌÅ‰‚Ì—v‘f
+   * ãƒãƒ¼ãƒ‰IDãƒªã‚¹ãƒˆã®æœ€åˆã®è¦ç´ 
    */
   node_id_list_const_iterator node_id_list_begin()
   {
@@ -298,7 +298,7 @@ public:
   }
 
   /**
-   * ƒm[ƒhIDƒŠƒXƒg‚ÌÅŒã‚ÌŸ‚Ì—v‘f
+   * ãƒãƒ¼ãƒ‰IDãƒªã‚¹ãƒˆã®æœ€å¾Œã®æ¬¡ã®è¦ç´ 
    */
   node_id_list_const_iterator node_id_list_end()
   {
@@ -306,7 +306,7 @@ public:
   }
 
   /**
-   * “o˜^‚³‚ê‚Ä‚¢‚éNodeFactory‚ğŒ³‚Éw’è‚³‚ê‚½Œ^‚Ìƒm[ƒh‚ğ¶¬‚·‚é
+   * ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹NodeFactoryã‚’å…ƒã«æŒ‡å®šã•ã‚ŒãŸå‹ã®ãƒãƒ¼ãƒ‰ã‚’ç”Ÿæˆã™ã‚‹
    */
   template<typename NodeType>
   boost::shared_ptr<NodeType> create_node() const
@@ -316,12 +316,12 @@ public:
   
 
   /**
-   * ‚·‚×‚Ä‚Ìƒf[ƒ^‚ğ”jŠü‚µA‰Šúó‘Ô‚É–ß‚·
+   * ã™ã¹ã¦ã®ãƒ‡ãƒ¼ã‚¿ã‚’ç ´æ£„ã—ã€åˆæœŸçŠ¶æ…‹ã«æˆ»ã™
    */
   void clear();
 
   /**
-   * ParseTree‚Ìó‘Ô‚Ìo—Í
+   * ParseTreeã®çŠ¶æ…‹ã®å‡ºåŠ›
    */
   std::ostream& dump(std::ostream& s) const;
 

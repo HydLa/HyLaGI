@@ -21,11 +21,11 @@ public:
 
   virtual void initialize(const parse_tree_sptr& parse_tree,int id);
   /**
-   * ŠeƒXƒŒƒbƒh‚ª—^‚¦‚ç‚ê‚½‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ðŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŽÀs‚ð‚¨‚±‚È‚¤
+   * å„ã‚¹ãƒ¬ãƒƒãƒ‰ãŒä¸Žãˆã‚‰ã‚ŒãŸè§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å…ƒã«ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å®Ÿè¡Œã‚’ãŠã“ãªã†
    */
   virtual phase_result_const_sptr_t simulate();
   /**
-   * ‘Ò‹@ƒXƒŒƒbƒh‚É‚ ‚éƒXƒŒƒbƒh‚ÌƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“I—¹‚ð’Ê’m
+   * å¾…æ©Ÿã‚¹ãƒ¬ãƒƒãƒ‰ã«ã‚ã‚‹ã‚¹ãƒ¬ãƒƒãƒ‰ã®ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†ã‚’é€šçŸ¥
    */
   void notify_simulation_end();
   

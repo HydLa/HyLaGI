@@ -23,7 +23,7 @@ public:
   ValueRange(){}
 
   /**
-   * ���S�Ȗ���`�l���ǂ���
+   * 完全な未定義値かどうか
    */
   bool undefined() const
   {
@@ -31,11 +31,11 @@ public:
   }
   
   /**
-   * ��ӂɒl����܂邩�ǂ���
-   * �����I�Ȕ�r�͂��Ă��炸�C
-   * 1. �����Ə�������ꂼ��1�������Ȃ��C
-   * 2. �����Ə���̌��ƂȂ���value���������̂ł���
-   * �ꍇ�̂�true���Ԃ�D
+   * 一意に値が定まるかどうか
+   * 数式的な比較はしておらず，
+   * 1. 下限と上限がそれぞれ1つずつしかなく，
+   * 2. 下限と上限の元となったvalueが同じものである
+   * 場合のみtrueが返る．
    */
   bool is_unique() const
   {
@@ -45,7 +45,7 @@ public:
   }
   
   /**
-   * ��ӂɒl����܂���̂Ƃ���
+   * 一意に値が定まるものとする
    */
   void set_unique(const value_t& val)
   {

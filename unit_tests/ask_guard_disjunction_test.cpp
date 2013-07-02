@@ -1,6 +1,6 @@
 /**
  *
- * ask‚ÌƒK[ƒhðŒ“à‚Ì˜_—Ï‚ÉŠÖ‚·‚éƒeƒXƒg
+ * askã®ã‚¬ãƒ¼ãƒ‰æ¡ä»¶å†…ã®è«–ç†ç©ã«é–¢ã™ã‚‹ãƒ†ã‚¹ãƒˆ
  *
  */
 
@@ -53,7 +53,7 @@ bool comp_splitted_struct(std::string lhs, std::string rhs)
 
 BOOST_AUTO_TEST_CASE(ask_guard_disjunction_format_test)
 {
-  // •Ï‰»‚È‚µ
+  // å¤‰åŒ–ãªã—
   BOOST_CHECK(comp_formatted_struct("x=1=>z=1.", "x=1=>z=1."));  
   BOOST_CHECK(comp_formatted_struct("a=1 | b=2 | c=3 => z=1.", "a=1 | b=2 | c=3 => z=1."));
   BOOST_CHECK(comp_formatted_struct("a=1 & b=2 & c=3 => z=1.", "a=1 & b=2 & c=3 => z=1."));
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(ask_guard_disjunction_format_test)
   BOOST_CHECK(comp_formatted_struct("(a=1 & b=2) | c=3 => z=1.", "(a=1 & b=2) | c=3 => z=1."));
   BOOST_CHECK(comp_formatted_struct("a=1 | (b=2 & c=3) => z=1.", "a=1 | (b=2 & c=3) => z=1."));
 
-  // “WŠJ
+  // å±•é–‹
   BOOST_CHECK(comp_formatted_struct(
     "(a=1 | b=2) & c=3 => z=1.", 
     "a=1 & c=3 | b=2 & c=3 => z=1."));
@@ -89,12 +89,12 @@ BOOST_AUTO_TEST_CASE(ask_guard_disjunction_format_test)
 
 BOOST_AUTO_TEST_CASE(ask_guard_disjunction_split_test)
 {  
-  // •Ï‰»‚È‚µ
+  // å¤‰åŒ–ãªã—
   BOOST_CHECK(comp_splitted_struct("x=1=>z=1.", "x=1=>z=1."));  
   BOOST_CHECK(comp_splitted_struct("a=1 & b=2 => z=1.", "a=1 & b=2 => z=1."));
   BOOST_CHECK(comp_splitted_struct("a=1 & b=2 & c=3 => z=1.", "a=1 & b=2 & c=3 => z=1."));
     
-  // •ªŠ„
+  // åˆ†å‰²
   BOOST_CHECK(comp_splitted_struct("a=1 | b=2 => z=1.", 
     "(a=1 => z=1) & (b=2 => z=1)."));
 

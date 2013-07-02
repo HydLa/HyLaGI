@@ -14,7 +14,7 @@ namespace simulator {
 namespace symbolic {
 
 /**
- * prev‚ğŠÜ‚Ş‚©‚ğ’²‚×‚éƒrƒWƒ^[ƒNƒ‰ƒXD
+ * prevã‚’å«ã‚€ã‹ã‚’èª¿ã¹ã‚‹ãƒ“ã‚¸ã‚¿ãƒ¼ã‚¯ãƒ©ã‚¹ï¼
  */
 class PrevSearcher : public parse_tree::DefaultTreeVisitor {
 public:
@@ -25,7 +25,7 @@ public:
   virtual ~PrevSearcher(){}
 
   /*
-   prev‚ğŠÜ‚ñ‚Å‚¢‚½‚çtrue‚ğ•Ô‚·
+   prevã‚’å«ã‚“ã§ã„ãŸã‚‰trueã‚’è¿”ã™
   */
   bool search_prev(const node_sptr &node){
     include_prev_ = false;

@@ -54,7 +54,7 @@ std::string REDUCELink::get_s_expr(){
   while(count_char(line, '(')!=count_char(line, ')')){
     std::string tmp;
     getline_with_throw("get_s_expr", tmp);
-    // Ÿ‚Ìs‚Ì•¶š—ñtmp‚ğŒ‹‡‚·‚é‘O‚ÉA‰üs’n“_‚ÅƒXƒy[ƒX‚ğ“ü‚ê‚Ä‚¨‚­
+    // æ¬¡ã®è¡Œã®æ–‡å­—åˆ—tmpã‚’çµåˆã™ã‚‹å‰ã«ã€æ”¹è¡Œåœ°ç‚¹ã§ã‚¹ãƒšãƒ¼ã‚¹ã‚’å…¥ã‚Œã¦ãŠã
     line = line + " ";
     line = line + tmp;
   }
@@ -77,9 +77,9 @@ std::istream& REDUCELink::getline_with_throw(const std::string& cmd, std::string
   std::istream& is = getline(s_, line);
   if(!s_){ throw REDUCELinkError(cmd, "fail to getline"); }
 
-  if(line.find("***")!=std::string::npos){ // "***** 1 invalid as list"‚Ì‚æ‚¤‚È˜_—ƒGƒ‰[o—Í‚Ì”»’è
+  if(line.find("***")!=std::string::npos){ // "***** 1 invalid as list"ã®ã‚ˆã†ãªè«–ç†ã‚¨ãƒ©ãƒ¼å‡ºåŠ›ã®åˆ¤å®š
     throw REDUCELinkError(cmd, "[ " + line + " ]");
-  }else if(line.find("Declare")!=std::string::npos){ // –¢’è‹`‚ÌŠÖ”‚Ì“ü—Í‚Ì”»’è
+  }else if(line.find("Declare")!=std::string::npos){ // æœªå®šç¾©ã®é–¢æ•°ã®å…¥åŠ›ã®åˆ¤å®š
     throw REDUCELinkError(cmd, "[ " + line + " ]");
   }
 
@@ -87,7 +87,7 @@ std::istream& REDUCELink::getline_with_throw(const std::string& cmd, std::string
 }
 
 /*
- * string’†‚Éw’è‚µ‚½char‚Ì”‚ğ”‚¦‚é
+ * stringä¸­ã«æŒ‡å®šã—ãŸcharã®æ•°ã‚’æ•°ãˆã‚‹
  */
 int REDUCELink::count_char(const std::string str, const char query) const {
   int count = 0;

@@ -8,21 +8,21 @@ namespace hydla {
 namespace logger {
 
 /**
- * ƒƒOo—ÍŠÖ”‚É‚¨‚¢‚Ä‘Î‰‚·‚éˆø”‚Ì”
+ * ãƒ­ã‚°å‡ºåŠ›é–¢æ•°ã«ãŠã„ã¦å¯¾å¿œã™ã‚‹å¼•æ•°ã®æ•°
  */
 #define HYDLA_LOGGER_LOG_WRITE_ARG_NUM 10
 
 /**
- * ƒƒOo—ÍŠÖ”“à‚Ì’è‹`
+ * ãƒ­ã‚°å‡ºåŠ›é–¢æ•°å†…ã®å®šç¾©
  */
 #define HYDLA_LOGGER_LEFT_SHIFT_ARGS_GEN(z, n, d) \
   << BOOST_PP_CAT(a, n)
 
 /**
- * w’è‚³‚ê‚½’l‚Ì”‚Ìˆø”‚ğ‚à‚ÂƒƒOo—ÍŠÖ”‚ğ¶¬
+ * æŒ‡å®šã•ã‚ŒãŸå€¤ã®æ•°ã®å¼•æ•°ã‚’ã‚‚ã¤ãƒ­ã‚°å‡ºåŠ›é–¢æ•°ã‚’ç”Ÿæˆ
  */
 
-//d‚Ì—v‘f => (ŠÖ”–¼, ƒtƒBƒ‹ƒ^•Ï”)
+//dã®è¦ç´  => (é–¢æ•°å, ãƒ•ã‚£ãƒ«ã‚¿å¤‰æ•°)
 #define HYDLA_LOGGER_DEF_LOG_WRITE_GEN(z, n, d)                   \
   template< BOOST_PP_ENUM_PARAMS(n, typename A) >                 \
   void BOOST_PP_TUPLE_ELEM(2, 0, d)(                              \
@@ -34,7 +34,7 @@ namespace logger {
 
 
 /**
- * w’è‚³‚ê‚½ƒŒƒxƒ‹‚ÌƒƒOo—ÍŠÖ”‚ğ¶¬
+ * æŒ‡å®šã•ã‚ŒãŸãƒ¬ãƒ™ãƒ«ã®ãƒ­ã‚°å‡ºåŠ›é–¢æ•°ã‚’ç”Ÿæˆ
  */
 #define HYDLA_LOGGER_DEF_LOG_WRITE(FUNC, LEVEL, FILTER) \
   BOOST_PP_REPEAT_FROM_TO(                              \
@@ -48,31 +48,31 @@ namespace logger {
 class Logger
 {
 public:
-  /// ƒvƒƒOƒ‰ƒ€“Ç‚İ‚İ‚Ìˆ—
+  /// ãƒ—ãƒ­ã‚°ãƒ©ãƒ èª­ã¿è¾¼ã¿ã®å‡¦ç†
   static bool parsing_area_;
   
-  /// §–ñŠK‘w‚Ìì¬‚âŠÇ—
+  /// åˆ¶ç´„éšå±¤ã®ä½œæˆã‚„ç®¡ç†
   static bool constraint_hierarchy_area_;
   
-  /// •Â•ïŒvZ‚Ìˆ—
+  /// é–‰åŒ…è¨ˆç®—ã®å‡¦ç†
   static bool calculate_closure_area_;
   
-  /// PP‚âIP‚Ì‘S‘Ì“I‚Èˆ—‚Ì—¬‚ê
+  /// PPã‚„IPã®å…¨ä½“çš„ãªå‡¦ç†ã®æµã‚Œ
   static bool phase_area_;
   
-  /// ƒ‚ƒWƒ…[ƒ‹W‡‚Ì‘I‘ğ
+  /// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é¸æŠ
   static bool module_set_area_; 
   
-  /// VirtualConstraintSolver“à‚Å‚Ìˆ—Då‚ÉŠO•”ƒ\ƒtƒg‚Æ‚Ì’ÊMˆ—
+  /// VirtualConstraintSolverå†…ã§ã®å‡¦ç†ï¼ä¸»ã«å¤–éƒ¨ã‚½ãƒ•ãƒˆã¨ã®é€šä¿¡å‡¦ç†
   static bool vcs_area_;
   
-  /// ŠO•”ƒ\ƒtƒg‚Å‚Ìˆ—
+  /// å¤–éƒ¨ã‚½ãƒ•ãƒˆã§ã®å‡¦ç†
   static bool extern_area_; 
 
-  /// ‚Ç‚±‚É‚àŠY“–‚µ‚È‚¢‚ªCo—Í‚µ‚½‚¢‚à‚ÌD‹É—Íg‚í‚È‚¢‚æ‚¤‚É
+  /// ã©ã“ã«ã‚‚è©²å½“ã—ãªã„ãŒï¼Œå‡ºåŠ›ã—ãŸã„ã‚‚ã®ï¼æ¥µåŠ›ä½¿ã‚ãªã„ã‚ˆã†ã«
   static bool rest_area_;
 	
-	/// HA•ÏŠ·‚Ìˆ—
+	/// HAå¤‰æ›ã®å‡¦ç†
 	static bool ha_converter_area_;
 
   enum LogLevel {
@@ -136,26 +136,26 @@ public:
     }
   }
   
-  /// Logger‚ÌSingleton‚ÈƒCƒ“ƒXƒ^ƒ“ƒX
+  /// Loggerã®Singletonãªã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
   static Logger& instance();
 
   /**
-   * ƒƒOƒŒƒxƒ‹debug‚Æ‚µ‚ÄƒƒO‚Ìo—Í‚ğ‚¨‚±‚È‚¤
+   * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«debugã¨ã—ã¦ãƒ­ã‚°ã®å‡ºåŠ›ã‚’ãŠã“ãªã†
    */
   HYDLA_LOGGER_DEF_LOG_WRITE(debug_write, Debug, debug_)
 
   /**
-   * ƒƒOƒŒƒxƒ‹warn‚Æ‚µ‚ÄƒƒO‚Ìo—Í‚ğ‚¨‚±‚È‚¤
+   * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«warnã¨ã—ã¦ãƒ­ã‚°ã®å‡ºåŠ›ã‚’ãŠã“ãªã†
    */
   HYDLA_LOGGER_DEF_LOG_WRITE(warn_write,  Warn,  warn_)
 
   /**
-   * ƒƒOƒŒƒxƒ‹error‚Æ‚µ‚ÄƒƒO‚Ìo—Í‚ğ‚¨‚±‚È‚¤
+   * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«errorã¨ã—ã¦ãƒ­ã‚°ã®å‡ºåŠ›ã‚’ãŠã“ãªã†
    */
   HYDLA_LOGGER_DEF_LOG_WRITE(error_write, Error, error_)
   
   /**
-   * ƒƒOƒŒƒxƒ‹fatal‚Æ‚µ‚ÄƒƒO‚Ìo—Í‚ğ‚¨‚±‚È‚¤
+   * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«fatalã¨ã—ã¦ãƒ­ã‚°ã®å‡ºåŠ›ã‚’ãŠã“ãªã†
    */
   HYDLA_LOGGER_DEF_LOG_WRITE(fatal_write, Fatal, fatal_)
 
@@ -182,82 +182,82 @@ private:
 
 
 /**
- * ƒƒOƒŒƒxƒ‹debug‚Å‚ÌƒƒO‚Ìo—Í
+ * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«debugã§ã®ãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_DEBUG(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Debug, debug_write, (__VA_ARGS__))
 
 
 /**
- * \•¶‰ğÍ‚ÌdebugƒƒO‚Ìo—Í
+ * æ§‹æ–‡è§£ææ™‚ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_PARSING(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ParsingArea, debug_write, (__VA_ARGS__))
 
 /**
- * §–ñŠK‘wŠÖŒW‚ÌdebugƒƒO‚Ìo—Í
+ * åˆ¶ç´„éšå±¤é–¢ä¿‚ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_HIERARCHY(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ConstraintHierarchyArea, debug_write, (__VA_ARGS__))
 
 /**
- * •Â•ïŒvZ‚ÌdebugƒƒO‚Ìo—Í
+ * é–‰åŒ…è¨ˆç®—æ™‚ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_CLOSURE(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(CalculateClosureArea, debug_write, (__VA_ARGS__))
   
 /**
- * ƒtƒF[ƒY‚²‚Æ‚ÌdebugƒƒO‚Ìo—Í
+ * ãƒ•ã‚§ãƒ¼ã‚ºã”ã¨ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_PHASE(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(PhaseArea, debug_write, (__VA_ARGS__))
   
 /**
- * ƒ‚ƒWƒ…[ƒ‹W‡‘I‘ğ‚ÌdebugƒƒO‚Ìo—Í
+ * ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆé¸æŠæ™‚ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_MS(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ModuleSetArea, debug_write, (__VA_ARGS__))
   
 /**
- * VCS‚ğŒp³‚µ‚½ƒNƒ‰ƒX‚ÌdebugƒƒO‚Ìo—Í
+ * VCSã‚’ç¶™æ‰¿ã—ãŸã‚¯ãƒ©ã‚¹ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_VCS(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(VCSArea, debug_write, (__VA_ARGS__))
 
 
 /**
- * ŠO•”ƒ\ƒtƒgƒEƒFƒA‚É‚æ‚édebugƒƒO‚Ìo—Í
+ * å¤–éƒ¨ã‚½ãƒ•ãƒˆã‚¦ã‚§ã‚¢ã«ã‚ˆã‚‹debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_EXTERN(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ExternArea, debug_write, (__VA_ARGS__))
 
 
 /**
- * ‚»‚Ì‘¼‚ÌdebugƒƒO‚Ìo—Í
+ * ãã®ä»–ã®debugãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_REST(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(RestArea, debug_write, (__VA_ARGS__))
 	
 /**
- * HA•ÏŠ·ˆ—‚ÌdebugƒƒOo—Í
+ * HAå¤‰æ›å‡¦ç†ã®debugãƒ­ã‚°å‡ºåŠ›
  */
 #define HYDLA_LOGGER_HA(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(HAConverterArea, debug_write, (__VA_ARGS__))
 
 /**
- * ƒƒOƒŒƒxƒ‹warn‚Å‚ÌƒƒO‚Ìo—Í
+ * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«warnã§ã®ãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_WARN(...)                                  \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Warn, warn_write, (__VA_ARGS__))
 
 /**
- * ƒƒOƒŒƒxƒ‹error‚Å‚ÌƒƒO‚Ìo—Í
+ * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«errorã§ã®ãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_ERROR(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Error, error_write, (__VA_ARGS__))
 
 /**
- * ƒƒOƒŒƒxƒ‹fatal‚Å‚ÌƒƒO‚Ìo—Í
+ * ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«fatalã§ã®ãƒ­ã‚°ã®å‡ºåŠ›
  */
 #define HYDLA_LOGGER_FATAL(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Fatal, fatal_write, (__VA_ARGS__))

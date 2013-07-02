@@ -42,15 +42,15 @@ public:
   
   typedef std::map<std::string, int> max_diff_map_t;
   /**
-   * •Ï”ƒf[ƒ^
-   * (•Ï”–¼C ”÷•ª‰ñ”C‘—MŒ`®)
+   * å¤‰æ•°ãƒ‡ãƒ¼ã‚¿
+   * (å¤‰æ•°åï¼Œ å¾®åˆ†å›æ•°ï¼Œé€ä¿¡å½¢å¼)
    */
   typedef boost::tuple<std::string, int, VariableArg>       var_info_t;
   typedef std::set<var_info_t>                 var_info_list_t;
 
   /**
-   * ‹L†’è”ƒf[ƒ^
-   * (Œ³‚Ì•Ï”–¼C ”÷•ª‰ñ”Cid)
+   * è¨˜å·å®šæ•°ãƒ‡ãƒ¼ã‚¿
+   * (å…ƒã®å¤‰æ•°åï¼Œ å¾®åˆ†å›æ•°ï¼Œid)
    */
   typedef boost::tuple<std::string, int, int>       par_info_t;
   typedef std::set<par_info_t>                 par_info_list_t;
@@ -58,15 +58,15 @@ public:
   typedef var_info_list_t::const_iterator      vars_const_iterator;
   typedef hydla::parse_tree::node_sptr         node_sptr;
 
-  // Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar"
-  // Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê
+  // Mathematicaã«é€ã‚‹éš›ã«å¤‰æ•°åã«ã¤ã‘ã‚‹æ¥é ­èª "usrVar"
+  // Mathematicaã«é€ã‚‹éš›ã«å®šæ•°åã«ã¤ã‘ã‚‹æ¥é ­èª
 
   PacketSender(MathLink& ml);
 
   virtual ~PacketSender();
   
   
-  /// Ã“Iƒƒ“ƒo‚Ì‰Šú‰»‚ğs‚¤
+  /// é™çš„ãƒ¡ãƒ³ãƒã®åˆæœŸåŒ–ã‚’è¡Œã†
   static void initialize();
 
   vars_const_iterator vars_begin() const { return vars_.begin(); }
@@ -77,33 +77,33 @@ public:
   void put_value(value_t, VariableArg var);
 
   /**
-   * —^‚¦‚ç‚ê‚½ƒm[ƒh‚Ì‘—M‚ğ‚¨‚±‚È‚¤
+   * ä¸ãˆã‚‰ã‚ŒãŸãƒãƒ¼ãƒ‰ã®é€ä¿¡ã‚’ãŠã“ãªã†
    *
-   * ƒm[ƒh‚Ì‘—M‚ğ‚¨‚±‚È‚¤Û‚Í’¼ÚvisitŠÖ”‚ğŒÄ‚Î‚¸‚ÉC
-   * •K‚¸‚±‚ÌŠÖ”‚ğŒo—R‚·‚é‚±‚Æ
+   * ãƒãƒ¼ãƒ‰ã®é€ä¿¡ã‚’ãŠã“ãªã†éš›ã¯ç›´æ¥visité–¢æ•°ã‚’å‘¼ã°ãšã«ï¼Œ
+   * å¿…ãšã“ã®é–¢æ•°ã‚’çµŒç”±ã™ã‚‹ã“ã¨
    */
 
   void put_node(const node_sptr& node, VariableArg variable_arg);
   /**
-   * ƒŠƒXƒgŒ`®‚Å‘—M‚·‚é
+   * ãƒªã‚¹ãƒˆå½¢å¼ã§é€ä¿¡ã™ã‚‹
    */
   void put_nodes(const std::vector<node_sptr> &constraints, VariableArg variable_arg);
 
   /**
-   * •Ï”‚Ì‘—M
+   * å¤‰æ•°ã®é€ä¿¡
    */
   void put_var(const var_info_t var);
   void put_var(const std::string& variable_name, const int& diff_count, VariableArg variable_arg);
 
   /**
-   * put_node‚ÌÛ‚É‘—M‚³‚ê‚½•Ï”ŒQ‚Ì‘—M‚ğ‚¨‚±‚È‚¤
-   * ”÷•ª’l‚ª‘—M‚³‚ê‚½ê‡‚ÍC‚»‚Ì”÷•ªŒ³‚à‘—M‚·‚é‚à‚Ì‚Æ‚·‚éD
+   * put_nodeã®éš›ã«é€ä¿¡ã•ã‚ŒãŸå¤‰æ•°ç¾¤ã®é€ä¿¡ã‚’ãŠã“ãªã†
+   * å¾®åˆ†å€¤ãŒé€ä¿¡ã•ã‚ŒãŸå ´åˆã¯ï¼Œãã®å¾®åˆ†å…ƒã‚‚é€ä¿¡ã™ã‚‹ã‚‚ã®ã¨ã™ã‚‹ï¼
    */
   void put_vars();
   
   
   /**
-   * ã2‚Â‚Ì‹L†’è””Å
+   * ä¸Š2ã¤ã®è¨˜å·å®šæ•°ç‰ˆ
    */
   void put_par(const par_info_t par);
   void put_par(const std::string& name, const int& diff_count, const int& id);
@@ -112,7 +112,7 @@ public:
 
 
   /**
-   * put_node‚ÌÛ‚É‘—M‚³‚ê‚½•Ï”ŒQ‚Ìƒf[ƒ^‚ğÁ‹‚µC‰Šú‰»‚·‚é
+   * put_nodeã®éš›ã«é€ä¿¡ã•ã‚ŒãŸå¤‰æ•°ç¾¤ã®ãƒ‡ãƒ¼ã‚¿ã‚’æ¶ˆå»ã—ï¼ŒåˆæœŸåŒ–ã™ã‚‹
    */
   void clear();
 
@@ -120,13 +120,13 @@ public:
 
   virtual void visit(hydla::simulator::symbolic::SymbolicValue& value);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
@@ -134,59 +134,59 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
 
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
   
-  // ƒRƒ}ƒ“ƒh•¶
+  // ã‚³ãƒãƒ³ãƒ‰æ–‡
   virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
 
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
 
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
 
-  // ”Û’è
+  // å¦å®š
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
-  // ŠÖ”
+  // é–¢æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> node);
   
   
-  // ‰~ü—¦
+  // å††å‘¨ç‡
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  // ©‘R‘Î”‚Ì’ê
+  // è‡ªç„¶å¯¾æ•°ã®åº•
   virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
   
     
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
-  // ”š
+  // æ•°å­—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
-  // ‹L†’è”
+  // è¨˜å·å®šæ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
 
   // t
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
   
-  // –³ŒÀ‘å
+  // ç„¡é™å¤§
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
   
   typedef std::pair<std::string, int> function_t;
@@ -194,20 +194,20 @@ public:
   static function_map_t function_map_;
 private:
   MathLink* ml_;
-  /// ‘—M‚³‚ê‚½•Ï”‚Ìˆê——
+  /// é€ä¿¡ã•ã‚ŒãŸå¤‰æ•°ã®ä¸€è¦§
   var_info_list_t vars_;
   par_info_list_t pars_;
 
-  // Differentialƒm[ƒh‚ğ‰½‰ñ’Ê‚Á‚½‚©
+  // Differentialãƒãƒ¼ãƒ‰ã‚’ä½•å›é€šã£ãŸã‹
   int differential_count_;
 
-  /// Prevƒm[ƒh‚Ì‰º‚É‚¢‚é‚©‚Ç‚¤‚©
+  /// Prevãƒãƒ¼ãƒ‰ã®ä¸‹ã«ã„ã‚‹ã‹ã©ã†ã‹
   int in_prev_;
 
-  /// •Ï”‚Ìˆø”‚Æ‚µ‚Ä‘—‚é•¨
+  /// å¤‰æ•°ã®å¼•æ•°ã¨ã—ã¦é€ã‚‹ç‰©
   VariableArg variable_arg_;
 
-  // prev§–ñ‚ğ–³‹‚·‚é‚©‚Ç‚¤‚©
+  // prevåˆ¶ç´„ã‚’ç„¡è¦–ã™ã‚‹ã‹ã©ã†ã‹
   bool ignore_prev_;
 };
 

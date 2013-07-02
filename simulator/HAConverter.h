@@ -31,7 +31,7 @@ protected:
 	typedef hydla::ch::module_set_sptr 												module_set_sptr_t;
 	typedef std::vector<module_set_sptr_t>					 					module_set_sptrs_t;
 		
-	// ƒGƒbƒW\‘¢‘Ì ¬‚è—§‚ÂƒK[ƒhğŒ{Ì—p‚µ‚½ƒ‚ƒWƒ…[ƒ‹W‡
+	// ã‚¨ãƒƒã‚¸æ§‹é€ ä½“ æˆã‚Šç«‹ã¤ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ï¼‹æ¡ç”¨ã—ãŸãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆ
 	struct Phase
 	{
 		module_set_sptr_t module_set;
@@ -52,63 +52,63 @@ protected:
 	
 	typedef std::deque<current_condition_t> 	ha_results_t;
 
-	// ó‘ÔƒLƒ…[
+	// çŠ¶æ…‹ã‚­ãƒ¥ãƒ¼
 	current_conditions_t cc_vec_;
 	
-	// •ÏŠ·Œ‹‰Ê‚ğ•Û
+	// å¤‰æ›çµæœã‚’ä¿æŒ
 	ha_results_t ha_results_;
 	
-	// ÀsÏ‚İ‚©‚Ç‚¤‚©‚Ìƒ`ƒFƒbƒN
+	// å®Ÿè¡Œæ¸ˆã¿ã‹ã©ã†ã‹ã®ãƒã‚§ãƒƒã‚¯
 	bool check_already_exec(phase_result_sptr_t phase, current_condition_t cc);
 
-	// Šeƒpƒ‰ƒ[ƒ^‚ª•”•ªW‡‚Æ‚È‚Á‚Ä‚¢‚é‚©‚Ìƒ`ƒFƒbƒN
+	// å„ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒéƒ¨åˆ†é›†åˆã¨ãªã£ã¦ã„ã‚‹ã‹ã®ãƒã‚§ãƒƒã‚¯
 	bool check_subset(phase_result_sptr_t phase, phase_result_sptr_t past_phase);
 
-	// A‚ªB‚Ì”ÍˆÍ‚ÉŠÜ‚Ü‚ê‚éê‡true‚ğ•Ô‚·
+	// AãŒBã®ç¯„å›²ã«å«ã¾ã‚Œã‚‹å ´åˆtrueã‚’è¿”ã™
 	bool compare_parameter_range(range_t A, range_t B);	
-	// •Ï”ƒpƒ‰ƒ[ƒ^‚ğ’Tõ‚µ‚Ä•\¦
+	// å¤‰æ•°ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’æ¢ç´¢ã—ã¦è¡¨ç¤º
 	void search_variable_parameter(parameter_map_t map, std::string name, int diff_cnt);
-	// •Ï”‚ªƒK[ƒhğŒ‚ÉoŒ»‚·‚é‚©
+	// å¤‰æ•°ãŒã‚¬ãƒ¼ãƒ‰æ¡ä»¶ã«å‡ºç¾ã™ã‚‹ã‹
 	bool check_guard_variable(phase_result_sptr_t phase, std::string name, int derivative_count);
 	
-	// ‚Q‚Â‚Ìphase_result‚ÌphaseAƒ‚ƒWƒ…[ƒ‹W‡Apositive_ask‚ª“™‚µ‚¢‚©‚Ç‚¤‚©”»’è
+	// ï¼’ã¤ã®phase_resultã®phaseã€ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã€positive_askãŒç­‰ã—ã„ã‹ã©ã†ã‹åˆ¤å®š
 	bool compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2);
 
-	// ƒtƒF[ƒY“¯m‚ª“¯‚¶‚à‚Ì‚©‚Ç‚¤‚©”»’è
+	// ãƒ•ã‚§ãƒ¼ã‚ºåŒå£«ãŒåŒã˜ã‚‚ã®ã‹ã©ã†ã‹åˆ¤å®š
 	bool compare_phase(phase_t p1, phase_t p2);
 
-	// Œ»phase_result‚ªphase_results‚ÉŠÜ‚Ü‚ê‚é‚©
+	// ç¾phase_resultãŒphase_resultsã«å«ã¾ã‚Œã‚‹ã‹
 	bool check_contain(phase_result_sptr_t result, current_condition_t cc);
  
-	// phase_result_sptrs_t‚Ì’†g•\¦
+	// phase_result_sptrs_tã®ä¸­èº«è¡¨ç¤º
 	void viewPrs(phase_result_sptrs_t results);
-	// phase_result_sptr_t‚Ì’†g•\¦
+	// phase_result_sptr_tã®ä¸­èº«è¡¨ç¤º
 	void viewPr(phase_result_sptr_t result);
-	// asks‚Ì’†g•\¦
+	// asksã®ä¸­èº«è¡¨ç¤º
 	void viewAsks(ask_set_t asks);
 	
-	// ¶¬‚³‚ê‚½‘S‚Ä‚ÌHA‚ğo—ÍidotŒ¾Œêj
+	// ç”Ÿæˆã•ã‚ŒãŸå…¨ã¦ã®HAã‚’å‡ºåŠ›ï¼ˆdotè¨€èªï¼‰
 	void output_ha();
 	
-	// phase_results‚ğha‚ÌdotŒ¾Œê‚É•ÏŠ·‚·‚é
+	// phase_resultsã‚’haã®dotè¨€èªã«å¤‰æ›ã™ã‚‹
 	void convert_phase_results_to_ha(phase_result_sptrs_t result);
 	
-	// ha_result‚ÉHA•ÏŠ·‚É•K—v‚Èî•ñ‚ğpush‚·‚é
+	// ha_resultã«HAå¤‰æ›ã«å¿…è¦ãªæƒ…å ±ã‚’pushã™ã‚‹
 	void push_result(current_condition_t cc);
 	
-	// asks‚ğ˜A‚Ë‚½•¶š—ñ‚ğæ“¾
+	// asksã‚’é€£ã­ãŸæ–‡å­—åˆ—ã‚’å–å¾—
 	std::string get_asks_str(ask_set_t asks);
 	
-	// ó‘ÔƒLƒ…[‚ÉV‚½‚Èó‘Ô‚ğ’Ç‰Á‚·‚é
-	// push_simulation_phase‚Æ‰ï‚í‚¹‚é•K—v‚ ‚è
+	// çŠ¶æ…‹ã‚­ãƒ¥ãƒ¼ã«æ–°ãŸãªçŠ¶æ…‹ã‚’è¿½åŠ ã™ã‚‹
+	// push_simulation_phaseã¨ä¼šã‚ã›ã‚‹å¿…è¦ã‚ã‚Š
 	void push_current_condition(const current_condition_t cc)
 	{
 	  //HYDLA_LOGGER_HA("push cc");
 		cc_vec_.push_front(cc);
 	}
 
-	// ó‘ÔƒLƒ…[‚©‚çó‘Ô‚ğ‚Ğ‚Æ‚Âæ‚èo‚·
-	// pop_simulation_phase()‚Æ‡‚í‚¹‚é•K—v‚ ‚è
+	// çŠ¶æ…‹ã‚­ãƒ¥ãƒ¼ã‹ã‚‰çŠ¶æ…‹ã‚’ã²ã¨ã¤å–ã‚Šå‡ºã™
+	// pop_simulation_phase()ã¨åˆã‚ã›ã‚‹å¿…è¦ã‚ã‚Š
 	current_condition_t pop_current_condition()
 	{
     current_condition_t cc;
@@ -154,9 +154,9 @@ public:
 	VaribleGetter();
 	virtual ~VaribleGetter();
 	
-	// ”÷•ª
+	// å¾®åˆ†
 	virtual void visit(boost::shared_ptr<parse_tree::Differential> node);
-	// •Ï”
+	// å¤‰æ•°
 	virtual void visit(boost::shared_ptr<parse_tree::Variable> node);
 	
 	int tmp_diff_cnt;

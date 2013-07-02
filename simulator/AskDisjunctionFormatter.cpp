@@ -32,25 +32,25 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
   HYDLA_LOGGER_PARSING("#*** End AskDisjunctionFormatter::format ***\n");
 }
 
-// §–ñŒÄ‚Ño‚µ
+// åˆ¶ç´„å‘¼ã³å‡ºã—
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
 {
   dispatch_unary_node(node);
 }
 
-// ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
 {    
   dispatch_unary_node(node);
 }
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 {    
   dispatch_unary_node(node);
 }
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   accept(node->get_guard());
@@ -60,13 +60,13 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Ask> no
   }
 }
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
   // do nothing
 }
 
-// ”äŠr‰‰Zq
+// æ¯”è¼ƒæ¼”ç®—å­
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Equal> node)
 {
   // do nothing
@@ -98,12 +98,12 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Greater
   // do nothing
 }
 
-// ˜_—‰‰Zq
+// è«–ç†æ¼”ç®—å­
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
 {
   boost::shared_ptr<hydla::parse_tree::BinaryNode> n(node);
 
-  // and‚Ì¶qƒm[ƒh‚ªor‚Å‚ ‚Á‚½ê‡
+  // andã®å·¦å­ãƒãƒ¼ãƒ‰ãŒorã§ã‚ã£ãŸå ´åˆ
   logical_or_sptr lhs_child = 
     boost::dynamic_pointer_cast<hydla::parse_tree::LogicalOr>(n->get_lhs());
   if(lhs_child) {
@@ -125,7 +125,7 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Logical
   dispatch_lhs(n);        
 
 
-  // and‚Ì‰Eqƒm[ƒh‚ªor‚Å‚ ‚Á‚½ê‡
+  // andã®å³å­ãƒãƒ¼ãƒ‰ãŒorã§ã‚ã£ãŸå ´åˆ
   logical_or_sptr rhs_child = 
     boost::dynamic_pointer_cast<hydla::parse_tree::LogicalOr>(n->get_rhs());
   if(rhs_child) {
@@ -160,7 +160,7 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Not> no
   dispatch_unary_node(node);
 }
 
-// §–ñŠK‘w’è‹`‰‰Zq
+// åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
 {
   dispatch_binary_node(node);
@@ -171,7 +171,7 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Paralle
   dispatch_binary_node(node);
 }
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
   dispatch_unary_node(node);

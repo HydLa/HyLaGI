@@ -13,17 +13,17 @@ namespace hydla {
 namespace vcs {
 namespace mathematica {
 
-/** Mathematica‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrVar" */
+/** Mathematicaã«é€ã‚‹éš›ã«å¤‰æ•°åã«ã¤ã‘ã‚‹æ¥é ­èª "usrVar" */
 const std::string var_prefix("usrVar");
 
-/** Mathematica‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éŠÖ”–¼ */
+/** Mathematicaã«é€ã‚‹éš›ã«å®šæ•°åã«ã¤ã‘ã‚‹é–¢æ•°å */
 const std::string par_prefix("parameter");
 
 PacketSender::function_map_t PacketSender::function_map_;
 
 
 void PacketSender::initialize(){
-  //HydLa‚ÆMathematica‚ÌŠÖ”–¼‚Ì‘Î‰ŠÖŒW‚ğì‚Á‚Ä‚¨‚­D
+  //HydLaã¨Mathematicaã®é–¢æ•°åã®å¯¾å¿œé–¢ä¿‚ã‚’ä½œã£ã¦ãŠãï¼
   typedef function_map_t::value_type value_t;
   function_map_.insert(value_t(function_t("sin", 1), function_t("Sin", 1)));
   function_map_.insert(value_t(function_t("sinh", 1), function_t("Sinh", 1)));
@@ -43,8 +43,8 @@ void PacketSender::initialize(){
 
 
 /**
- * ®(ƒm[ƒh)‚ğMathematica‚Ö‘—M‚·‚éƒNƒ‰ƒXD
- * @param ml MathlinkƒCƒ“ƒXƒ^ƒ“ƒX‚ÌQÆ
+ * å¼(ãƒãƒ¼ãƒ‰)ã‚’Mathematicaã¸é€ä¿¡ã™ã‚‹ã‚¯ãƒ©ã‚¹ï¼
+ * @param ml Mathlinkã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®å‚ç…§
  */
 PacketSender::PacketSender(MathLink& ml) :
   ml_(&ml),
@@ -55,18 +55,18 @@ PacketSender::PacketSender(MathLink& ml) :
 PacketSender::~PacketSender(){}
 
 
-/// Ask§–ñ
+/// Askåˆ¶ç´„
 void PacketSender::visit(boost::shared_ptr<Ask> node)                   
 {
-  // ask§–ñ‚Í‘—‚ê‚È‚¢
+  // askåˆ¶ç´„ã¯é€ã‚Œãªã„
   assert(0);
 }
 
-/// Tell§–ñ
+/// Tellåˆ¶ç´„
 void PacketSender::visit(boost::shared_ptr<Tell> node)                  
 {
   
-  // tell§–ñ‚Í‘—‚ê‚È‚¢
+  // tellåˆ¶ç´„ã¯é€ã‚Œãªã„
   assert(0);
 }
 
@@ -103,12 +103,12 @@ DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
 
 
 
-/// ˜_—‰‰Zq
+/// è«–ç†æ¼”ç®—å­
 DEFINE_VISIT_BINARY(LogicalAnd, And)
 DEFINE_VISIT_BINARY(LogicalOr, Or)
 
   
-/// Zp“ñ€‰‰Zq
+/// ç®—è¡“äºŒé …æ¼”ç®—å­
 DEFINE_VISIT_BINARY(Plus, Plus)
 DEFINE_VISIT_BINARY(Subtract, Subtract)
 DEFINE_VISIT_BINARY(Times, Times)
@@ -116,7 +116,7 @@ DEFINE_VISIT_BINARY(Divide, Divide)
 DEFINE_VISIT_BINARY(Power, Power)
 
   
-/// Zp’P€‰‰Zq
+/// ç®—è¡“å˜é …æ¼”ç®—å­
 
 DEFINE_VISIT_UNARY(Negative, Minus)
 void PacketSender::visit(boost::shared_ptr<Positive> node)              
@@ -124,7 +124,7 @@ void PacketSender::visit(boost::shared_ptr<Positive> node)
   accept(node->get_child());
 }
 
-/// ”÷•ª
+/// å¾®åˆ†
 void PacketSender::visit(boost::shared_ptr<Differential> node)          
 {
   differential_count_++;
@@ -132,7 +132,7 @@ void PacketSender::visit(boost::shared_ptr<Differential> node)
   differential_count_--;
 }
 
-/// ¶‹ÉŒÀ
+/// å·¦æ¥µé™
 void PacketSender::visit(boost::shared_ptr<Previous> node)              
 {
   in_prev_ = true;
@@ -141,11 +141,11 @@ void PacketSender::visit(boost::shared_ptr<Previous> node)
 }
 
 
-/// ”Û’è
+/// å¦å®š
 DEFINE_VISIT_UNARY(Not, Not)
 
 
-/// ŠÖ”
+/// é–¢æ•°
 void PacketSender::visit(boost::shared_ptr<Function> node)              
 {
   int size = node->get_arguments_size();
@@ -168,19 +168,19 @@ void PacketSender::visit(boost::shared_ptr<UnsupportedFunction> node)
   }
 }
 
-/// ‰~ü—¦
+/// å††å‘¨ç‡
 DEFINE_VISIT_FACTOR(Infinity, Infinity)
-/// ‰~ü—¦
+/// å††å‘¨ç‡
 DEFINE_VISIT_FACTOR(Pi, Pi)
-/// ©‘R‘Î”‚Ì’ê
+/// è‡ªç„¶å¯¾æ•°ã®åº•
 DEFINE_VISIT_FACTOR(E, E)
 
 
 
-// •Ï”
+// å¤‰æ•°
 void PacketSender::visit(boost::shared_ptr<Variable> node)              
 {
-  // •Ï”‚Ì‘—M
+  // å¤‰æ•°ã®é€ä¿¡
   VariableArg va;
   if(variable_arg_==VA_None&&in_prev_)
     va = VA_Prev;
@@ -193,11 +193,11 @@ void PacketSender::visit(boost::shared_ptr<Variable> node)
   put_var(new_var);
 }
 
-// ”š
+// æ•°å­—
 void PacketSender::visit(boost::shared_ptr<Number> node)                
 {
   HYDLA_LOGGER_REST("put: Number : ", node->get_number());
-  // ml_->MLPutInteger(atoi(node->get_number().c_str())); //”’l‚ª‚Å‚©‚¢‚ÆƒI[ƒo[ƒtƒ[‚·‚é
+  // ml_->MLPutInteger(atoi(node->get_number().c_str())); //æ•°å€¤ãŒã§ã‹ã„ã¨ã‚ªãƒ¼ãƒãƒ¼ãƒ•ãƒ­ãƒ¼ã™ã‚‹
 
   ml_->put_function("ToExpression", 1);
 
@@ -205,7 +205,7 @@ void PacketSender::visit(boost::shared_ptr<Number> node)
 }
 
 
-// ‹L†’è”
+// è¨˜å·å®šæ•°
 void PacketSender::visit(boost::shared_ptr<Parameter> node)
 {    
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
@@ -238,15 +238,15 @@ void PacketSender::put_var(const var_info_t var)
     ml_->MLPutInteger(diff_count);
   }else{
     name = var_prefix + name;
-    // •Ï”–¼‚Ì[t]‚â[0]‚ª‚Â‚­•ª
+    // å¤‰æ•°åã®[t]ã‚„[0]ãŒã¤ãåˆ†
     if(variable_arg == VA_Time ||  variable_arg == VA_Zero) {
       ml_->MLPutNext(MLTKFUNC);
       ml_->MLPutArgCount(1);
     }
 
-    // •Ï”‚Ìput
+    // å¤‰æ•°ã®put
     if(diff_count > 0){
-      // ”÷•ª•Ï”‚È‚ç (Derivative[‰ñ”])[•Ï”–¼]‚ğput
+      // å¾®åˆ†å¤‰æ•°ãªã‚‰ (Derivative[å›æ•°])[å¤‰æ•°å]ã‚’put
       ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative[*number*], arg f
       ml_->MLPutArgCount(1);      // this 1 is for the 'f'
       ml_->MLPutNext(MLTKFUNC);   // The func we are putting has head Derivative, arg 2
@@ -269,7 +269,7 @@ void PacketSender::put_var(const var_info_t var)
         assert(0);
     }
   }
-  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
+  // putã—ãŸå¤‰æ•°ã®æƒ…å ±ã‚’ä¿æŒ
   vars_.insert(var);
   
   HYDLA_LOGGER_REST("#*** End PacketSender::put_var ***");
@@ -309,7 +309,7 @@ void PacketSender::put_par(const par_info_t par)
   ml_->put_integer(diff_count);
   ml_->put_integer(id);
 
-  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
+  // putã—ãŸå¤‰æ•°ã®æƒ…å ±ã‚’ä¿æŒ
   pars_.insert(par);
   HYDLA_LOGGER_REST("#*** End PacketSender::put_par ***");
 }
@@ -322,8 +322,8 @@ void PacketSender::put_par(const std::string &name, const int &diff_count, const
 
 
 /**
- * ‚ ‚é®(ƒm[ƒh)‚ğput‚·‚é
- * @param node put‚µ‚½‚¢®(ƒm[ƒh)
+ * ã‚ã‚‹å¼(ãƒãƒ¼ãƒ‰)ã‚’putã™ã‚‹
+ * @param node putã—ãŸã„å¼(ãƒãƒ¼ãƒ‰)
  */
 void PacketSender::put_node(const node_sptr& node, 
                             VariableArg variable_arg)
@@ -339,7 +339,7 @@ void PacketSender::put_node(const node_sptr& node,
 
 
 /**
- * ‚ ‚é®‚ÌƒŠƒXƒg‚ğput‚·‚é
+ * ã‚ã‚‹å¼ã®ãƒªã‚¹ãƒˆã‚’putã™ã‚‹
  */
 void PacketSender::put_nodes(const std::vector<node_sptr>& constraints,
                             VariableArg variable_arg)
@@ -352,7 +352,7 @@ void PacketSender::put_nodes(const std::vector<node_sptr>& constraints,
   HYDLA_LOGGER_REST("#*** End PacketSender::put_nodes: ***");
 }
 
-// TODO ‘½•ª•Ï”‚Ì‘—M‚Ìd•¡‚ª‘½‚¢
+// TODO å¤šåˆ†å¤‰æ•°ã®é€ä¿¡ã®é‡è¤‡ãŒå¤šã„
 void PacketSender::put_vars()
 {
   HYDLA_LOGGER_REST("#*** Begin PacketSender::put_vars ***");
@@ -393,14 +393,14 @@ void PacketSender::put_pars()
 
 
 
-  // ƒRƒ}ƒ“ƒh•¶
+  // ã‚³ãƒãƒ³ãƒ‰æ–‡
 void PacketSender::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node){ml_->put_symbol("True");}
 void PacketSender::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node){ml_->put_symbol("True");}
 void PacketSender::visit(boost::shared_ptr<hydla::parse_tree::Scan> node){ml_->put_symbol("True");}
 
 /**
- * “à•”î•ñ(“Á‚É•Ï”î•ñ)‚ğƒŠƒZƒbƒg‚·‚éD
- * ®‚Ìput‚ğ‚â‚è’¼‚µ‚½‚¢‚Æ‚«‚È‚Ç‚É
+ * å†…éƒ¨æƒ…å ±(ç‰¹ã«å¤‰æ•°æƒ…å ±)ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹ï¼
+ * å¼ã®putã‚’ã‚„ã‚Šç›´ã—ãŸã„ã¨ããªã©ã«
  */
 void PacketSender::clear()
 {

@@ -17,8 +17,8 @@ namespace simulator {
 
 
 /**
- * tellƒm[ƒh‚ğW‚ß‚éƒrƒWƒ^[ƒNƒ‰ƒX
- * ƒm[ƒh‚Ì’†‚ÉoŒ»‚·‚é•Ï”i‚Æ‚»‚Ì”÷•ª‰ñ”j‚à“¯‚É’²‚×‚é
+ * tellãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹ãƒ“ã‚¸ã‚¿ãƒ¼ã‚¯ãƒ©ã‚¹
+ * ãƒãƒ¼ãƒ‰ã®ä¸­ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ï¼ˆã¨ãã®å¾®åˆ†å›æ•°ï¼‰ã‚‚åŒæ™‚ã«èª¿ã¹ã‚‹
  */
 class TellCollector : public parse_tree::TreeVisitor {
 public:
@@ -28,12 +28,12 @@ public:
   virtual ~TellCollector();
 
   /** 
-   * ‚·‚×‚Ä‚Ìtellƒm[ƒh‚ğW‚ß‚é
+   * ã™ã¹ã¦ã®tellãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹
    *
-   * @param expanded_always  “WŠJÏ‚İalwaysƒm[ƒh‚ÌW‡
-   *                           iask‚Ì’†‚É‚ ‚Á‚½always‚ª“WŠJ‚³‚ê‚½‚à‚Ìj
-   * @param all_tells        W‚ß‚ç‚ê‚½tellƒm[ƒh‚ÌW‡
-   * @param positive_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹‰Â”\‚Èaskƒm[ƒh‚ÌW‡
+   * @param expanded_always  å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®é›†åˆ
+   *                           ï¼ˆaskã®ä¸­ã«ã‚ã£ãŸalwaysãŒå±•é–‹ã•ã‚ŒãŸã‚‚ã®ï¼‰
+   * @param all_tells        é›†ã‚ã‚‰ã‚ŒãŸtellãƒãƒ¼ãƒ‰ã®é›†åˆ
+   * @param positive_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
    */
   void collect_all_tells(tells_t*                 all_tells,
                          const expanded_always_t* expanded_always,
@@ -44,12 +44,12 @@ public:
   }
 
   /** 
-   * ‚Ü‚¾W‚ß‚ç‚ê‚Ä‚¢‚È‚¢tellƒm[ƒh‚ğW‚ß‚é
+   * ã¾ã é›†ã‚ã‚‰ã‚Œã¦ã„ãªã„tellãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹
    *
-   * @param expanded_always  “WŠJÏ‚İalwaysƒm[ƒh‚ÌW‡
-   *                           iask‚Ì’†‚É‚ ‚Á‚½always‚ª“WŠJ‚³‚ê‚½‚à‚Ìj
-   * @param all_tells        W‚ß‚ç‚ê‚½tellƒm[ƒh‚ÌW‡
-   * @param positive_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹‰Â”\‚Èaskƒm[ƒh‚ÌW‡
+   * @param expanded_always  å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®é›†åˆ
+   *                           ï¼ˆaskã®ä¸­ã«ã‚ã£ãŸalwaysãŒå±•é–‹ã•ã‚ŒãŸã‚‚ã®ï¼‰
+   * @param all_tells        é›†ã‚ã‚‰ã‚ŒãŸtellãƒãƒ¼ãƒ‰ã®é›†åˆ
+   * @param positive_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
    */
   void collect_new_tells(tells_t*                 new_tells,
                          const expanded_always_t* expanded_always,                   
@@ -60,14 +60,14 @@ public:
   }
 
   /**
-   * ûWÏ‚İ‚Ìtellƒm[ƒh‚ÌW‡‚ğ“¾‚é
+   * åé›†æ¸ˆã¿ã®tellãƒãƒ¼ãƒ‰ã®é›†åˆã‚’å¾—ã‚‹
    *
-   * @param collected_tells W‚ß‚ç‚ê‚½tellƒm[ƒh‚ÌW‡
+   * @param collected_tells é›†ã‚ã‚‰ã‚ŒãŸtellãƒãƒ¼ãƒ‰ã®é›†åˆ
    */
   void collected_tells(tells_t* collected_tells);
 
   /**
-   * ûWÏ‚İ‚Ìtellƒm[ƒh‚Ì‹L˜^‚ğÁ‹‚µC‰Šúó‘Ô‚É–ß‚·
+   * åé›†æ¸ˆã¿ã®tellãƒãƒ¼ãƒ‰ã®è¨˜éŒ²ã‚’æ¶ˆå»ã—ï¼ŒåˆæœŸçŠ¶æ…‹ã«æˆ»ã™
    */
   void reset()
   {
@@ -88,31 +88,31 @@ public:
   }
 
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ˜_—Ï
+  // è«–ç†ç©
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
-  // ƒ‚ƒWƒ…[ƒ‹‚Ìã‡¬
+  // ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®å¼±åˆæˆ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
 
-  // ƒ‚ƒWƒ…[ƒ‹‚Ì•À—ñ‡¬
+  // ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ä¸¦åˆ—åˆæˆ
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
    
-  // §–ñŒÄ‚Ño‚µ
+  // åˆ¶ç´„å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
   
-  // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
   
 
@@ -131,31 +131,31 @@ private:
                const expanded_always_t* expanded_always,                   
                const positive_asks_t*   positive_asks);
 
-  /// ûW‚ğ‚¨‚±‚È‚¤‘ÎÛ‚Ì§–ñƒ‚ƒWƒ…[ƒ‹W‡
+  /// åé›†ã‚’ãŠã“ãªã†å¯¾è±¡ã®åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆ
   module_set_sptr    module_set_; 
 
-  /// —LŒø‚Æ‚È‚Á‚Ä‚¢‚éask‚ÌƒŠƒXƒg
+  /// æœ‰åŠ¹ã¨ãªã£ã¦ã„ã‚‹askã®ãƒªã‚¹ãƒˆ
   const positive_asks_t*   positive_asks_;
 
-  /// ûW‚µ‚½tellƒm[ƒh‚ÌƒŠƒXƒg
+  /// åé›†ã—ãŸtellãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆ
   tells_t*           tells_;
 
-  /// ûWÏ‚İ‚Ìtellƒm[ƒh‚ÌƒŠƒXƒg
+  /// åé›†æ¸ˆã¿ã®tellãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆ
   collected_tells_t  collected_tells_;
 
-  /// ‚·‚×‚Ä‚Ìtellƒm[ƒh‚ğûW‚·‚é‚©‚Ç‚¤‚©
+  /// ã™ã¹ã¦ã®tellãƒãƒ¼ãƒ‰ã‚’åé›†ã™ã‚‹ã‹ã©ã†ã‹
   bool               collect_all_tells_;
 
-  /// —LŒø‚Æ‚È‚Á‚Ä‚¢‚éaskƒm[ƒh‚Ìqƒm[ƒh‚©‚Ç‚¤‚©
+  /// æœ‰åŠ¹ã¨ãªã£ã¦ã„ã‚‹askãƒãƒ¼ãƒ‰ã®å­ãƒãƒ¼ãƒ‰ã‹ã©ã†ã‹
   bool               in_positive_ask_;
 
-  /// –³Œø‚Æ‚È‚Á‚Ä‚¢‚éaskƒm[ƒh‚Ìqƒm[ƒh‚©‚Ç‚¤‚©
+  /// ç„¡åŠ¹ã¨ãªã£ã¦ã„ã‚‹askãƒãƒ¼ãƒ‰ã®å­ãƒãƒ¼ãƒ‰ã‹ã©ã†ã‹
   bool               in_negative_ask_;
 
-  /// “WŠJÏ‚İalwaysƒm[ƒh‚ÌƒŠƒXƒg‚©‚ç‚Ì’Tõ‚©‚Ç‚¤‚©
+  /// å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆã‹ã‚‰ã®æ¢ç´¢ã‹ã©ã†ã‹
   bool               in_expanded_always_;
 
-  /// ’Tõ‚µ‚½alwaysƒm[ƒh‚ÌƒŠƒXƒg
+  /// æ¢ç´¢ã—ãŸalwaysãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆ
   visited_always_t   visited_always_;
   //print
   std::vector<std::string> v_print; 

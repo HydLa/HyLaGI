@@ -1,5 +1,5 @@
 /**
- * ConsistencyChecker‚ÌƒeƒXƒg
+ * ConsistencyCheckerã®ãƒ†ã‚¹ãƒˆ
  */
 
 #include "test_common.h"
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   ml.MLNewPacket();
 
   ParseTreeGenerator<DefaultNodeFactory> ptg;
-//  boost::shared_ptr<DefaultNodeFactory> nf(new DefaultNodeFactory());  ‚©‚ç•Ï‚¦‚Ä‚ ‚é
+//  boost::shared_ptr<DefaultNodeFactory> nf(new DefaultNodeFactory());  ã‹ã‚‰å¤‰ãˆã¦ã‚ã‚‹
   HydLaAST ast;
 
 #define SS_CONSISTEMCY_CHECKER_TEST(EXP)                          \
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   ConstraintStoreBuilderPoint csbp;                               \
   csbp.build_constraint_store();                                  \
 
-//  Œ³X‚ÍSS_CONSISTEMCY_CHECKER_TEST‚Ì2s–Ú‚ ‚½‚è‚ÉˆÈ‰º‚Ì‹Lq‚ª‚ ‚Á‚½‚ª•Ï‚¦‚Ä‚ ‚é
+//  å…ƒã€…ã¯SS_CONSISTEMCY_CHECKER_TESTã®2è¡Œç›®ã‚ãŸã‚Šã«ä»¥ä¸‹ã®è¨˜è¿°ãŒã‚ã£ãŸãŒå¤‰ãˆã¦ã‚ã‚‹
 //  module_set_sptr ms(                                           
 //    new ModuleSet("a", ast.parse_tree().get_tree()));           
 

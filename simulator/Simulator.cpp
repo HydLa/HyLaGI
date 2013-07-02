@@ -45,13 +45,13 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {    
   if(opts_->nd_mode||opts_->interactive_mode)
   {
-    //‘S‰ğ’Tõƒ‚[ƒh‚È‚Ç
+    //å…¨è§£æ¢ç´¢ãƒ¢ãƒ¼ãƒ‰ãªã©
     ModuleSetContainerInitializer::init<ch::ModuleSetGraph>(
         parse_tree, msc_original_, msc_no_init_, parse_tree_);
   }
   else
   {
-    //’ÊíÀsƒ‚[ƒh
+    //é€šå¸¸å®Ÿè¡Œãƒ¢ãƒ¼ãƒ‰
     ModuleSetContainerInitializer::init<ch::ModuleSetList>(
         parse_tree, msc_original_, msc_no_init_, parse_tree_);
   }

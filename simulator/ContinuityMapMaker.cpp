@@ -16,14 +16,14 @@ ContinuityMapMaker::~ContinuityMapMaker()
 
 
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   accept(node->get_child());
 }
 
 
-// •Ï”
+// å¤‰æ•°
 void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
   if(!differential_count_) return;
@@ -37,7 +37,7 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Variable> no
 }
 
 
-// ”÷•ª
+// å¾®åˆ†
 void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
 {
   differential_count_++;
@@ -46,7 +46,7 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Differential
 }
 
 
-// ¶‹ÉŒÀ
+// å·¦æ¥µé™
 void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 {
   if(in_interval_){

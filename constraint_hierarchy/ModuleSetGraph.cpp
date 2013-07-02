@@ -22,7 +22,7 @@ ModuleSetGraph::~ModuleSetGraph()
 void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 {
 
-  // parallel(X, Y) = X ¾ Y ¾ {x ¾ y | x¸X, y¸Y}
+  // parallel(X, Y) = X âˆª Y âˆª {x âˆª y | xâˆˆX, yâˆˆY}
 
   module_set_list_t::const_iterator p_it = 
     parallel_module_set_graph.module_set_list_.begin();
@@ -35,7 +35,7 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
   // Y
   new_module_set_list.insert(new_module_set_list.end(), p_it, p_end);
 
-  // {x ¾ y | x¸X, y¸Y}
+  // {x âˆª y | xâˆˆX, yâˆˆY}
   for(; p_it!=p_end; ++p_it) {
     module_set_list_t::iterator this_it =  module_set_list_.begin();
     module_set_list_t::iterator this_end = module_set_list_.end();
@@ -54,18 +54,18 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_graph)
 {
 
-  // parallel(X, Y) = {x ¾ y | x¸X, y¸Y}
+  // parallel(X, Y) = {x âˆª y | xâˆˆX, yâˆˆY}
 
   module_set_list_t::const_iterator p_it = 
     parallel_module_set_graph.module_set_list_.begin();
   module_set_list_t::const_iterator p_end = 
     parallel_module_set_graph.module_set_list_.end();
 
-  // ‹ó‚Ìƒ‚ƒWƒ…[ƒ‹W‡‚ÌW‡‚ğ—pˆÓ
+  // ç©ºã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é›†åˆã‚’ç”¨æ„
   module_set_list_t new_module_set_list(module_set_list_);
   new_module_set_list.clear();
 
-  // {x ¾ y | x¸X, y¸Y}
+  // {x âˆª y | xâˆˆX, yâˆˆY}
   for(; p_it!=p_end; ++p_it) {
     module_set_list_t::iterator this_it =  module_set_list_.begin();
     module_set_list_t::iterator this_end = module_set_list_.end();
@@ -83,12 +83,12 @@ void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_
 
 void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
 {
-  // ordered(X, Y) = Y ¾ {x ¾ y | x¸X, y¸Y}
+  // ordered(X, Y) = Y âˆª {x âˆª y | xâˆˆX, yâˆˆY}
       
   // Y
   module_set_list_t new_module_set_list(module_set_list_);
 
-  // {x ¾ y | x¸X, y¸Y}
+  // {x âˆª y | xâˆˆX, yâˆˆY}
   module_set_list_t::const_iterator p_it = 
     weak_module_set_graph.module_set_list_.begin();
   module_set_list_t::const_iterator p_end = 

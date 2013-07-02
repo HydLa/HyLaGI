@@ -113,49 +113,49 @@ void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<ArbitraryNode> node)
 }
 
 
-// §–ñ’è‹`
+// åˆ¶ç´„å®šç¾©
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConstraintDefinition> node)  
 {
   dump_node(node);
 }
 
-// ƒvƒƒOƒ‰ƒ€’è‹`
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramDefinition> node)     
 {
   dump_node(node);
 }
 
-// §–ñŒÄ‚Ño‚µ
+// åˆ¶ç´„å‘¼ã³å‡ºã—
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
   dump_node(node);
 }
 
-// ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramCaller> node)         
 {
   dump_node(node);
 }
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Constraint> node)            
 {
   dump_node(node);
 }
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Ask> node)                   
 {
   dump_node(node);
 }
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Tell> node)                  
 {
   dump_node(node);
 }
 
-// Zp’P€‰‰Zq
+// ç®—è¡“å˜é …æ¼”ç®—å­
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Negative> node)
 {
   dump_node(node);
@@ -248,19 +248,19 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Parallel> node)
   dump_node(node);
 }
   
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Always> node)
 {
   dump_node(node);
 }
   
-// ”÷•ª
+// å¾®åˆ†
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Differential> node)
 {
   dump_node(node);
 }
 
-// ¶‹ÉŒÀ
+// å·¦æ¥µé™
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Previous> node)
 {
   dump_node(node);
@@ -296,7 +296,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SVtimer> node)
 {
   dump_node(node);
 }
-// ŠÖ”
+// é–¢æ•°
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Function> node)
 {
   dump_node(node);
@@ -306,20 +306,20 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<UnsupportedFunction> node)
   dump_node(node);
 }
 
-// ‰~ü—¦
+// å††å‘¨ç‡
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Pi> node)
 {
   dump_node(node);
 }
 
-// ©‘R‘Î”‚Ì’ê
+// è‡ªç„¶å¯¾æ•°ã®åº•
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<E> node)
 {
   dump_node(node);
 }
 
 
-// •Ï”
+// å¤‰æ•°
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Variable> node)
 {
   graph_node_id_t own_id = node_id_;
@@ -327,7 +327,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Variable> node)
     "{" + node->get_node_type_name() + " | " + node->get_name() + "}"));
 }
 
-// ”š
+// æ•°å­—
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Number> node)
 {
   graph_node_id_t own_id = node_id_;

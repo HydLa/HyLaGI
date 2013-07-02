@@ -12,7 +12,7 @@ public:
   
   virtual ~SequentialSimulator();
   /**
-   * —^‚¦‚ç‚ê‚½‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ðŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŽÀs‚ð‚¨‚±‚È‚¤
+   * ä¸Žãˆã‚‰ã‚ŒãŸè§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å…ƒã«ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å®Ÿè¡Œã‚’ãŠã“ãªã†
    */
   virtual phase_result_const_sptr_t simulate();
 

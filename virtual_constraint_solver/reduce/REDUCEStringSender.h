@@ -15,7 +15,7 @@ namespace vcs {
 namespace reduce {
 
 /**
- * ParseTree‚Ìƒm[ƒhW‡‚É‘Î‚·‚éVisitorƒNƒ‰ƒX
+ * ParseTreeã®ãƒãƒ¼ãƒ‰é›†åˆã«å¯¾ã™ã‚‹Visitorã‚¯ãƒ©ã‚¹
  */
 class REDUCEStringSender :
   public hydla::parse_tree::TreeVisitor
@@ -24,10 +24,10 @@ public:
 
   typedef std::map<std::string, int> max_diff_map_t;
 
-  // TODO:‰½‚Æ‚©‚·‚é
+  // TODO:ä½•ã¨ã‹ã™ã‚‹
   /**
-   * •Ï”ƒf[ƒ^
-   * (•Ï”–¼C ”÷•ª‰ñ”,  prev•Ï”‚©‚Ç‚¤‚©,  ‰Šú’l•Ï”ˆµ‚¢‚·‚é‚©‚Ç‚¤‚©)
+   * å¤‰æ•°ãƒ‡ãƒ¼ã‚¿
+   * (å¤‰æ•°åï¼Œ å¾®åˆ†å›æ•°,  prevå¤‰æ•°ã‹ã©ã†ã‹,  åˆæœŸå€¤å¤‰æ•°æ‰±ã„ã™ã‚‹ã‹ã©ã†ã‹)
    */
   typedef boost::tuple<std::string, int, bool, bool> var_info_t;
 
@@ -35,11 +35,11 @@ public:
   typedef var_info_list_t::const_iterator            vars_const_iterator;
   typedef hydla::parse_tree::node_sptr               node_sptr;
 
-  // REDUCE‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrvar"
+  // REDUCEã«é€ã‚‹éš›ã«å¤‰æ•°åã«ã¤ã‘ã‚‹æ¥é ­èª "usrvar"
   static const std::string var_prefix;
-  // REDUCE‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê
+  // REDUCEã«é€ã‚‹éš›ã«å®šæ•°åã«ã¤ã‘ã‚‹æ¥é ­èª
   static const std::string par_prefix;
-  // ‹óW‡‚ğ•\‚·REDUCE“ü—Í—p•¶š—ñ "{}"
+  // ç©ºé›†åˆã‚’è¡¨ã™REDUCEå…¥åŠ›ç”¨æ–‡å­—åˆ— "{}"
   static const std::string empty_list_string;
 
   REDUCEStringSender();
@@ -52,54 +52,54 @@ public:
   vars_const_iterator vars_end() const { return vars_.end(); }
 
   /**
-   * —^‚¦‚ç‚ê‚½ƒm[ƒh‚Ì‘—M‚ğ‚¨‚±‚È‚¤
+   * ä¸ãˆã‚‰ã‚ŒãŸãƒãƒ¼ãƒ‰ã®é€ä¿¡ã‚’ãŠã“ãªã†
    *
-   * ƒm[ƒh‚Ì‘—M‚ğ‚¨‚±‚È‚¤Û‚Í’¼ÚvisitŠÖ”‚ğŒÄ‚Î‚¸‚ÉC
-   * •K‚¸‚±‚ÌŠÖ”‚ğŒo—R‚·‚é‚±‚Æ
-   * @param ignore_prev ‚±‚Ìƒm[ƒh‚ªprev§–ñ‚ğ–³‹‚·‚é‚©‚Ç‚¤‚©, ’Êí‚Ífalse
-   * @param is_init_var ‚±‚Ìƒm[ƒh‚ªƒ‰ƒvƒ‰ƒX•ÏŠ·‚Ì‰Šú’l‚Æ‚µ‚Äˆµ‚í‚ê‚é‚©‚Ç‚¤‚©, ’Êí‚Ífalse
+   * ãƒãƒ¼ãƒ‰ã®é€ä¿¡ã‚’ãŠã“ãªã†éš›ã¯ç›´æ¥visité–¢æ•°ã‚’å‘¼ã°ãšã«ï¼Œ
+   * å¿…ãšã“ã®é–¢æ•°ã‚’çµŒç”±ã™ã‚‹ã“ã¨
+   * @param ignore_prev ã“ã®ãƒãƒ¼ãƒ‰ãŒprevåˆ¶ç´„ã‚’ç„¡è¦–ã™ã‚‹ã‹ã©ã†ã‹, é€šå¸¸ã¯false
+   * @param is_init_var ã“ã®ãƒãƒ¼ãƒ‰ãŒãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›ã®åˆæœŸå€¤ã¨ã—ã¦æ‰±ã‚ã‚Œã‚‹ã‹ã©ã†ã‹, é€šå¸¸ã¯false
    */
   void put_node(const node_sptr& node, bool ignore_prev = false, bool is_init_var = false);
 
   /**
-   * ƒŠƒXƒgŒ`®‚Å‘—M‚·‚é
+   * ãƒªã‚¹ãƒˆå½¢å¼ã§é€ä¿¡ã™ã‚‹
    */
   void put_nodes(const std::vector<node_sptr> &constraints);
 
   /**
-   * •Ï”‚Ì‘—M
+   * å¤‰æ•°ã®é€ä¿¡
    */
   void put_var(const var_info_t var);
 
   /**
-   * put_node‚ÌÛ‚É‘—M‚³‚ê‚½•Ï”ŒQ‚Ì‘—M‚ğ‚¨‚±‚È‚¤
+   * put_nodeã®éš›ã«é€ä¿¡ã•ã‚ŒãŸå¤‰æ•°ç¾¤ã®é€ä¿¡ã‚’ãŠã“ãªã†
    */
   void put_vars(bool ignore_prev = false);
 
   /**
-   * ã2‚Â‚Ì‹L†’è””Å
+   * ä¸Š2ã¤ã®è¨˜å·å®šæ•°ç‰ˆ
    */
   void put_par(const std::string &name);
   void put_pars();
 
   /**
-   * put_node‚ÌÛ‚É‘—M‚³‚ê‚½•Ï”ŒQ‚Ìƒf[ƒ^‚ğÁ‹‚µC‰Šú‰»‚·‚é
+   * put_nodeã®éš›ã«é€ä¿¡ã•ã‚ŒãŸå¤‰æ•°ç¾¤ã®ãƒ‡ãƒ¼ã‚¿ã‚’æ¶ˆå»ã—ï¼ŒåˆæœŸåŒ–ã™ã‚‹
    */
   void clear();
 
   /**
-   * •Ï”‚ÌÅ‘å”÷•ª‰ñ”‚ğ‚à‚Æ‚ß‚é
+   * å¤‰æ•°ã®æœ€å¤§å¾®åˆ†å›æ•°ã‚’ã‚‚ã¨ã‚ã‚‹
    */
   void create_max_diff_map(max_diff_map_t& max_diff_map);
 
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
@@ -107,42 +107,42 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
 
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
 
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
 
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
 
-  // ”Û’è
+  // å¦å®š
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
 
-  // ‰~ü—¦
+  // å††å‘¨ç‡
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  // ©‘R‘Î”‚Ì’ê
+  // è‡ªç„¶å¯¾æ•°ã®åº•
   virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
 
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
-  // ”š
+  // æ•°å­—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
-  // ‹L†’è”
+  // è¨˜å·å®šæ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
 
   // t
@@ -153,23 +153,23 @@ private:
   REDUCELink* cl_;
 
 protected:
-  /// ‘—M‚³‚ê‚½•Ï”‚Ìˆê——
+  /// é€ä¿¡ã•ã‚ŒãŸå¤‰æ•°ã®ä¸€è¦§
   var_info_list_t vars_;
   std::set<std::string> pars_;
 
-  // Differentialƒm[ƒh‚ğ‰½‰ñ’Ê‚Á‚½‚©
+  // Differentialãƒãƒ¼ãƒ‰ã‚’ä½•å›é€šã£ãŸã‹
   int differential_count_;
 
-  /// Prevƒm[ƒh‚Ì‰º‚É‚¢‚é‚©‚Ç‚¤‚©
+  /// Prevãƒãƒ¼ãƒ‰ã®ä¸‹ã«ã„ã‚‹ã‹ã©ã†ã‹
   int in_prev_;
 
-  // prev§–ñ‚ğ–³‹‚·‚é‚©‚Ç‚¤‚©
+  // prevåˆ¶ç´„ã‚’ç„¡è¦–ã™ã‚‹ã‹ã©ã†ã‹
   bool ignore_prev_;
 
-  // not‚ğ“K—p‚·‚é‚©‚Ç‚¤‚©
+  // notã‚’é©ç”¨ã™ã‚‹ã‹ã©ã†ã‹
   bool apply_not_;
 
-  // Laplace•ÏŠ·‚Ì‰Šú’l(init*var)‚Å‚ ‚é‚©‚Ç‚¤‚©
+  // Laplaceå¤‰æ›ã®åˆæœŸå€¤(init*var)ã§ã‚ã‚‹ã‹ã©ã†ã‹
   bool is_init_var_;
 };
 

@@ -45,7 +45,7 @@ public:
   virtual ~InteractiveSimulator(){}
 
   /**
-   * —^‚¦‚ç‚ê‚½‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ðŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŽÀs‚ð‚¨‚±‚È‚¤
+   * ä¸Žãˆã‚‰ã‚ŒãŸè§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å…ƒã«ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å®Ÿè¡Œã‚’ãŠã“ãªã†
    */
 
   virtual phase_result_const_sptr_t simulate();
@@ -55,59 +55,59 @@ protected:
   static int select_phase(PhaseSimulator::result_list_t& results);
   
   /**
-   * “ü—Í‚ðŽó•t‚¯‚Â‚ÂCƒRƒ}ƒ“ƒh‚ðˆ—‚·‚é
-   * @return 0:I—¹ 1~: ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚·‚éƒXƒeƒbƒv‚Ì”
+   * å…¥åŠ›ã‚’å—ä»˜ã‘ã¤ã¤ï¼Œã‚³ãƒžãƒ³ãƒ‰ã‚’å‡¦ç†ã™ã‚‹
+   * @return 0:çµ‚äº† 1~: ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã™ã‚‹ã‚¹ãƒ†ãƒƒãƒ—ã®æ•°
    */
   int input_and_process_command(simulation_todo_sptr_t& phase);
 
   /**
-   * hyrose‚ÌƒIƒvƒVƒ‡ƒ“‚ðŽ©—R‚É•ÏX‚·‚é
-   * Œ»ÝdebugƒIƒvƒVƒ‡ƒ“‚Ì‚Ý
-   * TODO:‘¼‚ÌƒIƒvƒVƒ‡ƒ“‚àŽw’è‚Å‚«‚é‚æ‚¤‚É‚·‚é
+   * hyroseã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’è‡ªç”±ã«å¤‰æ›´ã™ã‚‹
+   * ç¾åœ¨debugã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®ã¿
+   * TODO:ä»–ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚‚æŒ‡å®šã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
    */
   int select_options(){assert(0); return 0;}
 
   /**
-   * interactiveƒ‚[ƒh‚É‚¨‚¯‚éƒwƒ‹ƒv‚ð•\Ž¦‚·‚é
+   * interactiveãƒ¢ãƒ¼ãƒ‰ã«ãŠã‘ã‚‹ãƒ˜ãƒ«ãƒ—ã‚’è¡¨ç¤ºã™ã‚‹
    */
   int show_help();
   
   /**
-   * •Ï”’l‚Ì•ÏX
+   * å¤‰æ•°å€¤ã®å¤‰æ›´
    */
   int change_variable(simulation_todo_sptr_t& phase);
   
   /**
-   * Œ»Ý‚ÌƒtƒF[ƒY‚ðo—Í‚·‚é
+   * ç¾åœ¨ã®ãƒ•ã‚§ãƒ¼ã‚ºã‚’å‡ºåŠ›ã™ã‚‹
    */
   void print(phase_result_sptr_t& phase);
   
   /**
-   * x = 0 ‚ª–ž‚½‚³‚ê‚½‚çƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ðˆêŽž’âŽ~C‚Ì‚æ‚¤‚É’âŽ~ðŒ‚ðÝ’è‚·‚é
-   * TODO: ŽÀ‘•‚·‚é
+   * x = 0 ãŒæº€ãŸã•ã‚ŒãŸã‚‰ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ä¸€æ™‚åœæ­¢ï¼Œã®ã‚ˆã†ã«åœæ­¢æ¡ä»¶ã‚’è¨­å®šã™ã‚‹
+   * TODO: å®Ÿè£…ã™ã‚‹
    */
   int set_breakpoint(){assert(0); return 0;}
   
   /**
    * save state
-   * TODO: ŽÀ‘•‚·‚é
+   * TODO: å®Ÿè£…ã™ã‚‹
    */
   int save_state(simulation_todo_sptr_t& simulation_phase){assert(0); return 0;}
 
   /**
    * load state
-   * TODO: ŽÀ‘•‚·‚é
+   * TODO: å®Ÿè£…ã™ã‚‹
    */
   int load_state(simulation_todo_sptr_t& simulation_phase){assert(0); return 0;}
   
   /**
-   * 1ƒtƒF[ƒY‚¾‚¯o—Í‚·‚éDTodo‚ð“n‚³‚ê‚Ä‚àƒtƒF[ƒY‚Ìî•ñ‚¾‚¯o—Í‚·‚é
+   * 1ãƒ•ã‚§ãƒ¼ã‚ºã ã‘å‡ºåŠ›ã™ã‚‹ï¼ŽTodoã‚’æ¸¡ã•ã‚Œã¦ã‚‚ãƒ•ã‚§ãƒ¼ã‚ºã®æƒ…å ±ã ã‘å‡ºåŠ›ã™ã‚‹
    */
   static void print_phase(phase_result_sptr_t& p){printer_.output_one_phase(p);}  
   static void print_phase(simulation_todo_sptr_t& t){printer_.output_one_phase(t->parent);}
   
   /**
-   * ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ª‰½‚ç‚©‚ÌðŒ‚ÅI—¹‚µ‚½ê‡‚É‚»‚ÌŽ|‚ðo—Í‚·‚é
+   * ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ãŒä½•ã‚‰ã‹ã®æ¡ä»¶ã§çµ‚äº†ã—ãŸå ´åˆã«ãã®æ—¨ã‚’å‡ºåŠ›ã™ã‚‹
    */
   void print_end(phase_result_sptr_t& p);
   

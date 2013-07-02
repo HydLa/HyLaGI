@@ -24,7 +24,7 @@ bool NonPrevSearcher::judge_non_prev(boost::shared_ptr<parse_tree::Node> node)
   return non_prev_;
 }
 
-// ç∂ã…å¿
+// Â∑¶Ê•µÈôê
 void NonPrevSearcher::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 {
   in_prev_ = true;

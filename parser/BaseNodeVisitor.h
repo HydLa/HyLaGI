@@ -9,7 +9,7 @@ namespace hydla {
 namespace parse_tree {
   
 /**
- * ParseTree‚Ìƒm[ƒhW‡‚É‘Î‚·‚éVisitorƒNƒ‰ƒX
+ * ParseTreeã®ãƒãƒ¼ãƒ‰é›†åˆã«å¯¾ã™ã‚‹Visitorã‚¯ãƒ©ã‚¹
  */
 class BaseNodeVisitor {
 public:
@@ -18,7 +18,7 @@ public:
   virtual ~BaseNodeVisitor();
 
   /**
-   * NodeƒNƒ‰ƒX‚ÌacceptŠÖ”ŒÄ‚Ño‚µ—pƒwƒ‹ƒpŠÖ”
+   * Nodeã‚¯ãƒ©ã‚¹ã®accepté–¢æ•°å‘¼ã³å‡ºã—ç”¨ãƒ˜ãƒ«ãƒ‘é–¢æ•°
    */
   template<class T>
   void accept(const T& n)
@@ -26,16 +26,16 @@ public:
     n->accept(n, this);
   }
 
-  /// ˆöqƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// å› å­ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<FactorNode> node);
   
-  /// 1‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 1ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<UnaryNode> node);
 
-  /// 2‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 2ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<BinaryNode> node);
   
-  /// 2‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 2ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<ArbitraryNode> node);
 };
 

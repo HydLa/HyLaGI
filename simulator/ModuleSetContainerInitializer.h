@@ -42,7 +42,7 @@ public:
         AskDisjunctionSplitter().split(pt_no_init.get());
         msc_no_init = mcc.create(pt_no_init);
 
-        // 最適化された形のパースツリーを得る
+        // 譛驕ｩ蛹悶＆繧後◆蠖｢縺ｮ繝代�ｼ繧ｹ繝�繝ｪ繝ｼ繧貞ｾ励ｋ
         member_parse_tree = pt_no_init;
       }
     }

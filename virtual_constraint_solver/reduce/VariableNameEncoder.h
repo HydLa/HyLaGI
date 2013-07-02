@@ -9,8 +9,8 @@ namespace vcs {
 namespace reduce {
 
 /**
- * Hyrose���@�ŋ������ϐ�����REDUCE�ŏ����o���镶����ɕϊ�����N���X
- * (var_prefix, par_prefix�̕t���O���Ȃǂ���ɂ܂Ƃ߂�ƃX�b�L��������)
+ * Hyrose文法で許される変数名をREDUCEで処理出来る文字列に変換するクラス
+ * (var_prefix, par_prefixの付け外しなどこれにまとめるとスッキリしそう)
  */
 class VariableNameEncoder {
 public:
@@ -18,7 +18,7 @@ public:
   virtual ~VariableNameEncoder(){}
 
   /**
-   * "XYZ" => "_x_y_z"�ƕϊ�����
+   * "XYZ" => "_x_y_z"と変換する
    */
   std::string LowerEncode(const std::string& dist) const {
     std::string ret = dist;
@@ -32,7 +32,7 @@ public:
   }
 
   /**
-   * "_x_y_z" => "XYZ"�ƕϊ�����
+   * "_x_y_z" => "XYZ"と変換する
    */
   std::string UpperDecode(const std::string& dist) const {
     std::string ret = dist;

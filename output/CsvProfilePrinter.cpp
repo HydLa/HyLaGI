@@ -27,7 +27,7 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
       output_stream_ << "Phase " << todo.id << ", ";
       for(profile_t::const_iterator it = todo.profile.begin(); it != todo.profile.end(); it++){
         label_set.insert(it->first);
-        //�t�F�[�Y�ɂ���ăV�~�����[�V�������Ȃ����W���[���W���Ȃǂ����邽�߁C�K�v�ȃ��x�������ׂė񋓂��Ă����D
+        //フェーズによってシミュレーションしないモジュール集合などもあるため，必要なラベルをすべて列挙しておく．
       }
     }
     output_stream_ << "Sum";

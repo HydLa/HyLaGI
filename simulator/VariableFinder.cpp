@@ -31,7 +31,7 @@ VariableFinder::variable_set_t VariableFinder::get_variable_set() const{ return 
 VariableFinder::variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variables_;}
 
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   accept(node->get_guard());
@@ -39,7 +39,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 }
 
 
-// •Ï”
+// å¤‰æ•°
 void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
   if(in_prev_){
@@ -52,7 +52,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 }
 
 
-// ”÷•ª
+// å¾®åˆ†
 void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
 {
   differential_count_++;
@@ -61,7 +61,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Differential> no
 }
 
 
-// ¶‹ÉŒÀ
+// å·¦æ¥µé™
 void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 {
   if(!in_interval_){

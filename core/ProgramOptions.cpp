@@ -15,7 +15,7 @@ ProgramOptions::~ProgramOptions()
 {
 }
 
-// TODO:ƒRƒƒ“ƒgƒAƒEƒg‚µ‚Ä‚ ‚éƒIƒvƒVƒ‡ƒ“‚É‚Â‚¢‚Äl‚¦‚é
+// TODO:ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆã—ã¦ã‚ã‚‹ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã«ã¤ã„ã¦è€ƒãˆã‚‹
 void ProgramOptions::init_descriptions()
 {
   options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:", 

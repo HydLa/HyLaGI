@@ -46,15 +46,15 @@ MathematicaExpressionConverter::value_t MathematicaExpressionConverter::receive_
 
 MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_tree(MathLink &ml){
   node_sptr ret;
-  switch(ml.get_type()){ // Œ»sƒIƒuƒWƒFƒNƒg‚ÌŒ^‚ğ“¾‚é
-    case MLTKSTR: // •¶š—ñ
+  switch(ml.get_type()){ // ç¾è¡Œã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å‹ã‚’å¾—ã‚‹
+    case MLTKSTR: // æ–‡å­—åˆ—
     {
       HYDLA_LOGGER_REST("%% MLTKSTR(make_tree)");
       std::string str = ml.get_string();
       ret = node_sptr(new hydla::parse_tree::Number(str));
       break;
     }
-    case MLTKSYM: // ƒVƒ“ƒ{ƒ‹i‹L†j
+    case MLTKSYM: // ã‚·ãƒ³ãƒœãƒ«ï¼ˆè¨˜å·ï¼‰
     {
     HYDLA_LOGGER_REST("%% MLTKSYM(make_tree)");
       std::string symbol = ml.get_symbol();
@@ -70,13 +70,13 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(var_prefix.length())));
       break;
     }
-    case MLTKINT: // ®”‚Í•¶š—ñŒ`®‚Å‚Ì‚İó‚¯æ‚é‚à‚Ì‚Æ‚·‚éiintŒ^‚¾‚ÆŒÀŠE‚ª‚ ‚é‚½‚ßj
+    case MLTKINT: // æ•´æ•°ã¯æ–‡å­—åˆ—å½¢å¼ã§ã®ã¿å—ã‘å–ã‚‹ã‚‚ã®ã¨ã™ã‚‹ï¼ˆintå‹ã ã¨é™ç•ŒãŒã‚ã‚‹ãŸã‚ï¼‰
     {
       HYDLA_LOGGER_REST("%% MLTKINT(make_tree)");
       assert(0);
       break;
     }
-    case MLTKFUNC: // ‡¬ŠÖ”
+    case MLTKFUNC: // åˆæˆé–¢æ•°
     HYDLA_LOGGER_REST("%% MLTKFUNC(make_tree)");
     {
       int arg_count = ml.get_arg_count();
@@ -84,7 +84,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
       if(next_type == MLTKSYM){
         std::string symbol = ml.get_symbol();
         HYDLA_LOGGER_REST("%% symbol_name:", symbol);
-        if(symbol == "Sqrt"){//1ˆø”ŠÖ”
+        if(symbol == "Sqrt"){//1å¼•æ•°é–¢æ•°
           ret = node_sptr(new hydla::parse_tree::Power(make_tree(ml), node_sptr(new hydla::parse_tree::Number("1/2"))));
         }
         else if(symbol == "parameter"){
@@ -102,7 +102,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
            || symbol == "Divide"
            || symbol == "Power"
            || symbol == "Rational")        
-        { // ‰ÁŒ¸æœ‚È‚ÇC“ñ€‰‰Zq‚Å‘‚©‚ê‚éŠÖ”
+        { // åŠ æ¸›ä¹—é™¤ãªã©ï¼ŒäºŒé …æ¼”ç®—å­ã§æ›¸ã‹ã‚Œã‚‹é–¢æ•°
           node_sptr lhs, rhs;
           ret = make_tree(ml);
           for(int arg_it=1;arg_it<arg_count;arg_it++){
@@ -123,16 +123,16 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
           }
         }
         else{
-          // ‚»‚Ì‘¼‚ÌŠÖ”
+          // ãã®ä»–ã®é–¢æ•°
           boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
           PacketSender::function_map_t::right_const_iterator it = 
             PacketSender::function_map_.right.find(PacketSender::function_t(symbol, arg_count));
           if(it != PacketSender::function_map_.right.end() && it->second.second == arg_count){
-            // ‘Î‰‚µ‚Ä‚¢‚éŠÖ”
+            // å¯¾å¿œã—ã¦ã„ã‚‹é–¢æ•°
             f.reset(new hydla::parse_tree::Function(it->second.first));
           }
           else{
-            // “ä‚ÌŠÖ”
+            // è¬ã®é–¢æ•°
             f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
           }
           for(int arg_it=0;arg_it<arg_count;arg_it++){
@@ -141,7 +141,7 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
           ret = f;
         }
       }else{
-        // Derivative‚Ì‚Í‚¸D
+        // Derivativeã®ã¯ãšï¼
         assert(next_type == MLTKFUNC);
         HYDLA_LOGGER_REST("%% derivative");
         ml.get_next();

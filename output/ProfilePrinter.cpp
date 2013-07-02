@@ -34,7 +34,7 @@ std::string Printer::get_state_output(const phase_result_t& result, const bool& 
         value_t* limit_time = result.end_time-result.current_time;
         
         
-        //TODO:‚Å‚«‚ê‚ÎPrinter‚©‚çƒ\ƒ‹ƒo‚ÍŒ©‚½‚­‚È‚¢‚ªC‚»‚¤‚µ‚È‚¢‚Æ”’l‚É•ÏŠ·‚Å‚«‚È‚¢‚Ì‚Å‚Ç‚¤‚µ‚Ü‚µ‚å‚¤
+        //TODO:ã§ãã‚Œã°Printerã‹ã‚‰ã‚½ãƒ«ãƒã¯è¦‹ãŸããªã„ãŒï¼Œãã†ã—ãªã„ã¨æ•°å€¤ã«å¤‰æ›ã§ããªã„ã®ã§ã©ã†ã—ã¾ã—ã‚‡ã†
         //solver_->simplify(limit_time);
         
         do{

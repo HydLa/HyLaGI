@@ -53,7 +53,7 @@ extern hydla::simulator::SequentialSimulator* simulator_;
 extern hydla::simulator::Opts opts;
 
 /**
- * ƒGƒ“ƒgƒŠƒ|ƒCƒ“ƒg
+ * ã‚¨ãƒ³ãƒˆãƒªãƒã‚¤ãƒ³ãƒˆ
  */
 int main(int argc, char* argv[]) 
 {
@@ -119,7 +119,7 @@ void hydla_main(int argc, char* argv[])
   Timer main_timer;
   
   std::string area_string(po.get<std::string>("debug"));
-  if(area_string!=""){                 // ƒfƒoƒbƒOo—Í
+  if(area_string!=""){                 // ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›
     Logger::instance().set_log_level(Logger::Debug);
     if(area_string.find('a') != std::string::npos){
       Logger::parsing_area_ = true;
@@ -140,23 +140,23 @@ void hydla_main(int argc, char* argv[])
       Logger::rest_area_ = (area_string.find('r') != std::string::npos);
       Logger::ha_converter_area_ = (area_string.find('h') != std::string::npos);
     }
-  }else {                              // Œx‚Ì‚İo—Í
+  }else {                              // è­¦å‘Šã®ã¿å‡ºåŠ›
     Logger::instance().set_log_level(Logger::Warn);
   }
   
-  if(po.count("help")) {     // ƒwƒ‹ƒv•\¦‚µ‚ÄI—¹
+  if(po.count("help")) {     // ãƒ˜ãƒ«ãƒ—è¡¨ç¤ºã—ã¦çµ‚äº†
     po.help_msg(std::cout);
     return;
   }
 
-  if(po.count("version")) {  // ƒo[ƒWƒ‡ƒ“•\¦‚µ‚ÄI—¹
+  if(po.count("version")) {  // ãƒãƒ¼ã‚¸ãƒ§ãƒ³è¡¨ç¤ºã—ã¦çµ‚äº†
     std::cout << Version::description() << std::endl;
     return;
   }
 
-  // ParseTree‚Ì\’z
-  // ƒtƒ@ƒCƒ‹‚ğw’è‚³‚ê‚½‚çƒtƒ@ƒCƒ‹‚©‚ç
-  // ‚»‚¤‚Å‚È‚¯‚ê‚Î•W€“ü—Í‚©‚çó‚¯æ‚é
+  // ParseTreeã®æ§‹ç¯‰
+  // ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã•ã‚ŒãŸã‚‰ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰
+  // ãã†ã§ãªã‘ã‚Œã°æ¨™æº–å…¥åŠ›ã‹ã‚‰å—ã‘å–ã‚‹
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   if(po.count("input-file")) {
     std::string filename(po.get<std::string>("input-file"));
@@ -169,12 +169,12 @@ void hydla_main(int argc, char* argv[])
     pt->parse<DefaultNodeFactory>(std::cin);
   }
   
-  // ‚¢‚ë‚¢‚ë‚Æ•\¦
+  // ã„ã‚ã„ã‚ã¨è¡¨ç¤º
   if(dump(pt)) {
     return;
   }
   
-  // ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŠJn
+  // ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³é–‹å§‹
   symbolic_simulate(pt);
 
   if(po.get<std::string>("tm") != "n"){
@@ -185,8 +185,8 @@ void hydla_main(int argc, char* argv[])
 }
 
 /**
- * ProgramOption‚ÆParseTree‚ğŒ³‚Éo—Í
- * ‰½‚©o—Í‚µ‚½‚çtrue‚ğ•Ô‚·
+ * ProgramOptionã¨ParseTreeã‚’å…ƒã«å‡ºåŠ›
+ * ä½•ã‹å‡ºåŠ›ã—ãŸã‚‰trueã‚’è¿”ã™
  */
 bool dump(boost::shared_ptr<ParseTree> pt)
 {

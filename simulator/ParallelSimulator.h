@@ -47,12 +47,12 @@ public:
   virtual ~ParallelSimulator();
 
   /**
-   * ƒXƒŒƒbƒh‚ğ—§‚¿ã‚°AƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ğŠJn‚·‚é
+   * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’ç«‹ã¡ä¸Šã’ã€ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã‚’é–‹å§‹ã™ã‚‹
    */
   virtual phase_result_const_sptr_t simulate();
 
   /**
-   * ƒVƒ~ƒ…ƒŒ[ƒ^‚Ì‰Šú‰»‚ğs‚¤
+   * ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚¿ã®åˆæœŸåŒ–ã‚’è¡Œã†
    */
   virtual void initialize(const parse_tree_sptr& parse_tree);
   

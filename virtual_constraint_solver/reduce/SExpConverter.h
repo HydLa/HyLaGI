@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 
 
-//S®ÌSymbolicValue‚Æ‚¢‚¤C®‚Ì•ÏŠ·‚ğ’S“–‚·‚éƒNƒ‰ƒXD
+//Så¼â‡”SymbolicValueã¨ã„ã†ï¼Œå¼ã®å¤‰æ›ã‚’æ‹…å½“ã™ã‚‹ã‚¯ãƒ©ã‚¹ï¼
 
 
 #include "../SymbolicVirtualConstraintSolver.h"
@@ -45,7 +45,7 @@ class SExpConverter
     nodeType node;
     tag_function_and_node(p_function_for_node func, nodeType nod):function(func), node(nod){}
   }function_and_node;
-  //Mathematica•¶š—ñ‚Æˆ—&ƒm[ƒh‚Ì‘Î‰ŠÖŒW
+  //Mathematicaæ–‡å­—åˆ—ã¨å‡¦ç†&ãƒãƒ¼ãƒ‰ã®å¯¾å¿œé–¢ä¿‚
   typedef std::map<std::string, function_and_node> string_map_t;
   static string_map_t string_map_;
 
@@ -53,39 +53,39 @@ class SExpConverter
 
   virtual ~SExpConverter();
 
-  //‰Šú‰»
+  //åˆæœŸåŒ–
   static void initialize();
 
-  //Šeƒm[ƒh‚É‘Î‰‚·‚éˆ—Di’FŠÖ”j
+  //å„ãƒãƒ¼ãƒ‰ã«å¯¾å¿œã™ã‚‹å‡¦ç†ï¼ï¼ˆæ³¨ï¼šé–¢æ•°ï¼‰
   static function_for_node for_derivative;
   static function_for_node for_unary_node;
   static function_for_node for_binary_node;
 
-  // S®‚Æ‚Á‚Ävalue‚É•ÏŠ·‚·‚é
+  // Så¼ã¨ã£ã¦valueã«å¤‰æ›ã™ã‚‹
   static value_t convert_s_exp_to_symbolic_value(const SExpParser &sp, const_tree_iter_t iter);
 
   static void add_parameter(variable_t &variable, parameter_t &parameter);
   static void clear_parameter_map();
 
   /**
-   * ivairablej=inodej‚ÌŒ`‚Ìƒm[ƒh‚ğ•Ô‚·
+   * ï¼ˆvairableï¼‰=ï¼ˆnodeï¼‰ã®å½¢ã®ãƒãƒ¼ãƒ‰ã‚’è¿”ã™
    */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
 
    /**
-   * ivairablej=inodej‚ÌŒ`‚Ìƒm[ƒh‚ğ•Ô‚·
+   * ï¼ˆvairableï¼‰=ï¼ˆnodeï¼‰ã®å½¢ã®ãƒãƒ¼ãƒ‰ã‚’è¿”ã™
    */
   static node_sptr make_equal(hydla::simulator::DefaultParameter &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
   
-  //’l‚ğ‹L†’è”‚ğ—p‚¢‚½•\Œ»‚É‚·‚é
+  //å€¤ã‚’è¨˜å·å®šæ•°ã‚’ç”¨ã„ãŸè¡¨ç¾ã«ã™ã‚‹
   static void set_parameter_on_value(value_t &val, const parameter_t &par);
   
-  //val‚ÆŠÖŒW‰‰Zq‚ğŒ³‚ÉArange‚ğİ’è‚·‚é
+  //valã¨é–¢ä¿‚æ¼”ç®—å­ã‚’å…ƒã«ã€rangeã‚’è¨­å®šã™ã‚‹
   static void set_range(const value_t &val, value_range_t &range, const int& relop);
 
 
   private:
-  //Ä‹A‚ÅŒÄ‚Ño‚µ‚Ä‚¢‚­•û
+  //å†å¸°ã§å‘¼ã³å‡ºã—ã¦ã„ãæ–¹
   static node_sptr convert_s_exp_to_symbolic_tree(const SExpParser& sp, const_tree_iter_t iter);
 
   static std::map<variable_t, parameter_t> variable_parameter_map_;

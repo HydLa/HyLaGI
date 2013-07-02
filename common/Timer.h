@@ -13,7 +13,7 @@
   
 #else
 
-#include <sys/time.h> /// Linux—pH
+#include <sys/time.h> /// Linuxç”¨ï¼Ÿ
 
 #endif
 
@@ -37,50 +37,50 @@ namespace hydla{
       Timer();
       ~Timer();
       /**
-       * Œv‘ªŠJn‚ğŒ»İ‚Éİ’è‚·‚é
+       * è¨ˆæ¸¬é–‹å§‹æ™‚åˆ»ã‚’ç¾åœ¨æ™‚åˆ»ã«è¨­å®šã™ã‚‹
        */
       void restart();
 
       /**
-       * ŒÄ‚Î‚ê‚½“_‚Å‚ÌŒo‰ß‚ğ“¾‚é
+       * å‘¼ã°ã‚ŒãŸæ™‚ç‚¹ã§ã®çµŒéæ™‚åˆ»ã‚’å¾—ã‚‹
        */
       elapsed_time_t get_time();
 
       /**
-       * elapsed_time_‚Ì’l‚ÉŒo‰ßŠÔ‚ğ‰ÁZ‚·‚é
+       * elapsed_time_ã®å€¤ã«çµŒéæ™‚é–“ã‚’åŠ ç®—ã™ã‚‹
        */
       void count_time();
 
       /**
-       * ƒƒ“ƒo•Ï”‚ğ‘S‚Ä‰Šú‰»‚·‚é
+       * ãƒ¡ãƒ³ãƒå¤‰æ•°ã‚’å…¨ã¦åˆæœŸåŒ–ã™ã‚‹
        */
       void reset();
 
       /**
-       * Œv‘ª‚µ‚½ŠÔ‚ğ•¶š—ñ‚Å•Ô‚·
+       * è¨ˆæ¸¬ã—ãŸæ™‚é–“ã‚’æ–‡å­—åˆ—ã§è¿”ã™
        */
       std::string get_time_string() const;
       
       /**
-       * Œo‰ß‚ğƒ}ƒCƒNƒ•b‚Å•Ô‚·
+       * çµŒéæ™‚åˆ»ã‚’ãƒã‚¤ã‚¯ãƒ­ç§’ã§è¿”ã™
        */ 
       unsigned int get_elapsed_us();
 
       /**
-       * ŒÄ‚Î‚ê‚½“_‚Å‚Ìƒ^ƒCƒ}[‰Šú‰»‚©‚ç‚ÌŒo‰ß‚ğ
-       * •\¦‚·‚é
+       * å‘¼ã°ã‚ŒãŸæ™‚ç‚¹ã§ã®ã‚¿ã‚¤ãƒãƒ¼åˆæœŸåŒ–ã‹ã‚‰ã®çµŒéæ™‚åˆ»ã‚’
+       * è¡¨ç¤ºã™ã‚‹
        */
       void elapsed();
       void elapsed(std::string str);
 
       /**
-       * Œv‘ªŠÔ‚Ì’l‚ª0‚È‚çtrue‚ğ•Ô‚·
+       * è¨ˆæ¸¬æ™‚é–“ã®å€¤ãŒ0ãªã‚‰trueã‚’è¿”ã™
        */
       bool is_zero();
       
     private:
       /**
-       * ‘ª’èŠJn‚Ì’l
+       * æ¸¬å®šé–‹å§‹æ™‚ã®å€¤
        */
       struct timeval start_point_;
       elapsed_time_t elapsed_time_;

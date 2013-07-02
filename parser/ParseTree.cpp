@@ -50,13 +50,13 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   HYDLA_LOGGER_PARSING("#*** Begin ParseTree::parse ***");
   node_factory_ = node_factory;
 
-  // AST‚Ì\’z
+  // ASTã®æ§‹ç¯‰
   HydLaAST ast;
   ast.parse(stream);
   HYDLA_LOGGER_PARSING("--- AST Tree ---", ast);
   
 
-  // ParseTree‚Ì\’z
+  // ParseTreeã®æ§‹ç¯‰
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition, node_factory);
@@ -66,7 +66,7 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   HYDLA_LOGGER_PARSING("--- Program Definition ---\n",    program_definition);
   if(assertion_node_tree_)
     HYDLA_LOGGER_PARSING("--- Assertion Tree ---\n", *assertion_node_tree_);
-  // ˆÓ–¡‰ğÍ
+  // æ„å‘³è§£æ
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
   update_node_id_list();

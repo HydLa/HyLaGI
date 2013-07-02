@@ -16,7 +16,7 @@ namespace hydla {
 namespace parser {
 
 /**
- * ’è‹`§–ñ‚ğû”[‚·‚éƒNƒ‰ƒX
+ * å®šç¾©åˆ¶ç´„ã‚’åç´ã™ã‚‹ã‚¯ãƒ©ã‚¹
  */
 template<typename DefinitionNodeType>
 class DefinitionContainer 
@@ -35,7 +35,7 @@ public:
   typedef typename definition_map_t::const_iterator definition_map_const_iterator;
 
   /**
-   * ’è‹`ƒm[ƒh‚ğ’Ç‰Á‚·‚éÛ‚ÌƒL[‚ğì¬‚·‚é
+   * å®šç¾©ãƒãƒ¼ãƒ‰ã‚’è¿½åŠ ã™ã‚‹éš›ã®ã‚­ãƒ¼ã‚’ä½œæˆã™ã‚‹
    */
   definition_map_key_t 
   create_definition_key(definition_name_t name, 
@@ -53,7 +53,7 @@ public:
   }
   
   /**
-   * ’è‹`ƒm[ƒh‚ğ’Ç‰Á‚·‚é
+   * å®šç¾©ãƒãƒ¼ãƒ‰ã‚’è¿½åŠ ã™ã‚‹
    */
   void add_definition(const boost::shared_ptr<definition_node_t>& d)
   {
@@ -64,7 +64,7 @@ public:
   }
 
   /**
-   * ‚·‚Å‚É“o˜^Ï‚İ‚Ìƒm[ƒh‚Å‚ ‚é‚©‚Ç‚¤‚©
+   * ã™ã§ã«ç™»éŒ²æ¸ˆã¿ã®ãƒãƒ¼ãƒ‰ã§ã‚ã‚‹ã‹ã©ã†ã‹
    */
   bool is_registered(
     const boost::shared_ptr<hydla::parse_tree::Definition>& d) const 
@@ -79,10 +79,10 @@ public:
 
 
   /**
-   * ’è‹`ƒm[ƒh‚ğ•Ô‚·
+   * å®šç¾©ãƒãƒ¼ãƒ‰ã‚’è¿”ã™
    *
-   * @return —^‚¦‚ç‚ê‚½’è‹`‚É‘Î‚·‚éƒm[ƒhD
-   *          ‘¶İ‚µ‚È‚¢’è‹`‚Ìê‡‚Í‹óƒNƒ‰ƒX‚ğ•Ô‚·
+   * @return ä¸ãˆã‚‰ã‚ŒãŸå®šç¾©ã«å¯¾ã™ã‚‹ãƒãƒ¼ãƒ‰ï¼
+   *          å­˜åœ¨ã—ãªã„å®šç¾©ã®å ´åˆã¯ç©ºã‚¯ãƒ©ã‚¹ã‚’è¿”ã™
    */
   const boost::shared_ptr<definition_node_t> 
   get_definition(const definition_map_key_t& d) const
@@ -95,7 +95,7 @@ public:
   }
 
   /**
-   * “o˜^‚³‚ê‚Ä‚¢‚éî•ñ‚ğ‚·‚×‚ÄÁ‹‚µC‰Šúó‘Ô‚É–ß‚·
+   * ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹æƒ…å ±ã‚’ã™ã¹ã¦æ¶ˆå»ã—ï¼ŒåˆæœŸçŠ¶æ…‹ã«æˆ»ã™
    */
   void clear()
   {
@@ -103,7 +103,7 @@ public:
   }
 
   /**
-   * ’è‹`“à—e‚Ìo—Í‚ğ‚¨‚±‚È‚¤
+   * å®šç¾©å†…å®¹ã®å‡ºåŠ›ã‚’ãŠã“ãªã†
    */
   std::ostream& dump(std::ostream& s) const
   {
@@ -119,7 +119,7 @@ public:
 private:
 
   /**
-   * ’è‹`‚ğŠi”[‚·‚é‚½‚ß‚Ìmap
+   * å®šç¾©ã‚’æ ¼ç´ã™ã‚‹ãŸã‚ã®map
    */
   definition_map_t definition_map_;
 };

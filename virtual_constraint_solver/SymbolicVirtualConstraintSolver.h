@@ -2,12 +2,12 @@
 #define _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
 
 /**
- * ѓvѓЌѓOѓ‰ѓЂЉФ‚М€Л‘¶ђ«‚М–в‘и‚©‚зЃC
- * ‚±‚Мѓwѓbѓ_Ѓ[‚Ё‚ж‚С‚±‚Мѓwѓbѓ_Ѓ[‚©‚зѓCѓ“ѓNѓ‹Ѓ[ѓh‚і‚к‚йѓwѓbѓ_Ѓ[‚Й‚Ё‚ў‚Д
- * ѓ\ѓ‹ѓoЃ[€Л‘¶‚Мѓwѓbѓ_Ѓ[(mathematica‚вrealpaver“™‚МЊЕ—L‚Мѓwѓbѓ_Ѓ[)‚р
- * ѓCѓ“ѓNѓ‹Ѓ[ѓh‚µ‚Д‚Н‚И‚з‚И‚ў
+ * гѓ—гѓ­г‚°гѓ©гѓ й–“гЃ®дѕќе­жЂ§гЃ®е•ЏйЎЊгЃ‹г‚‰пјЊ
+ * гЃ“гЃ®гѓгѓѓгѓЂгѓјгЃЉг‚€гЃігЃ“гЃ®гѓгѓѓгѓЂгѓјгЃ‹г‚‰г‚¤гѓіг‚Їгѓ«гѓјгѓ‰гЃ•г‚Њг‚‹гѓгѓѓгѓЂгѓјгЃ«гЃЉгЃ„гЃ¦
+ * г‚Ѕгѓ«гѓђгѓјдѕќе­гЃ®гѓгѓѓгѓЂгѓј(mathematicaг‚„realpaverз­‰гЃ®е›єжњ‰гЃ®гѓгѓѓгѓЂгѓј)г‚’
+ * г‚¤гѓіг‚Їгѓ«гѓјгѓ‰гЃ—гЃ¦гЃЇгЃЄг‚‰гЃЄгЃ„
  *
- * ‚±‚Мђ§–с‚НSymbolicVirtualConstraintSolver‚рЊpЏі‚µ‚ЅѓNѓ‰ѓX‚М’и‹`ѓwѓbѓ_Ѓ[‚Й‚а“K—p‚і‚к‚й
+ * гЃ“гЃ®е€¶зґ„гЃЇSymbolicVirtualConstraintSolverг‚’з¶™ж‰їгЃ—гЃџг‚Їгѓ©г‚№гЃ®е®љзѕ©гѓгѓѓгѓЂгѓјгЃ«г‚‚йЃ©з”ЁгЃ•г‚Њг‚‹
  */
 
 #include <iostream>
@@ -22,8 +22,8 @@ namespace hydla {
 namespace vcs {
 
 /**
- *  ђ”Ћ®Џ€—ќѓVѓ~ѓ…ѓЊЃ[ѓVѓ‡ѓ“‚М‚Ѕ‚Я‚ЙЋg‚¤ѓ\ѓ‹ѓoЃ[
- *  TODO:VCS‚рЊpЏі‚µ‚Д‚ак’к—‚Є‹N‚«‚И‚ў‚ж‚¤‚Й‚·‚й
+ *  ж•°ејЏе‡¦зђ†г‚·гѓџгѓҐгѓ¬гѓјг‚·гѓ§гѓігЃ®гЃџг‚ЃгЃ«дЅїгЃ†г‚Ѕгѓ«гѓђгѓј
+ *  TODO:VCSг‚’з¶™ж‰їгЃ—гЃ¦г‚‚йЅџйЅ¬гЃЊиµ·гЃЌгЃЄгЃ„г‚€гЃ†гЃ«гЃ™г‚‹
  */
 
 typedef hydla::simulator::symbolic::parameter_map_t         parameter_map_t;
@@ -68,7 +68,7 @@ public:
   
   
   /**
-   * calculate_next_PP_time‚Е•Ф‚·Ќ\‘ў‘М
+   * calculate_next_PP_timeгЃ§иї”гЃ™ж§‹йЂ дЅ“
    */
   typedef struct PPTimeResult
   {
@@ -83,8 +83,8 @@ public:
   } PP_time_result_t;
   
   /**
-   * create_maps‚Е•Ф‚·Ќ\‘ў‘М
-   * •Пђ”•\‚М—с‚Ж‚·‚й
+   * create_mapsгЃ§иї”гЃ™ж§‹йЂ дЅ“
+   * е¤‰ж•°иЎЁгЃ®е€—гЃЁгЃ™г‚‹
    */
   typedef struct CreateResult
   {
@@ -99,41 +99,41 @@ public:
   {}
 
   /**
-   * —ЈЋU•П‰»ѓ‚Ѓ[ѓhЃCA‘±•П‰»ѓ‚Ѓ[ѓh‚МђШ‚и‘Ц‚¦‚р‚Ё‚±‚И‚¤
+   * й›ўж•Је¤‰еЊ–гѓўгѓјгѓ‰пјЊйЂЈз¶ље¤‰еЊ–гѓўгѓјгѓ‰гЃ®е€‡г‚Љж›їгЃ€г‚’гЃЉгЃ“гЃЄгЃ†
    */
   virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision){}
 
   /**
-   * €кЋћ“I‚Иђ§–с‚М’З‰Б‚рЉJЋn‚·‚й
+   * дёЂж™‚зљ„гЃЄе€¶зґ„гЃ®иїЅеЉ г‚’й–‹е§‹гЃ™г‚‹
    */
   virtual void start_temporary(){assert(0);}
 
   /**
-   * €кЋћ“I‚Иђ§–с‚М’З‰Б‚рЏI—№‚·‚й
-   * startЊгЃC‚±‚МЉЦђ”‚рЊД‚СЏo‚·‚Ь‚Е‚Й’З‰Б‚µ‚Ѕђ§–с‚Н‚·‚Ч‚Д–і‚©‚Б‚Ѕ‚±‚Ж‚Й‚·‚й
+   * дёЂж™‚зљ„гЃЄе€¶зґ„гЃ®иїЅеЉ г‚’зµ‚дє†гЃ™г‚‹
+   * startеѕЊпјЊгЃ“гЃ®й–ўж•°г‚’е‘јгЃіе‡єгЃ™гЃѕгЃ§гЃ«иїЅеЉ гЃ—гЃџе€¶зґ„гЃЇгЃ™гЃ№гЃ¦з„ЎгЃ‹гЃЈгЃџгЃ“гЃЁгЃ«гЃ™г‚‹
    */
   virtual void end_temporary(){assert(0);}
 
   /**
-   * —^‚¦‚з‚к‚Ѕ•Пђ”•\‚Ж’иђ”•\‚рЊі‚ЙЃCђ§–сѓXѓgѓA‚МЏ‰Љъ‰»‚р‚Ё‚±‚И‚¤
-   * ЏoЊ»‚·‚й•Пђ”‚Ж’иђ”‚МЏWЌ‡‚МЏо•с‚а‹L‰Ї‚·‚й
+   * дёЋгЃ€г‚‰г‚ЊгЃџе¤‰ж•°иЎЁгЃЁе®љж•°иЎЁг‚’е…ѓгЃ«пјЊе€¶зґ„г‚№гѓ€г‚ўгЃ®е€ќжњџеЊ–г‚’гЃЉгЃ“гЃЄгЃ†
+   * е‡єзЏѕгЃ™г‚‹е¤‰ж•°гЃЁе®љж•°гЃ®й›†еђ€гЃ®жѓ…е ±г‚‚иЁж†¶гЃ™г‚‹
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0); return false;}
 
 
   /**
-   * Њ»ЌЭ‚Мђ§–сѓXѓgѓA‚©‚з•Пђ”•\‚рЌмђ¬‚·‚й
+   * зЏѕењЁгЃ®е€¶зґ„г‚№гѓ€г‚ўгЃ‹г‚‰е¤‰ж•°иЎЁг‚’дЅњж€ђгЃ™г‚‹
    */
   virtual create_result_t create_maps(){assert(0); return create_result_t();}
   
   /**
-   * ђ§–с‚р’З‰Б‚·‚йЃD
+   * е€¶зґ„г‚’иїЅеЉ гЃ™г‚‹пјЋ
    */
   virtual void add_constraint(const constraints_t& constraints){assert(0);}
   virtual void add_constraint(const node_sptr& constraint){assert(0);}
   
   /**
-   * •Пђ”•\‚р—p‚ў‚Дђ§–сѓXѓgѓA‚рЏгЏ‘‚«‚·‚йЃD
+   * е¤‰ж•°иЎЁг‚’з”ЁгЃ„гЃ¦е€¶зґ„г‚№гѓ€г‚ўг‚’дёЉж›ёгЃЌгЃ™г‚‹пјЋ
    */
   virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives){assert(0);}
   
@@ -145,34 +145,34 @@ public:
   virtual void add_guard(const node_sptr&){assert(0);}
 
   /**
-   * ђ§–сѓ‚ѓWѓ…Ѓ[ѓ‹ЏWЌ‡‚Є–µЏ‚‚·‚йЏрЊЏ‚рѓZѓbѓg‚·‚й
+   * е€¶зґ„гѓўг‚ёгѓҐгѓјгѓ«й›†еђ€гЃЊзџ›з›ѕгЃ™г‚‹жќЎд»¶г‚’г‚»гѓѓгѓ€гЃ™г‚‹
    */
   virtual void set_false_conditions(const node_sptr& constraint){assert(0);}
 
   /**
-   * –µЏ‚‚·‚йЏрЊЏ‚р‚ ‚з‚©‚¶‚Я’І‚Ч‚йЉЦђ”
-   * €шђ”‚Й“ѕ‚Ѕ–µЏ‚‚·‚йЏрЊЏ‚р“ь‚к‚й
+   * зџ›з›ѕгЃ™г‚‹жќЎд»¶г‚’гЃ‚г‚‰гЃ‹гЃг‚ЃиЄїгЃ№г‚‹й–ўж•°
+   * еј•ж•°гЃ«еѕ—гЃџзџ›з›ѕгЃ™г‚‹жќЎд»¶г‚’е…Ґг‚Њг‚‹
    * @return
-   * FALSE_CONDITIONS_TRUE                : •K‚ё–µЏ‚              ЏрЊЏ : ‰Ѕ‚а“ь‚к‚И‚ў
-   * FALSE_CONDITIONS_FALSE               : –µЏ‚‚µ‚И‚ў            ЏрЊЏ : ‰Ѕ‚а“ь‚к‚И‚ў
-   * FALSE_CONDITIONS_VARIABLE_CONDITIONS : ЏрЊЏ‚Й‚ж‚Б‚Д–µЏ‚‚·‚й  ЏрЊЏ : ЏрЊЏ‚р“ь‚к‚й
+   * FALSE_CONDITIONS_TRUE                : еї…гЃљзџ›з›ѕ              жќЎд»¶ : дЅ•г‚‚е…Ґг‚ЊгЃЄгЃ„
+   * FALSE_CONDITIONS_FALSE               : зџ›з›ѕгЃ—гЃЄгЃ„            жќЎд»¶ : дЅ•г‚‚е…Ґг‚ЊгЃЄгЃ„
+   * FALSE_CONDITIONS_VARIABLE_CONDITIONS : жќЎд»¶гЃ«г‚€гЃЈгЃ¦зџ›з›ѕгЃ™г‚‹  жќЎд»¶ : жќЎд»¶г‚’е…Ґг‚Њг‚‹
    */
   virtual FalseConditionsResult find_false_conditions(node_sptr& node){assert(0); return FALSE_CONDITIONS_FALSE;}
 
   /**
-   * ђ§–сѓXѓgѓA‚Є–і–µЏ‚‚©‚р”»’и‚·‚йЃD
-   * @return Џ[‘«‰В”\‚ИЏкЌ‡‚М‹LЌ†’иђ”ЏрЊЏ—сЃCЏ[‘«•s‰В”\‚ИЏкЌ‡‚М‹LЌ†’иђ”ЏрЊЏ—сЃi‚»‚к‚ј‚к‘¶ЌЭ‚µ‚И‚ўЏкЌ‡‚Н‹у‚М—с‚р•Ф‚·Ѓj
+   * е€¶зґ„г‚№гѓ€г‚ўгЃЊз„Ўзџ›з›ѕгЃ‹г‚’е€¤е®љгЃ™г‚‹пјЋ
+   * @return е……и¶іеЏЇиѓЅгЃЄе ґеђ€гЃ®иЁеЏ·е®љж•°жќЎд»¶е€—пјЊе……и¶ідёЌеЏЇиѓЅгЃЄе ґеђ€гЃ®иЁеЏ·е®љж•°жќЎд»¶е€—пј€гЃќг‚ЊгЃћг‚Ње­ењЁгЃ—гЃЄгЃ„е ґеђ€гЃЇз©єгЃ®е€—г‚’иї”гЃ™пј‰
    */
   virtual CheckConsistencyResult check_consistency(){assert(0); return CheckConsistencyResult();}
   
   /**
-   * •Пђ”‚ЙA‘±ђ«‚рђЭ’и‚·‚й
+   * е¤‰ж•°гЃ«йЂЈз¶љжЂ§г‚’иЁ­е®љгЃ™г‚‹
    */
   virtual void set_continuity(const std::string &name, const int& dc){assert(0);}
   
   /**
-   * Ћџ‚М—ЈЋU•П‰»ЋћЌЏ‚р‹Ѓ‚Я‚й
-   * @param discrete_cause —ЈЋU•П‰»‚МЊґ€ц‚Ж‚И‚и‚¤‚йЏрЊЏ
+   * ж¬ЎгЃ®й›ўж•Је¤‰еЊ–ж™‚е€»г‚’ж±‚г‚Ѓг‚‹
+   * @param discrete_cause й›ўж•Је¤‰еЊ–гЃ®еЋџе› гЃЁгЃЄг‚ЉгЃ†г‚‹жќЎд»¶
    */
   virtual PP_time_result_t calculate_next_PP_time(
     const constraints_t& discrete_cause,
@@ -180,37 +180,37 @@ public:
     const time_t& max_time){assert(0);return PP_time_result_t();}
     
 
-  // Њ»ЌЭ‚Мђ§–сѓXѓgѓA‚р•¶Ћљ—с‚ЕЋж“ѕ‚·‚й
+  // зЏѕењЁгЃ®е€¶зґ„г‚№гѓ€г‚ўг‚’ж–‡е­—е€—гЃ§еЏ–еѕ—гЃ™г‚‹
   virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}
   
-  //node‚рЉИ–с‚·‚й
+  //nodeг‚’з°Ўзґ„гЃ™г‚‹
   virtual FalseConditionsResult node_simplify(node_sptr &node){assert(0);return FALSE_CONDITIONS_FALSE;}
 
-  //SymbolicTime‚рЉИ–с‚·‚й
+  //SymbolicTimeг‚’з°Ўзґ„гЃ™г‚‹
   virtual void simplify(time_t &time){assert(0);}
-  //SymbolicTime‚р”дЉr‚·‚й
+  //SymbolicTimeг‚’жЇ”ијѓгЃ™г‚‹
   virtual bool less_than(const time_t &lhs, const time_t &rhs){assert(0); return false;}
-  //SymbolicValue‚МЋћЉФ‚р‚ё‚з‚·
+  //SymbolicValueгЃ®ж™‚й–“г‚’гЃљг‚‰гЃ™
   virtual value_t shift_expr_time(const value_t& val, const time_t &time){assert(0); return value_t();}
   
   /* 
-   * •Пђ”•\‚ЙЋћЌЏ‚р“K—p‚·‚й
+   * е¤‰ж•°иЎЁгЃ«ж™‚е€»г‚’йЃ©з”ЁгЃ™г‚‹
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
 
   virtual void approx_vm(variable_range_map_t& vm){assert(0);}
 
   /* 
-   * ЏoЊ»‚·‚й•Пђ”‚МЏWЌ‡‚рђЭ’и‚·‚йЃD
-   * reset‚µ‚Д‚аЏ‰Љъ‰»‚і‚к‚И‚ўЃD
+   * е‡єзЏѕгЃ™г‚‹е¤‰ж•°гЃ®й›†еђ€г‚’иЁ­е®љгЃ™г‚‹пјЋ
+   * resetгЃ—гЃ¦г‚‚е€ќжњџеЊ–гЃ•г‚ЊгЃЄгЃ„пјЋ
    */
   void set_variable_set(variable_set_t& v){
     variable_set_=&v;
   }
   
   /* 
-   * ЏoЊ»‚·‚й‹LЌ†’иђ”‚МЏWЌ‡‚рђЭ’и‚·‚йЃD
-   * reset‚µ‚Д‚аЏ‰Љъ‰»‚і‚к‚И‚ўЃD
+   * е‡єзЏѕгЃ™г‚‹иЁеЏ·е®љж•°гЃ®й›†еђ€г‚’иЁ­е®љгЃ™г‚‹пјЋ
+   * resetгЃ—гЃ¦г‚‚е€ќжњџеЊ–гЃ•г‚ЊгЃЄгЃ„пјЋ
    */
   void set_parameter_set(parameter_set_t& p){
     parameter_set_ = &p;

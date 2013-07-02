@@ -10,7 +10,7 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace parse_tree {
 
-//ˆø”‚Íƒ_ƒ~[
+//å¼•æ•°ã¯ãƒ€ãƒŸãƒ¼
 RTreeVisitor::RTreeVisitor(std::string caller)
 {
     caller_ = caller;
@@ -29,12 +29,12 @@ RTreeVisitor::~RTreeVisitor()
 //		std::cout << "rtv was destroyed" << std::endl;
 }
 
-//c++“®ì—ûK
+//c++å‹•ä½œç·´ç¿’
 void RTreeVisitor::sandbox(){
 //	std::cout << "sandbox called" << std::endl;
 }
 
-// §–ñ®‚ğl‚ª“Ç‚ß‚éstring‚É‚µ‚Ä•Ô‚·
+// åˆ¶ç´„å¼ã‚’äººãŒèª­ã‚ã‚‹stringã«ã—ã¦è¿”ã™
 std::string RTreeVisitor::get_expr(const node_sptr& node){
 	accept(node);
 	std::string ret = expr_;
@@ -42,7 +42,7 @@ std::string RTreeVisitor::get_expr(const node_sptr& node){
 	return ret;
 }
 
-//accept‚ğŠO•”‚Ås‚¤ê‡
+//acceptã‚’å¤–éƒ¨ã§è¡Œã†å ´åˆ
 std::string RTreeVisitor::get_expr(){
 	std::string ret = expr_;
 	expr_ ="";
@@ -63,15 +63,15 @@ std::string RTreeVisitor::get_ask_rhs(const boost::shared_ptr<hydla::parse_tree:
 	expr_ ="";
 	return ret;
 }
-// ’è‹`
+// å®šç¾©
 void RTreeVisitor::visit(boost::shared_ptr<ConstraintDefinition> node)  {assert(0);}
 void RTreeVisitor::visit(boost::shared_ptr<ProgramDefinition> node)     {assert(0);}
 
-// ŒÄ‚Ño‚µ
+// å‘¼ã³å‡ºã—
 void RTreeVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      {assert(0);}
 void RTreeVisitor::visit(boost::shared_ptr<ProgramCaller> node)         {assert(0);}
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void RTreeVisitor::visit(boost::shared_ptr<Constraint> node)            {
 	if(expr_==""){
 		expr_ += "{Constraint, ";
@@ -82,9 +82,9 @@ void RTreeVisitor::visit(boost::shared_ptr<Constraint> node)            {
 	expr_ += "}";
 }
 
-// Ask§–ñ BinaryNode
+// Askåˆ¶ç´„ BinaryNode
 /*
-* ‹Œ
+* æ—§
 void RTreeVisitor::visit(boost::shared_ptr<Ask> node){
 //	expr_ += "Ask: ";
 	accept(node->get_lhs());
@@ -92,7 +92,7 @@ void RTreeVisitor::visit(boost::shared_ptr<Ask> node){
 	accept(node->get_rhs());
 }
 */
-//ms—p
+//msç”¨
 void RTreeVisitor::visit(boost::shared_ptr<Ask> node){
 	expr_ += "{Ask, ";
 	accept(node->get_lhs());
@@ -101,9 +101,9 @@ void RTreeVisitor::visit(boost::shared_ptr<Ask> node){
 	expr_ += "}";
 }
 
-// Tell§–ñ UNARYNODE
+// Tellåˆ¶ç´„ UNARYNODE
 void RTreeVisitor::visit(boost::shared_ptr<Tell> node)                  {
-// ‹Œ reduce_output‚ÉŒÄ‚Ño‚³‚ê‚½‚Æ‚«
+// æ—§ reduce_outputã«å‘¼ã³å‡ºã•ã‚ŒãŸã¨ã
 	if(caller_=="reduce_output"){
 		accept(node->get_child());
 	}else{
@@ -113,7 +113,7 @@ void RTreeVisitor::visit(boost::shared_ptr<Tell> node)                  {
 	}
 }
 
-// ”äŠr‰‰Zq ASYMMETRIC_BINARY_NODE
+// æ¯”è¼ƒæ¼”ç®—å­ ASYMMETRIC_BINARY_NODE
 void RTreeVisitor::visit(boost::shared_ptr<Equal> node)                 {
 	accept(node->get_lhs());
 	expr_ += "=";
@@ -145,7 +145,7 @@ void RTreeVisitor::visit(boost::shared_ptr<GreaterEqual> node)          {
 	accept(node->get_rhs());
 }
 
-// ˜_—‰‰Zq
+// è«–ç†æ¼”ç®—å­
 void RTreeVisitor::visit(boost::shared_ptr<LogicalAnd> node)            {
 	expr_ += "{LogicalAnd, ";
 	accept(node->get_lhs());
@@ -162,7 +162,7 @@ void RTreeVisitor::visit(boost::shared_ptr<LogicalOr> node)             {
 
 }
   
-// Zp“ñ€‰‰Zq BINARY_NODE
+// ç®—è¡“äºŒé …æ¼”ç®—å­ BINARY_NODE
 void RTreeVisitor::visit(boost::shared_ptr<Plus> node)                  {
 	expr_ += "(";
 	accept(node->get_lhs());
@@ -188,44 +188,44 @@ void RTreeVisitor::visit(boost::shared_ptr<Divide> node)                {
 	accept(node->get_rhs());
 }
   
-// Zp’P€‰‰Zq UNARYNODE
+// ç®—è¡“å˜é …æ¼”ç®—å­ UNARYNODE
 void RTreeVisitor::visit(boost::shared_ptr<Negative> node)              {
     expr_ += "-";
     accept(node->get_child());
 }
 void RTreeVisitor::visit(boost::shared_ptr<Positive> node)              {assert(0);}
   
-// §–ñŠK‘w’è‹`‰‰Zq
+// åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
 void RTreeVisitor::visit(boost::shared_ptr<Weaker> node)                {assert(0);}
 void RTreeVisitor::visit(boost::shared_ptr<Parallel> node)              {assert(0);}
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void RTreeVisitor::visit(boost::shared_ptr<Always> node)                {
     expr_ += "{Always, ";
     accept(node->get_child());
     expr_ += "}";
 }
   
-// ”÷•ª UNARYNODE df(x,t)‚Æ•\‹L
+// å¾®åˆ† UNARYNODE df(x,t)ã¨è¡¨è¨˜
 void RTreeVisitor::visit(boost::shared_ptr<Differential> node)          {
     expr_ += "df(";
     accept(node->get_child());
     expr_ += ",t)";
 }
 
-// ¶‹ÉŒÀ UNARYNODE
+// å·¦æ¥µé™ UNARYNODE
 void RTreeVisitor::visit(boost::shared_ptr<Previous> node)              {
     expr_ += "prev(";
     accept(node->get_child());
     expr_ += ")";
 }
   
-// •Ï” FactorNode
+// å¤‰æ•° FactorNode
 void RTreeVisitor::visit(boost::shared_ptr<Variable> node)              {
     expr_ += node->get_name();
 }
 
-// ”š FactorNode
+// æ•°å­— FactorNode
 void RTreeVisitor::visit(boost::shared_ptr<Number> node)                {
     expr_ += node->get_number();
 }

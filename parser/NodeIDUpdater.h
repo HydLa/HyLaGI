@@ -22,26 +22,26 @@ public:
   virtual ~NodeIDUpdater();
 
   /**
-   * ƒm[ƒhID‚ª•t‚¢‚Ä‚¢‚È‚¢ƒm[ƒh‚É‘Î‚µ‚ÄV‚½‚ÉID‚ğ•t—^‚·‚é
+   * ãƒãƒ¼ãƒ‰IDãŒä»˜ã„ã¦ã„ãªã„ãƒãƒ¼ãƒ‰ã«å¯¾ã—ã¦æ–°ãŸã«IDã‚’ä»˜ä¸ã™ã‚‹
    */
   void update(hydla::parse_tree::ParseTree* pt);
 
-  /// ˆöqƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// å› å­ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::FactorNode> node);
   
-  /// 1‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 1ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnaryNode> node);
 
-  /// 2‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 2ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::BinaryNode> node);
   
-  /// ”CˆÓ”‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// ä»»æ„æ•°ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryNode> node);
 
 private:  
 
   /**
-   * ƒm[ƒh‚ÌID‚ğXV‚·‚é
+   * ãƒãƒ¼ãƒ‰ã®IDã‚’æ›´æ–°ã™ã‚‹
    */
   template<typename T>
   void update_node_id(const T& n)

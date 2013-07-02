@@ -2,7 +2,7 @@
 #define TREE_INFIX__PRINTER_H_
 
 
-//ƒcƒŠ[‚ğ’†’u‹L–@‚Åo—Í‚·‚éƒNƒ‰ƒX
+//ãƒ„ãƒªãƒ¼ã‚’ä¸­ç½®è¨˜æ³•ã§å‡ºåŠ›ã™ã‚‹ã‚¯ãƒ©ã‚¹
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
@@ -23,11 +23,11 @@ class TreeInfixPrinter:
   }needParenthesis;
 
   /**
-   * ƒm[ƒh‚ğˆø”‚Éæ‚èC’†’l‹L–@Œ`®‚Åo—Í‚·‚é
+   * ãƒãƒ¼ãƒ‰ã‚’å¼•æ•°ã«å–ã‚Šï¼Œä¸­å€¤è¨˜æ³•å½¢å¼ã§å‡ºåŠ›ã™ã‚‹
    */
   std::ostream& print_infix(const node_sptr &, std::ostream&);
   /**
-   * ƒm[ƒh‚ğˆø”‚Éæ‚èC’†’l‹L–@Œ`®‚É‚µ‚Ä•Ô‚·
+   * ãƒãƒ¼ãƒ‰ã‚’å¼•æ•°ã«å–ã‚Šï¼Œä¸­å€¤è¨˜æ³•å½¢å¼ã«ã—ã¦è¿”ã™
    */
   std::string get_infix_string(const node_sptr &);
 
@@ -42,29 +42,29 @@ class TreeInfixPrinter:
 
   void print_factor_node(const FactorNode &, const std::string &pre, const std::string &post);
 
-  // §–ñ’è‹`
+  // åˆ¶ç´„å®šç¾©
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
   
-  // ƒvƒƒOƒ‰ƒ€’è‹`
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
   virtual void visit(boost::shared_ptr<ProgramDefinition> node);
 
-  // §–ñŒÄ‚Ño‚µ
+  // åˆ¶ç´„å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<ConstraintCaller> node);
   
-  // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<ProgramCaller> node);
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<Tell> node);
 
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Equal> node);
   virtual void visit(boost::shared_ptr<UnEqual> node);
   virtual void visit(boost::shared_ptr<Less> node);
@@ -73,33 +73,33 @@ class TreeInfixPrinter:
   virtual void visit(boost::shared_ptr<GreaterEqual> node);
 
   
-  // §–ñŠK‘w’è‹`‰‰Zq
+  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Weaker> node);
   virtual void visit(boost::shared_ptr<Parallel> node);
 
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Always> node);
 
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<LogicalAnd> node);
   virtual void visit(boost::shared_ptr<LogicalOr> node);
 
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Plus> node);
   virtual void visit(boost::shared_ptr<Subtract> node);
   virtual void visit(boost::shared_ptr<Times> node);
   virtual void visit(boost::shared_ptr<Divide> node);
   virtual void visit(boost::shared_ptr<Power> node);
 
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Negative> node);
   virtual void visit(boost::shared_ptr<Positive> node);
 
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<Previous> node);
   
   //Print 
@@ -113,32 +113,32 @@ class TreeInfixPrinter:
   //SystemVariable
   virtual void visit(boost::shared_ptr<SVtimer> node);
 
-  // ”Û’è
+  // å¦å®š
   virtual void visit(boost::shared_ptr<Not> node);
   
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<Variable> node);
 
-  // ”š
+  // æ•°å­—
   virtual void visit(boost::shared_ptr<Number> node);
 
-  // ‹L†’è”
+  // è¨˜å·å®šæ•°
   virtual void visit(boost::shared_ptr<Parameter> node);
 
   // t
   virtual void visit(boost::shared_ptr<SymbolicT> node);
 
-  // –³ŒÀ‘å
+  // ç„¡é™å¤§
   virtual void visit(boost::shared_ptr<Infinity> node);
   
-  // ©‘R‘Î”‚Ì’ê
+  // è‡ªç„¶å¯¾æ•°ã®åº•
   virtual void visit(boost::shared_ptr<E> node);
   
-  // ‰~ü—¦
+  // å††å‘¨ç‡
   virtual void visit(boost::shared_ptr<Pi> node);
   
   
-  // ”CˆÓ
+  // ä»»æ„
   virtual void visit(boost::shared_ptr<Function> node);
   virtual void visit(boost::shared_ptr<UnsupportedFunction> node);
 };

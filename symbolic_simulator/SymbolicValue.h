@@ -27,36 +27,36 @@ class SymbolicValue: public hydla::simulator::Value
     {return new SymbolicValue(node_->clone());}
   
   /**
-   * ’P‚È‚é•¶š—ñ‚Í”’l‚ÆŒ©‚È‚µ‚Äó‚¯æ‚é
+   * å˜ãªã‚‹æ–‡å­—åˆ—ã¯æ•°å€¤ã¨è¦‹ãªã—ã¦å—ã‘å–ã‚‹
    */
   SymbolicValue(const std::string &str);
   
   /**
-   * “n‚³‚ê‚½ƒm[ƒh‚ğQÆ‚·‚éSymbolicValue‚ğì‚é
+   * æ¸¡ã•ã‚ŒãŸãƒãƒ¼ãƒ‰ã‚’å‚ç…§ã™ã‚‹SymbolicValueã‚’ä½œã‚‹
    */
   SymbolicValue(const node_sptr & node);
   
   /**
-   * –¢’è‹`’l‚©‚Ç‚¤‚©
+   * æœªå®šç¾©å€¤ã‹ã©ã†ã‹
    */
   bool undefined() const;
 
   /**
-   * •¶š—ñ•\Œ»‚ğæ“¾‚·‚é
+   * æ–‡å­—åˆ—è¡¨ç¾ã‚’å–å¾—ã™ã‚‹
    */
   std::string get_string() const;
   /**
-   * ƒm[ƒh‚ğæ“¾‚·‚é
+   * ãƒãƒ¼ãƒ‰ã‚’å–å¾—ã™ã‚‹
    */
   node_sptr get_node() const;
   
   /**
-   * ƒm[ƒh‚ğİ’è‚·‚é
+   * ãƒãƒ¼ãƒ‰ã‚’è¨­å®šã™ã‚‹
    */
   void set_node(node_sptr);
   
   /**
-   * V‚½‚Èƒm[ƒh‚ğƒZƒbƒg
+   * æ–°ãŸãªãƒãƒ¼ãƒ‰ã‚’ã‚»ãƒƒãƒˆ
    */
   void set(const node_sptr&);
 
@@ -64,7 +64,7 @@ class SymbolicValue: public hydla::simulator::Value
   
   private:
   
-  node_sptr node_;  //’l‚Ínode_sptr
+  node_sptr node_;  //å€¤ã¯node_sptr
 };
 
 }

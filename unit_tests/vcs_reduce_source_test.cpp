@@ -1,5 +1,5 @@
 /**
- * vcs_reduce_source_test.red‚ÌƒeƒXƒg
+ * vcs_reduce_source_test.redã®ãƒ†ã‚¹ãƒˆ
  */
 
 #include "test_common.h"
@@ -17,9 +17,9 @@ using namespace hydla::parser;
 using namespace hydla::vcs::reduce;
 
 /**
- * @param query REDUCE‚ÉŒvZ‚³‚¹‚éS®
- * @param ans S®‚Ì‰ğ
- * @return query‚ğREDUCE‚Å•]‰¿‚µ‚½Œ‹‰Ê‚ªans‚Æˆê’v‚·‚é‚©
+ * @param query REDUCEã«è¨ˆç®—ã•ã›ã‚‹Så¼
+ * @param ans Så¼ã®è§£
+ * @return queryã‚’REDUCEã§è©•ä¾¡ã—ãŸçµæœãŒansã¨ä¸€è‡´ã™ã‚‹ã‹
  */
 bool check(string query, string ans, bool isDebug = false){
   REDUCELink rl;
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
 
 
 /**
- * RCS_recovery checkConsistencyInterval() 1‰ñ–Ú ‚ÌexDSolve
+ * RCS_recovery checkConsistencyInterval() 1å›ç›® ã®exDSolve
  */
 BOOST_AUTO_TEST_CASE(rcsRecovery_exDSolve_test){
   string query = 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(rcsRecovery_exDSolve_test){
 }
 
 /**
- * RCS_recovery checkConsistencyInterval() 1‰ñ–Ú removeInitCons
+ * RCS_recovery checkConsistencyInterval() 1å›ç›® removeInitCons
  */
 BOOST_AUTO_TEST_CASE(removeInitCons_test){
   string query = 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(removeInitCons_test){
 }
 
 /**
- * Hyrose_v0.6.3 checkConsistencyInterval() 1‰ñ–Ú
+ * Hyrose_v0.6.3 checkConsistencyInterval() 1å›ç›®
  */
 BOOST_AUTO_TEST_CASE(old_myCheckConsistencyInterval_test){
   string query =
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(old_myCheckConsistencyInterval_test){
 }
 
 /**
- * RCS_recovery checkConsistencyInterval() 1‰ñ–Ú
+ * RCS_recovery checkConsistencyInterval() 1å›ç›®
  */
 BOOST_AUTO_TEST_CASE(rcsRecovery_myCheckConsistencyInterval_test){
   string query = 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(rcsRecovery_myCheckConsistencyInterval_test){
 }
 
 /**
- * RCS_recovery IP‚Ìcreate_maps()
+ * RCS_recovery IPæ™‚ã®create_maps()
  */
 BOOST_AUTO_TEST_CASE(convertCSToVMInterval_test){
   string query = 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTime_test){
     "parameterStore_:= {}$"
     "csVariables_:= {df(usrvary,t,2), df(usrvary,t), usrvarg, usrvary}$"
 
-    // calcNextPointPhaseTime“à•”‚Ç‚±‚©‚Åg‚í‚ê‚é
+    // calcNextPointPhaseTimeå†…éƒ¨ã©ã“ã‹ã§ä½¿ã‚ã‚Œã‚‹
     "psParameters_:= {}$"
 
     "maxTime_:= 1$"

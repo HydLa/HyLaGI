@@ -89,7 +89,7 @@ protected:
   } CheckEntailmentResult;
   
   /**
-   * —^‚¦‚ç‚ê‚½§–ñƒ‚ƒWƒ…[ƒ‹W‡‚Ì•Â•ïŒvZ‚ğs‚¢C–³–µ‚«‚ğ”»’è‚·‚é‚Æ‚Æ‚à‚É‘Î‰‚·‚é•Ï”•\‚ğ•Ô‚·D
+   * ä¸ãˆã‚‰ã‚ŒãŸåˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é–‰åŒ…è¨ˆç®—ã‚’è¡Œã„ï¼Œç„¡çŸ›ç›¾æ€§ã‚’åˆ¤å®šã™ã‚‹ã¨ã¨ã‚‚ã«å¯¾å¿œã™ã‚‹å¤‰æ•°è¡¨ã‚’è¿”ã™ï¼
    */
 
   virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
@@ -107,13 +107,13 @@ protected:
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
   /**
-   * —^‚¦‚ç‚ê‚½simulation_todo_sptr_t‚Ìî•ñ‚ğˆø‚«Œp‚¢‚¾C
-   * V‚½‚Èsimulation_todo_sptr_t‚Ìì¬
+   * ä¸ãˆã‚‰ã‚ŒãŸsimulation_todo_sptr_tã®æƒ…å ±ã‚’å¼•ãç¶™ã„ã ï¼Œ
+   * æ–°ãŸãªsimulation_todo_sptr_tã®ä½œæˆ
    */
   simulation_todo_sptr_t create_new_simulation_phase(const simulation_todo_sptr_t& old) const;
 
   /**
-   * PPƒ‚[ƒh‚ÆIPƒ‚[ƒh‚ğØ‚è‘Ö‚¦‚é
+   * PPãƒ¢ãƒ¼ãƒ‰ã¨IPãƒ¢ãƒ¼ãƒ‰ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
    */
   virtual void set_simulation_mode(const Phase& phase) = 0;
 
@@ -145,8 +145,8 @@ protected:
   boost::shared_ptr<RelationGraph> pp_relation_graph_, ip_relation_graph_;
   
   /**
-   * ‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ÌƒRƒ“ƒeƒi
-   * i”ñalways§–ñ‚ğœ‚¢‚½ƒo[ƒWƒ‡ƒ“j
+   * è§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®ã‚³ãƒ³ãƒ†ãƒŠ
+   * ï¼ˆéalwaysåˆ¶ç´„ã‚’é™¤ã„ãŸãƒãƒ¼ã‚¸ãƒ§ãƒ³ï¼‰
    */
   module_set_container_sptr msc_no_init_;
 
@@ -163,10 +163,10 @@ protected:
   void push_branch_states(simulation_todo_sptr_t &original,
     hydla::vcs::CheckConsistencyResult &result);
     
-  /// g—p‚·‚éƒ\ƒ‹ƒo‚Ö‚Ìƒ|ƒCƒ“ƒ^
+  /// ä½¿ç”¨ã™ã‚‹ã‚½ãƒ«ãƒã¸ã®ãƒã‚¤ãƒ³ã‚¿
   boost::shared_ptr<solver_t> solver_;
   
-  /// ƒP[ƒX‚Ì‘I‘ğ‚Ég—p‚·‚éŠÖ”ƒ|ƒCƒ“ƒ^
+  /// ã‚±ãƒ¼ã‚¹ã®é¸æŠæ™‚ã«ä½¿ç”¨ã™ã‚‹é–¢æ•°ãƒã‚¤ãƒ³ã‚¿
   int (*select_phase_)(result_list_t&);
 
   private:

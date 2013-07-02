@@ -65,20 +65,20 @@ void TellCollector::collect(tells_t*                 tells,
   positive_asks_  = positive_asks;
   visited_always_.clear();
 
-  // ModuleSet‚Ìƒm[ƒh‚Ì’Tõ
+  // ModuleSetã®ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   in_positive_ask_    = false;
   in_negative_ask_    = false;
   in_expanded_always_ = false;
   module_set_->dispatch(this);
 
-  // “WŠJÏ‚İalwaysƒm[ƒh‚Ì’Tõ
+  // å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   in_positive_ask_    = false;
   in_negative_ask_    = false;
   in_expanded_always_ = true;
   expanded_always_t::const_iterator it  = expanded_always->begin();
   expanded_always_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
-    // Ì—p‚µ‚Ä‚¢‚éƒ‚ƒWƒ…[ƒ‹W‡“à‚É“ü‚Á‚Ä‚¢‚é‚©‚Ç‚¤‚©
+    // æ¡ç”¨ã—ã¦ã„ã‚‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆå†…ã«å…¥ã£ã¦ã„ã‚‹ã‹ã©ã†ã‹
     if(visited_always_.find(*it) != visited_always_.end()) {
       accept((*it)->get_child());
     }
@@ -92,16 +92,16 @@ void TellCollector::collect(tells_t*                 tells,
   HYDLA_LOGGER_CLOSURE("#*** End TellCollector::collect ***\n");
 }
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 {
   accept(node->get_child());
 }
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
-  // ask‚ªƒGƒ“ƒe[ƒ‹‰Â”\‚Å‚ ‚Á‚½‚çqƒm[ƒh‚à’Tõ‚·‚é
+  // askãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å¯èƒ½ã§ã‚ã£ãŸã‚‰å­ãƒãƒ¼ãƒ‰ã‚‚æ¢ç´¢ã™ã‚‹
   if(positive_asks_->find(node) != positive_asks_->end()) {
     in_positive_ask_ = true;
     accept(node->get_child());
@@ -113,11 +113,11 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
   }
 }
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
   if(!in_negative_ask_){
-    // tell§–ñ‚Ì“o˜^
+    // tellåˆ¶ç´„ã®ç™»éŒ²
     if(collect_all_tells_ || 
        collected_tells_.find(node) == collected_tells_.end()) 
     {
@@ -127,14 +127,14 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
   }
 }
 
-// ˜_—Ï
+// è«–ç†ç©
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
 {
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
   if(in_expanded_always_) {
@@ -147,27 +147,27 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
   }
 }
 
-// ƒ‚ƒWƒ…[ƒ‹‚Ìã‡¬
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®å¼±åˆæˆ
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
 {
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
 
-// ƒ‚ƒWƒ…[ƒ‹‚Ì•À—ñ‡¬
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ä¸¦åˆ—åˆæˆ
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
 {
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
 
-// §–ñŒÄ‚Ño‚µ
+// åˆ¶ç´„å‘¼ã³å‡ºã—
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
 {
   accept(node->get_child());
 }
 
-// ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
 void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
 {
   accept(node->get_child());
@@ -183,13 +183,13 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
   std::string sb(" ");
   std::string sa("");
   std::string::size_type n, nb = 0;
-  //ƒXƒy[ƒX‚Ìíœ
+  //ã‚¹ãƒšãƒ¼ã‚¹ã®å‰Šé™¤
   while ((n = args.find(sb,nb)) != std::string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
-  //ˆø”‚Ì•ª‰ğ
+  //å¼•æ•°ã®åˆ†è§£
   uint i = 0;
   std::string key(",");
   v_print.push_back(str);
@@ -220,13 +220,13 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node)
   std::string sb(" ");
   std::string sa("");
   std::string::size_type n, nb = 0;
-  //ƒXƒy[ƒX‚Ìíœ
+  //ã‚¹ãƒšãƒ¼ã‚¹ã®å‰Šé™¤
   while ((n = args.find(sb,nb)) != std::string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
-  //ˆø”‚Ì•ª‰ğ
+  //å¼•æ•°ã®åˆ†è§£
   uint i = 0;
   std::string key(",");
   v_print_pp.push_back(str);
@@ -257,13 +257,13 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node)
   std::string sb(" ");
   std::string sa("");
   std::string::size_type n, nb = 0;
-  //ƒXƒy[ƒX‚Ìíœ
+  //ã‚¹ãƒšãƒ¼ã‚¹ã®å‰Šé™¤
   while ((n = args.find(sb,nb)) != std::string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
-  //ˆø”‚Ì•ª‰ğ
+  //å¼•æ•°ã®åˆ†è§£
   uint i = 0;
   std::string key(",");
   v_print_ip.push_back(str);
@@ -294,13 +294,13 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Scan> node)
   std::string sb(" ");
   std::string sa("");
   std::string::size_type n, nb = 0;
-  //ƒXƒy[ƒX‚Ìíœ
+  //ã‚¹ãƒšãƒ¼ã‚¹ã®å‰Šé™¤
   while ((n = args.find(sb,nb)) != std::string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
-  //ˆø”‚Ì•ª‰ğ
+  //å¼•æ•°ã®åˆ†è§£
   uint i = 0;
   std::string key(",");
   
@@ -330,13 +330,13 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Exit> node)
   std::string sb(" ");
   std::string sa("");
   std::string::size_type n, nb = 0;
-  //ƒXƒy[ƒX‚Ìíœ
+  //ã‚¹ãƒšãƒ¼ã‚¹ã®å‰Šé™¤
   while ((n = args.find(sb,nb)) != std::string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
-  //ˆø”‚Ì•ª‰ğ
+  //å¼•æ•°ã®åˆ†è§£
   uint i = 0;
   std::string key(",");
   v_print_ip.push_back(str);
@@ -368,13 +368,13 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Abort> node)
   std::string sb(" ");
   std::string sa("");
   std::string::size_type n, nb = 0;
-  //ƒXƒy[ƒX‚Ìíœ
+  //ã‚¹ãƒšãƒ¼ã‚¹ã®å‰Šé™¤
   while ((n = args.find(sb,nb)) != std::string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
-  //ˆø”‚Ì•ª‰ğ
+  //å¼•æ•°ã®åˆ†è§£
   uint i = 0;
   std::string key(",");
   v_print_ip.push_back(str);

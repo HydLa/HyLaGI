@@ -16,7 +16,7 @@ namespace simulator {
 typedef std::map<std::string, int>                               continuity_map_t;
 
 /**
- * Tellƒm[ƒh‚ğ’²‚×C˜A‘±«‚Ìª‹’‚Æ‚È‚é•Ï”i‚Æ‚»‚Ì”÷•ª’lj‚ÌoŒ»‚ğ”‚¦‚éƒNƒ‰ƒX
+ * Tellãƒãƒ¼ãƒ‰ã‚’èª¿ã¹ï¼Œé€£ç¶šæ€§ã®æ ¹æ‹ ã¨ãªã‚‹å¤‰æ•°ï¼ˆã¨ãã®å¾®åˆ†å€¤ï¼‰ã®å‡ºç¾ã‚’æ•°ãˆã‚‹ã‚¯ãƒ©ã‚¹
  */
 class ContinuityMapMaker : public parse_tree::DefaultTreeVisitor {
 public:
@@ -37,7 +37,7 @@ public:
   }
 
   /**
-   * ‰Šúó‘Ô‚É–ß‚·
+   * åˆæœŸçŠ¶æ…‹ã«æˆ»ã™
    */
   void reset()
   {
@@ -52,27 +52,27 @@ public:
     return variables_;
   }
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
 
 
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
 private:
 
   
-  // W‚ß‚½§–ñ’†‚ÉoŒ»‚·‚é•Ï”‚Æ‚»‚Ì”÷•ª‰ñ”‚Ìƒ}ƒbƒv
+  // é›†ã‚ãŸåˆ¶ç´„ä¸­ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã¨ãã®å¾®åˆ†å›æ•°ã®ãƒãƒƒãƒ—
   continuity_map_t  variables_;
   int differential_count_;
   bool in_interval_;
-  // •‰”‚ğ’Ç‰Á‚·‚é‚©‚Ç‚¤‚©
+  // è² æ•°ã‚’è¿½åŠ ã™ã‚‹ã‹ã©ã†ã‹
   bool negative_;
 };
 

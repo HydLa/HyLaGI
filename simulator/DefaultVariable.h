@@ -25,7 +25,7 @@ struct DefaultVariable {
   }
 
   /**
-   * \‘¢‘Ì‚Ì’l‚ğƒ_ƒ“ƒv‚·‚é
+   * æ§‹é€ ä½“ã®å€¤ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
    */
   std::ostream& dump(std::ostream& s) const
   {

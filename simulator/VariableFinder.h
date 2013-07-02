@@ -13,7 +13,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * §–ñ‚ğ’²‚×C•Ï”‚ÌoŒ»‚ğæ“¾‚·‚éƒNƒ‰ƒXD
+ * åˆ¶ç´„ã‚’èª¿ã¹ï¼Œå¤‰æ•°ã®å‡ºç¾ã‚’å–å¾—ã™ã‚‹ã‚¯ãƒ©ã‚¹ï¼
  */
 class VariableFinder : public parse_tree::DefaultTreeVisitor {
 public:
@@ -25,7 +25,7 @@ public:
   virtual ~VariableFinder();
   
   /** 
-   * §–ñ‚ğ’²‚×C•Ï”‚ÌoŒ»‚ğæ“¾‚·‚é
+   * åˆ¶ç´„ã‚’èª¿ã¹ï¼Œå¤‰æ•°ã®å‡ºç¾ã‚’å–å¾—ã™ã‚‹
    */
   void visit_node(boost::shared_ptr<parse_tree::Node> node, const bool& in_IP);
   
@@ -35,16 +35,16 @@ public:
   
   variable_set_t get_prev_variable_set() const;
   
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
 
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
 private:

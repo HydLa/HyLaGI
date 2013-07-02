@@ -13,7 +13,7 @@ namespace vcs {
 namespace reduce {
 
 /**
- * REDUCEƒT[ƒo‚Æ‚Ìsocket’ÊM‚ÌƒGƒ‰[A‚Ü‚½‚ÍREDUCE‘¤‚É˜_—“I‚ÈƒGƒ‰[‚ğ•\‚·
+ * REDUCEã‚µãƒ¼ãƒã¨ã®socketé€šä¿¡æ™‚ã®ã‚¨ãƒ©ãƒ¼ã€ã¾ãŸã¯REDUCEå´ã«è«–ç†çš„ãªã‚¨ãƒ©ãƒ¼ã‚’è¡¨ã™
  */
 class REDUCELinkError : public std::runtime_error {
 public:
@@ -32,62 +32,62 @@ private:
 };
 
 /**
- * REDUCEƒT[ƒo‚Æ‚ÌÚ‘±ƒNƒ‰ƒCƒAƒ“ƒgAƒT[ƒoÚ‘±‚Æstring‚Ì‘—óM‚ğs‚¤
+ * REDUCEã‚µãƒ¼ãƒã¨ã®æ¥ç¶šã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã€ã‚µãƒ¼ãƒæ¥ç¶šã¨stringã®é€å—ä¿¡ã‚’è¡Œã†
  */
 class REDUCELink {
 public:
 
   /**
-   * localhost:1206 ‚ÉÚ‘±‚·‚é
+   * localhost:1206 ã«æ¥ç¶šã™ã‚‹
    */
   REDUCELink();
   ~REDUCELink();
 
   /**
-   * end_of_redeval_s‚Ü‚Å•¶š—ñ‚ğgetline‚·‚é
-   * skip_until_redeval‚ğ„§
+   * end_of_redeval_è¡Œã¾ã§æ–‡å­—åˆ—ã‚’getlineã™ã‚‹
+   * skip_until_redevalã‚’æ¨å¥¨
    * \return 0
    */
   int read_until_redeval();
 
   /**
-   * end_of_redeval_s‚Ü‚Å•¶š—ñ‚ğgetline‚·‚é
+   * end_of_redeval_è¡Œã¾ã§æ–‡å­—åˆ—ã‚’getlineã™ã‚‹
    * \return 0
    */
   int skip_until_redeval();
 
   /**
-   * óM‚µ‚½•¡”s‚Ìstring‚ğŒ‹‡‚µ‚Ä”j‘¹‚Ì‚È‚¢Lisp®‚ğ–ß‚·
-   * \return REDUCE‚©‚çó‚¯æ‚éS®
+   * å—ä¿¡ã—ãŸè¤‡æ•°è¡Œã®stringã‚’çµåˆã—ã¦ç ´æã®ãªã„Lispå¼ã‚’æˆ»ã™
+   * \return REDUCEã‹ã‚‰å—ã‘å–ã‚‹Så¼
    */
   std::string get_s_expr();
 
   /**
-   * óM‚µ‚½•¡”s‚Ìstring‚ğŒ‹‡‚µ‚ÄSExpParser‚ğ–ß‚·
-   * \return REDUCE‚©‚çó‚¯æ‚éS®‚ğƒp[ƒX‚µ‚½‚à‚Ì
+   * å—ä¿¡ã—ãŸè¤‡æ•°è¡Œã®stringã‚’çµåˆã—ã¦SExpParserã‚’æˆ»ã™
+   * \return REDUCEã‹ã‚‰å—ã‘å–ã‚‹Så¼ã‚’ãƒ‘ãƒ¼ã‚¹ã—ãŸã‚‚ã®
    */
   const hydla::parser::SExpParser get_as_s_exp_parser();
 
   /**
-   * string‚Ì‘—M
-   * \param cmd REDUCE‚Ö‘—M‚·‚é•¶š—ñ
+   * stringã®é€ä¿¡
+   * \param cmd REDUCEã¸é€ä¿¡ã™ã‚‹æ–‡å­—åˆ—
    * \return 0
    */
   int send_string(const std::string cmd);
 
   /**
-   * getline‚ğs‚¢AˆÙí‚ğŒ©‚Â‚¯‚½ê‡throw‚·‚é
-   * \param cmd ŒÄ‚Ño‚µŒ³‚ÌŠÖ”–¼, ƒfƒoƒbƒO—p
-   * \param line REDUCE‚Ö‘—M‚·‚é•¶š—ñ
-   * \return getline‚Ì–ß‚è’l
+   * getlineã‚’è¡Œã„ã€ç•°å¸¸ã‚’è¦‹ã¤ã‘ãŸå ´åˆthrowã™ã‚‹
+   * \param cmd å‘¼ã³å‡ºã—å…ƒã®é–¢æ•°å, ãƒ‡ãƒãƒƒã‚°ç”¨
+   * \param line REDUCEã¸é€ä¿¡ã™ã‚‹æ–‡å­—åˆ—
+   * \return getlineã®æˆ»ã‚Šå€¤
    */
   std::istream& getline_with_throw(const std::string& cmd, std::string& line);
 
   /**
-   * •¶š—ñ’†‚ÉŠÜ‚Ü‚ê‚équery‚ğƒJƒEƒ“ƒg‚·‚é
-   * \param str ’²‚×‚é•¶š—ñ
-   * \param query '(' ‚Ü‚½‚Í ')'
-   * \return query‚ÌƒJƒEƒ“ƒg”
+   * æ–‡å­—åˆ—ä¸­ã«å«ã¾ã‚Œã‚‹queryã‚’ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹
+   * \param str èª¿ã¹ã‚‹æ–‡å­—åˆ—
+   * \param query '(' ã¾ãŸã¯ ')'
+   * \return queryã®ã‚«ã‚¦ãƒ³ãƒˆæ•°
    */
   int count_char(const std::string str, const char query) const;
 

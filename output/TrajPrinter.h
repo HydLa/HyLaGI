@@ -23,7 +23,7 @@ using hydla::simulator::parameter_set_t;
 using hydla::simulator::value_t;
 
 /**
- * ���O���̏o�͂�S������N���X
+ * 解軌道の出力を担当するクラス
  */
 
 class TrajPrinter{
@@ -32,11 +32,11 @@ public:
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
 
   /**
-   * ���O���ؑS�̂��o�͂���֐�
+   * 解軌道木全体を出力する関数
    */
   virtual void output_result_tree(const phase_result_const_sptr_t&) const = 0;
   /**
-   * �����1�t�F�[�Y���o�͂���֐�
+   * 特定の1フェーズを出力する関数
    */
   virtual void output_one_phase(const phase_result_const_sptr_t&) const = 0;
 };

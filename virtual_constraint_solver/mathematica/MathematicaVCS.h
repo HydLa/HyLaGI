@@ -27,37 +27,37 @@ public:
   virtual ~MathematicaVCS();
 
   /**
-   * —£U•Ï‰»ƒ‚[ƒhC˜A‘±•Ï‰»ƒ‚[ƒh‚ÌØ‚è‘Ö‚¦‚ğ‚¨‚±‚È‚¤
+   * é›¢æ•£å¤‰åŒ–ãƒ¢ãƒ¼ãƒ‰ï¼Œé€£ç¶šå¤‰åŒ–ãƒ¢ãƒ¼ãƒ‰ã®åˆ‡ã‚Šæ›¿ãˆã‚’ãŠã“ãªã†
    */
   virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision);
 
   /**
-   * ˆê“I‚È§–ñ‚Ì’Ç‰Á‚ğŠJn‚·‚é
+   * ä¸€æ™‚çš„ãªåˆ¶ç´„ã®è¿½åŠ ã‚’é–‹å§‹ã™ã‚‹
    */
   virtual void start_temporary();
 
   /**
-   * ˆê“I‚È§–ñ‚Ì’Ç‰Á‚ğI—¹‚·‚é
-   * startŒãC‚±‚ÌŠÖ”‚ğŒÄ‚Ño‚·‚Ü‚Å‚É’Ç‰Á‚µ‚½§–ñ‚Í‚·‚×‚Ä–³‚©‚Á‚½‚±‚Æ‚É‚·‚é
+   * ä¸€æ™‚çš„ãªåˆ¶ç´„ã®è¿½åŠ ã‚’çµ‚äº†ã™ã‚‹
+   * startå¾Œï¼Œã“ã®é–¢æ•°ã‚’å‘¼ã³å‡ºã™ã¾ã§ã«è¿½åŠ ã—ãŸåˆ¶ç´„ã¯ã™ã¹ã¦ç„¡ã‹ã£ãŸã“ã¨ã«ã™ã‚‹
    */
   virtual void end_temporary();
 
   /**
-   * —^‚¦‚ç‚ê‚½•Ï”•\‚Æ’è”•\‚ğŒ³‚ÉC§–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
-   * oŒ»‚·‚é•Ï”‚Æ’è”‚ÌW‡‚Ìî•ñ‚à‹L‰¯‚·‚é
+   * ä¸ãˆã‚‰ã‚ŒãŸå¤‰æ•°è¡¨ã¨å®šæ•°è¡¨ã‚’å…ƒã«ï¼Œåˆ¶ç´„ã‚¹ãƒˆã‚¢ã®åˆæœŸåŒ–ã‚’ãŠã“ãªã†
+   * å‡ºç¾ã™ã‚‹å¤‰æ•°ã¨å®šæ•°ã®é›†åˆã®æƒ…å ±ã‚‚è¨˜æ†¶ã™ã‚‹
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
   
 
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚Æ’è”•\‚ğì¬‚·‚é
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰å¤‰æ•°è¡¨ã¨å®šæ•°è¡¨ã‚’ä½œæˆã™ã‚‹
    */
   virtual create_result_t create_maps();
   
   virtual void approx_vm(variable_range_map_t& vm);
   
   /**
-   * §–ñ‚ğ’Ç‰Á‚·‚éD
+   * åˆ¶ç´„ã‚’è¿½åŠ ã™ã‚‹ï¼
    */
   virtual void add_constraint(const constraints_t& constraints);
   virtual void add_constraint(const node_sptr& constraint);
@@ -72,15 +72,15 @@ public:
   virtual FalseConditionsResult find_false_conditions(node_sptr& node);
 
   /**
-   * §–ñƒXƒgƒA‚ª–³–µ‚‚©‚ğ”»’è‚·‚éD
-   * @return [‘«‰Â”\‚Èê‡‚Ì‹L†’è”ğŒ—ñC[‘«•s‰Â”\‚Èê‡‚Ì‹L†’è”ğŒ—ñi‚»‚ê‚¼‚ê‘¶İ‚µ‚È‚¢ê‡‚Í‹ó‚Ì—ñ‚ğ•Ô‚·j
+   * åˆ¶ç´„ã‚¹ãƒˆã‚¢ãŒç„¡çŸ›ç›¾ã‹ã‚’åˆ¤å®šã™ã‚‹ï¼
+   * @return å……è¶³å¯èƒ½ãªå ´åˆã®è¨˜å·å®šæ•°æ¡ä»¶åˆ—ï¼Œå……è¶³ä¸å¯èƒ½ãªå ´åˆã®è¨˜å·å®šæ•°æ¡ä»¶åˆ—ï¼ˆãã‚Œãã‚Œå­˜åœ¨ã—ãªã„å ´åˆã¯ç©ºã®åˆ—ã‚’è¿”ã™ï¼‰
    */
   virtual CheckConsistencyResult check_consistency();
 
 
   /**
-   * Ÿ‚Ì—£U•Ï‰»‚ğ‹‚ß‚é
-   * @param discrete_cause —£U•Ï‰»‚ÌŒ´ˆö‚Æ‚È‚è‚¤‚éğŒ
+   * æ¬¡ã®é›¢æ•£å¤‰åŒ–æ™‚åˆ»ã‚’æ±‚ã‚ã‚‹
+   * @param discrete_cause é›¢æ•£å¤‰åŒ–ã®åŸå› ã¨ãªã‚Šã†ã‚‹æ¡ä»¶
    */
   virtual PP_time_result_t calculate_next_PP_time(
     const constraints_t& discrete_cause,
@@ -88,49 +88,49 @@ public:
     const time_t& max_time);
 
   /**
-   * •Ï”•\‚É‚ğ“K—p‚·‚é
+   * å¤‰æ•°è¡¨ã«æ™‚åˆ»ã‚’é©ç”¨ã™ã‚‹
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
   /**
-   * •Ï”‚É˜A‘±«‚ğİ’è‚·‚é
+   * å¤‰æ•°ã«é€£ç¶šæ€§ã‚’è¨­å®šã™ã‚‹
    */
   virtual void set_continuity(const std::string &name, const int& dc);
 
   /**
-   * node‚ğŠÈ–ñ‚·‚é
+   * nodeã‚’ç°¡ç´„ã™ã‚‹
    */
   virtual FalseConditionsResult node_simplify(node_sptr &node);
 
   /**
-   * SymbolicTime‚ğŠÈ–ñ‚·‚é
+   * SymbolicTimeã‚’ç°¡ç´„ã™ã‚‹
    */
   virtual void simplify(time_t &time);
 
   /**
-   * SymbolicTime‚ğ”äŠr‚·‚é
+   * SymbolicTimeã‚’æ¯”è¼ƒã™ã‚‹
    */
   virtual bool less_than(const time_t &lhs, const time_t &rhs);
 
   /**
-   * SymbolicValue‚ÌŠÔ‚ğ‚¸‚ç‚·
+   * SymbolicValueã®æ™‚é–“ã‚’ãšã‚‰ã™
    */
   virtual value_t shift_expr_time(const value_t &val, const time_t &time);
 
 private:
 
   /**
-   * ‹L†’è”‚ÌğŒ‚Ìƒ}ƒbƒv‚ğó‚¯æ‚éD–‘OğŒ‚ÍCml_‚ªƒ}ƒbƒv‚ğ•\‚·ƒŠƒXƒg‚Ìƒgƒbƒv‚É—ˆ‚Ä‚¢‚é‚±‚ÆD
-   * I—¹Cml_‚Íƒ}ƒbƒv‚ÌŸ‚ÌƒIƒuƒWƒFƒNƒg‚ÉˆÚ“®‚·‚é
+   * è¨˜å·å®šæ•°ã®æ¡ä»¶ã®ãƒãƒƒãƒ—ã‚’å—ã‘å–ã‚‹ï¼äº‹å‰æ¡ä»¶ã¯ï¼Œml_ãŒãƒãƒƒãƒ—ã‚’è¡¨ã™ãƒªã‚¹ãƒˆã®ãƒˆãƒƒãƒ—ã«æ¥ã¦ã„ã‚‹ã“ã¨ï¼
+   * çµ‚äº†æ™‚ï¼Œml_ã¯ãƒãƒƒãƒ—ã®æ¬¡ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã«ç§»å‹•ã™ã‚‹
    */
   void receive_parameter_map(parameter_map_t &map);
 
   void send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps);
 
   /**
-   * find_false_conditions‚Å“¾‚½–µ‚‚·‚éğŒ‚ğ
-   * node_sprtŒ`®‚Å•Ô‚·
-   * –‘OğŒ‚âI—¹‚Ìó‘Ô‚Íreceive_parameter_map‚Æ“¯‚¶
+   * find_false_conditionsã§å¾—ãŸçŸ›ç›¾ã™ã‚‹æ¡ä»¶ã‚’
+   * node_sprtå½¢å¼ã§è¿”ã™
+   * äº‹å‰æ¡ä»¶ã‚„çµ‚äº†æ™‚ã®çŠ¶æ…‹ã¯receive_parameter_mapã¨åŒã˜
    */
   node_sptr receive_condition_node(FalseConditionsResult& node_type);
   

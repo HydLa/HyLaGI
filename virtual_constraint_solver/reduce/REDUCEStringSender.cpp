@@ -12,13 +12,13 @@ namespace hydla {
 namespace vcs {
 namespace reduce {
 
-/** ‹óW‡‚ğ•\‚·REDUCE“ü—Í—p•¶š—ñ "{}" */
+/** ç©ºé›†åˆã‚’è¡¨ã™REDUCEå…¥åŠ›ç”¨æ–‡å­—åˆ— "{}" */
 const std::string REDUCEStringSender::empty_list_string("{}");
 
-/** REDUCE‚É‘—‚éÛ‚É•Ï”–¼‚É‚Â‚¯‚éÚ“ªŒê "usrvar" */
+/** REDUCEã«é€ã‚‹éš›ã«å¤‰æ•°åã«ã¤ã‘ã‚‹æ¥é ­èª "usrvar" */
 const std::string REDUCEStringSender::var_prefix("usrvar");
 
-/** REDUCE‚É‘—‚éÛ‚É’è”–¼‚É‚Â‚¯‚éÚ“ªŒê */
+/** REDUCEã«é€ã‚‹éš›ã«å®šæ•°åã«ã¤ã‘ã‚‹æ¥é ­èª */
 const std::string REDUCEStringSender::par_prefix("p");
 
 REDUCEStringSender::REDUCEStringSender() :
@@ -38,15 +38,15 @@ REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
 REDUCEStringSender::~REDUCEStringSender(){}
 
 
-// Ask§–ñ BinaryNode
+// Askåˆ¶ç´„ BinaryNode
 void REDUCEStringSender::visit(boost::shared_ptr<Ask> node){
-  // ask§–ñ‚Í‘—‚ê‚È‚¢
+  // askåˆ¶ç´„ã¯é€ã‚Œãªã„
   assert(0);
 }
 
-// Tell§–ñ UNARYNODE
+// Tellåˆ¶ç´„ UNARYNODE
 void REDUCEStringSender::visit(boost::shared_ptr<Tell> node)                  {
-  // tell§–ñ‚Í‘—‚ê‚È‚¢
+  // tellåˆ¶ç´„ã¯é€ã‚Œãªã„
   assert(0);
 }
 
@@ -88,7 +88,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Tell> node)                  {
   cl_->send_string(#FACTOR_NAME);                                       \
 }
 
-// ”äŠr‰‰Zq ASYMMETRIC_BINARY_NODE
+// æ¯”è¼ƒæ¼”ç®—å­ ASYMMETRIC_BINARY_NODE
 DEFINE_VISIT_BINARY_WITH_NOT_FUNC(Equal, equal, neq)
 DEFINE_VISIT_BINARY_WITH_NOT_FUNC(UnEqual, neq, equal)
 DEFINE_VISIT_BINARY_WITH_NOT_FUNC(Less, lessp, geq)
@@ -97,12 +97,12 @@ DEFINE_VISIT_BINARY_WITH_NOT_FUNC(Greater, greaterp, leq)
 DEFINE_VISIT_BINARY_WITH_NOT_FUNC(GreaterEqual, geq, lessp)
 
 
-// ˜_—‰‰Zq
+// è«–ç†æ¼”ç®—å­
 DEFINE_VISIT_BINARY_WITH_NOT_FUNC(LogicalAnd, and, or)
 DEFINE_VISIT_BINARY_WITH_NOT_FUNC(LogicalOr, or, and)
 
   
-// Zp“ñ€‰‰Zq BINARY_NODE
+// ç®—è¡“äºŒé …æ¼”ç®—å­ BINARY_NODE
 DEFINE_VISIT_BINARY(Plus, plus)
 DEFINE_VISIT_BINARY(Subtract, difference)
 DEFINE_VISIT_BINARY(Times, times)
@@ -110,27 +110,27 @@ DEFINE_VISIT_BINARY(Divide, quotient)
 DEFINE_VISIT_BINARY(Power, expt)
 
   
-// Zp’P€‰‰Zq UNARYNODE
+// ç®—è¡“å˜é …æ¼”ç®—å­ UNARYNODE
 DEFINE_VISIT_UNARY(Negative, -)
 void REDUCEStringSender::visit(boost::shared_ptr<Positive> node)              {
   accept(node->get_child());
 }
   
-// ”÷•ª UNARYNODE df(x,t)‚Æ•\‹L
+// å¾®åˆ† UNARYNODE df(x,t)ã¨è¡¨è¨˜
 void REDUCEStringSender::visit(boost::shared_ptr<Differential> node)          {
   differential_count_++;
   accept(node->get_child());
   differential_count_--;  
 }
 
-// ¶‹ÉŒÀ UNARYNODE
+// å·¦æ¥µé™ UNARYNODE
 void REDUCEStringSender::visit(boost::shared_ptr<Previous> node)              {
   in_prev_ = true;
   accept(node->get_child());
   in_prev_ = false;
 }
 
-// ”Û’è
+// å¦å®š
 void REDUCEStringSender::visit(boost::shared_ptr<Not> node)                   {
   apply_not_ = !apply_not_;
   accept(node->get_child());
@@ -138,27 +138,27 @@ void REDUCEStringSender::visit(boost::shared_ptr<Not> node)                   {
 }
 
 /*
-// OŠpŠÖ”
+// ä¸‰è§’é–¢æ•°
 DEFINE_VISIT_UNARY(Sin, sin)
 DEFINE_VISIT_UNARY(Cos, cos)
 DEFINE_VISIT_UNARY(Tan, tan)
-// ‹tOŠpŠÖ”
+// é€†ä¸‰è§’é–¢æ•°
 DEFINE_VISIT_UNARY(Asin, asin)
 DEFINE_VISIT_UNARY(Acos, acos)
 DEFINE_VISIT_UNARY(Atan, atan)
-// ‘Î”
-DEFINE_VISIT_BINARY(Log, logb) // g‚¦‚È‚¢H
+// å¯¾æ•°
+DEFINE_VISIT_BINARY(Log, logb) // ä½¿ãˆãªã„ï¼Ÿ
 DEFINE_VISIT_UNARY(Ln, log)
 */
 
-// ‰~ü—¦
+// å††å‘¨ç‡
 DEFINE_VISIT_FACTOR(Pi, pi)
-// ©‘R‘Î”‚Ì’ê
+// è‡ªç„¶å¯¾æ•°ã®åº•
 DEFINE_VISIT_FACTOR(E, e)
 
 
   
-// •Ï” FactorNode
+// å¤‰æ•° FactorNode
 void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
   var_info_t new_var = boost::make_tuple(node->get_name(),
                                          differential_count_,
@@ -168,12 +168,12 @@ void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
   put_var(new_var);
 }
 
-// ”š FactorNode
+// æ•°å­— FactorNode
 void REDUCEStringSender::visit(boost::shared_ptr<Number> node)                {
   cl_->send_string(node->get_number());
 }
 
-// ‹L†’è”
+// è¨˜å·å®šæ•°
 void REDUCEStringSender::visit(boost::shared_ptr<Parameter> node)
 {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
@@ -243,7 +243,7 @@ void REDUCEStringSender::put_var(const var_info_t var)
   cl_->send_string(var_str.str());
   HYDLA_LOGGER_REST("var_str: ", var_str.str());
 
-  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
+  // putã—ãŸå¤‰æ•°ã®æƒ…å ±ã‚’ä¿æŒ
   vars_.insert(var);
 
   HYDLA_LOGGER_REST("vars_size(): ", vars_.size());
@@ -258,7 +258,7 @@ void REDUCEStringSender::put_par(const std::string &name)
 
   cl_->send_string(name);
 
-  // put‚µ‚½•Ï”‚Ìî•ñ‚ğ•Û
+  // putã—ãŸå¤‰æ•°ã®æƒ…å ±ã‚’ä¿æŒ
   pars_.insert(name);
 
   HYDLA_LOGGER_FUNC_END(REST);
@@ -266,8 +266,8 @@ void REDUCEStringSender::put_par(const std::string &name)
 }
 
 /**
- * ‚ ‚é®(ƒm[ƒh)‚ğput‚·‚é
- * @param node put‚µ‚½‚¢®(ƒm[ƒh)
+ * ã‚ã‚‹å¼(ãƒãƒ¼ãƒ‰)ã‚’putã™ã‚‹
+ * @param node putã—ãŸã„å¼(ãƒãƒ¼ãƒ‰)
  */
 
 void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool is_init_var)
@@ -283,7 +283,7 @@ void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool 
 }
 
 /**
- * ‚ ‚é®‚ÌƒŠƒXƒg‚ğput‚·‚é
+ * ã‚ã‚‹å¼ã®ãƒªã‚¹ãƒˆã‚’putã™ã‚‹
  */
 void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
 {
@@ -298,7 +298,7 @@ void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
 }
 
 /**
- * •Ï”‚Ìˆê——‚ğ‘—MD
+ * å¤‰æ•°ã®ä¸€è¦§ã‚’é€ä¿¡ï¼
  */
 void REDUCEStringSender::put_vars(bool ignore_prev)
 {
@@ -336,8 +336,8 @@ void REDUCEStringSender::put_pars()
 }
 
 /**
- * “à•”î•ñ(“Á‚É•Ï”î•ñ)‚ğƒŠƒZƒbƒg‚·‚éD
- * ®‚Ìput‚ğ‚â‚è’¼‚µ‚½‚¢‚Æ‚«‚È‚Ç‚É
+ * å†…éƒ¨æƒ…å ±(ç‰¹ã«å¤‰æ•°æƒ…å ±)ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹ï¼
+ * å¼ã®putã‚’ã‚„ã‚Šç›´ã—ãŸã„ã¨ããªã©ã«
  */
 void REDUCEStringSender::clear()
 {

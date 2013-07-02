@@ -59,10 +59,10 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
         out_tmp << ", PlotStyle -> Dashed";
       out_tmp << "]"; //Plot
     }
-    if(now_node->children.size() == 0){//—t‚É“’B
-      out_tmp << "}, "; //®‚ÌƒŠƒXƒg‚±‚±‚Ü‚Å
+    if(now_node->children.size() == 0){//è‘‰ã«åˆ°é”
+      out_tmp << "}, "; //å¼ã®ãƒªã‚¹ãƒˆã“ã“ã¾ã§
       if(now_node->parameter_map.size() > 0){
-        // ’è”‚ÌğŒ
+        // å®šæ•°ã®æ¡ä»¶
         out_tmp << "{";
         typename parameter_map_t::const_iterator it = now_node->parameter_map.begin();
         while(it != now_node->parameter_map.end()){

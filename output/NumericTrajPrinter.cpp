@@ -11,8 +11,8 @@ namespace hydla{
 namespace output{
 
 void Printer::output_variable_labels(std::ostream &stream, const variable_map_t variable_map) const{
-  // •Ï”‚Ìƒ‰ƒxƒ‹‚Ìo—Í
-  // TODO: –¢’è‹`‚Ì’l‚Æ‚©‚Ì‚¹‚¢‚Å‚¸‚ê‚é‰Â”\«‚ ‚è?
+  // å¤‰æ•°ã®ãƒ©ãƒ™ãƒ«ã®å‡ºåŠ›
+  // TODO: æœªå®šç¾©ã®å€¤ã¨ã‹ã®ã›ã„ã§ãšã‚Œã‚‹å¯èƒ½æ€§ã‚ã‚Š?
   stream << "# time\t";
 
   BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
@@ -48,7 +48,7 @@ std::string Printer::get_state_output(const phase_result_t& result, const bool& 
         value_t* limit_time = result.end_time-result.current_time;
         
         
-        //TODO:‚Å‚«‚ê‚ÎPrinter‚©‚çƒ\ƒ‹ƒo‚ÍŒ©‚½‚­‚È‚¢‚ªC‚»‚¤‚µ‚È‚¢‚Æ”’l‚É•ÏŠ·‚Å‚«‚È‚¢‚Ì‚Å‚Ç‚¤‚µ‚Ü‚µ‚å‚¤
+        //TODO:ã§ãã‚Œã°Printerã‹ã‚‰ã‚½ãƒ«ãƒã¯è¦‹ãŸããªã„ãŒï¼Œãã†ã—ãªã„ã¨æ•°å€¤ã«å¤‰æ›ã§ããªã„ã®ã§ã©ã†ã—ã¾ã—ã‚‡ã†
         //solver_->simplify(limit_time);
         
         do{

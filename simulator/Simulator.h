@@ -76,7 +76,7 @@ typedef std::map<std::string, unsigned int> profile_t;
 
 
 /**
- * ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚·‚×‚«ƒtƒF[ƒY‚ğ•\‚·\‘¢‘Ì
+ * ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã™ã¹ããƒ•ã‚§ãƒ¼ã‚ºã‚’è¡¨ã™æ§‹é€ ä½“
  */
 struct SimulationTodo{
   typedef std::map<hydla::ch::ModuleSet, variable_range_maps_t > ms_cache_t;
@@ -90,27 +90,27 @@ struct SimulationTodo{
   expanded_always_t         expanded_always;
   entailed_prev_map_t       judged_prev_map;
 
-  /// ‘O‚ÌƒtƒF[ƒY
+  /// å‰ã®ãƒ•ã‚§ãƒ¼ã‚º
   phase_result_sptr_t parent;
 
-  /// ƒtƒF[ƒY“à‚Åˆê“I‚É’Ç‰Á‚·‚é§–ñD•ªŠòˆ—‚È‚Ç‚Ég—p
+  /// ãƒ•ã‚§ãƒ¼ã‚ºå†…ã§ä¸€æ™‚çš„ã«è¿½åŠ ã™ã‚‹åˆ¶ç´„ï¼åˆ†å²å‡¦ç†ãªã©ã«ä½¿ç”¨
   constraints_t temporary_constraints;
-  /// g—p‚·‚é§–ñƒ‚ƒWƒ…[ƒ‹W‡DiƒtƒF[ƒY‚²‚Æ‚ÉC”ñalways§–ñ‚ğŠÜ‚Ş‚©”Û‚©‚Ì·‚ª‚ ‚éj
+  /// ä½¿ç”¨ã™ã‚‹åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆï¼ï¼ˆãƒ•ã‚§ãƒ¼ã‚ºã”ã¨ã«ï¼Œéalwaysåˆ¶ç´„ã‚’å«ã‚€ã‹å¦ã‹ã®å·®ãŒã‚ã‚‹ï¼‰
   module_set_container_sptr module_set_container;
-  /// –¢”»’è‚Ìƒ‚ƒWƒ…[ƒ‹W‡‚ğ•Û‚µ‚Ä‚¨‚­D•ªŠòˆ—C“¯‚¶W‡‚ğ•¡”‰ñ’²‚×‚é‚±‚Æ‚ª–³‚¢‚æ‚¤‚É
-  /// TODO:Œ»óC‚±‚ê‚ª‚Ü‚Æ‚à‚Ég‚í‚ê‚Ä‚¢‚È‚¢‹C‚ª‚·‚éD‚Â‚Ü‚èC‰½‚©ŠÔˆá‚Á‚Ä‚¢‚é‰Â”\«‚ª‚ ‚é‚µC–³‘Ê‚ÍŠmÀ‚É‚ ‚é
+  /// æœªåˆ¤å®šã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’ä¿æŒã—ã¦ãŠãï¼åˆ†å²å‡¦ç†æ™‚ï¼ŒåŒã˜é›†åˆã‚’è¤‡æ•°å›èª¿ã¹ã‚‹ã“ã¨ãŒç„¡ã„ã‚ˆã†ã«
+  /// TODO:ç¾çŠ¶ï¼Œã“ã‚ŒãŒã¾ã¨ã‚‚ã«ä½¿ã‚ã‚Œã¦ã„ãªã„æ°—ãŒã™ã‚‹ï¼ã¤ã¾ã‚Šï¼Œä½•ã‹é–“é•ã£ã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ã—ï¼Œç„¡é§„ã¯ç¢ºå®Ÿã«ã‚ã‚‹
   module_set_list_t ms_to_visit;
-  /// ƒvƒƒtƒ@ƒCƒŠƒ“ƒOŒ‹‰Ê
+  /// ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°çµæœ
   profile_t profile;
-  /// Š‘®‚·‚éƒP[ƒX‚ÌŒvZŠÔ
+  /// æ‰€å±ã™ã‚‹ã‚±ãƒ¼ã‚¹ã®è¨ˆç®—æ™‚é–“
   int elapsed_time;
   /// map to cache result of calculation for each module_set
   ms_cache_t ms_cache;
   
   /**
    * reset members to calculate from the start of the phase
-   * TODO: expanded_always‚Ç‚¤‚µ‚æ‚¤D
-   * TODO: ‹L†’è”‚àŒ³‚É–ß‚·‚×‚«H‚±‚¿‚ç‚ÍŒ»ó‚Å‚Í‚»‚±‚Ü‚Å–â‘è‚È‚¢‚Í‚¸
+   * TODO: expanded_alwaysã©ã†ã—ã‚ˆã†ï¼
+   * TODO: è¨˜å·å®šæ•°ã‚‚å…ƒã«æˆ»ã™ã¹ãï¼Ÿã“ã¡ã‚‰ã¯ç¾çŠ¶ã§ã¯ãã“ã¾ã§å•é¡Œãªã„ã¯ãš
    */
   void reset_from_start_of_phase(){
     ms_cache.clear();
@@ -124,8 +124,8 @@ struct SimulationTodo{
 
 
 typedef boost::shared_ptr<SimulationTodo>     simulation_todo_sptr_t;
-// ƒvƒƒtƒ@ƒCƒŠƒ“ƒOŒ‹‰Ê‘S‘Ì
-// ŠeTodo‚²‚Æ‚É‚©‚©‚Á‚½ŠÔiŒ»ó‚Å‚ÍCTodo‚»‚Ì‚à‚Ì‚ğ•Û‘¶‚µ‚Ä‚¢‚éj
+// ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°çµæœå…¨ä½“
+// å„Todoã”ã¨ã«ã‹ã‹ã£ãŸæ™‚é–“ï¼ˆç¾çŠ¶ã§ã¯ï¼ŒTodoãã®ã‚‚ã®ã‚’ä¿å­˜ã—ã¦ã„ã‚‹ï¼‰
 typedef std::vector<simulation_todo_sptr_t> entire_profile_t;
 
 class PhaseSimulator;
@@ -210,7 +210,7 @@ public:
    */
   parameter_t* introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range);
   
-  // TODO: publicƒƒ“ƒo‚ª‘½‚·‚¬‚é‹C‚ª‚·‚é
+  // TODO: publicãƒ¡ãƒ³ãƒãŒå¤šã™ãã‚‹æ°—ãŒã™ã‚‹
   
   /**
    * template of variable_range maps
@@ -237,7 +237,7 @@ public:
 protected:
   
   /**
-   * ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚Ég—p‚³‚ê‚é•Ï”•\‚ÌƒIƒŠƒWƒiƒ‹‚Ìì¬
+   * ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³æ™‚ã«ä½¿ç”¨ã•ã‚Œã‚‹å¤‰æ•°è¡¨ã®ã‚ªãƒªã‚¸ãƒŠãƒ«ã®ä½œæˆ
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
   
@@ -259,7 +259,7 @@ protected:
   module_set_container_sptr msc_original_;
   
   /**
-   * mcs_original_‚©‚ç”ñalways§–ñ‚ğœ‚¢‚½‚à‚Ì
+   * mcs_original_ã‹ã‚‰éalwaysåˆ¶ç´„ã‚’é™¤ã„ãŸã‚‚ã®
    */
   module_set_container_sptr msc_no_init_;
 

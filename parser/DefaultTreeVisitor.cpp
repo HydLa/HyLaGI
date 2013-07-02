@@ -10,24 +10,24 @@ DefaultTreeVisitor::DefaultTreeVisitor()
 DefaultTreeVisitor::~DefaultTreeVisitor()
 {}
 
-// ’è‹`
+// å®šç¾©
 void DefaultTreeVisitor::visit(boost::shared_ptr<ConstraintDefinition> node)  {accept(node->get_child());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramDefinition> node)     {accept(node->get_child());}
 
-// ŒÄ‚Ño‚µ
+// å‘¼ã³å‡ºã—
 void DefaultTreeVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      {accept(node->get_child());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramCaller> node)         {accept(node->get_child());}
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void DefaultTreeVisitor::visit(boost::shared_ptr<Constraint> node)            {accept(node->get_child());}
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void DefaultTreeVisitor::visit(boost::shared_ptr<Ask> node)                   {accept(node->get_lhs());accept(node->get_rhs());}
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 void DefaultTreeVisitor::visit(boost::shared_ptr<Tell> node)                  {accept(node->get_child());}
 
-// ”äŠr‰‰Zq
+// æ¯”è¼ƒæ¼”ç®—å­
 void DefaultTreeVisitor::visit(boost::shared_ptr<Equal> node)                 {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<UnEqual> node)               {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Less> node)                  {accept(node->get_lhs());accept(node->get_rhs());}
@@ -35,54 +35,54 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<LessEqual> node)             {a
 void DefaultTreeVisitor::visit(boost::shared_ptr<Greater> node)               {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<GreaterEqual> node)          {accept(node->get_lhs());accept(node->get_rhs());}
 
-// ˜_—‰‰Zq
+// è«–ç†æ¼”ç®—å­
 void DefaultTreeVisitor::visit(boost::shared_ptr<LogicalAnd> node)            {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<LogicalOr> node)             {accept(node->get_lhs());accept(node->get_rhs());}
   
-// Zp“ñ€‰‰Zq
+// ç®—è¡“äºŒé …æ¼”ç®—å­
 void DefaultTreeVisitor::visit(boost::shared_ptr<Plus> node)                  {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Subtract> node)              {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Times> node)                 {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Divide> node)                {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Power> node)                 {accept(node->get_lhs());accept(node->get_rhs());}
 
-// Zp’P€‰‰Zq
+// ç®—è¡“å˜é …æ¼”ç®—å­
 void DefaultTreeVisitor::visit(boost::shared_ptr<Negative> node)              {accept(node->get_child());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Positive> node)              {accept(node->get_child());}
   
-// §–ñŠK‘w’è‹`‰‰Zq
+// åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
 void DefaultTreeVisitor::visit(boost::shared_ptr<Weaker> node)                {accept(node->get_lhs());accept(node->get_rhs());}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Parallel> node)              {accept(node->get_lhs());accept(node->get_rhs());}
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void DefaultTreeVisitor::visit(boost::shared_ptr<Always> node)                {accept(node->get_child());}
 
-// ‰~ü—¦
+// å††å‘¨ç‡
 void DefaultTreeVisitor::visit(boost::shared_ptr<Pi> node)                {}
-// ©‘R‘Î”‚Ì’ê
+// è‡ªç„¶å¯¾æ•°ã®åº•
 void DefaultTreeVisitor::visit(boost::shared_ptr<E> node)                {}
 
-// ŠÖ”
+// é–¢æ•°
 void DefaultTreeVisitor::visit(boost::shared_ptr<Function> node)                {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));}}
 void DefaultTreeVisitor::visit(boost::shared_ptr<UnsupportedFunction> node)     {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));}}
 
   
-// ”÷•ª
+// å¾®åˆ†
 void DefaultTreeVisitor::visit(boost::shared_ptr<Differential> node)          {accept(node->get_child());}
 
-// ¶‹ÉŒÀ
+// å·¦æ¥µé™
 void DefaultTreeVisitor::visit(boost::shared_ptr<Previous> node)              {accept(node->get_child());}
 
-// ”Û’è
+// å¦å®š
 void DefaultTreeVisitor::visit(boost::shared_ptr<Not> node)              {accept(node->get_child());}
   
-// •Ï”
+// å¤‰æ•°
 void DefaultTreeVisitor::visit(boost::shared_ptr<Variable> node)              {}
 
-// ”š
+// æ•°å­—
 void DefaultTreeVisitor::visit(boost::shared_ptr<Number> node)                {}
 
-// ‹L†’è”
+// è¨˜å·å®šæ•°
 void DefaultTreeVisitor::visit(boost::shared_ptr<Parameter> node)                {}
 
 // t

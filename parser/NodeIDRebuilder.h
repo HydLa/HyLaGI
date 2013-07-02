@@ -21,8 +21,8 @@ public:
   {}
 
   /**
-   * ƒm[ƒhID‚ğ‚·‚×‚ÄV‚½‚É“o˜^‚µ‚È‚¨‚·
-   * ParseTree‘¤‚Åƒm[ƒhID•\‚ğ‰ŠúÏ‚İ‚Å‚ ‚é‚Æ‰¼’è‚µ‚Ä‚¢‚é
+   * ãƒãƒ¼ãƒ‰IDã‚’ã™ã¹ã¦æ–°ãŸã«ç™»éŒ²ã—ãªãŠã™
+   * ParseTreeå´ã§ãƒãƒ¼ãƒ‰IDè¡¨ã‚’åˆæœŸæ¸ˆã¿ã§ã‚ã‚‹ã¨ä»®å®šã—ã¦ã„ã‚‹
    */
   void rebuild(hydla::parse_tree::ParseTree* pt)
   {
@@ -30,20 +30,20 @@ public:
     pt->dispatch(this);
   }
 
-  /// ˆöqƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// å› å­ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::FactorNode> node)
   {
     rebuild_node(node);
   }
   
-  /// 1‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 1ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnaryNode> node)
   {
     rebuild_node(node);
     accept(node->get_child());
   }
 
-  /// 2‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh‚ÌŒÄ‚Ño‚µ
+  /// 2ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰ã®å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::BinaryNode> node)
   {    
     rebuild_node(node);

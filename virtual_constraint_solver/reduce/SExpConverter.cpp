@@ -1,7 +1,7 @@
 #include "SExpConverter.h"
 
 
-using namespace hydla::parse_tree; // Negative‚ÆNumber—p
+using namespace hydla::parse_tree; // Negativeã¨Numberç”¨
 
 namespace hydla {
 namespace vcs {
@@ -17,7 +17,7 @@ SExpConverter::SExpConverter()
 SExpConverter::~SExpConverter(){}
 
 void SExpConverter::initialize(){
-  //ƒm[ƒh‚Æ•¶š—ñ‚Ì‘Î‰ŠÖŒW‚ğì‚Á‚Ä‚¨‚­D
+  //ãƒãƒ¼ãƒ‰ã¨æ–‡å­—åˆ—ã®å¯¾å¿œé–¢ä¿‚ã‚’ä½œã£ã¦ãŠãï¼
   string_map_.insert(std::make_pair("plus", function_and_node(for_binary_node, NODE_PLUS)));
   string_map_.insert(std::make_pair("difference", function_and_node(for_binary_node, NODE_SUBTRACT)));
   string_map_.insert(std::make_pair("times", function_and_node(for_binary_node, NODE_TIMES)));
@@ -48,7 +48,7 @@ void SExpConverter::add_parameter(variable_t &variable, parameter_t &parameter){
 void SExpConverter::clear_parameter_map(){
   variable_parameter_map_.clear();
 }
-//TODO init_varˆø”‚ğ‚È‚­‚·
+//TODO init_varå¼•æ•°ã‚’ãªãã™
 node_sptr SExpConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var){
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   node_sptr new_node(new Variable(variable.get_name()));
@@ -94,30 +94,30 @@ SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(const SEx
       }
       break;
     }
-    // header‚Æidentifier‚Æ‚Å•ª‚¯‚½‚¢
+    // headerã¨identifierã¨ã§åˆ†ã‘ãŸã„
     default:
       std::string value_str = std::string(iter->value.begin(), iter->value.end());
-      // •Ï”–¼‚Ìæ“ª‚ÉƒXƒy[ƒX‚ª“ü‚é‚±‚Æ‚ª‚ ‚é‚Ì‚Åœ‹‚·‚é
-      // TODO:S®ƒp[ƒT‚ğC³‚µ‚ÄƒXƒy[ƒX“ü‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+      // å¤‰æ•°åã®å…ˆé ­ã«ã‚¹ãƒšãƒ¼ã‚¹ãŒå…¥ã‚‹ã“ã¨ãŒã‚ã‚‹ã®ã§é™¤å»ã™ã‚‹
+      // TODO:Så¼ãƒ‘ãƒ¼ã‚µã‚’ä¿®æ­£ã—ã¦ã‚¹ãƒšãƒ¼ã‚¹å…¥ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹
       if(value_str.at(0) == ' ') value_str.erase(0,1);
 
       string_map_t::const_iterator strmap_it = string_map_.find(value_str);
       if(strmap_it == string_map_.end()){
-        if(value_str=="t"){//
+        if(value_str=="t"){//æ™‚åˆ»
           return node_sptr(new hydla::parse_tree::SymbolicT());
         }
-        if(value_str=="pi"){ // ‰~ü—¦
+        if(value_str=="pi"){ // å††å‘¨ç‡
           return node_sptr(new hydla::parse_tree::Pi());
         }
-        if(value_str.at(0)=='p'){//’è”–¼
+        if(value_str.at(0)=='p'){//å®šæ•°å
 //TODO
 //          return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
         }
-        if(value_str=="e"){//©‘R‘Î”‚Ì’ê
+        if(value_str=="e"){//è‡ªç„¶å¯¾æ•°ã®åº•
           return node_sptr(new hydla::parse_tree::E());
         }
         
-        // TODO:•Ï”–¼‚â‚»‚êˆÈŠO‚Ìfactor‚Ö‚Ì‘Î‰
+        // TODO:å¤‰æ•°åã‚„ãã‚Œä»¥å¤–ã®factorã¸ã®å¯¾å¿œ
         assert(0);
       }
 
@@ -129,9 +129,9 @@ SExpConverter::node_sptr SExpConverter::for_derivative(
   const SExpParser &sp,
   const_tree_iter_t iter,
   const SExpConverter::nodeType &nt){
-  //‚Ü‚¸”÷•ª‰ñ”
+  //ã¾ãšå¾®åˆ†å›æ•°
   int derivative_count = sp.get_derivative_count(iter);
-  //Ÿ‚É’†g
+  //æ¬¡ã«ä¸­èº«
   node_sptr tmp_node = convert_s_exp_to_symbolic_tree(sp, iter->children.begin());
   for(int i=0;i<derivative_count-1;i++){
     tmp_node.reset(new hydla::parse_tree::Differential(tmp_node));
@@ -144,7 +144,7 @@ SExpConverter::node_sptr SExpConverter::for_unary_node(
   const SExpParser &sp,
   const_tree_iter_t iter,
   const SExpConverter::nodeType &nt){
-  //’†g
+  //ä¸­èº«
   node_sptr tmp_node = convert_s_exp_to_symbolic_tree(sp, iter->children.begin());
   switch(nt){
     default:
@@ -170,18 +170,18 @@ SExpConverter::node_sptr SExpConverter::for_binary_node(
   const SExpParser &sp,
   const_tree_iter_t iter,
   const SExpConverter::nodeType &nt){
-  //BinaryNode‚ğì‚é‚½‚ß‚ÌŠÖ”‚¾‚¯‚ÇCplus‚Ætimes‚ÍƒŠƒXƒg‚Å•¡”ˆø”æ‚ê‚é‚İ‚½‚¢‚¾‚©‚ç“Á•Ê‚Éƒ‹[ƒv
+  //BinaryNodeã‚’ä½œã‚‹ãŸã‚ã®é–¢æ•°ã ã‘ã©ï¼Œplusã¨timesã¯ãƒªã‚¹ãƒˆã§è¤‡æ•°å¼•æ•°å–ã‚Œã‚‹ã¿ãŸã„ã ã‹ã‚‰ç‰¹åˆ¥ã«ãƒ«ãƒ¼ãƒ—
 
-  //¶
+  //å·¦
   node_sptr lhs = convert_s_exp_to_symbolic_tree(sp, iter->children.begin());
   size_t args_count = 0;
   while(1){
     args_count++;
-    //‰E
+    //å³
     node_sptr rhs = convert_s_exp_to_symbolic_tree(sp, iter->children.begin()+args_count);
     switch(nt){
       case NODE_PLUS:
-        if(args_count == iter->children.size()-1){//‚±‚±‚ÅI—¹
+        if(args_count == iter->children.size()-1){//ã“ã“ã§çµ‚äº†
           return node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
         }
         else{
@@ -190,7 +190,7 @@ SExpConverter::node_sptr SExpConverter::for_binary_node(
         break;
 
       case NODE_TIMES:
-        if(args_count == iter->children.size()-1)//‚±‚±‚ÅI—¹
+        if(args_count == iter->children.size()-1)//ã“ã“ã§çµ‚äº†
           return node_sptr(new hydla::parse_tree::Times(lhs, rhs));
         else
           lhs = node_sptr(new hydla::parse_tree::Times(lhs, rhs));

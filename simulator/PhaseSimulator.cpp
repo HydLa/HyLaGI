@@ -81,7 +81,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     todo->negative_asks.clear();
   }
 
-  //�������ȉ���⃂�W���[���W�������݂��Ȃ��ꍇ
+  //無矛盾な解候補モジュール集合が存在しない場合
   if(!has_next)
   {
     // make dummy phase and push into tree.
@@ -98,7 +98,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   HYDLA_LOGGER_MS("--- next module set ---\n", ms->get_infix_string());
   graph->set_valid(ms.get());
   result_list_t result;
-  // TODO:�ϐ��̒l�ɂ�镪����������Ă���H
+  // TODO:変数の値による分岐も無視している？
 
   variable_range_maps_t vms;
   vms.push_back(*variable_map_);
@@ -207,7 +207,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       hydla::vcs::CheckConsistencyResult cc_result;
       switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t())){
         case ENTAILED:
-        case BRANCH_VAR: //TODO: �ϐ��̒l�ɂ��̂ŁC����͂��ׂ�
+        case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
           std::cout << "Assertion Failed!" << std::endl;
           HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
           phase->cause_of_termination = ASSERTION;
@@ -217,7 +217,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           /*
         case BRANCH_VAR:
           HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
-            // �����𐶐�
+            // 分岐先を生成
           {
             simulation_todo_sptr_t new_state(create_new_simulation_phase(todo));
             new_state->temporary_constraints.push_back(opts_->assertion);
@@ -331,8 +331,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
   msc_no_init_ = msc_no_init;
   const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
   
-  // TODO:RelationGraph��ł́CASSERT���𖳎����Ă��邽�߁C���񃂃W���[�����ł͓Ɨ��ł�ASSERT���̒��Ŋ֌W���Ă���ϐ����������ꍇ�ɐ��������삵�Ȃ�
-  // RelationGraph������ł́CASSERT�����ȁu���W���[���̂悤�Ȃ��́v�Ƃ��Ĉ����K�v������D
+  // TODO:RelationGraph上では，ASSERT文を無視しているため，制約モジュール中では独立でもASSERT文の中で関係している変数があった場合に正しく動作しない
+  // RelationGraphを作る上では，ASSERTを特殊な「モジュールのようなもの」として扱う必要がある．
   pp_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, false);
   ip_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, true);
   

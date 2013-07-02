@@ -60,34 +60,34 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
   positive_asks_   = positive_asks;
   unknown_asks_    = unknown_asks;
 
-  // ModuleSet‚Ìƒm[ƒh‚Ì’Tõ
+  // ModuleSetã®ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   in_positive_ask_    = false;
   module_set_->dispatch(this);
 
-  // “WŠJÏ‚İalwaysƒm[ƒh‚Ì’Tõ
+  // å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   in_positive_ask_    = false;
   expanded_always_t::const_iterator it  = expanded_always->begin();
   expanded_always_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
-    // Ì—p‚µ‚Ä‚¢‚éƒ‚ƒWƒ…[ƒ‹W‡“à‚É“ü‚Á‚Ä‚¢‚é‚©‚Ç‚¤‚©
+    // æ¡ç”¨ã—ã¦ã„ã‚‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆå†…ã«å…¥ã£ã¦ã„ã‚‹ã‹ã©ã†ã‹
     if(visited_always_.find(*it) != visited_always_.end()) {
       accept((*it)->get_child());
     }
   }
 
-  // “WŠJÏ‚İalwaysƒm[ƒh‚ÌƒŠƒXƒg‚ÌXV
+  // å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆã®æ›´æ–°
   expanded_always->insert(new_expanded_always_.begin(), 
                           new_expanded_always_.end());
 }
 
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
   
   if(positive_asks_->find(node) != positive_asks_->end()) 
   {
-    // Šù‚É“WŠJÏ‚İ‚Ìaskƒm[ƒh‚Å‚ ‚Á‚½ê‡
+    // æ—¢ã«å±•é–‹æ¸ˆã¿ã®askãƒãƒ¼ãƒ‰ã§ã‚ã£ãŸå ´åˆ
     if(in_positive_ask_){
       accept(node->get_child());
     }else{
@@ -98,18 +98,18 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
   }
   else if(negative_asks_->find(node) == negative_asks_->end())
   {
-    // “±o‚³‚ê‚é‚Æ‚à–µ‚‚·‚é‚Æ‚à”»’è‚³‚ê‚Ä‚¢‚È‚¢askƒm[ƒh‚Å‚ ‚Á‚½ê‡
+    // å°å‡ºã•ã‚Œã‚‹ã¨ã‚‚çŸ›ç›¾ã™ã‚‹ã¨ã‚‚åˆ¤å®šã•ã‚Œã¦ã„ãªã„askãƒãƒ¼ãƒ‰ã§ã‚ã£ãŸå ´åˆ
     unknown_asks_->insert(node);
   }
 }
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
   // do nothing
 }
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
   accept(node->get_child());

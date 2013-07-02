@@ -73,7 +73,7 @@ void output_result(ParallelSimulator& ss, Opts& opts){
 
 
 /**
- * 記号処理によるシミュレーション
+ * 險伜捷蜃ｦ逅�縺ｫ繧医ｋ繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ
  */
 void setup_symbolic_simulator_opts(Opts& opts)
 {  

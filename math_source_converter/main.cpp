@@ -38,7 +38,7 @@ void conv()
         c = *in_itr++;   
         break;
 
-        // ƒRƒƒ“ƒgíœ
+        // ã‚³ãƒ¡ãƒ³ãƒˆå‰Šé™¤
       case '(': {
         char nc = *in_itr++;
         if(nc == '*') {

@@ -35,30 +35,30 @@ struct SExpGrammar : public grammar<SExpGrammar> {
     defRuleID(RI_Data)           data; 
     defRuleID(RI_Header)         header;
 
-    // \•¶’è‹`
+    // æ§‹æ–‡å®šç¾©
     definition(const SExpGrammar& self) {
-      // ŠJn
+      // é–‹å§‹
       data = +(s_expression);
 
-      // S®
+      // Så¼
       s_expression = number | identifier | string | list;
 
-      // ”š
+      // æ•°å­—
       number = int_p;
 
-      // ¯•Êq
+      // è­˜åˆ¥å­
       identifier = leaf_node_d[alpha_p >> lexeme_d[*(alpha_p | int_p | ch_p('-') | ch_p('_') | ch_p(':'))]];
 
-      // •¶š—ñ
+      // æ–‡å­—åˆ—
       string = leaf_node_d[inner_node_d[lexeme_d[confix_p(ch_p('"'), *c_escape_ch_p, ch_p('"'))]]];
 //      string = no_node_d[ch_p('"')] >> leaf_node_d[lexeme_d[*c_escape_ch_p]] >> no_node_d[ch_p('"')];
 //      string = discard_node_d[ch_p('"')] >> leaf_node_d[lexeme_d[*c_escape_ch_p]] >> discard_node_d[ch_p('"')];
 //      string = leaf_node_d[inner_node_d[confix_p('"', lexeme_d[*c_escape_ch_p], '"')]];
 
-      // ƒŠƒXƒg‚Ìƒwƒbƒ_
+      // ãƒªã‚¹ãƒˆã®ãƒ˜ãƒƒãƒ€
       header = identifier;
 
-      // ƒŠƒXƒg\‘¢
+      // ãƒªã‚¹ãƒˆæ§‹é€ 
 //      list =
 //        discard_node_d[ch_p('(')] >> root_node_d[header] >> *(s_expression) >> discard_node_d[ch_p(')')]
 //        | discard_node_d[ch_p('[')] >> root_node_d[header] >> *(s_expression) >> discard_node_d[ch_p(']')];
@@ -73,7 +73,7 @@ struct SExpGrammar : public grammar<SExpGrammar> {
 
     }
 
-    // ŠJnƒ‹[ƒ‹
+    // é–‹å§‹ãƒ«ãƒ¼ãƒ«
     defRuleID(RI_Data) const& start() const {
       return data;
     }

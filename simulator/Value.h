@@ -23,40 +23,40 @@ class Value:
   virtual ~Value(){}
   
   /**
-   * –¢’è‹`’l‚©‚Ç‚¤‚©
+   * æœªå®šç¾©å€¤ã‹ã©ã†ã‹
    */
   virtual bool undefined() const = 0;
   
   /**
-   * ©•ª©g‚ÌƒNƒ[ƒ“‚ğV‚½‚Éì¬‚µC‚»‚Ìƒ|ƒCƒ“ƒ^‚ğ•Ô‚·
-   * •Ô‚è’l‚Ìƒƒ‚ƒŠ‚ÍŒÄ‚Ño‚µ‚½‘¤‚Å‰ğ•ú‚·‚é‚æ‚¤‚É’ˆÓ‚·‚éD
+   * è‡ªåˆ†è‡ªèº«ã®ã‚¯ãƒ­ãƒ¼ãƒ³ã‚’æ–°ãŸã«ä½œæˆã—ï¼Œãã®ãƒã‚¤ãƒ³ã‚¿ã‚’è¿”ã™
+   * è¿”ã‚Šå€¤ã®ãƒ¡ãƒ¢ãƒªã¯å‘¼ã³å‡ºã—ãŸå´ã§è§£æ”¾ã™ã‚‹ã‚ˆã†ã«æ³¨æ„ã™ã‚‹ï¼
    */
   virtual Value* clone() const = 0;
 
   /**
-   * •¶š—ñ•\Œ»‚ğæ“¾‚·‚é
+   * æ–‡å­—åˆ—è¡¨ç¾ã‚’å–å¾—ã™ã‚‹
    */
   virtual std::string get_string() const = 0;
 
   /**
-   * Node‚ÌŒ`®‚É‚µ‚½‚à‚Ì‚ğæ“¾‚·‚é
+   * Nodeã®å½¢å¼ã«ã—ãŸã‚‚ã®ã‚’å–å¾—ã™ã‚‹
    */
   virtual hydla::parse_tree::node_sptr get_node() const = 0;
   
   virtual void accept(ValueVisitor &) = 0;
   
   /**
-   * Value“¯m‚Ì‰ÁZ
+   * ValueåŒå£«ã®åŠ ç®—
    */
   Value& operator+=(const Value& rhs);
 
   /**
-   * Value“¯m‚ÌŒ¸Z
+   * ValueåŒå£«ã®æ¸›ç®—
    */
   Value& operator-=(const Value& rhs);
   
   /**
-   * ƒf[ƒ^‚ğƒ_ƒ“ƒv‚·‚é
+   * ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
    */
   std::ostream& dump(std::ostream& s) const{
     if(undefined()) s << "UNDEF";

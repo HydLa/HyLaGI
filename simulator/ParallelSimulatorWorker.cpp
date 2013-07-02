@@ -58,7 +58,7 @@ void ParallelSimulatorWorker::print_thread_state()
 }
 
 /**
- * ŠeƒXƒŒƒbƒh‚ª—^‚¦‚ç‚ê‚½‰ðŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ðŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŽÀs‚ð‚¨‚±‚È‚¤
+ * å„ã‚¹ãƒ¬ãƒƒãƒ‰ãŒä¸Žãˆã‚‰ã‚ŒãŸè§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å…ƒã«ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å®Ÿè¡Œã‚’ãŠã“ãªã†
  */
 phase_result_const_sptr_t ParallelSimulatorWorker::simulate()
 {

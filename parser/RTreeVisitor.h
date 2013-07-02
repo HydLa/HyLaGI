@@ -12,25 +12,25 @@ namespace hydla {
 namespace parse_tree {
 
 /**
- * ParseTree‚Ìƒm[ƒhW‡‚É‘Î‚·‚éVisitorƒNƒ‰ƒX
+ * ParseTreeã®ãƒãƒ¼ãƒ‰é›†åˆã«å¯¾ã™ã‚‹Visitorã‚¯ãƒ©ã‚¹
  */
 class RTreeVisitor :
   public hydla::parse_tree::TreeVisitor
 {
 public:
-//ŒÄ‚Ño‚·ŠÖ”
+//å‘¼ã³å‡ºã™é–¢æ•°
   std::string caller_;
   std::string expr_;
-  //ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+  //ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
   RTreeVisitor(int a);
-  //ƒRƒ“ƒXƒgƒ‰ƒNƒ^ ‹Œreduce_outputŠÖ”—p
+  //ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ æ—§reduce_outputé–¢æ•°ç”¨
   RTreeVisitor(std::string caller);
 //  RTreeVisitor();
 
   virtual ~RTreeVisitor();
 
   /**
-   * NodeƒNƒ‰ƒX‚ÌacceptŠÖ”ŒÄ‚Ño‚µ—pƒwƒ‹ƒpŠÖ”
+   * Nodeã‚¯ãƒ©ã‚¹ã®accepté–¢æ•°å‘¼ã³å‡ºã—ç”¨ãƒ˜ãƒ«ãƒ‘é–¢æ•°
    */
   template<class T>
   void accept(const T& n)
@@ -38,42 +38,42 @@ public:
     n->accept(n, this);
   }
   
-  //c++“®ì—ûK
+  //c++å‹•ä½œç·´ç¿’
   int x;
   void sandbox();
 
-  // §–ñ®‚ğl‚ª“Ç‚ß‚éstring‚É‚µ‚Ä•Ô‚·
+  // åˆ¶ç´„å¼ã‚’äººãŒèª­ã‚ã‚‹stringã«ã—ã¦è¿”ã™
   virtual std::string get_expr(const node_sptr& node);
-  //accept‚ğŠO•”‚Ås‚¤ê‡
+  //acceptã‚’å¤–éƒ¨ã§è¡Œã†å ´åˆ
   virtual std::string get_expr();
-  // ƒK[ƒh‚ğl‚ª“Ç‚ß‚éstring‚É‚µ‚Ä•Ô‚·
+  // ã‚¬ãƒ¼ãƒ‰ã‚’äººãŒèª­ã‚ã‚‹stringã«ã—ã¦è¿”ã™
   virtual std::string get_guard(const boost::shared_ptr<hydla::parse_tree::Ask>& ask);
-  // ask‰E•Ó‚ğstring‚Å•Ô‚·
+  // askå³è¾ºã‚’stringã§è¿”ã™
   virtual std::string get_ask_rhs(const boost::shared_ptr<hydla::parse_tree::Ask>& ask);
 //  virtual std::string get_expr(const node_sptr& node);
 
-  // §–ñ’è‹`
+  // åˆ¶ç´„å®šç¾©
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
   
-  // ƒvƒƒOƒ‰ƒ€’è‹`
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
   virtual void visit(boost::shared_ptr<ProgramDefinition> node);
 
-  // §–ñŒÄ‚Ño‚µ
+  // åˆ¶ç´„å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<ConstraintCaller> node);
   
-  // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<ProgramCaller> node);
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<Tell> node);
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Equal> node);
   virtual void visit(boost::shared_ptr<UnEqual> node);
   virtual void visit(boost::shared_ptr<Less> node);
@@ -81,37 +81,37 @@ public:
   virtual void visit(boost::shared_ptr<Greater> node);
   virtual void visit(boost::shared_ptr<GreaterEqual> node);
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<LogicalAnd> node);
   virtual void visit(boost::shared_ptr<LogicalOr> node);
   
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Plus> node);
   virtual void visit(boost::shared_ptr<Subtract> node);
   virtual void visit(boost::shared_ptr<Times> node);
   virtual void visit(boost::shared_ptr<Divide> node);
   
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Negative> node);
   virtual void visit(boost::shared_ptr<Positive> node);
   
-  // §–ñŠK‘w’è‹`‰‰Zq
+  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Weaker> node);
   virtual void visit(boost::shared_ptr<Parallel> node);
 
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<Always> node);
   
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<Previous> node);
   
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<Variable> node);
 
-  // ”š
+  // æ•°å­—
   virtual void visit(boost::shared_ptr<Number> node);
 
 };

@@ -12,7 +12,7 @@ using namespace boost::spirit::classic;
 namespace hydla {
 namespace parser {
 
-/** ‹óW‡‚ğ•\‚·S®"list" */
+/** ç©ºé›†åˆã‚’è¡¨ã™Så¼"list" */
 const std::string SExpParser::empty_list_s_exp("list");
 
 SExpParser::SExpParser()
@@ -35,7 +35,7 @@ std::string SExpParser::get_string_from_tree(const_tree_iter_t iter) const{
 
   std::ostringstream ret_str;
 
-  // ƒT[ƒo[ƒ‚[ƒh‚Å‚Íminusg—p•s‰Â
+  // ã‚µãƒ¼ãƒãƒ¼ãƒ¢ãƒ¼ãƒ‰ã§ã¯minusä½¿ç”¨ä¸å¯
   std::string str = std::string(iter->value.begin(), iter->value.end());
   if(str == "minus") ret_str << "-";
   else ret_str << str;
@@ -59,15 +59,15 @@ int SExpParser::get_derivative_count(const_tree_iter_t var_iter) const{
   int var_derivative_count;
   std::string var_str = std::string(var_iter->value.begin(), var_iter->value.end());
 
-  // df‚Ìæ“ª‚ÉƒXƒy[ƒX‚ª“ü‚é‚±‚Æ‚ª‚ ‚é‚Ì‚Åœ‹‚·‚é
-  // TODO:S®ƒp[ƒT‚ğC³‚µ‚ÄƒXƒy[ƒX“ü‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+  // dfã®å…ˆé ­ã«ã‚¹ãƒšãƒ¼ã‚¹ãŒå…¥ã‚‹ã“ã¨ãŒã‚ã‚‹ã®ã§é™¤å»ã™ã‚‹
+  // TODO:Så¼ãƒ‘ãƒ¼ã‚µã‚’ä¿®æ­£ã—ã¦ã‚¹ãƒšãƒ¼ã‚¹å…¥ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹
   if(var_str.at(0) == ' ') var_str.erase(0,1);
 
-  // ”÷•ª‚ğŠÜ‚Ş•Ï”
+  // å¾®åˆ†ã‚’å«ã‚€å¤‰æ•°
   if(var_str=="df"){
     size_t df_child_size = var_iter->children.size();
 
-    // 1‰ñ”÷•ª‚Ìê‡‚Í”÷•ª‰ñ”•”•ª‚ªÈ—ª‚³‚ê‚Ä‚¢‚é
+    // 1å›å¾®åˆ†ã®å ´åˆã¯å¾®åˆ†å›æ•°éƒ¨åˆ†ãŒçœç•¥ã•ã‚Œã¦ã„ã‚‹
     if(df_child_size==2){
       var_derivative_count = 1;
     }
@@ -93,15 +93,15 @@ void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
     cout << "  ";
 
   if (iter->value.id() == SExpGrammar::RI_Identifier)
-    cout << "¯•Êq " << string(iter->value.begin(), iter->value.end());
+    cout << "è­˜åˆ¥å­ " << string(iter->value.begin(), iter->value.end());
   else if (iter->value.id() == SExpGrammar::RI_Number)
-    cout << "®” " << string(iter->value.begin(), iter->value.end());
+    cout << "æ•´æ•° " << string(iter->value.begin(), iter->value.end());
   else if (iter->value.id() == SExpGrammar::RI_String)
-    cout << "•¶š—ñ "<< "\"" << string(iter->value.begin(), iter->value.end()) << "\"";
+    cout << "æ–‡å­—åˆ— "<< "\"" << string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_List)
-    cout << "ƒŠƒXƒg ";
+    cout << "ãƒªã‚¹ãƒˆ ";
   else if (iter->value.id() == SExpGrammar::RI_Data)
-    cout << "ƒf[ƒ^ ";
+    cout << "ãƒ‡ãƒ¼ã‚¿ ";
   else
     cout << "Node '" << string(iter->value.begin(), iter->value.end()) << "'";
 
@@ -127,7 +127,7 @@ int SExpParser::parse_main(const char* input_str){
   if(ast_tree_.full){
     dump_tree(get_tree_iterator(), 0);
   }else{
-    cout << "¸”s\n";
+    cout << "å¤±æ•—\n";
   }
 */
 

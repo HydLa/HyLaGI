@@ -24,7 +24,7 @@ typedef boost::shared_ptr<Node> node_sptr;
 typedef boost::shared_ptr<const Node> node_const_sptr;
 
 /**
- * ƒpƒXƒcƒŠ[‚ÌŠî’êƒm[ƒh
+ * ãƒ‘ã‚¹ãƒ„ãƒªãƒ¼ã®åŸºåº•ãƒãƒ¼ãƒ‰
  */
 class Node {
 public:
@@ -41,34 +41,34 @@ public:
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor) = 0;
   
   /**
-   * qƒm[ƒh‚ğŠÜ‚ß‚½ƒm[ƒhiƒcƒŠ[j‚Ì\‘¢‚ğ•¡»‚·‚é
+   * å­ãƒãƒ¼ãƒ‰ã‚’å«ã‚ãŸãƒãƒ¼ãƒ‰ï¼ˆãƒ„ãƒªãƒ¼ï¼‰ã®æ§‹é€ ã‚’è¤‡è£½ã™ã‚‹
    * 
-   * •¡»‚³‚ê‚½ƒm[ƒh‚ÌID‚Í‚·‚×‚Ä0‚Æ‚È‚é
+   * è¤‡è£½ã•ã‚ŒãŸãƒãƒ¼ãƒ‰ã®IDã¯ã™ã¹ã¦0ã¨ãªã‚‹
    */
   virtual node_sptr clone() = 0;
 
   /**
-   * qƒm[ƒh‚ğŠÜ‚ß‚½ƒm[ƒhiƒcƒŠ[j‚Ì\‘¢‚Ì”äŠr‚ğs‚¤
+   * å­ãƒãƒ¼ãƒ‰ã‚’å«ã‚ãŸãƒãƒ¼ãƒ‰ï¼ˆãƒ„ãƒªãƒ¼ï¼‰ã®æ§‹é€ ã®æ¯”è¼ƒã‚’è¡Œã†
    * 
-   * \‘¢”äŠr‚ÉCƒm[ƒh‚ÌID‚Íl—¶‚³‚ê‚È‚¢
-   * I’[ƒm[ƒh‚É‚¨‚¢‚Ä‚Í‚»‚Ìƒm[ƒh‚Ì‹ï‘Ì“I‚È’l‚Í”äŠr‚Él—¶‚³‚ê‚é
-   * exactly_same‚ª^‚Ìê‡C
-   * x=1‚Æ1=x‚Ì—l‚É‘ÎÌ«‚ğ‚à‚ÂƒcƒŠ[‚Í“¯ˆê‚Å‚ ‚é‚Æ‚Í‚İ‚È‚³‚ê‚È‚¢
-   * exactly_same‚ª‹U‚Ìê‡C
-   * (x=1 & 2=y) & z=3 ‚Æ x=1 & (y=2 & z=3) ‚Ì‚æ‚¤‚ÈHydLaƒvƒƒOƒ‰ƒ€‚Æ‚µ‚Ä
-   * “¯ˆê‚ÌˆÓ–¡‚ğ‚Â\‘¢‚Ìê‡‚Í“¯ˆê‚Æ‚İ‚È‚³‚ê‚é
+   * æ§‹é€ æ¯”è¼ƒæ™‚ã«ï¼Œãƒãƒ¼ãƒ‰ã®IDã¯è€ƒæ…®ã•ã‚Œãªã„
+   * çµ‚ç«¯ãƒãƒ¼ãƒ‰ã«ãŠã„ã¦ã¯ãã®ãƒãƒ¼ãƒ‰ã®å…·ä½“çš„ãªå€¤ã¯æ¯”è¼ƒæ™‚ã«è€ƒæ…®ã•ã‚Œã‚‹
+   * exactly_sameãŒçœŸã®å ´åˆï¼Œ
+   * x=1ã¨1=xã®æ§˜ã«å¯¾ç§°æ€§ã‚’ã‚‚ã¤ãƒ„ãƒªãƒ¼ã¯åŒä¸€ã§ã‚ã‚‹ã¨ã¯ã¿ãªã•ã‚Œãªã„
+   * exactly_sameãŒå½ã®å ´åˆï¼Œ
+   * (x=1 & 2=y) & z=3 ã¨ x=1 & (y=2 & z=3) ã®ã‚ˆã†ãªHydLaãƒ—ãƒ­ã‚°ãƒ©ãƒ ã¨ã—ã¦
+   * åŒä¸€ã®æ„å‘³ã‚’æŒã¤æ§‹é€ ã®å ´åˆã¯åŒä¸€ã¨ã¿ãªã•ã‚Œã‚‹
    */
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   /**
-   * ƒm[ƒh‚ÌŒ^‚Ì–¼‘O
+   * ãƒãƒ¼ãƒ‰ã®å‹ã®åå‰
    */
   virtual std::string get_node_type_name() const {
     return "Node";
   }
 
   /**
-   * ƒm[ƒh‚Ìó‘Ô‚ğo—Í‚·‚é
+   * ãƒãƒ¼ãƒ‰ã®çŠ¶æ…‹ã‚’å‡ºåŠ›ã™ã‚‹
    */
   virtual std::ostream& dump(std::ostream& s) const 
   {
@@ -78,7 +78,7 @@ public:
   
 
   /**
-   * ƒm[ƒhID‚Ìİ’è
+   * ãƒãƒ¼ãƒ‰IDã®è¨­å®š
    */
   void set_id(node_id_t id)
   {
@@ -86,7 +86,7 @@ public:
   }
 
   /**
-   * ƒm[ƒhID‚ğ“¾‚é
+   * ãƒãƒ¼ãƒ‰IDã‚’å¾—ã‚‹
    */
   node_id_t get_id() const 
   {
@@ -95,7 +95,7 @@ public:
 
 private:
   /**
-   * ƒm[ƒhID
+   * ãƒãƒ¼ãƒ‰ID
    */
   node_id_t id_;
 };
@@ -123,7 +123,7 @@ public:
 };
 
 /**
- * 1‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh
+ * 1ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰
  */
 class UnaryNode : public Node {
 public:
@@ -219,7 +219,7 @@ protected:
   };
 
 /**
- * 2‚Â‚Ìqƒm[ƒh‚ğ‚Âƒm[ƒh
+ * 2ã¤ã®å­ãƒãƒ¼ãƒ‰ã‚’æŒã¤ãƒãƒ¼ãƒ‰
  */
 class BinaryNode : public Node{
 public:
@@ -360,7 +360,7 @@ protected:
 
 
 /**
- * §–ñ‚âƒvƒƒOƒ‰ƒ€‚ÌŒÄ‚Ño‚µƒm[ƒh‚Ì‹¤’ÊƒNƒ‰ƒX
+ * åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®å‘¼ã³å‡ºã—ãƒãƒ¼ãƒ‰ã®å…±é€šã‚¯ãƒ©ã‚¹
  */
 class Caller : public UnaryNode {
 public:
@@ -382,7 +382,7 @@ public:
   virtual std::ostream& dump(std::ostream& s) const;
 
   /**
-   * ŒÄ‚Ño‚·’è‹`–¼‚ğİ’è‚·‚é
+   * å‘¼ã³å‡ºã™å®šç¾©åã‚’è¨­å®šã™ã‚‹
    */
   void set_name(const std::string& name) 
   {
@@ -390,7 +390,7 @@ public:
   }
 
   /**
-   * ŒÄ‚Ño‚·’è‹`–¼‚ğ•Ô‚·
+   * å‘¼ã³å‡ºã™å®šç¾©åã‚’è¿”ã™
    */  
   std::string get_name() const
   {
@@ -398,9 +398,9 @@ public:
   }
 
   /**
-   * Àˆø”ƒm[ƒh‚Ì’Ç‰Á
+   * å®Ÿå¼•æ•°ãƒãƒ¼ãƒ‰ã®è¿½åŠ 
    *
-   * @param node Àˆø”‚Ìƒm[ƒh
+   * @param node å®Ÿå¼•æ•°ã®ãƒãƒ¼ãƒ‰
    */
   void add_actual_arg(const node_sptr& node) 
   {
@@ -408,9 +408,9 @@ public:
   }
 
   /**
-   * Àˆø”ƒm[ƒh‚ğ•Ô‚·
+   * å®Ÿå¼•æ•°ãƒãƒ¼ãƒ‰ã‚’è¿”ã™
    *
-   * @param index Àˆø”ƒm[ƒh‚Ì”Ô†
+   * @param index å®Ÿå¼•æ•°ãƒãƒ¼ãƒ‰ã®ç•ªå·
    */
   node_sptr get_actual_arg(size_t index) const
   {
@@ -418,7 +418,7 @@ public:
   }
 
   /**
-   * Àˆø”‚Ì”‚ğ•Ô‚·
+   * å®Ÿå¼•æ•°ã®æ•°ã‚’è¿”ã™
    */
   size_t actual_arg_size() const 
   {
@@ -426,8 +426,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅ‰‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‘‚«‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€åˆã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿æ›¸ãå¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   actual_args_iterator
   actual_arg_begin()
@@ -436,8 +436,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅ‰‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‚İ‚Ì‚İ‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€åˆã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿è¾¼ã¿ã®ã¿å¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   actual_args_const_iterator
   actual_arg_begin() const
@@ -446,8 +446,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅŒã‚ÌŸ‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‘‚«‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€å¾Œã®æ¬¡ã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿æ›¸ãå¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   actual_args_iterator
   actual_arg_end()
@@ -456,8 +456,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅŒã‚ÌŸ‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‚İ‚Ì‚İ‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€å¾Œã®æ¬¡ã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿è¾¼ã¿ã®ã¿å¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   actual_args_const_iterator
   actual_arg_end() const
@@ -467,15 +467,15 @@ public:
 
 
 protected:
-  /// ‚±‚Ìƒm[ƒh‚ªŒÄ‚Ño‚·’è‹`–¼
+  /// ã“ã®ãƒãƒ¼ãƒ‰ãŒå‘¼ã³å‡ºã™å®šç¾©å
   std::string name_;
 
-  /// ŒÄ‚Ño‚µ‚Ég—p‚·‚éÀˆø”‚ÌƒŠƒXƒg
+  /// å‘¼ã³å‡ºã—æ™‚ã«ä½¿ç”¨ã™ã‚‹å®Ÿå¼•æ•°ã®ãƒªã‚¹ãƒˆ
   actual_args_t actual_args_;
 };
 
 /**
- * §–ñŒÄ‚Ño‚µ
+ * åˆ¶ç´„å‘¼ã³å‡ºã—
  */
 class ConstraintCaller : public Caller {
 public:
@@ -490,7 +490,7 @@ public:
 };
 
 /**
- * ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+ * ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
  */
 class ProgramCaller : public Caller {
 public:
@@ -505,7 +505,7 @@ public:
 };
 
 /**
- * §–ñ‚âƒvƒƒOƒ‰ƒ€‚Ì’è‹`ƒm[ƒh‚Ì‹¤’ÊƒNƒ‰ƒX
+ * åˆ¶ç´„ã‚„ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®å®šç¾©ãƒãƒ¼ãƒ‰ã®å…±é€šã‚¯ãƒ©ã‚¹
  */
 class Definition : public UnaryNode {
 public:
@@ -526,7 +526,7 @@ public:
   virtual std::ostream& dump(std::ostream& s) const;
 
   /**
-   * ’è‹`–¼‚ğİ’è‚·‚é
+   * å®šç¾©åã‚’è¨­å®šã™ã‚‹
    */
   void set_name(const std::string& name) 
   {
@@ -534,7 +534,7 @@ public:
   }
   
   /**
-   * ’è‹`–¼‚ğ•Ô‚·
+   * å®šç¾©åã‚’è¿”ã™
    */
   std::string get_name() const            
   {
@@ -542,9 +542,9 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚Ì’Ç‰Á
+   * æŸç¸›å¤‰æ•°ã®è¿½åŠ 
    *
-   * @param variable_name ‘©”›•Ï”‚Ì–¼‘O
+   * @param variable_name æŸç¸›å¤‰æ•°ã®åå‰
    */
   void add_bound_variable(const std::string& variable_name) 
   {
@@ -552,9 +552,9 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”–¼‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°åã‚’è¿”ã™
    *
-   * @param index ‘©”›•Ï”‚Ì”Ô†
+   * @param index æŸç¸›å¤‰æ•°ã®ç•ªå·
    */
   std::string get_bound_variable(size_t index) const
   {
@@ -562,7 +562,7 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚Ì”‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®æ•°ã‚’è¿”ã™
    */
   size_t bound_variable_size() const 
   {
@@ -570,8 +570,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅ‰‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‘‚«‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€åˆã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿æ›¸ãå¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   bound_variables_iterator 
   bound_variable_begin()
@@ -580,8 +580,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅ‰‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‚İ‚Ì‚İ‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€åˆã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿è¾¼ã¿ã®ã¿å¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   bound_variables_const_iterator 
   bound_variable_begin() const
@@ -590,8 +590,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅŒã‚ÌŸ‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‘‚«‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€å¾Œã®æ¬¡ã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿æ›¸ãå¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   bound_variables_iterator 
   bound_variable_end()
@@ -600,8 +600,8 @@ public:
   }
 
   /**
-   * ‘©”›•Ï”‚ÌƒŠƒXƒg‚ÌÅŒã‚ÌŸ‚Ì—v‘f‚ğw‚·
-   * “Ç‚İ‚İ‚Ì‚İ‰Â”\‚Èiterator‚ğ•Ô‚·
+   * æŸç¸›å¤‰æ•°ã®ãƒªã‚¹ãƒˆã®æœ€å¾Œã®æ¬¡ã®è¦ç´ ã‚’æŒ‡ã™
+   * èª­ã¿è¾¼ã¿ã®ã¿å¯èƒ½ãªiteratorã‚’è¿”ã™
    */
   bound_variables_const_iterator 
   bound_variable_end() const
@@ -616,7 +616,7 @@ private:
 };
 
 /**
- * ƒvƒƒOƒ‰ƒ€’è‹`
+ * ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
  */
 class ProgramDefinition : public Definition {
 public:
@@ -631,7 +631,7 @@ public:
 };
 
 /**
- * §–ñ’è‹`
+ * åˆ¶ç´„å®šç¾©
  */
 class ConstraintDefinition : public Definition {
 public:
@@ -646,17 +646,17 @@ public:
 };
 
 /**
- * §–ñ®
+ * åˆ¶ç´„å¼
  */ 
 DEFINE_UNARY_NODE(Constraint);
 
 /**
- * tell§–ñ
+ * tellåˆ¶ç´„
  */ 
 DEFINE_UNARY_NODE(Tell);
 
 /**
- * ask§–ñ
+ * askåˆ¶ç´„
  */ 
 class Ask : public BinaryNode {
 public:
@@ -684,7 +684,7 @@ public:
   }
 
   /**
-   * ƒK[ƒhƒm[ƒh‚ğİ’è‚·‚é
+   * ã‚¬ãƒ¼ãƒ‰ãƒãƒ¼ãƒ‰ã‚’è¨­å®šã™ã‚‹
    */
   void set_guard(const node_sptr& guard) 
   {
@@ -692,7 +692,7 @@ public:
   }
 
   /**
-   * ƒK[ƒhƒm[ƒh‚ğ“¾‚é
+   * ã‚¬ãƒ¼ãƒ‰ãƒãƒ¼ãƒ‰ã‚’å¾—ã‚‹
    */
   const node_sptr& get_guard() const     
   {
@@ -700,7 +700,7 @@ public:
   }
     
   /**
-   * qƒm[ƒh‚ğİ’è‚·‚é
+   * å­ãƒãƒ¼ãƒ‰ã‚’è¨­å®šã™ã‚‹
    */
   void set_child(const node_sptr& child) 
   {
@@ -708,7 +708,7 @@ public:
   }
     
   /**
-   * qƒm[ƒh‚ğ“¾‚é
+   * å­ãƒãƒ¼ãƒ‰ã‚’å¾—ã‚‹
    */
   const node_sptr& get_child() const     
   {
@@ -717,122 +717,122 @@ public:
 };
 
 /**
- * ”äŠr‰‰Zqu=v
+ * æ¯”è¼ƒæ¼”ç®—å­ã€Œ=ã€
  */
 DEFINE_BINARY_NODE(Equal);
 
 /**
- * ”äŠr‰‰Zqu!=v
+ * æ¯”è¼ƒæ¼”ç®—å­ã€Œ!=ã€
  */
 DEFINE_BINARY_NODE(UnEqual);
 
 /**
- * ”äŠr‰‰Zqu<v
+ * æ¯”è¼ƒæ¼”ç®—å­ã€Œ<ã€
  */
 DEFINE_ASYMMETRIC_BINARY_NODE(Less);
 
 /**
- * ”äŠr‰‰Zqu<=v
+ * æ¯”è¼ƒæ¼”ç®—å­ã€Œ<=ã€
  */
 DEFINE_ASYMMETRIC_BINARY_NODE(LessEqual);
 
 /**
- * ”äŠr‰‰Zqu>v
+ * æ¯”è¼ƒæ¼”ç®—å­ã€Œ>ã€
  */
 DEFINE_ASYMMETRIC_BINARY_NODE(Greater);
 
 /**
- * ”äŠr‰‰Zqu>=v
+ * æ¯”è¼ƒæ¼”ç®—å­ã€Œ>=ã€
  */
 DEFINE_ASYMMETRIC_BINARY_NODE(GreaterEqual);
 
 
 /**
- * Zp‰‰Zqu+v
+ * ç®—è¡“æ¼”ç®—å­ã€Œ+ã€
  */
 DEFINE_BINARY_NODE(Plus);
 
 
 /**
- * Zp‰‰Zqu-v
+ * ç®—è¡“æ¼”ç®—å­ã€Œ-ã€
  */
 
 DEFINE_ASYMMETRIC_BINARY_NODE(Subtract);
 
 /**
- * Zp‰‰Zqu*v
+ * ç®—è¡“æ¼”ç®—å­ã€Œ*ã€
  */
 
 DEFINE_BINARY_NODE(Times);
 
 /**
- * Zp‰‰Zqu/v
+ * ç®—è¡“æ¼”ç®—å­ã€Œ/ã€
  */
 DEFINE_ASYMMETRIC_BINARY_NODE(Divide);
 
 /**
- * Zp‰‰Zqu**v u^v
+ * ç®—è¡“æ¼”ç®—å­ã€Œ**ã€ ã€Œ^ã€
  */
 DEFINE_ASYMMETRIC_BINARY_NODE(Power);
 
 
 /**
- * ˜_—‰‰Zqu/\vi˜AŒ¾j
+ * è«–ç†æ¼”ç®—å­ã€Œ/\ã€ï¼ˆé€£è¨€ï¼‰
  */
 DEFINE_BINARY_NODE(LogicalAnd);
 
 /**
- * ˜_—‰‰Zqu\/vi‘IŒ¾j
+ * è«–ç†æ¼”ç®—å­ã€Œ\/ã€ï¼ˆé¸è¨€ï¼‰
  */
 DEFINE_BINARY_NODE(LogicalOr);
 
 /**
- * §–ñŠK‘w’è‹`‰‰Zq
- * •À—ñ§–ñu,v
+ * åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
+ * ä¸¦åˆ—åˆ¶ç´„ã€Œ,ã€
  */ 
 DEFINE_BINARY_NODE(Parallel);
 
 /**
- * §–ñŠK‘w’è‹`‰‰Zq
- * ã§–ñu<<v
+ * åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
+ * å¼±åˆ¶ç´„ã€Œ<<ã€
  */ 
 DEFINE_ASYMMETRIC_BINARY_NODE(Weaker);
 
 
 /**
- * ‘Š‰‰Zqu[]v(Always)
+ * æ™‚ç›¸æ¼”ç®—å­ã€Œ[]ã€(Always)
  */
 DEFINE_UNARY_NODE(Always);
 
 /**
- * Zp’P€‰‰Zqu+v
+ * ç®—è¡“å˜é …æ¼”ç®—å­ã€Œ+ã€
  */
 DEFINE_UNARY_NODE(Positive);
 
 /**
- * Zp’P€‰‰Zqu-v
+ * ç®—è¡“å˜é …æ¼”ç®—å­ã€Œ-ã€
  */
 DEFINE_UNARY_NODE(Negative);
 
 /**
- * ”÷•ªu'v
+ * å¾®åˆ†ã€Œ'ã€
  */
 DEFINE_UNARY_NODE(Differential);
 
 
 /**
- * ¶‹ÉŒÀu-v
+ * å·¦æ¥µé™ã€Œ-ã€
  */
 DEFINE_UNARY_NODE(Previous);
 
 
 /**
- * ”Û’èu!v
+ * å¦å®šã€Œ!ã€
  */
 DEFINE_UNARY_NODE(Not);
 
 /**
- * ‰~ü—¦
+ * å††å‘¨ç‡
  */
 class Pi : public FactorNode {
 public:
@@ -850,7 +850,7 @@ public:
 
 
 /**
- * ©‘R‘Î”‚Ì’ê
+ * è‡ªç„¶å¯¾æ•°ã®åº•
  */
 class E : public FactorNode {
 public:
@@ -868,7 +868,7 @@ public:
 
 
 /**
- * ”š
+ * æ•°å­—
  */ 
 class Number : public FactorNode {
 public:
@@ -918,8 +918,8 @@ private:
 };
 
 /**
- * •Ï”
- * ]‘®•Ï”‚Ìê‡‚à‚ ‚è
+ * å¤‰æ•°
+ * å¾“å±å¤‰æ•°ã®å ´åˆã‚‚ã‚ã‚Š
  */ 
 class Variable : public FactorNode {
 public:
@@ -970,7 +970,7 @@ private:
 };
 
 /**
- * ‹L†’è”
+ * è¨˜å·å®šæ•°
  */ 
 class Parameter : public FactorNode {
 public:
@@ -1048,7 +1048,7 @@ private:
 
 
 /**
- * ³‚Ì–³ŒÀ‘å‚ğ•\‚·ƒm[ƒh
+ * æ­£ã®ç„¡é™å¤§ã‚’è¡¨ã™ãƒãƒ¼ãƒ‰
  */
 
 class Infinity : public FactorNode {
@@ -1079,7 +1079,7 @@ public:
 };
 
 /**
- * ‚”iŠÔj‚ğ•\‚·ƒm[ƒhD•Ï”‚Ì‚É‘Î‚·‚é®‚Ì’†‚ÉoŒ»‚·‚é‚â‚ÂD”®ˆ——p
+ * ï½”ï¼ˆæ™‚é–“ï¼‰ã‚’è¡¨ã™ãƒãƒ¼ãƒ‰ï¼å¤‰æ•°ã®æ™‚åˆ»ã«å¯¾ã™ã‚‹å¼ã®ä¸­ã«å‡ºç¾ã™ã‚‹ã‚„ã¤ï¼æ•°å¼å‡¦ç†ç”¨
  */
 
 class SymbolicT : public FactorNode {
@@ -1413,7 +1413,7 @@ private:
 };
 
 /**
- * ƒVƒXƒeƒ€•Ï”‚Ìƒm[ƒh
+ * ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°ã®ãƒãƒ¼ãƒ‰
  */
 class SystemVariableNode : public FactorNode{
 public:
@@ -1427,8 +1427,8 @@ public:
 };
 
 /**
- * timer•Ï”@
- * ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŠJn‚©‚ç‚Ì‚ğ•Û‚µ‚Ä‚¢‚éƒVƒXƒeƒ€•Ï”
+ * timerå¤‰æ•°ã€€
+ * ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³é–‹å§‹ã‹ã‚‰ã®æ™‚åˆ»ã‚’ä¿æŒã—ã¦ã„ã‚‹ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
  */
 class SVtimer : public SystemVariableNode{
 public:
@@ -1457,7 +1457,7 @@ public:
 };
 
 /**
- * ”CˆÓŒÂ‚Ìˆø”‚ğ‚Âƒm[ƒh
+ * ä»»æ„å€‹ã®å¼•æ•°ã‚’æŒã¤ãƒãƒ¼ãƒ‰
  */
 
 class ArbitraryNode : public Node {
@@ -1493,7 +1493,7 @@ public:
 
 
 /*
- * ŠÖ”
+ * é–¢æ•°
  */
 
 class Function : public ArbitraryNode {
@@ -1528,9 +1528,9 @@ private:
 
 
 /*
- * ƒTƒ|[ƒgŠOŠÖ”D
- * ƒ\ƒ‹ƒoŠÔ·ˆÙ‚È‚Ç‚É‘Î‰‚Å‚«‚È‚¢‚ªCˆê‰ƒ\ƒ‹ƒo“Á—L‚ÌŠÖ”‚ğ”CˆÓ‚ÅŒÄ‚Ño‚¹‚é‚æ‚¤‚É‚µ‚Ä‚¨‚­D
- * “®ì•ÛØ‚Í‚Å‚«‚È‚¢D
+ * ã‚µãƒãƒ¼ãƒˆå¤–é–¢æ•°ï¼
+ * ã‚½ãƒ«ãƒé–“å·®ç•°ãªã©ã«å¯¾å¿œã§ããªã„ãŒï¼Œä¸€å¿œã‚½ãƒ«ãƒç‰¹æœ‰ã®é–¢æ•°ã‚’ä»»æ„ã§å‘¼ã³å‡ºã›ã‚‹ã‚ˆã†ã«ã—ã¦ãŠãï¼
+ * å‹•ä½œä¿è¨¼ã¯ã§ããªã„ï¼
  */
 
 class UnsupportedFunction : public ArbitraryNode {

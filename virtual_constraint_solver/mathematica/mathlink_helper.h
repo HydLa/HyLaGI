@@ -79,7 +79,7 @@ public:
   
   
   /**
-   * ���̃��^�[���p�P�b�g�̒��O�܂�textpkt�Ȃǂ���M���Ă����D
+   * 次のリターンパケットの直前までtextpktなどを受信しておく．
    */
   bool receive();
   
@@ -101,7 +101,7 @@ public:
   }
 
   /** 
-   * �w�肳�ꂽ�^�C�v�̃p�P�b�g���Ԃ��Ă���܂ŃX�L�b�v����
+   * 指定されたタイプのパケットが返ってくるまでスキップする
    */ 
   void skip_pkt_until(int pkt_name) 
   {

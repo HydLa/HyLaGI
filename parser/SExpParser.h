@@ -18,7 +18,7 @@ public:
   typedef boost::spirit::classic::tree_match<pos_iter_t>::const_tree_iterator const_tree_iter_t;
 
   /**
-   * ‹óW‡‚ğ•\‚·S® "list"
+   * ç©ºé›†åˆã‚’è¡¨ã™Så¼ "list"
    */
   static const std::string empty_list_s_exp;
   
@@ -26,7 +26,7 @@ public:
   ~SExpParser();
 
   /**
-   * @param input_str parse_main‚·‚éS®‚Ì•¶š—ñ
+   * @param input_str parse_mainã™ã‚‹Så¼ã®æ–‡å­—åˆ—
    */
   SExpParser(const char* input_str);
   SExpParser(const SExpParser& sp);
@@ -38,12 +38,12 @@ public:
   void dump_tree(const_tree_iter_t iter, int nest);
 
   /**
-   * “ü—Í‚Æ‚µ‚Ä—^‚¦‚ç‚ê‚½S®‚Ì•¶š—ñ‚ğ‰ğß‚µ‚ÄA–Ø‚ğ\’z
+   * å…¥åŠ›ã¨ã—ã¦ä¸ãˆã‚‰ã‚ŒãŸSå¼ã®æ–‡å­—åˆ—ã‚’è§£é‡ˆã—ã¦ã€æœ¨ã‚’æ§‹ç¯‰
    */
   int parse_main(const char* input_str);
 
   /**
-   * AST‚ÌƒCƒeƒŒ[ƒ^‚ğ•Ô‚·
+   * ASTã®ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚¿ã‚’è¿”ã™
    */
   const_tree_iter_t get_tree_iterator() const
   {

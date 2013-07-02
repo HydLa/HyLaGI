@@ -7,7 +7,7 @@ namespace hydla{
 namespace output{
 
 /**
- * ”®‚É‚æ‚éo—Í‚ğs‚¤
+ * æ•°å¼ã«ã‚ˆã‚‹å‡ºåŠ›ã‚’è¡Œã†
  */
 
 class SymbolicTrajPrinter: public TrajPrinter{

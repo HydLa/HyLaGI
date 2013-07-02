@@ -64,7 +64,7 @@ std::ostream& HydLaAST::dump(std::ostream& outstream,
                              int nest) const
 {
   for(int i=0; i<nest; i++) {
-    outstream << "  "; // ƒXƒy[ƒX‚QŒÂ•ªƒCƒ“ƒfƒ“ƒg
+    outstream << "  "; // ã‚¹ãƒšãƒ¼ã‚¹ï¼’å€‹åˆ†ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆ
   }
 
 #define OUT_ID_NAME(X) case X: outstream << " " << #X; break

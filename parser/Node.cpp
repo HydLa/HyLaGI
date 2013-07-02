@@ -55,7 +55,7 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
     const Node* rhs = binnode->rhs_.get();
 
 
-    // ¶•Óƒm[ƒh
+    // å·¦è¾ºãƒãƒ¼ãƒ‰
     if(typeid(*n) == typeid(*lhs)) {
       create_child_node_list(cnl, lhs);
     }
@@ -63,7 +63,7 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
       cnl.push_back(make_pair(lhs, false));
     }
 
-    // ‰E•Óƒm[ƒh
+    // å³è¾ºãƒãƒ¼ãƒ‰
     if(typeid(*n) == typeid(*rhs)) {
       create_child_node_list(cnl, rhs);
     }
@@ -99,7 +99,7 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
   }
 
   if(typeid(*this) == typeid(n)) {
-    // ‘o•û‚Ìqƒm[ƒh‚ÌW‡‚ª“¯ˆê‚©‚Ç‚¤‚©’²‚×‚é
+    // åŒæ–¹ã®å­ãƒãƒ¼ãƒ‰ã®é›†åˆãŒåŒä¸€ã‹ã©ã†ã‹èª¿ã¹ã‚‹
 
     child_node_list_t this_node;
     child_node_list_t target_node;
@@ -130,7 +130,7 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
     const Node& n_lhs = *(static_cast<const BinaryNode*>(&n))->lhs_.get();
     const Node& n_rhs = *(static_cast<const BinaryNode*>(&n))->rhs_.get();
 
-    // ‘ÎÛ«
+    // å¯¾è±¡æ€§
     ret = 
       ((lhs_->is_same_struct(n_lhs, false) &&
       rhs_->is_same_struct(n_rhs, false)) ||
@@ -145,7 +145,7 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
     //  /  \  
     // a    b
     //
-    // ‚Æ
+    // ã¨
     //
     // node2
     //   &
@@ -154,9 +154,9 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
     //    / \  
     //   b   c
     //
-    // ‚Ì“¯ˆê‹
+    // ã®åŒä¸€è¦–
 
-    // ‚±‚Ìƒm[ƒh‚ªnode1‚ÅC”äŠrƒm[ƒh‚ªnode2‚¾‚Á‚½ê‡
+    // ã“ã®ãƒãƒ¼ãƒ‰ãŒnode1ã§ï¼Œæ¯”è¼ƒãƒãƒ¼ãƒ‰ãŒnode2ã ã£ãŸå ´åˆ
     if(!ret && typeid(*this)==typeid(*lhs_) && typeid(n)==typeid(n_rhs)) {
       const BinaryNode* b_lhs = static_cast<const BinaryNode*>(lhs_.get());
       const BinaryNode* b_n_rhs = static_cast<const BinaryNode*>(&n_rhs);
@@ -168,7 +168,7 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
     }
      
 
-    // ‚±‚Ìƒm[ƒh‚ªnode2‚ÅC”äŠrƒm[ƒh‚ªnode1‚¾‚Á‚½ê‡
+    // ã“ã®ãƒãƒ¼ãƒ‰ãŒnode2ã§ï¼Œæ¯”è¼ƒãƒãƒ¼ãƒ‰ãŒnode1ã ã£ãŸå ´åˆ
     if(!ret && typeid(*this)==typeid(*rhs_) && typeid(n)==typeid(n_lhs)) {
       const BinaryNode* b_rhs = static_cast<const BinaryNode*>(rhs_.get());
       const BinaryNode* b_n_lhs = static_cast<const BinaryNode*>(&n_lhs);
@@ -413,7 +413,7 @@ node_sptr Definition::clone()
 }
 
 /**
- * Šeƒm[ƒh‚ÌacceptŠÖ”’è‹`
+ * å„ãƒãƒ¼ãƒ‰ã®accepté–¢æ•°å®šç¾©
  */
 
 #define DEFINE_ACCEPT_FUNC(CLASS, VISITOR) \
@@ -424,7 +424,7 @@ node_sptr Definition::clone()
     visitor->visit(boost::shared_static_cast<CLASS>(own)); \
   }
 
-/// BaseNodeVisitor‚ÌacceptŠÖ”’è‹`
+/// BaseNodeVisitorã®accepté–¢æ•°å®šç¾©
 #define DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(CLASS) \
   DEFINE_ACCEPT_FUNC(CLASS, BaseNodeVisitor)
 
@@ -432,28 +432,28 @@ DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(FactorNode)
 DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(UnaryNode)
 DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(BinaryNode)
 
-/// TreeVisitor‚ÌacceptŠÖ”’è‹`
+/// TreeVisitorã®accepté–¢æ•°å®šç¾©
 #define DEFINE_TREE_VISITOR_ACCEPT_FUNC(CLASS) \
   DEFINE_ACCEPT_FUNC(CLASS, TreeVisitor)
 
-//’è‹`
+//å®šç¾©
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramDefinition)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintDefinition)
 
-//ŒÄ‚Ño‚µ
+//å‘¼ã³å‡ºã—
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
 
- //§–ñ®
+ //åˆ¶ç´„å¼
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
 
-//Tell§–ñ
+//Tellåˆ¶ç´„
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Tell)
 
-//Ask§–ñ
+//Askåˆ¶ç´„
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ask)
 
-//”äŠr‰‰Zq
+//æ¯”è¼ƒæ¼”ç®—å­
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Equal)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnEqual)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Less)
@@ -461,50 +461,50 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(LessEqual)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Greater)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(GreaterEqual)
 
-//˜_—‰‰Zq
+//è«–ç†æ¼”ç®—å­
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalAnd)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalOr)
 
-//Zp“ñ€‰‰Zq
+//ç®—è¡“äºŒé …æ¼”ç®—å­
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Plus)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Subtract)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Times)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Divide)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Power)
 
-//Zp’P€‰‰Zq
+//ç®—è¡“å˜é …æ¼”ç®—å­
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Negative)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Positive)
 
-//§–ñŠK‘w’è‹`‰‰Zq
+//åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Weaker)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parallel)
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Always)
 
-//”÷•ª
+//å¾®åˆ†
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Differential)
 
-//¶‹ÉŒÀ
+//å·¦æ¥µé™
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Previous)
 
-//”Û’è
+//å¦å®š
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Not)
 
-//‰~ü—¦
+//å††å‘¨ç‡
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
-//©‘R‘Î”‚Ì’ê
+//è‡ªç„¶å¯¾æ•°ã®åº•
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
 
-//”CˆÓ‚Ì•¶š—ñ
+//ä»»æ„ã®æ–‡å­—åˆ—
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Function)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnsupportedFunction)
 
-//•Ï”E‘©”›•Ï”
+//å¤‰æ•°ãƒ»æŸç¸›å¤‰æ•°
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
-//”š
+//æ•°å­—
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
 
 //Print
@@ -518,12 +518,12 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Abort)
 //SystemVariable
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(SVtimer)
 
-//‹L†’è”
+//è¨˜å·å®šæ•°
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)
 
 //t
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(SymbolicT)
-//–³ŒÀ‘å
+//ç„¡é™å¤§
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 
 } //namespace parse_tree

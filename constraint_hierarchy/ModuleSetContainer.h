@@ -23,62 +23,62 @@ public:
   {}
 
   /**
-   * �W���̏W���̃_���v
+   * 集合の集合のダンプ
    */
   virtual std::ostream& dump(std::ostream& s) const = 0;
 
   /**
-   * �v�f���ő�ł��郂�W���[���W���𓾂�
+   * 要素数最大であるモジュール集合を得る
    */
   virtual module_set_sptr get_max_module_set() const;
 
   /**
-   * ���݂̒��ڃm�[�h�𓾂�
+   * 現在の注目ノードを得る
    */
   virtual module_set_sptr get_reverse_module_set() const;
 
   /**
-   * ���݂̒��ڃm�[�h�𓾂�
+   * 現在の注目ノードを得る
    */
   virtual module_set_sptr get_module_set() const;
   
   /**
-   * �T�����ׂ����W���[���W���̏W���𓾂�
+   * 探索すべきモジュール集合の集合を得る
    */
   module_set_list_t get_ms_to_visit() const;
 
   /**
-   * ���݂̃��W���[���W��������⃂�W���[���W���̏W�������菜��
+   * 現在のモジュール集合を解候補モジュール集合の集合から取り除く
    */
   virtual bool eliminate_current_node();
 
   /**
-   * ���ɒT�����ׂ����W���[���W���ɐi��
-   * ���݂��Ȃ����false��Ԃ�.
-   * �T���͏��������W���[���W������J�n����.
+   * 次に探索すべきモジュール集合に進む
+   * 存在しなければfalseを返す.
+   * 探索は小さいモジュール集合から開始する.
    */
   virtual bool reverse_go_next();
   
   /**
-   * ���ɒT�����ׂ����W���[���W���ɐi��
-   * ���݂��Ȃ����false��Ԃ��D
+   * 次に探索すべきモジュール集合に進む
+   * 存在しなければfalseを返す．
    */
   virtual bool go_next();
   
   module_set_list_t get_full_ms_list() const;
   
   /**
-   * ���̃m�[�h��T���ς݂Ƃ��C�ȍ~�T�����Ȃ��悤�ɂ���
+   * そのノードを探索済みとし，以降探索しないようにする
    */
   virtual void mark_r_current_node();
 
   /**
-   * ���̃m�[�h��T���ς݂Ƃ��C�ȍ~�T�����Ȃ��悤�ɂ���
+   * そのノードを探索済みとし，以降探索しないようにする
    */
   virtual void mark_current_node();
 
   /**
-   * ���̃m�[�h�Ǝq�m�[�h���ȍ~�T�����Ȃ��悤�ɂ���
+   * そのノードと子ノードを以降探索しないようにする
    */
   virtual void mark_nodes() = 0;
   
@@ -88,25 +88,25 @@ public:
   virtual void mark_nodes(const ModuleSet& ms);
   
   /**
-   * �T�����ׂ����W���[���W���̏W�������������C���ڂ���W�����Ō�ɂ���.
+   * 探索すべきモジュール集合の集合を初期化し，注目する集合を最後にする.
    */
   virtual void reverse_reset();
 
   /**
-   * �T�����ׂ����W���[���W���̏W�������������C���ڂ���W�����ŏ��ɖ߂��D
+   * 探索すべきモジュール集合の集合を初期化し，注目する集合を最初に戻す．
    */
   virtual void reset();
   
   
   /**
-   * �^����ꂽ���W���[���W���̏W���͒T������K�v���������̂Ƃ��C
-   * ���̏�ōŏ��ɒT�����ׂ����W���[���W���ɒ��ڂ���D
+   * 与えられたモジュール集合の集合は探索する必要が無いものとし，
+   * その上で最初に探索すべきモジュール集合に注目する．
    */
   virtual void reset(const module_set_list_t &mss);
   
   /**
-   * ���݂̃��W���[���W����
-   * ��܂��郂�W���[���W����T���ς݂Ƃ���
+   * 現在のモジュール集合を
+   * 包含するモジュール集合を探索済みとする
    */
   virtual void mark_super_module_set();
 

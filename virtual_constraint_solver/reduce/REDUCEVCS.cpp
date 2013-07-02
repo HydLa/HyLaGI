@@ -28,7 +28,7 @@ REDUCEVCS::REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-  // ƒfƒoƒbƒOƒvƒŠƒ“ƒg‚Ìİ’è
+  // ãƒ‡ãƒãƒƒã‚°ãƒ—ãƒªãƒ³ãƒˆã®è¨­å®š
   std::stringstream debug_print_opt_str;
   debug_print_opt_str << "optUseDebugPrint_:=";
   debug_print_opt_str << (opts.debug_mode ? "t" : "nil");
@@ -44,8 +44,8 @@ REDUCEVCS::REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m
   bool first_element = true;
   for(; it!=end; ++it)
   {
-    // ‰ñ”ğ const REDUCEVariable& variable = it->first;
-    // ”÷•ª‰ñ”‚ª0‚Ì‚à‚Ì‚¾‚¯depend•¶‚ğì¬
+    // å›é¿ const REDUCEVariable& variable = it->first;
+    // å¾®åˆ†å›æ•°ãŒ0ã®ã‚‚ã®ã ã‘dependæ–‡ã‚’ä½œæˆ
     if(it->first->derivative_count == 0){
       VariableNameEncoder vne;
       if(!first_element) depend_str << ",";
@@ -59,7 +59,7 @@ REDUCEVCS::REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m
   cl_.send_string((depend_str.str()).c_str());
 
 
-  // REDUCE‚ÌŠÖ”’è‹`‚ğ‘—M
+  // REDUCEã®é–¢æ•°å®šç¾©ã‚’é€ä¿¡
   cl_.send_string(vcs_reduce_source());
   cl_.skip_until_redeval();
 
@@ -151,7 +151,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
     cl_.send_string("$");
   }
   cl_.send_string("vars_:=");
-  // is_unique()‚¾‚Á‚½Parameter‚É‚Â‚¢‚Ä‚à‘—M‚·‚é
+  // is_unique()ã ã£ãŸParameterã«ã¤ã„ã¦ã‚‚é€ä¿¡ã™ã‚‹
   rss.put_vars();
   cl_.send_string("$");
 
@@ -163,9 +163,9 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
 }
 
 /**
- * PP: {prev•Ï” = •Ï”–¼}
- * IP: {ƒ‰ƒvƒ‰ƒX•ÏŠ·‰Šú’l = prev•Ï”}, addInitConstraint
- * put_node‚·‚éÛignore_prev‚ğmode_‚Åİ’è‚µ‚È‚¢—Bˆê‚ÌƒP[ƒX(—vŠm”F)
+ * PPæ™‚: {prevå¤‰æ•° = å¤‰æ•°å}
+ * IPæ™‚: {ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›åˆæœŸå€¤ = prevå¤‰æ•°}, addInitConstraint
+ * put_nodeã™ã‚‹éš›ignore_prevã‚’mode_ã§è¨­å®šã—ãªã„å”¯ä¸€ã®ã‚±ãƒ¼ã‚¹(è¦ç¢ºèª)
  */
 void REDUCEVCS::set_continuity(const std::string &name, const int& dc){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
@@ -222,7 +222,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   REDUCEStringSender rss(cl_);
   const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
 
-  // cons_‚ğ“n‚·
+  // cons_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send cons_ ---");
   cl_.send_string("cons_:={");
   constraints_t::const_iterator it = constraints.begin();
@@ -233,7 +233,7 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
   }
   cl_.send_string("}$");
 
-  // vars_‚ğ“n‚·
+  // vars_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_.send_string("vars_:=");
   rss.put_vars();
@@ -255,13 +255,13 @@ void REDUCEVCS::add_constraint(const node_sptr& constraint){
   REDUCEStringSender rss(cl_);
   const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
 
-  // cons_‚ğ“n‚·
+  // cons_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send cons_ ---");
   cl_.send_string("cons_:={");
       rss.put_node(constraint, ignore_prev);
   cl_.send_string("}$");
 
-  // vars_‚ğ“n‚·
+  // vars_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_.send_string("vars_:=");
   rss.put_vars();
@@ -282,17 +282,17 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
 
   switch(mode_){ 
     case hydla::simulator::symbolic::DiscreteMode:
-      // TODO myCheckConsistencyPoint‚ª–{—ˆA^‹U‚ª”®‚ÉˆË‘¶‚·‚éê‡True‚ª–ß‚Á‚Ä‚­‚éƒoƒO‚ğ‚Â
+      // TODO myCheckConsistencyPointãŒæœ¬æ¥ã€çœŸå½ãŒæ•°å¼ã«ä¾å­˜ã™ã‚‹å ´åˆTrueãŒæˆ»ã£ã¦ãã‚‹ãƒã‚°ã‚’æŒã¤
       cl_.send_string("expr_:={}$ lcont_:={}$ vars:={}$");
       cl_.send_string("symbolic redeval '(myCheckConsistencyPoint);");
       break;
     case hydla::simulator::symbolic::FalseConditionsMode:
-      // TODO –¢À‘•
+      // TODO æœªå®Ÿè£…
       assert(0);
       cl_.send_string("symbolic redeval '(checkFalseConditions);");
       break;
     default: // case hydla::simulator::symbolic::ContinuousMode:
-      // TODO ‹L†’è”‚É‚æ‚éê‡•ª‚¯‚Ö‚Ì‘Î‰
+      // TODO è¨˜å·å®šæ•°ã«ã‚ˆã‚‹å ´åˆåˆ†ã‘ã¸ã®å¯¾å¿œ
       cl_.send_string("symbolic redeval '(myCheckConsistencyInterval);");
       break;
   }
@@ -301,11 +301,11 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
   cl_.skip_until_redeval();
   const SExpParser sp(cl_.get_as_s_exp_parser());
 
-  // {true, false} ‚Ü‚½‚Í {false, true} ‚Ì\‘¢
-  // TODO ‹L†’è”‚ğ–ß‚è’l‚Éæ‚éê‡‚Ì‘Î‰
+  // {true, false} ã¾ãŸã¯ {false, true} ã®æ§‹é€ 
+  // TODO è¨˜å·å®šæ•°ã‚’æˆ»ã‚Šå€¤ã«å–ã‚‹å ´åˆã®å¯¾å¿œ
   SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
-  // ‘æˆê—v‘f‚ğæ“¾
+  // ç¬¬ä¸€è¦ç´ ã‚’å–å¾—
   SExpParser::const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
   std::string ret_first_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
 
@@ -315,7 +315,7 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
   }else if(ret_first_str.find("false")!=std::string::npos){
     ret.false_parameter_maps.push_back(parameter_map_t());
   }else{
-    // TODO: ã‹LˆÈŠO‚Ì\‘¢‚Ö‚Ì‘Î‰
+    // TODO: ä¸Šè¨˜ä»¥å¤–ã®æ§‹é€ ã¸ã®å¯¾å¿œ
     assert(0);
   }
 
@@ -323,13 +323,13 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
   return ret;
 }
 
-// TODO: •s“™®‹y‚Ñ‹L†’è”‚Ö‚Ì‘Î‰
+// TODO: ä¸ç­‰å¼åŠã³è¨˜å·å®šæ•°ã¸ã®å¯¾å¿œ
 SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
-  /////////////////// ‘—Mˆ—
+  /////////////////// é€ä¿¡å‡¦ç†
 
   if(mode_==hydla::simulator::symbolic::DiscreteMode){
     cl_.send_string("symbolic redeval '(myConvertCSToVM);");
@@ -338,28 +338,28 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   }
 
 
-  /////////////////// óMˆ—                     
+  /////////////////// å—ä¿¡å‡¦ç†                     
 
   cl_.skip_until_redeval();
   const SExpParser sp(cl_.get_as_s_exp_parser());
 
-  // {true, false} ‚Ü‚½‚Í {false, true} ‚Ì\‘¢
+  // {true, false} ã¾ãŸã¯ {false, true} ã®æ§‹é€ 
   SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
   create_result_t create_result;
-  // TODO:ˆÈ‰º‚ÌƒR[ƒh‚Íor_size==1‚ª‘O’ñ
+  // TODO:ä»¥ä¸‹ã®ã‚³ãƒ¼ãƒ‰ã¯or_size==1ãŒå‰æ
   //  for(int or_it = 0; or_it < or_size; or_it++){}
   {
-    // {{(•Ï”–¼), (ŠÖŒW‰‰ZqƒR[ƒh), (’l‚Ìƒtƒ‹•¶š—ñ)}, ...}‚ÌŒ`®
+    // {{(å¤‰æ•°å), (é–¢ä¿‚æ¼”ç®—å­ã‚³ãƒ¼ãƒ‰), (å€¤ã®ãƒ•ãƒ«æ–‡å­—åˆ—)}, ...}ã®å½¢å¼
     variable_range_map_t map;
-    // TODO •s—vH
+    // TODO ä¸è¦ï¼Ÿ
     SExpConverter::clear_parameter_map();
 
     for(SExpParser::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
       std::string and_cons_string =  sp.get_string_from_tree(it);
       HYDLA_LOGGER_VCS("and_cons_string: ", and_cons_string);
 
-      // ŠÖŒW‰‰Zq‚ÌƒR[ƒh
+      // é–¢ä¿‚æ¼”ç®—å­ã®ã‚³ãƒ¼ãƒ‰
       int relop_code;
       {
         SExpParser::const_tree_iter_t relop_code_ptr = it->children.begin()+1;      
@@ -370,45 +370,45 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
         assert(relop_code>=0 && relop_code<=4);
       }
 
-      // ’l
+      // å€¤
       SExpParser::const_tree_iter_t value_ptr = it->children.begin()+2;
 
-      // •Ï”–¼
+      // å¤‰æ•°å
       std::string var_name;
-      // ”÷•ª‰ñ”
+      // å¾®åˆ†å›æ•°
       int var_derivative_count;
       {
         SExpParser::const_tree_iter_t var_ptr = it->children.begin();
         std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
 
-        // prev‚Ìæ“ª‚ÉƒXƒy[ƒX‚ª“ü‚é‚±‚Æ‚ª‚ ‚é‚Ì‚Åœ‹‚·‚é
-        // TODO:S®ƒp[ƒT‚ğC³‚µ‚ÄƒXƒy[ƒX“ü‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+        // prevã®å…ˆé ­ã«ã‚¹ãƒšãƒ¼ã‚¹ãŒå…¥ã‚‹ã“ã¨ãŒã‚ã‚‹ã®ã§é™¤å»ã™ã‚‹
+        // TODO:Så¼ãƒ‘ãƒ¼ã‚µã‚’ä¿®æ­£ã—ã¦ã‚¹ãƒšãƒ¼ã‚¹å…¥ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹
         if(var_head_str.at(0) == ' ') var_head_str.erase(0,1);
 
-        // prev•Ï”‚Íˆ—‚µ‚È‚¢
+        // prevå¤‰æ•°ã¯å‡¦ç†ã—ãªã„
         if(var_head_str=="prev") continue;
 
         var_derivative_count = sp.get_derivative_count(var_ptr);
 
-        // ”÷•ª‚ğŠÜ‚Ş•Ï”
+        // å¾®åˆ†ã‚’å«ã‚€å¤‰æ•°
         if(var_derivative_count > 0){
           var_name = std::string(var_ptr->children.begin()->value.begin(), 
               var_ptr->children.begin()->value.end());
         }
-        // ”÷•ª‚ğŠÜ‚Ü‚È‚¢•Ï”
+        // å¾®åˆ†ã‚’å«ã¾ãªã„å¤‰æ•°
         else{
           assert(var_derivative_count == 0);
           var_name = var_head_str;
         }
 
-        // •Ï”–¼‚Ìæ“ª‚ÉƒXƒy[ƒX‚ª“ü‚é‚±‚Æ‚ª‚ ‚é‚Ì‚Åœ‹‚·‚é
-        // TODO:S®ƒp[ƒT‚ğC³‚µ‚ÄƒXƒy[ƒX“ü‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+        // å¤‰æ•°åã®å…ˆé ­ã«ã‚¹ãƒšãƒ¼ã‚¹ãŒå…¥ã‚‹ã“ã¨ãŒã‚ã‚‹ã®ã§é™¤å»ã™ã‚‹
+        // TODO:Så¼ãƒ‘ãƒ¼ã‚µã‚’ä¿®æ­£ã—ã¦ã‚¹ãƒšãƒ¼ã‚¹å…¥ã‚‰ãªã„ã‚ˆã†ã«ã™ã‚‹
         if(var_name.at(0) == ' ') var_name.erase(0,1);
 
-        // Šù‘¶‚Ì‹L†’è”‚Ìê‡
-        // TODO —v“®ìŠm”F
+        // æ—¢å­˜ã®è¨˜å·å®šæ•°ã®å ´åˆ
+        // TODO è¦å‹•ä½œç¢ºèª
         if(var_name.find(REDUCEStringSender::var_prefix, 0) != 0){
-          // 'p'‚Íæ‚Á‚Ä‚¨‚­•K—v‚ª‚ ‚é
+          // 'p'ã¯å–ã£ã¦ãŠãå¿…è¦ãŒã‚ã‚‹
           assert(var_name.at(0) == REDUCEStringSender::par_prefix.at(0));
           var_name.erase(0, 1);
 
@@ -423,20 +423,20 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
           continue;
         }
 
-        // "usrVar"‚ğæ‚èœ‚­
+        // "usrVar"ã‚’å–ã‚Šé™¤ã
         assert(var_name.find(REDUCEStringSender::var_prefix, 0) == 0);
         var_name.erase(0, REDUCEStringSender::var_prefix.length());
 
-        // ‘å•¶š¬•¶š•\‹L‚É•ÏŠ·
+        // å¤§æ–‡å­—å°æ–‡å­—è¡¨è¨˜ã«å¤‰æ›
         VariableNameEncoder vne;
         var_name = vne.UpperDecode(var_name);
       }
 
-      // TODO: «‚ÌˆêsÁ‚·
+      // TODO: â†“ã®ä¸€è¡Œæ¶ˆã™
       if(var_name == "t") continue;
       variable_t* variable_ptr = get_variable(var_name, var_derivative_count);
 
-      // •Ï”•\‚Ì‘Î‰‚·‚é•”•ª‚É‘ã“ü‚·‚é
+      // å¤‰æ•°è¡¨ã®å¯¾å¿œã™ã‚‹éƒ¨åˆ†ã«ä»£å…¥ã™ã‚‹
       value_t symbolic_value = SExpConverter::convert_s_exp_to_symbolic_value(sp, value_ptr);
       if(symbolic_value->undefined()){
         throw SolveError("invalid value");
@@ -458,12 +458,12 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
 
   HYDLA_LOGGER_FUNC_END(VCS);
 
-  //TODO –ß‚è’l‚ğİ’è
+  //TODO æˆ»ã‚Šå€¤ã‚’è¨­å®š
   return create_result;
 
 }
 
-// TODO: Œ»óC§–ñ‚ÉŠÖ‚µ‚Ä‚Í•Ï”©‘Ì‚ğ‘—‚èC•Ï”ƒŠƒXƒg‚Í‘S•”‘—‚é‚Æ‚¢‚¤CCalculateNextPPTimeê—p‚Ìd—l‚É‚È‚Á‚Ä‚µ‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅC‚Ç‚¤‚É‚©‚·‚éD
+// TODO: ç¾çŠ¶ï¼Œåˆ¶ç´„ã«é–¢ã—ã¦ã¯å¤‰æ•°è‡ªä½“ã‚’é€ã‚Šï¼Œå¤‰æ•°ãƒªã‚¹ãƒˆã¯å…¨éƒ¨é€ã‚‹ã¨ã„ã†ï¼ŒCalculateNextPPTimeå°‚ç”¨ã®ä»•æ§˜ã«ãªã£ã¦ã—ã¾ã£ã¦ã„ã‚‹ã®ã§ï¼Œã©ã†ã«ã‹ã™ã‚‹ï¼
 void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_derivatives){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
@@ -473,10 +473,10 @@ void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_deri
   cl_.skip_until_redeval();
 
   REDUCEStringSender rss(cl_);
-  // ignore_prev‚Í•s—v‚Å‚ÍH
+  // ignore_prevã¯ä¸è¦ã§ã¯ï¼Ÿ
   const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
 
-  // cons_‚ğ“n‚·
+  // cons_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send cons_ ---");
 
   cl_.send_string("cons_:={");
@@ -493,7 +493,7 @@ void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_deri
   }
   cl_.send_string("}$");
 
-  // vars_‚ğ“n‚·
+  // vars_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_.send_string("vars_:={");
   for(it=vm.begin(); it!=vm.end(); ++it){
@@ -531,20 +531,20 @@ void REDUCEVCS::end_temporary(){
   return;
 }
 
-// TODO: add_guard‚È‚Ì‚©set_guard‚È‚Ì‚©‚Æ‚©Cd—l‚Æ‚©‚ğ‚Í‚Á‚«‚è‚³‚¹‚é
+// TODO: add_guardãªã®ã‹set_guardãªã®ã‹ã¨ã‹ï¼Œä»•æ§˜ã¨ã‹ã‚’ã¯ã£ãã‚Šã•ã›ã‚‹
 void REDUCEVCS::add_guard(const node_sptr& constraint){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   REDUCEStringSender rss(cl_);
   const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
 
-  // cons_‚ğ“n‚·
+  // cons_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send cons_ ---");
   cl_.send_string("cons_:={");
       rss.put_node(constraint, ignore_prev);
   cl_.send_string("}$");
 
-  // vars_‚ğ“n‚·
+  // vars_ã‚’æ¸¡ã™
   HYDLA_LOGGER_VCS("--- send vars_ ---");
   cl_.send_string("vars_:=");
   rss.put_vars();
@@ -575,7 +575,7 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
     const time_t& max_time){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-  ////////////////// ‘—Mˆ—
+  ////////////////// é€ä¿¡å‡¦ç†
   
   REDUCEStringSender rss(cl_);
   cl_.send_string("maxTime_:=");
@@ -595,34 +595,34 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
 
   cl_.send_string("symbolic redeval '(calculateNextPointPhaseTime maxTime_ discCause_);");
 
-  ////////////////// óMˆ—
+  ////////////////// å—ä¿¡å‡¦ç†
 
   cl_.skip_until_redeval();
   const SExpParser sp(cl_.get_as_s_exp_parser());
   
-  // {{value_t(time_t), {}(parameter_map_t), true(bool)},...} ‚Ì‚æ‚¤‚È‚à‚Ì‚ª–ß‚é‚Í‚¸
+  // {{value_t(time_t), {}(parameter_map_t), true(bool)},...} ã®ã‚ˆã†ãªã‚‚ã®ãŒæˆ»ã‚‹ã¯ãš
   SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
   PP_time_result_t result;
 
   for(SExpParser::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
     PP_time_result_t::candidate_t candidate;
 
-    // ‚ğó‚¯æ‚é
+    // æ™‚åˆ»ã‚’å—ã‘å–ã‚‹
     candidate.time = SExpConverter::convert_s_exp_to_symbolic_value(sp, it->children.begin());
     *candidate.time += *current_time;
     HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
 
-    // ğŒ‚ğó‚¯æ‚é
+    // æ¡ä»¶ã‚’å—ã‘å–ã‚‹
     SExpParser::const_tree_iter_t param_ptr = it->children.begin()+1;
     std::string param_str = std::string(param_ptr->value.begin(), param_ptr->value.end());
 
-    // TODO ‹óƒŠƒXƒgˆÈŠO‚Ìê‡‚É‘Î‰
+    // TODO ç©ºãƒªã‚¹ãƒˆä»¥å¤–ã®å ´åˆã«å¯¾å¿œ
     if(!(param_ptr->children.size()==1 && param_str.find("list")!=std::string::npos)){
       assert(0);
     }
     candidate.parameter_map = parameter_map_t();
 
-    // I—¹‚©‚Ç‚¤‚©‚ğó‚¯æ‚é
+    // çµ‚äº†æ™‚åˆ»ã‹ã©ã†ã‹ã‚’å—ã‘å–ã‚‹
     SExpParser::const_tree_iter_t bool_ptr = it->children.begin()+2;
     std::string bool_str = std::string(bool_ptr->value.begin(), bool_ptr->value.end());
     candidate.is_max_time = (bool_str.find("1")!=std::string::npos);
@@ -649,14 +649,14 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
   variable_map_t::const_iterator end = in_vm.end();
   for(; it!=end; ++it) {
     HYDLA_LOGGER_VCS("variable : ", *(it->first));
-    // ’l
+    // å€¤
     value_t value;
     if(it->second->undefined()) {
       out_vm[it->first] = value;
       continue;
     }
 
-    // applyTime2Expr(expr_, time_)‚ğ“n‚µ‚½‚¢
+    // applyTime2Expr(expr_, time_)ã‚’æ¸¡ã—ãŸã„
 
     cl_.send_string("expr_:=");
     rss.put_node(get_symbolic_value_t(it->second).get_node(), true);
@@ -673,22 +673,22 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
     cl_.send_string("symbolic redeval '(applyTime2Expr expr_ time_);");
 
     
-    ////////////////// óMˆ—
+    ////////////////// å—ä¿¡å‡¦ç†
 
     cl_.skip_until_redeval();
     const SExpParser sp(cl_.get_as_s_exp_parser());
 
-    // {ƒR[ƒh, ’l}‚Ì\‘¢
+    // {ã‚³ãƒ¼ãƒ‰, å€¤}ã®æ§‹é€ 
     SExpParser::const_tree_iter_t ct_it = sp.get_tree_iterator();
 
-    // ƒR[ƒh‚ğæ“¾
+    // ã‚³ãƒ¼ãƒ‰ã‚’å–å¾—
     SExpParser::const_tree_iter_t ret_code_it = ct_it->children.begin();
     std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
     HYDLA_LOGGER_VCS("ret_code_str: ",
                      ret_code_str);
 
     if(ret_code_str=="0") {
-      // TODO: “K—p‚É¸”siÀ”ˆÈŠO‚É‚È‚é“™j‚µ‚½ê‡B“KØ‚Èˆ—‚ğ‚·‚é
+      // TODO: é©ç”¨ã«å¤±æ•—ï¼ˆå®Ÿæ•°ä»¥å¤–ã«ãªã‚‹ç­‰ï¼‰ã—ãŸå ´åˆã€‚é©åˆ‡ãªå‡¦ç†ã‚’ã™ã‚‹
       assert(0);
     }
     else {
@@ -718,7 +718,7 @@ std::string REDUCEVCS::get_constraint_store(){
 }
 
 // deleted
-////value_t‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
+////value_tã‚’æŒ‡å®šã•ã‚ŒãŸç²¾åº¦ã§æ•°å€¤ã«å¤‰æ›ã™ã‚‹
 //std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::simulator::symbolic::OutputFormat opfmt){
 //  std::string ret;
 //  REDUCEStringSender rss(cl_);
@@ -727,7 +727,7 @@ std::string REDUCEVCS::get_constraint_store(){
 //    
 //    cl_.send_string("on rounded$");
 //
-//    // getRealVal(value_, prec_)‚ğ“n‚µ‚½‚¢
+//    // getRealVal(value_, prec_)ã‚’æ¸¡ã—ãŸã„
 //    cl_.send_string("value_:=");
 //    rss.put_node(val, true);
 //    cl_.send_string("$");
@@ -735,7 +735,7 @@ std::string REDUCEVCS::get_constraint_store(){
 //    std::stringstream precision_str;
 //    precision_str << precision;
 //    cl_.send_string("prec_:="+ precision_str.str() +"$");
-//    // ŒvZ‚É—p‚¢‚é¸“x‚Í6ƒPƒ^–¢–‚É‚Å‚«‚È‚¢iHj‚æ‚¤‚È‚Ì‚ÅC•\¦Œ…‚ğ‰º‚°‚é
+//    // è¨ˆç®—ã«ç”¨ã„ã‚‹ç²¾åº¦ã¯6ã‚±ã‚¿æœªæº€ã«ã§ããªã„ï¼ˆï¼Ÿï¼‰ã‚ˆã†ãªã®ã§ï¼Œè¡¨ç¤ºæ¡ã‚’ä¸‹ã’ã‚‹
 //    if(precision < 6){
 //      cl_.send_string("print_precision(" + precision_str.str() + ")$");
 //    }
@@ -745,7 +745,7 @@ std::string REDUCEVCS::get_constraint_store(){
 //    cl_.get_line();
 //    ret = cl_.get_line();
 //    cl_.send_string("off rounded$");
-//    // ¸“x‚ğŒ³‚É–ß‚µ‚Ä‚¨‚­
+//    // ç²¾åº¦ã‚’å…ƒã«æˆ»ã—ã¦ãŠã
 //    cl_.send_string("precision(defaultPrec_)$");
 //  }
 //  else {
@@ -763,7 +763,7 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
 
   //REDUCEStringSender rss(cl_);
 
-  //// checkLessThan(lhs_, rhs_)‚ğ“n‚µ‚½‚¢
+  //// checkLessThan(lhs_, rhs_)ã‚’æ¸¡ã—ãŸã„
   //
 
   //cl_.send_string("lhs_:=");
@@ -778,7 +778,7 @@ bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
   //cl_.send_string("symbolic redeval '(checkLessThan lhs_ rhs_);");
 
 
-  //////////////////// óMˆ—
+  //////////////////// å—ä¿¡å‡¦ç†
 
   //// cl_.read_until_redeval();
   //cl_.skip_until_redeval();
@@ -796,7 +796,7 @@ void REDUCEVCS::simplify(time_t &time)
   HYDLA_LOGGER_DEBUG("SymbolicTime::send_time : ", time);
   REDUCEStringSender rss(cl_);
 
-  // simplifyExpr(expr_)‚ğ“n‚µ‚½‚¢
+  // simplifyExpr(expr_)ã‚’æ¸¡ã—ãŸã„
 
   cl_.send_string("expr_:=");
   rss.put_node(get_symbolic_value_t(time).get_node(), true);
@@ -806,7 +806,7 @@ void REDUCEVCS::simplify(time_t &time)
   cl_.send_string("symbolic redeval '(simplifyExpr expr_);");
 
 
-  ////////////////// óMˆ—
+  ////////////////// å—ä¿¡å‡¦ç†
 
   cl_.skip_until_redeval();
   const SExpParser sp(cl_.get_as_s_exp_parser());
@@ -819,13 +819,13 @@ void REDUCEVCS::simplify(time_t &time)
 }
 
 /*
- * SymbolicValue‚ÌŠÔ‚ğ‚¸‚ç‚·
+ * SymbolicValueã®æ™‚é–“ã‚’ãšã‚‰ã™
  */
 hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(const value_t& val, const time_t& time){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   REDUCEStringSender rss(cl_);
 
-  // exprTimeShift(expr_, time_)‚ğ“n‚µ‚½‚¢
+  // exprTimeShift(expr_, time_)ã‚’æ¸¡ã—ãŸã„
 
   cl_.send_string("expr_:=");
   rss.put_node(get_symbolic_value_t(val).get_node(), true);
@@ -840,7 +840,7 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   cl_.send_string("symbolic redeval '(exprTimeShift expr_ time_);");
 
 
-  ////////////////// óMˆ—
+  ////////////////// å—ä¿¡å‡¦ç†
 
   cl_.skip_until_redeval();
   const SExpParser sp(cl_.get_as_s_exp_parser());
@@ -852,7 +852,7 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   return  sc.convert_s_exp_to_symbolic_value(sp, value_it);
 }
 
-// TODO ‚È‚ñ‚Æ‚©‚·‚é
+// TODO ãªã‚“ã¨ã‹ã™ã‚‹
 void REDUCEVCS::approx_vm(variable_range_map_t& vm){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   HYDLA_LOGGER_FUNC_END(VCS);

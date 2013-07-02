@@ -70,13 +70,13 @@ void ParseTreeSemanticAnalyzer::analyze(node_sptr& n/*, variable_map_t& variable
   }
 }
 
-// §–ñ’è‹`
+// åˆ¶ç´„å®šç¾©
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintDefinition> node)  
 {
   assert(0);
 }
 
-// ƒvƒƒOƒ‰ƒ€’è‹`
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramDefinition> node)     
 {
   assert(0);
@@ -91,7 +91,7 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
 
   definition = boost::shared_static_cast<Definition>(definition->clone());
   
-  //zŠÂQÆ‚Ìƒ`ƒFƒbƒN
+  //å¾ªç’°å‚ç…§ã®ãƒã‚§ãƒƒã‚¯
   if (state.referenced_definition_list.find(def_type) != 
       state.referenced_definition_list.end()) {
     throw CircularReference(caller);
@@ -109,21 +109,21 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   Caller::actual_args_iterator         
     aa_it = caller->actual_arg_begin();
   for(; bv_it!=bv_end; ++bv_it, ++aa_it) {
-    // Àˆø”‚É‘Î‚µpreprocess“K—p
+    // å®Ÿå¼•æ•°ã«å¯¾ã—preprocessé©ç”¨
     accept(*aa_it);
     if(new_child_) {
       *aa_it = new_child_;
       new_child_.reset();
     }
 
-    // ‰¼ˆø”‚ÆÀˆø”‚Ì‘Î‰•t‚¯
+    // ä»®å¼•æ•°ã¨å®Ÿå¼•æ•°ã®å¯¾å¿œä»˜ã‘
     new_state.formal_arg_map.insert(make_pair(*bv_it, *aa_it));
   }
 
-  // zŠÂQÆŒŸo—pƒŠƒXƒg‚É“o˜^
+  // å¾ªç’°å‚ç…§æ¤œå‡ºç”¨ãƒªã‚¹ãƒˆã«ç™»éŒ²
   new_state.referenced_definition_list.insert(def_type);
 
-  // ’è‹`‚Ìqƒm[ƒh‚É‘Î‚µpreprocess“K—p
+  // å®šç¾©ã®å­ãƒãƒ¼ãƒ‰ã«å¯¾ã—preprocessé©ç”¨
   todo_stack_.push(new_state);
   dispatch_child(definition);
   todo_stack_.pop();
@@ -131,7 +131,7 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   return definition->get_child();
 }
 
-// §–ñŒÄ‚Ño‚µ
+// åˆ¶ç´„å‘¼ã³å‡ºã—
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
   referenced_definition_t deftype(
@@ -139,20 +139,20 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
                    node->actual_arg_size()));
 
   if(!node->get_child()) {
-    // §–ñ’è‹`‚©‚ç’T‚·
+    // åˆ¶ç´„å®šç¾©ã‹ã‚‰æ¢ã™
     boost::shared_ptr<ConstraintDefinition> cons_def(
       constraint_definition_.get_definition(deftype));
     if(!cons_def) {
       throw UndefinedReference(node);
     }
 
-    // ’è‹`‚Ì“WŠJ
+    // å®šç¾©ã®å±•é–‹
     node->set_child( 
       apply_definition(deftype, node, cons_def));
   }
 }
 
-// ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)         
 {
   referenced_definition_t deftype(
@@ -162,13 +162,13 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
   if(!node->get_child()) {
     boost::shared_ptr<Definition> defnode;
 
-    // §–ñ’è‹`‚©‚ç’T‚·
+    // åˆ¶ç´„å®šç¾©ã‹ã‚‰æ¢ã™
     boost::shared_ptr<ConstraintDefinition> cons_def(
       constraint_definition_.get_definition(deftype));
     if(cons_def) {
       defnode = cons_def;
     } else {
-      // ƒvƒƒOƒ‰ƒ€’è‹`‚©‚ç’T‚·
+      // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©ã‹ã‚‰æ¢ã™
       boost::shared_ptr<ProgramDefinition> prog_def(
         program_definition_.get_definition(deftype));
       if(prog_def) {
@@ -178,18 +178,18 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
       }
     }
 
-    // ’è‹`‚Ì“WŠJ
+    // å®šç¾©ã®å±•é–‹
     node->set_child(
       apply_definition(deftype, node, defnode));
   }
 }
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)            
 {
   State& state = todo_stack_.top();
 
-  // ‚·‚Å‚É§–ñ®‚Ì’†‚Å‚ ‚Á‚½ê‡‚Í©•ª©g‚ğæ‚èœ‚­
+  // ã™ã§ã«åˆ¶ç´„å¼ã®ä¸­ã§ã‚ã£ãŸå ´åˆã¯è‡ªåˆ†è‡ªèº«ã‚’å–ã‚Šé™¤ã
   if(state.in_constraint) {
     dispatch_child(node);
     new_child_ = node->get_child();
@@ -204,18 +204,18 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)
 
 }
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)                   
 {
   State& state = todo_stack_.top();
 
-  // ƒK[ƒhƒm[ƒh‚Ì’Tõ
+  // ã‚¬ãƒ¼ãƒ‰ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   todo_stack_.push(state);
   todo_stack_.top().in_guard = true;
   dispatch<Ask, &Ask::get_guard, &Ask::set_guard>(node.get());
   todo_stack_.pop();
 
-  // qƒm[ƒh‚Ì’Tõ
+  // å­ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   todo_stack_.push(state);
   todo_stack_.top().in_always = false;
   dispatch<Ask, &Ask::get_child, &Ask::set_child>(node.get());
@@ -223,15 +223,15 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)
 }
 
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 DEFINE_DEFAULT_VISIT_UNARY(Tell)
 
-// Zp’P€‰‰Zq
+// ç®—è¡“å˜é …æ¼”ç®—å­
 DEFINE_DEFAULT_VISIT_UNARY(Negative)
 DEFINE_DEFAULT_VISIT_UNARY(Positive)
 
 
-// ”äŠr‰‰Zq
+// æ¯”è¼ƒæ¼”ç®—å­
 DEFINE_DEFAULT_VISIT_BINARY(Equal)
 DEFINE_DEFAULT_VISIT_BINARY(UnEqual)
 DEFINE_DEFAULT_VISIT_BINARY(Less)
@@ -239,14 +239,14 @@ DEFINE_DEFAULT_VISIT_BINARY(LessEqual)
 DEFINE_DEFAULT_VISIT_BINARY(Greater)
 DEFINE_DEFAULT_VISIT_BINARY(GreaterEqual)
 
-// Zp“ñ€‰‰Zq
+// ç®—è¡“äºŒé …æ¼”ç®—å­
 DEFINE_DEFAULT_VISIT_BINARY(Plus)
 DEFINE_DEFAULT_VISIT_BINARY(Subtract)
 DEFINE_DEFAULT_VISIT_BINARY(Times)
 DEFINE_DEFAULT_VISIT_BINARY(Divide)
 DEFINE_DEFAULT_VISIT_BINARY(Power)
 
-// ˜_—‰‰Zq
+// è«–ç†æ¼”ç®—å­
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
 {
   if(!todo_stack_.top().in_constraint) {
@@ -296,23 +296,23 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 
 }
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 {
   State& state = todo_stack_.top();
 
-  // ƒK[ƒh‚Ì’†‚É‚Í‚È‚¢
+  // ã‚¬ãƒ¼ãƒ‰ã®ä¸­ã«ã¯ãªã„
   if(state.in_guard) {
     throw InvalidAlways(node->get_child());
   }
 
-  // qƒm[ƒh‚Ì’Tõ
+  // å­ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   todo_stack_.push(state);
   todo_stack_.top().in_always = true;
   dispatch_child(node);
   todo_stack_.pop();
     
-  // ‚·‚Å‚Éalways§–ñ“à‚Å‚ ‚Á‚½ê‡‚±‚Ìƒm[ƒh‚ğ‚Í‚¸‚·
+  // ã™ã§ã«alwaysåˆ¶ç´„å†…ã§ã‚ã£ãŸå ´åˆã“ã®ãƒãƒ¼ãƒ‰ã‚’ã¯ãšã™
   if(state.in_always) {
     new_child_ = node->get_child();
   } 
@@ -320,25 +320,25 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 
 }
   
-// ”÷•ª
+// å¾®åˆ†
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
 {
-  // qƒm[ƒh‚ª”÷•ª‚©•Ï”‚Å‚È‚©‚Á‚½‚çƒGƒ‰[
+  // å­ãƒãƒ¼ãƒ‰ãŒå¾®åˆ†ã‹å¤‰æ•°ã§ãªã‹ã£ãŸã‚‰ã‚¨ãƒ©ãƒ¼
   if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
      !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
        throw InvalidDifferential(node);
   }
 
-  // qƒm[ƒh‚Ì’Tõ
+  // å­ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
   todo_stack_.top().differential_count++;
   dispatch_child(node);
   todo_stack_.top().differential_count--;
 }
 
-// ¶‹ÉŒÀ
+// å·¦æ¥µé™
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 {  
-  // qƒm[ƒh‚ª”÷•ª‚©•Ï”‚Å‚È‚©‚Á‚½‚çƒGƒ‰[
+  // å­ãƒãƒ¼ãƒ‰ãŒå¾®åˆ†ã‹å¤‰æ•°ã§ãªã‹ã£ãŸã‚‰ã‚¨ãƒ©ãƒ¼
   if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
      !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
        throw InvalidPrevious(node);
@@ -349,18 +349,18 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 
 
 
-// ŠÖ”
+// é–¢æ•°
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
 DEFINE_DEFAULT_VISIT_ARBITRARY(UnsupportedFunction)
 
-// ‰~ü—¦
+// å††å‘¨ç‡
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 
-// ©‘R‘Î”‚Ì’ê
+// è‡ªç„¶å¯¾æ•°ã®åº•
 DEFINE_DEFAULT_VISIT_FACTOR(E)
 
 
-// •Ï”
+// å¤‰æ•°
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 {
   State& state = todo_stack_.top();
@@ -368,22 +368,22 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
   formal_arg_map_t::iterator it = 
     state.formal_arg_map.find(node->get_name());
   if(it != state.formal_arg_map.end()) {
-    // ©g‚ª‰¼ˆø”‚Å‚ ‚Á‚½ê‡A‘‚«Š·‚¦‚é
+    // è‡ªèº«ãŒä»®å¼•æ•°ã§ã‚ã£ãŸå ´åˆã€æ›¸ãæ›ãˆã‚‹
     new_child_ = (*it).second->clone();
     boost::shared_ptr<hydla::parse_tree::Variable> v_ptr = boost::dynamic_pointer_cast<Variable>(new_child_);
     if(v_ptr){
-      //•Ï”‚¾‚Á‚½ê‡A“o˜^‚·‚é
+      //å¤‰æ•°ã ã£ãŸå ´åˆã€ç™»éŒ²ã™ã‚‹
       parse_tree_->register_variable(v_ptr->get_name(), state.differential_count);
     }
   } 
   else {
-    // ©g‚ªÀˆø”‚Å‚ ‚Á‚½ê‡
+    // è‡ªèº«ãŒå®Ÿå¼•æ•°ã§ã‚ã£ãŸå ´åˆ
     parse_tree_->register_variable(node->get_name(), 
                                    state.differential_count);
   } 
 }
 
-// ”š
+// æ•°å­—
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 
 // Print

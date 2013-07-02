@@ -5,7 +5,7 @@ namespace hydla {
 namespace parse_tree{
 
 
-//value‚Æ‚Á‚Ä•¶š—ñ‚É•ÏŠ·‚·‚é
+//valueã¨ã£ã¦æ–‡å­—åˆ—ã«å¤‰æ›ã™ã‚‹
 std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream& s){
   need_par_ = PAR_NONE;
   output_stream_ = &s;
@@ -52,17 +52,17 @@ void TreeInfixPrinter::visit(boost::shared_ptr<NAME> node){\
   print_binary_node(*node, #SYMBOL);\
 }
 
-//ã‡¬
+//å¼±åˆæˆ
 DEFINE_INFIX_VISIT_BINARY(Weaker, <<)
 
-// ”äŠr‰‰Zq
+// æ¯”è¼ƒæ¼”ç®—å­
 DEFINE_INFIX_VISIT_BINARY(Equal, =)
 DEFINE_INFIX_VISIT_BINARY(UnEqual, !=)
 DEFINE_INFIX_VISIT_BINARY(Less, <)
 DEFINE_INFIX_VISIT_BINARY(LessEqual, <=)
 DEFINE_INFIX_VISIT_BINARY(Greater, >)
 DEFINE_INFIX_VISIT_BINARY(GreaterEqual, >=)
-// ˜_—‰‰Zq
+// è«–ç†æ¼”ç®—å­
 DEFINE_INFIX_VISIT_BINARY(LogicalAnd, &)
 
 void TreeInfixPrinter::visit(boost::shared_ptr<LogicalOr> node){
@@ -71,7 +71,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<LogicalOr> node){
   (*output_stream_) << ")";
 }
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
 DEFINE_INFIX_VISIT_BINARY(Ask, =>)
 
 
@@ -80,20 +80,20 @@ void TreeInfixPrinter::visit(boost::shared_ptr<NAME> node){\
   print_unary_node(*node, PRE, POST);\
 }
 
-//’P€‰‰Zq "+"
+//å˜é …æ¼”ç®—å­ "+"
 DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
 
-//”÷•ª
+//å¾®åˆ†
 DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
-//¶‹ÉŒÀ
+//å·¦æ¥µé™
 DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
-//”Û’è
+//å¦å®š
 DEFINE_INFIX_VISIT_UNARY(Not, "!(", ")")
-//‘Š‰‰Zq
+//æ™‚ç›¸æ¼”ç®—å­
 DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
-// Tell§–ñ
+// Tellåˆ¶ç´„
 DEFINE_INFIX_VISIT_UNARY(Tell, "", "")
-// §–ñ®
+// åˆ¶ç´„å¼
 DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".\n")
 
 
@@ -108,13 +108,13 @@ DEFINE_INFIX_VISIT_FACTOR(Abort, "Abort(", ")")
 void TreeInfixPrinter::visit(boost::shared_ptr<SVtimer> node){
   (*output_stream_) << "$timer";
 }
-//•À—ñ‡¬
+//ä¸¦åˆ—åˆæˆ
 void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){
   print_binary_node(*node, ",");
 }
 
 
-// Zp“ñ€‰‰Zq
+// ç®—è¡“äºŒé …æ¼”ç®—å­
 void TreeInfixPrinter::visit(boost::shared_ptr<Plus> node){
   if(need_par_>=PAR_N_P_S){
     (*output_stream_) << "(";
@@ -161,7 +161,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Power> node){
   }
 }
 
-// Zp’P€‰‰Zq"-"
+// ç®—è¡“å˜é …æ¼”ç®—å­"-"
 void TreeInfixPrinter::visit(boost::shared_ptr<Negative> node){
   if(need_par_>=PAR_N){
     (*output_stream_) << "(";
@@ -172,17 +172,17 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Negative> node){
     print_unary_node(*node, "-", "");
   }
 }
-// •Ï”
+// å¤‰æ•°
 void TreeInfixPrinter::visit(boost::shared_ptr<Variable> node){
   (*output_stream_) << node->get_name();
 }
 
-// ”š
+// æ•°å­—
 void TreeInfixPrinter::visit(boost::shared_ptr<Number> node){
   (*output_stream_) << node->get_number();
 }
 
-// ‹L†’è”
+// è¨˜å·å®šæ•°
 void TreeInfixPrinter::visit(boost::shared_ptr<Parameter> node){
   (*output_stream_) << "parameter[" << node->get_name() << ", " << node->get_derivative_count() << ", " << node->get_phase_id() << "]";
 }
@@ -193,7 +193,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 }
 
 
-//ŠÖ”
+//é–¢æ•°
 void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
   (*output_stream_) << node->get_string() << "[";
   int i=0;
@@ -217,24 +217,24 @@ void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
 }
 
 
-// ©‘R‘Î”‚Ì’ê
+// è‡ªç„¶å¯¾æ•°ã®åº•
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
   (*output_stream_) << "E";
 }
 
 
-// ‰~ü—¦
+// å††å‘¨ç‡
 void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
   (*output_stream_) << "Pi";
 }
 
-// ‰~ü—¦
+// å††å‘¨ç‡
 void TreeInfixPrinter::visit(boost::shared_ptr<Infinity> node){
-  (*output_stream_) << "‡";
+  (*output_stream_) << "âˆ";
 }
 
 
-// §–ñ’è‹`
+// åˆ¶ç´„å®šç¾©
 void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintDefinition> node){
   (*output_stream_) << node->get_name() << "(";
   Definition::bound_variables_iterator it = node->bound_variable_begin();
@@ -250,7 +250,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintDefinition> node){
   if(node->get_child())print_unary_node(*node, "<=>", "");
 }
   
-// ƒvƒƒOƒ‰ƒ€’è‹`
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©
 void TreeInfixPrinter::visit(boost::shared_ptr<ProgramDefinition> node){
   (*output_stream_) << node->get_name() << "(";
   Definition::bound_variables_iterator it = node->bound_variable_begin();
@@ -267,7 +267,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramDefinition> node){
 }
 
 
-// §–ñŒÄ‚Ño‚µ
+// åˆ¶ç´„å‘¼ã³å‡ºã—
 void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintCaller> node){
   (*output_stream_) << node->get_name() << "(";
   Caller::actual_args_iterator it = node->actual_arg_begin();
@@ -283,7 +283,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintCaller> node){
   if(node->get_child()) print_unary_node(*node, "{", "}");
 }
 
-// ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
 void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
   (*output_stream_) << node->get_name() << "(";
   Caller::actual_args_iterator it = node->actual_arg_begin();

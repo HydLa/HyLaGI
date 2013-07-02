@@ -88,7 +88,7 @@ namespace simulator {
 					if (check_already_exec(phase, cc_))
 					{
 						push_result(tmp_cc_);
-						//todo‚ğ¶¬‚¹‚¸‚ÉŸ‚ÖiHA•ÏŠ·Š®—¹j
+						//todoã‚’ç”Ÿæˆã›ãšã«æ¬¡ã¸ï¼ˆHAå¤‰æ›å®Œäº†ï¼‰
 						continue;
 					}
 	    	}
@@ -119,9 +119,9 @@ namespace simulator {
 		HYDLA_LOGGER_HA("****** check_already_exec ******");
 		phase_result_sptrs_t::iterator it_prs = cc.begin();
 		while(it_prs != cc.end()){
-			// “¯‚¶ƒm[ƒh‚Ì’Tõ
+			// åŒã˜ãƒãƒ¼ãƒ‰ã®æ¢ç´¢
 			if(compare_phase_result(phase, *it_prs)) {
-				// ‘S‚Ä‚Ìƒpƒ‰ƒ[ƒ^‚ªÀsÏ‚İƒm[ƒh‚Ìƒpƒ‰ƒ[ƒ^‚Ì•”•ªW‡‚¾‚Á‚½‚çtrue
+				// å…¨ã¦ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒå®Ÿè¡Œæ¸ˆã¿ãƒãƒ¼ãƒ‰ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®éƒ¨åˆ†é›†åˆã ã£ãŸã‚‰true
 				if (check_subset(phase, *it_prs)) {
 					HYDLA_LOGGER_HA("****** end check_already_exec : true ******");
 					return true;
@@ -182,17 +182,17 @@ namespace simulator {
 	  parameter_map_t::const_iterator end_past = past_phase->parameter_map.end();
 	
 	  for(; it_phase!=end_phase; ++it_phase) {
-	  	// “r’†‚Å“±“ü‚³‚ê‚½ƒpƒ‰ƒ[ƒ^‚ÍŒ©‚È‚¢
+	  	// é€”ä¸­ã§å°å…¥ã•ã‚ŒãŸãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã¯è¦‹ãªã„
 	  	if ( (*(it_phase->first)).get_phase_id() != 1 ) continue;
 
 		  for(; it_past!=end_past; ++it_past) {
-		  	// “r’†‚Å“±“ü‚³‚ê‚½ƒpƒ‰ƒ[ƒ^‚ÍŒ©‚È‚¢
+		  	// é€”ä¸­ã§å°å…¥ã•ã‚ŒãŸãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã¯è¦‹ãªã„
 		  	if ( (*(it_past->first)).get_phase_id() != 1 ) continue;
 
   	    if ( (*(it_phase->first)).get_name() == (*(it_past->first)).get_name() && 
   	    		 (*(it_phase->first)).get_derivative_count() == (*(it_past->first)).get_derivative_count() )
   	    {
-  	    	// ‘ÎÛ•Ï”‚ªƒK[ƒhğŒ‚ÉŠÜ‚Ü‚ê‚È‚¢ê‡‚ÍŸ‚Ö
+  	    	// å¯¾è±¡å¤‰æ•°ãŒã‚¬ãƒ¼ãƒ‰æ¡ä»¶ã«å«ã¾ã‚Œãªã„å ´åˆã¯æ¬¡ã¸
   	    	if (!check_guard_variable(phase, (*(it_phase->first)).get_name(), (*(it_phase->first)).get_derivative_count())) continue;
 	  	    
 	  	    HYDLA_LOGGER_HA(*(it_phase->first));
@@ -220,7 +220,7 @@ namespace simulator {
 		VaribleGetter vg;
 		ask_set_t::iterator it = gg.asks.begin();
 		
-		// ƒK[ƒhğŒ‚ÉŠÜ‚Ü‚ê‚é•Ï”‚ğW‚ß‚é
+		// ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ã«å«ã¾ã‚Œã‚‹å¤‰æ•°ã‚’é›†ã‚ã‚‹
 		while(it != gg.asks.end()){
 			vg.tmp_diff_cnt = 0;
 			(*it)->get_guard()->accept((*it)->get_guard(), &vg);		
@@ -245,7 +245,7 @@ namespace simulator {
 	  parameter_map_t::const_iterator end = map.end();
 	  for(; it!=end; ++it) 
 	  {
-		  // “r’†‚Å“±“ü‚³‚ê‚½ƒpƒ‰ƒ[ƒ^‚ÍŒ©‚È‚¢
+		  // é€”ä¸­ã§å°å…¥ã•ã‚ŒãŸãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã¯è¦‹ãªã„
 	  	if ( (*(it->first)).get_phase_id() != 1 ) continue;
 
  	    if ( (*(it->first)).get_name() == name && (*(it->first)).get_derivative_count() == diff_cnt ){
@@ -270,7 +270,7 @@ namespace simulator {
 			
 			// Bup < Aup
 			if (B.get_upper_bound().value->get_string() < A.get_upper_bound().value->get_string() ||
-					// A=B & A‚ª•Â‹æŠÔ‚ÅB‚ªŠJ‹æŠÔ => false
+					// A=B & AãŒé–‰åŒºé–“ã§BãŒé–‹åŒºé–“ => false
 					( B.get_upper_bound().value->get_string() == A.get_upper_bound().value->get_string() && 
 					  !B.get_upper_bound().include_bound && A.get_upper_bound().include_bound ) ) {
 				HYDLA_LOGGER_HA("****** compare_parameter_range : false 2 ******");		
@@ -288,7 +288,7 @@ namespace simulator {
 			HYDLA_LOGGER_HA("Blow:",B.get_lower_bound().value->get_string());
 			// Alow < Blow
 			if (A.get_lower_bound().value->get_string() < B.get_lower_bound().value->get_string() ||
-					// A=B & A‚ª•Â‹æŠÔ‚ÅB‚ªŠJ‹æŠÔ => false
+					// A=B & AãŒé–‰åŒºé–“ã§BãŒé–‹åŒºé–“ => false
 					( B.get_lower_bound().value->get_string() == A.get_lower_bound().value->get_string() && 
 					  !B.get_lower_bound().include_bound && A.get_lower_bound().include_bound ) ) {
 				HYDLA_LOGGER_HA("****** compare_parameter_range : false 4 ******");		
@@ -302,9 +302,9 @@ namespace simulator {
 
 	bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2)
 	{
-		// ƒtƒF[ƒY
+		// ãƒ•ã‚§ãƒ¼ã‚º
 		if(!(r1->phase == r2->phase)) return false;
-		// ƒ‚ƒWƒ…[ƒ‹W‡
+		// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆ
 		HYDLA_LOGGER_HA("compare :: id:", r1->id, " ", r1->module_set->get_name(), " <=> id:", r2->id, " ", r2->module_set->get_name());
 		if(!(r1->module_set->compare(*r2->module_set) == 0)) return false;
 		// positive_ask
@@ -315,7 +315,7 @@ namespace simulator {
 			it_1++;
 			it_2++;
 		}
-		// ‚Ç‚¿‚ç‚©‚ÌƒCƒeƒŒ[ƒ^‚ªÅŒã‚Ü‚Å’B‚µ‚Ä‚¢‚È‚©‚Á‚½‚ç“™‚µ‚­‚È‚¢
+		// ã©ã¡ã‚‰ã‹ã®ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚¿ãŒæœ€å¾Œã¾ã§é”ã—ã¦ã„ãªã‹ã£ãŸã‚‰ç­‰ã—ããªã„
 		if(it_1 != r1->positive_asks.end() || it_2 != r2->positive_asks.end()) return false;
 		
 		return true;
@@ -333,7 +333,7 @@ namespace simulator {
 			it_1++;
 			it_2++;
 		}
-		// ‚Ç‚¿‚ç‚©‚ÌƒCƒeƒŒ[ƒ^‚ªÅŒã‚Ü‚Å’B‚µ‚Ä‚¢‚È‚©‚Á‚½‚ç“™‚µ‚­‚È‚¢
+		// ã©ã¡ã‚‰ã‹ã®ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚¿ãŒæœ€å¾Œã¾ã§é”ã—ã¦ã„ãªã‹ã£ãŸã‚‰ç­‰ã—ããªã„
 		if(it_1 != p1.positive_asks.end() || it_2 != p2.positive_asks.end()) return false;
 		
 		return true;
@@ -342,9 +342,9 @@ namespace simulator {
 	bool HAConverter::check_contain(phase_result_sptr_t result, current_condition_t cc)
 	{
 		HYDLA_LOGGER_HA("****** check_contain ******");
-		HYDLA_LOGGER_HA("EEEEEphase_resultEEEEE");
+		HYDLA_LOGGER_HA("ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»phase_resultãƒ»ãƒ»ãƒ»ãƒ»ãƒ»");
 		viewPrs(cc);
-		HYDLA_LOGGER_HA("EEEEEEEEEEEEEEEE");
+		HYDLA_LOGGER_HA("ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»");
 		phase_result_sptrs_t::iterator it_prs = cc.begin();
 		while(it_prs != cc.end()){
 			if(compare_phase_result(result, *it_prs)) {
@@ -397,19 +397,19 @@ namespace simulator {
 		for(unsigned int i = 0 ; i < cc.size() ; i++){
 			result.push_back(cc[i]);
 		}
-		HYDLA_LOGGER_HA("EEEEE ha_result ", ha_results_.size(), " EEEEE");
+		HYDLA_LOGGER_HA("ãƒ»ãƒ»ãƒ»ãƒ»ãƒ» ha_result ", ha_results_.size(), " ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»");
 		viewPrs(result);
-		HYDLA_LOGGER_HA("EEEEEEEEEEEEEE");
+		HYDLA_LOGGER_HA("ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»ãƒ»");
 		ha_results_.push_back(result);
 	}
 	
 	void HAConverter::output_ha()
 	{
-		cout << "-E-E-E-EResult ConvertE-E-E-E-" << endl;
+		cout << "-ãƒ»-ãƒ»-ãƒ»-ãƒ»Result Convertãƒ»-ãƒ»-ãƒ»-ãƒ»-" << endl;
 		ha_results_t::iterator it_ha_res = ha_results_.begin();		
 		while(it_ha_res != ha_results_.end()){
 			convert_phase_results_to_ha((*it_ha_res));
-			cout << "-E-E-E-E-E-E-E-E-E-E-E-E-" << endl;
+			cout << "-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-ãƒ»-" << endl;
 			it_ha_res++;
 		}
 	}

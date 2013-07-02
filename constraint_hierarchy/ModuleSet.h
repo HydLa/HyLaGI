@@ -16,7 +16,7 @@ namespace ch {
 typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 
 /**
- * ƒ‚ƒWƒ…[ƒ‹‚ÌW‡‚ğ•\‚·ƒNƒ‰ƒX
+ * ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®é›†åˆã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹
  *
  */
 class ModuleSet {
@@ -40,17 +40,17 @@ public:
   ~ModuleSet();
 
   /**
-   * W‡(‚±‚ÌƒNƒ‰ƒX)‚Ì–¼‘O
+   * é›†åˆ(ã“ã®ã‚¯ãƒ©ã‚¹)ã®åå‰
    */ 
   std::string get_name() const;
   
   /**
-   * ’†’l‹L–@‚Åo—Í
+   * ä¸­å€¤è¨˜æ³•ã§å‡ºåŠ›
    */ 
   std::string get_infix_string() const;
   
   /**
-   * W‡‚ÌÅ‰‚Ì—v‘f
+   * é›†åˆã®æœ€åˆã®è¦ç´ 
    */
   module_list_const_iterator begin() const 
   {
@@ -58,7 +58,7 @@ public:
   }
 
  /**
-   * W‡‚ÌÅŒã‚ÌŸ‚Ì—v‘f
+   * é›†åˆã®æœ€å¾Œã®æ¬¡ã®è¦ç´ 
    */
   module_list_const_iterator end() const 
   {
@@ -66,7 +66,7 @@ public:
   }
 
   /**
-   * W‡‚Ì—v‘f‚Ì”
+   * é›†åˆã®è¦ç´ ã®æ•°
    */
   size_t size() const 
   {
@@ -80,7 +80,7 @@ public:
   
   
   /**
-   * ƒ‚ƒWƒ…[ƒ‹‚ğ’Ç‰Á
+   * ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚’è¿½åŠ 
    */
   void add_module(const module_t& mod){module_list_.push_back(mod);}
 
@@ -94,15 +94,15 @@ public:
   }
 
   /**
-   * W‡‚Ìƒp[ƒXƒcƒŠ[‚Ì“à—eo—Í
+   * é›†åˆã®ãƒ‘ãƒ¼ã‚¹ãƒ„ãƒªãƒ¼ã®å†…å®¹å‡ºåŠ›
    */
   std::ostream& dump(std::ostream& s) const;
 
 
   /**
-   * ‚±‚ÌƒNƒ‰ƒX“¯m‚Ì”äŠr
-   * ŠÜ‚Ü‚ê‚éƒ‚ƒWƒ…[ƒ‹”‚ª­‚È‚¢‚Ù‚Ç¬‚³‚¢
-   * ƒ‚ƒWƒ…[ƒ‹”‚ª“¯ˆê‚Ì‚ÍŠÜ‚Ü‚ê‚Ä‚¢‚éƒ‚ƒWƒ…[ƒ‹–¼‚É‚æ‚è”»’f‚ğ‚¨‚±‚È‚¤
+   * ã“ã®ã‚¯ãƒ©ã‚¹åŒå£«ã®æ¯”è¼ƒ
+   * å«ã¾ã‚Œã‚‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«æ•°ãŒå°‘ãªã„ã»ã©å°ã•ã„
+   * ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«æ•°ãŒåŒä¸€ã®æ™‚ã¯å«ã¾ã‚Œã¦ã„ã‚‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«åã«ã‚ˆã‚Šåˆ¤æ–­ã‚’ãŠã“ãªã†
    */ 
   int compare(const ModuleSet& rhs) const;
   
@@ -112,7 +112,7 @@ public:
   bool including(const ModuleSet& ms) const;
 
   /**
-   * W‡‚ÌŠe§–ñƒ‚ƒWƒ…[ƒ‹‚É‘Î‚µ‚ÄTreeVisitor‚Ì“K—p
+   * é›†åˆã®å„åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã«å¯¾ã—ã¦TreeVisitorã®é©ç”¨
    */ 
   void dispatch(hydla::parse_tree::TreeVisitor* visitor)
   {

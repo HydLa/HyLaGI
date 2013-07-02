@@ -10,10 +10,10 @@ namespace hydla {
 namespace ch {
 
 /**
- * ‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ÌW‡‚ğƒŠƒXƒg\‘¢‚Å•\‚·ƒNƒ‰ƒX
- * ‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ÌW‡‚ğ“±o‚·‚éƒAƒ‹ƒSƒŠƒYƒ€‚Í
- * u§–ñŠK‘w‚É‚æ‚éƒnƒCƒuƒŠƒbƒhƒVƒXƒeƒ€‚Ìƒ‚ƒfƒŠƒ“ƒOè–@(JSSST2009)v
- * QÆ‚Ì‚±‚Æ
+ * è§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é›†åˆã‚’ãƒªã‚¹ãƒˆæ§‹é€ ã§è¡¨ã™ã‚¯ãƒ©ã‚¹
+ * è§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é›†åˆã‚’å°å‡ºã™ã‚‹ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¯
+ * ã€Œåˆ¶ç´„éšå±¤ã«ã‚ˆã‚‹ãƒã‚¤ãƒ–ãƒªãƒƒãƒ‰ã‚·ã‚¹ãƒ†ãƒ ã®ãƒ¢ãƒ‡ãƒªãƒ³ã‚°æ‰‹æ³•(JSSST2009)ã€
+ * å‚ç…§ã®ã“ã¨
  *
  */
 class ModuleSetList : public ModuleSetContainer {
@@ -25,37 +25,37 @@ public:
   virtual ~ModuleSetList();
 
   /**
-   * •À—ñ‡¬‚Æ‚µ‚ÄW‡‚ğ‡¬‚·‚é
+   * ä¸¦åˆ—åˆæˆã¨ã—ã¦é›†åˆã‚’åˆæˆã™ã‚‹
    */
   void add_parallel(ModuleSetList& parallel_module_set_list);
 
   /**
-   * •À—ñ‡¬‚Æ‚µ‚ÄW‡‚ğ‡¬‚·‚éirequired§–ñˆµ‚¢j
+   * ä¸¦åˆ—åˆæˆã¨ã—ã¦é›†åˆã‚’åˆæˆã™ã‚‹ï¼ˆrequiredåˆ¶ç´„æ‰±ã„ï¼‰
    */
   void add_required_parallel(ModuleSetList& parallel_module_set_list);
   
   /**
-   * ã‡¬‚Æ‚µ‚ÄW‡‚ğ‡¬‚·‚é
+   * å¼±åˆæˆã¨ã—ã¦é›†åˆã‚’åˆæˆã™ã‚‹
    */
   void add_weak(ModuleSetList& weak_module_set_list);
 
   /**
-   * W‡‚ÌW‡(‚±‚ÌƒNƒ‰ƒX)‚Ì–¼‘O
+   * é›†åˆã®é›†åˆ(ã“ã®ã‚¯ãƒ©ã‚¹)ã®åå‰
    */ 
   std::string get_name() const;
 
   /**
-   * W‡‚ÌW‡‚Ìƒ_ƒ“ƒv
+   * é›†åˆã®é›†åˆã®ãƒ€ãƒ³ãƒ—
    */
   virtual std::ostream& dump(std::ostream& s) const;
 
   /**
-   * –¼‘O•\Œ»‚É‚æ‚éƒ_ƒ“ƒv
+   * åå‰è¡¨ç¾ã«ã‚ˆã‚‹ãƒ€ãƒ³ãƒ—
    */
   std::ostream& dump_node_names(std::ostream& s) const;
   
   /**
-   * ƒcƒŠ[•\Œ»‚É‚æ‚éƒ_ƒ“ƒv
+   * ãƒ„ãƒªãƒ¼è¡¨ç¾ã«ã‚ˆã‚‹ãƒ€ãƒ³ãƒ—
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 

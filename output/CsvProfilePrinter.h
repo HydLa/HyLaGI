@@ -9,14 +9,14 @@ namespace hydla{
 namespace output{
 
 /**
- * ƒvƒƒtƒ@ƒCƒŠƒ“ƒOŒ‹‰Ê‚Ìo—Í‚ğ’S“–‚·‚éƒNƒ‰ƒX
- * ‚Æ‚è‚ ‚¦‚¸ŠÔ‚¾‚¯
+ * ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°çµæœã®å‡ºåŠ›ã‚’æ‹…å½“ã™ã‚‹ã‚¯ãƒ©ã‚¹
+ * ã¨ã‚Šã‚ãˆãšæ™‚é–“ã ã‘
  */
 
 class CsvProfilePrinter{
 public:
   /**
-   * ‰ğ‹O“¹–Ø‘S‘Ì‚ğo—Í‚·‚éŠÖ”
+   * è§£è»Œé“æœ¨å…¨ä½“ã‚’å‡ºåŠ›ã™ã‚‹é–¢æ•°
    */
   virtual void print_profile(const entire_profile_t&) const;
   CsvProfilePrinter(std::ostream &stream = std::cout):output_stream_(stream){}

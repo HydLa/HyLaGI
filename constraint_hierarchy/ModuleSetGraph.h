@@ -34,75 +34,75 @@ public:
   virtual ~ModuleSetGraph();
   
   /**
-   * •À—ñ‡¬‚Æ‚µ‚ÄW‡‚ğ‡¬‚·‚é
+   * ä¸¦åˆ—åˆæˆã¨ã—ã¦é›†åˆã‚’åˆæˆã™ã‚‹
    */
   void add_parallel(ModuleSetGraph& parallel_module_set_graph);
 
   /**
-   * •À—ñ‡¬‚Æ‚µ‚ÄW‡‚ğ‡¬‚·‚éirequired§–ñˆµ‚¢j
+   * ä¸¦åˆ—åˆæˆã¨ã—ã¦é›†åˆã‚’åˆæˆã™ã‚‹ï¼ˆrequiredåˆ¶ç´„æ‰±ã„ï¼‰
    */
   void add_required_parallel(ModuleSetGraph& parallel_module_set_graph);
   
   /**
-   * ã‡¬‚Æ‚µ‚ÄW‡‚ğ‡¬‚·‚é
+   * å¼±åˆæˆã¨ã—ã¦é›†åˆã‚’åˆæˆã™ã‚‹
    */
   void add_weak(ModuleSetGraph& weak_module_set_graph);
 
   /**
-   * W‡‚ÌW‡‚Ìƒ_ƒ“ƒv
+   * é›†åˆã®é›†åˆã®ãƒ€ãƒ³ãƒ—
    */
   virtual std::ostream& dump(std::ostream& s) const;
   
   virtual void reset(const module_set_list_t &mss);
 
   /**
-   * ƒm[ƒh‚Ìî•ñ‚Ì–¼‘O•\Œ»‚É‚æ‚éƒ_ƒ“ƒv
+   * ãƒãƒ¼ãƒ‰ã®æƒ…å ±ã®åå‰è¡¨ç¾ã«ã‚ˆã‚‹ãƒ€ãƒ³ãƒ—
    */
   std::ostream& dump_node_names(std::ostream& s) const;
 
   /**
-   * ƒm[ƒh‚Ìî•ñ‚ÌƒcƒŠ[•\Œ»‚É‚æ‚éƒ_ƒ“ƒv
+   * ãƒãƒ¼ãƒ‰ã®æƒ…å ±ã®ãƒ„ãƒªãƒ¼è¡¨ç¾ã«ã‚ˆã‚‹ãƒ€ãƒ³ãƒ—
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
   /**
-   * ƒGƒbƒW‚Ìî•ñ‚Ìƒ_ƒ“ƒv
+   * ã‚¨ãƒƒã‚¸ã®æƒ…å ±ã®ãƒ€ãƒ³ãƒ—
    */
   std::ostream& dump_edges(std::ostream& s) const;
 
   /**
-   * graphviz‚Å‰ğß‰Â”\‚ÈŒ`®‚Åo—Í‚ğ‚¨‚±‚È‚¤
+   * graphvizã§è§£é‡ˆå¯èƒ½ãªå½¢å¼ã§å‡ºåŠ›ã‚’ãŠã“ãªã†
    */
   std::ostream& dump_graphviz(std::ostream& s) const;
 
 
   /**
-   * ‚»‚Ìƒm[ƒh‚Æqƒm[ƒh‚ğƒ}[ƒLƒ“ƒO‚µCˆÈ~’Tõ‚µ‚È‚¢‚æ‚¤‚É‚·‚é
+   * ãã®ãƒãƒ¼ãƒ‰ã¨å­ãƒãƒ¼ãƒ‰ã‚’ãƒãƒ¼ã‚­ãƒ³ã‚°ã—ï¼Œä»¥é™æ¢ç´¢ã—ãªã„ã‚ˆã†ã«ã™ã‚‹
    */
   virtual void mark_nodes();
   
 
 private:
   /**
-   * —^‚¦‚ç‚ê‚½ƒm[ƒh‚¨‚æ‚ÑC
-   * ‚»‚ê‚É•ïŠÜ‚³‚ê‚éƒm[ƒh‚É‘Î‚µ‚Ä–K–âƒtƒ‰ƒO‚ğ—§‚Ä‚é
+   * ä¸ãˆã‚‰ã‚ŒãŸãƒãƒ¼ãƒ‰ãŠã‚ˆã³ï¼Œ
+   * ãã‚Œã«åŒ…å«ã•ã‚Œã‚‹ãƒãƒ¼ãƒ‰ã«å¯¾ã—ã¦è¨ªå•ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹
    */
   void mark_visited_flag(const module_set_sptr& ms);
 
   /**
-   * ƒOƒ‰ƒt‚Ì•Ó‚ğ\’z‚·‚é
+   * ã‚°ãƒ©ãƒ•ã®è¾ºã‚’æ§‹ç¯‰ã™ã‚‹
    */
   void build_edges();
 
   /**
-   * •Ó
+   * è¾º
    */
   edges_t edges_;
   
   /**
-   * “Á’è‚Ìƒ‚ƒWƒ…[ƒ‹W‡‚ğŠÜ‚Ş‚±‚Æ‚É‚æ‚é}Š ‚ÆC
-   * ‹É‘å«‚ğ–‚½‚³‚È‚¢‚±‚Æ‚É‚æ‚é}Š ‚Æ‚ğ‹æ•Ê‚·‚é•K—v‚ª‚ ‚è‚»‚¤‚È‚Ì‚ÅC
-   * ‹É‘å«‚ğ–‚½‚³‚È‚¢}Š ‚Ì‚½‚ß‚Éms_to_visit‚Æ‚Í•Ê‚Ég—p‚·‚é•Ï”D
+   * ç‰¹å®šã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å«ã‚€ã“ã¨ã«ã‚ˆã‚‹æåˆˆã¨ï¼Œ
+   * æ¥µå¤§æ€§ã‚’æº€ãŸã•ãªã„ã“ã¨ã«ã‚ˆã‚‹æåˆˆã¨ã‚’åŒºåˆ¥ã™ã‚‹å¿…è¦ãŒã‚ã‚Šãã†ãªã®ã§ï¼Œ
+   * æ¥µå¤§æ€§ã‚’æº€ãŸã•ãªã„æåˆˆã®ãŸã‚ã«ms_to_visitã¨ã¯åˆ¥ã«ä½¿ç”¨ã™ã‚‹å¤‰æ•°ï¼
    */
   std::set<module_set_sptr> visited_module_sets_;
 

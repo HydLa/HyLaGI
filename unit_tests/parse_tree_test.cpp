@@ -1,6 +1,6 @@
 /**
  *
- * ParseTree‚ÌƒeƒXƒgƒP[ƒX
+ * ParseTreeã®ãƒ†ã‚¹ãƒˆã‚±ãƒ¼ã‚¹
  *
  */
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_syntax)
 /*
 BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
 {
-  // À•Ï”‚Æ]‘®•Ï”‚Ì‹æ•Ê‚Ío—ˆ‚Ä‚¢‚é‚©‚Ç‚¤‚©
+  // å®Ÿå¤‰æ•°ã¨å¾“å±å¤‰æ•°ã®åŒºåˆ¥ã¯å‡ºæ¥ã¦ã„ã‚‹ã‹ã©ã†ã‹
   PARSE_TREE_TEST_EQUAL(
     "A(x)<=>B(x).B(y)<=>x=y.A(5)."
     ,
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
     "program_definition[],"
     "node_tree[call<A(5)>[call<B(5)>[tell[x=5]]]]]");
 
-  // •¡”‚Ì–¼‘OŒÄ‚Ño‚µ‚ğ³‚µ‚­‰ğŒˆ‚Å‚«‚é‚©
+  // è¤‡æ•°ã®åå‰å‘¼ã³å‡ºã—ã‚’æ­£ã—ãè§£æ±ºã§ãã‚‹ã‹
   PARSE_TREE_TEST_EQUAL(
     "A(x)<=>x=y.A(5).A(10)."
     ,
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
     "program_definition[],"
     "node_tree[call<A(5)>[constraint[tell[5=y]]],call<A(10)>[constraint[tell[10=y]]]]");
 
-  // ˜A‘±‚µ‚½always§–ñ‚Ííœ‚³‚êA
-  // ask‚Ìqƒm[ƒh‚É‚¨‚¯‚éalways§–ñ‚ÍŠO‚Ìalways‚É‰e‹¿‚³‚ê‚¸‚Éc‚é‚©
+  // é€£ç¶šã—ãŸalwaysåˆ¶ç´„ã¯å‰Šé™¤ã•ã‚Œã€
+  // askã®å­ãƒãƒ¼ãƒ‰ã«ãŠã‘ã‚‹alwaysåˆ¶ç´„ã¯å¤–ã®alwaysã«å½±éŸ¿ã•ã‚Œãšã«æ®‹ã‚‹ã‹
     PARSE_TREE_TEST_EQUAL(
     "[](x=1 & []y=2 => z=3 & v=4=>[]w=5)."
     ,
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_equal)
 */
 
 /**
- * –³Œø‚È‘IŒ¾
+ * ç„¡åŠ¹ãªé¸è¨€
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_invalid_disjunction)
 {
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_invalid_disjunction)
 }
 
 /**
- * ‘¶İ‚µ‚È‚¢–¼‘O‚Ö‚ÌŒÄ‚Ño‚µ
+ * å­˜åœ¨ã—ãªã„åå‰ã¸ã®å‘¼ã³å‡ºã—
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_undefined_reference)
 {
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_undefined_reference)
 }
 
 /**
- * zŠÂQÆ
+ * å¾ªç’°å‚ç…§
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_circular_reference)
 {
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_circular_reference)
 }
 
 /**
- * ‘½d’è‹`
+ * å¤šé‡å®šç¾©
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_multiple_definition)
 {
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_multiple_definition)
 }
 
 /**
- * ®‚É‘Î‚µ‚Ä‚Ì”÷•ª‚Ì“K—p
+ * å¼ã«å¯¾ã—ã¦ã®å¾®åˆ†ã®é©ç”¨
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_differential)
 {
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_differential)
 }
 
 /**
- * ®‚É‘Î‚µ‚Ä‚Ìprev‚Ì“K—p
+ * å¼ã«å¯¾ã—ã¦ã®prevã®é©ç”¨
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_previous)
 {
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_previous)
 }
 
 /**
- * ÀÛ‚Ì—á‘è‚ğ³‚µ‚­ƒp[ƒX‚Å‚«‚é‚©‚Ç‚¤‚©
+ * å®Ÿéš›ã®ä¾‹é¡Œã‚’æ­£ã—ããƒ‘ãƒ¼ã‚¹ã§ãã‚‹ã‹ã©ã†ã‹
  */
 BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
 {
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_test_example_file)
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box1.hydla");
   PARSE_TREE_TEST_EXAMPLE_FILE("../examples/box_mod.hydla");
 
-  // Œ»İ examples/ ‚É‘¶İ‚µ‚È‚¢—á‘è
+  // ç¾åœ¨ examples/ ã«å­˜åœ¨ã—ãªã„ä¾‹é¡Œ
   // PARSE_TREE_TEST_EXAMPLE_FILE("../examples/impulse_function.hydla");
   // PARSE_TREE_TEST_EXAMPLE_FILE("../examples/navigation.hydla");
 }

@@ -28,22 +28,22 @@ public:
 
   void split(hydla::parse_tree::ParseTree* pt);
 
-  // §–ñŒÄ‚Ño‚µ
+  // åˆ¶ç´„å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
 
-  // ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+  // ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
@@ -56,19 +56,19 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
-  // §–ñŠK‘w’è‹`‰‰Zq
+  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
 
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 
 private:   
@@ -118,19 +118,19 @@ private:
   }
 
   /**
-   * ƒtƒH[ƒ}ƒbƒg‘ÎÛ‚Æ‚È‚éParseTree
+   * ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆå¯¾è±¡ã¨ãªã‚‹ParseTree
    */
   hydla::parse_tree::ParseTree* pt_;
 
   /**
-   * V‚µ‚¢qƒm[ƒh
-   * acceptŒãA‚±‚ê‚É’l‚ª“ü‚Á‚Ä‚¢‚éê‡‚Íƒm[ƒh‚Ì’l‚ğŒğŠ·‚·‚é
+   * æ–°ã—ã„å­ãƒãƒ¼ãƒ‰
+   * acceptå¾Œã€ã“ã‚Œã«å€¤ãŒå…¥ã£ã¦ã„ã‚‹å ´åˆã¯ãƒãƒ¼ãƒ‰ã®å€¤ã‚’äº¤æ›ã™ã‚‹
    */
   node_sptr new_child_;
 
   
   /**
-   * •ªŠ„‚³‚ê‚½guardŒQ
+   * åˆ†å‰²ã•ã‚ŒãŸguardç¾¤
    */
   splitted_guard_nodes_t splitted_guard_nodes_;
 };

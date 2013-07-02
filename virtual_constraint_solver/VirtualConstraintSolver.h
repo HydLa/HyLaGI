@@ -2,12 +2,12 @@
 #define _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
 
 /**
- * ƒvƒƒOƒ‰ƒ€ŠÔ‚ÌˆË‘¶«‚Ì–â‘è‚©‚çC
- * ‚±‚Ìƒwƒbƒ_[‚¨‚æ‚Ñ‚±‚Ìƒwƒbƒ_[‚©‚çƒCƒ“ƒNƒ‹[ƒh‚³‚ê‚éƒwƒbƒ_[‚É‚¨‚¢‚Ä
- * ƒ\ƒ‹ƒo[ˆË‘¶‚Ìƒwƒbƒ_[(mathematica‚ârealpaver“™‚ÌŒÅ—L‚Ìƒwƒbƒ_[)‚ğ
- * ƒCƒ“ƒNƒ‹[ƒh‚µ‚Ä‚Í‚È‚ç‚È‚¢
+ * ãƒ—ãƒ­ã‚°ãƒ©ãƒ é–“ã®ä¾å­˜æ€§ã®å•é¡Œã‹ã‚‰ï¼Œ
+ * ã“ã®ãƒ˜ãƒƒãƒ€ãƒ¼ãŠã‚ˆã³ã“ã®ãƒ˜ãƒƒãƒ€ãƒ¼ã‹ã‚‰ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰ã•ã‚Œã‚‹ãƒ˜ãƒƒãƒ€ãƒ¼ã«ãŠã„ã¦
+ * ã‚½ãƒ«ãƒãƒ¼ä¾å­˜ã®ãƒ˜ãƒƒãƒ€ãƒ¼(mathematicaã‚„realpaverç­‰ã®å›ºæœ‰ã®ãƒ˜ãƒƒãƒ€ãƒ¼)ã‚’
+ * ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰ã—ã¦ã¯ãªã‚‰ãªã„
  *
- * ‚±‚Ì§–ñ‚ÍVirtualConstraintSolver‚ğŒp³‚µ‚½ƒNƒ‰ƒX‚Ì’è‹`ƒwƒbƒ_[‚É‚à“K—p‚³‚ê‚é
+ * ã“ã®åˆ¶ç´„ã¯VirtualConstraintSolverã‚’ç¶™æ‰¿ã—ãŸã‚¯ãƒ©ã‚¹ã®å®šç¾©ãƒ˜ãƒƒãƒ€ãƒ¼ã«ã‚‚é©ç”¨ã•ã‚Œã‚‹
  */
 
 #include <iostream>
@@ -25,7 +25,7 @@ namespace hydla {
 namespace vcs {
 
 /**
- *  ^E‹UE•s–¾E‹‰ğ•s”\ 
+ *  çœŸãƒ»å½ãƒ»ä¸æ˜ãƒ»æ±‚è§£ä¸èƒ½ 
  */
 enum VCSResult {
   VCSR_TRUE,
@@ -73,32 +73,32 @@ public:
   {}
 
   /**
-   * §–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
+   * åˆ¶ç´„ã‚¹ãƒˆã‚¢ã®åˆæœŸåŒ–ã‚’ãŠã“ãªã†
    */
   virtual bool reset() = 0;
 
   /**
-   * —^‚¦‚ç‚ê‚½•Ï”•\‚ğŒ³‚ÉC§–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
+   * ä¸ãˆã‚‰ã‚ŒãŸå¤‰æ•°è¡¨ã‚’å…ƒã«ï¼Œåˆ¶ç´„ã‚¹ãƒˆã‚¢ã®åˆæœŸåŒ–ã‚’ãŠã“ãªã†
    */
   virtual bool reset(const variable_map_t& vm) = 0;  
 
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚ğì¬‚·‚é
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰å¤‰æ•°è¡¨ã‚’ä½œæˆã™ã‚‹
    */
   virtual bool create_variable_map(variable_map_t& vm) = 0;
 
   /**
-   * §–ñ‚ğ’Ç‰Á‚·‚é
+   * åˆ¶ç´„ã‚’è¿½åŠ ã™ã‚‹
    */
   virtual VCSResult add_constraint(const tells_t& collected_tells) = 0;
   
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç—^‚¦‚½ask‚ª“±o‰Â”\‚©‚Ç‚¤‚©
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰ä¸ãˆãŸaskãŒå°å‡ºå¯èƒ½ã‹ã©ã†ã‹
    */
   virtual VCSResult check_entailment(const ask_node_sptr& negative_ask) = 0;
 
   /**
-   * ask‚Ì“±oó‘Ô‚ª•Ï‰»‚·‚é‚Ü‚ÅÏ•ª‚ğ‚¨‚±‚È‚¤
+   * askã®å°å‡ºçŠ¶æ…‹ãŒå¤‰åŒ–ã™ã‚‹ã¾ã§ç©åˆ†ã‚’ãŠã“ãªã†
    */
   virtual VCSResult integrate(
     integrate_result_t& integrate_result,
@@ -109,7 +109,7 @@ public:
     const not_adopted_tells_list_t& not_adopted_tells_list) = 0;
 
   /**
-   * Œ‹‰Ê‚Ìo—ÍŠÖ”‚ğİ’è‚·‚é
+   * çµæœã®å‡ºåŠ›é–¢æ•°ã‚’è¨­å®šã™ã‚‹
    */
   virtual void set_output_func(const time_t& max_interval, 
                                const output_function_t& func) 
@@ -119,13 +119,13 @@ public:
   }
 
   /**
-   * Œ‹‰Ê‚Ìo—ÍŠÖ”‚Ìİ’è‚ğƒŠƒZƒbƒg‚µC‰Šúó‘Ô‚É–ß‚·
+   * çµæœã®å‡ºåŠ›é–¢æ•°ã®è¨­å®šã‚’ãƒªã‚»ãƒƒãƒˆã—ï¼ŒåˆæœŸçŠ¶æ…‹ã«æˆ»ã™
    */
   virtual void reset_output_func() {
     output_func_.clear();
   }
   
-  //•Ï”•\‚ÉC‚ğ“K—p‚·‚éDSymbolicê—p
+  //å¤‰æ•°è¡¨ã«ï¼Œæ™‚åˆ»ã‚’é©ç”¨ã™ã‚‹ï¼Symbolicå°‚ç”¨
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
 
 

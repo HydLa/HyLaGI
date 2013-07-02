@@ -25,7 +25,7 @@ void NodeIDUpdater::update(hydla::parse_tree::ParseTree* pt)
   pt->dispatch(this);
   
 
-  // íœ‚³‚ê‚Ä‚¢‚½ƒm[ƒh‚ğ•\‚©‚çæ‚èœ‚­
+  // å‰Šé™¤ã•ã‚Œã¦ã„ãŸãƒãƒ¼ãƒ‰ã‚’è¡¨ã‹ã‚‰å–ã‚Šé™¤ã
   
   assert(node_id_list_.size() <= pt->node_map_size());
   std::vector<hydla::parse_tree::node_id_t> diff_id( pt->node_map_size());

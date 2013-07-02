@@ -26,92 +26,92 @@ public:
   //REDUCEVCS(Mode m, REDUCELink* cl, int approx_precision);
   
   /**
-   * @param m t‚ÉŠÖ‚·‚é]‘®•Ï”‚Ì’è‹`‚Ég—p‚·‚é
+   * @param m æ™‚åˆ»tã«é–¢ã™ã‚‹å¾“å±å¤‰æ•°ã®å®šç¾©ã«ä½¿ç”¨ã™ã‚‹
    */
   REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m);
 
   virtual ~REDUCEVCS();
   
   /**
-   * ƒ\ƒ‹ƒo‚Ìƒ‚[ƒh‚ğ•ÏX‚·‚é
+   * ã‚½ãƒ«ãƒã®ãƒ¢ãƒ¼ãƒ‰ã‚’å¤‰æ›´ã™ã‚‹
    */
   virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision);
  
   /**
-   * —^‚¦‚ç‚ê‚½•Ï”•\‚Æ’è”•\‚ğŒ³‚ÉC§–ñƒXƒgƒA‚Ì‰Šú‰»‚ğ‚¨‚±‚È‚¤
+   * ä¸ãˆã‚‰ã‚ŒãŸå¤‰æ•°è¡¨ã¨å®šæ•°è¡¨ã‚’å…ƒã«ï¼Œåˆ¶ç´„ã‚¹ãƒˆã‚¢ã®åˆæœŸåŒ–ã‚’ãŠã“ãªã†
    */
   virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
-   * •Ï”‚É˜A‘±«‚ğİ’è‚·‚é
+   * å¤‰æ•°ã«é€£ç¶šæ€§ã‚’è¨­å®šã™ã‚‹
    */
   virtual void set_continuity(const std::string &name, const int& dc);
 
   /**
-   * §–ñ‚ğ’Ç‰Á‚·‚éD
+   * åˆ¶ç´„ã‚’è¿½åŠ ã™ã‚‹ï¼
    */
   virtual void add_constraint(const constraints_t& constraints);
 
   /**
-   * §–ñ‚ğ’Ç‰Á‚·‚éD
+   * åˆ¶ç´„ã‚’è¿½åŠ ã™ã‚‹ï¼
    */
   virtual void add_constraint(const node_sptr& constraint);
 
   /**
-   * §–ñƒXƒgƒA‚ª–³–µ‚‚©‚ğ”»’è‚·‚éD
-   * @return [‘«‰Â”\‚Èê‡‚Ì‹L†’è”ğŒ—ñC[‘«•s‰Â”\‚Èê‡‚Ì‹L†’è”ğŒ—ñi‚»‚ê‚¼‚ê‘¶İ‚µ‚È‚¢ê‡‚Í‹ó‚Ì—ñ‚ğ•Ô‚·j
+   * åˆ¶ç´„ã‚¹ãƒˆã‚¢ãŒç„¡çŸ›ç›¾ã‹ã‚’åˆ¤å®šã™ã‚‹ï¼
+   * @return å……è¶³å¯èƒ½ãªå ´åˆã®è¨˜å·å®šæ•°æ¡ä»¶åˆ—ï¼Œå……è¶³ä¸å¯èƒ½ãªå ´åˆã®è¨˜å·å®šæ•°æ¡ä»¶åˆ—ï¼ˆãã‚Œãã‚Œå­˜åœ¨ã—ãªã„å ´åˆã¯ç©ºã®åˆ—ã‚’è¿”ã™ï¼‰
    */
   virtual CheckConsistencyResult check_consistency();
 
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚ğì¬‚·‚é
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰å¤‰æ•°è¡¨ã‚’ä½œæˆã™ã‚‹
    */
   virtual create_result_t create_maps();
 
   /**
-   * •Ï”•\‚ğ—p‚¢‚Ä§–ñƒXƒgƒA‚ğã‘‚«‚·‚éD
+   * å¤‰æ•°è¡¨ã‚’ç”¨ã„ã¦åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‚’ä¸Šæ›¸ãã™ã‚‹ï¼
    */
   virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives);
 
   /**
-   * ˆê“I‚È§–ñ‚Ì’Ç‰Á‚ğŠJn‚·‚é
+   * ä¸€æ™‚çš„ãªåˆ¶ç´„ã®è¿½åŠ ã‚’é–‹å§‹ã™ã‚‹
    */
   virtual void start_temporary();
 
   /**
-   * ˆê“I‚È§–ñ‚Ì’Ç‰Á‚ğI—¹‚·‚é
-   * startŒãC‚±‚ÌŠÖ”‚ğŒÄ‚Ño‚·‚Ü‚Å‚É’Ç‰Á‚µ‚½§–ñ‚Í‚·‚×‚Ä–³‚©‚Á‚½‚±‚Æ‚É‚·‚é
+   * ä¸€æ™‚çš„ãªåˆ¶ç´„ã®è¿½åŠ ã‚’çµ‚äº†ã™ã‚‹
+   * startå¾Œï¼Œã“ã®é–¢æ•°ã‚’å‘¼ã³å‡ºã™ã¾ã§ã«è¿½åŠ ã—ãŸåˆ¶ç´„ã¯ã™ã¹ã¦ç„¡ã‹ã£ãŸã“ã¨ã«ã™ã‚‹
    */
   virtual void end_temporary();
 
   /**
-   * ƒK[ƒh§–ñ‚ğ’Ç‰Á‚·‚é
+   * ã‚¬ãƒ¼ãƒ‰åˆ¶ç´„ã‚’è¿½åŠ ã™ã‚‹
    */
   virtual void add_guard(const node_sptr&);
 
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚ğ•¶š—ñ‚Åæ“¾‚·‚é
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‚’æ–‡å­—åˆ—ã§å–å¾—ã™ã‚‹
    */
   virtual std::string get_constraint_store();
 
   /**
-   * SymbolicTime‚ğŠÈ–ñ‚·‚é
+   * SymbolicTimeã‚’ç°¡ç´„ã™ã‚‹
    */
   virtual void simplify(time_t &time);
   
   /**
-   * SymbolicTime‚ğ”äŠr‚·‚é
+   * SymbolicTimeã‚’æ¯”è¼ƒã™ã‚‹
    */
   virtual bool less_than(const time_t &lhs, const time_t &rhs);
 
   /**
-   * SymbolicValue‚ÌŠÔ‚ğ‚¸‚ç‚·
+   * SymbolicValueã®æ™‚é–“ã‚’ãšã‚‰ã™
    */
   virtual value_t shift_expr_time(const value_t &val, const time_t &time);
 
   /**
-   * Ÿ‚Ì—£U•Ï‰»‚ğ‹‚ß‚é
-   * @param discrete_cause —£U•Ï‰»‚ÌŒ´ˆö‚Æ‚È‚è‚¤‚éğŒ
+   * æ¬¡ã®é›¢æ•£å¤‰åŒ–æ™‚åˆ»ã‚’æ±‚ã‚ã‚‹
+   * @param discrete_cause é›¢æ•£å¤‰åŒ–ã®åŸå› ã¨ãªã‚Šã†ã‚‹æ¡ä»¶
    */
   virtual PP_time_result_t calculate_next_PP_time(
     const constraints_t& discrete_cause,
@@ -119,32 +119,32 @@ public:
     const time_t& max_time);
 
   /**
-   * •Ï”•\‚É‚ğ“K—p‚·‚é
+   * å¤‰æ•°è¡¨ã«æ™‚åˆ»ã‚’é©ç”¨ã™ã‚‹
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
 
   /**
-   * TODO: ¡‚Ì‚Æ‚±‚ë‰½‚à‚µ‚È‚¢‚æ‚¤‚È‚Ì‚Åƒ_ƒ~[À‘•
+   * TODO: ä»Šã®ã¨ã“ã‚ä½•ã‚‚ã—ãªã„ã‚ˆã†ãªã®ã§ãƒ€ãƒŸãƒ¼å®Ÿè£…
    */
   virtual void approx_vm(variable_range_map_t& vm);
 
   // deleted
-  //  //SymbolicValue‚ğw’è‚³‚ê‚½¸“x‚Å”’l‚É•ÏŠ·‚·‚é
+  //  //SymbolicValueã‚’æŒ‡å®šã•ã‚ŒãŸç²¾åº¦ã§æ•°å€¤ã«å¤‰æ›ã™ã‚‹
   //  virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
 
 private:
   /**
-   * Variable‚Ì¶¬
+   * Variableã®ç”Ÿæˆ
    */
   const node_sptr make_variable(const std::string &name, const int& dc, const bool& is_prev = false) const;
 
   /**
-   * accept‚ğŒo—R‚µ‚Ävalue_t‚ğsymbolic_value_t‚Éƒ_ƒEƒ“ƒLƒƒƒXƒg‚·‚é
+   * acceptã‚’çµŒç”±ã—ã¦value_tã‚’symbolic_value_tã«ãƒ€ã‚¦ãƒ³ã‚­ãƒ£ã‚¹ãƒˆã™ã‚‹
    */
   const symbolic_value_t get_symbolic_value_t(value_t value);
 
   /**
-   * ValueVisitor‚ÌÀ‘•
+   * ValueVisitorã®å®Ÿè£…
    */
   virtual void visit(symbolic_value_t& value);
 
@@ -154,7 +154,7 @@ private:
   REDUCELink cl_;
 
   /**
-   * ValueVisior::visit()‚©‚ç“¾‚½’l‚ğˆêŠi”[‚·‚é
+   * ValueVisior::visit()ã‹ã‚‰å¾—ãŸå€¤ã‚’ä¸€æ™‚æ ¼ç´ã™ã‚‹
    */
   symbolic_value_t visited_;
 

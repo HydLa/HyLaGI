@@ -19,14 +19,14 @@ void InteractiveSimulator::print_end(phase_result_sptr_t& p)
 }
 
 /**
- * —^‚¦‚ç‚ê‚½‰ğŒó•âƒ‚ƒWƒ…[ƒ‹W‡‚ğŒ³‚ÉƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“Às‚ğ‚¨‚±‚È‚¤
+ * ä¸ãˆã‚‰ã‚ŒãŸè§£å€™è£œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã‚’å…ƒã«ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å®Ÿè¡Œã‚’ãŠã“ãªã†
  */
 phase_result_const_sptr_t InteractiveSimulator::simulate()
 {
   phase_simulator_->set_select_function(select_phase);
   printer_.set_output_variables(opts_->output_variables);
   simulation_todo_sptr_t todo(make_initial_todo());
-  unsigned int todo_num = 1; // ˜A‘±‚µ‚Äˆ—‚·‚éTODO‚Ìc”
+  unsigned int todo_num = 1; // é€£ç¶šã—ã¦å‡¦ç†ã™ã‚‹TODOã®æ®‹æ•°
 
   while(todo_num)
   {
@@ -75,7 +75,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       {
         todo_num = input_and_process_command(todo);
       }
-      // TODO:Œ»ó‚¾‚ÆCresult_root_‚Ì‚Æ‚±‚ë‚Ü‚Å–ß‚é‚Æ•Ï‚È‚±‚Æ‚É‚È‚é‚Ì‚Å‚»‚±‚Ü‚Å‚ÍŠª‚«–ß‚¹‚È‚¢‚æ‚¤‚É‚µ‚Ä‚¨‚­
+      // TODO:ç¾çŠ¶ã ã¨ï¼Œresult_root_ã®ã¨ã“ã‚ã¾ã§æˆ»ã‚‹ã¨å¤‰ãªã“ã¨ã«ãªã‚‹ã®ã§ãã“ã¾ã§ã¯å·»ãæˆ»ã›ãªã„ã‚ˆã†ã«ã—ã¦ãŠã
       all_todo_.push_back(todo);
     }
     catch(const runtime_error &se)
@@ -189,7 +189,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   cout << "(change variable mode)" << endl;
   variable_map_t& vm = todo->parent->variable_map;
   
-  // •Ï”‚Ì‘I‘ğ
+  // å¤‰æ•°ã®é¸æŠ
   variable_map_t::iterator v_it  = vm.begin();
   cout << "input variable name " << endl;
   cout << '>';
@@ -205,9 +205,9 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   
   if(value_str.substr(0,1)!="(" && value_str.substr(0,1)!="["){
     value_t value(new hydla::simulator::symbolic::SymbolicValue(value_str));
-    // TODO: string‚Åvalueì‚é‚ÆCƒoƒbƒNƒGƒ“ƒh•Ï‚¦‚½‚É‘Î‰‚Å‚«‚È‚¢‚Ì‚Å‰½‚Æ‚©‚·‚é
-    // @@@i‚±‚ê‚ÍSymbolicValue‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^‘¤‚Ì–â‘è‚©‚à‚µ‚ê‚È‚¢j
-    //       ‚ ‚Æ‚±‚ê‚¾‚Æ•s³‚È®“ü—Í‚³‚ê‚½ê‡‚à‘Î‰‚Å‚«‚È‚¢
+    // TODO: stringã§valueä½œã‚‹ã¨ï¼Œãƒãƒƒã‚¯ã‚¨ãƒ³ãƒ‰å¤‰ãˆãŸæ™‚ã«å¯¾å¿œã§ããªã„ã®ã§ä½•ã¨ã‹ã™ã‚‹
+    // ã€€ã€€ã€€ï¼ˆã“ã‚Œã¯SymbolicValueã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿å´ã®å•é¡Œã‹ã‚‚ã—ã‚Œãªã„ï¼‰
+    //       ã‚ã¨ã“ã‚Œã ã¨ä¸æ­£ãªå¼å…¥åŠ›ã•ã‚ŒãŸå ´åˆã‚‚å¯¾å¿œã§ããªã„
     vm[v_it->first] = value;
   }else{
     parameter_map_t& pm = todo->parameter_map;
@@ -247,7 +247,7 @@ int InteractiveSimulator::select_phase(PhaseSimulator::result_list_t& results)
 
 /*
 int InteractiveSimulator::select_options(){
-   // programoption ‚ªƒVƒ“ƒOƒ‹ƒgƒ“‚È‚Ì‚Å‘Î‰ô‚ğl‚¦‚é 
+   // programoption ãŒã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³ãªã®ã§å¯¾å¿œç­–ã‚’è€ƒãˆã‚‹ 
    ProgramOptions &po = ProgramOptions::instance();
   int argc = 0;
   cout << "argc : " << argc << endl;
@@ -266,7 +266,7 @@ int InteractiveSimulator::select_options(){
   cp = NULL;
   cout << "argc : " << argc << endl;
   for (int i = 0; i < argc; i++) {
-    printf("%d”Ô–Ú‚Ìˆø” = %s\n", i, argv[i]);
+    printf("%dç•ªç›®ã®å¼•æ•° = %s\n", i, argv[i]);
   }
   po.parse(argc, argv);
   cp = NULL;
@@ -274,7 +274,7 @@ int InteractiveSimulator::select_options(){
   string area_string;
   cin >> area_string;
   //cout << "area_string : " << area_string << endl;
-  if(area_string!=""){                 // ƒfƒoƒbƒOo—Í
+  if(area_string!=""){                 // ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›
     Logger::instance().set_log_level(Logger::Debug);
     if(area_string.find('a') != string::npos){
       Logger::instance().set_log_level(Logger::Debug);
@@ -302,7 +302,7 @@ int InteractiveSimulator::select_options(){
       Logger::rest_area_ = (area_string.find('r') != string::npos);
     }
   }
-  else {                              // Œx‚Ì‚İo—Í
+  else {                              // è­¦å‘Šã®ã¿å‡ºåŠ›
     Logger::instance().set_log_level(Logger::Warn);
   }
   cin.ignore( 1024,'\n');
@@ -316,7 +316,7 @@ int InteractiveSimulator::select_options(){
 int save_state(simulation_todo_sptr_t& simulation_phase){
   //FILE *fp;
   //fp = fopen("save.dat", "w");
-  //phase_root_‚Ü‚Å
+  //phase_root_ã¾ã§
   ofstream ofs( "test.txt", ios::out|ios::binary|ios::trunc );
   phase_result_sptr_t temp;
   temp = simulation_phase.todo->phase_result->parent;

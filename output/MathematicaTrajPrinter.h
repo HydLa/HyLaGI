@@ -7,7 +7,7 @@ namespace hydla{
 namespace output{
 
 /**
- * MathematicaŒ`®‚Å‚Ìo—Í‚ğs‚¤
+ * Mathematicaå½¢å¼ã§ã®å‡ºåŠ›ã‚’è¡Œã†
  */
 
 class MathematicaTrajPrinter: public TrajPrinter{

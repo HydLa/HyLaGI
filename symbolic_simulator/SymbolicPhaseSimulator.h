@@ -49,21 +49,21 @@ private:
   variable_map_t shift_variable_map_time(const variable_map_t& vm,const time_t &time);
   
   /**
-   * PPƒ‚[ƒh‚ÆIPƒ‚[ƒh‚ğØ‚è‘Ö‚¦‚é
+   * PPãƒ¢ãƒ¼ãƒ‰ã¨IPãƒ¢ãƒ¼ãƒ‰ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
    */
 
   virtual void set_simulation_mode(const Phase& phase);
   
 
   /**
-   * —^‚¦‚ç‚ê‚½§–ñƒ‚ƒWƒ…[ƒ‹W‡‚Ì•Â•ïŒvZ‚ğs‚¢C–³–µ‚«‚ğ”»’è‚·‚é‚Æ‚Æ‚à‚É‘Î‰‚·‚é•Ï”•\‚ğ•Ô‚·D
+   * ä¸ãˆã‚‰ã‚ŒãŸåˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆã®é–‰åŒ…è¨ˆç®—ã‚’è¡Œã„ï¼Œç„¡çŸ›ç›¾æ€§ã‚’åˆ¤å®šã™ã‚‹ã¨ã¨ã‚‚ã«å¯¾å¿œã™ã‚‹å¤‰æ•°è¡¨ã‚’è¿”ã™ï¼
    */
 
   virtual simulator::CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
                            simulation_todo_sptr_t& state, const variable_map_t &, variable_range_maps_t& result_vm);
 
   /**
-   * —^‚¦‚ç‚ê‚½ƒtƒF[ƒY‚ÌŸ‚ÌTodo‚ğ•Ô‚·D
+   * ä¸ãˆã‚‰ã‚ŒãŸãƒ•ã‚§ãƒ¼ã‚ºã®æ¬¡ã®Todoã‚’è¿”ã™ï¼
    */
   virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
 

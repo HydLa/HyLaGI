@@ -15,7 +15,7 @@ namespace hydla {
 namespace simulator {
 
 /**
- * §–ñ‚ğ’²‚×Cprev•Ï”ˆÈŠO‚Ì•Ï”‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©‚ğ•Ô‚·ƒNƒ‰ƒXD
+ * åˆ¶ç´„ã‚’èª¿ã¹ï¼Œprevå¤‰æ•°ä»¥å¤–ã®å¤‰æ•°ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹ã‚’è¿”ã™ã‚¯ãƒ©ã‚¹ï¼
  */
 class NonPrevSearcher : public parse_tree::DefaultTreeVisitor {
 public:
@@ -29,15 +29,15 @@ public:
   virtual ~NonPrevSearcher();
   
   /**
-   * prevˆÈŠO‚Ì•Ï”‚ğŠÜ‚Ş‚©”»’è‚·‚é
-   * @return: true‚È‚çprev•Ï”ˆÈŠO‚Ì•Ï”‚ğŠÜ‚ñ‚Å‚¢‚é
+   * prevä»¥å¤–ã®å¤‰æ•°ã‚’å«ã‚€ã‹åˆ¤å®šã™ã‚‹
+   * @return: trueãªã‚‰prevå¤‰æ•°ä»¥å¤–ã®å¤‰æ•°ã‚’å«ã‚“ã§ã„ã‚‹
    */
   bool judge_non_prev(boost::shared_ptr<parse_tree::Node> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 private:
 

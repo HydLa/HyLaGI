@@ -1,6 +1,6 @@
 /**
  *
- * ParseTree�̍\����r�֐��̃e�X�g�P�[�X
+ * ParseTreeの構造比較関数のテストケース
  *
  */
 
@@ -44,16 +44,16 @@ BOOST_AUTO_TEST_CASE(parse_tree_exactly_same_struct_test)
 #define TEST_NOT_EXACTLY_SAME(L, R) \
   BOOST_CHECK(!comp_same(L, R, true));
 
-  // ����\��
+  // 同一構造
   TEST_EXACTLY_SAME("x=1.", "x=1.");
   TEST_EXACTLY_SAME("x=1*3-2/4+h-, y'=4 & z=zzz.", "x=1*3-2/4+h-, y'=4 & z=zzz.");
   TEST_EXACTLY_SAME("A<=>x=1.B<=>y=2.A,B.", "A<=>x=1.B<=>y=2.A,B.");
   TEST_EXACTLY_SAME("B<=>y=2.A<=>x=1.A,B.", "A<=>x=1.B<=>y=2.A,B.");
 
-  // �I�[�m�[�hNumber�̋�̒l�̍���
+  // 終端ノードNumberの具体値の差異
   TEST_NOT_EXACTLY_SAME("x=1.", "x=2.");
 
-  // �I�[�m�[�hVariable�̋�̒l�̍���
+  // 終端ノードVariableの具体値の差異
   TEST_NOT_EXACTLY_SAME("x=1.", "y=1.");
 
   // Symmetry
@@ -77,17 +77,17 @@ BOOST_AUTO_TEST_CASE(parse_tree_same_struct_test)
 #define TEST_NOT_SAME(L, R) \
   BOOST_CHECK(!comp_same(L, R, false));
 
-  // ����\��
+  // 同一構造
   TEST_SAME("x=1.", "x=1.");
   
   TEST_SAME("x=1*3-2/4+h-, y'=4 & z=zzz.", "x=1*3-2/4+h-, y'=4 & z=zzz.");
   TEST_SAME("A<=>x=1.B<=>y=2.A,B.", "A<=>x=1.B<=>y=2.A,B.");
   TEST_SAME("B<=>y=2.A<=>x=1.A,B.", "A<=>x=1.B<=>y=2.A,B.");
 
-  // �I�[�m�[�hNumber�̋�̒l�̍���
+  // 終端ノードNumberの具体値の差異
   TEST_NOT_SAME("x=1.", "x=2.");
 
-  // �I�[�m�[�hVariable�̋�̒l�̍���
+  // 終端ノードVariableの具体値の差異
   TEST_NOT_SAME("x=1.", "y=1.");
 
   // Symmetry
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(parse_tree_same_struct_test)
   TEST_NOT_SAME("A<=>x=1.B<=>y=2.A<<B.", "A<=>x=1.B<=>y=2.B<<A.");
 
 
-  // ���ό`�ɂ�蓯��Ƃ݂Ȃ���
+  // 式変形により同一とみなせる
   TEST_SAME("(x=1 & y=2) & z=3.", "x=1 & (y=2 & z=3).");
   TEST_SAME("x=1 & (y=2 & z=3).", "(x=1 & y=2) & z=3.");
   TEST_SAME("((x=1 & y=2) & z=3) & w=4.", "x=1 & (y=2 & (z=3 & w=4)).");

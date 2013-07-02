@@ -27,28 +27,28 @@ public:
   virtual ~ParseTreeSemanticAnalyzer();
 
   /**
-   * ‰ğÍ‚¨‚æ‚Ñ§–ñŒÄ‚Ño‚µ‚Ì“WŠJ‚ğ‚¨‚±‚È‚¤
+   * è§£æãŠã‚ˆã³åˆ¶ç´„å‘¼ã³å‡ºã—ã®å±•é–‹ã‚’ãŠã“ãªã†
    */
   void analyze(node_sptr& n/*, variable_map_t& variable_map*/);
 
-  // ’è‹`
+  // å®šç¾©
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramDefinition> node);
 
-  // ŒÄ‚Ño‚µ
+  // å‘¼ã³å‡ºã—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
 
-  // §–ñ®
+  // åˆ¶ç´„å¼
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
 
-  // ”äŠr‰‰Zq
+  // æ¯”è¼ƒæ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
@@ -56,49 +56,49 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
 
-  // ˜_—‰‰Zq
+  // è«–ç†æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
   
-  // Zp“ñ€‰‰Zq
+  // ç®—è¡“äºŒé …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
   
-  // Zp’P€‰‰Zq
+  // ç®—è¡“å˜é …æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
   
-  // §–ñŠK‘w’è‹`‰‰Zq
+  // åˆ¶ç´„éšå±¤å®šç¾©æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
 
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
   
-  // ”÷•ª
+  // å¾®åˆ†
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
 
-  // ¶‹ÉŒÀ
+  // å·¦æ¥µé™
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
   
-  // ŠÖ”
+  // é–¢æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> node);
 
-  // ‰~ü—¦
+  // å††å‘¨ç‡
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  // ©‘R‘Î”‚Ì’ê
+  // è‡ªç„¶å¯¾æ•°ã®åº•
   virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
   
   
-  // •Ï”
+  // å¤‰æ•°
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
-  // ”š
+  // æ•°å­—
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
   // Print
@@ -121,49 +121,49 @@ private:
   typedef std::map<std::string, node_sptr>        formal_arg_map_t;
 
   /**
-   * ’Tõ’†‚Ìƒm[ƒhƒcƒŠ[‚Ìó‘Ô‚ğ•Û‘¶‚·‚é‚½‚ß‚Ì\‘¢‘Ì
+   * æ¢ç´¢ä¸­ã®ãƒãƒ¼ãƒ‰ãƒ„ãƒªãƒ¼ã®çŠ¶æ…‹ã‚’ä¿å­˜ã™ã‚‹ãŸã‚ã®æ§‹é€ ä½“
    */
   struct State {
-    /// ƒK[ƒh‚Ì’†‚©‚Ç‚¤‚©
+    /// ã‚¬ãƒ¼ãƒ‰ã®ä¸­ã‹ã©ã†ã‹
     bool in_guard;
 
-    /// §–ñ®‚Ì’†‚©‚Ç‚¤‚©
+    /// åˆ¶ç´„å¼ã®ä¸­ã‹ã©ã†ã‹
     bool in_constraint;
 
-    /// always§–ñ‚Ì—LŒø”ÍˆÍ“à‚©‚Ç‚¤‚©
+    /// alwaysåˆ¶ç´„ã®æœ‰åŠ¹ç¯„å›²å†…ã‹ã©ã†ã‹
     bool in_always;
 
-    /// ”÷•ª‹L†‚ğ’Ê‰ß‚µ‚½‰ñ”
-    /// •Ï”‚É“’B‚µ‚½ÛA‚±‚Ì’l‚ª‚»‚Ì•Ï”‚É‘Î‚·‚é”÷•ª‚ÌÅ‘å‰ñ”
+    /// å¾®åˆ†è¨˜å·ã‚’é€šéã—ãŸå›æ•°
+    /// å¤‰æ•°ã«åˆ°é”ã—ãŸéš›ã€ã“ã®å€¤ãŒãã®å¤‰æ•°ã«å¯¾ã™ã‚‹å¾®åˆ†ã®æœ€å¤§å›æ•°
     int differential_count;
 
-    /// “WŠJ‚³‚ê‚½’è‹`‚ÌƒŠƒXƒg 
+    /// å±•é–‹ã•ã‚ŒãŸå®šç¾©ã®ãƒªã‚¹ãƒˆ 
     referenced_definition_list_t referenced_definition_list;
 
-    /// ‰¼ˆø”‚Æ‚»‚ê‚É‘Î‰‚·‚éÀˆø”ƒm[ƒh‚Ì‘Î‰•\  
+    /// ä»®å¼•æ•°ã¨ãã‚Œã«å¯¾å¿œã™ã‚‹å®Ÿå¼•æ•°ãƒãƒ¼ãƒ‰ã®å¯¾å¿œè¡¨  
     formal_arg_map_t formal_arg_map;
   };
 
-  /// State‚ğ‚Â‚Ş‚½‚ß‚ÌƒXƒ^ƒbƒN
+  /// Stateã‚’ã¤ã‚€ãŸã‚ã®ã‚¹ã‚¿ãƒƒã‚¯
   std::stack<State> todo_stack_;
   
-  /// ƒvƒƒOƒ‰ƒ€’†‚Åg—p‚³‚ê‚é•Ï”‚Ìˆê——
+  /// ãƒ—ãƒ­ã‚°ãƒ©ãƒ ä¸­ã§ä½¿ç”¨ã•ã‚Œã‚‹å¤‰æ•°ã®ä¸€è¦§
   variable_map_t* variable_map_;
   
   /**
-   * V‚µ‚¢qƒm[ƒh
-   * acceptŒãA‚±‚ê‚É’l‚ª“ü‚Á‚Ä‚¢‚éê‡‚Íƒm[ƒh‚Ì’l‚ğŒğŠ·‚·‚é
+   * æ–°ã—ã„å­ãƒãƒ¼ãƒ‰
+   * acceptå¾Œã€ã“ã‚Œã«å€¤ãŒå…¥ã£ã¦ã„ã‚‹å ´åˆã¯ãƒãƒ¼ãƒ‰ã®å€¤ã‚’äº¤æ›ã™ã‚‹
    */
   node_sptr new_child_;
 
   /**
-   * §–ñ’è‹`‚Ìî•ñ
+   * åˆ¶ç´„å®šç¾©ã®æƒ…å ±
    */
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& 
     constraint_definition_;
     
   /**
-   * ƒvƒƒOƒ‰ƒ€’è‹`‚Ìî•ñ
+   * ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®šç¾©ã®æƒ…å ±
    */
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    
     program_definition_;
@@ -171,8 +171,8 @@ private:
   hydla::parse_tree::ParseTree* parse_tree_;
   
   /**
-   * w’è‚µ‚½ƒm[ƒh‚ğŒÄ‚Ño‚µA
-   * new_child_‚É’l‚ªİ’è‚³‚ê‚Ä‚¢‚½ê‡Aqƒm[ƒh‚ğ“ü‚ê‘Ö‚¦‚é
+   * æŒ‡å®šã—ãŸãƒãƒ¼ãƒ‰ã‚’å‘¼ã³å‡ºã—ã€
+   * new_child_ã«å€¤ãŒè¨­å®šã•ã‚Œã¦ã„ãŸå ´åˆã€å­ãƒãƒ¼ãƒ‰ã‚’å…¥ã‚Œæ›¿ãˆã‚‹
    */
   template<class C, 
            const node_sptr& (C::*getter)() const,
@@ -211,7 +211,7 @@ private:
   }
 
   /**
-   * ’è‹`‚ÌŠÈ–ñ‰»(“WŠJ)‚ğ‚¨‚±‚È‚¤
+   * å®šç¾©ã®ç°¡ç´„åŒ–(å±•é–‹)ã‚’ãŠã“ãªã†
    */
   node_sptr apply_definition(
     const referenced_definition_t& def_type,

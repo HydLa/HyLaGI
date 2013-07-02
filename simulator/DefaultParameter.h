@@ -18,7 +18,7 @@ struct DefaultParameter{
   }
   
   /**
-   * Œ³‚Æ‚È‚é•Ï”‚ğİ’è‚·‚é
+   * å…ƒã¨ãªã‚‹å¤‰æ•°ã‚’è¨­å®šã™ã‚‹
    */
   void set_variable(variable_t* const variable)
   {
@@ -26,7 +26,7 @@ struct DefaultParameter{
   }
   
   /**
-   * Œ³‚Æ‚È‚Á‚½•Ï”‚Ìƒ|ƒCƒ“ƒ^‚ğæ“¾‚·‚é
+   * å…ƒã¨ãªã£ãŸå¤‰æ•°ã®ãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ã™ã‚‹
    */
   variable_t* get_variable() const {return original_variable_;}
 
@@ -36,7 +36,7 @@ struct DefaultParameter{
   int get_phase_id(){return introduced_phase_->id;}
   
   /**
-   * “±“ü‚³‚ê‚½ƒtƒF[ƒY‚ğİ’è‚·‚é
+   * å°å…¥ã•ã‚ŒãŸãƒ•ã‚§ãƒ¼ã‚ºã‚’è¨­å®šã™ã‚‹
    */
   void set_phase(const phase_result_sptr_t &phase)
   {
@@ -44,7 +44,7 @@ struct DefaultParameter{
   }
   
   /**
-   * “±“ü‚³‚ê‚½ƒtƒF[ƒY‚ğæ“¾‚·‚é
+   * å°å…¥ã•ã‚ŒãŸãƒ•ã‚§ãƒ¼ã‚ºã‚’å–å¾—ã™ã‚‹
    */
   phase_result_sptr_t get_phase() const {return introduced_phase_;}
   
@@ -58,7 +58,7 @@ struct DefaultParameter{
   }
   
   /**
-   * \‘¢‘Ì‚Ì’l‚ğƒ_ƒ“ƒv‚·‚é
+   * æ§‹é€ ä½“ã®å€¤ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
    */
   std::ostream& dump(std::ostream& s) const
   {

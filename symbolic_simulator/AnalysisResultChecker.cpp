@@ -173,7 +173,7 @@ AnalysisResultChecker::check_false_conditions(
       return CVM_INCONSISTENT;
     }else if(check_consistency_result.false_parameter_maps.empty()){
     }else{
-    /* TODO ³‚µ‚­•ªŠò‚·‚é
+    /* TODO æ­£ã—ãåˆ†å²ã™ã‚‹
       CalculateClosureResult result;
       for(int i=0; i<(int)check_consistency_result.true_parameter_maps.size();i++){
         simulation_phase_sptr_t branch_state(new simulation_phase_t(*state));

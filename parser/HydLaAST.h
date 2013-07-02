@@ -24,14 +24,14 @@ public:
   ~HydLaAST();
 
   /**
-   * “ü—Í‚ğ‰ğÍ‚µAAST‚ğ\’z‚·‚é
+   * å…¥åŠ›ã‚’è§£æã—ã€ASTã‚’æ§‹ç¯‰ã™ã‚‹
    */
   void parse(std::istream& s);
   void parse_flie(const std::string& filename);
   void parse_string(const std::string& str);
 
   /**
-   * AST‚Ì\‘¢‚ğo—Í‚·‚é
+   * ASTã®æ§‹é€ ã‚’å‡ºåŠ›ã™ã‚‹
    */
   std::ostream& dump(std::ostream& stream) const
   {
@@ -39,7 +39,7 @@ public:
   }
 
   /**
-   * AST‚ÌƒCƒeƒŒ[ƒ^‚ğ•Ô‚·
+   * ASTã®ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚¿ã‚’è¿”ã™
    */
    const_tree_iter_t get_tree_iterator() const
    {

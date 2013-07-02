@@ -24,7 +24,7 @@ typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
 typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
 /**
- * askƒm[ƒh‚ğW‚ß‚éƒrƒWƒ^[ƒNƒ‰ƒX
+ * askãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹ãƒ“ã‚¸ã‚¿ãƒ¼ã‚¯ãƒ©ã‚¹
  */
 class AskCollector : public parse_tree::DefaultTreeVisitor {
 public:
@@ -33,48 +33,48 @@ public:
   virtual ~AskCollector();
 
   /** 
-   * askƒm[ƒh‚ğW‚ß‚é
+   * askãƒãƒ¼ãƒ‰ã‚’é›†ã‚ã‚‹
    *
-   * @param expanded_always  “WŠJÏ‚İalwaysƒm[ƒh‚ÌW‡
-   *                           iask‚Ì’†‚É‚ ‚Á‚½always‚ª“WŠJ‚³‚ê‚½‚à‚Ìj
-   * @param negative_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹•s‰Â”\‚Èaskƒm[ƒh‚ÌW‡
-   * @param positive_asks    ƒK[ƒhğŒ‚ªƒGƒ“ƒe[ƒ‹‰Â”\‚Èaskƒm[ƒh‚ÌW‡
+   * @param expanded_always  å±•é–‹æ¸ˆã¿alwaysãƒãƒ¼ãƒ‰ã®é›†åˆ
+   *                           ï¼ˆaskã®ä¸­ã«ã‚ã£ãŸalwaysãŒå±•é–‹ã•ã‚ŒãŸã‚‚ã®ï¼‰
+   * @param negative_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«ä¸å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
+   * @param positive_asks    ã‚¬ãƒ¼ãƒ‰æ¡ä»¶ãŒã‚¨ãƒ³ãƒ†ãƒ¼ãƒ«å¯èƒ½ãªaskãƒãƒ¼ãƒ‰ã®é›†åˆ
    */
   void collect_ask(expanded_always_t* expanded_always,                   
                    positive_asks_t*   positive_asks,
                    negative_asks_t*   negative_asks,
                    ask_set_t*        unknown_asks);
 
-  // Ask§–ñ
+  // Askåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
 
-  // Tell§–ñ
+  // Tellåˆ¶ç´„
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
   
-  // ‘Š‰‰Zq
+  // æ™‚ç›¸æ¼”ç®—å­
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
   
 private:
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
 
-  /// ûW‚ğ‚¨‚±‚È‚¤‘ÎÛ‚Ì§–ñƒ‚ƒWƒ…[ƒ‹W‡
+  /// åé›†ã‚’ãŠã“ãªã†å¯¾è±¡ã®åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«é›†åˆ
   module_set_sptr          module_set_; 
 
   expanded_always_t*       expanded_always_;                   
   
-  /// §–ñƒXƒgƒA‚Æ–µ‚‚·‚éask‚ÌƒŠƒXƒg
+  /// åˆ¶ç´„ã‚¹ãƒˆã‚¢ã¨çŸ›ç›¾ã™ã‚‹askã®ãƒªã‚¹ãƒˆ
   negative_asks_t*         negative_asks_;
 
-  /// —LŒø‚Æ‚È‚Á‚Ä‚¢‚éask‚ÌƒŠƒXƒg
+  /// æœ‰åŠ¹ã¨ãªã£ã¦ã„ã‚‹askã®ãƒªã‚¹ãƒˆ
   positive_asks_t*         positive_asks_;
   
-  /// ask‚ÌƒŠƒXƒg
+  /// askã®ãƒªã‚¹ãƒˆ
   ask_set_t*              unknown_asks_;
   
-  /// —LŒø‚É‚È‚Á‚½ask‚Ì’†‚©‚Ç‚¤‚©
+  /// æœ‰åŠ¹ã«ãªã£ãŸaskã®ä¸­ã‹ã©ã†ã‹
   bool                in_positive_ask_;
   
-  /// ’Tõ‚µ‚½alwaysƒm[ƒh‚ÌƒŠƒXƒg
+  /// æ¢ç´¢ã—ãŸalwaysãƒãƒ¼ãƒ‰ã®ãƒªã‚¹ãƒˆ
   visited_always_t   visited_always_;
 
   expanded_always_t  new_expanded_always_;

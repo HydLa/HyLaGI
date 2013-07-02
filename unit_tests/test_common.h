@@ -2,20 +2,20 @@
 #define _INCLUDED_HYDLA_TEST_COMMON_H_
 
 /**
- * ���j�b�g�e�X�g�̋��ʃw�b�_
+ * ユニットテストの共通ヘッダ
  * 
- * ���ׂẴe�X�g�͂��̃t�@�C�����C���N���[�h���邱��
+ * すべてのテストはこのファイルをインクルードすること
  */
 
 #include <boost/test/auto_unit_test.hpp>
 
 /**
- * ���s����e�X�g�̑I��
+ * 実行するテストの選択
  */
 
 #ifndef TEST_ALL_TEST_CASE
 
-  #define DISABLE_PARSE_TREE_BUILD_TEST // 20121206 parse_tree_test.cpp(332) �ŃG���[���N����
+  #define DISABLE_PARSE_TREE_BUILD_TEST // 20121206 parse_tree_test.cpp(332) でエラーを起こす
   //#define DISABLE_PARSE_TREE_STRUCT_TEST
   #define DISABLE_MODULE_SET_LIST_TEST
   #define DISABLE_CONSISTENCY_CHECKER_TEST

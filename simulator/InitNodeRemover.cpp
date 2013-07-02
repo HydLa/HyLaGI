@@ -50,58 +50,58 @@ void InitNodeRemover::binary_node(boost::shared_ptr<hydla::parse_tree::BinaryNod
   }
 }
 
-// Ask§–ñ
+// Askåˆ¶ç´„
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
-  // íœ
+  // å‰Šé™¤
   child_ = node_sptr();
 }
 
-// Tell§–ñ
+// Tellåˆ¶ç´„
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 {
-  // íœ
+  // å‰Šé™¤
   child_ = node_sptr();
 }
 
-// ‘Š‰‰Zq
+// æ™‚ç›¸æ¼”ç®—å­
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 {
-  // Œ»óˆÛ
+  // ç¾çŠ¶ç¶­æŒ
   child_ = node;
 }
 
-// §–ñ®
+// åˆ¶ç´„å¼
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
 {
   unary_node(node);
 }
 
-// ˜_—Ï
+// è«–ç†ç©
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
 {
   binary_node(node);
 }
 
-// ƒ‚ƒWƒ…[ƒ‹‚Ìã‡¬
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®å¼±åˆæˆ
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
 {
   binary_node(node);
 }
 
-// ƒ‚ƒWƒ…[ƒ‹‚Ì•À—ñ‡¬
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ä¸¦åˆ—åˆæˆ
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
 {
   binary_node(node);
 }
 
-// §–ñŒÄ‚Ño‚µ
+// åˆ¶ç´„å‘¼ã³å‡ºã—
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
 {
   unary_node(node);
 }
 
-// ƒvƒƒOƒ‰ƒ€ŒÄ‚Ño‚µ
+// ãƒ—ãƒ­ã‚°ãƒ©ãƒ å‘¼ã³å‡ºã—
 void InitNodeRemover::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
 {
   unary_node(node);

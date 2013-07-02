@@ -27,26 +27,26 @@ public:
 
 
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç•Ï”•\‚ğì¬‚·‚é
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰å¤‰æ•°è¡¨ã‚’ä½œæˆã™ã‚‹
    */
   virtual bool create_maps(create_result_t & create_result);
   
   /**
-   * §–ñƒXƒgƒA‚ª–³–µ‚‚©‚ğ”»’è‚·‚éD
-   * ˆø”‚Å§–ñ‚ğ“n‚³‚ê‚½ê‡‚Íˆê“I‚É§–ñƒXƒgƒA‚É’Ç‰Á‚·‚éD
+   * åˆ¶ç´„ã‚¹ãƒˆã‚¢ãŒç„¡çŸ›ç›¾ã‹ã‚’åˆ¤å®šã™ã‚‹ï¼
+   * å¼•æ•°ã§åˆ¶ç´„ã‚’æ¸¡ã•ã‚ŒãŸå ´åˆã¯ä¸€æ™‚çš„ã«åˆ¶ç´„ã‚¹ãƒˆã‚¢ã«è¿½åŠ ã™ã‚‹ï¼
    */
   virtual VCSResult check_consistency();
   virtual VCSResult check_consistency(const constraints_t& constraints);
   
 
   /**
-   * Œ»İ‚Ì§–ñƒXƒgƒA‚©‚ç—^‚¦‚½ask‚ª“±o‰Â”\‚©‚Ç‚¤‚©
+   * ç¾åœ¨ã®åˆ¶ç´„ã‚¹ãƒˆã‚¢ã‹ã‚‰ä¸ãˆãŸaskãŒå°å‡ºå¯èƒ½ã‹ã©ã†ã‹
    */
   virtual VCSResult check_entailment(const node_sptr &node);
 
 
   /**
-   * —^‚¦‚ç‚ê‚½map‚ğŒ³‚ÉCŠe•Ï”‚Ì˜A‘±«‚ğİ’è‚·‚éD
+   * ä¸ãˆã‚‰ã‚ŒãŸmapã‚’å…ƒã«ï¼Œå„å¤‰æ•°ã®é€£ç¶šæ€§ã‚’è¨­å®šã™ã‚‹ï¼
    */
   virtual void set_continuity(const continuity_map_t& continuity_map);
 
@@ -55,12 +55,12 @@ private:
   virtual void add_left_continuity_constraint(const continuity_map_t& continuity_map, PacketSender &ps);
   
   /**
-   * §–ñ‚ğoŒ»‚·‚é•Ï”‚â¶˜A‘±§–ñ‚Æ‚Æ‚à‚É‘—M‚·‚é
+   * åˆ¶ç´„ã‚’å‡ºç¾ã™ã‚‹å¤‰æ•°ã‚„å·¦é€£ç¶šåˆ¶ç´„ã¨ã¨ã‚‚ã«é€ä¿¡ã™ã‚‹
    */
   void send_constraint(const constraints_t& constraints);
   
   /**
-   * check_consistency ‚ÌóM•”•ª
+   * check_consistency ã®å—ä¿¡éƒ¨åˆ†
    */
   VCSResult check_consistency_receive();
 

@@ -60,12 +60,12 @@ public:
 protected:
 
   /**
-   * ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ã‚ÌTodo‚ð“ü‚ê‚Ä‚¨‚­ƒRƒ“ƒeƒi
+   * ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ä¸Šã®Todoã‚’å…¥ã‚Œã¦ãŠãã‚³ãƒ³ãƒ†ãƒŠ
    */
   boost::shared_ptr<todo_container_t> todo_stack_;
 
   /**
-   * ŠeTodo‚É‘Î‰ž‚·‚éƒvƒƒtƒ@ƒCƒŠƒ“ƒO‚ÌŒ‹‰Ê
+   * å„Todoã«å¯¾å¿œã™ã‚‹ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°ã®çµæžœ
    */
   boost::shared_ptr<entire_profile_t> profile_vector_;
 };

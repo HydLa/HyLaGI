@@ -80,7 +80,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
 
     if(!is_safe && opts_->stop_at_failure){
       HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
-      // assertionˆá”½‚Ìê‡‚ªŒ©‚Â‚©‚Á‚½‚Ì‚ÅC‘¼‚ÌƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ð’†’f‚µ‚ÄI—¹‚·‚é
+      // assertioné•åã®å ´åˆãŒè¦‹ã¤ã‹ã£ãŸã®ã§ï¼Œä»–ã®ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ä¸­æ–­ã—ã¦çµ‚äº†ã™ã‚‹
       while(!todo_stack_->empty()) {
         simulation_todo_sptr_t tmp_state(todo_stack_->pop_todo());
         phase_result_sptr_t phase(new PhaseResult(*todo, simulator::OTHER_ASSERTION));

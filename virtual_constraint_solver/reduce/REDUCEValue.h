@@ -10,27 +10,27 @@ namespace reduce {
 struct REDUCEValue {
 
   /**
-   * –¢’è‹`’l‚©‚Ç‚¤‚©
+   * æœªå®šç¾©å€¤ã‹ã©ã†ã‹
    */
   bool is_undefined() const;
 
   /**
-   * •¶š—ñ•\Œ»‚ğæ“¾‚·‚é
+   * æ–‡å­—åˆ—è¡¨ç¾ã‚’å–å¾—ã™ã‚‹
    */
   std::string get_string() const;
   
   /**
-   * ‚Æ‚è‚ ‚¦‚¸•¶š—ñ‚ğƒZƒbƒg
+   * ã¨ã‚Šã‚ãˆãšæ–‡å­—åˆ—ã‚’ã‚»ãƒƒãƒˆ
    */
   void set(std::string);
 
   /**
-   * ƒf[ƒ^‚ğƒ_ƒ“ƒv‚·‚é
+   * ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
    */
   std::ostream& dump(std::ostream& s) const;
 
   private:
-  std::string str_; // •¶š—ñi”CˆÓ‚Ì®‚ğˆµ‚¦‚éj
+  std::string str_; // æ–‡å­—åˆ—ï¼ˆä»»æ„ã®å¼ã‚’æ‰±ãˆã‚‹ï¼‰
 };
 
 bool operator<(const REDUCEValue& lhs, const REDUCEValue& rhs);

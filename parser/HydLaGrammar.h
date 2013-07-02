@@ -104,7 +104,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Logical_term)  logical_term; 
 
 
-    defRuleID(RI_Ask_Logical_Literal)  ask_logical_literal; //!‚ª‚Â‚­‚à‚Ì
+    defRuleID(RI_Ask_Logical_Literal)  ask_logical_literal; //!ãŒã¤ãã‚‚ã®
     defRuleID(RI_Ask_Logical_Term)  ask_logical_term; 
     defRuleID(RI_Ask_Logical)       ask_logical;
     defRuleID(RI_Comparison)        comparison; 
@@ -119,17 +119,17 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
 
-    // \•¶’è‹`
+    // æ§‹æ–‡å®šç¾©
     definition(const HydLaGrammar& self) {
 
-      //ŠJn
+      //é–‹å§‹
       hydla_program = gen_pt_node_d[statements];
             
-      //•¶‚ÌW‡
+      //æ–‡ã®é›†åˆ
       statements  = gen_ast_node_d[*(( assert | def_statement | program) 
                                      >> discard_node_d[ch_p('.')]) >> end_p];
 
-      //ƒvƒƒOƒ‰ƒ€
+      //ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
       program = program_parallel;
 
       program_parallel = program_ordered % root_node_d[parallel];
@@ -141,48 +141,48 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
             >> eps_p(*ch_p(')') >> (parallel | weaker | ch_p('}') | ch_p('.')))
         | module;
       
-      // ’è‹`
+      // å®šç¾©
       def_statement = gen_pt_node_d[constraint_def | program_def];
       
-      // assert•¶
+      // assertæ–‡
       assert = root_node_d[str_p("ASSERT")] >> no_node_d[ch_p('(')] >> ask_logical >> no_node_d[ch_p(')')];
 
 
-      //program’è‹`
+      //programå®šç¾©
       program_def = 
         gen_pt_node_d[program_callee] 
           >> no_node_d[ch_p('{')] >> program >> no_node_d[ch_p('}')];
       
-      //constraint’è‹`
+      //constraintå®šç¾©
       constraint_def = 
         gen_pt_node_d[constraint_callee] >> no_node_d[equivalent] >> gen_pt_node_d[constraint];
 
-      //constraint’è‹`‚Ì¶•Ó
+      //constraintå®šç¾©æ™‚ã®å·¦è¾º
       constraint_callee = 
         gen_ast_node_d[constraint_name] >> gen_pt_node_d[formal_args];
 
-      //constraintŒÄ‚Ño‚µ
+      //constraintå‘¼ã³å‡ºã—
       constraint_caller = 
         gen_ast_node_d[constraint_name] >> gen_pt_node_d[actual_args];
 
-      //program’è‹`‚Ì¶•Ó
+      //programå®šç¾©æ™‚ã®å·¦è¾º
       program_callee = 
         gen_ast_node_d[program_name] >> gen_pt_node_d[formal_args];
 
-      //programŒÄ‚Ño‚µ
+      //programå‘¼ã³å‡ºã—
       program_caller= 
         gen_ast_node_d[program_name] >> gen_pt_node_d[actual_args];
 
-      //module’è‹`
+      //moduleå®šç¾©
       module = gen_pt_node_d[constraint];
       
-      //§–ñ®
+      //åˆ¶ç´„å¼
       constraint = gen_ast_node_d[logical];
 
-      //˜_—˜a
+      //è«–ç†å’Œ
       logical      = logical_term % root_node_d[logical_or];
 
-      //˜_—Ï
+      //è«–ç†ç©
       logical_term = always_term % root_node_d[logical_and];
 
       //always
@@ -197,39 +197,39 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //tell
       tell = gen_pt_node_d[chain] | command;
       
-      //ƒRƒ}ƒ“ƒh•¶
+      //ã‚³ãƒãƒ³ãƒ‰æ–‡
       command = 
              no_node_d[ch_p('@')] >> root_node_d[leaf_node_d[identifier]] >>  no_node_d[ch_p('(')]
              >> leaf_node_d[!(identifier % ch_p(','))]
              >> no_node_d[ch_p(')')];
              
-      //®
+      //å¼
       expression = arithmetic;
 
-      //Zp®
+      //ç®—è¡“å¼
       arithmetic =
         arith_term % root_node_d[add | sub];
       
-      //Zp€
+      //ç®—è¡“é …
       arith_term =  
         unary % root_node_d[mul | div];
       
       
-      //’P€‰‰Zq
+      //å˜é …æ¼”ç®—å­
       unary = !(root_node_d[positive | negative]) >> power_term;
       
-      //‚×‚«æ
+      //ã¹ãä¹—
       power_term = limit >> !(root_node_d[pow] >> power_term);
 
-      //‹ÉŒÀ
-      //factorˆÈŠO‚Ì•¨‚ªŒã‚ë‚É‚ ‚Á‚½‚çprev
+      //æ¥µé™
+      //factorä»¥å¤–ã®ç‰©ãŒå¾Œã‚ã«ã‚ã£ãŸã‚‰prev
       limit = diff >> !(root_node_d[previous] >> eps_p(eps_p - factor));
       
 
-      //”÷•ª
+      //å¾®åˆ†
       diff = factor >> *(root_node_d[differential]);
 
-      //ˆöq
+      //å› å­
       factor =
           root_node_d[function|unsupported_function] >>  no_node_d[ch_p('(')] >> !(expression %  no_node_d[ch_p(',')])  >> no_node_d[ch_p(')')]
         | pi
@@ -240,16 +240,16 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         | no_node_d[ch_p('(')] >> expression >> no_node_d[ch_p(')')];
 
       // ---- ask ----
-      //˜_—˜a
+      //è«–ç†å’Œ
       ask_logical = ask_logical_term % root_node_d[logical_or];
 
-      //˜_—Ï
+      //è«–ç†ç©
       ask_logical_term = ask_logical_literal % root_node_d[logical_and];
       
-      //”Û’è
+      //å¦å®š
       ask_logical_literal = !(root_node_d[logical_not]) >> comparison;
 
-      //”äŠr
+      //æ¯”è¼ƒ
       comparison = 
         gen_pt_node_d[chain]
         | gen_pt_node_d[constraint_caller]
@@ -258,64 +258,64 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       chain = 
         gen_ast_node_d[expression >> +(comp_op >> expression)];
       
-      //‰~ü—¦
+      //å††å‘¨ç‡
       pi = str_p("Pi");
       
-      //©‘R‘Î”‚Ì’ê
+      //è‡ªç„¶å¯¾æ•°ã®åº•
       e = str_p("E");
 
-	  //SystemVariable "$"‚Ån‚Ü‚é‚à‚Ì
+	  //SystemVariable "$"ã§å§‹ã¾ã‚‹ã‚‚ã®
 	  system_variable = sv_timer;
 
 	  sv_timer = str_p("$timer");
       
       unsupported_function = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
       
-      //”š
+      //æ•°å­—
       number = 
         lexeme_d[leaf_node_d[
           +digit_p >> !('.' >> +digit_p)]]; 
 
-      //•Ï”
+      //å¤‰æ•°
       variable = lexeme_d[leaf_node_d[identifier]];
 
-      //‘©”›•Ï”
+      //æŸç¸›å¤‰æ•°
       bound_variable = lexeme_d[leaf_node_d[identifier]];
 
-      //§–ñ–¼
+      //åˆ¶ç´„å
       constraint_name = lexeme_d[leaf_node_d[identifier]];
 
-      //ƒ‚ƒWƒ…[ƒ‹–¼
+      //ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å
       program_name = lexeme_d[leaf_node_d[identifier]];
 
-      //¯•Êq
+      //è­˜åˆ¥å­
       identifier = lexeme_d[leaf_node_d[
           (alpha_p | '_') >> *(alpha_p | digit_p | '_')]];
 
-      //Àˆø”
+      //å®Ÿå¼•æ•°
       actual_args = gen_ast_node_d[
         !(no_node_d[ch_p('(')] 
           >> !(expression >> *(no_node_d[ch_p(',')] >> expression)) 
           >> no_node_d[ch_p(')')])];
 
-      //‰¼ˆø”
+      //ä»®å¼•æ•°
       formal_args = gen_ast_node_d[
         !(no_node_d[ch_p('(')] 
           >> !(bound_variable >> *(no_node_d[ch_p(',')] >> bound_variable)) 
           >> no_node_d[ch_p(')')])];
 
-      //“Áê‹L†’è‹`
+      //ç‰¹æ®Šè¨˜å·å®šç¾©
       equivalent   = str_p("<=>");
       implies      = str_p("=>");
       always       = str_p("[]"); 
       differential = ch_p("'");
       previous     = ch_p('-');
 
-      //”¼‡˜’è‹`‰‰Zq
+      //åŠé †åºå®šç¾©æ¼”ç®—å­
       weaker       = str_p("<<");
       parallel     = ch_p(',');
 
-      //”äŠr‰‰Zq
+      //æ¯”è¼ƒæ¼”ç®—å­
       comp_op     = less_eq
         | less
         | greater_eq
@@ -330,12 +330,12 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       equal       = ch_p("="); 
       not_equal   = str_p("!="); 
 
-      //˜_—‰‰Zq
+      //è«–ç†æ¼”ç®—å­
       logical_and     = str_p("&") | str_p("/\\");
       logical_or      = str_p("|") | str_p("\\/");
       logical_not     = ch_p('!');
 
-      //Zp“ñ€‰‰Zq
+      //ç®—è¡“äºŒé …æ¼”ç®—å­
       add          = ch_p('+');
       sub          = ch_p('-');
       mul          = ch_p('*');
@@ -343,15 +343,15 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       pow          = ch_p('^') | str_p("**");
 
 
-      //Zp’P€‰‰Zq
+      //ç®—è¡“å˜é …æ¼”ç®—å­
       positive    = ch_p('+');
       negative    = ch_p('-');
       
-      //ŠÖ”
+      //é–¢æ•°
       function         = lexeme_d[leaf_node_d[+alpha_p]];
     }
 
-    // ŠJnƒ‹[ƒ‹
+    // é–‹å§‹ãƒ«ãƒ¼ãƒ«
     defRuleID(RI_HydLaProgram) const& start() const {
       return hydla_program;
     }

@@ -20,7 +20,7 @@ namespace ch {
 
 
 /**
- * Container�^�̃��W���[���W���̏W����\���N���X���\�z���邽�߂̃N���X
+ * Container型のモジュール集合の集合を表すクラスを構築するためのクラス
  */
 template <class Container>
 class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
@@ -39,7 +39,7 @@ public:
   {}
 
   /**
-   * �^����ꂽ�p�[�X�c���[�����Ƀ��W���[���W���̏W����\���N���X���\�z����
+   * 与えられたパースツリーを元にモジュール集合の集合を表すクラスを構築する
    */
   container_sptr create(const parse_tree_sptr& parse_tree)
   {
@@ -93,14 +93,14 @@ public:
     constraint_level_++;
     container_name_.clear();
 
-    // ���ӁF�ア����
+    // 左辺：弱い制約
     node->get_lhs()->accept(node->get_lhs(), this);
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
 
     constraint_level_--;
 
-    // �E�ӁF��������
+    // 右辺：強い制約
     node->get_rhs()->accept(node->get_rhs(), this);
     mod_set_stack_.back()->add_weak(*lhs);
 
@@ -108,40 +108,40 @@ public:
 
   
   /**
-  * ���񍇐��u,�v
+  * 並列合成「,」
    */
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
   {    
     container_name_.clear();
 
-    // ����
+    // 左辺
     node->get_lhs()->accept(node->get_lhs(), this);
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
 
-    // �E��
+    // 右辺
     node->get_rhs()->accept(node->get_rhs(), this);
-    // �g�b�v���x���ł�required���񈵂�����
+    // トップレベルではrequired制約扱いする
     if(constraint_level_ == 0) mod_set_stack_.back()->add_required_parallel(*lhs);
     else mod_set_stack_.back()->add_parallel(*lhs);
   }
 
 private:
 
-  /// ���W���[���W���̏W�����ꎞ�I�ɕۑ����Ă����X�^�b�N
+  /// モジュール集合の集合を一時的に保存しておくスタック
   container_stack_t mod_set_stack_;
 
-  /// �o�^����鐧�񃂃W���[���̖��O
+  /// 登録される制約モジュールの名前
   std::string       container_name_;
 
   /**
-   * ���񃂃W���[���̊Ǘ�
-   * HydLa�̐��񃂃W���[���͑��d�W���̂��߁C
-   * ���ꖼ�̃��W���[������ʂ���K�v������
+   * 制約モジュールの管理
+   * HydLaの制約モジュールは多重集合のため，
+   * 同一名のモジュールも区別する必要がある
    */
   mod_name_map_t    mod_name_map_;
 
-  /// ����̗D�揇�ʂɊւ��郌�x���E�[���i0���ŗD��, required�j
+  /// 制約の優先順位に関するレベル・深さ（0が最優先, required）
   int constraint_level_;
 };
 
