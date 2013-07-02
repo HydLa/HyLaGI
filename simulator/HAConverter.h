@@ -66,7 +66,8 @@ protected:
 
 	// AがBの範囲に含まれる場合trueを返す
 	bool compare_parameter_range(range_t A, range_t B);	
-	
+	// 変数パラメータを探索して表示
+	void search_variable_parameter(parameter_map_t map, std::string name, int diff_cnt);
 	// 変数がガード条件に出現するか
 	bool check_guard_variable(phase_result_sptr_t phase, std::string name, int derivative_count);
 	
