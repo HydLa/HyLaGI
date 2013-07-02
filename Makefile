@@ -12,12 +12,12 @@ all: $(main_projects)
 check: $(projects)
 	cd unit_tests && ./unit_test
 
-# •¶šƒR[ƒh‚Ìİ’è & propset‚Ì“o˜^
+# æ–‡å­—ã‚³ãƒ¼ãƒ‰ã®è¨­å®š & propsetã®ç™»éŒ²
 charset:
 	@sources=`find . -name "Makefile" -or -name "*.cpp" -or -name "*.h" -or -name "*.m"` && \
 	echo $${sources} && \
-	nkf -s -Lw --overwrite $$sources  && \
-	svn propset svn:mime-type 'text/plain; charset=shift-jis' $$sources
+	nkf -w -Lu --overwrite $$sources  && \
+	svn propset svn:mime-type 'text/plain; charset=utf-8' $$sources
 
 charset_guess:
 	@nkf --guess `find . -name "*.cpp" -or -name "*.h" `
@@ -26,7 +26,7 @@ charset_guess:
 .PHONY : doc
 doc:
 	doxygen doc/doxygen.conf
-#latex‚ğo—Í‚·‚éê‡
+#latexã‚’å‡ºåŠ›ã™ã‚‹å ´åˆ
 #	nkf -e --overwrite `find doc/latex -name "*.tex"`
 #	make -f doc/latex
 #	dvipdfmx doc/latex/refman.dvi

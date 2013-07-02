@@ -11,7 +11,7 @@ LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/Deve
 LDFLAGS	 += -L/usr/local/lib
 
 
-LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2‰ñ‚â‚Á‚Ä‡˜‚É‚æ‚éˆË‘¶ŠÖŒW‚Ì–â‘è‚ğ‰ğÁ
+LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2å›ã‚„ã£ã¦é †åºã«ã‚ˆã‚‹ä¾å­˜é–¢ä¿‚ã®å•é¡Œã‚’è§£æ¶ˆ
 #LIBS     += -lrealpaver -lrealpaverbasic  
 LIBS     += -lboost_program_options
 LIBS     += -lML64i3 -lm -lrt

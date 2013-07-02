@@ -3,37 +3,37 @@ $MaxExtraPrecision = 1000;
 
 (*
  * global variables
- * constraint: Œ»İ‚ÌƒtƒF[ƒY‚Å‚Ì§–ñ
- * pConstraint: ’è”‚É‚Â‚¢‚Ä‚Ì§–ñ
- * prevConstraint: ¶‹ÉŒÀ’l‚ğİ’è‚·‚é§–ñ
- * initConstraint: ‰Šú’l§–ñ
- * variables: §–ñ‚ÉoŒ»‚·‚é•Ï”‚ÌƒŠƒXƒg
- * parameters: ‹L†’è”‚ÌƒŠƒXƒg
- * isTemporaryF§–ñ‚Ì’Ç‰Á‚ğˆê“I‚È‚à‚Ì‚Æ‚·‚é‚©
- * tmpConstraint: ˆê“I‚É’Ç‰Á‚³‚ê‚½§–ñ
- * initTmpConstraint: ˆê“I‚É’Ç‰Á‚³‚ê‚½‰Šú’l§–ñ
- * tmpVariables: ˆê§–ñ‚ÉoŒ»‚·‚é•Ï”‚ÌƒŠƒXƒg
+ * constraint: ç¾åœ¨ã®ãƒ•ã‚§ãƒ¼ã‚ºã§ã®åˆ¶ç´„
+ * pConstraint: å®šæ•°ã«ã¤ã„ã¦ã®åˆ¶ç´„
+ * prevConstraint: å·¦æ¥µé™å€¤ã‚’è¨­å®šã™ã‚‹åˆ¶ç´„
+ * initConstraint: åˆæœŸå€¤åˆ¶ç´„
+ * variables: åˆ¶ç´„ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã®ãƒªã‚¹ãƒˆ
+ * parameters: è¨˜å·å®šæ•°ã®ãƒªã‚¹ãƒˆ
+ * isTemporaryï¼šåˆ¶ç´„ã®è¿½åŠ ã‚’ä¸€æ™‚çš„ãªã‚‚ã®ã¨ã™ã‚‹ã‹
+ * tmpConstraint: ä¸€æ™‚çš„ã«è¿½åŠ ã•ã‚ŒãŸåˆ¶ç´„
+ * initTmpConstraint: ä¸€æ™‚çš„ã«è¿½åŠ ã•ã‚ŒãŸåˆæœŸå€¤åˆ¶ç´„
+ * tmpVariables: ä¸€æ™‚åˆ¶ç´„ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã®ãƒªã‚¹ãƒˆ
  * guard:
  * guardVars:
- * startTimes: ŒÄ‚Ño‚³‚ê‚½ŠÖ”‚ÌŠJn‚ğÏ‚Şƒvƒƒtƒ@ƒCƒŠƒ“ƒO—pƒXƒ^ƒbƒN
- * profileList: ƒvƒƒtƒ@ƒCƒŠƒ“ƒOŒ‹‰Ê‚ÌƒŠƒXƒg
- * dList: ”÷•ª•û’ö®‚Æ‚»‚Ìˆê”Ê‰ğ‚ğ•Û‚·‚éƒŠƒXƒg {”÷•ª•û’ö®‚ÌƒŠƒXƒg, ‚»‚Ìˆê”Ê‰ğ, •Ï”‚Ì’u‚«Š·‚¦‹K‘¥}
- * createMapList: createMapŠÖ”‚Ö‚Ì“ü—Í‚Æo—Í‚Ì‘g‚ÌƒŠƒXƒg
- * timeOutS: ƒ^ƒCƒ€ƒAƒEƒg‚Ü‚Å‚ÌŠÔD•b’PˆÊD
- * opt...: ŠeíƒIƒvƒVƒ‡ƒ“‚ÌON/OFFD
- * approxMode: ‹ß—ƒ‚[ƒhD
- * approxThreshold: ‹ß—è‡’lDŒ»İ‚ÍLeafCount‚Ì’l‚Å”»’f‚µ‚Ä‚¢‚éD
- * approxPrecision: ‹ß—¸“xD
+ * startTimes: å‘¼ã³å‡ºã•ã‚ŒãŸé–¢æ•°ã®é–‹å§‹æ™‚åˆ»ã‚’ç©ã‚€ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°ç”¨ã‚¹ã‚¿ãƒƒã‚¯
+ * profileList: ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°çµæœã®ãƒªã‚¹ãƒˆ
+ * dList: å¾®åˆ†æ–¹ç¨‹å¼ã¨ãã®ä¸€èˆ¬è§£ã‚’ä¿æŒã™ã‚‹ãƒªã‚¹ãƒˆ {å¾®åˆ†æ–¹ç¨‹å¼ã®ãƒªã‚¹ãƒˆ, ãã®ä¸€èˆ¬è§£, å¤‰æ•°ã®ç½®ãæ›ãˆè¦å‰‡}
+ * createMapList: createMapé–¢æ•°ã¸ã®å…¥åŠ›ã¨å‡ºåŠ›ã®çµ„ã®ãƒªã‚¹ãƒˆ
+ * timeOutS: ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã¾ã§ã®æ™‚é–“ï¼ç§’å˜ä½ï¼
+ * opt...: å„ç¨®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®ON/OFFï¼
+ * approxMode: è¿‘ä¼¼ãƒ¢ãƒ¼ãƒ‰ï¼
+ * approxThreshold: è¿‘ä¼¼é–¾å€¤ï¼ç¾åœ¨ã¯LeafCountã®å€¤ã§åˆ¤æ–­ã—ã¦ã„ã‚‹ï¼
+ * approxPrecision: è¿‘ä¼¼ç²¾åº¦ï¼
  *)
 
 dList = {};
 profileList = {};
 createMapList = {};
 
-(* ‘z’èŠO‚ÌƒƒbƒZ[ƒW‚ªo‚Ä‚¢‚È‚¢‚©ƒ`ƒFƒbƒNDo‚Ä‚¢‚½‚ç‚»‚±‚ÅI—¹D
- ‘z’èŠO‚ÌŒ`®‚ÌŒ‹‰Ê‚É‚È‚Á‚Ä•Ï‚ÈŒvZ‚ğn‚ß‚ÄƒGƒ‰[ƒƒbƒZ[ƒW‚ª”š”­‚·‚é‚±‚Æ‚ª–³‚¢‚æ‚¤‚É‚·‚é‚½‚ßD
- ‚ ‚Ü‚è—Ç‚¢Œ`‚ÌÀ‘•‚Å‚Í‚È‚­CpublicMethod‚É‚¾‚¯‘‚¢‚Ä‚¨‚­Œ`‚ÅÀ‘•‚Å‚«‚é‚È‚ç‘½•ª‚»‚ê‚ªİŒv“I‚Éˆê”Ô—Ç‚¢‚Í‚¸D
- Œ»ó‚Å‚ÍCŠë‚È‚¢‚Æv‚Á‚½ŒÂŠ‚É’€ˆê‹²‚ñ‚Å‚¨‚­‚±‚Æ‚É‚È‚éD *)
+(* æƒ³å®šå¤–ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒå‡ºã¦ã„ãªã„ã‹ãƒã‚§ãƒƒã‚¯ï¼å‡ºã¦ã„ãŸã‚‰ãã“ã§çµ‚äº†ï¼
+ æƒ³å®šå¤–ã®å½¢å¼ã®çµæœã«ãªã£ã¦å¤‰ãªè¨ˆç®—ã‚’å§‹ã‚ã¦ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒçˆ†ç™ºã™ã‚‹ã“ã¨ãŒç„¡ã„ã‚ˆã†ã«ã™ã‚‹ãŸã‚ï¼
+ ã‚ã¾ã‚Šè‰¯ã„å½¢ã®å®Ÿè£…ã§ã¯ãªãï¼ŒpublicMethodã«ã ã‘æ›¸ã„ã¦ãŠãå½¢ã§å®Ÿè£…ã§ãã‚‹ãªã‚‰å¤šåˆ†ãã‚ŒãŒè¨­è¨ˆçš„ã«ä¸€ç•ªè‰¯ã„ã¯ãšï¼
+ ç¾çŠ¶ã§ã¯ï¼Œå±ãªã„ã¨æ€ã£ãŸå€‹æ‰€ã«é€ä¸€æŒŸã‚“ã§ãŠãã“ã¨ã«ãªã‚‹ï¼ *)
 If[optIgnoreWarnings,
   checkMessage := (If[Length[Cases[$MessageList, Except[HoldForm[Minimize::ztest1], Except[HoldForm[Reduce::ztest1] ] ] ] ] > 0, Print[FullForm[$MessageList]];Abort[]]),
   checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
@@ -42,17 +42,17 @@ If[optIgnoreWarnings,
 publicMethod::timeout = "Calculation has reached to timeout";
 
 (*
- * ƒvƒƒtƒ@ƒCƒŠƒ“ƒO—pŠÖ”
- * timeFuncStart: startTimes‚ÉŠÖ”‚ÌŠJn‚ğÏ‚Ş
- * timeFuncEnd: startTimes‚©‚çŠJn‚ğæ‚èo‚µAprofileList‚Éƒvƒƒtƒ@ƒCƒ‹Œ‹‰Ê‚ğŠi”[
- * <g‚¢•û>
- *    ƒvƒƒtƒ@ƒCƒŠƒ“ƒO‚µ‚½‚¢ŠÖ”‚Ì’è‹`‚Ìæ“ª‚ÉtimeFuncStart[];‚ğ
- *    ––”ö‚ÅtimeFuncEnd["ŠÖ”–¼"];‚ğ’Ç‰Á‚·‚é.
- *    ‚½‚¾‚µtimeFuncEnd‚ÌŒã‚Å’l‚ğ•Ô‚·‚æ‚¤‚É‚µ‚È‚¢‚Æ•Ô’l‚ª•Ï‚í‚Á‚Ä‚µ‚Ü‚¤‚Ì‚Å’ˆÓ.
- * <ƒvƒƒtƒ@ƒCƒŠƒ“ƒOŒ‹‰Ê‚ÌŒ©•û>
- *    (Œ»İÀs‚ªI—¹‚µ‚½ŠÖ”–¼) took (‚»‚ÌŠÖ”Às‚É—v‚µ‚½ŠÔ), elapsed time:(ƒvƒƒOƒ‰ƒ€ÀsŠÔ)
- *      function:(¡‚Ü‚Å‚ÉŒÄ‚Ño‚³‚ê‚½ŠÖ”–¼)  calls:(ŒÄ‚Ño‚³‚ê‚½‰ñ”)  total time of this function:(‚»‚ÌŠÖ”‚Ì‡ŒvÀsŠÔ)  average time:(‚»‚ÌŠÖ”‚Ì•½‹ÏÀsŠÔ)  max time:(‚»‚ÌŠÖ”‚ÌÅ‚ÀsŠÔ)
- *    <—á>
+ * ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°ç”¨é–¢æ•°
+ * timeFuncStart: startTimesã«é–¢æ•°ã®é–‹å§‹æ™‚åˆ»ã‚’ç©ã‚€
+ * timeFuncEnd: startTimesã‹ã‚‰é–‹å§‹æ™‚åˆ»ã‚’å–ã‚Šå‡ºã—ã€profileListã«ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«çµæœã‚’æ ¼ç´
+ * <ä½¿ã„æ–¹>
+ *    ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°ã—ãŸã„é–¢æ•°ã®å®šç¾©ã®å…ˆé ­ã«timeFuncStart[];ã‚’
+ *    æœ«å°¾ã§timeFuncEnd["é–¢æ•°å"];ã‚’è¿½åŠ ã™ã‚‹.
+ *    ãŸã ã—timeFuncEndã®å¾Œã§å€¤ã‚’è¿”ã™ã‚ˆã†ã«ã—ãªã„ã¨è¿”å€¤ãŒå¤‰ã‚ã£ã¦ã—ã¾ã†ã®ã§æ³¨æ„.
+ * <ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒªãƒ³ã‚°çµæœã®è¦‹æ–¹>
+ *    (ç¾åœ¨å®Ÿè¡ŒãŒçµ‚äº†ã—ãŸé–¢æ•°å) took (ãã®é–¢æ•°å®Ÿè¡Œã«è¦ã—ãŸæ™‚é–“), elapsed time:(ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®Ÿè¡Œæ™‚é–“)
+ *      function:(ä»Šã¾ã§ã«å‘¼ã³å‡ºã•ã‚ŒãŸé–¢æ•°å)  calls:(å‘¼ã³å‡ºã•ã‚ŒãŸå›æ•°)  total time of this function:(ãã®é–¢æ•°ã®åˆè¨ˆå®Ÿè¡Œæ™‚é–“)  average time:(ãã®é–¢æ•°ã®å¹³å‡å®Ÿè¡Œæ™‚é–“)  max time:(ãã®é–¢æ•°ã®æœ€é«˜å®Ÿè¡Œæ™‚é–“)
+ *    <ä¾‹>
  *    calculateNextPointPhaseTime took 0.015635, elapsed time:1.006334
  *      function:checkConsistencyPoint  calls:1  total time of this function:0.000361  average time:0.000361  max time:0.000361
  *      function:createMap  calls:2  total time of this function:0.11461  average time:0.057304  max time:0.076988
@@ -88,9 +88,9 @@ Module[{endTime,startTime,funcidx,i},
 );
 
 (*
- * ƒfƒoƒbƒO—pƒƒbƒZ[ƒWo—ÍŠÖ”
- * debugPrintFˆø”‚Æ‚µ‚Ä—^‚¦‚ç‚ê‚½—v‘f—v‘f‚ğ•¶š—ñ‚É‚µ‚Äo—Í‚·‚éD iƒVƒ“ƒ{ƒ‹‚Í•]‰¿‚µ‚Ä‚©‚ç•\¦j
- * simplePrintFˆø”‚Æ‚µ‚Ä—^‚¦‚ç‚ê‚½®‚ğC ui•]‰¿‘Oj:i•]‰¿Œãjv‚ÌŒ`®‚Åo—Í‚·‚éD
+ * ãƒ‡ãƒãƒƒã‚°ç”¨ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å‡ºåŠ›é–¢æ•°
+ * debugPrintï¼šå¼•æ•°ã¨ã—ã¦ä¸ãˆã‚‰ã‚ŒãŸè¦ç´ è¦ç´ ã‚’æ–‡å­—åˆ—ã«ã—ã¦å‡ºåŠ›ã™ã‚‹ï¼ ï¼ˆã‚·ãƒ³ãƒœãƒ«ã¯è©•ä¾¡ã—ã¦ã‹ã‚‰è¡¨ç¤ºï¼‰
+ * simplePrintï¼šå¼•æ•°ã¨ã—ã¦ä¸ãˆã‚‰ã‚ŒãŸå¼ã‚’ï¼Œ ã€Œï¼ˆè©•ä¾¡å‰ï¼‰:ï¼ˆè©•ä¾¡å¾Œï¼‰ã€ã®å½¢å¼ã§å‡ºåŠ›ã™ã‚‹ï¼
  *)
  
 SetAttributes[simplePrint, HoldAll];
@@ -99,7 +99,7 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 
 SetAttributes[symbolToString, HoldAll];
 
-If[optUseDebugPrint || True,  (* ƒGƒ‰[‚ª‹N‚«‚½‚Ì‘Î‰‚Ì‚½‚ßCí‚ÉdebugPrint‚ğ•Ô‚·‚æ‚¤‚É‚µ‚Ä‚¨‚­D‚¢‚¸‚ê‚É‚µ‚ë‚»‚ñ‚È‚ÉƒRƒXƒg‚Í‚©‚©‚ç‚È‚¢H *)
+If[optUseDebugPrint || True,  (* ã‚¨ãƒ©ãƒ¼ãŒèµ·ããŸæ™‚ã®å¯¾å¿œã®ãŸã‚ï¼Œå¸¸ã«debugPrintã‚’è¿”ã™ã‚ˆã†ã«ã—ã¦ãŠãï¼ã„ãšã‚Œã«ã—ã‚ãã‚“ãªã«ã‚³ã‚¹ãƒˆã¯ã‹ã‹ã‚‰ãªã„ï¼Ÿ *)
   debugPrint[arg___] := Print[InputForm[{arg}]];
   simplePrint[arg___] := Print[delimiterAddedString[", ",
     List@@Map[symbolToString, Map[Unevaluated, Hold[arg]] ]
@@ -112,7 +112,7 @@ If[optUseDebugPrint || True,  (* ƒGƒ‰[‚ª‹N‚«‚½‚Ì‘Î‰‚Ì‚½‚ßCí‚ÉdebugPrint‚ğ•
 profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
 
 (*
- * ŠÖ”ŒÄ‚Ño‚µ‚ğÄŒ»‚·‚é‚½‚ß‚Ì•¶š—ño—Í‚ğs‚¤
+ * é–¢æ•°å‘¼ã³å‡ºã—ã‚’å†ç¾ã™ã‚‹ãŸã‚ã®æ–‡å­—åˆ—å‡ºåŠ›ã‚’è¡Œã†
  *)
  
 inputPrint[name_, arg___] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
@@ -123,9 +123,9 @@ delimiterAddedString[del_, {h_, t__}] := StringJoin[h, del, delimiterAddedString
 
 SetAttributes[publicMethod, HoldAll];
 
-(* C++‘¤‚©‚ç’¼ÚŒÄ‚Ño‚·ŠÖ”‚ÌC–{‘Ì•”•ª‚Ì’è‹`‚ğs‚¤ŠÖ”DƒfƒoƒbƒOo—Í‚Æ‚©C³íI—¹‚Ì”»’è‚Æ‚©C—áŠO‚Ìˆµ‚¢‚Æ‚©‚ğ“ˆê‚·‚é 
-   ­‚µ‚Å‚àƒƒbƒZ[ƒW‚ğ“f‚­‰Â”\«‚Ì‚ ‚éŠÖ”‚ÍC‚±‚ÌŠÖ”‚Å’è‹`‚·‚é‚æ‚¤‚É‚·‚éD
-   define‚ÉReturn‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚Æ³í‚É“®ì‚µ‚È‚­‚È‚é iReturn‚Ìˆø”‚ª‚»‚Ì‚Ü‚Ü•Ô‚é‚±‚Æ‚É‚È‚éj‚Ì‚Åg‚í‚È‚¢‚æ‚¤‚ÉI
+(* C++å´ã‹ã‚‰ç›´æ¥å‘¼ã³å‡ºã™é–¢æ•°ã®ï¼Œæœ¬ä½“éƒ¨åˆ†ã®å®šç¾©ã‚’è¡Œã†é–¢æ•°ï¼ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›ã¨ã‹ï¼Œæ­£å¸¸çµ‚äº†ã®åˆ¤å®šã¨ã‹ï¼Œä¾‹å¤–ã®æ‰±ã„ã¨ã‹ã‚’çµ±ä¸€ã™ã‚‹ 
+   å°‘ã—ã§ã‚‚ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’åãå¯èƒ½æ€§ã®ã‚ã‚‹é–¢æ•°ã¯ï¼Œã“ã®é–¢æ•°ã§å®šç¾©ã™ã‚‹ã‚ˆã†ã«ã™ã‚‹ï¼
+   defineã«ReturnãŒå«ã¾ã‚Œã¦ã„ã‚‹ã¨æ­£å¸¸ã«å‹•ä½œã—ãªããªã‚‹ ï¼ˆReturnã®å¼•æ•°ãŒãã®ã¾ã¾è¿”ã‚‹ã“ã¨ã«ãªã‚‹ï¼‰ã®ã§ä½¿ã‚ãªã„ã‚ˆã†ã«ï¼
 *)
 
 publicMethod[name_, args___, define_] := (
@@ -149,7 +149,7 @@ publicMethod[name_, args___, define_] := (
   )
 );
 
-(* i•sj“™®‚Ì‰E•Ó‚Æ¶•Ó‚ğ“ü‚ê‘Ö‚¦‚éÛ‚ÉCŠÖŒW‰‰Zq‚ÌŒü‚«‚à”½“]‚³‚¹‚éDNot‚Æ‚Íˆá‚¤ *)
+(* ï¼ˆä¸ï¼‰ç­‰å¼ã®å³è¾ºã¨å·¦è¾ºã‚’å…¥ã‚Œæ›¿ãˆã‚‹éš›ã«ï¼Œé–¢ä¿‚æ¼”ç®—å­ã®å‘ãã‚‚åè»¢ã•ã›ã‚‹ï¼Notã¨ã¯é•ã† *)
 
 getReverseRelop[relop_] := Switch[relop,
                                   Equal, Equal,
@@ -194,7 +194,7 @@ publicMethod[
   ]
 ];
 
-(* §–ñƒ‚ƒWƒ…[ƒ‹‚ª–µ‚‚·‚éğŒ‚ğƒZƒbƒg‚·‚é *)
+(* åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ãŒçŸ›ç›¾ã™ã‚‹æ¡ä»¶ã‚’ã‚»ãƒƒãƒˆã™ã‚‹ *)
 setFalseConditions[co_, va_] := Module[
   {cons, vars},
   cons = co;
@@ -202,7 +202,7 @@ setFalseConditions[co_, va_] := Module[
   simplePrint[cons, falseConditions];
 ];
 
-(* •Ï”‚ÌƒŠƒXƒg‚©‚çprev•Ï”‚ğæ‚èœ‚­ *)
+(* å¤‰æ•°ã®ãƒªã‚¹ãƒˆã‹ã‚‰prevå¤‰æ•°ã‚’å–ã‚Šé™¤ã *)
 removePrevVariables[vars_] := Module[
   {ret,i},
   ret = {};
@@ -212,7 +212,7 @@ removePrevVariables[vars_] := Module[
   ret
 ];
 
-(* –µ‚‚·‚éğŒ‚ğ®Œ`‚µ‚Ä•Ô‚· *)
+(* çŸ›ç›¾ã™ã‚‹æ¡ä»¶ã‚’æ•´å½¢ã—ã¦è¿”ã™ *)
 createPrevMap[cons_, vars_] := Module[
   {map},
   If[cons === True || cons === False, 
@@ -235,7 +235,7 @@ createPrevMap[cons_, vars_] := Module[
   ]
 ];
 
-(* §–ñƒ‚ƒWƒ…[ƒ‹‚ª–µ‚‚·‚éğŒ‚ğŒ©‚Â‚¯‚é‚½‚ß‚Ì–³–µ‚«”»’è *)
+(* åˆ¶ç´„ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ãŒçŸ›ç›¾ã™ã‚‹æ¡ä»¶ã‚’è¦‹ã¤ã‘ã‚‹ãŸã‚ã®ç„¡çŸ›ç›¾æ€§åˆ¤å®š *)
 findFalseConditions[] := (
   findFalseConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
 );
@@ -262,7 +262,7 @@ publicMethod[
   ]
 ];
 
-(* ƒ|ƒCƒ“ƒgƒtƒF[ƒY‚É‚¨‚¯‚é–³–µ‚«”»’è *)
+(* ãƒã‚¤ãƒ³ãƒˆãƒ•ã‚§ãƒ¼ã‚ºã«ãŠã‘ã‚‹ç„¡çŸ›ç›¾æ€§åˆ¤å®š *)
 
 checkConsistencyPoint[] := (
   checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]]
@@ -289,7 +289,7 @@ publicMethod[
   ]
 ];
 
-(* ƒCƒ“ƒ^[ƒoƒ‹ƒtƒF[ƒY‚É‚¨‚¯‚é–³–µ‚«”»’è *)
+(* ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ«ãƒ•ã‚§ãƒ¼ã‚ºã«ãŠã‘ã‚‹ç„¡çŸ›ç›¾æ€§åˆ¤å®š *)
 
 checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint && tmpConstraint && guard, initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]]
@@ -309,13 +309,13 @@ publicMethod[
       If[sol === overConstraint,
         {False, pcons},
         If[sol[[1]] === underConstraint,
-          (* §–ñ•s‘«‚Å”÷•ª•û’ö®‚ªŠ®‘S‚É‚Í‰ğ‚¯‚È‚¢‚È‚çC’Pƒ‚ÉŠe•Ï”’l‚¨‚æ‚Ñ‚»‚Ì”÷•ª’l‚ª–µ‚‚µ‚È‚¢‚©‚ğ’²‚×‚é *)
-          (* Exists‚Ì‘æˆêˆø”‚ÍHold iHoldAll?j‘®«‚ğ‚Á‚Ä‚¢‚é‚ç‚µ‚¢‚Ì‚ÅCEvaluate‚Å•]‰¿‚·‚é•K—v‚ª‚ ‚é i‹C‚ª‚·‚éj *)
+          (* åˆ¶ç´„ä¸è¶³ã§å¾®åˆ†æ–¹ç¨‹å¼ãŒå®Œå…¨ã«ã¯è§£ã‘ãªã„ãªã‚‰ï¼Œå˜ç´”ã«å„å¤‰æ•°å€¤ãŠã‚ˆã³ãã®å¾®åˆ†å€¤ãŒçŸ›ç›¾ã—ãªã„ã‹ã‚’èª¿ã¹ã‚‹ *)
+          (* Existsã®ç¬¬ä¸€å¼•æ•°ã¯Hold ï¼ˆHoldAll?ï¼‰å±æ€§ã‚’æŒã£ã¦ã„ã‚‹ã‚‰ã—ã„ã®ã§ï¼ŒEvaluateã§è©•ä¾¡ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ ï¼ˆæ°—ãŒã™ã‚‹ï¼‰ *)
           tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
           tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@applyList[tCons] && tmpPCons], Reals]]],
-          (* ”÷•ª•û’ö®‚ª‰ğ‚¯‚½ê‡ *)
+          (* å¾®åˆ†æ–¹ç¨‹å¼ãŒè§£ã‘ãŸå ´åˆ *)
           tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
           tCons = applyList[sol[[1]] /. tCons];
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
@@ -349,7 +349,7 @@ publicMethod[
   ]
 ];
 
-(* •Ï”‚à‚µ‚­‚Í‹L†’è”‚Æ‚»‚Ì’l‚ÉŠÖ‚·‚é®‚ÌƒŠƒXƒg‚ğC•\Œ`®‚É•ÏŠ· *)
+(* å¤‰æ•°ã‚‚ã—ãã¯è¨˜å·å®šæ•°ã¨ãã®å€¤ã«é–¢ã™ã‚‹å¼ã®ãƒªã‚¹ãƒˆã‚’ï¼Œè¡¨å½¢å¼ã«å¤‰æ› *)
 
 createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
 
@@ -382,7 +382,7 @@ publicMethod[
       tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
       simplePrint[tStore];
       If[Length[Select[tStore, (hasVariable[ #[[2]] ])&, 1] ] > 0,
-        (* ‰E•Ó‚É•Ï”–¼‚ªc‚Á‚Ä‚¢‚éC‚Â‚Ü‚è’l‚ªŠ®‘S‚Ét‚Ì®‚É‚È‚Á‚Ä‚¢‚È‚¢•Ï”‚ªoŒ»‚µ‚½ê‡‚ÍunderConstraint‚ğ•Ô‚· *)
+        (* å³è¾ºã«å¤‰æ•°åãŒæ®‹ã£ã¦ã„ã‚‹ï¼Œã¤ã¾ã‚Šå€¤ãŒå®Œå…¨ã«tã®å¼ã«ãªã£ã¦ã„ãªã„å¤‰æ•°ãŒå‡ºç¾ã—ãŸå ´åˆã¯underConstraintã‚’è¿”ã™ *)
         underConstraint,
         ret = {convertExprs[tStore]};
         debugPrint["ret after convert", ret];
@@ -420,10 +420,10 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       If[idx != {}, map = createMapList[[idx[[1]][[1]]]][[2]]];
     ];
     If[idx == {},
-      (* TODO: ‚±‚±‚Åprev‚ÉŠÖ‚·‚éˆ—‚Í–{—ˆ‚È‚­‚Ä‚à‚¢‚¢‚Í‚¸D0‚Å‚Ìprev‚Ìˆµ‚¢‚³‚¦‚¤‚Ü‚­‚Å‚«‚ê‚Î‚Ç‚¤‚É‚©‚È‚éH *)
+      (* TODO: ã“ã“ã§prevã«é–¢ã™ã‚‹å‡¦ç†ã¯æœ¬æ¥ãªãã¦ã‚‚ã„ã„ã¯ãšï¼æ™‚åˆ»0ã§ã®prevã®æ‰±ã„ã•ãˆã†ã¾ãã§ãã‚Œã°ã©ã†ã«ã‹ãªã‚‹ï¼Ÿ *)
       map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = Reduce[map, vars, Reals];
-      (* TODO:2‰ñ‚à“¯‚¶ƒ‹[ƒ‹“K—p‚ğ‚µ‚½‚­‚È‚¢Dê‡‚Ìd•¡‚âC•s—v‚ÈğŒ‚Ì”­¶‚ğ—}‚¦‚Â‚ÂC‰½‚©‚Å‚«‚È‚¢‚©H *)
+      (* TODO:2å›ã‚‚åŒã˜ãƒ«ãƒ¼ãƒ«é©ç”¨ã‚’ã—ãŸããªã„ï¼å ´åˆã®é‡è¤‡ã‚„ï¼Œä¸è¦ãªæ¡ä»¶ã®ç™ºç”Ÿã‚’æŠ‘ãˆã¤ã¤ï¼Œä½•ã‹ã§ããªã„ã‹ï¼Ÿ *)
       map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       simplePrint[map];
       map = LogicalExpand[map];
@@ -439,48 +439,48 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
   ]
 ];
 
-(* ®’†‚É•Ï”–¼‚ªoŒ»‚·‚é‚©”Û‚© *)
+(* å¼ä¸­ã«å¤‰æ•°åãŒå‡ºç¾ã™ã‚‹ã‹å¦ã‹ *)
 
 hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter]] > 0;
 
-(* ®‚ª•Ï”‚à‚µ‚­‚Í‚»‚Ì”÷•ª‚»‚Ì‚à‚Ì‚©”Û‚© *)
+(* å¼ãŒå¤‰æ•°ã‚‚ã—ãã¯ãã®å¾®åˆ†ãã®ã‚‚ã®ã‹å¦ã‹ *)
 
 isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], "usrVar" ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
-(* ®’†‚ÉoŒ»‚·‚é•Ï”‚ğæ“¾ *)
+(* å¼ä¸­ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã‚’å–å¾— *)
 
 getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter..]];
 
-(* ®’†‚ÉoŒ»‚·‚é‹L†’è”‚ğæ“¾ *)
+(* å¼ä¸­ã«å‡ºç¾ã™ã‚‹è¨˜å·å®šæ•°ã‚’å–å¾— *)
 
 getParameters[exprs_] := Cases[exprs, parameter[_, _, _], Infinity];
 
-(* ŠÔ•Ï”‚ğæ“¾ *)
+(* æ™‚é–“å¤‰æ•°ã‚’å–å¾— *)
 getTimeVars[list_] := Cases[list, _[t], Infinity];
 
-(* ‰Šú’l•Ï”‚ğæ“¾ *)
+(* åˆæœŸå€¤å¤‰æ•°ã‚’å–å¾— *)
 getInitVars[expr_] := Cases[expr, _[0], Infinity];
 
 hasInitVars[expr_] := (Length[getInitVars[expr] ] > 0);
 
-(* ®’†‚É’è”–¼‚ªoŒ»‚·‚é‚©”Û‚© *)
+(* å¼ä¸­ã«å®šæ•°åãŒå‡ºç¾ã™ã‚‹ã‹å¦ã‹ *)
 
 hasParameter[exprs_] := Length[Cases[exprs, parameter[_, _, _], Infinity]] > 0;
 
-(* ®‚ª’è”‚»‚Ì‚à‚Ì‚©”Û‚© *)
+(* å¼ãŒå®šæ•°ãã®ã‚‚ã®ã‹å¦ã‹ *)
 
 isParameter[exprs_] := Head[exprs] === parameter;
 
-(* ®‚ªw’è‚³‚ê‚½ƒVƒ“ƒ{ƒ‹‚ğ‚Â‚© *)
+(* å¼ãŒæŒ‡å®šã•ã‚ŒãŸã‚·ãƒ³ãƒœãƒ«ã‚’æŒã¤ã‹ *)
 hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
 
-(* ®‚ªprev•Ï”‚»‚Ì‚à‚Ì‚©”Û‚© *)
+(* å¼ãŒprevå¤‰æ•°ãã®ã‚‚ã®ã‹å¦ã‹ *)
 isPrevVariable[exprs_] := Head[exprs] === prev;
 
-(* ®‚ªprev•Ï”‚ğ‚Â‚© *)
+(* å¼ãŒprevå¤‰æ•°ã‚’æŒã¤ã‹ *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
 
-(* •K‚¸ŠÖŒW‰‰Zq‚Ì¶‘¤‚É•Ï”–¼‚â’è”–¼‚ª“ü‚é‚æ‚¤‚É‚·‚é *)
+(* å¿…ãšé–¢ä¿‚æ¼”ç®—å­ã®å·¦å´ã«å¤‰æ•°åã‚„å®šæ•°åãŒå…¥ã‚‹ã‚ˆã†ã«ã™ã‚‹ *)
 
 adjustExprs[andExprs_, judgeFunction_] := 
 Fold[
@@ -488,7 +488,7 @@ Fold[
    If[#2 === True,
     #1,
     If[Not[judgeFunction[#2[[1]] ] ] && judgeFunction[#2[[2]] ],
-     (* ‹t‚É‚È‚Á‚Ä‚é‚Ì‚ÅA‰‰Zq‚ğ‹t‚É‚µ‚Ä’Ç‰Á‚·‚é *)
+     (* é€†ã«ãªã£ã¦ã‚‹ã®ã§ã€æ¼”ç®—å­ã‚’é€†ã«ã—ã¦è¿½åŠ ã™ã‚‹ *)
      Append[#1, getReverseRelop[Head[#2] ][#2[[2]], #2[[1]] ] ],
      Append[#1, #2]]
    ]) &,
@@ -602,7 +602,7 @@ addParameterConstraint[pcons_, pars_] := (
   simplePrint[pConstraint, pars];
 );
 
-(* •Ï”–¼‚©‚çDerivative‚ât‚ğæ‚èC”÷•ª‰ñ”‚Æ‚Æ‚à‚É•Ô‚· *)
+(* å¤‰æ•°åã‹ã‚‰Derivativeã‚„tã‚’å–ã‚Šï¼Œå¾®åˆ†å›æ•°ã¨ã¨ã‚‚ã«è¿”ã™ *)
 removeDash[var_] := Module[
    {ret},
    If[Head[var] === parameter || Head[var] === prev, Return[var]];
@@ -616,18 +616,18 @@ removeDash[var_] := Module[
 apply[AndreduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
-(* And‚Å‚Í‚È‚­List‚Å‚­‚­‚é *)
+(* Andã§ã¯ãªãListã§ããã‚‹ *)
 
 applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
-(* Or‚Å‚Í‚È‚­List‚Å‚­‚­‚é *)
+(* Orã§ã¯ãªãListã§ããã‚‹ *)
 
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
-(* Piecewise‚Ì‘æ“ñ—v‘f‚ğC‚»‚ÌğŒ‚Æ‚Æ‚à‚É‘æˆê—v‘f‚É•t‰Á‚µ‚ÄƒŠƒXƒg‚É‚·‚éDğŒ‚ªFalse‚È‚çíœ 
-   ‚Â‚¢‚Å‚É others‚ğŠeğŒ‚É‘Î‚µ‚Ä•t‰Á *)
+(* Piecewiseã®ç¬¬äºŒè¦ç´ ã‚’ï¼Œãã®æ¡ä»¶ã¨ã¨ã‚‚ã«ç¬¬ä¸€è¦ç´ ã«ä»˜åŠ ã—ã¦ãƒªã‚¹ãƒˆã«ã™ã‚‹ï¼æ¡ä»¶ãŒFalseãªã‚‰å‰Šé™¤ 
+   ã¤ã„ã§ã« othersã‚’å„æ¡ä»¶ã«å¯¾ã—ã¦ä»˜åŠ  *)
 
 makeListFromPiecewise[minT_, others_] := Module[
   {tmpCondition = False, retMinT = minT[[1]]},
@@ -641,13 +641,13 @@ makeListFromPiecewise[minT_, others_] := Module[
 ];
 
 (*
- * Ÿ‚Ìƒ|ƒCƒ“ƒgƒtƒF[ƒY‚ÉˆÚs‚·‚é‚ğ‹‚ß‚é
+ * æ¬¡ã®ãƒã‚¤ãƒ³ãƒˆãƒ•ã‚§ãƒ¼ã‚ºã«ç§»è¡Œã™ã‚‹æ™‚åˆ»ã‚’æ±‚ã‚ã‚‹
  *)
 
 calculateNextPointPhaseTime[maxTime_, discCause_] := 
   calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, variables];
 
-(* •Ï”‚Æ‚»‚Ì’l‚ÉŠÖ‚·‚é®‚ÌƒŠƒXƒg‚ğA•Ï”•\“IŒ`®‚É•ÏŠ· *)
+(* å¤‰æ•°ã¨ãã®å€¤ã«é–¢ã™ã‚‹å¼ã®ãƒªã‚¹ãƒˆã‚’ã€å¤‰æ•°è¡¨çš„å½¢å¼ã«å¤‰æ› *)
 getExprCode[expr_] := Switch[Head[expr],
   Equal, 0,
   Less, 1,
@@ -664,18 +664,18 @@ integerString[expr_] := (
        /. (x_Integer :> replaceIntegerToString[x])
 );
 
-(* ƒŠƒXƒg‚ğ®Œ`‚·‚é *)
-(* FullSimplify‚ğg‚¤‚ÆCRoot&Function‚ªo‚Ä‚«‚½‚Æ‚«‚É‚àŒ‹\ŠÈ–ñ‚Å‚«‚éD‚Æ‚¢‚¤‚©ŠÈ–ñ‚Å‚«‚È‚¢‚ÆƒGƒ‰[‚É‚È‚é‚Ì‚ÅTODO‚ÆŒ¾‚¦‚ÎTODO *)
-(* TODO:•¡‘f”‚Ì—v‘f‚É‘Î‚µ‚Ä‚àC”CˆÓ¸“x‚Ö‚Ì‘Î‰ i•¶š—ñ‚Ö‚Ì•ÏŠ·‚Æ‚©j‚ğs‚¤ *)
+(* ãƒªã‚¹ãƒˆã‚’æ•´å½¢ã™ã‚‹ *)
+(* FullSimplifyã‚’ä½¿ã†ã¨ï¼ŒRoot&FunctionãŒå‡ºã¦ããŸã¨ãã«ã‚‚çµæ§‹ç°¡ç´„ã§ãã‚‹ï¼ã¨ã„ã†ã‹ç°¡ç´„ã§ããªã„ã¨ã‚¨ãƒ©ãƒ¼ã«ãªã‚‹ã®ã§TODOã¨è¨€ãˆã°TODO *)
+(* TODO:è¤‡ç´ æ•°ã®è¦ç´ ã«å¯¾ã—ã¦ã‚‚ï¼Œä»»æ„ç²¾åº¦ã¸ã®å¯¾å¿œ ï¼ˆæ–‡å­—åˆ—ã¸ã®å¤‰æ›ã¨ã‹ï¼‰ã‚’è¡Œã† *)
 
 (* convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list]; *)
 convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[#[[2]] ] } )&, list];
 
-(* ‚ÆğŒ‚Ì‘g‚ÅCğŒ‚ª˜_—˜a‚Å‚Â‚È‚ª‚Á‚Ä‚¢‚éê‡‚»‚ê‚¼‚ê‚É•ª‰ğ‚·‚é *)
+(* æ™‚åˆ»ã¨æ¡ä»¶ã®çµ„ã§ï¼Œæ¡ä»¶ãŒè«–ç†å’Œã§ã¤ãªãŒã£ã¦ã„ã‚‹å ´åˆãã‚Œãã‚Œã«åˆ†è§£ã™ã‚‹ *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], #, timeCond[[3]]})&, List@@timeCond[[2]]];
 
-(* Å‘å‚Æ‚ÆğŒ‚Æ‚Ì‘g‚ğ”äŠr‚µCÅ‘å‚Ì•û‚ª‘‚¢ê‡‚Í1‚ğ•t‰Á‚µ‚½‚à‚Ì‚ğ––”ö‚ÉC
-  ‚»‚¤‚Å‚È‚¢ê‡‚Í0‚ğ––”ö‚É•t‰Á‚µ‚Ä•Ô‚·DğŒ‚É‚æ‚Á‚Ä•Ï‰»‚·‚éê‡‚ÍCğŒ‚ği‚è‚ñ‚Å‚»‚ê‚¼‚ê‚ğ•Ô‚· *)
+(* æœ€å¤§æ™‚åˆ»ã¨æ™‚åˆ»ã¨æ¡ä»¶ã¨ã®çµ„ã‚’æ¯”è¼ƒã—ï¼Œæœ€å¤§æ™‚åˆ»ã®æ–¹ãŒæ—©ã„å ´åˆã¯1ã‚’ä»˜åŠ ã—ãŸã‚‚ã®ã‚’æœ«å°¾ã«ï¼Œ
+  ãã†ã§ãªã„å ´åˆã¯0ã‚’æœ«å°¾ã«ä»˜åŠ ã—ã¦è¿”ã™ï¼æ¡ä»¶ã«ã‚ˆã£ã¦å¤‰åŒ–ã™ã‚‹å ´åˆã¯ï¼Œæ¡ä»¶ã‚’çµã‚Šè¾¼ã‚“ã§ãã‚Œãã‚Œã‚’è¿”ã™ *)
 compareWithMaxTime[maxT_, timeCond_] := 
 Module[
   {sol, tmpCond},
@@ -683,7 +683,7 @@ Module[
   If[sol === False,
     {{timeCond[[1]], timeCond[[2]], 0}},
     tmpCond = Reduce[(!sol && timeCond[[2]]), Reals];
-    If[tmpCond === False,  (* ğŒ‚ğ–‚½‚·”ÍˆÍ‚Åí‚ÉmaxT <= timeCond[[1]]‚ª¬‚è—§‚Â‚Æ‚« *)
+    If[tmpCond === False,  (* æ¡ä»¶ã‚’æº€ãŸã™ç¯„å›²ã§å¸¸ã«maxT <= timeCond[[1]]ãŒæˆã‚Šç«‹ã¤ã¨ã *)
       {{maxT, timeCond[[2]], 1}},
       {{maxT, sol, 1}, {timeCond[[1]], tmpCond, 0}}
     ]
@@ -704,12 +704,12 @@ publicMethod[
       tmpMaxTime
     },
     
-    (* ‚Ü‚¸”÷•ª•û’ö®‚ğ‰ğ‚­D‚¤‚Ü‚­‚â‚ê‚ÎcheckConsistencyInterval‚Åo‚µ‚½Œ‹‰Ê (tStore)‚ğ‚»‚Ì‚Ü‚Üˆø‚«Œp‚®‚±‚Æ‚à‚Å‚«‚é‚Í‚¸ *)
+    (* ã¾ãšå¾®åˆ†æ–¹ç¨‹å¼ã‚’è§£ãï¼ã†ã¾ãã‚„ã‚Œã°checkConsistencyIntervalã§å‡ºã—ãŸçµæœ (tStore)ã‚’ãã®ã¾ã¾å¼•ãç¶™ãã“ã¨ã‚‚ã§ãã‚‹ã¯ãš *)
     dSol = exDSolve[cons, initCons];
     
     debugPrint["dSol after exDSolve", dSol];
     
-    (* Ÿ‚É‚»‚ê‚ç‚ğdiscCause‚É“K—p‚·‚é *)
+    (* æ¬¡ã«ãã‚Œã‚‰ã‚’discCauseã«é©ç”¨ã™ã‚‹ *)
     timeAppliedCauses = False;
     
     tStore = Map[(# -> createIntegratedValue[#, dSol[[2]] ])&, getTimeVars[vars]];
@@ -718,7 +718,7 @@ publicMethod[
     
     parameterList = getParameters[timeAppliedCauses];
     
-    (* •K—v‚ÈpCons‚¾‚¯‚ğ‘I‚ÔD•s—v‚È‚à‚Ì‚ª“ü‚Á‚Ä‚¢‚é‚ÆMinimze‚Ì“®ì‚ª‚¨‚©‚µ‚­‚È‚éH *)
+    (* å¿…è¦ãªpConsã ã‘ã‚’é¸ã¶ï¼ä¸è¦ãªã‚‚ã®ãŒå…¥ã£ã¦ã„ã‚‹ã¨Minimzeã®å‹•ä½œãŒãŠã‹ã—ããªã‚‹ï¼Ÿ *)
     
     necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
     
@@ -736,7 +736,7 @@ publicMethod[
     resultList = Fold[(Join[#1, compareWithMaxTime[If[Quiet[Reduce[maxTime <= 0, Reals]] === True, 0, maxTime], #2] ])&,{}, resultList];
     simplePrint[resultList];
     
-    (* ®Œ`‚µ‚ÄŒ‹‰Ê‚ğ•Ô‚· *)
+    (* æ•´å½¢ã—ã¦çµæœã‚’è¿”ã™ *)
     resultList = Map[({#[[1]],LogicalExpand[#[[2]] ], #[[3]]})&, resultList];
     resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
     resultList = Map[({#[[1]], Cases[applyList[#[[2]] ], Except[True]], #[[3]] })&, resultList];
@@ -757,9 +757,9 @@ getDerivativeCount[Derivative[n_][f_][_]] := n;
 
 applyDSolveResult[exprs_, integRule_] := (
   Simplify[
-      exprs  /. integRule     (* ’Pƒ‚Éƒ‹[ƒ‹‚ğ“K—p *)
+      exprs  /. integRule     (* å˜ç´”ã«ãƒ«ãƒ¼ãƒ«ã‚’é©ç”¨ *)
              /. Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule]
-             /. (Derivative[n_][f_][t] /; !isVariable[f]) :> D[f, {t, n}] (* ”÷•ª’l‚É‚Â‚¢‚Ä‚àƒ‹[ƒ‹‚ğ“K—p *)
+             /. (Derivative[n_][f_][t] /; !isVariable[f]) :> D[f, {t, n}] (* å¾®åˆ†å€¤ã«ã¤ã„ã¦ã‚‚ãƒ«ãƒ¼ãƒ«ã‚’é©ç”¨ *)
   ]
 );
 
@@ -774,17 +774,17 @@ createIntegratedValue[variable_, integRule_] := (
   ]
 );
 
-(* ”÷•ª•û’ö®Œn‚ğ‰ğ‚­D
-  ’P‚ÉDSolve‚ğ‚»‚Ì‚Ü‚Üg—p‚µ‚È‚¢——R‚ÍˆÈ‰ºD
-    ——R1: ‰º‹L‚Ì‚æ‚¤‚È“ü—Í‚É‘Î‚µ‚Äã‚¢D
+(* å¾®åˆ†æ–¹ç¨‹å¼ç³»ã‚’è§£ãï¼
+  å˜ã«DSolveã‚’ãã®ã¾ã¾ä½¿ç”¨ã—ãªã„ç†ç”±ã¯ä»¥ä¸‹ï¼
+    ç†ç”±1: ä¸‹è¨˜ã®ã‚ˆã†ãªå…¥åŠ›ã«å¯¾ã—ã¦å¼±ã„ï¼
       DSolve[{z[t] == x[t]^2, Derivative[1][x][t] == x[t], x[0] == 1}, {x[t], z[t]}, t]
-    ——R2: •s“™®‚Éã‚¢
-    ——R3: bvnul‚È‚Ç‚Ì—áŠOˆ—‚ğ“ˆê‚µ‚½‚¢
-  @param expr ‚ÉŠÖ‚·‚é•Ï”‚É‚Â‚¢‚Ä‚Ì§–ñ
-  @param initExpr •Ï”‚Ì‰Šú’l‚É‚Â‚¢‚Ä‚Ì§–ñ
+    ç†ç”±2: ä¸ç­‰å¼ã«å¼±ã„
+    ç†ç”±3: bvnulãªã©ã®ä¾‹å¤–å‡¦ç†ã‚’çµ±ä¸€ã—ãŸã„
+  @param expr æ™‚åˆ»ã«é–¢ã™ã‚‹å¤‰æ•°ã«ã¤ã„ã¦ã®åˆ¶ç´„
+  @param initExpr å¤‰æ•°ã®åˆæœŸå€¤ã«ã¤ã„ã¦ã®åˆ¶ç´„
   @return overConstraint | 
-    {underConstraint, •Ï”’l‚ª–‚½‚·‚×‚«§–ñ iƒ‹[ƒ‹‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚à‚Ì‚Íœ‚­jCŠe•Ï”‚Ì’l‚Ìƒ‹[ƒ‹} |
-    {•Ï”’l‚ª–‚½‚·‚×‚«§–ñ iƒ‹[ƒ‹‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚à‚Ì‚Íœ‚­jCŠe•Ï”‚Ì’l‚Ìƒ‹[ƒ‹} 
+    {underConstraint, å¤‰æ•°å€¤ãŒæº€ãŸã™ã¹ãåˆ¶ç´„ ï¼ˆãƒ«ãƒ¼ãƒ«ã«å«ã¾ã‚Œã¦ã„ã‚‹ã‚‚ã®ã¯é™¤ãï¼‰ï¼Œå„å¤‰æ•°ã®å€¤ã®ãƒ«ãƒ¼ãƒ«} |
+    {å¤‰æ•°å€¤ãŒæº€ãŸã™ã¹ãåˆ¶ç´„ ï¼ˆãƒ«ãƒ¼ãƒ«ã«å«ã¾ã‚Œã¦ã„ã‚‹ã‚‚ã®ã¯é™¤ãï¼‰ï¼Œå„å¤‰æ•°ã®å€¤ã®ãƒ«ãƒ¼ãƒ«} 
 *)
 
 exDSolve[expr_, initExpr_] := 
@@ -797,7 +797,7 @@ Check[
     resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
     tmpExpr = Complement[tmpExpr, resultCons];
     reducedExpr = Quiet[Check[Reduce[tmpExpr, Reals], tmpExpr], {Reduce::nsmet, Reduce::useq}];
-    (* Reduce‚ÌŒ‹‰Ê‚ªg‚¦‚»‚¤‚Èê‡‚Ì‚İg‚¤ *)
+    (* Reduceã®çµæœãŒä½¿ãˆãã†ãªå ´åˆã®ã¿ä½¿ã† *)
     If[Head[reducedExpr] === And && MemberQ[reducedExpr, Element, Infinity, Heads->True], tmpExpr = applyList[reducedExpr] ];
     tmpInitExpr = applyList[initExpr];
     resultRule = {};
@@ -808,7 +808,7 @@ Check[
         Break[],
         rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
         If[rules === overConstraint || Head[rules] === DSolve || Length[rules] == 0, Return[overConstraint] ];
-        (* TODO:rules‚Ì—v‘f”‚ª2ˆÈãC‚Â‚Ü‚è‰ğ‚ª•¡”‘¶İ‚·‚é”÷•ª•û’ö®Œn‚Ö‚Ì‘Î‰ *)
+        (* TODO:rulesã®è¦ç´ æ•°ãŒ2ä»¥ä¸Šï¼Œã¤ã¾ã‚Šè§£ãŒè¤‡æ•°å­˜åœ¨ã™ã‚‹å¾®åˆ†æ–¹ç¨‹å¼ç³»ã¸ã®å¯¾å¿œ *)
         resultRule = Union[resultRule, rules[[1]] ];
         tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
         If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]) )], Return[overConstraint] ];
@@ -833,9 +833,9 @@ Check[
 
 
 
-(* ®‚Ì”‚Æ‚»‚±‚ÉoŒ»‚·‚é‚ªˆê’v‚·‚é‚Ü‚ÅÄ‹A“I‚ÉŒÄ‚Ño‚·ŠÖ”
-  @param exprs ’Tõ‘ÎÛ‚Æ‚È‚é®W‡
-  @return unExpandable | {(DSolve‚·‚×‚«®‚ÌW‡j, (c‚è‚Ì®‚ÌW‡)C iDSolve‚·‚×‚«•Ï”‚ÌW‡j}
+(* å¼ã®æ•°ã¨ãã“ã«å‡ºç¾ã™ã‚‹ãŒä¸€è‡´ã™ã‚‹ã¾ã§å†å¸°çš„ã«å‘¼ã³å‡ºã™é–¢æ•°
+  @param exprs æ¢ç´¢å¯¾è±¡ã¨ãªã‚‹å¼é›†åˆ
+  @return unExpandable | {(DSolveã™ã¹ãå¼ã®é›†åˆï¼‰, (æ®‹ã‚Šã®å¼ã®é›†åˆ)ï¼Œ ï¼ˆDSolveã™ã¹ãå¤‰æ•°ã®é›†åˆï¼‰}
 *)
 searchExprsAndVars[exprs_] :=
 Module[
@@ -860,19 +860,19 @@ Module[
   searchResult
 ];
 
-(* Ä‹A“I‚ÉŒÄ‚Ño‚·ŠÖ”
-  @param searchedExpr ‚±‚ê‚Ü‚Å‚ÉŒ©‚Â‚¯‚½®‚ÌW‡
-  @param searchedVars ‚±‚ê‚Ü‚Å‚ÉŒ©‚Â‚¯‚½•Ï”‚ÌW‡
-  @param exprs ’Tõ‘ÎÛ‚Æ‚È‚é®W‡
-  @param tVarsMap exprs‚ÌŠe—v‘f‚ÆC‚»‚±‚ÉoŒ»‚·‚é•Ï”W‡‚Ìƒ}ƒbƒv
-  @return unExpandable | {(DSolve‚·‚×‚«®‚ÌW‡j, iDSolve‚·‚×‚«•Ï”‚ÌW‡j}
+(* å†å¸°çš„ã«å‘¼ã³å‡ºã™é–¢æ•°
+  @param searchedExpr ã“ã‚Œã¾ã§ã«è¦‹ã¤ã‘ãŸå¼ã®é›†åˆ
+  @param searchedVars ã“ã‚Œã¾ã§ã«è¦‹ã¤ã‘ãŸå¤‰æ•°ã®é›†åˆ
+  @param exprs æ¢ç´¢å¯¾è±¡ã¨ãªã‚‹å¼é›†åˆ
+  @param tVarsMap exprsã®å„è¦ç´ ã¨ï¼Œãã“ã«å‡ºç¾ã™ã‚‹å¤‰æ•°é›†åˆã®ãƒãƒƒãƒ—
+  @return unExpandable | {(DSolveã™ã¹ãå¼ã®é›†åˆï¼‰, ï¼ˆDSolveã™ã¹ãå¤‰æ•°ã®é›†åˆï¼‰}
 *)
 searchExprsAndVars[searchedExprs_, searchedVars_, exprs_, tVarsMap_] :=
 Module[
   {tVar, tVarsInExpr, unionVars, i, j, k, appendExprs, searchResult},
   inputPrint["searchExprsAndVars", searchedExprs, searchedVars, exprs, tVarsMap];
   For[i=1, i<=Min[Length[searchedVars], 2], i++,
-    (* ‰ğ‚¯‚È‚¢•Ï”‚ª2‚ÂˆÈãŠÜ‚Ü‚ê‚é‚È‚çŒó•â‚É‚Í“ü‚ç‚È‚¢‚Í‚¸‚È‚Ì‚ÅC2‚Æ‚ÌMin‚ğ‚Æ‚é *)
+    (* è§£ã‘ãªã„å¤‰æ•°ãŒ2ã¤ä»¥ä¸Šå«ã¾ã‚Œã‚‹ãªã‚‰å€™è£œã«ã¯å…¥ã‚‰ãªã„ã¯ãšãªã®ã§ï¼Œ2ã¨ã®Minã‚’ã¨ã‚‹ *)
     tVar = searchedVars[[i]];
     simplePrint[tVar];
     For[j=1, j<=Length[exprs], j++,
@@ -891,10 +891,10 @@ Module[
   unExpandable
 ];
 
-(* “n‚³‚ê‚½®‚ğDSolve‚Å‰ğ‚¢‚ÄCŒ‹‰Ê‚ÌRule‚ğ•Ô‚·D
-  @param expr: DSolve‚É“n‚·”÷•ª•û’ö®ŒnDŒ`®‚ÍƒŠƒXƒgD
-  @param initExpr: ‰Šú’l§–ñ‚ÌƒŠƒXƒgD—]Œv‚È‚à‚Ì‚ªŠÜ‚Ü‚ê‚Ä‚¢‚Ä‚à‚æ‚¢
-  @param tVars: expr‚ÉoŒ»‚·‚é•Ï”‚ÌƒŠƒXƒg
+(* æ¸¡ã•ã‚ŒãŸå¼ã‚’DSolveã§è§£ã„ã¦ï¼Œçµæœã®Ruleã‚’è¿”ã™ï¼
+  @param expr: DSolveã«æ¸¡ã™å¾®åˆ†æ–¹ç¨‹å¼ç³»ï¼å½¢å¼ã¯ãƒªã‚¹ãƒˆï¼
+  @param initExpr: åˆæœŸå€¤åˆ¶ç´„ã®ãƒªã‚¹ãƒˆï¼ä½™è¨ˆãªã‚‚ã®ãŒå«ã¾ã‚Œã¦ã„ã¦ã‚‚ã‚ˆã„
+  @param tVars: exprã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã®ãƒªã‚¹ãƒˆ
 *)  
 solveByDSolve[expr_, initExpr_, tVars_] :=
 Module[
@@ -904,7 +904,7 @@ Module[
   simplePrint[tmpExpr, ini];
   
   If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
-    (* ”÷•ª•û’ö®‚ÌŒ‹‰Ê‚ğÄ—˜—p‚·‚éê‡ *)
+    (* å¾®åˆ†æ–¹ç¨‹å¼ã®çµæœã‚’å†åˆ©ç”¨ã™ã‚‹å ´åˆ *)
 
     idx = Position[Map[(Sort[#])&,dList],Sort[tmpExpr]];
     If[idx == {},
@@ -946,7 +946,7 @@ Module[
 exDSolve::unkn = "unknown error occurred in exDSolve";
 
 (*
- * ®‚É‘Î‚µ‚Ä—^‚¦‚ç‚ê‚½ŠÔ‚ğ“K—p‚·‚é
+ * å¼ã«å¯¾ã—ã¦ä¸ãˆã‚‰ã‚ŒãŸæ™‚é–“ã‚’é©ç”¨ã™ã‚‹
  *)
 
 publicMethod[
@@ -954,7 +954,7 @@ publicMethod[
   expr, time,
   Module[
     {appliedExpr},
-    (* FullSimplify‚¾‚Æˆ—‚ªd‚¢‚ªCSimplify‚¾‚ÆMinimize:ztest‚ªoŒ»‚µ‚â‚·‚¢ *)
+    (* FullSimplifyã ã¨å‡¦ç†ãŒé‡ã„ãŒï¼ŒSimplifyã ã¨Minimize:ztestãŒå‡ºç¾ã—ã‚„ã™ã„ *)
     appliedExpr = (expr /. t -> time);
     (* appliedExpr = FullSimplify[(expr /. t -> time)]; *)
     If[Element[appliedExpr, Reals] =!= False,
@@ -1009,8 +1009,8 @@ approxValue[val_] := approxValue[val, pConstraint, approxMode, approxPrecision, 
 (*
  * approx given value
  * approxMode === none: do nothing
- * approxMode === numeric: numeric->numericCinterval->interval (invalid for expressions with parameters)
- * approxMode === interval: numeric->intervalCinterval->interval
+ * approxMode === numeric: numeric->numericï¼Œinterval->interval (invalid for expressions with parameters)
+ * approxMode === interval: numeric->intervalï¼Œinterval->interval
  *)
 publicMethod[
   approxValue,
@@ -1054,7 +1054,7 @@ approxExpr[precision_, expr_] := (
 );
 
 (* 
- * —^‚¦‚ç‚ê‚½t‚Ì®‚ğƒ^ƒCƒ€ƒVƒtƒg
+ * ä¸ãˆã‚‰ã‚ŒãŸtã®å¼ã‚’ã‚¿ã‚¤ãƒ ã‚·ãƒ•ãƒˆ
  *)
 
 publicMethod[
