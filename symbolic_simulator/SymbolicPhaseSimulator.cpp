@@ -504,7 +504,8 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   }
   
   // 記号定数表に出現する変数を変数以外のものに置き換える
-    VariableReplacer replacer(ret);
+  VariableReplacer replacer(ret);
+  
   for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
       it != simulator_->original_parameter_map_->end(); it++)
   {
@@ -543,8 +544,20 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       range.set_lower_bound(val, range.get_lower_bound().include_bound);
     }
   }
+/*
+  for(variable_map_t::iterator it = ret.begin();
+      it != ret.end();it++)
+  {
+      if(!it->second->undefined())
+      {
+          value_t val;
+          val = it->second;
+          replacer.replace_value(val);
+          ret[it->first] = val;
+      }
+  }
+*/
   
-
   return ret;
 }
 

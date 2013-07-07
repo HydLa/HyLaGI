@@ -1016,8 +1016,8 @@ publicMethod[
   approxValue,
   val, pcons, mode, precision, threshold,
   Module[
-    {lb, ub},
-    If[mode === none || LeafCount[val] <= 2*threshold,
+    {lb, ub, itv},
+    If[mode === none || LeafCount[val] <= 2*threshold || hasVariable[val],
       {0},
       If[mode === numeric,
         If[Length[val] == 1,
@@ -1026,7 +1026,13 @@ publicMethod[
         ],
         (* if approxMode === interval *)
         If[Length[val] == 1,
-          Join[{1}, integerString[getInterval[val[[1]], pcons, precision][[1]] ] ],
+          (* make interval from exact value *)
+          itv = getInterval[val[[1]], pcons, precision];
+          simplePrint[itv];
+          itv = integerString[{itv[[1]][[1]], itv[[1]][[2]]}];
+          simplePrint[itv];
+          Join[{1}, itv],
+          (* make interval from interval *)
           lb = getInterval[val[[1]], pcons, precision];
           ub = getInterval[val[[2]], pcons, precision];
           simplePrint[lb, ub];
@@ -1041,7 +1047,9 @@ publicMethod[
 getInterval[expr_, pcons_, precision_] := Module[
   {tmp},
   tmp = If[pcons =!= True, expr /. makeIntervalRulesList[pcons], expr ];
-  If[FreeQ[tmp, Interval], tmp = Interval[{tmp, tmp}] ];
+  simplePrint[tmp];
+  If[Head[tmp] =!= Interval, tmp = Interval[{tmp, tmp}] ];
+  simplePrint[tmp];
   Rationalize[N[tmp, precision], 0]
 ];
 

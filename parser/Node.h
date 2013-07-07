@@ -986,8 +986,7 @@ public:
 
   virtual node_sptr clone()
   {
-    boost::shared_ptr<Parameter> n(new Parameter());
-    n->name_ = name_;
+    boost::shared_ptr<Parameter> n(new Parameter(name_, derivative_count_, phase_id_));
     return n;
   }
 
