@@ -21,6 +21,7 @@ SequentialSimulator::~SequentialSimulator()
 
 phase_result_const_sptr_t SequentialSimulator::simulate()
 {
+  timer::Timer simulation_timer;
   std::string error_str;
   simulation_todo_sptr_t init_todo = make_initial_todo();
   todo_stack_->push_todo(init_todo);

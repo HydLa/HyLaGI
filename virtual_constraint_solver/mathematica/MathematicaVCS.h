@@ -56,6 +56,8 @@ public:
   
   virtual void approx_vm(variable_range_map_t& vm);
   
+  virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx);
+  
   /**
    * 制約を追加する．
    */

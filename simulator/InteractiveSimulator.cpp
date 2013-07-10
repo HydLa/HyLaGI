@@ -18,6 +18,7 @@ void InteractiveSimulator::print_end(phase_result_sptr_t& p)
   print_phase(p);
 }
 
+
 /**
  * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
  */
@@ -139,6 +140,10 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
       case 'p':
         print(todo->parent);
         break;
+      case 'a':
+        approx_variable(todo);
+        print_phase(todo->parent);
+        break;
       case 'c':
         change_variable(todo);
         print_phase(todo->parent);
@@ -164,6 +169,7 @@ int InteractiveSimulator::show_help(){
     "q              -- quit this simulation",
     "c              -- change a value of a variable",
     "p              -- display the information of the current phase"
+    "a              -- approx a value of a variable as interval",
     //"breakpoints    -- Making program stop at certain points",
     //"debug          -- Simulate with debug-mode",
     //"edit           -- Edit constraint ",
@@ -236,6 +242,46 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     
     todo->parent->parameter_map = todo->parameter_map;
   }
+  return 0;
+}
+
+
+int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
+
+  cout << "(approximate variable)" << endl;
+  variable_map_t& vm = todo->parent->variable_map;
+  
+  // 変数の選択
+  cout << "input variable name " << endl;
+  cout << '>';
+  string variable_str = excin<string>();
+  variable_map_t::iterator v_it  = vm.begin();
+  for(;v_it!=vm.end();v_it++){
+    if( v_it->first->get_string() == variable_str) break;
+  }
+  if(v_it == vm.end())
+  {
+    cout << "invalid variable name " << endl;
+    return 0;
+  }
+  ValueRange range;
+
+  parameter_map_t& pm = todo->parameter_map;
+
+  phase_simulator_->solver_->reset_parameters(pm);
+  bool approxed = phase_simulator_->solver_->approx_val(v_it->second, range, true);
+  assert(approxed);
+
+
+  parameter_t* introduced_par = introduce_parameter(v_it->first, todo->parent, range);
+  pm[introduced_par] = range;
+  value_t pvalue(new hydla::simulator::symbolic::SymbolicValue(
+      hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first->get_name(),
+      v_it->first->get_derivative_count(),
+      todo->parent->id))));
+  vm[v_it->first] = pvalue;
+  todo->parent->parameter_map = pm;
+
   return 0;
 }
 

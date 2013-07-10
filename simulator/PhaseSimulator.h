@@ -77,6 +77,10 @@ public:
   int get_phase_sum()const{return phase_sum_;}
   
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
+
+  /// 使用するソルバへのポインタ
+  boost::shared_ptr<solver_t> solver_;
+
   
 protected:
   
@@ -116,6 +120,8 @@ protected:
    * PPモードとIPモードを切り替える
    */
   virtual void set_simulation_mode(const Phase& phase) = 0;
+
+
 
 protected:
 
@@ -163,8 +169,6 @@ protected:
   void push_branch_states(simulation_todo_sptr_t &original,
     hydla::vcs::CheckConsistencyResult &result);
     
-  /// 使用するソルバへのポインタ
-  boost::shared_ptr<solver_t> solver_;
   
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);

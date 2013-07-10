@@ -44,6 +44,7 @@ typedef struct Opts_ {
   ApproximationMode approx_mode;
   int approx_precision;
   int approx_threshold;
+  int approx_threshold_ex;
   std::string solver;
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;
@@ -221,6 +222,8 @@ public:
    * set of variables
    */
   boost::shared_ptr<variable_set_t> variable_set_;
+
+  variable_t system_time_;
   
 
   /*

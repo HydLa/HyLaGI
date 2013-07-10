@@ -968,32 +968,33 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 
 makeIntervalRulesList[pcons_] := makeIntervalRulesList[pcons] = 
 Module[
-  {rules, iter, plist, appearedp = {}, ret = {} var},
+  {rules, iter, plist, pc, appearedp = {}, ret = {} var},
   plist = applyList[LogicalExpand[pcons] ];
   plist = adjustExprs[plist, isParameter];
   simplePrint[plist];
   For[iter = 1, iter <= Length[plist], iter++,
-    var = plist[[iter]][[1]];
-    debugPrint["var:", var];
+    pc = plist[[iter]];
+    var = pc[[1]];
+    simplePrint[var];
     
     If[Head[rules[var] ] =!= Rule,
       appearedp = Append[appearedp, var]
     ];
     
-    If[ MemberQ[{Less, LessEqual}, Head[ plist[[iter]] ] ],
+    If[ MemberQ[{Less, LessEqual}, Head[ pc ] ],
       If[Head[rules[var] ] === Rule,
-        rules[var] = var -> Interval[{rules[var][[2]][[1]][[1]], plist[[iter]][[2]] } ],
-        rules[var] = var -> Interval[{-Infinity, plist[[iter]][[2]]}]
+        rules[var] = var -> Interval[{rules[var][[2]][[1]][[1]], pc[[2]] } ],
+        rules[var] = var -> Interval[{-Infinity, pc[[2]]}]
       ]
     ];
-    If[ MemberQ[{Greater, GreaterEqual}, Head[ plist[[iter]] ] ],
+    If[ MemberQ[{Greater, GreaterEqual}, Head[ pc ] ],
       If[Head[rules[var] ] === Rule,
-        rules[var] = var -> Interval[{plist[[iter]][[2]], rules[var][[2]][[1]][[2]] }],
-        rules[var] = var -> Interval[{plist[[iter]][[2]], Infinity}]
+        rules[var] = var -> Interval[{pc[[2]], rules[var][[2]][[1]][[2]] }],
+        rules[var] = var -> Interval[{pc[[2]], Infinity}]
       ]
     ];
-    If[ Head[ plist[[iter]] ]=== Equal,
-      rules[var] = var -> Interval[plist[[iter[[2]] ] ] ]
+    If[ Head[ pc ]=== Equal,
+      rules[var] = var -> Interval[pc[[2]] ]
     ];
     debugPrint["rule:", rules[var]]
   ];
@@ -1005,6 +1006,9 @@ Module[
 ];
 
 approxValue[val_] := approxValue[val, pConstraint, approxMode, approxPrecision, approxThreshold];
+
+
+approxValue[val_, mode_] := approxValue[val, pConstraint, mode, approxPrecision, 0];
 
 (*
  * approx given value
@@ -1022,7 +1026,7 @@ publicMethod[
       If[mode === numeric,
         If[Length[val] == 1,
           {1, integerString[approxExpr[precision, val[[1]] ] ] },
-          {1, ntegerString[approxExpr[precision, val[[1]] ] ], integerString[approxExpr[precision, val[[2]] ] ] }
+          {1, integerString[approxExpr[precision, val[[1]] ] ], integerString[approxExpr[precision, val[[2]] ] ] }
         ],
         (* if approxMode === interval *)
         If[Length[val] == 1,
@@ -1036,7 +1040,6 @@ publicMethod[
           lb = getInterval[val[[1]], pcons, precision];
           ub = getInterval[val[[2]], pcons, precision];
           simplePrint[lb, ub];
-          Print[N[lb], N[ub]];
           Join[{1}, integerString[{Min[lb[[1]][[1]], ub[[1]][[1]] ], Max[lb[[1]][[2]], ub[[1]][[2]] ]}] ]
         ]
       ]
@@ -1047,10 +1050,10 @@ publicMethod[
 getInterval[expr_, pcons_, precision_] := Module[
   {tmp},
   tmp = If[pcons =!= True, expr /. makeIntervalRulesList[pcons], expr ];
-  simplePrint[tmp];
   If[Head[tmp] =!= Interval, tmp = Interval[{tmp, tmp}] ];
-  simplePrint[tmp];
-  Rationalize[N[tmp, precision], 0]
+  tmp = N[tmp, 10];
+  tmp = Rationalize[tmp, 0];
+  tmp
 ];
 
 

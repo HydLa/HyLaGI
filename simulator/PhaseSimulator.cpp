@@ -188,11 +188,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   for(unsigned int i=0; i < vms.size(); i++)
   {
     variable_range_map_t& vm = vms[i];
-    
+    /*  
     if(todo->phase == PointPhase)
     {
       solver_->approx_vm(vm);
     }
+    */
     
     phase_result_sptr_t phase = make_new_phase(todo, vm);
     phase->module_set = ms;

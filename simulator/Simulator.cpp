@@ -13,7 +13,7 @@ namespace hydla{
 namespace simulator{
 
 
-Simulator::Simulator(Opts& opts):opts_(&opts){}
+  Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);

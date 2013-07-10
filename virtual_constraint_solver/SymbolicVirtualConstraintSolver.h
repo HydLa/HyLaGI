@@ -200,6 +200,8 @@ public:
 
   virtual void approx_vm(variable_range_map_t& vm){assert(0);}
 
+  virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx = false){assert(0); return false;}
+
   /* 
    * 出現する変数の集合を設定する．
    * resetしても初期化されない．

@@ -107,6 +107,14 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
   
+  ml_.MLPutFunction("Set",2);
+  ml_.MLPutSymbol("approxThresholdEx");
+  ml_.MLPutInteger(opts.approx_threshold_ex);
+  ml_.MLEndPacket();
+  ml_.skip_pkt_until(RETURNPKT);
+  ml_.MLNewPacket();
+
+  
   // タイムアウト時間
   ml_.MLPutFunction("Set",2);
   ml_.MLPutSymbol("timeOutS"); 
@@ -353,6 +361,61 @@ void MathematicaVCS::add_constraint(const node_sptr& constraint)
 }
 
 
+
+  bool MathematicaVCS::approx_val(const value_t& val, value_range_t& range, bool force_approx)
+{
+  PacketSender ps(ml_);
+  VariableArg arg = VA_None;
+  if(val->undefined())
+  {
+    return false;
+  }
+
+
+  if(!force_approx)
+  {
+    ml_.put_function("approxValue", 1);
+    ml_.put_function("List", 1);
+    ps.put_value(val, arg);
+  }
+  else
+  {
+    ml_.put_function("approxValue", 2);
+    ml_.put_function("List", 1);
+    ps.put_value(val, arg);
+    ml_.put_symbol("interval");
+  }
+
+  ml_.receive();
+  PacketErrorHandler::handle(&ml_);
+  int length = ml_.get_arg_count();
+  ml_.get_next();
+  ml_.get_next();
+  int approxed = ml_.get_integer();
+  if(approxed)
+  {
+    if(length == 2)
+    {
+      value_t tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+      range.set_unique(tmp_value);
+    }
+    else if(length == 3)
+    {
+      value_t tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+      range.set_lower_bound(tmp_value, true);
+      tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+      range.set_upper_bound(tmp_value, true);
+    }
+    else assert(0);
+    ml_.MLNewPacket();
+    return true;
+  }
+  else
+  {
+    ml_.MLNewPacket();
+    return false;
+  }
+}
   
 void MathematicaVCS::approx_vm(variable_range_map_t& vm)
 {

@@ -75,7 +75,12 @@ protected:
   /**
    * 変数値の変更
    */
-  int change_variable(simulation_todo_sptr_t& phase);
+  int change_variable(simulation_todo_sptr_t& todo);
+
+  /**
+   * 変数値の近似
+   */
+  int approx_variable(simulation_todo_sptr_t& todo);
   
   /**
    * 現在のフェーズを出力する
@@ -141,7 +146,6 @@ protected:
 
   static hydla::output::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
-  boost::shared_ptr<solver_t> solver_;
 };
 
 } // simulator
