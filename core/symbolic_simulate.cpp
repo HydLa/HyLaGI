@@ -199,5 +199,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ss->initialize(parse_tree);
     ss->simulate();
     output_result(*ss, opts);
+
+    delete ss;
   }
 }
