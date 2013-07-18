@@ -42,7 +42,7 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
     result = make_results_from_todo(todo);
   }
 
-  todo->profile["Phase"] += phase_timer.get_elapsed_us();
+  todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
   return result;
 }
 

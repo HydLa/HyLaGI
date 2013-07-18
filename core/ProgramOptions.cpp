@@ -149,6 +149,9 @@ void ProgramOptions::init_descriptions()
      value<int>()->default_value(5), 
      "precision of output message")
      */
+    ("output_file,o",
+     value<std::string>()->default_value(""),
+     "file name to output result of simulation")
 
     ("time,t", 
      value<std::string>()->default_value(""), 

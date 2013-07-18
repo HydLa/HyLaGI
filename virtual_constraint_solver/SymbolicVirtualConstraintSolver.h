@@ -199,6 +199,8 @@ public:
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
 
   virtual void approx_vm(variable_range_map_t& vm){assert(0);}
+  
+  virtual void linear_approx(const value_t& val, value_t& approxed, value_range_t& range, int precision){assert(0);}
 
   virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx = false){assert(0); return false;}
 

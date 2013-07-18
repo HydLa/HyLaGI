@@ -28,9 +28,11 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
   printer_.set_output_variables(opts_->output_variables);
   simulation_todo_sptr_t todo(make_initial_todo());
   unsigned int todo_num = 1; // 連続して処理するTODOの残数
+  int todo_id = 0;
 
   while(todo_num)
   {
+    todo->id = ++todo_id;
     try
     {
       PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
@@ -58,7 +60,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       }
       
       PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
-
+      profile_vector_->push_back(todo);
       if(todos.empty())
       {
         simulation_todo_sptr_t tmp_todo = todo;
@@ -141,9 +143,10 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         print(todo->parent);
         break;
       case 'a':
-        approx_variable(todo);
-        print_phase(todo->parent);
+      {
+        if( approx_variable(todo) ) print_phase(todo->parent);
         break;
+      }
       case 'c':
         change_variable(todo);
         print_phase(todo->parent);
@@ -248,6 +251,11 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
 
+  if(todo->phase == PointPhase)
+  {
+    cout << "sorry, approximation at start point of PP is not supported" << endl;
+    return 0;
+  }
   cout << "(approximate variable)" << endl;
   variable_map_t& vm = todo->parent->variable_map;
   
@@ -255,34 +263,90 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   cout << "input variable name " << endl;
   cout << '>';
   string variable_str = excin<string>();
-  variable_map_t::iterator v_it  = vm.begin();
-  for(;v_it!=vm.end();v_it++){
-    if( v_it->first->get_string() == variable_str) break;
-  }
-  if(v_it == vm.end())
+  
+  variable_t* var = NULL;
+  value_t* val = NULL;
+  if(variable_str == "t")
   {
-    cout << "invalid variable name " << endl;
-    return 0;
+    var = &system_time_;
+    val = &todo->current_time;
   }
+  else
+  {
+    variable_map_t::iterator v_it  = vm.begin();
+    for(;v_it!=vm.end();v_it++){
+      if( v_it->first->get_string() == variable_str)
+      {
+        var = v_it->first;
+        val = &v_it->second;
+        break;
+      }
+    }
+    if(v_it == vm.end())
+    {
+      cout << "invalid variable name " << endl;
+      return 0;
+    }
+  }
+  
+  
+  cout << "input method of approximation (i: normal interval, l: linear approximation)" << endl;
+  cout << '>';
+  string method_string = excin<string>();
+  
   ValueRange range;
 
   parameter_map_t& pm = todo->parameter_map;
 
   phase_simulator_->solver_->reset_parameters(pm);
-  bool approxed = phase_simulator_->solver_->approx_val(v_it->second, range, true);
-  assert(approxed);
+  value_t approxed_val;
+  if(method_string == "i")
+  {
+    bool approxed = phase_simulator_->solver_->approx_val(*val, range, true);
+    assert(approxed);
+    parameter_t* introduced_par = introduce_parameter(var, todo->parent, range);
+    pm[introduced_par] = range;
+    approxed_val.reset(new hydla::simulator::symbolic::SymbolicValue(
+        hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(var->get_name(),
+        var->get_derivative_count(),
+        todo->parent->id))));
+    todo->parent->parameter_map = pm;
+  }
+  else if(method_string == "l")
+  {
+    phase_simulator_->solver_->linear_approx(*val, approxed_val, range, 10);
+    if(!range.undefined())
+    {
+      parameter_t* introduced_par = introduce_parameter(var, todo->parent, range);
+      pm[introduced_par] = range;
+      approxed_val.reset(new hydla::simulator::symbolic::SymbolicValue(
+          hydla::parse_tree::node_sptr(new hydla::parse_tree::Plus(
+              approxed_val->get_node(), 
+              hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(var->get_name(),
+              var->get_derivative_count(),
+              todo->parent->id))
+      ))
+      ));
+      todo->parent->parameter_map = pm;
+    }
+  }
+  else
+  {
+    cout << "invalid method" << endl;
+    return 0;
+  }
+
+  if(var == &system_time_)
+  {
+    todo->parent->current_time = todo->current_time = approxed_val;
+  }
+  else
+  {
+    vm[var] = approxed_val;
+  }
 
 
-  parameter_t* introduced_par = introduce_parameter(v_it->first, todo->parent, range);
-  pm[introduced_par] = range;
-  value_t pvalue(new hydla::simulator::symbolic::SymbolicValue(
-      hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first->get_name(),
-      v_it->first->get_derivative_count(),
-      todo->parent->id))));
-  vm[v_it->first] = pvalue;
-  todo->parent->parameter_map = pm;
-
-  return 0;
+  return 1;
 }
 
 

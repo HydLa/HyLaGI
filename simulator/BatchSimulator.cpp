@@ -20,7 +20,6 @@ BatchSimulator::~BatchSimulator(){}
 void BatchSimulator::initialize(const parse_tree_sptr& parse_tree)
 {
   Simulator::initialize(parse_tree);
-  profile_vector_.reset(new entire_profile_t());
   todo_stack_.reset(new BatchTodoContainer(opts_->search_method, profile_vector_));
 }
 
@@ -78,6 +77,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
       }
     }
     HYDLA_LOGGER_PHASE("%% phase_timer: ", phase_timer.get_elapsed_us());
+    todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
 
     if(!is_safe && opts_->stop_at_failure){
       HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");

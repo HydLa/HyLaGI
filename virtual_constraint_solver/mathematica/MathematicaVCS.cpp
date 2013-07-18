@@ -362,7 +362,41 @@ void MathematicaVCS::add_constraint(const node_sptr& constraint)
 
 
 
-  bool MathematicaVCS::approx_val(const value_t& val, value_range_t& range, bool force_approx)
+
+
+void MathematicaVCS::linear_approx(const value_t& val, value_t& approxed_val, value_range_t& itv, int precision)
+{
+  PacketSender ps(ml_);
+  VariableArg arg = VA_None;
+  
+  assert(!val->undefined());
+
+  ml_.put_function("linearApprox", 2);
+  ps.put_value(val, arg);
+  ml_.put_integer(precision);
+
+  ml_.receive();
+  PacketErrorHandler::handle(&ml_);
+  int length = ml_.get_arg_count();
+  assert(length == 3 || length == 1);
+  ml_.get_next();
+  ml_.get_next();
+  
+  value_t tmp_value;
+  approxed_val = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+  if(length == 3)
+  {
+    tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+    itv.set_lower_bound(tmp_value, true);
+    tmp_value = MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_);
+    itv.set_upper_bound(tmp_value, true);
+  }
+  ml_.MLNewPacket();
+  return;
+}
+
+
+bool MathematicaVCS::approx_val(const value_t& val, value_range_t& range, bool force_approx)
 {
   PacketSender ps(ml_);
   VariableArg arg = VA_None;

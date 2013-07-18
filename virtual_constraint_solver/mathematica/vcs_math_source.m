@@ -273,8 +273,10 @@ publicMethod[
   cons, pcons, vars,
   Module[
     {trueMap, falseMap, cpTrue, cpFalse},
+
+    (* ここでのSimplifyは不要な気がする *)
     Quiet[
-      cpTrue = Reduce[Exists[vars, cons && pcons], Reals], {Reduce::useq}
+      cpTrue = Reduce[Exists[vars, Simplify[cons&&pcons] ], Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     checkMessage;
@@ -310,7 +312,7 @@ publicMethod[
         {False, pcons},
         If[sol[[1]] === underConstraint,
           (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-          (* Existsの第一引数はHold （HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある （気がする） *)
+          (* Existsの第一引数はHold （HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある *)
           tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
@@ -975,7 +977,6 @@ Module[
   For[iter = 1, iter <= Length[plist], iter++,
     pc = plist[[iter]];
     var = pc[[1]];
-    simplePrint[var];
     
     If[Head[rules[var] ] =!= Rule,
       appearedp = Append[appearedp, var]
@@ -996,9 +997,7 @@ Module[
     If[ Head[ pc ]=== Equal,
       rules[var] = var -> Interval[pc[[2]] ]
     ];
-    debugPrint["rule:", rules[var]]
   ];
-  simplePrint[appearedp];
   For[iter = 1, iter <= Length[appearedp], iter++,
     ret = Append[ret, rules[appearedp[[iter]] ] ]
   ];
@@ -1063,6 +1062,51 @@ approxExpr[precision_, expr_] := (
     Divide[1, Power[10, precision] ]
   ]
 );
+
+
+linearApprox[val_, precision_] := linearApprox[val, pConstraint, precision];
+
+(*
+ * linear approximation
+ *)
+
+publicMethod[
+  linearApprox,
+  val, pcons, precision,
+  Module[
+    {res}, 
+    res = primaryTaylorExpansion[val, pcons, precision];
+    res = If[res[[2]] == 0, {integerString[res[[1]] ]},  {integerString[res[[1]] ], integerString[res[[2]] ], integerString[res[[3]] ]} ];
+    res 
+  ]
+];
+
+(* @return {linear approximated value, lb of interval, ub of interval} *)
+primaryTaylorExpansion[expr_, pcons_, precision_] := Module[
+  {i, tmp, pars, par, pRules, zeroRules, linear, coef, itv = 0},
+  pRules = If[pcons =!= True, makeIntervalRulesList[pcons], {} ];
+  pars = Union[getParameters[pRules]];
+  simplePrint[pRules];
+  (* calculate f(0) *)
+  zeroRules = Map[(#[[1]] -> 0)&, pRules];
+  simplePrint[zeroRules];
+  linear = expr /. zeroRules;
+  simplePrint[linear];
+  For[i = 1, i <= Length[pars], i++,
+    par = pars[[i]];
+    coef = D[expr, par ];
+    simplePrint[coef];
+    coef = coef /. zeroRules;
+    coef = Rationalize[N[coef, precision], 0];
+    itv = itv + (Max[coef] - Min[coef])/2;
+    coef = (Max[coef] + Min[coef])/2;
+    simplePrint[itv];
+    linear = linear + coef * par
+  ];
+  linear = linear + coef * par;
+  simplePrint[linear, itv];
+  {linear, -itv, itv}
+];
 
 (* 
  * 与えられたtの式をタイムシフト

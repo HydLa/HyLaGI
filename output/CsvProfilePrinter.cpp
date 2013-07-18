@@ -18,13 +18,13 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
       simulator::SimulationTodo& todo = *result[i];
       if(todo.phase == simulator::PointPhase)
       {
-        output_stream_ << "Point";
+        output_stream_ << "P";
       }
       else
       {
-        output_stream_ << "Interval";
+        output_stream_ << "I";
       }
-      output_stream_ << "Phase " << todo.id << ", ";
+      output_stream_ << "P " << todo.id << ", ";
       for(profile_t::const_iterator it = todo.profile.begin(); it != todo.profile.end(); it++){
         label_set.insert(it->first);
         //フェーズによってシミュレーションしないモジュール集合などもあるため，必要なラベルをすべて列挙しておく．

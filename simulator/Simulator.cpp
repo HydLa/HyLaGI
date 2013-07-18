@@ -13,7 +13,7 @@ namespace hydla{
 namespace simulator{
 
 
-  Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
+Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
@@ -31,6 +31,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
   phase_simulator_->initialize(*variable_set_, *parameter_set_,
    *original_range_map_, vm, msc_no_init_);
+  profile_vector_.reset(new entire_profile_t());
 }
 
 void Simulator::reset_result_root()

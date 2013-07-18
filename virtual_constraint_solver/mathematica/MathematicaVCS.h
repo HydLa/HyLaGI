@@ -58,6 +58,8 @@ public:
   
   virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx);
   
+  void linear_approx(const value_t& val, value_t& approxed, value_range_t& itv, int precision);
+  
   /**
    * 制約を追加する．
    */

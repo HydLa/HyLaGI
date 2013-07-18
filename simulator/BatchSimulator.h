@@ -52,10 +52,6 @@ public:
   
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
-  /**
-   * @return the result of profiling
-   */
-  entire_profile_t get_profile(){return *profile_vector_;}
 
 protected:
 
@@ -64,10 +60,6 @@ protected:
    */
   boost::shared_ptr<todo_container_t> todo_stack_;
 
-  /**
-   * 各Todoに対応するプロファイリングの結果
-   */
-  boost::shared_ptr<entire_profile_t> profile_vector_;
 };
 
 } // simulator
