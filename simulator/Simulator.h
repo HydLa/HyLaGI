@@ -36,6 +36,7 @@ typedef struct Opts_ {
   bool profile_mode;
   bool parallel_mode;
   int parallel_number;
+  bool reuse;
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
@@ -44,7 +45,6 @@ typedef struct Opts_ {
   ApproximationMode approx_mode;
   int approx_precision;
   int approx_threshold;
-  int approx_threshold_ex;
   std::string solver;
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;
@@ -107,7 +107,9 @@ struct SimulationTodo{
   int elapsed_time;
   /// map to cache result of calculation for each module_set
   ms_cache_t ms_cache;
-  
+
+  std::set<std::string> changed_variables;
+
   /**
    * reset members to calculate from the start of the phase
    * TODO: expanded_alwaysどうしよう．
@@ -210,12 +212,6 @@ public:
    * @return pointer to introduced parameter
    */
   parameter_t* introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range);
-
-  /**
-   * @return the result of profiling
-   */
-  entire_profile_t get_profile(){return *profile_vector_;}
-
   
   // TODO: publicメンバが多すぎる気がする
   
@@ -228,8 +224,6 @@ public:
    * set of variables
    */
   boost::shared_ptr<variable_set_t> variable_set_;
-
-  variable_t system_time_;
   
 
   /*
@@ -271,13 +265,6 @@ protected:
    * mcs_original_から非always制約を除いたもの
    */
   module_set_container_sptr msc_no_init_;
-
-
-  /**
-   * 蜷Уodo縺ォ蟇セ蠢懊☆繧九繝ュ繝輔ぃ繧、繝ェ繝ウ繧ー縺ョ邨先棡
-   */
-  boost::shared_ptr<entire_profile_t> profile_vector_;
-
 
   /** 
    * root of the tree of result trajectories

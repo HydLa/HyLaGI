@@ -14,6 +14,8 @@
 #include "VariableReplacer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
+#include "VariableFinder.h"
+#include "VariableSearcher.h"
 
 #include "InitNodeRemover.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
@@ -48,15 +50,16 @@ using hydla::simulator::ContinuityMapMaker;
 using hydla::simulator::IntervalPhase;
 using hydla::simulator::PointPhase;
 using hydla::parse_tree::TreeInfixPrinter;
+using hydla::simulator::VariableFinder;
 
 namespace hydla {
 namespace simulator {
 namespace symbolic {
 
 CalculateVariableMapResult
-SymbolicPhaseSimulator::check_false_conditions
-(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm){
-  return analysis_result_checker_->check_false_conditions(ms, state, vm);
+SymbolicPhaseSimulator::check_conditions
+(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){
+  return analysis_result_checker_->check_conditions(ms, state, vm, b);
 }
 
 
@@ -176,6 +179,8 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
 
+  VariableSearcher variable_searcher;
+
   bool expanded;
   
   do{
@@ -191,6 +196,9 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     maker.reset();
 
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
+      if(opts_->reuse && !state->changed_variables.empty() && !variable_searcher.visit_node(state->changed_variables,*it,true))
+        continue;
+
       // send "Constraint" node, not "Tell"
       constraint_list.push_back((*it)->get_child());
       maker.visit_node((*it), state->phase == IntervalPhase, false);
@@ -236,6 +244,14 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t::iterator it  = unknown_asks.begin();
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end){
+        if(opts_->reuse && !state->changed_variables.empty() && !variable_searcher.visit_node(state->changed_variables,*it,true)){
+          if(state->parent->positive_asks.find(*it) != state->parent->positive_asks.end())
+            positive_asks.insert(*it);
+          else negative_asks.insert(*it);
+          unknown_asks.erase(it);
+          it++;
+          continue;
+        }
         if(state->phase == PointPhase){
           if(state->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // if current time equals to 0, conditions about left-hand limits are considered to be invalid
@@ -272,6 +288,15 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             }
             unknown_asks.erase(it++);
             expanded = true;
+            
+            if(opts_->reuse && !state->changed_variables.empty()){
+              VariableFinder variable_finder;
+              variable_finder.visit_node(*it,true);
+              VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
+              for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
+                state->changed_variables.insert(it->first);
+              }
+            }
             break;
           case CONFLICTING:
             HYDLA_LOGGER_CLOSURE("--- conflicted ask ---\n", *((*it)->get_guard()));
@@ -370,6 +395,43 @@ SymbolicPhaseSimulator::calculate_variable_map(
   return CVM_CONSISTENT;
 }
 
+void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase, simulation_todo_sptr_t& todo)
+{
+  TellCollector current_tell_collector(phase->module_set);
+  tells_t current_tell_list;
+  expanded_always_t& current_expanded_always = phase->expanded_always;
+  positive_asks_t& current_positive_asks = phase->positive_asks;
+  current_tell_collector.collect_all_tells(&current_tell_list,&current_expanded_always,&current_positive_asks);
+  
+  TellCollector prev_tell_collector(phase->parent->module_set);
+  tells_t prev_tell_list;
+  expanded_always_t& prev_expanded_always = phase->parent->expanded_always;
+  positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
+  prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
+
+  tells_t tmp_tells;
+  tells_t::iterator tmp_it;
+  for(tells_t::iterator it = current_tell_list.begin(); it != current_tell_list.end(); it++){
+    tmp_it = std::find(prev_tell_list.begin(),prev_tell_list.end(),*it);
+    if(tmp_it == prev_tell_list.end()){
+      tmp_tells.push_back(*it);
+    }else{
+      prev_tell_list.erase(tmp_it);
+    }
+  }
+  for(tells_t::iterator it = prev_tell_list.begin(); it != prev_tell_list.end(); it++)
+    tmp_tells.push_back(*it);
+
+  VariableFinder variable_finder;
+  for(tells_t::iterator it = tmp_tells.begin(); it != tmp_tells.end(); it++){
+    variable_finder.visit_node(*it,false);
+  }
+  VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
+  for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
+    todo->changed_variables.insert(it->first);
+  }
+}
+
 SymbolicPhaseSimulator::todo_list_t 
   SymbolicPhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
@@ -390,6 +452,8 @@ SymbolicPhaseSimulator::todo_list_t
   {
     next_todo->phase = IntervalPhase;
     next_todo->current_time = phase->current_time;
+    if(opts_->reuse && phase->id > 1)
+      set_changed_variables(phase, next_todo);
     ret.push_back(next_todo);
   }
   else
@@ -432,16 +496,6 @@ SymbolicPhaseSimulator::todo_list_t
     {
       SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       solver_->simplify(candidate.time);
-/*
-      value_range_t tmp_range;
-      if(solver_->approx_val(candidate.time, tmp_range))
-      {
-        parameter_t* param = simulator_->introduce_parameter(&simulator_->system_time_, pr, tmp_range);
-        candidate.time = value_t(new SymbolicValue(node_sptr(
-                                                      new Parameter("time", 0, pr->id))));
-        candidate.parameter_map[param] = tmp_range;
-      }
-*/
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
@@ -494,7 +548,11 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   variable_map_t ret;
   for(variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
     variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
-    if(r_it->second.is_unique()){
+    std::set<std::string>::iterator it = state->changed_variables.find(r_it->first->get_name());
+    if(opts_->reuse && current_phase_ == IntervalPhase && state->id > 3 && it == state->changed_variables.end()){
+      ret[variable] = state->parent->parent->variable_map.find(variable)->second;
+    }
+    else if(r_it->second.is_unique()){
       ret[variable] = r_it->second.get_lower_bound().value;
     }
     else
@@ -512,10 +570,9 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
     }
   }
-  
+
   // 記号定数表に出現する変数を変数以外のものに置き換える
-  VariableReplacer replacer(ret);
-  
+    VariableReplacer replacer(ret);
   for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
       it != simulator_->original_parameter_map_->end(); it++)
   {
@@ -554,39 +611,8 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       range.set_lower_bound(val, range.get_lower_bound().include_bound);
     }
   }
-
-  for(variable_map_t::iterator it = ret.begin();
-      it != ret.end();it++)
-  {
-    if(!it->second->undefined())
-    {
-      value_t val;
-      val = it->second;
-      replacer.replace_value(val);
-      ret[it->first] = val;
-    }
-  }
-
-  // approx values in vm
-  // TODO:ここでやると，変数同士の相関性を生かせない．
-  if(state->phase == PointPhase)
-  {
-    for(variable_map_t::iterator it = ret.begin();
-        it != ret.end();it++)
-    { 
-      value_range_t tmp_range;
-      if(solver_->approx_val(it->second, tmp_range))
-      {
-        variable_t* variable = it->first;
-
-        parameter_t* param = simulator_->introduce_parameter(variable, state, tmp_range);
-        ret[variable] = value_t(new SymbolicValue(node_sptr(
-          new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-        parameter_map[param] = tmp_range;
-      }
-    }
-  }
   
+
   return ret;
 }
 

@@ -83,6 +83,8 @@ struct PhaseResult {
   int step;
   hydla::ch::module_set_sptr module_set;
 
+  std::set<std::string> changed_variables;
+
   CauseOfTermination cause_of_termination;
   /// A set of succeeding phases
   phase_result_sptrs_t children;
