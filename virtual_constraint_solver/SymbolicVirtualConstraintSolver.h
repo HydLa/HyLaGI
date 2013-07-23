@@ -61,10 +61,10 @@ public:
   typedef hydla::simulator::continuity_map_t                 continuity_map_t;
 
   typedef enum{
-    FALSE_CONDITIONS_TRUE,
-    FALSE_CONDITIONS_FALSE,
-    FALSE_CONDITIONS_VARIABLE_CONDITIONS
-  } FalseConditionsResult;
+    CONDITIONS_TRUE,
+    CONDITIONS_FALSE,
+    CONDITIONS_VARIABLE_CONDITIONS
+  } ConditionsResult;
   
   
   /**
@@ -147,17 +147,17 @@ public:
   /**
    * 制約モジュール集合が矛盾する条件をセットする
    */
-  virtual void set_false_conditions(const node_sptr& constraint){assert(0);}
+  virtual void set_conditions(const node_sptr& constraint){assert(0);}
 
   /**
    * 矛盾する条件をあらかじめ調べる関数
    * 引数に得た矛盾する条件を入れる
    * @return
-   * FALSE_CONDITIONS_TRUE                : 必ず矛盾              条件 : 何も入れない
-   * FALSE_CONDITIONS_FALSE               : 矛盾しない            条件 : 何も入れない
-   * FALSE_CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する  条件 : 条件を入れる
+   * CONDITIONS_TRUE                : 必ず矛盾              条件 : 何も入れない
+   * CONDITIONS_FALSE               : 矛盾しない            条件 : 何も入れない
+   * CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する  条件 : 条件を入れる
    */
-  virtual FalseConditionsResult find_false_conditions(node_sptr& node){assert(0); return FALSE_CONDITIONS_FALSE;}
+  virtual ConditionsResult find_conditions(node_sptr& node, bool b){assert(0); return CONDITIONS_FALSE;}
 
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -184,7 +184,7 @@ public:
   virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}
   
   //nodeを簡約する
-  virtual FalseConditionsResult node_simplify(node_sptr &node){assert(0);return FALSE_CONDITIONS_FALSE;}
+  virtual ConditionsResult node_simplify(node_sptr &node){assert(0);return CONDITIONS_FALSE;}
 
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time){assert(0);}

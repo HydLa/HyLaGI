@@ -20,9 +20,10 @@ public:
   virtual void set_solver(boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver);
 
   virtual simulator::CalculateVariableMapResult 
-    check_false_conditions(const hydla::ch::module_set_sptr& ms,
+    check_conditions(const hydla::ch::module_set_sptr& ms,
                            simulator::simulation_todo_sptr_t& state,
-                           const variable_map_t&);
+		     const variable_map_t&,
+		     bool);
 
   virtual void parse();
 

@@ -71,9 +71,9 @@ public:
 
   virtual void add_guard(const node_sptr&);
 
-  virtual void set_false_conditions(const node_sptr& constraint);
+  virtual void set_conditions(const node_sptr& constraint);
   
-  virtual FalseConditionsResult find_false_conditions(node_sptr& node);
+  virtual ConditionsResult find_conditions(node_sptr& node, bool b);
 
   /**
    * 制約ストアが無矛盾かを判定する．
@@ -104,7 +104,7 @@ public:
   /**
    * nodeを簡約する
    */
-  virtual FalseConditionsResult node_simplify(node_sptr &node);
+  virtual ConditionsResult node_simplify(node_sptr &node);
 
   /**
    * SymbolicTimeを簡約する
@@ -132,11 +132,11 @@ private:
   void send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps);
 
   /**
-   * find_false_conditionsで得た矛盾する条件を
+   * find_conditionsで得た矛盾する条件を
    * node_sprt形式で返す
    * 事前条件や終了時の状態はreceive_parameter_mapと同じ
    */
-  node_sptr receive_condition_node(FalseConditionsResult& node_type);
+  node_sptr receive_condition_node(ConditionsResult& node_type);
   
   hydla::simulator::symbolic::Mode      mode_;
   

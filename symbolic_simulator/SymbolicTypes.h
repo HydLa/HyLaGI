@@ -49,7 +49,7 @@ namespace symbolic {
   typedef enum Mode_{
     ContinuousMode,
     DiscreteMode,
-    FalseConditionsMode,
+    ConditionsMode,
   } Mode;
   
 } // namespace symbolic

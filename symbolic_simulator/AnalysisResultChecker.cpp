@@ -137,7 +137,7 @@ void AnalysisResultChecker::parse(){
   std::string tmp;
   while(std::getline(in,tmp)){
     unsigned int index = tmp.find(':',0);
-    false_conditions_[tmp.substr(0,index)] = string2node(tmp.substr(index+1));
+    conditions_[tmp.substr(0,index)] = string2node(tmp.substr(index+1));
   }
 }
 
@@ -146,28 +146,29 @@ void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::vcs::SymbolicVir
 }
 
 CalculateVariableMapResult
-AnalysisResultChecker::check_false_conditions(
+AnalysisResultChecker::check_conditions(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& state,
-  const variable_map_t& vm)
+  const variable_map_t& vm,
+  bool b)
 {
   phase_result_sptr_t& pr = state->parent;
   if(opts_->analysis_mode == "simulate"){
     if(checkd_module_set_.find(ms) != checkd_module_set_.end()){
-      if(false_conditions_.find(ms->get_name()) == false_conditions_.end()){
+      if(conditions_.find(ms->get_name()) == conditions_.end()){
         return CVM_INCONSISTENT;
       }
     }else{
       checkd_module_set_.insert(ms);
-      if(find_false_conditions(ms) == FALSE_CONDITIONS_TRUE){
+      if(find_conditions(ms,b) == CONDITIONS_TRUE){
         return CVM_INCONSISTENT;
       }
     }
   }
   solver_->reset(vm, pr->parameter_map);
-  if(false_conditions_[ms->get_name()] != NULL){
-    solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
-    solver_->set_false_conditions(false_conditions_[ms->get_name()]);
+  if(conditions_[ms->get_name()] != NULL){
+    solver_->change_mode(ConditionsMode, opts_->approx_precision);
+    solver_->set_conditions(conditions_[ms->get_name()]);
     CheckConsistencyResult check_consistency_result = solver_->check_consistency();
     if(check_consistency_result.true_parameter_maps.empty()){
       return CVM_INCONSISTENT;

@@ -15,32 +15,72 @@ namespace symbolic {
 {
 public:
   typedef enum{
-    FALSE_CONDITIONS_TRUE,
-    FALSE_CONDITIONS_FALSE,
-    FALSE_CONDITIONS_VARIABLE_CONDITIONS
-  } FalseConditionsResult;
+    CONDITIONS_TRUE,
+    CONDITIONS_FALSE,
+    CONDITIONS_VARIABLE_CONDITIONS
+  } ConditionsResult;
 
-  typedef std::map<std::string, hydla::parse_tree::node_sptr> false_map_t;
-  //  typedef std::map<module_set_sptr, node_sptr> false_map_t;
 
+  /**
+   * 文字列(制約モジュール集合の名前)をキーに、そのモジュール集合に対応する条件(矛盾の条件もしくは無矛盾の条件)を持つ型
+   */
+  typedef std::map<std::string, hydla::parse_tree::node_sptr> conditions_map_t;
+  //  typedef std::map<module_set_sptr, node_sptr> conditions_map_t;
+
+  /**
+   * optionをセット
+   */
   ConstraintAnalyzer(simulator::Opts& opts);
   virtual ~ConstraintAnalyzer();
 
+  /**
+   * Simulatorを継承している都合上、宣言している関数
+   */
   virtual simulator::phase_result_const_sptr_t simulate();
 
-  virtual void print_false_conditions();
+  /**
+   * 制約モジュール集合とそれに対する条件を出力する関数
+   * analysis_fileで指定したファイルに書き出す
+   * 指定がなければ標準出力に書き出す
+   */
+  virtual void print_conditions();
 
-  virtual FalseConditionsResult find_false_conditions(const module_set_sptr& ms);
+  /**
+   * msに対応する条件を算出する関数
+   * bがTrueならmsが無矛盾となる条件を
+   * bがFalseならmsが矛盾する条件を求める
+   * 求めた条件はconditions_に入る
+   * @return
+   * CONDITIONS_TRUE : 得られた条件がTrueだった場合
+   * CONDITIONS_FALSE : 得られた条件がFalseだった場合
+   * CONDITIONS_VARIABLE_CONDITIONS : 得られた条件が何らかの条件だった場合
+   */
+  virtual ConditionsResult find_conditions(const module_set_sptr& ms, bool b);
 
-  virtual void check_all_module_set();
 
+  /**
+   * すべての解候補制約モジュール集合に対してfind_conditionsを適用させる関数
+   */
+  virtual void check_all_module_set(bool b);
+
+  /**
+   * 初期化関数
+   * 制約階層とかソルバとかの設定のために呼んでいる
+   * この初期設定のためにSimulatorを継承している
+   */
   virtual void initialize(const parse_tree_sptr& parse_tree);  
 
 protected:
 
+  /**
+   * 使用するソルバへのポインタ
+   */
   boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver_;
 
-  false_map_t false_conditions_;
+  /**
+   * 制約モジュール集合の名前とそれに対応する条件のマップ
+   */
+  conditions_map_t conditions_;
 
 };
 

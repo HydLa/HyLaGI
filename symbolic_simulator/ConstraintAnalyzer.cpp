@@ -6,6 +6,7 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "ContinuityMapMaker.h"
+#include "TreeInfixPrinter.h"
 
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
 
@@ -25,24 +26,26 @@ ConstraintAnalyzer::ConstraintAnalyzer(Opts& opts):Simulator(opts){}
 
 ConstraintAnalyzer::~ConstraintAnalyzer(){}
 
-void ConstraintAnalyzer::print_false_conditions()
+void ConstraintAnalyzer::print_conditions()
 {
-  false_map_t::iterator it = false_conditions_.begin();
+  conditions_map_t::iterator it = conditions_.begin();
   std::ofstream ofs;
   if(opts_->analysis_file != ""){
     ofs.open(opts_->analysis_file.c_str());
   }
-  for(;it != false_conditions_.end();it++){
+  for(;it != conditions_.end();it++){
     if(opts_->analysis_file != ""){
+      // 出力先がファイルの場合
       ofs << (*it).first << ":";
       if((*it).second != NULL){
         ofs << *((*it).second);
       }
       ofs << std::endl;
     }else{
+      // 出力先が標準出力の場合
       std::cout << (*it).first << ":";
       if((*it).second != NULL){
-	      std::cout << *((*it).second);
+	std::cout << TreeInfixPrinter().get_infix_string((*it).second);
       }
       std::cout << std::endl;
     }
@@ -57,36 +60,28 @@ void ConstraintAnalyzer::initialize(const parse_tree_sptr& parse_tree)
   init_module_set_container(parse_tree);
 
   init_variable_map(parse_tree);
-  //  continuity_map_t cont(parse_tree->get_variable_map());
 
   solver_.reset(new MathematicaVCS(*opts_));
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
 }
 
-void ConstraintAnalyzer::check_all_module_set()
+void ConstraintAnalyzer::check_all_module_set(bool b)
 {
   msc_no_init_->reset();
+  // 単にすべての解候補制約モジュール集合にfind_conditionsを適用しているだけ
   while(msc_no_init_->go_next()){
-    find_false_conditions(msc_no_init_->get_module_set());
+    find_conditions(msc_no_init_->get_module_set(),b);
     msc_no_init_->mark_current_node();
   }
-  /*
-  msc_no_init_->reverse_reset();
-  while(msc_no_init_->reverse_go_next()){
-    FalseConditionsResult result = find_false_conditions(msc_no_init_->get_reverse_module_set());
-    if(result != FALSE_CONDITIONS_FALSE){
-        msc_no_init_->mark_super_module_set();
-    }
-    msc_no_init_->mark_r_current_node();
-  }
-  */
 }
 
-ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditions(const module_set_sptr& ms)
+  ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)
 {
-  solver_->change_mode(FalseConditionsMode, opts_->approx_precision);
-  ConstraintAnalyzer::FalseConditionsResult ret = FALSE_CONDITIONS_FALSE;
+
+  //  std::cout << ms->get_name() << std::endl;
+  solver_->change_mode(ConditionsMode, opts_->approx_precision);
+  ConstraintAnalyzer::ConditionsResult ret = CONDITIONS_FALSE;
 
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
@@ -104,40 +99,103 @@ ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditi
   parameter_map_t pm;
   solver_->reset(vm, pm);
 
+  // ask制約を集める。ここではexpanded_always=null, positive_asks=null, tmp_negetive=null, negative_asks=ask制約の配列となっているはず
   ask_collector.collect_ask(&expanded_always,
 			    &positive_asks,
 			    &tmp_negative,
 			    &negative_asks);
 
+  // 求められた条件を入れる変数
   node_sptr condition_node;
+  // ガード条件の仮定に関する条件を保持する変数
+  node_sptr guard_condition;
 
-  for(int i = 0; i < (1 << negative_asks.size()) && ret != FALSE_CONDITIONS_TRUE; i++){
+  // ask制約のガード条件の成否のパターンを全通り考える(2^(ask制約の個数)通り)
+  for(int i = 0; i < (1 << negative_asks.size()) && ret != CONDITIONS_TRUE; i++){
     positive_asks_t tmp_positive_asks;
     solver_->start_temporary();
-    
-    negative_asks_t::iterator it = negative_asks.begin();
-    for(int j = 0; j < (int)negative_asks.size(); j++, it++){
-      if((i & (1 << j)) != 0){
-        solver_->add_guard((*it)->get_guard());
-        tmp_positive_asks.insert(*it);
-      }else{
-        solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
-      }
-    }
-
-    tell_collector.collect_all_tells(&tell_list,
-				     &expanded_always,
-				     &tmp_positive_asks);
-
     maker.reset();
     constraint_list.clear();
 
+    tmp_positive_asks.clear();
+
+    negative_asks_t::iterator it = negative_asks.begin();
+
+    // ガード条件の成否の仮定。i の各ビットが成否に対応
+    // つまり i = 11(1011) でask制約が5つあれば否、成、否、成、成の順に仮定する
+    for(int j = 0; j < (int)negative_asks.size(); j++, it++){
+      if((i & (1 << j)) != 0){
+	//	std::cout << " +++ " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
+        tmp_positive_asks.insert(*it);
+        constraint_list.push_back((*it)->get_guard());
+      }else{
+	//	std::cout << " --- " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
+	// 成り立たないと仮定したガード条件の後件に関する連続性を見る
+        constraint_list.push_back(node_sptr(new Not((*it)->get_guard())));
+	maker.visit_node((*it)->get_child(), false, true);
+      }
+    }
+
+    // tell制約とガード条件が成立するask制約の後件を集める
+    tell_collector.collect_all_tells(&tell_list,
+				     &expanded_always,
+				     &tmp_positive_asks);  
+
+    //    std::cout << "collected tell for guard" << std::endl;
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
+      //      std::cout << TreeInfixPrinter().get_infix_string((*it)->get_child()) << std::endl;
       constraint_list.push_back((*it)->get_child());
       maker.visit_node((*it), false, false);
     }
 
+    // 集めた制約をソルバに送る
     solver_->add_constraint(constraint_list);
+
+    // デフォルト連続性を表わす制約をソルバに送る
+    continuity_map = maker.get_continuity_map();
+    for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
+      if(it->second>=0){
+        for(int i=0; i<it->second;i++){
+          solver_->set_continuity(it->first, i);
+        }
+      }else{
+        node_sptr lhs(new Variable(it->first));
+        for(int i=0; i<=-it->second;i++){
+          solver_->set_continuity(it->first, i);
+          lhs = node_sptr(new Differential(lhs));
+        }
+        node_sptr rhs(new Number("0"));
+        node_sptr cons(new Equal(lhs, rhs));
+        solver_->add_constraint(cons);
+      }
+    }
+
+    solver_->find_conditions(guard_condition,b);
+
+    solver_->end_temporary();
+    solver_->start_temporary();
+
+    maker.reset();
+
+    if(guard_condition != NULL){
+      constraint_list.push_back(guard_condition);
+      //      std::cout << "guard condition : " << TreeInfixPrinter().get_infix_string(guard_condition) << std::endl;
+    }
+    // tell制約とガード条件が成立するask制約の後件を集める
+    tell_collector.collect_all_tells(&tell_list,
+				     &expanded_always,
+				     &tmp_positive_asks);  
+
+    //    std::cout << "send tell" << std::endl;
+    for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
+      constraint_list.push_back((*it)->get_child());
+      maker.visit_node((*it), false, false);
+      //      std::cout << TreeInfixPrinter().get_infix_string((*it)->get_child()) << std::endl;
+    }
+
+    solver_->add_constraint(constraint_list);
+
+    // デフォルト連続性を表わす制約をソルバに送る
     continuity_map = maker.get_continuity_map();
     for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
       if(it->second>=0){
@@ -158,90 +216,52 @@ ConstraintAnalyzer::FalseConditionsResult ConstraintAnalyzer::find_false_conditi
 
     {
       node_sptr tmp_node;
-      switch(solver_->find_false_conditions(tmp_node)){
-      case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
-        ret = FALSE_CONDITIONS_TRUE;
+      //      std::cout << "    result" << std::endl;
+      // あるガード条件の仮定の下に得られた条件をtmp_nodeに入れる
+      switch(solver_->find_conditions(tmp_node,b)){
+      case SymbolicVirtualConstraintSolver::CONDITIONS_TRUE:
+        // もし求まった条件がTrueなら後の仮定の結果がどうであれTrueになるのでret = CONDITIONS_TRUEとおく
+	//	std::cout << "        True" << std::endl;
+        ret = CONDITIONS_TRUE;
         break;
-      case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
+      case SymbolicVirtualConstraintSolver::CONDITIONS_FALSE:
+	//	std::cout << "        False" << std::endl;
         break;
-      case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
+      case SymbolicVirtualConstraintSolver::CONDITIONS_VARIABLE_CONDITIONS:
+        // なんらかの条件が求まったら今まで求めた条件に論理和でその条件を追加する
+	//	std::cout << "        " << TreeInfixPrinter().get_infix_string(tmp_node) << std::endl; 
         if(condition_node == NULL) condition_node = node_sptr(tmp_node);
         else condition_node = node_sptr(new LogicalOr(condition_node, tmp_node));
-        ret = FALSE_CONDITIONS_VARIABLE_CONDITIONS;
+        // 何らかの条件が求まったことを表わすためにret = CONDITIONS_VARIABLE_CONDITIONSとする
+        ret = CONDITIONS_VARIABLE_CONDITIONS;
         break;
       default:
         assert(0);
         break;
       }
     }
+    if(ret == CONDITIONS_TRUE) break;
     solver_->end_temporary();
   }
+  //  std::cout << std::endl;
   switch(ret){
-  case FALSE_CONDITIONS_VARIABLE_CONDITIONS:
+  case CONDITIONS_VARIABLE_CONDITIONS:
+    // 何らかの条件が求まったとしても簡約するとTrueになる可能性があるので簡約する
+    // 条件を簡単にする目的もある
+    // 求まっている条件は A || B || … となっていて ret がCONDITIONS_VARIABLE_CONDITIONSになっていることから簡約してもFalseには絶対にならない
     solver_->node_simplify(condition_node);
     if(condition_node == NULL){
-      //      false_conditions_.erase(ms->get_name());
-      /*
-      if(opts_->optimization_level >= 3){
-        false_map_t::iterator it = false_conditions_.begin();
-        while(it != false_conditions_.end()){
-          if((*it).first->is_super_set(*ms)){
-            false_conditions_.erase(it++);
-          }else{
-            it++;
-          }
-        }
-      }
-    */
-      ret = FALSE_CONDITIONS_TRUE;
+      ret = CONDITIONS_TRUE;
+      if(b) conditions_[ms->get_name()] = node_sptr();
     }else{
-      false_conditions_[ms->get_name()] = condition_node;
-      /*
-      false_map_t::iterator it = false_conditions_.begin();
-      while(it != false_conditions_.end() && opts_->optimization_level >= 3){
-        if((*it).first->is_super_set(*ms) && (*it).first != ms){
-          node_sptr tmp = (*it).second;
-          if(tmp != NULL) tmp = node_sptr(new LogicalOr(tmp, condition_node));
-          else tmp = node_sptr(condition_node);
-          switch(solver_->node_simplify(tmp)){
-	  case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_TRUE:
-            false_conditions_.erase(it++);
-            break;
-          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_FALSE:
-            it++;
-            break;
-          case SymbolicVirtualConstraintSolver::FALSE_CONDITIONS_VARIABLE_CONDITIONS:
-            (*it).second = tmp;
-            it++;
-            break;
-          default:
-            assert(0);
-            break;
-          }
-        }else{
-          it++;
-        }
-      }
-      */
+      conditions_[ms->get_name()] = condition_node;
     }
     break;
-  case FALSE_CONDITIONS_TRUE:
-    //    false_conditions_.erase(ms->get_name());
-    /*
-    if(opts_->optimization_level >= 3){ 
-      false_map_t::iterator it = false_conditions_.begin();
-      while(it != false_conditions_.end()){
-        if((*it).first->is_super_set(*ms)){
-          false_conditions_.erase(it++);
-        }else{
-          it++;
-        }
-      }
-    }
-    */
+  case CONDITIONS_TRUE:
+    if(b) conditions_[ms->get_name()] = node_sptr();
     break;
-  case FALSE_CONDITIONS_FALSE:
-    false_conditions_[ms->get_name()] = node_sptr();
+  case CONDITIONS_FALSE:
+    if(!b) conditions_[ms->get_name()] = node_sptr();
     break;
   default:
     assert(0);

@@ -27,7 +27,7 @@ class SymbolicPhaseSimulator : public simulator_t
 {
 public:
   typedef simulator::Opts Opts;
-  typedef simulator::FalseConditionsResult FalseConditionsResult;
+  typedef simulator::ConditionsResult ConditionsResult;
   typedef simulator::Phase                 Phase;
   typedef simulator::phase_result_sptr_t   phase_result_sptr_t;
   typedef ch::module_set_sptr              modulse_set_sptr;
@@ -84,7 +84,7 @@ private:
 
   void add_continuity(const continuity_map_t&);
   
-  virtual simulator::CalculateVariableMapResult check_false_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &);
+  virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
 
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm)

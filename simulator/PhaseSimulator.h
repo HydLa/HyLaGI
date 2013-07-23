@@ -25,10 +25,10 @@ namespace simulator {
 
 
 typedef enum{
-  FALSE_CONDITIONS_TRUE,
-  FALSE_CONDITIONS_FALSE,
-  FALSE_CONDITIONS_VARIABLE_CONDITIONS
-} FalseConditionsResult;
+  CONDITIONS_TRUE,
+  CONDITIONS_FALSE,
+  CONDITIONS_VARIABLE_CONDITIONS
+} ConditionsResult;
 
 
 typedef enum{
@@ -45,7 +45,7 @@ public:
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
-  typedef std::map<module_set_sptr, hydla::parse_tree::node_sptr> false_map_t;
+  typedef std::map<module_set_sptr, hydla::parse_tree::node_sptr> condition_map_t;
   typedef hydla::parse_tree::node_sptr node_sptr;
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
@@ -131,10 +131,11 @@ protected:
     return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
   }
 
-  virtual CalculateVariableMapResult check_false_conditions(
+  virtual CalculateVariableMapResult check_conditions(
     const module_set_sptr& ms,
     simulation_todo_sptr_t&,
-    const variable_map_t &) = 0;
+    const variable_map_t &,
+    bool b) = 0;
 
   const Opts *opts_;
   

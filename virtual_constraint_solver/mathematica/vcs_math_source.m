@@ -158,12 +158,12 @@ getReverseRelop[relop_] := Switch[relop,
                                   LessEqual, GreaterEqual,
                                   GreaterEqual, LessEqual];
 
-checkFalseConditions[] := (
-  checkFalseConditions[prevConstraint, falseConditions, pConstraint, prevVariables]
+checkConditions[] := (
+  checkConditions[prevConstraint, falseConditions, pConstraint, prevVariables]
 );
 
 publicMethod[
-  checkFalseConditions,
+  checkConditions,
   pCons, fCond, paramCons, vars,
   Module[
    {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse, cpTmp},
@@ -195,7 +195,7 @@ publicMethod[
 ];
 
 (* 制約モジュールが矛盾する条件をセットする *)
-setFalseConditions[co_, va_] := Module[
+setConditions[co_, va_] := Module[
   {cons, vars},
   cons = co;
   falseConditions = cons;
@@ -236,29 +236,34 @@ createPrevMap[cons_, vars_] := Module[
 ];
 
 (* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
-findFalseConditions[] := (
-  findFalseConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
+findConditions[] := (
+  findConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]],tf]
 );
 
 publicMethod[
-  findFalseConditions,
-  cons, gua, vars,
+  findConditions,
+  cons, gua, vars, tf,
   Module[
-    {i, falseMap, cpFalse},
-    Quiet[
-      cpFalse = Reduce[!Reduce[Exists[vars, cons],Reals] && gua, Reals], {Reduce::useq}
-    ];
-    simplePrint[cpFalse];
+    {i, falseMap, cp},
+    if[tf === True,
+       Quiet[
+	 cp = Reduce[Exists[vars, cons],Reals], {Reduce::useq}
+       ],
+       Quiet[
+	 cp = Reduce[!Reduce[Exists[vars, cons],Reals] && gua, Reals], {Reduce::useq}             
+       ]
+    ]
+    simplePrint[cp];
     checkMessage;
-    cpFalse = cpFalse /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
+    cp = cp /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
 
     (*    falseMap = createPrevMap[cpFalse, {}]; *)
-    If[cpFalse =!= False && cpFalse =!= True,
-      cpFalse = integerString[cpFalse];
-      cpFalse = Simplify[cpFalse];
+    If[cp =!= False && cp =!= True,
+      cp = integerString[cp];
+      cp = Simplify[cp];
     ];
-    simplePrint[cpFalse];
-    cpFalse
+    simplePrint[cp];
+    cp
   ]
 ];
 

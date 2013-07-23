@@ -169,7 +169,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
  */
 void REDUCEVCS::set_continuity(const std::string &name, const int& dc){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
-  if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
+  if(mode_==hydla::simulator::symbolic::ConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
 
@@ -217,10 +217,10 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-  if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
+  if(mode_==hydla::simulator::symbolic::ConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
-  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
+  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::ConditionsMode);
 
   // cons_を渡す
   HYDLA_LOGGER_VCS("--- send cons_ ---");
@@ -250,10 +250,10 @@ void REDUCEVCS::add_constraint(const constraints_t& constraints)
 
 void REDUCEVCS::add_constraint(const node_sptr& constraint){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
-  if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
+  if(mode_==hydla::simulator::symbolic::ConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
-  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
+  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::ConditionsMode);
 
   // cons_を渡す
   HYDLA_LOGGER_VCS("--- send cons_ ---");
@@ -278,7 +278,7 @@ void REDUCEVCS::add_constraint(const node_sptr& constraint){
 
 CheckConsistencyResult REDUCEVCS::check_consistency(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
-  if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
+  if(mode_==hydla::simulator::symbolic::ConditionsMode){ assert(0); }
 
   switch(mode_){ 
     case hydla::simulator::symbolic::DiscreteMode:
@@ -286,7 +286,7 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
       cl_.send_string("expr_:={}$ lcont_:={}$ vars:={}$");
       cl_.send_string("symbolic redeval '(myCheckConsistencyPoint);");
       break;
-    case hydla::simulator::symbolic::FalseConditionsMode:
+    case hydla::simulator::symbolic::ConditionsMode:
       // TODO 未実装
       assert(0);
       cl_.send_string("symbolic redeval '(checkFalseConditions);");
@@ -326,7 +326,7 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
 // TODO: 不等式及び記号定数への対応
 SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
-  if(mode_==hydla::simulator::symbolic::FalseConditionsMode){ assert(0); }
+  if(mode_==hydla::simulator::symbolic::ConditionsMode){ assert(0); }
 
   REDUCEStringSender rss(cl_);
   /////////////////// 送信処理
@@ -474,7 +474,7 @@ void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_deri
 
   REDUCEStringSender rss(cl_);
   // ignore_prevは不要では？
-  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
+  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::ConditionsMode);
 
   // cons_を渡す
   HYDLA_LOGGER_VCS("--- send cons_ ---");
@@ -536,7 +536,7 @@ void REDUCEVCS::add_guard(const node_sptr& constraint){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
   REDUCEStringSender rss(cl_);
-  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::FalseConditionsMode);
+  const bool ignore_prev = (mode_==hydla::simulator::symbolic::ContinuousMode || mode_==hydla::simulator::symbolic::ConditionsMode);
 
   // cons_を渡す
   HYDLA_LOGGER_VCS("--- send cons_ ---");
@@ -554,7 +554,7 @@ void REDUCEVCS::add_guard(const node_sptr& constraint){
     case hydla::simulator::symbolic::DiscreteMode:
       cl_.send_string("symbolic redeval '(addConstraint cons_ vars_);");
       break;
-    case hydla::simulator::symbolic::FalseConditionsMode:
+    case hydla::simulator::symbolic::ConditionsMode:
       cl_.send_string("symbolic redeval '(addGuard cons_ vars_);");
       break;
     default: // case hydla::simulator::symbolic::ContinuousMode:

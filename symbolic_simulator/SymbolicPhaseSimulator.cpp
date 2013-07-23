@@ -57,9 +57,9 @@ namespace simulator {
 namespace symbolic {
 
 CalculateVariableMapResult
-SymbolicPhaseSimulator::check_false_conditions
-(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm){ 
-  return analysis_result_checker_->check_false_conditions(ms, state, vm);
+SymbolicPhaseSimulator::check_conditions
+(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){ 
+  return analysis_result_checker_->check_conditions(ms, state, vm, b);
 }
 
 
