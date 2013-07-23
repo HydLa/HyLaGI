@@ -45,6 +45,7 @@ typedef struct Opts_ {
   ApproximationMode approx_mode;
   int approx_precision;
   int approx_threshold;
+  int approx_threshold_ex;
   std::string solver;
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;
@@ -213,6 +214,12 @@ public:
    */
   parameter_t* introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range);
   
+  /**
+   * @return the result of profiling 
+   */
+  entire_profile_t get_profile(){return *profile_vector_;}
+
+
   // TODO: publicメンバが多すぎる気がする
   
   /**
@@ -225,6 +232,7 @@ public:
    */
   boost::shared_ptr<variable_set_t> variable_set_;
   
+  variable_t system_time_;
 
   /*
    * set of introduced parameters
@@ -265,6 +273,12 @@ protected:
    * mcs_original_から非always制約を除いたもの
    */
   module_set_container_sptr msc_no_init_;
+
+
+  /**
+   * 蜷Уodo縺ォ蟇セ蠢懊☆繧九繝ュ繝輔ぃ繧、繝ェ繝ウ繧ー縺ョ邨先棡
+   */
+  boost::shared_ptr<entire_profile_t> profile_vector_;
 
   /** 
    * root of the tree of result trajectories

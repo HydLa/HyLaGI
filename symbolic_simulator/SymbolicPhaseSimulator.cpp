@@ -57,9 +57,9 @@ namespace simulator {
 namespace symbolic {
 
 CalculateVariableMapResult
-SymbolicPhaseSimulator::check_conditions
-(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){
-  return analysis_result_checker_->check_conditions(ms, state, vm, b);
+SymbolicPhaseSimulator::check_false_conditions
+(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm){ 
+  return analysis_result_checker_->check_false_conditions(ms, state, vm);
 }
 
 
@@ -496,6 +496,16 @@ SymbolicPhaseSimulator::todo_list_t
     {
       SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       solver_->simplify(candidate.time);
+/*
+      value_range_t tmp_range;
+      if(solver_->approx_val(candidate.time, tmp_range))
+      {
+        parameter_t* param = simulator_->introduce_parameter(&simulator_->system_time_, pr, tmp_range);
+        candidate.time = value_t(new SymbolicValue(node_sptr( 
+                                                      new Parameter("time", 0, pr->id))));
+        candidate.parameter_map[param] = tmp_range;
+      }
+*/
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
@@ -572,7 +582,7 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   }
 
   // 記号定数表に出現する変数を変数以外のものに置き換える
-    VariableReplacer replacer(ret);
+  VariableReplacer replacer(ret);
   for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
       it != simulator_->original_parameter_map_->end(); it++)
   {
@@ -612,6 +622,37 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
     }
   }
   
+  for(variable_map_t::iterator it = ret.begin();
+          it != ret.end();it++)
+  {
+    if(!it->second->undefined())
+    {
+      value_t val;
+      val = it->second;
+      replacer.replace_value(val);
+      ret[it->first] = val;
+    }
+  }
+
+  // approx values in vm
+  // TODO:ここでやると，変数同士の相関性を生かせない．
+  if(state->phase == PointPhase)
+  {
+    for(variable_map_t::iterator it = ret.begin();
+        it != ret.end();it++)
+    { 
+      value_range_t tmp_range;
+      if(solver_->approx_val(it->second, tmp_range))
+      {
+        variable_t* variable = it->first;
+            
+        parameter_t* param = simulator_->introduce_parameter(variable, state, tmp_range);
+        ret[variable] = value_t(new SymbolicValue(node_sptr(
+          new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
+        parameter_map[param] = tmp_range;
+      }
+    }
+  }
 
   return ret;
 }
