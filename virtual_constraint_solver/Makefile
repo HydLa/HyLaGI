@@ -17,8 +17,8 @@ CLEAN_FILES += reduce/vcs_reduce_source.cpp
 
 include ../Makefile.common
 
-mathematica/vcs_math_source.cpp: mathematica/vcs_math_source.m
-	cat mathematica/vcs_math_source.m | \
+mathematica/vcs_math_source.cpp: mathematica/math_source/*.m
+	cat mathematica/math_source/*.m | \
 		../math_source_converter/msc vcs_math_source > \
 		mathematica/vcs_math_source.cpp
 

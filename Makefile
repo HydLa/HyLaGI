@@ -56,7 +56,4 @@ $(projects):
 # dependency
 $(test_projects): $(lib_projects)
 core: $(lib_projects)
-#symbolic_legacy_simulator: math_source_converter
 virtual_constraint_solver: math_source_converter reduce_source_converter
-#branch_and_prune_simulator : librealpaver
-#librealpaver: librealpaverbasic
