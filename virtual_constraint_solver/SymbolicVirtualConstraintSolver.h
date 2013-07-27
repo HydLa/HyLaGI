@@ -157,7 +157,7 @@ public:
    * CONDITIONS_FALSE               : 矛盾しない            条件 : 何も入れない
    * CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する  条件 : 条件を入れる
    */
-  virtual ConditionsResult find_conditions(node_sptr& node, bool b){assert(0); return CONDITIONS_FALSE;}
+  virtual ConditionsResult find_conditions(node_sptr& node){assert(0); return CONDITIONS_FALSE;}
 
   /**
    * 制約ストアが無矛盾かを判定する．

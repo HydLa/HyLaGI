@@ -170,7 +170,7 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
       }
     }
 
-    solver_->find_conditions(guard_condition,b);
+    solver_->find_conditions(guard_condition);
 
     solver_->end_temporary();
     solver_->start_temporary();
@@ -218,7 +218,7 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
       node_sptr tmp_node;
       //      std::cout << "    result" << std::endl;
       // あるガード条件の仮定の下に得られた条件をtmp_nodeに入れる
-      switch(solver_->find_conditions(tmp_node,b)){
+      switch(solver_->find_conditions(tmp_node)){
       case SymbolicVirtualConstraintSolver::CONDITIONS_TRUE:
         // もし求まった条件がTrueなら後の仮定の結果がどうであれTrueになるのでret = CONDITIONS_TRUEとおく
 	//	std::cout << "        True" << std::endl;
@@ -249,19 +249,19 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
     // 何らかの条件が求まったとしても簡約するとTrueになる可能性があるので簡約する
     // 条件を簡単にする目的もある
     // 求まっている条件は A || B || … となっていて ret がCONDITIONS_VARIABLE_CONDITIONSになっていることから簡約してもFalseには絶対にならない
+    if(!b) condition_node = node_sptr(new Not(condition_node));
     solver_->node_simplify(condition_node);
     if(condition_node == NULL){
       ret = CONDITIONS_TRUE;
-      if(b) conditions_[ms->get_name()] = node_sptr();
+      conditions_[ms->get_name()] = node_sptr();
     }else{
       conditions_[ms->get_name()] = condition_node;
     }
     break;
   case CONDITIONS_TRUE:
-    if(b) conditions_[ms->get_name()] = node_sptr();
+    conditions_[ms->get_name()] = node_sptr();
     break;
   case CONDITIONS_FALSE:
-    if(!b) conditions_[ms->get_name()] = node_sptr();
     break;
   default:
     assert(0);

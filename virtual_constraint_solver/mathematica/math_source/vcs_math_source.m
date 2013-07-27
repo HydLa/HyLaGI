@@ -86,30 +86,22 @@ createPrevMap[cons_, vars_] := Module[
 
 (* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
 findConditions[] := (
-  findConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]],tf]
+  findConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
 );
 
 publicMethod[
   findConditions,
-  cons, gua, vars, tf,
+  cons, gua, vars,
   Module[
     {i, falseMap, cp},
-    if[tf === True,
-       Quiet[
-	 cp = Reduce[Exists[vars, cons],Reals], {Reduce::useq}
-       ],
-       Quiet[
-	 cp = Reduce[!Reduce[Exists[vars, cons],Reals] && gua, Reals], {Reduce::useq}             
-       ]
-    ]
+    Quiet[
+      cp = Reduce[Exists[vars, cons],Reals], {Reduce::useq}
+    ];
     simplePrint[cp];
     checkMessage;
-    cp = cp /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
-
-    (*    falseMap = createPrevMap[cpFalse, {}]; *)
     If[cp =!= False && cp =!= True,
-      cp = integerString[cp];
       cp = Simplify[cp];
+      cp = integerString[cp];
     ];
     simplePrint[cp];
     cp

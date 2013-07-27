@@ -595,13 +595,11 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   return;
 }
 
-MathematicaVCS::ConditionsResult MathematicaVCS::find_conditions(node_sptr& node, bool b)
+MathematicaVCS::ConditionsResult MathematicaVCS::find_conditions(node_sptr& node)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-  ml_.put_function("findConditions",1);
-
-  ml_.put_symbol(b ? "True" : "False");
+  ml_.put_function("findConditions",0);
 
 /////////////////// 受信処理
   HYDLA_LOGGER_VCS( "%%receive");

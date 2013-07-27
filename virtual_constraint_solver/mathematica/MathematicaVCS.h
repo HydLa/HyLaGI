@@ -73,7 +73,7 @@ public:
 
   virtual void set_conditions(const node_sptr& constraint);
   
-  virtual ConditionsResult find_conditions(node_sptr& node, bool b);
+  virtual ConditionsResult find_conditions(node_sptr& node);
 
   /**
    * 制約ストアが無矛盾かを判定する．
