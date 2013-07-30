@@ -1,8 +1,8 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_VCS_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_VCS_H_
 
-
 #include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "../../simulator/ValueVisitor.h"
 #include "../../symbolic_simulator/SymbolicValue.h"
@@ -151,7 +151,7 @@ private:
 
   hydla::simulator::symbolic::Mode mode_;
 
-  REDUCELink cl_;
+  reduce_link_t reduce_link_;
 
   /**
    * ValueVisior::visit()から得た値を一時格納する

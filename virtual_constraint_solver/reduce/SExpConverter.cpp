@@ -110,6 +110,7 @@ SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(const SEx
           return node_sptr(new hydla::parse_tree::Pi());
         }
         if(value_str.at(0)=='p'){//定数名
+          assert(0);
 //TODO
 //          return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
         }

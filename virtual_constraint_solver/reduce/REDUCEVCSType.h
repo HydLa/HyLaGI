@@ -3,15 +3,18 @@
 
 #include "../SymbolicVirtualConstraintSolver.h"
 
-#include "REDUCEVariable.h"
-#include "REDUCEValue.h"
+#include "REDUCELink.h"
 #include "REDUCETime.h"
+#include "REDUCEValue.h"
+#include "REDUCEVariable.h"
+#include <boost/shared_ptr.hpp>
 
 namespace hydla {
 namespace vcs {
 namespace reduce {
 
 typedef hydla::vcs::SymbolicVirtualConstraintSolver virtual_constraint_solver_t;
+typedef boost::shared_ptr<REDUCELink> reduce_link_t;
 
 } // namespace reduce
 } // namespace simulator

@@ -8,9 +8,10 @@
 #include "string"
 #include "sstream"
 
-#include "../virtual_constraint_solver/reduce/REDUCELink.h"
-#include "../virtual_constraint_solver/reduce/vcs_reduce_source.h"
 #include "../parser/SExpParser.h"
+#include "../virtual_constraint_solver/reduce/REDUCELink.h"
+#include "../virtual_constraint_solver/reduce/REDUCELinkFactory.h"
+#include "../virtual_constraint_solver/reduce/vcs_reduce_source.h"
 
 using namespace std;
 using namespace hydla::parser;
@@ -22,22 +23,25 @@ using namespace hydla::vcs::reduce;
  * @return queryをREDUCEで評価した結果がansと一致するか
  */
 bool check(string query, string ans, bool isDebug = false){
-  REDUCELink rl;
-  rl.send_string(vcs_reduce_source());
-  rl.skip_until_redeval();
+  REDUCELinkFactory rlf;
+  REDUCELink* rl = rlf.createInstance();
+  rl->send_string(vcs_reduce_source());
+  rl->skip_until_redeval();
 
-  rl.send_string(query);
+  rl->send_string(query);
   if(isDebug){
-    rl.read_until_redeval();
+    rl->read_until_redeval();
   }else{
-    rl.skip_until_redeval();
+    rl->skip_until_redeval();
   }
 
-  string s_expr = rl.get_s_expr();
+  string s_expr = rl->get_s_expr();
   if(isDebug){
     cout << "ret s_expr: " <<  s_expr << endl;
   }
+  delete rl;
 
+  cout << "s_expr: " << s_expr << ", ans: " << ans << endl;
   return s_expr == ans;
 }
 

@@ -6,9 +6,10 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include "TreeVisitor.h"
-#include "REDUCELink.h"
 #include "ParseTree.h"
+#include "REDUCELink.h"
+#include "REDUCEVCSType.h"
+#include "TreeVisitor.h"
 
 namespace hydla {
 namespace vcs {
@@ -42,8 +43,7 @@ public:
   // 空集合を表すREDUCE入力用文字列 "{}"
   static const std::string empty_list_string;
 
-  REDUCEStringSender();
-  REDUCEStringSender(REDUCELink& cl);
+  REDUCEStringSender(reduce_link_t reduce_link);
 
   virtual ~REDUCEStringSender();
 
@@ -150,7 +150,7 @@ public:
 
 
 private:
-  REDUCELink* cl_;
+  reduce_link_t reduce_link_;
 
 protected:
   /// 送信された変数の一覧

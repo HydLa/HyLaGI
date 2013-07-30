@@ -21,15 +21,8 @@ const std::string REDUCEStringSender::var_prefix("usrvar");
 /** REDUCEに送る際に定数名につける接頭語 */
 const std::string REDUCEStringSender::par_prefix("p");
 
-REDUCEStringSender::REDUCEStringSender() :
-  cl_(NULL),
-  differential_count_(0),
-  in_prev_(false),
-  apply_not_(false)
-{}
-
-REDUCEStringSender::REDUCEStringSender(REDUCELink& cl) :
-  cl_(&cl),
+REDUCEStringSender::REDUCEStringSender(reduce_link_t reduce_link) :
+  reduce_link_(reduce_link),
   differential_count_(0),
   in_prev_(false),
   apply_not_(false)
@@ -56,36 +49,36 @@ void REDUCEStringSender::visit(boost::shared_ptr<Tell> node)                  {
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
   void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)     \
   {                                                                     \
-  cl_->send_string(#FUNC_NAME START_P);                                 \
+  reduce_link_->send_string(#FUNC_NAME START_P);                                 \
   accept(node->get_lhs());                                              \
-  cl_->send_string(", ");                                               \
+  reduce_link_->send_string(", ");                                               \
   accept(node->get_rhs());                                              \
-  cl_->send_string(END_P);                                              \
+  reduce_link_->send_string(END_P);                                              \
 }
 
 #define DEFINE_VISIT_BINARY_WITH_NOT_FUNC(NODE_NAME, FUNC_NAME, NOT_FUNC_NAME)     \
   void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)                \
   {                                                                                \
-  if(!apply_not_) cl_->send_string(#FUNC_NAME START_P);                            \
-  else cl_->send_string(#NOT_FUNC_NAME START_P);                                   \
+  if(!apply_not_) reduce_link_->send_string(#FUNC_NAME START_P);                            \
+  else reduce_link_->send_string(#NOT_FUNC_NAME START_P);                                   \
   accept(node->get_lhs());                                                         \
-  cl_->send_string(", ");                                                          \
+  reduce_link_->send_string(", ");                                                          \
   accept(node->get_rhs());                                                         \
-  cl_->send_string(END_P);                                                         \
+  reduce_link_->send_string(END_P);                                                         \
 }
 
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
   void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)     \
   {                                                                     \
-  cl_->send_string(#FUNC_NAME START_P);                                 \
+  reduce_link_->send_string(#FUNC_NAME START_P);                                 \
   accept(node->get_child());                                            \
-  cl_->send_string(END_P);                                              \
+  reduce_link_->send_string(END_P);                                              \
 }
 
 #define DEFINE_VISIT_FACTOR(NODE_NAME, FACTOR_NAME)                     \
   void REDUCEStringSender::visit(boost::shared_ptr<NODE_NAME> node)     \
   {                                                                     \
-  cl_->send_string(#FACTOR_NAME);                                       \
+  reduce_link_->send_string(#FACTOR_NAME);                                       \
 }
 
 // 比較演算子 ASYMMETRIC_BINARY_NODE
@@ -170,7 +163,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Variable> node)              {
 
 // 数字 FactorNode
 void REDUCEStringSender::visit(boost::shared_ptr<Number> node)                {
-  cl_->send_string(node->get_number());
+  reduce_link_->send_string(node->get_number());
 }
 
 // 記号定数
@@ -185,7 +178,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Parameter> node)
 // t
 void REDUCEStringSender::visit(boost::shared_ptr<SymbolicT> node)
 {
-  cl_->send_string("t");
+  reduce_link_->send_string("t");
 }
 
 
@@ -240,7 +233,7 @@ void REDUCEStringSender::put_var(const var_info_t var)
     }
   }
 
-  cl_->send_string(var_str.str());
+  reduce_link_->send_string(var_str.str());
   HYDLA_LOGGER_REST("var_str: ", var_str.str());
 
   // putした変数の情報を保持
@@ -256,7 +249,7 @@ void REDUCEStringSender::put_par(const std::string &name)
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("put_par: ", "name: ", name);
 
-  cl_->send_string(name);
+  reduce_link_->send_string(name);
 
   // putした変数の情報を保持
   pars_.insert(name);
@@ -288,12 +281,12 @@ void REDUCEStringSender::put_node(const node_sptr& node, bool ignore_prev, bool 
 void REDUCEStringSender::put_nodes(const std::vector<node_sptr>& constraints)
 {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
-  cl_->send_string("{");
+  reduce_link_->send_string("{");
   for(std::vector<node_sptr>::const_iterator it = constraints.begin(); it != constraints.end(); it++){
-    if(it!=constraints.begin()) cl_->send_string(",");
+    if(it!=constraints.begin()) reduce_link_->send_string(",");
     put_node(*it);
   }
-  cl_->send_string("}");
+  reduce_link_->send_string("}");
   HYDLA_LOGGER_FUNC_END(REST);
 }
 
@@ -305,18 +298,18 @@ void REDUCEStringSender::put_vars(bool ignore_prev)
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("var size:", vars_.size());
 
-  cl_->send_string("{");
+  reduce_link_->send_string("{");
   vars_const_iterator it  = vars_begin();
   vars_const_iterator end = vars_end();
   for(; it!=end; ++it) {
-    if(it!=vars_begin()) cl_->send_string(",");
+    if(it!=vars_begin()) reduce_link_->send_string(",");
     //    put_var(*it);
     put_var(boost::make_tuple(it->get<0>(),
                               it->get<1>(),
                               it->get<2>() && !ignore_prev,
                               it->get<3>()));
   }
-  cl_->send_string("}");
+  reduce_link_->send_string("}");
 
   HYDLA_LOGGER_FUNC_END(REST);
 }
@@ -325,12 +318,12 @@ void REDUCEStringSender::put_pars()
 {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("par size:", pars_.size());
-  cl_->send_string("{");
+  reduce_link_->send_string("{");
   for(std::set<std::string>::iterator it = pars_.begin(); it!=pars_.end(); ++it) {
-    if(it!=pars_.begin()) cl_->send_string(",");
+    if(it!=pars_.begin()) reduce_link_->send_string(",");
     put_par(*it);
   }
-  cl_->send_string("}");
+  reduce_link_->send_string("}");
 
   HYDLA_LOGGER_FUNC_END(REST);
 }
