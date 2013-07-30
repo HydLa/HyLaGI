@@ -861,6 +861,11 @@ void REDUCEVCS::approx_vm(variable_range_map_t& vm){
   HYDLA_LOGGER_FUNC_END(VCS);
 }
 
+// TODO なんとかする
+bool REDUCEVCS::approx_val(const value_t& val, value_range_t& range, bool force_approx){
+  return false;
+}
+
 const REDUCEVCS::symbolic_value_t REDUCEVCS::get_symbolic_value_t(value_t value){
   value->accept(*this);
   return visited_;

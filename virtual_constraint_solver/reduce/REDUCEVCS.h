@@ -128,6 +128,10 @@ public:
    */
   virtual void approx_vm(variable_range_map_t& vm);
 
+  /**
+   * TODO: 今のところダミー実装
+   */
+  virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx);
   // deleted
   //  //SymbolicValueを指定された精度で数値に変換する
   //  virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
