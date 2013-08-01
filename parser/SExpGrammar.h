@@ -41,10 +41,10 @@ struct SExpGrammar : public grammar<SExpGrammar> {
       data = +(s_expression);
 
       // S式
-      s_expression = number | identifier | string | list;
+      s_expression = no_node_d[!+ch_p(' ')] >> (number | identifier | string | list) >> no_node_d[!+ch_p(' ')];
 
       // 数字
-      number = int_p;
+      number = leaf_node_d[!(ch_p('-') | ch_p('+')) >> +digit_p];
 
       // 識別子
       identifier = leaf_node_d[alpha_p >> lexeme_d[*(alpha_p | int_p | ch_p('-') | ch_p('_') | ch_p(':'))]];
@@ -68,8 +68,8 @@ struct SExpGrammar : public grammar<SExpGrammar> {
 //        | no_node_d[ch_p('[')] >> root_node_d[header] >> *(s_expression) >> no_node_d[ch_p(']')];
 
       list =
-        discard_node_d[ch_p('(')] >> root_node_d[header] >> list_p(*(s_expression), space_p) >> discard_node_d[ch_p(')')]
-        | discard_node_d[ch_p('[')] >> root_node_d[header] >> list_p(*(s_expression), space_p) >> discard_node_d[ch_p(']')];
+        no_node_d[ch_p('(')] >> root_node_d[header] >> list_p(*s_expression, space_p) >> no_node_d[ch_p(')')]
+        | no_node_d[ch_p('[')] >> root_node_d[header] >> list_p(*s_expression, space_p) >> no_node_d[ch_p(']')];
 
     }
 

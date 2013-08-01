@@ -28,7 +28,7 @@ public:
   /**
    * @param input_str parse_mainするS式の文字列
    */
-  SExpParser(const char* input_str);
+  SExpParser(const std::string& input_str);
   SExpParser(const SExpParser& sp);
 
   std::string get_string_from_tree(const_tree_iter_t iter) const;
@@ -40,7 +40,7 @@ public:
   /**
    * 入力として与えられたS式の文字列を解釈して、木を構築
    */
-  int parse_main(const char* input_str);
+  int parse_main(const std::string& input_str);
 
   /**
    * ASTのイテレータを返す

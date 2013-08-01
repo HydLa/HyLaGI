@@ -23,7 +23,7 @@ SExpParser::~SExpParser()
 {
 }
 
-SExpParser::SExpParser(const char* input_str){
+SExpParser::SExpParser(const std::string& input_str){
   parse_main(input_str);
 }
 
@@ -93,9 +93,9 @@ void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
     cout << "  ";
 
   if (iter->value.id() == SExpGrammar::RI_Identifier)
-    cout << "識別子 " << string(iter->value.begin(), iter->value.end());
+    cout << "識別子 " << "\"" << string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_Number)
-    cout << "整数 " << string(iter->value.begin(), iter->value.end());
+    cout << "整数 " << "\"" << string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_String)
     cout << "文字列 "<< "\"" << string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_List)
@@ -112,24 +112,29 @@ void SExpParser::dump_tree(const_tree_iter_t iter, int nest){
     dump_tree(iter->children.begin()+j, nest+1);
 }
 
-int SExpParser::parse_main(const char* input_str){
+int SExpParser::parse_main(const std::string& input_str){
   SExpGrammar                   sg;
   CommentGrammar                cg;
-//  cout << "input_str: " << input_str << "\n";
 
-  pos_iter_t positBegin(input_str, input_str + strlen(input_str));
+  const char* str = input_str.c_str();
+
+  pos_iter_t positBegin(str, str + strlen(str));
   pos_iter_t positEnd;
 
   ast_tree_ = ast_parse(positBegin, positEnd, sg, cg);
 
-/*
-  cout << "--------------------------\n";
+   
+  cout << "input_str: " << str << endl;
+  cout << "--------------------------" << endl;
   if(ast_tree_.full){
     dump_tree(get_tree_iterator(), 0);
   }else{
-    cout << "失敗\n";
+    cout << "失敗" << endl;
+    assert(0);
   }
-*/
+  
+
+  assert(ast_tree_.full); // 失敗
 
   return(0);
 }

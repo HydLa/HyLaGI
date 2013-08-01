@@ -78,22 +78,19 @@ node_sptr SExpConverter::make_equal(hydla::simulator::DefaultParameter &variable
 SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(const SExpParser& sp, const_tree_iter_t iter){
 
   switch(iter->value.id().to_long()) {
-    case SExpGrammar::RI_Number: {
-      std::stringstream number_ss;
-      std::string number_str = std::string(iter->value.begin(),iter->value.end());
-      int number_value;
-      number_ss << number_str;
-      number_ss >> number_value;
-      if(number_value < 0) {
-        std::string positive_number_str = std::string(iter->value.begin()+1,iter->value.end());
-        return node_sptr(new Negative(node_sptr(new Number(positive_number_str))));
+    case SExpGrammar::RI_Number: 
+      {
+        std::string number_str = std::string(iter->value.begin(),iter->value.end());
+        assert(number_str.length()>0);
+        if(number_str[0] == '-'){ // number_value < 0
+          const std::string positive_number_str = std::string(iter->value.begin()+1,iter->value.end());
+          return node_sptr(new Negative(node_sptr(new Number(positive_number_str))));
+        }else{
+          return node_sptr(new Number(number_str));
+        }
+        break;
       }
-      else {
-        assert(number_value >= 0);
-        return node_sptr(new Number(number_str));
-      }
-      break;
-    }
+
     // headerとidentifierとで分けたい
     default:
       std::string value_str = std::string(iter->value.begin(), iter->value.end());
@@ -111,8 +108,8 @@ SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(const SEx
         }
         if(value_str.at(0)=='p'){//定数名
           assert(0);
-//TODO
-//          return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
+          // TODO
+          // return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
         }
         if(value_str=="e"){//自然対数の底
           return node_sptr(new hydla::parse_tree::E());
@@ -123,8 +120,13 @@ SExpConverter::node_sptr SExpConverter::convert_s_exp_to_symbolic_tree(const SEx
       }
 
       return (*(strmap_it->second.function))(sp, iter, strmap_it->second.node);
+      break;
   }
+
+  assert(0);
+  return node_sptr();
 }
+
 
 SExpConverter::node_sptr SExpConverter::for_derivative(
   const SExpParser &sp,

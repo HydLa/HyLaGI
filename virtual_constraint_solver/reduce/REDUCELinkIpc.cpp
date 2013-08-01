@@ -58,7 +58,7 @@ std::string REDUCELinkIpc::get_s_expr(){
 }
 
 const hydla::parser::SExpParser REDUCELinkIpc::get_as_s_exp_parser(){
-  return hydla::parser::SExpParser(get_s_expr().c_str());
+  return hydla::parser::SExpParser(get_s_expr());
 }
 
 int REDUCELinkIpc::send_string(const std::string cmd){

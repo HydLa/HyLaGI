@@ -41,7 +41,6 @@ bool check(string query, string ans, bool isDebug = false){
   }
   delete rl;
 
-  cout << "s_expr: " << s_expr << ", ans: " << ans << endl;
   return s_expr == ans;
 }
 
