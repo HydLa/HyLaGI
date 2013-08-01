@@ -123,7 +123,7 @@ int SExpParser::parse_main(const std::string& input_str){
 
   ast_tree_ = ast_parse(positBegin, positEnd, sg, cg);
 
-   
+  /* 
   cout << "input_str: " << str << endl;
   cout << "--------------------------" << endl;
   if(ast_tree_.full){
@@ -132,7 +132,7 @@ int SExpParser::parse_main(const std::string& input_str){
     cout << "失敗" << endl;
     assert(0);
   }
-  
+  */
 
   assert(ast_tree_.full); // 失敗
 
