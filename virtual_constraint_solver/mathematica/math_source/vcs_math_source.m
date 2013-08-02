@@ -151,7 +151,7 @@ publicMethod[
   Module[
     {sol, otherCons, tCons, hasTCons, necessaryTCons, parList, tmpPCons, cpTrue, cpFalse, trueMap, falseMap},
     If[cons === True,
-      {pcons, False},
+      {createMap[pcons, isParameter,hasParameter, {}], False},
       sol = exDSolve[cons, initCons];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
@@ -671,9 +671,9 @@ Check[
     resultCons = And@@resultCons;
     
     
-    If[Length[getVariables[tmpExpr] ] > 0,
+    If[Length[tmpExpr ] > 0,
       {underConstraint, resultCons && And@@tmpExpr, resultRule},
-      {resultCons, resultRule}
+      {resultCons && And@@tmpExpr, resultRule}
     ]
   ],
   Message[exDSolve::unkn]

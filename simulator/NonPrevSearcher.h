@@ -9,8 +9,6 @@
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 
-#include "./Types.h"
-
 namespace hydla {
 namespace simulator {
 
