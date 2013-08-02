@@ -1,16 +1,16 @@
 #include "REDUCEVCS.h"
 
+#include "../../common/Logger.h"
 #include "../../parser/SExpParser.h"
 #include "../../simulator/Dumpers.h"
 #include "../SolveError.h"
-#include "Logger.h"
 #include "REDUCELink.h"
 #include "REDUCELinkFactory.h"
 #include "REDUCEStringSender.h"
 #include "SExpConverter.h"
 #include "VariableNameEncoder.h"
-#include <cassert>
 #include <boost/shared_ptr.hpp>
+#include <cassert>
 
 
 using namespace hydla::parse_tree;
@@ -404,6 +404,9 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
           var_name = var_head_str;
         }
 
+        // TODO: ↓の一行消す
+        if(var_name == "t"){ continue; } 
+
         // 変数名の先頭にスペースが入ることがあるので除去する
         // TODO:S式パーサを修正してスペース入らないようにする
         if(var_name.at(0) == ' ') var_name.erase(0,1);
@@ -435,8 +438,6 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
         var_name = vne.UpperDecode(var_name);
       }
 
-      // TODO: ↓の一行消す
-      if(var_name == "t") continue;
       variable_t* variable_ptr = get_variable(var_name, var_derivative_count);
 
       // 変数表の対応する部分に代入する
@@ -886,7 +887,9 @@ const node_sptr REDUCEVCS::make_variable(const std::string &name, const int& dc,
   }
 
   return var_node; 
-  }
+}
+
 } // namespace reduce
 } // namespace vcs
 } // namespace hydla 
+
