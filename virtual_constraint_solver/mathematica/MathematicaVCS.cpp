@@ -1163,6 +1163,24 @@ bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
   return  ret == "True";
 }
 
+bool MathematicaVCS::equivalent(node_sptr &lhs, node_sptr &rhs){
+  ml_.put_function("ToString", 1);
+  ml_.put_function("Reduce",2);
+  ml_.put_function("And",2);
+  ml_.put_function("Implies",2);
+  PacketSender ps(ml_);
+  ps.put_node(lhs, VA_Prev);
+  ps.put_node(rhs, VA_Prev);
+  ml_.put_function("Implies",2);
+  ps.put_node(rhs, VA_Prev);
+  ps.put_node(lhs, VA_Prev);
+  ml_.put_symbol("Reals");
+
+  ml_.receive();
+  std::string ret = ml_.get_string();
+  return ret == "True";
+}
+
 MathematicaVCS::ConditionsResult MathematicaVCS::node_simplify(node_sptr &node)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);

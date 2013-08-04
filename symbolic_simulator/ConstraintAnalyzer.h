@@ -6,6 +6,7 @@
 #include "ParseTree.h"
 #include "Simulator.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
+#include "CMMap.h"
 
 namespace hydla{
 namespace simulator{
@@ -70,6 +71,11 @@ public:
    */
   virtual void initialize(const parse_tree_sptr& parse_tree);  
 
+  /**
+   * cm_listの対応する場所にmsを入れる
+   */
+  virtual void add_new_cm(const module_set_sptr& ms);
+
 protected:
 
   /**
@@ -81,6 +87,19 @@ protected:
    * 制約モジュール集合の名前とそれに対応する条件のマップ
    */
   conditions_map_t conditions_;
+
+  /**
+   * 無矛盾の条件をキーに持ち、その条件がTrueのときに
+   * 極大無矛盾となる制約モジュール集合を値に持つmapのlist
+   * 順番は極大な方から順に持っている
+   */
+  hydla::ch::cm_map_list_t cm_list_;
+
+  /**
+   * 上のリストのルート
+   * 多分いらないけど持っておく
+   */
+  hydla::ch::cm_map_sptr root_cm_;
 
 };
 

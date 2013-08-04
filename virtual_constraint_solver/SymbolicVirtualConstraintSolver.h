@@ -185,6 +185,9 @@ public:
   
   //nodeを簡約する
   virtual ConditionsResult node_simplify(node_sptr &node){assert(0);return CONDITIONS_FALSE;}
+  // 同値判定を行う
+  virtual bool equivalent(node_sptr &lhs, node_sptr &rhs){assert(0);return false;}
+
 
   //SymbolicTimeを簡約する
   virtual void simplify(time_t &time){assert(0);}

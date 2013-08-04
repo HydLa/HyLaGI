@@ -121,6 +121,10 @@ public:
    */
   virtual value_t shift_expr_time(const value_t &val, const time_t &time);
 
+  /**
+   * lhsとrhsが同値かどうかを判定する
+   */
+  virtual bool equivalent(node_sptr &lhs, node_sptr &rhs);
 private:
 
   /**
