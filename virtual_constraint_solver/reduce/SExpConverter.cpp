@@ -9,8 +9,6 @@ namespace reduce {
 
 SExpConverter::string_map_t SExpConverter::string_map_;
 
-std::map<SExpConverter::variable_t, SExpConverter::parameter_t> SExpConverter::variable_parameter_map_;
-
 SExpConverter::SExpConverter() 
 {}
 
@@ -40,14 +38,6 @@ SExpConverter::value_t SExpConverter::convert_s_exp_to_symbolic_value(const SExp
   return value;
 }
 
-void SExpConverter::add_parameter(variable_t &variable, parameter_t &parameter){
-  variable_parameter_map_.insert(std::make_pair(variable, parameter));
-}
-
-
-void SExpConverter::clear_parameter_map(){
-  variable_parameter_map_.clear();
-}
 //TODO init_var引数をなくす
 node_sptr SExpConverter::make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var){
   HYDLA_LOGGER_FUNC_BEGIN(REST);

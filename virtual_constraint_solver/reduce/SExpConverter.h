@@ -1,13 +1,9 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 
-
-//S式⇔SymbolicValueという，式の変換を担当するクラス．
-
-
-#include "../SymbolicVirtualConstraintSolver.h"
-#include "../../simulator/DefaultParameter.h"
 #include "../../parser/SExpParser.h"
+#include "../../simulator/DefaultParameter.h"
+#include "../SymbolicVirtualConstraintSolver.h"
 
 using namespace hydla::parser;
 
@@ -16,6 +12,10 @@ namespace vcs {
 namespace reduce {
 
 
+/**
+ * S式⇔SymbolicValueという，式の変換を担当するクラス．
+ * ドメイン駆動設計におけるサービス
+ */
 class SExpConverter
 {
   public:
@@ -53,42 +53,33 @@ class SExpConverter
 
   virtual ~SExpConverter();
 
-  //初期化
+  /** 初期化 */
   static void initialize();
 
-  //各ノードに対応する処理．（注：関数）
+  /** 各ノードに対応する処理．（注：関数）*/
   static function_for_node for_derivative;
   static function_for_node for_unary_node;
   static function_for_node for_binary_node;
 
-  // S式とってvalueに変換する
+  /** S式とってvalueに変換する */
   static value_t convert_s_exp_to_symbolic_value(const SExpParser &sp, const_tree_iter_t iter);
 
-  static void add_parameter(variable_t &variable, parameter_t &parameter);
-  static void clear_parameter_map();
-
-  /**
-   * （vairable）=（node）の形のノードを返す
-   */
+  /** （vairable）=（node）の形のノードを返す */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
 
-   /**
-   * （vairable）=（node）の形のノードを返す
-   */
+  /** （vairable）=（node）の形のノードを返す */
   static node_sptr make_equal(hydla::simulator::DefaultParameter &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
   
-  //値を記号定数を用いた表現にする
+  /** 値を記号定数を用いた表現にする */
   static void set_parameter_on_value(value_t &val, const parameter_t &par);
   
-  //valと関係演算子を元に、rangeを設定する
+  /** valと関係演算子を元に、rangeを設定する */
   static void set_range(const value_t &val, value_range_t &range, const int& relop);
 
 
   private:
-  //再帰で呼び出していく方
+  /** 再帰で呼び出していく方 */
   static node_sptr convert_s_exp_to_symbolic_tree(const SExpParser& sp, const_tree_iter_t iter);
-
-  static std::map<variable_t, parameter_t> variable_parameter_map_;
 };
 
 } // namespace reduce

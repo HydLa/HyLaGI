@@ -331,7 +331,6 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(mode_==hydla::simulator::symbolic::ConditionsMode){ assert(0); }
 
-  REDUCEStringSender rss(reduce_link_);
   /////////////////// 送信処理
 
   if(mode_==hydla::simulator::symbolic::DiscreteMode){
@@ -339,7 +338,6 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   }else{
     reduce_link_->send_string("symbolic redeval '(convertCSToVMInterval);");
   }
-
 
   /////////////////// 受信処理                     
 
@@ -355,14 +353,11 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   {
     // {{(変数名), (関係演算子コード), (値のフル文字列)}, ...}の形式
     variable_range_map_t map;
-    // TODO 不要？
-    SExpConverter::clear_parameter_map();
 
     for(SExpParser::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
-      std::string and_cons_string =  sp.get_string_from_tree(it);
-      HYDLA_LOGGER_VCS("and_cons_string: ", and_cons_string);
+      HYDLA_LOGGER_VCS("and_cons_string: ", sp.get_string_from_tree(it));
 
-      // 関係演算子のコード
+      // 関係演算子コード
       int relop_code;
       {
         SExpParser::const_tree_iter_t relop_code_ptr = it->children.begin()+1;      
@@ -374,24 +369,21 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
       }
 
       // 値
-      SExpParser::const_tree_iter_t value_ptr = it->children.begin()+2;
+      const SExpParser::const_tree_iter_t value_ptr = it->children.begin()+2;
+
+      // 微分回数
+      const int var_derivative_count = sp.get_derivative_count(it->children.begin());
 
       // 変数名
       std::string var_name;
-      // 微分回数
-      int var_derivative_count;
-      {
+      { // 変数名の取得
         SExpParser::const_tree_iter_t var_ptr = it->children.begin();
-        std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
-
-        // prevの先頭にスペースが入ることがあるので除去する
-        // TODO:S式パーサを修正してスペース入らないようにする
-        if(var_head_str.at(0) == ' ') var_head_str.erase(0,1);
+        const std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
 
         // prev変数は処理しない
-        if(var_head_str=="prev") continue;
-
-        var_derivative_count = sp.get_derivative_count(var_ptr);
+        if(var_head_str == "prev") continue;
+        // シミュレーション時刻tは処理しない TODO: ↓の一行消す
+        if(var_head_str == "t") continue;
 
         // 微分を含む変数
         if(var_derivative_count > 0){
@@ -403,13 +395,6 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
           assert(var_derivative_count == 0);
           var_name = var_head_str;
         }
-
-        // TODO: ↓の一行消す
-        if(var_name == "t"){ continue; } 
-
-        // 変数名の先頭にスペースが入ることがあるので除去する
-        // TODO:S式パーサを修正してスペース入らないようにする
-        if(var_name.at(0) == ' ') var_name.erase(0,1);
 
         // 既存の記号定数の場合
         // TODO 要動作確認
@@ -452,10 +437,8 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
     }
     create_result.result_maps.push_back(map);
   }
-  // TODO ?
-  // SExpConverter::clear_parameter_map();
 
-  for(unsigned int i=0; i < create_result.result_maps.size();i++){
+    for(unsigned int i=0; i < create_result.result_maps.size();i++){
     HYDLA_LOGGER_VCS("--- result map ", i, "/", create_result.result_maps.size(), "---\n");
     HYDLA_LOGGER_VCS(create_result.result_maps[i]);
   }
