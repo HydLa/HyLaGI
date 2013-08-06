@@ -1,9 +1,9 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 
-#include "../../parser/SExpParser.h"
-#include "../../simulator/DefaultParameter.h"
-#include "../SymbolicVirtualConstraintSolver.h"
+#include "../../../simulator/DefaultParameter.h"
+#include "../../SymbolicVirtualConstraintSolver.h"
+#include "sexp/SExpParseTree.h"
 
 using namespace hydla::parser;
 
@@ -15,6 +15,7 @@ namespace reduce {
 /**
  * S式⇔SymbolicValueという，式の変換を担当するクラス．
  * ドメイン駆動設計におけるサービス
+ * TODO: 適切な名前は？
  */
 class SExpConverter
 {
@@ -23,46 +24,11 @@ class SExpConverter
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_range_t value_range_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::variable_t    variable_t;
   typedef hydla::vcs::SymbolicVirtualConstraintSolver::parameter_t   parameter_t;
-  typedef hydla::parser::SExpParser::const_tree_iter_t               const_tree_iter_t;
+  typedef hydla::parser::SExpParseTree::const_tree_iter_t               const_tree_iter_t;
   typedef hydla::parse_tree::node_sptr                               node_sptr;
 
-  typedef enum{
-    NODE_PLUS,
-    NODE_SUBTRACT,
-    NODE_TIMES,
-    NODE_DIVIDE,
-    NODE_POWER,
-    NODE_DIFFERENTIAL,
-    NODE_PREVIOUS,
-    NODE_SQRT,
-    NODE_NEGATIVE,
-  }nodeType;
-
-  typedef node_sptr (function_for_node)(const SExpParser &sp, const_tree_iter_t iter, const nodeType &);
-  typedef function_for_node *p_function_for_node;
-  typedef struct tag_function_and_node{
-    p_function_for_node function;
-    nodeType node;
-    tag_function_and_node(p_function_for_node func, nodeType nod):function(func), node(nod){}
-  }function_and_node;
-  //Mathematica文字列と処理&ノードの対応関係
-  typedef std::map<std::string, function_and_node> string_map_t;
-  static string_map_t string_map_;
-
   SExpConverter();
-
   virtual ~SExpConverter();
-
-  /** 初期化 */
-  static void initialize();
-
-  /** 各ノードに対応する処理．（注：関数）*/
-  static function_for_node for_derivative;
-  static function_for_node for_unary_node;
-  static function_for_node for_binary_node;
-
-  /** S式とってvalueに変換する */
-  static value_t convert_s_exp_to_symbolic_value(const SExpParser &sp, const_tree_iter_t iter);
 
   /** （vairable）=（node）の形のノードを返す */
   static node_sptr make_equal(const variable_t &variable, const node_sptr& node, const bool& prev, const bool& init_var = false);
@@ -76,10 +42,6 @@ class SExpConverter
   /** valと関係演算子を元に、rangeを設定する */
   static void set_range(const value_t &val, value_range_t &range, const int& relop);
 
-
-  private:
-  /** 再帰で呼び出していく方 */
-  static node_sptr convert_s_exp_to_symbolic_tree(const SExpParser& sp, const_tree_iter_t iter);
 };
 
 } // namespace reduce

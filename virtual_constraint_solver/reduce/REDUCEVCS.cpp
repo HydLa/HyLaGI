@@ -1,7 +1,6 @@
 #include "REDUCEVCS.h"
 
 #include "../../common/Logger.h"
-#include "../../parser/SExpParser.h"
 #include "../../simulator/Dumpers.h"
 #include "../SolveError.h"
 #include "REDUCELink.h"
@@ -9,6 +8,7 @@
 #include "REDUCEStringSender.h"
 #include "SExpConverter.h"
 #include "VariableNameEncoder.h"
+#include "sexp/SExpParseTree.h"
 #include <boost/shared_ptr.hpp>
 #include <cassert>
 
@@ -68,7 +68,7 @@ REDUCEVCS::REDUCEVCS(const hydla::simulator::Opts &opts, variable_range_map_t &m
   reduce_link_->send_string(vcs_reduce_source());
   reduce_link_->skip_until_redeval();
 
-  SExpConverter::initialize();
+  SExpParseTree::initialize();
 
   HYDLA_LOGGER_FUNC_END(VCS);
 }
@@ -302,14 +302,14 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
 
   HYDLA_LOGGER_VCS( "--- REDUCEVCS::check_consistency receive ---");
   reduce_link_->skip_until_redeval();
-  const SExpParser sp(reduce_link_->get_as_s_exp_parser());
+  const SExpParseTree sp(reduce_link_->get_as_s_exp_parse_tree());
 
   // {true, false} または {false, true} の構造
   // TODO 記号定数を戻り値に取る場合の対応
-  SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
+  SExpParseTree::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
   // 第一要素を取得
-  SExpParser::const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
+  SExpParseTree::const_tree_iter_t ret_code_ptr = tree_root_ptr->children.begin();
   std::string ret_first_str = std::string(ret_code_ptr->value.begin(), ret_code_ptr->value.end());
 
   CheckConsistencyResult ret;
@@ -342,10 +342,10 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   /////////////////// 受信処理                     
 
   reduce_link_->skip_until_redeval();
-  const SExpParser sp(reduce_link_->get_as_s_exp_parser());
+  const SExpParseTree sp(reduce_link_->get_as_s_exp_parse_tree());
 
   // {true, false} または {false, true} の構造
-  SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
+  SExpParseTree::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
 
   create_result_t create_result;
   // TODO:以下のコードはor_size==1が前提
@@ -354,13 +354,13 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
     // {{(変数名), (関係演算子コード), (値のフル文字列)}, ...}の形式
     variable_range_map_t map;
 
-    for(SExpParser::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
+    for(SExpParseTree::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
       HYDLA_LOGGER_VCS("and_cons_string: ", sp.get_string_from_tree(it));
 
       // 関係演算子コード
       int relop_code;
       {
-        SExpParser::const_tree_iter_t relop_code_ptr = it->children.begin()+1;      
+        SExpParseTree::const_tree_iter_t relop_code_ptr = it->children.begin()+1;      
         std::string relop_code_str = std::string(relop_code_ptr->value.begin(),relop_code_ptr->value.end());
         std::stringstream relop_code_ss;
         relop_code_ss << relop_code_str;
@@ -369,7 +369,7 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
       }
 
       // 値
-      const SExpParser::const_tree_iter_t value_ptr = it->children.begin()+2;
+      const SExpParseTree::const_tree_iter_t value_ptr = it->children.begin()+2;
 
       // 微分回数
       const int var_derivative_count = sp.get_derivative_count(it->children.begin());
@@ -377,7 +377,7 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
       // 変数名
       std::string var_name;
       { // 変数名の取得
-        SExpParser::const_tree_iter_t var_ptr = it->children.begin();
+        SExpParseTree::const_tree_iter_t var_ptr = it->children.begin();
         const std::string var_head_str = std::string(var_ptr->value.begin(),var_ptr->value.end());
 
         // prev変数は処理しない
@@ -406,7 +406,7 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
           variable_t* variable_ptr = get_variable(var_name, var_derivative_count);
 
           value_range_t tmp_range = map[variable_ptr];
-          value_t tmp_value = SExpConverter::convert_s_exp_to_symbolic_value(sp, value_ptr);
+          value_t tmp_value = sp.to_symbolic_value(value_ptr);
           SExpConverter::set_range(tmp_value, tmp_range, relop_code);
 
           map[variable_ptr] = tmp_range;
@@ -426,7 +426,7 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
       variable_t* variable_ptr = get_variable(var_name, var_derivative_count);
 
       // 変数表の対応する部分に代入する
-      value_t symbolic_value = SExpConverter::convert_s_exp_to_symbolic_value(sp, value_ptr);
+      value_t symbolic_value = sp.to_symbolic_value(value_ptr);
       if(symbolic_value->undefined()){
         throw SolveError("invalid value");
       }
@@ -585,22 +585,22 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
   ////////////////// 受信処理
 
   reduce_link_->skip_until_redeval();
-  const SExpParser sp(reduce_link_->get_as_s_exp_parser());
+  const SExpParseTree sp(reduce_link_->get_as_s_exp_parse_tree());
   
   // {{value_t(time_t), {}(parameter_map_t), true(bool)},...} のようなものが戻るはず
-  SExpParser::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
+  SExpParseTree::const_tree_iter_t tree_root_ptr = sp.get_tree_iterator();
   PP_time_result_t result;
 
-  for(SExpParser::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
+  for(SExpParseTree::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
     PP_time_result_t::candidate_t candidate;
 
     // 時刻を受け取る
-    candidate.time = SExpConverter::convert_s_exp_to_symbolic_value(sp, it->children.begin());
+    candidate.time = sp.to_symbolic_value(it->children.begin());
     *candidate.time += *current_time;
     HYDLA_LOGGER_VCS("next_phase_time: ", candidate.time);
 
     // 条件を受け取る
-    SExpParser::const_tree_iter_t param_ptr = it->children.begin()+1;
+    SExpParseTree::const_tree_iter_t param_ptr = it->children.begin()+1;
     std::string param_str = std::string(param_ptr->value.begin(), param_ptr->value.end());
 
     // TODO 空リスト以外の場合に対応
@@ -610,7 +610,7 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
     candidate.parameter_map = parameter_map_t();
 
     // 終了時刻かどうかを受け取る
-    SExpParser::const_tree_iter_t bool_ptr = it->children.begin()+2;
+    SExpParseTree::const_tree_iter_t bool_ptr = it->children.begin()+2;
     std::string bool_str = std::string(bool_ptr->value.begin(), bool_ptr->value.end());
     candidate.is_max_time = (bool_str.find("1")!=std::string::npos);
 
@@ -663,13 +663,13 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
     ////////////////// 受信処理
 
     reduce_link_->skip_until_redeval();
-    const SExpParser sp(reduce_link_->get_as_s_exp_parser());
+    const SExpParseTree sp(reduce_link_->get_as_s_exp_parse_tree());
 
     // {コード, 値}の構造
-    SExpParser::const_tree_iter_t ct_it = sp.get_tree_iterator();
+    SExpParseTree::const_tree_iter_t ct_it = sp.get_tree_iterator();
 
     // コードを取得
-    SExpParser::const_tree_iter_t ret_code_it = ct_it->children.begin();
+    SExpParseTree::const_tree_iter_t ret_code_it = ct_it->children.begin();
     std::string ret_code_str = std::string(ret_code_it->value.begin(), ret_code_it->value.end());
     HYDLA_LOGGER_VCS("ret_code_str: ",
                      ret_code_str);
@@ -680,9 +680,8 @@ void REDUCEVCS::apply_time_to_vm(const variable_map_t& in_vm,
     }
     else {
       assert(ret_code_str=="1");
-      SExpParser::const_tree_iter_t value_it = ct_it->children.begin()+1;
-      SExpConverter sc;
-      value = sc.convert_s_exp_to_symbolic_value(sp, value_it);
+      SExpParseTree::const_tree_iter_t value_it = ct_it->children.begin()+1;
+      value = sp.to_symbolic_value(value_it);
       HYDLA_LOGGER_REST("new value : ", value->get_string());
     }
 
@@ -796,11 +795,10 @@ void REDUCEVCS::simplify(time_t &time)
   ////////////////// 受信処理
 
   reduce_link_->skip_until_redeval();
-  const SExpParser sp(reduce_link_->get_as_s_exp_parser());
+  const SExpParseTree sp(reduce_link_->get_as_s_exp_parse_tree());
 
-  SExpParser::const_tree_iter_t time_it = sp.get_tree_iterator();
-  SExpConverter sc;
-  time = sc.convert_s_exp_to_symbolic_value(sp, time_it);
+  SExpParseTree::const_tree_iter_t time_it = sp.get_tree_iterator();
+  time = sp.to_symbolic_value(time_it);
 
   HYDLA_LOGGER_FUNC_END(VCS);
 }
@@ -830,13 +828,12 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t REDUCEVCS::shift_expr_time(
   ////////////////// 受信処理
 
   reduce_link_->skip_until_redeval();
-  const SExpParser sp(reduce_link_->get_as_s_exp_parser());
+  const SExpParseTree sp(reduce_link_->get_as_s_exp_parse_tree());
 
-  SExpParser::const_tree_iter_t value_it = sp.get_tree_iterator();
-  SExpConverter sc;
+  SExpParseTree::const_tree_iter_t value_it = sp.get_tree_iterator();
 
   HYDLA_LOGGER_FUNC_END(VCS);
-  return  sc.convert_s_exp_to_symbolic_value(sp, value_it);
+  return sp.to_symbolic_value(value_it);
 }
 
 // TODO なんとかする

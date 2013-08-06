@@ -4,8 +4,9 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_IPC_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_LINK_IPC_H_
 
-#include "../../parser/SExpParser.h"
 #include "REDUCELink.h"
+
+#include "sexp/SExpParseTree.h"
 #include <stdexcept>
 #include <string>
 
@@ -50,10 +51,10 @@ public:
   std::string get_s_expr();
 
   /**
-   * 受信した複数行のstringを結合してSExpParserを戻す
+   * 受信した複数行のstringを結合してSExpParseTreeを戻す
    * \return REDUCEから受け取るS式をパースしたもの
    */
-  const hydla::parser::SExpParser get_as_s_exp_parser();
+  const hydla::parser::SExpParseTree get_as_s_exp_parse_tree();
 
   /**
    * stringの送信

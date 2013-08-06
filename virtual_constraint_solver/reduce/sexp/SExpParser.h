@@ -1,15 +1,17 @@
 #ifndef _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_
 #define _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_
 
+#include "SExpGrammar.h"
 #include <boost/spirit/include/classic_ast.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <string>
 
-#include "SExpGrammar.h"
-
 namespace hydla {
 namespace parser {
 
+/**
+ * S式のASTを生成するサービス
+ */
 class SExpParser {
 public:
   typedef boost::spirit::classic::position_iterator<char const *>             pos_iter_t;
@@ -18,47 +20,21 @@ public:
   typedef boost::spirit::classic::tree_match<pos_iter_t>::const_tree_iterator const_tree_iter_t;
 
   /**
-   * 空集合を表すS式 "list"
-   */
-  static const std::string empty_list_s_exp;
-  
-  SExpParser();
-  ~SExpParser();
-
-  /**
-   * @param input_str parse_mainするS式の文字列
-   */
-  SExpParser(const std::string& input_str);
-  SExpParser(const SExpParser& sp);
-
-  std::string get_string_from_tree(const_tree_iter_t iter) const;
-
-  int get_derivative_count(const_tree_iter_t iter) const;
-
-  void dump_tree(const_tree_iter_t iter, int nest);
-
-  /**
    * 入力として与えられたS式の文字列を解釈して、木を構築
    */
-  int parse_main(const std::string& input_str);
-
-  /**
-   * ASTのイテレータを返す
-   */
-  const_tree_iter_t get_tree_iterator() const
-  {
-    return ast_tree_.trees.begin();
-  }
-
+  static tree_info_t parse(const std::string& input_str);
+  static std::string get_string_from_tree(const_tree_iter_t var_iter);
+  
 private:
-  tree_info_t ast_tree_;
+   SExpParser();
+  ~SExpParser();
 
 };
 
 //std::ostream& operator<<(std::ostream& s, const SExpParser& sp);
 std::ostream& operator<<(std::ostream& s, const SExpParser::const_tree_iter_t& iter);
 
-} // namespace parser
+} // namespace vcs
 } // namespace hydla
 
 #endif // _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_

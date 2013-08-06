@@ -80,7 +80,7 @@ struct SExpGrammar : public grammar<SExpGrammar> {
   };
 };
 
-} // namespace parser
+} // namespace vcs
 } // namespace hydla
 
 #endif //_INCLUDED_HYDLA_S_EXP_GRAMMAR_H_
