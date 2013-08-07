@@ -1,8 +1,8 @@
 #ifndef _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 #define _INCLUDED_HYDLA_VCS_REDUCE_S_EXP_CONVERTER_H_
 
-#include "../../../simulator/DefaultParameter.h"
-#include "../../SymbolicVirtualConstraintSolver.h"
+#include "../../simulator/DefaultParameter.h"
+#include "../SymbolicVirtualConstraintSolver.h"
 #include "sexp/SExpParseTree.h"
 
 using namespace hydla::parser;

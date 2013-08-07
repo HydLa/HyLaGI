@@ -49,8 +49,23 @@ public:
 
   void dump_tree(const_tree_iter_t iter, int nest);
 
-  /** S式とってvalueに変換する */
-  value_t to_symbolic_value(const_tree_iter_t iter) const ;
+  /** 
+   * S式とってstringに変換する
+   * @param isFirst 再帰の冒頭か、ユーザはデフォルト引数を使用する
+   */
+  std::string to_string(const_tree_iter_t iter, bool isFirst = true) const ;
+
+  /** S式とってvalue_tに変換する */
+  value_t to_value(const_tree_iter_t iter) const ;
+
+  /** get_tree_iterator()のエイリアス */
+  const_tree_iter_t root() const; 
+
+  /** リスト操作を模した関数 */
+  const_tree_iter_t car(const_tree_iter_t iter) const; 
+  const_tree_iter_t cadr(const_tree_iter_t iter) const; 
+  const_tree_iter_t caddr(const_tree_iter_t iter) const; 
+  const_tree_iter_t cadddr(const_tree_iter_t iter) const; 
 
   /** ASTのイテレータを返す */
   const_tree_iter_t get_tree_iterator() const; 
@@ -87,6 +102,9 @@ private:
   function_for_node for_derivative;
   function_for_node for_unary_node;
   function_for_node for_binary_node;
+
+  /** to_string()の再帰部分 */
+  std::string to_string_recursive(const_tree_iter_t iter) const ;
 
   /** 再帰で呼び出していく方 */
   node_sptr to_symbolic_tree(const_tree_iter_t iter) const ;

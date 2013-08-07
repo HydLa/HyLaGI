@@ -8,7 +8,7 @@
 #include "string"
 #include "sstream"
 
-#include "../parser/SExpParser.h"
+#include "../virtual_constraint_solver/reduce/sexp/SExpParseTree.h"
 #include "../virtual_constraint_solver/reduce/REDUCELink.h"
 #include "../virtual_constraint_solver/reduce/REDUCELinkFactory.h"
 #include "../virtual_constraint_solver/reduce/vcs_reduce_source.h"

@@ -1,10 +1,11 @@
 #include "SExpParseTree.h"
 
 #include "../../../common/Logger.h"
+#include "SExpGrammar.h"
 #include <iostream>
 #include <sstream>
 
-using namespace hydla::parse_tree; // Negative$B$H(BNumber$BMQ(B
+using namespace hydla::parse_tree; // NegativeとNumber用
 
 namespace hydla {
 namespace parser {
@@ -20,7 +21,7 @@ SExpParseTree::SExpParseTree(const SExpParseTree& sp)
 SExpParseTree::~SExpParseTree(){}
 
 void SExpParseTree::initialize(){
-  //$B%N!<%I$HJ8;zNs$NBP1~4X78$r:n$C$F$*$/!%(B
+  //ノードと文字列の対応関係を作っておく．
   string_map_.insert(std::make_pair("plus", function_and_node(&SExpParseTree::for_binary_node, NODE_PLUS)));
   string_map_.insert(std::make_pair("difference", function_and_node(&SExpParseTree::for_binary_node, NODE_SUBTRACT)));
   string_map_.insert(std::make_pair("times", function_and_node(&SExpParseTree::for_binary_node, NODE_TIMES)));
@@ -47,7 +48,7 @@ std::string SExpParseTree::get_id() const {
 std::string SExpParseTree::get_string_from_tree(const_tree_iter_t iter){ 
   std::ostringstream ret_str;
 
-  // $B%5!<%P!<%b!<%I$G$O(Bminus$B;HMQIT2D(B
+  // サーバーモードではminus使用不可
   std::string str = std::string(iter->value.begin(), iter->value.end());
   if(str == "minus") ret_str << "-";
   else ret_str << str;
@@ -68,15 +69,15 @@ int SExpParseTree::get_derivative_count(const_tree_iter_t var_iter) const {
   int var_derivative_count;
   std::string var_str = std::string(var_iter->value.begin(), var_iter->value.end());
 
-  // df$B$N@hF,$K%9%Z!<%9$,F~$k$3$H$,$"$k$N$G=|5n$9$k(B
-  // TODO:S$B<0%Q!<%5$r=$@5$7$F%9%Z!<%9F~$i$J$$$h$&$K$9$k(B
+  // dfの先頭にスペースが入ることがあるので除去する
+  // TODO:S式パーサを修正してスペース入らないようにする
   if(var_str.at(0) == ' ') var_str.erase(0,1);
 
-  // $BHyJ,$r4^$`JQ?t(B
+  // 微分を含む変数
   if(var_str=="df"){
     size_t df_child_size = var_iter->children.size();
 
-    // 1$B2sHyJ,$N>l9g$OHyJ,2s?tItJ,$,>JN,$5$l$F$$$k(B
+    // 1回微分の場合は微分回数部分が省略されている
     if(df_child_size==2){
       var_derivative_count = 1;
     }
@@ -101,15 +102,15 @@ void SExpParseTree::dump_tree(const_tree_iter_t iter, int nest) {
     std::cout << "  ";
 
   if (iter->value.id() == SExpGrammar::RI_Identifier)
-    std::cout << "$B<1JL;R(B " << "\"" << std::string(iter->value.begin(), iter->value.end()) << "\"";
+    std::cout << "識別子 " << "\"" << std::string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_Number)
-    std::cout << "$B@0?t(B " << "\"" << std::string(iter->value.begin(), iter->value.end()) << "\"";
+    std::cout << "整数 " << "\"" << std::string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_String)
-    std::cout << "$BJ8;zNs(B "<< "\"" << std::string(iter->value.begin(), iter->value.end()) << "\"";
+    std::cout << "文字列 "<< "\"" << std::string(iter->value.begin(), iter->value.end()) << "\"";
   else if (iter->value.id() == SExpGrammar::RI_List)
-    std::cout << "$B%j%9%H(B ";
+    std::cout << "リスト ";
   else if (iter->value.id() == SExpGrammar::RI_Data)
-    std::cout << "$B%G!<%?(B ";
+    std::cout << "データ ";
   else
     std::cout << "Node '" << std::string(iter->value.begin(), iter->value.end()) << "'";
 
@@ -119,11 +120,52 @@ void SExpParseTree::dump_tree(const_tree_iter_t iter, int nest) {
     dump_tree(iter->children.begin()+j, nest+1);
 }
 
+SExpParseTree::const_tree_iter_t SExpParseTree::root() const {
+  return ast_tree_.trees.begin();
+}
+
+SExpParseTree::const_tree_iter_t SExpParseTree::car(const_tree_iter_t iter) const {
+  assert(iter->children.size() >= 1);
+  return iter->children.begin();
+}
+
+SExpParseTree::const_tree_iter_t SExpParseTree::cadr(const_tree_iter_t iter) const {
+  assert(iter->children.size() >= 2);
+  return iter->children.begin() + 1;
+}
+
+SExpParseTree::const_tree_iter_t SExpParseTree::caddr(const_tree_iter_t iter) const {
+  assert(iter->children.size() >= 3);
+  return iter->children.begin() + 2;
+}
+
+SExpParseTree::const_tree_iter_t SExpParseTree::cadddr(const_tree_iter_t iter) const {
+  assert(iter->children.size() >= 4);
+  return iter->children.begin() + 3;
+}
+
 SExpParseTree::const_tree_iter_t SExpParseTree::get_tree_iterator() const {
   return ast_tree_.trees.begin();
 }
 
-SExpParseTree::value_t SExpParseTree::to_symbolic_value(const_tree_iter_t iter) const {
+std::string SExpParseTree::to_string(const_tree_iter_t iter, bool isFirst) const {
+  std::string str(iter->value.begin(), iter->value.end());
+  if(iter->children.size() > 0){
+    str += '(';
+    for(int i = 0; i < iter->children.size(); ++i){
+      str += to_string(iter->children.begin() + i, false) + ' ';
+    }
+    str = str.substr(0, str.length() - 1);
+    str += ')';
+  }
+  if(isFirst && str.find("list")==0){
+    str =  '(' + str + ')';
+  }
+
+  return str;
+}
+
+SExpParseTree::value_t SExpParseTree::to_value(const_tree_iter_t iter) const {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   // TODOHYDLA_LOGGER_REST("--- convert s-expression to value ---\n", iter);
 
@@ -149,31 +191,31 @@ SExpParseTree::node_sptr SExpParseTree::to_symbolic_tree(const_tree_iter_t iter)
         break;
       }
 
-    // header$B$H(Bidentifier$B$H$GJ,$1$?$$(B
+    // headerとidentifierとで分けたい
     default:
       std::string value_str = std::string(iter->value.begin(), iter->value.end());
-      // $BJQ?tL>$N@hF,$K%9%Z!<%9$,F~$k$3$H$,$"$k$N$G=|5n$9$k(B
-      // TODO:S$B<0%Q!<%5$r=$@5$7$F%9%Z!<%9F~$i$J$$$h$&$K$9$k(B
+      // 変数名の先頭にスペースが入ることがあるので除去する
+      // TODO:S式パーサを修正してスペース入らないようにする
       if(value_str.at(0) == ' ') value_str.erase(0,1);
 
       string_map_t::const_iterator strmap_it = string_map_.find(value_str);
       if(strmap_it == string_map_.end()){
-        if(value_str=="t"){//$B;~9o(B
+        if(value_str=="t"){//時刻
           return node_sptr(new hydla::parse_tree::SymbolicT());
         }
-        if(value_str=="pi"){ // $B1_<~N((B
+        if(value_str=="pi"){ // 円周率
           return node_sptr(new hydla::parse_tree::Pi());
         }
-        if(value_str.at(0)=='p'){//$BDj?tL>(B
+        if(value_str.at(0)=='p'){//定数名
           assert(0);
           // TODO
           // return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
         }
-        if(value_str=="e"){//$B<+A3BP?t$NDl(B
+        if(value_str=="e"){//自然対数の底
           return node_sptr(new hydla::parse_tree::E());
         }
         
-        // TODO:$BJQ?tL>$d$=$l0J30$N(Bfactor$B$X$NBP1~(B
+        // TODO:変数名やそれ以外のfactorへの対応
         assert(0);
       }
 
@@ -188,9 +230,9 @@ SExpParseTree::node_sptr SExpParseTree::to_symbolic_tree(const_tree_iter_t iter)
 SExpParseTree::node_sptr SExpParseTree::for_derivative(
   const_tree_iter_t iter,
   const SExpParseTree::nodeType &nt) const {
-  //$B$^$:HyJ,2s?t(B
+  //まず微分回数
   int derivative_count = get_derivative_count(iter);
-  //$B<!$KCf?H(B
+  //次に中身
   node_sptr tmp_node = to_symbolic_tree(iter->children.begin());
   for(int i=0;i<derivative_count-1;i++){
     tmp_node.reset(new hydla::parse_tree::Differential(tmp_node));
@@ -202,7 +244,7 @@ SExpParseTree::node_sptr SExpParseTree::for_derivative(
 SExpParseTree::node_sptr SExpParseTree::for_unary_node(
   const_tree_iter_t iter,
   const SExpParseTree::nodeType &nt) const {
-  //$BCf?H(B
+  //中身
   node_sptr tmp_node = to_symbolic_tree(iter->children.begin());
   switch(nt){
     default:
@@ -227,18 +269,18 @@ SExpParseTree::node_sptr SExpParseTree::for_unary_node(
 SExpParseTree::node_sptr SExpParseTree::for_binary_node(
   const_tree_iter_t iter,
   const SExpParseTree::nodeType &nt) const {
-  //BinaryNode$B$r:n$k$?$a$N4X?t$@$1$I!$(Bplus$B$H(Btimes$B$O%j%9%H$GJ#?t0z?t<h$l$k$_$?$$$@$+$iFCJL$K%k!<%W(B
+  //BinaryNodeを作るための関数だけど，plusとtimesはリストで複数引数取れるみたいだから特別にループ
 
-  //$B:8(B
+  //左
   node_sptr lhs = to_symbolic_tree(iter->children.begin());
   size_t args_count = 0;
   while(1){
     args_count++;
-    //$B1&(B
+    //右
     node_sptr rhs = to_symbolic_tree(iter->children.begin()+args_count);
     switch(nt){
       case NODE_PLUS:
-        if(args_count == iter->children.size()-1){//$B$3$3$G=*N;(B
+        if(args_count == iter->children.size()-1){//ここで終了
           return node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
         }
         else{
@@ -247,7 +289,7 @@ SExpParseTree::node_sptr SExpParseTree::for_binary_node(
         break;
 
       case NODE_TIMES:
-        if(args_count == iter->children.size()-1)//$B$3$3$G=*N;(B
+        if(args_count == iter->children.size()-1)//ここで終了
           return node_sptr(new hydla::parse_tree::Times(lhs, rhs));
         else
           lhs = node_sptr(new hydla::parse_tree::Times(lhs, rhs));

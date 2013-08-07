@@ -4,7 +4,7 @@
 #include "string"
 #include "sstream"
 
-#include "../parser/SExpParser.h"
+#include "../virtual_constraint_solver/reduce/sexp/SExpParseTree.h"
 #include "../virtual_constraint_solver/reduce/SExpConverter.h"
 
 using namespace std;
@@ -12,7 +12,7 @@ using namespace hydla::parser;
 using namespace hydla::vcs::reduce;
 
 void check(std::string arg){
-  SExpParser sp(arg);
+  SExpParseTree sp(arg);
 }
 
 /**
