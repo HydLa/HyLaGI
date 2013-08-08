@@ -51,7 +51,7 @@ namespace simulator {
 	    std::cout << error_str;
 	  }
 	  
-	  HYDLA_LOGGER_HA("%% simulation ended");
+	  HYDLA_LOGGER_HA("%% simulation end");
 	  
  		output_ha();
 
@@ -92,16 +92,25 @@ namespace simulator {
 						continue;
 					}
 	    	}
-       	push_current_condition(tmp_cc_);
 	    	
 	      PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
 	      for(unsigned int j = 0; j < next_todos.size(); j++)
 	      {
 	        simulation_todo_sptr_t& n_todo = next_todos[j];
-	        n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
-          todo_stack_->push_todo(n_todo);
           HYDLA_LOGGER_HA("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
           HYDLA_LOGGER_HA(n_todo);
+	      	// TIME_LIMITの場合
+	      	if(n_todo->parent->cause_of_termination == TIME_LIMIT){
+	      		current_condition_t tmp_tmp_cc_;
+	      		tmp_tmp_cc_ = tmp_cc_;
+	      		tmp_tmp_cc_.pop_back();
+	      		tmp_tmp_cc_.push_back(n_todo->parent);
+	      		push_result(tmp_tmp_cc_);
+	      		continue;
+	      	}
+	        n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
+          todo_stack_->push_todo(n_todo);
+	       	push_current_condition(tmp_cc_);
 	      }
 	    }
 	  	
@@ -152,8 +161,8 @@ namespace simulator {
 			 		HYDLA_LOGGER_HA("t         :  0");		 				 	
 			  	tmp_variable_phase = it_phase_v->second;
 			  	HYDLA_LOGGER_HA("now       :  ", *tmp_variable_phase);
-			  	//HYDLA_LOGGER_HA("c-t         :  ", *phase->current_time);		 				 	
-			  	search_variable_parameter(phase->parameter_map, it_phase_v->first->name, it_phase_v->first->derivative_count);
+			  	//HYDLA_LOGGER_HA("c-t         :  ", *phase->current_time);		
+		 			search_variable_parameter(phase->parameter_map, it_phase_v->first->name, it_phase_v->first->derivative_count);
 					HYDLA_LOGGER_HA("");	 	
 			  	tmp_variable_past = it_past_v->second;
 			  	HYDLA_LOGGER_HA("past      :  ", *tmp_variable_past);
@@ -161,14 +170,25 @@ namespace simulator {
 			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first->name, it_past_v->first->derivative_count);
 		  	}
 		  } 
-		  bool isIncludeBound;
-		  cout << "please input 0 or 1: if past includes now, input 1, otherwise 0. " << endl;
-		  cout << ">";
-		  cin >> isIncludeBound;
-		  if(isIncludeBound == 0) {
-				HYDLA_LOGGER_HA("****** end check_subset : false ******");		
-			  return false;
+
+		  bool isIncludeBound = phase_simulator_->check_include_bound(tmp_variable_phase, tmp_variable_past, phase->parameter_map, past_phase->parameter_map);
+		  
+	  	if(isIncludeBound){
+		    HYDLA_LOGGER_HA("****** check_include_bound end : true ******");
+		  }else{
+		    HYDLA_LOGGER_HA("****** check_include_bound end : false ******");
 		  }
+	  	if(hydla::logger::Logger::ha_converter_area_){
+		  	cout << "please input 0 or 1: if past includes now, input 1, otherwise 0. " << endl;
+			  cout << ">";
+			  cin >> isIncludeBound;
+			  if(isIncludeBound == 0) {
+					HYDLA_LOGGER_HA("****** end check_subset : false ******");		
+				  return false;
+			  }
+	  	}else{
+	  		return isIncludeBound;
+	  	}
 	  }
 	  
 		HYDLA_LOGGER_HA("****** end check_subset : true ******");		
@@ -248,10 +268,7 @@ namespace simulator {
 		  // 途中で導入されたパラメータは見ない
 	  	if ( (*(it->first)).get_phase_id() != 1 ) continue;
 
- 	    if ( (*(it->first)).get_name() == name && (*(it->first)).get_derivative_count() == diff_cnt ){
-			  HYDLA_LOGGER_HA("parameter :  ", it->second);		
-			  break;	  	
- 	    }
+			HYDLA_LOGGER_HA((*it->first), " : " , it->second);		
 	  }
 	}
 	
@@ -416,6 +433,8 @@ namespace simulator {
 	
 	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
 	{
+		vector<string> strs_;
+		string str_;
 		cout << "digraph g{" << endl;
 		cout << "edge [dir=forward];" << endl;
 		cout << "\"start\" [shape=point];" << endl;
@@ -424,13 +443,16 @@ namespace simulator {
 			   << ")\", labelfloat=false,arrowtail=dot];" << endl;
 		for(unsigned int i = 2 ; i < result.size() ; i++){
 			if(result[i]->phase == IntervalPhase){
-				cout << "\"" << result[i-2]->module_set->get_name() << "\\n(" << get_asks_str(result[i-2]->positive_asks) 
-					<< ")\"->\"" << result[i]->module_set->get_name() << "\\n(" << get_asks_str(result[i]->positive_asks) 
-						<< ")\" [label=\"" << result[i-1]->module_set->get_name() << "\\n(" << get_asks_str(result[i-1]->positive_asks) 
-				     << ")\", labelfloat=false,arrowtail=dot];" << endl;
+				str_ = "\"" + result[i-2]->module_set->get_name() + "\\n(" + get_asks_str(result[i-2]->positive_asks) 
+					+ ")\"->\"" + result[i]->module_set->get_name() + "\\n(" + get_asks_str(result[i]->positive_asks) 
+						+ ")\" [label=\"" + result[i-1]->module_set->get_name() + "\\n(" + get_asks_str(result[i-1]->positive_asks) 
+				     + ")\", labelfloat=false,arrowtail=dot];";
+				vector<string>::iterator it_strs = find(strs_.begin(),strs_.end(),str_);
+				if(it_strs != strs_.end()) continue;				
+				cout << str_ << endl;
+				strs_.push_back(str_);
 			}
 		}
-		
 		cout << "}" << endl;
 	}
 	std::string HAConverter::get_asks_str(ask_set_t asks)

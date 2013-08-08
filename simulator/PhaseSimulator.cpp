@@ -365,3 +365,9 @@ simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulat
   simulation_todo_sptr_t sim(new SimulationTodo(*old));
   return sim;
 }
+
+bool PhaseSimulator::check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2)
+{
+  HYDLA_LOGGER_HA("****** check_include_bound ******");
+  return solver_->check_include_bound(tmp_variable_phase, tmp_variable_past, pm1, pm2);
+}

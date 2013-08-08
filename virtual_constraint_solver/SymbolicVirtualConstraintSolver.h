@@ -223,6 +223,11 @@ public:
     parameter_set_ = &p;
   }
 
+  /*
+   * HAConverter用：
+   */
+  virtual bool check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2){assert(0);}
+
   protected:
   
   variable_t* get_variable(const std::string &name, int derivative_count) const{

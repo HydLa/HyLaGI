@@ -59,6 +59,11 @@ public:
    */
   result_list_t calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont = NULL);
 
+  /**
+   * HAConverter用：二つの変数の存在範囲の関係を求める
+   * tmp_variable_phase in tmp_variable_past => true else false
+   */ 
+  bool check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2);
 
   /**
    * make todos from given phase_result

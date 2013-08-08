@@ -122,6 +122,11 @@ public:
   virtual value_t shift_expr_time(const value_t &val, const time_t &time);
 
   /**
+   * HAConverter用：
+   */
+  bool check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2);
+
+  /**
    * lhsとrhsが同値かどうかを判定する
    */
   virtual bool equivalent(node_sptr &lhs, node_sptr &rhs);

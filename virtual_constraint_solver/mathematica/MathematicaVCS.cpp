@@ -1316,6 +1316,49 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_
 }
 
 
+/**
+ * HAConverter用:
+ */
+// v1 in v2 => true
+bool MathematicaVCS::check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2)
+{
+  // parameter_mapを送信
+  {
+    PacketSender ps(ml_);
+    ml_.put_function("addParameterConstraintNow", 2);
+    send_parameter_map(pm1, ps);
+    ml_.receive();  
+    ml_.MLNewPacket();
+  }
+  {
+    PacketSender ps(ml_);
+    ml_.put_function("addParameterConstraintPast", 2);
+    send_parameter_map(pm2, ps);
+    ml_.receive();  
+    ml_.MLNewPacket();
+  }
+   ml_.put_function("checkIncludeBound", 2);
+    
+  PacketSender ps(ml_);
+    
+  ps.put_value(v1, VA_None);
+  ps.put_value(v2, VA_None);
+  ml_.receive();
+  
+  PacketErrorHandler::handle(&ml_);
+  value_t tmp_val = value_t(MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_));
+    
+  ml_.MLNewPacket();
+
+  HYDLA_LOGGER_HA("value: ", *tmp_val);
+    
+  if (tmp_val->get_string() == "1") {
+    return true;
+  }else{
+    return false;
+  }
+}
+
 } // namespace mathematica
 } // namespace vcs
 } // namespace hydla 
