@@ -97,7 +97,7 @@ int SExpParseTree::get_derivative_count(const_tree_iter_t var_iter) const {
   return var_derivative_count;
 }
 
-void SExpParseTree::dump_tree(const_tree_iter_t iter, int nest) {
+void SExpParseTree::dump_tree(const_tree_iter_t iter, int nest) const {
   for(int i = 0; i < nest; ++i)
     std::cout << "  ";
 
@@ -179,20 +179,21 @@ SExpParseTree::value_t SExpParseTree::to_value(const_tree_iter_t iter) const {
 SExpParseTree::node_sptr SExpParseTree::to_symbolic_tree(const_tree_iter_t iter) const {
   switch(iter->value.id().to_long()) {
     case SExpGrammar::RI_Number: 
-      {
-        std::string number_str = std::string(iter->value.begin(),iter->value.end());
-        assert(number_str.length()>0);
-        if(number_str[0] == '-'){ // number_value < 0
-          const std::string positive_number_str = std::string(iter->value.begin()+1,iter->value.end());
-          return node_sptr(new Negative(node_sptr(new Number(positive_number_str))));
-        }else{
-          return node_sptr(new Number(number_str));
-        }
-        break;
+    {
+      std::string number_str = std::string(iter->value.begin(),iter->value.end());
+      assert(number_str.length()>0);
+      if(number_str[0] == '-'){ // number_value < 0
+        const std::string positive_number_str = std::string(iter->value.begin()+1,iter->value.end());
+        return node_sptr(new Negative(node_sptr(new Number(positive_number_str))));
+      }else{
+        return node_sptr(new Number(number_str));
       }
+      break;
+    }
 
     // headerとidentifierとで分けたい
-    default:
+    case SExpGrammar::RI_Identifier:
+    {
       std::string value_str = std::string(iter->value.begin(), iter->value.end());
       // 変数名の先頭にスペースが入ることがあるので除去する
       // TODO:S式パーサを修正してスペース入らないようにする
@@ -207,19 +208,26 @@ SExpParseTree::node_sptr SExpParseTree::to_symbolic_tree(const_tree_iter_t iter)
           return node_sptr(new hydla::parse_tree::Pi());
         }
         if(value_str.at(0)=='p'){//定数名
-          assert(0);
-          // TODO
-          // return node_sptr(new hydla::parse_tree::Parameter(value_str.substr(1,value_str.length()-1)));
+          // TODO py => parameter[y, 0, 1]などと変換する
+          // TODO parameter[y, 0, 1]とparameter[y, 0, 2]を区別する
+          assert(value_str == "py");
+          return node_sptr(new hydla::parse_tree::Variable("parameter[" + value_str.substr(1) + ", 0, 1]"));
         }
         if(value_str=="e"){//自然対数の底
           return node_sptr(new hydla::parse_tree::E());
         }
-        
+
         // TODO:変数名やそれ以外のfactorへの対応
         assert(0);
       }
 
       return (this->*(strmap_it->second.function))(iter, strmap_it->second.node);
+      break;
+
+    }
+
+    default:
+      assert(0);
       break;
   }
 

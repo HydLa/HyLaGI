@@ -47,7 +47,7 @@ public:
 
   int get_derivative_count(const_tree_iter_t iter) const;
 
-  void dump_tree(const_tree_iter_t iter, int nest);
+  void dump_tree(const_tree_iter_t iter, int nest = 0) const;
 
   /** 
    * SŽ®‚Æ‚Á‚Ästring‚É•ÏŠ·‚·‚é

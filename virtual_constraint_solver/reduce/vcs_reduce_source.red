@@ -1718,12 +1718,11 @@ procedure isPrevVariable(expr_)$
   else if(myHead(expr_)=prev) then t
   else nil;
 
+% prev変数の場合prevを外す
 procedure removePrev(var_)$
   if(myHead(var_)=prev) then part(var_, 1) else var_;
 
-procedure removePrevVars(varsList_)$
-  union(for each x in varsList_ join if(freeof(x, prev)) then {x} else {});
-
+% リストからprev変数を除く
 procedure removePrevCons(consList_)$
   union(for each x in consList_ join if(freeof(x, prev)) then {x} else {});
 
@@ -2992,9 +2991,28 @@ begin;
   >>;
   ret_:= union(consRet_, paramRet_);
 
+  % TODO getTimeVarsの名前変更
+  ret_:= getTimeVars(ret_, removePrevCons(union(DExprVars_, (csVariables_ \ initVars_))));
+
   debugWrite("ret_: ", ret_);
   return ret_;
 end;
+
+% vcs_math_sourceにおけるgetTimeVars
+% convertCSToVMIntervalのretからパラメータを取り除く
+procedure getTimeVars(ret_, vars_);
+begin;
+  % TODO
+  return for each x in ret_ join if(contains(vars_, first x)) then {x} else {}; 
+end;
+
+% {df(usrvary,t,2),df(usrvary,t),usrvary}
+
+procedure contains(vars_, var_);
+begin;
+  return if((for each x in vars_ sum if(x = var_) then 1 else 0) > 0) then t else nil;
+end;
+
 % integrateCalcでtmpSol_が定まった後の処理をコピペし戻り値を整形
 % REDUCEVCS::calculate_next_PP_time()から呼び出される
 % 戻り値の形式: {time_t, {}(parameter_map_t), true(bool)},...}

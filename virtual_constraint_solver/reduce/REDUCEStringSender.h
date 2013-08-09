@@ -31,9 +31,17 @@ public:
    * (変数名， 微分回数,  prev変数かどうか,  初期値変数扱いするかどうか)
    */
   typedef boost::tuple<std::string, int, bool, bool> var_info_t;
-
   typedef std::set<var_info_t>                       var_info_list_t;
   typedef var_info_list_t::const_iterator            vars_const_iterator;
+
+  /**
+   * 記号定数データ
+   * (元の変数名， 微分回数，id)
+   */
+  typedef boost::tuple<std::string, int, int>        par_info_t;
+  typedef std::set<par_info_t>                       par_info_list_t;
+  typedef par_info_list_t::const_iterator            pars_const_iterator;
+
   typedef hydla::parse_tree::node_sptr               node_sptr;
 
   // REDUCEに送る際に変数名につける接頭語 "usrvar"
@@ -79,7 +87,8 @@ public:
   /**
    * 上2つの記号定数版
    */
-  void put_par(const std::string &name);
+  void put_par(const par_info_t& par);
+  void put_par(const std::string& name, const int& diff_count, const int& id);
   void put_pars();
 
   /**
@@ -155,7 +164,7 @@ private:
 protected:
   /// 送信された変数の一覧
   var_info_list_t vars_;
-  std::set<std::string> pars_;
+  par_info_list_t pars_;
 
   // Differentialノードを何回通ったか
   int differential_count_;

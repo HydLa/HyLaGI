@@ -1,6 +1,6 @@
 #include "REDUCEStringSender.h"
 
-#include "Logger.h"
+#include "../../common/Logger.h"
 #include <assert.h>
 #include <iostream>
 
@@ -171,7 +171,7 @@ void REDUCEStringSender::visit(boost::shared_ptr<Parameter> node)
 {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("put: Parameter : ", node->get_name());
-  put_par(par_prefix + node->get_name());
+  put_par(node->get_name(), node->get_derivative_count(), node->get_phase_id());
   HYDLA_LOGGER_FUNC_END(REST);
 }
 
@@ -244,19 +244,31 @@ void REDUCEStringSender::put_var(const var_info_t var)
 
 }
 
-void REDUCEStringSender::put_par(const std::string &name)
-{
+void REDUCEStringSender::put_par(const par_info_t& par) {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
-  HYDLA_LOGGER_REST("put_par: ", "name: ", name);
-
-  reduce_link_->send_string(name);
+  // TODO par_prefixを現実装に即す
+  const std::string name = par.get<0>();
+  const int diff_count = par.get<1>();
+  const int id = par.get<2>();
+  HYDLA_LOGGER_REST(
+    "REDUCEStringSender::put_par: ",
+    "name: ", name,
+    "\tdiff_count: ", diff_count,
+    "\tid: ", id);
+  
+  reduce_link_->send_string(par_prefix + name);
+  // TODO name以外も送信
 
   // putした変数の情報を保持
-  pars_.insert(name);
-
+  pars_.insert(par);
   HYDLA_LOGGER_FUNC_END(REST);
-
 }
+
+void REDUCEStringSender::put_par(const std::string &name, const int &diff_count, const int &id) {
+  put_par(boost::make_tuple(name, diff_count, id));
+}
+
+
 
 /**
  * ある式(ノード)をputする
@@ -319,7 +331,7 @@ void REDUCEStringSender::put_pars()
   HYDLA_LOGGER_FUNC_BEGIN(REST);
   HYDLA_LOGGER_REST("par size:", pars_.size());
   reduce_link_->send_string("{");
-  for(std::set<std::string>::iterator it = pars_.begin(); it!=pars_.end(); ++it) {
+  for(REDUCEStringSender::pars_const_iterator it = pars_.begin(); it!=pars_.end(); ++it) {
     if(it!=pars_.begin()) reduce_link_->send_string(",");
     put_par(*it);
   }

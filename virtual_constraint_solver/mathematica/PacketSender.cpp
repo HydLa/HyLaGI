@@ -381,14 +381,14 @@ void PacketSender::put_vars()
 
 void PacketSender::put_pars()
 {
-  HYDLA_LOGGER_REST("#*** Begin PacketSender::put_pars ***");
+  HYDLA_LOGGER_FUNC_BEGIN(REST);
   
   ml_->put_function("List", pars_.size());
 
   for(PacketSender::pars_const_iterator it = pars_.begin(); it!=pars_.end(); ++it) {
     put_par(*it);
   }
-  HYDLA_LOGGER_REST("#*** End PacketSender::put_pars ***");
+  HYDLA_LOGGER_FUNC_END(REST);
 }
 
 
