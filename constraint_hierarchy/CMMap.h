@@ -40,6 +40,8 @@ namespace hydla{
       cm_map_list_t get_parents();
       // childrenを再帰的に探索済みとする
       void mark_children();
+      // module_set_listを返す
+      module_set_list_t get_module_set_list();
 
       // ダンプ
       std::ostream& dump(std::ostream& s) const;

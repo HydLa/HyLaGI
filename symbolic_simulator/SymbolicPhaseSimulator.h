@@ -38,6 +38,8 @@ public:
   virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_range_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
   virtual parameter_set_t get_parameter_set();
 
+  virtual void init_arc(const parse_tree_sptr& parse_tree);
+
 private:
 
   std::set<module_set_sptr> checkd_module_set_;
@@ -84,6 +86,10 @@ private:
 
   void add_continuity(const continuity_map_t&);
   
+  virtual module_set_list_t calculate_mms(
+    simulation_todo_sptr_t& state,
+    const variable_map_t& vm);
+
   virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
 
   

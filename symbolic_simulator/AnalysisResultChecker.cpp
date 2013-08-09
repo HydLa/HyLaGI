@@ -145,14 +145,74 @@ void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::vcs::SymbolicVir
   solver_ = solver;
 }
 
-CalculateVariableMapResult
+
+module_set_list_t AnalysisResultChecker::calculate_mms(
+  simulator::simulation_todo_sptr_t& state,
+  const variable_map_t& vm,
+  todo_container_t* todo_container)
+{
+  module_set_list_t ret;
+  //  std::cout << "******************************" << std::endl;
+  for(hydla::ch::cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+    if((*it)->is_searched()) continue;
+    if(check_conditions((*it)->get_condition(), state, vm, todo_container)){
+      module_set_list_t ms_list = (*it)->get_module_set_list();
+      for(module_set_list_t::iterator ms_it = ms_list.begin(); ms_it != ms_list.end(); ms_it++){
+	ret.push_back(*ms_it);
+	//	std::cout << (*ms_it)->get_name() << std::endl;
+      }
+      (*it)->mark_children();
+    }
+  }
+  for(hydla::ch::cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+    (*it)->unsearched();
+  }
+  //  std::cout << "******************************" << std::endl;
+  return ret;
+}
+
+bool AnalysisResultChecker::check_conditions(
+  const hydla::parse_tree::node_sptr& cond,
+  simulation_todo_sptr_t& state,
+  const variable_map_t& vm,
+  todo_container_t* todo_container)
+{
+  solver_->reset(vm, state->parameter_map);
+  solver_->change_mode(ConditionsMode, opts_->approx_precision);
+  solver_->set_conditions(cond);
+  // check_conditionとか作った方が良さそうな気がするよ
+  CheckConsistencyResult check_consistency_result = solver_->check_consistency();
+  if(check_consistency_result.true_parameter_maps.empty()){
+    return false;
+  }else if(check_consistency_result.false_parameter_maps.empty()){
+    return true;
+  }else{
+    for(int i=1; i<(int)check_consistency_result.true_parameter_maps.size();i++){
+      simulation_todo_sptr_t branch_state(new SimulationTodo(*state));
+      branch_state->parameter_map = check_consistency_result.true_parameter_maps[i];
+      todo_container->push_todo(branch_state);
+    }
+    for(int i=0; i<(int)check_consistency_result.false_parameter_maps.size();i++){
+      simulation_todo_sptr_t branch_state(new SimulationTodo(*state));
+      branch_state->parameter_map = check_consistency_result.false_parameter_maps[i];
+      todo_container->push_todo(branch_state);
+    }
+    state->parameter_map = check_consistency_result.true_parameter_maps[0];
+    solver_->reset_parameters(state->parameter_map);
+
+    return true;
+  }
+}
+
+bool 
 AnalysisResultChecker::check_conditions(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& state,
   const variable_map_t& vm,
-  bool b)
+  bool b,
+  todo_container_t* todo_container)
 {
-  phase_result_sptr_t& pr = state->parent;
+  /*
   if(opts_->analysis_mode == "simulate"){
     if(checkd_module_set_.find(ms) != checkd_module_set_.end()){
       if(conditions_.find(ms->get_name()) == conditions_.end()){
@@ -165,42 +225,8 @@ AnalysisResultChecker::check_conditions(
       }
     }
   }
-  solver_->reset(vm, pr->parameter_map);
-  if(conditions_[ms->get_name()] != NULL){
-    solver_->change_mode(ConditionsMode, opts_->approx_precision);
-    solver_->set_conditions(conditions_[ms->get_name()]);
-    CheckConsistencyResult check_consistency_result = solver_->check_consistency();
-    if(check_consistency_result.true_parameter_maps.empty()){
-      return CVM_INCONSISTENT;
-    }else if(check_consistency_result.false_parameter_maps.empty()){
-    }else{
-    /* TODO 正しく分岐する
-      CalculateClosureResult result;
-      for(int i=0; i<(int)check_consistency_result.true_parameter_maps.size();i++){
-        simulation_phase_sptr_t branch_state(new simulation_phase_t(*state));
-        branch_state->phase_result.reset(new phase_result_t(*state->phase_result));
-        branch_state->phase_result->cause_of_termination = NONE;
-        branch_state->phase_result->parameter_map = check_consistency_result.true_parameter_maps[i];
-        result.push_back(branch_state);
-      }
-      for(int i=0; i<(int)check_consistency_result.false_parameter_maps.size();i++){
-        simulation_phase_sptr_t branch_state(new simulation_phase_t(*state));
-        branch_state->phase_result.reset(new phase_result_t(*state->phase_result));
-        branch_state->phase_result->cause_of_termination = NONE;
-        branch_state->phase_result->parameter_map = check_consistency_result.false_parameter_maps[i];
-        result.push_back(branch_state);
-      }
-
-      for(unsigned int i = 0; i < result.size(); i++){
-        result_todo.push_back(PhaseSimulator::TodoAndResult(result[i], phase_result_sptr_t()));
-      }
-      return CVM_BRANCH;
-      */
-      assert(0);
-      return CVM_INCONSISTENT;
-    }
-  }
-  return CVM_INCONSISTENT;
+  */
+  return check_conditions(conditions_[ms->get_name()],state,vm,todo_container);
 }
 
 

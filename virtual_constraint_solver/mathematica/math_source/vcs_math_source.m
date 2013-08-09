@@ -16,6 +16,9 @@ publicMethod[
   pCons, fCond, paramCons, vars,
   Module[
    {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse, cpTmp},
+   debugPrint["fcond",fCond];
+   If[fCond === 1, 
+    {True,False},
     prevCons = pCons;
     prevCons = prevCons /. Rule->Equal;
     If[prevCons[[0]] == List, prevCons[[0]] = And;];
@@ -28,18 +31,19 @@ publicMethod[
     simplePrint[cpTmp];
     checkMessage;
     Quiet[
-      cpTrue = Reduce[!cpTmp && paramCons, Reals], {Reduce::useq}
+      cpTrue = Reduce[cpTmp && paramCons, Reals], {Reduce::useq}
     ];
     checkMessage;
     simplePrint[cpTrue];
     Quiet[
-      cpFalse = Reduce[cpTmp && paramCons, Reals], {Reduce::useq}
+      cpFalse = Reduce[!cpTmp && paramCons, Reals], {Reduce::useq}
     ];
     checkMessage;
     simplePrint[cpFalse];
     {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
     simplePrint[trueMap, falseMap];
     {trueMap, falseMap}
+   ]
   ]
 ];
 

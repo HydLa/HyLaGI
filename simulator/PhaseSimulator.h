@@ -83,6 +83,8 @@ public:
   
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
 
+  virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
+
   /// 使用するソルバへのポインタ
   boost::shared_ptr<solver_t> solver_;
 
@@ -141,6 +143,10 @@ protected:
     simulation_todo_sptr_t&,
     const variable_map_t &,
     bool b) = 0;
+
+  virtual module_set_list_t calculate_mms(
+    simulation_todo_sptr_t& state,
+    const variable_map_t& vm) = 0;
 
   const Opts *opts_;
   

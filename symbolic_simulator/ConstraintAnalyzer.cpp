@@ -125,28 +125,31 @@ void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
 
 void ConstraintAnalyzer::check_all_module_set(bool b)
 {
- 
+  Timer ca_timer;
   msc_no_init_->reset();
   module_set_sptr check_ms;
   // 単にすべての解候補制約モジュール集合にfind_conditionsを適用しているだけ
   while(msc_no_init_->go_next()){
     check_ms = msc_no_init_->get_module_set();
     Timer fc_timer;
-    ConstraintAnalyzer::ConditionsResult ret = find_conditions(check_ms,b);
-    if(ret != CONDITIONS_FALSE){
+    ConstraintAnalyzer::ConditionsResult ret = find_conditions(check_ms,true);
+    //    std::cout << "  find conditions:" << check_ms->get_name() << " : " << fc_timer.get_elapsed_us() << " us" << std::endl;
+
+    if(ret != CONDITIONS_FALSE && b){
       add_new_cm(check_ms);
     }
 
-    std::cout << "  " << check_ms->get_name() << " : " << fc_timer.get_elapsed_us() << " us" << std::endl;
+    //    std::cout << "  " << check_ms->get_name() << " : " << fc_timer.get_elapsed_us() << " us" << std::endl;
     msc_no_init_->mark_current_node();
   }
 
-
+  /*
   for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
     std::cout << *(*it);
   }
   std::cout<<std::endl;
-
+  */
+  std::cout << "analysis : " << ca_timer.get_elapsed_us() << std::endl;
 }
 
   ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)

@@ -7,6 +7,10 @@ namespace hydla{
     CMMap::CMMap():searched_(false){}
     CMMap::CMMap(hydla::parse_tree::node_sptr& cond):condition_(cond),searched_(false){}
     CMMap::~CMMap(){}
+
+    module_set_list_t CMMap::get_module_set_list(){
+      return ms_list_;
+    }
     
     hydla::parse_tree::node_sptr& CMMap::get_condition(){ return condition_; }
 

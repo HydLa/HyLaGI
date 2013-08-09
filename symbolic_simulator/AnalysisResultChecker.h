@@ -19,11 +19,27 @@ public:
 
   virtual void set_solver(boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver);
 
-  virtual simulator::CalculateVariableMapResult 
+  virtual module_set_list_t 
+    calculate_mms(
+      simulator::simulation_todo_sptr_t& state,
+      const variable_map_t& vm,
+      todo_container_t* todo_container);
+
+
+  virtual bool 
+    check_conditions(
+      const hydla::parse_tree::node_sptr& cond,
+      simulation_todo_sptr_t& state,
+      const variable_map_t& vm,
+      todo_container_t* todo_container);
+
+
+  virtual bool 
     check_conditions(const hydla::ch::module_set_sptr& ms,
                            simulator::simulation_todo_sptr_t& state,
 		     const variable_map_t&,
-		     bool);
+		     bool b,
+                     todo_container_t* todo_container);
 
   virtual void parse();
 

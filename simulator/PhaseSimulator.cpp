@@ -57,6 +57,35 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   {
     time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
     graph = pp_relation_graph_;
+    /*
+    if(todo->current_time->get_string() != "0" && opts_->analysis_mode == "cmmap"){
+      timer::Timer cm_timer;
+      module_set_list_t mms = calculate_mms(todo,time_applied_map);
+      todo->profile["CalculateMaxModuleSets"] = cm_timer.get_elapsed_us();
+      set_simulation_mode(PointPhase);
+      for(module_set_list_t::iterator it = mms.begin(); it != mms.end(); it++){
+	timer::Timer ms_timer;
+        result_list_t tmp_result = simulate_ms((*it), graph, time_applied_map, todo);
+	if(!tmp_result.empty())
+	  {
+	    has_next = true;
+	    result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
+	  }
+	std::string module_sim_string = "\"ModuleSet" + (*it)->get_name() + "\"";
+	todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
+	todo->positive_asks.clear();
+	todo->negative_asks.clear();
+      }
+      //無矛盾な解候補モジュール集合が存在しない場合
+      if(!has_next)
+	{
+	  // make dummy phase and push into tree.
+	  phase_result_sptr_t phase(new PhaseResult(*todo, simulator::INCONSISTENCY));
+	  todo->parent->children.push_back(phase);
+	}
+      return result;
+    }
+    */
     set_simulation_mode(PointPhase);
   }else{
     time_applied_map = todo->parent->variable_map;
@@ -130,11 +159,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   else
   {
     CalculateVariableMapResult cvm_res;
-    if(todo->phase == PointPhase && (opts_->analysis_mode == "use" || opts_->analysis_mode == "simulate")){
-      cvm_res = check_conditions(ms, todo, time_applied_map, false);
+    /*
+    if(todo->phase == PointPhase && opts_->analysis_mode == "simulate"){
+      cvm_res = check_conditions(ms, todo, time_applied_map, true);
       switch(cvm_res){
         case CVM_CONSISTENT:
-	        break;
+          break;
         case CVM_INCONSISTENT:
           todo->module_set_container->mark_nodes(*ms);
           return result;
@@ -146,6 +176,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           break;
       }
     }
+    */
     HYDLA_LOGGER_LOCATION(MS);
     HYDLA_LOGGER_MS("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){

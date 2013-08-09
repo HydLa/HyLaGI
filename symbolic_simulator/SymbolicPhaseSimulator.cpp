@@ -56,10 +56,28 @@ namespace hydla {
 namespace simulator {
 namespace symbolic {
 
+void SymbolicPhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
+  analysis_result_checker_ = boost::shared_ptr<AnalysisResultChecker >(new AnalysisResultChecker(*opts_));
+  analysis_result_checker_->initialize(parse_tree);
+  analysis_result_checker_->check_all_module_set((opts_->analysis_mode == "cmmap" ? true : false));
+}
+
+module_set_list_t SymbolicPhaseSimulator::calculate_mms(
+  simulation_todo_sptr_t& state,
+  const variable_map_t& vm)
+{
+  return analysis_result_checker_->calculate_mms(state,vm,todo_container_);
+}
+
 CalculateVariableMapResult
 SymbolicPhaseSimulator::check_conditions
 (const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){ 
-  return analysis_result_checker_->check_conditions(ms, state, vm, b);
+  if(analysis_result_checker_->check_conditions(ms, state, vm, b, todo_container_)){
+    return CVM_CONSISTENT;
+  }else{
+    return CVM_INCONSISTENT;
+  }
+  return CVM_ERROR;
 }
 
 
