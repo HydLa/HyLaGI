@@ -59,9 +59,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     graph = pp_relation_graph_;
     /*
     if(todo->current_time->get_string() != "0" && opts_->analysis_mode == "cmmap"){
-      timer::Timer cm_timer;
       module_set_list_t mms = calculate_mms(todo,time_applied_map);
-      todo->profile["CalculateMaxModuleSets"] = cm_timer.get_elapsed_us();
       set_simulation_mode(PointPhase);
       for(module_set_list_t::iterator it = mms.begin(); it != mms.end(); it++){
 	timer::Timer ms_timer;

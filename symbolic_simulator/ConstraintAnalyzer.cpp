@@ -53,6 +53,12 @@ void ConstraintAnalyzer::print_conditions()
       std::cout << std::endl;
     }
   }
+  if(!cm_list_.empty()){
+    for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+      std::cout << *(*it) << std::endl;
+    }
+  }
+
   if(opts_->analysis_file != ""){
     ofs.close();
   }
@@ -156,7 +162,8 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
 {
   bool non_prev;
   NonPrevSearcher searcher;
-  //  std::cout << ms->get_name() << std::endl;
+  if(opts_->analysis_mode == "debug") 
+    std::cout << ms->get_name() << std::endl;
   solver_->change_mode(ConditionsMode, opts_->approx_precision);
   ConstraintAnalyzer::ConditionsResult ret = CONDITIONS_FALSE;
 
@@ -203,11 +210,13 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
     // つまり i = 11(1011) でask制約が5つあれば否、成、否、成、成の順に仮定する
     for(int j = 0; j < (int)negative_asks.size(); j++, it++){
       if((i & (1 << j)) != 0){
-	//	std::cout << " +++ " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
+	if(opts_->analysis_mode == "debug") 
+	  std::cout << " +++ " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
         tmp_positive_asks.insert(*it);
         constraint_list.push_back((*it)->get_guard());
       }else{
-	//	std::cout << " --- " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
+	if(opts_->analysis_mode == "debug") 
+	  std::cout << " --- " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
 	// 成り立たないと仮定したガード条件の後件に関する連続性を見る
         constraint_list.push_back(node_sptr(new Not((*it)->get_guard())));
         if(searcher.judge_non_prev((*it)->get_guard())){
@@ -303,15 +312,18 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
       switch(solver_->find_conditions(tmp_node)){
       case SymbolicVirtualConstraintSolver::CONDITIONS_TRUE:
         // もし求まった条件がTrueなら後の仮定の結果がどうであれTrueになるのでret = CONDITIONS_TRUEとおく
-	//	std::cout << "        True" << std::endl;
+	if(opts_->analysis_mode == "debug") 
+	  std::cout << "        True" << std::endl;
         ret = CONDITIONS_TRUE;
         break;
       case SymbolicVirtualConstraintSolver::CONDITIONS_FALSE:
-	//	std::cout << "        False" << std::endl;
+        if(opts_->analysis_mode == "debug") 
+	  std::cout << "        False" << std::endl;
         break;
       case SymbolicVirtualConstraintSolver::CONDITIONS_VARIABLE_CONDITIONS:
         // なんらかの条件が求まったら今まで求めた条件に論理和でその条件を追加する
-	//	std::cout << "        " << TreeInfixPrinter().get_infix_string(tmp_node) << std::endl; 
+	if(opts_->analysis_mode == "debug")
+	  std::cout << "        " << TreeInfixPrinter().get_infix_string(tmp_node) << std::endl; 
         if(condition_node == NULL) condition_node = node_sptr(tmp_node);
         else condition_node = node_sptr(new LogicalOr(condition_node, tmp_node));
         // 何らかの条件が求まったことを表わすためにret = CONDITIONS_VARIABLE_CONDITIONSとする

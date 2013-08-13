@@ -15,16 +15,33 @@ publicMethod[
   checkConditions,
   pCons, fCond, paramCons, vars,
   Module[
-   {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse, cpTmp},
+  {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse, cpTmp},
    debugPrint["fcond",fCond];
    If[fCond === 1, 
     {True,False},
     prevCons = pCons;
     prevCons = prevCons /. Rule->Equal;
     If[prevCons[[0]] == List, prevCons[[0]] = And;];
+    Quiet[
+      cpTrue = Reduce[Exists[vars, Simplify[prevCons&&fCond&&paramCons] ], Reals], {Reduce::useq}
+    ];
+    simplePrint[cpTrue];
+    checkMessage;
+    Quiet[
+      cpFalse = Reduce[paramCons && !cpTrue, Reals], {Reduce::useq}
+    ];
+    checkMessage;
+    simplePrint[cpFalse];
+      (*
+    Quiet[
+      cpTmp = Reduce[Exists[vars, prevCons && fCond],Reals];
+      cpTrue = Reduce[cpTmp && paramCons, Reals];
+      cpFalse = Reduce[!cpTmp && paramCons, Reals];
+    ];
+       
     falseCond = applyListToOr[LogicalExpand[fCond]];
     Quiet[
-      cpTmp = Map[Reduce[Exists[vars, prevCons && #], Reals]&, falseCond], {Reduce::useq}
+      cpTmp = ParallelMap[Reduce[Exists[vars, prevCons && #], Reals]&, falseCond], {Reduce::useq}
     ];
     If[cpTmp[[0]] == List, cpTmp[[0]] = Or;];
     cpTmp = Reduce[cpTmp,Reals];
@@ -40,6 +57,7 @@ publicMethod[
     ];
     checkMessage;
     simplePrint[cpFalse];
+       *)
     {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
     simplePrint[trueMap, falseMap];
     {trueMap, falseMap}

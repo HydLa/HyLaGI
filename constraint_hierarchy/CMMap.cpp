@@ -73,10 +73,10 @@ namespace hydla{
     }
 
     std::ostream& CMMap::dump(std::ostream& s) const{
-      s << "*****" << hydla::parse_tree::TreeInfixPrinter().get_infix_string(condition_) << "*****" << std::endl;
+      s << "condition : " << hydla::parse_tree::TreeInfixPrinter().get_infix_string(condition_) << std::endl;
       //      s << "*****" << condition_ << "*****" << std::endl;
-      s << "  parent" << std::endl;
-      for(cm_map_list_t::const_iterator it = parents_.begin(); it != parents_.end(); it++){
+      //      s << "  parent" << std::endl;
+      /*      for(cm_map_list_t::const_iterator it = parents_.begin(); it != parents_.end(); it++){
 	s << "    " << hydla::parse_tree::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
 	//	s << "    " << (*it)->get_condition() << std::endl;
       }
@@ -85,11 +85,12 @@ namespace hydla{
 	s << "    " << hydla::parse_tree::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
 	//	s << "    " << (*it)->get_condition() << std::endl;
       }
-      s << "  module set" << std::endl;
+      */
+      s << "module sets : " << std::endl;
       for(module_set_list_t::const_iterator it = ms_list_.begin(); it != ms_list_.end(); it++){
 	s << "    " << (*it)->get_name() << std::endl;
       }
-      s << "  searched : " << (searched_ ? "True" : "False") << std::endl;
+      //      s << "  searched : " << (searched_ ? "True" : "False") << std::endl;
       return s;
     }
 
