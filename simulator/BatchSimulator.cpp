@@ -76,7 +76,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
         }
       }
     }
-    HYDLA_LOGGER_PHASE("%% phase_timer: ", phase_timer.get_elapsed_us());
+
     todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
 
     if(!is_safe && opts_->stop_at_failure){

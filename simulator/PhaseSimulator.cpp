@@ -19,7 +19,6 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
   timer::Timer phase_timer;
   result_list_t result;
   
-  
   todo->module_set_container->reset(todo->ms_to_visit);
 
   if(todo_cont == NULL)

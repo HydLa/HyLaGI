@@ -35,6 +35,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
     todo->id = ++todo_id;
     try
     {
+      timer::Timer phase_timer;
       PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
       
       phase_result_sptr_t phase;
@@ -60,6 +61,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       }
       
       PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
+      todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
       profile_vector_->push_back(todo);
       if(todos.empty())
       {
