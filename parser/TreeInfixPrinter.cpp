@@ -230,7 +230,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
 
 // 円周率
 void TreeInfixPrinter::visit(boost::shared_ptr<Infinity> node){
-  (*output_stream_) << "∞";
+  (*output_stream_) << "inf";
 }
 
 

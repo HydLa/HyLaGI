@@ -27,7 +27,7 @@ std::string ValueRange::get_string()const
     }
     else
     {
-      tmp_str += "(inf, ";
+      tmp_str += "(-inf, ";
     }
 
     if(upper_.size() > 0)
