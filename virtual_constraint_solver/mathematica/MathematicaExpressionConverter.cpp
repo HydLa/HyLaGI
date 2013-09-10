@@ -144,10 +144,11 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         // Derivativeのはず．
         assert(next_type == MLTKFUNC);
         HYDLA_LOGGER_REST("%% derivative");
-        ml.get_next();
+        int type = ml.get_next();
         assert(ml.get_symbol() == "Derivative");
-        ml.get_next();
-        int variable_derivative_count = ml.get_integer();
+        type = ml.get_next();
+        std::string str = ml.get_string();
+        int variable_derivative_count = atoi(str.c_str());
         ml.get_next();
         std::string variable_name = ml.get_symbol();
         if(variable_name.length() < var_prefix.length()){
@@ -155,11 +156,11 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
         }
         assert(variable_name.substr(0, var_prefix.length()) == var_prefix);
         variable_name = variable_name.substr(var_prefix.length());
-	ret = node_sptr(new hydla::parse_tree::Variable(variable_name.substr(var_prefix.length())));
+        ret = node_sptr(new hydla::parse_tree::Variable(variable_name));
         for(int i = 0; i < variable_derivative_count; i++)
-	  {
-	    ret = node_sptr(new hydla::parse_tree::Differential(ret));
-	  }
+        {
+          ret = node_sptr(new hydla::parse_tree::Differential(ret));
+        }
       }
       break;
     }
