@@ -71,8 +71,7 @@ typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
 typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
-typedef std::map<variable_t*, simulator::ValueRange, VariableComparator>      variable_range_map_t;
-typedef std::vector<variable_range_map_t>      variable_range_maps_t;
+typedef std::vector<variable_map_t>      variable_maps_t;
 
 typedef std::map<std::string, unsigned int> profile_t;
 
@@ -81,7 +80,7 @@ typedef std::map<std::string, unsigned int> profile_t;
  * シミュレーションすべきフェーズを表す構造体
  */
 struct SimulationTodo{
-  typedef std::map<hydla::ch::ModuleSet, variable_range_maps_t > ms_cache_t;
+  typedef std::map<hydla::ch::ModuleSet, variable_maps_t > ms_cache_t;
 
   Phase                     phase;
   int                       id;
@@ -223,9 +222,9 @@ public:
   // TODO: publicメンバが多すぎる気がする
   
   /**
-   * template of variable_range maps
+   * template of variable maps
    */
-  boost::shared_ptr<variable_range_map_t> original_range_map_;
+  boost::shared_ptr<variable_map_t> original_map_;
   
   /*
    * set of variables
@@ -276,7 +275,7 @@ protected:
 
 
   /**
-   * 蜷Уodo縺ォ蟇セ蠢懊☆繧九繝ュ繝輔ぃ繧、繝ェ繝ウ繧ー縺ョ邨先棡
+   * vector for results of profiling
    */
   boost::shared_ptr<entire_profile_t> profile_vector_;
 

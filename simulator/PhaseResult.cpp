@@ -19,9 +19,9 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseOfTermination& c
   positive_asks(todo.positive_asks),
   negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
+  changed_variables(todo.changed_variables),
   cause_of_termination(cause),
-  parent(todo.parent),
-  changed_variables(todo.changed_variables)
+  parent(todo.parent)
 {
 }
 

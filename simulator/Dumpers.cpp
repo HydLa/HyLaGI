@@ -122,26 +122,10 @@ std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
 }
 
 
+
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
-  
-  for(; it!=end; ++it) {
-    if(it->second.get()){
-      s << *(it->first) << " <=> " << *(it->second) << "\n";
-    }else{
-      s << *(it->first) << " <=> UNDEF\n";
-    }
-  }
-  
-  return s;
-}
-
-
-
-std::ostream& operator<<(std::ostream& s, const variable_range_map_t& vm){
-  variable_range_map_t::const_iterator it  = vm.begin();
-  variable_range_map_t::const_iterator end = vm.end();
   
   for(; it!=end; ++it) {
     s << *(it->first) << "(" << it->first << ") " << " <=> " << it->second << "\n";

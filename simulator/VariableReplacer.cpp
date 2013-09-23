@@ -9,6 +9,7 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace simulator {
 
+//TODO: VariableReplacer自体が本来なら不要なはず
 
 
 VariableReplacer::VariableReplacer(const variable_map_t& map):variable_map(map)
@@ -35,6 +36,7 @@ void VariableReplacer::visit(hydla::simulator::symbolic::SymbolicValue& val)
 
 void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
+/*
   string v_name = node->get_name();
   variable_map_t::const_iterator it = variable_map.begin();
   for(;it != variable_map.end(); it++)
@@ -55,6 +57,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node
 	  break;
 	}
     }
+*/
 }
 
 void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)

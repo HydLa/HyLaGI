@@ -54,7 +54,7 @@ public:
    */
   virtual create_result_t create_maps();
   
-  virtual void approx_vm(variable_range_map_t& vm);
+  virtual void approx_vm(variable_map_t& vm);
   
   virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx);
   

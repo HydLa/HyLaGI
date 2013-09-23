@@ -22,47 +22,41 @@ public:
   ValueRange(const value_t& val){set_unique(val);}
   ValueRange(){}
 
-  /**
-   * 完全な未定義値かどうか
-   */
   bool undefined() const
   {
-    return (lower_.size() == 0 && upper_.size() == 0);
+    return (!unique() && lower_.size() == 0 && upper_.size() == 0);
   }
   
-  /**
-   * 一意に値が定まるかどうか
-   * 数式的な比較はしておらず，
-   * 1. 下限と上限がそれぞれ1つずつしかなく，
-   * 2. 下限と上限の元となったvalueが同じものである
-   * 場合のみtrueが返る．
-   */
-  bool is_unique() const
+  bool unique() const
   {
-    return lower_.size() == 1 && upper_.size() == 1 &&
-      lower_[0].value.get() == upper_[0].value.get() &&
-      lower_[0].include_bound && upper_[0].include_bound ;
+    return (unique_value_.get() != NULL);
   }
   
   /**
-   * 一意に値が定まるものとする
+   * 一意に値を定める
    */
   void set_unique(const value_t& val)
   {
-    set_upper_bound(val, true);
-    set_lower_bound(val, true);
+    unique_value_ = val;
+    lower_.clear();
+    upper_.clear();
   }
 
+  value_t get_unique() const
+  {
+    assert(unique_value_.get() != NULL);
+    return unique_value_;
+  }
 
   std::string get_string() const;
 
   uint get_lower_cnt()const{return lower_.size();}
-  const bound_t& get_lower_bound() const{return get_lower_bound(0);}
+  const bound_t& get_lower_bound() const{assert(lower_.size() > 0); return get_lower_bound(0);}
   const bound_t& get_lower_bound(const uint& idx) const
     {assert(idx<lower_.size()); return lower_[idx];}
 
   uint get_upper_cnt()const{return upper_.size();}
-  const bound_t& get_upper_bound() const{return get_upper_bound(0);}
+  const bound_t& get_upper_bound() const{assert(upper_.size() > 0); return get_upper_bound(0);}
   const bound_t& get_upper_bound(const uint& idx) const
     {assert(idx<upper_.size()); return upper_[idx];}
 
@@ -103,6 +97,7 @@ public:
 
   private:
   std::vector<bound_t> lower_, upper_;
+  value_t unique_value_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ValueRange & val);

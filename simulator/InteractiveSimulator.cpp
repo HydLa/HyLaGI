@@ -265,7 +265,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   cout << "input variable name " << endl;
   cout << '>';
   string variable_str = excin<string>();
-  
+  // TODO: 幅を持つ場合への対応
   variable_t* var = NULL;
   value_t* val = NULL;
   if(variable_str == "t")
@@ -280,7 +280,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
       if( v_it->first->get_string() == variable_str)
       {
         var = v_it->first;
-        val = &v_it->second;
+        val = &v_it->second.get_unique();
         break;
       }
     }

@@ -27,7 +27,6 @@ namespace symbolic {
   typedef simulator::DefaultParameter            parameter_t;
   typedef simulator::ValueRange                  value_range_t;
   typedef simulator::variable_map_t              variable_map_t;
-  typedef simulator::variable_range_map_t        variable_range_map_t;
   typedef simulator::parameter_map_t             parameter_map_t;
   typedef simulator::continuity_map_t            continuity_map_t;
   typedef simulator::constraints_t               constraints_t;

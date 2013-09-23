@@ -19,7 +19,7 @@
 
 #include "InitNodeRemover.h"
 #include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
-#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
+//#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
@@ -31,7 +31,7 @@
 
 using namespace hydla::vcs;
 using namespace hydla::vcs::mathematica;
-using namespace hydla::vcs::reduce;
+//using namespace hydla::vcs::reduce;
 
 
 using namespace std;
@@ -97,16 +97,19 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 {
 }
 
-void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_range_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
+void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
 
+  solver_.reset(new MathematicaVCS(*opts_));
+/*
   if(opts_->solver == "m" || opts_->solver == "Mathematica") {
     solver_.reset(new MathematicaVCS(*opts_));
   }else{
     solver_.reset(new REDUCEVCS(*opts_, m));
   }
+*/
 
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
@@ -375,7 +378,7 @@ SymbolicPhaseSimulator::calculate_variable_map(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& todo,
   const variable_map_t & vm,
-  variable_range_maps_t& result_vms)
+  variable_maps_t& result_vms)
 {
   HYDLA_LOGGER_FUNC_BEGIN(MS);
   
@@ -583,6 +586,7 @@ SymbolicPhaseSimulator::todo_list_t
   return ret;
 }
 
+/*
 variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   phase_result_sptr_t& state,
   const variable_range_map_t& rm,
@@ -595,8 +599,8 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
     if(opts_->reuse && current_phase_ == IntervalPhase && state->id > 3 && it == state->changed_variables.end()){
       ret[variable] = state->parent->parent->variable_map.find(variable)->second;
     }
-    else if(r_it->second.is_unique()){
-      ret[variable] = r_it->second.get_lower_bound().value;
+    else if(r_it->second.unique()){
+      ret[variable] = r_it->second.get_unique();
     }
     else
     {
@@ -690,16 +694,34 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
   return ret;
 }
 
+*/
 
 variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
   variable_map_t shifted_vm;
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    if(it->second->undefined())
+    if(it->second.undefined())
       shifted_vm[it->first] = it->second;
+    else if(it->second.unique())
+    {
+      shifted_vm[it->first] = solver_->shift_expr_time(it->second.get_unique(), time);
+    }
     else
-      shifted_vm[it->first] = solver_->shift_expr_time(it->second, time);
+    {
+      range_t range = it->second;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_lower_bound(i);
+        range.set_lower_bound(solver_->shift_expr_time(bd.value, time), bd.include_bound);
+      }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_upper_bound(i);
+        range.set_upper_bound(solver_->shift_expr_time(bd.value, time), bd.include_bound);
+      }
+      shifted_vm[it->first] = range;
+    }
   }
   return shifted_vm;
 }

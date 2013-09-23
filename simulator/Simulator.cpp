@@ -30,7 +30,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   init_variable_map(parse_tree);
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
   phase_simulator_->initialize(*variable_set_, *parameter_set_,
-   *original_range_map_, vm, msc_no_init_);
+   *original_map_, vm, msc_no_init_);
   profile_vector_.reset(new entire_profile_t());
 
   //  if(opts_->analysis_mode == "simulate"||opts_->analysis_mode == "cmmap") phase_simulator_->init_arc(parse_tree);
@@ -64,7 +64,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
   typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
   variable_set_.reset(new variable_set_t());
-  original_range_map_.reset(new variable_range_map_t());
+  original_map_.reset(new variable_map_t());
   original_parameter_map_.reset(new parameter_map_t());
   parameter_set_.reset(new parameter_set_t());
 
@@ -78,7 +78,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       v.name             = it->first;
       v.derivative_count = d;
       variable_set_->push_front(v);
-      (*original_range_map_)[&(variable_set_->front())] = ValueRange();
+      (*original_map_)[&(variable_set_->front())] = ValueRange();
     }
   }
 }

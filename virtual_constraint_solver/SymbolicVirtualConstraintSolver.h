@@ -41,7 +41,6 @@ public:
   typedef hydla::simulator::symbolic::value_range_t           value_range_t;
   typedef hydla::simulator::symbolic::time_t                  time_t;
   typedef hydla::simulator::symbolic::variable_map_t          variable_map_t;
-  typedef hydla::simulator::symbolic::variable_range_map_t    variable_range_map_t;
   typedef hydla::simulator::tells_t                          tells_t;
   typedef hydla::parse_tree::node_sptr                       node_sptr;
   typedef hydla::simulator::constraints_t                    constraints_t;
@@ -88,7 +87,7 @@ public:
    */
   typedef struct CreateResult
   {
-    typedef std::vector<variable_range_map_t> result_maps_t;
+    typedef std::vector<variable_map_t> result_maps_t;
     result_maps_t result_maps;
   } create_result_t;
 
@@ -201,7 +200,7 @@ public:
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
 
-  virtual void approx_vm(variable_range_map_t& vm){assert(0);}
+  virtual void approx_vm(variable_map_t& vm){assert(0);}
   
   virtual void linear_approx(const value_t& val, value_t& approxed, value_range_t& range, int precision){assert(0);}
 

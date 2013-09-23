@@ -73,7 +73,7 @@ public:
 
   virtual void initialize(variable_set_t &v,
     parameter_set_t &p, 
-    variable_range_map_t &m,
+    variable_map_t &m,
     continuity_map_t& c,
     const module_set_container_sptr &msc_no_init);
 
@@ -104,7 +104,7 @@ protected:
    */
 
   virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_todo_sptr_t& state, const variable_map_t &, variable_range_maps_t& result_vms) = 0;
+                           simulation_todo_sptr_t& state, const variable_map_t &, variable_maps_t& result_vms) = 0;
 
   result_list_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
                                   const variable_map_t& time_applied_map, simulation_todo_sptr_t& state);
@@ -152,7 +152,7 @@ protected:
   
   variable_set_t *variable_set_;
   parameter_set_t *parameter_set_;
-  variable_range_map_t *variable_map_;
+  variable_map_t *variable_map_;
   negative_asks_t prev_guards_;
 
   int phase_sum_;
@@ -170,11 +170,6 @@ protected:
 
   todo_container_t* todo_container_;
   
-  virtual variable_map_t range_map_to_value_map(phase_result_sptr_t&,
-    const variable_range_map_t &,
-    parameter_map_t &) = 0;
-
-  
   phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
   
   
@@ -190,13 +185,13 @@ protected:
   /**
    * merge rhs to lhs
    */
-  void merge_variable_map(variable_range_map_t& lhs, const variable_range_map_t& rhs);
+  void merge_variable_map(variable_map_t& lhs, const variable_map_t& rhs);
 
-  void merge_variable_maps(variable_range_maps_t& lhs, const variable_range_maps_t& rhs);
+  void merge_variable_maps(variable_maps_t& lhs, const variable_maps_t& rhs);
 
   result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
   
-  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const variable_range_map_t& vm);
+  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const variable_map_t& vm);
 };
 
 

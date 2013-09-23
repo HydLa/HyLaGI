@@ -151,7 +151,7 @@ namespace simulator {
 	  variable_map_t::const_iterator it_phase_v  = phase->variable_map.begin();
 	  variable_map_t::const_iterator end_phase_v = phase->variable_map.end();
 	  for(; it_phase_v!=end_phase_v; ++it_phase_v) {
-	  	value_t tmp_variable_phase, tmp_variable_past;
+	  	range_t tmp_variable_phase, tmp_variable_past;
 	  	variable_map_t::const_iterator it_past_v  = past_phase->variable_map.begin();
 		  variable_map_t::const_iterator end_past_v = past_phase->variable_map.end();
 		  for(; it_past_v!=end_past_v; ++it_past_v) {
@@ -160,18 +160,18 @@ namespace simulator {
 			 		HYDLA_LOGGER_HA("Variable: ",it_phase_v->first->name," ",it_phase_v->first->derivative_count);		 			
 			 		HYDLA_LOGGER_HA("t         :  0");		 				 	
 			  	tmp_variable_phase = it_phase_v->second;
-			  	HYDLA_LOGGER_HA("now       :  ", *tmp_variable_phase);
+			  	HYDLA_LOGGER_HA("now       :  ", tmp_variable_phase);
 			  	//HYDLA_LOGGER_HA("c-t         :  ", *phase->current_time);		
 		 			search_variable_parameter(phase->parameter_map, it_phase_v->first->name, it_phase_v->first->derivative_count);
 					HYDLA_LOGGER_HA("");	 	
 			  	tmp_variable_past = it_past_v->second;
-			  	HYDLA_LOGGER_HA("past      :  ", *tmp_variable_past);
+			  	HYDLA_LOGGER_HA("past      :  ", tmp_variable_past);
 			  	//HYDLA_LOGGER_HA("c-t         :  ", *past_phase->current_time);		 				 	
 			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first->name, it_past_v->first->derivative_count);
 		  	}
 		  } 
-
-		  bool isIncludeBound = phase_simulator_->check_include_bound(tmp_variable_phase, tmp_variable_past, phase->parameter_map, past_phase->parameter_map);
+      // TODO: 幅を持つ場合への対応
+		  bool isIncludeBound = phase_simulator_->check_include_bound(tmp_variable_phase.get_unique(), tmp_variable_past.get_unique(), phase->parameter_map, past_phase->parameter_map);
 		  
 	  	if(isIncludeBound){
 		    HYDLA_LOGGER_HA("****** check_include_bound end : true ******");

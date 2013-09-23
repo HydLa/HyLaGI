@@ -6,11 +6,8 @@
 
 namespace hydla {
 namespace simulator {
-
-
 std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
-std::ostream& operator<<(std::ostream& s, const variable_range_map_t& vm);
 std::ostream& operator<<(std::ostream& s, const constraints_t& a);
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);

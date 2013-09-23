@@ -12,8 +12,8 @@ std::ostream& operator<<(std::ostream& s, const ValueRange & val)
 std::string ValueRange::get_string()const
 {
   std::string tmp_str;
-  if(is_unique()){
-    tmp_str += lower_[0].value->get_string();
+  if(unique()){
+    tmp_str += unique_value_->get_string();
   }else{
     if(lower_.size() > 0)
     {

@@ -126,12 +126,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
 
-  variable_range_maps_t vms;
+  variable_maps_t vms;
   vms.push_back(*variable_map_);
 
   if(todo->module_set_container != msc_no_init_)
   {
-    variable_range_maps_t tmp_vms;
+    variable_maps_t tmp_vms;
     CalculateVariableMapResult cvm_res =
       calculate_variable_map(ms, todo, time_applied_map, tmp_vms);
     switch(cvm_res)
@@ -186,7 +186,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       }
       else
       {
-        variable_range_maps_t tmp_vms;
+        variable_maps_t tmp_vms;
         cvm_res =
           calculate_variable_map(connected_ms, todo, time_applied_map, tmp_vms);
         switch(cvm_res)
@@ -215,7 +215,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     
   for(unsigned int i=0; i < vms.size(); i++)
   {
-    variable_range_map_t& vm = vms[i];
+    variable_map_t& vm = vms[i];
     /*  
     if(todo->phase == PointPhase)
     {
@@ -293,11 +293,11 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, hydla:
 }
 
 
-phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo, const variable_range_map_t& vm)
+phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo, const variable_map_t& vm)
 {
   phase_result_sptr_t phase(new PhaseResult(*todo));
   phase->id = ++phase_sum_;
-  phase->variable_map = range_map_to_value_map(phase, vm, phase->parameter_map);
+  phase->variable_map = vm;
   todo->parent->children.push_back(phase);
   return phase;
 }
@@ -313,14 +313,14 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
 }
 
 
-void PhaseSimulator::merge_variable_maps(variable_range_maps_t& lhs, const variable_range_maps_t& rhs)
+void PhaseSimulator::merge_variable_maps(variable_maps_t& lhs, const variable_maps_t& rhs)
 {
   unsigned int original_l_size = lhs.size();
   for(unsigned int r_it = 0; r_it < rhs.size() - 1; r_it++)
   {
     for(unsigned int l_it = 0; l_it < original_l_size; l_it++)
     {
-      variable_range_map_t tmp_map = lhs[l_it];
+      variable_map_t tmp_map = lhs[l_it];
       merge_variable_map(tmp_map, rhs[r_it]);
       lhs.push_back(tmp_map);
     }
@@ -335,9 +335,9 @@ void PhaseSimulator::merge_variable_maps(variable_range_maps_t& lhs, const varia
 }
 
 
-void PhaseSimulator::merge_variable_map(variable_range_map_t& lhs, const variable_range_map_t& rhs)
+void PhaseSimulator::merge_variable_map(variable_map_t& lhs, const variable_map_t& rhs)
 {
-  variable_range_map_t::const_iterator it = rhs.begin();
+  variable_map_t::const_iterator it = rhs.begin();
   for(;it != rhs.end(); it++)
   {
     if(!it->second.undefined())
@@ -349,7 +349,7 @@ void PhaseSimulator::merge_variable_map(variable_range_map_t& lhs, const variabl
 
 void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_set_t &p,
-                                variable_range_map_t &m,
+                                variable_map_t &m,
                                 continuity_map_t& c, 
                                 const module_set_container_sptr &msc_no_init)
 {
