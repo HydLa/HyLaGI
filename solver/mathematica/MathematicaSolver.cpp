@@ -1,4 +1,4 @@
-#include "MathematicaVCS.h"
+#include "MathematicaSolver.h"
 
 #include <cassert>
 
@@ -8,20 +8,20 @@
 #include "../SolveError.h"
 #include "Dumpers.h"
 
-using namespace hydla::vcs;
+using namespace hydla::solver;
 using namespace hydla::parse_tree;
 using namespace hydla::simulator;
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
-void MathematicaVCS::change_mode(hydla::simulator::symbolic::Mode m, int approx_precision)
+void MathematicaSolver::change_mode(hydla::simulator::symbolic::Mode m, int approx_precision)
 {
   mode_ = m;
 }
 
-MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
+MathematicaSolver::MathematicaSolver(const hydla::simulator::Opts &opts)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   if(!ml_.init(opts.mathlink.c_str())) {
@@ -128,7 +128,7 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   ml_.MLNewPacket();
 
   ml_.MLPutFunction("ToExpression", 1);
-  ml_.MLPutString(vcs_math_source());  
+  ml_.MLPutString(math_source());  
   ml_.MLEndPacket();
   ml_.skip_pkt_until(RETURNPKT);
   ml_.MLNewPacket();
@@ -138,11 +138,11 @@ MathematicaVCS::MathematicaVCS(const hydla::simulator::Opts &opts)
   HYDLA_LOGGER_FUNC_END(VCS);
 }
 
-MathematicaVCS::~MathematicaVCS()
+MathematicaSolver::~MathematicaSolver()
 {}
 
 
-void MathematicaVCS::start_temporary(){
+void MathematicaSolver::start_temporary(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   ml_.put_function("startTemporary", 0);
   ml_.receive();
@@ -150,7 +150,7 @@ void MathematicaVCS::start_temporary(){
   HYDLA_LOGGER_FUNC_END(VCS);
 }
 
-void MathematicaVCS::end_temporary(){
+void MathematicaSolver::end_temporary(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   ml_.put_function("endTemporary", 0);
   ml_.receive();
@@ -158,7 +158,7 @@ void MathematicaVCS::end_temporary(){
   HYDLA_LOGGER_FUNC_END(VCS);
 }
 
-void MathematicaVCS::set_conditions(const node_sptr& constraint)
+void MathematicaSolver::set_conditions(const node_sptr& constraint)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   
@@ -182,7 +182,7 @@ void MathematicaVCS::set_conditions(const node_sptr& constraint)
 }
 
 
-bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
+bool MathematicaSolver::reset(const variable_map_t& variable_map, const parameter_map_t& parameter_map)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
@@ -237,7 +237,7 @@ bool MathematicaVCS::reset(const variable_map_t& variable_map, const parameter_m
 }
 
 
-MathematicaVCS::create_result_t MathematicaVCS::create_maps()
+MathematicaSolver::create_result_t MathematicaSolver::create_maps()
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
     
@@ -330,7 +330,7 @@ MathematicaVCS::create_result_t MathematicaVCS::create_maps()
   return create_result;
 }
 
-void MathematicaVCS::add_constraint(const constraints_t& constraints)
+void MathematicaSolver::add_constraint(const constraints_t& constraints)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   
@@ -355,7 +355,7 @@ void MathematicaVCS::add_constraint(const constraints_t& constraints)
   return;
 }
 
-void MathematicaVCS::add_constraint(const node_sptr& constraint)
+void MathematicaSolver::add_constraint(const node_sptr& constraint)
 {
   return add_constraint(constraints_t(1, constraint));
 }
@@ -364,7 +364,7 @@ void MathematicaVCS::add_constraint(const node_sptr& constraint)
 
 
 
-void MathematicaVCS::linear_approx(const value_t& val, value_t& approxed_val, value_range_t& itv, int precision)
+void MathematicaSolver::linear_approx(const value_t& val, value_t& approxed_val, value_range_t& itv, int precision)
 {
   PacketSender ps(ml_);
   VariableArg arg = VA_None;
@@ -396,7 +396,7 @@ void MathematicaVCS::linear_approx(const value_t& val, value_t& approxed_val, va
 }
 
 
-bool MathematicaVCS::approx_val(const value_t& val, value_range_t& range, bool force_approx)
+bool MathematicaSolver::approx_val(const value_t& val, value_range_t& range, bool force_approx)
 {
   PacketSender ps(ml_);
   VariableArg arg = VA_None;
@@ -451,7 +451,7 @@ bool MathematicaVCS::approx_val(const value_t& val, value_range_t& range, bool f
   }
 }
   
-void MathematicaVCS::approx_vm(variable_map_t& vm)
+void MathematicaSolver::approx_vm(variable_map_t& vm)
 {
   PacketSender ps(ml_);
   variable_map_t::iterator it = vm.begin();
@@ -506,7 +506,7 @@ void MathematicaVCS::approx_vm(variable_map_t& vm)
 }
 
 
-void MathematicaVCS::reset_constraint(const variable_map_t& vm, const bool& send_derivatives)
+void MathematicaSolver::reset_constraint(const variable_map_t& vm, const bool& send_derivatives)
 {
   PacketSender ps(ml_);
   
@@ -548,7 +548,7 @@ void MathematicaVCS::reset_constraint(const variable_map_t& vm, const bool& send
   ml_.MLNewPacket();
 }
 
-bool MathematicaVCS::reset_parameters(const parameter_map_t& pm)
+bool MathematicaSolver::reset_parameters(const parameter_map_t& pm)
 {
   PacketSender ps(ml_);
   
@@ -562,7 +562,7 @@ bool MathematicaVCS::reset_parameters(const parameter_map_t& pm)
 }
 
 // TODO: add_guardなのかset_guardなのかとか，仕様とかをはっきりさせる
-void MathematicaVCS::add_guard(const node_sptr& guard)
+void MathematicaSolver::add_guard(const node_sptr& guard)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   
@@ -595,7 +595,7 @@ void MathematicaVCS::add_guard(const node_sptr& guard)
   return;
 }
 
-MathematicaVCS::ConditionsResult MathematicaVCS::find_conditions(node_sptr& node)
+MathematicaSolver::ConditionsResult MathematicaSolver::find_conditions(node_sptr& node)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
@@ -617,7 +617,7 @@ MathematicaVCS::ConditionsResult MathematicaVCS::find_conditions(node_sptr& node
   return node_type; 
 }
 
-CheckConsistencyResult MathematicaVCS::check_consistency()
+CheckConsistencyResult MathematicaSolver::check_consistency()
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
@@ -691,7 +691,7 @@ CheckConsistencyResult MathematicaVCS::check_consistency()
   return ret;
 }
 
-MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
+MathematicaSolver::PP_time_result_t MathematicaSolver::calculate_next_PP_time(
   const constraints_t& discrete_cause,
   const time_t& current_time,
   const time_t& max_time)
@@ -754,7 +754,7 @@ MathematicaVCS::PP_time_result_t MathematicaVCS::calculate_next_PP_time(
   return result;
 }
 
-node_sptr MathematicaVCS::receive_condition_node(ConditionsResult& node_type){
+node_sptr MathematicaSolver::receive_condition_node(ConditionsResult& node_type){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   node_sptr ret;
   switch(ml_.get_type()){ // 現行オブジェクトの型を得る
@@ -928,7 +928,7 @@ node_sptr MathematicaVCS::receive_condition_node(ConditionsResult& node_type){
   return ret;
 }
 
-void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
+void MathematicaSolver::receive_parameter_map(parameter_map_t &map){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   int condition_size = ml_.get_arg_count(); //条件式の数
   HYDLA_LOGGER_VCS("%% map size:", condition_size);
@@ -958,11 +958,11 @@ void MathematicaVCS::receive_parameter_map(parameter_map_t &map){
   HYDLA_LOGGER_VCS("#*** End ", __FUNCTION__, " ***");
 }
 
-void MathematicaVCS::apply_time_to_vm(const variable_map_t& in_vm, 
+void MathematicaSolver::apply_time_to_vm(const variable_map_t& in_vm, 
                                               variable_map_t& out_vm, 
                                               const time_t& time)
 {
-  HYDLA_LOGGER_VCS("#*** Begin MathematicaVCS::apply_time_to_vm ***");
+  HYDLA_LOGGER_VCS("#*** Begin MathematicaSolver::apply_time_to_vm ***");
 
   PacketSender ps(ml_);
 
@@ -1008,7 +1008,7 @@ std::string upward(std::string str){
 
 /*
 //value_tを指定された精度で数値に変換する
-std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simulator::OutputFormat opfmt){
+std::string MathematicaSolver::get_real_val(const value_t &val, int precision, simulator::OutputFormat opfmt){
   std::string ret;
   PacketSender ps(ml_);
 
@@ -1150,7 +1150,7 @@ std::string MathematicaVCS::get_real_val(const value_t &val, int precision, simu
 }
 */
 
-bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
+bool MathematicaSolver::less_than(const time_t &lhs, const time_t &rhs)
 {
   ml_.put_function("ToString", 1);  
   ml_.put_function("Less", 2);  
@@ -1163,7 +1163,7 @@ bool MathematicaVCS::less_than(const time_t &lhs, const time_t &rhs)
   return  ret == "True";
 }
 
-bool MathematicaVCS::equivalent(node_sptr &lhs, node_sptr &rhs){
+bool MathematicaSolver::equivalent(node_sptr &lhs, node_sptr &rhs){
   ml_.put_function("ToString", 1);
   ml_.put_function("Reduce",2);
   ml_.put_function("And",2);
@@ -1181,7 +1181,7 @@ bool MathematicaVCS::equivalent(node_sptr &lhs, node_sptr &rhs){
   return ret == "True";
 }
 
-MathematicaVCS::ConditionsResult MathematicaVCS::node_simplify(node_sptr &node)
+MathematicaSolver::ConditionsResult MathematicaSolver::node_simplify(node_sptr &node)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   ml_.put_function("integerString", 1);
@@ -1202,7 +1202,7 @@ MathematicaVCS::ConditionsResult MathematicaVCS::node_simplify(node_sptr &node)
   return node_type; 
 }
 
-void MathematicaVCS::simplify(time_t &time) 
+void MathematicaSolver::simplify(time_t &time) 
 {
   ml_.put_function("integerString", 1);
   ml_.put_function("Simplify", 1);
@@ -1213,7 +1213,7 @@ void MathematicaVCS::simplify(time_t &time)
 }
 
 
-void MathematicaVCS::set_continuity(const std::string& name, const int& derivative_count)
+void MathematicaSolver::set_continuity(const std::string& name, const int& derivative_count)
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
   PacketSender ps(ml_);
@@ -1239,7 +1239,7 @@ void MathematicaVCS::set_continuity(const std::string& name, const int& derivati
   HYDLA_LOGGER_FUNC_END(VCS);
 }
 
-void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps)
+void MathematicaSolver::send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps)
 {
   HYDLA_LOGGER_VCS("------Parameter map in send_parameter_map------\n", parameter_map);
   parameter_map_t::const_iterator it = parameter_map.begin();
@@ -1302,7 +1302,7 @@ void MathematicaVCS::send_parameter_map(const parameter_map_t &parameter_map, Pa
   ps.put_pars();
 }
 
-hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_time(const value_t& val, const time_t& time){
+hydla::solver::SymbolicSolver::value_t MathematicaSolver::shift_expr_time(const value_t& val, const time_t& time){
   value_t tmp_val;
   ml_.put_function("exprTimeShift", 2);
   PacketSender ps(ml_);
@@ -1320,7 +1320,7 @@ hydla::vcs::SymbolicVirtualConstraintSolver::value_t MathematicaVCS::shift_expr_
  * HAConverter用:
  */
 // v1 in v2 => true
-bool MathematicaVCS::check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2)
+bool MathematicaSolver::check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2)
 {
   // parameter_mapを送信
   {
@@ -1360,5 +1360,5 @@ bool MathematicaVCS::check_include_bound(value_t v1, value_t v2, parameter_map_t
 }
 
 } // namespace mathematica
-} // namespace vcs
+} // namespace solver
 } // namespace hydla 

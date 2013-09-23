@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
-#define _INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
+#ifndef _INCLUDED_HYDLA_SOLVER_MATHEMATICA_PACKET_SENDER_H_
+#define _INCLUDED_HYDLA_SOLVER_MATHEMATICA_PACKET_SENDER_H_
 
 #include <map>
 
@@ -12,10 +12,10 @@
 #include "DefaultTreeVisitor.h"
 #include "mathlink_helper.h"
 #include "ParseTree.h"
-#include "MathematicaVCS.h"
+#include "MathematicaSolver.h"
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
 
@@ -212,7 +212,7 @@ private:
 };
 
 } // namespace mathematica
-} // namespace simulator
+} // namespace solver
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_VCS_MATHEMATICA_PACKET_SENDER_H_
+#endif // _INCLUDED_HYDLA_SOLVER_MATHEMATICA_PACKET_SENDER_H_

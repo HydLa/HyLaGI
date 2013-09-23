@@ -2,7 +2,6 @@
 #define _INCLUDED_MATHLINK_HELPER_H_
 
 #include "mathlink.h"
-//#include "/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/CompilerAdditions/mathlink.h"
 #include <string.h>
 #include <stdexcept>
 #include <sstream>

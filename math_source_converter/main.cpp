@@ -38,7 +38,7 @@ void conv()
         c = *in_itr++;   
         break;
 
-        // コメント削除
+        // for comment
       case '(': {
         char nc = *in_itr++;
         if(nc == '*') {

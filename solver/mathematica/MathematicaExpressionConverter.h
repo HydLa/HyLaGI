@@ -1,28 +1,27 @@
-#ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_EXPRESSION_CONVERTER_H_
-#define _INCLUDED_HYDLA_VCS_MATHEMATICA_EXPRESSION_CONVERTER_H_
+#ifndef _INCLUDED_HYDLA_SOLVER_MATHEMATICA_MATHEMATICA_EXPRESSION_CONVERTER_H_
+#define _INCLUDED_HYDLA_SOLVER_MATHEMATICA_MATHEMATICA_EXPRESSION_CONVERTER_H_
 
 
 //Mathematica文字列⇔SymbolicValueという，式の変換を担当するクラス．ValueRangeも少し．
 
-
-#include "../SymbolicVirtualConstraintSolver.h"
+#include "../SymbolicSolver.h"
 #include "PacketSender.h"
 #include <map>
 #include "TreeVisitor.h"
 #include "ParseTree.h"
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
 
 class MathematicaExpressionConverter
 {
   private:
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t value_t;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_range_t value_range_t;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::variable_t variable_t;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::parameter_t parameter_t;
+  typedef hydla::solver::SymbolicSolver::value_t value_t;
+  typedef hydla::solver::SymbolicSolver::value_range_t value_range_t;
+  typedef hydla::solver::SymbolicSolver::variable_t variable_t;
+  typedef hydla::solver::SymbolicSolver::parameter_t parameter_t;
   MathematicaExpressionConverter(){}
   
   public:
@@ -45,7 +44,7 @@ class MathematicaExpressionConverter
 };
 
 } // namespace mathematica
-} // namespace vcs
+} // namespace solver
 } // namespace hydla 
 
-#endif //_INCLUDED_HYDLA_VCS_MATHEMATICA_EXPRESSION_CONVERTER_H_
+#endif //include guard

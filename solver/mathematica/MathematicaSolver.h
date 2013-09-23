@@ -1,30 +1,28 @@
-#ifndef _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_H_
-#define _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_H_
-
+#ifndef _INCLUDED_HYDLA_SOLVER_MATHEMATICA_MATHEMATICA_SOLVER_H_
+#define _INCLUDED_HYDLA_SOLVER_MATHEMATICA_MATHEMATICA_SOLVER_H_
 
 #include <boost/scoped_ptr.hpp>
 
-#include "MathVCSType.h"
+#include "MathType.h"
 #include "mathlink_helper.h"
-#include "vcs_math_source.h"
+#include "math_source.h"
 
 class MathLink;
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
 class PacketSender;
 
-class MathematicaVCS : 
+class MathematicaSolver : 
     public virtual_constraint_solver_t
 {
 public:
 
-  //MathematicaVCS(Mode m, MathLink* ml, int approx_precision);
-  MathematicaVCS(const hydla::simulator::Opts &opts);
+  MathematicaSolver(const hydla::simulator::Opts &opts);
 
-  virtual ~MathematicaVCS();
+  virtual ~MathematicaSolver();
 
   /**
    * 離散変化モード，連続変化モードの切り替えをおこなう
@@ -155,7 +153,7 @@ private:
 };
 
 } // namespace mathematica
-} // namespace simulator
+} // namespace solver
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_VCS_MATHEMATICA_VCS_H_
+#endif // include guard

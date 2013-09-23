@@ -8,7 +8,7 @@
 #include <iostream>
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
 bool PacketErrorHandler::handle(MathLink* ml) 
@@ -34,6 +34,6 @@ bool PacketErrorHandler::handle(MathLink* ml)
 
 
 } // namespace mathematica
-} // namespace simulator
+} // namespace solver
 } // namespace hydla 
 

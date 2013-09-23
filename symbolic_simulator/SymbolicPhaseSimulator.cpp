@@ -18,7 +18,7 @@
 #include "VariableSearcher.h"
 
 #include "InitNodeRemover.h"
-#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+#include "../solver/mathematica/MathematicaSolver.h"
 //#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
 
@@ -29,8 +29,8 @@
 #include "TreeInfixPrinter.h"
 #include "Dumpers.h"
 
-using namespace hydla::vcs;
-using namespace hydla::vcs::mathematica;
+using namespace hydla::solver;
+using namespace hydla::solver::mathematica;
 //using namespace hydla::vcs::reduce;
 
 
@@ -102,7 +102,7 @@ void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, v
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
 
-  solver_.reset(new MathematicaVCS(*opts_));
+  solver_.reset(new MathematicaSolver(*opts_));
 /*
   if(opts_->solver == "m" || opts_->solver == "Mathematica") {
     solver_.reset(new MathematicaVCS(*opts_));
@@ -406,9 +406,9 @@ SymbolicPhaseSimulator::calculate_variable_map(
   }
   
   timer::Timer create_timer;
-  SymbolicVirtualConstraintSolver::create_result_t create_result = solver_->create_maps();
+  SymbolicSolver::create_result_t create_result = solver_->create_maps();
   todo->profile["CreateMap"] += create_timer.get_elapsed_us();
-  SymbolicVirtualConstraintSolver::create_result_t::result_maps_t& results = create_result.result_maps;
+  SymbolicSolver::create_result_t::result_maps_t& results = create_result.result_maps;
   
   if(results.size() != 1 && current_phase_ == IntervalPhase){
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
@@ -513,8 +513,7 @@ SymbolicPhaseSimulator::todo_list_t
       max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
     }
 
-    SymbolicVirtualConstraintSolver::PPTimeResult 
-      time_result = solver_->calculate_next_PP_time(disc_cause, phase->current_time, max_time);
+    SymbolicSolver::PPTimeResult time_result = solver_->calculate_next_PP_time(disc_cause, phase->current_time, max_time);
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -522,7 +521,7 @@ SymbolicPhaseSimulator::todo_list_t
 
     while(true)
     {
-      SymbolicVirtualConstraintSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
+      SymbolicSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       solver_->simplify(candidate.time);
 /*
       value_range_t tmp_range;
@@ -610,8 +609,6 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       ret[variable] = value_t(new SymbolicValue(node_sptr(
         new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
       parameter_map[param] = r_it->second;
-      // TODO:ここで，Parameter(variable->get_name(), variable->get_derivative_count(), state->id)))はPhaseResult自体を参照していないので，
-      // もしPhaseResultをこの処理以降に変更するような実装にした場合，整合性が取れなくなるのでどうにかする
       // TODO: ここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
       // 解軌道木上で一度しか出現しないUNDEFに対しては，記号定数を導入する必要が無いはずなので，どうにかそれを実現したい？
       // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．

@@ -5,7 +5,7 @@
 #include "SymbolicPhaseSimulator.h"
 #include "Simulator.h"
 #include "ConstraintAnalyzer.h"
-#include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
+#include "../solver/SymbolicSolver.h"
 
 namespace hydla{
 namespace simulator{
@@ -17,7 +17,7 @@ public:
   AnalysisResultChecker(const simulator::Opts& opts);
   virtual ~AnalysisResultChecker();
 
-  virtual void set_solver(boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver);
+  virtual void set_solver(boost::shared_ptr<hydla::solver::SymbolicSolver> solver);
 
   virtual module_set_list_t 
     calculate_mms(
@@ -54,4 +54,3 @@ private:
 }
 }
 #endif //_INCLUDED_CONSTRAINT_ANALYZER_H_
-

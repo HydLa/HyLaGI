@@ -5,7 +5,7 @@
 #include "SymbolicValue.h"
 #include "Dumpers.h"
 #include "Exceptions.h"
-#include "SymbolicVirtualConstraintSolver.h"
+#include "SymbolicSolver.h"
 
 using namespace hydla::simulator;
 
@@ -233,7 +233,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       solver_->reset_constraint(phase->variable_map, true);
       solver_->reset_parameters(phase->parameter_map);
       HYDLA_LOGGER_MS("%% check_assertion");
-      hydla::vcs::CheckConsistencyResult cc_result;
+      hydla::solver::CheckConsistencyResult cc_result;
       switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t())){
         case ENTAILED:
         case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
@@ -277,7 +277,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
 }
 
 
-void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, hydla::vcs::CheckConsistencyResult &result){
+void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, hydla::solver::CheckConsistencyResult &result){
   for(int i=1; i<(int)result.true_parameter_maps.size();i++){
     simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
     branch_state->parameter_map = result.true_parameter_maps[i];

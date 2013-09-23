@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
-#define _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
+#ifndef _INCLUDED_HYDLA_SOLVER_SOLVER_H_
+#define _INCLUDED_HYDLA_SOLVER_SOLVER_H_
 
 /**
  * プログラム間の依存性の問題から，
@@ -7,7 +7,7 @@
  * ソルバー依存のヘッダー(mathematicaやrealpaver等の固有のヘッダー)を
  * インクルードしてはならない
  *
- * この制約はSymbolicVirtualConstraintSolverを継承したクラスの定義ヘッダーにも適用される
+ * この制約はSymbolicSolverを継承したクラスの定義ヘッダーにも適用される
  */
 
 #include <iostream>
@@ -19,11 +19,11 @@
 #include "../symbolic_simulator/SymbolicTypes.h"
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 
 /**
  *  数式処理シミュレーションのために使うソルバー
- *  TODO:VCSを継承しても齟齬が起きないようにする
+ *  TODO:Solverを継承しても齟齬が起きないようにする
  */
 
 typedef hydla::simulator::symbolic::parameter_map_t         parameter_map_t;
@@ -32,7 +32,7 @@ struct CheckConsistencyResult{
   parameter_maps_t true_parameter_maps, false_parameter_maps; 
 };
 
-class SymbolicVirtualConstraintSolver
+class SymbolicSolver
 {
 public:
   typedef hydla::simulator::symbolic::variable_t              variable_t;
@@ -91,10 +91,10 @@ public:
     result_maps_t result_maps;
   } create_result_t;
 
-  SymbolicVirtualConstraintSolver()
+  SymbolicSolver()
   {}
 
-  virtual ~SymbolicVirtualConstraintSolver()
+  virtual ~SymbolicSolver()
   {}
 
   /**
@@ -252,7 +252,7 @@ public:
   parameter_set_t* parameter_set_;
 };
 
-} //namespace vcs
+} //namespace solver
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_VCS_VIRTUAL_CONSTRAINT_SOLVER_H_
+#endif // include guard

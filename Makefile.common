@@ -56,4 +56,3 @@ endif
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
 	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
 	$(MV) $@.tmp $@
-

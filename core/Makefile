@@ -1,6 +1,6 @@
 TARGET	 := ../hyrose
 
-LIB_DIRS := symbolic_simulator virtual_constraint_solver simulator constraint_hierarchy parser common output
+LIB_DIRS := symbolic_simulator solver simulator constraint_hierarchy parser common output
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/

@@ -4,13 +4,13 @@
 #include "ContinuityMapMaker.h"
 #include "AnalysisResultChecker.h"
 
-#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+#include "../solver/mathematica/MathematicaSolver.h"
 
 using namespace std;
 using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
-using namespace hydla::vcs;
-using namespace hydla::vcs::mathematica;
+using namespace hydla::solver;
+using namespace hydla::solver::mathematica;
 using namespace hydla::parse_tree;
 
 namespace hydla{
@@ -141,7 +141,7 @@ void AnalysisResultChecker::parse(){
   }
 }
 
-void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver){
+void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::solver::SymbolicSolver> solver){
   solver_ = solver;
 }
 

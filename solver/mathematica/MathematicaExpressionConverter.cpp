@@ -8,7 +8,7 @@
 #include <sstream>
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
 using namespace hydla::parse_tree;
@@ -178,5 +178,5 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
 
 
 } // namespace mathematica
-} // namespace vcs
+} // namespace solver
 } // namespace hydla 

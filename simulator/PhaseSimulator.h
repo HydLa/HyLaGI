@@ -16,9 +16,9 @@
 
 namespace hydla {
 
-namespace vcs{
+namespace solver{
   struct CheckConsistencyResult;
-  class SymbolicVirtualConstraintSolver;
+  class SymbolicSolver;
 }
 
 namespace simulator {
@@ -41,7 +41,7 @@ typedef enum{
 class PhaseSimulator{
 
 public:
-  typedef vcs::SymbolicVirtualConstraintSolver solver_t;
+  typedef solver::SymbolicSolver solver_t;
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
@@ -111,7 +111,7 @@ protected:
                                   
                                   
   virtual CheckEntailmentResult check_entailment(
-    vcs::CheckConsistencyResult &cc_result,
+    solver::CheckConsistencyResult &cc_result,
     const node_sptr& guard,
     const continuity_map_t& cont_map) = 0;
   
@@ -174,7 +174,7 @@ protected:
   
   
   void push_branch_states(simulation_todo_sptr_t &original,
-    hydla::vcs::CheckConsistencyResult &result);
+    hydla::solver::CheckConsistencyResult &result);
     
   
   /// ケースの選択時に使用する関数ポインタ

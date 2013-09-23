@@ -5,7 +5,7 @@
 
 #include "ParseTree.h"
 #include "Simulator.h"
-#include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
+#include "../solver/SymbolicSolver.h"
 #include "CMMap.h"
 
 namespace hydla{
@@ -81,7 +81,7 @@ protected:
   /**
    * 使用するソルバへのポインタ
    */
-  boost::shared_ptr<hydla::vcs::SymbolicVirtualConstraintSolver> solver_;
+  boost::shared_ptr<hydla::solver::SymbolicSolver> solver_;
 
   /**
    * 制約モジュール集合の名前とそれに対応する条件のマップ

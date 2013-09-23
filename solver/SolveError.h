@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SOLVE_ERROR_H_
-#define _INCLUDED_HYDLA_SOLVE_ERROR_H_
+#ifndef _INCLUDED_HYDLA_SOLVER_SOLVE_ERROR_H_
+#define _INCLUDED_HYDLA_SOLVER_SOLVE_ERROR_H_
 
 
 #include <string>
@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 
 class SolveError : public std::runtime_error {
 public:
@@ -16,7 +16,7 @@ public:
   {}
 };
 
-} //namespace vcs
+} //namespace solver
 } //namespace hydla 
 
-#endif
+#endif // include guard

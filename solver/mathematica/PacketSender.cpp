@@ -10,7 +10,7 @@ using namespace hydla::parse_tree;
 using namespace hydla::logger;
 
 namespace hydla {
-namespace vcs {
+namespace solver {
 namespace mathematica {
 
 /** Mathematicaに送る際に変数名につける接頭語 "usrVar" */
@@ -456,5 +456,5 @@ void PacketSender::create_max_diff_map(max_diff_map_t& max_diff_map)
 }
 
 } // namespace mathematica
-} // namespace simulator
+} // namespace solver
 } // namespace hydla 

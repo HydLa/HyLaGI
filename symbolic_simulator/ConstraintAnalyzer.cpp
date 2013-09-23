@@ -10,15 +10,15 @@
 #include "NonPrevSearcher.h"
 #include "Timer.h"
 
-#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+#include "../solver/mathematica/MathematicaSolver.h"
 
 using namespace std;
 using namespace hydla::ch;
 using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
-using namespace hydla::vcs;
-using namespace hydla::vcs::mathematica;
+using namespace hydla::solver;
+using namespace hydla::solver::mathematica;
 using namespace hydla::timer;
 
 namespace hydla{
@@ -70,7 +70,7 @@ void ConstraintAnalyzer::initialize(const parse_tree_sptr& parse_tree)
 
   init_variable_map(parse_tree);
 
-  solver_.reset(new MathematicaVCS(*opts_));
+  solver_.reset(new MathematicaSolver(*opts_));
   solver_->set_variable_set(*variable_set_);
   solver_->set_parameter_set(*parameter_set_);
 }
@@ -310,17 +310,17 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
       //      std::cout << "    result" << std::endl;
       // あるガード条件の仮定の下に得られた条件をtmp_nodeに入れる
       switch(solver_->find_conditions(tmp_node)){
-      case SymbolicVirtualConstraintSolver::CONDITIONS_TRUE:
+      case SymbolicSolver::CONDITIONS_TRUE:
         // もし求まった条件がTrueなら後の仮定の結果がどうであれTrueになるのでret = CONDITIONS_TRUEとおく
 	if(opts_->analysis_mode == "debug") 
 	  std::cout << "        True" << std::endl;
         ret = CONDITIONS_TRUE;
         break;
-      case SymbolicVirtualConstraintSolver::CONDITIONS_FALSE:
+      case SymbolicSolver::CONDITIONS_FALSE:
         if(opts_->analysis_mode == "debug") 
 	  std::cout << "        False" << std::endl;
         break;
-      case SymbolicVirtualConstraintSolver::CONDITIONS_VARIABLE_CONDITIONS:
+      case SymbolicSolver::CONDITIONS_VARIABLE_CONDITIONS:
         // なんらかの条件が求まったら今まで求めた条件に論理和でその条件を追加する
 	if(opts_->analysis_mode == "debug")
 	  std::cout << "        " << TreeInfixPrinter().get_infix_string(tmp_node) << std::endl; 

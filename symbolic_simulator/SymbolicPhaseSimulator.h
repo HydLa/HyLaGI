@@ -13,7 +13,7 @@
 #include "Simulator.h"
 
 #include "SymbolicTypes.h"
-#include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
+#include "../solver/SymbolicSolver.h"
 #include "PhaseSimulator.h"
 #include "../output/TrajPrinter.h"
 
@@ -76,7 +76,7 @@ private:
    * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
    */
   CheckEntailmentResult check_entailment(
-    hydla::vcs::CheckConsistencyResult &cc_result,
+    hydla::solver::CheckConsistencyResult &cc_result,
     const node_sptr& guard,
     const continuity_map_t& cont_map);
 

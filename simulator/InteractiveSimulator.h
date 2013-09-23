@@ -35,7 +35,7 @@ template<typename T> T excin(string message="")
   return ret;
 }
 
-typedef hydla::vcs::SymbolicVirtualConstraintSolver     solver_t;
+typedef hydla::solver::SymbolicSolver     solver_t;
 
 class InteractiveSimulator:public Simulator{
 public:
