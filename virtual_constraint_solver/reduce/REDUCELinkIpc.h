@@ -6,7 +6,7 @@
 
 #include "REDUCELink.h"
 
-#include "sexp/SExpParseTree.h"
+#include "sexp/SExpAST.h"
 #include <stdexcept>
 #include <string>
 
@@ -51,10 +51,10 @@ public:
   std::string get_s_expr();
 
   /**
-   * 受信した複数行のstringを結合してSExpParseTreeを戻す
+   * 受信した複数行のstringを結合してSExpASTを戻す
    * \return REDUCEから受け取るS式をパースしたもの
    */
-  const hydla::parser::SExpParseTree get_as_s_exp_parse_tree();
+  const hydla::parser::SExpAST get_as_s_exp_parse_tree();
 
   /**
    * stringの送信

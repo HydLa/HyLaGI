@@ -8,7 +8,7 @@
 #include "string"
 #include "sstream"
 
-#include "../virtual_constraint_solver/reduce/sexp/SExpParseTree.h"
+#include "../virtual_constraint_solver/reduce/sexp/SExpAST.h"
 #include "../virtual_constraint_solver/reduce/REDUCELink.h"
 #include "../virtual_constraint_solver/reduce/REDUCELinkFactory.h"
 #include "../virtual_constraint_solver/reduce/vcs_reduce_source.h"
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(exDSolve_test){
 BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
   string query = 
     "depend {ht,v}, t$"
-    "initVariables_:={inithtlhs,initvlhs}$"
-    "constraintStore_:= csVariables_:= {}$"
+    "initVariables__:={inithtlhs,initvlhs}$"
+    "constraintStore__:= csVariables__:= {}$"
     "expr_:={df(ht,t) = v, df(v,t) = -10 }$"
     "init_:={inithtlhs = 10, initvlhs = 0 }$"
     "vars_:={ht,v,df(ht,t),df(v,t)}$"
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(rcsRecovery_exDSolve_test){
 BOOST_AUTO_TEST_CASE(removeInitCons_test){
   string query = 
     "depend usrvary,t$"
-    "initVariables_:={initusrvary_1lhs,initusrvarylhs}$"
+    "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
     "rconts_:={initusrvary_1lhs = 0,initusrvarylhs = 10}$"
     "symbolic redeval '(removeInitCons rconts_);";
 
@@ -110,14 +110,14 @@ BOOST_AUTO_TEST_CASE(removeInitCons_test){
 BOOST_AUTO_TEST_CASE(old_myCheckConsistencyInterval_test){
   string query =
     "depend usrvary,t$"
-    "constraintStore_:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10, usrvarg = 10}$"
-    "csVariables_:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvarg}$"
+    "constraintStore__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10, usrvarg = 10}$"
+    "csVariables__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvarg}$"
 
-    "tmpConstraint_:= guard_:= initConstraint_:= initTmpConstraint_:={initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
+    "tmpConstraint__:= guard__:= initConstraint__:= initTmpConstraint__:={initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
 
-    "tmpVariables_:={df(usrvary,t),initusrvary_1lhs,initusrvarylhs,usrvary}$"
-    "guardVars_:={}$"
-    "initVariables_:={initusrvary_1lhs,initusrvarylhs}$"
+    "tmpVariables__:={df(usrvary,t),initusrvary_1lhs,initusrvarylhs,usrvary}$"
+    "guardVars__:= parameterStore__:= {}$"
+    "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
 
     "symbolic redeval '(myCheckConsistencyInterval);";
 
@@ -130,11 +130,12 @@ BOOST_AUTO_TEST_CASE(old_myCheckConsistencyInterval_test){
 BOOST_AUTO_TEST_CASE(rcsRecovery_myCheckConsistencyInterval_test){
   string query = 
     "depend usrvary,t$"
-    "constraintStore_:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
-    "csVariables_:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
-    "tmpConstraint_:= guard_:= initConstraint_:= initTmpConstraint_:= {initusrvary_1lhs = prev(df(usrvary,t)), initusrvarylhs = prev(usrvary)}$"
-    "tmpVariables_:= guardVars_:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
-    "initVariables_:={initusrvary_1lhs,initusrvarylhs}$"
+    "constraintStore__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
+    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+    "tmpConstraint__:= guard__:= initConstraint__:= initTmpConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)), initusrvarylhs = prev(usrvary)}$"
+    "tmpVariables__:= guardVars__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+    "parameterStore__:= {}$"
+    "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
 
     "symbolic redeval '(myCheckConsistencyInterval);";
 
@@ -147,11 +148,11 @@ BOOST_AUTO_TEST_CASE(rcsRecovery_myCheckConsistencyInterval_test){
 BOOST_AUTO_TEST_CASE(convertCSToVMInterval_test){
   string query = 
     "depend usrvary,t$"
-    "constraintStore_:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
-    "initConstraint_:= {initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
-    "parameterStore_:= {}$"
-    "csVariables_:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
-    "initVariables_:={initusrvary_1lhs,initusrvarylhs}$"
+    "constraintStore__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
+    "initConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
+    "parameterStore__:= {}$"
+    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+    "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
 
     "symbolic redeval '(convertCSToVMInterval);";
 
@@ -164,13 +165,13 @@ BOOST_AUTO_TEST_CASE(convertCSToVMInterval_test){
 BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTime_test){
   string query = 
     "depend usrvary,t$"
-    "constraintStore_:= {usrvarg = 10,usrvary = 5*(-t**2+2)}$"
-    "initConstraint_:= {}$"
-    "parameterStore_:= {}$"
-    "csVariables_:= {df(usrvary,t,2), df(usrvary,t), usrvarg, usrvary}$"
+    "constraintStore__:= {usrvarg = 10,usrvary = 5*(-t**2+2)}$"
+    "initConstraint__:= {}$"
+    "parameterStore__:= {}$"
+    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), usrvarg, usrvary}$"
 
     // calcNextPointPhaseTime内部どこかで使われる
-    "psParameters_:= {}$"
+    "psParameters__:= {}$"
 
     "maxTime_:= 1$"
     "discCause_:= {usrvary = 0}$"
@@ -185,8 +186,8 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTime_test){
 BOOST_AUTO_TEST_CASE(addConstraint_test){
   const string query1 = 
     "depend usrvary,t$"
-    "tmpVariables_:=tmpConstraint_:={}$"
-    "prevConstraint_:= {prev(df(usrvary,t,2)) = -10,prev(df(usrvary,t)) =  - 10*sqrt(2),prev(usrvarg) = 10,prev(usrvary) = 0};"
+    "tmpVariables__:=tmpConstraint__:={}$"
+    "prevConstraint__:= {prev(df(usrvary,t,2)) = -10,prev(df(usrvary,t)) =  - 10*sqrt(2),prev(usrvarg) = 10,prev(usrvary) = 0};"
     "cons_:= {prev(usrvary) <> 0};"
     "vars_:= {prev(usrvary)};"
 

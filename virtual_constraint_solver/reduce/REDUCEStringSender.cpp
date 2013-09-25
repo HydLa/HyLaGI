@@ -3,6 +3,7 @@
 #include "../../common/Logger.h"
 #include <assert.h>
 #include <iostream>
+#include <sstream>
 
 #include "VariableNameEncoder.h"
 
@@ -19,7 +20,7 @@ const std::string REDUCEStringSender::empty_list_string("{}");
 const std::string REDUCEStringSender::var_prefix("usrvar");
 
 /** REDUCEに送る際に定数名につける接頭語 */
-const std::string REDUCEStringSender::par_prefix("p");
+const std::string REDUCEStringSender::par_prefix("parameter");
 
 REDUCEStringSender::REDUCEStringSender(reduce_link_t reduce_link) :
   reduce_link_(reduce_link),
@@ -246,7 +247,6 @@ void REDUCEStringSender::put_var(const var_info_t var)
 
 void REDUCEStringSender::put_par(const par_info_t& par) {
   HYDLA_LOGGER_FUNC_BEGIN(REST);
-  // TODO par_prefixを現実装に即す
   const std::string name = par.get<0>();
   const int diff_count = par.get<1>();
   const int id = par.get<2>();
@@ -255,9 +255,8 @@ void REDUCEStringSender::put_par(const par_info_t& par) {
     "name: ", name,
     "\tdiff_count: ", diff_count,
     "\tid: ", id);
-  
-  reduce_link_->send_string(par_prefix + name);
-  // TODO name以外も送信
+
+  reduce_link_->send_string(make_par_name(par));
 
   // putした変数の情報を保持
   pars_.insert(par);
@@ -268,7 +267,11 @@ void REDUCEStringSender::put_par(const std::string &name, const int &diff_count,
   put_par(boost::make_tuple(name, diff_count, id));
 }
 
-
+std::string REDUCEStringSender::make_par_name(const par_info_t& par) const {
+  std::ostringstream oss;
+  oss << par_prefix << "_" << par.get<0>() << "_" << par.get<1>() << "_" << par.get<2>();
+  return oss.str();
+}
 
 /**
  * ある式(ノード)をputする

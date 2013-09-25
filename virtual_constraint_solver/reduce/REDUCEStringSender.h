@@ -159,6 +159,12 @@ public:
 
 
 private:
+
+  /**
+   * REDUCEに送信する記号定数の文字列を生成する
+   * @return "parameter_name_dc_id"の書式
+   */
+  std::string make_par_name(const par_info_t& par) const;
   reduce_link_t reduce_link_;
 
 protected:

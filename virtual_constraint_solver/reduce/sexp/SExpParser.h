@@ -31,7 +31,6 @@ private:
 
 };
 
-//std::ostream& operator<<(std::ostream& s, const SExpParser& sp);
 std::ostream& operator<<(std::ostream& s, const SExpParser::const_tree_iter_t& iter);
 
 } // namespace vcs

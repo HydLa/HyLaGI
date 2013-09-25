@@ -59,8 +59,8 @@ std::string REDUCELinkTelnet::get_s_expr(){
   return line;
 }
 
-const hydla::parser::SExpParseTree REDUCELinkTelnet::get_as_s_exp_parse_tree(){
-  return hydla::parser::SExpParseTree(get_s_expr());
+const hydla::parser::SExpAST REDUCELinkTelnet::get_as_s_exp_parse_tree(){
+  return hydla::parser::SExpAST(get_s_expr());
 }
 
 int REDUCELinkTelnet::send_string(const std::string cmd){
