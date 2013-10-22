@@ -13,7 +13,6 @@
 #include "Simulator.h"
 
 #include "SymbolicTypes.h"
-#include "../solver/SymbolicSolver.h"
 #include "PhaseSimulator.h"
 #include "../output/TrajPrinter.h"
 
@@ -76,11 +75,14 @@ private:
    * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
    */
   CheckEntailmentResult check_entailment(
-    hydla::solver::CheckConsistencyResult &cc_result,
+    CheckConsistencyResult &cc_result,
     const node_sptr& guard,
-    const continuity_map_t& cont_map);
-
-  void add_continuity(const continuity_map_t&);
+    const continuity_map_t& cont_map,
+    const Phase& phase);
+  
+  CheckConsistencyResult check_consistency(const Phase &phase);
+  
+  void add_continuity(const continuity_map_t&, const Phase &phase);
   
   virtual module_set_list_t calculate_mms(
     simulation_todo_sptr_t& state,
@@ -89,12 +91,7 @@ private:
   virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
 
   
-  virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm)
-  {
-    variable_map_t ret;
-    solver_->apply_time_to_vm(vm, ret, tm);
-    return ret;
-  }
+  virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm);
   
   continuity_map_t variable_derivative_map_;
   

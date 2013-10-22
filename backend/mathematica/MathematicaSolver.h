@@ -3,42 +3,23 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include "MathType.h"
 #include "mathlink_helper.h"
 #include "math_source.h"
 
 class MathLink;
 
 namespace hydla {
-namespace solver {
+namespace backend {
 namespace mathematica {
 
-class PacketSender;
 
-class MathematicaSolver : 
-    public virtual_constraint_solver_t
+class MathLink : public SymbolicLink
 {
 public:
 
-  MathematicaSolver(const hydla::simulator::Opts &opts);
+  MathLink(const hydla::simulator::Opts &opts);
 
-  virtual ~MathematicaSolver();
-
-  /**
-   * 離散変化モード，連続変化モードの切り替えをおこなう
-   */
-  virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision);
-
-  /**
-   * 一時的な制約の追加を開始する
-   */
-  virtual void start_temporary();
-
-  /**
-   * 一時的な制約の追加を終了する
-   * start後，この関数を呼び出すまでに追加した制約はすべて無かったことにする
-   */
-  virtual void end_temporary();
+  virtual ~MathLink();
 
   /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
@@ -58,12 +39,6 @@ public:
   
   void linear_approx(const value_t& val, value_t& approxed, value_range_t& itv, int precision);
   
-  /**
-   * 制約を追加する．
-   */
-  virtual void add_constraint(const constraints_t& constraints);
-  virtual void add_constraint(const node_sptr& constraint);
-  
   virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives);
   virtual bool reset_parameters(const parameter_map_t& pm);
 
@@ -71,14 +46,6 @@ public:
 
   virtual void set_conditions(const node_sptr& constraint);
   
-  virtual ConditionsResult find_conditions(node_sptr& node);
-
-  /**
-   * 制約ストアが無矛盾かを判定する．
-   * @return 充足可能な場合の記号定数条件列，充足不可能な場合の記号定数条件列（それぞれ存在しない場合は空の列を返す）
-   */
-  virtual CheckConsistencyResult check_consistency();
-
 
   /**
    * 次の離散変化時刻を求める
@@ -93,11 +60,6 @@ public:
    * 変数表に時刻を適用する
    */
   virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time);
-
-  /**
-   * 変数に連続性を設定する
-   */
-  virtual void set_continuity(const std::string &name, const int& dc);
 
   /**
    * nodeを簡約する
@@ -138,18 +100,7 @@ private:
 
   void send_parameter_map(const parameter_map_t &parameter_map, PacketSender& ps);
 
-  /**
-   * find_conditionsで得た矛盾する条件を
-   * node_sprt形式で返す
-   * 事前条件や終了時の状態はreceive_parameter_mapと同じ
-   */
-  node_sptr receive_condition_node(ConditionsResult& node_type);
-  
-  hydla::simulator::symbolic::Mode      mode_;
-  
 
-  MathLink ml_;
-  bool is_temporary_;
 };
 
 } // namespace mathematica

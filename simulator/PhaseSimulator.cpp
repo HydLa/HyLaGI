@@ -6,8 +6,10 @@
 #include "Dumpers.h"
 #include "Exceptions.h"
 #include "SymbolicSolver.h"
+#include "SymbolicInterface.h"
 
 using namespace hydla::simulator;
+using namespace hydla::backend;
 
 PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts):simulator_(simulator), opts_(&opts), select_phase_(NULL){}
 
@@ -230,11 +232,17 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     
     if(opts_->assertion){
       timer::Timer entailment_timer;
-      solver_->reset_constraint(phase->variable_map, true);
-      solver_->reset_parameters(phase->parameter_map);
+      // TODO: 送信
+      
+      backend_->call("resetConstraintForVariable", 0, "","");
+      std::string fmt = "mv";
+      fmt += (phase->phase==PointPhase)?"n":"t";
+      backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
+      backend_->call("resetConstraintForPatameter", 1, "mp", "", &phase->parameter_map);
+      
       HYDLA_LOGGER_MS("%% check_assertion");
-      hydla::solver::CheckConsistencyResult cc_result;
-      switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t())){
+      CheckConsistencyResult cc_result;
+      switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t(), todo->phase)){
         case ENTAILED:
         case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
           std::cout << "Assertion Failed!" << std::endl;
@@ -277,19 +285,20 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
 }
 
 
-void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, hydla::solver::CheckConsistencyResult &result){
-  for(int i=1; i<(int)result.true_parameter_maps.size();i++){
+void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckConsistencyResult &result){
+  assert(result.size() == 2);
+  for(int i=1; i<(int)result[0].size();i++){
     simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->parameter_map = result.true_parameter_maps[i];
+    branch_state->parameter_map = result[0][i];
     todo_container_->push_todo(branch_state);
   }
-  for(int i=0; i<(int)result.false_parameter_maps.size();i++){
+  for(int i=0; i<(int)result[1].size();i++){
     simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->parameter_map = result.false_parameter_maps[i];
+    branch_state->parameter_map = result[1][i];
     todo_container_->push_todo(branch_state);
   }
-  original->parameter_map = result.true_parameter_maps[0];
-  solver_->reset_parameters(original->parameter_map);
+  original->parameter_map = result[0][0];
+  backend_->call("resetConstraintForParameter", 1, "mp", "", &original->parameter_map);
 }
 
 
@@ -385,6 +394,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
       it++;
     }
   }
+  backend_->set_variable_set(*variable_set_);
 }
 
 
@@ -396,6 +406,10 @@ simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulat
 
 bool PhaseSimulator::check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2)
 {
+/*
+  TODO: 一旦無効化
   HYDLA_LOGGER_HA("****** check_include_bound ******");
   return solver_->check_include_bound(tmp_variable_phase, tmp_variable_past, pm1, pm2);
+*/
+  return true;
 }

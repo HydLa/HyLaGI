@@ -8,7 +8,7 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 checkConditions[] := (
-  checkConditions[prevConstraint, falseConditions, pConstraint, prevVariables]
+  checkConditions[prevConstraint, falseConditions, pConstraint, prevVariables ]
 );
 
 publicMethod[
@@ -73,15 +73,6 @@ setConditions[co_, va_] := Module[
   simplePrint[cons, falseConditions];
 ];
 
-(* 変数のリストからprev変数を取り除く *)
-removePrevVariables[vars_] := Module[
-  {ret,i},
-  ret = {};
-  For[i=1,i<=Length[vars],i++,
-    If[!isPrevVariable[vars[[i]]], ret=Append[ret,vars[[i]]]];
-  ];
-  ret
-];
 
 (* 矛盾する条件を整形して返す *)
 createPrevMap[cons_, vars_] := Module[
@@ -108,7 +99,7 @@ createPrevMap[cons_, vars_] := Module[
 
 (* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
 findConditions[] := (
-  findConditions[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, guard, removePrevVariables[Union[variables, tmpVariables, guardVars]]]
+  findConditions[constraint && tmpConstraint && initConstraint && initTmpConstraint, guard, variables ]
 );
 
 publicMethod[
@@ -122,7 +113,7 @@ publicMethod[
     simplePrint[cp];
     checkMessage;
     If[cp =!= False && cp =!= True,
-      cp = Simplify[cp];
+      cp = LogicalExpand[Simplify[cp] ];
       cp = integerString[cp];
     ];
     simplePrint[cp];
@@ -133,7 +124,7 @@ publicMethod[
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]]
+  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint, pConstraint, Union[variables, prevVariables] ]
 );
 
 publicMethod[
@@ -162,7 +153,7 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint && tmpConstraint && guard, initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]]
+  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, pConstraint, Union[timeVariables, prevVariables, initVariables] ]
 );
 
 appendZeroVars[vars_] := Join[vars, vars /. x_[t] -> x[0]];
@@ -237,7 +228,7 @@ publicMethod[
   ]
 ];
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, variables, parameters];
+createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables, parameters];
 
 publicMethod[
   createVariableMapInterval,
@@ -325,6 +316,8 @@ getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ Wo
 
 getParameters[exprs_] := Cases[exprs, parameter[_, _, _], Infinity];
 
+getPrevs[exprs_] := Cases[exprs, prev[_, _], Infinity];
+
 (* 時間変数を取得 *)
 getTimeVars[list_] := Cases[list, _[t], Infinity];
 
@@ -366,111 +359,177 @@ Fold[
   andExprs
 ];
 
-resetConstraint[] := (
+publicMethod[
+  resetConstraint,
   constraint = True;
   initConstraint = True;
   pConstraint = True;
   prevConstraint = {};
   initTmpConstraint = True;
   tmpConstraint = True;
-  variables = tmpVariables = prevVariables = {};
   isTemporary = False;
-  guard = True;
-  guardVars = {};
   parameters = {};
-);
-
-resetConstraintForVariable[] := (
-  constraint = True;
-);
-
-addGuard[gu_, vars_] := (
-  guard = guard && gu;
-  guardVars = Union[guardVars,vars];
-  simplePrint[gu, vars, guard, guradVars];
-);
-
-addConstraint[co_, va_] := Module[
-  {cons, vars},
-  cons = co;
-  cons = cons //. prevConstraint;
-  vars = va;
-  If[isTemporary,
-    tmpVariables = Union[tmpVariables, vars];
-    tmpConstraint = tmpConstraint && cons,
-    variables = Union[variables, vars];
-    constraint = constraint && cons
-  ];
-  simplePrint[cons, vars, constraint, variables, tmpConstraint, tmpVariables];
 ];
 
-addInitConstraint[co_, va_] := Module[
+publicMethod[
+  resetConstraintForVariable,
+  constraint = True;
+];
+
+addConstraint[co_List] := addConstraint[And@@List];
+
+publicMethod[
+  addConstraint,
+  co,
+  Module[
+    {cons},
+    cons = co //. prevConstraint;
+    If[isTemporary,
+      tmpConstraint = tmpConstraint && cons,
+      constraint = constraint && cons
+      ];
+    simplePrint[cons, constraint, tmpConstraint];
+  ]
+];
+
+addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = co;
-  cons = cons //. prevConstraint;
-  vars = va;
+  cons = co //. prevConstraint;
   If[isTemporary,
-    tmpVariables = Union[tmpVariables, vars];
     initTmpConstraint = initTmpConstraint && cons,
-    variables = Union[variables, vars];
     initConstraint = initConstraint && cons
   ];
-  simplePrint[cons, vars, initConstraint, variables, initTmpConstraint, tmpVariables];
+  simplePrint[cons, initConstraint, initTmpConstraint];
 ];
 
-addPrevConstraint[co_, va_] := Module[
-  {cons, vars},
-  cons = co;
-  vars = va;
-  If[cons =!= True,
-    prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, applyList[cons]]]
-  ];
-  prevVariables = Union[prevVariables, vars];
-  simplePrint[cons, vars, prevConstraint, prevVariables];
+publicMethod[
+  addPrevConstraint,
+  co,
+  Module[
+    {cons},
+    cons = co;
+    If[cons =!= True,
+       prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, applyList[cons]]]
+       ];
+    simplePrint[cons, prevConstraint];
+  ]
 ];
 
-addVariables[vars_] := (
-  If[isTemporary,
-    tmpVariables = Union[tmpVariables, vars],
-    variables = Union[variables, vars]
+publicMethod[
+  simplify,
+  arg,
+  integerString[Simplify[arg]]
+];
+
+
+makePrevVar[var_] := Module[
+  {name, dcount},
+  If[MatchQ[var, Derivative[_][_] ],
+    name = var[[1]];
+    dcount = var[[0]][[1]],
+    name = var;
+    dcount = 0
   ];
-  simplePrint[vars, variables, tmpVariables];
+  name = ToString[name];
+  (* drop "usrVar" *)
+  name = StringDrop[name, 6];
+  name = ToExpression[name];
+  prev[name, dcount]
+];
+
+publicMethod[
+  addVariables,
+  vars,
+  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  variables = Union[variables, vars];
+  prevVariables = Union[prevVariables,
+    Map[makePrevVar, vars] ];
+  timeVariables = Union[timeVariables, Map[(#[t])&, vars] ];
+  initVariables = Union[initVariables, Map[(#[0])&, vars] ];
+  simplePrint[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables, initVariables];
+];
+
+
+publicMethod[
+  addVariable,
+  var,
+  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  variables = Union[variables, {var}];
+  prevVariables = Union[prevVariables,
+  {makePrevVar[var]} ];
+  timeVariables = Union[timeVariables, {var[t] } ];
+  initVariables = Union[initVariables, {var[t]} ];
+  simplePrint[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables, initVariables];
+];
+
+
+setVariables[vars_] := (
+  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  variables = vars;
+  prevVariables = Map[makePrevVar, vars];
+  timeVariables = Map[(#[t])&, vars];
+  initVariables = Map[(#[0])&, vars];
+  simplePrint[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables, initVariables];
 );
 
-setGuard[gu_, vars_] := (
-  guard = gu;
-  guardVars = vars;
-  simplePrint[ gu, vars, guard, guardVars];
-);
 
-startTemporary[] := (
+publicMethod[
+  startTemporary,
   isTemporary = True;
-);
+];
 
-endTemporary[] := (
+publicMethod[
+  endTemporary,
   isTemporary = False;
   resetTemporaryConstraint[];
-);
+];
 
 resetTemporaryConstraint[] := (
   tmpConstraint = True;
   initTmpConstraint = True;
-  tmpVariables = {};
-  guard = True;
-  guardVars = {};
 );
 
-resetConstraintForParameter[pcons_, pars_] := (
+resetConstraintForParameter[pcons_] := (
   pConstraint = True;
-  parameters = {};
-  addParameterConstraint[pcons, pars];
+  addParameterConstraint[pcons];
 );
 
-addParameterConstraint[pcons_, pars_] := (
+
+publicMethod[
+  addInitEquation,
+  lhs, rhs,
+  addInitConstraint[lhs == rhs]
+];
+
+publicMethod[
+  addEquation,
+  lhs, rhs,
+  Module[
+    {cons},
+    cons = lhs == rhs //. prevConstraint;
+    If[isTemporary,
+      tmpConstraint = tmpConstraint && cons,
+      constraint = constraint && cons
+      ];
+    simplePrint[cons, constraint, tmpConstraint];
+  ]
+];
+
+publicMethod[
+  addParameterConstraint,
+  pcons,
   pConstraint = Reduce[pConstraint && pcons, Reals];
-  parameters = Union[parameters, pars];
-  simplePrint[pConstraint, pars];
-);
+  simplePrint[pConstraint];
+];
+
+publicMethod[
+  addParameter,
+  par,
+  parameters = Union[parameters, {par}]
+];
 
 (* 変数名からDerivativeやtを取り，微分回数とともに返す *)
 removeDash[var_] := Module[
@@ -515,7 +574,7 @@ makeListFromPiecewise[minT_, others_] := Module[
  *)
 
 calculateNextPointPhaseTime[maxTime_, discCause_] := 
-  calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, variables];
+  calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, timeVariables];
 
 (* 変数とその値に関する式のリストを、変数表的形式に変換 *)
 getExprCode[expr_] := Switch[Head[expr],
@@ -583,7 +642,7 @@ publicMethod[
     timeAppliedCauses = False;
     
     tStore = Map[(# -> createIntegratedValue[#, dSol[[2]] ])&, getTimeVars[vars]];
-    timeAppliedCauses = Or@@(discCause /. tStore );
+    timeAppliedCauses = Or@@(applyList[discCause] /. tStore );
     simplePrint[timeAppliedCauses];
     
     parameterList = getParameters[timeAppliedCauses];

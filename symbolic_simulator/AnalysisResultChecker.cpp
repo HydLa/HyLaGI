@@ -1,3 +1,4 @@
+/*
 #include "ConstraintAnalyzer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
@@ -212,7 +213,7 @@ AnalysisResultChecker::check_conditions(
   bool b,
   todo_container_t* todo_container)
 {
-  /*
+ 
   if(opts_->analysis_mode == "simulate"){
     if(checkd_module_set_.find(ms) != checkd_module_set_.end()){
       if(conditions_.find(ms->get_name()) == conditions_.end()){
@@ -225,7 +226,7 @@ AnalysisResultChecker::check_conditions(
       }
     }
   }
-  */
+ 
   return check_conditions(conditions_[ms->get_name()],state,vm,todo_container);
 }
 
@@ -233,3 +234,4 @@ AnalysisResultChecker::check_conditions(
 }
 }
 }
+*/

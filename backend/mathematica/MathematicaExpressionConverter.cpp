@@ -1,6 +1,7 @@
+/*
 #include "MathematicaExpressionConverter.h"
 #include "PacketSender.h"
-#include "../SolveError.h"
+#include "../LinkError.h"
 
 #include <stdlib.h>
 #include <cassert>
@@ -93,6 +94,14 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
           int id = boost::lexical_cast<int, std::string>(ml.get_string());
           ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
         }
+
+        else if(symbol == "prev"){
+          std::string name = ml_.get_symbol();
+          int derivative_count = boost::lexical_cast<int, std::string>(ml_.get_string());
+          hydla::parse_tree::node_sptr tmp_var = node_sptr(new hydla::parse_tree::Variable(name));
+          for(int i = 0; i < derivative_count; i++) tmp_var = node_sptr(new hydla::parse_tree::Differential(tmp_var));
+          ret = node_sptr(new hydla::parse_tree::Previous(tmp_var));
+        }
         else if(symbol == "minus"){
           ret = node_sptr(new hydla::parse_tree::Negative(make_tree(ml)));
         }
@@ -101,7 +110,15 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
            || symbol == "Times"
            || symbol == "Divide"
            || symbol == "Power"
-           || symbol == "Rational")        
+           || symbol == "Rational"
+           || symbol == "And"
+           || symbol == "Or"
+           || symbol == "Equal"
+           || symbol == "Unequal"
+           || symbol == "Less"
+           || symbol == "LessEqual"
+           || symbol == "Greater"
+           || symbol == "GreaterEqual")        
         { // 加減乗除など，二項演算子で書かれる関数
           node_sptr lhs, rhs;
           ret = make_tree(ml);
@@ -120,6 +137,57 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
               ret = node_sptr(new hydla::parse_tree::Power(lhs, rhs));
             else if(symbol == "Rational")
               ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
+            else if(symbol == "And")
+              ret = node_sptr(new hydla::parse_tree::LogicalAnd(lhs, rhs));
+            else if(symbol == "Or")
+              ret = node_sptr(new hydla::parse_tree::LogicalOr(lhs, rhs));
+            else if(symbol == "Equal")
+              ret = node_sptr(new hydla::parse_tree::Equal(lhs, rhs));
+            else if(symbol == "Unequal")
+              ret = node_sptr(new hydla::parse_tree::UnEqual(lhs, rhs));
+            else if(symbol == "Less")
+              ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
+            else if(symbol == "LessEqual")
+              ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
+            else if(symbol == "Greater")
+              ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
+            else if(symbol == "GreaterEqual")
+              ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
+          }
+        }
+
+
+        else if(symbol == "Inequality"){
+          node_sptr lhs, rhs;
+          rhs = receive_condition_node(node_type);
+          for(int arg_it=1;arg_it<arg_count;arg_it++){
+            if(arg_it % 2){
+              symbol = ml_.get_symbol();
+            }else{
+              lhs = rhs;
+              rhs = receive_condition_node(node_type);
+              if(symbol == "Less"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
+                else
+                  ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::Less(lhs, rhs))));
+              }else if(symbol == "LessEqual"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
+                else
+                  ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs))));
+              }else if(symbol == "Greater"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
+                else
+                  ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::Greater(lhs, rhs))));
+              }else if(symbol == "GreaterEqual"){
+                if(ret == NULL)
+                  ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
+                else
+                  ret = node_sptr(new hydla::parse_tree::LogicalAnd(ret,node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs))));
+              }
+            }
           }
         }
         else{
@@ -180,3 +248,4 @@ MathematicaExpressionConverter::node_sptr MathematicaExpressionConverter::make_t
 } // namespace mathematica
 } // namespace solver
 } // namespace hydla 
+*/

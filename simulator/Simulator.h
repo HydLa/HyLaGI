@@ -12,6 +12,12 @@
 #include "ContinuityMapMaker.h"
 
 namespace hydla {
+
+namespace backend
+{
+  class SymbolicInterface;
+}
+
 namespace simulator {
 
 typedef enum{
@@ -25,7 +31,7 @@ typedef enum{
   BFS
 }SearchMethod;
 
-typedef struct Opts_ {
+struct Opts {
   std::string mathlink;
   bool debug_mode;
   std::string max_time;
@@ -60,7 +66,7 @@ typedef struct Opts_ {
   int max_phase;
   int max_phase_expanded;
   SearchMethod search_method;
-} Opts;
+};
 
 typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
 typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
@@ -262,6 +268,8 @@ protected:
    * PhaseSimulator to use
    */ 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
+  
+  boost::shared_ptr<backend::SymbolicInterface> backend_;
 
   /**
    * a container for candidate module sets

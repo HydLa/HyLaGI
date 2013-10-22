@@ -16,12 +16,16 @@
 
 namespace hydla {
 
-namespace solver{
-  struct CheckConsistencyResult;
-  class SymbolicSolver;
+namespace backend{
+  class SymbolicInterface;
 }
 
 namespace simulator {
+
+
+typedef std::vector<parameter_map_t>                       parameter_maps_t;
+
+typedef std::vector<parameter_maps_t>    CheckConsistencyResult;
 
 
 typedef enum{
@@ -41,7 +45,6 @@ typedef enum{
 class PhaseSimulator{
 
 public:
-  typedef solver::SymbolicSolver solver_t;
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
@@ -86,8 +89,7 @@ public:
   virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
 
   /// 使用するソルバへのポインタ
-  boost::shared_ptr<solver_t> solver_;
-
+  boost::shared_ptr<backend::SymbolicInterface> backend_;
   
 protected:
   
@@ -111,9 +113,10 @@ protected:
                                   
                                   
   virtual CheckEntailmentResult check_entailment(
-    solver::CheckConsistencyResult &cc_result,
+    CheckConsistencyResult &cc_result,
     const node_sptr& guard,
-    const continuity_map_t& cont_map) = 0;
+    const continuity_map_t& cont_map,
+    const Phase& phase) = 0;
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
@@ -174,7 +177,7 @@ protected:
   
   
   void push_branch_states(simulation_todo_sptr_t &original,
-    hydla::solver::CheckConsistencyResult &result);
+    CheckConsistencyResult &result);
     
   
   /// ケースの選択時に使用する関数ポインタ

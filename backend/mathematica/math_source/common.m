@@ -7,14 +7,14 @@ $MaxExtraPrecision = 1000;
  * pConstraint: 定数についての制約
  * prevConstraint: 左極限値を設定する制約
  * initConstraint: 初期値制約
- * variables: 制約に出現する変数のリスト
- * parameters: 記号定数のリスト
+ * variables: プログラム内に出現する変数のリスト
+ * prevVariables: variables内の変数をusrVarx=>prev[x, 0]のようにしたもの
+ * timeVariables: variables内の変数を，usrVarx[t]のようにしたもの
+ * initVariables: variables内の変数を，usrVarx[0]のようにしたもの
+ * parameters: 使用する記号定数のリスト
  * isTemporary：制約の追加を一時的なものとするか
  * tmpConstraint: 一時的に追加された制約
  * initTmpConstraint: 一時的に追加された初期値制約
- * tmpVariables: 一時制約に出現する変数のリスト
- * guard:
- * guardVars:
  * startTimes: 呼び出された関数の開始時刻を積むプロファイリング用スタック
  * profileList: プロファイリング結果のリスト
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
@@ -26,6 +26,12 @@ $MaxExtraPrecision = 1000;
  * approxPrecision: 近似精度．
  *)
 
+
+variables = {};
+prevVariables = {};
+timeVariables = {};
+initVariables = {};
+parameters = {};
 dList = {};
 profileList = {};
 createMapList = {};
@@ -114,14 +120,22 @@ profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
 (*
  * 関数呼び出しを再現するための文字列出力を行う
  *)
+
+inputPrint[name_] := Print[StringJoin[name, "[]"]];
  
-inputPrint[name_, arg___] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
+inputPrint[name_, arg__] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
 
 delimiterAddedString[del_, {h_}] := h;
 
 delimiterAddedString[del_, {h_, t__}] := StringJoin[h, del, delimiterAddedString[del, {t}] ];
 
 SetAttributes[publicMethod, HoldAll];
+
+(* MathLinkでDerivativeの送信がややこしいのでこっちで変換する *)
+
+derivative[cnt_, var_] := Derivative[cnt][var];
+derivative[cnt_, var_, suc_] := Derivative[cnt][var][suc];
+
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
    少しでもメッセージを吐く可能性のある関数は，この関数で定義するようにする．

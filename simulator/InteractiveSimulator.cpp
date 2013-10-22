@@ -252,7 +252,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
-
+/* TODO: 一旦無効化
   if(todo->phase == PointPhase)
   {
     cout << "sorry, approximation at start point of PP is not supported" << endl;
@@ -348,6 +348,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   }
 
 
+*/
   return 1;
 }
 

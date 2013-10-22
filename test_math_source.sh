@@ -1,5 +1,5 @@
 #!/bin/sh
 
-cd ./virtual_constraint_solver/mathematica/math_source
+cd ./backend/mathematica/math_source/
 ./test.sh
 cd ../../../

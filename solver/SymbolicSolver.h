@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SOLVER_SOLVER_H_
-#define _INCLUDED_HYDLA_SOLVER_SOLVER_H_
+#ifndef _INCLUDED_HYDLA_SOLVER_SYMBOLIC_SOLVER_H_
+#define _INCLUDED_HYDLA_SOLVER_SYMBOLIC_SOLVER_H_
 
 /**
  * プログラム間の依存性の問題から，
@@ -16,6 +16,7 @@
 #include <boost/function.hpp>
 
 #include "PhaseSimulator.h"
+#include "SymbolicInterface.h"
 #include "../symbolic_simulator/SymbolicTypes.h"
 
 namespace hydla {
@@ -27,10 +28,7 @@ namespace solver {
  */
 
 typedef hydla::simulator::symbolic::parameter_map_t         parameter_map_t;
-typedef std::vector<parameter_map_t>                       parameter_maps_t;
-struct CheckConsistencyResult{
-  parameter_maps_t true_parameter_maps, false_parameter_maps; 
-};
+
 
 class SymbolicSolver
 {
@@ -91,62 +89,59 @@ public:
     result_maps_t result_maps;
   } create_result_t;
 
-  SymbolicSolver()
-  {}
+  SymbolicSolver();
 
-  virtual ~SymbolicSolver()
-  {}
+  virtual ~SymbolicSolver();
 
   /**
    * 離散変化モード，連続変化モードの切り替えをおこなう
    */
-  virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision){}
+  virtual void change_mode(hydla::simulator::symbolic::Mode m, int approx_precision);
 
   /**
    * 一時的な制約の追加を開始する
    */
-  virtual void start_temporary(){assert(0);}
+  virtual void start_temporary();
 
   /**
    * 一時的な制約の追加を終了する
    * start後，この関数を呼び出すまでに追加した制約はすべて無かったことにする
    */
-  virtual void end_temporary(){assert(0);}
+  virtual void end_temporary();
 
   /**
    * 与えられた変数表と定数表を元に，制約ストアの初期化をおこなう
    * 出現する変数と定数の集合の情報も記憶する
    */
-  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm){assert(0); return false;}
-
+  virtual bool reset(const variable_map_t& vm, const parameter_map_t& pm);
 
   /**
    * 現在の制約ストアから変数表を作成する
    */
-  virtual create_result_t create_maps(){assert(0); return create_result_t();}
+  virtual create_result_t create_maps();
   
   /**
    * 制約を追加する．
    */
-  virtual void add_constraint(const constraints_t& constraints){assert(0);}
-  virtual void add_constraint(const node_sptr& constraint){assert(0);}
+  virtual void add_constraint(const constraints_t& constraints);
+  virtual void add_constraint(const node_sptr& constraint);
   
   /**
    * 変数表を用いて制約ストアを上書きする．
    */
-  virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives){assert(0);}
+  virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives);
   
   /**
    * reset the condition of parameters based on the given parameter map
    */
-  virtual bool reset_parameters(const parameter_map_t& pm){assert(0); return false;}
+  virtual bool reset_parameters(const parameter_map_t& pm);
 
-  virtual void add_guard(const node_sptr&){assert(0);}
+  virtual void add_guard(const node_sptr&);
 
   /**
    * 制約モジュール集合が矛盾する条件をセットする
    */
-  virtual void set_conditions(const node_sptr& constraint){assert(0);}
+  virtual void set_conditions(const node_sptr& constraint);
 
   /**
    * 矛盾する条件をあらかじめ調べる関数
@@ -156,18 +151,18 @@ public:
    * CONDITIONS_FALSE               : 矛盾しない            条件 : 何も入れない
    * CONDITIONS_VARIABLE_CONDITIONS : 条件によって矛盾する  条件 : 条件を入れる
    */
-  virtual ConditionsResult find_conditions(node_sptr& node){assert(0); return CONDITIONS_FALSE;}
+  virtual ConditionsResult find_conditions(node_sptr& node);
 
   /**
    * 制約ストアが無矛盾かを判定する．
    * @return 充足可能な場合の記号定数条件列，充足不可能な場合の記号定数条件列（それぞれ存在しない場合は空の列を返す）
    */
-  virtual CheckConsistencyResult check_consistency(){assert(0); return CheckConsistencyResult();}
+  //virtual backend::SymbolicInterface::CheckConsistencyResult check_consistency();
   
   /**
    * 変数に連続性を設定する
    */
-  virtual void set_continuity(const std::string &name, const int& dc){assert(0);}
+  virtual void set_continuity(const std::string &name, const int& dc);
   
   /**
    * 次の離散変化時刻を求める
@@ -176,36 +171,12 @@ public:
   virtual PP_time_result_t calculate_next_PP_time(
     const constraints_t& discrete_cause,
     const time_t& current_time,
-    const time_t& max_time){assert(0);return PP_time_result_t();}
+    const time_t& max_time);
     
 
   // 現在の制約ストアを文字列で取得する
-  virtual std::string get_constraint_store(){return "this solver doesn't implement get_constraint_store";}
+  virtual std::string get_constraint_store();
   
-  //nodeを簡約する
-  virtual ConditionsResult node_simplify(node_sptr &node){assert(0);return CONDITIONS_FALSE;}
-  // 同値判定を行う
-  virtual bool equivalent(node_sptr &lhs, node_sptr &rhs){assert(0);return false;}
-
-
-  //SymbolicTimeを簡約する
-  virtual void simplify(time_t &time){assert(0);}
-  //SymbolicTimeを比較する
-  virtual bool less_than(const time_t &lhs, const time_t &rhs){assert(0); return false;}
-  //SymbolicValueの時間をずらす
-  virtual value_t shift_expr_time(const value_t& val, const time_t &time){assert(0); return value_t();}
-  
-  /* 
-   * 変数表に時刻を適用する
-   */
-  virtual void apply_time_to_vm(const variable_map_t& in_vm, variable_map_t& out_vm, const time_t& time){}
-
-  virtual void approx_vm(variable_map_t& vm){assert(0);}
-  
-  virtual void linear_approx(const value_t& val, value_t& approxed, value_range_t& range, int precision){assert(0);}
-
-  virtual bool approx_val(const value_t& val, value_range_t& range, bool force_approx = false){assert(0); return false;}
-
   /* 
    * 出現する変数の集合を設定する．
    * resetしても初期化されない．
@@ -221,11 +192,6 @@ public:
   void set_parameter_set(parameter_set_t& p){
     parameter_set_ = &p;
   }
-
-  /*
-   * HAConverter用：
-   */
-  virtual bool check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2){assert(0);}
 
   protected:
   
@@ -247,8 +213,9 @@ public:
     return NULL;
   }
   
+  hydla::backend::SymbolicInterface* backend_;
   variable_set_t* variable_set_;
-
+  hydla::simulator::symbolic::Mode mode_;
   parameter_set_t* parameter_set_;
 };
 

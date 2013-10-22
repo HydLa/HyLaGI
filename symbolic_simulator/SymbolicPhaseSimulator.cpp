@@ -1,5 +1,4 @@
 #include "SymbolicPhaseSimulator.h"
-
 #include <iostream>
 #include <fstream>
 #include <boost/xpressive/xpressive.hpp>
@@ -18,7 +17,7 @@
 #include "VariableSearcher.h"
 
 #include "InitNodeRemover.h"
-#include "../solver/mathematica/MathematicaSolver.h"
+#include "MathLink.h"
 //#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
 
@@ -29,8 +28,8 @@
 #include "TreeInfixPrinter.h"
 #include "Dumpers.h"
 
-using namespace hydla::solver;
-using namespace hydla::solver::mathematica;
+using namespace hydla::backend;
+using namespace hydla::backend::mathematica;
 //using namespace hydla::vcs::reduce;
 
 
@@ -57,10 +56,12 @@ namespace simulator {
 namespace symbolic {
 
 void SymbolicPhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
+/* TODO: 一時無効
   analysis_result_checker_ = boost::shared_ptr<AnalysisResultChecker >(new AnalysisResultChecker(*opts_));
   analysis_result_checker_->initialize(parse_tree);
   analysis_result_checker_->set_solver(solver_);
   analysis_result_checker_->check_all_module_set((opts_->analysis_mode == "cmmap" ? true : false));
+*/
 }
 
 module_set_list_t SymbolicPhaseSimulator::calculate_mms(
@@ -99,10 +100,9 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 
 void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
+  backend_.reset(new SymbolicInterface(new MathLink(*opts_)));  
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
-
-  solver_.reset(new MathematicaSolver(*opts_));
 /*
   if(opts_->solver == "m" || opts_->solver == "Mathematica") {
     solver_.reset(new MathematicaVCS(*opts_));
@@ -110,9 +110,6 @@ void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, v
     solver_.reset(new REDUCEVCS(*opts_, m));
   }
 */
-
-  solver_->set_variable_set(*variable_set_);
-  solver_->set_parameter_set(*parameter_set_);
 }
 
 
@@ -126,52 +123,86 @@ parameter_set_t SymbolicPhaseSimulator::get_parameter_set(){
 }
 
 
-void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map){
+void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const Phase &phase){
+  std::string fmt = "vpv";
+  if(phase == PointPhase)
+  {
+    fmt += "n";
+  }
+  else
+  {
+    fmt += "z";
+  }
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
     if(it->second>=0){
       for(int i=0; i<it->second;i++){
-        solver_->set_continuity(it->first, i);
+        variable_t* var = get_variable(it->first, i);
+      backend_->call("addInitEquation", 2, fmt.c_str(), "", var, var);
       }
     }else{
       node_sptr lhs(new Variable(it->first));
       for(int i=0; i<=-it->second;i++){
-        solver_->set_continuity(it->first, i);
+        variable_t* var = get_variable(it->first, i);
+      backend_->call("addInitEquation", 2, fmt.c_str(), "", var, var);
         lhs = node_sptr(new Differential(lhs));
       }
       node_sptr rhs(new Number("0"));
       node_sptr cons(new Equal(lhs, rhs));
-      solver_->add_constraint(cons);
+      fmt = phase == PointPhase?"vn":"vt";
+      fmt += "en";
+      variable_t var(it->first, it->second);
+      backend_->call("addEquation", 2, fmt.c_str(), "", &var, &cons);
     }
   }
+}
+
+CheckConsistencyResult SymbolicPhaseSimulator::check_consistency(const Phase& phase)
+{
+  CheckConsistencyResult ret;
+  if(phase == PointPhase)
+  {
+    backend_->call("checkConsistencyPoint", 0, "", "cc", &ret);
+  }
+  else
+  {
+    backend_->call("checkConsistencyInterval", 0, "", "cc", &ret);
+  }
+  return ret;
 }
 
 SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_entailment(
   CheckConsistencyResult &cc_result,
   const node_sptr& guard,
-  const continuity_map_t& cont_map
+  const continuity_map_t& cont_map,
+  const Phase& phase
   )
 {
   CheckEntailmentResult ce_result;
-  solver_->start_temporary();
-  add_continuity(cont_map);
-  solver_->add_guard(guard);
-  cc_result = solver_->check_consistency();
-  if(!cc_result.true_parameter_maps.empty()){
+  backend_->call("startTemporary", 0, "", "");
+  add_continuity(cont_map, phase);
+  const char* fmt = (phase == PointPhase)?"en":"et";
+  backend_->call("addConstraint", 1, fmt, "", &guard);
+  cc_result = check_consistency(phase);
+  assert(cc_result.size() == 2);
+  if(!cc_result[0].empty()){
     HYDLA_LOGGER_CLOSURE("%% entailable");
-    if(!cc_result.false_parameter_maps.empty()){
+    if(!cc_result[1].empty()){
       HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
       ce_result = BRANCH_PAR;
     }
     else
     {
-      solver_->end_temporary();
-      solver_->start_temporary();
-      add_continuity(cont_map);
-      solver_->add_guard(node_sptr(new Not(guard)));
-      cc_result = solver_->check_consistency();
-      if(!cc_result.true_parameter_maps.empty()){
+      backend_->call("startTemporary", 0, "", "");
+      backend_->call("endTemporary", 0, "", "");
+      add_continuity(cont_map, phase);
+      node_sptr not_node = node_sptr(new Not(guard));
+      const char* fmt = (phase == PointPhase)?"en":"et";
+      backend_->call("addConstraint", 1, fmt, "", &not_node);
+      cc_result = check_consistency(phase);
+      assert(cc_result.size() == 2);
+      if(!cc_result[0].empty()){
         HYDLA_LOGGER_CLOSURE("%% entailablity branches");
-        if(!cc_result.false_parameter_maps.empty()){
+        if(!cc_result[1].empty()){
           HYDLA_LOGGER_LOCATION(CLOSURE);
           HYDLA_LOGGER_CLOSURE("%% branches by parameters");
           ce_result = BRANCH_PAR;
@@ -184,7 +215,7 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   }else{
     ce_result = CONFLICTING;
   }
-  solver_->end_temporary();
+  backend_->call("endTemporary", 0, "", "");
   return ce_result;
 }
 
@@ -233,25 +264,27 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     }
 
     continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map);
+    add_continuity(continuity_map, state->phase);
 
     for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
-
-    solver_->add_constraint(constraint_list);
+    const char* fmt = (state->phase == PointPhase)?"cjn":"cjt";
+    backend_->call("addConstraint", 1, fmt, "", &constraint_list);
 
     {
-      CheckConsistencyResult check_consistency_result = solver_->check_consistency();
-      if(check_consistency_result.true_parameter_maps.empty()){
+      CheckConsistencyResult cc_result;
+      cc_result = check_consistency(state->phase);
+      assert(cc_result.size() == 2);
+      if(cc_result[0].empty()){
         HYDLA_LOGGER_CLOSURE("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return false;
-      }else if (check_consistency_result.false_parameter_maps.empty()){
+      }else if (cc_result[1].empty()){
         HYDLA_LOGGER_CLOSURE("%% consistent for all cases");
       }else{
         HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
-        push_branch_states(state, check_consistency_result);
+        push_branch_states(state, cc_result);
       }
     }
     
@@ -307,7 +340,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
         
         CheckConsistencyResult check_consistency_result;
-        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map())){
+        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase)){
           case ENTAILED:
             HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
@@ -349,7 +382,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
   }while(expanded);
 
-  add_continuity(continuity_map);
+  add_continuity(continuity_map, state->phase);
 
   if(!unknown_asks.empty()){
     boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
@@ -382,15 +415,9 @@ SymbolicPhaseSimulator::calculate_variable_map(
 {
   HYDLA_LOGGER_FUNC_BEGIN(MS);
   
-  // preparation
-  if(current_phase_ == PointPhase){
-    solver_->change_mode(DiscreteMode, opts_->approx_precision);
-  }
-  else
-  {
-    solver_->change_mode(ContinuousMode, opts_->approx_precision);
-  }
-  solver_->reset(vm, todo->parameter_map); //TODO: 左極限値と記号定数の初期化処理はもっと上でやった方が無駄が少ないはず
+  backend_->call("resetConstraint", 0, "", "");
+  backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
+  backend_->call("addPrevConstraint", 1, "mvp", "", &vm); //TODO: 左極限値と記号定数の初期化処理はもっと上でやった方が無駄が少ないはず
 
   timer::Timer cc_timer;
   
@@ -406,18 +433,25 @@ SymbolicPhaseSimulator::calculate_variable_map(
   }
   
   timer::Timer create_timer;
-  SymbolicSolver::create_result_t create_result = solver_->create_maps();
+  vector<variable_map_t> create_result;
+  if(todo->phase == PointPhase)
+  {
+    backend_->call("createVariableMap", 0, "", "cv", &create_result);
+  }
+  else
+  {
+    backend_->call("createVariableMapInterval", 0, "", "cv", &create_result);
+  }
   todo->profile["CreateMap"] += create_timer.get_elapsed_us();
-  SymbolicSolver::create_result_t::result_maps_t& results = create_result.result_maps;
   
-  if(results.size() != 1 && current_phase_ == IntervalPhase){
+  if(create_result.size() != 1 && current_phase_ == IntervalPhase){
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
     todo->parent->children.push_back(phase);
     HYDLA_LOGGER_FUNC_END(MS);
     return CVM_ERROR;
   }
   
-  result_vms = results;
+  result_vms = create_result;
 
   HYDLA_LOGGER_FUNC_END(MS);
   return CVM_CONSISTENT;
@@ -465,7 +499,9 @@ SymbolicPhaseSimulator::todo_list_t
 {
   HYDLA_LOGGER_FUNC_BEGIN(MS);
   
-  solver_->reset_constraint(phase->variable_map, false);
+  backend_->call("resetConstraintForVariable", 0, "", "");
+  const char* fmt = (current_todo->phase == PointPhase)?"mv0n":"mv0t";
+  backend_->call("addConstraint", 1, fmt, "", &phase->variable_map);
   
   todo_list_t ret;
   
@@ -513,7 +549,10 @@ SymbolicPhaseSimulator::todo_list_t
       max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
     }
 
-    SymbolicSolver::PPTimeResult time_result = solver_->calculate_next_PP_time(disc_cause, phase->current_time, max_time);
+    SymbolicInterface::PPTimeResult time_result; 
+    time_t time_limit(max_time->clone());
+    *time_limit -= *phase->current_time;
+    backend_->call("calculateNextPointPhaseTime", 2, "ltdjt", "cp", &(time_limit), &disc_cause, &time_result);
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -521,8 +560,9 @@ SymbolicPhaseSimulator::todo_list_t
 
     while(true)
     {
-      SymbolicSolver::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
-      solver_->simplify(candidate.time);
+      SymbolicInterface::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
+      node_sptr time_node = candidate.time->get_node();
+      backend_->call("simplify", 1, "et", "l", &time_node, &pr->end_time);
 /*
       value_range_t tmp_range;
       if(solver_->approx_val(candidate.time, tmp_range))
@@ -537,9 +577,12 @@ SymbolicPhaseSimulator::todo_list_t
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
       }
-      pr->end_time = candidate.time;
       if(candidate.is_max_time) {
         pr->cause_of_termination = simulator::TIME_LIMIT;
+      }
+      else
+      {
+        *pr->end_time += *current_todo->current_time;
       }
       results.push_back(pr);
       if(++time_it >= time_result.candidates.size())break;
@@ -558,6 +601,7 @@ SymbolicPhaseSimulator::todo_list_t
     while(true)
     {
       pr = results[result_it];
+      HYDLA_LOGGER_PHASE("%%time: ", *pr->current_time);
       if(pr->cause_of_termination != TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
@@ -693,6 +737,53 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
 
 */
 
+variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const time_t& tm)
+{
+  HYDLA_LOGGER_FUNC_BEGIN(PHASE);
+  HYDLA_LOGGER_PHASE("%% time: ", *tm);
+  variable_map_t result;
+  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  {
+    if(it->second.undefined())
+    {
+      result[it->first] = it->second;
+    }
+    else if(it->second.unique())
+    {
+      value_t val = it->second.get_unique();
+      range_t& range = result[it->first];
+      value_t ret;
+      backend_->call("applyTime2Expr", 2, "ltlt", "l", &val, &tm, &ret);
+      range.set_unique(ret);
+    }
+    else
+    {
+      range_t range = it->second;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("applyTime2Expr", 2, "ltlt", "l", &val, &tm, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
+      }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+
+        ValueRange::bound_t bd = it->second.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("applyTime2Expr", 2, "ltlt", "l", &val, &tm, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      result[it->first] = range;
+    }
+  }
+  HYDLA_LOGGER_FUNC_END(PHASE);  
+  return result;
+}
+
+
 variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
   variable_map_t shifted_vm;
   variable_map_t::const_iterator it  = vm.begin();
@@ -702,7 +793,11 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
       shifted_vm[it->first] = it->second;
     else if(it->second.unique())
     {
-      shifted_vm[it->first] = solver_->shift_expr_time(it->second.get_unique(), time);
+      value_t val = it->second.get_unique();
+      range_t& range = shifted_vm[it->first];
+      value_t ret;
+      backend_->call("exprTimeShift", 2, "ltlt", "l", &val, &time, &ret);
+      range.set_unique(ret);
     }
     else
     {
@@ -710,12 +805,19 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
       for(uint i = 0; i < range.get_lower_cnt(); i++)
       {
         ValueRange::bound_t bd = it->second.get_lower_bound(i);
-        range.set_lower_bound(solver_->shift_expr_time(bd.value, time), bd.include_bound);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "ltlt", "l", &val, &time, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
       }
       for(uint i = 0; i < range.get_upper_cnt(); i++)
       {
+
         ValueRange::bound_t bd = it->second.get_upper_bound(i);
-        range.set_upper_bound(solver_->shift_expr_time(bd.value, time), bd.include_bound);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "ltlt", "l", &val, &time, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
       }
       shifted_vm[it->first] = range;
     }

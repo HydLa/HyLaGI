@@ -2,16 +2,12 @@
 #define _INCLUDED_HYDLA_SOLVER_MATHEMATICA_MATHEMATICA_EXPRESSION_CONVERTER_H_
 
 
-//Mathematica文字列⇔SymbolicValueという，式の変換を担当するクラス．ValueRangeも少し．
-
-#include "../SymbolicSolver.h"
-#include "PacketSender.h"
 #include <map>
 #include "TreeVisitor.h"
 #include "ParseTree.h"
 
 namespace hydla {
-namespace solver {
+namespace backend {
 namespace mathematica {
 
 
@@ -44,7 +40,7 @@ class MathematicaExpressionConverter
 };
 
 } // namespace mathematica
-} // namespace solver
+} // namespace backend
 } // namespace hydla 
 
 #endif //include guard

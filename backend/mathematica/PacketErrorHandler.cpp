@@ -1,14 +1,14 @@
 #include "PacketErrorHandler.h"
 
-#include "mathlink_helper.h"
+#include "MathLink.h"
 #include "Logger.h"
 #include "TimeOutError.h"
-#include "../SolveError.h"
+#include "LinkError.h"
 
 #include <iostream>
 
 namespace hydla {
-namespace solver {
+namespace backend {
 namespace mathematica {
 
 bool PacketErrorHandler::handle(MathLink* ml) 
@@ -18,12 +18,10 @@ bool PacketErrorHandler::handle(MathLink* ml)
   ml->get_next();
   int ret_code = ml->get_integer();
   if(ret_code == 0) {
-    HYDLA_LOGGER_LOCATION(VCS);
-    throw SolveError("input:\n" + ml->get_input_print() + "\n\ntrace:\n" + ml->get_debug_print());
+    throw LinkError("math", "input:\n" + ml->get_input_print() + "\n\ntrace:\n" + ml->get_debug_print(), 0, "");
     return true;
   }
   if(ret_code == -1) {
-    HYDLA_LOGGER_LOCATION(VCS);
     throw hydla::timeout::TimeOutError("input:\n" + ml->get_input_print() + "\n\ntrace:\n" + ml->get_debug_print());
     return true;
   }
@@ -34,6 +32,5 @@ bool PacketErrorHandler::handle(MathLink* ml)
 
 
 } // namespace mathematica
-} // namespace solver
+} // namespace backend
 } // namespace hydla 
-

@@ -1,5 +1,6 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
+#include "SymbolicInterface.h"
 #include "SymbolicValue.h"
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
@@ -89,6 +90,8 @@ parameter_t* Simulator::introduce_parameter(variable_t* var, phase_result_sptr_t
   parameter_t param(var, phase);
   parameter_set_->push_front(param);
   (*original_parameter_map_)[&(parameter_set_->front())] = range;
+  // TODO: バックエンド側での対応
+  backend_->call("addParameter", 1, "p", "", &param);
   return &(parameter_set_->front());
 }
 

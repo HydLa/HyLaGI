@@ -22,7 +22,6 @@ struct BatchTodoContainer: public todo_container_t
   virtual simulation_todo_sptr_t pop_todo()
   {
     simulation_todo_sptr_t todo;
-    HYDLA_LOGGER_REST(__FUNCTION__, container_.size());
     if(search_method_ == DFS){
       todo = container_.front();
       container_.pop_front();
@@ -30,9 +29,7 @@ struct BatchTodoContainer: public todo_container_t
       todo = container_.back();
       container_.pop_back();
     }
-    HYDLA_LOGGER_REST(__FUNCTION__, container_.size());
     profile_vector_->push_back(todo);
-    HYDLA_LOGGER_REST(__FUNCTION__, container_.size());
     return todo;
   }
 

@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <ostream>
 #include <fstream>
@@ -9,8 +10,7 @@
 #include "TreeInfixPrinter.h"
 #include "NonPrevSearcher.h"
 #include "Timer.h"
-
-#include "../solver/mathematica/MathematicaSolver.h"
+#include "SymbolicInterface.h"
 
 using namespace std;
 using namespace hydla::ch;
@@ -18,7 +18,6 @@ using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
 using namespace hydla::solver;
-using namespace hydla::solver::mathematica;
 using namespace hydla::timer;
 
 namespace hydla{
@@ -69,10 +68,8 @@ void ConstraintAnalyzer::initialize(const parse_tree_sptr& parse_tree)
   init_module_set_container(parse_tree);
 
   init_variable_map(parse_tree);
-
-  solver_.reset(new MathematicaSolver(*opts_));
-  solver_->set_variable_set(*variable_set_);
-  solver_->set_parameter_set(*parameter_set_);
+  backend_.reset(new backend::SymbolicInterface(new backend::mathematica::MathLink(*opts_)));
+  // solver_.reset(new solver::SymbolicSolver(backend_));
 }
 
 void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
@@ -119,12 +116,12 @@ void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
       new_cm->add_parents(*pit);
       (*pit)->add_children(new_cm);
     }
-    /*
+    
     // 実際に条件を使う時用にrootを保持しておく
-    if(root_cm_ == NULL){
-      root_cm_ = cm_map_sptr(new_cm);
-    }
-    */
+    //if(root_cm_ == NULL){
+    //  root_cm_ = cm_map_sptr(new_cm);
+    //}
+    
     cm_list_.push_back(new_cm);
   }
 }
@@ -149,12 +146,11 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
     msc_no_init_->mark_current_node();
   }
 
-  /*
-  for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
-    std::cout << *(*it);
-  }
-  std::cout<<std::endl;
-  */
+  
+  //for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+  //  std::cout << *(*it);
+  //}
+  //std::cout<<std::endl;
   std::cout << "analysis : " << ca_timer.get_elapsed_us() << std::endl;
 }
 
@@ -371,3 +367,4 @@ phase_result_const_sptr_t ConstraintAnalyzer::simulate(){
 }
 }
 }
+*/

@@ -84,12 +84,18 @@ int main(int argc, char *argv[])
 
   std::cout <<
     "#include \"" << argv[1] << ".h\"\n\n"
+    "namespace hydla{\n"
+    "namespace backend{\n"
+    "namespace mathematica{\n"
     "const char* " << argv[1] << "() {\n"
     "  return \n";
   conv();
   std::cout << 
     ";\n"
-    "}";
+    "}\n"
+    "} //mathematica\n"
+    "} //backend\n"
+    "} //hydla\n";
 
   return 0;
 }
