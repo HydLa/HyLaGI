@@ -26,6 +26,7 @@
 
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
+#include "UnsatCoreFinder.h"
 #include "TreeInfixPrinter.h"
 #include "Dumpers.h"
 
@@ -85,6 +86,21 @@ SymbolicPhaseSimulator::check_conditions
     return CVM_INCONSISTENT;
   }
   return CVM_ERROR;
+}
+void
+SymbolicPhaseSimulator::find_unsat_core
+(const module_set_sptr& ms,
+ simulation_todo_sptr_t& todo,
+ const variable_map_t& vm
+ ){
+  boost::shared_ptr<UnsatCoreFinder> unsat_core_finder(new UnsatCoreFinder(*opts_));
+  unsat_core_finder->initialize();
+  map<node_sptr,string> S;
+  map<const std::string,int> S4C;
+  cout << "start find unsat core " << endl;
+  cout << ms << endl;
+  unsat_core_finder->find_unsat_core(ms,S,S4C,todo,vm);
+  cout << "end find unsat core " << endl;
 }
 
 

@@ -72,6 +72,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.dump_in_progress = po.count("dump_in_progress")>0;
   opts.dump_relation = po.count("dump_module_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
+  opts.find_unsat_core_mode = po.count("find_unsat_core")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   opts.ha_convert_mode = po.count("ha")>0;
   //opts.profile_mode  = po.count("profile")>0;
@@ -184,7 +185,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
   }
-  
+
   else
   {
     SequentialSimulator* ss = new SequentialSimulator(opts);

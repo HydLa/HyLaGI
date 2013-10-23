@@ -144,6 +144,12 @@ protected:
     const variable_map_t &,
     bool b) = 0;
 
+  virtual void find_unsat_core(
+    const module_set_sptr& ms,
+    simulation_todo_sptr_t&,
+    const variable_map_t&
+      ) = 0;
+
   virtual module_set_list_t calculate_mms(
     simulation_todo_sptr_t& state,
     const variable_map_t& vm) = 0;

@@ -201,6 +201,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           case CVM_INCONSISTENT:
           HYDLA_LOGGER_LOCATION(MS);
           todo->module_set_container->mark_nodes(*connected_ms);
+          if(opts_->find_unsat_core_mode)
+          {
+            find_unsat_core(ms, todo, time_applied_map);
+          }
           return result;
           break;
           
