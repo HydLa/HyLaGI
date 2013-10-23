@@ -1,6 +1,5 @@
 #ifndef _INCLUDED_HYDLA_BACKEND_SYMBOLIC_INTERFACE_H_
 #define _INCLUDED_HYDLA_BACKEND_SYMBOLIC_INTERFACE_H_
-
 #include "SymbolicLink.h"
 #include "SymbolicTypes.h"
 

@@ -5,14 +5,13 @@
 
 #include "ParseTree.h"
 #include "Simulator.h"
-#include "../solver/SymbolicSolver.h"
 #include "CMMap.h"
 
 namespace hydla{
 namespace simulator{
 namespace symbolic {
 
-  class ConstraintAnalyzer : public hydla::simulator::Simulator
+class ConstraintAnalyzer : public hydla::simulator::Simulator
 {
 public:
   typedef enum{
@@ -78,10 +77,6 @@ public:
 
 protected:
 
-  /**
-   * 使用するソルバへのポインタ
-   */
-  boost::shared_ptr<hydla::solver::SymbolicSolver> solver_;
 
   /**
    * 制約モジュール集合の名前とそれに対応する条件のマップ

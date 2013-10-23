@@ -5,7 +5,6 @@
 #include "SymbolicValue.h"
 #include "Dumpers.h"
 #include "Exceptions.h"
-#include "SymbolicSolver.h"
 #include "SymbolicInterface.h"
 
 using namespace hydla::simulator;

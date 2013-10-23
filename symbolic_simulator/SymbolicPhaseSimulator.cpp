@@ -23,6 +23,7 @@
 
 #include "PrevSearcher.h"
 
+#include "SymbolicInterface.h"
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
 #include "TreeInfixPrinter.h"

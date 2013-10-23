@@ -5,7 +5,6 @@
 #include "SymbolicPhaseSimulator.h"
 #include "Simulator.h"
 #include "ConstraintAnalyzer.h"
-#include "../solver/SymbolicSolver.h"
 
 namespace hydla{
 namespace simulator{
@@ -17,7 +16,7 @@ public:
   AnalysisResultChecker(const simulator::Opts& opts);
   virtual ~AnalysisResultChecker();
 
-  virtual void set_solver(boost::shared_ptr<hydla::solver::SymbolicSolver> solver);
+  //virtual void set_solver();
 
   virtual module_set_list_t 
     calculate_mms(
