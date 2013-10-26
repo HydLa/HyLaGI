@@ -5,7 +5,7 @@
 #include "SymbolicValue.h"
 #include "Dumpers.h"
 #include "Exceptions.h"
-#include "SymbolicInterface.h"
+#include "Backend.h"
 
 using namespace hydla::simulator;
 using namespace hydla::backend;

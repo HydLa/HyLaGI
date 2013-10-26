@@ -588,6 +588,7 @@ getExprCode[expr_] := Switch[Head[expr],
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 integerString[expr_] := (
   expr /. (Infinity :> inf)
+       /. (Derivative[cnt_, var_, ___]  :> derivative[cnt, var])
        /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
        /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
        /. (x_Integer :> replaceIntegerToString[x])

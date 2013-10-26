@@ -63,8 +63,8 @@ public:
   /// モジュール集合の選択
   static bool module_set_area_; 
   
-  /// VirtualConstraintSolver内での処理．主に外部ソフトとの通信処理
-  static bool vcs_area_;
+  /// Backendモジュール内での処理
+  static bool backend_area_;
   
   /// 外部ソフトでの処理
   static bool extern_area_; 
@@ -81,7 +81,7 @@ public:
     CalculateClosureArea,
     PhaseArea,
     ModuleSetArea,
-    VCSArea,
+    BackendArea,
     ExternArea,
     RestArea,
   	HAConverterArea,
@@ -120,8 +120,8 @@ public:
           return module_set_area_;
         case PhaseArea:
           return phase_area_;
-        case VCSArea:
-          return vcs_area_;
+        case BackendArea:
+          return backend_area_;
         case ExternArea:
           return extern_area_;
         case RestArea:
@@ -219,10 +219,10 @@ private:
   HYDLA_LOGGER_LOG_WRITE_MACRO(ModuleSetArea, debug_write, (__VA_ARGS__))
   
 /**
- * VCSを継承したクラスのdebugログの出力
+ * Backend内でのdebugログの出力
  */
-#define HYDLA_LOGGER_VCS(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(VCSArea, debug_write, (__VA_ARGS__))
+#define HYDLA_LOGGER_BACKEND(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(BackendArea, debug_write, (__VA_ARGS__))
 
 
 /**

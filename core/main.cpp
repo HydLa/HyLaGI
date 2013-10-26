@@ -126,7 +126,7 @@ void hydla_main(int argc, char* argv[])
       Logger::calculate_closure_area_ = true;
       Logger::phase_area_ = true;
       Logger::module_set_area_ = true;
-      Logger::vcs_area_ = true;
+      Logger::backend_area_ = true;
       Logger::extern_area_ = true;
       Logger::rest_area_ = true;
       Logger::ha_converter_area_ = true;
@@ -135,7 +135,7 @@ void hydla_main(int argc, char* argv[])
       Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
       Logger::module_set_area_ = (area_string.find('m') != std::string::npos);
       Logger::phase_area_ = (area_string.find('f') != std::string::npos);
-      Logger::vcs_area_ = (area_string.find('v') != std::string::npos);
+      Logger::backend_area_ = (area_string.find('v') != std::string::npos);
       Logger::extern_area_ = (area_string.find('e') != std::string::npos);
       Logger::rest_area_ = (area_string.find('r') != std::string::npos);
       Logger::ha_converter_area_ = (area_string.find('h') != std::string::npos);

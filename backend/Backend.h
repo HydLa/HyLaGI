@@ -1,6 +1,6 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_SYMBOLIC_INTERFACE_H_
-#define _INCLUDED_HYDLA_BACKEND_SYMBOLIC_INTERFACE_H_
-#include "SymbolicLink.h"
+#ifndef _INCLUDED_HYDLA_BACKEND_BACKEND_H_
+#define _INCLUDED_HYDLA_BACKEND_BACKEND_H_
+#include "Link.h"
 #include "SymbolicTypes.h"
 
 #include "DefaultTreeVisitor.h"
@@ -9,7 +9,7 @@
 namespace hydla{
 namespace backend{
 
-class SymbolicInterface : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
+class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
 {
   public:
 
@@ -53,8 +53,8 @@ class SymbolicInterface : public hydla::parse_tree::DefaultTreeVisitor, hydla::s
     candidate_list_t candidates;
   } pp_time_result_t;
 
-  SymbolicInterface(SymbolicLink *link);
-  virtual ~SymbolicInterface();
+  Backend(Link *link);
+  virtual ~Backend();
   /** set value to variable
    *  @param name name of variable
    *  @param value value to be set
@@ -245,7 +245,7 @@ class SymbolicInterface : public hydla::parse_tree::DefaultTreeVisitor, hydla::s
   int in_prev_;
 
 
-  SymbolicLink* link_;
+  Link* link_;
 
   variable_form_t variable_arg_;
 

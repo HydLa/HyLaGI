@@ -15,7 +15,7 @@ namespace hydla {
 
 namespace backend
 {
-  class SymbolicInterface;
+  class Backend;
 }
 
 namespace simulator {
@@ -269,7 +269,7 @@ protected:
    */ 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
   
-  boost::shared_ptr<backend::SymbolicInterface> backend_;
+  boost::shared_ptr<backend::Backend> backend_;
 
   /**
    * a container for candidate module sets

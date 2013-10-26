@@ -17,7 +17,7 @@
 namespace hydla {
 
 namespace backend{
-  class SymbolicInterface;
+  class Backend;
 }
 
 namespace simulator {
@@ -88,8 +88,8 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
 
-  /// 使用するソルバへのポインタ
-  boost::shared_ptr<backend::SymbolicInterface> backend_;
+  /// pointer to the backend to be used
+  boost::shared_ptr<backend::Backend> backend_;
   
 protected:
   

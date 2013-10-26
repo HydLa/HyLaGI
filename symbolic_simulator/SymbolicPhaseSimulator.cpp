@@ -17,13 +17,13 @@
 #include "VariableSearcher.h"
 
 #include "InitNodeRemover.h"
-#include "MathLink.h"
+#include "MathematicaLink.h"
 //#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
 
-#include "SymbolicInterface.h"
+#include "Backend.h"
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
 #include "TreeInfixPrinter.h"
@@ -101,7 +101,7 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 
 void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
-  backend_.reset(new SymbolicInterface(new MathLink(*opts_)));  
+  backend_.reset(new Backend(new MathematicaLink(*opts_)));  
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
 /*
@@ -550,7 +550,7 @@ SymbolicPhaseSimulator::todo_list_t
       max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
     }
 
-    SymbolicInterface::PPTimeResult time_result; 
+    Backend::PPTimeResult time_result; 
     time_t time_limit(max_time->clone());
     *time_limit -= *phase->current_time;
     backend_->call("calculateNextPointPhaseTime", 2, "ltdjt", "cp", &(time_limit), &disc_cause, &time_result);
@@ -561,7 +561,7 @@ SymbolicPhaseSimulator::todo_list_t
 
     while(true)
     {
-      SymbolicInterface::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
+      Backend::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       node_sptr time_node = candidate.time->get_node();
       backend_->call("simplify", 1, "et", "l", &time_node, &pr->end_time);
 /*

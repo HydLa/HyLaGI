@@ -1,6 +1,6 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
-#include "SymbolicInterface.h"
+#include "Backend.h"
 #include "SymbolicValue.h"
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
