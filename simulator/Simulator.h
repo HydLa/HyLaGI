@@ -33,6 +33,7 @@ typedef struct Opts_ {
   bool interactive_mode;
   bool find_unsat_core_mode;
   bool ha_convert_mode;
+  bool ha_simulator_mode;
   bool dump_relation;
   bool profile_mode;
   bool parallel_mode;

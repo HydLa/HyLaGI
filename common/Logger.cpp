@@ -14,6 +14,7 @@ bool Logger::vcs_area_;
 bool Logger::extern_area_;
 bool Logger::rest_area_;
 bool Logger::ha_converter_area_;
+bool Logger::ha_simulator_area_;
 
 Logger::Logger() :
   log_level_(Warn)

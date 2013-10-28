@@ -130,6 +130,7 @@ void hydla_main(int argc, char* argv[])
       Logger::extern_area_ = true;
       Logger::rest_area_ = true;
       Logger::ha_converter_area_ = true;
+      Logger::ha_simulator_area_ = true;
     }else{
       Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
       Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
@@ -139,6 +140,7 @@ void hydla_main(int argc, char* argv[])
       Logger::extern_area_ = (area_string.find('e') != std::string::npos);
       Logger::rest_area_ = (area_string.find('r') != std::string::npos);
       Logger::ha_converter_area_ = (area_string.find('h') != std::string::npos);
+      Logger::ha_simulator_area_ = (area_string.find('s') != std::string::npos);
     }
   }else {                              // 警告のみ出力
     Logger::instance().set_log_level(Logger::Warn);

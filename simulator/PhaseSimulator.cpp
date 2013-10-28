@@ -403,3 +403,39 @@ bool PhaseSimulator::check_include_bound(value_t tmp_variable_phase, value_t tmp
   HYDLA_LOGGER_HA("****** check_include_bound ******");
   return solver_->check_include_bound(tmp_variable_phase, tmp_variable_past, pm1, pm2);
 }
+
+void PhaseSimulator::substitute_values_for_vm(phase_result_sptr_t pr, std::map<parameter_t*, value_t> vm)
+{
+  HYDLA_LOGGER_HAS("****** substitute_values_for_vm ******");
+	// 変数に代入
+	variable_map_t ret;
+	solver_->substitute_values_for_vm(pr->variable_map, ret, vm);
+	pr->variable_map = ret;
+	// 時刻にも代入
+  HYDLA_LOGGER_HAS("****** substitute_values_for_vm time ******");
+	time_t ret_time;
+	solver_->substitute_values_for_time(pr->current_time, ret_time, vm);
+	pr->current_time = ret_time;
+	if(pr->phase == IntervalPhase){
+		solver_->substitute_values_for_time(pr->end_time, ret_time, vm);
+		pr->end_time = ret_time;
+	}
+}
+
+void PhaseSimulator::substitute_current_time_for_vm(phase_result_sptr_t pr, time_t current_time)
+{
+  HYDLA_LOGGER_HAS("****** substitute_current_time_for_vm ******");
+	variable_map_t ret;
+  solver_->substitute_current_time_for_vm(pr->variable_map, ret, current_time);
+  pr->variable_map = ret;
+	// 時刻にも適用
+  HYDLA_LOGGER_HAS("****** substitute_current_time_for_vm time ******");
+	time_t ret_time;
+	solver_->substitute_current_time_for_time(pr->current_time, ret_time, current_time);
+	pr->current_time = ret_time;
+	if(pr->phase == IntervalPhase){
+		solver_->substitute_current_time_for_time(pr->end_time, ret_time, current_time);
+		pr->end_time = ret_time;
+	}
+}
+

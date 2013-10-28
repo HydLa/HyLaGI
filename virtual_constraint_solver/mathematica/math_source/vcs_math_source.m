@@ -1084,3 +1084,39 @@ addParameterConstraintPast[pcons_, pars_] := (
      parametersPast = Union[parametersPast, pars];
      simplePrint[pConstraintPast];
      );
+
+publicMethod[
+  SubstituteValue,
+  expr, value,
+  Module[
+    {appliedExpr},
+    appliedExpr = Reduce[{expr, value}, expr[[1]], Reals];
+    simplePrint[appliedExpr];
+    appliedExpr = appliedExpr[[Length[appliedExpr],2]];    
+    If[Element[appliedExpr, Reals] =!= False,
+      integerString[appliedExpr],
+      Message[substitute_value::nrls, appliedExpr]
+    ]
+  ]
+];
+
+publicMethod[
+  SubstituteTime,
+  expr, value,
+  Module[
+    {appliedExpr},
+    appliedExpr = Reduce[{t==expr, t>=0, value}, t, Reals];
+    simplePrint[appliedExpr];
+    appliedExpr = appliedExpr[[Length[appliedExpr],2]];    
+    If[Element[appliedExpr, Reals] =!= False,
+      integerString[appliedExpr],
+      Message[substitute_value::nrls, appliedExpr]
+    ]
+  ]
+];
+
+publicMethod[
+  timeAdd,
+  expr, time,
+  integerString[expr + time]
+];

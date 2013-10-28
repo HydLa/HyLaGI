@@ -228,6 +228,14 @@ public:
    */
   virtual bool check_include_bound(value_t v1, value_t v2, parameter_map_t pm1, parameter_map_t pm2){assert(0);}
 
+	/*
+   * HASimulator用：
+   */
+  virtual void substitute_values_for_vm(variable_map_t in_vm, variable_map_t& out_vm, std::map<parameter_t*, value_t> vm){assert(0);}
+  virtual void substitute_values_for_time(time_t in_time, time_t& out_time, std::map<parameter_t*, value_t> vm){assert(0);}
+  virtual void substitute_current_time_for_vm(variable_map_t in_vm, variable_map_t& out_vm, time_t current_time){assert(0);}
+  virtual void substitute_current_time_for_time(time_t in_time, time_t& out_time, time_t current_time){assert(0);}
+
   protected:
   
   variable_t* get_variable(const std::string &name, int derivative_count) const{

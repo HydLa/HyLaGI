@@ -8,6 +8,7 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
+#include "HASimulator.h"
 #include "ParallelSimulator.h"
 
 
@@ -75,6 +76,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.find_unsat_core_mode = po.count("find_unsat_core")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   opts.ha_convert_mode = po.count("ha")>0;
+  opts.ha_simulator_mode = po.count("hs")>0;
   //opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;
   opts.parallel_number   = po.get<int>("pn");
@@ -179,14 +181,29 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   
   else if(opts.ha_convert_mode)
   {
-  	opts.nd_mode = true;
-  	HAConverter ha_converter(opts);
+    opts.nd_mode = true;
+    HAConverter ha_converter(opts);
     ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
   }
 
-  else
+  else if(opts.ha_simulator_mode)
+  {
+    opts.nd_mode = true;
+    HAConverter ha_converter(opts);
+    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
+    ha_converter.initialize(parse_tree);
+
+  	HASimulator ha_simulator(opts);
+    ha_simulator.set_phase_simulator(new SymbolicPhaseSimulator(&ha_simulator, opts));
+    ha_simulator.initialize(parse_tree);
+  	
+  	ha_converter.simulate();
+    ha_simulator.simulate(ha_converter.get_results());
+  }
+
+	else
   {
     SequentialSimulator* ss = new SequentialSimulator(opts);
     simulator_ = ss;

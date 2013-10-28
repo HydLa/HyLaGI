@@ -72,8 +72,10 @@ public:
   /// どこにも該当しないが，出力したいもの．極力使わないように
   static bool rest_area_;
 	
-	/// HA変換の処理
-	static bool ha_converter_area_;
+  /// HA変換の処理
+  static bool ha_converter_area_;
+  /// HAsimulatorの処理
+  static bool ha_simulator_area_;
 
   enum LogLevel {
     ParsingArea,
@@ -84,7 +86,8 @@ public:
     VCSArea,
     ExternArea,
     RestArea,
-  	HAConverterArea,
+    HAConverterArea,
+    HASimulatorArea,
     Debug,
     Warn,
     Error,
@@ -126,8 +129,10 @@ public:
           return extern_area_;
         case RestArea:
           return rest_area_;
-      case HAConverterArea:
-      		return ha_converter_area_;
+        case HAConverterArea:
+          return ha_converter_area_;
+        case HASimulatorArea:
+          return ha_simulator_area_;
         default:
           return log_level_ <= level;
       }
@@ -243,6 +248,12 @@ private:
  */
 #define HYDLA_LOGGER_HA(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(HAConverterArea, debug_write, (__VA_ARGS__))
+
+/**
+ * HAsimulatorのdebugログ出力
+ */
+#define HYDLA_LOGGER_HAS(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(HASimulatorArea, debug_write, (__VA_ARGS__))
 
 /**
  * ログレベルwarnでのログの出力

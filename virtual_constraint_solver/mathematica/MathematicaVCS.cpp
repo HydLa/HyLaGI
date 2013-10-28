@@ -1359,6 +1359,143 @@ bool MathematicaVCS::check_include_bound(value_t v1, value_t v2, parameter_map_t
   }
 }
 
+/**
+ * HASimulator用:
+ */
+void MathematicaVCS::substitute_values_for_vm(variable_map_t in_vm, variable_map_t& out_vm, std::map<parameter_t*, value_t> vm)
+{
+  PacketSender ps(ml_);
+
+  variable_map_t::const_iterator it  = in_vm.begin();
+  variable_map_t::const_iterator end = in_vm.end();
+  for(; it!=end; ++it) {
+    HYDLA_LOGGER_HAS("variable : ", *(it->first));
+  	std::map<parameter_t*, value_t>::const_iterator it_v = vm.begin();
+  	std::map<parameter_t*, value_t>::const_iterator end_v = vm.end();
+    value_t    value;
+  	value = it->second;
+	  for(; it_v != end_v; ++it_v) {
+	    // 値
+	    if(!it->second->undefined()) {
+	    	HYDLA_LOGGER_HAS("in_vm : ", *(it->first), "  =  ", *value);
+	    	HYDLA_LOGGER_HAS("vm : ", *(it_v->first), "  =  ", *(it_v->second));
+	      ml_.put_function("SubstituteValue", 2);
+
+	    	ml_.put_function("Equal", 2);
+      	ps.put_var(it->first->get_name(), it->first->get_derivative_count(), VA_None);
+      	ps.put_value(value, VA_None);
+	    	
+	    	ml_.put_function("Equal", 2);
+      	ps.put_par(it_v->first->get_name(), it_v->first->get_derivative_count(), it_v->first->get_phase_id());
+      	ps.put_value(it_v->second, VA_None);
+	    	
+	    ////////////////// 受信処理
+
+	      ml_.receive();
+	      PacketErrorHandler::handle(&ml_);
+	      
+	      value = value_t(MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_));
+	      HYDLA_LOGGER_REST("value : ", value->get_string());
+	    }
+    	HYDLA_LOGGER_HAS("ret value : ", *value);
+  	}
+	  out_vm[it->first] = value;
+  }
+  ml_.MLNewPacket();
+  HYDLA_LOGGER_FUNC_END(VCS);
+}
+      	
+void MathematicaVCS::substitute_values_for_time(time_t in_time, time_t& out_time, std::map<parameter_t*, value_t> vm)
+{
+  PacketSender ps(ml_);
+
+  HYDLA_LOGGER_HAS("time : ", *(in_time));
+	std::map<parameter_t*, value_t>::const_iterator it_v = vm.begin();
+	std::map<parameter_t*, value_t>::const_iterator end_v = vm.end();
+  value_t    value;
+	value = in_time;
+  for(; it_v != end_v; ++it_v) {
+    // 値
+    ml_.put_function("SubstituteTime", 2);
+
+  	ps.put_value(value, VA_None);
+  	
+  	ml_.put_function("Equal", 2);
+  	ps.put_par(it_v->first->get_name(), it_v->first->get_derivative_count(), it_v->first->get_phase_id());
+  	ps.put_value(it_v->second, VA_None);
+  	
+  ////////////////// 受信処理
+
+    ml_.receive();
+    PacketErrorHandler::handle(&ml_);
+    
+    value = value_t(MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_));
+    HYDLA_LOGGER_REST("value : ", value->get_string());
+    HYDLA_LOGGER_HAS("ret value : ", *value);
+	}
+  out_time = value;
+  
+  ml_.MLNewPacket();
+  HYDLA_LOGGER_FUNC_END(VCS);
+}
+      	
+void MathematicaVCS::substitute_current_time_for_vm(variable_map_t in_vm, variable_map_t& out_vm, time_t current_time)
+{
+  PacketSender ps(ml_);
+
+  HYDLA_LOGGER_HAS("current_time : ", *current_time);
+
+	variable_map_t::const_iterator it  = in_vm.begin();
+  variable_map_t::const_iterator end = in_vm.end();
+  for(; it!=end; ++it) {
+    HYDLA_LOGGER_HAS("variable : ", *(it->first));
+    // 値
+    value_t    value;
+    if(!it->second->undefined()) {
+      ml_.put_function("exprTimeShift", 2);
+      ps.put_value(it->second, VA_None);
+      ps.put_value(current_time, VA_None);
+
+    ////////////////// 受信処理
+
+      ml_.receive();
+      PacketErrorHandler::handle(&ml_);
+      
+      value = value_t(MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_));
+      HYDLA_LOGGER_REST("value : ", value->get_string());
+    }
+    out_vm[it->first] = value;
+  }
+  ml_.MLNewPacket();
+  HYDLA_LOGGER_FUNC_END(VCS);
+}
+      	
+void MathematicaVCS::substitute_current_time_for_time(time_t in_time, time_t& out_time, time_t current_time)
+{
+  PacketSender ps(ml_);
+
+  HYDLA_LOGGER_HAS("current_time : ", *current_time);
+
+  HYDLA_LOGGER_HAS("time : ", *in_time);
+  // 値
+  value_t    value;
+  ml_.put_function("timeAdd", 2);
+  ps.put_value(in_time, VA_None);
+  ps.put_value(current_time, VA_None);
+
+////////////////// 受信処理
+
+  ml_.receive();
+  PacketErrorHandler::handle(&ml_);
+  
+  value = value_t(MathematicaExpressionConverter::receive_and_make_symbolic_value(ml_));
+  HYDLA_LOGGER_REST("value : ", value->get_string());
+  out_time = value;
+
+  ml_.MLNewPacket();
+  HYDLA_LOGGER_FUNC_END(VCS);
+}
+
 } // namespace mathematica
 } // namespace vcs
 } // namespace hydla 
