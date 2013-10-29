@@ -92,7 +92,6 @@ namespace simulator {
 						continue;
 					}
 	    	}
-	    	
 	      PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
 	      for(unsigned int j = 0; j < next_todos.size(); j++)
 	      {
@@ -105,6 +104,7 @@ namespace simulator {
 	      		tmp_tmp_cc_ = tmp_cc_;
 	      		tmp_tmp_cc_.pop_back();
 	      		tmp_tmp_cc_.push_back(n_todo->parent);
+	      		HYDLA_LOGGER_HA("*-*-*-*-* termination == TIME_LIMIT");
 	      		push_result(tmp_tmp_cc_);
 	      		continue;
 	      	}
@@ -178,7 +178,7 @@ namespace simulator {
 		  }else{
 		    HYDLA_LOGGER_HA("****** check_include_bound end : false ******");
 		  }
-	  	if(hydla::logger::Logger::ha_converter_area_){
+	  	if(hydla::logger::Logger::ha_converter_area_ && hydla::logger::Logger::ha_simulator_area_){
 		  	cout << "please input 0 or 1: if past includes now, input 1, otherwise 0. " << endl;
 			  cout << ">";
 			  cin >> isIncludeBound;
@@ -194,69 +194,6 @@ namespace simulator {
 		HYDLA_LOGGER_HA("****** end check_subset : true ******");		
    	return true;
    	
-		/*
-	  parameter_map_t::const_iterator it_phase  = phase->parameter_map.begin();
-	  parameter_map_t::const_iterator end_phase = phase->parameter_map.end();
-
-	  parameter_map_t::const_iterator it_past  = past_phase->parameter_map.begin();
-	  parameter_map_t::const_iterator end_past = past_phase->parameter_map.end();
-	
-	  for(; it_phase!=end_phase; ++it_phase) {
-	  	// 途中で導入されたパラメータは見ない
-	  	if ( (*(it_phase->first)).get_phase_id() != 1 ) continue;
-
-		  for(; it_past!=end_past; ++it_past) {
-		  	// 途中で導入されたパラメータは見ない
-		  	if ( (*(it_past->first)).get_phase_id() != 1 ) continue;
-
-  	    if ( (*(it_phase->first)).get_name() == (*(it_past->first)).get_name() && 
-  	    		 (*(it_phase->first)).get_derivative_count() == (*(it_past->first)).get_derivative_count() )
-  	    {
-  	    	// 対象変数がガード条件に含まれない場合は次へ
-  	    	if (!check_guard_variable(phase, (*(it_phase->first)).get_name(), (*(it_phase->first)).get_derivative_count())) continue;
-	  	    
-	  	    HYDLA_LOGGER_HA(*(it_phase->first));
-	  	    HYDLA_LOGGER_HA("now:", it_phase->second);
-	  	    HYDLA_LOGGER_HA("past:", it_past->second);
-	  	    
-	  	    if (compare_parameter_range(it_phase->second, it_past->second)) {
-						HYDLA_LOGGER_HA("****** end check_subset : true ******");		  	
-	  	    	return true;
-	  	    }
-	  	  }
-		  }//for	  
-	  }//for
-		
-		HYDLA_LOGGER_HA("****** end check_subset : false ******");		
-		return false;		
-		*/
-	}
-	
-	bool HAConverter::check_guard_variable(phase_result_sptr_t phase, std::string name, int derivative_count)
-	{
- 		GuardGetter gg;
-		phase->module_set->dispatch(&gg);
-		
-		VaribleGetter vg;
-		ask_set_t::iterator it = gg.asks.begin();
-		
-		// ガード条件に含まれる変数を集める
-		while(it != gg.asks.end()){
-			vg.tmp_diff_cnt = 0;
-			(*it)->get_guard()->accept((*it)->get_guard(), &vg);		
-			it++;
-		}
-		
-		vg.it_begin();
-   	while(vg.get_iterator() != vg.vec_variable.end()){
-   		if ( (*vg.get_iterator()).name == name && (*vg.get_iterator()).diff_cnt == derivative_count ) {
-				HYDLA_LOGGER_HA("----- check_guard_variable : true ");		
-   			return true;
-   		}
-   		vg.inc_it();
-   	}	
-		HYDLA_LOGGER_HA("----- check_guard_variable : false ");		
-   	return false;
 	}
 	
 	void HAConverter::search_variable_parameter(parameter_map_t map, std::string name, int diff_cnt)
@@ -272,51 +209,6 @@ namespace simulator {
 	  }
 	}
 	
-	// A in B => true
-	bool HAConverter::compare_parameter_range(range_t A, range_t B)
-	{
-		if(B.get_upper_cnt() > 0){
-			// Bup != inf && Aup = inf
-			if (A.get_upper_cnt() == 0) {
-				HYDLA_LOGGER_HA("****** compare_parameter_range : false 1 ******");		
-				return false;
-			}
-			
-			HYDLA_LOGGER_HA("Bup:",B.get_upper_bound().value->get_string());
-			HYDLA_LOGGER_HA("Aup:",A.get_upper_bound().value->get_string());
-			
-			// Bup < Aup
-			if (B.get_upper_bound().value->get_string() < A.get_upper_bound().value->get_string() ||
-					// A=B & Aが閉区間でBが開区間 => false
-					( B.get_upper_bound().value->get_string() == A.get_upper_bound().value->get_string() && 
-					  !B.get_upper_bound().include_bound && A.get_upper_bound().include_bound ) ) {
-				HYDLA_LOGGER_HA("****** compare_parameter_range : false 2 ******");		
-				return false;
-			}
-		}
-		
-		if(B.get_lower_cnt() > 0){
-			// Blow != -inf && Alow = -inf
-			if (A.get_lower_cnt() == 0) {
-				HYDLA_LOGGER_HA("****** compare_parameter_range : false 3 ******");		
-				return false;
-			}
-			HYDLA_LOGGER_HA("Alow:",A.get_lower_bound().value->get_string());
-			HYDLA_LOGGER_HA("Blow:",B.get_lower_bound().value->get_string());
-			// Alow < Blow
-			if (A.get_lower_bound().value->get_string() < B.get_lower_bound().value->get_string() ||
-					// A=B & Aが閉区間でBが開区間 => false
-					( B.get_lower_bound().value->get_string() == A.get_lower_bound().value->get_string() && 
-					  !B.get_lower_bound().include_bound && A.get_lower_bound().include_bound ) ) {
-				HYDLA_LOGGER_HA("****** compare_parameter_range : false 4 ******");		
-				return false;
-			}
-		}
-		
-		HYDLA_LOGGER_HA("****** compare_parameter_range : true ******");		
-		return true;
-	}
-
 	bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2)
 	{
 		// フェーズ
@@ -337,42 +229,6 @@ namespace simulator {
 		
 		return true;
 	} 
-	
-	bool HAConverter::compare_phase(phase_t p1, phase_t p2)
-	{
-		// module set
-		if(!(p1.module_set->compare(*p2.module_set) == 0)) return false;
-		// positive_ask
-		ask_set_t::iterator it_1 = p1.positive_asks.begin();
-		ask_set_t::iterator it_2 = p2.positive_asks.begin();
-		while(it_1 != p1.positive_asks.end() && it_2 != p2.positive_asks.end()) {
-			if(!((**it_1).is_same_struct(**it_2, true))) return false;
-			it_1++;
-			it_2++;
-		}
-		// どちらかのイテレータが最後まで達していなかったら等しくない
-		if(it_1 != p1.positive_asks.end() || it_2 != p2.positive_asks.end()) return false;
-		
-		return true;
-	}
-  
-	bool HAConverter::check_contain(phase_result_sptr_t result, current_condition_t cc)
-	{
-		HYDLA_LOGGER_HA("****** check_contain ******");
-		HYDLA_LOGGER_HA("・・・・・phase_result・・・・・");
-		viewPrs(cc);
-		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・・・");
-		phase_result_sptrs_t::iterator it_prs = cc.begin();
-		while(it_prs != cc.end()){
-			if(compare_phase_result(result, *it_prs)) {
-				HYDLA_LOGGER_HA("****** end check_contain : true ******");				
-				return true;
-			}
-			it_prs++;
-		}
-		HYDLA_LOGGER_HA("****** end check_contain : false ******");				
-		return false;
-	}
 	
 	void HAConverter::viewPrs(phase_result_sptrs_t results)
 	{
@@ -425,6 +281,7 @@ namespace simulator {
 		cout << "-・-・-・-・Result Convert・-・-・-・-" << endl;
 		ha_results_t::iterator it_ha_res = ha_results_.begin();		
 		while(it_ha_res != ha_results_.end()){
+			viewPrs((*it_ha_res));
 			convert_phase_results_to_ha((*it_ha_res));
 			cout << "-・-・-・-・-・-・-・-・-・-・-・-・-" << endl;
 			it_ha_res++;
@@ -465,43 +322,6 @@ namespace simulator {
 			it++;
 		}
 		return res;
-	}
-		
-	GuardGetter::GuardGetter(){}
-	GuardGetter::~GuardGetter(){}
-	
-	void GuardGetter::accept(const boost::shared_ptr<parse_tree::Node>& n)
-	{
-		n->accept(n, this);
-	}
-	
-	void GuardGetter::visit(boost::shared_ptr<parse_tree::Ask> node)
-	{
-		asks.insert(node);
-	}
-
-	VaribleGetter::VaribleGetter(){}
-	VaribleGetter::~VaribleGetter(){}
-	
-	void VaribleGetter::accept(const boost::shared_ptr<parse_tree::Node>& n)
-	{
-		n->accept(n, this);
-	}
-	
-	void VaribleGetter::visit(boost::shared_ptr<parse_tree::Differential> node)
-	{
-			tmp_diff_cnt++;
-			cout << "DIFF:" << tmp_diff_cnt << endl;
-		  node->get_child()->accept(node->get_child(),this);
-		  tmp_diff_cnt--;
-	}
-	void VaribleGetter::visit(boost::shared_ptr<parse_tree::Variable> node)
-	{
-		guard_variable_t gv;
-		gv.diff_cnt = tmp_diff_cnt;
-		tmp_diff_cnt = 0;
-		gv.name = node->get_name();
-		vec_variable.push_back(gv);
 	}
 	
 }//namespace hydla

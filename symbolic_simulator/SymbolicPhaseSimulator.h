@@ -21,6 +21,7 @@ namespace simulator {
 namespace symbolic {
 
 class AnalysisResultChecker;
+class UnsatCoreFinder;
 
 class SymbolicPhaseSimulator : public simulator_t
 {
@@ -88,14 +89,18 @@ private:
     simulation_todo_sptr_t& state,
     const variable_map_t& vm);
 
-  virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
+  virtual void find_unsat_core(const modulse_set_sptr& ms,
+      simulation_todo_sptr_t&,
+    const variable_map_t& vm);
 
+  virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm);
   
   continuity_map_t variable_derivative_map_;
   
   boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
+  boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
   
   Phase current_phase_;
 };

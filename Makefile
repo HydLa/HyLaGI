@@ -14,7 +14,7 @@ check: $(projects)
 
 # 文字コードの設定 & propsetの登録
 charset:
-	@sources=`find . -name "Makefile" -or -name "*.cpp" -or -name "*.h" -or -name "*.m"` && \
+	@sources=`find . -name "Makefile" -or -name "*.cpp" -or -name "*.h" -or -name "*.m"` -or -name "*.red"` && \
 	echo $${sources} && \
 	nkf -w -Lu --overwrite $$sources  && \
 	svn propset svn:mime-type 'text/plain; charset=utf-8' $$sources

@@ -68,7 +68,13 @@ public:
    */ 
   bool check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2);
 
-  /**
+	/**
+   * HASimulator用
+   */ 
+	void substitute_values_for_vm(phase_result_sptr_t pr, std::map<parameter_t*, value_t> vm);
+  void substitute_current_time_for_vm(phase_result_sptr_t pr, time_t current_time);
+	
+ 	/**
    * make todos from given phase_result
    * this function doesn't change the 'phase' argument except the end time of phase
    */ 
@@ -146,6 +152,12 @@ protected:
     simulation_todo_sptr_t&,
     const variable_map_t &,
     bool b) = 0;
+
+  virtual void find_unsat_core(
+    const module_set_sptr& ms,
+    simulation_todo_sptr_t&,
+    const variable_map_t&
+      ) = 0;
 
   virtual module_set_list_t calculate_mms(
     simulation_todo_sptr_t& state,

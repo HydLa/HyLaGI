@@ -192,33 +192,33 @@ bool dump(boost::shared_ptr<ParseTree> pt)
 {
   ProgramOptions &po = ProgramOptions::instance();
 
-  if(po.count("dump-parse-tree")>0) {
+  if(po.count("dump_parse_tree")>0) {
     pt->to_graphviz(std::cout);
     return true;
   }
 
-  if(po.count("dump-module-set-list")>0) {
+  if(po.count("dump_module_set_list")>0) {
     ModuleSetContainerCreator<ModuleSetList> mcc;
     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
     msc->dump_node_names(std::cout);
     return true;
   }
 
-//   if(po.count("dump-module-set-list-noinit")>0) {
+//   if(po.count("dump_module_set_list_noinit")>0) {
 //     ModuleSetContainerCreator<ModuleSetList> mcc;
 //     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
 //     msc->dump_node_names(std::cout);
 //     return true;
 //   }
 
-  if(po.count("dump-module-set-graph")>0) {
+  if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<ModuleSetGraph> mcc;
     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
     msc->dump_graphviz(std::cout);
     return true;
   }
 
-//   if(po.count("dump-module-set-graph-noinit")>0) {
+//   if(po.count("dump_module_set_graph_noinit")>0) {
 //     ModuleSetContainerCreator<ModuleSetGraph> mcc;
 //     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
 //     msc->dump_graphviz(std::cout);

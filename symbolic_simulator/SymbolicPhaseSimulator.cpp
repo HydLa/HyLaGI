@@ -26,6 +26,7 @@
 #include "Backend.h"
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
+//#include "UnsatCoreFinder.h"
 #include "TreeInfixPrinter.h"
 #include "Dumpers.h"
 
@@ -87,6 +88,23 @@ SymbolicPhaseSimulator::check_conditions
     return CVM_INCONSISTENT;
   }
   return CVM_ERROR;
+}
+
+void
+SymbolicPhaseSimulator::find_unsat_core
+(const module_set_sptr& ms,
+ simulation_todo_sptr_t& todo,
+ const variable_map_t& vm
+ ){
+/*
+  boost::shared_ptr<UnsatCoreFinder> unsat_core_finder(new UnsatCoreFinder(backend_));
+  map<node_sptr,string> S;
+  map<const std::string,int> S4C;
+  cout << "start find unsat core " << endl;
+  cout << ms << endl;
+  unsat_core_finder->find_unsat_core(ms,S,S4C,todo,vm);
+  cout << "end find unsat core " << endl;
+*/
 }
 
 
@@ -610,8 +628,8 @@ SymbolicPhaseSimulator::todo_list_t
         next_todo->parent = pr;
         ret.push_back(next_todo);
       }
-    	// HAConverter用にTIME_LIMITのtodoも返す
-    	if(opts_->ha_convert_mode && pr->cause_of_termination == TIME_LIMIT)
+    	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_of_termination == TIME_LIMIT)
     	{
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;

@@ -8,6 +8,7 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
+#include "HASimulator.h"
 #include "ParallelSimulator.h"
 
 
@@ -72,8 +73,10 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.dump_in_progress = po.count("dump_in_progress")>0;
   opts.dump_relation = po.count("dump_module_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
+  opts.find_unsat_core_mode = po.count("find_unsat_core")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   opts.ha_convert_mode = po.count("ha")>0;
+  opts.ha_simulator_mode = po.count("hs")>0;
   //opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;
   opts.parallel_number   = po.get<int>("pn");
@@ -184,8 +187,44 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
     ha_converter.initialize(parse_tree);
     ha_converter.simulate();
   }
-  
-  else
+
+  else if(opts.ha_simulator_mode)
+  {
+    opts.nd_mode = true;
+  	
+  	timer::Timer hac_timer;
+
+  	HAConverter ha_converter(opts);
+    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
+    ha_converter.initialize(parse_tree);
+
+  	ha_converter.simulate();
+  	hac_timer.elapsed("HAConverter Time");
+    
+  	HASimulator ha_simulator(opts);
+    ha_simulator.set_phase_simulator(new SymbolicPhaseSimulator(&ha_simulator, opts));
+    ha_simulator.initialize(parse_tree);
+
+  	ha_simulator.simulate(ha_converter.get_results());
+  	
+  	// output profile 
+  	ProgramOptions &po = ProgramOptions::instance();
+	  if(po.get<std::string>("tm") == "s") {
+	    hydla::output::StdProfilePrinter().print_profile(ha_simulator.get_profile());
+	  } else if(po.get<std::string>("tm") == "c") {
+	    std::string csv_name = po.get<std::string>("csv");
+	    if(csv_name == ""){
+	      hydla::output::CsvProfilePrinter().print_profile(ha_simulator.get_profile());
+	    }else{
+	      std::ofstream ofs;
+	      ofs.open(csv_name.c_str());
+	      hydla::output::CsvProfilePrinter(ofs).print_profile(ha_simulator.get_profile());
+	      ofs.close();
+	    }
+	  }
+  }
+
+	else
   {
     SequentialSimulator* ss = new SequentialSimulator(opts);
     simulator_ = ss;

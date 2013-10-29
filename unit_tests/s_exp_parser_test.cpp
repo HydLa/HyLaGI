@@ -4,15 +4,14 @@
 #include "string"
 #include "sstream"
 
-#include "../virtual_constraint_solver/reduce/sexp/SExpParseTree.h"
-#include "../virtual_constraint_solver/reduce/SExpConverter.h"
+#include "../virtual_constraint_solver/reduce/sexp/SExpAST.h"
+#include "../virtual_constraint_solver/reduce/sexp/SExpExpressionConverter.h"
 
 using namespace std;
-using namespace hydla::parser;
 using namespace hydla::vcs::reduce;
 
 void check(std::string arg){
-  SExpParseTree sp(arg);
+  SExpAST sp(arg);
 }
 
 /**

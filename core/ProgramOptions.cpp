@@ -95,6 +95,8 @@ void ProgramOptions::init_descriptions()
     
     ("in", "interactive mode")
 
+    ("find_unsat_core", "find unsat core")
+
 	  ("ha", "convert to HA")
 
     ("parallel", "parallel mode")
