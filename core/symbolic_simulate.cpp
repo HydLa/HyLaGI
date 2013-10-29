@@ -191,16 +191,37 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   else if(opts.ha_simulator_mode)
   {
     opts.nd_mode = true;
-    HAConverter ha_converter(opts);
+  	
+  	timer::Timer hac_timer;
+
+  	HAConverter ha_converter(opts);
     ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
     ha_converter.initialize(parse_tree);
 
+  	ha_converter.simulate();
+  	hac_timer.elapsed("HAConverter Time");
+    
   	HASimulator ha_simulator(opts);
     ha_simulator.set_phase_simulator(new SymbolicPhaseSimulator(&ha_simulator, opts));
     ha_simulator.initialize(parse_tree);
+
+  	ha_simulator.simulate(ha_converter.get_results());
   	
-  	ha_converter.simulate();
-    ha_simulator.simulate(ha_converter.get_results());
+  	// output profile 
+  	ProgramOptions &po = ProgramOptions::instance();
+	  if(po.get<std::string>("tm") == "s") {
+	    hydla::output::StdProfilePrinter().print_profile(ha_simulator.get_profile());
+	  } else if(po.get<std::string>("tm") == "c") {
+	    std::string csv_name = po.get<std::string>("csv");
+	    if(csv_name == ""){
+	      hydla::output::CsvProfilePrinter().print_profile(ha_simulator.get_profile());
+	    }else{
+	      std::ofstream ofs;
+	      ofs.open(csv_name.c_str());
+	      hydla::output::CsvProfilePrinter(ofs).print_profile(ha_simulator.get_profile());
+	      ofs.close();
+	    }
+	  }
   }
 
 	else

@@ -92,7 +92,6 @@ namespace simulator {
 						continue;
 					}
 	    	}
-	    	
 	      PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
 	      for(unsigned int j = 0; j < next_todos.size(); j++)
 	      {
@@ -179,7 +178,7 @@ namespace simulator {
 		  }else{
 		    HYDLA_LOGGER_HA("****** check_include_bound end : false ******");
 		  }
-	  	if(hydla::logger::Logger::ha_converter_area_){
+	  	if(hydla::logger::Logger::ha_converter_area_ && hydla::logger::Logger::ha_simulator_area_){
 		  	cout << "please input 0 or 1: if past includes now, input 1, otherwise 0. " << endl;
 			  cout << ">";
 			  cin >> isIncludeBound;

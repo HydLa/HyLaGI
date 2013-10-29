@@ -47,7 +47,11 @@ namespace simulator {
 		init_value_map_t vm = get_init_vm(pr);
 		time_t current_time = value_t(new hydla::simulator::symbolic::SymbolicValue("0"));
 		
+		timer::Timer has_timer;
+		profile_t profile;
+		
 		while (true){
+	    timer::Timer phase_timer;
 			phase_result_sptr_t pr(new PhaseResult(*ha[i]));
 			
 			HYDLA_LOGGER_HAS("*** now pr : ", i);
@@ -67,6 +71,15 @@ namespace simulator {
 			cnt_phase++;
 			pr->id = cnt_phase;
 			simulation_result.push_back(pr);
+			
+			// profile 
+			profile["EntirePhase"] = phase_timer.get_elapsed_us();
+
+			simulation_todo_sptr_t st(new SimulationTodo);
+			st->id = pr->id;
+			st->phase = pr->phase;
+			st->profile = profile;
+			profile_vector_->push_back(st);
 			
 			if(opts_->max_phase > 0 && opts_->max_phase < cnt_phase) {
 				HYDLA_LOGGER_HAS("fin : max_phase");					
@@ -103,7 +116,7 @@ namespace simulator {
 			printer.output_one_phase(*it_ls);
 			it_ls++;
 		}	
-	
+  	has_timer.elapsed("\n\nHASimulator Time");
 		return result_root_;
 	}
 	
