@@ -175,7 +175,8 @@ DEFINE_VISIT_FACTOR(Pi, Pi)
 /// 自然対数の底
 DEFINE_VISIT_FACTOR(E, E)
 
-
+/// True
+DEFINE_VISIT_FACTOR(True, True)
 
 // 変数
 void PacketSender::visit(boost::shared_ptr<Variable> node)              

@@ -141,6 +141,9 @@ class TreeInfixPrinter:
   // 任意
   virtual void visit(boost::shared_ptr<Function> node);
   virtual void visit(boost::shared_ptr<UnsupportedFunction> node);
+
+  // True
+  virtual void visit(boost::shared_ptr<True> node);
 };
 
 } // namespace parse_tree

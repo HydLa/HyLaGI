@@ -116,6 +116,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_SystemVariable)           system_variable;
     defRuleID(RI_SVtimer)           sv_timer;
 
+    //True
+    defRuleID(RI_True)             tautology;
+
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
 
@@ -195,7 +198,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         | no_node_d[ch_p('(')] >> logical_term >> no_node_d[ch_p(')')];
 
       //tell
-      tell = gen_pt_node_d[chain] | command;
+      tell = gen_pt_node_d[chain] | command | tautology;
       
       //コマンド文
       command = 
@@ -235,7 +238,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         | pi
         | e
         | variable
-		| system_variable
+        | system_variable
         | number
         | no_node_d[ch_p('(')] >> expression >> no_node_d[ch_p(')')];
 
@@ -264,10 +267,10 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       //自然対数の底
       e = str_p("E");
 
-	  //SystemVariable "$"で始まるもの
-	  system_variable = sv_timer;
-
-	  sv_timer = str_p("$timer");
+      //SystemVariable "$"で始まるもの
+      system_variable = sv_timer;
+      sv_timer = str_p("$timer");
+      tautology = str_p("$TRUE");
       
       unsupported_function = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];
       

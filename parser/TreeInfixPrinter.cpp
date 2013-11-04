@@ -105,6 +105,9 @@ DEFINE_INFIX_VISIT_FACTOR(Scan, "Scan(", ")")
 DEFINE_INFIX_VISIT_FACTOR(Exit, "Exit(", ")")
 DEFINE_INFIX_VISIT_FACTOR(Abort, "Abort(", ")")
 
+// True
+DEFINE_INFIX_VISIT_FACTOR(True, "True", "")
+
 void TreeInfixPrinter::visit(boost::shared_ptr<SVtimer> node){
   (*output_stream_) << "$timer";
 }
@@ -298,7 +301,6 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
   (*output_stream_) << ")";
   if(node->get_child())print_unary_node(*node, "{", "}");
 }
-
 
 } // namespace parse_tree
 } // namespace hydla

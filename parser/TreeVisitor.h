@@ -124,6 +124,9 @@ public:
   
   // 無限大
   virtual void visit(boost::shared_ptr<Infinity> node);
+
+  // True
+  virtual void visit(boost::shared_ptr<True> node);
 };
 
 } //namespace parse_tree

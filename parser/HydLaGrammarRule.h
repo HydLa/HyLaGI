@@ -113,6 +113,9 @@ typedef enum _RuleID {
   RI_SystemVariable,
   RI_SVtimer,
 
+  // True
+  RI_True,
+
 } RuleID;
 
 } //namespace hydla

@@ -110,6 +110,9 @@ protected:
   //SystemVariable
   NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(SVtimer)
 
+  // True
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(True)
+
 };                                                     
 
 } //namespace parser

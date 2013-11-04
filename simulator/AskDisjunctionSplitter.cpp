@@ -20,10 +20,10 @@ void AskDisjunctionSplitter::split(hydla::parse_tree::ParseTree* pt)
   pt_ = pt;
   pt->dispatch(this);
   pt->update_node_id_list();
-  
   HYDLA_LOGGER_PARSING("#*** ask disjunction split result ***\n",
                      *pt, "\n",
                      pt->to_graphviz());
+  
 }
 
 // 制約呼び出し
@@ -97,6 +97,11 @@ void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::parse_tree::Less> no
 }
 
 void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node)
+{
+  // do nothing
+}
+
+void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::parse_tree::True> node)
 {
   // do nothing
 }

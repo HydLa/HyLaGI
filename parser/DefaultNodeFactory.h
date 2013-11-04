@@ -97,6 +97,9 @@ protected:
   //SystemVariable
   DEFAULT_NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(SVtimer)
 
+  //True
+  DEFAULT_NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(True)
+
 };
 
 

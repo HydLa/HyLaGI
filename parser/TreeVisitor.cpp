@@ -104,6 +104,7 @@ void TreeVisitor::visit(boost::shared_ptr<Abort> node)              {assert(0);}
 
 //SystemVariable
 void TreeVisitor::visit(boost::shared_ptr<SVtimer> node)              {assert(0);}
+void TreeVisitor::visit(boost::shared_ptr<True> node)              {assert(0);}
 
 
 } //namespace parse_tree

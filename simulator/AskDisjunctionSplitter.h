@@ -68,6 +68,8 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
 
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
+
   // 時相演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
 

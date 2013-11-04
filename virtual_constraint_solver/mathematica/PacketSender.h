@@ -188,6 +188,9 @@ public:
   
   // 無限大
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
+
+  // True
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
   
   typedef std::pair<std::string, int> function_t;
   typedef boost::bimaps::bimap<function_t, function_t > function_map_t;

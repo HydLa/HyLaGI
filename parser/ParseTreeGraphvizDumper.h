@@ -95,6 +95,8 @@ public:
 
   //SystemVariable
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
+
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
   
   //関数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
