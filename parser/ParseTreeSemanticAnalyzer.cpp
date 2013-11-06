@@ -399,6 +399,8 @@ DEFINE_DEFAULT_VISIT_FACTOR(Abort)
 // SystemVariable
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
 
+DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
+
 
 } //namespace parser
 } //namespace hydla

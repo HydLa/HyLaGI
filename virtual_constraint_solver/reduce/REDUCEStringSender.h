@@ -9,7 +9,7 @@
 #include "ParseTree.h"
 #include "REDUCELink.h"
 #include "REDUCEVCSType.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 namespace hydla {
 namespace vcs {
@@ -19,7 +19,7 @@ namespace reduce {
  * ParseTreeのノード集合に対するVisitorクラス
  */
 class REDUCEStringSender :
-  public hydla::parse_tree::TreeVisitor
+  public hydla::parse_tree::DefaultTreeVisitor
 {
 public:
 

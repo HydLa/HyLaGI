@@ -8,6 +8,7 @@ load_package "numeric";
 
 operator interval;
 
+LINELENGTH(100000000);
 
 % グローバル変数
 % constraintStore__: 現在扱っている制約集合（リスト形式、PPの定数未対応）

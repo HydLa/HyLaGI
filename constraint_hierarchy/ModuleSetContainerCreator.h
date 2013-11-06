@@ -10,7 +10,7 @@
 
 #include "ParseTree.h"
 #include "Node.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 #include "ModuleSet.h"
 
@@ -23,7 +23,7 @@ namespace ch {
  * Container型のモジュール集合の集合を表すクラスを構築するためのクラス
  */
 template <class Container>
-class ModuleSetContainerCreator : public hydla::parse_tree::TreeVisitor {
+class ModuleSetContainerCreator : public hydla::parse_tree::DefaultTreeVisitor {
 public:
   typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
   typedef typename boost::shared_ptr<Container> container_sptr;

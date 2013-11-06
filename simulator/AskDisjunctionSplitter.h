@@ -5,13 +5,13 @@
 
 #include "Node.h"
 #include "ParseTree.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 namespace hydla {
 namespace simulator {
 
 class AskDisjunctionSplitter : 
-  public hydla::parse_tree::TreeVisitor
+  public hydla::parse_tree::DefaultTreeVisitor
 {
 public:
   typedef hydla::parse_tree::node_sptr                     node_sptr;

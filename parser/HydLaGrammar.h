@@ -112,12 +112,13 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Command)          command;
     defRuleID(RI_Assert)           assert;
 
-	//SystemVariable
+    //SystemVariable
     defRuleID(RI_SystemVariable)           system_variable;
     defRuleID(RI_SVtimer)           sv_timer;
 
     //True
     defRuleID(RI_True)             tautology;
+    defRuleID(RI_SymbolicT)        symbolic_t;
 
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
@@ -268,8 +269,10 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       e = str_p("E");
 
       //SystemVariable "$"で始まるもの
-      system_variable = sv_timer;
+      system_variable = sv_timer | symbolic_t;
+      symbolic_t = str_p("$t");
       sv_timer = str_p("$timer");
+
       tautology = str_p("$TRUE");
       
       unsupported_function = no_node_d[ch_p('"')] >> leaf_node_d[+alpha_p] >> no_node_d[ch_p('"')];

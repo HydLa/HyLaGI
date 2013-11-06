@@ -450,6 +450,12 @@ private:
         boost::shared_ptr<True> node(node_factory_->create<True>());
 	return node;
       }
+
+      case RI_SymbolicT:
+      {
+        boost::shared_ptr<SymbolicT> node(node_factory_->create<SymbolicT>()); 
+        return node;
+      }
       
       default:
       {

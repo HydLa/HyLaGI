@@ -113,6 +113,9 @@ public:
   
   // t（時間）
   virtual void visit(boost::shared_ptr<SymbolicT> node);
+
+  // Infinity
+  virtual void visit(boost::shared_ptr<Infinity> node);
 };
 
 } //namespace parse_tree

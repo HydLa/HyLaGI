@@ -353,14 +353,6 @@ void ArbitraryNode::accept(node_sptr own,
 }
 
 
-void ArbitraryNode::accept(node_sptr own, 
-                   TreeVisitor* visitor) 
-{
-  assert(this == own.get()); 
-  visitor->visit(boost::shared_static_cast<ArbitraryNode>(own));
-}
-
-
 std::ostream& ArbitraryNode::dump(std::ostream& s) const 
 {
   Node::dump(s);

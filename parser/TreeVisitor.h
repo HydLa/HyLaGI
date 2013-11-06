@@ -27,106 +27,103 @@ public:
   }
 
   // 制約定義
-  virtual void visit(boost::shared_ptr<ConstraintDefinition> node);
+  virtual void visit(boost::shared_ptr<ConstraintDefinition> node) = 0;
   
   // プログラム定義
-  virtual void visit(boost::shared_ptr<ProgramDefinition> node);
+  virtual void visit(boost::shared_ptr<ProgramDefinition> node) = 0;
 
   // 制約呼び出し
-  virtual void visit(boost::shared_ptr<ConstraintCaller> node);
+  virtual void visit(boost::shared_ptr<ConstraintCaller> node) = 0;
   
   // プログラム呼び出し
-  virtual void visit(boost::shared_ptr<ProgramCaller> node);
+  virtual void visit(boost::shared_ptr<ProgramCaller> node) = 0;
 
   // 制約式
-  virtual void visit(boost::shared_ptr<Constraint> node);
+  virtual void visit(boost::shared_ptr<Constraint> node) = 0;
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<Ask> node);
+  virtual void visit(boost::shared_ptr<Ask> node) = 0;
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<Tell> node);
+  virtual void visit(boost::shared_ptr<Tell> node) = 0;
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<Equal> node);
-  virtual void visit(boost::shared_ptr<UnEqual> node);
-  virtual void visit(boost::shared_ptr<Less> node);
-  virtual void visit(boost::shared_ptr<LessEqual> node);
-  virtual void visit(boost::shared_ptr<Greater> node);
-  virtual void visit(boost::shared_ptr<GreaterEqual> node);
+  virtual void visit(boost::shared_ptr<Equal> node) = 0;
+  virtual void visit(boost::shared_ptr<UnEqual> node) = 0;
+  virtual void visit(boost::shared_ptr<Less> node) = 0;
+  virtual void visit(boost::shared_ptr<LessEqual> node) = 0;
+  virtual void visit(boost::shared_ptr<Greater> node) = 0;
+  virtual void visit(boost::shared_ptr<GreaterEqual> node) = 0;
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<LogicalOr> node);
+  virtual void visit(boost::shared_ptr<LogicalAnd> node) = 0;
+  virtual void visit(boost::shared_ptr<LogicalOr> node) = 0;
   
   // 算術二項演算子
-  virtual void visit(boost::shared_ptr<Plus> node);
-  virtual void visit(boost::shared_ptr<Subtract> node);
-  virtual void visit(boost::shared_ptr<Times> node);
-  virtual void visit(boost::shared_ptr<Divide> node);
-  virtual void visit(boost::shared_ptr<Power> node);
+  virtual void visit(boost::shared_ptr<Plus> node) = 0;
+  virtual void visit(boost::shared_ptr<Subtract> node) = 0;
+  virtual void visit(boost::shared_ptr<Times> node) = 0;
+  virtual void visit(boost::shared_ptr<Divide> node) = 0;
+  virtual void visit(boost::shared_ptr<Power> node) = 0;
   
   // 算術単項演算子
-  virtual void visit(boost::shared_ptr<Negative> node);
-  virtual void visit(boost::shared_ptr<Positive> node);
+  virtual void visit(boost::shared_ptr<Negative> node) = 0;
+  virtual void visit(boost::shared_ptr<Positive> node) = 0;
   
   // 制約階層定義演算子
-  virtual void visit(boost::shared_ptr<Weaker> node);
-  virtual void visit(boost::shared_ptr<Parallel> node);
+  virtual void visit(boost::shared_ptr<Weaker> node) = 0;
+  virtual void visit(boost::shared_ptr<Parallel> node) = 0;
 
   // 時相演算子
-  virtual void visit(boost::shared_ptr<Always> node);
+  virtual void visit(boost::shared_ptr<Always> node) = 0;
   
   // 微分
-  virtual void visit(boost::shared_ptr<Differential> node);
+  virtual void visit(boost::shared_ptr<Differential> node) = 0;
 
   // 左極限
-  virtual void visit(boost::shared_ptr<Previous> node);
+  virtual void visit(boost::shared_ptr<Previous> node) = 0;
   
   //Print
-  virtual void visit(boost::shared_ptr<Print> node);
-  virtual void visit(boost::shared_ptr<PrintPP> node);
-  virtual void visit(boost::shared_ptr<PrintIP> node);
+  virtual void visit(boost::shared_ptr<Print> node) = 0;
+  virtual void visit(boost::shared_ptr<PrintPP> node) = 0;
+  virtual void visit(boost::shared_ptr<PrintIP> node) = 0;
     
-  virtual void visit(boost::shared_ptr<Scan> node);
-  virtual void visit(boost::shared_ptr<Exit> node);
-  virtual void visit(boost::shared_ptr<Abort> node);
+  virtual void visit(boost::shared_ptr<Scan> node) = 0;
+  virtual void visit(boost::shared_ptr<Exit> node) = 0;
+  virtual void visit(boost::shared_ptr<Abort> node) = 0;
 
   //SystemVariable
-  virtual void visit(boost::shared_ptr<SVtimer> node);
+  virtual void visit(boost::shared_ptr<SVtimer> node) = 0;
   
   // 否定
-  virtual void visit(boost::shared_ptr<Not> node);
+  virtual void visit(boost::shared_ptr<Not> node) = 0;
   
   // 円周率
-  virtual void visit(boost::shared_ptr<Pi> node);
+  virtual void visit(boost::shared_ptr<Pi> node) = 0;
   // 自然対数の底
-  virtual void visit(boost::shared_ptr<E> node);
+  virtual void visit(boost::shared_ptr<E> node) = 0;
   
-  //任意の文字列
-  virtual void visit(boost::shared_ptr<ArbitraryNode> node);
-
   // 関数
-  virtual void visit(boost::shared_ptr<Function> node);
-  virtual void visit(boost::shared_ptr<UnsupportedFunction> node);
+  virtual void visit(boost::shared_ptr<Function> node) = 0;
+  virtual void visit(boost::shared_ptr<UnsupportedFunction> node) = 0;
 
   // 変数
-  virtual void visit(boost::shared_ptr<Variable> node);
+  virtual void visit(boost::shared_ptr<Variable> node) = 0;
 
   // 数字
-  virtual void visit(boost::shared_ptr<Number> node);
+  virtual void visit(boost::shared_ptr<Number> node) = 0;
   
   // 記号定数
-  virtual void visit(boost::shared_ptr<Parameter> node);
+  virtual void visit(boost::shared_ptr<Parameter> node) = 0;
   
   // t（時間）
-  virtual void visit(boost::shared_ptr<SymbolicT> node);
+  virtual void visit(boost::shared_ptr<SymbolicT> node) = 0;
   
   // 無限大
-  virtual void visit(boost::shared_ptr<Infinity> node);
+  virtual void visit(boost::shared_ptr<Infinity> node) = 0;
 
   // True
-  virtual void visit(boost::shared_ptr<True> node);
+  virtual void visit(boost::shared_ptr<True> node) = 0;
 };
 
 } //namespace parse_tree

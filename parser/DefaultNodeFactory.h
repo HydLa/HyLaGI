@@ -99,6 +99,8 @@ protected:
 
   //True
   DEFAULT_NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(True)
+  // System Time
+  DEFAULT_NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(SymbolicT)
 
 };
 

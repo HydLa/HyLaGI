@@ -112,6 +112,7 @@ typedef enum _RuleID {
   //SystemVariable
   RI_SystemVariable,
   RI_SVtimer,
+  RI_SymbolicT,
 
   // True
   RI_True,

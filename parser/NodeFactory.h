@@ -113,6 +113,9 @@ protected:
   // True
   NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(True)
 
+  // System Time
+  NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(SymbolicT)
+
 };                                                     
 
 } //namespace parser
