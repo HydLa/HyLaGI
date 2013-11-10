@@ -1,11 +1,11 @@
-#ifndef _INCLUDED_HYDLA_VCS_REDUCE_VARIABLENAMEENCODER_H_
-#define _INCLUDED_HYDLA_VCS_REDUCE_VARIABLENAMEENCODER_H_
+#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_VARIABLENAMEENCODER_H_
+#define _INCLUDED_HYDLA_BACKEND_REDUCE_VARIABLENAMEENCODER_H_
 
 #include <iostream>
 #include <algorithm>
 
 namespace hydla {
-namespace vcs {
+namespace backend {
 namespace reduce {
 
 /**
@@ -47,7 +47,7 @@ public:
 };
 
 } //namespace reduce
-} //namespace vcs
+} //namespace backend
 } //namespace hydla
 
-#endif /* _INCLUDED_HYDLA_VCS_REDUCE_VARIABLENAMEENCODER_H_ */
+#endif /* _INCLUDED_HYDLA_BACKEND_REDUCE_VARIABLENAMEENCODER_H_ */

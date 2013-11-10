@@ -2,7 +2,7 @@
 #define _INCLUDED_HYDLA_PARSER_S_EXP_PARSE_TREE_H_
 
 #include "../../../simulator/DefaultParameter.h"
-#include "../../SymbolicVirtualConstraintSolver.h"
+#include "Backend.h"
 #include "SExpParser.h"
 
 namespace hydla {
@@ -20,7 +20,7 @@ public:
   typedef SExpParser::tree_info_t                               tree_info_t;
   typedef SExpParser::tree_iter_t                               tree_iter_t;
   typedef hydla::parse_tree::node_sptr                          node_sptr;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t  value_t;
+  typedef hydla::simulator::value_t  value_t;
 
   /**
    * ãÛèWçáÇï\Ç∑SéÆ "list"

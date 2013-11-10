@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_FACTORY_H_
-#define _INCLUDED_HYDLA_VCS_REDUCE_LINK_FACTORY_H_
+#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_FACTORY_H_
+#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_FACTORY_H_
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 #include "REDUCELinkTelnet.h"
@@ -9,7 +9,7 @@
 #include "REDUCELink.h"
 
 namespace hydla {
-namespace vcs {
+namespace backend {
 namespace reduce {
 
 /**
@@ -21,19 +21,19 @@ public:
   REDUCELinkFactory(){}
   ~REDUCELinkFactory(){}
 
-  REDUCELink* createInstance(){
+  REDUCELink* createInstance(const simulator::Opts &opts){
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
-    return new REDUCELinkTelnet();
+    return new REDUCELinkTelnet(opts);
 #else
-    return new REDUCELinkIpc();
+    return new REDUCELinkIpc(opts);
 #endif
   }
 };
 
 } // namespace reduce
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_VCS_REDUCE_LINK_FACTORY_H_
+#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_FACTORY_H_
 

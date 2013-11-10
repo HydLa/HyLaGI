@@ -12,17 +12,19 @@
 #include <unistd.h>
 
 namespace hydla {
-namespace vcs {
+namespace backend {
 namespace reduce {
 
 const std::string REDUCELinkIpc::end_of_redeval_ = "<redeval> end:";
 
-REDUCELinkIpc::REDUCELinkIpc(){
+
+REDUCELinkIpc::REDUCELinkIpc(const simulator::Opts &opts):REDUCELink(){
   initProcess();
+  init_opts(opts);
 } 
  
 REDUCELinkIpc::~REDUCELinkIpc(){
-  send_string(";bye;");
+  put_string(";bye;");
   // waitpid(pid_, NULL, 0);
 }
 
@@ -53,7 +55,7 @@ std::string REDUCELinkIpc::get_s_expr(){
     line += tmp;
   }
 
-  HYDLA_LOGGER_VCS("get s_expr: ", line);
+  HYDLA_LOGGER_BACKEND("get s_expr: ", line);
   return line;
 }
 
@@ -61,25 +63,17 @@ const hydla::parser::SExpParseTree REDUCELinkIpc::get_as_s_exp_parse_tree(){
   return hydla::parser::SExpParseTree(get_s_expr());
 }
 
-int REDUCELinkIpc::send_string(const std::string cmd){
-  std::string str = cmd;
-  if(write(writefd_, str.c_str(), std::min((int)str.length(), (int)MAXLINE)) == -1){
-    throw REDUCELinkError("send_string()", "write");
+void REDUCELinkIpc::send_string_to_reduce(const char *cmd, int len){
+  if(write(writefd_, cmd, len + 1) == -1){
+    throw REDUCELinkError("send_string_to_reduce()", "write");
   }
-
-  while(str.length() > MAXLINE){
-    str = str.substr(MAXLINE);
-    std::string message = str.substr(0, std::min((int)str.length(), (int)MAXLINE));
-    if(write(writefd_, message.c_str(), message.length()) == -1){
-    throw REDUCELinkError("send_string()", "write");
-    }
-  }
-
   if(write(writefd_, "\n", 1) == -1){
-    throw REDUCELinkError("send_string()", "write");
+    throw REDUCELinkError("send_string_to_reduce()", "write");
   }
+}
 
-  return 0;
+void REDUCELinkIpc::send_string_to_reduce(const char *cmd){
+  send_string_to_reduce(cmd, strlen(cmd));
 }
 
 std::string REDUCELinkIpc::getline_with_throw(const std::string& cmd){
@@ -165,7 +159,7 @@ void REDUCELinkIpc::initProcess(){
 }
 
 } // namespace reduce
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
 
 #endif // defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 

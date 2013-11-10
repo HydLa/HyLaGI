@@ -6,15 +6,16 @@
 #include <string>
 
 namespace hydla {
-namespace vcs {
+namespace backend {
 namespace reduce {
 
 const std::string REDUCELinkTelnet::end_of_redeval_ = "<redeval> end:";
 
-REDUCELinkTelnet::REDUCELinkTelnet(){
+REDUCELinkTelnet::REDUCELinkTelnet(const simulator::Opts &opts):REDUCELink(){
   //  s_.connect("localhost", "1206");
   s_.connect("127.0.0.1", "1206");
   if(!s_){ throw REDUCELinkError("fail to connect"); }
+  init_opts(opts);
 }
 
 REDUCELinkTelnet::~REDUCELinkTelnet(){
@@ -55,7 +56,7 @@ std::string REDUCELinkTelnet::get_s_expr(){
     line = line + tmp;
   }
 
-  HYDLA_LOGGER_VCS("get s_expr: ", line);
+  HYDLA_LOGGER_BACKEND("get s_expr: ", line);
   return line;
 }
 
@@ -83,6 +84,5 @@ std::istream& REDUCELinkTelnet::getline_with_throw(const std::string& cmd, std::
 }
 
 } // namespace reduce
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
-

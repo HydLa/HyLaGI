@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_TELNET_H_
-#define _INCLUDED_HYDLA_VCS_REDUCE_LINK_TELNET_H_
+#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_TELNET_H_
+#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_TELNET_H_
 
 #include "REDUCELink.h"
 
@@ -11,7 +11,7 @@
 #include <stdexcept>
 
 namespace hydla {
-namespace vcs {
+namespace backend {
 namespace reduce {
 
 /**
@@ -23,7 +23,7 @@ public:
   /**
    * localhost:1206 に接続する
    */
-  REDUCELinkTelnet();
+  REDUCELinkTelnet(const simulator::Opts &opts);
   ~REDUCELinkTelnet();
 
   /**
@@ -74,8 +74,8 @@ private:
 };
 
 } // namespace reduce
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_VCS_REDUCE_LINK_TELNET_H_
+#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_TELNET_H_
 
