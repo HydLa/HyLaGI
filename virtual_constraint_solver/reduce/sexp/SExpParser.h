@@ -33,7 +33,7 @@ private:
 
 std::ostream& operator<<(std::ostream& s, const SExpParser::const_tree_iter_t& iter);
 
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
 
 #endif // _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_

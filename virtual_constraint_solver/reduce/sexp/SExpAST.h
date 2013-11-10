@@ -1,9 +1,9 @@
 #ifndef _INCLUDED_HYDLA_PARSER_S_EXP_AST_H_
 #define _INCLUDED_HYDLA_PARSER_S_EXP_AST_H_
 
-#include "../../../simulator/DefaultParameter.h"
-#include "../../SymbolicVirtualConstraintSolver.h"
+#include "DefaultParameter.h"
 #include "SExpParser.h"
+#include "Backend.h"
 
 namespace hydla {
 namespace parser {
@@ -20,7 +20,7 @@ public:
   typedef SExpParser::tree_info_t                               tree_info_t;
   typedef SExpParser::tree_iter_t                               tree_iter_t;
   typedef hydla::parse_tree::node_sptr                          node_sptr;
-  typedef hydla::vcs::SymbolicVirtualConstraintSolver::value_t  value_t;
+  typedef hydla::backend::Backend::value_t                      value_t;
 
   /**
    * 空集合を表すS式 "list"
@@ -61,7 +61,7 @@ private:
 
 std::ostream& operator<<(std::ostream& s, const SExpAST& sexp_ast);
 
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
 
 #endif //_INCLUDED_HYDLA_PARSER_S_EXP_AST_H_

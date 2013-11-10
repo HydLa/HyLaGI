@@ -1,7 +1,6 @@
 #include "SExpAST.h"
 
 #include "../../../common/Logger.h"
-#include "../REDUCEStringSender.h"
 #include "SExpGrammar.h"
 #include <iostream>
 #include <sstream>
@@ -79,6 +78,6 @@ std::ostream& operator<<(std::ostream& s, const SExpAST& ast)
 
 
 
-} // namespace vcs
+} // namespace backend
 } // namespace hydla
 
