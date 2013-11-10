@@ -1,8 +1,8 @@
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 #else
 
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_IPC_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_IPC_H_
+#ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_IPC_H_
+#define _INCLUDED_HYDLA_VCS_REDUCE_LINK_IPC_H_
 
 #include "REDUCELink.h"
 
@@ -11,7 +11,7 @@
 #include <string>
 
 namespace hydla {
-namespace backend {
+namespace vcs {
 namespace reduce {
 
 /**
@@ -20,16 +20,12 @@ namespace reduce {
  */
 class REDUCELinkIpc : public REDUCELink {
 public:
-
-  static const int MAXLINE = 512;
-
-  void send_string_to_reduce(const char* str, int len);
-  void send_string_to_reduce(const char* str);
+  enum{ MAXLINE = 512 };
 
   /**
    * reduceプロセスの生成
    */
-  REDUCELinkIpc(const simulator::Opts &opts);
+  REDUCELinkIpc();
   /**
    * reduceプロセスに終了命令を出す
    */
@@ -60,6 +56,12 @@ public:
    */
   const hydla::parser::SExpAST get_as_s_exp_parse_tree();
 
+  /**
+   * stringの送信
+   * \param cmd REDUCEへ送信する文字列
+   * \return 0
+   */
+  int send_string(const std::string cmd);
 private:
 
   /**
@@ -98,10 +100,10 @@ private:
 };
 
 } // namespace reduce
-} // namespace backend
+} // namespace vcs
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_IPC_H_
+#endif // _INCLUDED_HYDLA_VCS_REDUCE_LINK_IPC_H_
 
 #endif // defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 

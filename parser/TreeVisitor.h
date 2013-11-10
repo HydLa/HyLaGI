@@ -13,9 +13,9 @@ namespace parse_tree {
  */
 class TreeVisitor {
 public:
-  TreeVisitor();
+  TreeVisitor(){}
 
-  virtual ~TreeVisitor();
+  virtual ~TreeVisitor(){}
 
   /**
    * Nodeクラスのaccept関数呼び出し用ヘルパ関数

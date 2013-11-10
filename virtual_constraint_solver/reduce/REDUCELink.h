@@ -1,15 +1,12 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
+#ifndef _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
+#define _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
 
 #include "sexp/SExpAST.h"
 #include <sstream>
 #include <stdexcept>
-#include "Link.h"
-#include "Simulator.h"
-#include <stack>
 
 namespace hydla {
-namespace backend {
+namespace vcs {
 namespace reduce {
 
 /**
@@ -35,11 +32,8 @@ private:
  * REDUCEサーバとの接続クライアント、サーバ接続とstringの送受信を行う
  * telnet経由とIPC経由の実装を束ねるインタフェース
  */
-class REDUCELink: public Link {
+class REDUCELink {
 public:
-  
-  REDUCELink(const simulator::Opts &opts);
-  virtual ~REDUCELink(){}
 
   /**
    * end_of_redeval_行まで文字列をgetlineする
@@ -66,43 +60,12 @@ public:
    */
   virtual const hydla::parser::SExpAST  get_as_s_exp_parse_tree() = 0;
 
-
   /**
-   * inherit from Link
+   * stringの送信
+   * \param cmd REDUCEへ送信する文字列
+   * \return 0
    */
-  void put_function(const char* s, int n);
-  void put_symbol(const char* s);
-  void put_number(const char* value);
-  void put_string(const char* s);
-  void put_integer(int i);
-  
-  void get_function(std::string &name, int &cnt);
-  std::string get_symbol();
-  std::string get_string();
-  int get_integer();
-  int get_arg_count();
-  DataType get_type();
-  std::string get_token_name(int tk_type);
-  DataType get_next();
-  void pre_send();
-  void pre_receive();
-  void post_receive();
-
-
-  /**
-   * only for REDUCELink
-   */
-  void post_put();
-
-  // TODO: implementation
-  std::string get_debug_print();
-  std::string get_input_print();
-
-  void check(){assert(0);}
-
-  bool convert(const std::string& orig, int orig_cnt, bool hydla2back, std::string& ret, int& ret_cnt);
-
-  inline std::string backend_name(){return "REDUCE";}
+  virtual int send_string(const std::string cmd) = 0;
 
 protected:
 
@@ -124,20 +87,11 @@ protected:
 
     return count;
   }
-
-  /**
-   * send string to reduce practically
-   */
-  virtual void send_string_to_reduce(const char* str) = 0;
-
-private:
-  /// used for put_function
-  std::stack<int> arg_cnt_stack_;
 };
 
 } // namespace reduce
-} // namespace backend
+} // namespace vcs
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
+#endif // _INCLUDED_HYDLA_VCS_REDUCE_LINK_H_
 
