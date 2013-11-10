@@ -9,7 +9,6 @@
 #include <iostream>
 #include "Logger.h"
 #include "Link.h"
-#include <boost/bimap/bimap.hpp>
 
 
 #ifdef _MSC_VER
@@ -69,8 +68,8 @@ public:
     MLPutSymbol(s.c_str());
   }
 
-  int put_string(const char* s) {
-    return MLPutString(s);
+  void put_string(const char* s) {
+    MLPutString(s);
   }
 
   void put_integer(int i) {
@@ -117,9 +116,7 @@ public:
   void intCase();
   void funcCase();
 
-  bool convert(const std::string& orig, int orig_cnt, bool hydla2back, std::string& ret, int& ret_cnt);
-
-  std::string backend_name(){return "Mathematica";}
+  inline std::string backend_name(){return "Mathematica";}
 
 private:
 
@@ -165,9 +162,6 @@ private:
 
   bool on_next_;
 
-  typedef std::pair<std::string, int> function_t;
-  typedef boost::bimaps::bimap<function_t, function_t > function_map_t;
-  function_map_t function_map_;
 };
 
 }

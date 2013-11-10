@@ -157,60 +157,27 @@ void MathematicaLink::init(const hydla::simulator::Opts &opts)
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
   
-
+  
+  typedef function_map_t::value_type f_value_t;
   //HydLaとMathematicaの関数名の対応関係を作っておく．
-  typedef function_map_t::value_type value_t;
-  function_map_.insert(value_t(function_t("sin", 1), function_t("Sin", 1)));
-  function_map_.insert(value_t(function_t("sinh", 1), function_t("Sinh", 1)));
-  function_map_.insert(value_t(function_t("Asin", 1), function_t("ArcSin", 1)));
-  function_map_.insert(value_t(function_t("Asinh", 1), function_t("ArcSinh", 1)));
-  function_map_.insert(value_t(function_t("cos", 1), function_t("Cos", 1)));
-  function_map_.insert(value_t(function_t("cosh", 1), function_t("Cosh", 1)));
-  function_map_.insert(value_t(function_t("Acos", 1), function_t("ArcCos", 1)));
-  function_map_.insert(value_t(function_t("Acosh", 1), function_t("ArcCosh", 1)));
-  function_map_.insert(value_t(function_t("tan", 1), function_t("Tan", 1)));
-  function_map_.insert(value_t(function_t("tanh", 1), function_t("Tanh", 1)));
-  function_map_.insert(value_t(function_t("Atan", 1), function_t("Arctan", 1)));
-  function_map_.insert(value_t(function_t("Atanh", 1), function_t("ArcTanh", 1)));
-  function_map_.insert(value_t(function_t("log", 2), function_t("Log", 2)));
-  function_map_.insert(value_t(function_t("ln", 1), function_t("Log", 1)));
+  function_map_.insert(f_value_t("sin", "Sin"));
+  function_map_.insert(f_value_t("sinh", "Sinh"));
+  function_map_.insert(f_value_t("Asin", "ArcSin"));
+  function_map_.insert(f_value_t("Asinh","ArcSinh"));
+  function_map_.insert(f_value_t("cos", "Cos"));
+  function_map_.insert(f_value_t("cosh", "Cosh"));
+  function_map_.insert(f_value_t("Acos", "ArcCos"));
+  function_map_.insert(f_value_t("Acosh", "ArcCosh"));
+  function_map_.insert(f_value_t("tan", "Tan"));
+  function_map_.insert(f_value_t("tanh", "Tanh"));
+  function_map_.insert(f_value_t("Atan", "Arctan"));
+  function_map_.insert(f_value_t("Atanh", "ArcTanh"));
+  function_map_.insert(f_value_t("log", "Log"));
+  function_map_.insert(f_value_t("ln", "Log"));
 
 
   HYDLA_LOGGER_FUNC_END(BACKEND);
 }
-
-bool MathematicaLink::convert(const std::string &orig, int orig_cnt, bool hydla2back, std::string &ret, int &ret_cnt)
-{
-  if(hydla2back)
-  {
-    function_map_t::left_iterator it = function_map_.left.find(function_t(orig, orig_cnt));
-  if(it != function_map_.left.end())
-  {
-    ret = it->second.first;
-    ret_cnt = it->second.second;
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-else
-{
-  function_map_t::right_iterator it = function_map_.right.find(function_t(orig, orig_cnt));
-  if(it != function_map_.right.end())
-  {
-    ret = it->second.first;
-    ret_cnt = it->second.second;
-    return true;
-  }
-  else
-  {
-    return false;
-  }  
-}
-}
-
 
 
 bool MathematicaLink::receive_to_return_packet(){

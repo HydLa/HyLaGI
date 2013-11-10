@@ -18,7 +18,7 @@
 
 #include "InitNodeRemover.h"
 #include "MathematicaLink.h"
-//#include "../virtual_constraint_solver/reduce/REDUCEVCS.h"
+#include "REDUCELinkFactory.h"
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
@@ -32,7 +32,7 @@
 
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
-//using namespace hydla::vcs::reduce;
+using namespace hydla::backend::reduce;
 
 
 using namespace std;
@@ -119,16 +119,16 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 
 void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
 {
-  backend_.reset(new Backend(new MathematicaLink(*opts_)));  
+
+  if(opts_->solver == "m" || opts_->solver == "Mathematica") {
+    backend_.reset(new Backend(new MathematicaLink(*opts_)));
+  }else{
+    REDUCELinkFactory rlf;
+    REDUCELink *reduce_link  = rlf.createInstance(*opts_);
+    backend_.reset(new Backend(reduce_link));
+  }
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
-/*
-  if(opts_->solver == "m" || opts_->solver == "Mathematica") {
-    solver_.reset(new MathematicaVCS(*opts_));
-  }else{
-    solver_.reset(new REDUCEVCS(*opts_, m));
-  }
-*/
 }
 
 

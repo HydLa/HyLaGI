@@ -327,7 +327,15 @@ int Backend::call(const char* name, const int& arg_cnt, const char* args_fmt, co
                    ", args_fmt: ", args_fmt,
                    ", ret_fmt: ", ret_fmt);
   link_->pre_send();
-  link_->put_function(name, arg_cnt);
+  std::string converted_name;
+  if(link_->convert(name, true, converted_name))
+  {
+    link_->put_function(converted_name, arg_cnt);
+  }
+  else
+  {
+    link_->put_function(name, arg_cnt);
+  }
   va_list args;
   va_start(args, ret_fmt);
   for(int i = 0; args_fmt[i] != '\0'; i++)
@@ -596,15 +604,14 @@ DEFINE_VISIT_UNARY(Not, Not)
 /// 関数
 void Backend::visit(boost::shared_ptr<Function> node)              
 {
-  // TODO: いつbackendでの関数名に変換する？
-  int size;
   string name;
-  if(!link_->convert(node->get_string(), node->get_arguments_size(), true, name, size))
+  int arg_cnt = node->get_arguments_size();
+  if(!link_->convert(node->get_string(), true, name))
   {
     throw InterfaceError(node->get_string() + " is not suppported in " + link_->backend_name());
   }
-  link_->put_function(name.c_str(), size);
-  for(int i=0; i<size;i++){
+  link_->put_function(name.c_str(), arg_cnt);
+  for(int i=0; i < arg_cnt;i++){
     accept(node->get_argument(i));
   }
 }
@@ -940,8 +947,7 @@ Backend::node_sptr Backend::receive_function()
     // その他の関数
     boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
     std::string name;
-    int cnt;
-    if(link_->convert(symbol, arg_count, false, name, cnt))
+    if(link_->convert(symbol, false, name))
     {
       // 対応している関数
       f.reset(new hydla::parse_tree::Function(name));
@@ -950,10 +956,9 @@ Backend::node_sptr Backend::receive_function()
     else{
       // 謎の関数
       f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
-      cnt = arg_count;
     }
 
-    for(int arg_it=0; arg_it < cnt; arg_it++){
+    for(int arg_it=0; arg_it < arg_count; arg_it++){
       f->add_argument(receive_node());
     }
     ret = f;
