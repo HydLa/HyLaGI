@@ -65,12 +65,13 @@ BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
   string query = 
     "depend {ht,v}, t$"
     "initVariables__:={inithtlhs,initvlhs}$"
-    "constraintStore__:= csVariables__:= {}$"
-    "expr_:={df(ht,t) = v, df(v,t) = -10 }$"
-    "init_:={inithtlhs = 10, initvlhs = 0 }$"
+    "cons_:= csVariables__:= {}$"
+    "tmpCons_:={df(ht,t) = v, df(v,t) = -10 }$"
+    "rconts_:={inithtlhs = 10, initvlhs = 0 }$"
+    "pCons_:={}$"
     "vars_:={ht,v,df(ht,t),df(v,t)}$"
 
-    "symbolic redeval '(checkConsistencyInterval expr_ init_ vars_);";
+    "symbolic redeval '(checkConsistencyInterval cons_ tmpCons_ rconts_ pCons_ vars_);";
 
   BOOST_CHECK(check(query, "(list 2)"));
 }

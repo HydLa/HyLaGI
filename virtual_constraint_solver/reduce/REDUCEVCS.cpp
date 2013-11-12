@@ -288,7 +288,6 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
   switch(mode_){ 
     case hydla::simulator::symbolic::DiscreteMode:
       // TODO myCheckConsistencyPointが本来、真偽が数式に依存する場合Trueが戻ってくるバグを持つ
-      reduce_link_->send_string("expr_:={}$ lcont_:={}$ vars:={}$");
       reduce_link_->send_string("symbolic redeval '(myCheckConsistencyPoint);");
       break;
     case hydla::simulator::symbolic::ConditionsMode:
@@ -297,7 +296,6 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
       reduce_link_->send_string("symbolic redeval '(checkFalseConditions);");
       break;
     default: // case hydla::simulator::symbolic::ContinuousMode:
-      // TODO 記号定数による場合分けへの対応
       reduce_link_->send_string("symbolic redeval '(myCheckConsistencyInterval);");
       break;
   }
@@ -311,16 +309,32 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
   SExpAST::const_tree_iter_t tree_root_ptr = sp.root();
 
   // 第一要素を取得
-  SExpAST::const_tree_iter_t ret_code_ptr = sec::car(tree_root_ptr);
-  std::string ret_first_str = sec::to_string(ret_code_ptr);
+  SExpAST::const_tree_iter_t ret_first_ptr = sec::car(tree_root_ptr);
+  std::string ret_first_str = sec::to_string(ret_first_ptr);
 
   CheckConsistencyResult ret;
   if(ret_first_str.find("true")!=std::string::npos){
     ret.true_parameter_maps.push_back(parameter_map_t());
   }else if(ret_first_str.find("false")!=std::string::npos){
     ret.false_parameter_maps.push_back(parameter_map_t());
+  }else if(ret_first_str.find("list")!=std::string::npos){
+    // MCSでは二重リストが, RCSでは一重リストが来る
+    parameter_map_t tmp_map = to_parameter_map(ret_first_ptr);
+    ret.true_parameter_maps.push_back(tmp_map);
+    SExpAST::const_tree_iter_t ret_second_ptr = sec::cadr(tree_root_ptr);
+
+    const std::string symbol = sec::to_string(ret_second_ptr);
+    // "true", "false", "list"のいずれかのはず
+    if(symbol == "true"){
+      assert(0);
+    }else if(symbol == "list"){
+      // MCSでは二重リストが, RCSでは一重リストが来る
+      parameter_map_t tmp_map = to_parameter_map(ret_second_ptr);
+      ret.false_parameter_maps.push_back(tmp_map);
+    }
+
   }else{
-    // TODO: 上記以外の構造への対応
+    // TODO: "false", ないし上記以外の構造への対応
     assert(0);
   }
 
@@ -868,6 +882,46 @@ const node_sptr REDUCEVCS::make_variable(const std::string &name, const int& dc,
   }
 
   return var_node; 
+}
+
+parameter_map_t REDUCEVCS::to_parameter_map(const_tree_iter_t list_iter){
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
+  parameter_map_t map;
+  const_tree_iter_t it = list_iter->children.begin();
+  for(; it != list_iter->children.end(); ++it){
+    parameter_t* tmp_param;
+    {
+      std::string param_str = sec::to_string(sec::car(it));
+      // "parameter_"を取り除く
+      param_str.erase(0, REDUCEStringSender::par_prefix.length() + 1);
+      for(int i = 0; i < (int)param_str.size(); ++i){
+        if(param_str[i] == '_') param_str[i] = ' ';
+      }
+      std::istringstream param_iss(param_str);
+      std::string name;
+      int derivative_count, id;
+      param_iss >> name >> derivative_count >> id;
+
+      tmp_param = get_parameter(name, derivative_count, id);
+      if(tmp_param == NULL){
+        throw SolveError("some unknown form of result");
+      }
+    }
+
+    value_range_t tmp_range = map[tmp_param];
+    HYDLA_LOGGER_VCS("%% returned parameter_name: ", *tmp_param);
+    int relop_code = sec::to_int(sec::cadr(it));
+    HYDLA_LOGGER_VCS("%% returned relop_code: ", relop_code);
+    value_t tmp_value = sec::to_value(sec::caddr(it));
+    HYDLA_LOGGER_VCS("%% returned value: ", tmp_value->get_string());
+
+    sec::set_range(tmp_value, tmp_range, relop_code);
+    map[tmp_param] = tmp_range;
+  }
+
+  HYDLA_LOGGER_VCS("--- result map---\n", map);
+  HYDLA_LOGGER_VCS("#*** End ", __FUNCTION__, " ***");
+  return parameter_map_t();
 }
 
 } // namespace reduce

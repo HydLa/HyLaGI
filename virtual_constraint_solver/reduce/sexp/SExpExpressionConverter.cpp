@@ -1,6 +1,7 @@
 #include "SExpExpressionConverter.h"
 
 #include "../REDUCEStringSender.h"
+#include <sstream>
 
 using namespace hydla::parse_tree; // NegativeとNumber用
 
@@ -132,6 +133,12 @@ std::string SExpExpressionConverter::to_string(const_tree_iter_t iter, bool isFi
   }
 
   return str;
+}
+int SExpExpressionConverter:: to_int(const_tree_iter_t iter){
+  int ret;
+  std::istringstream iss(to_string(iter));
+  iss >> ret;
+  return ret;
 }
 
 SExpExpressionConverter::value_t SExpExpressionConverter::to_value(const_tree_iter_t iter){

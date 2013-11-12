@@ -6,8 +6,9 @@
 
 #include "../../simulator/ValueVisitor.h"
 #include "../../symbolic_simulator/SymbolicValue.h"
-#include "REDUCEVCSType.h"
 #include "REDUCELink.h"
+#include "REDUCEVCSType.h"
+#include "sexp/SExpAST.h"
 #include "vcs_reduce_source.h"
 
 
@@ -22,6 +23,7 @@ class REDUCEVCS :
 public:
 
   typedef hydla::simulator::symbolic::SymbolicValue symbolic_value_t;
+  typedef hydla::parser::SExpAST::const_tree_iter_t const_tree_iter_t;
 
   //REDUCEVCS(Mode m, REDUCELink* cl, int approx_precision);
   
@@ -137,19 +139,19 @@ public:
   //  virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
 
 private:
-  /**
-   * Variableの生成
+  /** 
+   * S式(list 記号定数 relop 値)をとって記号定数の式に変換する
+   * SExpConverterに置きたいがget_parameter()の関係上こちらに
    */
+  parameter_map_t to_parameter_map(const_tree_iter_t iter);
+
+  /** Variableの生成 */
   const node_sptr make_variable(const std::string &name, const int& dc, const bool& is_prev = false) const;
 
-  /**
-   * acceptを経由してvalue_tをsymbolic_value_tにダウンキャストする
-   */
+  /** acceptを経由してvalue_tをsymbolic_value_tにダウンキャストする */
   const symbolic_value_t get_symbolic_value_t(value_t value);
 
-  /**
-   * ValueVisitorの実装
-   */
+  /** ValueVisitorの実装 */
   virtual void visit(symbolic_value_t& value);
 
 
@@ -157,9 +159,7 @@ private:
 
   reduce_link_t reduce_link_;
 
-  /**
-   * ValueVisior::visit()から得た値を一時格納する
-   */
+  /** ValueVisior::visit()から得た値を一時格納する */
   symbolic_value_t visited_;
 
 };

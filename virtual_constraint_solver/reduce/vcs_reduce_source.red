@@ -10,59 +10,62 @@ operator interval;
 
 LINELENGTH(100000000);
 
-% ƒOƒ[ƒoƒ‹•Ï”
-% constraintStore__: Œ»İˆµ‚Á‚Ä‚¢‚é§–ñW‡iƒŠƒXƒgŒ`®APP‚Ì’è”–¢‘Î‰j
-% csVariables__: §–ñƒXƒgƒA“à‚ÉoŒ»‚·‚é•Ï”‚Ìˆê——iƒŠƒXƒgŒ`®APP‚Ì’è”–¢‘Î‰j
-% parameterStore__: Œ»İˆµ‚Á‚Ä‚¢‚éA’è”§–ñ‚ÌW‡iƒŠƒXƒgŒ`®AIP‚Ì‚İg—pj
-% psParameters__: ’è”§–ñ‚ÌW‡‚ÉoŒ»‚·‚é’è”‚Ìˆê——iƒŠƒXƒgŒ`®AIP‚Ì‚İg—pj
+% ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+% constraintStore__: ç¾åœ¨æ‰±ã£ã¦ã„ã‚‹åˆ¶ç´„é›†åˆï¼ˆãƒªã‚¹ãƒˆå½¢å¼ã€PPã®å®šæ•°æœªå¯¾å¿œï¼‰
+% csVariables__: åˆ¶ç´„ã‚¹ãƒˆã‚¢å†…ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã®ä¸€è¦§ï¼ˆãƒªã‚¹ãƒˆå½¢å¼ã€PPã®å®šæ•°æœªå¯¾å¿œï¼‰
+% parameterStore__: ç¾åœ¨æ‰±ã£ã¦ã„ã‚‹ã€å®šæ•°åˆ¶ç´„ã®é›†åˆï¼ˆãƒªã‚¹ãƒˆå½¢å¼ã€IPã®ã¿ä½¿ç”¨ï¼‰
+% psParameters__: å®šæ•°åˆ¶ç´„ã®é›†åˆã«å‡ºç¾ã™ã‚‹å®šæ•°ã®ä¸€è¦§ï¼ˆãƒªã‚¹ãƒˆå½¢å¼ã€IPã®ã¿ä½¿ç”¨ï¼‰
 %
-% RCS•œ‹Œ‚ÉŒü‚¯‚ÄV‚µ‚­’Ç‰Á‚·‚éƒOƒ[ƒoƒ‹•Ï”
-% isTemporary__F§–ñ‚Ì’Ç‰Á‚ğˆê“I‚È‚à‚Ì‚Æ‚·‚é‚©
-% tmpConstraint__: ˆê“I‚É’Ç‰Á‚³‚ê‚½•Ï”
-% prevConstraint__: ¶‹ÉŒÀ’l‚ğİ’è‚·‚é§–ñ
-% initConstraint__: ‰Šú’l§–ñ
-% initTmpConstraint__: ˆê“I‚É’Ç‰Á‚³‚ê‚½‰Šú’l§–ñ
-% (variables__: §–ñ‚ÉoŒ»‚·‚é•Ï”‚ÌƒŠƒXƒg)
-% tmpVariables__: ˆê§–ñ‚ÉoŒ»‚·‚é•Ï”‚ÌƒŠƒXƒg
-% guard__: ƒK[ƒh§–ñ
-% guardVars__: ƒK[ƒh§–ñ‚ÉŠÜ‚Ü‚ê‚é•Ï”‚ÌƒŠƒXƒg
+% RCSå¾©æ—§ã«å‘ã‘ã¦æ–°ã—ãè¿½åŠ ã™ã‚‹ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+% isTemporary__ï¼šåˆ¶ç´„ã®è¿½åŠ ã‚’ä¸€æ™‚çš„ãªã‚‚ã®ã¨ã™ã‚‹ã‹
+% tmpConstraint__: ä¸€æ™‚çš„ã«è¿½åŠ ã•ã‚ŒãŸå¤‰æ•°
+% prevConstraint__: å·¦æ¥µé™å€¤ã‚’è¨­å®šã™ã‚‹åˆ¶ç´„
+% initConstraint__: åˆæœŸå€¤åˆ¶ç´„
+% initTmpConstraint__: ä¸€æ™‚çš„ã«è¿½åŠ ã•ã‚ŒãŸåˆæœŸå€¤åˆ¶ç´„
+% (variables__: åˆ¶ç´„ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã®ãƒªã‚¹ãƒˆ)
+% tmpVariables__: ä¸€æ™‚åˆ¶ç´„ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ã®ãƒªã‚¹ãƒˆ
+% guard__: ã‚¬ãƒ¼ãƒ‰åˆ¶ç´„
+% guardVars__: ã‚¬ãƒ¼ãƒ‰åˆ¶ç´„ã«å«ã¾ã‚Œã‚‹å¤‰æ•°ã®ãƒªã‚¹ãƒˆ
 % 
-% initVariables__: init•Ï”(initüü)‚ÌƒŠƒXƒg 
+% initVariables__: initå¤‰æ•°(initâ—¯â—¯)ã®ãƒªã‚¹ãƒˆ 
 %
-% irrationalNumberIntervalList__: –³—”‚ÆA‹æŠÔ’l‚É‚æ‚é‹ß—•\Œ»‚Ì‘g‚ÌƒŠƒXƒg
+% irrationalNumberIntervalList__: ç„¡ç†æ•°ã¨ã€åŒºé–“å€¤ã«ã‚ˆã‚‹è¿‘ä¼¼è¡¨ç¾ã®çµ„ã®ãƒªã‚¹ãƒˆ
 %
-% optUseDebugPrint__: ƒfƒoƒbƒOo—Í‚ğ‚·‚é‚©‚Ç‚¤‚©
-% optUseApproximateCompare__: ‹ß—’l‚ğ—p‚¢‚½‘å¬”»’è‚ğs‚¤‚©‚Ç‚¤‚©
-% approxPrecision__: checkOrderingFormula“à‚ÅA”®‚ğ”’l‚É‹ß—‚·‚éÛ‚Ì¸“x
-% intervalPrecision__: ‹æŠÔ’l‚Ö‚Ì•ÏŠ·‚ğ—p‚¢‚½‘å¬”äŠr‚É‚¨‚¯‚éA‹æŠÔ‚Ì¸“x
+% optUseDebugPrint__: ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›ã‚’ã™ã‚‹ã‹ã©ã†ã‹
+% optUseApproximateCompare__: è¿‘ä¼¼å€¤ã‚’ç”¨ã„ãŸå¤§å°åˆ¤å®šã‚’è¡Œã†ã‹ã©ã†ã‹
+% approxPrecision__: checkOrderingFormulaå†…ã§ã€æ•°å¼ã‚’æ•°å€¤ã«è¿‘ä¼¼ã™ã‚‹éš›ã®ç²¾åº¦
+% intervalPrecision__: åŒºé–“å€¤ã¸ã®å¤‰æ›ã‚’ç”¨ã„ãŸå¤§å°æ¯”è¼ƒã«ãŠã‘ã‚‹ã€åŒºé–“ã®ç²¾åº¦
 %
 %
-% piInterval__: ‰~ü—¦Pi‚ğ•\‚·‹æŠÔ
-% eInterval__: ƒlƒCƒsƒA”E‚ğ•\‚·‹æŠÔ
+% piInterval__: å††å‘¨ç‡Piã‚’è¡¨ã™åŒºé–“
+% eInterval__: ãƒã‚¤ãƒ”ã‚¢æ•°Eã‚’è¡¨ã™åŒºé–“
 %
-% «—ˆg‚¤‚©‚à‚µ‚ê‚È‚¢‚ª–¢À‘•‚ÌƒOƒ[ƒoƒ‹•Ï”
-% prevVariables__: HydLaƒvƒƒOƒ‰ƒ€‚ÌÃ“I‰ğÍŒü‚¯
+% å°†æ¥ä½¿ã†ã‹ã‚‚ã—ã‚Œãªã„ãŒæœªå®Ÿè£…ã®ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+% prevVariables__: HydLaãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®é™çš„è§£æå‘ã‘
 
+% å‡ºåŠ›è¨­å®šåˆæœŸåŒ–
+off nat;
+linelength(10^5);
 
-% ƒOƒ[ƒoƒ‹•Ï”‰Šú‰»
+% ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°åˆæœŸåŒ–
 irrationalNumberIntervalList__:= {};
 optUseApproximateCompare__:= nil;
-approxPrecision__:= 30; % TODO:—vŒŸ“¢
-intervalPrecision__:= 2; % TODO:—vŒŸ“¢
+approxPrecision__:= 30; % TODO:è¦æ¤œè¨
+intervalPrecision__:= 2; % TODO:è¦æ¤œè¨
 piInterval__:= interval(3141592/1000000, 3141593/1000000);
 eInterval__:= interval(2718281/1000000, 2718282/1000000);
 
 
 %---------------------------------------------------------------
-% Šî–{“I‚È”®‘€ìŠÖ”
+% åŸºæœ¬çš„ãªæ•°å¼æ“ä½œé–¢æ•°
 %---------------------------------------------------------------
 
-%Mathematica‚Å‚¢‚¤HeadŠÖ”
+%Mathematicaã§ã„ã†Headé–¢æ•°
 procedure myHead(expr_)$
   if(arglength(expr_)=-1) then nil
   else part(expr_, 0);
 
-%Mathematica‚Å‚¢‚¤FoldŠÖ”
+%Mathematicaã§ã„ã†Foldé–¢æ•°
 procedure myFoldLeft(func_, init_, list_)$
   if(list_ = {}) then init_
   else myFoldLeft(func_, func_(init_, first(list_)), rest(list_));
@@ -71,19 +74,19 @@ procedure getArgsList(expr_)$
   if(arglength(expr_)=-1) then {}
   else for i:=1 : arglength(expr_) collect part(expr_, i);
 
-%Mathematica‚Å‚¢‚¤ApplyŠÖ”
+%Mathematicaã§ã„ã†Applyé–¢æ•°
 procedure myApply(func_, expr_)$
   part(expr_, 0):= func_;
 
-% ®‚Ì“ª•”‚ªƒ}ƒCƒiƒX‚©‚Ç‚¤‚©
-% ‚½‚¾‚µexpr‚ª®”‚Ìê‡‚Í•‰‚Å‚ ‚Á‚Ä‚àƒ}ƒCƒiƒXˆµ‚¢‚µ‚È‚¢
-% TODOF•s“s‡‚ª‚ ‚ê‚ÎA‘Î‰‚·‚é
+% å¼ã®é ­éƒ¨ãŒãƒã‚¤ãƒŠã‚¹ã‹ã©ã†ã‹
+% ãŸã ã—exprãŒæ•´æ•°ã®å ´åˆã¯è² ã§ã‚ã£ã¦ã‚‚ãƒã‚¤ãƒŠã‚¹æ‰±ã„ã—ãªã„
+% TODOï¼šä¸éƒ½åˆãŒã‚ã‚Œã°ã€å¯¾å¿œã™ã‚‹
 procedure hasMinusHead(expr_)$
   if(arglength(expr_)=-1) then nil
   else if(part(expr_, 1) = -1*expr_) then t
   else nil;
 
-% TODO:3æªˆÈã‚Ö‚Ì‘Î‰
+% TODO:3ä¹—æ ¹ä»¥ä¸Šã¸ã®å¯¾å¿œ
 procedure rationalisation(expr_)$
 begin;
   scalar head_, denominator_, numerator_, denominatorHead_, denomPlusArgsList_,
@@ -94,9 +97,9 @@ begin;
 %  debugWrite("expr_: ", expr_);
   if(getArgsList(expr_)={}) then return expr_;
 
-  % ‘z’è‚·‚é‘ÎÛF•ª•ê‚Ì€”‚ª4‚Ü‚Å
-  % TODO:‚æ‚èˆê”Ê“I‚ÈŒ`‚Ö‚Ì‘Î‰¨5€ˆÈãH
-  % TODO:3æªˆÈã‚Ö‚Ì‘Î‰
+  % æƒ³å®šã™ã‚‹å¯¾è±¡ï¼šåˆ†æ¯ã®é …æ•°ãŒ4ã¾ã§
+  % TODO:ã‚ˆã‚Šä¸€èˆ¬çš„ãªå½¢ã¸ã®å¯¾å¿œâ†’5é …ä»¥ä¸Šï¼Ÿ
+  % TODO:3ä¹—æ ¹ä»¥ä¸Šã¸ã®å¯¾å¿œ
 
   head_:= myHead(expr_);
 %  debugWrite("head_: ", head_);
@@ -104,7 +107,7 @@ begin;
   if(head_=quotient) then <<
     numerator_:= part(expr_, 1);
     denominator_:= part(expr_, 2);
-    % •ª•ê‚É–³—”‚ª‚È‚¯‚ê‚Î—L—‰»•K—v‚È‚µ
+    % åˆ†æ¯ã«ç„¡ç†æ•°ãŒãªã‘ã‚Œã°æœ‰ç†åŒ–å¿…è¦ãªã—
     if(numberp(denominator_)) then return expr_;
 
     denominatorHead_:= myHead(denominator_);
@@ -112,13 +115,13 @@ begin;
     if((denominatorHead_=plus) or (denominatorHead_=times)) then <<
       denomPlusArgsList_:= if(denominatorHead_=plus) then getArgsList(denominator_)
       else << 
-        % denominatorHead_=times‚Ì‚Æ‚«
+        % denominatorHead_=timesã®ã¨ã
         if(myHead(part(denominator_, 2))=plus) then getArgsList(part(denominator_, 2))
         else {part(denominator_, 2)}
       >>;
 %      debugWrite("denomPlusArgsList_: ", denomPlusArgsList_);
 
-      % €”‚ª3ˆÈã‚Ìê‡AŠmÀ‚É–³—”‚ªŒ¸‚é‚æ‚¤‚ÉH•v‚µ‚Ä‹¤–ğ”‚ğ‹‚ß‚é
+      % é …æ•°ãŒ3ä»¥ä¸Šã®å ´åˆã€ç¢ºå®Ÿã«ç„¡ç†æ•°ãŒæ¸›ã‚‹ã‚ˆã†ã«å·¥å¤«ã—ã¦å…±å½¹æ•°ã‚’æ±‚ã‚ã‚‹
       if(length(denomPlusArgsList_)>2) then <<
         frontTwoElemList_:= getFrontTwoElemList(denomPlusArgsList_);
 %        debugWrite("frontTwoElemList_: ", frontTwoElemList_);
@@ -127,8 +130,8 @@ begin;
         if(denominatorHead_=plus) then <<
           conjugate_:= plus(myApply(plus, frontTwoElemList_), -1*(myApply(plus, restElemList_)));
         >> else <<
-          % ‘O’ñFÏ‚Ì‰E•Ó‚Í‚·‚×‚Äplus‚Å(-5‚Í+(-5)‚Ì‚æ‚¤‚É)‚Â‚È‚ª‚Á‚Ä‚¢‚éŒ`®
-          % TODOF‚»‚¤‚Å‚È‚¢ê‡‚Å‚à•½‹C‚È‚æ‚¤‚ÉH
+          % å‰æï¼šç©ã®å³è¾ºã¯ã™ã¹ã¦plusã§(-5ã¯+(-5)ã®ã‚ˆã†ã«)ã¤ãªãŒã£ã¦ã„ã‚‹å½¢å¼
+          % TODOï¼šãã†ã§ãªã„å ´åˆã§ã‚‚å¹³æ°—ãªã‚ˆã†ã«ï¼Ÿ
           timesRhs_:= plus(myApply(plus, frontTwoElemList_), -1*(myApply(plus, restElemList_)));
           conjugate_:= part(denominator_, 1) * timesRhs_;
         >>;
@@ -136,12 +139,12 @@ begin;
         if(denominatorHead_=plus) then <<
           conjugate_:= plus(part(denomPlusArgsList_, 1), -1*part(denomPlusArgsList_, 2));
         >> else <<
-          % denominatorHead_=times‚Ì‚Æ‚«
+          % denominatorHead_=timesã®ã¨ã
           timesRhs_:= plus(part(denomPlusArgsList_, 1), -1*part(denomPlusArgsList_, 2));
           conjugate_:= part(denominator_, 1) * timesRhs_;
         >>;
       >> else <<
-        % denomPlusArgsList_‚Ì’·‚³‚Í1‚Ì‚Í‚¸A‚±‚Ì‚Æ‚«denominatorHead_‚Ítimes‚Å‚ ‚é‚Í‚¸
+        % denomPlusArgsList_ã®é•·ã•ã¯1ã®ã¯ãšã€ã“ã®ã¨ãdenominatorHead_ã¯timesã§ã‚ã‚‹ã¯ãš
         conjugate_:= -1*first(denomPlusArgsList_);
       >>;
     >> else if(denominatorHead_=difference) then <<
@@ -150,7 +153,7 @@ begin;
       conjugate_:= -1*denominator_;
     >>;
 %    debugWrite("conjugate_: ", conjugate_);
-    % ‹¤–ğ”‚ğ•ª•êq‚É‚©‚¯‚é
+    % å…±å½¹æ•°ã‚’åˆ†æ¯å­ã«ã‹ã‘ã‚‹
     numerator_:= numerator_ * conjugate_;
     denominator_:= denominator_ * conjugate_;
     rationalisedExpr_:= numerator_ / denominator_;
@@ -170,13 +173,13 @@ begin;
 end;
 
 
-% exSub‚Ì‘æ“ñˆø”‚ğƒŠƒXƒgŒ`®‚É‘Î‰‚³‚¹‚½’uŠ·ŠÖ”
+% exSubã®ç¬¬äºŒå¼•æ•°ã‚’ãƒªã‚¹ãƒˆå½¢å¼ã«å¯¾å¿œã•ã›ãŸç½®æ›é–¢æ•°
 procedure myExSub(patternList_, exprs_)$
   if(myHead(exprs_) = list) then 
     for each x in exprs_ collect myExSub(patternList_, x)
   else exSub(patternList_, exprs_);
 
-% expr_’†‚É“™®ˆÈŠO‚â˜_—‰‰Zq‚ªŠÜ‚Ü‚ê‚éê‡‚É‚à‘Î‰‚Å‚«‚é’uŠ·ŠÖ”
+% expr_ä¸­ã«ç­‰å¼ä»¥å¤–ã‚„è«–ç†æ¼”ç®—å­ãŒå«ã¾ã‚Œã‚‹å ´åˆã«ã‚‚å¯¾å¿œã§ãã‚‹ç½®æ›é–¢æ•°
 procedure exSub(patternList_, expr_)$
 begin;
   scalar subAppliedExpr_, head_, subAppliedLeft_, subAppliedRight_, 
@@ -186,28 +189,28 @@ begin;
 %  debugWrite("patternList_: ", patternList_);
 %  debugWrite("expr_: ", expr_);
   
-  % expr_‚ªˆø”‚ğ‚½‚È‚¢ê‡
+  % expr_ãŒå¼•æ•°ã‚’æŒãŸãªã„å ´åˆ
   if(arglength(expr_)=-1) then <<
     subAppliedExpr_:= sub(patternList_, expr_);
     return subAppliedExpr_;
   >>;
-  % patternList_‚©‚çTrue‚ğˆÓ–¡‚·‚é§–ñ‚ğœ‚­
+  % patternList_ã‹ã‚‰Trueã‚’æ„å‘³ã™ã‚‹åˆ¶ç´„ã‚’é™¤ã
   patternList_:= removeTrueList(patternList_);
 %  debugWrite("patternList_: ", patternList_);
 
   head_:= myHead(expr_);
 %  debugWrite("head_: ", head_);
 
-  % or‚ÅŒ‹‡‚³‚ê‚é‚à‚Ì“¯m‚ğŠ‡ŒÊ‚Å‚­‚­‚ç‚È‚¢‚ÆAneq‚Æ‚©‚ªˆá‚¤Œ‹‡‚Ì‚µ‚©‚½‚ğ‚·‚é‰Â”\«‚ ‚è
+  % orã§çµåˆã•ã‚Œã‚‹ã‚‚ã®åŒå£«ã‚’æ‹¬å¼§ã§ããã‚‰ãªã„ã¨ã€neqã¨ã‹ãŒé•ã†çµåˆã®ã—ã‹ãŸã‚’ã™ã‚‹å¯èƒ½æ€§ã‚ã‚Š
   if(isIneqRelop(head_)) then <<
-    % “™®ˆÈŠO‚ÌŠÖŒW‰‰Zq‚Ìê‡
+    % ç­‰å¼ä»¥å¤–ã®é–¢ä¿‚æ¼”ç®—å­ã®å ´åˆ
     subAppliedLeft_:= exSub(patternList_, lhs(expr_));
 %    debugWrite("subAppliedLeft_:", subAppliedLeft_);
     subAppliedRight_:= exSub(patternList_, rhs(expr_));
 %    debugWrite("subAppliedRight_:", subAppliedRight_);
     subAppliedExpr_:= myApply(head_, {subAppliedLeft_, subAppliedRight_});
   >> else if(isLogicalOp(head_)) then <<
-    % ˜_—‰‰Zq‚Ìê‡
+    % è«–ç†æ¼”ç®—å­ã®å ´åˆ
     argCount_:= arglength(expr_);
 %    debugWrite("argCount_: ", argCount_);
     subAppliedExprList_:= for i:=1 : argCount_ collect exSub(patternList_, part(expr_, i));
@@ -215,8 +218,8 @@ begin;
     subAppliedExpr_:= myApply(head_, subAppliedExprList_);
 
   >> else <<
-    % “™®‚âA•Ï”–¼‚È‚Ç‚Ìfactor‚Ìê‡
-    % TODO:expr_‚ğŒ©‚ÄA§–ñƒXƒgƒAi‚ ‚é‚¢‚Ícsvarsj“à‚É‚ ‚é‚æ‚¤‚È‚çA‚»‚ê‚Æ‘Î‚ğ‚È‚·’li“™®‚Ì‰E•Ój‚ğ“K—p
+    % ç­‰å¼ã‚„ã€å¤‰æ•°åãªã©ã®factorã®å ´åˆ
+    % TODO:expr_ã‚’è¦‹ã¦ã€åˆ¶ç´„ã‚¹ãƒˆã‚¢ï¼ˆã‚ã‚‹ã„ã¯csvarsï¼‰å†…ã«ã‚ã‚‹ã‚ˆã†ãªã‚‰ã€ãã‚Œã¨å¯¾ã‚’ãªã™å€¤ï¼ˆç­‰å¼ã®å³è¾ºï¼‰ã‚’é©ç”¨
     subAppliedExpr_:= sub(patternList_, expr_);
   >>;
 
@@ -224,8 +227,8 @@ begin;
   return subAppliedExpr_;
 end;
 
-% expr_’†‚ÉoŒ»‚·‚éAsqrt(var_)‚ÉŠÖ‚·‚é€‚ÌŒW”‚ğ“¾‚é
-% •¡”€‘¶İ‚·‚éê‡‚àl—¶‚µAƒŠƒXƒgŒ`®‚Å•Ô‚·
+% expr_ä¸­ã«å‡ºç¾ã™ã‚‹ã€sqrt(var_)ã«é–¢ã™ã‚‹é …ã®ä¿‚æ•°ã‚’å¾—ã‚‹
+% è¤‡æ•°é …å­˜åœ¨ã™ã‚‹å ´åˆã‚‚è€ƒæ…®ã—ã€ãƒªã‚¹ãƒˆå½¢å¼ã§è¿”ã™
 procedure getSqrtList(expr_, var_, mode_)$
 begin;
   scalar head_, argsAnsList_, coefficientList_, exprList_, insideSqrt_;
@@ -236,17 +239,17 @@ begin;
 %  debugWrite("mode_: ", mode_);
 
 
-  % •Ï”‚âsqrt‚ªŠÜ‚Ü‚ê‚È‚¯‚ê‚Îl‚¦‚é•K—v‚È‚µ
+  % å¤‰æ•°ã‚„sqrtãŒå«ã¾ã‚Œãªã‘ã‚Œã°è€ƒãˆã‚‹å¿…è¦ãªã—
   if(freeof(expr_, var_) or freeof(expr_, sqrt)) then return {};
 
   head_:= myHead(expr_);
 %  debugWrite("head_: ", head_);
   if(hasMinusHead(expr_)) then <<
-    % TODOF•‰†‚Ì’†‚Évar_‚ª•¡”ŒÂ‚ ‚éê‡‚Ö‚Ì‘Î‰H
+    % TODOï¼šè² å·ã®ä¸­ã«var_ãŒè¤‡æ•°å€‹ã‚ã‚‹å ´åˆã¸ã®å¯¾å¿œï¼Ÿ
     coefficientList_:= {-1*first(getSqrtList(part(expr_, 1), var_, mode_))};
     exprList_:= getSqrtList(part(expr_, 1), var_, mode_);
   >> else if(head_=plus) then <<
-    % ‘½€®‚Ìê‡
+    % å¤šé …å¼ã®å ´åˆ
     argsAnsList_:= for each x in getArgsList(expr_) join getSqrtList(x, var_, mode_);
     coefficientList_:= argsAnsList_;
     exprList_:= argsAnsList_;
@@ -260,13 +263,13 @@ begin;
     exprList_:= {insideSqrt_};
 
     if(freeof(insideSqrt_, sqrt)) then <<
-      % lcof‚ÅŒW”‚ğ‹‚ß‚é
+      % lcofã§ä¿‚æ•°ã‚’æ±‚ã‚ã‚‹
       coefficientList_:= {lcof(insideSqrt_, var_)};
     >> else <<
-      % ª†‚Ì’†‚ª‚³‚ç‚Ésqrt‚ğŠÜ‚Ş‘½€®‚É‚È‚Á‚Ä‚¢‚éê‡
+      % æ ¹å·ã®ä¸­ãŒã•ã‚‰ã«sqrtã‚’å«ã‚€å¤šé …å¼ã«ãªã£ã¦ã„ã‚‹å ´åˆ
       argsAnsList_:= for each x in getArgsList(insideSqrt_) join getSqrtList(x, var_, mode_);
 %      debugWrite("argsAnsList_: ", argsAnsList_);
-      % TODOF•¡”ŒÂ‚ ‚éê‡‚Ö‚Ì‘Î‰H
+      % TODOï¼šè¤‡æ•°å€‹ã‚ã‚‹å ´åˆã¸ã®å¯¾å¿œï¼Ÿ
       coefficientList_:= {first(argsAnsList_)};
       exprList_:= union(exprList_, argsAnsList_);
     >>;
@@ -282,7 +285,7 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ŠÖŒW‰‰ZqŠÖ˜A‚ÌŠÖ”
+% é–¢ä¿‚æ¼”ç®—å­é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure isIneqRelop(expr_)$
@@ -327,7 +330,7 @@ procedure getExprCode(cons_)$
 begin;
   scalar head_;
 
-  % relop‚ªˆø”‚Æ‚µ‚Ä’¼Ú“n‚³‚ê‚½ê‡‚Ö‚à‘Î‰
+  % relopãŒå¼•æ•°ã¨ã—ã¦ç›´æ¥æ¸¡ã•ã‚ŒãŸå ´åˆã¸ã‚‚å¯¾å¿œ
   if(arglength(cons_)=-1) then head_:= cons_
   else head_:= myHead(cons_);
 
@@ -340,7 +343,7 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ˜_—‰‰ZqŠÖ˜A‚ÌŠÖ”
+% è«–ç†æ¼”ç®—å­é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure isLogicalOp(expr_)$
@@ -350,7 +353,7 @@ procedure hasLogicalOp(expr_)$
   if(freeof(expr_, and) and freeof(expr_, or)) then nil else t;
 
 %---------------------------------------------------------------
-% OŠpŠÖ”ŠÖ˜A‚ÌŠÖ”
+% ä¸‰è§’é–¢æ•°é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure isTrigonometricFunc(expr_)$
@@ -366,7 +369,7 @@ procedure hasInvTrigonometricFunc(expr_)$
   if((not freeof(expr_, asin)) or (not freeof(expr_, acos)) or (not freeof(expr_, atan))) then t else nil;
 
 %---------------------------------------------------------------
-% ‹æŠÔ‰‰ZŠÖ˜A‚ÌŠÖ”
+% åŒºé–“æ¼”ç®—é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure isInterval(expr_)$
@@ -385,8 +388,8 @@ procedure getUbFromInterval(expr_)$
   if(isInterval(expr_)) then part(expr_, 2)
   else ERROR;
 
-% TODOF“™†‚Ì—L–³iŠJ‹æŠÔ/•Â‹æŠÔj‚É‚æ‚Á‚ÄŒ‹‰Ê‚ª•Ï‚í‚éê‡‚à³‚µ‚­ˆµ‚¦‚é‚æ‚¤‚É
-% i‚»‚Ìê‡Alb‚Æub‚ª“™‚µ‚­‚È‚Á‚Ä‚¢‚é‹æŠÔ‚ÍA•Â‹æŠÔ‚Æl‚¦‚é‚ÆÀŒ»‰Â”\‚©j
+% TODOï¼šç­‰å·ã®æœ‰ç„¡ï¼ˆé–‹åŒºé–“/é–‰åŒºé–“ï¼‰ã«ã‚ˆã£ã¦çµæœãŒå¤‰ã‚ã‚‹å ´åˆã‚‚æ­£ã—ãæ‰±ãˆã‚‹ã‚ˆã†ã«
+% ï¼ˆãã®å ´åˆã€lbã¨ubãŒç­‰ã—ããªã£ã¦ã„ã‚‹åŒºé–“ã¯ã€é–‰åŒºé–“ã¨è€ƒãˆã‚‹ã¨å®Ÿç¾å¯èƒ½ã‹ï¼‰
 procedure compareInterval(interval1_, op_, interval2_)$
 begin;
   debugWrite("in compareInterval", " ");
@@ -433,8 +436,8 @@ procedure quotientInterval(interval1_, interval2_)$
   if((getLbFromInterval(interval2_)=0) or (getUbFromInterval(interval2_)=0)) then ERROR
   else timesInterval(interval1_, interval(1/getUbFromInterval(interval2_), 1/getLbFromInterval(interval2_)));
 
-% –³—”‚ğŠÜ‚Ş’è”®‚ğ‹æŠÔ’lŒ`®‚É•ÏŠ·‚·‚é
-% ‘O’ñF“ü—Í‚Ìvalue_‚Í2ˆÈã‚Ì®”‚ÉŒÀ‚ç‚ê‚é
+% ç„¡ç†æ•°ã‚’å«ã‚€å®šæ•°å¼ã‚’åŒºé–“å€¤å½¢å¼ã«å¤‰æ›ã™ã‚‹
+% å‰æï¼šå…¥åŠ›ã®value_ã¯2ä»¥ä¸Šã®æ•´æ•°ã«é™ã‚‰ã‚Œã‚‹
 procedure getSqrtInterval(value_, mode_)$
 begin;
   scalar sqrtInterval_, sqrtLb_, sqrtUb_, midPoint_, loopCount_,
@@ -451,7 +454,7 @@ begin;
   if(iIntervalList_ neq {}) then return first(iIntervalList_);
 
   if(mode_=BINARY_SEARCH) then <<
-    % ã‰ºŒÀ‚Ì’†“_x‚É‚¨‚¢‚ÄAx^2-value‚Ì³•‰‚ğ’²‚×‚é‚±‚Æ‚Å’Tõ”ÍˆÍ‚ğ‹·‚ß‚Ä‚¢‚­
+    % ä¸Šä¸‹é™ã®ä¸­ç‚¹xã«ãŠã„ã¦ã€x^2-valueã®æ­£è² ã‚’èª¿ã¹ã‚‹ã“ã¨ã§æ¢ç´¢ç¯„å›²ã‚’ç‹­ã‚ã¦ã„ã
     sqrtLb_:= 0;
     sqrtUb_:= value_;
     loopCount_:= 0;
@@ -466,7 +469,7 @@ begin;
     sqrtInterval_:= interval(sqrtLb_, sqrtUb_);
     putIrrationalNumberInterval(sqrt(value_), sqrtInterval_);
   >> else if(mode_=NEWTON) then <<
-    % ƒjƒ…[ƒgƒ“–@‚É‚æ‚è‹‚ß‚é
+    % ãƒ‹ãƒ¥ãƒ¼ãƒˆãƒ³æ³•ã«ã‚ˆã‚Šæ±‚ã‚ã‚‹
     newTmpNewtonSol_:= value_;
     loopCount_:= 0;
     repeat <<
@@ -495,7 +498,7 @@ begin;
   debugWrite("in convertValueToInterval", " ");
   debugWrite("value_: ", value_);
 
-  % —L—”‚È‚Ì‚Å‹æŠÔ‚É‚·‚é‚±‚Æ‚È‚­‘å¬”»’è‰Â”\‚¾‚ªAã‰ºŒÀ‚ª“™‚µ‚¢‹æŠÔi“_‹æŠÔj‚Æ‚µ‚Äˆµ‚¤
+  % æœ‰ç†æ•°ãªã®ã§åŒºé–“ã«ã™ã‚‹ã“ã¨ãªãå¤§å°åˆ¤å®šå¯èƒ½ã ãŒã€ä¸Šä¸‹é™ãŒç­‰ã—ã„åŒºé–“ï¼ˆç‚¹åŒºé–“ï¼‰ã¨ã—ã¦æ‰±ã†
   if(numberp(value_)) then <<
     retInterval_:= makePointInterval(value_);
     debugWrite("retInterval_: ", retInterval_);
@@ -507,7 +510,7 @@ begin;
     head_:= myHead(value_);
     debugWrite("head_: ", head_);
     if(hasMinusHead(value_)) then <<
-      % •‰‚Ì”‚Ìê‡
+      % è² ã®æ•°ã®å ´åˆ
       retInterval_:= timesInterval(makePointInterval(-1), convertValueToInterval(part(value_, 1)));
     >> else if((head_=plus) or (head_= times)) then <<
       argsList_:= getArgsList(value_);
@@ -524,7 +527,7 @@ begin;
     >> else if(head_=quotient) then <<
       retInterval_:= quotientInterval(part(value_, 1), part(value_, 2));
     >> else if(head_=expt) then <<
-      % ‘O’ñF™p”‚Í®”
+      % å‰æï¼šå†ªæ•°ã¯æ•´æ•°
       retInterval_:= makePointInterval(1);
       for i:=1 : part(value_, 2) do <<
         retInterval_:= timesInterval(retInterval_, convertValueToInterval(part(value_, 1)));
@@ -546,7 +549,7 @@ begin;
     >> else if(head_=atan) then <<
       retInterval_:= interval(getLbFromInterval(timesInterval(makePointInterval(-1), piInterval__)), getUbFromInterval(piInterval__));
     >> else <<
-      % TODOF‘¼‚É‚Ç‚ñ‚Èê‡‚É–³—”ˆµ‚¢‚É‚È‚é‚©‚ğ’²‚×‚é
+      % TODOï¼šä»–ã«ã©ã‚“ãªå ´åˆã«ç„¡ç†æ•°æ‰±ã„ã«ãªã‚‹ã‹ã‚’èª¿ã¹ã‚‹
       retInterval_:= interval(hoge, hoge);
     >>;
   >> else <<
@@ -561,7 +564,7 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% À”ˆÈŠO‚Ì”ŠÖ˜A‚ÌŠÖ”
+% å®Ÿæ•°ä»¥å¤–ã®æ•°é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure hasImaginaryNum(value_)$
@@ -583,7 +586,7 @@ begin;
   head_:= myHead(value_);
 %  debugWrite("head_: ", head_);
   if(hasMinusHead(value_)) then <<
-    % •‰‚Ì”‚Ìê‡
+    % è² ã®æ•°ã®å ´åˆ
     retFlag_:= hasIndefinableNum(part(value_, 1));
   >> else if((head_=plus) or (head_=times)) then <<
     flagList_:= union(for each x in getArgsList(value_) join
@@ -609,14 +612,14 @@ procedure getIrrationalNumberInterval(value_)$
     if(first(x)=value_) then {second(x)} else {};
 
 %---------------------------------------------------------------
-% ƒpƒ‰ƒƒ^ŠÖ˜A‚ÌŠÖ”
+% ãƒ‘ãƒ©ãƒ¡ã‚¿é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
-% ®’†‚Éƒpƒ‰ƒƒ^‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ğApsParameters__“à‚Ì•Ï”‚ªŠÜ‚Ü‚ê‚é‚©‚Ç‚¤‚©‚Å”»’è
+% å¼ä¸­ã«ãƒ‘ãƒ©ãƒ¡ã‚¿ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹ã©ã†ã‹ã‚’ã€psParameters__å†…ã®å¤‰æ•°ãŒå«ã¾ã‚Œã‚‹ã‹ã©ã†ã‹ã§åˆ¤å®š
 procedure hasParameter(expr_)$
   if(collectParameters(expr_) neq {}) then t else nil;
 
-% ®\‘¢’†‚Ìƒpƒ‰ƒƒ^‚ğAW‚ß‚é
+% å¼æ§‹é€ ä¸­ã®ãƒ‘ãƒ©ãƒ¡ã‚¿ã‚’ã€é›†ã‚ã‚‹
 procedure collectParameters(expr_)$
 begin;
   scalar collectedParameters_;
@@ -632,16 +635,16 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ‘å¬”»’èŠÖ˜A‚ÌŠÖ”i’è”®‚Ì‚İAƒpƒ‰ƒƒ^‚È‚µj
+% å¤§å°åˆ¤å®šé–¢é€£ã®é–¢æ•°ï¼ˆå®šæ•°å¼ã®ã¿ã€ãƒ‘ãƒ©ãƒ¡ã‚¿ãªã—ï¼‰
 %---------------------------------------------------------------
 
 checkOrderingFormulaCount_:= 0;
 checkOrderingFormulaIrrationalNumberCount_:= 0;
 
 procedure checkOrderingFormula(orderingFormula_)$
-%“ü—Í: ˜_—®(“Á‚Ésqrt(2), greaterp_, sin(2)‚È‚Ç‚ğŠÜ‚Ş‚æ‚¤‚È‚à‚Ì), ¸“x
-%o—Í: t or nil or -1
-%      (x‚Æy‚ª‚Ù‚Ú“™‚µ‚¢ -1)
+%å…¥åŠ›: è«–ç†å¼(ç‰¹ã«sqrt(2), greaterp_, sin(2)ãªã©ã‚’å«ã‚€ã‚ˆã†ãªã‚‚ã®), ç²¾åº¦
+%å‡ºåŠ›: t or nil or -1
+%      (xã¨yãŒã»ã¼ç­‰ã—ã„æ™‚ -1)
 %geq_= >=, geq; greaterp_= >, greaterp; leq_= <=, leq; lessp_= <, lessp;
 begin;
   scalar head_, x, op, y, bak_precision, ans, margin, xInterval_, yInterval_;
@@ -652,7 +655,7 @@ begin;
   debugWrite("checkOrderingFormulaCount_: ", checkOrderingFormulaCount_);
 
   head_:= myHead(orderingFormula_);
-  % ‘å¬‚ÉŠÖ‚·‚é˜_—®ˆÈŠO‚ª“ü—Í‚³‚ê‚½‚çƒGƒ‰[
+  % å¤§å°ã«é–¢ã™ã‚‹è«–ç†å¼ä»¥å¤–ãŒå…¥åŠ›ã•ã‚ŒãŸã‚‰ã‚¨ãƒ©ãƒ¼
   if(hasLogicalOp(head_)) then return ERROR;
 
   x:= lhs(orderingFormula_);
@@ -681,14 +684,14 @@ begin;
   if(not numberp(x) or not(numberp(y))) then <<
     checkOrderingFormulaIrrationalNumberCount_:= checkOrderingFormulaIrrationalNumberCount_+1;
     debugWrite("checkOrderingFormulaIrrationalNumberCount_: ", checkOrderingFormulaIrrationalNumberCount_);
-    % –³—”‚ªŠÜ‚Ü‚ê‚éê‡
+    % ç„¡ç†æ•°ãŒå«ã¾ã‚Œã‚‹å ´åˆ
     if(optUseApproximateCompare__) then <<
-      % ‹ß—’l‚ğ—p‚¢‚½‘å¬”äŠr
+      % è¿‘ä¼¼å€¤ã‚’ç”¨ã„ãŸå¤§å°æ¯”è¼ƒ
       bak_precision := precision 0;
       on rounded$ precision approxPrecision__$
 
-      % x‚¨‚æ‚Ñy‚ª—L—”‚Å‚ ‚é
-      % 10^(3 + y‚©x‚Ìw”•”‚Ì’l - —LŒøŒ…”)
+      % xãŠã‚ˆã³yãŒæœ‰ç†æ•°ã§ã‚ã‚‹æ™‚
+      % 10^(3 + yã‹xã®æŒ‡æ•°éƒ¨ã®å€¤ - æœ‰åŠ¹æ¡æ•°)
       if(min(x,y)=0) then
         margin:=10 ^ (3 + floor log10 max(x, y) - approxPrecision__)
       else if(min(x,y)>0) then 
@@ -701,7 +704,7 @@ begin;
       debugWrite("x:= ", x);
       debugWrite("y:= ", y);
       debugWrite("abs(x-y):= ", abs(x-y));
-      %x‚Æy‚ª‚Ù‚Ú“™‚µ‚¢
+      %xã¨yãŒã»ã¼ç­‰ã—ã„æ™‚
       if(abs(x-y)<margin) then <<off rounded$ precision bak_precision$ write(-1); return -1>>;
 
       if (op = geq) then
@@ -715,7 +718,7 @@ begin;
 
       off rounded$ precision bak_precision$
     >> else <<
-      % ‹æŠÔ’l‚Ö‚Ì•ÏŠ·‚ğ—p‚¢‚½‘å¬”äŠr
+      % åŒºé–“å€¤ã¸ã®å¤‰æ›ã‚’ç”¨ã„ãŸå¤§å°æ¯”è¼ƒ
       xInterval_:= convertValueToInterval(x);
       yInterval_:= convertValueToInterval(y);
       debugWrite("xInterval_: ", xInterval_);
@@ -735,7 +738,7 @@ begin;
   debugWrite("ans in checkOrderingFormula: ", ans);
   debugWrite("(orderingFormula_: )", orderingFormula_);
   if(ans=unknown) then <<
-    % unknown‚ª•Ô‚Á‚½ê‡‚Í¸“x‚ğ•Ï‚¦‚ÄÄs
+    % unknownãŒè¿”ã£ãŸå ´åˆã¯ç²¾åº¦ã‚’å¤‰ãˆã¦å†è©¦è¡Œ
     intervalPrecision__:= intervalPrecision__+4;
     ans:= checkOrderingFormula(orderingFormula_);
     intervalPrecision__:= intervalPrecision__-4;
@@ -749,13 +752,13 @@ begin;
 
   debugWrite("in myInfinityIf", " ");
   debugWrite("op(x, y): ", op(x, y));
-  % INFINITY > -INFINITY‚Æ‚©‚Ì‘Î‰
+  % INFINITY > -INFINITYã¨ã‹ã®å¯¾å¿œ
   if(x=INFINITY or y=-INFINITY) then 
     if((op = geq) or (op = greaterp)) then ans_:=t else ans_:=nil
   else if(x=-INFINITY or y=INFINITY) then
     if((op = leq) or (op = lessp)) then ans_:=t else ans_:=nil
   else <<
-    % ŒW”“™‚Ö‚Ì‘Î‰‚Æ‚µ‚ÄA‚Ü‚¸infinity relop value‚ÌŒ`‚É‚µ‚Ä‚©‚ç‰ğ‚«‚È‚¨‚·
+    % ä¿‚æ•°ç­‰ã¸ã®å¯¾å¿œã¨ã—ã¦ã€ã¾ãšinfinity relop valueã®å½¢ã«ã—ã¦ã‹ã‚‰è§£ããªãŠã™
     infinityTupleDNF_:= exIneqSolve(op(x, y));
     debugWrite("infinityTupleDNF_: ", infinityTupleDNF_);
     if(isFalseDNF(infinityTupleDNF_)) then return nil;
@@ -778,45 +781,45 @@ begin;
 end;
 
 procedure mymin(x,y)$
-%“ü—Í: ”’l‚Æ‚¢‚¤‘O’ñ
+%å…¥åŠ›: æ•°å€¤ã¨ã„ã†å‰æ
   if(checkOrderingFormula(x<y)) then x else y;
 
 procedure mymax(x,y)$
-%“ü—Í: ”’l‚Æ‚¢‚¤‘O’ñ
+%å…¥åŠ›: æ•°å€¤ã¨ã„ã†å‰æ
   if(checkOrderingFormula(x>y)) then x else y;
 
 procedure myFindMinimumValue(x,lst)$
-%“ü—Í: Œ»’iŠK‚Å‚ÌÅ¬’lx, Å¬’l‚ğŒ©‚Â‚¯‚½‚¢‘ÎÛ‚ÌƒŠƒXƒg
-%o—Í: ƒŠƒXƒg’†‚ÌÅ¬’l
+%å…¥åŠ›: ç¾æ®µéšã§ã®æœ€å°å€¤x, æœ€å°å€¤ã‚’è¦‹ã¤ã‘ãŸã„å¯¾è±¡ã®ãƒªã‚¹ãƒˆ
+%å‡ºåŠ›: ãƒªã‚¹ãƒˆä¸­ã®æœ€å°å€¤
   if(lst={}) then x
   else if(mymin(x, first(lst)) = x) then myFindMinimumValue(x,rest(lst))
   else myFindMinimumValue(first(lst),rest(lst));
 
 procedure myFindMaximumValue(x,lst)$
-%“ü—Í: Œ»’iŠK‚Å‚ÌÅ‘å’lx, Å‘å’l‚ğŒ©‚Â‚¯‚½‚¢‘ÎÛ‚ÌƒŠƒXƒg
-%o—Í: ƒŠƒXƒg’†‚ÌÅ‘å’l
+%å…¥åŠ›: ç¾æ®µéšã§ã®æœ€å¤§å€¤x, æœ€å¤§å€¤ã‚’è¦‹ã¤ã‘ãŸã„å¯¾è±¡ã®ãƒªã‚¹ãƒˆ
+%å‡ºåŠ›: ãƒªã‚¹ãƒˆä¸­ã®æœ€å¤§å€¤
   if(lst={}) then x
   else if(mymax(x, first(lst)) = x) then myFindMaximumValue(x,rest(lst))
   else myFindMaximumValue(first(lst),rest(lst));
 
 %---------------------------------------------------------------
-% TCŒ`®ŠÖ˜A‚ÌŠÖ”
+% TCå½¢å¼é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
-% TCŒ`®i‚ÆğŒDNF‚Ì‘gj‚É‚¨‚¯‚éƒAƒNƒZƒX—pŠÖ”
+% TCå½¢å¼ï¼ˆæ™‚åˆ»ã¨æ¡ä»¶DNFã®çµ„ï¼‰ã«ãŠã‘ã‚‹ã‚¢ã‚¯ã‚»ã‚¹ç”¨é–¢æ•°
 procedure getTimeFromTC(TC_)$
   part(TC_, 1);
 procedure getCondDNFFromTC(TC_)$
   part(TC_, 2);
 
 %---------------------------------------------------------------
-% ‘å¬”»’èŠÖ˜A‚ÌŠÖ”iƒpƒ‰ƒƒ^‚ğŠÜ‚Şj
+% å¤§å°åˆ¤å®šé–¢é€£ã®é–¢æ•°ï¼ˆãƒ‘ãƒ©ãƒ¡ã‚¿ã‚’å«ã‚€ï¼‰
 %---------------------------------------------------------------
 
 procedure compareValueAndParameter(val_, paramExpr_, condDNF_)$
-%“ü—Í: ”äŠr‚·‚é‘ÎÛ‚Ì’l, ƒpƒ‰ƒ[ƒ^‚ğŠÜ‚Ş®, ƒpƒ‰ƒ[ƒ^‚ÉŠÖ‚·‚éğŒ
-%o—Í: {u’lv‘¤‚ª¬‚³‚­‚È‚é‚½‚ß‚Ìƒpƒ‰ƒ[ƒ^‚ÌğŒ, uƒpƒ‰ƒ[ƒ^‚ğŠÜ‚Ş®v‚ª¬‚³‚­‚È‚é‚½‚ß‚Ìƒpƒ‰ƒ[ƒ^‚ÌğŒ}
-% checkInfMinTime‚Ìd—l•ÏX‚É‚æ‚è•s—v‚É
+%å…¥åŠ›: æ¯”è¼ƒã™ã‚‹å¯¾è±¡ã®å€¤, ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’å«ã‚€å¼, ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã«é–¢ã™ã‚‹æ¡ä»¶
+%å‡ºåŠ›: {ã€Œå€¤ã€å´ãŒå°ã•ããªã‚‹ãŸã‚ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®æ¡ä»¶, ã€Œãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’å«ã‚€å¼ã€ãŒå°ã•ããªã‚‹ãŸã‚ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®æ¡ä»¶}
+% checkInfMinTimeã®ä»•æ§˜å¤‰æ›´ã«ã‚ˆã‚Šä¸è¦ã«
 begin;
   scalar valueLeqParamCondSol_, valueGreaterParamCondSol_, 
          ret_;
@@ -827,11 +830,11 @@ begin;
   debugWrite("condDNF_: ", condDNF_);
 
 
-  % minValue_…param‚Ìê‡‚ÌğŒ®
+  % minValue_â‰¦paramã®å ´åˆã®æ¡ä»¶å¼
   valueLeqParamCondSol_:= addCondTupleToCondDNF({val_, leq, paramExpr_}, condDNF_);
   debugWrite("valueLeqParamCondSol_: ", valueLeqParamCondSol_);
 
-  % minValue_„param‚Ìê‡‚ÌğŒ®
+  % minValue_ï¼paramã®å ´åˆã®æ¡ä»¶å¼
   valueGreaterParamCondSol_:= addCondTupleToCondDNF({val_, greaterp, paramExpr_}, condDNF_);
   debugWrite("valueGreaterParamCondSol_: ", valueGreaterParamCondSol_);
 
@@ -839,7 +842,7 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% •s“™®ƒ^ƒvƒ‹ŠÖ˜A‚ÌŠÖ”
+% ä¸ç­‰å¼ã‚¿ãƒ—ãƒ«é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure isLbTuple(tuple_)$
@@ -854,7 +857,7 @@ procedure getLbTupleListFromConj(conj_)$
 procedure getUbTupleListFromConj(conj_)$
   for each x in conj_ join if(isUbTuple(x)) then {x} else {};
 
-% {¶•Ó, relop, ‰E•Ó}‚Ìƒ^ƒvƒ‹‚©‚çA®‚ğì‚Á‚Ä•Ô‚·
+% {å·¦è¾º, relop, å³è¾º}ã®ã‚¿ãƒ—ãƒ«ã‹ã‚‰ã€å¼ã‚’ä½œã£ã¦è¿”ã™
 procedure makeExprFromTuple(tuple_)$
   myApply(getRelopFromTuple(tuple_), {getVarNameFromTuple(tuple_), getValueFromTuple(tuple_)});
 
@@ -868,15 +871,15 @@ procedure getValueFromTuple(tuple_)$
   part(tuple_, 3);
 
 %---------------------------------------------------------------
-% •s“™®ƒ^ƒvƒ‹‚É‚æ‚éDNFŠÖ˜A‚ÌŠÖ”
+% ä¸ç­‰å¼ã‚¿ãƒ—ãƒ«ã«ã‚ˆã‚‹DNFé–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
-% ˜_—Ï‚ÉNot‚ğ‚Â‚¯‚ÄDNF‚É‚·‚é
+% è«–ç†ç©ã«Notã‚’ã¤ã‘ã¦DNFã«ã™ã‚‹
 procedure getNotConjDNF(conj_)$
   for each tuple in conj_ collect
     {{getVarNameFromTuple(tuple), getInverseRelop(getRelopFromTuple(tuple)), getValueFromTuple(tuple)}};
 
-% Equal‚ğ•\‚·˜_—Ï‚É‚È‚Á‚Ä‚¢‚é‚©‚Ç‚¤‚©
+% Equalã‚’è¡¨ã™è«–ç†ç©ã«ãªã£ã¦ã„ã‚‹ã‹ã©ã†ã‹
 procedure isEqualConj(conj_)$
 begin;
   scalar value1_, value2_, relop1_, relop2_;
@@ -963,19 +966,19 @@ procedure isFalseDNF(DNF_)$
 procedure isTrueDNF(DNF_)$
   if(DNF_={{true}}) then t else nil;
 
-% ‘O’ñF®expr_‚Í1‚Â‚ÌŠÖŒW‰‰Zq‚Ì‚İ‚ğ‚Â
+% å‰æï¼šå¼expr_ã¯1ã¤ã®é–¢ä¿‚æ¼”ç®—å­ã®ã¿ã‚’æŒã¤
 procedure makeTupleDNFFromEq(var_, value_)$
   {{ {var_, geq, value_}, {var_, leq, value_} }};
 
 procedure makeTupleDNFFromNeq(var_, value_)$
   {{ {var_, lessp, value_}, {var_, greaterp, value_} }};
 
-% DNF’†‚ÌAÀ¿“™‚µ‚¢id•¡‚µ‚½j˜_—Ï‚ğíœ
+% DNFä¸­ã®ã€å®Ÿè³ªç­‰ã—ã„ï¼ˆé‡è¤‡ã—ãŸï¼‰è«–ç†ç©ã‚’å‰Šé™¤
 procedure simplifyDNF(DNF_)$
 begin;
   scalar tmpRetDNF_, simplifiedDNF_;
 
-  % myFoldLeft((if(isSameConj(first(#1), #2)) then #1 else cons(#2, #1))&, {first(DNF_)}, rest(DNF_))‚ğÀŒ»
+  % myFoldLeft((if(isSameConj(first(#1), #2)) then #1 else cons(#2, #1))&, {first(DNF_)}, rest(DNF_))ã‚’å®Ÿç¾
   tmpRetDNF_:= {first(DNF_)};
   for i:=1 : length(rest(DNF_)) do <<
     tmpRetDNF_:= if(isSameConj(first(tmpRetDNF_), part(rest(DNF_), i))) then tmpRetDNF_
@@ -995,7 +998,7 @@ begin;
   debugWrite("newCondDNF_: ", newCondDNF_);
   debugWrite("condDNF_: ", condDNF_);
 
-  % False‚ğ’Ç‰Á‚µ‚æ‚¤‚Æ‚·‚éê‡‚ÍFalse‚ğ•Ô‚·
+  % Falseã‚’è¿½åŠ ã—ã‚ˆã†ã¨ã™ã‚‹å ´åˆã¯Falseã‚’è¿”ã™
   if(isFalseDNF(newCondDNF_)) then return {{}};
 
   addedCondDNF_:= for each conj in newCondDNF_ join <<
@@ -1009,7 +1012,7 @@ begin;
     if(not isFalseDNF(tmpAddedCondDNF_)) then simplifyDNF(tmpAddedCondDNF_) else {}
   >>;
 
-  % newCondDNF_“à‚Ì‚Ç‚Ìconj‚ğ’Ç‰Á‚µ‚Ä‚àFalseDNF‚É‚È‚é‚æ‚¤‚Èê‡‚ÉAÅI“I‚É{}‚ª“¾‚ç‚ê‚Ä‚¢‚é‚Ì‚ÅC³‚·‚é
+  % newCondDNF_å†…ã®ã©ã®conjã‚’è¿½åŠ ã—ã¦ã‚‚FalseDNFã«ãªã‚‹ã‚ˆã†ãªå ´åˆã«ã€æœ€çµ‚çš„ã«{}ãŒå¾—ã‚‰ã‚Œã¦ã„ã‚‹ã®ã§ä¿®æ­£ã™ã‚‹
   if(addedCondDNF_={})then addedCondDNF_:= {{}};
 
   debugWrite("addedCondDNF_ in addCondDNFToCondDNF: ", addedCondDNF_);
@@ -1019,9 +1022,9 @@ begin;
 end;
 
 procedure addCondTupleToCondDNF(newCondTuple_, condDNF_)$
-%“ü—ÍF’Ç‰Á‚·‚éiƒpƒ‰ƒƒ^‚ÌjğŒƒ^ƒvƒ‹newCondTuple_, iƒpƒ‰ƒƒ^‚ÌjğŒ‚ğ•\‚·˜_—®‚ÌƒŠƒXƒgcondDNF_
-%o—ÍFiƒpƒ‰ƒƒ^‚ÌjğŒ‚ğ•\‚·˜_—®‚ÌDNF
-%’ˆÓFƒŠƒXƒg‚Ì—v‘f1‚Â1‚Â‚Í˜_—˜a‚Å‚Â‚È‚ª‚èA—v‘f“à‚Í˜_—Ï‚Å‚Â‚È‚ª‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·B
+%å…¥åŠ›ï¼šè¿½åŠ ã™ã‚‹ï¼ˆãƒ‘ãƒ©ãƒ¡ã‚¿ã®ï¼‰æ¡ä»¶ã‚¿ãƒ—ãƒ«newCondTuple_, ï¼ˆãƒ‘ãƒ©ãƒ¡ã‚¿ã®ï¼‰æ¡ä»¶ã‚’è¡¨ã™è«–ç†å¼ã®ãƒªã‚¹ãƒˆcondDNF_
+%å‡ºåŠ›ï¼šï¼ˆãƒ‘ãƒ©ãƒ¡ã‚¿ã®ï¼‰æ¡ä»¶ã‚’è¡¨ã™è«–ç†å¼ã®DNF
+%æ³¨æ„ï¼šãƒªã‚¹ãƒˆã®è¦ç´ 1ã¤1ã¤ã¯è«–ç†å’Œã§ã¤ãªãŒã‚Šã€è¦ç´ å†…ã¯è«–ç†ç©ã§ã¤ãªãŒã£ã¦ã„ã‚‹ã“ã¨ã‚’è¡¨ã™ã€‚
 begin;
   scalar addedCondDNF_, addedCondConj_;
 
@@ -1052,41 +1055,41 @@ begin;
   debugWrite("newCondTuple_: ", newCondTuple_);
   debugWrite("condConj_: ", condConj_);
 
-  % true‚ğ’Ç‰Á‚µ‚æ‚¤‚Æ‚·‚éê‡A’Ç‰Á‚µ‚È‚¢‚Ì‚Æ“¯‚¶
+  % trueã‚’è¿½åŠ ã—ã‚ˆã†ã¨ã™ã‚‹å ´åˆã€è¿½åŠ ã—ãªã„ã®ã¨åŒã˜
   if(newCondTuple_=true) then return condConj_;
-  % ƒpƒ‰ƒƒ^‚ª“ü‚ç‚È‚¢ê‡A’P‚É‘å¬”»’è‚ğ‚µ‚½Œ‹‰Ê‚ªc‚é
-  % iˆÚ€‚·‚é‚Æƒpƒ‰ƒƒ^‚ª“ü‚ç‚È‚­‚È‚éê‡‚à“¯—lj
+  % ãƒ‘ãƒ©ãƒ¡ã‚¿ãŒå…¥ã‚‰ãªã„å ´åˆã€å˜ã«å¤§å°åˆ¤å®šã‚’ã—ãŸçµæœãŒæ®‹ã‚‹
+  % ï¼ˆç§»é …ã™ã‚‹ã¨ãƒ‘ãƒ©ãƒ¡ã‚¿ãŒå…¥ã‚‰ãªããªã‚‹å ´åˆã‚‚åŒæ§˜ï¼‰
   if(not hasParameter(makeExprFromTuple(newCondTuple_)) and freeof(makeExprFromTuple(newCondTuple_), t)) then 
     if(checkOrderingFormula(makeExprFromTuple(newCondTuple_))) then return condConj_
     else return {};
-  % false‚É’Ç‰Á‚µ‚æ‚¤‚Æ‚·‚éê‡
+  % falseã«è¿½åŠ ã—ã‚ˆã†ã¨ã™ã‚‹å ´åˆ
   if(isFalseConj(condConj_)) then return {};
-  % true‚É’Ç‰Á‚µ‚æ‚¤‚Æ‚·‚éê‡
+  % trueã«è¿½åŠ ã—ã‚ˆã†ã¨ã™ã‚‹å ´åˆ
   if(isTrueConj(condConj_)) then return {newCondTuple_};
 
 
-  % ê‡‚É‚æ‚Á‚Ä‚ÍAƒ^ƒvƒ‹‚ÌVarName•”•ª‚ÆValue•”•ª‚Ì—¼•û‚É•Ï”–¼‚ª“ü‚Á‚Ä‚¢‚é‚±‚Æ‚à‚ ‚é
-  % ‚»‚Ì‚½‚ßA‚½‚Æ‚¦1Ÿ‚Å‚ ‚Á‚Ä‚àˆê’UexIneqSolve‚Å‰ğ‚­•K—v‚ª‚ ‚é
+  % å ´åˆã«ã‚ˆã£ã¦ã¯ã€ã‚¿ãƒ—ãƒ«ã®VarNameéƒ¨åˆ†ã¨Valueéƒ¨åˆ†ã®ä¸¡æ–¹ã«å¤‰æ•°åãŒå…¥ã£ã¦ã„ã‚‹ã“ã¨ã‚‚ã‚ã‚‹
+  % ãã®ãŸã‚ã€ãŸã¨ãˆ1æ¬¡ã§ã‚ã£ã¦ã‚‚ä¸€æ—¦exIneqSolveã§è§£ãå¿…è¦ãŒã‚ã‚‹
   if((arglength(getVarNameFromTuple(newCondTuple_)) neq -1) or not numberp(getValueFromTuple(newCondTuple_))) then <<
-    % VarName•”•ª‚ª1Ÿ‚Ì•Ï”–¼‚ÅA‚©‚ÂAValue•”•ª‚ª”’l‚È‚ç‚±‚Ìˆ—‚Í•s—v
+    % VarNameéƒ¨åˆ†ãŒ1æ¬¡ã®å¤‰æ•°åã§ã€ã‹ã¤ã€Valueéƒ¨åˆ†ãŒæ•°å€¤ãªã‚‰ã“ã®å‡¦ç†ã¯ä¸è¦
     ineqSolDNF_:= exIneqSolve(makeExprFromTuple(newCondTuple_));
     debugWrite("ineqSolDNF_: ", ineqSolDNF_);
     debugWrite("(newCondTuple_: )", newCondTuple_);
     debugWrite("(condConj_: )", condConj_);
     if(isFalseDNF(ineqSolDNF_)) then <<
-      % false‚ğ•\‚·ƒ^ƒvƒ‹‚ğ˜_—Ï‚É’Ç‰Á‚µ‚æ‚¤‚Æ‚µ‚½ê‡‚Ífalse‚ğ•\‚·˜_—Ï‚ğ•Ô‚·
+      % falseã‚’è¡¨ã™ã‚¿ãƒ—ãƒ«ã‚’è«–ç†ç©ã«è¿½åŠ ã—ã‚ˆã†ã¨ã—ãŸå ´åˆã¯falseã‚’è¡¨ã™è«–ç†ç©ã‚’è¿”ã™
       addedCondConj_:= {};
       debugWrite("addedCondConj_: ", addedCondConj_);
       return addedCondConj_;
     >> else if(isTrueDNF(ineqSolDNF_)) then <<
-      % true‚ğ•\‚·ƒ^ƒvƒ‹‚ğ˜_—Ï‚É’Ç‰Á‚µ‚æ‚¤‚Æ‚µ‚½ê‡‚ÍcondConj_‚ğ•Ô‚·
+      % trueã‚’è¡¨ã™ã‚¿ãƒ—ãƒ«ã‚’è«–ç†ç©ã«è¿½åŠ ã—ã‚ˆã†ã¨ã—ãŸå ´åˆã¯condConj_ã‚’è¿”ã™
       addedCondConj_:= condConj_;
       debugWrite("addedCondConj_: ", addedCondConj_);
       return addedCondConj_;
     >>;
-    % DNFŒ`®‚Å•Ô‚é‚Ì‚ÅA‰ü‚ß‚Äƒ^ƒvƒ‹‚ğæ‚èo‚·
+    % DNFå½¢å¼ã§è¿”ã‚‹ã®ã§ã€æ”¹ã‚ã¦ã‚¿ãƒ—ãƒ«ã‚’å–ã‚Šå‡ºã™
     if(length(first(ineqSolDNF_))>1) then <<
-      % u=v‚ğ•\‚·Œ`®‚Ìê‡‚Ígeq‚Æleq‚Ì2‚Â‚Ìƒ^ƒvƒ‹‚Ì˜_—Ï‚ª•Ô‚é
+      % ã€Œ=ã€ã‚’è¡¨ã™å½¢å¼ã®å ´åˆã¯geqã¨leqã®2ã¤ã®ã‚¿ãƒ—ãƒ«ã®è«–ç†ç©ãŒè¿”ã‚‹
       tmpConj_:= condConj_;
       for i:=1 : length(first(ineqSolDNF_)) do <<
         tmpConj_:= addCondTupleToCondConj(part(first(ineqSolDNF_), i), tmpConj_);
@@ -1105,16 +1108,16 @@ begin;
   debugWrite("relop_: ", relop_);
   debugWrite("value_: ", value_);
 
-  % ˜_—Ï‚Ì’†‚©‚çA’Ç‰Á‚·‚é•Ï”‚Æ“¯‚¶•Ï”‚Ì€‚ğ’T‚·
+  % è«–ç†ç©ã®ä¸­ã‹ã‚‰ã€è¿½åŠ ã™ã‚‹å¤‰æ•°ã¨åŒã˜å¤‰æ•°ã®é …ã‚’æ¢ã™
   varTerms_:= union(for each term in condConj_ join
     if(not freeof(term, varName_)) then {term} else {});
   debugWrite("varTerms_: ", varTerms_);
 
 
-  % ‰ºŒÀEãŒÀ‚ğ“¾‚é
+  % ä¸‹é™ãƒ»ä¸Šé™ã‚’å¾—ã‚‹
   ubTupleList_:= getUbTupleListFromConj(varTerms_);
   lbTupleList_:= getLbTupleListFromConj(varTerms_);
-  % À”‚Ì‚İ”äŠr‘ÎÛ‚Æ‚·‚éiƒpƒ‰ƒƒ^‚Æ‚Ì”äŠr‚Í•Ê‚Ìˆ—‚Ås‚¤j
+  % å®Ÿæ•°ã®ã¿æ¯”è¼ƒå¯¾è±¡ã¨ã™ã‚‹ï¼ˆãƒ‘ãƒ©ãƒ¡ã‚¿ã¨ã®æ¯”è¼ƒã¯åˆ¥ã®å‡¦ç†ã§è¡Œã†ï¼‰
   ubTupleList_:= for each x in ubTupleList_ join if(not hasParameter(getValueFromTuple(x))) then {x} else {};
   lbTupleList_:= for each x in lbTupleList_ join if(not hasParameter(getValueFromTuple(x))) then {x} else {};
   debugWrite("ubTupleList_: ", ubTupleList_);
@@ -1124,15 +1127,15 @@ begin;
   ubTuple_:= first(ubTupleList_);
   lbTuple_:= first(lbTupleList_);
 
-  % XV‚ª•K—v‚©‚Ç‚¤‚©‚ğA’Ç‰Á‚·‚é•s“™®‚Æã‰ºŒÀ‚Æ‚ğ”äŠr‚·‚é‚±‚Æ‚ÅŒˆ’è
+  % æ›´æ–°ãŒå¿…è¦ã‹ã©ã†ã‹ã‚’ã€è¿½åŠ ã™ã‚‹ä¸ç­‰å¼ã¨ä¸Šä¸‹é™ã¨ã‚’æ¯”è¼ƒã™ã‚‹ã“ã¨ã§æ±ºå®š
   ub_:= getValueFromTuple(ubTuple_);
   debugWrite("ub_: ", ub_);
   lb_:= getValueFromTuple(lbTuple_);
   debugWrite("lb_: ", lb_);
   if((relop_=leq) or (relop_=lessp)) then <<
-    % ãŒÀ‘¤‚ğ’²®
+    % ä¸Šé™å´ã‚’èª¿æ•´
     if(mymin(value_, ub_)=value_) then <<
-      % XV‚ğ—v‚·‚é‚©‚Ç‚¤‚©‚ğ”»’èBãŒÀ‚ª“¯‚¶ê‡‚àA“™†‚Ì—L–³‚É‚æ‚Á‚Ä‚ÍXV‚ª•K—v
+      % æ›´æ–°ã‚’è¦ã™ã‚‹ã‹ã©ã†ã‹ã‚’åˆ¤å®šã€‚ä¸Šé™ãŒåŒã˜å ´åˆã‚‚ã€ç­‰å·ã®æœ‰ç„¡ã«ã‚ˆã£ã¦ã¯æ›´æ–°ãŒå¿…è¦
       if((value_ neq ub_) or freeof(ubTupleList_, lessp)) then
         addedCondConj_:= cons(newCondTuple_, condConj_ \ ubTupleList_)
       else addedCondConj_:= condConj_;
@@ -1142,9 +1145,9 @@ begin;
       addedCondConj_:= condConj_;
     >>;
   >> else <<
-    % ‰ºŒÀ‘¤‚ğ’²®
+    % ä¸‹é™å´ã‚’èª¿æ•´
     if(mymin(value_, lb_)=lb_) then <<
-      % XV‚ğ—v‚·‚é‚©‚Ç‚¤‚©‚ğ”»’èB‰ºŒÀ‚ª“¯‚¶ê‡‚àA“™†‚Ì—L–³‚É‚æ‚Á‚Ä‚ÍXV‚ª•K—v
+      % æ›´æ–°ã‚’è¦ã™ã‚‹ã‹ã©ã†ã‹ã‚’åˆ¤å®šã€‚ä¸‹é™ãŒåŒã˜å ´åˆã‚‚ã€ç­‰å·ã®æœ‰ç„¡ã«ã‚ˆã£ã¦ã¯æ›´æ–°ãŒå¿…è¦
       if((value_ neq lb_) or freeof(lbTupleList_, greaterp)) then
         addedCondConj_:= cons(newCondTuple_, condConj_ \ lbTupleList_)
       else addedCondConj_:= condConj_;
@@ -1158,11 +1161,11 @@ begin;
   debugWrite("lb_: ", lb_);
   debugWrite("lbTuple_: ", lbTuple_);
 
-  % ÅŒã‚Élb…ub‚ğŠm‚©‚ßA–µ‚‚·‚éê‡‚Í{}‚ğ•Ô‚·ifalse‚ğ•\‚·˜_—Ïj
-  % ub‚ªƒfƒtƒHƒ‹ƒgiINFINITYj‚Ì‚Ü‚Ü‚È‚çŠm”F•s—v
+  % æœ€å¾Œã«lbâ‰¦ubã‚’ç¢ºã‹ã‚ã€çŸ›ç›¾ã™ã‚‹å ´åˆã¯{}ã‚’è¿”ã™ï¼ˆfalseã‚’è¡¨ã™è«–ç†ç©ï¼‰
+  % ubãŒãƒ‡ãƒ•ã‚©ãƒ«ãƒˆï¼ˆINFINITYï¼‰ã®ã¾ã¾ãªã‚‰ç¢ºèªä¸è¦
   if(ub_ neq INFINITY) then << 
     if(mymin(lb_, ub_)=lb_) then <<
-      % lb=ub‚Ìê‡AŠÖŒW‰‰Zq‚ªgeq‚Æleq‚Å‚È‚¯‚ê‚Î‚È‚ç‚È‚¢
+      % lb=ubã®å ´åˆã€é–¢ä¿‚æ¼”ç®—å­ãŒgeqã¨leqã§ãªã‘ã‚Œã°ãªã‚‰ãªã„
       if((lb_=ub_) and not isEqualConj({ubTuple_, lbTuple_})) then addedCondConj_:= {};
     >> else <<
       addedCondConj_:= {};
@@ -1177,10 +1180,10 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ˜_—®ŠÖ˜A‚ÌŠÖ”
+% è«–ç†å¼é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
-%”®‚ÌƒŠƒXƒg‚ğand‚ÅŒq‚¢‚¾˜_—®‚É•ÏŠ·‚·‚é
+%æ•°å¼ã®ãƒªã‚¹ãƒˆã‚’andã§ç¹‹ã„ã è«–ç†å¼ã«å¤‰æ›ã™ã‚‹
 procedure mymkand(lst)$
 for i:=1:length(lst) mkand part(lst,i);
 
@@ -1194,22 +1197,22 @@ procedure myall(lst,var)$
 rlqe all(var, mymkand(lst));
 
 %---------------------------------------------------------------
-% ‹‰ğE–³–µ‚«”»’èŠÖ˜A‚ÌŠÖ”
+% æ±‚è§£ãƒ»ç„¡çŸ›ç›¾æ€§åˆ¤å®šé–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
-% —L—‰»‚ğs‚Á‚½ã‚Å‰ğ‚ğ•Ô‚·
-% TODOFÀ”‰ğ‚Ì‚İ‚ğ•Ô‚·‚æ‚¤‚É‚·‚é
+% æœ‰ç†åŒ–ã‚’è¡Œã£ãŸä¸Šã§è§£ã‚’è¿”ã™
+% TODOï¼šå®Ÿæ•°è§£ã®ã¿ã‚’è¿”ã™ã‚ˆã†ã«ã™ã‚‹
 procedure exSolve(exprs_, vars_)$
 begin;
   scalar tmpSol_, retSol_;
 
-  % OŠpŠÖ”‚Ü‚í‚è‚Ì•û’ö®‚ğ‰ğ‚¢‚½ê‡A‰ğ‚Í1‚Â‚ÉŒÀ’è‚µ‚Ä‚µ‚Ü‚¤
-  % TODOF‚Ç‚¤‚É‚©‚·‚éH
+  % ä¸‰è§’é–¢æ•°ã¾ã‚ã‚Šã®æ–¹ç¨‹å¼ã‚’è§£ã„ãŸå ´åˆã€è§£ã¯1ã¤ã«é™å®šã—ã¦ã—ã¾ã†
+  % TODOï¼šã©ã†ã«ã‹ã™ã‚‹ï¼Ÿ
   off allbranch;
   tmpSol_:= solve(exprs_, vars_);
   on allbranch;
 
-  % ‹•”‰ğ‚ğœ‚­
+  % è™šæ•°è§£ã‚’é™¤ã
   tmpSol_:= for each x in tmpSol_ join
     if(myHead(x)=list) then <<
       {for each y in x join 
@@ -1220,7 +1223,7 @@ begin;
     >>;
   debugWrite("tmpSol_ after removing imaginary number: ", tmpSol_);
 
-  % À”ã‚Å’è‹`‚Å‚«‚È‚¢’liasin(5)‚È‚Çj‚ğœ‚­
+  % å®Ÿæ•°ä¸Šã§å®šç¾©ã§ããªã„å€¤ï¼ˆasin(5)ãªã©ï¼‰ã‚’é™¤ã
   tmpSol_:= for each x in tmpSol_ join
     if(myHead(x)=list) then <<
       {for each y in x join 
@@ -1231,7 +1234,7 @@ begin;
     >>;
   debugWrite("tmpSol_ after removing indefinable value: ", tmpSol_);
 
-  % —L—‰»
+  % æœ‰ç†åŒ–
   retSol_:= for each x in tmpSol_ collect
     if(myHead(x)=list) then map(rationalisation, x)
     else rationalisation(x);
@@ -1239,16 +1242,16 @@ begin;
   return retSol_;
 end;
 
-% •s“™®‚ğA¶•Ó‚É³‚Ì•Ï”–¼‚Ì‚İ‚ª‚ ‚éŒ`®‚É®Œ`‚µA‚»‚ê‚ğ•\‚·ƒ^ƒvƒ‹‚ğì‚é
-% (•s“™®‚Ìê‡A•K‚¸‰E•Ó‚ª0‚É‚È‚Á‚Ä‚µ‚Ü‚¤i©“®“I‚ÉˆÚ€‚µ‚Ä‚µ‚Ü‚¤j‚±‚Æ‚âA
-% •s“™®‚ÌŒü‚«‚ªŒÀ’è‚³‚ê‚Ä‚µ‚Ü‚Á‚½‚è‚·‚é‚±‚Æ‚ª‚ ‚é‚½‚ß)
-% ‘O’ñF“ü—Í‚³‚ê‚é•s“™®‚à•Ï”‚à1‚Â
-% TODOF•¡”‚Ì•s“™®‚ª“n‚³‚ê‚½ê‡‚Ö‚Ì‘Î‰H
-% 2Ÿ•s“™®‚Ü‚Å‚Í‰ğ‚¯‚é
-% TODOF3ŸˆÈã‚Ö‚Ì‘Î‰H
-% “ü—ÍF1•Ï”‚Ì2ŸˆÈ‰º‚Ì•s“™®1‚Â
-% o—ÍF{¶•Ó, relop, ‰E•Ó}‚ÌŒ`®‚É‚æ‚éDNFƒŠƒXƒg
-% “™®‚Ìê‡‚É‚à‘Î‰Bgeq‚Æleq‚ğˆê‚Ég‚¤‚±‚Æ‚É‚æ‚è•\Œ»‚·‚é
+% ä¸ç­‰å¼ã‚’ã€å·¦è¾ºã«æ­£ã®å¤‰æ•°åã®ã¿ãŒã‚ã‚‹å½¢å¼ã«æ•´å½¢ã—ã€ãã‚Œã‚’è¡¨ã™ã‚¿ãƒ—ãƒ«ã‚’ä½œã‚‹
+% (ä¸ç­‰å¼ã®å ´åˆã€å¿…ãšå³è¾ºãŒ0ã«ãªã£ã¦ã—ã¾ã†ï¼ˆè‡ªå‹•çš„ã«ç§»é …ã—ã¦ã—ã¾ã†ï¼‰ã“ã¨ã‚„ã€
+% ä¸ç­‰å¼ã®å‘ããŒé™å®šã•ã‚Œã¦ã—ã¾ã£ãŸã‚Šã™ã‚‹ã“ã¨ãŒã‚ã‚‹ãŸã‚)
+% å‰æï¼šå…¥åŠ›ã•ã‚Œã‚‹ä¸ç­‰å¼ã‚‚å¤‰æ•°ã‚‚1ã¤
+% TODOï¼šè¤‡æ•°ã®ä¸ç­‰å¼ãŒæ¸¡ã•ã‚ŒãŸå ´åˆã¸ã®å¯¾å¿œï¼Ÿ
+% 2æ¬¡ä¸ç­‰å¼ã¾ã§ã¯è§£ã‘ã‚‹
+% TODOï¼š3æ¬¡ä»¥ä¸Šã¸ã®å¯¾å¿œï¼Ÿ
+% å…¥åŠ›ï¼š1å¤‰æ•°ã®2æ¬¡ä»¥ä¸‹ã®ä¸ç­‰å¼1ã¤
+% å‡ºåŠ›ï¼š{å·¦è¾º, relop, å³è¾º}ã®å½¢å¼ã«ã‚ˆã‚‹DNFãƒªã‚¹ãƒˆ
+% ç­‰å¼ã®å ´åˆã«ã‚‚å¯¾å¿œã€‚geqã¨leqã‚’ä¸€ç·’ã«ä½¿ã†ã“ã¨ã«ã‚ˆã‚Šè¡¨ç¾ã™ã‚‹
 procedure exIneqSolve(ineqExpr_)$
 begin;
   scalar lhs_, relop_, rhs_, adjustedLhs_, adjustedRelop_, 
@@ -1264,7 +1267,7 @@ begin;
   relop_:= myHead(ineqExpr_);
   rhs_:= rhs(ineqExpr_);
 
-  % •¡”‚Ì•Ï”‚ª“ü‚Á‚Ä‚¢‚éê‡‚Ö‚Ì‘Î‰Ft‚ÆusrVar¨parameter¨INFINITY‚Ì‡‚ÉŒ©‚é
+  % è¤‡æ•°ã®å¤‰æ•°ãŒå…¥ã£ã¦ã„ã‚‹å ´åˆã¸ã®å¯¾å¿œï¼štã¨usrVarâ†’parameterâ†’INFINITYã®é †ã«è¦‹ã‚‹
   exprVarList_:= union(for each x in union(csVariables__, {t}) join
     if(not freeof(ineqExpr_, x)) then {x} else {});
   if(exprVarList_={}) then <<
@@ -1277,7 +1280,7 @@ begin;
   debugWrite("exprVar_: ", exprVar_);
 
 
-  % ‰E•Ó‚ğ¶•Ó‚ÉˆÚ€‚·‚é
+  % å³è¾ºã‚’å·¦è¾ºã«ç§»é …ã™ã‚‹
   adjustedIneqExpr_:= myApply(relop_, {lhs_+(-1)*rhs_, 0});
   adjustedLhs_:= lhs(adjustedIneqExpr_);
   debugWrite("adjustedIneqExpr_: ", adjustedIneqExpr_);
@@ -1285,7 +1288,7 @@ begin;
   adjustedRelop_:= myHead(adjustedIneqExpr_);
   debugWrite("adjustedRelop_: ", adjustedRelop_);
 
-  % OŠpŠÖ”‚ğŠÜ‚Şê‡A“Á•Ê‚È•„†”»’è‚ª•K—v
+  % ä¸‰è§’é–¢æ•°ã‚’å«ã‚€å ´åˆã€ç‰¹åˆ¥ãªç¬¦å·åˆ¤å®šãŒå¿…è¦
   if(hasTrigonometricFunc(adjustedLhs_)) then <<
     compareIntervalRet_:= compareInterval(convertValueToInterval(adjustedLhs_), adjustedRelop_, makePointInterval(0));
     debugWrite("compareIntervalRet_: ", compareIntervalRet_);
@@ -1300,7 +1303,7 @@ begin;
       debugWrite("(ineqExpr_: )", ineqExpr_);
       return retTupleDNF_;
     >> else <<
-      % unknown‚ª•Ô‚Á‚½
+      % unknownãŒè¿”ã£ãŸ
       retTupleDNF_:= {{unknown}};
       debugWrite("retTupleDNF_: ", retTupleDNF_);
       debugWrite("(ineqExpr_: )", ineqExpr_);
@@ -1308,25 +1311,25 @@ begin;
     >>;
   >>;
 
-  % ‚±‚Ì“_‚Åx+value relop 0‚Ü‚½‚Í-x+value relop 0‚ÌŒ`®i1Ÿ®j‚É‚È‚Á‚Ä‚¢‚é‚Ì‚ÅA
-  % -x+value…0‚Ìê‡‚Íx-value†0‚ÌŒ`‚É‚·‚é•K—v‚ª‚ ‚éirelop‚Æ‚µ‚Ä‹t‚Ì‚à‚Ì‚ğ“¾‚é•K—v‚ª‚ ‚éj
-  % ƒT[ƒo[ƒ‚[ƒh‚¾‚Æ†‚ğg‚Á‚½®•\Œ»‚Í•Û‚Å‚«‚È‚¢‚æ‚¤‚È‚Ì‚ÅAreverse‚·‚é‚©‚Ç‚¤‚©‚¾‚¯•ª‚©‚ê‚Î—Ç‚¢
-  % minus‚ÅğŒ”»’è‚ğs‚¤‚±‚Æ‚ª‚È‚º‚©‚Å‚«‚È‚¢‚Ì‚ÅA®‚ÉoŒ»‚·‚é•Ï”–¼x‚ğ’²‚×‚ÄA‚»‚ÌŒW”‚Ì³•‰‚ğ’²‚×‚é
+  % ã“ã®æ™‚ç‚¹ã§x+value relop 0ã¾ãŸã¯-x+value relop 0ã®å½¢å¼ï¼ˆ1æ¬¡å¼ï¼‰ã«ãªã£ã¦ã„ã‚‹ã®ã§ã€
+  % -x+valueâ‰¦0ã®å ´åˆã¯x-valueâ‰§0ã®å½¢ã«ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ï¼ˆrelopã¨ã—ã¦é€†ã®ã‚‚ã®ã‚’å¾—ã‚‹å¿…è¦ãŒã‚ã‚‹ï¼‰
+  % ã‚µãƒ¼ãƒãƒ¼ãƒ¢ãƒ¼ãƒ‰ã ã¨â‰§ã‚’ä½¿ã£ãŸå¼è¡¨ç¾ã¯ä¿æŒã§ããªã„ã‚ˆã†ãªã®ã§ã€reverseã™ã‚‹ã‹ã©ã†ã‹ã ã‘åˆ†ã‹ã‚Œã°è‰¯ã„
+  % minusã§æ¡ä»¶åˆ¤å®šã‚’è¡Œã†ã“ã¨ãŒãªãœã‹ã§ããªã„ã®ã§ã€å¼ã«å‡ºç¾ã™ã‚‹å¤‰æ•°åxã‚’èª¿ã¹ã¦ã€ãã®ä¿‚æ•°ã®æ­£è² ã‚’èª¿ã¹ã‚‹
   lcofRet_:= lcof(adjustedLhs_, exprVar_);
   if(not numberp(lcofRet_)) then lcofRet_:= 0;
   sqrtCoeffList_:= getSqrtList(adjustedLhs_, exprVar_, COEFF);
-  % ‘O’ñFª†‚Ì’†‚Éƒpƒ‰ƒƒ^‚ª‚ ‚é€‚Í‘½‚­‚Ä‚à1‚Â
-  % TODOF‚È‚ñ‚Æ‚©‚·‚é
+  % å‰æï¼šæ ¹å·ã®ä¸­ã«ãƒ‘ãƒ©ãƒ¡ã‚¿ãŒã‚ã‚‹é …ã¯å¤šãã¦ã‚‚1ã¤
+  % TODOï¼šãªã‚“ã¨ã‹ã™ã‚‹
   if(sqrtCoeffList_={}) then sqrtCoeff_:= 0
   else if(length(sqrtCoeffList_)=1) then sqrtCoeff_:= first(sqrtCoeffList_);
-  % TODOFŒµ–§‚É‚Íxor‚ğg‚¤‚×‚«‚©H
+  % TODOï¼šå³å¯†ã«ã¯xorã‚’ä½¿ã†ã¹ãã‹ï¼Ÿ
   if(checkOrderingFormula(lcofRet_<0) or checkOrderingFormula(sqrtCoeff_<0)) then <<
     adjustedRelop_:= getReverseRelop(adjustedRelop_);
   >>;
   debugWrite("adjustedRelop_: ", adjustedRelop_);
 
-  % •Ï”‚Ésqrt‚ª‚Â‚¢‚Ä‚éê‡‚ÍA•Ï”‚Í0ˆÈã‚Å‚ ‚é‚Æ‚¢‚¤ğŒ‚ğÅŒã‚É’Ç‰Á‚·‚é•K—v‚ª‚ ‚é
-  % TODO: sqrt(x-1)‚Æ‚©‚Ö‚Ì‘Î‰
+  % å¤‰æ•°ã«sqrtãŒã¤ã„ã¦ã‚‹å ´åˆã¯ã€å¤‰æ•°ã¯0ä»¥ä¸Šã§ã‚ã‚‹ã¨ã„ã†æ¡ä»¶ã‚’æœ€å¾Œã«è¿½åŠ ã™ã‚‹å¿…è¦ãŒã‚ã‚‹
+  % TODO: sqrt(x-1)ã¨ã‹ã¸ã®å¯¾å¿œ
   insideSqrtExprs_:= getSqrtList(adjustedLhs_, exprVar_, INSIDE);
   debugWrite("insideSqrtExprs_: ", insideSqrtExprs_);
   sqrtCondTupleList_:= for each x in insideSqrtExprs_ collect
@@ -1335,7 +1338,7 @@ begin;
   if(sqrtCondTupleList_={}) then sqrtCondTupleList_:= {true};
 
   
-  % ub‚Ü‚½‚Ílb‚ğ‹‚ß‚é
+  % ubã¾ãŸã¯lbã‚’æ±‚ã‚ã‚‹
   off arbvars;
   on multiplicities;
   sol_:= exSolve(equal(adjustedLhs_, 0), exprVar_);
@@ -1343,29 +1346,29 @@ begin;
   on arbvars;
   off multiplicities;
 
-  % TODOF•¡”•Ï”‚Ö‚Ì‘Î‰H
-  % •¡”•Ï”‚ª“ü‚é‚Æ2dƒŠƒXƒg‚É‚È‚é‚Í‚¸‚¾‚ªA1•Ï”‚È‚ç•s—v‚©H
+  % TODOï¼šè¤‡æ•°å¤‰æ•°ã¸ã®å¯¾å¿œï¼Ÿ
+  % è¤‡æ•°å¤‰æ•°ãŒå…¥ã‚‹ã¨2é‡ãƒªã‚¹ãƒˆã«ãªã‚‹ã¯ãšã ãŒã€1å¤‰æ•°ãªã‚‰ä¸è¦ã‹ï¼Ÿ
 %  if(length(sol_)>1 and myHead(first(sol_))=list) then <<
-%    % or‚Å‚Â‚È‚ª‚Á‚½’†‚Éand‚ª“ü‚Á‚Ä‚¢‚éŠÖŒW‚ğ•\‚µ‚Ä‚¢‚é
+%    % orã§ã¤ãªãŒã£ãŸä¸­ã«andãŒå…¥ã£ã¦ã„ã‚‹é–¢ä¿‚ã‚’è¡¨ã—ã¦ã„ã‚‹
 %      
 %    adjustedEqExpr_:= first(first(sol_))
 %
 %  >> 
 
   if(sol_={}) then <<
-    % adjustedLhs_=0‚É‘Î‚·‚éÀ”‰ğ‚ª‚È‚¢ê‡
-    % adjustedIneqExpr_‚ª-t^2-1<0‚ât^2+5<0‚È‚Ç‚Ì‚Æ‚«
+    % adjustedLhs_=0ã«å¯¾ã™ã‚‹å®Ÿæ•°è§£ãŒãªã„å ´åˆ
+    % adjustedIneqExpr_ãŒ-t^2-1<0ã‚„t^2+5<0ãªã©ã®ã¨ã
     if((adjustedRelop_=geq) or (adjustedRelop_=greaterp) or (adjustedRelop_=neq)) then retTupleDNF_:= {{true}}
     else retTupleDNF_:= {{}};
   >> else if(length(sol_)>1) then <<
-    % 2Ÿ•û’ö®‚ğ‰ğ‚¢‚½ê‡BŒµ–§‚É‚Í’·‚³2‚Ì‚Í‚¸
-    % TODOF3ŸˆÈã‚Ö‚Ìˆê”Ê‰»H
+    % 2æ¬¡æ–¹ç¨‹å¼ã‚’è§£ã„ãŸå ´åˆã€‚å³å¯†ã«ã¯é•·ã•2ã®ã¯ãš
+    % TODOï¼š3æ¬¡ä»¥ä¸Šã¸ã®ä¸€èˆ¬åŒ–ï¼Ÿ
 
     boundList_:= {rhs(part(sol_, 1)), rhs(part(sol_, 2))};
     debugWrite("boundList_: ", boundList_);
     if(not hasParameter(boundList_)) then <<
       if(length(union(boundList_))=1) then <<
-        % d‰ğ‚ğ•\‚·ê‡
+        % é‡è§£ã‚’è¡¨ã™å ´åˆ
         lb_:= first(union(boundList_));
         ub_:= first(union(boundList_));
       >> else <<
@@ -1375,24 +1378,24 @@ begin;
       debugWrite("lb_ in exIneqSolve: ", lb_);
       debugWrite("ub_ in exIneqSolve: ", ub_);
     
-      % relop‚É‚æ‚Á‚ÄAtupleDNF‚Ì\¬‚ğ•Ï‚¦‚é
+      % relopã«ã‚ˆã£ã¦ã€tupleDNFã®æ§‹æˆã‚’å¤‰ãˆã‚‹
       if((adjustedRelop_ = geq) or (adjustedRelop_ = greaterp)) then <<
-        % †‚¨‚æ‚Ñ„‚Ìê‡‚Íor‚ÌŠÖŒW‚É‚È‚é
+        % â‰§ãŠã‚ˆã³ï¼ã®å ´åˆã¯orã®é–¢ä¿‚ã«ãªã‚‹
         retTupleDNF_:= {{ {exprVar_, getReverseRelop(adjustedRelop_), lb_} }, { {exprVar_, adjustedRelop_, ub_} }};
       >> else if((adjustedRelop_ = geq) or (adjustedRelop_ = greaterp)) then <<
-        % …‚¨‚æ‚Ñƒ‚Ìê‡‚Íand‚ÌŠÖŒW‚É‚È‚é
+        % â‰¦ãŠã‚ˆã³ï¼œã®å ´åˆã¯andã®é–¢ä¿‚ã«ãªã‚‹
         retTupleDNF_:= {{ {exprVar_, getReverseRelop(adjustedRelop_), lb_},     {exprVar_, adjustedRelop_, ub_} }};
       >> else <<
-        % ‚‚Ìê‡
+        % â‰ ã®å ´åˆ
         retTupleDNF_:= {{ {exprVar_, lessp, lb_} }, { {exprVar_, greaterp, lb_}, {exprVar_, lessp, ub_} }, { {exprVar_, greaterp, ub_} }};
       >>;
     >> else <<
-      % ƒpƒ‰ƒƒ^‚Ì‰ğ‚ª“¾‚ç‚ê‚½ê‡
-      % ‚Ç‚¿‚ç‚ª‰ºŒÀ‚Å‚Ç‚¿‚ç‚ªãŒÀ‚É‚È‚é‚©‚ğ‚Ç‚Ì‚æ‚¤‚É’²‚×‚é‚©HH
-      % ’²‚×‚é‚ñ‚¶‚á‚È‚­‚Ä‚»‚¤‚¢‚¤®‚ğ’Ç‰Á‚·‚ê‚Î—Ç‚¢      
+      % ãƒ‘ãƒ©ãƒ¡ã‚¿ã®è§£ãŒå¾—ã‚‰ã‚ŒãŸå ´åˆ
+      % ã©ã¡ã‚‰ãŒä¸‹é™ã§ã©ã¡ã‚‰ãŒä¸Šé™ã«ãªã‚‹ã‹ã‚’ã©ã®ã‚ˆã†ã«èª¿ã¹ã‚‹ã‹ï¼Ÿï¼Ÿ
+      % èª¿ã¹ã‚‹ã‚“ã˜ã‚ƒãªãã¦ãã†ã„ã†å¼ã‚’è¿½åŠ ã™ã‚Œã°è‰¯ã„      
 
 
-      retTupleDNF_:= hogehogegege; % ©
+      retTupleDNF_:= hogehogegege; % â†
     >>;
   >> else <<
     adjustedEqExpr_:= first(sol_);
@@ -1424,7 +1427,7 @@ begin;
   scalar appliedFormula_, header_, argsCount_, appliedArgsList_;
   debugWrite("formula_: ", formula_);
 
-  % ˆø”‚ğ‚½‚È‚¢ê‡itrue‚È‚Çj
+  % å¼•æ•°ã‚’æŒãŸãªã„å ´åˆï¼ˆtrueãªã©ï¼‰
   if(arglength(formula_)=-1) then <<
     appliedFormula_:= rlqe(formula_);
     return appliedFormula_;
@@ -1440,8 +1443,8 @@ begin;
     if(header_= and) then appliedFormula_:= rlqe(mymkand(appliedArgsList_));
     if(header_= or) then appliedFormula_:= rlqe(mymkor(appliedArgsList_));
   >> else if(not freeof(formula_, sqrt)) then <<
-    % ”®“à‚Ésqrt‚ª“ü‚Á‚Ä‚¢‚é‚Ì‚İAŒµ–§‚È‘å¬”äŠr‚ª—LŒø‚Æ‚È‚é
-    % TODO:“–ŠY‚Ì”®“à‚É•Ï”‚ª“ü‚Á‚½Û‚É‚à³‚µ‚­ˆ—‚ª‚Å‚«‚é‚æ‚¤‚É‚·‚é
+    % æ•°å¼å†…ã«sqrtãŒå…¥ã£ã¦ã„ã‚‹æ™‚ã®ã¿ã€å³å¯†ãªå¤§å°æ¯”è¼ƒãŒæœ‰åŠ¹ã¨ãªã‚‹
+    % TODO:å½“è©²ã®æ•°å¼å†…ã«å¤‰æ•°ãŒå…¥ã£ãŸéš›ã«ã‚‚æ­£ã—ãå‡¦ç†ãŒã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
     if(checkOrderingFormula(myApply(getInverseRelop(header_), {lhs(formula_), rhs(formula_)}))) then 
       appliedFormula_:= false 
     else appliedFormula_:= rlqe(formula_);
@@ -1454,34 +1457,34 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ƒ‰ƒvƒ‰ƒX•ÏŠ·ŠÖ˜A‚ÌŠÖ”
+% ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›é–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
-% ‹tƒ‰ƒvƒ‰ƒX•ÏŠ·Œã‚Ì’l‚ğsin, cos‚Å•\¦‚·‚éƒXƒCƒbƒ`
+% é€†ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›å¾Œã®å€¤ã‚’sin, cosã§è¡¨ç¤ºã™ã‚‹ã‚¹ã‚¤ãƒƒãƒ
 on ltrig;
 
-% {{v, v(t), lapv(s)},...}‚Ì‘Î‰•\AƒOƒ[ƒoƒ‹•Ï”
-% exDSolve‚Ìexceptdfvars_‚É‘Î‰‚³‚¹‚é‚½‚ßAexDSolveÅŒã‚Å‹óW‡‚ğ‘ã“ü‚µ‰Šú‰»‚µ‚Ä‚¢‚é
+% {{v, v(t), lapv(s)},...}ã®å¯¾å¿œè¡¨ã€ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+% exDSolveã®exceptdfvars_ã«å¯¾å¿œã•ã›ã‚‹ãŸã‚ã€exDSolveæœ€å¾Œã§ç©ºé›†åˆã‚’ä»£å…¥ã—åˆæœŸåŒ–ã—ã¦ã„ã‚‹
 table_:={};
 
-% operatoréŒ¾‚³‚ê‚½args_‚ğ‹L‰¯‚·‚éƒOƒ[ƒoƒ‹•Ï”
+% operatorå®£è¨€ã•ã‚ŒãŸargs_ã‚’è¨˜æ†¶ã™ã‚‹ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 loadedOperator_:={};
 
-% ‰ŠúğŒinit›_›lhs‚ğì¬
+% åˆæœŸæ¡ä»¶initâ—‹_â—‹lhsã‚’ä½œæˆ
 procedure makeInitId(f,i)$
 if(i=0) then
   mkid(mkid(INIT,f),lhs)
 else
   mkid(mkid(mkid(mkid(INIT,f),_),i),lhs);
 
-%laprule_—pAmkid‚µ‚½‚†‚ğ‰‰Zq‚Æ‚µ‚Ä•Ô‚·
+%laprule_ç”¨ã€mkidã—ãŸï½†ã‚’æ¼”ç®—å­ã¨ã—ã¦è¿”ã™
 procedure setMkidOperator(f,x)$
   f(x);
 
-%laprule_—p‚Ì©—R‰‰Zq
+%laprule_ç”¨ã®è‡ªç”±æ¼”ç®—å­
 operator !~f$
 
-% ”÷•ª‚ÉŠÖ‚·‚é•ÏŠ·‹K‘¥laprule_, let‚Íˆê“x‚Å
+% å¾®åˆ†ã«é–¢ã™ã‚‹å¤‰æ›è¦å‰‡laprule_, letã¯ä¸€åº¦ã§
 let {
   laplace(df(~f(~x),x),x) => il!&*laplace(f(x),x) - makeInitId(f,0),
   laplace(df(~f(~x),x,~n),x) => il!&**n*laplace(f(x),x) -
@@ -1490,8 +1493,8 @@ let {
   laplace(~f(~x),x) => setMkidOperator(mkid(lap,f),il!&)
 }$
 
-% ƒ‰ƒvƒ‰ƒX•ÏŠ·‘Î‚Ìì¬, ƒIƒyƒŒ[ƒ^éŒ¾
-% {{v, v(t), lapv(s)},...}‚Ì‘Î‰•\table_‚Ìì¬
+% ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›å¯¾ã®ä½œæˆ, ã‚ªãƒšãƒ¬ãƒ¼ã‚¿å®£è¨€
+% {{v, v(t), lapv(s)},...}ã®å¯¾å¿œè¡¨table_ã®ä½œæˆ
 procedure LaplaceLetUnit(args_)$
 begin;
   scalar arg_, LAParg_;
@@ -1499,19 +1502,20 @@ begin;
   arg_:= first args_;
   LAParg_:= second args_;
 
-  % arg_‚ªd•¡‚µ‚Ä‚È‚¢‚©”»’è
+  % arg_ãŒé‡è¤‡ã—ã¦ãªã„ã‹åˆ¤å®š
   if(freeof(loadedOperator_,arg_)) then 
     << 
      operator arg_, LAParg_;
      loadedOperator_:= arg_ . loadedOperator_;
     >>;
 
-  % {{v, v(t), lapv(s)},...}‚Ì‘Î‰•\
+  % {{v, v(t), lapv(s)},...}ã®å¯¾å¿œè¡¨
   table_:= {arg_, arg_(t), LAParg_(s)} . table_;
   debugWrite("table_: ", table_);
 end;
 
-% vars_‚©‚çdf‚ğœ‚¢‚½‚à‚Ì‚ğ•Ô‚·
+
+% vars_ã‹ã‚‰dfã‚’é™¤ã„ãŸã‚‚ã®ã‚’è¿”ã™
 procedure removedf(vars_)$
 begin;
   exceptdfvars_:={};
@@ -1531,8 +1535,8 @@ if(lst={}) then nil
                 else getf(x,rest(lst));
 
 procedure lgetf(x,llst)$
-%“ü—Í: •Ï”–¼, “™®‚ÌƒŠƒXƒg‚ÌƒŠƒXƒg(ex. {{x=1,y=2},{x=3,y=4},...})
-%o—Í: •Ï”‚É‘Î‰‚·‚é’l‚ÌƒŠƒXƒg
+%å…¥åŠ›: å¤‰æ•°å, ç­‰å¼ã®ãƒªã‚¹ãƒˆã®ãƒªã‚¹ãƒˆ(ex. {{x=1,y=2},{x=3,y=4},...})
+%å‡ºåŠ›: å¤‰æ•°ã«å¯¾å¿œã™ã‚‹å€¤ã®ãƒªã‚¹ãƒˆ
 if(llst={}) then {}
         else if(rest(llst)={}) then getf(x,first(llst))
                 else getf(x,first(llst)) . {lgetf(x,rest(llst))};
@@ -1550,49 +1554,49 @@ begin;
   exceptdfvars_:= removedf(vars_);
   tmp_:= for each x in exceptdfvars_ collect {x,mkid(lap,x)};
   debugWrite("tmp_ before LaplaceLetUnit: ", tmp_);
-  % ƒ‰ƒvƒ‰ƒX•ÏŠ·‹K‘¥‚Ìì¬
+  % ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›è¦å‰‡ã®ä½œæˆ
   map(LaplaceLetUnit, tmp_);
 
-  %ht => ht(t)’uŠ·
+  %ht => ht(t)ç½®æ›
   tmp_:=map(first(~w)=second(~w), table_);
   debugWrite("MAP: ", tmp_);
 
   tmp_:= sub(tmp_, expr_);
   debugWrite("SUB: ", tmp_);
 
-  % expr_‚ğ“™®‚©‚ç·®Œ`®‚É
+  % expr_ã‚’ç­‰å¼ã‹ã‚‰å·®å¼å½¢å¼ã«
   diffexpr_:={};
   for each x in tmp_ do 
     if(not freeof(x, equal))
       then diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)})
     else diffexpr_:= append(diffexpr_, {lhs(x)-rhs(x)});
       
-  % laplace‰‰Zq‚ÅƒGƒ‰[Alaplace‰‰Zq‚İ‚Ì®‚ª•Ô‚é‚Æ‘z’è
+  % laplaceæ¼”ç®—å­ã§ã‚¨ãƒ©ãƒ¼æ™‚ã€laplaceæ¼”ç®—å­è¾¼ã¿ã®å¼ãŒè¿”ã‚‹ã¨æƒ³å®š
   if(not freeof(LAPexpr_, laplace)) then return retsolvererror___;
 
-  % ƒ‰ƒvƒ‰ƒX•ÏŠ·
+  % ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›
   LAPexpr_:=map(laplace(~w,t,s), diffexpr_);
   debugWrite("LAPexpr_: ", LAPexpr_);
 
-  % init_§–ñ‚ğLAPexpr_‚É“K‰
+  % init_åˆ¶ç´„ã‚’LAPexpr_ã«é©å¿œ
   solveexpr_:= append(LAPexpr_, init_);
   debugWrite("solveexpr_:", solveexpr_);
 
-  % ‹tƒ‰ƒvƒ‰ƒX•ÏŠ·‚Ì‘ÎÛ
+  % é€†ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›ã®å¯¾è±¡
   solvevars_:= append(append(map(third, table_), map(lhs, init_)), {s});
   debugWrite("solvevars_:", solvevars_);
 
-  % •ÏŠ·‘Î‚Æ‰ŠúğŒ‚ğ˜A—§‚µ‚Ä‰ğ‚­
+  % å¤‰æ›å¯¾ã¨åˆæœŸæ¡ä»¶ã‚’é€£ç«‹ã—ã¦è§£ã
   solveans_ := solve(solveexpr_, solvevars_);
   debugWrite("solveans_: ", solveans_);
 
-  % solve‚ª‰ğ–³‚µ‚Ì overconstraint‚Æ‘z’è
+  % solveãŒè§£ç„¡ã—ã®æ™‚ overconstraintã¨æƒ³å®š
   if(solveans_={}) then return retoverconstraint___;
-  % s‚ªarbcomplex‚Å‚È‚¢’l‚ğ‚Â overconstraint‚Æ‘z’è
+  % sãŒarbcomplexã§ãªã„å€¤ã‚’æŒã¤æ™‚ overconstraintã¨æƒ³å®š
   if(freeof(lgetf(s, solveans_), arbcomplex)) then  return retoverconstraint___;
 
   debugWrite("table_: ", table_);
-  % solveans_‚Ésolvevars_‚Ì‰ğ‚ªˆê‚Â‚Å‚àŠÜ‚Ü‚ê‚È‚¢ underconstraint‚Æ‘z’è
+  % solveans_ã«solvevars_ã®è§£ãŒä¸€ã¤ã§ã‚‚å«ã¾ã‚Œãªã„æ™‚ underconstraintã¨æƒ³å®š
   for each x in table_ do 
     if(freeof(solveans_, third(x))) then tmp_:=true;
   debugWrite("is under-constraint?: ", tmp_);
@@ -1600,7 +1604,7 @@ begin;
 
   debugWrite("table_: ", table_);
   
-  % solveans_‚Ì‹tƒ‰ƒvƒ‰ƒX•ÏŠ·
+  % solveans_ã®é€†ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›
   ans_:= for each table in table_ collect
       (first table) = invlap(lgetf((third table), solveans_),s,t);
   debugWrite("ans expr?: ", ans_);
@@ -1610,7 +1614,7 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% “Á’è‚Ì—v‘f‚ğ’Šo/íœ‚µ‚½‚è•¡”‚Ì—v‘f‚ğ•ª—Ş‚µ‚½‚è‚·‚éŠÖ”
+% ç‰¹å®šã®è¦ç´ ã‚’æŠ½å‡º/å‰Šé™¤ã—ãŸã‚Šè¤‡æ•°ã®è¦ç´ ã‚’åˆ†é¡ã—ãŸã‚Šã™ã‚‹é–¢æ•°
 %---------------------------------------------------------------
 
 procedure getFrontTwoElemList(lst_)$
@@ -1620,19 +1624,19 @@ procedure getFrontTwoElemList(lst_)$
 procedure removeTrueList(patternList_)$
   for each x in patternList_ join if(rlqe(x)=true) then {} else {x};
 
-% ˜_—®‚ªtrue‚Å‚ ‚é‚Æ‚«AŒ»İ‚Í‚»‚Ì‚Ü‚Ütrue‚ğ•Ô‚µ‚Ä‚¢‚é
-% TODOF‚È‚ñ‚Æ‚©‚·‚é
+% è«–ç†å¼ãŒtrueã§ã‚ã‚‹ã¨ãã€ç¾åœ¨ã¯ãã®ã¾ã¾trueã‚’è¿”ã—ã¦ã„ã‚‹
+% TODOï¼šãªã‚“ã¨ã‹ã™ã‚‹
 procedure removeTrueFormula(formula_)$
   if(formula_=true) then true
   else myApply(and, for each x in getArgsList(formula_) join 
     if(rlqe(x)=true) then {} else {x});
 
-% §–ñƒŠƒXƒg‚©‚çA“™®ˆÈŠO‚ğŠÜ‚Ş§–ñ‚ğ’Šo‚·‚é
+% åˆ¶ç´„ãƒªã‚¹ãƒˆã‹ã‚‰ã€ç­‰å¼ä»¥å¤–ã‚’å«ã‚€åˆ¶ç´„ã‚’æŠ½å‡ºã™ã‚‹
 procedure getOtherExpr(exprs_)$
   for each x in exprs_ join if(hasIneqRelop(x) or hasLogicalOp(x)) then {x} else {};
 
-% NDExpriexDSolve‚Åˆµ‚¦‚È‚¢‚æ‚¤‚È§–ñ®j‚Å‚ ‚é‚©‚Ç‚¤‚©‚ğ’²‚×‚é
-% ®‚Ì’†‚Ésin‚àcos‚à“ü‚Á‚Ä‚¢‚È‚¯‚ê‚Îfalse
+% NDExprï¼ˆexDSolveã§æ‰±ãˆãªã„ã‚ˆã†ãªåˆ¶ç´„å¼ï¼‰ã§ã‚ã‚‹ã‹ã©ã†ã‹ã‚’èª¿ã¹ã‚‹
+% å¼ã®ä¸­ã«sinã‚‚cosã‚‚å…¥ã£ã¦ã„ãªã‘ã‚Œã°false
 procedure isNDExpr(expr_)$
   if(freeof(expr_, sin) and freeof(expr_, cos)) then nil else t;
 
@@ -1650,8 +1654,8 @@ begin;
   return {NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_};
 end;
 
-% ‘O’ñF“ü—Í‚Íinitxlhs=prev(x)‚ÌŒ`
-% TODOF‚È‚ñ‚Æ‚©‚·‚é
+% å‰æï¼šå…¥åŠ›ã¯initxlhs=prev(x)ã®å½¢
+% TODOï¼šãªã‚“ã¨ã‹ã™ã‚‹
 procedure getInitVars(rcont_)$
   lhs(rcont_);
 
@@ -1665,7 +1669,7 @@ begin;
     timeExpr_:= getTimeFromTC(x);
     condExpr_:= getCondDNFFromTC(x);
 
-    % timeExpr_‚Í (t - value) op 0 ‚Ü‚½‚Í (-t - value) op 0 ‚ÌŒ`‚ğ‘z’è
+    % timeExpr_ã¯ (t - value) op 0 ã¾ãŸã¯ (-t - value) op 0 ã®å½¢ã‚’æƒ³å®š
     relop_:= myHead(timeExpr_);
     exprLhs_:= lhs(timeExpr_);
     lcofRet_:= lcof(exprLhs_, t);
@@ -1682,7 +1686,7 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ‘Ò‚¿s—ñIŠÖ˜A‚ÌŠÖ”
+% å¾…ã¡è¡Œåˆ—Ié–¢é€£ã®é–¢æ•°
 %---------------------------------------------------------------
 
 procedure enq(state,queue);
@@ -1699,7 +1703,7 @@ procedure deq queue;
   end;
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”idf•Ï”ŠÖ˜Aj
+% HydLaå‘ã‘é–¢æ•°ï¼ˆdfå¤‰æ•°é–¢é€£ï¼‰
 %---------------------------------------------------------------
 
 procedure removeDifferentialVars(vars_)$
@@ -1711,7 +1715,7 @@ procedure isDifferentialVar(var_)$
   else nil;
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”iprev•Ï”ŠÖ˜Aj
+% HydLaå‘ã‘é–¢æ•°ï¼ˆprevå¤‰æ•°é–¢é€£ï¼‰
 %---------------------------------------------------------------
 
 procedure isPrevVariable(expr_)$
@@ -1719,20 +1723,20 @@ procedure isPrevVariable(expr_)$
   else if(myHead(expr_)=prev) then t
   else nil;
 
-% prev•Ï”‚Ìê‡prev‚ğŠO‚·
+% prevå¤‰æ•°ã®å ´åˆprevã‚’å¤–ã™
 procedure removePrev(var_)$
   if(myHead(var_)=prev) then part(var_, 1) else var_;
 
-% ƒŠƒXƒg‚©‚çprev•Ï”‚ğœ‚­
+% ãƒªã‚¹ãƒˆã‹ã‚‰prevå¤‰æ•°ã‚’é™¤ã
 procedure removePrevCons(consList_)$
   union(for each x in consList_ join if(freeof(x, prev)) then {x} else {});
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”iinit•Ï”ŠÖ˜Aj
+% HydLaå‘ã‘é–¢æ•°ï¼ˆinitå¤‰æ•°é–¢é€£ï¼‰
 %---------------------------------------------------------------
 
-% REDUCEStringSender‚©‚çŒÄ‚Ño‚·
-% @params vars_ init•Ï”‚ÌƒŠƒXƒg
+% REDUCEStringSenderã‹ã‚‰å‘¼ã³å‡ºã™
+% @params vars_ initå¤‰æ•°ã®ãƒªã‚¹ãƒˆ
 procedure addInitVariables(vars_)$
 begin;
   putLineFeed();
@@ -1741,7 +1745,7 @@ begin;
   debugWrite("initVariables__: ", initVariables__);
 end;
 
-% initVariables__‚ÉŠÜ‚Ü‚ê‚é•Ï”‚©‚Ç‚¤‚©’²‚×‚é
+% initVariables__ã«å«ã¾ã‚Œã‚‹å¤‰æ•°ã‹ã©ã†ã‹èª¿ã¹ã‚‹
 procedure isInitVariable(var_)$
 begin;
   scalar ret_;
@@ -1765,18 +1769,17 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”i‹¤’Ê‚µ‚Ä•K—vj
+% HydLaå‘ã‘é–¢æ•°ï¼ˆå…±é€šã—ã¦å¿…è¦ï¼‰
 %---------------------------------------------------------------
 
 operator prev;
 
-%rettrue___ := "RETTRUE___";
-%retfalse___ := "RETFALSE___";
-rettrue___ := 1;
-retfalse___ := 2;
+rettrue___    := 1;
+retfalse___   := 2;
+retunknown___ := 3;
 
 
-% §–ñƒXƒgƒA‚ÌƒŠƒZƒbƒg
+% åˆ¶ç´„ã‚¹ãƒˆã‚¢ã®ãƒªã‚»ãƒƒãƒˆ
 procedure resetConstraintStore()$
 begin;
   putLineFeed();
@@ -1822,7 +1825,7 @@ begin;
   debugWrite("prevVariables__: ", prevVariables__);
 end;
 
-% TODO co_‚ÉprevConstraint__‚ğ“K—p‚·‚é
+% TODO co_ã«prevConstraint__ã‚’é©ç”¨ã™ã‚‹
 procedure addInitConstraint(co_, va_)$
 begin;
   putLineFeed();
@@ -1913,8 +1916,8 @@ begin;
   guardVars__:= {};
 end;
 
-% addConstraint‚Ís‚í‚È‚¢
-% PP/IP‚Å‹¤’Ê‚Ìreset‚És‚¤A§–ñƒXƒgƒA‚Ö‚Ì§–ñ‚Ì’Ç‰Á
+% addConstraintã¯è¡Œã‚ãªã„
+% PP/IPã§å…±é€šã®resetæ™‚ã«è¡Œã†ã€åˆ¶ç´„ã‚¹ãƒˆã‚¢ã¸ã®åˆ¶ç´„ã®è¿½åŠ 
 procedure addParameterConstraint(pcons_, pars_)$
 begin;
   putLineFeed();
@@ -1927,8 +1930,8 @@ begin;
 
 end;
 
-%% Œ»İ‚Í‘ã‚í‚è‚ÉaddParameterConstraint‚ğg‚¤
-%% PP/IP‚Å‹¤’Ê‚Ìreset‚És‚¤A§–ñƒXƒgƒA‚Ö‚Ì§–ñ‚Ì’Ç‰Á
+%% ç¾åœ¨ã¯ä»£ã‚ã‚Šã«addParameterConstraintã‚’ä½¿ã†
+%% PP/IPã§å…±é€šã®resetæ™‚ã«è¡Œã†ã€åˆ¶ç´„ã‚¹ãƒˆã‚¢ã¸ã®åˆ¶ç´„ã®è¿½åŠ 
 %procedure addConstraintReset(cons_, vars_, pcons_, pars_)$
 %begin;
 %  putLineFeed();
@@ -1948,7 +1951,7 @@ end;
 %
 %end;
 
-% §–ñƒXƒgƒA‚Ö‚Ì§–ñ‚Ì’Ç‰Á
+% åˆ¶ç´„ã‚¹ãƒˆã‚¢ã¸ã®åˆ¶ç´„ã®è¿½åŠ 
 procedure addConstraint(cons_, vars_)$
 begin;
   putLineFeed();
@@ -1984,8 +1987,8 @@ begin;
   debugWrite("constraintStore__:", constraintStore__);
   if(constraintStore__={}) then return {{}, parameterStore__};
 
-  % ‰ğ‚ğ1‚Â‚¾‚¯“¾‚é
-  % TODO: Or‚Å‚Â‚È‚ª‚Á‚½•¡”‰ğ‚Ö‚Ì‘Î‰
+  % è§£ã‚’1ã¤ã ã‘å¾—ã‚‹
+  % TODO: Orã§ã¤ãªãŒã£ãŸè¤‡æ•°è§£ã¸ã®å¯¾å¿œ
   if(myHead(first(constraintStore__))=list) then return {first(constraintStore__), parameterStore__}
   else return {constraintStore__, parameterStore__};
 end;
@@ -2007,7 +2010,7 @@ begin;
   scalar simplifiedExpr_;
   putLineFeed();
 
-  % TODO:simplifyŠÖ”‚ğg‚¤
+  % TODO:simplifyé–¢æ•°ã‚’ä½¿ã†
 %  simplifiedExpr_:= simplify(expr_);
   simplifiedExpr_:= expr_;
   debugWrite("simplifiedExpr_:", simplifiedExpr_);
@@ -2027,92 +2030,102 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”iPP‚É‚¨‚¢‚Ä•K—vj
+% HydLaå‘ã‘é–¢æ•°ï¼ˆPPã«ãŠã„ã¦å¿…è¦ï¼‰
 %---------------------------------------------------------------
 
-% TODO!! check_consistency_result_t‚Ì—vŒ‚ğ‚µ‚Á‚©‚èŠm”F‚·‚é‚±‚Æ
-% initConstraint__,  initTmpConstraint__, tmpVariables__ ‘Î‰”Å
-% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] ‚Ì‘S•Ï”‚É‘Î‰‚µ‚½‚¢
-% TODO; myLCont_‚É‚Ó‚é‚¢•ª‚¯‚éisInitVariable‚ğ³í‚É‰Ò“­‚³‚¹‚é
-% @return {true, false} ‚Ü‚½‚Í{false, true}
+% TODO!! check_consistency_result_tã®è¦ä»¶ã‚’ã—ã£ã‹ã‚Šç¢ºèªã™ã‚‹ã“ã¨
+% initConstraint__,  initTmpConstraint__, tmpVariables__ å¯¾å¿œç‰ˆ
+% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] ã®å…¨å¤‰æ•°ã«å¯¾å¿œã—ãŸã„
+% TODO; myLCont_ã«ãµã‚‹ã„åˆ†ã‘ã‚‹isInitVariableã‚’æ­£å¸¸ã«ç¨¼åƒã•ã›ã‚‹
+% @return {true, false} ã¾ãŸã¯{false, true}
 
 procedure myCheckConsistencyPoint()$
 begin;
-  scalar ans_, tmpExprs_, myExpr_, myLCont_, myVars_;
+  scalar ans_, ansBool_, trueMap_, falseMap_, tmpExprs_, myExpr_, myLCont_, myVars_;
   putLineFeed();
   tmpExprs_ := union(tmpConstraint__, guard__, initConstraint__, initTmpConstraint__);
-  % ğŒ: tmpExprs_‚ÉŠÜ‚Ü‚ê‚é˜A‘±«§–ñ‚Í•K‚¸ initxlhs=(”®) ‚ÌŠiD‚Å‚ ‚é
+  % æ¡ä»¶: tmpExprs_ã«å«ã¾ã‚Œã‚‹é€£ç¶šæ€§åˆ¶ç´„ã¯å¿…ãš initxlhs=(æ•°å¼) ã®æ ¼å¥½ã§ã‚ã‚‹
   myExpr_ := for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {} else {x};
   myLCont_ := for each x in tmpExprs_ join if(isInitVariable (lhs x)) then {x} else {};
   myVars_ := union(csVariables__, tmpVariables__, guardVars__);
   
   if(myExpr_ = {} and myLCont_ = {} and myVars_ = {} and constraintStore__ = {}) then
-    return {true, false};
+  <<
+    ansBool_:= true;
+    debugWrite("because of myExpr_ = {} and myLCont_ = {} and myVars_ = {} and constraintStore__ = {}, ansBool_: ", ansBool_);
+  >> else <<
+    ans_:= checkConsistencyBySolveOrRlqe(constraintStore__, myExpr_, myLCont_, parameterStore__, myVars_);
+    debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
+    ansBool_:= rlqe(part(ans_, 1) = rettrue___);
+  >>;
 
-  ans_:= checkConsistencyBySolveOrRlqe(myExpr_, myLCont_, myVars_);
-  debugWrite("ans_ in checkConsistencyBySolveOrRlqe: ", ans_);
-  if(part(ans_, 1)=rettrue___) then ans_:= {true, false}
-    else ans_:= {false, true};
+  if parameterStore__ <> {} then << 
+    trueMap_:= rlqe(ansBool_ and mymkand(parameterStore__));
+    falseMap_:= rlqe(not ansBool_ and mymkand(parameterStore__));
+
+    % TODO prevå¤‰æ•°ã®å‡¦ç†, t>0ã¨ã—ã¦tã®é™¤å»
+    trueMap_:= if(myHead(trueMap_) = and) then map(makeConsTuple, getArgsList(trueMap_)) else trueMap_;
+    falseMap_:= if(myHead(falseMap_) = and) then map(makeConsTuple, getArgsList(falseMap_)) else falseMap_;
+    ans_:= {trueMap_, falseMap_};
+  >> else if(ansBool_ = true) then ans_:= {true, false}
+  else ans_:= {false, true};
 
   debugWrite("ans_ in myCheckConsistencyPoint: ", ans_);
 
   return ans_;
 end;
 
-% (§ŒÀ and‚ğó‚¯•t‚¯‚È‚¢) TODO §ŒÀ‚Ö‚Ì‘Î‰
-% (§ŒÀ true‚ğó‚¯•t‚¯‚È‚¢) TODO §ŒÀ‚Ö‚Ì‘Î‰
+% (åˆ¶é™ andã‚’å—ã‘ä»˜ã‘ãªã„) TODO åˆ¶é™ã¸ã®å¯¾å¿œ
+% (åˆ¶é™ trueã‚’å—ã‘ä»˜ã‘ãªã„) TODO åˆ¶é™ã¸ã®å¯¾å¿œ
 procedure checkConsistencyWithTmpCons(expr_, lcont_, vars_)$
 begin;
   scalar ans_;
   putLineFeed();
 
-  ans_:= {part(checkConsistencyBySolveOrRlqe(expr_, lcont_, vars_), 1)};
+  ans_:= {part(checkConsistencyBySolveOrRlqe(constraintStore__, expr_, lcont_, parameterStore__, vars_), 1)};
   debugWrite("ans_ in checkConsistencyWithTmpCons: ", ans_);
 
   return ans_;
 end;
 
-% PP‚É‚¨‚¯‚é–³–µ‚«‚Ì”»’è
-% d—l QE–¢g—p % (g—p‚·‚é‚È‚ç, •Ï”‚ÍŠî–{–½‘è“I‚É’u‚«Š·‚¦)
-% @param expr_ ˆê“I‚È§–ñW‡
-% @param lcont_ ˆê“I‚È¶˜A‘±«§–ñW‡
-% @param vars_ ˆê“I‚È•Ï”W‡
-% @return {ans, {{•Ï”–¼ = ’l},...}} ‚ÌŒ`®
+% PPã«ãŠã‘ã‚‹ç„¡çŸ›ç›¾æ€§ã®åˆ¤å®š
+% ä»•æ§˜ QEæœªä½¿ç”¨ % (ä½¿ç”¨ã™ã‚‹ãªã‚‰, å¤‰æ•°ã¯åŸºæœ¬å‘½é¡Œçš„ã«ç½®ãæ›ãˆ)
+% @param cons_ constraintStore__
+% @param expr_ ä¸€æ™‚çš„ãªåˆ¶ç´„é›†åˆ
+% @param lcont_ ä¸€æ™‚çš„ãªå·¦é€£ç¶šæ€§åˆ¶ç´„é›†åˆ
+% @param pCons_ ä¸€æ™‚çš„ãªãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿åˆ¶ç´„ã®é›†åˆ, ç¾çŠ¶æœªä½¿ç”¨
+% @param vars_ ä¸€æ™‚çš„ãªå¤‰æ•°é›†åˆ
+% @return {ans, {{å¤‰æ•°å = å€¤},...}} ã®å½¢å¼
 
-procedure checkConsistencyBySolveOrRlqe(exprs_, lcont_, vars_)$
+procedure checkConsistencyBySolveOrRlqe(cons_, exprs_, lcont_, pCons_, vars_)$
 begin;
   scalar exprList_, eqExprs_, otherExprs_, modeFlagList_, mode_, tmpSol_,
          solvedExprs_, solvedExprsQE_, ans_;
 
   debugWrite("checkConsistencyBySolveOrRlqe: ", " ");
-  debugWrite("constraintStore__: ", constraintStore__);
-  debugWrite("csVariables__: ", csVariables__);
-  debugWrite("exprs_: ", exprs_);
-  debugWrite("lcont_: ", lcont_);
-  debugWrite("vars_: ", vars_);
+  debugWrite("{cons_, exprs_, lcont_, pCons_, vars_}: ", {cons_, exprs_, lcont_, pCons_, vars_});
 
-  exprList_:= union(constraintStore__, exprs_);
+  exprList_:= union(cons_, exprs_);
   debugWrite("exprList_: ", exprList_);
   otherExprs_:= getOtherExpr(exprList_);
   debugWrite("otherExprs_: ", otherExprs_);
   eqExprs_:= exprList_ \ otherExprs_;
   debugWrite("eqExprs_: ", eqExprs_);
 %  debugWrite("union(eqExprs_, lcont_):",  union(eqExprs_, lcont_));
-%  debugWrite("union(csVariables__, vars_):", union(csVariables__, vars_));
 
-  % –¢’m•Ï”‚ğ’Ç‰Á‚µ‚È‚¢‚æ‚¤‚É‚·‚é
+  % æœªçŸ¥å¤‰æ•°ã‚’è¿½åŠ ã—ãªã„ã‚ˆã†ã«ã™ã‚‹
   off arbvars;
-  tmpSol_:= exSolve(union(eqExprs_, lcont_),  union(csVariables__, vars_));
+  tmpSol_:= exSolve(union(eqExprs_, lcont_),  vars_);
   on arbvars;
   debugWrite("tmpSol_: ", tmpSol_);
 
   if(tmpSol_={}) then return {retfalse___};
-  % 2dƒŠƒXƒg‚Ì‚Ì‚İfirst‚Å“¾‚é
-  % TODO:•¡”‰ğ“¾‚ç‚ê‚½ê‡‚Ö‚Ì‘Î‰
+  % 2é‡ãƒªã‚¹ãƒˆã®æ™‚ã®ã¿firstã§å¾—ã‚‹
+  % TODO:è¤‡æ•°è§£å¾—ã‚‰ã‚ŒãŸå ´åˆã¸ã®å¯¾å¿œ
   if(myHead(first(tmpSol_))=list) then tmpSol_:= first(tmpSol_);
 
 
-  % exprs_‚¨‚æ‚Ñ§–ñƒXƒgƒA‚É“™®ˆÈŠO‚ª“ü‚Á‚Ä‚¢‚é‚©‚Ç‚¤‚©‚É‚æ‚èA‰ğ‚­‚Ì‚Ég—p‚·‚éŠÖ”‚ğŒˆ’è
+  % exprs_ãŠã‚ˆã³åˆ¶ç´„ã‚¹ãƒˆã‚¢ã«ç­‰å¼ä»¥å¤–ãŒå…¥ã£ã¦ã„ã‚‹ã‹ã©ã†ã‹ã«ã‚ˆã‚Šã€è§£ãã®ã«ä½¿ç”¨ã™ã‚‹é–¢æ•°ã‚’æ±ºå®š
   mode_:= if(otherExprs_={}) then SOLVE else RLQE;
   debugWrite("mode_:", mode_);
 
@@ -2123,7 +2136,7 @@ begin;
     if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
   >> else
   <<
-    % sub‚ÌŠg’£”Å‚ğ—p‚¢‚éè–@
+    % subã®æ‹¡å¼µç‰ˆã‚’ç”¨ã„ã‚‹æ‰‹æ³•
     solvedExprs_:= union(for each x in otherExprs_ join {exSub(tmpSol_, x)});
     debugWrite("solvedExprs_:", solvedExprs_);
     solvedExprsQE_:= exRlqe(mymkand(solvedExprs_));
@@ -2145,9 +2158,9 @@ begin;
   scalar sol_;
   putLineFeed();
 
-  sol_:= checkConsistencyBySolveOrRlqe({}, {}, {});
+  sol_:= checkConsistencyBySolveOrRlqe({}, {}, {}, {}, {});
   debugWrite("sol_ in checkConsistency: ", sol_);
-  % ret_code‚ªrettrue___A‚Â‚Ü‚è1‚Å‚ ‚é‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN
+  % ret_codeãŒrettrue___ã€ã¤ã¾ã‚Š1ã§ã‚ã‚‹ã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯
   if(part(sol_, 1) = 1) then constraintStore__:= part(sol_, 2);
   debugWrite("constraintStore__: ", constraintStore__);
 
@@ -2172,7 +2185,7 @@ begin;
   return ret_;
 end;
 
-% convertCSToVM“à‚Åg‚¤A®Œ`—pŠÖ”
+% convertCSToVMå†…ã§ä½¿ã†ã€æ•´å½¢ç”¨é–¢æ•°
 procedure makeConsTuple(cons_)$
 begin;
   scalar varName_, relopCode_, value_, tupleDNF_, retTuple_, adjustedCons_, sol_;
@@ -2180,8 +2193,8 @@ begin;
   debugWrite("in makeConsTuple", " ");
   debugWrite("cons_: ", cons_);
   
-  % ¶•Ó‚É•Ï”–¼‚Ì‚İ‚ª‚ ‚éŒ`®‚É‚·‚é
-  % ‘O’ñF“™®‚Í‚·‚Å‚É‚±‚ÌŒ`®‚É‚È‚Á‚Ä‚¢‚é
+  % å·¦è¾ºã«å¤‰æ•°åã®ã¿ãŒã‚ã‚‹å½¢å¼ã«ã™ã‚‹
+  % å‰æï¼šç­‰å¼ã¯ã™ã§ã«ã“ã®å½¢å¼ã«ãªã£ã¦ã„ã‚‹
   if(not hasIneqRelop(cons_)) then <<
     varName_:= lhs(cons_);
     relopCode_:= getExprCode(cons_);
@@ -2189,7 +2202,7 @@ begin;
   >> else <<
     tupleDNF_:= exIneqSolve(cons_);
     debugWrite("tupleDNF_: ", tupleDNF_);
-    % 1Ÿ®‚É‚È‚Á‚Ä‚é‚Í‚¸‚È‚Ì‚ÅA‰ğ‚Í1‚Â‚È‚Í‚¸
+    % 1æ¬¡å¼ã«ãªã£ã¦ã‚‹ã¯ãšãªã®ã§ã€è§£ã¯1ã¤ãªã¯ãš
     retTuple_:= first(first(tupleDNF_));
     
     varName_:= getVarNameFromTuple(retTuple_);
@@ -2202,7 +2215,7 @@ begin;
   return {varName_, relopCode_, value_};
 end;
 
-% constraintStore__‚ÉinitConstraint__‚ğunion‚µ‚ÄconvertCSToVM‚É‘JˆÚ‚·‚é
+% constraintStore__ã«initConstraint__ã‚’unionã—ã¦convertCSToVMã«é·ç§»ã™ã‚‹
 procedure myConvertCSToVM()$
 begin;
   putLineFeed();
@@ -2213,8 +2226,8 @@ begin;
   return convertCSToVM();
 end;
 
-% ‘O’ñFOr‚Å‚Â‚È‚ª‚Á‚Ä‚Í‚¢‚È‚¢
-% TODOF‚È‚ñ‚Æ‚©‚·‚é
+% å‰æï¼šOrã§ã¤ãªãŒã£ã¦ã¯ã„ãªã„
+% TODOï¼šãªã‚“ã¨ã‹ã™ã‚‹
 procedure convertCSToVM()$
 begin;
   scalar consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
@@ -2225,11 +2238,11 @@ begin;
   consTmpRet_:= applyPrevCons(constraintStore__, {});    
   debugWrite("consTmpRet_: ", consTmpRet_);
 
-  % ®‚ğ{(•Ï”–¼), (ŠÖŒW‰‰ZqƒR[ƒh), (’l‚Ìƒtƒ‹•¶š—ñ)}‚ÌŒ`®‚É•ÏŠ·‚·‚é
+  % å¼ã‚’{(å¤‰æ•°å), (é–¢ä¿‚æ¼”ç®—å­ã‚³ãƒ¼ãƒ‰), (å€¤ã®ãƒ•ãƒ«æ–‡å­—åˆ—)}ã®å½¢å¼ã«å¤‰æ›ã™ã‚‹
   consRet_:= map(makeConsTuple, consTmpRet_);
   paramDNFList_:= map(exIneqSolve, parameterStore__);
   paramRet_:= for each x in paramDNFList_ collect <<
-    % 1‚Â‚Ì€‚É‚È‚Á‚Ä‚¢‚é‚Í‚¸
+    % 1ã¤ã®é …ã«ãªã£ã¦ã„ã‚‹ã¯ãš
     tuple_:= first(first(x));
     {getVarNameFromTuple(tuple_), getExprCode(getRelopFromTuple(tuple_)), getValueFromTuple(tuple_)}
   >>;
@@ -2242,42 +2255,54 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% HydLaŒü‚¯ŠÖ”iIP‚É‚¨‚¢‚Ä•K—vj
+% HydLaå‘ã‘é–¢æ•°ï¼ˆIPã«ãŠã„ã¦å¿…è¦ï¼‰
 %---------------------------------------------------------------
 
-% TODO!! check_consistency_result_t‚Ì—vŒ‚ğ‚µ‚Á‚©‚èŠm”F‚·‚é‚±‚Æ
-% initConstraint__,  initTmpConstraint__, tmpVariables__ ‘Î‰”Å
-% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] ‚Ì‘S•Ï”‚É‘Î‰‚µ‚½‚¢
-% @return {true, false} ‚Ü‚½‚Í{false, true}
+% TODO!! check_consistency_result_tã®è¦ä»¶ã‚’ã—ã£ã‹ã‚Šç¢ºèªã™ã‚‹ã“ã¨
+% initConstraint__,  initTmpConstraint__, tmpVariables__ å¯¾å¿œç‰ˆ
+% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] ã®å…¨å¤‰æ•°ã«å¯¾å¿œã—ãŸã„
+% @return {true, false} ã¾ãŸã¯{false, true}
 
 procedure myCheckConsistencyInterval()$
 begin;
-  scalar ans_, tmpExprs_, myTmpCons_, myRCont_, myVars_;
+  scalar ans_, ansBool_, trueMap_, falseMap_, tmpExprs_, myTmpCons_, myRCont_, myVars_;
   putLineFeed();
   tmpExprs_ := union(tmpConstraint__, guard__, initConstraint__, initTmpConstraint__);
-  % ğŒ: tmpExprs_‚ÉŠÜ‚Ü‚ê‚é˜A‘±«§–ñ‚Í•K‚¸ initxlhs=prev(x) ‚ÌŠiD‚Å‚ ‚é
+  % æ¡ä»¶: tmpExprs_ã«å«ã¾ã‚Œã‚‹é€£ç¶šæ€§åˆ¶ç´„ã¯å¿…ãš initxlhs=prev(x) ã®æ ¼å¥½ã§ã‚ã‚‹
   myTmpCons_ := for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {} else {x};
   myRCont_ :=   for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {x} else {};
   myVars_ := union(csVariables__, tmpVariables__, guardVars__);
   
-  ans_:= checkConsistencyInterval(myTmpCons_, myRCont_, myVars_);
+  ans_:= checkConsistencyInterval(constraintStore__, myTmpCons_, myRCont_, parameterStore__, myVars_);
   debugWrite("ans_ in checkConsistencyInterval: ", ans_);
-  if(part(ans_, 1)=ICI_CONSISTENT___) then ans_:= {true, false}
-    else ans_:= {false, true};
+
+  ansBool_:= rlqe(part(ans_, 1) = ICI_CONSISTENT___);
+
+  if(part(ans_, 1)=ICI_UNKNOWN___) then ans_:= UNKNOWN
+  else if parameterStore__ <> {} then << 
+    trueMap_:= rlqe(ansBool_ and mymkand(parameterStore__));
+    falseMap_:= rlqe(not ansBool_ and mymkand(parameterStore__));
+
+    % TODO prevå¤‰æ•°ã®å‡¦ç†, t>0ã¨ã—ã¦tã®é™¤å»
+    trueMap_:= if(myHead(trueMap_) = and) then map(makeConsTuple, getArgsList(trueMap_)) else trueMap_;
+    falseMap_:= if(myHead(falseMap_) = and) then map(makeConsTuple, getArgsList(falseMap_)) else falseMap_;
+    ans_:= {trueMap_, falseMap_};
+  >> else if(ansBool_ = true) then ans_:= {true, false}
+  else ans_:= {false, true};
 
   debugWrite("ans_ in myCheckConsistencyInterval: ", ans_);
 
   return ans_;
 end;
 
-% 20110705 overconstraint___–³‚µ
+% 20110705 overconstraint___ç„¡ã—
 ICI_SOLVER_ERROR___:= 0;
 ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
-ICI_UNKNOWN___:= 3; % •s—vH
+ICI_UNKNOWN___:= 3; % ä¸è¦ï¼Ÿ
 
-% TODO parameterStore__‚ğ‰¼ˆø”‚É’Ç‰Á‚·‚é
-procedure checkConsistencyInterval(tmpCons_, rconts_, vars_)$
+% TODO parameterStore__ã‚’ä»®å¼•æ•°ã«è¿½åŠ ã™ã‚‹
+procedure checkConsistencyInterval(cons_, tmpCons_, rconts_, pCons_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_,
          initCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
@@ -2285,16 +2310,11 @@ begin;
          integTmp_, integTmpQE_, integTmpQEList_, integTmpEqualList_, integTmpIneqSolDNFList_, integTmpIneqSolDNF_, ans_;
   putLineFeed();
 
-  debugWrite("constraintStore__: ", constraintStore__);
-  debugWrite("csVariables__: ", csVariables__);
-  debugWrite("tmpCons_: ", tmpCons_);
-  debugWrite("rconts_: ", rconts_);
-  debugWrite("parameterStore__: ", parameterStore__);
-  debugWrite("vars_: ", vars_);
+  debugWrite("{cons_, tmpCons_, rconts_, pCons_, vars_}: ", {cons_, tmpCons_, rconts_, pCons_, vars_});
 
-  % Sin‚âCos‚ªŠÜ‚Ü‚ê‚éê‡‚Íƒ‰ƒvƒ‰ƒX•ÏŠ·•s‰Â”\‚È‚Ì‚ÅNDExprˆµ‚¢‚·‚é
-  % TODO:‚È‚ñ‚Æ‚©‚µ‚½‚¢‚Æ‚±‚ëH
-  splitExprsResult_ := splitExprs(removePrevCons(constraintStore__), csVariables__);
+  % Sinã‚„CosãŒå«ã¾ã‚Œã‚‹å ´åˆã¯ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›ä¸å¯èƒ½ãªã®ã§NDExpræ‰±ã„ã™ã‚‹
+  % TODO:ãªã‚“ã¨ã‹ã—ãŸã„ã¨ã“ã‚ï¼Ÿ
+  splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
   NDExprs_ := part(splitExprsResult_, 1);
   debugWrite("NDExprs_: ", NDExprs_);
   NDExprVars_:= part(splitExprsResult_, 2);
@@ -2309,7 +2329,7 @@ begin;
   DExprRconts_:= removeInitCons(rconts_);
   debugWrite("DExprRconts_: ", DExprRconts_);
   if(DExprRconts_ neq {}) then <<
-    prevVars_:= for each x in csVariables__ join if(isPrevVariable(x)) then {x} else {};
+    prevVars_:= for each x in vars_ join if(isPrevVariable(x)) then {x} else {};
     debugWrite("prevVars_: ", prevVars_);
     noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
     debugWrite("noPrevVars_: ", noPrevVars_);
@@ -2319,7 +2339,7 @@ begin;
     DExprVars_:= union(DExprVars_, DExprRcontsVars_);
   >>;
 
-  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(constraintStore__, x));
+  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(cons_, x));
   debugWrite("initCons_: ", initCons_);
   initVars_:= map(getInitVars, initCons_);
   debugWrite("initVars_: ", initVars_);
@@ -2339,7 +2359,7 @@ begin;
   debugWrite("tmpSol_:", tmpSol_);
 
 
-  % NDExpr_‚ğ˜A—§
+  % NDExpr_ã‚’é€£ç«‹
   if(union(tmpSol_, NDExprs_) neq {}) then <<
     debugWrite("union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))): ", 
                union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))));
@@ -2354,16 +2374,16 @@ begin;
   debugWrite("tmpSol_:", tmpSol_);
 
 
-  % tmpCons_‚ª‚È‚¢ê‡‚Í–³–µ‚‚Æ”»’è‚µ‚Ä—Ç‚¢
+  % tmpCons_ãŒãªã„å ´åˆã¯ç„¡çŸ›ç›¾ã¨åˆ¤å®šã—ã¦è‰¯ã„
   if(tmpCons_ = {}) then return {ICI_CONSISTENT___};
 
-  % TODO ‚±‚Ì‚Ö‚ñ‚©‚ç•ªŠò‚µ‚Ä•s“™®”»’èˆ—‚ğ’Ç‰Á‚·‚é‚©H
+  % TODO ã“ã®ã¸ã‚“ã‹ã‚‰åˆ†å²ã—ã¦ä¸ç­‰å¼åˆ¤å®šå‡¦ç†ã‚’è¿½åŠ ã™ã‚‹ã‹ï¼Ÿ
   % if(tmpCons_ = {} and parameterStore__ = {}) then return {ICI_CONSISTENT___};
 
   integTmp_:= sub(tmpSol_, tmpCons_);
   debugWrite("integTmp_: ", integTmp_);
 
-  % ‘O’ñFParseTree\’z‚É•ªŠ„‚³‚ê‚Ä‚¢‚é‚Í‚¸‚È‚Ì‚ÅƒK[ƒh‚Éor‚ª“ü‚é‚±‚Æ‚Íl‚¦‚È‚¢
+  % å‰æï¼šParseTreeæ§‹ç¯‰æ™‚ã«åˆ†å‰²ã•ã‚Œã¦ã„ã‚‹ã¯ãšãªã®ã§ã‚¬ãƒ¼ãƒ‰ã«orãŒå…¥ã‚‹ã“ã¨ã¯è€ƒãˆãªã„
   integTmpList_:= if(myHead(first(integTmp_))=and) then <<
     union(for each x in getArgsList(first(integTmp_)) join <<
       integTmpQE_:= rlqe(x);
@@ -2379,21 +2399,21 @@ begin;
   >>;
   debugWrite("integTmpList_: ", integTmpList_);
 
-  % ƒK[ƒhğŒ‘S‘Ì‚ªtrue‚Ìê‡
+  % ã‚¬ãƒ¼ãƒ‰æ¡ä»¶å…¨ä½“ãŒtrueã®å ´åˆ
   if(integTmpList_={}) then return {ICI_CONSISTENT___};
-  % ƒK[ƒhğŒ“à‚Éfalse‚ª“ü‚éê‡
+  % ã‚¬ãƒ¼ãƒ‰æ¡ä»¶å†…ã«falseãŒå…¥ã‚‹å ´åˆ
   if(not freeof(integTmpList_, false)) then return {ICI_INCONSISTENT___};
 
   integTmpEqualList_:= for each x in integTmpList_ join 
     if(myHead(x)=equal) then {x} 
     else {};
   debugWrite("integTmpEqualList_: ", integTmpEqualList_);
-  % ƒK[ƒhğŒ”»’è‚É‚¨‚¢‚Ä‚Íand‚Å‚Â‚È‚ª‚Á‚½“™®‚ª‚ ‚éê‡AŒ‹‰Ê‚Ífalse
+  % ã‚¬ãƒ¼ãƒ‰æ¡ä»¶åˆ¤å®šã«ãŠã„ã¦ã¯andã§ã¤ãªãŒã£ãŸç­‰å¼ãŒã‚ã‚‹å ´åˆã€çµæœã¯false
   if(integTmpEqualList_ neq {}) then return {ICI_INCONSISTENT___};
 
 
-  % ‚»‚ê‚¼‚ê‚Ì•s“™®‚É‚Â‚¢‚ÄA1Ÿ‚É‚µ‚ÄDNF‚É‚µAintegTmpIneqSolDNFList_‚Æ‚·‚éB
-  % ’ˆÓF‚»‚ê‚¼‚ê‚Ì—v‘fŠÔ‚Íand‚ÌŠÖŒW‚Å‚ ‚é
+  % ãã‚Œãã‚Œã®ä¸ç­‰å¼ã«ã¤ã„ã¦ã€1æ¬¡ã«ã—ã¦DNFã«ã—ã€integTmpIneqSolDNFList_ã¨ã™ã‚‹ã€‚
+  % æ³¨æ„ï¼šãã‚Œãã‚Œã®è¦ç´ é–“ã¯andã®é–¢ä¿‚ã§ã‚ã‚‹
   integTmpIneqSolDNFList_:= union(for each x in (integTmpList_ \ integTmpEqualList_) collect <<
                               ineqSolDNF_:= exIneqSolve(x);
                               debugWrite("ineqSolDNF_: ", ineqSolDNF_);
@@ -2407,9 +2427,9 @@ begin;
   integTmpIneqSolDNF_:= myFoldLeft(addCondDNFToCondDNF, {{{t, greaterp, 0}}}, integTmpIneqSolDNFList_);
   debugWrite("integTmpIneqSolDNF_:", integTmpIneqSolDNF_);
 
-  % •s“™®‚Ìê‡A‚±‚±‚Å‰‚ß‚Ä–µ‚‚ªŒ©‚Â‚©‚èAintegTmpIneqSolDNF_‚ªfalse‚É‚È‚é‚±‚Æ‚ª‚ ‚é
+  % ä¸ç­‰å¼ã®å ´åˆã€ã“ã“ã§åˆã‚ã¦çŸ›ç›¾ãŒè¦‹ã¤ã‹ã‚Šã€integTmpIneqSolDNF_ãŒfalseã«ãªã‚‹ã“ã¨ãŒã‚ã‚‹
   if(isFalseDNF(integTmpIneqSolDNF_)) then return {ICI_INCONSISTENT___}
-  % true‚É‚È‚Á‚½‚ç–³–µ‚
+  % trueã«ãªã£ãŸã‚‰ç„¡çŸ›ç›¾
   else if(isTrueDNF(integTmpIneqSolDNF_)) then return {ICI_CONSISTENT___};
 
 
@@ -2437,12 +2457,12 @@ begin;
     debugWrite("orArgsAnsList_: ", orArgsAnsList_);
     infCheckAns_:= if(orArgsAnsList_={false}) then false else true;
   >> else if(isEqualConj(conj_)) then <<
-    % Equal‚ğ•\‚·˜_—Ï‚Ìê‡
+    % Equalã‚’è¡¨ã™è«–ç†ç©ã®å ´åˆ
     infCheckAns_:= false;
   >> else <<
     lbTupleList_:= getLbTupleListFromConj(conj_);
-    % ‘O’ñF‰ºŒÀ‚Í1‚Â
-    % TODOFƒpƒ‰ƒƒ^‚É‚æ‚é‰ºŒÀ‚à‚ ‚éê‡‚Ö‚Ì‘Î‰
+    % å‰æï¼šä¸‹é™ã¯1ã¤
+    % TODOï¼šãƒ‘ãƒ©ãƒ¡ã‚¿ã«ã‚ˆã‚‹ä¸‹é™ã‚‚ã‚ã‚‹å ´åˆã¸ã®å¯¾å¿œ
     lbTuple_:= first(lbTupleList_);
     if((getRelopFromTuple(lbTuple_)=greaterp) and (getValueFromTuple(lbTuple_)=0)) then 
       infCheckAns_:= true
@@ -2454,8 +2474,8 @@ begin;
   return infCheckAns_;
 end;
 
-% o—ÍF‚ğ•\‚·DNF‚ÆğŒ‚Ì‘giTCj‚ÌƒŠƒXƒg
-% TODOFERRORˆ—
+% å‡ºåŠ›ï¼šæ™‚åˆ»ã‚’è¡¨ã™DNFã¨æ¡ä»¶ã®çµ„ï¼ˆTCï¼‰ã®ãƒªã‚¹ãƒˆ
+% TODOï¼šERRORå‡¦ç†
 procedure checkInfMinTimeDNF(tDNF_, condDNF_)$
 begin;
   scalar minTCList_, conj_, argsAnsTCListList_, minValue_, compareTCListList_, lbTuplelist_, ubTupleList_,
@@ -2472,10 +2492,10 @@ begin;
     debugWrite("argsAnsTCListList_: ", argsAnsTCListList_);
     minTCList_:= myFoldLeft(compareMinTimeList, first(argsAnsTCListList_), rest(argsAnsTCListList_));
   >> else if(isEqualConj(conj_)) then <<
-    % Equal‚ğ•\‚·˜_—Ï‚Ìê‡
+    % Equalã‚’è¡¨ã™è«–ç†ç©ã®å ´åˆ
     if(not hasParameter(conj_)) then minTCList_:= {{getValueFromTuple(first(conj_)), condDNF_}}
     else <<
-      % ƒpƒ‰ƒƒ^‚Ìê‡A‚»‚Ì’l‚ª0ˆÈ‰º‚È‚ç‚ÎŒ‹‰Ê‚ÍINFINITY‚É‚È‚é
+      % ãƒ‘ãƒ©ãƒ¡ã‚¿ã®å ´åˆã€ãã®å€¤ãŒ0ä»¥ä¸‹ãªã‚‰ã°çµæœã¯INFINITYã«ãªã‚‹
       minValue_:= getValueFromTuple(first(conj_));
       checkDNF_:= addCondTupleToCondDNF({minValue_, greaterp, 0}, condDNF_);
       debugWrite("checkDNF_: ", checkDNF_);
@@ -2494,9 +2514,9 @@ begin;
   >> else <<
     if(not hasParameter(conj_)) then minTCList_:= {{getValueFromTuple(first(getLbTupleListFromConj(conj_))), condDNF_}}
     else << 
-      % ƒpƒ‰ƒƒ^‚Ì“ü‚Á‚½‰ºŒÀ‚à‚ ‚éê‡
-      % ‘O’ñFcondDNF_“à‚Ì’è”‚Ìí—Ş‚Í1‚Â‚Ü‚ÅH
-      % TODOF‚È‚ñ‚Æ‚©‚·‚é
+      % ãƒ‘ãƒ©ãƒ¡ã‚¿ã®å…¥ã£ãŸä¸‹é™ã‚‚ã‚ã‚‹å ´åˆ
+      % å‰æï¼šcondDNF_å†…ã®å®šæ•°ã®ç¨®é¡ã¯1ã¤ã¾ã§ï¼Ÿ
+      % TODOï¼šãªã‚“ã¨ã‹ã™ã‚‹
       lbTupleList_:= getLbTupleListFromConj(conj_);
       ubTupleList_:= conj_ \ lbTupleList_;
       lbParamTupleList_:= for each x in lbTuplelist_ join if(hasParameter(x)) then {x} else {};
@@ -2510,8 +2530,8 @@ begin;
 
 
       minTCList_:= {};
-      % ƒpƒ‰ƒƒ^‚ğŠÜ‚Ş‰ºŒÀ‚ªlbValue_‚æ‚è‘å‚«‚¢‚©‚Ç‚¤‚©‚ğ’²‚×‚é
-      % TODOFƒpƒ‰ƒƒ^‚ğŠÜ‚Ş‰ºŒÀ“¯m‚Ì‘å¬”»’è
+      % ãƒ‘ãƒ©ãƒ¡ã‚¿ã‚’å«ã‚€ä¸‹é™ãŒlbValue_ã‚ˆã‚Šå¤§ãã„ã‹ã©ã†ã‹ã‚’èª¿ã¹ã‚‹
+      % TODOï¼šãƒ‘ãƒ©ãƒ¡ã‚¿ã‚’å«ã‚€ä¸‹é™åŒå£«ã®å¤§å°åˆ¤å®š
       debugWrite("lbParamTupleList_: ", lbParamTupleList_);
       debugWrite("lbValue_: ", lbValue_);
       for each x in lbParamTupleList_ do <<
@@ -2537,7 +2557,7 @@ begin;
 
 
       debugWrite("========== check param-ub ==========", " ");
-      % ƒpƒ‰ƒƒ^‚ğŠÜ‚ŞãŒÀ‚Í‰ºŒÀˆÈã‚Å‚È‚­‚Ä‚Í‚È‚ç‚È‚¢
+      % ãƒ‘ãƒ©ãƒ¡ã‚¿ã‚’å«ã‚€ä¸Šé™ã¯ä¸‹é™ä»¥ä¸Šã§ãªãã¦ã¯ãªã‚‰ãªã„
       debugWrite("ubParamTupleList_: ", ubParamTupleList_);
       if(minTCList_ neq {}) then <<
         for each x in ubParamTupleList_ do <<
@@ -2547,15 +2567,15 @@ begin;
               debugWrite("checkDNF_: ", checkDNF_);
               if(not isFalseDNF(checkDNF_)) then {y} else {}
             >> else <<
-              % ‰ºŒÀ‚ªINFINITY‚Ì‚Æ‚«i‚ ‚é“Á’è‚Ì”ÍˆÍ‚Ìƒpƒ‰ƒƒ^‚É‚æ‚Á‚Ä—£U•Ï‰»‚ª‹N‚«‚È‚¢ƒpƒ^[ƒ“j‚Íã‰ºŒÀŠm”F•s—v
-              % TODOF–{“–H
+              % ä¸‹é™ãŒINFINITYã®ã¨ãï¼ˆã‚ã‚‹ç‰¹å®šã®ç¯„å›²ã®ãƒ‘ãƒ©ãƒ¡ã‚¿ã«ã‚ˆã£ã¦é›¢æ•£å¤‰åŒ–ãŒèµ·ããªã„ãƒ‘ã‚¿ãƒ¼ãƒ³ï¼‰ã¯ä¸Šä¸‹é™ç¢ºèªä¸è¦
+              % TODOï¼šæœ¬å½“ï¼Ÿ
               {y}
             >>
           >>);
         >>;
         if(minTCList_={}) then minTCList_:= {{INFINITY, condDNF_}};
       >> else <<
-        % ƒpƒ‰ƒƒ^‚Ì‰ºŒÀ‚ª‚È‚©‚Á‚½ilbParamTupleList_‚ª‹óW‡j‚Æ‚«‚ÍlbValue_‚Æ‚¾‚¯”äŠr
+        % ãƒ‘ãƒ©ãƒ¡ã‚¿ã®ä¸‹é™ãŒãªã‹ã£ãŸï¼ˆlbParamTupleList_ãŒç©ºé›†åˆï¼‰ã¨ãã¯lbValue_ã¨ã ã‘æ¯”è¼ƒ
         for each x in ubParamTupleList_ do <<
           checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), geq, lbValue_}, condDNF_);
           if(not isFalseDNF(checkDNF_) and checkOrderingFormula(lbValue_ >0)) then minTCList_:= {{lbValue_, condDNF_}}
@@ -2587,8 +2607,8 @@ begin;
   debugWrite("vars_: ", vars_);
   debugWrite("maxTime_: ", maxTime_);
 
-  % Sin‚âCos‚ªŠÜ‚Ü‚ê‚éê‡‚Íƒ‰ƒvƒ‰ƒX•ÏŠ·•s‰Â”\‚È‚Ì‚ÅNDExprˆµ‚¢‚·‚é
-  % TODO:‚È‚ñ‚Æ‚©‚µ‚½‚¢‚Æ‚±‚ëH
+  % Sinã‚„CosãŒå«ã¾ã‚Œã‚‹å ´åˆã¯ãƒ©ãƒ—ãƒ©ã‚¹å¤‰æ›ä¸å¯èƒ½ãªã®ã§NDExpræ‰±ã„ã™ã‚‹
+  % TODO:ãªã‚“ã¨ã‹ã—ãŸã„ã¨ã“ã‚ï¼Ÿ
   splitExprsResult_ := splitExprs(removePrevCons(constraintStore__), csVariables__);
   NDExprs_ := part(splitExprsResult_, 1);
   debugWrite("NDExprs_: ", NDExprs_);
@@ -2600,11 +2620,11 @@ begin;
   debugWrite("DExprVars_: ", DExprVars_);
   otherExprs_:= union(part(splitExprsResult_, 5), parameterStore__);
   debugWrite("otherExprs_: ", otherExprs_);
-  % DNFŒ`®‚É‚·‚é
-  % ‹óW‡‚È‚çA{{true}}‚Æ‚µ‚Äˆµ‚¤itrue‚ğ•\‚·DNFj
+  % DNFå½¢å¼ã«ã™ã‚‹
+  % ç©ºé›†åˆãªã‚‰ã€{{true}}ã¨ã—ã¦æ‰±ã†ï¼ˆtrueã‚’è¡¨ã™DNFï¼‰
   if(otherExprs_={}) then paramCondDNF_:= {{true}}
   else <<
-    % paramCondDNF_:= myFoldLeft((addCondDNFToCondDNF(#1, exIneqSolve(#2)))&, {{true}}, otherExprs_);‚ğÀŒ»
+    % paramCondDNF_:= myFoldLeft((addCondDNFToCondDNF(#1, exIneqSolve(#2)))&, {{true}}, otherExprs_);ã‚’å®Ÿç¾
     tmpIneqSolDNF_:= {{true}};
     for i:=1 : length(otherExprs_) do <<
       tmpIneqSolDNF_:= addCondDNFToCondDNF(tmpIneqSolDNF_, exIneqSolve(part(otherExprs_, i)));
@@ -2644,7 +2664,7 @@ begin;
   debugWrite("tmpSol_:", tmpSol_);
 
 
-  % NDExpr_‚ğ˜A—§
+  % NDExpr_ã‚’é€£ç«‹
   if(union(tmpSol_, NDExprs_) neq {}) then <<
     debugWrite("union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))): ", 
                union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))));
@@ -2713,9 +2733,9 @@ begin;
   ans_:= union(for each x in comparedMinTCondList_ collect <<
     minTTime_:= getTimeFromTC(x);
     minTCondDNF_:= getCondDNFFromTC(x);
-    % Cond‚ªtrue‚Ìê‡‚Í‹óW‡‚Æ‚µ‚Äˆµ‚¤
+    % CondãŒtrueã®å ´åˆã¯ç©ºé›†åˆã¨ã—ã¦æ‰±ã†
     if(isTrueDNF(minTCondDNF_)) then minTCondDNF_:= {{}};
-    % ‰‰Zq•”•ª‚ğƒR[ƒh‚É’u‚«Š·‚¦‚é
+    % æ¼”ç®—å­éƒ¨åˆ†ã‚’ã‚³ãƒ¼ãƒ‰ã«ç½®ãæ›ãˆã‚‹
     minTCondDNF_:= for each conj in minTCondDNF_ collect
      for each term in conj collect {getVarNameFromTuple(term), getExprCode(getRelopFromTuple(term)), getValueFromTuple(term)};
     maxTimeFlag_:= if(minTTime_ neq maxTime_) then 0 else 1;
@@ -2735,12 +2755,12 @@ begin;
   debugWrite("integAsk_: ", integAsk_);
   debugWrite("condDNF_: ", condDNF_);
 
-  % t>0‚Æ˜A—§‚µ‚Äfalse‚É‚È‚é‚æ‚¤‚Èê‡‚ÍMinTime‚ğl‚¦‚é•K—v‚ª‚È‚¢
+  % t>0ã¨é€£ç«‹ã—ã¦falseã«ãªã‚‹ã‚ˆã†ãªå ´åˆã¯MinTimeã‚’è€ƒãˆã‚‹å¿…è¦ãŒãªã„
   if(rlqe(integAsk_ and t>0) = false) then return {{INFINITY, condDNF_}};
 
 
-  % ‘O’ñFParseTree\’z‚É•ªŠ„‚³‚ê‚Ä‚¢‚é‚Í‚¸‚È‚Ì‚ÅƒK[ƒh‚Éor‚ª“ü‚é‚±‚Æ‚Íl‚¦‚È‚¢
-  % TODOFÊg‚ÌŒ`‚¾‚Æ“ü‚é‚±‚Æ‚ª‚ ‚é‚Ì‚Å‚ÍHH
+  % å‰æï¼šParseTreeæ§‹ç¯‰æ™‚ã«åˆ†å‰²ã•ã‚Œã¦ã„ã‚‹ã¯ãšãªã®ã§ã‚¬ãƒ¼ãƒ‰ã«orãŒå…¥ã‚‹ã“ã¨ã¯è€ƒãˆãªã„
+  % TODOï¼šÂ¬gã®å½¢ã ã¨å…¥ã‚‹ã“ã¨ãŒã‚ã‚‹ã®ã§ã¯ï¼Ÿï¼Ÿ
   integAskList_:= if(myHead(integAsk_)=and) then <<
     union(for each x in getArgsList(integAsk_) join <<
       integAskQE_:= rlqe(x);
@@ -2756,14 +2776,14 @@ begin;
   >>;
   debugWrite("integAskList_: ", integAskList_);
 
-  % ƒK[ƒhğŒ‘S‘Ì‚ªtrue‚Ìê‡‚ÆƒK[ƒhğŒ“à‚Éfalse‚ª“ü‚éê‡‚ÍƒGƒ‰[
+  % ã‚¬ãƒ¼ãƒ‰æ¡ä»¶å…¨ä½“ãŒtrueã®å ´åˆã¨ã‚¬ãƒ¼ãƒ‰æ¡ä»¶å†…ã«falseãŒå…¥ã‚‹å ´åˆã¯ã‚¨ãƒ©ãƒ¼
   if(integAskList_={error} or not freeof(integAskList_, false)) then return {error};
 
 %  integAskQE_:= rlqe(integAsk_);
 %  debugWrite("integAskQE_: ", integAskQE_);
 %
-%  %%%%%%%%%%%% TODO:‚±‚Ì•Ó‚©‚çA%%%%%%%%%%%%%%
-%  % ‚Ü‚¸Aand‚Å‚Â‚È‚ª‚Á‚½tmp§–ñ‚ğƒŠƒXƒg‚É•ÏŠ·
+%  %%%%%%%%%%%% TODO:ã“ã®è¾ºã‹ã‚‰ã€%%%%%%%%%%%%%%
+%  % ã¾ãšã€andã§ã¤ãªãŒã£ãŸtmpåˆ¶ç´„ã‚’ãƒªã‚¹ãƒˆã«å¤‰æ›
 %  if(myHead(integAskQE_)=and) then integAskList_:= getArgsList(integAskQE_)
 %  else integAskList_:= {integAskQE_};
 %  debugWrite("integAskList_:", integAskList_);
@@ -2778,15 +2798,15 @@ begin;
                                 ineqSolDNF_:= exIneqSolve(x);
                                 debugWrite("ineqSolDNF_: ", ineqSolDNF_);
                                 if(isFalseDNF(ineqSolDNF_)) then {{}}
-                                else if(isTrueDNF(ineqSolDNF_)) then {{error}} % ©
+                                else if(isTrueDNF(ineqSolDNF_)) then {{error}} % â†
                                 else ineqSolDNF_
                               >>
                             );
   debugWrite("integAskIneqSolDNFList_:", integAskIneqSolDNFList_);
-  % unknown‚ªŠÜ‚Ü‚ê‚½‚çƒGƒ‰[‚ğ•Ô‚·
-  % TODOF—vŒŸ“¢
+  % unknownãŒå«ã¾ã‚ŒãŸã‚‰ã‚¨ãƒ©ãƒ¼ã‚’è¿”ã™
+  % TODOï¼šè¦æ¤œè¨
   if(not freeof(integAskIneqSolDNFList_, unknown)) then return {error}
-  % true‚É‚È‚Á‚½‚çƒGƒ‰[
+  % trueã«ãªã£ãŸã‚‰ã‚¨ãƒ©ãƒ¼
   else if(not freeof(integAskIneqSolDNFList_, error)) then return {error};
 
 
@@ -2795,17 +2815,17 @@ begin;
   debugWrite("========== end add t>0 ==========", " ");
   debugWrite("integAskIneqSolDNF_:", integAskIneqSolDNF_);
 
-  % •s“™®‚Ìê‡A‚±‚±‚Å‰‚ß‚Ä–µ‚‚ªŒ©‚Â‚©‚èAintegAskIneqSolDNF_‚ªfalse‚É‚È‚é‚±‚Æ‚ª‚ ‚é
+  % ä¸ç­‰å¼ã®å ´åˆã€ã“ã“ã§åˆã‚ã¦çŸ›ç›¾ãŒè¦‹ã¤ã‹ã‚Šã€integAskIneqSolDNF_ãŒfalseã«ãªã‚‹ã“ã¨ãŒã‚ã‚‹
   if(isFalseDNF(integAskIneqSolDNF_)) then return {{INFINITY, condDNF_}};
 
-  %%%%%%%%%%%% TODO:‚±‚Ì•Ó‚Ü‚Å‚ğ1‚Â‚Ìˆ—‚É‚Ü‚Æ‚ß‚½‚¢%%%%%%%%%%%%
+  %%%%%%%%%%%% TODO:ã“ã®è¾ºã¾ã§ã‚’1ã¤ã®å‡¦ç†ã«ã¾ã¨ã‚ãŸã„%%%%%%%%%%%%
 
 
   minTCList_:= checkInfMinTimeDNF(integAskIneqSolDNF_, condDNF_);
   debugWrite("minTCList_ in findMinTime: ", minTCList_);
   debugWrite("=================== end of findMinTime ====================", " ");
 
-  % ERROR‚ª•Ô‚Á‚Ä‚¢‚½‚çerror
+  % ERRORãŒè¿”ã£ã¦ã„ãŸã‚‰error
   if(not freeof(minTCList_, ERROR)) then return {error};
   return minTCList_;
 end;
@@ -2818,7 +2838,7 @@ begin;
   debugWrite("candidateTCList_: ", candidateTCList_);
   debugWrite("newTCList_: ", newTCList_);
 
-  %ret_:= myFoldLeft((makeMapAndUnion(candidateTCList_, #1, #2))&, {}, newTCList_);‚ğÀŒ»
+  %ret_:= myFoldLeft((makeMapAndUnion(candidateTCList_, #1, #2))&, {}, newTCList_);ã‚’å®Ÿç¾
   tmpRet_:= {};
   for i:=1 : length(newTCList_) do <<
     debugWrite("in loop", " ");
@@ -2846,7 +2866,7 @@ begin;
   debugWrite("retTCList_: ", retTCList_);
   debugWrite("newTC_: ", newTC_);
 
-  % Map‚Å‚Í‚È‚­AJoin‚ğg‚¤•û‚ª³‚µ‚»‚¤‚È‚Ì‚Å‚»‚¤‚µ‚Ä‚¢‚é
+  % Mapã§ã¯ãªãã€Joinã‚’ä½¿ã†æ–¹ãŒæ­£ã—ãã†ãªã®ã§ãã†ã—ã¦ã„ã‚‹
 %  comparedList_:= for each x in candidateTCList_ collect compareParamTime(newTC_, x, MIN);
   comparedList_:= for each x in candidateTCList_ join compareParamTime(newTC_, x, MIN);
   debugWrite("comparedList_ in makeMapAndUnion: ", comparedList_);
@@ -2871,24 +2891,24 @@ begin;
   TC1Cond_:= getCondDNFFromTC(TC1_);
   TC2Time_:= getTimeFromTC(TC2_);
   TC2Cond_:= getCondDNFFromTC(TC2_);
-  % ‚»‚ê‚¼‚ê‚ÌğŒ•”•ª‚É‚Â‚¢‚Ä˜_—Ï‚ğæ‚èAfalse‚È‚ç‹óW‡
+  % ãã‚Œãã‚Œã®æ¡ä»¶éƒ¨åˆ†ã«ã¤ã„ã¦è«–ç†ç©ã‚’å–ã‚Šã€falseãªã‚‰ç©ºé›†åˆ
   intersectionCondDNF_:= addCondDNFToCondDNF(TC1Cond_, TC2Cond_);
   debugWrite("intersectionCondDNF_: ", intersectionCondDNF_);
   if(isFalseDNF(intersectionCondDNF_)) then return {};
 
-  % ğŒ‚Ì‹¤’Ê•”•ª‚ÆŠÔ‚ÉŠÖ‚·‚éğŒ‚Æ‚Ì˜_—Ï‚ğæ‚é
-  % TC1Time_ƒTC2Time_‚Æ‚¢‚¤ğŒ
+  % æ¡ä»¶ã®å…±é€šéƒ¨åˆ†ã¨æ™‚é–“ã«é–¢ã™ã‚‹æ¡ä»¶ã¨ã®è«–ç†ç©ã‚’å–ã‚‹
+  % TC1Time_ï¼œTC2Time_ã¨ã„ã†æ¡ä»¶
   debugWrite("========== make TC1LessTC2CondDNF_ ==========", " ");
   TC1LessTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, lessp, TC2Time_}, intersectionCondDNF_);
   debugWrite("TC1LessTC2CondDNF_: ", TC1LessTC2CondDNF_);
-  % TC1Time_†TC2Time_‚Æ‚¢‚¤ğŒ
+  % TC1Time_â‰§TC2Time_ã¨ã„ã†æ¡ä»¶
   debugWrite("========== make TC1GeqTC2CondDNF_ ==========", " ");
   TC1GeqTC2CondDNF_:= addCondTupleToCondDNF({TC1Time_, geq, TC2Time_}, intersectionCondDNF_);
   debugWrite("TC1GeqTC2CondDNF_: ", TC1GeqTC2CondDNF_);
 
 
   retTCList_:= {};
-  % ‚»‚ê‚¼‚êAfalse‚Å‚È‚¯‚ê‚ÎretTCList_‚É’Ç‰Á
+  % ãã‚Œãã‚Œã€falseã§ãªã‘ã‚Œã°retTCList_ã«è¿½åŠ 
   if(not isFalseDNF(TC1LessTC2CondDNF_)) then 
     if(mode_=MIN) then retTCList_:= cons({TC1Time_, TC1LessTC2CondDNF_}, retTCList_)
     else if(mode_=MAX) then retTCList_:= cons({TC2Time_, TC1LessTC2CondDNF_}, retTCList_);
@@ -2900,7 +2920,7 @@ begin;
   return retTCList_;
 end;
 
-% –¢g—p‚©‚Â•¶–@ƒGƒ‰[‚Ì‚½‚ßƒRƒƒ“ƒgƒAƒEƒg
+% æœªä½¿ç”¨ã‹ã¤æ–‡æ³•ã‚¨ãƒ©ãƒ¼ã®ãŸã‚ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆ
 %procedure solveParameterIneq(ineqList_)$
 %begin;
 %  scalar paramNameList_, paramName_, ret_;
@@ -2908,8 +2928,8 @@ end;
 %  paramNameList_:= collectParameters(ineqList_);
 %  debugWrite("paramNameList_: ", paramNameList_);
 %
-%  % 2í—ŞˆÈã‚Ìƒpƒ‰ƒƒ^‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚Æˆµ‚¦‚È‚¢
-%  % TODOF‚È‚ñ‚Æ‚©‚·‚éH
+%  % 2ç¨®é¡ä»¥ä¸Šã®ãƒ‘ãƒ©ãƒ¡ã‚¿ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã¨æ‰±ãˆãªã„
+%  % TODOï¼šãªã‚“ã¨ã‹ã™ã‚‹ï¼Ÿ
 %  if(length(paramNameList_)>1) then return ERROR;
 %  paramName_:= first(paramNameList_);
 %
@@ -2935,7 +2955,7 @@ end;
 
 
 
-%TODO ƒGƒ‰[ŒŸoi“K—p‚µ‚½Œ‹‰ÊÀ”ˆÈŠO‚É‚È‚Á‚½ê‡“™j
+%TODO ã‚¨ãƒ©ãƒ¼æ¤œå‡ºï¼ˆé©ç”¨ã—ãŸçµæœå®Ÿæ•°ä»¥å¤–ã«ãªã£ãŸå ´åˆç­‰ï¼‰
 procedure applyTime2Expr(expr_, time_)$
 begin;
   scalar appliedExpr_;
@@ -2947,8 +2967,8 @@ begin;
   return {1, appliedExpr_};
 end;
 
-% ‘O’ñFOr‚Å‚Â‚È‚ª‚Á‚Ä‚Í‚¢‚È‚¢
-% TODOFexDSolve‚ğŠÜ‚ß‚½Às‚ğ‚·‚é
+% å‰æï¼šOrã§ã¤ãªãŒã£ã¦ã¯ã„ãªã„
+% TODOï¼šexDSolveã‚’å«ã‚ãŸå®Ÿè¡Œã‚’ã™ã‚‹
 procedure convertCSToVMInterval()$
 begin;
   scalar consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
@@ -2991,11 +3011,11 @@ begin;
   consTmpRet_:= applyPrevCons(union(constraintStore__, tmpSol_), {});    
   debugWrite("consTmpRet_: ", consTmpRet_);
 
-  % ®‚ğ{(•Ï”–¼), (ŠÖŒW‰‰ZqƒR[ƒh), (’l‚Ìƒtƒ‹•¶š—ñ)}‚ÌŒ`®‚É•ÏŠ·‚·‚é
+  % å¼ã‚’{(å¤‰æ•°å), (é–¢ä¿‚æ¼”ç®—å­ã‚³ãƒ¼ãƒ‰), (å€¤ã®ãƒ•ãƒ«æ–‡å­—åˆ—)}ã®å½¢å¼ã«å¤‰æ›ã™ã‚‹
   consRet_:= map(makeConsTuple, consTmpRet_);
   paramDNFList_:= map(exIneqSolve, parameterStore__);
   paramRet_:= for each x in paramDNFList_ collect <<
-    % 1‚Â‚Ì€‚É‚È‚Á‚Ä‚¢‚é‚Í‚¸
+    % 1ã¤ã®é …ã«ãªã£ã¦ã„ã‚‹ã¯ãš
     tuple_:= first(first(x));
     {getVarNameFromTuple(tuple_), getExprCode(getRelopFromTuple(tuple_)), getValueFromTuple(tuple_)}
   >>;
@@ -3007,8 +3027,8 @@ begin;
   return ret_;
 end;
 
-% vcs_math_source‚É‚¨‚¯‚égetTimeVars
-% convertCSToVMInterval‚Ìret‚©‚ç‹L†’è”‚ğæ‚èœ‚­
+% vcs_math_sourceã«ãŠã‘ã‚‹getTimeVars
+% convertCSToVMIntervalã®retã‹ã‚‰è¨˜å·å®šæ•°ã‚’å–ã‚Šé™¤ã
 procedure getUsrVars(ret_, vars_);
 begin;
   % TODO
@@ -3022,9 +3042,9 @@ begin;
   return if((for each x in vars_ sum if(x = var_) then 1 else 0) > 0) then t else nil;
 end;
 
-% integrateCalc‚ÅtmpSol_‚ª’è‚Ü‚Á‚½Œã‚Ìˆ—‚ğƒRƒsƒy‚µ–ß‚è’l‚ğ®Œ`
-% REDUCEVCS::calculate_next_PP_time()‚©‚çŒÄ‚Ño‚³‚ê‚é
-% –ß‚è’l‚ÌŒ`®: {time_t, {}(parameter_map_t), true(bool)},...}
+% integrateCalcã§tmpSol_ãŒå®šã¾ã£ãŸå¾Œã®å‡¦ç†ã‚’ã‚³ãƒ”ãƒšã—æˆ»ã‚Šå€¤ã‚’æ•´å½¢
+% REDUCEVCS::calculate_next_PP_time()ã‹ã‚‰å‘¼ã³å‡ºã•ã‚Œã‚‹
+% æˆ»ã‚Šå€¤ã®å½¢å¼: {time_t, {}(parameter_map_t), true(bool)},...}
 procedure calculateNextPointPhaseTime(maxTime_, discCause_);
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_, paramCondDNF_,
@@ -3051,11 +3071,11 @@ begin;
   DExprs_ := part(splitExprsResult_, 3);
   DExprVars_ := part(splitExprsResult_, 4);
   otherExprs_:= union(part(splitExprsResult_, 5), parameterStore__);
-  % DNFŒ`®‚É‚·‚é
-  % ‹óW‡‚È‚çA{{true}}‚Æ‚µ‚Äˆµ‚¤itrue‚ğ•\‚·DNFj
+  % DNFå½¢å¼ã«ã™ã‚‹
+  % ç©ºé›†åˆãªã‚‰ã€{{true}}ã¨ã—ã¦æ‰±ã†ï¼ˆtrueã‚’è¡¨ã™DNFï¼‰
   if(otherExprs_={}) then paramCondDNF_:= {{true}}
   else <<
-    % paramCondDNF_:= myFoldLeft((addCondDNFToCondDNF(#1, exIneqSolve(#2)))&, {{true}}, otherExprs_);‚ğÀŒ»
+    % paramCondDNF_:= myFoldLeft((addCondDNFToCondDNF(#1, exIneqSolve(#2)))&, {{true}}, otherExprs_);ã‚’å®Ÿç¾
     tmpIneqSolDNF_:= {{true}};
     for i:=1 : length(otherExprs_) do <<
       tmpIneqSolDNF_:= addCondDNFToCondDNF(tmpIneqSolDNF_, exIneqSolve(part(otherExprs_, i)));
@@ -3065,7 +3085,7 @@ begin;
   debugWrite("paramCondDNF_: ", paramCondDNF_);
 
 
-  % TODO DExprs_, NDExprs_‚Ìˆ—
+  % TODO DExprs_, NDExprs_ã®å‡¦ç†
   tmpDiscCause_:= union(sub(constraintStore__, discCause_));
   debugWrite("tmpDiscCause_:", tmpDiscCause_);
 
@@ -3078,11 +3098,11 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚É’¼Ú‚ÍŠÖŒW‚È‚¢‚ªˆ—Œn‚Ì“s‡‚Å•K—v‚ÈŠÖ”
+% ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã«ç›´æ¥ã¯é–¢ä¿‚ãªã„ãŒå‡¦ç†ç³»ã®éƒ½åˆã§å¿…è¦ãªé–¢æ•°
 %---------------------------------------------------------------
 
-% ƒfƒoƒbƒO—pƒƒbƒZ[ƒWo—ÍŠÖ”
-% TODO:”CˆÓ’·‚Ìˆø”‚É‘Î‰‚µ‚½‚¢
+% ãƒ‡ãƒãƒƒã‚°ç”¨ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å‡ºåŠ›é–¢æ•°
+% TODO:ä»»æ„é•·ã®å¼•æ•°ã«å¯¾å¿œã—ãŸã„
 procedure debugWrite(arg1_, arg2_)$
   if(optUseDebugPrint__) then <<
     write(arg1_, arg2_);
@@ -3091,8 +3111,8 @@ procedure debugWrite(arg1_, arg2_)$
     1$
   >>;
 
-% ŠÖ”ŒÄ‚Ño‚µ‚Íredeval‚ğŒo—R‚³‚¹‚é
-% <redeval> end:‚ÌŸ‚ªÅIs
+% é–¢æ•°å‘¼ã³å‡ºã—ã¯redevalã‚’çµŒç”±ã•ã›ã‚‹
+% <redeval> end:ã®æ¬¡ãŒæœ€çµ‚è¡Œ
 symbolic procedure redeval(foo_)$
 begin scalar ans_;
 
@@ -3109,12 +3129,12 @@ begin;
 end;
 
 %---------------------------------------------------------------
-% Œ»“_‚Å‚Íg—p‚µ‚Ä‚¢‚È‚¢‚ª—L—p‚»‚¤‚ÈŠÖ”
+% ç¾æ™‚ç‚¹ã§ã¯ä½¿ç”¨ã—ã¦ã„ãªã„ãŒæœ‰ç”¨ãã†ãªé–¢æ•°
 %---------------------------------------------------------------
 
 procedure bball_out()$
-% gnuplot—po—Í, –¢Š®¬
-% ³‹K•\Œ» {|}|\n
+% gnuplotç”¨å‡ºåŠ›, æœªå®Œæˆ
+% æ­£è¦è¡¨ç¾ {|}|
 <<
 off nat; 
 out "out";
@@ -3147,6 +3167,7 @@ end;
 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%
 
-symbolic redeval '(putLineFeed);
+% ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã®åˆæœŸåŒ–ã¨putLineFeed
+symbolic redeval '(resetConstraintStore);
 
 ;end;

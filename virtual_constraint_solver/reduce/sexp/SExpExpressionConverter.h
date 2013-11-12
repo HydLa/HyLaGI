@@ -55,6 +55,12 @@ public:
    */
   static std::string to_string(const_tree_iter_t iter, bool isFirst = true);
 
+  /** 
+   * S式とってstringに変換する
+   * 数式中の値には32bitの上限を超す可能性があるため使用しないこと
+   */
+  static int to_int(const_tree_iter_t iter);
+
   /** S式とってvalue_tに変換する */
   static value_t to_value(const_tree_iter_t iter);
 
