@@ -39,38 +39,18 @@ struct SExpGrammar : public grammar<SExpGrammar> {
     definition(const SExpGrammar& self) {
       // 開始
       data = +(s_expression);
-
       // S式
       s_expression = no_node_d[!+ch_p(' ')] >> (number | identifier | string | list) >> no_node_d[!+ch_p(' ')];
-
       // 数字
       number = leaf_node_d[!(ch_p('-') | ch_p('+')) >> +digit_p];
-
       // 識別子
       identifier = leaf_node_d[alpha_p >> lexeme_d[*(alpha_p | int_p | ch_p('-') | ch_p('_') | ch_p(':'))]];
-
       // 文字列
       string = leaf_node_d[inner_node_d[lexeme_d[confix_p(ch_p('"'), *c_escape_ch_p, ch_p('"'))]]];
-//      string = no_node_d[ch_p('"')] >> leaf_node_d[lexeme_d[*c_escape_ch_p]] >> no_node_d[ch_p('"')];
-//      string = discard_node_d[ch_p('"')] >> leaf_node_d[lexeme_d[*c_escape_ch_p]] >> discard_node_d[ch_p('"')];
-//      string = leaf_node_d[inner_node_d[confix_p('"', lexeme_d[*c_escape_ch_p], '"')]];
-
       // リストのヘッダ
       header = identifier;
-
       // リスト構造
-//      list =
-//        discard_node_d[ch_p('(')] >> root_node_d[header] >> *(s_expression) >> discard_node_d[ch_p(')')]
-//        | discard_node_d[ch_p('[')] >> root_node_d[header] >> *(s_expression) >> discard_node_d[ch_p(']')];
-
-//      list =
-//        no_node_d[ch_p('(')] >> root_node_d[header] >> *(s_expression) >> no_node_d[ch_p(')')]
-//        | no_node_d[ch_p('[')] >> root_node_d[header] >> *(s_expression) >> no_node_d[ch_p(']')];
-
-      list =
-        no_node_d[ch_p('(')] >> root_node_d[header] >> list_p(*s_expression, space_p) >> no_node_d[ch_p(')')]
-        | no_node_d[ch_p('[')] >> root_node_d[header] >> list_p(*s_expression, space_p) >> no_node_d[ch_p(']')];
-
+      list = no_node_d[ch_p('(')] >> root_node_d[header] >> list_p(*s_expression, space_p) >> no_node_d[ch_p(')')];
     }
 
     // 開始ルール
