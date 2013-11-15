@@ -12,16 +12,6 @@ namespace backend{
 class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
 {
   public:
-
-  enum VariableForm
-  {
-    VF_NONE,
-    VF_PREV,
-    VF_TIME,
-    VF_ZERO
-  };
-
-
   typedef hydla::simulator::value_t         value_t;
   typedef hydla::simulator::time_t          time_t;
   typedef hydla::simulator::variable_t      variable_t;
@@ -31,9 +21,8 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   typedef hydla::simulator::parameter_t     parameter_t;
   typedef hydla::simulator::variable_set_t  variable_set_t;
   typedef hydla::simulator::parameter_set_t parameter_set_t;
-  typedef hydla::simulator::constraints_t   disjunction_t;
-  typedef hydla::simulator::constraints_t   conjunction_t;
-  typedef VariableForm        variable_form_t;
+  typedef hydla::simulator::constraints_t   constraints_t;
+  typedef Link::VariableForm        variable_form_t;
   typedef hydla::parse_tree::node_sptr      node_sptr;
   typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
   typedef std::vector<variable_map_t>       create_vm_t;
@@ -73,9 +62,8 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    *    i: int: integer
    *    s: const char*: symbol (send only)
    *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
-   *    l(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
-   *    cj(n, p, z, t): conjunction_t: conjunction of constraints (send only)
-   *    dj(n, p, z, t): disjunction_t: disjunction of constraints (send only)
+   *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
+   *    cs(n, p, z, t): constraints_t: list of constraints (send only)
    *    cc: check_consistency_result_t (receive only)
    *    cv: create_vm_t (receive only)
    *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, derivatives are not sent. Characters after them are the same as 'e')
@@ -87,13 +75,15 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    *  Caution: In Mathematica, '_' cannot be used as name of symbols
    *           REDUCE doesn't distinguish whether characters are in upper cases or not.
    */
-  int call(const char* name, const int& arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
+  int call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
 
   void set_variable_set(variable_set_t& v){
     variable_set_=&v;
     for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
-        call("addVariable", 1, "vn", "", &(*it));
+        std::string name = it->get_name();
+        int diff = it->get_derivative_count();
+        call("addVariable", 2, "si", "", ("usrVar" + name).c_str(), &diff);
       }
   }
 
@@ -114,7 +104,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   void invalid_fmt(const char* fmt, int idx);
   void invalid_ret();
 
-
   variable_set_t* variable_set_;
 
   parameter_set_t* parameter_set_;
@@ -122,8 +111,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   variable_t* get_variable(const std::string &name, int derivative_count) const;
 
   parameter_t* get_parameter(const std::string &name, int derivative_count, int id) const;
-
-
 
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
@@ -153,12 +140,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    * 変数の送信
    */
   int send_variable(const variable_t &var, const variable_form_t& variable_arg);
-  int send_variable(const std::string& variable_name, const int& diff_count, const variable_form_t& variable_arg);
-
-  /**
-   * 上の記号定数版
-   */
-  int send_parameter(const std::string& name, const int& diff_count, const int& id);
+  int send_variable(const std::string& variable_name, int diff_count, const variable_form_t& variable_arg);
 
 
   int read_args_fmt(const char* args_fmt, const int& idx, void* arg);
@@ -198,6 +180,8 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
+
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
 
   // 算術単項演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
@@ -243,6 +227,8 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
 
   /// Prevノードの下にいるかどうか
   int in_prev_;
+
+  void put_converted_function(const std::string& name, int arg_cnt);
 
 
   Link* link_;

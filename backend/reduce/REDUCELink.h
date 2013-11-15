@@ -1,11 +1,12 @@
 #ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
 #define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
 
-#include "sexp/SExpParseTree.h"
+#include "sexp/SExpAST.h"
 #include <sstream>
 #include <stdexcept>
 #include "Link.h"
 #include "Simulator.h"
+#include "Logger.h"
 #include <stack>
 
 namespace hydla {
@@ -41,12 +42,6 @@ public:
   REDUCELink();
   virtual ~REDUCELink(){}
 
-  /**
-   * end_of_redeval_行まで文字列をgetlineする
-   * skip_until_redevalを推奨
-   * \return 0
-   */
-  virtual int read_until_redeval() = 0;
 
   /**
    * end_of_redeval_行まで文字列をgetlineする
@@ -64,7 +59,7 @@ public:
    * 受信した複数行のstringを結合してSExpParseTreeを戻す
    * \return REDUCEから受け取るS式をパースしたもの
    */
-  virtual const hydla::parser::SExpParseTree  get_as_s_exp_parse_tree() = 0;
+  virtual const hydla::parser::SExpAST  get_as_s_exp_parse_tree() = 0;
 
 
   /**
@@ -75,12 +70,12 @@ public:
   void put_number(const char* value);
   void put_string(const char* s);
   void put_integer(int i);
-  
+  void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg);
+  void put_parameter(const std::string& name, int diff_count, int id);  
   void get_function(std::string &name, int &cnt);
   std::string get_symbol();
   std::string get_string();
   int get_integer();
-  int get_arg_count();
   DataType get_type();
   std::string get_token_name(int tk_type);
   DataType get_next();
@@ -90,10 +85,8 @@ public:
 
   void init_opts(const simulator::Opts &opts);
 
-  /**
-   * only for REDUCELink
-   */
-  void post_put();
+
+  void flush(bool debug = true);
 
   // TODO: implementation
   std::string get_debug_print();
@@ -122,6 +115,7 @@ protected:
 
       count++; i++;
     }
+    HYDLA_LOGGER(BACKEND, "count: ", count)
 
     return count;
   }
@@ -132,8 +126,23 @@ protected:
   virtual void send_string_to_reduce(const char* str) = 0;
 
 private:
+  typedef hydla::parser::SExpAST::const_tree_iter_t tree_iter_t;
+  typedef std::stack<std::pair<tree_iter_t, int> > tree_stack_t;
+
   /// used for put_function
+
   std::stack<int> arg_cnt_stack_;
+  std::string send_buffer_;
+  void post_put();
+
+  /// used for get_function
+  hydla::parser::SExpAST sexp_ast_;
+  tree_stack_t tree_stack_;
+  bool first_get_;
+  tree_iter_t get_next_iter();  
+
+  static const std::string par_prefix;
+  static const std::string var_prefix;
 };
 
 } // namespace reduce
@@ -141,4 +150,3 @@ private:
 } // namespace hydla
 
 #endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
-

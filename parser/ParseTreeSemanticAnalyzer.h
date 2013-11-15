@@ -109,8 +109,20 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
 
+  //Parameter
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node){assert(0);}
+  //Infinity
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node){assert(0);}
+  //SymbolicT
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
+
   //SystemVariable
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
+  
+  //True
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
+
+  
 
 private:
   typedef hydla::parser::DefinitionContainer<

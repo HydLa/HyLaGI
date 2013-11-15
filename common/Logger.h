@@ -289,6 +289,10 @@ private:
   HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
 
 
+#define HYDLA_LOGGER(LEVEL, ...)                                            \
+  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__, " "__VA_ARGS__)
+
+
 } // namespace logger
 } // namespace hydla
 

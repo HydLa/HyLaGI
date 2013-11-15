@@ -918,6 +918,32 @@ private:
 };
 
 /**
+ *
+ *
+ */
+class True : public FactorNode{
+public:
+  True()
+  {}
+  
+  virtual ~True(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<True> n(new True());
+    return n;
+  }
+    
+  virtual std::string get_node_type_name() const {
+    return "True";
+  }
+};
+  
+/**
  * 変数
  * 従属変数の場合もあり
  */ 
@@ -1078,7 +1104,7 @@ public:
 };
 
 /**
- * ｔ（時間）を表すノード．変数の時刻に対する式の中に出現するやつ．数式処理用
+ * ｔ（時刻）を表すノード．変数の時刻に対する式の中に出現するやつ．数式処理用
  */
 
 class SymbolicT : public FactorNode {
@@ -1469,7 +1495,6 @@ public:
   virtual ~ArbitraryNode()
   {}
 
-  virtual void accept(node_sptr own, TreeVisitor* visitor);
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
 
   virtual std::string get_node_type_name() const {

@@ -6,7 +6,7 @@
 
 #include "REDUCELink.h"
 
-#include "sexp/SExpParseTree.h"
+#include "sexp/SExpAST.h"
 #include <stdexcept>
 #include <string>
 
@@ -27,20 +27,13 @@ public:
   void send_string_to_reduce(const char* str);
 
   /**
-   * reduceプロセスの生成
+   * REDUCEプロセスの生成
    */
   REDUCELinkIpc(const simulator::Opts &opts);
   /**
    * reduceプロセスに終了命令を出す
    */
   ~REDUCELinkIpc();
-
-  /**
-   * end_of_redeval_行まで文字列をgetlineする
-   * skip_until_redevalを推奨
-   * \return 0
-   */
-  int read_until_redeval();
 
   /**
    * end_of_redeval_行まで文字列をgetlineする
@@ -58,7 +51,8 @@ public:
    * 受信した複数行のstringを結合してSExpParseTreeを戻す
    * \return REDUCEから受け取るS式をパースしたもの
    */
-  const hydla::parser::SExpParseTree get_as_s_exp_parse_tree();
+  const hydla::parser::SExpAST get_as_s_exp_parse_tree();
+
 
 private:
 

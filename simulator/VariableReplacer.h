@@ -18,7 +18,7 @@ namespace simulator {
 /**
  * Replace variables with their values
  */
-class VariableReplacer : public parse_tree::TreeVisitor, hydla::simulator::ValueVisitor{
+class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor{
   typedef hydla::parse_tree::node_sptr                 node_sptr;
 
   public:

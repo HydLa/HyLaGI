@@ -288,7 +288,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
-    const char* fmt = (state->phase == PointPhase)?"cjn":"cjt";
+    const char* fmt = (state->phase == PointPhase)?"csn":"cst";
     backend_->call("addConstraint", 1, fmt, "", &constraint_list);
 
     {
@@ -571,7 +571,7 @@ SymbolicPhaseSimulator::todo_list_t
     Backend::PPTimeResult time_result; 
     time_t time_limit(max_time->clone());
     *time_limit -= *phase->current_time;
-    backend_->call("calculateNextPointPhaseTime", 2, "ltdjt", "cp", &(time_limit), &disc_cause, &time_result);
+    backend_->call("calculateNextPointPhaseTime", 2, "vltcst", "cp", &(time_limit), &disc_cause, &time_result);
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -581,7 +581,7 @@ SymbolicPhaseSimulator::todo_list_t
     {
       Backend::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       node_sptr time_node = candidate.time->get_node();
-      backend_->call("simplify", 1, "et", "l", &time_node, &pr->end_time);
+      backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
 /*
       value_range_t tmp_range;
       if(solver_->approx_val(candidate.time, tmp_range))
@@ -772,7 +772,7 @@ variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm
       value_t val = it->second.get_unique();
       range_t& range = result[it->first];
       value_t ret;
-      backend_->call("applyTime2Expr", 2, "ltlt", "l", &val, &tm, &ret);
+      backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
       range.set_unique(ret);
     }
     else
@@ -783,7 +783,7 @@ variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm
         ValueRange::bound_t bd = it->second.get_lower_bound(i);
         value_t val = bd.value;
         value_t ret;
-        backend_->call("applyTime2Expr", 2, "ltlt", "l", &val, &tm, &ret);
+        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
         range.set_lower_bound(ret, bd.include_bound);
       }
       for(uint i = 0; i < range.get_upper_cnt(); i++)
@@ -792,7 +792,7 @@ variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm
         ValueRange::bound_t bd = it->second.get_upper_bound(i);
         value_t val = bd.value;
         value_t ret;
-        backend_->call("applyTime2Expr", 2, "ltlt", "l", &val, &tm, &ret);
+        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
         range.set_upper_bound(ret, bd.include_bound);
       }
       result[it->first] = range;
@@ -815,7 +815,7 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
       value_t val = it->second.get_unique();
       range_t& range = shifted_vm[it->first];
       value_t ret;
-      backend_->call("exprTimeShift", 2, "ltlt", "l", &val, &time, &ret);
+      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
       range.set_unique(ret);
     }
     else
@@ -826,7 +826,7 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
         ValueRange::bound_t bd = it->second.get_lower_bound(i);
         value_t val = bd.value;
         value_t ret;
-        backend_->call("exprTimeShift", 2, "ltlt", "l", &val, &time, &ret);
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
         range.set_lower_bound(ret, bd.include_bound);
       }
       for(uint i = 0; i < range.get_upper_cnt(); i++)
@@ -835,7 +835,7 @@ variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_ma
         ValueRange::bound_t bd = it->second.get_upper_bound(i);
         value_t val = bd.value;
         value_t ret;
-        backend_->call("exprTimeShift", 2, "ltlt", "l", &val, &time, &ret);
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
         range.set_upper_bound(ret, bd.include_bound);
       }
       shifted_vm[it->first] = range;

@@ -53,6 +53,7 @@ private:
   create_unary_node(const TreeIter& tree_iter)
   {
     boost::shared_ptr<NodeType> n(node_factory_->create<NodeType>());
+    
     n->set_child(create_parse_tree(tree_iter));
     return n;
   }
@@ -438,11 +439,23 @@ private:
       }
 
 	  //SystemVarible
-	  case RI_SVtimer: 
-	  {
+      case RI_SVtimer: 
+      {
         boost::shared_ptr<SVtimer> node(node_factory_->create<SVtimer>());
         return node;
-	  }
+      }
+      
+      case RI_True:
+      {
+        boost::shared_ptr<True> node(node_factory_->create<True>());
+	return node;
+      }
+
+      case RI_SymbolicT:
+      {
+        boost::shared_ptr<SymbolicT> node(node_factory_->create<SymbolicT>()); 
+        return node;
+      }
       
       default:
       {

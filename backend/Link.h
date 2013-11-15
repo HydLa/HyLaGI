@@ -13,6 +13,15 @@ class Link
   virtual ~Link(){}
 
   /// Type of Datas(used for receive)
+
+  enum VariableForm
+  {
+    VF_NONE,
+    VF_PREV,
+    VF_TIME,
+    VF_ZERO
+  };
+
   enum DataType
   {
     DT_FUNC,
@@ -22,7 +31,7 @@ class Link
     DT_NONE
   };
 
-
+  typedef VariableForm        variable_form_t;
 
   virtual void put_symbol(const char *symbol) = 0;
   void put_symbol(const std::string& str){put_symbol(str.c_str());}
@@ -33,6 +42,8 @@ class Link
   void put_number(const std::string &val){put_number(val.c_str());}
   virtual void put_function(const char *name, int arg_cnt) = 0;
   void put_function(const std::string &name, int arg_cnt){put_function(name.c_str(), arg_cnt);}
+  virtual void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg) = 0;
+  virtual void put_parameter(const std::string& name, int diff_count, int id) = 0;
 
   virtual int get_integer() = 0;
   virtual void get_function(std::string& name, int& arg_cnt) = 0;
@@ -46,33 +57,48 @@ class Link
   virtual void post_receive() = 0;
 
   virtual std::string backend_name() = 0;
-  inline bool convert(const std::string& orig, bool hydla2back, std::string& ret)
+  std::string convert_function(const std::string& orig, bool hydla2back)
   {
+    bool converted;
+    return convert_function(orig, hydla2back, converted);
+  }
+
+  std::string convert_function(const std::string& orig, bool hydla2back, bool &converted)
+  {
+    std::string ret;
     if(hydla2back){
-        function_map_t::left_iterator it = function_map_.left.find(orig);
-        if(it != function_map_.left.end()){
-            ret = it->second;
-            return true;
-          }
-        else{
-            return false;
-          }
-      }else{
-        function_map_t::right_iterator it = function_map_.right.find(orig);
-        if(it != function_map_.right.end()){
-            ret = it->second;
-            return true;
-          }
-        else{
-            return false;
-          }  
+      function_map_t::left_iterator it = function_map_.left.find(orig);
+      if(it != function_map_.left.end()){
+        ret = it->second;
+        converted = true;
       }
+      else{
+        ret = orig;
+        converted = false;
+      }
+    }else{
+      function_map_t::right_iterator it = function_map_.right.find(orig);
+      if(it != function_map_.right.end()){
+        ret = it->second;
+        converted = true;
+      }
+      else{
+        ret = orig;
+        converted = false;
+      }  
+    }
+    return ret;
+  }
+
+  void put_converted_function(const std::string &orig, int arg_cnt)
+  {
+    put_function(convert_function(orig, true), arg_cnt);
   }
 
   virtual std::string get_input_print() = 0;
   virtual std::string get_debug_print() = 0;
   virtual void check() = 0;
- protected:
+  protected:
   typedef boost::bimaps::bimap<std::string, std::string > function_map_t;
   function_map_t function_map_;
 };

@@ -32,7 +32,7 @@ public:
         parse_tree_sptr pt_original(boost::make_shared<parse_tree_t>(*parse_tree));
         AskDisjunctionFormatter().format(pt_original.get());
         AskDisjunctionSplitter().split(pt_original.get());
-        msc_original = mcc.create(pt_original);
+	msc_original = mcc.create(pt_original);
       }
 
       {

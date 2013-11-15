@@ -7,6 +7,11 @@ namespace hydla{
 namespace backend{
 namespace mathematica{
 
+const std::string MathematicaLink::prev_prefix = "prev";
+const std::string MathematicaLink::par_prefix = "p";
+const std::string MathematicaLink::var_prefix = "usrVar";
+
+
 MathematicaLink::MathematicaLink(const hydla::simulator::Opts &opts) : env_(0), link_(0)
 {
   init(opts);
@@ -521,6 +526,40 @@ int MathematicaLink::get_arg_count()
   on_next_ = false;
   return c;
 }
+
+
+void MathematicaLink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
+{
+    
+  if(variable_arg == VF_PREV){
+    put_function(prev_prefix.c_str(), 2);
+    put_symbol(name);
+    put_integer(diff_count);
+  }else{
+    std::string derivative_str;
+    derivative_str = convert_function("derivative", true);
+    if(variable_arg == VF_NONE)
+    {
+      put_function(derivative_str.c_str(), 2);
+      put_integer(diff_count);
+      put_symbol(var_prefix + name);
+    }
+    else
+    {
+      put_function(derivative_str.c_str(), 3);
+      put_integer(diff_count);
+      put_symbol(var_prefix + name);
+      if(variable_arg == VF_TIME)
+      {
+        put_symbol("t");
+      }
+      else
+      {
+        put_integer(0);
+      }
+    }
+  }
+}
   
 
 
@@ -577,6 +616,15 @@ MathematicaLink::DataType MathematicaLink::get_next(){
   default:
     return DT_NONE;
   }
+}
+
+
+void MathematicaLink::put_parameter(const std::string& name, int diff_count, int id)
+{
+  put_function(par_prefix.c_str(), 3);
+  put_symbol(name.c_str());
+  put_integer(diff_count);
+  put_integer(id);
 }
 
 

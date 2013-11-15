@@ -231,6 +231,11 @@ bool Number::is_same_struct(const Node& n, bool exactly_same) const
     number_ == static_cast<const Number*>(&n)->number_;          
 }
 
+bool True::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n);
+}
+
 //Print
 bool Print::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -342,14 +347,6 @@ node_sptr UnsupportedFunction::clone(){
 
 void ArbitraryNode::accept(node_sptr own, 
                    BaseNodeVisitor* visitor) 
-{
-  assert(this == own.get()); 
-  visitor->visit(boost::shared_static_cast<ArbitraryNode>(own));
-}
-
-
-void ArbitraryNode::accept(node_sptr own, 
-                   TreeVisitor* visitor) 
 {
   assert(this == own.get()); 
   visitor->visit(boost::shared_static_cast<ArbitraryNode>(own));
@@ -525,6 +522,8 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(SymbolicT)
 //無限大
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
+//True
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)
 
 } //namespace parse_tree
 } //namespace hydla

@@ -3,6 +3,6 @@
 
 #include <iostream>
 
-const std::string backend_reduce_source();
+const std::string reduce_source();
 
 #endif //_INCLUDED_BACKEND_REDUCE_SOURCE_H_

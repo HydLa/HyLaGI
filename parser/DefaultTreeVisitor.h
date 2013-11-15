@@ -94,6 +94,8 @@ public:
   virtual void visit(boost::shared_ptr<Pi> node);
   // 自然対数の底
   virtual void visit(boost::shared_ptr<E> node);
+  // True
+  virtual void visit(boost::shared_ptr<True> node);
   
   //関数
   virtual void visit(boost::shared_ptr<Function> node);
@@ -111,6 +113,9 @@ public:
   
   // t（時間）
   virtual void visit(boost::shared_ptr<SymbolicT> node);
+
+  // Infinity
+  virtual void visit(boost::shared_ptr<Infinity> node);
 };
 
 } //namespace parse_tree

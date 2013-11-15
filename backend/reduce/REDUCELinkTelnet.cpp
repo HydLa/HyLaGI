@@ -23,17 +23,6 @@ REDUCELinkTelnet::~REDUCELinkTelnet(){
   if(!s_){ throw REDUCELinkError("fail to close"); }
 }
 
-int REDUCELinkTelnet::read_until_redeval(){
-  std::string line;
-  while(getline_with_throw("read_until_redeval", line)){
-    std::cout << line << std::endl;
-    if(line==end_of_redeval_){
-      break;
-    }
-  }
-  return 0;
-}
-
 int REDUCELinkTelnet::skip_until_redeval(){
   std::string line;
   while(getline_with_throw("skip_until_redeval", line)){
@@ -60,8 +49,8 @@ std::string REDUCELinkTelnet::get_s_expr(){
   return line;
 }
 
-const hydla::parser::SExpParseTree REDUCELinkTelnet::get_as_s_exp_parse_tree(){
-  return hydla::parser::SExpParseTree(get_s_expr());
+const hydla::parser::SExpAST REDUCELinkTelnet::get_as_s_exp_parse_tree(){
+  return hydla::parser::SExpAST(get_s_expr());
 }
 
 int REDUCELinkTelnet::send_string(const std::string cmd){

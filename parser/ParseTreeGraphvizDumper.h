@@ -95,6 +95,8 @@ public:
 
   //SystemVariable
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
+
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
   
   //関数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
@@ -110,6 +112,12 @@ public:
   // 数字
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
 
+  // Parameter
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
+  // SymbolicT
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
+  // Infinity
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
 
 private:
   void dump_node(boost::shared_ptr<hydla::parse_tree::FactorNode> node);

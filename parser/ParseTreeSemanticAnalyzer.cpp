@@ -359,6 +359,8 @@ DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 // 自然対数の底
 DEFINE_DEFAULT_VISIT_FACTOR(E)
 
+// True
+DEFINE_DEFAULT_VISIT_FACTOR(True)
 
 // 変数
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
@@ -396,6 +398,8 @@ DEFINE_DEFAULT_VISIT_FACTOR(Abort)
 
 // SystemVariable
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
+
+DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 
 
 } //namespace parser

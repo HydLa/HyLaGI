@@ -28,21 +28,13 @@ REDUCELinkIpc::~REDUCELinkIpc(){
   // waitpid(pid_, NULL, 0);
 }
 
-int REDUCELinkIpc::read_until_redeval(){
-  std::string line = getline_with_throw("read_until_redeval");
-  while(line.find(end_of_redeval_) == std::string::npos){
-    std::cout << line << std::endl;
-    line = getline_with_throw("read_until_redeval");
-  }
-  return 0;
-}
-
 int REDUCELinkIpc::skip_until_redeval(){
   std::string line = getline_with_throw("skip_until_redeval");
   while(line.find(end_of_redeval_) == std::string::npos){
     HYDLA_LOGGER_EXTERN(line);
     line = getline_with_throw("skip_until_redeval");
   }
+  HYDLA_LOGGER(BACKEND, "line: ", line);
   return 0; 
 }
 
@@ -54,21 +46,30 @@ std::string REDUCELinkIpc::get_s_expr(){
     line += " ";
     line += tmp;
   }
-
-  HYDLA_LOGGER_BACKEND("get s_expr: ", line);
+  HYDLA_LOGGER(BACKEND, "line: ", line);
   return line;
 }
 
-const hydla::parser::SExpParseTree REDUCELinkIpc::get_as_s_exp_parse_tree(){
-  return hydla::parser::SExpParseTree(get_s_expr());
+const hydla::parser::SExpAST REDUCELinkIpc::get_as_s_exp_parse_tree(){
+  return hydla::parser::SExpAST(get_s_expr());
 }
 
 void REDUCELinkIpc::send_string_to_reduce(const char *cmd, int len){
-  if(write(writefd_, cmd, len + 1) == -1){
-    throw REDUCELinkError("send_string_to_reduce()", "write");
+  std::string str = cmd;
+  if(write(writefd_, str.c_str(), std::min(len, (int)MAXLINE)) == -1){
+    throw REDUCELinkError("send_string()", "write");
   }
+
+  while((int)str.length() > MAXLINE){
+    str = str.substr(MAXLINE);
+    std::string message = str.substr(0, std::min(len, (int)MAXLINE));
+    if(write(writefd_, message.c_str(), message.length()) == -1){
+      throw REDUCELinkError("send_string()", "write");
+    }
+  }
+
   if(write(writefd_, "\n", 1) == -1){
-    throw REDUCELinkError("send_string_to_reduce()", "write");
+    throw REDUCELinkError("send_string()", "write");
   }
 }
 

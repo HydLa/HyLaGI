@@ -376,14 +376,12 @@ publicMethod[
   constraint = True;
 ];
 
-addConstraint[co_List] := addConstraint[And@@List];
-
 publicMethod[
   addConstraint,
   co,
   Module[
     {cons},
-    cons = co //. prevConstraint;
+    cons = If[Head[co] === List, And@@co, co] //. prevConstraint;
     If[isTemporary,
       tmpConstraint = tmpConstraint && cons,
       constraint = constraint && cons
@@ -394,7 +392,7 @@ publicMethod[
 
 addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = co //. prevConstraint;
+  cons = And@@co //. prevConstraint;
   If[isTemporary,
     initTmpConstraint = initTmpConstraint && cons,
     initConstraint = initConstraint && cons
@@ -407,7 +405,7 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = co;
+    cons = And@@co;
     If[cons =!= True,
        prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, applyList[cons]]]
        ];
@@ -438,30 +436,21 @@ makePrevVar[var_] := Module[
 ];
 
 publicMethod[
-  addVariables,
-  vars,
-  Unprotect[variables, prevVariables, timeVariables, initVariables];
-  variables = Union[variables, vars];
-  prevVariables = Union[prevVariables,
-    Map[makePrevVar, vars] ];
-  timeVariables = Union[timeVariables, Map[(#[t])&, vars] ];
-  initVariables = Union[initVariables, Map[(#[0])&, vars] ];
-  simplePrint[variables, prevVariables, timeVariables, initVariables];
-  Protect[variables, prevVariables, timeVariables, initVariables];
-];
-
-
-publicMethod[
   addVariable,
-  var,
-  Unprotect[variables, prevVariables, timeVariables, initVariables];
-  variables = Union[variables, {var}];
-  prevVariables = Union[prevVariables,
-  {makePrevVar[var]} ];
-  timeVariables = Union[timeVariables, {var[t] } ];
-  initVariables = Union[initVariables, {var[t]} ];
-  simplePrint[variables, prevVariables, timeVariables, initVariables];
-  Protect[variables, prevVariables, timeVariables, initVariables];
+  name,
+  diffCnt,
+  Module[
+    {var},
+    var = If[diffCnt > 0, Derivative[diffCnt][name], name];
+    Unprotect[variables, prevVariables, timeVariables, initVariables];
+    variables = Union[variables, {var}];
+    prevVariables = Union[prevVariables,
+      {makePrevVar[var]} ];
+    timeVariables = Union[timeVariables, {var[t] } ];
+    initVariables = Union[initVariables, {var[t]} ];
+    simplePrint[variables, prevVariables, timeVariables, initVariables];
+    Protect[variables, prevVariables, timeVariables, initVariables];
+  ]
 ];
 
 
@@ -501,7 +490,7 @@ resetConstraintForParameter[pcons_] := (
 publicMethod[
   addInitEquation,
   lhs, rhs,
-  addInitConstraint[lhs == rhs]
+  addInitConstraint[{lhs == rhs}]
 ];
 
 publicMethod[
@@ -521,7 +510,7 @@ publicMethod[
 publicMethod[
   addParameterConstraint,
   pcons,
-  pConstraint = Reduce[pConstraint && pcons, Reals];
+  pConstraint = Reduce[pConstraint && And@@pcons, Reals];
   simplePrint[pConstraint];
 ];
 
@@ -643,7 +632,7 @@ publicMethod[
     timeAppliedCauses = False;
     
     tStore = Map[(# -> createIntegratedValue[#, dSol[[2]] ])&, getTimeVars[vars]];
-    timeAppliedCauses = Or@@(applyList[discCause] /. tStore );
+    timeAppliedCauses = Or@@(discCause /. tStore );
     simplePrint[timeAppliedCauses];
     
     parameterList = getParameters[timeAppliedCauses];
@@ -1132,7 +1121,7 @@ publicMethod[checkInclude, includeBound,
 addParameterConstraintNow[pcons_, pars_] := (
      pConstraintNow = True;
      parametersNow = {};
-     pConstraintNow = Reduce[pConstraintNow && pcons, Reals];
+     pConstraintNow = Reduce[pConstraintNow && And@@pcons, Reals];
      parametersNow = Union[parametersNow, pars];
      simplePrint[pConstraintNow];
      );
@@ -1140,7 +1129,7 @@ addParameterConstraintNow[pcons_, pars_] := (
 addParameterConstraintPast[pcons_, pars_] := (
      pConstraintPast = True;
      parametersPast = {};
-     pConstraintPast = Reduce[pConstraintPast && pcons, Reals];
+     pConstraintPast = Reduce[pConstraintPast && And@@pcons, Reals];
      parametersPast = Union[parametersPast, pars];
      simplePrint[pConstraintPast];
      );

@@ -61,6 +61,8 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Always> node)                {a
 void DefaultTreeVisitor::visit(boost::shared_ptr<Pi> node)                {}
 // 自然対数の底
 void DefaultTreeVisitor::visit(boost::shared_ptr<E> node)                {}
+// True
+void DefaultTreeVisitor::visit(boost::shared_ptr<True> node)                {}
 
 // 関数
 void DefaultTreeVisitor::visit(boost::shared_ptr<Function> node)                {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));}}
@@ -97,8 +99,9 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Scan> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Exit> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Abort> node)              {}
 
-//SystemVariable
 void DefaultTreeVisitor::visit(boost::shared_ptr<SVtimer> node)              {}
+
+void DefaultTreeVisitor::visit(boost::shared_ptr<Infinity> node)              {}
 
 
 } //namespace parse_tree

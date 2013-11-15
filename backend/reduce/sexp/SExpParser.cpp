@@ -1,6 +1,7 @@
 #include "SExpParser.h"
 
 #include "../../../parser/CommentGrammar.h"
+#include "Logger.h"
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -18,13 +19,9 @@ SExpParser::tree_info_t SExpParser::parse(const std::string& input_str){
 
   pos_iter_t positBegin(str, str + strlen(str));
   pos_iter_t positEnd;
-
   tree_info_t ast_tree = ast_parse(positBegin, positEnd, sg, cg);
 
-  assert(ast_tree.full);
-
-  return(ast_tree);
-
+  return (ast_tree);
 }
 
 std::string SExpParser::get_string_from_tree(const_tree_iter_t iter){ 

@@ -75,6 +75,10 @@ public:
   void put_integer(int i) {
     MLPutInteger(i);
   } 
+
+  void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg);
+
+  void put_parameter(const std::string& name, int diff_count, int id);
   
   void get_function(std::string &name, int &cnt);
 
@@ -161,6 +165,11 @@ private:
   MLINK link_;
 
   bool on_next_;
+
+
+  static const std::string prev_prefix;
+  static const std::string par_prefix;
+  static const std::string var_prefix;
 
 };
 

@@ -1,7 +1,7 @@
 #include "AskDisjunctionFormatter.h"
 
 #include "Logger.h"
-
+#include <iostream>
 using namespace hydla::parse_tree;
 using namespace hydla::logger;
 
@@ -24,7 +24,6 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
     swapped_ = false;
     pt->dispatch(this);
   } while(swapped_);
-
   pt->update_node_id_list();
   HYDLA_LOGGER_PARSING("--- ask disjunction format result ---\n",
                      *pt, "\n",
@@ -88,6 +87,11 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::LessEqu
 }
 
 void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Greater> node)
+{
+  // do nothing
+}
+
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::True> node)
 {
   // do nothing
 }

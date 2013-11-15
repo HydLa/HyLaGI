@@ -9,7 +9,7 @@
 
 #include "Node.h"
 #include "ModuleSet.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 #include "AskCollector.h"
 
 namespace hydla {
@@ -20,7 +20,7 @@ namespace simulator {
  * tellノードを集めるビジタークラス
  * ノードの中に出現する変数（とその微分回数）も同時に調べる
  */
-class TellCollector : public parse_tree::TreeVisitor {
+class TellCollector : public parse_tree::DefaultTreeVisitor {
 public:
   
   TellCollector(const module_set_sptr& module_set);

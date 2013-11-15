@@ -5,13 +5,13 @@
 
 #include "Node.h"
 #include "ParseTree.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 namespace hydla {
 namespace simulator {
 
 class AskDisjunctionSplitter : 
-  public hydla::parse_tree::TreeVisitor
+  public hydla::parse_tree::DefaultTreeVisitor
 {
 public:
   typedef hydla::parse_tree::node_sptr                     node_sptr;
@@ -67,6 +67,8 @@ public:
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
+
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
 
   // 時相演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);

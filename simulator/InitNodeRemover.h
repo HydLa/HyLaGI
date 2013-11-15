@@ -5,15 +5,15 @@
 
 #include "Node.h"
 #include "ParseTree.h"
-#include "TreeVisitor.h"
+#include "DefaultTreeVisitor.h"
 
 namespace hydla {
 namespace simulator {
 
 /**
- * tellノードを集めるビジタークラス
+ * A class to remove init-node
  */
-class InitNodeRemover : public parse_tree::TreeVisitor {
+class InitNodeRemover : public parse_tree::DefaultTreeVisitor {
 public:
   typedef hydla::parse_tree::node_sptr node_sptr;
 
