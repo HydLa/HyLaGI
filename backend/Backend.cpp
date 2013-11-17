@@ -16,6 +16,22 @@ const std::string Backend::par_prefix = "p";
 const std::string Backend::var_prefix = "usrVar";
 
 
+// check equivalence ignoring whether upper or lower case
+static bool EqIC(std::string lhs, std::string rhs)
+{
+  const char *l = lhs.c_str(), *r = rhs.c_str();
+  int d;
+  while(*l != '\0' && *r != '\0'){
+    d = (tolower(*l++) - tolower(*r++));
+    if ( d != 0)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 Backend::Backend(Link* link):
 link_(link)
 {
@@ -354,6 +370,7 @@ int Backend::send_node(const node_sptr& node, const variable_form_t &form)
   HYDLA_LOGGER_BACKEND("%%node: ", TreeInfixPrinter().get_infix_string(node));
   differential_count_ = 0;
   in_prev_ = false;
+  apply_not_ = false;
   variable_arg_ = form;
   accept(node);
   HYDLA_LOGGER_FUNC_END(BACKEND);
@@ -508,6 +525,19 @@ void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
   accept(node->get_rhs());                                              \
 }
 
+#define DEFINE_VISIT_BINARY_NOT(NODE_NAME, FUNC_NAME, NOT_NAME)        \
+void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
+{                                                                       \
+  HYDLA_LOGGER_REST("put:" #NODE_NAME);                                 \
+  if(!apply_not_)                                                        \
+    link_->put_converted_function(#FUNC_NAME, 2);                       \
+  else                                                                  \
+    link_->put_converted_function(#NOT_NAME, 2);                        \
+  accept(node->get_lhs());                                                \
+  accept(node->get_rhs());                                              \
+}
+
+
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
 void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 {                                                                       \
@@ -523,17 +553,17 @@ void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
   link_->put_symbol(#FUNC_NAME);                                       \
 }
 
-DEFINE_VISIT_BINARY(Equal, Equal)
-DEFINE_VISIT_BINARY(UnEqual, Unequal)
-DEFINE_VISIT_BINARY(Less, Less)
-DEFINE_VISIT_BINARY(LessEqual, LessEqual)
-DEFINE_VISIT_BINARY(Greater, Greater)
-DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
+DEFINE_VISIT_BINARY_NOT(Equal, Equal, Unequal)
+DEFINE_VISIT_BINARY_NOT(UnEqual, Unequal, Equal)
+DEFINE_VISIT_BINARY_NOT(Less, Less, GreaterEqual)
+DEFINE_VISIT_BINARY_NOT(LessEqual, LessEqual, Greater)
+DEFINE_VISIT_BINARY_NOT(Greater, Greater, LessEqual)
+DEFINE_VISIT_BINARY_NOT(GreaterEqual, GreaterEqual, Less)
 
 /// 論理演算子
-DEFINE_VISIT_BINARY(LogicalAnd, And)
-DEFINE_VISIT_BINARY(LogicalOr, Or)
-  
+DEFINE_VISIT_BINARY_NOT(LogicalAnd, And, Or)
+DEFINE_VISIT_BINARY_NOT(LogicalOr, Or, Or)
+
 /// 算術二項演算子
 DEFINE_VISIT_BINARY(Plus, Plus)
 DEFINE_VISIT_BINARY(Subtract, Subtract)
@@ -568,8 +598,12 @@ void Backend::visit(boost::shared_ptr<Previous> node)
 
 
 /// 否定
-DEFINE_VISIT_UNARY(Not, Not)
-
+void Backend::visit(boost::shared_ptr<Not> node)              
+{
+  apply_not_ = !apply_not_;
+  accept(node->get_child());
+  apply_not_ = !apply_not_;
+}
 
 /// 関数
 void Backend::visit(boost::shared_ptr<Function> node)              
@@ -756,7 +790,7 @@ Backend::check_consistency_result_t Backend::receive_cc()
     {
       HYDLA_LOGGER_LOCATION(BACKEND);
       string sym = link_->get_symbol();
-      if(sym == "True" || sym == "true")
+      if(EqIC(sym, "true"))
       {
         maps.push_back(parameter_map_t());
       }
@@ -790,11 +824,14 @@ Backend::node_sptr Backend::receive_function()
   int arg_count;
   node_sptr ret;
   std::string symbol;
+  bool converted;
   link_->get_function(symbol, arg_count);
-  if(symbol == "Sqrt"){//1引数関数
-    ret = node_sptr(new hydla::parse_tree::Power(receive_node(), node_sptr(new hydla::parse_tree::Number("1/2"))));
+  symbol = link_->convert_function(symbol, false, converted);
+  if(EqIC(symbol, "Sqrt")){//1引数関数
+    ret = node_sptr(new Divide(node_sptr(new Number("1")), node_sptr(new Number("2")))); 
+    ret = node_sptr(new hydla::parse_tree::Power(receive_node(), ret));
   }
-  else if(symbol == "parameter"){
+  else if(EqIC(symbol, "parameter")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str;
@@ -805,7 +842,7 @@ Backend::node_sptr Backend::receive_function()
     int id = boost::lexical_cast<int, std::string>(id_str);
     ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
   }
-  else if(symbol == "prev"){
+  else if(EqIC(symbol, "prev")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str = link_->get_string();
@@ -814,60 +851,60 @@ Backend::node_sptr Backend::receive_function()
     for(int i = 0; i < derivative_count; i++) tmp_var = node_sptr(new hydla::parse_tree::Differential(tmp_var));
     ret = node_sptr(new hydla::parse_tree::Previous(tmp_var));
   }
-  else if(symbol == "minus"){
+  else if(EqIC(symbol, "minus")){
     ret = node_sptr(new hydla::parse_tree::Negative(receive_node()));
   }
-  else if(symbol == "Plus" 
-          || symbol == "Subtract"
-          || symbol == "Times"
-          || symbol == "Divide"
-          || symbol == "Power"
-          || symbol == "Rational"
-          || symbol == "And"
-          || symbol == "Or"
-          || symbol == "Equal"
-          || symbol == "Unequal"
-          || symbol == "Less"
-          || symbol == "LessEqual"
-          || symbol == "Greater"
-          || symbol == "GreaterEqual")        
+  else if(EqIC(symbol, "Plus")
+          || EqIC(symbol, "Subtract")
+          || EqIC(symbol, "Times")
+          || EqIC(symbol, "Divide")
+          || EqIC(symbol, "Power")
+          || EqIC(symbol, "Rational")
+          || EqIC(symbol, "And")
+          || EqIC(symbol, "Or")
+          || EqIC(symbol, "Equal")
+          || EqIC(symbol, "Unequal")
+          || EqIC(symbol, "Less")
+          || EqIC(symbol, "LessEqual")
+          || EqIC(symbol, "Greater")
+          || EqIC(symbol, "GreaterEqual"))        
   { // 加減乗除など，二項演算子で書かれる関数
     node_sptr lhs, rhs;
     ret = receive_node();
     for(int arg_it=1;arg_it<arg_count;arg_it++){
       lhs = ret;
       rhs = receive_node();
-      if(symbol == "Plus")
+      if(EqIC(symbol, "Plus"))
         ret = node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
-      else if(symbol == "Subtract")
+      else if(EqIC(symbol, "Subtract"))
         ret = node_sptr(new hydla::parse_tree::Subtract(lhs, rhs));
-      else if(symbol == "Times")
+      else if(EqIC(symbol, "Times"))
         ret = node_sptr(new hydla::parse_tree::Times(lhs, rhs));
-      else if(symbol == "Divide")
+      else if(EqIC(symbol, "Divide"))
         ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
-      else if(symbol == "Power")
+      else if(EqIC(symbol, "Power"))
         ret = node_sptr(new hydla::parse_tree::Power(lhs, rhs));
-      else if(symbol == "Rational")
+      else if(EqIC(symbol, "Rational"))
         ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
-      else if(symbol == "And")
+      else if(EqIC(symbol, "And"))
         ret = node_sptr(new hydla::parse_tree::LogicalAnd(lhs, rhs));
-      else if(symbol == "Or")
+      else if(EqIC(symbol, "Or"))
         ret = node_sptr(new hydla::parse_tree::LogicalOr(lhs, rhs));
-      else if(symbol == "Equal")
+      else if(EqIC(symbol, "Equal"))
         ret = node_sptr(new hydla::parse_tree::Equal(lhs, rhs));
-      else if(symbol == "Unequal")
+      else if(EqIC(symbol, "Unequal"))
         ret = node_sptr(new hydla::parse_tree::UnEqual(lhs, rhs));
-      else if(symbol == "Less")
+      else if(EqIC(symbol, "Less"))
         ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
-      else if(symbol == "LessEqual")
+      else if(EqIC(symbol, "LessEqual"))
         ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
-      else if(symbol == "Greater")
+      else if(EqIC(symbol, "Greater"))
         ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
-      else if(symbol == "GreaterEqual")
+      else if(EqIC(symbol, "GreaterEqual"))
         ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
     }
   }
-  else if(symbol == "derivative")
+  else if(EqIC(symbol, "derivative"))
   {
     std::string name = link_->get_symbol();
     assert(name == "Derivative");
@@ -984,17 +1021,20 @@ int Backend::receive_map(variable_map_t& map)
   for(int i = 0; i < and_size; i++)
   {
     //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
-    link_->get_function(f_name, size);  //List
+    link_->get_function(f_name, size); //List
     link_->get_function(f_name, size); //List
     std::string variable_name = link_->get_symbol();
+    HYDLA_LOGGER_VAR(BACKEND, variable_name);
     int d_cnt = link_->get_integer();
+    HYDLA_LOGGER_VAR(BACKEND, d_cnt);
     // 関係演算子のコード
     int rel = link_->get_integer();
-        
+    HYDLA_LOGGER_VAR(BACKEND, rel);
+
     symbolic_value = value_t(new hydla::simulator::symbolic::SymbolicValue(receive_node()));
     HYDLA_LOGGER_BACKEND("%% received: ", *symbolic_value);
 
-    // TODO: ↓の一行消す
+    // TODO:次の一行消す
     if(variable_name == "t")continue;
     variable_t* variable_ptr = get_variable(variable_name.substr(var_prefix.length()), d_cnt);
     if(!variable_ptr){

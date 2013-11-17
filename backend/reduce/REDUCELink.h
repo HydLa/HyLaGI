@@ -139,7 +139,8 @@ private:
   hydla::parser::SExpAST sexp_ast_;
   tree_stack_t tree_stack_;
   bool first_get_;
-  tree_iter_t get_next_iter();  
+  tree_iter_t get_current_iter();  
+  void go_next_iter();
 
   static const std::string par_prefix;
   static const std::string var_prefix;

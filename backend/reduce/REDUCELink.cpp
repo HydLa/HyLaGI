@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include <sstream>
 #include "sexp/SExpGrammar.h"
+#include "LinkError.h"
 
 using namespace std;
 using namespace hydla::parser;
@@ -29,6 +30,16 @@ REDUCELink::REDUCELink():sexp_ast_(""){
   function_map_.insert(f_value_t("createVariableMapInterval", "convertCSToVMInterval"));
   function_map_.insert(f_value_t("simplify", "simplifyExpr"));
   function_map_.insert(f_value_t("derivative", "df"));
+  function_map_.insert(f_value_t("Power", "expt"));
+  function_map_.insert(f_value_t("Subtract", "difference"));
+  function_map_.insert(f_value_t("Divide", "quotient"));
+
+  function_map_.insert(f_value_t("Unequal", "neq"));
+  function_map_.insert(f_value_t("Less", "lessp"));
+  function_map_.insert(f_value_t("Greater", "greaterp"));
+  function_map_.insert(f_value_t("LessEqual", "leq"));
+  function_map_.insert(f_value_t("GreaterEqual", "heq"));
+
   HYDLA_LOGGER_FUNC_END(BACKEND);
 }
 
@@ -161,11 +172,12 @@ std::string REDUCELink::get_input_print()
 
 void REDUCELink::get_function(std::string &name, int &cnt)
 {
-  SExpAST::const_tree_iter_t it = get_next_iter();
+  SExpAST::const_tree_iter_t it = get_current_iter();
+  HYDLA_LOGGER_VAR(BACKEND, it);
   name = std::string(it->value.begin(), it->value.end());
   cnt = it->children.size();
-  tree_stack_.push(std::make_pair(it, -1));
   HYDLA_LOGGER(BACKEND, "name: ", name, ", cnt: ", cnt);
+  go_next_iter();
 }
 
 std::string REDUCELink::get_symbol()
@@ -175,27 +187,31 @@ std::string REDUCELink::get_symbol()
 
 std::string REDUCELink::get_string()
 {
-  SExpAST::const_tree_iter_t it = get_next_iter();
+  SExpAST::const_tree_iter_t it = get_current_iter();
   std::string ret = std::string(it->value.begin(), it->value.end());
   HYDLA_LOGGER(BACKEND, "ret: ", ret);
+  go_next_iter();
   return ret;
 }
 
 int REDUCELink::get_integer()
 {
-  int relop_code;
-  std::stringstream relop_code_ss;
-  SExpAST::const_tree_iter_t it = get_next_iter();
+  int ret;
+  std::stringstream ss;
+  SExpAST::const_tree_iter_t it = get_current_iter();
   std::string str(it->value.begin(), it->value.end());
-  relop_code_ss << str;
-  relop_code_ss >> relop_code;
-  return relop_code;
+  ss << str;
+  ss >> ret;
+  HYDLA_LOGGER(BACKEND, "ret: ", ret); 
+  go_next_iter();
+  return ret;
 }
 
 
 REDUCELink::DataType REDUCELink::get_type()
 {
-  switch(tree_stack_.top().first->value.id().to_long()) {
+  tree_iter_t it = get_current_iter();
+  switch(it->value.id().to_long()) {
     case SExpGrammar::RI_Number: 
     {
       // TODO: DT_INTを返すべきかどうか検討する
@@ -208,6 +224,10 @@ REDUCELink::DataType REDUCELink::get_type()
     }
     
     case SExpGrammar::RI_Identifier:
+    if(it->children.size() > 0)
+    {
+      return DT_FUNC;
+    }
     case SExpGrammar::RI_Header:
     {
       return DT_SYM;
@@ -221,7 +241,7 @@ REDUCELink::DataType REDUCELink::get_type()
 
 REDUCELink::DataType REDUCELink::get_next()
 {
-  get_next_iter();  
+  go_next_iter();
   return get_type();
 }
 
@@ -233,30 +253,52 @@ void REDUCELink::pre_send()
   send_buffer_ += "symbolic redeval '";
 }
 
-REDUCELink::tree_iter_t REDUCELink::get_next_iter()
+REDUCELink::tree_iter_t REDUCELink::get_current_iter()
 {
   if(first_get_)
   {
     sexp_ast_ = get_as_s_exp_parse_tree();
     tree_stack_ = tree_stack_t();
+    tree_iter_t root = sexp_ast_.root();
+    tree_stack_.push(std::make_pair(root, -1));
     first_get_ = false;
-    return sexp_ast_.root();
+    HYDLA_LOGGER(BACKEND, "sexp_ast_\n", sexp_ast_);
+    return root;
   }
   else
   {
-    while(!tree_stack_.empty() && ++(tree_stack_.top().second) >= (int)(tree_stack_.top().first->children.size()))
-    {
-      tree_stack_.pop();
-    }
     if(tree_stack_.empty())
     {
+      throw LinkError("reduce", "tree stack_ is empty", 0);
       //TODO: throw exception
     }
-    return (tree_stack_.top().first->children.begin()
-            + tree_stack_.top().second);
+    int idx = tree_stack_.top().second;
+    if(idx == -1)
+    {
+      return tree_stack_.top().first;
+    }
+    else
+    {
+      return (tree_stack_.top().first->children.begin() + idx);
+    }
   }
 }
 
+void REDUCELink::go_next_iter()
+{
+  while(!tree_stack_.empty() && ++(tree_stack_.top().second) >= (int)(tree_stack_.top().first->children.size()))
+  {
+    tree_stack_.pop();
+  }
+  if(!tree_stack_.empty())
+  {
+    tree_iter_t it = get_current_iter();
+    if(it->children.size() > 0)
+    {
+      tree_stack_.push(std::make_pair(it, -1));
+    }
+  }
+}
 
 void REDUCELink::pre_receive()
 {
@@ -287,9 +329,6 @@ void REDUCELink::flush(bool debug)
 
 /*
  TODO:
- addInitVariablesとaddVariables無しで計算できる？
- set_variable_setでdepend文を作成，送信
- NOT_FUNCが必要？
  VariableNameEncoder通す
 */
 }

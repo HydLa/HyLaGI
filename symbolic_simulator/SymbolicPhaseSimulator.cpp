@@ -143,7 +143,7 @@ parameter_set_t SymbolicPhaseSimulator::get_parameter_set(){
 
 
 void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const Phase &phase){
-  std::string fmt = "vpv";
+  std::string fmt = "v";
   if(phase == PointPhase)
   {
     fmt += "n";
@@ -152,6 +152,7 @@ void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_m
   {
     fmt += "z";
   }
+  fmt += "vp";
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
     if(it->second>=0){
       for(int i=0; i<it->second;i++){
@@ -166,11 +167,10 @@ void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_m
         lhs = node_sptr(new Differential(lhs));
       }
       node_sptr rhs(new Number("0"));
-      node_sptr cons(new Equal(lhs, rhs));
       fmt = phase == PointPhase?"vn":"vt";
       fmt += "en";
-      variable_t var(it->first, it->second);
-      backend_->call("addEquation", 2, fmt.c_str(), "", &var, &cons);
+      variable_t var(it->first, -it->second + 1);
+      backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
     }
   }
 }

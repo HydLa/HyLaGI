@@ -193,7 +193,6 @@ private:
 #define HYDLA_LOGGER_DEBUG(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Debug, debug_write, (__VA_ARGS__))
 
-
 /**
  * 構文解析時のdebugログの出力
  */
@@ -236,7 +235,6 @@ private:
  */
 #define HYDLA_LOGGER_EXTERN(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(ExternArea, debug_write, (__VA_ARGS__))
-
 
 /**
  * その他のdebugログの出力
@@ -288,9 +286,18 @@ private:
 #define HYDLA_LOGGER_LOCATION(LEVEL)                                   \
   HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
 
-
+/**
+ * general log macro (add location automatically)
+ */
 #define HYDLA_LOGGER(LEVEL, ...)                                            \
-  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__, " "__VA_ARGS__)
+  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ", __VA_ARGS__)
+
+
+/**
+ * log macro for variables (printed like "(name of variable): (value of var)")
+ */
+#define HYDLA_LOGGER_VAR(LEVEL, VAR)                                            \
+  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ", #VAR": ", VAR)
 
 
 } // namespace logger

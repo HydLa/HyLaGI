@@ -228,6 +228,13 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   /// Prevノードの下にいるかどうか
   int in_prev_;
 
+  /** 
+   * whether to send negation of logical operators
+   * (needed for backend which cannot use logical negation easily
+   */
+  bool apply_not_;
+
+
   void put_converted_function(const std::string& name, int arg_cnt);
 
 
