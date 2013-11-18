@@ -67,7 +67,7 @@ struct DefaultVariable {
 
 class VariableComparator { // simple comparison class
    public:
-   bool operator()(const DefaultVariable* x,const DefaultVariable* y) const { return *x < *y; }
+   bool operator()(const DefaultVariable x,const DefaultVariable y) const { return x < y; }
 };
 
 } // namespace simulator

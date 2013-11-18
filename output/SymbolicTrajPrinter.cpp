@@ -49,7 +49,7 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
     ostream_ << "\n#---------parameter condition---------\n";
   }
   for(; it!=end; ++it) {
-    ostream_ << *(it->first) << "\t: " << it->second << "\n";
+    ostream_ << it->first << "\t: " << it->second << "\n";
   }
 }
 
@@ -59,7 +59,7 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    stream << *(it->first) << "\t: " << it->second << "\n";    
+    stream << it->first << "\t: " << it->second << "\n";    
   }
 }
 

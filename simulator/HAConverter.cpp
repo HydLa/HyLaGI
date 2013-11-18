@@ -155,19 +155,19 @@ namespace simulator {
 	  	variable_map_t::const_iterator it_past_v  = past_phase->variable_map.begin();
 		  variable_map_t::const_iterator end_past_v = past_phase->variable_map.end();
 		  for(; it_past_v!=end_past_v; ++it_past_v) {
-		 		if ( it_phase_v->first->name == it_past_v->first->name && 
-		 				 it_phase_v->first->derivative_count == it_past_v->first->derivative_count ) {
-			 		HYDLA_LOGGER_HA("Variable: ",it_phase_v->first->name," ",it_phase_v->first->derivative_count);		 			
-			 		HYDLA_LOGGER_HA("t         :  0");		 				 	
+		 		if ( it_phase_v->first.name == it_past_v->first.name && 
+		 				 it_phase_v->first.derivative_count == it_past_v->first.derivative_count ) {
+			 		HYDLA_LOGGER_HA("Variable: ",it_phase_v->first.name," ",it_phase_v->first.derivative_count);		 			
+			 		HYDLA_LOGGER_HA("t         :  0");	
 			  	tmp_variable_phase = it_phase_v->second;
 			  	HYDLA_LOGGER_HA("now       :  ", tmp_variable_phase);
 			  	//HYDLA_LOGGER_HA("c-t         :  ", *phase->current_time);		
-		 			search_variable_parameter(phase->parameter_map, it_phase_v->first->name, it_phase_v->first->derivative_count);
+		 			search_variable_parameter(phase->parameter_map, it_phase_v->first.name, it_phase_v->first.derivative_count);
 					HYDLA_LOGGER_HA("");	 	
 			  	tmp_variable_past = it_past_v->second;
 			  	HYDLA_LOGGER_HA("past      :  ", tmp_variable_past);
 			  	//HYDLA_LOGGER_HA("c-t         :  ", *past_phase->current_time);		 				 	
-			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first->name, it_past_v->first->derivative_count);
+			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first.name, it_past_v->first.derivative_count);
 		  	}
 		  } 
       // TODO: 幅を持つ場合への対応
@@ -203,9 +203,9 @@ namespace simulator {
 	  for(; it!=end; ++it) 
 	  {
 		  // 途中で導入されたパラメータは見ない
-	  	if ( (*(it->first)).get_phase_id() != 1 ) continue;
+	  	if ( it->first.get_phase_id() != 1 ) continue;
 
-			HYDLA_LOGGER_HA((*it->first), " : " , it->second);		
+			HYDLA_LOGGER_HA(it->first, " : " , it->second);		
 	  }
 	}
 	

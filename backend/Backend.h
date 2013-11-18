@@ -78,7 +78,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   int call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
 
   void set_variable_set(variable_set_t& v){
-    variable_set_=&v;
     for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
         std::string name = it->get_name();
@@ -88,7 +87,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   }
 
   void set_parameter_set(parameter_set_t& p){
-    parameter_set_ = &p;
     for(parameter_set_t::iterator it = p.begin(); it != p.end(); it++)
       {
         call("addParameter", 1, "p", "", &(*it));
@@ -103,14 +101,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   /// throw an exception for an invalid format
   void invalid_fmt(const char* fmt, int idx);
   void invalid_ret();
-
-  variable_set_t* variable_set_;
-
-  parameter_set_t* parameter_set_;
-
-  variable_t* get_variable(const std::string &name, int derivative_count) const;
-
-  parameter_t* get_parameter(const std::string &name, int derivative_count, int id) const;
 
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);

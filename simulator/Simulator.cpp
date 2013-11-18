@@ -79,20 +79,20 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       v.name             = it->first;
       v.derivative_count = d;
       variable_set_->push_front(v);
-      (*original_map_)[&(variable_set_->front())] = ValueRange();
+      (*original_map_)[v] = ValueRange();
     }
   }
 }
 
 
-parameter_t* Simulator::introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range)
+parameter_t Simulator::introduce_parameter(variable_t var, phase_result_sptr_t& phase, ValueRange& range)
 {
   parameter_t param(var, phase);
   parameter_set_->push_front(param);
-  (*original_parameter_map_)[&(parameter_set_->front())] = range;
+  (*original_parameter_map_)[parameter_set_->front()] = range;
   // TODO: バックエンド側での対応
   backend_->call("addParameter", 1, "p", "", &param);
-  return &(parameter_set_->front());
+  return parameter_set_->front();
 }
 
 simulation_todo_sptr_t Simulator::make_initial_todo()

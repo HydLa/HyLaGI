@@ -41,28 +41,6 @@ Backend::~Backend()
 {
 }
 
-
-Backend::variable_t *Backend::get_variable
-(const std::string &name, int derivative_count)const
-{
-  variable_t variable(name, derivative_count);
-  variable_set_t::iterator it = std::find(variable_set_->begin(), variable_set_->end(), variable);
-  if(it == variable_set_->end()) return NULL;
-  return &(*it);
-}
-
-Backend::parameter_t* Backend::get_parameter(const std::string &name, int derivative_count, int id) const
-{
-  for(parameter_set_t::iterator it = parameter_set_->begin(); it != parameter_set_->end();it++){
-    parameter_t& param = *it;
-    if(param.get_variable()->get_name() == name && param.get_variable()->get_derivative_count() == derivative_count && param.get_phase()->id == id){
-      return &param;
-    }
-  }
-  assert(0);
-  return NULL;
-}
-
 void Backend::invalid_fmt(const char* fmt, int idx)
 {
   std::stringstream sstr;
@@ -382,9 +360,9 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
   int size_to_sent = 0;
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
-    const variable_t *const var = it->first;
+    const variable_t var = it->first;
     const value_range_t &range = it->second;
-    if(!send_derivative && var->get_derivative_count() > 0 )continue;
+    if(!send_derivative && var.get_derivative_count() > 0 )continue;
     if(range.unique())
     {
       size_to_sent++;
@@ -398,13 +376,13 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
   link_->put_converted_function("List", size_to_sent);
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
-    const variable_t *const var = it->first;
+    const variable_t var = it->first;
     const value_range_t &range = it->second;
-    if(!send_derivative && var->get_derivative_count() > 0 )continue;
+    if(!send_derivative && var.get_derivative_count() > 0 )continue;
     if(range.unique())
     {
       link_->put_converted_function("Equal", 2);
-      send_variable(*var, vf);
+      send_variable(var, vf);
       send_value(range.get_unique(), vf);
     }
     else
@@ -420,7 +398,7 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
         {
           link_->put_converted_function("Greater", 2);
         }
-        send_variable(*var, vf);
+        send_variable(var, vf);
         send_value(bnd.value, vf);
       }
 
@@ -435,7 +413,7 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
         {
           link_->put_converted_function("Less", 2);
         }
-        send_variable(*var, vf);
+        send_variable(var, vf);
         send_value(bnd.value, vf);
       }
       
@@ -464,7 +442,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
   {
     if(it->second.unique()){
       const value_t &value = it->second.get_lower_bound().value;
-      parameter_t& param = *it->first;
+      const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
       link_->put_parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id());
       send_value(value, Link::VF_PREV);
@@ -473,7 +451,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
       {
         const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
         const value_t &value = bnd.value;
-        parameter_t& param = *it->first;
+        const parameter_t& param = it->first;
         if(!bnd.include_bound)
         {
           link_->put_converted_function("Greater", 2);
@@ -489,7 +467,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
       {
         const value_range_t::bound_t &bnd = it->second.get_upper_bound(i);
         const value_t &value = bnd.value;
-        parameter_t& param = *it->first;
+        const parameter_t& param = it->first;
         if(!bnd.include_bound)
         {
           link_->put_converted_function("Less", 2);
@@ -1036,16 +1014,14 @@ int Backend::receive_map(variable_map_t& map)
 
     // TODO:次の一行消す
     if(variable_name == "t")continue;
-    variable_t* variable_ptr = get_variable(variable_name.substr(var_prefix.length()), d_cnt);
-    if(!variable_ptr){
-      continue;
-    }
-    value_range_t tmp_range = map[variable_ptr];
+    variable_t variable(variable_name.substr(var_prefix.length()), d_cnt);
+
+    value_range_t tmp_range = map[variable];
     set_range(symbolic_value, tmp_range, rel);
     if(symbolic_value->undefined()){
       throw InterfaceError("invalid value");
     }
-    map[variable_ptr] = tmp_range;  
+    map[variable] = tmp_range;  
   }
   return 0;
 }
@@ -1060,10 +1036,8 @@ int Backend::receive_parameter_map(parameter_map_t& map)
     std::string name = link_->get_symbol();
     int derivative_count = link_->get_integer();
     int id = link_->get_integer();
-    parameter_t* tmp_param = get_parameter(name, derivative_count, id);
-    if(tmp_param == NULL){
-      throw InterfaceError("some unknown form of result at receive_parameter_map");
-    }
+    parameter_t tmp_param(name, derivative_count, id);
+
     value_range_t tmp_range = map[tmp_param];
     int relop_code = link_->get_integer();
     value_t tmp_value = value_t(new hydla::simulator::symbolic::SymbolicValue(receive_node()));

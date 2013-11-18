@@ -12,47 +12,30 @@ namespace simulator {
 struct DefaultParameter{
   public:
 
-  DefaultParameter(variable_t* variable, phase_result_sptr_t& phase)
-    :original_variable_(variable), introduced_phase_(phase)
+  DefaultParameter(variable_t variable, phase_result_sptr_t& phase)
+  :variable_name_(variable.get_name()), derivative_count_(variable.get_derivative_count()), phase_id_(phase->id)
   {
   }
-  
-  /**
-   * 元となる変数を設定する
-   */
-  void set_variable(variable_t* const variable)
-  {
-    original_variable_ = variable;
-  }
-  
-  /**
-   * 元となった変数のポインタを取得する
-   */
-  variable_t* get_variable() const {return original_variable_;}
 
-  
-  std::string get_name(){return original_variable_->get_name();}
-  int get_derivative_count(){return original_variable_->get_derivative_count();}
-  int get_phase_id(){return introduced_phase_->id;}
-  
-  /**
-   * 導入されたフェーズを設定する
-   */
-  void set_phase(const phase_result_sptr_t &phase)
+  DefaultParameter(const std::string& name, int derivative, int id)
+  :variable_name_(name), derivative_count_(derivative), phase_id_(id)
   {
-    introduced_phase_ = phase;
   }
   
-  /**
-   * 導入されたフェーズを取得する
-   */
-  phase_result_sptr_t get_phase() const {return introduced_phase_;}
-  
-  std::string get_name() const
+  std::string get_name()const {return variable_name_;}
+  int get_derivative_count()const {return derivative_count_;}
+  int get_phase_id()const {return phase_id_;}
+ 
+ 
+  void set_name(const std::string &str) {variable_name_ = str;}
+  void set_derivative_count(int d) {derivative_count_ = d;}
+  void set_phase_id(int p) {phase_id_ = p;}
+   
+  std::string to_string() const
   {
     std::stringstream strstr;
-    std::string ret("parameter[" + original_variable_->name);
-    strstr << ", " << original_variable_->derivative_count << ", " << introduced_phase_->id<< "]";
+    std::string ret("parameter[" + variable_name_);
+    strstr << ", " << derivative_count_ << ", " << phase_id_ << "]";
     ret += strstr.str();
     return ret;
   }
@@ -62,26 +45,21 @@ struct DefaultParameter{
    */
   std::ostream& dump(std::ostream& s) const
   {
-    s << get_name();
+    s << to_string();
     return s;
   }
   
-  
-  bool operator==(const DefaultParameter& rhs)
-  {
-    return (get_variable() == rhs.get_variable()) && (get_phase() == rhs.get_phase());
-  }
-  
-  
+    
   friend bool operator<(const DefaultParameter& lhs, 
                         const DefaultParameter& rhs)
   {
-    return lhs.get_name() < rhs.get_name();
+    return lhs.to_string() < rhs.to_string();
   }
   
   private:
-  variable_t* original_variable_;
-  phase_result_sptr_t introduced_phase_;
+  std::string variable_name_;
+  int derivative_count_;
+  int phase_id_;
 };
 
 std::ostream& operator<<(std::ostream& s, const DefaultParameter& p);

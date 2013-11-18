@@ -217,9 +217,9 @@ public:
   virtual simulation_todo_sptr_t make_initial_todo();
   
   /**
-   * @return pointer to introduced parameter
+   * @return introduced parameter
    */
-  parameter_t* introduce_parameter(variable_t* var, phase_result_sptr_t& phase, ValueRange& range);
+  parameter_t introduce_parameter(variable_t var, phase_result_sptr_t& phase, ValueRange& range);
   
   /**
    * @return the result of profiling 

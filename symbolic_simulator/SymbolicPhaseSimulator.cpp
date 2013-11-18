@@ -581,7 +581,6 @@ SymbolicPhaseSimulator::todo_list_t
     {
       Backend::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
       node_sptr time_node = candidate.time->get_node();
-      backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
 /*
       value_range_t tmp_range;
       if(solver_->approx_val(candidate.time, tmp_range))
@@ -601,7 +600,8 @@ SymbolicPhaseSimulator::todo_list_t
       }
       else
       {
-        *pr->end_time += *current_todo->current_time;
+        time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
+        backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       }
       results.push_back(pr);
       if(++time_it >= time_result.candidates.size())break;

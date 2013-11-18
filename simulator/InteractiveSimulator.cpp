@@ -206,7 +206,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   cout << '>';
   string variable_str = excin<string>();
   for(;v_it!=vm.end();v_it++){
-    if( v_it->first->get_string() == variable_str) break;
+    if( v_it->first.get_string() == variable_str) break;
   }
   
   string value_str;
@@ -237,11 +237,11 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
-    parameter_t* introduced_par = introduce_parameter(v_it->first, todo->parent, range);
+    parameter_t introduced_par = introduce_parameter(v_it->first, todo->parent, range);
     pm[introduced_par] = range;
     value_t pvalue(new hydla::simulator::symbolic::SymbolicValue(
-      hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first->get_name(),
-      v_it->first->get_derivative_count(),
+      hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first.get_name(),
+      v_it->first.get_derivative_count(),
       todo->parent->id))));
     vm[v_it->first] = pvalue;
     
