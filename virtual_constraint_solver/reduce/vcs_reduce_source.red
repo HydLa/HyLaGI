@@ -2891,10 +2891,15 @@ begin;
   TC1Cond_:= getCondDNFFromTC(TC1_);
   TC2Time_:= getTimeFromTC(TC2_);
   TC2Cond_:= getCondDNFFromTC(TC2_);
+
+
   % それぞれの条件部分について論理積を取り、falseなら空集合
   intersectionCondDNF_:= addCondDNFToCondDNF(TC1Cond_, TC2Cond_);
   debugWrite("intersectionCondDNF_: ", intersectionCondDNF_);
   if(isFalseDNF(intersectionCondDNF_)) then return {};
+
+  if(TC1Time_ = infinity) then return {{TC2Time_, intersectionCondDNF_}};
+  if(TC2Time_ = infinity) then return {{TC1Time_, intersectionCondDNF_}};
 
   % 条件の共通部分と時間に関する条件との論理積を取る
   % TC1Time_＜TC2Time_という条件
@@ -3042,35 +3047,38 @@ begin;
   return if((for each x in vars_ sum if(x = var_) then 1 else 0) > 0) then t else nil;
 end;
 
-% integrateCalcでtmpSol_が定まった後の処理をコピペし戻り値を整形
-% REDUCEVCS::calculate_next_PP_time()から呼び出される
+% 次のポイントフェーズに移行する時刻を求める
+procedure  calculateNextPointPhaseTime(maxTime_, discCause_);
+begin;
+  scalar ans_;
+  putLineFeed();
+
+  ans_:=  calculateNextPointPhaseTimeMain(maxTime_, discCause_, constraintStore__, initConstraint__, parameterStore__, csVariables__);
+  debugWrite("ans_ in calculateNextPointPhaseTime:", ans_);
+  return ans_;
+end;
+
+% 次のポイントフェーズに移行する時刻を求める
 % 戻り値の形式: {time_t, {}(parameter_map_t), true(bool)},...}
-procedure calculateNextPointPhaseTime(maxTime_, discCause_);
+procedure calculateNextPointPhaseTimeMain(maxTime_, discCause_, cons_, initCons_, pCons_, vars_);
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_, paramCondDNF_,
          initCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_,
          DExprRconts_, DExprRcontsVars_,
          tmpDiscCause_, retCode_, tmpVarMap_, tmpMinTList_, integAns_, tmpIneqSolDNF_;
   putLineFeed();
+  debugWrite("in calculateNextPointPhaseTimeMain", " ");
 
-  debugWrite("constraintStore__: ", constraintStore_constraintStore__);
-  debugWrite("csVariables__: ", csVariables__);
-  debugWrite("parameterStore__: ", parameterStore__);
-  debugWrite("psParameters__: ", psParameters__);
-  debugWrite("isTemporary__", isTemporary__);
-  debugWrite("initConstraint__", initConstraint__);
-  debugWrite("initTmpConstraint__", initTmpConstraint__);
-  debugWrite("tmpVariables__", tmpVariables__);
+  % TODO initCons_を使ってない？
+  debugWrite("{maxTime_ ,discCause_, cons_, initCons_, pCons_, vars_}: ", {maxTime_ ,discCause_, cons_, initCons_, pCons_, vars_});
+  debugWrite("{csVariables__, psParameters__}: ", {csVariables__, psParameters__});
 
-  debugWrite("maxTime_: ", maxTime_);
-  debugWrite("discCause_: ", discCause_);
-
-  splitExprsResult_ := splitExprs(removePrevCons(constraintStore__), csVariables__);
+  splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
   NDExprs_ := part(splitExprsResult_, 1);
   NDExprVars_ := part(splitExprsResult_, 2);
   DExprs_ := part(splitExprsResult_, 3);
   DExprVars_ := part(splitExprsResult_, 4);
-  otherExprs_:= union(part(splitExprsResult_, 5), parameterStore__);
+  otherExprs_:= union(part(splitExprsResult_, 5), pCons_);
   % DNF形式にする
   % 空集合なら、{{true}}として扱う（trueを表すDNF）
   if(otherExprs_={}) then paramCondDNF_:= {{true}}
@@ -3084,9 +3092,8 @@ begin;
   >>;
   debugWrite("paramCondDNF_: ", paramCondDNF_);
 
-
   % TODO DExprs_, NDExprs_の処理
-  tmpDiscCause_:= union(sub(constraintStore__, discCause_));
+  tmpDiscCause_:= union(sub(cons_, discCause_));
   debugWrite("tmpDiscCause_:", tmpDiscCause_);
 
   tmpMinTList_:= calcNextPointPhaseTime(maxTime_, tmpDiscCause_, paramCondDNF_);
