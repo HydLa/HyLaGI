@@ -7,7 +7,6 @@
 #include "ModuleSet.h"
 #include "Simulator.h"
 #include "../virtual_constraint_solver/SymbolicVirtualConstraintSolver.h"
-#include "tuple"
 
 namespace hydla{
 namespace simulator{
