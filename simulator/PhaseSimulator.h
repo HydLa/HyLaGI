@@ -49,6 +49,7 @@ public:
   typedef hydla::parse_tree::node_sptr node_sptr;
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
+  PhaseSimulator(PhaseSimulator&);
   
   virtual ~PhaseSimulator();
 

@@ -11,7 +11,7 @@ LN       := ln #@LN@
 
 LIBS += -lboost_system -lncurses -lboost_thread-mt
 
-CXX_OPT  += -Wall
+CXX_OPT  += -Wall -std=c++0x
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
 
 ARFLAGS  := cru

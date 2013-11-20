@@ -95,8 +95,8 @@ SymbolicPhaseSimulator::find_unsat_core
  ){
   boost::shared_ptr<UnsatCoreFinder> unsat_core_finder(new UnsatCoreFinder(*opts_));
   unsat_core_finder->initialize();
-  map<node_sptr,string> S;
-  map<const std::string,int> S4C;
+  UnsatCoreFinder::unsat_constraints_t S;
+  UnsatCoreFinder::unsat_continuities_t S4C;
   cout << "start find unsat core " << endl;
   cout << ms << endl;
   unsat_core_finder->find_unsat_core(ms,S,S4C,todo,vm);

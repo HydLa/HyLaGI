@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "UnsatCoreFinder.h"
+#include "ModuleSet.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "ContinuityMapMaker.h"
@@ -28,22 +29,23 @@ UnsatCoreFinder::UnsatCoreFinder(const Opts& opts):Simulator(const_cast<Opts&>(o
 UnsatCoreFinder::~UnsatCoreFinder(){}
 
 
-void UnsatCoreFinder::print_unsat_cores(map<node_sptr,string> S,map<const std::string,int> S4C){
+void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities_t S4C){
 
   cout << "-----unsat core------" << endl;
-  for(map<node_sptr,string>::iterator it = S.begin();it !=S.end();it++ )
+  for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
-    //cout << it->second << " : " << *(it->first) << endl;
-    std::cout << it->second << " : " << TreeInfixPrinter().get_infix_string((it->first)) << std::endl;
+    std::cout << it->first.second << " : " << TreeInfixPrinter().get_infix_string((it->first.first)) << std::endl;
+    cout << it->second << endl;
   }
-  for(map<const string, int>::iterator it = S4C.begin();it !=S4C.end();it++ )
+  for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
-    cout << "continuity : " << it->first;
-    for(int i=0;i<it->second;i++)
+    cout << "continuity : " << it->first.first;
+    for(int i=0;i<it->first.second;i++)
     {
       cout << "'";
     }
     cout << endl;
+    cout << it->second << endl;
   }
   cout << "---------------------" << endl;
 
@@ -70,8 +72,8 @@ void UnsatCoreFinder::check_all_module_set()
 }
 
 void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
-    map<node_sptr,string> S,
-    map<const std::string,int> S4C,
+    unsat_constraints_t S,
+    unsat_continuities_t S4C,
     simulation_todo_sptr_t& todo,
     const variable_map_t& vm
 )
@@ -80,17 +82,15 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
   positive_asks_t positive_asks = todo->positive_asks;
   negative_asks_t negative_asks = todo->negative_asks;
   expanded_always_t expanded_always;
-  TellCollector tell_collector(ms);
-  AskCollector ask_collector(ms);
-  tells_t tell_list;
+    tells_t tell_list;
   constraints_t constraint_list;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
   negative_asks_t tmp_negative;
 
-  //variable_map_t tvm;
   parameter_map_t pm = todo->parameter_map;
+
   if(todo->phase == PointPhase){
     solver_->change_mode(DiscreteMode, opts_->approx_precision);
   }
@@ -101,54 +101,28 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
   solver_->reset(vm, pm);
   variable_map_t::const_iterator vm_it  = vm.begin();
   variable_map_t::const_iterator vm_end = vm.end();
-for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it != todo->temporary_constraints.end(); it++){
-  cout << "temp" << endl;
-  cout << *it << endl;
-    }
+  for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it != todo->temporary_constraints.end(); it++){
+    cout << "temp" << endl;
+    cout << *it << endl;
+  }
 
-  ask_collector.collect_ask(&expanded_always,
-      &positive_asks,
-      &tmp_negative,
-      &negative_asks);
-
-  node_sptr condition_node;
-  //map<node_sptr,string> S;
-  //map<const std::string,int> S4C;
   add_constraints(S,S4C);
 
+  module_list_t::const_iterator ms_it = ms->begin();
+  module_list_t::const_iterator ms_end = ms->end();
+  for(;ms_it!=ms_end;ms_it++){
+    module_set_sptr temp_ms(new hydla::ch::ModuleSet());
+    temp_ms->add_module(*ms_it);
+    TellCollector tell_collector(temp_ms);
+    AskCollector ask_collector(temp_ms);
 
-  //for(int i = 0; i < (1 << negative_asks.size()); i++){
 
+    ask_collector.collect_ask(&expanded_always,
+        &positive_asks,
+        &tmp_negative,
+        &negative_asks);
 
-    //negative_asks_t::iterator it = negative_asks.begin();
-    //for(int j = 0; j < (int)negative_asks.size(); j++, it++){
-    //  if((i & (1 << j)) != 0){
-    //    solver_->add_guard((*it)->get_guard());
-    //    if(check_inconsistency()){
-    //      //TODO
-    //      S.insert(pair<node_sptr,string>(node_sptr((*it)->get_guard()),"guard"));
-    //      if(check_unsat_core(S,S4C,ms,todo,vm)){
-    //        return;
-    //      }else{
-    //        find_unsat_core(ms,S,S4C,todo,vm);
-    //      }
-    //    }
-    //    tmp_positive_asks.insert(*it);
-    //  }else{
-    //    solver_->add_guard(node_sptr(new Not((*it)->get_guard())));
-    //    if(check_inconsistency()){
-    //      //TODO
-    //      S.insert(pair<node_sptr,string>(node_sptr(new Not((*it)->get_guard())),"guard"));
-    //      if(check_unsat_core(S,S4C,ms,todo,vm)){
-    //        cout << 111 << endl;
-    //        return;
-    //      }else{
-    //        find_unsat_core(ms,S,S4C,todo,vm);
-    //      }
-
-    //    }
-    //  }
-    //}
+    node_sptr condition_node;
 
     tell_collector.collect_all_tells(&tell_list,
         &expanded_always,
@@ -162,14 +136,16 @@ for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it !
       maker.visit_node((*it), false, false);
     }
 
+    //add constraint
+    //*
     for(constraints_t::iterator it = constraint_list.begin();
         it != constraint_list.end();
         it++)
     {
       solver_->add_constraint(*it);
       if(check_inconsistency()){
-        S.insert(pair<node_sptr,string>(*it,"constraint"));
-        if(check_unsat_core(S,S4C,ms,todo,vm)){
+        S.insert(make_pair(make_pair(*it,"constraint"),temp_ms));
+        if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
           return ;
         }else{
           find_unsat_core(ms,S,S4C,todo,vm);
@@ -178,13 +154,14 @@ for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it !
 
       }
     }
+    //*/
     positive_asks_t::iterator it = positive_asks.begin();
-    for(int j = 0; j < (int)positive_asks.size(); j++, it++){
+    for(int j = 0; j < (int)positive_asks.size(); j++, it++)
+    {
       solver_->add_guard((*it)->get_guard());
       if(check_inconsistency()){
-        //TODO
-        S.insert(pair<node_sptr,string>(node_sptr((*it)->get_guard()),"guard"));
-        if(check_unsat_core(S,S4C,ms,todo,vm)){
+        S.insert(make_pair(make_pair(node_sptr((*it)->get_guard()),"guard"),temp_ms));
+        if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
           return;
         }else{
           find_unsat_core(ms,S,S4C,todo,vm);
@@ -193,14 +170,18 @@ for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it !
       }
 
     }
+    //add continuity
     continuity_map = maker.get_continuity_map();
-    for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
+    for(continuity_map_t::const_iterator it = continuity_map.begin();
+        it != continuity_map.end();
+        it++)
+    {
       if(it->second>=0){
         for(int i=0; i<it->second;i++){
           solver_->set_continuity(it->first, i);
           if(check_inconsistency()){
-            S4C.insert(pair<const string,int>(it->first,it->second));
-            if(check_unsat_core(S,S4C,ms,todo,vm)){
+            S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
+            if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
               return ;
             }else{
               find_unsat_core(ms,S,S4C,todo,vm);
@@ -214,8 +195,8 @@ for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it !
         for(int i=0; i<=-it->second;i++){
           solver_->set_continuity(it->first, i);
           if(check_inconsistency()){
-            S4C.insert(pair<const string,int>(it->first,it->second));
-            if(check_unsat_core(S,S4C,ms,todo,vm)){
+            S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
+            if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
               return ;
             }else{
               find_unsat_core(ms,S,S4C,todo,vm);
@@ -229,8 +210,8 @@ for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it !
         node_sptr cons(new Equal(lhs, rhs));
         solver_->add_constraint(cons);
         if(check_inconsistency()){
-          S.insert(pair<node_sptr,string>(cons,"constraint"));
-          if(check_unsat_core(S,S4C,ms,todo,vm)){
+          S.insert(make_pair(make_pair(cons,"constraint"),temp_ms));
+          if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
             return ;
           }else{
             find_unsat_core(ms,S,S4C,todo,vm);
@@ -240,10 +221,11 @@ for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it !
         }
       }
     }
-    
-    node_sptr tmp_node;
-    solver_->end_temporary();
-  //}
+  }
+
+  solver_->check_consistency();
+  node_sptr tmp_node;
+  solver_->end_temporary();
 
 
 }
@@ -261,7 +243,7 @@ bool UnsatCoreFinder::check_inconsistency(){
     return false;
   }
 }
-bool UnsatCoreFinder::check_unsat_core(map<node_sptr,string> S,map<const std::string,int> S4C,const module_set_sptr& ms,simulation_todo_sptr_t& todo, const variable_map_t& vm){
+bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms,simulation_todo_sptr_t& todo, const variable_map_t& vm){
   solver_->end_temporary();
   solver_->start_temporary();
 if(todo->phase == PointPhase){
@@ -274,46 +256,40 @@ if(todo->phase == PointPhase){
   solver_->reset(vm,todo->parameter_map);
   add_constraints(S, S4C);
   bool ret = check_inconsistency();
-  //cout << ret << endl;
   if(ret){
     print_unsat_cores(S,S4C);
   }else{
-    //cout << 1111<< endl;
     //print_unsat_cores(S,S4C);
-    //cout << 1111<< endl;
   }
   solver_->end_temporary();
   return ret;
 }
-void UnsatCoreFinder::add_constraints(map<node_sptr,string> S,map<const std::string,int> S4C){
-  //cout << "start add constraints" << endl;
-  for(map<node_sptr,string>::iterator it = S.begin();it !=S.end();it++ )
+void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C){
+  for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
-    //cout << *(it->first) << endl;
-    if(it->second == "guard"){
-      solver_->add_guard(it->first);
+    if(it->first.second == "guard"){
+      solver_->add_guard(it->first.first);
     }
-    else if(it->second == "constraint"){
-      solver_->add_constraint(it->first);
+    else if(it->first.second == "constraint"){
+      solver_->add_constraint(it->first.first);
     }
   }
-  for(map<const string, int>::iterator it = S4C.begin();it !=S4C.end();it++ )
+  for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
-    if(it->second>=0){
-      for(int i=0; i<it->second;i++){
-        solver_->set_continuity(it->first, i);
+    if(it->first.second>=0){
+      for(int i=0; i<it->first.second;i++){
+        solver_->set_continuity(it->first.first, i);
       }
     }else{
-      node_sptr lhs(new Variable(it->first));
-      for(int i=0; i<=-it->second;i++){
-        solver_->set_continuity(it->first, i);
+      node_sptr lhs(new Variable(it->first.first));
+      for(int i=0; i<=-it->first.second;i++){
+        solver_->set_continuity((it->first).first, i);
       }
       node_sptr rhs(new Number("0"));
       node_sptr cons(new Equal(lhs, rhs));
       solver_->add_constraint(cons);
     }
   }
-  //cout << "end add constraints" << endl;
 }
 
 }
