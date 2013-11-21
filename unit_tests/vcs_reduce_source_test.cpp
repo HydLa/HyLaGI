@@ -250,6 +250,21 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_test){
   BOOST_CHECK(check(query3, "(list (list (quotient (times (sqrt py) (sqrt 5)) 5) (list (list (list py leq 11) (list py geq 9)))))"));
 
 }
-   
+
+BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_case_test){
+  const string query1 = 
+    "depend usrvary,t$"
+    "maxTime_ := 7/5$"
+    "discCause_ := {usrvary = 0}$"
+    "cons_ := {usrvary = parameter_y_0_1 - 5*t**2}$"
+    "initCons_ := {initusrvary_1lhs = 0,initusrvarylhs = parameter_y_0_1}$"
+    "pCons_ := {parameter_y_0_1 - 9 > 0,parameter_y_0_1 - 11 < 0}$"
+    "csVariables__ := vars_ := {df(usrvary,t,2),df(usrvary,t),usrvary}$"
+    "psParameters__ := {parameter_y_0_1}$"
+
+    "symbolic redeval '(calculateNextPointPhaseTimeMain maxTime_ discCause_ cons_ initCons_ pCons_ vars_);";
+
+  BOOST_CHECK(check(query1, "(list (list (quotient (times (sqrt parameter_y_0_1) (sqrt 5)) 5) (list (list (list parameter_y_0_1 1 (quotient 49 5)) (list parameter_y_0_1 2 9))) 0) (list (quotient 7 5) (list (list (list parameter_y_0_1 4 (quotient 49 5)) (list parameter_y_0_1 1 11))) 1))"));
+}
 
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST

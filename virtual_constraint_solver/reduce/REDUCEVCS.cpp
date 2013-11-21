@@ -101,11 +101,11 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
           parameter_t& param = *it->first;
           if(!bnd.include_bound){
             const symbolic_value_t lower_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
+            constraints.push_back(node_sptr(new Greater(node_sptr(
                       new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
           }else{
             const symbolic_value_t lower_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new Greater(node_sptr(
+            constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
                       new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
           }
         }
@@ -115,11 +115,11 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
           parameter_t& param = *it->first;
           if(!bnd.include_bound){
             const symbolic_value_t upper_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new LessEqual(node_sptr(
+            constraints.push_back(node_sptr(new Less(node_sptr(
                       new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
           }else{
             const symbolic_value_t upper_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new Less(node_sptr(
+            constraints.push_back(node_sptr(new LessEqual(node_sptr(
                       new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
           }
         }
@@ -602,11 +602,11 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
   reduce_link_->skip_until_redeval();
   const SExpAST sp(reduce_link_->get_as_s_exp_parse_tree());
   
-  // {{value_t(time_t), {}(parameter_map_t), true(bool)},...} のようなものが戻るはず
-  SExpAST::const_tree_iter_t tree_root_ptr = sp.root();
+  // {{value_t(time_t), {DNF}(parameter_map_t), true(bool)},...} のようなものが戻るはず
+  SExpAST::const_tree_iter_t root_ptr = sp.root();
   PP_time_result_t result;
-
-  for(SExpAST::const_tree_iter_t it = tree_root_ptr->children.begin(); it!= tree_root_ptr->children.end(); it++){
+  SExpAST::const_tree_iter_t it = root_ptr->children.begin();
+  for(; it != root_ptr->children.end(); ++it){
     PP_time_result_t::candidate_t candidate;
 
     // 時刻を受け取る
@@ -618,11 +618,12 @@ SymbolicVirtualConstraintSolver::PP_time_result_t REDUCEVCS::calculate_next_PP_t
     SExpAST::const_tree_iter_t param_ptr = sec::cadr(it);
     std::string param_str = sec::to_string(param_ptr);
 
-    // TODO 空リスト以外の場合に対応
-    if(!(param_ptr->children.size()==1 && param_str.find("list")!=std::string::npos)){
-      assert(0);
+    if(param_ptr->children.size()==1 && param_str.find("(list)")!=std::string::npos){
+      candidate.parameter_map = parameter_map_t();
+    }else{
+      // TODO 二重リストへの正しい対応
+      candidate.parameter_map = to_parameter_map(sec::car(param_ptr));
     }
-    candidate.parameter_map = parameter_map_t();
 
     // 終了時刻かどうかを受け取る
     SExpAST::const_tree_iter_t bool_ptr = sec::caddr(it);
@@ -892,6 +893,7 @@ parameter_map_t REDUCEVCS::to_parameter_map(const_tree_iter_t list_iter){
     parameter_t* tmp_param;
     {
       std::string param_str = sec::to_string(sec::car(it));
+      std::cout << param_str << std::endl;
       // "parameter_"を取り除く
       param_str.erase(0, REDUCEStringSender::par_prefix.length() + 1);
       for(int i = 0; i < (int)param_str.size(); ++i){
@@ -921,7 +923,7 @@ parameter_map_t REDUCEVCS::to_parameter_map(const_tree_iter_t list_iter){
 
   HYDLA_LOGGER_VCS("--- result map---\n", map);
   HYDLA_LOGGER_VCS("#*** End ", __FUNCTION__, " ***");
-  return parameter_map_t();
+  return map;
 }
 
 } // namespace reduce

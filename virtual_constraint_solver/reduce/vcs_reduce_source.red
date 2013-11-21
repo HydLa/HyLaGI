@@ -2736,6 +2736,7 @@ begin;
     % Condがtrueの場合は空集合として扱う
     if(isTrueDNF(minTCondDNF_)) then minTCondDNF_:= {{}};
     % 演算子部分をコードに置き換える
+    % TODO DNFが"x=1 and x=2"と "x+1 or x=2"を正しく区別できているか?
     minTCondDNF_:= for each conj in minTCondDNF_ collect
      for each term in conj collect {getVarNameFromTuple(term), getExprCode(getRelopFromTuple(term)), getValueFromTuple(term)};
     maxTimeFlag_:= if(minTTime_ neq maxTime_) then 0 else 1;
