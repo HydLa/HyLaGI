@@ -1,9 +1,8 @@
 #!/usr/bin/ruby
 
 def dump(cases)
-  i = 1
   cases.each do |oneCase|
-    puts "case: " + i.to_s
+    puts "case: " + oneCase[:id].to_s
 
     puts "  traj:" if oneCase[:traj]
     oneCase[:traj].each do |elem|
@@ -19,25 +18,36 @@ def dump(cases)
     oneCase[:param].each do |param, range|
       puts "      " + param + "\t: " + range
     end
-
-    i += 1
   end
 end
 
 def diffVm(lhsCases, rhsCases)
+  msg = "{\n"
   lhsCase, rhsCase = lhsCases.each, rhsCases.each
   loop do
-    lhsTraj, rhsTraj = lhsCase.next[:traj].each, rhsCase.next[:traj].each
+    lhsOneCase = lhsCase.next
+    lhsTraj, rhsTraj = lhsOneCase[:traj].each, rhsCase.next[:traj].each
+    msg +=  " " * 2 + "{\"case " + lhsOneCase[:id].to_s + "\", \n"
     loop do
-      lhsVm, rhsVm = lhsTraj.next[:vm].sort.each, rhsTraj.next[:vm].sort.each
+      lhsElem = lhsTraj.next
+      lhsVm, rhsVm = lhsElem[:vm].sort.each, rhsTraj.next[:vm].sort.each
+      msg +=  " " * 4 + "{\"" + lhsElem[:phase] + " " + lhsElem[:id].to_s + "\", \n" + " " * 6
       loop do
         lhsVar, lhsVal = lhsVm.next
         rhsVar, rhsVal = rhsVm.next
         raise "unequal variable name" unless lhsVar == rhsVar
-        puts lhsVar + "\t: (" + lhsVal + ")-(" + rhsVal + ")"
+        msg += "{\"" + lhsVar + "\", Simplify[(" + lhsVal + ")-(" + rhsVal + ")] == 0},"
       end
+      msg = msg[0, msg.length-1]
+      msg += "},\n"
     end
+    msg = msg[0, msg.length-2]
+    msg += "\n},\n"
   end
+
+  msg = msg[0, msg.length-2]
+  msg += "}"
+  puts msg
 end
 
 def extract(str)
@@ -104,6 +114,11 @@ def getData(enum)
 
   cases.sort! do |lhs, rhs|
     lhs[:traj].collect{ |it| it[:ms] } <=> rhs[:traj].collect{ |it| it[:ms] }
+  end
+  i = 1
+  cases.each do |oneCase|
+    oneCase[:id] = i
+    i += 1
   end
 
   return cases
