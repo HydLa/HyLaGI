@@ -104,6 +104,8 @@ struct SimulationTodo{
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
   module_set_list_t ms_to_visit;
+  /// 無矛盾極大なモジュール集合の集合
+  module_set_list_t maximal_mss;
   /// プロファイリング結果
   profile_t profile;
   /// 所属するケースの計算時間
@@ -122,6 +124,7 @@ struct SimulationTodo{
     ms_cache.clear();
     temporary_constraints.clear();
     ms_to_visit = module_set_container->get_full_ms_list();
+    maximal_mss.clear();
     positive_asks.clear();
     negative_asks.clear();
     judged_prev_map.clear();

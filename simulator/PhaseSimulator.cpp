@@ -143,7 +143,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       
       case CVM_INCONSISTENT:
       HYDLA_LOGGER_LOCATION(MS);
-      todo->module_set_container->mark_nodes(*ms);
+      todo->module_set_container->mark_nodes(todo->maximal_mss, *ms);
       if(opts_->find_unsat_core_mode)
       {
         find_unsat_core(ms, todo, time_applied_map);
@@ -204,7 +204,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           
           case CVM_INCONSISTENT:
           HYDLA_LOGGER_LOCATION(MS);
-          todo->module_set_container->mark_nodes(*connected_ms);
+          todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           if(opts_->find_unsat_core_mode)
           {
             find_unsat_core(ms, todo, time_applied_map);
@@ -220,7 +220,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     }
   }
   todo->module_set_container->mark_nodes();
-    
+  //  if(opts_->nd_mode || opts_->interactive_mode) todo->module_set_container->reset(module_set_list_t());
+  todo->maximal_mss.push_back(ms);
   for(unsigned int i=0; i < vms.size(); i++)
   {
     variable_range_map_t& vm = vms[i];

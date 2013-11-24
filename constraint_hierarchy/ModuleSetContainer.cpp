@@ -108,5 +108,9 @@ void ModuleSetContainer::mark_nodes(const ModuleSet& ms){
   }while(diff > 0 && it != ms_to_visit_.end());
 }
 
+void ModuleSetContainer::mark_nodes(const module_set_list_t& mms, const ModuleSet& ms){
+  mark_nodes(ms);  
+}
+
 } // namespace ch
 } // namespace hydla
