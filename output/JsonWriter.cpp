@@ -1,7 +1,5 @@
 #include "JsonWriter.h"
 #include "Dumpers.h"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <sstream>
 
 using namespace boost::property_tree;
@@ -12,10 +10,8 @@ namespace output{
 
 void JsonWriter::write(const phase_result_const_sptr_t &root)
 {
-  ptree pt;
   stringstream sstr;
-  sstr << root->children[0]->variable_map;
-  pt.put("vm", sstr.str());
+  read_vm(root->children[0]->variable_map);
 /*
   sstr = stringstream();
   sstr << root->parameter_map;
@@ -31,8 +27,19 @@ void JsonWriter::write(const phase_result_const_sptr_t &root)
   pt.put("ea", sstr.str());
 
 */
-  write_json("hoge.json", pt);
+  write_json("hoge.json", parse_tree_);
 }
+
+
+void JsonWriter::read_vm(const variable_map_t &vm)
+{
+  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  {
+    std::string key = "vm." + it->first->get_string();
+    parse_tree_.put(key, it->second);
+  }
+}
+
 
 }
 }
