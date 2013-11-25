@@ -37,10 +37,10 @@ void ParallelSimulatorWorker::initialize(const parse_tree_sptr& parse_tree, int 
   profile_vector_ = master_->get_profile_vector();
   variable_set_ = master_->variable_set_;
   original_map_ = master_->original_map_;
-  parameter_set_ = master_->parameter_set_;
+  parameter_map_ = master_->parameter_map_;
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
-  phase_simulator_->initialize(*variable_set_, *parameter_set_,
-   *original_map_, vm, msc_no_init_);
+  phase_simulator_->initialize(variable_set_, parameter_map_,
+   original_map_, vm, msc_no_init_);
 }
 
 void ParallelSimulatorWorker::set_thread_state(string str)

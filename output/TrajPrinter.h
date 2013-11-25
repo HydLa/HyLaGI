@@ -19,7 +19,6 @@ using hydla::simulator::phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                                   phase_result_sptrs_t;
 using hydla::simulator::variable_map_t; 
 using hydla::simulator::parameter_map_t;
-using hydla::simulator::parameter_set_t;
 using hydla::simulator::value_t;
 
 /**

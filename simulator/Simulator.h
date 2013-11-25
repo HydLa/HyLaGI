@@ -179,8 +179,6 @@ typedef TodoContainer                                    todo_container_t;
 
 typedef std::list<variable_t>                            variable_set_t;
 
-typedef std::list<parameter_t>                     parameter_set_t;
-
 class Simulator
 {
 public:  
@@ -204,10 +202,12 @@ public:
    */
   virtual void set_phase_simulator(phase_simulator_t *ps);
   
+  void set_backend(backend::Backend* back);
+
   /**
    * @return set of introduced parameters and their ranges of values
    */
-  parameter_map_t get_parameter_map(){return *original_parameter_map_;}
+  parameter_map_t get_parameter_map(){return parameter_map_;}
   
   phase_result_sptr_t get_result_root(){return result_root_;}
   
@@ -232,24 +232,19 @@ public:
   /**
    * template of variable maps
    */
-  boost::shared_ptr<variable_map_t> original_map_;
+  variable_map_t original_map_;
   
   /*
    * set of variables
    */
-  boost::shared_ptr<variable_set_t> variable_set_;
+  variable_set_t variable_set_;
   
   variable_t system_time_;
 
   /*
-   * set of introduced parameters
+   * map of introduced parameters and their ranges of values
    */
-  boost::shared_ptr<parameter_set_t> parameter_set_;
-  
-  /*
-   * map of introduced parameters and their original ranges of values
-   */
-  boost::shared_ptr<parameter_map_t> original_parameter_map_;
+  parameter_map_t parameter_map_;
   
 
 protected:

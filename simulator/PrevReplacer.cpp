@@ -1,4 +1,4 @@
-#include "VariableReplacer.h"
+#include "PrevReplacer.h"
 #include "SymbolicValue.h"
 #include "Logger.h"
 #include "Dumpers.h"
@@ -9,67 +9,70 @@ using namespace hydla::parse_tree;
 namespace hydla {
 namespace simulator {
 
-//TODO: VariableReplacer自体が本来なら不要なはず
-
-
-VariableReplacer::VariableReplacer(const variable_map_t& map):variable_map(map)
+PrevReplacer::PrevReplacer(parameter_map_t& map, phase_result_sptr_t &phase, Simulator &simulator):parameter_map_(map), prev_phase_(phase), simulator_(simulator)
 {}
 
-VariableReplacer::~VariableReplacer()
+PrevReplacer::~PrevReplacer()
 {}
 
-void VariableReplacer::replace_value(value_t& val)
+void PrevReplacer::replace_value(value_t& val)
 {
-  differential_cnt = 0;
-  replace_cnt = 0;
+  HYDLA_LOGGER_LOCATION(REST);
   val->accept(*this);
 }
 
 
-void VariableReplacer::visit(hydla::simulator::symbolic::SymbolicValue& val)
+void PrevReplacer::visit(hydla::simulator::symbolic::SymbolicValue& val)
 {
-  new_child_.reset();
-  accept(val.get_node());
+  replace(val.get_node());
   if(new_child_) val.set_node(new_child_);
 }
 
-
-void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+void PrevReplacer::replace(node_sptr node)
 {
-/*
-  string v_name = node->get_name();
-  variable_map_t::const_iterator it = variable_map.begin();
-  for(;it != variable_map.end(); it++)
-    {
-      if(it->first->get_name() == v_name && it->first->get_derivative_count() == differential_cnt)
-	{
-	  new_child_ = it->second->get_node()->clone();
-	  replace_cnt++;
-	  // upper_bound to avoid infinite loop (may be caused by circular reference)
-	  if(replace_cnt >= variable_map.size())
-	    {
-	      HYDLA_LOGGER_LOCATION(ERROR)
-              HYDLA_LOGGER_ERROR("variable_map:", variable_map);
-	      assert(0);
-	    }
-	  replace_cnt--;
-
-	  break;
-	}
-    }
-*/
+  differential_cnt_ = 0;
+  in_prev_ = false;
+  new_child_.reset();
+  accept(node);
 }
 
-void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 {
-  differential_cnt++;
+  assert(!in_prev_);
+  in_prev_ = true;
   accept(node->get_child());
-  differential_cnt--;
+  if(parameter_node_)
+  {
+    new_child_ = parameter_node_;
+    parameter_node_.reset();
+  }
+  in_prev_ = false;
+}
+
+void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+{
+  HYDLA_LOGGER(REST, *node);
+  string v_name = node->get_name();
+  int diff_cnt = differential_cnt_;
+  HYDLA_LOGGER_VAR(REST, v_name);
+  HYDLA_LOGGER_VAR(REST, diff_cnt);
+  parameter_node_ = node_sptr(new Parameter(v_name, diff_cnt, prev_phase_->id));
+  parameter_t param(v_name, diff_cnt, prev_phase_->id);
+  variable_t variable(v_name, diff_cnt);
+  simulator_.introduce_parameter(variable, prev_phase_, prev_phase_->variable_map[variable]);
+  parameter_map_[param] = prev_phase_->variable_map[variable];
+}
+
+void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+{
+  differential_cnt_++;
+  accept(node->get_child());
+  differential_cnt_--;
 }
 
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
+void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 {                                                     \
   for(int i=0;i<node->get_arguments_size();i++){      \
     accept(node->get_argument(i));                    \
@@ -81,18 +84,18 @@ void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
+void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 {                                                     \
   dispatch_lhs(node);                                 \
   dispatch_rhs(node);                                 \
 }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
+void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 { dispatch_child(node);}
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node){}
+void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node){}
 
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
@@ -120,5 +123,5 @@ DEFINE_DEFAULT_VISIT_FACTOR(Infinity)
 
 
 
-} //namespace simulator
-} //namespace hydla
+}
+}

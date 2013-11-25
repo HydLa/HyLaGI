@@ -114,7 +114,7 @@ publicMethod[
     checkMessage;
     If[cp =!= False && cp =!= True,
       cp = LogicalExpand[Simplify[cp] ];
-      cp = integerString[cp];
+      cp = toReturnForm[cp];
     ];
     simplePrint[cp];
     cp
@@ -124,7 +124,7 @@ publicMethod[
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint, pConstraint, Union[variables, prevVariables] ]
+  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevConstraint, pConstraint, Union[variables, prevVariables] ]
 );
 
 publicMethod[
@@ -153,14 +153,12 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, pConstraint, Union[timeVariables, prevVariables, initVariables] ]
+  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevConstraint, pConstraint, timeVariables, initVariables, prevVariables]
 );
-
-appendZeroVars[vars_] := Join[vars, vars /. x_[t] -> x[0]];
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, pcons, vars,
+  cons, initCons, prevCons, pcons, timeVars, initVars, prevVars,
   Module[
     {sol, otherCons, tCons, hasTCons, necessaryTCons, parList, tmpPCons, cpTrue, cpFalse, trueMap, falseMap},
     If[cons === True,
@@ -168,19 +166,18 @@ publicMethod[
       sol = exDSolve[cons, initCons];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
-        {False, pcons},
+        {False, createMap[pcons, isParameter, hasParameter, {}]},
         If[sol[[1]] === underConstraint,
           (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-          (* Existsの第一引数はHold （HoldAll?）属性を持っているらしいので，Evaluateで評価する必要がある *)
-          tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, getTimeVars[vars]];
+          tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, timeVars];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = LogicalExpand[Quiet[Reduce[Exists[Evaluate[appendZeroVars[vars]], And@@applyList[tCons] && tmpPCons], Reals]]],
+          tCons = LogicalExpand[Quiet[Reduce[Exists[timeVars], tCons && tmpPCons && prevCons], Reals]],
           (* 微分方程式が解けた場合 *)
-          tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, getTimeVars[vars]];
+          tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, timeVars];
           tCons = applyList[sol[[1]] /. tCons];
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = LogicalExpand[Quiet[Reduce[And@@tCons && tmpPCons, Reals]]]
+          tCons = LogicalExpand[Quiet[Reduce[prevCons && tCons && tmpPCons, Reals]]]
         ];
         checkMessage;
 
@@ -195,7 +192,7 @@ publicMethod[
           necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
           
           simplePrint[necessaryTCons];
-          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, t], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
+          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, Append[prevVars, t] ], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
           cpFalse = Reduce[pcons && !cpTrue, Reals];
 
           simplePrint[cpTrue, cpFalse];
@@ -212,39 +209,47 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, prevConstraint, variables];
 
 publicMethod[
   createVariableMap,
-  cons, vars,
+  cons, prevCons, vars,
   Module[
-    {ret},
-    ret = createMap[cons, isVariable, hasVariable, vars];
+    {ret, prevList, prevAppliedCons, eqs},
+    prevList = applyList[prevCons];
+    eqs = Select[prevList, (Head[#] === Equal)&];
+    prevAppliedCons = cons /. Map[(Rule@@#)&, eqs];
+    simplePrint[prevAppliedCons];
+    ret = createMap[prevAppliedCons, isVariable, hasVariable, vars];
     debugPrint["ret after CreateMap", ret];
-    ret = Map[(Cases[#, Except[{parameter[___], _, _}] ])&, ret];
+    ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
     ret = ruleOutException[ret];
     simplePrint[ret];
     ret
   ]
 ];
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables, parameters];
+createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, prevConstraint, timeVariables, prevVariables, parameters];
 
 publicMethod[
   createVariableMapInterval,
-  cons, initCons, vars, pars,
+  cons, initCons, prevCons, vars, prevVars, pars,
   Module[
-    {sol, tStore, tVars, ret},
+    {sol, tStore, ret, prevList, eqs},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
-    If[sol[[1]] === underConstraint, 
+    If[sol[[1]] === underConstraint,
       underConstraint,
-      tVars = getTimeVars[vars];
-      tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, tVars];
+      tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, vars];
+      prevList = applyList[prevCons];
+      (* assume elements of equations in prevList are in the form like "prev[x, 0] == val" (not like "val == prev[x, 0]") *)
+      eqs = Select[prevList, (Head[#] === Equal)&];
+      tStore = tStore /. Map[(Rule@@#)&, eqs];
       simplePrint[tStore];
       If[Length[Select[tStore, (hasVariable[ #[[2]] ])&, 1] ] > 0,
         (* 右辺に変数名が残っている，つまり値が完全にtの式になっていない変数が出現した場合はunderConstraintを返す *)
         underConstraint,
+        (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
         ret = {convertExprs[tStore]};
         debugPrint["ret after convert", ret];
         ret = ruleOutException[ret];
@@ -314,12 +319,9 @@ getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ Wo
 
 (* 式中に出現する記号定数を取得 *)
 
-getParameters[exprs_] := Cases[exprs, parameter[_, _, _], Infinity];
+getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
 
 getPrevs[exprs_] := Cases[exprs, prev[_, _], Infinity];
-
-(* 時間変数を取得 *)
-getTimeVars[list_] := Cases[list, _[t], Infinity];
 
 (* 初期値変数を取得 *)
 getInitVars[expr_] := Cases[expr, _[0], Infinity];
@@ -328,11 +330,11 @@ hasInitVars[expr_] := (Length[getInitVars[expr] ] > 0);
 
 (* 式中に定数名が出現するか否か *)
 
-hasParameter[exprs_] := Length[Cases[exprs, parameter[_, _, _], Infinity]] > 0;
+hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity]] > 0;
 
 (* 式が定数そのものか否か *)
 
-isParameter[exprs_] := Head[exprs] === parameter;
+isParameter[exprs_] := Head[exprs] === p;
 
 (* 式が指定されたシンボルを持つか *)
 hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
@@ -364,7 +366,7 @@ publicMethod[
   constraint = True;
   initConstraint = True;
   pConstraint = True;
-  prevConstraint = {};
+  prevConstraint = True;
   initTmpConstraint = True;
   tmpConstraint = True;
   isTemporary = False;
@@ -373,7 +375,7 @@ publicMethod[
 
 publicMethod[
   resetConstraintForVariable,
-  constraint = True;
+  constraint = initConstraint = tmpConstraint = initTmpConstraint = True;
 ];
 
 publicMethod[
@@ -381,18 +383,18 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co] //. prevConstraint;
+    cons = If[Head[co] === List, And@@co, co];
     If[isTemporary,
       tmpConstraint = tmpConstraint && cons,
       constraint = constraint && cons
-      ];
+    ];
     simplePrint[cons, constraint, tmpConstraint];
   ]
 ];
 
 addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = And@@co //. prevConstraint;
+  cons = And@@co;
   If[isTemporary,
     initTmpConstraint = initTmpConstraint && cons,
     initConstraint = initConstraint && cons
@@ -403,20 +405,14 @@ addInitConstraint[co_] := Module[
 publicMethod[
   addPrevConstraint,
   co,
-  Module[
-    {cons},
-    cons = And@@co;
-    If[cons =!= True,
-       prevConstraint = Union[prevConstraint, Map[(Rule@@#)&, applyList[cons]]]
-       ];
-    simplePrint[cons, prevConstraint];
-  ]
+  prevConstraint = prevConstraint && And@@co;
+  simplePrint[prevConstraint];
 ];
 
 publicMethod[
   simplify,
   arg,
-  integerString[Simplify[arg]]
+  toReturnForm[Simplify[arg]]
 ];
 
 
@@ -498,7 +494,7 @@ publicMethod[
   lhs, rhs,
   Module[
     {cons},
-    cons = lhs == rhs //. prevConstraint;
+    cons = lhs == rhs;
     If[isTemporary,
       tmpConstraint = tmpConstraint && cons,
       constraint = constraint && cons
@@ -523,7 +519,7 @@ publicMethod[
 (* 変数名からDerivativeやtを取り，微分回数とともに返す *)
 removeDash[var_] := Module[
    {ret},
-   If[Head[var] === parameter || Head[var] === prev, Return[var]];
+   If[Head[var] === p || Head[var] === prev, Return[var]];
    ret = var /. x_[t] -> x;
    If[MatchQ[Head[ret], Derivative[_]],
      ret /. Derivative[d_][x_] -> {x, d},
@@ -575,7 +571,8 @@ getExprCode[expr_] := Switch[Head[expr],
 ];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
-integerString[expr_] := (
+
+toReturnForm[expr_] := (
   expr /. (Infinity :> inf)
        /. (Derivative[cnt_, var_, ___]  :> derivative[cnt, var])
        /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
@@ -587,8 +584,7 @@ integerString[expr_] := (
 (* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
 (* TODO:複素数の要素に対しても，任意精度への対応 （文字列への変換とか）を行う *)
 
-(* convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[FullSimplify[#[[2]] ] ] } )&, list]; *)
-convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], integerString[#[[2]] ] } )&, list];
+convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], toReturnForm[#[[2]] ] } )&, list];
 
 (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], #, timeCond[[3]]})&, List@@timeCond[[2]]];
@@ -614,7 +610,6 @@ publicMethod[
   maxTime, discCause, cons, initCons, pCons, vars,
   Module[
     {
-      dSol,
       timeAppliedCauses,
       resultList,
       necessaryPCons,
@@ -622,16 +617,11 @@ publicMethod[
       originalOther,
       tmpMaxTime
     },
-    
-    (* まず微分方程式を解く．うまくやればcheckConsistencyIntervalで出した結果 (tStore)をそのまま引き継ぐこともできるはず *)
-    dSol = exDSolve[cons, initCons];
-    
-    debugPrint["dSol after exDSolve", dSol];
-    
+        
     (* 次にそれらをdiscCauseに適用する *)
     timeAppliedCauses = False;
     
-    tStore = Map[(# -> createIntegratedValue[#, dSol[[2]] ])&, getTimeVars[vars]];
+    tStore = Map[(# -> createIntegratedValue[#, applyList[cons] ])&, vars];
     timeAppliedCauses = Or@@(discCause /. tStore );
     simplePrint[timeAppliedCauses];
     
@@ -662,7 +652,7 @@ publicMethod[
     
     debugPrint["resultList after Format", resultList];
     
-    resultList = Map[({integerString[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], #[[3]] })&, resultList];
+    resultList = Map[({toReturnForm[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], #[[3]] })&, resultList];
     simplePrint[resultList];
     resultList
   ]
@@ -751,8 +741,7 @@ Check[
 ];
 
 
-
-(* 式の数とそこに出現するが一致するまで再帰的に呼び出す関数
+(* 式の集合の要素数と式の集合中に出現する変数の数が一致するまで再帰的に呼び出す関数
   @param exprs 探索対象となる式集合
   @return unExpandable | {(DSolveすべき式の集合）, (残りの式の集合)， （DSolveすべき変数の集合）}
 *)
@@ -877,7 +866,7 @@ publicMethod[
     appliedExpr = (expr /. t -> time);
     (* appliedExpr = FullSimplify[(expr /. t -> time)]; *)
     If[Element[appliedExpr, Reals] =!= False,
-      integerString[appliedExpr],
+      toReturnForm[appliedExpr],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
   ]
@@ -941,22 +930,22 @@ publicMethod[
       {0},
       If[mode === numeric,
         If[Length[val] == 1,
-          {1, integerString[approxExpr[precision, val[[1]] ] ] },
-          {1, integerString[approxExpr[precision, val[[1]] ] ], integerString[approxExpr[precision, val[[2]] ] ] }
+          {1, toReturnForm[approxExpr[precision, val[[1]] ] ] },
+          {1, toReturnForm[approxExpr[precision, val[[1]] ] ], toReturnForm[approxExpr[precision, val[[2]] ] ] }
         ],
         (* if approxMode === interval *)
         If[Length[val] == 1,
           (* make interval from exact value *)
           itv = getInterval[val[[1]], pcons, precision];
           simplePrint[itv];
-          itv = integerString[{itv[[1]][[1]], itv[[1]][[2]]}];
+          itv = toReturnForm[{itv[[1]][[1]], itv[[1]][[2]]}];
           simplePrint[itv];
           Join[{1}, itv],
           (* make interval from interval *)
           lb = getInterval[val[[1]], pcons, precision];
           ub = getInterval[val[[2]], pcons, precision];
           simplePrint[lb, ub];
-          Join[{1}, integerString[{Min[lb[[1]][[1]], ub[[1]][[1]] ], Max[lb[[1]][[2]], ub[[1]][[2]] ]}] ]
+          Join[{1}, toReturnForm[{Min[lb[[1]][[1]], ub[[1]][[1]] ], Max[lb[[1]][[2]], ub[[1]][[2]] ]}] ]
         ]
       ]
     ]
@@ -993,7 +982,7 @@ publicMethod[
   Module[
     {res}, 
     res = primaryTaylorExpansion[val, pcons, precision];
-    res = If[res[[2]] == 0, {integerString[res[[1]] ]},  {integerString[res[[1]] ], integerString[res[[2]] ], integerString[res[[3]] ]} ];
+    res = If[res[[2]] == 0, {toReturnForm[res[[1]] ]},  {toReturnForm[res[[1]] ], toReturnForm[res[[2]] ], toReturnForm[res[[3]] ]} ];
     res 
   ]
 ];
@@ -1032,7 +1021,7 @@ primaryTaylorExpansion[expr_, pcons_, precision_] := Module[
 publicMethod[
   exprTimeShift,
   expr, time,
-  integerString[expr /. t -> t - time]
+  toReturnForm[expr /. t -> t - time]
 ];
 
 (*
@@ -1090,8 +1079,8 @@ publicMethod[checkIncludeBound, v1, v2,
     ];
    simplePrint[reduceExprPast && reduceExprNow];
    If[Reduce[
-      Not[reduceExprPast] && reduceExprNow] === False, integerString[1], 
-    integerString[0]]]
+      Not[reduceExprPast] && reduceExprNow] === False, toReturnForm[1], 
+    toReturnForm[0]]]
 ];
 
 publicMethod[checkInclude, includeBound, 

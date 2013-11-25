@@ -39,7 +39,6 @@ namespace symbolic {
   typedef simulator::not_adopted_tells_list_t    not_adopted_tells_list_t;
   typedef simulator::continuity_map_t            continuity_map_t;
   typedef simulator::variable_set_t   variable_set_t;
-  typedef simulator::parameter_set_t  parameter_set_t;
   
   typedef simulator::parse_tree_sptr  parse_tree_sptr;
   

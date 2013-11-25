@@ -20,7 +20,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   typedef hydla::simulator::ValueRange      value_range_t;
   typedef hydla::simulator::parameter_t     parameter_t;
   typedef hydla::simulator::variable_set_t  variable_set_t;
-  typedef hydla::simulator::parameter_set_t parameter_set_t;
   typedef hydla::simulator::constraints_t   constraints_t;
   typedef Link::VariableForm        variable_form_t;
   typedef hydla::parse_tree::node_sptr      node_sptr;
@@ -86,10 +85,10 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
       }
   }
 
-  void set_parameter_set(parameter_set_t& p){
-    for(parameter_set_t::iterator it = p.begin(); it != p.end(); it++)
+  void set_parameter_map(parameter_map_t& p){
+    for(parameter_map_t::iterator it = p.begin(); it != p.end(); it++)
       {
-        call("addParameter", 1, "p", "", &(*it));
+        call("addParameter", 1, "p", "", &(it->first));
       }
   }
 

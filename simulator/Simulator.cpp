@@ -1,6 +1,8 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
 #include "Backend.h"
+#include "MathematicaLink.h"
+#include "REDUCELinkFactory.h"
 #include "SymbolicValue.h"
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
@@ -10,14 +12,23 @@
 #include <stack>
 #include <cassert>
 
+using namespace hydla::backend;
+using namespace hydla::backend::mathematica;
+using namespace hydla::backend::reduce;
+
 namespace hydla{
 namespace simulator{
-
 
 Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
+  phase_simulator_->set_backend(backend_.get());
+}
+
+void Simulator::set_backend(Backend* back)
+{
+  backend_.reset(back);
 }
 
 void Simulator::initialize(const parse_tree_sptr& parse_tree)
@@ -30,9 +41,11 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
-  phase_simulator_->initialize(*variable_set_, *parameter_set_,
-   *original_map_, vm, msc_no_init_);
+  phase_simulator_->initialize(variable_set_, parameter_map_,
+   original_map_, vm, msc_no_init_);
   profile_vector_.reset(new entire_profile_t());
+
+
 
   //  if(opts_->analysis_mode == "simulate"||opts_->analysis_mode == "cmmap") phase_simulator_->init_arc(parse_tree);
 }
@@ -64,10 +77,6 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
   typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
-  variable_set_.reset(new variable_set_t());
-  original_map_.reset(new variable_map_t());
-  original_parameter_map_.reset(new parameter_map_t());
-  parameter_set_.reset(new parameter_set_t());
 
   vmci it  = parse_tree->variable_map_begin();
   vmci end = parse_tree->variable_map_end();
@@ -78,8 +87,8 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
       variable_t v;
       v.name             = it->first;
       v.derivative_count = d;
-      variable_set_->push_front(v);
-      (*original_map_)[v] = ValueRange();
+      variable_set_.push_front(v);
+      original_map_[v] = ValueRange();
     }
   }
 }
@@ -88,11 +97,10 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 parameter_t Simulator::introduce_parameter(variable_t var, phase_result_sptr_t& phase, ValueRange& range)
 {
   parameter_t param(var, phase);
-  parameter_set_->push_front(param);
-  (*original_parameter_map_)[parameter_set_->front()] = range;
-  // TODO: バックエンド側での対応
+  parameter_map_[param] = range;
+
   backend_->call("addParameter", 1, "p", "", &param);
-  return parameter_set_->front();
+  return param;
 }
 
 simulation_todo_sptr_t Simulator::make_initial_todo()

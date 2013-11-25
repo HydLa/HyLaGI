@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_VARIABLE_REPLACER_H_
-#define _INCLUDED_HYDLA_VARIABLE_REPLACER_H_
+#ifndef _INCLUDED_HYDLA_PREV_REPLACER_H_
+#define _INCLUDED_HYDLA_PREV_REPLACER_H_
 
 #include <set>
 #include <sstream>
@@ -10,24 +10,24 @@
 #include "DefaultTreeVisitor.h"
 #include "ValueVisitor.h"
 #include "PhaseResult.h"
+#include "Simulator.h"
 #include "SymbolicValue.h"
 
 namespace hydla {
 namespace simulator {
 
 /**
- * Replace variables with their values
+ * A class to replace prevs with parameters.
+ * (And introduce parameter into parameter_map)
  */
-class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor{
+class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor{
   typedef hydla::parse_tree::node_sptr                 node_sptr;
 
   public:
 
-  VariableReplacer(const variable_map_t& map);
+  PrevReplacer(parameter_map_t& map, phase_result_sptr_t &phase, Simulator& simulator);
 
-  void replace_node(node_sptr& node);
-
-  virtual ~VariableReplacer();
+  virtual ~PrevReplacer();
   
   virtual void visit(hydla::simulator::symbolic::SymbolicValue&);
 
@@ -57,16 +57,19 @@ class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
 
   private:
-  hydla::simulator::symbolic::SymbolicValue* processing_value;
-  int differential_cnt;
-  uint replace_cnt;
-  const variable_map_t& variable_map;
+  int differential_cnt_;
+  bool in_prev_;
+  parameter_map_t& parameter_map_;
+  phase_result_sptr_t& prev_phase_;
+  Simulator& simulator_;
 
-
+  node_sptr parameter_node_;
   node_sptr new_child_;
 
+  void replace(node_sptr node);
 
   template<class C, 
            const node_sptr& (C::*getter)() const,
@@ -105,7 +108,7 @@ class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator
   }
 };
 
-} //namespace parser
-} //namespace hydla
+}
+}
 
-#endif // _INCLUDED_HYDLA_PARAMETER_REPLACER_H_
+#endif // include guard

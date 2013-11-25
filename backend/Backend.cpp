@@ -1032,7 +1032,10 @@ int Backend::receive_parameter_map(parameter_map_t& map)
   string func_name;
   int condition_size; link_->get_function(func_name, condition_size);
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
-    link_->get_next(); link_->get_next(); // 先頭要素のparameterを読み飛ばす
+    string str_buf;
+    int int_buf;
+    link_->get_function(str_buf, int_buf); // List
+    link_->get_function(str_buf, int_buf); // parameter
     std::string name = link_->get_symbol();
     int derivative_count = link_->get_integer();
     int id = link_->get_integer();

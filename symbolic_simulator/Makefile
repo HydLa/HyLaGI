@@ -5,7 +5,7 @@ INCLUDES += -I. -I../parser -I../constraint_hierarchy -I../simulator -I../common
 INCLUDES += -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux/CompilerAdditions/
 LIBS	 += -lML64i3 -lm -lrt
-#LIBS	 += -lML32i3 -lm -lrt
+
 DEFINES  += 
 CXX_OPT  += 
 

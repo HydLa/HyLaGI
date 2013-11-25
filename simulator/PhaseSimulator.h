@@ -55,6 +55,8 @@ public:
   
   virtual ~PhaseSimulator();
 
+  void set_backend(backend::Backend* back);
+
   /**
    * calculate phase results from given todo
    * @param todo_cont container of todo into which PhaseSimulator pushes todo if case analyses are needed
@@ -81,12 +83,10 @@ public:
   virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo) = 0;
 
   virtual void initialize(variable_set_t &v,
-    parameter_set_t &p, 
+    parameter_map_t &p,
     variable_map_t &m,
     continuity_map_t& c,
     const module_set_container_sptr &msc_no_init);
-
-  virtual parameter_set_t get_parameter_set(){return *parameter_set_;}
   
   int get_phase_sum()const{return phase_sum_;}
   
@@ -143,9 +143,8 @@ protected:
 
   Simulator* simulator_;
 
-  variable_t* get_variable(const std::string &name, const int &derivative_count){
-    return &(*std::find(variable_set_->begin(), variable_set_->end(), (variable_t(name, derivative_count))));
-  }
+  void replace_prev2parameter(variable_map_t &vm, 
+                              phase_result_sptr_t &phase);
 
   virtual CalculateVariableMapResult check_conditions(
     const module_set_sptr& ms,
@@ -166,7 +165,7 @@ protected:
   const Opts *opts_;
   
   variable_set_t *variable_set_;
-  parameter_set_t *parameter_set_;
+  parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
   negative_asks_t prev_guards_;
 

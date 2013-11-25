@@ -10,9 +10,15 @@
 using namespace hydla::simulator;
 using namespace hydla::backend;
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts):simulator_(simulator), opts_(&opts), select_phase_(NULL){}
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts), select_phase_(NULL){
+}
 
 PhaseSimulator::~PhaseSimulator(){}
+
+void PhaseSimulator::set_backend(Backend* back)
+{
+  backend_.reset(back);
+}
 
 PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont)
 {
@@ -235,7 +241,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     
     if(opts_->assertion){
       timer::Timer entailment_timer;
-      // TODO: 送信
       
       backend_->call("resetConstraintForVariable", 0, "","");
       std::string fmt = "mv";
@@ -360,13 +365,13 @@ void PhaseSimulator::merge_variable_map(variable_map_t& lhs, const variable_map_
 }
 
 void PhaseSimulator::initialize(variable_set_t &v,
-                                parameter_set_t &p,
+                                parameter_map_t &p,
                                 variable_map_t &m,
                                 continuity_map_t& c, 
                                 const module_set_container_sptr &msc_no_init)
 {
   variable_set_ = &v;
-  parameter_set_ = &p;
+  parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
   msc_no_init_ = msc_no_init;
@@ -456,3 +461,9 @@ void PhaseSimulator::substitute_current_time_for_vm(phase_result_sptr_t pr, time
 */
 }
 
+void PhaseSimulator::replace_prev2parameter(variable_map_t &vm,
+                                            phase_result_sptr_t &phase)
+{
+  assert(phase->parent.get() != NULL);
+  
+}

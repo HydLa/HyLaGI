@@ -35,8 +35,7 @@ public:
   SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~SymbolicPhaseSimulator();
 
-  virtual void initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
-  virtual parameter_set_t get_parameter_set();
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
@@ -96,6 +95,10 @@ private:
   virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const time_t &tm);
+
+  void replace_prev2parameter(phase_result_sptr_t& state,
+                              variable_map_t& vm,
+                              parameter_map_t &parameter_map);
   
   continuity_map_t variable_derivative_map_;
   

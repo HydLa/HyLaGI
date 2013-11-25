@@ -10,7 +10,7 @@
 #include "Logger.h"
 #include "Timer.h"
 
-#include "VariableReplacer.h"
+#include "PrevReplacer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "VariableFinder.h"
@@ -117,16 +117,8 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 {
 }
 
-void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_set_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
-{
-
-  if(opts_->solver == "m" || opts_->solver == "Mathematica") {
-    backend_.reset(new Backend(new MathematicaLink(*opts_)));
-  }else{
-    REDUCELinkFactory rlf;
-    REDUCELink *reduce_link  = rlf.createInstance(*opts_);
-    backend_.reset(new Backend(reduce_link));
-  }
+void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
+{  
   simulator_t::initialize(v, p, m, c, msc);
   variable_derivative_map_ = c;
 }
@@ -136,11 +128,6 @@ void SymbolicPhaseSimulator::set_simulation_mode(const Phase& phase)
 {
   current_phase_ = phase;
 }
-
-parameter_set_t SymbolicPhaseSimulator::get_parameter_set(){
-  return *parameter_set_;
-}
-
 
 void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const Phase &phase){
   std::string fmt = "v";
@@ -156,14 +143,14 @@ void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_m
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
     if(it->second>=0){
       for(int i=0; i<it->second;i++){
-        variable_t* var = get_variable(it->first, i);
-      backend_->call("addInitEquation", 2, fmt.c_str(), "", var, var);
+        variable_t var(it->first, i);
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
       }
     }else{
       node_sptr lhs(new Variable(it->first));
       for(int i=0; i<=-it->second;i++){
-        variable_t* var = get_variable(it->first, i);
-      backend_->call("addInitEquation", 2, fmt.c_str(), "", var, var);
+        variable_t var(it->first, i);
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
         lhs = node_sptr(new Differential(lhs));
       }
       node_sptr rhs(new Number("0"));
@@ -463,12 +450,21 @@ SymbolicPhaseSimulator::calculate_variable_map(
   }
   todo->profile["CreateMap"] += create_timer.get_elapsed_us();
   
-  if(create_result.size() != 1 && current_phase_ == IntervalPhase){
-    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
-    todo->parent->children.push_back(phase);
-    HYDLA_LOGGER_FUNC_END(MS);
-    return CVM_ERROR;
+  if(current_phase_ == IntervalPhase)
+  {
+    if(create_result.size() != 1){
+      phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
+      todo->parent->children.push_back(phase);
+      HYDLA_LOGGER_FUNC_END(MS);
+      return CVM_ERROR;
+    }
+    
+    for(vector<variable_map_t>::iterator cr_it = create_result.begin(); cr_it != create_result.end(); cr_it++)
+    {
+      replace_prev2parameter(todo->parent, *cr_it, todo->parameter_map);
+    }
   }
+
   
   result_vms = create_result;
 
@@ -518,9 +514,10 @@ SymbolicPhaseSimulator::todo_list_t
 {
   HYDLA_LOGGER_FUNC_BEGIN(MS);
   
-  backend_->call("resetConstraintForVariable", 0, "", "");
+  backend_->call("resetConstraint", 0, "", "");
   const char* fmt = (current_todo->phase == PointPhase)?"mv0n":"mv0t";
   backend_->call("addConstraint", 1, fmt, "", &phase->variable_map);
+  backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
   
   todo_list_t ret;
   
@@ -642,95 +639,54 @@ SymbolicPhaseSimulator::todo_list_t
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
   
+
   
-  HYDLA_LOGGER_FUNC_END(MS);
-  
+  HYDLA_LOGGER_FUNC_END(MS);  
   return ret;
 }
 
-/*
-variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
+void SymbolicPhaseSimulator::replace_prev2parameter(
   phase_result_sptr_t& state,
-  const variable_range_map_t& rm,
+  variable_map_t& vm,
   parameter_map_t &parameter_map)
 {
-  variable_map_t ret;
-  for(variable_range_map_t::const_iterator r_it = rm.begin(); r_it != rm.end(); r_it++){
-    variable_t* variable = get_variable(r_it->first->get_name(), r_it->first->get_derivative_count());
-    std::set<std::string>::iterator it = state->changed_variables.find(r_it->first->get_name());
-    if(opts_->reuse && current_phase_ == IntervalPhase && state->id > 3 && it == state->changed_variables.end()){
-      ret[variable] = state->parent->parent->variable_map.find(variable)->second;
-    }
-    else if(r_it->second.unique()){
-      ret[variable] = r_it->second.get_unique();
+  PrevReplacer replacer(parameter_map, state, *simulator_);
+   
+  for(variable_map_t::iterator it = vm.begin();
+      it != vm.end(); it++)
+  {
+    HYDLA_LOGGER(PHASE, it->first, it->second);
+    ValueRange& range = it->second;
+    value_t val;
+    if(range.unique())
+    {
+      val = range.get_unique();
+      HYDLA_LOGGER(PHASE, *val);
+      replacer.replace_value(val);
+      range.set_unique(val);
     }
     else
     {
-      value_range_t range = r_it->second;
-      // introduce parameter
-      parameter_t* param = simulator_->introduce_parameter(r_it->first, state, range);
-      ret[variable] = value_t(new SymbolicValue(node_sptr(
-        new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-      parameter_map[param] = r_it->second;
-      // TODO: ここで常に記号定数を導入するようにしておくと，記号定数が増えすぎて見づらくなる可能性がある．
-      // 解軌道木上で一度しか出現しないUNDEFに対しては，記号定数を導入する必要が無いはずなので，どうにかそれを実現したい？
-      // 逆にここでUNDEFにすると，次のIPでのデフォルト連続性と噛み合わずバグが発生する可能性があるので注意する．
+      if(range.get_upper_cnt()>0)
+      {
+        val = range.get_upper_bound().value;
+        replacer.replace_value(val);
+        range.set_upper_bound(val, range.get_upper_bound().include_bound);
+      }
+      if(range.get_lower_cnt() > 0)
+      {
+        val = range.get_lower_bound().value;
+        replacer.replace_value(val);
+        range.set_lower_bound(val, range.get_lower_bound().include_bound);
+      }
     }
   }
 
-  // 記号定数表に出現する変数を変数以外のものに置き換える
-  VariableReplacer replacer(ret);
-  for(parameter_map_t::iterator it = simulator_->original_parameter_map_->begin();
-      it != simulator_->original_parameter_map_->end(); it++)
-  {
-    ValueRange& range = it->second;
-    value_t val;
-    if(range.get_upper_cnt() > 0)
-    {
-      val = range.get_upper_bound().value;
-      replacer.replace_value(val);
-      range.set_upper_bound(val, range.get_upper_bound().include_bound);
-    }
-
-    if(range.get_lower_cnt() > 0)
-    {
-      val = range.get_lower_bound().value;
-      replacer.replace_value(val);
-      range.set_lower_bound(val, range.get_lower_bound().include_bound);
-    }
-  }
+  HYDLA_LOGGER(MS, "param: ", parameter_map);
   
-  for(parameter_map_t::iterator it = parameter_map.begin();
-      it != parameter_map.end(); it++)
-  {
-    ValueRange& range = it->second;
-    value_t val;
-    if(range.get_upper_cnt()>0)
-    {
-      val = range.get_upper_bound().value;
-      replacer.replace_value(val);
-      range.set_upper_bound(val, range.get_upper_bound().include_bound);
-    }
-    if(range.get_lower_cnt() > 0)
-    {
-      val = range.get_lower_bound().value;
-      replacer.replace_value(val);
-      range.set_lower_bound(val, range.get_lower_bound().include_bound);
-    }
-  }
-  
-  for(variable_map_t::iterator it = ret.begin();
-          it != ret.end();it++)
-  {
-    if(!it->second->undefined())
-    {
-      value_t val;
-      val = it->second;
-      replacer.replace_value(val);
-      ret[it->first] = val;
-    }
-  }
+  // TODO: オリジナルの記号定数表についても置き換えを行う。（記号定数表の中にprevが残っている可能性がある
 
+/*
   // approx values in vm
   // TODO:ここでやると，変数同士の相関性を生かせない．
   if(state->phase == PointPhase)
@@ -750,11 +706,9 @@ variable_map_t SymbolicPhaseSimulator::range_map_to_value_map(
       }
     }
   }
-
-  return ret;
+*/
 }
 
-*/
 
 variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const time_t& tm)
 {

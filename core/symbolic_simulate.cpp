@@ -10,7 +10,9 @@
 #include "HAConverter.h"
 #include "HASimulator.h"
 #include "ParallelSimulator.h"
-
+#include "MathematicaLink.h"
+#include "REDUCELinkFactory.h"
+#include "Backend.h"
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -27,8 +29,11 @@ using namespace hydla::parser;
 using namespace hydla::ch;
 using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
+using namespace hydla::backend;
+using namespace hydla::backend::mathematica;
+using namespace hydla::backend::reduce;
 
-BatchSimulator* simulator_;
+Simulator* simulator_;
 Opts opts;
 
 void output_result(Simulator& ss, Opts& opts){
@@ -161,35 +166,33 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
 {
   Opts opts;
   setup_symbolic_simulator_opts(opts);
+  
+  Backend* backend;
+  
+  if(opts.solver == "m" || opts.solver == "Mathematica") {
+    backend = new Backend(new MathematicaLink(opts));
+  }else{
+    REDUCELinkFactory rlf;
+    REDUCELink *reduce_link  = rlf.createInstance(opts);
+    backend = new Backend(reduce_link);
+  }
 
   if(opts.interactive_mode)
   {
-    InteractiveSimulator is(opts);
-    is.set_phase_simulator(new SymbolicPhaseSimulator(&is, opts));
-    is.initialize(parse_tree);
-    is.simulate();
-    output_result(is, opts);
+    simulator_ = new InteractiveSimulator(opts);
   }
   else if(opts.parallel_mode)
   {
-    ParallelSimulator ps(opts);
-    ps.set_phase_simulator(new SymbolicPhaseSimulator(&ps, opts));
-    ps.initialize(parse_tree);
-    ps.simulate();
-    output_result(ps, opts);
+    simulator_ = new ParallelSimulator(opts);
   }
-  
   else if(opts.ha_convert_mode)
   {
-  	opts.nd_mode = true;
-  	HAConverter ha_converter(opts);
-    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
-    ha_converter.initialize(parse_tree);
-    ha_converter.simulate();
+    simulator_ = new HAConverter(opts);
   }
-
   else if(opts.ha_simulator_mode)
   {
+    assert(0);
+/*
     opts.nd_mode = true;
   	
   	timer::Timer hac_timer;
@@ -222,17 +225,19 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
 	      ofs.close();
 	    }
 	  }
+*/
   }
-
-	else
+  else
   {
-    SequentialSimulator* ss = new SequentialSimulator(opts);
-    simulator_ = ss;
-    ss->set_phase_simulator(new SymbolicPhaseSimulator(ss, opts));
-    ss->initialize(parse_tree);
-    ss->simulate();
-    output_result(*ss, opts);
-
-    delete ss;
+    simulator_ = new SequentialSimulator(opts);
   }
+  simulator_->set_backend(backend);
+  simulator_->set_phase_simulator(new SymbolicPhaseSimulator(simulator_, opts));  
+  simulator_->initialize(parse_tree);
+  simulator_->simulate();
+  if(!opts.ha_convert_mode)
+  {
+    output_result(*simulator_, opts);
+  }
+  delete simulator_;
 }
