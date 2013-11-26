@@ -9,6 +9,7 @@
 #include "HydLaGrammar.h"
 #include "CommentGrammar.h"
 #include "ParseError.h"
+#include "Logger.h"
 
 using namespace std;
 using namespace boost;
@@ -28,15 +29,13 @@ HydLaAST::~HydLaAST()
 
 void HydLaAST::parse(std::istream& stream) 
 {
-  pos_iter_t positBegin(make_multi_pass(istreambuf_iterator<char>(stream)), 
+  pos_iter_t it_begin(make_multi_pass(istreambuf_iterator<char>(stream)), 
                         make_multi_pass(istreambuf_iterator<char>()));
-  pos_iter_t positEnd;
+  pos_iter_t it_end;
 
   HydLaGrammar hg;
   CommentGrammar cg;
-  ast_tree_ = ast_parse<node_val_data_factory_t>(positBegin, positEnd, hg, cg);
-  
-  
+  ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_HydLaProgram>(), cg);
 
  if(!ast_tree_.full) {
     throw SyntaxError("", ast_tree_.stop.get_position().line);

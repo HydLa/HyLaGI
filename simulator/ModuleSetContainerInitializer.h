@@ -6,6 +6,7 @@
 #include "ModuleSetContainer.h"
 #include "ModuleSetGraph.h"
 #include "ModuleSetList.h"
+#include "IncrementalModuleSet.h"
 
 #include "AskDisjunctionSplitter.h"
 #include "AskDisjunctionFormatter.h"

@@ -142,6 +142,9 @@ protected:
     }
   }
 
+  //Print unsat cores in a phase
+  int find_unsat_core(simulation_todo_sptr_t&);
+
   static hydla::output::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
 };

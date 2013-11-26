@@ -7,6 +7,7 @@
 #include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/spirit/include/classic_parse_tree.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
+#include <boost/spirit/include/classic_grammar_def.hpp> 
 
 #include <string>
 
@@ -19,14 +20,21 @@ using namespace hydla::grammer_rule;
 using namespace boost::spirit::classic;
 
 struct HydLaGrammar : public grammar<HydLaGrammar> {
-  template<typename S> 
-  struct definition {
-        
+   enum
+   {
+     START_HydLaProgram = 0,
+     START_ArithmeticExpr = 1,
+     START_Constraint = 2
+   };
+
 #define defRuleID(ID) rule<S, parser_context<>, parser_tag<ID> >
+   template<typename S> 
+     struct definition : public grammar_def<defRuleID(RI_HydLaProgram),
+                  defRuleID(RI_ArithmeticEntryPoint),  defRuleID(RI_ConstraintEntryPoint)> {
 
     defRuleID(RI_Identifier)     identifier; 
     defRuleID(RI_Number)         number;
-    defRuleID(RI_Pi)              pi;
+    defRuleID(RI_Pi)             pi;
     defRuleID(RI_E)              e;
     defRuleID(RI_PrevVariable)   prev_val;
     defRuleID(RI_BoundVariable)  bound_variable;
@@ -51,7 +59,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
     defRuleID(RI_Negative)   negative;
     
     defRuleID(RI_Function)   function;
-
+    
     
     
     defRuleID(RI_UnsupportedFunction)        unsupported_function;
@@ -122,12 +130,16 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     defRuleID(RI_Statements)       statements;
     defRuleID(RI_HydLaProgram)     hydla_program;
+    defRuleID(RI_ArithmeticEntryPoint)     arithmetic_entry;
+    defRuleID(RI_ConstraintEntryPoint)     constraint_entry;
 
     // 構文定義
     definition(const HydLaGrammar& self) {
 
       //開始
       hydla_program = gen_pt_node_d[statements];
+      arithmetic_entry = arithmetic >> end_p;
+      constraint_entry = constraint >> end_p;
             
       //文の集合
       statements  = gen_ast_node_d[*(( assert | def_statement | program) 
@@ -355,11 +367,9 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
       
       //関数
       function         = lexeme_d[leaf_node_d[+alpha_p]];
-    }
 
-    // 開始ルール
-    defRuleID(RI_HydLaProgram) const& start() const {
-      return hydla_program;
+      // 開始ルール
+      this->start_parsers(hydla_program, arithmetic_entry, constraint_entry);
     }
   };
 };

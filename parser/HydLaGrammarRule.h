@@ -108,6 +108,8 @@ typedef enum _RuleID {
   RI_Assert,
   RI_Statements,
   RI_HydLaProgram,
+  RI_ArithmeticEntryPoint,
+  RI_ConstraintEntryPoint,
 
   //SystemVariable
   RI_SystemVariable,

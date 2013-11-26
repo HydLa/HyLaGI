@@ -32,7 +32,8 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
 
   while(todo_num)
   {
-    todo->id = ++todo_id;
+    todo_id++;
+    todo->id =todo_id;
     try
     {
       timer::Timer phase_timer;
@@ -44,7 +45,9 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
         simulation_todo_sptr_t tmp_todo = todo;
         do
         {
-          print_end(todo->parent);
+          if(todo->phase==PointPhase)
+            cout << "---------PP "<<todo->id<< "---------" << endl;
+          cout << "execution stuck" << endl;
           todo_num = input_and_process_command(todo);
         }while(todo_num > 0 && tmp_todo == todo);
         continue;
@@ -98,9 +101,15 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
 
   while(true)
   {
+    if(cin.good()==0)
+    {
+      cin.clear();//cin.seekg(0);
+      cin.ignore( 1024,'\n');
+    }
     string line;
     cout << "input a command ('h' is to show help)\n";
     cout << '>';
+    cin.clear();
     getline(cin,line);
     cin.clear();
     if(line.empty()) return 1;
@@ -153,12 +162,17 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         change_variable(todo);
         print_phase(todo->parent);
         break;
+      case 'u':
+        find_unsat_core(todo);
+        //cin.clear();
+        cin.ignore( 1024,'\n');
+        break;
       default:
         cout << "invalid command: " << line << endl;
         break;
     }
   }
-  return 0;
+    return 0;
 }
 
 
@@ -168,13 +182,14 @@ int InteractiveSimulator::show_help(){
     "Type [command] <return> to exec command",
     "List of commands:",
     "",
-    "j [arg]        -- jump forward or backward by given numer of phases",
+    "j [arg]        -- Jump forward or backward by given numer of phases",
     "                  positive number: forward (equal to normal simulate)",
     "                  negative number: backward",
-    "q              -- quit this simulation",
-    "c              -- change a value of a variable",
-    "p              -- display the information of the current phase"
-    "a              -- approx a value of a variable as interval",
+    "q              -- Quit this simulation",
+    "c              -- Change a value of a variable",
+    "p              -- Display the information of the current phase",
+    "a              -- Approx a value of a variable as interval",
+    "u              -- Find unsat core constraints and print them",
     //"breakpoints    -- Making program stop at certain points",
     //"debug          -- Simulate with debug-mode",
     //"edit           -- Edit constraint ",
@@ -217,7 +232,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   if(value_str.substr(0,1)!="(" && value_str.substr(0,1)!="["){
     value_t value(new hydla::simulator::symbolic::SymbolicValue(value_str));
     // TODO: stringでvalue作ると，バックエンド変えた時に対応できないので何とかする
-    // 　　　（これはSymbolicValueのコンストラクタ側の問題かもしれない）
+    //     （これはSymbolicValueのコンストラクタ側の問題かもしれない）
     //       あとこれだと不正な式入力された場合も対応できない
     vm[v_it->first] = value;
   }else{
@@ -633,6 +648,25 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
   return 1;
 }
 */
+//int InteractiveSimulator::get_phase_todo(){
+//}
+
+int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
+  opts_->find_unsat_core_mode = true;
+  //TODO 
+  InteractiveSimulator is(*opts_);
+  is.opts_->find_unsat_core_mode = true;
+  is.set_phase_simulator(new hydla::simulator::symbolic::SymbolicPhaseSimulator(&is, *opts_));
+  is.initialize(parse_tree_);
+  is.phase_simulator_->set_select_function(select_phase);
+  //is.phase_simulator_->calculate_phase_result(all_todo_[0]);
+  //cout << "hoge" << endl;
+  is.phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
+  //phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
+  opts_->find_unsat_core_mode = false;
+
+  return 0;
+}
 
 }
 }

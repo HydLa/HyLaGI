@@ -169,12 +169,12 @@ publicMethod[
         {False, createMap[pcons, isParameter, hasParameter, {}]},
         If[sol[[1]] === underConstraint,
           (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-          tCons = Map[(# -> createIntegratedValue[#, sol[[3]] ])&, timeVars];
+          tCons = Map[(Rule@@#)&, createIntegratedEquations[timeVars, sol[[3]] ] ];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
           tCons = LogicalExpand[Quiet[Reduce[Exists[timeVars], tCons && tmpPCons && prevCons], Reals]],
           (* 微分方程式が解けた場合 *)
-          tCons = Map[(# -> createIntegratedValue[#, sol[[2]] ])&, timeVars];
+          tCons = Map[(Rule@@#)&, createIntegratedEquations[timeVars, sol[[2]] ] ];
           tCons = applyList[sol[[1]] /. tCons];
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
           tCons = LogicalExpand[Quiet[Reduce[prevCons && tCons && tmpPCons, Reals]]]
@@ -235,27 +235,24 @@ publicMethod[
   createVariableMapInterval,
   cons, initCons, prevCons, vars, prevVars, pars,
   Module[
-    {sol, tStore, ret, prevList, eqs},
+    {sol, includedVars, tStore, ret, prevList, eqs},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
     If[sol[[1]] === underConstraint,
       underConstraint,
-      tStore = Map[(# == createIntegratedValue[#, sol[[2]] ] )&, vars];
+      tStore = createIntegratedEquations[vars, sol[[2]] ];
       prevList = applyList[prevCons];
       (* assume elements of equations in prevList are in the form like "prev[x, 0] == val" (not like "val == prev[x, 0]") *)
       eqs = Select[prevList, (Head[#] === Equal)&];
       tStore = tStore /. Map[(Rule@@#)&, eqs];
       simplePrint[tStore];
-      If[Length[Select[tStore, (hasVariable[ #[[2]] ])&, 1] ] > 0,
-        (* 右辺に変数名が残っている，つまり値が完全にtの式になっていない変数が出現した場合はunderConstraintを返す *)
-        underConstraint,
-        (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
-        ret = {convertExprs[tStore]};
-        debugPrint["ret after convert", ret];
-        ret = ruleOutException[ret];
-        simplePrint[ret];
-        ret
-      ]
+      tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+      (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
+      ret = {convertExprs[tStore]};
+      debugPrint["ret after convert", ret];
+      ret = ruleOutException[ret];
+      simplePrint[ret];
+      ret
     ]
   ]
 ];
@@ -621,7 +618,7 @@ publicMethod[
     (* 次にそれらをdiscCauseに適用する *)
     timeAppliedCauses = False;
     
-    tStore = Map[(# -> createIntegratedValue[#, applyList[cons] ])&, vars];
+    tStore = Map[(Rule@@#)&, createIntegratedEquations[vars, applyList[cons] ] ];
     timeAppliedCauses = Or@@(discCause /. tStore );
     simplePrint[timeAppliedCauses];
     
@@ -672,16 +669,37 @@ applyDSolveResult[exprs_, integRule_] := (
   ]
 );
 
-createIntegratedValue[variable_, integRule_] := (
+createIntegratedEquations[vars_, integRules_] := (
   Module[
-    {tRemovedRule, ruleApplied, derivativeExpanded, tRemoved},
-    tRemovedRule = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule];
-    tRemoved = variable /. x_Symbol[t] -> x;
-    ruleApplied = tRemoved /. tRemovedRule;
-    derivativeExpanded = ruleApplied /. Derivative[n_][f_][t] :> D[f, {t, n}];
-    Simplify[derivativeExpanded]
+    {tRemovedRules, derivativeExpanded, ruleApplied, ruleVars, ret, tRemovedVars},
+    inputPrint["createIntegratedEquations", vars, integRules];
+    ret = Fold[(Join[#1, createIntegratedEquation[#2, integRules] ])&, {}, vars];
+    ret
   ]
 );
+
+
+removeDerivative[Derivative[_][var_][arg_]] := var[arg];
+removeDerivative[var_] := var;
+
+createIntegratedEquation[var_, integRules_] := (
+  Module[
+    {tRemovedRules, derivativeExpanded, ruleApplied, ret, tRemovedVars, nonDerivative},
+    inputPrint["createIntegratedEquation", var, integRules];
+    nonDerivative = removeDerivative[var];
+    simplePrint[nonDerivative];
+    If[!MemberQ[integRules, nonDerivative, Infinity], Return[{}]];
+    tRemovedRules = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRules];
+    tRemovedVars = var /. x_Symbol[t] -> x;
+    simplePrint[tRemovedRules, tRemovedVars];
+    ruleApplied = tRemovedVars /. tRemovedRules;
+    derivativeExpanded = ruleApplied /. Derivative[n_][f_][t] :> D[f, {t, n}];
+    ret = {Equal[var, Simplify[derivativeExpanded] ]};
+    ret
+  ]
+);
+
+
 
 (* 微分方程式系を解く．
   単にDSolveをそのまま使用しない理由は以下．

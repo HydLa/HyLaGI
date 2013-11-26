@@ -65,7 +65,7 @@ public:
    */
   virtual bool go_next();
   
-  module_set_list_t get_full_ms_list() const;
+  virtual module_set_list_t get_full_ms_list() const;
   
   /**
    * そのノードを探索済みとし，以降探索しないようにする
@@ -86,6 +86,8 @@ public:
    * mark nodes which include given module_set
    */
   virtual void mark_nodes(const ModuleSet& ms);
+
+  virtual void mark_nodes(const module_set_list_t& mms, const ModuleSet& ms);
   
   /**
    * 探索すべきモジュール集合の集合を初期化し，注目する集合を最後にする.
