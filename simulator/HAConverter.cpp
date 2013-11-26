@@ -15,7 +15,7 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-	HAConverter::HAConverter(Opts &opts):BatchSimulator(opts){}
+	HAConverter::HAConverter(Opts &opts):HybridAutomata(opts){}
 
 	HAConverter::~HAConverter(){}
 
@@ -82,7 +82,14 @@ namespace simulator {
 	    	
       	tmp_cc_ = cc_;
       	tmp_cc_.push_back(phase);
-
+	    	
+	    	if(phase->cause_of_termination == ASSERTION)
+	      {
+	      	// ASSERTION はそこで変換終了。HAは出力しない（push_resultしない）
+	      	viewPr(phase);
+	        continue;
+	      }
+    		
 	    	if (phase->phase == IntervalPhase) 
 				{
 					if (check_already_exec(phase, cc_))
@@ -229,41 +236,7 @@ namespace simulator {
 		
 		return true;
 	} 
-	
-	void HAConverter::viewPrs(phase_result_sptrs_t results)
-	{
-		phase_result_sptrs_t::iterator it_ls = results.begin();
-		while(it_ls != results.end()) {
-			viewPr(*it_ls);	
-			it_ls++;
-		}	
-	}
-	
-	void HAConverter::viewPr(phase_result_sptr_t result)
-	{
-		if (logger::Logger::ha_converter_area_) {
-	    hydla::output::SymbolicTrajPrinter printer;
-			printer.output_one_phase(result);
-			
-			HYDLA_LOGGER_HA("negative ask:");
-			viewAsks(result->negative_asks);
-			HYDLA_LOGGER_HA("positive ask:");
-			viewAsks(result->positive_asks);
-		}
-	}
-	
-	void HAConverter::viewAsks(ask_set_t asks)
-	{
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
-		ask_set_t::iterator it = asks.begin();
-		string str = "";
-		while(it != asks.end()){
-			str += tree_printer.get_infix_string((*it)->get_guard()) + " ";
-			it++;
-		}
-		HYDLA_LOGGER_HA(str);
-	}
-	
+		
 	void HAConverter::push_result(current_condition_t cc)
 	{
 		phase_result_sptrs_t result;
@@ -312,6 +285,7 @@ namespace simulator {
 		}
 		cout << "}" << endl;
 	}
+	
 	std::string HAConverter::get_asks_str(ask_set_t asks)
 	{
 		std::string res = "";

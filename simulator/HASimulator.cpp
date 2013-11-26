@@ -17,7 +17,7 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-	HASimulator::HASimulator(Opts &opts):BatchSimulator(opts){}
+	HASimulator::HASimulator(Opts &opts):HybridAutomata(opts){}
 
 	HASimulator::~HASimulator(){}
 	
@@ -146,7 +146,6 @@ namespace simulator {
 		phase_simulator_->substitute_values_for_vm(pr, vm);
 		// current_time の適用
 		phase_simulator_->substitute_current_time_for_vm(pr, current_time);
-
 	}
 
   HASimulator::init_value_map_t HASimulator::update_vm(phase_result_sptr_t pr, init_value_map_t vm_pre){
@@ -162,42 +161,6 @@ namespace simulator {
 		  }
 	  }
 		return vm;
-	}
-	
-	
-	void HASimulator::viewPrs(phase_result_sptrs_t results)
-	{
-		phase_result_sptrs_t::iterator it_ls = results.begin();
-		while(it_ls != results.end()) {
-			viewPr(*it_ls);	
-			it_ls++;
-		}	
-	}
-	
-	void HASimulator::viewPr(phase_result_sptr_t result)
-	{
-		
-		if (logger::Logger::ha_simulator_area_) {
-	    hydla::output::SymbolicTrajPrinter printer;
-			printer.output_one_phase(result);
-			
-			HYDLA_LOGGER_HAS("negative ask:");
-			viewAsks(result->negative_asks);
-			HYDLA_LOGGER_HAS("positive ask:");
-			viewAsks(result->positive_asks);
-		}
-	}
-	
-	void HASimulator::viewAsks(ask_set_t asks)
-	{
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
-		ask_set_t::iterator it = asks.begin();
-		string str = "";
-		while(it != asks.end()){
-			str += tree_printer.get_infix_string((*it)->get_guard()) + " ";
-			it++;
-		}
-		HYDLA_LOGGER_HAS(str);
 	}
 	
 }//namespace hydla
