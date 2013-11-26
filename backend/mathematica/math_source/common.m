@@ -5,7 +5,8 @@ $MaxExtraPrecision = 1000;
  * global variables
  * constraint: 現在のフェーズでの制約
  * pConstraint: 定数についての制約
- * prevConstraint: 左極限値を設定する制約
+ * prevIneqs: constraints of inequalities of left-hand limits
+ * prevRules:      rules converted from equalities of left-hand limits
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
  * prevVariables: variables内の変数をusrVarx=>prev[x, 0]のようにしたもの

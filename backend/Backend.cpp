@@ -441,7 +441,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
   for(; it!=parameter_map.end(); ++it)
   {
     if(it->second.unique()){
-      const value_t &value = it->second.get_lower_bound().value;
+      const value_t &value = it->second.get_unique();
       const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
       link_->put_parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id());

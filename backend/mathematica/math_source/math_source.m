@@ -8,7 +8,7 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 checkConditions[] := (
-  checkConditions[prevConstraint, falseConditions, pConstraint, prevVariables ]
+  checkConditions[prevIneqs && And@@Map[(Equal@@#)&, prevRules], falseConditions, pConstraint, prevVariables ]
 );
 
 publicMethod[
@@ -124,7 +124,7 @@ publicMethod[
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevConstraint, pConstraint, Union[variables, prevVariables] ]
+  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables] ]
 );
 
 publicMethod[
@@ -132,7 +132,7 @@ publicMethod[
   cons, pcons, vars,
   Module[
     {trueMap, falseMap, cpTrue, cpFalse},
-
+    
     (* ここでのSimplifyは不要な気がする *)
     Quiet[
       cpTrue = Reduce[Exists[vars, Simplify[cons&&pcons] ], Reals], {Reduce::useq}
@@ -153,7 +153,7 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevConstraint, pConstraint, timeVariables, initVariables, prevVariables]
+  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables]
 );
 
 publicMethod[
@@ -169,12 +169,12 @@ publicMethod[
         {False, createMap[pcons, isParameter, hasParameter, {}]},
         If[sol[[1]] === underConstraint,
           (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-          tCons = Map[(Rule@@#)&, createIntegratedEquations[timeVars, sol[[3]] ] ];
+          tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
           tCons = LogicalExpand[Quiet[Reduce[Exists[timeVars], tCons && tmpPCons && prevCons], Reals]],
           (* 微分方程式が解けた場合 *)
-          tCons = Map[(Rule@@#)&, createIntegratedEquations[timeVars, sol[[2]] ] ];
+          tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[2]] ] ];
           tCons = applyList[sol[[1]] /. tCons];
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
           tCons = LogicalExpand[Quiet[Reduce[prevCons && tCons && tmpPCons, Reals]]]
@@ -209,18 +209,14 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, prevConstraint, variables];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
 
 publicMethod[
   createVariableMap,
-  cons, prevCons, vars,
+  cons, vars,
   Module[
-    {ret, prevList, prevAppliedCons, eqs},
-    prevList = applyList[prevCons];
-    eqs = Select[prevList, (Head[#] === Equal)&];
-    prevAppliedCons = cons /. Map[(Rule@@#)&, eqs];
-    simplePrint[prevAppliedCons];
-    ret = createMap[prevAppliedCons, isVariable, hasVariable, vars];
+    {ret},
+    ret = createMap[cons, isVariable, hasVariable, vars];
     debugPrint["ret after CreateMap", ret];
     ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
     ret = ruleOutException[ret];
@@ -229,23 +225,18 @@ publicMethod[
   ]
 ];
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, prevConstraint, timeVariables, prevVariables, parameters];
+createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables, prevVariables, parameters];
 
 publicMethod[
   createVariableMapInterval,
-  cons, initCons, prevCons, vars, prevVars, pars,
+  cons, initCons, vars, prevVars, pars,
   Module[
     {sol, includedVars, tStore, ret, prevList, eqs},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
     If[sol[[1]] === underConstraint,
       underConstraint,
-      tStore = createIntegratedEquations[vars, sol[[2]] ];
-      prevList = applyList[prevCons];
-      (* assume elements of equations in prevList are in the form like "prev[x, 0] == val" (not like "val == prev[x, 0]") *)
-      eqs = Select[prevList, (Head[#] === Equal)&];
-      tStore = tStore /. Map[(Rule@@#)&, eqs];
-      simplePrint[tStore];
+      tStore = createDifferentiatedEquations[vars, sol[[2]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
       ret = {convertExprs[tStore]};
@@ -363,7 +354,8 @@ publicMethod[
   constraint = True;
   initConstraint = True;
   pConstraint = True;
-  prevConstraint = True;
+  prevIneqs = True;
+  prevRules = {};
   initTmpConstraint = True;
   tmpConstraint = True;
   isTemporary = False;
@@ -380,7 +372,7 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co];
+    cons = If[Head[co] === List, And@@co, co] /. prevRules;
     If[isTemporary,
       tmpConstraint = tmpConstraint && cons,
       constraint = constraint && cons
@@ -391,7 +383,7 @@ publicMethod[
 
 addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = And@@co;
+  cons = And@@co /. prevRules;
   If[isTemporary,
     initTmpConstraint = initTmpConstraint && cons,
     initConstraint = initConstraint && cons
@@ -402,8 +394,14 @@ addInitConstraint[co_] := Module[
 publicMethod[
   addPrevConstraint,
   co,
-  prevConstraint = prevConstraint && And@@co;
-  simplePrint[prevConstraint];
+  Module[
+    {eqs, ineqs},
+    eqs = Select[co, (Head[#]===Equal)&];
+    ineqs = Complement[co, eqs];
+    prevRules = Join[prevRules, Map[(Rule@@#)&, eqs] ];
+    prevIneqs = prevIneqs && And@@ineqs;
+    simplePrint[prevRules, prevIneqs];
+  ]
 ];
 
 publicMethod[
@@ -618,7 +616,7 @@ publicMethod[
     (* 次にそれらをdiscCauseに適用する *)
     timeAppliedCauses = False;
     
-    tStore = Map[(Rule@@#)&, createIntegratedEquations[vars, applyList[cons] ] ];
+    tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
     timeAppliedCauses = Or@@(discCause /. tStore );
     simplePrint[timeAppliedCauses];
     
@@ -669,11 +667,11 @@ applyDSolveResult[exprs_, integRule_] := (
   ]
 );
 
-createIntegratedEquations[vars_, integRules_] := (
+createDifferentiatedEquations[vars_, integRules_] := (
   Module[
     {tRemovedRules, derivativeExpanded, ruleApplied, ruleVars, ret, tRemovedVars},
-    inputPrint["createIntegratedEquations", vars, integRules];
-    ret = Fold[(Join[#1, createIntegratedEquation[#2, integRules] ])&, {}, vars];
+    inputPrint["createDifferentiatedEquations", vars, integRules];
+    ret = Fold[(Join[#1, createDifferentiatedEquation[#2, integRules] ])&, {}, vars];
     ret
   ]
 );
@@ -682,10 +680,10 @@ createIntegratedEquations[vars_, integRules_] := (
 removeDerivative[Derivative[_][var_][arg_]] := var[arg];
 removeDerivative[var_] := var;
 
-createIntegratedEquation[var_, integRules_] := (
+createDifferentiatedEquation[var_, integRules_] := (
   Module[
     {tRemovedRules, derivativeExpanded, ruleApplied, ret, tRemovedVars, nonDerivative},
-    inputPrint["createIntegratedEquation", var, integRules];
+    inputPrint["createDifferentiatedEquation", var, integRules];
     nonDerivative = removeDerivative[var];
     simplePrint[nonDerivative];
     If[!MemberQ[integRules, nonDerivative, Infinity], Return[{}]];
