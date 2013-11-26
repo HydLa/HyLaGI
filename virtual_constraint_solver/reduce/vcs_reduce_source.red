@@ -2219,28 +2219,32 @@ end;
 procedure myConvertCSToVM()$
 begin;
   putLineFeed();
-  debugWrite("removePrevCons(initConstraint__): ", removePrevCons(initConstraint__));
-  debugWrite("old constraintStore__: ", constraintStore__);
+  debugWrite("constraintStore__: ", constraintStore__);
 
-  constraintStore__:= union(constraintStore__, removePrevCons(initConstraint__));
-  return convertCSToVM();
+  return convertCSToVM(union(constraintStore__, removePrevCons(initConstraint__)), csVariables__, psParameters__);
 end;
 
 % 前提：Orでつながってはいない
 % TODO：なんとかする
-procedure convertCSToVM()$
+procedure convertCSToVM(cons_, vars_, pars_)$
 begin;
-  scalar consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
+  scalar solvedCons_, consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
   putLineFeed();
 
-  debugWrite("constraintStore__:", constraintStore__);
+  debugWrite("in convertCSToVM", " ");
+  debugWrite("{cons_, vars_, pars_}: ", {cons_, vars_, pars_});
 
-  consTmpRet_:= applyPrevCons(constraintStore__, {});    
+  % 制約の右辺に変数が残っていた場合の適用処理
+  solvedCons_:= solve(cons_, vars_);
+  % もし二重リストだった場合一重にする
+  if(part(part(solvedCons_, 1), 0) = list) then solvedCons_ := first solvedCons_;
+
+  consTmpRet_:= applyPrevCons(solvedCons_, {});
   debugWrite("consTmpRet_: ", consTmpRet_);
 
   % 式を{(変数名), (関係演算子コード), (値のフル文字列)}の形式に変換する
   consRet_:= map(makeConsTuple, consTmpRet_);
-  paramDNFList_:= map(exIneqSolve, parameterStore__);
+  paramDNFList_:= map(exIneqSolve, pars_);
   paramRet_:= for each x in paramDNFList_ collect <<
     % 1つの項になっているはず
     tuple_:= first(first(x));
@@ -2248,7 +2252,7 @@ begin;
   >>;
   ret_:= union(consRet_, paramRet_);
 
-  ret_:= getUsrVars(ret_, removePrevCons(csVariables__));
+  ret_:= getUsrVars(ret_, removePrevCons(vars_));
 
   debugWrite("ret_: ", ret_);
   return ret_;
@@ -2973,11 +2977,18 @@ begin;
   return {1, appliedExpr_};
 end;
 
-% 前提：Orでつながってはいない
-% TODO：exDSolveを含めた実行をする
 procedure convertCSToVMInterval()$
 begin;
-  scalar consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
+  putLineFeed();
+  % TODO
+  return convertCSToVMIntervalMain(constraintStore__, initConstraint__, csVariables__, psParameters__);
+end;
+
+% 前提：Orでつながってはいない
+% TODO：exDSolveを含めた実行をする
+procedure convertCSToVMIntervalMain(cons_, initCons_, vars_, pars_)$
+begin;
+  scalar solvedRet_, consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
   scalar tmpCons_, rconts_;
   scalar tmpSol_, splitExprsResult_, DExprs_, DExprVars_, 
          initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
@@ -2985,24 +2996,28 @@ begin;
 
   putLineFeed();
 
-  tmpCons_ := for each x in initConstraint__ join if(isInitVariable(lhs x)) then {} else {x};
+  debugWrite("in convertCSToVMIntervalMain", " ");
+  debugWrite("{cons_, initCons_, vars_, pars_}: ", {cons_, initCons_, vars_, pars_});
+
+
+  tmpCons_ := for each x in initCons_ join if(isInitVariable(lhs x)) then {} else {x};
   if(tmpCons_ neq {}) then return {SOLVER_ERROR___};
-  rconts_ := for each x in initConstraint__ join if(isInitVariable(lhs x)) then {x} else {};
+  rconts_ := for each x in initCons_ join if(isInitVariable(lhs x)) then {x} else {};
   
-  splitExprsResult_ := splitExprs(removePrevCons(constraintStore__), csVariables__);
+  splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
   DExprs_ := part(splitExprsResult_, 3);
   DExprVars_ := part(splitExprsResult_, 4);
 
   DExprRconts_:= removeInitCons(rconts_);
   if(DExprRconts_ neq {}) then <<
-    prevVars_:= for each x in csVariables__ join if(isPrevVariable(x)) then {x} else {};
+    prevVars_:= for each x in vars_ join if(isPrevVariable(x)) then {x} else {};
     noPrevVars_:= union(for each x in prevVars_ collect part(x, 1));
     DExprRcontsVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprRconts_, x)) then {x} else {});
     DExprs_:= union(DExprs_, DExprRconts_);
     DExprVars_:= union(DExprVars_, DExprRcontsVars_);
   >>;
 
-  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(constraintStore__, x));
+  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(cons_, x));
   initVars_:= map(getInitVars, initCons_);
   noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
 
@@ -3012,13 +3027,19 @@ begin;
   if(tmpSol_ = retsolvererror___) then return {SOLVER_ERROR___}
   else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
-  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (csVariables__ \ initVars_))));
+  tmpVarMap_:= first(myFoldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (vars_ \ initVars_))));
   tmpSol_:= for each x in tmpVarMap_ collect (first(x)=second(x));
-  consTmpRet_:= applyPrevCons(union(constraintStore__, tmpSol_), {});    
+  consTmpRet_:= applyPrevCons(union(cons_, tmpSol_), {});    
   debugWrite("consTmpRet_: ", consTmpRet_);
 
+  % 制約の右辺に変数が残っていた場合の適用処理
+  solvedRet_:= solve(consTmpRet_, removePrevCons(vars_));
+  % もし二重リストだった場合一重にする
+  if(part(part(solvedRet_, 1), 0) = list) then solvedRet_ := first solvedRet_;
+  debugWrite("solvedRet_: ", solvedRet_);
+
   % 式を{(変数名), (関係演算子コード), (値のフル文字列)}の形式に変換する
-  consRet_:= map(makeConsTuple, consTmpRet_);
+  consRet_:= map(makeConsTuple, solvedRet_);
   paramDNFList_:= map(exIneqSolve, parameterStore__);
   paramRet_:= for each x in paramDNFList_ collect <<
     % 1つの項になっているはず
@@ -3027,7 +3048,7 @@ begin;
   >>;
   ret_:= union(consRet_, paramRet_);
 
-  ret_:= getUsrVars(ret_, removePrevCons(union(DExprVars_, (csVariables__ \ initVars_))));
+  ret_:= getUsrVars(ret_, removePrevCons(union(DExprVars_, (vars_ \ initVars_))));
 
   debugWrite("ret_: ", ret_);
   return ret_;
@@ -3072,7 +3093,7 @@ begin;
 
   % TODO initCons_を使ってない？
   debugWrite("{maxTime_ ,discCause_, cons_, initCons_, pCons_, vars_}: ", {maxTime_ ,discCause_, cons_, initCons_, pCons_, vars_});
-  debugWrite("{csVariables__, psParameters__}: ", {csVariables__, psParameters__});
+  debugWrite("{csVariables__, pars_}: ", {csVariables__, pars_});
 
   splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
   NDExprs_ := part(splitExprsResult_, 1);
