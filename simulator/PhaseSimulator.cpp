@@ -251,7 +251,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       std::string fmt = "mv";
       fmt += (phase->phase==PointPhase)?"n":"t";
       backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
-      backend_->call("resetConstraintForPatameter", 1, "mp", "", &phase->parameter_map);
+      backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
       
       HYDLA_LOGGER_MS("%% check_assertion");
       CheckConsistencyResult cc_result;
