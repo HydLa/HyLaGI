@@ -130,17 +130,18 @@ void SymbolicPhaseSimulator::set_simulation_mode(const Phase& phase)
 }
 
 void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const Phase &phase){
-  std::string fmt = "v";
-  if(phase == PointPhase)
-  {
-    fmt += "n";
-  }
-  else
-  {
-    fmt += "z";
-  }
-  fmt += "vp";
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
+
+    std::string fmt = "v";
+    if(phase == PointPhase)
+    {
+      fmt += "n";
+    }
+    else
+    {
+      fmt += "z";
+    }
+    fmt += "vp";
     if(it->second>=0){
       for(int i=0; i<it->second;i++){
         variable_t var(it->first, i);
@@ -153,11 +154,14 @@ void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_m
         backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
         lhs = node_sptr(new Differential(lhs));
       }
-      node_sptr rhs(new Number("0"));
-      fmt = phase == PointPhase?"vn":"vt";
-      fmt += "en";
-      variable_t var(it->first, -it->second + 1);
-      backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
+      if(phase == IntervalPhase)
+      {
+        node_sptr rhs(new Number("0"));
+        fmt = phase == PointPhase?"vn":"vt";
+        fmt += "en";
+        variable_t var(it->first, -it->second + 1);
+        backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
+      }
     }
   }
 }
@@ -198,8 +202,8 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
     }
     else
     {
-      backend_->call("startTemporary", 0, "", "");
       backend_->call("endTemporary", 0, "", "");
+      backend_->call("startTemporary", 0, "", "");
       add_continuity(cont_map, phase);
       node_sptr not_node = node_sptr(new Not(guard));
       const char* fmt = (phase == PointPhase)?"en":"et";
@@ -271,7 +275,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     continuity_map = maker.get_continuity_map();
     add_continuity(continuity_map, state->phase);
-
+    
     for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }

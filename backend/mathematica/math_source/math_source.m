@@ -172,12 +172,12 @@ publicMethod[
           tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = LogicalExpand[Quiet[Reduce[Exists[timeVars], tCons && tmpPCons && prevCons], Reals]],
+          tCons = Quiet[Reduce[Exists[timeVars], tCons && tmpPCons && prevCons], Reals],
           (* 微分方程式が解けた場合 *)
           tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[2]] ] ];
-          tCons = applyList[sol[[1]] /. tCons];
+          tCons = sol[[1]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = LogicalExpand[Quiet[Reduce[prevCons && tCons && tmpPCons, Reals]]]
+          tCons = Quiet[Reduce[prevCons && tCons && tmpPCons, Reals]]
         ];
         checkMessage;
 
@@ -187,12 +187,12 @@ publicMethod[
           {False, pcons},
           
           hasTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}])) -> True);
-          parList = getParameters[hasTCons];
+          parList = Join[prevVars, getParameters[hasTCons]];
           simplePrint[parList];
           necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
           
           simplePrint[necessaryTCons];
-          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, Append[prevVars, t] ], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
+          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, Join[prevVars, timeVars, {t}] ], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
           cpFalse = Reduce[pcons && !cpTrue, Reals];
 
           simplePrint[cpTrue, cpFalse];
@@ -472,10 +472,13 @@ resetTemporaryConstraint[] := (
   initTmpConstraint = True;
 );
 
-resetConstraintForParameter[pcons_] := (
+publicMethod[
+  resetConstraintForParameter,
+  pcons,
   pConstraint = True;
-  addParameterConstraint[pcons];
-);
+  pConstraint = Reduce[pConstraint && And@@pcons, Reals];
+  simplePrint[pConstraint];
+];
 
 
 publicMethod[

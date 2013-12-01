@@ -180,13 +180,10 @@ void MathematicaLink::init(const hydla::simulator::Opts &opts)
   function_map_.insert(f_value_t("log", "Log"));
   function_map_.insert(f_value_t("ln", "Log"));
 
-
-  HYDLA_LOGGER_FUNC_END(BACKEND);
 }
 
 
 bool MathematicaLink::receive_to_return_packet(){
-  HYDLA_LOGGER_FUNC_BEGIN(EXTERN);
   bool at_end = false;
   debug_print_.clear();
   input_print_.clear();
@@ -195,7 +192,6 @@ bool MathematicaLink::receive_to_return_packet(){
     int pkt = MLNextPacket();
     switch(pkt){
     case RETURNPKT:
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive returnpkt");
       MLGetType();
       on_next_ = true;
       at_end = true;
@@ -203,13 +199,11 @@ bool MathematicaLink::receive_to_return_packet(){
     case MESSAGEPKT: // Mathematica メッセージ識別子（symbol::string）
     {
       std::string str = get_string();
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive messagepkt\n", str, "\n");
       break;
     }
     case TEXTPKT: // Print[]で生成されるようなMathematica からのテキスト出力
     {
       std::string str = get_string();
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive textpkt\n", str, "\n");
       if(input_print_.empty()){
         input_print_ = str;
       }else{
@@ -218,27 +212,22 @@ bool MathematicaLink::receive_to_return_packet(){
       break;
     }
     case SYNTAXPKT:
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive syntaxpkt\n");
       break;
     case INPUTNAMEPKT: // 次の入力に割り当てられる名前（通常 In[n]:=）
     {
       std::string str = get_string();
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive inputnamepkt\n", str, "\n");
       break;
     }
     case ILLEGALPKT:
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive illegalpkt\n");
       throw LinkError("math", "receive illegalpkt", 0);
       break;
     default:
-      HYDLA_LOGGER_EXTERN("%% Mathlink::receive unknownpkt: ", pkt, "\n");
       throw LinkError("math", "receive unknownpkt", 0);
       break;
     }
     if(at_end)break;
     MLNewPacket();
   }
-  HYDLA_LOGGER_FUNC_END(EXTERN);
   return true;
 }
 
@@ -440,7 +429,6 @@ void MathematicaLink::pre_send()
 
 void MathematicaLink::pre_receive()
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   receive_to_return_packet();
   get_next();
   int ret_code = get_integer();
@@ -450,17 +438,13 @@ void MathematicaLink::pre_receive()
   if(ret_code == -1) {
     throw hydla::timeout::TimeOutError("input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
   }
-  HYDLA_LOGGER_FUNC_END(BACKEND);
 }
 
   
 void MathematicaLink::get_function(std::string &name, int &cnt)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   cnt = get_arg_count();
   name = get_symbol();
-  HYDLA_LOGGER_BACKEND("%% cnt: ", cnt, ", name: ", name);
-  HYDLA_LOGGER_FUNC_END(BACKEND);
 }
 
 std::string MathematicaLink::get_symbol()
@@ -474,8 +458,7 @@ std::string MathematicaLink::get_symbol()
     throw LinkError("math", "get_symbol", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   std::string ret = s;
-  HYDLA_LOGGER_LOCATION(BACKEND);
-  HYDLA_LOGGER_BACKEND("%% symbol: ", s);
+
   MLReleaseSymbol(s);
   on_next_ = false;
   return ret;
@@ -492,8 +475,6 @@ std::string MathematicaLink::get_string()
     throw LinkError("math", "get_string", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   std::string ret = s;
-  HYDLA_LOGGER_LOCATION(BACKEND);
-  HYDLA_LOGGER_BACKEND("%% string: ", s);
   MLReleaseString(s);
   on_next_ = false;
   return ret; 
@@ -580,7 +561,6 @@ MathematicaLink::DataType MathematicaLink::get_type(){
   {
     tk_type = MLGetType();
   }
-  HYDLA_LOGGER_BACKEND("tk_type: ", get_token_name(tk_type));
   switch(tk_type)
   {
   case MLTKFUNC:
@@ -600,8 +580,6 @@ MathematicaLink::DataType MathematicaLink::get_type(){
 MathematicaLink::DataType MathematicaLink::get_next(){
   int tk_type = MLGetNext();
   on_next_ = false;
-  HYDLA_LOGGER_LOCATION(BACKEND);
-  HYDLA_LOGGER_BACKEND("tk_type: ", get_token_name(tk_type));
   switch(tk_type)
   {
   case MLTKFUNC:

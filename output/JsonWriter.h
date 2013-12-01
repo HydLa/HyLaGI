@@ -20,13 +20,16 @@ class JsonWriter{
   public:
 
   typedef hydla::simulator::PhaseResult                                       phase_result_t;
+  typedef boost::shared_ptr<phase_result_t>                                   phase_result_sptr_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
   typedef hydla::simulator::variable_map_t variable_map_t;
+  typedef boost::property_tree::ptree       ptree;
   
   void write(const phase_result_const_sptr_t &root);  
-  void read_vm(const variable_map_t &vm); 
   private:
-  boost::property_tree::ptree parse_tree_;
+  ptree for_phase(const phase_result_const_sptr_t &phase);
+  void for_vm(const variable_map_t &vm); 
+  ptree parse_tree_;
 };
 
 

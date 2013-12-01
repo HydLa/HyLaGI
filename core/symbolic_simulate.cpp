@@ -13,6 +13,7 @@
 #include "MathematicaLink.h"
 #include "REDUCELinkFactory.h"
 #include "Backend.h"
+#include "JsonWriter.h"
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -32,6 +33,7 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
+using namespace hydla::output;
 
 Simulator* simulator_;
 Opts opts;
@@ -235,6 +237,8 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   simulator_->set_phase_simulator(new SymbolicPhaseSimulator(simulator_, opts));  
   simulator_->initialize(parse_tree);
   simulator_->simulate();
+  JsonWriter writer;
+  writer.write(simulator_->get_result_root());
   if(!opts.ha_convert_mode)
   {
     output_result(*simulator_, opts);
