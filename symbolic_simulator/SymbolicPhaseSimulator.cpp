@@ -602,8 +602,8 @@ SymbolicPhaseSimulator::todo_list_t
       else
       {
         time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
-        backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       }
+      backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       results.push_back(pr);
       if(++time_it >= time_result.candidates.size())break;
       pr = make_new_phase(pr);

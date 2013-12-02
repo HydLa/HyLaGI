@@ -238,7 +238,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   simulator_->initialize(parse_tree);
   simulator_->simulate();
   JsonWriter writer;
-  writer.write(simulator_->get_result_root());
+  writer.write(*simulator_);
   if(!opts.ha_convert_mode)
   {
     output_result(*simulator_, opts);

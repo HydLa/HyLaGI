@@ -8,49 +8,88 @@ using namespace std;
 namespace hydla{
 namespace output{
 
-void JsonWriter::write(const phase_result_const_sptr_t &root)
+void JsonWriter::write(const simulator_t &simulator)
 {
   stringstream sstr;
-  parse_tree_ = for_phase(root->children[0]);
-/*
-  sstr = stringstream();
-  sstr << root->parameter_map;
-  pt.put("pm", sstr.str());
-  sstr = stringstream();
-  sstr << root->positive_asks;
-  pt.put("pa", sstr.str());
-  sstr = stringstream();
-  sstr << root->negative_asks;
-  pt.put("na", sstr.str());
-  sstr = stringstream();
-  sstr << root->expanded_always;
-  pt.put("ea", sstr.str());
-*/
+  parse_tree_.add_child("vars", for_vs(simulator.get_variable_set()));
+  parse_tree_.add_child("pars", for_pm(simulator.get_parameter_map()));
+  parse_tree_.push_back(std::make_pair("", "hoge"));
+
+  phase_result_const_sptr_t root = simulator.get_result_root();
+  ptree children;
+  for(vector<phase_result_sptr_t>::const_iterator it = root->children.begin(); it != root->children.end(); it++)
+  {
+    children.push_back(std::make_pair("", for_phase(*it)));
+  }
+  parse_tree_.add_child("traj", make_children(root));
   write_json("hoge.json", parse_tree_);
 }
 
 
-ptree JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
+JsonWriter::ptree_t JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
 {
-  ptree ret;
+  ptree_t ret;
   ret.put("id", phase->id);
-  for(vector<phase_result_sptr_t>::const_iterator it = phase->children.begin();
-      it != phase->children.end(); it++)
+  if(phase->phase == simulator::PointPhase)
   {
-    ret.add_child("children", for_phase(*it));
+    ret.put("phase_type", "PP");
+    ret.put("time", *phase->current_time);
+  }
+  else if(phase->phase == simulator::IntervalPhase)
+  {
+    ret.put("phase_type", "IP");
+    ret.put("start_time", *phase->current_time);
+    ret.put("end_time", *phase->end_time);
+  }
+
+  ret.add_child("vm", for_vm(phase->variable_map));
+  ret.add_child("pm", for_pm(phase->parameter_map));
+  ret.add_child("children", make_children(phase));
+  return ret;
+}
+
+
+JsonWriter::ptree_t JsonWriter::make_children(const phase_result_const_sptr_t &phase)
+{
+  ptree_t children;
+  for(vector<phase_result_sptr_t>::const_iterator it = phase->children.begin(); it != phase->children.end(); it++)
+  {
+    children.push_back(std::make_pair("", for_phase(*it)));
+  }
+  return children;
+}
+
+
+JsonWriter::ptree_t JsonWriter::for_vm(const variable_map_t &vm)
+{
+  ptree_t ret;
+  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  {
+    std::string key = it->first.get_string();
+    ret.put(key, it->second);
   }
   return ret;
 }
 
-void JsonWriter::for_vm(const variable_map_t &vm)
+JsonWriter::ptree_t JsonWriter::for_vs(const variable_set_t &vs)
 {
-/*
-  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  ptree_t ret;
+  for(variable_set_t::const_iterator it = vs.begin(); it != vs.end(); it++)
   {
-    std::string key = prefix + "vm." + it->first.get_string();
-    parse_tree_.put(key, it->second);
+    ret.push_back(std::make_pair("", it->get_string()));
   }
-*/
+  return ret;
+}
+
+JsonWriter::ptree_t JsonWriter::for_pm(const parameter_map_t &pm)
+{
+  ptree_t ret;
+  for(parameter_map_t::const_iterator it = pm.begin(); it != pm.end(); it++)
+  {
+    std::string key = it->first.get_name();
+    ret.put(key, it->second);
+  }
+  return ret;
 }
 
 

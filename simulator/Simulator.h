@@ -210,9 +210,11 @@ public:
   /**
    * @return set of introduced parameters and their ranges of values
    */
-  parameter_map_t get_parameter_map(){return parameter_map_;}
+  parameter_map_t get_parameter_map()const {return parameter_map_;}
+
+  variable_set_t get_variable_set()const {return variable_set_;}
   
-  phase_result_sptr_t get_result_root(){return result_root_;}
+  phase_result_sptr_t get_result_root() const {return result_root_;}
   
   /**
    * push the initial state of simulation into the stack
