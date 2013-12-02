@@ -88,6 +88,10 @@ private:
     simulation_todo_sptr_t& state,
     const variable_map_t& vm);
 
+  virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
+      simulation_todo_sptr_t&,
+    const variable_map_t& vm);
+
   virtual void find_unsat_core(const modulse_set_sptr& ms,
       simulation_todo_sptr_t&,
     const variable_map_t& vm);

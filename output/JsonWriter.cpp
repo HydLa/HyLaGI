@@ -13,7 +13,6 @@ void JsonWriter::write(const simulator_t &simulator)
   stringstream sstr;
   parse_tree_.add_child("vars", for_vs(simulator.get_variable_set()));
   parse_tree_.add_child("pars", for_pm(simulator.get_parameter_map()));
-  parse_tree_.push_back(std::make_pair("", "hoge"));
 
   phase_result_const_sptr_t root = simulator.get_result_root();
   ptree children;

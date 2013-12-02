@@ -99,6 +99,12 @@ void ProgramOptions::init_descriptions()
 
 	  ("ha", "convert to HA")
 
+    ("find_unsat_core", "find unsat core")
+
+    ("use_unsat_core", "simulation using unsat core")
+
+    ("hs", "simulation using HA")
+
     ("parallel", "parallel mode")
 
     ("pn", 

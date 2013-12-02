@@ -17,14 +17,13 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-	HASimulator::HASimulator(Opts &opts):BatchSimulator(opts){}
+	HASimulator::HASimulator(Opts &opts):HybridAutomata(opts){}
 
 	HASimulator::~HASimulator(){}
 	
 	phase_result_const_sptr_t HASimulator::simulate(){assert(0); return result_root_;}
-
-  phase_result_const_sptr_t HASimulator::simulate(ha_results_t ha_results){assert(0); return result_root_;}
-  /*
+/*
+	phase_result_const_sptr_t HASimulator::simulate(ha_results_t ha_results)
 	{
 		HYDLA_LOGGER_HAS("%% simulation start");
 		HYDLA_LOGGER_HAS("*** using HA");
@@ -203,3 +202,4 @@ namespace simulator {
 */	
 }//namespace hydla
 }//namespace simulator 
+
