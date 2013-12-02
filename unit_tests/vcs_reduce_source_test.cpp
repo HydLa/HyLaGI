@@ -267,4 +267,31 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_case_test){
   BOOST_CHECK(check(query1, "(list (list (quotient (times (sqrt parameter_y_0_1) (sqrt 5)) 5) (list (list (list parameter_y_0_1 1 (quotient 49 5)) (list parameter_y_0_1 2 9))) 0) (list (quotient 7 5) (list (list (list parameter_y_0_1 4 (quotient 49 5)) (list parameter_y_0_1 1 11))) 1))"));
 }
 
+BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
+  const string query1 =
+    "depend usrvary, t$"
+    "cons_:={df(usrvary,t,2) = -10, df(usrvary,t) = 0, - usrvary + 9 <= 0, usrvary - 11 <= 0}$"
+    "vars_:={df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t)), prev(usrvary), usrvary}$"
+    "pars_:={}$"
+    // exIneqSolveのため
+    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+
+    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
+
+  BOOST_CHECK(check(query1, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 0 0) (list usrvary 4 9) (list usrvary 3 11))"));
+  const string query2 =
+    "depend {usrvarvx, usrvarvy, usrvarx, usrvary}, t$"
+    "cons_:={df(usrvarvx,t) = 0, df(usrvarvy,t) = -10, df(usrvarx,t) = usrvarvx, df(usrvary,t) = usrvarvy, usrvare = 77/100, usrvarvx = 1, usrvarvy = 0, usrvarx = 4/3, usrvary = 20}$"
+    "vars_:={df(usrvarvx,t), df(usrvarvy,t), df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvare, usrvarvx, usrvarvy, usrvarx, usrvary}$"
+    "pars_:={}$"
+    // exIneqSolveのため
+    "csVariables__:= {df(usrvarvx,t), df(usrvarvy,t), df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvare, usrvarvx, usrvarvy, usrvarx, usrvary}$"
+    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
+
+
+  BOOST_CHECK(check(query2, "(list (list (df usrvarvx t) 0 0) (list (df usrvarvy t) 0 -10) (list (df usrvarx t) 0 1) (list (df usrvary t) 0 0) (list usrvare 0 (quotient 77 100)) (list usrvarvx 0 1) (list usrvarvy 0 0) (list usrvarx 0 (quotient 4 3)) (list usrvary 0 20))"));
+
+
+}
+
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST

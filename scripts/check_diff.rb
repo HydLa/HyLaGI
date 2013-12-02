@@ -6,6 +6,7 @@ require 'optparse'
 # @cases_array Hyrose出力を構文解析したもの
 class HyroseOutputDumper
   def initialize(arg_arr)
+    @arg_names = arg_arr
     @cases_array = Array.new
     arg_arr.each do |arg|
       @cases_array.push get_data(to_enum(arg))
@@ -127,8 +128,86 @@ class HyroseOutputDumper
 
 end
 
+# kouno君向け, モジュール集合の差異を文字列として比較
+class HyroseOutputModuleSetDumper < HyroseOutputDumper
+  def initialize(arg_arr)
+    super(arg_arr)
+  end
+
+  def dump
+    return super if @cases_array.size == 1
+
+    enum = @cases_array.each
+    loop do
+      lhs_cases, rhs_cases = enum.next, enum.next
+
+      lhs_case, rhs_case = lhs_cases.each, rhs_cases.each
+      loop do
+        lhs_one_case = lhs_case.next
+        lhs_trajs, rhs_trajs = lhs_one_case[:traj].each, rhs_case.next[:traj].each
+        puts "case: " + lhs_one_case[:id].to_s
+        loop do
+          lhs_traj = lhs_trajs.next 
+          lhs_ms, rhs_ms = lhs_traj[:ms], rhs_trajs.next[:ms]
+          puts " " * 2 +  "phase: " + lhs_traj[:phase] + " " + lhs_traj[:id].to_s
+          if lhs_ms == rhs_ms
+            puts " " * 4 + "lhs MS equals rhs MS"
+          else
+            puts " " * 4 + "lhs MS unequals rhs MS"
+          end
+          puts " " * 6 + "lhs MS: " + lhs_ms
+          puts " " * 6 + "rhs MS: " + rhs_ms
+        end
+      end
+    end
+  end
+end
+
+# mathにパイプで渡すための２つ組の計算結果を比較する式の出力, simple版
+class HyroseOutputVariableMapSimpleDumper < HyroseOutputDumper
+  def initialize(arg_arr)
+    super(arg_arr)
+  end
+
+  def dump
+    return super if @cases_array.size == 1
+    name_enum = @arg_names.each
+    enum = @cases_array.each
+    msg = "{\n"
+    loop do
+      lhs_cases, rhs_cases = enum.next, enum.next
+      lhs_name, rhs_name  = name_enum.next, name_enum.next
+
+      msg += " " * 2 + "{\"match \'" + lhs_name[0, lhs_name.length - " -sm".length] + "\'\", \n" + " " * 3
+      lhs_case, rhs_case = lhs_cases.each, rhs_cases.each
+      loop do
+        lhs_one_case = lhs_case.next
+        lhs_trajs, rhs_trajs = lhs_one_case[:traj].each, rhs_case.next[:traj].each
+        loop do
+          lhs_traj = lhs_trajs.next
+          lhs_vm, rhs_vm = lhs_traj[:vm].sort.each, rhs_trajs.next[:vm].sort.each
+          loop do
+            lhs_var, lhs_val = lhs_vm.next
+            rhs_var, rhs_val = rhs_vm.next
+            raise "unequal variable name" unless lhs_var == rhs_var
+            msg += "Simplify[(" + lhs_val + ")-(" + rhs_val + ")] == 0 and "
+          end
+          msg += "\\\n" + " " * 3
+        end
+        msg = msg[0, msg.length - " and \\\n   ".length] + "\n"
+      end
+      msg += " " * 2 + "},\n"
+    end
+    msg = msg[0, msg.length - 2]
+    msg += "}"
+    puts msg
+  end
+end
+
+
+
 # mathにパイプで渡すための２つ組の計算結果を比較する式の出力
-class HyroseOutputVariableDumper < HyroseOutputDumper
+class HyroseOutputVariableMapDumper < HyroseOutputDumper
   def initialize(arg_arr)
     super(arg_arr)
   end
@@ -169,58 +248,27 @@ class HyroseOutputVariableDumper < HyroseOutputDumper
   end
 end
 
-# kouno君向け, モジュール集合の差異を文字列として比較
-class HyroseOutputModuleSetDumper < HyroseOutputDumper
-  def initialize(arg_arr)
-    super(arg_arr)
-  end
-
-  def dump
-    return super if @cases_array.size == 1
-
-    enum = @cases_array.each
-    loop do
-      lhs_cases, rhs_cases = enum.next, enum.next
-
-      lhs_case, rhs_case = lhs_cases.each, rhs_cases.each
-      loop do
-        lhs_one_case = lhs_case.next
-        lhs_trajs, rhs_trajs = lhs_one_case[:traj].each, rhs_case.next[:traj].each
-        puts "case: " + lhs_one_case[:id].to_s
-        loop do
-          lhs_traj = lhs_trajs.next 
-          lhs_ms, rhs_ms = lhs_traj[:ms], rhs_trajs.next[:ms]
-          puts " " * 2 +  "phase: " + lhs_traj[:phase] + " " + lhs_traj[:id].to_s
-          if lhs_ms == rhs_ms
-            puts " " * 4 + "lhs MS equals rhs MS"
-          else
-            puts " " * 4 + "lhs MS unequals rhs MS"
-          end
-          puts " " * 6 + "lhs MS: " + lhs_ms
-          puts " " * 6 + "rhs MS: " + rhs_ms
-        end
-      end
-    end
-  end
-end
-
 # Main process
 OptionParser.new do |opt|
   mode = 'NORMAL'
-  opt.on('-m', '--ms')    {  mode = 'MS'     }
-  opt.on('-n', '--normal'){  mode = 'NORMAL' }
-  opt.on('-v', '--vcs')   {  mode = 'VCS'    }
+  opt.on('-m', '--ms')    {  mode = 'MS'             }
+  opt.on('-n', '--normal'){  mode = 'NORMAL'         }
+  opt.on('-s', '--simple_vcs'){  mode = 'SIMPLE_VCS' }
+  opt.on('-v', '--vcs')   {  mode = 'VCS'            }
 
   arr = opt.parse(ARGV != [] ? ARGV : '-h')
 
   case mode
-  when 'VCS' then
-    cmds = arr.inject([]){ |arr, cmd| arr.push(cmd + " -sm").push(cmd + " -sm") }
-    HyroseOutputVariableMapDumper.new(cmds).dump
   when 'MS' then
     HyroseOutputModuleSetDumper.new(arr).dump
-  else # when 'NORMAL'
-    HyroseOutputVariableDumper.new(arr).dump
+  when 'NORMAL'
+    HyroseOutputVariableMapDumper.new(arr).dump
+  when 'SIMPLE_VCS' then
+    cmds = arr.inject([]){ |arr, cmd| arr.push(cmd + " -sm").push(cmd + " -sr") }
+    HyroseOutputVariableMapSimpleDumper.new(cmds).dump
+  when 'VCS' then
+    cmds = arr.inject([]){ |arr, cmd| arr.push(cmd + " -sm").push(cmd + " -sr") }
+    HyroseOutputVariableMapDumper.new(cmds).dump
   end
 end
 
