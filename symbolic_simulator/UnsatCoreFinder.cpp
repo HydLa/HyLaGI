@@ -72,8 +72,8 @@ void UnsatCoreFinder::check_all_module_set()
 }
 
 void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
-    unsat_constraints_t S,
-    unsat_continuities_t S4C,
+    unsat_constraints_t& S,
+    unsat_continuities_t& S4C,
     simulation_todo_sptr_t& todo,
     const variable_map_t& vm
 )
@@ -257,7 +257,7 @@ if(todo->phase == PointPhase){
   add_constraints(S, S4C);
   bool ret = check_inconsistency();
   if(ret){
-    print_unsat_cores(S,S4C);
+    //print_unsat_cores(S,S4C);
   }else{
     //print_unsat_cores(S,S4C);
   }
