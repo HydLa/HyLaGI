@@ -1691,16 +1691,39 @@ procedure deq queue;
   end;
 
 %---------------------------------------------------------------
-% HydLa向け関数（df変数関連）
+% HydLa向け関数（通常の限量子に使用可能な変数関連）
 %---------------------------------------------------------------
 
-procedure removeDifferentialVars(vars_)$
-  union(for each x in vars_ join if(freeof(x, df)) then {x} else {});
+% 左辺が限量可能(dfやprevでない)な変数の式を抽出する
+procedure getLhsQuantified(exprs_)$
+  union(for each x in exprs_ join
+    if(freeof(lhs x, df) and freeof(lhs x, prev)) then {x} else {}
+  );
+
+% 変数のリストからdf変数でもprev変数でもない変数のみ抽出する
+procedure getQuantifiedVars(vars_)$
+  union(for each x in vars_ join
+    if(freeof(x, prev) and freeof(x, df)) then {x} else {}
+  );
+
+%---------------------------------------------------------------
+% HydLa向け関数（df変数関連）
+%---------------------------------------------------------------
 
 procedure isDifferentialVar(var_)$
   if(arglength(var_)=-1) then nil
   else if(myHead(var_)=df) then t
   else nil;
+
+% リストからdf変数を除く
+procedure removeDfCons(consList_)$
+  union(for each x in consList_ join if(freeof(x, df)) then {x} else {});
+
+% 変数のリストからdf変数のみ抽出する
+procedure getDfVars(vars_)$
+  union(for each x in vars_ join
+    if(freeof(x, prev) and not freeof(x, df)) then {x} else {}
+  );
 
 %---------------------------------------------------------------
 % HydLa向け関数（prev変数関連）
@@ -1718,14 +1741,6 @@ procedure removePrev(var_)$
 % リストからprev変数を除く
 procedure removePrevCons(consList_)$
   union(for each x in consList_ join if(freeof(x, prev)) then {x} else {});
-
-%---------------------------------------------------------------
-% HydLa向け関数（df変数関連）
-%---------------------------------------------------------------
-
-% リストからdf変数を除く
-procedure removeDfCons(consList_)$
-  union(for each x in consList_ join if(freeof(x, df)) then {x} else {});
 
 %---------------------------------------------------------------
 % HydLa向け関数（init変数関連）
@@ -2208,38 +2223,7 @@ begin;
   return {varName_, relopCode_, value_};
 end;
 
-% constraintStore__にinitConstraint__をunionしてconvertCSToVMに遷移する
-procedure myConvertCSToVM()$
-begin;
-  putLineFeed();
-  debugWrite("constraintStore__: ", constraintStore__);
-
-  return convertCSToVMMain(union(constraintStore__, removePrevCons(initConstraint__)), csVariables__, parameterStore__);
-end;
-
-% TODO 適切な行に移動
-% 左辺が限量可能(dfやprevでない)な変数の式を抽出する
-procedure getLhsQuantified(exprs_)$
-  union(for each x in exprs_ join
-    if(freeof(lhs x, df) and freeof(lhs x, prev)) then {x} else {}
-  );
-
-% TODO 適切な行に移動
-% 変数のリストからdf変数のみ抽出する
-procedure getDfVars(vars_)$
-  union(for each x in vars_ join
-    if(freeof(x, prev) and not freeof(x, df)) then {x} else {}
-  );
-
-% TODO 適切な行に移動
-% 変数のリストからdf変数でもprev変数でもない変数のみ抽出する
-procedure getQuantifiedVars(vars_)$
-  union(for each x in vars_ join
-    if(freeof(x, prev) and freeof(x, df)) then {x} else {}
-  );
-
-% TODO 適切な行に移動
-% converCSToVMMain内で変数表の前処理を行う
+% convertCSToVM内で変数表の前処理を行う
 % df変数はただの変数として扱い、連立方程式の求解と整形を行う
 % df変数を含む式は方程式であると仮定し、整形操作は微分方程式のみについて行う
 % TODO df変数を限量子の対象として操作する方法を見つける
@@ -2247,7 +2231,6 @@ procedure solveCS(cons_, vars_)$
 begin;
   scalar ret_, dfVars_, quantifiedVars_;
   debugWrite("in solveCS", " ");
-  debugWrite("{cons_, vars_}: ", {cons_, vars_});
 
   % df変数も限量子に使えたら以下のようなことがしたい
   % for each x in vars_ collect
@@ -2259,7 +2242,6 @@ begin;
     ret_:= getArgsList(rlqe(ex(quantifiedVars_, mymkand cons_)));
     ret_:= first solve(ret_, getDfVars(vars_));
     if(myHead ret_ <> list) then ret_:= {ret_};
-    debugWrite("fixed DfCons_: ", ret_);
   >> else <<
     ret_:= {};
   >>;
@@ -2269,6 +2251,15 @@ begin;
 
   debugWrite("ans in solveCS: ", ret_);
   return ret_;
+end;
+
+% constraintStore__にinitConstraint__をunionしてconvertCSToVMに遷移する
+procedure myConvertCSToVM()$
+begin;
+  putLineFeed();
+  debugWrite("constraintStore__: ", constraintStore__);
+
+  return convertCSToVMMain(union(constraintStore__, removePrevCons(initConstraint__)), csVariables__, parameterStore__);
 end;
 
 % 前提：Orでつながってはいない
@@ -3076,10 +3067,7 @@ begin;
   debugWrite("consTmpRet_: ", consTmpRet_);
 
   % 制約の右辺に変数が残っていた場合の適用処理
-  solvedRet_:= solve(consTmpRet_, removePrevCons(vars_));
-  % もし二重リストだった場合一重にする
-  if(part(part(solvedRet_, 1), 0) = list) then solvedRet_ := first solvedRet_;
-  debugWrite("solvedRet_: ", solvedRet_);
+  solvedRet_:= solveCS(consTmpRet_, vars_);
 
   % 式を{(変数名), (関係演算子コード), (値のフル文字列)}の形式に変換する
   consRet_:= map(makeConsTuple, solvedRet_);
