@@ -288,10 +288,18 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
     "csVariables__:= {df(usrvarvx,t), df(usrvarvy,t), df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvare, usrvarvx, usrvarvy, usrvarx, usrvary}$"
     "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
 
-
   BOOST_CHECK(check(query2, "(list (list (df usrvarvx t) 0 0) (list (df usrvarvy t) 0 -10) (list (df usrvarx t) 0 1) (list (df usrvary t) 0 0) (list usrvare 0 (quotient 77 100)) (list usrvarvx 0 1) (list usrvarvy 0 0) (list usrvarx 0 (quotient 4 3)) (list usrvary 0 20))"));
 
+  const string query3 =
+    "depend usrvary, t$"
+    "cons_:={df(usrvary,t,2) = -10, usrvary = 10, - df(usrvary,t) <= 0, df(usrvary,t) - 2 <= 0}$"
+    "vars_:={df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t)), prev(usrvary), usrvary}$"
+    "pars_:={}$"
+    // exIneqSolveのため
+    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(usrvary), usrvary}$"
+    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
 
+  BOOST_CHECK(check(query3, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 4 0) (list (df usrvary t) 3 2) (list usrvary 0 10))"));
 }
 
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST

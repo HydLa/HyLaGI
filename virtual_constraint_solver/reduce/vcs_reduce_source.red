@@ -2223,37 +2223,69 @@ begin;
   return {varName_, relopCode_, value_};
 end;
 
-% convertCSToVM内で変数表の前処理を行う
-% df変数はただの変数として扱い、連立方程式の求解と整形を行う
-% df変数を含む式は方程式であると仮定し、整形操作は微分方程式のみについて行う
-% TODO df変数を限量子の対象として操作する方法を見つける
-procedure solveCS(cons_, vars_)$
+% hyrose版rlstruct
+% exSubのおかげでdfの深い順にvarsが並んでいなくてもOK
+% \param cons_: {df(usrvary,t,2)+10 = 0, usrvary - 10 = 0, - df(usrvary,t) <= 0, df(usrvary,t) - 2 <= 0}
+% \param vars_: {df(usrvary,t,2), df(usrvary,t), usrvary}
+% \return {{v1 + 10 = 0, v3 - 10 = 0, - v2 <= 0, v2 - 2 <= 0}, {v1 = df(usrvary,t,2),v2 = df(usrvary,t),v3 = usrvary}}
+procedure hyroseRlStruct(cons_, vars_)$
 begin;
-  scalar ret_, dfVars_, quantifiedVars_;
-  debugWrite("in solveCS", " ");
+  scalar formulaList_, varsMap_;
+  varsMap_:= for i:= 1:length(vars_) collect part(vars_, i) = mkid(v,i);
+  formulaList_:= for each x in cons_ collect exSub(varsMap_, x);
+  varsMap_:= for i:= 1:length(vars_) collect mkid(v,i) = part(vars_, i);
+  debugWrite("ans in hyroseRlStruct: ", {formulaList_, varsMap_});
 
-  % df変数も限量子に使えたら以下のようなことがしたい
-  % for each x in vars_ collect
-  %   rlqe(ex(vars_ \ {x}, mymkand cons_));
+  return {formulaList_, varsMap_};
+end;
 
-  dfVars_:= getDfVars(vars_);
-  if(dfVars_ <> {}) then <<
-    quantifiedVars_:= getQuantifiedVars(vars_);
-    ret_:= getArgsList(rlqe(ex(quantifiedVars_, mymkand cons_)));
-    ret_:= first solve(ret_, getDfVars(vars_));
-    if(myHead ret_ <> list) then ret_:= {ret_};
-  >> else <<
-    ret_:= {};
+% \param cons_ {v1 + 10 = 0, v3 - 10 = 0, - v2 <= 0, v2 - 2 <= 0}
+% \param varMap: {v1 = df(usrvary,t,2),v2 = df(usrvary,t),v3 = usrvary}
+% \return {df(usrvary,t) - 2 <= 0 and df(usrvary,t) >= 0, df(usrvary,t,2) + 10 = 0, usrvary - 10 = 0}
+procedure solveCSMain(cons_, varMap_)$
+begin;
+  scalar vars_, varsExecptOne_, ret_;
+  vars_:= for each x in varMap_ collect lhs x;
+  ret_:= {};
+  for each x in vars_ do <<
+    varsExecptOne_:= vars_ \ {x};
+    ret_:= ret_ union {rlqe(ex(varsExecptOne_, mymkand cons_))};
   >>;
 
-  % 残りの変数に関する制約を足す
-  ret_:= union(ret_, getLhsQuantified(cons_));
+  % TODO andが入る場合式に展開するが正しい対応か？
+  ret_:= for each x in ret_ join if(myHead(x) = and) then getArgsList(x) else {x};
+
+  ret_:= sub(varMap_, ret_);
+
+  debugWrite("ans in solveCSMain: ", ret_);
+  return ret_;
+end;
+
+% TODO solveCSMainとまとめる
+% convertCSToVM内で変数表の前処理を行う
+% df変数はただの変数として扱い、連立方程式の求解と整形を行う
+% exIneqSolveの都合上, 方程式のみ整形操作を行う
+procedure solveCS(cons_, vars_)$
+begin;
+  scalar ret_, tmp_, dfVars_, quantifiedVars_;
+  debugWrite("in solveCS", " ");
+  tmp_:= hyroseRlStruct(cons_, removePrevCons vars_);
+  tmp_:= solveCSMain(first tmp_, second tmp_);
+
+  % 等式だけsolveで整形
+  equalities_:= for each x in tmp_ join if(myHead(x) = equal) then {x} else {};
+  equalityVars_:= for each x in vars_ join if(not freeof(equalities_, x)) then {x} else {};
+  ret_:= first solve(equalities_, equalityVars_);
+  if(myHead ret_ <> list) then ret_:= {ret_};
+  ret_:= for each x in ret_ join if(freeof(x, arbcomplex)) then {x} else {};
+
+  ret_:= ret_ union
+    for each x in tmp_ join if(myHead(x) <> equal) then {x} else {};
 
   debugWrite("ans in solveCS: ", ret_);
   return ret_;
 end;
 
-% constraintStore__にinitConstraint__をunionしてconvertCSToVMに遷移する
 procedure myConvertCSToVM()$
 begin;
   putLineFeed();
