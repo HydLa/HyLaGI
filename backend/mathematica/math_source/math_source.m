@@ -1,4 +1,4 @@
-(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
+B32;10;2c(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
 
 getReverseRelop[relop_] := Switch[relop,
                                   Equal, Equal,
@@ -172,7 +172,7 @@ publicMethod[
           tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = Quiet[Reduce[Exists[timeVars], tCons && tmpPCons && prevCons], Reals],
+          tCons = Quiet[Reduce[Exists[timeVars, tCons && tmpPCons && prevCons] ,Reals] ],
           (* 微分方程式が解けた場合 *)
           tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[2]] ] ];
           tCons = sol[[1]] /. tCons;
@@ -673,7 +673,6 @@ applyDSolveResult[exprs_, integRule_] := (
 createDifferentiatedEquations[vars_, integRules_] := (
   Module[
     {tRemovedRules, derivativeExpanded, ruleApplied, ruleVars, ret, tRemovedVars},
-    inputPrint["createDifferentiatedEquations", vars, integRules];
     ret = Fold[(Join[#1, createDifferentiatedEquation[#2, integRules] ])&, {}, vars];
     ret
   ]
@@ -686,9 +685,7 @@ removeDerivative[var_] := var;
 createDifferentiatedEquation[var_, integRules_] := (
   Module[
     {tRemovedRules, derivativeExpanded, ruleApplied, ret, tRemovedVars, nonDerivative},
-    inputPrint["createDifferentiatedEquation", var, integRules];
     nonDerivative = removeDerivative[var];
-    simplePrint[nonDerivative];
     If[!MemberQ[integRules, nonDerivative, Infinity], Return[{}]];
     tRemovedRules = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRules];
     tRemovedVars = var /. x_Symbol[t] -> x;

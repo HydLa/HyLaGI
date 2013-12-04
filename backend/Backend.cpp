@@ -308,7 +308,8 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
   }
   HYDLA_LOGGER(BACKEND, "start receive");
   link_->pre_receive();
-  HYDLA_LOGGER(EXTERN, "\n", link_->get_debug_print());
+  HYDLA_LOGGER(EXTERN, "input: \n", link_->get_input_print());
+  HYDLA_LOGGER(EXTERN, "trace: \n", link_->get_debug_print());
   for(int i = 0; ret_fmt[i] != '\0'; i++)
   {
     void* ret = va_arg(args, void *);
