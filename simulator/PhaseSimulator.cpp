@@ -229,7 +229,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     }
   }
   todo->module_set_container->mark_nodes();
-  //if(!(opts_->nd_mode || opts_->interactive_mode)) todo->module_set_container->reset(module_set_list_t());
+  if(!(opts_->nd_mode || opts_->interactive_mode)) todo->module_set_container->reset(module_set_list_t());
   todo->maximal_mss.push_back(ms);
   for(unsigned int i=0; i < vms.size(); i++)
   {
