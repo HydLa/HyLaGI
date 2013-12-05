@@ -1747,7 +1747,7 @@ procedure removePrevCons(consList_)$
 %---------------------------------------------------------------
 
 % REDUCEStringSenderから呼び出す
-% @params vars_ init変数のリスト
+% @param vars_ init変数のリスト
 procedure addInitVariables(vars_)$
 begin;
   putLineFeed();
@@ -2223,67 +2223,65 @@ begin;
   return {varName_, relopCode_, value_};
 end;
 
-% hyrose版rlstruct
-% exSubのおかげでdfの深い順にvarsが並んでいなくてもOK
-% \param cons_: {df(usrvary,t,2)+10 = 0, usrvary - 10 = 0, - df(usrvary,t) <= 0, df(usrvary,t) - 2 <= 0}
-% \param vars_: {df(usrvary,t,2), df(usrvary,t), usrvary}
-% \return {{v1 + 10 = 0, v3 - 10 = 0, - v2 <= 0, v2 - 2 <= 0}, {v1 = df(usrvary,t,2),v2 = df(usrvary,t),v3 = usrvary}}
+% hyrose向けのrlstruct
+% @param cons_ 制約のリスト
+% @param vars_ prevの覗かれた変数のリスト, df変数の順序を気にしなくて良い
+% @return      {vの変数表, vで表現した制約の論理式}
 procedure hyroseRlStruct(cons_, vars_)$
 begin;
-  scalar formulaList_, varsMap_;
-  varsMap_:= for i:= 1:length(vars_) collect part(vars_, i) = mkid(v,i);
-  formulaList_:= for each x in cons_ collect exSub(varsMap_, x);
-  varsMap_:= for i:= 1:length(vars_) collect mkid(v,i) = part(vars_, i);
-  debugWrite("ans in hyroseRlStruct: ", {formulaList_, varsMap_});
+  scalar ansFormula_, ansMap_, formulaList_, varsMap1_;
+  varsMap1_:= for i:= 1:length(vars_) collect part(vars_, i) = mkid(v,i);
+  formulaList_:= for each x in cons_ collect exSub(varsMap1_, x);
 
-  return {formulaList_, varsMap_};
+  ansFormula_:= mymkand formulaList_;
+  ansMap_:= for i:= 1:length(vars_) collect mkid(v,i) = part(vars_, i);
+  debugWrite("ans in hyroseRlStruct: ", {ansFormula_, ansMap_});
+
+  return {ansFormula_, ansMap_};
 end;
 
-% \param cons_ {v1 + 10 = 0, v3 - 10 = 0, - v2 <= 0, v2 - 2 <= 0}
-% \param varMap: {v1 = df(usrvary,t,2),v2 = df(usrvary,t),v3 = usrvary}
-% \return {df(usrvary,t) - 2 <= 0 and df(usrvary,t) >= 0, df(usrvary,t,2) + 10 = 0, usrvary - 10 = 0}
-procedure solveCSMain(cons_, varMap_)$
-begin;
-  scalar vars_, varsExecptOne_, ret_;
-  vars_:= for each x in varMap_ collect lhs x;
-  ret_:= {};
-  for each x in vars_ do <<
-    varsExecptOne_:= vars_ \ {x};
-    ret_:= ret_ union {rlqe(ex(varsExecptOne_, mymkand cons_))};
-  >>;
-
-  % TODO andが入る場合式に展開するが正しい対応か？
-  ret_:= for each x in ret_ join if(myHead(x) = and) then getArgsList(x) else {x};
-
-  ret_:= sub(varMap_, ret_);
-
-  debugWrite("ans in solveCSMain: ", ret_);
-  return ret_;
-end;
-
-% TODO solveCSMainとまとめる
 % convertCSToVM内で変数表の前処理を行う
 % df変数はただの変数として扱い、連立方程式の求解と整形を行う
 % exIneqSolveの都合上, 方程式のみ整形操作を行う
+% @param cons_ 制約のリスト
+% @param vars_ 変数のリスト
+% @return      exIneqSolveの食える形になった制約のリスト
 procedure solveCS(cons_, vars_)$
 begin;
-  scalar ret_, tmp_, dfVars_, quantifiedVars_;
+  scalar ans_, structAns_, equalities_, equalityVars_;
+  scalar vAns_, formula, vVarsMap_, vVars_, varsExecptOne_;
   debugWrite("in solveCS", " ");
-  tmp_:= hyroseRlStruct(cons_, removePrevCons vars_);
-  tmp_:= solveCSMain(first tmp_, second tmp_);
 
-  % 等式だけsolveで整形
-  equalities_:= for each x in tmp_ join if(myHead(x) = equal) then {x} else {};
+  structAns_:= hyroseRlStruct(cons_, removePrevCons vars_);
+  formula:= first structAns_;
+  vVarsMap_:= second structAns_;
+
+  % v変数によるcons_のQE
+  vVars_:= for each x in vVarsMap_ collect lhs x;
+  vAns_:= {};
+  for each x in vVars_ do <<
+    varsExecptOne_:= vVars_ \ {x};
+    vAns_:= vAns_ union {rlqe(ex(varsExecptOne_, formula))};
+  >>;
+
+  % TODO andが入る場合式に展開するが正しい対応か？
+  vAns_:= for each x in vAns_ join if(myHead(x) = and) then getArgsList(x) else {x};
+
+  vAns_:= sub(vVarsMap_, vAns_);
+  debugWrite("vAns_: ", vAns_);
+
+  % 等式だけsolveで整形する
+  equalities_:= for each x in vAns_ join if(myHead(x) = equal) then {x} else {};
   equalityVars_:= for each x in vars_ join if(not freeof(equalities_, x)) then {x} else {};
-  ret_:= first solve(equalities_, equalityVars_);
-  if(myHead ret_ <> list) then ret_:= {ret_};
-  ret_:= for each x in ret_ join if(freeof(x, arbcomplex)) then {x} else {};
+  ans_:= first solve(equalities_, equalityVars_);
+  if(myHead ans_ <> list) then ans_:= {ans_};
+  ans_:= for each x in ans_ join if(freeof(x, arbcomplex)) then {x} else {};
 
-  ret_:= ret_ union
-    for each x in tmp_ join if(myHead(x) <> equal) then {x} else {};
+  ans_:= ans_ union
+    for each x in vAns_ join if(myHead(x) <> equal) then {x} else {};
 
-  debugWrite("ans in solveCS: ", ret_);
-  return ret_;
+  debugWrite("ans in solveCS: ", ans_);
+  return ans_;
 end;
 
 procedure myConvertCSToVM()$
