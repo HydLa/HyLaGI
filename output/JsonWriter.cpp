@@ -58,14 +58,62 @@ JsonWriter::ptree_t JsonWriter::make_children(const phase_result_const_sptr_t &p
   return children;
 }
 
+JsonWriter::ptree_t JsonWriter::for_range(const value_range_t &range)
+{
+  ptree_t ret;
+  if(range.unique())
+  {
+    ret.put("", range.get_unique()->get_string());
+  }
+  else
+  {
+    if(range.get_lower_cnt() > 0)
+    {
+      ptree_t lbs;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        const value_range_t::bound_t &bound = range.get_lower_bound(i);
+        if(bound.include_bound)
+        {
+          lbs.put(bound.value->get_string(), "[");
+        }
+        else
+        {
+          lbs.put(bound.value->get_string(), "(");
+        }
+      }
+      ret.add_child("lb", lbs);
+    }
+    if(range.get_upper_cnt() > 0)
+    {
+      ptree_t ubs;
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+        const value_range_t::bound_t &bound = range.get_upper_bound(i);
+        if(bound.include_bound)
+        {
+          ubs.put(bound.value->get_string(), "]");
+        }
+        else
+        {
+          ubs.put(bound.value->get_string(), ")");
+        }
+      }
+      ret.add_child("ub", ubs);
+    }
+  }
+  return ret;
+}
+
 
 JsonWriter::ptree_t JsonWriter::for_vm(const variable_map_t &vm)
 {
   ptree_t ret;
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
-    std::string key = it->first.get_string();
-    ret.put(key, it->second);
+    const std::string &key = it->first.get_string();
+    const value_range_t &range = it->second;
+    ret.add_child(key, for_range(range) );
   }
   return ret;
 }
@@ -86,7 +134,7 @@ JsonWriter::ptree_t JsonWriter::for_pm(const parameter_map_t &pm)
   for(parameter_map_t::const_iterator it = pm.begin(); it != pm.end(); it++)
   {
     std::string key = it->first.get_name();
-    ret.put(key, it->second);
+    ret.add_child(key, for_range(it->second));
   }
   return ret;
 }
