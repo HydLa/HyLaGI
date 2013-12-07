@@ -75,6 +75,11 @@ protected:
    */
   int change_variable(simulation_todo_sptr_t& todo);
 
+  /*
+   * change current time
+   */
+  int change_time(simulation_todo_sptr_t& todo);
+
   /**
    * 変数値の近似
    */

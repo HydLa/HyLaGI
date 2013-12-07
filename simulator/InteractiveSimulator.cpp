@@ -162,6 +162,10 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         change_variable(todo);
         print_phase(todo->parent);
         break;
+      case 't':
+        change_time(todo);
+        print_phase(todo->parent);
+        break;
       case 'u':
         find_unsat_core(todo);
         //cin.clear();
@@ -210,25 +214,44 @@ void InteractiveSimulator::print(phase_result_sptr_t& phase)
   print_phase(phase);
 }
 
+int InteractiveSimulator::change_time(simulation_todo_sptr_t& todo){
+  time_t& current_time = todo->parent->current_time;
+  string time_str = excin<string>();
+  current_time = value_t(new hydla::simulator::symbolic::SymbolicValue(time_str));
+  todo->current_time = current_time;
+  return 0;
+}
+
 int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
   cout << "(change variable mode)" << endl;
   variable_map_t& vm = todo->parent->variable_map;
-  
+
   // 変数の選択
   variable_map_t::iterator v_it  = vm.begin();
   cout << "input variable name " << endl;
   cout << '>';
-  string variable_str = excin<string>();
-  for(;v_it!=vm.end();v_it++){
-    if( v_it->first.get_string() == variable_str) break;
+  string variable_str;
+  while (true) {
+    bool is_varid_variable_name = false;
+    variable_str = excin<string>();
+    for(v_it = vm.begin();v_it!=vm.end();v_it++){
+      if( v_it->first.get_string() == variable_str){
+        is_varid_variable_name = true;
+        break;
+      }
+    }
+    if(is_varid_variable_name)
+      break;
+    else
+      cout << variable_str << " is not a member of variable map." << endl;
   }
-  
+
   string value_str;
   cout << "input value" << endl;
   cout << '>';
   getline(cin, value_str);
-  
+
   if(value_str.substr(0,1)!="(" && value_str.substr(0,1)!="["){
     value_t value(new hydla::simulator::symbolic::SymbolicValue(value_str));
     // TODO: stringでvalue作ると，バックエンド変えた時に対応できないので何とかする
@@ -241,14 +264,14 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
     bool upperflag = (value_str[0] == '[');
     bool lowerflag = (value_str[value_str.size()-1] == ']');
- 
+
     string rangevalue = value_str.substr(1,value_str.size()-2);
     vector<string> v;
     boost::algorithm::split( v, rangevalue, boost::is_any_of(",") );
-    
+
     value_t lowvalue(new hydla::simulator::symbolic::SymbolicValue(v[0]));
     value_t upvalue(new hydla::simulator::symbolic::SymbolicValue(v[1]));
-    
+
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
