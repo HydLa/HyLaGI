@@ -168,8 +168,13 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         break;
       case 'u':
         find_unsat_core(todo);
-        //cin.clear();
         cin.ignore( 1024,'\n');
+        break;
+      case 'b':
+        set_breakpoint(todo);
+        break;
+      case 'r':
+        run(todo);
         break;
       default:
         cout << "invalid command: " << line << endl;
@@ -688,6 +693,15 @@ int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
   //phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
   opts_->find_unsat_core_mode = false;
 
+  return 0;
+}
+
+
+int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
+  //break point
+  return 0;
+}
+int InteractiveSimulator::run(simulation_todo_sptr_t & todo){
   return 0;
 }
 

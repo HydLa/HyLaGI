@@ -94,7 +94,8 @@ protected:
    * x = 0 が満たされたらシミュレーションを一時停止，のように停止条件を設定する
    * TODO: 実装する
    */
-  int set_breakpoint(){assert(0); return 0;}
+  int set_breakpoint(simulation_todo_sptr_t& simulation_phase);
+  int run(simulation_todo_sptr_t& simulation_phase);
   
   /**
    * save state
