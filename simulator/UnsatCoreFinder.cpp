@@ -1,4 +1,3 @@
-/*
 #include <iostream>
 #include <ostream>
 #include <fstream>
@@ -11,24 +10,30 @@
 #include "Dumpers.h"
 #include "TreeInfixPrinter.h"
 
-#include "../virtual_constraint_solver/mathematica/MathematicaVCS.h"
+#include "../backend/Backend.h"
 
 using namespace std;
-using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
-using namespace hydla::vcs;
-using namespace hydla::vcs::mathematica;
-
+using namespace hydla::backend;
+using namespace hydla::ch;
 
 namespace hydla{
 namespace simulator{
-namespace symbolic {
 
-UnsatCoreFinder::UnsatCoreFinder(const Opts& opts):Simulator(const_cast<Opts&>(opts)){}
+UnsatCoreFinder::UnsatCoreFinder(hydla::backend::Backend *back):backend_(back){}
+
+UnsatCoreFinder::UnsatCoreFinder(){}
 
 UnsatCoreFinder::~UnsatCoreFinder(){}
 
+void UnsatCoreFinder::reset(Phase phase, const variable_map_t &vm, const parameter_map_t &pm)
+{
+  backend_->call("resetConstraintForVariable", 0, "","");
+  std::string fmt = "mvp";
+  backend_->call("addPrevConstraint", 1, fmt.c_str(), "", &vm);
+  backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);     
+}
 
 void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities_t S4C){
 
@@ -52,26 +57,6 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
 
 }
 
-void UnsatCoreFinder::initialize()
-{
-  init_variable_map();
-  solver_.reset(new MathematicaVCS(*opts_));
-  solver_->set_variable_set(*variable_set_);
-  solver_->set_parameter_set(*parameter_set_);
-}
-void UnsatCoreFinder::init_variable_map()
-{
-  variable_set_.reset(new variable_set_t());
-  original_range_map_.reset(new variable_range_map_t());
-  original_parameter_map_.reset(new parameter_map_t());
-  parameter_set_.reset(new parameter_set_t());
-
-}
-void UnsatCoreFinder::check_all_module_set()
-{
-  msc_no_init_->reset();
-}
-
 void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     unsat_constraints_t& S,
     unsat_continuities_t& S4C,
@@ -79,7 +64,7 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     const variable_map_t& vm
 )
 {
-
+  HYDLA_LOGGER_LOCATION(MS);
   positive_asks_t positive_asks = todo->positive_asks;
   negative_asks_t negative_asks = todo->negative_asks;
   expanded_always_t expanded_always;
@@ -92,14 +77,9 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
 
   parameter_map_t pm = todo->parameter_map;
 
-  if(todo->phase == PointPhase){
-    solver_->change_mode(DiscreteMode, opts_->approx_precision);
-  }
-  else
-  {
-    solver_->change_mode(ContinuousMode, opts_->approx_precision);
-  }
-  solver_->reset(vm, pm);
+  reset(todo->phase, vm, pm);
+
+
   variable_map_t::const_iterator vm_it  = vm.begin();
   variable_map_t::const_iterator vm_end = vm.end();
   for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it != todo->temporary_constraints.end(); it++){
@@ -107,11 +87,12 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     cout << *it << endl;
   }
 
-  add_constraints(S,S4C);
+  add_constraints(S, S4C, todo->phase);
 
   module_list_t::const_iterator ms_it = ms->begin();
   module_list_t::const_iterator ms_end = ms->end();
   for(;ms_it!=ms_end;ms_it++){
+    HYDLA_LOGGER_VAR(MS, *ms_it);
     module_set_sptr temp_ms(new hydla::ch::ModuleSet());
     temp_ms->add_module(*ms_it);
     TellCollector tell_collector(temp_ms);
@@ -137,10 +118,29 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
       maker.visit_node((*it), false, false);
     }
 
+    for(constraints_t::iterator it = constraint_list.begin();
+        it != constraint_list.end();
+        it++)
+    {
+      const char* fmt = (todo->phase == PointPhase)?"en":"et";
+      backend_->call("addConstraint", 1, fmt, "", &(*it));
+      if(check_inconsistency()){
+        S.insert(make_pair(make_pair(*it,"constraint"),temp_ms));
+        if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
+          return ;
+        }else{
+          find_unsat_core(ms,S,S4C,todo,vm);
+          return;
+        }
+
+      }
+    }
+
     positive_asks_t::iterator it = positive_asks.begin();
     for(int j = 0; j < (int)positive_asks.size(); j++, it++)
     {
-      solver_->add_guard((*it)->get_guard());
+      const char* fmt = (todo->phase == PointPhase)?"en":"et";
+      backend_->call("addConstraint", 1, fmt, "", &(*it)->get_guard());
       if(check_inconsistency()){
         S.insert(make_pair(make_pair(node_sptr((*it)->get_guard()),"guard"),temp_ms));
         if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
@@ -154,13 +154,26 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     }
     //add continuity
     continuity_map = maker.get_continuity_map();
+    
     for(continuity_map_t::const_iterator it = continuity_map.begin();
         it != continuity_map.end();
         it++)
     {
+
+      std::string fmt = "v";
+      if(todo->phase == PointPhase)
+      {
+        fmt += "n";
+      }
+      else
+      {
+        fmt += "z";
+      }
+      fmt += "vp"; 
       if(it->second>=0){
-        for(int i=0; i<it->second;i++){
-          solver_->set_continuity(it->first, i);
+        for(int i = 0; i < it->second; i++){
+          variable_t var(it->first, i);
+          backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
           if(check_inconsistency()){
             S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
             if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
@@ -169,13 +182,13 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
               find_unsat_core(ms,S,S4C,todo,vm);
               return;
             }
-
           }
         }
       }else{
         node_sptr lhs(new Variable(it->first));
         for(int i=0; i<=-it->second;i++){
-          solver_->set_continuity(it->first, i);
+          variable_t var(it->first, i);
+          backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
           if(check_inconsistency()){
             S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
             if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
@@ -184,13 +197,23 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
               find_unsat_core(ms,S,S4C,todo,vm);
               return;
             }
-
           }
           lhs = node_sptr(new Differential(lhs));
         }
         node_sptr rhs(new Number("0"));
         node_sptr cons(new Equal(lhs, rhs));
-        solver_->add_constraint(cons);
+        std::string fmt = "v";
+        if(todo->phase == PointPhase)
+        {
+          fmt += "n";
+        }
+        else
+        {
+          fmt += "z";
+        }
+        fmt += "vp"; 
+        variable_t var(it->first, -it->second + 1);
+        backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
         if(check_inconsistency()){
           S.insert(make_pair(make_pair(cons,"constraint"),temp_ms));
           if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
@@ -199,82 +222,76 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
             find_unsat_core(ms,S,S4C,todo,vm);
             return;
           }
-
         }
       }
     }
   }
-
-  solver_->check_consistency();
-  node_sptr tmp_node;
-  solver_->end_temporary();
-
-
-}
-
-phase_result_const_sptr_t UnsatCoreFinder::simulate(){
-  return phase_result_const_sptr_t();
+  backend_->call("endTemporary", 0, "", "");
 }
 
 bool UnsatCoreFinder::check_inconsistency(){
   CheckConsistencyResult check_consistency_result;
-  check_consistency_result= solver_->check_consistency();
-  if(check_consistency_result.true_parameter_maps.empty()){
+  backend_->call("checkConsistencyPoint", 0, "", "cc", &check_consistency_result);
+  if(check_consistency_result[0].empty()){
     return true;
   }else{
     return false;
   }
 }
+
+
 bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms,simulation_todo_sptr_t& todo, const variable_map_t& vm){
-  solver_->end_temporary();
-  solver_->start_temporary();
-if(todo->phase == PointPhase){
-    solver_->change_mode(DiscreteMode, opts_->approx_precision);
-  }
-  else
-  {
-    solver_->change_mode(ContinuousMode, opts_->approx_precision);
-  }
-  solver_->reset(vm,todo->parameter_map);
-  add_constraints(S, S4C);
+  backend_->call("endTemporary", 0, "", "");
+  backend_->call("startTemporary", 0, "", "");
+  reset(todo->phase, vm, todo->parameter_map);
+  add_constraints(S, S4C, todo->phase);
   bool ret = check_inconsistency();
-  if(ret){
-    //print_unsat_cores(S,S4C);
-  }else{
-    //print_unsat_cores(S,S4C);
-  }
-  solver_->end_temporary();
+
+  backend_->call("endTemporary", 0, "", "");
   return ret;
 }
-void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C){
+
+void UnsatCoreFinder::set_backend(Backend *back){
+  backend_ = back;
+}
+
+
+void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C, Phase phase){
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
-    if(it->first.second == "guard"){
-      solver_->add_guard(it->first.first);
-    }
-    else if(it->first.second == "constraint"){
-      solver_->add_constraint(it->first.first);
+    const char* fmt = (phase == PointPhase)?"en":"et";
+    if(it->first.second == "guard" || it->first.second == "constraint"){
+      backend_->call("addConstraint", 1, fmt, "", &it->first.first);
     }
   }
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
-    if(it->first.second>=0){
-      for(int i=0; i<it->first.second;i++){
-        solver_->set_continuity(it->first.first, i);
+    std::string fmt = "v";
+    if(phase == PointPhase)fmt += "n";
+    else fmt += "z";
+    fmt += "vp";
+    const string &name = it->first.first;
+    int diff_cnt= it->first.second;
+    if(diff_cnt >= 0){
+      for(int i = 0; i < diff_cnt; i++){
+        variable_t var(name, i);
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
       }
     }else{
-      node_sptr lhs(new Variable(it->first.first));
-      for(int i=0; i<=-it->first.second;i++){
-        solver_->set_continuity((it->first).first, i);
+      for(int i = 0; i <= -diff_cnt;i++){
+        variable_t var(name, i);
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
       }
       node_sptr rhs(new Number("0"));
-      node_sptr cons(new Equal(lhs, rhs));
-      solver_->add_constraint(cons);
+      std::string fmt = "v";
+      if(phase == PointPhase) fmt += "n";
+      else fmt += "z";
+      fmt += "vp"; 
+      variable_t var(name, diff_cnt + 1);
+      backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
     }
   }
 }
 
 }
 }
-}
-*/

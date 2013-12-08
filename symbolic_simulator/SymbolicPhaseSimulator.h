@@ -15,13 +15,13 @@
 #include "SymbolicTypes.h"
 #include "PhaseSimulator.h"
 #include "../output/TrajPrinter.h"
+#include "UnsatCoreFinder.h"
 
 namespace hydla {
 namespace simulator {
 namespace symbolic {
 
 class AnalysisResultChecker;
-class UnsatCoreFinder;
 
 class SymbolicPhaseSimulator : public simulator_t
 {
@@ -95,6 +95,8 @@ private:
   virtual void find_unsat_core(const modulse_set_sptr& ms,
       simulation_todo_sptr_t&,
     const variable_map_t& vm);
+
+  virtual void set_backend(backend::Backend* back);
 
   virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
   

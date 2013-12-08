@@ -251,7 +251,6 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     else
       cout << variable_str << " is not a member of variable map." << endl;
   }
-
   string value_str;
   cout << "input value" << endl;
   cout << '>';
@@ -680,19 +679,15 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
 //}
 
 int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
-  opts_->find_unsat_core_mode = true;
+  
   //TODO 
   InteractiveSimulator is(*opts_);
-  is.opts_->find_unsat_core_mode = true;
   is.set_phase_simulator(new hydla::simulator::symbolic::SymbolicPhaseSimulator(&is, *opts_));
   is.initialize(parse_tree_);
   is.phase_simulator_->set_select_function(select_phase);
   //is.phase_simulator_->calculate_phase_result(all_todo_[0]);
-  //cout << "hoge" << endl;
   is.phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
   //phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
-  opts_->find_unsat_core_mode = false;
-
   return 0;
 }
 

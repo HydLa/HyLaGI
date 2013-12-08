@@ -130,8 +130,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
-
-
+std::ostream& operator<<(std::ostream &s, const ModuleSet::module_t& m);
 
 class ModuleSetComparator {
 public:

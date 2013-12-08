@@ -77,7 +77,7 @@ std::ostream& ModuleSet::dump(std::ostream& s) const
   module_list_t::const_iterator end = module_list_.end();
 
   s << "{";
-  if(it!=end) s << *(it++)->second;
+  if(it != end) s << *(it++)->second;
   for(; it!=end; ++it) {
     s << ", " << *it->second;
   }
@@ -119,6 +119,12 @@ std::ostream& operator<<(std::ostream& s, const ModuleSet& m)
 {
   return m.dump(s);
 }
+
+std::ostream& operator<<(std::ostream& s, const ModuleSet::module_t& m)
+{
+  return s << m.first;
+}
+
 
 } // namespace ch
 } // namespace hydla

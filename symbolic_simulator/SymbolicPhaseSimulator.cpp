@@ -26,7 +26,7 @@
 #include "Backend.h"
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
-//#include "UnsatCoreFinder.h"
+#include "UnsatCoreFinder.h"
 #include "TreeInfixPrinter.h"
 #include "Dumpers.h"
 
@@ -96,21 +96,21 @@ SymbolicPhaseSimulator::mark_nodes_by_unsat_core
  simulation_todo_sptr_t& todo,
  const variable_map_t& vm
  ){
-/*
-  boost::shared_ptr<UnsatCoreFinder> unsat_core_finder(new UnsatCoreFinder(*opts_));
-  unsat_core_finder->initialize();
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
-  unsat_core_finder->find_unsat_core(ms,S,S4C,todo,vm);
+  HYDLA_LOGGER_VAR(MS, ms);
+  unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
   ModuleSet module_set;
   for(UnsatCoreFinder::unsat_constraints_t::iterator it = S.begin(); it != S.end(); it++){
+    HYDLA_LOGGER(MS, "unsat moduleset: ", *it->second);
     for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
   }
   for(UnsatCoreFinder::unsat_continuities_t::iterator it = S4C.begin(); it != S4C.end(); it++){
+    HYDLA_LOGGER(MS, "unsat moduleset: ", *it->second);
     for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
   }
+  HYDLA_LOGGER_VAR(MS, module_set);
   todo->module_set_container->mark_nodes(todo->maximal_mss, module_set);
-*/
 }
 
 void
@@ -119,26 +119,30 @@ SymbolicPhaseSimulator::find_unsat_core
  simulation_todo_sptr_t& todo,
  const variable_map_t& vm
  ){
-/*
-  boost::shared_ptr<UnsatCoreFinder> unsat_core_finder(new UnsatCoreFinder(backend_));
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
   cout << "start find unsat core " << endl;
   cout << ms << endl;
-  unsat_core_finder->find_unsat_core(ms,S,S4C,todo,vm);
-  unsat_core_finder->print_unsat_cores(S,S4C);
+  unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
+  unsat_core_finder_->print_unsat_cores(S,S4C);
   cout << "end find unsat core " << endl;
-*/
 }
 
 
 SymbolicPhaseSimulator::SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts) :
   simulator_t(simulator, opts)
 {
+  unsat_core_finder_.reset(new UnsatCoreFinder());
 }
 
 SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 {
+}
+
+void SymbolicPhaseSimulator::set_backend(backend::Backend* back)
+{
+  PhaseSimulator::set_backend(back);
+  unsat_core_finder_->set_backend(back);
 }
 
 void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
@@ -172,11 +176,9 @@ void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_m
         backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
       }
     }else{
-      node_sptr lhs(new Variable(it->first));
       for(int i=0; i<=-it->second;i++){
         variable_t var(it->first, i);
         backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-        lhs = node_sptr(new Differential(lhs));
       }
       if(phase == IntervalPhase)
       {

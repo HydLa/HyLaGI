@@ -56,7 +56,7 @@ public:
   
   virtual ~PhaseSimulator();
 
-  void set_backend(backend::Backend* back);
+  virtual void set_backend(backend::Backend* back);
 
   /**
    * calculate phase results from given todo
