@@ -13,14 +13,14 @@ class RelationGraph{
 public:
   typedef hydla::ch::ModuleSet module_set_t;
   typedef hydla::ch::ModuleSet::module_t module_t;
-  typedef std::list<DefaultVariable> variable_set_t;
+  typedef std::set<DefaultVariable, VariableComparator> variable_set_t;
   
   typedef struct Variable_{
-    hydla::simulator::DefaultVariable* variable;
+    hydla::simulator::DefaultVariable variable;
     bool is_prev;
-    Variable_():variable(NULL), is_prev(false)
+    Variable_(): is_prev(false)
     {}
-    Variable_(hydla::simulator::DefaultVariable* var, bool pr):variable(var), is_prev(pr)
+    Variable_(const hydla::simulator::DefaultVariable &var, bool pr):variable(var), is_prev(pr)
     {}
     friend bool operator<(const Variable_& lhs, 
                           const Variable_& rhs){
@@ -62,7 +62,7 @@ public:
     virtual std::string get_name() const;
   };
   
-  static boost::shared_ptr<RelationGraph> new_graph(const module_set_t &ms, variable_set_t &vm, bool in_IP);
+  static boost::shared_ptr<RelationGraph> new_graph(const module_set_t &ms, const variable_set_t &vm, bool in_IP);
 
   virtual ~RelationGraph();
   

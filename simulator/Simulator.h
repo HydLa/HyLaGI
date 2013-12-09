@@ -181,7 +181,7 @@ struct TodoContainer
 
 typedef TodoContainer                                    todo_container_t;
 
-typedef std::list<variable_t>                            variable_set_t;
+ typedef std::set<variable_t, VariableComparator>                            variable_set_t;
 
 class Simulator
 {

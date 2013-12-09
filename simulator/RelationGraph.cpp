@@ -66,7 +66,7 @@ std::ostream& RelationGraph::dump_graph(std::ostream & os) const
 
 std::string RelationGraph::VariableRelationNode::get_name() const
 {
-  std::string ret = variable.variable->get_string();
+  std::string ret = variable.variable.get_string();
   if(variable.is_prev)ret += "-";
   return ret;
 }
@@ -112,7 +112,7 @@ void RelationGraph::visit_edges(ModuleRelationNode* node, module_set_t &ms){
   }
 }
 
-boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms, variable_set_t& vs, bool in_IP)
+boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms, const variable_set_t& vs, bool in_IP)
 {
   relation_set_t relations;
   for(module_set_t::module_list_const_iterator it = ms.begin();it != ms.end(); it++){
@@ -122,14 +122,14 @@ boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms
       prev_variables = finder.get_prev_variable_set();
     for(VariableFinder::variable_set_t::const_iterator v_it = variables.begin(); v_it != variables.end(); v_it++)
     {
-      relations.push_back(std::make_pair(&(*it), 
-        variable_t(&(*std::find(vs.begin(), vs.end(), (hydla::simulator::DefaultVariable(v_it->first, v_it->second)))), false)));
+      variable_t var(*std::find(vs.begin(), vs.end(), DefaultVariable(v_it->first, v_it->second)), false);
+      relations.push_back(std::make_pair(&(*it), var));
     }
     
     for(VariableFinder::variable_set_t::const_iterator v_it = prev_variables.begin(); v_it != prev_variables.end(); v_it++)
     {
       relations.push_back(std::make_pair(&(*it), 
-        variable_t(&(*std::find(vs.begin(), vs.end(), (hydla::simulator::DefaultVariable(v_it->first, v_it->second)))), true)));
+        variable_t(*std::find(vs.begin(), vs.end(), (hydla::simulator::DefaultVariable(v_it->first, v_it->second))), true)));
     }
   }
   return boost::shared_ptr<RelationGraph>(new RelationGraph(relations));
