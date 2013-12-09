@@ -34,9 +34,21 @@ using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
 using namespace hydla::output;
+using namespace std;
+
 
 Simulator* simulator_;
 Opts opts;
+
+static string get_file_without_ext(const string &path)
+{
+  size_t start_idx = path.find_last_of('/');
+  if(start_idx == string::npos) start_idx = 0;
+  else ++start_idx;
+  size_t end_idx = path.find_last_of('.');
+  if(end_idx != string::npos) end_idx = end_idx - start_idx;
+  return path.substr(start_idx, end_idx);
+}
 
 void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
@@ -45,14 +57,31 @@ void output_result(Simulator& ss, Opts& opts){
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   cout << sstr.str(); 
-  std::string of_name = po.get<std::string>("output_file"); 
-  if(!of_name.empty()) 
+
+  // TODO: use boost (for compatibility)
+  std::string of_name = po.get<string>("output_name"); 
+  if(of_name.empty()) 
   {
-    std::ofstream ofs;
-    ofs.open(of_name.c_str());
-    ofs << sstr.str();
-    ofs.close(); 
+    const std::string hydat_dir = "./hydat/";
+    if(po.count("input-file"))
+    {
+      std::string if_name = po.get<string>("input-file");
+      of_name = hydat_dir + get_file_without_ext(if_name) + ".hydat";
+    }
+    else
+    {
+      of_name = hydat_dir + "no_name.hydat"; 
+    }
+    struct stat st;
+    int ret = stat(hydat_dir.c_str(), &st);
+    if(ret == -1)
+    {
+      mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
   }
+  JsonWriter writer;
+  writer.write(*simulator_, of_name);
+
   if(po.get<std::string>("tm") == "s") {
     hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
   } else if(po.get<std::string>("tm") == "c") {
@@ -141,28 +170,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
   }else{
     throw std::runtime_error(std::string("invalid option - approx_mode"));
   }
-  
-  
-  /* std::string output_variables = po.get<std::string>("output_variables");
-  std::string::size_type prev = 0, now;
-  while( (now = output_variables.find('_', prev)) != std::string::npos){
-    std::string name = output_variables.substr(prev, now-prev);
-    if(now == output_variables.length()-1)break;
-    now++;
-    prev = output_variables.find('_', now);
-    if(prev == std::string::npos) prev = output_variables.length();
-    int d_count;
-    try{ 
-      d_count = boost::lexical_cast<int>(output_variables.substr(now, prev-now));
-    }catch(boost::bad_lexical_cast e){
-      std::cerr << "invalid option format - output variables" << std::endl;
-      exit(-1);
-    }
-    name.append(d_count, '\'');
-    opts.output_variables.insert(name);
-    prev++;
-  }
-  */
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
@@ -238,8 +245,6 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   simulator_->set_phase_simulator(new SymbolicPhaseSimulator(simulator_, opts));  
   simulator_->initialize(parse_tree);
   simulator_->simulate();
-  JsonWriter writer;
-  writer.write(*simulator_);
   if(!opts.ha_convert_mode)
   {
     output_result(*simulator_, opts);

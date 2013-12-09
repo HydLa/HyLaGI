@@ -29,7 +29,7 @@ class JsonWriter{
   typedef hydla::simulator::Simulator       simulator_t;
   typedef hydla::simulator::ValueRange      value_range_t;
   
-  void write(const simulator_t &simulator);  
+  void write(const simulator_t &simulator, std::string name);
   private:
   ptree_t for_phase(const phase_result_const_sptr_t &phase);
   ptree_t for_vm(const variable_map_t &vm); 

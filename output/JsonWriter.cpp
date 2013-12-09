@@ -8,7 +8,7 @@ using namespace std;
 namespace hydla{
 namespace output{
 
-void JsonWriter::write(const simulator_t &simulator)
+void JsonWriter::write(const simulator_t &simulator, std::string name)
 {
   stringstream sstr;
   parse_tree_.add_child("vars", for_vs(simulator.get_variable_set()));
@@ -21,7 +21,11 @@ void JsonWriter::write(const simulator_t &simulator)
     children.push_back(std::make_pair("", for_phase(*it)));
   }
   parse_tree_.add_child("traj", make_children(root));
-  write_json("hoge.json", parse_tree_);
+ 
+  std::ofstream ofs;
+  ofs.open(name.c_str());
+  write_json(ofs, parse_tree_);
+  ofs.close(); 
 }
 
 

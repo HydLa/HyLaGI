@@ -51,13 +51,7 @@ void ProgramOptions::init_descriptions()
      "  by graph representation")
     ("dump_in_progress", 
      "output each phase in progress")
-     
-     /*
-     ("output-variables,v", 
-     value<std::string>()->default_value(""), 
-     "variables to output")
-     */
-     
+          
     ("search",
      value<std::string>()->default_value("d"), 
      "search method:\n"
@@ -159,9 +153,9 @@ void ProgramOptions::init_descriptions()
      "precision of output message")
      */
 
-    ("output_file,o",
+    ("output_name,o",
      value<std::string>()->default_value(""), 
-     "file name to output result of simulation") 
+     "file name for hydat output (if empty ./hydat/<program_name>.hydat)") 
 
     ("time,t", 
      value<std::string>()->default_value(""), 
