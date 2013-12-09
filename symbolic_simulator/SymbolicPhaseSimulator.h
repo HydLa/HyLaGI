@@ -39,6 +39,12 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
+
+  virtual void find_unsat_core(const module_set_sptr& ms,
+      simulation_todo_sptr_t&,
+      const variable_map_t& vm);
+
+
 private:
 
   std::set<module_set_sptr> checkd_module_set_;
@@ -89,10 +95,6 @@ private:
     const variable_map_t& vm);
 
   virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
-      simulation_todo_sptr_t&,
-    const variable_map_t& vm);
-
-  virtual void find_unsat_core(const modulse_set_sptr& ms,
       simulation_todo_sptr_t&,
     const variable_map_t& vm);
 

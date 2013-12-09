@@ -95,6 +95,12 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
 
+
+  virtual void find_unsat_core(const module_set_sptr& ms,
+      simulation_todo_sptr_t&,
+    const variable_map_t& vm) = 0;
+
+
   /// pointer to the backend to be used
   boost::shared_ptr<backend::Backend> backend_;
   
@@ -154,12 +160,6 @@ protected:
     bool b) = 0;
 
   virtual void mark_nodes_by_unsat_core(
-    const module_set_sptr& ms,
-    simulation_todo_sptr_t&,
-    const variable_map_t&
-      ) = 0;
-
-  virtual void find_unsat_core(
     const module_set_sptr& ms,
     simulation_todo_sptr_t&,
     const variable_map_t&

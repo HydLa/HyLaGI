@@ -61,6 +61,8 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
   variable_t variable(v_name, diff_cnt);
   simulator_.introduce_parameter(variable, prev_phase_, prev_phase_->variable_map[variable]);
   parameter_map_[param] = prev_phase_->variable_map[variable];
+  prev_phase_->parameter_map[param] = parameter_map_[param];
+  prev_phase_->variable_map[variable] = value_t(new symbolic::SymbolicValue(parameter_node_));
 }
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)

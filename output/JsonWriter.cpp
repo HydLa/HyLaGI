@@ -133,7 +133,7 @@ JsonWriter::ptree_t JsonWriter::for_pm(const parameter_map_t &pm)
   ptree_t ret;
   for(parameter_map_t::const_iterator it = pm.begin(); it != pm.end(); it++)
   {
-    std::string key = it->first.get_name();
+    std::string key = it->first.to_string();
     ret.add_child(key, for_range(it->second));
   }
   return ret;

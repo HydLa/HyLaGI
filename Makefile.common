@@ -9,7 +9,7 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lboost_system -lncurses -lboost_thread-mt
+LIBS += -lboost_system -lncurses -lboost_thread-mt -lpthread
 
 
 INCLUDES += -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/

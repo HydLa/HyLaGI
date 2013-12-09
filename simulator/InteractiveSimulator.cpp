@@ -679,15 +679,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
 //}
 
 int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
-  
-  //TODO 
-  InteractiveSimulator is(*opts_);
-  is.set_phase_simulator(new hydla::simulator::symbolic::SymbolicPhaseSimulator(&is, *opts_));
-  is.initialize(parse_tree_);
-  is.phase_simulator_->set_select_function(select_phase);
-  //is.phase_simulator_->calculate_phase_result(all_todo_[0]);
-  is.phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
-  //phase_simulator_->calculate_phase_result(all_todo_[all_todo_.size()-1]);
+  phase_simulator_->find_unsat_core(todo->parent->module_set, todo, todo->parent->variable_map);
   return 0;
 }
 
