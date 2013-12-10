@@ -138,7 +138,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   
   bool get_form(const char &form_c, variable_form_t &form);
 
-  virtual void visit(hydla::simulator::symbolic::SymbolicValue& value);
+  void visit_value(hydla::simulator::symbolic::SymbolicValue& value);
 
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);

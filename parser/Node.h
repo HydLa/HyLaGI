@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 
@@ -66,6 +67,14 @@ public:
   virtual std::string get_node_type_name() const {
     return "Node";
   }
+
+  std::string get_string() const
+  {
+    std::stringstream sstr;
+    dump(sstr);
+    return sstr.str();
+  }
+  
 
   /**
    * ノードの状態を出力する
@@ -1496,6 +1505,7 @@ public:
   {}
 
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
+  virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
   virtual std::string get_node_type_name() const {
     return "ArbitraryNode";

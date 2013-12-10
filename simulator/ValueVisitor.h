@@ -11,7 +11,7 @@ class SymbolicValue;
 
 class ValueVisitor{
   public:
-  virtual void visit(hydla::simulator::symbolic::SymbolicValue&) = 0;
+  virtual void visit_value(hydla::simulator::symbolic::SymbolicValue&) = 0;
 };
 
 } // namespace simulator

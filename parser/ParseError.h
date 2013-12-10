@@ -5,8 +5,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <boost/lexical_cast.hpp>
-
 #include "Node.h"
 
 namespace hydla {
@@ -23,7 +21,7 @@ public:
              int line = -1) : 
     std::runtime_error(
       init("", 
-           boost::lexical_cast<std::string>(*node), 
+           node->get_string(), 
            line))
   {}
   
@@ -32,7 +30,7 @@ public:
              int line = -1) : 
     std::runtime_error(
       init(tag, 
-           boost::lexical_cast<std::string>(*node), 
+           node->get_string(), 
            line))
   {}
 

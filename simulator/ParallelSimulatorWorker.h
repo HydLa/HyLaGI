@@ -15,11 +15,12 @@ class ParallelSimulatorWorker: public BatchSimulator{
 
 public:
 
-  ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master);
+  ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master, int id);
   
   virtual ~ParallelSimulatorWorker();
 
-  virtual void initialize(const parse_tree_sptr& parse_tree,int id);
+  virtual void initialize(const parse_tree_sptr& parse_tree);
+
   /**
    * 各スレッドが与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */

@@ -22,7 +22,7 @@ void PrevReplacer::replace_value(value_t& val)
 }
 
 
-void PrevReplacer::visit(hydla::simulator::symbolic::SymbolicValue& val)
+void PrevReplacer::visit_value(hydla::simulator::symbolic::SymbolicValue& val)
 {
   replace(val.get_node());
   if(new_child_) val.set_node(new_child_);
@@ -102,7 +102,6 @@ void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node){}
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
 DEFINE_DEFAULT_VISIT_ARBITRARY(UnsupportedFunction)
-DEFINE_DEFAULT_VISIT_ARBITRARY(ArbitraryNode)
 
 DEFINE_DEFAULT_VISIT_UNARY(Negative)
 DEFINE_DEFAULT_VISIT_UNARY(Positive)

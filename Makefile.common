@@ -1,8 +1,8 @@
 .SUFFIXES: 
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-CC       := gcc
-CXX      := g++
+CC       := clang
+CXX      := clang++
 SED      := sed #@SED@
 MV       := mv #@MV@
 AR       := ar #@AR@
@@ -12,8 +12,8 @@ LN       := ln #@LN@
 LIBS += -lboost_system -lncurses -lboost_thread-mt -lpthread
 
 
-INCLUDES += -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
-LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg

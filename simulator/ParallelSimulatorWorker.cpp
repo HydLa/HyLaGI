@@ -6,6 +6,7 @@
 #include "SymbolicPhaseSimulator.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
+#include <boost/lexical_cast.hpp>
 
 namespace hydla {
 namespace simulator {
@@ -18,17 +19,16 @@ bool ParallelSimulatorWorker::end_flag_;
 int ParallelSimulatorWorker::running_thread_count_;
 std::vector<std::string> ParallelSimulatorWorker::thread_state_;
 
-ParallelSimulatorWorker::ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master):BatchSimulator(opts), master_(master)
+ParallelSimulatorWorker::ParallelSimulatorWorker(Opts &opts, ParallelSimulator *master, int id):BatchSimulator(opts), master_(master), thr_id_(id)
 {
 }
 
 ParallelSimulatorWorker::~ParallelSimulatorWorker(){}
 
-void ParallelSimulatorWorker::initialize(const parse_tree_sptr& parse_tree, int id)
+void ParallelSimulatorWorker::initialize(const parse_tree_sptr& parse_tree)
 {
-  init_module_set_container(parse_tree);
+  BatchSimulator::initialize(parse_tree);
   set_phase_simulator(new hydla::simulator::symbolic::SymbolicPhaseSimulator(this, *opts_));
-  thr_id_ = id;
   end_flag_ = false;
   running_thread_count_ = 0;
   thread_state_.push_back("not running");
@@ -38,9 +38,6 @@ void ParallelSimulatorWorker::initialize(const parse_tree_sptr& parse_tree, int 
   variable_set_ = master_->variable_set_;
   original_map_ = master_->original_map_;
   parameter_map_ = master_->parameter_map_;
-  hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
-  phase_simulator_->initialize(variable_set_, parameter_map_,
-   original_map_, vm, msc_no_init_);
 }
 
 void ParallelSimulatorWorker::set_thread_state(string str)

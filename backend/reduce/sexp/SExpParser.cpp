@@ -44,11 +44,11 @@ std::string SExpParser::get_string_from_tree(const_tree_iter_t iter){
   return ret_str.str();
 }
 
-std::ostream& operator<<(std::ostream& s, const SExpParser::const_tree_iter_t& iter){
-  s << SExpParser::get_string_from_tree(iter);
-  return s;
-}
-
 } // namespace parser
 } // namespace hydla
 
+
+std::ostream& operator<<(std::ostream& s, const hydla::parser::SExpParser::const_tree_iter_t& iter){
+  s << SExpParser::get_string_from_tree(iter);
+  return s;
+}

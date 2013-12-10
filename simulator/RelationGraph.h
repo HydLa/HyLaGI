@@ -36,6 +36,7 @@ public:
 
   struct RelationNode{
     bool valid, visited;
+    virtual ~RelationNode(){}
     virtual std::string get_name() const = 0;
     RelationNode():valid(true), visited(false){}
   };
@@ -47,7 +48,7 @@ public:
     {}
     ModuleRelationNode(const module_t* mod):module(mod)
     {}
-    virtual std::string get_name() const
+    std::string get_name() const
     {return module->first;}
   };
   
@@ -59,7 +60,7 @@ public:
     mod_nodes_t edges;
     VariableRelationNode(variable_t var):variable(var)
     {}
-    virtual std::string get_name() const;
+    std::string get_name() const;
   };
   
   static boost::shared_ptr<RelationGraph> new_graph(const module_set_t &ms, const variable_set_t &vm, bool in_IP);

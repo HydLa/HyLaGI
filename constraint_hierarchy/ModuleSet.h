@@ -125,12 +125,14 @@ public:
   
   bool operator<(const ModuleSet& rhs) const{return (compare(rhs) < 0);}
 
+  friend std::ostream& operator<<(std::ostream &s, const ModuleSet::module_t& m);
+
 private:
   module_list_t module_list_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
-std::ostream& operator<<(std::ostream &s, const ModuleSet::module_t& m);
+
 
 class ModuleSetComparator {
 public:

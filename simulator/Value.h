@@ -8,15 +8,10 @@
 #include "ValueVisitor.h"
 #include "Node.h"
 
-#include <boost/operators.hpp>
-
 namespace hydla {
 namespace simulator {
 
-class ValueVisitor;
-
-class Value:
-  public boost::additive<Value>
+class Value
 {  
   public:
   

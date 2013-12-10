@@ -92,7 +92,6 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
   module_list_t::const_iterator ms_it = ms->begin();
   module_list_t::const_iterator ms_end = ms->end();
   for(;ms_it!=ms_end;ms_it++){
-    HYDLA_LOGGER_VAR(MS, *ms_it);
     module_set_sptr temp_ms(new hydla::ch::ModuleSet());
     temp_ms->add_module(*ms_it);
     TellCollector tell_collector(temp_ms);

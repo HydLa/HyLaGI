@@ -31,10 +31,10 @@ private:
 
 };
 
-//std::ostream& operator<<(std::ostream& s, const SExpParser& sp);
-std::ostream& operator<<(std::ostream& s, const SExpParser::const_tree_iter_t& iter);
 
-} // namespace backend
-} // namespace hydla
+}
+}
+
+std::ostream& operator<<(std::ostream& s, const hydla::parser::SExpParser::const_tree_iter_t& iter);
 
 #endif // _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_

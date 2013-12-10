@@ -29,7 +29,7 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::Va
 
   virtual ~PrevReplacer();
   
-  virtual void visit(hydla::simulator::symbolic::SymbolicValue&);
+  virtual void visit_value(hydla::simulator::symbolic::SymbolicValue&);
 
   void replace_value(value_t& val);
   
@@ -51,7 +51,6 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::Va
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ArbitraryNode> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);

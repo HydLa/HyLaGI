@@ -4,6 +4,7 @@
 #include "InterfaceError.h"
 #include <sstream>
 #include "TreeInfixPrinter.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace hydla::parse_tree;
 using namespace std;
@@ -661,7 +662,7 @@ int Backend::send_value(const value_t &val, const variable_form_t& var){
   return 0;
 }
 
-void Backend::visit(hydla::simulator::symbolic::SymbolicValue& value){
+void Backend::visit_value(hydla::simulator::symbolic::SymbolicValue& value){
   send_node(value.get_node(), variable_arg_);
 }
  

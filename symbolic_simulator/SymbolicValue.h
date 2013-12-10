@@ -5,9 +5,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include "Node.h"
-#include "../simulator/Value.h"
-
-#include <boost/operators.hpp>
+#include "Value.h"
 
 namespace hydla {
 namespace simulator {
@@ -60,7 +58,7 @@ class SymbolicValue: public hydla::simulator::Value
    */
   void set(const node_sptr&);
 
-  void accept(hydla::simulator::ValueVisitor& v){v.visit(*this);}
+  void accept(hydla::simulator::ValueVisitor& v){v.visit_value(*this);}
   
   private:
   

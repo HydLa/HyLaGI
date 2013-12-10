@@ -17,27 +17,6 @@ using namespace hydla::logger;
 namespace hydla {
 namespace simulator {
   
-namespace {
-struct NodeDumper {
-      
-  template<typename T>
-  NodeDumper(T it, T end) 
-  {
-    for(; it!=end; ++it) {
-      ss << **it << "\n";
-    }
-  }
-
-  friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
-  {
-    s << nd.ss.str();
-    return s;
-  }
-
-  std::stringstream ss;
-};
-}
-
 AskCollector::AskCollector(const module_set_sptr& module_set) :
   module_set_(module_set)
 {}

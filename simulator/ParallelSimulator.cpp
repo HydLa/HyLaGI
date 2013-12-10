@@ -18,7 +18,7 @@ ParallelSimulator::ParallelSimulator(Opts &opts):BatchSimulator(opts)
 
   for(int i = 0;i < opts_->parallel_number; i++)
   {
-    boost::shared_ptr<ParallelSimulatorWorker> psw(new ParallelSimulatorWorker(*opts_, this));
+    boost::shared_ptr<ParallelSimulatorWorker> psw(new ParallelSimulatorWorker(*opts_, this, i));
     workers_.push_back(psw);
   }
 }
@@ -52,7 +52,7 @@ void ParallelSimulator::initialize(const parse_tree_sptr& parse_tree)
 
   for(unsigned int i = 0; i < workers_.size(); i++)
   {
-    workers_[i]->initialize(parse_tree, i);
+    workers_[i]->initialize(parse_tree);
   }
   simulation_todo_sptr_t todo = workers_[0]->make_initial_todo();
   todo_stack_->push_todo(todo);
