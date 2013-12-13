@@ -316,11 +316,10 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
 
 BOOST_AUTO_TEST_CASE(findMinTime_test){
   const string query =
-    "integAsk_:= findMinTime((5000*t**2 - 5929*t - 9000 <= 0 and  - 5000*t**2 + 5929*t + 1000 <= 0) and 150*t - 169 = 0, {{true}})$"
+    "integAsk_:= (5000*t**2 - 5929*t - 9000 <= 0 and  - 5000*t**2 + 5929*t + 1000 <= 0) and 150*t - 169 = 0$"
     "condDNF_:= {{true}}$"
+    "symbolic redeval '(findMinTime integAsk_ condDNF_);";
 
-
-    "symbolic redeval '(findMinTime integAsk_ condDNF_)";
   // TODO getSqrtIntervalのボトルネック問題を解決する
   // BOOST_CHECK(check(query, "(list)", true));
 }
