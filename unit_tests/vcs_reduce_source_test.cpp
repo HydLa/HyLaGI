@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
   BOOST_CHECK(check(query3, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 4 0) (list (df usrvary t) 3 2) (list usrvary 0 10))"));
 
   const string query4 =
-    "depend usrvary, t$"
+    "depend {usrvarvx, usrvarvy, usrvarx, usrvary}, t$"
     "cons_:={df(usrvarx,t) = usrvarvx, df(usrvary,t) = usrvarvy, usrvarvx = (375*sqrt(5) + 974)/(54*sqrt(5) - 937), usrvarvy = ( - 480*sqrt(5) + 1288)/(54*sqrt(5) - 937), usrvarx = (160*sqrt(5) + 75)/89, usrvary = (80*sqrt(5) - 96)/89}$"
     "vars_:={df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvarvx, usrvarvy, usrvarx, usrvary}$"
     "pars_:={}$"
@@ -310,8 +310,7 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
     "csVariables__:= {df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvarvx, usrvarvy, usrvarx, usrvary}$"
     "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
 
-  // TODO
-  // BOOST_CHECK(check(query4, "(list)", true));
+  BOOST_CHECK(check(query4, "(list (list (df usrvarx t) 0 (quotient (plus (minus (times 51 (sqrt 5))) (minus 128)) 109)) (list (df usrvary t) 0 (quotient (plus (times 48 (sqrt 5)) (minus 136)) 109)) (list usrvarvx 0 (quotient (plus (minus (times 51 (sqrt 5))) (minus 128)) 109)) (list usrvarvy 0 (quotient (plus (times 48 (sqrt 5)) (minus 136)) 109)) (list usrvarx 0 (quotient (plus (times 160 (sqrt 5)) 75) 89)) (list usrvary 0 (quotient (plus (times 80 (sqrt 5)) (minus 96)) 89)))", true));
 }
 
 BOOST_AUTO_TEST_CASE(findMinTime_test){

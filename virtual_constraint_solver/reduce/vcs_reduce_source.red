@@ -86,24 +86,19 @@ procedure hasMinusHead(expr_)$
   else if(part(expr_, 1) = -1*expr_) then t
   else nil;
 
+% 多項式の有理化を行う
+% @param expr_ 分母の項数が4までの多項式
 % TODO:3乗根以上への対応
+% TODO:より一般的な形への対応, 5項以上？
 procedure rationalisation(expr_)$
 begin;
   scalar head_, denominator_, numerator_, denominatorHead_, denomPlusArgsList_,
          frontTwoElemList_, restElemList_, timesRhs_, conjugate_, 
          rationalisedArgsList_, rationalisedExpr_, flag_;
 
-%  debugWrite("in rationalisation", " ");
-%  debugWrite("expr_: ", expr_);
   if(getArgsList(expr_)={}) then return expr_;
 
-  % 想定する対象：分母の項数が4まで
-  % TODO:より一般的な形への対応→5項以上？
-  % TODO:3乗根以上への対応
-
   head_:= myHead(expr_);
-%  debugWrite("head_: ", head_);
-
   if(head_=quotient) then <<
     numerator_:= part(expr_, 1);
     denominator_:= part(expr_, 2);
@@ -111,7 +106,6 @@ begin;
     if(numberp(denominator_)) then return expr_;
 
     denominatorHead_:= myHead(denominator_);
-%    debugWrite("denominatorHead_: ", denominatorHead_);
     if((denominatorHead_=plus) or (denominatorHead_=times)) then <<
       denomPlusArgsList_:= if(denominatorHead_=plus) then getArgsList(denominator_)
       else << 
@@ -119,14 +113,11 @@ begin;
         if(myHead(part(denominator_, 2))=plus) then getArgsList(part(denominator_, 2))
         else {part(denominator_, 2)}
       >>;
-%      debugWrite("denomPlusArgsList_: ", denomPlusArgsList_);
 
       % 項数が3以上の場合、確実に無理数が減るように工夫して共役数を求める
       if(length(denomPlusArgsList_)>2) then <<
         frontTwoElemList_:= getFrontTwoElemList(denomPlusArgsList_);
-%        debugWrite("frontTwoElemList_: ", frontTwoElemList_);
         restElemList_:= denomPlusArgsList_ \ frontTwoElemList_;
-%        debugWrite("restElemList_: ", restElemList_);
         if(denominatorHead_=plus) then <<
           conjugate_:= plus(myApply(plus, frontTwoElemList_), -1*(myApply(plus, restElemList_)));
         >> else <<
@@ -152,7 +143,6 @@ begin;
     >> else <<
       conjugate_:= -1*denominator_;
     >>;
-%    debugWrite("conjugate_: ", conjugate_);
     % 共役数を分母子にかける
     numerator_:= numerator_ * conjugate_;
     denominator_:= denominator_ * conjugate_;
@@ -160,15 +150,14 @@ begin;
     flag_:= true;
   >> else if(length(expr_)>1) then <<
     rationalisedArgsList_:= map(rationalisation, getArgsList(expr_));
-%    debugWrite("rationalisedArgsList_: ", rationalisedArgsList_);
     rationalisedExpr_:= myApply(head_, rationalisedArgsList_);
   >> else <<
     rationalisedExpr_:= expr_;
   >>;
 
-%  debugWrite("rationalisedExpr_: ", rationalisedExpr_);
-%  debugWrite("flag_: ", flag_);
   if(flag_=true) then rationalisedExpr_:= rationalisation(rationalisedExpr_);
+
+  debugWrite("ans in rationalisation: ", rationalisedExpr_);
   return rationalisedExpr_;
 end;
 
@@ -2230,6 +2219,7 @@ end;
 procedure hyroseRlStruct(cons_, vars_)$
 begin;
   scalar ansFormula_, ansMap_, formulaList_, varsMap1_;
+  debugWrite("{cons_, vars_}: ", {cons_, vars_});
   varsMap1_:= for i:= 1:length(vars_) collect part(vars_, i) = mkid(v,i);
   formulaList_:= for each x in cons_ collect exSub(varsMap1_, x);
 
@@ -2248,11 +2238,13 @@ end;
 % @return      exIneqSolveの食える形になった制約のリスト
 procedure solveCS(cons_, vars_)$
 begin;
-  scalar ans_, structAns_, equalities_, equalityVars_;
+  scalar ans_, structAns_, rationalisedCons_, equalities_, equalityVars_;
   scalar vAns_, formula, vVarsMap_, vVars_, varsExecptOne_;
   debugWrite("in solveCS", " ");
 
-  structAns_:= hyroseRlStruct(cons_, removePrevCons vars_);
+  rationalisedCons_:= map(rationalisation, cons_);
+
+  structAns_:= hyroseRlStruct(rationalisedCons_, removePrevCons vars_);
   formula:= first structAns_;
   vVarsMap_:= second structAns_;
 
