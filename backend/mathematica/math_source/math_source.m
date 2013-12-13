@@ -138,6 +138,8 @@ publicMethod[
       cpTrue = Reduce[Exists[vars, Simplify[cons&&pcons] ], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
+    (* remove (Not)Element[] because it seems to be always true *)
+    cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
     checkMessage;
     Quiet[
       cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
@@ -716,7 +718,7 @@ createDifferentiatedEquation[var_, integRules_] := (
 exDSolve[expr_, initExpr_] := 
 Check[
   Module[
-    {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, exprSet, resultRule, idx, generalInitValue, swapValue, searchResult},
+    {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult},
     inputPrint["exDSolve", expr, initExpr];
     tmpExpr = applyList[expr];
     sol = {};
@@ -733,9 +735,16 @@ Check[
       If[searchResult === unExpandable,
         Break[],
         rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
-        If[rules === overConstraint || Head[rules] === DSolve || Length[rules] == 0, Return[overConstraint] ];
+        If[rules === overConstraint || Length[rules] == 0, Return[overConstraint] ];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
+        If[Head[rules] === DSolve,
+          resultCons = Union[resultCons, searchResult[[1]] ];
+          tmpExpr = Complement[tmpExpr, searchResult[[1]] ];
+          unsolvable = True;
+          Continue[]
+        ];
         resultRule = Union[resultRule, rules[[1]] ];
+        simplePrint[resultRule];
         tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
         If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]) )], Return[overConstraint] ];
         tmpExpr = Select[tmpExpr, (#=!=True)&];
@@ -749,7 +758,7 @@ Check[
     resultCons = And@@resultCons;
     
     
-    If[Length[tmpExpr ] > 0,
+    If[Length[tmpExpr ] > 0 || unsolvable,
       {underConstraint, resultCons && And@@tmpExpr, resultRule},
       {resultCons && And@@tmpExpr, resultRule}
     ]
@@ -826,7 +835,7 @@ Module[
   {tmpExpr, ini, sol, idx, generalInitValue, swapValue, j},
   tmpExpr = expr;
   ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
-  simplePrint[tmpExpr, ini];
+  simplePrint[tmpExpr, ini, tVars];
   
   If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
     (* 微分方程式の結果を再利用する場合 *)
@@ -865,6 +874,7 @@ Module[
      {DSolve::overdet, DSolve::bvnul}
     ]
   ];
+  simplePrint[sol];
   sol
 ];
 
