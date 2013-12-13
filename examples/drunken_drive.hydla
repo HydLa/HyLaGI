@@ -1,6 +1,6 @@
-INIT(vx,vy) <=> x = 0 & y = 0 & x' = vx & y' = vy & -1 < a < 1 & a' = 0.
+INIT(vx,vy, low, high) <=> x = 0 & y = 0 & x' = vx & y' = vy & low < a < high & a' = 0.
 
-CHANGE(time,low,high) <=> []((t- = time => (low < a < high & t = 0)) & (t- != time => a' = 0)).
+CHANGE(time, low, high) <=> []((t- = time => (low < a < high & t = 0)) & (t- != time => a' = 0)).
 CHANGE(time,value) <=> [](t- = time => a = value).
 ACC <=> [](x'' = -a*y' & y'' = a*x').
 //ACC <=> [](x'' = a & y'' = 100-a).
@@ -15,4 +15,10 @@ A_CONST <=> [](a' = 0).
 //INIT(0,1),(TIMER, A_CONST) << CHANGE(1,-10,10), FLAG_CONST << BORDER(-1,1), ACC.
 //INIT(0,1),(TIMER, A_CONST) << (CHANGE(1,-1,1), CHANGE(2,-1,1), CHANGE(3,-1,1),CHANGE(6,-1,1),CHANGE(8,-1,1),CHANGE(15,-1,1)), ACC.
 //INIT(0,1), (TIMER, A_CONST) << (CHANGE(1,1), CHANGE(2,-2), CHANGE(3,1/4), CHANGE(6,-1/2), CHANGE(8,1/3), CHANGE(15, -1/3)), ACC.
-INIT(0,1), TIMER << CHANGE(1,-1,1), ACC.
+
+DRUNKEN(vx, vy, step, low, high)
+{
+  INIT(vx,vy, low, high), TIMER << CHANGE(step,low,high), ACC
+}.
+
+DRUNKEN(0, 1, 1, -1, 0).

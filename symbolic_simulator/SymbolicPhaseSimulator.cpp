@@ -464,7 +464,6 @@ SymbolicPhaseSimulator::calculate_variable_map(
 
   if(!result)
   {
-    HYDLA_LOGGER_FUNC_END(MS);
     return CVM_INCONSISTENT;
   }
   
@@ -479,6 +478,8 @@ SymbolicPhaseSimulator::calculate_variable_map(
     backend_->call("createVariableMapInterval", 0, "", "cv", &create_result);
   }
   todo->profile["CreateMap"] += create_timer.get_elapsed_us();
+
+  HYDLA_LOGGER_VAR(MS, create_result.size());
   
   if(current_phase_ == IntervalPhase)
   {
@@ -495,10 +496,9 @@ SymbolicPhaseSimulator::calculate_variable_map(
     }
   }
 
-  
+
   result_vms = create_result;
 
-  HYDLA_LOGGER_FUNC_END(MS);
   return CVM_CONSISTENT;
 }
 

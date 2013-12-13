@@ -303,14 +303,16 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
 void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckConsistencyResult &result){
   assert(result.size() == 2);
   for(int i=1; i<(int)result[0].size();i++){
-    simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->parameter_map = result[0][i];
-    todo_container_->push_todo(branch_state);
+    simulation_todo_sptr_t branch_state_true(create_new_simulation_phase(original));
+    branch_state_true->parameter_map = result[0][i];
+    HYDLA_LOGGER_VAR(PHASE, branch_state_true);
+    todo_container_->push_todo(branch_state_true);
   }
   for(int i=0; i<(int)result[1].size();i++){
-    simulation_todo_sptr_t branch_state(create_new_simulation_phase(original));
-    branch_state->parameter_map = result[1][i];
-    todo_container_->push_todo(branch_state);
+    simulation_todo_sptr_t branch_state_false(create_new_simulation_phase(original));
+    branch_state_false->parameter_map = result[1][i];
+    HYDLA_LOGGER_VAR(PHASE, branch_state_false);
+    todo_container_->push_todo(branch_state_false);
   }
   original->parameter_map = result[0][0];
   backend_->call("resetConstraintForParameter", 1, "mp", "", &original->parameter_map);
