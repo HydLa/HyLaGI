@@ -10,6 +10,8 @@ PhaseResult::PhaseResult():cause_of_termination(NONE)
 {
 }
 
+bool ParameterComparator::operator()(const DefaultParameter x,const DefaultParameter y) const { return x < y; }
+
 
 
 PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseOfTermination& cause):

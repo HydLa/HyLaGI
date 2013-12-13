@@ -18,6 +18,11 @@ struct DefaultParameter;
 struct PhaseResult;
 struct SimulationTodo;
 
+class ParameterComparator{
+  public:
+  bool operator()(const DefaultVariable x,const DefaultVariable y) const;
+};
+
 /**
  * type for cause of termination of simulation
  */
@@ -66,7 +71,7 @@ typedef value_t                                           time_t;
 
 typedef std::map<variable_t, range_t, VariableComparator>                    variable_map_t;
 
-typedef std::map<parameter_t, range_t>                   parameter_map_t;
+ typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
 
 /**
  * A struct to express the result of each phase.
