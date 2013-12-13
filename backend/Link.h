@@ -3,6 +3,7 @@
 
 #include <string>
 #include <boost/bimap/bimap.hpp>
+#include "Logger.h"
 
 namespace hydla{
 namespace backend{
@@ -85,7 +86,7 @@ class Link
       else{
         ret = orig;
         converted = false;
-      }  
+      }
     }
     return ret;
   }

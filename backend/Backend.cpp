@@ -293,7 +293,6 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 
 int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   HYDLA_LOGGER_BACKEND("%%name: ",  name, 
                    ", arg_cnt: ", arg_cnt,
                    ", args_fmt: ", args_fmt,
@@ -347,7 +346,6 @@ bool Backend::get_form(const char &form_c, variable_form_t &form)
 
 int Backend::send_node(const node_sptr& node, const variable_form_t &form)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   HYDLA_LOGGER_BACKEND("%%node: ", TreeInfixPrinter().get_infix_string(node));
   differential_count_ = 0;
   in_prev_ = false;
@@ -418,8 +416,7 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
         }
         send_variable(var, vf);
         send_value(bnd.value, vf);
-      }
-      
+      }      
     }
   }
   return 0;
@@ -728,7 +725,6 @@ Backend::create_vm_t Backend::receive_cv()
 Backend::pp_time_result_t Backend::receive_cp()
 {
 
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   std::string name;
   int next_time_size; 
   link_->get_function(name, next_time_size);
@@ -756,7 +752,6 @@ Backend::pp_time_result_t Backend::receive_cp()
 
 Backend::check_consistency_result_t Backend::receive_cc()
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   check_consistency_result_t ret;
   std::string outer_name;
   int outer_cnt;
@@ -800,7 +795,6 @@ Backend::check_consistency_result_t Backend::receive_cc()
 
 Backend::node_sptr Backend::receive_function()
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
 // TODO: UnsupportedFunctionを含む関数は，バックエンドを切り替えられないので各Valueごとにそのことを示すフラグを持たせた方が良いかも
   int arg_count;
   node_sptr ret;
@@ -808,6 +802,7 @@ Backend::node_sptr Backend::receive_function()
   bool converted;
   link_->get_function(symbol, arg_count);
   symbol = link_->convert_function(symbol, false, converted);
+  HYDLA_LOGGER_VAR(BACKEND, symbol);
   if(EqIC(symbol, "Sqrt")){//1引数関数
     ret = node_sptr(new Divide(node_sptr(new Number("1")), node_sptr(new Number("2")))); 
     ret = node_sptr(new hydla::parse_tree::Power(receive_node(), ret));
@@ -887,8 +882,6 @@ Backend::node_sptr Backend::receive_function()
   }
   else if(EqIC(symbol, "derivative"))
   {
-    std::string name = link_->get_symbol();
-    assert(name == "Derivative");
     std::string d_str = link_->get_string();
     int variable_derivative_count = boost::lexical_cast<int, std::string>(d_str.c_str());
     std::string variable_name = link_->get_symbol();
@@ -904,18 +897,15 @@ Backend::node_sptr Backend::receive_function()
   else{
     // その他の関数
     boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
-    std::string name;
-    bool converted;
-    name = link_->convert_function(symbol, false, converted);
+    HYDLA_LOGGER_VAR(BACKEND, symbol);
     if(converted)
     {
       // 対応している関数
-      f.reset(new hydla::parse_tree::Function(name));
-
+      f.reset(new hydla::parse_tree::Function(symbol));
     }
     else{
       // 謎の関数
-      f.reset(new hydla::parse_tree::UnsupportedFunction(name));
+      f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
     }
 
     for(int arg_it=0; arg_it < arg_count; arg_it++){
@@ -937,20 +927,18 @@ Backend::value_t Backend::receive_value()
 }
 
 Backend::node_sptr Backend::receive_node(){
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   node_sptr ret;
   Link::DataType type = link_->get_type();
+  HYDLA_LOGGER_VAR(BACKEND, type);
   switch(type){
   case Link::DT_STR: // 文字列
     {
-      HYDLA_LOGGER_LOCATION(REST);
       std::string str = link_->get_string();
       ret = node_sptr(new hydla::parse_tree::Number(str));
       break;
     }
   case Link::DT_SYM: // シンボル（記号）
     {
-      HYDLA_LOGGER_LOCATION(REST);
       std::string symbol = link_->get_symbol();
       if(symbol=="t")
         ret = node_sptr(new hydla::parse_tree::SymbolicT());
@@ -966,7 +954,6 @@ Backend::node_sptr Backend::receive_node(){
     }
   case Link::DT_INT: // オーバーフローする可能性があるなら文字列使う
     {
-      HYDLA_LOGGER_LOCATION(REST);
       std::stringstream sstr;
       int num = link_->get_integer();
       sstr << num;
@@ -983,7 +970,6 @@ Backend::node_sptr Backend::receive_node(){
   if(ret == NULL){
     invalid_ret();
   }
-  HYDLA_LOGGER_FUNC_END(BACKEND);
   return ret;
 }
 
@@ -1031,9 +1017,9 @@ int Backend::receive_map(variable_map_t& map)
 
 int Backend::receive_parameter_map(parameter_map_t& map)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   string func_name;
   int condition_size; link_->get_function(func_name, condition_size);
+  HYDLA_LOGGER(BACKEND, "func_name: ", func_name, "\ncondition_size: ", condition_size);
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
     string str_buf;
     int int_buf;
@@ -1043,14 +1029,12 @@ int Backend::receive_parameter_map(parameter_map_t& map)
     int derivative_count = link_->get_integer();
     int id = link_->get_integer();
     parameter_t tmp_param(name, derivative_count, id);
-
     value_range_t tmp_range = map[tmp_param];
     int relop_code = link_->get_integer();
     value_t tmp_value = value_t(new hydla::simulator::symbolic::SymbolicValue(receive_node()));
     set_range(tmp_value, tmp_range, relop_code);
     map[tmp_param] = tmp_range;
   }
-  HYDLA_LOGGER_FUNC_END(BACKEND);
   return 0;
 }
 

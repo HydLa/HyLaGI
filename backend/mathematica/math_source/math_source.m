@@ -1,4 +1,4 @@
-B32;10;2c(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
+(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
 
 getReverseRelop[relop_] := Switch[relop,
                                   Equal, Equal,
@@ -124,23 +124,23 @@ publicMethod[
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables] ]
+  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables], parameters ]
 );
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, vars,
+  cons, pcons, vars, pars,
   Module[
     {trueMap, falseMap, cpTrue, cpFalse},
     
     (* ここでのSimplifyは不要な気がする *)
     Quiet[
-      cpTrue = Reduce[Exists[vars, Simplify[cons&&pcons] ], Reals], {Reduce::useq}
+      cpTrue = Reduce[Exists[vars, Simplify[cons&&pcons] ], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     checkMessage;
     Quiet[
-      cpFalse = Reduce[pcons && !cpTrue, Reals], {Reduce::useq}
+      cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
     ];
     checkMessage;
     simplePrint[cpFalse];
@@ -153,12 +153,12 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables]
+  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
 );
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, prevCons, pcons, timeVars, initVars, prevVars,
+  cons, initCons, prevCons, pcons, timeVars, initVars, prevVars, pars,
   Module[
     {sol, otherCons, tCons, hasTCons, necessaryTCons, parList, tmpPCons, cpTrue, cpFalse, trueMap, falseMap},
     If[cons === True,
@@ -172,12 +172,12 @@ publicMethod[
           tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
           tCons = sol[[2]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = Quiet[Reduce[Exists[timeVars, tCons && tmpPCons && prevCons] ,Reals] ],
+          tCons = Quiet[Reduce[Exists[timeVars, tCons && tmpPCons && prevCons], pars, Reals] ],
           (* 微分方程式が解けた場合 *)
           tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[2]] ] ];
           tCons = sol[[1]] /. tCons;
           tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = Quiet[Reduce[prevCons && tCons && tmpPCons, Reals]]
+          tCons = Quiet[Reduce[prevCons && tCons && tmpPCons, pars, Reals]]
         ];
         checkMessage;
 
@@ -192,8 +192,8 @@ publicMethod[
           necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
           
           simplePrint[necessaryTCons];
-          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, Join[prevVars, timeVars, {t}] ], {Minimize::wksol, Minimize::infeas}][[1]] == 0, Reals];
-          cpFalse = Reduce[pcons && !cpTrue, Reals];
+          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, Join[prevVars, timeVars, {t}] ], {Minimize::wksol, Minimize::infeas}][[1]] == 0, pars, Reals];
+          cpFalse = Reduce[pcons && !cpTrue, pars, Reals];
 
           simplePrint[cpTrue, cpFalse];
 
@@ -359,7 +359,6 @@ publicMethod[
   initTmpConstraint = True;
   tmpConstraint = True;
   isTemporary = False;
-  parameters = {};
 ];
 
 publicMethod[
@@ -572,7 +571,9 @@ replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerS
 
 toReturnForm[expr_] := (
   expr /. (Infinity :> inf)
-       /. (Derivative[cnt_, var_, ___]  :> derivative[cnt, var])
+       (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
+       /. (Derivative[cnt_][var_] :> Derivative[cnt, var])
+       /. (Derivative[cnt_, var_][_] :> Derivative[cnt, var])
        /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
        /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
        /. (x_Integer :> replaceIntegerToString[x])
@@ -890,145 +891,6 @@ publicMethod[
 
 applyTime2Expr::nrls = "`1` is not a real expression.";
 
-makeIntervalRulesList[pcons_] := makeIntervalRulesList[pcons] = 
-Module[
-  {rules, iter, plist, pc, appearedp = {}, ret = {} var},
-  plist = applyList[LogicalExpand[pcons] ];
-  plist = adjustExprs[plist, isParameter];
-  simplePrint[plist];
-  For[iter = 1, iter <= Length[plist], iter++,
-    pc = plist[[iter]];
-    var = pc[[1]];
-    
-    If[Head[rules[var] ] =!= Rule,
-      appearedp = Append[appearedp, var]
-    ];
-    
-    If[ MemberQ[{Less, LessEqual}, Head[ pc ] ],
-      If[Head[rules[var] ] === Rule,
-        rules[var] = var -> Interval[{rules[var][[2]][[1]][[1]], pc[[2]] } ],
-        rules[var] = var -> Interval[{-Infinity, pc[[2]]}]
-      ]
-    ];
-    If[ MemberQ[{Greater, GreaterEqual}, Head[ pc ] ],
-      If[Head[rules[var] ] === Rule,
-        rules[var] = var -> Interval[{pc[[2]], rules[var][[2]][[1]][[2]] }],
-        rules[var] = var -> Interval[{pc[[2]], Infinity}]
-      ]
-    ];
-    If[ Head[ pc ]=== Equal,
-      rules[var] = var -> Interval[pc[[2]] ]
-    ];
-  ];
-  For[iter = 1, iter <= Length[appearedp], iter++,
-    ret = Append[ret, rules[appearedp[[iter]] ] ]
-  ];
-  ret
-];
-
-approxValue[val_] := approxValue[val, pConstraint, approxMode, approxPrecision, approxThreshold];
-
-
-approxValue[val_, mode_] := approxValue[val, pConstraint, mode, approxPrecision, 0];
-
-(*
- * approx given value
- * approxMode === none: do nothing
- * approxMode === numeric: numeric->numeric，interval->interval (invalid for expressions with parameters)
- * approxMode === interval: numeric->interval，interval->interval
- *)
-publicMethod[
-  approxValue,
-  val, pcons, mode, precision, threshold,
-  Module[
-    {lb, ub, itv},
-    If[mode === none || LeafCount[val] <= 2*threshold || hasVariable[val],
-      {0},
-      If[mode === numeric,
-        If[Length[val] == 1,
-          {1, toReturnForm[approxExpr[precision, val[[1]] ] ] },
-          {1, toReturnForm[approxExpr[precision, val[[1]] ] ], toReturnForm[approxExpr[precision, val[[2]] ] ] }
-        ],
-        (* if approxMode === interval *)
-        If[Length[val] == 1,
-          (* make interval from exact value *)
-          itv = getInterval[val[[1]], pcons, precision];
-          simplePrint[itv];
-          itv = toReturnForm[{itv[[1]][[1]], itv[[1]][[2]]}];
-          simplePrint[itv];
-          Join[{1}, itv],
-          (* make interval from interval *)
-          lb = getInterval[val[[1]], pcons, precision];
-          ub = getInterval[val[[2]], pcons, precision];
-          simplePrint[lb, ub];
-          Join[{1}, toReturnForm[{Min[lb[[1]][[1]], ub[[1]][[1]] ], Max[lb[[1]][[2]], ub[[1]][[2]] ]}] ]
-        ]
-      ]
-    ]
-  ]
-];
-
-getInterval[expr_, pcons_, precision_] := Module[
-  {tmp},
-  tmp = If[pcons =!= True, expr /. makeIntervalRulesList[pcons], expr ];
-  If[Head[tmp] =!= Interval, tmp = Interval[{tmp, tmp}] ];
-  tmp = N[tmp, 10];
-  tmp = Rationalize[tmp, 0];
-  tmp
-];
-
-
-approxExpr[precision_, expr_] := (
-  Rationalize[
-    N[Simplify[expr], precision + 3],
-    Divide[1, Power[10, precision] ]
-  ]
-);
-
-
-linearApprox[val_, precision_] := linearApprox[val, pConstraint, precision];
-
-(*
- * linear approximation
- *)
-
-publicMethod[
-  linearApprox,
-  val, pcons, precision,
-  Module[
-    {res}, 
-    res = primaryTaylorExpansion[val, pcons, precision];
-    res = If[res[[2]] == 0, {toReturnForm[res[[1]] ]},  {toReturnForm[res[[1]] ], toReturnForm[res[[2]] ], toReturnForm[res[[3]] ]} ];
-    res 
-  ]
-];
-
-(* @return {linear approximated value, lb of interval, ub of interval} *)
-primaryTaylorExpansion[expr_, pcons_, precision_] := Module[
-  {i, tmp, pars, par, pRules, zeroRules, linear, coef, itv = 0},
-  pRules = If[pcons =!= True, makeIntervalRulesList[pcons], {} ];
-  pars = Union[getParameters[pRules]];
-  simplePrint[pRules];
-  (* calculate f(0) *)
-  zeroRules = Map[(#[[1]] -> 0)&, pRules];
-  simplePrint[zeroRules];
-  linear = expr /. zeroRules;
-  simplePrint[linear];
-  For[i = 1, i <= Length[pars], i++,
-    par = pars[[i]];
-    coef = D[expr, par ];
-    simplePrint[coef];
-    coef = coef /. zeroRules;
-    coef = Rationalize[N[coef, precision], 0];
-    itv = itv + (Max[coef] - Min[coef])/2;
-    coef = (Max[coef] + Min[coef])/2;
-    simplePrint[itv];
-    linear = linear + coef * par
-  ];
-  linear = linear + coef * par;
-  simplePrint[linear, itv];
-  {linear, -itv, itv}
-];
 
 (* 
  * 与えられたtの式をタイムシフト
@@ -1039,102 +901,3 @@ publicMethod[
   expr, time,
   toReturnForm[expr /. t -> t - time]
 ];
-
-(*
- * 以下，HAConverter用
- * v1(now) in v2(past) => true
- *)
-
-publicMethod[checkIncludeBound, v1, v2, 
-  Module[{minPast, maxPast, minNow, maxNow, tmp, reduceExprPast, 
-    reduceExprNow},
-   minPast = 
-    Quiet[Minimize[{v2, pConstraintPast}, 
-      If[Union[getParameters[v2 && pConstraintPast]] =!= {}, 
-       Union[getParameters[v2 && pConstraintPast]], {tmp}], 
-      Reals], {Minimize::wksol, Minimize::infeas}];
-   simplePrint[minPast];
-   maxPast = 
-    Quiet[Maximize[{v2, pConstraintPast}, 
-      If[Union[getParameters[v2 && pConstraintPast]] =!= {}, 
-       Union[getParameters[v2 && pConstraintPast]], {tmp}], 
-      Reals], {Maximize::wksol, Maximize::infeas}];
-   simplePrint[maxPast];
-   minNow = 
-    Quiet[Minimize[{v1, pConstraintNow}, 
-      If[Union[getParameters[v1 && pConstraintNow]] =!= {}, 
-       Union[getParameters[v1 && pConstraintNow]], {tmp}], 
-      Reals], {Minimize::wksol, Minimize::infeas}];
-   simplePrint[minNow];
-   maxNow = 
-    Quiet[Maximize[{v1, pConstraintNow}, 
-      If[Union[getParameters[v1 && pConstraintNow]] =!= {}, 
-       Union[getParameters[v1 && pConstraintNow]], {tmp}], 
-      Reals], {Maximize::wksol, Maximize::infeas}];
-   simplePrint[maxNow];
-   (* not (minPast < tmp < maxPast) && minNow < tmp < 
-   maxNow (=はcheckIncludeの戻り値で判断) *)
-   minPast = checkInclude[minPast][[2]];
-   maxPast = checkInclude[maxPast][[2]];
-   minNow = checkInclude[minNow][[2]];
-   maxNow = checkInclude[maxNow][[2]];
-   If[minPast[[1]] == maxPast[[1]], 
-    reduceExprPast = tmp == minPast[[1]];,
-    If[minPast[[2]] == 0, reduceExprPast = minPast[[1]] < tmp;, 
-     reduceExprPast = minPast[[1]] <= tmp;];
-    If[maxPast[[2]] == 0, 
-     reduceExprPast = reduceExprPast && tmp < maxPast[[1]];, 
-     reduceExprPast = reduceExprPast && tmp <= maxPast[[1]];];
-    ];
-   If[minNow[[1]] == maxNow[[1]], reduceExprNow = tmp == minNow[[1]];,
-    If[minNow[[2]] == 0, reduceExprNow = minNow[[1]] < tmp;, 
-     reduceExprNow = minNow[[1]] <= tmp;];
-    If[maxNow[[2]] == 0, 
-     reduceExprNow = reduceExprNow && tmp < maxNow[[1]];, 
-     reduceExprNow = reduceExprNow && tmp <= maxNow[[1]];];
-    ];
-   simplePrint[reduceExprPast && reduceExprNow];
-   If[Reduce[
-      Not[reduceExprPast] && reduceExprNow] === False, toReturnForm[1], 
-    toReturnForm[0]]]
-];
-
-publicMethod[checkInclude, includeBound, 
- Module[{flg, flgInclude, res, tmpT0}, flg = True; flgInclude = True;
-   If[Cases[includeBound[[1]], {_, _}] === {}, res = {includeBound[[1]], 1};,
-     For[i = 1, i <= Length[includeBound[[1, 1]]], i = i + 1,
-       If[Reduce[Not[includeBound[[1, 1, i, 2]]] && t == 0] === False,
-         (* t==0 の場合があったら開区間、なかったら閉区間 （あやしい） *)
-         flgInclude = False;
-       ];
-       If[Reduce[Not[includeBound[[1, 1, i, 2]]] && t > 0] === False,
-         flg = False;
-         res = {includeBound[[1, 1, i, 1]], 0};
-       ];
-     ](* For *);
-     If[flg === True,
-       If[flgInclude === True,
-         res = {includeBound[[1, 2]], 1};,
-         res = {includeBound[[1, 2]], 0};
-       ];
-     ];
-   ](* If *);
-   Limit[res, t -> 0, Direction -> -1]
- ](* Module *)
-];
-
-addParameterConstraintNow[pcons_, pars_] := (
-     pConstraintNow = True;
-     parametersNow = {};
-     pConstraintNow = Reduce[pConstraintNow && And@@pcons, Reals];
-     parametersNow = Union[parametersNow, pars];
-     simplePrint[pConstraintNow];
-     );
-
-addParameterConstraintPast[pcons_, pars_] := (
-     pConstraintPast = True;
-     parametersPast = {};
-     pConstraintPast = Reduce[pConstraintPast && And@@pcons, Reals];
-     parametersPast = Union[parametersPast, pars];
-     simplePrint[pConstraintPast];
-     );

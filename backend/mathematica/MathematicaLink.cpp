@@ -179,7 +179,6 @@ void MathematicaLink::init(const hydla::simulator::Opts &opts)
   function_map_.insert(f_value_t("Atanh", "ArcTanh"));
   function_map_.insert(f_value_t("log", "Log"));
   function_map_.insert(f_value_t("ln", "Log"));
-
 }
 
 
