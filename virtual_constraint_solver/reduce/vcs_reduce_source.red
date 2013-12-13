@@ -2815,6 +2815,32 @@ begin;
   return ans_;
 end;
 
+% @param formula_ or が含まれないQE論理式
+% @return andに並列につながったDNF形式のQE論理式
+procedure FixAndFormula(formula_)$
+begin;
+  scalar ans_, ansList_;
+  if(myHead(formula_)=and) then <<
+    ans_:= true;
+    for each x in getArgsList(formula_) do <<
+      ans_:= mymkand({ans_, FixAndFormula(x)});
+    >>;
+  >> else <<
+    ans_:= formula_;
+  >>;
+
+  if(myHead(ans_) = and) then <<
+    ansList_:= for each x in getArgsList(ans_) join
+      if(x <> true) then {x} else {};
+    ans_:= myApply(and, ansList_);
+  >>;
+
+  debugWrite("ans in FixAndFormula: ", ans_);
+  return ans_;
+end;
+
+% @param integAsk_: formula(rlqeの食える形)
+% @param condDNF_: バックエンドDNF
 procedure findMinTime(integAsk_, condDNF_)$
 begin;
   scalar integAskQE_, integAskList_, integAskIneqSolDNFList_, integAskIneqSolDNF_,
@@ -2827,6 +2853,8 @@ begin;
   % t>0と連立してfalseになるような場合はMinTimeを考える必要がない
   if(rlqe(integAsk_ and t>0) = false) then return {{INFINITY, condDNF_}};
 
+  % 入れ子になった and が来た場合に備えDNF形式に整形する
+  integAsk_ := FixAndFormula(integAsk_);
 
   % 前提：ParseTree構築時に分割されているはずなのでガードにorが入ることは考えない
   % TODO：¬gの形だと入ることがあるのでは？？
