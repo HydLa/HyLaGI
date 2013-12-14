@@ -139,7 +139,7 @@ SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
 {
 }
 
-void SymbolicPhaseSimulator::set_backend(backend::Backend* back)
+void SymbolicPhaseSimulator::set_backend(backend_sptr_t back)
 {
   PhaseSimulator::set_backend(back);
   unsat_core_finder_->set_backend(back);

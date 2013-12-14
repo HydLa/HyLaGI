@@ -21,7 +21,7 @@ using namespace hydla::ch;
 namespace hydla{
 namespace simulator{
 
-UnsatCoreFinder::UnsatCoreFinder(hydla::backend::Backend *back):backend_(back){}
+UnsatCoreFinder::UnsatCoreFinder(backend_sptr_t back):backend_(back){}
 
 UnsatCoreFinder::UnsatCoreFinder(){}
 
@@ -250,7 +250,7 @@ bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_
   return ret;
 }
 
-void UnsatCoreFinder::set_backend(Backend *back){
+void UnsatCoreFinder::set_backend(backend_sptr_t back){
   backend_ = back;
 }
 

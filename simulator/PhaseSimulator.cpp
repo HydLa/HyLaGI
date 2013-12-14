@@ -15,9 +15,9 @@ PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator
 
 PhaseSimulator::~PhaseSimulator(){}
 
-void PhaseSimulator::set_backend(Backend* back)
+void PhaseSimulator::set_backend(backend_sptr_t back)
 {
-  backend_.reset(back);
+  backend_ = back;
 }
 
 PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont)

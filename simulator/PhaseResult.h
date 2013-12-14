@@ -20,7 +20,7 @@ struct SimulationTodo;
 
 class ParameterComparator{
   public:
-  bool operator()(const DefaultVariable x,const DefaultVariable y) const;
+  bool operator()(const DefaultParameter x,const DefaultParameter y) const;
 };
 
 /**

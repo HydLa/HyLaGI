@@ -20,6 +20,8 @@ namespace backend
 
 namespace simulator {
 
+  typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
+
 typedef enum{
   NO_APPROX,
   NUMERIC_APPROX,
@@ -206,7 +208,7 @@ public:
    */
   virtual void set_phase_simulator(phase_simulator_t *ps);
   
-  void set_backend(backend::Backend* back);
+  void set_backend(backend_sptr_t back);
 
   /**
    * @return set of introduced parameters and their ranges of values
@@ -272,7 +274,7 @@ protected:
    */ 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
   
-  boost::shared_ptr<backend::Backend> backend_;
+  backend_sptr_t backend_;
 
   /**
    * a container for candidate module sets

@@ -23,12 +23,12 @@ Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
-  phase_simulator_->set_backend(backend_.get());
+  phase_simulator_->set_backend(backend_);
 }
 
-void Simulator::set_backend(Backend* back)
+void Simulator::set_backend(backend_sptr_t back)
 {
-  backend_.reset(back);
+  backend_ = back;
 }
 
 void Simulator::initialize(const parse_tree_sptr& parse_tree)
@@ -44,9 +44,6 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   phase_simulator_->initialize(variable_set_, parameter_map_,
    original_map_, vm, msc_no_init_);
   profile_vector_.reset(new entire_profile_t());
-
-
-
   //  if(opts_->analysis_mode == "simulate"||opts_->analysis_mode == "cmmap") phase_simulator_->init_arc(parse_tree);
 }
 

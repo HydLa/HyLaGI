@@ -177,14 +177,14 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   Opts opts;
   setup_symbolic_simulator_opts(opts);
   
-  Backend* backend;
+  boost::shared_ptr<Backend> backend;
   
   if(opts.solver == "m" || opts.solver == "Mathematica") {
-    backend = new Backend(new MathematicaLink(opts));
+    backend.reset(new Backend(new MathematicaLink(opts)));
   }else{
     REDUCELinkFactory rlf;
     REDUCELink *reduce_link  = rlf.createInstance(opts);
-    backend = new Backend(reduce_link);
+    backend.reset(new Backend(reduce_link));
   }
 
   if(opts.interactive_mode)

@@ -98,7 +98,7 @@ private:
       simulation_todo_sptr_t&,
     const variable_map_t& vm);
 
-  virtual void set_backend(backend::Backend* back);
+  virtual void set_backend(backend_sptr_t back);
 
   virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
   

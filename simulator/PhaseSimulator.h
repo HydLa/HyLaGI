@@ -16,10 +16,6 @@
 
 namespace hydla {
 
-namespace backend{
-  class Backend;
-}
-
 namespace simulator {
 
 
@@ -56,7 +52,7 @@ public:
   
   virtual ~PhaseSimulator();
 
-  virtual void set_backend(backend::Backend* back);
+  virtual void set_backend(backend_sptr_t back);
 
   /**
    * calculate phase results from given todo
@@ -102,7 +98,7 @@ public:
 
 
   /// pointer to the backend to be used
-  boost::shared_ptr<backend::Backend> backend_;
+  backend_sptr_t backend_;
   
 protected:
   
