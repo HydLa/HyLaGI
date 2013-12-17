@@ -48,6 +48,44 @@ JsonWriter::ptree_t JsonWriter::for_phase(const phase_result_const_sptr_t &phase
   ret.add_child("vm", for_vm(phase->variable_map));
   ret.add_child("pm", for_pm(phase->parameter_map));
   ret.add_child("children", make_children(phase));
+  if(phase->children.size() == 0){
+    std::string cot;
+    switch(phase->cause_of_termination){
+    case simulator::TIME_LIMIT:
+      cot = "TIME_LIMIT";
+      break;
+    case simulator::STEP_LIMIT:
+      cot = "STEP_LIMIT";
+      break;
+    case simulator::SOME_ERROR:
+      cot = "SOME_ERROR";
+      break;
+    case simulator::INCONSISTENCY:
+      cot = "INCONSISTENCY";
+      break;
+    case simulator::ASSERTION:
+      cot = "ASSERTION";
+      break;
+    case simulator::OTHER_ASSERTION:
+      cot = "OTHER_ASSERTION";
+      break;
+    case simulator::TIME_OUT_REACHED:
+      cot = "TIME_OUT_REACHED";
+      break;
+    case simulator::NOT_UNIQUE_IN_INTERVAL:
+      cot = "NOT_UNIQUE_IN_INTERVAL";
+      break;
+    case simulator::NOT_SELECTED:
+      cot = "NOT_SELECTED";
+      break;
+    case simulator::NONE:
+      cot = "NONE";
+      break;
+    default:
+      cot = "ERROR";
+    }
+    ret.put("cot", cot);
+  }
   return ret;
 }
 
