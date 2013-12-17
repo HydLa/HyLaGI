@@ -1,4 +1,5 @@
 #include "PrevReplacer.h"
+#include "VariableReplacer.h"
 #include "SymbolicValue.h"
 #include "Logger.h"
 #include "Dumpers.h"
@@ -41,11 +42,6 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
   assert(!in_prev_);
   in_prev_ = true;
   accept(node->get_child());
-  if(parameter_node_)
-  {
-    new_child_ = parameter_node_;
-    parameter_node_.reset();
-  }
   in_prev_ = false;
 }
 
@@ -56,15 +52,25 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
   int diff_cnt = differential_cnt_;
   HYDLA_LOGGER_VAR(REST, v_name);
   HYDLA_LOGGER_VAR(REST, diff_cnt);
-  parameter_node_ = node_sptr(new Parameter(v_name, diff_cnt, prev_phase_->id));
-  parameter_t param(v_name, diff_cnt, prev_phase_->id);
-  if(!parameter_map_.count(param))
+  variable_t variable(v_name, diff_cnt);
+  ValueRange range = prev_phase_->variable_map[variable];
+  VariableReplacer v_replacer(prev_phase_->variable_map);
+  v_replacer.replace_range(range);
+  if(range.unique())
   {
-    variable_t variable(v_name, diff_cnt);
-    simulator_.introduce_parameter(variable, prev_phase_, prev_phase_->variable_map[variable]);
-    parameter_map_[param] = prev_phase_->variable_map[variable];
-    prev_phase_->parameter_map[param] = parameter_map_[param];
-    prev_phase_->variable_map[variable] = value_t(new symbolic::SymbolicValue(parameter_node_));
+    new_child_ = range.get_unique()->get_node();
+  }
+  else
+  {
+    new_child_ = node_sptr(new Parameter(v_name, diff_cnt, prev_phase_->id));
+    parameter_t param(v_name, diff_cnt, prev_phase_->id);
+    if(!parameter_map_.count(param))
+    {
+      simulator_.introduce_parameter(variable, prev_phase_, range);
+      parameter_map_[param] = range;
+      prev_phase_->parameter_map[param] = parameter_map_[param];
+      prev_phase_->variable_map[variable] = value_t(new symbolic::SymbolicValue(new_child_));
+    }
   }
 }
 
@@ -79,7 +85,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)        \
 void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 {                                                     \
-  for(int i=0;i<node->get_arguments_size();i++){      \
+  for(int i = 0;i < node->get_arguments_size();i++){      \
     accept(node->get_argument(i));                    \
     if(new_child_) {                                  \
       node->set_argument((new_child_), i);            \

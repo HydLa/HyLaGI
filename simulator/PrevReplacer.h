@@ -65,7 +65,6 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::Va
   phase_result_sptr_t& prev_phase_;
   Simulator& simulator_;
 
-  node_sptr parameter_node_;
   node_sptr new_child_;
 
   void replace(node_sptr node);

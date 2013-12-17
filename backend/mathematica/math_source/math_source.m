@@ -186,7 +186,7 @@ publicMethod[
         simplePrint[tCons];
 
         If[tCons === False,
-          {False, pcons},
+          {False, createMap[pcons, isParameter, hasParameter, {}]},
           
           hasTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}])) -> True);
           parList = Join[prevVars, getParameters[hasTCons]];

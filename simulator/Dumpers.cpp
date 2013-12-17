@@ -26,12 +26,7 @@ namespace {
   };
 }
 
-
-
-
-namespace hydla {
-namespace simulator {
-
+using namespace hydla::simulator;
 
 std::ostream& operator<<(std::ostream& s, const constraints_t& a)
 {
@@ -64,24 +59,24 @@ std::ostream& operator<<(std::ostream& s, const expanded_always_t& a)
 }
 
 
-std::ostream& operator<<(std::ostream& s, const phase_result_sptr_t& phase)
+std::ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {
-  s << "%% PhaseType: " << phase->phase << std::endl;
-  s << "%% id: " <<  phase->id          << std::endl;
-  s << "%% step: " <<  phase->step << std::endl;
+  s << "%% PhaseType: " << phase.phase << std::endl;
+  s << "%% id: " <<  phase.id          << std::endl;
+  s << "%% step: " <<  phase.step << std::endl;
   
-  if(phase->current_time.get())
+  if(phase.current_time.get())
   {
-    s << "%% current_time: " << *phase->current_time << std::endl;
+    s << "%% current_time: " << *phase.current_time << std::endl;
   }
-  if(phase->end_time.get())
+  if(phase.end_time.get())
   {
-    s << "%% end_time: " << *phase->end_time << std::endl;
+    s << "%% end_time: " << *phase.end_time << std::endl;
   }
   s << "--- variable map ---" << std::endl;
-  s << phase->variable_map    << std::endl;
+  s << phase.variable_map    << std::endl;
   s << "--- parameter map ---"          << std::endl;
-  s << phase->parameter_map << std::endl;
+  s << phase.parameter_map << std::endl;
   
   return s;
 }
@@ -132,7 +127,4 @@ std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
   }
   
   return s;
-}
-
-}
 }

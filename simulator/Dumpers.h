@@ -4,20 +4,16 @@
 #include "Simulator.h"
 
 
-namespace hydla {
-namespace simulator {
-std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
-std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
-std::ostream& operator<<(std::ostream& s, const constraints_t& a);
-std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
-std::ostream& operator<<(std::ostream& s, const tells_t& a);
-std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
-std::ostream& operator<<(std::ostream& s, const expanded_always_t& a);
-std::ostream& operator<<(std::ostream& s, const phase_result_sptr_t& phase);
-std::ostream& operator<<(std::ostream& s, const simulation_todo_sptr_t& todo);
-std::ostream& operator<<(std::ostream& s, const module_set_sptr& m);
-}
-}
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::parameter_map_t& pm);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::variable_map_t& vm);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::constraints_t& a);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::ask_set_t& a);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::tells_t& a);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::collected_tells_t& a);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::expanded_always_t& a);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::PhaseResult& phase);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::simulation_todo_sptr_t& todo);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::module_set_sptr& m);
 
 
 

@@ -540,7 +540,7 @@ DEFINE_VISIT_BINARY_NOT(GreaterEqual, GreaterEqual, Less)
 
 /// 論理演算子
 DEFINE_VISIT_BINARY_NOT(LogicalAnd, And, Or)
-DEFINE_VISIT_BINARY_NOT(LogicalOr, Or, Or)
+DEFINE_VISIT_BINARY_NOT(LogicalOr, Or, And)
 
 /// 算術二項演算子
 DEFINE_VISIT_BINARY(Plus, Plus)

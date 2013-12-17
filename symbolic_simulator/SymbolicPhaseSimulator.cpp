@@ -712,10 +712,6 @@ void SymbolicPhaseSimulator::replace_prev2parameter(
     }
   }
 
-  HYDLA_LOGGER(MS, "param: ", parameter_map);
-  
-  // TODO: オリジナルの記号定数表についても置き換えを行う。（記号定数表の中にprevが残っている可能性がある
-
 /*
   // approx values in vm
   // TODO:ここでやると，変数同士の相関性を生かせない．
