@@ -59,19 +59,19 @@ BOOST_AUTO_TEST_CASE(exDSolve_test){
 }
 
 /**
- * checkConsistencyInterval()
+ * checkConsistencyIntervalMain()
  */
-BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
+BOOST_AUTO_TEST_CASE(checkConsistencyIntervalMain_test){
   string query = 
     "depend {ht,v}, t$"
     "initVariables__:={inithtlhs,initvlhs}$"
-    "cons_:= csVariables__:= {}$"
+    "cons_:= variables__:= {}$"
     "tmpCons_:={df(ht,t) = v, df(v,t) = -10 }$"
     "rconts_:={inithtlhs = 10, initvlhs = 0 }$"
     "pCons_:={}$"
     "vars_:={ht,v,df(ht,t),df(v,t)}$"
 
-    "symbolic redeval '(checkConsistencyInterval cons_ tmpCons_ rconts_ pCons_ vars_);";
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ tmpCons_ rconts_ pCons_ vars_);";
 
   BOOST_CHECK(check(query, "(list 2)"));
 }
@@ -108,19 +108,19 @@ BOOST_AUTO_TEST_CASE(removeInitCons_test){
 /**
  * Hyrose_v0.6.3 checkConsistencyInterval() 1回目
  */
-BOOST_AUTO_TEST_CASE(old_myCheckConsistencyInterval_test){
+BOOST_AUTO_TEST_CASE(old_checkConsistencyInterval_test){
   string query =
     "depend usrvary,t$"
-    "constraintStore__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10, usrvarg = 10}$"
-    "csVariables__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvarg}$"
+    "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10, usrvarg = 10}$"
+    "variables__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvarg}$"
 
     "tmpConstraint__:= guard__:= initConstraint__:= initTmpConstraint__:={initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
 
     "tmpVariables__:={df(usrvary,t),initusrvary_1lhs,initusrvarylhs,usrvary}$"
-    "guardVars__:= parameterStore__:= {}$"
+    "guardVars__:= pConstraint__:= {}$"
     "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
 
-    "symbolic redeval '(myCheckConsistencyInterval);";
+    "symbolic redeval '(checkConsistencyInterval);";
 
   BOOST_CHECK(check(query, "(list true false)"));
 }
@@ -128,17 +128,17 @@ BOOST_AUTO_TEST_CASE(old_myCheckConsistencyInterval_test){
 /**
  * RCS_recovery checkConsistencyInterval() 1回目
  */
-BOOST_AUTO_TEST_CASE(rcsRecovery_myCheckConsistencyInterval_test){
+BOOST_AUTO_TEST_CASE(rcsRecovery_checkConsistencyInterval_test){
   string query = 
     "depend usrvary,t$"
-    "constraintStore__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
-    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+    "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
+    "variables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
     "tmpConstraint__:= guard__:= initConstraint__:= initTmpConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)), initusrvarylhs = prev(usrvary)}$"
     "tmpVariables__:= guardVars__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
-    "parameterStore__:= {}$"
+    "pConstraint__:= {}$"
     "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
 
-    "symbolic redeval '(myCheckConsistencyInterval);";
+    "symbolic redeval '(checkConsistencyInterval);";
 
   BOOST_CHECK(check(query, "(list true false)"));
 }
@@ -146,16 +146,16 @@ BOOST_AUTO_TEST_CASE(rcsRecovery_myCheckConsistencyInterval_test){
 /**
  * RCS_recovery IP時のcreate_maps()
  */
-BOOST_AUTO_TEST_CASE(convertCSToVMInterval_test){
+BOOST_AUTO_TEST_CASE(createVariableMapInterval_test){
   string query = 
     "depend usrvary,t$"
-    "constraintStore__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
+    "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
     "initConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
-    "parameterStore__:= {}$"
-    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+    "pConstraint__:= {}$"
+    "variables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
     "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
 
-    "symbolic redeval '(convertCSToVMInterval);";
+    "symbolic redeval '(createVariableMapInterval);";
 
   BOOST_CHECK(check(query, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 0 (minus (times 10 t))) (list usrvary 0 (plus (minus (times 5 (expt t 2))) 10)))"));
 }
@@ -166,13 +166,13 @@ BOOST_AUTO_TEST_CASE(convertCSToVMInterval_test){
 BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTime_test){
   string query = 
     "depend usrvary,t$"
-    "constraintStore__:= {usrvarg = 10,usrvary = 5*(-t**2+2)}$"
+    "constraint__:= {usrvarg = 10,usrvary = 5*(-t**2+2)}$"
     "initConstraint__:= {}$"
-    "parameterStore__:= {}$"
-    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), usrvarg, usrvary}$"
+    "pConstraint__:= {}$"
+    "variables__:= {df(usrvary,t,2), df(usrvary,t), usrvarg, usrvary}$"
 
     // calcNextPointPhaseTime内部どこかで使われる
-    "psParameters__:= {}$"
+    "parameters__:= {}$"
 
     "maxTime_:= 1$"
     "discCause_:= {usrvary = 0}$"
@@ -200,14 +200,14 @@ BOOST_AUTO_TEST_CASE(addConstraint_test){
     "depend usrvary,t$"
     "lhs:= {prev(df(usrvary,t))=1, prev(usrvary)=0}$"
     "rhs:= prev(usrvary) neq 0$"
-    "symbolic redeval '(myExSub lhs rhs);";
+    "symbolic redeval '(exSub lhs rhs);";
   BOOST_CHECK(check(query2, "(neq 0 0)"));
 
   const string query3 = 
     "depend usrvary,t$"
     "lhs:= {prev(df(usrvary,t))=1, prev(usrvary)=0}$"
     "rhs:= {prev(usrvary) neq 0}$"
-    "symbolic redeval '(myExSub lhs rhs);";
+    "symbolic redeval '(exSub lhs rhs);";
   BOOST_CHECK(check(query3, "(list (neq 0 0))"));
 
 }
@@ -220,8 +220,8 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_test){
     "cons_ := {usrvary = parameter_y_0_1 - 5*t**2}$"
     "initCons_ := {initusrvary_1lhs = 0,initusrvarylhs = parameter_y_0_1}$"
     "pCons_ := {parameter_y_0_1 - 9 > 0,parameter_y_0_1 - 11 < 0}$"
-    "csVariables__ := vars_ := {df(usrvary,t,2),df(usrvary,t),usrvary}$"
-    "psParameters__ := {parameter_y_0_1}$"
+    "variables__ := vars_ := {df(usrvary,t,2),df(usrvary,t),usrvary}$"
+    "parameters__ := {parameter_y_0_1}$"
 
     "symbolic redeval '(calculateNextPointPhaseTimeMain maxTime_ discCause_ cons_ initCons_ pCons_ vars_);";
 
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_test){
 
   // query1の内部で動作する関数
   const string query2 = 
-     "psParameters__ := {py}$"
+     "parameters__ := {py}$"
      "candidateTCList_ := {{(sqrt(py)*sqrt(5))/5, {{{py,geq,9},{py,leq,11}}}}}$"
      "retTCList_ := {}$"
      "newTC_ := {infinity, {{{py,geq,9},{py,leq,11}}}}$"
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_test){
 
   // query2の内部で動作する関数
   const string query3 = 
-     "psParameters__ := {py}$"
+     "parameters__ := {py}$"
      "TC1_ := {infinity, {{{py,geq,9},{py,leq,11}}}}$"
      "TC2_ := {(sqrt(py)*sqrt(5))/5, {{{py,geq,9},{py,leq,11}}}}$"
      "mode_ := min$"
@@ -259,24 +259,24 @@ BOOST_AUTO_TEST_CASE(calculateNextPointPhaseTimeMain_case_test){
     "cons_ := {usrvary = parameter_y_0_1 - 5*t**2}$"
     "initCons_ := {initusrvary_1lhs = 0,initusrvarylhs = parameter_y_0_1}$"
     "pCons_ := {parameter_y_0_1 - 9 > 0,parameter_y_0_1 - 11 < 0}$"
-    "csVariables__ := vars_ := {df(usrvary,t,2),df(usrvary,t),usrvary}$"
-    "psParameters__ := {parameter_y_0_1}$"
+    "variables__ := vars_ := {df(usrvary,t,2),df(usrvary,t),usrvary}$"
+    "parameters__ := {parameter_y_0_1}$"
 
     "symbolic redeval '(calculateNextPointPhaseTimeMain maxTime_ discCause_ cons_ initCons_ pCons_ vars_);";
 
   BOOST_CHECK(check(query1, "(list (list (quotient (times (sqrt parameter_y_0_1) (sqrt 5)) 5) (list (list (list parameter_y_0_1 1 (quotient 49 5)) (list parameter_y_0_1 2 9))) 0) (list (quotient 7 5) (list (list (list parameter_y_0_1 4 (quotient 49 5)) (list parameter_y_0_1 1 11))) 1))"));
 }
 
-BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
+BOOST_AUTO_TEST_CASE(createVariableMapMain_test){
   const string query1 =
     "depend usrvary, t$"
     "cons_:={df(usrvary,t,2) = -10, df(usrvary,t) = 0, - usrvary + 9 <= 0, usrvary - 11 <= 0}$"
     "vars_:={df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t)), prev(usrvary), usrvary}$"
     "pars_:={}$"
     // exIneqSolveのため
-    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
+    "variables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
 
-    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
+    "symbolic redeval '(createVariableMapMain cons_ vars_ pars_);";
 
   BOOST_CHECK(check(query1, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 0 0) (list usrvary 4 9) (list usrvary 3 11))"));
   const string query2 =
@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
     "vars_:={df(usrvarvx,t), df(usrvarvy,t), df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvare, usrvarvx, usrvarvy, usrvarx, usrvary}$"
     "pars_:={}$"
     // exIneqSolveのため
-    "csVariables__:= {df(usrvarvx,t), df(usrvarvy,t), df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvare, usrvarvx, usrvarvy, usrvarx, usrvary}$"
-    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
+    "variables__:= {df(usrvarvx,t), df(usrvarvy,t), df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvare, usrvarvx, usrvarvy, usrvarx, usrvary}$"
+    "symbolic redeval '(createVariableMapMain cons_ vars_ pars_);";
 
   BOOST_CHECK(check(query2, "(list (list (df usrvarvx t) 0 0) (list (df usrvarvy t) 0 -10) (list (df usrvarx t) 0 1) (list (df usrvary t) 0 0) (list usrvare 0 (quotient 77 100)) (list usrvarvx 0 1) (list usrvarvy 0 0) (list usrvarx 0 (quotient 4 3)) (list usrvary 0 20))"));
 
@@ -296,8 +296,8 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
     "vars_:={df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t)), prev(usrvary), usrvary}$"
     "pars_:={}$"
     // exIneqSolveのため
-    "csVariables__:= {df(usrvary,t,2), df(usrvary,t), prev(usrvary), usrvary}$"
-    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
+    "variables__:= {df(usrvary,t,2), df(usrvary,t), prev(usrvary), usrvary}$"
+    "symbolic redeval '(createVariableMapMain cons_ vars_ pars_);";
 
   BOOST_CHECK(check(query3, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 4 0) (list (df usrvary t) 3 2) (list usrvary 0 10))"));
 
@@ -307,10 +307,10 @@ BOOST_AUTO_TEST_CASE(convertCSToVMMain_test){
     "vars_:={df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvarvx, usrvarvy, usrvarx, usrvary}$"
     "pars_:={}$"
     // exIneqSolveのため
-    "csVariables__:= {df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvarvx, usrvarvy, usrvarx, usrvary}$"
-    "symbolic redeval '(convertCSToVMMain cons_ vars_ pars_);";
+    "variables__:= {df(usrvarx,t), df(usrvary,t), prev(usrvarvx), prev(usrvarvy), prev(usrvarx), prev(usrvary), usrvarvx, usrvarvy, usrvarx, usrvary}$"
+    "symbolic redeval '(createVariableMapMain cons_ vars_ pars_);";
 
-  BOOST_CHECK(check(query4, "(list (list (df usrvarx t) 0 (quotient (plus (minus (times 51 (sqrt 5))) (minus 128)) 109)) (list (df usrvary t) 0 (quotient (plus (times 48 (sqrt 5)) (minus 136)) 109)) (list usrvarvx 0 (quotient (plus (minus (times 51 (sqrt 5))) (minus 128)) 109)) (list usrvarvy 0 (quotient (plus (times 48 (sqrt 5)) (minus 136)) 109)) (list usrvarx 0 (quotient (plus (times 160 (sqrt 5)) 75) 89)) (list usrvary 0 (quotient (plus (times 80 (sqrt 5)) (minus 96)) 89)))", true));
+  BOOST_CHECK(check(query4, "(list (list (df usrvarx t) 0 (quotient (plus (minus (times 51 (sqrt 5))) (minus 128)) 109)) (list (df usrvary t) 0 (quotient (plus (times 48 (sqrt 5)) (minus 136)) 109)) (list usrvarvx 0 (quotient (plus (minus (times 51 (sqrt 5))) (minus 128)) 109)) (list usrvarvy 0 (quotient (plus (times 48 (sqrt 5)) (minus 136)) 109)) (list usrvarx 0 (quotient (plus (times 160 (sqrt 5)) 75) 89)) (list usrvary 0 (quotient (plus (times 80 (sqrt 5)) (minus 96)) 89)))"));
 }
 
 BOOST_AUTO_TEST_CASE(findMinTime_test){

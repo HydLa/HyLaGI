@@ -81,7 +81,7 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
 {
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
 
-  reduce_link_->send_string("symbolic redeval '(resetConstraintStore);");
+  reduce_link_->send_string("symbolic redeval '(resetConstraint);");
   reduce_link_->skip_until_redeval();
 
   REDUCEStringSender rss(reduce_link_);
@@ -287,8 +287,8 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
 
   switch(mode_){ 
     case hydla::simulator::symbolic::DiscreteMode:
-      // TODO myCheckConsistencyPointが本来、真偽が数式に依存する場合Trueが戻ってくるバグを持つ
-      reduce_link_->send_string("symbolic redeval '(myCheckConsistencyPoint);");
+      // TODO checkConsistencyPointが本来、真偽が数式に依存する場合Trueが戻ってくるバグを持つ
+      reduce_link_->send_string("symbolic redeval '(checkConsistencyPoint);");
       break;
     case hydla::simulator::symbolic::ConditionsMode:
       // TODO 未実装
@@ -296,7 +296,7 @@ CheckConsistencyResult REDUCEVCS::check_consistency(){
       reduce_link_->send_string("symbolic redeval '(checkFalseConditions);");
       break;
     default: // case hydla::simulator::symbolic::ContinuousMode:
-      reduce_link_->send_string("symbolic redeval '(myCheckConsistencyInterval);");
+      reduce_link_->send_string("symbolic redeval '(checkConsistencyInterval);");
       break;
   }
 
@@ -350,9 +350,9 @@ SymbolicVirtualConstraintSolver::create_result_t REDUCEVCS::create_maps(){
   /////////////////// 送信処理
 
   if(mode_==hydla::simulator::symbolic::DiscreteMode){
-    reduce_link_->send_string("symbolic redeval '(myConvertCSToVM);");
+    reduce_link_->send_string("symbolic redeval '(createVariableMap);");
   }else{
-    reduce_link_->send_string("symbolic redeval '(convertCSToVMInterval);");
+    reduce_link_->send_string("symbolic redeval '(createVariableMapInterval);");
   }
 
   /////////////////// 受信処理                     
@@ -718,43 +718,6 @@ std::string REDUCEVCS::get_constraint_store(){
   HYDLA_LOGGER_FUNC_END(VCS);
   return ret;
 }
-
-// deleted
-////value_tを指定された精度で数値に変換する
-//std::string REDUCEVCS::get_real_val(const value_t &val, int precision, hydla::simulator::symbolic::OutputFormat opfmt){
-//  std::string ret;
-//  REDUCEStringSender rss(reduce_link_);
-//
-//  if(!val.undefined()) {
-//    
-//    reduce_link_->send_string("on rounded$");
-//
-//    // getRealVal(value_, prec_)を渡したい
-//    reduce_link_->send_string("value_:=");
-//    rss.put_node(val, true);
-//    reduce_link_->send_string("$");
-//    
-//    std::stringstream precision_str;
-//    precision_str << precision;
-//    reduce_link_->send_string("prec_:="+ precision_str.str() +"$");
-//    // 計算に用いる精度は6ケタ未満にできない（？）ようなので，表示桁を下げる
-//    if(precision < 6){
-//      reduce_link_->send_string("print_precision(" + precision_str.str() + ")$");
-//    }
-//    reduce_link_->send_string("getRealVal(value_, prec_);");
-//    
-//    reduce_link_->skip_until_redeval();
-//    reduce_link_->get_line();
-//    ret = reduce_link_->get_line();
-//    reduce_link_->send_string("off rounded$");
-//    // 精度を元に戻しておく
-//    reduce_link_->send_string("precision(defaultPrec_)$");
-//  }
-//  else {
-//    ret = "UNDEF";
-//  }
-//  return ret;
-//}
 
 
 bool REDUCEVCS::less_than(const time_t &lhs, const time_t &rhs)
