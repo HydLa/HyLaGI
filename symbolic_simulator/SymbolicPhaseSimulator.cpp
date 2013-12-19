@@ -625,10 +625,7 @@ SymbolicPhaseSimulator::todo_list_t
       if(candidate.is_max_time) {
         pr->cause_of_termination = simulator::TIME_LIMIT;
       }
-      else
-      {
-        time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
-      }
+      time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
       backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       results.push_back(pr);
       if(++time_it >= time_result.candidates.size())break;
