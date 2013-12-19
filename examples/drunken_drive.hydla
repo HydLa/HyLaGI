@@ -9,7 +9,7 @@ TIMER <=> [](t'=1) & t=0.
 FLAG_CONST <=> [](out' = 0) & out = 0.
 A_CONST <=> [](a' = 0).
 
-ASSERT(-5 < x < 5).
+//ASSERT(-5 < x < 5).
 
 DRUNKEN(vx, vy, step, left, right)
 {
