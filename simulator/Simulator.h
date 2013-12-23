@@ -53,10 +53,6 @@ struct Opts {
   bool ignore_warnings;
   std::string output_interval;
   int output_precision;
-  ApproximationMode approx_mode;
-  int approx_precision;
-  int approx_threshold;
-  int approx_threshold_ex;
   std::string solver;
   hydla::parse_tree::node_sptr assertion;
   std::set<std::string> output_variables;

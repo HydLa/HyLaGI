@@ -58,26 +58,6 @@ void ProgramOptions::init_descriptions()
      "  d: Depth First Search\n"
      "  b: Breadth First Search")
 
-    ("approx_mode,a",
-    value<std::string>()->default_value(""),
-    "mode of approximation:\n"
-    "  empty: no approximation \n"
-    "  n    : numeric (simple, but not validated!)\n"
-    "  i    : interval (validated)\n")
-
-    ("approx_precision",
-     value<int>()->default_value(5),
-     "precision of approximation")
-
-    ("approx_threshold_ex",
-    value<int>()->default_value(2),
-    "approximation threshold of exponent")
-         
-    ("approx_threshold",
-     value<int>()->default_value(30),
-     "threshold of approximation")
-     
-     
     ("solver,s",
      value<std::string>()->default_value("m"), 
      "solver:\n"

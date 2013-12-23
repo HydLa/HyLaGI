@@ -107,43 +107,6 @@ void MathematicaLink::init(const hydla::simulator::Opts &opts)
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
   
-  // 近似モード
-/*
-  TODO: 一旦無効化している
-  MLPutFunction("Set",2);
-  MLPutSymbol("approxMode");
-  if(opts.approx_mode == NO_APPROX)MLPutSymbol("none");
-  else if(opts.approx_mode == NUMERIC_APPROX)MLPutSymbol("numeric");
-  else if(opts.approx_mode == INTERVAL_APPROX)MLPutSymbol("interval");
-  else assert(0);
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-*/  
-  
-  MLPutFunction("Set",2);
-  MLPutSymbol("approxThreshold");
-  MLPutInteger(opts.approx_threshold);
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-  
-  
-  MLPutFunction("Set",2);
-  MLPutSymbol("approxPrecision");
-  MLPutInteger(opts.approx_precision);
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-  
-  MLPutFunction("Set",2);
-  MLPutSymbol("approxThresholdEx");
-  MLPutInteger(opts.approx_threshold_ex);
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  
   // タイムアウト時間
   MLPutFunction("Set",2);
   MLPutSymbol("timeOutS"); 

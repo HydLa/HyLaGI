@@ -155,21 +155,6 @@ void setup_symbolic_simulator_opts(Opts& opts)
     throw std::runtime_error(std::string("invalid option - search"));
   }
   
-  // set parameters for approximation 
-  opts.approx_threshold_ex = po.get<int>("approx_threshold_ex");
-  opts.approx_threshold = po.get<int>("approx_threshold");
-  opts.approx_precision = po.get<int>("approx_precision");
-
-  // select mode for approximation 
-  if(po.get<std::string>("approx_mode") == ""){
-    opts.approx_mode = simulator::NO_APPROX;
-  }else if(po.get<std::string>("approx_mode") == "n"){
-    opts.approx_mode = simulator::NUMERIC_APPROX;
-  }else if(po.get<std::string>("approx_mode") == "i"){
-    opts.approx_mode = simulator::INTERVAL_APPROX;
-  }else{
-    throw std::runtime_error(std::string("invalid option - approx_mode"));
-  }
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
