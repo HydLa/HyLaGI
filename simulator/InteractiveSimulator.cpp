@@ -1,13 +1,48 @@
 #include "InteractiveSimulator.h"
+#include "Timer.h"
+#include "PhaseSimulator.h"
+#include "SymbolicValue.h"
+#include "../common/TimeOutError.h"
 #include "Dumpers.h"
+#include "Backend.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <assert.h>
+#include <boost/make_shared.hpp>
+
+#include "HydLaGrammar.h"
+#include "CommentGrammar.h"
+#include "ParseError.h"
+#include "ParseTree.h"
+#include "Logger.h"
+#include <boost/spirit/include/classic_multi_pass.hpp>
+#include <boost/spirit/include/classic_position_iterator.hpp>
+#include <boost/spirit/include/classic_ast.hpp>
+#include "NodeFactory.h"
+#include "DefaultNodeFactory.h"
+#include "HydLaAST.h"
+
+
+
+
 // surpress warning "C4996: old 'strcpy'" on VC++2005
 #define _CRT_SECURE_NO_DEPRECATE
 #include <boost/algorithm/string.hpp>
 
+using namespace boost;
+using namespace std;
+using namespace hydla::grammer_rule;
+using namespace hydla::parse_error;
+using namespace hydla::parse_tree;
+using namespace hydla::parser;
+
+
+
 namespace hydla {
 namespace simulator {
 
-using namespace std;
 hydla::output::SymbolicTrajPrinter InteractiveSimulator::printer_;
 
 
@@ -38,7 +73,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
     {
       timer::Timer phase_timer;
       PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
-      
+
       phase_result_sptr_t phase;
       if(phases.empty())
       {
@@ -62,7 +97,8 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
           phases[i]->cause_of_termination = NOT_SELECTED;
         }
       }
-      
+
+
       PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
       todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
       profile_vector_->push_back(todo);
@@ -78,7 +114,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       }
       todo = todos[0];
       print_phase(todo);
-      
+
       if(--todo_num == 0)
       {
         todo_num = input_and_process_command(todo);
@@ -95,6 +131,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
   }
   return result_root_;
 }
+
 
 
 int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo){
@@ -154,10 +191,10 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         print(todo->parent);
         break;
       case 'a':
-      {
-        if( approx_variable(todo) ) print_phase(todo->parent);
-        break;
-      }
+        {
+          if( approx_variable(todo) ) print_phase(todo->parent);
+          break;
+        }
       case 'c':
         change_variable(todo);
         print_phase(todo->parent);
@@ -180,6 +217,7 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         cout << "invalid command: " << line << endl;
         break;
     }
+
   }
     return 0;
 }
@@ -199,11 +237,11 @@ int InteractiveSimulator::show_help(){
     "p              -- Display the information of the current phase",
     "a              -- Approx a value of a variable as interval",
     "u              -- Find unsat core constraints and print them",
-    //"breakpoints    -- Making program stop at certain points",
+    "breakpoints    -- Making program stop at certain points",
     //"debug          -- Simulate with debug-mode",
     //"edit           -- Edit constraint ",
     //"load           -- Load state ",
-    //"run            -- simulate program  until the breakpoint is reached",
+    "run            -- simulate program  until the breakpoint is reached",
     //"save           -- Save state to file",
   };
   for(uint i = 0;i < sizeof(help_list) / sizeof(help_list[0]);i++){
@@ -685,11 +723,150 @@ int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
 
 
 int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
-  //break point
+  cout << "input break point" << endl;
+  stringstream ss;
+  string break_str = excin<string>();
+  
+  ss << break_str;
+  //make constraint from str
+  //parse TODO use Hydla ast tree 
+  HydLaAST::tree_info_t ast = parse(ss);
+ node_sptr assertion_node_tree;
+  DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
+  DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
+  ParseTree::node_factory_sptr node_factory;
+  node_factory = boost::make_shared<DefaultNodeFactory>();
+  //node_factory.reset();
+
+ NodeTreeGenerator genarator(assertion_node_tree, constraint_definition, program_definition, node_factory);
+  cout << "hoge" << endl;
+ node_sptr node_tree = genarator.generate(ast.trees.begin());
+  cout << "fuga" << endl;
+  
+
+
+  if (break_str.find_first_of("time=") == 0) {
+  //time break point 
+    cout << 111 << endl;
+  } else if (break_str.find_first_of("=")!= std::string::npos) {
+    //variable break point 
+    //TODO = < >
+    std::vector<std::string> v;
+    boost::algorithm::split( v, break_str, boost::is_any_of("=") );
+    value_t value(new hydla::simulator::symbolic::SymbolicValue(v[1]));
+    variable_t var;
+    var.name = v[0];
+    var.derivative_count = 0;
+
+    breakpoint_vm_[var] = value;//ValueRange();
+    cout << 222 << endl;
+  } else {
+    //TODO module or guard
+  }
+
   return 0;
 }
+bool InteractiveSimulator::is_break(simulation_todo_sptr_t & todo){
+  if(todo->parent->phase == PointPhase){
+    const char* fmt = "mv0n";
+    CheckConsistencyResult ret;
+    backend_->call("startTemporary", 0, "", "");
+    backend_->call("addConstraint", 1, fmt, "", &todo->parent->variable_map);
+    backend_->call("addConstraint", 1, fmt, "", &breakpoint_vm_);
+    backend_->call("checkConsistencyPoint", 0, "", "cc", &ret);
+    phase_simulator_->backend_->call("endTemporary", 0, "", "");
+    cout << ret.size() << endl;
+    if (ret[1].empty()){
+      cout << "break" << endl;
+      return true;
+    }
+  }else{
+    //Interval Phase
+  }
+  return false;
+
+}
 int InteractiveSimulator::run(simulation_todo_sptr_t & todo){
+  bool is_running = true;
+
+  while(is_running)
+  {
+    try
+    {
+      timer::Timer phase_timer;
+      PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
+
+      phase_result_sptr_t phase;
+      if(phases.empty())
+      {
+        simulation_todo_sptr_t tmp_todo = todo;
+        do
+        {
+          if(todo->phase==PointPhase)
+            cout << "---------PP "<<todo->id<< "---------" << endl;
+          cout << "execution stuck" << endl;
+        }while(tmp_todo == todo);
+        continue;
+      }
+      else
+      {
+        unsigned int select_num = select_case<phase_result_sptr_t>(phases);
+        phase = phases[select_num];
+        for(unsigned int i = 0; i < phases.size(); i++)
+        {
+          if(i == select_num) continue;
+          phases[i]->cause_of_termination = NOT_SELECTED;
+        }
+      }
+ 
+
+      PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
+      todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
+      profile_vector_->push_back(todo);
+      if(todos.empty())
+      {
+        simulation_todo_sptr_t tmp_todo = todo;
+        do
+        {
+          print_end(phase);
+        }while(tmp_todo == todo);
+        continue;
+      }
+      todo = todos[0];
+      print_phase(todo);
+
+      if(is_break(todo)){
+        is_running = false;
+      }
+      // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
+      all_todo_.push_back(todo);
+    }
+    catch(const runtime_error &se)
+    {
+      cout << se.what() << endl;
+      HYDLA_LOGGER_REST(se.what());
+      break;
+    }
+  }
   return 0;
+}
+
+HydLaAST::tree_info_t InteractiveSimulator::parse(std::stringstream& ss) 
+{
+  istreambuf_iterator<char> it(ss);
+  pos_iter_t it_begin(boost::spirit::classic::make_multi_pass(it), 
+                        boost::spirit::classic::make_multi_pass(istreambuf_iterator<char>()));
+  pos_iter_t it_end;
+
+  parser::HydLaGrammar hg;
+  parser::CommentGrammar cg;
+  return parser::ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<parser::HydLaGrammar::START_Constraint>(), cg);
+
+  /*
+     if(!ast_tree_.full) {
+     throw SyntaxError("", ast_tree_.stop.get_position().line);
+     }
+     */
 }
 
 }

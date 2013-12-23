@@ -7,36 +7,43 @@
 #include "Logger.h"
 #include <sstream>
 #include "SymbolicTrajPrinter.h"
+#include "HydLaAST.h"
+#include "Node.h"
+#include "NodeFactory.h"
+#include "ParseTree.h"
+#include "NodeTreeGenerator.h"
 
-using namespace std;
-using namespace hydla::logger;
+
 
 namespace hydla {
 namespace simulator {
-
-
 /*
  * template method for input 
  */
-template<typename T> T excin(string message="")
+template<typename T> T excin(std::string message="")
 {
   T ret;
   while(1)
   {
-    if(!message.empty()) cout << message << endl;
-    cout << '>' ;
-    cin >> ret;
-    if(!cin.fail()) break;
-    cin.clear();
-    cin.ignore( 1024, '\n' );
+    if(!message.empty()) std::cout << message << std::endl;
+    std::cout << '>' ;
+    std::cin >> ret;
+    if(!std::cin.fail()) break;
+    std::cin.clear();
+    std::cin.ignore( 1024, '\n' );
   }
-  cin.clear();
-  cin.ignore( 1024, '\n' );
+  std::cin.clear();
+  std::cin.ignore( 1024, '\n' );
   return ret;
 }
 
 class InteractiveSimulator:public Simulator{
 public:
+
+  typedef boost::spirit::classic::multi_pass<std::istreambuf_iterator<char> > multipass_iter_t;
+  typedef boost::spirit::classic::position_iterator<multipass_iter_t> pos_iter_t;
+  typedef boost::spirit::classic::node_val_data_factory<> node_val_data_factory_t;
+  typedef boost::spirit::classic::tree_parse_info<pos_iter_t, node_val_data_factory_t> tree_info_t;
 
   InteractiveSimulator(Opts &opts):Simulator(opts){}
 
@@ -96,6 +103,7 @@ protected:
    */
   int set_breakpoint(simulation_todo_sptr_t& simulation_phase);
   int run(simulation_todo_sptr_t& simulation_phase);
+  bool is_break(simulation_todo_sptr_t& simulation_phase);
   
   /**
    * save state
@@ -151,8 +159,11 @@ protected:
   //Print unsat cores in a phase
   int find_unsat_core(simulation_todo_sptr_t&);
 
+  tree_info_t parse(std::stringstream& stream);
+
   static hydla::output::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
+  variable_map_t breakpoint_vm_;
 };
 
 } // simulator

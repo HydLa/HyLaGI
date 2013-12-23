@@ -56,7 +56,7 @@ void output_result(Simulator& ss, Opts& opts){
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
-  cout << sstr.str(); 
+  std::cout << sstr.str(); 
 
   // TODO: use boost (for compatibility)
   std::string of_name = po.get<string>("output_name"); 
