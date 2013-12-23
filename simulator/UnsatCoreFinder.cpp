@@ -7,7 +7,6 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "ContinuityMapMaker.h"
-#include "Dumpers.h"
 #include "TreeInfixPrinter.h"
 
 #include "../backend/Backend.h"

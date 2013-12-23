@@ -6,6 +6,7 @@
 #include "SymbolicValue.h"
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
+#include "PhaseResult.h"
 
 #include <iostream>
 #include <string>
@@ -116,6 +117,23 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   todo->maximal_mss.clear();
   todo->parent = result_root_;
   return todo;
+}
+
+
+
+std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
+{
+  s << "%% PhaseType: " << todo.phase << std::endl;
+  s << "%% id: " <<  todo.id          << std::endl;
+  s << "%% time: " << *todo.current_time << std::endl;
+  s << "--- parent phase result ---" << std::endl;
+  s << *(todo.parent) << std::endl;
+  s << "--- temporary_constraints ---"  << std::endl; 
+  s << todo.temporary_constraints      << std::endl;
+  s << "--- parameter map ---"          << std::endl;
+  s << todo.parameter_map << std::endl;
+  
+  return s;
 }
 
 

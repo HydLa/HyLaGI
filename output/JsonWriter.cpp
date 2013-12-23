@@ -1,5 +1,4 @@
 #include "JsonWriter.h"
-#include "Dumpers.h"
 #include <sstream>
 
 using namespace boost::property_tree;

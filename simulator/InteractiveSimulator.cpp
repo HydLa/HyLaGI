@@ -3,7 +3,6 @@
 #include "PhaseSimulator.h"
 #include "SymbolicValue.h"
 #include "../common/TimeOutError.h"
-#include "Dumpers.h"
 #include "Backend.h"
 #include <iostream>
 #include <fstream>
@@ -205,7 +204,6 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         break;
       case 'u':
         find_unsat_core(todo);
-        cin.ignore( 1024,'\n');
         break;
       case 'b':
         set_breakpoint(todo);
@@ -717,6 +715,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
 //}
 
 int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
+  cout << *todo << endl;
   phase_simulator_->find_unsat_core(todo->parent->module_set, todo, todo->parent->variable_map);
   return 0;
 }

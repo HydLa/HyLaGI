@@ -28,7 +28,6 @@
 #include "AnalysisResultChecker.h"
 #include "UnsatCoreFinder.h"
 #include "TreeInfixPrinter.h"
-#include "Dumpers.h"
 
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
@@ -122,7 +121,6 @@ SymbolicPhaseSimulator::find_unsat_core
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
   cout << "start find unsat core " << endl;
-  cout << ms << endl;
   unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
   unsat_core_finder_->print_unsat_cores(S,S4C);
   cout << "end find unsat core " << endl;

@@ -135,6 +135,9 @@ struct SimulationTodo{
   }
 };
 
+std::ostream& operator<<(std::ostream& s, const SimulationTodo& a);
+
+std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
 
 typedef boost::shared_ptr<SimulationTodo>     simulation_todo_sptr_t;
 // プロファイリング結果全体

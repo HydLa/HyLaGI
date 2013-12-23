@@ -4,7 +4,6 @@
 #include "SymbolicValue.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
-#include "Dumpers.h"
 
 namespace hydla {
 namespace simulator {

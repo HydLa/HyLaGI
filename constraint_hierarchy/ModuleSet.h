@@ -133,7 +133,6 @@ private:
 
 std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
 
-
 class ModuleSetComparator {
 public:
   bool operator()(const module_set_sptr &lhs, 
