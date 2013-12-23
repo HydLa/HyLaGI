@@ -121,7 +121,6 @@ SymbolicPhaseSimulator::find_unsat_core
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
   cout << "start find unsat core " << endl;
-  cout << todo->parent->positive_asks.size() << endl;
   unsat_core_finder_->find_unsat_core(ms,S,S4C, todo->parent->positive_asks, todo->parent->negative_asks, vm, todo->parent->parameter_map, todo->parent->phase);
   unsat_core_finder_->print_unsat_cores(S,S4C);
   cout << "end find unsat core " << endl;

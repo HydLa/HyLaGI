@@ -715,7 +715,6 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
 //}
 
 int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
-  cout << *todo << endl;
   phase_simulator_->find_unsat_core(msc_no_init_->get_max_module_set(), todo, todo->parent->variable_map);
   return 0;
 }
