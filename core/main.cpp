@@ -96,6 +96,10 @@ void timeout(int sig){
 }
 #endif
 
+void term_handler(int sig)
+{
+  exit(-1);
+}
 
 void interrupt_handler(int sig){
 }
@@ -105,7 +109,8 @@ void hydla_main(int argc, char* argv[])
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
   
-  signal(SIGINT,interrupt_handler);
+  signal(SIGINT, interrupt_handler);
+  signal(SIGTERM, term_handler);
   
 /*
 #ifdef _MSC_VER
