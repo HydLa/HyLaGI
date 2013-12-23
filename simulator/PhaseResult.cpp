@@ -86,7 +86,7 @@ std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
   variable_map_t::const_iterator end = vm.end();
   
   for(; it!=end; ++it) {
-    s << it->first << "(" << it->first << ") " << " <=> " << it->second << "\n";
+    s << it->first << " <=> " << it->second << "\n";
   }
   
   return s;

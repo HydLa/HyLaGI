@@ -40,7 +40,7 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
     std::cout << it->first.second << " : " << TreeInfixPrinter().get_infix_string((it->first.first)) << std::endl;
-    cout << it->second << endl;
+    cout << it->second->get_name() << endl;
   }
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
@@ -50,7 +50,7 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
       cout << "'";
     }
     cout << endl;
-    cout << it->second << endl;
+    cout << it->second->get_name() << endl;
   }
   cout << "---------------------" << endl;
 
@@ -63,30 +63,34 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     const variable_map_t& vm
 )
 {
+  find_unsat_core(ms, S, S4C, todo->positive_asks, todo->negative_asks, vm, todo->parameter_map, todo->phase);
+}
+
+
+
+void UnsatCoreFinder::find_unsat_core(
+  const module_set_sptr& ms,
+  unsat_constraints_t& S,
+  unsat_continuities_t& S4C,
+  const positive_asks_t &positive_asks,
+  const negative_asks_t &negative_asks,
+  const variable_map_t& vm,
+  const parameter_map_t &pm,
+  Phase phase_type
+)
+{
   HYDLA_LOGGER_LOCATION(MS);
-  positive_asks_t positive_asks = todo->positive_asks;
-  negative_asks_t negative_asks = todo->negative_asks;
   expanded_always_t expanded_always;
-    tells_t tell_list;
+  tells_t tell_list;
   constraints_t constraint_list;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
   negative_asks_t tmp_negative;
 
-  parameter_map_t pm = todo->parameter_map;
+  reset(phase_type, vm, pm);
 
-  reset(todo->phase, vm, pm);
-
-
-  variable_map_t::const_iterator vm_it  = vm.begin();
-  variable_map_t::const_iterator vm_end = vm.end();
-  for(constraints_t::const_iterator it = todo->temporary_constraints.begin(); it != todo->temporary_constraints.end(); it++){
-    cout << "temp" << endl;
-    cout << *it << endl;
-  }
-
-  add_constraints(S, S4C, todo->phase);
+  add_constraints(S, S4C, phase_type);
 
   module_list_t::const_iterator ms_it = ms->begin();
   module_list_t::const_iterator ms_end = ms->end();
@@ -94,13 +98,6 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     module_set_sptr temp_ms(new hydla::ch::ModuleSet());
     temp_ms->add_module(*ms_it);
     TellCollector tell_collector(temp_ms);
-    AskCollector ask_collector(temp_ms);
-
-
-    ask_collector.collect_ask(&expanded_always,
-        &positive_asks,
-        &tmp_negative,
-        &negative_asks);
 
     node_sptr condition_node;
 
@@ -120,14 +117,14 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
         it != constraint_list.end();
         it++)
     {
-      const char* fmt = (todo->phase == PointPhase)?"en":"et";
+      const char* fmt = (phase_type == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it));
       if(check_inconsistency()){
         S.insert(make_pair(make_pair(*it,"constraint"),temp_ms));
-        if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
+        if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
           return ;
         }else{
-          find_unsat_core(ms,S,S4C,todo,vm);
+          find_unsat_core(ms,S,S4C,positive_asks, negative_asks, vm, pm, phase_type);
           return;
         }
 
@@ -137,14 +134,14 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     positive_asks_t::iterator it = positive_asks.begin();
     for(int j = 0; j < (int)positive_asks.size(); j++, it++)
     {
-      const char* fmt = (todo->phase == PointPhase)?"en":"et";
+      const char* fmt = (phase_type == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it)->get_guard());
       if(check_inconsistency()){
         S.insert(make_pair(make_pair(node_sptr((*it)->get_guard()),"guard"),temp_ms));
-        if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
+        if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
           return;
         }else{
-          find_unsat_core(ms,S,S4C,todo,vm);
+          find_unsat_core(ms,S,S4C,positive_asks, negative_asks, vm, pm, phase_type);
           return;
         }
       }
@@ -159,7 +156,7 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     {
 
       std::string fmt = "v";
-      if(todo->phase == PointPhase)
+      if(phase_type == PointPhase)
       {
         fmt += "n";
       }
@@ -174,10 +171,10 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
           backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
           if(check_inconsistency()){
             S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
-            if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
+            if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
               return ;
             }else{
-              find_unsat_core(ms,S,S4C,todo,vm);
+              find_unsat_core(ms,S,S4C,positive_asks, negative_asks, vm, pm, phase_type);
               return;
             }
           }
@@ -189,10 +186,10 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
           backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
           if(check_inconsistency()){
             S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
-            if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
+            if(check_unsat_core(S,S4C,temp_ms, phase_type, vm, pm)){
               return ;
             }else{
-              find_unsat_core(ms,S,S4C,todo,vm);
+              find_unsat_core(ms,S,S4C,positive_asks, negative_asks, vm, pm, phase_type);
               return;
             }
           }
@@ -201,7 +198,7 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
         node_sptr rhs(new Number("0"));
         node_sptr cons(new Equal(lhs, rhs));
         std::string fmt = "v";
-        if(todo->phase == PointPhase)
+        if(phase_type == PointPhase)
         {
           fmt += "n";
         }
@@ -214,10 +211,10 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
         backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
         if(check_inconsistency()){
           S.insert(make_pair(make_pair(cons,"constraint"),temp_ms));
-          if(check_unsat_core(S,S4C,temp_ms,todo,vm)){
+          if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
             return ;
           }else{
-            find_unsat_core(ms,S,S4C,todo,vm);
+            find_unsat_core(ms,S,S4C,positive_asks, negative_asks, vm, pm, phase_type);
             return;
           }
         }
@@ -226,6 +223,7 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
   }
   backend_->call("endTemporary", 0, "", "");
 }
+
 
 bool UnsatCoreFinder::check_inconsistency(){
   CheckConsistencyResult check_consistency_result;
@@ -238,11 +236,11 @@ bool UnsatCoreFinder::check_inconsistency(){
 }
 
 
-bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms,simulation_todo_sptr_t& todo, const variable_map_t& vm){
+bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms, Phase phase_type, const variable_map_t& vm, const parameter_map_t& pm){
   backend_->call("endTemporary", 0, "", "");
   backend_->call("startTemporary", 0, "", "");
-  reset(todo->phase, vm, todo->parameter_map);
-  add_constraints(S, S4C, todo->phase);
+  reset(phase_type, vm, pm);
+  add_constraints(S, S4C, phase_type);
   bool ret = check_inconsistency();
 
   backend_->call("endTemporary", 0, "", "");

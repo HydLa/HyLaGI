@@ -97,7 +97,7 @@ SymbolicPhaseSimulator::mark_nodes_by_unsat_core
  ){
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
-  HYDLA_LOGGER_VAR(MS, ms);
+  HYDLA_LOGGER_VAR(MS, *ms);
   unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
   ModuleSet module_set;
   for(UnsatCoreFinder::unsat_constraints_t::iterator it = S.begin(); it != S.end(); it++){
@@ -121,7 +121,8 @@ SymbolicPhaseSimulator::find_unsat_core
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
   cout << "start find unsat core " << endl;
-  unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
+  cout << todo->parent->positive_asks.size() << endl;
+  unsat_core_finder_->find_unsat_core(ms,S,S4C, todo->parent->positive_asks, todo->parent->negative_asks, vm, todo->parent->parameter_map, todo->parent->phase);
   unsat_core_finder_->print_unsat_cores(S,S4C);
   cout << "end find unsat core " << endl;
 }

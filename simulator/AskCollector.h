@@ -41,8 +41,8 @@ public:
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
   void collect_ask(expanded_always_t* expanded_always,                   
-                   positive_asks_t*   positive_asks,
-                   negative_asks_t*   negative_asks,
+                   const positive_asks_t*   positive_asks,
+                   const negative_asks_t*   negative_asks,
                    ask_set_t*        unknown_asks);
 
   // Ask制約
@@ -63,15 +63,15 @@ private:
   expanded_always_t*       expanded_always_;                   
   
   /// 制約ストアと矛盾するaskのリスト
-  negative_asks_t*         negative_asks_;
+  const negative_asks_t*         negative_asks_;
 
   /// 有効となっているaskのリスト
-  positive_asks_t*         positive_asks_;
+  const positive_asks_t*         positive_asks_;
   
-  /// askのリスト
+  /// まだ導出の可否が不明なaskのリス
   ask_set_t*              unknown_asks_;
   
-  /// 有効になったaskの中かどうか
+  /// 有効になったaskの中かどうか（出力用）
   bool                in_positive_ask_;
   
   /// 探索したalwaysノードのリスト

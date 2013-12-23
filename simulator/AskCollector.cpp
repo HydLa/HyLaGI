@@ -25,8 +25,8 @@ AskCollector::~AskCollector()
 {}
 
 void AskCollector::collect_ask(expanded_always_t* expanded_always,                   
-                               positive_asks_t*   positive_asks,
-                               negative_asks_t*   negative_asks,
+                               const positive_asks_t*   positive_asks,
+                               const negative_asks_t*   negative_asks,
                                ask_set_t*         unknown_asks)
 {
   assert(expanded_always);
