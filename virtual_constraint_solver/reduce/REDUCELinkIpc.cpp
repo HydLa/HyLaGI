@@ -152,8 +152,10 @@ void REDUCELinkIpc::initProcess(){
     // stdout
     dup2(pipe2[1], STDOUT_FILENO);
     close(pipe2[1]);
-    // reduceプロセスを実行する
+
     if(execlp("reduce", "reduce", NULL) == -1) throw REDUCELinkError("initProcess()", "fail to execlp");
+    // REDUCEの出力をdumpする
+    // if(execlp("reduce", "reduce", "-ldump", NULL) == -1) throw REDUCELinkError("initProcess()", "fail to execlp");
   }
 
   // parent

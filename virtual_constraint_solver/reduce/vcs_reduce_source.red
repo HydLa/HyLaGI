@@ -573,6 +573,14 @@ procedure getIrrationalNumberInterval(value_)$
     if(first(x)=value_) then {second(x)} else {};
 
 %---------------------------------------------------------------
+% リスト関連の関数
+%---------------------------------------------------------------
+
+% @return true , false(t, nilでない!)
+procedure isEmpty(lst_)$
+  if(lst_ = {}) then true else false;
+
+%---------------------------------------------------------------
 % パラメタ関連の関数
 %---------------------------------------------------------------
 
@@ -1445,6 +1453,10 @@ procedure lgetf(x,llst)$
     if(rest(llst)={}) then getf(x,first(llst)) else
       getf(x,first(llst)) . {lgetf(x,rest(llst))};
 
+
+% ラプラス変換を用いて微分方程式の求解を行う
+% @param expr_ "df(v,t,n) = f(t)"の格好をした方程式
+% @return retsolvererror___, retoverconstraint___ retunderconstraint___
 procedure exDSolve(expr_, init_, vars_)$
 begin;
   scalar flag_, ans_, tmp_;
@@ -1474,8 +1486,8 @@ begin;
       
   % laplace演算子でエラー時、laplace演算子込みの式が返ると想定
   if(not freeof(LAPexpr_, laplace)) then <<
-    debugWrite("ans in exDSolve", retsolvererror___);
-    return retsolvererror___;
+    
+    return ansWrite("exDSolve", retsolvererror___);;
   >>;
 
   % ラプラス変換
@@ -1495,25 +1507,20 @@ begin;
   debugWrite("solveans_: ", solveans_);
 
   % solveが解無しの時 overconstraintと想定
-  if(solveans_={}) then <<
-    debugWrite("ans in exDSolve: ", retoverconstraint___);
-    return retoverconstraint___;
-  >>;
+  if(solveans_={}) then
+    return ansWrite("exDSolve: ", retoverconstraint___);
+
   % sがarbcomplexでない値を持つ時 overconstraintと想定
-  if(freeof(lgetf(s, solveans_), arbcomplex)) then <<
-    debugWrite("ans in exDSolve: ", retoverconstraint___);
-    return retoverconstraint___;
-  >>;
+  if(freeof(lgetf(s, solveans_), arbcomplex)) then
+    return ansWrite("exDSolve: ", retoverconstraint___);
 
   debugWrite("table__: ", table__);
   % solveans_にsolvevars_の解が一つでも含まれない時 underconstraintと想定
   for each x in table__ do 
     if(freeof(solveans_, third(x))) then tmp_:=true;
   debugWrite("is under-constraint?: ", tmp_);
-  if(tmp_=true) then <<
-    debugWrite("ans in exDSolve: ", retunderconstraint___);
-    return retunderconstraint___;
-  >>;
+  if(tmp_=true) then
+    return ansWrite("exDSolve: ", retunderconstraint___);
 
   debugWrite("table__: ", table__);
   
@@ -1525,8 +1532,7 @@ begin;
   % exceptdfvars_に対応させるため, 空集合でリセットする
   table__:={};
 
-  debugWrite("ans in exDSolve: ", ans_);
-  return ans_;
+  return ansWrite("exDSolve: ", ans_);
 end;
 
 %---------------------------------------------------------------
@@ -1914,103 +1920,78 @@ end;
 % HydLa向け関数（PPにおいて必要）
 %---------------------------------------------------------------
 
-% TODO!! check_consistency_result_tの要件をしっかり確認すること
-% initConstraint__,  initTmpConstraint__, tmpVariables__ 対応版
-% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] の全変数に対応したい
-% TODO; myLCont_にふるい分けるisInitVariableを正常に稼働させる
-% @return {true, false} または{false, true}
+% @return {trueMap, falseMap} または{false, true}
 procedure checkConsistencyPoint()$
 begin;
-  scalar ans_, ansBool_, trueMap_, falseMap_, tmpExprs_, myExpr_, myLCont_, myVars_;
-  tmpExprs_ := union(tmpConstraint__, guard__, initConstraint__, initTmpConstraint__);
-  % 条件: tmpExprs_に含まれる連続性制約は必ず initxlhs=(数式) の格好である
-  myExpr_ := for each x in tmpExprs_ join if(isInitVariable(lhs x)) then {} else {x};
-  myLCont_ := for each x in tmpExprs_ join if(isInitVariable (lhs x)) then {x} else {};
-  myVars_ := union(variables__, tmpVariables__, guardVars__);
+  scalar ans_, ansBool_, trueMap_, falseMap_, cons_, vars_;
+
+  cons_:= union(constraint__, tmpConstraint__, guard__, initConstraint__, initTmpConstraint__);
+  vars_:= union(variables__, tmpVariables__, guardVars__);
   
-  if(myExpr_ = {} and myLCont_ = {} and myVars_ = {} and constraint__ = {}) then
-  <<
-    ansBool_:= true;
-    debugWrite("because of myExpr_ = {} and myLCont_ = {} and myVars_ = {} and constraint__ = {}, ansBool_: ", ansBool_);
-  >> else <<
-    ans_:= checkConsistencyPointMain(constraint__, myExpr_, myLCont_, pConstraint__, myVars_);
-    ansBool_:= rlqe(part(ans_, 1) = rettrue___);
-  >>;
+  ansBool_:= checkConsistencyPointMain(cons_, pConstraint__, vars_);
 
-  if pConstraint__ <> {} then << 
-    trueMap_:= rlqe(ansBool_ and mymkand(pConstraint__));
-    falseMap_:= rlqe(not ansBool_ and mymkand(pConstraint__));
+  if(pConstraint__ = {}) then
+    return ansWrite("checkConsistencyPoint", {ansBool_, rlqe(not ansBool_)});
 
-    % TODO prev変数の処理, t>0としてtの除去
-    trueMap_:= if(head(trueMap_) = and) then map(makeConsTuple, getArgsList(trueMap_)) else trueMap_;
-    falseMap_:= if(head(falseMap_) = and) then map(makeConsTuple, getArgsList(falseMap_)) else falseMap_;
-    ans_:= {trueMap_, falseMap_};
-  >> else if(ansBool_ = true) then ans_:= {true, false}
-  else ans_:= {false, true};
+  trueMap_:= rlqe(ansBool_ and mymkand(pConstraint__));
+  falseMap_:= rlqe(not ansBool_ and mymkand(pConstraint__));
 
-  debugWrite("ans in checkConsistencyPoint: ", ans_);
+  trueMap_:= if(head(trueMap_) = and) then map(makeConsTuple, getArgsList(trueMap_)) else trueMap_;
+  falseMap_:= if(head(falseMap_) = and) then map(makeConsTuple, getArgsList(falseMap_)) else falseMap_;
+  ans_:= {trueMap_, falseMap_};
 
-  return ans_;
+  return ansWrite("checkConsistencyPoint", ans_);
 end;
 
 % PPにおける無矛盾性の判定
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
-% @param cons_ constraint__
-% @param expr_ 一時的な制約集合
-% @param lcont_ 一時的な左連続性制約集合
-% @param pCons_ 一時的なパラメータ制約の集合, 現状未使用
-% @param vars_ 一時的な変数集合
-% @return {ans, {{変数名 = 値},...}} の形式
-procedure checkConsistencyPointMain(cons_, exprs_, lcont_, pCons_, vars_)$
+% @param cons_ 制約集合
+% @param pCons_ 記号定数に関する制約の集合, 現状未使用
+% @param vars_ 変数集合
+% @return true or false
+procedure checkConsistencyPointMain(cons_, pCons_, vars_)$
 begin;
-  scalar exprList_, eqExprs_, otherExprs_, modeFlagList_, mode_, tmpSol_,
-         solvedExprs_, solvedExprsQE_, ans_;
+  scalar eqExprs_, otherExprs_, modeFlagList_, mode_, tmpSol_,
+         solvedExprs_, solvedExprsQE_, sol_, ans_;
 
   debugWrite("checkConsistencyPointMain: ", " ");
-  debugWrite("{cons_, exprs_, lcont_, pCons_, vars_}: ", {cons_, exprs_, lcont_, pCons_, vars_});
+  debugWrite("{cons_, pCons_, vars_}: ", {cons_, pCons_, vars_});
 
-  exprList_:= union(cons_, exprs_);
-  debugWrite("exprList_: ", exprList_);
-  otherExprs_:= getOtherExpr(exprList_);
-  debugWrite("otherExprs_: ", otherExprs_);
-  eqExprs_:= exprList_ \ otherExprs_;
-  debugWrite("eqExprs_: ", eqExprs_);
+  % exSolveの前処理
+  if(cons_={}) then
+    return ansWrite("checkConsistencyPointMain", true);
+
+  otherExprs_:= getOtherExpr(cons_);
+  eqExprs_:= cons_ \ otherExprs_;
 
   % 未知変数を追加しないようにする
   off arbvars;
-  tmpSol_:= exSolve(union(eqExprs_, lcont_),  vars_);
+  tmpSol_:= exSolve(eqExprs_, vars_);
   on arbvars;
   debugWrite("tmpSol_: ", tmpSol_);
 
-  if(tmpSol_={}) then return {retfalse___};
-  % 2重リストの時のみfirstで得る
+  if(tmpSol_={}) then
+    return ansWrite("checkConsistencyPointMain", false);
+
   % TODO:複数解得られた場合への対応
   if(head(first(tmpSol_))=list) then tmpSol_:= first(tmpSol_);
 
+  % otherExprs_が空の場合sub処理を省略する
+  if(otherExprs_={}) then
+    return ansWrite("checkConsistencyPointMain", rlqe(not isEmpty(tmpSol_)));
 
-  % exprs_および制約ストアに等式以外が入っているかどうかにより、解くのに使用する関数を決定
-  mode_:= if(otherExprs_={}) then SOLVE else RLQE;
-  debugWrite("mode_:", mode_);
+  % subの拡張版を用いる手法
+  solvedExprs_:= union(for each x in otherExprs_ join {exSub(tmpSol_, x)});
+  debugWrite("solvedExprs_:", solvedExprs_);
+  solvedExprsQE_:= exRlqe(mymkand(solvedExprs_));
 
-  if(mode_=SOLVE) then
-  <<
-    ans_:=tmpSol_;
-    debugWrite("ans in checkConsistencyPointMain: ", ans_);
-    if(ans_ <> {}) then return {rettrue___, ans_} else return {retfalse___};
-  >> else
-  <<
-    % subの拡張版を用いる手法
-    solvedExprs_:= union(for each x in otherExprs_ join {exSubMain(tmpSol_, x)});
-    debugWrite("solvedExprs_:", solvedExprs_);
-    solvedExprsQE_:= exRlqe(mymkand(solvedExprs_));
-    debugWrite("solvedExprsQE_:", solvedExprsQE_);
+  debugWrite("solvedExprsQE_:", solvedExprsQE_);
+  debugWrite("union(tmpSol_, solvedExprsQE_):", union(tmpSol_, {solvedExprsQE_}));
 
-    debugWrite("union(tmpSol_, solvedExprsQE_):", union(tmpSol_, {solvedExprsQE_}));
-    ans_:= rlqe(mymkand(union(tmpSol_, {solvedExprsQE_})));
-    debugWrite("ans in checkConsistencyPointMain: ", ans_);
-    if(ans_ <> false) then return {rettrue___, union(tmpSol_, solvedExprs_)} 
-    else return {retfalse___};
-  >>;
+  sol_:= rlqe(mymkand(union(tmpSol_, {solvedExprsQE_})));
+  ans_:= if(sol_ <> false) then return true else return false;
+
+  return ansWrite("checkConsistencyPointMain", ans_);
 end;
 
 procedure applyPrevCons(csList_, retList_)$
@@ -2022,7 +2003,7 @@ begin;
   firstCons_:= first(csList_);
 %  debugWrite("firstCons_: ", firstCons_);
   if(not freeof(lhs(firstCons_), prev)) then <<
-    newCsList_:= union(for each x in rest(csList_) join {exSubMain({firstCons_}, x)});
+    newCsList_:= union(for each x in rest(csList_) join {exSub({firstCons_}, x)});
     ret_:= applyPrevCons(rest(csList_), retList_);
   >> else if(not freeof(rhs(firstCons_), prev)) then <<
     ret_:= applyPrevCons(cons(getReverseCons(firstCons_), rest(csList_)), retList_);
@@ -2067,7 +2048,7 @@ begin;
   scalar ansFormula_, ansMap_, formulaList_, varsMap1_;
   debugWrite("{cons_, vars_}: ", {cons_, vars_});
   varsMap1_:= for i:= 1:length(vars_) collect part(vars_, i) = mkid(v,i);
-  formulaList_:= for each x in cons_ collect exSubMain(varsMap1_, x);
+  formulaList_:= for each x in cons_ collect exSub(varsMap1_, x);
 
   ansFormula_:= mymkand formulaList_;
   ansMap_:= for i:= 1:length(vars_) collect mkid(v,i) = part(vars_, i);
@@ -2202,31 +2183,25 @@ ICI_CONSISTENT___:= 1;
 ICI_INCONSISTENT___:= 2;
 ICI_UNKNOWN___:= 3; 
 
-% TODO pConstraint__を仮引数に追加する
-procedure checkConsistencyIntervalMain(cons_, tmpCons_, rconts_, pCons_, vars_)$
+procedure checkConsistencyIntervalMain(cons_, tmpCons_, initCons_, pCons_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_,
-         initCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
+         subedInitCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
          DExprRconts_, DExprRcontsVars_,
-         integTmp_, integTmpQE_, integTmpQEList_, integTmpEqualList_, integTmpIneqSolDNFList_, integTmpIneqSolDNF_, ans_;
+         integTmp_, integTmpQE_, integTmpQEList_, integTmpEqualList_, integTmpIneqSolDNFList_, integTmpIneqSolDNF_, isInf_, ans_;
 
-  debugWrite("{cons_, tmpCons_, rconts_, pCons_, vars_}: ", {cons_, tmpCons_, rconts_, pCons_, vars_});
+  debugWrite("{cons_, tmpCons_, initCons_, pCons_, vars_}: ", {cons_, tmpCons_, initCons_, pCons_, vars_});
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
-  % TODO:なんとかしたいところ？
   splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
-  NDExprs_ := part(splitExprsResult_, 1);
-  debugWrite("NDExprs_: ", NDExprs_);
+  NDExprs_ :=   part(splitExprsResult_, 1);
   NDExprVars_:= part(splitExprsResult_, 2);
-  debugWrite("NDExprVars_: ", NDExprVars_);
-  DExprs_ := part(splitExprsResult_, 3);
-  debugWrite("DExprs_: ", DExprs_);
+  DExprs_ :=    part(splitExprsResult_, 3);
   DExprVars_ := part(splitExprsResult_, 4);
-  debugWrite("DExprVars_: ", DExprVars_);
   otherExprs_:= part(splitExprsResult_, 5);
-  debugWrite("otherExprs_: ", otherExprs_);
+  debugWrite("{NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_}: ", {NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_});
 
-  DExprRconts_:= removeInitCons(rconts_);
+  DExprRconts_:= removeInitCons(initCons_);
   debugWrite("DExprRconts_: ", DExprRconts_);
   if(DExprRconts_ neq {}) then <<
     prevVars_:= for each x in vars_ join if(isPrevVariable(x)) then {x} else {};
@@ -2239,37 +2214,33 @@ begin;
     DExprVars_:= union(DExprVars_, DExprRcontsVars_);
   >>;
 
-  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSubMain(cons_, x));
-  debugWrite("initCons_: ", initCons_);
-  initVars_:= map(getInitVars, initCons_);
+  subedInitCons_:= union(for each x in (initCons_ \ DExprRconts_) collect exSub(cons_, x));
+  debugWrite("subedInitCons_: ", subedInitCons_);
+  initVars_:= map(getInitVars, subedInitCons_);
   debugWrite("initVars_: ", initVars_);
 
   noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
   debugWrite("noDifferentialVars_: ", noDifferentialVars_);
-  tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
+  %========== exDSolve
+  tmpSol_:= exDSolve(DExprs_, subedInitCons_, noDifferentialVars_);
   
-  if(tmpSol_ = retsolvererror___) then return {ICI_SOLVER_ERROR___}
-  else if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
+  if(tmpSol_ = retsolvererror___) then    return {ICI_SOLVER_ERROR___};
+  if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};
 
   tmpVarMap_:= first(foldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, (vars_ \ initVars_))));
   debugWrite("tmpVarMap_:", tmpVarMap_);
   tmpSol_:= for each x in tmpVarMap_ collect (part(x, 1)=part(x, 2));
-  debugWrite("tmpSol_:", tmpSol_);
+  debugWrite("tmpSol_ from exDSolve:", tmpSol_);
+
+  %========= exDSolve結果(tmpSol_)の整形
+  % TODO CHECK: union(tmpSol_, NDExprs_) = {} の場合どうなる?
 
   % NDExpr_を連立
   if(union(tmpSol_, NDExprs_) neq {}) then <<
-    debugWrite("union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))): ", 
-               union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))));
     tmpSol_:= solve(union(tmpSol_, NDExprs_), union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_))));
     debugWrite("tmpSol_ after solve with NDExpr_: ", tmpSol_);
     if(tmpSol_ = {}) then return {ICI_INCONSISTENT___};
   >>;
-
-  tmpVarMap_:= first(foldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
-  debugWrite("tmpVarMap_:", tmpVarMap_);
-  tmpSol_:= for each x in tmpVarMap_ collect (first(x)=second(x));
-  debugWrite("tmpSol_:", tmpSol_);
-
 
   % tmpCons_がない場合は無矛盾と判定して良い
   if(tmpCons_ = {}) then return {ICI_CONSISTENT___};
@@ -2277,24 +2248,36 @@ begin;
   % TODO このへんから分岐して不等式判定処理を追加するか？
   % if(tmpCons_ = {} and pConstraint__ = {}) then return {ICI_CONSISTENT___};
 
+
+  tmpVarMap_:= first(foldLeft(createIntegratedValue, {{},tmpSol_}, union(DExprVars_, union(NDExprVars_, (vars_ \ initVars_)))));
+  debugWrite("tmpVarMap_:", tmpVarMap_);
+  tmpSol_:= for each x in tmpVarMap_ collect (first(x)=second(x));
+  debugWrite("tmpSol_:", tmpSol_);
+
+
   integTmp_:= sub(tmpSol_, tmpCons_);
   debugWrite("integTmp_: ", integTmp_);
 
+  % ======= リスト形式(integTmpList_)に整形
+
   % 前提：ParseTree構築時に分割されているはずなのでガードにorが入ることは考えない
-  integTmpList_:= if(head(first(integTmp_))=and) then <<
-    union(for each x in getArgsList(first(integTmp_)) join <<
-      integTmpQE_:= rlqe(x);
+  integTmpList_:=
+    if(head(first(integTmp_))=and) then <<
+      union(for each x in getArgsList(first(integTmp_)) join <<
+        integTmpQE_:= rlqe(x);
+        if(integTmpQE_=true) then {}
+        else if(integTmpQE_=false) then {false}
+        else {x}
+      >>)
+    >> else <<
+      integTmpQE_:= rlqe(first(integTmp_));
       if(integTmpQE_=true) then {}
       else if(integTmpQE_=false) then {false}
-      else {x}
-    >>)
-  >> else <<
-    integTmpQE_:= rlqe(first(integTmp_));
-    if(integTmpQE_=true) then {}
-    else if(integTmpQE_=false) then {false}
-    else integTmp_
-  >>;
+      else integTmp_
+    >>;
   debugWrite("integTmpList_: ", integTmpList_);
+
+  % 戻り値の作成
 
   % ガード条件全体がtrueの場合
   if(integTmpList_={}) then return {ICI_CONSISTENT___};
@@ -2309,15 +2292,16 @@ begin;
   if(integTmpEqualList_ neq {}) then return {ICI_INCONSISTENT___};
 
 
-  % それぞれの不等式について、1次にしてDNFにし、integTmpIneqSolDNFList_とする。
-  % 注意：それぞれの要素間はandの関係である
-  integTmpIneqSolDNFList_:= union(for each x in (integTmpList_ \ integTmpEqualList_) collect <<
-                              ineqSolDNF_:= exIneqSolve(x);
-                              debugWrite("ineqSolDNF_: ", ineqSolDNF_);
-                              if(isFalseDNF(ineqSolDNF_)) then {{}}
-                              else if(isTrueDNF(ineqSolDNF_)) then {{true}}
-                              else ineqSolDNF_
-                            >>);
+  % それぞれの不等式について、1次にしてバックエンドDNF(integTmpIneqSolDNFList_)にする。
+  % 前提: それぞれの要素間はandの関係である
+  integTmpIneqSolDNFList_:= 
+    union(for each x in (integTmpList_ \ integTmpEqualList_) collect <<
+      ineqSolDNF_:= exIneqSolve(x);
+      debugWrite("ineqSolDNF_: ", ineqSolDNF_);
+      if(isFalseDNF(ineqSolDNF_)) then {{}}
+      else if(isTrueDNF(ineqSolDNF_)) then {{true}}
+      else ineqSolDNF_
+    >>);
 
   debugWrite("integTmpIneqSolDNFList_:", integTmpIneqSolDNFList_);
 
@@ -2325,22 +2309,18 @@ begin;
   debugWrite("integTmpIneqSolDNF_:", integTmpIneqSolDNF_);
 
   % 不等式の場合、ここで初めて矛盾が見つかり、integTmpIneqSolDNF_がfalseになることがある
-  if(isFalseDNF(integTmpIneqSolDNF_)) then return {ICI_INCONSISTENT___}
-  % trueになったら無矛盾
-  else if(isTrueDNF(integTmpIneqSolDNF_)) then return {ICI_CONSISTENT___};
+  ans_:=
+    if(isTrueDNF(integTmpIneqSolDNF_)) then       {ICI_CONSISTENT___}
+    else if(isFalseDNF(integTmpIneqSolDNF_)) then {ICI_INCONSISTENT___}
+    else <<
+      isInf_:= checkInfUnitDNF(integTmpIneqSolDNF_);
 
+      if(isInf_=true) then              {ICI_CONSISTENT___}
+             else if(isInf_=false) then {ICI_INCONSISTENT___}
+             else                       {ICI_UNKNOWN___}
+    >>;
 
-  ans_:= checkInfUnitDNF(integTmpIneqSolDNF_);
-  debugWrite("ans_: ", ans_);
-
-
-  if(ans_=true) then return {ICI_CONSISTENT___}
-  else if(ans_=false) then return {ICI_INCONSISTENT___}
-  else <<
-    debugWrite("rlqe ans: ", ans_);
-    return {ICI_UNKNOWN___};
-  >>;
-
+  return ansWrite("checkConsistencyIntervalMain", ans_);
 end;
 
 procedure checkInfUnitDNF(tDNF_)$
@@ -2829,7 +2809,7 @@ begin;
     DExprVars_:= union(DExprVars_, DExprRcontsVars_);
   >>;
 
-  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSubMain(cons_, x));
+  initCons_:= union(for each x in (rconts_ \ DExprRconts_) collect exSub(cons_, x));
   initVars_:= map(getInitVars, initCons_);
   noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
 
@@ -2885,12 +2865,15 @@ end;
 % デバッグ用メッセージ出力関数
 % TODO:任意長の引数に対応したい
 procedure debugWrite(arg1_, arg2_)$
+  if(optUseDebugPrint__) then write(arg1_, arg2_);
+
+% debugWriteのreturn文の時に渡す版
+% @return ans_
+procedure ansWrite(funcName_, ans_)$
   if(optUseDebugPrint__) then <<
-    write(arg1_, arg2_);
-  >> 
-  else <<
-    1$
-  >>;
+    write("ans in ", funcName_, ": ", ans_);
+    ans_
+  >> else ans_;
 
 % 関数呼び出しはredevalを経由させる
 % <redeval> end:の次が最終行
