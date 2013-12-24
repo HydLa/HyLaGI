@@ -119,7 +119,7 @@ void UnsatCoreFinder::find_unsat_core(
     {
       const char* fmt = (phase_type == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it));
-      if(check_inconsistency()){
+      if(check_inconsistency(phase_type)){
         S.insert(make_pair(make_pair(*it,"constraint"),temp_ms));
         if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
           return ;
@@ -136,7 +136,7 @@ void UnsatCoreFinder::find_unsat_core(
     {
       const char* fmt = (phase_type == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it)->get_guard());
-      if(check_inconsistency()){
+      if(check_inconsistency(phase_type)){
         S.insert(make_pair(make_pair(node_sptr((*it)->get_guard()),"guard"),temp_ms));
         if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
           return;
@@ -169,7 +169,7 @@ void UnsatCoreFinder::find_unsat_core(
         for(int i = 0; i < it->second; i++){
           variable_t var(it->first, i);
           backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-          if(check_inconsistency()){
+          if(check_inconsistency(phase_type)){
             S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
             if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
               return ;
@@ -184,7 +184,7 @@ void UnsatCoreFinder::find_unsat_core(
         for(int i=0; i<=-it->second;i++){
           variable_t var(it->first, i);
           backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-          if(check_inconsistency()){
+          if(check_inconsistency(phase_type)){
             S4C.insert(make_pair(make_pair(it->first,it->second),temp_ms));
             if(check_unsat_core(S,S4C,temp_ms, phase_type, vm, pm)){
               return ;
@@ -209,7 +209,7 @@ void UnsatCoreFinder::find_unsat_core(
         fmt += "vp"; 
         variable_t var(it->first, -it->second + 1);
         backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
-        if(check_inconsistency()){
+        if(check_inconsistency(phase_type)){
           S.insert(make_pair(make_pair(cons,"constraint"),temp_ms));
           if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
             return ;
@@ -225,9 +225,18 @@ void UnsatCoreFinder::find_unsat_core(
 }
 
 
-bool UnsatCoreFinder::check_inconsistency(){
+bool UnsatCoreFinder::check_inconsistency(Phase phase_type){
   CheckConsistencyResult check_consistency_result;
-  backend_->call("checkConsistencyPoint", 0, "", "cc", &check_consistency_result);
+  std::string func_name;
+  if(phase_type == PointPhase)
+  {
+    func_name = "checkConsistencyPoint";
+  }
+  else
+  {
+    func_name = "checkConsistencyInterval";
+  }
+  backend_->call(func_name.c_str(), 0, "", "cc", &check_consistency_result);
   if(check_consistency_result[0].empty()){
     return true;
   }else{
@@ -241,7 +250,7 @@ bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_
   backend_->call("startTemporary", 0, "", "");
   reset(phase_type, vm, pm);
   add_constraints(S, S4C, phase_type);
-  bool ret = check_inconsistency();
+  bool ret = check_inconsistency(phase_type);
 
   backend_->call("endTemporary", 0, "", "");
   return ret;

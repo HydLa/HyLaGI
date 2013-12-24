@@ -8,6 +8,7 @@
 #include "DefaultVariable.h"
 #include "ValueRange.h"
 #include "ModuleSet.h"
+#include "ModuleSetContainer.h"
 
 #include "Timer.h"
 
@@ -73,6 +74,8 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
 
+typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
+
 /**
  * A struct to express the result of each phase.
  */
@@ -89,6 +92,7 @@ struct PhaseResult {
   hydla::ch::module_set_sptr module_set;
 
   std::set<std::string> changed_variables;
+  module_set_container_sptr module_set_container;
 
   CauseOfTermination cause_of_termination;
   /// A set of succeeding phases

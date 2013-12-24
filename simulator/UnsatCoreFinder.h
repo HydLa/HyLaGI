@@ -34,7 +34,7 @@ public:
   const parameter_map_t &pm,
   Phase phase_type);
 
-  bool check_inconsistency();
+  bool check_inconsistency(Phase phase_type);
   void set_backend(backend_sptr_t back);
   bool check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms, Phase phase_type, const variable_map_t& vm, const parameter_map_t& pm);
 
