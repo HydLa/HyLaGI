@@ -138,8 +138,8 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
       //開始
       hydla_program = gen_pt_node_d[statements];
-      arithmetic_entry = arithmetic >> end_p;
-      constraint_entry = constraint >> end_p;
+      arithmetic_entry = gen_ast_node_d[arithmetic] >> end_p;
+      constraint_entry = gen_ast_node_d[constraint] >> end_p;
             
       //文の集合
       statements  = gen_ast_node_d[*(( assert | def_statement | program) 

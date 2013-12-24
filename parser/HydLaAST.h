@@ -27,6 +27,7 @@ public:
    * 入力を解析し、ASTを構築する
    */
   void parse(std::istream& s);
+  void parse_constraint(std::istream& s);
   void parse_flie(const std::string& filename);
   void parse_string(const std::string& str);
 

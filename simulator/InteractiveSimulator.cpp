@@ -726,44 +726,31 @@ int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
 int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   cout << "input break point" << endl;
   stringstream ss;
-  string break_str = excin<string>();
-  
+  string break_str;
+  getline(cin, break_str);
+  cin.clear();
   ss << break_str;
-  //make constraint from str
-  //parse TODO use Hydla ast tree 
-  HydLaAST::tree_info_t ast = parse(ss);
- node_sptr assertion_node_tree;
+  
+  HydLaAST ast;
+  try
+  {
+    ast.parse_constraint(ss);
+  }
+  catch(SyntaxError e)
+  {
+    cout << "invalid constraint" << endl;
+    return 0;
+  }
+
+  node_sptr assertion_node_tree;
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   ParseTree::node_factory_sptr node_factory;
   node_factory = boost::make_shared<DefaultNodeFactory>();
   //node_factory.reset();
-
- NodeTreeGenerator genarator(assertion_node_tree, constraint_definition, program_definition, node_factory);
-  cout << "hoge" << endl;
- node_sptr node_tree = genarator.generate(ast.trees.begin());
-  cout << "fuga" << endl;
-  
-
-
-  if (break_str.find_first_of("time=") == 0) {
-  //time break point 
-    cout << 111 << endl;
-  } else if (break_str.find_first_of("=")!= std::string::npos) {
-    //variable break point 
-    //TODO = < >
-    std::vector<std::string> v;
-    boost::algorithm::split( v, break_str, boost::is_any_of("=") );
-    value_t value(new hydla::simulator::symbolic::SymbolicValue(v[1]));
-    variable_t var;
-    var.name = v[0];
-    var.derivative_count = 0;
-
-    breakpoint_vm_[var] = value;//ValueRange();
-    cout << 222 << endl;
-  } else {
-    //TODO module or guard
-  }
+  cout << ast << endl;
+  NodeTreeGenerator genarator(assertion_node_tree, constraint_definition, program_definition, node_factory);
+  node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
 
   return 0;
 }
@@ -850,24 +837,6 @@ int InteractiveSimulator::run(simulation_todo_sptr_t & todo){
     }
   }
   return 0;
-}
-
-HydLaAST::tree_info_t InteractiveSimulator::parse(std::stringstream& ss) 
-{
-  istreambuf_iterator<char> it(ss);
-  pos_iter_t it_begin(boost::spirit::classic::make_multi_pass(it), 
-                        boost::spirit::classic::make_multi_pass(istreambuf_iterator<char>()));
-  pos_iter_t it_end;
-
-  parser::HydLaGrammar hg;
-  parser::CommentGrammar cg;
-  return parser::ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<parser::HydLaGrammar::START_Constraint>(), cg);
-
-  /*
-     if(!ast_tree_.full) {
-     throw SyntaxError("", ast_tree_.stop.get_position().line);
-     }
-     */
 }
 
 }

@@ -42,6 +42,22 @@ void HydLaAST::parse(std::istream& stream)
   }
 }
 
+void HydLaAST::parse_constraint(std::istream& stream) 
+{
+  pos_iter_t it_begin(make_multi_pass(istreambuf_iterator<char>(stream)), 
+                        make_multi_pass(istreambuf_iterator<char>()));
+  pos_iter_t it_end;
+
+  HydLaGrammar hg;
+  CommentGrammar cg;
+  ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_Constraint>(), cg);
+
+ if(!ast_tree_.full) {
+    throw SyntaxError("", ast_tree_.stop.get_position().line);
+  }
+}
+
+
 void HydLaAST::parse_flie(const std::string& filename) 
 {
   ifstream in(filename.c_str());
