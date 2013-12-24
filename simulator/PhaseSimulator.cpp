@@ -9,7 +9,7 @@
 using namespace hydla::simulator;
 using namespace hydla::backend;
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts), select_phase_(NULL){
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(node_sptr()){
 }
 
 PhaseSimulator::~PhaseSimulator(){}
@@ -239,7 +239,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     
     
     
-    if(opts_->assertion){
+    if(opts_->assertion || break_condition_.get() != NULL){
       timer::Timer entailment_timer;
       
       backend_->call("resetConstraintForVariable", 0, "","");
@@ -247,10 +247,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       fmt += (phase->phase==PointPhase)?"n":"t";
       backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
       backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
-      
-      HYDLA_LOGGER_MS("%% check_assertion");
-      CheckConsistencyResult cc_result;
-      switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t(), todo->phase)){
+     
+      if(opts_->assertion)
+      {
+        HYDLA_LOGGER_MS("%% check_assertion");
+        CheckConsistencyResult cc_result;
+        switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t(), todo->phase)){
         case ENTAILED:
         case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
           std::cout << "Assertion Failed!" << std::endl;
@@ -259,22 +261,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           break;
         case CONFLICTING:
           break;
-          /*
-        case BRANCH_VAR:
-          HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of variables");
-            // 分岐先を生成
-          {
-            simulation_todo_sptr_t new_state(create_new_simulation_phase(todo));
-            new_state->temporary_constraints.push_back(opts_->assertion);
-            todo_container_->push_back(new_state);
-          }
-          {
-            node_sptr not_cons(new hydla::parse_tree::Not(opts_->assertion));
-            todo->temporary_constraints.push_back(not_cons);
-            solver_->add_constraint(not_cons);
-          }
-          break;
-          */
         case BRANCH_PAR:
           HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
           push_branch_states(todo, cc_result);
@@ -283,11 +269,26 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
           phase->cause_of_termination = ASSERTION;
           break;
+        }
+        todo->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
       }
-      todo->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
+      if(break_condition_.get() != NULL)
+      {
+        HYDLA_LOGGER(MS, "%% check_break_condition");
+        CheckConsistencyResult cc_result;
+        switch(check_entailment(cc_result, break_condition_, continuity_map_t(), todo->phase)){
+        case ENTAILED:
+        case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
+        case BRANCH_PAR: //TODO: 分岐すべき？要検討
+          breaking = true;
+          break;
+        case CONFLICTING:
+          break;
+        }
+      }
     }
   
-  result.push_back(phase);
+    result.push_back(phase);
   }
   return result;
 }
@@ -467,5 +468,14 @@ void PhaseSimulator::replace_prev2parameter(variable_map_t &vm,
                                             phase_result_sptr_t &phase)
 {
   assert(phase->parent.get() != NULL);
-  
+}
+
+void PhaseSimulator::set_break_condition(node_sptr break_cond)
+{
+  break_condition_ = break_cond;
+}
+
+PhaseSimulator::node_sptr PhaseSimulator::get_break_condition()
+{
+  return break_condition_;
 }

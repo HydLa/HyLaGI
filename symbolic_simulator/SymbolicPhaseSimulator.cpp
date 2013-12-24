@@ -585,6 +585,10 @@ SymbolicPhaseSimulator::todo_list_t
     if(opts_->assertion){
       disc_cause.push_back(node_sptr(new Not(opts_->assertion)));
     }
+    if(break_condition_.get() != NULL)
+    {
+      disc_cause.push_back(break_condition_);
+    }
 
     time_t max_time;
     if(opts_->max_time != ""){

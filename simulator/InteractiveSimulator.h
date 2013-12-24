@@ -102,8 +102,6 @@ protected:
    * TODO: 実装する
    */
   int set_breakpoint(simulation_todo_sptr_t& simulation_phase);
-  int run(simulation_todo_sptr_t& simulation_phase);
-  bool is_break(simulation_todo_sptr_t& simulation_phase);
   
   /**
    * save state

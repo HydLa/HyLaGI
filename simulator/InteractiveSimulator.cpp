@@ -114,7 +114,12 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       todo = todos[0];
       print_phase(todo);
 
-      if(--todo_num == 0)
+      if(phase_simulator_->breaking)
+      {
+        cout << "break!" << endl;
+        todo_num = input_and_process_command(todo);
+      }
+      else if(todo_num > 0 && --todo_num == 0)
       {
         todo_num = input_and_process_command(todo);
       }
@@ -209,15 +214,14 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         set_breakpoint(todo);
         break;
       case 'r':
-        run(todo);
-        break;
+        return -1;
       default:
         cout << "invalid command: " << line << endl;
         break;
     }
 
   }
-    return 0;
+  return 0;
 }
 
 
@@ -738,7 +742,7 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   }
   catch(SyntaxError e)
   {
-    cout << "invalid constraint" << endl;
+    cout << "invalid condition" << endl;
     return 0;
   }
 
@@ -747,97 +751,14 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   ParseTree::node_factory_sptr node_factory;
   node_factory = boost::make_shared<DefaultNodeFactory>();
-  //node_factory.reset();
-  cout << ast << endl;
+
   NodeTreeGenerator genarator(assertion_node_tree, constraint_definition, program_definition, node_factory);
   node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
 
+  phase_simulator_->set_break_condition(node_tree);
   return 0;
 }
-bool InteractiveSimulator::is_break(simulation_todo_sptr_t & todo){
-  if(todo->parent->phase == PointPhase){
-    const char* fmt = "mv0n";
-    CheckConsistencyResult ret;
-    backend_->call("startTemporary", 0, "", "");
-    backend_->call("addConstraint", 1, fmt, "", &todo->parent->variable_map);
-    backend_->call("addConstraint", 1, fmt, "", &breakpoint_vm_);
-    backend_->call("checkConsistencyPoint", 0, "", "cc", &ret);
-    phase_simulator_->backend_->call("endTemporary", 0, "", "");
-    cout << ret.size() << endl;
-    if (ret[1].empty()){
-      cout << "break" << endl;
-      return true;
-    }
-  }else{
-    //Interval Phase
-  }
-  return false;
 
-}
-int InteractiveSimulator::run(simulation_todo_sptr_t & todo){
-  bool is_running = true;
-
-  while(is_running)
-  {
-    try
-    {
-      timer::Timer phase_timer;
-      PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
-
-      phase_result_sptr_t phase;
-      if(phases.empty())
-      {
-        simulation_todo_sptr_t tmp_todo = todo;
-        do
-        {
-          if(todo->phase==PointPhase)
-            cout << "---------PP "<<todo->id<< "---------" << endl;
-          cout << "execution stuck" << endl;
-        }while(tmp_todo == todo);
-        continue;
-      }
-      else
-      {
-        unsigned int select_num = select_case<phase_result_sptr_t>(phases);
-        phase = phases[select_num];
-        for(unsigned int i = 0; i < phases.size(); i++)
-        {
-          if(i == select_num) continue;
-          phases[i]->cause_of_termination = NOT_SELECTED;
-        }
-      }
- 
-
-      PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
-      todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
-      profile_vector_->push_back(todo);
-      if(todos.empty())
-      {
-        simulation_todo_sptr_t tmp_todo = todo;
-        do
-        {
-          print_end(phase);
-        }while(tmp_todo == todo);
-        continue;
-      }
-      todo = todos[0];
-      print_phase(todo);
-
-      if(is_break(todo)){
-        is_running = false;
-      }
-      // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
-      all_todo_.push_back(todo);
-    }
-    catch(const runtime_error &se)
-    {
-      cout << se.what() << endl;
-      HYDLA_LOGGER_REST(se.what());
-      break;
-    }
-  }
-  return 0;
-}
 
 }
 }

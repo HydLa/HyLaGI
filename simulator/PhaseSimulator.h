@@ -54,6 +54,10 @@ public:
 
   virtual void set_backend(backend_sptr_t back);
 
+  void set_break_condition(node_sptr break_cond);
+  node_sptr get_break_condition();
+
+
   /**
    * calculate phase results from given todo
    * @param todo_cont container of todo into which PhaseSimulator pushes todo if case analyses are needed
@@ -99,6 +103,7 @@ public:
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
+  bool breaking;
   
 protected:
   
@@ -140,9 +145,6 @@ protected:
    */
   virtual void set_simulation_mode(const Phase& phase) = 0;
 
-
-
-protected:
 
   Simulator* simulator_;
 
@@ -196,6 +198,7 @@ protected:
   
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
+  node_sptr break_condition_;
 
   private:
 

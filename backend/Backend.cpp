@@ -491,7 +491,7 @@ void Backend::visit(boost::shared_ptr<Ask> node)
 
 void Backend::visit(boost::shared_ptr<Tell> node)
 {
-  throw InterfaceError("Tell node cannot be sent to backend");
+  accept(node->get_child());
 }
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
