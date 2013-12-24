@@ -76,6 +76,11 @@ public:
   virtual void reset_constraint(const variable_map_t& vm, const bool& send_derivatives);
 
   /**
+   * 記号定数表を初期化する．
+   */
+  virtual bool reset_parameters(const parameter_map_t& pm);
+
+  /**
    * 一時的な制約の追加を開始する
    */
   virtual void start_temporary();
@@ -139,11 +144,18 @@ public:
   //  virtual std::string get_real_val(const value_t &val, int precision, hydla::symbolic_simulator::OutputFormat opfmt);
 
 private:
+
   /** 
    * S式(list 記号定数 relop 値)をとって記号定数の式に変換する
    * SExpConverterに置きたいがget_parameter()の関係上こちらに
    */
   parameter_map_t to_parameter_map(const_tree_iter_t iter);
+
+  /** 変数表をノードの集合に変換 */
+  constraints_t to_constraints(const variable_map_t &variable_map);
+
+  /** 記号定数表をノードの集合に変換 */
+  constraints_t to_constraints(const parameter_map_t &parameter_map);
 
   /** Variableの生成 */
   const node_sptr make_variable(const std::string &name, const int& dc, const bool& is_prev = false) const;

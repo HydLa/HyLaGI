@@ -1830,6 +1830,13 @@ begin;
   guardVars__:= {};
 end;
 
+procedure resetConstraintForParameter(pcons_, pars_)$
+begin;
+  pConstraint__:= {};
+  parameters__:= {};
+  addParameterConstraint(pcons_, pars_);
+end;
+
 % addConstraintは行わない
 % PP/IPで共通のreset時に行う、制約ストアへの制約の追加
 procedure addParameterConstraint(pcons_, pars_)$

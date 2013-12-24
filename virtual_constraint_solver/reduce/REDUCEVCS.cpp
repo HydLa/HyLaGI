@@ -85,52 +85,9 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   reduce_link_->skip_until_redeval();
 
   REDUCEStringSender rss(reduce_link_);
-  {
-    constraints_t constraints;
-
-    HYDLA_LOGGER_VCS("------Parameter map------\n", parameter_map);
-    parameter_map_t::const_iterator it = parameter_map.begin();
-    for(; it!=parameter_map.end(); ++it){
-      if(it->second.is_unique()){
-        const value_t &value = it->second.get_lower_bound().value;
-        constraints.push_back(sec::make_equal(*it->first, get_symbolic_value_t(value).get_node(), true));
-      }else{
-        for(uint i=0; i < it->second.get_lower_cnt();i++){
-          const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
-          const value_t &value = bnd.value;
-          parameter_t& param = *it->first;
-          if(!bnd.include_bound){
-            const symbolic_value_t lower_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new Greater(node_sptr(
-                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
-          }else{
-            const symbolic_value_t lower_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
-                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
-          }
-        }
-        for(uint i=0; i < it->second.get_upper_cnt();i++){
-          const value_range_t::bound_t &bnd = it->second.get_upper_bound(i);
-          const value_t &value = bnd.value;
-          parameter_t& param = *it->first;
-          if(!bnd.include_bound){
-            const symbolic_value_t upper_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new Less(node_sptr(
-                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
-          }else{
-            const symbolic_value_t upper_bound = get_symbolic_value_t(value);
-            constraints.push_back(node_sptr(new LessEqual(node_sptr(
-                      new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
-          }
-        }
-      }
-    }
-
-    HYDLA_LOGGER_VCS("size:", constraints.size());
-    reduce_link_->send_string("pcons_:=");
-    rss.put_nodes(constraints);
-    reduce_link_->send_string("$");
-  }
+  reduce_link_->send_string("pcons_:=");
+  rss.put_nodes(to_constraints(parameter_map));
+  reduce_link_->send_string("$");
   reduce_link_->send_string("pars_:=");
   rss.put_pars();
   reduce_link_->send_string("$");
@@ -138,23 +95,9 @@ bool REDUCEVCS::reset(const variable_map_t& variable_map, const parameter_map_t&
   reduce_link_->send_string("symbolic redeval '(addParameterConstraint pcons_ pars_);");
   reduce_link_->skip_until_redeval();
   
-  {
-    constraints_t constraints;
-
-    HYDLA_LOGGER_VCS("--- Variable map ---\n", variable_map);
-    variable_map_t::const_iterator it  = variable_map.begin();
-    variable_map_t::const_iterator end = variable_map.end();
-    for(; it!=end; ++it) {
-      if(it->second.get() && !it->second->undefined()) {
-        constraints.push_back(sec::make_equal(*it->first, get_symbolic_value_t(it->second).get_node(), true));
-      }
-    }
-
-    HYDLA_LOGGER_VCS("size:", constraints.size());
-    reduce_link_->send_string("cons_:=");
-    rss.put_nodes(constraints);
-    reduce_link_->send_string("$");
-  }
+  reduce_link_->send_string("cons_:=");
+  rss.put_nodes(to_constraints(variable_map));
+  reduce_link_->send_string("$");
   reduce_link_->send_string("vars_:=");
   // is_unique()だったParameterについても送信する
   rss.put_vars();
@@ -513,6 +456,25 @@ void REDUCEVCS::reset_constraint(const variable_map_t& vm, const bool& send_deri
   return;
 }
 
+bool REDUCEVCS::reset_parameters(const parameter_map_t& pm)
+{
+  HYDLA_LOGGER_FUNC_BEGIN(VCS);
+
+  REDUCEStringSender rss(reduce_link_);
+  reduce_link_->send_string("pcons_:=");
+  rss.put_nodes(to_constraints(pm));
+  reduce_link_->send_string("$");
+  reduce_link_->send_string("pars_:=");
+  rss.put_pars();
+  reduce_link_->send_string("$");
+
+  reduce_link_->send_string("symbolic redeval '(resetConstraintForParameter pcons_ pars_);");
+
+  reduce_link_->skip_until_redeval();
+
+  HYDLA_LOGGER_FUNC_END(VCS);
+  return true;
+}
 
 void REDUCEVCS::start_temporary(){
   HYDLA_LOGGER_FUNC_BEGIN(VCS);
@@ -888,6 +850,67 @@ parameter_map_t REDUCEVCS::to_parameter_map(const_tree_iter_t list_iter){
   HYDLA_LOGGER_VCS("--- result map---\n", map);
   HYDLA_LOGGER_VCS("#*** End ", __FUNCTION__, " ***");
   return map;
+}
+
+SymbolicVirtualConstraintSolver::constraints_t REDUCEVCS::to_constraints(const variable_map_t &variable_map){
+  HYDLA_LOGGER_VCS("--- Variable map in to_constraints ---\n", variable_map);
+  constraints_t constraints;
+
+  variable_map_t::const_iterator it  = variable_map.begin();
+  variable_map_t::const_iterator end = variable_map.end();
+  for(; it!=end; ++it) {
+    if(it->second.get() && !it->second->undefined()) {
+      constraints.push_back(sec::make_equal(*it->first, get_symbolic_value_t(it->second).get_node(), true));
+    }
+  }
+
+  HYDLA_LOGGER_VCS("size:", constraints.size());
+  return constraints;
+}
+
+SymbolicVirtualConstraintSolver::constraints_t REDUCEVCS::to_constraints(const parameter_map_t &parameter_map){
+  HYDLA_LOGGER_VCS("------ Parameter map in to_constraints ------\n", parameter_map);
+  constraints_t constraints;
+
+  parameter_map_t::const_iterator it = parameter_map.begin();
+  for(; it!=parameter_map.end(); ++it){
+    if(it->second.is_unique()){
+      const value_t &value = it->second.get_lower_bound().value;
+      constraints.push_back(sec::make_equal(*it->first, get_symbolic_value_t(value).get_node(), true));
+    }else{
+      for(uint i=0; i < it->second.get_lower_cnt();i++){
+        const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
+        const value_t &value = bnd.value;
+        parameter_t& param = *it->first;
+        if(!bnd.include_bound){
+          const symbolic_value_t lower_bound = get_symbolic_value_t(value);
+          constraints.push_back(node_sptr(new Greater(node_sptr(
+                    new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
+        }else{
+          const symbolic_value_t lower_bound = get_symbolic_value_t(value);
+          constraints.push_back(node_sptr(new GreaterEqual(node_sptr(
+                    new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), lower_bound.get_node())));
+        }
+      }
+      for(uint i=0; i < it->second.get_upper_cnt();i++){
+        const value_range_t::bound_t &bnd = it->second.get_upper_bound(i);
+        const value_t &value = bnd.value;
+        parameter_t& param = *it->first;
+        if(!bnd.include_bound){
+          const symbolic_value_t upper_bound = get_symbolic_value_t(value);
+          constraints.push_back(node_sptr(new Less(node_sptr(
+                    new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
+        }else{
+          const symbolic_value_t upper_bound = get_symbolic_value_t(value);
+          constraints.push_back(node_sptr(new LessEqual(node_sptr(
+                    new Parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id())), upper_bound.get_node())));
+        }
+      }
+    }
+  }
+
+  HYDLA_LOGGER_VCS("size:", constraints.size());
+  return constraints;
 }
 
 } // namespace reduce
