@@ -44,7 +44,7 @@ struct SExpGrammar : public grammar<SExpGrammar> {
       // 数字
       number = leaf_node_d[!(ch_p('-') | ch_p('+')) >> +digit_p];
       // 識別子
-      identifier = leaf_node_d[alpha_p >> lexeme_d[*(alpha_p | int_p | ch_p('-') | ch_p('_') | ch_p(':'))]];
+      identifier = leaf_node_d[alpha_p >> lexeme_d[*(alpha_p | int_p | ch_p('!') >> ch_p('!') | ch_p('-') | ch_p('_') | ch_p(':'))]];
       // 文字列
       string = leaf_node_d[inner_node_d[lexeme_d[confix_p(ch_p('"'), *c_escape_ch_p, ch_p('"'))]]];
       // リストのヘッダ

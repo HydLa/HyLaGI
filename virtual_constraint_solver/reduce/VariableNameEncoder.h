@@ -17,30 +17,28 @@ public:
   VariableNameEncoder(){}
   virtual ~VariableNameEncoder(){}
 
-  /**
-   * "XYZ" => "_x_y_z"と変換する
-   */
+  /** "XYZ" => "!!x!!y!!z"と変換する */
   std::string LowerEncode(const std::string& dist) const {
     std::string ret = dist;
-    for(int i=0;i<(int)ret.length();i++){
-      if( 'A'<=ret[i] && ret[i]<='Z' ){
+    for(int i=0; i<(int)ret.length(); ++i){
+      if('A' <= ret[i] && ret[i] <= 'Z'){
         ret[i] = std::tolower(ret[i]);
-        ret.insert(i, "_");
+        ret.insert(i, "!!");
       }
     }
     return ret;
   }
 
-  /**
-   * "_x_y_z" => "XYZ"と変換する
-   */
+  /** "!!x!!y!!z" => "XYZ"と変換する */
   std::string UpperDecode(const std::string& dist) const {
     std::string ret = dist;
-    for(int i=0;i<(int)ret.length();i++){
-      if( ret[i]=='_'){
-        ret.erase(i,1);
-        ret[i] = std::toupper(ret[i]);
+    char prev = ' ';
+    for(int i=0; i<(int)ret.length(); ++i){
+      if(ret[i] == '!' && prev == '!'){
+        ret[i+1] = std::toupper(ret[i+1]);
+        ret.erase(i-1, 2);
       }
+      prev = ret[i];
     }
     return ret;
   }

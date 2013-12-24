@@ -17,10 +17,10 @@ namespace reduce {
 const std::string REDUCEStringSender::empty_list_string("{}");
 
 /** REDUCEに送る際に変数名につける接頭語 "usrvar" */
-const std::string REDUCEStringSender::var_prefix("usrvar");
+const std::string REDUCEStringSender::var_prefix("usrvar_");
 
 /** REDUCEに送る際に定数名につける接頭語 */
-const std::string REDUCEStringSender::par_prefix("parameter");
+const std::string REDUCEStringSender::par_prefix("parameter_");
 
 REDUCEStringSender::REDUCEStringSender(reduce_link_t reduce_link) :
   reduce_link_(reduce_link),
@@ -268,8 +268,9 @@ void REDUCEStringSender::put_par(const std::string &name, const int &diff_count,
 }
 
 std::string REDUCEStringSender::make_par_name(const par_info_t& par) const {
+  VariableNameEncoder vne;
   std::ostringstream oss;
-  oss << par_prefix << "_" << par.get<0>() << "_" << par.get<1>() << "_" << par.get<2>();
+  oss << par_prefix << vne.LowerEncode(par.get<0>()) << "_" << par.get<1>() << "_" << par.get<2>();
   return oss.str();
 }
 

@@ -857,7 +857,7 @@ parameter_map_t REDUCEVCS::to_parameter_map(const_tree_iter_t list_iter){
     {
       std::string param_str = sec::to_string(sec::car(it));
       // "parameter_"を取り除く
-      param_str.erase(0, REDUCEStringSender::par_prefix.length() + 1);
+      param_str.erase(0, REDUCEStringSender::par_prefix.length());
       for(int i = 0; i < (int)param_str.size(); ++i){
         if(param_str[i] == '_') param_str[i] = ' ';
       }
@@ -865,6 +865,8 @@ parameter_map_t REDUCEVCS::to_parameter_map(const_tree_iter_t list_iter){
       std::string name;
       int derivative_count, id;
       param_iss >> name >> derivative_count >> id;
+      VariableNameEncoder vne;
+      name = vne.UpperDecode(name);
 
       tmp_param = get_parameter(name, derivative_count, id);
       if(tmp_param == NULL){

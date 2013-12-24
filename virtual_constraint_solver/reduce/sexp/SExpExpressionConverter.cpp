@@ -1,6 +1,7 @@
 #include "SExpExpressionConverter.h"
 
 #include "../REDUCEStringSender.h"
+#include "../VariableNameEncoder.h"
 #include <sstream>
 
 using namespace hydla::parse_tree; // NegativeとNumber用
@@ -292,11 +293,13 @@ SExpExpressionConverter::node_sptr SExpExpressionConverter::to_symbolic_tree(con
         if(value_str.find(hydla::vcs::reduce::REDUCEStringSender::par_prefix) == 0){//定数名
           // "parameter_name_diffcount_id"の格好で識別子を受け取ったはず
           std::replace(value_str.begin(), value_str.end(), '_', ' ');
-          std::istringstream iss(value_str.substr(hydla::vcs::reduce::REDUCEStringSender::par_prefix.size() + 1));
+          std::istringstream iss(value_str.substr(hydla::vcs::reduce::REDUCEStringSender::par_prefix.size()));
 
           std::string name;
           int derivative_count, id;
           iss >> name >> derivative_count >> id;
+          VariableNameEncoder vne;
+          name = vne.UpperDecode(name);
           return node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
         }
 
