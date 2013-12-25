@@ -9,7 +9,7 @@
 using namespace hydla::simulator;
 using namespace hydla::backend;
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(node_sptr()){
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts), select_phase_(NULL),breaking(false), break_condition_(node_sptr()) {
 }
 
 PhaseSimulator::~PhaseSimulator(){}

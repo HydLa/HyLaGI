@@ -117,6 +117,8 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       if(phase_simulator_->breaking)
       {
         cout << "break!" << endl;
+        phase_simulator_->breaking = false;
+        phase_simulator_->set_break_condition(node_sptr());
         todo_num = input_and_process_command(todo);
       }
       else if(todo_num > 0 && --todo_num == 0)
@@ -139,7 +141,8 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
 
 
 int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo){
-
+  output::JsonWriter writer;
+  writer.write(*this, "interactive.hydat");
   while(true)
   {
     if(cin.good()==0)

@@ -12,7 +12,7 @@
 #include "NodeFactory.h"
 #include "ParseTree.h"
 #include "NodeTreeGenerator.h"
-
+#include "JsonWriter.h"
 
 
 namespace hydla {
@@ -161,7 +161,6 @@ protected:
 
   static hydla::output::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
-  variable_map_t breakpoint_vm_;
 };
 
 } // simulator
