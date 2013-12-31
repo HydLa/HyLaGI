@@ -557,8 +557,8 @@ makeListFromPiecewise[minT_, others_] := Module[
  * 次のポイントフェーズに移行する時刻を求める
  *)
 
-calculateNextPointPhaseTime[maxTime_, discCause_] := 
-  calculateNextPointPhaseTime[maxTime, discCause, constraint, initConstraint, pConstraint, timeVariables];
+calculateNextPointPhaseTime[maxTime_, discCauses_] := 
+  calculateNextPointPhaseTime[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
 
 (* 変数とその値に関する式のリストを、変数表的形式に変換 *)
 getExprCode[expr_] := Switch[Head[expr],
@@ -570,6 +570,11 @@ getExprCode[expr_] := Switch[Head[expr],
 ];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
+
+toReturnForm[expr_timeAndID] :=
+(
+  timeAndID[toReturnForm[expr[[1]]], expr[[2]] ]
+);
 
 toReturnForm[expr_] := (
   expr /. (Infinity :> inf)
@@ -587,8 +592,6 @@ toReturnForm[expr_] := (
 
 convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], toReturnForm[#[[2]] ] } )&, list];
 
-(* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
-divideDisjunction[timeCond_] := Map[({timeCond[[1]], #, timeCond[[3]]})&, List@@timeCond[[2]]];
 
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
   そうでない場合は0を末尾に付加して返す．条件によって変化する場合は，条件を絞り込んでそれぞれを返す *)
@@ -609,12 +612,21 @@ Module[
 
 
 (* 条件を満たす最小の時刻と，その条件の組を求める *)
-findMinTime[ask_, condition_] := (
-  sol = Quiet[Check[Reduce[ask&&condition&&t>0, t, Reals],
+findMinTime[causeAndID_, condition_] := 
+Module[
+  {
+    id,
+    cause,
+    minT,
+    ret
+  },
+  id = causeAndID[[2]];
+  cause = causeAndID[[1]];
+  sol = Quiet[Check[Reduce[cause && condition && t > 0, t, Reals],
                     errorSol,
                     {Reduce::nsmet}],
               {Reduce::nsmet}];
-  If[sol=!=False && sol=!=errorSol, 
+  If[sol =!= False && sol =!= errorSol, 
     (* true *)
     (* 成り立つtの最小値を求める *)
     minT = First[Quiet[Minimize[{t, sol}, {t}], 
@@ -625,26 +637,37 @@ findMinTime[ask_, condition_] := (
   If[minT === error,
     {},
     (* Piecewiseなら分解*)
-    If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, condition}}];
+    If[Head[minT] === Piecewise, ret = makeListFromPiecewise[minT, condition], ret = {{minT, condition}}];
     (* 時刻が0となる場合を取り除く．*)
-    minT = Select[minT, (#[[1]] =!= 0)&];
-    minT
+    ret = Select[ret, (#[[1]] =!= 0)&];
+    (* append id for each time *)
+    ret = Map[({timeAndID[#[[1]], If[#[[1]] === Infinity, -1, id] ], #[[2]]})&, ret];
+    ret
   ]
-);
+];
 
 (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
 compareMinTime[timeCond1_, timeCond2_] := ( Block[
     {
+      minTime1, minTime2,
+      restTime,
       case1, case2,
+      ret1, ret2,
       andCond
     },
-    andCond = Reduce[timeCond1[[2]]&&timeCond2[[2]], Reals];
+    (* assume that timeCond1 only has restTime *)
+    andCond = Reduce[timeCond1[[3]]&&timeCond2[[2]], Reals];
     If[andCond === False, Return[{}] ];
-    case1 = Quiet[Reduce[And[andCond,timeCond1[[1]] < timeCond2[[1]]], Reals]];
-    If[ case1 === False, Return[{{timeCond2[[1]], andCond, timeCond2[[3]]}} ] ];
+    minTime1 = timeCond1[[1]][[1]];
+    minTime2 = timeCond2[[1]][[1]];
+    restTime = timeCond1[[2]];
+    case1 = Quiet[Reduce[And[andCond, minTime1 < minTime2], Reals]];
     case2 = Reduce[andCond&&!case1];
-    If[ case2 === False, Return[{{timeCond1[[1]], andCond, timeCond1[[3]]}} ] ];
-    Return[ {{timeCond2[[1]],  case2, timeCond2[[3]]}, {timeCond1[[1]], case1, timeCond2[[3]]}} ];
+    ret1 = {timeCond1[[1]], Append[restTime, timeCond2[[1]]], case1};
+    ret2 = {timeCond2[[1]], Append[restTime, timeCond1[[1]]], case2};
+    If[ case1 === False, Return[{ret2} ] ];
+    If[ case2 === False, Return[{ret1} ] ];
+    Return[ {ret1, ret2} ];
   ]
 );
 
@@ -665,14 +688,13 @@ compareMinTimeList[list1_, list2_] := ( Block[
 
 
 (* 最小時刻と条件の組をリストアップする関数 *)
-calculateMinTimeList[guardList_, condition_, maxT_] := (
+calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
   Block[
     {findResult, i},
-    timeCaseList = {{maxT, condition, 1}};
-    For[i = 1, i <= Length[guardList], i++,
-      findResult = findMinTime[guardList[[i]], condition];
-      (* maxTimeではないという意味で、0を末尾に付加する。 *)
-      findResult = Map[(Append[#, 0])&, findResult];
+    (* -1 is regarded as the id of time limit *)
+    timeCaseList = {{timeAndID[maxT, -1], {}, condition}};
+    For[i = 1, i <= Length[causeAndIDList], i++,
+      findResult = findMinTime[causeAndIDList[[i]], condition];
       timeCaseList = compareMinTimeList[timeCaseList, findResult]
     ];
     timeCaseList
@@ -680,11 +702,11 @@ calculateMinTimeList[guardList_, condition_, maxT_] := (
 );
 
 (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
-divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
+divideDisjunction[timeCond_] := Map[({timeCond[[1]], timecond[[2]], #})&, List@@timeCond[[3]]];
 
 publicMethod[
   calculateNextPointPhaseTime,
-  maxTime, discCause, cons, initCons, pCons, vars,
+  maxTime, causeAndIDs, cons, initCons, pCons, vars,
   Module[
     {
       timeAppliedCauses,
@@ -694,12 +716,9 @@ publicMethod[
       originalOther,
       tmpMaxTime
     },
-        
-    (* 次にそれらをdiscCauseに適用する *)
-    timeAppliedCauses = False;
-    
+
     tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
-    timeAppliedCauses = discCause /. tStore;
+    timeAppliedCauses = causeAndIDs /. tStore;
     simplePrint[timeAppliedCauses];
     
     parameterList = getParameters[timeAppliedCauses];
@@ -715,19 +734,18 @@ publicMethod[
     simplePrint[resultList];
     
     (* 整形して結果を返す *)
-    resultList = Map[({#[[1]],LogicalExpand[#[[2]] ], #[[3]]})&, resultList];
-    resultList = Fold[(Join[#1, If[Head[#2[[2]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-    resultList = Map[({#[[1]], Cases[applyList[#[[2]] ], Except[True]], #[[3]] })&, resultList];
+    resultList = Map[({#[[1]], #[[2]], LogicalExpand[#[[3]] ]})&, resultList];
+    resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+    resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
     
     debugPrint["resultList after Format", resultList];
     
-    resultList = Map[({toReturnForm[FullSimplify[#[[1]] ] ], convertExprs[adjustExprs[#[[2]], isParameter ] ], #[[3]] })&, resultList];
+    resultList = Map[
+    ({toReturnForm[FullSimplify[#[[1]] ] ], Map[(toReturnForm[#])&, #[[2]]], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
     simplePrint[resultList];
     resultList
   ]
 ];
-
-calculateNextPointPhaseTime::mnmz = "Failed to minimize in calculateNextPointPhaseTime";
 
 getDerivativeCount[variable_[_]] := 0;
 

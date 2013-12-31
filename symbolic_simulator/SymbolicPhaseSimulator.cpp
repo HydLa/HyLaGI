@@ -571,23 +571,28 @@ SymbolicPhaseSimulator::todo_list_t
     phase->variable_map = shift_variable_map_time(phase->variable_map, phase->current_time);
 
     timer::Timer next_pp_timer;
-    constraints_t disc_cause;
+    dc_causes_t dc_causes;
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
     for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
-      disc_cause.push_back(node_sptr(new Not((*it)->get_guard() ) ) );
+      node_sptr negated_node(new Not((*it)->get_guard()));
+      int id = (*it)->get_id();
+      dc_causes.push_back(dc_cause_t(negated_node, id) );
     }
     //現在導出されていないガード条件を離散変化条件として追加
     for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
-      disc_cause.push_back((*it)->get_guard());
+      node_sptr node((*it)->get_guard() );
+      int id = (*it)->get_id();
+      dc_causes.push_back(dc_cause_t(node, id));
     }
 
     //assertionの否定を追加
     if(opts_->assertion){
-      disc_cause.push_back(node_sptr(new Not(opts_->assertion)));
+      node_sptr assert_node(new Not(opts_->assertion));
+      dc_causes.push_back(dc_cause_t(assert_node, -2));
     }
     if(break_condition_.get() != NULL)
     {
-      disc_cause.push_back(break_condition_);
+      dc_causes.push_back(dc_cause_t(break_condition_, -3));
     }
 
     time_t max_time;
@@ -597,10 +602,10 @@ SymbolicPhaseSimulator::todo_list_t
       max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
     }
 
-    Backend::pp_time_result_t time_result; 
+    pp_time_result_t time_result; 
     time_t time_limit(max_time->clone());
     *time_limit -= *phase->current_time;
-    backend_->call("calculateNextPointPhaseTime", 2, "vltcst", "cp", &(time_limit), &disc_cause, &time_result);
+    backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -608,14 +613,14 @@ SymbolicPhaseSimulator::todo_list_t
 
     while(true)
     {
-      Backend::NextPhaseResult &candidate = time_result[time_it];
-      node_sptr time_node = candidate.time->get_node();
+      NextPhaseResult &candidate = time_result[time_it];
+      node_sptr time_node = candidate.minimum.time->get_node();
 
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
       }
-      if(candidate.is_max_time) {
+      if(candidate.minimum.id == -1) {
         pr->cause_of_termination = simulator::TIME_LIMIT;
       }
       time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));

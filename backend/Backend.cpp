@@ -68,6 +68,17 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
+  case 'd':
+    if(args_fmt[++i] != 'c')
+    {
+      invalid_fmt(args_fmt, i);
+    }
+    else
+    {
+      dc_causes_t* dc_causes = (dc_causes_t *)arg;
+      send_dc_causes(*dc_causes);
+    }
+    break;
 
   case 'e':
   {
@@ -346,14 +357,26 @@ bool Backend::get_form(const char &form_c, variable_form_t &form)
 
 int Backend::send_node(const node_sptr& node, const variable_form_t &form)
 {
-  HYDLA_LOGGER_BACKEND("%%node: ", TreeInfixPrinter().get_infix_string(node));
+  HYDLA_LOGGER(BACKEND, "%%node: ", TreeInfixPrinter().get_infix_string(node));
   differential_count_ = 0;
   in_prev_ = false;
   apply_not_ = false;
   variable_arg_ = form;
   accept(node);
-  HYDLA_LOGGER_FUNC_END(BACKEND);
   return 0;
+}
+
+void Backend::send_dc_causes(dc_causes_t &dc_causes)
+{
+  link_->put_converted_function("List", dc_causes.size());
+  for(int i = 0; i < dc_causes.size(); i++)
+  {
+    HYDLA_LOGGER(BACKEND, dc_causes[i].id, ": ", dc_causes[i].node);
+    dc_cause_t &cause = dc_causes[i];
+    link_->put_converted_function("causeAndID", 2);
+    send_node(cause.node, Link::VF_TIME);
+    link_->put_integer(cause.id);
+  }
 }
 
 int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& vf, const bool &send_derivative)
@@ -707,7 +730,7 @@ void Backend::set_range(const value_t &val, value_range_t &range, const int& rel
   }
 }
 
-Backend::create_vm_t Backend::receive_cv()
+create_vm_t Backend::receive_cv()
 {
   create_vm_t ret;
   std::string name;
@@ -722,7 +745,7 @@ Backend::create_vm_t Backend::receive_cv()
   return ret;
 }
 
-Backend::pp_time_result_t Backend::receive_cp()
+pp_time_result_t Backend::receive_cp()
 {
 
   std::string name;
@@ -733,16 +756,23 @@ Backend::pp_time_result_t Backend::receive_cp()
     candidate_t candidate;
     int dummy_buf;
     link_->get_function(name, dummy_buf);
+    // timeAndID
+    link_->get_function(name, dummy_buf);
     // 時刻を受け取る
-    candidate.time = receive_value();
+    candidate.minimum.time = receive_value();
+    candidate.minimum.id = link_->get_integer();
+    int suc_size;
+    link_->get_function(name, suc_size);
+    for(int suc_it = 0; suc_it < suc_size; suc_it++)
+    {
+      //timeAndID
+      link_->get_function(name, dummy_buf);
+      receive_value();
+      link_->get_integer();
+    }
     // 条件を受け取る
     receive_parameter_map(candidate.parameter_map);
     HYDLA_LOGGER_LOCATION(BACKEND);
-    HYDLA_LOGGER_LOCATION(BACKEND);
-    // 終了時刻かどうかを受け取る
-    int is_max_time = link_->get_integer();
-    HYDLA_LOGGER_LOCATION(BACKEND);
-    candidate.is_max_time = (bool)(is_max_time != 0);
     result.push_back(candidate);
   }
 
@@ -750,7 +780,7 @@ Backend::pp_time_result_t Backend::receive_cp()
   return result;
 }
 
-Backend::check_consistency_result_t Backend::receive_cc()
+check_consistency_result_t Backend::receive_cc()
 {
   check_consistency_result_t ret;
   std::string outer_name;
@@ -793,7 +823,7 @@ Backend::check_consistency_result_t Backend::receive_cc()
   return ret;
 }
 
-Backend::node_sptr Backend::receive_function()
+node_sptr Backend::receive_function()
 {
 // TODO: UnsupportedFunctionを含む関数は，バックエンドを切り替えられないので各Valueごとにそのことを示すフラグを持たせた方が良いかも
   int arg_count;
@@ -918,7 +948,7 @@ Backend::node_sptr Backend::receive_function()
   return ret;
 }
 
-Backend::value_t Backend::receive_value()
+value_t Backend::receive_value()
 {
   value_t val(new hydla::simulator::symbolic::SymbolicValue(receive_node()));
   HYDLA_LOGGER_LOCATION(BACKEND);
@@ -926,7 +956,7 @@ Backend::value_t Backend::receive_value()
   return val;
 }
 
-Backend::node_sptr Backend::receive_node(){
+node_sptr Backend::receive_node(){
   node_sptr ret;
   Link::DataType type = link_->get_type();
   HYDLA_LOGGER_VAR(BACKEND, type);

@@ -9,7 +9,7 @@
 using namespace hydla::simulator;
 using namespace hydla::backend;
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts), select_phase_(NULL),breaking(false), break_condition_(node_sptr()) {
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(node_sptr()) {
 }
 
 PhaseSimulator::~PhaseSimulator(){}
@@ -454,7 +454,7 @@ void PhaseSimulator::substitute_current_time_for_vm(phase_result_sptr_t pr, time
 	variable_map_t ret;
   solver_->substitute_current_time_for_vm(pr->variable_map, ret, current_time);
   pr->variable_map = ret;
-	// 時刻にも適用
+4	// 時刻にも適用
   HYDLA_LOGGER_HAS("****** substitute_current_time_for_vm time ******");
 	time_t ret_time;
 	solver_->substitute_current_time_for_time(pr->current_time, ret_time, current_time);

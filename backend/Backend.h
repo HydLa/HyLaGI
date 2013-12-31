@@ -9,45 +9,56 @@
 namespace hydla{
 namespace backend{
 
+typedef hydla::simulator::value_t         value_t;
+typedef hydla::simulator::time_t          time_t;
+typedef hydla::simulator::variable_t      variable_t;
+typedef hydla::simulator::variable_map_t  variable_map_t;
+typedef hydla::simulator::parameter_map_t parameter_map_t;
+typedef hydla::simulator::ValueRange      value_range_t;
+typedef hydla::simulator::parameter_t     parameter_t;
+typedef hydla::simulator::variable_set_t  variable_set_t;
+typedef hydla::simulator::constraints_t   constraints_t;
+typedef Link::VariableForm        variable_form_t;
+typedef hydla::parse_tree::node_sptr      node_sptr;
+typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
+typedef std::vector<variable_map_t>       create_vm_t;
+
+typedef struct TimeIdPair
+{
+  time_t time;
+  int id;
+}time_id_pair_t;
+
+/**
+ * calculate_next_PP_timeで返す構造体
+ */
+typedef struct NextPhaseResult 
+{
+  /// minimum time and the id of its condition
+  time_id_pair_t minimum;
+  /// non-minimum pairs of times and ids
+  std::vector<time_id_pair_t> successors;
+  /// condition for parameter in this case
+  hydla::simulator::symbolic::parameter_map_t parameter_map;
+} candidate_t;
+
+typedef std::vector<candidate_t> pp_time_result_t;
+
+/**
+ * 離散変化条件として渡す構造体
+ */
+typedef struct DCCause
+{
+  node_sptr node;
+  int id;
+  DCCause(node_sptr n, int i):node(n), id(i){}
+} dc_cause_t;
+typedef std::vector<dc_cause_t> dc_causes_t;
+  
+
 class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
 {
   public:
-  typedef hydla::simulator::value_t         value_t;
-  typedef hydla::simulator::time_t          time_t;
-  typedef hydla::simulator::variable_t      variable_t;
-  typedef hydla::simulator::variable_map_t  variable_map_t;
-  typedef hydla::simulator::parameter_map_t parameter_map_t;
-  typedef hydla::simulator::ValueRange      value_range_t;
-  typedef hydla::simulator::parameter_t     parameter_t;
-  typedef hydla::simulator::variable_set_t  variable_set_t;
-  typedef hydla::simulator::constraints_t   constraints_t;
-  typedef Link::VariableForm        variable_form_t;
-  typedef hydla::parse_tree::node_sptr      node_sptr;
-  typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
-  typedef std::vector<variable_map_t>       create_vm_t;
-
-  /**
-   * calculate_next_PP_timeで返す構造体
-   */
-  typedef struct NextPhaseResult 
-  {
-    time_t         time;
-    hydla::simulator::symbolic::parameter_map_t parameter_map;
-    bool           is_max_time;
-  } candidate_t;
-
-  typedef std::vector<candidate_t> pp_time_result_t;
-
-  /**
-   * 離散変化条件として渡す構造体
-   */
-  typedef struct PPCause
-  {
-    node_sptr condition;
-    int id;
-  } pp_cause_t;
-  typedef std::vector<pp_cause_t> pp_causes_t;
-  
 
   Backend(Link *link);
   virtual ~Backend();
@@ -69,7 +80,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    *    i: int: integer
    *    s: const char*: symbol (send only)
    *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
-   *    pp: pp_causes_t
+   *    dc: dc_causes_t : causes of discrete changes
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
    *    cs(n, p, z, t): constraints_t: list of constraints (send only)
    *    cc: check_consistency_result_t (receive only)
@@ -133,6 +144,8 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    * 必ずこの関数を経由すること
    */
   int send_node(const hydla::parse_tree::node_sptr& node, const variable_form_t &form);
+
+  void send_dc_causes(dc_causes_t &dc_causes);
 
   /**
    * 変数の送信
