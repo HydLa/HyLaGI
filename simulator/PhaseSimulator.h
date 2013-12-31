@@ -87,6 +87,7 @@ public:
     parameter_map_t &p,
     variable_map_t &m,
     continuity_map_t& c,
+    parse_tree_sptr pt,
     const module_set_container_sptr &msc_no_init);
   
   int get_phase_sum()const{return phase_sum_;}
@@ -94,7 +95,6 @@ public:
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
 
   virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
-
 
   virtual void find_unsat_core(const module_set_sptr& ms,
       simulation_todo_sptr_t&,
@@ -199,6 +199,7 @@ protected:
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
   node_sptr break_condition_;
+  parse_tree_sptr parse_tree_;
 
   private:
 

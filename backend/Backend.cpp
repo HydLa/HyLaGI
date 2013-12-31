@@ -730,7 +730,7 @@ Backend::pp_time_result_t Backend::receive_cp()
   link_->get_function(name, next_time_size);
   pp_time_result_t result;
   for(int time_it = 0; time_it < next_time_size; time_it++){
-    pp_time_result_t::candidate_t candidate;
+    candidate_t candidate;
     int dummy_buf;
     link_->get_function(name, dummy_buf);
     // 時刻を受け取る
@@ -743,7 +743,7 @@ Backend::pp_time_result_t Backend::receive_cp()
     int is_max_time = link_->get_integer();
     HYDLA_LOGGER_LOCATION(BACKEND);
     candidate.is_max_time = (bool)(is_max_time != 0);
-    result.candidates.push_back(candidate);
+    result.push_back(candidate);
   }
 
   HYDLA_LOGGER_FUNC_END(BACKEND);

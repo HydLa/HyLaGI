@@ -35,7 +35,7 @@ public:
   SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~SymbolicPhaseSimulator();
 
-  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc);
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc);
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 

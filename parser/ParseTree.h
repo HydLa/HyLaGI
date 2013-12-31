@@ -22,6 +22,7 @@
 namespace hydla { 
 namespace parse_tree {
 
+
 class ParseTree {
 public: 
   typedef hydla::parser::NodeFactory        node_factory_t;
@@ -40,20 +41,6 @@ public:
   // ノードID表
   typedef std::set<node_id_t>           node_id_list_t;
   typedef node_id_list_t::const_iterator node_id_list_const_iterator;
-
-  /*
-  struct tag_node_id {};
-  struct tag_node_sptr {};
-
-  typedef 
-    boost::bimaps::bimap<
-      boost::bimaps::unordered_set_of<
-        boost::bimaps::tags::tagged<node_id_t, tag_node_id> >,
-    boost::bimaps::unordered_set_of<
-        boost::bimaps::tags::tagged<node_sptr, tag_node_sptr> > > node_map_t;
-
-  typedef node_map_t::value_type                         node_map_value_t;
-  */
 
   static const int INITIAL_MAX_NODE_ID = 0;
 
@@ -206,9 +193,8 @@ public:
     if(it != node_map_.end()) {
       return it->second;
     }
-
     return node_sptr();
-  }  
+  }
   
   /**
    * トップノードを得る
@@ -225,24 +211,6 @@ public:
   {
     return assertion_node_tree_;
   }
-  /*wada
-  node_sptr get_print_node() const
-  {
-    return print_node_tree_;
-  }
-*/
-
-  /*
-  node_sptr get_node(node_id_t id) const
-  {
-    node_map_t::map_by<tag_node_id>::const_iterator it = 
-      node_map_.by<tag_node_id>().find(id);
-    if(it != node_map_.by<tag_node_id>().end()) {
-      return it->second;
-    }
-    return node_sptr();
-  }
-  */
 
   
   /**

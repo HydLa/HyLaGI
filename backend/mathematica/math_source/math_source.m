@@ -606,6 +606,82 @@ Module[
   ]
 ];
 
+
+
+(* 条件を満たす最小の時刻と，その条件の組を求める *)
+findMinTime[ask_, condition_] := (
+  sol = Quiet[Check[Reduce[ask&&condition&&t>0, t, Reals],
+                    errorSol,
+                    {Reduce::nsmet}],
+              {Reduce::nsmet}];
+  If[sol=!=False && sol=!=errorSol, 
+    (* true *)
+    (* 成り立つtの最小値を求める *)
+    minT = First[Quiet[Minimize[{t, sol}, {t}], 
+                       Minimize::wksol]],
+    (* false *)
+    minT = error
+  ];
+  If[minT === error,
+    {},
+    (* Piecewiseなら分解*)
+    If[Head[minT] === Piecewise, minT = makeListFromPiecewise[minT, condition], minT = {{minT, condition}}];
+    (* 時刻が0となる場合を取り除く．*)
+    minT = Select[minT, (#[[1]] =!= 0)&];
+    minT
+  ]
+);
+
+(* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
+compareMinTime[timeCond1_, timeCond2_] := ( Block[
+    {
+      case1, case2,
+      andCond
+    },
+    andCond = Reduce[timeCond1[[2]]&&timeCond2[[2]], Reals];
+    If[andCond === False, Return[{}] ];
+    case1 = Quiet[Reduce[And[andCond,timeCond1[[1]] < timeCond2[[1]]], Reals]];
+    If[ case1 === False, Return[{{timeCond2[[1]], andCond, timeCond2[[3]]}} ] ];
+    case2 = Reduce[andCond&&!case1];
+    If[ case2 === False, Return[{{timeCond1[[1]], andCond, timeCond1[[3]]}} ] ];
+    Return[ {{timeCond2[[1]],  case2, timeCond2[[3]]}, {timeCond1[[1]], case1, timeCond2[[3]]}} ];
+  ]
+);
+
+ 
+(* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
+compareMinTimeList[list1_, list2_] := ( Block[
+    {resultList, i, j},
+    If[list2 === {}, Return[list1] ];
+    resultList = {};
+    For[i = 1, i <= Length[list1], i++,
+      For[j = 1, j <= Length[list2], j++,
+        resultList = Join[resultList, compareMinTime[list1[[i]], list2[[j]] ] ]
+      ]
+    ];
+    resultList
+  ]
+);
+
+
+(* 最小時刻と条件の組をリストアップする関数 *)
+calculateMinTimeList[guardList_, condition_, maxT_] := (
+  Block[
+    {findResult, i},
+    timeCaseList = {{maxT, condition, 1}};
+    For[i = 1, i <= Length[guardList], i++,
+      findResult = findMinTime[guardList[[i]], condition];
+      (* maxTimeではないという意味で、0を末尾に付加する。 *)
+      findResult = Map[(Append[#, 0])&, findResult];
+      timeCaseList = compareMinTimeList[timeCaseList, findResult]
+    ];
+    timeCaseList
+  ]
+);
+
+(* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
+divideDisjunction[timeCond_] := Map[({timeCond[[1]], #})&, List@@timeCond[[2]]];
+
 publicMethod[
   calculateNextPointPhaseTime,
   maxTime, discCause, cons, initCons, pCons, vars,
@@ -623,7 +699,7 @@ publicMethod[
     timeAppliedCauses = False;
     
     tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
-    timeAppliedCauses = Or@@(discCause /. tStore );
+    timeAppliedCauses = discCause /. tStore;
     simplePrint[timeAppliedCauses];
     
     parameterList = getParameters[timeAppliedCauses];
@@ -634,16 +710,8 @@ publicMethod[
     
     simplePrint[necessaryPCons];
     
-    resultList = Quiet[Minimize[{t, (timeAppliedCauses) && necessaryPCons && t>0}, {t}], 
-                           {Minimize::wksol, Minimize::infeas, Minimize::ztest}];
-    debugPrint["resultList after Minimize", resultList];
-    If[Head[resultList] === Minimize, Message[calculateNextPointPhaseTime::mnmz]];
-    checkMessage;
-    resultList = First[resultList];
-    If[Head[resultList] === Piecewise, resultList = makeListFromPiecewise[resultList, pCons], resultList = {{resultList, pCons}}];
-    simplePrint[resultList];
+    resultList = calculateMinTimeList[timeAppliedCauses, necessaryPCons, maxTime];
     
-    resultList = Fold[(Join[#1, compareWithMaxTime[If[Quiet[Reduce[maxTime <= 0, Reals]] === True, 0, maxTime], #2] ])&,{}, resultList];
     simplePrint[resultList];
     
     (* 整形して結果を返す *)

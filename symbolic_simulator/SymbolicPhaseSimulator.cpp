@@ -143,9 +143,9 @@ void SymbolicPhaseSimulator::set_backend(backend_sptr_t back)
   unsat_core_finder_->set_backend(back);
 }
 
-void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, const module_set_container_sptr& msc)
+void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc)
 {  
-  simulator_t::initialize(v, p, m, c, msc);
+  simulator_t::initialize(v, p, m, c, pt, msc);
   variable_derivative_map_ = c;
 }
 
@@ -597,7 +597,7 @@ SymbolicPhaseSimulator::todo_list_t
       max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
     }
 
-    Backend::PPTimeResult time_result; 
+    Backend::pp_time_result_t time_result; 
     time_t time_limit(max_time->clone());
     *time_limit -= *phase->current_time;
     backend_->call("calculateNextPointPhaseTime", 2, "vltcst", "cp", &(time_limit), &disc_cause, &time_result);
@@ -608,18 +608,9 @@ SymbolicPhaseSimulator::todo_list_t
 
     while(true)
     {
-      Backend::PPTimeResult::NextPhaseResult &candidate = time_result.candidates[time_it];
+      Backend::NextPhaseResult &candidate = time_result[time_it];
       node_sptr time_node = candidate.time->get_node();
-/*
-      value_range_t tmp_range;
-      if(solver_->approx_val(candidate.time, tmp_range))
-      {
-        parameter_t* param = simulator_->introduce_parameter(&simulator_->system_time_, pr, tmp_range);
-        candidate.time = value_t(new SymbolicValue(node_sptr( 
-                                                      new Parameter("time", 0, pr->id))));
-        candidate.parameter_map[param] = tmp_range;
-      }
-*/
+
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
@@ -630,14 +621,14 @@ SymbolicPhaseSimulator::todo_list_t
       time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
       backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       results.push_back(pr);
-      if(++time_it >= time_result.candidates.size())break;
+      if(++time_it >= time_result.size())break;
       pr = make_new_phase(pr);
     }
     
     unsigned int result_it = 0;
     bool one_phase = false;
     
-    if(time_result.candidates.size() > 0 && select_phase_)
+    if(time_result.size() > 0 && select_phase_)
     {
       result_it = select_phase_(results);
       one_phase = true;

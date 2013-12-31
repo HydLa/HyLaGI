@@ -29,17 +29,25 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   /**
    * calculate_next_PP_timeで返す構造体
    */
-  typedef struct PPTimeResult
+  typedef struct NextPhaseResult 
   {
-    typedef struct NextPhaseResult 
-    {
-      time_t         time;
-      hydla::simulator::symbolic::parameter_map_t parameter_map;
-      bool           is_max_time;
-    } candidate_t;
-    typedef std::vector<candidate_t> candidate_list_t;
-    candidate_list_t candidates;
-  } pp_time_result_t;
+    time_t         time;
+    hydla::simulator::symbolic::parameter_map_t parameter_map;
+    bool           is_max_time;
+  } candidate_t;
+
+  typedef std::vector<candidate_t> pp_time_result_t;
+
+  /**
+   * 離散変化条件として渡す構造体
+   */
+  typedef struct PPCause
+  {
+    node_sptr condition;
+    int id;
+  } pp_cause_t;
+  typedef std::vector<pp_cause_t> pp_causes_t;
+  
 
   Backend(Link *link);
   virtual ~Backend();
@@ -61,6 +69,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    *    i: int: integer
    *    s: const char*: symbol (send only)
    *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
+   *    pp: pp_causes_t
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
    *    cs(n, p, z, t): constraints_t: list of constraints (send only)
    *    cc: check_consistency_result_t (receive only)

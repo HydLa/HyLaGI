@@ -371,12 +371,14 @@ void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
                                 continuity_map_t& c, 
+                                parse_tree_sptr pt,
                                 const module_set_container_sptr &msc_no_init)
 {
   variable_set_ = &v;
   parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
+  parse_tree_ = pt;
   msc_no_init_ = msc_no_init;
   const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
   

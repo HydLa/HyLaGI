@@ -118,7 +118,6 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       {
         cout << "break!" << endl;
         phase_simulator_->breaking = false;
-        phase_simulator_->set_break_condition(node_sptr());
         todo_num = input_and_process_command(todo);
       }
       else if(todo_num > 0 && --todo_num == 0)

@@ -43,7 +43,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   init_variable_map(parse_tree);
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
   phase_simulator_->initialize(variable_set_, parameter_map_,
-   original_map_, vm, msc_no_init_);
+                               original_map_, vm, parse_tree_, msc_no_init_);
   profile_vector_.reset(new entire_profile_t());
   //  if(opts_->analysis_mode == "simulate"||opts_->analysis_mode == "cmmap") phase_simulator_->init_arc(parse_tree);
 }
