@@ -51,11 +51,11 @@ BOOST_AUTO_TEST_CASE(exDSolve_test){
   string query = 
     "depend {ht,v}, t$"
     "expr_:={df(ht,t) = v, df(v,t) = -10 }$"
-    "init_:={inithtlhs = 10, initvlhs = 0 }$"
+    "initCons_:={inithtlhs = 10, initvlhs = 0 }$"
     "vars_:={ht,v,df(ht,t),df(v,t)}$"
-    "symbolic redeval '(exDSolve expr_ init_ vars_);";
+    "symbolic redeval '(exDSolve expr_ initCons_ vars_);";
 
-  BOOST_CHECK(check(query, "(list (equal ht (plus (minus (times 5 (expt t 2))) 10)) (equal v (minus (times 10 t))))"));
+  BOOST_CHECK(check(query, "(list (equal v (minus (times 10 t))) (equal ht (plus (minus (times 5 (expt t 2))) 10)))"));
 }
 
 /**
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(old_checkConsistencyInterval_test){
     "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10, usrvarg = 10}$"
     "variables__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvarg}$"
 
-    "tmpConstraint__:= guard__:= initConstraint__:= initTmpConstraint__:={initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
+    "initConstraint__:= initTmpConstraint__:={initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
 
     "tmpVariables__:={df(usrvary,t),initusrvary_1lhs,initusrvarylhs,usrvary}$"
     "guardVars__:= pConstraint__:= {}$"
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(rcsRecovery_checkConsistencyInterval_test){
     "depend usrvary,t$"
     "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
     "variables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
-    "tmpConstraint__:= guard__:= initConstraint__:= initTmpConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)), initusrvarylhs = prev(usrvary)}$"
+    "initConstraint__:= initTmpConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)), initusrvarylhs = prev(usrvary)}$"
     "tmpVariables__:= guardVars__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
     "pConstraint__:= {}$"
     "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
