@@ -180,6 +180,7 @@ procedure exSub(patternList_, exprs_)$
   else exSubMain(patternList_, exprs_);
 
 % expr_中に等式以外や論理演算子が含まれる場合にも対応できる置換関数
+% 不等式には未対応
 procedure exSubMain(patternList_, expr_)$
 begin;
   scalar subAppliedExpr_, head_, subAppliedLeft_, subAppliedRight_, 
@@ -2193,10 +2194,11 @@ ICI_UNKNOWN___:= 3;
 procedure checkConsistencyIntervalMain(cons_, tmpCons_, initCons_, pCons_, vars_)$
 begin;
   scalar tmpSol_, splitExprsResult_, NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_,
-         subedInitCons_, initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
+         initVars_, prevVars_, noPrevVars_, noDifferentialVars_, tmpVarMap_,
          DExprRconts_, DExprRcontsVars_,
          integTmp_, integTmpQE_, integTmpQEList_, integTmpEqualList_, integTmpIneqSolDNFList_, integTmpIneqSolDNF_, isInf_, ans_;
 
+  debugWrite("{variables__, parameters__}: ", {variables__, parameters__});
   debugWrite("{cons_, tmpCons_, initCons_, pCons_, vars_}: ", {cons_, tmpCons_, initCons_, pCons_, vars_});
 
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
@@ -2221,15 +2223,13 @@ begin;
     DExprVars_:= union(DExprVars_, DExprRcontsVars_);
   >>;
 
-  subedInitCons_:= union(for each x in (initCons_ \ DExprRconts_) collect exSub(cons_, x));
-  debugWrite("subedInitCons_: ", subedInitCons_);
-  initVars_:= map(getInitVars, subedInitCons_);
+  initVars_:= map(getInitVars, initCons_);
   debugWrite("initVars_: ", initVars_);
 
   noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
   debugWrite("noDifferentialVars_: ", noDifferentialVars_);
   %========== exDSolve
-  tmpSol_:= exDSolve(DExprs_, subedInitCons_, noDifferentialVars_);
+  tmpSol_:= exDSolve(DExprs_, initCons_, noDifferentialVars_);
   
   if(tmpSol_ = retsolvererror___) then    return {ICI_SOLVER_ERROR___};
   if(tmpSol_ = retoverconstraint___) then return {ICI_INCONSISTENT___};

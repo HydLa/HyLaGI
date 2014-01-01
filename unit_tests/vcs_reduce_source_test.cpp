@@ -323,4 +323,62 @@ BOOST_AUTO_TEST_CASE(findMinTime_test){
   // BOOST_CHECK(check(query, "(list)", true));
 }
 
+BOOST_AUTO_TEST_CASE(balloon_tank_test){
+  const string query_balloon_tank_ccpm =
+    "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
+    "cons_:= { - usrvar_ex!!t + 2 < 0 and usrvar_ex!!t - 4 < 0, - usrvar_volume + 1 < 0 and usrvar_volume - 3 < 0, df(usrvar_ex!!t,t) = 0, df(usrvar_h,t) = 0, df(usrvar_timer,t) = 1, df(usrvar_volume,t) = 0, usrvar_ex!!t = prev(usrvar_ex!!t), usrvar_fuel = 1, usrvar_h = prev(usrvar_h), usrvar_h = 10, usrvar_timer = prev(usrvar_timer), usrvar_timer = 0, usrvar_volume = prev(usrvar_volume)}$"
+    "pCons_:= {}$"
+    "vars_:= {df(usrvar_ex!!t,t), df(usrvar_h,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(usrvar_ex!!t), prev(usrvar_h), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_fuel, usrvar_h, usrvar_timer, usrvar_volume}$"
+
+    "symbolic redeval '(checkConsistencyPointMain cons_ pCons_ vars_);";
+  BOOST_CHECK(check(query_balloon_tank_ccpm, "true"));
+
+  const string query_balloon_tank_ccim =
+    "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
+    "initVariables__:= {initusrvar_ex!!tlhs, initusrvar_h_1lhs, initusrvar_h_2lhs, initusrvar_hlhs, initusrvar_timerlhs, initusrvar_volumelhs}$"
+
+    "cons_:={df(usrvar_ex!!t,t) = 0,df(usrvar_timer,t) = 1,df(usrvar_volume,t) = 0,usrvar_timer - usrvar_volume < 0}$"
+    "tmpCons_:={}$"
+    "initCons_:={initusrvar_ex!!tlhs = parameter_ex!!t_0_1,initusrvar_timerlhs = 0,initusrvar_volumelhs = parameter_volume_0_1}$"
+    "pCons_:={parameter_ex!!t_0_1 - 2 > 0, parameter_volume_0_1 - 1 > 0, parameter_ex!!t_0_1 - 4 < 0, parameter_volume_0_1 - 3 < 0}$"
+    "vars_:={df(usrvar_ex!!t,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(usrvar_ex!!t), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_timer, usrvar_volume}$"
+
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ tmpCons_ initCons_ pCons_ vars_);";
+  BOOST_CHECK(check(query_balloon_tank_ccim, "(list 1)"));
+
+  const string query_test_ccim =
+    "depend usrvar_volume, t$"
+    "initVariables__:= {initusrvar_volumelhs}$"
+    // exIneqSolveのため
+    "variables__:= {df(usrvar_volume,t),prev(usrvar_volume),usrvar_volume}$"
+    "parameters__:= {parameter_volume_0_1}$"
+
+    "cons_:={df(usrvar_volume,t) = 0,usrvar_volume <= 0}$"
+    "tmpCons_:={}$"
+    "initCons_:={initusrvar_volumelhs = parameter_volume_0_1}$"
+    "pCons_:={parameter_volume_0_1 - 1 > 0,parameter_volume_0_1 - 3 < 0}$"
+    "vars_:={df(usrvar_volume,t),prev(usrvar_volume),usrvar_volume}$"
+
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ tmpCons_ initCons_ pCons_ vars_);";
+  BOOST_CHECK(check(query_test_ccim, "(list 1)"));
+
+  const string query_test_ccim2 =
+    "depend usrvar_volume, t$"
+    "initVariables__:= {initusrvar_volumelhs}$"
+    // exIneqSolveのため
+    "variables__:= {df(usrvar_volume,t),prev(usrvar_volume),usrvar_volume}$"
+    "parameters__:= {parameter_volume_0_1}$"
+
+    "cons_:={df(usrvar_volume,t) = 0}$"
+    "tmpCons_:={usrvar_volume <= 0}$"
+    "initCons_:={initusrvar_volumelhs = parameter_volume_0_1}$"
+    "pCons_:={parameter_volume_0_1 - 1 > 0,parameter_volume_0_1 - 3 < 0}$"
+    "vars_:={df(usrvar_volume,t),prev(usrvar_volume),usrvar_volume}$"
+
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ tmpCons_ initCons_ pCons_ vars_);";
+  BOOST_CHECK(check(query_test_ccim2, "(list 2)", true));
+
+
+}
+
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST
