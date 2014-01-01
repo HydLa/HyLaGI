@@ -9,7 +9,8 @@ class HyroseOutputDumper
     @arg_names = arg_arr
     @cases_array = Array.new
     arg_arr.each do |arg|
-      @cases_array.push get_data(to_enum(arg))
+      enum = to_enum(arg)
+      @cases_array.push get_data(enum)
     end
   end
 
@@ -39,9 +40,14 @@ class HyroseOutputDumper
   # 引数を実行コマンドかファイル名か判断する
   # @return それぞれのEnumeratorを戻す
   def to_enum(arg)
-    if arg.index ".hydla" # treat as a command
-      `#{arg}`.each
-    else                  # treat as a file
+    if arg.index(".hydla")       # treat as a command
+      5.times do
+        data = `#{arg}`
+        next if data == ""
+        return data.each
+      end
+      raise "cannot read arg \"" + arg + "\""
+    else                         # treat as a file
       File.open(arg).each
     end
   end
@@ -178,7 +184,7 @@ class HyroseOutputVariableMapSimpleDumper < HyroseOutputDumper
       lhs_cases, rhs_cases = enum.next, enum.next
       lhs_name, rhs_name  = name_enum.next, name_enum.next
 
-      msg += " " * 2 + "{\"match \'" + lhs_name[0, lhs_name.length - " -sm".length] + "\'\", \n" + " " * 3
+      msg += " " * 2 + "{\"match \'" + lhs_name.split.find{|i| i =~ /hydla/} + "\'\", \n" + " " * 3
       lhs_case, rhs_case = lhs_cases.each, rhs_cases.each
       loop do
         lhs_one_case = lhs_case.next
@@ -253,8 +259,9 @@ OptionParser.new do |opt|
   mode = 'NORMAL'
   opt.on('-m', '--ms')    {  mode = 'MS'             }
   opt.on('-n', '--normal'){  mode = 'NORMAL'         }
-  opt.on('-s', '--simple_vcs'){  mode = 'SIMPLE_VCS' }
+  opt.on('-c', '--simple_check'){  mode = 'SIMPLE_CHECK' }
   opt.on('-v', '--vcs')   {  mode = 'VCS'            }
+  opt.on('-s', '--simple_vcs'){  mode = 'SIMPLE_VCS' }
 
   arr = opt.parse(ARGV != [] ? ARGV : '-h')
 
@@ -263,6 +270,8 @@ OptionParser.new do |opt|
     HyroseOutputModuleSetDumper.new(arr).dump
   when 'NORMAL'
     HyroseOutputVariableMapDumper.new(arr).dump
+  when 'SIMPLE_CHECK' then
+    HyroseOutputVariableMapSimpleDumper.new(arr).dump
   when 'SIMPLE_VCS' then
     cmds = arr.inject([]){ |arr, cmd| arr.push(cmd + " -sm").push(cmd + " -sr") }
     HyroseOutputVariableMapSimpleDumper.new(cmds).dump

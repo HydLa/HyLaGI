@@ -2217,8 +2217,6 @@ begin;
 
   %========= exDSolve結果(dfAnsExprs_)の整形
 
-  % TODO CHECK: union(dfAnsExprs_, NDExprs_) = {} の場合どうなる?
-
   % 微分項を含まない方程式
   NDExprs_ :=   part(splitExprsResult_, 1);
   NDExprVars_:= part(splitExprsResult_, 2);
