@@ -40,7 +40,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
     for(unsigned int i = 0; i < phases.size(); i++)
     {
       phase_result_sptr_t& phase = phases[i];
-      HYDLA_LOGGER_PHASE("--- Result Phase", i+1 , "/", phases.size(), " ---\n", phase);
+      HYDLA_LOGGER_PHASE("--- Result Phase", i+1 , "/", phases.size(), " ---\n", *phase);
 
       if(!opts_->nd_mode && i > 0)
       {

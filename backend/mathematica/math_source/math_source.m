@@ -158,56 +158,82 @@ checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
 );
 
+moveTermsToLeft[expr_] := Head[expr][expr[[1]] - expr[[2]], 0];
+
+ccIntervalForEach[cond_, initRules_, pCons_] :=
+Module[
+  {
+    operator,
+    lhs,
+    eqSol,
+    gtSol,
+    ltSol,
+    trueCond
+  },
+  inputPrint["ccIntervalForEach", cond, initRules, pCons];
+  If[cond === True || cond === False, Return[cond]];
+  operator = Head[cond];
+  lhs = (cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules;
+  simplePrint[lhs];
+  (* caused by underConstraint *)
+  If[hasVariable[lhs], Return[pCons] ];
+
+  trueCond = False;
+
+  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals] ];
+  If[eqSol =!= False,
+    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
+    simplePrint[eqSol];
+    trueCond = trueCond || eqSol
+  ];
+  If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
+    gtSol = Quiet[Reduce[lhs > 0 && pCons, Reals] ];
+    simplePrint[gtSol];
+    trueCond = trueCond || gtSol
+  ];
+  If[MemberQ[{Unequal, Less, LessEqual}, operator],
+    ltSol = Quiet[Reduce[lhs < 0 && pCons, Reals] ];
+    simplePrint[ltSol];
+    trueCond = trueCond || ltSol
+  ];
+  trueCond
+];
+
+
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, prevCons, pcons, timeVars, initVars, prevVars, pars,
+  cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
   Module[
-    {sol, otherCons, tCons, hasTCons, necessaryTCons, parList, tmpPCons, cpTrue, cpFalse, trueMap, falseMap},
+    {sol, otherCons, tCons, i, j, cnf, cpTrue, eachCpTrue, cpFalse, trueMap, falseMap},
     If[cons === True,
-      {createMap[pcons, isParameter,hasParameter, {}], False},
+      {createMap[pCons, isParameter, hasParameter, {}], False},
       sol = exDSolve[cons, initCons];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
-        {False, createMap[pcons, isParameter, hasParameter, {}]},
-        If[sol[[1]] === underConstraint,
-          (* 制約不足で微分方程式が完全には解けないなら，単純に各変数値およびその微分値が矛盾しないかを調べる *)
-          tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
-          tCons = sol[[2]] /. tCons;
-          tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = Quiet[Reduce[Exists[timeVars, tCons && tmpPCons && prevCons], pars, Reals] ],
-          (* 微分方程式が解けた場合 *)
-          tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[2]] ] ];
-          tCons = sol[[1]] /. tCons;
-          tmpPCons = If[getParameters[tCons] === {}, True, pcons];
-          tCons = Quiet[Reduce[prevCons && tCons && tmpPCons, pars, Reals]]
-        ];
-        checkMessage;
-
+        {False, createMap[pCons, isParameter, hasParameter, {}]},
+        tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
+        tCons = sol[[2]] /. tCons;
         simplePrint[tCons];
 
-        If[tCons === False,
-          {False, createMap[pcons, isParameter, hasParameter, {}]},
-          
-          hasTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}])) -> True);
-          parList = Join[prevVars, getParameters[hasTCons]];
-          simplePrint[parList];
-          necessaryTCons = tCons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, {t}] && !hasSymbol[expr, parList])) -> True);
-          
-          simplePrint[necessaryTCons];
-          cpTrue = Reduce[pcons && Quiet[Minimize[{t, necessaryTCons && t > 0}, Join[prevVars, timeVars, {t}] ], {Minimize::wksol, Minimize::infeas}][[1]] == 0, pars, Reals];
-          cpFalse = Reduce[pcons && !cpTrue, pars, Reals];
-
-          simplePrint[cpTrue, cpFalse];
-
-          checkMessage;
-          {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
-          simplePrint[trueMap, falseMap];
-          {trueMap, falseMap}
-        ]
+        cpTrue = False;
+        For[i = 1, i <= Length[tCons], i++,
+          cnf = tCons[[i]];
+          eachCpTrue = prevCons && pCons;
+          For[j = 1, j <= Length[cnf], j++,
+            eachCpTrue = eachCpTrue && ccIntervalForEach[cnf[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue]
+          ];
+          cpTrue = cpTrue || eachCpTrue
+        ];
+        cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+        checkMessage;
+        {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
+        simplePrint[trueMap, falseMap];
+        {trueMap, falseMap}
       ]
     ]
   ]
 ];
+
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
@@ -238,7 +264,7 @@ publicMethod[
     debugPrint["sol after exDSolve", sol];
     If[sol[[1]] === underConstraint,
       underConstraint,
-      tStore = createDifferentiatedEquations[vars, sol[[2]] ];
+      tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
       ret = {convertExprs[tStore]};
@@ -262,8 +288,8 @@ createParameterMap[] := createParameterMap[pConstraint];
 
 publicMethod[
   createParameterMap,
-  pcons,
-  createMap[pcons, isParameter, hasParameter, {}];
+  pCons,
+  createMap[pCons, isParameter, hasParameter, {}];
 ];
 
 createMap[cons_, judge_, hasJudge_, vars_] := Module[
@@ -475,9 +501,9 @@ resetTemporaryConstraint[] := (
 
 publicMethod[
   resetConstraintForParameter,
-  pcons,
+  pCons,
   pConstraint = True;
-  pConstraint = Reduce[pConstraint && And@@pcons, Reals];
+  pConstraint = Reduce[pConstraint && And@@pCons, Reals];
   simplePrint[pConstraint];
 ];
 
@@ -504,8 +530,8 @@ publicMethod[
 
 publicMethod[
   addParameterConstraint,
-  pcons,
-  pConstraint = Reduce[pConstraint && And@@pcons, Reals];
+  pCons,
+  pConstraint = Reduce[pConstraint && And@@pCons, Reals];
   simplePrint[pConstraint];
 ];
 
@@ -535,9 +561,17 @@ applyList[reduceSol_] :=
   If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
 
 (* OrではなくListでくくる *)
-
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
+
+(* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
+And2and[reduceSol_] :=
+  If[reduceSol === True, and[], If[Head[reduceSol] === And, and @@ reduceSol, and[reduceSol]] ];
+
+(* Or ではなくorでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
+Or2or[reduceSol_] :=
+  If[Head[reduceSol] === Or, or @@ reduceSol, or[reduceSol]];
+
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 
    ついでに othersを各条件に対して付加 *)
@@ -778,7 +812,6 @@ createDifferentiatedEquation[var_, integRules_] := (
     If[!MemberQ[integRules, nonDerivative, Infinity], Return[{}]];
     tRemovedRules = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRules];
     tRemovedVars = var /. x_Symbol[t] -> x;
-    simplePrint[tRemovedRules, tRemovedVars];
     ruleApplied = tRemovedVars /. tRemovedRules;
     derivativeExpanded = ruleApplied /. Derivative[n_][f_][t] :> D[f, {t, n}];
     ret = {Equal[var, Simplify[derivativeExpanded] ]};
@@ -804,7 +837,7 @@ createDifferentiatedEquation[var_, integRules_] := (
 exDSolve[expr_, initExpr_] := 
 Check[
   Module[
-    {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult},
+    {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
     inputPrint["exDSolve", expr, initExpr];
     tmpExpr = applyList[expr];
     sol = {};
@@ -841,13 +874,11 @@ Check[
       ]
     ];
     
-    resultCons = And@@resultCons;
-    
-    
-    If[Length[tmpExpr ] > 0 || unsolvable,
-      {underConstraint, resultCons && And@@tmpExpr, resultRule},
-      {resultCons && And@@tmpExpr, resultRule}
-    ]
+    retCode = If[Length[tmpExpr] > 0 || unsolvable, underConstraint, solved];
+    restCond = LogicalExpand[And@@tmpExpr && And@@resultCons];
+    restCond = Or2or[restCond];
+    restCond = Map[(And2and[#])&, restCond];    
+    { retCode, restCond, resultRule}
   ],
   Message[exDSolve::unkn]
 ];

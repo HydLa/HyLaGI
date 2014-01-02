@@ -212,6 +212,7 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   )
 {
   CheckEntailmentResult ce_result;
+  HYDLA_LOGGER(PHASE, TreeInfixPrinter().get_infix_string(guard) );
   backend_->call("startTemporary", 0, "", "");
   add_continuity(cont_map, phase);
   const char* fmt = (phase == PointPhase)?"en":"et";
