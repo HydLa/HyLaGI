@@ -99,14 +99,14 @@ createPrevMap[cons_, vars_] := Module[
 
 (* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
 findConditions[] := (
-  findConditions[constraint && tmpConstraint && initConstraint && initTmpConstraint, guard, variables ]
+  findConditions[constraint && tmpConstraint && initConstraint && initTmpConstraint, variables ]
 );
 
 publicMethod[
   findConditions,
-  cons, gua, vars,
+  cons, vars,
   Module[
-    {i, falseMap, cp},
+    {cp},
     Quiet[
       cp = Reduce[Exists[vars, cons],Reals], {Reduce::useq}
     ];

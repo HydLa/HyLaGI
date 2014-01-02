@@ -926,10 +926,28 @@ private:
   std::string number_;
 };
 
-/**
- *
- *
- */
+class False : public FactorNode{
+public:
+  False()
+  {}
+  
+  virtual ~False(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<False> n(new False());
+    return n;
+  }
+    
+  virtual std::string get_node_type_name() const {
+    return "False";
+  }
+};
+ 
 class True : public FactorNode{
 public:
   True()

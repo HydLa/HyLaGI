@@ -326,6 +326,12 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<True> node)
   dump_node(node);
 }
 
+// False
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<False> node)
+{
+  dump_node(node);
+}
+
 // 変数
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Variable> node)
 {

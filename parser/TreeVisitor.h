@@ -124,6 +124,10 @@ public:
 
   // True
   virtual void visit(boost::shared_ptr<True> node) = 0;
+
+  // False
+  virtual void visit(boost::shared_ptr<False> node) = 0;
+
 };
 
 } //namespace parse_tree

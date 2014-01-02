@@ -193,6 +193,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::False> node);
 
   // 算術単項演算子
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);

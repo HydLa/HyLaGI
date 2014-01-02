@@ -63,6 +63,8 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Pi> node)                {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<E> node)                {}
 // True
 void DefaultTreeVisitor::visit(boost::shared_ptr<True> node)                {}
+// False
+void DefaultTreeVisitor::visit(boost::shared_ptr<False> node)                {}
 
 // 関数
 void DefaultTreeVisitor::visit(boost::shared_ptr<Function> node)                {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));}}

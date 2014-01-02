@@ -108,6 +108,9 @@ DEFINE_INFIX_VISIT_FACTOR(Abort, "Abort(", ")")
 // True
 DEFINE_INFIX_VISIT_FACTOR(True, "True", "")
 
+// False
+DEFINE_INFIX_VISIT_FACTOR(False, "False", "")
+
 void TreeInfixPrinter::visit(boost::shared_ptr<SVtimer> node){
   (*output_stream_) << "$timer";
 }

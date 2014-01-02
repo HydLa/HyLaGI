@@ -96,6 +96,8 @@ public:
   virtual void visit(boost::shared_ptr<E> node);
   // True
   virtual void visit(boost::shared_ptr<True> node);
+  // False
+  virtual void visit(boost::shared_ptr<False> node);
   
   //関数
   virtual void visit(boost::shared_ptr<Function> node);

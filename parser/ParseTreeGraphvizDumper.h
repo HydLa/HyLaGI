@@ -98,6 +98,7 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
   
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::False> node);
   //関数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> node);

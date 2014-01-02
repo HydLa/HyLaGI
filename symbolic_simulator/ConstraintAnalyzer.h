@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_HYDLA_CONSTRAINT_ANALYZER_H_
 #define _INCLUDED_HYDLA_CONSTRAINT_ANALYZER_H_
 
-#include "SymbolicTypes.h"
+//#include "SymbolicTypes.h"
 
 #include "ParseTree.h"
 #include "Simulator.h"
@@ -11,7 +11,7 @@ namespace hydla{
 namespace simulator{
 namespace symbolic {
 
-class ConstraintAnalyzer : public hydla::simulator::Simulator
+class ConstraintAnalyzer 
 {
 public:
   typedef enum{
@@ -26,24 +26,19 @@ public:
    */
   typedef std::map<std::string, hydla::parse_tree::node_sptr> conditions_map_t;
   //  typedef std::map<module_set_sptr, node_sptr> conditions_map_t;
-
-  /**
-   * optionをセット
-   */
-  ConstraintAnalyzer(simulator::Opts& opts);
+  ConstraintAnalyzer(); 
+  ConstraintAnalyzer(backend_sptr_t back);
   virtual ~ConstraintAnalyzer();
 
-  /**
-   * Simulatorを継承している都合上、宣言している関数
-   */
-  virtual simulator::phase_result_const_sptr_t simulate();
-
+  virtual void set_backend(backend_sptr_t back);
   /**
    * 制約モジュール集合とそれに対する条件を出力する関数
    * analysis_fileで指定したファイルに書き出す
    * 指定がなければ標準出力に書き出す
    */
   virtual void print_conditions();
+
+  void add_continuity(const continuity_map_t& continuity_map, const Phase &phase);
 
   /**
    * msに対応する条件を算出する関数
@@ -64,19 +59,11 @@ public:
   virtual void check_all_module_set(bool b);
 
   /**
-   * 初期化関数
-   * 制約階層とかソルバとかの設定のために呼んでいる
-   * この初期設定のためにSimulatorを継承している
-   */
-  virtual void initialize(const parse_tree_sptr& parse_tree);  
-
-  /**
    * cm_listの対応する場所にmsを入れる
    */
   virtual void add_new_cm(const module_set_sptr& ms);
 
 protected:
-
 
   /**
    * 制約モジュール集合の名前とそれに対応する条件のマップ
@@ -96,6 +83,7 @@ protected:
    */
   hydla::ch::cm_map_sptr root_cm_;
 
+  backend_sptr_t backend_;
 };
 
 }

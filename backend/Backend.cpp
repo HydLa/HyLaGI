@@ -708,7 +708,7 @@ void Backend::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node){link_->p
 void Backend::visit(boost::shared_ptr<hydla::parse_tree::Scan> node){link_->put_symbol("True");}
 
 void Backend::visit(boost::shared_ptr<hydla::parse_tree::True> node){link_->put_symbol("True");}
-
+void Backend::visit(boost::shared_ptr<hydla::parse_tree::False> node){link_->put_symbol("False");}
 
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop){
   switch(relop){
@@ -978,6 +978,10 @@ node_sptr Backend::receive_node(){
         ret = node_sptr(new hydla::parse_tree::E());
       else if(symbol=="inf")
         ret = node_sptr(new hydla::parse_tree::Infinity());
+      else if(symbol=="true")
+        ret = node_sptr(new hydla::parse_tree::True());
+      else if(symbol=="False")
+	ret = node_sptr(new hydla::parse_tree::False());
       else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
         ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(var_prefix.length())));
       break;

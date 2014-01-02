@@ -362,6 +362,9 @@ DEFINE_DEFAULT_VISIT_FACTOR(E)
 // True
 DEFINE_DEFAULT_VISIT_FACTOR(True)
 
+// False
+DEFINE_DEFAULT_VISIT_FACTOR(False)
+
 // 変数
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 {

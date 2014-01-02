@@ -236,6 +236,11 @@ bool True::is_same_struct(const Node& n, bool exactly_same) const
   return typeid(*this) == typeid(n);
 }
 
+bool False::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n);
+}
+
 //Print
 bool Print::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -525,5 +530,6 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 //True
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)
 
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(False)
 } //namespace parse_tree
 } //namespace hydla
