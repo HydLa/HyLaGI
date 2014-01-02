@@ -114,43 +114,62 @@ void IncrementalModuleSet::format_parents_data()
 
 module_set_sptr IncrementalModuleSet::get_removable_module_set(const ModuleSet& ms)
 {
+  // msは矛盾集合
   module_set_sptr removable(new ModuleSet());
   module_set_sptr removed_ms(new ModuleSet());
 
+  // 現在調べているモジュール集合
+  // TODO:並列対応(今は逐次だからms_to_visitの先頭を現在調べていることを前提としている)
+  module_set_sptr current_ms = ms_to_visit_.front();
   module_list_const_iterator it = maximal_module_set_->begin();
   module_list_const_iterator end = maximal_module_set_->end();
 
+  // 現在調べているモジュール集合が含まないモジュールを算出
   for(; it!=end; it++){
-    if(ms.find(*it)==ms.end()) removed_ms->add_module(*it);
+    if(current_ms->find(*it)==current_ms->end()) removed_ms->add_module(*it);
   }
 
   it = ms.begin();
   end = ms.end();
-
-  for(; it!=end; it++){
-    if(required_ms_->find(*it)!=required_ms_->end()) continue;
-    if(parents_data_.find(*it)==parents_data_.end()){
-      removable->add_module(*it);
-      continue;
-    }
-    str_ms_list_t::iterator p_it = parents_data_[*it].begin();
-    str_ms_list_t::iterator p_end = parents_data_[*it].end();
-    for(; p_it!=p_end; p_it++){
-      if(removed_ms->including(*(p_it->second))) continue;
-      switch(p_it->first){
-      case WEAKER_THAN:
-      case PARALLEL:
+  bool must_search = true;
+  bool first = true;
+  while(must_search){
+    for(; it!=end; it++){
+      // requiredの場合はどうあっても削除出来ないので次の要素のチェックへ
+      if(required_ms_->find(*it)!=required_ms_->end()) continue;
+      // 常に削除できるモジュールのチェック(parents_data_になく、requiredでないもの)
+      if(parents_data_.find(*it)==parents_data_.end()){
         removable->add_module(*it);
-        break;
-      default:
+        continue;
+      }
+      // parents_data_に含まれているモジュールについて
+      str_ms_list_t::iterator p_it = parents_data_[*it].begin();
+      str_ms_list_t::iterator p_end = parents_data_[*it].end();
+      for(; p_it!=p_end; p_it++){
+        // current_msに含まれていないモジュールは関係ないので次の要素のチェック
+        if(removed_ms->including(*(p_it->second))) continue;
+        switch(p_it->first){
+        case WEAKER_THAN:
+        case PARALLEL:
+          // << の左か , かで削除できる
+          removable->add_module(*it);
+          break;
+        default:
+          break;
+        }
         break;
       }
-      break;
+      // 最後までチェックできた時も削除できる
+      if(p_it==p_end) removable->add_module(*it);
     }
-    if(p_it==p_end) removable->add_module(*it);
+    // 矛盾集合内の要素が削除できなければ現在調べている集合からも削除できるモジュールを探す
+    if(first && removable->size() == 0){
+      it = current_ms->begin();
+      end = current_ms->end();
+      first = false;
+    }else must_search = false;
   }
   return removable;
-
 }
 
 void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set_list) 
@@ -335,6 +354,7 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
     if((*lit)->including(ms)){
       module_list_const_iterator mend = (*lit)->end();
       module_set_sptr removed(new ModuleSet());
+      // rm内のモジュールをすべて除くまで繰り返す
       while(removed->size()!=rm->size()){
         // *litからrm内の要素一つを除いたものをすべてms_to_visit_に追加
         // ModuleSetにremove(module_t m)みたいのを作ってもいいのかも
