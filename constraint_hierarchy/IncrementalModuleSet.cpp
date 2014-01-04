@@ -129,45 +129,57 @@ module_set_sptr IncrementalModuleSet::get_removable_module_set(const ModuleSet& 
     if(current_ms->find(*it)==current_ms->end()) removed_ms->add_module(*it);
   }
 
-  it = ms.begin();
-  end = ms.end();
-  bool must_search = true;
-  bool first = true;
-  while(must_search){
-    for(; it!=end; it++){
-      // requiredの場合はどうあっても削除出来ないので次の要素のチェックへ
-      if(required_ms_->find(*it)!=required_ms_->end()) continue;
-      // 常に削除できるモジュールのチェック(parents_data_になく、requiredでないもの)
-      if(parents_data_.find(*it)==parents_data_.end()){
-        removable->add_module(*it);
-        continue;
+  it = current_ms->begin();
+  end = current_ms->end();
+  for(; it!=end; it++){
+    // requiredの場合はどうあっても削除出来ないので次の要素のチェックへ
+    if(required_ms_->find(*it)!=required_ms_->end()) continue;
+    // 常に削除できるモジュールのチェック(parents_data_になく、requiredでないもの)
+    if(parents_data_.find(*it)==parents_data_.end()){
+      removable->add_module(*it);
+      continue;
+    }
+    // parents_data_に含まれているモジュールについて
+    str_ms_list_t::iterator p_it = parents_data_[*it].begin();
+    str_ms_list_t::iterator p_end = parents_data_[*it].end();
+    for(; p_it!=p_end; p_it++){
+      // current_msに含まれていないモジュールは関係ないので次の要素のチェック
+      if(removed_ms->including(*(p_it->second))) continue;
+      bool weaker_than_inconsist_module = false;
+      for(module_list_const_iterator im_it = ms.begin(); im_it != ms.end(); im_it++){
+        if(p_it->second->find(*(im_it)) != p_it->second->end()){
+          weaker_than_inconsist_module = true;
+          break;
+	}
       }
-      // parents_data_に含まれているモジュールについて
-      str_ms_list_t::iterator p_it = parents_data_[*it].begin();
-      str_ms_list_t::iterator p_end = parents_data_[*it].end();
-      for(; p_it!=p_end; p_it++){
-        // current_msに含まれていないモジュールは関係ないので次の要素のチェック
-        if(removed_ms->including(*(p_it->second))) continue;
-        switch(p_it->first){
-        case WEAKER_THAN:
-        case PARALLEL:
-          // << の左か , かで削除できる
+      switch(p_it->first){
+      case WEAKER_THAN:
+        if(ms.find(*(it)) != ms.end()){
           removable->add_module(*it);
-          break;
-        default:
-          break;
+          break; 
+ 	}
+        {
+          bool weaker_than_inconsist_module = false;
+          for(module_list_const_iterator im_it = ms.begin(); im_it != ms.end(); im_it++){
+            if(p_it->second->find(*(im_it)) != p_it->second->end()){
+              weaker_than_inconsist_module = true;
+              break;
+            }
+          }
         }
+        if(weaker_than_inconsist_module) removable->add_module(*it);
+        break;
+      case PARALLEL:
+        // << の左か , かで削除できる
+        removable->add_module(*it);
+        break;
+      default:
         break;
       }
-      // 最後までチェックできた時も削除できる
-      if(p_it==p_end) removable->add_module(*it);
+      break;
     }
-    // 矛盾集合内の要素が削除できなければ現在調べている集合からも削除できるモジュールを探す
-    if(first && removable->size() == 0){
-      it = current_ms->begin();
-      end = current_ms->end();
-      first = false;
-    }else must_search = false;
+    // 最後までチェックできた時も削除できる
+    if(p_it==p_end) removable->add_module(*it);
   }
   return removable;
 }
