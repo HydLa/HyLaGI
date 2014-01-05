@@ -274,6 +274,9 @@ procedure hasIneqRelop(expr_)$
      freeof(expr_, geq) and freeof(expr_, greaterp) and
      freeof(expr_, leq) and freeof(expr_, lessp)) then nil else t;
 
+procedure hasEqual(expr_)$
+  if(freeof(expr_, equal)) then nil else t;
+
 procedure getReverseRelop(relop_)$
   if(relop_=equal) then equal
   else if(relop_=neq) then neq
@@ -1457,7 +1460,7 @@ procedure lgetf(x,llst)$
 % @return
 procedure exDSolve(cons_, guardCons_, initCons_, vars_)$
 begin;
-  scalar noDifferentialVars_, resultRule_, rules_, resultCons_, loopAns_;
+  scalar noDifferentialVars_, tmpExpr_, resultCons_, resultRule_, rules_, loopAns_;
 
   debugWrite("in exDSolve", " ");
   debugWrite("{cons_, guardCons_, initCons_, vars_}: ", {cons_, guardCons_, initCons_, vars_});
@@ -1468,15 +1471,16 @@ begin;
   noDifferentialVars_:= myUniq(noDifferentialVars_);
   debugWrite("noDifferentialVars_: ", noDifferentialVars_);
 
-  % NDExprs_, otherExprs_への対応
-  tmpExprs_:= part(splitExprs(removePrevCons(cons_), vars_), 3);
-  tmpExprs_:= union(tmpExprs_, guardCons_);
-  debugWrite("tmpExprs_: ",tmpExprs_);
-
-  resultCons_:= filter(hasIneqRelop, union(removePrevCons(cons_), guardCons_));
+  tmpExpr_:= union(removePrevCons(cons_), guardCons_);
+  resultCons_:= filter(hasIneqRelop, tmpExpr_);
   debugWrite("resultCons_: ", resultCons_);
 
-  loopAns_:= exDSolveLoop(tmpExprs_, noDifferentialVars_, vars_, initCons_, {}, resultCons_);
+  % TODO splitExprsで言うNDExprs_, otherExprs_への対応
+  debugWrite("old tmpExpr_: ", union(part(splitExprs(removePrevCons(cons_), vars_), 3), guardCons_));
+  tmpExpr_:= filter(hasEqual, tmpExpr_);
+  debugWrite("tmpExpr_: ",tmpExpr_);
+
+  loopAns_:= exDSolveLoop(tmpExpr_, noDifferentialVars_, vars_, initCons_, {}, resultCons_);
 
   if(loopAns_ = retoverconstraint___) then  return ansWrite("exDSolve", retoverconstraint___);
   if(loopAns_ = retsolvererror___) then     return ansWrite("exDSolve", retsolvererror___);
@@ -1489,20 +1493,20 @@ begin;
   debugWrite("resultCons_ :", resultCons_);
 
   if(resultCons_ = false) then return ansWrite("exDSolve", retoverconstraint___);
-  if((not hasVariable(guadCheck_, vars_)) and not freeof(resultCons_, t)) then
+  if((not hasVariable(resultCons_, vars_)) and not freeof(resultCons_, t)) then
     return ansWrite("exDSolve", retoverconstraint___);
 
   return ansWrite("exDSolve", resultRule_);
 end;
 
-procedure exDSolveLoop(tmpExprs_, noDifferentialVars_, vars_, initCons_, resultRule_, resultCons_)$
+procedure exDSolveLoop(tmpExpr_, noDifferentialVars_, vars_, initCons_, resultRule_, resultCons_)$
 begin;
   scalar searchResult_, rules_;
   debugWrite("in exDSolveLoop: ", " ");
-  debugWrite("{tmpExprs_, noDifferentialVars_, vars_, resultRule_, resultCons_}: ", 
-    {tmpExprs_, noDifferentialVars_, vars_, resultRule_, resultCons_});
+  debugWrite("{tmpExpr_, noDifferentialVars_, vars_, resultRule_, resultCons_}: ",
+    {tmpExpr_, noDifferentialVars_, vars_, resultRule_, resultCons_});
 
-  searchResult_:= searchExprsAndVars(tmpExprs_, noDifferentialVars_);
+  searchResult_:= searchExprsAndVars(tmpExpr_, noDifferentialVars_);
   if(searchResult_ = unExpandable) then return ansWrite("exDSolveLoop", {resultRule_, resultCons_});
 
   rules_:= dSolveByLaplace(first(searchResult_), initCons_, third(searchResult_));
@@ -1512,20 +1516,20 @@ begin;
   resultRule_:= union(resultRule_, rules_);
   debugWrite("resultRule_: ", resultRule_);
 
-  tmpExprs_:= exSub(rules_, second(searchResult_));
-  debugWrite("tmpExprs_: ", tmpExprs_);
-  if((not hasVariable(tmpExprs_, vars_)) and not freeof(tmpExprs_, t)) then
+  tmpExpr_:= exSub(rules_, second(searchResult_));
+  debugWrite("tmpExpr_: ", tmpExpr_);
+  if((not hasVariable(tmpExpr_, vars_)) and not freeof(tmpExpr_, t)) then
     return ansWrite("exDSolveLoop", retoverconstraint___);
-  if(rlqe(mymkand(tmpExprs_)) = false) then return ansWrite("exDSolveLoop", retoverconstraint___);
+  if(rlqe(mymkand(tmpExpr_)) = false) then return ansWrite("exDSolveLoop", retoverconstraint___);
 
-  tmpExprs_:= filter(isNotTrue, tmpExprs_);
-  debugWrite("tmpExprs_: ", tmpExprs_);
+  tmpExpr_:= filter(isNotTrue, tmpExpr_);
+  debugWrite("tmpExpr_: ", tmpExpr_);
 
   resultCons_:= exSub(rules_, resultCons_);
   if(rlqe(mymkand(resultCons_)) = false) then return ansWrite("exDSolveLoop", retoverconstraint___);
   resultCons_:= filter(isNotTrue, resultCons_);
 
-  return exDSolveLoop(tmpExprs_, noDifferentialVars_, vars_, initCons_, resultRule_, resultCons_);
+  return exDSolveLoop(tmpExpr_, noDifferentialVars_, vars_, initCons_, resultRule_, resultCons_);
 end;
 
 procedure searchExprsAndVars(exprs_, vars_)$
@@ -1536,12 +1540,13 @@ begin;
 end;
 
 % MCSの, length(tmpVars_)が見つからない場合最小のtmpVars_を持つ式を戻す処理を端折る
+% parameters__に依存
 procedure searchExprsAndVarsLoop(exprs_, vars_, idx_)$
 begin;
   debugWrite("searchExprsAndVarsLoop: ", {exprs_, vars_, idx_});
 
   if(idx_ > length(exprs_)) then return unExpandable;
-  tmpVars_:= for each var in vars_ join if(not freeof(part(exprs_, idx_) , var)) then {var} else {};
+  tmpVars_:= for each var in union(vars_, parameters__) join if(not freeof(part(exprs_, idx_) , var)) then {var} else {};
   debugWrite("tmpVars_: ", tmpVars_);
   if(length(tmpVars_) = 1) then
     return {{part(exprs_, idx_)}, drop(exprs_, idx_), tmpVars_};
@@ -1738,12 +1743,13 @@ end;
 %---------------------------------------------------------------
 
 % exprs_にvars_中の変数が少なくとも一つ含まれているか調べる
+% parameters__に依存
 % @return true || false
 procedure hasVariable(exprs_, vars_)$
 begin;
   scalar check_;
   check_:=
-    for each x in vars_ join if(freeof(exprs_, x)) then {} else {x};
+    for each x in union(vars_, parameters__) join if(freeof(exprs_, x)) then {} else {x};
   if(check_ <> {}) then return t
   else return nil;
 end;

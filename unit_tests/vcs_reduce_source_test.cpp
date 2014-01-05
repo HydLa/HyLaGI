@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(balloon_tank_test){
 
     "symbolic redeval '(checkConsistencyIntervalMain cons_ guardCons_ initCons_ pCons_ vars_);";
 
-  BOOST_CHECK(check(query_balloon_tank_ccim_timer_less_volume, "(list (list (list parameter_ex!!t_0_1 2 2) (list parameter_ex!!t_0_1 1 4) (list parameter_volume_0_1 2 1) (list parameter_volume_0_1 1 3)) false)", true));
+  BOOST_CHECK(check(query_balloon_tank_ccim_timer_less_volume, "(list (list (list parameter_ex!!t_0_1 2 2) (list parameter_ex!!t_0_1 1 4) (list parameter_volume_0_1 2 1) (list parameter_volume_0_1 1 3)) false)"));
 
 }
 
@@ -501,6 +501,26 @@ BOOST_AUTO_TEST_CASE(dSolveByLaplace_test){
 
     "symbolic redeval '(exDSolve cons_ guardCons_ initCons_ vars_);";
   BOOST_CHECK(check(query_square_exDSolve, "(list (equal usrvar_f 0) (equal usrvar_t t))"));
+}
+
+BOOST_AUTO_TEST_CASE(broken_example_test){
+  string query_bouncing_particle_rp_ccim2 =
+    "depend {usrvar_e, usrvar_ht, usrvar_v}, t$"
+    // exIneqSolveのため
+    "variables__:= {df(usrvar_e,t), df(usrvar_ht,t), df(usrvar_v,t), prev(usrvar_e), prev(usrvar_ht), prev(usrvar_v), usrvar_e, usrvar_ht, usrvar_v}$"
+    "parameters__:= {parameter_ht_0_1}$"
+    // removeinitconsのため
+    "initVariables__:= {initusrvar_elhs,initusrvar_htlhs,initusrvar_vlhs}$"
+
+    "cons_:={df(usrvar_e,t) = 0,df(usrvar_ht,t) = usrvar_v,df(usrvar_v,t) = -10}$"
+    "guardCons_:={usrvar_ht = 0}$"
+    "initCons_:={initusrvar_elhs = 4/5,initusrvar_htlhs = parameter_ht_0_1,initusrvar_vlhs = 0}$"
+    "pCons_:={parameter_ht_0_1 - 5 > 0,parameter_ht_0_1 - 15 < 0}$"
+    "vars_:={df(usrvar_e,t), df(usrvar_ht,t), df(usrvar_v,t), prev(usrvar_e), prev(usrvar_ht), prev(usrvar_v), usrvar_e, usrvar_ht, usrvar_v}$"
+
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ guardCons_ initCons_ pCons_ vars_);";
+
+  //BOOST_CHECK(check(query_bouncing_particle_rp_ccim2 , "(list false (list (list parameter_ht_0_1 2 5) (list parameter_ht_0_1 1 15)))"));
 }
 
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST
