@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(exDSolve_test){
     "vars_:={ht,v,df(ht,t),df(v,t)}$"
     "symbolic redeval '(exDSolve cons_ guardCons_ initCons_ vars_);";
 
-  BOOST_CHECK(check(query, "(list (equal ht (plus (minus (times 5 (expt t 2))) 10)) (equal v (minus (times 10 t))))"));
+  BOOST_CHECK(check(query, "(list (list) (list (equal ht (plus (minus (times 5 (expt t 2))) 10)) (equal v (minus (times 10 t)))))"));
 
   const string query_rcs_recovery = 
     "depend {usrvary}, t$"
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(exDSolve_test){
 
     "symbolic redeval '(exDSolve cons_ guardCons_ init_ vars_);";
 
-  BOOST_CHECK(check(query_rcs_recovery, "(list (equal usrvary (plus (minus (times 5 (expt t 2))) 10)))"));
+  BOOST_CHECK(check(query_rcs_recovery, "(list (list) (list (equal usrvary (plus (minus (times 5 (expt t 2))) 10))))"));
 }
 
 /**
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(balloon_tank_test){
     "vars_:= {df(usrvar_ex!!t,t), df(usrvar_h,t,3), df(usrvar_h,t,2), df(usrvar_h,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(df(usrvar_h,t,2)), prev(df(usrvar_h,t)), prev(usrvar_ex!!t), prev(usrvar_h), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_fuel, usrvar_h, usrvar_timer, usrvar_volume}$"
 
     "symbolic redeval '(exDSolve cons_ guardCons_ init_ vars_);";
-  BOOST_CHECK(check(query_balloon_tank_ccim4_exDSolve, "(list (equal usrvar_ex!!t parameter_ex!!t_0_1) (equal usrvar_fuel 1) (equal usrvar_h (quotient (plus (expt t 2) 20) 2)) (equal usrvar_timer t) (equal usrvar_volume parameter_volume_0_1))"));
+  BOOST_CHECK(check(query_balloon_tank_ccim4_exDSolve, "(list (list) (list (equal usrvar_ex!!t parameter_ex!!t_0_1) (equal usrvar_fuel 1) (equal usrvar_h (quotient (plus (expt t 2) 20) 2)) (equal usrvar_timer t) (equal usrvar_volume parameter_volume_0_1)))"));
 
   // guardを上手くexDSolveで処理しないと失敗する例
   const string query_circle_ccim2 =
@@ -462,6 +462,24 @@ BOOST_AUTO_TEST_CASE(balloon_tank_test){
 
   BOOST_CHECK(check(query_circle_ccim2, "(list false true)"));
 
+  const string query_balloon_tank_ccim_timer_geq_volume =
+    "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
+    // exIneqSolveのため
+    "variables__:= {df(usrvar_ex!!t,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(usrvar_ex!!t), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_timer, usrvar_volume}$"
+    "parameters__:= {parameter_ex!!t_0_1,parameter_volume_0_1}$"
+    // removeinitconsのため
+    "initVariables__:= {initusrvar_ex!!tlhs, initusrvar_h_1lhs, initusrvar_h_2lhs, initusrvar_hlhs, initusrvar_timerlhs, initusrvar_volumelhs}$"
+
+    "cons_:={df(usrvar_ex!!t,t) = 0,df(usrvar_timer,t) = 1,df(usrvar_volume,t) = 0}$"
+    "guardCons_:={usrvar_timer - usrvar_volume >= 0}$"
+    "initCons_:={initusrvar_ex!!tlhs = parameter_ex!!t_0_1,initusrvar_timerlhs = 0,initusrvar_volumelhs = parameter_volume_0_1}$"
+    "pCons_:={parameter_ex!!t_0_1 - 2 > 0, parameter_volume_0_1 - 1 > 0, parameter_ex!!t_0_1 - 4 < 0, parameter_volume_0_1 - 3 < 0}$"
+    "vars_:={df(usrvar_ex!!t,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(usrvar_ex!!t), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_timer, usrvar_volume}$"
+
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ guardCons_ initCons_ pCons_ vars_);";
+
+  BOOST_CHECK(check(query_balloon_tank_ccim_timer_geq_volume, "(list false (list (list parameter_ex!!t_0_1 2 2) (list parameter_ex!!t_0_1 1 4) (list parameter_volume_0_1 2 1) (list parameter_volume_0_1 1 3)))"));
+
   const string query_balloon_tank_ccim_timer_less_volume =
     "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
     // exIneqSolveのため
@@ -480,6 +498,22 @@ BOOST_AUTO_TEST_CASE(balloon_tank_test){
 
   BOOST_CHECK(check(query_balloon_tank_ccim_timer_less_volume, "(list (list (list parameter_ex!!t_0_1 2 2) (list parameter_ex!!t_0_1 1 4) (list parameter_volume_0_1 2 1) (list parameter_volume_0_1 1 3)) false)"));
 
+  const string query_balloon_tank_ccim_fuel_isnot_1 =
+    "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
+    // exIneqSolveのため
+    "variables__:= {df(usrvar_ex!!t,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(usrvar_ex!!t), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_timer, usrvar_volume}$"
+    "parameters__:= {parameter_ex!!t_0_1,parameter_volume_0_1}$"
+    // removeinitconsのため
+    "initVariables__:= {initusrvar_ex!!tlhs, initusrvar_h_1lhs, initusrvar_h_2lhs, initusrvar_hlhs, initusrvar_timerlhs, initusrvar_volumelhs}$"
+
+    "cons_:={df(usrvar_ex!!t,t) = 0,df(usrvar_h,t,3) = 0,df(usrvar_timer,t) = 1,df(usrvar_volume,t) = 0}$"
+    "guardCons_:={usrvar_fuel - 1 <> 0}$"
+    "initCons_:={initusrvar_ex!!tlhs = parameter_ex!!t_0_1,initusrvar_h_1lhs = 0,initusrvar_h_2lhs = 1,initusrvar_hlhs = 10,initusrvar_timerlhs = 0,initusrvar_volumelhs = parameter_volume_0_1}$"
+    "pCons_:={parameter_ex!!t_0_1 - 2 > 0, parameter_volume_0_1 - 1 > 0, parameter_ex!!t_0_1 - 4 < 0, parameter_volume_0_1 - 3 < 0}$"
+    "vars_:={df(usrvar_ex!!t,t), df(usrvar_h,t,3), df(usrvar_h,t,2), df(usrvar_h,t), df(usrvar_timer,t), df(usrvar_volume,t), prev(df(usrvar_h,t,2)), prev(df(usrvar_h,t)), prev(usrvar_ex!!t), prev(usrvar_h), prev(usrvar_timer), prev(usrvar_volume), usrvar_ex!!t, usrvar_fuel, usrvar_h, usrvar_timer, usrvar_volume}$" 
+    "symbolic redeval '(checkConsistencyIntervalMain cons_ guardCons_ initCons_ pCons_ vars_);";
+
+  BOOST_CHECK(check(query_balloon_tank_ccim_fuel_isnot_1, "(list (list (list parameter_ex!!t_0_1 2 2) (list parameter_ex!!t_0_1 1 4) (list parameter_volume_0_1 2 1) (list parameter_volume_0_1 1 3)) false)"));
 }
 
 BOOST_AUTO_TEST_CASE(dSolveByLaplace_test){
@@ -500,7 +534,7 @@ BOOST_AUTO_TEST_CASE(dSolveByLaplace_test){
     "vars_:= {df(usrvar_f,t), df(usrvar_t,t), prev(usrvar_f), prev(usrvar_t), usrvar_f, usrvar_t}$"
 
     "symbolic redeval '(exDSolve cons_ guardCons_ initCons_ vars_);";
-  BOOST_CHECK(check(query_square_exDSolve, "(list (equal usrvar_f 0) (equal usrvar_t t))"));
+  BOOST_CHECK(check(query_square_exDSolve, "(list (list) (list (equal usrvar_f 0) (equal usrvar_t t)))"));
 }
 
 BOOST_AUTO_TEST_CASE(broken_example_test){
