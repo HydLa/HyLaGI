@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(createVariableMapInterval_test){
   BOOST_CHECK(check(query_rcs_recovery, "(list (list (df usrvary t 2) 0 -10) (list (df usrvary t) 0 (minus (times 10 t))) (list usrvary 0 (plus (minus (times 5 (expt t 2))) 10)))"));
 }
 
-BOOST_AUTO_TEST_CASE(balloon_tank_test){
+BOOST_AUTO_TEST_CASE(balloon_tank_checkConsistency_test){
   const string query_balloon_tank_ccpm =
     "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
     "cons_:= { - usrvar_ex!!t + 2 < 0 and usrvar_ex!!t - 4 < 0, - usrvar_volume + 1 < 0 and usrvar_volume - 3 < 0, df(usrvar_ex!!t,t) = 0, df(usrvar_h,t) = 0, df(usrvar_timer,t) = 1, df(usrvar_volume,t) = 0, usrvar_ex!!t = prev(usrvar_ex!!t), usrvar_fuel = 1, usrvar_h = prev(usrvar_h), usrvar_h = 10, usrvar_timer = prev(usrvar_timer), usrvar_timer = 0, usrvar_volume = prev(usrvar_volume)}$"
@@ -557,4 +557,22 @@ BOOST_AUTO_TEST_CASE(broken_example_test){
   //BOOST_CHECK(check(query_bouncing_particle_rp_ccim2 , "(list false (list (list parameter_ht_0_1 2 5) (list parameter_ht_0_1 1 15)))"));
 }
 
+BOOST_AUTO_TEST_CASE(balloon_tank_calculateNextPointPhaseTimeMain_test){
+  const string query_balloon_tank_cnppt =
+    "depend {usrvar_ex!!t, usrvar_h, usrvar_timer, usrvar_volume}, t$"
+    // convertValueToIntervalで必要
+    "pConstraint__:= {parameter_ex!!t_0_1 - 2 > 0, parameter_volume_0_1 - 1 > 0, parameter_ex!!t_0_1 - 4 < 0, parameter_volume_0_1 - 3 < 0}$"
+
+    "maxTime_ := 100$"
+    "discCause_ := {usrvar_fuel - 1 <> 0, usrvar_timer - usrvar_volume >= 0, usrvar_timer - usrvar_volume >= 0, - usrvar_ex!!t + usrvar_timer - usrvar_volume >= 0, usrvar_fuel = 0, usrvar_h < 0}$"
+    "cons_ := {usrvar_ex!!t = parameter_ex!!t_0_1,usrvar_fuel = 1,usrvar_h = (t**2 + 20)/2,usrvar_timer = t,usrvar_volume = parameter_volume_0_1}$"
+    "initCons_ := {initusrvar_ex!!tlhs = parameter_ex!!t_0_1,initusrvar_h_1lhs = 0,initusrvar_hlhs = 10,initusrvar_timerlhs = 0,initusrvar_volumelhs = parameter_volume_0_1}$"
+    "pCons_ := {parameter_ex!!t_0_1 - 2 > 0, parameter_volume_0_1 - 1 > 0, parameter_ex!!t_0_1 - 4 < 0, parameter_volume_0_1 - 3 < 0}$"
+    "variables__ := vars_ := {df(usrvar_ex!!t,t), df(usrvar_h,t,2), df(usrvar_h,t), df(usrvar_timer,t), df(usrvar_volume,t), usrvar_ex!!t, usrvar_fuel, usrvar_h, usrvar_timer, usrvar_volume}$"
+    "parameters__ := {parameter_ex!!t_0_1,parameter_volume_0_1}$"
+
+    "symbolic redeval '(calculateNextPointPhaseTimeMain maxTime_ discCause_ cons_ initCons_ pCons_ vars_);";
+
+  BOOST_CHECK(check(query_balloon_tank_cnppt, "(list (list parameter_volume_0_1 (list (list (list parameter_ex!!t_0_1 1 4) (list parameter_ex!!t_0_1 2 2) (list parameter_volume_0_1 2 1) (list parameter_volume_0_1 1 3))) 0))"));
+}
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST

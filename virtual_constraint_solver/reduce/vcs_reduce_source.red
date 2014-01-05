@@ -371,27 +371,30 @@ procedure getUbFromInterval(expr_)$
 % （その場合、lbとubが等しくなっている区間は、閉区間と考えると実現可能か）
 procedure compareInterval(interval1_, op_, interval2_)$
 begin;
+  scalar ans_;
   debugWrite("in compareInterval", " ");
   debugWrite("interval1_: ", interval1_);
   debugWrite("op_: ", op_);
   debugWrite("interval2_: ", interval2_);
 
+  ans_:=
   if (op_ = geq) then
-    if (getLbFromInterval(interval1_) >= getUbFromInterval(interval2_)) then return t 
-    else if(getUbFromInterval(interval1_) < getLbFromInterval(interval2_)) then return nil
-    else return unknown
+    if (getLbFromInterval(interval1_) >= getUbFromInterval(interval2_)) then t
+    else if(getUbFromInterval(interval1_) < getLbFromInterval(interval2_)) then nil
+    else unknown
   else if (op_ = greaterp) then
-    if (getLbFromInterval(interval1_) > getUbFromInterval(interval2_)) then return t 
-    else if(getUbFromInterval(interval1_) <= getLbFromInterval(interval2_)) then return nil
-    else return unknown
+    if (getLbFromInterval(interval1_) > getUbFromInterval(interval2_)) then t
+    else if(getUbFromInterval(interval1_) <= getLbFromInterval(interval2_)) then nil
+    else unknown
   else if (op_ = leq) then
-    if (getUbFromInterval(interval1_) <= getLbFromInterval(interval2_)) then return t 
-    else if(getLbFromInterval(interval1_) > getUbFromInterval(interval2_)) then return nil
-    else return unknown
+    if (getUbFromInterval(interval1_) <= getLbFromInterval(interval2_)) then t
+    else if(getLbFromInterval(interval1_) > getUbFromInterval(interval2_)) then nil
+    else unknown
   else if (op_ = lessp) then
-    if (getUbFromInterval(interval1_) < getLbFromInterval(interval2_)) then return t 
-    else if(getLbFromInterval(interval1_) >= getUbFromInterval(interval2_)) then return nil
-    else return unknown;
+    if (getUbFromInterval(interval1_) < getLbFromInterval(interval2_)) then t
+    else if(getLbFromInterval(interval1_) >= getUbFromInterval(interval2_)) then nil
+    else unknown;
+  return ansWrite("compareInterval", ans_);
 end;
 
 procedure plusInterval(interval1_, interval2_)$
@@ -523,16 +526,30 @@ begin;
       retInterval_:= interval(getLbFromInterval(timesInterval(makePointInterval(-1), piInterval__)), getUbFromInterval(piInterval__));
     >> else <<
       % TODO：他にどんな場合に無理数扱いになるかを調べる
-      retInterval_:= interval(hoge, hoge);
+      retInterval_:= interval(unknown, unknown);
     >>;
   >> else <<
     if(value_=pi) then retInterval_:= piInterval__
     else if(value_=e) then retInterval_:= eInterval__
-    else retInterval_:= interval(hoge, hoge);
+    else if(hasParameter(value_)) then <<
+      valueConstraint_:= for each x in pConstraint__ join if(not freeof(x, value_)) then {x} else {};
+      lb_:=-INFINITY ; ub_:= INFINITY;
+      for each x in valueConstraint_ do <<
+        % value + expr op_ 0 の不等式を想定
+        op_:= head(x);
+        rhs_:= part(part(x, 1), 2);
+        debugWrite("{x, op_, rhs}: ", {x, op_, rhs_});
+        % TODO 開区間をよりマシに実装する 
+        if(op_ = geq) then      lb_:= getLbFromInterval(convertValueToInterval(rhs_));
+        if(op_ = greaterp) then lb_:= getLbFromInterval(convertValueToInterval(rhs_ + 1/10000000000));
+        if(op_ = leq) then      ub_:= getLbFromInterval(convertValueToInterval(rhs_));
+        if(op_ = lessp) then    ub_:= getUbFromInterval(convertValueToInterval(rhs_ - 1/10000000000));
+      >>;
+      retInterval_:= interval(lb_, ub_);
+    >> else retInterval_:= interval(unknown, unknown);
   >>;
-  debugWrite("ans in convertValueToInterval: ", retInterval_);
 
-  return retInterval_;
+  return ansWrite("convertValueToInterval", retInterval_);
 end;
 
 %---------------------------------------------------------------
@@ -604,26 +621,26 @@ end;
 % 大小判定関連の関数（定数式のみ、パラメタなし）
 %---------------------------------------------------------------
 
-checkOrderingFormulaCount_:= 0;
+checkOrderingFormulaCount__:= 0;
 checkOrderingFormulaIrrationalNumberCount_:= 0;
 
 procedure checkOrderingFormula(orderingFormula_)$
 % 論理式の比較を行う
+% TODO パラメータが入ってきた時の対処
 %入力: 論理式(特にsqrt(2), greaterp_, sin(2)などを含むようなもの), 精度
-%出力: t or nil or -1
-%      (xとyがほぼ等しい時 -1)
+%出力: t or nil or -1 or unknown
+%      (xとyがほぼ等しい時 -1, 記号定数で確定できない場合unknown)
 %geq_= >=, geq; greaterp_= >, greaterp; leq_= <=, leq; lessp_= <, lessp;
 begin;
   scalar head_, x, op, y, bak_precision, ans, margin, xInterval_, yInterval_;
 
   debugWrite("=== in checkOrderingFormula: ", orderingFormula_);
-  checkOrderingFormulaCount_:= checkOrderingFormulaCount_+1;
-  debugWrite("checkOrderingFormulaCount_: ", checkOrderingFormulaCount_);
+  checkOrderingFormulaCount__:= checkOrderingFormulaCount__+1;
+  debugWrite("checkOrderingFormulaCount__: ", checkOrderingFormulaCount__);
 
   head_:= head(orderingFormula_);
   % 大小に関する論理式以外が入力されたらエラー
   if(hasLogicalOp(head_)) then <<
-    debugWrite("ans in checkOrderingFormula: ", ERROR);
     return ERROR;
   >>;
 
@@ -635,14 +652,13 @@ begin;
 
   if(x=y) then <<
     ans:= if((op = geq) or (op = leq)) then t else nil;
-    debugWrite("ans in checkOrderingFormula: ", ans);
-    return ans;
+    return ansWrite("checkOrderingFormula", ans);
   >>;
 
   if(not freeof({x,y}, INFINITY)) then <<
     ans:= infinityIf(x, op, y);
     debugWrite("ans after infinityIf in checkOrderingFormula: ", ans);
-    return ans;
+    return ansWrite("checkOrderingFormula", ans);
   >>;
 
   if(not numberp(x) or not(numberp(y))) then <<
@@ -668,7 +684,7 @@ begin;
       if(abs(x-y)<margin) then <<
         off rounded$ precision bak_precision$
         write(-1);
-        return -1;
+        return ansWrite("checkOrderingFormula", -1);
       >>;
 
       if (op = geq) then
@@ -685,8 +701,7 @@ begin;
       % 区間値への変換を用いた大小比較
       xInterval_:= convertValueToInterval(x);
       yInterval_:= convertValueToInterval(y);
-      debugWrite("xInterval_: ", xInterval_);
-      debugWrite("yInterval_: ", yInterval_);
+      debugWrite("{xInterval_, yInterval_}: ", {xInterval_, yInterval_});
       ans:= compareInterval(xInterval_, op, yInterval_);
     >>;
   >> else <<
@@ -697,16 +712,17 @@ begin;
   >>;
 
   if(ans=unknown) then <<
-    % unknownが返った場合は精度を変えて再試行
-    intervalPrecision__:= intervalPrecision__+4;
-    ans:= checkOrderingFormula(orderingFormula_);
-    intervalPrecision__:= intervalPrecision__-4;
+    if(not hasParameter(orderingFormula_)) then <<
+      % unknownが返った場合は精度を変えて再試行
+      intervalPrecision__:= intervalPrecision__+4;
+      ans:= checkOrderingFormula(orderingFormula_);
+      intervalPrecision__:= intervalPrecision__-4;
+    >> else ans_:= unknown;
   >>;
 
   debugWrite("checkOrderingFormula arg:", orderingFormula_);
-  debugWrite("ans in checkOrderingFormula: ", ans);
 
-  return ans;
+  return ansWrite("checkOrderingFormula", ans);
 end;
 
 % infinity(無限大)を含む不等式の判定
@@ -714,7 +730,9 @@ procedure infinityIf(x, op, y)$
 begin;
   scalar ans_, infinityTupleDNF_, retTuple_, i_, j_, andAns_;
 
-  debugWrite("in infinityIf: ", {x, op, y});
+  debugWrite("in infinityIf", "");
+  debugWrite("{x, op, y}: ", {x, op, y});
+  
   % INFINITY > -INFINITYとかの対応
   if(x=INFINITY or y=-INFINITY) then 
     if((op = geq) or (op = greaterp)) then ans_:=t else ans_:=nil
@@ -724,7 +742,7 @@ begin;
     % 係数等への対応として、まずinfinity relop valueの形にしてから解きなおす
     infinityTupleDNF_:= exIneqSolve(op(x, y));
     debugWrite("infinityTupleDNF_: ", infinityTupleDNF_);
-    if(isFalseDNF(infinityTupleDNF_)) then return nil;
+    if(isFalseDNF(infinityTupleDNF_)) then return ansWrite("checkOrderingFormula", nil);
     i_:= 1;
     ans_:= nil;
     while (i_<=length(infinityTupleDNF_) and (ans_ neq t)) do <<
@@ -740,17 +758,32 @@ begin;
     >>;
   >>;
 
-  debugWrite("ans in infinityIf: ", ans_);
-  return ans_;
+  return ansWrite("infinityIf", ans_);
 end;
 
 procedure mymin(x,y)$
 %入力: 数値という前提
-  if(checkOrderingFormula(x<y)) then x else y;
+begin;
+  scalar ans_;
+  debugWrite("in mymin: ", {x,y});
+  ans_:= checkOrderingFormula(x<y);
+  ans_:= if(ans_ = t) then x
+         else if(ans_ = nil) then y
+         else if(ans_ = unknown) then unknown;
+  return ansWrite("mymin", ans_);
+end;
 
 procedure mymax(x,y)$
 %入力: 数値という前提
-  if(checkOrderingFormula(x>y)) then x else y;
+begin;
+  scalar ans_;
+  debugWrite("in mymax: ", {x,y});
+  ans_:= checkOrderingFormula(x>y);
+  ans_:= if(ans_ = t) then x
+         else if(ans_ = nil) then y
+         else if(ans_ = unknown) then unknown;
+  return ansWrite("mymax", ans_);
+end;
 
 procedure findMinimumValue(x,lst)$
 %入力: 現段階での最小値x, 最小値を見つけたい対象のリスト
@@ -991,8 +1024,7 @@ begin;
   >>);
 
   if(addedCondDNF_={}) then addedCondDNF_:= {{}};
-  debugWrite("ans in addCondTupleToCondDNF: ", addedCondDNF_);
-  return addedCondDNF_;
+  return ansWrite("addCondTupleToCondDNF", addedCondDNF_);
 end;
 
 procedure addCondTupleToCondConj(newCondTuple_, condConj_)$
@@ -1005,16 +1037,16 @@ begin;
   debugWrite("{newCondTuple_, condConj_}: ", {newCondTuple_, condConj_});
 
   % trueを追加しようとする場合、追加しないのと同じ
-  if(newCondTuple_=true) then return condConj_;
+  if(newCondTuple_=true) then return ansWrite("addCondTupleToCondConj", condConj_);
   % パラメタが入らない場合、単に大小判定をした結果が残る
   % （移項するとパラメタが入らなくなる場合も同様）
   if(not hasParameter(makeExprFromTuple(newCondTuple_)) and freeof(makeExprFromTuple(newCondTuple_), t)) then 
-    if(checkOrderingFormula(makeExprFromTuple(newCondTuple_))) then return condConj_
-    else return {};
+    if(checkOrderingFormula(makeExprFromTuple(newCondTuple_))) then return ansWrite("addCondTupleToCondConj", condConj_)
+    else return ansWrite("addCondTupleToCondConj", {});
   % falseに追加しようとする場合
-  if(isFalseConj(condConj_)) then return {};
+  if(isFalseConj(condConj_)) then return ansWrite("addCondTupleToCondConj", {});
   % trueに追加しようとする場合
-  if(isTrueConj(condConj_)) then return {newCondTuple_};
+  if(isTrueConj(condConj_)) then return ansWrite("addCondTupleToCondConj", {newCondTuple_});
 
 
   % 場合によっては、タプルのVarName部分とValue部分の両方に変数名が入っていることもある
@@ -1025,14 +1057,11 @@ begin;
     debugWrite("{ineqSolDNF_, (newCondTuple_), (condConj_)}: ", {ineqSolDNF_, newCondTuple_, condConj_});
     if(isFalseDNF(ineqSolDNF_)) then <<
       % falseを表すタプルを論理積に追加しようとした場合はfalseを表す論理積を返す
-      addedCondConj_:= {};
-      debugWrite("ans in addCondTupleToCondConj: ", addedCondConj_);
-      return addedCondConj_;
+      return ansWrite("addCondTupleToCondConj", {});
     >> else if(isTrueDNF(ineqSolDNF_)) then <<
       % trueを表すタプルを論理積に追加しようとした場合はcondConj_を返す
       addedCondConj_:= condConj_;
-      debugWrite("ans in addCondTupleToCondConj: ", addedCondConj_);
-      return addedCondConj_;
+      return ansWrite("addCondTupleToCondConj", addedCondConj_);
     >>;
     % DNF形式で返るので、改めてタプルを取り出す
     if(length(first(ineqSolDNF_))>1) then <<
@@ -1041,7 +1070,7 @@ begin;
       for i:=1 : length(first(ineqSolDNF_)) do <<
         tmpConj_:= addCondTupleToCondConj(part(first(ineqSolDNF_), i), tmpConj_);
       >>;
-      return tmpConj_;
+      return ansWrite("addCondTupleToCondConj", tmpConj_);
     >> else <<
       newCondTuple_:= first(first(ineqSolDNF_));
     >>
@@ -1115,10 +1144,8 @@ begin;
     >>;
   >>;
 
-
-  debugWrite("ans in addCondTupleToCondConj: ", addedCondConj_);
   debugWrite("{(newCondTuple_), (condConj_)}: ", {newCondTuple_, condConj_});
-  return addedCondConj_;
+  return ansWrite("addCondTupleToCondConj", addedCondConj_);
 end;
 
 %---------------------------------------------------------------
@@ -2533,7 +2560,7 @@ end;
 % TODO：ERROR処理
 procedure checkInfMinTimeDNF(tDNF_, condDNF_)$
 begin;
-  scalar minTCList_, conj_, argsAnsTCListList_, minValue_, compareTCListList_, lbTuplelist_, ubTupleList_,
+  scalar minTCList_, conj_, argsAnsTCListList_, minValue_, compareTCListList_, lbTupleList_, ubTupleList_,
          lbParamTupleList_, ubParamTupleList_, lbValueTupleList_, ubValueTupleList_, lbValue_, ubValue_, 
          paramLeqValueCondDNF_, paramGreaterValueCondDNF_, checkDNF_, diffCondDNF_;
   debugWrite("=== in checkInfMinTimeDNF", " ");
@@ -2573,10 +2600,10 @@ begin;
       % TODO：なんとかする
       lbTupleList_:= getLbTupleListFromConj(conj_);
       ubTupleList_:= conj_ \ lbTupleList_;
-      lbParamTupleList_:= for each x in lbTuplelist_ join if(hasParameter(x)) then {x} else {};
-      ubParamTupleList_:= for each x in ubTuplelist_ join if(hasParameter(x)) then {x} else {};
-      lbValueTupleList_:= lbTuplelist_ \ lbParamTupleList_;
-      ubValueTupleList_:= ubTuplelist_ \ ubParamTupleList_;
+      lbParamTupleList_:= filter(hasParameter, lbTupleList_);
+      ubParamTupleList_:= filter(hasParameter, ubTupleList_);
+      lbValueTupleList_:= lbTupleList_ \ lbParamTupleList_;
+      ubValueTupleList_:= ubTupleList_ \ ubParamTupleList_;
       if(lbValueTupleList_={}) then lbValueTupleList_:= {{t, geq, -INFINITY}};
       if(ubValueTupleList_={}) then ubValueTupleList_:= {{t, leq,  INFINITY}};
       lbValue_:= getValueFromTuple(first(lbValueTupleList_));
@@ -2588,6 +2615,8 @@ begin;
       % TODO：パラメタを含む下限同士の大小判定
       debugWrite("lbParamTupleList_: ", lbParamTupleList_);
       debugWrite("lbValue_: ", lbValue_);
+
+      debugWrite("========== check param-lb ==========", " ");
       for each x in lbParamTupleList_ do <<
         debugWrite("x (lbParamTuple): ", x);
         checkDNF_:= addCondTupleToCondDNF({getValueFromTuple(x), greaterp, lbValue_}, condDNF_);
@@ -2774,7 +2803,7 @@ begin;
   debugWrite("condDNF_: ", condDNF_);
 
   % t>0と連立してfalseになるような場合はMinTimeを考える必要がない
-  if(rlqe(integAsk_ and t>0) = false) then return {{INFINITY, condDNF_}};
+  if(rlqe(integAsk_ and t>0) = false) then return ansWrite("findMinTime", {{INFINITY, condDNF_}});
 
   % 入れ子になった and が来た場合に備えDNF形式に整形する
   integAsk_ := FixAndFormula(integAsk_);
@@ -2797,7 +2826,7 @@ begin;
   debugWrite("integAskList_: ", integAskList_);
 
   % ガード条件全体がtrueの場合とガード条件内にfalseが入る場合はエラー
-  if(integAskList_={error} or not freeof(integAskList_, false)) then return {error};
+  if(integAskList_={error} or not freeof(integAskList_, false)) then return ansWrite("findMinTime", {error});
 
 %  integAskQE_:= rlqe(integAsk_);
 %  debugWrite("integAskQE_: ", integAskQE_);
@@ -2825,9 +2854,9 @@ begin;
   debugWrite("integAskIneqSolDNFList_:", integAskIneqSolDNFList_);
   % unknownが含まれたらエラーを返す
   % TODO：要検討
-  if(not freeof(integAskIneqSolDNFList_, unknown)) then return {error}
+  if(not freeof(integAskIneqSolDNFList_, unknown)) then return ansWrite("findMinTime", {error})
   % trueになったらエラー
-  else if(not freeof(integAskIneqSolDNFList_, error)) then return {error};
+  else if(not freeof(integAskIneqSolDNFList_, error)) then return ansWrite("findMinTime", {error});
 
 
   debugWrite("findMinTime: add t>0", " ");
@@ -2836,7 +2865,7 @@ begin;
   debugWrite("integAskIneqSolDNF_:", integAskIneqSolDNF_);
 
   % 不等式の場合、ここで初めて矛盾が見つかり、integAskIneqSolDNF_がfalseになることがある
-  if(isFalseDNF(integAskIneqSolDNF_)) then return {{INFINITY, condDNF_}};
+  if(isFalseDNF(integAskIneqSolDNF_)) then return ansWrite("findMinTime", {{INFINITY, condDNF_}});
 
   %%%%%%%%%%%% TODO:この辺までを1つの処理にまとめたい%%%%%%%%%%%%
 
@@ -2846,8 +2875,8 @@ begin;
   debugWrite("=================== end of findMinTime ====================", " ");
 
   % ERRORが返っていたらerror
-  if(not freeof(minTCList_, ERROR)) then return {error};
-  return minTCList_;
+  if(not freeof(minTCList_, ERROR)) then return ansWrite("findMinTime", {error});
+  return ansWrite("findMinTime", minTCList_);
 end;
 
 procedure compareMinTimeList(candidateTCList_, newTCList_)$
