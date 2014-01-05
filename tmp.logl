@@ -1,0 +1,49 @@
+make --directory=common
+make --directory=parser
+make --directory=math_source_converter
+make --directory=reduce_source_converter
+make --directory=constraint_hierarchy
+make --directory=simulator
+make --directory=symbolic_simulator
+make --directory=output
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/math_source_converter' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/math_source_converter' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/reduce_source_converter' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/reduce_source_converter' から出ます
+make --directory=virtual_constraint_solver
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/common' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/common' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/constraint_hierarchy' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/constraint_hierarchy' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/output' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/output' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/parser' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/parser' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/symbolic_simulator' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/symbolic_simulator' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/simulator' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/simulator' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/virtual_constraint_solver' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/virtual_constraint_solver' から出ます
+make --directory=core
+make --directory=unit_tests
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/unit_tests' に入ります
+g++ -I. -I../symbolic_simulator -I../simulator -I../constraint_hierarchy -I../parser -I../common -I../virtual_constraint_solver -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/ -I/usr/local/include/boost -DRP_SYSTEM_LINUX_IX86  -Wall  -M vcs_reduce_source_test.cpp | \
+	sed  's,\(vcs_reduce_source_test\.o\) *:,./\1 vcs_reduce_source_test.d:  ,' >vcs_reduce_source_test.d.tmp
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/core' に入ります
+make[1]: `all' に対して行うべき事はありません.
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/core' から出ます
+mv  vcs_reduce_source_test.d.tmp vcs_reduce_source_test.d
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/unit_tests' から出ます
+make[1]: ディレクトリ `/home/yysaki/git/Hyrose_work/unit_tests' に入ります
+g++ -I. -I../symbolic_simulator -I../simulator -I../constraint_hierarchy -I../parser -I../common -I../virtual_constraint_solver -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/ -I/usr/local/include/boost -DRP_SYSTEM_LINUX_IX86  -Wall -c -o vcs_reduce_source_test.o vcs_reduce_source_test.cpp
+g++ -I. -I../symbolic_simulator -I../simulator -I../constraint_hierarchy -I../parser -I../common -I../virtual_constraint_solver -I/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/ -I/usr/local/include/boost -DRP_SYSTEM_LINUX_IX86  -Wall -L. -L../symbolic_simulator -L../simulator -L../constraint_hierarchy -L../parser -L../common -L../virtual_constraint_solver -L/usr/local/Wolfram/Mathematica/8.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/ -L/usr/local/lib -o unit_test   ./ask_guard_disjunction_test.o ./consistency_checker_test.o ./module_set_test.o ./parse_tree_struct_test.o ./parse_tree_test.o ./s_exp_parser_test.o ./test_main.o ./vcs_reduce_source_test.o -lhydla_symbolic_simulator -lhydla_simulator -lhydla_constraint_hierarchy -lhydla_parser -lhydla_common -lhydla_virtual_constraint_solver -lhydla_symbolic_simulator -lhydla_simulator -lhydla_constraint_hierarchy -lhydla_parser -lhydla_common -lhydla_virtual_constraint_solver  -lboost_unit_test_framework -lboost_regex  -lML64i3 -lm -lrt -lboost_system -lncurses -lboost_thread-mt

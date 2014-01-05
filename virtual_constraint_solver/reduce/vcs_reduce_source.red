@@ -1457,54 +1457,124 @@ procedure lgetf(x,llst)$
 % @return
 procedure exDSolve(cons_, guardCons_, initCons_, vars_)$
 begin;
-  scalar splitExprsResult_, DExprs_, DExprVars_, DExprRconts_, prevVars_, noPrevVars_, DExprRcontsVars_, noDifferentialVars_,
-         dSolveAns_, guardCheck_;
+  scalar noDifferentialVars_, resultRule_, rules_, resultCons_, loopAns_;
 
   debugWrite("in exDSolve", " ");
   debugWrite("{cons_, guardCons_, initCons_, vars_}: ", {cons_, guardCons_, initCons_, vars_});
 
-  % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
-  splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
-
-  % TODO otherExprs_は不等式やand, orを含む式, 未使用なのでまずいはず
-  debugWrite("{NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_}: ", splitExprsResult_);
-
-  DExprs_ :=    part(splitExprsResult_, 3); % 微分項を含む式
-  DExprVars_ := part(splitExprsResult_, 4);
-  DExprRconts_:= removeInitCons(initCons_);
-  debugWrite("DExprRconts_: ", DExprRconts_);
-
-  if(DExprRconts_ neq {}) then <<
-    prevVars_:= for each x in vars_ join if(isPrevVariable(x)) then {x} else {};
-    debugWrite("prevVars_: ", prevVars_);
-    noPrevVars_:= map(first(~w), prevVars_);
-    debugWrite("noPrevVars_: ", noPrevVars_);
-    DExprRcontsVars_ := union(for each x in noPrevVars_ join if(not freeof(DExprRconts_, x)) then {x} else {});
-    debugWrite("DExprRcontsVars_: ", DExprRcontsVars_);
-    DExprs_:= union(DExprs_, DExprRconts_);
-    DExprVars_:= union(DExprVars_, DExprRcontsVars_);
-  >>;
-
-  initVars_:= map(getInitVars, initCons_);
-  debugWrite("initVars_: ", initVars_);
-
-  noDifferentialVars_:= union(for each x in DExprVars_ collect if(isDifferentialVar(x)) then part(x, 1) else x);
+  noDifferentialVars_:=
+    for each x in removePrevCons(vars_) collect
+      if(isDifferentialVar(x)) then part(x, 1) else x;
+  noDifferentialVars_:= myUniq(noDifferentialVars_);
   debugWrite("noDifferentialVars_: ", noDifferentialVars_);
 
-  dSolveAns_:= ansWrite("exDSolve", dSolveByLaplace(DExprs_, initCons_, noDifferentialVars_));
-  if(dSolveAns_ = retoverconstraint___) then  return ansWrite("exDSolve", retoverconstraint___);
-  if(dSolveAns_ = retsolvererror___) then     return ansWrite("exDSolve", retsolvererror___);
-  if(dSolveAns_ = retunderconstraint___) then return ansWrite("exDSolve", retunderconstraint___);
+  % NDExprs_, otherExprs_への対応
+  tmpExprs_:= part(splitExprs(removePrevCons(cons_), vars_), 3);
+  tmpExprs_:= union(tmpExprs_, guardCons_);
+  debugWrite("tmpExprs_: ",tmpExprs_);
 
-  guardCheck_:= rlqe mymkand exSub(dSolveAns_, guardCons_);
-  debugWrite("guardCheck_ :", guardCheck_);
+  resultCons_:= filter(hasIneqRelop, union(removePrevCons(cons_), guardCons_));
+  debugWrite("resultCons_: ", resultCons_);
 
-  if(guardCheck_ = false) then return ansWrite("exDSolve", retoverconstraint___);
-  if((not hasVariable(guadCheck_, vars_)) and not freeof(guardCheck_, t)) then
+  loopAns_:= exDSolveLoop(tmpExprs_, noDifferentialVars_, vars_, initCons_, {}, resultCons_);
+
+  if(loopAns_ = retoverconstraint___) then  return ansWrite("exDSolve", retoverconstraint___);
+  if(loopAns_ = retsolvererror___) then     return ansWrite("exDSolve", retsolvererror___);
+  if(loopAns_ = retunderconstraint___) then return ansWrite("exDSolve", retunderconstraint___);
+
+  resultRule_:= first loopAns_;
+  resultCons_:= second loopAns_;
+
+  resultCons_:= rlqe mymkand exSub(resultRule_, guardCons_);
+  debugWrite("resultCons_ :", resultCons_);
+
+  if(resultCons_ = false) then return ansWrite("exDSolve", retoverconstraint___);
+  if((not hasVariable(guadCheck_, vars_)) and not freeof(resultCons_, t)) then
     return ansWrite("exDSolve", retoverconstraint___);
 
-  return ansWrite("exDSolve", dSolveAns_);
+  return ansWrite("exDSolve", resultRule_);
 end;
+
+procedure exDSolveLoop(tmpExprs_, noDifferentialVars_, vars_, initCons_, resultRule_, resultCons_)$
+begin;
+  scalar searchResult_, rules_;
+  debugWrite("in exDSolveLoop: ", " ");
+  debugWrite("{tmpExprs_, noDifferentialVars_, vars_, resultRule_, resultCons_}: ", 
+    {tmpExprs_, noDifferentialVars_, vars_, resultRule_, resultCons_});
+
+  searchResult_:= searchExprsAndVars(tmpExprs_, noDifferentialVars_);
+  if(searchResult_ = unExpandable) then return ansWrite("exDSolveLoop", {resultRule_, resultCons_});
+
+  rules_:= dSolveByLaplace(first(searchResult_), initCons_, third(searchResult_));
+  if(rules_ = retsolvererror___) then return ansWrite("exDSolveLoop", retsolvererror___);
+  if(rules_ = retunderconstraint___) then return ansWrite("exDSolveLoop", retunderconstraint___);
+
+  resultRule_:= union(resultRule_, rules_);
+  debugWrite("resultRule_: ", resultRule_);
+
+  tmpExprs_:= exSub(rules_, second(searchResult_));
+  debugWrite("tmpExprs_: ", tmpExprs_);
+  if((not hasVariable(tmpExprs_, vars_)) and not freeof(tmpExprs_, t)) then
+    return ansWrite("exDSolveLoop", retoverconstraint___);
+  if(rlqe(mymkand(tmpExprs_)) = false) then return ansWrite("exDSolveLoop", retoverconstraint___);
+
+  tmpExprs_:= filter(isNotTrue, tmpExprs_);
+  debugWrite("tmpExprs_: ", tmpExprs_);
+
+  resultCons_:= exSub(rules_, resultCons_);
+  if(rlqe(mymkand(resultCons_)) = false) then return ansWrite("exDSolveLoop", retoverconstraint___);
+  resultCons_:= filter(isNotTrue, resultCons_);
+
+  return exDSolveLoop(tmpExprs_, noDifferentialVars_, vars_, initCons_, resultRule_, resultCons_);
+end;
+
+procedure searchExprsAndVars(exprs_, vars_)$
+begin;
+  debugWrite("searchExprsAndVars: ", {exprs_, vars_});
+  searchResult_:= searchExprsAndVarsLoop(exprs_, vars_, 1);
+  return ansWrite("searchExprsAndVars", searchResult_);
+end;
+
+% MCSの, length(tmpVars_)が見つからない場合最小のtmpVars_を持つ式を戻す処理を端折る
+procedure searchExprsAndVarsLoop(exprs_, vars_, idx_)$
+begin;
+  debugWrite("searchExprsAndVarsLoop: ", {exprs_, vars_, idx_});
+
+  if(idx_ > length(exprs_)) then return unExpandable;
+  tmpVars_:= for each var in vars_ join if(not freeof(part(exprs_, idx_) , var)) then {var} else {};
+  debugWrite("tmpVars_: ", tmpVars_);
+  if(length(tmpVars_) = 1) then
+    return {{part(exprs_, idx_)}, drop(exprs_, idx_), tmpVars_};
+
+  return searchExprsAndVarsLoop(exprs_, vars_, idx_ + 1);
+end;
+
+procedure isNotTrue(formula_)$
+  if(rlqe(formula_) <> true) then t else nil;
+
+% リストの重複を除く
+% uniqだと名前の衝突がありそうなのでmyをつけた
+procedure myUniq(expr_)$
+begin;
+  scalar ans_, copy_;
+  ans_:= {};
+  copy_:= expr_;
+  for i:= 1 : length(copy_) do << 
+    ans_:= union(ans_, {part(copy_, i)});
+    for j:= i+1 : length(copy_) do <<
+      if(part(copy_, i) = part(copy_, j)) then <<
+        copy_ := drop(copy_, j);
+      >>;
+    >>;
+  >>;
+  return ansWrite("myUniq", ans_);
+end;
+
+procedure drop(exprs_, idx_)$
+  for i:= 1 : length(exprs_) join if(i <> idx_) then {part(exprs_, i)} else {};
+
+procedure filter(func, exprs_)$
+  for each x in exprs_ join if(func(x)) then {x} else {};
 
 % ラプラス変換を用いて微分方程式の求解を行う
 % @param expr_ "df(v,t,n) = f(t)"の格好をした方程式
@@ -1550,9 +1620,11 @@ begin;
   solveAns_:= solve(union(lapExpr_, initCons_), solveVars_);
   debugWrite("solveAns_: ", solveAns_);
 
-  % solveが解無しの時, 又はsがarbcomplexでない値を持つ時overconstraintと想定
-  if(solveAns_={} or freeof(lgetf(s, solveAns_), arbcomplex)) then
-    return ansWrite("dSolveByLaplace", retoverconstraint___);
+  % 複数候補が出た場合, sがarbcomplex又はsが出現しないものを正しい解とする
+  if(length(solveAns_) >= 2) then
+    for each x in solveAns_ do
+      if(hasSEqualArbComplex(x) or notHaveSExpr(x)) then solveAns_:= {x};
+  debugWrite("solveAns_: ", solveAns_);
 
   % solveAns_にsolveVars_の解が一つも含まれない時 underconstraintと想定
   isUnderConstraint_:= false;
@@ -1565,6 +1637,28 @@ begin;
   ans_:= for each x in lapTable_ collect
            first(x) = invlap(lgetf(third(x), solveAns_), s, t);
   return ansWrite("dSolveByLaplace", ans_);
+end;
+
+% s = arbcomplex(n)を含むリストであることを判定する
+procedure hasSEqualArbComplex(expr_)$
+begin;
+  scalar ans_;
+  debugWrite("hasSEqualArbComplex: ", expr_);
+  ans_:= nil;
+  for each x in expr_ do
+    if(lhs(x) = s and not freeof(rhs(x), arbcomplex)) then ans_:= t;
+  return ans_;
+end;
+
+% s = foo(n)を含むリストであることを判定する
+procedure notHaveSExpr(expr_)$
+begin;
+  scalar ans_;
+  debugWrite("notHaveSExpr: ", expr_);
+  ans_:= t;
+  for each x in expr_ do
+    if(lhs(x) = s) then ans_:= nil;
+  return ans_;
 end;
 
 %---------------------------------------------------------------
@@ -2136,7 +2230,7 @@ begin;
   >>;
 
   % TODO andが入る場合式に展開するが正しい対応か？
-  vAns_:= for each x in vAns_ join if(head(x) = and) then getArgsList(x) else {x};
+  vAns_:= expandAndToList(vAns_);
 
   vAns_:= sub(vVarsMap_, vAns_);
   debugWrite("vAns_: ", vAns_);
@@ -2153,6 +2247,15 @@ begin;
 
   debugWrite("ans in solveCS: ", ans_);
   return ans_;
+end;
+
+% and混じりのリストを連言形式に変換
+procedure expandAndToList(expr_)$
+begin;
+  scalar expandExpr_;
+  expandExpr_:= for each x in expr_ join if(head(x) = and) then getArgsList(x) else {x};
+  if(expandExpr_ = expr_) then return expr_;
+  return expandAndToList(expandExpr_);
 end;
 
 procedure createVariableMap()$
@@ -2275,18 +2378,21 @@ ICI_INCONSISTENT___:= 2;
 % rlqeをフル活用する
 procedure checkConsistencyIntervalMain(cons_, guardCons_, initCons_, pCons_, vars_)$
 begin;
-  scalar NDExprs_, otherExprs_,
+  scalar NDExprs_, otherExprs_, expandedGuard_,
          integratedSol_, exDSolveAns_, dfAnsExprs_, splitExprsResult_,
          initVars_, integratedVariableMap_, dfVariableMap_,
          cpTrue_, cpFalse_, trueMap_, falseMap_,
          subedGuardQE_, subedGuardEqualList_, ineqSolDNFList_, ineqSolDNF_, isInf_, ans_, testRet_;
 
-  debugWrite("{variables__, parameters__}: ", {variables__, parameters__});
+  debugWrite("{variables__, parameters__, initVariables__}: ", {variables__, parameters__, initVariables__});
   debugWrite("{cons_, guardCons_, initCons_, pCons_, vars_}: ", {cons_, guardCons_, initCons_, pCons_, vars_});
+
+  expandedGuard_:= expandAndToList(guardCons_);
+  debugWrite("expandedGuard_: ", expandedGuard_);
 
   %========== exDSolve
 
-  exDSolveAns_:= exDSolve(cons_, guardCons_, initCons_, vars_);
+  exDSolveAns_:= exDSolve(cons_, expandedGuard_, initCons_, vars_);
   
   if(exDSolveAns_ = retsolvererror___) then return ansWrite("checkConsistencyIntervalMain", SOLVER_ERROR___);
   if(exDSolveAns_ = retoverconstraint___ or exDSolveAns_ = retunderconstraint___ or exDSolveAns_ = {}) then
@@ -2318,8 +2424,8 @@ begin;
     if(solveAns_ = {}) then return ansWrite("checkConsistencyIntervalMain", makeCCAnsMap(false, pCons_));
   >>;
 
-  % guardCons_がない場合は無矛盾と判定して良い
-  if(guardCons_ = {}) then return ansWrite("checkConsistencyIntervalMain", makeCCAnsMap(true, pCons_));
+  % expandedGuard_がない場合は無矛盾と判定して良い
+  if(expandedGuard_ = {}) then return ansWrite("checkConsistencyIntervalMain", makeCCAnsMap(true, pCons_));
 
   %========= exDSolve結果から変数表の作成
 
@@ -2329,7 +2435,7 @@ begin;
   debugWrite("integratedSol_:", integratedSol_);
 
   % TODO Inf = 0の条件が抜けてるので失敗する例題を見つける
-  cpTrue_:= getInf(union(integratedSol_, guardCons_, pCons_, {t>0}), vars_);
+  cpTrue_:= getInf(union(integratedSol_, expandedGuard_, pCons_, {t>0}), vars_);
   % TODO cpFalse_の必要な例題を見つける(balloon_tankにあるはず)
   % cpFalse_:= rlqe(mymkand(union(pCons_, not cpTrue_)));
 

@@ -672,22 +672,18 @@ Check[
     tmpInitExpr = applyList[initExpr];
     resultRule = {};
     simplePrint[resultCons, tmpExpr];
-    While[True, 
-      searchResult = searchExprsAndVars[tmpExpr];
-      If[searchResult === unExpandable,
-        Break[],
-        rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
-        If[rules === overConstraint || Head[rules] === DSolve || Length[rules] == 0, Return[overConstraint] ];
-        (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
-        resultRule = Union[resultRule, rules[[1]] ];
-        tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-        If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]) )], Return[overConstraint] ];
-        tmpExpr = Select[tmpExpr, (#=!=True)&];
-        simplePrint[tmpExpr];
-        resultCons = applyDSolveResult[resultCons, rules[[1]] ];
-        If[MemberQ[resultCons, False], Return[overConstraint] ];
-        resultCons = Select[resultCons, (#=!=True)&]
-      ]
+    While[searchResult = searchExprsAndVars[tmpExpr]; searchResult =!= unExpandable,
+      rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
+      If[rules === overConstraint || Head[rules] === DSolve || Length[rules] == 0, Return[overConstraint] ];
+      (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
+      resultRule = Union[resultRule, rules[[1]] ];
+      tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+      If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]) )], Return[overConstraint] ];
+      tmpExpr = Select[tmpExpr, (#=!=True)&];
+      simplePrint[tmpExpr];
+      resultCons = applyDSolveResult[resultCons, rules[[1]] ];
+      If[MemberQ[resultCons, False], Return[overConstraint] ];
+      resultCons = Select[resultCons, (#=!=True)&];
     ];
     
     resultCons = And@@resultCons;
