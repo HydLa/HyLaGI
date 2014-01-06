@@ -1,5 +1,5 @@
 main_projects := core 
-lib_projects  := common parser math_source_converter reduce_source_converter constraint_hierarchy simulator backend symbolic_simulator output
+lib_projects  := common parser math_source_converter reduce_source_converter constraint_hierarchy simulator backend symbolic_simulator output interval
 test_projects := unit_tests
 
 projects := $(main_projects) $(test_projects) $(lib_projects)

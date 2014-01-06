@@ -1,6 +1,6 @@
 TARGET	 := ../hyrose
 
-LIB_DIRS := symbolic_simulator backend simulator constraint_hierarchy parser common output
+LIB_DIRS := symbolic_simulator backend simulator constraint_hierarchy parser common output interval
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
