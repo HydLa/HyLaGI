@@ -163,3 +163,75 @@ publicMethod[name_, args___, define_] := (
     ]
   )
 );
+
+
+
+publicMethod[
+  simplify,
+  arg,
+  toReturnForm[Simplify[arg]]
+];
+
+
+
+toReturnForm[expr_timeAndID] :=
+(
+  timeAndID[toReturnForm[expr[[1]]], expr[[2]] ]
+);
+
+toReturnForm[expr_] := (
+  expr /. (Infinity :> inf)
+       (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
+       /. (Derivative[cnt_][var_] :> Derivative[cnt, var])
+       /. (Derivative[cnt_, var_][_] :> Derivative[cnt, var])
+       /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
+       /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
+       /. (x_Integer :> replaceIntegerToString[x])
+);
+
+
+replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
+
+(* リストを整形する *)
+(* TODO:複素数の要素に対しても，任意精度への対応 （文字列への変換とか）を行う *)
+
+convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], toReturnForm[#[[2]] ] } )&, list];
+
+
+(* 変数とその値に関する式のリストを、変数表的形式に変換 *)
+getExprCode[expr_] := Switch[Head[expr],
+  Equal, 0,
+  Less, 1,
+  Greater, 2,
+  LessEqual, 3,
+  GreaterEqual, 4
+];
+
+
+(* AndではなくListでくくる *)
+
+applyList[reduceSol_] :=
+  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
+
+(* OrではなくListでくくる *)
+applyListToOr[reduceSol_] :=
+  If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
+
+
+(* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
+And2and[reduceSol_] :=
+  If[reduceSol === True, and[], If[Head[reduceSol] === And, and @@ reduceSol, and[reduceSol]] ];
+
+(* Or ではなくorでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
+Or2or[reduceSol_] :=
+  If[Head[reduceSol] === Or, or @@ reduceSol, or[reduceSol]];
+
+
+(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
+
+getReverseRelop[relop_] := Switch[relop,
+                                  Equal, Equal,
+                                  Less, Greater,
+                                  Greater, Less,
+                                  LessEqual, GreaterEqual,
+                                  GreaterEqual, LessEqual];

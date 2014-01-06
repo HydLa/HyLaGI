@@ -1,125 +1,3 @@
-(* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
-
-getReverseRelop[relop_] := Switch[relop,
-                                  Equal, Equal,
-                                  Less, Greater,
-                                  Greater, Less,
-                                  LessEqual, GreaterEqual,
-                                  GreaterEqual, LessEqual];
-
-checkConditions[] := (
-  checkConditions[prevIneqs && And@@Map[(Equal@@#)&, prevRules], falseConditions, pConstraint, prevVariables ]
-);
-
-publicMethod[
-  checkConditions,
-  pCons, fCond, paramCons, vars,
-  Module[
-  {prevCons, falseCond, trueMap, falseMap, cpTrue, cpFalse, cpTmp},
-   debugPrint["fcond",fCond];
-   If[fCond === 1, 
-    {True,False},
-    prevCons = pCons;
-    prevCons = prevCons /. Rule->Equal;
-    If[prevCons[[0]] == List, prevCons[[0]] = And;];
-    Quiet[
-      cpTrue = Reduce[Exists[vars, Simplify[prevCons&&fCond&&paramCons] ], Reals], {Reduce::useq}
-    ];
-    simplePrint[cpTrue];
-    checkMessage;
-    Quiet[
-      cpFalse = Reduce[paramCons && !cpTrue, Reals], {Reduce::useq}
-    ];
-    checkMessage;
-    simplePrint[cpFalse];
-      (*
-    Quiet[
-      cpTmp = Reduce[Exists[vars, prevCons && fCond],Reals];
-      cpTrue = Reduce[cpTmp && paramCons, Reals];
-      cpFalse = Reduce[!cpTmp && paramCons, Reals];
-    ];
-       
-    falseCond = applyListToOr[LogicalExpand[fCond]];
-    Quiet[
-      cpTmp = ParallelMap[Reduce[Exists[vars, prevCons && #], Reals]&, falseCond], {Reduce::useq}
-    ];
-    If[cpTmp[[0]] == List, cpTmp[[0]] = Or;];
-    cpTmp = Reduce[cpTmp,Reals];
-    simplePrint[cpTmp];
-    checkMessage;
-    Quiet[
-      cpTrue = Reduce[cpTmp && paramCons, Reals], {Reduce::useq}
-    ];
-    checkMessage;
-    simplePrint[cpTrue];
-    Quiet[
-      cpFalse = Reduce[!cpTmp && paramCons, Reals], {Reduce::useq}
-    ];
-    checkMessage;
-    simplePrint[cpFalse];
-       *)
-    {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
-    simplePrint[trueMap, falseMap];
-    {trueMap, falseMap}
-   ]
-  ]
-];
-
-(* 制約モジュールが矛盾する条件をセットする *)
-setConditions[co_, va_] := Module[
-  {cons, vars},
-  cons = co;
-  falseConditions = cons;
-  simplePrint[cons, falseConditions];
-];
-
-
-(* 矛盾する条件を整形して返す *)
-createPrevMap[cons_, vars_] := Module[
-  {map},
-  If[cons === True || cons === False, 
-    cons,
-
-    map = cons /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
-    map = Reduce[map, vars, Reals];
-    map = cons /. (expr_ /; (( Head[expr] === Inequality || Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (hasVariable[expr] || hasParameter[expr] || !hasPrevVariable[expr])) -> False);
-
-    simplePrint[map];
-    If[map =!= False, 
-      map = LogicalExpand[map];
-      map = applyListToOr[map];
-      map = Map[(applyList[#])&, map];
-      debugPrint["@createMap map after applyList", map];
- 
-      map = Map[(convertExprs[ adjustExprs[#, isPrevVariable] ])&, map];
-    ];
-    map
-  ]
-];
-
-(* 制約モジュールが矛盾する条件を見つけるための無矛盾性判定 *)
-findConditions[] := (
-  findConditions[constraint && tmpConstraint && initConstraint && initTmpConstraint, variables ]
-);
-
-publicMethod[
-  findConditions,
-  cons, vars,
-  Module[
-    {cp},
-    Quiet[
-      cp = Reduce[Exists[vars, cons],Reals], {Reduce::useq}
-    ];
-    simplePrint[cp];
-    checkMessage;
-    If[cp =!= False && cp =!= True,
-      cp = LogicalExpand[Simplify[cp] ];
-      cp = toReturnForm[cp];
-    ];
-    simplePrint[cp];
-    cp
-  ]
-];
 
 (* ポイントフェーズにおける無矛盾性判定 *)
 
@@ -133,9 +11,8 @@ publicMethod[
   Module[
     {trueMap, falseMap, cpTrue, cpFalse},
     
-    (* ここでのSimplifyは不要な気がする *)
     Quiet[
-      cpTrue = Reduce[Exists[vars, Simplify[cons&&pcons] ], pars, Reals], {Reduce::useq}
+      cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     (* remove (Not)Element[] because it seems to be always true *)
@@ -226,7 +103,7 @@ publicMethod[
         ];
         cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
         checkMessage;
-        {trueMap, falseMap} = Map[(createMap[#, isParameter,hasParameter, {}])&, {cpTrue, cpFalse}];
+        {trueMap, falseMap} = Map[(createMap[#, isParameterOrPrev, hasParameterOrPrev, {}])&, {cpTrue, cpFalse}];
         simplePrint[trueMap, falseMap];
         {trueMap, falseMap}
       ]
@@ -259,7 +136,7 @@ publicMethod[
   createVariableMapInterval,
   cons, initCons, vars, prevVars, pars,
   Module[
-    {sol, includedVars, tStore, ret, prevList, eqs},
+    {sol, tStore, ret},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
     If[sol[[1]] === underConstraint,
@@ -302,11 +179,9 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       If[idx != {}, map = createMapList[[idx[[1]][[1]]]][[2]]];
     ];
     If[idx == {},
-      (* TODO: ここでprevに関する処理は本来なくてもいいはず．時刻0でのprevの扱いさえうまくできればどうにかなる？ *)
+      (* Remove unnecessary Constraints*)
       map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = Reduce[map, vars, Reals];
-      (* TODO:2回も同じルール適用をしたくない．場合の重複や，不要な条件の発生を抑えつつ，何かできないか？ *)
-      map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       simplePrint[map];
       map = LogicalExpand[map];
       map = applyListToOr[map];
@@ -337,20 +212,17 @@ getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ Wo
 
 getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
 
-getPrevs[exprs_] := Cases[exprs, prev[_, _], Infinity];
-
-(* 初期値変数を取得 *)
-getInitVars[expr_] := Cases[expr, _[0], Infinity];
-
-hasInitVars[expr_] := (Length[getInitVars[expr] ] > 0);
-
 (* 式中に定数名が出現するか否か *)
 
-hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity]] > 0;
+hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity] ] > 0;
+ 
+hasParameterOrPrev[exprs_] := Length[Cases[exprs, p[_, _, _] | prev[_, _], Infinity] ] > 0;
 
 (* 式が定数そのものか否か *)
 
 isParameter[exprs_] := Head[exprs] === p;
+
+isParameterOrPrev[exprs_] := Head[exprs] === p || Head[exprs] === prev;
 
 (* 式が指定されたシンボルを持つか *)
 hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
@@ -429,12 +301,6 @@ publicMethod[
     prevIneqs = prevIneqs && And@@ineqs;
     simplePrint[prevRules, prevIneqs];
   ]
-];
-
-publicMethod[
-  simplify,
-  arg,
-  toReturnForm[Simplify[arg]]
 ];
 
 
@@ -552,26 +418,6 @@ removeDash[var_] := Module[
    ]
 ];
 
-apply[AndreduceSol_] :=
-  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
-
-(* AndではなくListでくくる *)
-
-applyList[reduceSol_] :=
-  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
-
-(* OrではなくListでくくる *)
-applyListToOr[reduceSol_] :=
-  If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
-
-(* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
-And2and[reduceSol_] :=
-  If[reduceSol === True, and[], If[Head[reduceSol] === And, and @@ reduceSol, and[reduceSol]] ];
-
-(* Or ではなくorでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
-Or2or[reduceSol_] :=
-  If[Head[reduceSol] === Or, or @@ reduceSol, or[reduceSol]];
-
 
 (* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 
    ついでに othersを各条件に対して付加 *)
@@ -593,38 +439,6 @@ makeListFromPiecewise[minT_, others_] := Module[
 
 calculateNextPointPhaseTime[maxTime_, discCauses_] := 
   calculateNextPointPhaseTime[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
-
-(* 変数とその値に関する式のリストを、変数表的形式に変換 *)
-getExprCode[expr_] := Switch[Head[expr],
-  Equal, 0,
-  Less, 1,
-  Greater, 2,
-  LessEqual, 3,
-  GreaterEqual, 4
-];
-
-replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
-
-toReturnForm[expr_timeAndID] :=
-(
-  timeAndID[toReturnForm[expr[[1]]], expr[[2]] ]
-);
-
-toReturnForm[expr_] := (
-  expr /. (Infinity :> inf)
-       (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
-       /. (Derivative[cnt_][var_] :> Derivative[cnt, var])
-       /. (Derivative[cnt_, var_][_] :> Derivative[cnt, var])
-       /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
-       /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
-       /. (x_Integer :> replaceIntegerToString[x])
-);
-
-(* リストを整形する *)
-(* FullSimplifyを使うと，Root&Functionが出てきたときにも結構簡約できる．というか簡約できないとエラーになるのでTODOと言えばTODO *)
-(* TODO:複素数の要素に対しても，任意精度への対応 （文字列への変換とか）を行う *)
-
-convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], toReturnForm[#[[2]] ] } )&, list];
 
 
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
@@ -996,35 +810,3 @@ Module[
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
-
-(*
- * 式に対して与えられた時間を適用する
- *)
-
-publicMethod[
-  applyTime2Expr,
-  expr, time,
-  Module[
-    {appliedExpr},
-    (* FullSimplifyだと処理が重いが，SimplifyだとMinimize:ztestが出現しやすい *)
-    appliedExpr = (expr /. t -> time);
-    (* appliedExpr = FullSimplify[(expr /. t -> time)]; *)
-    If[Element[appliedExpr, Reals] =!= False,
-      toReturnForm[appliedExpr],
-      Message[applyTime2Expr::nrls, appliedExpr]
-    ]
-  ]
-];
-
-applyTime2Expr::nrls = "`1` is not a real expression.";
-
-
-(* 
- * 与えられたtの式をタイムシフト
- *)
-
-publicMethod[
-  exprTimeShift,
-  expr, time,
-  toReturnForm[expr /. t -> t - time]
-];
