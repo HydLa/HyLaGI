@@ -211,7 +211,7 @@ getExprCode[expr_] := Switch[Head[expr],
 (* AndではなくListでくくる *)
 
 applyList[reduceSol_] :=
-  If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]];
+  If[reduceSol === True, {}, If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]]];
 
 (* OrではなくListでくくる *)
 applyListToOr[reduceSol_] :=

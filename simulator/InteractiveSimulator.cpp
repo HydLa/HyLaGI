@@ -22,6 +22,7 @@
 #include "NodeFactory.h"
 #include "DefaultNodeFactory.h"
 #include "HydLaAST.h"
+#include "AffineTranslator.h"
 
 
 
@@ -36,7 +37,7 @@ using namespace hydla::grammer_rule;
 using namespace hydla::parse_error;
 using namespace hydla::parse_tree;
 using namespace hydla::parser;
-
+using namespace hydla::interval;
 
 
 namespace hydla {
@@ -336,7 +337,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
-/* TODO: 一旦無効化
+/*
   if(todo->phase == PointPhase)
   {
     cout << "sorry, approximation at start point of PP is not supported" << endl;
@@ -361,7 +362,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   {
     variable_map_t::iterator v_it  = vm.begin();
     for(;v_it!=vm.end();v_it++){
-      if( v_it->first->get_string() == variable_str)
+      if( v_it->first.get_string() == variable_str)
       {
         var = v_it->first;
         val = &v_it->second.get_unique();
@@ -374,18 +375,13 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
       return 0;
     }
   }
-  
-  
-  cout << "input method of approximation (i: normal interval, l: linear approximation)" << endl;
-  cout << '>';
-  string method_string = excin<string>();
-  
-  ValueRange range;
 
-  parameter_map_t& pm = todo->parameter_map;
-
-  phase_simulator_->solver_->reset_parameters(pm);
-  value_t approxed_val;
+  AffineTranslator translator;
+  assert(val->unique());
+  affine_t affine = translator.translate(val->get_unique()->get_node());
+  cout << affine << endl;
+*/  
+/*  
   if(method_string == "i")
   {
     bool approxed = phase_simulator_->solver_->approx_val(*val, range, true);
@@ -422,6 +418,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
     return 0;
   }
 
+
   if(var == &system_time_)
   {
     todo->parent->current_time = todo->current_time = approxed_val;
@@ -430,9 +427,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   {
     vm[var] = approxed_val;
   }
-
-
-*/
+  */
   return 1;
 }
 

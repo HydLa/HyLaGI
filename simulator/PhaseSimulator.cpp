@@ -243,7 +243,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       timer::Timer entailment_timer;
       
       backend_->call("resetConstraintForVariable", 0, "","");
-      std::string fmt = "mv";
+      std::string fmt = "mv0";
       fmt += (phase->phase==PointPhase)?"n":"t";
       backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
       backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);

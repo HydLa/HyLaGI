@@ -263,7 +263,7 @@ publicMethod[
 
 publicMethod[
   resetConstraintForVariable,
-  constraint = initConstraint = tmpConstraint = initTmpConstraint = True;
+  constraint = initConstraint = tmpConstraint = initTmpConstraint = prevIneqs = True;
 ];
 
 publicMethod[
