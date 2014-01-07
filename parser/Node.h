@@ -25,7 +25,7 @@ typedef boost::shared_ptr<Node> node_sptr;
 typedef boost::shared_ptr<const Node> node_const_sptr;
 
 /**
- * パスツリーの基底ノード
+ * パースツリーの基底ノード
  */
 class Node {
 public:

@@ -1,7 +1,11 @@
 #include "AffineTranslator.h"
+#include <boost/lexical_cast.hpp>
+#include <exception>
+#include "Logger.h"
 
 using namespace std;
 using namespace hydla::parse_tree;
+using namespace boost;
 
 namespace hydla {
 namespace interval {
@@ -12,56 +16,122 @@ AffineTranslator::AffineTranslator()
 AffineTranslator::~AffineTranslator()
 {}
 
+affine_t AffineTranslator::translate(node_sptr& node)
+{
+  accept(node);
+  return current_val_;
+}
+
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
 {
+  accept(node->get_lhs());
+  affine_t lhs = current_val_;
+  accept(node->get_rhs());
+  affine_t rhs = current_val_;
+  current_val_ = lhs + rhs;
+  return;
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node)
 {
+  accept(node->get_lhs());
+  affine_t lhs = current_val_;
+  accept(node->get_rhs());
+  affine_t rhs = current_val_;
+  current_val_ = lhs - rhs;
+  return;
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
 {
+  accept(node->get_lhs());
+  affine_t lhs = current_val_;
+  accept(node->get_rhs());
+  affine_t rhs = current_val_;
+  current_val_ = lhs * rhs;
+  return;
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
 {
+  accept(node->get_lhs());
+  affine_t lhs = current_val_;
+  accept(node->get_rhs());
+  affine_t rhs = current_val_;
+  current_val_ = lhs / rhs;
+  return;
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
 {
+  //TODO: deal with Power
+  invalid_node(*node);
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Negative> node)
 {
+  accept(node->get_child());
+  current_val_ = -current_val_;
+  return;
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Positive> node)
 {
+  // do nothing
+  return;
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Pi> node)
 {
+  current_val_ = kv::constants<double>::pi();
 }
 
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::E> node)
 {
+  current_val_ = kv::constants<double>::e();
 }
 
+
+void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
+{
+  double val;
+  try{
+    val = lexical_cast<double>(node->get_string());
+  }catch(const std::exception &e){
+    HYDLA_LOGGER(REST, typeid(e).name(), e.what());
+    invalid_node(*node);
+  }
+  current_val_ = affine_t(val);
+}
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Function> node)
 {
+  string name = node->get_string();
+  if(name == "ln")
+  {
+    if(node->get_arguments_size() != 1)invalid_node(*node);
+    accept(node->get_argument(0) );
+    current_val_ = log(current_val_);
+  }
+  else
+  {
+    invalid_node(*node);
+  }
 }
 
-
+void AffineTranslator::invalid_node(parse_tree::Node& node)
+{
+  // TODO: throw exception specified for interval
+  throw std::exception();
+}
 
 
 #define DEFINE_INVALID_NODE(NODE_NAME)        \

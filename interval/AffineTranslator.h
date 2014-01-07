@@ -4,26 +4,32 @@
 #include <sstream>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/optional.hpp>
 
 #include "Node.h"
 #include "PhaseResult.h"
 #include "TreeVisitor.h"
 #include "SymbolicValue.h"
+#include "kv/affine.hpp"
 
 namespace hydla {
 namespace interval {
+
+
+typedef hydla::parse_tree::node_sptr          node_sptr;
+typedef kv::affine<double>                    affine_t;
+
 
 /**
  * A translator from symbolic formula to affine form
  */
 class AffineTranslator : public parse_tree::TreeVisitor{
-  typedef hydla::parse_tree::node_sptr                 node_sptr;
 
   public:
 
   AffineTranslator();
 
-  double translate(node_sptr& node);
+  affine_t translate(node_sptr& node);
 
   virtual ~AffineTranslator();  
 
@@ -92,6 +98,7 @@ class AffineTranslator : public parse_tree::TreeVisitor{
   
 private:
   void invalid_node(parse_tree::Node& node);
+  affine_t current_val_;
 };
 
 } //namespace interval
