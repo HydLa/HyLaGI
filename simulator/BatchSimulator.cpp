@@ -71,7 +71,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
         {
           todo_stack_->push_todo(n_todo);
           HYDLA_LOGGER_PHASE("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
-          HYDLA_LOGGER_PHASE(n_todo);
+          HYDLA_LOGGER_PHASE(*n_todo);
         }
       }
     }

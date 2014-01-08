@@ -103,7 +103,7 @@ publicMethod[
         ];
         cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
         checkMessage;
-        {trueMap, falseMap} = Map[(createMap[#, isParameterOrPrev, hasParameterOrPrev, {}])&, {cpTrue, cpFalse}];
+        {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
         simplePrint[trueMap, falseMap];
         {trueMap, falseMap}
       ]
@@ -183,10 +183,10 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = Reduce[map, vars, Reals];
 
-      (* Remove unnecessary Constraints*)
-      map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       simplePrint[map];
       map = LogicalExpand[map];
+      (* Remove unnecessary Constraints*)
+      map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = applyListToOr[map];
       map = Map[(applyList[#])&, map];
       debugPrint["@createMap map after applyList", map];
@@ -553,7 +553,7 @@ calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
 );
 
 (* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
-divideDisjunction[timeCond_] := Map[({timeCond[[1]], timecond[[2]], #})&, List@@timeCond[[3]]];
+divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
 
 publicMethod[
   calculateNextPointPhaseTime,
@@ -682,7 +682,8 @@ Check[
         resultRule = Union[resultRule, rules[[1]] ];
         simplePrint[resultRule];
         tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-        If[MemberQ[tmpExpr, ele_ /; ele === False], Return[overConstraint] ];
+        (* if there exists expression which has t only, it's inconsistent *)
+        If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
         tmpExpr = Select[tmpExpr, (#=!=True)&];
         simplePrint[tmpExpr];
         resultCons = applyDSolveResult[resultCons, rules[[1]] ];

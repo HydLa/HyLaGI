@@ -237,8 +237,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     phase_result_sptr_t phase = make_new_phase(todo, vm);
     phase->module_set = ms;
     
-    
-    
     if(opts_->assertion || break_condition_.get() != NULL){
       timer::Timer entailment_timer;
       
