@@ -46,10 +46,10 @@ void Simulator::reset_result_root()
 
 void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {    
-
+/*
   ModuleSetContainerInitializer::init<ch::IncrementalModuleSet>(
       parse_tree, msc_original_, msc_no_init_, parse_tree_);
-  /*
+*/
   if(opts_->nd_mode||opts_->interactive_mode)
   {
     //全解探索モードなど
@@ -62,7 +62,6 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
     ModuleSetContainerInitializer::init<ch::ModuleSetList>(
         parse_tree, msc_original_, msc_no_init_, parse_tree_);
   }
-  */
 }
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
