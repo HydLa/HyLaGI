@@ -22,7 +22,7 @@ public:
   phase_result_const_sptr_t simulate(ha_results_t ha_results);
   virtual phase_result_const_sptr_t simulate();
 
-	typedef std::map<parameter_t*, value_t>    init_value_map_t;
+	typedef std::map<parameter_t, value_t>    init_value_map_t;
 	
 	init_value_map_t get_init_vm(phase_result_sptr_t pr);
 	ha_result_t get_ha(ha_results_t ha_results);

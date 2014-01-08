@@ -78,6 +78,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
    *
    *  format is like below
    *    i: int: integer
+   *    b: bool: boolean value
    *    s: const char*: symbol (send only)
    *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
    *    dc: dc_causes_t : causes of discrete changes
@@ -128,6 +129,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
 
 
   int receive_map(variable_map_t &vm);
+  void receive_bool(bool &b);
   int receive_parameter_map(parameter_map_t &pm);
   pp_time_result_t receive_cp();
   check_consistency_result_t receive_cc();

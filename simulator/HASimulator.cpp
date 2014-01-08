@@ -22,7 +22,7 @@ namespace simulator {
 	HASimulator::~HASimulator(){}
 	
 	phase_result_const_sptr_t HASimulator::simulate(){assert(0); return result_root_;}
-/*
+
 	phase_result_const_sptr_t HASimulator::simulate(ha_results_t ha_results)
 	{
 		HYDLA_LOGGER_HAS("%% simulation start");
@@ -124,10 +124,9 @@ namespace simulator {
 		init_value_map_t vm;
 		parameter_map_t::iterator it = pr->parameter_map.begin();
 	  for(; it != pr->parameter_map.end(); ++it) {
-      parameter_t* v;
-	  	v = (*it).first;
+      parameter_t v = it->first;
 			string st = "";
-	  	cout << "input init value : " << *v << endl;
+	  	cout << "input init value : " << v << endl;
 			cout << ">" ;
 			cin >> st;
 			vm[v] = value_t(new hydla::simulator::symbolic::SymbolicValue(st));
@@ -146,7 +145,6 @@ namespace simulator {
 		phase_simulator_->substitute_values_for_vm(pr, vm);
 		// current_time の適用
 		phase_simulator_->substitute_current_time_for_vm(pr, current_time);
-
 	}
 
   HASimulator::init_value_map_t HASimulator::update_vm(phase_result_sptr_t pr, init_value_map_t vm_pre){
@@ -155,51 +153,15 @@ namespace simulator {
 	  for(; it_vm != vm_pre.end(); ++it_vm) {
 			variable_map_t::iterator it = pr->variable_map.begin();
 		  for(; it != pr->variable_map.end(); ++it) {
-		  	if(it_vm->first->get_name() == it->first->get_name() && 
-		  	   it_vm->first->get_derivative_count() == it->first->get_derivative_count() ){
-		  	   	vm[it_vm->first] = value_t(new hydla::simulator::symbolic::SymbolicValue(it->second->get_string()));
+		  	if(it_vm->first.get_name() == it->first.get_name() && 
+		  	   it_vm->first.get_derivative_count() == it->first.get_derivative_count() ){
+		  	   	vm[it_vm->first] = value_t(new hydla::simulator::symbolic::SymbolicValue(it->second.get_string()));
 		  	}
 		  }
 	  }
 		return vm;
 	}
 	
-	
-	void HASimulator::viewPrs(phase_result_sptrs_t results)
-	{
-		phase_result_sptrs_t::iterator it_ls = results.begin();
-		while(it_ls != results.end()) {
-			viewPr(*it_ls);	
-			it_ls++;
-		}	
-	}
-	
-	void HASimulator::viewPr(phase_result_sptr_t result)
-	{
-		
-		if (logger::Logger::ha_simulator_area_) {
-	    hydla::output::SymbolicTrajPrinter printer;
-			printer.output_one_phase(result);
-			
-			HYDLA_LOGGER_HAS("negative ask:");
-			viewAsks(result->negative_asks);
-			HYDLA_LOGGER_HAS("positive ask:");
-			viewAsks(result->positive_asks);
-		}
-	}
-	
-	void HASimulator::viewAsks(ask_set_t asks)
-	{
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
-		ask_set_t::iterator it = asks.begin();
-		string str = "";
-		while(it != asks.end()){
-			str += tree_printer.get_infix_string((*it)->get_guard()) + " ";
-			it++;
-		}
-		HYDLA_LOGGER_HAS(str);
-	}
-*/	
 }//namespace hydla
 }//namespace simulator 
 

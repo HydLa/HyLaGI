@@ -64,7 +64,7 @@ namespace simulator {
 
 	  HYDLA_LOGGER_HA("************************\n");
 
-	  HYDLA_LOGGER_HA("--- Current Todo ---\n", todo);
+	  HYDLA_LOGGER_HA("--- Current Todo ---\n", *todo);
     current_condition_t cc_;
     current_condition_t tmp_cc_;
 
@@ -78,7 +78,7 @@ namespace simulator {
 	    {
 	      phase_result_sptr_t& phase = phases[i];
 	    	
-	      HYDLA_LOGGER_HA("--- Result Phase", i+1 , "/", phases.size(), " ---\n", phase);
+	      HYDLA_LOGGER_HA("--- Result Phase", i+1 , "/", phases.size(), " ---\n", *phase);
 	    	
       	tmp_cc_ = cc_;
       	tmp_cc_.push_back(phase);
@@ -104,7 +104,7 @@ namespace simulator {
 	      {
 	        simulation_todo_sptr_t& n_todo = next_todos[j];
           HYDLA_LOGGER_HA("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
-          HYDLA_LOGGER_HA(n_todo);
+          HYDLA_LOGGER_HA(*n_todo);
 	      	// TIME_LIMITの場合
 	      	if(n_todo->parent->cause_of_termination == TIME_LIMIT){
 	      		current_condition_t tmp_tmp_cc_;

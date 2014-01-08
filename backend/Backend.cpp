@@ -94,6 +94,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
   }
   break;
+    
 
   case 'c':
     switch(args_fmt[++i])
@@ -229,6 +230,14 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     }
   }
   break;
+  
+  case 'b':
+  {
+    bool* b = (bool*)ret;
+    receive_bool(*b);
+    break;
+  }
+
                    
   case 'm':
     switch(ret_fmt[++i])
@@ -1011,6 +1020,17 @@ node_sptr Backend::receive_node(){
 void Backend::invalid_ret()
 {
   throw InterfaceError("invalid return value. \ninput:\n" + link_->get_input_print() + "\n\ntrace:\n" + link_->get_debug_print());
+}
+
+void Backend::receive_bool(bool &b)
+{
+  std::string s_name = link_->get_symbol();
+  if(s_name == "True") b = true;
+  else
+  {
+    if(s_name == "False")b = false;
+    else throw InterfaceError("invalid return value");
+  }
 }
 
 int Backend::receive_map(variable_map_t& map)

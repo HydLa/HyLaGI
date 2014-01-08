@@ -2,7 +2,7 @@
  * v1(now) in v2(past) => true
  *)
 
-publicMethod[checkIncludeBound, v1, v2, 
+publicMethod[checkIncludeBound, v1, v2, pConstraintPast, pConstraintNow,
   Module[{minPast, maxPast, minNow, maxNow, tmp, reduceExprPast, 
     reduceExprNow},
    minPast = 
@@ -52,8 +52,8 @@ publicMethod[checkIncludeBound, v1, v2,
     ];
    simplePrint[reduceExprPast && reduceExprNow];
    If[Reduce[
-      Not[reduceExprPast] && reduceExprNow] === False, toReturnForm[1], 
-    toReturnForm[0]]]
+      Not[reduceExprPast] && reduceExprNow] === False, True, 
+    False]]
 ];
 
 publicMethod[checkInclude, includeBound, 
@@ -80,18 +80,38 @@ publicMethod[checkInclude, includeBound,
  ](* Module *)
 ];
 
-addParameterConstraintNow[pcons_, pars_] := (
-     pConstraintNow = True;
-     parametersNow = {};
-     pConstraintNow = Reduce[pConstraintNow && And@@pcons, Reals];
-     parametersNow = Union[parametersNow, pars];
-     simplePrint[pConstraintNow];
-     );
+publicMethod[
+  SubstituteValue,
+  expr, value,
+  Module[
+    {appliedExpr},
+    appliedExpr = Reduce[{expr, value}, expr[[1]], Reals];
+    simplePrint[appliedExpr];
+    appliedExpr = appliedExpr[[Length[appliedExpr],2]];    
+    If[Element[appliedExpr, Reals] =!= False,
+      toReturnForm[appliedExpr],
+      Message[substitute_value::nrls, appliedExpr]
+    ]
+  ]
+];
 
-addParameterConstraintPast[pcons_, pars_] := (
-     pConstraintPast = True;
-     parametersPast = {};
-     pConstraintPast = Reduce[pConstraintPast && And@@pcons, Reals];
-     parametersPast = Union[parametersPast, pars];
-     simplePrint[pConstraintPast];
-     );
+publicMethod[
+  SubstituteTime,
+  expr, value,
+  Module[
+    {appliedExpr},
+    appliedExpr = Reduce[{t == expr, t>=0, value}, t, Reals];
+    simplePrint[appliedExpr];
+    appliedExpr = appliedExpr[[Length[appliedExpr],2]];    
+    If[Element[appliedExpr, Reals] =!= False,
+      integerString[appliedExpr],
+      Message[substitute_value::nrls, appliedExpr]
+    ]
+  ]
+];
+
+publicMethod[
+  timeAdd,
+  expr, time,
+  integerString[expr + time]
+];

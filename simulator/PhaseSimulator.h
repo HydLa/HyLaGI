@@ -74,7 +74,7 @@ public:
 	/**
    * HASimulator用
    */ 
-	void substitute_values_for_vm(phase_result_sptr_t pr, std::map<parameter_t*, value_t> vm);
+	void substitute_values_for_vm(phase_result_sptr_t pr, std::map<parameter_t, value_t> vm);
   void substitute_current_time_for_vm(phase_result_sptr_t pr, time_t current_time);
 	
  	/**

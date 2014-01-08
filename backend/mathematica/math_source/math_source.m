@@ -81,7 +81,7 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
   Module[
-    {sol, otherCons, tCons, i, j, cnf, cpTrue, eachCpTrue, cpFalse, trueMap, falseMap},
+    {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse, trueMap, falseMap},
     If[cons === True,
       {createMap[pCons, isParameter, hasParameter, {}], False},
       sol = exDSolve[cons, initCons];
@@ -94,10 +94,10 @@ publicMethod[
 
         cpTrue = False;
         For[i = 1, i <= Length[tCons], i++,
-          cnf = tCons[[i]];
+          conj = tCons[[i]];
           eachCpTrue = prevCons && pCons;
-          For[j = 1, j <= Length[cnf], j++,
-            eachCpTrue = eachCpTrue && ccIntervalForEach[cnf[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue]
+          For[j = 1, j <= Length[conj], j++,
+            eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue]
           ];
           cpTrue = cpTrue || eachCpTrue
         ];
@@ -182,6 +182,9 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       (* Remove unnecessary Constraints*)
       map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = Reduce[map, vars, Reals];
+
+      (* Remove unnecessary Constraints*)
+      map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       simplePrint[map];
       map = LogicalExpand[map];
       map = applyListToOr[map];
@@ -679,7 +682,7 @@ Check[
         resultRule = Union[resultRule, rules[[1]] ];
         simplePrint[resultRule];
         tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-        If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]) )], Return[overConstraint] ];
+        If[MemberQ[tmpExpr, ele_ /; ele === False], Return[overConstraint] ];
         tmpExpr = Select[tmpExpr, (#=!=True)&];
         simplePrint[tmpExpr];
         resultCons = applyDSolveResult[resultCons, rules[[1]] ];
