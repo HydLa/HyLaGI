@@ -2,6 +2,7 @@
 #include <boost/foreach.hpp>
 #include <stack>
 #include "DefaultParameter.h"
+#include "Logger.h"
 
 using namespace hydla::simulator;
 using namespace std;

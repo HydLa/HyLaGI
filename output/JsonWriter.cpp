@@ -1,4 +1,5 @@
 #include "JsonWriter.h"
+#include "Logger.h"
 #include <sstream>
 
 using namespace boost::property_tree;
@@ -35,15 +36,14 @@ JsonWriter::ptree_t JsonWriter::for_phase(const phase_result_const_sptr_t &phase
   if(phase->phase == simulator::PointPhase)
   {
     ret.put("phase_type", "PP");
-    ret.put("time", *phase->current_time);
+    if(phase->current_time.get())ret.put("time", *phase->current_time);
   }
   else if(phase->phase == simulator::IntervalPhase)
   {
     ret.put("phase_type", "IP");
-    ret.put("start_time", *phase->current_time);
-    ret.put("end_time", *phase->end_time);
+    if(phase->current_time.get())ret.put("start_time", *phase->current_time);
+    if(phase->end_time.get())ret.put("end_time", *phase->end_time);
   }
-
   ret.add_child("vm", for_vm(phase->variable_map));
   ret.add_child("pm", for_pm(phase->parameter_map));
   ret.add_child("children", make_children(phase));
@@ -102,7 +102,11 @@ JsonWriter::ptree_t JsonWriter::make_children(const phase_result_const_sptr_t &p
 JsonWriter::ptree_t JsonWriter::for_range(const value_range_t &range)
 {
   ptree_t ret;
-  if(range.unique())
+  if(range.undefined())
+  {
+    // do nothing
+  }
+  else if(range.unique())
   {
     ret.put("", range.get_unique()->get_string());
   }
