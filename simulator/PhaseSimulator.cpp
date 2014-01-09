@@ -423,44 +423,77 @@ bool PhaseSimulator::check_include_bound(value_t tmp_variable_phase, value_t tmp
   return ret;
 }
 
-void PhaseSimulator::substitute_values_for_vm(phase_result_sptr_t pr, std::map<parameter_t, value_t> vm)
+void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm)
 {
-/*
   HYDLA_LOGGER_LOCATION(HAS);
 	// 変数に代入
 	variable_map_t ret;
-  backend_->call("SubstituteValue",);
-	solver_->substitute_values_for_vm(pr->variable_map, ret, vm);
-	pr->variable_map = ret;
+  variable_map_t &vm = pr->variable_map;
+  HYDLA_LOGGER_VAR(HAS, *pr);
+  HYDLA_LOGGER_VAR(HAS, pm);
+  for(variable_map_t::iterator it = vm.begin();
+      it != vm.end(); it++)
+  {
+    if(it->second.undefined())continue;
+    HYDLA_LOGGER_VAR(HAS, it->first.get_name());
+    HYDLA_LOGGER_VAR(HAS, it->second.get_string());
+    assert(it->second.unique());
+    value_t tmp_val = it->second.get_unique();
+    backend_->call("substituteParameterCondition",
+                   2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
+    it->second.set_unique(tmp_val);
+  }
+
 	// 時刻にも代入
   HYDLA_LOGGER_LOCATION(HAS);
-	time_t ret_time;
-	solver_->substitute_values_for_time(pr->current_time, ret_time, vm);
-	pr->current_time = ret_time;
+  backend_->call("substituteParameterCondition",
+                 2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
 	if(pr->phase == IntervalPhase){
-		solver_->substitute_values_for_time(pr->end_time, ret_time, vm);
-		pr->end_time = ret_time;
+    backend_->call("substituteParameterCondition",
+                   2, "vlnmp", "vl", &pr->end_time, &pm, &pr->end_time);
 	}
-*/
 }
 
-void PhaseSimulator::substitute_current_time_for_vm(phase_result_sptr_t pr, time_t current_time)
-{
-/*
-  HYDLA_LOGGER_LOCATION(HAS);
-	variable_map_t ret;
-  solver_->substitute_current_time_for_vm(pr->variable_map, ret, current_time);
-  pr->variable_map = ret;
-4	// 時刻にも適用
-  HYDLA_LOGGER_LOCATION(HAS);
-	time_t ret_time;
-	solver_->substitute_current_time_for_time(pr->current_time, ret_time, current_time);
-	pr->current_time = ret_time;
-	if(pr->phase == IntervalPhase){
-		solver_->substitute_current_time_for_time(pr->end_time, ret_time, current_time);
-		pr->end_time = ret_time;
-	}
-*/
+
+variable_map_t PhaseSimulator::shift_variable_map_time(const variable_map_t& vm, const value_t &time){
+  variable_map_t shifted_vm;
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  for(; it!=end; ++it) {
+    if(it->second.undefined())
+      shifted_vm[it->first] = it->second;
+    else if(it->second.unique())
+    {
+      value_t val = it->second.get_unique();
+      range_t& range = shifted_vm[it->first];
+      value_t ret;
+      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+      range.set_unique(ret);
+    }
+    else
+    {
+      range_t range = it->second;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
+      }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+
+        ValueRange::bound_t bd = it->second.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      shifted_vm[it->first] = range;
+    }
+  }
+  return shifted_vm;
 }
 
 void PhaseSimulator::replace_prev2parameter(variable_map_t &vm,

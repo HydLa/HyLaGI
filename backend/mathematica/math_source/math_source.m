@@ -180,13 +180,15 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
     ];
     If[idx == {},
       (* Remove unnecessary Constraints*)
-      map = cons /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+      map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = Reduce[map, vars, Reals];
+
+      (* Remove unnecessary Constraints*)
+      map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+
 
       simplePrint[map];
       map = LogicalExpand[map];
-      (* Remove unnecessary Constraints*)
-      map = map /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
       map = applyListToOr[map];
       map = Map[(applyList[#])&, map];
       debugPrint["@createMap map after applyList", map];

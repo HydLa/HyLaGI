@@ -185,6 +185,8 @@ namespace simulator {
 		  }else{
 		    HYDLA_LOGGER_HA("****** check_include_bound end : false ******");
 		  }
+      return isIncludeBound;
+/*
 	  	if(hydla::logger::Logger::ha_converter_area_ && hydla::logger::Logger::ha_simulator_area_){
 		  	cout << "please input 0 or 1: if past includes now, input 1, otherwise 0. " << endl;
 			  cout << ">";
@@ -196,6 +198,7 @@ namespace simulator {
 	  	}else{
 	  		return isIncludeBound;
 	  	}
+*/
 	  }
 	  
 		HYDLA_LOGGER_HA("****** end check_subset : true ******");		

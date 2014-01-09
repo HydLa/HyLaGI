@@ -74,8 +74,7 @@ public:
 	/**
    * HASimulator用
    */ 
-	void substitute_values_for_vm(phase_result_sptr_t pr, std::map<parameter_t, value_t> vm);
-  void substitute_current_time_for_vm(phase_result_sptr_t pr, time_t current_time);
+	void substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm);
 	
  	/**
    * make todos from given phase_result
@@ -99,6 +98,8 @@ public:
   virtual void find_unsat_core(const module_set_sptr& ms,
       simulation_todo_sptr_t&,
     const variable_map_t& vm) = 0;
+
+  variable_map_t shift_variable_map_time(const variable_map_t& vm, const value_t &time);
 
 
   /// pointer to the backend to be used
@@ -132,7 +133,7 @@ protected:
     const continuity_map_t& cont_map,
     const Phase& phase) = 0;
   
-  virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
+  virtual variable_map_t apply_time_to_vm(const variable_map_t &, const value_t &) = 0;
   
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，

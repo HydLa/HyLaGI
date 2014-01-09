@@ -624,6 +624,7 @@ SymbolicPhaseSimulator::todo_list_t
       if(candidate.minimum.id == -1) {
         pr->cause_of_termination = simulator::TIME_LIMIT;
       }
+
       time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
       backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       results.push_back(pr);
@@ -664,8 +665,6 @@ SymbolicPhaseSimulator::todo_list_t
     }
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
-  
-
   
   HYDLA_LOGGER_FUNC_END(MS);  
   return ret;
@@ -776,48 +775,6 @@ variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm
   }
   HYDLA_LOGGER_FUNC_END(PHASE);  
   return result;
-}
-
-
-variable_map_t SymbolicPhaseSimulator::shift_variable_map_time(const variable_map_t& vm, const time_t &time){
-  variable_map_t shifted_vm;
-  variable_map_t::const_iterator it  = vm.begin();
-  variable_map_t::const_iterator end = vm.end();
-  for(; it!=end; ++it) {
-    if(it->second.undefined())
-      shifted_vm[it->first] = it->second;
-    else if(it->second.unique())
-    {
-      value_t val = it->second.get_unique();
-      range_t& range = shifted_vm[it->first];
-      value_t ret;
-      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-      range.set_unique(ret);
-    }
-    else
-    {
-      range_t range = it->second;
-      for(uint i = 0; i < range.get_lower_cnt(); i++)
-      {
-        ValueRange::bound_t bd = it->second.get_lower_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-        range.set_lower_bound(ret, bd.include_bound);
-      }
-      for(uint i = 0; i < range.get_upper_cnt(); i++)
-      {
-
-        ValueRange::bound_t bd = it->second.get_upper_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-        range.set_upper_bound(ret, bd.include_bound);
-      }
-      shifted_vm[it->first] = range;
-    }
-  }
-  return shifted_vm;
 }
 
 } //namespace symbolic

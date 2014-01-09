@@ -17,18 +17,20 @@ public:
 	
 	HASimulator(Opts &opts);
 
+  void set_ha_results(const ha_results_t& ha_results);
+
   virtual ~HASimulator();
 
-  phase_result_const_sptr_t simulate(ha_results_t ha_results);
   virtual phase_result_const_sptr_t simulate();
-
-	typedef std::map<parameter_t, value_t>    init_value_map_t;
 	
-	init_value_map_t get_init_vm(phase_result_sptr_t pr);
+	parameter_map_t get_init_vm(phase_result_sptr_t pr);
 	ha_result_t get_ha(ha_results_t ha_results);
-	void substitute(phase_result_sptr_t pr, init_value_map_t vm, time_t current_time);
-	init_value_map_t update_vm(phase_result_sptr_t pr, init_value_map_t vm_pre);
-	
+	void substitute(phase_result_sptr_t pr, parameter_map_t vm, time_t current_time);
+	parameter_map_t update_vm(phase_result_sptr_t pr, parameter_map_t vm_pre);
+
+private:
+  value_t simplify(parse_tree::node_sptr exp);
+  ha_results_t ha_results;
 
 };//HASimulator
 

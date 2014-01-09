@@ -80,6 +80,23 @@ publicMethod[checkInclude, includeBound,
  ](* Module *)
 ];
 
+
+publicMethod[
+  substituteParameterCondition,
+  expr, pCond,
+  Module[
+    {substitutedVal, pRules},
+    pRules = Map[(#[[1]] -> #[[2]])&, pCond];
+    substitutedVal = Simplify[expr /. pRules];
+    If[Element[substitutedVal, Reals] =!= False,
+      toReturnForm[substitutedVal],
+      Message[substitute_value::nrls, substitutedVal]
+    ]
+  ]
+];
+
+
+
 publicMethod[
   SubstituteValue,
   expr, value,

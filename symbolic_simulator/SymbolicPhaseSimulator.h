@@ -48,8 +48,6 @@ public:
 private:
 
   std::set<module_set_sptr> checkd_module_set_;
-
-  variable_map_t shift_variable_map_time(const variable_map_t& vm,const time_t &time);
   
   /**
    * PPモードとIPモードを切り替える
