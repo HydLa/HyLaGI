@@ -65,13 +65,13 @@ std::ostream& operator<<(std::ostream& s, const PhaseResult& phase)
   s << "%% id: " <<  phase.id          << std::endl;
   s << "%% step: " <<  phase.step << std::endl;
   
-  if(phase.current_time.get())
+  if(!phase.current_time.undefined())
   {
-    s << "%% current_time: " << *phase.current_time << std::endl;
+    s << "%% current_time: " << phase.current_time << std::endl;
   }
-  if(phase.end_time.get())
+  if(!phase.end_time.undefined())
   {
-    s << "%% end_time: " << *phase.end_time << std::endl;
+    s << "%% end_time: " << phase.end_time << std::endl;
   }
   s << "--- variable map ---" << std::endl;
   s << phase.variable_map    << std::endl;

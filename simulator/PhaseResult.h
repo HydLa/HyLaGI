@@ -64,11 +64,10 @@ typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef boost::shared_ptr<const PhaseResult>              phase_result_const_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 
-typedef boost::shared_ptr<Value>                          value_t;
+typedef Value                                             value_t;
 typedef ValueRange                                        range_t;
 typedef DefaultVariable                                   variable_t;
 typedef DefaultParameter                                  parameter_t;
-typedef value_t                                           time_t;
 
 typedef std::map<variable_t, range_t, VariableComparator>                    variable_map_t;
 
@@ -82,7 +81,7 @@ typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sp
 struct PhaseResult {
   Phase                     phase;
   int id;
-  time_t                    current_time, end_time;
+  value_t                   current_time, end_time;
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
   expanded_always_t         expanded_always;

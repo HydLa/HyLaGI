@@ -2,7 +2,6 @@
 #include "HAConverter.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
-#include "SymbolicValue.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
@@ -176,7 +175,7 @@ namespace simulator {
 			  	//HYDLA_LOGGER_HA("c-t         :  ", *past_phase->current_time);		 				 	
 			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first.name, it_past_v->first.derivative_count);
 		  	}
-		  } 
+		  }
       // TODO: 幅を持つ場合への対応
 		  bool isIncludeBound = phase_simulator_->check_include_bound(tmp_variable_phase.get_unique(), tmp_variable_past.get_unique(), phase->parameter_map, past_phase->parameter_map);
 		  

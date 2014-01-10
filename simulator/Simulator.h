@@ -91,7 +91,7 @@ struct SimulationTodo{
 
   Phase                     phase;
   int                       id;
-  time_t                    current_time;
+  value_t                    current_time;
   parameter_map_t           parameter_map;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;

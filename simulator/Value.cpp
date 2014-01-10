@@ -1,8 +1,7 @@
 #include "Value.h"
-#include "SymbolicValue.h"
+#include "TreeInfixPrinter.h"
 
 using namespace hydla::simulator;
-using hydla::simulator::symbolic::SymbolicValue;
 
 bool hydla::simulator::operator<(const Value& lhs, const Value& rhs){
   return lhs.get_string() < rhs.get_string();
@@ -13,15 +12,50 @@ std::ostream& hydla::simulator::operator<<(std::ostream& s, const Value & v){
 }
 
 Value& Value::operator+=(const Value& rhs){
-  assert(typeid(*this) == typeid(SymbolicValue) && typeid(rhs) == typeid(SymbolicValue));
-  SymbolicValue& me = static_cast<SymbolicValue &>(*this), him = static_cast<const SymbolicValue &>(rhs);
-  me.set_node(SymbolicValue::node_sptr(new hydla::parse_tree::Plus(me.get_node(), him.get_node())));
+  set_node(node_sptr(new hydla::parse_tree::Plus(get_node(), rhs.get_node())));
   return *this;
 }
 
 Value& Value::operator-=(const Value& rhs){
-  assert(typeid(*this) == typeid(SymbolicValue) && typeid(rhs) == typeid(SymbolicValue));
-  SymbolicValue& me = static_cast<SymbolicValue &>(*this), him = static_cast<const SymbolicValue &>(rhs);
-  me.set_node(SymbolicValue::node_sptr(new hydla::parse_tree::Subtract(me.get_node(), him.get_node())));
+  set_node(node_sptr(new hydla::parse_tree::Subtract(get_node(), rhs.get_node())));
   return *this;
+}
+
+
+
+
+bool Value::undefined() const
+{
+  return (node_ == NULL);
+}
+
+Value::Value(){}
+
+Value::Value(const std::string &str){
+  node_.reset((new hydla::parse_tree::Number(str)));
+}
+Value::Value(const Value::node_sptr & node){
+  node_ = node;
+}
+
+
+std::string Value::get_string() const
+{
+  if(undefined()) return "";
+  hydla::parse_tree::TreeInfixPrinter printer;
+  std::ostringstream os;
+  printer.print_infix(node_,os);
+  return os.str();
+}
+
+
+Value::node_sptr Value::get_node() const
+{
+  if(node_==NULL)assert(0);
+  return node_;
+}
+
+void Value::set_node(const node_sptr &n)
+{
+  node_ = n;
 }

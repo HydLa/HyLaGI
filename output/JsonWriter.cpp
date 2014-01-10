@@ -36,13 +36,13 @@ JsonWriter::ptree_t JsonWriter::for_phase(const phase_result_const_sptr_t &phase
   if(phase->phase == simulator::PointPhase)
   {
     ret.put("phase_type", "PP");
-    if(phase->current_time.get())ret.put("time", *phase->current_time);
+    if(!phase->current_time.undefined())ret.put("time", phase->current_time);
   }
   else if(phase->phase == simulator::IntervalPhase)
   {
     ret.put("phase_type", "IP");
-    if(phase->current_time.get())ret.put("start_time", *phase->current_time);
-    if(phase->end_time.get())ret.put("end_time", *phase->end_time);
+    if(!phase->current_time.undefined())ret.put("start_time", phase->current_time);
+    if(!phase->end_time.undefined())ret.put("end_time", phase->end_time);
   }
   ret.add_child("vm", for_vm(phase->variable_map));
   ret.add_child("pm", for_pm(phase->parameter_map));
@@ -108,7 +108,7 @@ JsonWriter::ptree_t JsonWriter::for_range(const value_range_t &range)
   }
   else if(range.unique())
   {
-    ret.put("", range.get_unique()->get_string());
+    ret.put("", range.get_unique().get_string());
   }
   else
   {
@@ -120,11 +120,11 @@ JsonWriter::ptree_t JsonWriter::for_range(const value_range_t &range)
         const value_range_t::bound_t &bound = range.get_lower_bound(i);
         if(bound.include_bound)
         {
-          lbs.put(bound.value->get_string(), "[");
+          lbs.put(bound.value.get_string(), "[");
         }
         else
         {
-          lbs.put(bound.value->get_string(), "(");
+          lbs.put(bound.value.get_string(), "(");
         }
       }
       ret.add_child("lb", lbs);
@@ -137,11 +137,11 @@ JsonWriter::ptree_t JsonWriter::for_range(const value_range_t &range)
         const value_range_t::bound_t &bound = range.get_upper_bound(i);
         if(bound.include_bound)
         {
-          ubs.put(bound.value->get_string(), "]");
+          ubs.put(bound.value.get_string(), "]");
         }
         else
         {
-          ubs.put(bound.value->get_string(), ")");
+          ubs.put(bound.value.get_string(), ")");
         }
       }
       ret.add_child("ub", ubs);

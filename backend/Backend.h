@@ -10,7 +10,6 @@ namespace hydla{
 namespace backend{
 
 typedef hydla::simulator::value_t         value_t;
-typedef hydla::simulator::time_t          time_t;
 typedef hydla::simulator::variable_t      variable_t;
 typedef hydla::simulator::variable_map_t  variable_map_t;
 typedef hydla::simulator::parameter_map_t parameter_map_t;
@@ -25,7 +24,7 @@ typedef std::vector<variable_map_t>       create_vm_t;
 
 typedef struct TimeIdPair
 {
-  time_t time;
+  value_t time;
   int id;
 }time_id_pair_t;
 
@@ -56,7 +55,7 @@ typedef struct DCCause
 typedef std::vector<dc_cause_t> dc_causes_t;
   
 
-class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor
+class Backend : public hydla::parse_tree::DefaultTreeVisitor
 {
   public:
 
@@ -125,7 +124,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
 
-  int send_value(const hydla::simulator::symbolic::value_t& val, const variable_form_t &var);
+  int send_value(const hydla::simulator::value_t& val, const variable_form_t &var);
 
 
   int receive_map(variable_map_t &vm);
@@ -161,8 +160,6 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
 
   
   bool get_form(const char &form_c, variable_form_t &form);
-
-  void visit_value(hydla::simulator::symbolic::SymbolicValue& value);
 
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
@@ -257,7 +254,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor, hydla::simulator::
   variable_form_t variable_arg_;
 
   //valと関係演算子を元に、rangeを設定する
-  void set_range(const hydla::simulator::symbolic::value_t &val, hydla::simulator::symbolic::value_range_t &range, const int& relop);
+  void set_range(const hydla::simulator::value_t &val, hydla::simulator::symbolic::value_range_t &range, const int& relop);
 };
 
 } // namespace backend

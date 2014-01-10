@@ -1,7 +1,6 @@
 #include "InteractiveSimulator.h"
 #include "Timer.h"
 #include "PhaseSimulator.h"
-#include "SymbolicValue.h"
 #include "../common/TimeOutError.h"
 #include "Backend.h"
 #include <iostream>
@@ -263,9 +262,9 @@ void InteractiveSimulator::print(phase_result_sptr_t& phase)
 }
 
 int InteractiveSimulator::change_time(simulation_todo_sptr_t& todo){
-  time_t& current_time = todo->parent->current_time;
+  value_t& current_time = todo->parent->current_time;
   string time_str = excin<string>();
-  current_time = value_t(new hydla::simulator::symbolic::SymbolicValue(time_str));
+  current_time = time_str;
   todo->current_time = current_time;
   return 0;
 }
@@ -300,7 +299,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   getline(cin, value_str);
 
   if(value_str.substr(0,1)!="(" && value_str.substr(0,1)!="["){
-    value_t value(new hydla::simulator::symbolic::SymbolicValue(value_str));
+    value_t value = value_str;
     // TODO: stringでvalue作ると，バックエンド変えた時に対応できないので何とかする
     //     （これはSymbolicValueのコンストラクタ側の問題かもしれない）
     //       あとこれだと不正な式入力された場合も対応できない
@@ -316,18 +315,17 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     vector<string> v;
     boost::algorithm::split( v, rangevalue, boost::is_any_of(",") );
 
-    value_t lowvalue(new hydla::simulator::symbolic::SymbolicValue(v[0]));
-    value_t upvalue(new hydla::simulator::symbolic::SymbolicValue(v[1]));
+    value_t lowvalue(v[0]);
+    value_t upvalue(v[1]);
 
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
     parameter_t introduced_par = introduce_parameter(v_it->first, todo->parent, range);
     pm[introduced_par] = range;
-    value_t pvalue(new hydla::simulator::symbolic::SymbolicValue(
-      hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(v_it->first.get_name(),
+    value_t pvalue(node_sptr(new Parameter(v_it->first.get_name(),
       v_it->first.get_derivative_count(),
-      todo->parent->id))));
+      todo->parent->id)));
     vm[v_it->first] = pvalue;
     
     todo->parent->parameter_map = todo->parameter_map;
@@ -337,7 +335,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
-/*
+
   if(todo->phase == PointPhase)
   {
     cout << "sorry, approximation at start point of PP is not supported" << endl;
@@ -350,13 +348,15 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   cout << "input variable name " << endl;
   cout << '>';
   string variable_str = excin<string>();
-  // TODO: 幅を持つ場合への対応
-  variable_t* var = NULL;
-  value_t* val = NULL;
+
+  // TODO: 変数自体が幅を持つ場合への対応
+
+  variable_t var;
+  range_t val;
   if(variable_str == "t")
   {
-    var = &system_time_;
-    val = &todo->current_time;
+    var = system_time_;
+    val = todo->current_time;
   }
   else
   {
@@ -365,7 +365,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
       if( v_it->first.get_string() == variable_str)
       {
         var = v_it->first;
-        val = &v_it->second.get_unique();
+        val = v_it->second.get_unique();
         break;
       }
     }
@@ -377,10 +377,11 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   }
 
   AffineTranslator translator;
-  assert(val->unique());
-  affine_t affine = translator.translate(val->get_unique()->get_node());
+  assert(val.unique());
+  node_sptr node = val.get_unique().get_node();
+  affine_t affine = translator.translate(node);
   cout << affine << endl;
-*/  
+
 /*  
   if(method_string == "i")
   {
@@ -515,7 +516,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
   for(int i = temp->id;i>0; i--){
     Phase                     phase;
     int                       id;
-    hydla::simulator::time_t                    current_time, end_time;
+    hydla::simulator::value_t                    current_time, end_time;
     variable_map_t            variable_map;
     parameter_map_t           parameter_map;
     expanded_always_t         expanded_always;
@@ -550,8 +551,8 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
       //ofs << id << endl;
       ofs.write((char*) &id, sizeof(int));
       cout << "id " << id << endl;
-    //fwrite(&current_time    , sizeof(time_t)               , 1 , fp);
-    //fwrite(&end_time        , sizeof(time_t)               , 1 , fp);
+    //fwrite(&current_time    , sizeof(value_t)               , 1 , fp);
+    //fwrite(&end_time        , sizeof(value_t)               , 1 , fp);
       //ofs << vm_size << endl;
       ofs.write((char*) &vm_size, sizeof(int));
       cout << "vm_size " << vm_size << endl;
@@ -615,7 +616,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
   for(int i = 0;i<1;i++){
     Phase                     phase;
     int                       id;
-    hydla::simulator::PhaseResult::time_t                    current_time, end_time;
+    hydla::simulator::PhaseResult::value_t                    current_time, end_time;
     variable_map_t            variable_map;
     int vm_size;
     int pm_size;
@@ -634,8 +635,8 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     //ifs >> id;
     ifs.read((char *) &id, sizeof(int));
     cout << "read id "<< id << endl;
-    //fread(&current_time         , sizeof(time_t)               , 1 , fp);
-    //fread(&end_time             , sizeof(time_t)               , 1 , fp);
+    //fread(&current_time         , sizeof(value_t)               , 1 , fp);
+    //fread(&end_time             , sizeof(value_t)               , 1 , fp);
     //ifs >> vm_size;
     ifs.read((char *) &vm_size, sizeof(int));
     cout << "read vm_size "<< vm_size << endl;

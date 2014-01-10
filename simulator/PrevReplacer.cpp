@@ -1,6 +1,5 @@
 #include "PrevReplacer.h"
 #include "VariableReplacer.h"
-#include "SymbolicValue.h"
 #include "Logger.h"
 
 using namespace std;
@@ -17,23 +16,18 @@ PrevReplacer::~PrevReplacer()
 
 void PrevReplacer::replace_value(value_t& val)
 {
-  HYDLA_LOGGER_LOCATION(REST);
-  val->accept(*this);
+  node_sptr node = val.get_node();
+  replace_node(node);
+  val.set_node(node);
 }
 
-
-void PrevReplacer::visit_value(hydla::simulator::symbolic::SymbolicValue& val)
-{
-  replace(val.get_node());
-  if(new_child_) val.set_node(new_child_);
-}
-
-void PrevReplacer::replace(node_sptr node)
+void PrevReplacer::replace_node(node_sptr &node)
 {
   differential_cnt_ = 0;
   in_prev_ = false;
   new_child_.reset();
   accept(node);
+  if(new_child_) node = new_child_;
 }
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
@@ -57,7 +51,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
   v_replacer.replace_range(range);
   if(range.unique())
   {
-    new_child_ = range.get_unique()->get_node();
+    new_child_ = range.get_unique().get_node();
   }
   else
   {
@@ -68,7 +62,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
       simulator_.introduce_parameter(variable, prev_phase_, range);
       parameter_map_[param] = range;
       prev_phase_->parameter_map[param] = parameter_map_[param];
-      prev_phase_->variable_map[variable] = value_t(new symbolic::SymbolicValue(new_child_));
+      prev_phase_->variable_map[variable] = value_t(new_child_);
     }
   }
 }

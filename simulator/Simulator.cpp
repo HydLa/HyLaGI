@@ -3,7 +3,6 @@
 #include "Backend.h"
 #include "MathematicaLink.h"
 #include "REDUCELinkFactory.h"
-#include "SymbolicValue.h"
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
@@ -110,7 +109,7 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   simulation_todo_sptr_t todo(new SimulationTodo());
   todo->elapsed_time = 0;
   todo->phase        = simulator::PointPhase;
-  todo->current_time = value_t(new hydla::simulator::symbolic::SymbolicValue("0"));
+  todo->current_time = value_t("0");
   todo->module_set_container = msc_original_;
   todo->ms_to_visit = msc_original_->get_full_ms_list();
   todo->maximal_mss.clear();
@@ -124,7 +123,7 @@ std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
 {
   s << "%% PhaseType: " << todo.phase << std::endl;
   s << "%% id: " <<  todo.id          << std::endl;
-  s << "%% time: " << *todo.current_time << std::endl;
+  s << "%% time: " << todo.current_time << std::endl;
   s << "--- parent phase result ---" << std::endl;
   s << *(todo.parent) << std::endl;
   s << "--- temporary_constraints ---"  << std::endl; 

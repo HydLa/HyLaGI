@@ -1,7 +1,6 @@
 #include "SequentialSimulator.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
-#include "SymbolicValue.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 

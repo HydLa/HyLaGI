@@ -2,7 +2,6 @@
 #include "ParallelSimulator.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
-#include "SymbolicValue.h"
 #include "SymbolicPhaseSimulator.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"

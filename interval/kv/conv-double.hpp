@@ -49,7 +49,7 @@ struct conv_double {
 	// format == 'a' : print all digits with no rounding
 
 	static std::string dtostring(double x, int precision = 17, char format = 'g', int mode = 0) {
-		int i, j;
+		int i;
 		int sign, ex;
 		double absx;
 
@@ -393,7 +393,7 @@ struct conv_double {
 	// mode ==  1 : up
 
 	static double stringtod(std::string s, int mode = 0) {
-		int i, j, tmp;
+		int i, tmp;
 		bool flag;
 		int sign, e10, esign;
 		std::string num1_s, num2_s, nume_s;
@@ -579,8 +579,6 @@ struct conv_double {
 		#endif
 
 		// convert binary to double double number
-
-		double dtmp;
 
 		if (result_max > 1023) {
 			return sign * std::numeric_limits<double>::infinity();

@@ -8,10 +8,8 @@
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
-#include "ValueVisitor.h"
 #include "PhaseResult.h"
 #include "Simulator.h"
-#include "SymbolicValue.h"
 
 namespace hydla {
 namespace simulator {
@@ -20,7 +18,7 @@ namespace simulator {
  * A class to replace prevs with parameters.
  * (And introduce parameter into parameter_map)
  */
-class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor{
+class PrevReplacer : public parse_tree::DefaultTreeVisitor{
   typedef hydla::parse_tree::node_sptr                 node_sptr;
 
   public:
@@ -29,9 +27,8 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::Va
 
   virtual ~PrevReplacer();
   
-  virtual void visit_value(hydla::simulator::symbolic::SymbolicValue&);
-
-  void replace_value(value_t& val);
+  void replace_value(value_t &val);
+  void replace_node(node_sptr &exp);
   
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
@@ -66,8 +63,6 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::Va
   Simulator& simulator_;
 
   node_sptr new_child_;
-
-  void replace(node_sptr node);
 
   template<class C, 
            const node_sptr& (C::*getter)() const,

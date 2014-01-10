@@ -9,7 +9,6 @@
 #include "Node.h"
 #include "PhaseResult.h"
 #include "TreeVisitor.h"
-#include "SymbolicValue.h"
 #include "kv/affine.hpp"
 
 namespace hydla {

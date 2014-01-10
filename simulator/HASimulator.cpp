@@ -3,7 +3,6 @@
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
 #include "SymbolicPhaseSimulator.h"
-#include "SymbolicValue.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
@@ -36,19 +35,19 @@ phase_result_const_sptr_t HASimulator::simulate()
 
   ha_result_t ha = get_ha(ha_results); //初期値の範囲にあっている記号定数を持つHAを求める。一旦分岐は考えない
 		
-  time_t max_time;
+  value_t max_time;
     
   if(opts_->max_time != ""){
-    max_time.reset(new symbolic::SymbolicValue(hydla::parse_tree::node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
+    max_time = value_t(node_sptr(new Number(opts_->max_time)));
   }else{
-    max_time.reset(new symbolic::SymbolicValue(hydla::parse_tree::node_sptr(new hydla::parse_tree::Infinity)));
+    max_time = value_t(node_sptr(new Infinity()));
   }
 
   int i = 0;
   int cnt_phase = 0;
   phase_result_sptr_t pr(new PhaseResult(*ha[i])), parent = result_root_;
   parameter_map_t vm = get_init_vm(pr);
-  time_t current_time = value_t(new hydla::simulator::symbolic::SymbolicValue("0"));
+  value_t current_time = value_t("0");
 		
   timer::Timer has_timer;
   profile_t profile;
@@ -75,10 +74,10 @@ phase_result_const_sptr_t HASimulator::simulate()
     else
     {
       pr->current_time = parent->current_time;
-      *pr->end_time = *ha[i]->end_time;
-      *pr->end_time -= *ha[i]->current_time;
-      *pr->end_time += *pr->current_time;      
-      pr->end_time = simplify(pr->end_time->get_node());
+      pr->end_time = ha[i]->end_time;
+      pr->end_time -= ha[i]->current_time;
+      pr->end_time += pr->current_time;      
+      pr->end_time = simplify(pr->end_time.get_node());
       current_time = pr->end_time;
       pr->variable_map = phase_simulator_->shift_variable_map_time(pr->variable_map, pr->current_time);     
     }
@@ -106,10 +105,10 @@ phase_result_const_sptr_t HASimulator::simulate()
     }
  
     if(ha[i]->phase == IntervalPhase){
-      if(!ha[i]->end_time.get()){
+      if(ha[i]->end_time.undefined()){
         // ???だったら最初のノードに戻る(初期のエッジは飛ばす)
         i = 1;
-      }else if(ha[i]->end_time.get()->get_string() == "inf"){
+      }else if(ha[i]->end_time.get_string() == "inf"){
         // infだったら終了
         HYDLA_LOGGER_HAS("fin : inf");
         pr->cause_of_termination = TIME_LIMIT;
@@ -142,7 +141,7 @@ parameter_map_t HASimulator::get_init_vm(phase_result_sptr_t pr){
     cout << "input init value : " << v << endl;
     cout << ">" ;
     cin >> st;
-    vm[v] = value_t(new hydla::simulator::symbolic::SymbolicValue(st));
+    vm[v] = value_t(st);
   }
 		
   return vm;
@@ -160,7 +159,7 @@ HASimulator::ha_result_t HASimulator::get_ha(ha_results_t ha_results){
   return cc;
 }
 	
-void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t vm, time_t current_time){
+void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t vm, value_t current_time){
   // parameter_map の適用
   phase_simulator_->substitute_parameter_condition(pr, vm);
 }
@@ -173,7 +172,7 @@ parameter_map_t HASimulator::update_vm(phase_result_sptr_t pr, parameter_map_t v
     for(; it != pr->variable_map.end(); ++it) {
       if(it_vm->first.get_name() == it->first.get_name() && 
          it_vm->first.get_derivative_count() == it->first.get_derivative_count() ){
-        vm[it_vm->first].set_unique(value_t(new hydla::simulator::symbolic::SymbolicValue(it->second.get_string())));
+        vm[it_vm->first].set_unique(it->second.get_string());
       }
     }
   }

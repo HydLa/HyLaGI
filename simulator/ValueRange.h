@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 #include "Value.h"
 
 namespace hydla {
@@ -10,7 +11,7 @@ namespace simulator {
 
 class ValueRange {
 public:
-  typedef boost::shared_ptr<Value> value_t;
+  typedef Value value_t;
   typedef struct Bound{
     value_t value;
     bool include_bound;
@@ -29,7 +30,7 @@ public:
   
   bool unique() const
   {
-    return (unique_value_.get() != NULL);
+    return !unique_value_.undefined();
   }
   
   /**
@@ -44,7 +45,12 @@ public:
 
   value_t get_unique() const
   {
-    assert(unique_value_.get() != NULL);
+    if(!unique())
+    {
+      throw std::runtime_error(
+        "ValueRange: " + get_string() + 
+        "is not unique, but get_unique() is called");
+    }
     return unique_value_;
   }
 
@@ -74,16 +80,15 @@ public:
 
   void add_lower_bound(const value_t& val, const bool& include)
   {
-
-    if(val && !val->undefined())
-    { 
+    if(!val.undefined())
+    {
       lower_.push_back(bound_t(val, include));
     }
   }
 
   void add_upper_bound(const value_t& val, const bool& include)
   {
-    if(val && !val->undefined())
+    if(!val.undefined())
     {
       upper_.push_back(bound_t(val, include));
     }

@@ -183,7 +183,6 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
     else
     {
-
       variable_t *var = (variable_t*)arg;
       variable_form_t vf;
       if(!get_form(args_fmt[i], vf))
@@ -685,18 +684,12 @@ void Backend::visit(boost::shared_ptr<SymbolicT> node)
 }
 
 
-int Backend::send_value(const value_t &val, const variable_form_t& var){
+int Backend::send_value(const value_t &val, const variable_form_t& var)
+{
   variable_arg_ = var;
-  val->accept(*this);
+  accept(val.get_node());
   return 0;
 }
-
-void Backend::visit_value(hydla::simulator::symbolic::SymbolicValue& value){
-  send_node(value.get_node(), variable_arg_);
-}
- 
-
-
 
 int Backend::send_variable(const variable_t &var, const variable_form_t &variable_arg)
 {
@@ -959,9 +952,9 @@ node_sptr Backend::receive_function()
 
 value_t Backend::receive_value()
 {
-  value_t val(new hydla::simulator::symbolic::SymbolicValue(receive_node()));
+  value_t val(receive_node());
   HYDLA_LOGGER_LOCATION(BACKEND);
-  HYDLA_LOGGER_BACKEND("%% val: ", *val);
+  HYDLA_LOGGER_BACKEND("%% val: ", val);
   return val;
 }
 
@@ -1052,8 +1045,8 @@ int Backend::receive_map(variable_map_t& map)
     int rel = link_->get_integer();
     HYDLA_LOGGER_VAR(BACKEND, rel);
 
-    symbolic_value = value_t(new hydla::simulator::symbolic::SymbolicValue(receive_node()));
-    HYDLA_LOGGER_BACKEND("%% received: ", *symbolic_value);
+    symbolic_value = value_t(receive_node());
+    HYDLA_LOGGER_BACKEND("%% received: ", symbolic_value);
 
     // TODO:次の一行消す
     if(variable_name == "t")continue;
@@ -1061,7 +1054,7 @@ int Backend::receive_map(variable_map_t& map)
 
     value_range_t tmp_range = map[variable];
     set_range(symbolic_value, tmp_range, rel);
-    if(symbolic_value->undefined()){
+    if(symbolic_value.undefined()){
       throw InterfaceError("invalid value");
     }
     map[variable] = tmp_range;  
@@ -1085,7 +1078,7 @@ int Backend::receive_parameter_map(parameter_map_t& map)
     parameter_t tmp_param(name, derivative_count, id);
     value_range_t tmp_range = map[tmp_param];
     int relop_code = link_->get_integer();
-    value_t tmp_value = value_t(new hydla::simulator::symbolic::SymbolicValue(receive_node()));
+    value_t tmp_value = value_t(receive_node());
     set_range(tmp_value, tmp_range, relop_code);
     map[tmp_param] = tmp_range;
   }

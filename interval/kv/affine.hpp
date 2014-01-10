@@ -78,7 +78,7 @@ template <class T> class affine {
 
 	static int& maxnum() {
 		static int m = 0;
-		#pragma omp threadprivate(m)
+		//#pragma omp threadprivate(m)
 		return m;
 	}
 
@@ -644,7 +644,7 @@ template <class T> class affine {
 
 	friend affine operator*(const affine& x, const affine& y) {
 		affine r;
-		int i, j, xs, ys;
+		int i, xs, ys;
 		T err;
 		T tmp_u, tmp_l;
 
@@ -1297,7 +1297,7 @@ template <class T> class ep_reduce_v {
 	T score;
 	void calc_score() {
 		int s = v.size();
-		int i, j;
+		int i;
 		T m1, m2, tmp;
 		using std::abs;
 		m1 = abs(v(0));

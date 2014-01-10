@@ -6,7 +6,6 @@
 #include "Simulator.h"
 #include "DefaultVariable.h"
 
-#include "SymbolicValue.h"
 #include "ValueRange.h"
 #include "DefaultParameter.h"
 #include "PhaseSimulator.h"
@@ -17,10 +16,8 @@ namespace symbolic {
   typedef simulator::module_set_sptr             module_set_sptr;
   typedef simulator::module_set_container_sptr   module_set_container_sptr;
   typedef simulator::module_set_list_t           module_set_list_t;
-
-  typedef boost::shared_ptr<simulator::Value>               value_t;
-  typedef value_t                                time_t;
-  typedef simulator::simulation_todo_sptr_t     simulation_todo_sptr_t;
+  typedef simulator::value_t                    value_t;
+  typedef simulator::simulation_todo_sptr_t      simulation_todo_sptr_t;
   typedef simulator::PhaseSimulator::todo_list_t          todo_list_t;
   typedef std::vector<simulator::PhaseResult>    phase_result_sptrs_t;
   typedef simulator::variable_t       variable_t;

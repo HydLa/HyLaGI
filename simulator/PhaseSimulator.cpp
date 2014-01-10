@@ -2,7 +2,6 @@
 #include "AskCollector.h"
 #include "NonPrevSearcher.h"
 #include "VariableFinder.h"
-#include "SymbolicValue.h"
 #include "Exceptions.h"
 #include "Backend.h"
 
@@ -21,7 +20,7 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
 
 PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont)
 {
-  HYDLA_LOGGER_PHASE("%% current time:", *todo->current_time);
+  HYDLA_LOGGER_PHASE("%% current time:", todo->current_time);
   timer::Timer phase_timer;
   result_list_t result;
   

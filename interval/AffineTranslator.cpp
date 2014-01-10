@@ -104,9 +104,10 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
 {
   double val;
   try{
-    val = lexical_cast<double>(node->get_string());
+    val = lexical_cast<double>(node->get_number());
   }catch(const std::exception &e){
-    HYDLA_LOGGER(REST, typeid(e).name(), e.what());
+    HYDLA_LOGGER(REST, "name: ",
+                 typeid(e).name(), "\n what: ", e.what());
     invalid_node(*node);
   }
   current_val_ = affine_t(val);
@@ -126,6 +127,13 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Function> node
     invalid_node(*node);
   }
 }
+
+void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Parameter> node)
+{
+  // TODO: do something
+  return;
+}
+
 
 void AffineTranslator::invalid_node(parse_tree::Node& node)
 {

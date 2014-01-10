@@ -5,7 +5,6 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-#include "ValueVisitor.h"
 #include "Node.h"
 
 namespace hydla {
@@ -14,41 +13,51 @@ namespace simulator {
 class Value
 {  
   public:
+
+  typedef hydla::parse_tree::node_sptr node_sptr;
   
   virtual ~Value(){}
+  
+  Value();
+
+  /**
+   * 単なる文字列は数値と見なして受け取る
+   */
+  Value(const std::string &str);
+  
+  /**
+   * 渡された数式を値とするValueを作る
+   */
+  Value(const node_sptr & node);
   
   /**
    * 未定義値かどうか
    */
-  virtual bool undefined() const = 0;
-  
-  /**
-   * 自分自身のクローンを新たに作成し，そのポインタを返す
-   * 返り値のメモリは呼び出した側で解放するように注意する．
-   */
-  virtual Value* clone() const = 0;
+  virtual bool undefined() const;
 
   /**
    * 文字列表現を取得する
    */
-  virtual std::string get_string() const = 0;
+  virtual std::string get_string() const;
 
   /**
    * Nodeの形式にしたものを取得する
    */
-  virtual hydla::parse_tree::node_sptr get_node() const = 0;
-  
-  virtual void accept(ValueVisitor &) = 0;
+  virtual node_sptr get_node() const;
+
+  virtual void set_node(const node_sptr&);
   
   /**
    * Value同士の加算
    */
-  Value& operator+=(const Value& rhs);
+  Value& operator+=(const Value &rhs);
+  Value operator+(const Value &rhs);
 
   /**
    * Value同士の減算
    */
-  Value& operator-=(const Value& rhs);
+  Value& operator-=(const Value &rhs);
+  Value operator-(const Value &rhs);
   
   /**
    * データをダンプする
@@ -58,6 +67,10 @@ class Value
     else s << get_string();
     return s;
   }
+
+  private:
+
+  node_sptr node_;  /// symbolic expression
 };
 
 bool operator<(const Value& lhs, const Value& rhs);

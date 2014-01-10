@@ -349,7 +349,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           continue;
         }
         if(state->phase == PointPhase){
-          if(state->current_time->get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
+          if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // if current time equals to 0, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
@@ -596,17 +596,17 @@ SymbolicPhaseSimulator::todo_list_t
       dc_causes.push_back(dc_cause_t(break_condition_, -3));
     }
 
-    time_t max_time;
+    value_t max_time;
     if(opts_->max_time != ""){
-      max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Number(opts_->max_time))));
+      max_time = node_sptr(new hydla::parse_tree::Number(opts_->max_time));
     }else{
-      max_time.reset(new SymbolicValue(node_sptr(new hydla::parse_tree::Infinity)));
+      max_time = node_sptr(new hydla::parse_tree::Infinity());
     }
 
     pp_time_result_t time_result; 
-    time_t time_limit(max_time->clone());
-    *time_limit -= *phase->current_time;
-    backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+    value_t time_limit(max_time);
+    time_limit -= phase->current_time;
+    backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &time_limit, &dc_causes, &time_result);
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -615,7 +615,7 @@ SymbolicPhaseSimulator::todo_list_t
     while(true)
     {
       NextPhaseResult &candidate = time_result[time_it];
-      node_sptr time_node = candidate.minimum.time->get_node();
+      node_sptr time_node = candidate.minimum.time.get_node();
 
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
@@ -625,7 +625,7 @@ SymbolicPhaseSimulator::todo_list_t
         pr->cause_of_termination = simulator::TIME_LIMIT;
       }
 
-      time_node = node_sptr(new Plus(time_node, current_todo->current_time->get_node()));
+      time_node = node_sptr(new Plus(time_node, current_todo->current_time.get_node()));
       backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       results.push_back(pr);
       if(++time_it >= time_result.size())break;
@@ -644,7 +644,7 @@ SymbolicPhaseSimulator::todo_list_t
     while(true)
     {
       pr = results[result_it];
-      HYDLA_LOGGER_PHASE("%%time: ", *pr->current_time);
+      HYDLA_LOGGER_PHASE("%%time: ", pr->current_time);
       if(pr->cause_of_termination != TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
@@ -686,7 +686,7 @@ void SymbolicPhaseSimulator::replace_prev2parameter(
     if(range.unique())
     {
       val = range.get_unique();
-      HYDLA_LOGGER(PHASE, *val);
+      HYDLA_LOGGER(PHASE, val);
       replacer.replace_value(val);
       range.set_unique(val);
     }
@@ -731,10 +731,10 @@ void SymbolicPhaseSimulator::replace_prev2parameter(
 }
 
 
-variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const time_t& tm)
+variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const value_t& tm)
 {
   HYDLA_LOGGER_FUNC_BEGIN(PHASE);
-  HYDLA_LOGGER_PHASE("%% time: ", *tm);
+  HYDLA_LOGGER_PHASE("%% time: ", tm);
   variable_map_t result;
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {

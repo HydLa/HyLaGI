@@ -25,7 +25,7 @@ public:
 	
 	parameter_map_t get_init_vm(phase_result_sptr_t pr);
 	ha_result_t get_ha(ha_results_t ha_results);
-	void substitute(phase_result_sptr_t pr, parameter_map_t vm, time_t current_time);
+	void substitute(phase_result_sptr_t pr, parameter_map_t vm, value_t current_time);
 	parameter_map_t update_vm(phase_result_sptr_t pr, parameter_map_t vm_pre);
 
 private:

@@ -8,9 +8,8 @@
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
-#include "ValueVisitor.h"
 #include "PhaseResult.h"
-#include "SymbolicValue.h"
+#include "Value.h"
 
 namespace hydla {
 namespace simulator {
@@ -18,7 +17,7 @@ namespace simulator {
 /**
  * Replace variables with their values
  */
-class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator::ValueVisitor{
+class VariableReplacer : public parse_tree::DefaultTreeVisitor{
   typedef hydla::parse_tree::node_sptr                 node_sptr;
 
   public:
@@ -28,8 +27,6 @@ class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator
   void replace_node(node_sptr& node);
 
   virtual ~VariableReplacer();
-  
-  virtual void visit_value(hydla::simulator::symbolic::SymbolicValue&);
 
   void replace_value(value_t &val);
   void replace_range(ValueRange &range);
@@ -59,7 +56,7 @@ class VariableReplacer : public parse_tree::DefaultTreeVisitor, hydla::simulator
   virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
 
   private:
-  hydla::simulator::symbolic::SymbolicValue* processing_value;
+  hydla::simulator::Value* processing_value;
   int differential_cnt;
   uint replace_cnt;
   const variable_map_t& variable_map;

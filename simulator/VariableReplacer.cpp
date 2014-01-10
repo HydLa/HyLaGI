@@ -1,5 +1,4 @@
 #include "VariableReplacer.h"
-#include "SymbolicValue.h"
 #include "Logger.h"
 
 using namespace std;
@@ -16,14 +15,21 @@ VariableReplacer::VariableReplacer(const variable_map_t& map):variable_map(map)
 VariableReplacer::~VariableReplacer()
 {}
 
-void VariableReplacer::replace_value(value_t& val)
+void VariableReplacer::replace_node(node_sptr& node)
 {
   differential_cnt = 0;
   replace_cnt = 0;
-  val->accept(*this);
+  new_child_.reset();
+  accept(node);
+  if(new_child_) node = new_child_;
 }
 
-
+void VariableReplacer::replace_value(value_t& val)
+{
+  node_sptr node = val.get_node();
+  replace_node(node);
+  val.set_node(node);
+}
 
 void VariableReplacer::replace_range(ValueRange &range)
 {
@@ -47,15 +53,6 @@ void VariableReplacer::replace_range(ValueRange &range)
   }
 }
 
-
-void VariableReplacer::visit_value(hydla::simulator::symbolic::SymbolicValue& val)
-{
-  new_child_.reset();
-  accept(val.get_node());
-  if(new_child_) val.set_node(new_child_);
-}
-
-
 void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
   string v_name = node->get_name();
@@ -66,7 +63,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node
       {
         //TODO: 値が範囲を持っている場合にも対応する
         assert(it->second.unique());
-        new_child_ = it->second.get_unique()->get_node()->clone();
+        new_child_ = it->second.get_unique().get_node()->clone();
         replace_cnt++;
         // upper_bound to avoid infinite loop (may be caused by circular reference)
         if(replace_cnt >= variable_map.size())
