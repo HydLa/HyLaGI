@@ -8,10 +8,12 @@ namespace hydla {
 namespace simulator {
 
 
-struct BatchTodoContainer: public todo_container_t
+class BatchTodoContainer: public todo_container_t
 {
+  public:
   BatchTodoContainer(SearchMethod& method, boost::shared_ptr<entire_profile_t> vec)
     : search_method_(method), todo_id_(0), profile_vector_(vec){}
+  virtual ~BatchTodoContainer(){}
 
   virtual void push_todo(simulation_todo_sptr_t& todo)
   {

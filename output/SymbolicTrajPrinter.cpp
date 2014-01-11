@@ -23,7 +23,6 @@ SymbolicTrajPrinter::SymbolicTrajPrinter():ostream_(cout){}
 
 std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   std::stringstream sstr;
-  
   if(result.phase==IntervalPhase){
     sstr << "---------IP " << result.id << "---------" << endl;
     sstr << result.module_set->get_name() << endl;

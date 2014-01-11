@@ -56,12 +56,15 @@ phase_result_const_sptr_t HASimulator::simulate()
   while (true){
     timer::Timer phase_timer;
     pr.reset(new PhaseResult(*ha[i]));
+
+    // clear members inherited from ha[i]
     pr->children.clear();
+    pr->parameter_map.clear();
 			
     HYDLA_LOGGER_HAS("*** now pr : ", i);
     viewPr(pr);
-			
-    substitute(pr, vm, current_time);
+ 
+    substitute(pr, vm);
 
     HYDLA_LOGGER_HAS("*** after substitute pr");
     viewPr(pr);
@@ -73,13 +76,13 @@ phase_result_const_sptr_t HASimulator::simulate()
     }
     else
     {
-      pr->current_time = parent->current_time;
-      pr->end_time = ha[i]->end_time;
+      pr->current_time = current_time;
       pr->end_time -= ha[i]->current_time;
-      pr->end_time += pr->current_time;      
+      pr->end_time += pr->current_time;
       pr->end_time = simplify(pr->end_time.get_node());
       current_time = pr->end_time;
-      pr->variable_map = phase_simulator_->shift_variable_map_time(pr->variable_map, pr->current_time);     
+      pr->variable_map = phase_simulator_->shift_variable_map_time(pr->variable_map, pr->current_time);
+      substitute(pr, vm);
     }
 			
     i++;
@@ -158,8 +161,8 @@ HASimulator::ha_result_t HASimulator::get_ha(ha_results_t ha_results){
   ha_result_t cc = ha_results[0];
   return cc;
 }
-	
-void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t vm, value_t current_time){
+
+void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t vm){
   // parameter_map の適用
   phase_simulator_->substitute_parameter_condition(pr, vm);
 }

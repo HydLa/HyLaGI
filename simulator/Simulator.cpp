@@ -12,6 +12,7 @@
 #include <stack>
 #include <cassert>
 
+using namespace std;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
@@ -20,6 +21,10 @@ namespace hydla{
 namespace simulator{
 
 Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
+
+Simulator::~Simulator()
+{
+}
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);

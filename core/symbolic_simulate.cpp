@@ -153,8 +153,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
     opts.search_method = simulator::BFS;
   }else{
     throw std::runtime_error(std::string("invalid option - search"));
-  }
-  
+  } 
 }
 
 void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
@@ -206,6 +205,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   {
     simulator_ = new SequentialSimulator(opts);
   }
+
   simulator_->set_backend(backend);
   simulator_->set_phase_simulator(new SymbolicPhaseSimulator(simulator_, opts));  
   simulator_->initialize(parse_tree);
@@ -214,5 +214,6 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   {
     output_result(*simulator_, opts);
   }
+
   delete simulator_;
 }

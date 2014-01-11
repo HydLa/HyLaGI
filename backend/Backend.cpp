@@ -33,9 +33,9 @@ static bool EqIC(std::string lhs, std::string rhs)
 }
 
 
-Backend::Backend(Link* link):
-link_(link)
+Backend::Backend(Link* link)
 {
+  link_.reset(link);
 }
 
 Backend::~Backend()

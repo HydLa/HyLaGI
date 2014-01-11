@@ -5,6 +5,7 @@
 #include "Exceptions.h"
 #include "Backend.h"
 
+using namespace std;
 using namespace hydla::simulator;
 using namespace hydla::backend;
 
@@ -428,14 +429,10 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
 	// 変数に代入
 	variable_map_t ret;
   variable_map_t &vm = pr->variable_map;
-  HYDLA_LOGGER_VAR(HAS, *pr);
-  HYDLA_LOGGER_VAR(HAS, pm);
   for(variable_map_t::iterator it = vm.begin();
       it != vm.end(); it++)
   {
     if(it->second.undefined())continue;
-    HYDLA_LOGGER_VAR(HAS, it->first.get_name());
-    HYDLA_LOGGER_VAR(HAS, it->second.get_string());
     assert(it->second.unique());
     value_t tmp_val = it->second.get_unique();
     backend_->call("substituteParameterCondition",

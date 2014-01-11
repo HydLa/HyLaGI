@@ -249,7 +249,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
   void put_converted_function(const std::string& name, int arg_cnt);
 
 
-  Link* link_;
+  boost::shared_ptr<Link> link_;
 
   variable_form_t variable_arg_;
 

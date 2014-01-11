@@ -91,7 +91,7 @@ struct SimulationTodo{
 
   Phase                     phase;
   int                       id;
-  value_t                    current_time;
+  value_t                   current_time;
   parameter_map_t           parameter_map;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
@@ -152,8 +152,10 @@ typedef PhaseSimulator                                    phase_simulator_t;
 typedef boost::shared_ptr<SimulationTodo>                simulation_todo_sptr_t;
 
 
-struct TodoContainer
+class TodoContainer
 {
+  public:
+  virtual ~TodoContainer(){}
   virtual void push_todo(simulation_todo_sptr_t& todo)
   {
     container_.push_back(todo);
@@ -190,7 +192,7 @@ public:
 
   Simulator(Opts& opts);
   
-  virtual ~Simulator(){}
+  virtual ~Simulator();
 
   /**
    * simulate using given parse_tree

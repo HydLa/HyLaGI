@@ -30,6 +30,8 @@ public:
   typedef hydla::simulator::PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
 
+  virtual ~TrajPrinter(){}
+
   /**
    * 解軌道木全体を出力する関数
    */
