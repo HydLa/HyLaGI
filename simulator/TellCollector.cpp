@@ -1,6 +1,5 @@
 #include "TellCollector.h"
 #include "Logger.h"
-#include "TreeInfixPrinter.h"
 
 #include <assert.h>
 #include <iostream>
@@ -8,7 +7,7 @@
 namespace hydla {
 namespace simulator {
 using namespace hydla::logger;
-
+using namespace hydla::parse_tree;
 
 namespace {
 struct NodeDumper {
@@ -17,7 +16,7 @@ struct NodeDumper {
   NodeDumper(T it, T end) 
   {
     for(; it!=end; ++it) {
-      ss << hydla::parse_tree::TreeInfixPrinter().get_infix_string(*it) << "\n";
+      ss << get_infix_string(*it) << "\n";
     }
   }
 

@@ -1,5 +1,4 @@
 #include "Value.h"
-#include "TreeInfixPrinter.h"
 
 using namespace hydla::simulator;
 
@@ -42,10 +41,7 @@ Value::Value(const Value::node_sptr & node){
 std::string Value::get_string() const
 {
   if(undefined()) return "";
-  hydla::parse_tree::TreeInfixPrinter printer;
-  std::ostringstream os;
-  printer.print_infix(node_,os);
-  return os.str();
+  return hydla::parse_tree::get_infix_string(node_);
 }
 
 

@@ -7,7 +7,6 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "ContinuityMapMaker.h"
-#include "TreeInfixPrinter.h"
 
 #include "../backend/Backend.h"
 
@@ -39,7 +38,7 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
   cout << "-----unsat core------" << endl;
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
-    std::cout << it->first.second << " : " << TreeInfixPrinter().get_infix_string((it->first.first)) << std::endl;
+    cout << it->first.second << " : " << get_infix_string((it->first.first)) << endl;
     cout << it->second->get_name() << endl;
   }
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )

@@ -5,7 +5,6 @@
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
-#include "../parser/TreeInfixPrinter.h"
 #include <limits.h>
 #include <string>
 
@@ -291,10 +290,9 @@ namespace simulator {
 	std::string HAConverter::get_asks_str(ask_set_t asks)
 	{
 		std::string res = "";
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
 		ask_set_t::iterator it = asks.begin();
 		while(it != asks.end()){
-			res += tree_printer.get_infix_string((*it)->get_guard()) + " ";
+			res += get_infix_string((*it)->get_guard()) + " ";
 			it++;
 		}
 		return res;

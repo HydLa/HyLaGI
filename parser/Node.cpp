@@ -9,6 +9,7 @@
 #include "ParseError.h"
 #include "BaseNodeVisitor.h"
 #include "TreeVisitor.h"
+#include "TreeInfixPrinter.h"
 #include "Logger.h"
 
 using namespace std;
@@ -19,11 +20,14 @@ using namespace hydla::logger;
 namespace hydla { 
 namespace parse_tree {
 
-
-
 std::ostream& operator<<(std::ostream& s, const Node& node)
 {
   return node.dump(s);
+}
+
+std::string get_infix_string(const node_sptr& node)
+{
+  return TreeInfixPrinter().get_infix_string(node);
 }
 
 bool Node::is_same_struct(const Node& n, bool exactly_same) const

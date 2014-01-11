@@ -6,7 +6,6 @@
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
-#include "../parser/TreeInfixPrinter.h"
 #include <limits.h>
 #include <string>
 #include <assert.h>
@@ -45,11 +44,10 @@ namespace simulator {
 	
 	void HybridAutomata::viewAsks(ask_set_t asks)
 	{
-		hydla::parse_tree::TreeInfixPrinter tree_printer;
 		ask_set_t::iterator it = asks.begin();
 		string str = "";
 		while(it != asks.end()){
-			str += tree_printer.get_infix_string((*it)->get_guard()) + " ";
+			str += get_infix_string((*it)->get_guard()) + " ";
 			it++;
 		}
 		HYDLA_LOGGER_HAS(str);

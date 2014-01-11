@@ -6,7 +6,6 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "ContinuityMapMaker.h"
-#include "TreeInfixPrinter.h"
 #include "NonPrevSearcher.h"
 #include "Timer.h"
 
@@ -53,7 +52,7 @@ void ConstraintAnalyzer::print_conditions()
       // 出力先が標準出力の場合
       std::cout << (*it).first << ":";
       if((*it).second != NULL){
-	std::cout << TreeInfixPrinter().get_infix_string((*it).second);
+	std::cout << get_infix_string((*it).second);
       }
       std::cout << std::endl;
    // }
@@ -244,11 +243,11 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     // つまり i = 11(1011) でask制約が5つあれば否、成、否、成、成の順に仮定する
     for(int j = 0; j < (int)negative_asks.size(); j++, it++){
       if((i & (1 << j)) != 0){
-	  std::cout << " +++ " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
+	  std::cout << " +++ " << get_infix_string((*it)->get_guard()) << std::endl;
         tmp_positive_asks.insert(*it);
         constraint_list.push_back((*it)->get_guard());
       }else{
-	  std::cout << " --- " << TreeInfixPrinter().get_infix_string((*it)->get_guard()) << std::endl;
+	  std::cout << " --- " << get_infix_string((*it)->get_guard()) << std::endl;
 	// 成り立たないと仮定したガード条件の後件に関する連続性を見る
         constraint_list.push_back(node_sptr(new Not((*it)->get_guard())));
         if(searcher.judge_non_prev((*it)->get_guard())){
@@ -265,7 +264,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 
     //    std::cout << "collected tell for guard" << std::endl;
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      //      std::cout << TreeInfixPrinter().get_infix_string((*it)->get_child()) << std::endl;
+      //      std::cout << get_infix_string((*it)->get_child()) << std::endl;
       constraint_list.push_back((*it)->get_child());
       maker.visit_node((*it), false, false);
     }
@@ -289,8 +288,8 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       maker.reset();
       
       if(guard_condition != NULL){
-	constraint_list.push_back(guard_condition);
-	//      std::cout << "guard condition : " << TreeInfixPrinter().get_infix_string(guard_condition) << std::endl;
+        constraint_list.push_back(guard_condition);
+        //      std::cout << "guard condition : " << get_infix_string(guard_condition) << std::endl;
       }
       // tell制約とガード条件が成立するask制約の後件を集める
       tell_collector.collect_all_tells(&tell_list,
@@ -302,7 +301,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 	constraint_list.push_back((*it)->get_child());
 // TODO? : IPにも対応する
 	maker.visit_node((*it), false, false);
-	//      std::cout << TreeInfixPrinter().get_infix_string((*it)->get_child()) << std::endl;
+	//      std::cout << get_infix_string((*it)->get_child()) << std::endl;
       }
       
       // TODO? : IP にも対応する

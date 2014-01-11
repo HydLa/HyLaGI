@@ -27,7 +27,6 @@
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
 #include "UnsatCoreFinder.h"
-#include "TreeInfixPrinter.h"
 
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
@@ -49,7 +48,6 @@ using hydla::simulator::AskCollector;
 using hydla::simulator::ContinuityMapMaker;
 using hydla::simulator::IntervalPhase;
 using hydla::simulator::PointPhase;
-using hydla::parse_tree::TreeInfixPrinter;
 using hydla::simulator::VariableFinder;
 
 namespace hydla {
@@ -212,7 +210,7 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   )
 {
   CheckEntailmentResult ce_result;
-  HYDLA_LOGGER(PHASE, TreeInfixPrinter().get_infix_string(guard) );
+  HYDLA_LOGGER(PHASE, get_infix_string(guard) );
   backend_->call("startTemporary", 0, "", "");
   add_continuity(cont_map, phase);
   const char* fmt = (phase == PointPhase)?"en":"et";
@@ -422,7 +420,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   if(!unknown_asks.empty()){
     boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
     // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
-    HYDLA_LOGGER_CLOSURE("%% branched_ask:", TreeInfixPrinter().get_infix_string(branched_ask));
+    HYDLA_LOGGER_CLOSURE("%% branched_ask:", get_infix_string(branched_ask));
     {
       // 分岐先を生成（導出される方）
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));

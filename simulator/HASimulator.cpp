@@ -6,7 +6,6 @@
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
-#include "../parser/TreeInfixPrinter.h"
 #include "Backend.h"
 #include <limits.h>
 #include <string>

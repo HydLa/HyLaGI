@@ -3,7 +3,6 @@
 #include "LinkError.h"
 #include "InterfaceError.h"
 #include <sstream>
-#include "TreeInfixPrinter.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace hydla::parse_tree;
@@ -365,7 +364,7 @@ bool Backend::get_form(const char &form_c, variable_form_t &form)
 
 int Backend::send_node(const node_sptr& node, const variable_form_t &form)
 {
-  HYDLA_LOGGER(BACKEND, "%%node: ", TreeInfixPrinter().get_infix_string(node));
+  HYDLA_LOGGER(BACKEND, "%%node: ", get_infix_string(node));
   differential_count_ = 0;
   in_prev_ = false;
   apply_not_ = false;

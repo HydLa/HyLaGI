@@ -74,7 +74,7 @@ public:
     dump(sstr);
     return sstr.str();
   }
-  
+
 
   /**
    * ノードの状態を出力する
@@ -110,6 +110,8 @@ private:
 };
 
 std::ostream& operator<<(std::ostream&, const Node&);
+std::string get_infix_string(const node_sptr& node);
+
 
 class FactorNode : public Node {
 public:
