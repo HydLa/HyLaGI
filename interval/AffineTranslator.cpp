@@ -1,5 +1,6 @@
 #include "AffineTranslator.h"
 #include <boost/lexical_cast.hpp>
+#include "TreeInfixPrinter.h"
 #include <exception>
 #include "Logger.h"
 
@@ -68,8 +69,23 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
 
 void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
 {
-  //TODO: deal with Power
-  invalid_node(*node);
+  string rhs_str = TreeInfixPrinter().get_infix_string(node->get_rhs());
+  HYDLA_LOGGER(REST, rhs_str);
+  if(rhs_str == "1/2")
+  {
+    accept(node->get_lhs());
+    current_val_ = sqrt(current_val_);
+  }
+  else if(rhs_str == "2")
+  {
+    accept(node->get_lhs());
+    current_val_ = square(current_val_);
+  }
+  else
+  {
+    //TODO: deal with general Power
+    invalid_node(*node);
+  }
 }
 
 

@@ -280,15 +280,15 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
   cout << '>';
   string variable_str;
   while (true) {
-    bool is_varid_variable_name = false;
+    bool is_valid_variable_name = false;
     variable_str = excin<string>();
     for(v_it = vm.begin();v_it!=vm.end();v_it++){
       if( v_it->first.get_string() == variable_str){
-        is_varid_variable_name = true;
+        is_valid_variable_name = true;
         break;
       }
     }
-    if(is_varid_variable_name)
+    if(is_valid_variable_name)
       break;
     else
       cout << variable_str << " is not a member of variable map." << endl;
