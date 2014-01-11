@@ -571,16 +571,22 @@ SymbolicPhaseSimulator::todo_list_t
 
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
+    
+    //TODO: どこかで事前にmapを作って、毎回作らないようにする。
+    std::map<int, boost::shared_ptr<Ask> > ask_map;
+
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
     for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
       node_sptr negated_node(new Not((*it)->get_guard()));
       int id = (*it)->get_id();
+      ask_map[id] = *it;
       dc_causes.push_back(dc_cause_t(negated_node, id) );
     }
     //現在導出されていないガード条件を離散変化条件として追加
     for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
       node_sptr node((*it)->get_guard() );
       int id = (*it)->get_id();
+      ask_map[id] = *it;
       dc_causes.push_back(dc_cause_t(node, id));
     }
 
@@ -662,17 +668,18 @@ SymbolicPhaseSimulator::todo_list_t
     	}
 
       NextPhaseResult &candidate = time_result[result_it];
+      HYDLA_LOGGER_VAR(PHASE, result_it);
       for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
       { 
         int id = candidate.minimum.ids[id_it];
         if(id == -1) {
           pr->cause_of_termination = simulator::TIME_LIMIT;
         }
-        else
+        else if(id >= 0)
         {
-          node_sptr node = parse_tree_->get_node(id);
-          HYDLA_LOGGER(PHASE, node);
-          next_todo->discrete_causes.insert(boost::dynamic_pointer_cast<Ask>(node));
+          HYDLA_LOGGER_VAR(PHASE, id);
+          HYDLA_LOGGER_VAR(PHASE, *ask_map[id]);
+          next_todo->discrete_causes.insert(ask_map[id]);
         }
       }
 
