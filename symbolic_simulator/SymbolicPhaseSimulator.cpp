@@ -288,7 +288,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     maker.reset();
 
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      if(opts_->reuse && !state->changed_variables.empty() && !variable_searcher.visit_node(state->changed_variables,*it,true))
+      if(opts_->reuse && !state->parent->changed_variables.empty() && !variable_searcher.visit_node(state->parent->changed_variables,*it,true))
         continue;
 
       // send "Constraint" node, not "Tell"
@@ -338,7 +338,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t::iterator it  = unknown_asks.begin();
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end){
-        if(opts_->reuse && !state->changed_variables.empty() && !variable_searcher.visit_node(state->changed_variables,*it,true)){
+        if(opts_->reuse && !state->parent->changed_variables.empty() && !variable_searcher.visit_node(state->parent->changed_variables,*it,true)){
           if(state->parent->positive_asks.find(*it) != state->parent->positive_asks.end())
             positive_asks.insert(*it);
           else negative_asks.insert(*it);
@@ -383,12 +383,12 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             unknown_asks.erase(it++);
             expanded = true;
             
-            if(opts_->reuse && !state->changed_variables.empty()){
+            if(opts_->reuse && !state->parent->changed_variables.empty()){
               VariableFinder variable_finder;
               variable_finder.visit_node(*it,true);
               VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
               for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
-                state->changed_variables.insert(it->first);
+                state->parent->changed_variables.insert(it->first);
               }
             }
             break;
@@ -532,7 +532,7 @@ void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase, s
   }
   VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
   for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
-    todo->changed_variables.insert(it->first);
+    phase->changed_variables.insert(it->first);
   }
 }
 
@@ -610,6 +610,8 @@ SymbolicPhaseSimulator::todo_list_t
     result_list_t results;
     phase_result_sptr_t pr = next_todo->parent;
 
+
+    // まずインタラクティブ実行のために最小限の情報だけ整理する
     while(true)
     {
       NextPhaseResult &candidate = time_result[time_it];
@@ -618,9 +620,6 @@ SymbolicPhaseSimulator::todo_list_t
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
-      }
-      if(candidate.minimum.id == -1) {
-        pr->cause_of_termination = simulator::TIME_LIMIT;
       }
 
       time_node = node_sptr(new Plus(time_node, current_todo->current_time.get_node()));
@@ -633,12 +632,15 @@ SymbolicPhaseSimulator::todo_list_t
     unsigned int result_it = 0;
     bool one_phase = false;
     
+    // 場合の選択を行う場合はここで
     if(time_result.size() > 0 && select_phase_)
     {
       result_it = select_phase_(results);
       one_phase = true;
     }
     
+
+    // todoを実際に作成する
     while(true)
     {
       pr = results[result_it];
@@ -658,6 +660,22 @@ SymbolicPhaseSimulator::todo_list_t
         next_todo->parent = pr;
         ret.push_back(next_todo);
     	}
+
+      NextPhaseResult &candidate = time_result[result_it];
+      for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
+      { 
+        int id = candidate.minimum.ids[id_it];
+        if(id == -1) {
+          pr->cause_of_termination = simulator::TIME_LIMIT;
+        }
+        else
+        {
+          node_sptr node = parse_tree_->get_node(id);
+          HYDLA_LOGGER(PHASE, node);
+          next_todo->discrete_causes.insert(boost::dynamic_pointer_cast<Ask>(node));
+        }
+      }
+
       if(one_phase || ++result_it >= results.size())break;
       next_todo = create_new_simulation_phase(next_todo);
     }

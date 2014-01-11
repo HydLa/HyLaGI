@@ -395,6 +395,7 @@ void MathematicaLink::pre_receive()
   get_next();
   int ret_code = get_integer();
   if(ret_code == 0) {
+
     throw LinkError(backend_name(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print(), 0, "");
   }
   if(ret_code == -1) {

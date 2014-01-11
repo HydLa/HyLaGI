@@ -22,11 +22,11 @@ typedef hydla::parse_tree::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
 
-typedef struct TimeIdPair
+typedef struct TimeIdsPair
 {
   value_t time;
-  int id;
-}time_id_pair_t;
+  std::vector<int> ids;
+}time_ids_pair_t;
 
 /**
  * calculate_next_PP_timeで返す構造体
@@ -34,9 +34,10 @@ typedef struct TimeIdPair
 typedef struct NextPhaseResult 
 {
   /// minimum time and the id of its condition
-  time_id_pair_t minimum;
+  
+  time_ids_pair_t             minimum;
   /// non-minimum pairs of times and ids
-  std::vector<time_id_pair_t> successors;
+  std::vector<time_ids_pair_t> non_minimums;
   /// condition for parameter in this case
   hydla::simulator::symbolic::parameter_map_t parameter_map;
 } candidate_t;

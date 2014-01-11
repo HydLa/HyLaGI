@@ -95,6 +95,7 @@ struct SimulationTodo{
   parameter_map_t           parameter_map;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
+  ask_set_t                 discrete_causes;
   expanded_always_t         expanded_always;
   entailed_prev_map_t       judged_prev_map;
 
@@ -116,8 +117,6 @@ struct SimulationTodo{
   int elapsed_time;
   /// map to cache result of calculation for each module_set
   ms_cache_t ms_cache;
-
-  std::set<std::string> changed_variables;
 
   /**
    * reset members to calculate from the start of the phase

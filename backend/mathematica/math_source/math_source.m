@@ -494,33 +494,47 @@ Module[
     (* 時刻が0となる場合を取り除く．*)
     ret = Select[ret, (#[[1]] =!= 0)&];
     (* append id for each time *)
-    ret = Map[({timeAndID[#[[1]], If[#[[1]] === Infinity, -1, id] ], #[[2]]})&, ret];
+    ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
     ret
   ]
 ];
 
+(* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
 (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
 compareMinTime[timeCond1_, timeCond2_] := ( Block[
     {
       minTime1, minTime2,
-      restTime,
-      case1, case2,
-      ret1, ret2,
+      timeAndID1, timeAndID2,
+      nonMinimum,
+      caseEq,caseLe, caseGr,
+      ret,
       andCond
     },
-    (* assume that timeCond1 only has restTime *)
-    andCond = Reduce[timeCond1[[3]]&&timeCond2[[2]], Reals];
+    (* assume that only timeCond1 only has nonMinimum *)
+    andCond = Reduce[timeCond1[[3]] && timeCond2[[2]], Reals];
     If[andCond === False, Return[{}] ];
-    minTime1 = timeCond1[[1]][[1]];
-    minTime2 = timeCond2[[1]][[1]];
-    restTime = timeCond1[[2]];
-    case1 = Quiet[Reduce[And[andCond, minTime1 < minTime2], Reals]];
-    case2 = Reduce[andCond&&!case1];
-    ret1 = {timeCond1[[1]], Append[restTime, timeCond2[[1]]], case1};
-    ret2 = {timeCond2[[1]], Append[restTime, timeCond1[[1]]], case2};
-    If[ case1 === False, Return[{ret2} ] ];
-    If[ case2 === False, Return[{ret1} ] ];
-    Return[ {ret1, ret2} ];
+    timeAndID1 = timeCond1[[1]];
+    timeAndID2 = timeCond2[[1]];
+    minTime1 = timeAndID1[[1]];
+    minTime2 = timeAndID2[[1]];
+    nonMinimum = timeCond1[[2]];
+    caseEq = Quiet[Reduce[And[andCond, minTime1 == minTime2], Reals]];
+    caseLe = Quiet[Reduce[And[andCond, minTime1 < minTime2], Reals]];
+    caseGr = Reduce[andCond && !caseLe && !caseEq];
+    ret = {};
+    If[ caseEq =!= False,
+      ret = Append[ret,
+        {timeAndIDs[minTime1, Join[timeAndID1[[2]], timeAndID2[[2]] ] ], nonMinimum, caseEq}]
+    ];
+    If[ caseLe =!= False,
+      ret = Append[ret, 
+        {timeAndID1, Append[nonMinimum, timeCond2[[1]]], caseLe}]
+    ];
+    If[ caseGr =!= False, 
+      ret = Append[ret,
+        {timeAndID2, Append[nonMinimum, timeCond1[[1]]], caseGr}]
+    ];
+    Return[ ret ];
   ]
 );
 
@@ -545,7 +559,7 @@ calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
   Block[
     {findResult, i},
     (* -1 is regarded as the id of time limit *)
-    timeCaseList = {{timeAndID[maxT, -1], {}, condition}};
+    timeCaseList = {{timeAndIDs[maxT, ids[-1]], {}, condition}};
     For[i = 1, i <= Length[causeAndIDList], i++,
       findResult = findMinTime[causeAndIDList[[i]], condition];
       timeCaseList = compareMinTimeList[timeCaseList, findResult]
@@ -594,11 +608,13 @@ publicMethod[
     debugPrint["resultList after Format", resultList];
     
     resultList = Map[
-    ({toReturnForm[FullSimplify[#[[1]] ] ], Map[(toReturnForm[#])&, #[[2]]], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
+    ({timeAndIDsToReturn[#[[1]] ], Map[(timeAndIDsToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
     simplePrint[resultList];
     resultList
   ]
 ];
+
+timeAndIDsToReturn[ti_] := timeAndIDs[FullSimplify[ti[[1]] ], ti[[2]] ];
 
 getDerivativeCount[variable_[_]] := 0;
 

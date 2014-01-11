@@ -164,8 +164,6 @@ publicMethod[name_, args___, define_] := (
   )
 );
 
-
-
 publicMethod[
   simplify,
   arg,

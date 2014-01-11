@@ -756,20 +756,37 @@ pp_time_result_t Backend::receive_cp()
   for(int time_it = 0; time_it < next_time_size; time_it++){
     candidate_t candidate;
     int dummy_buf;
+    // List
     link_->get_function(name, dummy_buf);
-    // timeAndID
+
+    // for minimum
+    // timeAndIDs
     link_->get_function(name, dummy_buf);
-    // 時刻を受け取る
     candidate.minimum.time = receive_value();
-    candidate.minimum.id = link_->get_integer();
-    int suc_size;
-    link_->get_function(name, suc_size);
-    for(int suc_it = 0; suc_it < suc_size; suc_it++)
+    int min_size;
+    // ids
+    link_->get_function(name, min_size);
+    for(int min_it = 0; min_it < min_size; min_it++)
     {
-      //timeAndID
+      candidate.minimum.ids.push_back(link_->get_integer()); 
+    }
+
+    // for nonminimum
+    int nonmin_size;
+    link_->get_function(name, nonmin_size);
+    for(int nonmin_it = 0; nonmin_it < nonmin_size; nonmin_it++)
+    {
+      time_ids_pair_t time_id;
+      //timeAndIDs
       link_->get_function(name, dummy_buf);
-      receive_value();
-      link_->get_integer();
+      time_id.time = receive_value();
+      int id_size;
+      link_->get_function(name, id_size);
+      for(int id_it = 0; id_it < id_size; id_it++)
+      {
+        time_id.ids.push_back(link_->get_integer());
+      }
+      candidate.non_minimums.push_back(time_id);
     }
     // 条件を受け取る
     receive_parameter_map(candidate.parameter_map);
