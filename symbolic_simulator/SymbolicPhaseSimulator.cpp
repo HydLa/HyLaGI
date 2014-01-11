@@ -513,26 +513,49 @@ void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase, s
   positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
   prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
 
-  tells_t tmp_tells;
+  tells_t symm_diff_tells;
+  tells_t intersection_tells;
   tells_t::iterator tmp_it;
   for(tells_t::iterator it = current_tell_list.begin(); it != current_tell_list.end(); it++){
     tmp_it = std::find(prev_tell_list.begin(),prev_tell_list.end(),*it);
     if(tmp_it == prev_tell_list.end()){
-      tmp_tells.push_back(*it);
+      symm_diff_tells.push_back(*it);
     }else{
+      intersection_tells.push_back(*tmp_it);
       prev_tell_list.erase(tmp_it);
     }
   }
   for(tells_t::iterator it = prev_tell_list.begin(); it != prev_tell_list.end(); it++)
-    tmp_tells.push_back(*it);
-
+    symm_diff_tells.push_back(*it);
+  
   VariableFinder variable_finder;
-  for(tells_t::iterator it = tmp_tells.begin(); it != tmp_tells.end(); it++){
+  for(tells_t::iterator it = symm_diff_tells.begin(); it != symm_diff_tells.end(); it++){
     variable_finder.visit_node(*it,false);
   }
   VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
   for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
     phase->changed_variables.insert(it->first);
+  }
+
+  VariableSearcher variable_searcher;
+  int variable_count = phase->changed_variables.size();
+  while( true ){
+    for(tells_t::iterator it = intersection_tells.begin(); it != intersection_tells.end(); it++){
+      bool has_cv = variable_searcher.visit_node(phase->changed_variables, *it,false);
+      if(has_cv){
+        variable_finder.clear();
+        variable_finder.visit_node(*it, false);
+        VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
+        for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
+          phase->changed_variables.insert(it->first);
+        }
+      }
+    }
+    if(phase->changed_variables.size() > variable_count){
+      variable_count = phase->changed_variables.size();
+      continue;
+    }
+    break;
   }
 }
 

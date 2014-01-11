@@ -25,15 +25,11 @@ public:
   virtual ~VariableSearcher();
   
   /** 
-   * 制約を調べ，変数の出現を取得する
+   * 変数の集合の要素が制約に含まれるか調べる。
+   * Ask制約はガード条件を調べる。
+   * include_prev:prev変数も対象にするか
    */
-  bool visit_node(std::set<std::string>, boost::shared_ptr<parse_tree::Node> node, const bool& in_IP);
-  
-  void clear();
-  
-  variable_set_t get_variable_set() const;
-  
-  variable_set_t get_prev_variable_set() const;
+  bool visit_node(std::set<std::string> variables, boost::shared_ptr<parse_tree::Node> node, const bool& include_prev);
   
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
@@ -41,12 +37,15 @@ public:
     // 変数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
 
+  // 左極限
+  void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+
 private:
 
-  variable_set_t variables_, prev_variables_;
+  variable_set_t variables_;
   
-  bool in_interval_;
   bool in_prev_;
+  bool include_prev_;
   bool has_variables_;
 };
 
