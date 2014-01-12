@@ -22,6 +22,7 @@
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
+#include "NonPrevSearcher.h"
 
 #include "Backend.h"
 #include "Exceptions.h"
@@ -252,6 +253,43 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   return ce_result;
 }
 
+void SymbolicPhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
+                                                                       positive_asks_t& positive_asks,
+                                                                       negative_asks_t& negative_asks,
+                                                                       ask_set_t& unknown_asks ){
+  /*
+  std::cout << "before" << std::endl;
+  std::cout << "A+: " << positive_asks << std::endl;
+  std::cout << "A-: " << negative_asks << std::endl;
+  std::cout << "Au: " << unknown_asks << std::endl;
+  */
+
+  NonPrevSearcher np_searcher;
+  ask_set_t prev_asks = unknown_asks;
+
+  for( auto ask : unknown_asks ){
+    if( np_searcher.judge_non_prev(ask) ){
+      prev_asks.erase(ask);
+    }else{
+      unknown_asks.erase(ask);
+    }
+  }
+
+  for( auto prev_ask : prev_asks ){
+    if( discrete_causes.find(prev_ask) != discrete_causes.end() ){
+      positive_asks.insert( prev_ask );
+    }else{
+      negative_asks.insert( prev_ask );
+    }
+  }
+
+  /*
+  std::cout << "after" << std::endl;
+  std::cout << "A+: " << positive_asks << std::endl;
+  std::cout << "A-: " << negative_asks << std::endl;
+  std::cout << "Au: " << unknown_asks << std::endl;
+  */
+}
 
 bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms)
@@ -261,6 +299,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   // preparation
   positive_asks_t& positive_asks = state->positive_asks;
   negative_asks_t& negative_asks = state->negative_asks;
+  
   ask_set_t unknown_asks;
   expanded_always_t& expanded_always = state->expanded_always;
   TellCollector tell_collector(ms);
@@ -274,6 +313,14 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   VariableSearcher variable_searcher;
 
   bool expanded;
+
+  if( opts_->reuse && state->id > 1 && state->phase == PointPhase){
+    ask_collector.collect_ask(&expanded_always, 
+        &positive_asks, 
+        &negative_asks,
+        &unknown_asks);
+    apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
+  }
   
   do{
     tell_collector.collect_new_tells(&tell_list,
@@ -330,7 +377,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         &positive_asks, 
         &negative_asks,
         &unknown_asks);
-    
+
     timer::Timer entailment_timer;
     
     {

@@ -70,6 +70,11 @@ private:
    */
   virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
 
+  void apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
+                                                 positive_asks_t& positive_asks,
+                                                 negative_asks_t& negative_asks,
+                                                 ask_set_t& unknown_asks );
+
   bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
 
