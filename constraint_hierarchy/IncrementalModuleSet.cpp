@@ -1,4 +1,6 @@
 #include "IncrementalModuleSet.h"
+#include "TreeInfixPrinter.h"
+#include "../common/Logger.h"
 
 #include <iostream>
 #include <algorithm>
@@ -118,57 +120,55 @@ module_set_sptr IncrementalModuleSet::get_removable_module_set(const ModuleSet& 
   module_set_sptr removable(new ModuleSet());
   module_set_sptr removed_ms(new ModuleSet());
 
+  // 削除対象とするモジュール集合
+  module_set_sptr candidates(new ModuleSet(ms)); 
+
   // 現在調べているモジュール集合
   // TODO:並列対応(今は逐次だからms_to_visitの先頭を現在調べていることを前提としている)
   module_set_sptr current_ms = ms_to_visit_.front();
+  
   module_list_const_iterator it = maximal_module_set_->begin();
   module_list_const_iterator end = maximal_module_set_->end();
 
-  // 現在調べているモジュール集合が含まないモジュールを算出
-  for(; it!=end; it++){
-    if(current_ms->find(*it)==current_ms->end()) removed_ms->add_module(*it);
+  for(; it != end; it++){
+    if(current_ms->find(*it) == current_ms->end()) removed_ms->add_module(*it);
   }
 
-  it = current_ms->begin();
-  end = current_ms->end();
-  for(; it!=end; it++){
-    // requiredの場合はどうあっても削除出来ないので次の要素のチェックへ
-    if(required_ms_->find(*it)!=required_ms_->end()) continue;
-    // 常に削除できるモジュールのチェック(parents_data_になく、requiredでないもの)
-    if(parents_data_.find(*it)==parents_data_.end()){
-      removable->add_module(*it);
-      continue;
+  it = ms.begin();
+  end = ms.end();
+
+  for(; it != end; it++){
+    str_ms_list_t::iterator p_it = parents_data_[*it].begin();
+    str_ms_list_t::iterator p_end = parents_data_[*it].end();
+    for(; p_it != p_end; p_it++){
+      for(module_list_const_iterator c_it = current_ms->begin(); c_it != current_ms->end(); c_it++){
+        if(p_it->second->find(*(c_it)) != p_it->second->end()){
+          switch(p_it->first){
+          case STRONGER_THAN:
+            if(candidates->find(*(c_it)) == candidates->end()){
+              candidates->add_module(*(c_it));
+	    }
+            break;
+          default:
+            break; 
+          }
+	}
+      }
     }
+  }
+
+  it = candidates->begin();
+  end = candidates->end();
+
+  for(; it!=end; it++){
     // parents_data_に含まれているモジュールについて
     str_ms_list_t::iterator p_it = parents_data_[*it].begin();
     str_ms_list_t::iterator p_end = parents_data_[*it].end();
     for(; p_it!=p_end; p_it++){
       // current_msに含まれていないモジュールは関係ないので次の要素のチェック
       if(removed_ms->including(*(p_it->second))) continue;
-      bool weaker_than_inconsist_module = false;
-      for(module_list_const_iterator im_it = ms.begin(); im_it != ms.end(); im_it++){
-        if(p_it->second->find(*(im_it)) != p_it->second->end()){
-          weaker_than_inconsist_module = true;
-          break;
-	}
-      }
       switch(p_it->first){
       case WEAKER_THAN:
-        if(ms.find(*(it)) != ms.end()){
-          removable->add_module(*it);
-          break; 
- 	}
-        {
-          bool weaker_than_inconsist_module = false;
-          for(module_list_const_iterator im_it = ms.begin(); im_it != ms.end(); im_it++){
-            if(p_it->second->find(*(im_it)) != p_it->second->end()){
-              weaker_than_inconsist_module = true;
-              break;
-            }
-          }
-        }
-        if(weaker_than_inconsist_module) removable->add_module(*it);
-        break;
       case PARALLEL:
         // << の左か , かで削除できる
         removable->add_module(*it);
@@ -181,6 +181,9 @@ module_set_sptr IncrementalModuleSet::get_removable_module_set(const ModuleSet& 
     // 最後までチェックできた時も削除できる
     if(p_it==p_end) removable->add_module(*it);
   }
+  HYDLA_LOGGER_MS("%% current module set\n", current_ms->get_name());
+  HYDLA_LOGGER_MS("%% inconsistency module set\n", ms.get_name());
+  HYDLA_LOGGER_MS("%% removable modules\n", removable->get_name(), "\n");
   return removable;
 }
 
@@ -307,6 +310,7 @@ std::ostream& IncrementalModuleSet::dump_node_trees(std::ostream& s) const
     it++;
   }
   s << std::endl;
+  /*
   module_list_const_iterator it2 = required_ms_->begin();
   module_list_const_iterator end2 = required_ms_->end();
   s << "*****required_ms_*****" << std::endl;
@@ -322,7 +326,7 @@ std::ostream& IncrementalModuleSet::dump_node_trees(std::ostream& s) const
   s << std::endl;
 
   s << "***** list *****" << std::endl;
-
+*/
   /*
   module_set_list_t::const_iterator it  = module_set_list_.begin();
   module_set_list_t::const_iterator end = module_set_list_.end();
@@ -354,11 +358,8 @@ void IncrementalModuleSet::mark_nodes(){
 }
 
 void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const ModuleSet& ms){
-  // ここは無くしたい
-  if(!formated_){
-    format_parents_data();
-    formated_ = true;
-  }
+  HYDLA_LOGGER_LOCATION(MS);
+  bool recursive = false;
   module_set_sptr rm = get_removable_module_set(ms);
   module_set_list_t add, remain;
   module_set_list_t::iterator lit = ms_to_visit_.begin();
@@ -367,24 +368,16 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
       module_list_const_iterator mend = (*lit)->end();
       module_set_sptr removed(new ModuleSet());
       // rm内のモジュールをすべて除くまで繰り返す
-      while(removed->size()!=rm->size()){
+      for(module_list_const_iterator rm_it = rm->begin(); rm_it != rm->end(); rm_it++){
         // *litからrm内の要素一つを除いたものをすべてms_to_visit_に追加
-        // ModuleSetにremove(module_t m)みたいのを作ってもいいのかも
         module_list_const_iterator mit = (*lit)->begin();
         module_set_sptr new_ms(new ModuleSet());
-        bool not_remove = true;
         for(; mit!=mend; mit++){
-          if(rm->find(*mit)!=rm->end()){
-            if(not_remove && removed->find(*mit)==removed->end()){
-              removed->add_module(*mit);
-              not_remove = false;
-              continue;
-            }
-          }
-          new_ms->add_module(*mit);
+          if((*rm_it) != (*mit))new_ms->add_module(*mit);
         }
         bool checked = false;
-        for(module_set_list_t::iterator cit = ms_to_visit_.begin(); cit != ms_to_visit_.end(); cit++){
+        // 並列化とかしたり幅優先をやめる場合チェック済みのモジュールセットをどっかで持っておき、そこにnew_msがないかのチェックに変える
+	for(module_set_list_t::iterator cit = ms_to_visit_.begin(); cit != ms_to_visit_.end(); cit++){
 	  if((*cit)->including(*new_ms) && new_ms->including(**cit)){
             checked = true;
             break;
@@ -396,7 +389,11 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
             break;
 	  }
         }
-	if(!checked)  add.push_back(new_ms);
+	if(!checked){
+          add.push_back(new_ms);
+          if(new_ms->including(ms)) recursive = true;
+          HYDLA_LOGGER_MS("%% new ms : ", new_ms->get_name());
+	}
       }
     }else{
       remain.push_back(*lit);
@@ -404,6 +401,8 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
   }
   remain.insert(remain.end(),add.begin(),add.end());
   ms_to_visit_ = remain;
+  if(recursive) mark_nodes(mms,ms);
+  else sort(ms_to_visit_.begin(), ms_to_visit_.end(), ModuleSetComparator());
 }
 
   module_set_sptr IncrementalModuleSet::get_max_module_set() const{
