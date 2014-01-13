@@ -15,6 +15,7 @@
 #include "AskCollector.h"
 #include "VariableFinder.h"
 #include "VariableSearcher.h"
+#include "AskConstraintVariableFinder.h"
 
 #include "InitNodeRemover.h"
 #include "MathematicaLink.h"
@@ -253,44 +254,6 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   return ce_result;
 }
 
-void SymbolicPhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
-                                                                       positive_asks_t& positive_asks,
-                                                                       negative_asks_t& negative_asks,
-                                                                       ask_set_t& unknown_asks ){
-  /*
-  std::cout << "before" << std::endl;
-  std::cout << "A+: " << positive_asks << std::endl;
-  std::cout << "A-: " << negative_asks << std::endl;
-  std::cout << "Au: " << unknown_asks << std::endl;
-  */
-
-  NonPrevSearcher np_searcher;
-  ask_set_t prev_asks = unknown_asks;
-
-  for( auto ask : unknown_asks ){
-    if( np_searcher.judge_non_prev(ask) ){
-      prev_asks.erase(ask);
-    }else{
-      unknown_asks.erase(ask);
-    }
-  }
-
-  for( auto prev_ask : prev_asks ){
-    if( discrete_causes.find(prev_ask) != discrete_causes.end() ){
-      positive_asks.insert( prev_ask );
-    }else{
-      negative_asks.insert( prev_ask );
-    }
-  }
-
-  /*
-  std::cout << "after" << std::endl;
-  std::cout << "A+: " << positive_asks << std::endl;
-  std::cout << "A-: " << negative_asks << std::endl;
-  std::cout << "Au: " << unknown_asks << std::endl;
-  */
-}
-
 bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms)
 {
@@ -314,12 +277,16 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   bool expanded;
 
+  change_variables_t changing_variables;
+
   if( opts_->reuse && state->id > 1 && state->phase == PointPhase){
     ask_collector.collect_ask(&expanded_always, 
         &positive_asks, 
         &negative_asks,
         &unknown_asks);
     apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
+    set_changing_variables( state->parent, ms, positive_asks, negative_asks, changing_variables );
+    //std::cout << changing_variables << std::endl;
   }
   
   do{
@@ -546,7 +513,110 @@ SymbolicPhaseSimulator::calculate_variable_map(
   return CVM_CONSISTENT;
 }
 
-void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase, simulation_todo_sptr_t& todo)
+void SymbolicPhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
+                                                                       positive_asks_t& positive_asks,
+                                                                       negative_asks_t& negative_asks,
+                                                                       ask_set_t& unknown_asks ){
+  /*
+  std::cout << "before" << std::endl;
+  std::cout << "A+: " << positive_asks << std::endl;
+  std::cout << "A-: " << negative_asks << std::endl;
+  std::cout << "Au: " << unknown_asks << std::endl;
+  */
+
+  NonPrevSearcher np_searcher;
+  ask_set_t prev_asks = unknown_asks;
+
+  for( auto ask : unknown_asks ){
+    if( np_searcher.judge_non_prev(ask) ){
+      prev_asks.erase(ask);
+    }else{
+      unknown_asks.erase(ask);
+    }
+  }
+
+  for( auto prev_ask : prev_asks ){
+    if( discrete_causes.find(prev_ask) != discrete_causes.end() ){
+      positive_asks.insert( prev_ask );
+    }else{
+      negative_asks.insert( prev_ask );
+    }
+  }
+
+  /*
+  std::cout << "after" << std::endl;
+  std::cout << "A+: " << positive_asks << std::endl;
+  std::cout << "A-: " << negative_asks << std::endl;
+  std::cout << "Au: " << unknown_asks << std::endl;
+  */
+}
+
+void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& parent_phase,
+                                                           const module_set_sptr& present_ms,
+                                                           const positive_asks_t& positive_asks,
+                                                           const negative_asks_t& negative_asks,
+                                                           change_variables_t& changing_variables ){
+  //条件なし制約の差分取得
+  module_set_sptr parent_ms = parent_phase->module_set;
+  TellCollector parent_t_collector(parent_ms);
+  tells_t parent_tells;
+  //条件なし制約だけ集める
+  expanded_always_t empty_ea;
+  positive_asks_t empty_asks;
+  parent_t_collector.collect_all_tells(&parent_tells, &empty_ea, &empty_asks );
+
+  TellCollector t_collector(present_ms);
+  tells_t tells;
+  t_collector.collect_all_tells(&tells, &empty_ea, &empty_asks );
+
+  changing_variables = get_difference_variables_from_2tells( parent_tells, tells );
+
+  //導出状態の差分取得
+  //現在はpositiveだけど、parentではpositiveじゃないやつ
+  //現在はnegativeだけど、parentではpositiveなやつ
+  AskConstraintVariableFinder v_finder;
+  VariableSearcher v_searcher;
+  positive_asks_t parent_positives = parent_phase->positive_asks;
+  int cv_count = changing_variables.size();
+  for( auto ask : positive_asks ){
+    if(parent_positives.find(ask) == parent_positives.end() ){
+      v_finder.visit_node(ask, false);
+      VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+      for( auto var : tmp_vars ) changing_variables.insert(var.first);
+    }
+  }
+
+  for( auto ask : negative_asks ){
+    if(parent_positives.find(ask) != parent_positives.end() ){
+      v_finder.visit_node(ask, false);
+      VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+      for( auto var : tmp_vars ) changing_variables.insert(var.first);
+    }
+  }
+
+  if(changing_variables.size() > cv_count){
+    cv_count = changing_variables.size();
+    while(true){
+      for( auto tell : tells ){
+        bool has_cv = v_searcher.visit_node(changing_variables, tell, false );
+        if(has_cv){
+          v_finder.clear();
+          v_finder.visit_node(tell, false);
+          VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+          for( auto var : tmp_vars )
+            changing_variables.insert(var.first);
+        }
+      }
+      if(changing_variables.size() > cv_count ){
+        cv_count = changing_variables.size();
+        continue;
+      }
+      break;
+    }
+  }
+}
+
+void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
 {
   TellCollector current_tell_collector(phase->module_set);
   tells_t current_tell_list;
@@ -560,50 +630,55 @@ void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase, s
   positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
   prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
 
-  tells_t symm_diff_tells;
-  tells_t intersection_tells;
-  tells_t::iterator tmp_it;
-  for(tells_t::iterator it = current_tell_list.begin(); it != current_tell_list.end(); it++){
-    tmp_it = std::find(prev_tell_list.begin(),prev_tell_list.end(),*it);
-    if(tmp_it == prev_tell_list.end()){
-      symm_diff_tells.push_back(*it);
-    }else{
-      intersection_tells.push_back(*tmp_it);
-      prev_tell_list.erase(tmp_it);
+  phase->changed_variables = get_difference_variables_from_2tells(current_tell_list, prev_tell_list);
+}
+
+change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg){
+  change_variables_t cv;
+  tells_t l_tells = larg;
+  tells_t r_tells = rarg;
+
+  tells_t symm_diff_tells, intersection_tells;
+  for( auto tell : l_tells ){
+    tells_t::iterator it = std::find( r_tells.begin(), r_tells.end(), tell );
+    if( it == r_tells.end() )
+      symm_diff_tells.push_back(tell);
+    else{
+      intersection_tells.push_back(tell);
+      r_tells.erase(it);
     }
   }
-  for(tells_t::iterator it = prev_tell_list.begin(); it != prev_tell_list.end(); it++)
-    symm_diff_tells.push_back(*it);
-  
-  VariableFinder variable_finder;
-  for(tells_t::iterator it = symm_diff_tells.begin(); it != symm_diff_tells.end(); it++){
-    variable_finder.visit_node(*it,false);
-  }
-  VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
-  for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
-    phase->changed_variables.insert(it->first);
-  }
+  for( auto tell : r_tells ) symm_diff_tells.push_back(tell);
 
-  VariableSearcher variable_searcher;
-  int variable_count = phase->changed_variables.size();
-  while( true ){
-    for(tells_t::iterator it = intersection_tells.begin(); it != intersection_tells.end(); it++){
-      bool has_cv = variable_searcher.visit_node(phase->changed_variables, *it,false);
+  VariableFinder v_finder;
+  for( auto tell : symm_diff_tells )
+    v_finder.visit_node(tell, false);
+
+  VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+  for( auto var : tmp_vars )
+    cv.insert(var.first);
+
+  VariableSearcher v_searcher;
+  int v_count = cv.size();
+  while(true){
+    for( auto tell : intersection_tells ){
+      bool has_cv = v_searcher.visit_node(cv, tell, false );
       if(has_cv){
-        variable_finder.clear();
-        variable_finder.visit_node(*it, false);
-        VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
-        for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
-          phase->changed_variables.insert(it->first);
-        }
+        v_finder.clear();
+        v_finder.visit_node(tell, false);
+        tmp_vars = v_finder.get_variable_set();
+        for( auto var : tmp_vars )
+          cv.insert(var.first);
       }
     }
-    if(phase->changed_variables.size() > variable_count){
-      variable_count = phase->changed_variables.size();
+    if(cv.size() > v_count ){
+      v_count = cv.size();
       continue;
     }
     break;
   }
+
+  return cv;
 }
 
 SymbolicPhaseSimulator::todo_list_t 
@@ -629,8 +704,10 @@ SymbolicPhaseSimulator::todo_list_t
   {
     next_todo->phase = IntervalPhase;
     next_todo->current_time = phase->current_time;
-    if(opts_->reuse && phase->id > 1)
-      set_changed_variables(phase, next_todo);
+    if(opts_->reuse && phase->id > 1){
+      set_changed_variables(phase);
+      //std::cout << phase->changed_variables << std::endl;
+    }
     ret.push_back(next_todo);
   }
   else

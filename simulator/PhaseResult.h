@@ -75,6 +75,8 @@ typedef std::map<parameter_t, range_t, ParameterComparator>                   pa
 
 typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
 
+typedef std::set<std::string> change_variables_t;
+
 /**
  * A struct to express the result of each phase.
  */
@@ -90,7 +92,7 @@ struct PhaseResult {
   int step;
   hydla::ch::module_set_sptr module_set;
 
-  std::set<std::string> changed_variables;
+  change_variables_t changed_variables;
   module_set_container_sptr module_set_container;
 
   CauseOfTermination cause_of_termination;
@@ -116,6 +118,7 @@ std::ostream& operator<<(std::ostream& s, const hydla::simulator::tells_t& a);
 
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::expanded_always_t& a);
 
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::change_variables_t& a);
 
 } // namespace simulator
 } // namespace hydla 

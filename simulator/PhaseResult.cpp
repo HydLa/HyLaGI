@@ -142,6 +142,17 @@ std::ostream& operator<<(std::ostream& s, const module_set_sptr& m)
   return s;
 }
 
+std::ostream& operator<<(std::ostream& s, const change_variables_t& a)
+{
+  s << "%% ChangedVariables: ";
+  change_variables_t::iterator it = a.begin();
+  s << *it;
+  it++;
+  for(; it != a.end(); it++)
+    s << ", " << *it;
+  s << std::endl;
+  return s;
+}
 
 
 } // namespace simulator

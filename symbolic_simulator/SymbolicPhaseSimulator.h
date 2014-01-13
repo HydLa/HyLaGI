@@ -31,6 +31,7 @@ public:
   typedef simulator::Phase                 Phase;
   typedef simulator::phase_result_sptr_t   phase_result_sptr_t;
   typedef ch::module_set_sptr              modulse_set_sptr;
+  typedef std::set< std::string > change_variables_t;
 
   SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~SymbolicPhaseSimulator();
@@ -63,17 +64,25 @@ private:
   virtual simulator::CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
                            simulation_todo_sptr_t& state, const variable_map_t &, variable_maps_t& result_vm);
 
-  void set_changed_variables(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);  
+  void apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
+                                                 positive_asks_t& positive_asks,
+                                                 negative_asks_t& negative_asks,
+                                                 ask_set_t& unknown_asks );
+
+void set_changing_variables( const phase_result_sptr_t& parent_phase,
+                             const module_set_sptr& present_ms,
+                             const positive_asks_t& positive_asks,
+                             const negative_asks_t& negative_asks,
+                             change_variables_t& changing_variables );
+
+  void set_changed_variables(phase_result_sptr_t& phase);  
+
+  change_variables_t get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg);
 
   /**
    * 与えられたフェーズの次のTodoを返す．
    */
   virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
-
-  void apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
-                                                 positive_asks_t& positive_asks,
-                                                 negative_asks_t& negative_asks,
-                                                 ask_set_t& unknown_asks );
 
   bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
