@@ -31,7 +31,7 @@ void VariableSearcher::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 // •Ï”
 void VariableSearcher::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
-  if(include_prev_ || !include_prev_ && !in_prev_)
+  if(include_prev_ || !in_prev_)
     if(variables_.find(node->get_name()) != variables_.end())
       has_variables_ = true;
 }

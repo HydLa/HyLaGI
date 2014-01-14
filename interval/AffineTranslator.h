@@ -29,6 +29,8 @@ class AffineTranslator : public parse_tree::TreeVisitor{
   AffineTranslator();
 
   affine_t translate(node_sptr& node);
+  ///calculate x^y
+  affine_t pow(affine_t x, affine_t y);
 
   virtual ~AffineTranslator();  
 
