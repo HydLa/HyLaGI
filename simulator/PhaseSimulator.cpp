@@ -236,6 +236,31 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     
     phase_result_sptr_t phase = make_new_phase(todo, vm);
     phase->module_set = ms;
+
+    if(opts_->reuse && todo->module_set_container == msc_no_init_){
+      set_changed_variables(phase);
+      if(phase->phase == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
+      {
+        for(auto var_entry : phase->variable_map)
+        {
+          bool changed = false;
+          for(auto var_name : phase->changed_variables)
+          {
+            if(var_entry.first.get_name() == var_name)
+            {
+              changed = true;
+            }
+          }
+          if(!changed)
+          {
+            phase->variable_map[var_entry.first] =
+              phase->parent->parent->variable_map[var_entry.first];            
+          }
+        }
+      }
+    }
+
+ 
     
     if(opts_->assertion || break_condition_.get() != NULL){
       timer::Timer entailment_timer;

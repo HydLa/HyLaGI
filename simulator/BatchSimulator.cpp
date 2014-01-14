@@ -30,7 +30,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
     return;
   }
 
-  HYDLA_LOGGER_PHASE("--- Current Todo ---\n", todo);
+  HYDLA_LOGGER_PHASE("--- Current Todo ---\n", *todo);
 
   try{
     timer::Timer phase_timer;

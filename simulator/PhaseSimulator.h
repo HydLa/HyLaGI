@@ -108,6 +108,9 @@ public:
   
 protected:
   
+
+  virtual void set_changed_variables(phase_result_sptr_t& phase) = 0;
+
   
   typedef enum{
     ENTAILED,

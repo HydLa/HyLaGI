@@ -507,7 +507,6 @@ SymbolicPhaseSimulator::calculate_variable_map(
     }
   }
 
-
   result_vms = create_result;
 
   return CVM_CONSISTENT;
@@ -618,6 +617,7 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
 
 void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
 {
+  if(phase->parent.get() == NULL)return;
   TellCollector current_tell_collector(phase->module_set);
   tells_t current_tell_list;
   expanded_always_t& current_expanded_always = phase->expanded_always;
@@ -704,10 +704,6 @@ SymbolicPhaseSimulator::todo_list_t
   {
     next_todo->phase = IntervalPhase;
     next_todo->current_time = phase->current_time;
-    if(opts_->reuse && phase->id > 1){
-      set_changed_variables(phase);
-      //std::cout << phase->changed_variables << std::endl;
-    }
     ret.push_back(next_todo);
   }
   else
