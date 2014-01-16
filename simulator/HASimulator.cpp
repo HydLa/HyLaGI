@@ -152,7 +152,7 @@ parameter_map_t HASimulator::get_init_vm(phase_result_sptr_t pr){
 value_t HASimulator::simplify(node_sptr exp)
 {
   value_t ret;
-  backend_->call("simplify", 1, "en", "vl", &exp, &ret);
+  backend->call("simplify", 1, "en", "vl", &exp, &ret);
   return ret;
 }
 	

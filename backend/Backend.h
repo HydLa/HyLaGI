@@ -22,11 +22,17 @@ typedef hydla::parse_tree::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
 
-typedef struct TimeIdsPair
+struct MidpointRadius
+{
+  value_t              midpoint;
+  value_t              radius;
+};
+
+struct TimeIdsPair
 {
   value_t time;
   std::vector<int> ids;
-}time_ids_pair_t;
+};
 
 /**
  * calculate_next_PP_timeで返す構造体
@@ -34,10 +40,9 @@ typedef struct TimeIdsPair
 typedef struct NextPhaseResult 
 {
   /// minimum time and the id of its condition
-  
-  time_ids_pair_t             minimum;
+  TimeIdsPair             minimum;
   /// non-minimum pairs of times and ids
-  std::vector<time_ids_pair_t> non_minimums;
+  std::vector<TimeIdsPair> non_minimums;
   /// condition for parameter in this case
   hydla::simulator::symbolic::parameter_map_t parameter_map;
 } candidate_t;
@@ -77,6 +82,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
    *  @return 0 for success, otherwise non-zero value
    *
    *  format is like below
+   *    r: MidpointRadius: midpoint_radius form (receive only)
    *    i: int: integer
    *    b: bool: boolean value
    *    s: const char*: symbol (send only)
@@ -246,6 +252,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
    */
   bool apply_not_;
 
+  MidpointRadius receive_midpoint_radius();
 
   void put_converted_function(const std::string& name, int arg_cnt);
 

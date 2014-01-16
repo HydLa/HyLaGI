@@ -23,12 +23,6 @@ namespace simulator {
   typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
 
 typedef enum{
-  NO_APPROX,
-  NUMERIC_APPROX,
-  INTERVAL_APPROX
-}ApproximationMode;
-
-typedef enum{
   DFS,
   BFS
 }SearchMethod;
@@ -37,6 +31,7 @@ struct Opts {
   std::string mathlink;
   bool debug_mode;
   std::string max_time;
+  bool approx;
   bool nd_mode;
   bool interactive_mode;
   bool find_unsat_core_mode;
@@ -201,7 +196,6 @@ public:
   
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
-  
   /**
    * set the phase simulator which this simulator uses in each phase
    * @param ps a pointer to an instance of phase_simlulator_t (caller must not delete the instance)
@@ -253,6 +247,8 @@ public:
    * map of introduced parameters and their ranges of values
    */
   parameter_map_t parameter_map_;
+
+  backend_sptr_t backend;
   
 
 protected:
@@ -273,8 +269,6 @@ protected:
    * PhaseSimulator to use
    */ 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
-  
-  backend_sptr_t backend_;
 
   /**
    * a container for candidate module sets
@@ -285,7 +279,6 @@ protected:
    * mcs_original_から非always制約を除いたもの
    */
   module_set_container_sptr msc_no_init_;
-
 
   /**
    * vector for results of profiling

@@ -151,6 +151,8 @@ void ProgramOptions::init_descriptions()
      "  positive value: number of phases\n"
      "  negative value: infinity")
 
+    ("approx,a",
+     "simulate with approximation")
      /*
     ("phase_expanded", 
      value<int>()->default_value(-1), 

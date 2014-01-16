@@ -841,7 +841,7 @@ void SymbolicPhaseSimulator::replace_prev2parameter(
   variable_map_t& vm,
   parameter_map_t &parameter_map)
 {
-  PrevReplacer replacer(parameter_map, state, *simulator_);
+  PrevReplacer replacer(parameter_map, state, *simulator_, opts_->approx);
    
   for(variable_map_t::iterator it = vm.begin();
       it != vm.end(); it++)

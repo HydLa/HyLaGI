@@ -47,17 +47,22 @@ class Value
 
   virtual void set_node(const node_sptr&);
   
-  /**
-   * Value同士の加算
-   */
+  /// Value同士の加算
   Value& operator+=(const Value &rhs);
   Value operator+(const Value &rhs);
 
-  /**
-   * Value同士の減算
-   */
+  /// Value同士の減算
   Value& operator-=(const Value &rhs);
   Value operator-(const Value &rhs);
+
+  /// Value同士の乗算
+  Value& operator*=(const Value &rhs);
+  Value operator*(const Value &rhs);
+
+  /// Value同士の除算
+  Value& operator/=(const Value &rhs);
+  Value operator/(const Value &rhs);
+
   
   /**
    * データをダンプする

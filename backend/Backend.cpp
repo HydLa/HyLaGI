@@ -207,6 +207,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   int i = idx;
   switch(ret_fmt[i])
   {
+  case 'r':
+  {
+    MidpointRadius *mr = (MidpointRadius *)ret;
+    *mr = receive_midpoint_radius();
+  }
+  break;
   case 'i':
   {
     int* num = (int *)ret;
@@ -337,7 +343,7 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
 
   // TODO: 例外投げた場合もva_endを呼び出すように
   va_end(args);
-  HYDLA_LOGGER_FUNC_END(BACKEND);
+  HYDLA_LOGGER_LOCATION(BACKEND);
   return 0;
 }
 
@@ -748,7 +754,6 @@ create_vm_t Backend::receive_cv()
 
 pp_time_result_t Backend::receive_cp()
 {
-
   std::string name;
   int next_time_size; 
   link_->get_function(name, next_time_size);
@@ -776,7 +781,7 @@ pp_time_result_t Backend::receive_cp()
     link_->get_function(name, nonmin_size);
     for(int nonmin_it = 0; nonmin_it < nonmin_size; nonmin_it++)
     {
-      time_ids_pair_t time_id;
+      TimeIdsPair time_id;
       //timeAndIDs
       link_->get_function(name, dummy_buf);
       time_id.time = receive_value();
@@ -1078,6 +1083,8 @@ int Backend::receive_map(variable_map_t& map)
   return 0;
 }
 
+
+
 int Backend::receive_parameter_map(parameter_map_t& map)
 {
   string func_name;
@@ -1101,6 +1108,22 @@ int Backend::receive_parameter_map(parameter_map_t& map)
   return 0;
 }
 
+MidpointRadius Backend::receive_midpoint_radius()
+{
+  HYDLA_LOGGER_LOCATION(BACKEND);
+  MidpointRadius mr;
+  string func_name;
+  int size;
+  link_->get_function(func_name, size);
+  HYDLA_LOGGER(BACKEND, "func_name: ", func_name, "\nsize: ", size);
+  if(func_name != "midpointRadius" || size != 2)
+  {
+    throw InterfaceError("invalid as midpoint_radius");
+  }
+  mr.midpoint = receive_value();
+  mr.radius = receive_value();
+  return mr;
+}
 
 }
 }

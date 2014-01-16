@@ -23,7 +23,7 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor{
 
   public:
 
-  PrevReplacer(parameter_map_t& map, phase_result_sptr_t &phase, Simulator& simulator);
+  PrevReplacer(parameter_map_t& map, phase_result_sptr_t &phase, Simulator& simulator, bool approx);
 
   virtual ~PrevReplacer();
   
@@ -60,7 +60,8 @@ class PrevReplacer : public parse_tree::DefaultTreeVisitor{
   bool in_prev_;
   parameter_map_t& parameter_map_;
   phase_result_sptr_t& prev_phase_;
-  Simulator& simulator_;
+  Simulator &simulator_;
+  bool approx_;
 
   node_sptr new_child_;
 

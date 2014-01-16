@@ -15,8 +15,8 @@ CLEAN_FILES += reduce/reduce_source.cpp
 
 include ../Makefile.common
 
-mathematica/math_source.cpp: mathematica/math_source/*.m
-	cat mathematica/math_source/*.m | \
+mathematica/math_source.cpp: mathematica/math_source/must_be_first/*.m mathematica/math_source/*.m
+	cat mathematica/math_source/must_be_first/*.m mathematica/math_source/*.m | \
 		../math_source_converter/msc math_source > \
 		mathematica/math_source.cpp
 

@@ -28,12 +28,12 @@ Simulator::~Simulator()
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
-  phase_simulator_->set_backend(backend_);
+  phase_simulator_->set_backend(backend);
 }
 
 void Simulator::set_backend(backend_sptr_t back)
 {
-  backend_ = back;
+  backend = back;
 }
 
 void Simulator::initialize(const parse_tree_sptr& parse_tree)
@@ -105,7 +105,7 @@ parameter_t Simulator::introduce_parameter(variable_t var, phase_result_sptr_t& 
   parameter_t param(var, phase);
   parameter_map_[param] = range;
 
-  backend_->call("addParameter", 1, "p", "", &param);
+  backend->call("addParameter", 1, "p", "", &param);
   return param;
 }
 

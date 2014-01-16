@@ -16,7 +16,7 @@ public:
     value_t value;
     bool include_bound;
     Bound():include_bound(false){}
-    Bound(const value_t& val, const bool& in):value(val), include_bound(in){}
+    Bound(const value_t& val, bool in):value(val), include_bound(in){}
   }bound_t;
   
 

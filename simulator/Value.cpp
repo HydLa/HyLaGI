@@ -15,12 +15,40 @@ Value& Value::operator+=(const Value& rhs){
   return *this;
 }
 
+Value Value::operator+(const Value& rhs){
+  Value ret(*this);
+  return ret += rhs;
+}
+
 Value& Value::operator-=(const Value& rhs){
   set_node(node_sptr(new hydla::parse_tree::Subtract(get_node(), rhs.get_node())));
   return *this;
 }
 
+Value Value::operator-(const Value& rhs){
+  Value ret(*this);
+  return ret -= rhs;
+}
 
+Value& Value::operator*=(const Value& rhs){
+  set_node(node_sptr(new hydla::parse_tree::Times(get_node(), rhs.get_node())));
+  return *this;
+}
+
+Value Value::operator*(const Value& rhs){
+  Value ret(*this);
+  return ret *= rhs;
+}
+
+Value& Value::operator/=(const Value& rhs){
+  set_node(node_sptr(new hydla::parse_tree::Divide(get_node(), rhs.get_node())));
+  return *this;
+}
+
+Value Value::operator/(const Value& rhs){
+  Value ret(*this);
+  return ret /= rhs;
+}
 
 
 bool Value::undefined() const

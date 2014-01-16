@@ -1,3 +1,5 @@
+(* This file must be loaded first! *)
+
 $RecursionLimit = 1000;
 $MaxExtraPrecision = 1000;
 
