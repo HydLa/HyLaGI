@@ -793,22 +793,6 @@ SymbolicPhaseSimulator::todo_list_t
     while(true)
     {
       pr = results[result_it];
-      HYDLA_LOGGER_PHASE("%%time: ", pr->current_time);
-      if(pr->cause_of_termination != TIME_LIMIT)
-      {
-        next_todo->current_time = pr->end_time;
-        next_todo->parameter_map = pr->parameter_map;
-        next_todo->parent = pr;
-        ret.push_back(next_todo);
-      }
-    	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
-    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_of_termination == TIME_LIMIT)
-    	{
-        next_todo->current_time = pr->end_time;
-        next_todo->parameter_map = pr->parameter_map;
-        next_todo->parent = pr;
-        ret.push_back(next_todo);
-    	}
 
       NextPhaseResult &candidate = time_result[result_it];
       HYDLA_LOGGER_VAR(PHASE, result_it);
@@ -825,6 +809,24 @@ SymbolicPhaseSimulator::todo_list_t
           next_todo->discrete_causes.insert(ask_map[id]);
         }
       }
+
+
+      HYDLA_LOGGER_PHASE("%%time: ", pr->current_time);
+      if(pr->cause_of_termination != TIME_LIMIT)
+      {
+        next_todo->current_time = pr->end_time;
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->parent = pr;
+        ret.push_back(next_todo);
+      }
+    	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_of_termination == TIME_LIMIT)
+    	{
+        next_todo->current_time = pr->end_time;
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->parent = pr;
+        ret.push_back(next_todo);
+    	}
 
       if(one_phase || ++result_it >= results.size())break;
       next_todo = create_new_simulation_phase(next_todo);
