@@ -11,6 +11,14 @@ using namespace boost;
 namespace hydla {
 namespace interval {
 
+AffineTranslator* AffineTranslator::affine_translator_ = NULL;
+
+AffineTranslator* AffineTranslator::get_instance()
+{
+  if(affine_translator_ == NULL)affine_translator_ = new AffineTranslator();
+  return affine_translator_;
+}
+
 AffineTranslator::AffineTranslator()
 {}
 
@@ -35,6 +43,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
   accept(node->get_rhs());
   affine_t rhs = current_val_;
   current_val_ = lhs + rhs;
+  HYDLA_LOGGER_VAR(INTERVAL, current_val_);
   return;
 }
 
@@ -46,6 +55,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node
   accept(node->get_rhs());
   affine_t rhs = current_val_;
   current_val_ = lhs - rhs;
+  HYDLA_LOGGER_VAR(INTERVAL, current_val_);
   return;
 }
 
@@ -57,6 +67,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
   accept(node->get_rhs());
   affine_t rhs = current_val_;
   current_val_ = lhs * rhs;
+  HYDLA_LOGGER_VAR(INTERVAL, current_val_);
   return;
 }
 
@@ -68,6 +79,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
   accept(node->get_rhs());
   affine_t rhs = current_val_;
   current_val_ = lhs / rhs;
+  HYDLA_LOGGER_VAR(INTERVAL, current_val_);
   return;
 }
 
@@ -80,6 +92,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
   accept(node->get_rhs());
   affine_t rhs = current_val_;
   current_val_ = pow(lhs, rhs);
+  HYDLA_LOGGER_VAR(INTERVAL, current_val_);
 }
 
 
@@ -87,6 +100,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Negative> node
 {
   accept(node->get_child());
   current_val_ = -current_val_;
+  HYDLA_LOGGER_VAR(INTERVAL, current_val_);
   return;
 }
 

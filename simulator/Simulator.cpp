@@ -6,6 +6,7 @@
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
+#include "AffineTranslator.h"
 
 #include <iostream>
 #include <string>
@@ -20,7 +21,10 @@ using namespace hydla::backend::reduce;
 namespace hydla{
 namespace simulator{
 
-Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts){}
+Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
+{
+  affine_translator_ = interval::AffineTranslator::get_instance();
+}
 
 Simulator::~Simulator()
 {

@@ -78,6 +78,10 @@ public:
   /// HAsimulatorの処理
   static bool ha_simulator_area_;
 
+  /// for interval arithmetic
+  static bool interval_area_;
+
+
   enum LogLevel {
     ParsingArea,
     ConstraintHierarchyArea,
@@ -89,6 +93,7 @@ public:
     RestArea,
     HAConverterArea,
     HASimulatorArea,
+    IntervalArea,
     Debug,
     Warn,
     Error,
@@ -134,6 +139,8 @@ public:
       		return ha_converter_area_;
         case HASimulatorArea:
           return ha_simulator_area_;
+        case IntervalArea:
+          return interval_area_;
         default:
           return log_level_ <= level;
       }
@@ -253,6 +260,12 @@ private:
  */
 #define HYDLA_LOGGER_HAS(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(HASimulatorArea, debug_write, (__VA_ARGS__))
+
+/**
+ * log for interval arithmetic
+ */
+#define HYDLA_LOGGER_INTERVAL(...)                                   \
+  HYDLA_LOGGER_LOG_WRITE_MACRO(IntervalArea, debug_write, (__VA_ARGS__))
 
 
 /**

@@ -938,7 +938,7 @@ template <class T> class interval {
 	}
 
 	static interval exp_point(const T& x) {
-		T x_i, x_f, tmp;
+		T x_i, x_f;
 		interval r, y, remainder;
 		int i;
 

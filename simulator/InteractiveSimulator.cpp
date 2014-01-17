@@ -376,10 +376,9 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
     }
   }
 
-  AffineTranslator translator;
   assert(val.unique());
   node_sptr node = val.get_unique().get_node();
-  affine_t affine = translator.translate(node);
+  affine_t affine = affine_translator_->translate(node);
   cout << affine << endl;
 
 /*  

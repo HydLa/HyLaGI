@@ -10,6 +10,7 @@
 #include "PhaseResult.h"
 #include "TreeVisitor.h"
 #include "kv/affine.hpp"
+#include "DefaultParameter.h"
 
 namespace hydla {
 namespace interval {
@@ -23,10 +24,9 @@ typedef kv::affine<double>                    affine_t;
  * A translator from symbolic formula to affine form
  */
 class AffineTranslator : public parse_tree::TreeVisitor{
-
   public:
 
-  AffineTranslator();
+  static AffineTranslator* get_instance();
 
   affine_t translate(node_sptr& node);
   ///calculate x^y
@@ -98,8 +98,22 @@ class AffineTranslator : public parse_tree::TreeVisitor{
   virtual void visit(boost::shared_ptr<parse_tree::False> node);
   
 private:
+
+  typedef std::map
+    <simulator::DefaultParameter, uint,
+    simulator::ParameterComparator>
+    parameter_idx_map_t;
+
+  AffineTranslator();
+  AffineTranslator(const AffineTranslator& rhs);
+  AffineTranslator& operator=(const AffineTranslator& rhs);
+
   void invalid_node(parse_tree::Node& node);
+
+  static interval::AffineTranslator* affine_translator_;
+
   affine_t current_val_;
+  parameter_idx_map_t parameter_idx_map_;
 };
 
 } //namespace interval

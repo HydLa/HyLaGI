@@ -18,9 +18,14 @@ namespace backend
   class Backend;
 }
 
+namespace interval
+{
+  class AffineTranslator;
+}
+
 namespace simulator {
 
-  typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
+typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
 
 typedef enum{
   DFS,
@@ -291,6 +296,8 @@ protected:
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
+
+  interval::AffineTranslator* affine_translator_;
 };
 
 } //namespace simulator
