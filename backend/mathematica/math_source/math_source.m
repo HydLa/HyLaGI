@@ -614,7 +614,7 @@ publicMethod[
   ]
 ];
 
-timeAndIDsToReturn[ti_] := timeAndIDs[FullSimplify[ti[[1]] ], ti[[2]] ];
+timeAndIDsToReturn[ti_] := timeAndIDs[toReturnForm[FullSimplify[ti[[1]] ] ], ti[[2]] ];
 
 getDerivativeCount[variable_[_]] := 0;
 

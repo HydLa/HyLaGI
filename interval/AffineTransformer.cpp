@@ -1,4 +1,4 @@
-#include "AffineTranslator.h"
+#include "AffineTransformer.h"
 #include <boost/lexical_cast.hpp>
 #include "TreeInfixPrinter.h"
 #include <exception>
@@ -7,36 +7,62 @@
 using namespace std;
 using namespace hydla::parse_tree;
 using namespace boost;
+using namespace hydla::simulator;
+
 
 namespace hydla {
 namespace interval {
 
-AffineTranslator* AffineTranslator::affine_translator_ = NULL;
+AffineTransformer* AffineTransformer::affine_translator_ = NULL;
 
-AffineTranslator* AffineTranslator::get_instance()
+AffineTransformer* AffineTransformer::get_instance()
 {
-  if(affine_translator_ == NULL)affine_translator_ = new AffineTranslator();
+  if(affine_translator_ == NULL)affine_translator_ = new AffineTransformer();
   return affine_translator_;
 }
 
-AffineTranslator::AffineTranslator()
+AffineTransformer::AffineTransformer()
 {}
 
-AffineTranslator::~AffineTranslator()
+AffineTransformer::~AffineTransformer()
 {}
 
-affine_t AffineTranslator::pow(affine_t x, affine_t y)
+void AffineTransformer::set_simulator(Simulator* simulator)
+{
+  simulator_ = simulator;
+}
+
+affine_t AffineTransformer::pow(affine_t x, affine_t y)
 {
   return exp(y*log(x));
 }
 
-affine_t AffineTranslator::translate(node_sptr& node)
+value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter_map)
 {
   accept(node);
-  return current_val_;
+  value_t ret(current_val_.a(0));
+  HYDLA_LOGGER(REST, current_val_);
+  for(int i = 1; i < current_val_.a.size(); i++)
+  {
+    if(current_val_.a(i) == 0)continue;
+    if(parameter_idx_map_.right.find(i)
+       == parameter_idx_map_.right.end())
+    {
+      range_t range;
+      range.set_lower_bound(value_t("-1"), true);
+      range.set_upper_bound(value_t("1"), true);
+      // a parameter whose differential count is -1 is regarded as a dummy variable
+      parameter_t param = simulator_->introduce_parameter("affine", 0, i, range);
+      parameter_idx_map_.insert(parameter_idx_t(param, i));
+      parameter_map[param] = range_t(value_t(-1), value_t(1));
+    }
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(i);
+    ret = ret + value_t(current_val_.a(i)) * value_t(r_it->second);
+  }
+  return ret;
 }
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
 {
   accept(node->get_lhs());
   affine_t lhs = current_val_;
@@ -48,7 +74,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node)
 {
   accept(node->get_lhs());
   affine_t lhs = current_val_;
@@ -60,7 +86,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
 {
   accept(node->get_lhs());
   affine_t lhs = current_val_;
@@ -72,7 +98,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
 {
   accept(node->get_lhs());
   affine_t lhs = current_val_;
@@ -84,7 +110,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
 {
 
   accept(node->get_lhs());
@@ -96,7 +122,7 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Negative> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Negative> node)
 {
   accept(node->get_child());
   current_val_ = -current_val_;
@@ -105,26 +131,26 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Negative> node
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Positive> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Positive> node)
 {
   // do nothing
   return;
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Pi> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Pi> node)
 {
   current_val_ = kv::constants<double>::pi();
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::E> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::E> node)
 {
   current_val_ = kv::constants<double>::e();
 }
 
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
 {
   double val;
   try{
@@ -137,7 +163,13 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
   current_val_ = affine_t(val);
 }
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Function> node)
+
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Float> node)
+{
+  current_val_ = affine_t(node->get_number());
+}
+
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Function> node)
 {
   string name = node->get_string();
   if(name == "ln")
@@ -152,14 +184,21 @@ void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Function> node
   }
 }
 
-void AffineTranslator::visit(boost::shared_ptr<hydla::parse_tree::Parameter> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> node)
 {
-  // TODO: do something
+  current_val_ = affine_t();
+  parameter_t param(node->get_name(),
+                    node->get_derivative_count(),
+                    node->get_phase_id());
+  parameter_idx_map_t::left_iterator it = parameter_idx_map_.left.find(param);
+  assert(it != parameter_idx_map_.left.end());
+  current_val_.a.resize(it->second + 1);
+  current_val_.a(1) = 1;
   return;
 }
 
 
-void AffineTranslator::invalid_node(parse_tree::Node& node)
+void AffineTransformer::invalid_node(parse_tree::Node& node)
 {
   // TODO: throw exception specified for interval
   throw std::exception();
@@ -167,7 +206,7 @@ void AffineTranslator::invalid_node(parse_tree::Node& node)
 
 
 #define DEFINE_INVALID_NODE(NODE_NAME)        \
-void AffineTranslator::visit(boost::shared_ptr<NODE_NAME> node) \
+void AffineTransformer::visit(boost::shared_ptr<NODE_NAME> node) \
 {                                                     \
   invalid_node(*node);                                 \
 }

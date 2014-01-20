@@ -173,12 +173,6 @@ publicMethod[
 ];
 
 
-
-toReturnForm[expr_timeAndID] :=
-(
-  timeAndID[toReturnForm[expr[[1]]], expr[[2]] ]
-);
-
 toReturnForm[expr_] := (
   expr /. (Infinity :> inf)
        (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
@@ -189,6 +183,8 @@ toReturnForm[expr_] := (
        /. (x_Integer :> replaceIntegerToString[x])
 );
 
+(* TODO: Is this really free of approximation error? *)
+toRational[float_] := Rationalize[float, 0];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 

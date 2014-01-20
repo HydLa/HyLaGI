@@ -21,8 +21,7 @@
 #include "NodeFactory.h"
 #include "DefaultNodeFactory.h"
 #include "HydLaAST.h"
-#include "AffineTranslator.h"
-
+#include "AffineTransformer.h"
 
 
 
@@ -378,8 +377,9 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
 
   assert(val.unique());
   node_sptr node = val.get_unique().get_node();
-  affine_t affine = affine_translator_->translate(node);
-  cout << affine << endl;
+  value_t affine = affine_transformer_->transform(node, todo->parent->parameter_map);
+  todo->parameter_map = todo->parent->parameter_map;
+  todo->parent->variable_map[var] = affine;
 
 /*  
   if(method_string == "i")

@@ -7,8 +7,11 @@
 
 #include "Node.h"
 
+
 namespace hydla {
 namespace simulator {
+
+class DefaultParameter;
 
 class Value
 {  
@@ -24,11 +27,26 @@ class Value
    * 単なる文字列は数値と見なして受け取る
    */
   Value(const std::string &str);
+
+  /**
+   * construct Value from given integer
+   */
+  Value(int num);
   
   /**
    * 渡された数式を値とするValueを作る
    */
   Value(const node_sptr & node);
+  
+  /**
+   * construct Value from given parameter
+   */
+  Value(const DefaultParameter &param);
+
+  /**
+   * construct Value from given double value
+   */
+  Value(double num);
   
   /**
    * 未定義値かどうか

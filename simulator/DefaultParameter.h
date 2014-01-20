@@ -9,15 +9,15 @@
 namespace hydla {
 namespace simulator {
 
-struct DefaultParameter{
+class DefaultParameter{
   public:
 
-  DefaultParameter(variable_t variable, phase_result_sptr_t& phase)
+  DefaultParameter(const variable_t &variable, const phase_result_sptr_t &phase)
   :variable_name_(variable.get_name()), derivative_count_(variable.get_derivative_count()), phase_id_(phase->id)
   {
   }
 
-  DefaultParameter(const std::string& name, int derivative, int id)
+  DefaultParameter(const std::string &name, int derivative, int id)
   :variable_name_(name), derivative_count_(derivative), phase_id_(id)
   {
   }

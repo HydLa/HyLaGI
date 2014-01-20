@@ -7,6 +7,18 @@ std::ostream& operator<<(std::ostream& s, const ValueRange & val)
 {
   return val.dump(s);
 }
+ValueRange::ValueRange(const value_t& lower, bool low_include,
+                       const value_t& upper, bool up_include)
+{
+  set_lower_bound(lower, low_include);
+  set_upper_bound(upper, up_include);
+}
+
+ValueRange::ValueRange(const value_t& lower, const value_t& upper)
+{
+  set_lower_bound(lower, true);
+  set_upper_bound(upper, true);
+}
 
 
 std::string ValueRange::get_string()const

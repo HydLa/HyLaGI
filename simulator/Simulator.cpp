@@ -6,7 +6,7 @@
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
-#include "AffineTranslator.h"
+#include "AffineTransformer.h"
 
 #include <iostream>
 #include <string>
@@ -23,7 +23,8 @@ namespace simulator{
 
 Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
 {
-  affine_translator_ = interval::AffineTranslator::get_instance();
+  affine_transformer_ = interval::AffineTransformer::get_instance();
+  affine_transformer_->set_simulator(this);
 }
 
 Simulator::~Simulator()
@@ -104,14 +105,27 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 }
 
 
-parameter_t Simulator::introduce_parameter(variable_t var, phase_result_sptr_t& phase, ValueRange& range)
+parameter_t Simulator::introduce_parameter(const variable_t &var,const phase_result_sptr_t &phase, const ValueRange &range)
 {
   parameter_t param(var, phase);
-  parameter_map_[param] = range;
+  return introduce_parameter(param, range);
+}
 
+
+parameter_t Simulator::introduce_parameter(const std::string &name, int differential_cnt, int id, const ValueRange &range)
+{
+  parameter_t param(name, differential_cnt, id);
+  return introduce_parameter(param, range);
+}
+
+parameter_t Simulator::introduce_parameter(const parameter_t &param, const ValueRange &range)
+{
+  parameter_map_[param] = range;
   backend->call("addParameter", 1, "p", "", &param);
   return param;
 }
+
+
 
 simulation_todo_sptr_t Simulator::make_initial_todo()
 {

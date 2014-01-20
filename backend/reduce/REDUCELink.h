@@ -68,6 +68,7 @@ public:
   void put_function(const char* s, int n);
   void put_symbol(const char* s);
   void put_number(const char* value);
+  void put_float(double d){assert(0);}
   void put_string(const char* s);
   void put_integer(int i);
   void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg);

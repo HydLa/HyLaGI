@@ -10,6 +10,9 @@
 #include "NodeFactory.h"
 #include "DefinitionContainer.h"
 #include "ParseError.h"
+#include "Utility.h"
+
+using namespace hydla::utility;
 
 namespace hydla {
 namespace parser {
@@ -374,20 +377,16 @@ private:
       case RI_Number:
       {
         std::string str(tree_iter->value.begin(), tree_iter->value.end());
-        std::string::size_type sz = str.find(".");
-        if(sz == std::string::npos){
+        std::string numerator;
+        std::string denominator;
+        bool fraction = num_denom_str(str, numerator, denominator);
+        if(!fraction){
           boost::shared_ptr<Number> node(node_factory_->create<Number>());
           node->set_number(str);
           return node;
-        }else{
-          //小数なら，分数に変換する
-          std::string denominator("1");
-          for(unsigned int i=0; i<str.size()-(sz+1);i++){
-            denominator += "0";
-          }
-          str = str.substr(0, sz) + str.substr(sz+1);
+        }else if(fraction){
           boost::shared_ptr<Number> num_node(node_factory_->create<Number>());
-          num_node->set_number(str);
+          num_node->set_number(numerator);
           boost::shared_ptr<Number> den_node(node_factory_->create<Number>());
           den_node->set_number(denominator);
           boost::shared_ptr<Divide> node(node_factory_->create<Divide>());

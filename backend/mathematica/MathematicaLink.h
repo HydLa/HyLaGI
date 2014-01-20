@@ -76,6 +76,11 @@ public:
     MLPutInteger(i);
   } 
 
+  void put_float(double num)
+  {
+    MLPutDouble(num);
+  }
+
   void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg);
 
   void put_parameter(const std::string& name, int diff_count, int id);
@@ -133,6 +138,8 @@ private:
 
   int MLPutInteger(int i)                 {return ::MLPutInteger(link_, i);}
   int MLGetInteger(int *i)                {return ::MLGetInteger(link_, i);}
+
+  int MLPutDouble(double d)               {return ::MLPutDouble(link_, d);}
 
   int MLPutSymbol(const char *s)          {return ::MLPutSymbol(link_, s);}
   int MLGetSymbol(const char **s)         {return ::MLGetSymbol(link_, s);}

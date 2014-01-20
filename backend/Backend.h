@@ -230,6 +230,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
 
   // 数字
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Float> node);
 
   // 記号定数
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);

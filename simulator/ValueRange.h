@@ -20,7 +20,11 @@ public:
   }bound_t;
   
 
-  ValueRange(const value_t& val){set_unique(val);}
+
+  ValueRange(const value_t &lower, bool low_include,
+             const value_t &upper, bool up_include);
+  ValueRange(const value_t &lower, const value_t &upper);
+  ValueRange(const value_t &val){set_unique(val);}
   ValueRange(){}
 
   bool undefined() const

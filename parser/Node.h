@@ -879,7 +879,7 @@ public:
 
 
 /**
- * 数字
+ * 数字（文字列で値を保持する）
  */ 
 class Number : public FactorNode {
 public:
@@ -927,6 +927,58 @@ public:
 private:
   std::string number_;
 };
+
+
+/**
+ * floating point number
+ */ 
+class Float : public FactorNode {
+public:
+  Float()
+  {}  
+  
+  Float(double number) : 
+    number_(number)
+  {}
+    
+  virtual ~Float()
+  {}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<Float> n(new Float());
+    n->number_ = number_;
+    return n;
+  }
+  
+  virtual std::string get_node_type_name() const {
+    return "Float";
+  }
+
+  virtual std::ostream& dump(std::ostream& s) const 
+  {
+    Node::dump(s);
+    return s <<"[" << number_ << "]";
+  }
+  
+  void set_number(double number) 
+  {
+    number_ = number;
+  }
+  
+  double get_number() const
+  {
+    return number_;
+  }
+
+private:
+  double number_;
+};
+
 
 class False : public FactorNode{
 public:

@@ -15,7 +15,7 @@
 namespace hydla {
 namespace simulator {
 
-struct DefaultParameter;
+class DefaultParameter;
 struct PhaseResult;
 struct SimulationTodo;
 

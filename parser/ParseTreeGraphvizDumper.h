@@ -112,6 +112,7 @@ public:
 
   // 数字
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
+  virtual void visit(boost::shared_ptr<hydla::parse_tree::Float> node);
 
   // Parameter
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);

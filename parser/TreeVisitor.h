@@ -112,6 +112,9 @@ public:
 
   // 数字
   virtual void visit(boost::shared_ptr<Number> node) = 0;
+
+  // 浮動小数点数
+  virtual void visit(boost::shared_ptr<Float> node) = 0;
   
   // 記号定数
   virtual void visit(boost::shared_ptr<Parameter> node) = 0;

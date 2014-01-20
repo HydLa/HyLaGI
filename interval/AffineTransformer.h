@@ -1,15 +1,17 @@
-#ifndef _INCLUDED_HYDLA_AFFINE_TRANSLATOR_H_
-#define _INCLUDED_HYDLA_AFFINE_TRANSLATOR_H_
+#ifndef _INCLUDED_HYDLA_AFFINE_TRANSFORMER_H_
+#define _INCLUDED_HYDLA_AFFINE_TRANSFORMER_H_
 
 #include <sstream>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
+#include <boost/bimap.hpp>
 
 #include "Node.h"
 #include "PhaseResult.h"
 #include "TreeVisitor.h"
 #include "kv/affine.hpp"
+#include "Simulator.h"
 #include "DefaultParameter.h"
 
 namespace hydla {
@@ -18,21 +20,33 @@ namespace interval {
 
 typedef hydla::parse_tree::node_sptr          node_sptr;
 typedef kv::affine<double>                    affine_t;
+typedef simulator::DefaultParameter           parameter_t;
+typedef simulator::Value                      value_t;
+typedef simulator::ValueRange                 range_t;
+typedef simulator::parameter_map_t            parameter_map_t;
 
 
 /**
- * A translator from symbolic formula to affine form
+ * A class which transforms symbolic formula to affine form
  */
-class AffineTranslator : public parse_tree::TreeVisitor{
+class AffineTransformer : public parse_tree::TreeVisitor{
   public:
 
-  static AffineTranslator* get_instance();
+  static AffineTransformer* get_instance();
+  
+  void set_simulator(simulator::Simulator* simulator);
 
-  affine_t translate(node_sptr& node);
+  /**
+   * transform given expression to affine form
+   * @param node expression
+   * @param parameter_map
+   *          map of parameter to be added parameter for new dummy variables
+   */
+  value_t transform(node_sptr &node, parameter_map_t &parameter_map);
   ///calculate x^y
   affine_t pow(affine_t x, affine_t y);
 
-  virtual ~AffineTranslator();  
+  virtual ~AffineTransformer();  
 
   virtual void visit(boost::shared_ptr<parse_tree::ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<parse_tree::ProgramDefinition> node);
@@ -91,6 +105,7 @@ class AffineTranslator : public parse_tree::TreeVisitor{
 
   virtual void visit(boost::shared_ptr<parse_tree::Variable> node);
   virtual void visit(boost::shared_ptr<parse_tree::Number> node);
+  virtual void visit(boost::shared_ptr<parse_tree::Float> node);
   virtual void visit(boost::shared_ptr<parse_tree::Parameter> node);
   virtual void visit(boost::shared_ptr<parse_tree::SymbolicT> node);
   virtual void visit(boost::shared_ptr<parse_tree::Infinity> node);
@@ -99,18 +114,20 @@ class AffineTranslator : public parse_tree::TreeVisitor{
   
 private:
 
-  typedef std::map
-    <simulator::DefaultParameter, uint,
-    simulator::ParameterComparator>
+  typedef boost::bimaps::bimap<parameter_t, int >
     parameter_idx_map_t;
+  typedef parameter_idx_map_t::value_type parameter_idx_t;
 
-  AffineTranslator();
-  AffineTranslator(const AffineTranslator& rhs);
-  AffineTranslator& operator=(const AffineTranslator& rhs);
+
+  AffineTransformer();
+  AffineTransformer(const AffineTransformer& rhs);
+  AffineTransformer& operator=(const AffineTransformer& rhs);
 
   void invalid_node(parse_tree::Node& node);
 
-  static interval::AffineTranslator* affine_translator_;
+  simulator::Simulator* simulator_;
+
+  static interval::AffineTransformer* affine_translator_;
 
   affine_t current_val_;
   parameter_idx_map_t parameter_idx_map_;

@@ -235,6 +235,14 @@ bool Number::is_same_struct(const Node& n, bool exactly_same) const
     number_ == static_cast<const Number*>(&n)->number_;          
 }
 
+
+bool Float::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+    number_ == static_cast<const Float*>(&n)->number_;          
+}
+
+
 bool True::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
@@ -512,6 +520,7 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
 //数字
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Float)
 
 //Print
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Print)

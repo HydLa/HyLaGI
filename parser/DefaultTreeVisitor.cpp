@@ -85,6 +85,7 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Variable> node)              {}
 
 // 数字
 void DefaultTreeVisitor::visit(boost::shared_ptr<Number> node)                {}
+void DefaultTreeVisitor::visit(boost::shared_ptr<Float> node)                {}
 
 // 記号定数
 void DefaultTreeVisitor::visit(boost::shared_ptr<Parameter> node)                {}

@@ -121,6 +121,7 @@ class TreeInfixPrinter:
 
   // 数字
   virtual void visit(boost::shared_ptr<Number> node);
+  virtual void visit(boost::shared_ptr<Float> node);
 
   // 記号定数
   virtual void visit(boost::shared_ptr<Parameter> node);

@@ -348,6 +348,16 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Number> node)
     "{" + node->get_node_type_name() + " | " + node->get_number() + "}"));
 }
 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Float> node)
+{
+  stringstream sstr;
+  sstr << node->get_number();
+  graph_node_id_t own_id = node_id_;
+  nodes_.insert(make_pair(own_id, 
+               "{" + node->get_node_type_name()
+               + " | " + sstr.str() + "}"));
+}
+
 
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Infinity> node)
 {
