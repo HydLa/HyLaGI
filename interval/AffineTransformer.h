@@ -10,7 +10,7 @@
 #include "Node.h"
 #include "PhaseResult.h"
 #include "TreeVisitor.h"
-#include "kv/affine.hpp"
+#include "AffineOrInteger.h"
 #include "Simulator.h"
 #include "DefaultParameter.h"
 
@@ -19,7 +19,6 @@ namespace interval {
 
 
 typedef hydla::parse_tree::node_sptr          node_sptr;
-typedef kv::affine<double>                    affine_t;
 typedef simulator::DefaultParameter           parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
@@ -44,8 +43,7 @@ class AffineTransformer : public parse_tree::TreeVisitor{
    */
   value_t transform(node_sptr &node, parameter_map_t &parameter_map);
   ///calculate x^y
-  affine_t pow(affine_t x, affine_t y);
-  affine_t pow(affine_t x, int y);
+  AffineOrInteger pow(AffineOrInteger x, AffineOrInteger y);
 
   virtual ~AffineTransformer();  
 
@@ -130,7 +128,7 @@ private:
 
   static interval::AffineTransformer* affine_translator_;
 
-  affine_t current_val_;
+  AffineOrInteger current_val_;
   parameter_idx_map_t parameter_idx_map_;
 };
 
