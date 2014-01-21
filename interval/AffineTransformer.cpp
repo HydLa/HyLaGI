@@ -191,9 +191,19 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
                     node->get_derivative_count(),
                     node->get_phase_id());
   parameter_idx_map_t::left_iterator it = parameter_idx_map_.left.find(param);
-  assert(it != parameter_idx_map_.left.end());
-  current_val_.a.resize(it->second + 1);
-  current_val_.a(1) = 1;
+  int idx;
+  if(it == parameter_idx_map_.left.end())
+  {
+    idx = affine_t::maxnum();
+    parameter_idx_map_.insert(
+      parameter_idx_t(param, affine_t::maxnum()));
+  }
+  else
+  {
+    idx = it->second;
+  }
+  current_val_.a.resize(idx + 1);
+  current_val_.a(idx) = 1;
   return;
 }
 
