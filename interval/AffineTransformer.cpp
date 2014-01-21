@@ -40,6 +40,7 @@ affine_t AffineTransformer::pow(affine_t x, affine_t y)
 
 affine_t AffineTransformer::pow(affine_t x, int y)
 {
+/*
   if(x > 0)
   {
     return exp(y * log(x));
@@ -55,6 +56,8 @@ affine_t AffineTransformer::pow(affine_t x, int y)
       return exp(y * log(-x));
     }
   }
+*/
+  return affine_t();
 }
 
 value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter_map)
