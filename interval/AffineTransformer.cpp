@@ -34,7 +34,27 @@ void AffineTransformer::set_simulator(Simulator* simulator)
 
 affine_t AffineTransformer::pow(affine_t x, affine_t y)
 {
-  return exp(y*log(x));
+  return exp(y * log(x));
+}
+
+
+affine_t AffineTransformer::pow(affine_t x, int y)
+{
+  if(x > 0)
+  {
+    return exp(y * log(x));
+  }
+  else
+  {
+    if(y % 2)
+    {
+      return -exp(y * log(-x));
+    }
+    else
+    {
+      return exp(y * log(-x));
+    }
+  }
 }
 
 value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter_map)
