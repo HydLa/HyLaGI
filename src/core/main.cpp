@@ -123,34 +123,12 @@ void hydla_main(int argc, char* argv[])
 
   Timer main_timer;
   
-  std::string area_string(po.get<std::string>("debug"));
-  if(area_string!=""){                 // デバッグ出力
+  if(po.count("debug")){                 // デバッグ出力
     Logger::instance().set_log_level(Logger::Debug);
-    if(area_string.find('a') != std::string::npos){
-      Logger::parsing_area_ = true;
-      Logger::calculate_closure_area_ = true;
-      Logger::phase_area_ = true;
-      Logger::module_set_area_ = true;
-      Logger::backend_area_ = true;
-      Logger::extern_area_ = true;
-      Logger::rest_area_ = true;
-      Logger::ha_converter_area_ = true;
-      Logger::ha_simulator_area_ = true;
-      Logger::interval_area_ = true;
-    }else{
-      Logger::parsing_area_ = (area_string.find('p') != std::string::npos);
-      Logger::calculate_closure_area_ = (area_string.find('c') != std::string::npos);
-      Logger::module_set_area_ = (area_string.find('m') != std::string::npos);
-      Logger::phase_area_ = (area_string.find('f') != std::string::npos);
-      Logger::backend_area_ = (area_string.find('v') != std::string::npos);
-      Logger::extern_area_ = (area_string.find('e') != std::string::npos);
-      Logger::rest_area_ = (area_string.find('r') != std::string::npos);
-      Logger::ha_converter_area_ = (area_string.find('h') != std::string::npos);
-      Logger::interval_area_ = (area_string.find('i') != std::string::npos);
-    }
   }else {                              // 警告のみ出力
     Logger::instance().set_log_level(Logger::Warn);
   }
+  
   
   if(po.count("help")) {     // ヘルプ表示して終了
     po.help_msg(std::cout);
@@ -161,7 +139,6 @@ void hydla_main(int argc, char* argv[])
     std::cout << Version::description() << std::endl;
     return;
   }
-
   // ParseTreeの構築
   // ファイルを指定されたらファイルから
   // そうでなければ標準入力から受け取る
@@ -181,7 +158,7 @@ void hydla_main(int argc, char* argv[])
   if(dump(pt)) {
     return;
   }
-  
+
   // シミュレーション開始
   symbolic_simulate(pt);
 

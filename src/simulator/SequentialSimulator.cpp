@@ -42,7 +42,7 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
       error_str += ": ";
       error_str += se.what();
       error_str += "\n";
-      HYDLA_LOGGER_PHASE(se.what());
+      HYDLA_LOGGER_DEBUG(se.what());
     }
   }
   
@@ -50,7 +50,7 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
     std::cout << error_str;
   }
   
-  HYDLA_LOGGER_PHASE("%% simulation ended");
+  HYDLA_LOGGER_DEBUG("%% simulation ended");
   return result_root_;
 }
 

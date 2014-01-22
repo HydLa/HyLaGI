@@ -129,7 +129,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
     catch(const runtime_error &se)
     {
       cout << se.what() << endl;
-      HYDLA_LOGGER_REST(se.what());
+      HYDLA_LOGGER_DEBUG(se.what());
       break;
     }
   }

@@ -21,7 +21,7 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
 
 PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont)
 {
-  HYDLA_LOGGER_PHASE("%% current time:", todo->current_time);
+  HYDLA_LOGGER_DEBUG("%% current time:", todo->current_time);
   timer::Timer phase_timer;
   result_list_t result;
   
@@ -127,7 +127,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms,
   boost::shared_ptr<RelationGraph>& graph, const variable_map_t& time_applied_map, simulation_todo_sptr_t& todo)
 {
-  HYDLA_LOGGER_MS("--- next module set ---\n", ms->get_infix_string());
+  HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
   graph->set_valid(ms.get());
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
@@ -143,12 +143,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     switch(cvm_res)
     {
       case CVM_CONSISTENT:
-      HYDLA_LOGGER_LOCATION(MS);
+      HYDLA_LOGGER_DEBUG("");
       merge_variable_maps(vms, tmp_vms);
       break;
       
       case CVM_INCONSISTENT:
-      HYDLA_LOGGER_LOCATION(MS);
+      HYDLA_LOGGER_DEBUG("");
       if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
       else todo->module_set_container->mark_nodes(todo->maximal_mss, *ms);
       if(opts_->find_unsat_core_mode)
@@ -159,7 +159,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       break;
       
       case CVM_ERROR:
-      HYDLA_LOGGER_LOCATION(MS);
+      HYDLA_LOGGER_DEBUG("");
       throw SimulateError("CalculateVariableMap for " + ms->get_name());
       break;
     }
@@ -185,11 +185,11 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       }
     }
     */
-    HYDLA_LOGGER_LOCATION(MS);
-    HYDLA_LOGGER_MS("%% connected module set size:", graph->get_connected_count());
+    HYDLA_LOGGER_DEBUG("");
+    HYDLA_LOGGER_DEBUG("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){
       module_set_sptr connected_ms = graph->get_component(i);
-      HYDLA_LOGGER_MS("--- next connected module set ---\n", connected_ms->get_infix_string());
+      HYDLA_LOGGER_DEBUG("--- next connected module set ---\n", connected_ms->get_infix_string());
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
       if(ms_it != todo->ms_cache.end())
       {
@@ -203,14 +203,14 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
         switch(cvm_res)
         {
           case CVM_CONSISTENT:
-          HYDLA_LOGGER_LOCATION(MS);
-          HYDLA_LOGGER_MS("--- CVM_CONSISTENT ---\n");
+          HYDLA_LOGGER_DEBUG("");
+          HYDLA_LOGGER_DEBUG("--- CVM_CONSISTENT ---\n");
           todo->ms_cache.insert(std::make_pair(*connected_ms, tmp_vms) );
           merge_variable_maps(vms, tmp_vms);
           break;
           
           case CVM_INCONSISTENT:
-          HYDLA_LOGGER_LOCATION(MS);
+          HYDLA_LOGGER_DEBUG("");
           if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
           else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           if(opts_->find_unsat_core_mode)
@@ -273,23 +273,23 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
      
       if(opts_->assertion)
       {
-        HYDLA_LOGGER_MS("%% check_assertion");
+        HYDLA_LOGGER_DEBUG("%% check_assertion");
         CheckConsistencyResult cc_result;
         switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t(), todo->phase)){
         case ENTAILED:
         case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
           std::cout << "Assertion Failed!" << std::endl;
-          HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
+          HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
           phase->cause_of_termination = ASSERTION;
           break;
         case CONFLICTING:
           break;
         case BRANCH_PAR:
-          HYDLA_LOGGER_CLOSURE("%% failure of assertion depends on conditions of parameters");
+          HYDLA_LOGGER_DEBUG("%% failure of assertion depends on conditions of parameters");
           push_branch_states(todo, cc_result);
           std::cout << "Assertion Failed!" << std::endl;
           phase->parameter_map = todo->parameter_map;
-          HYDLA_LOGGER_CLOSURE("%% Assertion Failed!");
+          HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
           phase->cause_of_termination = ASSERTION;
           break;
         }
@@ -297,7 +297,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
       }
       if(break_condition_.get() != NULL)
       {
-        HYDLA_LOGGER(MS, "%% check_break_condition");
+        HYDLA_LOGGER_DEBUG("%% check_break_condition");
         CheckConsistencyResult cc_result;
         switch(check_entailment(cc_result, break_condition_, continuity_map_t(), todo->phase)){
         case ENTAILED:
@@ -309,6 +309,11 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           break;
         }
       }
+    }
+
+    if(todo->phase == IntervalPhase)
+    {
+//      phase->variable_map = shift_variable_map_time(phase->variable_map, phase->current_time);
     }
   
     result.push_back(phase);
@@ -322,13 +327,13 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   for(int i=1; i<(int)result[0].size();i++){
     simulation_todo_sptr_t branch_state_true(create_new_simulation_phase(original));
     branch_state_true->parameter_map = result[0][i];
-    HYDLA_LOGGER_VAR(PHASE, branch_state_true);
+    HYDLA_LOGGER_DEBUG_VAR(branch_state_true);
     todo_container_->push_todo(branch_state_true);
   }
   for(int i=0; i<(int)result[1].size();i++){
     simulation_todo_sptr_t branch_state_false(create_new_simulation_phase(original));
     branch_state_false->parameter_map = result[1][i];
-    HYDLA_LOGGER_VAR(PHASE, branch_state_false);
+    HYDLA_LOGGER_DEBUG_VAR(branch_state_false);
     todo_container_->push_todo(branch_state_false);
   }
   original->parameter_map = result[0][0];
@@ -442,7 +447,7 @@ simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulat
 
 bool PhaseSimulator::check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2)
 {
-  HYDLA_LOGGER_LOCATION(HA);
+  HYDLA_LOGGER_DEBUG("");
   bool ret;
   backend_->call("checkIncludeBound", 4, "vlnvlnmpmp", "b", &tmp_variable_phase, &tmp_variable_past, &pm1, &pm2, &ret);
   return ret;
@@ -450,7 +455,7 @@ bool PhaseSimulator::check_include_bound(value_t tmp_variable_phase, value_t tmp
 
 void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm)
 {
-  HYDLA_LOGGER_LOCATION(HAS);
+  HYDLA_LOGGER_DEBUG("");
 	// 変数に代入
 	variable_map_t ret;
   variable_map_t &vm = pr->variable_map;
@@ -466,7 +471,7 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
   }
 
 	// 時刻にも代入
-  HYDLA_LOGGER_LOCATION(HAS);
+  HYDLA_LOGGER_DEBUG("");
   backend_->call("substituteParameterCondition",
                  2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
 	if(pr->phase == IntervalPhase){

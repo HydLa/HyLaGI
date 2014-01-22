@@ -116,7 +116,7 @@ protected:
 
       count++; i++;
     }
-    HYDLA_LOGGER(BACKEND, "count: ", count)
+    HYDLA_LOGGER_DEBUG_VAR(count)
 
     return count;
   }

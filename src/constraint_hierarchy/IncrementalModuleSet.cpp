@@ -181,9 +181,9 @@ module_set_sptr IncrementalModuleSet::get_removable_module_set(const ModuleSet& 
     // 最後までチェックできた時も削除できる
     if(p_it==p_end) removable->add_module(*it);
   }
-  HYDLA_LOGGER_MS("%% current module set\n", current_ms->get_name());
-  HYDLA_LOGGER_MS("%% inconsistency module set\n", ms.get_name());
-  HYDLA_LOGGER_MS("%% removable modules\n", removable->get_name(), "\n");
+  HYDLA_LOGGER_DEBUG("%% current module set\n", current_ms->get_name());
+  HYDLA_LOGGER_DEBUG("%% inconsistency module set\n", ms.get_name());
+  HYDLA_LOGGER_DEBUG("%% removable modules\n", removable->get_name(), "\n");
   return removable;
 }
 
@@ -358,7 +358,7 @@ void IncrementalModuleSet::mark_nodes(){
 }
 
 void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const ModuleSet& ms){
-  HYDLA_LOGGER_LOCATION(MS);
+  HYDLA_LOGGER_DEBUG("");
   bool recursive = false;
   module_set_sptr rm = get_removable_module_set(ms);
   module_set_list_t add, remain;
@@ -392,7 +392,7 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
 	if(!checked){
           add.push_back(new_ms);
           if(new_ms->including(ms)) recursive = true;
-          HYDLA_LOGGER_MS("%% new ms : ", new_ms->get_name());
+          HYDLA_LOGGER_DEBUG("%% new ms : ", new_ms->get_name());
 	}
       }
     }else{

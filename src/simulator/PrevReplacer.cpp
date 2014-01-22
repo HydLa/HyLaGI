@@ -41,11 +41,11 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
-  HYDLA_LOGGER(REST, *node);
+  HYDLA_LOGGER_DEBUG_VAR(*node);
   string v_name = node->get_name();
   int diff_cnt = differential_cnt_;
-  HYDLA_LOGGER_VAR(REST, v_name);
-  HYDLA_LOGGER_VAR(REST, diff_cnt);
+  HYDLA_LOGGER_DEBUG_VAR(v_name);
+  HYDLA_LOGGER_DEBUG_VAR(diff_cnt);
   variable_t variable(v_name, diff_cnt);
   ValueRange range = prev_phase_->variable_map[variable];
   
@@ -71,7 +71,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
         value_t lb = range.get_lower_bound().value;
         value_t ub = range.get_upper_bound().value;
         simulator_.backend->call("intervalToMidpointRadius", 2, "vltvlt", "r", &lb, &ub, &mr);
-        HYDLA_LOGGER_LOCATION(PHASE);
+        HYDLA_LOGGER_DEBUG("");
         range.set_upper_bound(value_t("1"), range.get_upper_bound().include_bound);
         range.set_lower_bound(value_t("-1"), range.get_lower_bound().include_bound);
         value_t new_value(mr.midpoint + mr.radius * value_t(new_child_));

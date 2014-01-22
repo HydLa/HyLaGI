@@ -31,10 +31,10 @@ REDUCELinkIpc::~REDUCELinkIpc(){
 int REDUCELinkIpc::skip_until_redeval(){
   std::string line = getline_with_throw("skip_until_redeval");
   while(line.find(end_of_redeval_) == std::string::npos){
-    HYDLA_LOGGER_EXTERN(line);
+    HYDLA_LOGGER_DEBUG_VAR(line);
     line = getline_with_throw("skip_until_redeval");
   }
-  HYDLA_LOGGER(BACKEND, "line: ", line);
+  HYDLA_LOGGER_DEBUG_VAR(line);
   return 0; 
 }
 
@@ -46,7 +46,7 @@ std::string REDUCELinkIpc::get_s_expr(){
     line += " ";
     line += tmp;
   }
-  HYDLA_LOGGER(BACKEND, "line: ", line);
+  HYDLA_LOGGER_DEBUG_VAR(line);
   return line;
 }
 

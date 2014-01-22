@@ -28,8 +28,8 @@ void HASimulator::set_ha_results(const ha_results_t& ha)
 	
 phase_result_const_sptr_t HASimulator::simulate()
 {
-  HYDLA_LOGGER_HAS("%% simulation start");
-  HYDLA_LOGGER_HAS("*** using HA");
+  HYDLA_LOGGER_DEBUG("%% simulation start");
+  HYDLA_LOGGER_DEBUG("*** using HA");
   viewPrs(ha_results[0]);
 
   ha_result_t ha = get_ha(ha_results); //初期値の範囲にあっている記号定数を持つHAを求める。一旦分岐は考えない
@@ -50,7 +50,7 @@ phase_result_const_sptr_t HASimulator::simulate()
 		
   timer::Timer has_timer;
   profile_t profile;
-  HYDLA_LOGGER_LOCATION(HAS);
+  HYDLA_LOGGER_DEBUG("");
 		
   while (true){
     timer::Timer phase_timer;
@@ -60,12 +60,12 @@ phase_result_const_sptr_t HASimulator::simulate()
     pr->children.clear();
     pr->parameter_map.clear();
 			
-    HYDLA_LOGGER_HAS("*** now pr : ", i);
+    HYDLA_LOGGER_DEBUG("*** now pr : ", i);
     viewPr(pr);
  
     substitute(pr, vm);
 
-    HYDLA_LOGGER_HAS("*** after substitute pr");
+    HYDLA_LOGGER_DEBUG("*** after substitute pr");
     viewPr(pr);
 			
     if(pr->phase == PointPhase)
@@ -87,7 +87,7 @@ phase_result_const_sptr_t HASimulator::simulate()
     i++;
     cnt_phase++;
     pr->id = cnt_phase;
-    HYDLA_LOGGER_LOCATION(HAS);
+    HYDLA_LOGGER_DEBUG("");
     parent->children.push_back(pr);
 
  
@@ -101,7 +101,7 @@ phase_result_const_sptr_t HASimulator::simulate()
     profile_vector_->push_back(st);
 
     if(opts_->max_phase >= 0 && opts_->max_phase < cnt_phase) {
-      HYDLA_LOGGER_HAS("fin : max_phase");					
+      HYDLA_LOGGER_DEBUG("fin : max_phase");					
       pr->cause_of_termination = STEP_LIMIT;
       break;
     }
@@ -112,14 +112,14 @@ phase_result_const_sptr_t HASimulator::simulate()
         i = 1;
       }else if(ha[i]->end_time.get_string() == "inf"){
         // infだったら終了
-        HYDLA_LOGGER_HAS("fin : inf");
+        HYDLA_LOGGER_DEBUG("fin : inf");
         pr->cause_of_termination = TIME_LIMIT;
         break;
       }else if(max_time < ha[i]->end_time){
 /*
         TODO: バックエンドで時刻同士の判定を行う
         // max_time <= end_timeなら終了
-        HYDLA_LOGGER_HAS("fin : max_time");
+        HYDLA_LOGGER_DEBUG("fin : max_time");
         pr->cause_of_termination = TIME_LIMIT;
         break;
 */
@@ -128,7 +128,7 @@ phase_result_const_sptr_t HASimulator::simulate()
     parent = pr;
   }
 		
-  HYDLA_LOGGER_HAS("%% simulation end");
+  HYDLA_LOGGER_DEBUG("%% simulation end");
 
   has_timer.elapsed("\n\nHASimulator Time");
   return result_root_;

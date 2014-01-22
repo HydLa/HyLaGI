@@ -78,7 +78,7 @@ void UnsatCoreFinder::find_unsat_core(
   Phase phase_type
 )
 {
-  HYDLA_LOGGER_LOCATION(MS);
+  HYDLA_LOGGER_DEBUG("");
   expanded_always_t expanded_always;
   tells_t tell_list;
   constraints_t constraint_list;

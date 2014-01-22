@@ -41,7 +41,7 @@ namespace simulator {
 	      error_str += ": ";
 	      error_str += se.what();
 	      error_str += "\n";
-	      HYDLA_LOGGER_HA(se.what());
+	      HYDLA_LOGGER_DEBUG(se.what());
 	    }
 	  }
 	  
@@ -49,7 +49,7 @@ namespace simulator {
 	    std::cout << error_str;
 	  }
 	  
-	  HYDLA_LOGGER_HA("%% simulation end");
+	  HYDLA_LOGGER_DEBUG("%% simulation end");
 	  
  		output_ha();
 
@@ -60,9 +60,9 @@ namespace simulator {
 	{
 	  hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
 
-	  HYDLA_LOGGER_HA("************************\n");
+	  HYDLA_LOGGER_DEBUG("************************\n");
 
-	  HYDLA_LOGGER_HA("--- Current Todo ---\n", *todo);
+	  HYDLA_LOGGER_DEBUG("--- Current Todo ---\n", *todo);
     current_condition_t cc_;
     current_condition_t tmp_cc_;
 
@@ -76,7 +76,7 @@ namespace simulator {
 	    {
 	      phase_result_sptr_t& phase = phases[i];
 	    	
-	      HYDLA_LOGGER_HA("--- Result Phase", i+1 , "/", phases.size(), " ---\n", *phase);
+	      HYDLA_LOGGER_DEBUG("--- Result Phase", i+1 , "/", phases.size(), " ---\n", *phase);
 	    	
       	tmp_cc_ = cc_;
       	tmp_cc_.push_back(phase);
@@ -101,15 +101,15 @@ namespace simulator {
 	      for(unsigned int j = 0; j < next_todos.size(); j++)
 	      {
 	        simulation_todo_sptr_t& n_todo = next_todos[j];
-          HYDLA_LOGGER_HA("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
-          HYDLA_LOGGER_HA(*n_todo);
+          HYDLA_LOGGER_DEBUG("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
+          HYDLA_LOGGER_DEBUG(*n_todo);
 	      	// TIME_LIMITの場合
 	      	if(n_todo->parent->cause_of_termination == TIME_LIMIT){
 	      		current_condition_t tmp_tmp_cc_;
 	      		tmp_tmp_cc_ = tmp_cc_;
 	      		tmp_tmp_cc_.pop_back();
 	      		tmp_tmp_cc_.push_back(n_todo->parent);
-	      		HYDLA_LOGGER_HA("*-*-*-*-* termination == TIME_LIMIT");
+	      		HYDLA_LOGGER_DEBUG("*-*-*-*-* termination == TIME_LIMIT");
 	      		push_result(tmp_tmp_cc_);
 	      		continue;
 	      	}
@@ -122,7 +122,7 @@ namespace simulator {
 	  }
 	  catch(const hydla::timeout::TimeOutError &te)
 	  {
-	    HYDLA_LOGGER_HA(te.what());
+	    HYDLA_LOGGER_DEBUG(te.what());
 	    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
 	    todo->parent->children.push_back(phase);
 	  }
@@ -130,26 +130,26 @@ namespace simulator {
 
 	bool HAConverter::check_already_exec(phase_result_sptr_t phase, current_condition_t cc)
 	{
-		HYDLA_LOGGER_HA("****** check_already_exec ******");
+		HYDLA_LOGGER_DEBUG("****** check_already_exec ******");
 		phase_result_sptrs_t::iterator it_prs = cc.begin();
 		while(it_prs != cc.end()){
 			// 同じノードの探索
 			if(compare_phase_result(phase, *it_prs)) {
 				// 全てのパラメータが実行済みノードのパラメータの部分集合だったらtrue
 				if (check_subset(phase, *it_prs)) {
-					HYDLA_LOGGER_HA("****** end check_already_exec : true ******");
+					HYDLA_LOGGER_DEBUG("****** end check_already_exec : true ******");
 					return true;
 				}
 			}
 			it_prs++;
 		}
-		HYDLA_LOGGER_HA("****** end check_already_exec : false ******");
+		HYDLA_LOGGER_DEBUG("****** end check_already_exec : false ******");
 		return false;
 	}
 	
 	bool HAConverter::check_subset(phase_result_sptr_t phase, phase_result_sptr_t past_phase)
 	{
-		HYDLA_LOGGER_HA("****** check_subset ******");
+		HYDLA_LOGGER_DEBUG("****** check_subset ******");
 		viewPr(phase);
 		viewPr(past_phase);
  		
@@ -162,16 +162,16 @@ namespace simulator {
 		  for(; it_past_v!=end_past_v; ++it_past_v) {
 		 		if ( it_phase_v->first.name == it_past_v->first.name && 
 		 				 it_phase_v->first.derivative_count == it_past_v->first.derivative_count ) {
-			 		HYDLA_LOGGER_HA("Variable: ",it_phase_v->first.name," ",it_phase_v->first.derivative_count);		 			
-			 		HYDLA_LOGGER_HA("t         :  0");	
+			 		HYDLA_LOGGER_DEBUG("Variable: ",it_phase_v->first.name," ",it_phase_v->first.derivative_count);		 			
+			 		HYDLA_LOGGER_DEBUG("t         :  0");	
 			  	tmp_variable_phase = it_phase_v->second;
-			  	HYDLA_LOGGER_HA("now       :  ", tmp_variable_phase);
-			  	//HYDLA_LOGGER_HA("c-t         :  ", *phase->current_time);		
+			  	HYDLA_LOGGER_DEBUG("now       :  ", tmp_variable_phase);
+			  	//HYDLA_LOGGER_DEBUG("c-t         :  ", *phase->current_time);		
 		 			search_variable_parameter(phase->parameter_map, it_phase_v->first.name, it_phase_v->first.derivative_count);
-					HYDLA_LOGGER_HA("");	 	
+					HYDLA_LOGGER_DEBUG("");	 	
 			  	tmp_variable_past = it_past_v->second;
-			  	HYDLA_LOGGER_HA("past      :  ", tmp_variable_past);
-			  	//HYDLA_LOGGER_HA("c-t         :  ", *past_phase->current_time);		 				 	
+			  	HYDLA_LOGGER_DEBUG("past      :  ", tmp_variable_past);
+			  	//HYDLA_LOGGER_DEBUG("c-t         :  ", *past_phase->current_time);		 				 	
 			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first.name, it_past_v->first.derivative_count);
 		  	}
 		  }
@@ -179,9 +179,9 @@ namespace simulator {
 		  bool isIncludeBound = phase_simulator_->check_include_bound(tmp_variable_phase.get_unique(), tmp_variable_past.get_unique(), phase->parameter_map, past_phase->parameter_map);
 		  
 	  	if(isIncludeBound){
-		    HYDLA_LOGGER_HA("****** check_include_bound end : true ******");
+		    HYDLA_LOGGER_DEBUG("****** check_include_bound end : true ******");
 		  }else{
-		    HYDLA_LOGGER_HA("****** check_include_bound end : false ******");
+		    HYDLA_LOGGER_DEBUG("****** check_include_bound end : false ******");
 		  }
       return isIncludeBound;
 /*
@@ -190,7 +190,7 @@ namespace simulator {
 			  cout << ">";
 			  cin >> isIncludeBound;
 			  if(isIncludeBound == 0) {
-					HYDLA_LOGGER_HA("****** end check_subset : false ******");		
+					HYDLA_LOGGER_DEBUG("****** end check_subset : false ******");		
 				  return false;
 			  }
 	  	}else{
@@ -199,7 +199,7 @@ namespace simulator {
 */
 	  }
 	  
-		HYDLA_LOGGER_HA("****** end check_subset : true ******");		
+		HYDLA_LOGGER_DEBUG("****** end check_subset : true ******");		
    	return true;
    	
 	}
@@ -213,7 +213,7 @@ namespace simulator {
 		  // 途中で導入されたパラメータは見ない
 	  	if ( it->first.get_phase_id() != 1 ) continue;
 
-			HYDLA_LOGGER_HA(it->first, " : " , it->second);		
+			HYDLA_LOGGER_DEBUG(it->first, " : " , it->second);		
 	  }
 	}
 	
@@ -222,7 +222,7 @@ namespace simulator {
 		// フェーズ
 		if(!(r1->phase == r2->phase)) return false;
 		// モジュール集合
-		HYDLA_LOGGER_HA("compare :: id:", r1->id, " ", r1->module_set->get_name(), " <=> id:", r2->id, " ", r2->module_set->get_name());
+		HYDLA_LOGGER_DEBUG("compare :: id:", r1->id, " ", r1->module_set->get_name(), " <=> id:", r2->id, " ", r2->module_set->get_name());
 		if(!(r1->module_set->compare(*r2->module_set) == 0)) return false;
 		// positive_ask
 		ask_set_t::iterator it_1 = r1->positive_asks.begin();
@@ -244,9 +244,9 @@ namespace simulator {
 		for(unsigned int i = 0 ; i < cc.size() ; i++){
 			result.push_back(cc[i]);
 		}
-		HYDLA_LOGGER_HA("・・・・・ ha_result ", ha_results_.size(), " ・・・・・");
+		HYDLA_LOGGER_DEBUG("・・・・・ ha_result ", ha_results_.size(), " ・・・・・");
 		viewPrs(result);
-		HYDLA_LOGGER_HA("・・・・・・・・・・・・・・");
+		HYDLA_LOGGER_DEBUG("・・・・・・・・・・・・・・");
 		ha_results_.push_back(result);
 	}
 	

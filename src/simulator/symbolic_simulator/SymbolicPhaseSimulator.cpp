@@ -97,18 +97,18 @@ SymbolicPhaseSimulator::mark_nodes_by_unsat_core
  ){
   UnsatCoreFinder::unsat_constraints_t S;
   UnsatCoreFinder::unsat_continuities_t S4C;
-  HYDLA_LOGGER_VAR(MS, *ms);
+  HYDLA_LOGGER_DEBUG_VAR(*ms);
   unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
   ModuleSet module_set;
   for(UnsatCoreFinder::unsat_constraints_t::iterator it = S.begin(); it != S.end(); it++){
-    HYDLA_LOGGER(MS, "unsat moduleset: ", *it->second);
+    HYDLA_LOGGER_DEBUG("unsat moduleset: ", *it->second);
     for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
   }
   for(UnsatCoreFinder::unsat_continuities_t::iterator it = S4C.begin(); it != S4C.end(); it++){
-    HYDLA_LOGGER(MS, "unsat moduleset: ", *it->second);
+    HYDLA_LOGGER_DEBUG("unsat moduleset: ", *it->second);
     for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
   }
-  HYDLA_LOGGER_VAR(MS, module_set);
+  HYDLA_LOGGER_DEBUG_VAR(module_set);
   todo->module_set_container->mark_nodes(todo->maximal_mss, module_set);
 }
 
@@ -212,7 +212,7 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   )
 {
   CheckEntailmentResult ce_result;
-  HYDLA_LOGGER(PHASE, get_infix_string(guard) );
+  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   backend_->call("startTemporary", 0, "", "");
   add_continuity(cont_map, phase);
   const char* fmt = (phase == PointPhase)?"en":"et";
@@ -220,9 +220,9 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   cc_result = check_consistency(phase);
   assert(cc_result.size() == 2);
   if(!cc_result[0].empty()){
-    HYDLA_LOGGER_CLOSURE("%% entailable");
+    HYDLA_LOGGER_DEBUG("%% entailable");
     if(!cc_result[1].empty()){
-      HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
+      HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
       ce_result = BRANCH_PAR;
     }
     else
@@ -236,10 +236,9 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
       cc_result = check_consistency(phase);
       assert(cc_result.size() == 2);
       if(!cc_result[0].empty()){
-        HYDLA_LOGGER_CLOSURE("%% entailablity branches");
+        HYDLA_LOGGER_DEBUG("%% entailablity branches");
         if(!cc_result[1].empty()){
-          HYDLA_LOGGER_LOCATION(CLOSURE);
-          HYDLA_LOGGER_CLOSURE("%% branches by parameters");
+          HYDLA_LOGGER_DEBUG("%% branches by parameters");
           ce_result = BRANCH_PAR;
         }
         ce_result = BRANCH_VAR;
@@ -257,8 +256,6 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
 bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(CLOSURE);
-  
   // preparation
   positive_asks_t& positive_asks = state->positive_asks;
   negative_asks_t& negative_asks = state->negative_asks;
@@ -294,7 +291,6 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         &expanded_always,
         &positive_asks);
 
-    HYDLA_LOGGER_LOCATION(CLOSURE);
     timer::Timer consistency_timer;
 
     constraint_list.clear();
@@ -324,13 +320,13 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       cc_result = check_consistency(state->phase);
       assert(cc_result.size() == 2);
       if(cc_result[0].empty()){
-        HYDLA_LOGGER_CLOSURE("%% inconsistent for all cases");
+        HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return false;
       }else if (cc_result[1].empty()){
-        HYDLA_LOGGER_CLOSURE("%% consistent for all cases");
+        HYDLA_LOGGER_DEBUG("%% consistent for all cases");
       }else{
-        HYDLA_LOGGER_CLOSURE("%% consistency depends on conditions of parameters\n");
+        HYDLA_LOGGER_DEBUG("%% consistency depends on conditions of parameters\n");
         push_branch_states(state, cc_result);
       }
     }
@@ -338,8 +334,6 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
 
-    HYDLA_LOGGER_LOCATION(CLOSURE);
-    
     ask_collector.collect_ask(&expanded_always, 
         &positive_asks, 
         &negative_asks,
@@ -371,7 +365,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           {
             // if this guard doesn't have non-prev variable and it has been already judged
             bool entailed = state->judged_prev_map.find(*it)->second;
-            HYDLA_LOGGER_CLOSURE("%% ommitted guard: ", **it, ", entailed: ", entailed);
+            HYDLA_LOGGER_DEBUG("%% ommitted guard: ", **it, ", entailed: ", entailed);
             if(entailed)
             {
               positive_asks.insert(*it);
@@ -389,7 +383,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         CheckConsistencyResult check_consistency_result;
         switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase)){
           case ENTAILED:
-            HYDLA_LOGGER_CLOSURE("--- entailed ask ---\n", *((*it)->get_guard()));
+            HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
               state->judged_prev_map.insert(std::make_pair(*it, true));
@@ -407,7 +401,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             }
             break;
           case CONFLICTING:
-            HYDLA_LOGGER_CLOSURE("--- conflicted ask ---\n", *((*it)->get_guard()));
+            HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
               state->judged_prev_map.insert(std::make_pair(*it, false));
@@ -415,11 +409,11 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             unknown_asks.erase(it++);
             break;
           case BRANCH_VAR:
-            HYDLA_LOGGER_CLOSURE("--- branched ask ---\n", *((*it)->get_guard()));
+            HYDLA_LOGGER_DEBUG("--- branched ask ---\n", *((*it)->get_guard()));
             it++;
             break;
           case BRANCH_PAR:
-            HYDLA_LOGGER_CLOSURE("%% entailablity depends on conditions of parameters\n");
+            HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
             push_branch_states(state, check_consistency_result);
             break;
         }
@@ -434,7 +428,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   if(!unknown_asks.empty()){
     boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
     // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
-    HYDLA_LOGGER_CLOSURE("%% branched_ask:", get_infix_string(branched_ask));
+    HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
     {
       // 分岐先を生成（導出される方）
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
@@ -448,8 +442,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       return calculate_closure(state, ms);
     }
   }
-  
-  HYDLA_LOGGER_FUNC_END(CLOSURE);
+
   return true;
 }
 
@@ -460,8 +453,6 @@ SymbolicPhaseSimulator::calculate_variable_map(
   const variable_map_t & vm,
   variable_maps_t& result_vms)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(MS);
-  
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   backend_->call("addPrevConstraint", 1, "mvp", "", &vm); //TODO: 左極限値と記号定数の初期化処理はもっと上でやった方が無駄が少ないはず
@@ -490,14 +481,13 @@ SymbolicPhaseSimulator::calculate_variable_map(
   }
   todo->profile["CreateMap"] += create_timer.get_elapsed_us();
 
-  HYDLA_LOGGER_VAR(MS, create_result.size());
+  HYDLA_LOGGER_DEBUG_VAR(create_result.size());
   
   if(current_phase_ == IntervalPhase)
   {
     if(create_result.size() != 1){
       phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
       todo->parent->children.push_back(phase);
-      HYDLA_LOGGER_FUNC_END(MS);
       return CVM_ERROR;
     }
     
@@ -684,8 +674,6 @@ change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(
 SymbolicPhaseSimulator::todo_list_t 
   SymbolicPhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(MS);
-  
   backend_->call("resetConstraint", 0, "", "");
   const char* fmt = (current_todo->phase == PointPhase)?"mv0n":"mv0t";
   backend_->call("addConstraint", 1, fmt, "", &phase->variable_map);
@@ -709,8 +697,8 @@ SymbolicPhaseSimulator::todo_list_t
   else
   {
     assert(current_phase_ == IntervalPhase);
-    next_todo->phase = PointPhase;
     phase->variable_map = shift_variable_map_time(phase->variable_map, phase->current_time);
+    next_todo->phase = PointPhase;
 
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
@@ -795,7 +783,7 @@ SymbolicPhaseSimulator::todo_list_t
       pr = results[result_it];
 
       NextPhaseResult &candidate = time_result[result_it];
-      HYDLA_LOGGER_VAR(PHASE, result_it);
+      HYDLA_LOGGER_DEBUG_VAR(result_it);
       for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
       { 
         int id = candidate.minimum.ids[id_it];
@@ -804,14 +792,14 @@ SymbolicPhaseSimulator::todo_list_t
         }
         else if(id >= 0)
         {
-          HYDLA_LOGGER_VAR(PHASE, id);
-          HYDLA_LOGGER_VAR(PHASE, *ask_map[id]);
+          HYDLA_LOGGER_DEBUG_VAR(id);
+          HYDLA_LOGGER_DEBUG_VAR(*ask_map[id]);
           next_todo->discrete_causes.insert(ask_map[id]);
         }
       }
 
 
-      HYDLA_LOGGER_PHASE("%%time: ", pr->current_time);
+      HYDLA_LOGGER_DEBUG("%%time: ", pr->current_time);
       if(pr->cause_of_termination != TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
@@ -834,7 +822,6 @@ SymbolicPhaseSimulator::todo_list_t
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
   
-  HYDLA_LOGGER_FUNC_END(MS);  
   return ret;
 }
 
@@ -848,13 +835,13 @@ void SymbolicPhaseSimulator::replace_prev2parameter(
   for(variable_map_t::iterator it = vm.begin();
       it != vm.end(); it++)
   {
-    HYDLA_LOGGER(PHASE, it->first, it->second);
+    HYDLA_LOGGER_DEBUG(it->first, it->second);
     ValueRange& range = it->second;
     value_t val;
     if(range.unique())
     {
       val = range.get_unique();
-      HYDLA_LOGGER(PHASE, val);
+      HYDLA_LOGGER_DEBUG(val);
       replacer.replace_value(val);
       range.set_unique(val);
     }
@@ -901,8 +888,7 @@ void SymbolicPhaseSimulator::replace_prev2parameter(
 
 variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const value_t& tm)
 {
-  HYDLA_LOGGER_FUNC_BEGIN(PHASE);
-  HYDLA_LOGGER_PHASE("%% time: ", tm);
+  HYDLA_LOGGER_DEBUG("%% time: ", tm);
   variable_map_t result;
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
@@ -941,7 +927,6 @@ variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm
       result[it->first] = range;
     }
   }
-  HYDLA_LOGGER_FUNC_END(PHASE);  
   return result;
 }
 

@@ -102,7 +102,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   ProgramOptions &po = ProgramOptions::instance();
   
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math_name") + " -mathlink'";
-  opts.debug_mode    = po.get<std::string>("debug")!="";
+  opts.debug_mode    = po.count("debug") > 0;
   opts.max_time      = po.get<std::string>("time");
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;

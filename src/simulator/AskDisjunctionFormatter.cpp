@@ -16,7 +16,7 @@ AskDisjunctionFormatter::~AskDisjunctionFormatter()
 
 void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
 {
-  HYDLA_LOGGER_PARSING("#*** Begin AskDisjunctionFormatter::format ***\n");
+  HYDLA_LOGGER_DEBUG("#*** Begin AskDisjunctionFormatter::format ***\n");
   pt_ = pt;
   
   
@@ -25,10 +25,10 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
     pt->dispatch(this);
   } while(swapped_);
   pt->update_node_id_list();
-  HYDLA_LOGGER_PARSING("--- ask disjunction format result ---\n",
+  HYDLA_LOGGER_DEBUG("--- ask disjunction format result ---\n",
                      *pt, "\n",
                      pt->to_graphviz());
-  HYDLA_LOGGER_PARSING("#*** End AskDisjunctionFormatter::format ***\n");
+  HYDLA_LOGGER_DEBUG("#*** End AskDisjunctionFormatter::format ***\n");
 }
 
 // 制約呼び出し

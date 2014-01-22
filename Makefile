@@ -12,4 +12,4 @@ check: $(src_directory)
 
 .PHONY : clean
 clean:
-	@cd $(src_directory) make clean
+	@cd $(src_directory) && make clean

@@ -5,18 +5,6 @@
 namespace hydla {
 namespace logger {
 
-bool Logger::parsing_area_;
-bool Logger::constraint_hierarchy_area_;
-bool Logger::calculate_closure_area_;
-bool Logger::phase_area_;
-bool Logger::module_set_area_;
-bool Logger::backend_area_;
-bool Logger::extern_area_;
-bool Logger::rest_area_;
-bool Logger::ha_converter_area_;
-bool Logger::ha_simulator_area_;
-bool Logger::interval_area_;
-
 Logger::Logger() :
   log_level_(Warn)
 {

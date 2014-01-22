@@ -54,7 +54,7 @@ void TellCollector::collect(tells_t*                 tells,
                             const expanded_always_t* expanded_always,                   
                             const positive_asks_t*   positive_asks)
 {
-  HYDLA_LOGGER_CLOSURE("#*** Begin TellCollector::collect ***\n");
+  HYDLA_LOGGER_DEBUG("#*** Begin TellCollector::collect ***\n");
   assert(expanded_always);
   assert(tells);
   assert(positive_asks);
@@ -83,12 +83,12 @@ void TellCollector::collect(tells_t*                 tells,
     }
   }
 
-  HYDLA_LOGGER_CLOSURE(
+  HYDLA_LOGGER_DEBUG(
     "#*** tell collector ***\n", 
     "--- collected tells ---\n", 
     NodeDumper(tells->begin(), tells->end()));
     
-  HYDLA_LOGGER_CLOSURE("#*** End TellCollector::collect ***\n");
+  HYDLA_LOGGER_DEBUG("#*** End TellCollector::collect ***\n");
 }
 
 // 制約式

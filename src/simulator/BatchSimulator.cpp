@@ -30,7 +30,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
     return;
   }
 
-  HYDLA_LOGGER_PHASE("--- Current Todo ---\n", *todo);
+  HYDLA_LOGGER_DEBUG("--- Current Todo ---\n", *todo);
 
   try{
     timer::Timer phase_timer;
@@ -39,7 +39,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
     for(unsigned int i = 0; i < phases.size(); i++)
     {
       phase_result_sptr_t& phase = phases[i];
-      HYDLA_LOGGER_PHASE("--- Result Phase", i+1 , "/", phases.size(), " ---\n", *phase);
+      HYDLA_LOGGER_DEBUG("--- Result Phase", i+1 , "/", phases.size(), " ---\n", *phase);
 
       if(!opts_->nd_mode && i > 0)
       {
@@ -69,8 +69,8 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
         else
         {
           todo_stack_->push_todo(n_todo);
-          HYDLA_LOGGER_PHASE("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
-          HYDLA_LOGGER_PHASE(*n_todo);
+          HYDLA_LOGGER_DEBUG("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
+          HYDLA_LOGGER_DEBUG(*n_todo);
         }
       }
     }
@@ -78,7 +78,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
     todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
 
     if(!is_safe && opts_->stop_at_failure){
-      HYDLA_LOGGER_PHASE("%% Failure of assertion is detected");
+      HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
       // assertion違反の場合が見つかったので，他のシミュレーションを中断して終了する
       while(!todo_stack_->empty()) {
         simulation_todo_sptr_t tmp_state(todo_stack_->pop_todo());
@@ -89,7 +89,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
   }
   catch(const hydla::timeout::TimeOutError &te)
   {
-    HYDLA_LOGGER_PHASE(te.what());
+    HYDLA_LOGGER_DEBUG(te.what());
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
     todo->parent->children.push_back(phase);
   }

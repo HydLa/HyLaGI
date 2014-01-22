@@ -47,13 +47,13 @@ ParseTree::~ParseTree()
 
 void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory) 
 {
-  HYDLA_LOGGER_PARSING("#*** Begin ParseTree::parse ***");
+  HYDLA_LOGGER_DEBUG("#*** Begin ParseTree::parse ***");
   node_factory_ = node_factory;
 
   // ASTの構築
   HydLaAST ast;
   ast.parse(stream);
-  HYDLA_LOGGER_PARSING("--- AST Tree ---", ast);
+  HYDLA_LOGGER_DEBUG("--- AST Tree ---", ast);
   
 
   // ParseTreeの構築
@@ -61,17 +61,17 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
-  HYDLA_LOGGER_PARSING("--- Parse Tree ---\n", *this);
-  HYDLA_LOGGER_PARSING("--- Constraint Definition ---\n", constraint_definition);
-  HYDLA_LOGGER_PARSING("--- Program Definition ---\n",    program_definition);
+  HYDLA_LOGGER_DEBUG("--- Parse Tree ---\n", *this);
+  HYDLA_LOGGER_DEBUG("--- Constraint Definition ---\n", constraint_definition);
+  HYDLA_LOGGER_DEBUG("--- Program Definition ---\n",    program_definition);
   if(assertion_node_tree_)
-    HYDLA_LOGGER_PARSING("--- Assertion Tree ---\n", *assertion_node_tree_);
+    HYDLA_LOGGER_DEBUG("--- Assertion Tree ---\n", *assertion_node_tree_);
   // 意味解析
   ParseTreeSemanticAnalyzer analyer(constraint_definition, program_definition, this);  
   analyer.analyze(node_tree_);
   update_node_id_list();
-  HYDLA_LOGGER_PARSING("--- Analyzed Parse Tree ---\n", *this);
-  HYDLA_LOGGER_PARSING("#*** End ParseTree::parse ***\n");
+  HYDLA_LOGGER_DEBUG("--- Analyzed Parse Tree ---\n", *this);
+  HYDLA_LOGGER_DEBUG("#*** End ParseTree::parse ***\n");
 }
 
 void ParseTree::rebuild_node_id_list()

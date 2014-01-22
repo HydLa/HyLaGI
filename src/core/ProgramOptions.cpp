@@ -23,7 +23,7 @@ void ProgramOptions::init_descriptions()
   generic_desc.add_options()
     ("help,h", "produce help message")
     ("version", "display version")
-    ("debug,d", value<std::string>()->default_value(""), "enable debug mode\n")
+    ("debug,d", "enable debug mode\n")
    // ("profile", "enable profile mode")
 
   

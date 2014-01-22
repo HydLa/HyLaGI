@@ -18,7 +18,6 @@ const std::string REDUCELink::var_prefix = "usrvar";
 
 
 REDUCELink::REDUCELink():sexp_ast_(""){
-  HYDLA_LOGGER_FUNC_BEGIN(BACKEND);
   typedef function_map_t::value_type f_value_t;
   function_map_.insert(f_value_t("ln", "Log"));
   function_map_.insert(f_value_t("resetConstraint", "resetConstraintStore"));
@@ -39,14 +38,11 @@ REDUCELink::REDUCELink():sexp_ast_(""){
   function_map_.insert(f_value_t("Greater", "greaterp"));
   function_map_.insert(f_value_t("LessEqual", "leq"));
   function_map_.insert(f_value_t("GreaterEqual", "heq"));
-
-  HYDLA_LOGGER_FUNC_END(BACKEND);
 }
 
 
 void REDUCELink::init_opts(const simulator::Opts &opts)
 {
-  HYDLA_LOGGER_LOCATION(BACKEND);
   //pre_send();
   std::stringstream init_str;
   init_str << "optUseDebugPrint__:=";
@@ -173,10 +169,10 @@ std::string REDUCELink::get_input_print()
 void REDUCELink::get_function(std::string &name, int &cnt)
 {
   SExpAST::const_tree_iter_t it = get_current_iter();
-  HYDLA_LOGGER_VAR(BACKEND, it);
+  HYDLA_LOGGER_DEBUG_VAR(it);
   name = std::string(it->value.begin(), it->value.end());
   cnt = it->children.size();
-  HYDLA_LOGGER(BACKEND, "name: ", name, ", cnt: ", cnt);
+  HYDLA_LOGGER_DEBUG("name: ", name, ", cnt: ", cnt);
   go_next_iter();
 }
 
@@ -189,7 +185,7 @@ std::string REDUCELink::get_string()
 {
   SExpAST::const_tree_iter_t it = get_current_iter();
   std::string ret = std::string(it->value.begin(), it->value.end());
-  HYDLA_LOGGER(BACKEND, "ret: ", ret);
+  HYDLA_LOGGER_DEBUG( "ret: ", ret);
   go_next_iter();
   return ret;
 }
@@ -202,7 +198,7 @@ int REDUCELink::get_integer()
   std::string str(it->value.begin(), it->value.end());
   ss << str;
   ss >> ret;
-  HYDLA_LOGGER(BACKEND, "ret: ", ret); 
+  HYDLA_LOGGER_DEBUG("ret: ", ret); 
   go_next_iter();
   return ret;
 }
@@ -262,7 +258,7 @@ REDUCELink::tree_iter_t REDUCELink::get_current_iter()
     tree_iter_t root = sexp_ast_.root();
     tree_stack_.push(std::make_pair(root, -1));
     first_get_ = false;
-    HYDLA_LOGGER(BACKEND, "sexp_ast_\n", sexp_ast_);
+    HYDLA_LOGGER_DEBUG_VAR(sexp_ast_);
     return root;
   }
   else
@@ -316,11 +312,11 @@ void REDUCELink::flush(bool debug)
 {
   if(debug)
   {
-    HYDLA_LOGGER(BACKEND, "send_buffer_: ", send_buffer_);
+    HYDLA_LOGGER_DEBUG_VAR(send_buffer_);
   }
   else
   {
-    HYDLA_LOGGER(BACKEND, "send_buffer_: (omitted)");
+    HYDLA_LOGGER_DEBUG("send_buffer_: (omitted)");
   }
   send_string_to_reduce(send_buffer_.c_str());
   send_buffer_ = "";

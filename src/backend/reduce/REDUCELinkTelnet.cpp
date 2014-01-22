@@ -26,7 +26,7 @@ REDUCELinkTelnet::~REDUCELinkTelnet(){
 int REDUCELinkTelnet::skip_until_redeval(){
   std::string line;
   while(getline_with_throw("skip_until_redeval", line)){
-    HYDLA_LOGGER_EXTERN(line);
+    HYDLA_LOGGER_DEBUG(line);
     if(line==end_of_redeval_){
       break;
     }
@@ -45,7 +45,7 @@ std::string REDUCELinkTelnet::get_s_expr(){
     line = line + tmp;
   }
 
-  HYDLA_LOGGER_BACKEND("get s_expr: ", line);
+  HYDLA_LOGGER_DEBUG("get s_expr: ", line);
   return line;
 }
 

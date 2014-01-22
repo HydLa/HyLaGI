@@ -10,7 +10,7 @@ namespace logger {
 /**
  * ログ出力関数において対応する引数の数
  */
-#define HYDLA_LOGGER_LOG_WRITE_ARG_NUM 10
+#define HYDLA_LOGGER_LOG_WRITE_ARG_NUM 20
 
 /**
  * ログ出力関数内の定義
@@ -48,57 +48,12 @@ namespace logger {
 class Logger
 {
 public:
-  /// プログラム読み込みの処理
-  static bool parsing_area_;
-  
-  /// 制約階層の作成や管理
-  static bool constraint_hierarchy_area_;
-  
-  /// 閉包計算の処理
-  static bool calculate_closure_area_;
-  
-  /// PPやIPの全体的な処理の流れ
-  static bool phase_area_;
-  
-  /// モジュール集合の選択
-  static bool module_set_area_; 
-  
-  /// Backendモジュール内での処理
-  static bool backend_area_;
-  
-  /// 外部ソフトでの処理
-  static bool extern_area_; 
-
-  /// どこにも該当しないが，出力したいもの．極力使わないように
-  static bool rest_area_;
-	
-  /// HA変換の処理
-  static bool ha_converter_area_;
-  
-  /// HAsimulatorの処理
-  static bool ha_simulator_area_;
-
-  /// for interval arithmetic
-  static bool interval_area_;
-
-
   enum LogLevel {
-    ParsingArea,
-    ConstraintHierarchyArea,
-    CalculateClosureArea,
-    PhaseArea,
-    ModuleSetArea,
-    BackendArea,
-    ExternArea,
-    RestArea,
-    HAConverterArea,
-    HASimulatorArea,
-    IntervalArea,
     Debug,
     Warn,
     Error,
     Fatal,
-    None,
+    None
   };
 
   ~Logger();
@@ -117,36 +72,7 @@ public:
 
   bool valid_level(LogLevel level)
   {
-    if(log_level_ == Debug){
-      switch(level){
-        case ParsingArea:
-          return parsing_area_;
-        case ConstraintHierarchyArea:
-          return constraint_hierarchy_area_;
-        case CalculateClosureArea:
-          return calculate_closure_area_;
-        case ModuleSetArea:
-          return module_set_area_;
-        case PhaseArea:
-          return phase_area_;
-        case BackendArea:
-          return backend_area_;
-        case ExternArea:
-          return extern_area_;
-        case RestArea:
-          return rest_area_;
-        case HAConverterArea:
-      		return ha_converter_area_;
-        case HASimulatorArea:
-          return ha_simulator_area_;
-        case IntervalArea:
-          return interval_area_;
-        default:
-          return log_level_ <= level;
-      }
-    } else {
-      return log_level_ <= level;
-    }
+    return log_level_ <= level;
   }
   
   /// LoggerのSingletonなインスタンス
@@ -194,78 +120,15 @@ private:
   }
 
 
-/**
- * ログレベルdebugでのログの出力
- */
-#define HYDLA_LOGGER_DEBUG(...)                                   \
+#define HYDLA_LOGGER_DEBUG_INTERNAL(...)                                    \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Debug, debug_write, (__VA_ARGS__))
 
 /**
- * 構文解析時のdebugログの出力
+ * ログレベルdebugでのログの出力
+ * append informations for location by default
  */
-#define HYDLA_LOGGER_PARSING(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ParsingArea, debug_write, (__VA_ARGS__))
-
-/**
- * 制約階層関係のdebugログの出力
- */
-#define HYDLA_LOGGER_HIERARCHY(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ConstraintHierarchyArea, debug_write, (__VA_ARGS__))
-
-/**
- * 閉包計算時のdebugログの出力
- */
-#define HYDLA_LOGGER_CLOSURE(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(CalculateClosureArea, debug_write, (__VA_ARGS__))
-  
-/**
- * フェーズごとのdebugログの出力
- */
-#define HYDLA_LOGGER_PHASE(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(PhaseArea, debug_write, (__VA_ARGS__))
-  
-/**
- * モジュール集合選択時のdebugログの出力
- */
-#define HYDLA_LOGGER_MS(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ModuleSetArea, debug_write, (__VA_ARGS__))
-  
-/**
- * Backend内でのdebugログの出力
- */
-#define HYDLA_LOGGER_BACKEND(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(BackendArea, debug_write, (__VA_ARGS__))
-
-
-/**
- * 外部ソフトウェアによるdebugログの出力
- */
-#define HYDLA_LOGGER_EXTERN(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(ExternArea, debug_write, (__VA_ARGS__))
-
-/**
- * その他のdebugログの出力
- */
-#define HYDLA_LOGGER_REST(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(RestArea, debug_write, (__VA_ARGS__))
-	
-/**
- * HA変換処理のdebugログ出力
- */
-#define HYDLA_LOGGER_HA(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(HAConverterArea, debug_write, (__VA_ARGS__))
-
-/**
- * HASimulatorのdebugログ出力
- */
-#define HYDLA_LOGGER_HAS(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(HASimulatorArea, debug_write, (__VA_ARGS__))
-
-/**
- * log for interval arithmetic
- */
-#define HYDLA_LOGGER_INTERVAL(...)                                   \
-  HYDLA_LOGGER_LOG_WRITE_MACRO(IntervalArea, debug_write, (__VA_ARGS__))
+#define HYDLA_LOGGER_DEBUG(...)                                  \
+  HYDLA_LOGGER_DEBUG_INTERNAL("@", __FILE__, " ", __LINE__, " function: ", __FUNCTION__, " @ ",  __VA_ARGS__)
 
 
 /**
@@ -286,31 +149,11 @@ private:
 #define HYDLA_LOGGER_FATAL(...)                                   \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Fatal, fatal_write, (__VA_ARGS__))
 
-
-#define HYDLA_LOGGER_FUNC_BEGIN(LEVEL)                                   \
-  HYDLA_LOGGER_##LEVEL("*** Begin ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
-  
-#define HYDLA_LOGGER_FUNC_END(LEVEL)                                   \
-  HYDLA_LOGGER_##LEVEL("*** End ", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ***")
-
-/**
- * print location where this code is
- */
-#define HYDLA_LOGGER_LOCATION(LEVEL)                                   \
-  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__)
-
-/**
- * general log macro (add location automatically)
- */
-#define HYDLA_LOGGER(LEVEL, ...)                                            \
-  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ", __VA_ARGS__)
-
-
 /**
  * log macro for variables (printed like "(name of variable): (value of var)")
  */
-#define HYDLA_LOGGER_VAR(LEVEL, VAR)                                            \
-  HYDLA_LOGGER_##LEVEL("%% @", __FUNCTION__, " ", __FILE__ " ", __LINE__, " ", #VAR": ", VAR)
+#define HYDLA_LOGGER_DEBUG_VAR(VAR)                                            \
+  HYDLA_LOGGER_DEBUG(#VAR": ", VAR)
 
 
 } // namespace logger

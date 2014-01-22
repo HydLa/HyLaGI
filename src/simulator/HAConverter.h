@@ -71,7 +71,7 @@ protected:
 	// push_simulation_phaseと会わせる必要あり
 	void push_current_condition(const current_condition_t cc)
 	{
-	  //HYDLA_LOGGER_HA("push cc");
+	  //HYDLA_LOGGER_DEBUG("push cc");
 		cc_vec_.push_front(cc);
 	}
 

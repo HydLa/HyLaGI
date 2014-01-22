@@ -81,7 +81,7 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
   if(current_val_.is_integer)return value_t(current_val_.integer);
   affine_t affine_value = current_val_.affine_value;
   value_t ret(affine_value.a(0));
-  HYDLA_LOGGER(REST, affine_value.a);
+  HYDLA_LOGGER_DEBUG(affine_value.a);
   for(int i = 1; i < affine_value.a.size(); i++)
   {
     if(affine_value.a(i) == 0)continue;
@@ -193,7 +193,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
     current_val_.is_integer = true;
     current_val_.integer = integer;
   }catch(const std::exception &e){
-    HYDLA_LOGGER(REST, "name: ",
+    HYDLA_LOGGER_DEBUG("name: ",
                  typeid(e).name(), "\n what: ", e.what());
   }
 
@@ -201,7 +201,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
   try{
     val = lexical_cast<double>(node->get_number());
   }catch(const std::exception &e){
-    HYDLA_LOGGER(REST, "name: ",
+    HYDLA_LOGGER_DEBUG("name: ",
                  typeid(e).name(), "\n what: ", e.what());
     invalid_node(*node);
   }

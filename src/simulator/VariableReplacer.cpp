@@ -68,7 +68,6 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node
         // upper_bound to avoid infinite loop (may be caused by circular reference)
         if(replace_cnt >= variable_map.size())
         {
-          HYDLA_LOGGER_LOCATION(ERROR);
           assert(0);
         }
         replace_cnt--;        
