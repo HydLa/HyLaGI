@@ -1,16 +1,11 @@
 main_projects := core 
-lib_projects  := common parser math_source_converter reduce_source_converter constraint_hierarchy simulator backend symbolic_simulator output interval
+lib_projects  := common parser math_source_converter reduce_source_converter constraint_hierarchy simulator backend output interval
 test_projects := unit_tests
 
 projects := $(main_projects) $(test_projects) $(lib_projects)
 
 .PHONY : all
 all: $(main_projects)
-
-# execute unit test
-.PHONY : check
-check: $(projects)
-	cd unit_tests && ./unit_test
 
 # 文字コードの設定 & propsetの登録
 charset:

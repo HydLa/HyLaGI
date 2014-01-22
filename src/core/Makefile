@@ -1,10 +1,11 @@
 TARGET	 := ../../bin/hyrose
 
-LIB_DIRS := symbolic_simulator backend simulator constraint_hierarchy parser common output interval
+LIB_DIRS := backend simulator constraint_hierarchy parser common output interval
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica -I../backend/reduce
+INCLUDES += -I../simulator/symbolic_simulator
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib
