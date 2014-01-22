@@ -1,4 +1,4 @@
-TARGET	 := ../hyrose
+TARGET	 := ../../bin/hyrose
 
 LIB_DIRS := symbolic_simulator backend simulator constraint_hierarchy parser common output interval
 
