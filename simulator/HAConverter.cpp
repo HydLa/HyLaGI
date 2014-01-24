@@ -9,8 +9,8 @@
 #include "../parser/TreeInfixPrinter.h"
 #include <limits.h>
 #include <string>
-
 using namespace std;
+
 
 namespace hydla {
 namespace simulator {
@@ -81,12 +81,14 @@ namespace simulator {
 	      HYDLA_LOGGER_HA("--- Result Phase", i+1 , "/", phases.size(), " ---\n", phase);
 	    	
       	tmp_cc_ = cc_;
+	    	
       	tmp_cc_.push_back(phase);
 	    	
 	    	if(phase->cause_of_termination == ASSERTION)
 	      {
 	      	// ASSERTION はそこで変換終了。HAは出力しない（push_resultしない）
-	      	viewPr(phase);
+	      	cout << "****** assertion" << endl;
+	      	viewPrs(tmp_cc_);
 	        continue;
 	      }
     		
@@ -139,6 +141,7 @@ namespace simulator {
 			if(compare_phase_result(phase, *it_prs)) {
 				// 全てのパラメータが実行済みノードのパラメータの部分集合だったらtrue
 				if (check_subset(phase, *it_prs)) {
+					subset_id = (*it_prs)->id;
 					HYDLA_LOGGER_HA("****** end check_already_exec : true ******");
 					return true;
 				}
@@ -154,26 +157,31 @@ namespace simulator {
 		HYDLA_LOGGER_HA("****** check_subset ******");
 		viewPr(phase);
 		viewPr(past_phase);
- 		
-	  variable_map_t::const_iterator it_phase_v  = phase->variable_map.begin();
-	  variable_map_t::const_iterator end_phase_v = phase->variable_map.end();
+		
+		time_t past_time = past_phase->current_time;
+		variable_map_t now_vm, past_vm;
+		now_vm = phase_simulator_->apply_time_to_vm(phase->variable_map, value_t(new symbolic::SymbolicValue("0")));
+		past_vm = phase_simulator_->apply_time_to_vm(past_phase->variable_map, past_time);
+
+		variable_map_t::const_iterator it_phase_v  = now_vm.begin();
+	  variable_map_t::const_iterator end_phase_v = now_vm.end();
 	  for(; it_phase_v!=end_phase_v; ++it_phase_v) {
 	  	value_t tmp_variable_phase, tmp_variable_past;
-	  	variable_map_t::const_iterator it_past_v  = past_phase->variable_map.begin();
-		  variable_map_t::const_iterator end_past_v = past_phase->variable_map.end();
+	  	variable_map_t::const_iterator it_past_v  = past_vm.begin();
+		  variable_map_t::const_iterator end_past_v = past_vm.end();
 		  for(; it_past_v!=end_past_v; ++it_past_v) {
 		 		if ( it_phase_v->first->name == it_past_v->first->name && 
 		 				 it_phase_v->first->derivative_count == it_past_v->first->derivative_count ) {
+			  	tmp_variable_phase = it_phase_v->second;
 			 		HYDLA_LOGGER_HA("Variable: ",it_phase_v->first->name," ",it_phase_v->first->derivative_count);		 			
 			 		HYDLA_LOGGER_HA("t         :  0");		 				 	
-			  	tmp_variable_phase = it_phase_v->second;
 			  	HYDLA_LOGGER_HA("now       :  ", *tmp_variable_phase);
-			  	//HYDLA_LOGGER_HA("c-t         :  ", *phase->current_time);		
 		 			search_variable_parameter(phase->parameter_map, it_phase_v->first->name, it_phase_v->first->derivative_count);
-					HYDLA_LOGGER_HA("");	 	
+
+		 			HYDLA_LOGGER_HA("");	 	
 			  	tmp_variable_past = it_past_v->second;
+			 		HYDLA_LOGGER_HA("t         :  ", *past_time);		 				 	
 			  	HYDLA_LOGGER_HA("past      :  ", *tmp_variable_past);
-			  	//HYDLA_LOGGER_HA("c-t         :  ", *past_phase->current_time);		 				 	
 			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first->name, it_past_v->first->derivative_count);
 		  	}
 		  } 
@@ -189,13 +197,11 @@ namespace simulator {
 		  	cout << "please input 0 or 1: if past includes now, input 1, otherwise 0. " << endl;
 			  cout << ">";
 			  cin >> isIncludeBound;
-			  if(isIncludeBound == 0) {
-					HYDLA_LOGGER_HA("****** end check_subset : false ******");		
-				  return false;
-			  }
-	  	}else{
-	  		return isIncludeBound;
 	  	}
+		  if(isIncludeBound == 0) {
+				HYDLA_LOGGER_HA("****** end check_subset : false ******");		
+			  return false;
+		  }
 	  }
 	  
 		HYDLA_LOGGER_HA("****** end check_subset : true ******");		
@@ -261,28 +267,70 @@ namespace simulator {
 		}
 	}
 	
+	string IntToString(int number)
+	{
+	  stringstream ss;
+	  ss << number;
+	  return ss.str();
+	}
+
 	void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
 	{
+		// 初期状態のパラメータの出力  id=1のもののみ出力
+		parameter_map_t::const_iterator it_pm = result[result.size() - 1]->parameter_map.begin();
+		parameter_map_t::const_iterator end_pm = result[result.size() - 1]->parameter_map.end();
+		string parameter_str = "";
+		for(; it_pm!=end_pm; ++it_pm) {
+			if(it_pm->first->get_phase_id() == 1){
+				cout << *(it_pm->first) << "\t: " << it_pm->second << "\n";
+				parameter_str += it_pm->first->get_name();
+				for(int i=0; i < it_pm->first->get_derivative_count(); i++) parameter_str +="'";
+				parameter_str += "=" + it_pm->second.get_string() + "\\n";
+			}
+		}
+		
+		// 状態遷移列の出力
+		string stf_str = "";
+		for(unsigned int i = 0 ; i < result.size() ; i++){
+			// phase_idの出力時に，同じノード，エッジは同じphase_idに合わせる
+			if (result[i]->id == subset_id){
+				stf_str += "*";
+			}
+			for(unsigned int j = 1 ; j < i ; j++){
+				if(compare_phase_result(result[i],result[j])){
+					result[i]->id = result[j]->id;
+				}
+			}
+			if(i == result.size() - 1){
+				stf_str += "Phase " + IntToString(result[i]->id);
+			}else{
+				stf_str += "Phase " + IntToString(result[i]->id) + " -> ";
+			}
+		}
+		cout << "State Transition Flow" << "\n";
+		cout << stf_str << endl;
+
 		vector<string> strs_;
 		string str_;
 		cout << "digraph g{" << endl;
 		cout << "edge [dir=forward];" << endl;
+		cout << "labelloc=t;" << endl;
+		cout << "label=\"" << stf_str << "\";" << endl;
 		cout << "\"start\" [shape=point];" << endl;
-			cout << "\"start\"->\"" << result[1]->module_set->get_name() << "\\n(" << get_asks_str(result[1]->positive_asks) 
-			<< ")\" [label=\"" << result[0]->module_set->get_name() << "\\n(" << get_asks_str(result[0]->positive_asks)
+			cout << "\"start\"->\"" << "Phase " << result[1]->id << "\\n" << result[1]->module_set->get_name() << "\\n(" << get_asks_str(result[1]->positive_asks) 
+			<< ")\" [label=\"" << "Phase " << result[0]->id << "\\n" << parameter_str << result[0]->module_set->get_name() << "\\n(" << get_asks_str(result[0]->positive_asks)
 			   << ")\", labelfloat=false,arrowtail=dot];" << endl;
 		for(unsigned int i = 2 ; i < result.size() ; i++){
 			if(result[i]->phase == IntervalPhase){
-				str_ = "\"" + result[i-2]->module_set->get_name() + "\\n(" + get_asks_str(result[i-2]->positive_asks) 
-					+ ")\"->\"" + result[i]->module_set->get_name() + "\\n(" + get_asks_str(result[i]->positive_asks) 
-						+ ")\" [label=\"" + result[i-1]->module_set->get_name() + "\\n(" + get_asks_str(result[i-1]->positive_asks) 
-				     + ")\", labelfloat=false,arrowtail=dot];";
-				vector<string>::iterator it_strs = find(strs_.begin(),strs_.end(),str_);
-				if(it_strs != strs_.end()) continue;				
-				cout << str_ << endl;
-				strs_.push_back(str_);
+				str_ = "\"Phase " + IntToString(result[i-2]->id) + "\\n" + result[i-2]->module_set->get_name() + "\\n(" + get_asks_str(result[i-2]->positive_asks)
+        	+ ")\"->\"Phase " + IntToString(result[i]->id) + "\\n" + result[i]->module_set->get_name() + "\\n(" + get_asks_str(result[i]->positive_asks)
+          + ")\" [label=\"Phase " + IntToString(result[i-1]->id) + "\\n" + result[i-1]->module_set->get_name() + "\\n(" + get_asks_str(result[i-1]->positive_asks)
+     			+ ")\", labelfloat=false,arrowtail=dot];";
+ 				vector<string>::iterator it_strs = find(strs_.begin(),strs_.end(),str_);
+ 				if(it_strs != strs_.end()) continue;                           
+  			cout << str_ << endl;
+   			strs_.push_back(str_);			}
 			}
-		}
 		cout << "}" << endl;
 	}
 	

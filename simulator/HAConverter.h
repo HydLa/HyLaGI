@@ -43,6 +43,9 @@ public:
 	
 protected:
 
+	// check_subsetがtrueとなったときのphase_idを保持  状態遷移列の出力時に必要
+	int subset_id;
+
 	// 実行済みかどうかのチェック
 	bool check_already_exec(phase_result_sptr_t phase, current_condition_t cc);
 
@@ -90,6 +93,8 @@ protected:
     return cc;
 
 	}
+	
+
 
 
 };//HAConverter

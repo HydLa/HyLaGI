@@ -95,6 +95,7 @@ public:
   /// 使用するソルバへのポインタ
   boost::shared_ptr<solver_t> solver_;
 
+  virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
 protected:
   
@@ -122,7 +123,6 @@ protected:
     const node_sptr& guard,
     const continuity_map_t& cont_map) = 0;
   
-  virtual variable_map_t apply_time_to_vm(const variable_map_t &, const time_t &) = 0;
   
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，

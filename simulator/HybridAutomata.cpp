@@ -33,18 +33,26 @@ namespace simulator {
 	void HybridAutomata::viewPr(phase_result_sptr_t result)
 	{
 		
-		if (logger::Logger::ha_simulator_area_) {
+		if (logger::Logger::ha_converter_area_) {
+	    hydla::output::SymbolicTrajPrinter printer;
+			printer.output_one_phase(result);
+			
+			HYDLA_LOGGER_HA("negative ask:");
+			HYDLA_LOGGER_HA(viewAsks(result->negative_asks));
+			HYDLA_LOGGER_HA("positive ask:");
+			HYDLA_LOGGER_HA(viewAsks(result->positive_asks));
+		}else if (logger::Logger::ha_simulator_area_) {
 	    hydla::output::SymbolicTrajPrinter printer;
 			printer.output_one_phase(result);
 			
 			HYDLA_LOGGER_HAS("negative ask:");
-			viewAsks(result->negative_asks);
+			HYDLA_LOGGER_HAS(viewAsks(result->negative_asks));
 			HYDLA_LOGGER_HAS("positive ask:");
-			viewAsks(result->positive_asks);
+			HYDLA_LOGGER_HAS(viewAsks(result->positive_asks));
 		}
 	}
 	
-	void HybridAutomata::viewAsks(ask_set_t asks)
+	string HybridAutomata::viewAsks(ask_set_t asks)
 	{
 		hydla::parse_tree::TreeInfixPrinter tree_printer;
 		ask_set_t::iterator it = asks.begin();
@@ -53,7 +61,7 @@ namespace simulator {
 			str += tree_printer.get_infix_string((*it)->get_guard()) + " ";
 			it++;
 		}
-		HYDLA_LOGGER_HAS(str);
+		return str;
 	}
 	
 }//namespace hydla

@@ -28,7 +28,6 @@ public:
 	ha_result_t get_ha(ha_results_t ha_results);
 	void substitute(phase_result_sptr_t pr, init_value_map_t vm, time_t current_time);
 	init_value_map_t update_vm(phase_result_sptr_t pr, init_value_map_t vm_pre);
-	
 
 };//HASimulator
 
