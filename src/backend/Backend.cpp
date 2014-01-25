@@ -17,7 +17,7 @@ const std::string Backend::var_prefix = "usrVar";
 
 
 // check equivalence ignoring whether upper or lower case
-static bool EqIC(std::string lhs, std::string rhs)
+static bool equal_ignoring_case(std::string lhs, std::string rhs)
 {
   const char *l = lhs.c_str(), *r = rhs.c_str();
   int d;
@@ -819,7 +819,7 @@ check_consistency_result_t Backend::receive_cc()
     if(dt == Link::DT_SYM)
     {
       string sym = link_->get_symbol();
-      if(EqIC(sym, "true"))
+      if(equal_ignoring_case(sym, "true"))
       {
         maps.push_back(parameter_map_t());
       }
@@ -853,11 +853,11 @@ node_sptr Backend::receive_function()
   link_->get_function(symbol, arg_count);
   symbol = link_->convert_function(symbol, false, converted);
   HYDLA_LOGGER_DEBUG_VAR(symbol);
-  if(EqIC(symbol, "Sqrt")){//1引数関数
+  if(equal_ignoring_case(symbol, "Sqrt")){//1引数関数
     ret = node_sptr(new Divide(node_sptr(new Number("1")), node_sptr(new Number("2")))); 
     ret = node_sptr(new hydla::parse_tree::Power(receive_node(), ret));
   }
-  else if(EqIC(symbol, "parameter")){
+  else if(equal_ignoring_case(symbol, "parameter")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str;
@@ -868,7 +868,7 @@ node_sptr Backend::receive_function()
     int id = boost::lexical_cast<int, std::string>(id_str);
     ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
   }
-  else if(EqIC(symbol, "prev")){
+  else if(equal_ignoring_case(symbol, "prev")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str = link_->get_string();
@@ -877,60 +877,60 @@ node_sptr Backend::receive_function()
     for(int i = 0; i < derivative_count; i++) tmp_var = node_sptr(new hydla::parse_tree::Differential(tmp_var));
     ret = node_sptr(new hydla::parse_tree::Previous(tmp_var));
   }
-  else if(EqIC(symbol, "minus")){
+  else if(equal_ignoring_case(symbol, "minus")){
     ret = node_sptr(new hydla::parse_tree::Negative(receive_node()));
   }
-  else if(EqIC(symbol, "Plus")
-          || EqIC(symbol, "Subtract")
-          || EqIC(symbol, "Times")
-          || EqIC(symbol, "Divide")
-          || EqIC(symbol, "Power")
-          || EqIC(symbol, "Rational")
-          || EqIC(symbol, "And")
-          || EqIC(symbol, "Or")
-          || EqIC(symbol, "Equal")
-          || EqIC(symbol, "Unequal")
-          || EqIC(symbol, "Less")
-          || EqIC(symbol, "LessEqual")
-          || EqIC(symbol, "Greater")
-          || EqIC(symbol, "GreaterEqual"))        
+  else if(equal_ignoring_case(symbol, "Plus")
+          || equal_ignoring_case(symbol, "Subtract")
+          || equal_ignoring_case(symbol, "Times")
+          || equal_ignoring_case(symbol, "Divide")
+          || equal_ignoring_case(symbol, "Power")
+          || equal_ignoring_case(symbol, "Rational")
+          || equal_ignoring_case(symbol, "And")
+          || equal_ignoring_case(symbol, "Or")
+          || equal_ignoring_case(symbol, "Equal")
+          || equal_ignoring_case(symbol, "Unequal")
+          || equal_ignoring_case(symbol, "Less")
+          || equal_ignoring_case(symbol, "LessEqual")
+          || equal_ignoring_case(symbol, "Greater")
+          || equal_ignoring_case(symbol, "GreaterEqual"))        
   { // 加減乗除など，二項演算子で書かれる関数
     node_sptr lhs, rhs;
     ret = receive_node();
     for(int arg_it=1;arg_it<arg_count;arg_it++){
       lhs = ret;
       rhs = receive_node();
-      if(EqIC(symbol, "Plus"))
+      if(equal_ignoring_case(symbol, "Plus"))
         ret = node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
-      else if(EqIC(symbol, "Subtract"))
+      else if(equal_ignoring_case(symbol, "Subtract"))
         ret = node_sptr(new hydla::parse_tree::Subtract(lhs, rhs));
-      else if(EqIC(symbol, "Times"))
+      else if(equal_ignoring_case(symbol, "Times"))
         ret = node_sptr(new hydla::parse_tree::Times(lhs, rhs));
-      else if(EqIC(symbol, "Divide"))
+      else if(equal_ignoring_case(symbol, "Divide"))
         ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
-      else if(EqIC(symbol, "Power"))
+      else if(equal_ignoring_case(symbol, "Power"))
         ret = node_sptr(new hydla::parse_tree::Power(lhs, rhs));
-      else if(EqIC(symbol, "Rational"))
+      else if(equal_ignoring_case(symbol, "Rational"))
         ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
-      else if(EqIC(symbol, "And"))
+      else if(equal_ignoring_case(symbol, "And"))
         ret = node_sptr(new hydla::parse_tree::LogicalAnd(lhs, rhs));
-      else if(EqIC(symbol, "Or"))
+      else if(equal_ignoring_case(symbol, "Or"))
         ret = node_sptr(new hydla::parse_tree::LogicalOr(lhs, rhs));
-      else if(EqIC(symbol, "Equal"))
+      else if(equal_ignoring_case(symbol, "Equal"))
         ret = node_sptr(new hydla::parse_tree::Equal(lhs, rhs));
-      else if(EqIC(symbol, "Unequal"))
+      else if(equal_ignoring_case(symbol, "Unequal"))
         ret = node_sptr(new hydla::parse_tree::UnEqual(lhs, rhs));
-      else if(EqIC(symbol, "Less"))
+      else if(equal_ignoring_case(symbol, "Less"))
         ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
-      else if(EqIC(symbol, "LessEqual"))
+      else if(equal_ignoring_case(symbol, "LessEqual"))
         ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
-      else if(EqIC(symbol, "Greater"))
+      else if(equal_ignoring_case(symbol, "Greater"))
         ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
-      else if(EqIC(symbol, "GreaterEqual"))
+      else if(equal_ignoring_case(symbol, "GreaterEqual"))
         ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
     }
   }
-  else if(EqIC(symbol, "derivative"))
+  else if(equal_ignoring_case(symbol, "derivative"))
   {
     std::string d_str = link_->get_string();
     int variable_derivative_count = boost::lexical_cast<int, std::string>(d_str.c_str());
@@ -1089,15 +1089,28 @@ int Backend::receive_parameter_map(parameter_map_t& map)
     int int_buf;
     link_->get_function(str_buf, int_buf); // List
     link_->get_function(str_buf, int_buf); // parameter
-    std::string name = link_->get_symbol();
-    int derivative_count = link_->get_integer();
-    int id = link_->get_integer();
-    parameter_t tmp_param(name, derivative_count, id);
-    value_range_t tmp_range = map[tmp_param];
-    int relop_code = link_->get_integer();
-    value_t tmp_value = value_t(receive_node());
-    set_range(tmp_value, tmp_range, relop_code);
-    map[tmp_param] = tmp_range;
+    if(str_buf == "p")
+    {
+      std::string name = link_->get_symbol();
+      int derivative_count = link_->get_integer();
+      int id = link_->get_integer();
+      parameter_t tmp_param(name, derivative_count, id);
+      value_range_t tmp_range = map[tmp_param];
+      int relop_code = link_->get_integer();
+      value_t tmp_value = value_t(receive_node());
+      set_range(tmp_value, tmp_range, relop_code);
+      map[tmp_param] = tmp_range;
+    }
+    else
+    {
+      //ignore
+      for(int i = 0; i < int_buf; i++)
+      {
+        link_->get_next();
+      }
+      link_->get_integer();
+      receive_node();
+    }
   }
   return 0;
 }

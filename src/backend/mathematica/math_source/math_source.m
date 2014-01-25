@@ -103,7 +103,7 @@ publicMethod[
         ];
         cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
         checkMessage;
-        {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
+        {trueMap, falseMap} = Map[(createMap[#, isParameterOrPrev, hasParameterOrPrev, {}])&, {cpTrue, cpFalse}];
         simplePrint[trueMap, falseMap];
         {trueMap, falseMap}
       ]
@@ -191,9 +191,8 @@ createMap[cons_, judge_, hasJudge_, vars_] := Module[
       map = LogicalExpand[map];
       map = applyListToOr[map];
       map = Map[(applyList[#])&, map];
-      debugPrint["@createMap map after applyList", map];
-      
       map = Map[(adjustExprs[#, judge])&, map];
+      debugPrint["@createMap map after adjustExprs", map];
       map = Map[(convertExprs[#])&, map];
       If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
     ];
@@ -221,7 +220,7 @@ getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
 
 hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity] ] > 0;
  
-hasParameterOrPrev[exprs_] := Length[Cases[exprs, p[_, _, _] | prev[_, _], Infinity] ] > 0;
+hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Infinity] ] > 0;
 
 (* 式が定数そのものか否か *)
 

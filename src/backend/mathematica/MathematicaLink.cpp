@@ -408,6 +408,7 @@ void MathematicaLink::get_function(std::string &name, int &cnt)
 {
   cnt = get_arg_count();
   name = get_symbol();
+  HYDLA_LOGGER_DEBUG("cnt: ", cnt, ", name: ", name);
 }
 
 std::string MathematicaLink::get_symbol()
@@ -506,7 +507,6 @@ void MathematicaLink::put_variable(const std::string &name, int diff_count, cons
 }
   
 
-
 void MathematicaLink::post_receive()
 {
   MLNewPacket();
@@ -543,6 +543,7 @@ MathematicaLink::DataType MathematicaLink::get_type(){
 MathematicaLink::DataType MathematicaLink::get_next(){
   int tk_type = MLGetNext();
   on_next_ = false;
+  HYDLA_LOGGER_DEBUG("token: ", get_token_name(tk_type));
   switch(tk_type)
   {
   case MLTKFUNC:
