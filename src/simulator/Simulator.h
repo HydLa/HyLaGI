@@ -132,6 +132,10 @@ struct SimulationTodo{
     negative_asks.clear();
     judged_prev_map.clear();
   }
+
+  inline bool in_following_step(){
+    return parent.get() && parent->parent.get() && parent->parent->parent.get();
+  }
 };
 
 std::ostream& operator<<(std::ostream& s, const SimulationTodo& a);

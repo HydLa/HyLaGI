@@ -79,6 +79,18 @@ void set_changing_variables( const phase_result_sptr_t& parent_phase,
 
   change_variables_t get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg);
 
+  bool apply_entailment_change( const ask_set_t::iterator it,
+                                const ask_set_t& previous_asks,
+                                const bool in_IP,
+                                change_variables_t& changing_variables,
+                                ask_set_t& notcv_unknown_asks,
+                                ask_set_t& unknown_asks );
+
+void apply_previous_solution(const change_variables_t& changing_variables,
+                             const ask_set_t::iterator it,
+                             const bool in_IP,
+                             const phase_result_sptr_t parent );
+
   /**
    * 与えられたフェーズの次のTodoを返す．
    */

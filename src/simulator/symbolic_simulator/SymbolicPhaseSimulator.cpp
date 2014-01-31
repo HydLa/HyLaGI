@@ -276,17 +276,33 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   change_variables_t changing_variables;
 
-  if( opts_->reuse && state->id > 1 && state->phase == PointPhase){
-    ask_collector.collect_ask(&expanded_always, 
-        &positive_asks, 
-        &negative_asks,
-        &unknown_asks);
-    apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
-    set_changing_variables( state->parent, ms, positive_asks, negative_asks, changing_variables );
-    //std::cout << changing_variables << std::endl;
+  if(opts_->reuse && state->in_following_step() ){
+    if(state->phase == PointPhase){
+      ask_collector.collect_ask(&expanded_always, 
+          &positive_asks, 
+          &negative_asks,
+          &unknown_asks);
+      apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
+      set_changing_variables( state->parent, ms, positive_asks, negative_asks, changing_variables );
+      //std::cout << changing_variables << std::endl;
+    }
+    else{
+      changing_variables = state->parent->changed_variables;
+    }
   }
+
+  ask_set_t original_p_asks = positive_asks;
+  ask_set_t original_n_asks = negative_asks;
+  ask_set_t original_u_asks = unknown_asks;
+  bool entailment_changed = false;
   
   do{
+    if(entailment_changed){
+      positive_asks = original_p_asks;
+      negative_asks = original_n_asks;
+      unknown_asks = original_u_asks;
+      entailment_changed = false;
+    }
     tell_collector.collect_new_tells(&tell_list,
         &expanded_always,
         &positive_asks);
@@ -298,8 +314,10 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     maker.reset();
 
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      if(opts_->reuse && !state->parent->changed_variables.empty() && !variable_searcher.visit_node(state->parent->changed_variables,*it,true))
+      if(opts_->reuse && state->in_following_step() &&
+          !variable_searcher.visit_node(changing_variables,*it,state->phase == IntervalPhase)){
         continue;
+      }
 
       // send "Constraint" node, not "Tell"
       constraint_list.push_back((*it)->get_child());
@@ -343,9 +361,21 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     
     {
       expanded = false;
+      ask_set_t cv_unknown_asks, notcv_unknown_asks;
+      if(opts_->reuse && state->in_following_step()){
+        for( auto ask : unknown_asks ){
+          if( variable_searcher.visit_node(changing_variables, ask, state->phase == IntervalPhase) ){
+            cv_unknown_asks.insert(ask);
+          }else{
+            notcv_unknown_asks.insert(ask);
+          }
+        }
+        unknown_asks = cv_unknown_asks;
+      }
       ask_set_t::iterator it  = unknown_asks.begin();
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end){
+        /*
         if(opts_->reuse && !state->parent->changed_variables.empty() && !variable_searcher.visit_node(state->parent->changed_variables,*it,true)){
           if(state->parent->positive_asks.find(*it) != state->parent->positive_asks.end())
             positive_asks.insert(*it);
@@ -354,6 +384,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           it++;
           continue;
         }
+        */
         if(state->phase == PointPhase){
           if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // if current time equals to 0, conditions about left-hand limits are considered to be invalid
@@ -379,18 +410,34 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           }
         }
         maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
+
+        if(opts_->reuse && state->in_following_step()){
+          apply_previous_solution(changing_variables, it,
+              state->phase == IntervalPhase, state->parent );
+        }
         
         CheckConsistencyResult check_consistency_result;
         switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
+            if(opts_->reuse && state->in_following_step()){
+              if(state->phase == PointPhase){
+                apply_entailment_change(it, state->parent->negative_asks,
+                    false, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }else{
+                apply_entailment_change(it, state->parent->parent->negative_asks,
+                    true, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }
+            }
             positive_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
               state->judged_prev_map.insert(std::make_pair(*it, true));
             }
             unknown_asks.erase(it++);
             expanded = true;
-            
+           /* 
             if(opts_->reuse && !state->parent->changed_variables.empty()){
               VariableFinder variable_finder;
               variable_finder.visit_node(*it,true);
@@ -399,9 +446,22 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
                 state->parent->changed_variables.insert(it->first);
               }
             }
+            */
             break;
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
+            if(opts_->reuse && state->in_following_step() ){
+              if(state->phase == PointPhase){
+                entailment_changed = apply_entailment_change(it, state->parent->positive_asks,
+                    false, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }else{
+                entailment_changed = apply_entailment_change(it, state->parent->parent->positive_asks,
+                    true, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }
+              if(entailment_changed) break;
+            }
             negative_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
               state->judged_prev_map.insert(std::make_pair(*it, false));
@@ -417,10 +477,12 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             push_branch_states(state, check_consistency_result);
             break;
         }
+        if(entailment_changed) break;
         maker.set_continuity_map(continuity_map);
       }
     }
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
+    if(entailment_changed) continue;
   }while(expanded);
 
   add_continuity(continuity_map, state->phase);
@@ -669,6 +731,74 @@ change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(
   }
 
   return cv;
+}
+
+bool SymbolicPhaseSimulator::apply_entailment_change( const ask_set_t::iterator it,
+                                                      const ask_set_t& previous_asks,
+                                                      const bool in_IP,
+                                                      change_variables_t& changing_variables,
+                                                      ask_set_t& notcv_unknown_asks,
+                                                      ask_set_t& unknown_asks ){
+  bool ret = false;
+  if(previous_asks.find(*it) != previous_asks.end() ){
+    VariableFinder v_finder;
+    v_finder.visit_node(*it, in_IP);
+    VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+    int v_count = changing_variables.size();
+    for(auto var : tmp_vars){
+      changing_variables.insert(var.first);
+    }
+    if(changing_variables.size() > v_count){
+      ask_set_t change_asks;
+      VariableSearcher v_searcher;
+      for(auto ask : notcv_unknown_asks){
+        if(v_searcher.visit_node(changing_variables, ask->get_child(), in_IP) ){
+          unknown_asks.insert(ask);
+          change_asks.insert(ask);
+        }
+      }
+      if( !change_asks.empty() ){
+        ret = true;
+        for(auto ask : change_asks){
+          notcv_unknown_asks.erase(ask);
+        }
+      }
+    }
+  }
+  return ret;
+}
+
+void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& changing_variables,
+                                                     const ask_set_t::iterator it,
+                                                     const bool in_IP,
+                                                     const phase_result_sptr_t parent ){
+  VariableFinder v_finder;
+  v_finder.visit_node((*it)->get_guard(),in_IP); 
+  VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+  continuity_map_t continuity_map;
+  for(auto var : tmp_vars){
+    continuity_map_t::iterator tmp_it = continuity_map.find(var.first);
+    if(tmp_it != continuity_map.end() ){
+      if(tmp_it->second < var.second ){
+        continuity_map.erase(tmp_it);
+        continuity_map.insert(var);
+      }
+    }else{
+      continuity_map.insert(var);
+    }
+  }
+  for(auto var : continuity_map){
+    if(changing_variables.find(var.first) == changing_variables.end()){
+      for(int i=0; i<=var.second; i++){
+        if(in_IP){
+          //add_constraint var.firstのvar.second微分 = parent.variable_mapから追加
+          //parameterも考慮
+        }else{
+          //add_constraint var.firstのvar.second微分 = prev[var.firstのvar.second微分]
+        }
+      }
+    }
+  }
 }
 
 SymbolicPhaseSimulator::todo_list_t 
