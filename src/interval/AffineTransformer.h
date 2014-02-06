@@ -44,6 +44,7 @@ class AffineTransformer : public parse_tree::TreeVisitor{
   value_t transform(node_sptr &node, parameter_map_t &parameter_map);
   ///calculate x^y
   AffineOrInteger pow(AffineOrInteger x, AffineOrInteger y);
+  affine_t pow(affine_t affine, int exp);
 
   virtual ~AffineTransformer();  
 

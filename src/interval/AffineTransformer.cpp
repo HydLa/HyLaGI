@@ -9,6 +9,8 @@ using namespace hydla::parse_tree;
 using namespace boost;
 using namespace hydla::simulator;
 
+#define HYDLA_LOGGER_NODE_VAR \
+  HYDLA_LOGGER_DEBUG("node: ", node->get_node_type_name(), ", current_val: ", current_val_)
 
 namespace hydla {
 namespace interval {
@@ -32,6 +34,23 @@ void AffineTransformer::set_simulator(Simulator* simulator)
   simulator_ = simulator;
 }
 
+affine_t AffineTransformer::pow(affine_t affine, int exp)
+{
+  bool is_negative = exp < 0;
+  exp = is_negative?-exp:exp;
+  affine_t power_val(1);
+  while(exp != 0)
+  {
+    if(exp & 1)
+    {
+      power_val = power_val * affine;
+    }
+    affine *= affine;
+    exp /= 2;
+  }
+  return power_val;
+}
+
 AffineOrInteger AffineTransformer::pow(AffineOrInteger x, AffineOrInteger y)
 {
   AffineOrInteger ret;
@@ -50,24 +69,35 @@ AffineOrInteger AffineTransformer::pow(AffineOrInteger x, AffineOrInteger y)
     else x_affine = x.affine_value;
     if(y.is_integer)y_affine = y.integer;
     else y_affine = y.affine_value;
-    if(l < 0 && u > 0)
-    {
-      // TODO: throw appropriate exception
-      throw std::exception();
-    }
-    else if(u >= 0)
+    if(u >= 0 && l >= 0)
     {
       ret.affine_value = exp(y_affine * log(x_affine));
     }
     else
     {
-      if(y.is_integer && y.integer % 2)
+      if(!y.is_integer)
       {
-        ret.affine_value = -exp(y_affine * log(-x_affine));
+          // TODO: throw appropriate exception
+          HYDLA_LOGGER_DEBUG("l: ", l, ", u: ", u);
+          throw std::exception();
+      }
+      if(u >= 0)
+      {
+        // include zero
+        ret.affine_value = pow(x_affine, y.integer);
+        HYDLA_LOGGER_DEBUG_VAR(ret.affine_value);
       }
       else
       {
-        ret.affine_value = exp(y_affine * log(-x_affine));
+        // pure negative interval
+        if(y.integer % 2)
+        {
+          ret.affine_value = -exp(y_affine * log(-x_affine));
+        }
+        else
+        {
+          ret.affine_value = exp(y_affine * log(-x_affine));
+        }
       }
     }
   }
@@ -109,6 +139,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
   accept(node->get_rhs());
   AffineOrInteger rhs = current_val_;
   current_val_ = lhs + rhs;
+  HYDLA_LOGGER_NODE_VAR;
   return;
 }
 
@@ -120,6 +151,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Subtract> nod
   accept(node->get_rhs());
   AffineOrInteger rhs = current_val_;
   current_val_ = lhs - rhs;
+  HYDLA_LOGGER_NODE_VAR;
   return;
 }
 
@@ -131,6 +163,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
   accept(node->get_rhs());
   AffineOrInteger rhs = current_val_;
   current_val_ = lhs * rhs;
+  HYDLA_LOGGER_NODE_VAR;
   return;
 }
 
@@ -142,6 +175,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
   accept(node->get_rhs());
   AffineOrInteger rhs = current_val_;
   current_val_ = lhs / rhs;
+  HYDLA_LOGGER_NODE_VAR;
   return;
 }
 
@@ -154,6 +188,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
   accept(node->get_rhs());
   AffineOrInteger rhs = current_val_;
   current_val_ = pow(lhs, rhs);
+  HYDLA_LOGGER_NODE_VAR;
 }
 
 
@@ -188,11 +223,13 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::E> node)
 
 void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
 {
+  HYDLA_LOGGER_DEBUG(node->get_number());
   try{
     int integer = lexical_cast<int>(node->get_number());
     current_val_.is_integer = true;
     current_val_.integer = integer;
-  }catch(const std::exception &e){
+    return;
+  }catch(const bad_lexical_cast &e){
     HYDLA_LOGGER_DEBUG("name: ",
                  typeid(e).name(), "\n what: ", e.what());
   }
@@ -200,13 +237,14 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
   double val;
   try{
     val = lexical_cast<double>(node->get_number());
-  }catch(const std::exception &e){
+  }catch(const bad_lexical_cast &e){
     HYDLA_LOGGER_DEBUG("name: ",
                  typeid(e).name(), "\n what: ", e.what());
     invalid_node(*node);
   }
   current_val_.affine_value = affine_t(val);
   current_val_.is_integer = false;
+
 }
 
 
@@ -214,11 +252,13 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Float> node)
 {
   current_val_.affine_value = affine_t(node->get_number());
   current_val_.is_integer = false;
+  HYDLA_LOGGER_NODE_VAR;
 }
 
 void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Function> node)
 {
   string name = node->get_string();
+  HYDLA_LOGGER_DEBUG(name);
   if(name == "ln")
   {
     if(node->get_arguments_size() != 1)invalid_node(*node);
@@ -230,10 +270,12 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Function> nod
   {
     invalid_node(*node);
   }
+  HYDLA_LOGGER_NODE_VAR;
 }
 
 void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> node)
 {
+  current_val_.is_integer = false;
   current_val_.affine_value = affine_t();
   parameter_t param(node->get_name(),
                     node->get_derivative_count(),
@@ -252,6 +294,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
   }
   current_val_.affine_value.a.resize(idx + 1);
   current_val_.affine_value.a(idx) = 1;
+  HYDLA_LOGGER_NODE_VAR;
   return;
 }
 
@@ -263,10 +306,11 @@ void AffineTransformer::invalid_node(parse_tree::Node& node)
 }
 
 
-#define DEFINE_INVALID_NODE(NODE_NAME)        \
+#define DEFINE_INVALID_NODE(NODE_NAME)                           \
 void AffineTransformer::visit(boost::shared_ptr<NODE_NAME> node) \
-{                                                     \
-  invalid_node(*node);                                 \
+{                                                                \
+  HYDLA_LOGGER_DEBUG("");                                        \
+  invalid_node(*node);                                           \
 }
 
 DEFINE_INVALID_NODE(ConstraintDefinition)
