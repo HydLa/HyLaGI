@@ -821,9 +821,9 @@ Module[
     sol = Quiet[Check[
         DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],
             overConstraint,
-        {DSolve::overdet, DSolve::bvnul}
+        {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
       ],
-     {DSolve::overdet, DSolve::bvnul}
+     {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
     ]
   ];
   simplePrint[sol];

@@ -56,6 +56,23 @@ namespace hydla {
 namespace simulator {
 namespace symbolic {
 
+string timein(string message="")
+{
+  string ret;
+  while(1)
+  {
+    if(!message.empty()) std::cout << message << std::endl;
+    std::cout << '>' ;
+    std::cin >> ret;
+    if(!std::cin.fail()) break;
+    std::cin.clear();
+    std::cin.ignore( 1024, '\n' );
+  }
+  std::cin.clear();
+  std::cin.ignore( 1024, '\n' );
+  return ret;
+}
+
 void SymbolicPhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
 /* TODO: 一時無効
   analysis_result_checker_ = boost::shared_ptr<AnalysisResultChecker >(new AnalysisResultChecker(*opts_));
@@ -871,7 +888,82 @@ SymbolicPhaseSimulator::todo_list_t
     pp_time_result_t time_result; 
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
-    backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &time_limit, &dc_causes, &time_result);
+    if(opts_->cheby)
+    {
+      try
+      {
+        backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+      }
+      catch(const std::runtime_error &se)
+      {
+        std::cout << "Error occurs in calculateNextPointPhaseTime." << endl;
+        std::cout << "Do you want to change next time ? (y or n)" << endl;
+        std::string line;
+        std::cin.clear();
+        getline(std::cin, line);
+        std::cin.clear();
+        if(line[0] == 'y')
+        {
+          std::cout << "Parameter ? (y or n)" << endl;
+          std::string pa;
+          std::cin.clear();
+          getline(std::cin, pa);
+          std::cin.clear();
+          if(pa[0] == 'y')
+          {
+            ValueRange time_range;
+            std::string low;
+            std::string up;
+        
+            variable_t time("time", 0);
+
+            std::cout << "Input Lower time." << endl;
+            low = timein();
+
+            std::cout << "Input Upper time." << endl;
+            up = timein();
+
+            value_t lower_time(low);
+            value_t upper_time(up);
+
+            time_range.set_lower_bound(lower_time, true);
+            time_range.set_upper_bound(upper_time, true);
+
+            parameter_t par = simulator_->introduce_parameter(time, phase, time_range);
+
+            next_todo->current_time = node_sptr(new Parameter("time", 0, phase->id));
+            phase->end_time = node_sptr(new Parameter("time", 0, phase->id));
+
+            next_todo->parameter_map[par] = time_range;
+            phase->parameter_map[par] = time_range;
+
+            ret.push_back(next_todo);
+
+            return ret;
+          }
+          else
+          {
+            std::cout << "Input Next PP Time." << endl;
+            std::string p_time;
+
+            p_time = timein();
+
+            next_todo->current_time = p_time;
+
+            ret.push_back(next_todo);
+
+            return ret;
+          }
+        }
+        else
+        {
+          backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+        }
+      }
+    }
+    
+    else
+      backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
 
     unsigned int time_it = 0;
     result_list_t results;

@@ -119,6 +119,7 @@ void setup_symbolic_simulator_opts(Opts& opts)
   opts.parallel_number   = po.get<int>("pn");
   opts.reuse = po.count("reuse")>0;
   opts.approx = po.count("approx")>0;
+  opts.cheby = po.count("cheby")>0;
   /*
   opts.output_interval = po.get<std::string>("output_interval");
   opts.output_precision = po.get<int>("output_precision");

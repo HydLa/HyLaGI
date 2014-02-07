@@ -153,6 +153,9 @@ void ProgramOptions::init_descriptions()
 
     ("approx,a",
      "simulate with approximation")
+
+    ("change,c",
+      "change next PP time")
      /*
     ("phase_expanded", 
      value<int>()->default_value(-1), 

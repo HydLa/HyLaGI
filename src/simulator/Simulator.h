@@ -37,6 +37,7 @@ struct Opts {
   bool debug_mode;
   std::string max_time;
   bool approx;
+  bool cheby;
   bool nd_mode;
   bool interactive_mode;
   bool find_unsat_core_mode;
