@@ -50,6 +50,8 @@ If[optIgnoreWarnings,
 
 publicMethod::timeout = "Calculation has reached to timeout";
 
+$MessagePrePrint = InputForm;
+
 (*
  * プロファイリング用関数
  * timeFuncStart: startTimesに関数の開始時刻を積む

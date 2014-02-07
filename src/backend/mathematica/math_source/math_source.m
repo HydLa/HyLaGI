@@ -474,28 +474,18 @@ Module[
   },
   id = causeAndID[[2]];
   cause = causeAndID[[1]];
-  sol = Quiet[Check[Reduce[cause && condition && t > 0, t, Reals],
-                    errorSol,
-                    {Reduce::nsmet}],
-              {Reduce::nsmet}];
-  If[sol =!= False && sol =!= errorSol, 
-    (* true *)
-    (* 成り立つtの最小値を求める *)
-    minT = First[Quiet[Minimize[{t, sol}, {t}], 
-                       Minimize::wksol]],
-    (* false *)
-    minT = error
-  ];
-  If[minT === error,
-    {},
-    (* Piecewiseなら分解*)
-    If[Head[minT] === Piecewise, ret = makeListFromPiecewise[minT, condition], ret = {{minT, condition}}];
-    (* 時刻が0となる場合を取り除く．*)
-    ret = Select[ret, (#[[1]] =!= 0)&];
-    (* append id for each time *)
-    ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
-    ret
-  ]
+  sol = Reduce[cause && condition && t > 0, t, Reals];
+  checkMessage[];
+  If[sol === False, Return[{}] ];
+  (* 成り立つtの最小値を求める *)
+  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]]
+  (* Piecewiseなら分解*)
+  If[Head[minT] === Piecewise, ret = makeListFromPiecewise[minT, condition], ret = {{minT, condition}}];
+  (* 時刻が0となる場合を取り除く．*)
+  ret = Select[ret, (#[[1]] =!= 0)&];
+  (* append id for each time *)
+  ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
+  ret
 ];
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
