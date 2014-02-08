@@ -184,7 +184,7 @@ class HyroseOutputVariableMapSimpleDumper < HyroseOutputDumper
       lhs_cases, rhs_cases = enum.next, enum.next
       lhs_name, rhs_name  = name_enum.next, name_enum.next
 
-      msg += " " * 2 + "{\"match \'" + lhs_name.split.find{|i| i =~ /hydla/} + "\'\", \n" + " " * 3
+      msg += " " * 2 + "{\"match \'" + lhs_name.split.find{|i| i =~ /hydla/ or i =~ /data/} + "\'\", \n" + " " * 3
       lhs_case, rhs_case = lhs_cases.each, rhs_cases.each
       loop do
         lhs_one_case = lhs_case.next
