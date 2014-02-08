@@ -11,6 +11,7 @@ namespace ch {
 
 /**
  * 解候補モジュール集合の集合をインクリメンタルに生成していくクラス
+ *
  */
 class IncrementalModuleSet : public ModuleSetContainer {
 public:
@@ -25,12 +26,9 @@ typedef enum{
   typedef ModuleSet::module_t module_t;
   typedef ModuleSet::module_list_const_iterator module_list_const_iterator;
 
-  //  typedef std::vector<module_set_sptr> module_set_list_t;
   typedef std::pair<NodeRelation,module_set_sptr> str_ms_pair_t;
   typedef std::vector<str_ms_pair_t> str_ms_list_t;
   typedef std::map<module_t,str_ms_list_t> m_str_ms_t;
-  //  typedef std::map<std::string,str_ms_list_t> m_str_ms_t;
-
   
   IncrementalModuleSet();
   IncrementalModuleSet(module_set_sptr m);
@@ -43,9 +41,11 @@ typedef enum{
   void add_maximal_module_set(module_set_sptr ms);
 
   /**
-   * msから取り除くことのできるモジュールの集合を返す
+   * @param current_ms あるモジュールを取り除かれる元のモジュール集合
+   * @param ms 矛盾の原因となるモジュール集合
+   * msを使って取り除くことのできるモジュールの集合を返す
    */
-  module_set_sptr get_removable_module_set(const ModuleSet& ms);
+  module_set_sptr get_removable_module_set(module_set_sptr current_ms, const ModuleSet& ms);
 
   /**
    * parents_data_内の余分なデータを削除し、
@@ -90,22 +90,40 @@ typedef enum{
 
   void next();
 
+
+  /**
+   * ms_to_visit_内のモジュール集合で
+   * 現在のモジュール集合が包含するモジュール集合を
+   * ms_to_visit_から外す
+   */
   virtual void mark_nodes();
 
   /**
-   * ms:矛盾するモジュールセット
+   * @ param ms:矛盾するモジュールセット
    * ms_to_visit_内のmsを包含するモジュールセットを削除し、
    * ms_to_visit_の先頭モジュールセットからmsを包含しないモジュールセットで
    * 要素が一つ少ないものをms_to_visit_に追加する
    */
   virtual void mark_nodes(const module_set_list_t& mss, const ModuleSet& ms);
 
+  /**
+   * 探索対象をmssが示すモジュール集合とする
+   */
   virtual void reset(const module_set_list_t &mss);
 
+  /**
+   * 探索対象を初期化する
+   */
   virtual void reset();
 
+  /**
+   * 最大の要素数のモジュール集合を得る
+   */
   virtual module_set_sptr get_max_module_set() const;
 
+  /**
+   * 探索対象の初期状態を返す
+   */
   virtual module_set_list_t get_full_ms_list() const;
 
 private:
@@ -119,8 +137,6 @@ private:
   module_set_sptr required_ms_;
 // 現在までに出現したすべてのモジュールを要素とする集合
   module_set_sptr maximal_module_set_;
-
-  bool formated_;
 };
 
 } // namespace ch
