@@ -1,47 +1,12 @@
 // A model for collision of multiple bouncy balls
 //INIT <=> y1 = 10 & y2 = 10 - e & y3 = 10 - 2*e & y1' = y2' = y3' = 0 & 1/1000 < e < 1 & [](e' = 0).
-/*
+
 INIT <=> y1 = 10 & y2 = 10 - e & y1' = y2'  = 0 & e = 1 & [](e' = 0) & 1 < r <  4 & [](r' = 0).
 FALL(y) <=> [](y'' = -10).
 COLL(ya, yb) <=> [](ya- = yb- 
   => yb' = ((r - 1)*yb'- + 2*ya'-)/(r+1) 
   & ya' = ((1 - r)*ya'- + r * yb' -)/(r+1)).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
-*/
+
 //INIT, (FALL(y1), FALL(y2), FALL(y3)) << (COLL(y1, y2) , COLL(y2, y3), COLL(y3, y1), BOUNCE(y1), BOUNCE(y2), BOUNCE(y3)).
-//INIT, (FALL(y1), FALL(y2)) << (COLL(y1, y2) ,BOUNCE(y1), BOUNCE(y2)).
-
-
-CONST <=>
-  [](e = 1) & [](space = 1).
-
-INIT_BALL(m,y,m0,y0) <=> 
-  m = m0 & y = y0 & y' = 0.
-RIGID(m,r) <=>
-  [](m' = 0 & r' = 0).
-FALL(y) <=> 
-  [](y'' = 0).
-
-COLL_BB(m1,y1,m2,y2) <=> 
-  [](y1- = y2- 
-    => (
-         y2' - y1' = - (y2'- - y1'-) * e &
-         m1*y1' + m2*y2' = m1*y1'- + m2*y2'-
-       )
-  ).
-
-BOUNCE(y) <=>
-  [](y- = 0
-    => (
-         y' = -e * y'-
-       )
-  ).
-
-BALL(m,x,y,r,m0,x0,y0,r0,vx0,vy0){
-  INIT_BALL(m,y,m0,y0), RIGID(m,r), FALL(y) << BOUNCE(y)
-}.
-
-CONST,
-BALL(m1,y1,2,10),
-BALL(m2,y2,1,10-space),
-COLL_BB(m1,y1,m2,y1).
+INIT, (FALL(y1), FALL(y2)) << (COLL(y1, y2) ,BOUNCE(y1), BOUNCE(y2)).
