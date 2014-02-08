@@ -533,11 +533,11 @@ begin;
     else if(value_=e) then retInterval_:= eInterval__
     else if(hasParameter(value_)) then <<
       valueConstraint_:= for each x in pConstraint__ join if(not freeof(x, value_)) then {x} else {};
+      debugWrite("valueConstraint_: ", valueConstraint_);
       lb_:=-INFINITY ; ub_:= INFINITY;
       for each x in valueConstraint_ do <<
-        % value + expr op_ 0 の不等式を想定
         op_:= head(x);
-        rhs_:= part(part(x, 1), 2);
+        rhs_:= getRhs(x, value_);
         debugWrite("{x, op_, rhs}: ", {x, op_, rhs_});
         % TODO 開区間をよりマシに実装する 
         if(op_ = geq) then      lb_:= getLbFromInterval(convertValueToInterval(rhs_));
@@ -551,6 +551,18 @@ begin;
 
   return ansWrite("convertValueToInterval", retInterval_);
 end;
+
+% TODO x/y >0 の格好の時y <> 0 の情報を追加する
+% @param inequality_ value_ + expr op_ 0 の不等式
+% @return - expr
+procedure getRhs(inequality_, value_)$
+begin;
+  scalar equality_, ans_;
+  equality_:= myApply(equal, inequality_);
+  ans_:= rhs first solve(equality_, value_);
+  return ansWrite("getRhs", ans_);
+end;
+
 
 %---------------------------------------------------------------
 % 実数以外の数関連の関数
@@ -1568,13 +1580,13 @@ begin;
 end;
 
 % MCSの, length(tmpVars_)が見つからない場合最小のtmpVars_を持つ式を戻す処理を端折る
-% parameters__に依存
+% parameters__に依存しない
 procedure searchExprsAndVarsLoop(exprs_, vars_, idx_)$
 begin;
   debugWrite("searchExprsAndVarsLoop: ", {exprs_, vars_, idx_});
 
   if(idx_ > length(exprs_)) then return unExpandable;
-  tmpVars_:= for each var in union(vars_, parameters__) join if(not freeof(part(exprs_, idx_) , var)) then {var} else {};
+  tmpVars_:= for each var in vars_ join if(not freeof(part(exprs_, idx_) , var)) then {var} else {};
   debugWrite("tmpVars_: ", tmpVars_);
   if(length(tmpVars_) = 1) then
     return {{part(exprs_, idx_)}, drop(exprs_, idx_), tmpVars_};
@@ -1775,13 +1787,13 @@ end;
 %---------------------------------------------------------------
 
 % exprs_にvars_中の変数が少なくとも一つ含まれているか調べる
-% parameters__に依存
+% parameters__に依存しない
 % @return true || false
 procedure hasVariable(exprs_, vars_)$
 begin;
   scalar check_;
   check_:=
-    for each x in union(vars_, parameters__) join if(freeof(exprs_, x)) then {} else {x};
+    for each x in vars_ join if(freeof(exprs_, x)) then {} else {x};
   if(check_ <> {}) then return t
   else return nil;
 end;
