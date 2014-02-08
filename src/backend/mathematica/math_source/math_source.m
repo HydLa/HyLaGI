@@ -478,7 +478,7 @@ Module[
   checkMessage[];
   If[sol === False, Return[{}] ];
   (* 成り立つtの最小値を求める *)
-  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]]
+  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
   (* Piecewiseなら分解*)
   If[Head[minT] === Piecewise, ret = makeListFromPiecewise[minT, condition], ret = {{minT, condition}}];
   (* 時刻が0となる場合を取り除く．*)
