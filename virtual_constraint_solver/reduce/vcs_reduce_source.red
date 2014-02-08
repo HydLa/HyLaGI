@@ -2854,6 +2854,7 @@ begin;
                               if(not isIneqRelop(head(x))) then <<
                                 tmpSol_:= exSolve(x, t);
                                 if(length(tmpSol_)>1) then for each y in tmpSol_ join makeTupleDNFFromEq(lhs(y), rhs(y))
+                                else if(length(tmpSol_)=0) then {}
                                 else makeTupleDNFFromEq(lhs(first(tmpSol_)), rhs(first(tmpSol_)))
                               >> else <<
                                 ineqSolDNF_:= exIneqSolve(x);
