@@ -44,6 +44,7 @@ AffineOrInteger AffineOrInteger::operator+(const AffineOrInteger &rhs)
   }
   return ret;
 }
+
 AffineOrInteger AffineOrInteger::operator-(const AffineOrInteger &rhs)
 {
   AffineOrInteger ret;
@@ -73,6 +74,7 @@ AffineOrInteger AffineOrInteger::operator-(const AffineOrInteger &rhs)
   }
   return ret;
 }
+
 AffineOrInteger AffineOrInteger::operator*(const AffineOrInteger &rhs)
 {
   AffineOrInteger ret;
@@ -119,17 +121,24 @@ AffineOrInteger AffineOrInteger::operator/(const AffineOrInteger &rhs)
     ret.is_integer = false;
     if(is_integer)
     {
-      ret.affine_value = (double)integer * rhs.affine_value;
+      if(rhs.is_integer)
+      {
+        ret.affine_value = affine_t(integer) / affine_t(rhs.integer);
+      }
+      else
+      {
+        ret.affine_value = affine_t(integer) / rhs.affine_value;
+      }
     }
     else
     {
       if(rhs.is_integer)
       {
-        ret.affine_value = affine_value * (double)rhs.integer;
+        ret.affine_value = affine_value / (affine_t)rhs.integer;
       }
       else
       {
-        ret.affine_value = affine_value * rhs.affine_value;
+        ret.affine_value = affine_value / rhs.affine_value;
       }
     }
   }
