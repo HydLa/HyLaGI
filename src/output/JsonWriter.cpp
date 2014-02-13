@@ -21,7 +21,7 @@ void JsonWriter::write(const simulator_t &simulator, std::string name)
 
   phase_result_const_sptr_t root = simulator.get_result_root();
   array children;
-  json_object["trajectories"] = make_children(root);
+  json_object["first_phases"] = make_children(root);
 
   value json(json_object);
  
@@ -35,29 +35,28 @@ void JsonWriter::write(const simulator_t &simulator, std::string name)
 value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
 {
   object phase_object;
-  phase_object["id"] = value(to_string(phase->id));
+  phase_object["id"] = value((long)phase->id);
   if(phase->phase == simulator::PointPhase)
   {
     phase_object["type"] = value(string("PP"));
-    if(!phase->current_time.undefined())
-    {
-      phase_object["time"] = 
-        value(phase->current_time.get_string());
-    }
+    object time_object;
+    time_object["time_point"] =
+      value(phase->current_time.get_string());
+    phase_object["time"] = value(time_object);
   }
   else if(phase->phase == simulator::IntervalPhase)
   {
     phase_object["type"] = value(string("IP"));
-    if(!phase->current_time.undefined())
-    {
-      phase_object["start_time"] = 
-        value(phase->current_time.get_string());
-    }
+
+    object time_object;
+    time_object["start_time"] = 
+      value(phase->current_time.get_string());
     if(!phase->end_time.undefined())
     {
-      phase_object["end_time"] = 
+      time_object["end_time"] = 
         value(phase->end_time.get_string());
     }
+    phase_object["time"] = value(time_object);
   }
   phase_object["variable_map"] = for_vm(phase->variable_map);
   phase_object["parameter_map"] = for_pm(phase->parameter_map);
@@ -117,42 +116,34 @@ value JsonWriter::make_children(const phase_result_const_sptr_t &phase)
 value JsonWriter::for_range(const value_range_t &range)
 {
   object range_object;
-  if(range.undefined())
-  {
-    // do nothing
-  }
-  else if(range.unique())
+
+  if(range.unique())
   {
     range_object["unique_value"] = value(range.get_unique().get_string());
   }
   else
   {
-    if(range.get_lower_cnt() > 0)
+    array lbs;
+    for(uint i = 0; i < range.get_lower_cnt(); i++)
     {
-      array lbs;
-      for(uint i = 0; i < range.get_lower_cnt(); i++)
-      {
-        const value_range_t::bound_t &bound = range.get_lower_bound(i);
-        object lb;
-        lb["value"] = value(bound.value.get_string());
-        lb["closed"] = value(bound.include_bound);
-        lbs.push_back(value(lb));
-      }
-      range_object["lower_bounds"] = value(lbs);
+      const value_range_t::bound_t &bound = range.get_lower_bound(i);
+      object lb;
+      lb["value"] = value(bound.value.get_string());
+      lb["closed"] = value(bound.include_bound);
+      lbs.push_back(value(lb));
     }
-    if(range.get_upper_cnt() > 0)
+    range_object["lower_bounds"] = value(lbs);
+ 
+    array ubs;
+    for(uint i = 0; i < range.get_upper_cnt(); i++)
     {
-      array ubs;
-      for(uint i = 0; i < range.get_upper_cnt(); i++)
-      {
-        const value_range_t::bound_t &bound = range.get_upper_bound(i);
-        object ub;
-        ub["value"] = value(bound.value.get_string());
-        ub["closed"] = value(bound.include_bound);
-        ubs.push_back(value(ub));
-      }
-      range_object["upper_bounds"] = value(ubs);
+      const value_range_t::bound_t &bound = range.get_upper_bound(i);
+      object ub;
+      ub["value"] = value(bound.value.get_string());
+      ub["closed"] = value(bound.include_bound);
+      ubs.push_back(value(ub));
     }
+    range_object["upper_bounds"] = value(ubs);
   }
   return value(range_object);
 }
