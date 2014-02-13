@@ -168,6 +168,7 @@ bool MathematicaLink::receive_to_return_packet(){
       std::string str = get_string();
       if(input_print_.empty()){
         input_print_ = str;
+        HYDLA_LOGGER_DEBUG_VAR(input_print_);
       }else{
         debug_print_ += str + "\n";
       }

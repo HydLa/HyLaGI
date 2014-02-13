@@ -603,18 +603,16 @@ publicMethod[
   ]
 ];
 
-timeAndIDsToReturn[ti_] := timeAndIDs[toReturnForm[FullSimplify[ti[[1]] ] ], ti[[2]] ];
+timeAndIDsToReturn[ti_] := timeAndIDs[toReturnForm[ti[[1]] ], ti[[2]] ];
 
 getDerivativeCount[variable_[_]] := 0;
 
 getDerivativeCount[Derivative[n_][f_][_]] := n;
 
 applyDSolveResult[exprs_, integRule_] := (
-  Simplify[
-      exprs  /. integRule     (* 単純にルールを適用 *)
-             /. Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule]
-             /. (Derivative[n_][f_][t] /; !isVariable[f]) :> D[f, {t, n}] (* 微分値についてもルールを適用 *)
-  ]
+  exprs  /. integRule     (* 単純にルールを適用 *)
+         /. Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule]
+         /. (Derivative[n_][f_][t] /; !isVariable[f]) :> D[f, {t, n}] (* 微分値についてもルールを適用 *)
 );
 
 createDifferentiatedEquations[vars_, integRules_] := (
