@@ -92,18 +92,18 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       ostream_ << *r_it;
     }
 
-    if(node->cause_of_termination==simulator::ASSERTION ||
-      node->cause_of_termination==simulator::OTHER_ASSERTION ||
-      node->cause_of_termination==simulator::TIME_LIMIT ||
-      node->cause_of_termination==simulator::NOT_SELECTED ||
-      node->cause_of_termination==simulator::NONE ||
-      node->cause_of_termination==simulator::STEP_LIMIT)
+    if(node->cause_for_termination==simulator::ASSERTION ||
+      node->cause_for_termination==simulator::OTHER_ASSERTION ||
+      node->cause_for_termination==simulator::TIME_LIMIT ||
+      node->cause_for_termination==simulator::NOT_SELECTED ||
+      node->cause_for_termination==simulator::NONE ||
+      node->cause_for_termination==simulator::STEP_LIMIT)
     {
       ostream_ << get_state_output(*node);
     }
 
     output_parameter_map(node->parameter_map);
-    switch(node->cause_of_termination){
+    switch(node->cause_for_termination){
       case simulator::INCONSISTENCY:
         ostream_ << "# execution stuck\n";
         break;

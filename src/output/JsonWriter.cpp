@@ -64,7 +64,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   phase_object["children"] = make_children(phase);
   if(phase->children.size() == 0){
     std::string cot;
-    switch(phase->cause_of_termination){
+    switch(phase->cause_for_termination){
     case simulator::TIME_LIMIT:
       cot = "TIME_LIMIT";
       break;

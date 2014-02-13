@@ -1010,7 +1010,7 @@ SymbolicPhaseSimulator::todo_list_t
       { 
         int id = candidate.minimum.ids[id_it];
         if(id == -1) {
-          pr->cause_of_termination = simulator::TIME_LIMIT;
+          pr->cause_for_termination = simulator::TIME_LIMIT;
         }
         else if(id >= 0)
         {
@@ -1022,7 +1022,7 @@ SymbolicPhaseSimulator::todo_list_t
 
 
       HYDLA_LOGGER_DEBUG("%%time: ", pr->current_time);
-      if(pr->cause_of_termination != TIME_LIMIT)
+      if(pr->cause_for_termination != TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
@@ -1030,7 +1030,7 @@ SymbolicPhaseSimulator::todo_list_t
         ret.push_back(next_todo);
       }
     	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
-    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_of_termination == TIME_LIMIT)
+    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
     	{
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;

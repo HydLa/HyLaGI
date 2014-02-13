@@ -38,7 +38,7 @@ typedef enum{
   NOT_UNIQUE_IN_INTERVAL,
   NOT_SELECTED,
   NONE
-}CauseOfTermination;
+}CauseForTermination;
 
 
 /**
@@ -95,14 +95,14 @@ struct PhaseResult {
   change_variables_t changed_variables;
   module_set_container_sptr module_set_container;
 
-  CauseOfTermination cause_of_termination;
+  CauseForTermination cause_for_termination;
   /// A set of succeeding phases
   phase_result_sptrs_t children;
   /// A preceding phase
   phase_result_sptr_t parent;
 
   PhaseResult();
-  PhaseResult(const SimulationTodo& todo, const CauseOfTermination& cause = NONE);
+  PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NONE);
 };
 
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::PhaseResult& pr);

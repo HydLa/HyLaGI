@@ -220,9 +220,9 @@ void Printer::output_result_node(const phase_result_const_sptr_t &node, std::vec
       std::cout << *r_it;
     }
     
-    if(node->cause_of_termination!=simulator::INCONSISTENCY)
+    if(node->cause_for_termination!=simulator::INCONSISTENCY)
         std::cout << get_state_output(*node, false,false);
-    switch(node->cause_of_termination){
+    switch(node->cause_for_termination){
       case simulator::INCONSISTENCY:
         std::cout << "# execution stuck\n";
         output_parameter_map(node->parameter_map);

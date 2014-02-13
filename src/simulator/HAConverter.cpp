@@ -81,7 +81,7 @@ namespace simulator {
       	tmp_cc_ = cc_;
       	tmp_cc_.push_back(phase);
 	    	
-	    	if(phase->cause_of_termination == ASSERTION)
+	    	if(phase->cause_for_termination == ASSERTION)
 	      {
 	      	// ASSERTION はそこで変換終了。HAは出力しない（push_resultしない）
 	      	viewPr(phase);
@@ -104,7 +104,7 @@ namespace simulator {
           HYDLA_LOGGER_DEBUG("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
           HYDLA_LOGGER_DEBUG(*n_todo);
 	      	// TIME_LIMITの場合
-	      	if(n_todo->parent->cause_of_termination == TIME_LIMIT){
+	      	if(n_todo->parent->cause_for_termination == TIME_LIMIT){
 	      		current_condition_t tmp_tmp_cc_;
 	      		tmp_tmp_cc_ = tmp_cc_;
 	      		tmp_tmp_cc_.pop_back();

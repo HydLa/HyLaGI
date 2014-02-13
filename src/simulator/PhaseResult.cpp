@@ -35,7 +35,7 @@ namespace hydla {
 namespace simulator {
 
 
-PhaseResult::PhaseResult():cause_of_termination(NONE)
+PhaseResult::PhaseResult():cause_for_termination(NONE)
 {
 }
 
@@ -43,7 +43,7 @@ bool ParameterComparator::operator()(const DefaultParameter x,const DefaultParam
 
 
 
-PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseOfTermination& cause):
+PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause):
   phase(todo.phase),
   current_time(todo.current_time),
   parameter_map(todo.parameter_map),
@@ -51,7 +51,7 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseOfTermination& c
   negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
   module_set_container(todo.module_set_container),
-  cause_of_termination(cause),
+  cause_for_termination(cause),
   parent(todo.parent)
 {
 }

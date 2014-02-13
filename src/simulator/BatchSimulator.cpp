@@ -26,7 +26,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
   bool is_safe = true;
   hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
   if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase){
-    todo->parent->cause_of_termination = simulator::STEP_LIMIT;
+    todo->parent->cause_for_termination = simulator::STEP_LIMIT;
     return;
   }
 
@@ -43,11 +43,11 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
 
       if(!opts_->nd_mode && i > 0)
       {
-        phase->cause_of_termination = NOT_SELECTED;
+        phase->cause_for_termination = NOT_SELECTED;
         continue;
       }
 
-      if(phase->cause_of_termination == ASSERTION)
+      if(phase->cause_for_termination == ASSERTION)
       {
         is_safe = false;
         if(opts_->stop_at_failure)break;
@@ -64,7 +64,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
         }
         if(!opts_->nd_mode && j > 0)
         {
-          n_todo->parent->cause_of_termination = NOT_SELECTED;
+          n_todo->parent->cause_for_termination = NOT_SELECTED;
         }
         else
         {

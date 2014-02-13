@@ -280,7 +280,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
         case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
           std::cout << "Assertion Failed!" << std::endl;
           HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
-          phase->cause_of_termination = ASSERTION;
+          phase->cause_for_termination = ASSERTION;
           break;
         case CONFLICTING:
           break;
@@ -290,7 +290,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           std::cout << "Assertion Failed!" << std::endl;
           phase->parameter_map = todo->parameter_map;
           HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
-          phase->cause_of_termination = ASSERTION;
+          phase->cause_for_termination = ASSERTION;
           break;
         }
         todo->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
@@ -356,7 +356,7 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
   phase_result_sptr_t phase(new PhaseResult(*original));
   phase->id = ++phase_sum_;
   phase->parent->children.push_back(phase);
-  phase->cause_of_termination = simulator::NONE;
+  phase->cause_for_termination = simulator::NONE;
   return phase;
 }
 

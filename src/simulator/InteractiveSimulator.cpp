@@ -92,7 +92,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
         for(unsigned int i = 0; i < phases.size(); i++)
         {
           if(i == select_num) continue;
-          phases[i]->cause_of_termination = NOT_SELECTED;
+          phases[i]->cause_for_termination = NOT_SELECTED;
         }
       }
 
@@ -522,7 +522,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
     positive_asks_t           positive_asks;
     int                       step;
     //hydla::ch::ModuleSet module_set;
-    CauseOfTermination         cause_of_termination;
+    CauseForTermination         cause_for_termination;
     //phase_result_sptrs_t       children;
     //phase_result_sptr_t        parent;
 
@@ -540,7 +540,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
     positive_asks   = temp->positive_asks;
     step            = temp->step;
     //module_set           = *(temp->module_set);
-    cause_of_termination = temp->cause_of_termination;
+    cause_for_termination = temp->cause_for_termination;
     //children             = pr->children;
     //parent               = pr->parent;
 
@@ -593,7 +593,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
       //ofs << changed_asks << endl;
       //ofs << step << endl;
      //fwrite(&module_set    , sizeof(hydla::ch::ModuleSet) , 1 , fp);
-      //ofs << cause_of_termination << endl;
+      //ofs << cause_for_termination << endl;
     temp = temp->parent;
   }
 
@@ -624,7 +624,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     positive_asks_t           positive_asks;
     int                       step;
     //hydla::ch::ModuleSet module_set;
-    CauseOfTermination         cause_of_termination;
+    CauseForTermination         cause_for_termination;
 
     cout << "file read start" << endl;
 
@@ -673,7 +673,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     //ifs >> changed_asks;
     //ifs >> step;
     //fread(&module_set         , sizeof(hydla::ch::ModuleSet) , 1 , fp);
-    //ifs >> cause_of_termination;
+    //ifs >> cause_for_termination;
 
     cout << "read end "<< endl;
 
@@ -701,7 +701,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     //temp->changed_asks         = changed_asks;
     //temp->step                 = step;
     // *(temp->module_set)        = module_set;
-    //temp->cause_of_termination = cause_of_termination;
+    //temp->cause_for_termination = cause_for_termination;
     cout << 444444<< endl;
   }
 
