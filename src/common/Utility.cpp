@@ -48,7 +48,12 @@ bool num_denom_str(string val_str,
   }
 }
 
-
+string to_string(int n)
+{
+  stringstream sstr;
+  sstr << n;
+  return sstr.str();
+}
 
 }
 }

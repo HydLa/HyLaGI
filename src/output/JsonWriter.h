@@ -8,9 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include "PhaseResult.h"
 #include "Simulator.h"
-
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "picojson.h"
 
 namespace hydla{
 namespace output{
@@ -25,19 +23,17 @@ class JsonWriter{
   typedef hydla::simulator::variable_map_t variable_map_t;
   typedef hydla::simulator::variable_set_t variable_set_t;
   typedef hydla::simulator::parameter_map_t parameter_map_t;
-  typedef boost::property_tree::ptree       ptree_t;
   typedef hydla::simulator::Simulator       simulator_t;
   typedef hydla::simulator::ValueRange      value_range_t;
   
   void write(const simulator_t &simulator, std::string name);
   private:
-  ptree_t for_phase(const phase_result_const_sptr_t &phase);
-  ptree_t for_vm(const variable_map_t &vm); 
-  ptree_t for_range(const value_range_t &range); 
-  ptree_t for_vs(const variable_set_t &vs); 
-  ptree_t for_pm(const parameter_map_t &pm); 
-  ptree_t make_children(const phase_result_const_sptr_t &phase);
-  ptree_t parse_tree_;
+  picojson::value for_phase(const phase_result_const_sptr_t &phase);
+  picojson::value for_vm(const variable_map_t &vm); 
+  picojson::value for_range(const value_range_t &range); 
+  picojson::value for_vs(const variable_set_t &vs); 
+  picojson::value for_pm(const parameter_map_t &pm); 
+  picojson::value make_children(const phase_result_const_sptr_t &phase);
 };
 
 

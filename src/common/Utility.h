@@ -24,6 +24,7 @@ bool num_denom_str(std::string val_str,
                    std::string &numerator,
                    std::string &denominator);
 
+std::string to_string(int n);
 
 }  //  namespace utility
 }  //  namespace hydla
