@@ -8,10 +8,10 @@
 #include "string"
 #include "sstream"
 
-#include "../virtual_constraint_solver/reduce/sexp/SExpAST.h"
-#include "../virtual_constraint_solver/reduce/REDUCELink.h"
-#include "../virtual_constraint_solver/reduce/REDUCELinkFactory.h"
-#include "../virtual_constraint_solver/reduce/vcs_reduce_source.h"
+#include "SExpAST.h"
+#include "REDUCELink.h"
+#include "REDUCELinkFactory.h"
+#include "vcs_reduce_source.h"
 
 using namespace std;
 using namespace hydla::parser;
