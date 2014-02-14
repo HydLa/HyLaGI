@@ -12,6 +12,13 @@ namespace parser {
 
 class HydLaAST {
 public:
+  typedef enum
+  {
+    PROGRAM,
+    CONSTRAINT,
+    ARITHMETIC_EXPRESSION,
+  }SyntaxType;
+
   typedef boost::spirit::classic::multi_pass<std::istreambuf_iterator<char> > multipass_iter_t;
   typedef boost::spirit::classic::position_iterator<multipass_iter_t> pos_iter_t;
   typedef boost::spirit::classic::node_val_data_factory<> node_val_data_factory_t;
@@ -26,10 +33,9 @@ public:
   /**
    * 入力を解析し、ASTを構築する
    */
-  void parse(std::istream& s);
-  void parse_constraint(std::istream& s);
-  void parse_flie(const std::string& filename);
-  void parse_string(const std::string& str);
+  void parse(std::istream& s, SyntaxType type = PROGRAM);
+  void parse_flie(const std::string& filename, SyntaxType type = PROGRAM);
+  void parse_string(const std::string& str, SyntaxType type = PROGRAM);
 
   /**
    * ASTの構造を出力する

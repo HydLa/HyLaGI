@@ -27,48 +27,41 @@ HydLaAST::~HydLaAST()
 {
 }
 
-void HydLaAST::parse(std::istream& stream) 
+void HydLaAST::parse(std::istream& stream, SyntaxType type) 
 {
   pos_iter_t it_begin(make_multi_pass(istreambuf_iterator<char>(stream)), 
                         make_multi_pass(istreambuf_iterator<char>()));
   pos_iter_t it_end;
-
   HydLaGrammar hg;
   CommentGrammar cg;
-  ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_HydLaProgram>(), cg);
-
- if(!ast_tree_.full) {
-    throw SyntaxError("", ast_tree_.stop.get_position().line);
+  switch(type)
+  {
+  case PROGRAM:
+    ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_HydLaProgram>(), cg);
+    break;
+  case CONSTRAINT:
+    ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_Constraint>(), cg);
+    break;
+  case ARITHMETIC_EXPRESSION:
+    ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_ArithmeticExpr>(), cg);
+  break;
   }
-}
-
-void HydLaAST::parse_constraint(std::istream& stream) 
-{
-  pos_iter_t it_begin(make_multi_pass(istreambuf_iterator<char>(stream)), 
-                        make_multi_pass(istreambuf_iterator<char>()));
-  pos_iter_t it_end;
-
-  HydLaGrammar hg;
-  CommentGrammar cg;
-  ast_tree_ = ast_parse<node_val_data_factory_t>(it_begin, it_end, hg.use_parser<HydLaGrammar::START_Constraint>(), cg);
-
  if(!ast_tree_.full) {
     throw SyntaxError("", ast_tree_.stop.get_position().line);
   }
 }
 
 
-void HydLaAST::parse_flie(const std::string& filename) 
+void HydLaAST::parse_flie(const std::string& filename, SyntaxType type) 
 {
   ifstream in(filename.c_str());
   if (!in) {    
     throw std::runtime_error(string("cannot open \"") + filename + "\"");
   }
-
-  parse(in);
+  parse(in, type);
 }
 
-void HydLaAST::parse_string(const std::string& str)
+void HydLaAST::parse_string(const std::string& str, SyntaxType type)
 {    
   stringstream in(str);
   parse(in);

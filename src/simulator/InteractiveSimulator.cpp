@@ -735,7 +735,7 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   HydLaAST ast;
   try
   {
-    ast.parse_constraint(ss);
+    ast.parse(ss, HydLaAST::CONSTRAINT);
   }
   catch(SyntaxError e)
   {

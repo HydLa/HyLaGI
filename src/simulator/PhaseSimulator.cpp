@@ -55,11 +55,13 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 {
   result_list_t result; 
   bool has_next = false;
+  constraints_t time_applied_store;
   variable_map_t time_applied_map;
   boost::shared_ptr<RelationGraph> graph;
   
   if(todo->phase == PointPhase)
   {
+    time_applied_store = apply_time_to_constraints(todo->parent->reduced_constraint_store, todo->current_time);
     time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
     graph = pp_relation_graph_;
     set_simulation_mode(PointPhase);
@@ -95,6 +97,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   }
   return result;
 }
+
 
 
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms,
@@ -489,4 +492,11 @@ void PhaseSimulator::set_break_condition(node_sptr break_cond)
 PhaseSimulator::node_sptr PhaseSimulator::get_break_condition()
 {
   return break_condition_;
+}
+
+constraints_t PhaseSimulator::apply_time_to_constraints(const constraints_t &original_constraints, const value_t &time)
+{
+  constraints_t applied_constraints;
+  backend_->call("applyTime2Expr", 2, "cstvlt", "cs", &original_constraints, &time, &applied_constraints);
+  return applied_constraints;
 }

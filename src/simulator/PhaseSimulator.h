@@ -137,6 +137,7 @@ protected:
     const Phase& phase) = 0;
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const value_t &) = 0;
+  virtual constraints_t apply_time_to_constraints(const constraints_t &, const value_t &);
   
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
