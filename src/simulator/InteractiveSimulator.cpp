@@ -743,13 +743,7 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
     return 0;
   }
 
-  node_sptr assertion_node_tree;
-  DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
-  DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
-  ParseTree::node_factory_sptr node_factory;
-  node_factory = boost::make_shared<DefaultNodeFactory>();
-
-  NodeTreeGenerator genarator(assertion_node_tree, constraint_definition, program_definition, node_factory);
+  NodeTreeGenerator genarator;
   node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
 
   phase_simulator_->set_break_condition(node_tree);

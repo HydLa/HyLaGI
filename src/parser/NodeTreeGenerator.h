@@ -9,6 +9,7 @@
 #include "ParseTree.h"
 #include "NodeFactory.h"
 #include "DefinitionContainer.h"
+#include "DefaultNodeFactory.h"
 #include "ParseError.h"
 #include "Utility.h"
 
@@ -22,17 +23,44 @@ class NodeTreeGenerator
 public:
   typedef hydla::parse_tree::node_sptr node_sptr;
 
+  /**
+   * default constructor
+   * (use temporary ones)
+   */
+  NodeTreeGenerator():
+    temporary_constraint_definition_(new DefinitionContainer<hydla::parse_tree::ConstraintDefinition>()),
+    temporary_program_definition_(new DefinitionContainer<hydla::parse_tree::ProgramDefinition>()),
+    assertion_node_(temporary_assertion_node_),
+    constraint_definition_(*temporary_constraint_definition_),
+    program_definition_(*temporary_program_definition_),
+    node_factory_(boost::make_shared<DefaultNodeFactory>())
+  {}
+
   NodeTreeGenerator(
     node_sptr&    assertion_node,
     DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
     DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
     const boost::shared_ptr<NodeFactory>& node_factory) :
-    
+    temporary_constraint_definition_(nullptr),
+    temporary_program_definition_(nullptr),
     assertion_node_(assertion_node),
     constraint_definition_(constraint_definition),
     program_definition_(program_definition),
     node_factory_(node_factory)
   {}
+
+  ~NodeTreeGenerator()
+    {
+      if(temporary_constraint_definition_ != nullptr)
+      {
+        delete temporary_constraint_definition_;
+      }
+
+      if(temporary_program_definition_ != nullptr)
+      {
+        delete temporary_program_definition_;
+      }
+    }
 
   /**
    * ASTを元にParseTreeを構築する
@@ -462,13 +490,15 @@ private:
         return node_sptr();
       }  
     }
-  }
-  
+  }  
+
+  node_sptr temporary_assertion_node_;
+  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>* temporary_constraint_definition_;
+  DefinitionContainer<hydla::parse_tree::ProgramDefinition>*    temporary_program_definition_;
   
   node_sptr& assertion_node_;
   DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition_;
   DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition_;
-
 
   boost::shared_ptr<NodeFactory>   node_factory_;
 };
