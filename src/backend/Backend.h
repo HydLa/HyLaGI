@@ -89,7 +89,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
    *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
    *    dc: dc_causes_t : causes of discrete changes
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
-   *    cs(n, p, z, t): constraints_t: list of constraints (send only)
+   *    cs(n, p, z, t): constraints_t: list of constraints
    *    cc: check_consistency_result_t (receive only)
    *    cv: create_vm_t (receive only)
    *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, derivatives are not sent. Characters after them are the same as 'e')
@@ -140,6 +140,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
   pp_time_result_t receive_cp();
   check_consistency_result_t receive_cc();
   create_vm_t receive_cv();
+  constraints_t receive_cs();
   
   value_t receive_value();
   node_sptr receive_function();

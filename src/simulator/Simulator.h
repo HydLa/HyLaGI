@@ -105,6 +105,9 @@ struct SimulationTodo{
 
   /// フェーズ内で一時的に追加する制約．分岐処理などに使用
   constraints_t temporary_constraints;
+
+  constraints_t original_constraint_store;
+  constraints_t reduced_constraint_store;
   /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
   module_set_container_sptr module_set_container;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように

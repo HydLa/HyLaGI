@@ -62,33 +62,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   {
     time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
     graph = pp_relation_graph_;
-    /*
-    if(todo->current_time->get_string() != "0" && opts_->analysis_mode == "cmmap"){
-      module_set_list_t mms = calculate_mms(todo,time_applied_map);
-      set_simulation_mode(PointPhase);
-      for(module_set_list_t::iterator it = mms.begin(); it != mms.end(); it++){
-	timer::Timer ms_timer;
-        result_list_t tmp_result = simulate_ms((*it), graph, time_applied_map, todo);
-	if(!tmp_result.empty())
-	  {
-	    has_next = true;
-	    result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
-	  }
-	std::string module_sim_string = "\"ModuleSet" + (*it)->get_name() + "\"";
-	todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
-	todo->positive_asks.clear();
-	todo->negative_asks.clear();
-      }
-      //無矛盾な解候補モジュール集合が存在しない場合
-      if(!has_next)
-	{
-	  // make dummy phase and push into tree.
-	  phase_result_sptr_t phase(new PhaseResult(*todo, simulator::INCONSISTENCY));
-	  todo->parent->children.push_back(phase);
-	}
-      return result;
-    }
-    */
     set_simulation_mode(PointPhase);
   }else{
     time_applied_map = todo->parent->variable_map;
@@ -167,25 +140,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   else
   {
     CalculateVariableMapResult cvm_res;
-    /*
-    if(todo->phase == PointPhase && opts_->analysis_mode == "simulate"){
-      cvm_res = check_conditions(ms, todo, time_applied_map, true);
-      switch(cvm_res){
-        case CVM_CONSISTENT:
-          break;
-        case CVM_INCONSISTENT:
-          todo->module_set_container->mark_nodes(*ms);
-          return result;
-        case CVM_ERROR:
-          throw SimulateError("CalculateVariableMap for " + ms->get_name());
-          break;
-        default:
-          assert(0);
-          break;
-      }
-    }
-    */
-    HYDLA_LOGGER_DEBUG("");
     HYDLA_LOGGER_DEBUG("%% connected module set size:", graph->get_connected_count());
     for(int i = 0; i < graph->get_connected_count(); i++){
       module_set_sptr connected_ms = graph->get_component(i);
@@ -203,14 +157,13 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
         switch(cvm_res)
         {
           case CVM_CONSISTENT:
-          HYDLA_LOGGER_DEBUG("");
           HYDLA_LOGGER_DEBUG("--- CVM_CONSISTENT ---\n");
           todo->ms_cache.insert(std::make_pair(*connected_ms, tmp_vms) );
           merge_variable_maps(vms, tmp_vms);
           break;
           
           case CVM_INCONSISTENT:
-          HYDLA_LOGGER_DEBUG("");
+          HYDLA_LOGGER_DEBUG("--- CVN_INCONSISTENT ---");
           if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
           else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           if(opts_->find_unsat_core_mode)

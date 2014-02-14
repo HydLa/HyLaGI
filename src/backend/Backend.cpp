@@ -280,14 +280,23 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     }
     case 'v':
     {
+      // for cv
       create_vm_t* cv = (create_vm_t*)ret;
       *cv = receive_cv();
       break;
     }
     case 'p':
     {
+      // for cp
       pp_time_result_t* cp = (pp_time_result_t*)ret;
       *cp = receive_cp();
+      break;
+    }
+    case 's':
+    {
+      // for cs
+      constraints_t* cs = (constraints_t*)ret;
+      *cs = receive_cs();
       break;
     }
     default:
@@ -741,12 +750,27 @@ void Backend::set_range(const value_t &val, value_range_t &range, const int& rel
   }
 }
 
+constraints_t Backend::receive_cs()
+{
+  constraints_t cs;
+  std::string name;
+  int cnt;
+  link_->get_function(name, cnt);
+  for(int i = 0; i < cnt; i++)
+  {
+    node_sptr constraint;
+    constraint = receive_node();
+    cs.push_back(constraint);
+  }
+  return cs;
+}
+
+
 create_vm_t Backend::receive_cv()
 {
   create_vm_t ret;
   std::string name;
   int cnt;
-//  link_->check();
   link_->get_function(name, cnt);
   for(int i = 0; i < cnt; i++)
   {
