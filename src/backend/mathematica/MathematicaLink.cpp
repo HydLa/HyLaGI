@@ -49,7 +49,6 @@ void MathematicaLink::skip_pkt_until(int pkt_name)
 
 void MathematicaLink::init(const hydla::simulator::Opts &opts)
 {
-
   if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
   int err;
   link_ = MLOpenString(env_, opts.mathlink.c_str(), &err);

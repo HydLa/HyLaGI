@@ -52,7 +52,7 @@ void HydLaAST::parse(std::istream& stream, SyntaxType type)
 }
 
 
-void HydLaAST::parse_flie(const std::string& filename, SyntaxType type) 
+void HydLaAST::parse_file(const std::string& filename, SyntaxType type) 
 {
   ifstream in(filename.c_str());
   if (!in) {    
@@ -62,9 +62,9 @@ void HydLaAST::parse_flie(const std::string& filename, SyntaxType type)
 }
 
 void HydLaAST::parse_string(const std::string& str, SyntaxType type)
-{    
-  stringstream in(str);
-  parse(in);
+{
+  istringstream in(str);
+  parse(in, type);
 }
 
 std::ostream& HydLaAST::dump(std::ostream& outstream, 

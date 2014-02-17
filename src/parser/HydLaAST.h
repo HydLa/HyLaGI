@@ -34,7 +34,7 @@ public:
    * 入力を解析し、ASTを構築する
    */
   void parse(std::istream& s, SyntaxType type = PROGRAM);
-  void parse_flie(const std::string& filename, SyntaxType type = PROGRAM);
+  void parse_file(const std::string& filename, SyntaxType type = PROGRAM);
   void parse_string(const std::string& str, SyntaxType type = PROGRAM);
 
   /**
