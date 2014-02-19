@@ -31,6 +31,12 @@ publicMethod[
   toReturnForm[expr /. t -> t - time]
 ];
 
+publicMethod[
+  exprTimeShiftInverse,
+  expr, time,
+  toReturnForm[expr /. t -> t + time]
+];
+
 
 publicMethod[
   equivalent,
