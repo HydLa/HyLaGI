@@ -209,8 +209,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
           }
           if(!changed)
           {
-            phase->variable_map[var_entry.first] =
-              phase->parent->parent->variable_map[var_entry.first];            
+            value_t val = phase->parent->parent->variable_map[var_entry.first].get_unique();
+            value_t ret;
+            backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &todo->current_time, &ret);
+            phase->variable_map[var_entry.first].set_unique(ret);            
           }
         }
       }
