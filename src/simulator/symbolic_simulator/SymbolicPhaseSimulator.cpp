@@ -343,7 +343,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     continuity_map = maker.get_continuity_map();
     add_continuity(continuity_map, state->phase);
-    
+
     for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
       constraint_list.push_back(*it);
     }
@@ -368,6 +368,11 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
+    if(opts_->reuse && state->in_following_step()){
+      apply_previous_solution(changing_variables,
+          state->phase == IntervalPhase, state->parent,
+          continuity_map, state->current_time );
+    }
 
     ask_collector.collect_ask(&expanded_always, 
         &positive_asks, 
@@ -427,12 +432,6 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           }
         }
         maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
-
-        if(opts_->reuse && state->in_following_step()){
-          apply_previous_solution(changing_variables, it,
-              state->phase == IntervalPhase, state->parent );
-        }
-        
         CheckConsistencyResult check_consistency_result;
         switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase)){
           case ENTAILED:
@@ -785,37 +784,43 @@ bool SymbolicPhaseSimulator::apply_entailment_change( const ask_set_t::iterator 
   return ret;
 }
 
-void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& changing_variables,
-                                                     const ask_set_t::iterator it,
-                                                     const bool in_IP,
-                                                     const phase_result_sptr_t parent ){
-  VariableFinder v_finder;
-  v_finder.visit_node((*it)->get_guard(),in_IP); 
-  VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-  continuity_map_t continuity_map;
-  for(auto var : tmp_vars){
-    continuity_map_t::iterator tmp_it = continuity_map.find(var.first);
-    if(tmp_it != continuity_map.end() ){
-      if(tmp_it->second < var.second ){
-        continuity_map.erase(tmp_it);
-        continuity_map.insert(var);
+void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& variables,
+    const bool in_IP,
+    const phase_result_sptr_t parent,
+    continuity_map_t& continuity_map,
+    const value_t& current_time ){
+  for(auto pair : parent->variable_map){
+    std::string var_name = pair.first.get_name();
+    if(variables.find(var_name) == variables.end() ){
+      if(continuity_map.find(var_name) == continuity_map.end() )
+        continuity_map.insert( make_pair(var_name, pair.first.derivative_count) );
+      else if(continuity_map[var_name] < pair.first.derivative_count){
+        continuity_map.erase(var_name);
+        continuity_map.insert( make_pair(var_name, pair.first.derivative_count) );
       }
-    }else{
-      continuity_map.insert(var);
+      std::string fmt = "v";
+      if(in_IP){
+        // 前IPの解を追加
+        // TODO:undefである場合の対応
+        // TODO:とりあえずunique_valueのみ対応
+        fmt += "t";
+        fmt += "vlt";
+        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique();
+        value_t ret;
+        backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &current_time, &ret);
+        backend_->call("addEquation", 2, fmt.c_str(), "", &pair.first, &ret);
+      }else{
+        // x=x-
+        fmt += "n";
+        fmt += "vp";
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &pair.first, &pair.first);
+      }
     }
   }
-  for(auto var : continuity_map){
-    if(changing_variables.find(var.first) == changing_variables.end()){
-      for(int i=0; i<=var.second; i++){
-        if(in_IP){
-          //add_constraint var.firstのvar.second微分 = parent.variable_mapから追加
-          //parameterも考慮
-        }else{
-          //add_constraint var.firstのvar.second微分 = prev[var.firstのvar.second微分]
-        }
-      }
-    }
-  }
+  Phase_ phase;
+  if(in_IP) phase = IntervalPhase;
+  else phase = PointPhase; 
+  add_continuity(continuity_map, phase);
 }
 
 SymbolicPhaseSimulator::todo_list_t 

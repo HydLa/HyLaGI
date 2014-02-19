@@ -87,9 +87,10 @@ void set_changing_variables( const phase_result_sptr_t& parent_phase,
                                 ask_set_t& unknown_asks );
 
 void apply_previous_solution(const change_variables_t& changing_variables,
-                             const ask_set_t::iterator it,
                              const bool in_IP,
-                             const phase_result_sptr_t parent );
+                             const phase_result_sptr_t parent,
+                             continuity_map_t& continuity_map,
+                             const value_t& current_time );
 
   /**
    * 与えられたフェーズの次のTodoを返す．
