@@ -107,7 +107,9 @@ void apply_previous_solution(const change_variables_t& changing_variables,
     const PhaseType& phase);
   
   CheckConsistencyResult check_consistency(const PhaseType &phase);
-  
+
+  bool has_variables(node_sptr node, const change_variables_t &variables, bool include_prev);
+
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
   
   virtual module_set_list_t calculate_mms(

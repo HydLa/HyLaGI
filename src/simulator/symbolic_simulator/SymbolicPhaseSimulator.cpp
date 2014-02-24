@@ -14,7 +14,6 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "VariableFinder.h"
-#include "VariableSearcher.h"
 
 #include "InitNodeRemover.h"
 #include "MathematicaLink.h"
@@ -333,8 +332,6 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
 
-  VariableSearcher variable_searcher;
-
   bool expanded;
 
   change_variables_t changing_variables;
@@ -376,15 +373,21 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     maker.reset();
 
-    for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      if(opts_->reuse && state->in_following_step() &&
-          !variable_searcher.visit_node(changing_variables,*it,state->phase_type == IntervalPhase)){
-        continue;
+    for(auto tell : tell_list){
+      if(opts_->reuse && state->in_following_step())
+      {
+        VariableFinder variable_finder;
+        variable_finder.visit_node(tell);
+        if(!variable_finder.include_variables(changing_variables)
+           && (current_phase_ != IntervalPhase || !variable_finder.include_variables_prev(changing_variables)))
+        {
+          continue;
+        }
       }
 
       // send "Constraint" node, not "Tell"
-      constraint_list.add_constraint((*it)->get_child());
-      maker.visit_node((*it), state->phase_type == IntervalPhase, false);
+      constraint_list.add_constraint(tell->get_child());
+      maker.visit_node(tell, state->phase_type == IntervalPhase, false);
     }
 
     continuity_map = maker.get_continuity_map();
@@ -431,7 +434,8 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t cv_unknown_asks, notcv_unknown_asks;
       if(opts_->reuse && state->in_following_step()){
         for( auto ask : unknown_asks ){
-          if( variable_searcher.visit_node(changing_variables, ask, state->phase_type == IntervalPhase) ){
+          
+          if(has_variables(ask, changing_variables, state->phase_type == IntervalPhase)){
             cv_unknown_asks.insert(ask);
           }else{
             notcv_unknown_asks.insert(ask);
@@ -660,7 +664,6 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
   //現在はpositiveだけど、parentではpositiveじゃないやつ
   //現在はnegativeだけど、parentではpositiveなやつ
   VariableFinder v_finder;
-  VariableSearcher v_searcher;
   positive_asks_t parent_positives = parent_phase->positive_asks;
   int cv_count = changing_variables.size();
   for( auto ask : positive_asks ){
@@ -683,7 +686,7 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
     cv_count = changing_variables.size();
     while(true){
       for( auto tell : tells ){
-        bool has_cv = v_searcher.visit_node(changing_variables, tell, false );
+        bool has_cv = has_variables(tell, changing_variables, false);
         if(has_cv){
           v_finder.clear();
           v_finder.visit_node(tell);
@@ -746,11 +749,10 @@ change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(
   for( auto var : tmp_vars )
     cv.insert(var.first);
 
-  VariableSearcher v_searcher;
   int v_count = cv.size();
   while(true){
     for( auto tell : intersection_tells ){
-      bool has_cv = v_searcher.visit_node(cv, tell, false );
+      bool has_cv = has_variables(tell, cv, false);
       if(has_cv){
         v_finder.clear();
         v_finder.visit_node(tell);
@@ -767,6 +769,18 @@ change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(
   }
 
   return cv;
+}
+
+bool SymbolicPhaseSimulator::has_variables(node_sptr node, const change_variables_t & change_variables, bool include_prev)
+{
+  VariableFinder variable_finder;
+  variable_finder.visit_node(node);
+  if(variable_finder.include_variables(change_variables) || 
+     (include_prev && variable_finder.include_variables_prev(change_variables)))
+  {
+    return true;
+  }
+  return false;
 }
 
 bool SymbolicPhaseSimulator::apply_entailment_change( const ask_set_t::iterator it,
@@ -786,9 +800,8 @@ bool SymbolicPhaseSimulator::apply_entailment_change( const ask_set_t::iterator 
     }
     if(changing_variables.size() > v_count){
       ask_set_t change_asks;
-      VariableSearcher v_searcher;
       for(auto ask : notcv_unknown_asks){
-        if(v_searcher.visit_node(changing_variables, ask->get_child(), in_IP) ){
+        if(has_variables(ask->get_child(), changing_variables, in_IP) ){
           unknown_asks.insert(ask);
           change_asks.insert(ask);
         }

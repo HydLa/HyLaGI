@@ -26,6 +26,36 @@ void VariableFinder::clear(){
   prev_variables_.clear();
 }
 
+bool VariableFinder::include_variables(std::set<std::string> variables) const
+{
+  for(auto found_var : variables_)
+  {
+    for(auto var : variables)
+    {
+      if(found_var.first == var)
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+bool VariableFinder::include_variables_prev(std::set<std::string> variables) const
+{
+  for(auto found_var : prev_variables_)
+  {
+    for(auto var : variables)
+    {
+      if(found_var.first == var)
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 VariableFinder::variable_set_t VariableFinder::get_all_variable_set() const
 {

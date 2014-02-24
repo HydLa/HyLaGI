@@ -41,6 +41,10 @@ public:
 
   /// get prev variables
   variable_set_t get_prev_variable_set() const;
+
+  /// judge if found variables include given variables
+  bool include_variables(std::set<std::string> variables) const;
+  bool include_variables_prev(std::set<std::string> variables) const;
   
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
