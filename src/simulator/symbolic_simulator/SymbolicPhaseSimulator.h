@@ -23,13 +23,9 @@ namespace symbolic {
 
 class AnalysisResultChecker;
 
-class SymbolicPhaseSimulator : public simulator_t
+class SymbolicPhaseSimulator : public PhaseSimulator
 {
 public:
-  typedef simulator::Opts Opts;
-  typedef simulator::ConditionsResult ConditionsResult;
-  typedef simulator::Phase                 Phase;
-  typedef simulator::phase_result_sptr_t   phase_result_sptr_t;
   typedef ch::module_set_sptr              modulse_set_sptr;
   typedef std::set< std::string > change_variables_t;
 
@@ -40,11 +36,11 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
-
+/*
   virtual void find_unsat_core(const module_set_sptr& ms,
       simulation_todo_sptr_t&,
       const variable_map_t& vm);
-
+*/
 
 private:
 
@@ -54,15 +50,15 @@ private:
    * PPモードとIPモードを切り替える
    */
 
-  virtual void set_simulation_mode(const Phase& phase);
+  virtual void set_simulation_mode(const PhaseType& phase);
   
 
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
    */
 
-  virtual simulator::CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_todo_sptr_t& state, const variable_map_t &, variable_maps_t& result_vm);
+  virtual ConstraintStore calculate_constraint_store(const module_set_sptr& ms,
+                           simulation_todo_sptr_t& state);
 
   void apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
                                                  positive_asks_t& positive_asks,
@@ -109,36 +105,37 @@ void apply_previous_solution(const change_variables_t& changing_variables,
     CheckConsistencyResult &cc_result,
     const node_sptr& guard,
     const continuity_map_t& cont_map,
-    const Phase& phase);
+    const PhaseType& phase);
   
-  CheckConsistencyResult check_consistency(const Phase &phase);
+  CheckConsistencyResult check_consistency(const PhaseType &phase);
   
-  void add_continuity(const continuity_map_t&, const Phase &phase);
+  void add_continuity(const continuity_map_t&, const PhaseType &phase);
   
   virtual module_set_list_t calculate_mms(
     simulation_todo_sptr_t& state,
     const variable_map_t& vm);
-
+/*
   virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
       simulation_todo_sptr_t&,
     const variable_map_t& vm);
-
+*/
   virtual void set_backend(backend_sptr_t back);
 
-  virtual simulator::CalculateVariableMapResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
+  //virtual ConstraintStoreResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
 
   void replace_prev2parameter(phase_result_sptr_t& state,
-                              variable_map_t& vm,
+                              ConstraintStore& store,
                               parameter_map_t &parameter_map);
+
   
   continuity_map_t variable_derivative_map_;
   
   boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
   boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
   
-  Phase current_phase_;
+  PhaseType current_phase_;
 };
 
 } // namespace symbolic

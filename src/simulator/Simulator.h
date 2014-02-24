@@ -10,6 +10,7 @@
 #include "PhaseResult.h"
 #include "DefaultParameter.h"
 #include "ContinuityMapMaker.h"
+#include "ConstraintStore.h"
 
 namespace hydla {
 
@@ -40,7 +41,6 @@ struct Opts {
   bool cheby;
   bool nd_mode;
   bool interactive_mode;
-  bool find_unsat_core_mode;
   bool use_unsat_core;
   bool ha_convert_mode;
   bool ha_simulator_mode;
@@ -88,9 +88,9 @@ typedef std::map<std::string, unsigned int> profile_t;
  * シミュレーションすべきフェーズを表す構造体
  */
 struct SimulationTodo{
-  typedef std::map<hydla::ch::ModuleSet, variable_maps_t > ms_cache_t;
+  typedef std::map<hydla::ch::ModuleSet, ConstraintStore> ms_cache_t;
 
-  Phase                     phase;
+  PhaseType                 phase_type;
   int                       id;
   value_t                   current_time;
   parameter_map_t           parameter_map;
@@ -104,10 +104,10 @@ struct SimulationTodo{
   phase_result_sptr_t parent;
 
   /// フェーズ内で一時的に追加する制約．分岐処理などに使用
-  constraints_t temporary_constraints;
+  ConstraintStore temporary_constraints;
 
-  constraints_t original_constraint_store;
-  constraints_t reduced_constraint_store;
+  ConstraintStore original_constraint_store;
+  ConstraintStore reduced_constraint_store;
   /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
   module_set_container_sptr module_set_container;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように

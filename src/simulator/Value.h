@@ -81,6 +81,8 @@ class Value
   Value& operator/=(const Value &rhs);
   Value operator/(const Value &rhs);
 
+  /// negative
+  Value operator-();
   
   /**
    * データをダンプする

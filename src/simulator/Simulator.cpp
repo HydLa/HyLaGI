@@ -117,7 +117,7 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
 {
   simulation_todo_sptr_t todo(new SimulationTodo());
   todo->elapsed_time = 0;
-  todo->phase        = simulator::PointPhase;
+  todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
   todo->module_set_container = msc_original_;
   todo->ms_to_visit = msc_original_->get_full_ms_list();
@@ -130,7 +130,7 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
 
 std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
 {
-  s << "%% PhaseType: " << todo.phase << std::endl;
+  s << "%% PhaseType: " << todo.phase_type << std::endl;
   s << "%% id: " <<  todo.id          << std::endl;
   s << "%% time: " << todo.current_time << std::endl;
   s << "--- parent phase result ---" << std::endl;

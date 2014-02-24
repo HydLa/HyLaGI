@@ -92,7 +92,52 @@ module_set_list_t SymbolicPhaseSimulator::calculate_mms(
   return ret;
 }
 
-CalculateVariableMapResult
+
+variable_map_t shift_variable_map_time(const variable_map_t& vm,
+                                       Backend* backend_, const value_t &time){
+  variable_map_t shifted_vm;
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  for(; it!=end; ++it) {
+    if(it->second.undefined())
+      shifted_vm[it->first] = it->second;
+    else if(it->second.unique())
+    {
+      value_t val = it->second.get_unique();
+      range_t& range = shifted_vm[it->first];
+      value_t ret;
+      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+      range.set_unique(ret);
+    }
+    else
+    {
+      range_t range = it->second;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
+      }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+
+        ValueRange::bound_t bd = it->second.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      shifted_vm[it->first] = range;
+    }
+  }
+  return shifted_vm;
+}
+
+
+/*
+CalculateConstraintStoreResult
 SymbolicPhaseSimulator::check_conditions
 (const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){
   timer::Timer cc_timer;
@@ -105,7 +150,9 @@ SymbolicPhaseSimulator::check_conditions
   }
   return CVM_ERROR;
 }
+*/
 
+/*
 void
 SymbolicPhaseSimulator::mark_nodes_by_unsat_core
 (const module_set_sptr& ms,
@@ -128,7 +175,8 @@ SymbolicPhaseSimulator::mark_nodes_by_unsat_core
   HYDLA_LOGGER_DEBUG_VAR(module_set);
   todo->module_set_container->mark_nodes(todo->maximal_mss, module_set);
 }
-
+*/
+ /*
 void
 SymbolicPhaseSimulator::find_unsat_core
 (const module_set_sptr& ms,
@@ -142,10 +190,11 @@ SymbolicPhaseSimulator::find_unsat_core
   unsat_core_finder_->print_unsat_cores(S,S4C);
   cout << "end find unsat core " << endl;
 }
+ */
 
 
 SymbolicPhaseSimulator::SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts) :
-  simulator_t(simulator, opts)
+  PhaseSimulator(simulator, opts)
 {
   unsat_core_finder_.reset(new UnsatCoreFinder());
 }
@@ -162,17 +211,17 @@ void SymbolicPhaseSimulator::set_backend(backend_sptr_t back)
 
 void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc)
 {  
-  simulator_t::initialize(v, p, m, c, pt, msc);
+  PhaseSimulator::initialize(v, p, m, c, pt, msc);
   variable_derivative_map_ = c;
 }
 
 
-void SymbolicPhaseSimulator::set_simulation_mode(const Phase& phase)
+void SymbolicPhaseSimulator::set_simulation_mode(const PhaseType& phase)
 {
   current_phase_ = phase;
 }
 
-void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const Phase &phase){
+void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
 
     std::string fmt = "v";
@@ -207,7 +256,7 @@ void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_m
   }
 }
 
-CheckConsistencyResult SymbolicPhaseSimulator::check_consistency(const Phase& phase)
+CheckConsistencyResult SymbolicPhaseSimulator::check_consistency(const PhaseType& phase)
 {
   CheckConsistencyResult ret;
   if(phase == PointPhase)
@@ -225,7 +274,7 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   CheckConsistencyResult &cc_result,
   const node_sptr& guard,
   const continuity_map_t& cont_map,
-  const Phase& phase
+  const PhaseType& phase
   )
 {
   CheckEntailmentResult ce_result;
@@ -235,10 +284,9 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
   const char* fmt = (phase == PointPhase)?"en":"et";
   backend_->call("addConstraint", 1, fmt, "", &guard);
   cc_result = check_consistency(phase);
-  assert(cc_result.size() == 2);
-  if(!cc_result[0].empty()){
+  if(cc_result.consistent_store.consistent()){
     HYDLA_LOGGER_DEBUG("%% entailable");
-    if(!cc_result[1].empty()){
+    if(cc_result.inconsistent_store.consistent()){
       HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
       ce_result = BRANCH_PAR;
     }
@@ -251,10 +299,9 @@ SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_enta
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &not_node);
       cc_result = check_consistency(phase);
-      assert(cc_result.size() == 2);
-      if(!cc_result[0].empty()){
+      if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
-        if(!cc_result[1].empty()){
+        if(!cc_result.inconsistent_store.consistent()){
           HYDLA_LOGGER_DEBUG("%% branches by parameters");
           ce_result = BRANCH_PAR;
         }
@@ -282,7 +329,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
-  constraints_t   constraint_list;
+  ConstraintStore   constraint_list;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -294,7 +341,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   change_variables_t changing_variables;
 
   if(opts_->reuse && state->in_following_step() ){
-    if(state->phase == PointPhase){
+    if(state->phase_type == PointPhase){
       ask_collector.collect_ask(&expanded_always, 
           &positive_asks, 
           &negative_asks,
@@ -332,33 +379,32 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       if(opts_->reuse && state->in_following_step() &&
-          !variable_searcher.visit_node(changing_variables,*it,state->phase == IntervalPhase)){
+          !variable_searcher.visit_node(changing_variables,*it,state->phase_type == IntervalPhase)){
         continue;
       }
 
       // send "Constraint" node, not "Tell"
-      constraint_list.push_back((*it)->get_child());
-      maker.visit_node((*it), state->phase == IntervalPhase, false);
+      constraint_list.add_constraint((*it)->get_child());
+      maker.visit_node((*it), state->phase_type == IntervalPhase, false);
     }
 
     continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map, state->phase);
+    add_continuity(continuity_map, state->phase_type);
 
-    for(constraints_t::const_iterator it = state->temporary_constraints.begin(); it != state->temporary_constraints.end(); it++){
-      constraint_list.push_back(*it);
+    for(auto constraint : state->temporary_constraints){
+      constraint_list.add_constraint(constraint);
     }
-    const char* fmt = (state->phase == PointPhase)?"csn":"cst";
+    const char* fmt = (state->phase_type == PointPhase)?"csn":"cst";
     backend_->call("addConstraint", 1, fmt, "", &constraint_list);
 
     {
       CheckConsistencyResult cc_result;
-      cc_result = check_consistency(state->phase);
-      assert(cc_result.size() == 2);
-      if(cc_result[0].empty()){
+      cc_result = check_consistency(state->phase_type);
+      if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return false;
-      }else if (cc_result[1].empty()){
+      }else if (!cc_result.inconsistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% consistent for all cases");
       }else{
         HYDLA_LOGGER_DEBUG("%% consistency depends on conditions of parameters\n");
@@ -370,7 +416,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     if(opts_->reuse && state->in_following_step()){
       apply_previous_solution(changing_variables,
-          state->phase == IntervalPhase, state->parent,
+          state->phase_type == IntervalPhase, state->parent,
           continuity_map, state->current_time );
     }
 
@@ -386,7 +432,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t cv_unknown_asks, notcv_unknown_asks;
       if(opts_->reuse && state->in_following_step()){
         for( auto ask : unknown_asks ){
-          if( variable_searcher.visit_node(changing_variables, ask, state->phase == IntervalPhase) ){
+          if( variable_searcher.visit_node(changing_variables, ask, state->phase_type == IntervalPhase) ){
             cv_unknown_asks.insert(ask);
           }else{
             notcv_unknown_asks.insert(ask);
@@ -407,7 +453,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           continue;
         }
         */
-        if(state->phase == PointPhase){
+        if(state->phase_type == PointPhase){
           if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // if current time equals to 0, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
@@ -431,13 +477,13 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             continue;
           }
         }
-        maker.visit_node((*it)->get_child(), state->phase == IntervalPhase, true);
+        maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
         CheckConsistencyResult check_consistency_result;
-        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase)){
+        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             if(opts_->reuse && state->in_following_step()){
-              if(state->phase == PointPhase){
+              if(state->phase_type == PointPhase){
                 apply_entailment_change(it, state->parent->negative_asks,
                     false, changing_variables,
                     notcv_unknown_asks, unknown_asks );
@@ -467,7 +513,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
             if(opts_->reuse && state->in_following_step() ){
-              if(state->phase == PointPhase){
+              if(state->phase_type == PointPhase){
                 entailment_changed = apply_entailment_change(it, state->parent->positive_asks,
                     false, changing_variables,
                     notcv_unknown_asks, unknown_asks );
@@ -501,7 +547,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     if(entailment_changed) continue;
   }while(expanded);
 
-  add_continuity(continuity_map, state->phase);
+  add_continuity(continuity_map, state->phase_type);
 
   if(!unknown_asks.empty()){
     boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
@@ -510,12 +556,12 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     {
       // 分岐先を生成（導出される方）
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
-      new_todo->temporary_constraints.push_back((branched_ask)->get_guard());
+      new_todo->temporary_constraints.add_constraint((branched_ask)->get_guard());
       todo_container_->push_todo(new_todo);
     }
     {
       // 分岐先を生成（導出されない方）
-      state->temporary_constraints.push_back(node_sptr(new Not((branched_ask)->get_guard())));
+      state->temporary_constraints.add_constraint(node_sptr(new Not((branched_ask)->get_guard())));
       negative_asks.insert(branched_ask);
       return calculate_closure(state, ms);
     }
@@ -524,60 +570,33 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   return true;
 }
 
-CalculateVariableMapResult 
-SymbolicPhaseSimulator::calculate_variable_map(
+ConstraintStore 
+SymbolicPhaseSimulator::calculate_constraint_store(
   const module_set_sptr& ms,
-  simulation_todo_sptr_t& todo,
-  const variable_map_t & vm,
-  variable_maps_t& result_vms)
+  simulation_todo_sptr_t& todo)
 {
-  backend_->call("resetConstraint", 0, "", "");
-  backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
-  backend_->call("addPrevConstraint", 1, "mvp", "", &vm); //TODO: 左極限値と記号定数の初期化処理はもっと上でやった方が無駄が少ないはず
-
   timer::Timer cc_timer;
-  
-  // calculate closure
+  ConstraintStore result_store;
   bool result = calculate_closure(todo, ms);
-  
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
 
   if(!result)
   {
-    return CVM_INCONSISTENT;
+    result_store.set_consistency(false);
+    return result_store;
   }
-  
-  timer::Timer create_timer;
-  vector<variable_map_t> create_result;
-  if(todo->phase == PointPhase)
+
+  if(todo->phase_type == PointPhase)
   {
-    backend_->call("createVariableMap", 0, "", "cv", &create_result);
+    backend_->call("getConstraintStorePoint", 0, "", "cs", &result_store);
   }
   else
   {
-    backend_->call("createVariableMapInterval", 0, "", "cv", &create_result);
+    backend_->call("getConstraintStoreInterval", 0, "", "cs", &result_store);
+    replace_prev2parameter(todo->parent, result_store, todo->parameter_map);
   }
-  todo->profile["CreateMap"] += create_timer.get_elapsed_us();
-
-  HYDLA_LOGGER_DEBUG_VAR(create_result.size());
   
-  if(current_phase_ == IntervalPhase)
-  {
-    if(create_result.size() != 1){
-      phase_result_sptr_t phase(new PhaseResult(*todo, simulator::NOT_UNIQUE_IN_INTERVAL));
-      todo->parent->children.push_back(phase);
-      return CVM_ERROR;
-    }
-    
-    for(vector<variable_map_t>::iterator cr_it = create_result.begin(); cr_it != create_result.end(); cr_it++)
-    {
-      replace_prev2parameter(todo->parent, *cr_it, todo->parameter_map);
-    }
-  }
-
-  result_vms = create_result;
-
-  return CVM_CONSISTENT;
+  return result_store;
 }
 
 void SymbolicPhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
@@ -701,6 +720,8 @@ void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
   phase->changed_variables = get_difference_variables_from_2tells(current_tell_list, prev_tell_list);
 }
 
+
+
 change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg){
   change_variables_t cv;
   tells_t l_tells = larg;
@@ -789,6 +810,7 @@ void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& v
     const phase_result_sptr_t parent,
     continuity_map_t& continuity_map,
     const value_t& current_time ){
+/*
   for(auto pair : parent->variable_map){
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
@@ -817,20 +839,16 @@ void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& v
       }
     }
   }
-  Phase_ phase;
+  PhaseType phase;
   if(in_IP) phase = IntervalPhase;
   else phase = PointPhase; 
   add_continuity(continuity_map, phase);
+*/
 }
 
 SymbolicPhaseSimulator::todo_list_t 
   SymbolicPhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
-  backend_->call("resetConstraint", 0, "", "");
-  const char* fmt = (current_todo->phase == PointPhase)?"mv0n":"mv0t";
-  backend_->call("addConstraint", 1, fmt, "", &phase->variable_map);
-  backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
-  
   todo_list_t ret;
   
   simulation_todo_sptr_t next_todo(new SimulationTodo());
@@ -842,15 +860,21 @@ SymbolicPhaseSimulator::todo_list_t
   
   if(current_phase_ == PointPhase)
   {
-    next_todo->phase = IntervalPhase;
+    next_todo->phase_type = IntervalPhase;
     next_todo->current_time = phase->current_time;
     ret.push_back(next_todo);
   }
   else
   {
+    backend_->call("resetConstraint", 0, "", "");
+    backend_->call("addConstraint", 1, "cst", "", &phase->reduced_constraint_store);
+    backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
+
+    PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     assert(current_phase_ == IntervalPhase);
-    phase->variable_map = shift_variable_map_time(phase->variable_map, phase->current_time);
-    next_todo->phase = PointPhase;
+    backend_->call("exprTimeShift", 2, "csnvln", "cs", &phase->reduced_constraint_store, &phase->current_time, &phase->reduced_constraint_store);
+    phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
+    next_todo->phase_type = PointPhase;
 
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
@@ -1054,62 +1078,14 @@ SymbolicPhaseSimulator::todo_list_t
 
 void SymbolicPhaseSimulator::replace_prev2parameter(
   phase_result_sptr_t& state,
-  variable_map_t& vm,
+  ConstraintStore& store,
   parameter_map_t &parameter_map)
 {
   PrevReplacer replacer(parameter_map, state, *simulator_, opts_->approx);
-   
-  for(variable_map_t::iterator it = vm.begin();
-      it != vm.end(); it++)
+  for(auto constraint : store)
   {
-    HYDLA_LOGGER_DEBUG(it->first, it->second);
-    ValueRange& range = it->second;
-    value_t val;
-    if(range.unique())
-    {
-      val = range.get_unique();
-      HYDLA_LOGGER_DEBUG(val);
-      replacer.replace_value(val);
-      range.set_unique(val);
-    }
-    else
-    {
-      if(range.get_upper_cnt()>0)
-      {
-        val = range.get_upper_bound().value;
-        replacer.replace_value(val);
-        range.set_upper_bound(val, range.get_upper_bound().include_bound);
-      }
-      if(range.get_lower_cnt() > 0)
-      {
-        val = range.get_lower_bound().value;
-        replacer.replace_value(val);
-        range.set_lower_bound(val, range.get_lower_bound().include_bound);
-      }
-    }
+    replacer.replace_node(constraint);
   }
-
-/*
-  // approx values in vm
-  // TODO:ここでやると，変数同士の相関性を生かせない．
-  if(state->phase == PointPhase)
-  {
-    for(variable_map_t::iterator it = ret.begin();
-        it != ret.end();it++)
-    { 
-      value_range_t tmp_range;
-      if(solver_->approx_val(it->second, tmp_range))
-      {
-        variable_t* variable = it->first;
-            
-        parameter_t* param = simulator_->introduce_parameter(variable, state, tmp_range);
-        ret[variable] = value_t(new SymbolicValue(node_sptr(
-          new Parameter(variable->get_name(), variable->get_derivative_count(), state->id))));
-        parameter_map[param] = tmp_range;
-      }
-    }
-  }
-*/
 }
 
 

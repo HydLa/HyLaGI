@@ -23,10 +23,10 @@ using namespace hydla::parse_tree;
 
 node_sptr parse_arithmetic_string(const string &str)
 {
-    HydLaAST ast;
-    ast.parse_string(str, HydLaAST::ARITHMETIC_EXPRESSION);
-    NodeTreeGenerator genarator;
-    return genarator.generate(ast.get_tree_iterator());
+  HydLaAST ast;
+  ast.parse_string(str, HydLaAST::ARITHMETIC_EXPRESSION);
+  NodeTreeGenerator genarator;
+  return genarator.generate(ast.get_tree_iterator());
 }
 
 

@@ -41,51 +41,53 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 {
-  HYDLA_LOGGER_DEBUG_VAR(*node);
-  string v_name = node->get_name();
-  int diff_cnt = differential_cnt_;
-  HYDLA_LOGGER_DEBUG_VAR(v_name);
-  HYDLA_LOGGER_DEBUG_VAR(diff_cnt);
-  variable_t variable(v_name, diff_cnt);
-  ValueRange range = prev_phase_->variable_map[variable];
+  if(in_prev_)
+  {
+    HYDLA_LOGGER_DEBUG_VAR(*node);
+    string v_name = node->get_name();
+    int diff_cnt = differential_cnt_;
+    HYDLA_LOGGER_DEBUG_VAR(v_name);
+    HYDLA_LOGGER_DEBUG_VAR(diff_cnt);
+    variable_t variable(v_name, diff_cnt);
+    ValueRange range = prev_phase_->variable_map[variable];
   
-  // replace variables in the range with their values
-  VariableReplacer v_replacer(prev_phase_->variable_map);
-  v_replacer.replace_range(range);
+    // replace variables in the range with their values
+    VariableReplacer v_replacer(prev_phase_->variable_map);
+    v_replacer.replace_range(range);
 
-
-  if(range.unique())
-  {
-    new_child_ = range.get_unique().get_node();
-  }
-  else
-  {
-    new_child_ = node_sptr(new Parameter(v_name, diff_cnt, prev_phase_->id));
-    parameter_t param(v_name, diff_cnt, prev_phase_->id);
-
-    if(!parameter_map_.count(param))
+    if(range.unique())
     {
-      if(approx_)
-      {
-        hydla::backend::MidpointRadius mr;
-        value_t lb = range.get_lower_bound().value;
-        value_t ub = range.get_upper_bound().value;
-        simulator_.backend->call("intervalToMidpointRadius", 2, "vltvlt", "r", &lb, &ub, &mr);
-        HYDLA_LOGGER_DEBUG("");
-        range.set_upper_bound(value_t("1"), range.get_upper_bound().include_bound);
-        range.set_lower_bound(value_t("-1"), range.get_lower_bound().include_bound);
-        value_t new_value(mr.midpoint + mr.radius * value_t(new_child_));
-        prev_phase_->variable_map[variable] = new_value;
-        new_child_ = new_value.get_node();
-      }
-      else
-      {
-        prev_phase_->variable_map[variable] = value_t(new_child_);
-      }
+      new_child_ = range.get_unique().get_node();
+    }
+    else
+    {
+      new_child_ = node_sptr(new Parameter(v_name, diff_cnt, prev_phase_->id));
+      parameter_t param(v_name, diff_cnt, prev_phase_->id);
 
-      simulator_.introduce_parameter(variable, prev_phase_, range);
-      parameter_map_[param] = range;
-      prev_phase_->parameter_map[param] = parameter_map_[param];
+      if(!parameter_map_.count(param))
+      {
+        if(approx_)
+        {
+          hydla::backend::MidpointRadius mr;
+          value_t lb = range.get_lower_bound().value;
+          value_t ub = range.get_upper_bound().value;
+          simulator_.backend->call("intervalToMidpointRadius", 2, "vltvlt", "r", &lb, &ub, &mr);
+          HYDLA_LOGGER_DEBUG("");
+          range.set_upper_bound(value_t("1"), range.get_upper_bound().include_bound);
+          range.set_lower_bound(value_t("-1"), range.get_lower_bound().include_bound);
+          value_t new_value(mr.midpoint + mr.radius * value_t(new_child_));
+          prev_phase_->variable_map[variable] = new_value;
+          new_child_ = new_value.get_node();
+        }
+        else
+        {
+          prev_phase_->variable_map[variable] = value_t(new_child_);
+        }
+
+        simulator_.introduce_parameter(variable, prev_phase_, range);
+        parameter_map_[param] = range;
+        prev_phase_->parameter_map[param] = parameter_map_[param];
+      }
     }
   }
 }

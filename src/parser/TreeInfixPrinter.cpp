@@ -9,7 +9,6 @@ namespace parse_tree{
 std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream& s){
   need_par_ = PAR_NONE;
   output_stream_ = &s;
-  //s << "print_infix\n";
   accept(node);
   return s;
 }
@@ -23,7 +22,6 @@ std::string TreeInfixPrinter::get_infix_string(const hydla::parse_tree::node_spt
 }
 
 void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const std::string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
-  //(*output_stream_) << "binary_node\n";
   need_par_ = pre_par;
   accept(node.get_lhs());
   (*output_stream_) << symbol;
@@ -31,14 +29,12 @@ void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const std::stri
   accept(node.get_rhs());
 }
 void TreeInfixPrinter::print_unary_node(const UnaryNode &node, const std::string &pre, const std::string &post){
-  //(*output_stream_) << "unary_node\n";
   (*output_stream_) << pre;
   accept(node.get_child());
   (*output_stream_) << post;
 }
 
 void TreeInfixPrinter::print_factor_node(const FactorNode &node, const std::string &pre, const std::string &post){
-  //(*output_stream_) << "dactor_node\n";
   (*output_stream_) << pre;
   (*output_stream_) << post;
 }

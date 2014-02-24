@@ -16,7 +16,7 @@ typedef hydla::simulator::parameter_map_t parameter_map_t;
 typedef hydla::simulator::ValueRange      value_range_t;
 typedef hydla::simulator::parameter_t     parameter_t;
 typedef hydla::simulator::variable_set_t  variable_set_t;
-typedef hydla::simulator::constraints_t   constraints_t;
+typedef hydla::simulator::ConstraintStore constraint_store_t;
 typedef Link::VariableForm        variable_form_t;
 typedef hydla::parse_tree::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
@@ -44,7 +44,7 @@ typedef struct NextPhaseResult
   /// non-minimum pairs of times and ids
   std::vector<TimeIdsPair> non_minimums;
   /// condition for parameter in this case
-  hydla::simulator::symbolic::parameter_map_t parameter_map;
+  hydla::simulator::parameter_map_t parameter_map;
 } candidate_t;
 
 typedef std::vector<candidate_t> pp_time_result_t;
@@ -89,7 +89,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
    *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
    *    dc: dc_causes_t : causes of discrete changes
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
-   *    cs(n, p, z, t): constraints_t: list of constraints
+   *    cs(n, p, z, t): constraint_store_t: constraint store
    *    cc: check_consistency_result_t (receive only)
    *    cv: create_vm_t (receive only)
    *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, derivatives are not sent. Characters after them are the same as 'e')
@@ -140,7 +140,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
   pp_time_result_t receive_cp();
   check_consistency_result_t receive_cc();
   create_vm_t receive_cv();
-  constraints_t receive_cs();
+  constraint_store_t receive_cs();
   
   value_t receive_value();
   node_sptr receive_function();
@@ -264,7 +264,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
   variable_form_t variable_arg_;
 
   //valと関係演算子を元に、rangeを設定する
-  void set_range(const hydla::simulator::value_t &val, hydla::simulator::symbolic::value_range_t &range, const int& relop);
+  void set_range(const hydla::simulator::value_t &val, hydla::simulator::range_t &range, const int& relop);
 };
 
 } // namespace backend

@@ -9,7 +9,7 @@ publicMethod[
   checkConsistencyPoint,
   cons, pcons, vars, pars,
   Module[
-    {trueMap, falseMap, cpTrue, cpFalse},
+    {cpTrue, cpFalse},
     
     Quiet[
       cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
@@ -23,9 +23,7 @@ publicMethod[
     ];
     checkMessage;
     simplePrint[cpFalse];
-    {trueMap, falseMap} = Map[(createMap[#, isParameter, hasParameter, {}])&, {cpTrue, cpFalse}];
-    simplePrint[trueMap, falseMap];
-    {trueMap, falseMap}
+    toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
   ]
 ];
 
@@ -81,13 +79,13 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
   Module[
-    {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse, trueMap, falseMap},
+    {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
-      {createMap[pCons, isParameter, hasParameter, {}], False},
+      {{LogicalExpand[pCons]}, {False}},
       sol = exDSolve[cons, initCons];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
-        {False, createMap[pCons, isParameter, hasParameter, {}]},
+        {{False}, {LogicalExpand[pCons]}},
         tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
         tCons = sol[[2]] /. tCons;
         simplePrint[tCons];
@@ -103,9 +101,7 @@ publicMethod[
         ];
         cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
         checkMessage;
-        {trueMap, falseMap} = Map[(createMap[#, isParameterOrPrev, hasParameterOrPrev, {}])&, {cpTrue, cpFalse}];
-        simplePrint[trueMap, falseMap];
-        {trueMap, falseMap}
+        toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
       ]
     ]
   ]
@@ -149,6 +145,31 @@ publicMethod[
       ret = ruleOutException[ret];
       simplePrint[ret];
       ret
+    ]
+  ]
+];
+
+publicMethod[
+  getConstraintStorePoint,
+  {toReturnForm[LogicalExpand[constraint && pConstraint && initConstraint]]}
+];
+
+
+getConstraintStoreInterval[] := 
+getConstraintStoreInterval[constraint, initConstraint, timeVariables];
+
+publicMethod[
+  getConstraintStoreInterval,
+  cons, initCons, vars,
+  Module[
+    {sol, tStore},
+    sol = exDSolve[cons, initCons];
+    debugPrint["sol after exDSolve", sol];
+    If[sol[[1]] === underConstraint,
+      underConstraint,
+      tStore = createDifferentiatedEquations[vars, sol[[3]] ];
+      tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+      toReturnForm[tStore]
     ]
   ]
 ];
@@ -298,10 +319,13 @@ publicMethod[
   addPrevConstraint,
   co,
   Module[
-    {eqs, ineqs},
-    eqs = Select[co, (Head[#]===Equal)&];
-    ineqs = Complement[co, eqs];
-    prevRules = Join[prevRules, Map[(Rule@@#)&, eqs] ];
+    {land, cnf, eqs, ineqs},
+    land = And@@co;
+    (* x == 1 && y == 3 || x == 2 && y == 3を、(x == 1 || x == 2) && y == 3のようなCNFに変換して、yの値が一意に定まることを容易に判断できる形式にする *)
+    cnf = And2and[BooleanConvert[land, "CNF"] ];
+    eqs = Select[cnf, (Head[#]===Equal)&];
+    ineqs = Complement[cnf, eqs];
+    prevRules = Join[prevRules, List@@Map[(Rule@@#)&, eqs] ];
     prevIneqs = prevIneqs && And@@ineqs;
     simplePrint[prevRules, prevIneqs];
   ]

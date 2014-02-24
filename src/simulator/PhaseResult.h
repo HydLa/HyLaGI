@@ -9,6 +9,7 @@
 #include "ValueRange.h"
 #include "ModuleSet.h"
 #include "ModuleSetContainer.h"
+#include "ConstraintStore.h"
 
 #include "Timer.h"
 
@@ -16,7 +17,7 @@ namespace hydla {
 namespace simulator {
 
 class DefaultParameter;
-struct PhaseResult;
+class PhaseResult;
 struct SimulationTodo;
 
 class ParameterComparator{
@@ -44,13 +45,12 @@ typedef enum{
 /**
  * type of a phase
  */
-typedef enum Phase_ {
+typedef enum {
   PointPhase,
   IntervalPhase,
-} Phase;
+} PhaseType;
 
 
-typedef std::vector<boost::shared_ptr<hydla::parse_tree::Node> > constraints_t;
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  expanded_always_t;
@@ -78,17 +78,18 @@ typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sp
 typedef std::set<std::string> change_variables_t;
 
 /**
- * A struct to express the result of each phase.
+ * A class to express the result of each phase.
  */
-struct PhaseResult {
-  Phase                     phase;
+class PhaseResult {
+public:
+  PhaseType                 phase_type;
   int id;
   value_t                   current_time, end_time;
 
-  constraints_t             original_constraint_store;
-  constraints_t             reduced_constraint_store;
+  ConstraintStore             original_constraint_store;
+  ConstraintStore             reduced_constraint_store;
 
-  variable_map_t            variable_map;
+  variable_map_t           variable_map;
   parameter_map_t           parameter_map;
   expanded_always_t         expanded_always;
   positive_asks_t           positive_asks;
@@ -115,8 +116,6 @@ std::ostream& operator<<(std::ostream& s, const hydla::simulator::variable_map_t
 
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::parameter_map_t& pm);
 
-
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::constraints_t& a);
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::tells_t& a);
 

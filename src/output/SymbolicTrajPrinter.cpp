@@ -23,7 +23,7 @@ SymbolicTrajPrinter::SymbolicTrajPrinter():ostream_(cout){}
 
 std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   std::stringstream sstr;
-  if(result.phase==IntervalPhase){
+  if(result.phase_type == IntervalPhase){
     sstr << "---------IP " << result.id << "---------" << endl;
     sstr << result.module_set->get_name() << endl;
     if(!result.end_time.undefined()){
@@ -36,6 +36,7 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << result.module_set->get_name() << endl;
     sstr << "time\t: " << result.current_time << "\n";
   }
+  sstr << result.reduced_constraint_store << endl;
   output_variable_map(sstr, result.variable_map);
   
   return sstr.str();
@@ -147,7 +148,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
     ostream_ << endl;
   }else{
-    if(node->phase==hydla::simulator::PointPhase){
+    if(node->phase_type == hydla::simulator::PointPhase){
       std::stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
@@ -159,7 +160,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       output_result_node(*it, result, case_num, phase_num);
     }
     result.pop_back();
-    if(node->phase==PointPhase){
+    if(node->phase_type == PointPhase){
       result.pop_back();
       phase_num--;
     }

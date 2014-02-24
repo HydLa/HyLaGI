@@ -16,7 +16,7 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
     std::set<std::string> label_set;
     for(unsigned int i = 0; i < result.size(); i++){
       simulator::SimulationTodo& todo = *result[i];
-      if(todo.phase == simulator::PointPhase)
+      if(todo.phase_type == simulator::PointPhase)
       {
         output_stream_ << "P";
       }

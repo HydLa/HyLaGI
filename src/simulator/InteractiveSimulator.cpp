@@ -78,7 +78,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
         simulation_todo_sptr_t tmp_todo = todo;
         do
         {
-          if(todo->phase==PointPhase)
+          if(todo->phase_type == PointPhase)
             cout << "---------PP "<<todo->id<< "---------" << endl;
           cout << "execution stuck" << endl;
           todo_num = input_and_process_command(todo);
@@ -335,7 +335,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
 
-  if(todo->phase == PointPhase)
+  if(todo->phase_type == PointPhase)
   {
     cout << "sorry, approximation at start point of PP is not supported" << endl;
     return 0;
@@ -715,11 +715,13 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
 //int InteractiveSimulator::get_phase_todo(){
 //}
 
+
 int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
-  phase_simulator_->find_unsat_core(
+/*  phase_simulator_->find_unsat_core(
     todo->parent->module_set_container->get_max_module_set(),
     todo,
     todo->parent->variable_map);
+*/
   return 0;
 }
 

@@ -44,7 +44,7 @@ bool ParameterComparator::operator()(const DefaultParameter x,const DefaultParam
 
 
 PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause):
-  phase(todo.phase),
+  phase_type(todo.phase_type),
   current_time(todo.current_time),
   parameter_map(todo.parameter_map),
   positive_asks(todo.positive_asks),
@@ -60,7 +60,7 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {
-  s << "%% PhaseType: " << phase.phase << std::endl;
+  s << "%% PhaseType: " << phase.phase_type << std::endl;
   s << "%% id: " <<  phase.id          << std::endl;
   s << "%% step: " <<  phase.step << std::endl;
   
@@ -104,11 +104,7 @@ std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
 
 
 
-std::ostream& operator<<(std::ostream& s, const constraints_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
+
 
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a)
 {

@@ -155,7 +155,7 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
   */
 }
 
-void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, const Phase &phase){
+void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
   for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
 
     std::string fmt = "v";
@@ -205,7 +205,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
   TellCollector tell_collector(ms);
   AskCollector ask_collector(ms);
   tells_t tell_list;
-  constraints_t constraint_list;
+  ConstraintStore constraint_list;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -245,11 +245,11 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       if((i & (1 << j)) != 0){
 	  std::cout << " +++ " << get_infix_string((*it)->get_guard()) << std::endl;
         tmp_positive_asks.insert(*it);
-        constraint_list.push_back((*it)->get_guard());
+        constraint_list.add_constraint((*it)->get_guard());
       }else{
 	  std::cout << " --- " << get_infix_string((*it)->get_guard()) << std::endl;
 	// 成り立たないと仮定したガード条件の後件に関する連続性を見る
-        constraint_list.push_back(node_sptr(new Not((*it)->get_guard())));
+        constraint_list.add_constraint(node_sptr(new Not((*it)->get_guard())));
         if(searcher.judge_non_prev((*it)->get_guard())){
 	  maker.visit_node((*it)->get_child(), false, true);
 	  non_prev = true;
@@ -265,7 +265,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     //    std::cout << "collected tell for guard" << std::endl;
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       //      std::cout << get_infix_string((*it)->get_child()) << std::endl;
-      constraint_list.push_back((*it)->get_child());
+      constraint_list.add_constraint((*it)->get_child());
       maker.visit_node((*it), false, false);
     }
 
@@ -288,7 +288,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       maker.reset();
       
       if(guard_condition != NULL){
-        constraint_list.push_back(guard_condition);
+        constraint_list.add_constraint(guard_condition);
         //      std::cout << "guard condition : " << get_infix_string(guard_condition) << std::endl;
       }
       // tell制約とガード条件が成立するask制約の後件を集める
@@ -298,7 +298,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       
       //    std::cout << "send tell" << std::endl;
       for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-	constraint_list.push_back((*it)->get_child());
+	constraint_list.add_constraint((*it)->get_child());
 // TODO? : IPにも対応する
 	maker.visit_node((*it), false, false);
 	//      std::cout << get_infix_string((*it)->get_child()) << std::endl;

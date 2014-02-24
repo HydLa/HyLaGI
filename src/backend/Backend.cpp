@@ -7,6 +7,7 @@
 
 using namespace hydla::parse_tree;
 using namespace std;
+using namespace hydla::simulator;
 
 namespace hydla{
 namespace backend{
@@ -107,13 +108,11 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       }
       else
       {
-        constraints_t *cs = (constraints_t *)arg;
+        constraint_store_t *cs = (constraint_store_t *)arg;
         link_->put_converted_function("List", cs->size());
-        for(constraints_t::iterator it = cs->begin(); 
-            it != cs->end();
-            it++)
+        for(auto constraint : *cs)
         {
-          send_node(*it, form);
+          send_node(constraint, form);
         }
       }
     }
@@ -295,7 +294,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     case 's':
     {
       // for cs
-      constraints_t* cs = (constraints_t*)ret;
+      ConstraintStore* cs = (ConstraintStore*)ret;
       *cs = receive_cs();
       break;
     }
@@ -750,17 +749,27 @@ void Backend::set_range(const value_t &val, value_range_t &range, const int& rel
   }
 }
 
-constraints_t Backend::receive_cs()
+ConstraintStore Backend::receive_cs()
 {
-  constraints_t cs;
+  ConstraintStore cs;
   std::string name;
-  int cnt;
-  link_->get_function(name, cnt);
-  for(int i = 0; i < cnt; i++)
+  int count;
+  link_->get_function(name, count);
+  for(int i = 0; i < count; i++)
   {
     node_sptr constraint;
+  
     constraint = receive_node();
-    cs.push_back(constraint);
+    // TODO: avoid string comparison
+    string constraint_string = get_infix_string(constraint);
+    if(constraint_string == "False")
+    {
+      cs.set_consistency(false);
+    }
+    else if(constraint_string != "True")
+    {
+      cs.add_constraint(constraint);
+    }
   }
   return cs;
 }
@@ -834,36 +843,9 @@ check_consistency_result_t Backend::receive_cc()
   std::string outer_name;
   int outer_cnt;
   link_->get_function(outer_name, outer_cnt);
-  for(int i = 0; i < outer_cnt; i++)
-  {
-    std::string inner_name;
-    int inner_cnt;
-    vector<parameter_map_t> maps;
-    Link::DataType dt = link_->get_type();
-    if(dt == Link::DT_SYM)
-    {
-      string sym = link_->get_symbol();
-      if(equal_ignoring_case(sym, "true"))
-      {
-        maps.push_back(parameter_map_t());
-      }
-    }
-    else if(dt == Link::DT_FUNC)
-    {
-      link_->get_function(inner_name, inner_cnt);
-      for(int j = 0; j < inner_cnt; j++)
-      {
-        parameter_map_t map;
-        receive_parameter_map(map);
-        maps.push_back(map);
-      }
-    }
-    else
-    {
-      assert(0);
-    }
-    ret.push_back(maps);
-  }
+  assert(outer_cnt == 2);
+  ret.consistent_store = receive_cs();
+  ret.inconsistent_store = receive_cs();
   return ret;
 }
 
@@ -876,7 +858,6 @@ node_sptr Backend::receive_function()
   bool converted;
   link_->get_function(symbol, arg_count);
   symbol = link_->convert_function(symbol, false, converted);
-  HYDLA_LOGGER_DEBUG_VAR(symbol);
   if(equal_ignoring_case(symbol, "Sqrt")){//1引数関数
     ret = node_sptr(new Divide(node_sptr(new Number("1")), node_sptr(new Number("2")))); 
     ret = node_sptr(new hydla::parse_tree::Power(receive_node(), ret));
@@ -1019,7 +1000,7 @@ node_sptr Backend::receive_node(){
         ret = node_sptr(new hydla::parse_tree::E());
       else if(symbol=="inf")
         ret = node_sptr(new hydla::parse_tree::Infinity());
-      else if(symbol=="true")
+      else if(symbol=="True")
         ret = node_sptr(new hydla::parse_tree::True());
       else if(symbol=="False")
 	ret = node_sptr(new hydla::parse_tree::False());

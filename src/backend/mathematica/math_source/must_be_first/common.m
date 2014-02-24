@@ -179,15 +179,21 @@ publicMethod[
 ];
 
 
-toReturnForm[expr_] := (
-  expr /. (Infinity :> inf)
-       (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
-       /. (Derivative[cnt_][var_] :> Derivative[cnt, var])
-       /. (Derivative[cnt_, var_][_] :> Derivative[cnt, var])
-       /. (x_ :> ToString[InputForm[x]] /; Head[x] === Root )
-       /. (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )
-       /. (x_Integer :> replaceIntegerToString[x])
-);
+
+toReturnForm[expr_] := 
+Module[
+  {ret},
+  If[expr === Infinity, Return[inf]];
+  (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
+  If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
+  If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
+  If[MatchQ[expr, _[t]], Return[Head[expr] ] ];
+  ret = Map[toReturnForm, expr];
+  ret = Replace[ret, (x_ :> ToString[InputForm[x]] /; Head[x] === Root )];
+  ret = Replace[ret, (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )];
+  ret = Replace[ret, (x_Integer :> replaceIntegerToString[x])];
+  ret
+];
 
 (* TODO: Is this really free of approximation error? *)
 toRational[float_] := Rationalize[float, 0];

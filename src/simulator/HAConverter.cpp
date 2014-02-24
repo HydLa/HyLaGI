@@ -88,7 +88,7 @@ namespace simulator {
 	        continue;
 	      }
     		
-	    	if (phase->phase == IntervalPhase) 
+	    	if (phase->phase_type == IntervalPhase) 
 				{
 					if (check_already_exec(phase, cc_))
 					{
@@ -220,7 +220,7 @@ namespace simulator {
 	bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2)
 	{
 		// フェーズ
-		if(!(r1->phase == r2->phase)) return false;
+		if(!(r1->phase_type == r2->phase_type)) return false;
 		// モジュール集合
 		HYDLA_LOGGER_DEBUG("compare :: id:", r1->id, " ", r1->module_set->get_name(), " <=> id:", r2->id, " ", r2->module_set->get_name());
 		if(!(r1->module_set->compare(*r2->module_set) == 0)) return false;
@@ -273,7 +273,7 @@ namespace simulator {
 			<< ")\" [label=\"" << result[0]->module_set->get_name() << "\\n(" << get_asks_str(result[0]->positive_asks)
 			   << ")\", labelfloat=false,arrowtail=dot];" << endl;
 		for(unsigned int i = 2 ; i < result.size() ; i++){
-			if(result[i]->phase == IntervalPhase){
+			if(result[i]->phase_type == IntervalPhase){
 				str_ = "\"" + result[i-2]->module_set->get_name() + "\\n(" + get_asks_str(result[i-2]->positive_asks) 
 					+ ")\"->\"" + result[i]->module_set->get_name() + "\\n(" + get_asks_str(result[i]->positive_asks) 
 						+ ")\" [label=\"" + result[i-1]->module_set->get_name() + "\\n(" + get_asks_str(result[i-1]->positive_asks) 

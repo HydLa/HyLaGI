@@ -68,7 +68,7 @@ phase_result_const_sptr_t HASimulator::simulate()
     HYDLA_LOGGER_DEBUG("*** after substitute pr");
     viewPr(pr);
 			
-    if(pr->phase == PointPhase)
+    if(pr->phase_type == PointPhase)
     {
       vm = update_vm(pr, vm);
       pr->current_time = current_time;
@@ -80,7 +80,7 @@ phase_result_const_sptr_t HASimulator::simulate()
       pr->end_time += pr->current_time;
       pr->end_time = simplify(pr->end_time.get_node());
       current_time = pr->end_time;
-      pr->variable_map = phase_simulator_->shift_variable_map_time(pr->variable_map, pr->current_time);
+      //pr->variable_map = phase_simulator_->shift_variable_map_time(pr->variable_map, pr->current_time);
       substitute(pr, vm);
     }
 			
@@ -96,7 +96,7 @@ phase_result_const_sptr_t HASimulator::simulate()
 
     simulation_todo_sptr_t st(new SimulationTodo);
     st->id = pr->id;
-    st->phase = pr->phase;
+    st->phase_type = pr->phase_type;
     st->profile = profile;
     profile_vector_->push_back(st);
 
@@ -106,7 +106,7 @@ phase_result_const_sptr_t HASimulator::simulate()
       break;
     }
  
-    if(ha[i]->phase == IntervalPhase){
+    if(ha[i]->phase_type == IntervalPhase){
       if(ha[i]->end_time.undefined()){
         // ???だったら最初のノードに戻る(初期のエッジは飛ばす)
         i = 1;

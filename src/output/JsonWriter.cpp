@@ -36,7 +36,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
 {
   object phase_object;
   phase_object["id"] = value((long)phase->id);
-  if(phase->phase == simulator::PointPhase)
+  if(phase->phase_type == simulator::PointPhase)
   {
     phase_object["type"] = value(string("PP"));
     object time_object;
@@ -44,7 +44,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
       value(phase->current_time.get_string());
     phase_object["time"] = value(time_object);
   }
-  else if(phase->phase == simulator::IntervalPhase)
+  else if(phase->phase_type == simulator::IntervalPhase)
   {
     phase_object["type"] = value(string("IP"));
 

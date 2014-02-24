@@ -55,6 +55,12 @@ Value Value::operator/(const Value& rhs){
   return ret /= rhs;
 }
 
+Value Value::operator-()
+{
+  Value ret(*this);
+  ret.set_node(node_sptr(new Negative(ret.get_node())));
+  return ret;
+}
 
 bool Value::undefined() const
 {

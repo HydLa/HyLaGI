@@ -21,7 +21,10 @@ namespace simulator {
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
-typedef std::vector<parameter_maps_t>    CheckConsistencyResult;
+struct CheckConsistencyResult
+{
+  ConstraintStore consistent_store, inconsistent_store;
+};
 
 
 typedef enum{
@@ -29,14 +32,6 @@ typedef enum{
   CONDITIONS_FALSE,
   CONDITIONS_VARIABLE_CONDITIONS
 } ConditionsResult;
-
-
-typedef enum{
-  CVM_INCONSISTENT,
-  CVM_CONSISTENT,
-  CVM_ERROR
-} CalculateVariableMapResult;
- 
 
 class PhaseSimulator{
 
@@ -95,12 +90,11 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
 
+/*
   virtual void find_unsat_core(const module_set_sptr& ms,
       simulation_todo_sptr_t&,
     const variable_map_t& vm) = 0;
-
-  variable_map_t shift_variable_map_time(const variable_map_t& vm, const value_t &time);
-
+*/
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
@@ -123,21 +117,20 @@ protected:
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
    */
 
-  virtual CalculateVariableMapResult calculate_variable_map(const module_set_sptr& ms,
-                           simulation_todo_sptr_t& state, const variable_map_t &, variable_maps_t& result_vms) = 0;
+  virtual ConstraintStore calculate_constraint_store(const module_set_sptr& ms, simulation_todo_sptr_t& state) = 0;
 
   result_list_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
-                                  const variable_map_t& time_applied_map, simulation_todo_sptr_t& state);
+                                  const ConstraintStore&, simulation_todo_sptr_t& state);
                                   
                                   
   virtual CheckEntailmentResult check_entailment(
     CheckConsistencyResult &cc_result,
     const node_sptr& guard,
     const continuity_map_t& cont_map,
-    const Phase& phase) = 0;
+    const PhaseType& phase) = 0;
   
   virtual variable_map_t apply_time_to_vm(const variable_map_t &, const value_t &) = 0;
-  virtual constraints_t apply_time_to_constraints(const constraints_t &, const value_t &);
+  ConstraintStore apply_time_to_constraints(const ConstraintStore &, const value_t &);
   
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
@@ -148,25 +141,30 @@ protected:
   /**
    * PPモードとIPモードを切り替える
    */
-  virtual void set_simulation_mode(const Phase& phase) = 0;
+  virtual void set_simulation_mode(const PhaseType& phase) = 0;
 
 
   Simulator* simulator_;
 
-  void replace_prev2parameter(variable_map_t &vm, 
-                              phase_result_sptr_t &phase);
+  void replace_prev2parameter(
+                              phase_result_sptr_t &phase,
+                              variable_map_t &vm, 
+                              parameter_map_t &parameter_map);
 
-  virtual CalculateVariableMapResult check_conditions(
+/*
+  virtual ConstraintStore check_conditions(
     const module_set_sptr& ms,
     simulation_todo_sptr_t&,
     const variable_map_t &,
     bool b) = 0;
-
+*/
+/*
   virtual void mark_nodes_by_unsat_core(
     const module_set_sptr& ms,
     simulation_todo_sptr_t&,
     const variable_map_t&
       ) = 0;
+*/
 
   virtual module_set_list_t calculate_mms(
     simulation_todo_sptr_t& state,
@@ -208,16 +206,9 @@ protected:
 
   private:
 
-  /**
-   * merge rhs to lhs
-   */
-  void merge_variable_map(variable_map_t& lhs, const variable_map_t& rhs);
-
-  void merge_variable_maps(variable_maps_t& lhs, const variable_maps_t& rhs);
-
   result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
   
-  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const variable_map_t& vm);
+  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const ConstraintStore& store);
 };
 
 

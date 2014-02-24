@@ -25,7 +25,7 @@ UnsatCoreFinder::UnsatCoreFinder(){}
 
 UnsatCoreFinder::~UnsatCoreFinder(){}
 
-void UnsatCoreFinder::reset(Phase phase, const variable_map_t &vm, const parameter_map_t &pm)
+void UnsatCoreFinder::reset(PhaseType phase, const variable_map_t &vm, const parameter_map_t &pm)
 {
   backend_->call("resetConstraintForVariable", 0, "","");
   std::string fmt = "mvp";
@@ -62,7 +62,7 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     const variable_map_t& vm
 )
 {
-  find_unsat_core(ms, S, S4C, todo->positive_asks, todo->negative_asks, vm, todo->parameter_map, todo->phase);
+  find_unsat_core(ms, S, S4C, todo->positive_asks, todo->negative_asks, vm, todo->parameter_map, todo->phase_type);
 }
 
 
@@ -75,13 +75,13 @@ void UnsatCoreFinder::find_unsat_core(
   const negative_asks_t &negative_asks,
   const variable_map_t& vm,
   const parameter_map_t &pm,
-  Phase phase_type
+  PhaseType phase_type
 )
 {
   HYDLA_LOGGER_DEBUG("");
   expanded_always_t expanded_always;
   tells_t tell_list;
-  constraints_t constraint_list;
+  ConstraintStore constraint_list;
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -108,18 +108,16 @@ void UnsatCoreFinder::find_unsat_core(
     constraint_list.clear();
 
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      constraint_list.push_back((*it)->get_child());
+      constraint_list.add_constraint((*it)->get_child());
       maker.visit_node((*it), false, false);
     }
 
-    for(constraints_t::iterator it = constraint_list.begin();
-        it != constraint_list.end();
-        it++)
+    for(auto constraint : constraint_list)
     {
       const char* fmt = (phase_type == PointPhase)?"en":"et";
-      backend_->call("addConstraint", 1, fmt, "", &(*it));
+      backend_->call("addConstraint", 1, fmt, "", &(constraint));
       if(check_inconsistency(phase_type)){
-        S.insert(make_pair(make_pair(*it,"constraint"),temp_ms));
+        S.insert(make_pair(make_pair(constraint,"constraint"),temp_ms));
         if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
           return ;
         }else{
@@ -224,7 +222,7 @@ void UnsatCoreFinder::find_unsat_core(
 }
 
 
-bool UnsatCoreFinder::check_inconsistency(Phase phase_type){
+bool UnsatCoreFinder::check_inconsistency(PhaseType phase_type){
   CheckConsistencyResult check_consistency_result;
   std::string func_name;
   if(phase_type == PointPhase)
@@ -236,7 +234,7 @@ bool UnsatCoreFinder::check_inconsistency(Phase phase_type){
     func_name = "checkConsistencyInterval";
   }
   backend_->call(func_name.c_str(), 0, "", "cc", &check_consistency_result);
-  if(check_consistency_result[0].empty()){
+  if(!check_consistency_result.consistent_store.consistent()){
     return true;
   }else{
     return false;
@@ -244,7 +242,7 @@ bool UnsatCoreFinder::check_inconsistency(Phase phase_type){
 }
 
 
-bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms, Phase phase_type, const variable_map_t& vm, const parameter_map_t& pm){
+bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms, PhaseType phase_type, const variable_map_t& vm, const parameter_map_t& pm){
   backend_->call("endTemporary", 0, "", "");
   backend_->call("startTemporary", 0, "", "");
   reset(phase_type, vm, pm);
@@ -260,7 +258,7 @@ void UnsatCoreFinder::set_backend(backend_sptr_t back){
 }
 
 
-void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C, Phase phase){
+void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C, PhaseType phase){
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
     const char* fmt = (phase == PointPhase)?"en":"et";
