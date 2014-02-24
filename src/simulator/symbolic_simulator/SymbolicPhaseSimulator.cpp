@@ -15,7 +15,6 @@
 #include "AskCollector.h"
 #include "VariableFinder.h"
 #include "VariableSearcher.h"
-#include "AskConstraintVariableFinder.h"
 
 #include "InitNodeRemover.h"
 #include "MathematicaLink.h"
@@ -502,8 +501,8 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
            /* 
             if(opts_->reuse && !state->parent->changed_variables.empty()){
               VariableFinder variable_finder;
-              variable_finder.visit_node(*it,true);
-              VariableFinder::variable_set_t tmp_vars = variable_finder.get_variable_set();
+              variable_finder.visit_node(*it);
+              VariableFinder::variable_set_t tmp_vars = variable_finder.get_all_variable_set();
               for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
                 state->parent->changed_variables.insert(it->first);
               }
@@ -660,13 +659,13 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
   //導出状態の差分取得
   //現在はpositiveだけど、parentではpositiveじゃないやつ
   //現在はnegativeだけど、parentではpositiveなやつ
-  AskConstraintVariableFinder v_finder;
+  VariableFinder v_finder;
   VariableSearcher v_searcher;
   positive_asks_t parent_positives = parent_phase->positive_asks;
   int cv_count = changing_variables.size();
   for( auto ask : positive_asks ){
     if(parent_positives.find(ask) == parent_positives.end() ){
-      v_finder.visit_node(ask);
+      v_finder.visit_node(ask, false);
       VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
       for( auto var : tmp_vars ) changing_variables.insert(var.first);
     }

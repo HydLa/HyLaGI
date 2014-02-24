@@ -12,8 +12,9 @@ VariableFinder::VariableFinder()
 VariableFinder::~VariableFinder()
 {}
 
-void VariableFinder::visit_node(boost::shared_ptr<parse_tree::Node> node)
+void VariableFinder::visit_node(boost::shared_ptr<parse_tree::Node> node, bool include_guard)
 {
+  include_guard_ = include_guard;
   in_prev_ = false;
   differential_count_ = 0;
   accept(node);
@@ -40,7 +41,10 @@ VariableFinder::variable_set_t VariableFinder::get_prev_variable_set() const{ret
 // Ask制約
 void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 {
-  accept(node->get_guard());
+  if(include_guard_)
+  {
+    accept(node->get_guard());
+  }
   accept(node->get_child());
 }
 

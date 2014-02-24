@@ -26,8 +26,10 @@ public:
   
   /** 
    * 制約を調べ，変数の出現を取得する
+   * @param node 調べる対象となる制約
+   * @param include_guard ガード条件を対象とするかどうか
    */
-  void visit_node(boost::shared_ptr<parse_tree::Node> node);
+  void visit_node(boost::shared_ptr<parse_tree::Node> node, bool  include_guard = true);
   
   void clear();
   
@@ -57,6 +59,7 @@ private:
   variable_set_t variables_, prev_variables_;  
   int differential_count_;
   bool in_prev_;
+  bool include_guard_;
 };
 
 } //namespace simulator
