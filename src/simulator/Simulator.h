@@ -6,7 +6,6 @@
 #include "Node.h"
 #include "ParseTree.h"
 
-
 #include "PhaseResult.h"
 #include "DefaultParameter.h"
 #include "ContinuityMapMaker.h"

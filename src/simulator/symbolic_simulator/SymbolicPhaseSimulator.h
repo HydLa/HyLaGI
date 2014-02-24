@@ -12,7 +12,6 @@
 
 #include "Simulator.h"
 
-#include "SymbolicTypes.h"
 #include "PhaseSimulator.h"
 #include "../output/TrajPrinter.h"
 #include "UnsatCoreFinder.h"

@@ -9,6 +9,7 @@
 #include "ContinuityMapMaker.h"
 
 #include "../backend/Backend.h"
+#include "Simulator.h"
 
 using namespace std;
 using namespace hydla::simulator;

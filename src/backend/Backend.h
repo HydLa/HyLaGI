@@ -1,10 +1,12 @@
 #ifndef _INCLUDED_HYDLA_BACKEND_BACKEND_H_
 #define _INCLUDED_HYDLA_BACKEND_BACKEND_H_
 #include "Link.h"
-#include "SymbolicTypes.h"
 
 #include "DefaultTreeVisitor.h"
 #include "ParseTree.h"
+#include "PhaseResult.h"
+#include "Simulator.h"
+#include "PhaseSimulator.h"
 
 namespace hydla{
 namespace backend{

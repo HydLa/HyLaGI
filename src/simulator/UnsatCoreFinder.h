@@ -1,11 +1,10 @@
 #ifndef _INCLUDED_HYDLA_UNSAT_CORE_FINDER_H_
 #define _INCLUDED_HYDLA_UNSAT_CORE_FINDER_H_
 
-#include "SymbolicTypes.h"
-
 #include "ParseTree.h"
 #include "ModuleSet.h"
 #include "PhaseResult.h"
+#include "Simulator.h"
 
 namespace hydla{
 namespace simulator{
@@ -48,4 +47,3 @@ protected:
 }
 }
 #endif //_INCLUDED_HYDLA_UNSAT_CORE_FINDER_H_
-
