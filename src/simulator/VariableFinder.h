@@ -27,12 +27,17 @@ public:
   /** 
    * 制約を調べ，変数の出現を取得する
    */
-  void visit_node(boost::shared_ptr<parse_tree::Node> node, const bool& in_IP);
+  void visit_node(boost::shared_ptr<parse_tree::Node> node);
   
   void clear();
   
+  /// get found variables (include prev)
+  variable_set_t get_all_variable_set() const;
+
+  /// get found variables (without prev)
   variable_set_t get_variable_set() const;
-  
+
+  /// get prev variables
   variable_set_t get_prev_variable_set() const;
   
   // Ask制約
@@ -49,10 +54,8 @@ public:
 
 private:
 
-  variable_set_t variables_, prev_variables_;
-  
+  variable_set_t variables_, prev_variables_;  
   int differential_count_;
-  bool in_interval_;
   bool in_prev_;
 };
 

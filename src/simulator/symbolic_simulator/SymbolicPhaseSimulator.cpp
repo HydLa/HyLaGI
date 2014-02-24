@@ -666,7 +666,7 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
   int cv_count = changing_variables.size();
   for( auto ask : positive_asks ){
     if(parent_positives.find(ask) == parent_positives.end() ){
-      v_finder.visit_node(ask, false);
+      v_finder.visit_node(ask);
       VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
       for( auto var : tmp_vars ) changing_variables.insert(var.first);
     }
@@ -674,7 +674,7 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
 
   for( auto ask : negative_asks ){
     if(parent_positives.find(ask) != parent_positives.end() ){
-      v_finder.visit_node(ask, false);
+      v_finder.visit_node(ask);
       VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
       for( auto var : tmp_vars ) changing_variables.insert(var.first);
     }
@@ -687,7 +687,7 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
         bool has_cv = v_searcher.visit_node(changing_variables, tell, false );
         if(has_cv){
           v_finder.clear();
-          v_finder.visit_node(tell, false);
+          v_finder.visit_node(tell);
           VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
           for( auto var : tmp_vars )
             changing_variables.insert(var.first);
@@ -741,7 +741,7 @@ change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(
 
   VariableFinder v_finder;
   for( auto tell : symm_diff_tells )
-    v_finder.visit_node(tell, false);
+    v_finder.visit_node(tell);
 
   VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
   for( auto var : tmp_vars )
@@ -754,7 +754,7 @@ change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(
       bool has_cv = v_searcher.visit_node(cv, tell, false );
       if(has_cv){
         v_finder.clear();
-        v_finder.visit_node(tell, false);
+        v_finder.visit_node(tell);
         tmp_vars = v_finder.get_variable_set();
         for( auto var : tmp_vars )
           cv.insert(var.first);
@@ -779,8 +779,8 @@ bool SymbolicPhaseSimulator::apply_entailment_change( const ask_set_t::iterator 
   bool ret = false;
   if(previous_asks.find(*it) != previous_asks.end() ){
     VariableFinder v_finder;
-    v_finder.visit_node(*it, in_IP);
-    VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+    v_finder.visit_node(*it);
+    VariableFinder::variable_set_t tmp_vars = in_IP?v_finder.get_all_variable_set():v_finder.get_variable_set();
     int v_count = changing_variables.size();
     for(auto var : tmp_vars){
       changing_variables.insert(var.first);

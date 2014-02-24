@@ -1,6 +1,7 @@
 #include "VariableFinder.h"
 #include "Logger.h"
 
+using namespace std;
 
 namespace hydla {
 namespace simulator {
@@ -11,9 +12,8 @@ VariableFinder::VariableFinder()
 VariableFinder::~VariableFinder()
 {}
 
-void VariableFinder::visit_node(boost::shared_ptr<parse_tree::Node> node, const bool& in_IP)
+void VariableFinder::visit_node(boost::shared_ptr<parse_tree::Node> node)
 {
-  in_interval_ = in_IP;
   in_prev_ = false;
   differential_count_ = 0;
   accept(node);
@@ -26,6 +26,12 @@ void VariableFinder::clear(){
 }
 
 
+VariableFinder::variable_set_t VariableFinder::get_all_variable_set() const
+{
+  variable_set_t merged_set(variables_);
+  merged_set.insert(prev_variables_.begin(), prev_variables_.end());
+  return merged_set;
+}
 
 VariableFinder::variable_set_t VariableFinder::get_variable_set() const{ return variables_;}
 VariableFinder::variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variables_;}
@@ -64,13 +70,9 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Differential> no
 // 左極限
 void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
 {
-  if(!in_interval_){
-    in_prev_ = true;
-    accept(node->get_child());
-    in_prev_ = false;
-  }else{
-    accept(node->get_child());
-  }
+  in_prev_ = true;
+  accept(node->get_child());
+  in_prev_ = false;
 }
 
 

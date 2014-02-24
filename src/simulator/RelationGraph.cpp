@@ -117,19 +117,27 @@ boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms
   relation_set_t relations;
   for(module_set_t::module_list_const_iterator it = ms.begin();it != ms.end(); it++){
     VariableFinder finder;
-    finder.visit_node(it->second, in_IP);
-    VariableFinder::variable_set_t variables = finder.get_variable_set(),
-      prev_variables = finder.get_prev_variable_set();
-    for(VariableFinder::variable_set_t::const_iterator v_it = variables.begin(); v_it != variables.end(); v_it++)
+    finder.visit_node(it->second);
+    VariableFinder::variable_set_t variables, prev_variables;
+    if(in_IP)
     {
-      variable_t var(*std::find(vs.begin(), vs.end(), DefaultVariable(v_it->first, v_it->second)), false);
+      variables = finder.get_all_variable_set();
+    }
+    else
+    {
+      variables = finder.get_variable_set();
+      prev_variables = finder.get_prev_variable_set();
+    }
+    for(auto variable : variables)
+    {
+      variable_t var(DefaultVariable(variable.first, variable.second), false);
       relations.push_back(std::make_pair(&(*it), var));
     }
     
-    for(VariableFinder::variable_set_t::const_iterator v_it = prev_variables.begin(); v_it != prev_variables.end(); v_it++)
+    for(auto variable : prev_variables)
     {
       relations.push_back(std::make_pair(&(*it), 
-        variable_t(*std::find(vs.begin(), vs.end(), (hydla::simulator::DefaultVariable(v_it->first, v_it->second))), true)));
+        variable_t(DefaultVariable(variable.first, variable.second), true)));
     }
   }
   return boost::shared_ptr<RelationGraph>(new RelationGraph(relations));
