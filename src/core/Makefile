@@ -5,7 +5,7 @@ LIB_DIRS := backend simulator constraint_hierarchy parser common output interval
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica -I../backend/reduce
-INCLUDES += -I../simulator/symbolic_simulator
+INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib
