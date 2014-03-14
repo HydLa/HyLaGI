@@ -47,6 +47,7 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   phase_type(todo.phase_type),
   current_time(todo.current_time),
   parameter_map(todo.parameter_map),
+  expanded_always(todo.expanded_always),
   positive_asks(todo.positive_asks),
   negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
@@ -124,7 +125,7 @@ std::ostream& operator<<(std::ostream& s, const collected_tells_t& a)
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const expanded_always_t& a)
+std::ostream& operator<<(std::ostream& s, const always_set_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;

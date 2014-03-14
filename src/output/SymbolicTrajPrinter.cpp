@@ -36,7 +36,7 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << result.module_set->get_name() << endl;
     sstr << "time\t: " << result.current_time << "\n";
   }
-  sstr << result.reduced_constraint_store << endl;
+  sstr << result.constraint_store << endl;
   output_variable_map(sstr, result.variable_map);
   
   return sstr.str();

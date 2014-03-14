@@ -36,7 +36,7 @@ public:
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
   void collect_all_tells(tells_t*                 all_tells,
-                         const expanded_always_t* expanded_always,
+                         const always_set_t* expanded_always,
                          const positive_asks_t*   positive_asks)
   {
     collect_all_tells_ = true;
@@ -52,7 +52,7 @@ public:
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
   void collect_new_tells(tells_t*                 new_tells,
-                         const expanded_always_t* expanded_always,                   
+                         const always_set_t* expanded_always,                   
                          const positive_asks_t*   positive_asks)
   {
     collect_all_tells_ = false;
@@ -128,7 +128,7 @@ private:
   typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
 
   void collect(tells_t*                 tells,
-               const expanded_always_t* expanded_always,                   
+               const always_set_t* expanded_always,                   
                const positive_asks_t*   positive_asks);
 
   /// 収集をおこなう対象の制約モジュール集合

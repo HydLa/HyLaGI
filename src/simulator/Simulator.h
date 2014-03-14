@@ -96,17 +96,14 @@ struct SimulationTodo{
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   ask_set_t                 discrete_causes;
-  expanded_always_t         expanded_always;
+  always_set_t         expanded_always;
   entailed_prev_map_t       judged_prev_map;
 
   /// 前のフェーズ
   phase_result_sptr_t parent;
 
-  /// フェーズ内で一時的に追加する制約．分岐処理などに使用
-  ConstraintStore temporary_constraints;
-
-  ConstraintStore original_constraint_store;
-  ConstraintStore reduced_constraint_store;
+  /// このフェーズの制約ストアの初期値（離散変化条件など，特に重要な条件を入れる）
+  ConstraintStore initial_constraint_store;
   /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
   module_set_container_sptr module_set_container;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
@@ -128,7 +125,6 @@ struct SimulationTodo{
    */
   void reset_from_start_of_phase(){
     ms_cache.clear();
-    temporary_constraints.clear();
     ms_to_visit = module_set_container->get_full_ms_list();
     maximal_mss.clear();
     positive_asks.clear();

@@ -56,16 +56,16 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 {
   result_list_t result; 
   bool has_next = false;
-  ConstraintStore time_applied_store;
+  variable_map_t time_applied_map;
   boost::shared_ptr<RelationGraph> graph;
   
   if(todo->phase_type == PointPhase)
   {
-    time_applied_store = apply_time_to_constraints(todo->parent->reduced_constraint_store, todo->current_time);
+    time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
     graph = pp_relation_graph_;
     set_simulation_mode(PointPhase);
   }else{
-    time_applied_store = todo->parent->reduced_constraint_store;
+    time_applied_map = todo->parent->variable_map;
     graph = ip_relation_graph_;
     set_simulation_mode(IntervalPhase);
   }
@@ -76,7 +76,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
-    result_list_t tmp_result = simulate_ms(ms, graph, time_applied_store, todo);
+    result_list_t tmp_result = simulate_ms(ms, graph, time_applied_map, todo);
     if(!tmp_result.empty())
     {
       has_next = true;
@@ -100,7 +100,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms,
-  boost::shared_ptr<RelationGraph>& graph, const ConstraintStore& time_applied_store, simulation_todo_sptr_t& todo)
+  boost::shared_ptr<RelationGraph>& graph, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
 {
   HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
   graph->set_valid(ms.get());
@@ -110,7 +110,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
-  backend_->call("addPrevConstraint", 1, "csp", "", &time_applied_store);
+  backend_->call("addPrevConstraint", 1, "mvp", "", &time_applied_map);
 
   if(todo->module_set_container != msc_no_init_)
   {
@@ -274,11 +274,10 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
 
 void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckConsistencyResult &result){
   simulation_todo_sptr_t branch_state_false(create_new_simulation_phase(original));
-  branch_state_false->original_constraint_store.add_constraint_store(result.inconsistent_store);
+  branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   todo_container_->push_todo(branch_state_false);
-  original->reduced_constraint_store.add_constraint_store(result.consistent_store);
-  original->original_constraint_store.add_constraint_store(result.inconsistent_store);
-  backend_->call("resetConstraint", 1, "cs", "", &original->reduced_constraint_store);
+  original->initial_constraint_store.add_constraint_store(result.consistent_store);
+  backend_->call("resetConstraint", 1, "cs", "", &original->initial_constraint_store);
 }
 
 
@@ -286,7 +285,7 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo,
 {
   phase_result_sptr_t phase(new PhaseResult(*todo));
   phase->id = ++phase_sum_;
-  phase->reduced_constraint_store = store;
+  phase->constraint_store = store;
   todo->parent->children.push_back(phase);
   return phase;
 }
@@ -328,7 +327,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   }
   
   AskCollector ac(ms);
-  expanded_always_t eat;
+  always_set_t eat;
   positive_asks_t pat;
   negative_asks_t nat;
 

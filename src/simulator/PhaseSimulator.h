@@ -120,7 +120,7 @@ protected:
   virtual ConstraintStore calculate_constraint_store(const module_set_sptr& ms, simulation_todo_sptr_t& state) = 0;
 
   result_list_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
-                                  const ConstraintStore&, simulation_todo_sptr_t& state);
+                                  const variable_map_t&, simulation_todo_sptr_t& state);
                                   
                                   
   virtual CheckEntailmentResult check_entailment(

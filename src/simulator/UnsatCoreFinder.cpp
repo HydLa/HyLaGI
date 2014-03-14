@@ -80,7 +80,7 @@ void UnsatCoreFinder::find_unsat_core(
 )
 {
   HYDLA_LOGGER_DEBUG("");
-  expanded_always_t expanded_always;
+  always_set_t expanded_always;
   tells_t tell_list;
   ConstraintStore constraint_list;
 

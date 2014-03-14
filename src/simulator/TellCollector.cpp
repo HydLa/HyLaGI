@@ -51,7 +51,7 @@ void TellCollector::collected_tells(tells_t* collected_tells)
 }
 
 void TellCollector::collect(tells_t*                 tells,
-                            const expanded_always_t* expanded_always,                   
+                            const always_set_t* expanded_always,                   
                             const positive_asks_t*   positive_asks)
 {
   HYDLA_LOGGER_DEBUG("#*** Begin TellCollector::collect ***\n");
@@ -74,8 +74,8 @@ void TellCollector::collect(tells_t*                 tells,
   in_positive_ask_    = false;
   in_negative_ask_    = false;
   in_expanded_always_ = true;
-  expanded_always_t::const_iterator it  = expanded_always->begin();
-  expanded_always_t::const_iterator end = expanded_always->end();
+  always_set_t::const_iterator it  = expanded_always->begin();
+  always_set_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
     // 採用しているモジュール集合内に入っているかどうか
     if(visited_always_.find(*it) != visited_always_.end()) {

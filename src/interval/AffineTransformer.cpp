@@ -2,6 +2,7 @@
 #include <boost/lexical_cast.hpp>
 #include "TreeInfixPrinter.h"
 #include <exception>
+#include "Backend.h"
 #include "Logger.h"
 
 using namespace std;
@@ -113,24 +114,46 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
   kv::interval<double> itv = to_interval(affine_value);
   HYDLA_LOGGER_DEBUG_VAR(itv);
   value_t ret(affine_value.a(0));
-  HYDLA_LOGGER_DEBUG(affine_value.a);
+  simulator_->backend->call("transformToRational", 1, "vln", "vl", &ret, &ret);
+  double sum = 0;
+  int available_index;
+  // set rounding mode
+  kv::hwround::roundup();
   for(int i = 1; i < affine_value.a.size(); i++)
   {
     if(affine_value.a(i) == 0)continue;
     if(parameter_idx_map_.right.find(i)
        == parameter_idx_map_.right.end())
     {
-      range_t range;
-      range.set_lower_bound(value_t("-1"), true);
-      range.set_upper_bound(value_t("1"), true);
-      // a parameter whose differential count is -1 is regarded as a dummy variable
-      parameter_t param = simulator_->introduce_parameter("affine", 0, i, range);
-      parameter_idx_map_.insert(parameter_idx_t(param, i));
-      parameter_map[param] = range_t(value_t(-1), value_t(1));
+      //新規に追加されるダミー変数は1つにまとめる（現状だと他の変数と関係を持っていないため）
+      // TODO: kvライブラリ内のダミー変数も削除する
+      sum += affine_value.a(i);
+      available_index = i;
     }
-    parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(i);
-    ret = ret + value_t(affine_value.a(i)) * value_t(r_it->second);
+    else
+    {
+      parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(i);
+      value_t val = value_t(affine_value.a(i));
+      simulator_->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
+      ret = ret + val * value_t(r_it->second);
+    }
   }
+  if(sum != 0)
+  {
+    range_t range;
+    range.set_lower_bound(value_t("-1"), true);
+    range.set_upper_bound(value_t("1"), true);
+    // a parameter whose differential count is -1 is regarded as a dummy variable
+    parameter_t param = simulator_->introduce_parameter("affine", -1, available_index, range);
+    parameter_idx_map_.insert(parameter_idx_t(param, available_index));
+    parameter_map[param] = range_t(value_t(-1), value_t(1));
+    value_t val = value_t(affine_value.a(available_index));
+    simulator_->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
+    ret = ret + val * value_t(param);
+  }
+
+  // reset rounding mode
+  kv::hwround::roundnear();
 
   return ret;
 }
@@ -225,9 +248,12 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::E> node)
 
 void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
 {
-  HYDLA_LOGGER_DEBUG(node->get_number());
+  std::string number_str = node->get_number();
+  HYDLA_LOGGER_DEBUG(number_str);
+
+  // try translation to int
   try{
-    int integer = lexical_cast<int>(node->get_number());
+    int integer = lexical_cast<int>(number_str);
     current_val_.is_integer = true;
     current_val_.integer = integer;
     return;
@@ -236,15 +262,9 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
                  typeid(e).name(), "\n what: ", e.what());
   }
 
-  double val;
-  try{
-    val = lexical_cast<double>(node->get_number());
-  }catch(const bad_lexical_cast &e){
-    HYDLA_LOGGER_DEBUG("name: ",
-                 typeid(e).name(), "\n what: ", e.what());
-    invalid_node(*node);
-  }
-  current_val_.affine_value = affine_t(val);
+  //try approximation as double with upper rounding
+  kv::interval<double> itv = kv::interval<double>(number_str);
+  current_val_.affine_value = affine_t(itv);
   current_val_.is_integer = false;
 
 }

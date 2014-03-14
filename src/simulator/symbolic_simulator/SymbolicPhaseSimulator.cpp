@@ -27,6 +27,7 @@
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
 #include "UnsatCoreFinder.h"
+#include "AlwaysFinder.h"
 
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
@@ -323,7 +324,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   negative_asks_t& negative_asks = state->negative_asks;
   
   ask_set_t unknown_asks;
-  expanded_always_t& expanded_always = state->expanded_always;
+  always_set_t& expanded_always = state->expanded_always;
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
@@ -331,6 +332,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
+  AlwaysFinder always_finder;
 
   bool expanded;
 
@@ -363,6 +365,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       unknown_asks = original_u_asks;
       entailment_changed = false;
     }
+    HYDLA_LOGGER_DEBUG_VAR(expanded_always.size());
     tell_collector.collect_new_tells(&tell_list,
         &expanded_always,
         &positive_asks);
@@ -393,7 +396,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     continuity_map = maker.get_continuity_map();
     add_continuity(continuity_map, state->phase_type);
 
-    for(auto constraint : state->temporary_constraints){
+    for(auto constraint : state->initial_constraint_store){
       constraint_list.add_constraint(constraint);
     }
     const char* fmt = (state->phase_type == PointPhase)?"csn":"cst";
@@ -500,6 +503,7 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             if(prev_guards_.find(*it) != prev_guards_.end()){
               state->judged_prev_map.insert(std::make_pair(*it, true));
             }
+            always_finder.find_always((*it)->get_child(), expanded_always);
             unknown_asks.erase(it++);
             expanded = true;
            /* 
@@ -559,12 +563,12 @@ bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     {
       // 分岐先を生成（導出される方）
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
-      new_todo->temporary_constraints.add_constraint((branched_ask)->get_guard());
+      new_todo->initial_constraint_store.add_constraint((branched_ask)->get_guard());
       todo_container_->push_todo(new_todo);
     }
     {
       // 分岐先を生成（導出されない方）
-      state->temporary_constraints.add_constraint(node_sptr(new Not((branched_ask)->get_guard())));
+      state->initial_constraint_store.add_constraint(node_sptr(new Not((branched_ask)->get_guard())));
       negative_asks.insert(branched_ask);
       return calculate_closure(state, ms);
     }
@@ -650,7 +654,7 @@ void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& 
   TellCollector parent_t_collector(parent_ms);
   tells_t parent_tells;
   //条件なし制約だけ集める
-  expanded_always_t empty_ea;
+  always_set_t empty_ea;
   positive_asks_t empty_asks;
   parent_t_collector.collect_all_tells(&parent_tells, &empty_ea, &empty_asks );
 
@@ -709,13 +713,13 @@ void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
   if(phase->parent.get() == NULL)return;
   TellCollector current_tell_collector(phase->module_set);
   tells_t current_tell_list;
-  expanded_always_t& current_expanded_always = phase->expanded_always;
+  always_set_t& current_expanded_always = phase->expanded_always;
   positive_asks_t& current_positive_asks = phase->positive_asks;
   current_tell_collector.collect_all_tells(&current_tell_list,&current_expanded_always,&current_positive_asks);
   
   TellCollector prev_tell_collector(phase->parent->module_set);
   tells_t prev_tell_list;
-  expanded_always_t& prev_expanded_always = phase->parent->expanded_always;
+  always_set_t& prev_expanded_always = phase->parent->expanded_always;
   positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
   prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
 
@@ -879,12 +883,12 @@ SymbolicPhaseSimulator::todo_list_t
   else
   {
     backend_->call("resetConstraint", 0, "", "");
-    backend_->call("addConstraint", 1, "cst", "", &phase->reduced_constraint_store);
+    backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
 
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     assert(current_phase_ == IntervalPhase);
-    backend_->call("exprTimeShift", 2, "csnvln", "cs", &phase->reduced_constraint_store, &phase->current_time, &phase->reduced_constraint_store);
+    backend_->call("exprTimeShift", 2, "csnvln", "cs", &phase->constraint_store, &phase->current_time, &phase->constraint_store);
     phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
     next_todo->phase_type = PointPhase;
 

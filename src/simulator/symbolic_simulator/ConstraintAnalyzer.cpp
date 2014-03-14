@@ -201,7 +201,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 
   positive_asks_t positive_asks;
   negative_asks_t negative_asks;
-  expanded_always_t expanded_always;
+  always_set_t expanded_always;
   TellCollector tell_collector(ms);
   AskCollector ask_collector(ms);
   tells_t tell_list;

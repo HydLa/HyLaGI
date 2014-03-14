@@ -518,7 +518,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
     hydla::simulator::value_t                    current_time, end_time;
     variable_map_t            variable_map;
     parameter_map_t           parameter_map;
-    expanded_always_t         expanded_always;
+    always_set_t         expanded_always;
     positive_asks_t           positive_asks;
     int                       step;
     //hydla::ch::ModuleSet module_set;
@@ -620,7 +620,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     int vm_size;
     int pm_size;
     parameter_map_t           parameter_map;
-    expanded_always_t         expanded_always;
+    always_set_t         expanded_always;
     positive_asks_t           positive_asks;
     int                       step;
     //hydla::ch::ModuleSet module_set;

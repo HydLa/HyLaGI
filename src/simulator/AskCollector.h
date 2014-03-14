@@ -40,7 +40,7 @@ public:
    * @param negative_asks    ガード条件がエンテール不可能なaskノードの集合
    * @param positive_asks    ガード条件がエンテール可能なaskノードの集合
    */
-  void collect_ask(expanded_always_t* expanded_always,                   
+  void collect_ask(always_set_t* expanded_always,                   
                    const positive_asks_t*   positive_asks,
                    const negative_asks_t*   negative_asks,
                    ask_set_t*        unknown_asks);
@@ -60,7 +60,7 @@ private:
   /// 収集をおこなう対象の制約モジュール集合
   module_set_sptr          module_set_; 
 
-  expanded_always_t*       expanded_always_;                   
+  always_set_t*       expanded_always_;                   
   
   /// 制約ストアと矛盾するaskのリスト
   const negative_asks_t*         negative_asks_;
@@ -77,7 +77,7 @@ private:
   /// 探索したalwaysノードのリスト
   visited_always_t   visited_always_;
 
-  expanded_always_t  new_expanded_always_;
+  always_set_t  new_expanded_always_;
 };
 
 } //namespace simulator

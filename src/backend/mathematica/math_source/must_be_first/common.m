@@ -188,6 +188,8 @@ Module[
   If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
   If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
   If[MatchQ[expr, _[t]], Return[Head[expr] ] ];
+  If[Head[expr] === p, Return[expr] ];
+
   ret = Map[toReturnForm, expr];
   ret = Replace[ret, (x_ :> ToString[InputForm[x]] /; Head[x] === Root )];
   ret = Replace[ret, (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )];
@@ -195,7 +197,6 @@ Module[
   ret
 ];
 
-(* TODO: Is this really free of approximation error? *)
 toRational[float_] := Rationalize[float, 0];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);

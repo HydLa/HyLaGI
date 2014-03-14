@@ -135,8 +135,8 @@ std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
   s << "%% time: " << todo.current_time << std::endl;
   s << "--- parent phase result ---" << std::endl;
   s << *(todo.parent) << std::endl;
-  s << "--- temporary_constraints ---"  << std::endl; 
-  s << todo.temporary_constraints      << std::endl;
+  s << "--- initial_constraint_store ---"  << std::endl; 
+  s << todo.initial_constraint_store      << std::endl;
   s << "--- parameter map ---"          << std::endl;
   s << todo.parameter_map << std::endl;
   

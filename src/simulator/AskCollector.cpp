@@ -24,7 +24,7 @@ AskCollector::AskCollector(const module_set_sptr& module_set) :
 AskCollector::~AskCollector()
 {}
 
-void AskCollector::collect_ask(expanded_always_t* expanded_always,                   
+void AskCollector::collect_ask(always_set_t* expanded_always,                   
                                const positive_asks_t*   positive_asks,
                                const negative_asks_t*   negative_asks,
                                ask_set_t*         unknown_asks)
@@ -45,8 +45,8 @@ void AskCollector::collect_ask(expanded_always_t* expanded_always,
 
   // 展開済みalwaysノードの探索
   in_positive_ask_    = false;
-  expanded_always_t::const_iterator it  = expanded_always->begin();
-  expanded_always_t::const_iterator end = expanded_always->end();
+  always_set_t::const_iterator it  = expanded_always->begin();
+  always_set_t::const_iterator end = expanded_always->end();
   for(; it!=end; ++it) {
     // 採用しているモジュール集合内に入っているかどうか
     if(visited_always_.find(*it) != visited_always_.end()) {

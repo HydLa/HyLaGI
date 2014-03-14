@@ -53,7 +53,7 @@ typedef enum {
 
 typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells_t;
-typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  expanded_always_t;
+typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  always_set_t;
 typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
@@ -86,12 +86,11 @@ public:
   int id;
   value_t                   current_time, end_time;
 
-  ConstraintStore             original_constraint_store;
-  ConstraintStore             reduced_constraint_store;
+  ConstraintStore           constraint_store;
 
-  variable_map_t           variable_map;
+  variable_map_t            variable_map;
   parameter_map_t           parameter_map;
-  expanded_always_t         expanded_always;
+  always_set_t         expanded_always;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   int step;
@@ -119,7 +118,7 @@ std::ostream& operator<<(std::ostream& s, const hydla::simulator::parameter_map_
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::tells_t& a);
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::expanded_always_t& a);
+std::ostream& operator<<(std::ostream& s, const hydla::simulator::always_set_t& a);
 
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::change_variables_t& a);
 
