@@ -13,8 +13,8 @@ namespace backend{
 namespace reduce{
 
 
-const std::string REDUCELink::par_prefix = "parameter";
-const std::string REDUCELink::var_prefix = "usrvar";
+const std::string REDUCELink::par_prefix = "parameter_";
+const std::string REDUCELink::var_prefix = "usrvar_";
 
 
 REDUCELink::REDUCELink():sexp_ast_(""){
