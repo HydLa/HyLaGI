@@ -17,6 +17,6 @@ FULL<=>[](timer-<volume=>fuel=1).
 COMP<=>
   [](timer->=volume+exT=>timer=0).
 
-ASSERT(h>=0).
+ASSERT(h>0).
 
 INIT,CONS,BURN,FALL,VOID,FULL,TIME<<COMP.

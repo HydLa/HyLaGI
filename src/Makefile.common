@@ -1,0 +1,62 @@
+.SUFFIXES: 
+.SUFFIXES: .o .c .cc .cpp .h .d
+
+CC       := clang
+CXX      := clang++
+SED      := sed #@SED@
+MV       := mv #@MV@
+AR       := ar #@AR@
+RM	 := rm #@RM@
+LN       := ln #@LN@
+
+LIBS += -lboost_system -lncurses -lboost_thread-mt -lpthread
+
+
+INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+
+CXX_OPT  += -Wall -std=c++11
+# CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
+
+ARFLAGS  := cru
+CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
+
+SRC_DIR  += .
+SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 
+OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
+	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
+	    $(subst .cpp,.o,$(filter %.cpp,$(SRC)))
+DEP_FILE := $(OBJECT:.o=.d)
+
+.PHONY : all
+all: $(DEP_PROJECTS) $(TARGET)
+
+.PHONY : clean
+clean:
+	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES)
+
+$(TARGET): $(DEP_OBJECTS) $(OBJECT)
+ifeq ($(MAKE_TYPE),library)
+	$(AR) $(ARFLAGS) $@ $(OBJECT)
+	ranlib $@
+else
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
+endif
+
+#$(DEP_OBJECTS):
+#	$(MAKE) --directory=$(dir $@)
+
+ifneq "$(MAKECMDGOALS)" "clean"
+-include $(DEP_FILE)
+endif
+
+.c.o:
+	$(CC) $(CXXFLAGS) -c -o $@ $<
+
+.cc.o .cpp.o: 
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+.c.d .cc.d .cpp.d:
+	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
+	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
+	$(MV) $@.tmp $@

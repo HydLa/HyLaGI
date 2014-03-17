@@ -1,0 +1,1154 @@
+#include "SymbolicPhaseSimulator.h"
+#include <iostream>
+#include <fstream>
+#include <boost/xpressive/xpressive.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
+#include <boost/bind.hpp>
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+
+#include "Logger.h"
+#include "Timer.h"
+
+#include "PrevReplacer.h"
+#include "TellCollector.h"
+#include "AskCollector.h"
+#include "VariableFinder.h"
+
+#include "InitNodeRemover.h"
+#include "MathematicaLink.h"
+#include "REDUCELinkFactory.h"
+#include "ContinuityMapMaker.h"
+
+#include "PrevSearcher.h"
+#include "NonPrevSearcher.h"
+
+#include "Backend.h"
+#include "Exceptions.h"
+#include "AnalysisResultChecker.h"
+#include "UnsatCoreFinder.h"
+#include "AlwaysFinder.h"
+
+using namespace hydla::backend;
+using namespace hydla::backend::mathematica;
+using namespace hydla::backend::reduce;
+
+
+using namespace std;
+using namespace boost;
+using namespace boost::xpressive;
+
+using namespace hydla::ch;
+using namespace hydla::simulator;
+using namespace hydla::parse_tree;
+using namespace hydla::logger;
+using namespace hydla::timer;
+
+using hydla::simulator::TellCollector;
+using hydla::simulator::AskCollector;
+using hydla::simulator::ContinuityMapMaker;
+using hydla::simulator::IntervalPhase;
+using hydla::simulator::PointPhase;
+using hydla::simulator::VariableFinder;
+
+namespace hydla {
+namespace simulator {
+namespace symbolic {
+
+string timein(string message="")
+{
+  string ret;
+  while(1)
+  {
+    if(!message.empty()) std::cout << message << std::endl;
+    std::cout << '>' ;
+    std::cin >> ret;
+    if(!std::cin.fail()) break;
+    std::cin.clear();
+    std::cin.ignore( 1024, '\n' );
+  }
+  std::cin.clear();
+  std::cin.ignore( 1024, '\n' );
+  return ret;
+}
+
+void SymbolicPhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
+/* TODO: 一時無効
+  analysis_result_checker_ = boost::shared_ptr<AnalysisResultChecker >(new AnalysisResultChecker(*opts_));
+  analysis_result_checker_->initialize(parse_tree);
+  analysis_result_checker_->set_solver(solver_);
+  analysis_result_checker_->check_all_module_set((opts_->analysis_mode == "cmmap" ? true : false));
+*/
+}
+
+module_set_list_t SymbolicPhaseSimulator::calculate_mms(
+  simulation_todo_sptr_t& state,
+  const variable_map_t& vm)
+{
+  timer::Timer cmms_timer;
+  module_set_list_t ret = analysis_result_checker_->calculate_mms(state,vm,todo_container_);
+  state->profile["CalculateMMS"] += cmms_timer.get_elapsed_us();
+  return ret;
+}
+
+
+variable_map_t shift_variable_map_time(const variable_map_t& vm,
+                                       Backend* backend_, const value_t &time){
+  variable_map_t shifted_vm;
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  for(; it!=end; ++it) {
+    if(it->second.undefined())
+      shifted_vm[it->first] = it->second;
+    else if(it->second.unique())
+    {
+      value_t val = it->second.get_unique();
+      range_t& range = shifted_vm[it->first];
+      value_t ret;
+      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+      range.set_unique(ret);
+    }
+    else
+    {
+      range_t range = it->second;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
+      }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+
+        ValueRange::bound_t bd = it->second.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      shifted_vm[it->first] = range;
+    }
+  }
+  return shifted_vm;
+}
+
+
+/*
+CalculateConstraintStoreResult
+SymbolicPhaseSimulator::check_conditions
+(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){
+  timer::Timer cc_timer;
+  bool cc_result = analysis_result_checker_->check_conditions(ms, state, vm, b, todo_container_);
+  state->profile["CheckCondition " + ms->get_name()] += cc_timer.get_elapsed_us();
+  if(cc_result){
+    return CVM_CONSISTENT;
+  }else{
+    return CVM_INCONSISTENT;
+  }
+  return CVM_ERROR;
+}
+*/
+
+/*
+void
+SymbolicPhaseSimulator::mark_nodes_by_unsat_core
+(const module_set_sptr& ms,
+ simulation_todo_sptr_t& todo,
+ const variable_map_t& vm
+ ){
+  UnsatCoreFinder::unsat_constraints_t S;
+  UnsatCoreFinder::unsat_continuities_t S4C;
+  HYDLA_LOGGER_DEBUG_VAR(*ms);
+  unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
+  ModuleSet module_set;
+  for(UnsatCoreFinder::unsat_constraints_t::iterator it = S.begin(); it != S.end(); it++){
+    HYDLA_LOGGER_DEBUG("unsat moduleset: ", *it->second);
+    for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
+  }
+  for(UnsatCoreFinder::unsat_continuities_t::iterator it = S4C.begin(); it != S4C.end(); it++){
+    HYDLA_LOGGER_DEBUG("unsat moduleset: ", *it->second);
+    for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
+  }
+  HYDLA_LOGGER_DEBUG_VAR(module_set);
+  todo->module_set_container->mark_nodes(todo->maximal_mss, module_set);
+}
+*/
+ /*
+void
+SymbolicPhaseSimulator::find_unsat_core
+(const module_set_sptr& ms,
+ simulation_todo_sptr_t& todo,
+ const variable_map_t& vm
+ ){
+  UnsatCoreFinder::unsat_constraints_t S;
+  UnsatCoreFinder::unsat_continuities_t S4C;
+  cout << "start find unsat core " << endl;
+  unsat_core_finder_->find_unsat_core(ms,S,S4C, todo->parent->positive_asks, todo->parent->negative_asks, vm, todo->parent->parameter_map, todo->parent->phase);
+  unsat_core_finder_->print_unsat_cores(S,S4C);
+  cout << "end find unsat core " << endl;
+}
+ */
+
+
+SymbolicPhaseSimulator::SymbolicPhaseSimulator(Simulator* simulator, const Opts& opts) :
+  PhaseSimulator(simulator, opts)
+{
+  unsat_core_finder_.reset(new UnsatCoreFinder());
+}
+
+SymbolicPhaseSimulator::~SymbolicPhaseSimulator()
+{
+}
+
+void SymbolicPhaseSimulator::set_backend(backend_sptr_t back)
+{
+  PhaseSimulator::set_backend(back);
+  unsat_core_finder_->set_backend(back);
+}
+
+void SymbolicPhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc)
+{  
+  PhaseSimulator::initialize(v, p, m, c, pt, msc);
+  variable_derivative_map_ = c;
+}
+
+
+void SymbolicPhaseSimulator::set_simulation_mode(const PhaseType& phase)
+{
+  current_phase_ = phase;
+}
+
+void SymbolicPhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
+  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
+
+    std::string fmt = "v";
+    if(phase == PointPhase)
+    {
+      fmt += "n";
+    }
+    else
+    {
+      fmt += "z";
+    }
+    fmt += "vp";
+    if(it->second>=0){
+      for(int i=0; i<it->second;i++){
+        variable_t var(it->first, i);
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
+      }
+    }else{
+      for(int i=0; i<=-it->second;i++){
+        variable_t var(it->first, i);
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
+      }
+      if(phase == IntervalPhase)
+      {
+        node_sptr rhs(new Number("0"));
+        fmt = phase == PointPhase?"vn":"vt";
+        fmt += "en";
+        variable_t var(it->first, -it->second + 1);
+        backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
+      }
+    }
+  }
+}
+
+CheckConsistencyResult SymbolicPhaseSimulator::check_consistency(const PhaseType& phase)
+{
+  CheckConsistencyResult ret;
+  if(phase == PointPhase)
+  {
+    backend_->call("checkConsistencyPoint", 0, "", "cc", &ret);
+  }
+  else
+  {
+    backend_->call("checkConsistencyInterval", 0, "", "cc", &ret);
+  }
+  return ret;
+}
+
+SymbolicPhaseSimulator::CheckEntailmentResult SymbolicPhaseSimulator::check_entailment(
+  CheckConsistencyResult &cc_result,
+  const node_sptr& guard,
+  const continuity_map_t& cont_map,
+  const PhaseType& phase
+  )
+{
+  CheckEntailmentResult ce_result;
+  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  backend_->call("startTemporary", 0, "", "");
+  add_continuity(cont_map, phase);
+  const char* fmt = (phase == PointPhase)?"en":"et";
+  backend_->call("addConstraint", 1, fmt, "", &guard);
+  cc_result = check_consistency(phase);
+  if(cc_result.consistent_store.consistent()){
+    HYDLA_LOGGER_DEBUG("%% entailable");
+    if(cc_result.inconsistent_store.consistent()){
+      HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
+      ce_result = BRANCH_PAR;
+    }
+    else
+    {
+      backend_->call("endTemporary", 0, "", "");
+      backend_->call("startTemporary", 0, "", "");
+      add_continuity(cont_map, phase);
+      node_sptr not_node = node_sptr(new Not(guard));
+      const char* fmt = (phase == PointPhase)?"en":"et";
+      backend_->call("addConstraint", 1, fmt, "", &not_node);
+      cc_result = check_consistency(phase);
+      if(cc_result.consistent_store.consistent()){
+        HYDLA_LOGGER_DEBUG("%% entailablity branches");
+        if(!cc_result.inconsistent_store.consistent()){
+          HYDLA_LOGGER_DEBUG("%% branches by parameters");
+          ce_result = BRANCH_PAR;
+        }
+        ce_result = BRANCH_VAR;
+      }else{
+        ce_result = ENTAILED;
+      }
+    }
+  }else{
+    ce_result = CONFLICTING;
+  }
+  backend_->call("endTemporary", 0, "", "");
+  return ce_result;
+}
+
+bool SymbolicPhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
+    const module_set_sptr& ms)
+{
+  // preparation
+  positive_asks_t& positive_asks = state->positive_asks;
+  negative_asks_t& negative_asks = state->negative_asks;
+  
+  ask_set_t unknown_asks;
+  always_set_t& expanded_always = state->expanded_always;
+  TellCollector tell_collector(ms);
+  AskCollector  ask_collector(ms);
+  tells_t         tell_list;
+  ConstraintStore   constraint_list;
+
+  continuity_map_t continuity_map;
+  ContinuityMapMaker maker;
+  AlwaysFinder always_finder;
+
+  bool expanded;
+
+  change_variables_t changing_variables;
+
+  if(opts_->reuse && state->in_following_step() ){
+    if(state->phase_type == PointPhase){
+      ask_collector.collect_ask(&expanded_always, 
+          &positive_asks, 
+          &negative_asks,
+          &unknown_asks);
+      apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
+      set_changing_variables( state->parent, ms, positive_asks, negative_asks, changing_variables );
+      //std::cout << changing_variables << std::endl;
+    }
+    else{
+      changing_variables = state->parent->changed_variables;
+    }
+  }
+
+  ask_set_t original_p_asks = positive_asks;
+  ask_set_t original_n_asks = negative_asks;
+  ask_set_t original_u_asks = unknown_asks;
+  bool entailment_changed = false;
+  
+  do{
+    if(entailment_changed){
+      positive_asks = original_p_asks;
+      negative_asks = original_n_asks;
+      unknown_asks = original_u_asks;
+      entailment_changed = false;
+    }
+    HYDLA_LOGGER_DEBUG_VAR(expanded_always.size());
+    tell_collector.collect_new_tells(&tell_list,
+        &expanded_always,
+        &positive_asks);
+
+    timer::Timer consistency_timer;
+
+    constraint_list.clear();
+
+    maker.reset();
+
+    for(auto tell : tell_list){
+      if(opts_->reuse && state->in_following_step())
+      {
+        VariableFinder variable_finder;
+        variable_finder.visit_node(tell);
+        if(!variable_finder.include_variables(changing_variables)
+           && (current_phase_ != IntervalPhase || !variable_finder.include_variables_prev(changing_variables)))
+        {
+          continue;
+        }
+      }
+
+      // send "Constraint" node, not "Tell"
+      constraint_list.add_constraint(tell->get_child());
+      maker.visit_node(tell, state->phase_type == IntervalPhase, false);
+    }
+
+    continuity_map = maker.get_continuity_map();
+    add_continuity(continuity_map, state->phase_type);
+
+    for(auto constraint : state->initial_constraint_store){
+      constraint_list.add_constraint(constraint);
+    }
+    const char* fmt = (state->phase_type == PointPhase)?"csn":"cst";
+    backend_->call("addConstraint", 1, fmt, "", &constraint_list);
+
+    {
+      CheckConsistencyResult cc_result;
+      cc_result = check_consistency(state->phase_type);
+      if(!cc_result.consistent_store.consistent()){
+        HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
+        state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
+        return false;
+      }else if (!cc_result.inconsistent_store.consistent()){
+        HYDLA_LOGGER_DEBUG("%% consistent for all cases");
+      }else{
+        HYDLA_LOGGER_DEBUG("%% consistency depends on conditions of parameters\n");
+        push_branch_states(state, cc_result);
+      }
+    }
+    
+    state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
+
+    if(opts_->reuse && state->in_following_step()){
+      apply_previous_solution(changing_variables,
+          state->phase_type == IntervalPhase, state->parent,
+          continuity_map, state->current_time );
+    }
+
+    ask_collector.collect_ask(&expanded_always, 
+        &positive_asks, 
+        &negative_asks,
+        &unknown_asks);
+
+    timer::Timer entailment_timer;
+    
+    {
+      expanded = false;
+      ask_set_t cv_unknown_asks, notcv_unknown_asks;
+      if(opts_->reuse && state->in_following_step()){
+        for( auto ask : unknown_asks ){
+          
+          if(has_variables(ask, changing_variables, state->phase_type == IntervalPhase)){
+            cv_unknown_asks.insert(ask);
+          }else{
+            notcv_unknown_asks.insert(ask);
+          }
+        }
+        unknown_asks = cv_unknown_asks;
+      }
+      ask_set_t::iterator it  = unknown_asks.begin();
+      ask_set_t::iterator end = unknown_asks.end();
+      while(it!=end){
+        /*
+        if(opts_->reuse && !state->parent->changed_variables.empty() && !variable_searcher.visit_node(state->parent->changed_variables,*it,true)){
+          if(state->parent->positive_asks.find(*it) != state->parent->positive_asks.end())
+            positive_asks.insert(*it);
+          else negative_asks.insert(*it);
+          unknown_asks.erase(it);
+          it++;
+          continue;
+        }
+        */
+        if(state->phase_type == PointPhase){
+          if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
+            // if current time equals to 0, conditions about left-hand limits are considered to be invalid
+            negative_asks.insert(*it);
+            unknown_asks.erase(it++);
+            continue;
+          }else if(prev_guards_.find(*it) != prev_guards_.end() && 
+            state->judged_prev_map.find(*it) != state->judged_prev_map.end())
+          {
+            // if this guard doesn't have non-prev variable and it has been already judged
+            bool entailed = state->judged_prev_map.find(*it)->second;
+            HYDLA_LOGGER_DEBUG("%% ommitted guard: ", **it, ", entailed: ", entailed);
+            if(entailed)
+            {
+              positive_asks.insert(*it);
+              expanded = true;
+            }else
+            {
+              negative_asks.insert(*it);
+            }
+            unknown_asks.erase(it++);
+            continue;
+          }
+        }
+        maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
+        CheckConsistencyResult check_consistency_result;
+        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
+          case ENTAILED:
+            HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
+            if(opts_->reuse && state->in_following_step()){
+              if(state->phase_type == PointPhase){
+                apply_entailment_change(it, state->parent->negative_asks,
+                    false, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }else{
+                apply_entailment_change(it, state->parent->parent->negative_asks,
+                    true, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }
+            }
+            positive_asks.insert(*it);
+            if(prev_guards_.find(*it) != prev_guards_.end()){
+              state->judged_prev_map.insert(std::make_pair(*it, true));
+            }
+            always_finder.find_always((*it)->get_child(), expanded_always);
+            unknown_asks.erase(it++);
+            expanded = true;
+           /* 
+            if(opts_->reuse && !state->parent->changed_variables.empty()){
+              VariableFinder variable_finder;
+              variable_finder.visit_node(*it);
+              VariableFinder::variable_set_t tmp_vars = variable_finder.get_all_variable_set();
+              for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
+                state->parent->changed_variables.insert(it->first);
+              }
+            }
+            */
+            break;
+          case CONFLICTING:
+            HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
+            if(opts_->reuse && state->in_following_step() ){
+              if(state->phase_type == PointPhase){
+                entailment_changed = apply_entailment_change(it, state->parent->positive_asks,
+                    false, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }else{
+                entailment_changed = apply_entailment_change(it, state->parent->parent->positive_asks,
+                    true, changing_variables,
+                    notcv_unknown_asks, unknown_asks );
+              }
+              if(entailment_changed) break;
+            }
+            negative_asks.insert(*it);
+            if(prev_guards_.find(*it) != prev_guards_.end()){
+              state->judged_prev_map.insert(std::make_pair(*it, false));
+            }
+            unknown_asks.erase(it++);
+            break;
+          case BRANCH_VAR:
+            HYDLA_LOGGER_DEBUG("--- branched ask ---\n", *((*it)->get_guard()));
+            it++;
+            break;
+          case BRANCH_PAR:
+            HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
+            push_branch_states(state, check_consistency_result);
+            break;
+        }
+        if(entailment_changed) break;
+        maker.set_continuity_map(continuity_map);
+      }
+    }
+    state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
+    if(entailment_changed) continue;
+  }while(expanded);
+
+  add_continuity(continuity_map, state->phase_type);
+
+  if(!unknown_asks.empty()){
+    boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
+    // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
+    HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
+    {
+      // 分岐先を生成（導出される方）
+      simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
+      new_todo->initial_constraint_store.add_constraint((branched_ask)->get_guard());
+      todo_container_->push_todo(new_todo);
+    }
+    {
+      // 分岐先を生成（導出されない方）
+      state->initial_constraint_store.add_constraint(node_sptr(new Not((branched_ask)->get_guard())));
+      negative_asks.insert(branched_ask);
+      return calculate_closure(state, ms);
+    }
+  }
+
+  return true;
+}
+
+ConstraintStore 
+SymbolicPhaseSimulator::calculate_constraint_store(
+  const module_set_sptr& ms,
+  simulation_todo_sptr_t& todo)
+{
+  timer::Timer cc_timer;
+  ConstraintStore result_store;
+  bool result = calculate_closure(todo, ms);
+  todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
+
+  if(!result)
+  {
+    result_store.set_consistency(false);
+    return result_store;
+  }
+
+  if(todo->phase_type == PointPhase)
+  {
+    backend_->call("getConstraintStorePoint", 0, "", "cs", &result_store);
+  }
+  else
+  {
+    backend_->call("getConstraintStoreInterval", 0, "", "cs", &result_store);
+    replace_prev2parameter(todo->parent, result_store, todo->parameter_map);
+  }
+  
+  return result_store;
+}
+
+void SymbolicPhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
+                                                                       positive_asks_t& positive_asks,
+                                                                       negative_asks_t& negative_asks,
+                                                                       ask_set_t& unknown_asks ){
+  /*
+  std::cout << "before" << std::endl;
+  std::cout << "A+: " << positive_asks << std::endl;
+  std::cout << "A-: " << negative_asks << std::endl;
+  std::cout << "Au: " << unknown_asks << std::endl;
+  */
+
+  NonPrevSearcher np_searcher;
+  ask_set_t prev_asks = unknown_asks;
+
+  for( auto ask : unknown_asks ){
+    if( np_searcher.judge_non_prev(ask) ){
+      prev_asks.erase(ask);
+    }else{
+      unknown_asks.erase(ask);
+    }
+  }
+
+  for( auto prev_ask : prev_asks ){
+    if( discrete_causes.find(prev_ask) != discrete_causes.end() ){
+      positive_asks.insert( prev_ask );
+    }else{
+      negative_asks.insert( prev_ask );
+    }
+  }
+
+  /*
+  std::cout << "after" << std::endl;
+  std::cout << "A+: " << positive_asks << std::endl;
+  std::cout << "A-: " << negative_asks << std::endl;
+  std::cout << "Au: " << unknown_asks << std::endl;
+  */
+}
+
+void SymbolicPhaseSimulator::set_changing_variables( const phase_result_sptr_t& parent_phase,
+                                                           const module_set_sptr& present_ms,
+                                                           const positive_asks_t& positive_asks,
+                                                           const negative_asks_t& negative_asks,
+                                                           change_variables_t& changing_variables ){
+  //条件なし制約の差分取得
+  module_set_sptr parent_ms = parent_phase->module_set;
+  TellCollector parent_t_collector(parent_ms);
+  tells_t parent_tells;
+  //条件なし制約だけ集める
+  always_set_t empty_ea;
+  positive_asks_t empty_asks;
+  parent_t_collector.collect_all_tells(&parent_tells, &empty_ea, &empty_asks );
+
+  TellCollector t_collector(present_ms);
+  tells_t tells;
+  t_collector.collect_all_tells(&tells, &empty_ea, &empty_asks );
+
+  changing_variables = get_difference_variables_from_2tells( parent_tells, tells );
+
+  //導出状態の差分取得
+  //現在はpositiveだけど、parentではpositiveじゃないやつ
+  //現在はnegativeだけど、parentではpositiveなやつ
+  VariableFinder v_finder;
+  positive_asks_t parent_positives = parent_phase->positive_asks;
+  int cv_count = changing_variables.size();
+  for( auto ask : positive_asks ){
+    if(parent_positives.find(ask) == parent_positives.end() ){
+      v_finder.visit_node(ask, false);
+      VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+      for( auto var : tmp_vars ) changing_variables.insert(var.first);
+    }
+  }
+
+  for( auto ask : negative_asks ){
+    if(parent_positives.find(ask) != parent_positives.end() ){
+      v_finder.visit_node(ask);
+      VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+      for( auto var : tmp_vars ) changing_variables.insert(var.first);
+    }
+  }
+
+  if(changing_variables.size() > cv_count){
+    cv_count = changing_variables.size();
+    while(true){
+      for( auto tell : tells ){
+        bool has_cv = has_variables(tell, changing_variables, false);
+        if(has_cv){
+          v_finder.clear();
+          v_finder.visit_node(tell);
+          VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+          for( auto var : tmp_vars )
+            changing_variables.insert(var.first);
+        }
+      }
+      if(changing_variables.size() > cv_count ){
+        cv_count = changing_variables.size();
+        continue;
+      }
+      break;
+    }
+  }
+}
+
+void SymbolicPhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
+{
+  if(phase->parent.get() == NULL)return;
+  TellCollector current_tell_collector(phase->module_set);
+  tells_t current_tell_list;
+  always_set_t& current_expanded_always = phase->expanded_always;
+  positive_asks_t& current_positive_asks = phase->positive_asks;
+  current_tell_collector.collect_all_tells(&current_tell_list,&current_expanded_always,&current_positive_asks);
+  
+  TellCollector prev_tell_collector(phase->parent->module_set);
+  tells_t prev_tell_list;
+  always_set_t& prev_expanded_always = phase->parent->expanded_always;
+  positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
+  prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
+
+  phase->changed_variables = get_difference_variables_from_2tells(current_tell_list, prev_tell_list);
+}
+
+
+
+change_variables_t SymbolicPhaseSimulator::get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg){
+  change_variables_t cv;
+  tells_t l_tells = larg;
+  tells_t r_tells = rarg;
+
+  tells_t symm_diff_tells, intersection_tells;
+  for( auto tell : l_tells ){
+    tells_t::iterator it = std::find( r_tells.begin(), r_tells.end(), tell );
+    if( it == r_tells.end() )
+      symm_diff_tells.push_back(tell);
+    else{
+      intersection_tells.push_back(tell);
+      r_tells.erase(it);
+    }
+  }
+  for( auto tell : r_tells ) symm_diff_tells.push_back(tell);
+
+  VariableFinder v_finder;
+  for( auto tell : symm_diff_tells )
+    v_finder.visit_node(tell);
+
+  VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
+  for( auto var : tmp_vars )
+    cv.insert(var.first);
+
+  int v_count = cv.size();
+  while(true){
+    for( auto tell : intersection_tells ){
+      bool has_cv = has_variables(tell, cv, false);
+      if(has_cv){
+        v_finder.clear();
+        v_finder.visit_node(tell);
+        tmp_vars = v_finder.get_variable_set();
+        for( auto var : tmp_vars )
+          cv.insert(var.first);
+      }
+    }
+    if(cv.size() > v_count ){
+      v_count = cv.size();
+      continue;
+    }
+    break;
+  }
+
+  return cv;
+}
+
+bool SymbolicPhaseSimulator::has_variables(node_sptr node, const change_variables_t & change_variables, bool include_prev)
+{
+  VariableFinder variable_finder;
+  variable_finder.visit_node(node);
+  if(variable_finder.include_variables(change_variables) || 
+     (include_prev && variable_finder.include_variables_prev(change_variables)))
+  {
+    return true;
+  }
+  return false;
+}
+
+bool SymbolicPhaseSimulator::apply_entailment_change( const ask_set_t::iterator it,
+                                                      const ask_set_t& previous_asks,
+                                                      const bool in_IP,
+                                                      change_variables_t& changing_variables,
+                                                      ask_set_t& notcv_unknown_asks,
+                                                      ask_set_t& unknown_asks ){
+  bool ret = false;
+  if(previous_asks.find(*it) != previous_asks.end() ){
+    VariableFinder v_finder;
+    v_finder.visit_node(*it);
+    VariableFinder::variable_set_t tmp_vars = in_IP?v_finder.get_all_variable_set():v_finder.get_variable_set();
+    int v_count = changing_variables.size();
+    for(auto var : tmp_vars){
+      changing_variables.insert(var.first);
+    }
+    if(changing_variables.size() > v_count){
+      ask_set_t change_asks;
+      for(auto ask : notcv_unknown_asks){
+        if(has_variables(ask->get_child(), changing_variables, in_IP) ){
+          unknown_asks.insert(ask);
+          change_asks.insert(ask);
+        }
+      }
+      if( !change_asks.empty() ){
+        ret = true;
+        for(auto ask : change_asks){
+          notcv_unknown_asks.erase(ask);
+        }
+      }
+    }
+  }
+  return ret;
+}
+
+void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& variables,
+    const bool in_IP,
+    const phase_result_sptr_t parent,
+    continuity_map_t& continuity_map,
+    const value_t& current_time ){
+/*
+  for(auto pair : parent->variable_map){
+    std::string var_name = pair.first.get_name();
+    if(variables.find(var_name) == variables.end() ){
+      if(continuity_map.find(var_name) == continuity_map.end() )
+        continuity_map.insert( make_pair(var_name, pair.first.derivative_count) );
+      else if(continuity_map[var_name] < pair.first.derivative_count){
+        continuity_map.erase(var_name);
+        continuity_map.insert( make_pair(var_name, pair.first.derivative_count) );
+      }
+      std::string fmt = "v";
+      if(in_IP){
+        // 前IPの解を追加
+        // TODO:undefである場合の対応
+        // TODO:とりあえずunique_valueのみ対応
+        fmt += "t";
+        fmt += "vlt";
+        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique();
+        value_t ret;
+        backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &current_time, &ret);
+        backend_->call("addEquation", 2, fmt.c_str(), "", &pair.first, &ret);
+      }else{
+        // x=x-
+        fmt += "n";
+        fmt += "vp";
+        backend_->call("addInitEquation", 2, fmt.c_str(), "", &pair.first, &pair.first);
+      }
+    }
+  }
+  PhaseType phase;
+  if(in_IP) phase = IntervalPhase;
+  else phase = PointPhase; 
+  add_continuity(continuity_map, phase);
+*/
+}
+
+SymbolicPhaseSimulator::todo_list_t 
+  SymbolicPhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
+{
+  todo_list_t ret;
+  
+  simulation_todo_sptr_t next_todo(new SimulationTodo());
+  next_todo->module_set_container = msc_no_init_;
+  next_todo->parent = phase;
+  next_todo->ms_to_visit = next_todo->module_set_container->get_full_ms_list();
+  next_todo->expanded_always = phase->expanded_always;
+  next_todo->parameter_map = phase->parameter_map;
+  
+  if(current_phase_ == PointPhase)
+  {
+    next_todo->phase_type = IntervalPhase;
+    next_todo->current_time = phase->current_time;
+    ret.push_back(next_todo);
+  }
+  else
+  {
+    backend_->call("resetConstraint", 0, "", "");
+    backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
+    backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
+
+    PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
+    assert(current_phase_ == IntervalPhase);
+    backend_->call("exprTimeShift", 2, "csnvln", "cs", &phase->constraint_store, &phase->current_time, &phase->constraint_store);
+    phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
+    next_todo->phase_type = PointPhase;
+
+    timer::Timer next_pp_timer;
+    dc_causes_t dc_causes;
+    
+    //TODO: どこかで事前にmapを作って、毎回作らないようにする。
+    std::map<int, boost::shared_ptr<Ask> > ask_map;
+
+    //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
+    for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
+      node_sptr negated_node(new Not((*it)->get_guard()));
+      int id = (*it)->get_id();
+      ask_map[id] = *it;
+      dc_causes.push_back(dc_cause_t(negated_node, id) );
+    }
+    //現在導出されていないガード条件を離散変化条件として追加
+    for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
+      node_sptr node((*it)->get_guard() );
+      int id = (*it)->get_id();
+      ask_map[id] = *it;
+      dc_causes.push_back(dc_cause_t(node, id));
+    }
+
+    //assertionの否定を追加
+    if(opts_->assertion){
+      node_sptr assert_node(new Not(opts_->assertion));
+      dc_causes.push_back(dc_cause_t(assert_node, -2));
+    }
+    if(break_condition_.get() != NULL)
+    {
+      dc_causes.push_back(dc_cause_t(break_condition_, -3));
+    }
+
+    value_t max_time;
+    if(opts_->max_time != ""){
+      max_time = node_sptr(new hydla::parse_tree::Number(opts_->max_time));
+    }else{
+      max_time = node_sptr(new hydla::parse_tree::Infinity());
+    }
+
+    pp_time_result_t time_result; 
+    value_t time_limit(max_time);
+    time_limit -= phase->current_time;
+    if(opts_->cheby)
+    {
+      try
+      {
+        backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+      }
+      catch(const std::runtime_error &se)
+      {
+        std::cout << "Error occurs in calculateNextPointPhaseTime." << endl;
+        std::cout << "Do you want to change next time ? (y or n)" << endl;
+        std::string line;
+        std::cin.clear();
+        getline(std::cin, line);
+        std::cin.clear();
+        if(line[0] == 'y')
+        {
+          std::cout << "Parameter ? (y or n)" << endl;
+          std::string pa;
+          std::cin.clear();
+          getline(std::cin, pa);
+          std::cin.clear();
+          if(pa[0] == 'y')
+          {
+            ValueRange time_range;
+            std::string low;
+            std::string up;
+        
+            variable_t time("time", 0);
+
+            std::cout << "Input Lower time." << endl;
+            low = timein();
+
+            std::cout << "Input Upper time." << endl;
+            up = timein();
+
+            value_t lower_time(low);
+            value_t upper_time(up);
+
+            time_range.set_lower_bound(lower_time, true);
+            time_range.set_upper_bound(upper_time, true);
+
+            parameter_t par = simulator_->introduce_parameter(time, phase, time_range);
+
+            next_todo->current_time = node_sptr(new Parameter("time", 0, phase->id));
+            phase->end_time = node_sptr(new Parameter("time", 0, phase->id));
+
+            next_todo->parameter_map[par] = time_range;
+            phase->parameter_map[par] = time_range;
+
+            ret.push_back(next_todo);
+
+            return ret;
+          }
+          else
+          {
+            std::cout << "Input Next PP Time." << endl;
+            std::string p_time;
+
+            p_time = timein();
+
+            next_todo->current_time = p_time;
+
+            ret.push_back(next_todo);
+
+            return ret;
+          }
+        }
+        else
+        {
+          backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+        }
+      }
+    }
+    
+    else
+      backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+
+    unsigned int time_it = 0;
+    result_list_t results;
+    phase_result_sptr_t pr = next_todo->parent;
+
+
+    // まずインタラクティブ実行のために最小限の情報だけ整理する
+    while(true)
+    {
+      NextPhaseResult &candidate = time_result[time_it];
+      node_sptr time_node = candidate.minimum.time.get_node();
+
+      // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
+      for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
+        pr->parameter_map[it->first] = it->second;
+      }
+
+      time_node = node_sptr(new Plus(time_node, current_todo->current_time.get_node()));
+      backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
+      results.push_back(pr);
+      if(++time_it >= time_result.size())break;
+      pr = make_new_phase(pr);
+    }
+    
+    unsigned int result_it = 0;
+    bool one_phase = false;
+    
+    // 場合の選択を行う場合はここで
+    if(time_result.size() > 0 && select_phase_)
+    {
+      result_it = select_phase_(results);
+      one_phase = true;
+    }
+    
+
+    // todoを実際に作成する
+    while(true)
+    {
+      pr = results[result_it];
+
+      NextPhaseResult &candidate = time_result[result_it];
+      HYDLA_LOGGER_DEBUG_VAR(result_it);
+      for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
+      { 
+        int id = candidate.minimum.ids[id_it];
+        if(id == -1) {
+          pr->cause_for_termination = simulator::TIME_LIMIT;
+        }
+        else if(id >= 0)
+        {
+          HYDLA_LOGGER_DEBUG_VAR(id);
+          HYDLA_LOGGER_DEBUG_VAR(*ask_map[id]);
+          next_todo->discrete_causes.insert(ask_map[id]);
+        }
+      }
+
+
+      HYDLA_LOGGER_DEBUG("%%time: ", pr->current_time);
+      if(pr->cause_for_termination != TIME_LIMIT)
+      {
+        next_todo->current_time = pr->end_time;
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->parent = pr;
+        ret.push_back(next_todo);
+      }
+    	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
+    	{
+        next_todo->current_time = pr->end_time;
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->parent = pr;
+        ret.push_back(next_todo);
+    	}
+
+      if(one_phase || ++result_it >= results.size())break;
+      next_todo = create_new_simulation_phase(next_todo);
+    }
+    current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
+  }
+  
+  return ret;
+}
+
+void SymbolicPhaseSimulator::replace_prev2parameter(
+  phase_result_sptr_t& state,
+  ConstraintStore& store,
+  parameter_map_t &parameter_map)
+{
+  PrevReplacer replacer(parameter_map, state, *simulator_, opts_->approx);
+  for(auto constraint : store)
+  {
+    replacer.replace_node(constraint);
+  }
+}
+
+
+variable_map_t SymbolicPhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const value_t& tm)
+{
+  HYDLA_LOGGER_DEBUG("%% time: ", tm);
+  variable_map_t result;
+  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  {
+    if(it->second.undefined())
+    {
+      result[it->first] = it->second;
+    }
+    else if(it->second.unique())
+    {
+      value_t val = it->second.get_unique();
+      range_t& range = result[it->first];
+      value_t ret;
+      backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
+      range.set_unique(ret);
+    }
+    else
+    {
+      range_t range = it->second;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+      {
+        ValueRange::bound_t bd = it->second.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
+      }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+
+        ValueRange::bound_t bd = it->second.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      result[it->first] = range;
+    }
+  }
+  return result;
+}
+
+} //namespace symbolic
+} //namespace simulator
+} //namespace hydla

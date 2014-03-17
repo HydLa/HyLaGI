@@ -8,10 +8,11 @@
 #include "string"
 #include "sstream"
 
-#include "../virtual_constraint_solver/reduce/sexp/SExpAST.h"
-#include "../virtual_constraint_solver/reduce/REDUCELink.h"
-#include "../virtual_constraint_solver/reduce/REDUCELinkFactory.h"
-#include "../virtual_constraint_solver/reduce/vcs_reduce_source.h"
+
+#include "SExpAST.h"
+#include "REDUCELink.h"
+#include "REDUCELinkFactory.h"
+#include "vcs_reduce_source.h"
 
 using namespace std;
 using namespace hydla::parser;
@@ -65,10 +66,12 @@ BOOST_AUTO_TEST_CASE(exDSolve_test){
     "cons_:={df(ht,t) = v, df(v,t) = -10 }$"
     "guardCons_:={}$"
     "initCons_:={inithtlhs = 10, initvlhs = 0 }$"
+
     "vars_:={ht,v,df(ht,t),df(v,t)}$"
     "symbolic redeval '(exDSolve cons_ guardCons_ initCons_ vars_);";
 
   BOOST_CHECK(check(query, "(list (list) (list (equal ht (plus (minus (times 5 (expt t 2))) 10)) (equal v (minus (times 10 t)))))"));
+
 
   const string query_rcs_recovery = 
     "depend {usrvary}, t$"
@@ -90,13 +93,11 @@ BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
     "depend usrvary,t$"
     // removeinitconsのため
     "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
-
     "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10, usrvarg = 10}$"
     "variables__:= {df(usrvary,t,2), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvarg}$"
     "initConstraint__:= initTmpConstraint__:={initusrvary_1lhs = prev(df(usrvary,t)),initusrvarylhs = prev(usrvary)}$"
     "tmpVariables__:={df(usrvary,t),initusrvary_1lhs,initusrvarylhs,usrvary}$"
     "guardVars__:= pConstraint__:= {}$"
-
     "symbolic redeval '(checkConsistencyInterval);";
 
   BOOST_CHECK(check(query, "(list true false)"));
@@ -105,7 +106,6 @@ BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
     "depend usrvary,t$"
     // removeinitconsのため
     "initVariables__:={initusrvary_1lhs,initusrvarylhs}$"
-
     "constraint__:= {df(usrvary,t,2) = -10, prev(df(usrvary,t,2)) = -10, prev(df(usrvary,t)) = 0, prev(usrvarg) = 10, prev(usrvary) = 10}$"
     "variables__:= {df(usrvary,t,2), df(usrvary,t), prev(df(usrvary,t,2)), prev(df(usrvary,t)), prev(usrvarg), prev(usrvary), usrvary}$"
     "initConstraint__:= initTmpConstraint__:= {initusrvary_1lhs = prev(df(usrvary,t)), initusrvarylhs = prev(usrvary)}$"
@@ -120,12 +120,12 @@ BOOST_AUTO_TEST_CASE(checkConsistencyInterval_test){
 /**
  * checkConsistencyIntervalMain()
  */
+
 BOOST_AUTO_TEST_CASE(checkConsistencyIntervalMain_test){
   const string query = 
     "depend {ht,v}, t$"
     // removeinitconsのため
     "initVariables__:={inithtlhs,initvlhs}$"
-
     "cons_:= {df(ht,t) = v, df(v,t) = -10 }$"
     "variables__:= {}$"
     "guardCons_:={}$"
@@ -647,6 +647,5 @@ BOOST_AUTO_TEST_CASE(two_sawtooth_waves){
   //BOOST_CHECK(check(query_two_waves_cnppt,  "{{( - parameter_f1_0_1 + 100)/10, {{{parameter_f1_0_1,lessp,2}, {parameter_f1_0_1,greaterp,3}, {parameter_f2_0_1,greaterp,2}, {parameter_f2_0_1,lessp,parameter_f1_0_1}}} }, {( - parameter_f2_0_1 + 100)/10, {{{parameter_f1_0_1,lessp,1}, {parameter_f1_0_1,geq,2}, {parameter_f2_0_1,greaterp,2}, {parameter_f2_0_1,lessp,4}}, {{parameter_f1_0_1,lessp,2}, {parameter_f1_0_1,greaterp,3}, {parameter_f2_0_1,leq, parameter_f1_0_1}, {parameter_f2_0_1,lessp,4}}}}, 0}", true));
 
 }
-
 
 #endif // DISABLE_VCS_REDUCE_SOURCE_TEST

@@ -1,59 +1,15 @@
-main_projects := core 
-lib_projects  := common parser math_source_converter reduce_source_converter constraint_hierarchy simulator virtual_constraint_solver symbolic_simulator output
-test_projects := unit_tests
-
-projects := $(main_projects) $(test_projects) $(lib_projects)
+src_directory := src
 
 .PHONY : all
-all: $(main_projects)
+all: $(src_directory)
+	@mkdir bin -p && cd src && make
+##	@cd $(src_directory) make
 
 # execute unit test
 .PHONY : check
-check: $(projects)
-	cd unit_tests && ./unit_test
+check: $(src_directory)
+	cd unit_tests && make && ./unit_test
 
-# 文字コードの設定 & propsetの登録
-charset:
-	@sources=`find . -name "Makefile" -or -name "*.cpp" -or -name "*.h" -or -name "*.m"` -or -name "*.red"` && \
-	echo $${sources} && \
-	nkf -w -Lu --overwrite $$sources  && \
-	svn propset svn:mime-type 'text/plain; charset=utf-8' $$sources
-
-charset_guess:
-	@nkf --guess `find . -name "*.cpp" -or -name "*.h" `
-
-# generate documentation
-.PHONY : doc
-doc:
-	doxygen doc/doxygen.conf
-#latexを出力する場合
-#	nkf -e --overwrite `find doc/latex -name "*.tex"`
-#	make -f doc/latex
-#	dvipdfmx doc/latex/refman.dvi
-#	cp doc/latex/refman.dvi doc/
-
-# remove documentation
-.PHONY : doc-clean
-doc-clean:
-	rm -fvr doc/html
-
-# remove all temp files
 .PHONY : clean
 clean:
-	@for i in $(projects); do \
-	   (cd $$i && $(MAKE) clean); \
-	done
-
-.PHONY : distclean
-distclean: doc-clean clean
-
-
-# 
-.PHONY : $(projects)
-$(projects):
-	$(MAKE) --directory=$@
-
-# dependency
-$(test_projects): $(lib_projects)
-core: $(lib_projects)
-virtual_constraint_solver: math_source_converter reduce_source_converter
+	@cd $(src_directory) && make clean

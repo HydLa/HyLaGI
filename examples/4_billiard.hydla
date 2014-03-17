@@ -1,0 +1,51 @@
+INIT(x,y,x0,y0,xv,yv) <=> x=x0&y=y0&x'=xv&y'=yv.
+PARAM(p,min,max) <=> min <= p <= max.
+CONS(x) <=> [](x''=0).
+COL(x1,y1,x2,y2) <=>
+  [](
+    (x1- - x2-)^2 + (y1- - y2-)^2 = 4 =>
+      x1'=1/4 *
+        (
+          (x2- - x1-)*(x2'-*(x2- - x1-) + y2'- * (y2- - y1-) ) -
+          (y2- - y1-)*(-x1'-*(y2- - y1-) + y1'- *(x2- - x1-) )
+        ) &
+      y1'=1/4 *
+        (
+          (y2- - y1-)*(x2'-*(x2- - x1-) + y2'- * (y2- - y1-) ) +
+          (x2- - x1-)*(-x1'-*(y2- - y1-) + y1'- *(x2- - x1-) )
+        ) &
+      x2'=1/4 *
+        (
+          (x2- - x1-)*(x1'-*(x2- - x1-) + y1'- * (y2- - y1-) ) -
+          (y2- - y1-)*(-x2'-*(y2- - y1-) + y2'- *(x2- - x1-) )
+        ) &
+      y2'=1/4 *
+        (
+          (y2- - y1-)*(x1'-*(x2- - x1-) + y1'- * (y2- - y1-) ) +
+          (x2- - x1-)*(-x2'-*(y2- - y1-) + y2'- *(x2- - x1-) )
+        )
+  ).
+COL_WALL(z) <=>
+  [](z- + 1 = 40 | z- - 1 = -40 => z' = -z'-).
+
+PARAM(p,-1,1),
+INIT(x0,y0,0,0,20+p,20), 
+INIT(x1,y1,5,5,0,0),
+INIT(x2,y2,10,10,0,0),
+INIT(x3,y3,15,15,0,0),
+(
+CONS(x0),CONS(y0),
+CONS(x1),CONS(y1),
+CONS(x2),CONS(y2),
+CONS(x3),CONS(y3)
+)
+ << 
+(
+COL_WALL(x0),COL_WALL(y0),
+COL_WALL(x1),COL_WALL(y1),
+COL_WALL(x2),COL_WALL(y2),
+COL_WALL(x3),COL_WALL(y3),
+COL(x0,y0,x1,y1),COL(x0,y0,x2,y2),COL(x0,y0,x3,y3),
+COL(x1,y1,x2,y2),COL(x1,y1,x3,y3),
+COL(x2,y2,x3,y3)
+).
