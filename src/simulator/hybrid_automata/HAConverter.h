@@ -90,7 +90,8 @@ protected:
     return cc;
 
 	}
-
+  
+  int subset_id;
 
 };//HAConverter
 

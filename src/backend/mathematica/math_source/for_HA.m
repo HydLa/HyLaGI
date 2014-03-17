@@ -6,25 +6,25 @@ publicMethod[checkIncludeBound, v1, v2, pConstraintPast, pConstraintNow,
   Module[{minPast, maxPast, minNow, maxNow, tmp, reduceExprPast, 
     reduceExprNow},
    minPast = 
-    Quiet[Minimize[{v2, pConstraintPast}, 
+    Quiet[Minimize[{v2, And@@pConstraintPast && t > 0}, 
       If[Union[getParameters[v2 && pConstraintPast]] =!= {}, 
        Union[getParameters[v2 && pConstraintPast]], {tmp}], 
       Reals], {Minimize::wksol, Minimize::infeas}];
    simplePrint[minPast];
    maxPast = 
-    Quiet[Maximize[{v2, pConstraintPast}, 
+    Quiet[Maximize[{v2, And@@pConstraintPast && t > 0}, 
       If[Union[getParameters[v2 && pConstraintPast]] =!= {}, 
        Union[getParameters[v2 && pConstraintPast]], {tmp}], 
       Reals], {Maximize::wksol, Maximize::infeas}];
    simplePrint[maxPast];
    minNow = 
-    Quiet[Minimize[{v1, pConstraintNow}, 
+    Quiet[Minimize[{v1, And@@pConstraintNow && t > 0}, 
       If[Union[getParameters[v1 && pConstraintNow]] =!= {}, 
        Union[getParameters[v1 && pConstraintNow]], {tmp}], 
       Reals], {Minimize::wksol, Minimize::infeas}];
    simplePrint[minNow];
    maxNow = 
-    Quiet[Maximize[{v1, pConstraintNow}, 
+    Quiet[Maximize[{v1, And@@pConstraintNow && t > 0}, 
       If[Union[getParameters[v1 && pConstraintNow]] =!= {}, 
        Union[getParameters[v1 && pConstraintNow]], {tmp}], 
       Reals], {Maximize::wksol, Maximize::infeas}];

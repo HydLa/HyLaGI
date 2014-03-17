@@ -34,12 +34,12 @@ void HybridAutomata::viewPr(phase_result_sptr_t result)
   printer.output_one_phase(result);
 			
   HYDLA_LOGGER_DEBUG("negative ask:");
-  viewAsks(result->negative_asks);
+  HYDLA_LOGGER_DEBUG(viewAsks(result->negative_asks));
   HYDLA_LOGGER_DEBUG("positive ask:");
-  viewAsks(result->positive_asks);	
+  HYDLA_LOGGER_DEBUG(viewAsks(result->positive_asks));	
 }
 	
-void HybridAutomata::viewAsks(ask_set_t asks)
+string HybridAutomata::viewAsks(ask_set_t asks)
 {
   ask_set_t::iterator it = asks.begin();
   string str = "";
@@ -47,9 +47,8 @@ void HybridAutomata::viewAsks(ask_set_t asks)
     str += get_infix_string((*it)->get_guard()) + " ";
     it++;
   }
-  HYDLA_LOGGER_DEBUG(str);
+  return str;
 }
 	
 }//namespace hydla
 }//namespace simulator 
-

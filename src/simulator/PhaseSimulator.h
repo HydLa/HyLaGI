@@ -90,6 +90,8 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree) = 0;
 
+  virtual variable_map_t apply_time_to_vm(const variable_map_t &, const value_t &) = 0;
+
 /*
   virtual void find_unsat_core(const module_set_sptr& ms,
       simulation_todo_sptr_t&,
@@ -129,7 +131,6 @@ protected:
     const continuity_map_t& cont_map,
     const PhaseType& phase) = 0;
   
-  virtual variable_map_t apply_time_to_vm(const variable_map_t &, const value_t &) = 0;
   ConstraintStore apply_time_to_constraints(const ConstraintStore &, const value_t &);
   
   /**
