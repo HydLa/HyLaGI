@@ -683,7 +683,6 @@ void Backend::visit(boost::shared_ptr<Number> node)
 }
 
 void Backend::visit(boost::shared_ptr<Float> node)              {
-  link_->put_function("toRational", 1);
   link_->put_float(node->get_number());
 }  
 

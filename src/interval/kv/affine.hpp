@@ -1300,6 +1300,8 @@ template <class T> class ep_reduce_v {
 		int i;
 		T m1, m2, tmp;
 		using std::abs;
+    // modified
+    if(s<2){score = abs(v(0)); return;}
 		m1 = abs(v(0));
 		m2 = abs(v(1));
 		if (m2 > m1) {

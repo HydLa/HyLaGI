@@ -16,6 +16,13 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace interval {
 
+
+class ApproximateException:public std::runtime_error{
+public:
+  ApproximateException(const std::string& msg):
+    std::runtime_error("error occurred in approximation: " + msg){}
+};
+
 AffineTransformer* AffineTransformer::affine_translator_ = NULL;
 
 AffineTransformer* AffineTransformer::get_instance()
@@ -78,9 +85,8 @@ AffineOrInteger AffineTransformer::pow(AffineOrInteger x, AffineOrInteger y)
     {
       if(!y.is_integer)
       {
-          // TODO: throw appropriate exception
           HYDLA_LOGGER_DEBUG("l: ", l, ", u: ", u);
-          throw std::exception();
+          throw ApproximateException("noninteger power function for interval including zero");
       }
       if(u >= 0)
       {
@@ -110,15 +116,24 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
 {
   accept(node);
   if(current_val_.is_integer)return value_t(current_val_.integer);
+
   affine_t affine_value = current_val_.affine_value;
-  kv::interval<double> itv = to_interval(affine_value);
-  HYDLA_LOGGER_DEBUG_VAR(itv);
+
+
+  // set rounding mode
+  kv::hwround::roundup();
+
+  // 試験的にダミー変数の削減をしてみる
+  ub::vector<affine_t> formulas(1);
+  formulas(0) = affine_value;
+  kv::epsilon_reduce(formulas, 2);
+  affine_value = formulas(0);
+
+
   value_t ret(affine_value.a(0));
   simulator_->backend->call("transformToRational", 1, "vln", "vl", &ret, &ret);
   double sum = 0;
   int available_index;
-  // set rounding mode
-  kv::hwround::roundup();
   for(int i = 1; i < affine_value.a.size(); i++)
   {
     if(affine_value.a(i) == 0)continue;
@@ -147,13 +162,17 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
     parameter_t param = simulator_->introduce_parameter("affine", -1, available_index, range);
     parameter_idx_map_.insert(parameter_idx_t(param, available_index));
     parameter_map[param] = range_t(value_t(-1), value_t(1));
-    value_t val = value_t(affine_value.a(available_index));
+    value_t val = value_t(sum);
     simulator_->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
     ret = ret + val * value_t(param);
   }
 
   // reset rounding mode
   kv::hwround::roundnear();
+
+
+  kv::interval<double> itv = to_interval(affine_value);
+  HYDLA_LOGGER_DEBUG_VAR(itv);
 
   return ret;
 }
@@ -323,8 +342,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
 
 void AffineTransformer::invalid_node(parse_tree::Node& node)
 {
-  // TODO: throw exception specified for interval
-  throw std::exception();
+  throw ApproximateException("invalid node" + node.get_string());
 }
 
 
