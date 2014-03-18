@@ -16,4 +16,5 @@ ruby check_diff.rb -c "../hyrose red_data/dansa.hydla                -sr -t100 -
 ruby check_diff.rb -c "../hyrose red_data/roof_bouncing.hydla        -sr -t100 -p3 --nd" red_data/roof_bouncing.data | math
 
 ruby check_diff.rb -c "../hyrose red_data/magnet_ball.hydla          -sr -t100 -p3 --nd" red_data/magnet_ball.data | math
-ruby check_diff.rb -c "../hyrose red_data/balloon_tank_subset.hydla  -sr -t100 -p3 --nd" red_data/balloon_tank_subset.data  | math
+ruby check_diff.rb -c "../hyrose red_data/balloon_tank_subset.hydla  -sr -t100 -p3 --nd" red_data/balloon_tank_subset.data | math
+ruby check_diff.rb -c "../hyrose red_data/n_waves.hydla              -sr -t100 -p3 --nd" red_data/n_waves.data  | math

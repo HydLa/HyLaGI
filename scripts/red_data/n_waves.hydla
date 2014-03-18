@@ -1,0 +1,9 @@
+// n本のノコギリ波 (sawtooth wave)
+
+INIT(f, lb, ub) <=> lb < f < ub.
+INCREASE(f) <=> [](f'=1).
+DROP(f) <=> [](f- = 10 => f = 0).
+
+WAVE(farg, lb, ub){INIT(farg, lb, ub), INCREASE(farg) << DROP(farg)}.
+
+WAVE(f1, 0, 1), WAVE(f2, 2, 3), WAVE(f3, 4, 5), WAVE(f4, 6, 7), WAVE(f5, 8, 9).
