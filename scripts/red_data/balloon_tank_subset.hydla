@@ -1,0 +1,5 @@
+INIT <=> fuel=1 & 1 < volume < 3.
+CONS <=> [](volume'=0).
+VOID <=> [](volume- > 0 =>fuel=2).
+
+INIT,CONS,VOID.

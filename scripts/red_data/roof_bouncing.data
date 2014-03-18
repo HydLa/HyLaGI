@@ -1,0 +1,88 @@
+
+#---------parameter condition---------
+parameter[y, 2, 5]	: (-inf, inf)
+parameter[y, 0, 1]	: (9, 11)
+#---------Case 1---------
+#---------1---------
+---------PP 1---------
+{INIT$0, FALL$0, BOUNCE$0}
+time	: 0
+y	: parameter[y, 0, 1]
+y'	: 10
+y''	: -10
+---------IP 2---------
+{FALL$0, BOUNCE$0}
+time	: 0->1+(-1)*(-2+parameter[y, 0, 1]*1/5)^(1/2)
+y	: t*(t+(-2))*(-5)+parameter[y, 0, 1]
+y'	: (t+(-1))*(-10)
+y''	: -10
+#---------2---------
+---------PP 4---------
+{FALL$0, BOUNCE$0}
+time	: 1+(-1)*(-2+parameter[y, 0, 1]*1/5)^(1/2)
+y	: 15
+y'	: 0
+y''	: -10
+---------IP 6---------
+{FALL$0, BOUNCE$0}
+time	: 1+(-1)*(-2+parameter[y, 0, 1]*1/5)^(1/2)->100
+y	: (-5)*(-3+(t+(-1)+(-2+parameter[y, 0, 1]*1/5)^(1/2))^2)
+y'	: (-10)*(t+(-1)+(-2+parameter[y, 0, 1]*1/5)^(1/2))
+y''	: -10
+
+#---------parameter condition---------
+parameter[y, 0, 1]	: 10
+# time reached limit
+
+#---------Case 2---------
+#---------1---------
+---------PP 1---------
+{INIT$0, FALL$0, BOUNCE$0}
+time	: 0
+y	: parameter[y, 0, 1]
+y'	: 10
+y''	: -10
+---------IP 2---------
+{FALL$0, BOUNCE$0}
+time	: 0->1+(-1)*(-2+parameter[y, 0, 1]*1/5)^(1/2)
+y	: t*(t+(-2))*(-5)+parameter[y, 0, 1]
+y'	: (t+(-1))*(-10)
+y''	: -10
+#---------2---------
+---------PP 5---------
+{BOUNCE$0}
+time	: 1+(-1)*(-2+parameter[y, 0, 1]*1/5)^(1/2)
+y	: 15
+y'	: 5^((-1)/2)*(-8)*(-10+parameter[y, 0, 1])^(1/2)
+y''	: parameter[y, 2, 5]
+---------IP 7---------
+{FALL$0, BOUNCE$0}
+time	: 1+(-1)*(-2+parameter[y, 0, 1]*1/5)^(1/2)->100
+y	: 15+(-8)*(-2+parameter[y, 0, 1]*1/5)^(1/2)*(t+(-1)+(-2+parameter[y, 0, 1]*1/5)^(1/2))+(-5)*(t+(-1)+(-2+parameter[y, 0, 1]*1/5)^(1/2))^2
+y'	: (-8)*(-2+parameter[y, 0, 1]*1/5)^(1/2)+(-10)*(t+(-1)+(-2+parameter[y, 0, 1]*1/5)^(1/2))
+y''	: -10
+
+#---------parameter condition---------
+parameter[y, 2, 5]	: (-inf, inf)
+parameter[y, 0, 1]	: (10, 11)
+# time reached limit
+
+#---------Case 3---------
+#---------1---------
+---------PP 1---------
+{INIT$0, FALL$0, BOUNCE$0}
+time	: 0
+y	: parameter[y, 0, 1]
+y'	: 10
+y''	: -10
+---------IP 3---------
+{FALL$0, BOUNCE$0}
+time	: 0->100
+y	: t*(t+(-2))*(-5)+parameter[y, 0, 1]
+y'	: (t+(-1))*(-10)
+y''	: -10
+
+#---------parameter condition---------
+parameter[y, 0, 1]	: (9, 10)
+# time reached limit
+

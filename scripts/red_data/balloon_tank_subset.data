@@ -1,0 +1,22 @@
+
+#---------parameter condition---------
+parameter[volume, 0, 1]	: (1, 3)
+#---------Case 1---------
+#---------1---------
+---------PP 1---------
+{CONS$0, INIT$0, VOID$0}
+time	: 0
+fuel	: 1
+volume	: parameter[volume, 0, 1]
+volume'	: 0
+---------IP 2---------
+{CONS$0, VOID$0}
+time	: 0->100
+fuel	: 2
+volume	: parameter[volume, 0, 1]
+volume'	: 0
+
+#---------parameter condition---------
+parameter[volume, 0, 1]	: (1, 3)
+# time reached limit
+

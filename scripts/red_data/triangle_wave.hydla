@@ -1,0 +1,7 @@
+// -*- coding: utf-8 -*-
+// 三角波 (triangle wave)
+
+init       <=> F'=5 /\ F=5.
+jackknife  <=> [](F- = 10 \/ F- = 0 => F' = - F'-).
+fa         <=> [](F''=0).
+init, fa << jackknife.

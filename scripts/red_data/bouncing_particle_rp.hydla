@@ -1,0 +1,7 @@
+// bouncing particle with parameter
+
+INIT   <=> 5 < ht < 15 & v = 0 & e =4/5 & [](ht' = v & e'=0).
+FALL   <=> [](v'  = -10).
+BOUNCE <=> [](ht- = 0 => v = -e * v-).
+
+INIT, FALL << BOUNCE.

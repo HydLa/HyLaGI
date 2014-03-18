@@ -1,0 +1,33 @@
+#---------Case 1---------
+#---------1---------
+---------PP 1---------
+{INIT$0, TIMER$0, BFLAT$0, BPULSE$0, CFLAT$0, CPULSE$0}
+time	: 0
+a	: 0
+b	: 0
+c	: 0
+a'	: 1
+---------IP 2---------
+{TIMER$0, BFLAT$0, BPULSE$0, CFLAT$0, CPULSE$0}
+time	: 0->2
+a	: t
+b	: 0
+c	: 0
+a'	: 1
+#---------2---------
+---------PP 3---------
+{TIMER$0, BPULSE$0, CPULSE$0}
+time	: 2
+a	: 2
+b	: 1
+c	: 1
+a'	: 1
+---------IP 4---------
+{TIMER$0, BFLAT$0, BPULSE$0, CFLAT$0, CPULSE$0}
+time	: 2->100
+a	: t
+b	: 0
+c	: 0
+a'	: 1
+# time reached limit
+

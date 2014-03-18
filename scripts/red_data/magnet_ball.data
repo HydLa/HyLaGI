@@ -1,0 +1,155 @@
+
+#---------parameter condition---------
+parameter[mag, 1, 3]	: (-inf, inf)
+parameter[mag, 1, 4]	: (-inf, inf)
+parameter[mag, 1, 5]	: (-inf, inf)
+parameter[timer, 1, 3]	: (-inf, inf)
+parameter[timer, 1, 4]	: (-inf, inf)
+parameter[timer, 1, 5]	: (-inf, inf)
+#---------Case 1---------
+#---------1---------
+---------PP 1---------
+{INIT$0, TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+{TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+#---------2---------
+---------PP 3---------
+{SWITCHW$0, TRUE$0, FALL$0}
+time	: 1
+mag	: 100
+timer	: 0
+y	: 5
+mag'	: parameter[mag, 1, 3]
+timer'	: parameter[timer, 1, 3]
+y'	: -10
+y''	: 90
+---------IP 6---------
+{TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(1+9*(t+(-1))^2+(t+(-1))*(-2))
+mag'	: 0
+timer'	: 1
+y'	: 90*(t+(-1))+(-10)
+y''	: 90
+
+#---------parameter condition---------
+parameter[mag, 1, 3]	: (-inf, inf)
+parameter[timer, 1, 3]	: (-inf, inf)
+# number of phases reached limit
+
+#---------Case 2---------
+#---------1---------
+---------PP 1---------
+{INIT$0, TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+{TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+#---------2---------
+---------PP 4---------
+{SWITCHON$0, TRUE$0, FALL$0}
+time	: 1
+mag	: 12
+timer	: 0
+y	: 5
+mag'	: parameter[mag, 1, 4]
+timer'	: parameter[timer, 1, 4]
+y'	: -10
+y''	: 2
+---------IP 7---------
+{TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 5+(t+(-1))^2+(t+(-1))*(-10)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+
+#---------parameter condition---------
+parameter[mag, 1, 4]	: (-inf, inf)
+parameter[timer, 1, 4]	: (-inf, inf)
+# number of phases reached limit
+
+#---------Case 3---------
+#---------1---------
+---------PP 1---------
+{INIT$0, TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+{TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+#---------2---------
+---------PP 5---------
+{SWITCHOFF$0, TRUE$0, FALL$0}
+time	: 1
+mag	: 0
+timer	: 0
+y	: 5
+mag'	: parameter[mag, 1, 5]
+timer'	: parameter[timer, 1, 5]
+y'	: -10
+y''	: -10
+---------IP 8---------
+{TIMER$0, SWITCHOFF$0, SWITCHON$0, SWITCHW$0, TRUE$0, FALL$0}
+time	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (-1+2*(t+(-1))+(t+(-1))^2)*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+
+#---------parameter condition---------
+parameter[mag, 1, 5]	: (-inf, inf)
+parameter[timer, 1, 5]	: (-inf, inf)
+# number of phases reached limit
+
