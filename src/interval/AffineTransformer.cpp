@@ -79,6 +79,8 @@ AffineOrInteger AffineTransformer::pow(AffineOrInteger x, AffineOrInteger y)
     double l = itv.lower(), u = itv.upper();
     if(u >= 0 && l >= 0)
     {
+      HYDLA_LOGGER_DEBUG(x_affine);
+      HYDLA_LOGGER_DEBUG(y_affine);
       ret.affine_value = exp(y_affine * log(x_affine));
     }
     else
@@ -225,13 +227,39 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
 }
 
 
+AffineOrInteger sqrt(const AffineOrInteger &a)
+{
+  affine_t affine_value;
+  if(a.is_integer)
+  {
+    affine_value = a.integer;
+  }
+  else
+  {
+    affine_value = a.affine_value;
+  }
+  affine_value = sqrt(affine_value);
+  AffineOrInteger result_ai;
+  result_ai.is_integer = false;
+  result_ai.affine_value = affine_value;
+  return result_ai;
+}
+
 void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;  
-  accept(node->get_rhs());
-  AffineOrInteger rhs = current_val_;
-  current_val_ = pow(lhs, rhs);
+  // TODO: 文字列以外で判定する
+  if(get_infix_string(node->get_rhs())=="1/2")
+  {
+    current_val_ = sqrt(lhs);
+  }
+  else
+  {
+    accept(node->get_rhs());
+    AffineOrInteger rhs = current_val_;
+    current_val_ = pow(lhs, rhs);
+  }
   HYDLA_LOGGER_NODE_VAR;
 }
 
