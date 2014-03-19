@@ -347,7 +347,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
   current_val_.is_integer = false;
   current_val_.affine_value = affine_t();
   parameter_t param(node->get_name(),
-                    node->get_derivative_count(),
+                    node->get_differential_count(),
                     node->get_phase_id());
   parameter_idx_map_t::left_iterator it = parameter_idx_map_.left.find(param);
   int idx;
@@ -421,7 +421,7 @@ DEFINE_INVALID_NODE(Not)
 
 DEFINE_INVALID_NODE(UnsupportedFunction)
 
-DEFINE_INVALID_NODE(Variable)
+DEFINE_INVALID_NODE(parse_tree::Variable)
 DEFINE_INVALID_NODE(SymbolicT)
 DEFINE_INVALID_NODE(Infinity)
 DEFINE_INVALID_NODE(True)

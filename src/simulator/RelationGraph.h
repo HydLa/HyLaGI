@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_HYDLA_RELATION_GRAPH_H_
 #define _INCLUDED_HYDLA_RELATION_GRAPH_H_
 
-#include "DefaultVariable.h"
+#include "Variable.h"
 #include "ModuleSetContainer.h"
 
 namespace hydla {
@@ -13,14 +13,14 @@ class RelationGraph{
 public:
   typedef hydla::ch::ModuleSet module_set_t;
   typedef hydla::ch::ModuleSet::module_t module_t;
-  typedef std::set<DefaultVariable, VariableComparator> variable_set_t;
+  typedef std::set<Variable, VariableComparator> variable_set_t;
   
   typedef struct Variable_{
-    hydla::simulator::DefaultVariable variable;
+    hydla::simulator::Variable variable;
     bool is_prev;
     Variable_(): is_prev(false)
     {}
-    Variable_(const hydla::simulator::DefaultVariable &var, bool pr):variable(var), is_prev(pr)
+    Variable_(const hydla::simulator::Variable &var, bool pr):variable(var), is_prev(pr)
     {}
     friend bool operator<(const Variable_& lhs, 
                           const Variable_& rhs){

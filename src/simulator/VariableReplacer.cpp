@@ -59,7 +59,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node
   variable_map_t::const_iterator it = variable_map.begin();
   for(;it != variable_map.end(); it++)
     {
-      if(it->first.get_name() == v_name && it->first.get_derivative_count() == differential_cnt)
+      if(it->first.get_name() == v_name && it->first.get_differential_count() == differential_cnt)
       {
         //TODO: 値が範囲を持っている場合にも対応する
         assert(it->second.unique());
@@ -126,7 +126,7 @@ DEFINE_DEFAULT_VISIT_BINARY(Power)
 
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-DEFINE_DEFAULT_VISIT_FACTOR(Parameter)
+DEFINE_DEFAULT_VISIT_FACTOR(parse_tree::Parameter)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)

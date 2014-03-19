@@ -12,14 +12,14 @@
 #include "TreeVisitor.h"
 #include "AffineOrInteger.h"
 #include "Simulator.h"
-#include "DefaultParameter.h"
+#include "Parameter.h"
 
 namespace hydla {
 namespace interval {
 
 
 typedef hydla::parse_tree::node_sptr          node_sptr;
-typedef simulator::DefaultParameter           parameter_t;
+typedef simulator::Parameter                  parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
 typedef simulator::parameter_map_t            parameter_map_t;

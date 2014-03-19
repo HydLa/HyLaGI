@@ -7,7 +7,7 @@
 #include "ParseTree.h"
 
 #include "PhaseResult.h"
-#include "DefaultParameter.h"
+#include "Parameter.h"
 #include "ContinuityMapMaker.h"
 #include "ConstraintStore.h"
 

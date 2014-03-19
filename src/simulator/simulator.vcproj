@@ -171,7 +171,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DefaultParameter.cpp"
+				RelativePath=".\Parameter.cpp"
 				>
 			</File>
 			<File
@@ -265,11 +265,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DefaultParameter.h"
+				RelativePath=".\Parameter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DefaultVariable.h"
+				RelativePath=".\Variable.h"
 				>
 			</File>
 			<File

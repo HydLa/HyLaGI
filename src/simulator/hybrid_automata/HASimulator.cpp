@@ -173,7 +173,7 @@ parameter_map_t HASimulator::update_vm(phase_result_sptr_t pr, parameter_map_t v
     variable_map_t::iterator it = pr->variable_map.begin();
     for(; it != pr->variable_map.end(); ++it) {
       if(it_vm->first.get_name() == it->first.get_name() && 
-         it_vm->first.get_derivative_count() == it->first.get_derivative_count() ){
+         it_vm->first.get_differential_count() == it->first.get_differential_count() ){
         vm[it_vm->first].set_unique(it->second.get_string());
       }
     }

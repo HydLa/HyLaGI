@@ -83,7 +83,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
     {
       variable_t v;
       v.name             = it->first;
-      v.derivative_count = d;
+      v.differential_count = d;
       variable_set_.insert(v);
       original_map_[v] = ValueRange();
     }

@@ -178,7 +178,7 @@ void UnsatCoreFinder::find_unsat_core(
           }
         }
       }else{
-        node_sptr lhs(new Variable(it->first));
+        node_sptr lhs(new parse_tree::Variable(it->first));
         for(int i=0; i<=-it->second;i++){
           variable_t var(it->first, i);
           backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);

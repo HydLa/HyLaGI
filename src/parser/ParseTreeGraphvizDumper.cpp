@@ -370,7 +370,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Parameter> node)
   
   graph_node_id_t own_id = node_id_;
   stringstream sstr;
-  sstr << "{" << node->get_node_type_name() << " | " << node->get_name() << ", " << node->get_derivative_count() << ", " << node->get_phase_id() << "}";
+  sstr << "{" << node->get_node_type_name() << " | " << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "}";
   nodes_.insert(make_pair(own_id, sstr.str()));
 }
 

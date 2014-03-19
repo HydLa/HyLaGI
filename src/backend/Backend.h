@@ -109,7 +109,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
     for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
         std::string name = it->get_name();
-        int diff = it->get_derivative_count();
+        int diff = it->get_differential_count();
         call("addVariable", 2, "si", "", ("usrVar" + name).c_str(), &diff);
       }
   }

@@ -169,17 +169,17 @@ namespace simulator {
 		  variable_map_t::const_iterator end_past_v = past_vm.end();
 		  for(; it_past_v!=end_past_v; ++it_past_v) {
 		 		if ( it_phase_v->first.name == it_past_v->first.name && 
-		 				 it_phase_v->first.derivative_count == it_past_v->first.derivative_count ) {
+		 				 it_phase_v->first.differential_count == it_past_v->first.differential_count ) {
           tmp_variable_phase = it_phase_v->second;
-			 		HYDLA_LOGGER_DEBUG("Variable: ",it_phase_v->first.name," ",it_phase_v->first.derivative_count);
+			 		HYDLA_LOGGER_DEBUG("Variable: ",it_phase_v->first.name," ",it_phase_v->first.differential_count);
 			 		HYDLA_LOGGER_DEBUG("t         :  0");	
 			  	HYDLA_LOGGER_DEBUG("now       :  ", tmp_variable_phase);
-		 			search_variable_parameter(phase->parameter_map, it_phase_v->first.name, it_phase_v->first.derivative_count);
+		 			search_variable_parameter(phase->parameter_map, it_phase_v->first.name, it_phase_v->first.differential_count);
 					HYDLA_LOGGER_DEBUG("");	 	
 			  	tmp_variable_past = it_past_v->second;
 			 		HYDLA_LOGGER_DEBUG("t         :  ", past_time);	
 			  	HYDLA_LOGGER_DEBUG("past      :  ", tmp_variable_past);
-			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first.name, it_past_v->first.derivative_count);
+			  	search_variable_parameter(past_phase->parameter_map, it_past_v->first.name, it_past_v->first.differential_count);
 		  	}
 		  }
       // TODO: 幅を持つ場合への対応
@@ -266,7 +266,7 @@ namespace simulator {
 			if(it_pm->first.get_phase_id() == 1){
 				cout << it_pm->first << "\t: " << it_pm->second << "\n";
 				parameter_str += it_pm->first.get_name();
-				for(int i=0; i < it_pm->first.get_derivative_count(); i++) parameter_str +="'";
+				for(int i=0; i < it_pm->first.get_differential_count(); i++) parameter_str +="'";
 				parameter_str += "=" + it_pm->second.get_string() + "\\n";
 			}
 		}

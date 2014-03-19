@@ -1,41 +1,41 @@
-#ifndef _DEFAULT_PARAMETER_H_
-#define _DEFAULT_PARAMETER_H_
+#ifndef _INCLUDED_HYDLA_SIMULATOR_PARAMETER_H_
+#define _INCLUDED_HYDLA_SIMULATOR_PARAMETER_H_
 
 #include <boost/shared_ptr.hpp>
 #include <sstream>
 #include "PhaseResult.h"
-#include "DefaultVariable.h"
+#include "Variable.h"
 
 namespace hydla {
 namespace simulator {
 
-class DefaultParameter{
+class Parameter{
   public:
 
-  DefaultParameter(const variable_t &variable, const phase_result_sptr_t &phase)
-  :variable_name_(variable.get_name()), derivative_count_(variable.get_derivative_count()), phase_id_(phase->id)
+  Parameter(const variable_t &variable, const phase_result_sptr_t &phase)
+  :variable_name_(variable.get_name()), differential_count_(variable.get_differential_count()), phase_id_(phase->id)
   {
   }
 
-  DefaultParameter(const std::string &name, int derivative, int id)
-  :variable_name_(name), derivative_count_(derivative), phase_id_(id)
+  Parameter(const std::string &name, int diff_cnt, int id)
+  :variable_name_(name), differential_count_(diff_cnt), phase_id_(id)
   {
   }
   
   std::string get_name()const {return variable_name_;}
-  int get_derivative_count()const {return derivative_count_;}
+  int get_differential_count()const {return differential_count_;}
   int get_phase_id()const {return phase_id_;}
  
  
   void set_name(const std::string &str) {variable_name_ = str;}
-  void set_derivative_count(int d) {derivative_count_ = d;}
+  void set_differential_count(int d) {differential_count_ = d;}
   void set_phase_id(int p) {phase_id_ = p;}
    
   std::string to_string() const
   {
     std::stringstream strstr;
     std::string ret("parameter[" + variable_name_);
-    strstr << ", " << derivative_count_ << ", " << phase_id_ << "]";
+    strstr << ", " << differential_count_ << ", " << phase_id_ << "]";
     ret += strstr.str();
     return ret;
   }
@@ -50,19 +50,19 @@ class DefaultParameter{
   }
   
     
-  friend bool operator<(const DefaultParameter& lhs, 
-                        const DefaultParameter& rhs)
+  friend bool operator<(const Parameter& lhs, 
+                        const Parameter& rhs)
   {
     return lhs.to_string() < rhs.to_string();
   }
   
   private:
   std::string variable_name_;
-  int derivative_count_;
+  int differential_count_;
   int phase_id_;
 };
 
-std::ostream& operator<<(std::ostream& s, const DefaultParameter& p);
+std::ostream& operator<<(std::ostream& s, const Parameter& p);
 
 } // namespace simulator
 } // namespace hydla 

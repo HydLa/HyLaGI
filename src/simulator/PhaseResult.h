@@ -5,7 +5,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "DefaultVariable.h"
+#include "Variable.h"
 #include "ValueRange.h"
 #include "ModuleSet.h"
 #include "ModuleSetContainer.h"
@@ -16,13 +16,13 @@
 namespace hydla {
 namespace simulator {
 
-class DefaultParameter;
+class Parameter;
 class PhaseResult;
 struct SimulationTodo;
 
 class ParameterComparator{
   public:
-  bool operator()(const DefaultParameter x,const DefaultParameter y) const;
+  bool operator()(const Parameter x,const Parameter y) const;
 };
 
 /**
@@ -66,8 +66,8 @@ typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 
 typedef Value                                             value_t;
 typedef ValueRange                                        range_t;
-typedef DefaultVariable                                   variable_t;
-typedef DefaultParameter                                  parameter_t;
+typedef Variable                                          variable_t;
+typedef Parameter                                         parameter_t;
 
 typedef std::map<variable_t, range_t, VariableComparator>                    variable_map_t;
 

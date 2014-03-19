@@ -1081,8 +1081,8 @@ private:
  */ 
 class Parameter : public FactorNode {
 public:
-  Parameter(const std::string& name, const int& derivative_count, const int& id) : 
-    name_(name), derivative_count_(derivative_count), phase_id_(id)
+  Parameter(const std::string& name, const int& differential_count, const int& id) : 
+    name_(name), differential_count_(differential_count), phase_id_(id)
   {}
     
   virtual ~Parameter(){}
@@ -1093,7 +1093,7 @@ public:
 
   virtual node_sptr clone()
   {
-    boost::shared_ptr<Parameter> n(new Parameter(name_, derivative_count_, phase_id_));
+    boost::shared_ptr<Parameter> n(new Parameter(name_, differential_count_, phase_id_));
     return n;
   }
 
@@ -1118,15 +1118,15 @@ public:
   }
 
   
-  void set_derivative_count(const int& dc)
+  void set_differential_count(const int& dc)
   {
-    derivative_count_ = dc;
+    differential_count_ = dc;
   }
 
   
-  int get_derivative_count() const
+  int get_differential_count() const
   {
-    return derivative_count_;
+    return differential_count_;
   }
 
   
@@ -1147,7 +1147,7 @@ private:
   {} 
   
   std::string name_;
-  int derivative_count_;
+  int differential_count_;
   int phase_id_;
 };
 

@@ -322,8 +322,8 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     range.set_lower_bound(lowvalue,lowerflag);
     parameter_t introduced_par = introduce_parameter(v_it->first, todo->parent, range);
     pm[introduced_par] = range;
-    value_t pvalue(node_sptr(new Parameter(v_it->first.get_name(),
-      v_it->first.get_derivative_count(),
+    value_t pvalue(node_sptr(new parse_tree::Parameter(v_it->first.get_name(),
+      v_it->first.get_differential_count(),
       todo->parent->id)));
     vm[v_it->first] = pvalue;
     
@@ -390,7 +390,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
     pm[introduced_par] = range;
     approxed_val.reset(new hydla::simulator::symbolic::SymbolicValue(
         hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(var->get_name(),
-        var->get_derivative_count(),
+        var->get_differential_count(),
         todo->parent->id))));
     todo->parent->parameter_map = pm;
   }
@@ -405,7 +405,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
           hydla::parse_tree::node_sptr(new hydla::parse_tree::Plus(
               approxed_val->get_node(), 
               hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(var->get_name(),
-              var->get_derivative_count(),
+              var->get_differential_count(),
               todo->parent->id))
       ))
       ));

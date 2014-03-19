@@ -5,12 +5,12 @@
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 
-using namespace hydla::parse_tree;
 using namespace std;
-using namespace hydla::simulator;
 
 namespace hydla{
 namespace backend{
+using namespace simulator;
+using namespace parse_tree;
 
 const std::string Backend::prev_prefix = "prev";
 const std::string Backend::par_prefix = "p";
@@ -162,7 +162,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   case 'p':     
   {
     parameter_t* par = (parameter_t *)arg;
-    link_->put_parameter(par->get_name(), par->get_derivative_count(), par->get_phase_id());
+    link_->put_parameter(par->get_name(), par->get_differential_count(), par->get_phase_id());
   }
   break;
 
@@ -188,7 +188,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
         invalid_fmt(args_fmt, i);
         break;
       }
-      send_variable(var->get_name(), var->get_derivative_count(), vf);
+      send_variable(var->get_name(), var->get_differential_count(), vf);
     }
   }
   break;
@@ -406,7 +406,7 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
   {
     const variable_t var = it->first;
     const value_range_t &range = it->second;
-    if(!send_derivative && var.get_derivative_count() > 0 )continue;
+    if(!send_derivative && var.get_differential_count() > 0 )continue;
     if(range.unique())
     {
       size_to_sent++;
@@ -422,7 +422,7 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
   {
     const variable_t var = it->first;
     const value_range_t &range = it->second;
-    if(!send_derivative && var.get_derivative_count() > 0 )continue;
+    if(!send_derivative && var.get_differential_count() > 0 )continue;
     if(range.unique())
     {
       link_->put_converted_function("Equal", 2);
@@ -487,7 +487,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
       const value_t &value = it->second.get_unique();
       const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
-      link_->put_parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+      link_->put_parameter(param.get_name(), param.get_differential_count(), param.get_phase_id());
       send_value(value, Link::VF_PREV);
     }else{
       for(uint i=0; i < it->second.get_lower_cnt();i++)
@@ -503,7 +503,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
         {
           link_->put_converted_function("GreaterEqual", 2);
         }
-        link_->put_parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+        link_->put_parameter(param.get_name(), param.get_differential_count(), param.get_phase_id());
         send_value(value, Link::VF_PREV);
       }
       for(uint i=0; i < it->second.get_upper_cnt();i++)
@@ -519,7 +519,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
         {
           link_->put_converted_function("LessEqual", 2);
         }
-        link_->put_parameter(param.get_name(), param.get_derivative_count(), param.get_phase_id());
+        link_->put_parameter(param.get_name(), param.get_differential_count(), param.get_phase_id());
         send_value(value, Link::VF_PREV);
       }
     }
@@ -659,7 +659,7 @@ DEFINE_VISIT_FACTOR(Pi, Pi)
 DEFINE_VISIT_FACTOR(E, E)
 
 // 変数
-void Backend::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)              
+void Backend::visit(boost::shared_ptr<parse_tree::Variable> node)              
 {
   // 変数の送信
   variable_form_t va;
@@ -688,9 +688,9 @@ void Backend::visit(boost::shared_ptr<Float> node)              {
 
 
 // 記号定数
-void Backend::visit(boost::shared_ptr<Parameter> node)
+void Backend::visit(boost::shared_ptr<parse_tree::Parameter> node)
 {
-  link_->put_parameter(node->get_name(), node->get_derivative_count(), node->get_phase_id());
+  link_->put_parameter(node->get_name(), node->get_differential_count(), node->get_phase_id());
 }
 
 // t
@@ -709,7 +709,7 @@ int Backend::send_value(const value_t &val, const variable_form_t& var)
 
 int Backend::send_variable(const variable_t &var, const variable_form_t &variable_arg)
 {
-  return send_variable(var.get_name(), var.get_derivative_count(), variable_arg);
+  return send_variable(var.get_name(), var.get_differential_count(), variable_arg);
 }
 
 
@@ -721,12 +721,12 @@ int Backend::send_variable(const std::string& name, int diff_count, const variab
 
 
 // コマンド文
-void Backend::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node){link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node){link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<hydla::parse_tree::Scan> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<parse_tree::PrintPP> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<parse_tree::PrintIP> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<parse_tree::Scan> node){link_->put_symbol("True");}
 
-void Backend::visit(boost::shared_ptr<hydla::parse_tree::True> node){link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<hydla::parse_tree::False> node){link_->put_symbol("False");}
+void Backend::visit(boost::shared_ptr<parse_tree::True> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<parse_tree::False> node){link_->put_symbol("False");}
 
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop){
   switch(relop){
@@ -859,30 +859,30 @@ node_sptr Backend::receive_function()
   symbol = link_->convert_function(symbol, false, converted);
   if(equal_ignoring_case(symbol, "Sqrt")){//1引数関数
     ret = node_sptr(new Divide(node_sptr(new Number("1")), node_sptr(new Number("2")))); 
-    ret = node_sptr(new hydla::parse_tree::Power(receive_node(), ret));
+    ret = node_sptr(new parse_tree::Power(receive_node(), ret));
   }
   else if(equal_ignoring_case(symbol, "parameter")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str;
     d_str = link_->get_string();
-    int derivative_count = boost::lexical_cast<int, std::string>(d_str);
+    int differential_count = boost::lexical_cast<int, std::string>(d_str);
     std::string id_str;
     id_str = link_->get_string();
     int id = boost::lexical_cast<int, std::string>(id_str);
-    ret = node_sptr(new hydla::parse_tree::Parameter(name, derivative_count, id));
+    ret = node_sptr(new parse_tree::Parameter(name, differential_count, id));
   }
   else if(equal_ignoring_case(symbol, "prev")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str = link_->get_string();
-    int derivative_count = boost::lexical_cast<int, std::string>(d_str);
-    hydla::parse_tree::node_sptr tmp_var = node_sptr(new hydla::parse_tree::Variable(name));
-    for(int i = 0; i < derivative_count; i++) tmp_var = node_sptr(new hydla::parse_tree::Differential(tmp_var));
-    ret = node_sptr(new hydla::parse_tree::Previous(tmp_var));
+    int differential_count = boost::lexical_cast<int, std::string>(d_str);
+    parse_tree::node_sptr tmp_var = node_sptr(new parse_tree::Variable(name));
+    for(int i = 0; i < differential_count; i++) tmp_var = node_sptr(new parse_tree::Differential(tmp_var));
+    ret = node_sptr(new parse_tree::Previous(tmp_var));
   }
   else if(equal_ignoring_case(symbol, "minus")){
-    ret = node_sptr(new hydla::parse_tree::Negative(receive_node()));
+    ret = node_sptr(new parse_tree::Negative(receive_node()));
   }
   else if(equal_ignoring_case(symbol, "Plus")
           || equal_ignoring_case(symbol, "Subtract")
@@ -905,61 +905,61 @@ node_sptr Backend::receive_function()
       lhs = ret;
       rhs = receive_node();
       if(equal_ignoring_case(symbol, "Plus"))
-        ret = node_sptr(new hydla::parse_tree::Plus(lhs, rhs));
+        ret = node_sptr(new parse_tree::Plus(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Subtract"))
-        ret = node_sptr(new hydla::parse_tree::Subtract(lhs, rhs));
+        ret = node_sptr(new parse_tree::Subtract(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Times"))
-        ret = node_sptr(new hydla::parse_tree::Times(lhs, rhs));
+        ret = node_sptr(new parse_tree::Times(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Divide"))
-        ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
+        ret = node_sptr(new parse_tree::Divide(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Power"))
-        ret = node_sptr(new hydla::parse_tree::Power(lhs, rhs));
+        ret = node_sptr(new parse_tree::Power(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Rational"))
-        ret = node_sptr(new hydla::parse_tree::Divide(lhs, rhs));
+        ret = node_sptr(new parse_tree::Divide(lhs, rhs));
       else if(equal_ignoring_case(symbol, "And"))
-        ret = node_sptr(new hydla::parse_tree::LogicalAnd(lhs, rhs));
+        ret = node_sptr(new parse_tree::LogicalAnd(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Or"))
-        ret = node_sptr(new hydla::parse_tree::LogicalOr(lhs, rhs));
+        ret = node_sptr(new parse_tree::LogicalOr(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Equal"))
-        ret = node_sptr(new hydla::parse_tree::Equal(lhs, rhs));
+        ret = node_sptr(new parse_tree::Equal(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Unequal"))
-        ret = node_sptr(new hydla::parse_tree::UnEqual(lhs, rhs));
+        ret = node_sptr(new parse_tree::UnEqual(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Less"))
-        ret = node_sptr(new hydla::parse_tree::Less(lhs, rhs));
+        ret = node_sptr(new parse_tree::Less(lhs, rhs));
       else if(equal_ignoring_case(symbol, "LessEqual"))
-        ret = node_sptr(new hydla::parse_tree::LessEqual(lhs, rhs));
+        ret = node_sptr(new parse_tree::LessEqual(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Greater"))
-        ret = node_sptr(new hydla::parse_tree::Greater(lhs, rhs));
+        ret = node_sptr(new parse_tree::Greater(lhs, rhs));
       else if(equal_ignoring_case(symbol, "GreaterEqual"))
-        ret = node_sptr(new hydla::parse_tree::GreaterEqual(lhs, rhs));
+        ret = node_sptr(new parse_tree::GreaterEqual(lhs, rhs));
     }
   }
   else if(equal_ignoring_case(symbol, "derivative"))
   {
     std::string d_str = link_->get_string();
-    int variable_derivative_count = boost::lexical_cast<int, std::string>(d_str.c_str());
+    int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
     std::string variable_name = link_->get_symbol();
     if(variable_name.length() < var_prefix.length())invalid_ret();
     assert(variable_name.substr(0, var_prefix.length()) == var_prefix);
     variable_name = variable_name.substr(var_prefix.length());
-    ret = node_sptr(new hydla::parse_tree::Variable(variable_name));
-    for(int i = 0; i < variable_derivative_count; i++)
+    ret = node_sptr(new parse_tree::Variable(variable_name));
+    for(int i = 0; i < variable_differential_count; i++)
     {
-      ret = node_sptr(new hydla::parse_tree::Differential(ret));
+      ret = node_sptr(new parse_tree::Differential(ret));
     } 
   }
   else{
     // その他の関数
-    boost::shared_ptr<hydla::parse_tree::ArbitraryNode> f;
+    boost::shared_ptr<parse_tree::ArbitraryNode> f;
     HYDLA_LOGGER_DEBUG_VAR(symbol);
     if(converted)
     {
       // 対応している関数
-      f.reset(new hydla::parse_tree::Function(symbol));
+      f.reset(new parse_tree::Function(symbol));
     }
     else{
       // 謎の関数
-      f.reset(new hydla::parse_tree::UnsupportedFunction(symbol));
+      f.reset(new parse_tree::UnsupportedFunction(symbol));
     }
 
     for(int arg_it=0; arg_it < arg_count; arg_it++){
@@ -985,26 +985,26 @@ node_sptr Backend::receive_node(){
   case Link::DT_STR: // 文字列
     {
       std::string str = link_->get_string();
-      ret = node_sptr(new hydla::parse_tree::Number(str));
+      ret = node_sptr(new parse_tree::Number(str));
       break;
     }
   case Link::DT_SYM: // シンボル（記号）
     {
       std::string symbol = link_->get_symbol();
       if(symbol=="t")
-        ret = node_sptr(new hydla::parse_tree::SymbolicT());
+        ret = node_sptr(new parse_tree::SymbolicT());
       else if(symbol=="Pi")
-        ret = node_sptr(new hydla::parse_tree::Pi());
+        ret = node_sptr(new parse_tree::Pi());
       else if(symbol=="E")
-        ret = node_sptr(new hydla::parse_tree::E());
+        ret = node_sptr(new parse_tree::E());
       else if(symbol=="inf")
-        ret = node_sptr(new hydla::parse_tree::Infinity());
+        ret = node_sptr(new parse_tree::Infinity());
       else if(symbol=="True")
-        ret = node_sptr(new hydla::parse_tree::True());
+        ret = node_sptr(new parse_tree::True());
       else if(symbol=="False")
-	ret = node_sptr(new hydla::parse_tree::False());
+	ret = node_sptr(new parse_tree::False());
       else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
-        ret = node_sptr(new hydla::parse_tree::Variable(symbol.substr(var_prefix.length())));
+        ret = node_sptr(new parse_tree::Variable(symbol.substr(var_prefix.length())));
       break;
     }
   case Link::DT_INT: // オーバーフローする可能性があるなら文字列使う
@@ -1012,7 +1012,7 @@ node_sptr Backend::receive_node(){
       std::stringstream sstr;
       int num = link_->get_integer();
       sstr << num;
-      ret = node_sptr(new hydla::parse_tree::Number(sstr.str() ) );
+      ret = node_sptr(new parse_tree::Number(sstr.str() ) );
       break;
     }
   case Link::DT_FUNC: // 合成関数
@@ -1096,9 +1096,9 @@ int Backend::receive_parameter_map(parameter_map_t& map)
     if(str_buf == "p")
     {
       std::string name = link_->get_symbol();
-      int derivative_count = link_->get_integer();
+      int differential_count = link_->get_integer();
       int id = link_->get_integer();
-      parameter_t tmp_param(name, derivative_count, id);
+      parameter_t tmp_param(name, differential_count, id);
       value_range_t tmp_range = map[tmp_param];
       int relop_code = link_->get_integer();
       value_t tmp_value = value_t(receive_node());

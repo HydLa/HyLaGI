@@ -1,7 +1,7 @@
 #include "SymbolicTrajPrinter.h"
 #include <boost/foreach.hpp>
 #include <stack>
-#include "DefaultParameter.h"
+#include "Parameter.h"
 #include "Logger.h"
 
 using namespace hydla::simulator;

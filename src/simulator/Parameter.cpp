@@ -1,10 +1,10 @@
-#include "DefaultParameter.h"
+#include "Parameter.h"
 
 namespace hydla{
 namespace simulator{
 
 std::ostream& operator<<(std::ostream& s, 
-                               const DefaultParameter& p)
+                               const Parameter& p)
 {
   return p.dump(s);
 }

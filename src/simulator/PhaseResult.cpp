@@ -1,5 +1,5 @@
 #include "PhaseResult.h"
-#include "DefaultParameter.h"
+#include "Parameter.h"
 #include "Simulator.h"
 
 
@@ -39,7 +39,7 @@ PhaseResult::PhaseResult():cause_for_termination(NONE)
 {
 }
 
-bool ParameterComparator::operator()(const DefaultParameter x,const DefaultParameter y) const { return x < y; }
+bool ParameterComparator::operator()(const Parameter x,const Parameter y) const { return x < y; }
 
 
 

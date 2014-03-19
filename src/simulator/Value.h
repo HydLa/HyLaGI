@@ -11,7 +11,7 @@
 namespace hydla {
 namespace simulator {
 
-class DefaultParameter;
+class Parameter;
 
 class Value
 {  
@@ -41,7 +41,7 @@ class Value
   /**
    * construct Value from given parameter
    */
-  Value(const DefaultParameter &param);
+  Value(const Parameter &param);
 
   /**
    * construct Value from given double value

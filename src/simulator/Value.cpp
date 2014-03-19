@@ -1,5 +1,5 @@
 #include "Value.h"
-#include "DefaultParameter.h"
+#include "Parameter.h"
 #include <sstream>
 #include "Utility.h"
 
@@ -73,11 +73,11 @@ Value::Value(const std::string &str){
   node_.reset(new Number(str));
 }
 
-Value::Value(const DefaultParameter &param)
+Value::Value(const Parameter &param)
 {
-  node_.reset(new Parameter(
+  node_.reset(new parse_tree::Parameter(
                param.get_name(),
-               param.get_derivative_count(), 
+               param.get_differential_count(), 
                param.get_phase_id()));
 }
 

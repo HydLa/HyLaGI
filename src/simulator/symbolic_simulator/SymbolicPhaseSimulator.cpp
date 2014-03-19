@@ -831,10 +831,10 @@ void SymbolicPhaseSimulator::apply_previous_solution(const change_variables_t& v
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
       if(continuity_map.find(var_name) == continuity_map.end() )
-        continuity_map.insert( make_pair(var_name, pair.first.derivative_count) );
-      else if(continuity_map[var_name] < pair.first.derivative_count){
+        continuity_map.insert( make_pair(var_name, pair.first.differential_count) );
+      else if(continuity_map[var_name] < pair.first.differential_count){
         continuity_map.erase(var_name);
-        continuity_map.insert( make_pair(var_name, pair.first.derivative_count) );
+        continuity_map.insert( make_pair(var_name, pair.first.differential_count) );
       }
       std::string fmt = "v";
       if(in_IP){
@@ -976,8 +976,8 @@ SymbolicPhaseSimulator::todo_list_t
 
             parameter_t par = simulator_->introduce_parameter(time, phase, time_range);
 
-            next_todo->current_time = node_sptr(new Parameter("time", 0, phase->id));
-            phase->end_time = node_sptr(new Parameter("time", 0, phase->id));
+            next_todo->current_time = node_sptr(new parse_tree::Parameter("time", 0, phase->id));
+            phase->end_time = node_sptr(new parse_tree::Parameter("time", 0, phase->id));
 
             next_todo->parameter_map[par] = time_range;
             phase->parameter_map[par] = time_range;

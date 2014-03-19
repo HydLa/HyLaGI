@@ -61,7 +61,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
     }
     else
     {
-      new_child_ = node_sptr(new Parameter(v_name, diff_cnt, prev_phase_->id));
+      new_child_ = node_sptr(new parse_tree::Parameter(v_name, diff_cnt, prev_phase_->id));
       parameter_t param(v_name, diff_cnt, prev_phase_->id);
 
       if(!parameter_map_.count(param))
@@ -170,7 +170,7 @@ DEFINE_DEFAULT_VISIT_FACTOR(False)
 
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-DEFINE_DEFAULT_VISIT_FACTOR(Parameter)
+DEFINE_DEFAULT_VISIT_FACTOR(parse_tree::Parameter)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)

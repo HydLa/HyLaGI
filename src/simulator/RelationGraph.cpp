@@ -130,14 +130,14 @@ boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms
     }
     for(auto variable : variables)
     {
-      variable_t var(DefaultVariable(variable.first, variable.second), false);
+      variable_t var(Variable(variable.first, variable.second), false);
       relations.push_back(std::make_pair(&(*it), var));
     }
     
     for(auto variable : prev_variables)
     {
       relations.push_back(std::make_pair(&(*it), 
-        variable_t(DefaultVariable(variable.first, variable.second), true)));
+        variable_t(Variable(variable.first, variable.second), true)));
     }
   }
   return boost::shared_ptr<RelationGraph>(new RelationGraph(relations));
