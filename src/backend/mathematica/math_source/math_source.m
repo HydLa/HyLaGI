@@ -190,33 +190,26 @@ publicMethod[
   createMap[pCons, isParameter, hasParameter, {}];
 ];
 
-createMap[cons_, judge_, hasJudge_, vars_] := Module[
-  {map, idx},
+createMap[cons_, judge_, hasJudge_, vars_] := 
+createMap[cons, judge, hasJudge, vars] = (* for memoization *)
+Module[
+  {map},
   If[cons === True || cons === False, 
     cons,
-    idx = {};
-    If[optOptimizationLevel == 1 || optOptimizationLevel == 4,
-      idx = Position[createMapList,{cons,judge,hasJudge,vars}];
-      If[idx != {}, map = createMapList[[idx[[1]][[1]]]][[2]]];
-    ];
-    If[idx == {},
-      (* Remove unnecessary Constraints*)
-      map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
-      map = Reduce[map, vars, Reals];
+    (* Remove unnecessary Constraints*)
+    map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+    map = Reduce[map, vars, Reals];
 
-      (* Remove unnecessary Constraints*)
-      map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+    (* Remove unnecessary Constraints*)
+    map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
 
-
-      simplePrint[map];
-      map = LogicalExpand[map];
-      map = applyListToOr[map];
-      map = Map[(applyList[#])&, map];
-      map = Map[(adjustExprs[#, judge])&, map];
-      debugPrint["@createMap map after adjustExprs", map];
-      map = Map[(convertExprs[#])&, map];
-      If[optOptimizationLevel == 1 || optOptimizationLevel == 4, createMapList = Append[createMapList,{{cons,judge,hasJudge,vars},map}]];
-    ];
+    simplePrint[map];
+    map = LogicalExpand[map];
+    map = applyListToOr[map];
+    map = Map[(applyList[#])&, map];
+    map = Map[(adjustExprs[#, judge])&, map];
+    debugPrint["@createMap map after adjustExprs", map];
+    map = Map[(convertExprs[#])&, map];
     map
   ]
 ];
@@ -795,48 +788,19 @@ Module[
   @param tVars: exprに出現する変数のリスト
 *)  
 solveByDSolve[expr_, initExpr_, tVars_] :=
+solveByDSolve[expr, initExpr, tVars] = (* for memoization *)
 Module[
   {tmpExpr, ini, sol, idx, generalInitValue, swapValue, j},
   tmpExpr = expr;
   ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
   simplePrint[tmpExpr, ini, tVars];
   
-  If[optOptimizationLevel == 1 || optOptimizationLevel == 4, 
-    (* 微分方程式の結果を再利用する場合 *)
-
-    idx = Position[Map[(Sort[#])&,dList],Sort[tmpExpr]];
-    If[idx == {},
-      generalInitValue = ini;
-      For[j=1,j<=Length[generalInitValue],j++,
-        generalInitValue[[j, 1]] = ini[j];
-      ];
-      sol = Check[
-        DSolve[Union[tmpExpr, generalInitValue], Map[(#[t])&, tVars], t],
-        overConstraint,
-        {DSolve::overdet, DSolve::bvnul}
-      ];
-      For[j=1,j<=Length[generalInitValue],j++,
-        generalInitValue[[j, 0]] = Rule;
-      ];
-      dList = Append[dList,{tmpExpr,sol,generalInitValue}];
-      idx = Position[dList,tmpExpr],
-      sol = dList[[idx[[1,1]],2]];
-    ];
-    For[j=1,j<=Length[ini],j++,
-      swapValue = ini[[j, 2]];
-      ini[[j, 2]] = ini[[j, 1]];
-      ini[[j, 1]] = swapValue;
-      ini[[j, 0]] = Rule;
-    ];
-    sol = sol /. (dList[[idx[[1, 1]], 3]] /. ini)
-    ,
-    sol = Quiet[Check[
-        DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],
-            overConstraint,
-        {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
-      ],
-     {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
-    ]
+  sol = Quiet[Check[
+      DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],
+          overConstraint,
+      {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
+    ],
+   {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
   ];
   simplePrint[sol];
   sol

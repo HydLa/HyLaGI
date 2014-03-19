@@ -97,14 +97,6 @@ void MathematicaLink::init(const hydla::simulator::Opts &opts)
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
-
-  // 最適化レベル
-  MLPutFunction("Set",2);
-  MLPutSymbol("optOptimizationLevel");
-  MLPutInteger(opts.optimization_level);
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
   
   // タイムアウト時間
   MLPutFunction("Set",2);
