@@ -8,7 +8,11 @@ load_package "numeric";
 load_package "redlog"; rlset R;
 load_package "sets";
 
+% 区間値を表す演算子
+% (下限値, 上限値, closure属性)の三つ組
+% closure属性: closed__(上下限共に閉区間), open__(上下限共に開区間), closed_open__(下限が閉, 上限が開く), open_closed__(下限が開, 上限が閉)のいずれか
 operator interval;
+
 operator prev;
 
 % 出力の設定
@@ -52,8 +56,8 @@ irrationalNumberIntervalList__:= {};
 optUseApproximateCompare__:= nil;
 approxPrecision__:= 30; % TODO:要検討
 intervalPrecision__:= 2; % TODO:要検討
-piInterval__:= interval(3141592/1000000, 3141593/1000000);
-eInterval__:= interval(2718281/1000000, 2718282/1000000);
+piInterval__:= interval(3141592/1000000, 3141593/1000000, closed__);
+eInterval__:= interval(2718281/1000000, 2718282/1000000, closed__);
 
 loadedOperator__:={};
 
@@ -359,16 +363,56 @@ procedure isInterval(expr_)$
 procedure isZeroInterval(expr_)$
   if(expr_=makePointInterval(0)) then t else nil;
 
-procedure getLbFromInterval(expr_)$
+procedure getLb(expr_)$
   if(isInterval(expr_)) then part(expr_, 1)
   else ERROR;
 
-procedure getUbFromInterval(expr_)$
+procedure getUb(expr_)$
   if(isInterval(expr_)) then part(expr_, 2)
   else ERROR;
 
-% TODO：等号の有無（開区間/閉区間）によって結果が変わる場合も正しく扱えるように
-% （その場合、lbとubが等しくなっている区間は、閉区間と考えると実現可能か）
+procedure getClosure(expr_)$
+  if(isInterval(expr_)) then part(expr_, 3)
+  else ERROR;
+
+
+procedure isLbOpen(interval_)$
+  if(isInterval(interval_)) then
+      if(part(interval_, 3) = open__ or part(interval_, 3) = open_closed__) then t
+        else nil
+    else ERROR;
+
+procedure isUbOpen(interval_)$
+  if(isInterval(interval_)) then
+      if(part(interval_, 3) = open__ or part(interval_, 3) = closed_open__) then t
+        else nil
+    else ERROR;
+
+procedure setLbOpen(closure_)$
+  if(closure_ = closed__) then open_closed
+    else if(closure_ = closed_open__) then open__
+      else closure_;
+
+procedure setUbOpen(closure_)$
+  if(closure_ = closed__) then closed_open__
+    else if(closure_ = open_closed__) then open__
+      else closure_;
+
+procedure setReverseClosure(closure_)$
+  if(closure_ = open_closed__) then closed_open__
+    else if(closure_ = closed_open__) then open_closed__
+      else closure_;
+
+procedure timesClosure(closure1_, closure2_)$
+begin;
+  scalar closure_;
+
+  closure_:= closed__;
+  if(isLbOpen(closure1_) or isLbOpen(closure2_)) then closure_:= setLbOpen(closure_);
+  if(isUbOpen(closure1_) or isUbOpen(closure2_)) then closure_:= setUbOpen(closure_);
+  return closure_;
+end;
+
 procedure compareInterval(interval1_, op_, interval2_)$
 begin;
   scalar ans_;
@@ -379,44 +423,77 @@ begin;
 
   ans_:=
   if (op_ = geq) then
-    if (getLbFromInterval(interval1_) >= getUbFromInterval(interval2_)) then t
-    else if(getUbFromInterval(interval1_) < getLbFromInterval(interval2_)) then nil
+    if (getLb(interval1_) >= getUb(interval2_)) then t
+    else if(getUb(interval1_) = getLb(interval2_) and (isUbOpen(getClosure(interval1_)) or isLbOpen(getClosure(interval2_)))) then nil
+    else if(getUb(interval1_) < getLb(interval2_)) then nil
     else unknown
   else if (op_ = greaterp) then
-    if (getLbFromInterval(interval1_) > getUbFromInterval(interval2_)) then t
-    else if(getUbFromInterval(interval1_) <= getLbFromInterval(interval2_)) then nil
+    if (getLb(interval1_) = getUb(interval2_) and (isLbOpen(getClosure(interval1_)) or isUbOpen(getClosure(interval2_)))) then t
+    else if(getLb(interval1_) > getUb(interval2_)) then t
+    else if(getUb(interval1_) <= getLb(interval2_)) then nil
     else unknown
   else if (op_ = leq) then
-    if (getUbFromInterval(interval1_) <= getLbFromInterval(interval2_)) then t
-    else if(getLbFromInterval(interval1_) > getUbFromInterval(interval2_)) then nil
+    if (getUb(interval1_) <= getLb(interval2_)) then t
+    else if(getLb(interval1_) = getUb(interval2_) and (isLbOpen(getClosure(interval1_)) or isUbOpen(getClosure(interval2_)))) then nil
+    else if(getLb(interval1_) > getUb(interval2_)) then nil
     else unknown
   else if (op_ = lessp) then
-    if (getUbFromInterval(interval1_) < getLbFromInterval(interval2_)) then t
-    else if(getLbFromInterval(interval1_) >= getUbFromInterval(interval2_)) then nil
+    if (getUb(interval1_) = getLb(interval2_) and (isUbOpen(getClosure(interval1_)) or isLbOpen(getClosure(interval2_)))) then t
+    else if(getUb(interval1_) < getLb(interval2_)) then t
+    else if(getLb(interval1_) >= getUb(interval2_)) then nil
     else unknown;
+
   return ansWrite("compareInterval", ans_);
 end;
 
 procedure plusInterval(interval1_, interval2_)$
-  interval(getLbFromInterval(interval1_)+getLbFromInterval(interval2_), getUbFromInterval(interval1_)+getUbFromInterval(interval2_));
+  ansWrite("plusInterval", interval(getLb(interval1_)+getLb(interval2_), getUb(interval1_)+getUb(interval2_), 
+                             timesClosure(getClosure(interval1_), getClosure(interval2_))));
 
 procedure timesInterval(interval1_, interval2_)$
 begin;
-  scalar compareList_, retInterval_;
+  scalar closure1_, closure2_, comparedList_,  min_, max_, isLbOpen_, isUbOpen_, closure_;
 
-  compareList_:= {getLbFromInterval(interval1_) * getLbFromInterval(interval2_),
-                  getLbFromInterval(interval1_) * getUbFromInterval(interval2_),
-                  getUbFromInterval(interval1_) * getLbFromInterval(interval2_),
-                  getUbFromInterval(interval1_) * getUbFromInterval(interval2_)};
-  retInterval_:= interval(findMinimumValue(INFINITY, compareList_), findMaximumValue(-INFINITY, compareList_));
-  debugWrite("ans in timesInterval: ", retInterval_);
+  closure1_:= getClosure(interval1_); closure2_:= getClosure(interval2_);
+  comparedList_:= {{getLb(interval1_) * getLb(interval2_), (if(isLbOpen(closure1_) or isLbOpen(closure2_)) then t else nil)}, 
+                  {getLb(interval1_) * getUb(interval2_), (if(isLbOpen(closure1_) or isUbOpen(closure2_)) then t else nil)},
+                  {getUb(interval1_) * getLb(interval2_), (if(isUbOpen(closure1_) or isLbOpen(closure2_)) then t else nil)},
+                  {getUb(interval1_) * getUb(interval2_), (if(isUbOpen(closure1_) or isUbOpen(closure2_)) then t else nil)}};
 
-  return retInterval_;
+  min_:= INFINITY; max_:= -INFINITY;
+  isLbOpen_:= t; isUbOpen_:= t;
+
+  for each x in comparedList_ do <<
+    if(min_ = first(x)) then <<
+      if(not isLbOpen_ or not second(x)) then isLbOpen_:= nil;
+    >> else <<
+      if(mymin(min_, first(x)) = first(x)) then <<
+        min_:= first(x);
+        isLbOpen_:= second(x);
+      >>
+    >>;
+
+    if(max_ = first(x)) then <<
+      if(not isUbOpen_ or not second(x)) then isUbOpen_:= nil;
+    >> else <<
+      if(mymax(max_, first(x)) = first(x)) then <<
+        max_:= first(x);
+        isUbOpen_:= second(x);
+      >>
+    >>;
+  >>;
+
+  closure_:= closed__;
+  if(isLbOpen_) then closure_:= setLbOpen(closure_);
+  if(isUbOpen_) then closure_:= setUbOpen(closure_);
+
+  return ansWrite("timesInterval", interval(min_, max_, closure_));
 end;
 
 procedure quotientInterval(interval1_, interval2_)$
-  if((getLbFromInterval(interval2_)=0) or (getUbFromInterval(interval2_)=0)) then ERROR
-  else timesInterval(interval1_, interval(1/getUbFromInterval(interval2_), 1/getLbFromInterval(interval2_)));
+  ansWrite("quotientInterval",
+           if((getLb(interval2_)=0) or (getUb(interval2_)=0)) then ERROR
+             else timesInterval(interval1_, interval(1/getUb(interval2_), 1/getLb(interval2_), setReverseClosure(getClosure(interval2_)))));
 
 % 無理数を含む定数式を区間値形式に変換する
 % 前提：入力のvalue_は2以上の整数に限られる
@@ -444,7 +521,7 @@ begin;
       else sqrtUb_:= sqrtUb_:= midPoint_;
       loopCount_:= loopCount_+1;
     >>;
-    sqrtInterval_:= interval(sqrtLb_, sqrtUb_);
+    sqrtInterval_:= interval(sqrtLb_, sqrtUb_, closed__);
     putIrrationalNumberInterval(sqrt(value_), sqrtInterval_);
   >> else if(mode_=NEWTON) then <<
     % ニュートン法により求める
@@ -458,16 +535,15 @@ begin;
     >> until (tmpNewtonSol_ - newTmpNewtonSol_ < 1/10^intervalPrecision__);
     sqrtLb_:= 2*newTmpNewtonSol_ - tmpNewtonSol_;
     sqrtUb_:= newTmpNewtonSol_;
-    sqrtInterval_:= interval(sqrtLb_, sqrtUb_);
+    sqrtInterval_:= interval(sqrtLb_, sqrtUb_, closed__);
     putIrrationalNumberInterval(sqrt(value_), sqrtInterval_);
   >>;
 
-  debugWrite("ans in getSqrtInterval: ", sqrtInterval_);
-  return sqrtInterval_;
+  return ansWrite("getSqrtInterval", sqrtInterval_);
 end;
 
 procedure makePointInterval(value_)$
-  interval(value_, value_);
+  interval(value_, value_, closed__);
 
 procedure convertValueToInterval(value_)$
 begin;
@@ -492,11 +568,11 @@ begin;
       argsList_:= getArgsList(value_);
       debugWrite("argsList_: ", argsList_);
       if(head_=plus) then <<
-        retInterval_:= interval(0, 0);
+        retInterval_:= makePointInterval(0);
         for each x in argsList_ do
           retInterval_:= plusInterval(convertValueToInterval(x), retInterval_);
       >> else <<
-        retInterval_:= interval(1, 1);
+        retInterval_:= makePointInterval(1);
         for each x in argsList_ do
           retInterval_:= timesInterval(convertValueToInterval(x), retInterval_);
       >>;
@@ -512,21 +588,21 @@ begin;
       insideSqrt_:= part(value_, 1);
       retInterval_:= getSqrtInterval(insideSqrt_, NEWTON);
     >> else if(head_=sin) then <<
-      retInterval_:= interval(-1, 1);
+      retInterval_:= interval(-1, 1, closed__);
     >> else if(head_=cos) then <<
-      retInterval_:= interval(-1, 1);
+      retInterval_:= interval(-1, 1, closed__);
     >> else if(head_=tan) then <<
-      retInterval_:= interval(-1, 1);
+      retInterval_:= interval(-1, 1, closed__);
     >> else if(head_=asin) then <<
-      % interval(-Pi, Pi)
-      retInterval_:= interval(getLbFromInterval(timesInterval(makePointInterval(-1), piInterval__)), getUbFromInterval(piInterval__));
+      % interval(-Pi, Pi, closed__)
+      retInterval_:= interval(getLb(timesInterval(makePointInterval(-1), piInterval__)), getUb(piInterval__), closed__);
     >> else if(head_=acos) then <<
-      retInterval_:= interval(getLbFromInterval(timesInterval(makePointInterval(-1), piInterval__)), getUbFromInterval(piInterval__));
+      retInterval_:= interval(getLb(timesInterval(makePointInterval(-1), piInterval__)), getUb(piInterval__), closed__);
     >> else if(head_=atan) then <<
-      retInterval_:= interval(getLbFromInterval(timesInterval(makePointInterval(-1), piInterval__)), getUbFromInterval(piInterval__));
+      retInterval_:= interval(getLb(timesInterval(makePointInterval(-1), piInterval__)), getUb(piInterval__), closed__);
     >> else <<
       % TODO：他にどんな場合に無理数扱いになるかを調べる
-      retInterval_:= interval(unknown, unknown);
+      retInterval_:= interval(unknown, unknown, closed__);
     >>;
   >> else <<
     if(value_=pi) then retInterval_:= piInterval__
@@ -535,18 +611,26 @@ begin;
       valueConstraint_:= for each x in pConstraint__ join if(not freeof(x, value_)) then {x} else {};
       debugWrite("valueConstraint_: ", valueConstraint_);
       lb_:=-INFINITY ; ub_:= INFINITY;
+      isLbOpen_:= nil; isUbOpen:= nil;
       for each x in valueConstraint_ do <<
         op_:= head(x);
         rhs_:= getRhs(x, value_);
         debugWrite("{x, op_, rhs}: ", {x, op_, rhs_});
-        % TODO 開区間をよりマシに実装する 
-        if(op_ = geq) then      lb_:= getLbFromInterval(convertValueToInterval(rhs_));
-        if(op_ = greaterp) then lb_:= getLbFromInterval(convertValueToInterval(rhs_ + 1/10000000000));
-        if(op_ = leq) then      ub_:= getLbFromInterval(convertValueToInterval(rhs_));
-        if(op_ = lessp) then    ub_:= getUbFromInterval(convertValueToInterval(rhs_ - 1/10000000000));
+
+        if((op_ = geq) or (op_ = greaterp)) then lb_:= getLb(convertValueToInterval(rhs_));
+        if((op_ = leq) or (op_ = lessp)) then    ub_:= getLb(convertValueToInterval(rhs_));
+
+        if(op_ = greaterp) then isLbOpen_:= t;
+        if(op_ = lessp) then    isUbOpen_:= t;
       >>;
-      retInterval_:= interval(lb_, ub_);
-    >> else retInterval_:= interval(unknown, unknown);
+      if(isLbOpen_) then
+          if(isUbOpen_) then closure_:= open__
+            else closure_:= open_closed__
+        else if(isUbOpen_) then closure_:= closed_open__
+          else closure_:= closed__;
+
+      retInterval_:= interval(lb_, ub_, closure_);
+    >> else retInterval_:= interval(unknown, unknown, closed__);
   >>;
 
   return ansWrite("convertValueToInterval", retInterval_);
