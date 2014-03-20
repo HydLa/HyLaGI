@@ -65,27 +65,57 @@ loadedOperator__:={};
 % 基本的な数式操作関数
 %---------------------------------------------------------------
 
-%MathematicaでいうHead関数
+% MathematicaでいうHead関数
 procedure head(expr_)$
   if(arglength(expr_)=-1) then nil
   else part(expr_, 0);
 
-%MathematicaでいうFold関数
+% MathematicaでいうFold関数
 procedure foldLeft(func_, init_, list_)$
   if(list_ = {}) then init_
   else foldLeft(func_, func_(init_, first(list_)), rest(list_));
 
+% MathematicaでいうApply関数
+procedure myApply(func_, expr_)$
+  part(expr_, 0):= func_;
+
+% MathematicaでいうDrop関数
+procedure drop(exprs_, idx_)$
+  for i:= 1 : length(exprs_) join if(i <> idx_) then {part(exprs_, i)} else {};
+
+% MathematicaでいうFilter関数
+procedure filter(func, exprs_)$
+  for each x in exprs_ join if(func(x)) then {x} else {};
+
+% filterの条件を反転したもの
+procedure filterNot(func, exprs_)$
+  for each x in exprs_ join if(func(x)) then {} else {x};
+
+% 論理式(formula)をリストに変換する場合などに使用する関数
 procedure getArgsList(expr_)$
   if(arglength(expr_)=-1) then {}
   else for i:=1 : arglength(expr_) collect part(expr_, i);
 
-%MathematicaでいうApply関数
-procedure myApply(func_, expr_)$
-  part(expr_, 0):= func_;
+% リストの重複を除く
+% uniqだと名前の衝突がありそうなのでmyをつけた
+procedure myUniq(expr_)$
+begin;
+  scalar ans_, copy_;
+  ans_:= {};
+  copy_:= expr_;
+  for i:= 1 : length(copy_) do <<
+    ans_:= union(ans_, {part(copy_, i)});
+    for j:= i+1 : length(copy_) do <<
+      if(part(copy_, i) = part(copy_, j)) then <<
+        copy_ := drop(copy_, j);
+      >>;
+    >>;
+  >>;
+  return ansWrite("myUniq", ans_);
+end;
 
 % 式の頭部がマイナスかどうか
 % ただしexprが整数の場合は負であってもマイナス扱いしない
-% TODO：不都合があれば、対応する
 procedure hasMinusHead(expr_)$
   if(arglength(expr_)=-1) then nil
   else if(part(expr_, 1) = -1*expr_) then t
@@ -94,13 +124,7 @@ procedure hasMinusHead(expr_)$
 % 多項式の有理化を行う
 % @param expr_ 分母の項数が4までの多項式
 procedure rationalise(expr_)$
-begin;
-  scalar ans_;
-
-  ans_:= rationaliseMain(expr_);
-  debugWrite("ans in rationalise: ", ans_);
-  return ans_;
-end;
+  ansWrite("rationalise", rationaliseMain(expr_));
 
 % TODO:3乗根以上への対応
 % TODO:より一般的な形への対応, 5項以上？
@@ -136,7 +160,6 @@ begin;
           conjugate_:= plus(myApply(plus, frontTwoElemList_), -1*(myApply(plus, restElemList_)));
         >> else <<
           % 前提：積の右辺はすべてplusで(-5は+(-5)のように)つながっている形式
-          % TODO：そうでない場合でも平気なように？
           timesRhs_:= plus(myApply(plus, frontTwoElemList_), -1*(myApply(plus, restElemList_)));
           conjugate_:= part(denominator_, 1) * timesRhs_;
         >>;
@@ -174,7 +197,6 @@ begin;
   return rationalisedExpr_;
 end;
 
-
 % exSubMainの第二引数をリスト形式に対応させた置換関数
 procedure exSub(patternList_, exprs_)$
   if(head(exprs_) = list) then
@@ -210,8 +232,7 @@ begin;
     subAppliedExpr_:= myApply(head_, subAppliedExprList_);
 
   >> else <<
-    % 等式や、変数名などのfactorの場合
-    % TODO:expr_を見て、制約ストア（あるいはcsvars）内にあるようなら、それと対をなす値（等式の右辺）を適用
+    % 等式や、変数名などのfactorの場合を前提とする
     subAppliedExpr_:= sub(patternList_, expr_);
   >>;
 
@@ -229,7 +250,6 @@ begin;
 
   head_:= head(expr_);
   if(hasMinusHead(expr_)) then <<
-    % TODO：負号の中にvar_が複数個ある場合への対応？
     coefficientList_:= {-1*first(getSqrtList(part(expr_, 1), var_, mode_))};
     exprList_:= getSqrtList(part(expr_, 1), var_, mode_);
   >> else if(head_=plus) then <<
@@ -251,7 +271,6 @@ begin;
     >> else <<
       % 根号の中がさらにsqrtを含む多項式になっている場合
       argsAnsList_:= for each x in getArgsList(insideSqrt_) join getSqrtList(x, var_, mode_);
-      % TODO：複数個ある場合への対応？
       coefficientList_:= {first(argsAnsList_)};
       exprList_:= union(exprList_, argsAnsList_);
     >>;
@@ -264,23 +283,49 @@ begin;
   else if(mode_=INSIDE) then return exprList_;
 end;
 
+% s = arbcomplex(n)を含むリストであることを判定する
+procedure hasSEqualArbComplex(expr_)$
+begin;
+  scalar ans_;
+  debugWrite("hasSEqualArbComplex: ", expr_);
+  ans_:= nil;
+  for each x in expr_ do
+    if(lhs(x) = s and not freeof(rhs(x), arbcomplex)) then ans_:= t;
+  return ans_;
+end;
+
+% s = foo(n)を含むリストであることを判定する
+procedure notHaveSExpr(expr_)$
+begin;
+  scalar ans_;
+  debugWrite("notHaveSExpr: ", expr_);
+  ans_:= t;
+  for each x in expr_ do
+    if(lhs(x) = s) then ans_:= nil;
+  return ans_;
+end;
+
 %---------------------------------------------------------------
 % 関係演算子関連の関数
 %---------------------------------------------------------------
 
+% 不等式かどうか判定
 procedure isIneqRelop(expr_)$
   if((expr_=neq) or (expr_=not) or
     (expr_=geq) or (expr_=greaterp) or 
     (expr_=leq) or (expr_=lessp)) then t else nil;
 
+% 不等号を含むかどうか判定
 procedure hasIneqRelop(expr_)$
   if(freeof(expr_, neq) and freeof(expr_, not) and
      freeof(expr_, geq) and freeof(expr_, greaterp) and
      freeof(expr_, leq) and freeof(expr_, lessp)) then nil else t;
 
+% 等号を含むかどうか判定
 procedure hasEqual(expr_)$
   if(freeof(expr_, equal)) then nil else t;
 
+% 不等号の向きを反転させる
 procedure getReverseRelop(relop_)$
   if(relop_=equal) then equal
   else if(relop_=neq) then neq
@@ -290,6 +335,7 @@ procedure getReverseRelop(relop_)$
   else if(relop_=lessp) then greaterp
   else nil;
 
+% 論理的に逆の不等号を生成する
 procedure getInverseRelop(relop_)$
   if(relop_=equal) then neq
   else if(relop_=neq) then equal
@@ -299,6 +345,7 @@ procedure getInverseRelop(relop_)$
   else if(relop_=lessp) then geq
   else nil;
 
+% 式の左辺, 右辺を逆にする
 procedure getReverseCons(cons_)$
 begin;
   scalar reverseRelop_, lhs_, rhs_;
@@ -309,6 +356,7 @@ begin;
   return reverseRelop_(rhs_, lhs_);
 end;
 
+% 等号, 不等号をVCSのコードに変換する
 procedure getExprCode(cons_)$
 begin;
   scalar head_;
@@ -403,6 +451,7 @@ procedure setReverseClosure(closure_)$
     else if(closure_ = closed_open__) then open_closed__
       else closure_;
 
+% 2つのclosureを掛けあわせる
 procedure timesClosure(closure1_, closure2_)$
 begin;
   scalar closure_;
@@ -413,6 +462,8 @@ begin;
   return closure_;
 end;
 
+% 区間値の比較を行う関数
+% [1,3] > [2,4]のように明確に順序関係を作れない場合unknownを戻す
 procedure compareInterval(interval1_, op_, interval2_)$
 begin;
   scalar ans_;
@@ -542,9 +593,11 @@ begin;
   return ansWrite("getSqrtInterval", sqrtInterval_);
 end;
 
+% 1つの値による区間値を生成する
 procedure makePointInterval(value_)$
   interval(value_, value_, closed__);
 
+% ある値を比較用に区間値に変換する
 procedure convertValueToInterval(value_)$
 begin;
   scalar head_, retInterval_, argsList_, insideSqrt_;
@@ -601,7 +654,7 @@ begin;
     >> else if(head_=atan) then <<
       retInterval_:= interval(getLb(timesInterval(makePointInterval(-1), piInterval__)), getUb(piInterval__), closed__);
     >> else <<
-      % TODO：他にどんな場合に無理数扱いになるかを調べる
+      % 未対応の値
       retInterval_:= interval(unknown, unknown, closed__);
     >>;
   >> else <<
@@ -636,7 +689,6 @@ begin;
   return ansWrite("convertValueToInterval", retInterval_);
 end;
 
-% TODO x/y >0 の格好の時y <> 0 の情報を追加する
 % @param inequality_ value_ + expr op_ 0 の不等式
 % @return - expr
 procedure getRhs(inequality_, value_)$
@@ -652,6 +704,7 @@ end;
 % 実数以外の数関連の関数
 %---------------------------------------------------------------
 
+% 虚数を含むかどうか判定
 procedure hasImaginaryNum(value_)$
   if(not freeof(value_, i)) then t else nil;
 
@@ -717,12 +770,12 @@ end;
 % 大小判定関連の関数（定数式のみ、パラメタなし）
 %---------------------------------------------------------------
 
+% 比較回数のカウンタ
 checkOrderingFormulaCount__:= 0;
 checkOrderingFormulaIrrationalNumberCount_:= 0;
 
 procedure checkOrderingFormula(orderingFormula_)$
 % 論理式の比較を行う
-% TODO パラメータが入ってきた時の対処
 %入力: 論理式(特にsqrt(2), greaterp_, sin(2)などを含むようなもの), 精度
 %出力: t or nil or -1 or unknown
 %      (xとyがほぼ等しい時 -1, 記号定数で確定できない場合unknown)
@@ -857,6 +910,7 @@ begin;
   return ansWrite("infinityIf", ans_);
 end;
 
+% x, yの内最小の値を得る
 procedure mymin(x,y)$
 %入力: 数値という前提
 begin;
@@ -869,6 +923,7 @@ begin;
   return ansWrite("mymin", ans_);
 end;
 
+% x, yの内最大の値を得る
 procedure mymax(x,y)$
 %入力: 数値という前提
 begin;
@@ -896,7 +951,7 @@ procedure findMaximumValue(x,lst)$
   else findMaximumValue(first(lst),rest(lst));
 
 %---------------------------------------------------------------
-% TC形式関連の関数
+% TC形式（時刻と条件DNFの組）関連の関数
 %---------------------------------------------------------------
 
 % TC形式（時刻と条件DNFの組）におけるアクセス用関数
@@ -1248,10 +1303,11 @@ end;
 % 論理式関連の関数
 %---------------------------------------------------------------
 
-%数式のリストをandで繋いだ論理式に変換する
+% 数式のリストをandで繋いだ論理式に変換する
 procedure mymkand(lst)$
 for i:=1:length(lst) mkand part(lst,i);
 
+% 数式のリストをorで繋いだ論理式に変換する
 procedure mymkor(lst)$
 for i:=1:length(lst) mkor part(lst, i);
 
@@ -1267,7 +1323,6 @@ begin;
 
   debugWrite("=== in exSolve: ", {exprs_, vars_});
   % 三角関数まわりの方程式を解いた場合、解は1つに限定してしまう
-  % TODO：どうにかする？
   off allbranch;
   tmpSol_:= solve(exprs_, vars_);
   on allbranch;
@@ -1307,7 +1362,6 @@ end;
 % 不等式の向きが限定されてしまったりすることがあるため)
 % 2次不等式までは解ける
 % 前提：入力される不等式も変数も1つ
-% TODO：複数の不等式が渡された場合への対応？
 % TODO：3次以上への対応？
 % 入力：1変数の2次以下の不等式1つ
 % 出力：{左辺, relop, 右辺}の形式によるDNFリスト
@@ -1375,10 +1429,9 @@ begin;
   if(not numberp(lcofRet_)) then lcofRet_:= 0;
   sqrtCoeffList_:= getSqrtList(adjustedLhs_, exprVar_, COEFF);
   % 前提：根号の中にパラメタがある項は多くても1つ
-  % TODO：なんとかする
   if(sqrtCoeffList_={}) then sqrtCoeff_:= 0
   else if(length(sqrtCoeffList_)=1) then sqrtCoeff_:= first(sqrtCoeffList_);
-  % TODO：厳密にはxorを使うべきか？
+  % 厳密にはxorを使うべきか？
   if(checkOrderingFormula(lcofRet_<0) or checkOrderingFormula(sqrtCoeff_<0)) then <<
     adjustedRelop_:= getReverseRelop(adjustedRelop_);
   >>;
@@ -1513,7 +1566,7 @@ procedure makeInitId(f,i)$
   else
     mkid(mkid(mkid(mkid(INIT,f),_),i),lhs);
 
-%laprule_用、mkidしたｆを演算子として返す
+% laprule_用、mkidしたｆを演算子として返す
 procedure setMkidOperator(f,x)$
   f(x);
 
@@ -1574,6 +1627,69 @@ procedure lgetf(x,llst)$
   if(llst={}) then {} else
     if(rest(llst)={}) then getf(x,first(llst)) else
       getf(x,first(llst)) . {lgetf(x,rest(llst))};
+
+% ラプラス変換を用いて微分方程式の求解を行う
+% @param expr_ "df(v,t,n) = f(t)"の格好をした方程式
+% @return retsolvererror___, retoverconstraint___ retunderconstraint___
+procedure dSolveByLaplace(expr_, initCons_, vars_)$
+begin;
+  scalar ans_, lapList_, lapTable_, lapPattern_;
+  scalar exceptDfVars_, subedExpr_, diffExpr_, lapExpr_, solveVars_, solveAns_, isUnderConstraint_;
+
+  debugWrite("in dSolveByLaplace", " ");
+  debugWrite("{expr_, initCons_, vars_}: ", {expr_, initCons_, vars_});
+
+  exceptDfVars_:= removedf(vars_);
+  lapList_:= map({~w, mkid(lap, ~w)}, exceptDfVars_);
+
+  % ラプラス変換規則, {{v, v(t), lapv(s)},...}の対応表
+  lapTable_:= map(laplaceLetUnit, lapList_);
+  debugWrite("lapTable_: ", lapTable_);
+
+  % ht => ht(t)置換
+  lapPattern_:= map(first(~w)=second(~w), lapTable_);
+  subedExpr_:= sub(lapPattern_, expr_);
+
+  % expr_を等式から差式形式に
+  diffExpr_:= {};
+  for each x in subedExpr_ do
+    if(not freeof(x, equal)) then
+      diffExpr_:= append(diffExpr_, {lhs(x) - rhs(x)})
+    else diffExpr_:= append(diffExpr_, {lhs(x) - rhs(x)});
+
+  % エラー時の式にはlaplace演算子が含まれる
+  if(not freeof(lapExpr_, laplace)) then return ansWrite("dSolveByLaplace", retsolvererror___);
+
+  % ラプラス変換
+  lapExpr_:=map(laplace(~w,t,s), diffExpr_);
+  debugWrite("lapExpr_: ", lapExpr_);
+
+  % 逆ラプラス変換の対象
+  solveVars_:= union(map(third, lapTable_), map(lhs, initCons_), {s});
+  debugWrite("solveVars_:", solveVars_);
+
+  % 変換対と初期条件を連立して解く
+  solveAns_:= solve(union(lapExpr_, initCons_), solveVars_);
+  debugWrite("solveAns_: ", solveAns_);
+
+  % 複数候補が出た場合, sがarbcomplex又はsが出現しないものを正しい解とする
+  if(length(solveAns_) >= 2) then
+    for each x in solveAns_ do
+      if(hasSEqualArbComplex(x) or notHaveSExpr(x)) then solveAns_:= {x};
+  debugWrite("solveAns_: ", solveAns_);
+
+  % solveAns_にsolveVars_の解が一つも含まれない時 underconstraintと想定
+  isUnderConstraint_:= false;
+  for each x in lapTable_ do
+    if(freeof(solveAns_, third(x))) then isUnderConstraint_:= true;
+  if(isUnderConstraint_=true) then
+    return ansWrite("dSolveByLaplace", retunderconstraint___);
+
+  % 逆ラプラス変換
+  ans_:= for each x in lapTable_ collect
+           first(x) = invlap(lgetf(third(x), solveAns_), s, t);
+  return ansWrite("dSolveByLaplace", ans_);
+end;
 
 % checkConsistencyIntervalMainより処理を抜き出し
 % @param cons_
@@ -1678,122 +1794,6 @@ begin;
   return searchExprsAndVarsLoop(exprs_, vars_, idx_ + 1);
 end;
 
-procedure isNotTrue(formula_)$
-  if(rlqe(formula_) <> true) then t else nil;
-
-% リストの重複を除く
-% uniqだと名前の衝突がありそうなのでmyをつけた
-procedure myUniq(expr_)$
-begin;
-  scalar ans_, copy_;
-  ans_:= {};
-  copy_:= expr_;
-  for i:= 1 : length(copy_) do << 
-    ans_:= union(ans_, {part(copy_, i)});
-    for j:= i+1 : length(copy_) do <<
-      if(part(copy_, i) = part(copy_, j)) then <<
-        copy_ := drop(copy_, j);
-      >>;
-    >>;
-  >>;
-  return ansWrite("myUniq", ans_);
-end;
-
-procedure drop(exprs_, idx_)$
-  for i:= 1 : length(exprs_) join if(i <> idx_) then {part(exprs_, i)} else {};
-
-procedure filter(func, exprs_)$
-  for each x in exprs_ join if(func(x)) then {x} else {};
-
-procedure filterNot(func, exprs_)$
-  for each x in exprs_ join if(func(x)) then {} else {x};
-
-
-% ラプラス変換を用いて微分方程式の求解を行う
-% @param expr_ "df(v,t,n) = f(t)"の格好をした方程式
-% @return retsolvererror___, retoverconstraint___ retunderconstraint___
-procedure dSolveByLaplace(expr_, initCons_, vars_)$
-begin;
-  scalar ans_, lapList_, lapTable_, lapPattern_;
-  scalar exceptDfVars_, subedExpr_, diffExpr_, lapExpr_, solveVars_, solveAns_, isUnderConstraint_;
-
-  debugWrite("in dSolveByLaplace", " ");
-  debugWrite("{expr_, initCons_, vars_}: ", {expr_, initCons_, vars_});
-
-  exceptDfVars_:= removedf(vars_);
-  lapList_:= map({~w, mkid(lap, ~w)}, exceptDfVars_);
-
-  % ラプラス変換規則, {{v, v(t), lapv(s)},...}の対応表
-  lapTable_:= map(laplaceLetUnit, lapList_);
-  debugWrite("lapTable_: ", lapTable_);
-
-  % ht => ht(t)置換
-  lapPattern_:= map(first(~w)=second(~w), lapTable_);
-  subedExpr_:= sub(lapPattern_, expr_);
-
-  % expr_を等式から差式形式に
-  diffExpr_:= {};
-  for each x in subedExpr_ do
-    if(not freeof(x, equal)) then
-      diffExpr_:= append(diffExpr_, {lhs(x) - rhs(x)})
-    else diffExpr_:= append(diffExpr_, {lhs(x) - rhs(x)});
-
-  % エラー時の式にはlaplace演算子が含まれる
-  if(not freeof(lapExpr_, laplace)) then return ansWrite("dSolveByLaplace", retsolvererror___);
-
-  % ラプラス変換
-  lapExpr_:=map(laplace(~w,t,s), diffExpr_);
-  debugWrite("lapExpr_: ", lapExpr_);
-
-  % 逆ラプラス変換の対象
-  solveVars_:= union(map(third, lapTable_), map(lhs, initCons_), {s});
-  debugWrite("solveVars_:", solveVars_);
-
-  % 変換対と初期条件を連立して解く
-  solveAns_:= solve(union(lapExpr_, initCons_), solveVars_);
-  debugWrite("solveAns_: ", solveAns_);
-
-  % 複数候補が出た場合, sがarbcomplex又はsが出現しないものを正しい解とする
-  if(length(solveAns_) >= 2) then
-    for each x in solveAns_ do
-      if(hasSEqualArbComplex(x) or notHaveSExpr(x)) then solveAns_:= {x};
-  debugWrite("solveAns_: ", solveAns_);
-
-  % solveAns_にsolveVars_の解が一つも含まれない時 underconstraintと想定
-  isUnderConstraint_:= false;
-  for each x in lapTable_ do 
-    if(freeof(solveAns_, third(x))) then isUnderConstraint_:= true;
-  if(isUnderConstraint_=true) then
-    return ansWrite("dSolveByLaplace", retunderconstraint___);
-
-  % 逆ラプラス変換
-  ans_:= for each x in lapTable_ collect
-           first(x) = invlap(lgetf(third(x), solveAns_), s, t);
-  return ansWrite("dSolveByLaplace", ans_);
-end;
-
-% s = arbcomplex(n)を含むリストであることを判定する
-procedure hasSEqualArbComplex(expr_)$
-begin;
-  scalar ans_;
-  debugWrite("hasSEqualArbComplex: ", expr_);
-  ans_:= nil;
-  for each x in expr_ do
-    if(lhs(x) = s and not freeof(rhs(x), arbcomplex)) then ans_:= t;
-  return ans_;
-end;
-
-% s = foo(n)を含むリストであることを判定する
-procedure notHaveSExpr(expr_)$
-begin;
-  scalar ans_;
-  debugWrite("notHaveSExpr: ", expr_);
-  ans_:= t;
-  for each x in expr_ do
-    if(lhs(x) = s) then ans_:= nil;
-  return ans_;
-end;
-
 %---------------------------------------------------------------
 % 特定の要素を抽出/削除したり複数の要素を分類したりする関数
 %---------------------------------------------------------------
@@ -1805,8 +1805,10 @@ procedure getFrontTwoElemList(lst_)$
 procedure removeTrueList(patternList_)$
   for each x in patternList_ join if(rlqe(x)=true) then {} else {x};
 
-% 論理式がtrueであるとき、現在はそのままtrueを返している
-% TODO：なんとかする
+procedure isNotTrue(formula_)$
+  if(rlqe(formula_) <> true) then t else nil;
+
+% 論理式がtrueであるときそのままtrueを返す
 procedure removeTrueFormula(formula_)$
   if(formula_=true) then true else
     myApply(and, for each x in getArgsList(formula_) join 
@@ -1821,6 +1823,7 @@ procedure getOtherExpr(exprs_)$
 procedure isNDExpr(expr_)$
   if(freeof(expr_, sin) and freeof(expr_, cos)) then nil else t;
 
+% 制約リストから, 微分を含む制約(DExprs_), 微分変数(DExprVars_), 微分を含まない制約(NDExpr_), 微分でない変数(NDExprs_), その他等式以外を含む制約(otherExprs_)を抽出する
 procedure splitExprs(exprs_, vars_)$
 begin;
   scalar otherExprs_, NDExprs_, NDExprVars_, DExprs_, DExprVars_;
@@ -1835,8 +1838,7 @@ begin;
   return {NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_};
 end;
 
-% 前提：入力はinitxlhs=prev(x)の形
-% TODO：なんとかする
+% 前提: initxlhs=prev(x)
 procedure getInitVars(rcont_)$
   lhs(rcont_);
 
@@ -1970,8 +1972,6 @@ end;
 
 rettrue___    := 1;
 retfalse___   := 2;
-retunknown___ := 3;
-
 
 % 制約ストアのリセット
 procedure resetConstraint()$
@@ -2200,15 +2200,9 @@ end;
 
 % @return {trueMap, falseMap} または{false, true}
 procedure checkConsistencyPoint()$
-begin;
-  scalar ans_, cons_, vars_;
-
-  cons_:= union(constraint__, tmpConstraint__, guard__, initConstraint__, initTmpConstraint__);
-  vars_:= union(variables__, tmpVariables__, guardVars__);
-  
-  ans_:= checkConsistencyPointMain(cons_, pConstraint__, vars_);
-  return ansWrite("checkConsistencyPoint", ans_);
-end;
+  ansWrite("checkConsistencyPoint",
+           checkConsistencyPointMain(union(constraint__, tmpConstraint__, guard__, initConstraint__, initTmpConstraint__), 
+                                     pConstraint__, union(variables__, tmpVariables__, guardVars__)));
 
 % PPにおける無矛盾性の判定
 % 仕様 QE未使用 % (使用するなら, 変数は基本命題的に置き換え)
@@ -2264,11 +2258,9 @@ end;
 procedure applyPrevCons(csList_, retList_)$
 begin;
   scalar firstCons_, newCsList_, ret_;
-%  debugWrite("=== in applyPrevCons", " ");
   if(csList_={}) then return retList_;
 
   firstCons_:= first(csList_);
-%  debugWrite("firstCons_: ", firstCons_);
   if(not freeof(lhs(firstCons_), prev)) then <<
     newCsList_:= union(for each x in rest(csList_) join {exSub({firstCons_}, x)});
     ret_:= applyPrevCons(rest(csList_), retList_);
@@ -2400,7 +2392,6 @@ begin;
 end;
 
 % 前提：Orでつながってはいない
-% TODO：なんとかする
 procedure createVariableMapMain(cons_, vars_, pars_)$
 begin;
   scalar removedVars_, solvedCons_, consTmpRet_, consRet_, paramDNFList_, paramRet_, tuple_, ret_;
@@ -2432,7 +2423,7 @@ end;
 % df変数はただの変数として扱う
 % parameters__を使用
 % exIneqSolveの都合上, 方程式のみ整形操作を行う
-% @param cons_ 制約のリスト TODO CHECK: prevを除くか?
+% @param cons_ 制約のリスト CHECK: prevを除くか?
 % @param vars_ 変数のリスト
 % @return      解, exIneqSolveの食える形になった制約のリスト
 procedure isInfZero(cons_, vars_)$
@@ -2465,7 +2456,6 @@ end;
 procedure isTGreaterZero(expr_)$
   if(expr_ = (t>0)) then t else nil;
 
-
 % checkConsitency[Point|Interval]の解となる形式のリストを作成する
 % TODO prev変数の処理, t>0としてtの除去
 % @param expr_ 通常形式の制約で表現された解
@@ -2487,20 +2477,12 @@ begin;
   return {trueMap_, falseMap_};
 end;
 
-% TODO!! check_consistency_result_tの要件をしっかり確認すること
-% initConstraint__,  initTmpConstraint__, tmpVariables__ 対応版
-% TODO: .m::checkConsistencyPoint[constraint && tmpConstraint && guard && initConstraint && initTmpConstraint, pConstraint, Union[variables, tmpVariables, guardVars]] の全変数に対応したい
 % @return {true, false} または{false, true}
 procedure checkConsistencyInterval()$
-begin;
-  scalar ans_, ansBool_;
-  
-  ans_:= checkConsistencyIntervalMain(union(constraint__, tmpConstraint__), guard__,
-           union(initConstraint__, initTmpConstraint__), pConstraint__, union(variables__, tmpVariables__, guardVars__));
-  debugWrite("ans_ in checkConsistencyIntervalMain: ", ans_);
-
-  return ansWrite("checkConsistencyInterval", ans_);
-end;
+  ansWrite("checkConsistencyInterval",
+           checkConsistencyIntervalMain(union(constraint__, tmpConstraint__), guard__,
+                                        union(initConstraint__, initTmpConstraint__), pConstraint__, 
+                                        union(variables__, tmpVariables__, guardVars__)));
 
 ICI_INCONSISTENT___:= 2;
 
@@ -2542,7 +2524,7 @@ begin;
   % SinやCosが含まれる場合はラプラス変換不可能なのでNDExpr扱いする
   splitExprsResult_ := splitExprs(removePrevCons(cons_), vars_);
   debugWrite("{NDExprs_, NDExprVars_, DExprs_, DExprVars_, otherExprs_}: ", splitExprsResult_);
-  % TODO otherExprs_は不等式やand, orを含む式, 使用すること
+  % otherExprs_は不等式やand, orを含む式, 使用すること
 
   % 微分項を含まない方程式
   NDExprs_ := part(splitExprsResult_, 1);
@@ -2562,7 +2544,6 @@ begin;
   integratedVariableMap_:= first(foldLeft(createIntegratedValue, {{},solveAns_}, removePrevCons(vars_ \ initVars_)));
   integratedSol_:= map((first(~w)=second(~w)), integratedVariableMap_);
   debugWrite("integratedSol_:", integratedSol_);
-  % TODO infの正しい計算
 
   tCons_:= first(exDSolveAns_);
   if(tCons_ = {}) then tCons_:= {true};
@@ -2653,7 +2634,6 @@ begin;
 end;
 
 % 出力：時刻を表すDNFと条件の組（TC）のリスト
-% TODO：ERROR処理
 procedure checkInfMinTimeDNF(tDNF_, condDNF_)$
 begin;
   scalar minTCList_, conj_, argsAnsTCListList_, minValue_, compareTCListList_, lbTupleList_, ubTupleList_,
@@ -2693,7 +2673,6 @@ begin;
     else << 
       % パラメタの入った下限もある場合
       % 前提：condDNF_内の定数の種類は1つまで？
-      % TODO：なんとかする
       lbTupleList_:= getLbTupleListFromConj(conj_);
       ubTupleList_:= conj_ \ lbTupleList_;
       lbParamTupleList_:= filter(hasParameter, lbTupleList_);
@@ -2746,8 +2725,7 @@ begin;
               debugWrite("checkDNF_: ", checkDNF_);
               if(not isFalseDNF(checkDNF_)) then {y} else {}
             >> else <<
-              % 下限がINFINITYのとき（ある特定の範囲のパラメタによって離散変化が起きないパターン）は上下限確認不要
-              % TODO：本当？
+              % 下限がINFINITYのとき（ある特定の範囲のパラメタによって離散変化が起きないパターン）は上下限確認不要のはず
               {y}
             >>
           >>);
@@ -2807,7 +2785,7 @@ begin;
 
   debugWrite("=== in calculateNextPointPhaseTimeMain", " ");
 
-  % TODO initCons_を使ってない？
+  % initCons_を使ってない？
   debugWrite("{maxTime_ ,discCause_, cons_, initCons_, pCons_, vars_}: ", {maxTime_ ,discCause_, cons_, initCons_, pCons_, vars_});
   debugWrite("{variables__, parameters__}: ", {variables__, parameters__});
 
@@ -3016,6 +2994,7 @@ begin;
   return ret_;
 end;
 
+% 時と条件の組の比較
 procedure compareParamTime(TC1_, TC2_, mode_)$
 begin;
   scalar TC1Time_, TC1Cond_, TC2Time_, TC2Cond_,
@@ -3067,19 +3046,10 @@ defaultPrec_ := 0;
 
 %TODO エラー検出（適用した結果実数以外になった場合等）
 procedure applyTime2Expr(expr_, time_)$
-begin;
-  scalar appliedExpr_;
-
-  appliedExpr_:= sub(t=time_, expr_);
-  debugWrite("appliedExpr_:", appliedExpr_);
-
-  return {1, appliedExpr_};
-end;
+  ansWrite("applyTime2Expr", {1, sub(t=time_, expr_)});
 
 procedure createVariableMapInterval()$
-begin;
-  return createVariableMapIntervalMain(constraint__, initConstraint__, variables__, parameters__);
-end;
+  createVariableMapIntervalMain(constraint__, initConstraint__, variables__, parameters__);
 
 % 前提：Orでつながってはいない
 % TODO：exDSolveを含めた実行をする
@@ -3136,17 +3106,10 @@ end;
 % vcs_math_sourceにおけるgetTimeVars
 % createVariableMapIntervalのretから記号定数を取り除く
 procedure getUsrVars(ret_, vars_);
-begin;
-  % TODO
-  return for each x in ret_ join if(contains(vars_, first x)) then {x} else {}; 
-end;
-
-% {df(usrvary,t,2),df(usrvary,t),usrvary}
+  for each x in ret_ join if(contains(vars_, first x)) then {x} else {}; 
 
 procedure contains(vars_, var_);
-begin;
-  return if((for each x in vars_ sum if(x = var_) then 1 else 0) > 0) then t else nil;
-end;
+  if((for each x in vars_ sum if(x = var_) then 1 else 0) > 0) then t else nil;
 
 %---------------------------------------------------------------
 % シミュレーションに直接は関係ないが処理系の都合で必要な関数
