@@ -112,14 +112,14 @@ void RelationGraph::visit_edges(ModuleRelationNode* node, module_set_t &ms){
   }
 }
 
-boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms, const variable_set_t& vs, bool in_IP)
+boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms, const variable_set_t& vs, bool include_prev)
 {
   relation_set_t relations;
   for(module_set_t::module_list_const_iterator it = ms.begin();it != ms.end(); it++){
     VariableFinder finder;
     finder.visit_node(it->second);
     VariableFinder::variable_set_t variables, prev_variables;
-    if(in_IP)
+    if(include_prev)
     {
       variables = finder.get_all_variable_set();
     }

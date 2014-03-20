@@ -5,6 +5,6 @@ rm ${log}
 for filepath in ${files}
 do
   echo ${filepath} >> ${log}
-  ../hydla -m s -t 5 ${filepath} --nd -f t >> ${log}
+  ../bin/hyrose -t5 ${filepath} --nd >> ${log}
 done
 read wait

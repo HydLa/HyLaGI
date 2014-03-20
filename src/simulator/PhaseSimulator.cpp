@@ -130,10 +130,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   }
   else
   {
-    HYDLA_LOGGER_DEBUG("%% connected module set size:", graph->get_connected_count());
-    for(int i = 0; i < graph->get_connected_count(); i++){
+    int connected_count = graph->get_connected_count();
+    for(int i = 0; i < connected_count; i++){
       module_set_sptr connected_ms = graph->get_component(i);
-      HYDLA_LOGGER_DEBUG("\n--- next connected module set ---\n", connected_ms->get_infix_string());
+      HYDLA_LOGGER_DEBUG("\n--- connected module set", i, "/", connected_count, " ---\n", connected_ms->get_infix_string());
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
       if(ms_it != todo->ms_cache.end())
       {
@@ -317,7 +317,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   
   // TODO:RelationGraph上では，ASSERT文を無視しているため，制約モジュール中では独立でもASSERT文の中で関係している変数があった場合に正しく動作しない
   // RelationGraphを作る上では，ASSERTを特殊な「モジュールのようなもの」として扱う必要がある．
-  pp_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, false);
+  pp_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, true);
   ip_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, true);
   
   if(opts_->dump_relation){
