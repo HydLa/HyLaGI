@@ -1,5 +1,4 @@
 src_directory := src
-
 .PHONY : all
 all: $(src_directory)
 	@mkdir bin -p && cd src && make
@@ -13,3 +12,13 @@ check: $(src_directory)
 .PHONY : clean
 clean:
 	@cd $(src_directory) && make clean
+
+# generate documentation
+.PHONY : doc
+doc:
+	doxygen doc/doxygen.conf	
+
+# remove documentation
+.PHONY : doc-clean
+doc-clean:
+	rm -fvr doc/html

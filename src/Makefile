@@ -17,20 +17,12 @@ charset:
 charset_guess:
 	@nkf --guess `find . -name "*.cpp" -or -name "*.h" `
 
-# generate documentation
-.PHONY : doc
-doc:
-	doxygen doc/doxygen.conf
+
 #latexを出力する場合
 #	nkf -e --overwrite `find doc/latex -name "*.tex"`
 #	make -f doc/latex
 #	dvipdfmx doc/latex/refman.dvi
 #	cp doc/latex/refman.dvi doc/
-
-# remove documentation
-.PHONY : doc-clean
-doc-clean:
-	rm -fvr doc/html
 
 # remove all temp files
 .PHONY : clean
