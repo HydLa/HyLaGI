@@ -62,6 +62,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node
       if(it->first.get_name() == v_name && it->first.get_differential_count() == differential_cnt)
       {
         //TODO: 値が範囲を持っている場合にも対応する
+        //TODO: 使おうとした変数値の数式が更に別の変数を含んでいる場合にも対応する。
         assert(it->second.unique());
         new_child_ = it->second.get_unique().get_node()->clone();
         replace_cnt++;

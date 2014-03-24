@@ -100,7 +100,6 @@ publicMethod[
           cpTrue = cpTrue || eachCpTrue
         ];
         cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-        checkMessage;
         toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
       ]
     ]
@@ -674,53 +673,49 @@ createDifferentiatedEquation[var_, integRules_] := (
 *)
 
 exDSolve[expr_, initExpr_] := 
-Check[
-  Module[
-    {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
-    inputPrint["exDSolve", expr, initExpr];
-    tmpExpr = applyList[expr];
-    sol = {};
-    resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
-    tmpExpr = Complement[tmpExpr, resultCons];
-    reducedExpr = Quiet[Check[Reduce[tmpExpr, Reals], tmpExpr], {Reduce::nsmet, Reduce::useq}];
-    (* Reduceの結果が使えそうな場合のみ使う *)
-    If[Head[reducedExpr] === And && MemberQ[reducedExpr, Element, Infinity, Heads->True], tmpExpr = applyList[reducedExpr] ];
-    tmpInitExpr = applyList[initExpr];
-    resultRule = {};
-    simplePrint[resultCons, tmpExpr];
-    While[True, 
-      searchResult = searchExprsAndVars[tmpExpr];
-      If[searchResult === unExpandable,
-        Break[],
-        rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
-        If[rules === overConstraint || Length[rules] == 0, Return[overConstraint] ];
-        (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
-        If[Head[rules] === DSolve,
-          resultCons = Union[resultCons, searchResult[[1]] ];
-          tmpExpr = Complement[tmpExpr, searchResult[[1]] ];
-          unsolvable = True;
-          Continue[]
-        ];
-        resultRule = Union[resultRule, rules[[1]] ];
-        simplePrint[resultRule];
-        tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-        (* if there exists expression which has t only, it's inconsistent *)
-        If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
-        tmpExpr = Select[tmpExpr, (#=!=True)&];
-        simplePrint[tmpExpr];
-        resultCons = applyDSolveResult[resultCons, rules[[1]] ];
-        If[MemberQ[resultCons, False], Return[overConstraint] ];
-        resultCons = Select[resultCons, (#=!=True)&]
-      ]
-    ];
-    
-    retCode = If[Length[tmpExpr] > 0 || unsolvable, underConstraint, solved];
-    restCond = LogicalExpand[And@@tmpExpr && And@@resultCons];
-    restCond = Or2or[restCond];
-    restCond = Map[(And2and[#])&, restCond];    
-    { retCode, restCond, resultRule}
-  ],
-  Message[exDSolve::unkn]
+Module[
+  {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
+  inputPrint["exDSolve", expr, initExpr];
+  tmpExpr = applyList[expr];
+  sol = {};
+  resultCons = Select[tmpExpr, (Head[#] =!= Equal)&];
+  tmpExpr = Complement[tmpExpr, resultCons];
+  reducedExpr = Quiet[Check[Reduce[tmpExpr, Reals], tmpExpr], {Reduce::nsmet, Reduce::useq}];
+  (* Reduceの結果が使えそうな場合のみ使う *)
+  If[Head[reducedExpr] === And && MemberQ[reducedExpr, Element, Infinity, Heads->True], tmpExpr = applyList[reducedExpr] ];
+  tmpInitExpr = applyList[initExpr];
+  resultRule = {};
+  simplePrint[resultCons, tmpExpr];
+  While[True, 
+    searchResult = searchExprsAndVars[tmpExpr];
+    If[searchResult === unExpandable,
+      Break[],
+      rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
+      If[rules === overConstraint || Length[rules] == 0, Return[overConstraint] ];
+      (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
+      If[Head[rules] === DSolve,
+        resultCons = Union[resultCons, searchResult[[1]] ];
+        tmpExpr = Complement[tmpExpr, searchResult[[1]] ];
+        unsolvable = True;
+        Continue[]
+      ];
+      resultRule = Union[resultRule, rules[[1]] ];
+      simplePrint[resultRule];
+      tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+      (* if there exists expression which has t only, it's inconsistent *)
+      If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
+      tmpExpr = Select[tmpExpr, (#=!=True)&];
+      simplePrint[tmpExpr];
+      resultCons = applyDSolveResult[resultCons, rules[[1]] ];
+      If[MemberQ[resultCons, False], Return[overConstraint] ];
+      resultCons = Select[resultCons, (#=!=True)&]
+    ]
+  ];
+  retCode = If[Length[tmpExpr] > 0 || unsolvable, underConstraint, solved];
+  restCond = LogicalExpand[And@@tmpExpr && And@@resultCons];
+  restCond = Or2or[restCond];
+  restCond = Map[(And2and[#])&, restCond];    
+  { retCode, restCond, resultRule}
 ];
 
 
@@ -795,12 +790,13 @@ Module[
   ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
   simplePrint[tmpExpr, ini, tVars];
   
-  sol = Quiet[Check[
+  sol = Quiet[
+    Check[
       DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],
           overConstraint,
-      {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
+      {DSolve::overdet, DSolve::bvimp}
     ],
-   {DSolve::overdet, DSolve::bvnul, DSolve::bvimp}
+   {DSolve::overdet, DSolve::bvimp}
   ];
   simplePrint[sol];
   sol

@@ -39,12 +39,9 @@ dList = {};
 profileList = {};
 createMapList = {};
 
-(* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．
- 想定外の形式の結果になって変な計算を始めてエラーメッセージが爆発することが無いようにするため．
- あまり良い形の実装ではなく，publicMethodにだけ書いておく形で実装できるなら多分それが設計的に一番良いはず．
- 現状では，危ないと思った個所に逐一挟んでおくことになる． *)
+(* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
-  checkMessage := (If[Length[Cases[$MessageList, Except[HoldForm[Minimize::ztest1], Except[HoldForm[Reduce::ztest1] ] ] ] ] > 0, Print[FullForm[$MessageList]];Abort[]]),
+  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
   checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
 ];
 
@@ -167,7 +164,7 @@ publicMethod[name_, args___, define_] := (
         Evaluate[timeOutS],
         {-1}
       ],
-      debugPrint[$MessageList]; {0}
+      simplePrint[$MessageList];{0}
     ]
   )
 );
