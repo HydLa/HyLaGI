@@ -277,7 +277,7 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   todo_container_->push_todo(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
-  backend_->call("resetConstraint", 1, "cs", "", &original->initial_constraint_store);
+  backend_->call("resetConstraint", 1, "csn", "", &original->initial_constraint_store);
 }
 
 

@@ -1,0 +1,56 @@
+INIT <=> h1 = h2 = 0.15 & h3 = 0.14.
+FLOW1 <=> [](Pi*h1*(0.6 - h1)*h1' = (Q1 - V13*Q13V13 -V1*Q13V1 -VL1*QL1)).
+FLOW2 <=> [](Pi*h2*(0.6 - h2)*h2' = (Q2 - V23*Q23V23 - V2*Q23V2)).
+FLOW3 <=> [](Pi*h3*(0.6 - h3)*h3' = (V13*Q13V13 + V23*Q23V23 + V1*Q13V1 + V2*Q23V2 - VN3*QN)).
+INTERMEDIATE <=> [](
+               (h1 >= h3 => (Q13V13 = 0.95*(2*9.8*(h1-h3))^(1/2)))
+             & (h1 < h3 => (Q13V13 = -0.95*(2*9.8*(h3-h1))^(1/2)))
+             & (h2 >= h3 => (Q23V23 = 0.95*(2*9.8*(h2-h3))^(1/2)))
+             & (h2 < h3 => (Q23V23 = -0.95*(2*9.8*(h3-h2))^(1/2)))
+             & QL1 = 0.95*(2*9.8*h1)^(1/2)
+             & QN = 0.95*(2*9.8*h3)^(1/2)
+             & (h1 >= 0.3 => maxh1hv = h1)   // max(h1, hv)
+             & (h1 < 0.3 => maxh1hv = 0.3)
+             & (h2 >= 0.3 => maxh2hv = h2)    // max(h2, hv)
+             & (h2 < 0.3 => maxh2hv = 0.3)     
+             & (h3 >= 0.3 => maxh3hv = h3)    // max(h3, hv)
+             & (h3 < 0.3 => maxh3hv = 0.3)
+             & (maxh1hv >= maxh3hv => (Q13V1 = 0.95*(2*9.8*(maxh1hv-maxh3hv))^(1/2)))
+             & (maxh1hv < maxh3hv => (Q13V1 = -0.95*(2*9.8*(maxh1hv-maxh3hv))^(1/2)))
+             & (maxh2hv >= maxh3hv => (Q23V2 = 0.95*(2*9.8*(maxh2hv-maxh3hv))^(1/2)))
+             & (maxh2hv < maxh3hv => (Q23V2 = -0.95*(2*9.8*(maxh2hv-maxh3hv))^(1/2)))
+).
+INPUT <=> [](Q1=Q2=0&V23=V1=V2=VL1=VN3=0&V13=1).
+
+INIT, FLOW1, FLOW2, FLOW3, INTERMEDIATE, INPUT.
+
+
+
+/*
+CONSTANT <=> [](hv = 0.3 & hmax = 0.6 & S1 = S2 = S13 = S23 = SL1 = SN = 0.95 & az = 1 & g = 9.8).
+INIT <=> h1 = h2 = 0.15 & h3 = 0.14.
+FLOW1 <=> [](Pi*h1*(hmax - h1)*h1' = (Q1 - V13*Q13V13 -V1*Q13V1 -VL1QL1)).
+FLOW2 <=> [](Pi*h2*(hmax - h2)*h2' = (Q2 - V23*Q23V23 - V2Q23V2)).
+FLOW3 <=> [](Pi*h3*(hmax - h3)*h3' = (V13*Q13V13 + V23*Q23V23 + V1*Q13V1 + V2*Q23V2 - VN3*QN)).
+INTERMEDIATE <=> [](
+               (h1 >= h3 => (Q13V13 = az*S13*(2*g*(h1-h3))^(1/2)))
+             & (h1 < h3 => (Q13V13 = -az*S13*(2*g*(h3-h1))^(1/2)))
+             & (h2 >= h3 => (Q23V23 = az*S23*(2*g*(h2-h3))^(1/2)))
+             & (h2 < h3 => (Q23V23 = -az*S23*(2*g*(h3-h2))^(1/2)))
+             & QL1 = az*SL1*(2*g*h1)^(1/2)
+             & QN = az*SN*(2*g*h3)^(1/2)
+             & (h1 >= hv => maxh1hv = h1)   // max(h1, hv)
+             & (h1 < hv => maxh1hv = hv)
+             & (h2 >= hv => maxh2hv = h2)    // max(h2, hv)
+             & (h2 < hv => maxh2hv = hv)     
+             & (h3 >= hv => maxh3hv = h3)    // max(h3, hv)
+             & (h3 < hv => maxh3hv = hv)
+             & (maxh1hv >= maxh3hv => (Q13V1 = az*S1*(2*g*(maxh1hv-maxh3hv))^(1/2)))
+             & (maxh1hv < maxh3hv => (Q13V1 = -az*S1*(2*g*(maxh1hv-maxh3hv))^(1/2)))
+             & (maxh2hv >= maxh3hv => (Q23V2 = az*S2*(2*g*(maxh2hv-maxh3hv))^(1/2)))
+             & (maxh2hv < maxh3hv => (Q23V2 = -az*S2*(2*g*(maxh2hv-maxh3hv))^(1/2)))
+).
+INPUT <=> [](Q1=Q2=0&V13=V23=V1=V2=VL1=VN3=0).
+
+CONSTANT, INIT, FLOW1, FLOW2, FLOW3, INTERMEDIATE, INPUT.
+*/

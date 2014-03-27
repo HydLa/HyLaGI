@@ -1,0 +1,8 @@
+INIT <=> h = 0 & h' = 0 & rising = 1 & lt =10 & [](lt' = 0) & ut = 15  & [](ut' = 0).
+ACCEL <=> [](h'' = -2 + rising * 4).
+CONST <=> [](rising ' = 0).
+RISE <=> [](rising- = 0 & h- <= lt => rising = 1).
+FALL <=> [](rising- = 1 & h- >= ut => rising = 0).
+//ASSERT(h  >= 0).
+
+INIT, ACCEL, CONST << (RISE, FALL).
