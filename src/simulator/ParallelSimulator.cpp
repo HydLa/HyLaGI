@@ -1,7 +1,7 @@
 #include "ParallelSimulator.h"
 #include "ParallelSimulatorWorker.h"
 #include "Timer.h"
-#include "SymbolicPhaseSimulator.h"
+#include "PhaseSimulator.h"
 #include "SymbolicTrajPrinter.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"

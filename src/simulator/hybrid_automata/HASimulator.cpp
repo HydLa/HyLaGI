@@ -1,8 +1,7 @@
-
 #include "HASimulator.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
-#include "SymbolicPhaseSimulator.h"
+#include "PhaseSimulator.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"

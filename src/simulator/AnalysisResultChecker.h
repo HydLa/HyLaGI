@@ -2,13 +2,11 @@
 #define _INCLUDED_HYDLA_ANALYSIS_RESULT_CHECKER_H_
 
 #include "ParseTree.h"
-#include "SymbolicPhaseSimulator.h"
 #include "Simulator.h"
 #include "ConstraintAnalyzer.h"
 
 namespace hydla{
 namespace simulator{
-namespace symbolic {
 
 class AnalysisResultChecker : public ConstraintAnalyzer
 {
@@ -49,7 +47,6 @@ private:
 
 };
 
-}
 }
 }
 #endif //_INCLUDED_CONSTRAINT_ANALYZER_H_

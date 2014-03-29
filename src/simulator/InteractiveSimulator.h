@@ -3,7 +3,7 @@
 
 #include "Simulator.h"
 #include <fstream>
-#include "SymbolicPhaseSimulator.h"
+#include "PhaseSimulator.h"
 #include "Logger.h"
 #include <sstream>
 #include "SymbolicTrajPrinter.h"

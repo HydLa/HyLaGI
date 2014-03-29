@@ -13,7 +13,6 @@
 
 using namespace std;
 using namespace hydla::ch;
-using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::parse_tree;
 using namespace hydla::timer;

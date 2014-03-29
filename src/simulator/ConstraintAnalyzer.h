@@ -1,7 +1,6 @@
 #ifndef _INCLUDED_HYDLA_CONSTRAINT_ANALYZER_H_
 #define _INCLUDED_HYDLA_CONSTRAINT_ANALYZER_H_
 
-//#include "SymbolicTypes.h"
 
 #include "ParseTree.h"
 #include "Simulator.h"
@@ -9,7 +8,6 @@
 
 namespace hydla{
 namespace simulator{
-namespace symbolic {
 
 class ConstraintAnalyzer 
 {
@@ -86,7 +84,6 @@ protected:
   backend_sptr_t backend_;
 };
 
-}
 }
 }
 #endif //_INCLUDED_CONSTRAINT_ANALYZER_H_

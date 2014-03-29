@@ -16,7 +16,7 @@ namespace simulator {
 class HAConverter: public HybridAutomata{
 public:
 	
-	HAConverter(Opts &opts);
+	HAConverter(boost::shared_ptr<backend::Backend> backend, Opts &opts);
 
   virtual ~HAConverter();
 
@@ -75,6 +75,13 @@ protected:
 		cc_vec_.push_front(cc);
 	}
 
+  /**
+   * 二つの変数の存在範囲の関係を求める
+   * tmp_variable_phase in tmp_variable_past => true else false
+   */ 
+  bool check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2);
+
+
 	// 状態キューから状態をひとつ取り出す
 	// pop_simulation_phase()と合わせる必要あり
 	current_condition_t pop_current_condition()
@@ -92,6 +99,8 @@ protected:
 	}
   
   int subset_id;
+
+  boost::shared_ptr<backend::Backend> backend_;
 
 };//HAConverter
 

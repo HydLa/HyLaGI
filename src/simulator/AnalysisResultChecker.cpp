@@ -8,7 +8,6 @@
 #include "../solver/mathematica/MathematicaSolver.h"
 
 using namespace std;
-using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::solver;
 using namespace hydla::solver::mathematica;
@@ -16,7 +15,6 @@ using namespace hydla::parse_tree;
 
 namespace hydla{
 namespace simulator{
-namespace symbolic{
 
 AnalysisResultChecker::AnalysisResultChecker(const Opts& opts):ConstraintAnalyzer(const_cast<Opts&>(opts)){}
 
@@ -231,7 +229,6 @@ AnalysisResultChecker::check_conditions(
 }
 
 
-}
 }
 }
 */

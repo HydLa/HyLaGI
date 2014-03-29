@@ -1,9 +1,8 @@
 #include "ParallelSimulatorWorker.h"
 #include "ParallelSimulator.h"
 #include "Timer.h"
-#include "SymbolicTrajPrinter.h"
-#include "SymbolicPhaseSimulator.h"
 #include "PhaseSimulator.h"
+#include "SymbolicTrajPrinter.h"
 #include "../common/TimeOutError.h"
 #include <boost/lexical_cast.hpp>
 
@@ -27,7 +26,7 @@ ParallelSimulatorWorker::~ParallelSimulatorWorker(){}
 void ParallelSimulatorWorker::initialize(const parse_tree_sptr& parse_tree)
 {
   BatchSimulator::initialize(parse_tree);
-  set_phase_simulator(new hydla::simulator::symbolic::SymbolicPhaseSimulator(this, *opts_));
+  set_phase_simulator(new hydla::simulator::PhaseSimulator(this, *opts_));
   end_flag_ = false;
   running_thread_count_ = 0;
   thread_state_.push_back("not running");

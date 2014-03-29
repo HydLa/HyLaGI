@@ -2,8 +2,8 @@
 #include "HybridAutomata.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
-#include "SymbolicPhaseSimulator.h"
 #include "PhaseSimulator.h"
+#include "Simulator.h"
 #include "../common/TimeOutError.h"
 #include "../common/Logger.h"
 #include <limits.h>

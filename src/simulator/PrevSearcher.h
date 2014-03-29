@@ -11,7 +11,6 @@
 
 namespace hydla {
 namespace simulator {
-namespace symbolic {
 
 /**
  * prevを含むかを調べるビジタークラス．
@@ -41,7 +40,6 @@ private:
   bool include_prev_;
 };
 
-} //namespace symbolic
 } //namespace simulator
 } //namespace hydla 
 

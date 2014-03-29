@@ -1,7 +1,7 @@
 #include "ModuleSetList.h"
 
 #include "ProgramOptions.h"
-#include "SymbolicPhaseSimulator.h"
+#include "PhaseSimulator.h"
 #include "SequentialSimulator.h"
 #include "InteractiveSimulator.h"
 #include "SymbolicTrajPrinter.h"
@@ -29,7 +29,6 @@ using namespace hydla;
 using namespace hydla::parse_tree;
 using namespace hydla::parser;
 using namespace hydla::ch;
-using namespace hydla::simulator::symbolic;
 using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
@@ -98,7 +97,7 @@ void output_result(Simulator& ss, Opts& opts){
   }
 }
 
-void setup_symbolic_simulator_opts(Opts& opts)
+void setup_simulator_opts(Opts& opts)
 {  
   ProgramOptions &po = ProgramOptions::instance();
   
@@ -158,10 +157,10 @@ void setup_symbolic_simulator_opts(Opts& opts)
   } 
 }
 
-void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
+void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   Opts opts;
-  setup_symbolic_simulator_opts(opts);
+  setup_simulator_opts(opts);
   
   boost::shared_ptr<Backend> backend;
   
@@ -183,7 +182,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   }
   else if(opts.ha_convert_mode)
   {
-    simulator_ = new HAConverter(opts);
+    simulator_ = new HAConverter(backend, opts);
   }
   else if(opts.ha_simulator_mode)
   {
@@ -191,9 +190,9 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   	
   	timer::Timer hac_timer;
 
-  	HAConverter ha_converter(opts);
+  	HAConverter ha_converter(backend, opts);
     ha_converter.set_backend(backend);
-    ha_converter.set_phase_simulator(new SymbolicPhaseSimulator(&ha_converter, opts));
+    ha_converter.set_phase_simulator(new PhaseSimulator(&ha_converter, opts));
     ha_converter.initialize(parse_tree);
 
   	ha_converter.simulate();
@@ -209,7 +208,7 @@ void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tre
   }
 
   simulator_->set_backend(backend);
-  simulator_->set_phase_simulator(new SymbolicPhaseSimulator(simulator_, opts));  
+  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));  
   simulator_->initialize(parse_tree);
   simulator_->simulate();
   if(!opts.ha_convert_mode)

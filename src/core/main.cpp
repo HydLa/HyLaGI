@@ -44,8 +44,7 @@ using namespace std;
 // prototype declarations
 int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
-void symbolic_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
-void symbolic_legacy_simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
 void output_result(hydla::simulator::SequentialSimulator& ss, hydla::simulator::Opts& opts);
 
@@ -160,7 +159,7 @@ void hydla_main(int argc, char* argv[])
   }
 
   // シミュレーション開始
-  symbolic_simulate(pt);
+  simulate(pt);
 
   if(po.get<std::string>("tm") != "n"){
     main_timer.elapsed("Finish Time");

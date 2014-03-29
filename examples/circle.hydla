@@ -2,7 +2,7 @@
 //bouncing particle in a circle
 
 INIT   <=> x = 0 /\ 99/100 = y /\ x' = 2 /\ y' = 1.
-RUN    <=> [](x'' = 0 /\ y'' = 0).
+RUN    <=> [](x'' = 0 /\ y'' = -5).
 BOUNCE <=> []((x-)^2 + (y-)^2 = 1 => 
                 x' = x'- - (x- * x'- + y- * y'-) * 2 * (x-) /\
                 y' = y'- - (x- * x'- + y- * y'-) * 2 * (y-)
