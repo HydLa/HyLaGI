@@ -6,6 +6,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 #include <boost/bimap.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 #include "Node.h"
 #include "PhaseResult.h"
@@ -45,6 +48,13 @@ class AffineTransformer : public parse_tree::TreeVisitor{
   ///calculate x^y
   AffineOrInteger pow(AffineOrInteger x, AffineOrInteger y);
   affine_t pow(affine_t affine, int exp);
+  
+  /**
+   * Reduce dummy variables
+   * @param formulas Formulas to be reduced
+   * @param limit the number which the number of dummy variables are to be after reduction
+   */
+  boost::numeric::ublas::vector<affine_t> reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> formulas, int limit);
 
   virtual ~AffineTransformer();  
 

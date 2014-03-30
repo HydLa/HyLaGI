@@ -113,6 +113,23 @@ AffineOrInteger AffineTransformer::pow(AffineOrInteger x, AffineOrInteger y)
   return ret;
 }
 
+ub::vector<affine_t> AffineTransformer::reduce_dummy_variables(ub::vector<affine_t> formulas, int limit)
+{
+  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
+  for(auto pair : index_map)
+  {
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(pair.first);
+    if(pair.second == -1)
+    {
+      parameter_idx_map_.right.erase(r_it);
+    }
+    else
+    {
+      parameter_idx_map_.right.replace_key(r_it, pair.second);
+    }
+  }
+  return formulas;
+}
 
 value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter_map)
 {
@@ -120,16 +137,14 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
   if(current_val_.is_integer)return value_t(current_val_.integer);
 
   affine_t affine_value = current_val_.affine_value;
-
-
-  // set rounding mode
-  kv::hwround::roundup();
-
   // 試験的にダミー変数の削減をしてみる
   ub::vector<affine_t> formulas(1);
   formulas(0) = affine_value;
-  kv::epsilon_reduce(formulas, 2);
-  affine_value = formulas(0);
+  reduce_dummy_variables(formulas, 2);
+  affine_value = formulas(0);  
+
+  // set rounding mode
+  kv::hwround::roundup();
 
 
   value_t ret(affine_value.a(0));
@@ -142,14 +157,15 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
     if(parameter_idx_map_.right.find(i)
        == parameter_idx_map_.right.end())
     {
-      //新規に追加されるダミー変数は1つにまとめる（現状だと他の変数と関係を持っていないため）
-      // TODO: kvライブラリ内のダミー変数も削除する
+      // 新規に追加されるダミー変数は1つにまとめる（この時点では他の変数と関係を持っていないため）
+      // TODO: kvライブラリ内のダミー変数も削除する？結果に誤りは生まれないはずだが、インデックスが無駄に増える。
       sum += affine_value.a(i);
       available_index = i;
     }
     else
     {
       parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(i);
+      // convert floating point into rational
       value_t val = value_t(affine_value.a(i));
       simulator_->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
       ret = ret + val * value_t(r_it->second);
@@ -160,7 +176,7 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
     range_t range;
     range.set_lower_bound(value_t("-1"), true);
     range.set_upper_bound(value_t("1"), true);
-    // a parameter whose differential count is -1 is regarded as a dummy variable
+    // parameters whose differential counts are -1 are regarded as dummy variables
     parameter_t param = simulator_->introduce_parameter("affine", -1, available_index, range);
     parameter_idx_map_.insert(parameter_idx_t(param, available_index));
     parameter_map[param] = range_t(value_t(-1), value_t(1));
@@ -363,6 +379,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
   }
   current_val_.affine_value.a.resize(idx + 1);
   current_val_.affine_value.a(idx) = 1;
+  current_val_.affine_value.er = 0;
   HYDLA_LOGGER_NODE_VAR;
   return;
 }

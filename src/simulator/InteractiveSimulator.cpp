@@ -350,11 +350,12 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
 
   // TODO: 変数自体が幅を持つ場合への対応
 
+  bool for_time = false;
   variable_t var;
   range_t val;
   if(variable_str == "t")
   {
-    var = system_time_;
+    for_time = true;
     val = todo->current_time;
   }
   else
@@ -379,55 +380,15 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   node_sptr node = val.get_unique().get_node();
   value_t affine = affine_transformer_->transform(node, todo->parent->parameter_map);
   todo->parameter_map = todo->parent->parameter_map;
-  todo->parent->variable_map[var] = affine;
 
-/*  
-  if(method_string == "i")
+  if(for_time)
   {
-    bool approxed = phase_simulator_->solver_->approx_val(*val, range, true);
-    assert(approxed);
-    parameter_t* introduced_par = introduce_parameter(var, todo->parent, range);
-    pm[introduced_par] = range;
-    approxed_val.reset(new hydla::simulator::symbolic::SymbolicValue(
-        hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(var->get_name(),
-        var->get_differential_count(),
-        todo->parent->id))));
-    todo->parent->parameter_map = pm;
-  }
-  else if(method_string == "l")
-  {
-    phase_simulator_->solver_->linear_approx(*val, approxed_val, range, 10);
-    if(!range.undefined())
-    {
-      parameter_t* introduced_par = introduce_parameter(var, todo->parent, range);
-      pm[introduced_par] = range;
-      approxed_val.reset(new hydla::simulator::symbolic::SymbolicValue(
-          hydla::parse_tree::node_sptr(new hydla::parse_tree::Plus(
-              approxed_val->get_node(), 
-              hydla::parse_tree::node_sptr(new hydla::parse_tree::Parameter(var->get_name(),
-              var->get_differential_count(),
-              todo->parent->id))
-      ))
-      ));
-      todo->parent->parameter_map = pm;
-    }
+    todo->parent->current_time = todo->current_time = affine;
   }
   else
   {
-    cout << "invalid method" << endl;
-    return 0;
+    todo->parent->variable_map[var] = affine;
   }
-
-
-  if(var == &system_time_)
-  {
-    todo->parent->current_time = todo->current_time = approxed_val;
-  }
-  else
-  {
-    vm[var] = approxed_val;
-  }
-  */
   return 1;
 }
 

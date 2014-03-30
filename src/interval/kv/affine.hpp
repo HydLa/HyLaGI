@@ -13,6 +13,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <vector>
+#include <map>
 #include <algorithm>
 
 #include <kv/interval.hpp>
@@ -1295,6 +1296,7 @@ template <class T> class ep_reduce_v {
 	public:
 	ub::vector<T> v;
 	T score;
+  int index; /// modified: to identify intervalized dummy variables
 	void calc_score() {
 		int s = v.size();
 		int i;
@@ -1328,25 +1330,31 @@ template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* 
 #endif
 }
 
-template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
+/// modified @return map from original indices to indices after reduce (-1 means that the variable was reduced)
+template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
 	int s = x.size();
 	int m = affine<T>::maxnum();
 	int i, j;
 	std::vector< ep_reduce_v<T> > a;
 	std::vector< ep_reduce_v<T>* > pa;
+  // modified
+  std::map<int, int> result_map;
+
 	ub::vector< affine<T> > r;
 	T tmp;
 
 	if (n_limit < n) n_limit = n;
 
-	if (m <= n_limit) return;
-	if (n < s) return; // impossible
+	if (m <= n_limit) return result_map;
+	if (n < s) return result_map; // impossible
 
 	a.resize(m);
 	pa.resize(m);
 
 	for (i=1; i<=m; i++) {
 		a[i-1].v.resize(s);
+    a[i-1].index = i-1;// modified
+    result_map.insert(std::make_pair(i, -1)); // modified: initialize
 		for (j=0; j<s; j++) {
 			a[i-1].v(j) = (i < x(j).a.size()) ? x(j).a(i) : (T)0.;
 		}
@@ -1367,8 +1375,10 @@ template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n,
 		for (j=0; j<n-s; j++) {
 #ifdef EP_REDUCE_REVERSE
 			r(i).a(j+1) = pa[m-1-j]->v(i);
+      result_map.insert(std::make_pair(pa[m-1-j]->index, j+1));//modified
 #else
 			r(i).a(j+1) = pa[j]->v(i);
+      result_map.insert(std::make_pair(pa[j]->index, j+1));//modified
 #endif
 		}
 		tmp = 0.;
@@ -1396,6 +1406,7 @@ template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n,
 
 	x = r;
 	affine<T>::maxnum() = n;
+  return result_map;
 }
 
 
