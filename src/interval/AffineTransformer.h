@@ -54,7 +54,7 @@ class AffineTransformer : public parse_tree::TreeVisitor{
    * @param formulas Formulas to be reduced
    * @param limit the number which the number of dummy variables are to be after reduction
    */
-  boost::numeric::ublas::vector<affine_t> reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> formulas, int limit);
+  void reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> &formulas, int limit);
 
   virtual ~AffineTransformer();  
 
@@ -141,6 +141,7 @@ private:
 
   AffineOrInteger current_val_;
   parameter_idx_map_t parameter_idx_map_;
+  int epsilon_index;
 };
 
 } //namespace interval

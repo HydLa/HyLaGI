@@ -31,7 +31,7 @@ AffineTransformer* AffineTransformer::get_instance()
   return affine_translator_;
 }
 
-AffineTransformer::AffineTransformer()
+AffineTransformer::AffineTransformer(): epsilon_index(0)
 {}
 
 AffineTransformer::~AffineTransformer()
@@ -113,19 +113,26 @@ AffineOrInteger AffineTransformer::pow(AffineOrInteger x, AffineOrInteger y)
   return ret;
 }
 
-ub::vector<affine_t> AffineTransformer::reduce_dummy_variables(ub::vector<affine_t> formulas, int limit)
+void AffineTransformer::reduce_dummy_variables(ub::vector<affine_t> &formulas, int limit)
 {
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
-  for(auto pair : index_map)
+  if(!index_map.empty())
   {
-    parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(pair.first);
-    if(pair.second == -1)
+    parameter_idx_map_.clear();
+    for(auto pair : index_map)
     {
-      parameter_idx_map_.right.erase(r_it);
-    }
-    else
-    {
-      parameter_idx_map_.right.replace_key(r_it, pair.second);
+      HYDLA_LOGGER_DEBUG_VAR(pair.first);
+      HYDLA_LOGGER_DEBUG_VAR(pair.second);
+      parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(pair.first);
+      if(r_it == parameter_idx_map_.right.end())continue;
+      if(pair.second == -1)
+      {
+        parameter_idx_map_.right.erase(r_it);
+      }
+      else
+      {
+        parameter_idx_map_.right.replace_key(r_it, pair.second);
+      }
     }
   }
   return formulas;
@@ -142,7 +149,8 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
   formulas(0) = affine_value;
   reduce_dummy_variables(formulas, 2);
   affine_value = formulas(0);  
-
+  HYDLA_LOGGER_DEBUG_VAR(affine_t::maxnum());
+  HYDLA_LOGGER_DEBUG_VAR(affine_value);
   // set rounding mode
   kv::hwround::roundup();
 
@@ -177,7 +185,7 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
     range.set_lower_bound(value_t("-1"), true);
     range.set_upper_bound(value_t("1"), true);
     // parameters whose differential counts are -1 are regarded as dummy variables
-    parameter_t param = simulator_->introduce_parameter("affine", -1, available_index, range);
+    parameter_t param = simulator_->introduce_parameter("affine", -1, ++epsilon_index, range);
     parameter_idx_map_.insert(parameter_idx_t(param, available_index));
     parameter_map[param] = range_t(value_t(-1), value_t(1));
     value_t val = value_t(sum);
@@ -284,6 +292,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Negative> nod
 {
   accept(node->get_child());
   current_val_ = -current_val_;
+  HYDLA_LOGGER_NODE_VAR;
   return;
 }
 
@@ -329,7 +338,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
   kv::interval<double> itv = kv::interval<double>(number_str);
   current_val_.affine_value = affine_t(itv);
   current_val_.is_integer = false;
-
+  HYDLA_LOGGER_DEBUG(current_val_);
 }
 
 

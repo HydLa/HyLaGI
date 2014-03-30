@@ -1353,7 +1353,7 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 	for (i=1; i<=m; i++) {
 		a[i-1].v.resize(s);
-    a[i-1].index = i-1;// modified
+    a[i-1].index = i;// modified
     result_map.insert(std::make_pair(i, -1)); // modified: initialize
 		for (j=0; j<s; j++) {
 			a[i-1].v(j) = (i < x(j).a.size()) ? x(j).a(i) : (T)0.;
@@ -1375,10 +1375,10 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 		for (j=0; j<n-s; j++) {
 #ifdef EP_REDUCE_REVERSE
 			r(i).a(j+1) = pa[m-1-j]->v(i);
-      result_map.insert(std::make_pair(pa[m-1-j]->index, j+1));//modified
+      result_map[pa[m-1-j]->index] = j+1;//modified
 #else
 			r(i).a(j+1) = pa[j]->v(i);
-      result_map.insert(std::make_pair(pa[j]->index, j+1));//modified
+      result_map[pa[j]->index] = j+1;//modified
 #endif
 		}
 		tmp = 0.;
