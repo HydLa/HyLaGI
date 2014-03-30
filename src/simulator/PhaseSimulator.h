@@ -109,8 +109,7 @@ protected:
     BRANCH_PAR
   } CheckEntailmentResult;
 
-  result_list_t simulate_ms(const module_set_sptr& ms, boost::shared_ptr<RelationGraph>& graph, 
-                                  const variable_map_t&, simulation_todo_sptr_t& state);
+  result_list_t simulate_ms(const module_set_sptr& ms, const variable_map_t&, simulation_todo_sptr_t& state);
   
   ConstraintStore apply_time_to_constraints(const ConstraintStore &, const value_t &);
   
@@ -145,7 +144,7 @@ protected:
   /**
    * graph of relation between module_set for IP and PP
    */
-  boost::shared_ptr<RelationGraph> pp_relation_graph_, ip_relation_graph_;
+  boost::shared_ptr<RelationGraph> relation_graph_;
   
   /**
    * 解候補モジュール集合のコンテナ

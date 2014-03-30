@@ -5,11 +5,6 @@
 namespace hydla {
 namespace simulator {
 
-RelationGraph::RelationGraph(const relation_set_t& rel)
-{
-  add(rel);
-  check_completed = false;
-}
 
 RelationGraph::~RelationGraph()
 {
@@ -26,17 +21,17 @@ RelationGraph::~RelationGraph()
   }
 }
 
-void RelationGraph::add(const relation_set_t &rel)
+void RelationGraph::add(const relation_t &rel)
 {
-  for(relation_set_t::const_iterator it = rel.begin(); it != rel.end(); it++){
-    ModuleRelationNode*& mod = module_map_[it->first];
+  for(relation_t::const_iterator it = rel.begin(); it != rel.end(); it++){
+    ModuleNode*& mod = module_map_[it->first];
     if(mod == NULL){
-      mod = new ModuleRelationNode(it->first);
+      mod = new ModuleNode(it->first);
       mod_list_.push_back(mod);
     }
-    VariableRelationNode*& var = variable_map_[it->second];
+    VariableNode*& var = variable_map_[it->second];
     if(var == NULL){
-      var = new VariableRelationNode(it->second);
+      var = new VariableNode(it->second);
       var_list_.push_back(var);
     }
     mod->edges.push_back(var);
@@ -49,7 +44,7 @@ std::ostream& RelationGraph::dump_graph(std::ostream & os) const
 {
   os << "graph g {\n";
   
-  for(std::map<const module_t *, ModuleRelationNode*>::const_iterator it = module_map_.begin(); it != module_map_.end(); ++it) {
+  for(std::map<const module_t *, ModuleNode*>::const_iterator it = module_map_.begin(); it != module_map_.end(); ++it) {
     os << "  \"" << it->second->get_name() << "\" [shape = box]\n";
     for(var_nodes_t::const_iterator e_it = it->second->edges.begin(); e_it != it->second->edges.end(); ++e_it){
       os << "  \"" 
@@ -64,11 +59,14 @@ std::ostream& RelationGraph::dump_graph(std::ostream & os) const
   return os;
 }
 
-std::string RelationGraph::VariableRelationNode::get_name() const
+std::string RelationGraph::VariableNode::get_name() const
 {
-  std::string ret = variable.variable.get_string();
-  if(variable.is_prev)ret += "-";
-  return ret;
+  return variable.get_string();
+}
+
+std::string RelationGraph::ModuleNode::get_name() const
+{
+  return module->first;
 }
 
 void RelationGraph::check_connected_components(){
@@ -92,7 +90,7 @@ void RelationGraph::check_connected_components(){
   check_completed = true;
 }
 
-void RelationGraph::visit_node(ModuleRelationNode* node, module_set_t &ms){
+void RelationGraph::visit_node(ModuleNode* node, module_set_t &ms){
   if(!node->visited){
     node->visited = true;
     ms.add_module(*node->module);
@@ -100,7 +98,7 @@ void RelationGraph::visit_node(ModuleRelationNode* node, module_set_t &ms){
   }
 }
 
-void RelationGraph::visit_edges(ModuleRelationNode* node, module_set_t &ms){
+void RelationGraph::visit_edges(ModuleNode* node, module_set_t &ms){
   for(var_nodes_t::const_iterator it = node->edges.begin();
       it != node->edges.end();
       it++){
@@ -112,35 +110,21 @@ void RelationGraph::visit_edges(ModuleRelationNode* node, module_set_t &ms){
   }
 }
 
-boost::shared_ptr<RelationGraph> RelationGraph::new_graph(const module_set_t &ms, const variable_set_t& vs, bool include_prev)
+RelationGraph::RelationGraph(const module_set_t &ms, const variable_set_t& vs)
 {
-  relation_set_t relations;
+  relation_t relations;
   for(module_set_t::module_list_const_iterator it = ms.begin();it != ms.end(); it++){
     VariableFinder finder;
     finder.visit_node(it->second);
-    VariableFinder::variable_set_t variables, prev_variables;
-    if(include_prev)
-    {
-      variables = finder.get_all_variable_set();
-    }
-    else
-    {
-      variables = finder.get_variable_set();
-      prev_variables = finder.get_prev_variable_set();
-    }
+    VariableFinder::variable_set_t variables;
+    variables = finder.get_all_variable_set();
     for(auto variable : variables)
     {
-      variable_t var(Variable(variable.first, variable.second), false);
-      relations.push_back(std::make_pair(&(*it), var));
-    }
-    
-    for(auto variable : prev_variables)
-    {
-      relations.push_back(std::make_pair(&(*it), 
-        variable_t(Variable(variable.first, variable.second), true)));
+      relations.push_back(std::make_pair(&(*it), Variable(variable.first, variable.second)));
     }
   }
-  return boost::shared_ptr<RelationGraph>(new RelationGraph(relations));
+  add(relations);
+  check_completed = false;
 }
 
 int RelationGraph::get_connected_count()
@@ -157,11 +141,10 @@ void RelationGraph::set_valid(const module_t * mod, bool valid)
   check_completed = false;
 }
 
-
 void RelationGraph::set_valid(const module_set_t* ms)
 {
   for(unsigned int i=0; i < mod_list_.size(); i++){
-    ModuleRelationNode& node = *mod_list_[i];
+    ModuleNode& node = *mod_list_[i];
     node.valid = (ms->find(*(node.module)) != ms->end());
   }
   check_completed = false;

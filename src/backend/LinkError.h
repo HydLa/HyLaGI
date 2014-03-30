@@ -4,6 +4,9 @@
 #include <sstream>
 #include <stdexcept>
 
+namespace hydla{
+namespace backend{
+
 class LinkError : public std::runtime_error{
 public:
  LinkError(const std::string& backend_name, const std::string& msg, int code, const std::string &trace = "") : 
@@ -18,5 +21,8 @@ private:
     return s.str();
   }
 };
+
+}
+}
 
 #endif

@@ -101,16 +101,13 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   result_list_t result; 
   bool has_next = false;
   variable_map_t time_applied_map;
-  boost::shared_ptr<RelationGraph> graph;
   
   if(todo->phase_type == PointPhase)
   {
     time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
-    graph = pp_relation_graph_;
     set_simulation_mode(PointPhase);
   }else{
     time_applied_map = todo->parent->variable_map;
-    graph = ip_relation_graph_;
     set_simulation_mode(IntervalPhase);
   }
   
@@ -120,7 +117,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
-    result_list_t tmp_result = simulate_ms(ms, graph, time_applied_map, todo);
+    result_list_t tmp_result = simulate_ms(ms, time_applied_map, todo);
     if(!tmp_result.empty())
     {
       has_next = true;
@@ -143,11 +140,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 
 
-PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms,
-  boost::shared_ptr<RelationGraph>& graph, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
+PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
 {
   HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
-  graph->set_valid(ms.get());
+  relation_graph_->set_valid(ms.get());
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
   ConstraintStore store;
@@ -174,9 +170,9 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   }
   else
   {
-    int connected_count = graph->get_connected_count();
+    int connected_count = relation_graph_->get_connected_count();
     for(int i = 0; i < connected_count; i++){
-      module_set_sptr connected_ms = graph->get_component(i);
+      module_set_sptr connected_ms = relation_graph_->get_component(i);
       HYDLA_LOGGER_DEBUG("\n--- connected module set", i, "/", connected_count, " ---\n", connected_ms->get_infix_string());
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
       if(ms_it != todo->ms_cache.end())
@@ -359,14 +355,10 @@ void PhaseSimulator::initialize(variable_set_t &v,
   msc_no_init_ = msc_no_init;
   const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
   
-  // TODO:RelationGraph上では，ASSERT文を無視しているため，制約モジュール中では独立でもASSERT文の中で関係している変数があった場合に正しく動作しない
-  // RelationGraphを作る上では，ASSERTを特殊な「モジュールのようなもの」として扱う必要がある．
-  pp_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, true);
-  ip_relation_graph_ = RelationGraph::new_graph(*ms, *variable_set_, true);
+  relation_graph_.reset(new RelationGraph(*ms, *variable_set_));
   
   if(opts_->dump_relation){
-    pp_relation_graph_->dump_graph(std::cout);
-    ip_relation_graph_->dump_graph(std::cout);
+    relation_graph_->dump_graph(std::cout);
     exit(EXIT_SUCCESS);
   }
   

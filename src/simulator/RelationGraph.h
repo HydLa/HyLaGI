@@ -8,79 +8,63 @@ namespace hydla {
 namespace simulator {
 
 
+/**
+ * Graph to represent relation of constraint modules and variables.
+ */
 class RelationGraph{
 
 public:
   typedef hydla::ch::ModuleSet module_set_t;
   typedef hydla::ch::ModuleSet::module_t module_t;
-  typedef std::set<Variable, VariableComparator> variable_set_t;
+  typedef std::set<Variable, VariableComparator> variable_set_t;  
   
-  typedef struct Variable_{
-    hydla::simulator::Variable variable;
-    bool is_prev;
-    Variable_(): is_prev(false)
-    {}
-    Variable_(const hydla::simulator::Variable &var, bool pr):variable(var), is_prev(pr)
-    {}
-    friend bool operator<(const Variable_& lhs, 
-                          const Variable_& rhs){
-      return (lhs.variable < rhs.variable) || (lhs.variable == rhs.variable && lhs.is_prev && !rhs.is_prev);
-    }
-  }variable_t;
-  
-  struct RelationNode;
-  struct ModuleRelationNode;
-  struct VariableRelationNode;
-  typedef std::vector<ModuleRelationNode* > mod_nodes_t;
-  typedef std::vector<VariableRelationNode* > var_nodes_t;
+  struct ModuleNode;
+  struct VariableNode;
+  typedef std::vector<ModuleNode* > mod_nodes_t;
+  typedef std::vector<VariableNode* > var_nodes_t;
 
-  struct RelationNode{
-    bool valid, visited;
-    virtual ~RelationNode(){}
-    virtual std::string get_name() const = 0;
-    RelationNode():valid(true), visited(false){}
-  };
-
-  struct ModuleRelationNode:public RelationNode{
-    const module_t* module;
-    var_nodes_t edges;
-    ModuleRelationNode():module(NULL)
-    {}
-    ModuleRelationNode(const module_t* mod):module(mod)
-    {}
-    std::string get_name() const
-    {return module->first;}
-  };
-  
   /**
-   * VariableRelationNode has members 'valid' and 'visited' too, but they are currently ignored.
+   * Node for constraint modules
    */
-  struct VariableRelationNode:public RelationNode{
-    variable_t variable;
-    mod_nodes_t edges;
-    VariableRelationNode(variable_t var):variable(var)
+  struct ModuleNode{
+    const module_t* module;
+    bool valid, visited;
+    var_nodes_t edges;
+    ModuleNode():module(NULL)
+    {}
+    ModuleNode(const module_t* mod):module(mod)
     {}
     std::string get_name() const;
   };
   
-  static boost::shared_ptr<RelationGraph> new_graph(const module_set_t &ms, const variable_set_t &vm, bool in_IP);
+  /**
+   * Node for variables.
+   */
+  struct VariableNode{
+    Variable variable;
+    mod_nodes_t edges;
+    VariableNode(Variable var):variable(var)
+    {}
+    std::string get_name() const;
+  };
+  
+  RelationGraph(const module_set_t &ms, const variable_set_t &vm);
 
   virtual ~RelationGraph();
   
 
   /**
-   * Print the structure of the graph in graphviz format.
+   * Print the structure in graphviz format.
    */
   std::ostream& dump_graph(std::ostream & os) const;
   
   /**
-   * set a module valid or invalid
+   * Set a module valid or invalid
    */
   void set_valid(const module_t *mod, bool valid);
   
   /**
-   * set modules in ms to argument valid
-   * set modules not in ms negation of argument invalid
+   * Set modules in ms valid and modules not in ms invalid
    */
   void set_valid(const module_set_t *ms);
   
@@ -95,28 +79,26 @@ public:
   boost::shared_ptr<module_set_t> get_component(unsigned int index);  
 
 private:
-  typedef std::map<const module_t *, ModuleRelationNode*> module_map_t;
-  typedef std::map<variable_t, VariableRelationNode*> variable_map_t;  
-  typedef std::vector<std::pair<const module_t *, variable_t > > relation_set_t;
-
-  RelationGraph(const relation_set_t& rel);
+  typedef std::map<const module_t *, ModuleNode*> module_map_t;
+  typedef std::map<Variable, VariableNode*> variable_map_t;  
+  typedef std::vector<std::pair<const module_t *, Variable > > relation_t;
   
   /**
    * Add nodes and edges to the graph.
    */
-  void add(const relation_set_t &rel);
+  void add(const relation_t &rel);
   
   void check_connected_components();
-  void visit_node(ModuleRelationNode* node, module_set_t &ms);
-  void visit_edges(ModuleRelationNode* node, module_set_t &ms);
+  void visit_node(ModuleNode* node, module_set_t &ms);
+  void visit_edges(ModuleNode* node, module_set_t &ms);
   
   mod_nodes_t mod_list_;
   var_nodes_t var_list_;
   
   std::vector<module_set_t> connected_components_;
-  bool check_completed;
-  std::map<const module_t *, ModuleRelationNode*> module_map_;
-  std::map<variable_t, VariableRelationNode*> variable_map_;
+  bool check_completed;     /// false if recheck is necessary
+  std::map<const module_t *, ModuleNode*> module_map_;
+  std::map<Variable, VariableNode*> variable_map_;
 };
 
 } //namespace simulator
