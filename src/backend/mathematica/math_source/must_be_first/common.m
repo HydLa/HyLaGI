@@ -185,7 +185,7 @@ Module[
   If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
   If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
-  If[Head[expr] === p, Return[expr] ];
+  If[Head[expr] === p || Head[expr] === Root, Return[expr] ];
 
   ret = Map[toReturnForm, expr];
   ret = Replace[ret, (x_ :> ToString[InputForm[x]] /; Head[x] === Root )];

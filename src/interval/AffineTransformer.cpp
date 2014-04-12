@@ -135,7 +135,6 @@ void AffineTransformer::reduce_dummy_variables(ub::vector<affine_t> &formulas, i
       }
     }
   }
-  return formulas;
 }
 
 value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter_map)

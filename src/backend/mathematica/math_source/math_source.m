@@ -109,7 +109,7 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
+createVariableMap[cons_] := createVariableMap[And@@cons && pConstraint && initConstraint, variables];
 
 publicMethod[
   createVariableMap,
@@ -125,28 +125,20 @@ publicMethod[
   ]
 ];
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables, prevVariables, parameters];
-
 publicMethod[
   createVariableMapInterval,
-  cons, initCons, vars, prevVars, pars,
+  cons,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons, initCons];
-    debugPrint["sol after exDSolve", sol];
-    If[sol[[1]] === underConstraint,
-      underConstraint,
-      tStore = createDifferentiatedEquations[vars, sol[[3]] ];
-      tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
-      (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
-      ret = {convertExprs[tStore]};
-      debugPrint["ret after convert", ret];
-      ret = ruleOutException[ret];
-      simplePrint[ret];
-      ret
-    ]
+    tStore = And@@cons;
+    tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+    ret = {convertExprs[tStore]};
+    ret = ruleOutException[ret];
+    simplePrint[ret];
+    ret
   ]
 ];
+
 
 publicMethod[
   getConstraintStorePoint,

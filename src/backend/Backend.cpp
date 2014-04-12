@@ -645,7 +645,8 @@ void Backend::visit(boost::shared_ptr<Function> node)
 
 void Backend::visit(boost::shared_ptr<UnsupportedFunction> node)              
 {
-  link_->put_function(node->get_string().c_str(), node->get_arguments_size());
+  link_->put_function(node->get_string().c_str(), 1);
+  link_->put_function("Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica
   for(int i=0; i<node->get_arguments_size();i++){
     accept(node->get_argument(i));
   }

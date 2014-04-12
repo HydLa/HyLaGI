@@ -173,7 +173,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
     int connected_count = relation_graph_->get_connected_count();
     for(int i = 0; i < connected_count; i++){
       module_set_sptr connected_ms = relation_graph_->get_component(i);
-      HYDLA_LOGGER_DEBUG("\n--- connected module set", i, "/", connected_count, " ---\n", connected_ms->get_infix_string());
+      HYDLA_LOGGER_DEBUG("\n--- connected module set", i + 1, "/", connected_count, " ---\n", connected_ms->get_infix_string());
+      HYDLA_LOGGER_DEBUG_VAR(store);
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
       if(ms_it != todo->ms_cache.end())
       {
@@ -208,15 +209,17 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   phase_result_sptr_t phase = make_new_phase(todo, store);
   phase->module_set = ms;
 
+
   // 変数表はここで作成する
+  backend_->call("resetConstraint", 0, "", "");
   vector<variable_map_t> create_result;
   if(phase->phase_type == PointPhase)
   {
-    backend_->call("createVariableMap", 0, "", "cv", &create_result);
+    backend_->call("createVariableMap", 1, "csn", "cv", &store, &create_result);
   }
   else
   {
-    backend_->call("createVariableMapInterval", 0, "", "cv", &create_result);
+    backend_->call("createVariableMapInterval", 1, "cst", "cv", &store, &create_result);
   }
   if(create_result.size() != 1)
   {
