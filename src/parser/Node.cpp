@@ -366,7 +366,7 @@ void ArbitraryNode::accept(node_sptr own,
                    BaseNodeVisitor* visitor) 
 {
   assert(this == own.get()); 
-  visitor->visit(boost::shared_static_cast<ArbitraryNode>(own));
+  visitor->visit(boost::dynamic_pointer_cast<ArbitraryNode>(own));
 }
 
 
@@ -435,7 +435,7 @@ node_sptr Definition::clone()
                      VISITOR* visitor) \
   { \
     assert(this == own.get()); \
-    visitor->visit(boost::shared_static_cast<CLASS>(own)); \
+    visitor->visit(boost::dynamic_pointer_cast<CLASS>(own)); \
   }
 
 /// BaseNodeVisitorのaccept関数定義

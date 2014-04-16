@@ -109,7 +109,7 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
+createVariableMap[cons_] := createVariableMap[And@@cons && pConstraint && initConstraint, variables];
 
 publicMethod[
   createVariableMap,
@@ -125,28 +125,20 @@ publicMethod[
   ]
 ];
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables, prevVariables, parameters];
-
 publicMethod[
   createVariableMapInterval,
-  cons, initCons, vars, prevVars, pars,
+  cons,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons, initCons];
-    debugPrint["sol after exDSolve", sol];
-    If[sol[[1]] === underConstraint,
-      underConstraint,
-      tStore = createDifferentiatedEquations[vars, sol[[3]] ];
-      tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
-      (* TODO: deal with multiple maps ( caused by LogicalOr ) *)
-      ret = {convertExprs[tStore]};
-      debugPrint["ret after convert", ret];
-      ret = ruleOutException[ret];
-      simplePrint[ret];
-      ret
-    ]
+    tStore = And@@cons;
+    tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+    ret = {convertExprs[tStore]};
+    ret = ruleOutException[ret];
+    simplePrint[ret];
+    ret
   ]
 ];
+
 
 publicMethod[
   getConstraintStorePoint,
@@ -645,15 +637,17 @@ removeDerivative[var_] := var;
 
 createDifferentiatedEquation[var_, integRules_] := (
   Module[
-    {tRemovedRules, derivativeExpanded, ruleApplied, ret, tRemovedVars, nonDerivative},
-    nonDerivative = removeDerivative[var];
-    If[!MemberQ[integRules, nonDerivative, Infinity], Return[{}]];
-    tRemovedRules = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRules];
-    tRemovedVars = var /. x_Symbol[t] -> x;
-    ruleApplied = tRemovedVars /. tRemovedRules;
-    derivativeExpanded = ruleApplied /. Derivative[n_][f_][t] :> D[f, {t, n}];
-    ret = {Equal[var, Simplify[derivativeExpanded] ]};
-    ret
+    {rule, result, tVar, dCount},
+    (* exclude variables which have no rule *)
+    tVar = removeDerivative[var];
+    rule = Select[integRules, (#[[1]] === tVar)&];
+    If[Length[rule] == 0, Return[{}], rule = rule[[1]] ];
+    If[MatchQ[var, Derivative[n_][x_][t]], 
+      dCount = Head[Head[var] ][[1]];
+      result = Equal[var, D[rule[[2]], {t, dCount}] ],
+      result = Equal[var, rule[[2]] ]
+    ];
+    {result}
   ]
 );
 
