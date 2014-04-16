@@ -89,7 +89,7 @@ node_sptr ParseTreeSemanticAnalyzer::apply_definition(
 {
   State& state = todo_stack_.top();
 
-  definition = boost::shared_static_cast<Definition>(definition->clone());
+  definition = boost::dynamic_pointer_cast<Definition>(definition->clone());
   
   //循環参照のチェック
   if (state.referenced_definition_list.find(def_type) != 
