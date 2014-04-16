@@ -637,15 +637,17 @@ removeDerivative[var_] := var;
 
 createDifferentiatedEquation[var_, integRules_] := (
   Module[
-    {tRemovedRules, derivativeExpanded, ruleApplied, ret, tRemovedVars, nonDerivative},
-    nonDerivative = removeDerivative[var];
-    If[!MemberQ[integRules, nonDerivative, Infinity], Return[{}]];
-    tRemovedRules = Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRules];
-    tRemovedVars = var /. x_Symbol[t] -> x;
-    ruleApplied = tRemovedVars /. tRemovedRules;
-    derivativeExpanded = ruleApplied /. Derivative[n_][f_][t] :> D[f, {t, n}];
-    ret = {Equal[var, Simplify[derivativeExpanded] ]};
-    ret
+    {rule, result, tVar, dCount},
+    (* exclude variables which have no rule *)
+    tVar = removeDerivative[var];
+    rule = Select[integRules, (#[[1]] === tVar)&];
+    If[Length[rule] == 0, Return[{}], rule = rule[[1]] ];
+    If[MatchQ[var, Derivative[n_][x_][t]], 
+      dCount = Head[Head[var] ][[1]];
+      result = Equal[var, D[rule[[2]], {t, dCount}] ],
+      result = Equal[var, rule[[2]] ]
+    ];
+    {result}
   ]
 );
 
