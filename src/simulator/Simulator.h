@@ -38,6 +38,7 @@ struct Opts {
   std::string max_time;
   bool approx;
   bool cheby;
+  bool epsilon_mode;
   bool nd_mode;
   bool interactive_mode;
   bool use_unsat_core;

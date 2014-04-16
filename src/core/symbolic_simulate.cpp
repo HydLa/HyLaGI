@@ -119,6 +119,7 @@ void setup_simulator_opts(Opts& opts)
   opts.reuse = po.count("reuse")>0;
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
+  opts.epsilon_mode = po.count("epsilon")>0;
   /*
   opts.output_interval = po.get<std::string>("output_interval");
   opts.output_precision = po.get<int>("output_precision");

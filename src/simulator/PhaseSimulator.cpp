@@ -69,7 +69,7 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
   HYDLA_LOGGER_DEBUG("%% current time:", todo->current_time);
   timer::Timer phase_timer;
   result_list_t result;
-  
+
   todo->module_set_container->reset(todo->ms_to_visit);
 
   if(todo_cont == NULL)
@@ -98,10 +98,10 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
 
 PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_todo_sptr_t& todo)
 {
-  result_list_t result; 
+  result_list_t result;
   bool has_next = false;
   variable_map_t time_applied_map;
-  
+
   if(todo->phase_type == PointPhase)
   {
     time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
@@ -110,11 +110,11 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     time_applied_map = todo->parent->variable_map;
     set_simulation_mode(IntervalPhase);
   }
-  
+
   while(todo->module_set_container->go_next())
   {
     module_set_sptr ms = todo->module_set_container->get_module_set();
-    
+
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
     result_list_t tmp_result = simulate_ms(ms, time_applied_map, todo);
@@ -250,7 +250,7 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
             value_t val = phase->parent->parent->variable_map[var_entry.first].get_unique();
             value_t ret;
             backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &todo->current_time, &ret);
-            phase->variable_map[var_entry.first].set_unique(ret);            
+            phase->variable_map[var_entry.first].set_unique(ret);
           }
         }
       }    }
@@ -260,13 +260,13 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
 
     if(opts_->assertion || break_condition_.get() != NULL){
       timer::Timer entailment_timer;
-      
+
       backend_->call("resetConstraintForVariable", 0, "","");
       std::string fmt = "mv0";
       fmt += (phase->phase_type==PointPhase)?"n":"t";
       backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
       backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
-     
+
       if(opts_->assertion)
       {
         HYDLA_LOGGER_DEBUG("%% check_assertion");
@@ -306,6 +306,47 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
         }
       }
     }
+
+    //aho
+    if(opts_->epsilon_mode){
+      std::cout << std::endl;
+      if(phase->phase_type==0){std::cout << "This Phase is PP" << phase->id << std::endl;}
+      if(phase->phase_type==1){std::cout << "This Phase is IP" << phase->id << std::endl;}
+
+      if(phase->id==1){
+        std::cout << "PhaseId 1's Test"  << std::endl;
+        for(parameter_map_t::iterator eps_p_it = phase->parameter_map.begin(); eps_p_it != phase->parameter_map.end(); eps_p_it++){
+          std::cout << "show para"  << std::endl;
+          std::cout << eps_p_it->first << "\t: " << eps_p_it->second << std::endl;
+        }
+        std::cout << "show para end"  << std::endl;
+      }
+
+      for(parameter_map_t::iterator eps_p_it = phase->parameter_map.begin(); eps_p_it != phase->parameter_map.end(); eps_p_it++){
+        std::cout << eps_p_it->first << "\t: " << eps_p_it->second << std::endl;
+        std::string eps_parameter_name = eps_p_it->first.get_name();
+        int eps_parameter_differential_count = eps_p_it->first.get_differential_count();
+        if(eps_parameter_name=="eps" && eps_parameter_differential_count==0){
+          std::cout << "parameter eps Find!!"  << std::endl;
+          variable_map_t& eps_vm_tmp = phase->variable_map;
+          variable_map_t::iterator eps_v_it;
+          simulator::value_t eps_ret;
+          simulator::value_t eps_doit;
+          for(eps_v_it = eps_vm_tmp.begin();eps_v_it!=eps_vm_tmp.end();eps_v_it++){
+            if(eps_v_it->second.unique()){
+              int difftimes = 1;
+              eps_doit = eps_v_it->second.get_unique();
+              std::cout << eps_v_it->first << "\t: (" << eps_doit;
+              // backend_->call("reduceEpsilon", 1, "vln", "vl", &eps_doit, &eps_ret);
+              backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &eps_doit, &eps_p_it, &difftimes, &eps_ret);
+              std::cout << " -> " << eps_ret << ")" << std::endl;
+              eps_vm_tmp[eps_v_it->first] = eps_ret;
+            }
+          }
+        }
+      }
+    }
+    //aho
     result.push_back(phase);
 
   return result;
@@ -343,7 +384,7 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
 void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
-                                continuity_map_t& c, 
+                                continuity_map_t& c,
                                 parse_tree_sptr pt,
                                 const module_set_container_sptr &msc_no_init)
 {
@@ -354,14 +395,14 @@ void PhaseSimulator::initialize(variable_set_t &v,
   parse_tree_ = pt;
   msc_no_init_ = msc_no_init;
   const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
-  
+
   relation_graph_.reset(new RelationGraph(*ms, *variable_set_));
-  
+
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
     exit(EXIT_SUCCESS);
   }
-  
+
   AskCollector ac(ms);
   always_set_t eat;
   positive_asks_t pat;
@@ -723,7 +764,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   // preparation
   positive_asks_t& positive_asks = state->positive_asks;
   negative_asks_t& negative_asks = state->negative_asks;
-  
+
   ask_set_t unknown_asks;
   always_set_t& expanded_always = state->expanded_always;
   TellCollector tell_collector(ms);
@@ -741,8 +782,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
-      ask_collector.collect_ask(&expanded_always, 
-          &positive_asks, 
+      ask_collector.collect_ask(&expanded_always,
+          &positive_asks,
           &negative_asks,
           &unknown_asks);
       apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
@@ -758,7 +799,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   ask_set_t original_n_asks = negative_asks;
   ask_set_t original_u_asks = unknown_asks;
   bool entailment_changed = false;
-  
+
   do{
     if(entailment_changed){
       positive_asks = original_p_asks;
@@ -817,7 +858,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         push_branch_states(state, cc_result);
       }
     }
-    
+
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
     if(opts_->reuse && state->in_following_step()){
@@ -826,19 +867,19 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           continuity_map, state->current_time );
     }
 
-    ask_collector.collect_ask(&expanded_always, 
-        &positive_asks, 
+    ask_collector.collect_ask(&expanded_always,
+        &positive_asks,
         &negative_asks,
         &unknown_asks);
 
     timer::Timer entailment_timer;
-    
+
     {
       expanded = false;
       ask_set_t cv_unknown_asks, notcv_unknown_asks;
       if(opts_->reuse && state->in_following_step()){
         for( auto ask : unknown_asks ){
-          
+
           if(has_variables(ask, changing_variables, state->phase_type == IntervalPhase)){
             cv_unknown_asks.insert(ask);
           }else{
@@ -866,7 +907,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
             continue;
-          }else if(prev_guards_.find(*it) != prev_guards_.end() && 
+          }else if(prev_guards_.find(*it) != prev_guards_.end() &&
             state->judged_prev_map.find(*it) != state->judged_prev_map.end())
           {
             // if this guard doesn't have non-prev variable and it has been already judged
@@ -907,7 +948,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             always_finder.find_always((*it)->get_child(), expanded_always);
             unknown_asks.erase(it++);
             expanded = true;
-           /* 
+           /*
             if(opts_->reuse && !state->parent->changed_variables.empty()){
               VariableFinder variable_finder;
               variable_finder.visit_node(*it);
@@ -978,7 +1019,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   return true;
 }
 
-ConstraintStore 
+ConstraintStore
 PhaseSimulator::calculate_constraint_store(
   const module_set_sptr& ms,
   simulation_todo_sptr_t& todo)
@@ -1003,7 +1044,7 @@ PhaseSimulator::calculate_constraint_store(
     backend_->call("getConstraintStoreInterval", 0, "", "cs", &result_store);
     replace_prev2parameter(todo->parent, result_store, todo->parameter_map);
   }
-  
+
   return result_store;
 }
 
@@ -1117,7 +1158,7 @@ void PhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
   always_set_t& current_expanded_always = phase->expanded_always;
   positive_asks_t& current_positive_asks = phase->positive_asks;
   current_tell_collector.collect_all_tells(&current_tell_list,&current_expanded_always,&current_positive_asks);
-  
+
   TellCollector prev_tell_collector(phase->parent->module_set);
   tells_t prev_tell_list;
   always_set_t& prev_expanded_always = phase->parent->expanded_always;
@@ -1180,7 +1221,7 @@ bool PhaseSimulator::has_variables(node_sptr node, const change_variables_t & ch
 {
   VariableFinder variable_finder;
   variable_finder.visit_node(node);
-  if(variable_finder.include_variables(change_variables) || 
+  if(variable_finder.include_variables(change_variables) ||
      (include_prev && variable_finder.include_variables_prev(change_variables)))
   {
     return true;
@@ -1258,23 +1299,23 @@ void PhaseSimulator::apply_previous_solution(const change_variables_t& variables
   }
   PhaseType phase;
   if(in_IP) phase = IntervalPhase;
-  else phase = PointPhase; 
+  else phase = PointPhase;
   add_continuity(continuity_map, phase);
 */
 }
 
-PhaseSimulator::todo_list_t 
+PhaseSimulator::todo_list_t
   PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
   todo_list_t ret;
-  
+
   simulation_todo_sptr_t next_todo(new SimulationTodo());
   next_todo->module_set_container = msc_no_init_;
   next_todo->parent = phase;
   next_todo->ms_to_visit = next_todo->module_set_container->get_full_ms_list();
   next_todo->expanded_always = phase->expanded_always;
   next_todo->parameter_map = phase->parameter_map;
-  
+
   if(current_phase_ == PointPhase)
   {
     next_todo->phase_type = IntervalPhase;
@@ -1295,7 +1336,7 @@ PhaseSimulator::todo_list_t
 
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
-    
+
     //TODO: どこかで事前にmapを作って、毎回作らないようにする。
     std::map<int, boost::shared_ptr<Ask> > ask_map;
 
@@ -1331,7 +1372,7 @@ PhaseSimulator::todo_list_t
       max_time = node_sptr(new hydla::parse_tree::Infinity());
     }
 
-    pp_time_result_t time_result; 
+    pp_time_result_t time_result;
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
     if(opts_->cheby)
@@ -1360,7 +1401,7 @@ PhaseSimulator::todo_list_t
             ValueRange time_range;
             std::string low;
             std::string up;
-        
+
             variable_t time("time", 0);
 
             std::cout << "Input Lower time." << endl;
@@ -1407,9 +1448,116 @@ PhaseSimulator::todo_list_t
         }
       }
     }
-    
+
     else
       backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+
+    //aho
+    if(opts_->epsilon_mode){
+      std::cout << std::endl;
+      // 次のPointPhaseを求めた後に分岐するCase数が出る？
+      std::cout << "Next Phase Case Count\t: " << time_result.size() << std::endl;
+      unsigned int eps_time_it;
+      pp_time_result_t eps_time_result;
+
+      // 次のPointPhaseに向けて分岐するCaseを全て調べる
+      for(eps_time_it=0;eps_time_it < time_result.size();eps_time_it++){
+        std::cout << "Case \t: " << (eps_time_it + 1) << std::endl;
+        NextPhaseResult &eps_candidate = time_result[eps_time_it];
+        bool eps_isNG = false;
+
+        // 変数表(parameter_map)の変数(parameter_t)を見ていく
+        for(parameter_map_t::iterator eps_it = eps_candidate.parameter_map.begin(); eps_it != eps_candidate.parameter_map.end(); eps_it++){
+          // 変数(parameter_t)の名前や微分回数をチェックする
+          // 変数の名前がepsの時, 値が0の近傍か確認する
+          std::string eps_parameter_name = eps_it->first.get_name();
+          int eps_parameter_differential_count = eps_it->first.get_differential_count();
+          if(eps_parameter_name=="eps" && eps_parameter_differential_count==0){
+            std::cout << eps_it->first << "\t: " << eps_it->second << "\t->\t";
+
+            node_sptr eps_val_node;
+            bool eps_isRet;
+            if(eps_it->second.unique()){
+              eps_val_node = eps_it->second.get_unique().get_node();
+              eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_unique().get_node()));
+              // std::cout << "before is Over Zero \t: " << *eps_val_node << std::endl;
+              backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
+              // std::cout << "after is Over Zero \t: " << eps_isRet << std::endl;
+              eps_isNG = eps_isNG || eps_isRet;
+            }else{
+              if(eps_it->second.get_lower_cnt()){
+                eps_val_node = eps_it->second.get_lower_bound(0).value.get_node();
+                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
+                eps_isNG = eps_isNG || eps_isRet;
+              }
+              if(eps_it->second.get_upper_cnt()){
+                eps_val_node = node_sptr(new Number("-1"));
+                eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_upper_bound(0).value.get_node()));
+                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
+                eps_isNG = eps_isNG || eps_isRet;
+              }
+            }
+            if(eps_isNG){
+              std::cout<<"NG range"<<std::endl;
+            }else{
+              std::cout<<"OK"<<std::endl;
+            }
+          }else{
+            // eps以外の変数
+            // std::cout << eps_it->first << "\t: " << eps_it->second << std::endl;
+          }
+        }
+        // 変数の中にNGなepsの範囲があった場合, 結果としない
+        if(!eps_isNG){
+          // eps_time_result[eps_time_result_it++] = eps_candidate;
+          eps_time_result.push_back(eps_candidate);
+        }
+      }
+      std::cout << "######### remove NG Case & all "<< time_result.size() << " -> " << eps_time_result.size() << std::endl;
+      // 現在のcalculateNextPPの結果を削除して, 新しい結果ので置換する
+      time_result.clear();
+      for(eps_time_it=0;eps_time_it < eps_time_result.size();eps_time_it++){
+        std::cout << "NewCase\t: " << (eps_time_it + 1) << std::endl;
+        NextPhaseResult &eps_candidate = eps_time_result[eps_time_it];
+        time_result.push_back(eps_candidate);
+
+        // 内容の確認
+        bool eps_isNG = false;
+        for(parameter_map_t::iterator eps_it = eps_candidate.parameter_map.begin(); eps_it != eps_candidate.parameter_map.end(); eps_it++){
+          std::string eps_parameter_name = eps_it->first.get_name();
+          int eps_parameter_differential_count = eps_it->first.get_differential_count();
+          if(eps_parameter_name=="eps" && eps_parameter_differential_count==0){
+            std::cout << eps_it->first << "\t: " << eps_it->second << "\t->\t";
+            node_sptr eps_val_node;
+            bool eps_isRet;
+            if(eps_it->second.unique()){
+              eps_val_node = eps_it->second.get_unique().get_node();
+              eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_unique().get_node()));
+              backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
+              eps_isNG = eps_isNG || eps_isRet;
+            }else{
+              if(eps_it->second.get_lower_cnt()){
+                eps_val_node = eps_it->second.get_lower_bound(0).value.get_node();
+                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
+                eps_isNG = eps_isNG || eps_isRet;
+              }
+              if(eps_it->second.get_upper_cnt()){
+                eps_val_node = node_sptr(new Number("-1"));
+                eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_upper_bound(0).value.get_node()));
+                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
+                eps_isNG = eps_isNG || eps_isRet;
+              }
+            }
+            if(eps_isNG){
+              std::cout<<"NG range"<<std::endl;
+            }else{
+              std::cout<<"OK"<<std::endl;
+            }
+          }
+        }
+      }
+    }
+    //aho
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -1433,17 +1581,17 @@ PhaseSimulator::todo_list_t
       if(++time_it >= time_result.size())break;
       pr = make_new_phase(pr);
     }
-    
+
     unsigned int result_it = 0;
     bool one_phase = false;
-    
+
     // 場合の選択を行う場合はここで
     if(time_result.size() > 0 && select_phase_)
     {
       result_it = select_phase_(results);
       one_phase = true;
     }
-    
+
 
     // todoを実際に作成する
     while(true)
@@ -1453,7 +1601,7 @@ PhaseSimulator::todo_list_t
       NextPhaseResult &candidate = time_result[result_it];
       HYDLA_LOGGER_DEBUG_VAR(result_it);
       for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
-      { 
+      {
         int id = candidate.minimum.ids[id_it];
         if(id == -1) {
           pr->cause_for_termination = simulator::TIME_LIMIT;
@@ -1489,7 +1637,7 @@ PhaseSimulator::todo_list_t
     }
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
-  
+
   return ret;
 }
 
