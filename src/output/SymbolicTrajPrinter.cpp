@@ -3,11 +3,15 @@
 #include <stack>
 #include "Parameter.h"
 #include "Logger.h"
+#include "Backend.h"
 
 using namespace hydla::simulator;
 using namespace std;
 
+using namespace hydla::backend;
+
 namespace hydla{
+// namespace backend{
 namespace output{
 
 SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables, std::ostream& ostream):
@@ -28,13 +32,73 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << result.module_set->get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "time\t: " << result.current_time << "->" << result.end_time << "\n";
+      //aho
+      if(opts_->epsilon_mode){
+        simulator::value_t ret1,ret2;
+        parse_tree::node_sptr tmp1,tmp2;
+        int limitflag,tmps,tmpe;
+        tmp1 = result.current_time.get_node();
+        tmp2 = result.end_time.get_node();
+        backend_->call("checkEpsilon", 1, "en", "i",&tmp1, &tmps);
+        backend_->call("checkEpsilon", 1, "en", "i",&tmp2, &tmpe);
+        limitflag = tmps * tmpe;
+        if(limitflag == 1){
+          backend_->call("limitEpsilon", 1, "en", "vl",&tmp1, &ret1);
+          backend_->call("limitEpsilon", 1, "en", "vl",&tmp2, &ret2);
+          sstr << "Limit(time)\t: " << ret1 << "->" << ret2 << "\n";
+        }else{
+          backend_->call("limitEpsilonP", 1, "en", "vl",&tmp1, &ret1);
+          backend_->call("limitEpsilonP", 1, "en", "vl",&tmp2, &ret2);
+          sstr << "Limit(time)\t+ : " << ret1 << "->" << ret2 << "\n";
+          backend_->call("limitEpsilonM", 1, "en", "vl",&tmp1, &ret1);
+          backend_->call("limitEpsilonM", 1, "en", "vl",&tmp2, &ret2);
+          sstr << "Limit(time)\t- : " << ret1 << "->" << ret2 << "\n";
+        }
+      }
+      //aho
     }else{
       sstr << "time\t: " << result.current_time << "->" << "???" << "\n";
+      //aho
+      if(opts_->epsilon_mode){
+        simulator::value_t ret1,ret2;
+        parse_tree::node_sptr tmp1,tmp2;
+        int limitflag,tmps,tmpe;
+        tmp1 = result.current_time.get_node();
+        backend_->call("checkEpsilon", 1, "en", "i",&tmp1, &limitflag);
+        if(limitflag == 1){
+          backend_->call("limitEpsilon", 1, "en", "vl",&tmp1, &ret1);
+          sstr << "Limit(time)\t: " << ret1 << "->" << "???" << "\n";
+        }else{
+          backend_->call("limitEpsilonP", 1, "en", "vl",&tmp1, &ret1);
+          sstr << "Limit(time)\t+ : " << ret1 << "->" << "???" << "\n";
+          backend_->call("limitEpsilonM", 1, "en", "vl",&tmp1, &ret1);
+          sstr << "Limit(time)\t- : " << ret1 << "->" << "???" << "\n";
+        }
+      }
+      //aho
     }
   }else{
     sstr << "---------PP " << result.id << "---------" << endl;
     sstr << result.module_set->get_name() << endl;
     sstr << "time\t: " << result.current_time << "\n";
+    //aho
+    if(opts_->epsilon_mode){
+      simulator::value_t ret1,ret2;
+      parse_tree::node_sptr tmp1,tmp2;
+      int limitflag,tmps,tmpe;
+      tmp1 = result.current_time.get_node();
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp1, &limitflag);
+      if(limitflag == 1){
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp1, &ret1);
+        sstr << "Limit(time)\t: " << ret1 << "\n";
+      }else{
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp1, &ret1);
+        sstr << "Limit(time)\t+ : " << ret1 << "\n";
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp1, &ret1);
+        sstr << "Limit(time)\t- : " << ret1 << "\n";
+      }
+    }
+      //aho
   }
   output_variable_map(sstr, result.variable_map);
 
@@ -59,8 +123,34 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    stream << it->first << "\t: " << it->second << "\n";    
+    stream << it->first << "\t: " << it->second << "\n";
   }
+  //aho
+  if(opts_->epsilon_mode){
+    simulator::value_t ret;
+    simulator::value_t tmp;
+    int limitflag;
+    it  = vm.begin();
+    for(; it!=end; ++it) {
+      if(it->second.unique()){
+        tmp = it->second.get_unique();
+        backend_->call("checkEpsilon", 1, "vln", "i",&tmp, &limitflag);
+        if(limitflag == 1){
+          backend_->call("limitEpsilon", 1, "vln", "vl", &tmp, &ret);
+          stream << "Limit(" << it->first << ")\t  : " << ret << "\n";
+        }else{
+          backend_->call("limitEpsilonP", 1, "vln", "vl", &tmp, &ret);
+          stream << "Limit(" << it->first << ")\t+ : " << ret << "\n";
+          backend_->call("limitEpsilonM", 1, "vln", "vl", &tmp, &ret);
+          stream << "Limit(" << it->first << ")\t- : " << ret << "\n";
+        }
+      }else {
+        stream << "Limit(" << it->first << ")\t: " << it->second << "\n";
+      }
+    }
+  }
+  //aho
+
 }
 
 void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
@@ -115,23 +205,23 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       case simulator::ASSERTION:
         ostream_ << "# assertion failed\n" ;
         break;
-        
+
       case simulator::OTHER_ASSERTION:
         ostream_ << "# terminated by failure of assertion in another case\n" ;
         break;
-        
+
       case simulator::TIME_LIMIT:
         ostream_ << "# time reached limit\n" ;
         break;
-        
+
       case simulator::STEP_LIMIT:
         ostream_ << "# number of phases reached limit\n" ;
         break;
-        
+
       case simulator::TIME_OUT_REACHED:
         ostream_ << "# time out\n" ;
         break;
-        
+
       case simulator::NOT_UNIQUE_IN_INTERVAL:
         ostream_ << "# some values of variables are not unique in IP\n" ;
         break;
@@ -153,7 +243,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       result.push_back(sstr.str());
     }
     result.push_back(get_state_output(*node));
-    
+
     phase_result_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
     for(;it!=end;it++){
       output_result_node(*it, result, case_num, phase_num);
@@ -165,9 +255,12 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
   }
 }
-  
 
-
+void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,Opts *op){
+  backend_ = back;
+  opts_ = op;
+}
 
 } // output
+// } // backend
 } // hydla

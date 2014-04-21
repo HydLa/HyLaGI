@@ -39,6 +39,7 @@ using namespace hydla::backend;
 #include "AnalysisResultChecker.h"
 #include "UnsatCoreFinder.h"
 #include "AlwaysFinder.h"
+#include "EpsilonMode.h"
 
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
@@ -93,6 +94,18 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
   }
 
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
+  //aho
+  if(opts_->epsilon_mode){
+    // PhaseSimulator::result_list_t eps_result;
+    // eps_result.insert(eps_result.begin(), result.begin(), result.end());
+    // std::cout << "PhaseResultSize \t" << eps_result.size() << std::endl;
+    // for(unsigned int i = 0; i < eps_result.size(); i++){
+    //   phase_result_sptr_t& eps_phase = eps_result[i];
+    //   }
+    // }
+  }
+  //aho
+
   return result;
 }
 
@@ -151,6 +164,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::modul
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   backend_->call("addPrevConstraint", 1, "mvp", "", &time_applied_map);
+
+  simulation_todo_sptr_t tes = todo;
 
   if(todo->module_set_container != msc_no_init_)
   {
@@ -312,44 +327,10 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
 
     //aho
     if(opts_->epsilon_mode){
-      std::cout << std::endl;
-      if(phase->phase_type==0){std::cout << "This Phase is PP" << phase->id << std::endl;}
-      if(phase->phase_type==1){std::cout << "This Phase is IP" << phase->id << std::endl;}
-
-      if(phase->id==1){
-        std::cout << "PhaseId 1's Test"  << std::endl;
-        for(parameter_map_t::iterator eps_p_it = phase->parameter_map.begin(); eps_p_it != phase->parameter_map.end(); eps_p_it++){
-          std::cout << "show para"  << std::endl;
-          std::cout << eps_p_it->first << "\t: " << eps_p_it->second << std::endl;
-        }
-        std::cout << "show para end"  << std::endl;
-      }
-
-      for(parameter_map_t::iterator eps_p_it = phase->parameter_map.begin(); eps_p_it != phase->parameter_map.end(); eps_p_it++){
-        std::cout << eps_p_it->first << "\t: " << eps_p_it->second << std::endl;
-        std::string eps_parameter_name = eps_p_it->first.get_name();
-        int eps_parameter_differential_count = eps_p_it->first.get_differential_count();
-        if(eps_parameter_name=="eps" && eps_parameter_differential_count==0){
-          std::cout << "parameter eps Find!!"  << std::endl;
-          variable_map_t& eps_vm_tmp = phase->variable_map;
-          variable_map_t::iterator eps_v_it;
-          simulator::value_t eps_ret;
-          simulator::value_t eps_doit;
-          for(eps_v_it = eps_vm_tmp.begin();eps_v_it!=eps_vm_tmp.end();eps_v_it++){
-            if(eps_v_it->second.unique()){
-              int difftimes = 1;
-              eps_doit = eps_v_it->second.get_unique();
-              std::cout << eps_v_it->first << "\t: (" << eps_doit;
-              // backend_->call("reduceEpsilon", 1, "vln", "vl", &eps_doit, &eps_ret);
-              backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &eps_doit, &eps_p_it, &difftimes, &eps_ret);
-              std::cout << " -> " << eps_ret << ")" << std::endl;
-              eps_vm_tmp[eps_v_it->first] = eps_ret;
-            }
-          }
-        }
-      }
+      phase->variable_map = cut_high_order_epsilon(backend_,phase);
     }
     //aho
+
     result.push_back(phase);
 
   return result;
@@ -1457,108 +1438,7 @@ PhaseSimulator::todo_list_t
 
     //aho
     if(opts_->epsilon_mode){
-      std::cout << std::endl;
-      // 次のPointPhaseを求めた後に分岐するCase数が出る？
-      std::cout << "Next Phase Case Count\t: " << time_result.size() << std::endl;
-      unsigned int eps_time_it;
-      pp_time_result_t eps_time_result;
-
-      // 次のPointPhaseに向けて分岐するCaseを全て調べる
-      for(eps_time_it=0;eps_time_it < time_result.size();eps_time_it++){
-        std::cout << "Case \t: " << (eps_time_it + 1) << std::endl;
-        NextPhaseResult &eps_candidate = time_result[eps_time_it];
-        bool eps_isNG = false;
-
-        // 変数表(parameter_map)の変数(parameter_t)を見ていく
-        for(parameter_map_t::iterator eps_it = eps_candidate.parameter_map.begin(); eps_it != eps_candidate.parameter_map.end(); eps_it++){
-          // 変数(parameter_t)の名前や微分回数をチェックする
-          // 変数の名前がepsの時, 値が0の近傍か確認する
-          std::string eps_parameter_name = eps_it->first.get_name();
-          int eps_parameter_differential_count = eps_it->first.get_differential_count();
-          if(eps_parameter_name=="eps" && eps_parameter_differential_count==0){
-            std::cout << eps_it->first << "\t: " << eps_it->second << "\t->\t";
-
-            node_sptr eps_val_node;
-            bool eps_isRet;
-            if(eps_it->second.unique()){
-              eps_val_node = eps_it->second.get_unique().get_node();
-              eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_unique().get_node()));
-              // std::cout << "before is Over Zero \t: " << *eps_val_node << std::endl;
-              backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
-              // std::cout << "after is Over Zero \t: " << eps_isRet << std::endl;
-              eps_isNG = eps_isNG || eps_isRet;
-            }else{
-              if(eps_it->second.get_lower_cnt()){
-                eps_val_node = eps_it->second.get_lower_bound(0).value.get_node();
-                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
-                eps_isNG = eps_isNG || eps_isRet;
-              }
-              if(eps_it->second.get_upper_cnt()){
-                eps_val_node = node_sptr(new Number("-1"));
-                eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_upper_bound(0).value.get_node()));
-                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
-                eps_isNG = eps_isNG || eps_isRet;
-              }
-            }
-            if(eps_isNG){
-              std::cout<<"NG range"<<std::endl;
-            }else{
-              std::cout<<"OK"<<std::endl;
-            }
-          }else{
-            // eps以外の変数
-            // std::cout << eps_it->first << "\t: " << eps_it->second << std::endl;
-          }
-        }
-        // 変数の中にNGなepsの範囲があった場合, 結果としない
-        if(!eps_isNG){
-          // eps_time_result[eps_time_result_it++] = eps_candidate;
-          eps_time_result.push_back(eps_candidate);
-        }
-      }
-      std::cout << "######### remove NG Case & all "<< time_result.size() << " -> " << eps_time_result.size() << std::endl;
-      // 現在のcalculateNextPPの結果を削除して, 新しい結果ので置換する
-      time_result.clear();
-      for(eps_time_it=0;eps_time_it < eps_time_result.size();eps_time_it++){
-        std::cout << "NewCase\t: " << (eps_time_it + 1) << std::endl;
-        NextPhaseResult &eps_candidate = eps_time_result[eps_time_it];
-        time_result.push_back(eps_candidate);
-
-        // 内容の確認
-        bool eps_isNG = false;
-        for(parameter_map_t::iterator eps_it = eps_candidate.parameter_map.begin(); eps_it != eps_candidate.parameter_map.end(); eps_it++){
-          std::string eps_parameter_name = eps_it->first.get_name();
-          int eps_parameter_differential_count = eps_it->first.get_differential_count();
-          if(eps_parameter_name=="eps" && eps_parameter_differential_count==0){
-            std::cout << eps_it->first << "\t: " << eps_it->second << "\t->\t";
-            node_sptr eps_val_node;
-            bool eps_isRet;
-            if(eps_it->second.unique()){
-              eps_val_node = eps_it->second.get_unique().get_node();
-              eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_unique().get_node()));
-              backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
-              eps_isNG = eps_isNG || eps_isRet;
-            }else{
-              if(eps_it->second.get_lower_cnt()){
-                eps_val_node = eps_it->second.get_lower_bound(0).value.get_node();
-                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
-                eps_isNG = eps_isNG || eps_isRet;
-              }
-              if(eps_it->second.get_upper_cnt()){
-                eps_val_node = node_sptr(new Number("-1"));
-                eps_val_node = node_sptr(new Times(eps_val_node, eps_it->second.get_upper_bound(0).value.get_node()));
-                backend_->call("isOverZero", 1, "en", "b", &eps_val_node, &eps_isRet);
-                eps_isNG = eps_isNG || eps_isRet;
-              }
-            }
-            if(eps_isNG){
-              std::cout<<"NG range"<<std::endl;
-            }else{
-              std::cout<<"OK"<<std::endl;
-            }
-          }
-        }
-      }
+      time_result = reduce_unsuitable_case(time_result,backend_,phase);
     }
     //aho
 

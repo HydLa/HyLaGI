@@ -45,7 +45,7 @@ public:
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
   PhaseSimulator(PhaseSimulator&);
-  
+
   virtual ~PhaseSimulator();
 
   virtual void set_backend(backend_sptr_t back);
@@ -57,7 +57,7 @@ public:
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
-  
+
   variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
 
   /**
@@ -71,11 +71,11 @@ public:
 
 	/**
    * HASimulator用
-   */ 
+   */
 	void substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm);
-	  
+
   int get_phase_sum()const{return phase_sum_;}
-  
+
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
 
 
@@ -88,19 +88,19 @@ public:
       const variable_map_t& vm);
 */
 
-  
+
  	/**
    * make todos from given phase_result
    * this function doesn't change the 'phase' argument except the end time of phase
-   */ 
+   */
   virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
 
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
   bool breaking;
-  
-protected:  
+
+protected:
 
   typedef enum{
     ENTAILED,
@@ -110,9 +110,9 @@ protected:
   } CheckEntailmentResult;
 
   result_list_t simulate_ms(const module_set_sptr& ms, const variable_map_t&, simulation_todo_sptr_t& state);
-  
+
   ConstraintStore apply_time_to_constraints(const ConstraintStore &, const value_t &);
-  
+
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
    * 新たなsimulation_todo_sptr_tの作成
@@ -129,11 +129,11 @@ protected:
 
   void replace_prev2parameter(
                               phase_result_sptr_t &phase,
-                              variable_map_t &vm, 
+                              variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
   const Opts *opts_;
-  
+
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
@@ -145,7 +145,7 @@ protected:
    * graph of relation between module_set for IP and PP
    */
   boost::shared_ptr<RelationGraph> relation_graph_;
-  
+
   /**
    * 解候補モジュール集合のコンテナ
    * （非always制約を除いたバージョン）
@@ -153,14 +153,14 @@ protected:
   module_set_container_sptr msc_no_init_;
 
   todo_container_t* todo_container_;
-  
+
   phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
-  
-  
+
+
   void push_branch_states(simulation_todo_sptr_t &original,
     CheckConsistencyResult &result);
-    
-  
+
+
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
   node_sptr break_condition_;
@@ -169,11 +169,11 @@ protected:
 private:
 
   result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
-  
+
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const ConstraintStore& store);
 
   std::set<module_set_sptr> checkd_module_set_;
- 
+
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
    */
@@ -191,7 +191,7 @@ private:
                              const negative_asks_t& negative_asks,
                              change_variables_t& changing_variables );
 
-  void set_changed_variables(phase_result_sptr_t& phase);  
+  void set_changed_variables(phase_result_sptr_t& phase);
 
   change_variables_t get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg);
 
@@ -222,13 +222,13 @@ private:
     const node_sptr& guard,
     const continuity_map_t& cont_map,
     const PhaseType& phase);
-  
+
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
   bool has_variables(node_sptr node, const change_variables_t &variables, bool include_prev);
 
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
-  
+
   virtual module_set_list_t calculate_mms(
     simulation_todo_sptr_t& state,
     const variable_map_t& vm);
@@ -243,12 +243,12 @@ private:
                               ConstraintStore& store,
                               parameter_map_t &parameter_map);
 
-  
+
   continuity_map_t variable_derivative_map_;
-  
+
   boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
   boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
-  
+
   PhaseType current_phase_;
 
 
@@ -256,6 +256,6 @@ private:
 
 
 } //namespace simulator
-} //namespace hydla 
+} //namespace hydla
 
 #endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
