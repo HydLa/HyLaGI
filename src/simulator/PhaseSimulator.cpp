@@ -313,11 +313,9 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
       }
     }
 
-    //aho
     if(opts_->epsilon_mode){
       phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
     }
-    //aho
 
     result.push_back(phase);
 
@@ -1425,11 +1423,9 @@ PhaseSimulator::todo_list_t
     else
       backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
 
-    //aho
     if(opts_->epsilon_mode){
       time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
     }
-    //aho
 
     unsigned int time_it = 0;
     result_list_t results;
