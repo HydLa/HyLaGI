@@ -4,7 +4,6 @@
 #include "TrajPrinter.h"
 
 namespace hydla{
-/* namespace backend{ */
 namespace output{
 
 /**
@@ -35,6 +34,8 @@ public:
   virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, hydla::simulator::Opts *op);
   hydla::simulator::backend_sptr_t backend_;
   hydla::simulator::Opts *opts_;
+  void output_limit_of_time(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result) const;
+  void output_limits_of_variable_map(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const;
 
 private:
 
@@ -43,7 +44,6 @@ private:
 };
 
 }// output
-/* }// backend */
 }// hydla
 
 #endif // _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_

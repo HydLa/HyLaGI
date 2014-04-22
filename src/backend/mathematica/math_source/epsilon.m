@@ -49,7 +49,7 @@ publicMethod[
                     one = Quiet[Check[arg /. p[eps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
                     two = Quiet[Check[D[arg, p[eps, 0, 1]] /. p[eps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
                     If[one =!= False && two =!= False, ret = one + two * p[eps, 0, 1], ret = arg];
-                    ret
+                    toReturnForm[ret]
                     ]
              ];
 

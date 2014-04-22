@@ -94,18 +94,6 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
   }
 
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
-  //aho
-  if(opts_->epsilon_mode){
-    // PhaseSimulator::result_list_t eps_result;
-    // eps_result.insert(eps_result.begin(), result.begin(), result.end());
-    // std::cout << "PhaseResultSize \t" << eps_result.size() << std::endl;
-    // for(unsigned int i = 0; i < eps_result.size(); i++){
-    //   phase_result_sptr_t& eps_phase = eps_result[i];
-    //   }
-    // }
-  }
-  //aho
-
   return result;
 }
 
@@ -327,7 +315,7 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
 
     //aho
     if(opts_->epsilon_mode){
-      phase->variable_map = cut_high_order_epsilon(backend_,phase);
+      phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
     }
     //aho
 
@@ -1318,6 +1306,7 @@ PhaseSimulator::todo_list_t
     phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
     next_todo->phase_type = PointPhase;
 
+
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
 
@@ -1438,7 +1427,7 @@ PhaseSimulator::todo_list_t
 
     //aho
     if(opts_->epsilon_mode){
-      time_result = reduce_unsuitable_case(time_result,backend_,phase);
+      time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
     }
     //aho
 

@@ -17,11 +17,10 @@
 #include "AnalysisResultChecker.h"
 
 namespace hydla {
+namespace simulator{
 
-namespace simulator {
-
-  variable_map_t cut_high_order_epsilon(backend_sptr_t backend_, phase_result_sptr_t phase);
-  pp_time_result_t reduce_unsuitable_case(pp_time_result_t time_result, backend_sptr_t backend_, phase_result_sptr_t phase);
+  variable_map_t cut_high_order_epsilon(backend::Backend* backend_, phase_result_sptr_t& phase);
+  backend::pp_time_result_t reduce_unsuitable_case(backend::pp_time_result_t time_result, backend::Backend* backend_, phase_result_sptr_t& phase);
 
 } //namespace simulator
 } //namespace hydla

@@ -4,6 +4,7 @@
 #include "Parameter.h"
 #include "Logger.h"
 #include "Backend.h"
+#include "EpsilonMode.h"
 
 using namespace hydla::simulator;
 using namespace std;
@@ -11,7 +12,6 @@ using namespace std;
 using namespace hydla::backend;
 
 namespace hydla{
-// namespace backend{
 namespace output{
 
 SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables, std::ostream& ostream):
@@ -32,75 +32,27 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << result.module_set->get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "time\t: " << result.current_time << "->" << result.end_time << "\n";
-      //aho
-      if(opts_->epsilon_mode){
-        simulator::value_t ret1,ret2;
-        parse_tree::node_sptr tmp1,tmp2;
-        int limitflag,tmps,tmpe;
-        tmp1 = result.current_time.get_node();
-        tmp2 = result.end_time.get_node();
-        backend_->call("checkEpsilon", 1, "en", "i",&tmp1, &tmps);
-        backend_->call("checkEpsilon", 1, "en", "i",&tmp2, &tmpe);
-        limitflag = tmps * tmpe;
-        if(limitflag == 1){
-          backend_->call("limitEpsilon", 1, "en", "vl",&tmp1, &ret1);
-          backend_->call("limitEpsilon", 1, "en", "vl",&tmp2, &ret2);
-          sstr << "Limit(time)\t: " << ret1 << "->" << ret2 << "\n";
-        }else{
-          backend_->call("limitEpsilonP", 1, "en", "vl",&tmp1, &ret1);
-          backend_->call("limitEpsilonP", 1, "en", "vl",&tmp2, &ret2);
-          sstr << "Limit(time)\t+ : " << ret1 << "->" << ret2 << "\n";
-          backend_->call("limitEpsilonM", 1, "en", "vl",&tmp1, &ret1);
-          backend_->call("limitEpsilonM", 1, "en", "vl",&tmp2, &ret2);
-          sstr << "Limit(time)\t- : " << ret1 << "->" << ret2 << "\n";
-        }
-      }
-      //aho
     }else{
       sstr << "time\t: " << result.current_time << "->" << "???" << "\n";
-      //aho
-      if(opts_->epsilon_mode){
-        simulator::value_t ret1,ret2;
-        parse_tree::node_sptr tmp1,tmp2;
-        int limitflag,tmps,tmpe;
-        tmp1 = result.current_time.get_node();
-        backend_->call("checkEpsilon", 1, "en", "i",&tmp1, &limitflag);
-        if(limitflag == 1){
-          backend_->call("limitEpsilon", 1, "en", "vl",&tmp1, &ret1);
-          sstr << "Limit(time)\t: " << ret1 << "->" << "???" << "\n";
-        }else{
-          backend_->call("limitEpsilonP", 1, "en", "vl",&tmp1, &ret1);
-          sstr << "Limit(time)\t+ : " << ret1 << "->" << "???" << "\n";
-          backend_->call("limitEpsilonM", 1, "en", "vl",&tmp1, &ret1);
-          sstr << "Limit(time)\t- : " << ret1 << "->" << "???" << "\n";
-        }
-      }
-      //aho
     }
   }else{
     sstr << "---------PP " << result.id << "---------" << endl;
     sstr << result.module_set->get_name() << endl;
     sstr << "time\t: " << result.current_time << "\n";
-    //aho
-    if(opts_->epsilon_mode){
-      simulator::value_t ret1,ret2;
-      parse_tree::node_sptr tmp1,tmp2;
-      int limitflag,tmps,tmpe;
-      tmp1 = result.current_time.get_node();
-      backend_->call("checkEpsilon", 1, "en", "i",&tmp1, &limitflag);
-      if(limitflag == 1){
-        backend_->call("limitEpsilon", 1, "en", "vl",&tmp1, &ret1);
-        sstr << "Limit(time)\t: " << ret1 << "\n";
-      }else{
-        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp1, &ret1);
-        sstr << "Limit(time)\t+ : " << ret1 << "\n";
-        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp1, &ret1);
-        sstr << "Limit(time)\t- : " << ret1 << "\n";
-      }
-    }
-      //aho
   }
+  //aho
+  if(opts_->epsilon_mode){
+    output_limit_of_time(sstr,backend_.get(),result);
+  }
+  //aho
   output_variable_map(sstr, result.variable_map);
+
+  //aho
+  if(opts_->epsilon_mode){
+    output_limits_of_variable_map(sstr,backend_.get(),result,result.variable_map);
+  }
+  //aho
+
 
   return sstr.str();
 }
@@ -117,7 +69,6 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
   }
 }
 
-
 void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();
@@ -125,32 +76,6 @@ void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variab
   for(; it!=end; ++it) {
     stream << it->first << "\t: " << it->second << "\n";
   }
-  //aho
-  if(opts_->epsilon_mode){
-    simulator::value_t ret;
-    simulator::value_t tmp;
-    int limitflag;
-    it  = vm.begin();
-    for(; it!=end; ++it) {
-      if(it->second.unique()){
-        tmp = it->second.get_unique();
-        backend_->call("checkEpsilon", 1, "vln", "i",&tmp, &limitflag);
-        if(limitflag == 1){
-          backend_->call("limitEpsilon", 1, "vln", "vl", &tmp, &ret);
-          stream << "Limit(" << it->first << ")\t  : " << ret << "\n";
-        }else{
-          backend_->call("limitEpsilonP", 1, "vln", "vl", &tmp, &ret);
-          stream << "Limit(" << it->first << ")\t+ : " << ret << "\n";
-          backend_->call("limitEpsilonM", 1, "vln", "vl", &tmp, &ret);
-          stream << "Limit(" << it->first << ")\t- : " << ret << "\n";
-        }
-      }else {
-        stream << "Limit(" << it->first << ")\t: " << it->second << "\n";
-      }
-    }
-  }
-  //aho
-
 }
 
 void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
@@ -261,6 +186,107 @@ void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,Opts *op){
   opts_ = op;
 }
 
+void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* backend_, const phase_result_t& result) const
+{
+  simulator::value_t ret_current_time,ret_end_time;
+  parse_tree::node_sptr tmp_current_time,tmp_end_time;
+  int check_result,check_current_time,check_end_time;
+
+  if(result.phase_type == IntervalPhase)
+  {
+    if(!result.end_time.undefined())
+    {
+      tmp_current_time = result.current_time.get_node();
+      tmp_end_time = result.end_time.get_node();
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_current_time);
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp_end_time, &check_end_time);
+      check_result = check_current_time * check_end_time;
+      if(check_result == 1)
+      {
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        stream << "Limit(time)\t: " << ret_current_time << "->" << ret_end_time << "\n";
+      }
+      else
+      {
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        stream << "Limit(time)\t+ : " << ret_current_time << "->" << ret_end_time << "\n";
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        stream << "Limit(time)\t- : " << ret_current_time << "->" << ret_end_time << "\n";
+      }
+    }
+    else
+    {
+      tmp_current_time = result.current_time.get_node();
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+      if(check_result == 1)
+      {
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(time)\t: " << ret_current_time << "->" << "???" << "\n";
+      }
+      else
+      {
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(time)\t+ : " << ret_current_time << "->" << "???" << "\n";
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(time)\t- : " << ret_current_time << "->" << "???" << "\n";
+      }
+    }
+  }
+  else
+  {
+    tmp_current_time = result.current_time.get_node();
+    backend_->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+    if(check_result == 1)
+    {
+      backend_->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+      stream << "Limit(time)\t: " << ret_current_time << "\n";
+    }
+    else
+    {
+      backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+      stream << "Limit(time)\t+ : " << ret_current_time << "\n";
+      backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+      stream << "Limit(time)\t- : " << ret_current_time << "\n";
+    }
+  }
+}
+
+void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const
+{
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  simulator::value_t ret;
+  simulator::value_t tmp;
+  int check_result;
+  it  = vm.begin();
+  for(; it!=end; ++it)
+  {
+    if(it->second.unique())
+    {
+      tmp = it->second.get_unique();
+      backend_->call("checkEpsilon", 1, "vln", "i",&tmp, &check_result);
+      if(check_result == 1)
+      {
+        backend_->call("limitEpsilon", 1, "vln", "vl", &tmp, &ret);
+        stream << "Limit(" << it->first << ")\t  : " << ret << "\n";
+      }
+      else
+      {
+        backend_->call("limitEpsilonP", 1, "vln", "vl", &tmp, &ret);
+        stream << "Limit(" << it->first << ")\t+ : " << ret << "\n";
+        backend_->call("limitEpsilonM", 1, "vln", "vl", &tmp, &ret);
+        stream << "Limit(" << it->first << ")\t- : " << ret << "\n";
+      }
+    }
+    else
+    {
+      stream << "Limit(" << it->first << ")\t: " << it->second << "\n";
+    }
+  }
+}
+
 } // output
-// } // backend
 } // hydla
