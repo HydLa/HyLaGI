@@ -20,7 +20,7 @@ void JsonWriter::write(const simulator_t &simulator, std::string name)
   json_object["parameters"] = for_pm(simulator.get_parameter_map());
 
   phase_result_const_sptr_t root = simulator.get_result_root();
-  array children;
+  picojson::array children;
   json_object["first_phases"] = make_children(root);
 
   value json(json_object);
@@ -105,7 +105,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
 
 value JsonWriter::make_children(const phase_result_const_sptr_t &phase)
 {
-  array children;
+  picojson::array children;
   for(vector<phase_result_sptr_t>::const_iterator it = phase->children.begin(); it != phase->children.end(); it++)
   {
     children.push_back(for_phase(*it));
@@ -123,7 +123,7 @@ value JsonWriter::for_range(const value_range_t &range)
   }
   else
   {
-    array lbs;
+    picojson::array lbs;
     for(uint i = 0; i < range.get_lower_cnt(); i++)
     {
       const value_range_t::bound_t &bound = range.get_lower_bound(i);
@@ -134,7 +134,7 @@ value JsonWriter::for_range(const value_range_t &range)
     }
     range_object["lower_bounds"] = value(lbs);
  
-    array ubs;
+    picojson::array ubs;
     for(uint i = 0; i < range.get_upper_cnt(); i++)
     {
       const value_range_t::bound_t &bound = range.get_upper_bound(i);
@@ -163,7 +163,7 @@ value JsonWriter::for_vm(const variable_map_t &vm)
 
 value JsonWriter::for_vs(const variable_set_t &vs)
 {
-  array vs_array;
+  picojson::array vs_array;
   for(variable_set_t::const_iterator it = vs.begin(); it != vs.end(); it++)
   {
     vs_array.push_back(value(it->get_string()));

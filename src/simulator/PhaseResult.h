@@ -90,7 +90,7 @@ public:
 
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
-  always_set_t         expanded_always;
+  always_set_t              expanded_always;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   int step;
