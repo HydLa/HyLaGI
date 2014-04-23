@@ -45,7 +45,7 @@ class AffineApproximator{
    * @param parameter_map
    *          map of parameter to be added parameter for new dummy variables
    */
-  value_t transform(node_sptr &node, parameter_map_t &parameter_map);
+  value_t approximate(node_sptr &expr, parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
   
   /**
    * Reduce dummy variables
@@ -57,6 +57,7 @@ class AffineApproximator{
   virtual ~AffineApproximator();  
 
 private:
+  value_t translate_into_symbolic_value(const affine_t &affine_value, parameter_map_t &parameter_map);
   AffineApproximator();
   AffineApproximator(const AffineApproximator& rhs);
   AffineApproximator& operator=(const AffineApproximator& rhs);
@@ -66,6 +67,7 @@ private:
   simulator::Simulator* simulator_;
 
   static interval::AffineApproximator* affine_translator_;
+
 
   parameter_idx_map_t parameter_idx_map_;
   int epsilon_index;

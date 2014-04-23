@@ -378,7 +378,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
 
   assert(val.unique());
   node_sptr node = val.get_unique().get_node();
-  value_t affine = affine_transformer_->transform(node, todo->parent->parameter_map);
+  value_t affine = affine_transformer_->approximate(node, todo->parent->parameter_map);
   todo->parameter_map = todo->parent->parameter_map;
 
   if(for_time)
