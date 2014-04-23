@@ -6,7 +6,7 @@
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
-#include "AffineTransformer.h"
+#include "AffineApproximator.h"
 
 #include <iostream>
 #include <string>
@@ -23,7 +23,7 @@ namespace simulator{
 
 Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
 {
-  affine_transformer_ = interval::AffineTransformer::get_instance();
+  affine_transformer_ = interval::AffineApproximator::get_instance();
   affine_transformer_->set_simulator(this);
 }
 

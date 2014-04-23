@@ -21,7 +21,7 @@
 #include "NodeFactory.h"
 #include "DefaultNodeFactory.h"
 #include "HydLaAST.h"
-#include "AffineTransformer.h"
+#include "AffineApproximator.h"
 
 
 

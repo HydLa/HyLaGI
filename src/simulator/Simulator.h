@@ -20,7 +20,7 @@ namespace backend
 
 namespace interval
 {
-  class AffineTransformer;
+  class AffineApproximator;
 }
 
 namespace simulator {
@@ -302,7 +302,7 @@ protected:
 
   Opts*     opts_;
 
-  interval::AffineTransformer* affine_transformer_;
+  interval::AffineApproximator* affine_transformer_;
 };
 
 } //namespace simulator
