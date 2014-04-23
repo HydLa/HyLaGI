@@ -1,7 +1,6 @@
 #ifndef _INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_
 #define _INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_
 
-#include <vector>
 #include <map>
 #include "ModuleSet.h"
 #include "ModuleSetContainer.h"
@@ -16,19 +15,10 @@ namespace ch {
 class IncrementalModuleSet : public ModuleSetContainer {
 public:
 
-typedef enum{
-  WEAKER_THAN,
-  STRONGER_THAN,
-  PARALLEL,
-  REQUIRED_PARALLEL,
-}NodeRelation;
-
   typedef ModuleSet::module_t module_t;
   typedef ModuleSet::module_list_const_iterator module_list_const_iterator;
 
-  typedef std::pair<NodeRelation,module_set_sptr> str_ms_pair_t;
-  typedef std::vector<str_ms_pair_t> str_ms_list_t;
-  typedef std::map<module_t,str_ms_list_t> m_str_ms_t;
+  typedef std::map<module_t, module_set_sptr> node_relations_data_t;
   
   IncrementalModuleSet();
   IncrementalModuleSet(module_set_sptr m);
@@ -133,11 +123,13 @@ private:
    * parents_data_に情報がないモジュールは無条件で除ける
    * (モジュール、(記号ID、相手モジュールセット)の配列)
    */ 
-  m_str_ms_t parents_data_;
+  node_relations_data_t parents_data_;
+  node_relations_data_t children_data_;
   module_set_sptr required_ms_;
 // 現在までに出現したすべてのモジュールを要素とする集合
   module_set_sptr maximal_module_set_;
 };
+
 
 } // namespace ch
 } // namespace hydla
