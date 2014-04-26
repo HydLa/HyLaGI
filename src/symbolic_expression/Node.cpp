@@ -14,7 +14,7 @@
 
 using namespace std;
 using namespace boost;
-using namespace hydla::parser_error;
+using namespace hydla::parser::error;
 using namespace hydla::logger;
 
 namespace hydla { 

@@ -14,7 +14,7 @@
 using namespace std;
 using namespace boost;
 using namespace hydla::grammer_rule;
-using namespace hydla::parser_error;
+using namespace hydla::parser::error;
 
 namespace hydla {
 namespace parser {

@@ -245,7 +245,7 @@ private:
           // 既に制約/プログラム定義として定義されていないかどうか
           if(constraint_definition_.is_registered(d) ||
              program_definition_.is_registered(d)) {
-            throw hydla::parser_error::MultipleDefinition(d->get_name()); 
+            throw hydla::parser::error::MultipleDefinition(d->get_name()); 
           }
 
           // 定義ノードの登録
@@ -264,7 +264,7 @@ private:
           // 既に制約/プログラム定義として定義されていないかどうか
           if(constraint_definition_.is_registered(d) ||
              program_definition_.is_registered(d)) {
-            throw hydla::parser_error::MultipleDefinition(d->get_name()); 
+            throw hydla::parser::error::MultipleDefinition(d->get_name()); 
           }
 
           // 定義ノードの登録
@@ -460,7 +460,7 @@ private:
           io_node->set_string(str);
           io_node->set_args(str);
         }else{
-            throw hydla::parser_error::InvalidCommand(command_name); 
+            throw hydla::parser::error::InvalidCommand(command_name); 
         }
         return io_node;
       }

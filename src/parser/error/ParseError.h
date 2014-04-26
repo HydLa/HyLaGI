@@ -8,7 +8,8 @@
 #include "Node.h"
 
 namespace hydla {
-namespace parser_error {
+namespace parser {
+namespace error {
 
 class ParseError : public std::runtime_error {
 public:
@@ -230,8 +231,8 @@ public:
 };
 
 
-
-} //namespace parse_error
+} //namespace error
+} //namespace parser
 } //namespace hydla
 
 #endif //_INCLUDED_HYDLA_PARSE_ERROR_H_

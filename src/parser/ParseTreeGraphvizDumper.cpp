@@ -5,7 +5,7 @@
 #include <sstream>
 
 using namespace hydla::symbolic_expression;
-using namespace hydla::parser_error;
+using namespace hydla::parser::error;
 using namespace std;
 
 using std::make_pair;

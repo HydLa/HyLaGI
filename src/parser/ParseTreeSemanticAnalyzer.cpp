@@ -7,7 +7,7 @@
 #include "ParseError.h"
 
 using namespace hydla::symbolic_expression;
-using namespace hydla::parser_error;
+using namespace hydla::parser::error;
 
 namespace hydla { 
 namespace parser {

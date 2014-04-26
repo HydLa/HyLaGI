@@ -32,7 +32,7 @@
 using namespace boost;
 using namespace std;
 using namespace hydla::grammer_rule;
-using namespace hydla::parser_error;
+using namespace hydla::parser::error;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
 using namespace hydla::interval;
