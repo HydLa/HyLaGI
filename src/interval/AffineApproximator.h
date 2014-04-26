@@ -27,7 +27,8 @@ typedef simulator::Parameter                  parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
 typedef simulator::parameter_map_t            parameter_map_t;
-
+typedef simulator::Variable                   variable_t;
+typedef simulator::variable_map_t             variable_map_t;
 
 /**
  * A class which approximates symbolic formulas as affine forms
@@ -39,13 +40,20 @@ class AffineApproximator{
   
   void set_simulator(simulator::Simulator* simulator);
 
+
   /**
-   * Approximate given a expression as an affine form
+   * Approximate given variable in given variable map conserving given condition
+   */
+  void approximate(const variable_t &var, variable_map_t& variable_map,  parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
+
+
+  /**
+   * Approximate given expression as an affine form
    * @param node expression
    * @param parameter_map
    *          map of parameter to be added parameter for new dummy variables
    */
-  value_t approximate(node_sptr &expr, parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
+  value_t approximate(node_sptr &expr, parameter_map_t &parameter_map);
   
   /**
    * Reduce dummy variables

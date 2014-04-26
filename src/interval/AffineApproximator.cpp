@@ -4,6 +4,7 @@
 #include <exception>
 #include "Backend.h"
 #include "Logger.h"
+#include "VariableFinder.h"
 
 using namespace std;
 using namespace boost;
@@ -103,7 +104,7 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   return ret;
 }
 
-value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map, node_sptr condition)
+value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map)
 {
   AffineTreeVisitor visitor(parameter_idx_map_);
   AffineOrInteger val = visitor.approximate(node);
@@ -120,8 +121,33 @@ value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parame
   // set rounding mode
   kv::hwround::roundup();
 
-  return translate_into_symbolic_value(affine_value, parameter_map);
+  value_t result_value = translate_into_symbolic_value(affine_value, parameter_map);  
+  return result_value;
 }
+
+
+void AffineApproximator::approximate(const variable_t &var, variable_map_t&variable_map, parameter_map_t &parameter_map, node_sptr condition)
+{
+  range_t val = variable_map[var];
+  assert(val.unique());
+  node_sptr node = val.get_unique().get_node();
+  value_t affine = approximate(node, parameter_map);
+  variable_map[var] = affine;
+
+  if(condition.get() != nullptr)
+  {
+    //TODO: deal with general case (currently only for '=')
+    assert(typeid(*condition) == typeid(parse_tree::Equal));
+    //Check whether the condition has approximated variable
+    simulator::VariableFinder finder;
+    finder.visit_node(condition, false);
+    if(finder.include_variable(var))
+    {
+      assert(0);
+    }
+  }
+}
+
 
 
 }

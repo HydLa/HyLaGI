@@ -1,4 +1,5 @@
 #include "VariableFinder.h"
+#include "Variable.h"
 #include "Logger.h"
 
 using namespace std;
@@ -25,6 +26,21 @@ void VariableFinder::clear(){
   variables_.clear();
   prev_variables_.clear();
 }
+
+
+bool VariableFinder::include_variable(const Variable &variable) const
+{
+  for(auto found_var : variables_)
+  {
+    if(found_var.first == variable.get_name() && found_var.second == variable.get_differential_count())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 
 bool VariableFinder::include_variables(std::set<std::string> variables) const
 {

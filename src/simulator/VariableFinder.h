@@ -12,6 +12,8 @@
 namespace hydla {
 namespace simulator {
 
+struct Variable;
+
 /**
  * 制約を調べ，変数の出現を取得するクラス．
  */
@@ -29,7 +31,7 @@ public:
    * @param node 調べる対象となる制約
    * @param include_guard ガード条件を対象とするかどうか
    */
-  void visit_node(boost::shared_ptr<parse_tree::Node> node, bool  include_guard = true);
+  void visit_node(boost::shared_ptr<parse_tree::Node> node, bool include_guard = true);
   
   void clear();
   
@@ -45,6 +47,8 @@ public:
   /// judge if found variables include given variables
   bool include_variables(std::set<std::string> variables) const;
   bool include_variables_prev(std::set<std::string> variables) const;
+
+  bool include_variable(const Variable& var)const;
   
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
