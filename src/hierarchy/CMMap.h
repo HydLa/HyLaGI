@@ -5,7 +5,7 @@
 
 
 namespace hydla{
-  namespace ch{
+  namespace hierarchy{
     typedef boost::shared_ptr<class CMMap> cm_map_sptr;
     typedef std::vector<module_set_sptr> module_set_list_t;
     typedef std::vector<cm_map_sptr> cm_map_list_t;
@@ -13,7 +13,7 @@ namespace hydla{
     class CMMap{
     public:
       CMMap();
-      CMMap(hydla::parse_tree::node_sptr& cond);
+      CMMap(hydla::symbolic_expression::node_sptr& cond);
       ~CMMap();
 
       // 探索済みならtrue
@@ -25,7 +25,7 @@ namespace hydla{
       // children_にcmを追加
       void add_children(const cm_map_sptr& cm);
       // このCMMapのconditionを得る
-      hydla::parse_tree::node_sptr& get_condition();
+      hydla::symbolic_expression::node_sptr& get_condition();
       // このCMMapがmsのsuper_cm(msを包含するモジュール集合を持っていればtrue)
       bool is_super_cm(const module_set_sptr& ms);
       // このCMMapがcmのparentsにあればtrue
@@ -35,7 +35,7 @@ namespace hydla{
       // メンバ変数を全てリセット
       void reset();
       // このCMMapのconditionをセット
-      void set_condition(const hydla::parse_tree::node_sptr& cond);
+      void set_condition(const hydla::symbolic_expression::node_sptr& cond);
       // parentsを得る
       cm_map_list_t get_parents();
       // childrenを再帰的に探索済みとする
@@ -47,7 +47,7 @@ namespace hydla{
       std::ostream& dump(std::ostream& s) const;
 
     private:
-      hydla::parse_tree::node_sptr condition_;
+      hydla::symbolic_expression::node_sptr condition_;
       module_set_list_t ms_list_;
       cm_map_list_t parents_;
       cm_map_list_t children_;

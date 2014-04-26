@@ -7,7 +7,7 @@
 #include "ModuleSetContainer.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 /**
  * 解候補モジュール集合の集合をリスト構造で表すクラス
@@ -62,7 +62,7 @@ public:
   void mark_nodes();
 };
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 #endif //_INCLUDED_HTDLA_CH_MODULE_SET_LIST_H_

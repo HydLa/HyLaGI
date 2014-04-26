@@ -6,7 +6,7 @@
 #include "ModuleSetContainer.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 /**
  * 解候補モジュール集合の集合をインクリメンタルに生成していくクラス
@@ -131,7 +131,7 @@ private:
 };
 
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 #endif //_INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_

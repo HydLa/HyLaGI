@@ -11,15 +11,15 @@ namespace hydla {
 namespace simulator {
 
 class AskDisjunctionSplitter : 
-  public hydla::parse_tree::DefaultTreeVisitor
+  public hydla::symbolic_expression::DefaultTreeVisitor
 {
 public:
-  typedef hydla::parse_tree::node_sptr                     node_sptr;
-  typedef boost::shared_ptr<hydla::parse_tree::LogicalAnd> logical_and_sptr;
-  typedef boost::shared_ptr<hydla::parse_tree::LogicalOr>  logical_or_sptr;
-  typedef boost::shared_ptr<hydla::parse_tree::Ask>        ask_sptr;
+  typedef hydla::symbolic_expression::node_sptr                     node_sptr;
+  typedef boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> logical_and_sptr;
+  typedef boost::shared_ptr<hydla::symbolic_expression::LogicalOr>  logical_or_sptr;
+  typedef boost::shared_ptr<hydla::symbolic_expression::Ask>        ask_sptr;
 
-  typedef std::vector<node_sptr>                           splitted_guard_nodes_t;
+  typedef std::vector<symbolic_expression::node_sptr>                           splitted_guard_nodes_t;
   
 
   AskDisjunctionSplitter();
@@ -29,49 +29,49 @@ public:
   void split(hydla::parse_tree::ParseTree* pt);
 
   // 制約呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node);
 
   // プログラム呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node);
 
   // 制約式
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node);
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnEqual> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node);
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Not> node);
   
   // 制約階層定義演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::True> node);
 
   // 時相演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Always> node);
 
 private:   
   template<class NodeType>
@@ -111,9 +111,9 @@ private:
     dispatch_rhs(node);
   }
 
-  ask_sptr create_ask_node(node_sptr guard, node_sptr child)
+  ask_sptr create_ask_node(symbolic_expression::node_sptr guard, symbolic_expression::node_sptr child)
   {
-    ask_sptr ask_node = pt_->create_node<hydla::parse_tree::Ask>();
+    ask_sptr ask_node = pt_->create_node<hydla::symbolic_expression::Ask>();
     ask_node->set_guard(guard);
     ask_node->set_child(child);
     return ask_node;
@@ -128,7 +128,7 @@ private:
    * 新しい子ノード
    * accept後、これに値が入っている場合はノードの値を交換する
    */
-  node_sptr new_child_;
+  symbolic_expression::node_sptr new_child_;
 
   
   /**

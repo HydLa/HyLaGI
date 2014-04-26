@@ -21,7 +21,7 @@
 using namespace std;
 using namespace boost;
 using namespace hydla::parser;
-using namespace hydla::parse_error;
+using namespace hydla::parser_error;
 using namespace hydla::logger;
 
 namespace hydla { 
@@ -34,7 +34,7 @@ ParseTree::ParseTree() :
     
 ParseTree::ParseTree(const ParseTree& pt) :
   node_factory_(pt.node_factory_),
-  node_tree_(pt.node_tree_ ? pt.node_tree_->clone() : node_sptr()),
+  node_tree_(pt.node_tree_ ? pt.node_tree_->clone() : symbolic_expression::node_sptr()),
   variable_map_(pt.variable_map_),
   node_map_(pt.node_map_),
   max_node_id_(pt.max_node_id_)
@@ -57,8 +57,8 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   
 
   // ParseTreeの構築
-  DefinitionContainer<hydla::parse_tree::ConstraintDefinition> constraint_definition;
-  DefinitionContainer<hydla::parse_tree::ProgramDefinition>    program_definition;
+  DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> constraint_definition;
+  DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>    program_definition;
   NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition, node_factory);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
   HYDLA_LOGGER_DEBUG("--- Parse Tree ---\n", *this);
@@ -89,9 +89,9 @@ void ParseTree::update_node_id_list()
   updater.update(this);
 }
 
-node_sptr ParseTree::swap_tree(const node_sptr& tree) 
+symbolic_expression::node_sptr ParseTree::swap_tree(const symbolic_expression::node_sptr& tree) 
 {
-  node_sptr ret(node_tree_);
+  symbolic_expression::node_sptr ret(node_tree_);
   node_tree_ = tree;
   update_node_id_list();
   return ret;
@@ -132,7 +132,7 @@ int ParseTree::get_differential_count(const std::string& name) const
   return ret;
 }
 
-node_id_t ParseTree::register_node(const node_sptr& n)
+symbolic_expression::node_id_t ParseTree::register_node(const symbolic_expression::node_sptr& n)
 {
   assert(n->get_id() == 0);
   assert(node_map_.find(n->get_id()) == node_map_.end());
@@ -143,7 +143,7 @@ node_id_t ParseTree::register_node(const node_sptr& n)
   return max_node_id_;
 }
 
-void ParseTree::update_node(node_id_t id, const node_sptr& n)
+void ParseTree::update_node(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n)
 {
   node_map_t::iterator it = node_map_.find(id);
   assert(it != node_map_.end());
@@ -151,7 +151,7 @@ void ParseTree::update_node(node_id_t id, const node_sptr& n)
   it->second = n;
 }
 
-void ParseTree::remove_node(node_id_t id)
+void ParseTree::remove_node(symbolic_expression::node_id_t id)
 {
   node_map_t::iterator it = node_map_.find(id);
   if(it!=node_map_.end()) {
@@ -161,11 +161,11 @@ void ParseTree::remove_node(node_id_t id)
 
 
 /*
-node_id_t ParseTree::register_node(const node_sptr& n)
+symbolic_expression::node_id_t ParseTree::register_node(const symbolic_expression::node_sptr& n)
 {
   assert(n->get_id() == 0);
-  assert(node_map_.by<tag_node_sptr>().find(n) == 
-            node_map_.by<tag_node_sptr>().end());
+  assert(node_map_.by<tag_symbolic_expression::node_sptr>().find(n) == 
+            node_map_.by<tag_symbolic_expression::node_sptr>().end());
     
   ++max_node_id_;
   n->set_id(max_node_id_);
@@ -173,7 +173,7 @@ node_id_t ParseTree::register_node(const node_sptr& n)
   return max_node_id_;
 }
 
-void ParseTree::update_node(node_id_t id, const node_sptr& n)
+void ParseTree::update_node(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n)
 {
   node_map_t::map_by<tag_node_id>::iterator it = 
     node_map_.by<tag_node_id>().find(id);
@@ -183,13 +183,13 @@ void ParseTree::update_node(node_id_t id, const node_sptr& n)
     modify_data(it, boost::bimaps::_data = n);
 }
 
-void ParseTree::update_node_id(node_id_t id, const node_sptr& n)
+void ParseTree::update_node_id(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n)
 {
-  node_map_t::map_by<tag_node_sptr>::iterator it = 
-    node_map_.by<tag_node_sptr>().find(n);
-  assert(it != node_map_.by<tag_node_sptr>().end());
+  node_map_t::map_by<tag_symbolic_expression::node_sptr>::iterator it = 
+    node_map_.by<tag_symbolic_expression::node_sptr>().find(n);
+  assert(it != node_map_.by<tag_symbolic_expression::node_sptr>().end());
       
-  node_map_.by<tag_node_sptr>().
+  node_map_.by<tag_symbolic_expression::node_sptr>().
     modify_data(it, boost::bimaps::_data = id);
 }
 */
@@ -281,10 +281,10 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   }
 /*
   s << "--- node id table (sptr -> id) ---\n";
-  BOOST_FOREACH(const node_map_t::map_by<tag_node_sptr>::value_type& i, 
-                node_map_.by<tag_node_sptr>()) 
+  BOOST_FOREACH(const node_map_t::map_by<tag_symbolic_expression::node_sptr>::value_type& i, 
+                node_map_.by<tag_symbolic_expression::node_sptr>()) 
   {
-    s << i.get<tag_node_sptr>() << " => " 
+    s << i.get<tag_symbolic_expression::node_sptr>() << " => " 
       << i.get<tag_node_id>() << "\n";
   }
 */

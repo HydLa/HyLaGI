@@ -11,7 +11,7 @@
 #include "Logger.h"
 
 using namespace std;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::logger;
 
 namespace hydla {
@@ -61,7 +61,7 @@ void AskCollector::collect_ask(always_set_t* expanded_always,
 
 
 // Ask制約
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
+void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
   
   if(positive_asks_->find(node) != positive_asks_->end()) 
@@ -83,13 +83,13 @@ void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 }
 
 // Tell制約
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
+void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node)
 {
   // do nothing
 }
 
 // 時相演算子
-void AskCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
+void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
 {
   accept(node->get_child());
   if(in_positive_ask_){

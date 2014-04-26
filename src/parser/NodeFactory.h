@@ -10,8 +10,8 @@ namespace hydla {
 namespace parser {
 
 #define NODE_FACTORY_DEFINE_NODE_CREATE_FUNC(NAME) \
-  virtual boost::shared_ptr<hydla::parse_tree::NAME> \
-  create(hydla::parse_tree::NAME) const = 0;
+  virtual boost::shared_ptr<hydla::symbolic_expression::NAME> \
+  create(hydla::symbolic_expression::NAME) const = 0;
 
 class NodeFactory 
 {

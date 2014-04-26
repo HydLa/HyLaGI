@@ -1,7 +1,7 @@
 MAKE_TYPE := library
 
-TARGET	 := libhydla_constraint_hierarchy.a
-INCLUDES += -I. -I../parser 
+TARGET	 := libhydla_utility.a
+INCLUDES += -I. 
 INCLUDES += -I/usr/local/include/boost
 LDFLAGS	 += -L/usr/local/lib
 LIBS	 += 

@@ -9,22 +9,22 @@
 namespace hydla {
   namespace simulator {
 
-class GuardGetter : public parse_tree::DefaultTreeVisitor {
+class GuardGetter : public symbolic_expression::DefaultTreeVisitor {
  public:
-  virtual void accept(const boost::shared_ptr<parse_tree::Node>& n);
+  virtual void accept(const boost::shared_ptr<symbolic_expression::Node>& n);
   
   GuardGetter();
   virtual ~GuardGetter();
   
   // Ask
-  virtual void visit(boost::shared_ptr<parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
   
   ask_set_t asks;
 };//GuardGetter
 
-class VaribleGetter : public parse_tree::DefaultTreeVisitor {
+class VaribleGetter : public symbolic_expression::DefaultTreeVisitor {
  public:
-  virtual void accept(const boost::shared_ptr<parse_tree::Node>& n);
+  virtual void accept(const boost::shared_ptr<symbolic_expression::Node>& n);
 
   typedef struct GuardVariable
   {
@@ -38,9 +38,9 @@ class VaribleGetter : public parse_tree::DefaultTreeVisitor {
   virtual ~VaribleGetter();
   
   // 微分
-  virtual void visit(boost::shared_ptr<parse_tree::Differential> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Differential> node);
   // 変数
-  virtual void visit(boost::shared_ptr<parse_tree::Variable> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
   
   int tmp_diff_cnt;
   

@@ -14,11 +14,11 @@
 
 using namespace std;
 using namespace boost;
-using namespace hydla::parse_error;
+using namespace hydla::parser_error;
 using namespace hydla::logger;
 
 namespace hydla { 
-namespace parse_tree {
+namespace symbolic_expression {
 
 std::ostream& operator<<(std::ostream& s, const Node& node)
 {
@@ -544,5 +544,5 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)
 
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(False)
-} //namespace parse_tree
+} //namespace symbolic_expression
 } //namespace hydla

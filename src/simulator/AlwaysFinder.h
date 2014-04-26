@@ -11,7 +11,7 @@ namespace simulator {
 /**
  * 制約を調べ，変数の出現を取得するクラス．
  */
-class AlwaysFinder : public parse_tree::DefaultTreeVisitor {
+class AlwaysFinder : public symbolic_expression::DefaultTreeVisitor {
 public:
 
   AlwaysFinder(){}
@@ -23,7 +23,7 @@ public:
    * @param node 調べる対象となる制約
    * @param include_guard ガード条件を対象とするかどうか
    */
-  void find_always(parse_tree::node_sptr node, always_set_t& always_set)
+  void find_always(symbolic_expression::node_sptr node, always_set_t& always_set)
   {
     always_set_ = &always_set;
     accept(node);
@@ -31,13 +31,13 @@ public:
 
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
   {
     // do nothing
   }
   
   // Always
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
   {
     always_set_->insert(node);
   }

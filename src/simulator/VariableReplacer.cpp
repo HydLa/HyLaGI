@@ -2,7 +2,7 @@
 #include "Logger.h"
 
 using namespace std;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 
 namespace hydla {
 namespace simulator {
@@ -15,7 +15,7 @@ VariableReplacer::VariableReplacer(const variable_map_t& map):variable_map(map)
 VariableReplacer::~VariableReplacer()
 {}
 
-void VariableReplacer::replace_node(node_sptr& node)
+void VariableReplacer::replace_node(symbolic_expression::node_sptr& node)
 {
   differential_cnt = 0;
   replace_cnt = 0;
@@ -26,7 +26,7 @@ void VariableReplacer::replace_node(node_sptr& node)
 
 void VariableReplacer::replace_value(value_t& val)
 {
-  node_sptr node = val.get_node();
+  symbolic_expression::node_sptr node = val.get_node();
   replace_node(node);
   val.set_node(node);
 }
@@ -53,7 +53,7 @@ void VariableReplacer::replace_range(ValueRange &range)
   }
 }
 
-void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   string v_name = node->get_name();
   variable_map_t::const_iterator it = variable_map.begin();
@@ -77,7 +77,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node
     }
 }
 
-void VariableReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
   differential_cnt++;
   accept(node->get_child());
@@ -127,7 +127,7 @@ DEFINE_DEFAULT_VISIT_BINARY(Power)
 
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-DEFINE_DEFAULT_VISIT_FACTOR(parse_tree::Parameter)
+DEFINE_DEFAULT_VISIT_FACTOR(symbolic_expression::Parameter)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)

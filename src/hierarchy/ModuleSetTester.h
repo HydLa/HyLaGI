@@ -4,7 +4,7 @@
 #include "ModuleSet.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 class ModuleSetTester {
 public:
@@ -14,7 +14,7 @@ public:
   virtual bool test_module_set(module_set_sptr ms) = 0;
 };
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 

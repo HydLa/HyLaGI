@@ -1,12 +1,12 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_TREE_VISITOR_H_
+#ifndef _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_TREE_VISITOR_H_
+#define _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_TREE_VISITOR_H_
 
 #include <boost/shared_ptr.hpp>
 
 #include "Node.h"
 
 namespace hydla { 
-namespace parse_tree {
+namespace symbolic_expression {
   
 /**
  * ParseTreeのノード集合に対するVisitorクラス
@@ -133,7 +133,7 @@ public:
 
 };
 
-} //namespace parse_tree
+} //namespace symbolic_expression
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_TREE_VISITOR_H_
+#endif //_INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_TREE_VISITOR_H_

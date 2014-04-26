@@ -11,6 +11,7 @@ namespace hydla{
 namespace backend{
 using namespace simulator;
 using namespace parse_tree;
+using namespace symbolic_expression;
 
 const std::string Backend::prev_prefix = "prev";
 const std::string Backend::par_prefix = "p";
@@ -82,7 +83,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
 
   case 'e':
   {
-    node_sptr* node = (node_sptr *)arg;
+    symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr *)arg;
     variable_form_t form;
     if(!get_form(args_fmt[++i], form))
     {
@@ -221,7 +222,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 
   case 'e':
   {
-    node_sptr* node = (node_sptr*)ret;
+    symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr*)ret;
     variable_form_t form;
     if(!get_form(ret_fmt[++i], form))
     {
@@ -375,7 +376,7 @@ bool Backend::get_form(const char &form_c, variable_form_t &form)
   }
 }
 
-int Backend::send_node(const node_sptr& node, const variable_form_t &form)
+int Backend::send_node(const symbolic_expression::node_sptr& node, const variable_form_t &form)
 {
   HYDLA_LOGGER_DEBUG("%%node: ", get_infix_string(node));
   differential_count_ = 0;
@@ -660,7 +661,7 @@ DEFINE_VISIT_FACTOR(Pi, Pi)
 DEFINE_VISIT_FACTOR(E, E)
 
 // 変数
-void Backend::visit(boost::shared_ptr<parse_tree::Variable> node)              
+void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
 {
   // 変数の送信
   variable_form_t va;
@@ -689,7 +690,7 @@ void Backend::visit(boost::shared_ptr<Float> node)              {
 
 
 // 記号定数
-void Backend::visit(boost::shared_ptr<parse_tree::Parameter> node)
+void Backend::visit(boost::shared_ptr<symbolic_expression::Parameter> node)
 {
   link_->put_parameter(node->get_name(), node->get_differential_count(), node->get_phase_id());
 }
@@ -722,12 +723,12 @@ int Backend::send_variable(const std::string& name, int diff_count, const variab
 
 
 // コマンド文
-void Backend::visit(boost::shared_ptr<parse_tree::PrintPP> node){link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<parse_tree::PrintIP> node){link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<parse_tree::Scan> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::PrintPP> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::PrintIP> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::Scan> node){link_->put_symbol("True");}
 
-void Backend::visit(boost::shared_ptr<parse_tree::True> node){link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<parse_tree::False> node){link_->put_symbol("False");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::True> node){link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::False> node){link_->put_symbol("False");}
 
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop){
   switch(relop){
@@ -757,7 +758,7 @@ ConstraintStore Backend::receive_cs()
   link_->get_function(name, count);
   for(int i = 0; i < count; i++)
   {
-    node_sptr constraint;
+    symbolic_expression::node_sptr constraint;
   
     constraint = receive_node();
     // TODO: avoid string comparison
@@ -849,18 +850,18 @@ check_consistency_result_t Backend::receive_cc()
   return ret;
 }
 
-node_sptr Backend::receive_function()
+symbolic_expression::node_sptr Backend::receive_function()
 {
 // TODO: UnsupportedFunctionを含む関数は，バックエンドを切り替えられないので各Valueごとにそのことを示すフラグを持たせた方が良いかも
   int arg_count;
-  node_sptr ret;
+  symbolic_expression::node_sptr ret;
   std::string symbol;
   bool converted;
   link_->get_function(symbol, arg_count);
   symbol = link_->convert_function(symbol, false, converted);
   if(equal_ignoring_case(symbol, "Sqrt")){//1引数関数
-    ret = node_sptr(new Divide(node_sptr(new Number("1")), node_sptr(new Number("2")))); 
-    ret = node_sptr(new parse_tree::Power(receive_node(), ret));
+    ret = symbolic_expression::node_sptr(new Divide(symbolic_expression::node_sptr(new Number("1")), symbolic_expression::node_sptr(new Number("2")))); 
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Power(receive_node(), ret));
   }
   else if(equal_ignoring_case(symbol, "parameter")){
     std::string name;
@@ -871,19 +872,19 @@ node_sptr Backend::receive_function()
     std::string id_str;
     id_str = link_->get_string();
     int id = boost::lexical_cast<int, std::string>(id_str);
-    ret = node_sptr(new parse_tree::Parameter(name, differential_count, id));
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Parameter(name, differential_count, id));
   }
   else if(equal_ignoring_case(symbol, "prev")){
     std::string name;
     name = link_->get_symbol();
     std::string d_str = link_->get_string();
     int differential_count = boost::lexical_cast<int, std::string>(d_str);
-    parse_tree::node_sptr tmp_var = node_sptr(new parse_tree::Variable(name));
-    for(int i = 0; i < differential_count; i++) tmp_var = node_sptr(new parse_tree::Differential(tmp_var));
-    ret = node_sptr(new parse_tree::Previous(tmp_var));
+    symbolic_expression::node_sptr tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Variable(name));
+    for(int i = 0; i < differential_count; i++) tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Differential(tmp_var));
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Previous(tmp_var));
   }
   else if(equal_ignoring_case(symbol, "minus")){
-    ret = node_sptr(new parse_tree::Negative(receive_node()));
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Negative(receive_node()));
   }
   else if(equal_ignoring_case(symbol, "Plus")
           || equal_ignoring_case(symbol, "Subtract")
@@ -900,39 +901,39 @@ node_sptr Backend::receive_function()
           || equal_ignoring_case(symbol, "Greater")
           || equal_ignoring_case(symbol, "GreaterEqual"))        
   { // 加減乗除など，二項演算子で書かれる関数
-    node_sptr lhs, rhs;
+    symbolic_expression::node_sptr lhs, rhs;
     ret = receive_node();
     for(int arg_it=1;arg_it<arg_count;arg_it++){
       lhs = ret;
       rhs = receive_node();
       if(equal_ignoring_case(symbol, "Plus"))
-        ret = node_sptr(new parse_tree::Plus(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Plus(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Subtract"))
-        ret = node_sptr(new parse_tree::Subtract(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Subtract(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Times"))
-        ret = node_sptr(new parse_tree::Times(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Times(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Divide"))
-        ret = node_sptr(new parse_tree::Divide(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Divide(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Power"))
-        ret = node_sptr(new parse_tree::Power(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Power(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Rational"))
-        ret = node_sptr(new parse_tree::Divide(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Divide(lhs, rhs));
       else if(equal_ignoring_case(symbol, "And"))
-        ret = node_sptr(new parse_tree::LogicalAnd(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::LogicalAnd(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Or"))
-        ret = node_sptr(new parse_tree::LogicalOr(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::LogicalOr(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Equal"))
-        ret = node_sptr(new parse_tree::Equal(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Equal(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Unequal"))
-        ret = node_sptr(new parse_tree::UnEqual(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::UnEqual(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Less"))
-        ret = node_sptr(new parse_tree::Less(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Less(lhs, rhs));
       else if(equal_ignoring_case(symbol, "LessEqual"))
-        ret = node_sptr(new parse_tree::LessEqual(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::LessEqual(lhs, rhs));
       else if(equal_ignoring_case(symbol, "Greater"))
-        ret = node_sptr(new parse_tree::Greater(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Greater(lhs, rhs));
       else if(equal_ignoring_case(symbol, "GreaterEqual"))
-        ret = node_sptr(new parse_tree::GreaterEqual(lhs, rhs));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::GreaterEqual(lhs, rhs));
     }
   }
   else if(equal_ignoring_case(symbol, "derivative"))
@@ -943,24 +944,24 @@ node_sptr Backend::receive_function()
     if(variable_name.length() < var_prefix.length())invalid_ret();
     assert(variable_name.substr(0, var_prefix.length()) == var_prefix);
     variable_name = variable_name.substr(var_prefix.length());
-    ret = node_sptr(new parse_tree::Variable(variable_name));
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for(int i = 0; i < variable_differential_count; i++)
     {
-      ret = node_sptr(new parse_tree::Differential(ret));
+      ret = symbolic_expression::node_sptr(new symbolic_expression::Differential(ret));
     } 
   }
   else{
     // その他の関数
-    boost::shared_ptr<parse_tree::ArbitraryNode> f;
+    boost::shared_ptr<symbolic_expression::ArbitraryNode> f;
     HYDLA_LOGGER_DEBUG_VAR(symbol);
     if(converted)
     {
       // 対応している関数
-      f.reset(new parse_tree::Function(symbol));
+      f.reset(new symbolic_expression::Function(symbol));
     }
     else{
       // 謎の関数
-      f.reset(new parse_tree::UnsupportedFunction(symbol));
+      f.reset(new symbolic_expression::UnsupportedFunction(symbol));
     }
 
     for(int arg_it=0; arg_it < arg_count; arg_it++){
@@ -978,34 +979,34 @@ value_t Backend::receive_value()
   return val;
 }
 
-node_sptr Backend::receive_node(){
-  node_sptr ret;
+symbolic_expression::node_sptr Backend::receive_node(){
+  symbolic_expression::node_sptr ret;
   Link::DataType type = link_->get_type();
   HYDLA_LOGGER_DEBUG_VAR(type);
   switch(type){
   case Link::DT_STR: // 文字列
     {
       std::string str = link_->get_string();
-      ret = node_sptr(new parse_tree::Number(str));
+      ret = symbolic_expression::node_sptr(new symbolic_expression::Number(str));
       break;
     }
   case Link::DT_SYM: // シンボル（記号）
     {
       std::string symbol = link_->get_symbol();
       if(symbol=="t")
-        ret = node_sptr(new parse_tree::SymbolicT());
+        ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
       else if(symbol=="Pi")
-        ret = node_sptr(new parse_tree::Pi());
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());
       else if(symbol=="E")
-        ret = node_sptr(new parse_tree::E());
+        ret = symbolic_expression::node_sptr(new symbolic_expression::E());
       else if(symbol=="inf")
-        ret = node_sptr(new parse_tree::Infinity());
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
       else if(symbol=="True")
-        ret = node_sptr(new parse_tree::True());
+        ret = symbolic_expression::node_sptr(new symbolic_expression::True());
       else if(symbol=="False")
-	ret = node_sptr(new parse_tree::False());
+	ret = symbolic_expression::node_sptr(new symbolic_expression::False());
       else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
-        ret = node_sptr(new parse_tree::Variable(symbol.substr(var_prefix.length())));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(symbol.substr(var_prefix.length())));
       break;
     }
   case Link::DT_INT: // オーバーフローする可能性があるなら文字列使う
@@ -1013,7 +1014,7 @@ node_sptr Backend::receive_node(){
       std::stringstream sstr;
       int num = link_->get_integer();
       sstr << num;
-      ret = node_sptr(new parse_tree::Number(sstr.str() ) );
+      ret = symbolic_expression::node_sptr(new symbolic_expression::Number(sstr.str() ) );
       break;
     }
   case Link::DT_FUNC: // 合成関数

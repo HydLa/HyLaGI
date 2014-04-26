@@ -15,11 +15,11 @@ namespace simulator {
 /**
  * 制約を調べ，prev変数以外の変数が含まれているかを返すクラス．
  */
-class NonPrevSearcher : public parse_tree::DefaultTreeVisitor {
+class NonPrevSearcher : public symbolic_expression::DefaultTreeVisitor {
 public:
 
 
-  virtual void accept(const boost::shared_ptr<hydla::parse_tree::Node>& n);
+  virtual void accept(const boost::shared_ptr<hydla::symbolic_expression::Node>& n);
 
 
   NonPrevSearcher();
@@ -30,13 +30,13 @@ public:
    * prev以外の変数を含むか判定する
    * @return: trueならprev変数以外の変数を含んでいる
    */
-  bool judge_non_prev(boost::shared_ptr<parse_tree::Node> node);
+  bool judge_non_prev(boost::shared_ptr<symbolic_expression::Node> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
   
   // 変数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 private:
 
   bool non_prev_;

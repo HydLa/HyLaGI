@@ -6,7 +6,7 @@
 #include "Logger.h"
 
 using namespace std;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace boost;
 using namespace hydla::simulator;
 
@@ -137,7 +137,7 @@ void AffineTransformer::reduce_dummy_variables(ub::vector<affine_t> &formulas, i
   }
 }
 
-value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter_map)
+value_t AffineTransformer::transform(symbolic_expression::node_sptr& node, parameter_map_t &parameter_map)
 {
   accept(node);
   if(current_val_.is_integer)return value_t(current_val_.integer);
@@ -202,7 +202,7 @@ value_t AffineTransformer::transform(node_sptr& node, parameter_map_t &parameter
   return ret;
 }
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -214,7 +214,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -226,7 +226,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Subtract> nod
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -238,7 +238,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -268,7 +268,7 @@ AffineOrInteger sqrt(const AffineOrInteger &a)
   return result_ai;
 }
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;  
@@ -287,7 +287,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Negative> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
 {
   accept(node->get_child());
   current_val_ = -current_val_;
@@ -296,28 +296,28 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Negative> nod
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Positive> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node)
 {
   // do nothing
   return;
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Pi> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
   current_val_.affine_value = kv::constants<double>::pi();
   current_val_.is_integer = false;
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::E> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
   current_val_.affine_value = kv::constants<double>::e();
   current_val_.is_integer = false;
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
 {
   std::string number_str = node->get_number();
   HYDLA_LOGGER_DEBUG(number_str);
@@ -341,14 +341,14 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
 }
 
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Float> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
 {
   current_val_.affine_value = affine_t(node->get_number());
   current_val_.is_integer = false;
   HYDLA_LOGGER_NODE_VAR;
 }
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Function> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Function> node)
 {
   string name = node->get_string();
   HYDLA_LOGGER_DEBUG(name);
@@ -366,7 +366,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Function> nod
   HYDLA_LOGGER_NODE_VAR;
 }
 
-void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> node)
+void AffineTransformer::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
 {
   current_val_.is_integer = false;
   current_val_.affine_value = affine_t();
@@ -393,7 +393,7 @@ void AffineTransformer::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
 }
 
 
-void AffineTransformer::invalid_node(parse_tree::Node& node)
+void AffineTransformer::invalid_node(symbolic_expression::Node& node)
 {
   throw ApproximateException("invalid node" + node.get_string());
 }
@@ -446,7 +446,7 @@ DEFINE_INVALID_NODE(Not)
 
 DEFINE_INVALID_NODE(UnsupportedFunction)
 
-DEFINE_INVALID_NODE(parse_tree::Variable)
+DEFINE_INVALID_NODE(symbolic_expression::Variable)
 DEFINE_INVALID_NODE(SymbolicT)
 DEFINE_INVALID_NODE(Infinity)
 DEFINE_INVALID_NODE(True)

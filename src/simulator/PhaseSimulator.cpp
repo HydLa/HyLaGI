@@ -46,9 +46,9 @@ using namespace hydla::backend::reduce;
 
 using namespace boost;
 
-using namespace hydla::ch;
+using namespace hydla::hierarchy;
 using namespace hydla::simulator;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::logger;
 using namespace hydla::timer;
 
@@ -60,7 +60,7 @@ using hydla::simulator::PointPhase;
 using hydla::simulator::VariableFinder;
 
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(node_sptr()), unsat_core_finder_(new UnsatCoreFinder()) {
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()), unsat_core_finder_(new UnsatCoreFinder()) {
 }
 
 PhaseSimulator::~PhaseSimulator(){}
@@ -141,7 +141,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 
 
-PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::ch::module_set_sptr& ms, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
+PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy::module_set_sptr& ms, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
 {
   HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
   relation_graph_->set_valid(ms.get());
@@ -277,7 +277,7 @@ if(opts_->reuse && todo->module_set_container == msc_no_init_){
       {
         HYDLA_LOGGER_DEBUG("%% check_assertion");
         CheckConsistencyResult cc_result;
-        switch(check_entailment(cc_result, node_sptr(new parse_tree::Not(opts_->assertion)), continuity_map_t(), todo->phase_type)){
+        switch(check_entailment(cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), continuity_map_t(), todo->phase_type)){
         case ENTAILED:
         case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
           std::cout << "Assertion Failed!" << std::endl;
@@ -465,7 +465,7 @@ void PhaseSimulator::replace_prev2parameter(
   }
 }
 
-void PhaseSimulator::set_break_condition(node_sptr break_cond)
+void PhaseSimulator::set_break_condition(symbolic_expression::node_sptr break_cond)
 {
   break_condition_ = break_cond;
 }
@@ -657,7 +657,7 @@ void PhaseSimulator::add_continuity(const continuity_map_t& continuity_map, cons
       }
       if(phase == IntervalPhase)
       {
-        node_sptr rhs(new Number("0"));
+        symbolic_expression::node_sptr rhs(new Number("0"));
         fmt = phase == PointPhase?"vn":"vt";
         fmt += "en";
         variable_t var(it->first, -it->second + 1);
@@ -683,7 +683,7 @@ CheckConsistencyResult PhaseSimulator::check_consistency(const PhaseType& phase)
 
 PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
   CheckConsistencyResult &cc_result,
-  const node_sptr& guard,
+  const symbolic_expression::node_sptr& guard,
   const continuity_map_t& cont_map,
   const PhaseType& phase
   )
@@ -706,7 +706,7 @@ PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
       backend_->call("endTemporary", 0, "", "");
       backend_->call("startTemporary", 0, "", "");
       add_continuity(cont_map, phase);
-      node_sptr not_node = node_sptr(new Not(guard));
+      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &not_node);
       cc_result = check_consistency(phase);
@@ -969,7 +969,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   add_continuity(continuity_map, state->phase_type);
 
   if(!unknown_asks.empty()){
-    boost::shared_ptr<hydla::parse_tree::Ask> branched_ask = *unknown_asks.begin();
+    boost::shared_ptr<hydla::symbolic_expression::Ask> branched_ask = *unknown_asks.begin();
     // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
     HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
     {
@@ -980,7 +980,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     }
     {
       // 分岐先を生成（導出されない方）
-      state->initial_constraint_store.add_constraint(node_sptr(new Not((branched_ask)->get_guard())));
+      state->initial_constraint_store.add_constraint(symbolic_expression::node_sptr(new Not((branched_ask)->get_guard())));
       negative_asks.insert(branched_ask);
       return calculate_closure(state, ms);
     }
@@ -1187,7 +1187,7 @@ change_variables_t PhaseSimulator::get_difference_variables_from_2tells(const te
   return cv;
 }
 
-bool PhaseSimulator::has_variables(node_sptr node, const change_variables_t & change_variables, bool include_prev)
+bool PhaseSimulator::has_variables(symbolic_expression::node_sptr node, const change_variables_t & change_variables, bool include_prev)
 {
   VariableFinder variable_finder;
   variable_finder.visit_node(node);
@@ -1313,14 +1313,14 @@ PhaseSimulator::todo_list_t
 
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
     for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
-      node_sptr negated_node(new Not((*it)->get_guard()));
+      symbolic_expression::node_sptr negated_node(new Not((*it)->get_guard()));
       int id = (*it)->get_id();
       ask_map[id] = *it;
       dc_causes.push_back(dc_cause_t(negated_node, id) );
     }
     //現在導出されていないガード条件を離散変化条件として追加
     for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
-      node_sptr node((*it)->get_guard() );
+      symbolic_expression::node_sptr node((*it)->get_guard() );
       int id = (*it)->get_id();
       ask_map[id] = *it;
       dc_causes.push_back(dc_cause_t(node, id));
@@ -1328,7 +1328,7 @@ PhaseSimulator::todo_list_t
 
     //assertionの否定を追加
     if(opts_->assertion){
-      node_sptr assert_node(new Not(opts_->assertion));
+      symbolic_expression::node_sptr assert_node(new Not(opts_->assertion));
       dc_causes.push_back(dc_cause_t(assert_node, -2));
     }
     if(break_condition_.get() != NULL)
@@ -1338,9 +1338,9 @@ PhaseSimulator::todo_list_t
 
     value_t max_time;
     if(opts_->max_time != ""){
-      max_time = node_sptr(new hydla::parse_tree::Number(opts_->max_time));
+      max_time = symbolic_expression::node_sptr(new hydla::symbolic_expression::Number(opts_->max_time));
     }else{
-      max_time = node_sptr(new hydla::parse_tree::Infinity());
+      max_time = symbolic_expression::node_sptr(new hydla::symbolic_expression::Infinity());
     }
 
     pp_time_result_t time_result;
@@ -1389,8 +1389,8 @@ PhaseSimulator::todo_list_t
 
             parameter_t par = simulator_->introduce_parameter(time, phase, time_range);
 
-            next_todo->current_time = node_sptr(new parse_tree::Parameter("time", 0, phase->id));
-            phase->end_time = node_sptr(new parse_tree::Parameter("time", 0, phase->id));
+            next_todo->current_time = symbolic_expression::node_sptr(new symbolic_expression::Parameter("time", 0, phase->id));
+            phase->end_time = symbolic_expression::node_sptr(new symbolic_expression::Parameter("time", 0, phase->id));
 
             next_todo->parameter_map[par] = time_range;
             phase->parameter_map[par] = time_range;
@@ -1436,14 +1436,14 @@ PhaseSimulator::todo_list_t
     while(true)
     {
       NextPhaseResult &candidate = time_result[time_it];
-      node_sptr time_node = candidate.minimum.time.get_node();
+      symbolic_expression::node_sptr time_node = candidate.minimum.time.get_node();
 
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
       }
 
-      time_node = node_sptr(new Plus(time_node, current_todo->current_time.get_node()));
+      time_node = symbolic_expression::node_sptr(new Plus(time_node, current_todo->current_time.get_node()));
       backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
       results.push_back(pr);
       if(++time_it >= time_result.size())break;

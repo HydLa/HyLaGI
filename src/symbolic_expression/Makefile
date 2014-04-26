@@ -1,7 +1,7 @@
 MAKE_TYPE := library
 
-TARGET	 := libhydla_common.a
-INCLUDES += -I. -I../utility 
+TARGET	 := libhydla_symbolic_expression.a
+INCLUDES += -I. -I../common -I../parser/error
 INCLUDES += -I/usr/local/include/boost
 LDFLAGS	 += -L/usr/local/lib
 LIBS	 += 

@@ -10,12 +10,12 @@ namespace hydla {
 GuardGetter::GuardGetter(){}
 GuardGetter::~GuardGetter(){}
 
-void GuardGetter::accept(const boost::shared_ptr<parse_tree::Node>& n)
+void GuardGetter::accept(const boost::shared_ptr<symbolic_expression::Node>& n)
 {
   n->accept(n, this);
 }
 
-void GuardGetter::visit(boost::shared_ptr<parse_tree::Ask> node)
+void GuardGetter::visit(boost::shared_ptr<symbolic_expression::Ask> node)
 {
   asks.insert(node);
 }
@@ -23,19 +23,19 @@ void GuardGetter::visit(boost::shared_ptr<parse_tree::Ask> node)
 VaribleGetter::VaribleGetter(){}
 VaribleGetter::~VaribleGetter(){}
 
-void VaribleGetter::accept(const boost::shared_ptr<parse_tree::Node>& n)
+void VaribleGetter::accept(const boost::shared_ptr<symbolic_expression::Node>& n)
 {
   n->accept(n, this);
 }
 
-void VaribleGetter::visit(boost::shared_ptr<parse_tree::Differential> node)
+void VaribleGetter::visit(boost::shared_ptr<symbolic_expression::Differential> node)
 {
   tmp_diff_cnt++;
   cout << "DIFF:" << tmp_diff_cnt << endl;
   node->get_child()->accept(node->get_child(),this);
   tmp_diff_cnt--;
 }
-void VaribleGetter::visit(boost::shared_ptr<parse_tree::Variable> node)
+void VaribleGetter::visit(boost::shared_ptr<symbolic_expression::Variable> node)
 {
   guard_variable_t gv;
   gv.diff_cnt = tmp_diff_cnt;

@@ -2,7 +2,7 @@
 #include <sstream>
 
 namespace hydla {
-namespace parse_tree{
+namespace symbolic_expression{
 
 
 //valueとって文字列に変換する
@@ -13,7 +13,7 @@ std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream&
   return s;
 }
 
-std::string TreeInfixPrinter::get_infix_string(const hydla::parse_tree::node_sptr &node){
+std::string TreeInfixPrinter::get_infix_string(const hydla::symbolic_expression::node_sptr &node){
   need_par_ = PAR_NONE;
   std::stringstream sstr;
   output_stream_ = &sstr;
@@ -306,5 +306,5 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
   if(node->get_child())print_unary_node(*node, "{", "}");
 }
 
-} // namespace parse_tree
+} // namespace symbolic_expression
 } // namespace hydla

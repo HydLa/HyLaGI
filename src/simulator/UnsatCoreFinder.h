@@ -16,10 +16,10 @@ public:
   UnsatCoreFinder(backend_sptr_t back);
   ~UnsatCoreFinder();
 
-  typedef std::map<std::pair<hydla::parse_tree::node_sptr,std::string>,module_set_sptr > unsat_constraints_t;
+  typedef std::map<std::pair<hydla::symbolic_expression::node_sptr,std::string>,module_set_sptr > unsat_constraints_t;
   typedef std::map<std::pair<std::string,int>,module_set_sptr > unsat_continuities_t;
 
-  typedef hydla::ch::ModuleSet::module_t module_t;
+  typedef hydla::hierarchy::ModuleSet::module_t module_t;
   typedef std::vector<module_t>                   module_list_t;
 
   void print_unsat_cores(unsat_constraints_t S,unsat_continuities_t S4C);

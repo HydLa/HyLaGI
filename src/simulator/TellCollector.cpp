@@ -7,7 +7,7 @@
 namespace hydla {
 namespace simulator {
 using namespace hydla::logger;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 
 namespace {
 struct NodeDumper {
@@ -92,13 +92,13 @@ void TellCollector::collect(tells_t*                 tells,
 }
 
 // 制約式
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
 {
   accept(node->get_child());
 }
 
 // Ask制約
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
   // askがエンテール可能であったら子ノードも探索する
   if(positive_asks_->find(node) != positive_asks_->end()) {
@@ -113,7 +113,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 }
 
 // Tell制約
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node)
 {
   if(!in_negative_ask_){
     // tell制約の登録
@@ -127,14 +127,14 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
 }
 
 // 論理積
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
 {
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
 
 // 時相演算子
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
 {
   if(in_expanded_always_) {
     if(visited_always_.find(node) != visited_always_.end()) {
@@ -147,33 +147,33 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
 }
 
 // モジュールの弱合成
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
 {
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
 
 // モジュールの並列合成
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node)
 {
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
 
 // 制約呼び出し
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
 {
   accept(node->get_child());
 }
 
 // プログラム呼び出し
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
 {
   accept(node->get_child());
 }
 
 
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Print> node)
 {
   std::string str =  node->get_string();
   std::string args = node->get_args();
@@ -210,7 +210,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
   }
 
 }
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::PrintPP> node)
 {
   std::string str =  node->get_string();
   std::string args = node->get_args();
@@ -247,7 +247,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node)
   }
 
 }
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::PrintIP> node)
 {
   std::string str =  node->get_string();
   std::string args = node->get_args();
@@ -285,7 +285,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node)
 
 }
 
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Scan> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Scan> node)
 {
   std::string str =  node->get_string();
   std::string args = node->get_args();
@@ -320,7 +320,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Scan> node)
   }
 }
 
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Exit> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Exit> node)
 {
   std::string str =  node->get_string();
   std::string args = node->get_args();
@@ -358,7 +358,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Exit> node)
 
 }
     
-void TellCollector::visit(boost::shared_ptr<hydla::parse_tree::Abort> node)
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Abort> node)
 {
   std::string str =  node->get_string();
   std::string args = node->get_args();

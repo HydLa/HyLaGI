@@ -2,7 +2,7 @@
 
 #include "Logger.h"
 #include <iostream>
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::logger;
 
 namespace hydla {
@@ -32,25 +32,25 @@ void AskDisjunctionFormatter::format(hydla::parse_tree::ParseTree* pt)
 }
 
 // 制約呼び出し
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
 {
   dispatch_unary_node(node);
 }
 
 // プログラム呼び出し
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
 {    
   dispatch_unary_node(node);
 }
 
 // 制約式
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
 {    
   dispatch_unary_node(node);
 }
 
 // Ask制約
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
   accept(node->get_guard());
   if(new_child_) {
@@ -60,56 +60,56 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Ask> no
 }
 
 // Tell制約
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Tell> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node)
 {
   // do nothing
 }
 
 // 比較演算子
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Equal> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node)
 {
   // do nothing
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::UnEqual> node)
 {
   // do nothing
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Less> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Less> node)
 {
   // do nothing
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node)
 {
   // do nothing
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Greater> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node)
 {
   // do nothing
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::True> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::True> node)
 {
   // do nothing
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
 
 {
   // do nothing
 }
 
 // 論理演算子
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
 {
-  boost::shared_ptr<hydla::parse_tree::BinaryNode> n(node);
+  boost::shared_ptr<hydla::symbolic_expression::BinaryNode> n(node);
 
   // andの左子ノードがorであった場合
   logical_or_sptr lhs_child = 
-    boost::dynamic_pointer_cast<hydla::parse_tree::LogicalOr>(n->get_lhs());
+    boost::dynamic_pointer_cast<hydla::symbolic_expression::LogicalOr>(n->get_lhs());
   if(lhs_child) {
     logical_or_sptr node_or(pt_->create_node<LogicalOr>());
 
@@ -131,7 +131,7 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Logical
 
   // andの右子ノードがorであった場合
   logical_or_sptr rhs_child = 
-    boost::dynamic_pointer_cast<hydla::parse_tree::LogicalOr>(n->get_rhs());
+    boost::dynamic_pointer_cast<hydla::symbolic_expression::LogicalOr>(n->get_rhs());
   if(rhs_child) {
     logical_or_sptr node_or(pt_->create_node<LogicalOr>());
 
@@ -153,35 +153,35 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Logical
   new_child_ = n;
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node)
 {
   dispatch_binary_node(node);
 }
 
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Not> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Not> node)
 {
   dispatch_unary_node(node);
 }
 
 // 制約階層定義演算子
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
 {
   dispatch_binary_node(node);
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node)
 {
   dispatch_binary_node(node);
 }
 
 // 時相演算子
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Always> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
 {
   dispatch_unary_node(node);
 }
 
-void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::parse_tree::Print> node)
+void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression::Print> node)
 {
   //dispatch_unary_node(node);
 }

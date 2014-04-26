@@ -11,7 +11,7 @@ using namespace std;
 using namespace hydla::simulator;
 using namespace hydla::solver;
 using namespace hydla::solver::mathematica;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 
 namespace hydla{
 namespace simulator{
@@ -20,14 +20,14 @@ AnalysisResultChecker::AnalysisResultChecker(const Opts& opts):ConstraintAnalyze
 
 AnalysisResultChecker::~AnalysisResultChecker(){}
 
-node_sptr AnalysisResultChecker::string2node(std::string s){
+symbolic_expression::node_sptr AnalysisResultChecker::string2node(std::string s){
   unsigned int index = s.find('<',0);
   std::string tmp = s.substr(0,index);
   if(tmp == "E"){
-    return node_sptr(new hydla::parse_tree::E());
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::E());
   }
   if(tmp == "Pi"){
-    return node_sptr(new hydla::parse_tree::Pi());
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::Pi());
   }
   index = s.find('[',index+1);
   std::string arg = s.substr(index+1);
@@ -63,66 +63,66 @@ node_sptr AnalysisResultChecker::string2node(std::string s){
     }
     if(parmit == 0){
       std::cout << "syntax error" << std::endl;
-      return node_sptr();
+      return symbolic_expression::node_sptr();
     }
     if(tmp == "Equal"){
-      return node_sptr(new hydla::parse_tree::Equal(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Equal(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "UnEqual"){
-      return node_sptr(new hydla::parse_tree::UnEqual(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::UnEqual(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Plus"){
-      return node_sptr(new hydla::parse_tree::Plus(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Plus(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Subtract"){
-      return node_sptr(new hydla::parse_tree::Subtract(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Subtract(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Times"){
-      return node_sptr(new hydla::parse_tree::Times(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Times(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Divide"){
-      return node_sptr(new hydla::parse_tree::Divide(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Divide(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Power"){
-      return node_sptr(new hydla::parse_tree::Power(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Power(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "LogicalAnd"){
-      return node_sptr(new hydla::parse_tree::LogicalAnd(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::LogicalAnd(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "LogicalOr"){
-      return node_sptr(new hydla::parse_tree::LogicalOr(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::LogicalOr(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Less"){
-      return node_sptr(new hydla::parse_tree::Less(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Less(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "LessEqual"){
-      return node_sptr(new hydla::parse_tree::LessEqual(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::LessEqual(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "Greater"){
-      return node_sptr(new hydla::parse_tree::Greater(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::Greater(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
     if(tmp == "GreaterEqual"){
-      return node_sptr(new hydla::parse_tree::GreaterEqual(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
+      return symbolic_expression::node_sptr(new hydla::symbolic_expression::GreaterEqual(string2node(arg.substr(0,parmit)),string2node(arg.substr(parmit+1))));
     }
   }
   if(tmp == "Differential"){
-    return node_sptr(new hydla::parse_tree::Differential(string2node(arg)));
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::Differential(string2node(arg)));
   }
   if(tmp == "Previous"){
-    return node_sptr(new hydla::parse_tree::Previous(string2node(arg)));
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::Previous(string2node(arg)));
   }
   if(tmp == "Negative"){
-    return node_sptr(new hydla::parse_tree::Negative(string2node(arg)));
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::Negative(string2node(arg)));
   }
   if(tmp == "Variable"){
     unsigned int end = arg.find(']',0);
-    return node_sptr(new hydla::parse_tree::Variable(arg.substr(0,end)));
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable(arg.substr(0,end)));
   }
   if(tmp == "Number"){
     unsigned int end = arg.find(']',0);
-    return node_sptr(new hydla::parse_tree::Number(arg.substr(0,end)));
+    return symbolic_expression::node_sptr(new hydla::symbolic_expression::Number(arg.substr(0,end)));
   }
-  return node_sptr();
+  return symbolic_expression::node_sptr();
 }
 
 void AnalysisResultChecker::parse(){
@@ -152,7 +152,7 @@ module_set_list_t AnalysisResultChecker::calculate_mms(
 {
   module_set_list_t ret;
   //  std::cout << "******************************" << std::endl;
-  for(hydla::ch::cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+  for(hydla::hierarchy::cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
     if((*it)->is_searched()) continue;
     if(check_conditions((*it)->get_condition(), state, vm, todo_container)){
       module_set_list_t ms_list = (*it)->get_module_set_list();
@@ -163,7 +163,7 @@ module_set_list_t AnalysisResultChecker::calculate_mms(
       (*it)->mark_children();
     }
   }
-  for(hydla::ch::cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+  for(hydla::hierarchy::cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
     (*it)->unsearched();
   }
   //  std::cout << "******************************" << std::endl;
@@ -171,7 +171,7 @@ module_set_list_t AnalysisResultChecker::calculate_mms(
 }
 
 bool AnalysisResultChecker::check_conditions(
-  const hydla::parse_tree::node_sptr& cond,
+  const hydla::symbolic_expression::node_sptr& cond,
   simulation_todo_sptr_t& state,
   const variable_map_t& vm,
   todo_container_t* todo_container)

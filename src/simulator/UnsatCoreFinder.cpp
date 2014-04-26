@@ -13,9 +13,9 @@
 
 using namespace std;
 using namespace hydla::simulator;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::backend;
-using namespace hydla::ch;
+using namespace hydla::hierarchy;
 
 namespace hydla{
 namespace simulator{
@@ -95,11 +95,11 @@ void UnsatCoreFinder::find_unsat_core(
   module_list_t::const_iterator ms_it = ms->begin();
   module_list_t::const_iterator ms_end = ms->end();
   for(;ms_it!=ms_end;ms_it++){
-    module_set_sptr temp_ms(new hydla::ch::ModuleSet());
+    module_set_sptr temp_ms(new hydla::hierarchy::ModuleSet());
     temp_ms->add_module(*ms_it);
     TellCollector tell_collector(temp_ms);
 
-    node_sptr condition_node;
+    symbolic_expression::node_sptr condition_node;
 
     tell_collector.collect_all_tells(&tell_list,
         &expanded_always,
@@ -135,7 +135,7 @@ void UnsatCoreFinder::find_unsat_core(
       const char* fmt = (phase_type == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it)->get_guard());
       if(check_inconsistency(phase_type)){
-        S.insert(make_pair(make_pair(node_sptr((*it)->get_guard()),"guard"),temp_ms));
+        S.insert(make_pair(make_pair(symbolic_expression::node_sptr((*it)->get_guard()),"guard"),temp_ms));
         if(check_unsat_core(S,S4C,temp_ms,phase_type, vm, pm)){
           return;
         }else{
@@ -178,7 +178,7 @@ void UnsatCoreFinder::find_unsat_core(
           }
         }
       }else{
-        node_sptr lhs(new parse_tree::Variable(it->first));
+        symbolic_expression::node_sptr lhs(new symbolic_expression::Variable(it->first));
         for(int i=0; i<=-it->second;i++){
           variable_t var(it->first, i);
           backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
@@ -191,10 +191,10 @@ void UnsatCoreFinder::find_unsat_core(
               return;
             }
           }
-          lhs = node_sptr(new Differential(lhs));
+          lhs = symbolic_expression::node_sptr(new Differential(lhs));
         }
-        node_sptr rhs(new Number("0"));
-        node_sptr cons(new Equal(lhs, rhs));
+        symbolic_expression::node_sptr rhs(new Number("0"));
+        symbolic_expression::node_sptr cons(new Equal(lhs, rhs));
         std::string fmt = "v";
         if(phase_type == PointPhase)
         {
@@ -285,7 +285,7 @@ void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t
         variable_t var(name, i);
         backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
       }
-      node_sptr rhs(new Number("0"));
+      symbolic_expression::node_sptr rhs(new Number("0"));
       std::string fmt = "v";
       if(phase == PointPhase) fmt += "n";
       else fmt += "z";

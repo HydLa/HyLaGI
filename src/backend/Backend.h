@@ -20,7 +20,7 @@ typedef hydla::simulator::parameter_t     parameter_t;
 typedef hydla::simulator::variable_set_t  variable_set_t;
 typedef hydla::simulator::ConstraintStore constraint_store_t;
 typedef Link::VariableForm        variable_form_t;
-typedef hydla::parse_tree::node_sptr      node_sptr;
+typedef hydla::symbolic_expression::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
 
@@ -56,14 +56,14 @@ typedef std::vector<candidate_t> pp_time_result_t;
  */
 typedef struct DCCause
 {
-  node_sptr node;
+  symbolic_expression::node_sptr node;
   int id;
-  DCCause(node_sptr n, int i):node(n), id(i){}
+  DCCause(symbolic_expression::node_sptr n, int i):node(n), id(i){}
 } dc_cause_t;
 typedef std::vector<dc_cause_t> dc_causes_t;
   
 
-class Backend : public hydla::parse_tree::DefaultTreeVisitor
+class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 {
   public:
 
@@ -88,7 +88,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
    *    i: int: integer
    *    b: bool: boolean value
    *    s: const char*: symbol (send only)
-   *    e(n,p,z,t): node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
+   *    e(n,p,z,t): symbolic_expression::node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
    *    dc: dc_causes_t : causes of discrete changes
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
    *    cs(n, p, z, t): constraint_store_t: constraint store
@@ -145,8 +145,8 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
   constraint_store_t receive_cs();
   
   value_t receive_value();
-  node_sptr receive_function();
-  node_sptr receive_node();
+  symbolic_expression::node_sptr receive_function();
+  symbolic_expression::node_sptr receive_node();
 
   /**
    * 与えられたノードの送信をおこなう
@@ -154,7 +154,7 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  int send_node(const hydla::parse_tree::node_sptr& node, const variable_form_t &form);
+  int send_node(const hydla::symbolic_expression::node_sptr& node, const variable_form_t &form);
 
   void send_dc_causes(dc_causes_t &dc_causes);
 
@@ -172,77 +172,77 @@ class Backend : public hydla::parse_tree::DefaultTreeVisitor
   bool get_form(const char &form_c, variable_form_t &form);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node);
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Equal> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Less> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LessEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Greater> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::GreaterEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node);
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalOr> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node);
 
   // 算術二項演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node);
   
   // コマンド文
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Scan> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::True> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::False> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::True> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::False> node);
 
   // 算術単項演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node);
 
   // 微分
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
   // 否定
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Not> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Not> node);
   
   // 関数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Function> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> node);
   
   
   // 円周率
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node);
   // 自然対数の底
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node);
   
     
   // 変数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 
   // 数字
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Float> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Float> node);
 
   // 記号定数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node);
 
   // t
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
   
   // 無限大
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Infinity> node);
   
   // Differentialノードを何回通ったか
   int differential_count_;

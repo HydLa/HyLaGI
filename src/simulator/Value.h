@@ -17,7 +17,7 @@ class Value
 {  
   public:
 
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
   
   virtual ~Value(){}
   
@@ -36,7 +36,7 @@ class Value
   /**
    * 渡された数式を値とするValueを作る
    */
-  Value(const node_sptr & node);
+  Value(const symbolic_expression::node_sptr & node);
   
   /**
    * construct Value from given parameter
@@ -61,9 +61,9 @@ class Value
   /**
    * Nodeの形式にしたものを取得する
    */
-  virtual node_sptr get_node() const;
+  virtual symbolic_expression::node_sptr get_node() const;
 
-  virtual void set_node(const node_sptr&);
+  virtual void set_node(const symbolic_expression::node_sptr&);
   
   /// Value同士の加算
   Value& operator+=(const Value &rhs);
@@ -95,7 +95,7 @@ class Value
 
   private:
 
-  node_sptr node_;  /// symbolic expression
+  symbolic_expression::node_sptr node_;  /// symbolic expression
 };
 
 bool operator<(const Value& lhs, const Value& rhs);

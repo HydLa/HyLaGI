@@ -34,12 +34,12 @@ public:
 
     
   // ノード表
-  typedef std::map<node_id_t, node_sptr> node_map_t;
+  typedef std::map<symbolic_expression::node_id_t, symbolic_expression::node_sptr> node_map_t;
   typedef node_map_t::value_type         node_map_value_t;
   typedef node_map_t::const_iterator     node_map_const_iterator;
 
   // ノードID表
-  typedef std::set<node_id_t>           node_id_list_t;
+  typedef std::set<symbolic_expression::node_id_t>           node_id_list_t;
   typedef node_id_list_t::const_iterator node_id_list_const_iterator;
 
   static const int INITIAL_MAX_NODE_ID = 0;
@@ -124,13 +124,13 @@ public:
    * パースされたノードツリーの設定
    * 設定された後，意味解析等の前処理は自動でおこなわれる
    */
-  //void set_tree(const node_sptr& tree);
+  //void set_tree(const symbolic_expression::node_sptr& tree);
  
   /**
    * ノードツリーを交換する
    * 新しいノードツリーは意味解析等の前処理をおこなった後である必要がある
    */
-  node_sptr swap_tree(const node_sptr& tree);
+  symbolic_expression::node_sptr swap_tree(const symbolic_expression::node_sptr& tree);
 
   bool is_same_struct(const ParseTree& pt, bool exactly_same) const {
     return node_tree_->is_same_struct(*pt.node_tree_, exactly_same);
@@ -151,7 +151,7 @@ public:
   /**
    * ノードツリーに対してビジターを適用する
    */
-  void dispatch(parse_tree::TreeVisitor* visitor)
+  void dispatch(symbolic_expression::TreeVisitor* visitor)
   {
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
   }
@@ -159,7 +159,7 @@ public:
   /**
    * ノードツリーに対してビジターを適用する
    */
-  void dispatch(parse_tree::BaseNodeVisitor* visitor)
+  void dispatch(symbolic_expression::BaseNodeVisitor* visitor)
   {
     if(node_tree_) node_tree_->accept(node_tree_, visitor);
   }
@@ -167,39 +167,39 @@ public:
   /**
    * 新しいノードを追加する
    */
-  node_id_t register_node(const node_sptr& n);
+  symbolic_expression::node_id_t register_node(const symbolic_expression::node_sptr& n);
 
   /**
    * IDに対応付けられているノードの変更
    */
-  void update_node(node_id_t id, const node_sptr& n);
+  void update_node(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n);
 
   /**
    * ノード表から指定されたノードIDの情報を削除する
    */
-  void remove_node(node_id_t id);
+  void remove_node(symbolic_expression::node_id_t id);
     
   /**
    * ノードに対応付けられているIDの変更
    */
-  //void update_node_id(node_id_t id, const node_sptr& n);
+  //void update_node_id(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n);
 
   /**
    * 指定されたIDに対応するノードを得る
    */  
-  node_sptr get_node(node_id_t id) const
+  symbolic_expression::node_sptr get_node(symbolic_expression::node_id_t id) const
   {
     node_map_t::const_iterator it = node_map_.find(id);
     if(it != node_map_.end()) {
       return it->second;
     }
-    return node_sptr();
+    return symbolic_expression::node_sptr();
   }
   
   /**
    * トップノードを得る
    */  
-  node_sptr get_node() const
+  symbolic_expression::node_sptr get_node() const
   {
     return node_tree_;
   }  
@@ -207,7 +207,7 @@ public:
   /**
    * assertノードを得る
    */
-  node_sptr get_assertion_node() const
+  symbolic_expression::node_sptr get_assertion_node() const
   {
     return assertion_node_tree_;
   }
@@ -217,14 +217,14 @@ public:
    * 指定されたノードに対応するIDを得る
    */
   /*
-  node_id_t get_node_id(const node_sptr& n) const
+  symbolic_expression::node_id_t get_node_id(const symbolic_expression::node_sptr& n) const
   {
-    node_map_t::map_by<tag_node_sptr>::const_iterator it = 
-      node_map_.by<tag_node_sptr>().find(n);
-    if(it != node_map_.by<tag_node_sptr>().end()) {
+    node_map_t::map_by<tag_symbolic_expression::node_sptr>::const_iterator it = 
+      node_map_.by<tag_symbolic_expression::node_sptr>().find(n);
+    if(it != node_map_.by<tag_symbolic_expression::node_sptr>().end()) {
       return it->second;
     }
-    return node_id_t();
+    return symbolic_expression::node_id_t();
   }
   */
 
@@ -298,13 +298,13 @@ private:
 
   node_factory_sptr    node_factory_;
 
-  node_sptr            node_tree_;
-  node_sptr            assertion_node_tree_;
+  symbolic_expression::node_sptr            node_tree_;
+  symbolic_expression::node_sptr            assertion_node_tree_;
   
   variable_map_t       variable_map_;
 
   node_map_t           node_map_;
-  node_id_t            max_node_id_;
+  symbolic_expression::node_id_t            max_node_id_;
   node_id_list_t       node_id_list_;
 };
 

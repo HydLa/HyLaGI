@@ -40,8 +40,8 @@ public:
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
-  typedef std::map<module_set_sptr, hydla::parse_tree::node_sptr> condition_map_t;
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef std::map<module_set_sptr, hydla::symbolic_expression::node_sptr> condition_map_t;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
   PhaseSimulator(PhaseSimulator&);
@@ -50,8 +50,8 @@ public:
 
   virtual void set_backend(backend_sptr_t back);
 
-  void set_break_condition(node_sptr break_cond);
-  node_sptr get_break_condition();
+  void set_break_condition(symbolic_expression::node_sptr break_cond);
+  symbolic_expression::node_sptr get_break_condition();
 
   virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc);
 
@@ -79,7 +79,7 @@ public:
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
 
 
-  typedef ch::module_set_sptr              modulse_set_sptr;
+  typedef hierarchy::module_set_sptr              modulse_set_sptr;
   typedef std::set< std::string > change_variables_t;
 
 /*
@@ -163,7 +163,7 @@ protected:
 
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
-  node_sptr break_condition_;
+  symbolic_expression::node_sptr break_condition_;
   parse_tree_sptr parse_tree_;
 
 private:
@@ -219,13 +219,13 @@ private:
    */
   CheckEntailmentResult check_entailment(
     CheckConsistencyResult &cc_result,
-    const node_sptr& guard,
+    const symbolic_expression::node_sptr& guard,
     const continuity_map_t& cont_map,
     const PhaseType& phase);
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
-  bool has_variables(node_sptr node, const change_variables_t &variables, bool include_prev);
+  bool has_variables(symbolic_expression::node_sptr node, const change_variables_t &variables, bool include_prev);
 
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
 

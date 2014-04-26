@@ -20,7 +20,7 @@ namespace simulator {
  * tellノードを集めるビジタークラス
  * ノードの中に出現する変数（とその微分回数）も同時に調べる
  */
-class TellCollector : public parse_tree::DefaultTreeVisitor {
+class TellCollector : public symbolic_expression::DefaultTreeVisitor {
 public:
   
   TellCollector(const module_set_sptr& module_set);
@@ -89,43 +89,43 @@ public:
 
 
   // 制約式
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node);
 
   // 論理積
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::LogicalAnd> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node);
   
   // 時相演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Always> node);
 
   // モジュールの弱合成
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node);
 
   // モジュールの並列合成
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node);
    
   // 制約呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node);
   
   // プログラム呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node);
   
 
   // Print
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Print> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintPP> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::PrintIP> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Scan> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Exit> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Abort> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Print> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::PrintPP> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::PrintIP> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Scan> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Exit> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Abort> node);
 
 private:
-  typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
+  typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >   visited_always_t;
 
   void collect(tells_t*                 tells,
                const always_set_t* expanded_always,                   

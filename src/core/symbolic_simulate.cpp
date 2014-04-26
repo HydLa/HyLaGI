@@ -26,9 +26,9 @@
 
 // namespace
 using namespace hydla;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
-using namespace hydla::ch;
+using namespace hydla::hierarchy;
 using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;

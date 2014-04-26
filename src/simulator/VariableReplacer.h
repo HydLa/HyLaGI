@@ -17,43 +17,43 @@ namespace simulator {
 /**
  * Replace variables with their values
  */
-class VariableReplacer : public parse_tree::DefaultTreeVisitor{
-  typedef hydla::parse_tree::node_sptr                 node_sptr;
+class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
+  typedef hydla::symbolic_expression::node_sptr                 node_sptr;
 
   public:
 
   VariableReplacer(const variable_map_t& map);
 
-  void replace_node(node_sptr& node);
+  void replace_node(symbolic_expression::node_sptr& node);
 
   virtual ~VariableReplacer();
 
   void replace_value(value_t &val);
   void replace_range(ValueRange &range);
   
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Plus> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Subtract> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Times> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Divide> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Power> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Negative> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Positive> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node);
   
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Function> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnsupportedFunction> node);  
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Function> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> node);  
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Pi> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::E> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Number> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parameter> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::SymbolicT> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Infinity> node);
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::SVtimer> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Infinity> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SVtimer> node);
 
   private:
   hydla::simulator::Value* processing_value;
@@ -62,12 +62,12 @@ class VariableReplacer : public parse_tree::DefaultTreeVisitor{
   const variable_map_t& variable_map;
 
 
-  node_sptr new_child_;
+  symbolic_expression::node_sptr new_child_;
 
 
   template<class C, 
-           const node_sptr& (C::*getter)() const,
-           void (C::*setter)(const node_sptr& child)>
+           const symbolic_expression::node_sptr& (C::*getter)() const,
+           void (C::*setter)(const symbolic_expression::node_sptr& child)>
   void dispatch(C* n) 
   {
     accept((n->*getter)());
@@ -80,25 +80,25 @@ class VariableReplacer : public parse_tree::DefaultTreeVisitor{
   template<class NodeType>
   void dispatch_child(NodeType& node)
   {
-    dispatch<hydla::parse_tree::UnaryNode, 
-      &hydla::parse_tree::UnaryNode::get_child, 
-      &hydla::parse_tree::UnaryNode::set_child>(node.get());
+    dispatch<hydla::symbolic_expression::UnaryNode, 
+      &hydla::symbolic_expression::UnaryNode::get_child, 
+      &hydla::symbolic_expression::UnaryNode::set_child>(node.get());
   }
 
   template<class NodeType>
   void dispatch_rhs(NodeType& node)
   {
-    dispatch<hydla::parse_tree::BinaryNode, 
-      &hydla::parse_tree::BinaryNode::get_rhs, 
-      &hydla::parse_tree::BinaryNode::set_rhs>(node.get());
+    dispatch<hydla::symbolic_expression::BinaryNode, 
+      &hydla::symbolic_expression::BinaryNode::get_rhs, 
+      &hydla::symbolic_expression::BinaryNode::set_rhs>(node.get());
   }
 
   template<class NodeType>
   void dispatch_lhs(NodeType& node)
   {
-    dispatch<hydla::parse_tree::BinaryNode, 
-      &hydla::parse_tree::BinaryNode::get_lhs, 
-      &hydla::parse_tree::BinaryNode::set_lhs>(node.get());
+    dispatch<hydla::symbolic_expression::BinaryNode, 
+      &hydla::symbolic_expression::BinaryNode::get_lhs, 
+      &hydla::symbolic_expression::BinaryNode::set_lhs>(node.get());
   }
 };
 

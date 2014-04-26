@@ -16,17 +16,17 @@ namespace hydla {
 namespace simulator {
 
 
-typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
-typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
+typedef boost::shared_ptr<hydla::hierarchy::ModuleSet>           module_set_sptr;
+typedef hydla::hierarchy::ModuleSetContainer                     module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
-typedef hydla::ch::ModuleSetContainer::module_set_list_t  module_set_list_t;
-typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
-typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
+typedef hydla::hierarchy::ModuleSetContainer::module_set_list_t  module_set_list_t;
+typedef boost::shared_ptr<const hydla::hierarchy::ModuleSet>    module_set_const_sptr;
+typedef boost::shared_ptr<hydla::hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 /**
  * askノードを集めるビジタークラス
  */
-class AskCollector : public parse_tree::DefaultTreeVisitor {
+class AskCollector : public symbolic_expression::DefaultTreeVisitor {
 public:
   AskCollector(const module_set_sptr& module_set);
 
@@ -46,16 +46,16 @@ public:
                    ask_set_t*        unknown_asks);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Tell> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node);
   
   // 時相演算子
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Always> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Always> node);
   
 private:
-  typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >   visited_always_t;
+  typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >   visited_always_t;
 
   /// 収集をおこなう対象の制約モジュール集合
   module_set_sptr          module_set_; 

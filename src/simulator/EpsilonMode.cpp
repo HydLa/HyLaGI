@@ -50,9 +50,9 @@ using namespace hydla::backend::reduce;
 
 using namespace boost;
 
-using namespace hydla::ch;
+using namespace hydla::hierarchy;
 using namespace hydla::simulator;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::logger;
 using namespace hydla::timer;
 
@@ -173,12 +173,12 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
 #ifdef _DEBUG_REDUCE_UNSUIT
         std::cout << p_it->first << "\t: " << p_it->second << "\t->\t";
 #endif
-        node_sptr val;
+        symbolic_expression::node_sptr val;
         bool Ret;
         if(p_it->second.unique())
         {
           val = p_it->second.get_unique().get_node();
-          val = node_sptr(new Times(val, p_it->second.get_unique().get_node()));
+          val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique().get_node()));
           backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
           isNG = isNG || Ret;
         }
@@ -192,8 +192,8 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
           }
           if(p_it->second.get_upper_cnt())
           {
-            val = node_sptr(new Number("-1"));
-            val = node_sptr(new Times(val, p_it->second.get_upper_bound(0).value.get_node()));
+            val = symbolic_expression::node_sptr(new Number("-1"));
+            val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_upper_bound(0).value.get_node()));
             backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
             isNG = isNG || Ret;
           }
@@ -240,12 +240,12 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
         if(parameter_name=="eps" && parameter_differential_count==0)
         {
           std::cout << p_it->first << "\t: " << p_it->second << "\t->\t";
-          node_sptr val;
+          symbolic_expression::node_sptr val;
           bool Ret;
           if(p_it->second.unique())
           {
             val = p_it->second.get_unique().get_node();
-            val = node_sptr(new Times(val, p_it->second.get_unique().get_node()));
+            val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique().get_node()));
             backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
             isNG = isNG || Ret;
           }
@@ -259,8 +259,8 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
             }
             if(p_it->second.get_upper_cnt())
             {
-              val = node_sptr(new Number("-1"));
-              val = node_sptr(new Times(val, p_it->second.get_upper_bound(0).value.get_node()));
+              val = symbolic_expression::node_sptr(new Number("-1"));
+              val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_upper_bound(0).value.get_node()));
               backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
               isNG = isNG || Ret;
             }

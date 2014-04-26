@@ -8,7 +8,7 @@
 #include "DefaultTreeVisitor.h"
 
 namespace hydla {
-namespace parse_tree {
+namespace symbolic_expression {
 
 
 class TreeInfixPrinter:
@@ -151,7 +151,7 @@ class TreeInfixPrinter:
 
 };
 
-} // namespace parse_tree
+} // namespace symbolic_expression
 } // namespace hydla 
 
 #endif // TREE_INFIX__PRINTER_H_

@@ -184,7 +184,7 @@ void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,Opts *op){
 void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* backend_, const phase_result_t& result) const
 {
   simulator::value_t ret_current_time,ret_end_time;
-  parse_tree::node_sptr tmp_current_time,tmp_end_time;
+  symbolic_expression::node_sptr tmp_current_time,tmp_end_time;
   int check_result,check_current_time,check_end_time;
 
   if(result.phase_type == IntervalPhase)

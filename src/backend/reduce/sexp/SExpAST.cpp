@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-using namespace hydla::parse_tree; // NegativeとNumber用
+using namespace hydla::symbolic_expression; // NegativeとNumber用
 
 namespace hydla {
 namespace parser {

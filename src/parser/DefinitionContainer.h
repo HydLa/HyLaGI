@@ -46,7 +46,7 @@ public:
 
   definition_map_key_t 
   create_definition_key(
-    const boost::shared_ptr<hydla::parse_tree::Definition>& d) const 
+    const boost::shared_ptr<hydla::symbolic_expression::Definition>& d) const 
   {
     return std::make_pair(d->get_name(), 
                           d->bound_variable_size());
@@ -67,7 +67,7 @@ public:
    * すでに登録済みのノードであるかどうか
    */
   bool is_registered(
-    const boost::shared_ptr<hydla::parse_tree::Definition>& d) const 
+    const boost::shared_ptr<hydla::symbolic_expression::Definition>& d) const 
   {
     return is_registered(create_definition_key(d));
   }

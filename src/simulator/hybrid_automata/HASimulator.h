@@ -29,7 +29,7 @@ public:
 	parameter_map_t update_vm(phase_result_sptr_t pr, parameter_map_t vm_pre);
 
 private:
-  value_t simplify(parse_tree::node_sptr exp);
+  value_t simplify(symbolic_expression::node_sptr exp);
   ha_results_t ha_results;
 
 };//HASimulator

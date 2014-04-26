@@ -7,7 +7,7 @@
 #include "ModuleSet.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 class ModuleSetContainer {
 public:
@@ -119,7 +119,7 @@ public:
 
 std::ostream& operator<<(std::ostream& s, const ModuleSetContainer& m);
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 #endif // _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_H_

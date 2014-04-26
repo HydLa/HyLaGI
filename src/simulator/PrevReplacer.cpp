@@ -4,7 +4,7 @@
 #include "Backend.h"
 
 using namespace std;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 
 namespace hydla {
 namespace simulator {
@@ -17,12 +17,12 @@ PrevReplacer::~PrevReplacer()
 
 void PrevReplacer::replace_value(value_t& val)
 {
-  node_sptr node = val.get_node();
+  symbolic_expression::node_sptr node = val.get_node();
   replace_node(node);
   val.set_node(node);
 }
 
-void PrevReplacer::replace_node(node_sptr &node)
+void PrevReplacer::replace_node(symbolic_expression::node_sptr &node)
 {
   differential_cnt_ = 0;
   in_prev_ = false;
@@ -31,7 +31,7 @@ void PrevReplacer::replace_node(node_sptr &node)
   if(new_child_) node = new_child_;
 }
 
-void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
+void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
 {
   assert(!in_prev_);
   in_prev_ = true;
@@ -39,7 +39,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
   in_prev_ = false;
 }
 
-void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   if(in_prev_)
   {
@@ -61,7 +61,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
     }
     else
     {
-      new_child_ = node_sptr(new parse_tree::Parameter(v_name, diff_cnt, prev_phase_->id));
+      new_child_ = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase_->id));
       parameter_t param(v_name, diff_cnt, prev_phase_->id);
 
       if(!parameter_map_.count(param))
@@ -92,7 +92,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
   }
 }
 
-void PrevReplacer::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
   differential_cnt_++;
   accept(node->get_child());
@@ -170,7 +170,7 @@ DEFINE_DEFAULT_VISIT_FACTOR(False)
 
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-DEFINE_DEFAULT_VISIT_FACTOR(parse_tree::Parameter)
+DEFINE_DEFAULT_VISIT_FACTOR(symbolic_expression::Parameter)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
