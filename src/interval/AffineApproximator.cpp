@@ -137,7 +137,7 @@ void AffineApproximator::approximate(const variable_t &var, variable_map_t&varia
   if(condition.get() != nullptr)
   {
     //TODO: deal with general case (currently only for '=')
-    assert(typeid(*condition) == typeid(parse_tree::Equal));
+    assert(typeid(*condition) == typeid(symbolic_expression::Equal));
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition, false);

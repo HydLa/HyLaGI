@@ -22,7 +22,7 @@ namespace hydla {
 namespace interval {
 
 
-typedef hydla::parse_tree::node_sptr          node_sptr;
+typedef symbolic_expression::node_sptr        node_sptr;
 typedef simulator::Parameter                  parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
@@ -70,7 +70,7 @@ private:
   AffineApproximator(const AffineApproximator& rhs);
   AffineApproximator& operator=(const AffineApproximator& rhs);
 
-  void invalid_node(parse_tree::Node& node);
+  void invalid_node(symbolic_expression::Node& node);
 
   simulator::Simulator* simulator_;
 
