@@ -1,4 +1,5 @@
 #include "VariableFinder.h"
+#include "Variable.h"
 #include "Logger.h"
 
 using namespace std;
@@ -32,7 +33,7 @@ bool VariableFinder::include_variables(std::set<std::string> variables) const
   {
     for(auto var : variables)
     {
-      if(found_var.first == var)
+      if(found_var.get_name() == var)
       {
         return true;
       }
@@ -48,7 +49,7 @@ bool VariableFinder::include_variables_prev(std::set<std::string> variables) con
   {
     for(auto var : variables)
     {
-      if(found_var.first == var)
+      if(found_var.get_name() == var)
       {
         return true;
       }
@@ -83,10 +84,10 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   if(in_prev_){
-    prev_variables_.insert(std::make_pair(node->get_name(), differential_count_));
+    prev_variables_.insert(Variable(node->get_name(), differential_count_));
   }else{
     for(int i=0; i <= differential_count_; i++){
-      variables_.insert(std::make_pair(node->get_name(), i));
+      variables_.insert(Variable(node->get_name(), i));
     }
   }
 }

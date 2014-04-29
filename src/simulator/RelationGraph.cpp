@@ -120,7 +120,7 @@ RelationGraph::RelationGraph(const module_set_t &ms, const variable_set_t& vs)
     variables = finder.get_all_variable_set();
     for(auto variable : variables)
     {
-      relations.push_back(std::make_pair(&(*it), Variable(variable.first, variable.second)));
+      relations.push_back(std::make_pair(&(*it), variable));
     }
   }
   add(relations);
