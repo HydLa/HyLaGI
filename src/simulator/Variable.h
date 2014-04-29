@@ -7,7 +7,8 @@
 namespace hydla {
 namespace simulator {
 
-struct Variable {
+class Variable {
+public:
   std::string  name;
   int differential_count;
   

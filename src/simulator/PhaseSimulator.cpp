@@ -908,8 +908,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
               VariableFinder variable_finder;
               variable_finder.visit_node(*it);
               VariableFinder::variable_set_t tmp_vars = variable_finder.get_all_variable_set();
-              for(VariableFinder::variable_set_t::iterator it=tmp_vars.begin(); it != tmp_vars.end(); it++){
-                state->parent->changed_variables.insert(it->first);
+              for(auto var : tmp_vars){
+                state->parent->changed_variables.insert(var.get_name());
               }
             }
             break;
@@ -1070,7 +1070,7 @@ void PhaseSimulator::set_changing_variables( const phase_result_sptr_t& parent_p
     if(parent_positives.find(ask) == parent_positives.end() ){
       v_finder.visit_node(ask, false);
       VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-      for( auto var : tmp_vars ) changing_variables.insert(var.first);
+      for( auto var : tmp_vars ) changing_variables.insert(var.get_name());
     }
   }
 
@@ -1078,7 +1078,7 @@ void PhaseSimulator::set_changing_variables( const phase_result_sptr_t& parent_p
     if(parent_positives.find(ask) != parent_positives.end() ){
       v_finder.visit_node(ask);
       VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-      for( auto var : tmp_vars ) changing_variables.insert(var.first);
+      for( auto var : tmp_vars ) changing_variables.insert(var.get_name());
     }
   }
 
@@ -1092,7 +1092,7 @@ void PhaseSimulator::set_changing_variables( const phase_result_sptr_t& parent_p
           v_finder.visit_node(tell);
           VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
           for( auto var : tmp_vars )
-            changing_variables.insert(var.first);
+            changing_variables.insert(var.get_name());
         }
       }
       if(changing_variables.size() > cv_count ){
@@ -1147,7 +1147,7 @@ change_variables_t PhaseSimulator::get_difference_variables_from_2tells(const te
 
   VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
   for( auto var : tmp_vars )
-    cv.insert(var.first);
+    cv.insert(var.get_name());
 
   int v_count = cv.size();
   while(true){
@@ -1158,7 +1158,7 @@ change_variables_t PhaseSimulator::get_difference_variables_from_2tells(const te
         v_finder.visit_node(tell);
         tmp_vars = v_finder.get_variable_set();
         for( auto var : tmp_vars )
-          cv.insert(var.first);
+          cv.insert(var.get_name());
       }
     }
     if(cv.size() > v_count ){
@@ -1196,7 +1196,7 @@ bool PhaseSimulator::apply_entailment_change( const ask_set_t::iterator it,
     VariableFinder::variable_set_t tmp_vars = in_IP?v_finder.get_all_variable_set():v_finder.get_variable_set();
     int v_count = changing_variables.size();
     for(auto var : tmp_vars){
-      changing_variables.insert(var.first);
+      changing_variables.insert(var.get_name());
     }
     if(changing_variables.size() > v_count){
       ask_set_t change_asks;

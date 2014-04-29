@@ -9,10 +9,11 @@
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 
+
 namespace hydla {
 namespace simulator {
 
-struct Variable;
+class Variable;
 
 /**
  * 制約を調べ，変数の出現を取得するクラス．
@@ -20,7 +21,7 @@ struct Variable;
 class VariableFinder : public symbolic_expression::DefaultTreeVisitor {
 public:
 
-  typedef std::set< std::pair<std::string, int> > variable_set_t;
+  typedef std::set<Variable > variable_set_t;
 
   VariableFinder();
 
