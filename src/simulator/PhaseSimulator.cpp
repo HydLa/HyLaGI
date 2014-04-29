@@ -784,9 +784,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           continue;
         }
       }
-
-      // send "Constraint" node, not "Tell"
-      constraint_list.add_constraint(tell->get_child());
+      constraint_list.add_constraint(tell);
       maker.visit_node(tell, state->phase_type == IntervalPhase, false);
     }
 
