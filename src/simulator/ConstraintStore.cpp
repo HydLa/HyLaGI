@@ -68,7 +68,7 @@ std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store)
 {
   for(auto constraint : store)
   {
-    ost << parse_tree::get_infix_string(constraint) << endl;
+    ost << symbolic_expression::get_infix_string(constraint) << endl;
   }
   return ost;
 }

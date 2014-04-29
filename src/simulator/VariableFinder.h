@@ -17,7 +17,7 @@ struct Variable;
 /**
  * 制約を調べ，変数の出現を取得するクラス．
  */
-class VariableFinder : public parse_tree::DefaultTreeVisitor {
+class VariableFinder : public symbolic_expression::DefaultTreeVisitor {
 public:
 
   typedef std::set< std::pair<std::string, int> > variable_set_t;
@@ -31,8 +31,8 @@ public:
    * @param node 調べる対象となる制約
    * @param include_guard ガード条件を対象とするかどうか
    */
-  void visit_node(boost::shared_ptr<parse_tree::Node> node, bool include_guard = true);
-  
+  void visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool include_guard = true);
+
   void clear();
   
   /// get found variables (include prev)
@@ -51,16 +51,16 @@ public:
   bool include_variable(const Variable& var)const;
   
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // 微分
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
   // 変数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 
 private:
 

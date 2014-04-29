@@ -9,12 +9,12 @@
 #include <sstream>
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 ModuleSet::ModuleSet()
 {}
 
-ModuleSet::ModuleSet(const std::string& name, hydla::parse_tree::node_sptr node) :
+ModuleSet::ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node) :
   module_list_(1, std::make_pair(name, node))
 {}
 
@@ -59,7 +59,7 @@ ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
 
 std::string ModuleSet::get_infix_string() const 
 {
-  hydla::parse_tree::TreeInfixPrinter printer;
+  hydla::symbolic_expression::TreeInfixPrinter printer;
   std::ostringstream ostr;
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
@@ -126,5 +126,5 @@ std::ostream& operator<<(std::ostream& s, const ModuleSet::module_t& m)
 }
 
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla

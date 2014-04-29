@@ -14,8 +14,8 @@ namespace simulator {
 class RelationGraph{
 
 public:
-  typedef hydla::ch::ModuleSet module_set_t;
-  typedef hydla::ch::ModuleSet::module_t module_t;
+  typedef hydla::hierarchy::ModuleSet module_set_t;
+  typedef hydla::hierarchy::ModuleSet::module_t module_t;
   typedef std::set<Variable, VariableComparator> variable_set_t;  
   
   struct ModuleNode;

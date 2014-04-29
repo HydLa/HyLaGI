@@ -5,7 +5,7 @@
 
 using namespace hydla::simulator;
 using namespace hydla::utility;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 
 bool hydla::simulator::operator<(const Value& lhs, const Value& rhs){
   return lhs.get_string() < rhs.get_string();
@@ -16,7 +16,7 @@ std::ostream& hydla::simulator::operator<<(std::ostream& s, const Value & v){
 }
 
 Value& Value::operator+=(const Value& rhs){
-  set_node(node_sptr(new Plus(get_node(), rhs.get_node())));
+  set_node(symbolic_expression::node_sptr(new Plus(get_node(), rhs.get_node())));
   return *this;
 }
 
@@ -26,7 +26,7 @@ Value Value::operator+(const Value& rhs){
 }
 
 Value& Value::operator-=(const Value& rhs){
-  set_node(node_sptr(new Subtract(get_node(), rhs.get_node())));
+  set_node(symbolic_expression::node_sptr(new Subtract(get_node(), rhs.get_node())));
   return *this;
 }
 
@@ -36,7 +36,7 @@ Value Value::operator-(const Value& rhs){
 }
 
 Value& Value::operator*=(const Value& rhs){
-  set_node(node_sptr(new Times(get_node(), rhs.get_node())));
+  set_node(symbolic_expression::node_sptr(new Times(get_node(), rhs.get_node())));
   return *this;
 }
 
@@ -46,7 +46,7 @@ Value Value::operator*(const Value& rhs){
 }
 
 Value& Value::operator/=(const Value& rhs){
-  set_node(node_sptr(new Divide(get_node(), rhs.get_node())));
+  set_node(symbolic_expression::node_sptr(new Divide(get_node(), rhs.get_node())));
   return *this;
 }
 
@@ -58,7 +58,7 @@ Value Value::operator/(const Value& rhs){
 Value Value::operator-()
 {
   Value ret(*this);
-  ret.set_node(node_sptr(new Negative(ret.get_node())));
+  ret.set_node(symbolic_expression::node_sptr(new Negative(ret.get_node())));
   return ret;
 }
 
@@ -75,7 +75,7 @@ Value::Value(const std::string &str){
 
 Value::Value(const Parameter &param)
 {
-  node_.reset(new parse_tree::Parameter(
+  node_.reset(new symbolic_expression::Parameter(
                param.get_name(),
                param.get_differential_count(), 
                param.get_phase_id()));
@@ -111,7 +111,7 @@ Value::node_sptr Value::get_node() const
   return node_;
 }
 
-void Value::set_node(const node_sptr &n)
+void Value::set_node(const symbolic_expression::node_sptr &n)
 {
   node_ = n;
 }

@@ -1,11 +1,11 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_DEFAULT_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_DEFAULT_TREE_VISITOR_H_
+#ifndef _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_DEFAULT_TREE_VISITOR_H_
+#define _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_DEFAULT_TREE_VISITOR_H_
 
 
 #include "TreeVisitor.h"
 
 namespace hydla { 
-namespace parse_tree {
+namespace symbolic_expression {
   
 /**
  * 各ノードに対してデフォルトの動作（全ノード走査するが，何も変更しない）を行うヘルパクラス．
@@ -121,7 +121,7 @@ public:
   virtual void visit(boost::shared_ptr<Infinity> node);
 };
 
-} //namespace parse_tree
+} //namespace symbolic_expression
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_DEFAULT_TREE_VISITOR_H_
+#endif //_INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_DEFAULT_TREE_VISITOR_H_

@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_NODE_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_NODE_H_
+#ifndef _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_NODE_H_
+#define _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_NODE_H_
 
 #include <ostream>
 #include <string>
@@ -11,7 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 namespace hydla { 
-namespace parse_tree {
+namespace symbolic_expression {
 
 class Node;
 class ConstraintDefinition;
@@ -1671,7 +1671,7 @@ private:
 };
 
 
-} //namespace parse_tree
+} //namespace symbolic_expression
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_NODE_H_
+#endif //_INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_NODE_H_

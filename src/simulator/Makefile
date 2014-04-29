@@ -1,7 +1,7 @@
 MAKE_TYPE := library
 
 TARGET	 := libhydla_simulator.a
-INCLUDES += -I. -I../parser -I../constraint_hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../output -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval
+INCLUDES += -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../output -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error
 LIBS	 += -lML64i3 -lm -lrt
 DEFINES  += 
 CXX_OPT  += 

@@ -26,9 +26,9 @@
 
 // namespace
 using namespace hydla;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
-using namespace hydla::ch;
+using namespace hydla::hierarchy;
 using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
@@ -39,6 +39,7 @@ using namespace std;
 
 Simulator* simulator_;
 Opts opts;
+backend_sptr_t backend_;
 
 static string get_file_without_ext(const string &path)
 {
@@ -54,13 +55,14 @@ void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
+  if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_,&opts);}
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
-  std::cout << sstr.str(); 
+  std::cout << sstr.str();
 
   // TODO: use boost (for compatibility)
-  std::string of_name = po.get<string>("output_name"); 
-  if(of_name.empty()) 
+  std::string of_name = po.get<string>("output_name");
+  if(of_name.empty())
   {
     const std::string hydat_dir = "./hydat/";
     if(po.count("input-file"))
@@ -70,7 +72,7 @@ void output_result(Simulator& ss, Opts& opts){
     }
     else
     {
-      of_name = hydat_dir + "no_name.hydat"; 
+      of_name = hydat_dir + "no_name.hydat";
     }
     struct stat st;
     int ret = stat(hydat_dir.c_str(), &st);
@@ -98,9 +100,9 @@ void output_result(Simulator& ss, Opts& opts){
 }
 
 void setup_simulator_opts(Opts& opts)
-{  
+{
   ProgramOptions &po = ProgramOptions::instance();
-  
+
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
   opts.max_time      = po.get<std::string>("time");
@@ -119,6 +121,7 @@ void setup_simulator_opts(Opts& opts)
   opts.reuse = po.count("reuse")>0;
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
+  opts.epsilon_mode = po.count("epsilon")>0;
   /*
   opts.output_interval = po.get<std::string>("output_interval");
   opts.output_precision = po.get<int>("output_precision");
@@ -133,15 +136,15 @@ void setup_simulator_opts(Opts& opts)
   }
   */
   opts.optimization_level = 0;
-  
+
   /*
   opts.timeout = po.get<int>("timeout");
   opts.timeout_case = po.get<int>("timeout_case");
   opts.timeout_phase = po.get<int>("timeout_phase");
   */
   opts.timeout_calc= po.get<int>("timeout_calc");
-  
-  
+
+
   /*
   opts.max_loop_count= po.get<int>("mlc");
   opts.max_phase_expanded = po.get<int>("phase_expanded");
@@ -154,16 +157,16 @@ void setup_simulator_opts(Opts& opts)
     opts.search_method = simulator::BFS;
   }else{
     throw std::runtime_error(std::string("invalid option - search"));
-  } 
+  }
 }
 
 void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   Opts opts;
   setup_simulator_opts(opts);
-  
+
   boost::shared_ptr<Backend> backend;
-  
+
   if(opts.solver == "m" || opts.solver == "Mathematica") {
     backend.reset(new Backend(new MathematicaLink(opts)));
   }else{
@@ -171,6 +174,8 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     REDUCELink *reduce_link  = rlf.createInstance(opts);
     backend.reset(new Backend(reduce_link));
   }
+
+  if(opts.epsilon_mode){backend_ = backend;}
 
   if(opts.interactive_mode)
   {
@@ -187,7 +192,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   else if(opts.ha_simulator_mode)
   {
     opts.nd_mode = true;
-  	
+
   	timer::Timer hac_timer;
 
   	HAConverter ha_converter(backend, opts);
@@ -197,7 +202,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 
   	ha_converter.simulate();
   	hac_timer.elapsed("HAConverter Time");
-    
+
     HASimulator* ha_simulator = new HASimulator(opts);
     ha_simulator->set_ha_results(ha_converter.get_results());
     simulator_ = ha_simulator;
@@ -208,7 +213,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   }
 
   simulator_->set_backend(backend);
-  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));  
+  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
   simulator_->initialize(parse_tree);
   simulator_->simulate();
   if(!opts.ha_convert_mode)

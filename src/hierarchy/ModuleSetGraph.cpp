@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost;
 
 namespace hydla{
-namespace ch {
+namespace hierarchy {
 
 ModuleSetGraph::ModuleSetGraph()
 {}
@@ -115,7 +115,7 @@ struct ModSizePred {
     size_(size)
   {}
 
-  bool operator()(const hydla::ch::module_set_sptr& n) const {
+  bool operator()(const hydla::hierarchy::module_set_sptr& n) const {
     return n->size() == size_;
   }
 
@@ -280,5 +280,5 @@ void ModuleSetGraph::mark_visited_flag(const module_set_sptr& ms)
   }
 }
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla

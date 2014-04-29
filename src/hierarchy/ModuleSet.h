@@ -11,7 +11,7 @@
 #include "Node.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 
@@ -22,7 +22,7 @@ typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 class ModuleSet {
 public:
   typedef std::pair<std::string,
-                    hydla::parse_tree::node_sptr> module_t;
+                    hydla::symbolic_expression::node_sptr> module_t;
   typedef std::vector<module_t>                   module_list_t;
   typedef module_list_t::const_iterator           module_list_const_iterator;
 
@@ -34,7 +34,7 @@ public:
   };
 
   ModuleSet();
-  ModuleSet(const std::string& name, hydla::parse_tree::node_sptr node);
+  ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node);
   ModuleSet(ModuleSet& lhs, ModuleSet& rhs);
 
   ~ModuleSet();
@@ -114,7 +114,7 @@ public:
   /**
    * 集合の各制約モジュールに対してTreeVisitorの適用
    */ 
-  void dispatch(hydla::parse_tree::TreeVisitor* visitor)
+  void dispatch(hydla::symbolic_expression::TreeVisitor* visitor)
   {
     module_list_t::iterator it  = module_list_.begin();
     module_list_t::iterator end = module_list_.end();
@@ -143,7 +143,7 @@ public:
 };
 
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 #endif //_INCLUDED_HTDLA_CH_MODULE_SET_H_

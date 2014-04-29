@@ -6,7 +6,8 @@
 #include "Logger.h"
 #include "kv/affine.hpp"
 
-using namespace hydla::parse_tree;
+using namespace std;
+using namespace hydla::symbolic_expression;
 using namespace boost;
 
 #define HYDLA_LOGGER_NODE_VAR \
@@ -105,7 +106,7 @@ AffineOrInteger AffineTreeVisitor::pow(AffineOrInteger x, AffineOrInteger y)
   return ret;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -117,7 +118,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Plus> node)
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Subtract> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -129,7 +130,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Subtract> nod
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -141,7 +142,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Times> node)
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Divide> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;
@@ -171,7 +172,7 @@ AffineOrInteger AffineTreeVisitor::sqrt_affine(const AffineOrInteger &a)
   return result_ai;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
 {
   accept(node->get_lhs());
   AffineOrInteger lhs = current_val_;  
@@ -189,8 +190,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Power> node)
   HYDLA_LOGGER_NODE_VAR;
 }
 
-
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Negative> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
 {
   accept(node->get_child());
   current_val_ = -current_val_;
@@ -199,28 +199,26 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Negative> nod
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Positive> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node)
 {
   // do nothing
   return;
 }
 
-
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Pi> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
   current_val_.affine_value = kv::constants<double>::pi();
   current_val_.is_integer = false;
 }
 
-
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::E> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
   current_val_.affine_value = kv::constants<double>::e();
   current_val_.is_integer = false;
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
 {
   std::string number_str = node->get_number();
   HYDLA_LOGGER_DEBUG(number_str);
@@ -244,14 +242,14 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Number> node)
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Float> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
 {
   current_val_.affine_value = affine_t(node->get_number());
   current_val_.is_integer = false;
   HYDLA_LOGGER_NODE_VAR;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Function> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Function> node)
 {
   std::string name = node->get_string();
   HYDLA_LOGGER_DEBUG(name);
@@ -269,7 +267,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Function> nod
   HYDLA_LOGGER_NODE_VAR;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Parameter> node)
+void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
 {
   current_val_.is_integer = false;
   current_val_.affine_value = affine_t();
@@ -296,7 +294,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::parse_tree::Parameter> no
 }
 
 
-void AffineTreeVisitor::invalid_node(parse_tree::Node& node)
+void AffineTreeVisitor::invalid_node(symbolic_expression::Node& node)
 {
   throw ApproximateException("invalid node" + node.get_string());
 }
@@ -349,7 +347,7 @@ DEFINE_INVALID_NODE(Not)
 
 DEFINE_INVALID_NODE(UnsupportedFunction)
 
-DEFINE_INVALID_NODE(parse_tree::Variable)
+DEFINE_INVALID_NODE(symbolic_expression::Variable)
 DEFINE_INVALID_NODE(SymbolicT)
 DEFINE_INVALID_NODE(Infinity)
 DEFINE_INVALID_NODE(True)

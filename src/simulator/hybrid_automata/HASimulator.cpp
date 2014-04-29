@@ -11,7 +11,7 @@
 #include <assert.h>
 
 using namespace std;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 
 namespace hydla {
 namespace simulator {
@@ -36,9 +36,9 @@ phase_result_const_sptr_t HASimulator::simulate()
   value_t max_time;
     
   if(opts_->max_time != ""){
-    max_time = value_t(node_sptr(new Number(opts_->max_time)));
+    max_time = value_t(symbolic_expression::node_sptr(new Number(opts_->max_time)));
   }else{
-    max_time = value_t(node_sptr(new Infinity()));
+    max_time = value_t(symbolic_expression::node_sptr(new Infinity()));
   }
 
   int i = 0;
@@ -148,7 +148,7 @@ parameter_map_t HASimulator::get_init_vm(phase_result_sptr_t pr){
   return vm;
 }
 
-value_t HASimulator::simplify(node_sptr exp)
+value_t HASimulator::simplify(symbolic_expression::node_sptr exp)
 {
   value_t ret;
   backend->call("simplify", 1, "en", "vl", &exp, &ret);

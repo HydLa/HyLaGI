@@ -28,7 +28,7 @@ public:
         module_set_container_sptr& msc_no_init,
         parse_tree_sptr& member_parse_tree)
     {
-      hydla::ch::ModuleSetContainerCreator<MSCC> mcc;
+      hydla::hierarchy::ModuleSetContainerCreator<MSCC> mcc;
       {
         parse_tree_sptr pt_original(boost::make_shared<parse_tree_t>(*parse_tree));
         AskDisjunctionFormatter().format(pt_original.get());

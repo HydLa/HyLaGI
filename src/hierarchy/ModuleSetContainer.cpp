@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 std::ostream& operator<<(std::ostream& s, const ModuleSetContainer& m)
 {
@@ -112,5 +112,5 @@ void ModuleSetContainer::mark_nodes(const module_set_list_t& mms, const ModuleSe
   mark_nodes(ms);  
 }
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla

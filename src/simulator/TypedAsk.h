@@ -7,28 +7,28 @@ namespace hydla {
 namespace simulator {
 
 class DiscreteAsk :
-  public hydla::parse_tree::Ask
+  public hydla::symbolic_expression::Ask
 {
 public:
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
 
   DiscreteAsk()
   {}
 
-  DiscreteAsk(const node_sptr& guard, const node_sptr& child) :
-    hydla::parse_tree::Ask(guard, child)
+  DiscreteAsk(const symbolic_expression::node_sptr& guard, const symbolic_expression::node_sptr& child) :
+    hydla::symbolic_expression::Ask(guard, child)
   {}
     
   virtual ~DiscreteAsk()
   {}
 
-  // virtual void accept(node_sptr own, TreeVisitor* visitor);
+  // virtual void accept(symbolic_expression::node_sptr own, TreeVisitor* visitor);
   // virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
-  virtual node_sptr clone()
+  virtual symbolic_expression::node_sptr clone()
   {
     node_type_sptr n(new DiscreteAsk);
-    return hydla::parse_tree::BinaryNode::clone(n);
+    return hydla::symbolic_expression::BinaryNode::clone(n);
   }
 
   virtual std::string get_node_type_name() const {
@@ -37,28 +37,28 @@ public:
 };
 
 class ContinuousAsk :
-  public hydla::parse_tree::Ask
+  public hydla::symbolic_expression::Ask
 {
 public:
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
 
   ContinuousAsk()
   {}
 
-  ContinuousAsk(const node_sptr& guard, const node_sptr& child) :
-    hydla::parse_tree::Ask(guard, child)
+  ContinuousAsk(const symbolic_expression::node_sptr& guard, const symbolic_expression::node_sptr& child) :
+    hydla::symbolic_expression::Ask(guard, child)
   {}
     
   virtual ~ContinuousAsk()
   {}
 
-  // virtual void accept(node_sptr own, TreeVisitor* visitor);
+  // virtual void accept(symbolic_expression::node_sptr own, TreeVisitor* visitor);
   // virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
-  virtual node_sptr clone()
+  virtual symbolic_expression::node_sptr clone()
   {
     node_type_sptr n(new ContinuousAsk);
-    return hydla::parse_tree::BinaryNode::clone(n);
+    return hydla::symbolic_expression::BinaryNode::clone(n);
   }
 
   virtual std::string get_node_type_name() const {

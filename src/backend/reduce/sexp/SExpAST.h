@@ -18,7 +18,7 @@ public:
   typedef SExpParser::pos_iter_t                                pos_iter_t;
   typedef SExpParser::tree_info_t                               tree_info_t;
   typedef SExpParser::tree_iter_t                               tree_iter_t;
-  typedef hydla::parse_tree::node_sptr                          node_sptr;
+  typedef hydla::symbolic_expression::node_sptr                          node_sptr;
 
   /**
    * 空集合を表すS式 "list"

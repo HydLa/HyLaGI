@@ -6,8 +6,8 @@
 
 #include "ParseError.h"
 
-using namespace hydla::parse_tree;
-using namespace hydla::parse_error;
+using namespace hydla::symbolic_expression;
+using namespace hydla::parser::error;
 
 namespace hydla { 
 namespace parser {
@@ -41,8 +41,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node){}
 
 
 ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
-  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
-  DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
+  DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>& constraint_definition,
+  DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&    program_definition,
   hydla::parse_tree::ParseTree* parse_tree) :
     constraint_definition_(constraint_definition),
     program_definition_(program_definition),
@@ -52,7 +52,7 @@ ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
 ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 {}
 
-void ParseTreeSemanticAnalyzer::analyze(node_sptr& n/*, variable_map_t& variable_map*/)
+void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n/*, variable_map_t& variable_map*/)
 {
   if(n) {
     State state;
@@ -82,9 +82,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramDefinition> node)
   assert(0);
 }
 
-node_sptr ParseTreeSemanticAnalyzer::apply_definition(
+symbolic_expression::node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   const referenced_definition_t& def_type,
-  boost::shared_ptr<hydla::parse_tree::Caller> caller, 
+  boost::shared_ptr<hydla::symbolic_expression::Caller> caller, 
   boost::shared_ptr<Definition> definition)
 {
   State& state = todo_stack_.top();
@@ -375,7 +375,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
   if(it != state.formal_arg_map.end()) {
     // 自身が仮引数であった場合、書き換える
     new_child_ = (*it).second->clone();
-    boost::shared_ptr<hydla::parse_tree::Variable> v_ptr = boost::dynamic_pointer_cast<Variable>(new_child_);
+    boost::shared_ptr<hydla::symbolic_expression::Variable> v_ptr = boost::dynamic_pointer_cast<Variable>(new_child_);
     if(v_ptr){
       //変数だった場合、登録する
       parse_tree_->register_variable(v_ptr->get_name(), state.differential_count);

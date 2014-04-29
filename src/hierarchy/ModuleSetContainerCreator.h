@@ -15,7 +15,7 @@
 #include "ModuleSet.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 
 
@@ -23,7 +23,7 @@ namespace ch {
  * Container型のモジュール集合の集合を表すクラスを構築するためのクラス
  */
 template <class Container>
-class ModuleSetContainerCreator : public hydla::parse_tree::DefaultTreeVisitor {
+class ModuleSetContainerCreator : public hydla::symbolic_expression::DefaultTreeVisitor {
 public:
   typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
   typedef typename boost::shared_ptr<Container> container_sptr;
@@ -61,19 +61,19 @@ public:
     return ret;
   }
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ConstraintCaller> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
   {
     container_name_ = node->get_name();
     accept(node->get_child());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::ProgramCaller> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
   {
     container_name_ = node->get_name();
     accept(node->get_child());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Constraint> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
     container_name_ += "$";
     container_name_ += boost::lexical_cast<std::string>(
@@ -88,7 +88,7 @@ public:
     mod_set_stack_.push_back(container);
   }
 
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Weaker> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
   {    
     constraint_level_++;
     container_name_.clear();
@@ -110,7 +110,7 @@ public:
   /**
   * 並列合成「,」
    */
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Parallel> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node)
   {    
     container_name_.clear();
 
@@ -145,7 +145,7 @@ private:
   int constraint_level_;
 };
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 #endif // _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_

@@ -17,14 +17,14 @@ ContinuityMapMaker::~ContinuityMapMaker()
 
 
 // Ask制約
-void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
+void ContinuityMapMaker::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
   accept(node->get_child());
 }
 
 
 // 変数
-void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+void ContinuityMapMaker::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   if(!differential_count_) return;
   continuity_map_t::iterator find = variables_.find(node->get_name());
@@ -38,7 +38,7 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Variable> no
 
 
 // 微分
-void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+void ContinuityMapMaker::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
   differential_count_++;
   accept(node->get_child());
@@ -47,7 +47,7 @@ void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Differential
 
 
 // 左極限
-void ContinuityMapMaker::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
+void ContinuityMapMaker::visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
 {
   if(in_interval_){
     accept(node->get_child());

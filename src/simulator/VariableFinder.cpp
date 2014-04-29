@@ -13,7 +13,7 @@ VariableFinder::VariableFinder()
 VariableFinder::~VariableFinder()
 {}
 
-void VariableFinder::visit_node(boost::shared_ptr<parse_tree::Node> node, bool include_guard)
+void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool include_guard)
 {
   include_guard_ = include_guard;
   in_prev_ = false;
@@ -85,7 +85,7 @@ VariableFinder::variable_set_t VariableFinder::get_prev_variable_set() const{ret
 
 
 // Ask制約
-void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
+void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
   if(include_guard_)
   {
@@ -96,7 +96,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Ask> node)
 
 
 // 変数
-void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
+void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   if(in_prev_){
     prev_variables_.insert(std::make_pair(node->get_name(), differential_count_));
@@ -109,7 +109,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Variable> node)
 
 
 // 微分
-void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Differential> node)
+void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
   differential_count_++;
   accept(node->get_child());
@@ -118,7 +118,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Differential> no
 
 
 // 左極限
-void VariableFinder::visit(boost::shared_ptr<hydla::parse_tree::Previous> node)
+void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
 {
   in_prev_ = true;
   accept(node->get_child());

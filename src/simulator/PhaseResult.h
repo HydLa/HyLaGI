@@ -51,10 +51,10 @@ typedef enum {
 } PhaseType;
 
 
-typedef std::vector<boost::shared_ptr<hydla::parse_tree::Tell> > tells_t;
-typedef std::set<boost::shared_ptr<hydla::parse_tree::Tell> >    collected_tells_t;
-typedef std::set<boost::shared_ptr<hydla::parse_tree::Always> >  always_set_t;
-typedef std::set<boost::shared_ptr<hydla::parse_tree::Ask> >     ask_set_t;
+typedef std::vector<boost::shared_ptr<hydla::symbolic_expression::Tell> > tells_t;
+typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Tell> >    collected_tells_t;
+typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
+typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
@@ -73,7 +73,7 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
 
-typedef boost::shared_ptr<hydla::ch::ModuleSetContainer> module_set_container_sptr;
+typedef boost::shared_ptr<hydla::hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
 
@@ -94,7 +94,7 @@ public:
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   int step;
-  hydla::ch::module_set_sptr module_set;
+  hydla::hierarchy::module_set_sptr module_set;
 
   change_variables_t changed_variables;
   module_set_container_sptr module_set_container;

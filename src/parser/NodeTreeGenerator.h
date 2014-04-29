@@ -21,15 +21,15 @@ namespace parser {
 class NodeTreeGenerator
 {
 public:
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
 
   /**
    * default constructor
    * (use temporary ones)
    */
   NodeTreeGenerator():
-    temporary_constraint_definition_(new DefinitionContainer<hydla::parse_tree::ConstraintDefinition>()),
-    temporary_program_definition_(new DefinitionContainer<hydla::parse_tree::ProgramDefinition>()),
+    temporary_constraint_definition_(new DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>()),
+    temporary_program_definition_(new DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>()),
     assertion_node_(temporary_assertion_node_),
     constraint_definition_(*temporary_constraint_definition_),
     program_definition_(*temporary_program_definition_),
@@ -37,9 +37,9 @@ public:
   {}
 
   NodeTreeGenerator(
-    node_sptr&    assertion_node,
-    DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition,
-    DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition,
+    symbolic_expression::node_sptr&    assertion_node,
+    DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>& constraint_definition,
+    DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&    program_definition,
     const boost::shared_ptr<NodeFactory>& node_factory) :
     temporary_constraint_definition_(nullptr),
     temporary_program_definition_(nullptr),
@@ -66,7 +66,7 @@ public:
    * ASTを元にParseTreeを構築する
    */
   template<typename TreeIter>
-  node_sptr generate(const TreeIter& tree_iter)
+  symbolic_expression::node_sptr generate(const TreeIter& tree_iter)
   {
     constraint_definition_.clear();
     program_definition_.clear();
@@ -179,11 +179,11 @@ private:
    * 比較演算子を返す
    */
   template<typename TreeIter>
-  boost::shared_ptr<hydla::parse_tree::BinaryNode>
+  boost::shared_ptr<hydla::symbolic_expression::BinaryNode>
   get_comp_node(const TreeIter& tree_iter)
   {
     using namespace hydla::grammer_rule;
-    using namespace hydla::parse_tree;
+    using namespace hydla::symbolic_expression;
     long node_id = tree_iter->value.id().to_long();
     switch(node_id) 
     {
@@ -202,11 +202,11 @@ private:
    * ParseTreeを構築する
    */
   template<typename TreeIter>
-  boost::shared_ptr<hydla::parse_tree::Node>
+  boost::shared_ptr<hydla::symbolic_expression::Node>
   create_parse_tree(const TreeIter& tree_iter)
   {
     using namespace hydla::grammer_rule;
-    using namespace hydla::parse_tree;
+    using namespace hydla::symbolic_expression;
 
     TreeIter ch = tree_iter->children.begin();
 
@@ -216,11 +216,11 @@ private:
       // プログラムの集合
       case RI_Statements:
       {
-        node_sptr node_tree;
+        symbolic_expression::node_sptr node_tree;
         TreeIter it  = tree_iter->children.begin();
         TreeIter end = tree_iter->children.end();
         while(it != end) {
-          if(node_sptr new_tree = create_parse_tree(it++)) {
+          if(symbolic_expression::node_sptr new_tree = create_parse_tree(it++)) {
             // 制約宣言が複数回出現した場合は「,」によって連結する
             if(node_tree) {
               boost::shared_ptr<Parallel> rn(node_factory_->create<Parallel>());
@@ -245,13 +245,13 @@ private:
           // 既に制約/プログラム定義として定義されていないかどうか
           if(constraint_definition_.is_registered(d) ||
              program_definition_.is_registered(d)) {
-            throw hydla::parse_error::MultipleDefinition(d->get_name()); 
+            throw hydla::parser::error::MultipleDefinition(d->get_name()); 
           }
 
           // 定義ノードの登録
           constraint_definition_.add_definition(d);
 
-          return node_sptr();
+          return symbolic_expression::node_sptr();
         }
 
       // プログラム定義
@@ -264,13 +264,13 @@ private:
           // 既に制約/プログラム定義として定義されていないかどうか
           if(constraint_definition_.is_registered(d) ||
              program_definition_.is_registered(d)) {
-            throw hydla::parse_error::MultipleDefinition(d->get_name()); 
+            throw hydla::parser::error::MultipleDefinition(d->get_name()); 
           }
 
           // 定義ノードの登録
           program_definition_.add_definition(d);
 
-          return node_sptr();
+          return symbolic_expression::node_sptr();
       }
       
       // 制約呼び出し
@@ -289,10 +289,10 @@ private:
       // （連鎖）制約
       case RI_Chain:
       {
-        node_sptr node_tree;
+        symbolic_expression::node_sptr node_tree;
         TreeIter it  = tree_iter->children.begin();
         TreeIter end = tree_iter->children.end();
-        node_sptr lhs_exp, rhs_exp;
+        symbolic_expression::node_sptr lhs_exp, rhs_exp;
         assert(it!=end);
         lhs_exp = create_parse_tree(it++);
         while(it != end) {
@@ -430,7 +430,7 @@ private:
         assert(!assertion_node_);
         
         assertion_node_ = create_parse_tree(ch);
-        return node_sptr();
+        return symbolic_expression::node_sptr();
       }
       
       case RI_Command://wada
@@ -460,7 +460,7 @@ private:
           io_node->set_string(str);
           io_node->set_args(str);
         }else{
-            throw hydla::parse_error::InvalidCommand(command_name); 
+            throw hydla::parser::error::InvalidCommand(command_name); 
         }
         return io_node;
       }
@@ -487,18 +487,18 @@ private:
       default:
       {
         assert(0);
-        return node_sptr();
+        return symbolic_expression::node_sptr();
       }  
     }
   }  
 
-  node_sptr temporary_assertion_node_;
-  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>* temporary_constraint_definition_;
-  DefinitionContainer<hydla::parse_tree::ProgramDefinition>*    temporary_program_definition_;
+  symbolic_expression::node_sptr temporary_assertion_node_;
+  DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>* temporary_constraint_definition_;
+  DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>*    temporary_program_definition_;
   
-  node_sptr& assertion_node_;
-  DefinitionContainer<hydla::parse_tree::ConstraintDefinition>& constraint_definition_;
-  DefinitionContainer<hydla::parse_tree::ProgramDefinition>&    program_definition_;
+  symbolic_expression::node_sptr& assertion_node_;
+  DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>& constraint_definition_;
+  DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&    program_definition_;
 
   boost::shared_ptr<NodeFactory>   node_factory_;
 };

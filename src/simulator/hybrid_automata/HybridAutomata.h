@@ -22,7 +22,7 @@ public:
   HybridAutomata(Opts &opts);
   virtual ~HybridAutomata();
 
-  typedef hydla::ch::module_set_sptr module_set_sptr_t;
+  typedef hydla::hierarchy::module_set_sptr module_set_sptr_t;
   typedef std::vector<module_set_sptr_t> module_set_sptrs_t;
 
   typedef phase_result_sptrs_t													 current_condition_t;

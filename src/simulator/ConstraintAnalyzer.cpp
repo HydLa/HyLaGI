@@ -12,9 +12,9 @@
 #include "../backend/Backend.h"
 
 using namespace std;
-using namespace hydla::ch;
+using namespace hydla::hierarchy;
 using namespace hydla::simulator;
-using namespace hydla::parse_tree;
+using namespace hydla::symbolic_expression;
 using namespace hydla::timer;
 
 namespace hydla{
@@ -70,7 +70,7 @@ void ConstraintAnalyzer::print_conditions()
 
 void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
   // msに対する無矛盾の条件
-  node_sptr cond = conditions_[ms->get_name()];
+  symbolic_expression::node_sptr cond = conditions_[ms->get_name()];
   cm_map_list_t parents_cm;
   // flag用変数
   bool in_m = false;
@@ -179,7 +179,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       }
       if(phase == IntervalPhase)
       {
-        node_sptr rhs(new Number("0"));
+        symbolic_expression::node_sptr rhs(new Number("0"));
         fmt = phase == PointPhase?"vn":"vt";
         fmt += "en";
         variable_t var(it->first, -it->second + 1);
@@ -222,9 +222,9 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 			    &negative_asks);
 
   // 求められた条件を入れる変数
-  node_sptr condition_node;
+  symbolic_expression::node_sptr condition_node;
   // ガード条件の仮定に関する条件を保持する変数
-  node_sptr guard_condition;
+  symbolic_expression::node_sptr guard_condition;
 
   // ask制約のガード条件の成否のパターンを全通り考える(2^(ask制約の個数)通り)
   for(int i = 0; i < (1 << negative_asks.size()) && ret != CONDITIONS_TRUE; i++){
@@ -248,7 +248,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       }else{
 	  std::cout << " --- " << get_infix_string((*it)->get_guard()) << std::endl;
 	// 成り立たないと仮定したガード条件の後件に関する連続性を見る
-        constraint_list.add_constraint(node_sptr(new Not((*it)->get_guard())));
+        constraint_list.add_constraint(symbolic_expression::node_sptr(new Not((*it)->get_guard())));
         if(searcher.judge_non_prev((*it)->get_guard())){
 	  maker.visit_node((*it)->get_child(), false, true);
 	  non_prev = true;
@@ -312,7 +312,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       add_continuity(continuity_map, PointPhase);
     }
     {
-      node_sptr tmp_node;
+      symbolic_expression::node_sptr tmp_node;
       //      std::cout << "    result" << std::endl;
       // あるガード条件の仮定の下に得られた条件をtmp_nodeに入れる
       backend_->call("findConditions", 0, "", "ep", &tmp_node);
@@ -323,8 +323,8 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
           backend_->call("endTemporary",0,"","");
 	  break;
 	}
-        if(condition_node == NULL) condition_node = node_sptr(tmp_node);
-        else condition_node = node_sptr(new LogicalOr(condition_node, tmp_node));
+        if(condition_node == NULL) condition_node = symbolic_expression::node_sptr(tmp_node);
+        else condition_node = symbolic_expression::node_sptr(new LogicalOr(condition_node, tmp_node));
         ret = CONDITIONS_VARIABLE_CONDITIONS;  
       }
     }
@@ -337,7 +337,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     // 何らかの条件が求まったとしても簡約するとTrueになる可能性があるので簡約する
     // 条件を簡単にする目的もある
     // 求まっている条件は A || B || … となっていて ret がCONDITIONS_VARIABLE_CONDITIONSになっていることから簡約してもFalseには絶対にならない
-    if(!b) condition_node = node_sptr(new Not(condition_node));
+    if(!b) condition_node = symbolic_expression::node_sptr(new Not(condition_node));
  //   backend_->call("Simplify", 1, "ep", "ep", &condition_node, &condition_node);
     if((new True())->is_same_struct(*condition_node, false)){
       ret = CONDITIONS_TRUE;
@@ -345,7 +345,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     conditions_[ms->get_name()] = condition_node;
     break;
   case CONDITIONS_TRUE:
-    conditions_[ms->get_name()] = node_sptr(new True());
+    conditions_[ms->get_name()] = symbolic_expression::node_sptr(new True());
     break;
   case CONDITIONS_FALSE:
     break;

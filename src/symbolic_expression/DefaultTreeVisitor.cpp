@@ -2,7 +2,7 @@
 
 
 namespace hydla { 
-namespace parse_tree {
+namespace symbolic_expression {
 
 DefaultTreeVisitor::DefaultTreeVisitor()
 {}
@@ -107,5 +107,5 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<SVtimer> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<Infinity> node)              {}
 
 
-} //namespace parse_tree
+} //namespace symbolic_expression
 } //namespace hydla

@@ -38,6 +38,7 @@ struct Opts {
   std::string max_time;
   bool approx;
   bool cheby;
+  bool epsilon_mode;
   bool nd_mode;
   bool interactive_mode;
   bool use_unsat_core;
@@ -54,7 +55,7 @@ struct Opts {
   std::string output_interval;
   int output_precision;
   std::string solver;
-  hydla::parse_tree::node_sptr assertion;
+  hydla::symbolic_expression::node_sptr assertion;
   std::set<std::string> output_variables;
   int optimization_level;
   std::string analysis_mode;
@@ -69,15 +70,15 @@ struct Opts {
   SearchMethod search_method;
 };
 
-typedef boost::shared_ptr<hydla::ch::ModuleSet>           module_set_sptr;
-typedef hydla::ch::ModuleSetContainer                     module_set_container_t;
+typedef boost::shared_ptr<hydla::hierarchy::ModuleSet>           module_set_sptr;
+typedef hydla::hierarchy::ModuleSetContainer                     module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
-typedef hydla::ch::ModuleSetContainer::module_set_list_t  module_set_list_t;
+typedef hydla::hierarchy::ModuleSetContainer::module_set_list_t  module_set_list_t;
 typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
-typedef boost::shared_ptr<const hydla::ch::ModuleSet>    module_set_const_sptr;
+typedef boost::shared_ptr<const hydla::hierarchy::ModuleSet>    module_set_const_sptr;
 
 
-typedef std::map<boost::shared_ptr<hydla::parse_tree::Ask>, bool> entailed_prev_map_t;
+typedef std::map<boost::shared_ptr<hydla::symbolic_expression::Ask>, bool> entailed_prev_map_t;
 typedef std::vector<variable_map_t>      variable_maps_t;
 
 typedef std::map<std::string, unsigned int> profile_t;
@@ -87,7 +88,7 @@ typedef std::map<std::string, unsigned int> profile_t;
  * シミュレーションすべきフェーズを表す構造体
  */
 struct SimulationTodo{
-  typedef std::map<hydla::ch::ModuleSet, ConstraintStore> ms_cache_t;
+  typedef std::map<hydla::hierarchy::ModuleSet, ConstraintStore> ms_cache_t;
 
   PhaseType                 phase_type;
   int                       id;

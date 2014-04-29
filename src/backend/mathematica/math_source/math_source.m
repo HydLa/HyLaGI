@@ -156,8 +156,8 @@ publicMethod[
     {sol, tStore},
     sol = exDSolve[cons, initCons];
     debugPrint["sol after exDSolve", sol];
-    If[sol[[1]] === underConstraint,
-      underConstraint,
+    If[sol === overConstraint || sol[[1]] === underConstraint,
+      error,
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       toReturnForm[tStore]
@@ -696,8 +696,8 @@ Module[
       resultRule = Union[resultRule, rules[[1]] ];
       simplePrint[resultRule];
       tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-      (* if there exists expression which has t only, it's inconsistent *)
-      If[MemberQ[tmpExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
+      tmpExpr = Map[(If[!hasVariable[#], Reduce[#], #])&, tmpExpr];
+      If[MemberQ[tmpExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
       tmpExpr = Select[tmpExpr, (#=!=True)&];
       simplePrint[tmpExpr];
       resultCons = applyDSolveResult[resultCons, rules[[1]] ];

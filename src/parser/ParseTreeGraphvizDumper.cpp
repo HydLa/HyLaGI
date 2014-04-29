@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <sstream>
 
-using namespace hydla::parse_tree;
-using namespace hydla::parse_error;
+using namespace hydla::symbolic_expression;
+using namespace hydla::parser::error;
 using namespace std;
 
 using std::make_pair;
@@ -52,7 +52,7 @@ namespace {
   };
 }
 
-std::ostream& ParseTreeGraphvizDumper::dump(std::ostream& s, const node_sptr& node)
+std::ostream& ParseTreeGraphvizDumper::dump(std::ostream& s, const symbolic_expression::node_sptr& node)
 {
   node_id_ = 0;
   nodes_.clear();
@@ -77,13 +77,13 @@ std::ostream& ParseTreeGraphvizDumper::dump(std::ostream& s, const node_sptr& no
 
 void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<FactorNode> node)
 {
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_node_type_name()));
 }
 
 void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<UnaryNode> node)
 {
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_node_type_name()));
 
   edges_.insert(make_pair(own_id, ++node_id_));
@@ -92,7 +92,7 @@ void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<UnaryNode> node)
 
 void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<BinaryNode> node)
 {
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_node_type_name()));
 
   edges_.insert(make_pair(own_id, ++node_id_));
@@ -105,7 +105,7 @@ void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<BinaryNode> node)
 
 void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<ArbitraryNode> node)
 {
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_string()));
 
   for(int i=0; i< node->get_arguments_size();i++){
@@ -335,7 +335,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<False> node)
 // 変数
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Variable> node)
 {
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, 
     "{" + node->get_node_type_name() + " | " + node->get_name() + "}"));
 }
@@ -343,7 +343,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Variable> node)
 // 数字
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Number> node)
 {
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, 
     "{" + node->get_node_type_name() + " | " + node->get_number() + "}"));
 }
@@ -352,7 +352,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Float> node)
 {
   stringstream sstr;
   sstr << node->get_number();
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, 
                "{" + node->get_node_type_name()
                + " | " + sstr.str() + "}"));
@@ -368,7 +368,7 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Infinity> node)
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Parameter> node)
 {
   
-  graph_node_id_t own_id = node_id_;
+  node_id_t own_id = node_id_;
   stringstream sstr;
   sstr << "{" << node->get_node_type_name() << " | " << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "}";
   nodes_.insert(make_pair(own_id, sstr.str()));

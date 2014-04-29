@@ -3,16 +3,16 @@
 #include <iostream>
 
 namespace hydla{
-  namespace ch{
+  namespace hierarchy{
     CMMap::CMMap():searched_(false){}
-    CMMap::CMMap(hydla::parse_tree::node_sptr& cond):condition_(cond),searched_(false){}
+    CMMap::CMMap(hydla::symbolic_expression::node_sptr& cond):condition_(cond),searched_(false){}
     CMMap::~CMMap(){}
 
     module_set_list_t CMMap::get_module_set_list(){
       return ms_list_;
     }
     
-    hydla::parse_tree::node_sptr& CMMap::get_condition(){ return condition_; }
+    hydla::symbolic_expression::node_sptr& CMMap::get_condition(){ return condition_; }
 
     bool CMMap::is_searched(){
       return searched_;
@@ -44,7 +44,7 @@ namespace hydla{
       return false;
     }
 
-    void CMMap::set_condition(const hydla::parse_tree::node_sptr& cond){
+    void CMMap::set_condition(const hydla::symbolic_expression::node_sptr& cond){
       condition_ = cond;
     }
 
@@ -65,7 +65,7 @@ namespace hydla{
     }
 
     void CMMap::reset(){
-      condition_ = hydla::parse_tree::node_sptr();
+      condition_ = hydla::symbolic_expression::node_sptr();
       ms_list_.clear();
       parents_.clear();
       children_.clear();
@@ -73,16 +73,16 @@ namespace hydla{
     }
 
     std::ostream& CMMap::dump(std::ostream& s) const{
-      s << "condition : " << hydla::parse_tree::TreeInfixPrinter().get_infix_string(condition_) << std::endl;
+      s << "condition : " << hydla::symbolic_expression::TreeInfixPrinter().get_infix_string(condition_) << std::endl;
       //      s << "*****" << condition_ << "*****" << std::endl;
       //      s << "  parent" << std::endl;
       /*      for(cm_map_list_t::const_iterator it = parents_.begin(); it != parents_.end(); it++){
-	s << "    " << hydla::parse_tree::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
+	s << "    " << hydla::symbolic_expression::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
 	//	s << "    " << (*it)->get_condition() << std::endl;
       }
       s << "  children" << std::endl;
       for(cm_map_list_t::const_iterator it = children_.begin(); it != children_.end(); it++){
-	s << "    " << hydla::parse_tree::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
+	s << "    " << hydla::symbolic_expression::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
 	//	s << "    " << (*it)->get_condition() << std::endl;
       }
       */

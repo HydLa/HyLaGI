@@ -22,8 +22,8 @@ public:
   /**
    * 文字列(制約モジュール集合の名前)をキーに、そのモジュール集合に対応する条件(矛盾の条件もしくは無矛盾の条件)を持つ型
    */
-  typedef std::map<std::string, hydla::parse_tree::node_sptr> conditions_map_t;
-  //  typedef std::map<module_set_sptr, node_sptr> conditions_map_t;
+  typedef std::map<std::string, hydla::symbolic_expression::node_sptr> conditions_map_t;
+  //  typedef std::map<module_set_sptr, symbolic_expression::node_sptr> conditions_map_t;
   ConstraintAnalyzer(); 
   ConstraintAnalyzer(backend_sptr_t back);
   virtual ~ConstraintAnalyzer();
@@ -73,13 +73,13 @@ protected:
    * 極大無矛盾となる制約モジュール集合を値に持つmapのlist
    * 順番は極大な方から順に持っている
    */
-  hydla::ch::cm_map_list_t cm_list_;
+  hydla::hierarchy::cm_map_list_t cm_list_;
 
   /**
    * 上のリストのルート
    * 多分いらないけど持っておく
    */
-  hydla::ch::cm_map_sptr root_cm_;
+  hydla::hierarchy::cm_map_sptr root_cm_;
 
   backend_sptr_t backend_;
 };

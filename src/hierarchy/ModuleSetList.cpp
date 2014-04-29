@@ -7,7 +7,7 @@
 using namespace boost::lambda;
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 ModuleSetList::ModuleSetList()
 {}
@@ -152,5 +152,5 @@ void ModuleSetList::mark_nodes(){
   ms_to_visit_.clear();
 }
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla

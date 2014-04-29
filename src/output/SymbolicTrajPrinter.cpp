@@ -3,9 +3,13 @@
 #include <stack>
 #include "Parameter.h"
 #include "Logger.h"
+#include "Backend.h"
+#include "EpsilonMode.h"
 
 using namespace hydla::simulator;
 using namespace std;
+
+using namespace hydla::backend;
 
 namespace hydla{
 namespace output{
@@ -36,7 +40,14 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << result.module_set->get_name() << endl;
     sstr << "time\t: " << result.current_time << "\n";
   }
+  if(opts_->epsilon_mode){
+    output_limit_of_time(sstr,backend_.get(),result);
+  }
   output_variable_map(sstr, result.variable_map);
+
+  if(opts_->epsilon_mode){
+    output_limits_of_variable_map(sstr,backend_.get(),result,result.variable_map);
+  }
 
   return sstr.str();
 }
@@ -53,13 +64,12 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
   }
 }
 
-
 void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    stream << it->first << "\t: " << it->second << "\n";    
+    stream << it->first << "\t: " << it->second << "\n";
   }
 }
 
@@ -115,23 +125,23 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       case simulator::ASSERTION:
         ostream_ << "# assertion failed\n" ;
         break;
-        
+
       case simulator::OTHER_ASSERTION:
         ostream_ << "# terminated by failure of assertion in another case\n" ;
         break;
-        
+
       case simulator::TIME_LIMIT:
         ostream_ << "# time reached limit\n" ;
         break;
-        
+
       case simulator::STEP_LIMIT:
         ostream_ << "# number of phases reached limit\n" ;
         break;
-        
+
       case simulator::TIME_OUT_REACHED:
         ostream_ << "# time out\n" ;
         break;
-        
+
       case simulator::NOT_UNIQUE_IN_INTERVAL:
         ostream_ << "# some values of variables are not unique in IP\n" ;
         break;
@@ -153,7 +163,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       result.push_back(sstr.str());
     }
     result.push_back(get_state_output(*node));
-    
+
     phase_result_sptrs_t::const_iterator it = node->children.begin(), end = node->children.end();
     for(;it!=end;it++){
       output_result_node(*it, result, case_num, phase_num);
@@ -165,9 +175,113 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
   }
 }
-  
 
+void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,Opts *op){
+  backend_ = back;
+  opts_ = op;
+}
 
+void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* backend_, const phase_result_t& result) const
+{
+  simulator::value_t ret_current_time,ret_end_time;
+  symbolic_expression::node_sptr tmp_current_time,tmp_end_time;
+  int check_result,check_current_time,check_end_time;
+
+  if(result.phase_type == IntervalPhase)
+  {
+    if(!result.end_time.undefined())
+    {
+      tmp_current_time = result.current_time.get_node();
+      tmp_end_time = result.end_time.get_node();
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_current_time);
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp_end_time, &check_end_time);
+      check_result = check_current_time * check_end_time;
+      if(check_result == 1)
+      {
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        stream << "Limit(time)\t: " << ret_current_time << "->" << ret_end_time << "\n";
+      }
+      else
+      {
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        stream << "Limit(time)\t+ : " << ret_current_time << "->" << ret_end_time << "\n";
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        stream << "Limit(time)\t- : " << ret_current_time << "->" << ret_end_time << "\n";
+      }
+    }
+    else
+    {
+      tmp_current_time = result.current_time.get_node();
+      backend_->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+      if(check_result == 1)
+      {
+        backend_->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(time)\t: " << ret_current_time << "->" << "???" << "\n";
+      }
+      else
+      {
+        backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(time)\t+ : " << ret_current_time << "->" << "???" << "\n";
+        backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(time)\t- : " << ret_current_time << "->" << "???" << "\n";
+      }
+    }
+  }
+  else
+  {
+    tmp_current_time = result.current_time.get_node();
+    backend_->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+    if(check_result == 1)
+    {
+      backend_->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+      stream << "Limit(time)\t: " << ret_current_time << "\n";
+    }
+    else
+    {
+      backend_->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+      stream << "Limit(time)\t+ : " << ret_current_time << "\n";
+      backend_->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+      stream << "Limit(time)\t- : " << ret_current_time << "\n";
+    }
+  }
+}
+
+void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const
+{
+  variable_map_t::const_iterator it  = vm.begin();
+  variable_map_t::const_iterator end = vm.end();
+  simulator::value_t ret;
+  simulator::value_t tmp;
+  int check_result;
+  it  = vm.begin();
+  for(; it!=end; ++it)
+  {
+    if(it->second.unique())
+    {
+      tmp = it->second.get_unique();
+      backend_->call("checkEpsilon", 1, "vln", "i",&tmp, &check_result);
+      if(check_result == 1)
+      {
+        backend_->call("limitEpsilon", 1, "vln", "vl", &tmp, &ret);
+        stream << "Limit(" << it->first << ")\t  : " << ret << "\n";
+      }
+      else
+      {
+        backend_->call("limitEpsilonP", 1, "vln", "vl", &tmp, &ret);
+        stream << "Limit(" << it->first << ")\t+ : " << ret << "\n";
+        backend_->call("limitEpsilonM", 1, "vln", "vl", &tmp, &ret);
+        stream << "Limit(" << it->first << ")\t- : " << ret << "\n";
+      }
+    }
+    else
+    {
+      stream << "Limit(" << it->first << ")\t: " << it->second << "\n";
+    }
+  }
+}
 
 } // output
 } // hydla

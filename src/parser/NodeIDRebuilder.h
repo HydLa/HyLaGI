@@ -9,10 +9,10 @@ namespace hydla {
 namespace parser {
 
 class NodeIDRebuilder : 
-  public hydla::parse_tree::BaseNodeVisitor
+  public hydla::symbolic_expression::BaseNodeVisitor
 {
 public:
-  typedef hydla::parse_tree::node_sptr node_sptr;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
 
   NodeIDRebuilder()
   {}
@@ -31,20 +31,20 @@ public:
   }
 
   /// 因子ノードの呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::FactorNode> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::FactorNode> node)
   {
     rebuild_node(node);
   }
   
   /// 1つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::UnaryNode> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnaryNode> node)
   {
     rebuild_node(node);
     accept(node->get_child());
   }
 
   /// 2つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::BinaryNode> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::BinaryNode> node)
   {    
     rebuild_node(node);
     accept(node->get_lhs());

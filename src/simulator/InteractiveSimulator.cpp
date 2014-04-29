@@ -32,8 +32,8 @@
 using namespace boost;
 using namespace std;
 using namespace hydla::grammer_rule;
-using namespace hydla::parse_error;
-using namespace hydla::parse_tree;
+using namespace hydla::parser::error;
+using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
 using namespace hydla::interval;
 
@@ -322,7 +322,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     range.set_lower_bound(lowvalue,lowerflag);
     parameter_t introduced_par = introduce_parameter(v_it->first, todo->parent, range);
     pm[introduced_par] = range;
-    value_t pvalue(node_sptr(new parse_tree::Parameter(v_it->first.get_name(),
+    value_t pvalue(symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_it->first.get_name(),
       v_it->first.get_differential_count(),
       todo->parent->id)));
     vm[v_it->first] = pvalue;
@@ -463,7 +463,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
     always_set_t         expanded_always;
     positive_asks_t           positive_asks;
     int                       step;
-    //hydla::ch::ModuleSet module_set;
+    //hydla::hierarchy::ModuleSet module_set;
     CauseForTermination         cause_for_termination;
     //phase_result_sptrs_t       children;
     //phase_result_sptr_t        parent;
@@ -534,7 +534,7 @@ int save_state(simulation_todo_sptr_t& simulation_phase){
       //ofs << positive_asks << endl;
       //ofs << changed_asks << endl;
       //ofs << step << endl;
-     //fwrite(&module_set    , sizeof(hydla::ch::ModuleSet) , 1 , fp);
+     //fwrite(&module_set    , sizeof(hydla::hierarchy::ModuleSet) , 1 , fp);
       //ofs << cause_for_termination << endl;
     temp = temp->parent;
   }
@@ -565,7 +565,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     always_set_t         expanded_always;
     positive_asks_t           positive_asks;
     int                       step;
-    //hydla::ch::ModuleSet module_set;
+    //hydla::hierarchy::ModuleSet module_set;
     CauseForTermination         cause_for_termination;
 
     cout << "file read start" << endl;
@@ -614,7 +614,7 @@ int load_state(simulation_todo_sptr_t& simulation_phase){
     //ifs >> positive_asks;
     //ifs >> changed_asks;
     //ifs >> step;
-    //fread(&module_set         , sizeof(hydla::ch::ModuleSet) , 1 , fp);
+    //fread(&module_set         , sizeof(hydla::hierarchy::ModuleSet) , 1 , fp);
     //ifs >> cause_for_termination;
 
     cout << "read end "<< endl;
@@ -688,7 +688,7 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   }
 
   NodeTreeGenerator genarator;
-  node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
+  symbolic_expression::node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
 
   phase_simulator_->set_break_condition(node_tree);
   return 0;

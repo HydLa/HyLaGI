@@ -10,7 +10,7 @@
 #include "ModuleSetContainer.h"
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 class ModuleSetGraph : public ModuleSetContainer {
 public:
@@ -110,7 +110,7 @@ private:
 
 
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
 
 #endif // _INCLUDED_HTDLA_CH_MODULE_SET_GRAPH_H_

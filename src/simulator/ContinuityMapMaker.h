@@ -18,7 +18,7 @@ typedef std::map<std::string, int>                               continuity_map_
 /**
  * Tellノードを調べ，連続性の根拠となる変数（とその微分値）の出現を数えるクラス
  */
-class ContinuityMapMaker : public parse_tree::DefaultTreeVisitor {
+class ContinuityMapMaker : public symbolic_expression::DefaultTreeVisitor {
 public:
   
   ContinuityMapMaker();
@@ -28,7 +28,7 @@ public:
   /** 
    * 
    */
-  void visit_node(boost::shared_ptr<parse_tree::Node> node, const bool& in_IP, const bool& negative)
+  void visit_node(boost::shared_ptr<symbolic_expression::Node> node, const bool& in_IP, const bool& negative)
   {
     in_interval_ = in_IP;
     negative_ = negative;
@@ -53,17 +53,17 @@ public:
   }
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Ask> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // 微分
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Differential> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Previous> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
 
   // 変数
-  virtual void visit(boost::shared_ptr<hydla::parse_tree::Variable> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 
 private:
 

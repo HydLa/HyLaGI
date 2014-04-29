@@ -71,7 +71,7 @@ void ProgramOptions::init_descriptions()
 
     ("find_unsat_core", "find unsat core")
 
-	  ("ha", "convert to HA")
+    ("ha", "convert to HA")
 
     ("find_unsat_core", "find unsat core")
 
@@ -156,7 +156,11 @@ void ProgramOptions::init_descriptions()
 
     ("change,c",
       "change next PP time")
-     /*
+
+    ("epsilon,e",
+     "epsilon mode")
+    
+    /*
     ("phase_expanded", 
      value<int>()->default_value(-1), 
      "simulation limit for number of phases expanded in simulation\n"

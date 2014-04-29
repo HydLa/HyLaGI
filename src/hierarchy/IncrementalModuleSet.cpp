@@ -9,7 +9,7 @@
 using namespace boost::lambda;
 
 namespace hydla {
-namespace ch {
+namespace hierarchy {
 
 IncrementalModuleSet::IncrementalModuleSet()
 {}
@@ -318,5 +318,5 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
     ms_to_visit_.push_back(maximal_module_set_);
   }
 
-} // namespace ch
+} // namespace hierarchy
 } // namespace hydla
