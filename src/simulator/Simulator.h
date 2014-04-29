@@ -118,6 +118,8 @@ struct SimulationTodo{
   int elapsed_time;
   /// map to cache result of calculation for each module_set
   ms_cache_t ms_cache;
+  /// changing variables from previous phase
+  change_variables_t changing_variables;
 
   /**
    * reset members to calculate from the start of the phase

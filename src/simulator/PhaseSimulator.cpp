@@ -197,7 +197,14 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
           HYDLA_LOGGER_DEBUG("INCONSISTENT");
           //if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
           //else
-          todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
+	  if(opts_->reuse){
+	    module_set_sptr changed_ms(new ModuleSet());
+	    for( auto it : *connected_ms ){
+	      if(has_variables(it.second,todo->changing_variables,false)) changed_ms->add_module(it);
+	    }
+	    todo->module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
+	  }
+	  else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           return result;
         }
       }
@@ -732,8 +739,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   bool expanded;
 
-  change_variables_t changing_variables;
-
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
       ask_collector.collect_ask(&expanded_always,
@@ -741,10 +746,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           &negative_asks,
           &unknown_asks);
       apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
-      set_changing_variables( state->parent, ms, positive_asks, negative_asks, changing_variables );
+      set_changing_variables( state->parent, ms, positive_asks, negative_asks, state->changing_variables );
     }
     else{
-      changing_variables = state->parent->changed_variables;
+      state->changing_variables = state->parent->changed_variables;
     }
   }
 
@@ -776,8 +781,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       {
         VariableFinder variable_finder;
         variable_finder.visit_node(tell);
-        if(!variable_finder.include_variables(changing_variables)
-           && (current_phase_ != IntervalPhase || !variable_finder.include_variables_prev(changing_variables)))
+        if(!variable_finder.include_variables(state->changing_variables)
+           && (current_phase_ != IntervalPhase || !variable_finder.include_variables_prev(state->changing_variables)))
         {
           continue;
         }
@@ -813,7 +818,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
     if(opts_->reuse && state->in_following_step()){
-      apply_previous_solution(changing_variables,
+      apply_previous_solution(state->changing_variables,
           state->phase_type == IntervalPhase, state->parent,
           continuity_map, state->current_time );
     }
@@ -830,7 +835,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t cv_unknown_asks, notcv_unknown_asks;
       if(opts_->reuse && state->in_following_step()){
         for( auto ask : unknown_asks ){
-          if(has_variables(ask, changing_variables, state->phase_type == IntervalPhase)){
+          if(has_variables(ask, state->changing_variables, state->phase_type == IntervalPhase)){
             cv_unknown_asks.insert(ask);
           }else{
             notcv_unknown_asks.insert(ask);
@@ -887,11 +892,11 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             if(opts_->reuse && state->in_following_step()){
               if(state->phase_type == PointPhase){
                 apply_entailment_change(it, state->parent->negative_asks,
-                    false, changing_variables,
+                    false, state->changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }else{
                 apply_entailment_change(it, state->parent->parent->negative_asks,
-                    true, changing_variables,
+                    true, state->changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }
             }
@@ -916,11 +921,11 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             if(opts_->reuse && state->in_following_step() ){
               if(state->phase_type == PointPhase){
                 entailment_changed = apply_entailment_change(it, state->parent->positive_asks,
-                    false, changing_variables,
+                    false, state->changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }else{
                 entailment_changed = apply_entailment_change(it, state->parent->parent->positive_asks,
-                    true, changing_variables,
+                    true, state->changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }
               if(entailment_changed) break;
