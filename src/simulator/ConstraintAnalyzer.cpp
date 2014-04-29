@@ -6,8 +6,8 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "ContinuityMapMaker.h"
-#include "NonPrevSearcher.h"
 #include "Timer.h"
+#include "PrevSearcher.h"
 
 #include "../backend/Backend.h"
 
@@ -193,7 +193,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
   ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)
 {
   bool non_prev;
-  NonPrevSearcher searcher;
+  PrevSearcher searcher;
  // if(opts_->analysis_mode == "debug") 
     std::cout << ms->get_name() << std::endl;
   ConstraintAnalyzer::ConditionsResult ret = CONDITIONS_FALSE;
@@ -249,10 +249,10 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 	  std::cout << " --- " << get_infix_string((*it)->get_guard()) << std::endl;
 	// 成り立たないと仮定したガード条件の後件に関する連続性を見る
         constraint_list.add_constraint(symbolic_expression::node_sptr(new Not((*it)->get_guard())));
-        if(searcher.judge_non_prev((*it)->get_guard())){
-	  maker.visit_node((*it)->get_child(), false, true);
-	  non_prev = true;
-	}
+        if(!searcher.search_prev((*it)->get_guard())){
+          maker.visit_node((*it)->get_child(), false, true);
+          non_prev = true;
+        }
       }
     }
 

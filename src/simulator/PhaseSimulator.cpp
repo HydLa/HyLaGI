@@ -1,6 +1,5 @@
 #include "PhaseSimulator.h"
 #include "AskCollector.h"
-#include "NonPrevSearcher.h"
 #include "VariableFinder.h"
 #include "Exceptions.h"
 #include "Backend.h"
@@ -32,7 +31,6 @@ using namespace hydla::backend;
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
-#include "NonPrevSearcher.h"
 
 #include "Backend.h"
 #include "Exceptions.h"
@@ -369,9 +367,9 @@ void PhaseSimulator::initialize(variable_set_t &v,
   negative_asks_t nat;
 
   ac.collect_ask(&eat, &pat, &nat, &prev_guards_);
-  NonPrevSearcher searcher;
+  PrevSearcher searcher;
   for(negative_asks_t::iterator it = prev_guards_.begin(); it != prev_guards_.end();){
-    if(searcher.judge_non_prev((*it)->get_guard())){
+    if(!searcher.search_prev((*it)->get_guard())){
       prev_guards_.erase(it++);
     }else{
       it++;
@@ -1013,11 +1011,11 @@ void PhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discre
   std::cout << "Au: " << unknown_asks << std::endl;
   */
 
-  NonPrevSearcher np_searcher;
+  PrevSearcher searcher;
   ask_set_t prev_asks = unknown_asks;
 
   for( auto ask : unknown_asks ){
-    if( np_searcher.judge_non_prev(ask) ){
+    if( !searcher.search_prev(ask) ){
       prev_asks.erase(ask);
     }else{
       unknown_asks.erase(ask);

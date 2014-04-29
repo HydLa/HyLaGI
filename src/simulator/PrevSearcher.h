@@ -32,7 +32,7 @@ public:
     return include_prev_;
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node){
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)  {
     include_prev_ = true;
   }
   
