@@ -32,7 +32,7 @@ bool VariableFinder::include_variable(const Variable &variable) const
 {
   for(auto found_var : variables_)
   {
-    if(found_var.first == variable.get_name() && found_var.second == variable.get_differential_count())
+    if(variable == found_var)
     {
       return true;
     }
