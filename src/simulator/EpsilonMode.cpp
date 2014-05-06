@@ -1,6 +1,5 @@
 #include "PhaseSimulator.h"
 #include "AskCollector.h"
-#include "NonPrevSearcher.h"
 #include "VariableFinder.h"
 #include "Exceptions.h"
 #include "Backend.h"
@@ -32,7 +31,6 @@ using namespace hydla::backend;
 #include "ContinuityMapMaker.h"
 
 #include "PrevSearcher.h"
-#include "NonPrevSearcher.h"
 
 #include "Backend.h"
 #include "Exceptions.h"

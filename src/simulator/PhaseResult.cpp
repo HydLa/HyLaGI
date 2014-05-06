@@ -142,11 +142,9 @@ std::ostream& operator<<(std::ostream& s, const module_set_sptr& m)
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a)
 {
   s << "%% ChangedVariables: ";
-  change_variables_t::iterator it = a.begin();
-  s << *it;
-  it++;
-  for(; it != a.end(); it++)
-    s << ", " << *it;
+  int i = 1;
+  for(change_variables_t::iterator it = a.begin(); it != a.end(); it++, i++)
+    s << *it << (i<a.size() ? " , " : "");
   s << std::endl;
   return s;
 }
