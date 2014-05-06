@@ -5,6 +5,7 @@
 #include "Backend.h"
 #include "Logger.h"
 #include "VariableFinder.h"
+#include "Variable.h"
 
 using namespace std;
 using namespace boost;
@@ -126,13 +127,13 @@ value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parame
 }
 
 
-void AffineApproximator::approximate(const variable_t &var, variable_map_t&variable_map, parameter_map_t &parameter_map, node_sptr condition)
+void AffineApproximator::approximate(const variable_t &variable_to_approximate, variable_map_t&variable_map, parameter_map_t &parameter_map, node_sptr condition)
 {
-  range_t val = variable_map[var];
+  range_t val = variable_map[variable_to_approximate];
   assert(val.unique());
   node_sptr node = val.get_unique().get_node();
   value_t affine = approximate(node, parameter_map);
-  variable_map[var] = affine;
+  variable_map[variable_to_approximate] = affine;
 
   if(condition.get() != nullptr)
   {
@@ -141,9 +142,24 @@ void AffineApproximator::approximate(const variable_t &var, variable_map_t&varia
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition, false);
-    if(finder.include_variable(var))
+    if(finder.include_variable(variable_to_approximate))
     {
-      assert(0);
+      VariableFinder::variable_set_t variables = finder.get_all_variable_set();
+      if(variables.size() > 2)
+      {
+        //TODO: approximate n-2 variables
+        assert(0);
+      }
+      variable_t remain_var;
+      for(auto var : variables)
+      {
+        if(var != variable_to_approximate)
+        {
+          remain_var = var;
+          break;
+        }
+      }
+      cout << "rem:" << remain_var << endl;
     }
   }
 }

@@ -57,6 +57,13 @@ public:
     return (lhs.name == rhs.name) && (lhs.differential_count == rhs.differential_count);
   }
 
+
+  friend bool operator!=(const Variable& lhs, 
+                        const Variable& rhs)
+  {
+    return !(lhs == rhs);
+  }
+
   friend std::ostream& operator<<(std::ostream& s, 
                                   const Variable& v) 
   {
