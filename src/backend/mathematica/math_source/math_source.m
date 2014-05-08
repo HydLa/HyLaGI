@@ -713,7 +713,8 @@ Module[
 ];
 
 
-(* 式の集合の要素数と式の集合中に出現する変数の数が一致するまで再帰的に呼び出す関数
+(* 与えられた微分方程式系から，独立に解くことのできる部分集合を探す関数
+  方程式の数と集合中に出現する変数の数が一致するような部分集合を探す．
   @param exprs 探索対象となる式集合
   @return unExpandable | {(DSolveすべき式の集合）, (残りの式の集合)， （DSolveすべき変数の集合）}
 *)
@@ -728,7 +729,7 @@ Module[
       searchResult = {{ exprs[[i]] }, Drop[exprs, {i}], tVars}
     ]
   ];
-  
+    simplePrint[searchResult];
   If[searchResult === unExpandable,
     tmpExprs = Sort[exprs, (Length[tVarsMap[#1] ] < Length[tVarsMap[#2] ])&];
     For[tmpExprs, Length[tmpExprs] > 0 && searchResult === unExpandable, tmpExprs = droppedExprs,
@@ -736,6 +737,7 @@ Module[
       searchResult = searchExprsAndVars[{tmpExprs[[1]]}, tVarsMap[tmpExprs[[1]] ], droppedExprs, tVarsMap]
     ]
   ];
+  debugPrint["seA"];
   simplePrint[searchResult];
   searchResult
 ];
