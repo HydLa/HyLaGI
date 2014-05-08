@@ -280,7 +280,7 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co] /. prevRules;
+    cons = If[Head[co] === List, And@@co, co] //. prevRules;
     If[isTemporary,
       tmpConstraint = tmpConstraint && cons,
       constraint = constraint && cons
@@ -291,12 +291,12 @@ publicMethod[
 
 addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = And@@co /. prevRules;
+  cons = And@@co //. prevRules;
   If[isTemporary,
     initTmpConstraint = initTmpConstraint && cons,
     initConstraint = initConstraint && cons
   ];
-  simplePrint[cons, initConstraint, initTmpConstraint];
+  simplePrint[cons, initConstraint, initTmpConstraint, prevRules];
 ];
 
 publicMethod[
