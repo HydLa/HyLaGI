@@ -703,7 +703,7 @@ PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
       cc_result = check_consistency(phase);
       if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
-        if(!cc_result.inconsistent_store.consistent()){
+        if(cc_result.inconsistent_store.consistent()){
           HYDLA_LOGGER_DEBUG("%% branches by parameters");
           ce_result = BRANCH_PAR;
         }
