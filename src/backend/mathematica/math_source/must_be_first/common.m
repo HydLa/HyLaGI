@@ -194,7 +194,7 @@ Module[
   ret
 ];
 
-toRational[float_] := Rationalize[float, 0];
+toRational[float_] := SetPrecision[float, Infinity];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 
