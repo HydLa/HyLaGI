@@ -24,6 +24,14 @@ bool num_denom_str(std::string val_str,
                    std::string &numerator,
                    std::string &denominator);
 
+
+/**
+ * return string whose substrs are replaced to dest
+ */
+std::string replace(std::string original,
+                    const std::string &substr,
+                    const std::string &dest);
+
 std::string to_string(int n);
 
 }  //  namespace utility

@@ -55,5 +55,20 @@ string to_string(int n)
   return sstr.str();
 }
 
+
+string replace(string original, const string &substr, const string &dest )
+{
+  string::size_type  pos( original.find( substr ) );
+
+  while( pos != string::npos )
+  {
+    original.replace( pos, substr.length(), dest );
+    pos = original.find( substr, pos + dest.length() );
+  }
+
+  return original;
+}
+
+
 }
 }

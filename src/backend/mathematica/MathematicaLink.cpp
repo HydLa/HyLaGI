@@ -2,6 +2,7 @@
 #include "math_source.h"
 #include "Simulator.h"
 #include "TimeOutError.h"
+#include "Utility.h"
 
 namespace hydla{
 namespace backend{
@@ -157,6 +158,8 @@ bool MathematicaLink::receive_to_return_packet(){
     case TEXTPKT: // Print[]で生成されるようなMathematica からのテキスト出力
     {
       std::string str = get_string();
+      str = utility::replace(str, "\\012", "\n");
+      str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
         HYDLA_LOGGER_DEBUG_VAR(input_print_);
