@@ -40,14 +40,17 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << result.module_set->get_name() << endl;
     sstr << "time\t: " << result.current_time << "\n";
   }
+/*
   if(opts_->epsilon_mode){
     output_limit_of_time(sstr,backend_.get(),result);
   }
+*/
   output_variable_map(sstr, result.variable_map);
-
+/*
   if(opts_->epsilon_mode){
     output_limits_of_variable_map(sstr,backend_.get(),result,result.variable_map);
   }
+*/
 
   return sstr.str();
 }

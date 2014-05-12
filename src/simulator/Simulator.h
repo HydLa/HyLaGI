@@ -77,12 +77,9 @@ typedef hydla::hierarchy::ModuleSetContainer::module_set_list_t  module_set_list
 typedef boost::shared_ptr<hydla::parse_tree::ParseTree>  parse_tree_sptr;
 typedef boost::shared_ptr<const hydla::hierarchy::ModuleSet>    module_set_const_sptr;
 
-
 typedef std::map<boost::shared_ptr<hydla::symbolic_expression::Ask>, bool> entailed_prev_map_t;
 typedef std::vector<variable_map_t>      variable_maps_t;
-
 typedef std::map<std::string, unsigned int> profile_t;
-
 
 /**
  * シミュレーションすべきフェーズを表す構造体

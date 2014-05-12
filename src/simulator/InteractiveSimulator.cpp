@@ -367,7 +367,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
     return 0;
   }
   
-  affine_transformer_->approximate(var, vm, todo->parent->parameter_map);
+  affine_transformer_->approximate(var, vm, todo->parent->parameter_map, *todo->discrete_causes.begin());
   todo->parameter_map = todo->parent->parameter_map;
 
   return 1;
