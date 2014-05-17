@@ -51,17 +51,20 @@ public:
 
   bool include_variable(const Variable& var)const;
   
-  // Ask制約
+  /// Ask制約
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
-  // 微分
+  /// 微分
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
 
-  // 左極限
+  /// 左極限
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
-  // 変数
+  /// 変数
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+
+  /// 時刻
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
 
 private:
 

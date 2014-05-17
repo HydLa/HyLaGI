@@ -95,6 +95,17 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
 }
 
 
+// 時刻
+void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
+{
+  Variable time_var("t", 0);
+  if(in_prev_){
+    prev_variables_.insert(time_var);
+  }else{
+    variables_.insert(time_var);
+  }
+}
+
 // 変数
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
