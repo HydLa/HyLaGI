@@ -1,0 +1,53 @@
+/* ref:  A. Fehnker and F. Ivancic : Benchmarks for hybrid systems verification, Hy-
+brid Systems Computation and Control, 2004, pp. 381-397.
+*/
+// u: ³°µ¤²¹
+// s: 0 -> off 
+//     1 -> on & room1
+//     2 -> on & room2
+
+
+STATE0 <=> [](
+  ta' = -0.9*ta + 0.5 * tb + 0.4 * u
+  & tb' = 0.5 * ta - 0.9 * tb + 0.4 * u
+).
+
+STATE1 <=> [](s = 1 & timer >= 0.01
+  => ta' = -0.9*ta + 0.5 * tb + 0.4 * u + heat
+  & tb' = 0.5 * ta - 0.9 * tb + 0.4 * u
+).
+
+STATE2 <=> [](s = 2 & timer >= 0.01
+  => ta' = -0.9*ta + 0.5 * tb + 0.4 * u
+  & tb' = 0.5 * ta - 0.9 * tb + 0.4 * u + heat
+).
+
+ROOM(initTempA, initTempB){
+  ta = initTempA & tb = initTempB & [](u = 4),
+  STATE0 << STATE1 & STATE2
+}.
+ROOM(20.5, 20).
+
+SWITCH01(lb) <=> 
+[](ta- <= lb & s- = 0 => s = 1 & timer = 0).
+SWITCH21(lb) <=> 
+[](ta- <= lb & s- = 2 & tb- - ta - >= 1 => s = 1 & timer = 0).
+SWITCH02(lb) <=> 
+[](tb- <= lb & s- = 0 => s = 2 & timer = 0).
+SWITCH12(lb) <=> 
+[](tb- <= lb & s- = 1 & ta- >= tb - 1 => s = 1 & timer = 0).
+SWITCH10(ub) <=> 
+[](ta- >= ub & s- = 1 => s = 0 & timer = 0).
+SWITCH20(ub) <=> 
+[](tb- >= ub & s- = 2 => s = 0 & timer = 0).
+
+
+
+THERMO(initSwitch, initTimer, H)
+{
+    s = initSwitch, timer = initTimer, [](heat = H),
+    [](s'=0 & timer' = 1) << SWITCH01(18) & SWITCH02(18) &
+    SWITCH02(18) & SWITCH12(18) & SWITCH10(22) & SWITCH20(22)
+}.
+
+THERMO(0,0, 7).

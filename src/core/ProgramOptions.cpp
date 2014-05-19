@@ -24,6 +24,7 @@ void ProgramOptions::init_descriptions()
     ("help,h", "produce help message")
     ("version", "display version")
     ("debug,d", "enable debug mode\n")
+    ("parse_only", "only parse hydla program")
    // ("profile", "enable profile mode")
 
   

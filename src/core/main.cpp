@@ -153,6 +153,12 @@ void hydla_main(int argc, char* argv[])
   } else {
     pt->parse<DefaultNodeFactory>(std::cin);
   }
+
+  if(po.count("parse_only"))
+  {
+    std::cout << "successfully parsed" << std::endl;
+    return;
+  }
   
   // いろいろと表示
   if(dump(pt)) {

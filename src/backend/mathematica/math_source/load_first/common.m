@@ -128,7 +128,7 @@ profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
 
 inputPrint[name_] := Print[StringJoin[name, "[]"]];
  
-inputPrint[name_, arg__] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
+inputPrint[name_, arg__] := Print[StringJoin[name, "[", delimiterAddedString[",\n\t", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
 
 delimiterAddedString[del_, {h_}] := h;
 

@@ -323,7 +323,9 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   todo_container_->push_todo(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
-  backend_->call("resetConstraint", 1, "csn", "", &original->initial_constraint_store);
+  //backend_->call("resetConstraint", 1, "csn", "", &original->initial_constraint_store);
+  // TODO: implement branch here
+  throw SimulateError("branch in calculate closure.");
 }
 
 
@@ -703,7 +705,7 @@ PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
       cc_result = check_consistency(phase);
       if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
-        if(!cc_result.inconsistent_store.consistent()){
+        if(cc_result.inconsistent_store.consistent()){
           HYDLA_LOGGER_DEBUG("%% branches by parameters");
           ce_result = BRANCH_PAR;
         }

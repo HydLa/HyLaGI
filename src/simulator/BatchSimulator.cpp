@@ -25,7 +25,7 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
 {
   bool is_safe = true;
   hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
-  if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase){
+  if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase - 1){
     todo->parent->cause_for_termination = simulator::STEP_LIMIT;
     return;
   }
