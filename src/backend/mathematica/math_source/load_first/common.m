@@ -108,8 +108,6 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 SetAttributes[symbolToString, HoldAll];
 
 SetAttributes[prev, Constant];
-SetAttributes[prev, HoldAll];
-SetAttributes[parameter, HoldAll];
 SetAttributes[parameter, Constant];
 
 If[optUseDebugPrint || True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく．いずれにしろそんなにコストはかからない？ *)
