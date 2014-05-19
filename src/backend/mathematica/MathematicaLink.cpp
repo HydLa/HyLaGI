@@ -470,7 +470,6 @@ int MathematicaLink::get_arg_count()
 
 void MathematicaLink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
 {
-    
   if(variable_arg == VF_PREV){
     put_function(prev_prefix.c_str(), 2);
     put_symbol(name);

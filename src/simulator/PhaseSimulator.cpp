@@ -1277,6 +1277,8 @@ PhaseSimulator::todo_list_t
   {
     next_todo->phase_type = IntervalPhase;
     next_todo->current_time = phase->current_time;
+    // TODO: 離散変化した変数が関わるガード条件はここから取り除く必要が有りそう（単純なコピーではだめ）
+    next_todo->discrete_causes = current_todo->discrete_causes;
     ret.push_back(next_todo);
   }
   else

@@ -21,7 +21,7 @@
 #include "NodeFactory.h"
 #include "DefaultNodeFactory.h"
 #include "HydLaAST.h"
-#include "AffineTransformer.h"
+#include "AffineApproximator.h"
 
 
 
@@ -349,46 +349,26 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   string variable_str = excin<string>();
 
   // TODO: 変数自体が幅を持つ場合への対応
+  // TODO: 時刻を近似したい場合への対応
 
-  bool for_time = false;
   variable_t var;
-  range_t val;
-  if(variable_str == "t")
-  {
-    for_time = true;
-    val = todo->current_time;
-  }
-  else
-  {
-    variable_map_t::iterator v_it  = vm.begin();
-    for(;v_it!=vm.end();v_it++){
-      if( v_it->first.get_string() == variable_str)
-      {
-        var = v_it->first;
-        val = v_it->second.get_unique();
-        break;
-      }
-    }
-    if(v_it == vm.end())
-    {
-      cout << "invalid variable name " << endl;
-      return 0;
-    }
-  }
 
-  assert(val.unique());
-  symbolic_expression::node_sptr node = val.get_unique().get_node();
-  value_t affine = affine_transformer_->transform(node, todo->parent->parameter_map);
+  variable_map_t::iterator v_it  = vm.begin();
+  for(;v_it!=vm.end();v_it++){
+    if( v_it->first.get_string() == variable_str)
+    {
+      var = v_it->first;
+      break;
+    }
+  }
+  if(v_it == vm.end())
+  {
+    cout << "invalid variable name " << endl;
+    return 0;
+  }
+  affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
   todo->parameter_map = todo->parent->parameter_map;
 
-  if(for_time)
-  {
-    todo->parent->current_time = todo->current_time = affine;
-  }
-  else
-  {
-    todo->parent->variable_map[var] = affine;
-  }
   return 1;
 }
 

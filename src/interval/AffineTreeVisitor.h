@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_AFFINE_TRANSFORMER_H_
-#define _INCLUDED_HYDLA_AFFINE_TRANSFORMER_H_
+#ifndef _INCLUDED_HYDLA_AFFINE_TREE_VISITOR_H_
+#define _INCLUDED_HYDLA_AFFINE_TREE_VISITOR_H_
 
 #include <sstream>
 
@@ -14,49 +14,38 @@
 #include "PhaseResult.h"
 #include "TreeVisitor.h"
 #include "AffineOrInteger.h"
-#include "Simulator.h"
 #include "Parameter.h"
 
 namespace hydla {
 namespace interval {
 
-
-typedef hydla::symbolic_expression::node_sptr          node_sptr;
+typedef symbolic_expression::node_sptr        node_sptr;
 typedef simulator::Parameter                  parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
 typedef simulator::parameter_map_t            parameter_map_t;
 
 
+
+typedef boost::bimaps::bimap<parameter_t, int >
+  parameter_idx_map_t;
+typedef parameter_idx_map_t::value_type parameter_idx_t;
+
 /**
- * A class which transforms symbolic formula to affine form
+ * A tree visitor to approximates symbolic formulas as affine forms
  */
-class AffineTransformer : public symbolic_expression::TreeVisitor{
+class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   public:
 
-  static AffineTransformer* get_instance();
-  
-  void set_simulator(simulator::Simulator* simulator);
+  AffineTreeVisitor(parameter_idx_map_t&);
 
-  /**
-   * transform given expression to affine form
-   * @param node expression
-   * @param parameter_map
-   *          map of parameter to be added parameter for new dummy variables
-   */
-  value_t transform(symbolic_expression::node_sptr &node, parameter_map_t &parameter_map);
+  AffineOrInteger approximate(node_sptr &node);
   ///calculate x^y
   AffineOrInteger pow(AffineOrInteger x, AffineOrInteger y);
   affine_t pow(affine_t affine, int exp);
+  AffineOrInteger sqrt_affine(const AffineOrInteger &a);
   
-  /**
-   * Reduce dummy variables
-   * @param formulas Formulas to be reduced
-   * @param limit the number which the number of dummy variables are to be after reduction
-   */
-  void reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> &formulas, int limit);
-
-  virtual ~AffineTransformer();  
+  virtual ~AffineTreeVisitor();  
 
   virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramDefinition> node);
@@ -124,24 +113,11 @@ class AffineTransformer : public symbolic_expression::TreeVisitor{
   
 private:
 
-  typedef boost::bimaps::bimap<parameter_t, int >
-    parameter_idx_map_t;
-  typedef parameter_idx_map_t::value_type parameter_idx_t;
-
-
-  AffineTransformer();
-  AffineTransformer(const AffineTransformer& rhs);
-  AffineTransformer& operator=(const AffineTransformer& rhs);
 
   void invalid_node(symbolic_expression::Node& node);
 
-  simulator::Simulator* simulator_;
-
-  static interval::AffineTransformer* affine_translator_;
-
   AffineOrInteger current_val_;
-  parameter_idx_map_t parameter_idx_map_;
-  int epsilon_index;
+  parameter_idx_map_t& parameter_idx_map_;
 };
 
 } //namespace interval

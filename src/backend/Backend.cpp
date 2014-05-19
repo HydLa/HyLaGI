@@ -362,6 +362,9 @@ bool Backend::get_form(const char &form_c, variable_form_t &form)
   case 'p':
     form = Link::VF_PREV;
     return true;
+  case 'c':
+    form = Link::VF_IGNORE_PREV;
+    return true;
   case 'n':
     form = Link::VF_NONE;
     return true;
@@ -670,7 +673,14 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)
     va = Link::VF_PREV;
   }
   else{
-    va = variable_arg_;
+    if(variable_arg_ == Link::VF_IGNORE_PREV)
+    {
+      va = Link::VF_NONE;
+    }
+    else
+    {
+      va = variable_arg_;
+    }
   }
 
   send_variable(node->get_name(), differential_count_, va);
