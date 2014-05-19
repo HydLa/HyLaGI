@@ -13,9 +13,7 @@ using namespace simulator;
 using namespace parse_tree;
 using namespace symbolic_expression;
 
-const std::string Backend::prev_prefix = "prev";
-const std::string Backend::par_prefix = "p";
-const std::string Backend::var_prefix = "usrVar";
+const std::string Backend::var_prefix = "u";
 
 
 // check equivalence ignoring whether upper or lower case
@@ -163,7 +161,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   case 'p':     
   {
     parameter_t* par = (parameter_t *)arg;
-    link_->put_parameter(par->get_name(), par->get_differential_count(), par->get_phase_id());
+    link_->put_parameter(var_prefix + par->get_name(), par->get_differential_count(), par->get_phase_id());
   }
   break;
 
@@ -727,7 +725,7 @@ int Backend::send_variable(const variable_t &var, const variable_form_t &variabl
 
 int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
 {
-  link_->put_variable(name, diff_count, variable_arg);
+  link_->put_variable(var_prefix + name, diff_count, variable_arg);
   return 0;
 }
 
@@ -848,6 +846,12 @@ pp_time_result_t Backend::receive_cp()
   return result;
 }
 
+std::string Backend::remove_prefix(const std::string &original)
+{
+  if(original.length() <= var_prefix.length())throw InterfaceError("invalid name of variable: " + original);
+  return original.substr(var_prefix.length());
+}
+
 check_consistency_result_t Backend::receive_cc()
 {
   check_consistency_result_t ret;
@@ -873,9 +877,9 @@ symbolic_expression::node_sptr Backend::receive_function()
     ret = symbolic_expression::node_sptr(new Divide(symbolic_expression::node_sptr(new Number("1")), symbolic_expression::node_sptr(new Number("2")))); 
     ret = symbolic_expression::node_sptr(new symbolic_expression::Power(receive_node(), ret));
   }
-  else if(equal_ignoring_case(symbol, "parameter")){
+  else if(equal_ignoring_case(symbol, "par")){
     std::string name;
-    name = link_->get_symbol();
+    name = remove_prefix(link_->get_symbol());
     std::string d_str;
     d_str = link_->get_string();
     int differential_count = boost::lexical_cast<int, std::string>(d_str);
@@ -886,7 +890,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   }
   else if(equal_ignoring_case(symbol, "prev")){
     std::string name;
-    name = link_->get_symbol();
+    name = remove_prefix(link_->get_symbol());
     std::string d_str = link_->get_string();
     int differential_count = boost::lexical_cast<int, std::string>(d_str);
     symbolic_expression::node_sptr tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Variable(name));
@@ -950,10 +954,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   {
     std::string d_str = link_->get_string();
     int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
-    std::string variable_name = link_->get_symbol();
-    if(variable_name.length() < var_prefix.length())invalid_ret();
-    assert(variable_name.substr(0, var_prefix.length()) == var_prefix);
-    variable_name = variable_name.substr(var_prefix.length());
+    std::string variable_name = remove_prefix(link_->get_symbol());
     ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for(int i = 0; i < variable_differential_count; i++)
     {

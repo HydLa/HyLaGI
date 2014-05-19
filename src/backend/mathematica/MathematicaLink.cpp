@@ -10,7 +10,6 @@ namespace mathematica{
 
 const std::string MathematicaLink::prev_prefix = "prev";
 const std::string MathematicaLink::par_prefix = "p";
-const std::string MathematicaLink::var_prefix = "usrVar";
 
 
 MathematicaLink::MathematicaLink(const hydla::simulator::Opts &opts) : env_(0), link_(0)
@@ -481,13 +480,13 @@ void MathematicaLink::put_variable(const std::string &name, int diff_count, cons
     {
       put_function(derivative_str.c_str(), 2);
       put_integer(diff_count);
-      put_symbol(var_prefix + name);
+      put_symbol(name);
     }
     else
     {
       put_function(derivative_str.c_str(), 3);
       put_integer(diff_count);
-      put_symbol(var_prefix + name);
+      put_symbol(name);
       if(variable_arg == VF_TIME)
       {
         put_symbol("t");

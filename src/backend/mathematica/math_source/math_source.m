@@ -207,15 +207,15 @@ Module[
 
 (* 式中に変数名が出現するか否か *)
 
-hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter]] > 0;
+hasVariable[exprs_] := Length[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter]] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
-isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], "usrVar" ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
 
-getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter..]];
+getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter..]];
 
 (* 式中に出現する記号定数を取得 *)
 
@@ -324,10 +324,6 @@ makePrevVar[var_] := Module[
     name = var;
     dcount = 0
   ];
-  name = ToString[name];
-  (* drop "usrVar" *)
-  name = StringDrop[name, 6];
-  name = ToExpression[name];
   prev[name, dcount]
 ];
 
@@ -721,7 +717,7 @@ Module[
 searchExprsAndVars[exprs_] :=
 Module[
   {tmpExprs, droppedExprs, searchResult = unExpandable, tVarsMap, tVars},
-  
+  simplePrint[exprs];
   For[i=1, i<=Length[exprs], i++,
     tVarsMap[ exprs[[i]] ] = Union[getVariables[exprs[[i]] ] ];
     tVars = tVarsMap[ exprs[[i]] ];
@@ -737,7 +733,6 @@ Module[
       searchResult = searchExprsAndVars[{tmpExprs[[1]]}, tVarsMap[tmpExprs[[1]] ], droppedExprs, tVarsMap]
     ]
   ];
-  debugPrint["seA"];
   simplePrint[searchResult];
   searchResult
 ];

@@ -11,9 +11,9 @@ $MaxExtraPrecision = 1000;
  * prevRules:      rules converted from equalities of left-hand limits
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
- * prevVariables: variables内の変数をusrVarx=>prev[x, 0]のようにしたもの
- * timeVariables: variables内の変数を，usrVarx[t]のようにしたもの
- * initVariables: variables内の変数を，usrVarx[0]のようにしたもの
+ * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの
+ * timeVariables: variables内の変数を，ux[t]のようにしたもの
+ * initVariables: variables内の変数を，ux[0]のようにしたもの
  * parameters: 使用する記号定数のリスト
  * isTemporary：制約の追加を一時的なものとするか
  * tmpConstraint: 一時的に追加された制約
@@ -240,3 +240,5 @@ getReverseRelop[relop_] := Switch[relop,
                                   Greater, Less,
                                   LessEqual, GreaterEqual,
                                   GreaterEqual, LessEqual];
+
+variablePrefix = "u";

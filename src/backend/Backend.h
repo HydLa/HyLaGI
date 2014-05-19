@@ -108,9 +108,9 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   void set_variable_set(variable_set_t& v){
     for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
-        std::string name = it->get_name();
+        std::string name = var_prefix + it->get_name();
         int diff = it->get_differential_count();
-        call("addVariable", 2, "si", "", ("usrVar" + name).c_str(), &diff);
+        call("addVariable", 2, "si", "", name.c_str(), &diff);
       }
   }
 
@@ -123,12 +123,12 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 
 
   private:
-  static const std::string prev_prefix;
-  static const std::string par_prefix;
   static const std::string var_prefix;
   /// throw an exception for an invalid format
   void invalid_fmt(const char* fmt, int idx);
   void invalid_ret();
+
+  std::string remove_prefix(const std::string &original);
 
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
