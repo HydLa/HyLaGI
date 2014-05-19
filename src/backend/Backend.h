@@ -88,7 +88,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
    *    i: int: integer
    *    b: bool: boolean value
    *    s: const char*: symbol (send only)
-   *    e(n,p,z,t): symbolic_expression::node_sptr: expression (Variables are handled like n:x, p:prev[x], x[0], x[t], needed only for sending)
+   *    e(n,p,z,t): symbolic_expression::node_sptr: expression (Variables are handled like n:x,c:x (ignoring prev), p:prev[x], x[0], x[t], needed only for sending)
    *    dc: dc_causes_t : causes of discrete changes
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
    *    cs(n, p, z, t): constraint_store_t: constraint store

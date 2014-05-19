@@ -366,8 +366,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
     cout << "invalid variable name " << endl;
     return 0;
   }
-  
-  affine_transformer_->approximate(var, vm, todo->parent->parameter_map, *todo->discrete_causes.begin());
+  affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
   todo->parameter_map = todo->parent->parameter_map;
 
   return 1;

@@ -113,12 +113,14 @@ value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parame
 
   affine_t affine_value = val.affine_value;
   // 試験的にダミー変数の削減をしてみる TODO:外部から削減タイミングを指定するようにする
+
   ub::vector<affine_t> formulas(1);
   formulas(0) = affine_value;
-  reduce_dummy_variables(formulas, 2);
+  reduce_dummy_variables(formulas, 3);
   affine_value = formulas(0);  
   HYDLA_LOGGER_DEBUG_VAR(affine_t::maxnum());
   HYDLA_LOGGER_DEBUG_VAR(affine_value);
+
   // set rounding mode
   kv::hwround::roundup();
 
@@ -134,7 +136,6 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
   node_sptr node = val.get_unique().get_node();
   value_t affine = approximate(node, parameter_map);
   variable_map[variable_to_approximate] = affine;
-
   if(condition.get() != nullptr)
   {
     //TODO: deal with general case (currently only for '=')
@@ -142,7 +143,8 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition, false);
-    if(finder.include_variable(variable_to_approximate))
+    std::set<Variable> variables = finder.get_all_variable_set();
+    if(finder.include_variable(variable_to_approximate) || finder.include_variable_prev(variable_to_approximate))
     {
       VariableFinder::variable_set_t variables = finder.get_all_variable_set();
       if(variables.size() > 2)
@@ -150,6 +152,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
         //TODO: approximate n-2 variables
         assert(0);
       }
+      // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない
       variable_t remain_var;
       for(auto var : variables)
       {
@@ -159,7 +162,11 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
           break;
         }
       }
-      cout << "rem:" << remain_var << endl;
+      Value consistent_value;
+      simulator_->backend->call("calculateConsistentValue", 4,
+                                "ecvnmvnmp", "vl",
+                                &condition, &remain_var, &variable_map, &parameter_map, &consistent_value);
+      variable_map[remain_var] = consistent_value;
     }
   }
 }

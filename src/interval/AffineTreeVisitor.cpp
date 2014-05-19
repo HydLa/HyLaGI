@@ -278,7 +278,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Para
   int idx;
   if(it == parameter_idx_map_.left.end())
   {
-    idx = affine_t::maxnum();
+    idx = ++affine_t::maxnum();
     parameter_idx_map_.insert(
       parameter_idx_t(param, affine_t::maxnum()));
   }

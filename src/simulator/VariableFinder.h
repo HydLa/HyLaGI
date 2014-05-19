@@ -50,6 +50,7 @@ public:
   bool include_variables_prev(std::set<std::string> variables) const;
 
   bool include_variable(const Variable& var)const;
+  bool include_variable_prev(const Variable& var)const;
   
   /// Ask制約
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);

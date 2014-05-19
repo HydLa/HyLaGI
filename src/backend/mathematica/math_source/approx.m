@@ -1,7 +1,7 @@
 (* calculate the value of given variable which satisfies given equation *)
 publicMethod[
-  calculateConsistentValueForEquation,
-  equation, variable, variableMap, parameterConstraint,
+  calculateConsistentValue,
+  equation, variable, variableMap, parameterMap,
   Module[
     {rules, sol, originalValue},
     (* ignore entry of variableMap for given variable *)
@@ -14,7 +14,7 @@ publicMethod[
 
     sol = Solve[equation //. rules, {variable}];
     simplePrint[sol];
-    sol = Select[sol, (Reduce[variable == #[[1]][[2]] && variable == originalValue && parameterConstraint] =!= False)&];    
+    sol = Select[sol, (Reduce[variable == #[[1]][[2]] && variable == originalValue && And@@parameterMap] =!= False)&];    
     simplePrint[sol];
     toReturnForm[sol[[1]][[1]][[2]] ]
   ]

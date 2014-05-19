@@ -41,6 +41,19 @@ bool VariableFinder::include_variable(const Variable &variable) const
 }
 
 
+bool VariableFinder::include_variable_prev(const Variable &variable) const
+{
+  for(auto found_var : prev_variables_)
+  {
+    if(variable == found_var)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 
 bool VariableFinder::include_variables(std::set<std::string> variables) const
 {
