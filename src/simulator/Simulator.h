@@ -90,6 +90,8 @@ struct SimulationTodo{
   PhaseType                 phase_type;
   int                       id;
   value_t                   current_time;
+  /// 左極限値のマップ
+  variable_map_t            prev_map;
   parameter_map_t           parameter_map;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;

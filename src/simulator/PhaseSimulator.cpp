@@ -94,14 +94,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 {
   result_list_t result;
   bool has_next = false;
-  variable_map_t time_applied_map;
-
   if(todo->phase_type == PointPhase)
   {
-    time_applied_map = apply_time_to_vm(todo->parent->variable_map, todo->current_time);
     set_simulation_mode(PointPhase);
   }else{
-    time_applied_map = todo->parent->variable_map;
     set_simulation_mode(IntervalPhase);
   }
 
@@ -111,7 +107,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
-    result_list_t tmp_result = simulate_ms(ms, time_applied_map, todo);
+    result_list_t tmp_result = simulate_ms(ms, todo->prev_map, todo);
     if(!tmp_result.empty())
     {
       has_next = true;
@@ -1267,6 +1263,7 @@ PhaseSimulator::todo_list_t
     next_todo->current_time = phase->current_time;
     // TODO: 離散変化した変数が関わるガード条件はここから取り除く必要が有りそう（単純なコピーではだめ）
     next_todo->discrete_causes = current_todo->discrete_causes;
+    next_todo->prev_map = phase->variable_map;
     ret.push_back(next_todo);
   }
   else
@@ -1274,12 +1271,11 @@ PhaseSimulator::todo_list_t
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
-
+    
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
-    assert(current_phase_ == IntervalPhase);
+    variable_map_t vm_before_time_shift = phase->variable_map;
     phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
     next_todo->phase_type = PointPhase;
-
 
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
@@ -1412,15 +1408,15 @@ PhaseSimulator::todo_list_t
     while(true)
     {
       NextPhaseResult &candidate = time_result[time_it];
-      symbolic_expression::node_sptr time_node = candidate.minimum.time.get_node();
-
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
       }
 
-      time_node = symbolic_expression::node_sptr(new Plus(time_node, current_todo->current_time.get_node()));
-      backend_->call("simplify", 1, "et", "vl", &time_node, &pr->end_time);
+      next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, candidate.minimum.time);
+
+      pr->end_time = current_todo->current_time + candidate.minimum.time;
+      backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
       results.push_back(pr);
       if(++time_it >= time_result.size())break;
       pr = make_new_phase(pr);
@@ -1496,7 +1492,6 @@ void PhaseSimulator::replace_prev2parameter(
     replacer.replace_node(constraint);
   }
 }
-
 
 variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const value_t& tm)
 {
