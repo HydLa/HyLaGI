@@ -467,13 +467,6 @@ PhaseSimulator::node_sptr PhaseSimulator::get_break_condition()
   return break_condition_;
 }
 
-ConstraintStore PhaseSimulator::apply_time_to_constraints(const ConstraintStore &original_store, const value_t &time)
-{
-  ConstraintStore applied_store;
-  backend_->call("applyTime2Expr", 2, "csnvlt", "cs", &original_store, &time, &applied_store);
-  return applied_store;
-}
-
 string timein(string message="")
 {
   string ret;
@@ -1284,7 +1277,6 @@ PhaseSimulator::todo_list_t
 
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     assert(current_phase_ == IntervalPhase);
-    backend_->call("exprTimeShift", 2, "csnvln", "cs", &phase->constraint_store, &phase->current_time, &phase->constraint_store);
     phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
     next_todo->phase_type = PointPhase;
 
