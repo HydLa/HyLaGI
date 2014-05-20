@@ -130,8 +130,7 @@ publicMethod[
   cons,
   Module[
     {sol, tStore, ret},
-    tStore = And@@cons;
-    tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+    tStore = Select[cons, (!hasVariable[ #[[2]] ])&];
     ret = {convertExprs[tStore]};
     ret = ruleOutException[ret];
     simplePrint[ret];
