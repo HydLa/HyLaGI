@@ -26,9 +26,6 @@
 #include "ModuleSetList.h"
 #include "ModuleSetGraph.h"
 
-// parser
-#include "DefaultNodeFactory.h"
-
 #include "SequentialSimulator.h"
 
 // namespace
@@ -149,9 +146,9 @@ void hydla_main(int argc, char* argv[])
     if (!in) {
       throw std::runtime_error(std::string("cannot open \"") + filename + "\"");
     }
-    pt->parse<DefaultNodeFactory>(in);
+    pt->parse(in);
   } else {
-    pt->parse<DefaultNodeFactory>(std::cin);
+    pt->parse(std::cin);
   }
 
   if(po.count("parse_only"))

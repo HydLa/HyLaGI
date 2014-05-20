@@ -18,8 +18,6 @@
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
-#include "NodeFactory.h"
-#include "DefaultNodeFactory.h"
 #include "HydLaAST.h"
 #include "AffineApproximator.h"
 

@@ -11,13 +11,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-//#include <boost/bimap/bimap.hpp>
-//#include <boost/bimap/unordered_set_of.hpp>
-//#include <boost/bimap/support/lambda.hpp>
 
 #include "ParseError.h"
 #include "Node.h"
-#include "NodeFactory.h"
 
 namespace hydla { 
 namespace parse_tree {
@@ -25,9 +21,6 @@ namespace parse_tree {
 
 class ParseTree {
 public: 
-  typedef hydla::parser::NodeFactory        node_factory_t;
-  typedef boost::shared_ptr<node_factory_t> node_factory_sptr;
-
   // 変数表
   typedef std::map<std::string, int>     variable_map_t;
   typedef variable_map_t::const_iterator variable_map_const_iterator;
@@ -65,7 +58,7 @@ public:
     parse<NodeFactoryT>(stream);
   }
     
-  void parse(std::istream& s, node_factory_sptr node_factory);
+  void parse(std::istream& s);
 
 
   /**
@@ -274,16 +267,6 @@ public:
   }
 
   /**
-   * 登録されているNodeFactoryを元に指定された型のノードを生成する
-   */
-  template<typename NodeType>
-  boost::shared_ptr<NodeType> create_node() const
-  {
-    return node_factory_->create<NodeType>();
-  }
-  
-
-  /**
    * すべてのデータを破棄し、初期状態に戻す
    */
   void clear();
@@ -295,8 +278,6 @@ public:
 
 private:  
   ParseTree& operator=(const ParseTree& pt);
-
-  node_factory_sptr    node_factory_;
 
   symbolic_expression::node_sptr            node_tree_;
   symbolic_expression::node_sptr            assertion_node_tree_;

@@ -20,7 +20,6 @@
 #include <windows.h>
 #endif
 // parser
-#include "DefaultNodeFactory.h"
 
 #include <boost/lexical_cast.hpp>
 
