@@ -1,14 +1,3 @@
-#include "PhaseSimulator.h"
-#include "AskCollector.h"
-#include "VariableFinder.h"
-#include "Exceptions.h"
-#include "Backend.h"
-#include "PrevReplacer.h"
-
-using namespace std;
-using namespace hydla::simulator;
-using namespace hydla::backend;
-
 #include <iostream>
 #include <fstream>
 #include <boost/xpressive/xpressive.hpp>
@@ -16,6 +5,10 @@ using namespace hydla::backend;
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
+
+#include "PhaseSimulator.h"
+#include "Exceptions.h"
+#include "Backend.h"
 
 #include "Logger.h"
 #include "Timer.h"
@@ -39,13 +32,15 @@ using namespace hydla::backend;
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
 
+
+using namespace std;
+using namespace boost;
+using namespace hydla::simulator;
+using namespace hydla::backend;
+
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
-
-using namespace boost;
-
 using namespace hydla::hierarchy;
-using namespace hydla::simulator;
 using namespace hydla::symbolic_expression;
 using namespace hydla::logger;
 using namespace hydla::timer;
