@@ -562,7 +562,7 @@ calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
 (* 時刻と条件の組に対し，条件が論理和でつながっている場合それぞれの場合に分解する *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
 
-(* 
+ 
 publicMethod[
   calculateNextPointPhaseTime,
   maxTime, causeAndIDs, cons, initCons, pCons, vars,
