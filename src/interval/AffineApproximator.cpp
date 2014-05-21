@@ -113,14 +113,14 @@ value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parame
 
   affine_t affine_value = val.affine_value;
   // 試験的にダミー変数の削減をしてみる TODO:外部から削減タイミングを指定するようにする
-
+/*
   ub::vector<affine_t> formulas(1);
   formulas(0) = affine_value;
   reduce_dummy_variables(formulas, 3);
   affine_value = formulas(0);  
   HYDLA_LOGGER_DEBUG_VAR(affine_t::maxnum());
   HYDLA_LOGGER_DEBUG_VAR(affine_value);
-
+*/
   // set rounding mode
   kv::hwround::roundup();
 
