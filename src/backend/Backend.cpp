@@ -14,7 +14,8 @@ using namespace parse_tree;
 using namespace symbolic_expression;
 
 const std::string Backend::var_prefix = "u";
-
+// use different prefix to distinct variables and constants
+const std::string par_prefix = "p";
 
 // check equivalence ignoring whether upper or lower case
 static bool equal_ignoring_case(std::string lhs, std::string rhs)
@@ -161,7 +162,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   case 'p':     
   {
     parameter_t* par = (parameter_t *)arg;
-    link_->put_parameter(var_prefix + par->get_name(), par->get_differential_count(), par->get_phase_id());
+    link_->put_parameter(par_prefix + par->get_name(), par->get_differential_count(), par->get_phase_id());
   }
   break;
 
@@ -489,7 +490,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
       const value_t &value = it->second.get_unique();
       const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
-      link_->put_parameter(param.get_name(), param.get_differential_count(), param.get_phase_id());
+      link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
       send_value(value, Link::VF_PREV);
     }else{
       for(uint i=0; i < it->second.get_lower_cnt();i++)
@@ -505,7 +506,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
         {
           link_->put_converted_function("GreaterEqual", 2);
         }
-        link_->put_parameter(param.get_name(), param.get_differential_count(), param.get_phase_id());
+        link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
         send_value(value, Link::VF_PREV);
       }
       for(uint i=0; i < it->second.get_upper_cnt();i++)
@@ -521,7 +522,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
         {
           link_->put_converted_function("LessEqual", 2);
         }
-        link_->put_parameter(param.get_name(), param.get_differential_count(), param.get_phase_id());
+        link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
         send_value(value, Link::VF_PREV);
       }
     }
@@ -700,7 +701,7 @@ void Backend::visit(boost::shared_ptr<Float> node)              {
 // 記号定数
 void Backend::visit(boost::shared_ptr<symbolic_expression::Parameter> node)
 {
-  link_->put_parameter(node->get_name(), node->get_differential_count(), node->get_phase_id());
+  link_->put_parameter(par_prefix + node->get_name(), node->get_differential_count(), node->get_phase_id());
 }
 
 // t
@@ -725,7 +726,8 @@ int Backend::send_variable(const variable_t &var, const variable_form_t &variabl
 
 int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
 {
-  link_->put_variable(var_prefix + name, diff_count, variable_arg);
+  std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
+  link_->put_variable(prefix + name, diff_count, variable_arg);
   return 0;
 }
 
@@ -846,10 +848,10 @@ pp_time_result_t Backend::receive_cp()
   return result;
 }
 
-std::string Backend::remove_prefix(const std::string &original)
+std::string Backend::remove_prefix(const std::string &original, const std::string &prefix)
 {
-  if(original.length() <= var_prefix.length())throw InterfaceError("invalid name of variable: " + original);
-  return original.substr(var_prefix.length());
+  if(original.length() <= prefix.length())throw InterfaceError("invalid name: " + original);
+  return original.substr(prefix.length());
 }
 
 check_consistency_result_t Backend::receive_cc()
@@ -879,7 +881,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   }
   else if(equal_ignoring_case(symbol, "par")){
     std::string name;
-    name = remove_prefix(link_->get_symbol());
+    name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str;
     d_str = link_->get_string();
     int differential_count = boost::lexical_cast<int, std::string>(d_str);
@@ -890,7 +892,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   }
   else if(equal_ignoring_case(symbol, "prev")){
     std::string name;
-    name = remove_prefix(link_->get_symbol());
+    name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str = link_->get_string();
     int differential_count = boost::lexical_cast<int, std::string>(d_str);
     symbolic_expression::node_sptr tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Variable(name));
@@ -954,7 +956,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   {
     std::string d_str = link_->get_string();
     int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
-    std::string variable_name = remove_prefix(link_->get_symbol());
+    std::string variable_name = remove_prefix(link_->get_symbol(), var_prefix);
     ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for(int i = 0; i < variable_differential_count; i++)
     {
@@ -1015,7 +1017,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
       else if(symbol=="True")
         ret = symbolic_expression::node_sptr(new symbolic_expression::True());
       else if(symbol=="False")
-	ret = symbolic_expression::node_sptr(new symbolic_expression::False());
+        ret = symbolic_expression::node_sptr(new symbolic_expression::False());
       else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
         ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(symbol.substr(var_prefix.length())));
       break;
@@ -1108,7 +1110,7 @@ int Backend::receive_parameter_map(parameter_map_t& map)
     link_->get_function(str_buf, int_buf); // parameter
     if(str_buf == "p")
     {
-      std::string name = link_->get_symbol();
+      std::string name = remove_prefix(link_->get_symbol(), par_prefix);
       int differential_count = link_->get_integer();
       int id = link_->get_integer();
       parameter_t tmp_param(name, differential_count, id);

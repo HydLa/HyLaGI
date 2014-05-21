@@ -323,6 +323,11 @@ makePrevVar[var_] := Module[
     name = var;
     dcount = 0
   ];
+  (* remove 'u' *)
+  name = ToString[name];
+  name = StringDrop[name, 1];
+  name = StringJoin["p", name];
+  name = ToExpression[name];
   prev[name, dcount]
 ];
 
@@ -406,6 +411,13 @@ publicMethod[
   pCons,
   pConstraint = Reduce[pConstraint && And@@pCons, Reals];
   simplePrint[pConstraint];
+];
+
+
+publicMethod[
+  clearParameters,
+  par,
+  parameters = {}
 ];
 
 publicMethod[

@@ -114,21 +114,13 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
       }
   }
 
-  void set_parameter_map(parameter_map_t& p){
-    for(parameter_map_t::iterator it = p.begin(); it != p.end(); it++)
-      {
-        call("addParameter", 1, "p", "", &(it->first));
-      }
-  }
-
-
   private:
   static const std::string var_prefix;
   /// throw an exception for an invalid format
   void invalid_fmt(const char* fmt, int idx);
   void invalid_ret();
 
-  std::string remove_prefix(const std::string &original);
+  std::string remove_prefix(const std::string &original, const std::string &prefix);
 
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
