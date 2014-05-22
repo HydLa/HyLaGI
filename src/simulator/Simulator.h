@@ -261,7 +261,9 @@ public:
   parameter_map_t parameter_map_;
 
   backend_sptr_t backend;
-  
+
+  boost::shared_ptr<phase_simulator_t > phase_simulator_;
+
 
 protected:
   
@@ -275,12 +277,7 @@ protected:
   void reset_result_root();
 
 
-  parse_tree_sptr parse_tree_;
-  
-  /**
-   * PhaseSimulator to use
-   */ 
-  boost::shared_ptr<phase_simulator_t > phase_simulator_;
+  parse_tree_sptr parse_tree_;  
 
   /**
    * a container for candidate module sets

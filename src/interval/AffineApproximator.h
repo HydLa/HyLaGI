@@ -46,6 +46,10 @@ class AffineApproximator{
    */
   void approximate(const variable_t &var, variable_map_t& variable_map,  parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
 
+  /**
+   * Approximate time
+   */
+  void approximate_time(value_t &time, const variable_map_t &ip_map, variable_map_t& prev_map,  parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
 
   /**
    * Approximate given expression as an affine form
@@ -72,12 +76,12 @@ private:
 
   void invalid_node(symbolic_expression::Node& node);
 
-  simulator::Simulator* simulator_;
+  simulator::Simulator* simulator;
 
-  static interval::AffineApproximator* affine_translator_;
+  static interval::AffineApproximator* affine_translator;
 
 
-  parameter_idx_map_t parameter_idx_map_;
+  parameter_idx_map_t parameter_idx_map;
   int epsilon_index;
 };
 

@@ -4,6 +4,7 @@
 #include <exception>
 #include "Backend.h"
 #include "Logger.h"
+#include "TimeModifier.h"
 #include "VariableFinder.h"
 #include "Variable.h"
 
@@ -14,12 +15,12 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace interval {
 
-AffineApproximator* AffineApproximator::affine_translator_ = NULL;
+AffineApproximator* AffineApproximator::affine_translator = NULL;
 
 AffineApproximator* AffineApproximator::get_instance()
 {
-  if(affine_translator_ == NULL)affine_translator_ = new AffineApproximator();
-  return affine_translator_;
+  if(affine_translator == NULL)affine_translator = new AffineApproximator();
+  return affine_translator;
 }
 
 AffineApproximator::AffineApproximator(): epsilon_index(0)
@@ -28,9 +29,9 @@ AffineApproximator::AffineApproximator(): epsilon_index(0)
 AffineApproximator::~AffineApproximator()
 {}
 
-void AffineApproximator::set_simulator(Simulator* simulator)
+void AffineApproximator::set_simulator(Simulator* s)
 {
-  simulator_ = simulator;
+  simulator = s;
 }
 
 void AffineApproximator::reduce_dummy_variables(ub::vector<affine_t> &formulas, int limit)
@@ -38,20 +39,20 @@ void AffineApproximator::reduce_dummy_variables(ub::vector<affine_t> &formulas, 
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
   if(!index_map.empty())
   {
-    parameter_idx_map_.clear();
+    parameter_idx_map.clear();
     for(auto pair : index_map)
     {
       HYDLA_LOGGER_DEBUG_VAR(pair.first);
       HYDLA_LOGGER_DEBUG_VAR(pair.second);
-      parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(pair.first);
-      if(r_it == parameter_idx_map_.right.end())continue;
+      parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.first);
+      if(r_it == parameter_idx_map.right.end())continue;
       if(pair.second == -1)
       {
-        parameter_idx_map_.right.erase(r_it);
+        parameter_idx_map.right.erase(r_it);
       }
       else
       {
-        parameter_idx_map_.right.replace_key(r_it, pair.second);
+        parameter_idx_map.right.replace_key(r_it, pair.second);
       }
     }
   }
@@ -60,14 +61,14 @@ void AffineApproximator::reduce_dummy_variables(ub::vector<affine_t> &formulas, 
 value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine_value, parameter_map_t &parameter_map)
 {
   value_t ret(affine_value.a(0));
-  simulator_->backend->call("transformToRational", 1, "vln", "vl", &ret, &ret);
+  simulator->backend->call("transformToRational", 1, "vln", "vl", &ret, &ret);
   double sum = 0;
   int available_index;
   for(int i = 1; i < affine_value.a.size(); i++)
   {
     if(affine_value.a(i) == 0)continue;
-    if(parameter_idx_map_.right.find(i)
-       == parameter_idx_map_.right.end())
+    if(parameter_idx_map.right.find(i)
+       == parameter_idx_map.right.end())
     {
       // 新規に追加されるダミー変数は1つにまとめる（この時点では他の変数と関係を持っていないため）
       // TODO: kvライブラリ内のダミー変数も削除する？結果に誤りは生まれないはずだが、インデックスが無駄に増える。
@@ -76,10 +77,10 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
     }
     else
     {
-      parameter_idx_map_t::right_iterator r_it = parameter_idx_map_.right.find(i);
+      parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
       // convert floating point into rational
       value_t val = value_t(affine_value.a(i));
-      simulator_->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
+      simulator->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
       ret = ret + val * value_t(r_it->second);
     }
   }
@@ -89,11 +90,11 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
     range.set_lower_bound(value_t("-1"), true);
     range.set_upper_bound(value_t("1"), true);
     // parameters whose differential counts are -1 are regarded as dummy variables
-    parameter_t param = simulator_->introduce_parameter("affine", -1, ++epsilon_index, range);
-    parameter_idx_map_.insert(parameter_idx_t(param, available_index));
+    parameter_t param = simulator->introduce_parameter("affine", -1, ++epsilon_index, range);
+    parameter_idx_map.insert(parameter_idx_t(param, available_index));
     parameter_map[param] = range_t(value_t(-1), value_t(1));
     value_t val = value_t(sum);
-    simulator_->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
+    simulator->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
     ret = ret + val * value_t(param);
   }
 
@@ -107,7 +108,7 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
 
 value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map)
 {
-  AffineTreeVisitor visitor(parameter_idx_map_);
+  AffineTreeVisitor visitor(parameter_idx_map);
   AffineOrInteger val = visitor.approximate(node);
   if(val.is_integer)return value_t(val.integer);
 
@@ -143,7 +144,6 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition, false);
-    std::set<Variable> variables = finder.get_all_variable_set();
     if(finder.include_variable(variable_to_approximate) || finder.include_variable_prev(variable_to_approximate))
     {
       VariableFinder::variable_set_t variables = finder.get_all_variable_set();
@@ -152,7 +152,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
         //TODO: approximate n-2 variables
         assert(0);
       }
-      // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない
+      // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない（現状だと離散変化条件が直接言及している変数しか考慮していない）
       variable_t remain_var;
       for(auto var : variables)
       {
@@ -163,11 +163,45 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
         }
       }
       Value consistent_value;
-      simulator_->backend->call("calculateConsistentValue", 4,
+      simulator->backend->call("calculateConsistentValue", 4,
                                 "ecvnmvnmp", "vl",
                                 &condition, &remain_var, &variable_map, &parameter_map, &consistent_value);
       variable_map[remain_var] = consistent_value;
     }
+  }
+}
+
+
+void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
+{
+  node_sptr node = time.get_node();
+  time = approximate(node, parameter_map);
+  if(condition.get() != nullptr)
+  {
+    //TODO: deal with general case (currently only for '=')
+    assert(typeid(*condition) == typeid(symbolic_expression::Equal));
+    //Check whether the condition has approximated variable
+    simulator::VariableFinder finder;
+    finder.visit_node(condition, false);
+    VariableFinder::variable_set_t variables = finder.get_all_variable_set();
+    
+    // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない
+    // 再計算する変数を１つだけ決める（暫定的に最初の要素とする）
+    if(variables.size() <= 1)return;
+    variable_t recalculate_variable = *(variables.begin());
+    for(auto vm_it = prev_map.begin(); vm_it != prev_map.end(); vm_it++)
+    {
+      // それ以外は新しいtを代入する．
+      // TODO: 使用する時刻はタイムシフト前の方が計算が楽なはず
+      TimeModifier modifier(*simulator->backend);
+      prev_map[vm_it->first] = modifier.substitute_time(time, ip_map.find(vm_it->first)->second);
+    }
+
+    Value consistent_value;
+    simulator->backend->call("calculateConsistentValue", 4,
+                             "ecvnmvnmp", "vl",
+                             &condition, &recalculate_variable, &prev_map, &parameter_map, &consistent_value);
+    prev_map[recalculate_variable] = consistent_value;
   }
 }
 
