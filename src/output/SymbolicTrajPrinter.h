@@ -31,9 +31,9 @@ public:
 
   void set_output_variables(const std::set<std::string>& ovs){output_variables_ = ovs;}
 
-  virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, hydla::simulator::Opts *op);
+  virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
   hydla::simulator::backend_sptr_t backend_;
-  hydla::simulator::Opts *opts_;
+  bool epsilon_mode_flag = false;
   void output_limit_of_time(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result) const;
   void output_limits_of_variable_map(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const;
 

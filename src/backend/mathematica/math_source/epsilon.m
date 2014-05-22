@@ -1,5 +1,148 @@
-isOverZero[expr_] := isOverZero[expr, pConstraint];
+(*
+ * 次のポイントフェーズに移行する時刻を求める
+ *)
 
+calculateNextPointPhaseTimeTest[maxTime_, discCauses_] :=
+  calculateNextPointPhaseTimeTest[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
+publicMethod[
+             calculateNextPointPhaseTimeTest,
+             maxTime, causeAndIDs, cons, initCons, pCons, vars,
+             Module[
+                    {
+                      timeAppliedCauses,
+                        resultList,
+                        necessaryPCons,
+                        parameterList,
+                        originalOther,
+                        tmpMaxTime
+                        },
+
+                    tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
+                    timeAppliedCauses = causeAndIDs /. tStore;
+                    simplePrint[timeAppliedCauses];
+
+                    parameterList = getParameters[timeAppliedCauses];
+
+                    (* 必要なpConsだけを選ぶ．不要なものが入っているとMinimzeの動作がおかしくなる？ *)
+
+                    necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
+
+                    simplePrint[necessaryPCons];
+
+                    resultList = calculateMinTimeListTest[timeAppliedCauses, necessaryPCons, maxTime];
+
+                    simplePrint[resultList];
+
+                    (* 整形して結果を返す *)
+                    resultList = Map[({#[[1]], #[[2]], LogicalExpand[#[[3]] ]})&, resultList];
+                    resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+                    resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
+
+                    debugPrint["resultList after Format", resultList];
+
+                    resultList = Map[
+                                     ({timeAndIDsToReturn[#[[1]] ], Map[(timeAndIDsToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
+                    simplePrint[resultList];
+                    resultList
+                    ]
+             ];
+
+
+(* 条件を満たす最小の時刻と，その条件の組を求める *)
+findMinTimeTest[causeAndID_, condition_] :=
+Module[
+  {
+    id,
+    cause,
+    minT,
+    ret
+  },
+  id = causeAndID[[2]];
+  cause = causeAndID[[1]];
+  sol = Reduce[cause && condition && t > 0, t, Reals];
+  checkMessage[];
+  If[sol === False, Return[{}] ];
+  (* 成り立つtの最小値を求める *)
+  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
+  ret = makeListFromPiecewise[minT, condition];
+  (* 時刻が0となる場合を取り除く．*)
+  ret = Select[ret, (#[[1]] =!= 0)&];
+  ret = Select[ret, (isNotZero[#[[1]]])&];
+  (* append id for each time *)
+  ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
+  ret
+];
+
+(* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
+(* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
+compareMinTimeTest[timeCond1_, timeCond2_] := ( Block[
+    {
+      minTime1, minTime2,
+      timeAndID1, timeAndID2,
+      nonMinimum,
+      caseEq,caseLe, caseGr,
+      ret,
+      andCond
+    },
+    (* assume that only timeCond1 only has nonMinimum *)
+    andCond = Reduce[timeCond1[[3]] && timeCond2[[2]], Reals];
+    If[andCond === False, Return[{}] ];
+    timeAndID1 = timeCond1[[1]];
+    timeAndID2 = timeCond2[[1]];
+    minTime1 = timeAndID1[[1]];
+    minTime2 = timeAndID2[[1]];
+    nonMinimum = timeCond1[[2]];
+    caseEq = Quiet[Reduce[And[andCond, minTime1 == minTime2], Reals]];
+    caseLe = Quiet[Reduce[And[andCond, minTime1 < minTime2], Reals]];
+    caseGr = Reduce[andCond && !caseLe && !caseEq];
+    ret = {};
+    If[ caseEq =!= False,
+      ret = Append[ret,
+        {timeAndIDs[minTime1, Join[timeAndID1[[2]], timeAndID2[[2]] ] ], nonMinimum, caseEq}]
+    ];
+    If[ caseLe =!= False,
+      ret = Append[ret,
+        {timeAndID1, Append[nonMinimum, timeCond2[[1]]], caseLe}]
+    ];
+    If[ caseGr =!= False,
+      ret = Append[ret,
+        {timeAndID2, Append[nonMinimum, timeCond1[[1]]], caseGr}]
+    ];
+    Return[ ret ];
+  ]
+);
+
+
+(* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
+compareMinTimeListTest[list1_, list2_] := ( Block[
+    {resultList, i, j},
+    If[list2 === {}, Return[list1] ];
+    resultList = {};
+    For[i = 1, i <= Length[list1], i++,
+      For[j = 1, j <= Length[list2], j++,
+        resultList = Join[resultList, compareMinTime[list1[[i]], list2[[j]] ] ]
+      ]
+    ];
+    resultList
+  ]
+);
+
+(* 最小時刻と条件の組をリストアップする関数 *)
+calculateMinTimeListTest[causeAndIDList_, condition_, maxT_] := (
+  Block[
+    {findResult, i},
+    (* -1 is regarded as the id of time limit *)
+    timeCaseList = {{timeAndIDs[maxT, ids[-1]], {}, condition}};
+    For[i = 1, i <= Length[causeAndIDList], i++,
+      findResult = findMinTimeTest[causeAndIDList[[i]], condition];
+      timeCaseList = compareMinTimeListTest[timeCaseList, findResult]
+    ];
+    timeCaseList
+  ]
+);
+
+(* 式が0以上かどうか *)
+isOverZero[expr_] := isOverZero[expr, pConstraint];
 publicMethod[
              isOverZero,
              expr, pCons,
@@ -14,6 +157,7 @@ publicMethod[
                     ]
              ];
 
+(* n(dcount)次近似をする *)
 publicMethod[
              cutHighOrderVariable,
              expr, var, dcount,
@@ -23,16 +167,31 @@ publicMethod[
                     dExpr = expr;
                     sTmp = Quiet[Check[dExpr /. var -> 0, False, {Power::infy, Power::indet}]];
                     sCond = sTmp =!= False;
-                    If[sCond, ret = sTmp, ret = expr]
-                    While[sCond && dTimes++ < dcount,
+                    If[sCond, ret = sTmp, ret = expr];
+                    While[sCond && dTimes < dcount,
                           dExpr = D[dExpr, var];
+                          Clear[sTmp,sCond];
                           sTmp = Quiet[Check[dExpr /. var -> 0, False, {Power::infy, Power::indet}]];
                           sCond = sTmp =!= False;
-                          If[sCond, ret = ret + sTmp*var^dTimes, ret = expr]
+                          dTimes++;
+                          If[sCond, ret = ret + sTmp * var ^ dTimes, ret = expr];
                           ];
                     toReturnForm[ret]
                     ]
              ];
+
+publicMethod[
+             isNotZero,
+             expr,
+             Module[
+                    {ret},
+                    debugPrint["is not zero expr = ",expr];
+                    ret = Limit[expr, p[peps, 0, 1] -> 0] =!= 0;
+                    simplePrint[ret];
+                    ret
+                    ]
+             ];
+
 
 publicMethod[
              limitEpsilon,

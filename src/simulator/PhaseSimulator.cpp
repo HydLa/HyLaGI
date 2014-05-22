@@ -243,7 +243,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
         if(!changed)
         {
           phase->variable_map[var_entry.first] =
-            phase->parent->parent->variable_map[var_entry.first];            
+            phase->parent->parent->variable_map[var_entry.first];
         }
       }
     }
@@ -1271,7 +1271,7 @@ PhaseSimulator::todo_list_t
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
-    
+
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
     phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
@@ -1392,6 +1392,10 @@ PhaseSimulator::todo_list_t
       }
     }
 
+    // else if(opts_->epsilon_mode){
+    //   backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+    // }
+
     else
       backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
 
@@ -1408,6 +1412,10 @@ PhaseSimulator::todo_list_t
     while(true)
     {
       NextPhaseResult &candidate = time_result[time_it];
+      // //aho
+      // std::cout << "candidate.min.time \t: " << candidate.minimum.time << std::endl;
+      // //aho
+
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
