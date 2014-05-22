@@ -1411,7 +1411,7 @@ PhaseSimulator::todo_list_t
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
-        next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, pr->end_time);
+        next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, candidate.minimum.time);
         ret.push_back(next_todo);
       }
     	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
