@@ -9,7 +9,6 @@
 #include "SymbolicTrajPrinter.h"
 #include "HydLaAST.h"
 #include "Node.h"
-#include "NodeFactory.h"
 #include "ParseTree.h"
 #include "NodeTreeGenerator.h"
 #include "JsonWriter.h"

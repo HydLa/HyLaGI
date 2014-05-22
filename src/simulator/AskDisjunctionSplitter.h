@@ -113,7 +113,7 @@ private:
 
   ask_sptr create_ask_node(symbolic_expression::node_sptr guard, symbolic_expression::node_sptr child)
   {
-    ask_sptr ask_node = pt_->create_node<hydla::symbolic_expression::Ask>();
+    ask_sptr ask_node(new hydla::symbolic_expression::Ask());
     ask_node->set_guard(guard);
     ask_node->set_child(child);
     return ask_node;

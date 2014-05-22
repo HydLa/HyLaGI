@@ -32,8 +32,8 @@ public:
    * @param node 調べる対象となる制約
    * @param include_guard ガード条件を対象とするかどうか
    */
-  void visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool  include_guard = true);
-  
+  void visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool include_guard = true);
+
   void clear();
   
   /// get found variables (include prev)
@@ -48,18 +48,24 @@ public:
   /// judge if found variables include given variables
   bool include_variables(std::set<std::string> variables) const;
   bool include_variables_prev(std::set<std::string> variables) const;
+
+  bool include_variable(const Variable& var)const;
+  bool include_variable_prev(const Variable& var)const;
   
-  // Ask制約
+  /// Ask制約
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
-  // 微分
+  /// 微分
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
 
-  // 左極限
+  /// 左極限
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
-  // 変数
+  /// 変数
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+
+  /// 時刻
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
 
 private:
 

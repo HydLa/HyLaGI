@@ -1,24 +1,28 @@
-LAW(m,M,L,g,iniU) <=> 
- 0.01 < threshold < 0.4 &
- [](I = m*L^2/3 
- & e = I*(m+M)+m*M*L^2 
- & th''= m*L*(m+M)*g/e*th - m*L/e*u
- & x'' = -m^2*L^2*g/e*th + (I+m*L^2)/e*u
- & threshold' = 0)
- & u=iniU.
- 
+LAW(m,M,L,g,iniU) <=>
+ [](I = m*L^2/3
+ & e = I*(m+M)+m*M*L^2
+ & th''= m*L*(m+M)*g/e*th - m*L/e*u).
+// & x'' = -m^2*L^2*g/e*th + (I+m*L^2)/e*u
+
 SR <=> [](th- = threshold & s-=0 => s=1).
 SL <=> [](th- = -threshold & s-=0 => s=2).
 SN <=> []((th- = threshold & s-=1)
  | (th-= -threshold & s-=2) => s=0).
- 
-TURN(state, vel) <=> [](s = state => u = vel).
 
-CAR(iniTH,iniTHV,iniX,iniXV){
- [](s' = 0) << SR & SL & SN ,
+CAR(iniTH,iniTHV){
  LAW(1,1,1,10,0),
- th = iniTH & th' = iniTHV & x = iniX &
- x' = iniXV & s = 0,
- TURN(1, 15), TURN(2, -15),TURN(0, 0)
+ th = iniTH & th' = iniTHV
 }.
-CAR(0.005, 0, 0, 0).
+CAR(0.005, 0).
+
+FORCE(state, force) <=> [](s = state => u = force).
+
+CONTROL(){
+ 0.01 < threshold < 0.4
+ //threshold = 0.01
+ & [](threshold' = 0),
+ [](s' = 0) << SR & SL & SN ,
+ s = 0, FORCE(1, 15), FORCE(2, -15),FORCE(0, 0)
+}.
+CONTROL().
+

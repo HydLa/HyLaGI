@@ -111,8 +111,6 @@ protected:
 
   result_list_t simulate_ms(const module_set_sptr& ms, const variable_map_t&, simulation_todo_sptr_t& state);
 
-  ConstraintStore apply_time_to_constraints(const ConstraintStore &, const value_t &);
-
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
    * 新たなsimulation_todo_sptr_tの作成

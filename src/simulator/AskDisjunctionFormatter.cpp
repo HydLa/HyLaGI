@@ -111,14 +111,14 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression
   logical_or_sptr lhs_child = 
     boost::dynamic_pointer_cast<hydla::symbolic_expression::LogicalOr>(n->get_lhs());
   if(lhs_child) {
-    logical_or_sptr node_or(pt_->create_node<LogicalOr>());
+    logical_or_sptr node_or(new LogicalOr());
 
-    logical_and_sptr lhs_and(pt_->create_node<LogicalAnd>());
+    logical_and_sptr lhs_and(new LogicalAnd());
     node_or->set_lhs(lhs_and);
     lhs_and->set_lhs(lhs_child->get_lhs());
     lhs_and->set_rhs(node->get_rhs());
 
-    logical_and_sptr rhs_and(pt_->create_node<LogicalAnd>());
+    logical_and_sptr rhs_and(new LogicalAnd());
     node_or->set_rhs(rhs_and);
     rhs_and->set_lhs(lhs_child->get_rhs());
     rhs_and->set_rhs(n->get_rhs());
@@ -133,14 +133,14 @@ void AskDisjunctionFormatter::visit(boost::shared_ptr<hydla::symbolic_expression
   logical_or_sptr rhs_child = 
     boost::dynamic_pointer_cast<hydla::symbolic_expression::LogicalOr>(n->get_rhs());
   if(rhs_child) {
-    logical_or_sptr node_or(pt_->create_node<LogicalOr>());
+    logical_or_sptr node_or(new LogicalOr());
 
-    logical_and_sptr lhs_and(pt_->create_node<LogicalAnd>());
+    logical_and_sptr lhs_and(new LogicalAnd());
     node_or->set_lhs(lhs_and);
     lhs_and->set_lhs(rhs_child->get_lhs());
     lhs_and->set_rhs(node->get_lhs());
 
-    logical_and_sptr rhs_and(pt_->create_node<LogicalAnd>());
+    logical_and_sptr rhs_and(new LogicalAnd());
     node_or->set_rhs(rhs_and);
     rhs_and->set_lhs(rhs_child->get_rhs());
     rhs_and->set_rhs(n->get_lhs());

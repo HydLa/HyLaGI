@@ -130,8 +130,7 @@ publicMethod[
   cons,
   Module[
     {sol, tStore, ret},
-    tStore = And@@cons;
-    tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+    tStore = Select[cons, (!hasVariable[ #[[2]] ])&];
     ret = {convertExprs[tStore]};
     ret = ruleOutException[ret];
     simplePrint[ret];
@@ -165,6 +164,7 @@ publicMethod[
   ]
 ];
 
+(* 返す制約として不要なものを除く *)
 ruleOutException[list_] := Module[
   {ret},
   ret = Map[(Cases[#, {{_?isVariable, _}, _, _} ])&, list];
@@ -207,15 +207,15 @@ Module[
 
 (* 式中に変数名が出現するか否か *)
 
-hasVariable[exprs_] := Length[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter]] > 0;
+hasVariable[exprs_] := Length[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter]] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
-isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], "usrVar" ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
 
-getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], "usrVar" ~~ WordCharacter..]];
+getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter..]];
 
 (* 式中に出現する記号定数を取得 *)
 
@@ -243,7 +243,6 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
-
 adjustExprs[andExprs_, judgeFunction_] := 
 Fold[
   (
@@ -324,9 +323,10 @@ makePrevVar[var_] := Module[
     name = var;
     dcount = 0
   ];
+  (* remove 'u' *)
   name = ToString[name];
-  (* drop "usrVar" *)
-  name = StringDrop[name, 6];
+  name = StringDrop[name, 1];
+  name = StringJoin["p", name];
   name = ToExpression[name];
   prev[name, dcount]
 ];
@@ -413,6 +413,13 @@ publicMethod[
   simplePrint[pConstraint];
 ];
 
+
+publicMethod[
+  clearParameters,
+  par,
+  parameters = {}
+];
+
 publicMethod[
   addParameter,
   par,
@@ -436,6 +443,7 @@ removeDash[var_] := Module[
 
 makeListFromPiecewise[minT_, others_] := Module[
   {tmpCondition = False, retMinT = minT[[1]]},
+  If[Head[minT] =!= Piecewise, Return[{{minT, others}}] ];
   tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
   retMinT = Map[({#[[1]], Reduce[others && #[[2]] ]})&, retMinT];
@@ -470,7 +478,6 @@ Module[
 ];
 
 
-
 (* 条件を満たす最小の時刻と，その条件の組を求める *)
 findMinTime[causeAndID_, condition_] := 
 Module[
@@ -487,8 +494,7 @@ Module[
   If[sol === False, Return[{}] ];
   (* 成り立つtの最小値を求める *)
   minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
-  (* Piecewiseなら分解*)
-  If[Head[minT] === Piecewise, ret = makeListFromPiecewise[minT, condition], ret = {{minT, condition}}];
+  ret = makeListFromPiecewise[minT, condition];
   (* 時刻が0となる場合を取り除く．*)
   ret = Select[ret, (#[[1]] =!= 0)&];
   (* append id for each time *)
@@ -550,7 +556,6 @@ compareMinTimeList[list1_, list2_] := ( Block[
   ]
 );
 
-
 (* 最小時刻と条件の組をリストアップする関数 *)
 calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
   Block[
@@ -565,9 +570,10 @@ calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
   ]
 );
 
-(* 時刻と条件の組で，条件が論理和でつながっている場合それぞれに分解する *)
+(* 時刻と条件の組に対し，条件が論理和でつながっている場合それぞれの場合に分解する *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
 
+ 
 publicMethod[
   calculateNextPointPhaseTime,
   maxTime, causeAndIDs, cons, initCons, pCons, vars,
@@ -613,10 +619,6 @@ publicMethod[
 
 timeAndIDsToReturn[ti_] := timeAndIDs[toReturnForm[ti[[1]] ], ti[[2]] ];
 
-getDerivativeCount[variable_[_]] := 0;
-
-getDerivativeCount[Derivative[n_][f_][_]] := n;
-
 applyDSolveResult[exprs_, integRule_] := (
   exprs  /. integRule     (* 単純にルールを適用 *)
          /. Map[((#[[1]] /. x_[t]-> x) -> #[[2]] )&, integRule]
@@ -630,7 +632,6 @@ createDifferentiatedEquations[vars_, integRules_] := (
     ret
   ]
 );
-
 
 removeDerivative[Derivative[_][var_][arg_]] := var[arg];
 removeDerivative[var_] := var;
@@ -721,7 +722,7 @@ Module[
 searchExprsAndVars[exprs_] :=
 Module[
   {tmpExprs, droppedExprs, searchResult = unExpandable, tVarsMap, tVars},
-  
+  simplePrint[exprs];
   For[i=1, i<=Length[exprs], i++,
     tVarsMap[ exprs[[i]] ] = Union[getVariables[exprs[[i]] ] ];
     tVars = tVarsMap[ exprs[[i]] ];
@@ -737,7 +738,6 @@ Module[
       searchResult = searchExprsAndVars[{tmpExprs[[1]]}, tVarsMap[tmpExprs[[1]] ], droppedExprs, tVarsMap]
     ]
   ];
-  debugPrint["seA"];
   simplePrint[searchResult];
   searchResult
 ];
