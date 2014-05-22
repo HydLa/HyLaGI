@@ -609,54 +609,6 @@ void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
   current_phase_ = phase;
 }
 
-void PhaseSimulator::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
-  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
-
-    std::string fmt = "v";
-    if(phase == PointPhase)
-    {
-      fmt += "n";
-    }
-    else
-    {
-      fmt += "z";
-    }
-    fmt += "vp";
-    if(it->second>=0){
-      for(int i=0; i<it->second;i++){
-        variable_t var(it->first, i);
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-      }
-    }else{
-      for(int i=0; i<=-it->second;i++){
-        variable_t var(it->first, i);
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-      }
-      if(phase == IntervalPhase)
-      {
-        symbolic_expression::node_sptr rhs(new Number("0"));
-        fmt = phase == PointPhase?"vn":"vt";
-        fmt += "en";
-        variable_t var(it->first, -it->second + 1);
-        backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
-      }
-    }
-  }
-}
-
-CheckConsistencyResult PhaseSimulator::check_consistency(const PhaseType& phase)
-{
-  CheckConsistencyResult ret;
-  if(phase == PointPhase)
-  {
-    backend_->call("checkConsistencyPoint", 0, "", "cc", &ret);
-  }
-  else
-  {
-    backend_->call("checkConsistencyInterval", 0, "", "cc", &ret);
-  }
-  return ret;
-}
 
 PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
   CheckConsistencyResult &cc_result,
@@ -666,12 +618,13 @@ PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
   )
 {
   CheckEntailmentResult ce_result;
+  ConsistencyChecker consistency_checker(backend_);
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   backend_->call("startTemporary", 0, "", "");
-  add_continuity(cont_map, phase);
+  consistency_checker.add_continuity(cont_map, phase);
   const char* fmt = (phase == PointPhase)?"en":"et";
   backend_->call("addConstraint", 1, fmt, "", &guard);
-  cc_result = check_consistency(phase);
+  cc_result = consistency_checker.call_backend_check_consistency(phase);
   if(cc_result.consistent_store.consistent()){
     HYDLA_LOGGER_DEBUG("%% entailable");
     if(cc_result.inconsistent_store.consistent()){
@@ -682,11 +635,11 @@ PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
     {
       backend_->call("endTemporary", 0, "", "");
       backend_->call("startTemporary", 0, "", "");
-      add_continuity(cont_map, phase);
+      consistency_checker.add_continuity(cont_map, phase);
       symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &not_node);
-      cc_result = check_consistency(phase);
+      cc_result = consistency_checker.call_backend_check_consistency(phase);
       if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
         if(cc_result.inconsistent_store.consistent()){
@@ -718,6 +671,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
   ConstraintStore   constraint_list;
+  ConsistencyChecker consistency_checker(backend_);
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -774,21 +728,18 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         }
       }
       constraint_list.add_constraint(tell);
-      maker.visit_node(tell, state->phase_type == IntervalPhase, false);
+//      maker.visit_node(tell, state->phase_type == IntervalPhase, false);
     }
 
-    continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map, state->phase_type);
+//    continuity_map = maker.get_continuity_map();
 
     for(auto constraint : state->initial_constraint_store){
       constraint_list.add_constraint(constraint);
     }
-    const char* fmt = (state->phase_type == PointPhase)?"csn":"cst";
-    backend_->call("addConstraint", 1, fmt, "", &constraint_list);
 
     {
       CheckConsistencyResult cc_result;
-      cc_result = check_consistency(state->phase_type);
+      cc_result = consistency_checker.check_consistency(constraint_list, state->phase_type);
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
@@ -932,14 +883,14 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             break;
         }
         if(entailment_changed) break;
-        maker.set_continuity_map(continuity_map);
+//        maker.set_continuity_map(continuity_map);
       }
     }
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     if(entailment_changed) continue;
   }while(expanded);
 
-  add_continuity(continuity_map, state->phase_type);
+  //add_continuity(continuity_map, state->phase_type);
 
   if(!unknown_asks.empty()){
     boost::shared_ptr<hydla::symbolic_expression::Ask> branched_ask = *unknown_asks.begin();
@@ -1211,6 +1162,7 @@ void PhaseSimulator::apply_previous_solution(const change_variables_t& variables
     const phase_result_sptr_t parent,
     continuity_map_t& continuity_map,
     const value_t& current_time ){
+  ConsistencyChecker consistency_checker(backend_);
   for(auto pair : parent->variable_map){
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
@@ -1242,7 +1194,7 @@ void PhaseSimulator::apply_previous_solution(const change_variables_t& variables
   PhaseType phase;
   if(in_IP) phase = IntervalPhase;
   else phase = PointPhase;
-  add_continuity(continuity_map, phase);
+  consistency_checker.add_continuity(continuity_map, phase);
 }
 
 PhaseSimulator::todo_list_t

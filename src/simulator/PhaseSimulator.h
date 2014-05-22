@@ -15,18 +15,19 @@
 #include "Simulator.h"
 #include "UnsatCoreFinder.h"
 #include "AnalysisResultChecker.h"
+#include "ConsistencyChecker.h"
 
 namespace hydla {
 
 namespace simulator {
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
-
+/*
 struct CheckConsistencyResult
 {
   ConstraintStore consistent_store, inconsistent_store;
 };
-
+*/
 
 typedef enum{
   CONDITIONS_TRUE,
