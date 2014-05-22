@@ -1413,8 +1413,6 @@ PhaseSimulator::todo_list_t
         pr->parameter_map[it->first] = it->second;
       }
 
-      next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, candidate.minimum.time);
-
       pr->end_time = current_todo->current_time + candidate.minimum.time;
       backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
       results.push_back(pr);
@@ -1449,18 +1447,19 @@ PhaseSimulator::todo_list_t
         else if(id >= 0)
         {
           HYDLA_LOGGER_DEBUG_VAR(id);
+          HYDLA_LOGGER_DEBUG_VAR(candidate.minimum.time);
           HYDLA_LOGGER_DEBUG_VAR(*ask_map[id]);
           next_todo->discrete_causes.insert(ask_map[id]);
         }
       }
 
 
-      HYDLA_LOGGER_DEBUG("%%time: ", pr->current_time);
       if(pr->cause_for_termination != TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
+        next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, pr->end_time);
         ret.push_back(next_todo);
       }
     	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
