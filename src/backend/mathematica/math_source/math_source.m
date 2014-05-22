@@ -442,8 +442,9 @@ removeDash[var_] := Module[
    ついでに othersを各条件に対して付加 *)
 
 makeListFromPiecewise[minT_, others_] := Module[
-  {tmpCondition = False, retMinT = minT[[1]]},
+  {tmpCondition = False, retMinT},
   If[Head[minT] =!= Piecewise, Return[{{minT, others}}] ];
+  retMinT = minT[[1]];
   tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
   retMinT = Map[({#[[1]], Reduce[others && #[[2]] ]})&, retMinT];
