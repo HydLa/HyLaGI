@@ -59,7 +59,7 @@ phase_result_const_sptr_t HAConverter::simulate()
 	
 void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
 {
-  hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
+  hydla::output::SymbolicTrajPrinter printer(backend, opts_->output_variables, std::cerr);
 
   HYDLA_LOGGER_DEBUG("************************\n");
 

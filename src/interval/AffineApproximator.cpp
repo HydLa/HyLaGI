@@ -117,7 +117,7 @@ value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parame
 /*
   ub::vector<affine_t> formulas(1);
   formulas(0) = affine_value;
-  reduce_dummy_variables(formulas, 3);
+  reduce_dummy_variables(formulas, 1);
   affine_value = formulas(0);  
   HYDLA_LOGGER_DEBUG_VAR(affine_t::maxnum());
   HYDLA_LOGGER_DEBUG_VAR(affine_value);

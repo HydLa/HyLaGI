@@ -39,8 +39,6 @@ using namespace hydla::interval;
 namespace hydla {
 namespace simulator {
 
-hydla::output::SymbolicTrajPrinter InteractiveSimulator::printer_;
-
 
 void InteractiveSimulator::print_end(phase_result_sptr_t& p)
 {

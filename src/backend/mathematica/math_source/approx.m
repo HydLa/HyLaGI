@@ -32,3 +32,9 @@ publicMethod[
   float,
   toReturnForm[toRational[float]]
 ];
+
+publicMethod[
+  numericalOutput,
+  expr,
+  toReturnForm[N[Expand[expr]]]
+];

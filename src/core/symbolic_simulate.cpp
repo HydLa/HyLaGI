@@ -53,7 +53,7 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
-  hydla::output::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
+  hydla::output::SymbolicTrajPrinter Printer(backend_, opts.output_variables, sstr);
   if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_,&opts);}
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
