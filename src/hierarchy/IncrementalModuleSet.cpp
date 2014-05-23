@@ -53,49 +53,50 @@ void IncrementalModuleSet::add_maximal_module_set(module_set_sptr ms)
  * @param current_ms 対象のモジュール集合 
  * @param ms 矛盾の原因となったモジュール集合
  */
-module_set_sptr IncrementalModuleSet::get_removable_module_set(module_set_sptr current_ms, const ModuleSet& ms)
+std::vector<module_set_sptr> IncrementalModuleSet::get_removable_module_sets(module_set_sptr current_ms, const ModuleSet& ms)
 {
   HYDLA_LOGGER_DEBUG("%% candidate modules : ", ms.get_name(), "\n");
   // msは矛盾集合
-  module_set_sptr removable(new ModuleSet());
+  std::vector<module_set_sptr> removable;
 
-  // 削除対象の候補となるモジュールの集合
-  // 初期値は矛盾の原因となったモジュール集合に含まれるモジュール
-  module_set_sptr candidates(new ModuleSet()); 
-
-  module_set_sptr tmp;
-
-  // 矛盾した集合に含まれる制約について見ていく
-  module_list_const_iterator it = ms.begin();
-  module_list_const_iterator end = ms.end();
-
-  bool exist_weaker_modules;
   for( auto it : ms ){
-    exist_weaker_modules = false;
-    if(children_data_[it] != NULL){
-      for( auto wmit : *children_data_[it] ){
-        if(current_ms->find(wmit) != current_ms->end()){
-          // 現在のモジュール集合に自分(it)よりも弱い制約が存在した場合
-          if(candidates->find(wmit)==candidates->end()) candidates->add_module(wmit);
-          exist_weaker_modules = true;
+    // if it is a required constraint, do nothing for it
+    if(parents_data_[it] == NULL) continue;
+    // one of the removable module set
+    module_set_sptr removable_for_it(new ModuleSet());
+    // a vector which has all modules which is weaker than it
+    std::vector<module_t> childs;
+    childs.push_back(it);
+
+    while(childs.size() > 0){
+      // pop the top of childs
+      auto roop_it = childs.front();
+      removable_for_it->add_module(roop_it);
+      // to prevent recheck, erase childs front
+      childs.erase(childs.begin());
+      // if there are modules which is weaker than roop_it
+      if(children_data_[roop_it] != NULL){
+        for( auto wmit : *children_data_[roop_it] ){
+	  // wmit is a module which is weaker than roop_it
+	  // if wmit is included by current module set
+          if(current_ms->find(wmit) != current_ms->end()){
+	    // push wmit to childs
+            childs.push_back(wmit);
+          }
         }
       }
     }
-    if(!exist_weaker_modules){
-      // 自分(it)より優先度が低いモジュールが現在のモジュール集合に含まれていない場合
-      if(parents_data_[it] != NULL){
-      // 自分(it)より強い優先度のモジュールが存在している==requiredでない場合
-        if(removable->find(it) == removable->end()) removable->add_module(it);
-      }
-    }
+
+    removable.push_back(removable_for_it);
   }
-  if(candidates->size() > 0){
-    tmp = get_removable_module_set(current_ms,*candidates);
-    for( auto it : *tmp ){
-      if(removable->find(it) == removable->end()) removable->add_module(it);
-    }
+
+  // string for debug
+  std::string str = "";
+  for(auto it : removable){
+    str += it->get_name();
+    str += " , ";
   }
-  HYDLA_LOGGER_DEBUG("%% removable modules : ", removable->get_name(), "\n");
+  HYDLA_LOGGER_DEBUG("%% removable modules : ", str, "\n");
   return removable;
 }
 
@@ -240,7 +241,7 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
   }
   HYDLA_LOGGER_DEBUG("%% maximal consistent module set : ", for_debug);
   // 探索対象にmsを含むモジュール集合が存在する間この関数を再帰的に呼び出すためのフラグ
-  bool recursive = false;
+//  bool recursive = false;
   // 制約の優先度を崩さない範囲で除去可能なモジュールを要素として持つ集合を得る
   // 結果用のモジュール集合の集合
   module_set_list_t add, remain;
@@ -249,40 +250,49 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
     // そのモジュール集合は矛盾するため
     // 新たなモジュール集合を生成する
     if(lit->including(ms)){
-      module_set_sptr rm = get_removable_module_set(lit,ms);
-      module_list_const_iterator mend = lit->end();
-      module_set_sptr removed(new ModuleSet());
-      // rm内のモジュールをすべて除くまで繰り返す
-      for( auto rm_it : *rm ){
-        // *litからrm内の要素一つを除き、新たなモジュール集合(new_ms)を生成
-        module_list_const_iterator mit = lit->begin();
-        module_set_sptr new_ms(new ModuleSet());
-        for( auto mit : *lit ){
-          if(rm_it != mit) new_ms->add_module(mit);
-        }
-        bool checked = false;
-	for( auto cit : ms_to_visit_ ){
-	  if(cit->including(*new_ms) && new_ms->including(*cit)){
-            // 生成されたモジュール集合がすでに探索対象にある場合checkedをtrueにしておく
-            checked = true;
-            break;
+      // get vector of removable module set
+      std::vector<module_set_sptr> rm = get_removable_module_sets(lit,ms);
+      for(auto removable_it : rm){
+        module_set_sptr removed(new ModuleSet());
+        // remove removable module set of lit.
+        for( auto rm_it : *removable_it ){
+          // make new module set
+	  // The set has no module which is in removable module set
+          module_set_sptr new_ms(new ModuleSet());
+          for( auto mit : *lit ){
+            if(removable_it->find(mit) == removable_it->end()) new_ms->add_module(mit);
           }
-        }
-        for( auto cit : mms ){
-	  // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
-          if(cit->including(*new_ms)){
-            checked = true;
-            break;
+          bool checked = false;
+          for( auto cit : ms_to_visit_ ){
+	    if(cit->including(*new_ms) && new_ms->including(*cit)){
+              // 生成されたモジュール集合がすでに探索対象にある場合checkedをtrueにしておく
+              checked = true;
+              break;
+            }
+          }
+          for( auto cit : add ){
+	    if(cit->including(*new_ms) && new_ms->including(*cit)){
+              // 生成されたモジュール集合がすでに探索対象にある場合checkedをtrueにしておく
+              checked = true;
+              break;
+            }
+          }
+          for( auto cit : mms ){
+	    // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
+            if(cit->including(*new_ms)){
+              checked = true;
+              break;
+	    }
+          }
+         // checkedがtrueでない場合、生成したモジュール集合を探索対象に追加
+	  if(!checked){
+            add.push_back(new_ms);
+	    // 新たに生成したモジュール集合がまだmsを含んでいる場合再帰的にこの関数を呼ぶ
+//            if(new_ms->including(ms)) recursive = true;
+            HYDLA_LOGGER_DEBUG("%% new ms : ", new_ms->get_name());
 	  }
         }
-	// checkedがtrueでない場合、生成したモジュール集合を探索対象に追加
-	if(!checked){
-          add.push_back(new_ms);
-	  // 新たに生成したモジュール集合がまだmsを含んでいる場合再帰的にこの関数を呼ぶ
-          if(new_ms->including(ms)) recursive = true;
-          HYDLA_LOGGER_DEBUG("%% new ms : ", new_ms->get_name());
-	}
-      }
+      }	
     }else{
       // 探索対象がmsを含んでいない場合そのまま残しておく
       remain.push_back(lit);
@@ -292,9 +302,10 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mms, const Module
   remain.insert(remain.end(),add.begin(),add.end());
   // マージした集合の集合を探索対象とする
   ms_to_visit_ = remain;
-  if(recursive) mark_nodes(mms,ms);
+//  if(recursive) mark_nodes(mms,ms);
   // 生成処理がすべて終了したら探索対象を要素数が多い順にソートする
-  else sort(ms_to_visit_.begin(), ms_to_visit_.end(), ModuleSetComparator());
+//  else 
+  sort(ms_to_visit_.begin(), ms_to_visit_.end(), ModuleSetComparator());
 }
 
 /// 最も要素数の多いモジュール集合を返す
