@@ -11,9 +11,9 @@ $MaxExtraPrecision = 1000;
  * prevRules:      rules converted from equalities of left-hand limits
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
- * prevVariables: variables内の変数をusrVarx=>prev[x, 0]のようにしたもの
- * timeVariables: variables内の変数を，usrVarx[t]のようにしたもの
- * initVariables: variables内の変数を，usrVarx[0]のようにしたもの
+ * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの
+ * timeVariables: variables内の変数を，ux[t]のようにしたもの
+ * initVariables: variables内の変数を，ux[0]のようにしたもの
  * parameters: 使用する記号定数のリスト
  * isTemporary：制約の追加を一時的なものとするか
  * tmpConstraint: 一時的に追加された制約
@@ -108,7 +108,6 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 SetAttributes[symbolToString, HoldAll];
 
 SetAttributes[prev, Constant];
-
 SetAttributes[parameter, Constant];
 
 If[optUseDebugPrint || True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく．いずれにしろそんなにコストはかからない？ *)
@@ -129,7 +128,7 @@ profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
 
 inputPrint[name_] := Print[StringJoin[name, "[]"]];
  
-inputPrint[name_, arg__] := Print[StringJoin[name, "[", delimiterAddedString[",", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
+inputPrint[name_, arg__] := Print[StringJoin[name, "[", delimiterAddedString[",\n\t", Map[(ToString[InputForm[#] ])&,{arg}] ], "]" ] ];
 
 delimiterAddedString[del_, {h_}] := h;
 
@@ -194,7 +193,7 @@ Module[
   ret
 ];
 
-toRational[float_] := Rationalize[float, 0];
+toRational[float_] := SetPrecision[float, Infinity];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 
@@ -241,3 +240,5 @@ getReverseRelop[relop_] := Switch[relop,
                                   Greater, Less,
                                   LessEqual, GreaterEqual,
                                   GreaterEqual, LessEqual];
+
+variablePrefix = "u";

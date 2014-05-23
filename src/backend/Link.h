@@ -18,6 +18,7 @@ class Link
   enum VariableForm
   {
     VF_NONE,
+    VF_IGNORE_PREV,
     VF_PREV,
     VF_TIME,
     VF_ZERO

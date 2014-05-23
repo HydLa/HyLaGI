@@ -15,8 +15,6 @@
 #include "ParseTreeGraphvizDumper.h"
 #include "DefinitionContainer.h"
 
-#include "DefaultNodeFactory.h"
-
 
 using namespace std;
 using namespace boost;
@@ -33,7 +31,6 @@ ParseTree::ParseTree() :
 
     
 ParseTree::ParseTree(const ParseTree& pt) :
-  node_factory_(pt.node_factory_),
   node_tree_(pt.node_tree_ ? pt.node_tree_->clone() : symbolic_expression::node_sptr()),
   variable_map_(pt.variable_map_),
   node_map_(pt.node_map_),
@@ -45,10 +42,9 @@ ParseTree::ParseTree(const ParseTree& pt) :
 ParseTree::~ParseTree()
 {}
 
-void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory) 
+void ParseTree::parse(std::istream& stream) 
 {
   HYDLA_LOGGER_DEBUG("#*** Begin ParseTree::parse ***");
-  node_factory_ = node_factory;
 
   // ASTの構築
   HydLaAST ast;
@@ -59,7 +55,7 @@ void ParseTree::parse(std::istream& stream, node_factory_sptr node_factory)
   // ParseTreeの構築
   DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>    program_definition;
-  NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition, node_factory);
+  NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
   HYDLA_LOGGER_DEBUG("--- Parse Tree ---\n", *this);
   HYDLA_LOGGER_DEBUG("--- Constraint Definition ---\n", constraint_definition);
@@ -210,7 +206,6 @@ void ParseTree::make_node_id_list()
 void ParseTree::clear()
 {
   max_node_id_ = INITIAL_MAX_NODE_ID;
-  node_factory_.reset();
   node_map_.clear();
   node_tree_.reset();
   variable_map_.clear();

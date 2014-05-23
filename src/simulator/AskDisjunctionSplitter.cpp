@@ -55,7 +55,7 @@ void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::symbolic_expression:
     splitted_guard_nodes_t::iterator it       = splitted_guard_nodes_.begin();
     splitted_guard_nodes_t::iterator prev_end = --splitted_guard_nodes_.end();
     
-    logical_and_sptr and_node = pt_->create_node<LogicalAnd>();
+    logical_and_sptr and_node(new LogicalAnd());
     new_child_ = and_node;
 
     // 1個目
@@ -63,7 +63,7 @@ void AskDisjunctionSplitter::visit(boost::shared_ptr<hydla::symbolic_expression:
 
     // 2〜n-1個目
     while(it!=prev_end) {
-      logical_and_sptr new_and_node = pt_->create_node<LogicalAnd>();
+      logical_and_sptr new_and_node(new LogicalAnd());
       new_and_node->set_lhs(create_ask_node(*it++, node->get_child()->clone()));
       and_node->set_rhs(new_and_node);
       and_node = new_and_node;

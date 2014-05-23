@@ -1,0 +1,45 @@
+/*
+ Insulin Infusion Control in Diabetic Patients
+ reference: X. Chen, E. Abraham and S. Sankaranarayanan. Taylor Model Flowpipe Construction for Non-linear Hybrid Systems. IEEE Real-Time Systems Symposium (RTSS), 2012.
+ 
+ ODEs are cannot be solved symbolically by Mathematica
+ */
+INIT <=> -2 < g < 2 & x = 0 & -0.1 < in < 0.1 & mode = 1.
+TIME <=> time = 0 & [](time' = 1).
+FLOW <=> [](mode' = 0).
+CONTINUOUS <=>  
+  [](
+    x' = -0.025*x + 0.000013*in
+     & (mode = 1 =>
+         g' = -0.01*g - x*(g + 4.5) + 0.0167*time &
+         in' = -0.093*(in + 15) + 0.08333 + 0.01852*g)
+     & (mode = 2 =>
+         g' = -0.01*g - x*(g + 4.5) + 0.0167*time &
+         in' = -0.093*(in + 15) + 1.3889)
+     & (mode = 3 =>
+         g' = -0.01*g - x*(g + 4.5) + 0.0056*(120 - time) &
+         in' = -0.093*(in + 15) + 0.08333 + 0.01852*g)
+     & (mode = 4 =>
+         g' = -0.01*g - x*(g + 4.5) + 0.0056*(120 - time) &
+         in' = -0.093*(in + 15) + 1.3889)
+     & (mode = 5 =>
+         g' = -0.01*g - x*(g + 4.5) &
+         in' = -0.093*(in + 15) + 0.08333 + 0.01852*g)
+     & (mode = 6 =>
+         g' = -0.01*g - x*(g + 4.5) &
+         in' = -0.093*(in + 15) + 1.3889)
+  ).
+
+JUMP <=>
+  [](
+    (g- >= 6 & mode- = 1 => mode = 2) &
+    (g- <= 6 & mode- = 2 => mode = 1) &
+    (time- >= 30 & mode- <= 2=> mode = mode- + 2) &
+    (g- >= 6 & mode- = 3 => mode = 4) &
+    (g- <= 6 & mode- = 4 => mode = 3) &
+    (time- >= 120 & mode- <= 4=> mode = mode- + 2) &
+    (g- >= 6 & mode- = 5 => mode = 6) &
+    (g- <= 6 & mode- = 6 => mode = 5)
+   ).
+
+INIT, TIME, FLOW << JUMP, CONTINUOUS.

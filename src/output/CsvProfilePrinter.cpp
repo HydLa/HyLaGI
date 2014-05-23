@@ -34,7 +34,7 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
     output_stream_ << "\n";
     for(std::set<std::string>::const_iterator it = label_set.begin(); it != label_set.end(); it++){
       output_stream_ << *it << ", ";
-      int sum = 0;
+      double sum = 0;
       for(unsigned int i = 0; i < result.size(); i++){
         simulator::SimulationTodo& todo = *result[i];
         output_stream_ << todo.profile[*it] << ", ";

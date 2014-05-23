@@ -27,6 +27,34 @@ void VariableFinder::clear(){
   prev_variables_.clear();
 }
 
+
+bool VariableFinder::include_variable(const Variable &variable) const
+{
+  for(auto found_var : variables_)
+  {
+    if(variable == found_var)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+bool VariableFinder::include_variable_prev(const Variable &variable) const
+{
+  for(auto found_var : prev_variables_)
+  {
+    if(variable == found_var)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
 bool VariableFinder::include_variables(std::set<std::string> variables) const
 {
   for(auto found_var : variables_)
@@ -79,6 +107,17 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
   accept(node->get_child());
 }
 
+
+// 時刻
+void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
+{
+  Variable time_var("t", 0);
+  if(in_prev_){
+    prev_variables_.insert(time_var);
+  }else{
+    variables_.insert(time_var);
+  }
+}
 
 // 変数
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)

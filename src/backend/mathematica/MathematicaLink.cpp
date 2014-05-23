@@ -2,6 +2,7 @@
 #include "math_source.h"
 #include "Simulator.h"
 #include "TimeOutError.h"
+#include "Utility.h"
 
 namespace hydla{
 namespace backend{
@@ -9,7 +10,6 @@ namespace mathematica{
 
 const std::string MathematicaLink::prev_prefix = "prev";
 const std::string MathematicaLink::par_prefix = "p";
-const std::string MathematicaLink::var_prefix = "usrVar";
 
 
 MathematicaLink::MathematicaLink(const hydla::simulator::Opts &opts) : env_(0), link_(0)
@@ -157,6 +157,8 @@ bool MathematicaLink::receive_to_return_packet(){
     case TEXTPKT: // Print[]で生成されるようなMathematica からのテキスト出力
     {
       std::string str = get_string();
+      str = utility::replace(str, "\\012", "\n");
+      str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
         HYDLA_LOGGER_DEBUG_VAR(input_print_);
@@ -467,7 +469,6 @@ int MathematicaLink::get_arg_count()
 
 void MathematicaLink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
 {
-    
   if(variable_arg == VF_PREV){
     put_function(prev_prefix.c_str(), 2);
     put_symbol(name);
@@ -479,13 +480,13 @@ void MathematicaLink::put_variable(const std::string &name, int diff_count, cons
     {
       put_function(derivative_str.c_str(), 2);
       put_integer(diff_count);
-      put_symbol(var_prefix + name);
+      put_symbol(name);
     }
     else
     {
       put_function(derivative_str.c_str(), 3);
       put_integer(diff_count);
-      put_symbol(var_prefix + name);
+      put_symbol(name);
       if(variable_arg == VF_TIME)
       {
         put_symbol("t");

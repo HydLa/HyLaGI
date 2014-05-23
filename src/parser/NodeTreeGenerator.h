@@ -7,9 +7,7 @@
 #include "Node.h"
 #include "HydLaGrammarRule.h"
 #include "ParseTree.h"
-#include "NodeFactory.h"
 #include "DefinitionContainer.h"
-#include "DefaultNodeFactory.h"
 #include "ParseError.h"
 #include "Utility.h"
 
@@ -32,21 +30,18 @@ public:
     temporary_program_definition_(new DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>()),
     assertion_node_(temporary_assertion_node_),
     constraint_definition_(*temporary_constraint_definition_),
-    program_definition_(*temporary_program_definition_),
-    node_factory_(boost::make_shared<DefaultNodeFactory>())
+    program_definition_(*temporary_program_definition_)
   {}
 
   NodeTreeGenerator(
     symbolic_expression::node_sptr&    assertion_node,
     DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>& constraint_definition,
-    DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&    program_definition,
-    const boost::shared_ptr<NodeFactory>& node_factory) :
+    DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&    program_definition):
     temporary_constraint_definition_(nullptr),
     temporary_program_definition_(nullptr),
     assertion_node_(assertion_node),
     constraint_definition_(constraint_definition),
-    program_definition_(program_definition),
-    node_factory_(node_factory)
+    program_definition_(program_definition)
   {}
 
   ~NodeTreeGenerator()
@@ -83,7 +78,7 @@ private:
   boost::shared_ptr<NodeType>
   create_unary_node(const TreeIter& tree_iter)
   {
-    boost::shared_ptr<NodeType> n(node_factory_->create<NodeType>());
+    boost::shared_ptr<NodeType> n(new NodeType());
     
     n->set_child(create_parse_tree(tree_iter));
     return n;
@@ -96,7 +91,7 @@ private:
   boost::shared_ptr<NodeType>  
   create_binary_node(const TreeIter& tree_iter)
   { 
-    boost::shared_ptr<NodeType> n(node_factory_->create<NodeType>());
+    boost::shared_ptr<NodeType> n(new NodeType());
     n->set_lhs(create_parse_tree(tree_iter)); 
     n->set_rhs(create_parse_tree(tree_iter+1)); 
     return n; 
@@ -110,7 +105,7 @@ private:
   boost::shared_ptr<NodeType>  
   create_arbitrary_node(const TreeIter& tree_iter)
   { 
-    boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
+    boost::shared_ptr<NodeType> node(new NodeType());
     std::string name(tree_iter->value.begin(), tree_iter->value.end());
     node->set_string(name);
     TreeIter it  = tree_iter->children.begin();
@@ -128,7 +123,7 @@ private:
   boost::shared_ptr<NodeType>  
   create_definition(const TreeIter& tree_iter)
   {
-    boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
+    boost::shared_ptr<NodeType> node(new NodeType());
 
     TreeIter gch = tree_iter->children.begin();
 
@@ -158,7 +153,7 @@ private:
   create_caller(const TreeIter& tree_iter)
   {
     TreeIter ch = tree_iter->children.begin();
-    boost::shared_ptr<NodeType> node(node_factory_->create<NodeType>());
+    boost::shared_ptr<NodeType> node(new NodeType());
 
     //プログラム名
     node->set_name(    
@@ -188,13 +183,13 @@ private:
     switch(node_id) 
     {
         // 比較演算子
-      case RI_Equal:        {return node_factory_->create<Equal>();}
-      case RI_UnEqual:      {return node_factory_->create<UnEqual>();}
-      case RI_Less:         {return node_factory_->create<Less>();}
-      case RI_LessEqual:    {return node_factory_->create<LessEqual>();}
-      case RI_Greater:      {return node_factory_->create<Greater>();}
-      case RI_GreaterEqual: {return node_factory_->create<GreaterEqual>();}
-      default: assert(0); return node_factory_->create<Equal>();
+    case RI_Equal:        {return boost::shared_ptr<BinaryNode>(new Equal());}
+    case RI_UnEqual:      {return boost::shared_ptr<BinaryNode>(new UnEqual());}
+    case RI_Less:         {return boost::shared_ptr<BinaryNode>(new Less());}
+    case RI_LessEqual:    {return boost::shared_ptr<BinaryNode>(new LessEqual());}
+    case RI_Greater:      {return boost::shared_ptr<BinaryNode>(new Greater());}
+    case RI_GreaterEqual: {return boost::shared_ptr<BinaryNode>(new GreaterEqual());}
+    default: assert(0); return boost::shared_ptr<BinaryNode>(new Equal());
     }
   }
   
@@ -223,7 +218,7 @@ private:
           if(symbolic_expression::node_sptr new_tree = create_parse_tree(it++)) {
             // 制約宣言が複数回出現した場合は「,」によって連結する
             if(node_tree) {
-              boost::shared_ptr<Parallel> rn(node_factory_->create<Parallel>());
+              boost::shared_ptr<Parallel> rn(new Parallel());
               rn->set_lhs(node_tree);
               rn->set_rhs(new_tree);
               node_tree = rn;
@@ -304,7 +299,7 @@ private:
 
           // 2つ以上の比較演算子でつながっている場合は、論理積でつなげる
           if(node_tree) {
-            boost::shared_ptr<LogicalAnd> and_node(node_factory_->create<LogicalAnd>());
+            boost::shared_ptr<LogicalAnd> and_node(new LogicalAnd());
             and_node->set_lhs(node_tree);
             and_node->set_rhs(comp_op);
             node_tree = and_node;
@@ -379,7 +374,7 @@ private:
         // 円周率
       case RI_Pi:
       {
-        boost::shared_ptr<Pi> node(node_factory_->create<Pi>());
+        boost::shared_ptr<Pi> node(new Pi());
         return node;
       }
       
@@ -387,7 +382,7 @@ private:
         // 自然対数の底
       case RI_E:          
       {
-        boost::shared_ptr<E> node(node_factory_->create<E>());
+        boost::shared_ptr<E> node(new E());
         return node;
       }
       
@@ -395,9 +390,14 @@ private:
       case RI_BoundVariable:
       case RI_Variable:
       {
-        boost::shared_ptr<Variable> node(node_factory_->create<Variable>());
-        node->set_name(
-          std::string(tree_iter->value.begin(), tree_iter->value.end()));
+        std::string name(tree_iter->value.begin(), tree_iter->value.end());
+        if(name == "t")
+        {
+          boost::shared_ptr<SymbolicT> node(new SymbolicT());
+          return node;
+        }
+        boost::shared_ptr<Variable> node(new Variable());
+        node->set_name(name);
         return node;
       }
 
@@ -409,15 +409,15 @@ private:
         std::string denominator;
         bool fraction = num_denom_str(str, numerator, denominator);
         if(!fraction){
-          boost::shared_ptr<Number> node(node_factory_->create<Number>());
+          boost::shared_ptr<Number> node(new Number());
           node->set_number(str);
           return node;
         }else if(fraction){
-          boost::shared_ptr<Number> num_node(node_factory_->create<Number>());
+          boost::shared_ptr<Number> num_node(new Number());
           num_node->set_number(numerator);
-          boost::shared_ptr<Number> den_node(node_factory_->create<Number>());
+          boost::shared_ptr<Number> den_node(new Number());
           den_node->set_number(denominator);
-          boost::shared_ptr<Divide> node(node_factory_->create<Divide>());
+          boost::shared_ptr<Divide> node(new Divide());
           node->set_lhs(num_node);
           node->set_rhs(den_node);
           return node;
@@ -438,7 +438,7 @@ private:
         std::string command_name(tree_iter->value.begin(), tree_iter->value.end());
         boost::shared_ptr<IONode> io_node;
         if(command_name == "PRINTPP"){
-          io_node = node_factory_->create<PrintPP>();
+          io_node = boost::shared_ptr<IONode>(new PrintPP());
           assert(ch != tree_iter->children.end());
           std::string str(ch->value.begin(), ch->value.end());
           io_node->set_string(
@@ -446,7 +446,7 @@ private:
           io_node->set_args(
           std::string(str, str.find(",", 0), str.length()));
         } else if( command_name == "PRINTIP"){
-          io_node = node_factory_->create<PrintIP>();
+          io_node = boost::shared_ptr<IONode>(new PrintIP());
           assert(ch != tree_iter->children.end());
           std::string str(ch->value.begin(), ch->value.end());
           io_node->set_string(
@@ -454,7 +454,7 @@ private:
           io_node->set_args(
           std::string(str, str.find(",", 0), str.length()));
         }else if( command_name == "SCAN"){
-          io_node = node_factory_->create<Scan>();
+          io_node = boost::shared_ptr<IONode>(new Scan());
           assert(ch != tree_iter->children.end());
           std::string str(ch->value.begin(), ch->value.end());
           io_node->set_string(str);
@@ -468,19 +468,19 @@ private:
 	  //SystemVarible
       case RI_SVtimer: 
       {
-        boost::shared_ptr<SVtimer> node(node_factory_->create<SVtimer>());
+        boost::shared_ptr<SVtimer> node(new SVtimer());
         return node;
       }
       
       case RI_True:
       {
-        boost::shared_ptr<True> node(node_factory_->create<True>());
+        boost::shared_ptr<True> node(new True());
 	return node;
       }
 
       case RI_SymbolicT:
       {
-        boost::shared_ptr<SymbolicT> node(node_factory_->create<SymbolicT>()); 
+        boost::shared_ptr<SymbolicT> node(new SymbolicT()); 
         return node;
       }
       
@@ -500,7 +500,6 @@ private:
   DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>& constraint_definition_;
   DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&    program_definition_;
 
-  boost::shared_ptr<NodeFactory>   node_factory_;
 };
 
 } // namespace parser
