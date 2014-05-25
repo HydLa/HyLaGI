@@ -13,6 +13,7 @@ using namespace hydla::backend;
 #define DIFFCNT 1
 // #define _DEBUG_CUT_HIGH_ORDER
 // #define _DEBUG_REDUCE_UNSUIT
+// #define _DEBUG_PASS_SPECIFIC_CASE
 // #define _DEBUG_ZERO_CASE
 
 #include <iostream>
@@ -105,11 +106,11 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
           simulator::value_t val = v_it->second.get_unique();
           range_t& range = vm_ret[v_it->first];
 #ifdef _DEBUG_CUT_HIGH_ORDER
-          std::cout << v_it->first << "\t: (" << val;
+          std::cout << v_it->first << "\t: " << val;
 #endif
           backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
 #ifdef _DEBUG_CUT_HIGH_ORDER
-          std::cout << " -> " << ret << ")" << std::endl;
+          std::cout << "\n ->\t: " << ret << std::endl;
 #endif
           range.set_unique(ret);
           // vm_ret[eps_v_it->first] = eps_ret;
@@ -140,6 +141,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
   }
 #ifdef _DEBUG_CUT_HIGH_ORDER
   std::cout << "Cut High Order Epsilon End;" << std::endl;
+  std::cout << std::endl;
 #endif
   if(have_eps)
     return vm_ret;
@@ -282,9 +284,162 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
   }
 #ifdef _DEBUG_REDUCE_UNSUIT
   std::cout << "Remove UnSuitable Cases End;" << std::endl;
+  std::cout << std::endl;
 #endif
   //return time_result;
   return eps_time_result;
+}
+
+pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase,
+                                                      variable_map_t vm_before_time_shift, dc_causes_t dc_causes, value_t time_limit,simulation_todo_sptr_t& current_todo)
+{
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+  std::cout << "Pass Specific Cases Start;" << std::endl;
+  std::cout << "## Phase == " << phase->id << std::endl;
+  for(int i = 0; i < dc_causes.size(); i++)
+    {
+      std::cout << " Guard Condition " << dc_causes[i].id << " : " << dc_causes[i].node->get_string() << std::endl;
+    }
+#endif
+  pp_time_result_t eps_time_result;
+  //一階目
+  backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+  //中身の確認
+  unsigned int time_it;
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+  std::cout << "#### check next cases ####" << std::endl;
+#endif
+  for(time_it=0;time_it < time_result.size();time_it++)
+    {
+      NextPhaseResult &candidate = time_result[time_it];
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+      std::cout << "Case " << (time_it + 1) << "\t: condition :\n";
+      for(parameter_map_t::iterator p_it = candidate.parameter_map.begin(); p_it != candidate.parameter_map.end(); p_it++)
+        {
+          std::cout << "\t " << p_it->first << "\t: " << p_it->second << std::endl;
+        }
+      std::cout << "vm_before_time_shift" << std::endl;
+      for(variable_map_t::iterator v_it = vm_before_time_shift.begin(); v_it != vm_before_time_shift.end(); v_it++)
+        {
+          std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
+        }
+      std::cout << "phase->variable_map" << std::endl;
+      for(variable_map_t::iterator v_it = phase->variable_map.begin(); v_it != phase->variable_map.end(); v_it++)
+        {
+          std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
+        }
+      std::cout << "mintime \t: " << candidate.minimum.time << std::endl;
+#endif
+      value_t tmp = candidate.minimum.time;
+      bool iszero = true;
+      backend_->call("isZero", 1, "vln", "b", &tmp, &iszero);
+      //極限を取ると0に成る場合
+      if(iszero){
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+        std::cout << "----- limit zero case happen -----" << std::endl;
+        //std::cout << phase->constraint_store << std::endl;
+#endif
+        pp_time_result_t tmp_time_result;
+
+        symbolic_expression::node_sptr tmp_val;
+        tmp_val = symbolic_expression::node_sptr(new Number("-1"));
+        tmp_val = symbolic_expression::node_sptr(new Times(tmp_val, candidate.minimum.time.get_node()));
+
+        variable_map_t shifted_vm;
+        variable_map_t::const_iterator it  = vm_before_time_shift.begin();
+        variable_map_t::const_iterator end = vm_before_time_shift.end();
+        for(; it!=end; ++it) {
+          if(it->second.undefined())
+            shifted_vm[it->first] = it->second;
+          else if(it->second.unique())
+            {
+              value_t val = it->second.get_unique();
+              range_t& range = shifted_vm[it->first];
+              value_t ret;
+              backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
+              range.set_unique(ret);
+            }
+          else
+            {
+              range_t range = it->second;
+              for(uint i = 0; i < range.get_lower_cnt(); i++)
+                {
+                  ValueRange::bound_t bd = it->second.get_lower_bound(i);
+                  value_t val = bd.value;
+                  value_t ret;
+                  backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
+                  range.set_lower_bound(ret, bd.include_bound);
+                }
+              for(uint i = 0; i < range.get_upper_cnt(); i++)
+                {
+
+                  ValueRange::bound_t bd = it->second.get_upper_bound(i);
+                  value_t val = bd.value;
+                  value_t ret;
+                  backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
+                  range.set_upper_bound(ret, bd.include_bound);
+                }
+              shifted_vm[it->first] = range;
+            }
+        }
+
+        // backend_->call("resetConstraintEpsilon", 0, "", "");
+        // backend_->call("addConstraintEpsilon", 1, "mv0t", "", &shifted_vm);
+        // backend_->call("addParameterConstraintEpsilon", 1, "mp", "", &(candidate.parameter_map));
+        // value_t eps_time_limit = time_limit;
+        // eps_time_limit -= candidate.minimum.time;
+        // //二回目
+        // backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(eps_time_limit), &dc_causes, &tmp_time_result);
+
+        backend_->call("resetConstraint", 0, "", "");
+        backend_->call("addConstraint", 1, "mv0t", "", &shifted_vm);
+        backend_->call("addParameterConstraint", 1, "mp", "", &(candidate.parameter_map));
+        value_t eps_time_limit = time_limit;
+        eps_time_limit -= candidate.minimum.time;
+        //二回目
+        backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(eps_time_limit), &dc_causes, &tmp_time_result);
+
+        unsigned int tmp_it;
+        for(tmp_it=0;tmp_it < tmp_time_result.size();tmp_it++)
+          {
+            NextPhaseResult &tmp_candidate = tmp_time_result[tmp_it];
+            value_t new_time = candidate.minimum.time + tmp_candidate.minimum.time ;
+            backend_->call("simplify", 1, "vln", "vl", &new_time, &new_time);
+            tmp_candidate.minimum.time = new_time;
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+            std::cout << "new mintime \t: " << new_time << std::endl;
+#endif
+            eps_time_result.push_back(tmp_candidate);
+          }
+
+        // eps_time_result.push_back(candidate);
+      }
+      else
+      {
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+        std::cout << "----- this is not limit zero case -----" << std::endl;
+#endif
+        eps_time_result.push_back(candidate);
+      }
+      value_t test_time = current_todo->current_time + candidate.minimum.time;
+      backend_->call("simplify", 1, "vln", "vl", &test_time, &test_time);
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+      std::cout << "--------- shifted next time is ---------" << std::endl;
+      std::cout << "next -- time \t: " << test_time << std::endl;
+#endif
+    }
+  time_result.clear();
+  for(time_it=0;time_it < eps_time_result.size();time_it++)
+    {
+      NextPhaseResult &eps_candidate = eps_time_result[time_it];
+      time_result.push_back(eps_candidate);
+    }
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+  std::cout << "Pass Specific Cases End;" << std::endl;
+  std::cout << std::endl;
+#endif
+  return time_result;
+  //return eps_time_result;
 }
 
 pp_time_result_t hydla::simulator::zero_case_expansion(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase)
