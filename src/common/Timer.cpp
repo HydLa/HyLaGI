@@ -101,7 +101,7 @@ namespace hydla{
     void Timer::elapsed(){
       std::cout << std::fixed;
       std::cout << std::setprecision(TIMER_PLACES) << get_time() << " s" << std::endl;
-      std::cout << resetiosflags(std::ios_base::floatfield);
+      std::cout << std::resetiosflags(std::ios_base::floatfield);
     }
 
     void Timer::elapsed(std::string str){
