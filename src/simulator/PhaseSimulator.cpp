@@ -743,19 +743,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end)
       {
-        if(opts_->reuse)
-        {
-          VariableFinder variable_finder;
-          variable_finder.visit_node(*it);
-          if(!variable_finder.include_variables(state->parent->changed_variables))
-          {
-            if(state->parent->positive_asks.find(*it) != state->parent->positive_asks.end())  positive_asks.insert(*it);
-            else negative_asks.insert(*it);
-            unknown_asks.erase(it);
-            it++;
-            continue;
-          }
-        }
         if(state->phase_type == PointPhase){
           if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // if current time equals to 0, conditions about left-hand limits are considered to be invalid
