@@ -20,6 +20,9 @@ using namespace boost;
 namespace hydla {
 namespace interval {
 
+/// share constants to take advantage of dependency
+affine_t AffineTreeVisitor::pi = affine_t(kv::constants<kv::interval<double> >::pi());
+affine_t AffineTreeVisitor::e = affine_t(kv::constants<kv::interval<double> >::e());
 
 class ApproximateException:public std::runtime_error{
 public:
@@ -228,13 +231,13 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Posi
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
-  current_val_.affine_value = kv::constants<kv::interval<double> >::pi();
+  current_val_.affine_value = pi;
   current_val_.is_integer = false;
 }
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
-  current_val_.affine_value = kv::constants<kv::interval<double> >::e();
+  current_val_.affine_value = e;
   current_val_.is_integer = false;
 }
 

@@ -113,7 +113,7 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   
 private:
 
-
+  static affine_t pi, e; 
   void invalid_node(symbolic_expression::Node& node);
 
   AffineOrInteger current_val_;
