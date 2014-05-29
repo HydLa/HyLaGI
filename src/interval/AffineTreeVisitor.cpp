@@ -11,10 +11,10 @@ using namespace hydla::symbolic_expression;
 using namespace boost;
 
 #define HYDLA_LOGGER_NODE_VALUE \
-  HYDLA_LOGGER_DEBUG("node: ", node->get_node_type_name(), ", current_val: ", current_val_)
+  HYDLA_LOGGER_DEBUG("node: ", node->get_node_type_name(), ", expr: ", get_infix_string(node), ", current_val: ", current_val_)
 
 #define HYDLA_LOGGER_NODE_VISIT \
-  HYDLA_LOGGER_DEBUG("visit node: ", node->get_node_type_name())
+  HYDLA_LOGGER_DEBUG("visit node: ", node->get_node_type_name(), ", expr: ", get_infix_string(node))
 
 
 namespace hydla {
@@ -78,7 +78,11 @@ AffineOrInteger AffineTreeVisitor::pow(AffineOrInteger x, AffineOrInteger y)
     {
       HYDLA_LOGGER_DEBUG(x_affine);
       HYDLA_LOGGER_DEBUG(y_affine);
-      ret.affine_value = exp(y_affine * log(x_affine));
+      HYDLA_LOGGER_DEBUG(x.affine_value);
+      HYDLA_LOGGER_DEBUG(y.affine_value);
+      //ret.affine_value = exp(y_affine * log(x_affine));
+      ret.affine_value = exp(y.affine_value * log(x.affine_value));
+      HYDLA_LOGGER_DEBUG(ret.affine_value);
     }
     else
     {
@@ -224,13 +228,13 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Posi
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
-  current_val_.affine_value = kv::constants<double>::pi();
+  current_val_.affine_value = kv::constants<kv::interval<double> >::pi();
   current_val_.is_integer = false;
 }
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
-  current_val_.affine_value = kv::constants<double>::e();
+  current_val_.affine_value = kv::constants<kv::interval<double> >::e();
   current_val_.is_integer = false;
 }
 
