@@ -1,12 +1,10 @@
-#ifndef _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
-#define _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
+#pragma once
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "Node.h"
 #include "HydLaGrammarRule.h"
-#include "ParseTree.h"
 #include "DefinitionContainer.h"
 #include "ParseError.h"
 #include "Utility.h"
@@ -58,7 +56,7 @@ public:
     }
 
   /**
-   * ASTを元にParseTreeを構築する
+   * ASTを元にNodeTreeを構築する
    */
   template<typename TreeIter>
   symbolic_expression::node_sptr generate(const TreeIter& tree_iter)
@@ -194,7 +192,7 @@ private:
   }
   
   /**
-   * ParseTreeを構築する
+   * NodeTreeを構築する
    */
   template<typename TreeIter>
   boost::shared_ptr<hydla::symbolic_expression::Node>
@@ -504,5 +502,3 @@ private:
 
 } // namespace parser
 } // namespace hydla
-
-#endif // _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_

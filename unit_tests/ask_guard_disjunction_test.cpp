@@ -10,7 +10,6 @@
 #include <iostream>
 
 #include "ParseTree.h"
-#include "DefaultNodeFactory.h"
 
 #include "AskDisjunctionFormatter.h"
 #include "AskDisjunctionSplitter.h"

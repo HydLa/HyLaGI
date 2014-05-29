@@ -4,11 +4,10 @@
 #include "string"
 #include "sstream"
 
-#include "../virtual_constraint_solver/reduce/sexp/SExpAST.h"
-#include "../virtual_constraint_solver/reduce/sexp/SExpExpressionConverter.h"
+#include "../backend/reduce/sexp/SExpAST.h"
 
 using namespace std;
-using namespace hydla::vcs::reduce;
+//using namespace hydla::backend::reduce;
 
 void check(std::string arg){
   SExpAST sp(arg);
