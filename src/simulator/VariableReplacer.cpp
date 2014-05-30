@@ -35,7 +35,7 @@ void VariableReplacer::replace_range(ValueRange &range)
 {
   if(range.unique())
   {
-    value_t val = range.get_unique();
+    value_t val = range.get_unique_value();
     replace_value(val);
   }
   else
@@ -64,7 +64,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Varia
         //TODO: 値が範囲を持っている場合にも対応する
         //TODO: 使おうとした変数値の数式が更に別の変数を含んでいる場合にも対応する。
         assert(it->second.unique());
-        new_child_ = it->second.get_unique().get_node()->clone();
+        new_child_ = it->second.get_unique_value().get_node()->clone();
         replace_cnt++;
         // upper_bound to avoid infinite loop (may be caused by circular reference)
         if(replace_cnt >= variable_map.size())

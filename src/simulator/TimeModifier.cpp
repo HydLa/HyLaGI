@@ -15,8 +15,8 @@ ValueRange TimeModifier::apply_function(const std::string& function, const Value
   {
     if(range.unique())
     {
-      result_range.set_unique(
-        apply_function(function, time, range.get_unique()));
+      result_range.set_unique_value(
+        apply_function(function, time, range.get_unique_value()));
     }
     else
     {
