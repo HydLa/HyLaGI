@@ -807,7 +807,26 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             unknown_asks.erase(it++);
             continue;
           }
+        }else if(opts_->reuse && state->in_following_step()
+            && state->parent->negative_asks.find(*it) != state->parent->negative_asks.end()){
+          VariableFinder v_finder;
+          v_finder.visit_node((*it)->get_guard(), true);
+          auto variables = v_finder.get_all_variable_set();
+          bool continuity = true;
+          for(auto var : variables){
+            auto var_d = state->parent->variable_map.find(Variable(var.get_name(),var.get_differential_count()+1));
+            if(var_d->second.undefined()){
+              continuity = false;
+              break;
+            }
+          }
+          if(continuity){
+            negative_asks.insert(*it);
+            unknown_asks.erase(it++);
+            continue;
+          }
         }
+
         maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
         CheckConsistencyResult check_consistency_result;
         switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
@@ -1153,7 +1172,8 @@ bool PhaseSimulator::apply_entailment_change(
   return ret;
 }
 
-void PhaseSimulator::apply_previous_solution(const change_variables_t& variables,
+void PhaseSimulator::apply_previous_solution(
+    const change_variables_t& variables,
     const bool in_IP,
     const phase_result_sptr_t parent,
     continuity_map_t& continuity_map,
@@ -1187,10 +1207,7 @@ void PhaseSimulator::apply_previous_solution(const change_variables_t& variables
       }
     }
   }
-  PhaseType phase;
-  if(in_IP) phase = IntervalPhase;
-  else phase = PointPhase;
-  consistency_checker.add_continuity(continuity_map, phase);
+  consistency_checker.add_continuity(continuity_map, in_IP ? IntervalPhase : PointPhase );
 }
 
 PhaseSimulator::todo_list_t
