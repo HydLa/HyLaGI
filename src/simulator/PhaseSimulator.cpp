@@ -398,10 +398,10 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
   {
     if(it->second.undefined())continue;
     assert(it->second.unique());
-    value_t tmp_val = it->second.get_unique();
+    value_t tmp_val = it->second.get_unique_value();
     backend_->call("substituteParameterCondition",
                    2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
-    it->second.set_unique(tmp_val);
+    it->second.set_unique_value(tmp_val);
   }
 
 	// 時刻にも代入
@@ -430,10 +430,10 @@ void PhaseSimulator::replace_prev2parameter(
     value_t val;
     if(range.unique())
     {
-      val = range.get_unique();
+      val = range.get_unique_value();
       HYDLA_LOGGER_DEBUG(val);
       replacer.replace_value(val);
-      range.set_unique(val);
+      range.set_unique_value(val);
     }
     else
     {
@@ -510,11 +510,11 @@ variable_map_t shift_variable_map_time(const variable_map_t& vm,
       shifted_vm[it->first] = it->second;
     else if(it->second.unique())
     {
-      value_t val = it->second.get_unique();
+      value_t val = it->second.get_unique_value();
       range_t& range = shifted_vm[it->first];
       value_t ret;
       backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-      range.set_unique(ret);
+      range.set_unique_value(ret);
     }
     else
     {
@@ -1195,7 +1195,7 @@ void PhaseSimulator::apply_previous_solution(
         // TODO:とりあえずunique_valueのみ対応
         fmt += "t";
         fmt += "vlt";
-        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique();
+        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique_value();
         value_t ret;
         backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &current_time, &ret);
         backend_->call("addEquation", 2, fmt.c_str(), "", &pair.first, &ret);
@@ -1469,11 +1469,11 @@ variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const 
     }
     else if(it->second.unique())
     {
-      value_t val = it->second.get_unique();
+      value_t val = it->second.get_unique_value();
       range_t& range = result[it->first];
       value_t ret;
       backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-      range.set_unique(ret);
+      range.set_unique_value(ret);
     }
     else
     {

@@ -430,7 +430,7 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
     {
       link_->put_converted_function("Equal", 2);
       send_variable(var, vf);
-      send_value(range.get_unique(), vf);
+      send_value(range.get_unique_value(), vf);
     }
     else
     {
@@ -487,7 +487,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
   for(; it!=parameter_map.end(); ++it)
   {
     if(it->second.unique()){
-      const value_t &value = it->second.get_unique();
+      const value_t &value = it->second.get_unique_value();
       const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
       link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
@@ -743,7 +743,7 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::False> node){link_->p
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop){
   switch(relop){
     case 0://Equal
-    range.set_unique(val);
+    range.set_unique_value(val);
     break;
     case 1://Less
     range.set_upper_bound(val, false);
