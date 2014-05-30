@@ -398,10 +398,10 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
   {
     if(it->second.undefined())continue;
     assert(it->second.unique());
-    value_t tmp_val = it->second.get_unique();
+    value_t tmp_val = it->second.get_unique_value();
     backend_->call("substituteParameterCondition",
                    2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
-    it->second.set_unique(tmp_val);
+    it->second.set_unique_value(tmp_val);
   }
 
 	// 時刻にも代入
@@ -430,10 +430,10 @@ void PhaseSimulator::replace_prev2parameter(
     value_t val;
     if(range.unique())
     {
-      val = range.get_unique();
+      val = range.get_unique_value();
       HYDLA_LOGGER_DEBUG(val);
       replacer.replace_value(val);
-      range.set_unique(val);
+      range.set_unique_value(val);
     }
     else
     {
@@ -510,11 +510,11 @@ variable_map_t shift_variable_map_time(const variable_map_t& vm,
       shifted_vm[it->first] = it->second;
     else if(it->second.unique())
     {
-      value_t val = it->second.get_unique();
+      value_t val = it->second.get_unique_value();
       range_t& range = shifted_vm[it->first];
       value_t ret;
       backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-      range.set_unique(ret);
+      range.set_unique_value(ret);
     }
     else
     {
@@ -685,7 +685,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           &positive_asks,
           &negative_asks,
           &unknown_asks);
-      apply_discrete_causes_to_guard_judgement( state->discrete_causes, positive_asks, negative_asks, unknown_asks );
+      apply_discrete_causes_to_guard_judgement( state->parent, state->discrete_causes, positive_asks, negative_asks, unknown_asks );
       set_changing_variables( state->parent, ms, positive_asks, negative_asks, state->changing_variables );
     }
     else{
@@ -784,19 +784,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t::iterator end = unknown_asks.end();
       while(it!=end)
       {
-        if(opts_->reuse)
-        {
-          VariableFinder variable_finder;
-          variable_finder.visit_node(*it);
-          if(!variable_finder.include_variables(state->parent->changed_variables))
-          {
-            if(state->parent->positive_asks.find(*it) != state->parent->positive_asks.end())  positive_asks.insert(*it);
-            else negative_asks.insert(*it);
-            unknown_asks.erase(it);
-            it++;
-            continue;
-          }
-        }
         if(state->phase_type == PointPhase){
           if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
             // if current time equals to 0, conditions about left-hand limits are considered to be invalid
@@ -820,7 +807,26 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             unknown_asks.erase(it++);
             continue;
           }
+        }else if(opts_->reuse && state->in_following_step()
+            && state->parent->negative_asks.find(*it) != state->parent->negative_asks.end()){
+          VariableFinder v_finder;
+          v_finder.visit_node((*it)->get_guard(), true);
+          auto variables = v_finder.get_all_variable_set();
+          bool continuity = true;
+          for(auto var : variables){
+            auto var_d = state->parent->variable_map.find(Variable(var.get_name(),var.get_differential_count()+1));
+            if(var_d->second.undefined()){
+              continuity = false;
+              break;
+            }
+          }
+          if(continuity){
+            negative_asks.insert(*it);
+            unknown_asks.erase(it++);
+            continue;
+          }
         }
+
         maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
         CheckConsistencyResult check_consistency_result;
         switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
@@ -844,14 +850,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             always_finder.find_always((*it)->get_child(), expanded_always);
             unknown_asks.erase(it++);
             expanded = true;
-            if(opts_->reuse && !state->parent->changed_variables.empty()){
-              VariableFinder variable_finder;
-              variable_finder.visit_node(*it);
-              VariableFinder::variable_set_t tmp_vars = variable_finder.get_all_variable_set();
-              for(auto var : tmp_vars){
-                state->parent->changed_variables.insert(var.get_name());
-              }
-            }
             break;
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
@@ -942,49 +940,65 @@ PhaseSimulator::calculate_constraint_store(
   return result_store;
 }
 
-void PhaseSimulator::apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
-                                                                       positive_asks_t& positive_asks,
-                                                                       negative_asks_t& negative_asks,
-                                                                       ask_set_t& unknown_asks ){
-  /*
+void PhaseSimulator::apply_discrete_causes_to_guard_judgement(
+    const phase_result_sptr_t& parent,
+    const ask_set_t& discrete_causes,
+    positive_asks_t& positive_asks,
+    negative_asks_t& negative_asks,
+    ask_set_t& unknown_asks ){
+ /* 
   std::cout << "before" << std::endl;
   std::cout << "A+: " << positive_asks << std::endl;
   std::cout << "A-: " << negative_asks << std::endl;
   std::cout << "Au: " << unknown_asks << std::endl;
-  */
+ */ 
 
   PrevSearcher searcher;
-  ask_set_t prev_asks = unknown_asks;
+  ask_set_t prev_asks,reduced_u_asks;
 
   for( auto ask : unknown_asks ){
-    if( !searcher.search_prev(ask) ){
-      prev_asks.erase(ask);
-    }else{
-      unknown_asks.erase(ask);
+    if( searcher.search_prev(ask) ){
+      prev_asks.insert(ask);
+    }
+    else{
+      reduced_u_asks.insert(ask);
     }
   }
+
+  unknown_asks = reduced_u_asks;
 
   for( auto prev_ask : prev_asks ){
     if( discrete_causes.find(prev_ask) != discrete_causes.end() ){
-      positive_asks.insert( prev_ask );
+      if ( parent->positive_asks.find(prev_ask) != parent->positive_asks.end() )
+      {
+        negative_asks.insert( prev_ask );
+      }else{
+        positive_asks.insert( prev_ask );
+      }
     }else{
-      negative_asks.insert( prev_ask );
+      if ( parent->positive_asks.find(prev_ask) != parent->positive_asks.end() )
+      {
+        positive_asks.insert( prev_ask );
+      }else{
+        negative_asks.insert( prev_ask );
+      }
     }
   }
 
-  /*
+ /* 
   std::cout << "after" << std::endl;
   std::cout << "A+: " << positive_asks << std::endl;
   std::cout << "A-: " << negative_asks << std::endl;
   std::cout << "Au: " << unknown_asks << std::endl;
-  */
+ */ 
 }
 
-void PhaseSimulator::set_changing_variables( const phase_result_sptr_t& parent_phase,
-                                                           const module_set_sptr& present_ms,
-                                                           const positive_asks_t& positive_asks,
-                                                           const negative_asks_t& negative_asks,
-                                                           change_variables_t& changing_variables ){
+void PhaseSimulator::set_changing_variables(
+    const phase_result_sptr_t& parent_phase,
+    const module_set_sptr& present_ms,
+    const positive_asks_t& positive_asks,
+    const negative_asks_t& negative_asks,
+    change_variables_t& changing_variables ){
   //条件なし制約の差分取得
   module_set_sptr parent_ms = parent_phase->module_set;
   TellCollector parent_t_collector(parent_ms);
@@ -1123,12 +1137,13 @@ bool PhaseSimulator::has_variables(symbolic_expression::node_sptr node, const ch
   return false;
 }
 
-bool PhaseSimulator::apply_entailment_change( const ask_set_t::iterator it,
-                                                      const ask_set_t& previous_asks,
-                                                      const bool in_IP,
-                                                      change_variables_t& changing_variables,
-                                                      ask_set_t& notcv_unknown_asks,
-                                                      ask_set_t& unknown_asks ){
+bool PhaseSimulator::apply_entailment_change(
+    const ask_set_t::iterator it,
+    const ask_set_t& previous_asks,
+    const bool in_IP,
+    change_variables_t& changing_variables,
+    ask_set_t& notcv_unknown_asks,
+    ask_set_t& unknown_asks ){
   bool ret = false;
   if(previous_asks.find(*it) != previous_asks.end() ){
     VariableFinder v_finder;
@@ -1157,7 +1172,8 @@ bool PhaseSimulator::apply_entailment_change( const ask_set_t::iterator it,
   return ret;
 }
 
-void PhaseSimulator::apply_previous_solution(const change_variables_t& variables,
+void PhaseSimulator::apply_previous_solution(
+    const change_variables_t& variables,
     const bool in_IP,
     const phase_result_sptr_t parent,
     continuity_map_t& continuity_map,
@@ -1179,7 +1195,7 @@ void PhaseSimulator::apply_previous_solution(const change_variables_t& variables
         // TODO:とりあえずunique_valueのみ対応
         fmt += "t";
         fmt += "vlt";
-        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique();
+        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique_value();
         value_t ret;
         backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &current_time, &ret);
         backend_->call("addEquation", 2, fmt.c_str(), "", &pair.first, &ret);
@@ -1191,10 +1207,7 @@ void PhaseSimulator::apply_previous_solution(const change_variables_t& variables
       }
     }
   }
-  PhaseType phase;
-  if(in_IP) phase = IntervalPhase;
-  else phase = PointPhase;
-  consistency_checker.add_continuity(continuity_map, phase);
+  consistency_checker.add_continuity(continuity_map, in_IP ? IntervalPhase : PointPhase );
 }
 
 PhaseSimulator::todo_list_t
@@ -1456,11 +1469,11 @@ variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const 
     }
     else if(it->second.unique())
     {
-      value_t val = it->second.get_unique();
+      value_t val = it->second.get_unique_value();
       range_t& range = result[it->first];
       value_t ret;
       backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-      range.set_unique(ret);
+      range.set_unique_value(ret);
     }
     else
     {

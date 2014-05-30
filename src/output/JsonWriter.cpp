@@ -119,7 +119,7 @@ value JsonWriter::for_range(const value_range_t &range)
 
   if(range.unique())
   {
-    range_object["unique_value"] = value(range.get_unique().get_string());
+    range_object["unique_value"] = value(range.get_unique_value().get_string());
   }
   else
   {

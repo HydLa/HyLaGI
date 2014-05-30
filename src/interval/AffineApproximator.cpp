@@ -133,7 +133,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
 {
   range_t val = variable_map[variable_to_approximate];
   assert(val.unique());
-  node_sptr node = val.get_unique().get_node();
+  node_sptr node = val.get_unique_value().get_node();
   value_t affine = approximate(node, parameter_map);
   variable_map[variable_to_approximate] = affine;
   if(condition.get() != nullptr)
