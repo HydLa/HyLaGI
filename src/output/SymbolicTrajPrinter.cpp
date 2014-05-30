@@ -264,7 +264,7 @@ void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Ba
   {
     if(it->second.unique())
     {
-      tmp = it->second.get_unique();
+      tmp = it->second.get_unique_value();
       backend_->call("checkEpsilon", 1, "vln", "i",&tmp, &check_result);
       if(check_result == 1)
       {

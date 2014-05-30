@@ -57,7 +57,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
 
     if(range.unique())
     {
-      new_child_ = range.get_unique().get_node();
+      new_child_ = range.get_unique_value().get_node();
     }
     else
     {

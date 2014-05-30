@@ -98,7 +98,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
         else if(v_it->second.unique())
         {
           simulator::value_t ret;
-          simulator::value_t val = v_it->second.get_unique();
+          simulator::value_t val = v_it->second.get_unique_value();
           range_t& range = vm_ret[v_it->first];
 #ifdef _DEBUG_CUT_HIGH_ORDER
           std::cout << v_it->first << "\t: (" << val;
@@ -107,7 +107,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
 #ifdef _DEBUG_CUT_HIGH_ORDER
           std::cout << " -> " << ret << ")" << std::endl;
 #endif
-          range.set_unique(ret);
+          range.set_unique_value(ret);
           // vm_ret[eps_v_it->first] = eps_ret;
         }
         else
@@ -175,8 +175,8 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
         bool Ret;
         if(p_it->second.unique())
         {
-          val = p_it->second.get_unique().get_node();
-          val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique().get_node()));
+          val = p_it->second.get_unique_value().get_node();
+          val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique_value().get_node()));
           backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
           isNG = isNG || Ret;
         }
@@ -242,8 +242,8 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
           bool Ret;
           if(p_it->second.unique())
           {
-            val = p_it->second.get_unique().get_node();
-            val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique().get_node()));
+            val = p_it->second.get_unique_value().get_node();
+            val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique_value().get_node()));
             backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
             isNG = isNG || Ret;
           }
