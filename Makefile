@@ -1,7 +1,13 @@
 src_directory := src
+UNAME := $(shell uname)
 .PHONY : all
 all: $(src_directory)
+ifeq ($(UNAME),Linux)
 	@mkdir bin -p && cd src && make
+endif
+ifeq ($(UNAME),Darwin)
+	@mkdir -p bin && cd src && make
+endif
 ##	@cd $(src_directory) make
 
 # execute unit test

@@ -11,6 +11,7 @@ namespace simulator {
 
 class ValueRange {
 public:
+  typedef unsigned int uint;
   typedef Value value_t;
   typedef struct Bound{
     value_t value;
