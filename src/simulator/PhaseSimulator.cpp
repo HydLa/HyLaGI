@@ -808,7 +808,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             continue;
           }
         }else if(opts_->reuse && state->in_following_step()
-            && state->parent->negative_asks.find(*it) != state->parent->negative_asks.end()){
+            && state->parent->negative_asks.find(*it) != state->parent->negative_asks.end()
+            && state->discrete_causes.find(*it) == state->discrete_causes.end()){
           VariableFinder v_finder;
           v_finder.visit_node((*it)->get_guard(), true);
           auto variables = v_finder.get_all_variable_set();
