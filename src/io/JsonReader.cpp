@@ -27,6 +27,7 @@ simulator::phase_result_sptr_t JsonReader::read_phase(const std::string &name)
 
 JsonReader::phase_result_sptr_t JsonReader::read_phase(object &json_object)
 { 
+  //TODO: positive_asksとかnegative_asksとかも読む
   phase_result_sptr_t phase(new phase_result_t());
   phase->id = json_object["id"].get<long>();
   string phase_type_str = json_object["type"].get<string>();

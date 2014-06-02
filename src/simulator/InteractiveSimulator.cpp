@@ -447,18 +447,40 @@ int InteractiveSimulator::select_options(){
 
 
 int InteractiveSimulator::save_state(simulation_todo_sptr_t& todo){
-  cout << "save current phase" << endl;
+  cout << "input name of the file to save (default: last_phase)" <<endl;
+  string file_name;
+  getline(cin, file_name);
+  if(file_name == "")file_name = "last_phase";
   io::JsonWriter writer;
-  writer.write_phase(todo->parent, "last_phase");
+  writer.write_phase(todo->parent, file_name);
+  cout << "saved phase" << endl;
   return 1;
 }
 
 
 int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
-  cout << "load phase" << endl;
+  cout << "input name of the file to load (default: last_phase)" <<endl;
+  string file_name;
+  getline(cin, file_name);
+  if(file_name == "")file_name = "last_phase";
   io::JsonReader reader;
-  phase_result_sptr_t loaded_phase = reader.read_phase("last_phase");
-  cout << *loaded_phase << endl;
+  phase_result_sptr_t loaded_phase = reader.read_phase(file_name);
+
+
+  loaded_phase->step = 0;
+  loaded_phase->parent = result_root_;
+  result_root_->children.clear();
+  result_root_->children.push_back(loaded_phase);
+  todo.reset(new SimulationTodo(*loaded_phase));
+  if(todo->phase_type == PointPhase)
+  {
+    //TODO: apply time to variable map
+  }
+  else
+  {
+    todo->prev_map = loaded_phase->variable_map;
+  }
+  cout << "loaded phase" << endl;
   return 1;
 }
 

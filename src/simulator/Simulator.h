@@ -134,6 +134,14 @@ struct SimulationTodo{
     judged_prev_map.clear();
   }
 
+  SimulationTodo(){}
+
+  /**
+   * parentとなるPhaseResultから情報を引き継いだTodoを作る。
+   * prev_mapはこのコンストラクタで初期化されない。
+   */
+  SimulationTodo(const PhaseResult &parent);
+
   inline bool in_following_step(){
     return parent.get() && parent->parent.get() && parent->parent->parent.get();
   }

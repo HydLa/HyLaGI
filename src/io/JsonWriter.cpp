@@ -40,6 +40,7 @@ void JsonWriter::write_phase(const phase_result_const_sptr_t &phase, const std::
 
 value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
 {
+  //TODO: positive_asksとかnegative_asksとかも書く
   object phase_object;
   phase_object["id"] = value((long)phase->id);
   if(phase->phase_type == simulator::PointPhase)

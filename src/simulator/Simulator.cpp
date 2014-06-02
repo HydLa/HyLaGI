@@ -31,6 +31,13 @@ Simulator::~Simulator()
 {
 }
 
+SimulationTodo::SimulationTodo(const PhaseResult &parent)
+{
+  phase_type = parent.phase_type == PointPhase?IntervalPhase:PointPhase;
+  current_time = parent.current_time;
+  parameter_map = parent.parameter_map;
+}
+
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
   phase_simulator_->set_backend(backend);
