@@ -158,7 +158,7 @@ protected:
 
   tree_info_t parse(std::stringstream& stream);
 
-  static hydla::output::SymbolicTrajPrinter printer_;
+  static hydla::io::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
 };
 

@@ -32,7 +32,7 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
-using namespace hydla::output;
+using namespace hydla::io;
 using namespace std;
 
 
@@ -53,7 +53,7 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
-  hydla::output::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
+  hydla::io::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
   if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_,&opts);}
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
@@ -84,15 +84,15 @@ void output_result(Simulator& ss, Opts& opts){
   writer.write(*simulator_, of_name);
 
   if(po.get<std::string>("tm") == "s") {
-    hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
+    hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
   } else if(po.get<std::string>("tm") == "c") {
     std::string csv_name = po.get<std::string>("csv");
     if(csv_name == ""){
-      hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+      hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
     }else{
       std::ofstream ofs;
       ofs.open(csv_name.c_str());
-      hydla::output::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
+      hydla::io::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
       ofs.close();
     }
   }

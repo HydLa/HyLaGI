@@ -4,7 +4,7 @@
 #include "TrajPrinter.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 /**
  * 数式による出力を行う

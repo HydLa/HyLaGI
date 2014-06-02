@@ -39,7 +39,7 @@ using namespace hydla::interval;
 namespace hydla {
 namespace simulator {
 
-hydla::output::SymbolicTrajPrinter InteractiveSimulator::printer_;
+hydla::io::SymbolicTrajPrinter InteractiveSimulator::printer_;
 
 
 void InteractiveSimulator::print_end(phase_result_sptr_t& p)
@@ -137,7 +137,7 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
 
 
 int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo){
-  output::JsonWriter writer;
+  io::JsonWriter writer;
   writer.write(*this, "interactive.hydat");
   while(true)
   {

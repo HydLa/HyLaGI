@@ -1,5 +1,5 @@
 /*
-#include "TimePrinter.h"
+#include "ProfilePrinter.h"
 #include <boost/foreach.hpp>
 #include <stack>
 #include "DefaultParameter.h"
@@ -8,21 +8,7 @@ using namespace std;
 using namespace hydla::simulator;
 
 namespace hydla{
-namespace output{
-
-void Printer::output_variable_labels(std::ostream &stream, const variable_map_t variable_map) const{
-  // 変数のラベルの出力
-  // TODO: 未定義の値とかのせいでずれる可能性あり?
-  stream << "# time\t";
-
-  BOOST_FOREACH(const variable_map_t::value_type& i, variable_map) {
-    if(output_variables_.find(i.first->get_string()) != output_variables_.end()){
-      stream << i.first << "\t";
-    }
-  }
-  stream << std::endl;
-}
-
+namespace io{
   
 std::string Printer::get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const{
   std::stringstream sstr;

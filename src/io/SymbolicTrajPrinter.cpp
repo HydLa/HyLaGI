@@ -12,7 +12,7 @@ using namespace std;
 using namespace hydla::backend;
 
 namespace hydla{
-namespace output{
+namespace io{
 
 SymbolicTrajPrinter::SymbolicTrajPrinter(const std::set<std::string> &output_variables, std::ostream& ostream):
    ostream_(ostream), output_variables_(output_variables){

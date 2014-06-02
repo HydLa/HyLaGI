@@ -11,7 +11,7 @@
 #include "picojson.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 class JsonWriter{
 

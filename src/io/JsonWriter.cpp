@@ -10,7 +10,7 @@ using namespace picojson;
 using namespace hydla::utility;
 
 namespace hydla{
-namespace output{
+namespace io{
 
 void JsonWriter::write(const simulator_t &simulator, std::string name)
 {
