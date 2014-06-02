@@ -179,10 +179,12 @@ private:
   virtual ConstraintStore calculate_constraint_store(const module_set_sptr& ms,
                            simulation_todo_sptr_t& state);
 
-  void apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
-                                                 positive_asks_t& positive_asks,
-                                                 negative_asks_t& negative_asks,
-                                                 ask_set_t& unknown_asks );
+  void apply_discrete_causes_to_guard_judgement(
+    const phase_result_sptr_t& parent,
+    const ask_set_t& discrete_causes,
+    positive_asks_t& positive_asks,
+    negative_asks_t& negative_asks,
+    ask_set_t& unknown_asks );
 
   void set_changing_variables( const phase_result_sptr_t& parent_phase,
                              const module_set_sptr& present_ms,
