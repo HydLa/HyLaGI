@@ -104,15 +104,13 @@ protected:
   
   /**
    * save state
-   * TODO: 実装する
    */
-  int save_state(simulation_todo_sptr_t& simulation_phase){assert(0); return 0;}
+  int save_state(simulation_todo_sptr_t& simulation_phase);
 
   /**
    * load state
-   * TODO: 実装する
    */
-  int load_state(simulation_todo_sptr_t& simulation_phase){assert(0); return 0;}
+  int load_state(simulation_todo_sptr_t& simulation_phase);
   
   /**
    * 1フェーズだけ出力する．Todoを渡されてもフェーズの情報だけ出力する

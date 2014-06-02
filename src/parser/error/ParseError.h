@@ -230,6 +230,13 @@ public:
   {}
 };
 
+class InvalidParameter : public ParseError {
+public:
+  InvalidParameter(int line = -1) :
+    ParseError("invalid parameter. parameter must be in form of \"p[(name), (differential_count), (phase_id)]\"", line)
+  {}
+};
+
 
 } //namespace error
 } //namespace parser

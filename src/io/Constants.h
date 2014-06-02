@@ -9,7 +9,7 @@ namespace io
 {
 
 std::string get_string_for_cause(simulator::CauseForTermination);
-simulator::CauseForTermination get_cause_for_string(std::string);
+simulator::CauseForTermination get_cause_for_string(const std::string &str);
 
 }
 }

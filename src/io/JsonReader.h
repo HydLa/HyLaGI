@@ -7,6 +7,7 @@
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "picojson.h"
+#include "HydLaAST.h"
 
 namespace hydla{
 namespace io{
@@ -30,6 +31,7 @@ class JsonReader{
   phase_result_sptr_t read_phase(const std::string &name);
   phase_result_sptr_t read_phase(picojson::object &o);
   private:
+  parser::HydLaAST ast;
   variable_map_t read_vm(picojson::object &o); 
   value_range_t read_range(picojson::object &o); 
   parameter_map_t read_pm(picojson::object &o); 

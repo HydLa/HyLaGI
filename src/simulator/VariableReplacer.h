@@ -56,7 +56,6 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SVtimer> node);
 
   private:
-  hydla::simulator::Value* processing_value;
   int differential_cnt;
   uint replace_cnt;
   const variable_map_t& variable_map;

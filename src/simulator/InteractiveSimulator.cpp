@@ -10,10 +10,7 @@
 #include <assert.h>
 #include <boost/make_shared.hpp>
 
-#include "HydLaGrammar.h"
-#include "CommentGrammar.h"
-#include "ParseError.h"
-#include "ParseTree.h"
+#include "JsonReader.h"
 #include "Logger.h"
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
@@ -214,6 +211,12 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         break;
       case 'r':
         return -1;
+      case 's':
+        save_state(todo);
+        break;
+      case 'l':
+        load_state(todo);
+        break;
       default:
         cout << "invalid command: " << line << endl;
         break;
@@ -243,7 +246,7 @@ int InteractiveSimulator::show_help(){
     //"edit           -- Edit constraint ",
     //"load           -- Load state ",
     "run            -- simulate program  until the breakpoint is reached",
-    //"save           -- Save state to file",
+    "s              -- Save state to file",
   };
   for(uint i = 0;i < sizeof(help_list) / sizeof(help_list[0]);i++){
     printf("%s\n",help_list[i]);
@@ -303,7 +306,6 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     vm[v_it->first] = value;
   }else{
     parameter_map_t& pm = todo->parameter_map;
-    parameter_map_t::const_iterator it  = pm.begin();
 
     bool upperflag = (value_str[0] == '[');
     bool lowerflag = (value_str[value_str.size()-1] == ']');
@@ -443,217 +445,22 @@ int InteractiveSimulator::select_options(){
 */
 
 
- /*
-int save_state(simulation_todo_sptr_t& simulation_phase){
-  //FILE *fp;
-  //fp = fopen("save.dat", "w");
-  //phase_root_まで
-  ofstream ofs( "test.txt", ios::out|ios::binary|ios::trunc );
-  phase_result_sptr_t temp;
-  temp = simulation_phase.todo->phase_result->parent;
-  for(int i = temp->id;i>0; i--){
-    Phase                     phase;
-    int                       id;
-    hydla::simulator::value_t                    current_time, end_time;
-    variable_map_t            variable_map;
-    parameter_map_t           parameter_map;
-    always_set_t         expanded_always;
-    positive_asks_t           positive_asks;
-    int                       step;
-    //hydla::hierarchy::ModuleSet module_set;
-    CauseForTermination         cause_for_termination;
-    //phase_result_sptrs_t       children;
-    //phase_result_sptr_t        parent;
 
-    phase           = temp->phase;
-    id              = temp->id;
-    current_time    = temp->current_time;
-    end_time        = temp->end_time;
-    variable_map    = temp->variable_map;
-    int vm_size     = variable_map.size();
-    variable_map_t::const_iterator v_it  = variable_map.begin();
-    parameter_map   = temp->parameter_map;
-    int pm_size     = parameter_map.size();
-    parameter_map_t::const_iterator p_it  = parameter_map.begin();
-    expanded_always = temp->expanded_always;
-    positive_asks   = temp->positive_asks;
-    step            = temp->step;
-    //module_set           = *(temp->module_set);
-    cause_for_termination = temp->cause_for_termination;
-    //children             = pr->children;
-    //parent               = pr->parent;
-
-      //ofs << phase << endl;
-      ofs.write((char*) &phase, sizeof(Phase));
-      cout << "phase " << phase << endl;
-      //ofs << id << endl;
-      ofs.write((char*) &id, sizeof(int));
-      cout << "id " << id << endl;
-    //fwrite(&current_time    , sizeof(value_t)               , 1 , fp);
-    //fwrite(&end_time        , sizeof(value_t)               , 1 , fp);
-      //ofs << vm_size << endl;
-      ofs.write((char*) &vm_size, sizeof(int));
-      cout << "vm_size " << vm_size << endl;
-      string first;
-      string second;
-      int first_size,second_size;
-      for(v_it = variable_map.begin(); v_it!=variable_map.end(); ++v_it) {
-        first = (*(v_it->first)).get_string();
-        second = (*(v_it->second)).get_string();
-        first_size = first.size();
-        second_size = second.size();
-        ofs.write((char*) &first_size, sizeof(int));
-        ofs.write((char*)(first.c_str()), first_size);
-        cout << "first " << first << " size "<< endl;
-        ofs.write((char*) &second_size, sizeof(int));
-        ofs.write((char*)(second.c_str()), second_size);
-        cout << "second " << second << "size " << endl;
-        //ofs << first << endl;
-        //ofs << second << endl;
-      }
-    //ofs << pm_size << endl;
-    for(p_it = parameter_map.begin(); p_it!=parameter_map.end(); ++p_it) {
-      first = (*(p_it->first)).get_name();
-      second = (p_it->second).get_string();
-        first_size = first.size();
-        second_size = second.size();
-        ofs.write((char*) &first_size, sizeof(int));
-        ofs.write((char*)(first.c_str()), first_size);
-        cout << "p first " << first << " size "<< endl;
-        ofs.write((char*) &second_size, sizeof(int));
-        ofs.write((char*)(second.c_str()), second_size);
-        cout << "p second " << second << "size " << endl;
-      //ofs << *(p_it->first) << endl;
-      //ofs << p_it->second << endl;
-      //cout << "save parameter "<< *(p_it->first) << "\t: " << p_it->second << endl;
-    }
-      //ofs << expanded_always << endl;
-      //ofs << positive_asks << endl;
-      //ofs << changed_asks << endl;
-      //ofs << step << endl;
-     //fwrite(&module_set    , sizeof(hydla::hierarchy::ModuleSet) , 1 , fp);
-      //ofs << cause_for_termination << endl;
-    temp = temp->parent;
-  }
-
-  //fclose(fp);
-
+int InteractiveSimulator::save_state(simulation_todo_sptr_t& todo){
+  cout << "save current phase" << endl;
+  io::JsonWriter writer;
+  writer.write_phase(todo->parent, "last_phase");
   return 1;
 }
-*/
-
-/*
-int load_state(simulation_todo_sptr_t& simulation_phase){
-  //FILE *fp;
-  //fp = fopen("save.dat", "rb+");
-  ifstream ifs( "test.txt" ,ios::in | ios::binary);
-  //fseek(fp, 0L, SEEK_SET);
-  simulation_todo_sptr_t temp_phase(phase_simulator_->create_new_simulation_phase());
-  phase_result_sptr_t temp = temp_phase->phase_result;
-  
-  for(int i = 0;i<1;i++){
-    Phase                     phase;
-    int                       id;
-    hydla::simulator::PhaseResult::value_t                    current_time, end_time;
-    variable_map_t            variable_map;
-    int vm_size;
-    int pm_size;
-    parameter_map_t           parameter_map;
-    always_set_t         expanded_always;
-    positive_asks_t           positive_asks;
-    int                       step;
-    //hydla::hierarchy::ModuleSet module_set;
-    CauseForTermination         cause_for_termination;
-
-    cout << "file read start" << endl;
-
-    //ifs >> phase;
-    ifs.read((char *) &phase, sizeof(Phase));
-    cout << "read phase "<< phase  << endl;
-    //ifs >> id;
-    ifs.read((char *) &id, sizeof(int));
-    cout << "read id "<< id << endl;
-    //fread(&current_time         , sizeof(value_t)               , 1 , fp);
-    //fread(&end_time             , sizeof(value_t)               , 1 , fp);
-    //ifs >> vm_size;
-    ifs.read((char *) &vm_size, sizeof(int));
-    cout << "read vm_size "<< vm_size << endl;
-    string v_first,v_second;
-    int v_first_size,v_second_size;
-    for(int i=0;i<vm_size;i++){
-      //ifs >> v_first;
-      ifs.read((char *) &v_first_size, sizeof(int));
-      char* buf = new char[v_first_size+1];
-      ifs.read(buf, v_first_size);
-      buf[v_first_size]=0;
-      cout << 1 << endl;
-      v_first = buf;
-      cout << 1 << endl;
-      cout << "first " << v_first << " size "<< endl;
-      cout << 1 << endl;
-      //ifs >> v_second;
-      ifs.read((char *) &v_second_size, sizeof(int));
-      char* buf2 = new char[v_second_size+1];
-      ifs.read(buf, v_second_size);
-      buf2[v_second_size]=0; 
-      v_second = buf;
-      cout << "second " << v_second << " size "<< endl;
-      delete []buf;
-      delete []buf2;
-    }
-    //ifs >> pm_size;;
-    //for(int i=0;i<pm_size;i++){
-    //ifs >> v_first;
-    //ifs >> v_second;
-    //cout << "read parameter "<< v_first << "\t: " << v_second << endl;
-    //}
-    //ifs >> expanded_always;
-    //ifs >> positive_asks;
-    //ifs >> changed_asks;
-    //ifs >> step;
-    //fread(&module_set         , sizeof(hydla::hierarchy::ModuleSet) , 1 , fp);
-    //ifs >> cause_for_termination;
-
-    cout << "read end "<< endl;
-
-    //temp->phase                = phase;
-    cout << "phase " << temp->phase << endl;
-    temp->id                   = id;
-    cout << "id " << temp->id << endl;
-    //temp->current_time         = current_time;
-    //cout << "current_time " << temp->current_time << endl;
-    //temp->end_time             = end_time;
-    //cout << "end_time " << temp->end_time << endl;
-    variable_map_t::const_iterator v_it  = variable_map.begin();
-    for(v_it = variable_map.begin(); v_it!=variable_map.end(); ++v_it) {
-    cout <<"load " <<  *(v_it->first) << "\t: " << *(v_it->second) << endl;
-    }
-    temp->variable_map         = variable_map;
-    //variable_map_t::const_iterator v_it  = variable_map.begin();
-    //for(v_it = variable_map.begin(); v_it!=variable_map.end(); ++v_it) {
-    //  cout << *(v_it->first) << "\t: " << *(v_it->second) << endl;
-    //}
-    temp->parameter_map        = parameter_map;
-    cout << 3333333<< endl;
-    //temp->expanded_always      = expanded_always;
-    //temp->positive_asks        = positive_asks;
-    //temp->changed_asks         = changed_asks;
-    //temp->step                 = step;
-    // *(temp->module_set)        = module_set;
-    //temp->cause_for_termination = cause_for_termination;
-    cout << 444444<< endl;
-  }
-
-  //simulation_phase.phase_result->parent = temp;
 
 
-    
+int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
+  cout << "load phase" << endl;
+  io::JsonReader reader;
+  phase_result_sptr_t loaded_phase = reader.read_phase("last_phase");
+  cout << *loaded_phase << endl;
   return 1;
 }
-*/
-//int InteractiveSimulator::get_phase_todo(){
-//}
-
 
 int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
 /*  phase_simulator_->find_unsat_core(
