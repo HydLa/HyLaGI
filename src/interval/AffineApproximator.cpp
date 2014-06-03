@@ -106,9 +106,9 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   return ret;
 }
 
-value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map)
+value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map, variable_map_t &variable_map)
 {
-  AffineTreeVisitor visitor(parameter_idx_map);
+  AffineTreeVisitor visitor(parameter_idx_map, variable_map);
   AffineOrInteger val = visitor.approximate(node);
   if(val.is_integer)return value_t(val.integer);
 
@@ -135,7 +135,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
   range_t val = variable_map[variable_to_approximate];
   assert(val.unique());
   node_sptr node = val.get_unique_value().get_node();
-  value_t affine = approximate(node, parameter_map);
+  value_t affine = approximate(node, parameter_map, variable_map);
   variable_map[variable_to_approximate] = affine;
   if(condition.get() != nullptr)
   {
@@ -175,7 +175,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
 void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
 {
   node_sptr node = time.get_node();
-  time = approximate(node, parameter_map);
+  time = approximate(node, parameter_map, prev_map);
   if(condition.get() != nullptr)
   {
     //TODO: deal with general case (currently only for '=')

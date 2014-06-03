@@ -490,6 +490,7 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
     todo->prev_map = loaded_phase->variable_map;
   }
   cout << "loaded phase" << endl;
+  print_phase(loaded_phase);
   return 1;
 }
 

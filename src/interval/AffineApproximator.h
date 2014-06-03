@@ -57,7 +57,7 @@ class AffineApproximator{
    * @param parameter_map
    *          map of parameter to be added parameter for new dummy variables
    */
-  value_t approximate(node_sptr &expr, parameter_map_t &parameter_map);
+  value_t approximate(node_sptr &expr, parameter_map_t &parameter_map, variable_map_t &variable_map);
   
   /**
    * Reduce dummy variables

@@ -24,7 +24,7 @@ typedef simulator::Parameter                  parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
 typedef simulator::parameter_map_t            parameter_map_t;
-
+typedef simulator::variable_map_t             variable_map_t;
 
 
 typedef boost::bimaps::bimap<parameter_t, int >
@@ -37,7 +37,7 @@ typedef parameter_idx_map_t::value_type parameter_idx_t;
 class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   public:
 
-  AffineTreeVisitor(parameter_idx_map_t&);
+  AffineTreeVisitor(parameter_idx_map_t&, variable_map_t&);
 
   AffineOrInteger approximate(node_sptr &node);
   ///calculate x^y
@@ -118,6 +118,8 @@ private:
 
   AffineOrInteger current_val_;
   parameter_idx_map_t& parameter_idx_map_;
+  variable_map_t& variable_map;
+  int differential_count;
 };
 
 } //namespace interval

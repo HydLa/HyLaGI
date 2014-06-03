@@ -30,7 +30,7 @@ public:
     std::runtime_error("error occurred in approximation: " + msg){}
 };
 
-AffineTreeVisitor::AffineTreeVisitor(parameter_idx_map_t &map):parameter_idx_map_(map)
+AffineTreeVisitor::AffineTreeVisitor(parameter_idx_map_t &map, variable_map_t &vm):parameter_idx_map_(map), variable_map(vm)
 {}
 
 AffineTreeVisitor::~AffineTreeVisitor()
@@ -38,6 +38,7 @@ AffineTreeVisitor::~AffineTreeVisitor()
 
 AffineOrInteger AffineTreeVisitor::approximate(node_sptr &node)
 {
+  differential_count = 0;
   accept(node);
   return current_val_;
 }
@@ -322,9 +323,32 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Para
 }
 
 
+
+void AffineTreeVisitor::visit(boost::shared_ptr<symbolic_expression::Variable> node)
+{
+  HYDLA_LOGGER_NODE_VISIT;
+  simulator::Variable variable(node->get_name(), differential_count);
+  if(variable_map.find(variable) == variable_map.end())throw ApproximateException("unknown variable: " + variable.get_string() );
+  if(!variable_map[variable].unique())throw ApproximateException("the value of a variable must be unique: "+ variable.get_string());
+  accept(variable_map[variable].get_unique_value().get_node());
+  HYDLA_LOGGER_NODE_VALUE;
+  return;
+}
+
+
+void AffineTreeVisitor::visit(boost::shared_ptr<Differential> node)
+{
+  HYDLA_LOGGER_NODE_VISIT;
+  differential_count++;
+  // TODO: 変数以外の微分値は扱えないので、その判定もしたい。
+  accept(node->get_child());
+  differential_count--;
+  return;
+}
+
 void AffineTreeVisitor::invalid_node(symbolic_expression::Node& node)
 {
-  throw ApproximateException("invalid node" + node.get_string());
+  throw ApproximateException("invalid node: " + node.get_string());
 }
 
 
@@ -359,7 +383,6 @@ DEFINE_INVALID_NODE(Weaker)
 DEFINE_INVALID_NODE(Parallel)
 
 DEFINE_INVALID_NODE(Always)
-DEFINE_INVALID_NODE(Differential)
 
 DEFINE_INVALID_NODE(Previous)
 
@@ -375,7 +398,6 @@ DEFINE_INVALID_NODE(Not)
 
 DEFINE_INVALID_NODE(UnsupportedFunction)
 
-DEFINE_INVALID_NODE(symbolic_expression::Variable)
 DEFINE_INVALID_NODE(SymbolicT)
 DEFINE_INVALID_NODE(Infinity)
 DEFINE_INVALID_NODE(True)

@@ -31,11 +31,12 @@ Simulator::~Simulator()
 {
 }
 
-SimulationTodo::SimulationTodo(const PhaseResult &parent)
+SimulationTodo::SimulationTodo(const phase_result_sptr_t &parent_phase)
 {
-  phase_type = parent.phase_type == PointPhase?IntervalPhase:PointPhase;
-  current_time = parent.current_time;
-  parameter_map = parent.parameter_map;
+  parent = parent_phase;
+  phase_type = parent->phase_type == PointPhase?IntervalPhase:PointPhase;
+  current_time = parent->current_time;
+  parameter_map = parent->parameter_map;
 }
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){

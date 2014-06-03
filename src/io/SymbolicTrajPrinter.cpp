@@ -22,7 +22,7 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
   std::stringstream sstr;
   if(result.phase_type == IntervalPhase){
     sstr << "---------IP " << result.id << "---------" << endl;
-    sstr << result.module_set->get_name() << endl;
+    if(result.module_set != nullptr)sstr << result.module_set->get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
     }else{
@@ -30,7 +30,7 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     }
   }else{
     sstr << "---------PP " << result.id << "---------" << endl;
-    sstr << result.module_set->get_name() << endl;
+    if(result.module_set != nullptr)sstr << result.module_set->get_name() << endl;
     sstr << "t\t: " << result.current_time << "\n";
   }
 /*

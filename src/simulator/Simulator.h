@@ -140,7 +140,7 @@ struct SimulationTodo{
    * parentとなるPhaseResultから情報を引き継いだTodoを作る。
    * prev_mapはこのコンストラクタで初期化されない。
    */
-  SimulationTodo(const PhaseResult &parent);
+  SimulationTodo(const phase_result_sptr_t &parent_phase);
 
   inline bool in_following_step(){
     return parent.get() && parent->parent.get() && parent->parent->parent.get();
