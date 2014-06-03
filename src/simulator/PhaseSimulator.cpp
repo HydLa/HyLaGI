@@ -32,6 +32,8 @@
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
 
+#include "TimeModifier.h"
+
 
 using namespace std;
 using namespace boost;
@@ -61,6 +63,7 @@ PhaseSimulator::~PhaseSimulator(){}
 PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont)
 {
   HYDLA_LOGGER_DEBUG("%% current time:", todo->current_time);
+  HYDLA_LOGGER_DEBUG("%% prev map:", todo->prev_map);
   timer::Timer phase_timer;
   result_list_t result;
 
@@ -498,50 +501,6 @@ module_set_list_t PhaseSimulator::calculate_mms(
   state->profile["CalculateMMS"] += cmms_timer.get_elapsed_us();
   return ret;
 }
-
-
-variable_map_t shift_variable_map_time(const variable_map_t& vm,
-                                       Backend* backend_, const value_t &time){
-  variable_map_t shifted_vm;
-  variable_map_t::const_iterator it  = vm.begin();
-  variable_map_t::const_iterator end = vm.end();
-  for(; it!=end; ++it) {
-    if(it->second.undefined())
-      shifted_vm[it->first] = it->second;
-    else if(it->second.unique())
-    {
-      value_t val = it->second.get_unique_value();
-      range_t& range = shifted_vm[it->first];
-      value_t ret;
-      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-      range.set_unique_value(ret);
-    }
-    else
-    {
-      range_t range = it->second;
-      for(uint i = 0; i < range.get_lower_cnt(); i++)
-      {
-        ValueRange::bound_t bd = it->second.get_lower_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-        range.set_lower_bound(ret, bd.include_bound);
-      }
-      for(uint i = 0; i < range.get_upper_cnt(); i++)
-      {
-
-        ValueRange::bound_t bd = it->second.get_upper_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-        range.set_upper_bound(ret, bd.include_bound);
-      }
-      shifted_vm[it->first] = range;
-    }
-  }
-  return shifted_vm;
-}
-
 
 /*
 CalculateConstraintStoreResult
@@ -1240,7 +1199,7 @@ PhaseSimulator::todo_list_t
     
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
-    phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
+    phase->variable_map = shift_time_of_vm(phase->variable_map, phase->current_time);
     next_todo->phase_type = PointPhase;
 
     timer::Timer next_pp_timer;
@@ -1462,42 +1421,23 @@ variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const 
 {
   HYDLA_LOGGER_DEBUG("%% time: ", tm);
   variable_map_t result;
+  TimeModifier modifier(*backend_);
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
-    if(it->second.undefined())
-    {
-      result[it->first] = it->second;
-    }
-    else if(it->second.unique())
-    {
-      value_t val = it->second.get_unique_value();
-      range_t& range = result[it->first];
-      value_t ret;
-      backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-      range.set_unique_value(ret);
-    }
-    else
-    {
-      range_t range = it->second;
-      for(uint i = 0; i < range.get_lower_cnt(); i++)
-      {
-        ValueRange::bound_t bd = it->second.get_lower_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-        range.set_lower_bound(ret, bd.include_bound);
-      }
-      for(uint i = 0; i < range.get_upper_cnt(); i++)
-      {
+    result[it->first] = modifier.substitute_time(tm, it->second);
+  }
+  return result;
+}
 
-        ValueRange::bound_t bd = it->second.get_upper_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-        range.set_upper_bound(ret, bd.include_bound);
-      }
-      result[it->first] = range;
-    }
+
+variable_map_t PhaseSimulator::shift_time_of_vm(const variable_map_t& vm, const value_t& tm)
+{
+  HYDLA_LOGGER_DEBUG("%% time: ", tm);
+  variable_map_t result;
+  TimeModifier modifier(*backend_);
+  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  {
+    result[it->first] = modifier.shift_time(tm, it->second);
   }
   return result;
 }

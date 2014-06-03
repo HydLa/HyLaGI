@@ -60,6 +60,7 @@ public:
 
 
   variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
+  variable_map_t shift_time_of_vm(const variable_map_t &vm, const value_t &tm);
 
   /**
    * calculate phase results from given todo

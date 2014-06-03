@@ -17,7 +17,7 @@
 #include <boost/spirit/include/classic_ast.hpp>
 #include "HydLaAST.h"
 #include "AffineApproximator.h"
-
+#include "TimeModifier.h"
 
 
 // surpress warning "C4996: old 'strcpy'" on VC++2005
@@ -35,8 +35,6 @@ using namespace hydla::interval;
 
 namespace hydla {
 namespace simulator {
-
-hydla::io::SymbolicTrajPrinter InteractiveSimulator::printer_;
 
 
 void InteractiveSimulator::print_end(phase_result_sptr_t& p)
@@ -334,39 +332,44 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
-
   if(todo->phase_type == PointPhase)
   {
-    cout << "sorry, approximation at start point of PP is not supported" << endl;
-    return 0;
+    cout << "(approximate time)" << endl;
+    affine_transformer_->approximate_time(todo->current_time, todo->parent->variable_map, todo->prev_map, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
+    todo->parent->end_time = todo->current_time;
   }
-  cout << "(approximate variable)" << endl;
-  variable_map_t& vm = todo->parent->variable_map;
-  
-  // 変数の選択
-  cout << "input variable name " << endl;
-  cout << '>';
-  string variable_str = excin<string>();
-
-  // TODO: 変数自体が幅を持つ場合への対応
-  // TODO: 時刻を近似したい場合への対応
-
-  variable_t var;
-
-  variable_map_t::iterator v_it  = vm.begin();
-  for(;v_it!=vm.end();v_it++){
-    if( v_it->first.get_string() == variable_str)
-    {
-      var = v_it->first;
-      break;
-    }
-  }
-  if(v_it == vm.end())
+  else
   {
-    cout << "invalid variable name " << endl;
-    return 0;
+    variable_map_t& vm = todo->parent->variable_map;
+    cout << "(approximate variable)" << endl;
+  
+    // 変数の選択
+    cout << "input variable name " << endl;
+    cout << '>';
+    string variable_str = excin<string>();
+
+    // TODO: 変数自体が幅を持つ場合への対応
+    // TODO: 時刻を近似したい場合への対応
+
+    variable_t var;
+
+    variable_map_t::iterator v_it  = vm.begin();
+    for(;v_it!=vm.end();v_it++){
+      if( v_it->first.get_string() == variable_str)
+      {
+        var = v_it->first;
+        break;
+      }
+    }
+    if(v_it == vm.end())
+    {
+      cout << "invalid variable name " << endl;
+      return 0;
+    }
+    affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
+    todo->prev_map = vm;
   }
-  affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
+
   todo->parameter_map = todo->parent->parameter_map;
 
   return 1;
@@ -471,10 +474,16 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
   loaded_phase->parent = result_root_;
   result_root_->children.clear();
   result_root_->children.push_back(loaded_phase);
-  todo.reset(new SimulationTodo(*loaded_phase));
+  todo.reset(new SimulationTodo(loaded_phase));
+  todo->module_set_container = msc_no_init_;
+  todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
   if(todo->phase_type == PointPhase)
   {
-    //TODO: apply time to variable map
+    TimeModifier modifier(*backend);
+    for(auto entry : loaded_phase->variable_map)
+    {
+      todo->prev_map[entry.first] = modifier.substitute_time(todo->current_time, entry.second);
+    }
   }
   else
   {
