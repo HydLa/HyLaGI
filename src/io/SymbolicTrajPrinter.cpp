@@ -98,12 +98,14 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       ostream << *r_it;
     }
 
+    //このフェーズの情報が既に完成しているなら出力する
     if(node->cause_for_termination==simulator::ASSERTION ||
       node->cause_for_termination==simulator::OTHER_ASSERTION ||
       node->cause_for_termination==simulator::TIME_LIMIT ||
       node->cause_for_termination==simulator::NOT_SELECTED ||
       node->cause_for_termination==simulator::NONE ||
-      node->cause_for_termination==simulator::STEP_LIMIT)
+      node->cause_for_termination==simulator::STEP_LIMIT ||
+      node->cause_for_termination==simulator::INTERRUPTED)
     {
       ostream << get_state_output(*node);
     }
@@ -144,6 +146,11 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
 
       case simulator::NOT_SELECTED:
         ostream << "# this case is not selected to be simulated\n" ;
+        break;
+
+
+      case simulator::INTERRUPTED:
+        ostream << "# simulation is interrupted\n" ;
         break;
 
       default:

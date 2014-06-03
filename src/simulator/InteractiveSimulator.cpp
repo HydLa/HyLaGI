@@ -18,6 +18,7 @@
 #include "HydLaAST.h"
 #include "AffineApproximator.h"
 #include "TimeModifier.h"
+#include "SignalHandler.h"
 
 
 // surpress warning "C4996: old 'strcpy'" on VC++2005
@@ -118,13 +119,21 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       }
       // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
       all_todo_.push_back(todo);
+      if(signal_handler::interrupted) break;
     }
     catch(const runtime_error &se)
     {
       cout << se.what() << endl;
+      todo->parent->cause_for_termination = SOME_ERROR;
       HYDLA_LOGGER_DEBUG(se.what());
       break;
     }
+
+  }
+
+  if(signal_handler::interrupted || todo->parent->cause_for_termination != SOME_ERROR){
+    todo->parent->cause_for_termination = INTERRUPTED;
+    io::JsonWriter().write_phase(todo->parent, "interrupted_phase");
   }
   return result_root_;
 }
