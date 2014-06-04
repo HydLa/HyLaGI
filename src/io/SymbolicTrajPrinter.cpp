@@ -105,6 +105,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       node->cause_for_termination==simulator::NOT_SELECTED ||
       node->cause_for_termination==simulator::NONE ||
       node->cause_for_termination==simulator::STEP_LIMIT ||
+      node->cause_for_termination==simulator::SOME_ERROR ||
       node->cause_for_termination==simulator::INTERRUPTED)
     {
       ostream << get_state_output(*node);
