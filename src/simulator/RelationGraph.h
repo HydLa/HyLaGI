@@ -1,57 +1,58 @@
-#ifndef _INCLUDED_HYDLA_RELATION_GRAPH_H_
-#define _INCLUDED_HYDLA_RELATION_GRAPH_H_
+#pragma once
 
 #include "Variable.h"
 #include "ModuleSetContainer.h"
+#include "Node.h"
+#include "DefaultTreeVisitor.h"
 
 namespace hydla {
 namespace simulator {
 
-
 /**
- * Graph to represent relation of constraint modules and variables.
+ * Graph to represent relations of constraints and variables
  */
-class RelationGraph{
+class RelationGraph: public symbolic_expression::DefaultTreeVisitor{
 
 public:
-  typedef hydla::hierarchy::ModuleSet module_set_t;
-  typedef hydla::hierarchy::ModuleSet::module_t module_t;
+  typedef hierarchy::ModuleSet module_set_t;
+  typedef hierarchy::module_set_sptr module_set_sptr;
+  typedef hierarchy::ModuleSet::module_t module_t;
   typedef std::set<Variable, VariableComparator> variable_set_t;  
+  typedef symbolic_expression::node_sptr constraint_t;
+  typedef std::vector<constraint_t> constraints_t;
   
-  struct ModuleNode;
   struct VariableNode;
-  typedef std::vector<ModuleNode* > mod_nodes_t;
+  struct ConstraintNode;
   typedef std::vector<VariableNode* > var_nodes_t;
+  typedef std::vector<ConstraintNode* > constraint_nodes_t;
 
   /**
-   * Node for constraint modules
+   * Node for constraint
    */
-  struct ModuleNode{
-    const module_t* module;
+  struct ConstraintNode{
+    constraint_t constraint;
+    module_t module; /// module which the constraint belongs to    
     bool valid, visited;
     var_nodes_t edges;
-    ModuleNode():module(NULL)
-    {}
-    ModuleNode(const module_t* mod):module(mod)
+    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod)
     {}
     std::string get_name() const;
   };
   
   /**
-   * Node for variables.
+   * Node for variable
    */
   struct VariableNode{
     Variable variable;
-    mod_nodes_t edges;
+    constraint_nodes_t edges;
     VariableNode(Variable var):variable(var)
     {}
     std::string get_name() const;
   };
   
-  RelationGraph(const module_set_t &ms, const variable_set_t &vm);
+  RelationGraph(const module_set_t &mods);
 
-  virtual ~RelationGraph();
-  
+  virtual ~RelationGraph();  
 
   /**
    * Print the structure in graphviz format.
@@ -61,47 +62,66 @@ public:
   /**
    * Set a module valid or invalid
    */
-  void set_valid(const module_t *mod, bool valid);
+  void set_valid(const module_t &mod, bool valid);
   
   /**
    * Set modules in ms valid and modules not in ms invalid
    */
-  void set_valid(const module_set_t *ms);
+  void set_valid(module_set_t *ms);
   
   /**
    * Get the number of connected component in the graph.
    */
   int get_connected_count();
   
+
   /**
-   * Get the module_set corresponding to the connected component specified by index.
+   * Get constraints corresponding to the connected component specified by index.
    */
-  boost::shared_ptr<module_set_t> get_component(unsigned int index);  
+  constraints_t get_constraints(unsigned int index);  
+
+  /**
+   * Get a ModuleSet included by the connected component specified by index.
+   */ 
+  module_set_sptr get_modules(unsigned int index);  
+
+  /**
+   * Get constraints which related to given variables
+   */
+  
+  constraints_t get_constraints(const std::vector<Variable>& variables);
 
 private:
-  typedef std::map<const module_t *, ModuleNode*> module_map_t;
   typedef std::map<Variable, VariableNode*> variable_map_t;  
-  typedef std::vector<std::pair<const module_t *, Variable > > relation_t;
+  typedef std::vector<std::pair<constraint_t, Variable > > relation_t;
   
-  /**
-   * Add nodes and edges to the graph.
-   */
-  void add(const relation_t &rel);
+  void add(module_t &mod);
   
   void check_connected_components();
-  void visit_node(ModuleNode* node, module_set_t &ms);
-  void visit_edges(ModuleNode* node, module_set_t &ms);
+  void visit_node(ConstraintNode* node, constraints_t &constraints, module_set_t &ms);
+  void visit_edges(ConstraintNode* node, constraints_t &constraint, module_set_t &ms);
+ 
+
+  void visit(boost::shared_ptr<symbolic_expression::Equal> node);
+  void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
+  void visit(boost::shared_ptr<symbolic_expression::Less> node);
+  void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
+  void visit(boost::shared_ptr<symbolic_expression::Greater> node);
+  void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
+  void visit(boost::shared_ptr<symbolic_expression::Ask> node);
+  void add_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
+
+  var_nodes_t variable_nodes;
+  constraint_nodes_t constraint_nodes;
+  module_t current_module;
   
-  mod_nodes_t mod_list_;
-  var_nodes_t var_list_;
-  
-  std::vector<module_set_t> connected_components_;
-  bool check_completed;     /// false if recheck is necessary
-  std::map<const module_t *, ModuleNode*> module_map_;
-  std::map<Variable, VariableNode*> variable_map_;
+  std::vector<constraints_t> connected_constraints_vector;
+  std::vector<module_set_t> connected_modules_vector;
+  bool up_to_date;     /// if false, recalculation of connected components is necessary
+  std::map<module_t, constraint_nodes_t>       module_constraint_nodes_map;
+  std::map<constraint_t, ConstraintNode*> constraint_map;
+  std::map<Variable, VariableNode*> variable_map;
 };
 
 } //namespace simulator
 } //namespace hydla 
-
-#endif // _INCLUDED_HYDLA_RELATION_GRAPH_H_

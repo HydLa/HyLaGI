@@ -11,7 +11,6 @@
 #include "Timer.h"
 #include "Logger.h"
 #include "PhaseResult.h"
-#include "RelationGraph.h"
 #include "Simulator.h"
 #include "UnsatCoreFinder.h"
 #include "AnalysisResultChecker.h"

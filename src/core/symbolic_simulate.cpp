@@ -108,7 +108,7 @@ void setup_simulator_opts(Opts& opts)
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
   opts.dump_in_progress = po.count("dump_in_progress")>0;
-  opts.dump_relation = po.count("dump_module_relation_graph")>0;
+  opts.dump_relation = po.count("dump_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.use_unsat_core = po.count("use_unsat_core")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;

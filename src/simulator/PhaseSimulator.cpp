@@ -167,7 +167,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
   {
     int connected_count = relation_graph_->get_connected_count();
     for(int i = 0; i < connected_count; i++){
-      module_set_sptr connected_ms = relation_graph_->get_component(i);
+      module_set_sptr connected_ms = relation_graph_->get_modules(i);
       HYDLA_LOGGER_DEBUG("\n--- connected module set", i + 1, "/", connected_count, " ---\n", connected_ms->get_infix_string());
       HYDLA_LOGGER_DEBUG_VAR(store);
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
@@ -357,7 +357,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   msc_no_init_ = msc_no_init;
   const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
 
-  relation_graph_.reset(new RelationGraph(*ms, *variable_set_));
+  relation_graph_.reset(new RelationGraph(*ms));
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
