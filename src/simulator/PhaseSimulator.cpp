@@ -136,7 +136,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy::module_set_sptr& ms, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
 {
   HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
-  relation_graph_->set_valid(ms.get());
+  relation_graph_->set_adopted(ms.get());
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
   ConstraintStore store;

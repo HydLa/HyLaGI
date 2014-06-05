@@ -19,7 +19,7 @@ public:
   typedef hierarchy::ModuleSet::module_t module_t;
   typedef std::set<Variable, VariableComparator> variable_set_t;  
   typedef symbolic_expression::node_sptr constraint_t;
-  typedef std::vector<constraint_t> constraints_t;
+  typedef std::set<constraint_t> constraints_t;
   
   struct VariableNode;
   struct ConstraintNode;
@@ -31,10 +31,12 @@ public:
    */
   struct ConstraintNode{
     constraint_t constraint;
-    module_t module; /// module which the constraint belongs to    
-    bool valid, visited;
+    module_t module; /// module which the constraint belongs to
+    bool visited;
+    bool module_adopted; /// whether the module is in ms
+    bool expanded; /// whether the guard of the constraint is entailed
     var_nodes_t edges;
-    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod)
+    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(true)
     {}
     std::string get_name() const;
   };
@@ -49,6 +51,7 @@ public:
     {}
     std::string get_name() const;
   };
+
   
   RelationGraph(const module_set_t &mods);
 
@@ -60,20 +63,33 @@ public:
   std::ostream& dump_graph(std::ostream & os) const;
   
   /**
-   * Set a module valid or invalid
+   * Set a moduld adopted or not
    */
-  void set_valid(const module_t &mod, bool valid);
+  void set_adopted(const module_t &mod, bool adopted);
   
   /**
-   * Set modules in ms valid and modules not in ms invalid
+   * Set modules in ms adopted and modules not in ms not adopted
    */
-  void set_valid(module_set_t *ms);
+  void set_adopted(module_set_t *ms);
+
+  /**
+   * Set the constraint expanded or not
+   */ 
+  void set_expanded(constraint_t &cons, bool expanded);
   
   /**
    * Get the number of connected component in the graph.
    */
   int get_connected_count();
-  
+
+
+  /**
+   * Get constraints and modules related to given variable
+   * @parameter constraints for output
+   * @parameter modules for output
+   */
+  void get_related_constraints(const Variable &variable, constraints_t &constraints,
+                               module_set_sptr &modules);
 
   /**
    * Get constraints corresponding to the connected component specified by index.
@@ -118,9 +134,9 @@ private:
   std::vector<constraints_t> connected_constraints_vector;
   std::vector<module_set_t> connected_modules_vector;
   bool up_to_date;     /// if false, recalculation of connected components is necessary
-  std::map<module_t, constraint_nodes_t>       module_constraint_nodes_map;
-  std::map<constraint_t, ConstraintNode*> constraint_map;
-  std::map<Variable, VariableNode*> variable_map;
+  std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
+  std::map<constraint_t, ConstraintNode*> constraint_node_map;
+  std::map<Variable, VariableNode*> variable_node_map;
 };
 
 } //namespace simulator

@@ -64,11 +64,31 @@ string RelationGraph::ConstraintNode::get_name() const
 }
 
 
+
+void RelationGraph::get_related_constraints(const Variable &var, constraints_t &constraints, module_set_sptr &module_set){
+  for(auto constraint_node : constraint_nodes){
+    constraint_node->visited = !constraint_node->module_adopted || !constraint_node->expanded;
+  }
+
+  VariableNode &var_node = *variable_node_map[var];
+  module_set_t ms;
+  for(auto constraint_node : var_node.edges)
+  {
+    if(!constraint_node->visited){
+      visit_node(constraint_node, constraints, ms);
+      connected_constraints_vector.push_back(constraints);
+      connected_modules_vector.push_back(ms);
+    }
+  }
+  module_set.reset(new module_set_t(ms));
+}
+
+
 void RelationGraph::check_connected_components(){
   connected_constraints_vector.clear();
   connected_modules_vector.clear();
   for(auto constraint_node : constraint_nodes){
-    constraint_node->visited = !constraint_node->valid;
+    constraint_node->visited = !constraint_node->module_adopted || !constraint_node->expanded;
   }
 
   for(auto constraint_node : constraint_nodes){
@@ -87,7 +107,7 @@ void RelationGraph::visit_node(ConstraintNode* node, constraints_t &constraints,
   if(!node->visited){
     node->visited = true;
     ms.add_module(node->module);
-    constraints.push_back(node->constraint);
+    constraints.insert(node->constraint);
     visit_edges(node, constraints, ms);
   }
 }
@@ -119,27 +139,32 @@ int RelationGraph::get_connected_count()
   return connected_constraints_vector.size();
 }
 
-void RelationGraph::set_valid(const module_t &mod, bool valid)
+void RelationGraph::set_adopted(const module_t &mod, bool adopted)
 {
   for(auto constraint_node : module_constraint_nodes_map[mod])
   {
-    constraint_node->valid = valid;
+    constraint_node->module_adopted = adopted;
   }
   up_to_date = false;
 }
 
-void RelationGraph::set_valid(module_set_t *ms)
+void RelationGraph::set_adopted(module_set_t *ms)
 {
   for(auto entry : module_constraint_nodes_map)
   {
-    bool valid = !(ms->find(entry.first) == ms->end());
-    for(auto constraint_node : entry.second)
-    {
-      constraint_node->valid = valid;
-    }
+    bool adopted = !(ms->find(entry.first) == ms->end());
+    set_adopted(entry.first, adopted);
   }
   up_to_date = false;
 }
+
+
+void RelationGraph::set_expanded(constraint_t &cons, bool expanded)
+{
+  constraint_node_map[cons]->expanded = expanded;
+  up_to_date = false;
+}
+
 
 RelationGraph::constraints_t RelationGraph::get_constraints(unsigned int index)
 {
@@ -167,7 +192,7 @@ void RelationGraph::add_node(boost::shared_ptr<symbolic_expression::BinaryNode> 
   VariableFinder::variable_set_t variables;
   variables = finder.get_all_variable_set();
 
-  ConstraintNode*& cons = constraint_map[node];
+  ConstraintNode*& cons = constraint_node_map[node];
   if(cons == NULL){
     cons = new ConstraintNode(node, current_module);
     constraint_nodes.push_back(cons);
@@ -175,7 +200,7 @@ void RelationGraph::add_node(boost::shared_ptr<symbolic_expression::BinaryNode> 
   }
   for(auto variable : variables)
   {
-    VariableNode*& var_node = variable_map[variable];
+    VariableNode*& var_node = variable_node_map[variable];
     if(var_node == NULL){
       var_node = new VariableNode(variable);
       variable_nodes.push_back(var_node);
