@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <iostream>
 
+using namespace std;
+
 namespace hydla {
 namespace simulator {
 using namespace hydla::logger;
@@ -25,13 +27,13 @@ struct NodeDumper {
     ss << rhs.ss.rdbuf();
   }
 
-  friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+  friend ostream& operator<<(ostream& s, const NodeDumper& nd)
   {
     s << nd.ss.str();
     return s;
   }
 
-  std::stringstream ss;
+  stringstream ss;
 };
 }
 
@@ -175,34 +177,34 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::ProgramC
 
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Print> node)
 {
-  std::string str =  node->get_string();
-  std::string args = node->get_args();
+  string str =  node->get_string();
+  string args = node->get_args();
 
   args.erase(0,2);
-  std::string sb(" ");
-  std::string sa("");
-  std::string::size_type n, nb = 0;
+  string sb(" ");
+  string sa("");
+  string::size_type n, nb = 0;
   //スペースの削除
-  while ((n = args.find(sb,nb)) != std::string::npos)
+  while ((n = args.find(sb,nb)) != string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
   //引数の分解
-  uint i = 0;
-  std::string key(",");
+  string::size_type i = 0;
+  string key(",");
   v_print.push_back(str);
   
   while(i < args.length())
   {
-    int old_i = i;
+    string::size_type old_i = i;
     i = args.find(key, i);
-    if( i != std::string::npos)
+    if( i != string::npos)
     {
-      std::string item = args.substr(old_i, i - old_i);
+      string item = args.substr(old_i, i - old_i);
       v_print.push_back(item);
     }else{
-      std::string item = args.substr(old_i);
+      string item = args.substr(old_i);
       v_print.push_back(item);
       break;
     }
@@ -212,34 +214,34 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Print> n
 }
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::PrintPP> node)
 {
-  std::string str =  node->get_string();
-  std::string args = node->get_args();
+  string str =  node->get_string();
+  string args = node->get_args();
 
   args.erase(0,2);
-  std::string sb(" ");
-  std::string sa("");
-  std::string::size_type n, nb = 0;
+  string sb(" ");
+  string sa("");
+  string::size_type n, nb = 0;
   //スペースの削除
-  while ((n = args.find(sb,nb)) != std::string::npos)
+  while ((n = args.find(sb,nb)) != string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
   //引数の分解
-  uint i = 0;
-  std::string key(",");
+  string::size_type i = 0;
+  string key(",");
   v_print_pp.push_back(str);
   
   while(i < args.length())
   {
-    int old_i = i;
+    string::size_type old_i = i;
     i = args.find(key, i);
-    if( i != std::string::npos)
+    if( i != string::npos)
     {
-      std::string item = args.substr(old_i, i - old_i);
+      string item = args.substr(old_i, i - old_i);
       v_print_pp.push_back(item);
     }else{
-      std::string item = args.substr(old_i);
+      string item = args.substr(old_i);
       v_print_pp.push_back(item);
       break;
     }
@@ -249,34 +251,34 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::PrintPP>
 }
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::PrintIP> node)
 {
-  std::string str =  node->get_string();
-  std::string args = node->get_args();
+  string str =  node->get_string();
+  string args = node->get_args();
 
   args.erase(0,2);
-  std::string sb(" ");
-  std::string sa("");
-  std::string::size_type n, nb = 0;
+  string sb(" ");
+  string sa("");
+  string::size_type n, nb = 0;
   //スペースの削除
-  while ((n = args.find(sb,nb)) != std::string::npos)
+  while ((n = args.find(sb,nb)) != string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
   //引数の分解
-  uint i = 0;
-  std::string key(",");
+  string::size_type i = 0;
+  string key(",");
   v_print_ip.push_back(str);
   
   while(i < args.length())
   {
-    int old_i = i;
+    string::size_type old_i = i;
     i = args.find(key, i);
-    if( i != std::string::npos)
+    if( i != string::npos)
     {
-      std::string item = args.substr(old_i, i - old_i);
+      string item = args.substr(old_i, i - old_i);
       v_print_ip.push_back(item);
     }else{
-      std::string item = args.substr(old_i);
+      string item = args.substr(old_i);
       v_print_ip.push_back(item);
       break;
     }
@@ -287,32 +289,32 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::PrintIP>
 
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Scan> node)
 {
-  std::string str =  node->get_string();
-  std::string args = node->get_args();
+  string str =  node->get_string();
+  string args = node->get_args();
 
-  std::string sb(" ");
-  std::string sa("");
-  std::string::size_type n, nb = 0;
+  string sb(" ");
+  string sa("");
+  string::size_type n, nb = 0;
   //スペースの削除
-  while ((n = args.find(sb,nb)) != std::string::npos)
+  while ((n = args.find(sb,nb)) != string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
   //引数の分解
-  uint i = 0;
-  std::string key(",");
+  string::size_type i = 0;
+  string key(",");
   
   while(i < args.length())
   {
-    int old_i = i;
+    string::size_type old_i = i;
     i = args.find(key, i);
-    if( i != std::string::npos)
+    if( i != string::npos)
     {
-      std::string item = args.substr(old_i, i - old_i);
+      string item = args.substr(old_i, i - old_i);
       v_scan.push_back(item);
     }else{
-      std::string item = args.substr(old_i);
+      string item = args.substr(old_i);
       v_scan.push_back(item);
       break;
     }
@@ -322,34 +324,34 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Scan> no
 
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Exit> node)
 {
-  std::string str =  node->get_string();
-  std::string args = node->get_args();
+  string str =  node->get_string();
+  string args = node->get_args();
 
   args.erase(0,2);
-  std::string sb(" ");
-  std::string sa("");
-  std::string::size_type n, nb = 0;
+  string sb(" ");
+  string sa("");
+  string::size_type n, nb = 0;
   //スペースの削除
-  while ((n = args.find(sb,nb)) != std::string::npos)
+  while ((n = args.find(sb,nb)) != string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
   //引数の分解
-  uint i = 0;
-  std::string key(",");
+  string::size_type i = 0;
+  string key(",");
   v_print_ip.push_back(str);
   
   while(i < args.length())
   {
-    int old_i = i;
+    string::size_type old_i = i;
     i = args.find(key, i);
-    if( i != std::string::npos)
+    if( i != string::npos)
     {
-      std::string item = args.substr(old_i, i - old_i);
+      string item = args.substr(old_i, i - old_i);
       v_print_ip.push_back(item);
     }else{
-      std::string item = args.substr(old_i);
+      string item = args.substr(old_i);
       v_print_ip.push_back(item);
       break;
     }
@@ -360,34 +362,34 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Exit> no
     
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Abort> node)
 {
-  std::string str =  node->get_string();
-  std::string args = node->get_args();
+  string str =  node->get_string();
+  string args = node->get_args();
 
   args.erase(0,2);
-  std::string sb(" ");
-  std::string sa("");
-  std::string::size_type n, nb = 0;
+  string sb(" ");
+  string sa("");
+  string::size_type n, nb = 0;
   //スペースの削除
-  while ((n = args.find(sb,nb)) != std::string::npos)
+  while ((n = args.find(sb,nb)) != string::npos)
   {
     args.replace(n, sb.size(), sa);
     nb = n + sa.size();
   }
   //引数の分解
-  uint i = 0;
-  std::string key(",");
+  string::size_type i = 0;
+  string key(",");
   v_print_ip.push_back(str);
   
   while(i < args.length())
   {
-    int old_i = i;
+    string::size_type old_i = i;
     i = args.find(key, i);
-    if( i != std::string::npos)
+    if( i != string::npos)
     {
-      std::string item = args.substr(old_i, i - old_i);
+      string item = args.substr(old_i, i - old_i);
       v_print_ip.push_back(item);
     }else{
-      std::string item = args.substr(old_i);
+      string item = args.substr(old_i);
       v_print_ip.push_back(item);
       break;
     }
