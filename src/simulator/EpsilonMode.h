@@ -8,13 +8,6 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Timer.h"
-#include "Logger.h"
-#include "PhaseResult.h"
-#include "RelationGraph.h"
-#include "Simulator.h"
-#include "UnsatCoreFinder.h"
-#include "AnalysisResultChecker.h"
 
 namespace hydla {
 namespace simulator{
