@@ -6,6 +6,8 @@
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
+#include "Node.h"
+
 
 namespace hydla {
 namespace parser {
@@ -36,6 +38,11 @@ public:
   void parse(std::istream& s, SyntaxType type = PROGRAM);
   void parse_file(const std::string& filename, SyntaxType type = PROGRAM);
   void parse_string(const std::string& str, SyntaxType type = PROGRAM);
+
+  /**
+   * 解析し、さらにNodeTreeも生成する
+   */
+  symbolic_expression::node_sptr parse_generate(const std::string& str, SyntaxType type = PROGRAM);
 
   /**
    * ASTの構造を出力する

@@ -21,6 +21,11 @@ class Parameter{
   :variable_name_(name), differential_count_(diff_cnt), phase_id_(id)
   {
   }
+
+  /**
+   * create Parameter from string (like parameter[x, 0, 1]")
+   */
+  Parameter(const std::string &variable_str);
   
   std::string get_name()const {return variable_name_;}
   int get_differential_count()const {return differential_count_;}
@@ -34,7 +39,7 @@ class Parameter{
   std::string to_string() const
   {
     std::stringstream strstr;
-    std::string ret("parameter[" + variable_name_);
+    std::string ret("p[" + variable_name_);
     strstr << ", " << differential_count_ << ", " << phase_id_ << "]";
     ret += strstr.str();
     return ret;

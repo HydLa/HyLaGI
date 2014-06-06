@@ -4,7 +4,7 @@
 #include "TrajPrinter.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 /**
  * Mathematica形式での出力を行う

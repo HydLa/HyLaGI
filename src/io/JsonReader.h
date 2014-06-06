@@ -1,6 +1,4 @@
-#ifndef _HYDLA_OUTPUT_JSON_WRITER_H_
-#define _HYDLA_OUTPUT_JSON_WRITER_H_
-
+#pragma once
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -9,11 +7,12 @@
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "picojson.h"
+#include "HydLaAST.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
-class JsonWriter{
+class JsonReader{
 
   public:
 
@@ -26,18 +25,18 @@ class JsonWriter{
   typedef hydla::simulator::Simulator       simulator_t;
   typedef hydla::simulator::ValueRange      value_range_t;
   
-  void write(const simulator_t &simulator, std::string name);
+  /**
+   * read Json corresponding to one phase.
+   */
+  phase_result_sptr_t read_phase(const std::string &name);
+  phase_result_sptr_t read_phase(picojson::object &o);
   private:
-  picojson::value for_phase(const phase_result_const_sptr_t &phase);
-  picojson::value for_vm(const variable_map_t &vm); 
-  picojson::value for_range(const value_range_t &range); 
-  picojson::value for_vs(const variable_set_t &vs); 
-  picojson::value for_pm(const parameter_map_t &pm); 
-  picojson::value make_children(const phase_result_const_sptr_t &phase);
+  parser::HydLaAST ast;
+  variable_map_t read_vm(picojson::object &o); 
+  value_range_t read_range(picojson::object &o); 
+  parameter_map_t read_pm(picojson::object &o); 
 };
 
 
-}// output
-}// hydla
-
-#endif // include guard
+}
+}

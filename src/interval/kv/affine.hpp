@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2014 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef AFFINE_HPP
@@ -13,7 +13,6 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <vector>
-#include <map>
 #include <algorithm>
 
 #include <kv/interval.hpp>
@@ -21,6 +20,7 @@
 
 #include <kv/convert.hpp>
 
+#include <map> //added@hyrose
 
 /*
  * define simplicity of affine arithmetic
@@ -79,7 +79,7 @@ template <class T> class affine {
 
 	static int& maxnum() {
 		static int m = 0;
-		//#pragma omp threadprivate(m)
+		#pragma omp threadprivate(m)
 		return m;
 	}
 
@@ -645,7 +645,7 @@ template <class T> class affine {
 
 	friend affine operator*(const affine& x, const affine& y) {
 		affine r;
-		int i, xs, ys;
+		int i, j, xs, ys;
 		T err;
 		T tmp_u, tmp_l;
 
@@ -1228,6 +1228,60 @@ template <class T> class affine {
 		return r;
 	}
 
+	// lazy implementation of sin
+	friend affine sin(const affine& x) {
+		// return sin((interval<T>)(x.a(0))) + cos(to_interval(x)) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = sin((interval<T>)(x.a(0)));
+		r2 = cos(to_interval(x));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of cos
+	friend affine cos(const affine& x) {
+		// return cos((interval<T>)(x.a(0))) - sin(to_interval(x)) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = cos((interval<T>)(x.a(0)));
+		r2 = -sin(to_interval(x));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of tan 
+	friend affine tan(const affine& x) {
+		// return tan((interval<T>)(x.a(0))) + pow(cos(to_interval(x)), -2) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = tan((interval<T>)(x.a(0)));
+		r2 = pow(cos(to_interval(x)), -2);
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
 	friend std::ostream& operator<<(std::ostream& s, const affine& x) {
 		int i;
 
@@ -1296,14 +1350,14 @@ template <class T> class ep_reduce_v {
 	public:
 	ub::vector<T> v;
 	T score;
-  int index; /// modified: to identify intervalized dummy variables
+  int index; // added@hyrose to identify intervalized dummy variables
 	void calc_score() {
 		int s = v.size();
-		int i;
+		int i, j;
+
 		T m1, m2, tmp;
 		using std::abs;
-    // modified
-    if(s<2){score = abs(v(0)); return;}
+    if (s<2){score = abs(v(0)); return;} // added@hyrose
 		m1 = abs(v(0));
 		m2 = abs(v(1));
 		if (m2 > m1) {
@@ -1330,31 +1384,33 @@ template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* 
 #endif
 }
 
-/// modified @return map from original indices to indices after reduce (-1 means that the variable was reduced)
-template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
+//template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
+template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) { // modified@hyrose
 	int s = x.size();
 	int m = affine<T>::maxnum();
 	int i, j;
 	std::vector< ep_reduce_v<T> > a;
 	std::vector< ep_reduce_v<T>* > pa;
-  // modified
-  std::map<int, int> result_map;
-
 	ub::vector< affine<T> > r;
 	T tmp;
+  std::map<int, int> result_map; // added@hyrose
 
 	if (n_limit < n) n_limit = n;
 
-	if (m <= n_limit) return result_map;
+//	if (m <= n_limit) return;
+//	if (n < s) return; // impossible
+  // modified@hyrose
+	if (m <= n_limit) return result_map; 
 	if (n < s) return result_map; // impossible
+
 
 	a.resize(m);
 	pa.resize(m);
 
 	for (i=1; i<=m; i++) {
 		a[i-1].v.resize(s);
-    a[i-1].index = i;// modified
-    result_map.insert(std::make_pair(i, -1)); // modified: initialize
+    a[i-1].index = i;// added@hyrose
+    result_map.insert(std::make_pair(i, -1)); // added@hyrose
 		for (j=0; j<s; j++) {
 			a[i-1].v(j) = (i < x(j).a.size()) ? x(j).a(i) : (T)0.;
 		}
@@ -1375,10 +1431,10 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 		for (j=0; j<n-s; j++) {
 #ifdef EP_REDUCE_REVERSE
 			r(i).a(j+1) = pa[m-1-j]->v(i);
-      result_map[pa[m-1-j]->index] = j+1;//modified
+      result_map[pa[m-1-j]->index] = j+1; // added@hyrose
 #else
 			r(i).a(j+1) = pa[j]->v(i);
-      result_map[pa[j]->index] = j+1;//modified
+      result_map[pa[j]->index] = j+1; // added@hyrose
 #endif
 		}
 		tmp = 0.;
@@ -1406,7 +1462,7 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 	x = r;
 	affine<T>::maxnum() = n;
-  return result_map;
+  return result_map; //added@hyrose
 }
 
 

@@ -44,12 +44,12 @@ ParseTree::~ParseTree()
 
 void ParseTree::parse(std::istream& stream) 
 {
-  HYDLA_LOGGER_DEBUG("#*** Begin ParseTree::parse ***");
+  HYDLA_LOGGER_DEBUG("");
 
   // ASTの構築
   HydLaAST ast;
   ast.parse(stream);
-  HYDLA_LOGGER_DEBUG("--- AST Tree ---", ast);
+  HYDLA_LOGGER_DEBUG("--- AST Tree ---\n", ast);
   
 
   // ParseTreeの構築
@@ -67,7 +67,7 @@ void ParseTree::parse(std::istream& stream)
   analyer.analyze(node_tree_);
   update_node_id_list();
   HYDLA_LOGGER_DEBUG("--- Analyzed Parse Tree ---\n", *this);
-  HYDLA_LOGGER_DEBUG("#*** End ParseTree::parse ***\n");
+  HYDLA_LOGGER_DEBUG("");
 }
 
 void ParseTree::rebuild_node_id_list()

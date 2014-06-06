@@ -4,7 +4,7 @@
 #include "Types.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 /**
  * プロファイリング結果の出力を担当するクラス
