@@ -107,7 +107,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     //aho
-    if(opts_->epsilon_mode || true){
+    if(opts_->epsilon_mode>0 && false ){
       // todo
       // PhaseType                 phase_type;
       // int                       id;
@@ -287,6 +287,20 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
   {
     throw SimulateError("result variable map is not single.");
   }
+  if(opts_->epsilon_mode>0)
+  {
+    //aho
+    // std::cout << "create reslt : variable map" << std::endl;
+    // // phase->variable_map = cut_high_order_epsilon(backend_.get(),phase,opts_->epsilon_mode);
+    // for(vector<variable_map_t>::iterator c_it = create_result.begin(); c_it != create_result.end();c_it++){
+    //   std::cout << "test" << std::endl;
+    //   for(variable_map_t::iterator v_it = c_it->begin(); v_it != c_it->end(); v_it++)
+    //     {
+    //       std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
+    //     }
+    // }
+    //aho
+  }
   phase->variable_map = create_result[0];
 
   if(opts_->reuse && todo->module_set_container == msc_no_init_){
@@ -362,8 +376,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
     }
   }
 
-  if(opts_->epsilon_mode){
-    phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
+  if(opts_->epsilon_mode>0){
+    phase->variable_map = cut_high_order_epsilon(backend_.get(),phase,opts_->epsilon_mode);
   }
 
   result.push_back(phase);
@@ -1287,13 +1301,13 @@ PhaseSimulator::todo_list_t
     backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     //aho
-    std::cout<<"makenexttodo come here 1\n";
-    std::cout<<"phase->constraint_store"<<phase->constraint_store<<"\n";
-    std::cout << "variable map" << std::endl;
-    for(variable_map_t::iterator v_it = phase->variable_map.begin(); v_it != phase->variable_map.end(); v_it++)
-      {
-        std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
-      }
+    // std::cout<<"makenexttodo come here 1\n";
+    // std::cout<<"phase->constraint_store"<<phase->constraint_store<<"\n";
+    // std::cout << "variable map" << std::endl;
+    // for(variable_map_t::iterator v_it = phase->variable_map.begin(); v_it != phase->variable_map.end(); v_it++)
+    //   {
+    //     std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
+    //   }
     //aho
 
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
@@ -1416,7 +1430,7 @@ PhaseSimulator::todo_list_t
       }
     }
 
-    else if(opts_->epsilon_mode){
+    else if(opts_->epsilon_mode>0){
       time_result = pass_specific_case(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
       time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
     }

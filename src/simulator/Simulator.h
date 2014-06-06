@@ -38,7 +38,7 @@ struct Opts {
   std::string max_time;
   bool approx;
   bool cheby;
-  bool epsilon_mode;
+  int epsilon_mode;
   bool nd_mode;
   bool interactive_mode;
   bool use_unsat_core;
@@ -164,24 +164,24 @@ class TodoContainer
   {
     container_.push_back(todo);
   }
-  
+
   virtual simulation_todo_sptr_t pop_todo()
   {
     simulation_todo_sptr_t todo = container_.back();
     container_.pop_back();
     return todo;
   }
-  
+
   virtual bool empty()
   {
     return container_.empty();
   }
-  
+
   virtual int size()
   {
     return container_.size();
   }
-  
+
   protected:
   std::deque<simulation_todo_sptr_t> container_;
 };
@@ -192,10 +192,10 @@ typedef TodoContainer                                    todo_container_t;
 
 class Simulator
 {
-public:  
+public:
 
   Simulator(Opts& opts);
-  
+
   virtual ~Simulator();
 
   /**
@@ -203,15 +203,15 @@ public:
    * @return root of the tree which expresses the result-trajectories
    */
   virtual phase_result_const_sptr_t simulate() = 0;
-  
+
   virtual void initialize(const parse_tree_sptr& parse_tree);
-  
+
   /**
    * set the phase simulator which this simulator uses in each phase
    * @param ps a pointer to an instance of phase_simlulator_t (caller must not delete the instance)
    */
   virtual void set_phase_simulator(phase_simulator_t *ps);
-  
+
   void set_backend(backend_sptr_t back);
 
   /**
@@ -220,39 +220,39 @@ public:
   parameter_map_t get_parameter_map()const {return parameter_map_;}
 
   variable_set_t get_variable_set()const {return variable_set_;}
-  
+
   phase_result_sptr_t get_result_root() const {return result_root_;}
-  
+
   /**
    * push the initial state of simulation into the stack
    */
   virtual simulation_todo_sptr_t make_initial_todo();
-  
+
   /**
    * @return introduced parameter
    */
   parameter_t introduce_parameter(const variable_t &var, const phase_result_sptr_t& phase, const ValueRange &range);
   parameter_t introduce_parameter(const std::string &name, int differential_cnt, int id, const ValueRange &range);
   parameter_t introduce_parameter(const parameter_t &par, const ValueRange &range);
-  
+
   /**
-   * @return the result of profiling 
+   * @return the result of profiling
    */
   entire_profile_t get_profile(){return *profile_vector_;}
 
 
   // TODO: publicメンバが多すぎる気がする
-  
+
   /**
    * template of variable maps
    */
   variable_map_t original_map_;
-  
+
   /*
    * set of variables
    */
   variable_set_t variable_set_;
-  
+
   variable_t system_time_;
 
   /*
@@ -261,32 +261,32 @@ public:
   parameter_map_t parameter_map_;
 
   backend_sptr_t backend;
-  
+
 
 protected:
-  
+
   /**
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
-  
+
   void init_module_set_container(const parse_tree_sptr& parse_tree);
-  
+
   void reset_result_root();
 
 
   parse_tree_sptr parse_tree_;
-  
+
   /**
    * PhaseSimulator to use
-   */ 
+   */
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
 
   /**
    * a container for candidate module sets
    */
   module_set_container_sptr msc_original_;
-  
+
   /**
    * mcs_original_から非always制約を除いたもの
    */
@@ -297,7 +297,7 @@ protected:
    */
   boost::shared_ptr<entire_profile_t> profile_vector_;
 
-  /** 
+  /**
    * root of the tree of result trajectories
    */
   phase_result_sptr_t result_root_;
@@ -308,6 +308,6 @@ protected:
 };
 
 } //namespace simulator
-} //namespace hydla 
+} //namespace hydla
 
 #endif // _INCLUDED_HYDLA_SIMULATOR_H_

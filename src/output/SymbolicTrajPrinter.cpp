@@ -286,5 +286,54 @@ void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Ba
   }
 }
 
+// void SymbolicTrajPrinter::result_tree_diff(phase_result_const_sptr_t& root)
+// {
+//   if(root->children.size() == 0){
+//     return;
+//   }
+//   phase_result_sptrs_t::const_iterator it = root->children.begin(), end = root->children.end();
+//   for(;it!=end;it++){
+//     result_node_diff(*it);
+//   }
+// }
+// void SymbolicTrajPrinter::result_node_diff(phase_result_sptr_t &node)
+// {
+//   (*node).variable_map = diff_variable_map(node,backend_.get());
+
+//   if(node->children.size() != 0){
+//     phase_result_sptrs_t::iterator it = node->children.begin(), end = node->children.end();
+//     for(;it!=end;it++){
+//       result_node_diff(*it);
+//     }
+//   }
+// }
+
+// variable_map_t SymbolicTrajPrinter::diff_variable_map(phase_result_sptr_t& node, Backend* backend_){
+//   variable_map_t vm_ret;
+//   variable_map_t vm = (*node).variable_map;
+//   variable_map_t::iterator it  = vm.begin();
+//   variable_map_t::iterator end = vm.end();
+//   simulator::value_t ret;
+//   simulator::value_t tmp;
+//   it  = vm.begin();
+//   for(; it!=end; ++it)
+//   {
+//       if(it->second.undefined())
+//       {
+//           vm_ret[it->first] = it->second;
+//       }
+//       else if(it->second.unique())
+//       {
+//           simulator::value_t ret;
+//           simulator::value_t val = it->second.get_unique();
+//           range_t& range = vm_ret[it->first];
+//           backend_->call("diffEpsilon", 1, "vln", "vl", &val, &ret);
+//           range.set_unique(ret);
+//       }
+//   }
+//   return vm_ret;
+// }
+
+
 } // output
 } // hydla

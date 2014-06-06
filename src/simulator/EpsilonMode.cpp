@@ -10,7 +10,7 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 
 //n次近似
-#define DIFFCNT 1
+// #define DIFFCNT 1
 // #define _DEBUG_CUT_HIGH_ORDER
 // #define _DEBUG_REDUCE_UNSUIT
 // #define _DEBUG_PASS_SPECIFIC_CASE
@@ -66,7 +66,7 @@ using hydla::simulator::IntervalPhase;
 using hydla::simulator::PointPhase;
 using hydla::simulator::VariableFinder;
 
-variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sptr_t& phase)
+variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sptr_t& phase, int diffcnt)
 {
   variable_map_t vm_ret;
   bool have_eps = false;
@@ -89,10 +89,10 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
 #ifdef _DEBUG_CUT_HIGH_ORDER
       std::cout << "parameter eps Find!!"  << std::endl;
 #endif
-      int differential_times = DIFFCNT; // のこす次数
+      //int differential_times = DIFFCNT; // のこす次数
       have_eps = true;
       value_t time_ret;
-      backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &phase->current_time, &p_it->first, &differential_times, &time_ret);
+      backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &phase->current_time, &p_it->first, &diffcnt, &time_ret);
       phase->current_time = time_ret;
      for(variable_map_t::iterator v_it = phase->variable_map.begin();v_it!=phase->variable_map.end();v_it++)
       {
@@ -108,7 +108,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
 #ifdef _DEBUG_CUT_HIGH_ORDER
           std::cout << v_it->first << "\t: " << val;
 #endif
-          backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
+          backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &diffcnt, &ret);
 #ifdef _DEBUG_CUT_HIGH_ORDER
           std::cout << "\n ->\t: " << ret << std::endl;
 #endif
@@ -123,7 +123,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
             ValueRange::bound_t bd = v_it->second.get_lower_bound(i);
             value_t val = bd.value;
             value_t ret;
-            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
+            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &diffcnt, &ret);
             range.set_lower_bound(ret, bd.include_bound);
           }
           for(uint i = 0; i < range.get_upper_cnt(); i++)
@@ -131,7 +131,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
             ValueRange::bound_t bd = v_it->second.get_upper_bound(i);
             value_t val = bd.value;
             value_t ret;
-            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
+            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &diffcnt, &ret);
             range.set_upper_bound(ret, bd.include_bound);
           }
           vm_ret[v_it->first] = range;

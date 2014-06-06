@@ -63,6 +63,7 @@ findMinTimeTest[causeAndID_, condition_] :=
   Module[
          {
            id,
+           tmp,
            cause,
            minT,
            ret
@@ -71,22 +72,33 @@ findMinTimeTest[causeAndID_, condition_] :=
          cause = causeAndID[[1]];
          debugPrint["# In EPSILON MODE # : causeAndID[[1]] ", causeAndID[[1]]];
          debugPrint["# In EPSILON MODE # : causeAndID[[2]] ", causeAndID[[2]]];
+         tmp = cause && condition && t > 0;
+         debugPrint["# In EPSILON MODE # : sol before Reduce", tmp];
+         debugPrint["# In EPSILON MODE # : Reals", Reals];
          sol = Reduce[cause && condition && t > 0, t, Reals];
          checkMessage[];
          If[sol === False, Return[{}] ];
          (* 成り立つtの最小値を求める *)
+         debugPrint["# In EPSILON MODE # : get Min t of sol", sol];
          minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
          debugPrint["# In EPSILON MODE # : minT ", minT];
          ret = makeListFromPiecewise[minT, condition];
          (* 時刻が0となる場合を取り除く．*)
          ret = Select[ret, (#[[1]] =!= 0)&];
-         (* ret = Select[ret, (Limit[#[[1]], p[peps, 0, 1] -> 0] =!= 0)&]; *)
+         If[False,
+            ret = nextPPTimeShift[ret];
+            ];
          (* append id for each time *)
          ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
          debugPrint["# In EPSILON MODE # : FindMinTime result ", ret];
          ret
          ];
 
+nextPPTimeShift[ret_] :=
+  Module[
+         {head,isNotZero,shift,result}
+         isNotZero = Limit[#[[1]], p[peps, 0, 1] -> 0] =!= 0;
+         ];
 
 (* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
 compareMinTimeListTest[list1_, list2_] := ( Block[
@@ -244,4 +256,16 @@ publicMethod[
              arg,
              debugPrint["limitEpsilonM arg",arg];
              toReturnForm[Limit[arg, p[eps, 0, 1] -> 0,Direction->1]]
+             ];
+
+publicMethod[
+             diffEpsilon,
+             arg,
+             Module[
+                    {tmp,ret},
+                    debugPrint["diffEpsilonP arg",arg];
+                    tmp = arg /. p[eps, 0, 1] -> 0;
+                    ret = Reduce[arg - tmp];
+                    toReturnForm[ret]
+                    ]
              ];

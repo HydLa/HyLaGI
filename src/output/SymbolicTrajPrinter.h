@@ -36,6 +36,9 @@ public:
   bool epsilon_mode_flag = false;
   void output_limit_of_time(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result) const;
   void output_limits_of_variable_map(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const;
+  /* void result_tree_diff(phase_result_const_sptr_t& root); */
+  /* void result_node_diff(phase_result_sptr_t &node); */
+  /* variable_map_t diff_variable_map(phase_result_sptr_t& node, backend::Backend* backend_); */
 
 private:
 

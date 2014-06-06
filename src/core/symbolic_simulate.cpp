@@ -54,7 +54,7 @@ void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
   hydla::output::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
-  if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_, false);}
+  if(opts.epsilon_mode>0){Printer.set_epsilon_mode(backend_, false);}
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
@@ -82,6 +82,34 @@ void output_result(Simulator& ss, Opts& opts){
   }
   JsonWriter writer;
   writer.write(*simulator_, of_name);
+
+  //aho
+  // std::string of_name = po.get<string>("output_name");
+  // if(of_name.empty())
+  //   {
+  //     const std::string hydat_dir = "./hydat/";
+  //     if(po.count("input-file"))
+  //       {
+  //         std::string if_name = po.get<string>("input-file");
+  //         of_name = hydat_dir + get_file_without_ext(if_name) + ".hydat";
+  //       }
+  //     else
+  //       {
+  //         of_name = hydat_dir + "no_name.hydat";
+  //       }
+  //     struct stat st;
+  //     int ret = stat(hydat_dir.c_str(), &st);
+  //     if(ret == -1)
+  //       {
+  //         mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  //       }
+  //   }
+  // JsonWriter writer;
+  // writer.write(*simulator_, of_name);
+
+  // Printer.output_parameter_map(ss.get_parameter_map());
+  //Printer.result_tree_diff(ss.get_result_root());
+  //aho
 
   if(po.get<std::string>("tm") == "s") {
     hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
@@ -120,7 +148,8 @@ void setup_simulator_opts(Opts& opts)
   opts.reuse = po.count("reuse")>0;
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
-  opts.epsilon_mode = po.count("epsilon")>0;
+  // opts.epsilon_mode = po.count("epsilon")>0;
+  opts.epsilon_mode = po.get<int>("epsilon");
   /*
   opts.output_interval = po.get<std::string>("output_interval");
   opts.output_precision = po.get<int>("output_precision");
@@ -174,7 +203,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     backend.reset(new Backend(reduce_link));
   }
 
-  if(opts.epsilon_mode){backend_ = backend;}
+  if(opts.epsilon_mode>0){backend_ = backend;}
 
   if(opts.interactive_mode)
   {
