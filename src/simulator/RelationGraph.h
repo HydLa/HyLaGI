@@ -74,7 +74,7 @@ public:
   /**
    * Set the constraint expanded or not
    */ 
-  void set_expanded(constraint_t &cons, bool expanded);
+  void set_expanded(constraint_t cons, bool expanded);
   
   /**
    * Get the number of connected component in the graph.
@@ -95,7 +95,7 @@ public:
    * @parameter constraints for output
    * @parameter modules for output
    */
-  void get_related_constraints(const constraint_t &constraint, constraints_t &constraints,
+  void get_related_constraints(constraint_t constraint, constraints_t &constraints,
                                module_set_t &modules);
 
 
@@ -134,11 +134,17 @@ private:
   void visit(boost::shared_ptr<symbolic_expression::Greater> node);
   void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
   void visit(boost::shared_ptr<symbolic_expression::Ask> node);
-  void add_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
+  void visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
 
   var_nodes_t variable_nodes;
   constraint_nodes_t constraint_nodes;
   module_t current_module;
+
+  typedef enum{
+    EXPANDING,
+    UNEXPANDING,
+    ADDING
+  }VisitMode;
   
   std::vector<constraints_t> connected_constraints_vector;
   std::vector<module_set_t> connected_modules_vector;
@@ -146,6 +152,7 @@ private:
   std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
   std::map<constraint_t, ConstraintNode*> constraint_node_map;
   std::map<Variable, VariableNode*> variable_node_map;
+  VisitMode visit_mode;
 };
 
 } //namespace simulator

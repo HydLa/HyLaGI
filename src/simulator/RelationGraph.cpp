@@ -23,6 +23,7 @@ RelationGraph::~RelationGraph()
 void RelationGraph::add(module_t &mod)
 {
   current_module = mod;
+  visit_mode = ADDING;
   accept(mod.second);
   up_to_date = false;
 }
@@ -70,7 +71,7 @@ void RelationGraph::initialize_node_visited()
   }
 }
 
-void RelationGraph::get_related_constraints(const constraint_t &constraint, constraints_t &constraints, module_set_t &module_set){
+void RelationGraph::get_related_constraints(constraint_t constraint, constraints_t &constraints, module_set_t &module_set){
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -179,9 +180,10 @@ void RelationGraph::set_adopted(module_set_t *ms)
 }
 
 
-void RelationGraph::set_expanded(constraint_t &cons, bool expanded)
+void RelationGraph::set_expanded(constraint_t cons, bool expanded)
 {
-  constraint_node_map[cons]->expanded = expanded;
+  visit_mode = expanded?EXPANDING:UNEXPANDING;
+  accept(cons);
   up_to_date = false;
 }
 
@@ -205,54 +207,67 @@ RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 }
 
 
-void RelationGraph::add_node(boost::shared_ptr<symbolic_expression::BinaryNode> node)
+void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node)
 {
-  VariableFinder finder;
-  finder.visit_node(node);
-  VariableFinder::variable_set_t variables;
-  variables = finder.get_all_variable_set();
-
-  ConstraintNode*& cons = constraint_node_map[node];
-  if(cons == NULL){
-    cons = new ConstraintNode(node, current_module);
-    constraint_nodes.push_back(cons);
-    module_constraint_nodes_map[current_module].push_back(cons);
-  }
-  for(auto variable : variables)
+  if(visit_mode == ADDING)
   {
-    VariableNode*& var_node = variable_node_map[variable];
-    if(var_node == NULL){
-      var_node = new VariableNode(variable);
-      variable_nodes.push_back(var_node);
+    VariableFinder finder;
+    finder.visit_node(node);
+    VariableFinder::variable_set_t variables;
+    variables = finder.get_all_variable_set();
+
+    ConstraintNode*& cons = constraint_node_map[node];
+    if(cons == NULL){
+      cons = new ConstraintNode(node, current_module);
+      constraint_nodes.push_back(cons);
+      module_constraint_nodes_map[current_module].push_back(cons);
     }
-    cons->edges.push_back(var_node);
-    var_node->edges.push_back(cons);
+    for(auto variable : variables)
+    {
+      VariableNode*& var_node = variable_node_map[variable];
+      if(var_node == NULL){
+        var_node = new VariableNode(variable);
+        variable_nodes.push_back(var_node);
+      }
+      cons->edges.push_back(var_node);
+      var_node->edges.push_back(cons);
+    }
+  }
+  else if(visit_mode == EXPANDING)
+  {
+    assert(constraint_node_map[node] != nullptr);
+    constraint_node_map[node]->expanded = true;
+  }
+  else if(visit_mode == UNEXPANDING)
+  {
+    assert(constraint_node_map[node] != nullptr);
+    constraint_node_map[node]->expanded = false;
   }
 }
 
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Equal> node)
 {
-  add_node(node);
+  visit_binary_node(node);
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::UnEqual> node)
 {
-  add_node(node);
+  visit_binary_node(node);
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Less> node)
 {
-  add_node(node);
+  visit_binary_node(node);
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LessEqual> node)
 {
-  add_node(node);
+  visit_binary_node(node);
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Greater> node)
 {
-  add_node(node);
+  visit_binary_node(node);
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node)
 {
-  add_node(node);
+  visit_binary_node(node);
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> node)
 {
