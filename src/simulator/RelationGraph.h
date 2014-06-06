@@ -15,7 +15,6 @@ class RelationGraph: public symbolic_expression::DefaultTreeVisitor{
 
 public:
   typedef hierarchy::ModuleSet module_set_t;
-  typedef hierarchy::module_set_sptr module_set_sptr;
   typedef hierarchy::ModuleSet::module_t module_t;
   typedef std::set<Variable, VariableComparator> variable_set_t;  
   typedef symbolic_expression::node_sptr constraint_t;
@@ -89,7 +88,16 @@ public:
    * @parameter modules for output
    */
   void get_related_constraints(const Variable &variable, constraints_t &constraints,
-                               module_set_sptr &modules);
+                               module_set_t &modules);
+
+  /**
+   * Get constraints and modules related to given variable
+   * @parameter constraints for output
+   * @parameter modules for output
+   */
+  void get_related_constraints(const constraint_t &constraint, constraints_t &constraints,
+                               module_set_t &modules);
+
 
   /**
    * Get constraints corresponding to the connected component specified by index.
@@ -99,7 +107,7 @@ public:
   /**
    * Get a ModuleSet included by the connected component specified by index.
    */ 
-  module_set_sptr get_modules(unsigned int index);  
+  module_set_t get_modules(unsigned int index);  
 
   /**
    * Get constraints which related to given variables
@@ -115,7 +123,8 @@ private:
   
   void check_connected_components();
   void visit_node(ConstraintNode* node, constraints_t &constraints, module_set_t &ms);
-  void visit_edges(ConstraintNode* node, constraints_t &constraint, module_set_t &ms);
+  void visit_node(VariableNode* node, constraints_t &constraint, module_set_t &ms);
+  void initialize_node_visited();
  
 
   void visit(boost::shared_ptr<symbolic_expression::Equal> node);

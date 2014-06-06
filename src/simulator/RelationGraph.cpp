@@ -63,33 +63,53 @@ string RelationGraph::ConstraintNode::get_name() const
   return ret + " (" + module.first + ")";
 }
 
-
-
-void RelationGraph::get_related_constraints(const Variable &var, constraints_t &constraints, module_set_sptr &module_set){
+void RelationGraph::initialize_node_visited()
+{
   for(auto constraint_node : constraint_nodes){
     constraint_node->visited = !constraint_node->module_adopted || !constraint_node->expanded;
   }
+}
 
-  VariableNode &var_node = *variable_node_map[var];
-  module_set_t ms;
-  for(auto constraint_node : var_node.edges)
+void RelationGraph::get_related_constraints(const constraint_t &constraint, constraints_t &constraints, module_set_t &module_set){
+  initialize_node_visited();
+  constraints.clear();
+  module_set.clear();
+  auto constraint_it = constraint_node_map.find(constraint);
+  if(constraint_it == constraint_node_map.end())
   {
-    if(!constraint_node->visited){
-      visit_node(constraint_node, constraints, ms);
-      connected_constraints_vector.push_back(constraints);
-      connected_modules_vector.push_back(ms);
+    VariableFinder finder;
+    finder.visit_node(constraint);
+    VariableFinder::variable_set_t variables;
+    variables = finder.get_all_variable_set();
+    for(auto variable : variables)
+    {
+      VariableNode *var_node = variable_node_map[variable];
+      visit_node(var_node, constraints, module_set);
     }
   }
-  module_set.reset(new module_set_t(ms));
+  else
+  {
+    ConstraintNode *constraint_node = constraint_it->second;
+    visit_node(constraint_node, constraints, module_set);
+  }
+}
+
+
+void RelationGraph::get_related_constraints(const Variable &var, constraints_t &constraints, module_set_t &module_set){
+  initialize_node_visited();
+  constraints.clear();
+  module_set.clear();
+  VariableNode *var_node = variable_node_map[var];
+  assert(var_node != nullptr);
+  visit_node(var_node, constraints, module_set);
 }
 
 
 void RelationGraph::check_connected_components(){
   connected_constraints_vector.clear();
   connected_modules_vector.clear();
-  for(auto constraint_node : constraint_nodes){
-    constraint_node->visited = !constraint_node->module_adopted || !constraint_node->expanded;
-  }
+  initialize_node_visited();
+
 
   for(auto constraint_node : constraint_nodes){
     module_set_t ms;
@@ -108,17 +128,17 @@ void RelationGraph::visit_node(ConstraintNode* node, constraints_t &constraints,
     node->visited = true;
     ms.add_module(node->module);
     constraints.insert(node->constraint);
-    visit_edges(node, constraints, ms);
+    for(auto var_node : node->edges)
+    {
+      visit_node(var_node, constraints, ms);
+    }
   }
 }
 
-void RelationGraph::visit_edges(ConstraintNode* node, constraints_t &constraints, module_set_t &ms){
-  for(auto var_node : node->edges)
+void RelationGraph::visit_node(VariableNode* node, constraints_t &constraints, module_set_t &ms){
+  for(auto constraint_node : node->edges)
   {
-    for(auto constraint_node : var_node->edges)
-    {
-      visit_node(constraint_node, constraints, ms);
-    }
+    visit_node(constraint_node, constraints, ms);
   }
 }
 
@@ -175,13 +195,13 @@ RelationGraph::constraints_t RelationGraph::get_constraints(unsigned int index)
   return connected_constraints_vector[index];
 }
 
-RelationGraph::module_set_sptr RelationGraph::get_modules(unsigned int index)
+RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
   if(!up_to_date){
     check_connected_components();
   }
   assert(index < connected_modules_vector.size());
-  return boost::shared_ptr<module_set_t>(new module_set_t(connected_modules_vector[index]));
+  return connected_modules_vector[index];
 }
 
 

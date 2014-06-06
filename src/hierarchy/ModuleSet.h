@@ -65,6 +65,12 @@ public:
    return module_list_.end();
   }
 
+  void clear() 
+  {
+    module_list_.clear();
+  }
+
+
   /**
    * 集合の要素の数
    */

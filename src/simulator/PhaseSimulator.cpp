@@ -167,7 +167,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
   {
     int connected_count = relation_graph_->get_connected_count();
     for(int i = 0; i < connected_count; i++){
-      module_set_sptr connected_ms = relation_graph_->get_modules(i);
+      module_set_sptr connected_ms = module_set_sptr(new RelationGraph::module_set_t(relation_graph_->get_modules(i)));
       HYDLA_LOGGER_DEBUG("\n--- connected module set", i + 1, "/", connected_count, " ---\n", connected_ms->get_infix_string());
       HYDLA_LOGGER_DEBUG_VAR(store);
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
