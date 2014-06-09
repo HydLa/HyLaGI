@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_TREE_VISITOR_H_
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -136,4 +135,3 @@ public:
 } //namespace symbolic_expression
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_TREE_VISITOR_H_

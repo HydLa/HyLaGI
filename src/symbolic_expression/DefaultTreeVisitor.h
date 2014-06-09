@@ -1,6 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_DEFAULT_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_DEFAULT_TREE_VISITOR_H_
-
+#pragma once
 
 #include "TreeVisitor.h"
 
@@ -124,4 +122,3 @@ public:
 } //namespace symbolic_expression
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_DEFAULT_TREE_VISITOR_H_

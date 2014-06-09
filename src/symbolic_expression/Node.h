@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_NODE_H_
-#define _INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_NODE_H_
+#pragma once
 
 #include <ostream>
 #include <string>
@@ -1674,4 +1673,3 @@ private:
 } //namespace symbolic_expression
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_SYMBOLIC_EXPRESSION_NODE_H_

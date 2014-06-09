@@ -1,14 +1,9 @@
 #include "Node.h"
 
 #include <assert.h>
-#include <algorithm>
-#include <typeinfo>
-
-#include <boost/bind.hpp>
 
 #include "ParseError.h"
 #include "BaseNodeVisitor.h"
-#include "TreeVisitor.h"
 #include "TreeInfixPrinter.h"
 #include "Logger.h"
 
