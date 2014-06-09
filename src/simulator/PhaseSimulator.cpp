@@ -25,8 +25,6 @@
 #include "TimeModifier.h"
 
 #include "Backend.h"
-#include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
 
 namespace hydla
 {
@@ -37,8 +35,6 @@ using namespace std;
 using namespace boost;
 using namespace backend;
 
-using namespace backend::mathematica;
-using namespace backend::reduce;
 using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
@@ -380,7 +376,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   module_set_container = msc;
   relation_graph_ = relation;
   prev_guards_ = prev_guards;
-
   
   backend_->set_variable_set(*variable_set_);
   variable_derivative_map_ = c;
@@ -585,7 +580,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   TellCollector tell_collector(ms);
   AskCollector  ask_collector(ms);
   tells_t         tell_list;
-  ConstraintStore   constraint_list;
   ConsistencyChecker consistency_checker(backend_);
 
   continuity_map_t continuity_map;
@@ -627,8 +621,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     timer::Timer consistency_timer;
 
-    constraint_list.clear();
-
     maker.reset();
 
     for(auto tell : tell_list){
@@ -641,17 +633,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         {
           continue;
         }
+        // TODO: 何やってるか確認
       }
-      constraint_list.add_constraint(tell);
-    }
-
-    for(auto constraint : state->initial_constraint_store){
-      constraint_list.add_constraint(constraint);
     }
 
     {
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker.check_consistency(constraint_list, state->phase_type);
+      cc_result = consistency_checker.check_consistency(*relation_graph_, state->phase_type);
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
@@ -789,13 +777,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
     {
       // 分岐先を生成（導出される方）
+      // TODO: 分岐時の制約の追加をしていない。
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
-      new_todo->initial_constraint_store.add_constraint((branched_ask)->get_guard());
       todo_container_->push_todo(new_todo);
     }
     {
       // 分岐先を生成（導出されない方）
-      state->initial_constraint_store.add_constraint(symbolic_expression::node_sptr(new Not((branched_ask)->get_guard())));
+      // TODO: 分岐時の制約の追加をしていない。
       negative_asks.insert(branched_ask);
       return calculate_closure(state, ms);
     }
