@@ -1,6 +1,5 @@
 #include "Backend.h"
 #include <stdarg.h>
-#include "LinkError.h"
 #include "InterfaceError.h"
 #include <sstream>
 #include <boost/lexical_cast.hpp>

@@ -1,8 +1,6 @@
 #include "REDUCELink.h"
 #include "reduce_source.h"
 #include "Logger.h"
-#include <sstream>
-#include "sexp/SExpGrammar.h"
 #include "LinkError.h"
 
 using namespace std;

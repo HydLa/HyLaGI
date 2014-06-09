@@ -1,9 +1,4 @@
-#include "Logger.h"
 #include "REDUCELinkTelnet.h"
-#include <boost/asio.hpp>
-#include <fstream>
-#include <iostream>
-#include <string>
 
 namespace hydla {
 namespace backend {
