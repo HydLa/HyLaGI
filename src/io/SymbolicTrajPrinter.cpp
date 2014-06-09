@@ -33,17 +33,16 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     if(result.module_set != nullptr)sstr << result.module_set->get_name() << endl;
     sstr << "t\t: " << result.current_time << "\n";
   }
-/*
-  if(opts->epsilon_mode){
+
+  if(epsilon_mode_flag){
     output_limit_of_time(sstr,backend.get(),result);
   }
-*/
+
   output_variable_map(sstr, result.variable_map);
-/*
-  if(opts->epsilon_mode){
+
+  if(epsilon_mode_flag){
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
   }
-*/
   return sstr.str();
 }
 
@@ -179,9 +178,9 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
   }
 }
 
-void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,Opts *op){
+void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,bool flag){
   backend = back;
-  opts = op;
+  epsilon_mode_flag = flag;
 }
 
 void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* backend, const phase_result_t& result) const
@@ -192,7 +191,7 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
 
   if(result.phase_type == IntervalPhase)
   {
-    if(!result.end_time.undefined())
+    if(!result.end_time.undefined() && !result.current_time.undefined())
     {
       tmp_current_time = result.current_time.get_node();
       tmp_end_time = result.end_time.get_node();
@@ -215,7 +214,7 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
         stream << "Limit(t)\t- : " << ret_current_time << "->" << ret_end_time << "\n";
       }
     }
-    else
+    else if(!result.current_time.undefined())
     {
       tmp_current_time = result.current_time.get_node();
       backend->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
@@ -235,24 +234,27 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
   }
   else
   {
-    tmp_current_time = result.current_time.get_node();
-    backend->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
-    if(check_result == 1)
+    if(!result.current_time.undefined())
     {
-      backend->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
-      stream << "Limit(t)\t: " << ret_current_time << "\n";
-    }
-    else
-    {
-      backend->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
-      stream << "Limit(t)\t+ : " << ret_current_time << "\n";
-      backend->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
-      stream << "Limit(t)\t- : " << ret_current_time << "\n";
+      tmp_current_time = result.current_time.get_node();
+      backend->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+      if(check_result == 1)
+      {
+        backend->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(t)\t: " << ret_current_time << "\n";
+      }
+      else
+      {
+        backend->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(t)\t+ : " << ret_current_time << "\n";
+        backend->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        stream << "Limit(t)\t- : " << ret_current_time << "\n";
+      }
     }
   }
 }
 
-void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Backend* backend, const phase_result_t& result, const variable_map_t& vm) const
+  void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Backend* backend, const phase_result_t& result, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
