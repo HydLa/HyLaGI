@@ -55,7 +55,7 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
   timer::Timer phase_timer;
   result_list_t result;
 
-  todo->module_set_container->reset(todo->ms_to_visit);
+  module_set_container->reset(todo->ms_to_visit);
 
   if(todo_cont == NULL)
   {
@@ -68,7 +68,7 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
       result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
       if(tmp_cont.empty())break;
       tmp_todo = tmp_cont.pop_todo();
-      tmp_todo->module_set_container->reset(tmp_todo->ms_to_visit);
+      module_set_container->reset(tmp_todo->ms_to_visit);
     }
   }
   else
@@ -94,7 +94,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   if(todo->phase_type == PointPhase)
   {
     set_simulation_mode(PointPhase);
-    if(todo->module_set_container == msc_no_init_)
+    if(todo->parent != result_root)
     {
       // if it's not in first phases, judge entailment of the prev guards in advance
       for(auto prev_guard : prev_guards_)
@@ -129,9 +129,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     set_simulation_mode(IntervalPhase);
   }
 
-  while(todo->module_set_container->go_next())
+  while(module_set_container->go_next())
   {
-    module_set_sptr ms = todo->module_set_container->get_module_set();
+    module_set_sptr ms = module_set_container->get_module_set();
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
@@ -170,7 +170,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
 
   backend_->call("resetConstraintForVariable", 0, "", "");
 
-  if(todo->module_set_container != msc_no_init_)
+  if(todo->parent != result_root)
   {
     ConstraintStore sub_store =
       calculate_constraint_store(ms, todo);
@@ -182,7 +182,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     else
     {
       HYDLA_LOGGER_DEBUG("INCONSISTENT");
-      todo->module_set_container->mark_nodes(todo->maximal_mss, *ms);
+      module_set_container->mark_nodes(todo->maximal_mss, *ms);
       return result;
     }
   }
@@ -219,16 +219,16 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
             for( auto it : *connected_ms ){
               if(has_variables(it.second,todo->changing_variables,false)) changed_ms->add_module(it);
             }
-            todo->module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
+            module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
           }
-          else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
+          else module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           return result;
         }
       }
     }
   }
-  todo->module_set_container->mark_nodes();
-  if(!(opts_->nd_mode || opts_->interactive_mode)) todo->module_set_container->reset(module_set_list_t());
+  module_set_container->mark_nodes();
+  if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_list_t());
   todo->maximal_mss.push_back(ms);
 
   phase_result_sptr_t phase = make_new_phase(todo, store);
@@ -252,7 +252,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   }
   phase->variable_map = create_result[0];
 
-  if(opts_->reuse && todo->module_set_container == msc_no_init_){
+  if(opts_->reuse && todo->parent != result_root){
     set_changed_variables(phase);
     if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
     {
@@ -369,41 +369,19 @@ void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
                                 continuity_map_t& c,
-                                parse_tree_sptr pt,
-                                const module_set_container_sptr &msc_no_init)
+                                module_set_container_sptr &msc,
+                                boost::shared_ptr<RelationGraph> &relation,
+                                ask_set_t &prev_guards)
 {
   variable_set_ = &v;
   parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
-  parse_tree_ = pt;
-  msc_no_init_ = msc_no_init;
-  const simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
+  module_set_container = msc;
+  relation_graph_ = relation;
+  prev_guards_ = prev_guards;
 
-  relation_graph_.reset(new RelationGraph(*ms));
-
-  if(opts_->dump_relation){
-    relation_graph_->dump_graph(std::cout);
-    exit(EXIT_SUCCESS);
-  }
-
-  AskCollector ac(ms);
-  always_set_t eat;
-  positive_asks_t pat;
-  negative_asks_t nat;
-
-  // search prev guards
-  ac.collect_ask(&eat, &pat, &nat, &prev_guards_);
-  PrevSearcher searcher;
-  for(auto it = prev_guards_.begin(); it != prev_guards_.end();){
-    if(!searcher.search_prev((*it)->get_guard())){
-      prev_guards_.erase(it++);
-    }else{
-      it++;
-    }
-  }
-
-
+  
   backend_->set_variable_set(*variable_set_);
   variable_derivative_map_ = c;
 }
@@ -719,7 +697,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       while(it!=end)
       {
         if(state->phase_type == PointPhase){
-          if(state->module_set_container != msc_no_init_ && PrevSearcher().search_prev((*it)->get_guard())){
+          if(state->parent == result_root && PrevSearcher().search_prev((*it)->get_guard())){
             // in initial state, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
@@ -1119,9 +1097,8 @@ PhaseSimulator::todo_list_t
   todo_list_t ret;
 
   simulation_todo_sptr_t next_todo(new SimulationTodo());
-  next_todo->module_set_container = msc_no_init_;
   next_todo->parent = phase;
-  next_todo->ms_to_visit = next_todo->module_set_container->get_full_ms_list();
+  next_todo->ms_to_visit = module_set_container->get_full_ms_list();
   next_todo->expanded_always = phase->expanded_always;
   next_todo->parameter_map = phase->parameter_map;
 

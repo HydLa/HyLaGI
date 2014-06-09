@@ -97,7 +97,6 @@ public:
   hydla::hierarchy::module_set_sptr module_set;
 
   change_variables_t changed_variables;
-  module_set_container_sptr module_set_container;
 
   CauseForTermination cause_for_termination;
   /// A set of succeeding phases

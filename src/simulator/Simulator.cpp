@@ -1,12 +1,12 @@
 #include "Simulator.h"
 #include "PhaseSimulator.h"
 #include "Backend.h"
-#include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
 #include "ValueRange.h"
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
 #include "AffineApproximator.h"
+#include "AskCollector.h"
+#include "PrevSearcher.h"
 
 #include <iostream>
 #include <string>
@@ -15,8 +15,6 @@
 
 using namespace std;
 using namespace hydla::backend;
-using namespace hydla::backend::mathematica;
-using namespace hydla::backend::reduce;
 
 namespace hydla{
 namespace simulator{
@@ -58,9 +56,44 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
+
+
+
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
+
+  const simulator::module_set_sptr ms = module_set_container_->get_max_module_set();
+
+  relation_graph_.reset(new RelationGraph(*ms));
+
+  
+
+  AskCollector ac(ms);
+  always_set_t eat;
+  positive_asks_t pat;
+  negative_asks_t nat;
+  ask_set_t prev_guards_;
+
+  // search prev guards
+  ac.collect_ask(&eat, &pat, &nat, &prev_guards_);
+  PrevSearcher searcher;
+  for(auto it = prev_guards_.begin(); it != prev_guards_.end();){
+    if(!searcher.search_prev((*it)->get_guard())){
+      prev_guards_.erase(it++);
+    }else{
+      it++;
+    }
+  }
+
+
+  if(opts_->dump_relation){
+    relation_graph_->dump_graph(std::cout);
+    exit(EXIT_SUCCESS);
+  }
+
   phase_simulator_->initialize(variable_set_, parameter_map_,
-                               original_map_, vm, parse_tree_, msc_no_init_);
+                               original_map_, vm, module_set_container_, relation_graph_, prev_guards_);
+  phase_simulator_->result_root = result_root_;
+
   profile_vector_.reset(new entire_profile_t());
   //  if(opts_->analysis_mode == "simulate"||opts_->analysis_mode == "cmmap") phase_simulator_->init_arc(parse_tree);
 }
@@ -76,21 +109,19 @@ void Simulator::reset_result_root()
 void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {    
   ModuleSetContainerInitializer::init<hierarchy::IncrementalModuleSet>(
-      parse_tree, msc_original_, msc_no_init_, parse_tree_);
+      parse_tree, module_set_container_);
 }
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
   typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
 
-  vmci it  = parse_tree->variable_map_begin();
-  vmci end = parse_tree->variable_map_end();
-  for(; it != end; ++it)
+  for(auto entry : parse_tree->get_variable_map())
   {
-    for(int d=0; d<=it->second; ++d)
+    for(int d = 0; d <= entry.second; ++d)
     {
       variable_t v;
-      v.name             = it->first;
+      v.name               = entry.first;
       v.differential_count = d;
       variable_set_.insert(v);
       original_map_[v] = ValueRange();
@@ -127,8 +158,7 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   todo->elapsed_time = 0;
   todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
-  todo->module_set_container = msc_original_;
-  todo->ms_to_visit = msc_original_->get_full_ms_list();
+  todo->ms_to_visit = module_set_container_->get_full_ms_list();
   todo->maximal_mss.clear();
   todo->parent = result_root_;
   return todo;

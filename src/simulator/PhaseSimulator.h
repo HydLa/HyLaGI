@@ -44,7 +44,7 @@ public:
   void set_break_condition(symbolic_expression::node_sptr break_cond);
   symbolic_expression::node_sptr get_break_condition();
 
-  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc);
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, module_set_container_sptr& msc, boost::shared_ptr<RelationGraph> &relation_graph, ask_set_t &prev_guards);
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
@@ -58,7 +58,6 @@ public:
    *                  if it's null, PhaseSimulator uses internal container and handle all cases derived from given todo
    */
   result_list_t calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont = NULL);
-
 
 
 	/**
@@ -91,6 +90,7 @@ public:
   /// pointer to the backend to be used
   backend_sptr_t backend_;
   bool breaking;
+  phase_result_sptr_t result_root;
 
 protected:
 
@@ -131,9 +131,6 @@ protected:
 
   int phase_sum_;
 
-  /**
-   * graph of relation between module_set for IP and PP
-   */
   boost::shared_ptr<RelationGraph> relation_graph_;
 
   /**
@@ -154,7 +151,6 @@ protected:
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
   symbolic_expression::node_sptr break_condition_;
-  parse_tree_sptr parse_tree_;
 
 private:
 
@@ -232,7 +228,8 @@ private:
   boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
 
   PhaseType current_phase_;
-
+  
+  module_set_container_sptr module_set_container;
 
 };
 

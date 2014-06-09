@@ -184,7 +184,13 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
             }
           }
         }
-        todo->reset_from_start_of_phase();
+
+        todo->ms_cache.clear();
+        todo->ms_to_visit = module_set_container_->get_full_ms_list();
+        todo->maximal_mss.clear();
+        todo->positive_asks.clear();
+        todo->negative_asks.clear();
+        todo->judged_prev_map.clear();
         cout << "jump" << endl;
         print_phase(todo);
         break;
@@ -484,8 +490,7 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
   result_root_->children.clear();
   result_root_->children.push_back(loaded_phase);
   todo.reset(new SimulationTodo(loaded_phase));
-  todo->module_set_container = msc_no_init_;
-  todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
+  todo->ms_to_visit = module_set_container_->get_full_ms_list();
   if(todo->phase_type == PointPhase)
   {
     TimeModifier modifier(*backend);

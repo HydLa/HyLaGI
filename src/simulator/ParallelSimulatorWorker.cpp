@@ -63,13 +63,8 @@ phase_result_const_sptr_t ParallelSimulatorWorker::simulate()
     if(end_flag_) break;
     running_thread_count_++;
     set_thread_state("simulating phase " + boost::lexical_cast<string>(todo->id));
-    if(todo->parent.get() != result_root_.get()){
-      todo->module_set_container = msc_no_init_;
-    }
-    else{
-      todo->module_set_container = msc_original_;
-    }
-      todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
+    // TODO: initialize ms_to_visit
+    // todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
     process_one_todo(todo);
     notify_simulation_end();
   }
