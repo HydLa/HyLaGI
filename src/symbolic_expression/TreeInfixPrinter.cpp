@@ -1,5 +1,4 @@
 #include "TreeInfixPrinter.h"
-#include <sstream>
 
 namespace hydla {
 namespace symbolic_expression{

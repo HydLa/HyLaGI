@@ -3,9 +3,6 @@
 #include "Link.h"
 
 #include "DefaultTreeVisitor.h"
-#include "ParseTree.h"
-#include "PhaseResult.h"
-#include "Simulator.h"
 #include "PhaseSimulator.h"
 
 namespace hydla{

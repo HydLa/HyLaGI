@@ -1,6 +1,5 @@
 #pragma once
 
-
 //ツリーを中置記法で出力するクラス
 
 #include "Node.h"

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "TreeVisitor.h"
 
 namespace hydla { 

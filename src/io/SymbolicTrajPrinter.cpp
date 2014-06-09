@@ -43,8 +43,6 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
   if(epsilon_mode_flag){
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
   }
-
-
   return sstr.str();
 }
 
