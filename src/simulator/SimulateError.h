@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATE_ERROR_H_
-#define _INCLUDED_HYDLA_SIMULATE_ERROR_H_
+#pragma once
 
 
 #include <string>
@@ -19,4 +18,3 @@ public:
 } //namespace simulator
 } //namespace hydla 
 
-#endif

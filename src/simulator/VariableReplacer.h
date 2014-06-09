@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_VARIABLE_REPLACER_H_
-#define _INCLUDED_HYDLA_VARIABLE_REPLACER_H_
+#pragma once
 
 #include <set>
 #include <sstream>
@@ -104,4 +103,3 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
 } //namespace parser
 } //namespace hydla
 
-#endif // _INCLUDED_HYDLA_PARAMETER_REPLACER_H_

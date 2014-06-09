@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_MODULE_SET_GRAPH_H_
-#define _INCLUDED_HTDLA_CH_MODULE_SET_GRAPH_H_
+#pragma once
 
 #include <vector>
 
@@ -112,5 +111,3 @@ private:
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif // _INCLUDED_HTDLA_CH_MODULE_SET_GRAPH_H_

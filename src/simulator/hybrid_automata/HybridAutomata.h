@@ -1,7 +1,4 @@
-
-#ifndef _INCLUDED_HYDLA_HybridAutomata_SIMULATOR_H_
-#define _INCLUDED_HYDLA_HybridAutomata_SIMULATOR_H_
-
+#pragma once
 
 #include "BatchSimulator.h"
 #include "Node.h"
@@ -43,5 +40,3 @@ protected:
 
 }//namespace hydla
 }//namespace simulator 
-
-#endif // _INCLUDED_HYDLA_HybridAutomata_SIMULATOR_H_

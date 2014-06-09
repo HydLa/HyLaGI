@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_EXCEPTIONS_H_
-#define _INCLUDED_HYDLA_SIMULATOR_EXCEPTIONS_H_
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -17,5 +16,3 @@ public:
 
 } //namespace simulator
 } //namespace hydla 
-
-#endif

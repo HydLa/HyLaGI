@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_INIT_NODE_REMOVER_H_
-#define _INCLUDED_HYDLA_SIMULATOR_INIT_NODE_REMOVER_H_
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -62,4 +61,3 @@ private:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_INIT_NODE_REMOVER_H_

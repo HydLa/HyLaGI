@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_LINK_H_
-#define _INCLUDED_HYDLA_BACKEND_LINK_H_
+#pragma once
 
 #include <string>
 #include <boost/bimap/bimap.hpp>
@@ -108,5 +107,3 @@ class Link
 
 } // namespace backend
 } // namespace hydla
-
-#endif // include guard

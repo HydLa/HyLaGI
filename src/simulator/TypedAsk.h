@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_TYPED_ASK_H_
-#define _INCLUDED_HYDLA_SIMULATOR_TYPED_ASK_H_
+#pragma once
+
 
 #include "Node.h"
 
@@ -68,5 +68,3 @@ public:
 
 } //namespace simulator
 } //namespace hydla 
-
-#endif // _INCLUDED_HYDLA_SIMULATOR_TYPED_ASK_H_

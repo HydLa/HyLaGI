@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_FACTORY_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_FACTORY_H_
+#pragma once
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 #include "REDUCELinkTelnet.h"
@@ -34,6 +33,3 @@ public:
 } // namespace reduce
 } // namespace backend
 } // namespace hydla
-
-#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_FACTORY_H_
-

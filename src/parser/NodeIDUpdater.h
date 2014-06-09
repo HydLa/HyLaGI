@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_NODE_ID_UPDATER_H_
-#define _INCLUDED_HYDLA_PARSER_NODE_ID_UPDATER_H_
+#pragma once
 
 #include <vector>
 
@@ -66,4 +65,3 @@ private:
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_NODE_ID_UPDATER_H_

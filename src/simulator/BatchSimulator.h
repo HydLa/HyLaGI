@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BATCH_SIMULATOR_H_
-#define _INCLUDED_HYDLA_BATCH_SIMULATOR_H_
+#pragma once
 
 #include "Simulator.h"
 #include "Logger.h"
@@ -64,4 +63,3 @@ protected:
 } // simulator
 } // hydla
 
-#endif // _INCLUDED_HYDLA_BATCH_SIMULATOR_H_

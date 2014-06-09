@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_H_
-#define _INCLUDED_HYDLA_SIMULATOR_H_
+#pragma once
+
 
 #include <deque>
 
@@ -316,4 +316,3 @@ protected:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_H_

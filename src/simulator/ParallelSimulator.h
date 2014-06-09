@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
-#define _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_
+#pragma once
+
 
 #include "BatchSimulator.h"
 #include <boost/thread.hpp>
@@ -75,4 +75,3 @@ public:
 } // simulator
 } // hydla
 
-#endif // _INCLUDED_HYDLA_PARALLEL_SIMULATOR_H_

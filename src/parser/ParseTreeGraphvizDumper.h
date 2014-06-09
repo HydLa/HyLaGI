@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_GRAPHVIZ_DUMPER_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_GRAPHVIZ_DUMPER_H_
+#pragma once
 
 #include <ostream>
 #include <map>
@@ -138,4 +137,3 @@ private:
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_GRAPHVIZ_DUMPER_H_

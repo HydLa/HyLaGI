@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_HYDLA_GRAMMAR_RULE_H_
-#define _INCLUDED_HYDLA_HYDLA_GRAMMAR_RULE_H_
+#pragma once
 
 namespace hydla {
 namespace grammer_rule {
@@ -127,4 +126,3 @@ typedef enum _RuleID {
 } //namespace grammer_rule
 
 
-#endif //_INCLUDED_HYDLA_HYDLA_GRAMMAR_RULE_H_

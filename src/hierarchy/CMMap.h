@@ -1,5 +1,4 @@
-#ifndef _CONDITION_MAP_H_
-#define _CONDITION_MAP_H_
+#pragma once
 
 #include "ModuleSet.h"
 
@@ -56,5 +55,3 @@ namespace hydla{
     std::ostream& operator<<(std::ostream& s, const CMMap& c);
   }
 }
-
-#endif
