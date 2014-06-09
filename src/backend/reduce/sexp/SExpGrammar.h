@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/spirit/include/classic_confix.hpp>
 #include <boost/spirit/include/classic_ast.hpp>

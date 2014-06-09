@@ -1,15 +1,7 @@
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 #else
 
-#include "Logger.h"
 #include "REDUCELinkIpc.h"
-#include <cassert>
-#include <iostream>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 namespace hydla {
 namespace backend {

@@ -1,11 +1,8 @@
 #pragma once
 
 #include "sexp/SExpAST.h"
-#include <sstream>
-#include <stdexcept>
 #include "Link.h"
 #include "Simulator.h"
-#include "Logger.h"
 #include <stack>
 
 namespace hydla {

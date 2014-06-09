@@ -3,10 +3,6 @@
 #include "mathlink.h"
 #include "LinkError.h"
 #include <string.h>
-#include <stdexcept>
-#include <sstream>
-#include <iostream>
-#include "Logger.h"
 #include "Link.h"
 
 

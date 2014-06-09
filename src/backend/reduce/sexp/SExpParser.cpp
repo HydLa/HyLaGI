@@ -1,9 +1,7 @@
 #include "SExpParser.h"
 
 #include "../../../parser/CommentGrammar.h"
-#include "Logger.h"
 #include <cstring>
-#include <iostream>
 #include <sstream>
 
 using namespace boost::spirit::classic;
