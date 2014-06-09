@@ -1,23 +1,13 @@
-#ifndef _INCLUDED_HYDLA_CONSISTENCY_CHECKER_H_
-#define _INCLUDED_HYDLA_CONSISTENCY_CHECKER_H_
-
-#include <iostream>
-#include <string>
-#include <cassert>
+#pragma once
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Timer.h"
-#include "Logger.h"
 #include "PhaseResult.h"
 #include "RelationGraph.h"
 #include "Simulator.h"
-#include "UnsatCoreFinder.h"
-#include "AnalysisResultChecker.h"
 
 namespace hydla {
-
 namespace simulator {
 
 struct CheckConsistencyResult
@@ -28,9 +18,18 @@ struct CheckConsistencyResult
 class ConsistencyChecker{
 
 public:
+
+
+  typedef enum{
+    ENTAILED,
+    CONFLICTING,
+    BRANCH_VAR,
+    BRANCH_PAR
+  } CheckEntailmentResult;
+
+
   typedef hydla::symbolic_expression::node_sptr node_sptr;
 
-  ConsistencyChecker();
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
 
@@ -42,18 +41,21 @@ public:
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase);
   
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
-  void set_backend(backend_sptr_t back);
   
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
-protected:
 
-  typedef enum{
-    ENTAILED,
-    CONFLICTING,
-    BRANCH_VAR,
-    BRANCH_PAR
-  } CheckEntailmentResult;
+  /**
+   * Check whether a guard is entailed or not.
+   * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
+   * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
+   */
+  CheckEntailmentResult check_entailment(CheckConsistencyResult &cc_result,
+    const symbolic_expression::node_sptr& guard,
+    const continuity_map_t& cont_map,
+    const PhaseType& phase
+    );
+
 
 private:
   backend_sptr_t backend;
@@ -62,5 +64,3 @@ private:
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_

@@ -28,7 +28,6 @@
 #include "MathematicaLink.h"
 #include "REDUCELinkFactory.h"
 
-
 namespace hydla
 {
 namespace simulator
@@ -87,6 +86,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 {
   result_list_t result;
   bool has_next = false;
+  ConsistencyChecker consistency_checker(backend_);
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
@@ -104,13 +104,15 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         // TODO: 離散変化時刻の計算時の情報を生かせれば、そもそもこの判定自体が不要なはず。
         // 前のフェーズで成り立っていたかと、不等式を含むかどうかとかで判定できる。
         // もしくは離散変化時刻の計算時に、PPを含むかどうかまで計算しておく。     
-        switch(check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
+        switch(consistency_checker.check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
         case ENTAILED:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
+          todo->positive_asks.insert(prev_guard);
           relation_graph_->set_expanded(prev_guard->get_child(), true);
           break;
         case CONFLICTING:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, false));
+          todo->negative_asks.insert(prev_guard);
           relation_graph_->set_expanded(prev_guard->get_child(), false);
           break;
         default:
@@ -164,7 +166,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
   ConstraintStore store;
-
+  ConsistencyChecker consistency_checker(backend_);
   simulation_todo_sptr_t tes = todo;
 
   backend_->call("resetConstraintForVariable", 0, "", "");
@@ -288,7 +290,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     {
       HYDLA_LOGGER_DEBUG("%% check_assertion");
       CheckConsistencyResult cc_result;
-      switch(check_entailment(cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), continuity_map_t(), todo->phase_type)){
+      switch(consistency_checker.check_entailment(cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), continuity_map_t(), todo->phase_type)){
       case ENTAILED:
       case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
         std::cout << "Assertion Failed!" << std::endl;
@@ -312,7 +314,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     {
       HYDLA_LOGGER_DEBUG("%% check_break_condition");
       CheckConsistencyResult cc_result;
-      switch(check_entailment(cc_result, break_condition_, continuity_map_t(), todo->phase_type)){
+      switch(consistency_checker.check_entailment(cc_result, break_condition_, continuity_map_t(), todo->phase_type)){
       case ENTAILED:
       case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
       case BRANCH_PAR: //TODO: 分岐すべき？要検討
@@ -594,54 +596,6 @@ void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
 }
 
 
-PhaseSimulator::CheckEntailmentResult PhaseSimulator::check_entailment(
-  CheckConsistencyResult &cc_result,
-  const symbolic_expression::node_sptr& guard,
-  const continuity_map_t& cont_map,
-  const PhaseType& phase
-  )
-{
-  CheckEntailmentResult ce_result;
-  ConsistencyChecker consistency_checker(backend_);
-  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
-  backend_->call("startTemporary", 0, "", "");
-  consistency_checker.add_continuity(cont_map, phase);
-  const char* fmt = (phase == PointPhase)?"en":"et";
-  backend_->call("addConstraint", 1, fmt, "", &guard);
-  cc_result = consistency_checker.call_backend_check_consistency(phase);
-  if(cc_result.consistent_store.consistent()){
-    HYDLA_LOGGER_DEBUG("%% entailable");
-    if(cc_result.inconsistent_store.consistent()){
-      HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
-      ce_result = BRANCH_PAR;
-    }
-    else
-    {
-      backend_->call("endTemporary", 0, "", "");
-      backend_->call("startTemporary", 0, "", "");
-      consistency_checker.add_continuity(cont_map, phase);
-      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
-      const char* fmt = (phase == PointPhase)?"en":"et";
-      backend_->call("addConstraint", 1, fmt, "", &not_node);
-      cc_result = consistency_checker.call_backend_check_consistency(phase);
-      if(cc_result.consistent_store.consistent()){
-        HYDLA_LOGGER_DEBUG("%% entailablity branches");
-        if(cc_result.inconsistent_store.consistent()){
-          HYDLA_LOGGER_DEBUG("%% branches by parameters");
-          ce_result = BRANCH_PAR;
-        }
-        ce_result = BRANCH_VAR;
-      }else{
-        ce_result = ENTAILED;
-      }
-    }
-  }else{
-    ce_result = CONFLICTING;
-  }
-  backend_->call("endTemporary", 0, "", "");
-  return ce_result;
-}
-
 bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms)
 {
@@ -766,24 +720,9 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       while(it!=end)
       {
         if(state->phase_type == PointPhase){
-          if(state->current_time.get_string() == "0" && PrevSearcher().search_prev((*it)->get_guard())){
-            // if current time equals to 0, conditions about left-hand limits are considered to be invalid
+          if(state->module_set_container != msc_no_init_ && PrevSearcher().search_prev((*it)->get_guard())){
+            // in initial state, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
-            unknown_asks.erase(it++);
-            continue;
-          }else if(state->judged_prev_map.find(*it) != state->judged_prev_map.end())
-          {
-            // if this guard has been already judged
-            bool entailed = state->judged_prev_map.find(*it)->second;
-            HYDLA_LOGGER_DEBUG("%% ommitted guard: ", **it, ", entailed: ", entailed);
-            if(entailed)
-            {
-              positive_asks.insert(*it);
-              expanded = true;
-            }else
-            {
-              negative_asks.insert(*it);
-            }
             unknown_asks.erase(it++);
             continue;
           }
@@ -810,7 +749,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
         maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
         CheckConsistencyResult check_consistency_result;
-        switch(check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
+        switch(consistency_checker.check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             if(opts_->reuse && state->in_following_step()){
@@ -921,12 +860,6 @@ void PhaseSimulator::apply_discrete_causes_to_guard_judgement(
     positive_asks_t& positive_asks,
     negative_asks_t& negative_asks,
     ask_set_t& unknown_asks ){
- /* 
-  std::cout << "before" << std::endl;
-  std::cout << "A+: " << positive_asks << std::endl;
-  std::cout << "A-: " << negative_asks << std::endl;
-  std::cout << "Au: " << unknown_asks << std::endl;
- */ 
 
   PrevSearcher searcher;
   ask_set_t prev_asks,reduced_u_asks;
@@ -960,12 +893,6 @@ void PhaseSimulator::apply_discrete_causes_to_guard_judgement(
     }
   }
 
- /* 
-  std::cout << "after" << std::endl;
-  std::cout << "A+: " << positive_asks << std::endl;
-  std::cout << "A-: " << negative_asks << std::endl;
-  std::cout << "Au: " << unknown_asks << std::endl;
- */ 
 }
 
 void PhaseSimulator::set_changing_variables(
@@ -1331,9 +1258,10 @@ PhaseSimulator::todo_list_t
         }
       }
     }
-
     else
+    {
       backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+    }
 
     if(opts_->epsilon_mode){
       time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);

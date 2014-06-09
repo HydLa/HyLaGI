@@ -22,20 +22,12 @@ using namespace symbolic_expression;
 using namespace logger;
 using namespace timer;
 using namespace backend;
-using namespace backend::mathematica;
-using namespace backend::reduce;
 
 
 ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back){}
 ConsistencyChecker::~ConsistencyChecker(){}
 
-void ConsistencyChecker::set_backend(backend_sptr_t back){
-  backend = back;
-}
-
 void ConsistencyChecker::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
-
-//  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
 
   for(auto continuity : continuity_map){
     std::string fmt = "v";
@@ -83,6 +75,56 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   }
   return ret;
 }
+
+
+ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
+  CheckConsistencyResult &cc_result,
+  const symbolic_expression::node_sptr& guard,
+  const continuity_map_t& cont_map,
+  const PhaseType& phase
+  )
+{
+  CheckEntailmentResult ce_result;
+  ConsistencyChecker consistency_checker(backend);
+  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  backend->call("startTemporary", 0, "", "");
+  consistency_checker.add_continuity(cont_map, phase);
+  const char* fmt = (phase == PointPhase)?"en":"et";
+  backend->call("addConstraint", 1, fmt, "", &guard);
+  cc_result = consistency_checker.call_backend_check_consistency(phase);
+  if(cc_result.consistent_store.consistent()){
+    HYDLA_LOGGER_DEBUG("%% entailable");
+    if(cc_result.inconsistent_store.consistent()){
+      HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
+      ce_result = BRANCH_PAR;
+    }
+    else
+    {
+      backend->call("endTemporary", 0, "", "");
+      backend->call("startTemporary", 0, "", "");
+      consistency_checker.add_continuity(cont_map, phase);
+      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
+      const char* fmt = (phase == PointPhase)?"en":"et";
+      backend->call("addConstraint", 1, fmt, "", &not_node);
+      cc_result = consistency_checker.call_backend_check_consistency(phase);
+      if(cc_result.consistent_store.consistent()){
+        HYDLA_LOGGER_DEBUG("%% entailablity branches");
+        if(cc_result.inconsistent_store.consistent()){
+          HYDLA_LOGGER_DEBUG("%% branches by parameters");
+          ce_result = BRANCH_PAR;
+        }
+        ce_result = BRANCH_VAR;
+      }else{
+        ce_result = ENTAILED;
+      }
+    }
+  }else{
+    ce_result = CONFLICTING;
+  }
+  backend->call("endTemporary", 0, "", "");
+  return ce_result;
+}
+
 
 
 CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase)
