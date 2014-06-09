@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_EPSILON_MODE
-#define _INCLUDED_EPSILON_MODE
+#pragma once
+
 
 #include <iostream>
 #include <string>
@@ -24,5 +24,3 @@ namespace simulator{
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_EPSILON_MODE

@@ -1,6 +1,4 @@
-#ifndef _HYDLA_OUTPUT_CSV_PROFILE_PRINTER_H_
-#define _HYDLA_OUTPUT_CSV_PROFILE_PRINTER_H_
-
+#pragma once
 
 #include "ProfilePrinter.h"
 #include <iostream>
@@ -26,5 +24,3 @@ private:
 
 }// output
 }// hydla
-
-#endif // _HYDLA_OUTPUT_CSV_PROFILE_PRINTER_H_

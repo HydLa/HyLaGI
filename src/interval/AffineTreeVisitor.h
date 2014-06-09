@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_AFFINE_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_AFFINE_TREE_VISITOR_H_
+#pragma once
 
 #include <sstream>
 
@@ -122,5 +121,3 @@ private:
 
 } //namespace interval
 } //namespace hydla
-
-#endif // include guard

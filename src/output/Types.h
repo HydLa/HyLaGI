@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_OUTPUT_TYPES_H_
-#define _INCLUDED_HYDLA_OUTPUT_TYPES_H_
+#pragma once
 
 #include "../simulator/Simulator.h"
 
@@ -13,4 +12,3 @@ typedef simulator::PhaseResult phase_result_t;
 }// output
 }// hydla
 
-#endif // _INCLUDED_HYDLA_OUTPUT_TYPES_H_

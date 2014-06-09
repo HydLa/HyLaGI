@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSE_ERROR_H_
-#define _INCLUDED_HYDLA_PARSE_ERROR_H_
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -234,5 +233,3 @@ public:
 } //namespace error
 } //namespace parser
 } //namespace hydla
-
-#endif //_INCLUDED_HYDLA_PARSE_ERROR_H_

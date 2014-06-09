@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
+#pragma once
 
 #include "Simulator.h"
 #include <fstream>
@@ -164,6 +163,4 @@ protected:
 
 } // simulator
 } // hydla
-
-#endif // _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
 

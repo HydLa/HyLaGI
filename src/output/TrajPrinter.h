@@ -1,5 +1,4 @@
-#ifndef _HYDLA_OUTPUT_TRAJ_PRINTER_H_
-#define _HYDLA_OUTPUT_TRAJ_PRINTER_H_
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -45,4 +44,3 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_TRAJECTORY_PRINTER_H_

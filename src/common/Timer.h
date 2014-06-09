@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_TIMER_H_
-#define _INCLUDED_HYDLA_TIMER_H_
+#pragma once
 
 #include <string>
 
@@ -88,5 +87,3 @@ namespace hydla{
     };
   }  //  namespace timer
 }  //  namespace hydla
-
-#endif  // _INCLUDED_HYDLA_TIMER_H_

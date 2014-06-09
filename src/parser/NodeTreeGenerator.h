@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
-#define _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
+#pragma once
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
@@ -505,4 +504,3 @@ private:
 } // namespace parser
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_

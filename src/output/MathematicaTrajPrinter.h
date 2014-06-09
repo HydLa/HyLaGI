@@ -1,5 +1,4 @@
-#ifndef _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_
-#define _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_
+#pragma once
 
 #include "TrajPrinter.h"
 
@@ -29,4 +28,3 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_

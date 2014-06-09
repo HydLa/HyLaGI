@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_S_EXP_AST_H_
-#define _INCLUDED_HYDLA_PARSER_S_EXP_AST_H_
+#pragma once
 
 #include "SExpParser.h"
 #include "Node.h"
@@ -62,5 +61,4 @@ std::ostream& operator<<(std::ostream& s, const SExpAST& sexp_ast);
 } // namespace vcs
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_S_EXP_AST_H_
 

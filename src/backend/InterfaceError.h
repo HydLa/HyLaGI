@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_INTERFACE_ERROR_H_
-#define _INCLUDED_HYDLA_BACKEND_INTERFACE_ERROR_H_
+#pragma once
 
 namespace hydla{
 namespace backend{
@@ -21,5 +20,3 @@ private:
 
 }
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef _SIMULATOR_VALUE_H_
-#define _SIMULATOR_VALUE_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -106,4 +105,3 @@ std::ostream& operator<<(std::ostream& s, const Value & v);
 } // namespace simulator
 } // namespace hydla
 
-#endif // _SIMULATOR_VALUE_H_

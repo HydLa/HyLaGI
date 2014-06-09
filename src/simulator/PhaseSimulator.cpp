@@ -32,7 +32,6 @@
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
 
-
 using namespace std;
 using namespace boost;
 using namespace hydla::simulator;
@@ -51,7 +50,6 @@ using hydla::simulator::ContinuityMapMaker;
 using hydla::simulator::IntervalPhase;
 using hydla::simulator::PointPhase;
 using hydla::simulator::VariableFinder;
-
 
 PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()), unsat_core_finder_(new UnsatCoreFinder()) {
 }
@@ -815,6 +813,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           auto variables = v_finder.get_all_variable_set();
           bool continuity = true;
           for(auto var : variables){
+            //すべてのdiscrete_causesの後件に変数値が含まれていないことを調べないといけない
+            //以下の処理は黒ジャンプには対応しているが、白ジャンプには対応していない 
             auto var_d = state->parent->variable_map.find(Variable(var.get_name(),var.get_differential_count()+1));
             if(var_d->second.undefined()){
               continuity = false;

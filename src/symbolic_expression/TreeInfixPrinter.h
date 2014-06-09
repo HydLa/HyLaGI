@@ -1,5 +1,4 @@
-#ifndef TREE_INFIX__PRINTER_H_
-#define TREE_INFIX__PRINTER_H_
+#pragma once
 
 
 //ツリーを中置記法で出力するクラス
@@ -154,4 +153,3 @@ class TreeInfixPrinter:
 } // namespace symbolic_expression
 } // namespace hydla 
 
-#endif // TREE_INFIX__PRINTER_H_

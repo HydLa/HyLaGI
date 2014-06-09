@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_VERSION_H_
-#define _INCLUDED_HYDLA_VERSION_H_
+#pragma once
 
 #include <string>
 
@@ -15,5 +14,3 @@ class Version {
   static std::string description();
 };
 }
- 
-#endif //_INCLUDED_HYDLA_VERSION_H_

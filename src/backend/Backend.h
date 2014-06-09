@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_BACKEND_H_
-#define _INCLUDED_HYDLA_BACKEND_BACKEND_H_
+#pragma once
+
 #include "Link.h"
 
 #include "DefaultTreeVisitor.h"
@@ -263,5 +263,3 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 
 } // namespace backend
 } // namespace hydla
-
-#endif // include guard

@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_ALWAYS_FINDER_H_
-#define _INCLUDED_HYDLA_ALWAYS_FINDER_H_
+#pragma once
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
@@ -50,4 +49,3 @@ private:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_VARIABLE_FINDER_H_

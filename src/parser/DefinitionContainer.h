@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_DEFINITION_CONTAINER_H_
-#define _INCLUDED_HYDLA_PARSER_DEFINITION_CONTAINER_H_
+#pragma once
 
 #include <ostream>
 #include <string>
@@ -133,4 +132,3 @@ std::ostream& operator<<(std::ostream& s, const DefinitionContainer<T>& d)
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_DEFINITION_CONTAINER_H_

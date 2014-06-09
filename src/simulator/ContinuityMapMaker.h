@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_CONTINUITY_MAP_MAKER_H_
-#define _INCLUDED_HYDLA_CONTINUITY_MAP_MAKER_H_
+#pragma once
 
 #include <vector>
 #include <set>
@@ -82,4 +81,3 @@ std::ostream& operator<<(std::ostream& s, const continuity_map_t& continuity_map
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_CONTINUITY_MAP_MAKER_H_

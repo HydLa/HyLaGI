@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_CONSISTENCY_CHECKER_H_
-#define _INCLUDED_HYDLA_CONSISTENCY_CHECKER_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -63,4 +62,3 @@ private:
 } //namespace simulator
 } //namespace hydla
 
-#endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_

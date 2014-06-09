@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_LOGGER_H_
-#define _INCLUDED_HYDLA_LOGGER_H_
+#pragma once
 
 #include <boost/preprocessor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -158,5 +157,3 @@ private:
 
 } // namespace logger
 } // namespace hydla
-
-#endif // _INCLUDED_HYDLA_LOGGER_H_

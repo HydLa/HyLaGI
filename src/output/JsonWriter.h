@@ -1,5 +1,4 @@
-#ifndef _HYDLA_OUTPUT_JSON_WRITER_H_
-#define _HYDLA_OUTPUT_JSON_WRITER_H_
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -39,5 +38,3 @@ class JsonWriter{
 
 }// output
 }// hydla
-
-#endif // include guard

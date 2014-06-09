@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -8,13 +7,6 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Timer.h"
-#include "Logger.h"
-#include "PhaseResult.h"
-#include "RelationGraph.h"
-#include "Simulator.h"
-#include "UnsatCoreFinder.h"
-#include "AnalysisResultChecker.h"
 #include "ConsistencyChecker.h"
 
 namespace hydla {
@@ -258,5 +250,3 @@ private:
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_

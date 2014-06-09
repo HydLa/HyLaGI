@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_UNSAT_CORE_FINDER_H_
-#define _INCLUDED_HYDLA_UNSAT_CORE_FINDER_H_
+#pragma once
 
 #include "ParseTree.h"
 #include "ModuleSet.h"
@@ -46,4 +45,3 @@ protected:
 
 }
 }
-#endif //_INCLUDED_HYDLA_UNSAT_CORE_FINDER_H_

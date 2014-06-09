@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_
-#define _INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_
+#pragma once
 
 #include <map>
 #include "ModuleSet.h"
@@ -133,5 +132,3 @@ private:
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif //_INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_

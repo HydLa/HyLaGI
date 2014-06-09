@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_RELATION_GRAPH_H_
-#define _INCLUDED_HYDLA_RELATION_GRAPH_H_
+#pragma once
 
 #include "Variable.h"
 #include "ModuleSetContainer.h"
@@ -104,4 +103,3 @@ private:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_RELATION_GRAPH_H_
