@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_CONSTRAINT_STORE_H_
-#define _INCLUDED_HYDLA_SIMULATOR_CONSTRAINT_STORE_H_
+#pragma once
 
 #include "Node.h"
 #include <vector>
@@ -40,4 +39,3 @@ std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store);
 }
 }
 
-#endif // include guard

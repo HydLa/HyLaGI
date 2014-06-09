@@ -51,7 +51,6 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   positive_asks(todo.positive_asks),
   negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
-  module_set_container(todo.module_set_container),
   cause_for_termination(cause),
   parent(todo.parent)
 {

@@ -62,8 +62,7 @@ void AskCollector::collect_ask(always_set_t* expanded_always,
 
 // Ask制約
 void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
-{
-  
+{  
   if(positive_asks_->find(node) != positive_asks_->end()) 
   {
     // 既に展開済みのaskノードであった場合

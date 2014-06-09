@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_H_
-#define _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_H_
+#pragma once
 
 #include <boost/function.hpp>
 #include <list>
@@ -121,5 +120,3 @@ std::ostream& operator<<(std::ostream& s, const ModuleSetContainer& m);
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif // _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_H_

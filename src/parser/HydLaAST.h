@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_HYDLA_AST_H_
-#define _INCLUDED_HYDLA_PARSER_HYDLA_AST_H_
+#pragma once
 
 #include <ostream>
 
@@ -72,4 +71,3 @@ std::ostream& operator<<(std::ostream& s, const HydLaAST& ast);
 } // namespace parser
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_HYDLA_AST_H_

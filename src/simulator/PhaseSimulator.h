@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -7,19 +6,16 @@
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include "Timer.h"
-#include "Logger.h"
 #include "PhaseResult.h"
-#include "RelationGraph.h"
 #include "Simulator.h"
-#include "UnsatCoreFinder.h"
-#include "AnalysisResultChecker.h"
 #include "ConsistencyChecker.h"
+#include "RelationGraph.h"
 
 namespace hydla {
-
 namespace simulator {
+
+class AnalysisResultChecker;
+class UnsatCoreFinder;
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
@@ -48,7 +44,7 @@ public:
   void set_break_condition(symbolic_expression::node_sptr break_cond);
   symbolic_expression::node_sptr get_break_condition();
 
-  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, parse_tree_sptr pt, const module_set_container_sptr& msc);
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, module_set_container_sptr& msc, boost::shared_ptr<RelationGraph> &relation_graph, ask_set_t &prev_guards);
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
@@ -62,7 +58,6 @@ public:
    *                  if it's null, PhaseSimulator uses internal container and handle all cases derived from given todo
    */
   result_list_t calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont = NULL);
-
 
 
 	/**
@@ -95,6 +90,7 @@ public:
   /// pointer to the backend to be used
   backend_sptr_t backend_;
   bool breaking;
+  phase_result_sptr_t result_root;
 
 protected:
 
@@ -135,9 +131,6 @@ protected:
 
   int phase_sum_;
 
-  /**
-   * graph of relation between module_set for IP and PP
-   */
   boost::shared_ptr<RelationGraph> relation_graph_;
 
   /**
@@ -158,7 +151,6 @@ protected:
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
   symbolic_expression::node_sptr break_condition_;
-  parse_tree_sptr parse_tree_;
 
 private:
 
@@ -208,16 +200,6 @@ private:
   bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
 
-  /**
-   * Check whether a guard is entailed or not.
-   * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
-   * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
-   */
-  CheckEntailmentResult check_entailment(
-    CheckConsistencyResult &cc_result,
-    const symbolic_expression::node_sptr& guard,
-    const continuity_map_t& cont_map,
-    const PhaseType& phase);
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
@@ -246,12 +228,11 @@ private:
   boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
 
   PhaseType current_phase_;
-
+  
+  module_set_container_sptr module_set_container;
 
 };
 
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_

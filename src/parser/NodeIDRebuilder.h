@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_NODE_ID_REBUILDER_H_
-#define _INCLUDED_HYDLA_PARSER_NODE_ID_REBUILDER_H_
+#pragma once
 
 #include "Node.h"
 #include "BaseNodeVisitor.h"
@@ -65,4 +64,3 @@ private:
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_NODE_ID_REBUILDER_H_

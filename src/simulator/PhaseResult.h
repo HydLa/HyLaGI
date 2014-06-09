@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_
-#define _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_
+#pragma once
 
 #include <vector>
 
@@ -98,7 +97,6 @@ public:
   hydla::hierarchy::module_set_sptr module_set;
 
   change_variables_t changed_variables;
-  module_set_container_sptr module_set_container;
 
   CauseForTermination cause_for_termination;
   /// A set of succeeding phases
@@ -126,4 +124,3 @@ std::ostream& operator<<(std::ostream& s, const hydla::simulator::change_variabl
 } // namespace simulator
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_PHASE_RESULT_H_

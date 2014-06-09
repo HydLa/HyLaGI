@@ -81,7 +81,6 @@ public:
    */
   int get_connected_count();
 
-
   /**
    * Get constraints and modules related to given variable
    * @parameter constraints for output
@@ -102,17 +101,16 @@ public:
   /**
    * Get constraints corresponding to the connected component specified by index.
    */
-  constraints_t get_constraints(unsigned int index);  
+  constraints_t get_constraints(unsigned int index);
 
   /**
    * Get a ModuleSet included by the connected component specified by index.
    */ 
-  module_set_t get_modules(unsigned int index);  
+  module_set_t get_modules(unsigned int index);
 
   /**
    * Get constraints which related to given variables
    */
-  
   constraints_t get_constraints(const std::vector<Variable>& variables);
 
 private:

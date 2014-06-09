@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_FORMATTER_H_
-#define _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_FORMATTER_H_
+#pragma once
 
 #include "Node.h"
 #include "ParseTree.h"
@@ -128,4 +127,3 @@ private:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_ASK_DISJUNCTION_FORMATTER_H_

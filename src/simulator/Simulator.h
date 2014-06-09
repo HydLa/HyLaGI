@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_H_
-#define _INCLUDED_HYDLA_SIMULATOR_H_
+#pragma once
+
 
 #include <deque>
 
@@ -24,6 +24,8 @@ namespace interval
 }
 
 namespace simulator {
+
+class RelationGraph;
 
 typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
 
@@ -97,6 +99,8 @@ struct SimulationTodo{
   negative_asks_t           negative_asks;
   ask_set_t                 discrete_causes;
   always_set_t              expanded_always;
+  constraints_t             current_constraints;   /// 現在のフェーズで有効な制約
+  
   entailed_prev_map_t       judged_prev_map;
 
   /// 前のフェーズ
@@ -104,8 +108,6 @@ struct SimulationTodo{
 
   /// このフェーズの制約ストアの初期値（離散変化条件など，特に重要な条件を入れる）
   ConstraintStore initial_constraint_store;
-  /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
-  module_set_container_sptr module_set_container;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
   module_set_list_t ms_to_visit;
@@ -119,20 +121,6 @@ struct SimulationTodo{
   ms_cache_t ms_cache;
   /// changing variables from previous phase
   change_variables_t changing_variables;
-
-  /**
-   * reset members to calculate from the start of the phase
-   * TODO: expanded_alwaysどうしよう．
-   * TODO: 記号定数も元に戻すべき？こちらは現状ではそこまで問題ないはず
-   */
-  void reset_from_start_of_phase(){
-    ms_cache.clear();
-    ms_to_visit = module_set_container->get_full_ms_list();
-    maximal_mss.clear();
-    positive_asks.clear();
-    negative_asks.clear();
-    judged_prev_map.clear();
-  }
 
   SimulationTodo(){}
 
@@ -284,19 +272,15 @@ protected:
   
   void reset_result_root();
 
+  boost::shared_ptr<RelationGraph> relation_graph_;
 
   parse_tree_sptr parse_tree_;  
 
   /**
    * a container for candidate module sets
    */
-  module_set_container_sptr msc_original_;
+  module_set_container_sptr module_set_container_;
   
-  /**
-   * mcs_original_から非always制約を除いたもの
-   */
-  module_set_container_sptr msc_no_init_;
-
   /**
    * vector for results of profiling
    */
@@ -315,4 +299,3 @@ protected:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_H_

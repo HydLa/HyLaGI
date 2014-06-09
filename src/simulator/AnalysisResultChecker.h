@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_ANALYSIS_RESULT_CHECKER_H_
-#define _INCLUDED_HYDLA_ANALYSIS_RESULT_CHECKER_H_
+#pragma once
 
 #include "ParseTree.h"
 #include "Simulator.h"
@@ -49,4 +48,3 @@ private:
 
 }
 }
-#endif //_INCLUDED_CONSTRAINT_ANALYZER_H_

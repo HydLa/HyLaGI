@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_VARIABLE_H_
-#define _INCLUDED_HYDLA_SIMULATOR_VARIABLE_H_
+#pragma once
 
 #include <ostream>
 #include <string>
@@ -104,4 +103,3 @@ class VariableComparator { // simple comparison class
 } // namespace simulator
 } // namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_DEFAULT_VARIABLE_H_

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -38,4 +39,3 @@ class JsonWriter{
 
 }// output
 }// hydla
-
