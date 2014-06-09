@@ -1,60 +1,30 @@
 #include "ConsistencyChecker.h"
-#include "AskCollector.h"
-#include "VariableFinder.h"
-#include "Exceptions.h"
 #include "Backend.h"
-#include "PrevReplacer.h"
-
-using namespace std;
-using namespace hydla::simulator;
-using namespace hydla::backend;
 
 #include <iostream>
 #include <fstream>
-#include <boost/xpressive/xpressive.hpp>
-#include <boost/iterator/indirect_iterator.hpp>
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
 
 #include "Logger.h"
 #include "Timer.h"
 
-#include "PrevReplacer.h"
-#include "TellCollector.h"
-#include "AskCollector.h"
-#include "VariableFinder.h"
-
-#include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
 #include "ContinuityMapMaker.h"
 
-#include "PrevSearcher.h"
-
-#include "Backend.h"
-#include "Exceptions.h"
-#include "AnalysisResultChecker.h"
-#include "UnsatCoreFinder.h"
-#include "AlwaysFinder.h"
-#include "EpsilonMode.h"
-
-using namespace hydla::backend::mathematica;
-using namespace hydla::backend::reduce;
-
+using namespace std;
 using namespace boost;
 
-using namespace hydla::hierarchy;
-using namespace hydla::simulator;
-using namespace hydla::symbolic_expression;
-using namespace hydla::logger;
-using namespace hydla::timer;
+namespace hydla
+{
+namespace simulator
+{
 
-using hydla::simulator::TellCollector;
-using hydla::simulator::AskCollector;
-using hydla::simulator::ContinuityMapMaker;
-using hydla::simulator::IntervalPhase;
-using hydla::simulator::PointPhase;
-using hydla::simulator::VariableFinder;
+using namespace hierarchy;
+using namespace symbolic_expression;
+using namespace logger;
+using namespace timer;
+using namespace backend;
+using namespace backend::mathematica;
+using namespace backend::reduce;
+
 
 ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back){}
 ConsistencyChecker::~ConsistencyChecker(){}
@@ -135,3 +105,5 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
   return call_backend_check_consistency(phase);
 }
 
+}
+}
