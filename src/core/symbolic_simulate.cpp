@@ -32,7 +32,7 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::backend::reduce;
-using namespace hydla::output;
+using namespace hydla::io;
 using namespace std;
 
 
@@ -53,8 +53,8 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
-  hydla::output::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
-  if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_,&opts);}
+  hydla::io::SymbolicTrajPrinter Printer(backend_, opts.output_variables, sstr);
+  if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_,true);}
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
@@ -84,15 +84,15 @@ void output_result(Simulator& ss, Opts& opts){
   writer.write(*simulator_, of_name);
 
   if(po.get<std::string>("tm") == "s") {
-    hydla::output::StdProfilePrinter().print_profile(ss.get_profile());
+    hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
   } else if(po.get<std::string>("tm") == "c") {
     std::string csv_name = po.get<std::string>("csv");
     if(csv_name == ""){
-      hydla::output::CsvProfilePrinter().print_profile(ss.get_profile());
+      hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
     }else{
       std::ofstream ofs;
       ofs.open(csv_name.c_str());
-      hydla::output::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
+      hydla::io::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
       ofs.close();
     }
   }
@@ -108,7 +108,7 @@ void setup_simulator_opts(Opts& opts)
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
   opts.dump_in_progress = po.count("dump_in_progress")>0;
-  opts.dump_relation = po.count("dump_module_relation_graph")>0;
+  opts.dump_relation = po.count("dump_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
   opts.use_unsat_core = po.count("use_unsat_core")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;

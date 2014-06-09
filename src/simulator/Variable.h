@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <stdexcept>
 
 namespace hydla {
 namespace simulator {
@@ -12,6 +13,28 @@ public:
   int differential_count;
   
   Variable(const std::string& n, const int& d):name(n), differential_count(d){}
+  /**
+   * create Variable from string (like x')
+   */
+  Variable(const std::string& n)
+  {
+    std::string::size_type index = n.find_first_of("'");
+    if(index != std::string::npos)
+    {
+      name = n.substr(0, index);
+      differential_count = n.length() - index;
+      // check the correctness of given string
+      for(;index < n.length(); index++)
+      {
+        if(n[index] != '\'') throw std::runtime_error("invalid name of variable: " + n);
+      }
+    }
+    else
+    {
+      name = n;
+      differential_count = 0;
+    }
+  }
   Variable():name(""), differential_count(0){}
 
   std::string get_name() const

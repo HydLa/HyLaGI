@@ -47,9 +47,9 @@ void ProgramOptions::init_descriptions()
      "  which might be solution\n"
      "  by graph representation")
      */
-    ("dump_module_relation_graph", 
-     "output relation of module and variables\n"
-     "  by graph representation")
+    ("dump_relation_graph", 
+     "output relation of constraints and variables\n"
+     "  by graphviz format")
     ("dump_in_progress", 
      "output each phase in progress")
           

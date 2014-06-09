@@ -110,6 +110,10 @@ SetAttributes[symbolToString, HoldAll];
 SetAttributes[prev, Constant];
 SetAttributes[parameter, Constant];
 
+SetAttributes[prev, NHoldAll];
+SetAttributes[parameter, NHoldAll];
+
+
 If[optUseDebugPrint || True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく．いずれにしろそんなにコストはかからない？ *)
   debugPrint[arg___] := Print[InputForm[{arg}]];
   simplePrint[arg___] := Print[delimiterAddedString[", ",
@@ -184,6 +188,7 @@ Module[
   If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
   If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
+  If[Head[expr] === Real, Return[ToString[expr] ] ];
   If[Head[expr] === p || Head[expr] === Root, Return[expr] ];
 
   ret = Map[toReturnForm, expr];

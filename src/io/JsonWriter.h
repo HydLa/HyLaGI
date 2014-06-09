@@ -10,7 +10,7 @@
 #include "picojson.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 class JsonWriter{
 
@@ -25,7 +25,8 @@ class JsonWriter{
   typedef hydla::simulator::Simulator       simulator_t;
   typedef hydla::simulator::ValueRange      value_range_t;
   
-  void write(const simulator_t &simulator, std::string name);
+  void write(const simulator_t &simulator, const std::string &name);
+  void write_phase(const phase_result_const_sptr_t &phase, const std::string &name);
   private:
   picojson::value for_phase(const phase_result_const_sptr_t &phase);
   picojson::value for_vm(const variable_map_t &vm); 

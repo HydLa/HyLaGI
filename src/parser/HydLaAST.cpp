@@ -10,6 +10,8 @@
 #include "CommentGrammar.h"
 #include "ParseError.h"
 #include "Logger.h"
+#include "Node.h"
+#include "NodeTreeGenerator.h"
 
 using namespace std;
 using namespace boost;
@@ -51,7 +53,6 @@ void HydLaAST::parse(std::istream& stream, SyntaxType type)
   }
 }
 
-
 void HydLaAST::parse_file(const std::string& filename, SyntaxType type) 
 {
   ifstream in(filename.c_str());
@@ -65,6 +66,13 @@ void HydLaAST::parse_string(const std::string& str, SyntaxType type)
 {
   istringstream in(str);
   parse(in, type);
+}
+
+
+symbolic_expression::node_sptr HydLaAST::parse_generate(const std::string& str, SyntaxType type)
+{
+  parse_string(str, type);
+  return NodeTreeGenerator().generate(get_tree_iterator());
 }
 
 std::ostream& HydLaAST::dump(std::ostream& outstream, 

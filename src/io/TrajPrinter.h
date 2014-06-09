@@ -9,7 +9,7 @@
 #include "Simulator.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 
 typedef hydla::simulator::PhaseResult                                       phase_result_t;

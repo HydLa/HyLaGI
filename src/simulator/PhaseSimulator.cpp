@@ -7,8 +7,6 @@
 #include <boost/make_shared.hpp>
 
 #include "PhaseSimulator.h"
-#include "Exceptions.h"
-#include "Backend.h"
 
 #include "Logger.h"
 #include "Timer.h"
@@ -17,39 +15,34 @@
 #include "TellCollector.h"
 #include "AskCollector.h"
 #include "VariableFinder.h"
-
-#include "InitNodeRemover.h"
-#include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
 #include "ContinuityMapMaker.h"
-
 #include "PrevSearcher.h"
-
-#include "Backend.h"
 #include "Exceptions.h"
 #include "AnalysisResultChecker.h"
 #include "UnsatCoreFinder.h"
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
+#include "TimeModifier.h"
+
+#include "Backend.h"
+#include "MathematicaLink.h"
+#include "REDUCELinkFactory.h"
+
+
+namespace hydla
+{
+namespace simulator
+{
 
 using namespace std;
 using namespace boost;
-using namespace hydla::simulator;
-using namespace hydla::backend;
+using namespace backend;
 
-using namespace hydla::backend::mathematica;
-using namespace hydla::backend::reduce;
-using namespace hydla::hierarchy;
-using namespace hydla::symbolic_expression;
-using namespace hydla::logger;
-using namespace hydla::timer;
-
-using hydla::simulator::TellCollector;
-using hydla::simulator::AskCollector;
-using hydla::simulator::ContinuityMapMaker;
-using hydla::simulator::IntervalPhase;
-using hydla::simulator::PointPhase;
-using hydla::simulator::VariableFinder;
+using namespace backend::mathematica;
+using namespace backend::reduce;
+using namespace hierarchy;
+using namespace symbolic_expression;
+using namespace timer;
 
 PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()), unsat_core_finder_(new UnsatCoreFinder()) {
 }
@@ -59,6 +52,7 @@ PhaseSimulator::~PhaseSimulator(){}
 PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont)
 {
   HYDLA_LOGGER_DEBUG("%% current time:", todo->current_time);
+  HYDLA_LOGGER_DEBUG("%% prev map:", todo->prev_map);
   timer::Timer phase_timer;
   result_list_t result;
 
@@ -92,10 +86,44 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 {
   result_list_t result;
   bool has_next = false;
+
+  backend_->call("resetConstraint", 0, "", "");
+  backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
+  backend_->call("addPrevConstraint", 1, "mvp", "", &todo->prev_map);
+
   if(todo->phase_type == PointPhase)
   {
     set_simulation_mode(PointPhase);
+    if(todo->module_set_container == msc_no_init_)
+    {
+      // if it's not in first phases, judge entailment of the prev guards in advance
+      for(auto prev_guard : prev_guards_)
+      {
+        CheckConsistencyResult cc_result;
+        // TODO: 離散変化時刻の計算時の情報を生かせれば、そもそもこの判定自体が不要なはず。
+        // 前のフェーズで成り立っていたかと、不等式を含むかどうかとかで判定できる。
+        // もしくは離散変化時刻の計算時に、PPを含むかどうかまで計算しておく。     
+        switch(check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
+        case ENTAILED:
+          todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
+          relation_graph_->set_expanded(prev_guard->get_child(), true);
+          break;
+        case CONFLICTING:
+          todo->judged_prev_map.insert(std::make_pair(prev_guard, false));
+          relation_graph_->set_expanded(prev_guard->get_child(), false);
+          break;
+        default:
+          assert(0); // entailablities of prev guards must be determined
+          break;
+        }
+      }
+    }
   }else{
+    for(auto prev_guard : prev_guards_)
+    {
+      // reset expanded for all prev_guards
+      relation_graph_->set_expanded(prev_guard->get_child(), true);
+    }
     set_simulation_mode(IntervalPhase);
   }
 
@@ -105,7 +133,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
-    result_list_t tmp_result = simulate_ms(ms, todo->prev_map, todo);
+    result_list_t tmp_result = simulate_ms(ms, todo);
     if(!tmp_result.empty())
     {
       has_next = true;
@@ -128,19 +156,17 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 
 
-PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy::module_set_sptr& ms, const variable_map_t &time_applied_map, simulation_todo_sptr_t& todo)
+PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::module_set_sptr& ms, simulation_todo_sptr_t& todo)
 {
   HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
-  relation_graph_->set_valid(ms.get());
+  relation_graph_->set_adopted(ms.get());
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
   ConstraintStore store;
 
-  backend_->call("resetConstraint", 0, "", "");
-  backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
-  backend_->call("addPrevConstraint", 1, "mvp", "", &time_applied_map);
-
   simulation_todo_sptr_t tes = todo;
+
+  backend_->call("resetConstraintForVariable", 0, "", "");
 
   if(todo->module_set_container != msc_no_init_)
   {
@@ -162,7 +188,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
   {
     int connected_count = relation_graph_->get_connected_count();
     for(int i = 0; i < connected_count; i++){
-      module_set_sptr connected_ms = relation_graph_->get_component(i);
+      module_set_sptr connected_ms = module_set_sptr(new RelationGraph::module_set_t(relation_graph_->get_modules(i)));
       HYDLA_LOGGER_DEBUG("\n--- connected module set", i + 1, "/", connected_count, " ---\n", connected_ms->get_infix_string());
       HYDLA_LOGGER_DEBUG_VAR(store);
       SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
@@ -186,14 +212,14 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
           HYDLA_LOGGER_DEBUG("INCONSISTENT");
           //if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
           //else
-	  if(opts_->reuse){
-	    module_set_sptr changed_ms(new ModuleSet());
-	    for( auto it : *connected_ms ){
-	      if(has_variables(it.second,todo->changing_variables,false)) changed_ms->add_module(it);
-	    }
-	    todo->module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
-	  }
-	  else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
+          if(opts_->reuse){
+            module_set_sptr changed_ms(new ModuleSet());
+            for( auto it : *connected_ms ){
+              if(has_variables(it.second,todo->changing_variables,false)) changed_ms->add_module(it);
+            }
+            todo->module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
+          }
+          else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           return result;
         }
       }
@@ -350,9 +376,9 @@ void PhaseSimulator::initialize(variable_set_t &v,
   phase_sum_ = 0;
   parse_tree_ = pt;
   msc_no_init_ = msc_no_init;
-  const hydla::simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
+  const simulator::module_set_sptr ms = msc_no_init->get_max_module_set();
 
-  relation_graph_.reset(new RelationGraph(*ms, *variable_set_));
+  relation_graph_.reset(new RelationGraph(*ms));
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
@@ -364,15 +390,18 @@ void PhaseSimulator::initialize(variable_set_t &v,
   positive_asks_t pat;
   negative_asks_t nat;
 
+  // search prev guards
   ac.collect_ask(&eat, &pat, &nat, &prev_guards_);
   PrevSearcher searcher;
-  for(negative_asks_t::iterator it = prev_guards_.begin(); it != prev_guards_.end();){
+  for(auto it = prev_guards_.begin(); it != prev_guards_.end();){
     if(!searcher.search_prev((*it)->get_guard())){
       prev_guards_.erase(it++);
     }else{
       it++;
     }
   }
+
+
   backend_->set_variable_set(*variable_set_);
   variable_derivative_map_ = c;
 }
@@ -496,50 +525,6 @@ module_set_list_t PhaseSimulator::calculate_mms(
   state->profile["CalculateMMS"] += cmms_timer.get_elapsed_us();
   return ret;
 }
-
-
-variable_map_t shift_variable_map_time(const variable_map_t& vm,
-                                       Backend* backend_, const value_t &time){
-  variable_map_t shifted_vm;
-  variable_map_t::const_iterator it  = vm.begin();
-  variable_map_t::const_iterator end = vm.end();
-  for(; it!=end; ++it) {
-    if(it->second.undefined())
-      shifted_vm[it->first] = it->second;
-    else if(it->second.unique())
-    {
-      value_t val = it->second.get_unique_value();
-      range_t& range = shifted_vm[it->first];
-      value_t ret;
-      backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-      range.set_unique_value(ret);
-    }
-    else
-    {
-      range_t range = it->second;
-      for(uint i = 0; i < range.get_lower_cnt(); i++)
-      {
-        ValueRange::bound_t bd = it->second.get_lower_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-        range.set_lower_bound(ret, bd.include_bound);
-      }
-      for(uint i = 0; i < range.get_upper_cnt(); i++)
-      {
-
-        ValueRange::bound_t bd = it->second.get_upper_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("exprTimeShift", 2, "vltvlt", "vl", &val, &time, &ret);
-        range.set_upper_bound(ret, bd.include_bound);
-      }
-      shifted_vm[it->first] = range;
-    }
-  }
-  return shifted_vm;
-}
-
 
 /*
 CalculateConstraintStoreResult
@@ -726,10 +711,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         }
       }
       constraint_list.add_constraint(tell);
-//      maker.visit_node(tell, state->phase_type == IntervalPhase, false);
     }
-
-//    continuity_map = maker.get_continuity_map();
 
     for(auto constraint : state->initial_constraint_store){
       constraint_list.add_constraint(constraint);
@@ -788,10 +770,9 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
             continue;
-          }else if(prev_guards_.find(*it) != prev_guards_.end() &&
-            state->judged_prev_map.find(*it) != state->judged_prev_map.end())
+          }else if(state->judged_prev_map.find(*it) != state->judged_prev_map.end())
           {
-            // if this guard doesn't have non-prev variable and it has been already judged
+            // if this guard has been already judged
             bool entailed = state->judged_prev_map.find(*it)->second;
             HYDLA_LOGGER_DEBUG("%% ommitted guard: ", **it, ", entailed: ", entailed);
             if(entailed)
@@ -846,7 +827,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             }
             positive_asks.insert(*it);
             if(prev_guards_.find(*it) != prev_guards_.end()){
-              state->judged_prev_map.insert(std::make_pair(*it, true));
+
             }
             always_finder.find_always((*it)->get_child(), expanded_always);
             unknown_asks.erase(it++);
@@ -867,9 +848,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
               if(entailment_changed) break;
             }
             negative_asks.insert(*it);
-            if(prev_guards_.find(*it) != prev_guards_.end()){
-              state->judged_prev_map.insert(std::make_pair(*it, false));
-            }
             unknown_asks.erase(it++);
             break;
           case BRANCH_VAR:
@@ -882,17 +860,14 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             break;
         }
         if(entailment_changed) break;
-//        maker.set_continuity_map(continuity_map);
       }
     }
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     if(entailment_changed) continue;
   }while(expanded);
 
-  //add_continuity(continuity_map, state->phase_type);
-
   if(!unknown_asks.empty()){
-    boost::shared_ptr<hydla::symbolic_expression::Ask> branched_ask = *unknown_asks.begin();
+    boost::shared_ptr<symbolic_expression::Ask> branched_ask = *unknown_asks.begin();
     // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
     HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
     {
@@ -1240,7 +1215,7 @@ PhaseSimulator::todo_list_t
     
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
-    phase->variable_map = shift_variable_map_time(phase->variable_map, backend_.get(), phase->current_time);
+    phase->variable_map = shift_time_of_vm(phase->variable_map, phase->current_time);
     next_todo->phase_type = PointPhase;
 
     timer::Timer next_pp_timer;
@@ -1276,9 +1251,9 @@ PhaseSimulator::todo_list_t
 
     value_t max_time;
     if(opts_->max_time != ""){
-      max_time = symbolic_expression::node_sptr(new hydla::symbolic_expression::Number(opts_->max_time));
+      max_time = symbolic_expression::node_sptr(new symbolic_expression::Number(opts_->max_time));
     }else{
-      max_time = symbolic_expression::node_sptr(new hydla::symbolic_expression::Infinity());
+      max_time = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
     }
 
     pp_time_result_t time_result;
@@ -1462,42 +1437,27 @@ variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const 
 {
   HYDLA_LOGGER_DEBUG("%% time: ", tm);
   variable_map_t result;
+  TimeModifier modifier(*backend_);
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
-    if(it->second.undefined())
-    {
-      result[it->first] = it->second;
-    }
-    else if(it->second.unique())
-    {
-      value_t val = it->second.get_unique_value();
-      range_t& range = result[it->first];
-      value_t ret;
-      backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-      range.set_unique_value(ret);
-    }
-    else
-    {
-      range_t range = it->second;
-      for(uint i = 0; i < range.get_lower_cnt(); i++)
-      {
-        ValueRange::bound_t bd = it->second.get_lower_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-        range.set_lower_bound(ret, bd.include_bound);
-      }
-      for(uint i = 0; i < range.get_upper_cnt(); i++)
-      {
-
-        ValueRange::bound_t bd = it->second.get_upper_bound(i);
-        value_t val = bd.value;
-        value_t ret;
-        backend_->call("applyTime2Expr", 2, "vltvlt", "vl", &val, &tm, &ret);
-        range.set_upper_bound(ret, bd.include_bound);
-      }
-      result[it->first] = range;
-    }
+    result[it->first] = modifier.substitute_time(tm, it->second);
   }
   return result;
+}
+
+
+variable_map_t PhaseSimulator::shift_time_of_vm(const variable_map_t& vm, const value_t& tm)
+{
+  HYDLA_LOGGER_DEBUG("%% time: ", tm);
+  variable_map_t result;
+  TimeModifier modifier(*backend_);
+  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  {
+    result[it->first] = modifier.shift_time(tm, it->second);
+  }
+  return result;
+}
+
+
+}
 }

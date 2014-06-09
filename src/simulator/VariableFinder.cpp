@@ -125,6 +125,8 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variabl
   if(in_prev_){
     prev_variables_.insert(Variable(node->get_name(), differential_count_));
   }else{
+    // デフォルトの連続性を考えて、微分値が含まれる制約はもとの変数値も含むものとする
+    // TODO:連続性の解決はここでやらず、他のところでやるべきかも
     for(int i=0; i <= differential_count_; i++){
       variables_.insert(Variable(node->get_name(), i));
     }

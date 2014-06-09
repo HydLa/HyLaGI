@@ -37,6 +37,7 @@ typedef enum{
   TIME_OUT_REACHED,
   NOT_UNIQUE_IN_INTERVAL,
   NOT_SELECTED,
+  INTERRUPTED,
   NONE
 }CauseForTermination;
 

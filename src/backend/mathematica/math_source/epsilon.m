@@ -59,12 +59,15 @@ publicMethod[
              Module[
                     {direplus,direminus,flag,ret},
                     debugPrint["checkEpsilon arg",arg];
-                    direplus = Limit[arg, p[eps, 0, 1] -> 0,Direction->-1];
-                    direminus = Limit[arg, p[eps, 0, 1] -> 0,Direction->1];
-                    flag = FullSimplify[direplus - direminus];
-                    If[flag === 0,
-                       ret = 1,
-                       ret = 0
+                    ret = 0;
+                    If[arg =!= Infinity,
+                       direplus = Limit[arg, p[eps, 0, 1] -> 0,Direction->-1];
+                       direminus = Limit[arg, p[eps, 0, 1] -> 0,Direction->1];
+                       flag = FullSimplify[direplus - direminus];
+                       If[flag === 0,
+                          ret = 1,
+                          ret = 0
+                          ];
                        ];
                     ret
                     ]

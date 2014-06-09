@@ -14,12 +14,6 @@ namespace hydla {
 namespace simulator {
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
-/*
-struct CheckConsistencyResult
-{
-  ConstraintStore consistent_store, inconsistent_store;
-};
-*/
 
 typedef enum{
   CONDITIONS_TRUE,
@@ -52,6 +46,7 @@ public:
 
 
   variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
+  variable_map_t shift_time_of_vm(const variable_map_t &vm, const value_t &tm);
 
   /**
    * calculate phase results from given todo
@@ -102,7 +97,7 @@ protected:
     BRANCH_PAR
   } CheckEntailmentResult;
 
-  result_list_t simulate_ms(const module_set_sptr& ms, const variable_map_t&, simulation_todo_sptr_t& state);
+  result_list_t simulate_ms(const module_set_sptr& ms, simulation_todo_sptr_t& state);
 
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，

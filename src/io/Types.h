@@ -3,7 +3,7 @@
 #include "../simulator/Simulator.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 typedef simulator::entire_profile_t entire_profile_t;
 typedef simulator::profile_t profile_t;

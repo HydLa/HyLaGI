@@ -5,11 +5,13 @@ namespace grammer_rule {
 
 typedef enum _RuleID {
   RI_Number = 1, 
+  RI_Integer, 
   RI_Pi,
   RI_E,
   RI_PrevVariable,
   RI_BoundVariable,
   RI_Variable,
+  RI_Parameter,
   RI_Identifier,
   RI_ProgramName,
 
