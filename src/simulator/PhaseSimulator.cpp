@@ -103,12 +103,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         case ENTAILED:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
           todo->positive_asks.insert(prev_guard);
-          relation_graph_->set_expanded(prev_guard->get_child(), true);
           break;
         case CONFLICTING:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, false));
           todo->negative_asks.insert(prev_guard);
-          relation_graph_->set_expanded(prev_guard->get_child(), false);
           break;
         default:
           assert(0); // entailablities of prev guards must be determined
@@ -819,12 +817,33 @@ PhaseSimulator::calculate_constraint_store(
     return result_store;
   }
 
+  //TODO: ここで追加するより、全体を簡約したものをつなげて持っておいた方が良さそう
+  
+  ConstraintStore tmp_constraint_store;
+  for(int i = 0; i < relation_graph_->get_connected_count(); i++)
+  {
+    for(auto constraint : relation_graph_->get_constraints(i))
+    {
+      tmp_constraint_store.add_constraint(constraint);
+    }
+  }
+  
+  ConsistencyChecker consistency_checker(backend_);
+  ContinuityMapMaker maker;
+  for(auto constraint : tmp_constraint_store){
+    maker.visit_node(constraint, todo->phase_type == IntervalPhase, false);
+  }
+  consistency_checker.add_continuity(maker.get_continuity_map(), todo->phase_type);
+
+
   if(todo->phase_type == PointPhase)
   {
+    backend_->call("addConstraint", 1, "csn", "", &tmp_constraint_store);
     backend_->call("getConstraintStorePoint", 0, "", "cs", &result_store);
   }
   else
   {
+    backend_->call("addConstraint", 1, "cst", "", &tmp_constraint_store);
     backend_->call("getConstraintStoreInterval", 0, "", "cs", &result_store);
     replace_prev2parameter(todo->parent, result_store, todo->parameter_map);
   }

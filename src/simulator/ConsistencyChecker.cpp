@@ -82,13 +82,12 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   )
 {
   CheckEntailmentResult ce_result;
-  ConsistencyChecker consistency_checker(backend);
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   backend->call("startTemporary", 0, "", "");
-  consistency_checker.add_continuity(cont_map, phase);
+  add_continuity(cont_map, phase);
   const char* fmt = (phase == PointPhase)?"en":"et";
   backend->call("addConstraint", 1, fmt, "", &guard);
-  cc_result = consistency_checker.call_backend_check_consistency(phase);
+  cc_result = call_backend_check_consistency(phase);
   if(cc_result.consistent_store.consistent()){
     HYDLA_LOGGER_DEBUG("%% entailable");
     if(cc_result.inconsistent_store.consistent()){
@@ -99,11 +98,11 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
     {
       backend->call("endTemporary", 0, "", "");
       backend->call("startTemporary", 0, "", "");
-      consistency_checker.add_continuity(cont_map, phase);
+      add_continuity(cont_map, phase);
       symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend->call("addConstraint", 1, fmt, "", &not_node);
-      cc_result = consistency_checker.call_backend_check_consistency(phase);
+      cc_result = call_backend_check_consistency(phase);
       if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
         if(cc_result.inconsistent_store.consistent()){
@@ -130,7 +129,6 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   {
     ConstraintStore tmp_constraint_store;
     ContinuityMapMaker maker;
-    maker.reset();
     // TODO: ConstraintStoreでまとめる
     for(auto constraint : relation_graph.get_constraints(i))
     {
@@ -163,7 +161,6 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase)
 {
   ContinuityMapMaker maker;
-  maker.reset();
   for(auto constraint : constraint_store){
     maker.visit_node(constraint, phase == IntervalPhase, false);
   }
@@ -173,6 +170,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
 
 CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const continuity_map_t& continuity_map, const PhaseType& phase)
 {
+  backend->call("resetConstraintForVariable", 0, "", "");
   add_continuity(continuity_map, phase);
 
   const char* fmt = (phase == PointPhase)?"csn":"cst";
