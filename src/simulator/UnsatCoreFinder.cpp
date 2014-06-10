@@ -92,11 +92,9 @@ void UnsatCoreFinder::find_unsat_core(
 
   add_constraints(S, S4C, phase_type);
 
-  module_list_t::const_iterator ms_it = ms->begin();
-  module_list_t::const_iterator ms_end = ms->end();
-  for(;ms_it!=ms_end;ms_it++){
+  for(auto module : *ms){
     module_set_sptr temp_ms(new hydla::hierarchy::ModuleSet());
-    temp_ms->add_module(*ms_it);
+    temp_ms->add_module(module);
     TellCollector tell_collector(temp_ms);
 
     symbolic_expression::node_sptr condition_node;

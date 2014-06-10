@@ -207,6 +207,33 @@ RelationGraph::constraints_t RelationGraph::get_constraints(unsigned int index)
   return connected_constraints_vector[index];
 }
 
+RelationGraph::constraints_t RelationGraph::get_constraints()
+{
+  constraints_t constraints;
+  for(auto constraint_node : constraint_nodes)
+  {
+    if(constraint_node->expanded && constraint_node->module_adopted)
+    {
+      constraints.insert(constraint_node->constraint);
+    }
+  }
+  return constraints;
+}
+
+RelationGraph::constraints_t RelationGraph::get_expanded_constraints()
+{
+  constraints_t constraints;
+  for(auto constraint_node : constraint_nodes)
+  {
+    if(constraint_node->expanded)
+    {
+      constraints.insert(constraint_node->constraint);
+    }
+  }
+  return constraints;
+}
+
+
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
   if(!up_to_date){

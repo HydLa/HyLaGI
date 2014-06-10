@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <set>
 #include <string>
 #include <ostream>
 #include <algorithm>
@@ -22,7 +22,7 @@ class ModuleSet {
 public:
   typedef std::pair<std::string,
                     hydla::symbolic_expression::node_sptr> module_t;
-  typedef std::vector<module_t>                   module_list_t;
+  typedef std::set<module_t>                   module_list_t;
   typedef module_list_t::const_iterator           module_list_const_iterator;
 
   struct ModuleComp {
@@ -87,7 +87,7 @@ public:
   /**
    * モジュールを追加
    */
-  void add_module(const module_t& mod){module_list_.push_back(mod);}
+  void add_module(const module_t& mod){module_list_.insert(mod);}
 
   bool is_super_set(const ModuleSet& subset_mod) const
   {
@@ -121,10 +121,8 @@ public:
    */ 
   void dispatch(hydla::symbolic_expression::TreeVisitor* visitor)
   {
-    module_list_t::iterator it  = module_list_.begin();
-    module_list_t::iterator end = module_list_.end();
-    for(; it!=end; ++it) {
-      (it->second)->accept(it->second, visitor);
+    for(auto module :module_list_) {
+      (module.second)->accept(module.second, visitor);
     }
   }
   

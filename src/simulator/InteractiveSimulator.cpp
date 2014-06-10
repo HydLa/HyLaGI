@@ -185,7 +185,6 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
           }
         }
 
-        todo->ms_cache.clear();
         todo->ms_to_visit = module_set_container_->get_full_ms_list();
         todo->maximal_mss.clear();
         todo->positive_asks.clear();

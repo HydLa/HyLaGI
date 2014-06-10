@@ -207,9 +207,6 @@ private:
 
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
 
-  virtual module_set_list_t calculate_mms(
-    simulation_todo_sptr_t& state,
-    const variable_map_t& vm);
 /*
   virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
       simulation_todo_sptr_t&,

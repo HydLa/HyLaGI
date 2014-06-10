@@ -63,9 +63,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   const simulator::module_set_sptr ms = module_set_container_->get_max_module_set();
 
-  relation_graph_.reset(new RelationGraph(*ms));
-
-  
+  relation_graph_.reset(new RelationGraph(*ms)); 
 
   AskCollector ac;
 

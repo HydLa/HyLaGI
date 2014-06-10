@@ -2,6 +2,7 @@
 #include "Parameter.h"
 #include "Simulator.h"
 
+using namespace std;
 
 
 namespace {
@@ -20,13 +21,13 @@ namespace {
       ss << rhs.ss.rdbuf();
     }
 
-    friend std::ostream& operator<<(std::ostream& s, const NodeDumper& nd)
+    friend ostream& operator<<(std::ostream& s, const NodeDumper& nd)
     {
       s << nd.ss.str();
       return s;
     }
 
-    std::stringstream ss;
+    stringstream ss;
   };
 }
 
@@ -58,30 +59,31 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
 
 
 
-std::ostream& operator<<(std::ostream& s, const PhaseResult& phase)
+ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {
-  s << "%% PhaseType: " << phase.phase_type << std::endl;
-  s << "%% id: " <<  phase.id          << std::endl;
-  s << "%% step: " <<  phase.step << std::endl;
+  s << "%% PhaseType: " << phase.phase_type << endl;
+  s << "%% id: " <<  phase.id          << endl;
+  s << "%% step: " <<  phase.step << endl;
   
   if(!phase.current_time.undefined())
   {
-    s << "%% current_time: " << phase.current_time << std::endl;
+    s << "%% current_time: " << phase.current_time << endl;
   }
   if(!phase.end_time.undefined())
   {
-    s << "%% end_time: " << phase.end_time << std::endl;
+    s << "%% end_time: " << phase.end_time << endl;
   }
-  s << "--- variable map ---" << std::endl;
-  s << phase.variable_map    << std::endl;
-  s << "--- parameter map ---"          << std::endl;
-  s << phase.parameter_map << std::endl;
-  
+  s << "--- variable map ---" << endl;
+  s << phase.variable_map    << endl;
+  s << "--- parameter map ---"          << endl;
+  s << phase.parameter_map << endl;
+  s << "--- expanded_always --- " << endl;
+  s << phase.expanded_always << endl;
   return s;
 }
 
 
-std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
+ostream& operator<<(std::ostream& s, const variable_map_t& vm){
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   
@@ -93,7 +95,7 @@ std::ostream& operator<<(std::ostream& s, const variable_map_t& vm){
 }
 
 
-std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
+ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
   for(; it!=end; ++it) {
@@ -106,31 +108,31 @@ std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
 
 
 
-std::ostream& operator<<(std::ostream& s, const ask_set_t& a)
+ostream& operator<<(std::ostream& s, const ask_set_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const tells_t& a)
+ostream& operator<<(std::ostream& s, const tells_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const collected_tells_t& a)
+ostream& operator<<(std::ostream& s, const collected_tells_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const always_set_t& a)
+ostream& operator<<(std::ostream& s, const always_set_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const module_set_sptr& m)
+ostream& operator<<(std::ostream& s, const module_set_sptr& m)
 {
   s << m->get_name()
     << "\n"
@@ -138,13 +140,13 @@ std::ostream& operator<<(std::ostream& s, const module_set_sptr& m)
   return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const change_variables_t& a)
+ostream& operator<<(std::ostream& s, const change_variables_t& a)
 {
   s << "%% ChangedVariables: ";
   int i = 1;
   for(change_variables_t::iterator it = a.begin(); it != a.end(); it++, i++)
     s << *it << (i<a.size() ? " , " : "");
-  s << std::endl;
+  s << endl;
   return s;
 }
 

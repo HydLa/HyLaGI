@@ -14,16 +14,16 @@ namespace hierarchy {
 ModuleSet::ModuleSet()
 {}
 
-ModuleSet::ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node) :
-  module_list_(1, std::make_pair(name, node))
-{}
-
-ModuleSet::ModuleSet(ModuleSet& lhs, ModuleSet& rhs) :
-  module_list_(lhs.module_list_.size() + rhs.module_list_.size())
+ModuleSet::ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node)
 {
-  std::merge(lhs.module_list_.begin(), lhs.module_list_.end(),
-             rhs.module_list_.begin(), rhs.module_list_.end(),
-             module_list_.begin());
+  module_list_.insert(std::make_pair(name, node));
+}
+
+
+ModuleSet::ModuleSet(ModuleSet& lhs, ModuleSet& rhs)
+{
+  module_list_.insert(lhs.module_list_.begin(), lhs.module_list_.end());
+  module_list_.insert(rhs.module_list_.begin(), rhs.module_list_.end());
 }
 
 ModuleSet::~ModuleSet()

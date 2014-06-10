@@ -175,7 +175,6 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
 
   const char* fmt = (phase == PointPhase)?"csn":"cst";
   backend->call("addConstraint", 1, fmt, "", &constraint_store);
-      
   return call_backend_check_consistency(phase);
 }
 

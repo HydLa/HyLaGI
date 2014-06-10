@@ -87,8 +87,6 @@ typedef std::map<std::string, unsigned int> profile_t;
  * シミュレーションすべきフェーズを表す構造体
  */
 struct SimulationTodo{
-  typedef std::map<hydla::hierarchy::ModuleSet, ConstraintStore> ms_cache_t;
-
   PhaseType                 phase_type;
   int                       id;
   value_t                   current_time;
@@ -99,6 +97,7 @@ struct SimulationTodo{
   negative_asks_t           negative_asks;
   ask_set_t                 discrete_causes;
   always_set_t              expanded_always;
+  constraints_t             expanded_constraints;
   constraints_t             current_constraints;   /// 現在のフェーズで有効な制約
   
   entailed_prev_map_t       judged_prev_map;
@@ -117,8 +116,6 @@ struct SimulationTodo{
   profile_t profile;
   /// 所属するケースの計算時間
   int elapsed_time;
-  /// map to cache result of calculation for each module_set
-  ms_cache_t ms_cache;
   /// changing variables from previous phase
   change_variables_t changing_variables;
 

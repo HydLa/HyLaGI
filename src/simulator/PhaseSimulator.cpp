@@ -86,7 +86,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   backend_->call("addPrevConstraint", 1, "mvp", "", &todo->prev_map);
-
   if(todo->phase_type == PointPhase)
   {
     set_simulation_mode(PointPhase);
@@ -102,11 +101,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         switch(consistency_checker.check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
         case ENTAILED:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
-          todo->positive_asks.insert(prev_guard);
           break;
         case CONFLICTING:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, false));
-          todo->negative_asks.insert(prev_guard);
           break;
         default:
           assert(0); // entailablities of prev guards must be determined
@@ -115,21 +112,39 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       }
     }
   }else{
-    for(auto prev_guard : prev_guards_)
-    {
-      // reset expanded for all prev_guards
-      relation_graph_->set_expanded(prev_guard->get_child(), true);
-    }
     set_simulation_mode(IntervalPhase);
   }
-
-  for(auto constraint : todo->expanded_always)
-  {
-    todo->current_constraints.insert(constraint->get_child());
-  }
-
   while(module_set_container->go_next())
   {
+    relation_graph_->set_expanded_all(false);
+    if(todo->parent == result_root)
+    {
+      // in the initial state, set all modules expanded
+      for(auto module : *module_set_container->get_max_module_set())
+      {
+        relation_graph_->set_expanded(module.second, true);
+        todo->expanded_constraints.insert(module.second);
+      }
+    }
+    for(auto constraint : todo->expanded_always)
+    {
+      todo->expanded_constraints.insert(constraint);
+      relation_graph_->set_expanded(constraint, true);
+    }
+
+    for(auto entry : todo->judged_prev_map)
+    {
+      if(entry.second)
+      {
+        todo->positive_asks.insert(entry.first);
+        relation_graph_->set_expanded(entry.first->get_child(), true);
+      }
+      else
+      {
+        todo->negative_asks.insert(entry.first);
+      }
+    }
+
     module_set_sptr ms = module_set_container->get_module_set();
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
@@ -143,6 +158,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     todo->positive_asks.clear();
     todo->negative_asks.clear();
+    todo->expanded_constraints.clear();
   }
 
   //無矛盾な解候補モジュール集合が存在しない場合
@@ -163,70 +179,21 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   relation_graph_->set_adopted(ms.get());
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
-  ConstraintStore store;
   ConsistencyChecker consistency_checker(backend_);
   simulation_todo_sptr_t tes = todo;
 
   backend_->call("resetConstraintForVariable", 0, "", "");
 
-
-  if(todo->parent != result_root)
+  ConstraintStore store =
+    calculate_constraint_store(ms, todo);
+  if(!store.consistent())
   {
-    ConstraintStore sub_store =
-      calculate_constraint_store(ms, todo);
-    if(sub_store.consistent())
-    {
-      HYDLA_LOGGER_DEBUG("CONSISTENT");
-      store.add_constraint_store(sub_store);
-    }
-    else
-    {
-      HYDLA_LOGGER_DEBUG("INCONSISTENT");
-      module_set_container->mark_nodes(todo->maximal_mss, *ms);
-      return result;
-    }
+    HYDLA_LOGGER_DEBUG("INCONSISTENT");
+    module_set_container->mark_nodes(todo->maximal_mss, *ms);
+    return result;
   }
-  else
-  {
-    int connected_count = relation_graph_->get_connected_count();
-    for(int i = 0; i < connected_count; i++){
-      module_set_sptr connected_ms = module_set_sptr(new RelationGraph::module_set_t(relation_graph_->get_modules(i)));
-      HYDLA_LOGGER_DEBUG("\n--- connected module set", i + 1, "/", connected_count, " ---\n", connected_ms->get_infix_string());
-      HYDLA_LOGGER_DEBUG_VAR(store);
-      SimulationTodo::ms_cache_t::iterator ms_it = todo->ms_cache.find(*connected_ms);
-      if(ms_it != todo->ms_cache.end())
-      {
-        store.add_constraint_store(ms_it->second);
-      }
-      else
-      {
-        ConstraintStore sub_store =
-          calculate_constraint_store(connected_ms, todo);
-        if(sub_store.consistent())
-        {
-          HYDLA_LOGGER_DEBUG("CONSISTENT");
-          todo->ms_cache.insert(std::make_pair(*connected_ms, sub_store) );
-          store.add_constraint_store(sub_store);
-        }
-        else
-        {
+  HYDLA_LOGGER_DEBUG("CONSISTENT");
 
-          HYDLA_LOGGER_DEBUG("INCONSISTENT");
-          //if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
-          //else
-          if(opts_->reuse){
-            module_set_sptr changed_ms(new ModuleSet());
-            for( auto it : *connected_ms ){
-              if(has_variables(it.second,todo->changing_variables,false)) changed_ms->add_module(it);
-            }
-            module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
-          }
-          else module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
-          return result;
-        }
-      }
-    }
-  }
   module_set_container->mark_nodes();
   if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_list_t());
   todo->maximal_mss.push_back(ms);
@@ -274,6 +241,15 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
       }
     }
   }
+
+
+  AlwaysFinder always_finder;
+  // TODO: positive_asksの後件がalwaysだった場合に、expanded_alwaysから消しても良いはず
+  for(auto constraint : todo->expanded_constraints)
+  {
+    always_finder.find_always(constraint, phase->expanded_always);
+  }
+  todo->current_constraints = relation_graph_->get_constraints();
 
 
   if(opts_->assertion || break_condition_.get() != NULL){
@@ -495,69 +471,6 @@ void PhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
 */
 }
 
-module_set_list_t PhaseSimulator::calculate_mms(
-  simulation_todo_sptr_t& state,
-  const variable_map_t& vm)
-{
-  timer::Timer cmms_timer;
-  module_set_list_t ret = analysis_result_checker_->calculate_mms(state,vm,todo_container_);
-  state->profile["CalculateMMS"] += cmms_timer.get_elapsed_us();
-  return ret;
-}
-
-/*
-CalculateConstraintStoreResult
-PhaseSimulator::check_conditions
-(const module_set_sptr& ms, simulation_todo_sptr_t& state, const variable_map_t& vm, bool b){
-  timer::Timer cc_timer;
-  bool cc_result = analysis_result_checker_->check_conditions(ms, state, vm, b, todo_container_);
-  state->profile["CheckCondition " + ms->get_name()] += cc_timer.get_elapsed_us();
-  if(cc_result){
-    return CVM_CONSISTENT;
-  }else{
-    return CVM_INCONSISTENT;
-  }
-  return CVM_ERROR;
-}
-*/
- /*
-void PhaseSimulator::mark_nodes_by_unsat_core
-(const module_set_sptr& ms,
- simulation_todo_sptr_t& todo,
- const variable_map_t& vm
- ){
-  UnsatCoreFinder::unsat_constraints_t S;
-  UnsatCoreFinder::unsat_continuities_t S4C;
-  HYDLA_LOGGER_DEBUG_VAR(*ms);
-  unsat_core_finder_->find_unsat_core(ms,S,S4C,todo,vm);
-  ModuleSet module_set;
-  for(UnsatCoreFinder::unsat_constraints_t::iterator it = S.begin(); it != S.end(); it++){
-    HYDLA_LOGGER_DEBUG("unsat moduleset: ", *it->second);
-    for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
-  }
-  for(UnsatCoreFinder::unsat_continuities_t::iterator it = S4C.begin(); it != S4C.end(); it++){
-    HYDLA_LOGGER_DEBUG("unsat moduleset: ", *it->second);
-    for(ModuleSet::module_list_const_iterator mit = it->second->begin(); mit != it->second->end(); mit++) module_set.add_module(*mit);
-  }
-  HYDLA_LOGGER_DEBUG_VAR(module_set);
-  todo->module_set_container->mark_nodes(todo->maximal_mss, module_set);
-}
- */
-  /*
-void
-PhaseSimulator::find_unsat_core
-(const module_set_sptr& ms,
- simulation_todo_sptr_t& todo,
- const variable_map_t& vm
- ){
-  UnsatCoreFinder::unsat_constraints_t S;
-  UnsatCoreFinder::unsat_continuities_t S4C;
-  cout << "start find unsat core " << endl;
-  unsat_core_finder_->find_unsat_core(ms,S,S4C, todo->parent->positive_asks, todo->parent->negative_asks, vm, todo->parent->parameter_map, todo->parent->phase);
-  unsat_core_finder_->print_unsat_cores(S,S4C);
-  cout << "end find unsat core " << endl;
-}
-  */
 
 void PhaseSimulator::set_backend(backend_sptr_t back)
 {
@@ -580,7 +493,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   negative_asks_t& negative_asks = state->negative_asks;
 
   ask_set_t unknown_asks;
-  constraints_t &current_constraints = state->current_constraints;
 
   AskCollector  ask_collector;
   ConsistencyChecker consistency_checker(backend_);
@@ -592,7 +504,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
-      ask_collector.collect_ask(current_constraints,
+      ask_collector.collect_ask(state->expanded_constraints,
           &positive_asks,
           &negative_asks,
           &unknown_asks);
@@ -609,24 +521,12 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   ask_set_t original_u_asks = unknown_asks;
   bool entailment_changed = false;
 
-  relation_graph_->set_expanded_all(false);
-
   do{
     if(entailment_changed){
       positive_asks = original_p_asks;
       negative_asks = original_n_asks;
       unknown_asks = original_u_asks;
       entailment_changed = false;
-    }
-
-    for(auto ask : positive_asks)
-    {
-      current_constraints.insert(ask->get_child());
-    }
-    
-    for(auto constraint : current_constraints)
-    {
-      relation_graph_->set_expanded(constraint, true);
     }
 
     timer::Timer consistency_timer;
@@ -649,6 +549,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 */
     {
       CheckConsistencyResult cc_result;
+      static int num = 0;
+      cerr << ++num << endl;
       cc_result = consistency_checker.check_consistency(*relation_graph_, state->phase_type);
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
@@ -670,7 +572,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           continuity_map, state->current_time );
     }
 
-    ask_collector.collect_ask(current_constraints,
+    ask_collector.collect_ask(state->expanded_constraints,
         &positive_asks,
         &negative_asks,
         &unknown_asks);
@@ -741,9 +643,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
               }
             }
             positive_asks.insert(*it);
-            if(prev_guards_.find(*it) != prev_guards_.end()){
-
-            }
+            state->expanded_constraints.insert((*it)->get_child());
+            relation_graph_->set_expanded((*it)->get_child(), true);
             unknown_asks.erase(it++);
             expanded = true;
             break;
@@ -797,7 +698,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       return calculate_closure(state, ms);
     }
   }
-
   return true;
 }
 
@@ -1114,15 +1014,10 @@ PhaseSimulator::todo_list_t
 {
   todo_list_t ret;
 
-  AlwaysFinder always_finder;
   simulation_todo_sptr_t next_todo(new SimulationTodo());
   next_todo->parent = phase;
   next_todo->ms_to_visit = module_set_container->get_full_ms_list();
-  // TODO: positive_asksの後件がalwaysだった場合に、expanded_alwaysから消しても良いはず
-  for(auto constraint : current_todo->current_constraints)
-  {
-    always_finder.find_always(constraint, phase->expanded_always);
-  }
+  
   next_todo->expanded_always = phase->expanded_always;
   next_todo->parameter_map = phase->parameter_map;
 

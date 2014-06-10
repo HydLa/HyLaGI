@@ -119,6 +119,16 @@ public:
    */
   constraints_t get_constraints(const std::vector<Variable>& variables);
 
+  /**
+   * Get all valid (adopted and expanded) constraints
+   */
+  constraints_t get_constraints();
+
+  /**
+   * Get all expanded constraints
+   */
+  constraints_t get_expanded_constraints();
+
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
   typedef std::vector<std::pair<constraint_t, Variable > > relation_t;
