@@ -14,6 +14,7 @@
 namespace hydla {
 namespace simulator {
 
+typedef hierarchy::module_set_sptr module_set_sptr;
 
 /**
  * tellノードを集めるビジタークラス
