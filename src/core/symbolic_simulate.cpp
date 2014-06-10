@@ -21,7 +21,6 @@
 #endif
 // parser
 
-#include <boost/lexical_cast.hpp>
 
 // namespace
 using namespace hydla;
