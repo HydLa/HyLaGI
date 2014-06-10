@@ -1,7 +1,5 @@
 #include "Logger.h"
 
-#include <iostream>
-
 namespace hydla {
 namespace logger {
 

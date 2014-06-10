@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/preprocessor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
 namespace hydla {
