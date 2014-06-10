@@ -12,13 +12,13 @@ namespace hydla{
 namespace io{
 
 
-typedef hydla::simulator::PhaseResult                                       phase_result_t;
+typedef simulator::PhaseResult                                       phase_result_t;
 typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
-using hydla::simulator::phase_result_sptr_t;
+using simulator::phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                                   phase_result_sptrs_t;
-using hydla::simulator::variable_map_t; 
-using hydla::simulator::parameter_map_t;
-using hydla::simulator::value_t;
+using simulator::variable_map_t; 
+using simulator::parameter_map_t;
+using simulator::value_t;
 
 /**
  * 解軌道の出力を担当するクラス
@@ -26,7 +26,7 @@ using hydla::simulator::value_t;
 
 class TrajPrinter{
 public:
-  typedef hydla::simulator::PhaseResult                                       phase_result_t;
+  typedef simulator::PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
 
   virtual ~TrajPrinter(){}

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include "PhaseResult.h"
 
 namespace hydla

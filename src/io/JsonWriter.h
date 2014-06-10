@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -16,14 +15,14 @@ class JsonWriter{
 
   public:
 
-  typedef hydla::simulator::PhaseResult                                       phase_result_t;
+  typedef simulator::PhaseResult                                       phase_result_t;
   typedef boost::shared_ptr<phase_result_t>                                   phase_result_sptr_t;
   typedef boost::shared_ptr<const phase_result_t>                             phase_result_const_sptr_t;
-  typedef hydla::simulator::variable_map_t variable_map_t;
-  typedef hydla::simulator::variable_set_t variable_set_t;
-  typedef hydla::simulator::parameter_map_t parameter_map_t;
-  typedef hydla::simulator::Simulator       simulator_t;
-  typedef hydla::simulator::ValueRange      value_range_t;
+  typedef simulator::variable_map_t variable_map_t;
+  typedef simulator::variable_set_t variable_set_t;
+  typedef simulator::parameter_map_t parameter_map_t;
+  typedef simulator::Simulator       simulator_t;
+  typedef simulator::ValueRange      value_range_t;
   
   void write(const simulator_t &simulator, const std::string &name);
   void write_phase(const phase_result_const_sptr_t &phase, const std::string &name);
