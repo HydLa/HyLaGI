@@ -1,22 +1,17 @@
 #include <iostream>
 #include <exception>
 #include <string>
-#include <vector>
 #include <fstream>
 
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
 
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-
 // core
 #include "version.h"
 #include "ProgramOptions.h"
 
 // common
-#include "Logger.h"
 #include "Timer.h"
 
 // constraint hierarchy

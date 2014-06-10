@@ -1,14 +1,7 @@
 #pragma once
 
-#include <boost/bind.hpp>
-#include <boost/spirit/include/classic_core.hpp>
-#include <boost/spirit/include/classic_functor_parser.hpp>
-#include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/spirit/include/classic_parse_tree.hpp>
-#include <boost/spirit/include/classic_ast.hpp>
 #include <boost/spirit/include/classic_grammar_def.hpp> 
-
-#include <string>
 
 #include "HydLaGrammarRule.h"
 
