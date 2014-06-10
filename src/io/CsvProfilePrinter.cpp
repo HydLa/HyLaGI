@@ -1,7 +1,6 @@
 
 #include "CsvProfilePrinter.h"
 #include "PhaseResult.h"
-#include <iostream>
 
 using namespace std;
 
