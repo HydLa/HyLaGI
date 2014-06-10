@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-#include <sstream>
 #include <stdexcept>
 
 #include "Node.h"
@@ -17,7 +15,7 @@ public:
     std::runtime_error(init("", msg, line))
   {}
 
-  ParseError(const hydla::symbolic_expression::node_sptr& node, 
+  ParseError(const symbolic_expression::node_sptr& node, 
              int line = -1) : 
     std::runtime_error(
       init("", 
@@ -26,7 +24,7 @@ public:
   {}
   
   ParseError(const std::string& tag, 
-             const hydla::symbolic_expression::node_sptr& node, 
+             const symbolic_expression::node_sptr& node, 
              int line = -1) : 
     std::runtime_error(
       init(tag, 
@@ -79,7 +77,7 @@ public:
  */
 class UndefinedReference : public ParseError {
 public:
-  UndefinedReference(const hydla::symbolic_expression::node_sptr& node, 
+  UndefinedReference(const symbolic_expression::node_sptr& node, 
                      int line = -1) :
     ParseError("undefined reference", node, line)    
   {}
@@ -90,7 +88,7 @@ public:
  */
 class CircularReference : public ParseError {
 public:
-  CircularReference(const hydla::symbolic_expression::node_sptr& node, 
+  CircularReference(const symbolic_expression::node_sptr& node, 
                     int line = -1) :
     ParseError("circular reference", node, line)
   {}
@@ -111,8 +109,8 @@ public:
 class BinNodeError : public ParseError {
 public:
   BinNodeError(const std::string& tag,
-               const hydla::symbolic_expression::node_sptr& lhs,
-               const hydla::symbolic_expression::node_sptr& rhs, 
+               const symbolic_expression::node_sptr& lhs,
+               const symbolic_expression::node_sptr& rhs, 
                int line = -1) :
     ParseError(tag,
                msg(lhs, rhs), 
@@ -120,8 +118,8 @@ public:
   {}
 
 private:
-  std::string msg(const hydla::symbolic_expression::node_sptr& lhs,
-                  const hydla::symbolic_expression::node_sptr& rhs)
+  std::string msg(const symbolic_expression::node_sptr& lhs,
+                  const symbolic_expression::node_sptr& rhs)
   {
     std::stringstream s;
     s << "between '" 
@@ -139,8 +137,8 @@ private:
  */
 class InvalidConjunction : public BinNodeError {
 public:
-  InvalidConjunction(const hydla::symbolic_expression::node_sptr& lhs,
-                     const hydla::symbolic_expression::node_sptr& rhs, 
+  InvalidConjunction(const symbolic_expression::node_sptr& lhs,
+                     const symbolic_expression::node_sptr& rhs, 
                      int line = -1) :
     BinNodeError("cannot conbine using conjunction", 
                  lhs, rhs, 
@@ -153,8 +151,8 @@ public:
  */
 class InvalidDisjunction : public BinNodeError {
 public:
-  InvalidDisjunction(const hydla::symbolic_expression::node_sptr& lhs,
-                     const hydla::symbolic_expression::node_sptr& rhs, 
+  InvalidDisjunction(const symbolic_expression::node_sptr& lhs,
+                     const symbolic_expression::node_sptr& rhs, 
                      int line = -1) :
     BinNodeError("cannot conbine using disjunction", 
                  lhs, rhs, 
@@ -167,8 +165,8 @@ public:
  */
 class InvalidParallelComposition : public BinNodeError {
 public:
-  InvalidParallelComposition(const hydla::symbolic_expression::node_sptr& lhs,
-                             const hydla::symbolic_expression::node_sptr& rhs, 
+  InvalidParallelComposition(const symbolic_expression::node_sptr& lhs,
+                             const symbolic_expression::node_sptr& rhs, 
                              int line = -1) :
     BinNodeError("invalid parallel composition",
                  lhs, rhs, 
@@ -181,8 +179,8 @@ public:
  */
 class InvalidWeakComposition : public BinNodeError {
 public:
-  InvalidWeakComposition(const hydla::symbolic_expression::node_sptr& lhs,
-                         const hydla::symbolic_expression::node_sptr& rhs, 
+  InvalidWeakComposition(const symbolic_expression::node_sptr& lhs,
+                         const symbolic_expression::node_sptr& rhs, 
                          int line = -1) :
     BinNodeError("invalid weak composition",
                  lhs, rhs, 
@@ -195,7 +193,7 @@ public:
  */
 class InvalidAlways : public ParseError {
 public:
-  InvalidAlways(const hydla::symbolic_expression::node_sptr& child, 
+  InvalidAlways(const symbolic_expression::node_sptr& child, 
                 int line = -1) :
     ParseError("invalid always. do not use always operator in guard constraints", 
                  child, 
@@ -208,7 +206,7 @@ public:
  */
 class InvalidDifferential : public ParseError {
 public:
-  InvalidDifferential(const hydla::symbolic_expression::node_sptr& own, 
+  InvalidDifferential(const symbolic_expression::node_sptr& own, 
                           int line = -1) :
     ParseError("Sorry, applying differential operator to expression is not supported", 
                  own, 
@@ -221,7 +219,7 @@ public:
  */
 class InvalidPrevious : public ParseError {
 public:
-  InvalidPrevious(const hydla::symbolic_expression::node_sptr& own, 
+  InvalidPrevious(const symbolic_expression::node_sptr& own, 
                           int line = -1) :
     ParseError("Sorry, applying previous operator to expression is not supported", 
                  own, 

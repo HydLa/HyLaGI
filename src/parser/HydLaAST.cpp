@@ -1,16 +1,9 @@
 #include "HydLaAST.h"
 
-#include <iostream>
 #include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <assert.h>
 
 #include "HydLaGrammar.h"
 #include "CommentGrammar.h"
-#include "ParseError.h"
-#include "Logger.h"
-#include "Node.h"
 #include "NodeTreeGenerator.h"
 
 using namespace std;
