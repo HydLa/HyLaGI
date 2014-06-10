@@ -2,10 +2,8 @@
 #include "Backend.h"
 
 #include <iostream>
-#include <fstream>
 
 #include "Logger.h"
-#include "Timer.h"
 
 #include "ContinuityMapMaker.h"
 
@@ -20,7 +18,6 @@ namespace simulator
 using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace logger;
-using namespace timer;
 using namespace backend;
 
 
@@ -126,6 +123,42 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 }
 
 
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase)
+{
+  CheckConsistencyResult result;
+  for(int i = 0; i < relation_graph.get_connected_count(); i++)
+  {
+    ConstraintStore tmp_constraint_store;
+    ContinuityMapMaker maker;
+    maker.reset();
+    // TODO: ConstraintStoreでまとめる
+    for(auto constraint : relation_graph.get_constraints(i))
+    {
+      tmp_constraint_store.add_constraint(constraint);
+      maker.visit_node(constraint, phase == IntervalPhase, false);
+    }
+    
+    CheckConsistencyResult tmp_result;
+    tmp_result = check_consistency(tmp_constraint_store, maker.get_continuity_map(), phase);
+
+    // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）
+    if(!tmp_result.consistent_store.consistent())
+    {
+      result.consistent_store = tmp_result.consistent_store;
+    }
+    else
+    {
+      result.consistent_store.add_constraint_store(tmp_result.consistent_store);
+    }
+  }
+
+  if(result.consistent_store.consistent())
+  {
+    result.inconsistent_store.set_consistency(false);
+  }
+  return result;
+}
+
 
 CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase)
 {
@@ -136,6 +169,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
   }
   return check_consistency(constraint_store, maker.get_continuity_map(), phase);
 }
+
 
 CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const continuity_map_t& continuity_map, const PhaseType& phase)
 {

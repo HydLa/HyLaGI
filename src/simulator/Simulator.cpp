@@ -67,14 +67,19 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   
 
-  AskCollector ac(ms);
-  always_set_t eat;
+  AskCollector ac;
+
+  constraints_t constraints;
+  for(auto module : *ms)
+  {
+    constraints.insert(module.second);
+  }
   positive_asks_t pat;
   negative_asks_t nat;
   ask_set_t prev_guards_;
 
   // search prev guards
-  ac.collect_ask(&eat, &pat, &nat, &prev_guards_);
+  ac.collect_ask(constraints, &pat, &nat, &prev_guards_);
   PrevSearcher searcher;
   for(auto it = prev_guards_.begin(); it != prev_guards_.end();){
     if(!searcher.search_prev((*it)->get_guard())){
@@ -159,8 +164,12 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
+  for(auto module : *module_set_container_->get_max_module_set())
+  {
+    todo->current_constraints.insert(module.second);
+  }
   todo->maximal_mss.clear();
-  todo->parent = result_root_;
+  todo->parent = result_root_;  
   return todo;
 }
 

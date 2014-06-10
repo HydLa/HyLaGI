@@ -8,6 +8,7 @@
 namespace hydla {
 namespace simulator {
 
+
 /**
  * Graph to represent relations of constraints and variables
  */
@@ -75,6 +76,11 @@ public:
    * Set the constraint expanded or not
    */ 
   void set_expanded(constraint_t cons, bool expanded);
+
+  /**
+   * Set all constraints expanded or not
+   */
+  void set_expanded_all(bool expanded);
   
   /**
    * Get the number of connected component in the graph.

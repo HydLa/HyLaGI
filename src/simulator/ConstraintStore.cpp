@@ -32,11 +32,11 @@ constraints_t::const_iterator ConstraintStore::end()const
 
 void ConstraintStore::add_constraint(const constraint_t &constraint)
 {
-  constraints.push_back(constraint);
+  constraints.insert(constraint);
 }
 void ConstraintStore::add_constraint_store(const ConstraintStore &store)
 {
-  constraints.insert(constraints.end(), store.begin(), store.end());
+  constraints.insert(store.begin(), store.end());
 }
 
 void ConstraintStore::clear()

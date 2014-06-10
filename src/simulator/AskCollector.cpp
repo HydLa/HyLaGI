@@ -1,8 +1,6 @@
 #include "AskCollector.h"
 
 #include <cassert>
-#include <iostream>
-#include <algorithm>
 #include <sstream>
 
 #include <boost/bind.hpp>
@@ -17,46 +15,30 @@ using namespace hydla::logger;
 namespace hydla {
 namespace simulator {
   
-AskCollector::AskCollector(const module_set_sptr& module_set) :
-  module_set_(module_set)
+AskCollector::AskCollector()
 {}
 
 AskCollector::~AskCollector()
 {}
 
-void AskCollector::collect_ask(always_set_t* expanded_always,                   
+void AskCollector::collect_ask(constraints_t &constraints,
                                const positive_asks_t*   positive_asks,
                                const negative_asks_t*   negative_asks,
                                ask_set_t*         unknown_asks)
 {
-  assert(expanded_always);
   assert(negative_asks);
   assert(positive_asks);
   assert(unknown_asks);
 
-  expanded_always_ = expanded_always;
   negative_asks_   = negative_asks;
   positive_asks_   = positive_asks;
   unknown_asks_    = unknown_asks;
 
-  // ModuleSetのノードの探索
-  in_positive_ask_    = false;
-  module_set_->dispatch(this);
-
-  // 展開済みalwaysノードの探索
-  in_positive_ask_    = false;
-  always_set_t::const_iterator it  = expanded_always->begin();
-  always_set_t::const_iterator end = expanded_always->end();
-  for(; it!=end; ++it) {
-    // 採用しているモジュール集合内に入っているかどうか
-    if(visited_always_.find(*it) != visited_always_.end()) {
-      accept((*it)->get_child());
-    }
-  }
-
-  // 展開済みalwaysノードのリストの更新
-  expanded_always->insert(new_expanded_always_.begin(), 
-                          new_expanded_always_.end());
+  for(auto constraint : constraints)
+  {
+    in_positive_ask_    = false;
+    accept(constraint);
+  }   
 }
 
 
@@ -80,23 +62,6 @@ void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node
     unknown_asks_->insert(node);
   }
 }
-
-// Tell制約
-void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node)
-{
-  // do nothing
-}
-
-// 時相演算子
-void AskCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
-{
-  accept(node->get_child());
-  if(in_positive_ask_){
-    new_expanded_always_.insert(node);
-  }
-  visited_always_.insert(node);
-}
-
 
 } //namespace simulator
 } //namespace hydla

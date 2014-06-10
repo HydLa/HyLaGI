@@ -25,8 +25,6 @@
 #include "TimeModifier.h"
 
 #include "Backend.h"
-#include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
 
 namespace hydla
 {
@@ -37,8 +35,6 @@ using namespace std;
 using namespace boost;
 using namespace backend;
 
-using namespace backend::mathematica;
-using namespace backend::reduce;
 using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
@@ -129,6 +125,11 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     set_simulation_mode(IntervalPhase);
   }
 
+  for(auto constraint : todo->expanded_always)
+  {
+    todo->current_constraints.insert(constraint->get_child());
+  }
+
   while(module_set_container->go_next())
   {
     module_set_sptr ms = module_set_container->get_module_set();
@@ -169,6 +170,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   simulation_todo_sptr_t tes = todo;
 
   backend_->call("resetConstraintForVariable", 0, "", "");
+
 
   if(todo->parent != result_root)
   {
@@ -380,7 +382,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   module_set_container = msc;
   relation_graph_ = relation;
   prev_guards_ = prev_guards;
-
   
   backend_->set_variable_set(*variable_set_);
   variable_derivative_map_ = c;
@@ -581,22 +582,19 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   negative_asks_t& negative_asks = state->negative_asks;
 
   ask_set_t unknown_asks;
-  always_set_t& expanded_always = state->expanded_always;
-  TellCollector tell_collector(ms);
-  AskCollector  ask_collector(ms);
-  tells_t         tell_list;
-  ConstraintStore   constraint_list;
+  constraints_t &current_constraints = state->current_constraints;
+
+  AskCollector  ask_collector;
   ConsistencyChecker consistency_checker(backend_);
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
-  AlwaysFinder always_finder;
 
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
-      ask_collector.collect_ask(&expanded_always,
+      ask_collector.collect_ask(current_constraints,
           &positive_asks,
           &negative_asks,
           &unknown_asks);
@@ -613,6 +611,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   ask_set_t original_u_asks = unknown_asks;
   bool entailment_changed = false;
 
+  relation_graph_->set_expanded_all(false);
+
   do{
     if(entailment_changed){
       positive_asks = original_p_asks;
@@ -620,17 +620,21 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       unknown_asks = original_u_asks;
       entailment_changed = false;
     }
-    HYDLA_LOGGER_DEBUG_VAR(expanded_always.size());
-    tell_collector.collect_new_tells(&tell_list,
-        &expanded_always,
-        &positive_asks);
+
+    for(auto ask : positive_asks)
+    {
+      current_constraints.insert(ask->get_child());
+    }
+    
+    for(auto constraint : current_constraints)
+    {
+      relation_graph_->set_expanded(constraint, true);
+    }
 
     timer::Timer consistency_timer;
 
-    constraint_list.clear();
-
     maker.reset();
-
+/*
     for(auto tell : tell_list){
       if(opts_->reuse && state->in_following_step())
       {
@@ -641,17 +645,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         {
           continue;
         }
+        // TODO: 何やってるか確認
       }
-      constraint_list.add_constraint(tell);
     }
-
-    for(auto constraint : state->initial_constraint_store){
-      constraint_list.add_constraint(constraint);
-    }
-
+*/
     {
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker.check_consistency(constraint_list, state->phase_type);
+      cc_result = consistency_checker.check_consistency(*relation_graph_, state->phase_type);
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
@@ -672,7 +672,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           continuity_map, state->current_time );
     }
 
-    ask_collector.collect_ask(&expanded_always,
+    ask_collector.collect_ask(current_constraints,
         &positive_asks,
         &negative_asks,
         &unknown_asks);
@@ -746,7 +746,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             if(prev_guards_.find(*it) != prev_guards_.end()){
 
             }
-            always_finder.find_always((*it)->get_child(), expanded_always);
             unknown_asks.erase(it++);
             expanded = true;
             break;
@@ -789,13 +788,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
     {
       // 分岐先を生成（導出される方）
+      // TODO: 分岐時の制約の追加をしていない。
       simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
-      new_todo->initial_constraint_store.add_constraint((branched_ask)->get_guard());
       todo_container_->push_todo(new_todo);
     }
     {
       // 分岐先を生成（導出されない方）
-      state->initial_constraint_store.add_constraint(symbolic_expression::node_sptr(new Not((branched_ask)->get_guard())));
+      // TODO: 分岐時の制約の追加をしていない。
       negative_asks.insert(branched_ask);
       return calculate_closure(state, ms);
     }
@@ -1096,11 +1095,18 @@ PhaseSimulator::todo_list_t
 {
   todo_list_t ret;
 
+  AlwaysFinder always_finder;
   simulation_todo_sptr_t next_todo(new SimulationTodo());
   next_todo->parent = phase;
   next_todo->ms_to_visit = module_set_container->get_full_ms_list();
+  // TODO: positive_asksの後件がalwaysだった場合に、expanded_alwaysから消しても良いはず
+  for(auto constraint : current_todo->current_constraints)
+  {
+    always_finder.find_always(constraint, phase->expanded_always);
+  }
   next_todo->expanded_always = phase->expanded_always;
   next_todo->parameter_map = phase->parameter_map;
+
 
   if(current_phase_ == PointPhase)
   {
@@ -1129,17 +1135,17 @@ PhaseSimulator::todo_list_t
     std::map<int, boost::shared_ptr<Ask> > ask_map;
 
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
-    for(positive_asks_t::const_iterator it = phase->positive_asks.begin(); it != phase->positive_asks.end(); it++){
-      symbolic_expression::node_sptr negated_node(new Not((*it)->get_guard()));
-      int id = (*it)->get_id();
-      ask_map[id] = *it;
+    for(auto ask : phase->positive_asks){
+      symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
+      int id = ask->get_id();
+      ask_map[id] = ask;
       dc_causes.push_back(dc_cause_t(negated_node, id) );
     }
     //現在導出されていないガード条件を離散変化条件として追加
-    for(negative_asks_t::const_iterator it = phase->negative_asks.begin(); it != phase->negative_asks.end(); it++){
-      symbolic_expression::node_sptr node((*it)->get_guard() );
-      int id = (*it)->get_id();
-      ask_map[id] = *it;
+    for(auto ask : phase->negative_asks){
+      symbolic_expression::node_sptr node(ask->get_guard() );
+      int id = ask->get_id();
+      ask_map[id] = ask;
       dc_causes.push_back(dc_cause_t(node, id));
     }
 

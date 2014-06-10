@@ -192,6 +192,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 
   ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)
 {
+/* TODO: implement
   bool non_prev;
   PrevSearcher searcher;
  // if(opts_->analysis_mode == "debug") 
@@ -270,7 +271,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 
     // 集めた制約をソルバに送る
     // TODO? : IP にも対応する
-    const char* fmt = (/*state->phase == PointPhase*/ true)?"csn":"cst";
+    const char* fmt = (true)?"csn":"cst";
     backend_->call("addConstraint", 1, fmt, "", &constraint_list);
 
     // デフォルト連続性を表わす制約をソルバに送る
@@ -304,7 +305,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       }
       
       // TODO? : IP にも対応する
-      const char* fmt = (/*state->phase == PointPhase*/ true)?"csn":"cst";
+      const char* fmt = (true)?"csn":"cst";
       backend_->call("addConstraint", 1, fmt, "", &constraint_list);
       
       // デフォルト連続性を表わす制約をソルバに送る
@@ -354,7 +355,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     break;
   }
   return ret;
-
+*/
 
 }
 }

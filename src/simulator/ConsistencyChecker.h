@@ -1,12 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <cassert>
-
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "PhaseResult.h"
 #include "RelationGraph.h"
 #include "Simulator.h"
@@ -22,7 +15,6 @@ struct CheckConsistencyResult
 class ConsistencyChecker{
 
 public:
-
 
   typedef enum{
     ENTAILED,
@@ -43,11 +35,10 @@ public:
   typedef std::set< std::string > change_variables_t;
 
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase);
-  
-  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
-  
+
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase);
+
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
-  CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
 
   /**
    * Check whether a guard is entailed or not.
@@ -62,6 +53,8 @@ public:
 
 
 private:
+  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
+  CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   backend_sptr_t backend;
 };
 
