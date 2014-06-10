@@ -7,7 +7,7 @@ namespace hydla{
 namespace simulator{
 
 typedef symbolic_expression::node_sptr constraint_t;
-typedef std::vector<constraint_t> constraints_t;
+typedef std::set<constraint_t> constraints_t;
 
 class ConstraintStore
 {

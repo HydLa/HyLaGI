@@ -188,6 +188,16 @@ void RelationGraph::set_expanded(constraint_t cons, bool expanded)
 }
 
 
+void RelationGraph::set_expanded_all(bool expanded)
+{
+  for(auto node : constraint_nodes)
+  {
+    node->expanded = expanded;
+  }
+  up_to_date = false;
+}
+
+
 RelationGraph::constraints_t RelationGraph::get_constraints(unsigned int index)
 {
   if(!up_to_date){
@@ -271,7 +281,10 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::GreaterEqual> n
 }
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> node)
 {
-  accept(node->get_rhs());
+  if(visit_mode == ADDING)
+  {
+    accept(node->get_rhs());
+  }
 }
 
 
