@@ -159,7 +159,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
     ostream << endl;
   }else{
-    if(node->phase_type == hydla::simulator::PointPhase){
+    if(node->phase_type == simulator::PointPhase){
       std::stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());

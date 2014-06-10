@@ -1,6 +1,5 @@
 #include "JsonWriter.h"
 #include "Logger.h"
-#include <iostream>
 #include <fstream>
 #include "Utility.h"
 #include "Constants.h"
