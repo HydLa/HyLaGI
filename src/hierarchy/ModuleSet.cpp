@@ -98,6 +98,14 @@ int ModuleSet::compare(const ModuleSet& rhs) const
   return comp;
 }
 
+int ModuleSet::erase(const ModuleSet& ms)
+{
+  int sum = 0;
+  for(auto m : ms){
+    sum += erase(m);
+  }
+  return sum;
+}	
 
 bool ModuleSet::including(const ModuleSet& ms) const
 {
