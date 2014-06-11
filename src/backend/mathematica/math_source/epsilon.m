@@ -74,7 +74,6 @@ findMinTimeTest[causeAndID_, condition_] :=
          debugPrint["# In EPSILON MODE # : causeAndID[[2]] ", causeAndID[[2]]];
          tmp = cause && condition && t > 0;
          debugPrint["# In EPSILON MODE # : sol before Reduce", tmp];
-         debugPrint["# In EPSILON MODE # : Reals", Reals];
          sol = Reduce[cause && condition && t > 0, t, Reals];
          checkMessage[];
          If[sol === False, Return[{}] ];

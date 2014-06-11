@@ -303,7 +303,7 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
 #endif
   pp_time_result_t eps_time_result;
   //一階目
-  backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+  backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
   //中身の確認
   unsigned int time_it;
 #ifdef _DEBUG_PASS_SPECIFIC_CASE
