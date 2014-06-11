@@ -39,8 +39,6 @@ public:
 
   virtual ~PhaseSimulator();
 
-  virtual void set_backend(backend_sptr_t back);
-
   void set_break_condition(symbolic_expression::node_sptr break_cond);
   symbolic_expression::node_sptr get_break_condition();
 
@@ -86,6 +84,7 @@ public:
    */
   virtual todo_list_t make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
 
+  void set_backend(backend_sptr_t);
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
@@ -196,7 +195,6 @@ private:
                              continuity_map_t& continuity_map,
                              const value_t& current_time );
 
-
   bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
 
@@ -226,6 +224,8 @@ private:
 
   PhaseType current_phase_;
   
+  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+
   module_set_container_sptr module_set_container;
 
 };

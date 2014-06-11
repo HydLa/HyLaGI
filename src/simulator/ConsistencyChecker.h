@@ -38,6 +38,12 @@ public:
 
   CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase);
 
+
+  /**
+   * Get inconsistent module set in the last check_consistency
+   */
+  module_set_t get_inconsistent_module_set();
+
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
 
   /**
@@ -56,6 +62,7 @@ private:
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   backend_sptr_t backend;
+  module_set_t inconsistent_module_set;
 };
 
 

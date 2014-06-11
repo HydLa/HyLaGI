@@ -72,7 +72,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 {
   result_list_t result;
   bool has_next = false;
-  ConsistencyChecker consistency_checker(backend_);
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
@@ -89,7 +88,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         // TODO: 離散変化時刻の計算時の情報を生かせれば、そもそもこの判定自体が不要なはず。
         // 前のフェーズで成り立っていたかと、不等式を含むかどうかとかで判定できる。
         // もしくは離散変化時刻の計算時に、PPを含むかどうかまで計算しておく。     
-        switch(consistency_checker.check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
+        switch(consistency_checker->check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
         case ENTAILED:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
           break;
@@ -170,7 +169,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   relation_graph_->set_adopted(ms.get());
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
-  ConsistencyChecker consistency_checker(backend_);
 
   backend_->call("resetConstraintForVariable", 0, "", "");
 
@@ -179,7 +177,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   if(!store.consistent())
   {
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
-    module_set_container->mark_nodes(todo->maximal_mss, *ms);
+    module_set_container->mark_nodes(todo->maximal_mss, consistency_checker->get_inconsistent_module_set());
     return result;
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");
@@ -251,7 +249,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     {
       HYDLA_LOGGER_DEBUG("%% check_assertion");
       CheckConsistencyResult cc_result;
-      switch(consistency_checker.check_entailment(cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), continuity_map_t(), todo->phase_type)){
+      switch(consistency_checker->check_entailment(cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), continuity_map_t(), todo->phase_type)){
       case ENTAILED:
       case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
         std::cout << "Assertion Failed!" << std::endl;
@@ -275,7 +273,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     {
       HYDLA_LOGGER_DEBUG("%% check_break_condition");
       CheckConsistencyResult cc_result;
-      switch(consistency_checker.check_entailment(cc_result, break_condition_, continuity_map_t(), todo->phase_type)){
+      switch(consistency_checker->check_entailment(cc_result, break_condition_, continuity_map_t(), todo->phase_type)){
       case ENTAILED:
       case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
       case BRANCH_PAR: //TODO: 分岐すべき？要検討
@@ -461,6 +459,7 @@ void PhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
 void PhaseSimulator::set_backend(backend_sptr_t back)
 {
   backend_ = back;
+  consistency_checker.reset(new ConsistencyChecker(backend_));
 }
 
 
@@ -480,7 +479,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   ask_set_t unknown_asks;
 
   AskCollector  ask_collector;
-  ConsistencyChecker consistency_checker(backend_);
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
@@ -534,9 +532,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 */
     {
       CheckConsistencyResult cc_result;
-      static int num = 0;
-      cerr << ++num << endl;
-      cc_result = consistency_checker.check_consistency(*relation_graph_, state->phase_type);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type);
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
@@ -613,7 +609,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
         maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
         CheckConsistencyResult check_consistency_result;
-        switch(consistency_checker.check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
+        switch(consistency_checker->check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             if(opts_->reuse && state->in_following_step()){
@@ -712,12 +708,11 @@ PhaseSimulator::calculate_constraint_store(
     }
   }
   
-  ConsistencyChecker consistency_checker(backend_);
   ContinuityMapMaker maker;
   for(auto constraint : tmp_constraint_store){
     maker.visit_node(constraint, todo->phase_type == IntervalPhase, false);
   }
-  consistency_checker.add_continuity(maker.get_continuity_map(), todo->phase_type);
+  consistency_checker->add_continuity(maker.get_continuity_map(), todo->phase_type);
 
 
   if(todo->phase_type == PointPhase)
@@ -965,7 +960,6 @@ void PhaseSimulator::apply_previous_solution(
     const phase_result_sptr_t parent,
     continuity_map_t& continuity_map,
     const value_t& current_time ){
-  ConsistencyChecker consistency_checker(backend_);
   for(auto pair : parent->variable_map){
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
@@ -994,7 +988,7 @@ void PhaseSimulator::apply_previous_solution(
       }
     }
   }
-  consistency_checker.add_continuity(continuity_map, in_IP ? IntervalPhase : PointPhase );
+  consistency_checker->add_continuity(continuity_map, in_IP ? IntervalPhase : PointPhase );
 }
 
 PhaseSimulator::todo_list_t

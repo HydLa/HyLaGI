@@ -145,6 +145,8 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     if(!tmp_result.consistent_store.consistent())
     {
       result.consistent_store = tmp_result.consistent_store;
+      inconsistent_module_set = relation_graph.get_modules(i);
+      break;
     }
     else
     {
@@ -160,14 +162,9 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   return result;
 }
 
-
-CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase)
+module_set_t ConsistencyChecker::get_inconsistent_module_set()
 {
-  ContinuityMapMaker maker;
-  for(auto constraint : constraint_store){
-    maker.visit_node(constraint, phase == IntervalPhase, false);
-  }
-  return check_consistency(constraint_store, maker.get_continuity_map(), phase);
+  return inconsistent_module_set;
 }
 
 
