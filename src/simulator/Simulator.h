@@ -96,7 +96,6 @@ struct SimulationTodo{
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   ask_set_t                 discrete_causes;
-  always_set_t              expanded_always;
   constraints_t             expanded_constraints;
   constraints_t             current_constraints;   /// 現在のフェーズで有効な制約
   

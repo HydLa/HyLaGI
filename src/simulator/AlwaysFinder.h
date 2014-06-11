@@ -22,7 +22,7 @@ public:
    * @param node 調べる対象となる制約
    * @param include_guard ガード条件を対象とするかどうか
    */
-  void find_always(symbolic_expression::node_sptr node, always_set_t& always_set)
+  void find_always(symbolic_expression::node_sptr node, constraints_t& always_set)
   {
     always_set_ = &always_set;
     accept(node);
@@ -43,7 +43,7 @@ public:
 
 private:
 
-  always_set_t *always_set_;
+  constraints_t *always_set_;
 };
 
 } //namespace simulator

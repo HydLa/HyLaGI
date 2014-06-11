@@ -1,10 +1,4 @@
 #include <iostream>
-#include <fstream>
-#include <boost/xpressive/xpressive.hpp>
-#include <boost/iterator/indirect_iterator.hpp>
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
 
 #include "PhaseSimulator.h"
 
@@ -12,14 +6,11 @@
 #include "Timer.h"
 
 #include "PrevReplacer.h"
-#include "TellCollector.h"
 #include "AskCollector.h"
 #include "VariableFinder.h"
 #include "ContinuityMapMaker.h"
 #include "PrevSearcher.h"
 #include "Exceptions.h"
-#include "AnalysisResultChecker.h"
-#include "UnsatCoreFinder.h"
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
 #include "TimeModifier.h"
@@ -39,7 +30,7 @@ using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()), unsat_core_finder_(new UnsatCoreFinder()) {
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()) {
 }
 
 PhaseSimulator::~PhaseSimulator(){}
@@ -114,21 +105,23 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   }else{
     set_simulation_mode(IntervalPhase);
   }
+  if(todo->parent == result_root)
+  {
+    // in the initial state, set all modules expanded
+    for(auto module : *module_set_container->get_max_module_set())
+    {
+      todo->expanded_constraints.insert(module.second);
+    }
+  }
+
+
   while(module_set_container->go_next())
   {
+    module_set_sptr ms = module_set_container->get_module_set();
+    
     relation_graph_->set_expanded_all(false);
-    if(todo->parent == result_root)
+    for(auto constraint : todo->expanded_constraints)
     {
-      // in the initial state, set all modules expanded
-      for(auto module : *module_set_container->get_max_module_set())
-      {
-        relation_graph_->set_expanded(module.second, true);
-        todo->expanded_constraints.insert(module.second);
-      }
-    }
-    for(auto constraint : todo->expanded_always)
-    {
-      todo->expanded_constraints.insert(constraint);
       relation_graph_->set_expanded(constraint, true);
     }
 
@@ -145,7 +138,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       }
     }
 
-    module_set_sptr ms = module_set_container->get_module_set();
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
     timer::Timer ms_timer;
@@ -158,7 +150,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     todo->positive_asks.clear();
     todo->negative_asks.clear();
-    todo->expanded_constraints.clear();
   }
 
   //無矛盾な解候補モジュール集合が存在しない場合
@@ -180,7 +171,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
   ConsistencyChecker consistency_checker(backend_);
-  simulation_todo_sptr_t tes = todo;
 
   backend_->call("resetConstraintForVariable", 0, "", "");
 
@@ -203,7 +193,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
 
 
   // 変数表はここで作成する
-  backend_->call("resetConstraint", 0, "", "");
   vector<variable_map_t> create_result;
   if(phase->phase_type == PointPhase)
   {
@@ -242,12 +231,9 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     }
   }
 
-
-  AlwaysFinder always_finder;
-  // TODO: positive_asksの後件がalwaysだった場合に、expanded_alwaysから消しても良いはず
-  for(auto constraint : todo->expanded_constraints)
+  for(auto positive_ask : todo->positive_asks)
   {
-    always_finder.find_always(constraint, phase->expanded_always);
+    phase->expanded_constraints.insert(positive_ask->get_child());
   }
   todo->current_constraints = relation_graph_->get_constraints();
 
@@ -475,7 +461,6 @@ void PhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
 void PhaseSimulator::set_backend(backend_sptr_t back)
 {
   backend_ = back;
-  unsat_core_finder_->set_backend(back);
 }
 
 
@@ -643,7 +628,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
               }
             }
             positive_asks.insert(*it);
-            state->expanded_constraints.insert((*it)->get_child());
             relation_graph_->set_expanded((*it)->get_child(), true);
             unknown_asks.erase(it++);
             expanded = true;
@@ -799,6 +783,8 @@ void PhaseSimulator::set_changing_variables(
     const negative_asks_t& negative_asks,
     change_variables_t& changing_variables ){
   //条件なし制約の差分取得
+  /* Todo: implement
+  
   module_set_sptr parent_ms = parent_phase->module_set;
   TellCollector parent_t_collector(parent_ms);
   tells_t parent_tells;
@@ -855,10 +841,12 @@ void PhaseSimulator::set_changing_variables(
       break;
     }
   }
+  */
 }
 
 void PhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
 {
+/* TODO: implement
   if(phase->parent.get() == NULL)return;
   TellCollector current_tell_collector(phase->module_set);
   tells_t current_tell_list;
@@ -871,8 +859,8 @@ void PhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
   always_set_t& prev_expanded_always = phase->parent->expanded_always;
   positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
   prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
-
   phase->changed_variables = get_difference_variables_from_2tells(current_tell_list, prev_tell_list);
+*/
 }
 
 
@@ -1018,7 +1006,12 @@ PhaseSimulator::todo_list_t
   next_todo->parent = phase;
   next_todo->ms_to_visit = module_set_container->get_full_ms_list();
   
-  next_todo->expanded_always = phase->expanded_always;
+  AlwaysFinder always_finder;
+  // TODO: positive_asksの後件がalwaysだった場合に、expanded_alwaysから消しても良いはず
+  for(auto constraint : phase->expanded_constraints)
+  {
+    always_finder.find_always(constraint, next_todo->expanded_constraints);
+  }
   next_todo->parameter_map = phase->parameter_map;
 
 

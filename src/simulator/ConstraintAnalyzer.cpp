@@ -3,8 +3,6 @@
 #include <fstream>
 
 #include "ConstraintAnalyzer.h"
-#include "TellCollector.h"
-#include "AskCollector.h"
 #include "ContinuityMapMaker.h"
 #include "Timer.h"
 #include "PrevSearcher.h"
@@ -356,6 +354,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
   }
   return ret;
 */
+  return ConditionsResult();
 
 }
 }

@@ -125,6 +125,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase)
 {
   CheckConsistencyResult result;
+  HYDLA_LOGGER_DEBUG("");
   for(int i = 0; i < relation_graph.get_connected_count(); i++)
   {
     ConstraintStore tmp_constraint_store;
@@ -136,6 +137,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
       maker.visit_node(constraint, phase == IntervalPhase, false);
     }
     
+    HYDLA_LOGGER_DEBUG_VAR(tmp_constraint_store);
     CheckConsistencyResult tmp_result;
     tmp_result = check_consistency(tmp_constraint_store, maker.get_continuity_map(), phase);
 
@@ -154,6 +156,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   {
     result.inconsistent_store.set_consistency(false);
   }
+  HYDLA_LOGGER_DEBUG("");
   return result;
 }
 

@@ -53,7 +53,6 @@ typedef enum {
 
 typedef std::vector<boost::shared_ptr<hydla::symbolic_expression::Tell> > tells_t;
 typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Tell> >    collected_tells_t;
-typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
 typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
@@ -90,7 +89,7 @@ public:
 
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
-  always_set_t              expanded_always;
+  constraints_t             expanded_constraints;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   int step;
@@ -108,18 +107,18 @@ public:
   PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NONE);
 };
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::PhaseResult& pr);
+std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::variable_map_t& vm);
+std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::parameter_map_t& pm);
+std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::ask_set_t& a);
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::tells_t& a);
+std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
+std::ostream& operator<<(std::ostream& s, const tells_t& a);
+std::ostream& operator<<(std::ostream& s, const constraints_t& a);
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::always_set_t& a);
 
-std::ostream& operator<<(std::ostream& s, const hydla::simulator::change_variables_t& a);
+std::ostream& operator<<(std::ostream& s, const change_variables_t& a);
 
 } // namespace simulator
 } // namespace hydla 

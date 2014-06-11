@@ -4,8 +4,6 @@
 
 #include "UnsatCoreFinder.h"
 #include "ModuleSet.h"
-#include "TellCollector.h"
-#include "AskCollector.h"
 #include "ContinuityMapMaker.h"
 
 #include "../backend/Backend.h"
@@ -79,6 +77,7 @@ void UnsatCoreFinder::find_unsat_core(
   PhaseType phase_type
 )
 {
+/* TODO: implement
   HYDLA_LOGGER_DEBUG("");
   always_set_t expanded_always;
   tells_t tell_list;
@@ -218,6 +217,7 @@ void UnsatCoreFinder::find_unsat_core(
     }
   }
   backend_->call("endTemporary", 0, "", "");
+  */
 }
 
 

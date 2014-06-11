@@ -12,7 +12,7 @@ namespace {
     NodeDumper(T it, T end) 
     {
       for(; it!=end; ++it) {
-        ss << **it << "\n";
+        ss << hydla::symbolic_expression::get_infix_string(*it) << "\n";
       }
     }
 
@@ -48,7 +48,7 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   phase_type(todo.phase_type),
   current_time(todo.current_time),
   parameter_map(todo.parameter_map),
-  expanded_always(todo.expanded_always),
+  expanded_constraints(todo.expanded_constraints),
   positive_asks(todo.positive_asks),
   negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
@@ -77,8 +77,8 @@ ostream& operator<<(std::ostream& s, const PhaseResult& phase)
   s << phase.variable_map    << endl;
   s << "--- parameter map ---"          << endl;
   s << phase.parameter_map << endl;
-  s << "--- expanded_always --- " << endl;
-  s << phase.expanded_always << endl;
+  s << "--- expanded_constraints --- " << endl;
+  s << phase.expanded_constraints << endl;
   return s;
 }
 
@@ -126,11 +126,12 @@ ostream& operator<<(std::ostream& s, const collected_tells_t& a)
   return s;
 }
 
-ostream& operator<<(std::ostream& s, const always_set_t& a)
+ostream& operator<<(std::ostream& s, const constraints_t &a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;
 }
+
 
 ostream& operator<<(std::ostream& s, const module_set_sptr& m)
 {

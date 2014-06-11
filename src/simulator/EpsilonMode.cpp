@@ -21,7 +21,6 @@ using namespace hydla::backend;
 #include "Timer.h"
 
 #include "PrevReplacer.h"
-#include "TellCollector.h"
 #include "AskCollector.h"
 #include "VariableFinder.h"
 
@@ -54,7 +53,6 @@ using namespace hydla::symbolic_expression;
 using namespace hydla::logger;
 using namespace hydla::timer;
 
-using hydla::simulator::TellCollector;
 using hydla::simulator::AskCollector;
 using hydla::simulator::ContinuityMapMaker;
 using hydla::simulator::IntervalPhase;
