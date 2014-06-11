@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_AFFINE_OR_INTEGER_H_
-#define _INCLUDED_HYDLA_AFFINE_OR_INTEGER_H_
+#pragma once
 
 #include "kv/affine.hpp"
 
@@ -29,5 +28,3 @@ std::ostream& operator<<(std::ostream &ost, const AffineOrInteger &val);
 
 } //namespace interval
 } //namespace hydla
-
-#endif // include guard

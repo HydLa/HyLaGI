@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_TELNET_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_TELNET_H_
+#pragma once
 
 #include "REDUCELink.h"
 
@@ -69,6 +68,3 @@ private:
 } // namespace reduce
 } // namespace backend
 } // namespace hydla
-
-#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_TELNET_H_
-

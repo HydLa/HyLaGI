@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -7,19 +6,16 @@
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include "Timer.h"
-#include "Logger.h"
 #include "PhaseResult.h"
-#include "RelationGraph.h"
 #include "Simulator.h"
-#include "UnsatCoreFinder.h"
-#include "AnalysisResultChecker.h"
 #include "ConsistencyChecker.h"
+#include "RelationGraph.h"
 
 namespace hydla {
-
 namespace simulator {
+
+class AnalysisResultChecker;
+class UnsatCoreFinder;
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
@@ -208,16 +204,6 @@ private:
   bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
 
-  /**
-   * Check whether a guard is entailed or not.
-   * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
-   * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
-   */
-  CheckEntailmentResult check_entailment(
-    CheckConsistencyResult &cc_result,
-    const symbolic_expression::node_sptr& guard,
-    const continuity_map_t& cont_map,
-    const PhaseType& phase);
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
@@ -253,5 +239,3 @@ private:
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_

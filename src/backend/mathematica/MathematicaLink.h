@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_MATHEMATICA_MATHEMATICALINK_H_
-#define _INCLUDED_HYDLA_BACKEND_MATHEMATICA_MATHEMATICALINK_H_
+#pragma once
 
 #include "mathlink.h"
 #include "LinkError.h"
@@ -184,4 +183,3 @@ private:
 }
 }
 
-#endif // include guard

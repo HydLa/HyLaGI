@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_
+#pragma once
 
 #include "sexp/SExpAST.h"
 #include <sstream>
@@ -150,5 +149,3 @@ private:
 } // namespace reduce
 } // namespace backend
 } // namespace hydla
-
-#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_H_

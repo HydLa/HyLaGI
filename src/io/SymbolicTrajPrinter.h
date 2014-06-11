@@ -1,5 +1,4 @@
-#ifndef _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_
-#define _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_
+#pragma once
 
 #include "TrajPrinter.h"
 
@@ -44,5 +43,3 @@ private:
 
 }// output
 }// hydla
-
-#endif // _HYDLA_OUTPUT_SYMBOLIC_TRAJ_PRINTER_H_

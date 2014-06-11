@@ -1,6 +1,4 @@
-#ifndef _HYDLA_OUTPUT_STD_PROFILE_PRINTER_H_
-#define _HYDLA_OUTPUT_STD_PROFILE_PRINTER_H_
-
+#pragma once
 
 #include "ProfilePrinter.h"
 
@@ -23,4 +21,3 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_STD_PROFILE_PRINTER_H_

@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_
-#define _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_
+#pragma once
 
 #include <assert.h>
 #include <deque>
@@ -147,5 +146,3 @@ private:
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif // _INCLUDED_HTDLA_CH_MODULE_SET_CONTAINER_CREATOR_H_

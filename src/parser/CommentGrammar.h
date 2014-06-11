@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
-#define _INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
+#pragma once
 
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_confix.hpp>
@@ -26,6 +25,4 @@ struct CommentGrammar : public grammar<CommentGrammar> {
 
 } // namespace parser
 } // namespace hydla
-
-#endif //_INCLUDED_HYDLA_COMMENT_GRAMMAR_H_
 

@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_ASK_COLLECTOR_H_
-#define _INCLUDED_HYDLA_ASK_COLLECTOR_H_
+#pragma once
 
 #include <vector>
 #include <set>
@@ -83,4 +82,3 @@ private:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_ASK_COLLECTOR_H_

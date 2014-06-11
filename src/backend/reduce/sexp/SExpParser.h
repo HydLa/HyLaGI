@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_
-#define _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_
+#pragma once
 
 #include "SExpGrammar.h"
 #include <boost/spirit/include/classic_ast.hpp>
@@ -37,4 +36,3 @@ private:
 
 std::ostream& operator<<(std::ostream& s, const hydla::parser::SExpParser::const_tree_iter_t& iter);
 
-#endif // _INCLUDED_HYDLA_PARSER_S_EXP_PARSER_H_

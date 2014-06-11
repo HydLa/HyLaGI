@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_H_
-#define _INCLUDED_HYDLA_SIMULATOR_H_
+#pragma once
+
 
 #include <deque>
 
@@ -97,6 +97,7 @@ struct SimulationTodo{
   negative_asks_t           negative_asks;
   ask_set_t                 discrete_causes;
   always_set_t              expanded_always;
+  
   entailed_prev_map_t       judged_prev_map;
 
   /// 前のフェーズ
@@ -315,4 +316,3 @@ protected:
 } //namespace simulator
 } //namespace hydla 
 
-#endif // _INCLUDED_HYDLA_SIMULATOR_H_

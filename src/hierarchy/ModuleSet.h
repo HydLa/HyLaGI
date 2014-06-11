@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_MODULE_SET_H_
-#define _INCLUDED_HTDLA_CH_MODULE_SET_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -151,5 +150,3 @@ public:
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif //_INCLUDED_HTDLA_CH_MODULE_SET_H_

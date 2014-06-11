@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_PARAMETER_H_
-#define _INCLUDED_HYDLA_SIMULATOR_PARAMETER_H_
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <sstream>
@@ -72,4 +71,3 @@ std::ostream& operator<<(std::ostream& s, const Parameter& p);
 } // namespace simulator
 } // namespace hydla 
 
-#endif // _DEFAULT_PARAMETER_H_

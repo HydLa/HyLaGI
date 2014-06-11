@@ -1,5 +1,4 @@
-#ifndef _VALUE_RANGE_H_
-#define _VALUE_RANGE_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -116,4 +115,3 @@ std::ostream& operator<<(std::ostream& s, const ValueRange & val);
 } // namespace simulator
 } // namespace hydla
 
-#endif // _VALUE_RANGE_H_

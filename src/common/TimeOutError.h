@@ -1,6 +1,4 @@
-#ifndef _INCLUDED_HYDLA_TIME_OUT_ERROR_H_
-#define _INCLUDED_HYDLA_TIME_OUT_ERROR_H_
-
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -18,5 +16,3 @@ public:
 
 } //namespace timeout
 } //namespace hydla 
-
-#endif

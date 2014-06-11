@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
-#define _INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
+#pragma once
 
 #include <boost/bind.hpp>
 #include <boost/spirit/include/classic_core.hpp>
@@ -388,6 +387,4 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
 } // namespace parser
 } // namespace hydla
-
-#endif //_INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
 

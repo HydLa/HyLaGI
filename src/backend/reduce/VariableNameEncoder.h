@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_VARIABLENAMEENCODER_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_VARIABLENAMEENCODER_H_
+#pragma once
 
 #include <iostream>
 #include <algorithm>
@@ -47,5 +46,3 @@ public:
 }
 }
 }
-
-#endif /* _INCLUDED_HYDLA_BACKEND_REDUCE_VARIABLENAMEENCODER_H_ */
