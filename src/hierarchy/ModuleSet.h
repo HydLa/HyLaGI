@@ -12,7 +12,6 @@
 namespace hydla {
 namespace hierarchy {
 
-typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 
 /**
  * モジュールの集合を表すクラス
@@ -143,10 +142,10 @@ std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
 
 class ModuleSetComparator {
 public:
-  bool operator()(const module_set_sptr &lhs, 
-                  const module_set_sptr &rhs) const
+  bool operator()(const ModuleSet &lhs, 
+                  const ModuleSet &rhs) const
   {
-    return lhs->compare(*rhs) > 0;
+    return lhs.compare(rhs) > 0;
   }
 };
 

@@ -17,17 +17,17 @@ public:
   typedef ModuleSet::module_t module_t;
   typedef ModuleSet::module_list_const_iterator module_list_const_iterator;
 
-  typedef std::map<module_t, module_set_sptr> node_relations_data_t;
+  typedef std::map<module_t, ModuleSet> node_relations_data_t;
   
   IncrementalModuleSet();
-  IncrementalModuleSet(module_set_sptr m);
+  IncrementalModuleSet(ModuleSet &m);
   IncrementalModuleSet(const IncrementalModuleSet& im);
   virtual ~IncrementalModuleSet();
 
   /**
    * 今までに出現したモジュールのセットを作る
    */
-  void add_maximal_module_set(module_set_sptr ms);
+  void add_maximal_module_set(ModuleSet &ms);
 
 
   /**
@@ -35,7 +35,7 @@ public:
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
    */
-  std::vector<module_set_sptr> get_removable_module_sets(module_set_sptr current_ms, const module_set_sptr ms);
+  std::vector<ModuleSet> get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms);
 
   /**
    * parents_data_内の余分なデータを削除し、
@@ -109,7 +109,7 @@ public:
   /**
    * 最大の要素数のモジュール集合を得る
    */
-  virtual module_set_sptr get_max_module_set() const;
+  virtual ModuleSet get_max_module_set() const;
 
   /**
    * 探索対象の初期状態を返す
@@ -121,7 +121,7 @@ private:
   /**
    * check same module set was generated
    */
-  virtual bool check_same_ms_generated(module_set_list_t, module_set_sptr); 
+  virtual bool check_same_ms_generated(module_set_list_t, ModuleSet&); 
 
   /**
    * generate module sets which has only required modules
@@ -138,9 +138,9 @@ private:
    */ 
   node_relations_data_t stronger_modules_;
   node_relations_data_t weaker_modules_;
-  module_set_sptr required_ms_;
+  ModuleSet required_ms_;
 // 現在までに出現したすべてのモジュールを要素とする集合
-  module_set_sptr maximal_module_set_;
+  ModuleSet maximal_module_set_;
 };
 
 

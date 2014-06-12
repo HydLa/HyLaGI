@@ -10,7 +10,7 @@ std::ostream& operator<<(std::ostream& s, const ModuleSetContainer& m)
 }
 
 
-ModuleSetContainer::ModuleSetContainer(module_set_sptr m) :
+ModuleSetContainer::ModuleSetContainer(ModuleSet &m) :
   module_set_list_(1, m)
 {}
 
@@ -18,15 +18,15 @@ bool ModuleSetContainer::go_next(){
   return !ms_to_visit_.empty();
 }
 
-module_set_sptr ModuleSetContainer::get_max_module_set() const{
+ModuleSet ModuleSetContainer::get_max_module_set() const{
 if(module_set_list_.empty())
 {
-  return module_set_sptr(new ModuleSet());
+  return ModuleSet();
 }
   return module_set_list_.front();
 }
 
-module_set_sptr ModuleSetContainer::get_module_set()const{
+ModuleSet ModuleSetContainer::get_module_set()const{
   return ms_to_visit_.front();
 }
 
@@ -56,8 +56,8 @@ void ModuleSetContainer::mark_nodes(const ModuleSet& ms){
   module_set_list_t::iterator it = ms_to_visit_.begin();
   do
   {
-    diff = (*it)->size() - ms.size();
-    if((*it)->including(ms))
+    diff = it->size() - ms.size();
+    if(it->including(ms))
     {
       it = ms_to_visit_.erase(it);
     }

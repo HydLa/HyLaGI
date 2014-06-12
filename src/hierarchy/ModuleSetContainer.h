@@ -11,12 +11,12 @@ namespace hierarchy {
 class ModuleSetContainer {
 public:
 
-  typedef std::set<module_set_sptr> module_set_set_t;
-  typedef std::vector<module_set_sptr> module_set_list_t;
+  typedef std::set<ModuleSet> module_set_set_t;
+  typedef std::vector<ModuleSet> module_set_list_t;
 
   ModuleSetContainer() 
   {}
-  ModuleSetContainer(module_set_sptr m);
+  ModuleSetContainer(ModuleSet &m);
   
   virtual ~ModuleSetContainer()
   {}
@@ -29,12 +29,12 @@ public:
   /**
    * 要素数最大であるモジュール集合を得る
    */
-  virtual module_set_sptr get_max_module_set() const;
+  virtual ModuleSet get_max_module_set() const;
 
   /**
    * 現在の注目ノードを得る
    */
-  virtual module_set_sptr get_module_set() const;
+  virtual ModuleSet get_module_set() const;
   
   /**
    * 探索すべきモジュール集合の集合を得る

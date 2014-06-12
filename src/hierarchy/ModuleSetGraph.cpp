@@ -1,3 +1,4 @@
+/*
 #include "ModuleSetGraph.h"
 
 #include <assert.h>
@@ -282,3 +283,4 @@ void ModuleSetGraph::mark_visited_flag(const module_set_sptr& ms)
 
 } // namespace hierarchy
 } // namespace hydla
+*/
