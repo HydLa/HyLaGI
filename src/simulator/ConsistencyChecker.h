@@ -31,7 +31,6 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  typedef hierarchy::module_set_sptr              modulse_set_sptr;
   typedef std::set< std::string > change_variables_t;
 
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase);

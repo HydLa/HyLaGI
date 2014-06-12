@@ -16,8 +16,6 @@
 
 // constraint hierarchy
 #include "ModuleSetContainerCreator.h"
-#include "ModuleSetList.h"
-#include "ModuleSetGraph.h"
 
 #include "SequentialSimulator.h"
 #include "SignalHandler.h"
@@ -149,33 +147,15 @@ bool dump(boost::shared_ptr<ParseTree> pt)
     return true;
   }
 
-  if(po.count("dump_module_set_list")>0) {
-    ModuleSetContainerCreator<ModuleSetList> mcc;
-    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
-    msc->dump_node_names(std::cout);
-    return true;
-  }
-
-//   if(po.count("dump_module_set_list_noinit")>0) {
-//     ModuleSetContainerCreator<ModuleSetList> mcc;
-//     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
-//     msc->dump_node_names(std::cout);
-//     return true;
-//   }
-
+/*
+  TODO: implement
   if(po.count("dump_module_set_graph")>0) {
-    ModuleSetContainerCreator<ModuleSetGraph> mcc;
-    boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
+    ModuleSetContainerCreator<IncrementalModuleSet> mcc;
+    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_graphviz(std::cout);
     return true;
   }
-
-//   if(po.count("dump_module_set_graph_noinit")>0) {
-//     ModuleSetContainerCreator<ModuleSetGraph> mcc;
-//     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
-//     msc->dump_graphviz(std::cout);
-//     return true;
-//   }
+*/
 
   return false;
 }

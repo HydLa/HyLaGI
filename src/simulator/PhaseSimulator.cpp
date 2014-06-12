@@ -108,7 +108,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   if(todo->parent == result_root)
   {
     // in the initial state, set all modules expanded
-    for(auto module : *module_set_container->get_max_module_set())
+    for(auto module : module_set_container->get_max_module_set())
     {
       todo->expanded_constraints.add_constraint(module.second);
     }
@@ -139,7 +139,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     }
 
 
-    std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
+    std::string module_sim_string = "\"ModuleSet" + ms.get_name() + "\"";
     timer::Timer ms_timer;
     result_list_t tmp_result = simulate_ms(ms, todo);
     if(!tmp_result.empty())

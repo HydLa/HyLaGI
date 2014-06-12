@@ -1,28 +1,28 @@
 #include "SymbolicTrajPrinter.h"
-#include <boost/foreach.hpp>
 #include <stack>
+#include <iostream>
 #include "Parameter.h"
 #include "Logger.h"
 #include "Backend.h"
 #include "EpsilonMode.h"
 
-using namespace hydla::simulator;
-using namespace std;
-
-using namespace hydla::backend;
 
 namespace hydla{
 namespace io{
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, std::set<std::string> vars, std::ostream& ost):
+using namespace simulator;
+using namespace backend;
+using namespace std;
+
+SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, set<string> vars, std::ostream& ost):
   ostream(ost), output_variables(vars), backend(b){
 }
 
-std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
-  std::stringstream sstr;
+string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
+  stringstream sstr;
   if(result.phase_type == IntervalPhase){
     sstr << "---------IP " << result.id << "---------" << endl;
-    if(result.module_set != nullptr)sstr << result.module_set->get_name() << endl;
+    sstr << result.module_set.get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
     }else{
@@ -30,7 +30,7 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     }
   }else{
     sstr << "---------PP " << result.id << "---------" << endl;
-    if(result.module_set != nullptr)sstr << result.module_set->get_name() << endl;
+    sstr << result.module_set.get_name() << endl;
     sstr << "t\t: " << result.current_time << "\n";
   }
 
@@ -58,7 +58,8 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
   }
 }
 
-void SymbolicTrajPrinter::output_variable_map(std::ostream &stream, const variable_map_t& vm) const
+void SymbolicTrajPrinter::output_variable_map(std::
+ostream &stream, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
@@ -82,16 +83,16 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
   int i=1, j=1;
   phase_result_sptrs_t::const_iterator it = root->children.begin(), end = root->children.end();
   for(;it!=end;it++){
-    std::vector<std::string> result;
+    vector<std::string> result;
     output_result_node(*it, result, i, j);
   }
 }
 
-void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, std::vector<std::string> &result, int &case_num, int &phase_num) const{
+void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
     ostream << "#---------Case " << case_num++ << "---------" << endl;
-    std::vector<std::string>::const_iterator r_it = result.begin();
+    vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
       ostream << *r_it;
     }
@@ -160,7 +161,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     ostream << endl;
   }else{
     if(node->phase_type == simulator::PointPhase){
-      std::stringstream sstr;
+      stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
     }
@@ -254,7 +255,7 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
   }
 }
 
-  void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Backend* backend, const phase_result_t& result, const variable_map_t& vm) const
+void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Backend* backend, const phase_result_t& result, const variable_map_t& vm) const
 {
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();

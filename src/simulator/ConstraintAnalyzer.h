@@ -72,13 +72,13 @@ protected:
    * 極大無矛盾となる制約モジュール集合を値に持つmapのlist
    * 順番は極大な方から順に持っている
    */
-  hydla::hierarchy::cm_map_list_t cm_list_;
+  //hierarchy::cm_map_list_t cm_list_;
 
   /**
    * 上のリストのルート
    * 多分いらないけど持っておく
    */
-  hydla::hierarchy::cm_map_sptr root_cm_;
+  //hierarchy::cm_map_sptr root_cm_;
 
   backend_sptr_t backend_;
 };

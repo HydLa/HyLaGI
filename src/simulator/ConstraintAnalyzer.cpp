@@ -30,9 +30,9 @@ void ConstraintAnalyzer::set_backend(backend_sptr_t back)
 
 void ConstraintAnalyzer::print_conditions()
 {
+/*
   conditions_map_t::iterator it = conditions_.begin();
   std::ofstream ofs;
-  /*
   if(opts_->analysis_file != ""){
     ofs.open(opts_->analysis_file.c_str());
   }
@@ -46,19 +46,19 @@ void ConstraintAnalyzer::print_conditions()
       ofs << std::endl;
     }else{
     */
-      // 出力先が標準出力の場合
-      std::cout << (*it).first << ":";
-      if((*it).second != NULL){
-	std::cout << get_infix_string((*it).second);
-      }
-      std::cout << std::endl;
-   // }
- // }
-  if(!cm_list_.empty()){
-    for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
-      std::cout << *(*it) << std::endl;
-    }
-  }
+ //      // 出力先が標準出力の場合
+ //      std::cout << (*it).first << ":";
+ //      if((*it).second != NULL){
+ //  std::cout << get_infix_string((*it).second);
+ //      }
+ //      std::cout << std::endl;
+ //   // }
+ // // }
+ //  if(!cm_list_.empty()){
+ //    for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+ //      std::cout << *(*it) << std::endl;
+ //    }
+ //  }
 /*
   if(opts_->analysis_file != ""){
     ofs.close();
