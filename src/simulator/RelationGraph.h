@@ -69,7 +69,7 @@ public:
   /**
    * Set modules in ms adopted and modules not in ms not adopted
    */
-  void set_adopted(module_set_t *ms);
+  void set_adopted(module_set_t &ms);
 
   /**
    * Set the constraint expanded or not

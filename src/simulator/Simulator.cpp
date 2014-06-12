@@ -58,14 +58,14 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
 
-  const simulator::module_set_sptr ms = module_set_container_->get_max_module_set();
+  simulator::module_set_t ms = module_set_container_->get_max_module_set();
 
-  relation_graph_.reset(new RelationGraph(*ms)); 
+  relation_graph_.reset(new RelationGraph(ms)); 
 
   AskCollector ac;
 
   ConstraintStore constraints;
-  for(auto module : *ms)
+  for(auto module : ms)
   {
     constraints.add_constraint(module.second);
   }

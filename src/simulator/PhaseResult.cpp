@@ -133,11 +133,11 @@ ostream& operator<<(std::ostream& s, const constraints_t &a)
 }
 
 
-ostream& operator<<(std::ostream& s, const module_set_sptr& m)
+ostream& operator<<(std::ostream& s, const module_set_t& m)
 {
-  s << m->get_name()
+  s << m.get_name()
     << "\n"
-    << m->get_infix_string();
+    << m.get_infix_string();
   return s;
 }
 

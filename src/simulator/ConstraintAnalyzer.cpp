@@ -65,7 +65,7 @@ void ConstraintAnalyzer::print_conditions()
   }
   */
 }
-
+/*
 void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
   // msに対する無矛盾の条件
   symbolic_expression::node_sptr cond = conditions_[ms->get_name()];
@@ -121,6 +121,7 @@ void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
     cm_list_.push_back(new_cm);
   }
 }
+*/
 
 void ConstraintAnalyzer::check_all_module_set(bool b)
 {
@@ -187,10 +188,10 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
   }
 }
 
-
+/* TODO: implement
   ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)
 {
-/* TODO: implement
+
   bool non_prev;
   PrevSearcher searcher;
  // if(opts_->analysis_mode == "debug") 
@@ -353,9 +354,8 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     break;
   }
   return ret;
-*/
-  return ConditionsResult();
-
 }
+*/
+
 }
 }

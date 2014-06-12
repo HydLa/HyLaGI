@@ -38,7 +38,7 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
     cout << it->first.second << " : " << get_infix_string((it->first.first)) << endl;
-    cout << it->second->get_name() << endl;
+    cout << it->second.get_name() << endl;
   }
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
@@ -48,12 +48,13 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
       cout << "'";
     }
     cout << endl;
-    cout << it->second->get_name() << endl;
+    cout << it->second.get_name() << endl;
   }
   cout << "---------------------" << endl;
 
 }
 
+/* TODO: implement
 void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     unsat_constraints_t& S,
     unsat_continuities_t& S4C,
@@ -63,9 +64,9 @@ void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
 {
   find_unsat_core(ms, S, S4C, todo->positive_asks, todo->negative_asks, vm, todo->parameter_map, todo->phase_type);
 }
+*/
 
-
-
+/* TODO: implement
 void UnsatCoreFinder::find_unsat_core(
   const module_set_sptr& ms,
   unsat_constraints_t& S,
@@ -77,7 +78,6 @@ void UnsatCoreFinder::find_unsat_core(
   PhaseType phase_type
 )
 {
-/* TODO: implement
   HYDLA_LOGGER_DEBUG("");
   always_set_t expanded_always;
   tells_t tell_list;
@@ -217,8 +217,8 @@ void UnsatCoreFinder::find_unsat_core(
     }
   }
   backend_->call("endTemporary", 0, "", "");
-  */
 }
+*/
 
 
 bool UnsatCoreFinder::check_inconsistency(PhaseType phase_type){
@@ -240,7 +240,7 @@ bool UnsatCoreFinder::check_inconsistency(PhaseType phase_type){
   }
 }
 
-
+/* TODO: implement
 bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms, PhaseType phase_type, const variable_map_t& vm, const parameter_map_t& pm){
   backend_->call("endTemporary", 0, "", "");
   backend_->call("startTemporary", 0, "", "");
@@ -251,6 +251,7 @@ bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_
   backend_->call("endTemporary", 0, "", "");
   return ret;
 }
+*/
 
 void UnsatCoreFinder::set_backend(backend_sptr_t back){
   backend_ = back;

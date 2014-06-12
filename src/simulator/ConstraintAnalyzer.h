@@ -47,7 +47,7 @@ public:
    * CONDITIONS_FALSE : 得られた条件がFalseだった場合
    * CONDITIONS_VARIABLE_CONDITIONS : 得られた条件が何らかの条件だった場合
    */
-  virtual ConditionsResult find_conditions(const module_set_sptr& ms, bool b);
+//  virtual ConditionsResult find_conditions(const module_set_sptr& ms, bool b);
 
 
   /**
@@ -58,7 +58,7 @@ public:
   /**
    * cm_listの対応する場所にmsを入れる
    */
-  virtual void add_new_cm(const module_set_sptr& ms);
+//  virtual void add_new_cm(const module_set_sptr& ms);
 
 protected:
 

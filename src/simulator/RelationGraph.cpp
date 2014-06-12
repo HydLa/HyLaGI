@@ -169,11 +169,11 @@ void RelationGraph::set_adopted(const module_t &mod, bool adopted)
   up_to_date = false;
 }
 
-void RelationGraph::set_adopted(module_set_t *ms)
+void RelationGraph::set_adopted(module_set_t &ms)
 {
   for(auto entry : module_constraint_nodes_map)
   {
-    bool adopted = !(ms->find(entry.first) == ms->end());
+    bool adopted = !(ms.find(entry.first) == ms.end());
     set_adopted(entry.first, adopted);
   }
   up_to_date = false;
