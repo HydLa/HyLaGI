@@ -58,7 +58,7 @@ typedef std::set<boost::shared_ptr<symbolic_expression::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
-
+typedef hierarchy::ModuleSet                              module_set_t;
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef boost::shared_ptr<const PhaseResult>              phase_result_const_sptr_t;
@@ -94,7 +94,7 @@ public:
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   int step;
-  hierarchy::module_set_sptr module_set;
+  module_set_t              module_set;
 
   change_variables_t changed_variables;
 
@@ -113,11 +113,10 @@ std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
 
 std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
-
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
-std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
 
+std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
 
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a);
 

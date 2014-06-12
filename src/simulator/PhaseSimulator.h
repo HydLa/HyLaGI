@@ -31,8 +31,8 @@ public:
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
-  typedef std::map<module_set_sptr, hydla::symbolic_expression::node_sptr> condition_map_t;
-  typedef hydla::symbolic_expression::node_sptr node_sptr;
+  // typedef std::map<module_set_sptr, symbolic_expression::node_sptr> condition_map_t;
+  typedef symbolic_expression::node_sptr node_sptr;
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
   PhaseSimulator(PhaseSimulator&);
@@ -68,11 +68,10 @@ public:
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
 
 
-  typedef hierarchy::module_set_sptr              modulse_set_sptr;
   typedef std::set< std::string > change_variables_t;
 
 /*
-  virtual void find_unsat_core(const module_set_sptr& ms,
+  virtual void find_unsat_core(const module_set_t& ms,
       simulation_todo_sptr_t&,
       const variable_map_t& vm);
 */
@@ -100,7 +99,7 @@ protected:
     BRANCH_PAR
   } CheckEntailmentResult;
 
-  result_list_t simulate_ms(const module_set_sptr& ms, simulation_todo_sptr_t& state);
+  result_list_t simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& state);
 
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
@@ -157,12 +156,10 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const ConstraintStore& store);
 
-  std::set<module_set_sptr> checkd_module_set_;
-
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
    */
-  virtual ConstraintStore calculate_constraint_store(const module_set_sptr& ms,
+  virtual ConstraintStore calculate_constraint_store(const module_set_t& ms,
                            simulation_todo_sptr_t& state);
 
   void apply_discrete_causes_to_guard_judgement(
@@ -173,7 +170,7 @@ private:
     ask_set_t& unknown_asks );
 
   void set_changing_variables( const phase_result_sptr_t& parent_phase,
-                             const module_set_sptr& present_ms,
+                             const module_set_t& present_ms,
                              const positive_asks_t& positive_asks,
                              const negative_asks_t& negative_asks,
                              change_variables_t& changing_variables );
@@ -196,7 +193,7 @@ private:
                              const value_t& current_time );
 
   bool calculate_closure(simulation_todo_sptr_t& state,
-    const module_set_sptr& ms);
+    const module_set_t& ms);
 
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
@@ -211,7 +208,7 @@ private:
     const variable_map_t& vm);
 */
 
-  //virtual ConstraintStoreResult check_conditions(const module_set_sptr& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
+  //virtual ConstraintStoreResult check_conditions(const module_set_t& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
   void replace_prev2parameter(phase_result_sptr_t& state,
                               ConstraintStore& store,
                               parameter_map_t &parameter_map);

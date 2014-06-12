@@ -73,12 +73,10 @@ struct Opts {
 };
 
 typedef hierarchy::ModuleSet                              module_set_t;
-typedef boost::shared_ptr<module_set_t>                   module_set_sptr;
 typedef hierarchy::ModuleSetContainer                     module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
-typedef hierarchy::ModuleSetContainer::module_set_list_t  module_set_list_t;
+typedef std::vector<module_set_t>                         module_set_list_t;
 typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
-typedef boost::shared_ptr<const hierarchy::ModuleSet>    module_set_const_sptr;
 
 typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_prev_map_t;
 typedef std::vector<variable_map_t>      variable_maps_t;

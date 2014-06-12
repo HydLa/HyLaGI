@@ -117,7 +117,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   while(module_set_container->go_next())
   {
-    module_set_sptr ms = module_set_container->get_module_set();
+    module_set_t ms = module_set_container->get_module_set();
     
     relation_graph_->set_expanded_all(false);
     for(auto constraint : todo->expanded_constraints)
@@ -165,10 +165,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 
 
-PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::module_set_sptr& ms, simulation_todo_sptr_t& todo)
+PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& todo)
 {
-  HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms->get_infix_string());
-  relation_graph_->set_adopted(ms.get());
+  HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms.get_infix_string());
+  relation_graph_->set_adopted(ms);
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
 
@@ -474,7 +474,7 @@ void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
 
 
 bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
-    const module_set_sptr& ms)
+    const module_set_t& ms)
 {
   // preparation
   positive_asks_t& positive_asks = state->positive_asks;
@@ -684,7 +684,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
 ConstraintStore
 PhaseSimulator::calculate_constraint_store(
-  const module_set_sptr& ms,
+  const module_set_t& ms,
   simulation_todo_sptr_t& todo)
 {
   timer::Timer cc_timer;
@@ -775,14 +775,14 @@ void PhaseSimulator::apply_discrete_causes_to_guard_judgement(
 
 void PhaseSimulator::set_changing_variables(
     const phase_result_sptr_t& parent_phase,
-    const module_set_sptr& present_ms,
+    const module_set_t& present_ms,
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,
     change_variables_t& changing_variables ){
   //条件なし制約の差分取得
   /* Todo: implement
   
-  module_set_sptr parent_ms = parent_phase->module_set;
+  module_set_t parent_ms = parent_phase->module_set;
   TellCollector parent_t_collector(parent_ms);
   tells_t parent_tells;
   //条件なし制約だけ集める
