@@ -80,7 +80,7 @@ std::vector<module_set_sptr> IncrementalModuleSet::get_removable_module_sets(mod
         for( auto wmit : *weaker_modules_[roop_it] ){
 	  // wmit is a module which is weaker than roop_it
 	  // if wmit is included by current module set
-          if(current_ms->find(wmit) != current_ms->end()){
+          if(current_ms->find(wmit) != current_ms->end() && roop_it != wmit){
 	    // push wmit to childs
             childs.push_back(wmit);
           }
