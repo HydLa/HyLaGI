@@ -79,7 +79,7 @@ public:
                         mod_name_map_[container_name_]++);
 
     // create ModuleSet
-    module_set_sptr mod_set(new ModuleSet(container_name_, node));
+    ModuleSet mod_set = ModuleSet(container_name_, node);
     container_name_.clear();
 
     // create Container
