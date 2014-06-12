@@ -6,11 +6,10 @@
 #include "PhaseResult.h"
 #include "AffineApproximator.h"
 #include "AskCollector.h"
-#include "PrevSearcher.h"
+#include "VariableFinder.h"
 
 #include <iostream>
 #include <string>
-#include <stack>
 #include <cassert>
 
 using namespace std;
@@ -57,8 +56,6 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   parse_tree_ = parse_tree;
   init_variable_map(parse_tree);
 
-
-
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
 
   const simulator::module_set_sptr ms = module_set_container_->get_max_module_set();
@@ -78,9 +75,10 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   // search prev guards
   ac.collect_ask(constraints, &pat, &nat, &prev_guards_);
-  PrevSearcher searcher;
   for(auto it = prev_guards_.begin(); it != prev_guards_.end();){
-    if(!searcher.search_prev((*it)->get_guard())){
+    VariableFinder finder;
+    finder.visit_node((*it)->get_guard());
+    if(!finder.get_variable_set().empty()){
       prev_guards_.erase(it++);
     }else{
       it++;

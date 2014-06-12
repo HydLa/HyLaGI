@@ -87,7 +87,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   ConstraintStore constraint_store;
   module_set_t module_set;
   // get constraints related with the guard 
-  relation_graph.get_related_constraints(guard, constraint_store, module_set);
+  relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
   for(auto constraint : constraint_store)
   {
     maker.visit_node(constraint, phase == IntervalPhase, false);
