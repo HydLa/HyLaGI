@@ -30,7 +30,7 @@ public:
    * @param negative_asks    ガード条件が成立しないaskノードの集合
    * @param unknown_asks     成否の定まっていないaskノードの集合
    */
-  void collect_ask(constraints_t &constraints,                   
+  void collect_ask(ConstraintStore &constraints,                   
                    const positive_asks_t*   positive_asks,
                    const negative_asks_t*   negative_asks,
                    ask_set_t*        unknown_asks);

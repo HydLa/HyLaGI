@@ -22,7 +22,7 @@ public:
    * @param node 調べる対象となる制約
    * @param include_guard ガード条件を対象とするかどうか
    */
-  void find_always(symbolic_expression::node_sptr node, constraints_t& always_set)
+  void find_always(symbolic_expression::node_sptr node, ConstraintStore& always_set)
   {
     always_set_ = &always_set;
     accept(node);
@@ -38,12 +38,12 @@ public:
   // Always
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
   {
-    always_set_->insert(node);
+    always_set_->add_constraint(node);
   }
 
 private:
 
-  constraints_t *always_set_;
+  ConstraintStore *always_set_;
 };
 
 } //namespace simulator

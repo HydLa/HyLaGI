@@ -21,7 +21,7 @@ AskCollector::AskCollector()
 AskCollector::~AskCollector()
 {}
 
-void AskCollector::collect_ask(constraints_t &constraints,
+void AskCollector::collect_ask(ConstraintStore &constraints,
                                const positive_asks_t*   positive_asks,
                                const negative_asks_t*   negative_asks,
                                ask_set_t*         unknown_asks)
