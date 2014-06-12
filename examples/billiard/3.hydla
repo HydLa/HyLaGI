@@ -1,0 +1,9 @@
+INIT(x,x0,vx0) <=> x=x0 & x'=vx0.
+COL(x1,x2) <=> [](x1-=x2- => x1'=x2'- & x2'=x1'-).
+CONST(x) <=> [](x''=0).
+WALL(x) <=> []((x-=-10 | x-=1000) => x' = -x'-).
+
+INIT(x0,0,1),INIT(x1,5,0),INIT(x2,7,0),
+WALL(x0),WALL(x1),WALL(x2),
+(CONST(x0),CONST(x1),CONST(x2))
+ << (COL(x0,x1),COL(x0,x2),COL(x1,x2)).

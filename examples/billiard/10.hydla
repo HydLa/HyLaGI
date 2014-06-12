@@ -1,0 +1,9 @@
+INIT(x,x0,vx0) <=> x=x0 & x'=vx0.
+COL(x1,x2) <=> [](x1-=x2- => x1'=x2'- & x2'=x1'-).
+CONST(x) <=> [](x''=0).
+WALL(x) <=> []((x-=-10 | x-=1000) => x' = -x'-).
+
+INIT(x0,0,1),INIT(x1,2,0),INIT(x2,5,0),INIT(x3,6,0),INIT(x4,9,0),INIT(x5,13,0),INIT(x6,14,0),INIT(x7,18,0),INIT(x8,19,0),INIT(x9,20,0),
+WALL(x0),WALL(x1),WALL(x2),WALL(x3),WALL(x4),WALL(x5),WALL(x6),WALL(x7),WALL(x8),WALL(x9),
+(CONST(x0),CONST(x1),CONST(x2),CONST(x3),CONST(x4),CONST(x5),CONST(x6),CONST(x7),CONST(x8),CONST(x9))
+ << (COL(x0,x1),COL(x0,x2),COL(x0,x3),COL(x0,x4),COL(x0,x5),COL(x0,x6),COL(x0,x7),COL(x0,x8),COL(x0,x9),COL(x1,x2),COL(x1,x3),COL(x1,x4),COL(x1,x5),COL(x1,x6),COL(x1,x7),COL(x1,x8),COL(x1,x9),COL(x2,x3),COL(x2,x4),COL(x2,x5),COL(x2,x6),COL(x2,x7),COL(x2,x8),COL(x2,x9),COL(x3,x4),COL(x3,x5),COL(x3,x6),COL(x3,x7),COL(x3,x8),COL(x3,x9),COL(x4,x5),COL(x4,x6),COL(x4,x7),COL(x4,x8),COL(x4,x9),COL(x5,x6),COL(x5,x7),COL(x5,x8),COL(x5,x9),COL(x6,x7),COL(x6,x8),COL(x6,x9),COL(x7,x8),COL(x7,x9),COL(x8,x9)).
