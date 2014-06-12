@@ -222,7 +222,7 @@ void IncrementalModuleSet::update_by_new_mss(module_set_list_t new_mss)
 void IncrementalModuleSet::generate_required_ms()
 {
   for(auto ms : maximal_module_set_){
-    if(stronger_modules_.find(ms) != stronger_modules_.end()) required_ms_.add_module(ms);
+    if(stronger_modules_.find(ms) == stronger_modules_.end()) required_ms_.add_module(ms);
   }
 }
 
