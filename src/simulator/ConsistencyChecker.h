@@ -51,10 +51,11 @@ public:
    * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
    * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
    */
-  CheckEntailmentResult check_entailment(CheckConsistencyResult &cc_result,
-    const symbolic_expression::node_sptr& guard,
-    const continuity_map_t& cont_map,
-    const PhaseType& phase
+  CheckEntailmentResult check_entailment(
+    RelationGraph &relation_graph,
+    CheckConsistencyResult &cc_result,
+    const ask_t &guard,
+    const PhaseType &phase
     );
 
 

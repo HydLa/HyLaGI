@@ -59,7 +59,7 @@ void ConsistencyChecker::add_continuity(const continuity_map_t& continuity_map, 
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const PhaseType& phase)
+CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase)
 {
   CheckConsistencyResult ret;
   if(phase == PointPhase)
@@ -75,18 +75,29 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
 
 
 ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
+  RelationGraph &relation_graph,
   CheckConsistencyResult &cc_result,
-  const symbolic_expression::node_sptr& guard,
-  const continuity_map_t& cont_map,
-  const PhaseType& phase
+  const ask_t &guard,
+  const PhaseType &phase
   )
 {
   CheckEntailmentResult ce_result;
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
-  backend->call("startTemporary", 0, "", "");
+  ContinuityMapMaker maker;
+  ConstraintStore constraint_store;
+  module_set_t module_set;
+  // get constraints related with the guard 
+  relation_graph.get_related_constraints(guard, constraint_store, module_set);
+  for(auto constraint : constraint_store)
+  {
+    maker.visit_node(constraint, phase == IntervalPhase, false);
+  }
+  maker.visit_node(guard->get_child(), phase == IntervalPhase, true);
+  continuity_map_t cont_map = maker.get_continuity_map();
+  backend->call("resetConstraintForVariable", 0, "", "");
   add_continuity(cont_map, phase);
-  const char* fmt = (phase == PointPhase)?"en":"et";
-  backend->call("addConstraint", 1, fmt, "", &guard);
+  backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
+  backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
   cc_result = call_backend_check_consistency(phase);
   if(cc_result.consistent_store.consistent()){
     HYDLA_LOGGER_DEBUG("%% entailable");
@@ -96,10 +107,10 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
     }
     else
     {
-      backend->call("endTemporary", 0, "", "");
-      backend->call("startTemporary", 0, "", "");
+      backend->call("resetConstraintForVariable", 0, "", "");
       add_continuity(cont_map, phase);
-      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
+      backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
+      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard->get_guard()));
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend->call("addConstraint", 1, fmt, "", &not_node);
       cc_result = call_backend_check_consistency(phase);
@@ -117,7 +128,6 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   }else{
     ce_result = CONFLICTING;
   }
-  backend->call("endTemporary", 0, "", "");
   return ce_result;
 }
 
@@ -128,16 +138,12 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   HYDLA_LOGGER_DEBUG("");
   for(int i = 0; i < relation_graph.get_connected_count(); i++)
   {
-    ConstraintStore tmp_constraint_store;
+    ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
     ContinuityMapMaker maker;
-    // TODO: ConstraintStoreでまとめる
-    for(auto constraint : relation_graph.get_constraints(i))
+    for(auto constraint : tmp_constraint_store)
     {
-      tmp_constraint_store.add_constraint(constraint);
       maker.visit_node(constraint, phase == IntervalPhase, false);
     }
-    
-    HYDLA_LOGGER_DEBUG_VAR(tmp_constraint_store);
     CheckConsistencyResult tmp_result;
     tmp_result = check_consistency(tmp_constraint_store, maker.get_continuity_map(), phase);
 

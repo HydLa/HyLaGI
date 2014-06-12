@@ -51,9 +51,10 @@ typedef enum {
 } PhaseType;
 
 
-typedef std::vector<boost::shared_ptr<hydla::symbolic_expression::Tell> > tells_t;
-typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Tell> >    collected_tells_t;
-typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Ask> >     ask_set_t;
+typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
+typedef std::set<boost::shared_ptr<symbolic_expression::Tell> >    collected_tells_t;
+typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
+typedef std::set<boost::shared_ptr<symbolic_expression::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;
 typedef ask_set_t                                                negative_asks_t;
 typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
@@ -72,7 +73,7 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
 
-typedef boost::shared_ptr<hydla::hierarchy::ModuleSetContainer> module_set_container_sptr;
+typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
 
@@ -89,11 +90,11 @@ public:
 
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
-  constraints_t             expanded_constraints;
+  ConstraintStore             expanded_constraints;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
   int step;
-  hydla::hierarchy::module_set_sptr module_set;
+  hierarchy::module_set_sptr module_set;
 
   change_variables_t changed_variables;
 
@@ -115,7 +116,7 @@ std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
 
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
-std::ostream& operator<<(std::ostream& s, const constraints_t& a);
+std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
 
 
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a);

@@ -71,7 +71,7 @@ void RelationGraph::initialize_node_visited()
   }
 }
 
-void RelationGraph::get_related_constraints(constraint_t constraint, constraints_t &constraints, module_set_t &module_set){
+void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -96,7 +96,7 @@ void RelationGraph::get_related_constraints(constraint_t constraint, constraints
 }
 
 
-void RelationGraph::get_related_constraints(const Variable &var, constraints_t &constraints, module_set_t &module_set){
+void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -114,7 +114,7 @@ void RelationGraph::check_connected_components(){
 
   for(auto constraint_node : constraint_nodes){
     module_set_t ms;
-    constraints_t constraints;
+    ConstraintStore constraints;
     if(!constraint_node->visited){
       visit_node(constraint_node, constraints, ms);
       connected_constraints_vector.push_back(constraints);
@@ -124,11 +124,11 @@ void RelationGraph::check_connected_components(){
   up_to_date = true;
 }
 
-void RelationGraph::visit_node(ConstraintNode* node, constraints_t &constraints, module_set_t &ms){
+void RelationGraph::visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms){
   if(!node->visited){
     node->visited = true;
     ms.add_module(node->module);
-    constraints.insert(node->constraint);
+    constraints.add_constraint(node->constraint);
     for(auto var_node : node->edges)
     {
       visit_node(var_node, constraints, ms);
@@ -136,7 +136,7 @@ void RelationGraph::visit_node(ConstraintNode* node, constraints_t &constraints,
   }
 }
 
-void RelationGraph::visit_node(VariableNode* node, constraints_t &constraints, module_set_t &ms){
+void RelationGraph::visit_node(VariableNode* node, ConstraintStore &constraints, module_set_t &ms){
   for(auto constraint_node : node->edges)
   {
     visit_node(constraint_node, constraints, ms);
@@ -198,7 +198,7 @@ void RelationGraph::set_expanded_all(bool expanded)
 }
 
 
-RelationGraph::constraints_t RelationGraph::get_constraints(unsigned int index)
+ConstraintStore RelationGraph::get_constraints(unsigned int index)
 {
   if(!up_to_date){
     check_connected_components();
@@ -207,27 +207,27 @@ RelationGraph::constraints_t RelationGraph::get_constraints(unsigned int index)
   return connected_constraints_vector[index];
 }
 
-RelationGraph::constraints_t RelationGraph::get_constraints()
+ConstraintStore RelationGraph::get_constraints()
 {
-  constraints_t constraints;
+  ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
     if(constraint_node->expanded && constraint_node->module_adopted)
     {
-      constraints.insert(constraint_node->constraint);
+      constraints.add_constraint(constraint_node->constraint);
     }
   }
   return constraints;
 }
 
-RelationGraph::constraints_t RelationGraph::get_expanded_constraints()
+ConstraintStore RelationGraph::get_expanded_constraints()
 {
-  constraints_t constraints;
+  ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
     if(constraint_node->expanded)
     {
-      constraints.insert(constraint_node->constraint);
+      constraints.add_constraint(constraint_node->constraint);
     }
   }
   return constraints;

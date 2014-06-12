@@ -15,7 +15,7 @@ CAR(iniTH,iniTHV){
 }.
 CAR(0.005, 0).
 
-FORCE(state, force) <=> [](s = state & timer -= 1 => u = force).
+FORCE(state, force) <=> [](s- = state & timer -= 1 => u = force).
 
 CONTROL(){
  0.01 < threshold < 0.4

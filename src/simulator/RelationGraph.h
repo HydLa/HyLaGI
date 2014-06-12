@@ -4,6 +4,7 @@
 #include "ModuleSetContainer.h"
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
+#include "ConstraintStore.h"
 
 namespace hydla {
 namespace simulator {
@@ -18,8 +19,6 @@ public:
   typedef hierarchy::ModuleSet module_set_t;
   typedef hierarchy::ModuleSet::module_t module_t;
   typedef std::set<Variable, VariableComparator> variable_set_t;  
-  typedef symbolic_expression::node_sptr constraint_t;
-  typedef std::set<constraint_t> constraints_t;
   
   struct VariableNode;
   struct ConstraintNode;
@@ -92,7 +91,7 @@ public:
    * @parameter constraints for output
    * @parameter modules for output
    */
-  void get_related_constraints(const Variable &variable, constraints_t &constraints,
+  void get_related_constraints(const Variable &variable, ConstraintStore &constraints,
                                module_set_t &modules);
 
   /**
@@ -100,14 +99,14 @@ public:
    * @parameter constraints for output
    * @parameter modules for output
    */
-  void get_related_constraints(constraint_t constraint, constraints_t &constraints,
+  void get_related_constraints(constraint_t constraint, ConstraintStore &constraints,
                                module_set_t &modules);
 
 
   /**
    * Get constraints corresponding to the connected component specified by index.
    */
-  constraints_t get_constraints(unsigned int index);
+  ConstraintStore get_constraints(unsigned int index);
 
   /**
    * Get a ModuleSet included by the connected component specified by index.
@@ -117,17 +116,17 @@ public:
   /**
    * Get constraints which related to given variables
    */
-  constraints_t get_constraints(const std::vector<Variable>& variables);
+  ConstraintStore get_constraints(const std::vector<Variable>& variables);
 
   /**
    * Get all valid (adopted and expanded) constraints
    */
-  constraints_t get_constraints();
+  ConstraintStore get_constraints();
 
   /**
    * Get all expanded constraints
    */
-  constraints_t get_expanded_constraints();
+  ConstraintStore get_expanded_constraints();
 
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
@@ -136,8 +135,8 @@ private:
   void add(module_t &mod);
   
   void check_connected_components();
-  void visit_node(ConstraintNode* node, constraints_t &constraints, module_set_t &ms);
-  void visit_node(VariableNode* node, constraints_t &constraint, module_set_t &ms);
+  void visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms);
+  void visit_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms);
   void initialize_node_visited();
  
 
@@ -160,7 +159,7 @@ private:
     ADDING
   }VisitMode;
   
-  std::vector<constraints_t> connected_constraints_vector;
+  std::vector<ConstraintStore> connected_constraints_vector;
   std::vector<module_set_t> connected_modules_vector;
   bool up_to_date;     /// if false, recalculation of connected components is necessary
   std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
