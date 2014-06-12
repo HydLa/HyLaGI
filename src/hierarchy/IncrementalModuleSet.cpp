@@ -222,7 +222,7 @@ void IncrementalModuleSet::update_by_new_mss(module_set_list_t new_mss)
 void IncrementalModuleSet::generate_required_ms()
 {
   for(auto ms : maximal_module_set_){
-    required_ms_.add_module(ms);
+    if(stronger_modules_.find(ms) != stronger_modules_.end()) required_ms_.add_module(ms);
   }
 }
 
@@ -233,7 +233,7 @@ void IncrementalModuleSet::generate_required_ms()
  * @param ms 矛盾の原因となったモジュール集合 
  */
 void IncrementalModuleSet::mark_nodes(const module_set_list_t& mcss, const ModuleSet& ms){
-  generate_required_ms();
+  if(required_ms_.size() == 0) generate_required_ms();
   HYDLA_LOGGER_DEBUG("%% inconsistency module set : ", ms.get_name());
   std::string for_debug = "";
   for( auto mit : mcss ){
