@@ -29,12 +29,13 @@ public:
    */
   void add_maximal_module_set(module_set_sptr ms);
 
+
   /**
    * @param current_ms あるモジュールを取り除かれる元のモジュール集合
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
    */
-  std::vector<module_set_sptr> get_removable_module_sets(module_set_sptr current_ms, const ModuleSet& ms);
+  std::vector<module_set_sptr> get_removable_module_sets(module_set_sptr current_ms, const module_set_sptr ms);
 
   /**
    * parents_data_内の余分なデータを削除し、
@@ -118,12 +119,25 @@ public:
 private:
 
   /**
-   * あるモジュールの親を辿って行ったときにどのようなノードが出現するかの情報
-   * parents_data_に情報がないモジュールは無条件で除ける
-   * (モジュール、(記号ID、相手モジュールセット)の配列)
+   * check same module set was generated
+   */
+  virtual bool check_same_ms_generated(module_set_list_t, module_set_sptr); 
+
+  /**
+   * generate module sets which has only required modules
+   */
+  virtual void generate_required_ms();
+
+  /**
+   * update ms_to_visit_ by generated module sets
+   */
+  virtual void update_by_new_mss(module_set_list_t);
+
+  /**
+   * children_data_[module_t ms] is a map which has weaker modules than ms.
    */ 
-  node_relations_data_t parents_data_;
-  node_relations_data_t children_data_;
+  node_relations_data_t stronger_modules_;
+  node_relations_data_t weaker_modules_;
   module_set_sptr required_ms_;
 // 現在までに出現したすべてのモジュールを要素とする集合
   module_set_sptr maximal_module_set_;
