@@ -83,7 +83,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     if(todo->parent != result_root)
     {
       // if it's not in first phases, judge entailment of the prev guards in advance
-      for(auto prev_guard : prev_guards_)
+      for(auto prev_guard : prev_asks_)
       {
         CheckConsistencyResult cc_result;
         // TODO: 離散変化時刻の計算時の情報を生かせれば、そもそもこの判定自体が不要なはず。
@@ -333,17 +333,48 @@ void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
                                 continuity_map_t& c,
-                                module_set_container_sptr &msc,
-                                boost::shared_ptr<RelationGraph> &relation,
-                                ask_set_t &prev_guards)
+                                module_set_container_sptr &msc)
 {
   variable_set_ = &v;
   parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
   module_set_container = msc;
-  relation_graph_ = relation;
-  prev_guards_ = prev_guards;
+
+  simulator::module_set_t ms = module_set_container->get_max_module_set();
+
+  relation_graph_.reset(new RelationGraph(ms)); 
+
+  if(opts_->dump_relation){
+    relation_graph_->dump_graph(std::cout);
+    exit(EXIT_SUCCESS);
+  }
+
+
+  AskCollector ac;
+
+  ConstraintStore constraints;
+  for(auto module : ms)
+  {
+    constraints.add_constraint(module.second);
+  }
+  positive_asks_t pat;
+  negative_asks_t nat;
+
+  // search asks and initialize prev_asks_ and ask_map
+  ac.collect_ask(constraints, &pat, &nat, &prev_asks_);
+  for(auto it = prev_asks_.begin(); it != prev_asks_.end();){
+    int id = (*it)->get_id();
+    ask_map[id] = *it;
+    VariableFinder finder;
+    finder.visit_node((*it)->get_guard());
+    if(!finder.get_variable_set().empty()){
+      prev_asks_.erase(it++);
+    }else{
+      it++;
+    }
+  }
+
   
   backend_->set_variable_set(*variable_set_);
   variable_derivative_map_ = c;
@@ -1034,22 +1065,15 @@ PhaseSimulator::todo_list_t
     timer::Timer next_pp_timer;
     dc_causes_t dc_causes;
 
-    //TODO: どこかで事前にmapを作って、毎回作らないようにする。
-    std::map<int, boost::shared_ptr<Ask> > ask_map;
-
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
     for(auto ask : phase->positive_asks){
       symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
-      int id = ask->get_id();
-      ask_map[id] = ask;
-      dc_causes.push_back(dc_cause_t(negated_node, id) );
+      dc_causes.push_back(dc_cause_t(negated_node, ask->get_id() ) );
     }
     //現在導出されていないガード条件を離散変化条件として追加
     for(auto ask : phase->negative_asks){
       symbolic_expression::node_sptr node(ask->get_guard() );
-      int id = ask->get_id();
-      ask_map[id] = ask;
-      dc_causes.push_back(dc_cause_t(node, id));
+      dc_causes.push_back(dc_cause_t(node, ask->get_id() ));
     }
 
     //assertionの否定を追加

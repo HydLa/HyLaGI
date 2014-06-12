@@ -58,41 +58,9 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
 
-  simulator::module_set_t ms = module_set_container_->get_max_module_set();
-
-  relation_graph_.reset(new RelationGraph(ms)); 
-
-  AskCollector ac;
-
-  ConstraintStore constraints;
-  for(auto module : ms)
-  {
-    constraints.add_constraint(module.second);
-  }
-  positive_asks_t pat;
-  negative_asks_t nat;
-  ask_set_t prev_guards_;
-
-  // search prev guards
-  ac.collect_ask(constraints, &pat, &nat, &prev_guards_);
-  for(auto it = prev_guards_.begin(); it != prev_guards_.end();){
-    VariableFinder finder;
-    finder.visit_node((*it)->get_guard());
-    if(!finder.get_variable_set().empty()){
-      prev_guards_.erase(it++);
-    }else{
-      it++;
-    }
-  }
-
-
-  if(opts_->dump_relation){
-    relation_graph_->dump_graph(std::cout);
-    exit(EXIT_SUCCESS);
-  }
 
   phase_simulator_->initialize(variable_set_, parameter_map_,
-                               original_map_, vm, module_set_container_, relation_graph_, prev_guards_);
+                               original_map_, vm, module_set_container_);
   phase_simulator_->result_root = result_root_;
 
   profile_vector_.reset(new entire_profile_t());

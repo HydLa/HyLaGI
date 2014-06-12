@@ -267,8 +267,6 @@ protected:
   
   void reset_result_root();
 
-  boost::shared_ptr<RelationGraph> relation_graph_;
-
   parse_tree_sptr parse_tree_;  
 
   /**

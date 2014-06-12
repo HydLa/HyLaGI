@@ -42,7 +42,7 @@ public:
   void set_break_condition(symbolic_expression::node_sptr break_cond);
   symbolic_expression::node_sptr get_break_condition();
 
-  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, module_set_container_sptr& msc, boost::shared_ptr<RelationGraph> &relation_graph, ask_set_t &prev_guards);
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, module_set_container_sptr& msc);
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
@@ -125,7 +125,7 @@ protected:
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
-  negative_asks_t prev_guards_;
+  negative_asks_t prev_asks_;
 
   int phase_sum_;
 
@@ -225,6 +225,7 @@ private:
 
   module_set_container_sptr module_set_container;
 
+  std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
 };
 
 
