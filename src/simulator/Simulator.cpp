@@ -96,7 +96,6 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   phase_simulator_->result_root = result_root_;
 
   profile_vector_.reset(new entire_profile_t());
-  //  if(opts_->analysis_mode == "simulate"||opts_->analysis_mode == "cmmap") phase_simulator_->init_arc(parse_tree);
 }
 
 void Simulator::reset_result_root()
@@ -160,10 +159,6 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
-  for(auto module : *module_set_container_->get_max_module_set())
-  {
-    todo->current_constraints.add_constraint(module.second);
-  }
   todo->maximal_mss.clear();
   todo->parent = result_root_;  
   return todo;

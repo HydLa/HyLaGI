@@ -15,7 +15,6 @@ class ParseTreeSemanticAnalyzer :
 {
 public:
   typedef symbolic_expression::node_sptr                 node_sptr;
-  typedef parse_tree::ParseTree::variable_map_t variable_map_t;
 
   ParseTreeSemanticAnalyzer(
     DefinitionContainer<symbolic_expression::ConstraintDefinition>& constraint_definition,
@@ -27,7 +26,7 @@ public:
   /**
    * 解析および制約呼び出しの展開をおこなう
    */
-  void analyze(symbolic_expression::node_sptr& n/*, variable_map_t& variable_map*/);
+  void analyze(symbolic_expression::node_sptr& n);
 
   // 定義
   virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
@@ -160,10 +159,7 @@ private:
 
   /// Stateをつむためのスタック
   std::stack<State> todo_stack_;
-  
-  /// プログラム中で使用される変数の一覧
-  variable_map_t* variable_map_;
-  
+   
   /**
    * 新しい子ノード
    * accept後、これに値が入っている場合はノードの値を交換する

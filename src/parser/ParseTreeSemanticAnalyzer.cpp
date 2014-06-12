@@ -50,7 +50,7 @@ ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
 ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 {}
 
-void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n/*, variable_map_t& variable_map*/)
+void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n)
 {
   if(n) {
     State state;
@@ -59,7 +59,6 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n/*, var
     state.in_constraint      = false;
     state.differential_count = 0;
     todo_stack_.push(state);
-  //  variable_map_ = &variable_map;
 
     accept(n);
     if(new_child_) n = new_child_;
