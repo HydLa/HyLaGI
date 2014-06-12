@@ -107,7 +107,7 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
 #ifdef _DEBUG_REDUCE_UNSUIT
     std::cout << "Case \t: " << (time_it + 1) << std::endl;
 #endif
-    NextPhaseResult &candidate = time_result[time_it];
+    DCCandidate &candidate = time_result[time_it];
     bool isNG = false;
     for(parameter_map_t::iterator p_it = candidate.parameter_map.begin(); p_it != candidate.parameter_map.end(); p_it++)
     {
@@ -173,7 +173,7 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
     time_result.clear();
     for(time_it=0;time_it < eps_time_result.size();time_it++)
     {
-      NextPhaseResult &eps_candidate = eps_time_result[time_it];
+      DCCandidate &eps_candidate = eps_time_result[time_it];
       time_result.push_back(eps_candidate);
 #ifdef _DEBUG_REDUCE_UNSUIT
       std::cout << "NewCase\t: " << (time_it + 1) << std::endl;

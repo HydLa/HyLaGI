@@ -27,26 +27,27 @@ struct MidpointRadius
   value_t              radius;
 };
 
-struct TimeIdsPair
+/**
+ * 離散変化に関する情報
+ */
+struct DCInformation
 {
-  value_t time;
-  std::vector<int> ids;
+  value_t time;         /// 離散変化時刻
+  std::vector<int> ids; /// 原因となった条件のID
+  bool on_time;         /// 計算した時刻に条件が成り立つかどうか
 };
 
-/**
- * calculate_next_PP_timeで返す構造体
- */
-typedef struct NextPhaseResult 
+struct DCCandidate 
 {
   /// minimum time and the id of its condition
-  TimeIdsPair             minimum;
+  DCInformation             minimum;
   /// non-minimum pairs of times and ids
-  std::vector<TimeIdsPair> non_minimums;
+  std::vector<DCInformation> non_minimums;
   /// condition for parameter in this case
   hydla::simulator::parameter_map_t parameter_map;
-} candidate_t;
+};
 
-typedef std::vector<candidate_t> pp_time_result_t;
+typedef std::vector<DCCandidate> pp_time_result_t;
 
 /**
  * 離散変化条件として渡す構造体

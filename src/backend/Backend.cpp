@@ -806,13 +806,13 @@ pp_time_result_t Backend::receive_cp()
   link_->get_function(name, next_time_size);
   pp_time_result_t result;
   for(int time_it = 0; time_it < next_time_size; time_it++){
-    candidate_t candidate;
+    DCCandidate candidate;
     int dummy_buf;
     // List
     link_->get_function(name, dummy_buf);
-
+    
     // for minimum
-    // timeAndIDs
+    // dcInfo
     link_->get_function(name, dummy_buf);
     candidate.minimum.time = receive_value();
     int min_size;
@@ -822,23 +822,27 @@ pp_time_result_t Backend::receive_cp()
     {
       candidate.minimum.ids.push_back(link_->get_integer()); 
     }
+    candidate.minimum.on_time = (bool)link_->get_integer();
+    HYDLA_LOGGER_DEBUG_VAR(candidate.minimum.on_time);
 
     // for nonminimum
     int nonmin_size;
     link_->get_function(name, nonmin_size);
     for(int nonmin_it = 0; nonmin_it < nonmin_size; nonmin_it++)
     {
-      TimeIdsPair time_id;
-      //timeAndIDs
+      DCInformation dc_info;
+      //dcInfo
       link_->get_function(name, dummy_buf);
-      time_id.time = receive_value();
+      dc_info.time = receive_value();
       int id_size;
       link_->get_function(name, id_size);
       for(int id_it = 0; id_it < id_size; id_it++)
       {
-        time_id.ids.push_back(link_->get_integer());
+        dc_info.ids.push_back(link_->get_integer());
       }
-      candidate.non_minimums.push_back(time_id);
+      dc_info.on_time = (bool)link_->get_integer();
+
+      candidate.non_minimums.push_back(dc_info);
     }
     // 条件を受け取る
     receive_parameter_map(candidate.parameter_map);

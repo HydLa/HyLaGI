@@ -1162,7 +1162,7 @@ PhaseSimulator::todo_list_t
     // まずインタラクティブ実行のために最小限の情報だけ整理する
     while(true)
     {
-      NextPhaseResult &candidate = time_result[time_it];
+      DCCandidate &candidate = time_result[time_it];
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
         pr->parameter_map[it->first] = it->second;
@@ -1191,7 +1191,7 @@ PhaseSimulator::todo_list_t
     {
       pr = results[result_it];
 
-      NextPhaseResult &candidate = time_result[result_it];
+      DCCandidate &candidate = time_result[result_it];
       HYDLA_LOGGER_DEBUG_VAR(result_it);
       for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
       {

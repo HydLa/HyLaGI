@@ -486,6 +486,7 @@ Module[
     id,
     cause,
     minT,
+    onTime = True,
     ret
   },
   id = causeAndID[[2]];
@@ -494,12 +495,19 @@ Module[
   checkMessage[];
   If[sol === False, Return[{}] ];
   (* 成り立つtの最小値を求める *)
-  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
+  
+  minT = Quiet[Check[minT = Minimize[{t, sol}, {t}],
+                     onTime = False;minT,
+                     Minimize::wksol],
+         Minimize::wksol];
+  (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
+  minT = First[minT];
+  Assert[Head[minT] =!= Piecewise];
   ret = makeListFromPiecewise[minT, condition];
   (* 時刻が0となる場合を取り除く．*)
   ret = Select[ret, (#[[1]] =!= 0)&];
   (* append id for each time *)
-  ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
+  ret = Map[({dcInfo[#[[1]], ids[id], If[onTime, 1, 0] ], #[[2]] })&, ret];
   ret
 ];
 
@@ -528,7 +536,7 @@ compareMinTime[timeCond1_, timeCond2_] := ( Block[
     ret = {};
     If[ caseEq =!= False,
       ret = Append[ret,
-        {timeAndIDs[minTime1, Join[timeAndID1[[2]], timeAndID2[[2]] ] ], nonMinimum, caseEq}]
+        {dcInfo[minTime1, Join[timeAndID1[[2]], timeAndID2[[2]] ] ], nonMinimum, caseEq}]
     ];
     If[ caseLe =!= False,
       ret = Append[ret, 
@@ -562,7 +570,7 @@ calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
   Block[
     {findResult, i},
     (* -1 is regarded as the id of time limit *)
-    timeCaseList = {{timeAndIDs[maxT, ids[-1]], {}, condition}};
+    timeCaseList = {{dcInfo[maxT, ids[-1], 0], {}, condition}};
     For[i = 1, i <= Length[causeAndIDList], i++,
       findResult = findMinTime[causeAndIDList[[i]], condition];
       timeCaseList = compareMinTimeList[timeCaseList, findResult]
@@ -612,13 +620,13 @@ publicMethod[
     debugPrint["resultList after Format", resultList];
     
     resultList = Map[
-    ({timeAndIDsToReturn[#[[1]] ], Map[(timeAndIDsToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
+    ({dcInfoToReturn[#[[1]] ], Map[(dcInfoToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
     simplePrint[resultList];
     resultList
   ]
 ];
 
-timeAndIDsToReturn[ti_] := timeAndIDs[toReturnForm[ti[[1]] ], ti[[2]] ];
+dcInfoToReturn[ti_] := dcInfo[toReturnForm[ti[[1]] ], ti[[2]], ti[[3]] ];
 
 applyDSolveResult[exprs_, integRule_] := (
   exprs  /. integRule     (* 単純にルールを適用 *)
