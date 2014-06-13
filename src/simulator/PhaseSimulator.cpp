@@ -115,7 +115,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   }
 
 
-  while(module_set_container->go_next())
+  while(module_set_container->has_next())
   {
     module_set_t ms = module_set_container->get_module_set();
     
@@ -179,12 +179,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   if(!store.consistent())
   {
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
-    module_set_container->mark_nodes(todo->maximal_mss, consistency_checker->get_inconsistent_module_set());
+    module_set_container->generate_new_ms(todo->maximal_mss, consistency_checker->get_inconsistent_module_set());
     return result;
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");
 
-  module_set_container->mark_nodes();
+  module_set_container->remove_included_ms_by_current_ms();
   if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_set_t());
   todo->maximal_mss.insert(ms);
 

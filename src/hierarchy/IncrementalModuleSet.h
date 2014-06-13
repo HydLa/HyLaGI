@@ -80,7 +80,7 @@ public:
 
   void next();
 
-  bool go_next(){ return !ms_to_visit_.empty(); }
+  bool has_next(){ return !ms_to_visit_.empty(); }
 
   ModuleSet get_module_set(){ return *ms_to_visit_.rbegin(); }
 
@@ -89,7 +89,7 @@ public:
    * 現在のモジュール集合が包含するモジュール集合を
    * ms_to_visit_から外す
    */
-  virtual void mark_nodes();
+  virtual void remove_included_ms_by_current_ms();
 
   /**
    * @ param ms:矛盾するモジュールセット
@@ -97,7 +97,7 @@ public:
    * ms_to_visit_の先頭モジュールセットからmsを包含しないモジュールセットで
    * 要素が一つ少ないものをms_to_visit_に追加する
    */
-  virtual void mark_nodes(const module_set_set_t& mss, const ModuleSet& ms);
+  virtual void generate_new_ms(const module_set_set_t& mss, const ModuleSet& ms);
 
   /**
    * 探索対象をmssが示すモジュール集合とする

@@ -38,14 +38,8 @@ void IncrementalModuleSet::add_maximal_module_set(ModuleSet &ms)
   module_list_const_iterator p_end =
     maximal_module_set_.end();
  
-  // 引数のmsに要素を追加する
-  for(; p_it != p_end; ++p_it){
-      ms.add_module(*p_it);
-  }
   // maximal_module_set_の更新
-  maximal_module_set_ = ms;
-
-
+  maximal_module_set_.insert(ms);
   // リスト内で優先度が低いモジュールはそれより優先度が高いモジュールより必ず前に来るようにする
 }
 
@@ -133,14 +127,6 @@ void IncrementalModuleSet::add_required_parallel(IncrementalModuleSet& parallel_
 
 void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list) 
 {
-  // weak_module_set_list << this
-  module_list_const_iterator p_it = 
-    weak_module_set_list.maximal_module_set_.begin();
-  module_list_const_iterator p_end =
-    weak_module_set_list.maximal_module_set_.end();
-  module_list_const_iterator this_it = maximal_module_set_.begin();
-  module_list_const_iterator this_end = maximal_module_set_.end();
-
   stronger_modules_.insert(
     weak_module_set_list.stronger_modules_.begin(),
     weak_module_set_list.stronger_modules_.end()
@@ -151,14 +137,12 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
     weak_module_set_list.weaker_modules_.end()
   );
 
-  ModuleSet new_ms;
-  ModuleSet against_max(weak_module_set_list.maximal_module_set_);
   // thisに含まれるすべてのモジュールが
   // weak_module_setに含まれるすべてのモジュールよりも強いという情報を保持
-  for(; this_it != this_end; ++this_it){
-    for(module_list_const_iterator tmp_it = p_it; tmp_it != p_end; ++tmp_it){
-      stronger_modules_[*tmp_it].add_module(*this_it);
-      weaker_modules_[*this_it].add_module(*tmp_it);
+  for(auto this_modules : maximal_module_set_ ){
+    for(auto weaker_modules : weak_module_set_list.maximal_module_set_ ){
+      stronger_modules_[weaker_modules].add_module(this_modules);
+      weaker_modules_[this_modules].add_module(weaker_modules);
     }
   }
   add_maximal_module_set(weak_module_set_list.maximal_module_set_);
@@ -166,6 +150,7 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
 
 std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
 {
+  
   return s;
 }
 
@@ -185,9 +170,9 @@ std::ostream& IncrementalModuleSet::dump_node_trees(std::ostream& s) const
  * そのモジュール集合が包含しているモジュール集合を
  * 探索対象から外す
  */
-void IncrementalModuleSet::mark_nodes(){
+void IncrementalModuleSet::remove_included_ms_by_current_ms(){
   /// current は現在のモジュール集合
-  ModuleSet current = *ms_to_visit_.begin();
+  ModuleSet current = get_module_set();
   module_set_set_t::iterator lit = ms_to_visit_.begin();
   while(lit!=ms_to_visit_.end()){
     /**
@@ -217,9 +202,8 @@ void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
 
 void IncrementalModuleSet::generate_required_ms()
 {
-  for(auto ms : maximal_module_set_){
-    if(stronger_modules_.find(ms) == stronger_modules_.end()) required_ms_.add_module(ms);
-  }
+  for(auto ms : maximal_module_set_)
+    if(!stronger_modules_.count(ms)) required_ms_.add_module(ms);
 }
 
 /**
@@ -228,7 +212,7 @@ void IncrementalModuleSet::generate_required_ms()
  * @param mms そのフェーズにおおける極大無矛盾集合
  * @param ms 矛盾の原因となったモジュール集合 
  */
-void IncrementalModuleSet::mark_nodes(const module_set_set_t& mcss, const ModuleSet& ms){
+void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const ModuleSet& ms){
   if(required_ms_.size() == 0) generate_required_ms();
   HYDLA_LOGGER_DEBUG("%% inconsistency module set : ", ms.get_name());
   std::string for_debug = "";
@@ -255,16 +239,13 @@ void IncrementalModuleSet::mark_nodes(const module_set_set_t& mcss, const Module
         // The set has no module which is in removable module set
         ModuleSet new_ms = lit;
         new_ms.erase(removable_module_set);
-        // check weather a same module set was generated
-        bool checked = check_same_ms_generated(new_mss, new_ms);
         // check weather the new_ms is included by maximal consistent module sets.
-        if(!checked){
-          for( auto mcs : mcss ){
-           // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
-            if(mcs.including(new_ms)){
-              checked = true;
-              break;
-            }
+        bool checked = false;
+	for( auto mcs : mcss ){
+         // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
+          if(mcs.including(new_ms)){
+            checked = true;
+            break;
           }
         }
        // checkedがtrueでない場合、生成したモジュール集合を探索対象に追加
