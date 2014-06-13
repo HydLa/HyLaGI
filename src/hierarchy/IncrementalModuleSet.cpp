@@ -95,15 +95,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
 
 void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set) 
 {
-  stronger_modules_.insert(
-    parallel_module_set.stronger_modules_.begin(),
-    parallel_module_set.stronger_modules_.end()
-  );
-
-  weaker_modules_.insert(
-    parallel_module_set.weaker_modules_.begin(),
-    parallel_module_set.weaker_modules_.end()
-  );
+  add_order_data(parallel_module_set);
 
   // 今まで出現したすべてのモジュールの集合を保持
   add_maximal_module_set(parallel_module_set.maximal_module_set_);
@@ -111,15 +103,7 @@ void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_se
 
 void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list) 
 {
-  stronger_modules_.insert(
-    weak_module_set_list.stronger_modules_.begin(),
-    weak_module_set_list.stronger_modules_.end()
-  );
-
-  weaker_modules_.insert(
-    weak_module_set_list.weaker_modules_.begin(),
-    weak_module_set_list.weaker_modules_.end()
-  );
+  add_order_data(weak_module_set_list);
 
   // thisに含まれるすべてのモジュールが
   // weak_module_setに含まれるすべてのモジュールよりも強いという情報を保持
@@ -130,6 +114,16 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
     }
   }
   add_maximal_module_set(weak_module_set_list.maximal_module_set_);
+}
+
+void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)
+{
+  for(auto sm : ims.stronger_modules_){
+    stronger_modules_[sm.first].insert(sm.second);
+  }
+  for(auto wm : ims.weaker_modules_){
+    weaker_modules_[wm.first].insert(wm.second);
+  }
 }
 
 std::ostream& IncrementalModuleSet::dump(std::ostream& s) const

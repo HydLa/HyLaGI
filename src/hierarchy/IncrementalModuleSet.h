@@ -120,6 +120,10 @@ public:
   virtual module_set_set_t get_full_ms_list() const;
 
 private:
+  /**
+   * add << data
+   */
+  virtual void add_order_data(IncrementalModuleSet&);
 
   /**
    * check same module set was generated

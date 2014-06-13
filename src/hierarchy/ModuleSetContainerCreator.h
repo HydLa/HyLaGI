@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "ParseTree.h"
+#include "TreeInfixPrinter.h"
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 
@@ -28,6 +29,7 @@ public:
   typedef typename boost::shared_ptr<Container> container_sptr;
   typedef std::deque<container_sptr>            container_stack_t;
   typedef std::map<std::string, int>            mod_name_map_t;
+  typedef std::set<ModuleSet>                   module_set_set_t;
  
  
 
@@ -59,26 +61,58 @@ public:
     return ret;
   }
 
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
+  {
+    container_name_ += node->get_name();
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
+  {
+    container_name_ += node->get_number();
+  }
+
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
   {
     container_name_ = node->get_name();
+    int arg_size = node->actual_arg_size();
+    if(arg_size) container_name_ += "("; 
+    for(int i = 0; i < arg_size; i++){
+      if(i) container_name_ += ",";
+      accept(node->get_actual_arg(i));
+    }
+    if(arg_size) container_name_ += ")";
     accept(node->get_child());
   }
-
+  
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
   {
     container_name_ = node->get_name();
+    int arg_size = node->actual_arg_size();
+    if(arg_size) container_name_ += "("; 
+    for(int i = 0; i < arg_size; i++){
+      if(i) container_name_ += ",";
+      accept(node->get_actual_arg(i));
+    }
+    if(arg_size) container_name_ += ")";
     accept(node->get_child());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
-    container_name_ += "$";
-    container_name_ += boost::lexical_cast<std::string>(
-                        mod_name_map_[container_name_]++);
-
+    if(container_name_ == "")
+      container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node->get_child());
     // create ModuleSet
-    ModuleSet mod_set = ModuleSet(container_name_, node);
+    ModuleSet mod_set;
+    for(auto ms : generated_mss_){
+      if(ms.begin()->first == container_name_){
+        mod_set = ms;
+        break;
+      }
+    }
+    if(mod_set.empty()){
+      mod_set = ModuleSet(container_name_, node);
+      generated_mss_.insert(mod_set);
+    }
     container_name_.clear();
 
     // create Container
@@ -133,6 +167,11 @@ private:
    * 同一名のモジュールも区別する必要がある
    */
   mod_name_map_t    mod_name_map_;
+  
+  /**
+   * ModuleSets which are generated before
+   */
+  module_set_set_t generated_mss_;
 };
 
 } // namespace hierarchy
