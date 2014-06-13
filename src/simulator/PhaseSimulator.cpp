@@ -82,24 +82,13 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     set_simulation_mode(PointPhase);
     if(todo->parent != result_root)
     {
-      // if it's not in first phases, judge entailment of the prev guards in advance
-      for(auto prev_guard : prev_asks_)
+      // use the discrete causes for prev_asks
+      for(auto prev_ask : prev_asks_)
       {
-        CheckConsistencyResult cc_result;
-        // TODO: 離散変化時刻の計算時の情報を生かせれば、そもそもこの判定自体が不要なはず。
-        // 前のフェーズで成り立っていたかと、不等式を含むかどうかとかで判定できる。
-        // もしくは離散変化時刻の計算時に、PPを含むかどうかまで計算しておく。     
-        switch(consistency_checker->check_entailment(*relation_graph_, cc_result, prev_guard, todo->phase_type)){
-        case ENTAILED:
-          todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
-          break;
-        case CONFLICTING:
-          todo->judged_prev_map.insert(std::make_pair(prev_guard, false));
-          break;
-        default:
-          assert(0); // entailablities of prev guards must be determined
-          break;
-        }
+        bool entailed = todo->parent->positive_asks.count(prev_ask);
+        if(todo->discrete_causes.count(prev_ask)
+         && todo->discrete_causes[prev_ask]) entailed = !entailed;
+        todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
       }
     }
   }else{
@@ -525,7 +514,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           &positive_asks,
           &negative_asks,
           &unknown_asks);
-      apply_discrete_causes_to_guard_judgement( state->parent, state->discrete_causes, positive_asks, negative_asks, unknown_asks );
       set_changing_variables( state->parent, ms, positive_asks, negative_asks, state->changing_variables );
     }
     else{
@@ -761,47 +749,6 @@ PhaseSimulator::calculate_constraint_store(
   }
 
   return result_store;
-}
-
-void PhaseSimulator::apply_discrete_causes_to_guard_judgement(
-    const phase_result_sptr_t& parent,
-    const ask_set_t& discrete_causes,
-    positive_asks_t& positive_asks,
-    negative_asks_t& negative_asks,
-    ask_set_t& unknown_asks ){
-
-  PrevSearcher searcher;
-  ask_set_t prev_asks,reduced_u_asks;
-
-  for( auto ask : unknown_asks ){
-    if( searcher.search_prev(ask) ){
-      prev_asks.insert(ask);
-    }
-    else{
-      reduced_u_asks.insert(ask);
-    }
-  }
-
-  unknown_asks = reduced_u_asks;
-
-  for( auto prev_ask : prev_asks ){
-    if( discrete_causes.find(prev_ask) != discrete_causes.end() ){
-      if ( parent->positive_asks.find(prev_ask) != parent->positive_asks.end() )
-      {
-        negative_asks.insert( prev_ask );
-      }else{
-        positive_asks.insert( prev_ask );
-      }
-    }else{
-      if ( parent->positive_asks.find(prev_ask) != parent->positive_asks.end() )
-      {
-        positive_asks.insert( prev_ask );
-      }else{
-        negative_asks.insert( prev_ask );
-      }
-    }
-  }
-
 }
 
 void PhaseSimulator::set_changing_variables(
@@ -1227,8 +1174,7 @@ PhaseSimulator::todo_list_t
         {
           HYDLA_LOGGER_DEBUG_VAR(id);
           HYDLA_LOGGER_DEBUG_VAR(candidate.minimum.time);
-          HYDLA_LOGGER_DEBUG_VAR(*ask_map[id]);
-          next_todo->discrete_causes.insert(ask_map[id]);
+          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
         }
       }
 

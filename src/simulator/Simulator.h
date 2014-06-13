@@ -52,9 +52,9 @@ struct SimulationTodo{
   parameter_map_t           parameter_map;
   positive_asks_t           positive_asks;
   negative_asks_t           negative_asks;
-  ask_set_t                 discrete_causes;
-  ConstraintStore             expanded_constraints;
-  ConstraintStore             current_constraints;   /// 現在のフェーズで有効な制約
+  std::map<ask_t, bool>     discrete_causes;
+  ConstraintStore           expanded_constraints;
+  ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約
   
   entailed_prev_map_t       judged_prev_map;
 
