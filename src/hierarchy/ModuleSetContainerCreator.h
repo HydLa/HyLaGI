@@ -45,7 +45,6 @@ public:
     mod_set_stack_.clear();
     container_name_.clear();
     mod_name_map_.clear();
-    constraint_level_ = 0;
 
     parse_tree->dispatch(this);
     assert(mod_set_stack_.size() <= 1);
@@ -89,15 +88,12 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
   {    
-    constraint_level_++;
     container_name_.clear();
 
     // 左辺：弱い制約
     node->get_lhs()->accept(node->get_lhs(), this);
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
-
-    constraint_level_--;
 
     // 右辺：強い制約
     node->get_rhs()->accept(node->get_rhs(), this);
@@ -120,9 +116,7 @@ public:
 
     // 右辺
     node->get_rhs()->accept(node->get_rhs(), this);
-    // トップレベルではrequired制約扱いする
-    if(constraint_level_ == 0) mod_set_stack_.back()->add_required_parallel(*lhs);
-    else mod_set_stack_.back()->add_parallel(*lhs);
+    mod_set_stack_.back()->add_parallel(*lhs);
   }
 
 private:
@@ -139,9 +133,6 @@ private:
    * 同一名のモジュールも区別する必要がある
    */
   mod_name_map_t    mod_name_map_;
-
-  /// 制約の優先順位に関するレベル・深さ（0が最優先, required）
-  int constraint_level_;
 };
 
 } // namespace hierarchy
