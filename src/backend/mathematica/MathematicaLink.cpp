@@ -12,7 +12,7 @@ const std::string MathematicaLink::prev_prefix = "prev";
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const hydla::simulator::Opts &opts) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const Opts &opts) : env_(0), link_(0)
 {
   init(opts);
 }
@@ -47,7 +47,7 @@ void MathematicaLink::skip_pkt_until(int pkt_name)
 }
 
 
-void MathematicaLink::init(const hydla::simulator::Opts &opts)
+void MathematicaLink::init(const Opts &opts)
 {
   if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
   int err;
@@ -393,7 +393,7 @@ void MathematicaLink::pre_receive()
     throw LinkError(backend_name(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print(), 0, "");
   }
   if(ret_code == -1) {
-    throw hydla::timeout::TimeOutError("input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
+    throw timeout::TimeOutError("input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
   }
 }
 

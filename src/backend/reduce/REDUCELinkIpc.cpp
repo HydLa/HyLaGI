@@ -10,7 +10,7 @@ namespace reduce {
 const std::string REDUCELinkIpc::end_of_redeval_ = "<redeval> end:";
 
 
-REDUCELinkIpc::REDUCELinkIpc(const simulator::Opts &opts):REDUCELink(){
+REDUCELinkIpc::REDUCELinkIpc(const Opts &opts):REDUCELink(){
   initProcess();
   init_opts(opts);
 } 

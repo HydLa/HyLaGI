@@ -148,9 +148,9 @@ void setup_simulator_opts(Opts& opts)
 
   // select search method (dfs or bfs)
   if(po.get<std::string>("search") == "d"){
-    opts.search_method = simulator::DFS;
+    opts.search_method = DFS;
   }else if(po.get<std::string>("search") == "b"){
-    opts.search_method = simulator::BFS;
+    opts.search_method = BFS;
   }else{
     throw std::runtime_error(std::string("invalid option - search"));
   }

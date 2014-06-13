@@ -39,7 +39,7 @@ REDUCELink::REDUCELink():sexp_ast_(""){
 }
 
 
-void REDUCELink::init_opts(const simulator::Opts &opts)
+void REDUCELink::init_opts(const Opts &opts)
 {
   //pre_send();
   std::stringstream init_str;
