@@ -118,6 +118,12 @@ public:
 
 
   /**
+   * Get variabes included by connected component specified by index
+   */
+  variable_set_t get_variables(unsigned int index);
+
+
+  /**
    * Get constraints corresponding to the connected component specified by index.
    */
   ConstraintStore get_constraints(unsigned int index);
@@ -143,6 +149,12 @@ public:
   ConstraintStore get_expanded_constraints();
 
   /**
+   * Get all adopted constraints
+   */
+  ConstraintStore get_adopted_constraints();
+
+
+  /**
    * if true, the left hand limit is regareded as a constant (ignoring its relation)
    */
   void set_ignore_prev(bool);
@@ -157,8 +169,8 @@ private:
   VariableNode* add_variable_node(Variable &);
   
   void check_connected_components();
-  void visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms);
-  void visit_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms);
+  void visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
+  void visit_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
   void initialize_node_visited();
  
 
@@ -180,9 +192,10 @@ private:
     UNEXPANDING,
     ADDING
   }VisitMode;
-  
+
   std::vector<ConstraintStore> connected_constraints_vector;
   std::vector<module_set_t> connected_modules_vector;
+  std::vector<variable_set_t>     connected_variables_vector;
   bool up_to_date;     /// if false, recalculation of connected components is necessary
   std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
   std::map<constraint_t, ConstraintNode*> constraint_node_map;

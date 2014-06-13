@@ -163,14 +163,13 @@ private:
                            simulation_todo_sptr_t& state);
 
   void set_changing_variables( const phase_result_sptr_t& parent_phase,
-                             const module_set_t& present_ms,
                              const positive_asks_t& positive_asks,
                              const negative_asks_t& negative_asks,
                              change_variables_t& changing_variables );
 
   void set_changed_variables(phase_result_sptr_t& phase);
 
-  change_variables_t get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg);
+  change_variables_t get_difference_variables_from_2tells(const ConstraintStore& larg, const ConstraintStore& rarg);
 
   bool apply_entailment_change( const ask_set_t::iterator it,
                                 const ask_set_t& previous_asks,

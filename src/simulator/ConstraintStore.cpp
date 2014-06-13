@@ -11,43 +11,15 @@ ConstraintStore::ConstraintStore():is_consistent(true)
 {
 }
 
-constraints_t::iterator ConstraintStore::begin()
-{
-  return constraints.begin();
-}
-constraints_t::iterator ConstraintStore::end()
-{
-  return constraints.end();
-}
-
-constraints_t::const_iterator ConstraintStore::begin()const
-{
-  return constraints.begin();
-}
-
-constraints_t::const_iterator ConstraintStore::end()const
-{
-  return constraints.end();
-}
-
 void ConstraintStore::add_constraint(const constraint_t &constraint)
 {
-  constraints.insert(constraint);
+  insert(constraint);
 }
 void ConstraintStore::add_constraint_store(const ConstraintStore &store)
 {
-  constraints.insert(store.begin(), store.end());
+  insert(store.begin(), store.end());
 }
 
-void ConstraintStore::clear()
-{
-  constraints.clear();
-}
-
-size_t ConstraintStore::size()const
-{
-  return constraints.size();
-}
 
 bool ConstraintStore::consistent() const
 {

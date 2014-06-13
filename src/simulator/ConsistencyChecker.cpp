@@ -132,7 +132,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase, change_variables_t *change_variables)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
@@ -141,6 +141,24 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   {
     ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
     ContinuityMapMaker maker;
+    variable_set_t related_variables = relation_graph.get_variables(i);
+    
+    
+    if(change_variables != nullptr)
+    {
+      // check whether current constraints include any of change_variables
+      bool related = false;
+      for(auto related_variable : related_variables)
+      {
+        if(change_variables->count(related_variable.get_name()))
+        {
+          related = true;
+          break;
+        }
+      }
+      if(!related)continue;
+    }
+
     for(auto constraint : tmp_constraint_store)
     {
       maker.visit_node(constraint, phase == IntervalPhase, false);
