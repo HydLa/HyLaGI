@@ -24,18 +24,12 @@ public:
   } CheckEntailmentResult;
 
 
-  typedef symbolic_expression::node_sptr node_sptr;
-
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
 
   virtual ~ConsistencyChecker();
 
-  typedef std::set< std::string > change_variables_t;
-
-  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase);
-
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase, change_variables_t *change_variables = nullptr);
 
 
   /**
