@@ -34,12 +34,12 @@ using namespace std;
 // prototype declarations
 int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
-void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+void simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
-void output_result(hydla::simulator::SequentialSimulator& ss, hydla::simulator::Opts& opts);
+void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 
-extern hydla::simulator::SequentialSimulator* simulator_;
-extern hydla::simulator::Opts opts;
+extern simulator::SequentialSimulator* simulator_;
+extern Opts opts;
 
 /**
  * エントリポイント

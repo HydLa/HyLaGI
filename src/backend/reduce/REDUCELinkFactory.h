@@ -20,7 +20,7 @@ public:
   REDUCELinkFactory(){}
   ~REDUCELinkFactory(){}
 
-  REDUCELink* createInstance(const simulator::Opts &opts){
+  REDUCELink* createInstance(const Opts &opts){
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
     return new REDUCELinkTelnet(opts);

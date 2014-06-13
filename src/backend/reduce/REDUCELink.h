@@ -80,7 +80,7 @@ public:
   void pre_receive();
   void post_receive();
 
-  void init_opts(const simulator::Opts &opts);
+  void init_opts(const Opts &opts);
 
 
   void flush(bool debug = true);

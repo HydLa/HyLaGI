@@ -17,7 +17,7 @@ public:
   /**
    * localhost:1206 に接続する
    */
-  REDUCELinkTelnet(const simulator::Opts &opts);
+  REDUCELinkTelnet(const Opts &opts);
   ~REDUCELinkTelnet();
 
   /**

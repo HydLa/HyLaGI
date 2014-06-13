@@ -6,7 +6,7 @@ namespace reduce {
 
 const std::string REDUCELinkTelnet::end_of_redeval_ = "<redeval> end:";
 
-REDUCELinkTelnet::REDUCELinkTelnet(const simulator::Opts &opts):REDUCELink(){
+REDUCELinkTelnet::REDUCELinkTelnet(const Opts &opts):REDUCELink(){
   //  s_.connect("localhost", "1206");
   s_.connect("127.0.0.1", "1206");
   if(!s_){ throw REDUCELinkError("fail to connect"); }

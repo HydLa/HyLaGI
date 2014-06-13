@@ -84,7 +84,7 @@ protected:
 	current_condition_t pop_current_condition()
 	{
     current_condition_t cc;
-    if(opts_->search_method == simulator::DFS){
+    if(opts_->search_method == DFS){
       cc = cc_vec_.front();
       cc_vec_.pop_front();
     }else{

@@ -4,7 +4,7 @@
 #include "LinkError.h"
 #include <string.h>
 #include "Link.h"
-
+#include "Opts.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "ml32i1m.lib")
@@ -16,17 +16,13 @@
 
 namespace hydla{
 
-namespace simulator{
-  struct Opts;
-}
-
 namespace backend{
 namespace mathematica{
 
 class MathematicaLink : public Link
 {
 public:
-  MathematicaLink(const hydla::simulator::Opts &opts);
+  MathematicaLink(const Opts &opts);
 
   virtual ~MathematicaLink() ;
 
@@ -124,7 +120,7 @@ public:
 
 private:
 
-  void init(const hydla::simulator::Opts& opts);
+  void init(const Opts& opts);
 
 
   /////////// Mathematica Function /////////////

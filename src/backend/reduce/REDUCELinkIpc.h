@@ -25,7 +25,7 @@ public:
   /**
    * REDUCEプロセスの生成
    */
-  REDUCELinkIpc(const simulator::Opts &opts);
+  REDUCELinkIpc(const Opts &opts);
   /**
    * reduceプロセスに終了命令を出す
    */
