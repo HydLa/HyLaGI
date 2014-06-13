@@ -264,6 +264,19 @@ ConstraintStore RelationGraph::get_expanded_constraints()
   return constraints;
 }
 
+ConstraintStore RelationGraph::get_adopted_constraints()
+{
+  ConstraintStore constraints;
+  for(auto constraint_node : constraint_nodes)
+  {
+    if(constraint_node->module_adopted)
+    {
+      constraints.add_constraint(constraint_node->constraint);
+    }
+  }
+  return constraints;
+}
+
 
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {

@@ -95,6 +95,7 @@ public:
   negative_asks_t           negative_asks;
   int step;
   module_set_t              module_set;
+  ConstraintStore           current_constraints;
 
   change_variables_t changed_variables;
 

@@ -9,21 +9,18 @@ namespace simulator{
 typedef symbolic_expression::node_sptr constraint_t;
 typedef std::set<constraint_t> constraints_t;
 
-class ConstraintStore
+
+/**
+ * 制約ストアに対応するクラス。
+ * virtual デストラクタを持たないクラスを継承しているのでアップキャストしてはいけない。
+ */
+class ConstraintStore : public constraints_t
 {
 public:
   ConstraintStore();
-  constraints_t::iterator begin();
-  constraints_t::iterator end();
-
-  constraints_t::const_iterator begin()const ;
-  constraints_t::const_iterator end()const ;
 
   void add_constraint(const constraint_t &constraint);
   void add_constraint_store(const ConstraintStore &store);
-
-  void clear();
-  size_t size()const;
 
   bool consistent() const;
   // return if this constraint store is always true
@@ -31,7 +28,6 @@ public:
   void set_consistency(bool);
 private:
   bool is_consistent;
-  constraints_t constraints;
 };
 
 std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store);

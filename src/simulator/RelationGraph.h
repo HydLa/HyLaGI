@@ -149,6 +149,12 @@ public:
   ConstraintStore get_expanded_constraints();
 
   /**
+   * Get all adopted constraints
+   */
+  ConstraintStore get_adopted_constraints();
+
+
+  /**
    * if true, the left hand limit is regareded as a constant (ignoring its relation)
    */
   void set_ignore_prev(bool);

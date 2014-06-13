@@ -229,8 +229,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   {
     phase->expanded_constraints.add_constraint(positive_ask->get_child());
   }
-  todo->current_constraints = relation_graph_->get_constraints();
-
+  phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
+  
 
   if(opts_->assertion || break_condition_.get() != NULL){
     timer::Timer entailment_timer;
@@ -501,7 +501,6 @@ void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
 bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_t& ms)
 {
-  // preparation
   positive_asks_t& positive_asks = state->positive_asks;
   negative_asks_t& negative_asks = state->negative_asks;
 
@@ -519,7 +518,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           &positive_asks,
           &negative_asks,
           &unknown_asks);
-      set_changing_variables( state->parent, ms, positive_asks, negative_asks, state->changing_variables );
+      set_changing_variables( state->parent, positive_asks, negative_asks, state->changing_variables );
     }
     else{
       state->changing_variables = state->parent->changed_variables;
@@ -541,24 +540,16 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     timer::Timer consistency_timer;
 
-/*
-    for(auto tell : tell_list){
-      if(opts_->reuse && state->in_following_step())
-      {
-        VariableFinder variable_finder;
-        variable_finder.visit_node(tell);
-        if(!variable_finder.include_variables(state->changing_variables)
-           && (current_phase_ != IntervalPhase || !variable_finder.include_variables_prev(state->changing_variables)))
-        {
-          continue;
-        }
-        // TODO: 何やってるか確認
-      }
-    }
-*/
     {
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type);
+      if(opts_->reuse)
+      {
+        cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, &state->changing_variables);
+      }
+      else
+      {
+        cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type);
+      }
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
@@ -758,24 +749,15 @@ PhaseSimulator::calculate_constraint_store(
 
 void PhaseSimulator::set_changing_variables(
     const phase_result_sptr_t& parent_phase,
-    const module_set_t& present_ms,
     const positive_asks_t& positive_asks,
     const negative_asks_t& negative_asks,
     change_variables_t& changing_variables ){
-  //条件なし制約の差分取得
-  /* Todo: implement
-  
-  module_set_t parent_ms = parent_phase->module_set;
-  TellCollector parent_t_collector(parent_ms);
-  tells_t parent_tells;
-  //条件なし制約だけ集める
-  always_set_t empty_ea;
-  positive_asks_t empty_asks;
-  parent_t_collector.collect_all_tells(&parent_tells, &empty_ea, &empty_asks );
+  // TODO: これで正しいかを小林くんに確認
 
-  TellCollector t_collector(present_ms);
-  tells_t tells;
-  t_collector.collect_all_tells(&tells, &empty_ea, &empty_asks );
+  //条件なし制約の差分取得
+  ConstraintStore parent_tells = parent_phase->current_constraints;
+
+  ConstraintStore tells = relation_graph_->get_adopted_constraints();
 
   changing_variables = get_difference_variables_from_2tells( parent_tells, tells );
 
@@ -821,46 +803,32 @@ void PhaseSimulator::set_changing_variables(
       break;
     }
   }
-  */
 }
 
 void PhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
 {
-/* TODO: implement
   if(phase->parent.get() == NULL)return;
-  TellCollector current_tell_collector(phase->module_set);
-  tells_t current_tell_list;
-  always_set_t& current_expanded_always = phase->expanded_always;
-  positive_asks_t& current_positive_asks = phase->positive_asks;
-  current_tell_collector.collect_all_tells(&current_tell_list,&current_expanded_always,&current_positive_asks);
-
-  TellCollector prev_tell_collector(phase->parent->module_set);
-  tells_t prev_tell_list;
-  always_set_t& prev_expanded_always = phase->parent->expanded_always;
-  positive_asks_t& prev_positive_asks = phase->parent->positive_asks;
-  prev_tell_collector.collect_all_tells(&prev_tell_list,&prev_expanded_always,&prev_positive_asks);
-  phase->changed_variables = get_difference_variables_from_2tells(current_tell_list, prev_tell_list);
-*/
+  phase->changed_variables = get_difference_variables_from_2tells(phase->current_constraints, phase->parent->current_constraints);
 }
 
 
 
-change_variables_t PhaseSimulator::get_difference_variables_from_2tells(const tells_t& larg, const tells_t& rarg){
+change_variables_t PhaseSimulator::get_difference_variables_from_2tells(const ConstraintStore& larg, const ConstraintStore& rarg){
   change_variables_t cv;
-  tells_t l_tells = larg;
-  tells_t r_tells = rarg;
+  ConstraintStore l_tells = larg;
+  ConstraintStore r_tells = rarg;
 
-  tells_t symm_diff_tells, intersection_tells;
+  ConstraintStore symm_diff_tells, intersection_tells;
   for( auto tell : l_tells ){
-    tells_t::iterator it = std::find( r_tells.begin(), r_tells.end(), tell );
+    auto it = r_tells.find(tell);
     if( it == r_tells.end() )
-      symm_diff_tells.push_back(tell);
+      symm_diff_tells.add_constraint(tell);
     else{
-      intersection_tells.push_back(tell);
+      intersection_tells.add_constraint(tell);
       r_tells.erase(it);
     }
   }
-  for( auto tell : r_tells ) symm_diff_tells.push_back(tell);
+  for( auto tell : r_tells ) symm_diff_tells.add_constraint(tell);
 
   VariableFinder v_finder;
   for( auto tell : symm_diff_tells )
