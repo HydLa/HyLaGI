@@ -129,6 +129,11 @@ public:
    */
   virtual module_set_set_t get_full_ms_list() const;
 
+  /**
+   * generate module sets which has only required modules
+   */
+  virtual void generate_required_ms();
+
 private:
   /**
    * add << data
@@ -139,11 +144,6 @@ private:
    * check same module set was generated
    */
   virtual bool check_same_ms_generated(module_set_set_t&, ModuleSet&); 
-
-  /**
-   * generate module sets which has only required modules
-   */
-  virtual void generate_required_ms();
 
   /**
    * update ms_to_visit_ by generated module sets

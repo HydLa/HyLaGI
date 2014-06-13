@@ -118,12 +118,25 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
 
   // thisに含まれるすべてのモジュールが
   // weak_module_setに含まれるすべてのモジュールよりも強いという情報を保持
-  for(auto this_modules : maximal_module_set_ ){
-    for(auto weaker_modules : weak_module_set_list.maximal_module_set_ ){
-      stronger_modules_[weaker_modules].add_module(this_modules);
-      weaker_modules_[this_modules].add_module(weaker_modules);
+
+  ModuleSet strong_modules;
+  ModuleSet weak_modules;
+  for(auto this_module : maximal_module_set_ ){
+    if(weaker_modules_.count(this_module)) continue;
+    strong_modules.add_module(this_module);
+  }
+  for(auto weaker_module : weak_module_set_list.maximal_module_set_ ){
+    if(stronger_modules_.count(weaker_module)) continue;
+    weak_modules.add_module(weaker_module);
+  }
+  for(auto sm : strong_modules){
+    for(auto wm : weak_modules){
+      stronger_modules_[wm].add_module(sm);
+      weaker_modules_[sm].add_module(wm);
     }
   }
+
+  // 今まで出現したすべてのモジュールの集合を保持
   add_maximal_module_set(weak_module_set_list.maximal_module_set_);
 }
 
@@ -167,7 +180,7 @@ std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream
   }
   for(auto m : weaker_modules_){
     for(auto wm : m.second){
-      s << " \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
+      s << "  \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
     }
   }
   s << "}" << std::endl;
@@ -228,6 +241,8 @@ void IncrementalModuleSet::generate_required_ms()
 {
   for(auto ms : maximal_module_set_)
     if(!stronger_modules_.count(ms)) required_ms_.add_module(ms);
+
+  HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }
 
 /**
@@ -237,7 +252,6 @@ void IncrementalModuleSet::generate_required_ms()
  * @param ms 矛盾の原因となったモジュール集合 
  */
 void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const ModuleSet& ms){
-  if(required_ms_.size() == 0) generate_required_ms();
   HYDLA_LOGGER_DEBUG("%% inconsistency module set : ", ms.get_name());
   std::string for_debug = "";
   for( auto mit : mcss ){

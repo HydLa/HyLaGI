@@ -58,6 +58,7 @@ public:
     else {
       ret.reset(new Container);
     }
+    ret->generate_required_ms();
     return ret;
   }
 
