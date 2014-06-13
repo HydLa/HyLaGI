@@ -92,6 +92,7 @@ public:
    * モジュールを追加
    */
   void add_module(const module_t& mod){module_list_.insert(mod);}
+  void insert(const ModuleSet &ms){module_list_.insert(ms.module_list_.begin(), ms.module_list_.end());}
 
   bool is_super_set(const ModuleSet& subset_mod) const
   {

@@ -2,9 +2,6 @@
 
 #include "Node.h"
 #include "ParseTree.h"
-#include "ModuleSetContainer.h"
-#include "ModuleSetGraph.h"
-#include "ModuleSetList.h"
 #include "IncrementalModuleSet.h"
 
 #include "AskDisjunctionSplitter.h"
