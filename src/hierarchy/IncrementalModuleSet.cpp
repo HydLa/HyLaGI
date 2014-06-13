@@ -93,36 +93,20 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   return removable;
 }
 
-void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set_list) 
+void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set) 
 {
   stronger_modules_.insert(
-    parallel_module_set_list.stronger_modules_.begin(),
-    parallel_module_set_list.stronger_modules_.end()
+    parallel_module_set.stronger_modules_.begin(),
+    parallel_module_set.stronger_modules_.end()
   );
 
   weaker_modules_.insert(
-    parallel_module_set_list.weaker_modules_.begin(),
-    parallel_module_set_list.weaker_modules_.end()
+    parallel_module_set.weaker_modules_.begin(),
+    parallel_module_set.weaker_modules_.end()
   );
 
   // 今まで出現したすべてのモジュールの集合を保持
-  add_maximal_module_set(parallel_module_set_list.maximal_module_set_);
-}
-
-void IncrementalModuleSet::add_required_parallel(IncrementalModuleSet& parallel_module_set_list) 
-{
-  stronger_modules_.insert(
-    parallel_module_set_list.stronger_modules_.begin(),
-    parallel_module_set_list.stronger_modules_.end()
-  );
-
-  weaker_modules_.insert(
-    parallel_module_set_list.weaker_modules_.begin(),
-    parallel_module_set_list.weaker_modules_.end()
-  );
-  
-  // 今まで出現したすべてのモジュールの情報を保持
-  add_maximal_module_set(parallel_module_set_list.maximal_module_set_);
+  add_maximal_module_set(parallel_module_set.maximal_module_set_);
 }
 
 void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list) 
