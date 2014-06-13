@@ -174,8 +174,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   HYDLA_LOGGER_DEBUG("CONSISTENT");
 
   module_set_container->mark_nodes();
-  if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_list_t());
-  todo->maximal_mss.push_back(ms);
+  if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_set_t());
+  todo->maximal_mss.insert(ms);
 
   phase_result_sptr_t phase = make_new_phase(todo, store);
   phase->module_set = ms;

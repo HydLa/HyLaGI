@@ -31,9 +31,9 @@ class RelationGraph;
 typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
 
 typedef hierarchy::ModuleSet                              module_set_t;
-typedef hierarchy::ModuleSetContainer                     module_set_container_t;
+typedef hierarchy::IncrementalModuleSet                     module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
-typedef std::vector<module_set_t>                         module_set_list_t;
+typedef std::set<module_set_t>                         module_set_set_t;
 typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
 
 typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_prev_map_t;
@@ -65,9 +65,9 @@ struct SimulationTodo{
   ConstraintStore initial_constraint_store;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
-  module_set_list_t ms_to_visit;
+  module_set_set_t ms_to_visit;
   /// 無矛盾極大なモジュール集合の集合
-  module_set_list_t maximal_mss;
+  module_set_set_t maximal_mss;
   /// プロファイリング結果
   profile_t profile;
   /// 所属するケースの計算時間

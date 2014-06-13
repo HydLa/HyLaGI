@@ -187,8 +187,8 @@ std::ostream& IncrementalModuleSet::dump_node_trees(std::ostream& s) const
  */
 void IncrementalModuleSet::mark_nodes(){
   /// current は現在のモジュール集合
-  ModuleSet current = ms_to_visit_.front();
-  module_set_list_t::iterator lit = ms_to_visit_.begin();
+  ModuleSet current = *ms_to_visit_.begin();
+  module_set_set_t::iterator lit = ms_to_visit_.begin();
   while(lit!=ms_to_visit_.end()){
     /**
      * ms_to_visit_内のモジュール集合で
@@ -201,22 +201,18 @@ void IncrementalModuleSet::mark_nodes(){
   }
 }
 
-bool IncrementalModuleSet::check_same_ms_generated(module_set_list_t new_mss, ModuleSet &ms)
+bool IncrementalModuleSet::check_same_ms_generated(module_set_set_t &new_mss, ModuleSet &ms)
 {
-  for(auto new_ms : new_mss){
-    if(new_ms.including(ms) && ms.including(new_ms)) return true;
-  }
-  return false;
+  return new_mss.count(ms);
 }
 
-void IncrementalModuleSet::update_by_new_mss(module_set_list_t new_mss)
+void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
 {
   ms_to_visit_.clear();
   for(auto new_ms : new_mss){
-    for(auto rm : required_ms_) new_ms.add_module(rm);
-    ms_to_visit_.push_back(new_ms);
+    new_ms.insert(required_ms_);
+    ms_to_visit_.insert(new_ms);
   }
-  sort(ms_to_visit_.begin(), ms_to_visit_.end(), ModuleSetComparator());
 }
 
 void IncrementalModuleSet::generate_required_ms()
@@ -232,7 +228,7 @@ void IncrementalModuleSet::generate_required_ms()
  * @param mms そのフェーズにおおける極大無矛盾集合
  * @param ms 矛盾の原因となったモジュール集合 
  */
-void IncrementalModuleSet::mark_nodes(const module_set_list_t& mcss, const ModuleSet& ms){
+void IncrementalModuleSet::mark_nodes(const module_set_set_t& mcss, const ModuleSet& ms){
   if(required_ms_.size() == 0) generate_required_ms();
   HYDLA_LOGGER_DEBUG("%% inconsistency module set : ", ms.get_name());
   std::string for_debug = "";
@@ -242,7 +238,7 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mcss, const Modul
   HYDLA_LOGGER_DEBUG("%% maximal consistent module set : ", for_debug);
   // 制約の優先度を崩さない範囲で除去可能なモジュールを要素として持つ集合を得る
   // 結果用のモジュール集合の集合
-  module_set_list_t new_mss;
+  module_set_set_t new_mss;
   ModuleSet inconsistent_ms = ms;
   inconsistent_ms.erase(required_ms_);
   for( auto lit : ms_to_visit_ ){
@@ -273,14 +269,14 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mcss, const Modul
         }
        // checkedがtrueでない場合、生成したモジュール集合を探索対象に追加
         if(!checked){
-          new_mss.push_back(new_ms);
+          new_mss.insert(new_ms);
           HYDLA_LOGGER_DEBUG("%% new ms : ", new_ms.get_name());
         }
       }	
     }else{
       // 探索対象がmsを含んでいない場合そのまま残しておく
       if(!check_same_ms_generated(new_mss, lit)){
-        new_mss.push_back(lit);
+        new_mss.insert(lit);
       }
     }
   }
@@ -294,21 +290,21 @@ void IncrementalModuleSet::mark_nodes(const module_set_list_t& mcss, const Modul
   }
 
 /// 探索対象の初期状態を返す
-  IncrementalModuleSet::module_set_list_t IncrementalModuleSet::get_full_ms_list() const{
-    module_set_list_t ret;
-    ret.push_back(maximal_module_set_);
+  IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() const{
+    module_set_set_t ret;
+    ret.insert(maximal_module_set_);
     return ret;
   }
 
 // 探索対象を引数のmssが示す状態にする
-  void IncrementalModuleSet::reset(const module_set_list_t &mss){
+  void IncrementalModuleSet::reset(const module_set_set_t &mss){
     ms_to_visit_ = mss;
   }
 
 // 探索対象を初期状態に戻す
   void IncrementalModuleSet::reset(){
     ms_to_visit_.clear();
-    ms_to_visit_.push_back(maximal_module_set_);
+    ms_to_visit_.insert(maximal_module_set_);
   }
 
 } // namespace hierarchy

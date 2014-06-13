@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Variable.h"
-#include "ModuleSetContainer.h"
+#include "IncrementalModuleSet.h"
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 #include "ConstraintStore.h"
