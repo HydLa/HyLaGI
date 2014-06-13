@@ -25,6 +25,20 @@ public:
   typedef std::vector<VariableNode* > var_nodes_t;
   typedef std::vector<ConstraintNode* > constraint_nodes_t;
 
+  struct EdgeToVariable
+  {
+    VariableNode *variable_node;
+    bool ref_prev;               // indicates whether the reference is only for left hand limit or not
+    EdgeToVariable(VariableNode *, bool);
+  };
+
+  struct EdgeToConstraint
+  {
+    ConstraintNode *constraint_node;
+    bool ref_prev;               // indicates whether the reference is only for left hand limit or not
+    EdgeToConstraint(ConstraintNode *, bool);
+  };
+
   /**
    * Node for constraint
    */
@@ -34,7 +48,7 @@ public:
     bool visited;
     bool module_adopted; /// whether the module is in ms
     bool expanded; /// whether the guard of the constraint is entailed
-    var_nodes_t edges;
+    std::vector<EdgeToVariable> edges;
     ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(true)
     {}
     std::string get_name() const;
@@ -45,7 +59,7 @@ public:
    */
   struct VariableNode{
     Variable variable;
-    constraint_nodes_t edges;
+    std::vector<EdgeToConstraint> edges;
     VariableNode(Variable var):variable(var)
     {}
     std::string get_name() const;
@@ -128,11 +142,19 @@ public:
    */
   ConstraintStore get_expanded_constraints();
 
+  /**
+   * if true, the left hand limit is regareded as a constant (ignoring its relation)
+   */
+  void set_ignore_prev(bool);
+
+
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
   typedef std::vector<std::pair<constraint_t, Variable > > relation_t;
   
   void add(module_t &mod);
+
+  VariableNode* add_variable_node(Variable &);
   
   void check_connected_components();
   void visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms);
@@ -166,6 +188,7 @@ private:
   std::map<constraint_t, ConstraintNode*> constraint_node_map;
   std::map<Variable, VariableNode*> variable_node_map;
   VisitMode visit_mode;
+  bool ignore_prev;
 };
 
 } //namespace simulator

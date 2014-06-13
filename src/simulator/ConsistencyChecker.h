@@ -24,7 +24,7 @@ public:
   } CheckEntailmentResult;
 
 
-  typedef hydla::symbolic_expression::node_sptr node_sptr;
+  typedef symbolic_expression::node_sptr node_sptr;
 
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
@@ -39,9 +39,9 @@ public:
 
 
   /**
-   * Get inconsistent module set in the last check_consistency
+   * Get inconsistent module sets in the last check_consistency
    */
-  module_set_t get_inconsistent_module_set();
+  std::vector<module_set_t> get_inconsistent_module_sets();
 
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
 
@@ -62,7 +62,7 @@ private:
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   backend_sptr_t backend;
-  module_set_t inconsistent_module_set;
+  std::vector<module_set_t> inconsistent_module_sets;
 };
 
 

@@ -91,8 +91,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
       }
     }
+    relation_graph_->set_ignore_prev(true);
   }else{
     set_simulation_mode(IntervalPhase);
+    relation_graph_->set_ignore_prev(false);
   }
   if(todo->parent == result_root)
   {
@@ -168,7 +170,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   if(!store.consistent())
   {
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
-    module_set_container->mark_nodes(todo->maximal_mss, consistency_checker->get_inconsistent_module_set());
+    for(auto module_set : consistency_checker->get_inconsistent_module_sets())
+    {
+      module_set_container->mark_nodes(todo->maximal_mss, module_set);
+    }
     return result;
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");

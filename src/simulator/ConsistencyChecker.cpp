@@ -135,6 +135,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase)
 {
   CheckConsistencyResult result;
+  inconsistent_module_sets.clear();
   HYDLA_LOGGER_DEBUG("");
   for(int i = 0; i < relation_graph.get_connected_count(); i++)
   {
@@ -151,8 +152,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     if(!tmp_result.consistent_store.consistent())
     {
       result.consistent_store = tmp_result.consistent_store;
-      inconsistent_module_set = relation_graph.get_modules(i);
-      break;
+      inconsistent_module_sets.push_back(relation_graph.get_modules(i));
     }
     else
     {
@@ -168,9 +168,9 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   return result;
 }
 
-module_set_t ConsistencyChecker::get_inconsistent_module_set()
+vector<module_set_t> ConsistencyChecker::get_inconsistent_module_sets()
 {
-  return inconsistent_module_set;
+  return inconsistent_module_sets;
 }
 
 
