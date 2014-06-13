@@ -64,6 +64,16 @@ public:
   std::string get_name() const;
 
   /**
+   * dump priority data in dot language
+   */
+  virtual std::ostream& dump_module_sets_for_graphviz(std::ostream& s);
+  
+  /**
+   * dump priority data in dot language
+   */
+  virtual std::ostream& dump_priority_data_for_graphviz(std::ostream& s) const;
+  
+  /**
    * 集合の集合のダンプ
    */
   virtual std::ostream& dump(std::ostream& s) const;

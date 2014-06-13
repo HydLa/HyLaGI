@@ -147,15 +147,12 @@ bool dump(boost::shared_ptr<ParseTree> pt)
     return true;
   }
 
-/*
-  TODO: implement
   if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
-    msc->dump_graphviz(std::cout);
+    msc->dump_module_sets_for_graphviz(std::cout);
     return true;
   }
-*/
 
   return false;
 }

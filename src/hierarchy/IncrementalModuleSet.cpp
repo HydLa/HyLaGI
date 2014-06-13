@@ -79,8 +79,19 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
         }
       }
     }
-
-    removable.push_back(removable_for_it);
+    bool insert_flag = true;
+    for(std::vector<ModuleSet>::iterator it = removable.begin();
+        it != removable.end();
+        it++){
+      if(removable_for_it.including(*it)){
+        insert_flag = false;
+        break;
+      }
+      if(it->including(removable_for_it)){
+        removable.erase(it);
+      }
+    }
+    if(insert_flag) removable.push_back(removable_for_it);
   }
 
   // string for debug
@@ -126,9 +137,44 @@ void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)
   }
 }
 
+std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& s)
+{
+  reset();
+  s << "digraph module_set { " << std::endl;
+  s << "  edge [dir=back];" << std::endl;
+  s << "  \"" << get_module_set().get_name() << "\"" << std::endl;
+  module_set_set_t mss;
+  while(has_next()){
+    ModuleSet tmp = get_module_set();
+    generate_new_ms(mss, tmp);
+    for(auto ms : ms_to_visit_){
+      if(tmp.including(ms)){
+        s << "  \"" << tmp.get_name() << "\" -> \"" << ms.get_name() << "\"" << std::endl;
+      }
+    }
+  }
+  s << "}" << std::endl;
+  reset();
+  return s;
+}
+
+std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream& s) const
+{
+  s << "digraph priority_data { " << std::endl;
+  s << "  edge [dir=back];" << std::endl;
+  for(auto m : maximal_module_set_){
+    s << "  \"" << m.first << "\"" << std::endl;
+  }
+  for(auto m : weaker_modules_){
+    for(auto wm : m.second){
+      s << " \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
+    }
+  }
+  s << "}" << std::endl;
+  return s;
+}
 std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
 {
-  
   return s;
 }
 
