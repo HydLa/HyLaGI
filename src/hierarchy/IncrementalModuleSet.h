@@ -82,9 +82,7 @@ public:
 
   bool go_next(){ return !ms_to_visit_.empty(); }
 
-  ModuleSet get_module_set(){ 
-	  std::cout << "get : " << (*ms_to_visit_.rbegin()).get_name() << std::endl;
-	  return *ms_to_visit_.rbegin(); }
+  ModuleSet get_module_set(){ return *ms_to_visit_.rbegin(); }
 
   /**
    * ms_to_visit_内のモジュール集合で
