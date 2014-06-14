@@ -199,7 +199,7 @@ Module[
     map = applyListToOr[map];
     map = Map[(applyList[#])&, map];
     map = Map[(adjustExprs[#, judge])&, map];
-    debugPrint["@createMap map after adjustExprs", map];
+    debugPrint["map after adjustExprs in createMap", map];
     map = Map[(convertExprs[#])&, map];
     map
   ]

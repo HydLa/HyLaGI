@@ -81,7 +81,7 @@ createPrevMap[cons_, vars_] := Module[
       map = LogicalExpand[map];
       map = applyListToOr[map];
       map = Map[(applyList[#])&, map];
-      debugPrint["@createMap map after applyList", map];
+      debugPrint["map after applyList in createMap", map];
  
       map = Map[(convertExprs[ adjustExprs[#, isPrevVariable] ])&, map];
     ];
