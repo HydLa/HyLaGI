@@ -79,8 +79,19 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
         }
       }
     }
-
-    removable.push_back(removable_for_it);
+    bool insert_flag = true;
+    for(std::vector<ModuleSet>::iterator it = removable.begin();
+        it != removable.end();
+        it++){
+      if(removable_for_it.including(*it)){
+        insert_flag = false;
+        break;
+      }
+      if(it->including(removable_for_it)){
+        removable.erase(it);
+      }
+    }
+    if(insert_flag) removable.push_back(removable_for_it);
   }
 
   // string for debug
@@ -95,15 +106,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
 
 void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set) 
 {
-  stronger_modules_.insert(
-    parallel_module_set.stronger_modules_.begin(),
-    parallel_module_set.stronger_modules_.end()
-  );
-
-  weaker_modules_.insert(
-    parallel_module_set.weaker_modules_.begin(),
-    parallel_module_set.weaker_modules_.end()
-  );
+  add_order_data(parallel_module_set);
 
   // 今まで出現したすべてのモジュールの集合を保持
   add_maximal_module_set(parallel_module_set.maximal_module_set_);
@@ -111,30 +114,80 @@ void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_se
 
 void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list) 
 {
-  stronger_modules_.insert(
-    weak_module_set_list.stronger_modules_.begin(),
-    weak_module_set_list.stronger_modules_.end()
-  );
-
-  weaker_modules_.insert(
-    weak_module_set_list.weaker_modules_.begin(),
-    weak_module_set_list.weaker_modules_.end()
-  );
+  add_order_data(weak_module_set_list);
 
   // thisに含まれるすべてのモジュールが
   // weak_module_setに含まれるすべてのモジュールよりも強いという情報を保持
-  for(auto this_modules : maximal_module_set_ ){
-    for(auto weaker_modules : weak_module_set_list.maximal_module_set_ ){
-      stronger_modules_[weaker_modules].add_module(this_modules);
-      weaker_modules_[this_modules].add_module(weaker_modules);
+
+  ModuleSet strong_modules;
+  ModuleSet weak_modules;
+  for(auto this_module : maximal_module_set_ ){
+    if(weaker_modules_.count(this_module)) continue;
+    strong_modules.add_module(this_module);
+  }
+  for(auto weaker_module : weak_module_set_list.maximal_module_set_ ){
+    if(stronger_modules_.count(weaker_module)) continue;
+    weak_modules.add_module(weaker_module);
+  }
+  for(auto sm : strong_modules){
+    for(auto wm : weak_modules){
+      stronger_modules_[wm].add_module(sm);
+      weaker_modules_[sm].add_module(wm);
     }
   }
+
+  // 今まで出現したすべてのモジュールの集合を保持
   add_maximal_module_set(weak_module_set_list.maximal_module_set_);
 }
 
+void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)
+{
+  for(auto sm : ims.stronger_modules_){
+    stronger_modules_[sm.first].insert(sm.second);
+  }
+  for(auto wm : ims.weaker_modules_){
+    weaker_modules_[wm.first].insert(wm.second);
+  }
+}
+
+std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& s)
+{
+  reset();
+  s << "digraph module_set { " << std::endl;
+  s << "  edge [dir=back];" << std::endl;
+  s << "  \"" << get_module_set().get_name() << "\"" << std::endl;
+  module_set_set_t mss;
+  while(has_next()){
+    ModuleSet tmp = get_module_set();
+    generate_new_ms(mss, tmp);
+    for(auto ms : ms_to_visit_){
+      if(tmp.including(ms)){
+        s << "  \"" << tmp.get_name() << "\" -> \"" << ms.get_name() << "\"" << std::endl;
+      }
+    }
+  }
+  s << "}" << std::endl;
+  reset();
+  return s;
+}
+
+std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream& s) const
+{
+  s << "digraph priority_data { " << std::endl;
+  s << "  edge [dir=back];" << std::endl;
+  for(auto m : maximal_module_set_){
+    s << "  \"" << m.first << "\"" << std::endl;
+  }
+  for(auto m : weaker_modules_){
+    for(auto wm : m.second){
+      s << "  \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
+    }
+  }
+  s << "}" << std::endl;
+  return s;
+}
 std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
 {
-  
   return s;
 }
 
@@ -188,6 +241,8 @@ void IncrementalModuleSet::generate_required_ms()
 {
   for(auto ms : maximal_module_set_)
     if(!stronger_modules_.count(ms)) required_ms_.add_module(ms);
+
+  HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }
 
 /**
@@ -197,7 +252,6 @@ void IncrementalModuleSet::generate_required_ms()
  * @param ms 矛盾の原因となったモジュール集合 
  */
 void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const ModuleSet& ms){
-  if(required_ms_.size() == 0) generate_required_ms();
   HYDLA_LOGGER_DEBUG("%% inconsistency module set : ", ms.get_name());
   std::string for_debug = "";
   for( auto mit : mcss ){

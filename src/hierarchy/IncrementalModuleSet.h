@@ -64,6 +64,16 @@ public:
   std::string get_name() const;
 
   /**
+   * dump priority data in dot language
+   */
+  virtual std::ostream& dump_module_sets_for_graphviz(std::ostream& s);
+  
+  /**
+   * dump priority data in dot language
+   */
+  virtual std::ostream& dump_priority_data_for_graphviz(std::ostream& s) const;
+  
+  /**
    * 集合の集合のダンプ
    */
   virtual std::ostream& dump(std::ostream& s) const;
@@ -119,17 +129,21 @@ public:
    */
   virtual module_set_set_t get_full_ms_list() const;
 
+  /**
+   * generate module sets which has only required modules
+   */
+  virtual void generate_required_ms();
+
 private:
+  /**
+   * add << data
+   */
+  virtual void add_order_data(IncrementalModuleSet&);
 
   /**
    * check same module set was generated
    */
   virtual bool check_same_ms_generated(module_set_set_t&, ModuleSet&); 
-
-  /**
-   * generate module sets which has only required modules
-   */
-  virtual void generate_required_ms();
 
   /**
    * update ms_to_visit_ by generated module sets

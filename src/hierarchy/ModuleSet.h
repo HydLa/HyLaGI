@@ -116,6 +116,7 @@ public:
    */ 
   int compare(const ModuleSet& rhs) const;
   
+  bool empty() const { return module_list_.size()==0; }
   /**
    * return whether this module_set includes given module_set or not
    */
