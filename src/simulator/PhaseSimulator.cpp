@@ -182,7 +182,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_set_t());
   todo->maximal_mss.insert(ms);
 
-  phase_result_sptr_t phase = make_new_phase(todo, store);
+  phase_result_sptr_t phase = make_new_phase(todo);
   phase->module_set = ms;
 
 
@@ -304,11 +304,10 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
 }
 
 
-phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo, const ConstraintStore& store)
+phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo)
 {
   phase_result_sptr_t phase(new PhaseResult(*todo));
   phase->id = ++phase_sum_;
-  phase->constraint_store = store;
   todo->parent->children.push_back(phase);
   return phase;
 }
@@ -972,7 +971,7 @@ PhaseSimulator::todo_list_t
   else
   {
     backend_->call("resetConstraint", 0, "", "");
-    backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
+    backend_->call("addConstraint", 1, "mvt", "", &phase->variable_map);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);

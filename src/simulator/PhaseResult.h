@@ -86,8 +86,6 @@ public:
   int id;
   value_t                   current_time, end_time;
 
-  ConstraintStore           constraint_store;
-
   variable_map_t            variable_map;
   parameter_map_t           parameter_map;
   ConstraintStore             expanded_constraints;

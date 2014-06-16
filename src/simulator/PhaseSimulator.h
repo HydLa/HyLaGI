@@ -154,7 +154,7 @@ private:
 
   result_list_t make_results_from_todo(simulation_todo_sptr_t& todo);
 
-  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo, const ConstraintStore& store);
+  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
   /**
    * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
