@@ -130,11 +130,9 @@ private:
 
     //仮引数
     if (tree_iter->children.size()>1) {
-      TreeIter args = (gch+1)->children.begin();
-      size_t bound_variable_count = (gch+1)->children.size();
-      for(size_t i=0; i<bound_variable_count; i++) {
-        node->add_bound_variable(
-          std::string((args+i)->value.begin(), (args+i)->value.end()));
+      for(auto arg : (gch+1)->children)
+      {
+        node->add_bound_variable(std::string(arg.value.begin(), arg.value.end() ) );
       }
     }
 
@@ -200,18 +198,16 @@ private:
     using namespace grammer_rule;
     using namespace symbolic_expression;
 
-    TreeIter ch = tree_iter->children.begin();
+    const TreeIter &ch = tree_iter->children.begin();
 
-    long node_id = tree_iter->value.id().to_long();
-    switch(node_id) 
+    switch(tree_iter->value.id().to_long() ) 
     {
       // プログラムの集合
       case RI_Statements:
       {
         symbolic_expression::node_sptr node_tree;
         TreeIter it  = tree_iter->children.begin();
-        TreeIter end = tree_iter->children.end();
-        while(it != end) {
+        while(it != tree_iter->children.end()) {
           if(symbolic_expression::node_sptr new_tree = create_parse_tree(it++)) {
             // 制約宣言が複数回出現した場合は「,」によって連結する
             if(node_tree) {
@@ -283,13 +279,10 @@ private:
       {
         symbolic_expression::node_sptr node_tree;
         TreeIter it  = tree_iter->children.begin();
-        TreeIter end = tree_iter->children.end();
         symbolic_expression::node_sptr lhs_exp, rhs_exp;
-        assert(it!=end);
         lhs_exp = create_parse_tree(it++);
-        while(it != end) {
+        while(it != tree_iter->children.end() ) {
           boost::shared_ptr<BinaryNode> comp_op = get_comp_node(it++);
-          assert(it!=end);
           rhs_exp = create_parse_tree(it++);
           comp_op->set_lhs(lhs_exp);
           comp_op->set_rhs(rhs_exp);
