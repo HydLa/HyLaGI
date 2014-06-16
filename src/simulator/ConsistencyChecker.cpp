@@ -81,8 +81,6 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   const PhaseType &phase
   )
 {
-  static int i = 0;
-  cout << ++i << endl;
   CheckEntailmentResult ce_result;
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   ContinuityMapMaker maker;
