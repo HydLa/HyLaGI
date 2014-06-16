@@ -541,11 +541,11 @@ compareMinTime[timeCond1_, timeCond2_] := ( Block[
     ];
     If[ caseLe =!= False,
       ret = Append[ret, 
-        {dcInfo1, Append[nonMinimum, timeCond2[[1]]], caseLe}]
+        {dcInfo1, Append[nonMinimum, dcInfo2], caseLe}]
     ];
     If[ caseGr =!= False, 
       ret = Append[ret,
-        {dcInfo2, Append[nonMinimum, timeCond1[[1]]], caseGr}]
+        {dcInfo2, Append[nonMinimum, dcInfo1], caseGr}]
     ];
     Return[ ret ];
   ]
