@@ -516,35 +516,36 @@ Module[
 compareMinTime[timeCond1_, timeCond2_] := ( Block[
     {
       minTime1, minTime2,
-      timeAndID1, timeAndID2,
+      dcInfo1, dcInfo2,
       nonMinimum,
       caseEq,caseLe, caseGr,
       ret,
       andCond
     },
-    (* assume that only timeCond1 only has nonMinimum *)
+    (* assume that only timeCond1 has nonMinimum *)
     andCond = Reduce[timeCond1[[3]] && timeCond2[[2]], Reals];
     If[andCond === False, Return[{}] ];
-    timeAndID1 = timeCond1[[1]];
-    timeAndID2 = timeCond2[[1]];
-    minTime1 = timeAndID1[[1]];
-    minTime2 = timeAndID2[[1]];
+    dcInfo1 = timeCond1[[1]];
+    dcInfo2 = timeCond2[[1]];
+    minTime1 = dcInfo1[[1]];
+    minTime2 = dcInfo2[[1]];
     nonMinimum = timeCond1[[2]];
     caseEq = Quiet[Reduce[And[andCond, minTime1 == minTime2], Reals]];
     caseLe = Quiet[Reduce[And[andCond, minTime1 < minTime2], Reals]];
     caseGr = Reduce[andCond && !caseLe && !caseEq];
     ret = {};
     If[ caseEq =!= False,
+      (* TODO: onTimeかどうかで真面目に場合分けをする *)
       ret = Append[ret,
-        {dcInfo[minTime1, Join[timeAndID1[[2]], timeAndID2[[2]] ] ], nonMinimum, caseEq}]
+        {dcInfo[minTime1, Join[dcInfo1[[2]], dcInfo2[[2]] ], dcInfo1[[3]] ], nonMinimum, caseEq}]
     ];
     If[ caseLe =!= False,
       ret = Append[ret, 
-        {timeAndID1, Append[nonMinimum, timeCond2[[1]]], caseLe}]
+        {dcInfo1, Append[nonMinimum, timeCond2[[1]]], caseLe}]
     ];
     If[ caseGr =!= False, 
       ret = Append[ret,
-        {timeAndID2, Append[nonMinimum, timeCond1[[1]]], caseGr}]
+        {dcInfo2, Append[nonMinimum, timeCond1[[1]]], caseGr}]
     ];
     Return[ ret ];
   ]
