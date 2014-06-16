@@ -72,8 +72,6 @@ struct SimulationTodo{
   profile_t profile;
   /// 所属するケースの計算時間
   int elapsed_time;
-  /// changing variables from previous phase
-  change_variables_t changing_variables;
 
   SimulationTodo(){}
 

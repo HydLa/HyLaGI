@@ -388,15 +388,14 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
 	// 変数に代入
 	variable_map_t ret;
   variable_map_t &vm = pr->variable_map;
-  for(variable_map_t::iterator it = vm.begin();
-      it != vm.end(); it++)
+  for(auto var_entry : vm)
   {
-    if(it->second.undefined())continue;
-    assert(it->second.unique());
-    value_t tmp_val = it->second.get_unique_value();
+    if(var_entry.second.undefined())continue;
+    assert(var_entry.second.unique());
+    value_t tmp_val = var_entry.second.get_unique_value();
     backend_->call("substituteParameterCondition",
                    2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
-    it->second.set_unique_value(tmp_val);
+    var_entry.second.set_unique_value(tmp_val);
   }
 
 	// 時刻にも代入
@@ -417,11 +416,10 @@ void PhaseSimulator::replace_prev2parameter(
   assert(phase->parent.get() != NULL);
 
   PrevReplacer replacer(parameter_map, phase, *simulator_, opts_->approx);
-  for(variable_map_t::iterator it = vm.begin();
-      it != vm.end(); it++)
+  for(auto var_entry : vm)
   {
-    HYDLA_LOGGER_DEBUG(it->first, it->second);
-    ValueRange& range = it->second;
+    HYDLA_LOGGER_DEBUG(var_entry.first, var_entry.second);
+    ValueRange& range = var_entry.second;
     value_t val;
     if(range.unique())
     {
@@ -511,6 +509,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   continuity_map_t continuity_map;
 
   bool expanded;
+  change_variables_t changing_variables;
 
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
@@ -518,10 +517,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           &positive_asks,
           &negative_asks,
           &unknown_asks);
-      set_changing_variables( state->parent, positive_asks, negative_asks, state->changing_variables );
+      set_changing_variables( state->parent, positive_asks, negative_asks, changing_variables );
     }
     else{
-      state->changing_variables = state->parent->changed_variables;
+      changing_variables = state->parent->changed_variables;
     }
   }
 
@@ -544,7 +543,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       CheckConsistencyResult cc_result;
       if(opts_->reuse)
       {
-        cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, &state->changing_variables);
+        cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, &changing_variables);
       }
       else
       {
@@ -565,7 +564,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
     if(opts_->reuse && state->in_following_step()){
-      apply_previous_solution(state->changing_variables,
+      apply_previous_solution(changing_variables,
           state->phase_type == IntervalPhase, state->parent,
           continuity_map, state->current_time );
     }
@@ -582,7 +581,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       ask_set_t cv_unknown_asks, notcv_unknown_asks;
       if(opts_->reuse && state->in_following_step()){
         for( auto ask : unknown_asks ){
-          if(has_variables(ask, state->changing_variables, state->phase_type == IntervalPhase)){
+          if(has_variables(ask, changing_variables, state->phase_type == IntervalPhase)){
             cv_unknown_asks.insert(ask);
           }else{
             notcv_unknown_asks.insert(ask);
@@ -590,9 +589,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         }
         unknown_asks = cv_unknown_asks;
       }
-      ask_set_t::iterator it  = unknown_asks.begin();
-      ask_set_t::iterator end = unknown_asks.end();
-      while(it!=end)
+      auto it  = unknown_asks.begin();
+      while(it != unknown_asks.end())
       {
         if(state->phase_type == PointPhase){
           if(state->parent == result_root && PrevSearcher().search_prev((*it)->get_guard())){
@@ -631,11 +629,11 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             if(opts_->reuse && state->in_following_step()){
               if(state->phase_type == PointPhase){
                 apply_entailment_change(it, state->parent->negative_asks,
-                    false, state->changing_variables,
+                    false, changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }else{
                 apply_entailment_change(it, state->parent->parent->negative_asks,
-                    true, state->changing_variables,
+                    true, changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }
             }
@@ -649,11 +647,11 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             if(opts_->reuse && state->in_following_step() ){
               if(state->phase_type == PointPhase){
                 entailment_changed = apply_entailment_change(it, state->parent->positive_asks,
-                    false, state->changing_variables,
+                    false, changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }else{
                 entailment_changed = apply_entailment_change(it, state->parent->parent->positive_asks,
-                    true, state->changing_variables,
+                    true, changing_variables,
                     notcv_unknown_asks, unknown_asks );
               }
               if(entailment_changed) break;
@@ -757,7 +755,7 @@ void PhaseSimulator::set_changing_variables(
   //条件なし制約の差分取得
   ConstraintStore parent_tells = parent_phase->current_constraints;
 
-  ConstraintStore tells = relation_graph_->get_adopted_constraints();
+  ConstraintStore tells = relation_graph_->get_constraints();
 
   changing_variables = get_difference_variables_from_2tells( parent_tells, tells );
 
@@ -1108,8 +1106,8 @@ PhaseSimulator::todo_list_t
     {
       DCCandidate &candidate = time_result[time_it];
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
-      for(parameter_map_t::iterator it = candidate.parameter_map.begin(); it != candidate.parameter_map.end(); it++){
-        pr->parameter_map[it->first] = it->second;
+      for(auto par_entry : candidate.parameter_map ){
+        pr->parameter_map[par_entry.first] = par_entry.second;
       }
 
       pr->end_time = current_todo->current_time + candidate.minimum.time;
@@ -1195,9 +1193,9 @@ variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const 
   HYDLA_LOGGER_DEBUG("%% time: ", tm);
   variable_map_t result;
   TimeModifier modifier(*backend_);
-  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  for(auto var_entry : vm)
   {
-    result[it->first] = modifier.substitute_time(tm, it->second);
+    result[var_entry.first] = modifier.substitute_time(tm, var_entry.second);
   }
   return result;
 }
@@ -1208,9 +1206,9 @@ variable_map_t PhaseSimulator::shift_time_of_vm(const variable_map_t& vm, const 
   HYDLA_LOGGER_DEBUG("%% time: ", tm);
   variable_map_t result;
   TimeModifier modifier(*backend_);
-  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+  for(auto var_entry : vm)
   {
-    result[it->first] = modifier.shift_time(tm, it->second);
+    result[var_entry.first] = modifier.shift_time(tm, var_entry.second);
   }
   return result;
 }
