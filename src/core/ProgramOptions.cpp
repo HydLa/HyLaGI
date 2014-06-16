@@ -47,6 +47,9 @@ void ProgramOptions::init_descriptions()
      "  which might be solution\n"
      "  by graph representation")
      */
+    ("dump_module_priority_graph",
+     "output priorities of modules\n"
+     "  by graphviz format")
     ("dump_relation_graph", 
      "output relation of constraints and variables\n"
      "  by graphviz format")

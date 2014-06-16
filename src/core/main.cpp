@@ -154,5 +154,12 @@ bool dump(boost::shared_ptr<ParseTree> pt)
     return true;
   }
 
+  if(po.count("dump_module_priority_graph")>0) {
+    ModuleSetContainerCreator<IncrementalModuleSet> mcc;
+    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    msc->dump_priority_data_for_graphviz(std::cout);
+    return true;
+  }
+
   return false;
 }
