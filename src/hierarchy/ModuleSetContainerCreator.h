@@ -100,8 +100,13 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
-    if(container_name_ == "")
+    if(container_name_ == ""){
       container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node->get_child());
+      container_name_ += "$";
+      container_name_ += boost::lexical_cast<std::string>(
+                          mod_name_map_[container_name_]++); 
+    }
+
     // create ModuleSet
     ModuleSet mod_set;
     for(auto ms : generated_mss_){
