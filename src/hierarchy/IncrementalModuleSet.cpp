@@ -82,13 +82,15 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
     bool insert_flag = true;
     for(std::vector<ModuleSet>::iterator it = removable.begin();
         it != removable.end();
-        it++){
+        ){
       if(removable_for_it.including(*it)){
         insert_flag = false;
         break;
       }
       if(it->including(removable_for_it)){
-        removable.erase(it);
+        it = removable.erase(it);
+      }else{
+        it++;
       }
     }
     if(insert_flag) removable.push_back(removable_for_it);
