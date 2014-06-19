@@ -511,16 +511,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   change_variables_t changing_variables;
 
   if(opts_->reuse && state->in_following_step() ){
-    if(state->phase_type == PointPhase){
-      ask_collector.collect_ask(state->expanded_constraints,
-          &positive_asks,
-          &negative_asks,
-          &unknown_asks);
-      set_changing_variables( state->parent, positive_asks, negative_asks, changing_variables );
-    }
-    else{
-      changing_variables = state->parent->changed_variables;
-    }
+    set_changing_variables( state->parent, positive_asks, negative_asks, changing_variables );
   }
 
   ask_set_t original_p_asks = positive_asks;
@@ -540,7 +531,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     {
       CheckConsistencyResult cc_result;
-      if(opts_->reuse)
+      if(opts_->reuse && state->in_following_step())
       {
         cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, &changing_variables);
       }
