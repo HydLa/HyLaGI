@@ -30,19 +30,6 @@ IncrementalModuleSet::IncrementalModuleSet(const IncrementalModuleSet& im)
 IncrementalModuleSet::~IncrementalModuleSet()
 {}
 
-void IncrementalModuleSet::add_maximal_module_set(ModuleSet &ms)
-{
-  // この関数を呼び出したインスタンスが持つmaximal_module_set_のイテレータ
-  module_list_const_iterator p_it = 
-    maximal_module_set_.begin();
-  module_list_const_iterator p_end =
-    maximal_module_set_.end();
- 
-  // maximal_module_set_の更新
-  maximal_module_set_.insert(ms);
-  // リスト内で優先度が低いモジュールはそれより優先度が高いモジュールより必ず前に来るようにする
-}
-
 /**
  * 対象のモジュール集合から除去可能なモジュールの集合を返す
  * @param current_ms 対象のモジュール集合 
@@ -55,6 +42,14 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   std::vector<ModuleSet> removable;
 
   for( auto it : ms ){
+    bool has_weaker = false;
+    for( auto weaker : weaker_modules_[it] ){
+      if(ms.find(weaker) != ms.end()){
+        has_weaker = true;
+	break;
+      }
+    }
+    if(has_weaker) continue;
     // one of the removable module set
     ModuleSet removable_for_it;
     // a vector which has all modules which is weaker than it
@@ -79,19 +74,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
         }
       }
     }
-    bool insert_flag = true;
-    for(std::vector<ModuleSet>::iterator it = removable.begin();
-        it != removable.end();
-        it++){
-      if(removable_for_it.including(*it)){
-        insert_flag = false;
-        break;
-      }
-      if(it->including(removable_for_it)){
-        removable.erase(it);
-      }
-    }
-    if(insert_flag) removable.push_back(removable_for_it);
+    removable.push_back(removable_for_it);
   }
 
   // string for debug
@@ -109,7 +92,7 @@ void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_se
   add_order_data(parallel_module_set);
 
   // 今まで出現したすべてのモジュールの集合を保持
-  add_maximal_module_set(parallel_module_set.maximal_module_set_);
+  maximal_module_set_.insert(parallel_module_set.maximal_module_set_);
 }
 
 void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list) 
@@ -137,7 +120,7 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
   }
 
   // 今まで出現したすべてのモジュールの集合を保持
-  add_maximal_module_set(weak_module_set_list.maximal_module_set_);
+  maximal_module_set_.insert(weak_module_set_list.maximal_module_set_);
 }
 
 void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)

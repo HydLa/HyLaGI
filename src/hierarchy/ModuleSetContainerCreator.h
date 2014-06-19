@@ -62,6 +62,41 @@ public:
     return ret;
   }
 
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
+  {
+    accept(node->get_lhs());
+    container_name_+="+";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
+  {
+    accept(node->get_lhs());
+    container_name_+="-";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
+  {
+    accept(node->get_lhs());
+    container_name_+="*";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
+  {
+    accept(node->get_lhs());
+    container_name_+="/";
+    accept(node->get_rhs());
+  }
+  
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
+  {
+    accept(node->get_lhs());
+    container_name_+="^";
+    accept(node->get_rhs());
+  }
+
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
   {
     container_name_ += node->get_name();

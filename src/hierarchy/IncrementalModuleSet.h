@@ -25,12 +25,6 @@ public:
   virtual ~IncrementalModuleSet();
 
   /**
-   * 今までに出現したモジュールのセットを作る
-   */
-  void add_maximal_module_set(ModuleSet &ms);
-
-
-  /**
    * @param current_ms あるモジュールを取り除かれる元のモジュール集合
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
