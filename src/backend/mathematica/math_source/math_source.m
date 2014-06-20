@@ -30,7 +30,7 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
+  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, parameters]
 );
 
 moveTermsToLeft[expr_] := Head[expr][expr[[1]] - expr[[2]], 0];
@@ -77,12 +77,14 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
+  cons, initCons, prevCons, pCons, pars,
   Module[
-    {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
+    {sol, timeVars, prevVars, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
       {{LogicalExpand[pCons]}, {False}},
       sol = exDSolve[cons, initCons];
+      timeVars = Map[(#[t])&, getVariables[cons] ];
+      prevVars = getPrevVariables[initCons];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
         {{False}, {LogicalExpand[pCons]}},
@@ -216,6 +218,9 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 (* 式中に出現する変数を取得 *)
 
 getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter..]];
+
+(* 式中に出現するprev値を取得 *)
+getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
 
 (* 式中に出現する記号定数を取得 *)
 
