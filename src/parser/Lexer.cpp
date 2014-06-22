@@ -1,0 +1,260 @@
+#include "Lexer.h"
+
+namespace hydla{
+  namespace parser{
+
+Lexer::Lexer(std::istream& stream):line(0),column(0)
+{
+  std::string tmp;
+  while(std::getline(stream,tmp)){
+    strs.push_back(tmp);
+  }
+  skip_space();
+}
+
+Lexer::Lexer(std::string file_name):line(0),column(0)
+{
+  std::ifstream ifs(file_name.c_str());
+  if(!ifs){
+    std::cout << "file not found" << std::endl;
+  }else{
+    std::string tmp;
+    while(std::getline(ifs, tmp)){
+      strs.push_back(tmp);
+    }
+  }
+  skip_space();
+}
+
+Lexer::Lexer(std::vector<std::string> strings):strs(strings),line(0),column(0){}
+Lexer::~Lexer(){}
+
+Token Lexer::identifier()
+{
+  std::string identifier;
+  bool not_alpha = false;
+  do{
+    if(!not_alpha && (get_current_char() == '_' || is_digit(get_current_char()))) not_alpha = true;
+    identifier += get_current_char();
+  }while(next_char() && (
+          is_digit(get_current_char())
+       || is_alphabet(get_current_char())
+       || get_current_char() == '_'
+         )
+       );
+  current_token_string = identifier;
+  if(not_alpha) return IDENTIFIER;
+  return ALPHABET;
+}
+
+Token Lexer::number()
+{   
+  bool is_real = false;
+  std::string number;
+  do{
+    if(get_current_char() == '.'){
+      if(is_real){
+        break;
+      }else{
+        int now_line = line;
+        int now_column = column;
+        if(next_char() && is_digit(get_current_char())){
+          is_real = true;
+          number += ".";
+        }else{
+          line = now_line;
+          column = now_column;
+          current_token_string = number;
+          return INTEGER;
+        }
+      }
+    }
+    number += get_current_char();
+  }while(next_char() && (
+        is_digit(get_current_char()) ||
+        get_current_char() == '.'
+         )
+        );
+  current_token_string = number;
+  if(is_real) return NUMBER;
+  else return INTEGER;
+}
+
+Token Lexer::get_token()
+{
+  if(strs.size() <= line) return END_OF_FILE;
+  char current = get_current_char();
+  // identifier | Pi | E
+  if(is_alphabet(current) || current == '_'){
+    return identifier();
+  }
+  // number
+  if(is_digit(current)){
+    return number();
+  }
+
+  // else
+  current_token_string = current;
+  bool cont = next_char();
+  switch(current){
+    case '^':
+      return POWER;
+    case ']':
+      return RIGHT_BOX_BRACKETS;
+    case '(':
+      return LEFT_PARENTHESES;
+    case ')':
+      return RIGHT_PARENTHESES;
+    case '{':
+      return LEFT_BRACES;
+    case '}':
+      return RIGHT_BRACES;
+    case '.':
+      return PERIOD;
+    case ',':
+      return COMMA;
+    case '&':
+      return AMPERSAND;
+    case '|':
+      return VERTICAL_BAR;
+    case '\'':
+      return DIFFERENTIAL; 
+    case '+':
+      return PLUS;
+    case '-':
+      return MINUS;
+    case '@':
+      return COMMAND;
+    case '$':
+      return SYSTEM;
+    case '\"':
+      return DOUBLE_QUOTATION;
+  }
+  if(!cont) return UNKNOWN; 
+  // 2 or more charactors
+  switch(current){
+    case '!':
+      if(get_current_char() == '='){
+        next_char();
+        current_token_string = "!=";
+        return NOT_EQUAL;
+      }
+      return NOT;
+    case '*':
+      if(get_current_char() == '*'){
+        next_char();
+        current_token_string = "**";
+        return POWER;
+      }
+      return MUL;
+    case '<':
+      if(get_current_char() == '='){
+        if(!next_char() && get_current_char() != '>'){
+          current_token_string = "<=";
+          return LESS_EQUAL;
+        }
+        if(get_current_char() == '>'){
+          next_char();
+          current_token_string = "<=>";
+          return EQUIVALENT;
+        }
+      }
+      if(get_current_char() == '<'){
+        next_char();
+        current_token_string = "<<";
+        return WEAKER;
+      }
+      return LESS;
+    case '>':
+      if(get_current_char() == '='){
+        next_char();
+        current_token_string = ">=";
+        return GREATER_EQUAL;
+      }
+      return GREATER;
+    case '=':
+      if(get_current_char() == '>'){
+        next_char();
+        current_token_string = "=>";
+        return IMPLIES;
+      }
+      return EQUAL;
+    case '[':
+      if(get_current_char() == ']'){
+        next_char();
+        current_token_string = "[]";
+        return ALWAYS;
+      }
+      return LEFT_BOX_BRACKETS;
+    case '/':
+      current = get_current_char();
+      if(current == '\\'){
+        next_char();
+        current_token_string = "/\\";
+        return LOGICAL_AND;
+      }
+      if(current == '*'){
+        while(true){
+          do{
+            if(!next_char()){
+              std::cout << "error!" << std::endl;
+              return ERROR;
+            }
+          }while(get_current_char()!='*');
+          if(!next_char()){
+            std::cout << "error!" << std::endl;
+          }
+          if(get_current_char()=='/'){
+            next_char();
+            return get_token();
+          }
+        }
+      }
+      if(current == '/'){
+        next_line();
+        return get_token();
+      }
+      current_token_string = "/";
+      return DIVIDE;
+      break;
+    case '\\':
+      if(get_current_char() == '/'){
+        next_char();
+        current_token_string = "\\/";
+        return LOGICAL_OR;
+      }
+      break;
+  }
+
+  return UNKNOWN;
+}
+
+void Lexer::skip_space(){
+  while(line<strs.size()){
+    while(column<strs[line].size()){
+      if(is_space(get_current_char())) column++;
+      else return;
+    }
+    column = 0;
+    line++;
+  }
+}
+
+bool Lexer::next_line()
+{
+  column = 0;
+  line++;
+  skip_space();
+  return line<strs.size();
+}
+
+bool Lexer::next_char()
+{
+  column++;
+  skip_space();
+  if(line<strs.size() && column<strs[line].size()) return true;
+  else return false; 
+}
+
+} // namespace parser
+} // namespace hydla
