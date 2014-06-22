@@ -91,7 +91,7 @@ void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintS
   {
     VariableFinder finder;
     finder.visit_node(constraint);
-    VariableFinder::variable_set_t variables;
+    variable_set_t variables;
     variables = finder.get_all_variable_set();
     for(auto variable : variables)
     {
@@ -300,7 +300,7 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
   {
     VariableFinder finder;
     finder.visit_node(node);
-    VariableFinder::variable_set_t variables;
+    variable_set_t variables;
     
     ConstraintNode* cons;
     if(constraint_node_map.count(node))
@@ -323,7 +323,7 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
       var_node->edges.push_back(EdgeToConstraint(cons, false));
     }
 
-    VariableFinder::variable_set_t prev_variables;
+    variable_set_t prev_variables;
     prev_variables = finder.get_prev_variable_set();
     for(auto variable : prev_variables)
     {

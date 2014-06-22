@@ -86,15 +86,15 @@ bool VariableFinder::include_variables_prev(std::set<std::string> variables) con
   return false;
 }
 
-VariableFinder::variable_set_t VariableFinder::get_all_variable_set() const
+variable_set_t VariableFinder::get_all_variable_set() const
 {
   variable_set_t merged_set(variables_);
   merged_set.insert(prev_variables_.begin(), prev_variables_.end());
   return merged_set;
 }
 
-VariableFinder::variable_set_t VariableFinder::get_variable_set() const{ return variables_;}
-VariableFinder::variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variables_;}
+variable_set_t VariableFinder::get_variable_set() const{ return variables_;}
+variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variables_;}
 
 
 // Ask制約

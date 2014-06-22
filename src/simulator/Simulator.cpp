@@ -60,7 +60,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
 
   phase_simulator_->initialize(variable_set_, parameter_map_,
-                               original_map_, vm, module_set_container_);
+                               original_map_, module_set_container_);
   phase_simulator_->result_root = result_root_;
 
   profile_vector_.reset(new entire_profile_t());

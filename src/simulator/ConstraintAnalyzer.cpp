@@ -153,40 +153,6 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
   */
 }
 
-void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
-  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
-
-    std::string fmt = "v";
-    if(phase == PointPhase)
-    {
-      fmt += "n";
-    }
-    else
-    {
-      fmt += "z";
-    }
-    fmt += "vp";
-    if(it->second>=0){
-      for(int i=0; i<it->second;i++){
-        variable_t var(it->first, i);
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-      }
-    }else{
-      for(int i=0; i<=-it->second;i++){
-        variable_t var(it->first, i);
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-      }
-      if(phase == IntervalPhase)
-      {
-        symbolic_expression::node_sptr rhs(new Number("0"));
-        fmt = phase == PointPhase?"vn":"vt";
-        fmt += "en";
-        variable_t var(it->first, -it->second + 1);
-        backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
-      }
-    }
-  }
-}
 
 /* TODO: implement
   ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)

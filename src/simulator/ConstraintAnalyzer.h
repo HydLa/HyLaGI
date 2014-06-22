@@ -35,7 +35,7 @@ public:
    */
   virtual void print_conditions();
 
-  void add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase);
+  //void add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase);
 
   /**
    * msに対応する条件を算出する関数
