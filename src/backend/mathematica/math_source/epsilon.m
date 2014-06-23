@@ -14,8 +14,8 @@ publicMethod[
                         originalOther,
                         tmpMaxTime
                         },
-                    debugPrint["# In EPSILON MODE # : constraint ", cons];
-                    debugPrint["# In EPSILON MODE # : cauzeAndIDs ", causeAndIDs];
+                    debugPrint["# In EPSILON MODE # : CNPPTT constraint ", cons];
+                    debugPrint["# In EPSILON MODE # : CNPPTT cauzeAndIDs ", causeAndIDs];
 
                     tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
                     timeAppliedCauses = causeAndIDs /. tStore;
@@ -38,7 +38,7 @@ publicMethod[
                     resultList = Map[
                                      ({timeAndIDsToReturn[#[[1]] ], Map[(timeAndIDsToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
 
-                    debugPrint["# In EPSILON MODE # : resultList ", resultList];
+                    debugPrint["# In EPSILON MODE # :CNPPTT resultList ", resultList];
                     resultList
                     ]
              ];
