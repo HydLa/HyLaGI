@@ -52,6 +52,7 @@ public:
     ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(true)
     {}
     std::string get_name() const;
+    bool active() const;
   };
   
   /**
@@ -74,6 +75,11 @@ public:
    * Print the structure in graphviz format.
    */
   std::ostream& dump_graph(std::ostream & os) const;
+
+  /**
+   * Print active nodes and edges in graphviz format.
+   */
+  std::ostream& dump_active_graph(std::ostream & os) const;
   
   /**
    * Set a moduld adopted or not
