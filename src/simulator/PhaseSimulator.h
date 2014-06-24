@@ -173,13 +173,6 @@ private:
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
-<<<<<<< HEAD
-  void add_continuity(const continuity_map_t&, const PhaseType &phase);
-=======
-  bool has_variables(symbolic_expression::node_sptr node, const change_variables_t &variables, bool include_prev);
-
->>>>>>> 222f0357c28b4995c8b40bee680ae80fe6e7df8e
-
 /*
   virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
       simulation_todo_sptr_t&,
