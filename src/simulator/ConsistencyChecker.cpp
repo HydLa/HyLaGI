@@ -132,32 +132,20 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase, change_variables_t *change_variables)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase, const bool reuse)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
   HYDLA_LOGGER_DEBUG("");
   for(int i = 0; i < relation_graph.get_connected_count(); i++)
   {
+
     ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
+
+    if(reuse && !relation_graph.is_changing(tmp_constraint_store)) continue;
+
     ContinuityMapMaker maker;
     variable_set_t related_variables = relation_graph.get_variables(i);
-    
-    
-    if(change_variables != nullptr)
-    {
-      // check whether current constraints include any of change_variables
-      bool related = false;
-      for(auto related_variable : related_variables)
-      {
-        if(change_variables->count(related_variable.get_name()))
-        {
-          related = true;
-          break;
-        }
-      }
-      if(!related)continue;
-    }
 
     for(auto constraint : tmp_constraint_store)
     {

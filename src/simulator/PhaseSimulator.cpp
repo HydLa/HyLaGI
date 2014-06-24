@@ -203,19 +203,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   phase->variable_map = create_result[0];
 
   if(opts_->reuse && todo->parent != result_root){
-    set_changed_variables(phase);
+   phase->changed_constraints = relation_graph_->get_changing_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
     {
       for(auto var_entry : phase->variable_map)
       {
-        bool changed = false;
-        for(auto var_name : phase->changed_variables)
-        {
-          if(var_entry.first.get_name() == var_name)
-          {
-            changed = true;
-          }
-        }
+       bool changed = relation_graph_->is_changing(var_entry.first);
         if(!changed)
         {
           phase->variable_map[var_entry.first] =
@@ -508,46 +501,30 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   continuity_map_t continuity_map;
 
   bool expanded;
-  change_variables_t changing_variables;
 
   if(opts_->reuse && state->in_following_step() ){
+    relation_graph_->clear_changing();
     if(state->phase_type == PointPhase){
-      ask_collector.collect_ask(state->expanded_constraints,
-          &positive_asks,
-          &negative_asks,
-          &unknown_asks);
-      set_changing_variables( state->parent, positive_asks, negative_asks, changing_variables );
+      ConstraintStore changing_constraints;
+      insert_iterator<ConstraintStore> ins_it(changing_constraints, changing_constraints.begin());
+      set_symmetric_difference(state->parent->current_constraints.begin(), state->parent->current_constraints.end(),
+        relation_graph_->get_constraints().begin(), relation_graph_->get_constraints().end(), ins_it );
+      relation_graph_->set_changing_constraints(changing_constraints);
     }
     else{
-      changing_variables = state->parent->changed_variables;
+      relation_graph_->set_changing_constraints(state->parent->changed_constraints);
     }
   }
 
-  ask_set_t original_p_asks = positive_asks;
-  ask_set_t original_n_asks = negative_asks;
-  ask_set_t original_u_asks = unknown_asks;
-  bool entailment_changed = false;
-
   do{
-    if(entailment_changed){
-      positive_asks = original_p_asks;
-      negative_asks = original_n_asks;
-      unknown_asks = original_u_asks;
-      entailment_changed = false;
-    }
 
     timer::Timer consistency_timer;
 
     {
       CheckConsistencyResult cc_result;
-      if(opts_->reuse)
-      {
-        cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, &changing_variables);
-      }
-      else
-      {
-        cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type);
-      }
+
+      cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, opts_->reuse);
+
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
@@ -561,13 +538,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     }
 
     state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-
+/*
     if(opts_->reuse && state->in_following_step()){
       apply_previous_solution(changing_variables,
           state->phase_type == IntervalPhase, state->parent,
           continuity_map, state->current_time );
     }
-
+*/
     ask_collector.collect_ask(state->expanded_constraints,
         &positive_asks,
         &negative_asks,
@@ -577,17 +554,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
     {
       expanded = false;
-      ask_set_t cv_unknown_asks, notcv_unknown_asks;
-      if(opts_->reuse && state->in_following_step()){
-        for( auto ask : unknown_asks ){
-          if(has_variables(ask, changing_variables, state->phase_type == IntervalPhase)){
-            cv_unknown_asks.insert(ask);
-          }else{
-            notcv_unknown_asks.insert(ask);
-          }
-        }
-        unknown_asks = cv_unknown_asks;
-      }
       auto it  = unknown_asks.begin();
       while(it != unknown_asks.end())
       {
@@ -598,44 +564,12 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             unknown_asks.erase(it++);
             continue;
           }
-        }else if(opts_->reuse && state->in_following_step()
-            && state->parent->negative_asks.find(*it) != state->parent->negative_asks.end()
-            && state->discrete_causes.find(*it) == state->discrete_causes.end()){
-          VariableFinder v_finder;
-          v_finder.visit_node((*it)->get_guard(), true);
-          auto variables = v_finder.get_all_variable_set();
-          bool continuity = true;
-          for(auto var : variables){
-            //すべてのdiscrete_causesの後件に変数値が含まれていないことを調べないといけない
-            //以下の処理は黒ジャンプには対応しているが、白ジャンプには対応していない 
-            auto var_d = state->parent->variable_map.find(Variable(var.get_name(),var.get_differential_count()+1));
-            if(var_d->second.undefined()){
-              continuity = false;
-              break;
-            }
-          }
-          if(continuity){
-            negative_asks.insert(*it);
-            unknown_asks.erase(it++);
-            continue;
-          }
         }
 
         CheckConsistencyResult check_consistency_result;
         switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, *it, state->phase_type)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
-            if(opts_->reuse && state->in_following_step()){
-              if(state->phase_type == PointPhase){
-                apply_entailment_change(it, state->parent->negative_asks,
-                    false, changing_variables,
-                    notcv_unknown_asks, unknown_asks );
-              }else{
-                apply_entailment_change(it, state->parent->parent->negative_asks,
-                    true, changing_variables,
-                    notcv_unknown_asks, unknown_asks );
-              }
-            }
             positive_asks.insert(*it);
             relation_graph_->set_expanded((*it)->get_child(), true);
             unknown_asks.erase(it++);
@@ -643,18 +577,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             break;
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
-            if(opts_->reuse && state->in_following_step() ){
-              if(state->phase_type == PointPhase){
-                entailment_changed = apply_entailment_change(it, state->parent->positive_asks,
-                    false, changing_variables,
-                    notcv_unknown_asks, unknown_asks );
-              }else{
-                entailment_changed = apply_entailment_change(it, state->parent->parent->positive_asks,
-                    true, changing_variables,
-                    notcv_unknown_asks, unknown_asks );
-              }
-              if(entailment_changed) break;
-            }
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
             break;
@@ -667,11 +589,9 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             push_branch_states(state, check_consistency_result);
             break;
         }
-        if(entailment_changed) break;
       }
     }
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-    if(entailment_changed) continue;
   }while(expanded);
 
   if(!unknown_asks.empty()){
@@ -742,166 +662,6 @@ PhaseSimulator::calculate_constraint_store(
   }
 
   return result_store;
-}
-
-void PhaseSimulator::set_changing_variables(
-    const phase_result_sptr_t& parent_phase,
-    const positive_asks_t& positive_asks,
-    const negative_asks_t& negative_asks,
-    change_variables_t& changing_variables ){
-  // TODO: これで正しいかを小林くんに確認
-
-  //条件なし制約の差分取得
-  ConstraintStore parent_tells = parent_phase->current_constraints;
-
-  ConstraintStore tells = relation_graph_->get_constraints();
-
-  changing_variables = get_difference_variables_from_2tells( parent_tells, tells );
-
-  //導出状態の差分取得
-  //現在はpositiveだけど、parentではpositiveじゃないやつ
-  //現在はnegativeだけど、parentではpositiveなやつ
-  VariableFinder v_finder;
-  positive_asks_t parent_positives = parent_phase->positive_asks;
-  int cv_count = changing_variables.size();
-  for( auto ask : positive_asks ){
-    if(parent_positives.find(ask) == parent_positives.end() ){
-      v_finder.visit_node(ask, false);
-      VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-      for( auto var : tmp_vars ) changing_variables.insert(var.get_name());
-    }
-  }
-
-  for( auto ask : negative_asks ){
-    if(parent_positives.find(ask) != parent_positives.end() ){
-      v_finder.visit_node(ask);
-      VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-      for( auto var : tmp_vars ) changing_variables.insert(var.get_name());
-    }
-  }
-
-  if(changing_variables.size() > cv_count){
-    cv_count = changing_variables.size();
-    while(true){
-      for( auto tell : tells ){
-        bool has_cv = has_variables(tell, changing_variables, false);
-        if(has_cv){
-          v_finder.clear();
-          v_finder.visit_node(tell);
-          VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-          for( auto var : tmp_vars )
-            changing_variables.insert(var.get_name());
-        }
-      }
-      if(changing_variables.size() > cv_count ){
-        cv_count = changing_variables.size();
-        continue;
-      }
-      break;
-    }
-  }
-}
-
-void PhaseSimulator::set_changed_variables(phase_result_sptr_t& phase)
-{
-  if(phase->parent.get() == NULL)return;
-  phase->changed_variables = get_difference_variables_from_2tells(phase->current_constraints, phase->parent->current_constraints);
-}
-
-
-
-change_variables_t PhaseSimulator::get_difference_variables_from_2tells(const ConstraintStore& larg, const ConstraintStore& rarg){
-  change_variables_t cv;
-  ConstraintStore l_tells = larg;
-  ConstraintStore r_tells = rarg;
-
-  ConstraintStore symm_diff_tells, intersection_tells;
-  for( auto tell : l_tells ){
-    auto it = r_tells.find(tell);
-    if( it == r_tells.end() )
-      symm_diff_tells.add_constraint(tell);
-    else{
-      intersection_tells.add_constraint(tell);
-      r_tells.erase(it);
-    }
-  }
-  for( auto tell : r_tells ) symm_diff_tells.add_constraint(tell);
-
-  VariableFinder v_finder;
-  for( auto tell : symm_diff_tells )
-    v_finder.visit_node(tell);
-
-  VariableFinder::variable_set_t tmp_vars = v_finder.get_variable_set();
-  for( auto var : tmp_vars )
-    cv.insert(var.get_name());
-
-  int v_count = cv.size();
-  while(true){
-    for( auto tell : intersection_tells ){
-      bool has_cv = has_variables(tell, cv, false);
-      if(has_cv){
-        v_finder.clear();
-        v_finder.visit_node(tell);
-        tmp_vars = v_finder.get_variable_set();
-        for( auto var : tmp_vars )
-          cv.insert(var.get_name());
-      }
-    }
-    if(cv.size() > v_count ){
-      v_count = cv.size();
-      continue;
-    }
-    break;
-  }
-
-  return cv;
-}
-
-bool PhaseSimulator::has_variables(symbolic_expression::node_sptr node, const change_variables_t & change_variables, bool include_prev)
-{
-  VariableFinder variable_finder;
-  variable_finder.visit_node(node);
-  if(variable_finder.include_variables(change_variables) ||
-     (include_prev && variable_finder.include_variables_prev(change_variables)))
-  {
-    return true;
-  }
-  return false;
-}
-
-bool PhaseSimulator::apply_entailment_change(
-    const ask_set_t::iterator it,
-    const ask_set_t& previous_asks,
-    const bool in_IP,
-    change_variables_t& changing_variables,
-    ask_set_t& notcv_unknown_asks,
-    ask_set_t& unknown_asks ){
-  bool ret = false;
-  if(previous_asks.find(*it) != previous_asks.end() ){
-    VariableFinder v_finder;
-    v_finder.visit_node(*it);
-    VariableFinder::variable_set_t tmp_vars = in_IP?v_finder.get_all_variable_set():v_finder.get_variable_set();
-    int v_count = changing_variables.size();
-    for(auto var : tmp_vars){
-      changing_variables.insert(var.get_name());
-    }
-    if(changing_variables.size() > v_count){
-      ask_set_t change_asks;
-      for(auto ask : notcv_unknown_asks){
-        if(has_variables(ask->get_child(), changing_variables, in_IP) ){
-          unknown_asks.insert(ask);
-          change_asks.insert(ask);
-        }
-      }
-      if( !change_asks.empty() ){
-        ret = true;
-        for(auto ask : change_asks){
-          notcv_unknown_asks.erase(ask);
-        }
-      }
-    }
-  }
-  return ret;
 }
 
 void PhaseSimulator::apply_previous_solution(

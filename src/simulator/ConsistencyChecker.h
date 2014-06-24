@@ -29,7 +29,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase, change_variables_t *change_variables = nullptr);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase, const bool reuse);
 
 
   /**

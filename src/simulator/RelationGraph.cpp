@@ -219,6 +219,24 @@ void RelationGraph::set_expanded_all(bool expanded)
   up_to_date = false;
 }
 
+void RelationGraph::set_changing_constraints(const ConstraintStore& constraints)
+{
+  if(!up_to_date){
+    check_connected_components();
+  }
+  for(auto constraint_node : constraint_nodes){
+    constraint_node->visited = false;
+  }
+  ConstraintStore tmp_constraints;
+  for(auto constraint : constraints){
+    auto constraint_it = constraint_node_map.find(constraint);
+    ConstraintNode *constraint_node = constraint_it->second;
+    module_set_t module_set;
+    variable_set_t vars;
+    visit_node(constraint_node, tmp_constraints, module_set, vars);
+  }
+  changing_constraints.add_constraint_store(tmp_constraints);
+}
 
 RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
 {
@@ -277,6 +295,10 @@ ConstraintStore RelationGraph::get_adopted_constraints()
   return constraints;
 }
 
+ConstraintStore RelationGraph::get_changing_constraints(){
+  return changing_constraints;
+}
+
 
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
@@ -293,6 +315,34 @@ void RelationGraph::set_ignore_prev(bool ignore)
   up_to_date = false;
 }
 
+bool RelationGraph::is_changing(const ConstraintStore constraint_store)
+{
+  if(!up_to_date){
+    check_connected_components();
+    set_changing_constraints(changing_constraints);
+  }
+  bool ret = false;
+  for(auto constraint : constraint_store){
+    if(changing_constraints.find(constraint) != changing_constraints.end()){
+      ret = true;
+      break;
+    }
+  }
+  return ret;
+}
+
+bool RelationGraph::is_changing(const Variable& variable)
+{
+  VariableFinder finder;
+  for(auto constraint : changing_constraints){
+    finder.visit_node(constraint);
+  }
+  return finder.include_variable(variable) || finder.include_variable_prev(variable);
+}
+
+void RelationGraph::clear_changing(){
+  changing_constraints.clear();
+}
 
 void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node)
 {

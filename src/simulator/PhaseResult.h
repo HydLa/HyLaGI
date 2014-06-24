@@ -82,20 +82,20 @@ typedef std::set<std::string> change_variables_t;
  */
 class PhaseResult {
 public:
-  PhaseType                 phase_type;
+  PhaseType                    phase_type;
   int id;
-  value_t                   current_time, end_time;
+  value_t                      current_time, end_time;
 
-  variable_map_t            variable_map;
-  parameter_map_t           parameter_map;
-  ConstraintStore             expanded_constraints;
-  positive_asks_t           positive_asks;
-  negative_asks_t           negative_asks;
+  variable_map_t               variable_map;
+  parameter_map_t              parameter_map;
+  ConstraintStore              expanded_constraints;
+  positive_asks_t              positive_asks;
+  negative_asks_t              negative_asks;
   int step;
-  module_set_t              module_set;
-  ConstraintStore           current_constraints;
+  module_set_t                 module_set;
+  ConstraintStore              current_constraints;
 
-  change_variables_t changed_variables;
+  ConstraintStore              changed_constraints;
 
   CauseForTermination cause_for_termination;
   /// A set of succeeding phases

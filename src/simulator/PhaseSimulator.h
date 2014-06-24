@@ -162,22 +162,6 @@ private:
   virtual ConstraintStore calculate_constraint_store(const module_set_t& ms,
                            simulation_todo_sptr_t& state);
 
-  void set_changing_variables( const phase_result_sptr_t& parent_phase,
-                             const positive_asks_t& positive_asks,
-                             const negative_asks_t& negative_asks,
-                             change_variables_t& changing_variables );
-
-  void set_changed_variables(phase_result_sptr_t& phase);
-
-  change_variables_t get_difference_variables_from_2tells(const ConstraintStore& larg, const ConstraintStore& rarg);
-
-  bool apply_entailment_change( const ask_set_t::iterator it,
-                                const ask_set_t& previous_asks,
-                                const bool in_IP,
-                                change_variables_t& changing_variables,
-                                ask_set_t& notcv_unknown_asks,
-                                ask_set_t& unknown_asks );
-
   void apply_previous_solution(const change_variables_t& changing_variables,
                              const bool in_IP,
                              const phase_result_sptr_t parent,
@@ -189,8 +173,6 @@ private:
 
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
-
-  bool has_variables(symbolic_expression::node_sptr node, const change_variables_t &variables, bool include_prev);
 
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
 
