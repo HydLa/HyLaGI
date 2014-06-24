@@ -31,7 +31,7 @@ void RelationGraph::add(module_t &mod)
 ostream& RelationGraph::dump_graph(ostream & os) const
 {
   os << "graph g {\n";
-  
+  os << "graph [ranksep = 2.0 ,rankdir = LR]\n";
   for(auto constraint_node : constraint_nodes) {
     os << "  \"" << constraint_node->get_name() << "\" [shape = box]\n";
     for(auto edge : constraint_node->edges){
@@ -51,6 +51,31 @@ ostream& RelationGraph::dump_graph(ostream & os) const
 
   return os;
 }
+
+ostream& RelationGraph::dump_active_graph(ostream & os) const
+{
+  os << "graph g {\n";
+  os << "graph [ranksep = 2.0 ,rankdir = LR]";
+  for(auto constraint_node : constraint_nodes) {
+    if(!constraint_node->active())continue;
+    os << "  \"" << constraint_node->get_name() << "\" [shape = box]\n";
+    for(auto edge : constraint_node->edges){
+      os << "  \"" 
+        << constraint_node->get_name() 
+        << "\" -- \"" 
+        << edge.variable_node->get_name() 
+        << "\"";
+      if(edge.ref_prev)
+      {
+        os << "[label = \"prev\"]";
+      }
+      os <<  ";\n";
+    }
+  }
+  os << "}" << endl;
+  return os;
+}
+
 
 RelationGraph::EdgeToConstraint::EdgeToConstraint(ConstraintNode *cons, bool prev)
   : constraint_node(cons), ref_prev(prev){}
@@ -75,10 +100,16 @@ string RelationGraph::ConstraintNode::get_name() const
   return ret + " (" + module.first + ")";
 }
 
+bool RelationGraph::ConstraintNode::active() const
+{
+  return expanded && module_adopted;
+}
+
+
 void RelationGraph::initialize_node_visited()
 {
   for(auto constraint_node : constraint_nodes){
-    constraint_node->visited = !constraint_node->module_adopted || !constraint_node->expanded;
+    constraint_node->visited = !constraint_node->active();
   }
 }
 
@@ -91,7 +122,7 @@ void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintS
   {
     VariableFinder finder;
     finder.visit_node(constraint);
-    VariableFinder::variable_set_t variables;
+    variable_set_t variables;
     variables = finder.get_all_variable_set();
     for(auto variable : variables)
     {
@@ -261,7 +292,7 @@ ConstraintStore RelationGraph::get_constraints()
   ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
-    if(constraint_node->expanded && constraint_node->module_adopted)
+    if(constraint_node->active())
     {
       constraints.add_constraint(constraint_node->constraint);
     }
@@ -350,7 +381,7 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
   {
     VariableFinder finder;
     finder.visit_node(node);
-    VariableFinder::variable_set_t variables;
+    variable_set_t variables;
     
     ConstraintNode* cons;
     if(constraint_node_map.count(node))
@@ -373,7 +404,7 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
       var_node->edges.push_back(EdgeToConstraint(cons, false));
     }
 
-    VariableFinder::variable_set_t prev_variables;
+    variable_set_t prev_variables;
     prev_variables = finder.get_prev_variable_set();
     for(auto variable : prev_variables)
     {

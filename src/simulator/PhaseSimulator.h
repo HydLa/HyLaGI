@@ -42,7 +42,7 @@ public:
   void set_break_condition(symbolic_expression::node_sptr break_cond);
   symbolic_expression::node_sptr get_break_condition();
 
-  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m, continuity_map_t& c, module_set_container_sptr& msc);
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m,  module_set_container_sptr& msc);
 
   virtual void init_arc(const parse_tree_sptr& parse_tree);
 
@@ -165,7 +165,6 @@ private:
   void apply_previous_solution(const change_variables_t& changing_variables,
                              const bool in_IP,
                              const phase_result_sptr_t parent,
-                             continuity_map_t& continuity_map,
                              const value_t& current_time );
 
   bool calculate_closure(simulation_todo_sptr_t& state,
@@ -174,7 +173,12 @@ private:
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
+<<<<<<< HEAD
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
+=======
+  bool has_variables(symbolic_expression::node_sptr node, const change_variables_t &variables, bool include_prev);
+
+>>>>>>> 222f0357c28b4995c8b40bee680ae80fe6e7df8e
 
 /*
   virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
@@ -186,9 +190,6 @@ private:
   void replace_prev2parameter(phase_result_sptr_t& state,
                               ConstraintStore& store,
                               parameter_map_t &parameter_map);
-
-
-  continuity_map_t variable_derivative_map_;
 
   boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
   boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;

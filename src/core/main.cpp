@@ -56,12 +56,12 @@ int main(int argc, char* argv[])
     hydla_main(argc, argv);
   }
   catch(std::exception &e) {
-    std::cerr << "error : " << e.what() << std::endl;
+    cerr << "error : " << e.what() << endl;
     ret = -1;
   } 
 #if !(defined(_MSC_VER) && defined(_DEBUG))
   catch(...) {
-    std::cerr << "fatal error!!" << std::endl;
+    cerr << "fatal error!!" << endl;
     ret = -1;
   }
 #else
@@ -90,12 +90,12 @@ void hydla_main(int argc, char* argv[])
   
   
   if(po.count("help")) {     // ヘルプ表示して終了
-    po.help_msg(std::cout);
+    po.help_msg(cout);
     return;
   }
 
   if(po.count("version")) {  // バージョン表示して終了
-    std::cout << Version::description() << std::endl;
+    cout << Version::description() << endl;
     return;
   }
   // ParseTreeの構築
@@ -103,19 +103,19 @@ void hydla_main(int argc, char* argv[])
   // そうでなければ標準入力から受け取る
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   if(po.count("input-file")) {
-    std::string filename(po.get<std::string>("input-file"));
-    std::ifstream in(filename.c_str());
+    string filename(po.get<string>("input-file"));
+    ifstream in(filename.c_str());
     if (!in) {
-      throw std::runtime_error(std::string("cannot open \"") + filename + "\"");
+      throw runtime_error(string("cannot open \"") + filename + "\"");
     }
     pt->parse(in);
   } else {
-    pt->parse(std::cin);
+    pt->parse(cin);
   }
 
   if(po.count("parse_only"))
   {
-    std::cout << "successfully parsed" << std::endl;
+    cout << "successfully parsed" << endl;
     return;
   }
   
@@ -124,12 +124,14 @@ void hydla_main(int argc, char* argv[])
     return;
   }
 
+  Timer simulation_timer;
   // シミュレーション開始
   simulate(pt);
 
-  if(po.get<std::string>("tm") != "n"){
+  if(po.get<string>("tm") != "n"){
+    simulation_timer.elapsed("Simulation Time");
     main_timer.elapsed("Finish Time");
-    std::cout << std::endl;
+    cout << endl;
   }
 
 }
@@ -143,21 +145,21 @@ bool dump(boost::shared_ptr<ParseTree> pt)
   ProgramOptions &po = ProgramOptions::instance();
 
   if(po.count("dump_parse_tree")>0) {
-    pt->to_graphviz(std::cout);
+    pt->to_graphviz(cout);
     return true;
   }
 
   if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
-    msc->dump_module_sets_for_graphviz(std::cout);
+    msc->dump_module_sets_for_graphviz(cout);
     return true;
   }
 
   if(po.count("dump_module_priority_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
-    msc->dump_priority_data_for_graphviz(std::cout);
+    msc->dump_priority_data_for_graphviz(cout);
     return true;
   }
 

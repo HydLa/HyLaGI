@@ -12,6 +12,8 @@ struct CheckConsistencyResult
   ConstraintStore consistent_store, inconsistent_store;
 };
 
+class VariableFinder;
+
 class ConsistencyChecker{
 
 public:
@@ -37,7 +39,7 @@ public:
    */
   std::vector<module_set_t> get_inconsistent_module_sets();
 
-  void add_continuity(const continuity_map_t&, const PhaseType &phase);
+  void add_continuity(const VariableFinder&, const PhaseType &phase);
 
   /**
    * Check whether a guard is entailed or not.
@@ -51,11 +53,18 @@ public:
     const PhaseType &phase
     );
 
+  void set_prev_map(const variable_map_t *);
+
+  void send_init_equation(Variable &var, std::string fmt);
+  void send_prev_constraint(Variable &var);
+
 
 private:
-  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
+  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
+  std::map<std::string, int> get_differential_map(variable_set_t &);
   backend_sptr_t backend;
+  const variable_map_t* prev_map;
   std::vector<module_set_t> inconsistent_module_sets;
 };
 

@@ -8,7 +8,6 @@
 
 #include "PhaseResult.h"
 #include "Parameter.h"
-#include "ContinuityMapMaker.h"
 #include "ConstraintStore.h"
 #include "Opts.h"
 
@@ -135,7 +134,7 @@ class TodoContainer
 
 typedef TodoContainer                                    todo_container_t;
 
- typedef std::set<variable_t, VariableComparator>                            variable_set_t;
+typedef std::set<variable_t, VariableComparator>                            variable_set_t;
 
 class Simulator
 {

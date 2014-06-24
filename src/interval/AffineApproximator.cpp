@@ -146,7 +146,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
     finder.visit_node(condition, false);
     if(finder.include_variable(variable_to_approximate) || finder.include_variable_prev(variable_to_approximate))
     {
-      VariableFinder::variable_set_t variables = finder.get_all_variable_set();
+      variable_set_t variables = finder.get_all_variable_set();
       if(variables.size() > 2)
       {
         //TODO: approximate n-2 variables
@@ -183,7 +183,7 @@ void AffineApproximator::approximate_time(value_t& time, const variable_map_t& i
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition, false);
-    VariableFinder::variable_set_t variables = finder.get_all_variable_set();
+    variable_set_t variables = finder.get_all_variable_set();
     
     // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない
     // 再計算する変数を１つだけ決める（暫定的に最初の要素とする）

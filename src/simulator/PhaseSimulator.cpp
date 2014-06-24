@@ -75,7 +75,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
-  backend_->call("addPrevConstraint", 1, "mvp", "", &todo->prev_map);
+  consistency_checker->set_prev_map(&todo->prev_map);
   relation_graph_->set_expanded_all(false);
   if(todo->phase_type == PointPhase)
   {
@@ -158,7 +158,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& todo)
 {
-  HYDLA_LOGGER_DEBUG("--- next module set ---\n", ms.get_infix_string());
+  HYDLA_LOGGER_DEBUG("\n--- next module set ---\n", ms.get_infix_string());
   relation_graph_->set_adopted(ms);
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
@@ -318,7 +318,6 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
 void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
-                                continuity_map_t& c,
                                 module_set_container_sptr &msc)
 {
   variable_set_ = &v;
@@ -363,7 +362,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   
   backend_->set_variable_set(*variable_set_);
-  variable_derivative_map_ = c;
 }
 
 
@@ -391,7 +389,6 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
   }
 
 	// 時刻にも代入
-  HYDLA_LOGGER_DEBUG("");
   backend_->call("substituteParameterCondition",
                  2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
 	if(pr->phase_type == IntervalPhase){
@@ -406,17 +403,14 @@ void PhaseSimulator::replace_prev2parameter(
                                             parameter_map_t &parameter_map)
 {
   assert(phase->parent.get() != NULL);
-
   PrevReplacer replacer(parameter_map, phase, *simulator_, opts_->approx);
   for(auto var_entry : vm)
   {
-    HYDLA_LOGGER_DEBUG(var_entry.first, var_entry.second);
     ValueRange& range = var_entry.second;
     value_t val;
     if(range.unique())
     {
       val = range.get_unique_value();
-      HYDLA_LOGGER_DEBUG(val);
       replacer.replace_value(val);
       range.set_unique_value(val);
     }
@@ -542,7 +536,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     if(opts_->reuse && state->in_following_step()){
       apply_previous_solution(changing_variables,
           state->phase_type == IntervalPhase, state->parent,
-          continuity_map, state->current_time );
+          state->current_time );
     }
 */
     ask_collector.collect_ask(state->expanded_constraints,
@@ -642,11 +636,11 @@ PhaseSimulator::calculate_constraint_store(
   }
   
   backend_->call("resetConstraintForVariable", 0, "", "");
-  ContinuityMapMaker maker;
+  VariableFinder finder;
   for(auto constraint : tmp_constraint_store){
-    maker.visit_node(constraint, todo->phase_type == IntervalPhase, false);
+    finder.visit_node(constraint);
   }
-  consistency_checker->add_continuity(maker.get_continuity_map(), todo->phase_type);
+  consistency_checker->add_continuity(finder, todo->phase_type);
 
 
   if(todo->phase_type == PointPhase)
@@ -664,12 +658,13 @@ PhaseSimulator::calculate_constraint_store(
   return result_store;
 }
 
+
 void PhaseSimulator::apply_previous_solution(
     const change_variables_t& variables,
     const bool in_IP,
     const phase_result_sptr_t parent,
-    continuity_map_t& continuity_map,
     const value_t& current_time ){
+/* TODO : implement
   for(auto pair : parent->variable_map){
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
@@ -698,7 +693,7 @@ void PhaseSimulator::apply_previous_solution(
       }
     }
   }
-  consistency_checker->add_continuity(continuity_map, in_IP ? IntervalPhase : PointPhase );
+*/
 }
 
 PhaseSimulator::todo_list_t
@@ -902,8 +897,6 @@ PhaseSimulator::todo_list_t
         }
         else if(id >= 0)
         {
-          HYDLA_LOGGER_DEBUG_VAR(id);
-          HYDLA_LOGGER_DEBUG_VAR(candidate.minimum.time);
           next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
         }
       }

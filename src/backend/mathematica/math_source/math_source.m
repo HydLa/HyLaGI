@@ -2,7 +2,7 @@
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables], parameters ]
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
 );
 
 publicMethod[
@@ -30,7 +30,7 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
+  checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
 moveTermsToLeft[expr_] := Head[expr][expr[[1]] - expr[[2]], 0];
@@ -77,12 +77,14 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
+  cons, initCons, prevCons, pCons, pars,
   Module[
-    {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
+    {sol, timeVars, prevVars, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
       {{LogicalExpand[pCons]}, {False}},
       sol = exDSolve[cons, initCons];
+      timeVars = Map[(#[t])&, getVariables[cons] ];
+      prevVars = getPrevVariables[initCons];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
         {{False}, {LogicalExpand[pCons]}},
@@ -217,6 +219,9 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 
 getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter..]];
 
+(* 式中に出現するprev値を取得 *)
+getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
+
 (* 式中に出現する記号定数を取得 *)
 
 getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
@@ -262,16 +267,14 @@ publicMethod[
   constraint = True;
   initConstraint = True;
   pConstraint = True;
-  prevIneqs = True;
+  prevConstraint = True;
   prevRules = {};
-  initTmpConstraint = True;
-  tmpConstraint = True;
-  isTemporary = False;
 ];
 
 publicMethod[
   resetConstraintForVariable,
-  constraint = initConstraint = tmpConstraint = initTmpConstraint = True;
+  constraint = initConstraint = prevConstraint = True;
+  prevRules = {};
 ];
 
 publicMethod[
@@ -279,40 +282,38 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co] //. prevRules;
-    If[isTemporary,
-      tmpConstraint = tmpConstraint && cons,
-      constraint = constraint && cons
-    ];
-    simplePrint[cons, constraint, tmpConstraint];
+    cons = If[Head[co] === List, And@@co, co] /. prevRules;
+    constraint = constraint && cons;
+    simplePrint[cons, constraint];
   ]
 ];
 
 addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = And@@co //. prevRules;
-  If[isTemporary,
-    initTmpConstraint = initTmpConstraint && cons,
-    initConstraint = initConstraint && cons
-  ];
-  simplePrint[cons, initConstraint, initTmpConstraint, prevRules];
+  cons = And@@co /. prevRules;
+  initConstraint = initConstraint && cons;
+  simplePrint[cons, initConstraint];
+];
+
+addPrevLessEqual[var_, expr_] := addPrevConstraint[var <= expr];
+addPrevLess[var_, expr_] := addPrevConstraint[var <= expr];
+addPrevGreaterEqual[var_, expr_] := addPrevConstraint[var >= expr];
+addPrevGreater[var_, expr_] := addPrevConstraint[var > expr];
+
+publicMethod[
+  addPrevEqual,
+  var, expr,
+  prevRules = Append[prevRules, var -> expr];
+  simplePrint[prevRules];
 ];
 
 publicMethod[
   addPrevConstraint,
   co,
-  Module[
-    {land, cnf, eqs, ineqs},
-    land = And@@co;
-    (* x == 1 && y == 3 || x == 2 && y == 3を、(x == 1 || x == 2) && y == 3のようなCNFに変換して、yの値が一意に定まることを容易に判断できる形式にする *)
-    cnf = And2and[BooleanConvert[land, "CNF"] ];
-    eqs = Select[cnf, (Head[#]===Equal)&];
-    ineqs = Complement[cnf, eqs];
-    prevRules = Join[prevRules, List@@Map[(Rule@@#)&, eqs] ];
-    prevIneqs = prevIneqs && And@@ineqs;
-    simplePrint[prevRules, prevIneqs];
-  ]
+  prevConstraint = prevConstraint && co;
+  simplePrint[prevConstraint];
 ];
+
 
 
 makePrevVar[var_] := Module[
@@ -361,21 +362,6 @@ setVariables[vars_] := (
 );
 
 
-publicMethod[
-  startTemporary,
-  isTemporary = True;
-];
-
-publicMethod[
-  endTemporary,
-  isTemporary = False;
-  resetTemporaryConstraint[];
-];
-
-resetTemporaryConstraint[] := (
-  tmpConstraint = True;
-  initTmpConstraint = True;
-);
 
 publicMethod[
   resetConstraintForParameter,
@@ -398,11 +384,8 @@ publicMethod[
   Module[
     {cons},
     cons = lhs == rhs;
-    If[isTemporary,
-      tmpConstraint = tmpConstraint && cons,
-      constraint = constraint && cons
-      ];
-    simplePrint[cons, constraint, tmpConstraint];
+    constraint = constraint && cons;
+    simplePrint[cons, constraint];
   ]
 ];
 
