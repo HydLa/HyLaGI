@@ -12,17 +12,9 @@ Lexer::Lexer(std::istream& stream):line(0),column(0)
   skip_space();
 }
 
-Lexer::Lexer(std::string file_name):line(0),column(0)
+Lexer::Lexer(std::string str):line(0),column(0)
 {
-  std::ifstream ifs(file_name.c_str());
-  if(!ifs){
-    std::cout << "file not found" << std::endl;
-  }else{
-    std::string tmp;
-    while(std::getline(ifs, tmp)){
-      strs.push_back(tmp);
-    }
-  }
+  strs.push_back(str);
   skip_space();
 }
 

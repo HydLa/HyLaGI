@@ -79,6 +79,8 @@ public:
 private:
   Lexer lexer;
 
+  std::pair<std::pair<int,int>, std::string> error_info;
+
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> > constraint_definitions;

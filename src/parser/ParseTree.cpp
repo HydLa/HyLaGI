@@ -4,10 +4,8 @@
 #include <boost/foreach.hpp>
 
 #include "Logger.h"
-#include "HydLaAST.h"
 #include "NodeIDUpdater.h"
 #include "NodeIDRebuilder.h"
-#include "NodeTreeGenerator.h"
 #include "ParseTreeSemanticAnalyzer.h"
 #include "ParseTreeGraphvizDumper.h"
 #include "DefinitionContainer.h"

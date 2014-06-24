@@ -9,7 +9,7 @@ namespace hydla{
 
 using namespace symbolic_expression;
 
-Parser::Parser(std::string file_name):lexer(file_name){}
+Parser::Parser(std::string str):lexer(str){}
 Parser::Parser(std::istream& stream):lexer(stream){}
 Parser::~Parser(){}
 

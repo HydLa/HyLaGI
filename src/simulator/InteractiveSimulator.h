@@ -6,10 +6,8 @@
 #include "Logger.h"
 #include <sstream>
 #include "SymbolicTrajPrinter.h"
-#include "HydLaAST.h"
 #include "Node.h"
 #include "ParseTree.h"
-#include "NodeTreeGenerator.h"
 #include "JsonWriter.h"
 
 
@@ -37,12 +35,12 @@ template<typename T> T excin(std::string message="")
 
 class InteractiveSimulator:public Simulator{
 public:
-
+/*
   typedef boost::spirit::classic::multi_pass<std::istreambuf_iterator<char> > multipass_iter_t;
   typedef boost::spirit::classic::position_iterator<multipass_iter_t> pos_iter_t;
   typedef boost::spirit::classic::node_val_data_factory<> node_val_data_factory_t;
   typedef boost::spirit::classic::tree_parse_info<pos_iter_t, node_val_data_factory_t> tree_info_t;
-
+*/
   InteractiveSimulator(Opts &opts):Simulator(opts), printer_(backend){}
 
   virtual ~InteractiveSimulator(){}
@@ -154,7 +152,7 @@ protected:
   //Print unsat cores in a phase
   int find_unsat_core(simulation_todo_sptr_t&);
 
-  tree_info_t parse(std::stringstream& stream);
+//  tree_info_t parse(std::stringstream& stream);
 
   hydla::io::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
