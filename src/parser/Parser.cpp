@@ -439,41 +439,43 @@ node_sptr Parser::conditional_constraint(){
   return node_sptr();
 }
 
-#define UPDATE_COMPARE_NODE(NAME, CLASS, LHS, RHS)        \
-  case NAME:                                              \
-    LHS = boost::shared_ptr<CLASS>(new CLASS(LHS,RHS));   \
+#define UPDATE_COMPARE_NODE(NAME, FIRST, CLASS, LHS, RHS)           \
+  case NAME:                                                        \
+    LHS = boost::shared_ptr<CLASS>(new CLASS(LHS,RHS));             \
     break;
 
 /// compare_expression := expression (("<"|"<="|">"|">="|"="|"!=") expression)+
 node_sptr Parser::compare_expression(){
   node_sptr ret;
-  bool first = true;
+  node_sptr lhs;
   std::pair<int,int> position = lexer.get_current_position();
   // expression
-  if((ret = expression())){
+  if((lhs = expression())){
     Token token = lexer.get_token();
     // ("<"|"<="|">"|">="|"="|"!=")
     if(is_COMPARE(token)){
-      node_sptr tmp;
+      node_sptr rhs;
       do{
         // expression
-        if((tmp = expression())){
+        if((rhs = expression())){
           switch(token){
-            UPDATE_COMPARE_NODE(LESS, Less, ret, tmp)
-            UPDATE_COMPARE_NODE(LESS_EQUAL, LessEqual, ret, tmp)
-            UPDATE_COMPARE_NODE(GREATER, Greater, ret, tmp)
-            UPDATE_COMPARE_NODE(GREATER_EQUAL, GreaterEqual, ret, tmp)
-            UPDATE_COMPARE_NODE(EQUAL, Equal, ret, tmp)
-            UPDATE_COMPARE_NODE(NOT_EQUAL, UnEqual, ret, tmp)
+            UPDATE_COMPARE_NODE(LESS, first, Less, lhs, rhs)
+            UPDATE_COMPARE_NODE(LESS_EQUAL, first, LessEqual, lhs, rhs)
+            UPDATE_COMPARE_NODE(GREATER, first, Greater, lhs, rhs)
+            UPDATE_COMPARE_NODE(GREATER_EQUAL, first, GreaterEqual, lhs, rhs)
+            UPDATE_COMPARE_NODE(EQUAL, first, Equal, lhs, rhs)
+            UPDATE_COMPARE_NODE(NOT_EQUAL, first, UnEqual, lhs, rhs)
             default: break;
           }
-          first = false;
+          if(!ret) ret = lhs;
+          else ret = boost::shared_ptr<LogicalAnd>(new LogicalAnd(ret,lhs));
+          lhs = rhs;
         }else break;
         position = lexer.get_current_position();
         token = lexer.get_token();
       }while(is_COMPARE(token));
       lexer.set_current_position(position);
-      if(!first){return ret;}
+      if(ret){ return ret;}
     }
     lexer.set_current_position(position);
   }
