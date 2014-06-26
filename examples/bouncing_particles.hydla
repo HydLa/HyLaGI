@@ -9,7 +9,7 @@ BALL(yarg, y0){INIT(yarg, y0), FALL(yarg) << BOUNCE(yarg)}.
 BALL(y1, 1), BALL(y2, 2)
 , BALL(y3, 3), BALL(y4, 4)
 , BALL(y5, 5), BALL(y6, 6),
- BALL(y7, 7), BALL(y8, 8). BALL(y9, 9), BALL(y10, 10),
+ BALL(y7, 7), BALL(y8, 8), BALL(y9, 9), BALL(y10, 10),
  BALL(y11, 11),BALL(y12, 12), BALL(y13, 13),
- BALL(y14, 14).
+ BALL(y14, 14),
  BALL(y15, 15), BALL(y16, 16).

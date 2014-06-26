@@ -4,13 +4,13 @@
 #include <boost/foreach.hpp>
 
 #include "Logger.h"
-#include "HydLaAST.h"
 #include "NodeIDUpdater.h"
 #include "NodeIDRebuilder.h"
-#include "NodeTreeGenerator.h"
 #include "ParseTreeSemanticAnalyzer.h"
 #include "ParseTreeGraphvizDumper.h"
 #include "DefinitionContainer.h"
+
+#include "Parser.h"
 
 
 using namespace std;
@@ -43,17 +43,23 @@ void ParseTree::parse(std::istream& stream)
 {
   HYDLA_LOGGER_DEBUG("");
 
+  /*
   // ASTの構築
   HydLaAST ast;
   ast.parse(stream);
   HYDLA_LOGGER_DEBUG("--- AST Tree ---\n", ast);
-  
+  */
 
   // ParseTreeの構築
   DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>    program_definition;
+  /*
   NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
+  */
+  Parser parser(stream);
+  node_tree_ = parser.parse(assertion_node_tree_, constraint_definition, program_definition);
+  
   HYDLA_LOGGER_DEBUG("--- Parse Tree ---\n", *this);
   HYDLA_LOGGER_DEBUG("--- Constraint Definition ---\n", constraint_definition);
   HYDLA_LOGGER_DEBUG("--- Program Definition ---\n",    program_definition);

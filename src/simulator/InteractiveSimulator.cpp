@@ -15,10 +15,10 @@
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
-#include "HydLaAST.h"
 #include "AffineApproximator.h"
 #include "TimeModifier.h"
 #include "SignalHandler.h"
+#include "Parser.h"
 
 
 // surpress warning "C4996: old 'strcpy'" on VC++2005
@@ -27,7 +27,7 @@
 
 using namespace boost;
 using namespace std;
-using namespace hydla::grammer_rule;
+//using namespace hydla::grammer_rule;
 using namespace hydla::parser::error;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
@@ -525,19 +525,11 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   cin.clear();
   ss << break_str;
   
-  HydLaAST ast;
-  try
-  {
-    ast.parse(ss, HydLaAST::CONSTRAINT);
-  }
-  catch(SyntaxError e)
-  {
+  symbolic_expression::node_sptr node_tree = Parser(ss.str()).constraint();
+  if(!node_tree){
     cout << "invalid condition" << endl;
     return 0;
   }
-
-  NodeTreeGenerator genarator;
-  symbolic_expression::node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
 
   phase_simulator_->set_break_condition(node_tree);
   return 0;
