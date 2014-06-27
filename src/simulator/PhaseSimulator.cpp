@@ -202,7 +202,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
   phase->variable_map = create_result[0];
 
-  if(opts_->reuse && todo->parent != result_root){
+  if(opts_->reuse && todo->in_following_step()){
    phase->changed_constraints = relation_graph_->get_changing_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
     {
@@ -500,9 +500,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     relation_graph_->clear_changing();
     if(state->phase_type == PointPhase){
       ConstraintStore changing_constraints;
-      insert_iterator<ConstraintStore> ins_it(changing_constraints, changing_constraints.begin());
-      set_symmetric_difference(state->parent->current_constraints.begin(), state->parent->current_constraints.end(),
-        relation_graph_->get_constraints().begin(), relation_graph_->get_constraints().end(), ins_it );
+      set_symmetric_difference(state->parent->current_constraints,
+        relation_graph_->get_constraints(), changing_constraints );
       relation_graph_->set_changing_constraints(changing_constraints);
     }
     else{
@@ -517,7 +516,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     {
       CheckConsistencyResult cc_result;
 
-      cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, opts_->reuse);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, opts_->reuse && state->in_following_step());
 
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
@@ -658,6 +657,33 @@ PhaseSimulator::calculate_constraint_store(
   return result_store;
 }
 
+void PhaseSimulator::set_symmetric_difference(
+    const ConstraintStore& parent_constraints,
+    const ConstraintStore& current_constraints,
+    ConstraintStore& result ){
+  ConstraintStore::iterator it1 = parent_constraints.begin();
+  ConstraintStore::iterator it2 = current_constraints.begin();
+  while(it1 != parent_constraints.end() && it2 != current_constraints.end()){
+    if(*it1 < *it2){
+      result.insert(*it1);
+      it1++;
+    }else if(*it2 < *it1){
+      result.insert(*it2);
+      it2++;
+    }else{
+      it1++;
+      it2++;
+    }
+  }
+  while(it1 != parent_constraints.end()){
+    result.insert(*it1);
+    it1++;
+  }
+  while(it2 != current_constraints.end()){
+    result.insert(*it2);
+    it2++;
+  }
+}
 
 void PhaseSimulator::apply_previous_solution(
     const change_variables_t& variables,

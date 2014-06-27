@@ -255,9 +255,7 @@ void RelationGraph::set_changing_constraints(const ConstraintStore& constraints)
   if(!up_to_date){
     check_connected_components();
   }
-  for(auto constraint_node : constraint_nodes){
-    constraint_node->visited = false;
-  }
+  initialize_node_visited();
   ConstraintStore tmp_constraints;
   for(auto constraint : constraints){
     auto constraint_it = constraint_node_map.find(constraint);
