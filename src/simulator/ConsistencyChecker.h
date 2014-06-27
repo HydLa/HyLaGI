@@ -58,8 +58,13 @@ public:
   void send_init_equation(Variable &var, std::string fmt);
   void send_prev_constraint(Variable &var);
 
+  /// reset internal counters
+  void reset_count();
+
+  int get_backend_check_consistency_count();
 
 private:
+  int backend_check_consistency_count;
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   std::map<std::string, int> get_differential_map(variable_set_t &);

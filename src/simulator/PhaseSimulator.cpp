@@ -148,6 +148,19 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     relation_graph_->set_expanded_all(false);
   }
 
+  if(todo->profile["# of CheckConsistency"])
+  {
+    todo->profile["Average of CheckConsistency"] = 
+      todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
+  }
+
+  if(todo->profile["# of CheckEntailment"])
+  {
+    todo->profile["Average of CheckEntailment"] = 
+      todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
+  }
+
+
 
   //無矛盾な解候補モジュール集合が存在しない場合
   if(!has_next)
@@ -238,6 +251,9 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
       }
     }
   }
+
+  todo->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
+  consistency_checker->reset_count();
 
   for(auto positive_ask : todo->positive_asks)
   {
@@ -548,9 +564,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       {
         cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type);
       }
+      state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
+      state->profile["# of CheckConsistency"] += 1;
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
-        state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return false;
       }else if (!cc_result.inconsistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% consistent for all cases");
@@ -559,8 +576,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         push_branch_states(state, cc_result);
       }
     }
-
-    state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 
     if(opts_->reuse && state->in_following_step()){
       apply_previous_solution(changing_variables,
@@ -667,6 +682,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             push_branch_states(state, check_consistency_result);
             break;
         }
+        state->profile["# of CheckEntailment"]+= 1;
         if(entailment_changed) break;
       }
     }
@@ -703,6 +719,7 @@ PhaseSimulator::calculate_constraint_store(
   ConstraintStore result_store;
   bool result = calculate_closure(todo, ms);
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
+  todo->profile["# of CalculateClosure"]++;
 
   if(!result)
   {
@@ -736,6 +753,7 @@ PhaseSimulator::calculate_constraint_store(
       }
       if(!related)continue;
     }
+
     for(auto constraint : relation_graph_->get_constraints(i))
     {
       tmp_constraint_store.add_constraint(constraint);
