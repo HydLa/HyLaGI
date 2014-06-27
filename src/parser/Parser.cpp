@@ -116,7 +116,8 @@ node_sptr Parser::statement(){
   // program "."
   if((ret = program())){
     if(lexer.get_token() == PERIOD){
-      parsed_program = ret;
+      if(!parsed_program) parsed_program = ret;
+      else parsed_program = boost::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
       return ret;
     }
   }
