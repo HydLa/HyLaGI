@@ -116,12 +116,16 @@ node_sptr Parser::statement(){
   // program "."
   if((ret = program())){
     if(lexer.get_token() == PERIOD){
-      parsed_program = ret;
+      if(!parsed_program) parsed_program = ret;
+      else parsed_program = boost::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
       return ret;
     }
   }
   lexer.set_current_position(position);
 
+  int line = lexer.get_current_position().first;
+  std::cout << "syntax error : at line " << line+1 << std::endl;
+  std::cout << " > " << lexer.get_string(line) << std::endl;
   std::exit(1);
   return node_sptr();
 }

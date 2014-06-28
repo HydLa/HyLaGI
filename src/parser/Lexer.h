@@ -60,6 +60,7 @@ public:
   ~Lexer();
   Token get_token();
  
+  std::string get_string(int line){ return strs[line]; }
   std::string get_current_token_string(){ return current_token_string; }
   std::pair<int,int> get_current_position(){ return std::pair<int,int>(line,column); }
   void set_current_position(std::pair<int,int> p){ line = p.first; column = p.second; }
