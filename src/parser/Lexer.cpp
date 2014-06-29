@@ -114,6 +114,8 @@ Token Lexer::get_token()
       return DIFFERENTIAL; 
     case ':':
       return COLON;
+    case ';':
+      return SEMICOLON;
     case '+':
       return PLUS;
     case '-':

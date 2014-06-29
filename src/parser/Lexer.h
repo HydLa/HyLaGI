@@ -15,6 +15,7 @@ enum Token{
   IDENTIFIER,          //  [a-z, A-Z, "_"] [a-z, A-Z, "_", 0-9]*
   NUMBER,              //  ([0-9]*) [. [0-9]* ]?
   INTEGER,             //  ([0-9]*)
+  SEMICOLON,           //  ";"
   TILDE,               //  "~"
   EQUIVALENT,          //  "<=>"
   IMPLIES,             //  "=>"
