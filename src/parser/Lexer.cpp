@@ -9,13 +9,11 @@ Lexer::Lexer(std::istream& stream):line(0),column(0)
   while(std::getline(stream,tmp)){
     strs.push_back(tmp);
   }
-  skip_space();
 }
 
 Lexer::Lexer(std::string str):line(0),column(0)
 {
   strs.push_back(str);
-  skip_space();
 }
 
 Lexer::Lexer(std::vector<std::string> strings):strs(strings),line(0),column(0){}
@@ -74,6 +72,7 @@ Token Lexer::number()
 
 Token Lexer::get_token()
 {
+  skip_space();
   if(strs.size() <= line) return END_OF_FILE;
   char current = get_current_char();
   // identifier | Pi | E
@@ -87,8 +86,10 @@ Token Lexer::get_token()
 
   // else
   current_token_string = current;
-  bool cont = next_char();
+  next_char();
   switch(current){
+    case '~':
+      return TILDE;
     case '^':
       return POWER;
     case ']':
@@ -111,6 +112,8 @@ Token Lexer::get_token()
       return VERTICAL_BAR;
     case '\'':
       return DIFFERENTIAL; 
+    case ':':
+      return COLON;
     case '+':
       return PLUS;
     case '-':
@@ -122,7 +125,6 @@ Token Lexer::get_token()
     case '\"':
       return DOUBLE_QUOTATION;
   }
-  if(!cont) return UNKNOWN; 
   // 2 or more charactors
   switch(current){
     case '!':
@@ -170,6 +172,18 @@ Token Lexer::get_token()
         current_token_string = "=>";
         return IMPLIES;
       }
+      if(get_current_char() == '!'){
+        int now_line = line;
+        int now_column = column;
+        next_char();
+        if(get_current_char() == '='){
+          current_token_string = "=!=";
+          next_char();
+          return DIFFERENT_VARIABLE;
+        }
+        line = now_line;
+        column = now_column;
+      }
       return EQUAL;
     case '[':
       if(get_current_char() == ']'){
@@ -192,6 +206,7 @@ Token Lexer::get_token()
               std::cout << "error!" << std::endl;
               return ERROR;
             }
+            skip_space();
           }while(get_current_char()!='*');
           if(!next_char()){
             std::cout << "error!" << std::endl;
@@ -236,14 +251,12 @@ bool Lexer::next_line()
 {
   column = 0;
   line++;
-  skip_space();
   return line<strs.size();
 }
 
 bool Lexer::next_char()
 {
   column++;
-  skip_space();
   if(line<strs.size() && column<strs[line].size()) return true;
   else return false; 
 }

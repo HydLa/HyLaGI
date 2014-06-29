@@ -15,6 +15,7 @@ enum Token{
   IDENTIFIER,          //  [a-z, A-Z, "_"] [a-z, A-Z, "_", 0-9]*
   NUMBER,              //  ([0-9]*) [. [0-9]* ]?
   INTEGER,             //  ([0-9]*)
+  TILDE,               //  "~"
   EQUIVALENT,          //  "<=>"
   IMPLIES,             //  "=>"
   ALWAYS,              //  "[]"
@@ -36,6 +37,7 @@ enum Token{
   POWER,               //  "^" | "**"
   EQUAL,               //  "="
   NOT_EQUAL,           //  "!="
+  DIFFERENT_VARIABLE,  //  "=!="
   NOT,                 //  "!"
   LESS,                //  "<"
   LESS_EQUAL,          //  "<="
@@ -48,6 +50,7 @@ enum Token{
   END_OF_FILE,         //  EOF
   DIFFERENTIAL,        //  "'"
   DOUBLE_QUOTATION,    //  """
+  COLON,               //  ":"
   UNKNOWN,             //  other
   ERROR                //  error
 };
