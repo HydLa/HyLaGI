@@ -204,19 +204,15 @@ Token Lexer::get_token()
       if(current == '*'){
         while(true){
           do{
-            if(!next_char()){
-              std::cout << "error!" << std::endl;
-              return ERROR;
-            }
+            next_char();
             skip_space();
           }while(get_current_char()!='*');
-          if(!next_char()){
-            std::cout << "error!" << std::endl;
-          }
+          next_char();
           if(get_current_char()=='/'){
             next_char();
             return get_token();
           }
+          skip_space();
         }
       }
       if(current == '/'){
