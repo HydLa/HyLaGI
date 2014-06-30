@@ -208,7 +208,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     {
       for(auto var_entry : phase->variable_map)
       {
-       bool changed = relation_graph_->is_changing(var_entry.first);
+        bool changed = relation_graph_->is_changing(var_entry.first);
         if(!changed)
         {
           phase->variable_map[var_entry.first] =

@@ -256,15 +256,13 @@ void RelationGraph::set_changing_constraints(const ConstraintStore& constraints)
     check_connected_components();
   }
   initialize_node_visited();
-  ConstraintStore tmp_constraints;
+  ConstraintStore tmp_constraints,result_constraints;
+  module_set_t module_set;
   for(auto constraint : constraints){
-    auto constraint_it = constraint_node_map.find(constraint);
-    ConstraintNode *constraint_node = constraint_it->second;
-    module_set_t module_set;
-    variable_set_t vars;
-    visit_node(constraint_node, tmp_constraints, module_set, vars);
+    get_related_constraints(constraint, tmp_constraints, module_set);
+    result_constraints.insert(tmp_constraints.begin(),tmp_constraints.end());
   }
-  changing_constraints.add_constraint_store(tmp_constraints);
+  changing_constraints.add_constraint_store(result_constraints);
 }
 
 RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
