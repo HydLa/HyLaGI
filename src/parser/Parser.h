@@ -87,7 +87,7 @@ public:
   boost::shared_ptr<hydla::symbolic_expression::Variable> variable_list_element();
   
   std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > variables();
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > variable_list();
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > variable_list(std::string);
 
   std::vector<std::pair<std::string, std::pair<std::string, std::string> > > variable_conditions();
   std::pair<std::string, std::pair<std::string, std::string> > variable_condition();

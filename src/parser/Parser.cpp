@@ -1360,11 +1360,12 @@ std::vector<std::pair<std::string, std::pair<std::string, std::string> > > Parse
   return std::vector<std::pair<std::string, std::pair<std::string, std::string> > >();
 }
 
-std::vector<boost::shared_ptr<Variable> > Parser::variable_list(){
+std::vector<boost::shared_ptr<Variable> > Parser::variable_list(std::string name){
   std::pair<int,int> position = lexer.get_current_position();
   std::string variables;
-
-  if(lexer.get_token() == LEFT_BRACES){
+  
+  Token def_token = lexer.get_token();
+  if(def_token == LEFT_BRACES){
     std::pair<int,int> tmp_position = lexer.get_current_position();
     Token token = lexer.get_token();
     while(token != VERTICAL_BAR && token != RIGHT_BRACES){
@@ -1382,6 +1383,25 @@ std::vector<boost::shared_ptr<Variable> > Parser::variable_list(){
       return ret;
     }
   }
+
+  if(def_token == LEFT_BOX_BRACKETS){
+    boost::shared_ptr<Number> num;
+    if((num = non_variable_expression())){
+      if(num->get_number().find(".") != std::string::npos){
+        std::cout << "the number of list must be integer" << std::endl;
+      }else{
+        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+          int end = std::stoi(num->get_number());
+          std::vector<boost::shared_ptr<Variable> > ret;
+          for(int i = 0; i < end; i++){
+            ret.push_back(boost::shared_ptr<Variable>(new Variable(name+std::to_string(i))));
+          }
+          return ret;
+        }
+      }
+    }
+  }
+
   lexer.set_current_position(position);
   return std::vector<boost::shared_ptr<Variable> >();
 }
@@ -1396,7 +1416,7 @@ bool Parser::variable_list_definition(){
         std::exit(1);
       }
       std::vector<boost::shared_ptr<Variable> > list;
-      list = variable_list();
+      list = variable_list(name);
       if(!list.empty()){
         variable_list_map[name] = list;
         return true;
