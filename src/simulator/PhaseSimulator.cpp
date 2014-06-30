@@ -73,6 +73,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   result_list_t result;
   bool has_next = false;
 
+
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   consistency_checker->set_prev_map(&todo->prev_map);
@@ -129,20 +130,37 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       }
     }
 
-
     std::string module_sim_string = "\"ModuleSet" + ms.get_name() + "\"";
     timer::Timer ms_timer;
     result_list_t tmp_result = simulate_ms(ms, todo);
+
     if(!tmp_result.empty())
     {
       has_next = true;
       result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
+/*      cout << "Phase" << todo->id << endl;
+      relation_graph_->dump_active_graph(cout);
+*/
     }
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     todo->positive_asks.clear();
     todo->negative_asks.clear();
     relation_graph_->set_expanded_all(false);
   }
+
+  if(todo->profile["# of CheckConsistency"])
+  {
+    todo->profile["Average of CheckConsistency"] = 
+      todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
+  }
+
+  if(todo->profile["# of CheckEntailment"])
+  {
+    todo->profile["Average of CheckEntailment"] = 
+      todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
+  }
+
+
 
   //無矛盾な解候補モジュール集合が存在しない場合
   if(!has_next)
@@ -151,6 +169,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::INCONSISTENCY));
     todo->parent->children.push_back(phase);
   }
+
   return result;
 }
 
@@ -159,7 +178,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& todo)
 {
   HYDLA_LOGGER_DEBUG("\n--- next module set ---\n", ms.get_infix_string());
+
   relation_graph_->set_adopted(ms);
+
   result_list_t result;
   // TODO:変数の値による分岐も無視している？
 
@@ -167,8 +188,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 
   ConstraintStore store =
     calculate_constraint_store(ms, todo);
+
   if(!store.consistent())
   {
+
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
@@ -185,7 +208,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   phase_result_sptr_t phase = make_new_phase(todo);
   phase->module_set = ms;
 
-
+  timer::Timer vm_timer;
   // 変数表はここで作成する
   vector<variable_map_t> create_result;
   if(phase->phase_type == PointPhase)
@@ -201,22 +224,36 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     throw SimulateError("result variable map is not single.");
   }
   phase->variable_map = create_result[0];
+  todo->profile["CreateVariableMap"] += vm_timer.get_elapsed_us();
 
   if(opts_->reuse && todo->in_following_step()){
    phase->changed_constraints = relation_graph_->get_changing_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
     {
-      for(auto var_entry : phase->variable_map)
+      for(auto var_entry : phase->parent->parent->variable_map)
       {
-        bool changed = relation_graph_->is_changing(var_entry.first);
-        if(!changed)
+        if(!phase->variable_map.count(var_entry.first) )
         {
           phase->variable_map[var_entry.first] =
-            phase->parent->parent->variable_map[var_entry.first];            
+            phase->parent->parent->variable_map[var_entry.first];
+        }
+      }
+    }
+    else if(phase->phase_type == PointPhase && phase->parent.get())
+    {
+      for(auto var_entry : todo->prev_map)
+      {
+        if(!phase->variable_map.count(var_entry.first) )
+        {
+          phase->variable_map[var_entry.first] =
+            todo->prev_map[var_entry.first];
         }
       }
     }
   }
+
+  todo->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
+  consistency_checker->reset_count();
 
   for(auto positive_ask : todo->positive_asks)
   {
@@ -281,6 +318,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
 
   result.push_back(phase);
+
 
   return result;
 }
@@ -518,9 +556,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
       cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, opts_->reuse && state->in_following_step());
 
+      state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
+      state->profile["# of CheckConsistency"] += 1;
       if(!cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
-        state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
         return false;
       }else if (!cc_result.inconsistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% consistent for all cases");
@@ -530,7 +569,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       }
     }
 
-    state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
 /*
     if(opts_->reuse && state->in_following_step()){
       apply_previous_solution(changing_variables,
@@ -582,6 +620,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             push_branch_states(state, check_consistency_result);
             break;
         }
+        state->profile["# of CheckEntailment"]+= 1;
       }
     }
     state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
@@ -616,6 +655,7 @@ PhaseSimulator::calculate_constraint_store(
   ConstraintStore result_store;
   bool result = calculate_closure(todo, ms);
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
+  todo->profile["# of CalculateClosure"]++;
 
   if(!result)
   {
@@ -624,10 +664,13 @@ PhaseSimulator::calculate_constraint_store(
   }
 
   //TODO: ここで追加するより、全体を簡約したものをつなげて持っておいた方が良さそう
-  
+
   ConstraintStore tmp_constraint_store;
   for(int i = 0; i < relation_graph_->get_connected_count(); i++)
   {
+    if(opts_->reuse && todo->in_following_step() &&
+      !relation_graph_->is_changing(relation_graph_->get_constraints(i))) continue;
+
     for(auto constraint : relation_graph_->get_constraints(i))
     {
       tmp_constraint_store.add_constraint(constraint);
@@ -640,7 +683,6 @@ PhaseSimulator::calculate_constraint_store(
     finder.visit_node(constraint);
   }
   consistency_checker->add_continuity(finder, todo->phase_type);
-
 
   if(todo->phase_type == PointPhase)
   {

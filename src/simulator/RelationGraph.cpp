@@ -28,17 +28,19 @@ void RelationGraph::add(module_t &mod)
   up_to_date = false;
 }
 
-ostream& RelationGraph::dump_graph(ostream & os) const
+void RelationGraph::dump_graph(ostream & os) const
 {
   os << "graph g {\n";
-  os << "graph [ranksep = 2.0 ,rankdir = LR]\n";
+  os << "graph [ranksep = 2.0 ,rankdir = LR];\n";
   for(auto constraint_node : constraint_nodes) {
-    os << "  \"" << constraint_node->get_name() << "\" [shape = box]\n";
+    string constraint_name = constraint_node->get_name();
+    os << "  \"" << constraint_name << "\" [shape = box]\n";
     for(auto edge : constraint_node->edges){
+      string variable_name = edge.variable_node->get_name();
       os << "  \"" 
-        << constraint_node->get_name() 
+        << constraint_name 
         << "\" -- \"" 
-        << edge.variable_node->get_name() 
+        << variable_name 
         << "\"";
       if(edge.ref_prev)
       {
@@ -48,32 +50,38 @@ ostream& RelationGraph::dump_graph(ostream & os) const
     }
   }
   os << "}" << endl;
-
-  return os;
 }
 
-ostream& RelationGraph::dump_active_graph(ostream & os) const
+void RelationGraph::dump_active_graph(ostream & os) const
 {
-  os << "graph g {\n";
-  os << "graph [ranksep = 2.0 ,rankdir = LR]";
+  os << "graph g {" << endl;
+  os << "graph [ranksep = 2.0 ,rankdir = LR];" << endl;
   for(auto constraint_node : constraint_nodes) {
-    if(!constraint_node->active())continue;
-    os << "  \"" << constraint_node->get_name() << "\" [shape = box]\n";
-    for(auto edge : constraint_node->edges){
-      os << "  \"" 
-        << constraint_node->get_name() 
-        << "\" -- \"" 
-        << edge.variable_node->get_name() 
-        << "\"";
-      if(edge.ref_prev)
-      {
-        os << "[label = \"prev\"]";
+    if(constraint_node->active())
+    {
+      string constraint_name = constraint_node->get_name();
+      os << "  \"" << constraint_name;
+      os << "\" [shape = box];" << endl;
+      for(auto edge : constraint_node->edges){
+        if(!(ignore_prev && edge.ref_prev) )
+        {
+          string variable_name = edge.variable_node->get_name();
+          os << "  \"" << constraint_name 
+             <<   "\" -- \"" 
+             << variable_name
+             << "\"";
+          if(edge.ref_prev)
+          {
+            os << "[label = \"prev\"]";
+          }
+          os <<  ";" << endl;
+        }
       }
-      os <<  ";\n";
+
     }
   }
+
   os << "}" << endl;
-  return os;
 }
 
 
@@ -175,14 +183,12 @@ void RelationGraph::check_connected_components(){
 }
 
 void RelationGraph::visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars){
-  if(!node->visited){
-    node->visited = true;
-    ms.add_module(node->module);
-    constraints.add_constraint(node->constraint);
-    for(auto edge : node->edges)
-    {
-      if(!ignore_prev || !edge.ref_prev) visit_node(edge.variable_node, constraints, ms, vars);
-    }
+  node->visited = true;
+  ms.add_module(node->module);
+  constraints.add_constraint(node->constraint);
+  for(auto edge : node->edges)
+  {
+    if(!ignore_prev || !edge.ref_prev) visit_node(edge.variable_node, constraints, ms, vars);
   }
 }
 
@@ -190,7 +196,8 @@ void RelationGraph::visit_node(VariableNode* node, ConstraintStore &constraints,
   vars.insert(node->variable);
   for(auto edge : node->edges)
   {
-    if(!ignore_prev || !edge.ref_prev) visit_node(edge.constraint_node, constraints, ms, vars);
+    if( (!ignore_prev || !edge.ref_prev)
+      && !edge.constraint_node->visited) visit_node(edge.constraint_node, constraints, ms, vars);
   }
 }
 

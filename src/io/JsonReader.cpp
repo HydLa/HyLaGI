@@ -3,6 +3,7 @@
 #include <fstream>
 #include "Utility.h"
 #include "Constants.h"
+#include "Parser.h"
 
 using namespace std;
 using namespace picojson;
@@ -36,7 +37,7 @@ JsonReader::phase_result_sptr_t JsonReader::read_phase(object &json_object)
     object time_object = json_object["time"].get<object>();
     string time_str = time_object["time_point"].get<string>();
     phase->current_time =
-      ast.parse_generate(time_str, HydLaAST::ARITHMETIC_EXPRESSION);
+      Parser(time_str).arithmetic();
   }
   else if(phase->phase_type == simulator::IntervalPhase)
   {
@@ -44,9 +45,9 @@ JsonReader::phase_result_sptr_t JsonReader::read_phase(object &json_object)
     object time_object = json_object["time"].get<object>();
     string start_str = time_object["start_time"].get<string>();
     phase->current_time =
-      ast.parse_generate(start_str, HydLaAST::ARITHMETIC_EXPRESSION);
+      Parser(start_str).arithmetic();
     string end_str = time_object["end_time"].get<string>();
-    phase->end_time = ast.parse_generate(end_str, HydLaAST::ARITHMETIC_EXPRESSION);
+    phase->end_time = Parser(end_str).arithmetic();
   }
   phase->variable_map = read_vm(json_object["variable_map"].get<object>());
   phase->parameter_map = read_pm(json_object["parameter_map"].get<object>());
@@ -69,7 +70,7 @@ JsonReader::value_range_t JsonReader::read_range(object &o)
   if(o.find("unique_value") != o.end())
   {
     string value_str = o["unique_value"].get<string>();
-    range.set_unique_value(ast.parse_generate(value_str, HydLaAST::ARITHMETIC_EXPRESSION));
+    range.set_unique_value(Parser(value_str).arithmetic());
   }
   else
   {
@@ -81,7 +82,7 @@ JsonReader::value_range_t JsonReader::read_range(object &o)
         object bound_object = bound.get<object>();
         bool closed = bound_object["closed"].get<bool>();
         simulator::value_t value = 
-          ast.parse_generate(bound_object["value"].get<string>(), HydLaAST::ARITHMETIC_EXPRESSION);
+          Parser(bound_object["value"].get<string>()).arithmetic();
         range.add_lower_bound(value, closed);
       }
     }
@@ -94,7 +95,7 @@ JsonReader::value_range_t JsonReader::read_range(object &o)
         object bound_object = bound.get<object>();
         bool closed = bound_object["closed"].get<bool>();
         simulator::value_t value = 
-          ast.parse_generate(bound_object["value"].get<string>(), HydLaAST::ARITHMETIC_EXPRESSION);
+          Parser(bound_object["value"].get<string>()).arithmetic();
         range.add_lower_bound(value, closed);
       }
     }

@@ -22,7 +22,7 @@ using namespace logger;
 using namespace backend;
 
 
-ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back), prev_map(nullptr){}
+ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back), prev_map(nullptr), backend_check_consistency_count(0){}
 ConsistencyChecker::~ConsistencyChecker(){}
 
 void ConsistencyChecker::send_prev_constraint(Variable &var)
@@ -110,8 +110,20 @@ void ConsistencyChecker::add_continuity(const VariableFinder& finder, const Phas
 
 }
 
+int ConsistencyChecker::get_backend_check_consistency_count()
+{
+  return backend_check_consistency_count;
+}
+
+
+void ConsistencyChecker::reset_count()
+{
+  backend_check_consistency_count = 0;
+}
+
 CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase)
 {
+  backend_check_consistency_count++;
   CheckConsistencyResult ret;
   if(phase == PointPhase)
   {
