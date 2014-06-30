@@ -179,10 +179,8 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   finder.visit_node(guard->get_child());
   add_continuity(finder, phase);
 
-
   backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
   backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
-
 
   cc_result = call_backend_check_consistency(phase);
 
