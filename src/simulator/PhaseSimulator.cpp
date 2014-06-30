@@ -569,13 +569,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       }
     }
 
-/*
-    if(opts_->reuse && state->in_following_step()){
-      apply_previous_solution(changing_variables,
-          state->phase_type == IntervalPhase, state->parent,
-          state->current_time );
-    }
-*/
     ask_collector.collect_ask(state->expanded_constraints,
         &positive_asks,
         &negative_asks,
@@ -592,6 +585,20 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           if(state->parent == result_root && PrevSearcher().search_prev((*it)->get_guard())){
             // in initial state, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
+            unknown_asks.erase(it++);
+            continue;
+          }
+        }
+
+        if(opts_->reuse && state->in_following_step()){
+          if(!relation_graph_->is_changing((*it)->get_guard())){
+            if(state->parent->positive_asks.count(*it)){
+              positive_asks.insert(*it);
+              relation_graph_->set_expanded((*it)->get_child(), true);
+              expanded = true;
+            }else{
+              negative_asks.insert(*it);
+            }
             unknown_asks.erase(it++);
             continue;
           }
@@ -725,43 +732,6 @@ void PhaseSimulator::set_symmetric_difference(
     result.insert(*it2);
     it2++;
   }
-}
-
-void PhaseSimulator::apply_previous_solution(
-    const change_variables_t& variables,
-    const bool in_IP,
-    const phase_result_sptr_t parent,
-    const value_t& current_time ){
-/* TODO : implement
-  for(auto pair : parent->variable_map){
-    std::string var_name = pair.first.get_name();
-    if(variables.find(var_name) == variables.end() ){
-      if(continuity_map.find(var_name) == continuity_map.end() )
-        continuity_map.insert( make_pair(var_name, pair.first.differential_count) );
-      else if(continuity_map[var_name] < pair.first.differential_count){
-        continuity_map.erase(var_name);
-        continuity_map.insert( make_pair(var_name, pair.first.differential_count) );
-      }
-      std::string fmt = "v";
-      if(in_IP){
-        // 前IPの解を追加
-        // TODO:undefである場合の対応
-        // TODO:とりあえずunique_valueのみ対応
-        fmt += "t";
-        fmt += "vlt";
-        value_t val = parent->parent->variable_map.find(pair.first)->second.get_unique_value();
-        value_t ret;
-        backend_->call("exprTimeShiftInverse", 2, "vltvlt", "vl", &val, &current_time, &ret);
-        backend_->call("addEquation", 2, fmt.c_str(), "", &pair.first, &ret);
-      }else{
-        // x=x-
-        fmt += "n";
-        fmt += "vp";
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &pair.first, &pair.first);
-      }
-    }
-  }
-*/
 }
 
 PhaseSimulator::todo_list_t
