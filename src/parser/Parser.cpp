@@ -42,6 +42,7 @@ bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUA
   lexer.set_current_position(zero_position);                               \
 }
 
+
 node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
   parse();
   an = assertion_node;
@@ -50,6 +51,18 @@ node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> 
   }
   for(auto program_definition : program_definitions){
     pd.add_definition(program_definition);
+  }
+  if(!error_info.empty()){
+    for(auto info : error_info){
+      std::cout << "parse error : " << info.first.first+1 << " : ";
+      std::cout << info.second << std::endl;
+      std::cout << "    " << lexer.get_string(info.first.first) << std::endl;
+      std::cout << "    ";
+      for(int i = 0; i < info.first.second; i++) std::cout << " ";
+      std::cout << "~" << std::endl;
+    }
+    // TODO : throw Error
+    std::exit(1);
   }
   return parsed_program;
 }
@@ -86,63 +99,84 @@ node_sptr Parser::statement(){
 
   // assert "."
   if((ret = assertion())){
+    std::pair<int,int> tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       assertion_node = ret;
       return ret;
     }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after assert statement");
+    return ret; 
   }
   lexer.set_current_position(position);
 
   // def_statement(constraint_def) "."
   boost::shared_ptr<ConstraintDefinition> cd;
   if((cd = constraint_def())){
+    std::pair<int,int> tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       constraint_definitions.push_back(cd);
       return cd;
     }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after constraint definition");
+    return cd;
   }
   lexer.set_current_position(position);
 
   // def_statement(program_def) "."
   boost::shared_ptr<ProgramDefinition> pd;
   if((pd = program_def())){
+    std::pair<int,int> tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       program_definitions.push_back(pd);
       return pd;
     }
-  }
-  lexer.set_current_position(position);
-
-  // program "."
-  if((ret = program())){
-    if(lexer.get_token() == PERIOD){
-      if(!parsed_program) parsed_program = ret;
-      else parsed_program = boost::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
-      return ret;
-    }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after program definition");
+    return pd;
   }
   lexer.set_current_position(position);
 
   // variable_list_definition "."
   if(variable_list_definition()){
+    std::pair<int,int> tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       return node_sptr(new True());
     }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after variable list definition");
+    return node_sptr(new True());
   }
   lexer.set_current_position(position);
   
   // program_list_definition "."
   if(program_list_definition()){
+    std::pair<int,int> tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       return node_sptr(new True());
     }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after program list definition");
+    return node_sptr(new True());
   }
   lexer.set_current_position(position);
 
-  int line = lexer.get_current_position().first;
-  std::cout << "syntax error : at line " << line+1 << std::endl;
-  std::cout << " > " << lexer.get_string(line) << std::endl;
-  std::exit(1);
+  // program "."
+  if((ret = program())){
+    std::pair<int,int> tmp_position = lexer.get_current_position();
+    if(lexer.get_token() == PERIOD){
+      if(!parsed_program) parsed_program = ret;
+      else parsed_program = boost::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
+      return ret;
+    }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after program");
+    return ret;
+  }
+  lexer.set_current_position(position);
+
+
   return node_sptr();
 }
 
@@ -1343,7 +1377,9 @@ std::vector<boost::shared_ptr<Variable> > Parser::variable_list(){
     }
     if(token == RIGHT_BRACES){
       std::map<std::string, std::string> bound_vars; 
-      return expand_variable_conditions(bound_vars,conditions,0,variables);
+      std::vector<boost::shared_ptr<Variable> > ret;
+      ret = expand_variable_conditions(bound_vars,conditions,0,variables);
+      return ret;
     }
   }
   lexer.set_current_position(position);
@@ -1741,7 +1777,7 @@ std::vector<node_sptr > Parser::expand_program_conditions(
         return std::vector<node_sptr>();
       }
       for(int i = from; i <= to; i++){
-        bound_vars[var_name] = i+'0';
+        bound_vars[var_name] = std::to_string(i);
         std::vector<node_sptr> tmp = expand_program_conditions(bound_vars, conditions, idx+1, programs);
         for(auto var : tmp) ret.push_back(var);
       }

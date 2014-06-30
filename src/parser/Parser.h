@@ -75,6 +75,7 @@ public:
   std::string identifier();
   node_sptr number();
   
+  void error_occurred(std::pair<int,int> position, std::string error_message){ error_info.push_back(std::pair<std::pair<int,int>, std::string>(position,error_message)); }
 
   bool variable_list_definition();
   std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > expand_variable_conditions(std::map<std::string, std::string> bound_vars, std::vector<std::pair<std::string, std::pair<std::string, std::string> > > &conditions, int idx, std::string variables);
@@ -102,7 +103,7 @@ public:
 private:
   Lexer lexer;
 
-  std::pair<std::pair<int,int>, std::string> error_info;
+  std::vector<std::pair<std::pair<int,int>, std::string> > error_info;
 
   // map which save appeared variable list
   std::map<std::string, std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > > variable_list_map;
