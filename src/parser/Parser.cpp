@@ -1646,7 +1646,7 @@ std::vector<boost::shared_ptr<Variable> > Parser::expand_variable_conditions(
         return std::vector<boost::shared_ptr<Variable> >();
       }
       for(int i = from; i <= to; i++){
-        bound_vars[var_name] = i+'0';
+        bound_vars[var_name] = std::to_string(i);
         std::vector<boost::shared_ptr<Variable> > tmp = expand_variable_conditions(bound_vars, conditions, idx+1, variables);
         for(auto var : tmp) ret.push_back(var);
       }
