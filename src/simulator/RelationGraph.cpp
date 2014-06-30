@@ -183,14 +183,12 @@ void RelationGraph::check_connected_components(){
 }
 
 void RelationGraph::visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars){
-  if(!node->visited){
-    node->visited = true;
-    ms.add_module(node->module);
-    constraints.add_constraint(node->constraint);
-    for(auto edge : node->edges)
-    {
-      if(!ignore_prev || !edge.ref_prev) visit_node(edge.variable_node, constraints, ms, vars);
-    }
+  node->visited = true;
+  ms.add_module(node->module);
+  constraints.add_constraint(node->constraint);
+  for(auto edge : node->edges)
+  {
+    if(!ignore_prev || !edge.ref_prev) visit_node(edge.variable_node, constraints, ms, vars);
   }
 }
 
@@ -198,7 +196,8 @@ void RelationGraph::visit_node(VariableNode* node, ConstraintStore &constraints,
   vars.insert(node->variable);
   for(auto edge : node->edges)
   {
-    if(!ignore_prev || !edge.ref_prev) visit_node(edge.constraint_node, constraints, ms, vars);
+    if( (!ignore_prev || !edge.ref_prev)
+      && !edge.constraint_node->visited) visit_node(edge.constraint_node, constraints, ms, vars);
   }
 }
 
