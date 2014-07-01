@@ -1,19 +1,20 @@
+// variable list
+x:[20].
+
+
+// constraints
 INIT(x,x0,vx0) <=> x=x0 & x'=vx0.
 COL(x1,x2) <=> [](x1-=x2- => x1'=x2'- & x2'=x1'-).
 CONST(x) <=> [](x''=0).
-WALL(x) <=> [](x-=-1 | x-=30 => x'=-x'-).
+WALL(x) <=> [](x-=-1 | x-=2*|x| => x'=-x'-).
 
-x:[20].
-
-/**
- * priority list
- */
-INITS;{INIT(x[i],2*i,0) | i = 1 ~ |x|-1}.
+// program lists
+INITS;{ INIT(x[i],2*i,0) | i = 1~|x|-1}.
 COL_PRIORITIES;{
-  ( CONST(x[i]), CONST(x[j]) ) <<
-  ( COL(x[i], x[j]) ) |
-  i = 0~|x|-2, j = i+1~|x|-1 }.
+  ( CONST(x[i]), CONST(x[j]) ) << COL(x[i], x[j]) |
+                       i = 0~|x|-2, j = i+1~|x|-1 }.
 WALL_PRIORITIES;{ CONST(x[i]) << WALL(x[i]) | i=0~|x|-1}.
 
-INIT(x0,0,1),
+
+INIT(x[0],0,1),
 INITS, COL_PRIORITIES, WALL_PRIORITIES.

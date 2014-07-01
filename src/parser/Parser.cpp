@@ -1284,15 +1284,6 @@ std::pair<std::string, std::pair<std::string, std::string> > Parser::variable_co
 
   if((name = identifier()) != ""){
     Token token = lexer.get_token();
-    if(token == DIFFERENT_VARIABLE){
-      std::string tmp;
-      if((tmp = identifier()) != ""){
-        ret.first = "=!=";
-        ret.second.first = name;
-        ret.second.second = tmp;
-        return ret;
-      }
-    }
     if(token == EQUAL){
       std::string first,second;
       bool tilde_appeared = false;
@@ -1326,6 +1317,19 @@ std::pair<std::string, std::pair<std::string, std::string> > Parser::variable_co
         ret.first = "in";
         ret.second.first = name;
         ret.second.second = tmp;
+        return ret;
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  boost::shared_ptr<Variable> var;
+  if((var = variable())){
+    if(lexer.get_token() == DIFFERENT_VARIABLE){
+      std::string tmp;
+      ret.second.first = var->get_name();
+      if((var = variable())){
+        ret.first = "=!=";
+        ret.second.second = var->get_name();
         return ret;
       }
     }

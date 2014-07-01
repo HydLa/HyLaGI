@@ -570,7 +570,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       }
     }
 
-
     ask_collector.collect_ask(state->expanded_constraints,
         &positive_asks,
         &negative_asks,
@@ -587,6 +586,20 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           if(state->parent == result_root && PrevSearcher().search_prev((*it)->get_guard())){
             // in initial state, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
+            unknown_asks.erase(it++);
+            continue;
+          }
+        }
+
+        if(opts_->reuse && state->in_following_step()){
+          if(!relation_graph_->is_changing((*it)->get_guard())){
+            if(state->parent->positive_asks.count(*it)){
+              positive_asks.insert(*it);
+              relation_graph_->set_expanded((*it)->get_child(), true);
+              expanded = true;
+            }else{
+              negative_asks.insert(*it);
+            }
             unknown_asks.erase(it++);
             continue;
           }

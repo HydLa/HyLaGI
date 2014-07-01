@@ -180,6 +180,8 @@ public:
    */
   bool is_changing(const ConstraintStore constraint_store);
 
+  bool is_changing(const constraint_t constraint);
+
   /**
    * return whether variable is related to changing connected constraints
    */
