@@ -66,7 +66,7 @@ public:
     std::string get_name() const;
   };
 
-  
+
   RelationGraph(const module_set_t &mods);
 
   virtual ~RelationGraph();  
@@ -185,6 +185,9 @@ public:
    */
   bool is_changing(const Variable& variable);
 
+  /// return whether the variable is referred by some constraints or not
+  bool referring(const Variable& variable);
+
   /**
    * clear changing_connected_constraints_index_set
    */
@@ -226,6 +229,7 @@ private:
   std::vector<ConstraintStore> connected_constraints_vector;
   std::vector<module_set_t> connected_modules_vector;
   std::vector<variable_set_t>     connected_variables_vector;
+  variable_set_t referred_variables;
   ConstraintStore changing_constraints;
   bool up_to_date;     /// if false, recalculation of connected components is necessary
   std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
