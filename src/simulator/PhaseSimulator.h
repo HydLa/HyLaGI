@@ -10,6 +10,7 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
+#include "ConstraintDifferenceCalculator.h"
 
 namespace hydla {
 namespace simulator {
@@ -194,6 +195,8 @@ private:
   module_set_container_sptr module_set_container;
 
   std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
+
+  ConstraintDifferenceCalculator differnce_calculator_;
 };
 
 
