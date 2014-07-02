@@ -227,7 +227,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   todo->profile["CreateVariableMap"] += vm_timer.get_elapsed_us();
 
   if(opts_->reuse && todo->in_following_step()){
-   phase->changed_constraints = relation_graph_->get_changing_constraints();
+   phase->changed_constraints = differnce_calculator_.get_changing_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
     {
       for(auto var_entry : phase->parent->parent->variable_map)
@@ -368,6 +368,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
   relation_graph_.reset(new RelationGraph(ms)); 
+  differnce_calculator_.set_relation_graph(relation_graph_);
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
@@ -536,15 +537,15 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
-    relation_graph_->clear_changing();
+    differnce_calculator_.clear_changing();
     if(state->phase_type == PointPhase){
       ConstraintStore changing_constraints;
       set_symmetric_difference(state->parent->current_constraints,
         relation_graph_->get_constraints(), changing_constraints );
-      relation_graph_->set_changing_constraints(changing_constraints);
+      differnce_calculator_.set_changing_constraints(changing_constraints);
     }
     else{
-      relation_graph_->set_changing_constraints(state->parent->changed_constraints);
+      differnce_calculator_.set_changing_constraints(state->parent->changed_constraints);
     }
   }
 
@@ -555,7 +556,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     {
       CheckConsistencyResult cc_result;
 
-      cc_result = consistency_checker->check_consistency(*relation_graph_, state->phase_type, opts_->reuse && state->in_following_step());
+      cc_result = consistency_checker->check_consistency(*relation_graph_, differnce_calculator_, state->phase_type, opts_->reuse && state->in_following_step());
 
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
       state->profile["# of CheckConsistency"] += 1;
@@ -592,7 +593,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         }
 
         if(opts_->reuse && state->in_following_step()){
-          if(!relation_graph_->is_changing((*it)->get_guard())){
+          if(!differnce_calculator_.is_changing((*it)->get_guard())
+            || differnce_calculator_.is_continuous((*it)->get_guard())){
             if(state->parent->positive_asks.count(*it)){
               positive_asks.insert(*it);
               relation_graph_->set_expanded((*it)->get_child(), true);
@@ -677,7 +679,7 @@ PhaseSimulator::calculate_constraint_store(
   for(int i = 0; i < relation_graph_->get_connected_count(); i++)
   {
     if(opts_->reuse && todo->in_following_step() &&
-      !relation_graph_->is_changing(relation_graph_->get_constraints(i))) continue;
+      !differnce_calculator_.is_changing(relation_graph_->get_constraints(i))) continue;
 
     for(auto constraint : relation_graph_->get_constraints(i))
     {

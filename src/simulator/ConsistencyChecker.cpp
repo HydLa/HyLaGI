@@ -1,4 +1,5 @@
 #include "ConsistencyChecker.h"
+#include "ConstraintDifferenceCalculator.h"
 #include "Backend.h"
 
 #include <iostream>
@@ -219,7 +220,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, const PhaseType& phase, const bool reuse)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
@@ -229,7 +230,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
     ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
 
-    if(reuse && !relation_graph.is_changing(tmp_constraint_store)) continue;
+    if(reuse && !difference_calculator.is_changing(tmp_constraint_store)) continue;
 
     VariableFinder finder;
     variable_set_t related_variables = relation_graph.get_variables(i);
