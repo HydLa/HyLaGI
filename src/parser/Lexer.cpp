@@ -102,8 +102,6 @@ Token Lexer::get_token()
       return LEFT_BRACES;
     case '}':
       return RIGHT_BRACES;
-    case '.':
-      return PERIOD;
     case ',':
       return COMMA;
     case '&':
@@ -129,6 +127,13 @@ Token Lexer::get_token()
   }
   // 2 or more charactors
   switch(current){
+    case '.':
+      if(get_current_char() == '.'){
+        next_char();
+        current_token_string = "..";
+        return TWO_PERIOD;
+      }
+      return PERIOD;
     case '!':
       if(get_current_char() == '='){
         next_char();

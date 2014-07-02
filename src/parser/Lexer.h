@@ -30,6 +30,7 @@ enum Token{
   LEFT_BOX_BRACKETS,   //  "["
   RIGHT_BOX_BRACKETS,  //  "]"
   PERIOD,              //  "."
+  TWO_PERIOD,          //  ".."
   COMMA,               //  ","
   PLUS,                //  "+"
   MINUS,               //  "-"
@@ -56,6 +57,8 @@ enum Token{
   ERROR                //  error
 };
 
+typedef std::pair<int,int> position_t;
+
 class Lexer{
 public:
   Lexer(std::string);
@@ -66,8 +69,8 @@ public:
  
   std::string get_string(int line){ return strs[line]; }
   std::string get_current_token_string(){ return current_token_string; }
-  std::pair<int,int> get_current_position(){ return std::pair<int,int>(line,column); }
-  void set_current_position(std::pair<int,int> p){ line = p.first; column = p.second; }
+  position_t get_current_position(){ return position_t(line,column); }
+  void set_current_position(position_t p){ line = p.first; column = p.second; }
 
 private:
 

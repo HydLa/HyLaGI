@@ -13,6 +13,13 @@ Parser::Parser(std::string str):lexer(str){}
 Parser::Parser(std::istream& stream):lexer(stream){}
 Parser::~Parser(){}
 
+bool Parser::parse_ended(){
+  position_t position = lexer.get_current_position();
+  if(lexer.get_token() == END_OF_FILE) return true;
+  lexer.set_current_position(position);
+  return false;
+}
+
 /**
  * support functions
  */
@@ -23,12 +30,37 @@ bool Parser::is_LOGICAL_AND(Token token){ return token == LOGICAL_AND || token =
 bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUAL || token == GREATER || token == GREATER_EQUAL || token == EQUAL || token == NOT_EQUAL; }
 
 /**
+ * get list element
+ * RET = NAME[num]
+ * NAME[num] parsed by FUNCTION
+ */
+#define list_element(RET, TYPE, FUNCTION, NAME, BOUND_VARS, ADDITIONAL){ \
+  boost::shared_ptr<Number> LIST_INDEX;                                  \
+  position_t LEXER_POSITION = lexer.get_current_position();              \
+  if(list_map.find(NAME)!=list_map.end()){                               \
+    if(lexer.get_token() == LEFT_BOX_BRACKETS){                          \
+      if((LIST_INDEX = non_variable_expression(BOUND_VARS))){            \
+        if(lexer.get_token() == RIGHT_BOX_BRACKETS){                     \
+          int INT_INDEX = (int)std::stof(LIST_INDEX->get_number());      \
+          Parser ELEMENT_PARSER(list_map[NAME][INT_INDEX]+ADDITIONAL);   \
+          ELEMENT_PARSER.set_list(list_map);                             \
+          RET = ELEMENT_PARSER.FUNCTION;                               \
+          if(!ELEMENT_PARSER.parse_ended()){                             \
+            RET = TYPE();                                                \
+          }                                                              \
+        }                                                                \
+      }                                                                  \
+    }                                                                    \
+  }                                                                      \
+  if(!RET) lexer.set_current_position(LEXER_POSITION);                   \
+}
+/**
  * make binary node (lhs operator operand operator operand ...)
  * lhs (operator operand)*
  */
 #define ZERO_OR_MORE_OPERATOR_OPERAND(CLASS, LHS, IS_OPERATOR, IS_OPERAND) \
 {                                                                          \
-  std::pair<int,int> zero_position = lexer.get_current_position();         \
+  position_t zero_position = lexer.get_current_position();         \
   node_sptr rhs;                                                           \
   while(IS_OPERATOR(lexer.get_token())){                                   \
     if((rhs = IS_OPERAND())){                                              \
@@ -90,7 +122,7 @@ node_sptr Parser::statements(){
  *            | program "."
  */
 node_sptr Parser::statement(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr ret;
   if(lexer.get_token() == END_OF_FILE){
     return node_sptr();
@@ -99,7 +131,7 @@ node_sptr Parser::statement(){
 
   // assert "."
   if((ret = assertion())){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       assertion_node = ret;
       return ret;
@@ -113,7 +145,7 @@ node_sptr Parser::statement(){
   // def_statement(constraint_def) "."
   boost::shared_ptr<ConstraintDefinition> cd;
   if((cd = constraint_def())){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       constraint_definitions.push_back(cd);
       return cd;
@@ -127,7 +159,7 @@ node_sptr Parser::statement(){
   // def_statement(program_def) "."
   boost::shared_ptr<ProgramDefinition> pd;
   if((pd = program_def())){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       program_definitions.push_back(pd);
       return pd;
@@ -138,9 +170,9 @@ node_sptr Parser::statement(){
   }
   lexer.set_current_position(position);
 
-  // variable_list_definition "."
-  if(variable_list_definition()){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+  // list_definition "."
+  if(list_definition()){
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       return node_sptr(new True());
     }
@@ -150,21 +182,9 @@ node_sptr Parser::statement(){
   }
   lexer.set_current_position(position);
   
-  // program_list_definition "."
-  if(program_list_definition()){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
-    if(lexer.get_token() == PERIOD){
-      return node_sptr(new True());
-    }
-    lexer.set_current_position(tmp_position);
-    error_occurred(lexer.get_current_position(), "expected \".\" after program list definition");
-    return node_sptr(new True());
-  }
-  lexer.set_current_position(position);
-
   // program "."
   if((ret = program())){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       if(!parsed_program) parsed_program = ret;
       else parsed_program = boost::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
@@ -182,7 +202,7 @@ node_sptr Parser::statement(){
 
 /// program := program_priority ( "," program_priority )*
 node_sptr Parser::program(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // program_priority
   if((tmp_l = program_priority())){
@@ -196,7 +216,7 @@ node_sptr Parser::program(){
 
 /// program_priority := program_factor ( "<<" program_factor )*
 node_sptr Parser::program_priority(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // program_factor
   if((tmp_l = program_factor())){
@@ -214,7 +234,7 @@ node_sptr Parser::program_factor(){
 
 /// constraint_def := constraint_callee "<=>" constraint
 boost::shared_ptr<ConstraintDefinition> Parser::constraint_def(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   boost::shared_ptr<ConstraintDefinition> ret;
   node_sptr tmp;
   // constraint_callee
@@ -235,7 +255,7 @@ boost::shared_ptr<ConstraintDefinition> Parser::constraint_def(){
 
 /// program_def := program_callee "{" program "}"
 boost::shared_ptr<ProgramDefinition> Parser::program_def(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   boost::shared_ptr<ProgramDefinition> ret;
   node_sptr tmp;
   // program_callee
@@ -333,71 +353,13 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
   return boost::shared_ptr<ProgramCaller>();
 }
 
-/**
- * module := program_caller
- *         | "(" program ")"
- *         | constraint
- */
-node_sptr Parser::module(){
+node_sptr Parser::parenthesis_program(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
-
-  std::string name;
-  // program_list_caller
-  if((name = identifier()) != ""){
-    if(program_list_map.find(name) != program_list_map.end()){
-      std::pair<int,int> tmp_position = lexer.get_current_position();
-      if(lexer.get_token() == LEFT_BOX_BRACKETS){
-        boost::shared_ptr<Number> num;
-        if((num = non_variable_expression())){
-          if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-            int idx = (int)std::stof(num->get_number());
-            return program_list_map[name][idx]->clone();
-          }
-        }
-        lexer.set_current_position(position);
-        return node_sptr();
-      }
-      lexer.set_current_position(tmp_position);
-
-      if(program_list_map[name].size() == 1){
-        return program_list_map[name].front()->clone();
-      }else{
-        boost::shared_ptr<Parallel> list_ret;
-        node_sptr lhs, rhs;
-        lhs = program_list_map[name][0]->clone();
-        rhs = program_list_map[name][1]->clone();
-        list_ret = boost::shared_ptr<Parallel>(new Parallel(lhs,rhs));
-        int idx = 2;
-        while(idx < program_list_map[name].size()){
-          list_ret = boost::shared_ptr<Parallel>(new Parallel(list_ret, program_list_map[name][idx]->clone())); 
-          idx++;
-        }
-        return list_ret;
-      }
-    }
-  }
-  lexer.set_current_position(position);
-
-  // program_caller
-  if((ret = program_caller())){
-    std::pair<int,int> tmp_position = lexer.get_current_position(); 
-    Token token;
-    // after program_caller must be ")"* ("," ||  "<<" || "}" || ".")
-    while((token = lexer.get_token()) == RIGHT_PARENTHESES);
-    if(token == COMMA || token == WEAKER || token == RIGHT_BRACES || token == PERIOD){
-      // but don't skip these token
-      lexer.set_current_position(tmp_position);
-      return ret;
-    }
-  }
-  lexer.set_current_position(position);
-
-  // "(" program ")"
+  position_t position = lexer.get_current_position();
   if(lexer.get_token() == LEFT_PARENTHESES){
     if((ret = program())){
       if(lexer.get_token() == RIGHT_PARENTHESES){
-        std::pair<int,int> tmp_position = lexer.get_current_position(); 
+        position_t tmp_position = lexer.get_current_position(); 
         Token token;
         // after "(" program ")" must be ")"* ("," ||  "<<" || "}" || ".")
         while((token = lexer.get_token()) == RIGHT_PARENTHESES);
@@ -410,6 +372,68 @@ node_sptr Parser::module(){
     }
   }
   lexer.set_current_position(position);
+  return node_sptr();
+}
+
+/**
+ * module := program_caller
+ *         | "(" program ")"
+ *         | constraint
+ */
+node_sptr Parser::module(){
+  node_sptr ret;
+  position_t position = lexer.get_current_position();
+
+  std::string name;
+  // program_list
+  list_t p_list;
+  if(!((p_list=list("",std::map<std::string,std::string>())).empty())){
+    boost::shared_ptr<Parallel> parallel;
+    node_sptr lhs,rhs;
+    for(auto elem : p_list){
+      Parser program_parser(elem+".");
+      program_parser.set_list(list_map);
+      if((rhs = program_parser.program())){
+        if(lhs){
+          parallel = boost::shared_ptr<Parallel>(new Parallel(lhs,rhs));
+          lhs = parallel;
+        }else{
+          lhs = rhs;
+        }
+      }else{
+        lhs = node_sptr();
+        break;
+      }
+    }
+    if(lhs) return lhs;
+  }
+  lexer.set_current_position(position);
+
+  // list_element
+  if((name = identifier()) != ""){
+    // program?
+    std::map<std::string,std::string> null_map;
+    list_element(ret,node_sptr,program(),name,null_map,".");
+    if(ret) return ret;
+  }
+  lexer.set_current_position(position);
+
+  // program_caller
+  if((ret = program_caller())){
+    position_t tmp_position = lexer.get_current_position(); 
+    Token token;
+    // after program_caller must be ")"* ("," ||  "<<" || "}" || ".")
+    while((token = lexer.get_token()) == RIGHT_PARENTHESES);
+    if(token == COMMA || token == WEAKER || token == RIGHT_BRACES || token == PERIOD){
+      // but don't skip these token
+      lexer.set_current_position(tmp_position);
+      return ret;
+    }
+  }
+  lexer.set_current_position(position);
+
+  // "(" program ")"
+  if((ret = parenthesis_program())){ return ret; }
 
   // constraint
   if((ret = constraint())){ return ret;}
@@ -426,7 +450,7 @@ boost::shared_ptr<Constraint> Parser::constraint(){
 
 /// logical_or := logical_and ( ("|" | "\/") logical_and )*
 node_sptr Parser::logical_or(){ 
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // logical_and
   if((tmp_l = logical_and())){
@@ -440,7 +464,7 @@ node_sptr Parser::logical_or(){
 
 /// logical_and := always ( ("&" | "/\") always )*
 node_sptr Parser::logical_and(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // always
   if((tmp_l = always())){
@@ -456,7 +480,7 @@ node_sptr Parser::logical_and(){
 node_sptr Parser::always(){
   node_sptr ret;
   boost::shared_ptr<Always> always(new Always());
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // "[]"
   if(lexer.get_token() == ALWAYS){
     // conditional_constraint
@@ -479,7 +503,7 @@ node_sptr Parser::always(){
  */
 node_sptr Parser::conditional_constraint(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
 
   // guard "=>" constraint
   if((ret = guard())){
@@ -527,7 +551,7 @@ node_sptr Parser::conditional_constraint(){
 node_sptr Parser::compare_expression(){
   node_sptr ret;
   node_sptr lhs;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // expression
   if((lhs = expression())){
     Token token = lexer.get_token();
@@ -569,7 +593,7 @@ node_sptr Parser::compare_expression(){
  */
 node_sptr Parser::atomic_constraint(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // command
   if((ret = command())){ return ret;}
   // tautology
@@ -582,7 +606,7 @@ node_sptr Parser::atomic_constraint(){
 
 /// guard := guard_term (("|" | "\/") guard_term)*
 node_sptr Parser::guard(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // guard_term
   if((tmp_l = guard_term())){
@@ -595,7 +619,7 @@ node_sptr Parser::guard(){
 
 /// guard_term := logical_not (( "&" | "/\") logical_not)*
 node_sptr Parser::guard_term(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // logical_not
   if((tmp_l = logical_not())){
@@ -610,7 +634,7 @@ node_sptr Parser::guard_term(){
 /// logical_not := "!"? comparison
 node_sptr Parser::logical_not(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // "!"
   if(lexer.get_token() == NOT){
     // comparison
@@ -631,7 +655,7 @@ node_sptr Parser::logical_not(){
  */
 node_sptr Parser::comparison(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // compare_expression
   if((ret = compare_expression())){ return ret; }
   // constraint_caller
@@ -667,7 +691,7 @@ node_sptr Parser::arithmetic(){
   node_sptr ret;
   // arith_term
   if((ret = arith_term())){
-    std::pair<int,int> position = lexer.get_current_position();
+    position_t position = lexer.get_current_position();
     Token token = lexer.get_token();
     // ("+"|"-")
     while(token == PLUS || token == MINUS){
@@ -700,7 +724,7 @@ node_sptr Parser::arith_term(){
   node_sptr ret;
   // unary
   if((ret = unary())){
-    std::pair<int,int> position = lexer.get_current_position();
+    position_t position = lexer.get_current_position();
     Token token = lexer.get_token();
     // ("*"|"/")
     while(token == MUL || token == DIVIDE){
@@ -731,7 +755,7 @@ node_sptr Parser::arith_term(){
 /// unary := ("+"|"-")? power
 node_sptr Parser::unary(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
   // ("+"|"-")
   if(token == PLUS || token == MINUS){
@@ -758,7 +782,7 @@ node_sptr Parser::power(){
   node_sptr ret;
   // prev
   if((ret = prev())){
-    std::pair<int,int> position = lexer.get_current_position();
+    position_t position = lexer.get_current_position();
     // ("**"|"^")
     if(lexer.get_token() == POWER){
       node_sptr tmp;
@@ -777,7 +801,7 @@ node_sptr Parser::prev(){
   node_sptr ret;
   // diff
   if((ret = diff())){
-    std::pair<int,int> position = lexer.get_current_position();
+    position_t position = lexer.get_current_position();
     // "-"
     if(lexer.get_token() == MINUS){
       // [^factor]
@@ -795,7 +819,7 @@ node_sptr Parser::diff(){
   node_sptr ret;
   // factor
   if((ret = factor())){
-    std::pair<int,int> position = lexer.get_current_position();
+    position_t position = lexer.get_current_position();
     // "'"*
     while(lexer.get_token() == DIFFERENTIAL){
       ret = boost::shared_ptr<Differential>(new Differential(ret));
@@ -820,7 +844,7 @@ node_sptr Parser::diff(){
  */
 node_sptr Parser::factor(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // Pi | E
   if(lexer.get_token() == ALPHABET){
     if(lexer.get_current_token_string() == "PI"){
@@ -839,7 +863,7 @@ node_sptr Parser::factor(){
     if(lexer.get_token() == LEFT_PARENTHESES){
       // expression
       if((ret = expression())){
-        std::pair<int,int> tmp_position = lexer.get_current_position();
+        position_t tmp_position = lexer.get_current_position();
         func->add_argument(ret);
         // ("," expression)*
         while(lexer.get_token() == COMMA){
@@ -857,7 +881,7 @@ node_sptr Parser::factor(){
   // parameter
   if((ret = parameter())){ return ret;}
   // variable
-  if((ret = variable())){ return ret;}
+  if((ret = variable(std::map<std::string,std::string>()))){ return ret;}
   // system_variable
   if((ret = system_variable())){ return ret;}
   // number
@@ -881,7 +905,7 @@ node_sptr Parser::factor(){
  */
 node_sptr Parser::system_variable(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // "$"
   if(lexer.get_token() == SYSTEM){
     std::string name = identifier();
@@ -897,7 +921,7 @@ node_sptr Parser::system_variable(){
 
 // unsupported_function := " " " [a-z,A-Z]+ " " "
 boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // " " "
   if(lexer.get_token() == DOUBLE_QUOTATION){
     // " [a-z, A-Z]+ "
@@ -916,7 +940,7 @@ boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
 
 /// function := [a-z,A-Z]+
 boost::shared_ptr<Function> Parser::function(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // [a-z,A-Z]+
   if(lexer.get_token() == ALPHABET){ return boost::shared_ptr<Function>(new Function(lexer.get_current_token_string()));}
   lexer.set_current_position(position);
@@ -928,18 +952,21 @@ boost::shared_ptr<Function> Parser::function(){
  * variable := identifier
  *           | variable_list_element 
  */
-boost::shared_ptr<Variable> Parser::variable(){
+boost::shared_ptr<Variable> Parser::variable(std::map<std::string, std::string> bound_vars){
   std::string name;
   boost::shared_ptr<Variable> ret;
   // identifier
-  if((ret = variable_list_element())) return ret;
-  if((name = identifier()) != ""){ return boost::shared_ptr<Variable>(new Variable(name));}
+  if((name = identifier()) != ""){
+    list_element(ret, boost::shared_ptr<Variable>, variable(bound_vars), name, bound_vars, ""); 
+    if(ret) return ret;
+    return boost::shared_ptr<Variable>(new Variable(name));
+  }
   return boost::shared_ptr<Variable>();
 }
 
 /// parameter := "p" "[" variable "," integer "," integer "]"
 node_sptr Parser::parameter(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   lexer.get_token();
   // "p"
   if(lexer.get_current_token_string() == "p"){
@@ -948,7 +975,7 @@ node_sptr Parser::parameter(){
       boost::shared_ptr<Variable> var;
       int first,second;
       // variable
-      if((var = variable())){
+      if((var = variable(std::map<std::string,std::string>()))){
         // ","
         if(lexer.get_token() == COMMA){
           // integer
@@ -978,7 +1005,7 @@ node_sptr Parser::parameter(){
 /// assertion := "ASSERT" "(" guard ")"
 node_sptr Parser::assertion(){
   node_sptr ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   lexer.get_token();
   // "ASSERT"
   if(lexer.get_current_token_string() == "ASSERT"){
@@ -1000,7 +1027,7 @@ node_sptr Parser::assertion(){
 
 /// tautology := "$TRUE"
 node_sptr Parser::tautology(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // "$"
   if(lexer.get_token() == SYSTEM){
     if(lexer.get_token() == ALPHABET){
@@ -1040,14 +1067,14 @@ std::string Parser::constraint_name(){
 /// actual_args := ( "("expression ("," expression)*")" )?
 std::vector<node_sptr> Parser::actual_args(){
   std::vector<node_sptr> ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // "("
   if(lexer.get_token() == LEFT_PARENTHESES){
     node_sptr var;
     // expression
     if((var = expression())){
       ret.push_back(var);
-      std::pair<int,int> tmp_position = lexer.get_current_position();
+      position_t tmp_position = lexer.get_current_position();
       // ("," expression)*
       while(lexer.get_token() == COMMA){
         if((var = expression())){
@@ -1070,14 +1097,14 @@ std::vector<node_sptr> Parser::actual_args(){
 /// formal_args := ( "(" bound_variable ("," bound_variable)* ")" )?
 std::vector<std::string> Parser::formal_args(){
   std::vector<std::string> ret;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   // "("
   if(lexer.get_token() == LEFT_PARENTHESES){
     boost::shared_ptr<Variable> var;
     // bound_variable
     if((var = bound_variable())){
       ret.push_back(var->get_name());
-      std::pair<int,int> tmp_position = lexer.get_current_position();
+      position_t tmp_position = lexer.get_current_position();
       // ("," bound_variable)*
       while(lexer.get_token() == COMMA){
         if((var = bound_variable())){
@@ -1099,7 +1126,7 @@ std::vector<std::string> Parser::formal_args(){
 
 // identifier := [a-z,A-Z,"_"] [a-z,A-Z,"_",0-9]*
 std::string Parser::identifier(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
   if(token == IDENTIFIER || token == ALPHABET){ return lexer.get_current_token_string();}
   lexer.set_current_position(position);
@@ -1108,7 +1135,7 @@ std::string Parser::identifier(){
 
 // number := [0-9]+ ("." [0-9]+)?
 node_sptr Parser::number(){
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
   if(token == NUMBER){
     std::string str = lexer.get_current_token_string();
@@ -1131,10 +1158,8 @@ node_sptr Parser::number(){
     std::string name;
     boost::shared_ptr<Number> ret;
     if((name = identifier()) != ""){
-      if(variable_list_map.find(name) != variable_list_map.end()){
-        ret = boost::shared_ptr<Number>(new Number(std::to_string(variable_list_map[name].size()))); 
-      }else if(program_list_map.find(name) != program_list_map.end()){
-        ret = boost::shared_ptr<Number>(new Number(std::to_string(program_list_map[name].size()))); 
+      if(list_map.find(name) != list_map.end()){
+        ret = boost::shared_ptr<Number>(new Number(std::to_string(list_map[name].size())));
       }
       if(lexer.get_token() == VERTICAL_BAR){
         return ret;
@@ -1145,16 +1170,16 @@ node_sptr Parser::number(){
   return node_sptr();
 }
 
-boost::shared_ptr<Number> Parser::non_variable_expression(){
+boost::shared_ptr<Number> Parser::non_variable_expression(std::map<std::string, std::string> bound_vars){
   double num;
   boost::shared_ptr<Number> ret;
   boost::shared_ptr<Number> tmp;
-  std::pair<int,int> position = lexer.get_current_position();
-  if((ret = non_variable_term())){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
+  if((ret = non_variable_term(bound_vars))){
+    position_t tmp_position = lexer.get_current_position();
     Token token = lexer.get_token();
     while(token == PLUS || token == MINUS){
-      if((tmp = non_variable_term())){
+      if((tmp = non_variable_term(bound_vars))){
         switch(token){
           case PLUS:
             num = std::stof(ret->get_number())+std::stof(tmp->get_number());
@@ -1179,16 +1204,16 @@ boost::shared_ptr<Number> Parser::non_variable_expression(){
   lexer.set_current_position(position);
   return boost::shared_ptr<Number>();
 }
-boost::shared_ptr<Number> Parser::non_variable_term(){
+boost::shared_ptr<Number> Parser::non_variable_term(std::map<std::string,std::string> bound_vars){
   double num;
   boost::shared_ptr<Number> ret;
   boost::shared_ptr<Number> tmp;
-  std::pair<int,int> position = lexer.get_current_position();
-  if((ret = non_variable_factor())){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
+  if((ret = non_variable_factor(bound_vars))){
+    position_t tmp_position = lexer.get_current_position();
     Token token = lexer.get_token();
     while(token == MUL || token == DIVIDE){
-      if((tmp = non_variable_factor())){
+      if((tmp = non_variable_factor(bound_vars))){
         switch(token){
           case MUL:
             num = std::stof(ret->get_number())*std::stof(tmp->get_number());
@@ -1214,12 +1239,12 @@ boost::shared_ptr<Number> Parser::non_variable_term(){
   return boost::shared_ptr<Number>();
 }
 
-boost::shared_ptr<Number> Parser::non_variable_factor(){
-  std::pair<int,int> position = lexer.get_current_position();
+boost::shared_ptr<Number> Parser::non_variable_factor(std::map<std::string, std::string> bound_vars){
+  position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
   boost::shared_ptr<Number> ret;
   if(token == LEFT_PARENTHESES){
-    if((ret = non_variable_expression())){
+    if((ret = non_variable_expression(bound_vars))){
       if(token == RIGHT_PARENTHESES){
         return ret;
       }
@@ -1232,13 +1257,23 @@ boost::shared_ptr<Number> Parser::non_variable_factor(){
   if(token == VERTICAL_BAR){
     std::string name;
     if((name = identifier()) != ""){
-      if(variable_list_map.find(name) != variable_list_map.end()){
-        ret = boost::shared_ptr<Number>(new Number(std::to_string(variable_list_map[name].size()))); 
-      }else if(program_list_map.find(name) != program_list_map.end()){
-        ret = boost::shared_ptr<Number>(new Number(std::to_string(program_list_map[name].size()))); 
+      if(list_map.find(name) != list_map.end()){
+        ret = boost::shared_ptr<Number>(new Number(std::to_string(list_map[name].size()))); 
       }
       if(lexer.get_token() == VERTICAL_BAR){
         return ret;
+      }
+    }
+  }
+  if(token == IDENTIFIER || token == ALPHABET){
+    std::string name = lexer.get_current_token_string();
+    if(bound_vars.find(name) != bound_vars.end()){
+      Lexer num_lexer(bound_vars[name]);
+      token = num_lexer.get_token();
+      if(token == NUMBER || token == INTEGER){
+        if(num_lexer.get_token() == END_OF_FILE){
+          return boost::shared_ptr<Number>(new Number(num_lexer.get_current_token_string())); 
+        }
       }
     }
   }
@@ -1246,179 +1281,259 @@ boost::shared_ptr<Number> Parser::non_variable_factor(){
   return boost::shared_ptr<Number>();
 }
 
-std::string Parser::list_variable_name(){
+/**
+ * bound_variable "in" list
+ * bound_variable "=!=" bound_variable
+ */
+list_t Parser::list_conditions(
+    std::map<std::string, std::string> bound_vars,
+    std::string elements_of_list)
+{
+  list_t ret;
+  position_t position = lexer.get_current_position();
   std::string name;
-  node_sptr num;
-  std::pair<int,int> position = lexer.get_current_position();
-  if((name = identifier()) == ""){
-    if(lexer.get_token() == LEFT_BOX_BRACKETS){
-      std::pair<int,int> tmp_position = lexer.get_current_position();
-      if((num = expression())){
-        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-          lexer.set_current_position(tmp_position);
-          std::string ret = name;
-          ret += "[";
-          while(lexer.get_token() != RIGHT_BOX_BRACKETS){
-            name += lexer.get_current_token_string();
+
+  boost::shared_ptr<Variable> var;
+  if((var = variable(bound_vars))){
+    if(lexer.get_token() == DIFFERENT_VARIABLE){
+      std::string first_var = var->get_name();
+      if((var = variable(bound_vars))){
+        std::string second_var = var->get_name();
+        if(bound_vars.find(first_var) != bound_vars.end()) first_var = bound_vars[first_var];
+        if(bound_vars.find(second_var) != bound_vars.end()) second_var = bound_vars[second_var];
+        if(first_var != second_var){
+          Token token;
+          token = lexer.get_token();
+          if(token == COMMA){
+            list_t tmp = list_conditions(bound_vars, elements_of_list);
+            for(auto var : tmp) ret.push_back(var);
+          }else if(token == RIGHT_BRACES){
+            ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
           }
           return ret;
         }
       }
-    }else{
-      return name;
     }
   }
   lexer.set_current_position(position);
-  return std::string();
+
+  if((name = identifier()) != ""){
+    position_t tmp_position = lexer.get_current_position();
+    lexer.get_token();
+    if(lexer.get_current_token_string() == "in"){
+      list_t tmp_list;
+      if(!((tmp_list = list("",bound_vars)).empty())){
+        if(bound_vars.find(name) != bound_vars.end()){
+          std::cout << "cannot decided " << name << " value" << std::endl;
+          std::exit(1);
+        }
+        Token token;
+        token = lexer.get_token();
+        tmp_position = lexer.get_current_position();
+        for(auto element : tmp_list){
+          bound_vars[name] = replace_string_by_bound_variables(bound_vars, element);
+          lexer.set_current_position(tmp_position);
+          if(token == COMMA){
+            list_t tmp = list_conditions(bound_vars, elements_of_list);
+            for(auto var : tmp) ret.push_back(var);
+          }else if(token == RIGHT_BRACES){
+            ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
+          }
+        }
+        return ret;
+      }else{
+        std::cout << "expected list after \"in\"" << std::endl;
+        std::exit(1);
+      }
+    }
+  }
+  lexer.set_current_position(position);
+
+  return list_t();
+}
+
+std::string Parser::replace_string_by_bound_variables(
+    std::map<std::string, std::string> bound_vars,
+    std::string origin)
+{
+  std::string ret = "";
+  Lexer replace_lexer(origin);
+  while(replace_lexer.get_token() != END_OF_FILE){
+    if(bound_vars.find(replace_lexer.get_current_token_string()) != bound_vars.end()){
+      ret += bound_vars[replace_lexer.get_current_token_string()];
+    }else{
+      ret += replace_lexer.get_current_token_string();
+    }
+  }
+  return ret;
 }
 
 /**
- * bound_variable "in" list_name
- * bound_variable "=!=" bound_variable
- * bound_variable "=" string~string
+ * list_factor := identifier
+ *              | "{" string ( "|" conditions )? "}"
+ *              | expression".."expression
+ *              | "[" expression "]"
+ *              | "(" list ")"
  */
-std::pair<std::string, std::pair<std::string, std::string> > Parser::variable_condition(){
-  std::pair<std::string, std::pair<std::string, std::string> > ret;
-  std::pair<int,int> position = lexer.get_current_position();
+list_t Parser::list_factor(std::string list_name, std::map<std::string, std::string> bound_vars){
+  list_t ret;
   std::string name;
+  position_t position = lexer.get_current_position();
 
+  // identifier
   if((name = identifier()) != ""){
-    Token token = lexer.get_token();
-    if(token == DIFFERENT_VARIABLE){
-      std::string tmp;
-      if((tmp = identifier()) != ""){
-        ret.first = "=!=";
-        ret.second.first = name;
-        ret.second.second = tmp;
-        return ret;
-      }
+    if(list_map.find(name) != list_map.end()){
+      return list_map[name];
     }
-    if(token == EQUAL){
-      std::string first,second;
-      bool tilde_appeared = false;
-      std::pair<int,int> tmp_position = lexer.get_current_position();
-      token = lexer.get_token();
-      while(token != COMMA && token != RIGHT_BRACES){
-        if(token == TILDE){
-          if(tilde_appeared){
-            std::cout << "2 or more tilde appeared" << std::endl;
-            std::exit(1);
-            return std::pair<std::string, std::pair<std::string, std::string> >();
-          }
-          tilde_appeared = true;
-        }else{
-          if(tilde_appeared) second += lexer.get_current_token_string();
-          else first += lexer.get_current_token_string();
+  }
+  lexer.set_current_position(position);
+
+
+  // non_expression ".." non_variable_expression
+  
+  boost::shared_ptr<Number> num1, num2;
+  if((num1 = non_variable_expression(bound_vars))){
+    if(lexer.get_token() == TWO_PERIOD){
+      if((num2 = non_variable_expression(bound_vars))){
+        int from = (int)std::stof(num1->get_number());
+        int to = (int)std::stof(num2->get_number());
+        for(int i = from; i <= to; i++){
+          ret.push_back(std::to_string(i));
         }
-        tmp_position = lexer.get_current_position();
-        token = lexer.get_token();
-      }
-      lexer.set_current_position(tmp_position);
-      ret.first = name;
-      ret.second.first=first;
-      ret.second.second = second;
-      if(first != "") return ret;
-      return std::pair<std::string, std::pair<std::string, std::string> >();
-    }
-    if(lexer.get_current_token_string() == "in"){
-      std::string tmp;
-      if((tmp = identifier()) != ""){
-        ret.first = "in";
-        ret.second.first = name;
-        ret.second.second = tmp;
         return ret;
       }
     }
   }
   lexer.set_current_position(position);
-  return std::pair<std::string, std::pair<std::string, std::string> >();
+
+  // "[" non_variable_expression "]"
+  if(list_name != ""){
+    if(lexer.get_token() == LEFT_BOX_BRACKETS){
+      if((num1 = non_variable_expression(bound_vars))){
+        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+          int num = (int)std::stof(num1->get_number());
+          for(int i = 0; i < num; i++){
+            ret.push_back(list_name + std::to_string(i));
+          }
+          return ret;
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+
+  // "{" string ( "|" conditions )? "}"
+  if(lexer.get_token() == LEFT_BRACES){
+    position_t tmp_position = lexer.get_current_position();
+    std::string contents_of_list = "";
+    Token token = lexer.get_token();
+    while(token != VERTICAL_BAR && token != RIGHT_BRACES){
+      contents_of_list += lexer.get_current_token_string();
+      token = lexer.get_token();
+    }
+    std::map<std::string, std::string> var_map;
+    if(token == VERTICAL_BAR){
+      return list_conditions(var_map, contents_of_list);
+    }
+    if(token == RIGHT_BRACES){
+      std::string var_tmp = "";
+      for(auto ch : contents_of_list){
+        if(ch != ','){
+          var_tmp += ch;
+        }else{
+          ret.push_back(var_tmp);
+          var_tmp = "";
+        }
+      }
+      ret.push_back(var_tmp);
+      return ret;
+    }
+  }
+  lexer.set_current_position(position);
+
+  // "(" list ")"
+  if(lexer.get_token() == LEFT_PARENTHESES){
+    if(!((ret = list(list_name, bound_vars)).empty())){
+      if(lexer.get_token() == RIGHT_PARENTHESES){
+        return ret;
+      }
+    }
+  }
+
+  return list_t();
 }
 
-
-std::vector<std::pair<std::string, std::pair<std::string, std::string> > > Parser::variable_conditions(){
-  std::vector<std::pair<std::string, std::pair<std::string, std::string> > > ret;
-  std::pair<int,int> position = lexer.get_current_position();
-  std::string name;
-  std::pair<std::string, std::pair<std::string, std::string> > tmp;
-
-  if((tmp = variable_condition()).first != ""){
-    ret.push_back(tmp);
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+list_t Parser::list(std::string list_name, std::map<std::string, std::string> bound_vars){
+  list_t ret;
+  list_t tmp;
+  position_t position = lexer.get_current_position();
+  if(!((ret = list_term(list_name, bound_vars)).empty())){
+    position_t tmp_position = lexer.get_current_position();
     Token token = lexer.get_token();
-    while(token == COMMA){
-      if((tmp = variable_condition()).first != ""){
-        ret.push_back(tmp);
+    while(lexer.get_current_token_string() == "or"){
+      if(!((tmp = list_term(list_name,bound_vars)).empty())){
+        for(auto element : tmp) ret.push_back(element);
+      }else{
+        lexer.set_current_position(tmp_position);
+        break;
       }
       tmp_position = lexer.get_current_position();
       token = lexer.get_token();
     }
     lexer.set_current_position(tmp_position);
     return ret;
-  }
-
+  } 
   lexer.set_current_position(position);
-  return std::vector<std::pair<std::string, std::pair<std::string, std::string> > >();
+  return list_t();
 }
 
-std::vector<boost::shared_ptr<Variable> > Parser::variable_list(std::string name){
-  std::pair<int,int> position = lexer.get_current_position();
-  std::string variables;
-  
-  Token def_token = lexer.get_token();
-  if(def_token == LEFT_BRACES){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
+list_t Parser::list_term(std::string list_name, std::map<std::string, std::string> bound_vars){
+  list_t ret;
+  list_t tmp;
+  position_t position = lexer.get_current_position();
+  if(!((ret = list_factor(list_name, bound_vars)).empty())){
+    position_t tmp_position = lexer.get_current_position();
     Token token = lexer.get_token();
-    while(token != VERTICAL_BAR && token != RIGHT_BRACES){
-      variables += lexer.get_current_token_string();
+    while(lexer.get_current_token_string() == "and"){
+      if(!((tmp = list_factor(list_name,bound_vars)).empty())){
+        for(list_t::iterator element = ret.begin(); element != ret.end(); ){
+          bool in_tmp = false;
+          for(auto tmp_element : tmp){
+            if((*element) == tmp_element){
+              in_tmp = true;
+              break;
+            }
+          }
+          if(!in_tmp) element = ret.erase(element);
+          else element++;
+        }
+      }else{
+        lexer.set_current_position(tmp_position);
+        break;
+      }
+      tmp_position = lexer.get_current_position();
       token = lexer.get_token();
     }
-    std::vector<std::pair<std::string, std::pair<std::string, std::string> > > conditions;
-    if(token == VERTICAL_BAR){
-      if(!((conditions = variable_conditions()).empty())) token = lexer.get_token();
-    }
-    if(token == RIGHT_BRACES){
-      std::map<std::string, std::string> bound_vars; 
-      std::vector<boost::shared_ptr<Variable> > ret;
-      ret = expand_variable_conditions(bound_vars,conditions,0,variables);
-      return ret;
-    }
-  }
-
-  if(def_token == LEFT_BOX_BRACKETS){
-    boost::shared_ptr<Number> num;
-    if((num = non_variable_expression())){
-      if(num->get_number().find(".") != std::string::npos){
-        std::cout << "the number of list must be integer" << std::endl;
-      }else{
-        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-          int end = std::stoi(num->get_number());
-          std::vector<boost::shared_ptr<Variable> > ret;
-          for(int i = 0; i < end; i++){
-            ret.push_back(boost::shared_ptr<Variable>(new Variable(name+std::to_string(i))));
-          }
-          return ret;
-        }
-      }
-    }
-  }
-
+    lexer.set_current_position(tmp_position);
+    return ret;
+  } 
   lexer.set_current_position(position);
-  return std::vector<boost::shared_ptr<Variable> >();
+  return list_t();
 }
 
-bool Parser::variable_list_definition(){
+bool Parser::list_definition(){
   std::string name;
-  std::pair<int,int> position = lexer.get_current_position();
+  position_t position = lexer.get_current_position();
   if((name = identifier()) != ""){
-    if(lexer.get_token() == COLON){
-      if(variable_list_map.find(name) != variable_list_map.end()){
+    if(lexer.get_token() == EQUIVALENT){
+      if(list_map.find(name) != list_map.end()){
         std::cout << "redefinition of " << name << std::endl;
         std::exit(1);
       }
-      std::vector<boost::shared_ptr<Variable> > list;
-      list = variable_list(name);
-      if(!list.empty()){
-        variable_list_map[name] = list;
+      list_t tmp_list;
+      tmp_list = list(name,std::map<std::string, std::string>());
+      if(!tmp_list.empty()){
+        list_map[name] = tmp_list;
         return true;
       }
     }
@@ -1427,384 +1542,6 @@ bool Parser::variable_list_definition(){
   return false;
 }
 
-bool Parser::program_list_definition(){
-  std::string name;
-  std::pair<int,int> position = lexer.get_current_position();
-  if((name = identifier()) != ""){
-    if(lexer.get_token() == SEMICOLON){
-      if(program_list_map.find(name) != program_list_map.end()){
-        std::cout << "redefinition of " << name << std::endl;
-        std::exit(1);
-      }
-      std::vector<node_sptr > list;
-      list = program_list();
-      if(!list.empty()){
-        program_list_map[name] = list;
-        return true;
-      }
-    }
-  }
-  lexer.set_current_position(position);
-  return false;
-}
-
-std::vector<node_sptr > Parser::program_list(){
-  std::pair<int,int> position = lexer.get_current_position();
-  std::string programs;
-
-  if(lexer.get_token() == LEFT_BRACES){
-    std::pair<int,int> tmp_position = lexer.get_current_position();
-    Token token = lexer.get_token();
-    while(token != VERTICAL_BAR && token != RIGHT_BRACES){
-      programs += lexer.get_current_token_string();
-      token = lexer.get_token();
-    }
-    std::vector<std::pair<std::string, std::pair<std::string, std::string> > > conditions;
-    if(token == VERTICAL_BAR){
-      if(!((conditions = variable_conditions()).empty())) token = lexer.get_token();
-    }
-    if(token == RIGHT_BRACES){
-      std::map<std::string, std::string> bound_vars; 
-      return expand_program_conditions(bound_vars,conditions,0,programs);
-    }
-  }
-  lexer.set_current_position(position);
-  return std::vector<node_sptr>();
-}
-
-std::vector<boost::shared_ptr<Variable> > Parser::variables(){
-  std::pair<int,int> position = lexer.get_current_position();
-  std::vector<boost::shared_ptr<Variable> > ret;
-
-  boost::shared_ptr<Variable> var;
-  if((var = variable())){
-    ret.push_back(var);
-    while(lexer.get_token() == COMMA){
-      if((var = variable())){
-        ret.push_back(var);
-      }
-    }
-    if(lexer.get_token() == END_OF_FILE){
-      return ret;
-    }
-  }
-
-  lexer.set_current_position(position);
-  return ret;
-}
-
-boost::shared_ptr<Variable> Parser::variable_list_element(){
-  std::string name;
-  boost::shared_ptr<Number> idx;
-  std::pair<int,int> position = lexer.get_current_position();
-  if((name = identifier()) != ""){
-    if(variable_list_map.find(name)==variable_list_map.end()){
-      lexer.set_current_position(position);
-      return boost::shared_ptr<Variable>();
-    }
-    if(lexer.get_token() == LEFT_BOX_BRACKETS){
-      if((idx = non_variable_expression())){
-        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-          double d = std::stof(idx->get_number());
-          int i = (int)d;
-          return boost::shared_ptr<Variable>(new Variable(*(variable_list_map[name])[i]));
-        }
-      }
-    }
-  }
-  lexer.set_current_position(position);
-  return boost::shared_ptr<Variable>();
-}
-
-node_sptr Parser::program_list_element(){
-  std::string name;
-  boost::shared_ptr<Number> idx;
-  std::pair<int,int> position = lexer.get_current_position();
-  if((name = identifier()) != ""){
-    if(variable_list_map.find(name)==variable_list_map.end()){
-      lexer.set_current_position(position);
-      return node_sptr();
-    }
-    if(lexer.get_token() == LEFT_BOX_BRACKETS){
-      if((idx = non_variable_expression())){
-        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-          double d = std::stof(idx->get_number());
-          int i = (int)d;
-          return (variable_list_map[name])[i]->clone();
-        }
-      }
-    }
-  }
-  lexer.set_current_position(position);
-  return boost::shared_ptr<Variable>();
-}
-
-void Parser::set_list(
-    std::map<std::string, std::vector<boost::shared_ptr<Variable> > > vl,
-    std::map<std::string, std::vector<node_sptr > > pl){
-  variable_list_map = vl;
-  program_list_map = pl;
-}
-
-std::vector<boost::shared_ptr<Variable> > Parser::expand_variable_conditions(
-    std::map<std::string, std::string> bound_vars, 
-    std::vector<std::pair<std::string, std::pair<std::string, std::string> > > &conditions, 
-    int idx,
-    std::string variables){
-
-  std::vector<boost::shared_ptr<Variable> > ret;
-  if(idx >= conditions.size()){
-    std::string replaced;
-    Lexer num_lexer(variables);
-    
-    Token token;
-    while((token = num_lexer.get_token()) != END_OF_FILE){
-      if(token == IDENTIFIER || token == ALPHABET){
-        std::string var_name = num_lexer.get_current_token_string();
-        if(bound_vars.find(var_name) == bound_vars.end()){
-          replaced += var_name + " ";
-        }else{
-          replaced += bound_vars[var_name] + " ";
-        }
-      }else{
-        replaced += num_lexer.get_current_token_string() + " ";
-      }
-    }
-    Parser num_parser(replaced);
-    num_parser.set_list(variable_list_map, program_list_map);
-    ret = num_parser.variables();
-    return ret;
-  }else{
-    if(conditions[idx].first == "in"){
-      std::string var_name = conditions[idx].second.first;
-      std::string list_name = conditions[idx].second.second;
-      if(bound_vars.find(var_name) != bound_vars.end()){
-        std::cout << "cannot decided " << var_name << " value" << std::endl;
-            std::exit(1);
-        return std::vector<boost::shared_ptr<Variable> >();
-      }
-      if(variable_list_map.find(list_name) == variable_list_map.end()){
-        std::cout << "cannot found " << list_name << std::endl;
-            std::exit(1);
-        return std::vector<boost::shared_ptr<Variable> >();
-      }
-      for(auto list_element : variable_list_map[list_name]){
-        bound_vars[var_name] = list_element->get_name();
-        std::vector<boost::shared_ptr<Variable> > tmp = expand_variable_conditions(bound_vars, conditions, idx+1, variables);
-        for(auto var : tmp) ret.push_back(var);
-      }
-    }else if(conditions[idx].first == "=!="){
-      std::string first_var, second_var;
-      first_var = conditions[idx].second.first;
-      second_var = conditions[idx].second.second;
-      if(bound_vars.find(first_var) != bound_vars.end()){
-        first_var = bound_vars[first_var];
-      }
-      if(bound_vars.find(second_var) != bound_vars.end()){
-        second_var = bound_vars[second_var];
-      }
-      if(first_var != second_var){
-        std::vector<boost::shared_ptr<Variable> > tmp = expand_variable_conditions(bound_vars, conditions, idx+1, variables);
-        for(auto var : tmp) ret.push_back(var);
-      }
-    }else{
-      std::string first;
-      Lexer num_lexer(conditions[idx].second.first);
-      Token token;
-      while((token=num_lexer.get_token()) != END_OF_FILE){
-        if(token == IDENTIFIER || token == ALPHABET){
-          std::string var_name = num_lexer.get_current_token_string();
-          if(bound_vars.find(var_name) != bound_vars.end()){
-            first += bound_vars[var_name] + " ";
-          }else{
-            first += num_lexer.get_current_token_string() + " ";
-          }
-        }else{
-          first += num_lexer.get_current_token_string() + " ";
-        }
-      }
-      Parser num_parser(first);
-      num_parser.set_list(variable_list_map, program_list_map);
-      boost::shared_ptr<Number> first_num;
-      int from;
-      if((first_num=num_parser.non_variable_expression())){
-        from = (int)std::stof(first_num->get_number());
-      }else{
-        std::cout << "iterator range is not number" << std::endl;
-            std::exit(1);
-        return std::vector<boost::shared_ptr<Variable> >();
-      }
-
-      std::string second;
-      num_lexer = Lexer(conditions[idx].second.second);
-      while((token=num_lexer.get_token()) != END_OF_FILE){
-        if(token == IDENTIFIER || token == ALPHABET){
-          std::string var_name = num_lexer.get_current_token_string();
-          if(bound_vars.find(var_name) != bound_vars.end()){
-            second += bound_vars[var_name] + " ";
-          }else{
-            second += num_lexer.get_current_token_string() + " ";
-          }
-        }else{
-          second += num_lexer.get_current_token_string() + " ";
-        }
-      }
-      num_parser = Parser(second);
-      num_parser.set_list(variable_list_map, program_list_map);
-      boost::shared_ptr<Number> second_num;
-      int to;
-      if((second_num=num_parser.non_variable_expression())){
-        to = (int)std::stof(second_num->get_number());
-      }else{
-        to = from;
-      }
-
-      std::string var_name = conditions[idx].first;
-      if(bound_vars.find(var_name) != bound_vars.end()){
-        std::cout << "cannot decided " << var_name << " value" << std::endl;
-            std::exit(1);
-        return std::vector<boost::shared_ptr<Variable> >();
-      }
-      for(int i = from; i <= to; i++){
-        bound_vars[var_name] = std::to_string(i);
-        std::vector<boost::shared_ptr<Variable> > tmp = expand_variable_conditions(bound_vars, conditions, idx+1, variables);
-        for(auto var : tmp) ret.push_back(var);
-      }
-    }
-  }
-  return ret;
-}
-
-std::vector<node_sptr > Parser::expand_program_conditions(
-    std::map<std::string, std::string> bound_vars, 
-    std::vector<std::pair<std::string, std::pair<std::string, std::string> > > &conditions, 
-    int idx,
-    std::string programs){
-
-  std::vector<node_sptr > ret;
-  if(idx >= conditions.size()){
-    std::string replaced;
-    Lexer num_lexer(programs);
-    
-    Token token;
-    while((token = num_lexer.get_token()) != END_OF_FILE){
-      if(token == IDENTIFIER || token == ALPHABET){
-        std::string var_name = num_lexer.get_current_token_string();
-        if(bound_vars.find(var_name) == bound_vars.end()){
-          replaced += var_name + " ";
-        }else{
-          replaced += bound_vars[var_name] + " ";
-        }
-      }else{
-        replaced += num_lexer.get_current_token_string() + " ";
-      }
-    }
-    replaced += ".";
-    Parser num_parser(replaced);
-    num_parser.set_list(variable_list_map, program_list_map);
-    node_sptr tmp_ret = num_parser.program();
-    ret.push_back(tmp_ret);
-    return ret;
-  }else{
-    if(conditions[idx].first == "in"){
-      std::string var_name = conditions[idx].second.first;
-      std::string list_name = conditions[idx].second.second;
-      if(bound_vars.find(var_name) != bound_vars.end()){
-        std::cout << "cannot decided " << var_name << " value" << std::endl;
-            std::exit(1);
-        return std::vector<node_sptr>();
-      }
-      if(variable_list_map.find(list_name) == variable_list_map.end()){
-        std::cout << "cannot found " << list_name << std::endl;
-            std::exit(1);
-        return std::vector<node_sptr >();
-      }
-      for(auto list_element : variable_list_map[list_name]){
-        bound_vars[var_name] = list_element->get_name();
-        std::vector<node_sptr> tmp = expand_program_conditions(bound_vars, conditions, idx+1, programs);
-        for(auto var : tmp) ret.push_back(var);
-      }
-    }else if(conditions[idx].first == "=!="){
-      std::string first_var, second_var;
-      first_var = conditions[idx].second.first;
-      second_var = conditions[idx].second.second;
-      if(bound_vars.find(first_var) != bound_vars.end()){
-        first_var = bound_vars[first_var];
-      }
-      if(bound_vars.find(second_var) != bound_vars.end()){
-        second_var = bound_vars[second_var];
-      }
-      if(first_var != second_var){
-        std::vector<node_sptr> tmp = expand_program_conditions(bound_vars, conditions, idx+1, programs);
-        for(auto var : tmp) ret.push_back(var);
-      }
-    }else{
-      std::string first;
-      Lexer num_lexer(conditions[idx].second.first);
-      Token token;
-      while((token=num_lexer.get_token()) != END_OF_FILE){
-        if(token == IDENTIFIER || token == ALPHABET){
-          std::string var_name = num_lexer.get_current_token_string();
-          if(bound_vars.find(var_name) != bound_vars.end()){
-            first += bound_vars[var_name] + " ";
-          }else{
-            first += num_lexer.get_current_token_string() + " ";
-          }
-        }else{
-          first += num_lexer.get_current_token_string() + " ";
-        }
-      }
-      Parser num_parser(first);
-      num_parser.set_list(variable_list_map, program_list_map);
-      boost::shared_ptr<Number> first_num;
-      int from;
-      if((first_num=num_parser.non_variable_expression())){
-        from = (int)std::stof(first_num->get_number());
-      }else{
-        std::cout << "iterator range is not number" << std::endl;
-            std::exit(1);
-        return std::vector<node_sptr>();
-      }
-
-      std::string second;
-      num_lexer = Lexer(conditions[idx].second.second);
-      while((token=num_lexer.get_token()) != END_OF_FILE){
-        if(token == IDENTIFIER || token == ALPHABET){
-          std::string var_name = num_lexer.get_current_token_string();
-          if(bound_vars.find(var_name) != bound_vars.end()){
-            second += bound_vars[var_name] + " ";
-          }else{
-            second += num_lexer.get_current_token_string() + " ";
-          }
-        }else{
-          second += num_lexer.get_current_token_string() + " ";
-        }
-      }
-      num_parser = Parser(second);
-      num_parser.set_list(variable_list_map, program_list_map);
-      boost::shared_ptr<Number> second_num;
-      int to;
-      if((second_num=num_parser.non_variable_expression())){
-        to = (int)std::stof(second_num->get_number());
-      }else{
-        to = from;
-      }
-
-      std::string var_name = conditions[idx].first;
-      if(bound_vars.find(var_name) != bound_vars.end()){
-        std::cout << "cannot decided " << var_name << " value" << std::endl;
-            std::exit(1);
-        return std::vector<node_sptr>();
-      }
-      for(int i = from; i <= to; i++){
-        bound_vars[var_name] = std::to_string(i);
-        std::vector<node_sptr> tmp = expand_program_conditions(bound_vars, conditions, idx+1, programs);
-        for(auto var : tmp) ret.push_back(var);
-      }
-    }
-  }
-  return ret;
-}
 
 } // namespace parser
 } // namespace hydla

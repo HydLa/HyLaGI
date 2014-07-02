@@ -232,10 +232,11 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     {
       for(auto var_entry : phase->parent->parent->variable_map)
       {
-        if(!phase->variable_map.count(var_entry.first) )
+        auto var = var_entry.first;
+        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
-          phase->variable_map[var_entry.first] =
-            phase->parent->parent->variable_map[var_entry.first];
+          phase->variable_map[var] =
+            phase->parent->parent->variable_map[var];
         }
       }
     }
@@ -243,10 +244,11 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     {
       for(auto var_entry : todo->prev_map)
       {
-        if(!phase->variable_map.count(var_entry.first) )
+        auto var = var_entry.first;
+        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
-          phase->variable_map[var_entry.first] =
-            todo->prev_map[var_entry.first];
+          phase->variable_map[var] =
+            todo->prev_map[var];
         }
       }
     }
@@ -270,7 +272,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     fmt += (phase->phase_type==PointPhase)?"n":"t";
     backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
     backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
-
 /*  TODO: implement
     if(opts_->assertion)
     {
