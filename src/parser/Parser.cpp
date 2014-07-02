@@ -1331,6 +1331,18 @@ list_t Parser::list_conditions(
             ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
           }
           return ret;
+        }else{
+          Token token = lexer.get_token();
+          if(token == COMMA){
+            list_conditions(bound_vars, elements_of_list);
+            return ret;
+          }else if(token == RIGHT_BRACES){
+            return ret;
+          }
+          if(token != COMMA && token != RIGHT_BRACES){
+            error_occurred(lexer.get_current_position(), "expected \",\" or \"}\" after =!=");
+            return ret;
+          }
         }
       }
     }
@@ -1358,6 +1370,9 @@ list_t Parser::list_conditions(
             for(auto var : tmp) ret.push_back(var);
           }else if(token == RIGHT_BRACES){
             ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
+          }else{
+            error_occurred(lexer.get_current_position(), "expected \",\" or \"}\" after =!=");
+            return ret;
           }
         }
         return ret;
@@ -1457,8 +1472,11 @@ list_t Parser::list_factor(std::string list_name, std::map<std::string, std::str
     }
     if(token == RIGHT_BRACES){
       std::string var_tmp = "";
+      int p = 0;
       for(auto ch : contents_of_list){
-        if(ch != ','){
+        if(ch == '(') p++;
+        if(ch == ')') p--;
+        if(ch != ',' || p > 0){
           var_tmp += ch;
         }else{
           ret.push_back(var_tmp);
