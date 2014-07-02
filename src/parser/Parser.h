@@ -11,8 +11,12 @@
 namespace hydla{
   namespace parser{
 
-class Parser{
   typedef hydla::symbolic_expression::node_sptr node_sptr;
+  typedef std::vector<std::string> list_t;
+  typedef std::pair<std::string, std::pair<std::string, std::string> > condition_t;
+  typedef std::pair<position_t, std::string> error_info_t;
+
+class Parser{
 public:
   Parser(std::string);
   Parser(std::istream&);
@@ -33,6 +37,7 @@ public:
   node_sptr program();
   node_sptr program_priority();
   node_sptr program_factor();
+  node_sptr parenthesis_program();
   boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> constraint_def();
   boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> program_def();
   boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> constraint_callee();
@@ -63,7 +68,7 @@ public:
   node_sptr system_variable();
   boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> unsupported_function();
   boost::shared_ptr<hydla::symbolic_expression::Function> function();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> variable();
+  boost::shared_ptr<hydla::symbolic_expression::Variable> variable(std::map<std::string, std::string>);
   node_sptr parameter();
   boost::shared_ptr<hydla::symbolic_expression::Variable> bound_variable();
   std::string constraint_name();
@@ -75,40 +80,31 @@ public:
   std::string identifier();
   node_sptr number();
   
-  void error_occurred(std::pair<int,int> position, std::string error_message){ error_info.push_back(std::pair<std::pair<int,int>, std::string>(position,error_message)); }
+  void error_occurred(position_t position, std::string error_message){ error_info.push_back(error_info_t(position,error_message)); }
+  void error_occurred(error_info_t info){ error_info.push_back(info); }
 
-  bool variable_list_definition();
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > expand_variable_conditions(std::map<std::string, std::string> bound_vars, std::vector<std::pair<std::string, std::pair<std::string, std::string> > > &conditions, int idx, std::string variables);
+  bool parse_ended();
 
-  std::string list_variable_name();
-  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_factor();
-  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_term();
-  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_expression();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> variable_list_element();
+  // list functions
+  bool list_definition();
+  list_t list(std::string,std::map<std::string, std::string>);
+
+  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_factor(std::map<std::string, std::string>);
+  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_term(std::map<std::string, std::string>);
+  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_expression(std::map<std::string, std::string>);
   
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > variables();
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > variable_list(std::string);
-
-  std::vector<std::pair<std::string, std::pair<std::string, std::string> > > variable_conditions();
-  std::pair<std::string, std::pair<std::string, std::string> > variable_condition();
-  std::vector<node_sptr> expand_program_conditions(std::map<std::string, std::string> bound_vars, std::vector<std::pair<std::string, std::pair<std::string, std::string> > > &conditions, int idx, std::string programs);
-
-
-  std::vector<node_sptr> program_list();
-  bool program_list_definition();
-  node_sptr program_list_element();
-
-  void set_list(std::map<std::string, std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > > vl, std::map<std::string, std::vector<node_sptr > > pl);
+  list_t list_conditions(std::map<std::string, std::string>, std::string);
+  std::string replace_string_by_bound_variables(std::map<std::string, std::string>, std::string);
+  list_t list_check(std::string list_name);
+  void set_list(std::map<std::string, list_t> list){ list_map = list; }
 
 private:
   Lexer lexer;
 
-  std::vector<std::pair<std::pair<int,int>, std::string> > error_info;
+  std::vector<error_info_t> error_info;
 
   // map which save appeared variable list
-  std::map<std::string, std::vector<boost::shared_ptr<hydla::symbolic_expression::Variable> > > variable_list_map;
-  // map which save appeared program list
-  std::map<std::string, std::vector<node_sptr> > program_list_map;
+  std::map<std::string, list_t> list_map;
 
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;

@@ -1,6 +1,5 @@
 // variable list
-x:[200].
-
+x <=> [3].
 
 // constraints
 INIT(x,x0,vx0) <=> x=x0 & x'=vx0.
@@ -8,14 +7,14 @@ COL(x1,x2) <=> [](x1-=x2- => x1'=x2'- & x2'=x1'-).
 CONST(x) <=> [](x''=0).
 WALL(x) <=> [](x-=-1 | x-=2*|x| => x'=-x'-).
 
-
 // program lists
-INITS;{ INIT(x[i],2*i,0) | i = 1~|x|-1}.
-COL_PRIORITIES;{
-  ( CONST(x[i]), CONST(x[j]) ) << COL(x[i], x[j]) |
-                       i = 0~|x|-2, j = i+1~|x|-1 }.
-WALL_PRIORITIES;{ CONST(x[i]) << WALL(x[i]) | i=0~|x|-1}.
+INITS <=> { INIT(x[i],2*i,0) | i in 0..|x|-1, x[i] =!= x0 }.
 
+COL_PRIORITIES <=> 
+ { ( CONST(x[i]), CONST(x[j]) ) << COL(x[i], x[j]) |
+                       i in 0..|x|-2, j in i+1..|x|-1 }.
+WALL_PRIORITIES <=> 
+ { CONST(x[i]) << WALL(x[i]) | i in 0..|x|-1}.
 
 INIT(x[0],0,1),
 INITS, COL_PRIORITIES, WALL_PRIORITIES.
