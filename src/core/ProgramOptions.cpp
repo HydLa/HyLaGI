@@ -164,15 +164,6 @@ void ProgramOptions::init_descriptions()
     ("epsilon,e",
      "epsilon mode")
     
-    /*
-    ("phase_expanded", 
-     value<int>()->default_value(-1), 
-     "simulation limit for number of phases expanded in simulation\n"
-     " (equivalent to \"phase\" if \"nd\" is invalid)"
-     "  positive value: number of phases\n"
-     "  negative value: infinity")
-     */
-     
      /*
     ("timeout", 
      value<int>()->default_value(-1),

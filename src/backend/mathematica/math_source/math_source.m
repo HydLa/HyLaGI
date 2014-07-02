@@ -33,8 +33,6 @@ checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
-moveTermsToLeft[expr_] := Head[expr][expr[[1]] - expr[[2]], 0];
-
 ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[
   {

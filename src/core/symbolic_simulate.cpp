@@ -141,10 +141,8 @@ void setup_simulator_opts(Opts& opts)
   opts.timeout_calc= po.get<int>("timeout_calc");
 
 
-  /*
-  opts.max_loop_count= po.get<int>("mlc");
-  opts.max_phase_expanded = po.get<int>("phase_expanded");
-  */
+  
+  //opts.max_loop_count= po.get<int>("mlc");
 
   // select search method (dfs or bfs)
   if(po.get<std::string>("search") == "d"){

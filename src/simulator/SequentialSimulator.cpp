@@ -20,17 +20,13 @@ SequentialSimulator::~SequentialSimulator()
 
 phase_result_const_sptr_t SequentialSimulator::simulate()
 {
-  timer::Timer simulation_timer;
-  std::string error_str;
+  std::string error_str = "";
   simulation_todo_sptr_t init_todo = make_initial_todo();
   todo_stack_->push_todo(init_todo);
   int error_sum = 0;
+
   while(!todo_stack_->empty() && !signal_handler::interrupted) 
   {
-    if((opts_->max_phase_expanded > 0 && phase_simulator_->get_phase_sum() >= opts_->max_phase_expanded))
-    {
-      break;
-    }
     simulation_todo_sptr_t todo(todo_stack_->pop_todo());
     try
     {
@@ -61,6 +57,7 @@ phase_result_const_sptr_t SequentialSimulator::simulate()
   if(!error_str.empty()){
     std::cout << error_str;
   }
+
   
   HYDLA_LOGGER_DEBUG("%% simulation ended");
   return result_root_;
