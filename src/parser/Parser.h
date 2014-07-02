@@ -88,6 +88,8 @@ public:
   // list functions
   bool list_definition();
   list_t list(std::string,std::map<std::string, std::string>);
+  list_t list_term(std::string,std::map<std::string, std::string>);
+  list_t list_factor(std::string,std::map<std::string, std::string>);
 
   boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_factor(std::map<std::string, std::string>);
   boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_term(std::map<std::string, std::string>);

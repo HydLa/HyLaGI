@@ -1369,12 +1369,13 @@ std::string Parser::replace_string_by_bound_variables(
 }
 
 /**
- * list := identifier
- *       | "{" string ( "|" conditions )? "}"
- *       | expression".."expression
- *       | "[" expression "]"
+ * list_factor := identifier
+ *              | "{" string ( "|" conditions )? "}"
+ *              | expression".."expression
+ *              | "[" expression "]"
+ *              | "(" list ")"
  */
-list_t Parser::list(std::string list_name, std::map<std::string, std::string> bound_vars){
+list_t Parser::list_factor(std::string list_name, std::map<std::string, std::string> bound_vars){
   list_t ret;
   std::string name;
   position_t position = lexer.get_current_position();
@@ -1448,6 +1449,74 @@ list_t Parser::list(std::string list_name, std::map<std::string, std::string> bo
       return ret;
     }
   }
+  lexer.set_current_position(position);
+
+  // "(" list ")"
+  if(lexer.get_token() == LEFT_PARENTHESES){
+    if(!((ret = list(list_name, bound_vars)).empty())){
+      if(lexer.get_token() == RIGHT_PARENTHESES){
+        return ret;
+      }
+    }
+  }
+
+  return list_t();
+}
+
+list_t Parser::list(std::string list_name, std::map<std::string, std::string> bound_vars){
+  list_t ret;
+  list_t tmp;
+  position_t position = lexer.get_current_position();
+  if(!((ret = list_term(list_name, bound_vars)).empty())){
+    position_t tmp_position = lexer.get_current_position();
+    Token token = lexer.get_token();
+    while(lexer.get_current_token_string() == "or"){
+      if(!((tmp = list_term(list_name,bound_vars)).empty())){
+        for(auto element : tmp) ret.push_back(element);
+      }else{
+        lexer.set_current_position(tmp_position);
+        break;
+      }
+      tmp_position = lexer.get_current_position();
+      token = lexer.get_token();
+    }
+    lexer.set_current_position(tmp_position);
+    return ret;
+  } 
+  lexer.set_current_position(position);
+  return list_t();
+}
+
+list_t Parser::list_term(std::string list_name, std::map<std::string, std::string> bound_vars){
+  list_t ret;
+  list_t tmp;
+  position_t position = lexer.get_current_position();
+  if(!((ret = list_factor(list_name, bound_vars)).empty())){
+    position_t tmp_position = lexer.get_current_position();
+    Token token = lexer.get_token();
+    while(lexer.get_current_token_string() == "and"){
+      if(!((tmp = list_factor(list_name,bound_vars)).empty())){
+        for(list_t::iterator element = ret.begin(); element != ret.end(); ){
+          bool in_tmp = false;
+          for(auto tmp_element : tmp){
+            if((*element) == tmp_element){
+              in_tmp = true;
+              break;
+            }
+          }
+          if(!in_tmp) element = ret.erase(element);
+          else element++;
+        }
+      }else{
+        lexer.set_current_position(tmp_position);
+        break;
+      }
+      tmp_position = lexer.get_current_position();
+      token = lexer.get_token();
+    }
+    lexer.set_current_position(tmp_position);
+    return ret;
+  } 
   lexer.set_current_position(position);
   return list_t();
 }
