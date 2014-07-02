@@ -13,6 +13,7 @@ struct CheckConsistencyResult
 };
 
 class VariableFinder;
+class ConstraintDifferenceCalculator;
 
 class ConsistencyChecker{
 
@@ -31,7 +32,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, const PhaseType& phase, const bool reuse);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse);
 
 
   /**

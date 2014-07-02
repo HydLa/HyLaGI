@@ -257,21 +257,6 @@ void RelationGraph::set_expanded_all(bool expanded)
   up_to_date = false;
 }
 
-void RelationGraph::set_changing_constraints(const ConstraintStore& constraints)
-{
-  if(!up_to_date){
-    check_connected_components();
-  }
-  initialize_node_visited();
-  ConstraintStore tmp_constraints,result_constraints;
-  module_set_t module_set;
-  //TODO: IPでprevを区別する
-  for(auto constraint : constraints){
-    get_related_constraints(constraint, tmp_constraints, module_set);
-    changing_constraints.add_constraint_store(tmp_constraints);
-  }
-}
-
 RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
 {
   if(!up_to_date){
@@ -329,11 +314,6 @@ ConstraintStore RelationGraph::get_adopted_constraints()
   return constraints;
 }
 
-ConstraintStore RelationGraph::get_changing_constraints(){
-  return changing_constraints;
-}
-
-
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
   if(!up_to_date){
@@ -347,46 +327,6 @@ void RelationGraph::set_ignore_prev(bool ignore)
 {
   ignore_prev = ignore;
   up_to_date = false;
-}
-
-bool RelationGraph::is_changing(const ConstraintStore constraint_store)
-{
-  if(!up_to_date){
-    check_connected_components();
-    set_changing_constraints(changing_constraints);
-  }
-  bool ret = false;
-  for(auto constraint : constraint_store){
-    if(changing_constraints.count(constraint)){
-      ret = true;
-      break;
-    }
-  }
-  return ret;
-}
-
-bool RelationGraph::is_changing(const constraint_t constraint)
-{
-  ConstraintStore constraint_store;
-  module_set_t module_set;
-  get_related_constraints(constraint, constraint_store, module_set);
-  for(auto tmp_constraint : constraint_store){
-    if(changing_constraints.count(tmp_constraint)) return true;
-  }
-  return false;
-}
-
-bool RelationGraph::is_changing(const Variable& variable)
-{
-  VariableFinder finder;
-  for(auto constraint : changing_constraints){
-    finder.visit_node(constraint);
-  }
-  return finder.include_variable(variable) || finder.include_variable_prev(variable);
-}
-
-void RelationGraph::clear_changing(){
-  changing_constraints.clear();
 }
 
 void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node)
