@@ -114,6 +114,13 @@ bool RelationGraph::ConstraintNode::active() const
 }
 
 
+bool RelationGraph::referring(const Variable& var)
+{
+  if(!up_to_date) check_connected_components();
+  return referred_variables.count(var) > 0;
+}
+
+
 void RelationGraph::initialize_node_visited()
 {
   for(auto constraint_node : constraint_nodes){
@@ -121,7 +128,9 @@ void RelationGraph::initialize_node_visited()
   }
 }
 
+
 void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
+  if(!up_to_date) check_connected_components();
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -150,6 +159,7 @@ void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintS
 
 
 void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
+  if(!up_to_date) check_connected_components();
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -165,8 +175,8 @@ void RelationGraph::check_connected_components(){
   connected_constraints_vector.clear();
   connected_modules_vector.clear();
   connected_variables_vector.clear();
+  referred_variables.clear();
   initialize_node_visited();
-
 
   for(auto constraint_node : constraint_nodes){
     module_set_t ms;
@@ -177,6 +187,7 @@ void RelationGraph::check_connected_components(){
       connected_constraints_vector.push_back(constraints);
       connected_modules_vector.push_back(ms);
       connected_variables_vector.push_back(vars);
+      referred_variables.insert(vars.begin(), vars.end());
     }
   }
   up_to_date = true;
@@ -213,9 +224,7 @@ RelationGraph::RelationGraph(const module_set_t &ms)
 
 int RelationGraph::get_connected_count()
 {
-  if(!up_to_date){
-    check_connected_components();
-  }
+  if(!up_to_date) check_connected_components();
   return connected_constraints_vector.size();
 }
 
@@ -274,24 +283,21 @@ void RelationGraph::set_changing_constraints(const ConstraintStore& constraints)
 
 RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
 {
-  if(!up_to_date){
-    check_connected_components();
-  }
+  if(!up_to_date) check_connected_components();
   assert(index < connected_variables_vector.size());
   return connected_variables_vector[index];
 }
 
 ConstraintStore RelationGraph::get_constraints(unsigned int index)
 {
-  if(!up_to_date){
-    check_connected_components();
-  }
+  if(!up_to_date) check_connected_components();
   assert(index < connected_constraints_vector.size());
   return connected_constraints_vector[index];
 }
 
 ConstraintStore RelationGraph::get_constraints()
 {
+  if(!up_to_date) check_connected_components();
   ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
@@ -305,6 +311,7 @@ ConstraintStore RelationGraph::get_constraints()
 
 ConstraintStore RelationGraph::get_expanded_constraints()
 {
+  if(!up_to_date) check_connected_components();
   ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
@@ -318,6 +325,7 @@ ConstraintStore RelationGraph::get_expanded_constraints()
 
 ConstraintStore RelationGraph::get_adopted_constraints()
 {
+  if(!up_to_date) check_connected_components();
   ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
@@ -336,9 +344,7 @@ ConstraintStore RelationGraph::get_changing_constraints(){
 
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
-  if(!up_to_date){
-    check_connected_components();
-  }
+  if(!up_to_date) check_connected_components();
   assert(index < connected_modules_vector.size());
   return connected_modules_vector[index];
 }

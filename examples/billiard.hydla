@@ -1,11 +1,10 @@
-// variable list
-x <=> [3].
+x <=> [20].
 
 // constraints
-INIT(x,x0,vx0) <=> x=x0 & x'=vx0.
-COL(x1,x2) <=> [](x1-=x2- => x1'=x2'- & x2'=x1'-).
-CONST(x) <=> [](x''=0).
-WALL(x) <=> [](x-=-1 | x-=2*|x| => x'=-x'-).
+INIT(b,b0,vb0) <=> b=b0 & b'=vb0.
+COL(b1,b2) <=> [](b1-=b2- => b1'=b2'- & b2'=b1'-).
+CONST(b) <=> [](b''=0).
+WALL(b) <=> [](b-=-1 | b-=2*|x| => b'=-b'-).
 
 // program lists
 INITS <=> { INIT(x[i],2*i,0) | i in 0..|x|-1, x[i] =!= x0 }.
