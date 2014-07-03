@@ -229,7 +229,8 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   {
 
     ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
-
+    HYDLA_LOGGER_DEBUG_VAR(tmp_constraint_store);
+    HYDLA_LOGGER_DEBUG_VAR(relation_graph.get_modules(i).get_name());
     if(reuse && !difference_calculator.is_changing(tmp_constraint_store)) continue;
 
     VariableFinder finder;

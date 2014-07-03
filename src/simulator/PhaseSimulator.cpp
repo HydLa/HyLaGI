@@ -8,7 +8,6 @@
 #include "PrevReplacer.h"
 #include "AskCollector.h"
 #include "VariableFinder.h"
-#include "ContinuityMapMaker.h"
 #include "PrevSearcher.h"
 #include "Exceptions.h"
 #include "AlwaysFinder.h"
@@ -105,7 +104,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     }
   }
 
-
   while(module_set_container->has_next())
   {
     module_set_t ms = module_set_container->get_module_set();
@@ -129,7 +127,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       }
     }
 
-    std::string module_sim_string = "\"ModuleSet" + ms.get_name() + "\"";
+    std::string module_sim_string = "\"ModuleSet" + module_set_container->unadopted_module_set().get_name() + "\"";
     timer::Timer ms_timer;
     result_list_t tmp_result = simulate_ms(ms, todo);
 
@@ -312,11 +310,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
 
   result.push_back(phase);
-
-
   return result;
 }
-
 
 void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckConsistencyResult &result){
   simulation_todo_sptr_t branch_state_false(create_new_simulation_phase(original));
@@ -327,7 +322,6 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   // TODO: implement branch here
   throw SimulateError("branch in calculate closure.");
 }
-
 
 phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo)
 {
@@ -368,7 +362,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
     exit(EXIT_SUCCESS);
   }
 
-
   AskCollector ac;
 
   ConstraintStore constraints;
@@ -392,12 +385,10 @@ void PhaseSimulator::initialize(variable_set_t &v,
       it++;
     }
   }
-
   
   backend_->set_variable_set(*variable_set_);
   time_modifier.reset(new TimeModifier(*backend_));
 }
-
 
 simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulation_todo_sptr_t& old) const
 {
@@ -487,8 +478,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   ask_set_t unknown_asks;
 
   AskCollector  ask_collector;
-
-  continuity_map_t continuity_map;
 
   bool expanded;
 
@@ -764,86 +753,11 @@ PhaseSimulator::todo_list_t
     pp_time_result_t time_result;
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
-    if(opts_->cheby)
-    {
-      try
-      {
-        backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
-      }
-      catch(const std::runtime_error &se)
-      {
-        std::cout << "Error occurs in calculateNextPointPhaseTime." << endl;
-        std::cout << "Do you want to change next time ? (y or n)" << endl;
-        std::string line;
-        std::cin.clear();
-        getline(std::cin, line);
-        std::cin.clear();
-        if(line[0] == 'y')
-        {
-          std::cout << "Parameter ? (y or n)" << endl;
-          std::string pa;
-          std::cin.clear();
-          getline(std::cin, pa);
-          std::cin.clear();
-          if(pa[0] == 'y')
-          {
-            ValueRange time_range;
-            std::string low;
-            std::string up;
 
-            variable_t time("time", 0);
-
-            std::cout << "Input Lower time." << endl;
-            low = timein();
-
-            std::cout << "Input Upper time." << endl;
-            up = timein();
-
-            value_t lower_time(low);
-            value_t upper_time(up);
-
-            time_range.set_lower_bound(lower_time, true);
-            time_range.set_upper_bound(upper_time, true);
-
-            parameter_t par = simulator_->introduce_parameter(time, *phase, time_range);
-
-            next_todo->current_time = symbolic_expression::node_sptr(new symbolic_expression::Parameter("time", 0, phase->id));
-            phase->end_time = symbolic_expression::node_sptr(new symbolic_expression::Parameter("time", 0, phase->id));
-
-            next_todo->parameter_map[par] = time_range;
-            phase->parameter_map[par] = time_range;
-
-            ret.push_back(next_todo);
-
-            return ret;
-          }
-          else
-          {
-            std::cout << "Input Next PP Time." << endl;
-            std::string p_time;
-
-            p_time = timein();
-
-            next_todo->current_time = p_time;
-
-            ret.push_back(next_todo);
-
-            return ret;
-          }
-        }
-        else
-        {
-          backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
-        }
-      }
-    }
-    else
-    {
-      backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
-    }
+    backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
 
     if(opts_->epsilon_mode){
-      time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
+      time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
     }
 
     unsigned int time_it = 0;
@@ -876,7 +790,6 @@ PhaseSimulator::todo_list_t
       result_it = select_phase_(results);
       one_phase = true;
     }
-
 
     // todoを実際に作成する
     while(true)
@@ -923,8 +836,6 @@ PhaseSimulator::todo_list_t
 
   return ret;
 }
-
-
 
 }
 }

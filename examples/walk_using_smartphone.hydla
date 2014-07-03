@@ -7,16 +7,13 @@ ANGLE <=> [](angle = PI/6).
 HUMAN_RADIUS <=> [](radius = 5).
 
 TURN_LEFT(x1,y1,v1,s1,r,x2,y2) <=>
-    []((x1-x2)^2 + (y1-y2)^2 = (r+(2*radius))^2 => s1 = s1- + angle ).
+    []((x1- - x2-)^2 + (y1- - y2- )^2 = (r-+(2*radius-))^2 => s1 = s1- + angle- ).
 
 TURN_RIGHT(x1,y1,v1,s1,r,x2,y2) <=>
-    []((x1-x2)^2 + (y1-y2)^2 = (r+(2*radius))^2 => s1 = s1- - angle ).
-
-STRAIGHT(x1,y1,v1,s1,r,x2,y2) <=>
-    []((x1-x2)^2 + (y1-y2)^2 = (r+(2*radius))^2 => s1 = s1- ).
+    []((x1- - x2-)^2 + (y1- - y2- )^2 = (r-+(2*radius-))^2 => s1 = s1- - angle- ).
 
 COLLISION(x1,y1,v1,x2,y2,v2) <=>
-    []((x1-x2)^2 + (y1-y2)^2 = (2*radius)^2 => v1 = 0 & v2 = 0 ).
+    []((x1- - x2-)^2 + (y1- - y2- )^2 = (2*radius-)^2 => v1 = 0 & v2 = 0 ).
 
 CONST(vs) <=> [](vs'=0).
 VELOCITY(x,y,v,s) <=> [](x' = v*cos(s) & y' = v*sin(s)).
@@ -46,17 +43,16 @@ ANGLE, HUMAN_RADIUS,
 { INIT(x[i], y[i], v[i], s[i], x0[i], y0[i], v0[i], s0[i]) 
         | i in 0..|x|-1 }.
 
-{ CONST(s[i]) << TURN_LEFT(x[i],y[i],v[i],s[i], 10, x[j], y[j]) << []($TRUE)
+{ TURN_LEFT(x[i],y[i],v[i],s[i], 10, x[j], y[j]) << $TRUE
         | i in 0..|x|-1, j in 0..|x|-1, 
           x[i] =!= x[j], y[i] =!= y[j] },
 
-{ CONST(s[i]) << TURN_RIGHT(x[i],y[i],v[i],s[i], 10, x[j], y[j]) << []($TRUE)
+{ TURN_RIGHT(x[i],y[i],v[i],s[i], 10, x[j], y[j]) << $TRUE
         | i in 0..|x|-1, j in 0..|x|-1, 
           x[i] =!= x[j], y[i] =!= y[j] },
 
-{ CONST(s[i]) << STRAIGHT(x[i],y[i],v[i],s[i], 10, x[j], y[j]) << []($TRUE)
-        | i in 0..|x|-1, j in 0..|x|-1, 
-          x[i] =!= x[j], y[i] =!= y[j] },
+{ CONST(s[i]) << $TRUE
+        | i in 0..|x|-1},
 
 { CONST(v[i]) << COLLISION(x[i],y[i],v[i],x[j],y[j],v[j])
         | i in 0..|x|-1, j in 0..|x|-1, 
