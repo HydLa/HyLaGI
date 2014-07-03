@@ -87,6 +87,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   return removable;
 }
 
+
 void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set) 
 {
   add_order_data(parallel_module_set);
@@ -284,6 +285,12 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
   }
   // update ms_to_visit_ by generated module sets
   update_by_new_mss(new_mss);
+}
+
+ModuleSet IncrementalModuleSet::unadopted_module_set(){
+  ModuleSet ret = get_max_module_set();
+  ret.erase(get_module_set());
+  return ret;
 }
 
 /// 最も要素数の多いモジュール集合を返す

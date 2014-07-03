@@ -119,6 +119,11 @@ public:
   virtual ModuleSet get_max_module_set() const;
 
   /**
+   * 採用されていないモジュールの集合を返す
+   */
+  virtual ModuleSet unadopted_module_set();
+
+  /**
    * 探索対象の初期状態を返す
    */
   virtual module_set_set_t get_full_ms_list() const;
