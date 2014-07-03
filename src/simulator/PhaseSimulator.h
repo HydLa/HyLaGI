@@ -59,11 +59,6 @@ public:
   result_list_t calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont = NULL);
 
 
-	/**
-   * HASimulator用
-   */
-	void substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm);
-
   int get_phase_sum()const{return phase_sum_;}
 
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}

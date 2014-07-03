@@ -78,7 +78,6 @@ protected:
    */ 
   bool check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2);
 
-
 	// 状態キューから状態をひとつ取り出す
 	// pop_simulation_phase()と合わせる必要あり
 	current_condition_t pop_current_condition()

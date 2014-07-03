@@ -411,32 +411,6 @@ simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulat
   return sim;
 }
 
-
-void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm)
-{
-  HYDLA_LOGGER_DEBUG("");
-	// 変数に代入
-	variable_map_t ret;
-  variable_map_t &vm = pr->variable_map;
-  for(auto var_entry : vm)
-  {
-    if(var_entry.second.undefined())continue;
-    assert(var_entry.second.unique());
-    value_t tmp_val = var_entry.second.get_unique_value();
-    backend_->call("substituteParameterCondition",
-                   2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
-    var_entry.second.set_unique_value(tmp_val);
-  }
-
-	// 時刻にも代入
-  backend_->call("substituteParameterCondition",
-                 2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
-	if(pr->phase_type == IntervalPhase){
-    backend_->call("substituteParameterCondition",
-                   2, "vlnmp", "vl", &pr->end_time, &pm, &pr->end_time);
-	}
-}
-
 void PhaseSimulator::replace_prev2parameter(
                                             PhaseResult &phase,
                                             variable_map_t &vm,

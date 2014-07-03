@@ -209,6 +209,7 @@ void HAConverter::search_variable_parameter(parameter_map_t map, std::string nam
     HYDLA_LOGGER_DEBUG(it->first, " : " , it->second);		
   }
 }
+
 	
 bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2)
 {
