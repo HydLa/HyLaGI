@@ -40,6 +40,14 @@ PhaseResult::PhaseResult():cause_for_termination(NONE)
 {
 }
 
+PhaseResult::~PhaseResult()
+{
+  for(auto child : children)
+  {
+    child->parent = nullptr;
+  }
+}
+
 bool ParameterComparator::operator()(const Parameter x,const Parameter y) const { return x < y; }
 
 
@@ -53,7 +61,7 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
   cause_for_termination(cause),
-  parent(todo.parent)
+  parent(todo.parent.get())
 {
 }
 

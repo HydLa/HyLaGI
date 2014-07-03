@@ -101,10 +101,11 @@ public:
   /// A set of succeeding phases
   phase_result_sptrs_t children;
   /// A preceding phase
-  phase_result_sptr_t parent;
+  PhaseResult *parent;
 
   PhaseResult();
   PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NONE);
+  ~PhaseResult();
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);

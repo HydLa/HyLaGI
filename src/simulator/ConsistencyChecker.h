@@ -65,12 +65,12 @@ public:
   int get_backend_check_consistency_count();
 
 private:
-  int backend_check_consistency_count;
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   std::map<std::string, int> get_differential_map(variable_set_t &);
   backend_sptr_t backend;
   const variable_map_t* prev_map;
+  int backend_check_consistency_count;
   std::vector<module_set_t> inconsistent_module_sets;
 };
 

@@ -332,7 +332,7 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
-    parameter_t introduced_par = introduce_parameter(v_it->first, todo->parent, range);
+    parameter_t introduced_par = introduce_parameter(v_it->first, *todo->parent, range);
     pm[introduced_par] = range;
     value_t pvalue(symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_it->first.get_name(),
       v_it->first.get_differential_count(),
@@ -485,7 +485,7 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
 
 
   loaded_phase->step = 0;
-  loaded_phase->parent = result_root_;
+  loaded_phase->parent = result_root_.get();
   result_root_->children.clear();
   result_root_->children.push_back(loaded_phase);
   todo.reset(new SimulationTodo(loaded_phase));

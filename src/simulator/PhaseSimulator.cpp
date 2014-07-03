@@ -228,7 +228,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 
   if(opts_->reuse && todo->in_following_step()){
    phase->changed_constraints = differnce_calculator_.get_changing_constraints();
-    if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
+   if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent)
     {
       for(auto var_entry : phase->parent->parent->variable_map)
       {
@@ -240,7 +240,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
         }
       }
     }
-    else if(phase->phase_type == PointPhase && phase->parent.get())
+    else if(phase->phase_type == PointPhase && phase->parent)
     {
       for(auto var_entry : todo->prev_map)
       {
@@ -438,11 +438,11 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
 }
 
 void PhaseSimulator::replace_prev2parameter(
-                                            phase_result_sptr_t &phase,
+                                            PhaseResult &phase,
                                             variable_map_t &vm,
                                             parameter_map_t &parameter_map)
 {
-  assert(phase->parent.get() != NULL);
+  assert(phase.parent != nullptr);
   PrevReplacer replacer(parameter_map, phase, *simulator_, opts_->approx);
   for(auto var_entry : vm)
   {
@@ -703,7 +703,6 @@ PhaseSimulator::calculate_constraint_store(
   {
     backend_->call("addConstraint", 1, "cst", "", &tmp_constraint_store);
     backend_->call("getConstraintStoreInterval", 0, "", "cs", &result_store);
-    replace_prev2parameter(todo->parent, result_store, todo->parameter_map);
   }
 
   return result_store;
@@ -770,7 +769,7 @@ PhaseSimulator::todo_list_t
     backend_->call("addConstraint", 1, "mvt", "", &phase->variable_map);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
-    PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
+    PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
     phase->variable_map = shift_time_of_vm(phase->variable_map, phase->current_time);
     next_todo->phase_type = PointPhase;
@@ -850,7 +849,7 @@ PhaseSimulator::todo_list_t
             time_range.set_lower_bound(lower_time, true);
             time_range.set_upper_bound(upper_time, true);
 
-            parameter_t par = simulator_->introduce_parameter(time, phase, time_range);
+            parameter_t par = simulator_->introduce_parameter(time, *phase, time_range);
 
             next_todo->current_time = symbolic_expression::node_sptr(new symbolic_expression::Parameter("time", 0, phase->id));
             phase->end_time = symbolic_expression::node_sptr(new symbolic_expression::Parameter("time", 0, phase->id));
@@ -969,17 +968,6 @@ PhaseSimulator::todo_list_t
   return ret;
 }
 
-void PhaseSimulator::replace_prev2parameter(
-  phase_result_sptr_t& state,
-  ConstraintStore& store,
-  parameter_map_t &parameter_map)
-{
-  PrevReplacer replacer(parameter_map, state, *simulator_, opts_->approx);
-  for(auto constraint : store)
-  {
-    replacer.replace_node(constraint);
-  }
-}
 
 variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const value_t& tm)
 {

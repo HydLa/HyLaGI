@@ -81,7 +81,7 @@ struct SimulationTodo{
   SimulationTodo(const phase_result_sptr_t &parent_phase);
 
   inline bool in_following_step(){
-    return parent.get() && parent->parent.get() && parent->parent->parent.get();
+    return parent.get() && parent->parent && parent->parent->parent;
   }
 };
 
@@ -177,7 +177,7 @@ public:
   /**
    * @return introduced parameter
    */
-  parameter_t introduce_parameter(const variable_t &var, const phase_result_sptr_t& phase, const ValueRange &range);
+  parameter_t introduce_parameter(const variable_t &var, const PhaseResult& phase, const ValueRange &range);
   parameter_t introduce_parameter(const std::string &name, int differential_cnt, int id, const ValueRange &range);
   parameter_t introduce_parameter(const parameter_t &par, const ValueRange &range);
   

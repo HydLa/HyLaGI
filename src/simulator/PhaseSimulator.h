@@ -117,7 +117,7 @@ protected:
   Simulator* simulator_;
 
   void replace_prev2parameter(
-                              phase_result_sptr_t &phase,
+                              PhaseResult &phase,
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
@@ -179,11 +179,6 @@ private:
       simulation_todo_sptr_t&,
     const variable_map_t& vm);
 */
-
-  //virtual ConstraintStoreResult check_conditions(const module_set_t& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
-  void replace_prev2parameter(phase_result_sptr_t& state,
-                              ConstraintStore& store,
-                              parameter_map_t &parameter_map);
 
   boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
   boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
