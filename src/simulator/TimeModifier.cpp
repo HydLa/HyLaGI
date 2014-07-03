@@ -8,6 +8,17 @@ TimeModifier::TimeModifier(backend::Backend &b):backend(b)
 {
 }
 
+variable_map_t TimeModifier::apply_function(const std::string& function, const Value& time, const variable_map_t& map)
+{
+  variable_map_t result;
+  for(auto var_entry : map)
+  {
+    result[var_entry.first] = apply_function(function, time, var_entry.second);
+  }
+  return result;
+}
+
+
 ValueRange TimeModifier::apply_function(const std::string& function, const Value& time, const ValueRange& range)
 {
   ValueRange result_range;
@@ -45,6 +56,10 @@ Value TimeModifier::apply_function(const std::string& function, const Value& tim
   return result_value;
 }
 
+variable_map_t TimeModifier::substitute_time(const Value& time, const variable_map_t& map){
+  return apply_function("applyTime2Expr", time, map); 
+}
+
 ValueRange TimeModifier::substitute_time(const Value& time, const ValueRange& range){
   return apply_function("applyTime2Expr", time, range); 
 }
@@ -60,6 +75,10 @@ Value TimeModifier::shift_time(const Value& time, const Value& value){
 
 ValueRange TimeModifier::shift_time(const Value& time, const ValueRange& range){
   return apply_function("exprTimeShift", time, range);
+}
+
+variable_map_t TimeModifier::shift_time(const Value& time, const variable_map_t &map){
+  return apply_function("exprTimeShift", time, map);
 }
 
 

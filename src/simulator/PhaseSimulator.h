@@ -17,6 +17,7 @@ namespace simulator {
 
 class AnalysisResultChecker;
 class UnsatCoreFinder;
+class TimeModifier;
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
@@ -32,7 +33,6 @@ public:
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
-  // typedef std::map<module_set_sptr, symbolic_expression::node_sptr> condition_map_t;
   typedef symbolic_expression::node_sptr node_sptr;
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
@@ -44,12 +44,6 @@ public:
   symbolic_expression::node_sptr get_break_condition();
 
   virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m,  module_set_container_sptr& msc);
-
-  virtual void init_arc(const parse_tree_sptr& parse_tree);
-
-
-  variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
-  variable_map_t shift_time_of_vm(const variable_map_t &vm, const value_t &tm);
 
   /**
    * calculate phase results from given todo
@@ -65,13 +59,6 @@ public:
 
 
   typedef std::set< std::string > change_variables_t;
-
-/*
-  virtual void find_unsat_core(const module_set_t& ms,
-      simulation_todo_sptr_t&,
-      const variable_map_t& vm);
-*/
-
 
  	/**
    * make todos from given phase_result
@@ -169,15 +156,6 @@ private:
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
-/*
-  virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
-      simulation_todo_sptr_t&,
-    const variable_map_t& vm);
-*/
-
-  boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
-  boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
-
   PhaseType current_phase_;
   
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
@@ -187,6 +165,8 @@ private:
   std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
 
   ConstraintDifferenceCalculator differnce_calculator_;
+
+  boost::shared_ptr<TimeModifier> time_modifier;
 };
 
 

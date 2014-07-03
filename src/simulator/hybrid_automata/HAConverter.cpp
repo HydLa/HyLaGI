@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <string>
 #include "Backend.h"
+#include "TimeModifier.h"
 
 using namespace std;
 
@@ -155,11 +156,11 @@ bool HAConverter::check_subset(phase_result_sptr_t phase, phase_result_sptr_t pa
   viewPr(phase);
   viewPr(past_phase);
 
-		
   value_t past_time = past_phase->current_time;
   variable_map_t now_vm, past_vm;
-  now_vm = phase_simulator_->apply_time_to_vm(phase->variable_map, value_t("0"));
-  past_vm = phase_simulator_->apply_time_to_vm(past_phase->variable_map, past_time);
+  TimeModifier modifier(*backend);
+  now_vm = modifier.substitute_time(value_t("0"), phase->variable_map);
+  past_vm = modifier.substitute_time(past_time, past_phase->variable_map);
 
   variable_map_t::const_iterator it_phase_v  = now_vm.begin();
   variable_map_t::const_iterator end_phase_v = now_vm.end();

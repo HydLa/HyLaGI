@@ -73,7 +73,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   result_list_t result;
   bool has_next = false;
 
-
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   consistency_checker->set_prev_map(&todo->prev_map);
@@ -138,9 +137,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     {
       has_next = true;
       result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
-/*      cout << "Phase" << todo->id << endl;
-      relation_graph_->dump_active_graph(cout);
-*/
     }
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     todo->positive_asks.clear();
@@ -160,8 +156,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
   }
 
-
-
   //無矛盾な解候補モジュール集合が存在しない場合
   if(!has_next)
   {
@@ -172,7 +166,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   return result;
 }
-
 
 
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& todo)
@@ -402,6 +395,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   
   backend_->set_variable_set(*variable_set_);
+  time_modifier.reset(new TimeModifier(*backend_));
 }
 
 
@@ -473,28 +467,16 @@ string timein(string message="")
   return ret;
 }
 
-void PhaseSimulator::init_arc(const parse_tree_sptr& parse_tree){
-/* TODO: 一時無効
-  analysis_result_checker_ = boost::shared_ptr<AnalysisResultChecker >(new AnalysisResultChecker(*opts_));
-  analysis_result_checker_->initialize(parse_tree);
-  analysis_result_checker_->set_solver(solver_);
-  analysis_result_checker_->check_all_module_set((opts_->analysis_mode == "cmmap" ? true : false));
-*/
-}
-
-
 void PhaseSimulator::set_backend(backend_sptr_t back)
 {
   backend_ = back;
   consistency_checker.reset(new ConsistencyChecker(backend_));
 }
 
-
 void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
 {
   current_phase_ = phase;
 }
-
 
 bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_t& ms)
@@ -745,7 +727,7 @@ PhaseSimulator::todo_list_t
     
     PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
-    phase->variable_map = shift_time_of_vm(phase->variable_map, phase->current_time);
+    phase->variable_map = time_modifier->shift_time(phase->current_time, phase->variable_map);
     next_todo->phase_type = PointPhase;
 
     timer::Timer next_pp_timer;
@@ -921,7 +903,7 @@ PhaseSimulator::todo_list_t
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
-        next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, candidate.minimum.time);
+        next_todo->prev_map = time_modifier->substitute_time(candidate.minimum.time, vm_before_time_shift);
         ret.push_back(next_todo);
       }
     	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
@@ -942,31 +924,6 @@ PhaseSimulator::todo_list_t
   return ret;
 }
 
-
-variable_map_t PhaseSimulator::apply_time_to_vm(const variable_map_t& vm, const value_t& tm)
-{
-  HYDLA_LOGGER_DEBUG("%% time: ", tm);
-  variable_map_t result;
-  TimeModifier modifier(*backend_);
-  for(auto var_entry : vm)
-  {
-    result[var_entry.first] = modifier.substitute_time(tm, var_entry.second);
-  }
-  return result;
-}
-
-
-variable_map_t PhaseSimulator::shift_time_of_vm(const variable_map_t& vm, const value_t& tm)
-{
-  HYDLA_LOGGER_DEBUG("%% time: ", tm);
-  variable_map_t result;
-  TimeModifier modifier(*backend_);
-  for(auto var_entry : vm)
-  {
-    result[var_entry.first] = modifier.shift_time(tm, var_entry.second);
-  }
-  return result;
-}
 
 
 }
