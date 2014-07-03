@@ -185,24 +185,23 @@ createMap[cons_, judge_, hasJudge_, vars_] :=
 createMap[cons, judge, hasJudge, vars] = (* for memoization *)
 Module[
   {map},
-  If[cons === True || cons === False, 
-    cons,
-    (* Remove unnecessary Constraints*)
-    map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
-    map = Reduce[map, vars, Reals];
+  If[cons === True, Return[{{}}] ];
+  If[cons === False, Return[{}] ];
+  (* Remove unnecessary Constraints*)
+  map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+  map = Reduce[map, vars, Reals];
 
-    (* Remove unnecessary Constraints*)
-    map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+  (* Remove unnecessary Constraints*)
+  map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
 
-    simplePrint[map];
-    map = LogicalExpand[map];
-    map = applyListToOr[map];
-    map = Map[(applyList[#])&, map];
-    map = Map[(adjustExprs[#, judge])&, map];
-    debugPrint["map after adjustExprs in createMap", map];
-    map = Map[(convertExprs[#])&, map];
-    map
-  ]
+  simplePrint[map];
+  map = LogicalExpand[map];
+  map = applyListToOr[map];
+  map = Map[(applyList[#])&, map];
+  map = Map[(adjustExprs[#, judge])&, map];
+  debugPrint["map after adjustExprs in createMap", map];
+  map = Map[(convertExprs[#])&, map];
+  map
 ];
 
 (* 式中に変数名が出現するか否か *)

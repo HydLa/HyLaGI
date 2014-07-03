@@ -64,6 +64,7 @@ bool ConstraintDifferenceCalculator::is_continuous(const constraint_t constraint
 
   }
   */
+  return false;
 }
 
 void ConstraintDifferenceCalculator::set_relation_graph(const boost::shared_ptr<RelationGraph> graph){
