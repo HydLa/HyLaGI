@@ -17,6 +17,7 @@ namespace simulator {
 
 class AnalysisResultChecker;
 class UnsatCoreFinder;
+class TimeModifier;
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
@@ -32,7 +33,6 @@ public:
   typedef std::vector<simulation_todo_sptr_t> todo_list_t;
   typedef std::vector<phase_result_sptr_t> result_list_t;
 
-  // typedef std::map<module_set_sptr, symbolic_expression::node_sptr> condition_map_t;
   typedef symbolic_expression::node_sptr node_sptr;
 
   PhaseSimulator(Simulator* simulator, const Opts& opts);
@@ -45,12 +45,6 @@ public:
 
   virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m,  module_set_container_sptr& msc);
 
-  virtual void init_arc(const parse_tree_sptr& parse_tree);
-
-
-  variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
-  variable_map_t shift_time_of_vm(const variable_map_t &vm, const value_t &tm);
-
   /**
    * calculate phase results from given todo
    * @param todo_cont container of todo into which PhaseSimulator pushes todo if case analyses are needed
@@ -59,24 +53,12 @@ public:
   result_list_t calculate_phase_result(simulation_todo_sptr_t& todo, todo_container_t* todo_cont = NULL);
 
 
-	/**
-   * HASimulator用
-   */
-	void substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm);
-
   int get_phase_sum()const{return phase_sum_;}
 
   void set_select_function(int (*f)(result_list_t&)){select_phase_ = f;}
 
 
   typedef std::set< std::string > change_variables_t;
-
-/*
-  virtual void find_unsat_core(const module_set_t& ms,
-      simulation_todo_sptr_t&,
-      const variable_map_t& vm);
-*/
-
 
  	/**
    * make todos from given phase_result
@@ -117,7 +99,7 @@ protected:
   Simulator* simulator_;
 
   void replace_prev2parameter(
-                              phase_result_sptr_t &phase,
+                              PhaseResult &phase,
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
@@ -157,12 +139,6 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
-  /**
-   * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
-   */
-  virtual ConstraintStore calculate_constraint_store(const module_set_t& ms,
-                           simulation_todo_sptr_t& state);
-
   void set_symmetric_difference(
     const ConstraintStore& parent_constraints,
     const ConstraintStore& current_constraints,
@@ -174,20 +150,6 @@ private:
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
-/*
-  virtual void mark_nodes_by_unsat_core(const modulse_set_sptr& ms,
-      simulation_todo_sptr_t&,
-    const variable_map_t& vm);
-*/
-
-  //virtual ConstraintStoreResult check_conditions(const module_set_t& ms, simulation_todo_sptr_t&, const variable_map_t &, bool b);
-  void replace_prev2parameter(phase_result_sptr_t& state,
-                              ConstraintStore& store,
-                              parameter_map_t &parameter_map);
-
-  boost::shared_ptr<AnalysisResultChecker > analysis_result_checker_;
-  boost::shared_ptr<UnsatCoreFinder > unsat_core_finder_;
-
   PhaseType current_phase_;
   
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
@@ -197,6 +159,8 @@ private:
   std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
 
   ConstraintDifferenceCalculator differnce_calculator_;
+
+  boost::shared_ptr<TimeModifier> time_modifier;
 };
 
 

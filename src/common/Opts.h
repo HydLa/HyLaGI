@@ -50,7 +50,6 @@ struct Opts {
   int timeout_calc;
   int max_loop_count;
   int max_phase;
-  int max_phase_expanded;
   SearchMethod search_method;
 };
 

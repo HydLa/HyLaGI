@@ -160,10 +160,31 @@ HASimulator::ha_result_t HASimulator::get_ha(ha_results_t ha_results){
   return cc;
 }
 
-void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t vm){
-  // parameter_map の適用
-  phase_simulator_->substitute_parameter_condition(pr, vm);
+void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t pm)
+{
+  HYDLA_LOGGER_DEBUG("");
+	// 変数に代入
+	variable_map_t ret;
+  variable_map_t &vm = pr->variable_map;
+  for(auto var_entry : vm)
+  {
+    if(var_entry.second.undefined())continue;
+    assert(var_entry.second.unique());
+    value_t tmp_val = var_entry.second.get_unique_value();
+    backend->call("substituteParameterCondition",
+                   2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
+    var_entry.second.set_unique_value(tmp_val);
+  }
+
+	// 時刻にも代入
+  backend->call("substituteParameterCondition",
+                 2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
+	if(pr->phase_type == IntervalPhase){
+    backend->call("substituteParameterCondition",
+                   2, "vlnmp", "vl", &pr->end_time, &pm, &pr->end_time);
+	}
 }
+
 
 parameter_map_t HASimulator::update_vm(phase_result_sptr_t pr, parameter_map_t vm_pre){
   parameter_map_t vm;

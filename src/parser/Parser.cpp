@@ -44,7 +44,7 @@ bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUA
           int INT_INDEX = (int)std::stof(LIST_INDEX->get_number());      \
           Parser ELEMENT_PARSER(list_map[NAME][INT_INDEX]+ADDITIONAL);   \
           ELEMENT_PARSER.set_list(list_map);                             \
-          RET = ELEMENT_PARSER.FUNCTION;                               \
+          RET = ELEMENT_PARSER.FUNCTION;                                 \
           if(!ELEMENT_PARSER.parse_ended()){                             \
             RET = TYPE();                                                \
           }                                                              \
@@ -345,7 +345,9 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
     // actual_args
     args = actual_args();
     if(!args.empty()){
-      for(auto arg : args) ret->add_actual_arg(arg);
+      for(auto arg : args){
+        ret->add_actual_arg(arg);
+      }
     }
     return ret;
   }
@@ -689,6 +691,17 @@ node_sptr Parser::expression(){
 /// arithmetic := arith_term (("+"|"-") arith_term)*
 node_sptr Parser::arithmetic(){
   node_sptr ret;
+  position_t position = lexer.get_current_position();
+  Token token = lexer.get_token();
+  // list_element
+  if(token == IDENTIFIER || token == ALPHABET){
+    node_sptr ret;
+    std::string name = lexer.get_current_token_string();
+    std::map<std::string,std::string> null_map;
+    list_element(ret,node_sptr,expression(),name,null_map,"");
+    if(ret) return ret;
+  }
+  lexer.set_current_position(position);
   // arith_term
   if((ret = arith_term())){
     position_t position = lexer.get_current_position();
@@ -956,11 +969,17 @@ boost::shared_ptr<Variable> Parser::variable(std::map<std::string, std::string> 
   std::string name;
   boost::shared_ptr<Variable> ret;
   // identifier
+  position_t position = lexer.get_current_position();
   if((name = identifier()) != ""){
     list_element(ret, boost::shared_ptr<Variable>, variable(bound_vars), name, bound_vars, ""); 
     if(ret) return ret;
-    return boost::shared_ptr<Variable>(new Variable(name));
+    position_t tmp_position = lexer.get_current_position();
+    if(lexer.get_token () != LEFT_BOX_BRACKETS){
+      lexer.set_current_position(tmp_position);
+      return boost::shared_ptr<Variable>(new Variable(name));
+    }
   }
+  lexer.set_current_position(position);
   return boost::shared_ptr<Variable>();
 }
 
@@ -1137,6 +1156,7 @@ std::string Parser::identifier(){
 node_sptr Parser::number(){
   position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
+
   if(token == NUMBER){
     std::string str = lexer.get_current_token_string();
     std::string num = "";
@@ -1311,6 +1331,18 @@ list_t Parser::list_conditions(
             ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
           }
           return ret;
+        }else{
+          Token token = lexer.get_token();
+          if(token == COMMA){
+            list_conditions(bound_vars, elements_of_list);
+            return ret;
+          }else if(token == RIGHT_BRACES){
+            return ret;
+          }
+          if(token != COMMA && token != RIGHT_BRACES){
+            error_occurred(lexer.get_current_position(), "expected \",\" or \"}\" after =!=");
+            return ret;
+          }
         }
       }
     }
@@ -1338,6 +1370,9 @@ list_t Parser::list_conditions(
             for(auto var : tmp) ret.push_back(var);
           }else if(token == RIGHT_BRACES){
             ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
+          }else{
+            error_occurred(lexer.get_current_position(), "expected \",\" or \"}\" after =!=");
+            return ret;
           }
         }
         return ret;
@@ -1437,8 +1472,11 @@ list_t Parser::list_factor(std::string list_name, std::map<std::string, std::str
     }
     if(token == RIGHT_BRACES){
       std::string var_tmp = "";
+      int p = 0;
       for(auto ch : contents_of_list){
-        if(ch != ','){
+        if(ch == '(') p++;
+        if(ch == ')') p--;
+        if(ch != ',' || p > 0){
           var_tmp += ch;
         }else{
           ret.push_back(var_tmp);

@@ -9,7 +9,7 @@ using namespace hydla::symbolic_expression;
 namespace hydla {
 namespace simulator {
 
-PrevReplacer::PrevReplacer(parameter_map_t& map, phase_result_sptr_t &phase, Simulator &simulator, bool approx):parameter_map_(map), prev_phase_(phase), simulator_(simulator), approx_(approx)
+PrevReplacer::PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator &simulator, bool approx):parameter_map_(map), prev_phase_(phase), simulator_(simulator), approx_(approx)
 {}
 
 PrevReplacer::~PrevReplacer()
@@ -49,10 +49,10 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
     HYDLA_LOGGER_DEBUG_VAR(v_name);
     HYDLA_LOGGER_DEBUG_VAR(diff_cnt);
     variable_t variable(v_name, diff_cnt);
-    ValueRange range = prev_phase_->variable_map[variable];
+    ValueRange range = prev_phase_.variable_map[variable];
   
     // replace variables in the range with their values
-    VariableReplacer v_replacer(prev_phase_->variable_map);
+    VariableReplacer v_replacer(prev_phase_.variable_map);
     v_replacer.replace_range(range);
 
     if(range.unique())
@@ -61,8 +61,8 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
     }
     else
     {
-      new_child_ = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase_->id));
-      parameter_t param(v_name, diff_cnt, prev_phase_->id);
+      new_child_ = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase_.id));
+      parameter_t param(v_name, diff_cnt, prev_phase_.id);
 
       if(!parameter_map_.count(param))
       {
@@ -76,17 +76,17 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
           range.set_upper_bound(value_t("1"), range.get_upper_bound().include_bound);
           range.set_lower_bound(value_t("-1"), range.get_lower_bound().include_bound);
           value_t new_value(mr.midpoint + mr.radius * value_t(new_child_));
-          prev_phase_->variable_map[variable] = new_value;
+          prev_phase_.variable_map[variable] = new_value;
           new_child_ = new_value.get_node();
         }
         else
         {
-          prev_phase_->variable_map[variable] = value_t(new_child_);
+          prev_phase_.variable_map[variable] = value_t(new_child_);
         }
 
         simulator_.introduce_parameter(variable, prev_phase_, range);
         parameter_map_[param] = range;
-        prev_phase_->parameter_map[param] = parameter_map_[param];
+        prev_phase_.parameter_map[param] = parameter_map_[param];
       }
     }
   }

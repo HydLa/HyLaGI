@@ -26,14 +26,12 @@ public:
     BRANCH_PAR
   } CheckEntailmentResult;
 
-
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
 
   virtual ~ConsistencyChecker();
 
   CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse);
-
 
   /**
    * Get inconsistent module sets in the last check_consistency
@@ -56,8 +54,8 @@ public:
 
   void set_prev_map(const variable_map_t *);
 
-  void send_init_equation(Variable &var, std::string fmt);
-  void send_prev_constraint(Variable &var);
+
+  std::vector<variable_map_t> get_result_maps();
 
   /// reset internal counters
   void reset_count();
@@ -65,12 +63,16 @@ public:
   int get_backend_check_consistency_count();
 
 private:
-  int backend_check_consistency_count;
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   std::map<std::string, int> get_differential_map(variable_set_t &);
+  void send_init_equation(Variable &var, std::string fmt);
+  void send_prev_constraint(Variable &var);
+
   backend_sptr_t backend;
-  const variable_map_t* prev_map;
+  const variable_map_t *prev_map;
+  std::vector<variable_map_t> result_maps;
+  int backend_check_consistency_count;
   std::vector<module_set_t> inconsistent_module_sets;
 };
 

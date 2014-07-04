@@ -98,7 +98,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 }
 
 
-parameter_t Simulator::introduce_parameter(const variable_t &var,const phase_result_sptr_t &phase, const ValueRange &range)
+parameter_t Simulator::introduce_parameter(const variable_t &var,const PhaseResult &phase, const ValueRange &range)
 {
   parameter_t param(var, phase);
   return introduce_parameter(param, range);

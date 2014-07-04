@@ -8,6 +8,7 @@
 
 #include "VariableFinder.h"
 #include "VariableReplacer.h"
+#include "SimulateError.h"
 
 using namespace std;
 using namespace boost;
@@ -224,12 +225,15 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
+  result_maps.clear();
+  result_maps.push_back(variable_map_t());
   HYDLA_LOGGER_DEBUG("");
   for(int i = 0; i < relation_graph.get_connected_count(); i++)
   {
-
     ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
 
+    HYDLA_LOGGER_DEBUG_VAR(tmp_constraint_store);
+    HYDLA_LOGGER_DEBUG_VAR(relation_graph.get_modules(i).get_name());
     if(reuse && !difference_calculator.is_difference(tmp_constraint_store)) continue;
 
     VariableFinder finder;
@@ -243,7 +247,6 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
     tmp_result = check_consistency(tmp_constraint_store, finder, phase);
 
-
     // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）
     if(!tmp_result.consistent_store.consistent())
     {
@@ -253,6 +256,24 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     else
     {
       result.consistent_store.add_constraint_store(tmp_result.consistent_store);
+      vector<variable_map_t> create_result;
+      if(phase == PointPhase)
+      {
+        backend->call("createVariableMap", 0, "", "cv", &create_result);
+      }
+      else
+      {
+        backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
+      }
+      // TODO: deal with multiple variable map
+      if(create_result.size() != 1)
+      {
+        throw SimulateError("result variable map is not single.");
+      }
+      for(auto var_entry : create_result[0])
+      {
+        result_maps[0][var_entry.first] = var_entry.second;
+      }
     }
   }
 
@@ -267,6 +288,11 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 void ConsistencyChecker::set_prev_map(const variable_map_t* vm)
 {
   prev_map = vm;
+}
+
+vector<variable_map_t> ConsistencyChecker::get_result_maps()
+{
+  return result_maps;
 }
 
 vector<module_set_t> ConsistencyChecker::get_inconsistent_module_sets()

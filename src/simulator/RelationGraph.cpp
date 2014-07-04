@@ -2,6 +2,7 @@
 #include <iostream>
 #include "VariableFinder.h"
 #include "Logger.h"
+#include "SimulateError.h"
 
 using namespace std;
 
@@ -143,7 +144,7 @@ void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintS
     variables = finder.get_all_variable_set();
     for(auto variable : variables)
     {
-      assert(variable_node_map.count(variable));
+      if(!variable_node_map.count(variable))continue;
       VariableNode *var_node = variable_node_map[variable];
       variable_set_t vars;
       visit_node(var_node, constraints, module_set, vars);
@@ -163,9 +164,9 @@ void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
-  assert(variable_node_map.count(var));
+  if(!variable_node_map.count(var))return;
   VariableNode *var_node = variable_node_map[var];
-  assert(var_node != nullptr);
+  if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
   variable_set_t vars;
   visit_node(var_node, constraints, module_set, vars);
 }
@@ -230,7 +231,7 @@ int RelationGraph::get_connected_count()
 
 void RelationGraph::set_adopted(const module_t &mod, bool adopted)
 {
-  assert(module_constraint_nodes_map.count(mod));
+  if(!module_constraint_nodes_map.count(mod))throw HYDLA_SIMULATE_ERROR("module " + mod.first + " is not found");
   for(auto constraint_node : module_constraint_nodes_map[mod])
   {
     constraint_node->module_adopted = adopted;
@@ -269,14 +270,14 @@ void RelationGraph::set_expanded_all(bool expanded)
 RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
-  assert(index < connected_variables_vector.size());
+  if(index >= connected_variables_vector.size())throw HYDLA_SIMULATE_ERROR("index is out of range");
   return connected_variables_vector[index];
 }
 
 ConstraintStore RelationGraph::get_constraints(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
-  assert(index < connected_constraints_vector.size());
+  if(index >= connected_constraints_vector.size())throw HYDLA_SIMULATE_ERROR("index is out of range");
   return connected_constraints_vector[index];
 }
 
@@ -325,7 +326,7 @@ ConstraintStore RelationGraph::get_adopted_constraints()
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
-  assert(index < connected_modules_vector.size());
+  if(index >= connected_modules_vector.size())throw HYDLA_SIMULATE_ERROR("index is out of range");
   return connected_modules_vector[index];
 }
 
@@ -376,13 +377,13 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
   }
   else if(visit_mode == EXPANDING)
   {
-    assert(constraint_node_map.count(node));
-    constraint_node_map[node]->expanded = true;
+    if(constraint_node_map.count(node)) constraint_node_map[node]->expanded = true;
+    else HYDLA_LOGGER_WARN("(@RelationGraph) try to expand unknown node: ", get_infix_string(node));
   }
   else if(visit_mode == UNEXPANDING)
   {
-    assert(constraint_node_map.count(node));
-    constraint_node_map[node]->expanded = false;
+    if(constraint_node_map.count(node)) constraint_node_map[node]->expanded = false;
+    else HYDLA_LOGGER_WARN("(@RelationGraph) try to unexpand unknown node: ", get_infix_string(node));
   }
 }
 

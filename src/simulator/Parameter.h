@@ -11,8 +11,8 @@ namespace simulator {
 class Parameter{
   public:
 
-  Parameter(const variable_t &variable, const phase_result_sptr_t &phase)
-  :variable_name_(variable.get_name()), differential_count_(variable.get_differential_count()), phase_id_(phase->id)
+  Parameter(const variable_t &variable, const PhaseResult &phase)
+  :variable_name_(variable.get_name()), differential_count_(variable.get_differential_count()), phase_id_(phase.id)
   {
   }
 

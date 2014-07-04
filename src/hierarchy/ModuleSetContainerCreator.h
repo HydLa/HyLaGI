@@ -62,6 +62,16 @@ public:
     return ret;
   }
 
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
+  {
+    container_name_+="PI";
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
+  {
+    container_name_+="E";
+  }
+
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
   {
     accept(node->get_lhs());
