@@ -76,8 +76,18 @@ void Simulator::reset_result_root()
 
 void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {    
-  ModuleSetContainerInitializer::init<hierarchy::IncrementalModuleSet>(
-      parse_tree, module_set_container_);
+  if(opts_->static_generation_of_module_sets){
+    if(opts_->nd_mode){
+      ModuleSetContainerInitializer::init<hierarchy::ModuleSetGraph>(
+          parse_tree, module_set_container_);
+    }else{
+      ModuleSetContainerInitializer::init<hierarchy::ModuleSetList>(
+          parse_tree, module_set_container_);
+    }
+  }else{ 
+    ModuleSetContainerInitializer::init<hierarchy::IncrementalModuleSet>(
+        parse_tree, module_set_container_);
+  }
 }
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)

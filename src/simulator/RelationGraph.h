@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Variable.h"
-#include "IncrementalModuleSet.h"
 #include "Node.h"
+#include "ModuleSetContainer.h"
 #include "DefaultTreeVisitor.h"
 #include "ConstraintStore.h"
 

@@ -104,6 +104,7 @@ void setup_simulator_opts(Opts& opts)
   opts.max_time      = po.get<std::string>("time");
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
+  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") > 0;
   opts.dump_in_progress = po.count("dump_in_progress")>0;
   opts.dump_relation = po.count("dump_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;

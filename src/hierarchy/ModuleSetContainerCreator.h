@@ -31,8 +31,6 @@ public:
   typedef std::map<std::string, int>            mod_name_map_t;
   typedef std::set<ModuleSet>                   module_set_set_t;
  
- 
-
   ModuleSetContainerCreator()
   {}
 
@@ -47,6 +45,7 @@ public:
     mod_set_stack_.clear();
     container_name_.clear();
     mod_name_map_.clear();
+    constraint_level_ = 0;
 
     parse_tree->dispatch(this);
     assert(mod_set_stack_.size() <= 1);
@@ -58,7 +57,7 @@ public:
     else {
       ret.reset(new Container);
     }
-    ret->generate_required_ms();
+    ret->init();
     return ret;
   }
 
@@ -173,12 +172,15 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
   {    
+    constraint_level_++;
     container_name_.clear();
 
     // 左辺：弱い制約
     node->get_lhs()->accept(node->get_lhs(), this);
     container_sptr lhs(mod_set_stack_.back());
     mod_set_stack_.pop_back();
+
+    constraint_level_--;
 
     // 右辺：強い制約
     node->get_rhs()->accept(node->get_rhs(), this);
@@ -201,7 +203,8 @@ public:
 
     // 右辺
     node->get_rhs()->accept(node->get_rhs(), this);
-    mod_set_stack_.back()->add_parallel(*lhs);
+    if(constraint_level_ == 0) mod_set_stack_.back()->add_required_parallel(*lhs);
+    else mod_set_stack_.back()->add_parallel(*lhs);
   }
 
 private:
@@ -223,6 +226,8 @@ private:
    * ModuleSets which are generated before
    */
   module_set_set_t generated_mss_;
+
+  int constraint_level_;
 };
 
 } // namespace hierarchy

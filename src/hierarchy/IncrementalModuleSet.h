@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include "ModuleSet.h"
+#include "ModuleSetContainer.h"
 
 namespace hydla {
 namespace hierarchy {
@@ -10,17 +10,16 @@ namespace hierarchy {
  * 解候補モジュール集合の集合をインクリメンタルに生成していくクラス
  *
  */
-class IncrementalModuleSet {
+class IncrementalModuleSet : public ModuleSetContainer{
 public:
 
   typedef ModuleSet::module_t module_t;
   typedef ModuleSet::module_list_const_iterator module_list_const_iterator;
 
-  typedef std::set<ModuleSet> module_set_set_t;
   typedef std::map<module_t, ModuleSet> node_relations_data_t;
   
   IncrementalModuleSet();
-  IncrementalModuleSet(ModuleSet &m);
+  IncrementalModuleSet(ModuleSet ms);
   IncrementalModuleSet(const IncrementalModuleSet& im);
   virtual ~IncrementalModuleSet();
 
@@ -32,12 +31,6 @@ public:
   std::vector<ModuleSet> get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms);
 
   /**
-   * parents_data_内の余分なデータを削除し、
-   * requiredなものを分離する
-   */
-  void format_parents_data();
-
-  /**
    * 並列合成として集合を合成する
    */
   void add_parallel(IncrementalModuleSet&);
@@ -45,7 +38,7 @@ public:
   /**
    * 並列合成として集合を合成する（required制約扱い）
    */
-  void add_required_parallel(IncrementalModuleSet&);
+  void add_required_parallel(IncrementalModuleSet& im){ add_parallel(im); }
   
   /**
    * 弱合成として集合を合成する
@@ -89,13 +82,6 @@ public:
   ModuleSet get_module_set(){ return *ms_to_visit_.rbegin(); }
 
   /**
-   * ms_to_visit_内のモジュール集合で
-   * 現在のモジュール集合が包含するモジュール集合を
-   * ms_to_visit_から外す
-   */
-  virtual void remove_included_ms_by_current_ms();
-
-  /**
    * @ param ms:矛盾するモジュールセット
    * ms_to_visit_内のmsを包含するモジュールセットを削除し、
    * ms_to_visit_の先頭モジュールセットからmsを包含しないモジュールセットで
@@ -119,19 +105,9 @@ public:
   virtual ModuleSet get_max_module_set() const;
 
   /**
-   * 採用されていないモジュールの集合を返す
+   * initialize 
    */
-  virtual ModuleSet unadopted_module_set();
-
-  /**
-   * 探索対象の初期状態を返す
-   */
-  virtual module_set_set_t get_full_ms_list() const;
-
-  /**
-   * generate module sets which has only required modules
-   */
-  virtual void generate_required_ms();
+  virtual void init();
 
 private:
   /**
@@ -157,10 +133,6 @@ private:
   node_relations_data_t weaker_modules_;
   /// required module set
   ModuleSet required_ms_;
-  /// a module set which has all modules
-  ModuleSet maximal_module_set_;
-  /// module set list which has generated module sets
-  module_set_set_t ms_to_visit_;
 };
 
 

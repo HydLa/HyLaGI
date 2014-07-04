@@ -15,8 +15,8 @@ namespace hierarchy {
 IncrementalModuleSet::IncrementalModuleSet()
 {}
 
-IncrementalModuleSet::IncrementalModuleSet(ModuleSet &m) :
-maximal_module_set_(m)
+IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms):
+  ModuleSetContainer(ms)
 {}
 
 IncrementalModuleSet::IncrementalModuleSet(const IncrementalModuleSet& im)
@@ -191,21 +191,6 @@ std::ostream& IncrementalModuleSet::dump_node_trees(std::ostream& s) const
  * そのモジュール集合が包含しているモジュール集合を
  * 探索対象から外す
  */
-void IncrementalModuleSet::remove_included_ms_by_current_ms(){
-  /// current は現在のモジュール集合
-  ModuleSet current = get_module_set();
-  module_set_set_t::iterator lit = ms_to_visit_.begin();
-  while(lit!=ms_to_visit_.end()){
-    /**
-     * ms_to_visit_内のモジュール集合で
-     * currentが包含するモジュール集合を削除
-     */
-    if(current.including(*lit)){
-      lit = ms_to_visit_.erase(lit);
-    }
-    else lit++;
-  }
-}
 
 bool IncrementalModuleSet::check_same_ms_generated(module_set_set_t &new_mss, ModuleSet &ms)
 {
@@ -221,8 +206,11 @@ void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
   }
 }
 
-void IncrementalModuleSet::generate_required_ms()
+void IncrementalModuleSet::init()
 {
+  full_module_set_set_.clear();
+  full_module_set_set_.insert(maximal_module_set_);
+
   for(auto ms : maximal_module_set_)
     if(!stronger_modules_.count(ms)) required_ms_.add_module(ms);
 
@@ -287,22 +275,9 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
   update_by_new_mss(new_mss);
 }
 
-ModuleSet IncrementalModuleSet::unadopted_module_set(){
-  ModuleSet ret = get_max_module_set();
-  ret.erase(get_module_set());
-  return ret;
-}
-
 /// 最も要素数の多いモジュール集合を返す
   ModuleSet IncrementalModuleSet::get_max_module_set() const{
     return maximal_module_set_;
-  }
-
-/// 探索対象の初期状態を返す
-  IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() const{
-    module_set_set_t ret;
-    ret.insert(maximal_module_set_);
-    return ret;
   }
 
 // 探索対象を引数のmssが示す状態にする
@@ -312,8 +287,7 @@ ModuleSet IncrementalModuleSet::unadopted_module_set(){
 
 // 探索対象を初期状態に戻す
   void IncrementalModuleSet::reset(){
-    ms_to_visit_.clear();
-    ms_to_visit_.insert(maximal_module_set_);
+    ms_to_visit_ = get_full_ms_list();
   }
 
 } // namespace hierarchy

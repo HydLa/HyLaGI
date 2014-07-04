@@ -7,7 +7,7 @@
 #include "Variable.h"
 #include "ValueRange.h"
 #include "ModuleSet.h"
-#include "IncrementalModuleSet.h"
+#include "ModuleSetContainer.h"
 #include "ConstraintStore.h"
 
 #include "Timer.h"
@@ -73,7 +73,7 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
 
-typedef boost::shared_ptr<hierarchy::IncrementalModuleSet> module_set_container_sptr;
+typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
 

@@ -30,7 +30,7 @@ class RelationGraph;
 typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
 
 typedef hierarchy::ModuleSet                              module_set_t;
-typedef hierarchy::IncrementalModuleSet                     module_set_container_t;
+typedef hierarchy::ModuleSetContainer                     module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
 typedef std::set<module_set_t>                         module_set_set_t;
 typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;

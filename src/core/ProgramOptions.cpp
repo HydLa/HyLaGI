@@ -68,6 +68,7 @@ void ProgramOptions::init_descriptions()
      "  m or Mathematica\n"
      "  r or Reduce")
      
+    ("static_generation_of_module_sets", "simulation with static generation of module sets")
 
     ("nd", "nondeterministic mode")
     

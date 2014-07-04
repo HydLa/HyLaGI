@@ -16,6 +16,7 @@
 
 // constraint hierarchy
 #include "ModuleSetContainerCreator.h"
+#include "IncrementalModuleSet.h"
 
 #include "SequentialSimulator.h"
 #include "SignalHandler.h"
