@@ -227,7 +227,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   todo->profile["CreateVariableMap"] += vm_timer.get_elapsed_us();
 
   if(opts_->reuse && todo->in_following_step()){
-   phase->changed_constraints = differnce_calculator_.get_changing_constraints();
+   phase->changed_constraints = differnce_calculator_.get_difference_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent.get() && phase->parent->parent.get())
     {
       for(auto var_entry : phase->parent->parent->variable_map)
@@ -415,8 +415,8 @@ simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulat
 void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, parameter_map_t pm)
 {
   HYDLA_LOGGER_DEBUG("");
-	// 変数に代入
-	variable_map_t ret;
+  // 変数に代入
+  variable_map_t ret;
   variable_map_t &vm = pr->variable_map;
   for(auto var_entry : vm)
   {
@@ -428,13 +428,13 @@ void PhaseSimulator::substitute_parameter_condition(phase_result_sptr_t pr, para
     var_entry.second.set_unique_value(tmp_val);
   }
 
-	// 時刻にも代入
+  // 時刻にも代入
   backend_->call("substituteParameterCondition",
                  2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
-	if(pr->phase_type == IntervalPhase){
+  if(pr->phase_type == IntervalPhase){
     backend_->call("substituteParameterCondition",
                    2, "vlnmp", "vl", &pr->end_time, &pm, &pr->end_time);
-	}
+  }
 }
 
 void PhaseSimulator::replace_prev2parameter(
@@ -537,15 +537,15 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
-    differnce_calculator_.clear_changing();
+    differnce_calculator_.clear_difference();
     if(state->phase_type == PointPhase){
-      ConstraintStore changing_constraints;
+      ConstraintStore difference_constraints;
       set_symmetric_difference(state->parent->current_constraints,
-        relation_graph_->get_constraints(), changing_constraints );
-      differnce_calculator_.set_changing_constraints(changing_constraints);
+        relation_graph_->get_constraints(), difference_constraints );
+      differnce_calculator_.set_difference_constraints(difference_constraints);
     }
     else{
-      differnce_calculator_.set_changing_constraints(state->parent->changed_constraints);
+      differnce_calculator_.set_difference_constraints(state->parent->changed_constraints);
     }
   }
 
@@ -593,17 +593,19 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
         }
 
         if(opts_->reuse && state->in_following_step()){
-          if(!differnce_calculator_.is_changing((*it)->get_guard())
-            || differnce_calculator_.is_continuous((*it)->get_guard())){
-            if(state->parent->positive_asks.count(*it)){
-              positive_asks.insert(*it);
-              relation_graph_->set_expanded((*it)->get_child(), true);
-              expanded = true;
-            }else{
-              negative_asks.insert(*it);
+          if(!state->discrete_causes.find(*it)->second){
+            if(!differnce_calculator_.is_difference((*it)->get_guard())
+              || differnce_calculator_.is_continuous(state->parent, (*it)->get_guard())){
+              if(state->parent->positive_asks.count(*it)){
+                positive_asks.insert(*it);
+                relation_graph_->set_expanded((*it)->get_child(), true);
+                expanded = true;
+              }else{
+                negative_asks.insert(*it);
+              }
+              unknown_asks.erase(it++);
+              continue;
             }
-            unknown_asks.erase(it++);
-            continue;
           }
         }
 
@@ -679,7 +681,7 @@ PhaseSimulator::calculate_constraint_store(
   for(int i = 0; i < relation_graph_->get_connected_count(); i++)
   {
     if(opts_->reuse && todo->in_following_step() &&
-      !differnce_calculator_.is_changing(relation_graph_->get_constraints(i))) continue;
+      !differnce_calculator_.is_difference(relation_graph_->get_constraints(i))) continue;
 
     for(auto constraint : relation_graph_->get_constraints(i))
     {
@@ -951,14 +953,14 @@ PhaseSimulator::todo_list_t
         next_todo->prev_map = apply_time_to_vm(vm_before_time_shift, candidate.minimum.time);
         ret.push_back(next_todo);
       }
-    	// HAConverter, HASimulator用にTIME_LIMITのtodoも返す
-    	if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
-    	{
+      // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+      if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
+      {
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
         ret.push_back(next_todo);
-    	}
+      }
 
       if(one_phase || ++result_it >= results.size())break;
       next_todo = create_new_simulation_phase(next_todo);

@@ -230,7 +230,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
     ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
 
-    if(reuse && !difference_calculator.is_changing(tmp_constraint_store)) continue;
+    if(reuse && !difference_calculator.is_difference(tmp_constraint_store)) continue;
 
     VariableFinder finder;
     variable_set_t related_variables = relation_graph.get_variables(i);
