@@ -139,12 +139,6 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
-  /**
-   * 与えられた制約モジュール集合の閉包計算を行い，無矛盾性を判定するとともに対応する変数表を返す．
-   */
-  virtual ConstraintStore calculate_constraint_store(const module_set_t& ms,
-                           simulation_todo_sptr_t& state);
-
   void set_symmetric_difference(
     const ConstraintStore& parent_constraints,
     const ConstraintStore& current_constraints,

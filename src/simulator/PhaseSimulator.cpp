@@ -131,12 +131,13 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     timer::Timer ms_timer;
     result_list_t tmp_result = simulate_ms(ms, todo);
 
+    todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     if(!tmp_result.empty())
     {
       has_next = true;
       result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
+      if(!(opts_->nd_mode || opts_->interactive_mode))break;
     }
-    todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     todo->positive_asks.clear();
     todo->negative_asks.clear();
     relation_graph_->set_expanded_all(false);
@@ -172,74 +173,56 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 
   relation_graph_->set_adopted(ms);
 
-  result_list_t result;
-  // TODO:変数の値による分岐も無視している？
+  timer::Timer cc_timer;
+  bool consistent = calculate_closure(todo, ms);
+  todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
+  todo->profile["# of CalculateClosure"]++;
 
-  backend_->call("resetConstraintForVariable", 0, "", "");
-
-  ConstraintStore store =
-    calculate_constraint_store(ms, todo);
-
-  if(!store.consistent())
+  if(!consistent)
   {
-
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       module_set_container->generate_new_ms(todo->maximal_mss, module_set);
     }
-    return result;
+    return result_list_t(); 
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");
-
+  
   module_set_container->remove_included_ms_by_current_ms();
-  if(!(opts_->nd_mode || opts_->interactive_mode)) module_set_container->reset(module_set_set_t());
   todo->maximal_mss.insert(ms);
 
   phase_result_sptr_t phase = make_new_phase(todo);
   phase->module_set = ms;
 
-  timer::Timer vm_timer;
-  // 変数表はここで作成する
-  vector<variable_map_t> create_result;
-  if(phase->phase_type == PointPhase)
-  {
-    backend_->call("createVariableMap", 1, "csn", "cv", &store, &create_result);
-  }
-  else
-  {
-    backend_->call("createVariableMapInterval", 1, "cst", "cv", &store, &create_result);
-  }
+  result_list_t result;
+  
+  vector<variable_map_t> create_result = consistency_checker->get_result_maps();
   if(create_result.size() != 1)
   {
     throw SimulateError("result variable map is not single.");
   }
   phase->variable_map = create_result[0];
-  todo->profile["CreateVariableMap"] += vm_timer.get_elapsed_us();
 
   if(opts_->reuse && todo->in_following_step()){
-   phase->changed_constraints = differnce_calculator_.get_changing_constraints();
-   if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent)
-    {
-      for(auto var_entry : phase->parent->parent->variable_map)
-      {
-        auto var = var_entry.first;
-        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
-        {
-          phase->variable_map[var] =
-            phase->parent->parent->variable_map[var];
-        }
-      }
+    phase->changed_constraints = differnce_calculator_.get_changing_constraints();
+    variable_map_t vm_to_take_over;
+    bool take_over = false;
+    if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
+      vm_to_take_over = phase->parent->parent->variable_map;
+      take_over = true;
     }
-    else if(phase->phase_type == PointPhase && phase->parent)
-    {
-      for(auto var_entry : todo->prev_map)
+    else if(phase->phase_type == PointPhase && phase->parent){
+      vm_to_take_over = todo->prev_map;
+      take_over = true;
+    }
+    if(take_over){
+      for(auto var_entry : vm_to_take_over)
       {
         auto var = var_entry.first;
         if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
-          phase->variable_map[var] =
-            todo->prev_map[var];
+          phase->variable_map[var] = vm_to_take_over[var];
         }
       }
     }
@@ -441,23 +424,6 @@ PhaseSimulator::node_sptr PhaseSimulator::get_break_condition()
   return break_condition_;
 }
 
-string timein(string message="")
-{
-  string ret;
-  while(1)
-  {
-    if(!message.empty()) std::cout << message << std::endl;
-    std::cout << '>' ;
-    std::cin >> ret;
-    if(!std::cin.fail()) break;
-    std::cin.clear();
-    std::cin.ignore( 1024, '\n' );
-  }
-  std::cin.clear();
-  std::cin.ignore( 1024, '\n' );
-  return ret;
-}
-
 void PhaseSimulator::set_backend(backend_sptr_t back)
 {
   backend_ = back;
@@ -599,58 +565,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     }
   }
   return true;
-}
-
-ConstraintStore
-PhaseSimulator::calculate_constraint_store(
-  const module_set_t& ms,
-  simulation_todo_sptr_t& todo)
-{
-  timer::Timer cc_timer;
-  ConstraintStore result_store;
-  bool result = calculate_closure(todo, ms);
-  todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
-  todo->profile["# of CalculateClosure"]++;
-
-  if(!result)
-  {
-    result_store.set_consistency(false);
-    return result_store;
-  }
-
-  //TODO: ここで追加するより、全体を簡約したものをつなげて持っておいた方が良さそう
-
-  ConstraintStore tmp_constraint_store;
-  for(int i = 0; i < relation_graph_->get_connected_count(); i++)
-  {
-    if(opts_->reuse && todo->in_following_step() &&
-      !differnce_calculator_.is_changing(relation_graph_->get_constraints(i))) continue;
-
-    for(auto constraint : relation_graph_->get_constraints(i))
-    {
-      tmp_constraint_store.add_constraint(constraint);
-    }
-  }
-  
-  backend_->call("resetConstraintForVariable", 0, "", "");
-  VariableFinder finder;
-  for(auto constraint : tmp_constraint_store){
-    finder.visit_node(constraint);
-  }
-  consistency_checker->add_continuity(finder, todo->phase_type);
-
-  if(todo->phase_type == PointPhase)
-  {
-    backend_->call("addConstraint", 1, "csn", "", &tmp_constraint_store);
-    backend_->call("getConstraintStorePoint", 0, "", "cs", &result_store);
-  }
-  else
-  {
-    backend_->call("addConstraint", 1, "cst", "", &tmp_constraint_store);
-    backend_->call("getConstraintStoreInterval", 0, "", "cs", &result_store);
-  }
-
-  return result_store;
 }
 
 void PhaseSimulator::set_symmetric_difference(

@@ -109,7 +109,7 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[cons_] := createVariableMap[And@@cons && pConstraint && initConstraint, variables];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
 
 publicMethod[
   createVariableMap,
@@ -125,44 +125,29 @@ publicMethod[
   ]
 ];
 
+
+createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint , timeVariables];
+
 publicMethod[
   createVariableMapInterval,
-  cons,
-  Module[
-    {sol, tStore, ret},
-    tStore = Select[cons, (!hasVariable[ #[[2]] ])&];
-    ret = {convertExprs[tStore]};
-    ret = ruleOutException[ret];
-    simplePrint[ret];
-    ret
-  ]
-];
-
-
-publicMethod[
-  getConstraintStorePoint,
-  {toReturnForm[LogicalExpand[constraint && pConstraint && initConstraint]]}
-];
-
-
-getConstraintStoreInterval[] := 
-getConstraintStoreInterval[constraint, initConstraint, timeVariables];
-
-publicMethod[
-  getConstraintStoreInterval,
   cons, initCons, vars,
   Module[
-    {sol, tStore},
+    {sol, tStore, ret},
     sol = exDSolve[cons, initCons];
+
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint || sol[[1]] === underConstraint,
       error,
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
-      toReturnForm[tStore]
+      ret = {convertExprs[tStore]};
+      ret = ruleOutException[ret];
+      simplePrint[ret];
+      ret
     ]
   ]
 ];
+
 
 (* 返す制約として不要なものを除く *)
 ruleOutException[list_] := Module[
