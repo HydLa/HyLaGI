@@ -150,14 +150,14 @@ Token Lexer::get_token()
       return MUL;
     case '<':
       if(get_current_char() == '='){
-        if(!next_char() && get_current_char() != '>'){
-          current_token_string = "<=";
-          return LESS_EQUAL;
-        }
+        next_char();
         if(get_current_char() == '>'){
           next_char();
           current_token_string = "<=>";
           return EQUIVALENT;
+        }else{
+          current_token_string = "<=";
+          return LESS_EQUAL;
         }
       }
       if(get_current_char() == '<'){
