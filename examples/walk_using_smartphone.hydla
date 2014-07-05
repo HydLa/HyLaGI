@@ -9,18 +9,20 @@ TURN_LEFT(x1,y1,v1,s1,t1,r,x2,y2) <=>
     [](((x1- + r-*cos(s1-)) - x2-)^2 + 
        ((y1- + r-*sin(s1-)) - y2-)^2 <= (r-+(2*radius-))^2 &
        (cos(s1-) * (y2- - y1-) - (x2- - x1-) * sin(s1-)) <= 0 &
-       t1- <= 0
+       t1- <= 0 & v1- > 0
                    => s1 = s1- + angle- & t1 = 5).
 
 TURN_RIGHT(x1,y1,v1,s1,t1,r,x2,y2) <=>
     [](((x1- + r-*cos(s1-)) - x2-)^2 + 
        ((y1- + r-*sin(s1-)) - y2-)^2 <= (r-+(2*radius-))^2 &
        (cos(s1-) * (y2- - y1-) - (x2- - x1-) * sin(s1-)) > 0 &
-       t1- <= 0
+       t1- <= 0 & v1- > 0
                    => s1 = s1- - angle- & t1 = 5).
 
 COLLISION(x1,y1,v1,x2,y2,v2) <=>
-    []((x1- - x2-)^2 + (y1- - y2- )^2 = (2*radius-)^2 => v1 = 0 & v2 = 0 ).
+    []((x1- - x2-)^2 + (y1- - y2- )^2 = (2*radius-)^2 & 
+       (v1- > 0 | v2- > 0)
+                   => v1 = 0 & v2 = 0 ).
 
 CONST(vs) <=> [](vs'=0).
 TIMER(time) <=> [](time' = -1).

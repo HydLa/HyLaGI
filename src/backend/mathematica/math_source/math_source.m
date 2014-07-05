@@ -466,7 +466,7 @@ Module[
                      Minimize::wksol],
          Minimize::wksol];
   (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-  minT = First[minT];
+  minT = ToRadicals[First[minT]];
   Assert[Head[minT] =!= Piecewise];
   ret = makeListFromPiecewise[minT, condition];
   (* 時刻が0となる場合を取り除く．*)
