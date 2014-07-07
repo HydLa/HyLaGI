@@ -858,18 +858,6 @@ node_sptr Parser::diff(){
 node_sptr Parser::factor(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
-  if(lexer.get_token() == VERTICAL_BAR){
-    std::string name;
-    if((name = identifier()) != ""){
-      if(list_map.find(name) != list_map.end()){
-        ret = boost::shared_ptr<Number>(new Number(std::to_string(list_map[name].size()))); 
-      }
-      if(lexer.get_token() == VERTICAL_BAR){
-        return ret;
-      }
-    }
-  }
-  lexer.set_current_position(position);
   // Pi | E
   if(lexer.get_token() == ALPHABET){
     if(lexer.get_current_token_string() == "PI"){
@@ -1472,20 +1460,43 @@ list_t Parser::list_factor(std::string list_name, std::map<std::string, std::str
   // "{" string ( "|" conditions )? "}"
   if(lexer.get_token() == LEFT_BRACES){
     position_t tmp_position = lexer.get_current_position();
-    std::string contents_of_list = "";
+    std::vector<std::string> contents_of_list;
+    std::vector<position_t> positions;
+    std::string content = "";
     Token token = lexer.get_token();
-    while(token != VERTICAL_BAR && token != RIGHT_BRACES){
-      contents_of_list += lexer.get_current_token_string();
+    while(token != RIGHT_BRACES){
+      if(token == VERTICAL_BAR){
+        positions.push_back(lexer.get_current_position());
+        contents_of_list.push_back(content);
+        content = "";
+      }else{
+        content += lexer.get_current_token_string();
+      }
       token = lexer.get_token();
     }
+    contents_of_list.push_back(content);
+    positions.push_back(lexer.get_current_position());
     std::map<std::string, std::string> var_map;
-    if(token == VERTICAL_BAR){
-      return list_conditions(var_map, contents_of_list);
+    for(int i = 0; i < positions.size()-1; i++){
+      content = "";
+      for(int j = 0; j <= i; j++){
+        if(content != "") content += "|";
+        content += contents_of_list[j];
+      }
+      list_t tmp_list;
+      lexer.set_current_position(positions[i]);
+      if(!((tmp_list = list_conditions(var_map, content)).empty())) return tmp_list;
     }
+    content = "";
+    for(auto cont : contents_of_list){
+      if(content != "") content += "|";
+      content += cont;
+    }
+    lexer.set_current_position(positions.back());
     if(token == RIGHT_BRACES){
       std::string var_tmp = "";
       int p = 0;
-      for(auto ch : contents_of_list){
+      for(auto ch : content){
         if(ch == '(') p++;
         if(ch == ')') p--;
         if(ch != ',' || p > 0){
