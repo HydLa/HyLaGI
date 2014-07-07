@@ -214,8 +214,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
         if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
           // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
-//          phase->variable_map[var] = time_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
-          phase->variable_map[var] = vm_to_take_over[var];
+          phase->variable_map[var] = time_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
         }
       }
     }

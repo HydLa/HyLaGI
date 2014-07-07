@@ -458,7 +458,7 @@ Module[
   cause = causeAndID[[1]];
   (* 成り立つtの最小値を求める *)
   
-  minT = Quiet[Check[minT = Minimize[{t, cause}, {t}],
+  minT = Quiet[Check[minT = Minimize[{t, cause && t>0}, {t}],
                      onTime = False;minT,
                      Minimize::wksol],
          {Minimize::wksol, Minimize::infeas} ];
