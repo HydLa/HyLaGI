@@ -685,6 +685,43 @@ node_sptr Parser::command(){
 
 /// expression := arithmetic
 node_sptr Parser::expression(){ 
+  position_t position = lexer.get_current_position();
+  std::string name;
+  if((name = identifier()) != ""){
+    if(name == "sum"){
+      if(lexer.get_token() == LEFT_PARENTHESES){
+        list_t tmp_list;
+        std::map<std::string,std::string> null_map;
+        if(!((tmp_list = list("",null_map)).empty())){
+          std::string content = "";
+          for(auto l : tmp_list){
+            if(content != "") content += "+";
+            content += "(" + l + ")";
+          }
+          Parser sum_expression_parser(content);
+          sum_expression_parser.set_list(list_map);
+          node_sptr sum_expression = sum_expression_parser.expression();
+          if(sum_expression_parser.parse_ended()){
+            if(lexer.get_token() == RIGHT_PARENTHESES){
+              return sum_expression;
+            }
+          }
+        }
+      }
+    }
+    /*
+    node_sptr ret;
+    std::string name = lexer.get_current_token_string();
+    std::map<std::string,std::string> null_map;
+    std::cout << "expression list : " << name << std::endl;
+    list_element(ret,node_sptr,expression(),name,null_map,"");
+    if(ret){
+      std::cout << "expression list ret : " << name << std::endl;
+      return ret;
+    }
+    */
+  }
+  lexer.set_current_position(position);
   return arithmetic(); 
 }
 
@@ -692,16 +729,6 @@ node_sptr Parser::expression(){
 node_sptr Parser::arithmetic(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
-  Token token = lexer.get_token();
-  // list_element
-  if(token == IDENTIFIER || token == ALPHABET){
-    node_sptr ret;
-    std::string name = lexer.get_current_token_string();
-    std::map<std::string,std::string> null_map;
-    list_element(ret,node_sptr,expression(),name,null_map,"");
-    if(ret) return ret;
-  }
-  lexer.set_current_position(position);
   // arith_term
   if((ret = arith_term())){
     position_t position = lexer.get_current_position();
@@ -858,14 +885,18 @@ node_sptr Parser::diff(){
 node_sptr Parser::factor(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
+  std::string name;
   // Pi | E
-  if(lexer.get_token() == ALPHABET){
+  if((name = identifier()) != ""){
     if(lexer.get_current_token_string() == "PI"){
       return boost::shared_ptr<Pi>(new Pi());
     }
     if(lexer.get_current_token_string() == "E"){
       return boost::shared_ptr<E>(new E());
     }
+    std::map<std::string,std::string> null_map;
+    list_element(ret, node_sptr, expression(), name, null_map, ""); 
+    if(ret) return ret;
   }
   lexer.set_current_position(position);
   boost::shared_ptr<ArbitraryNode> func;
@@ -1156,6 +1187,14 @@ std::string Parser::identifier(){
 node_sptr Parser::number(){
   position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
+
+  if(token == IDENTIFIER || token == ALPHABET){
+    node_sptr ret;
+    std::string name = lexer.get_current_token_string();
+    std::map<std::string, std::string> null_map;
+    list_element(ret, node_sptr, number(), name, null_map, ""); 
+    if(ret) return ret;
+  }
 
   if(token == NUMBER){
     std::string str = lexer.get_current_token_string();
