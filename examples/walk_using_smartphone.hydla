@@ -3,7 +3,7 @@ INIT(x,y,v,s,time,x0,y0,v0,s0) <=>
     x = x0 & y = y0 & x' = v0*cos(s0) & y' = v0*sin(s0) & s = s0 & v = v0 & time = 0.
 
 ANGLE <=> [](angle = PI/6).
-HUMAN_RADIUS <=> [](radius = 5).
+HUMAN_RADIUS <=> [](radius = 0.5).
 
 TURN_LEFT(x1,y1,v1,s1,t1,r,x2,y2) <=>
     [](((x1- + r-*cos(s1-)) - x2-)^2 + 

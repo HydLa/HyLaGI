@@ -206,22 +206,25 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 
   if(opts_->reuse && todo->in_following_step()){
     phase->changed_constraints = differnce_calculator_.get_difference_constraints();
-    variable_map_t vm_to_take_over;
-    bool take_over = false;
     if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
-      vm_to_take_over = phase->parent->parent->variable_map;
-      take_over = true;
-    }
-    else if(phase->phase_type == PointPhase && phase->parent){
-      vm_to_take_over = todo->prev_map;
-      take_over = true;
-    }
-    if(take_over){
+      variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
       for(auto var_entry : vm_to_take_over)
       {
         auto var = var_entry.first;
         if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
+          phase->variable_map[var] = time_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
+        }
+      }
+    }
+    else if(phase->phase_type == PointPhase && phase->parent){
+      variable_map_t &vm_to_take_over = todo->prev_map;
+      for(auto var_entry : vm_to_take_over)
+      {
+        auto var = var_entry.first;
+        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
+        {
+          // TODO : ここれずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
           phase->variable_map[var] = vm_to_take_over[var];
         }
       }

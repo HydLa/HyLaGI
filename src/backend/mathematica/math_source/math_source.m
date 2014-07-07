@@ -456,17 +456,15 @@ Module[
   },
   id = causeAndID[[2]];
   cause = causeAndID[[1]];
-  sol = Reduce[cause && condition && t > 0, t, Reals];
-  checkMessage[];
-  If[sol === False, Return[{}] ];
   (* 成り立つtの最小値を求める *)
   
-  minT = Quiet[Check[minT = Minimize[{t, sol}, {t}],
+  minT = Quiet[Check[minT = Minimize[{t, cause}, {t}],
                      onTime = False;minT,
                      Minimize::wksol],
-         Minimize::wksol];
+         {Minimize::wksol, Minimize::infeas} ];
   (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
   minT = ToRadicals[First[minT]];
+  If[minT === Infinity, Return[{}] ];
   Assert[Head[minT] =!= Piecewise];
   ret = makeListFromPiecewise[minT, condition];
   (* 時刻が0となる場合を取り除く．*)
