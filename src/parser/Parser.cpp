@@ -858,6 +858,18 @@ node_sptr Parser::diff(){
 node_sptr Parser::factor(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
+  if(lexer.get_token() == VERTICAL_BAR){
+    std::string name;
+    if((name = identifier()) != ""){
+      if(list_map.find(name) != list_map.end()){
+        ret = boost::shared_ptr<Number>(new Number(std::to_string(list_map[name].size()))); 
+      }
+      if(lexer.get_token() == VERTICAL_BAR){
+        return ret;
+      }
+    }
+  }
+  lexer.set_current_position(position);
   // Pi | E
   if(lexer.get_token() == ALPHABET){
     if(lexer.get_current_token_string() == "PI"){
