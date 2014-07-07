@@ -709,17 +709,6 @@ node_sptr Parser::expression(){
         }
       }
     }
-    /*
-    node_sptr ret;
-    std::string name = lexer.get_current_token_string();
-    std::map<std::string,std::string> null_map;
-    std::cout << "expression list : " << name << std::endl;
-    list_element(ret,node_sptr,expression(),name,null_map,"");
-    if(ret){
-      std::cout << "expression list ret : " << name << std::endl;
-      return ret;
-    }
-    */
   }
   lexer.set_current_position(position);
   return arithmetic(); 
