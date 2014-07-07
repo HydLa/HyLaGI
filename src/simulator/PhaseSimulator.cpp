@@ -626,11 +626,12 @@ PhaseSimulator::todo_list_t
   }
   else
   {
+    PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
+
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addConstraint", 1, "mvt", "", &phase->variable_map);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
-    PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
     phase->variable_map = time_modifier->shift_time(phase->current_time, phase->variable_map);
     next_todo->phase_type = PointPhase;
