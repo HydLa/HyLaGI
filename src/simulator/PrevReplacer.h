@@ -27,7 +27,7 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
 
   virtual ~PrevReplacer();
   
-  void replace_value(value_t &val);
+  bool replace_value(value_t &val);
   void replace_node(symbolic_expression::node_sptr &exp);
 
   virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
@@ -91,14 +91,15 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
 
   private:
-  int differential_cnt_;
-  bool in_prev_;
-  parameter_map_t& parameter_map_;
-  PhaseResult& prev_phase_;
-  Simulator &simulator_;
-  bool approx_;
+  int differential_cnt;
+  bool in_prev;
+  parameter_map_t& parameter_map;
+  PhaseResult& prev_phase;
+  Simulator &simulator;
+  bool approx;
+  bool replaced;
 
-  symbolic_expression::node_sptr new_child_;
+  symbolic_expression::node_sptr new_child;
 
   template<class C, 
            const symbolic_expression::node_sptr& (C::*getter)() const,
@@ -106,9 +107,9 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   void dispatch(C* n) 
   {
     accept((n->*getter)());
-    if(new_child_) {
-      (n->*setter)(new_child_);
-      new_child_.reset();
+    if(new_child) {
+      (n->*setter)(new_child);
+      new_child.reset();
     }
   }
   

@@ -69,12 +69,14 @@ PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_
 
 PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_todo_sptr_t& todo)
 {
+  timer::Timer preprocess_timer;
   result_list_t result;
   bool has_next = false;
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   consistency_checker->set_prev_map(&todo->prev_map);
+  // suspected
   relation_graph_->set_expanded_all(false);
   if(todo->phase_type == PointPhase)
   {
@@ -103,6 +105,8 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       todo->expanded_constraints.add_constraint(module.second);
     }
   }
+
+  todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
   while(module_set_container->has_next())
   {
@@ -171,6 +175,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 {
   HYDLA_LOGGER_DEBUG("\n--- next module set ---\n", ms.get_infix_string());
 
+  // suspected
   relation_graph_->set_adopted(ms);
 
   timer::Timer cc_timer;
@@ -178,6 +183,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   todo->profile["# of CalculateClosure"]++;
 
+  // suspected
   if(!consistent)
   {
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
@@ -188,7 +194,10 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     return result_list_t(); 
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");
-  
+
+  timer::Timer postprocess_timer;
+
+  // suspected
   module_set_container->remove_included_ms_by_current_ms();
   todo->maximal_mss.insert(ms);
 
@@ -204,6 +213,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
   phase->variable_map = create_result[0];
 
+  // suspected
   if(opts_->reuse && todo->in_following_step()){
     phase->changed_constraints = differnce_calculator_.get_difference_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
@@ -232,6 +242,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
 
   todo->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
+  todo->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
   consistency_checker->reset_count();
 
   for(auto positive_ask : todo->positive_asks)
@@ -240,7 +251,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
   
-
+/*  TODO: implement
   if(opts_->assertion || break_condition_.get() != NULL){
     timer::Timer entailment_timer;
 
@@ -249,7 +260,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     fmt += (phase->phase_type==PointPhase)?"n":"t";
     backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
     backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
-/*  TODO: implement
+
     if(opts_->assertion)
     {
       HYDLA_LOGGER_DEBUG("%% check_assertion");
@@ -288,14 +299,15 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
         break;
       }
     }
-    */
   }
+*/
 
   if(opts_->epsilon_mode){
     phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
   }
 
   result.push_back(phase);
+  todo->profile["Postprocess"] += postprocess_timer.get_elapsed_us();
   return result;
 }
 
@@ -391,30 +403,42 @@ void PhaseSimulator::replace_prev2parameter(
   PrevReplacer replacer(parameter_map, phase, *simulator_, opts_->approx);
   for(auto var_entry : vm)
   {
-    ValueRange& range = var_entry.second;
+    ValueRange range = var_entry.second;
     value_t val;
     if(range.unique())
     {
       val = range.get_unique_value();
-      replacer.replace_value(val);
-      range.set_unique_value(val);
+      if(replacer.replace_value(val))
+      {
+        range.set_unique_value(val);
+        vm[var_entry.first] = range;
+      }
     }
     else
     {
+      bool replaced = false;
       if(range.get_upper_cnt()>0)
       {
         val = range.get_upper_bound().value;
-        replacer.replace_value(val);
-        range.set_upper_bound(val, range.get_upper_bound().include_bound);
+        if(replacer.replace_value(val))
+        {
+          range.set_upper_bound(val, range.get_upper_bound().include_bound);
+          replaced = true;
+        }
       }
       if(range.get_lower_cnt() > 0)
       {
         val = range.get_lower_bound().value;
-        replacer.replace_value(val);
-        range.set_lower_bound(val, range.get_lower_bound().include_bound);
+        if(replacer.replace_value(val))
+        {
+          range.set_lower_bound(val, range.get_lower_bound().include_bound);
+          replaced = true;
+        }
       }
+      if(replaced)vm[var_entry.first] = range;
     }
   }
+  HYDLA_LOGGER_DEBUG_VAR(vm);
 }
 
 void PhaseSimulator::set_break_condition(symbolic_expression::node_sptr break_cond)
@@ -603,6 +627,7 @@ void PhaseSimulator::set_symmetric_difference(
 PhaseSimulator::todo_list_t
   PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
+  timer::Timer next_todo_timer;
   todo_list_t ret;
 
   simulation_todo_sptr_t next_todo(new SimulationTodo());
@@ -630,6 +655,8 @@ PhaseSimulator::todo_list_t
   else
   {
     PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
+    
+    HYDLA_LOGGER_DEBUG_VAR(phase->variable_map);
 
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addConstraint", 1, "mvt", "", &phase->variable_map);
@@ -753,6 +780,8 @@ PhaseSimulator::todo_list_t
     }
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
+
+  current_todo->profile["NextTodo"] += next_todo_timer.get_elapsed_us();
 
   return ret;
 }

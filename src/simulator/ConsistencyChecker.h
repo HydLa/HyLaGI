@@ -62,6 +62,9 @@ public:
 
   int get_backend_check_consistency_count();
 
+  int get_backend_check_consistency_time();
+
+
 private:
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
@@ -73,6 +76,7 @@ private:
   const variable_map_t *prev_map;
   std::vector<variable_map_t> result_maps;
   int backend_check_consistency_count;
+  int backend_check_consistency_time;
   std::vector<module_set_t> inconsistent_module_sets;
 };
 
