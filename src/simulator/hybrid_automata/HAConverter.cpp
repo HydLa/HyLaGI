@@ -116,7 +116,6 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
           push_result(tmp_tmp_cc_);
           continue;
         }
-        n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
         todo_stack_->push_todo(n_todo);
         push_current_condition(tmp_cc_);
       }

@@ -31,7 +31,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse, profile_t &profile);
 
   /**
    * Get inconsistent module sets in the last check_consistency
@@ -49,7 +49,8 @@ public:
     RelationGraph &relation_graph,
     CheckConsistencyResult &cc_result,
     const ask_t &guard,
-    const PhaseType &phase
+    const PhaseType &phase,
+    profile_t &profile
     );
 
   void set_prev_map(const variable_map_t *);

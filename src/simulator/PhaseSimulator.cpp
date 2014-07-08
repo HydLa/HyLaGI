@@ -76,21 +76,23 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   consistency_checker->set_prev_map(&todo->prev_map);
-  // suspected
-  relation_graph_->set_expanded_all(false);
   if(todo->phase_type == PointPhase)
   {
     set_simulation_mode(PointPhase);
-    if(todo->parent != result_root)
     {
-      // use the discrete causes for prev_asks
-      for(auto prev_ask : prev_asks_)
+      timer::Timer timer;
+      if(todo->parent != result_root)
       {
-        bool entailed = todo->parent->positive_asks.count(prev_ask);
-        if(todo->discrete_causes.count(prev_ask)
-         && todo->discrete_causes[prev_ask]) entailed = !entailed;
-        todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
+        // use the discrete causes for prev_asks
+        for(auto prev_ask : prev_asks_)
+        {
+          bool entailed = todo->parent->positive_asks.count(prev_ask);
+          if(todo->discrete_causes.count(prev_ask)
+             && todo->discrete_causes[prev_ask]) entailed = !entailed;
+          todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
+        }
       }
+      todo->profile["PrevMap"] += timer.get_elapsed_us();
     }
     relation_graph_->set_ignore_prev(true);
   }else{
@@ -110,30 +112,52 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   while(module_set_container->has_next())
   {
-    module_set_t ms = module_set_container->get_module_set();
+    module_set_t ms;
+    {
+      timer::Timer timer;
+      ms = module_set_container->get_module_set();
     
-    relation_graph_->set_expanded_all(false);
-    for(auto constraint : todo->expanded_constraints)
-    {
-      relation_graph_->set_expanded(constraint, true);
+      relation_graph_->set_expanded_all(false);
+      for(auto constraint : todo->expanded_constraints)
+      {
+        relation_graph_->set_expanded(constraint, true);
+      }
+
+      for(auto entry : todo->judged_prev_map)
+      {
+        if(entry.second)
+        {
+          todo->positive_asks.insert(entry.first);
+          relation_graph_->set_expanded(entry.first->get_child(), true);
+        }
+        else
+        {
+          todo->negative_asks.insert(entry.first);
+        }
+      }
+      todo->profile["RelationGraphSetExpanded"] += timer.get_elapsed_us();
     }
 
-    for(auto entry : todo->judged_prev_map)
-    {
-      if(entry.second)
-      {
-        todo->positive_asks.insert(entry.first);
-        relation_graph_->set_expanded(entry.first->get_child(), true);
-      }
-      else
-      {
-        todo->negative_asks.insert(entry.first);
-      }
-    }
-
-    std::string module_sim_string = "\"ModuleSet" + module_set_container->unadopted_module_set().get_name() + "\"";
+    
+    module_set_t unadopted_ms = module_set_container->unadopted_module_set();
+    std::string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
+    // suspected
+    {
+      timer::Timer timer;
+      relation_graph_->set_adopted(unadopted_ms, false);
+      todo->profile["RelationGraphSetAdopted"] += timer.get_elapsed_us();
+    }
+
     result_list_t tmp_result = simulate_ms(ms, todo);
+
+    // suspected
+    {
+      timer::Timer timer;
+      relation_graph_->set_adopted(unadopted_ms, true);
+      todo->profile["RelationGraphSetAdopted"] += timer.get_elapsed_us();
+    }
+
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     if(!tmp_result.empty())
@@ -144,7 +168,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     }
     todo->positive_asks.clear();
     todo->negative_asks.clear();
-    relation_graph_->set_expanded_all(false);
   }
 
   if(todo->profile["# of CheckConsistency"])
@@ -175,8 +198,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 {
   HYDLA_LOGGER_DEBUG("\n--- next module set ---\n", ms.get_infix_string());
 
-  // suspected
-  relation_graph_->set_adopted(ms);
 
   timer::Timer cc_timer;
   bool consistent = calculate_closure(todo, ms);
@@ -186,11 +207,13 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   // suspected
   if(!consistent)
   {
+    timer::Timer timer;
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       module_set_container->generate_new_ms(todo->maximal_mss, module_set);
     }
+    todo->profile["MscGenerateNewMS"] += timer.get_elapsed_us();
     return result_list_t(); 
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");
@@ -198,8 +221,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   timer::Timer postprocess_timer;
 
   // suspected
-  module_set_container->remove_included_ms_by_current_ms();
-  todo->maximal_mss.insert(ms);
+  {
+    timer::Timer timer;
+    module_set_container->remove_included_ms_by_current_ms();
+    todo->maximal_mss.insert(ms);
+    todo->profile["RemoveIncludedMs"] += timer.get_elapsed_us();
+  }
 
   phase_result_sptr_t phase = make_new_phase(todo);
   phase->module_set = ms;
@@ -215,6 +242,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 
   // suspected
   if(opts_->reuse && todo->in_following_step()){
+    timer::Timer timer;
     phase->changed_constraints = differnce_calculator_.get_difference_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
       variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
@@ -239,6 +267,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
         }
       }
     }
+    todo->profile["TakeOverVM"] += timer.get_elapsed_us();
   }
 
   todo->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
@@ -494,7 +523,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     {
       CheckConsistencyResult cc_result;
 
-      cc_result = consistency_checker->check_consistency(*relation_graph_, differnce_calculator_, state->phase_type, opts_->reuse && state->in_following_step());
+      cc_result = consistency_checker->check_consistency(*relation_graph_, differnce_calculator_, state->phase_type, opts_->reuse && state->in_following_step(), state->profile);
 
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
       state->profile["# of CheckConsistency"] += 1;
@@ -521,16 +550,17 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       auto it  = unknown_asks.begin();
       while(it != unknown_asks.end())
       {
-        if(state->phase_type == PointPhase){
-          if(state->parent == result_root && PrevSearcher().search_prev((*it)->get_guard())){
-            // in initial state, conditions about left-hand limits are considered to be invalid
+        if(state->phase_type == PointPhase  
+           && state->parent == result_root
+           && PrevSearcher().search_prev((*it)->get_guard())){
+          // in initial state, conditions about left-hand limits are considered to be invalid
             negative_asks.insert(*it);
             unknown_asks.erase(it++);
             continue;
-          }
         }
-
+        // suspected
         if(opts_->reuse && state->in_following_step()){
+          timer::Timer timer;
           if(!state->discrete_causes.find(*it)->second){
             if(!differnce_calculator_.is_difference((*it)->get_guard())
               || differnce_calculator_.is_continuous(state->parent, (*it)->get_guard())){
@@ -542,13 +572,15 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
                 negative_asks.insert(*it);
               }
               unknown_asks.erase(it++);
+              state->profile["OmitEntailment"] += timer.get_elapsed_us();
               continue;
             }
           }
+          state->profile["OmitEntailment"] += timer.get_elapsed_us();
         }
 
         CheckConsistencyResult check_consistency_result;
-        switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, *it, state->phase_type)){
+        switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, *it, state->phase_type, state->profile)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);

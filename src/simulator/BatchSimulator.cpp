@@ -58,7 +58,6 @@ void BatchSimulator::process_one_todo(simulation_todo_sptr_t& todo)
       for(unsigned int j = 0; j < next_todos.size(); j++)
       {
         simulation_todo_sptr_t& n_todo = next_todos[j];
-        n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
         if(opts_->dump_in_progress){
           printer.output_one_phase(n_todo->parent);
         }
