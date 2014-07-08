@@ -75,11 +75,19 @@ public:
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
+  ModuleSet unadopted_module_set();
+
   void next();
 
   bool has_next(){ return !ms_to_visit_.empty(); }
 
-  ModuleSet get_module_set(){ return *ms_to_visit_.rbegin(); }
+  ModuleSet get_weaker_module_set(){ return *ms_to_visit_.rbegin(); }
+
+  ModuleSet get_module_set(){
+    ModuleSet ret = get_weaker_module_set();
+    ret.insert(required_ms_);
+    return ret;
+  }
 
   /**
    * @ param ms:矛盾するモジュールセット
@@ -108,6 +116,8 @@ public:
    * initialize 
    */
   virtual void init();
+
+  virtual module_set_set_t get_full_ms_list() const;
 
 private:
   /**
