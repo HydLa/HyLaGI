@@ -87,6 +87,18 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   return removable;
 }
 
+IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() const{
+  module_set_set_t mss;
+  mss.insert(maximal_module_set_);
+  return mss;
+}
+
+ModuleSet IncrementalModuleSet::unadopted_module_set(){
+  ModuleSet ret = maximal_module_set_;
+  ret.erase(get_weaker_module_set());
+  return ret;
+}
+
 
 void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set) 
 {
@@ -201,7 +213,6 @@ void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
 {
   ms_to_visit_.clear();
   for(auto new_ms : new_mss){
-    new_ms.insert(required_ms_);
     ms_to_visit_.insert(new_ms);
   }
 }
@@ -214,6 +225,7 @@ void IncrementalModuleSet::init()
   for(auto ms : maximal_module_set_)
     if(!stronger_modules_.count(ms)) required_ms_.add_module(ms);
 
+  maximal_module_set_.erase(required_ms_);
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }
 
@@ -236,7 +248,6 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
   ModuleSet inconsistent_ms = ms;
   inconsistent_ms.erase(required_ms_);
   for( auto lit : ms_to_visit_ ){
-    lit.erase(required_ms_);
     // 探索対象のモジュール集合がmsを含んでいる場合
     // そのモジュール集合は矛盾するため
     // 新たなモジュール集合を生成する
@@ -277,7 +288,9 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
 
 /// 最も要素数の多いモジュール集合を返す
   ModuleSet IncrementalModuleSet::get_max_module_set() const{
-    return maximal_module_set_;
+    ModuleSet ret = maximal_module_set_;
+    ret.insert(required_ms_);
+    return ret;
   }
 
 // 探索対象を引数のmssが示す状態にする
