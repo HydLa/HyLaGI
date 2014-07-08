@@ -168,7 +168,8 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   RelationGraph &relation_graph,
   CheckConsistencyResult &cc_result,
   const ask_t &guard,
-  const PhaseType &phase
+  const PhaseType &phase,
+  profile_t &profile
   )
 {
   
@@ -178,20 +179,32 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   ConstraintStore constraint_store;
   module_set_t module_set;
   // get constraints related with the guard 
-  relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
+  {
+    timer::Timer timer;
+    relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
+    profile["GetRelatedConstraints"] += timer.get_elapsed_us();
+  }
 
 
   backend->call("resetConstraintForVariable", 0, "", "");
 
-  for(auto constraint : constraint_store)
   {
-    finder.visit_node(constraint);
+    timer::Timer timer;
+    for(auto constraint : constraint_store)
+    {
+      finder.visit_node(constraint);
+    }
+    finder.visit_node(guard->get_child());
+    add_continuity(finder, phase);
+    profile["FindAndAddContinuity"] += timer.get_elapsed_us();
   }
-  finder.visit_node(guard->get_child());
-  add_continuity(finder, phase);
 
-  backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
-  backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
+  {
+    timer::Timer timer;
+    backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
+    backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
+    profile["AddConstraintInCE"] += timer.get_elapsed_us();
+  }
 
   cc_result = call_backend_check_consistency(phase);
 
@@ -204,12 +217,14 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
     }
     else
     {
+      timer::Timer timer;
       backend->call("resetConstraintForVariable", 0, "", "");
       add_continuity(finder, phase);
       backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
       symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard->get_guard()));
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend->call("addConstraint", 1, fmt, "", &not_node);
+      profile["PrepareForSecondCC"] += timer.get_elapsed_us();
       cc_result = call_backend_check_consistency(phase);
       if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
@@ -230,7 +245,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse, profile_t &profile)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
@@ -243,14 +258,26 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
     HYDLA_LOGGER_DEBUG_VAR(tmp_constraint_store);
     HYDLA_LOGGER_DEBUG_VAR(relation_graph.get_modules(i).get_name());
-    if(reuse && !difference_calculator.is_difference(tmp_constraint_store)) continue;
+    {
+      timer::Timer timer;
+      if(reuse && !difference_calculator.is_difference(tmp_constraint_store))
+      {
+        profile["OmitCheckConsistency"] += timer.get_elapsed_us();
+        continue;
+      }
+      profile["OmitCheckConsistency"] += timer.get_elapsed_us();
+    }
 
     VariableFinder finder;
-    variable_set_t related_variables = relation_graph.get_variables(i);
-        
-    for(auto constraint : tmp_constraint_store)
     {
-      finder.visit_node(constraint);
+      timer::Timer timer;
+      variable_set_t related_variables = relation_graph.get_variables(i);
+        
+      for(auto constraint : tmp_constraint_store)
+      {
+        finder.visit_node(constraint);
+      }
+      profile["FindAndVisit"] += timer.get_elapsed_us();
     }
     CheckConsistencyResult tmp_result;
 
@@ -264,6 +291,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     }
     else
     {
+      timer::Timer timer;
       result.consistent_store.add_constraint_store(tmp_result.consistent_store);
       vector<variable_map_t> create_result;
       if(phase == PointPhase)
@@ -283,6 +311,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
       {
         result_maps[0][var_entry.first] = var_entry.second;
       }
+      profile["CreateVM"] += timer.get_elapsed_us();
     }
   }
 

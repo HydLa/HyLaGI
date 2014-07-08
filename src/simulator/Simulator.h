@@ -69,8 +69,6 @@ struct SimulationTodo{
   module_set_set_t maximal_mss;
   /// プロファイリング結果
   profile_t profile;
-  /// 所属するケースの計算時間
-  int elapsed_time;
 
   SimulationTodo(){}
 

@@ -80,16 +80,12 @@ public:
    * Print active nodes and edges in graphviz format.
    */
   void dump_active_graph(std::ostream &os) const;
-  
-  /**
-   * Set a moduld adopted or not
-   */
+
+  /// Set adoptedness of module
   void set_adopted(const module_t &mod, bool adopted);
-  
-  /**
-   * Set modules in ms adopted and modules not in ms not adopted
-   */
-  void set_adopted(const module_set_t &ms);
+
+  /// Set adoptedness of modules
+  void set_adopted(const module_set_t &ms, bool adopted);
 
   /**
    * Set the constraint expanded or not

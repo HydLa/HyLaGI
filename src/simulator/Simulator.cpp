@@ -133,7 +133,6 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
 simulation_todo_sptr_t Simulator::make_initial_todo()
 {
   simulation_todo_sptr_t todo(new SimulationTodo());
-  todo->elapsed_time = 0;
   todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
