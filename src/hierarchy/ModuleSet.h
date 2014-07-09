@@ -85,7 +85,6 @@ public:
   /**
    * erase module from module_list_
    */
-  int erase(const module_t& mod){ return module_list_.erase(mod);}
   int erase(const ModuleSet& ms);
 
   /**
