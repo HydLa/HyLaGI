@@ -82,7 +82,7 @@ protected:
     BRANCH_PAR
   } CheckEntailmentResult;
 
-  result_list_t simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& state);
+  result_list_t simulate_ms(const module_set_t& unadopted_ms, simulation_todo_sptr_t& state);
 
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
@@ -144,8 +144,7 @@ private:
     const ConstraintStore& current_constraints,
     ConstraintStore& result );
 
-  bool calculate_closure(simulation_todo_sptr_t& state,
-    const module_set_t& ms);
+  bool calculate_closure(simulation_todo_sptr_t& state);
 
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);

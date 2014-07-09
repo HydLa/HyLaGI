@@ -113,10 +113,8 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   while(module_set_container->has_next())
   {
-    module_set_t ms;
     {
       timer::Timer timer;
-      ms = module_set_container->get_module_set();
     
       relation_graph_->set_expanded_all(false);
       for(auto constraint : todo->expanded_constraints)
@@ -145,9 +143,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     timer::Timer ms_timer;
 
     relation_graph_->set_adopted(unadopted_ms, false);
-
-    result_list_t tmp_result = simulate_ms(ms, todo);
-
+    result_list_t tmp_result = simulate_ms(unadopted_ms, todo);
     relation_graph_->set_adopted(unadopted_ms, true);
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
@@ -181,13 +177,12 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 }
 
 
-PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms, simulation_todo_sptr_t& todo)
+PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_todo_sptr_t& todo)
 {
-  HYDLA_LOGGER_DEBUG("\n--- next module set ---\n", ms.get_infix_string());
-
+  HYDLA_LOGGER_DEBUG("\n--- next unadopoted module set ---\n", unadopted_ms.get_infix_string());
 
   timer::Timer cc_timer;
-  bool consistent = calculate_closure(todo, ms);
+  bool consistent = calculate_closure(todo);
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   todo->profile["# of CalculateClosure"]++;
 
@@ -198,7 +193,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
-      module_set_container->generate_new_ms(todo->maximal_mss, module_set);
+      module_set_container->generate_new_ms(todo->unadopted_mss, module_set);
     }
     todo->profile["MscGenerateNewMS"] += timer.get_elapsed_us();
     return result_list_t(); 
@@ -209,9 +204,9 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
 
   // suspected
   {
-    timer::Timer timer;
     module_set_container->remove_included_ms_by_current_ms();
-    todo->maximal_mss.insert(ms);
+    timer::Timer timer;
+    todo->unadopted_mss.insert(unadopted_ms);
     todo->profile["RemoveIncludedMs"] += timer.get_elapsed_us();
   }
 
@@ -477,8 +472,7 @@ void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
   current_phase_ = phase;
 }
 
-bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
-    const module_set_t& ms)
+bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
 {
   ask_set_t& positive_asks = state->positive_asks;
   ask_set_t& negative_asks = state->negative_asks;
@@ -609,7 +603,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
       // 分岐先を生成（導出されない方）
       // TODO: 分岐時の制約の追加をしていない。
       negative_asks.insert(branched_ask);
-      return calculate_closure(state, ms);
+      return calculate_closure(state);
     }
   }
   return true;
