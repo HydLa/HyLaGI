@@ -48,7 +48,6 @@ PhaseResult::~PhaseResult()
   }
 }
 
-bool ParameterComparator::operator()(const Parameter x,const Parameter y) const { return x < y; }
 
 
 
@@ -64,7 +63,6 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   parent(todo.parent.get())
 {
 }
-
 
 
 ostream& operator<<(std::ostream& s, const PhaseResult& phase)
@@ -112,10 +110,6 @@ ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
   return s;
 }
 
-
-
-
-
 ostream& operator<<(std::ostream& s, const ask_set_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
@@ -123,12 +117,6 @@ ostream& operator<<(std::ostream& s, const ask_set_t& a)
 }
 
 ostream& operator<<(std::ostream& s, const tells_t& a)
-{
-  s << NodeDumper(a.begin(), a.end());
-  return s;
-}
-
-ostream& operator<<(std::ostream& s, const collected_tells_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;

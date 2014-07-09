@@ -108,7 +108,7 @@ protected:
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
-  negative_asks_t prev_asks_;
+  ask_set_t prev_asks_;
 
   int phase_sum_;
 

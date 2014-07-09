@@ -9,20 +9,13 @@
 #include "ModuleSet.h"
 #include "ModuleSetContainer.h"
 #include "ConstraintStore.h"
-
-#include "Timer.h"
+#include "Parameter.h"
 
 namespace hydla {
 namespace simulator {
 
-class Parameter;
 class PhaseResult;
 struct SimulationTodo;
-
-class ParameterComparator{
-  public:
-  bool operator()(const Parameter x,const Parameter y) const;
-};
 
 /**
  * type for cause of termination of simulation
@@ -52,12 +45,8 @@ typedef enum {
 
 
 typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
-typedef std::set<boost::shared_ptr<symbolic_expression::Tell> >    collected_tells_t;
 typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
-typedef std::set<boost::shared_ptr<symbolic_expression::Ask> >     ask_set_t;
-typedef ask_set_t                                                positive_asks_t;
-typedef ask_set_t                                                negative_asks_t;
-typedef std::vector<tells_t>                                     not_adopted_tells_list_t;
+typedef std::set<ask_t >                                           ask_set_t;
 typedef hierarchy::ModuleSet                              module_set_t;
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
@@ -77,6 +66,14 @@ typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sp
 
 typedef std::set<std::string> change_variables_t;
 
+
+struct FullInformation
+{
+  ConstraintStore              expanded_constraints;
+  ask_set_t                    positive_asks;
+  ask_set_t                    negative_asks;
+};
+
 /**
  * A class to express the result of each phase.
  */
@@ -89,12 +86,11 @@ public:
   variable_map_t               variable_map;
   parameter_map_t              parameter_map;
   ConstraintStore              expanded_constraints;
-  positive_asks_t              positive_asks;
-  negative_asks_t              negative_asks;
-  int step;
+  ask_set_t                    positive_asks;
+  ask_set_t                    negative_asks;
+  int                          step;
   module_set_t                 module_set;
   ConstraintStore              current_constraints;
-
   ConstraintStore              changed_constraints;
 
   CauseForTermination cause_for_termination;

@@ -31,8 +31,8 @@ public:
    * @param unknown_asks     成否の定まっていないaskノードの集合
    */
   void collect_ask(ConstraintStore &constraints,                   
-                   const positive_asks_t*   positive_asks,
-                   const negative_asks_t*   negative_asks,
+                   const ask_set_t*   positive_asks,
+                   const ask_set_t*   negative_asks,
                    ask_set_t*        unknown_asks);
 
   // Ask制約
@@ -40,10 +40,10 @@ public:
 
 private:  
   /// 制約ストアと矛盾するaskのリスト
-  const negative_asks_t*         negative_asks_;
+  const ask_set_t*         negative_asks_;
 
   /// 有効となっているaskのリスト
-  const positive_asks_t*         positive_asks_;
+  const ask_set_t*         positive_asks_;
   
   /// まだ導出の可否が不明なaskのリスト
   ask_set_t*              unknown_asks_;

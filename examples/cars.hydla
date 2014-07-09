@@ -11,10 +11,10 @@ INIT(x1,980,20,t1),( CONST(x1) )<<( ACC(x0,x1,t1), BRK(x0,x1,t1) ).
 */
 
 INIT(x,x0,v0,t) <=> x=x0 & x'=v0 & t=0.
-SW_ACC(xl,xf,t) <=> [](xf'- < 30 & xl- - xf- >= 10 => t'=1).
-SW_BRK(xl,xf,t) <=> [](xf'- > 0 & xl- - xf- <= 3 => t'=-1).
-ACC(xl,xf,t) <=> [](xf'- < 30 & xl- - xf- >= 10 & t- >= 1 => xf''=3).
-BRK(xl,xf,t) <=> [](xf'- > 0 & xl- - xf- <= 3 & t- >= -1 => xf''=-5).
+SW_ACC(xl,xf,t) <=> [](xf'- < 30 & xl- - xf- >= 10 => t'=1 & xf'' = xf'').
+SW_BRK(xl,xf,t) <=> [](xf'- > 0 & xl- - xf- <= 3 => t'=-1 & xf'' = xf'').
+ACC(xl,xf,t) <=> [](t- >= 1 => xf''=3).
+BRK(xl,xf,t) <=> [](t- <= -1 => xf''=-5).
 CONST(x) <=> [](x''=0).
 TIMER_OFF(t) <=>[](t=0).
 

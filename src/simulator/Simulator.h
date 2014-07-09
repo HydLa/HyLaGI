@@ -49,8 +49,8 @@ struct SimulationTodo{
   /// 左極限値のマップ
   variable_map_t            prev_map;
   parameter_map_t           parameter_map;
-  positive_asks_t           positive_asks;
-  negative_asks_t           negative_asks;
+  ask_set_t           positive_asks;
+  ask_set_t           negative_asks;
   std::map<ask_t, bool>     discrete_causes;
   ConstraintStore           expanded_constraints;
   ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約
@@ -84,8 +84,6 @@ struct SimulationTodo{
 };
 
 std::ostream& operator<<(std::ostream& s, const SimulationTodo& a);
-
-std::ostream& operator<<(std::ostream& s, const collected_tells_t& a);
 
 typedef boost::shared_ptr<SimulationTodo>     simulation_todo_sptr_t;
 // プロファイリング結果全体

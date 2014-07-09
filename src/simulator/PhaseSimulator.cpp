@@ -87,6 +87,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         for(auto prev_ask : prev_asks_)
         {
           bool entailed = todo->parent->positive_asks.count(prev_ask);
+          // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point
           if(todo->discrete_causes.count(prev_ask)
              && todo->discrete_causes[prev_ask]) entailed = !entailed;
           todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
@@ -142,26 +143,20 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     module_set_t unadopted_ms = module_set_container->unadopted_module_set();
     std::string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
-    // suspected
-    {
-      timer::Timer timer;
-      relation_graph_->set_adopted(unadopted_ms, false);
-      todo->profile["RelationGraphSetAdopted"] += timer.get_elapsed_us();
-    }
+
+    relation_graph_->set_adopted(unadopted_ms, false);
 
     result_list_t tmp_result = simulate_ms(ms, todo);
 
-    // suspected
-    {
-      timer::Timer timer;
-      relation_graph_->set_adopted(unadopted_ms, true);
-      todo->profile["RelationGraphSetAdopted"] += timer.get_elapsed_us();
-    }
-
+    relation_graph_->set_adopted(unadopted_ms, true);
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
     if(!tmp_result.empty())
     {
+      for(auto phase : tmp_result)
+      {
+        phase->module_set = unadopted_ms;
+      }
       has_next = true;
       result.insert(result.begin(), tmp_result.begin(), tmp_result.end());
       if(!(opts_->nd_mode || opts_->interactive_mode))break;
@@ -170,17 +165,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     todo->negative_asks.clear();
   }
 
-  if(todo->profile["# of CheckConsistency"])
-  {
-    todo->profile["Average of CheckConsistency"] = 
-      todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
-  }
+  if(todo->profile["# of CheckConsistency"]) todo->profile["Average of CheckConsistency"] = todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
+  if(todo->profile["# of CheckEntailment"]) todo->profile["Average of CheckEntailment"] =  todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
 
-  if(todo->profile["# of CheckEntailment"])
-  {
-    todo->profile["Average of CheckEntailment"] = 
-      todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
-  }
 
   //無矛盾な解候補モジュール集合が存在しない場合
   if(!has_next)
@@ -229,7 +216,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& ms
   }
 
   phase_result_sptr_t phase = make_new_phase(todo);
-  phase->module_set = ms;
 
   result_list_t result;
   
@@ -396,8 +382,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
   {
     constraints.add_constraint(module.second);
   }
-  positive_asks_t pat;
-  negative_asks_t nat;
+  ask_set_t pat;
+  ask_set_t nat;
 
   // search asks and initialize prev_asks_ and ask_map
   ac.collect_ask(constraints, &pat, &nat, &prev_asks_);
@@ -494,8 +480,8 @@ void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
 bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
     const module_set_t& ms)
 {
-  positive_asks_t& positive_asks = state->positive_asks;
-  negative_asks_t& negative_asks = state->negative_asks;
+  ask_set_t& positive_asks = state->positive_asks;
+  ask_set_t& negative_asks = state->negative_asks;
 
   ask_set_t unknown_asks;
 
@@ -609,6 +595,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
   }while(expanded);
 
   if(!unknown_asks.empty()){
+    throw SimulateError("unknown asks");
     boost::shared_ptr<symbolic_expression::Ask> branched_ask = *unknown_asks.begin();
     // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
     HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));

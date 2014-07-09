@@ -22,8 +22,8 @@ AskCollector::~AskCollector()
 {}
 
 void AskCollector::collect_ask(ConstraintStore &constraints,
-                               const positive_asks_t*   positive_asks,
-                               const negative_asks_t*   negative_asks,
+                               const ask_set_t*   positive_asks,
+                               const ask_set_t*   negative_asks,
                                ask_set_t*         unknown_asks)
 {
   assert(negative_asks);
