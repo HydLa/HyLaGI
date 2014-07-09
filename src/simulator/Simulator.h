@@ -65,8 +65,8 @@ struct SimulationTodo{
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
   module_set_set_t ms_to_visit;
-  /// 無矛盾極大なモジュール集合の集合
-  module_set_set_t maximal_mss;
+  /// set of module sets which are unadopted in maximal module sets
+  module_set_set_t unadopted_mss;
   /// プロファイリング結果
   profile_t profile;
 

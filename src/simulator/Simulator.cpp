@@ -136,7 +136,7 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
   todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
-  todo->maximal_mss.clear();
+  todo->unadopted_mss.clear();
   todo->parent = result_root_;  
   return todo;
 }
