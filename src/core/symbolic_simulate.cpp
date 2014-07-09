@@ -12,6 +12,7 @@
 #include "REDUCELinkFactory.h"
 #include "Backend.h"
 #include "JsonWriter.h"
+#include "Timer.h"
 #include <sys/stat.h>
 
 #ifdef _MSC_VER
