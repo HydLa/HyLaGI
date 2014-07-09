@@ -5,6 +5,7 @@
 #include "TreeVisitor.h"
 #include "AffineOrInteger.h"
 #include "Parameter.h"
+#include "PhaseResult.h"
 
 namespace hydla {
 namespace interval {
