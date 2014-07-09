@@ -229,6 +229,22 @@ void IncrementalModuleSet::init()
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }
 
+void IncrementalModuleSet::remove_included_ms_by_current_ms(){
+  /// current は現在のモジュール集合
+  ModuleSet current = get_weaker_module_set();
+  module_set_set_t::iterator lit = ms_to_visit_.begin();
+  while(lit!=ms_to_visit_.end()){
+    /**
+     * ms_to_visit_内のモジュール集合で
+     * currentが包含するモジュール集合を削除
+     */
+    if(current.including(*lit)){
+      lit = ms_to_visit_.erase(lit);
+    }
+    else lit++;
+  }
+}
+
 /**
  * この mark_nodes は調べているモジュール集合が
  * 矛盾した場合に呼ばれ、新たなモジュール集合を生成する

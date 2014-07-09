@@ -89,6 +89,8 @@ public:
     return ret;
   }
 
+  void remove_included_ms_by_current_ms();
+
   /**
    * @ param ms:矛盾するモジュールセット
    * ms_to_visit_内のmsを包含するモジュールセットを削除し、
