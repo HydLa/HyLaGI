@@ -101,9 +101,11 @@ int ModuleSet::compare(const ModuleSet& rhs) const
 int ModuleSet::erase(const ModuleSet& ms)
 {
   int sum = 0;
-  for(auto ml : module_list_){
-    if(ms.module_list_.find(ml) != ms.module_list_.end()){
-      erase(ml);
+  for(auto it = begin(); it != end();){
+    if(ms.module_list_.find(*it) != ms.module_list_.end()){
+      module_list_.erase(it++);
+    }else{
+      it++;
     }
   }
   return sum;
