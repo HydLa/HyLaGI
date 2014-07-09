@@ -121,6 +121,8 @@ public:
    */
   bool including(const ModuleSet& ms) const;
 
+  bool disjoint(const ModuleSet& ms) const;
+
   /**
    * 集合の各制約モジュールに対してTreeVisitorの適用
    */ 

@@ -243,7 +243,7 @@ void IncrementalModuleSet::remove_included_ms_by_current_ms(){
     }
     else lit++;
   }
-}
+} 
 
 /**
  * この mark_nodes は調べているモジュール集合が
@@ -278,9 +278,9 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
         new_ms.erase(removable_module_set);
         // check weather the new_ms is included by maximal consistent module sets.
         bool checked = false;
-	for( auto mcs : mcss ){
+        for( auto mcs : mcss ){
          // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
-          if(mcs.including(new_ms)){
+          if(mcs.disjoint(new_ms)){
             checked = true;
             break;
           }

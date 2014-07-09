@@ -46,8 +46,18 @@ std::string ModuleSet::get_name() const
   return str;
 }
 
+bool ModuleSet::disjoint(const ModuleSet& ms) const
+{
+  for(auto m : ms){
+    if(module_list_.count(m)) return false;
+  }
+  return true;
+}
+
 ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
 {
+  return module_list_.find(mod);
+  /*
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
 
@@ -55,6 +65,7 @@ ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
     if(it->first == mod.first && it->second->get_id() == mod.second->get_id()) return it;
   }
   return this->end();
+  */
 }
 
 std::string ModuleSet::get_infix_string() const 
