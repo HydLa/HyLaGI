@@ -101,6 +101,7 @@ int ModuleSet::compare(const ModuleSet& rhs) const
 int ModuleSet::erase(const ModuleSet& ms)
 {
   int sum = 0;
+
   for(auto it = begin(); it != end();){
     if(ms.module_list_.find(*it) != ms.module_list_.end()){
       module_list_.erase(it++);
@@ -113,17 +114,13 @@ int ModuleSet::erase(const ModuleSet& ms)
 
 bool ModuleSet::including(const ModuleSet& ms) const
 {
-  module_list_t::const_iterator ms_it   = ms.module_list_.begin();
-  module_list_t::const_iterator ms_end   = ms.module_list_.end();
-  
-  for(;ms_it != ms_end; ms_it++)
+  for(auto m : ms)
   {
-    if(std::find(module_list_.begin(), module_list_.end(), *ms_it) == module_list_.end())
+    if(!module_list_.count(m))
     {
       return false;
     }
   }
-  
   return true;
 }
 
