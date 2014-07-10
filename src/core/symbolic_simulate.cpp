@@ -122,7 +122,6 @@ void setup_simulator_opts(Opts& opts)
   opts.epsilon_mode = po.count("epsilon")>0;
   /*
   opts.output_interval = po.get<std::string>("output_interval");
-  opts.output_precision = po.get<int>("output_precision");
   */
   opts.analysis_mode = po.get<std::string>("analysis_mode");
   opts.analysis_file = po.get<std::string>("analysis_file");
@@ -142,7 +141,6 @@ void setup_simulator_opts(Opts& opts)
   */
   opts.timeout_calc= po.get<int>("timeout_calc");
 
-
   
   //opts.max_loop_count= po.get<int>("mlc");
 
@@ -159,12 +157,14 @@ void setup_simulator_opts(Opts& opts)
 void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   Opts opts;
+  ProgramOptions &po = ProgramOptions::instance();
   setup_simulator_opts(opts);
+  
 
   boost::shared_ptr<Backend> backend;
 
   if(opts.solver == "m" || opts.solver == "Mathematica") {
-    backend.reset(new Backend(new MathematicaLink(opts)));
+    backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.timeout_calc, po.get<int>("precision"), po.count("without_validation")==0?0:po.get<int>("time_delta"))));
   }else{
     REDUCELinkFactory rlf;
     REDUCELink *reduce_link  = rlf.createInstance(opts);
@@ -209,7 +209,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   }
 
   simulator_->set_backend(backend);
-  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
+  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts, po.count("without_validation")==0));
   simulator_->initialize(parse_tree);
   simulator_->simulate();
   if(!opts.ha_convert_mode)

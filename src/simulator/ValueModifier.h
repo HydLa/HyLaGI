@@ -8,9 +8,9 @@
 namespace hydla {
 namespace simulator {
 
-class TimeModifier{
+class ValueModifier{
 public:
-  TimeModifier(backend::Backend &b);
+  ValueModifier(backend::Backend &b);
   
   variable_map_t substitute_time(const Value& time, const variable_map_t& map);
   ValueRange substitute_time(const Value& time, const ValueRange& range);
@@ -26,8 +26,17 @@ public:
   // apply function to ValueRange
   ValueRange apply_function(const std::string& function, const Value& time, const ValueRange& range);
 
-  //  function with two arguments of Value
+  // apply function with two arguments of Value
   Value apply_function(const std::string& function, const Value& time, const Value& value);
+
+  // apply function to variable_map_t
+  variable_map_t apply_function(const std::string& function, const variable_map_t& map, const std::string &fmt = "");
+
+  // apply function to ValueRange
+  ValueRange apply_function(const std::string& function, const ValueRange& range,  const std::string &fmt = "");
+
+  // function with single argument of Value
+  Value apply_function(const std::string& function, const Value& value,  const std::string &fmt = "");
 private:
   backend::Backend backend;
 };

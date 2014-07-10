@@ -4,7 +4,7 @@
 #include <exception>
 #include "Backend.h"
 #include "Logger.h"
-#include "TimeModifier.h"
+#include "ValueModifier.h"
 #include "VariableFinder.h"
 #include "Variable.h"
 
@@ -193,7 +193,7 @@ void AffineApproximator::approximate_time(value_t& time, const variable_map_t& i
     {
       // それ以外は新しいtを代入する．
       // TODO: 使用する時刻はタイムシフト前の方が計算が楽なはず
-      TimeModifier modifier(*simulator->backend);
+      ValueModifier modifier(*simulator->backend);
       prev_map[vm_it->first] = modifier.substitute_time(time, ip_map.find(vm_it->first)->second);
     }
 

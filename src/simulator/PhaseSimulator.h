@@ -17,7 +17,7 @@ namespace simulator {
 
 class AnalysisResultChecker;
 class UnsatCoreFinder;
-class TimeModifier;
+class ValueModifier;
 
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
@@ -35,7 +35,7 @@ public:
 
   typedef symbolic_expression::node_sptr node_sptr;
 
-  PhaseSimulator(Simulator* simulator, const Opts& opts);
+  PhaseSimulator(Simulator* simulator, const Opts& opts, bool _validate = true);
   PhaseSimulator(PhaseSimulator&);
 
   virtual ~PhaseSimulator();
@@ -159,7 +159,9 @@ private:
 
   ConstraintDifferenceCalculator differnce_calculator_;
 
-  boost::shared_ptr<TimeModifier> time_modifier;
+  boost::shared_ptr<ValueModifier> value_modifier;
+
+  bool validate;
 };
 
 

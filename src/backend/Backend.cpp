@@ -712,8 +712,7 @@ void Backend::visit(boost::shared_ptr<SymbolicT> node)
 
 int Backend::send_value(const value_t &val, const variable_form_t& var)
 {
-  variable_arg_ = var;
-  accept(val.get_node());
+  send_node(val.get_node(), var);
   return 0;
 }
 

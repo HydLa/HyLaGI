@@ -12,7 +12,7 @@
 #include "Exceptions.h"
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
-#include "TimeModifier.h"
+#include "ValueModifier.h"
 
 #include "Backend.h"
 
@@ -29,7 +29,7 @@ using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
 
-PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()) {
+PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts, bool _validate): breaking(false), simulator_(simulator), opts_(&opts), select_phase_(NULL), break_condition_(symbolic_expression::node_sptr()), validate(_validate) {
 }
 
 PhaseSimulator::~PhaseSimulator(){}
@@ -204,8 +204,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
 
   // suspected
   {
-    module_set_container->remove_included_ms_by_current_ms();
     timer::Timer timer;
+    module_set_container->remove_included_ms_by_current_ms();
     todo->unadopted_mss.insert(unadopted_ms);
     todo->profile["RemoveIncludedMs"] += timer.get_elapsed_us();
   }
@@ -221,6 +221,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
   }
   phase->variable_map = create_result[0];
 
+  if(!validate && phase->phase_type == PointPhase)
+  {
+    phase->variable_map = value_modifier->apply_function("toNumericalValue", phase->variable_map, "vln");
+    phase->current_time = value_modifier->apply_function("toNumericalValue", phase->current_time, "vln");
+  }
+
   // suspected
   if(opts_->reuse && todo->in_following_step()){
     timer::Timer timer;
@@ -233,7 +239,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
         if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
           // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
-          phase->variable_map[var] = time_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
+          phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
         }
       }
     }
@@ -395,7 +401,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   }
   
   backend_->set_variable_set(*variable_set_);
-  time_modifier.reset(new TimeModifier(*backend_));
+  value_modifier.reset(new ValueModifier(*backend_));
 }
 
 simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulation_todo_sptr_t& old) const
@@ -676,7 +682,7 @@ PhaseSimulator::todo_list_t
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
     variable_map_t vm_before_time_shift = phase->variable_map;
-    phase->variable_map = time_modifier->shift_time(phase->current_time, phase->variable_map);
+    phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
     next_todo->phase_type = PointPhase;
 
     timer::Timer next_pp_timer;
@@ -776,7 +782,7 @@ PhaseSimulator::todo_list_t
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
-        next_todo->prev_map = time_modifier->substitute_time(candidate.minimum.time, vm_before_time_shift);
+        next_todo->prev_map = value_modifier->substitute_time(candidate.minimum.time, vm_before_time_shift);
         ret.push_back(next_todo);
       }
       // HAConverter, HASimulator用にTIME_LIMITのtodoも返す

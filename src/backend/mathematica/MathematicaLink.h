@@ -4,7 +4,6 @@
 #include "LinkError.h"
 #include <string.h>
 #include "Link.h"
-#include "Opts.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "ml32i1m.lib")
@@ -22,7 +21,7 @@ namespace mathematica{
 class MathematicaLink : public Link
 {
 public:
-  MathematicaLink(const Opts &opts);
+  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, int timeout, int precision, int time_delta);
 
   virtual ~MathematicaLink() ;
 
@@ -119,9 +118,6 @@ public:
   inline std::string backend_name(){return "Mathematica";}
 
 private:
-
-  void init(const Opts& opts);
-
 
   /////////// Mathematica Function /////////////
   int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}

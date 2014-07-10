@@ -16,7 +16,7 @@
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
 #include "AffineApproximator.h"
-#include "TimeModifier.h"
+#include "ValueModifier.h"
 #include "SignalHandler.h"
 #include "Parser.h"
 
@@ -492,7 +492,7 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
   if(todo->phase_type == PointPhase)
   {
-    TimeModifier modifier(*backend);
+    ValueModifier modifier(*backend);
     for(auto entry : loaded_phase->variable_map)
     {
       todo->prev_map[entry.first] = modifier.substitute_time(todo->current_time, entry.second);

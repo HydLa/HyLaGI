@@ -1,5 +1,5 @@
-x <=> [5].
-y <=> [5].
+x <=> [10].
+y <=> [10].
 
 INIT(x,y,x0,y0,vx0,vy0) <=> x = x0 & y = y0 & x' = vx0 & y' = vy0.
 
@@ -12,9 +12,9 @@ COL(px1,py1,px2,py2,e) <=>
   ).
 
 CONST(p) <=> [](p'' = 0).
-WALL(b,e) <=> []( (b- -1 = -10*|x| | 10*|x| = b- +1) => b' = -e*b'- ).
+WALL(b,e) <=> []( (b- -1 = -10 | 10*|x| = b- +1) => b' = -e*b'- ).
 
 INIT(x[0],y[0],0,0,10,1),
 {INIT(x[i],y[i],5*i,5*i,0,0) | i in 1..|x|-1},
-{(CONST(x[i]), CONST(y[i]), CONST(x[j]), CONST(y[j])) << COL(x[i],y[i],x[j],y[j],4/5) | i in 0..|x|-2, j in i+1..|x|-1}. 
-{CONST(p) << WALL(p,4/5) | p in x or y}.
+{(CONST(x[i]), CONST(y[i]), CONST(x[j]), CONST(y[j])) << COL(x[i],y[i],x[j],y[j],1) | i in 0..|x|-2, j in i+1..|x|-1}. 
+{CONST(p) << WALL(p,1) | p in x or y}.

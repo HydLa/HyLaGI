@@ -45,3 +45,9 @@ publicMethod[
     ToString[Reduce[Implies[lhs, rhs] && Implies[rhs, lhs], Reals] ]
   ]
 ];
+
+publicMethod[
+  toNumericalValue,
+  expr,
+  toReturnForm[Rationalize[N[expr], approxPrecision] ]
+];

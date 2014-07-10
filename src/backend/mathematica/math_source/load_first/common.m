@@ -11,6 +11,7 @@ $MaxExtraPrecision = 1000;
  * prevRules:      rules converted from equalities of left-hand limits
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
+ * timeDelta: 1ステップで進む最低時刻
  * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの
  * timeVariables: variables内の変数を，ux[t]のようにしたもの
  * initVariables: variables内の変数を，ux[0]のようにしたもの
@@ -24,8 +25,6 @@ $MaxExtraPrecision = 1000;
  * createMapList: createMap関数への入力と出力の組のリスト
  * timeOutS: タイムアウトまでの時間．秒単位．
  * opt...: 各種オプションのON/OFF．
- * approxMode: 近似モード．
- * approxThreshold: 近似閾値．現在はLeafCountの値で判断している．
  * approxPrecision: 近似精度．
  *)
 
@@ -114,7 +113,7 @@ SetAttributes[prev, NHoldAll];
 SetAttributes[parameter, NHoldAll];
 
 
-If[optUseDebugPrint || True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく．いずれにしろそんなにコストはかからない？ *)
+If[True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく *)
   debugPrint[arg___] := Print[InputForm[{arg}]];
   simplePrint[arg___] := Print[delimiterAddedString[", ",
     List@@Map[symbolToString, Map[Unevaluated, Hold[arg]] ]
