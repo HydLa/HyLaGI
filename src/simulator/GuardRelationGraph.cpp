@@ -64,67 +64,27 @@ string GuardRelationGraph::GuardNode::get_name() const
   return ret + " (" + module.first + ")";
 }
 
-void GuardRelationGraph::initialize_node_visited()
-{
-  for(auto guard_node : guard_nodes){
-//    guard_node->visited = false;
-  }
-}
 
-
-void GuardRelationGraph::get_related_guards(constraint_t guard, ConstraintStore &guards, module_set_t &module_set){
-  initialize_node_visited();
+void GuardRelationGraph::get_adjacent_guards(const Variable &var, ConstraintStore &guards){
   guards.clear();
-  module_set.clear();
-  auto guard_it = guard_node_map.find(guard);
-  if(guard_it == guard_node_map.end())
-  {
-    VariableFinder finder;
-    finder.visit_node(guard);
-    variable_set_t variables;
-    variables = finder.get_all_variable_set();
-    for(auto variable : variables)
-    {
-      if(!variable_node_map.count(variable))continue;
-      VariableNode *var_node = variable_node_map[variable];
-      variable_set_t vars;
-      visit_node(var_node, guards, module_set, vars);
-    }
-  }
-  else
-  {
-    variable_set_t vars;
-    GuardNode *guard_node = guard_it->second;
-    visit_node(guard_node, guards, module_set, vars);
-  }
-}
-
-
-void GuardRelationGraph::get_related_guards(const Variable &var, ConstraintStore &guards, module_set_t &module_set){
-  initialize_node_visited();
-  guards.clear();
-  module_set.clear();
   if(!variable_node_map.count(var))return;
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
-  variable_set_t vars;
-  visit_node(var_node, guards, module_set, vars);
-}
-
-void GuardRelationGraph::visit_node(GuardNode* node, ConstraintStore &guards, module_set_t &ms, variable_set_t &vars){
-  ms.add_module(node->module);
-  guards.add_constraint(node->guard);
-  for(auto var_node : node->edges)
+  for(auto guard_node : var_node->edges)
   {
-    visit_node(var_node, guards, ms, vars);
+    guards.add_constraint(guard_node->guard);
   }
 }
 
-void GuardRelationGraph::visit_node(VariableNode* node, ConstraintStore &guards, module_set_t &ms, variable_set_t &vars){
-  vars.insert(node->variable);
-  for(auto guard_node : node->edges)
+
+void GuardRelationGraph::get_adjacent_variables(const constraint_t &guard, variable_set_t &vars){
+  vars.clear();
+  if(!guard_node_map.count(guard))return;
+  GuardNode *guard_node = guard_node_map[guard];
+  if(guard_node == nullptr)throw HYDLA_SIMULATE_ERROR("GuardNode is not found");
+  for(auto var_node: guard_node->edges)
   {
-    visit_node(guard_node, guards, ms, vars);
+    vars.insert(var_node->variable);
   }
 }
 

@@ -39,6 +39,19 @@ typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_pre
 typedef std::vector<variable_map_t>      variable_maps_t;
 typedef std::map<std::string, unsigned int> profile_t;
 
+struct DiscreteCause{
+  ask_t ask;
+  bool on_time;
+};
+
+struct CandidateOfNextPP{
+  std::vector<DiscreteCause >   causes;
+  value_t                       pp_time;
+};
+
+/// map from variables to candidates of next PP whose time is minimum
+typedef std::map<Variable, CandidateOfNextPP> next_pp_candidate_map_t;
+
 /**
  * シミュレーションすべきフェーズを表す構造体
  */
@@ -52,6 +65,7 @@ struct SimulationTodo{
   ask_set_t           positive_asks;
   ask_set_t           negative_asks;
   std::map<ask_t, bool>     discrete_causes;
+  next_pp_candidate_map_t   next_pp_candidate_map; 
   ConstraintStore           expanded_constraints;
   ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約
   

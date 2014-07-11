@@ -57,25 +57,16 @@ public:
   void dump_graph(std::ostream &os) const;
 
   /**
-   * Get constraints and modules related to given variable
+   * Get guards adjacent to given variable
    * @parameter constraints for output
-   * @parameter modules for output
    */
-  void get_related_guards(const Variable &variable, ConstraintStore &guards,
-                               module_set_t &modules);
+  void get_adjacent_guards(const Variable &variable, ConstraintStore &guards);
 
   /**
-   * Get guards and modules related to given variable
-   * @parameter guards for output
-   * @parameter modules for output
+   * Get variables adjacent to given guard
+   * @parameter constraints for output
    */
-  void get_related_guards(constraint_t constraint, ConstraintStore &guards,
-                               module_set_t &modules);
-
-  /**
-   * Get constraints which related to given variables
-   */
-  ConstraintStore get_guards(const std::vector<Variable>& variables);
+  void get_adjacent_variables(const constraint_t &guards, variable_set_t &variables);
 
   /**
    * Get all guards
@@ -90,11 +81,6 @@ private:
 
   VariableNode* add_variable_node(Variable &);
   
-  void visit_node(GuardNode* node, ConstraintStore &guards, module_set_t &ms, variable_set_t &vars);
-  void visit_node(VariableNode* node, ConstraintStore &guards, module_set_t &ms, variable_set_t &vars);
-  void initialize_node_visited();
- 
-
   void visit(boost::shared_ptr<symbolic_expression::Ask> node);
 
   var_nodes_t variable_nodes;
