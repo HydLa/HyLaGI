@@ -46,7 +46,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
     for( auto weaker : weaker_modules_[it] ){
       if(ms.find(weaker) != ms.end()){
         has_weaker = true;
-	break;
+        break;
       }
     }
     if(has_weaker) continue;
@@ -67,13 +67,14 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
         for( auto wmit : weaker_modules_[roop_it] ){
 	  // wmit is a module which is weaker than roop_it
 	  // if wmit is included by current module set
-          if(current_ms.find(wmit) != current_ms.end() && roop_it != wmit){
+          if(current_ms.find(wmit) != current_ms.end()){
 	    // push wmit to childs
             childs.push_back(wmit);
           }
         }
       }
     }
+    if(same_modules_.count(it)) removable_for_it.insert(same_modules_[it]);
     removable.push_back(removable_for_it);
   }
 
@@ -170,12 +171,17 @@ std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream
 {
   s << "digraph priority_data { " << std::endl;
   s << "  edge [dir=back];" << std::endl;
-  for(auto m : maximal_module_set_){
-    s << "  \"" << m.first << "\"" << std::endl;
+  for(auto m : required_ms_){
+    s << "  \"" << m.first << "\" [shape=box];" << std::endl;
   }
   for(auto m : weaker_modules_){
     for(auto wm : m.second){
       s << "  \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
+    }
+  }
+  for(auto m : same_modules_){
+    for(auto sm : m.second){
+      s << "  \"" << m.first.first << "\" -- \"" << sm.first << "\";" << std::endl;
     }
   }
   s << "}" << std::endl;
@@ -216,14 +222,58 @@ void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
   }
 }
 
+ModuleSet IncrementalModuleSet::get_circular_ms(ModuleSet root, module_t &origin, module_t &module)
+{
+  ModuleSet ret;
+  if(origin == module){
+    ret.add_module(module);
+    return ret;
+  }
+  if(root.find(module) != root.end()){
+    return ret;
+  }
+  root.add_module(module);
+  ModuleSet ms;
+  if(weaker_modules_.count(module)){
+    for(auto weak : weaker_modules_[module]){
+      ms = get_circular_ms(root,origin,weak);
+      if(!ms.empty()){
+        ret.insert(ms);
+      }
+    }
+  }
+  if(!ret.empty()) ret.add_module(module);
+  return ret;
+}
+
 void IncrementalModuleSet::init()
 {
   full_module_set_set_.clear();
   full_module_set_set_.insert(maximal_module_set_);
 
-  for(auto ms : maximal_module_set_)
-    if(!stronger_modules_.count(ms)) required_ms_.add_module(ms);
+  for(auto m : maximal_module_set_){
+    ModuleSet ms;
+    ms.add_module(m);
+    for(auto weak : weaker_modules_[m]){
+      ModuleSet circular = get_circular_ms(ms, m, weak);
+      if(!circular.empty()){
+        same_modules_[m].insert(circular);
+      }
+    }
+  }
+  for(auto m : maximal_module_set_){
+    if(same_modules_.count(m)){
+      stronger_modules_[m].erase(same_modules_[m]);
+      weaker_modules_[m].erase(same_modules_[m]);
+      same_modules_[m].erase(m);
+    }
+  }
 
+  for(auto m : maximal_module_set_){
+    if(!stronger_modules_.count(m) && !same_modules_.count(m)){ 
+      required_ms_.add_module(m);
+    }
+  }
   maximal_module_set_.erase(required_ms_);
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }

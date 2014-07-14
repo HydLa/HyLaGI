@@ -119,6 +119,8 @@ public:
    */
   virtual void init();
 
+  virtual ModuleSet get_circular_ms(ModuleSet, module_t&, module_t&);
+
   virtual module_set_set_t get_full_ms_list() const;
 
 private:
@@ -143,6 +145,8 @@ private:
    */ 
   node_relations_data_t stronger_modules_;
   node_relations_data_t weaker_modules_;
+  node_relations_data_t same_modules_;
+   
   /// required module set
   ModuleSet required_ms_;
 };
