@@ -69,8 +69,10 @@ bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t par
   return true;
 }
 
-void ConstraintDifferenceCalculator::set_relation_graph(const boost::shared_ptr<RelationGraph> graph){
-  relation_graph_ = graph;
+void ConstraintDifferenceCalculator::set_relation_graph(const boost::shared_ptr<RelationGraph> relation_graph,
+    const boost::shared_ptr<GuardRelationGraph> guard_relation_graph){
+  relation_graph_ = relation_graph;
+  guard_relation_graph_ = guard_relation_graph;
 }
 
 
