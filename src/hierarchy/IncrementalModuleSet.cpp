@@ -252,6 +252,13 @@ void IncrementalModuleSet::init()
   full_module_set_set_.insert(maximal_module_set_);
 
   for(auto m : maximal_module_set_){
+    if(!stronger_modules_.count(m)){ 
+      required_ms_.add_module(m);
+    }
+  }
+  maximal_module_set_.erase(required_ms_);
+
+  for(auto m : maximal_module_set_){
     ModuleSet ms;
     ms.add_module(m);
     for(auto weak : weaker_modules_[m]){
@@ -269,12 +276,6 @@ void IncrementalModuleSet::init()
     }
   }
 
-  for(auto m : maximal_module_set_){
-    if(!stronger_modules_.count(m) && !same_modules_.count(m)){ 
-      required_ms_.add_module(m);
-    }
-  }
-  maximal_module_set_.erase(required_ms_);
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }
 
