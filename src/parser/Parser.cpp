@@ -142,6 +142,18 @@ node_sptr Parser::statement(){
   }
   lexer.set_current_position(position);
 
+  // list_definition "."
+  if(list_definition()){
+    position_t tmp_position = lexer.get_current_position();
+    if(lexer.get_token() == PERIOD){
+      return node_sptr(new True());
+    }
+    lexer.set_current_position(tmp_position);
+    error_occurred(lexer.get_current_position(), "expected \".\" after variable list definition");
+    return node_sptr(new True());
+  }
+  lexer.set_current_position(position);
+
   // def_statement(constraint_def) "."
   boost::shared_ptr<ConstraintDefinition> cd;
   if((cd = constraint_def())){
@@ -167,18 +179,6 @@ node_sptr Parser::statement(){
     lexer.set_current_position(tmp_position);
     error_occurred(lexer.get_current_position(), "expected \".\" after program definition");
     return pd;
-  }
-  lexer.set_current_position(position);
-
-  // list_definition "."
-  if(list_definition()){
-    position_t tmp_position = lexer.get_current_position();
-    if(lexer.get_token() == PERIOD){
-      return node_sptr(new True());
-    }
-    lexer.set_current_position(tmp_position);
-    error_occurred(lexer.get_current_position(), "expected \".\" after variable list definition");
-    return node_sptr(new True());
   }
   lexer.set_current_position(position);
   
@@ -1445,15 +1445,48 @@ list_t Parser::list_factor(std::string list_name, std::map<std::string, std::str
 
   // identifier
   if((name = identifier()) != ""){
+    // defined list
     if(list_map.find(name) != list_map.end()){
       return list_map[name];
+    }
+    // var num..var num
+    int from,to;
+    std::string head = "";
+    for(int i = 0; i < name.size(); i++){
+      Parser tmp_parser(name.substr(i));
+      tmp_parser.set_list(list_map);
+      boost::shared_ptr<Number> num = tmp_parser.non_variable_expression(bound_vars);
+      if(num){
+        if(tmp_parser.parse_ended()){
+          from = (int)std::stof(num->get_number());
+          head = name.substr(0,i);
+          break;
+        }
+      }
+    }
+    if(head != ""){
+      if(lexer.get_token() == TWO_PERIOD){
+        if((name = identifier()) != ""){
+          Parser tmp_parser(name.substr(head.size()));
+          tmp_parser.set_list(list_map);
+          boost::shared_ptr<Number> num = tmp_parser.non_variable_expression(bound_vars);
+          if(num){
+            if(tmp_parser.parse_ended()){
+              to = (int)std::stof(num->get_number());
+              for(int i = from; i <= to; i++){
+                ret.push_back(head+std::to_string(i));
+              }
+              return ret;
+            }
+          }
+        }
+      }
     }
   }
   lexer.set_current_position(position);
 
 
   // non_expression ".." non_variable_expression
-  
   boost::shared_ptr<Number> num1, num2;
   if((num1 = non_variable_expression(bound_vars))){
     if(lexer.get_token() == TWO_PERIOD){

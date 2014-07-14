@@ -151,10 +151,9 @@ std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& 
   reset();
   s << "digraph module_set { " << std::endl;
   s << "  edge [dir=back];" << std::endl;
-  s << "  \"" << get_module_set().get_name() << "\"" << std::endl;
   module_set_set_t mss;
   while(has_next()){
-    ModuleSet tmp = get_module_set();
+    ModuleSet tmp = get_weaker_module_set();
     generate_new_ms(mss, tmp);
     for(auto ms : ms_to_visit_){
       if(tmp.including(ms)){
