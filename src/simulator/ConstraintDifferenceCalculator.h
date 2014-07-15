@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RelationGraph.h"
+#include "AskRelationGraph.h"
 #include "PhaseResult.h"
 
 namespace hydla {
@@ -20,7 +21,6 @@ public:
 
   /**
    * Get connected constraints which are changed
-   * @parameter constraints_vector for output
    */
   ConstraintStore get_difference_constraints();
   
@@ -46,11 +46,17 @@ public:
    */
   bool is_continuous(const phase_result_sptr_t parent, const constraint_t constraint);
 
-  void set_relation_graph(const boost::shared_ptr<RelationGraph> graph);
+  void set_relation_graph(const boost::shared_ptr<RelationGraph> relation_graph,
+      const boost::shared_ptr<AskRelationGraph> ask_relation_graph);
+
+  void collect_ask(const ask_set_t &positive_asks,
+      const ask_set_t &negative_asks,
+      ask_set_t &unknown_asks);
 
 private:
   ConstraintStore difference_constraints_;
   boost::shared_ptr<RelationGraph> relation_graph_;
+  boost::shared_ptr<AskRelationGraph> ask_relation_graph_;
 };
 
 } //namespace simulator

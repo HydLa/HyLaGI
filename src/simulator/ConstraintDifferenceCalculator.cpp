@@ -69,8 +69,28 @@ bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t par
   return true;
 }
 
-void ConstraintDifferenceCalculator::set_relation_graph(const boost::shared_ptr<RelationGraph> graph){
-  relation_graph_ = graph;
+void ConstraintDifferenceCalculator::set_relation_graph(const boost::shared_ptr<RelationGraph> relation_graph,
+    const boost::shared_ptr<AskRelationGraph> ask_relation_graph){
+  relation_graph_ = relation_graph;
+  ask_relation_graph_ = ask_relation_graph;
+}
+
+void ConstraintDifferenceCalculator::collect_ask(const ask_set_t &positive_asks,
+    const ask_set_t &negative_asks,
+    ask_set_t &unknown_asks){
+  VariableFinder finder;
+  for(auto constraint : difference_constraints_){
+    finder.visit_node(constraint);
+  }
+  //TODO: prevを区別する
+  variable_set_t variables = finder.get_all_variable_set();
+  AskRelationGraph::asks_t asks;
+  for(auto variable : variables){
+    ask_relation_graph_->get_adjacent_asks(variable.get_name(), asks);
+    for(auto ask : asks){
+      if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
+    }
+  }
 }
 
 

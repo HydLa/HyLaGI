@@ -369,8 +369,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
   relation_graph_.reset(new RelationGraph(ms)); 
-  guard_relation_graph_.reset(new GuardRelationGraph(ms));
-  differnce_calculator_.set_relation_graph(relation_graph_);
+  guard_relation_graph_.reset(new AskRelationGraph(ms));
+  differnce_calculator_.set_relation_graph(relation_graph_, guard_relation_graph_);
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
@@ -525,10 +525,15 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
       }
     }
 
-    ask_collector.collect_ask(state->expanded_constraints,
-        &positive_asks,
-        &negative_asks,
-        &unknown_asks);
+    if(opts_->reuse && state->in_following_step()){
+      differnce_calculator_.collect_ask(positive_asks,
+          negative_asks, unknown_asks);
+    }else{
+      ask_collector.collect_ask(state->expanded_constraints,
+          &positive_asks,
+          &negative_asks,
+          &unknown_asks);
+    }
 
     timer::Timer entailment_timer;
 
