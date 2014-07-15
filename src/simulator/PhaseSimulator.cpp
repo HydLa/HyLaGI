@@ -525,10 +525,15 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
       }
     }
 
-    ask_collector.collect_ask(state->expanded_constraints,
-        &positive_asks,
-        &negative_asks,
-        &unknown_asks);
+    if(opts_->reuse && state->in_following_step()){
+      differnce_calculator_.collect_ask(positive_asks,
+          negative_asks, unknown_asks);
+    }else{
+      ask_collector.collect_ask(state->expanded_constraints,
+          &positive_asks,
+          &negative_asks,
+          &unknown_asks);
+    }
 
     timer::Timer entailment_timer;
 
