@@ -181,7 +181,8 @@ std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream
   }
   for(auto m : same_modules_){
     for(auto sm : m.second){
-      s << "  \"" << m.first.first << "\" -- \"" << sm.first << "\";" << std::endl;
+      s << "  \"" << m.first.first << "\" -> \"" << sm.first << "\" [style=dotted];" << std::endl;
+      s << "  \"" << sm.first << "\" -> \"" << m.first.first << "\" [style=dotted];" << std::endl;
     }
   }
   s << "}" << std::endl;
