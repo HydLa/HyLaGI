@@ -109,6 +109,11 @@ int ModuleSet::compare(const ModuleSet& rhs) const
   return comp;
 }
 
+int ModuleSet::erase(const module_t& m)
+{
+  return module_list_.erase(m);
+}
+
 int ModuleSet::erase(const ModuleSet& ms)
 {
   int sum = 0;
