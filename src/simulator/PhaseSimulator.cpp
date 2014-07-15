@@ -369,7 +369,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
   relation_graph_.reset(new RelationGraph(ms)); 
-  guard_relation_graph_.reset(new GuardRelationGraph(ms));
+  guard_relation_graph_.reset(new AskRelationGraph(ms));
   differnce_calculator_.set_relation_graph(relation_graph_);
 
   if(opts_->dump_relation){

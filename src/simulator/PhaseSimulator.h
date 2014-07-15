@@ -10,7 +10,7 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
-#include "GuardRelationGraph.h"
+#include "AskRelationGraph.h"
 #include "ConstraintDifferenceCalculator.h"
 
 namespace hydla {
@@ -114,7 +114,7 @@ protected:
   int phase_sum_;
 
   boost::shared_ptr<RelationGraph> relation_graph_;
-  boost::shared_ptr<GuardRelationGraph> guard_relation_graph_;
+  boost::shared_ptr<AskRelationGraph> guard_relation_graph_;
 
   /**
    * 解候補モジュール集合のコンテナ
