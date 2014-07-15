@@ -86,6 +86,7 @@ public:
    * erase module from module_list_
    */
   int erase(const ModuleSet& ms);
+  int erase(const module_t& m);
 
   /**
    * モジュールを追加
