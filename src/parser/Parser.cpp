@@ -1072,9 +1072,6 @@ node_sptr Parser::tautology(){
     if(lexer.get_token() == ALPHABET){
       // "TRUE"
       if(lexer.get_current_token_string() == "TRUE"){ return boost::shared_ptr<True>(new True());}
-    }
-    if(lexer.get_token() == ALPHABET){
-      // "TRUE"
       if(lexer.get_current_token_string() == "FALSE"){ return boost::shared_ptr<False>(new False());}
     }
   }
