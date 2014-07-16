@@ -34,15 +34,17 @@ bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUA
  * RET = NAME[num]
  * NAME[num] parsed by FUNCTION
  */
-#define list_element(RET, TYPE, FUNCTION, NAME, BOUND_VARS, ADDITIONAL){ \
+#define list_element(RET, TYPE, FUNCTION, BOUND_VARS, ADDITIONAL){       \
+  RET = TYPE();                                                          \
   boost::shared_ptr<Number> LIST_INDEX;                                  \
   position_t LEXER_POSITION = lexer.get_current_position();              \
-  if(list_map.find(NAME)!=list_map.end()){                               \
+  list_t LIST = list("", BOUND_VARS);                                    \
+  if(!LIST.empty()){                                                     \
     if(lexer.get_token() == LEFT_BOX_BRACKETS){                          \
       if((LIST_INDEX = non_variable_expression(BOUND_VARS))){            \
         if(lexer.get_token() == RIGHT_BOX_BRACKETS){                     \
           int INT_INDEX = (int)std::stof(LIST_INDEX->get_number());      \
-          Parser ELEMENT_PARSER(list_map[NAME][INT_INDEX]+ADDITIONAL);   \
+          Parser ELEMENT_PARSER(LIST[INT_INDEX]+ADDITIONAL);             \
           ELEMENT_PARSER.set_list(list_map);                             \
           RET = ELEMENT_PARSER.FUNCTION;                                 \
           if(!ELEMENT_PARSER.parse_ended()){                             \
@@ -412,12 +414,9 @@ node_sptr Parser::module(){
   lexer.set_current_position(position);
 
   // list_element
-  if((name = identifier()) != ""){
-    // program?
-    std::map<std::string,std::string> null_map;
-    list_element(ret,node_sptr,program(),name,null_map,".");
-    if(ret) return ret;
-  }
+  std::map<std::string,std::string> null_map;
+  list_element(ret,node_sptr,program(),null_map,".");
+  if(ret) return ret;
   lexer.set_current_position(position);
 
   // program_caller
@@ -883,11 +882,12 @@ node_sptr Parser::factor(){
     if(lexer.get_current_token_string() == "E"){
       return boost::shared_ptr<E>(new E());
     }
-    std::map<std::string,std::string> null_map;
-    list_element(ret, node_sptr, expression(), name, null_map, ""); 
-    if(ret) return ret;
   }
   lexer.set_current_position(position);
+  std::map<std::string,std::string> null_map;
+  list_element(ret, node_sptr, expression(), null_map, ""); 
+  if(ret) return ret;
+
   boost::shared_ptr<ArbitraryNode> func;
 
   // (function | unsupported_function) "(" (expression ("," expression)* )? ")"
@@ -990,9 +990,9 @@ boost::shared_ptr<Variable> Parser::variable(std::map<std::string, std::string> 
   boost::shared_ptr<Variable> ret;
   // identifier
   position_t position = lexer.get_current_position();
+  list_element(ret, boost::shared_ptr<Variable>, variable(bound_vars), bound_vars, ""); 
+  if(ret) return ret;
   if((name = identifier()) != ""){
-    list_element(ret, boost::shared_ptr<Variable>, variable(bound_vars), name, bound_vars, ""); 
-    if(ret) return ret;
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token () != LEFT_BOX_BRACKETS){
       lexer.set_current_position(tmp_position);
@@ -1072,6 +1072,7 @@ node_sptr Parser::tautology(){
     if(lexer.get_token() == ALPHABET){
       // "TRUE"
       if(lexer.get_current_token_string() == "TRUE"){ return boost::shared_ptr<True>(new True());}
+      if(lexer.get_current_token_string() == "FALSE"){ return boost::shared_ptr<False>(new False());}
     }
   }
   lexer.set_current_position(position);
@@ -1175,14 +1176,15 @@ std::string Parser::identifier(){
 // number := [0-9]+ ("." [0-9]+)?
 node_sptr Parser::number(){
   position_t position = lexer.get_current_position();
-  Token token = lexer.get_token();
+  node_sptr list_elem;
+  std::map<std::string,std::string> null_map;
+  list_element(list_elem, node_sptr, number(), null_map, ""); 
+  if(list_elem) return list_elem;
 
+  Token token = lexer.get_token();
   if(token == IDENTIFIER || token == ALPHABET){
     node_sptr ret;
     std::string name = lexer.get_current_token_string();
-    std::map<std::string, std::string> null_map;
-    list_element(ret, node_sptr, number(), name, null_map, ""); 
-    if(ret) return ret;
   }
 
   if(token == NUMBER){
@@ -1205,12 +1207,10 @@ node_sptr Parser::number(){
   if(token == VERTICAL_BAR){
     std::string name;
     boost::shared_ptr<Number> ret;
-    if((name = identifier()) != ""){
-      if(list_map.find(name) != list_map.end()){
-        ret = boost::shared_ptr<Number>(new Number(std::to_string(list_map[name].size())));
-      }
+    list_t l;
+    if(!((l=list("",std::map<std::string,std::string>())).empty())){
       if(lexer.get_token() == VERTICAL_BAR){
-        return ret;
+        return boost::shared_ptr<Number>(new Number(std::to_string(l.size())));
       }
     }
   }
