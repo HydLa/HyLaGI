@@ -32,7 +32,7 @@ void RelationGraph::add(module_t &mod)
 void RelationGraph::dump_graph(ostream & os) const
 {
   os << "graph g {\n";
-  os << "graph [ranksep = 2.0 ,rankdir = LR];\n";
+  os << "graph [ranksep = 1.0 ,rankdir = LR];\n";
   for(auto constraint_node : constraint_nodes) {
     string constraint_name = constraint_node->get_name();
     os << "  \"" << constraint_name << "\" [shape = box]\n";
@@ -45,7 +45,7 @@ void RelationGraph::dump_graph(ostream & os) const
         << "\"";
       if(edge.ref_prev)
       {
-        os << "[label = \"prev\"]";
+        os << " [style = dotted]";
       }
       os <<  ";\n";
     }
