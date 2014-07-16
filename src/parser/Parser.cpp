@@ -44,7 +44,7 @@ bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUA
       if((LIST_INDEX = non_variable_expression(BOUND_VARS))){            \
         if(lexer.get_token() == RIGHT_BOX_BRACKETS){                     \
           int INT_INDEX = (int)std::stof(LIST_INDEX->get_number());      \
-          Parser ELEMENT_PARSER(LIST[INT_INDEX]+ADDITIONAL);             \
+          Parser ELEMENT_PARSER(LIST[INT_INDEX-1]+ADDITIONAL);           \
           ELEMENT_PARSER.set_list(list_map);                             \
           RET = ELEMENT_PARSER.FUNCTION;                                 \
           if(!ELEMENT_PARSER.parse_ended()){                             \
