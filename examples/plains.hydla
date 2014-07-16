@@ -1,0 +1,18 @@
+
+VELOCITY(v) <=> [](v = 220).
+PARAMETER <=> 100 < p < 1000 /\ [](p' = 0).
+
+FLAG <=> [](colided = 0).
+
+COLLISION(x1,y1,x2,y2) <=>
+[]( (x1- - x2-)^2 + (y1- - y2-)^2 = 30^2 =>  colided = 1).
+
+AVOID_START(x1,y1,s1,x2,y2) <=>
+[]( (x1- - x2-)^2 + (y1- - y2-)^2 = (30+p)^2 =>  s1 = s1- + PI/2).
+
+AVOIDING(s,s0) <=> []( s- != s0- => s' = -1/2).
+
+AVOID_END(s,s0) <=> []( s- = s0- - PI/2 =>
+s- = s0-).
+
+ASSERT(colided = 0).
