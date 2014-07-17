@@ -141,11 +141,6 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
-  void set_symmetric_difference(
-    const ConstraintStore& parent_constraints,
-    const ConstraintStore& current_constraints,
-    ConstraintStore& result );
-
   bool calculate_closure(simulation_todo_sptr_t& state);
 
 

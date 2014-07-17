@@ -6,52 +6,36 @@ namespace hydla
 namespace simulator
 {
 
-void ConstraintDifferenceCalculator::set_difference_constraints(const ConstraintStore& constraints)
-{
+void ConstraintDifferenceCalculator::calculate_difference_constraints(const phase_result_sptr_t parent, const boost::shared_ptr<RelationGraph> relation_graph){
+  difference_constraints_.clear();
+  
+  ConstraintStore current_constraints = relation_graph->get_constraints();
+  ConstraintStore difference_constraints;
+  if(parent->phase_type == IntervalPhase){
+    set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
+  }
+  else{
+    difference_constraints = parent->changed_constraints;
+  }
+  
   ConstraintStore tmp_constraints;
   module_set_t module_set;
   //TODO: IPでprevを区別する
-  for(auto constraint : constraints){
-    relation_graph_->get_related_constraints(constraint, tmp_constraints, module_set);
+  for(auto constraint : difference_constraints){
+    relation_graph->get_related_constraints(constraint, tmp_constraints, module_set);
     difference_constraints_.add_constraint_store(tmp_constraints);
   }
 }
 
+void ConstraintDifferenceCalculator::add_diference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph){
+  ConstraintStore tmp_constraints;
+  module_set_t module_set;
+  relation_graph->get_related_constraints(constraint, tmp_constraints, module_set);
+  difference_constraints_.add_constraint_store(tmp_constraints);
+}
+
 ConstraintStore ConstraintDifferenceCalculator::get_difference_constraints(){
   return difference_constraints_;
-}
-
-bool ConstraintDifferenceCalculator::is_difference(const ConstraintStore constraint_store)
-{
-  set_difference_constraints(difference_constraints_);
-  for(auto constraint : constraint_store){
-    if(difference_constraints_.count(constraint)) return true;
-  }
-  return false;
-}
-
-bool ConstraintDifferenceCalculator::is_difference(const constraint_t constraint)
-{
-  ConstraintStore constraint_store;
-  module_set_t module_set;
-  relation_graph_->get_related_constraints(constraint, constraint_store, module_set);
-  for(auto tmp_constraint : constraint_store){
-    if(difference_constraints_.count(tmp_constraint)) return true;
-  }
-  return false;
-}
-
-bool ConstraintDifferenceCalculator::is_difference(const Variable& variable)
-{
-  VariableFinder finder;
-  for(auto constraint : difference_constraints_){
-    finder.visit_node(constraint);
-  }
-  return finder.include_variable(variable) || finder.include_variable_prev(variable);
-}
-
-void ConstraintDifferenceCalculator::clear_difference(){
-  difference_constraints_.clear();
 }
 
 bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t parent, const constraint_t constraint)
@@ -67,13 +51,8 @@ bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t par
   return true;
 }
 
-void ConstraintDifferenceCalculator::set_relation_graph(const boost::shared_ptr<RelationGraph> relation_graph,
-    const boost::shared_ptr<AskRelationGraph> ask_relation_graph){
-  relation_graph_ = relation_graph;
-  ask_relation_graph_ = ask_relation_graph;
-}
-
-void ConstraintDifferenceCalculator::collect_ask(const ask_set_t &positive_asks,
+void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
+    const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
   VariableFinder finder;
@@ -84,10 +63,38 @@ void ConstraintDifferenceCalculator::collect_ask(const ask_set_t &positive_asks,
   variable_set_t variables = finder.get_all_variable_set();
   AskRelationGraph::asks_t asks;
   for(auto variable : variables){
-    ask_relation_graph_->get_adjacent_asks(variable.get_name(), asks);
+    ask_relation_graph->get_adjacent_asks(variable.get_name(), asks);
     for(auto ask : asks){
       if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
     }
+  }
+}
+
+void ConstraintDifferenceCalculator::set_symmetric_difference(
+    const ConstraintStore& parent_constraints,
+    const ConstraintStore& current_constraints,
+    ConstraintStore& result ){
+  ConstraintStore::iterator it1 = parent_constraints.begin();
+  ConstraintStore::iterator it2 = current_constraints.begin();
+  while(it1 != parent_constraints.end() && it2 != current_constraints.end()){
+    if(*it1 < *it2){
+      result.insert(*it1);
+      it1++;
+    }else if(*it2 < *it1){
+      result.insert(*it2);
+      it2++;
+    }else{
+      it1++;
+      it2++;
+    }
+  }
+  while(it1 != parent_constraints.end()){
+    result.insert(*it1);
+    it1++;
+  }
+  while(it2 != current_constraints.end()){
+    result.insert(*it2);
+    it2++;
   }
 }
 

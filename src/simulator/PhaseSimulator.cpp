@@ -371,7 +371,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   relation_graph_.reset(new RelationGraph(ms)); 
   guard_relation_graph_.reset(new AskRelationGraph(ms));
-  difference_calculator_.set_relation_graph(relation_graph_, guard_relation_graph_);
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
@@ -492,16 +491,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
-    difference_calculator_.clear_difference();
-    if(state->phase_type == PointPhase){
-      ConstraintStore difference_constraints;
-      set_symmetric_difference(state->parent->current_constraints,
-        relation_graph_->get_constraints(), difference_constraints );
-      difference_calculator_.set_difference_constraints(difference_constraints);
-    }
-    else{
-      difference_calculator_.set_difference_constraints(state->parent->changed_constraints);
-    }
+    difference_calculator_.calculate_difference_constraints(state->parent, relation_graph_);
   }
 
   do{
@@ -527,8 +517,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
     }
 
     if(opts_->reuse && state->in_following_step()){
-      difference_calculator_.collect_ask(positive_asks,
-          negative_asks, unknown_asks);
+      difference_calculator_.collect_ask(guard_relation_graph_,
+        positive_asks, negative_asks, unknown_asks);
     }else{
       ask_collector.collect_ask(state->expanded_constraints,
           &positive_asks,
@@ -579,12 +569,18 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
             relation_graph_->set_expanded((*it)->get_child(), true);
+            if(!state->parent->positive_asks.count(*it)){
+              difference_calculator_.add_diference_constraints((*it)->get_child(), relation_graph_);
+            }
             unknown_asks.erase(it++);
             expanded = true;
             break;
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
+            if(!state->parent->negative_asks.count(*it)){
+              difference_calculator_.add_diference_constraints((*it)->get_child(), relation_graph_);
+            }
             unknown_asks.erase(it++);
             break;
           case BRANCH_VAR:
@@ -617,38 +613,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
       // 分岐先を生成（導出されない方）
       // TODO: 分岐時の制約の追加をしていない。
       negative_asks.insert(branched_ask);
+      if(!state->parent->negative_asks.count(branched_ask)){
+        difference_calculator_.add_diference_constraints(branched_ask->get_child(), relation_graph_);
+      }
       return calculate_closure(state);
     }
   }
   return true;
-}
-
-void PhaseSimulator::set_symmetric_difference(
-    const ConstraintStore& parent_constraints,
-    const ConstraintStore& current_constraints,
-    ConstraintStore& result ){
-  ConstraintStore::iterator it1 = parent_constraints.begin();
-  ConstraintStore::iterator it2 = current_constraints.begin();
-  while(it1 != parent_constraints.end() && it2 != current_constraints.end()){
-    if(*it1 < *it2){
-      result.insert(*it1);
-      it1++;
-    }else if(*it2 < *it1){
-      result.insert(*it2);
-      it2++;
-    }else{
-      it1++;
-      it2++;
-    }
-  }
-  while(it1 != parent_constraints.end()){
-    result.insert(*it1);
-    it1++;
-  }
-  while(it2 != current_constraints.end()){
-    result.insert(*it2);
-    it2++;
-  }
 }
 
 PhaseSimulator::todo_list_t
