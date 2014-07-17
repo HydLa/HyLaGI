@@ -555,17 +555,19 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         if(opts_->reuse && state->in_following_step()){
           timer::Timer timer;
           if(!state->discrete_causes.find(*it)->second){
-            if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
-              if(state->parent->positive_asks.count(*it)){
-                positive_asks.insert(*it);
-                relation_graph_->set_expanded((*it)->get_child(), true);
-                expanded = true;
-              }else{
-                negative_asks.insert(*it);
+            if(state->phase_type == IntervalPhase){
+              if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
+                if(state->parent->positive_asks.count(*it)){
+                  positive_asks.insert(*it);
+                  relation_graph_->set_expanded((*it)->get_child(), true);
+                  expanded = true;
+                }else{
+                  negative_asks.insert(*it);
+                }
+                unknown_asks.erase(it++);
+                state->profile["OmitEntailment"] += timer.get_elapsed_us();
+                continue;
               }
-              unknown_asks.erase(it++);
-              state->profile["OmitEntailment"] += timer.get_elapsed_us();
-              continue;
             }
           }
           state->profile["OmitEntailment"] += timer.get_elapsed_us();
