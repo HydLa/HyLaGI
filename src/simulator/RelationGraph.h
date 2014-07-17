@@ -104,19 +104,29 @@ public:
 
   /**
    * Get constraints and modules related to given variable
-   * @parameter constraints for output
+   * @parameter list of connectedconstraints for output
    * @parameter modules for output
    */
   void get_related_constraints(const Variable &variable, ConstraintStore &constraints,
                                module_set_t &modules);
 
   /**
-   * Get constraints and modules related to given variable
+   * Get constraints and modules related to given constraint
    * @parameter constraints for output
    * @parameter modules for output
    */
   void get_related_constraints(constraint_t constraint, ConstraintStore &constraints,
                                module_set_t &modules);
+
+
+
+  /**
+   * Get vector of constraints and modules related to given constraints
+   * @parameter vector of connected constraints for output
+   * @parameter vector of modules for output
+   */
+  void get_related_constraints_vector(const ConstraintStore &constraints, std::vector<ConstraintStore> &constraints_vector,
+                               std::vector<module_set_t> &modules_vector);
 
 
   /**

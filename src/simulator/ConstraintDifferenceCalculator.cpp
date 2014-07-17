@@ -62,7 +62,7 @@ bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t par
   variable_set_t variables(finder.get_all_variable_set());
   for(auto variable : variables){
     if(parent->phase_type == PointPhase){
-      auto differential_pair = parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count()));
+      auto differential_pair = parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
       if(differential_pair == parent->variable_map.end() || differential_pair->second.undefined()) return false;
     }
   }

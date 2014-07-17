@@ -188,24 +188,16 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 
   backend->call("resetConstraintForVariable", 0, "", "");
 
+  for(auto constraint : constraint_store)
   {
-    timer::Timer timer;
-    for(auto constraint : constraint_store)
-    {
-      finder.visit_node(constraint);
-    }
-    finder.visit_node(guard->get_child());
-    add_continuity(finder, phase);
-    profile["FindAndAddContinuity"] += timer.get_elapsed_us();
+    finder.visit_node(constraint);
   }
+  finder.visit_node(guard->get_child());
+  add_continuity(finder, phase);
 
-  {
-    timer::Timer timer;
-    backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
-    backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
-    profile["AddConstraintInCE"] += timer.get_elapsed_us();
-  }
-
+  backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
+  backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
+  
   cc_result = call_backend_check_consistency(phase);
 
 
@@ -244,6 +236,53 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   return ce_result;
 }
 
+void ConsistencyChecker::check_consistency(const ConstraintStore &constraints, 
+                                           RelationGraph &relation_graph,
+                                           module_set_t &module_set,
+                                           CheckConsistencyResult &result,
+                                           const PhaseType& phase)
+{
+  VariableFinder finder;
+  for(auto constraint : constraints)
+  {
+    finder.visit_node(constraint);
+  }
+  CheckConsistencyResult tmp_result;
+  tmp_result = check_consistency(constraints, finder, phase);
+
+  // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）
+  if(!tmp_result.consistent_store.consistent())
+  {
+    result.consistent_store = tmp_result.consistent_store;
+    inconsistent_module_sets.push_back(module_set);
+  }
+  else
+  {
+    // TODO: ここで変数表が必ずしもできるとは限らない．underconstraintの場合があるので対処する．
+    result.consistent_store.add_constraint_store(tmp_result.consistent_store);
+    vector<variable_map_t> create_result;
+    if(phase == PointPhase)
+    {
+      backend->call("createVariableMap", 0, "", "cv", &create_result);
+    }
+    else
+    {
+      backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
+    }
+    // TODO: deal with multiple variable map
+    if(create_result.size() == 1)
+    {
+      for(auto var_entry : create_result[0])
+      {
+        result_maps[0][var_entry.first] = var_entry.second;
+      }
+    }
+    else if(create_result.size() > 1)
+    {
+      throw SimulateError("result variable map is not single.");
+    }
+  }
+}
 
 CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse, profile_t &profile)
 {
@@ -252,66 +291,24 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   result_maps.clear();
   result_maps.push_back(variable_map_t());
   HYDLA_LOGGER_DEBUG("");
-  for(int i = 0; i < relation_graph.get_connected_count(); i++)
+  if(reuse)
   {
-    ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
-
-    HYDLA_LOGGER_DEBUG_VAR(tmp_constraint_store);
-    HYDLA_LOGGER_DEBUG_VAR(relation_graph.get_modules(i).get_name());
+    ConstraintStore difference_constraints = difference_calculator.get_difference_constraints();
+    vector<ConstraintStore> related_constraints_list;
+    vector<module_set_t> related_modules_list;
+    relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
+    for(int i = 0; i < related_constraints_list.size(); i++)
     {
-      timer::Timer timer;
-      if(reuse && !difference_calculator.is_difference(tmp_constraint_store))
-      {
-        profile["OmitCheckConsistency"] += timer.get_elapsed_us();
-        continue;
-      }
-      profile["OmitCheckConsistency"] += timer.get_elapsed_us();
+      check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase);
     }
-
-    VariableFinder finder;
+  }
+  else
+  {
+    for(int i = 0; i < relation_graph.get_connected_count(); i++)
     {
-      timer::Timer timer;
-      variable_set_t related_variables = relation_graph.get_variables(i);
-        
-      for(auto constraint : tmp_constraint_store)
-      {
-        finder.visit_node(constraint);
-      }
-      profile["FindAndVisit"] += timer.get_elapsed_us();
-    }
-    CheckConsistencyResult tmp_result;
-
-    tmp_result = check_consistency(tmp_constraint_store, finder, phase);
-
-    // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）
-    if(!tmp_result.consistent_store.consistent())
-    {
-      result.consistent_store = tmp_result.consistent_store;
-      inconsistent_module_sets.push_back(relation_graph.get_modules(i));
-    }
-    else
-    {
-      timer::Timer timer;
-      result.consistent_store.add_constraint_store(tmp_result.consistent_store);
-      vector<variable_map_t> create_result;
-      if(phase == PointPhase)
-      {
-        backend->call("createVariableMap", 0, "", "cv", &create_result);
-      }
-      else
-      {
-        backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
-      }
-      // TODO: deal with multiple variable map
-      if(create_result.size() != 1)
-      {
-        throw SimulateError("result variable map is not single.");
-      }
-      for(auto var_entry : create_result[0])
-      {
-        result_maps[0][var_entry.first] = var_entry.second;
-      }
-      profile["CreateVM"] += timer.get_elapsed_us();
+      ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
+      module_set_t ms = relation_graph.get_modules(i);
+      check_consistency(tmp_constraint_store, relation_graph, ms, result, phase);
     }
   }
 
@@ -319,7 +316,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   {
     result.inconsistent_store.set_consistency(false);
   }
-  HYDLA_LOGGER_DEBUG("");
+
   return result;
 }
 

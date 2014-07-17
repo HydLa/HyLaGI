@@ -137,7 +137,7 @@ publicMethod[
 
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint || sol[[1]] === underConstraint,
-      error,
+      {},
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       ret = {convertExprs[tStore]};

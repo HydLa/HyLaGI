@@ -83,6 +83,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       timer::Timer timer;
       if(todo->parent != result_root)
       {
+        
         // use the discrete causes for prev_asks
         for(auto prev_ask : prev_asks_)
         {
@@ -230,7 +231,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
   // suspected
   if(opts_->reuse && todo->in_following_step()){
     timer::Timer timer;
-    phase->changed_constraints = differnce_calculator_.get_difference_constraints();
+    phase->changed_constraints = difference_calculator_.get_difference_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
       variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
       for(auto var_entry : vm_to_take_over)
@@ -370,7 +371,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   relation_graph_.reset(new RelationGraph(ms)); 
   guard_relation_graph_.reset(new AskRelationGraph(ms));
-  differnce_calculator_.set_relation_graph(relation_graph_, guard_relation_graph_);
+  difference_calculator_.set_relation_graph(relation_graph_, guard_relation_graph_);
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
@@ -491,15 +492,15 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
-    differnce_calculator_.clear_difference();
+    difference_calculator_.clear_difference();
     if(state->phase_type == PointPhase){
       ConstraintStore difference_constraints;
       set_symmetric_difference(state->parent->current_constraints,
         relation_graph_->get_constraints(), difference_constraints );
-      differnce_calculator_.set_difference_constraints(difference_constraints);
+      difference_calculator_.set_difference_constraints(difference_constraints);
     }
     else{
-      differnce_calculator_.set_difference_constraints(state->parent->changed_constraints);
+      difference_calculator_.set_difference_constraints(state->parent->changed_constraints);
     }
   }
 
@@ -510,7 +511,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
     {
       CheckConsistencyResult cc_result;
 
-      cc_result = consistency_checker->check_consistency(*relation_graph_, differnce_calculator_, state->phase_type, opts_->reuse && state->in_following_step(), state->profile);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, difference_calculator_, state->phase_type, opts_->reuse && state->in_following_step(), state->profile);
 
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
       state->profile["# of CheckConsistency"] += 1;
@@ -526,7 +527,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
     }
 
     if(opts_->reuse && state->in_following_step()){
-      differnce_calculator_.collect_ask(positive_asks,
+      difference_calculator_.collect_ask(positive_asks,
           negative_asks, unknown_asks);
     }else{
       ask_collector.collect_ask(state->expanded_constraints,
@@ -554,7 +555,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         if(opts_->reuse && state->in_following_step()){
           timer::Timer timer;
           if(!state->discrete_causes.find(*it)->second){
-            if(differnce_calculator_.is_continuous(state->parent, (*it)->get_guard())){
+            if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
               if(state->parent->positive_asks.count(*it)){
                 positive_asks.insert(*it);
                 relation_graph_->set_expanded((*it)->get_child(), true);

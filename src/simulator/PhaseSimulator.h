@@ -159,7 +159,7 @@ private:
 
   std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
 
-  ConstraintDifferenceCalculator differnce_calculator_;
+  ConstraintDifferenceCalculator difference_calculator_;
 
   boost::shared_ptr<ValueModifier> value_modifier;
 
