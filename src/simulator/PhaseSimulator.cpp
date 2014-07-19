@@ -106,69 +106,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     module_set_sptr ms = todo->module_set_container->get_module_set();
 
     std::string module_sim_string = "\"ModuleSet" + ms->get_name() + "\"";
-    //aho
-    if(opts_->epsilon_mode>0 && false ){
-      // todo
-      // PhaseType                 phase_type;
-      // int                       id;
-      // value_t                   current_time;
-      // /// 左極限値のマップ
-      // variable_map_t            prev_map;
-      // parameter_map_t           parameter_map;
-      // positive_asks_t           positive_asks;
-      // negative_asks_t           negative_asks;
-      // ask_set_t                 discrete_causes;
-      // always_set_t              expanded_always;
-      // entailed_prev_map_t       judged_prev_map;
-      // /// 前のフェーズ
-      // phase_result_sptr_t parent;
-      // /// このフェーズの制約ストアの初期値（離散変化条件など，特に重要な条件を入れる）
-      // ConstraintStore initial_constraint_store;
-      // /// 使用する制約モジュール集合．（フェーズごとに，非always制約を含むか否かの差がある）
-      // module_set_container_sptr module_set_container;
-      // /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-      // /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
-      // module_set_list_t ms_to_visit;
-      // /// 無矛盾極大なモジュール集合の集合
-      // module_set_list_t maximal_mss;
-      // /// プロファイリング結果
-      // profile_t profile;
-      // /// 所属するケースの計算時間
-      // int elapsed_time;
-      // /// map to cache result of calculation for each module_set
-      // ms_cache_t ms_cache;
-      // /// changing variables from previous phase
-      // change_variables_t changing_variables;
-
-      std::cout << "todo id " <<  todo->id << std::endl;
-      std::cout << "parent phase " << todo->parent->id << std::endl;
-      std::cout << "current time " <<  todo->current_time << std::endl;
-      if(todo->phase_type == PointPhase)
-        std::cout << "phase type " <<  todo->phase_type << ": PointPhase" << std::endl;
-      else
-        std::cout << "phase type " <<  todo->phase_type << ": IntervalPhase" << std::endl;
-      std::cout << "module set == " << ms->get_name() << std::endl;
-
-      std::cout << "parameter map" << std::endl;
-      for(parameter_map_t::iterator p_it = todo->parameter_map.begin(); p_it != todo->parameter_map.end(); p_it++)
-        {
-          std::cout << "\t " << p_it->first << "\t: " << p_it->second << std::endl;
-        }
-
-      std::cout << "variable map" << std::endl;
-      for(variable_map_t::iterator v_it = todo->prev_map.begin(); v_it != todo->prev_map.end(); v_it++)
-        {
-          std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
-        }
-      std::cout << "judged_prev_map \t: " <<  std::endl;
-      for(entailed_prev_map_t::iterator it = todo->judged_prev_map.begin(); it != todo->judged_prev_map.end();it++){
-        std::cout << "\t " << *(*it).first << "\t: ";
-        if((*it).second) std::cout << "true" << std::endl;
-        else std::cout << "false" << std::endl;
-      }
-      std::cout << std::endl;
-    }
-
     timer::Timer ms_timer;
     result_list_t tmp_result = simulate_ms(ms, todo->prev_map, todo);
     if(!tmp_result.empty())
@@ -287,20 +224,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
   {
     throw SimulateError("result variable map is not single.");
   }
-  if(opts_->epsilon_mode>0)
-  {
-    //aho
-    // std::cout << "create reslt : variable map" << std::endl;
-    // // phase->variable_map = cut_high_order_epsilon(backend_.get(),phase,opts_->epsilon_mode);
-    // for(vector<variable_map_t>::iterator c_it = create_result.begin(); c_it != create_result.end();c_it++){
-    //   std::cout << "test" << std::endl;
-    //   for(variable_map_t::iterator v_it = c_it->begin(); v_it != c_it->end(); v_it++)
-    //     {
-    //       std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
-    //     }
-    // }
-    //aho
-  }
   phase->variable_map = create_result[0];
 
   if(opts_->reuse && todo->module_set_container == msc_no_init_){
@@ -376,7 +299,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
     }
   }
 
-  if(opts_->epsilon_mode>0){
+  if(opts_->epsilon_mode > 0){
     phase->variable_map = cut_high_order_epsilon(backend_.get(),phase,opts_->epsilon_mode);
   }
 
@@ -1300,15 +1223,6 @@ PhaseSimulator::todo_list_t
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
-    //aho
-    // std::cout<<"makenexttodo come here 1\n";
-    // std::cout<<"phase->constraint_store"<<phase->constraint_store<<"\n";
-    // std::cout << "variable map" << std::endl;
-    // for(variable_map_t::iterator v_it = phase->variable_map.begin(); v_it != phase->variable_map.end(); v_it++)
-    //   {
-    //     std::cout << "\t " << v_it->first << "\t: " << v_it->second << std::endl;
-    //   }
-    //aho
 
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
@@ -1430,8 +1344,8 @@ PhaseSimulator::todo_list_t
       }
     }
 
-    else if(opts_->epsilon_mode>0){
-      time_result = pass_specific_case(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
+    else if(opts_->epsilon_mode >= 0){
+      time_result = pass_specific_case2(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
       time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
     }
 

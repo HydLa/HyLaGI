@@ -1,3 +1,112 @@
+
+(* ポイントフェーズにおける無矛盾性判定 *)
+checkConsistencyPointTest[] := (
+  checkConsistencyPointTest[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables], parameters ]
+                            );
+
+publicMethod[
+             checkConsistencyPointTest,
+             cons, pcons, vars, pars,
+             Module[
+                    {cpTrue, cpFalse},
+                    Quiet[
+                          cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
+                          ];
+                    simplePrint[cpTrue];
+                    (* remove (Not)Element[] because it seems to be always true *)
+                    cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
+                    checkMessage;
+                    Quiet[
+                          cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
+                          ];
+                    checkMessage;
+                    simplePrint[cpFalse];
+                    debugPrint["# checkConsistencyP # : cpTrue", cpTrue];
+                    debugPrint["# checkConsistencyP # : cpFalse", cpFalse ];
+                    toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+                    ]
+             ];
+
+(* インターバルフェーズにおける無矛盾性判定 *)
+checkConsistencyIntervalTest[] :=  (
+  checkConsistencyIntervalTest[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
+                                );
+
+
+moveTermsToLeft[expr_] := Head[expr][expr[[1]] - expr[[2]], 0];
+
+ccIntervalForEachTest[cond_, initRules_, pCons_] :=
+  Module[
+         {
+           operator,
+           lhs,
+           eqSol,
+           gtSol,
+           ltSol,
+           trueCond
+         },
+         inputPrint["ccIntervalForEach", cond, initRules, pCons];
+         If[cond === True || cond === False, Return[cond]];
+         operator = Head[cond];
+         lhs = (cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules;
+         simplePrint[lhs];
+         (* caused by underConstraint *)
+         If[hasVariable[lhs], Return[pCons] ];
+
+         trueCond = False;
+
+         eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals] ];
+         If[eqSol =!= False,
+            eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
+            simplePrint[eqSol];
+            trueCond = trueCond || eqSol
+            ];
+         If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
+            gtSol = Quiet[Reduce[lhs > 0 && pCons, Reals] ];
+            simplePrint[gtSol];
+            trueCond = trueCond || gtSol
+            ];
+         If[MemberQ[{Unequal, Less, LessEqual}, operator],
+            ltSol = Quiet[Reduce[lhs < 0 && pCons, Reals] ];
+            simplePrint[ltSol];
+            trueCond = trueCond || ltSol
+            ];
+         trueCond
+         ];
+
+
+publicMethod[
+             checkConsistencyIntervalTest,
+             cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
+             Module[
+                    {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
+                    If[cons === True,
+                        {{LogicalExpand[pCons]}, {False}},
+                       sol = exDSolve[cons, initCons];
+                       debugPrint["sol after exDSolve", sol];
+                       If[sol === overConstraint,
+                           {{False}, {LogicalExpand[pCons]}},
+                          tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
+                          tCons = sol[[2]] /. tCons;
+                          simplePrint[tCons];
+
+                          cpTrue = False;
+                          For[i = 1, i <= Length[tCons], i++,
+                              conj = tCons[[i]];
+                              eachCpTrue = prevCons && pCons;
+                              For[j = 1, j <= Length[conj], j++,
+                                  eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue]
+                                  ];
+                              cpTrue = cpTrue || eachCpTrue
+                              ];
+                          cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+                          toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+                          ]
+    ]
+  ]
+];
+
+
 (* 次のポイントフェーズに移行する時刻を求める *)
 calculateNextPointPhaseTimeTest[maxTime_, discCauses_] :=
   calculateNextPointPhaseTimeTest[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
@@ -211,7 +320,7 @@ publicMethod[
              limitEpsilon,
              arg,
              debugPrint["limitEpsilon arg",arg];
-             toReturnForm[Limit[arg, p[eps, 0, 1] -> 0]]
+             toReturnForm[Limit[arg, p[peps, 0, 1] -> 0]]
              ];
 
 publicMethod[
@@ -232,8 +341,8 @@ publicMethod[
              Module[
                     {direplus,direminus,flag,ret},
                     debugPrint["checkEpsilon arg",arg];
-                    direplus = Limit[arg, p[eps, 0, 1] -> 0,Direction->-1];
-                    direminus = Limit[arg, p[eps, 0, 1] -> 0,Direction->1];
+                    direplus = Limit[arg, p[peps, 0, 1] -> 0,Direction->-1];
+                    direminus = Limit[arg, p[peps, 0, 1] -> 0,Direction->1];
                     flag = FullSimplify[direplus - direminus];
                     If[flag === 0,
                        ret = 1,
@@ -262,9 +371,9 @@ publicMethod[
              arg,
              Module[
                     {tmp,ret},
-                    debugPrint["diffEpsilonP arg",arg];
-                    tmp = arg /. p[eps, 0, 1] -> 0;
-                    ret = Reduce[arg - tmp];
+                    debugPrint["json diffEpsilonP arg",arg];
+                    tmp = arg /. p[peps, 0, 1] -> 0;
+                    ret = Simplify[arg - tmp];
                     toReturnForm[ret]
                     ]
              ];

@@ -13,7 +13,7 @@ using namespace hydla::backend;
 // #define DIFFCNT 1
 // #define _DEBUG_CUT_HIGH_ORDER
 // #define _DEBUG_REDUCE_UNSUIT
- #define _DEBUG_PASS_SPECIFIC_CASE
+// #define _DEBUG_PASS_SPECIFIC_CASE
 // #define _DEBUG_ZERO_CASE
 
 #include <iostream>
@@ -338,35 +338,216 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
         }
       std::cout << "mintime \t: " << candidate.minimum.time << std::endl;
 #endif
+
       value_t tmp = candidate.minimum.time;
+      //極限を取ると時間 t -> 0
       bool iszero = false;
       backend_->call("isZero", 1, "vln", "b", &tmp, &iszero);
       //前回の離散変化条件のidとの比較
       bool sameid = false;
-      std::cout<< "##########parent_phase id" <<phase->parent->id << "\n";
       if(phase->parent->id > 1){
-        std::cout<< "##########parentparent_phase id" <<phase->parent->parent->id<< "\n";
         uint size = phase->parent->parent->NextGuardids.size();
         if(size == candidate.minimum.ids.size()){
           bool tmpidbool = true;
           for(uint beforeid_it = 0;beforeid_it < size; beforeid_it++)
             {
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
               std::cout << "#######time ids id#########" << candidate.minimum.ids[beforeid_it] << std::endl;
               std::cout << "#######before ids id#########" << phase->parent->parent->NextGuardids[beforeid_it] << std::endl;
+#endif
               tmpidbool = tmpidbool && (candidate.minimum.ids[beforeid_it] == phase->parent->parent->NextGuardids[beforeid_it]);
             }
           sameid = tmpidbool;
         }
       }
 
-      //極限を取ると0に成る場合
+      value_t passed_time = candidate.minimum.time;
+
+      //時刻をずらす場合
       if(iszero && sameid){
 #ifdef _DEBUG_PASS_SPECIFIC_CASE
         std::cout << "----- limit zero case happen -----" << std::endl;
         //std::cout << phase->constraint_store << std::endl;
 #endif
         //時刻ずらし
+        pp_time_result_t tmp_time_result;
 
+        symbolic_expression::node_sptr tmp_val;
+        tmp_val = symbolic_expression::node_sptr(new Number("-1"));
+        tmp_val = symbolic_expression::node_sptr(new Times(tmp_val, passed_time.get_node()));
+
+        variable_map_t shifted_vm;
+        variable_map_t::const_iterator it  = vm_before_time_shift.begin();
+        variable_map_t::const_iterator end = vm_before_time_shift.end();
+        for(; it!=end; ++it) {
+          if(it->second.undefined())
+            shifted_vm[it->first] = it->second;
+          else if(it->second.unique())
+            {
+              value_t val = it->second.get_unique();
+              range_t& range = shifted_vm[it->first];
+              value_t ret;
+              backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
+              range.set_unique(ret);
+            }
+          else
+            {
+              range_t range = it->second;
+              for(uint i = 0; i < range.get_lower_cnt(); i++)
+                {
+                  ValueRange::bound_t bd = it->second.get_lower_bound(i);
+                  value_t val = bd.value;
+                  value_t ret;
+                  backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
+                  range.set_lower_bound(ret, bd.include_bound);
+                }
+              for(uint i = 0; i < range.get_upper_cnt(); i++)
+                {
+
+                  ValueRange::bound_t bd = it->second.get_upper_bound(i);
+                  value_t val = bd.value;
+                  value_t ret;
+                  backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
+                  range.set_upper_bound(ret, bd.include_bound);
+                }
+              shifted_vm[it->first] = range;
+            }
+        }
+
+        backend_->call("resetConstraint", 0, "", "");
+        backend_->call("addConstraint", 1, "mv0t", "", &shifted_vm);
+        backend_->call("addParameterConstraint", 1, "mp", "", &(candidate.parameter_map));
+        value_t eps_time_limit = time_limit;
+        eps_time_limit -= passed_time;
+        //二回目
+        backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(eps_time_limit), &dc_causes, &tmp_time_result);
+
+        //結果の保存
+        unsigned int tmp_it;
+        for(tmp_it=0;tmp_it < tmp_time_result.size();tmp_it++)
+          {
+            NextPhaseResult &tmp_candidate = tmp_time_result[tmp_it];
+            value_t new_time = passed_time + tmp_candidate.minimum.time ;
+            backend_->call("simplify", 1, "vln", "vl", &new_time, &new_time);
+            tmp_candidate.minimum.time = new_time;
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+            std::cout << "new mintime \t: " << new_time << std::endl;
+#endif
+            eps_time_result.push_back(tmp_candidate);
+          }
+      }
+      else
+      {
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+        std::cout << "----- this is not limit zero case -----" << std::endl;
+#endif
+        eps_time_result.push_back(candidate);
+      }
+      value_t test_time = current_todo->current_time + candidate.minimum.time;
+      backend_->call("simplify", 1, "vln", "vl", &test_time, &test_time);
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+      std::cout << "--------- shifted next time is ---------" << std::endl;
+      std::cout << "next -- time \t: " << test_time << std::endl;
+#endif
+    }
+  time_result.clear();
+  for(time_it=0;time_it < eps_time_result.size();time_it++)
+    {
+      NextPhaseResult &eps_candidate = eps_time_result[time_it];
+      time_result.push_back(eps_candidate);
+    }
+
+  //次のCNPPTTのために無視したいIDを保存したい
+  for(time_it=0;time_it < time_result.size();time_it++)
+    {
+      NextPhaseResult &tmp_candidate = time_result[time_it];
+      for(uint id_it = 0; id_it < tmp_candidate.minimum.ids.size(); id_it++)
+        {
+          phase->NextGuardids.push_back(tmp_candidate.minimum.ids[id_it]);
+        }
+    }
+
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+  std::cout << "Pass Specific Cases End;" << std::endl;
+  std::cout << std::endl;
+#endif
+  return time_result;
+  //return eps_time_result;
+}
+
+pp_time_result_t hydla::simulator::pass_specific_case2(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase,
+                                                       variable_map_t vm_before_time_shift, dc_causes_t dc_causes, value_t time_limit,simulation_todo_sptr_t& current_todo)
+{
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+  std::cout << "Pass Specific Cases Start;" << std::endl;
+#endif
+  //結果の保存(ret)
+  pp_time_result_t eps_time_result;
+
+  eps_time_result = calculate_tmp_result(phase,time_limit,dc_causes,backend_,vm_before_time_shift);
+
+  time_result.clear();
+  unsigned int time_it;
+  for(time_it=0;time_it < eps_time_result.size();time_it++)
+    {
+      NextPhaseResult &eps_candidate = eps_time_result[time_it];
+      time_result.push_back(eps_candidate);
+    }
+
+  //次のCNPPTTのために無視したいIDを保存したい
+  for(time_it=0;time_it < time_result.size();time_it++)
+    {
+      NextPhaseResult &tmp_candidate = time_result[time_it];
+      for(uint id_it = 0; id_it < tmp_candidate.minimum.ids.size(); id_it++)
+        {
+          phase->NextGuardids.push_back(tmp_candidate.minimum.ids[id_it]);
+        }
+    }
+
+#ifdef _DEBUG_PASS_SPECIFIC_CASE
+  std::cout << "Pass Specific Cases End;" << std::endl;
+  std::cout << std::endl;
+#endif
+  return time_result;
+}
+
+pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& phase, value_t time_limit,
+                                                        dc_causes_t dc_causes, Backend* backend_, variable_map_t vm_before_time_shift)
+
+{
+  pp_time_result_t tmp_time_result;
+  pp_time_result_t eps_time_result;
+
+  bool iszero = false;
+  bool sameid = false;
+
+  backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(time_limit), &dc_causes, &tmp_time_result);
+
+  //中身の確認
+  unsigned int time_it;
+  for(time_it=0;time_it < tmp_time_result.size();time_it++)
+    {
+      NextPhaseResult &candidate = tmp_time_result[time_it];
+
+      value_t tmp = candidate.minimum.time;
+      //極限を取ると時間 t -> 0
+      backend_->call("isZero", 1, "vln", "b", &tmp, &iszero);
+      //前回の離散変化条件のidとの比較
+      if(phase->parent->id > 1){
+        uint size = phase->parent->parent->NextGuardids.size();
+        if(size == candidate.minimum.ids.size()){
+          bool tmpidbool = true;
+          for(uint beforeid_it = 0;beforeid_it < size; beforeid_it++)
+            {
+              tmpidbool = tmpidbool && (candidate.minimum.ids[beforeid_it] == phase->parent->parent->NextGuardids[beforeid_it]);
+            }
+          sameid = tmpidbool;
+        }
+      }
+
+      //時刻をずらす場合
+      if(iszero && sameid){
+        //時刻ずらし
         pp_time_result_t tmp_time_result;
 
         symbolic_expression::node_sptr tmp_val;
@@ -417,8 +598,9 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
         value_t eps_time_limit = time_limit;
         eps_time_limit -= candidate.minimum.time;
         //二回目
-        backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(eps_time_limit), &dc_causes, &tmp_time_result);
+        tmp_time_result = calculate_tmp_result(phase,eps_time_limit,dc_causes,backend_,shifted_vm);
 
+        //結果の保存
         unsigned int tmp_it;
         for(tmp_it=0;tmp_it < tmp_time_result.size();tmp_it++)
           {
@@ -426,147 +608,13 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
             value_t new_time = candidate.minimum.time + tmp_candidate.minimum.time ;
             backend_->call("simplify", 1, "vln", "vl", &new_time, &new_time);
             tmp_candidate.minimum.time = new_time;
-#ifdef _DEBUG_PASS_SPECIFIC_CASE
-            std::cout << "new mintime \t: " << new_time << std::endl;
-#endif
             eps_time_result.push_back(tmp_candidate);
           }
-
-        // eps_time_result.push_back(candidate);
       }
       else
-      {
-#ifdef _DEBUG_PASS_SPECIFIC_CASE
-        std::cout << "----- this is not limit zero case -----" << std::endl;
-#endif
-        eps_time_result.push_back(candidate);
-      }
-      value_t test_time = current_todo->current_time + candidate.minimum.time;
-      backend_->call("simplify", 1, "vln", "vl", &test_time, &test_time);
-#ifdef _DEBUG_PASS_SPECIFIC_CASE
-      std::cout << "--------- shifted next time is ---------" << std::endl;
-      std::cout << "next -- time \t: " << test_time << std::endl;
-#endif
-    }
-  time_result.clear();
-  for(time_it=0;time_it < eps_time_result.size();time_it++)
-    {
-      NextPhaseResult &eps_candidate = eps_time_result[time_it];
-      time_result.push_back(eps_candidate);
-    }
-
-  //次のCNPPTTのために無視したいIDを保存したい
-  for(time_it=0;time_it < time_result.size();time_it++)
-    {
-      NextPhaseResult &tmp_candidate = time_result[time_it];
-      for(uint id_it = 0; id_it < tmp_candidate.minimum.ids.size(); id_it++)
         {
-          phase->NextGuardids.push_back(tmp_candidate.minimum.ids[id_it]);
+          eps_time_result.push_back(candidate);
         }
     }
-
-#ifdef _DEBUG_PASS_SPECIFIC_CASE
-  std::cout << "Pass Specific Cases End;" << std::endl;
-  std::cout << std::endl;
-#endif
-  return time_result;
-  //return eps_time_result;
-}
-
-pp_time_result_t hydla::simulator::zero_case_expansion(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase)
-{
-#ifdef _DEBUG_ZERO_CASE
-  std::cout << "Zero Case Expand Start;" << std::endl;
-  if(phase->phase_type==0)
-    std::cout << "PointPhase " << phase->id << std::endl;
-  else
-    std::cout << "IntervalPhase " << phase->id << std::endl;
-#endif
-  unsigned int time_it;
-  symbolic_expression::node_sptr max = symbolic_expression::node_sptr(new Number("0"));
-  symbolic_expression::node_sptr min = symbolic_expression::node_sptr(new Number("0"));
-  for(time_it=0;time_it < time_result.size();time_it++)
-    {
-#ifdef _DEBUG_ZERO_CASE
-      std::cout << "Case \t: " << (time_it + 1) << std::endl;
-#endif
-      NextPhaseResult &candidate = time_result[time_it];
-      for(parameter_map_t::iterator p_it = candidate.parameter_map.begin(); p_it != candidate.parameter_map.end(); p_it++)
-        {
-          std::string parameter_name = p_it->first.get_name();
-          int parameter_differential_count = p_it->first.get_differential_count();
-          if(parameter_name=="eps" && parameter_differential_count==0)
-            {
-#ifdef _DEBUG_ZERO_CASE
-              std::cout << p_it->first << "\t: " << p_it->second << std::endl;
-#endif
-              symbolic_expression::node_sptr val;
-              bool Ret;
-              if(!p_it->second.unique())
-                {
-                  if(p_it->second.get_lower_cnt())
-                    {
-                      val = symbolic_expression::node_sptr(new Number("-1"));
-                      val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_lower_bound(0).value.get_node()));
-                      val = symbolic_expression::node_sptr(new Plus(val, min));
-                      //min - val;
-                      backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-                      if(Ret) min = p_it->second.get_lower_bound(0).value.get_node();
-                    }
-                  if(p_it->second.get_upper_cnt())
-                    {
-                      val = symbolic_expression::node_sptr(new Number("-1"));
-                      val = symbolic_expression::node_sptr(new Times(val, max));
-                      val = symbolic_expression::node_sptr(new Plus(val, p_it->second.get_upper_bound(0).value.get_node()));
-                      //val - max;
-                      backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-                      if(Ret) max = p_it->second.get_upper_bound(0).value.get_node();
-                    }
-                }
-            }
-        }
-    }
-#ifdef _DEBUG_ZERO_CASE
-  std::cout << "######### find parameter eps \nmax \t: "<< *max << "\nmin \t: " << *min << std::endl;
-#endif
-
-  for(time_it=0;time_it < time_result.size();time_it++)
-    {
-      NextPhaseResult &candidate = time_result[time_it];
-      for(parameter_map_t::iterator p_it = candidate.parameter_map.begin(); p_it != candidate.parameter_map.end(); p_it++)
-        {
-          std::string parameter_name = p_it->first.get_name();
-          int parameter_differential_count = p_it->first.get_differential_count();
-          if(parameter_name=="eps" && parameter_differential_count==0)
-            {
-#ifdef _DEBUG_ZERO_CASE
-              std::cout << p_it->first << "\t: " << p_it->second << "\t->\t";
-#endif
-              symbolic_expression::node_sptr val;
-              bool Ret;
-              if(p_it->second.unique())
-                {
-                  range_t range;
-
-                  val = symbolic_expression::node_sptr(new Times(min, min));
-                  backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-                  if(Ret) range.set_lower_bound(min, false);
-
-                  val = symbolic_expression::node_sptr(new Times(max, max));
-                  backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-                  if(Ret) range.set_upper_bound(max, false);
-
-                  p_it->second = range;
-                }
-
-#ifdef _DEBUG_ZERO_CASE
-              std::cout << p_it->second << std::endl;
-#endif
-            }
-        }
-    }
-#ifdef _DEBUG_ZERO_CASE
-  std::cout << "Zero Case Expand End;" << std::endl;
-#endif
-  return time_result;
+  return eps_time_result;
 }
