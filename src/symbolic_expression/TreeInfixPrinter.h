@@ -15,9 +15,9 @@ class TreeInfixPrinter:
   public:
   typedef enum{
     PAR_NONE,
-    PAR_N,
-    PAR_N_P_S,
-    PAR_N_P_S_T_D_P,
+    PAR_N,          /// parentheses are needed for negative
+    PAR_N_P_S,      /// needed for negative, plus and subtract
+    PAR_N_P_S_T_D_P, /// needed for negative, plus, subtract, times, divide, power
   }needParenthesis;
 
   /**
