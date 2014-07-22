@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSE_ERROR_H_
-#define _INCLUDED_HYDLA_PARSE_ERROR_H_
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -230,9 +229,14 @@ public:
   {}
 };
 
+class InvalidParameter : public ParseError {
+public:
+  InvalidParameter(int line = -1) :
+    ParseError("invalid parameter. parameter must be in form of \"p[(name), (differential_count), (phase_id)]\"", line)
+  {}
+};
+
 
 } //namespace error
 } //namespace parser
 } //namespace hydla
-
-#endif //_INCLUDED_HYDLA_PARSE_ERROR_H_

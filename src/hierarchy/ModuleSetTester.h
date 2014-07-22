@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_MODULE_SET_TESTER_H_
-#define _INCLUDED_HTDLA_CH_MODULE_SET_TESTER_H_
+#pragma once
 
 #include "ModuleSet.h"
 
@@ -16,6 +15,3 @@ public:
 
 } // namespace hierarchy
 } // namespace hydla
-
-
-#endif //_INCLUDED_HTDLA_CH_MODULE_SET_TESTER_H_

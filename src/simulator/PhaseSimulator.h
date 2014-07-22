@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_PHASE_SIMULATOR_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -7,27 +6,18 @@
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include "Timer.h"
-#include "Logger.h"
 #include "PhaseResult.h"
-#include "RelationGraph.h"
 #include "Simulator.h"
-#include "UnsatCoreFinder.h"
-#include "AnalysisResultChecker.h"
 #include "ConsistencyChecker.h"
+#include "RelationGraph.h"
 
 namespace hydla {
-
 namespace simulator {
 
+class AnalysisResultChecker;
+class UnsatCoreFinder;
+
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
-/*
-struct CheckConsistencyResult
-{
-  ConstraintStore consistent_store, inconsistent_store;
-};
-*/
 
 typedef enum{
   CONDITIONS_TRUE,
@@ -60,6 +50,7 @@ public:
 
 
   variable_map_t apply_time_to_vm(const variable_map_t &vm, const value_t &tm);
+  variable_map_t shift_time_of_vm(const variable_map_t &vm, const value_t &tm);
 
   /**
    * calculate phase results from given todo
@@ -110,7 +101,7 @@ protected:
     BRANCH_PAR
   } CheckEntailmentResult;
 
-  result_list_t simulate_ms(const module_set_sptr& ms, const variable_map_t&, simulation_todo_sptr_t& state);
+  result_list_t simulate_ms(const module_set_sptr& ms, simulation_todo_sptr_t& state);
 
   /**
    * 与えられたsimulation_todo_sptr_tの情報を引き継いだ，
@@ -179,10 +170,12 @@ private:
   virtual ConstraintStore calculate_constraint_store(const module_set_sptr& ms,
                            simulation_todo_sptr_t& state);
 
-  void apply_discrete_causes_to_guard_judgement( ask_set_t& discrete_causes,
-                                                 positive_asks_t& positive_asks,
-                                                 negative_asks_t& negative_asks,
-                                                 ask_set_t& unknown_asks );
+  void apply_discrete_causes_to_guard_judgement(
+    const phase_result_sptr_t& parent,
+    const ask_set_t& discrete_causes,
+    positive_asks_t& positive_asks,
+    negative_asks_t& negative_asks,
+    ask_set_t& unknown_asks );
 
   void set_changing_variables( const phase_result_sptr_t& parent_phase,
                              const module_set_sptr& present_ms,
@@ -211,16 +204,6 @@ private:
   bool calculate_closure(simulation_todo_sptr_t& state,
     const module_set_sptr& ms);
 
-  /**
-   * Check whether a guard is entailed or not.
-   * If the entailment depends on the condition of variables or parameters, return BRANHC_VAR or BRANCH_PAR.
-   * If the return value is BRANCH_PAR, the value of cc_result consists of cases the guard is entailed and cases the guard is not entailed.
-   */
-  CheckEntailmentResult check_entailment(
-    CheckConsistencyResult &cc_result,
-    const symbolic_expression::node_sptr& guard,
-    const continuity_map_t& cont_map,
-    const PhaseType& phase);
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
@@ -256,5 +239,3 @@ private:
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_HYDLA_PHASE_SIMULATOR_H_

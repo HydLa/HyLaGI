@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_VARIABLE_REPLACER_H_
-#define _INCLUDED_HYDLA_VARIABLE_REPLACER_H_
+#pragma once
 
 #include <set>
 #include <sstream>
@@ -56,7 +55,6 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SVtimer> node);
 
   private:
-  hydla::simulator::Value* processing_value;
   int differential_cnt;
   uint replace_cnt;
   const variable_map_t& variable_map;
@@ -105,4 +103,3 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
 } //namespace parser
 } //namespace hydla
 
-#endif // _INCLUDED_HYDLA_PARAMETER_REPLACER_H_

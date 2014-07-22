@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
-#define _INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
+#pragma once
 
 #include <boost/bind.hpp>
 #include <boost/spirit/include/classic_core.hpp>
@@ -34,11 +33,13 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
     defRuleID(RI_Identifier)     identifier; 
     defRuleID(RI_Number)         number;
+    defRuleID(RI_Integer)        integer;
     defRuleID(RI_Pi)             pi;
     defRuleID(RI_E)              e;
     defRuleID(RI_PrevVariable)   prev_val;
     defRuleID(RI_BoundVariable)  bound_variable;
     defRuleID(RI_Variable)       variable; 
+    defRuleID(RI_Parameter)       parameter; 
     defRuleID(RI_ProgramName)    program_name; 
     
     defRuleID(RI_Always)        always; 
@@ -250,6 +251,7 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
           root_node_d[function|unsupported_function] >>  no_node_d[ch_p('(')] >> !(expression %  no_node_d[ch_p(',')])  >> no_node_d[ch_p(')')]
         | pi
         | e
+        | parameter
         | variable
         | system_variable
         | number
@@ -294,8 +296,17 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
         lexeme_d[leaf_node_d[
           +digit_p >> !('.' >> +digit_p)]]; 
 
+      integer = 
+        lexeme_d[leaf_node_d[+digit_p] ]; 
+
+
       //変数
       variable = lexeme_d[leaf_node_d[identifier]];
+
+      parameter = root_node_d[str_p("p")] >> no_node_d[ch_p('[')]
+                             >> variable >> no_node_d[ch_p(',')]
+                             >> integer >> no_node_d[ch_p(',')]
+                             >> integer >> no_node_d[ch_p(']')];
 
       //束縛変数
       bound_variable = lexeme_d[leaf_node_d[identifier]];
@@ -376,6 +387,4 @@ struct HydLaGrammar : public grammar<HydLaGrammar> {
 
 } // namespace parser
 } // namespace hydla
-
-#endif //_INCLUDED_HYDLA_HYDLA_GRAMMAR_H_
 

@@ -10,24 +10,14 @@
 
 #include "Backend.h"
 #include "mathematica/MathematicaLink.h"
-#include "NodeTreeGenerator.h"
-#include "HydLaAST.h"
+#include "arithmetic_expr.h"
 
 using namespace std;
 using namespace hydla::backend;
 using namespace hydla::simulator;
 using namespace hydla::backend::mathematica;
 using namespace hydla::parser;
-using namespace hydla::parse_tree;
-
-
-node_sptr parse_arithmetic_string(const string &str)
-{
-  HydLaAST ast;
-  ast.parse_string(str, HydLaAST::ARITHMETIC_EXPRESSION);
-  NodeTreeGenerator genarator;
-  return genarator.generate(ast.get_tree_iterator());
-}
+using namespace hydla::symbolic_expression;
 
 
 BOOST_AUTO_TEST_CASE(apply_time_test){

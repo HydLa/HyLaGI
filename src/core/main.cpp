@@ -8,8 +8,6 @@
 #include <windows.h>
 #endif
 
-#include <signal.h>
-
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -27,6 +25,7 @@
 #include "ModuleSetGraph.h"
 
 #include "SequentialSimulator.h"
+#include "SignalHandler.h"
 
 // namespace
 using namespace boost;
@@ -79,45 +78,15 @@ int main(int argc, char* argv[])
   return ret;
 }
 
-#ifdef _MSC_VER
-void CALLBACK timeout(HWND,
-   UINT,
-   UINT_PTR,
-   DWORD){
-   // cout << "timeout" << endl;
-}
- 
-#else
-void timeout(int sig){
-  // exit(-1);
-}
-#endif
-
-void term_handler(int sig)
-{
-  exit(-1);
-}
-
-void interrupt_handler(int sig){
-}
 
 void hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
   
-  signal(SIGINT, interrupt_handler);
-  signal(SIGTERM, term_handler);
+  signal(SIGINT, signal_handler::interrupt_handler);
+  signal(SIGTERM, signal_handler::term_handler);
   
-/*
-#ifdef _MSC_VER
-  SetTimer(0, 0, 1000, timeout);
-#else
-  signal(SIGALRM,timeout);
-  alarm(1);
-#endif
-*/
-
   Timer main_timer;
   
   if(po.count("debug")){                 // デバッグ出力

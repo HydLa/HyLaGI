@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_
-#define _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_
+#pragma once
 
 #include "BatchSimulator.h"
 
@@ -22,4 +21,3 @@ protected:
 } // simulator
 } // hydla
 
-#endif // _INCLUDED_HYDLA_SEQUENTIAL_SIMULATOR_H_

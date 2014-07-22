@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_PROGRAM_OPTIONS_H_
-#define _INCLUDED_HTDLA_PROGRAM_OPTIONS_H_
+#pragma once
 
 #include <boost/program_options.hpp>
 #include <ostream>
@@ -50,6 +49,3 @@ private:
 };
 
 } //namespace hydla
-
-#endif //_INCLUDED_HTDLA_PROGRAM_OPTIONS_H_
-

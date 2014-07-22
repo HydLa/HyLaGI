@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_UTILITY_H_
-#define _INCLUDED_HYDLA_UTILITY_H_
+#pragma once
 
 #include <string>
 
@@ -34,7 +33,7 @@ std::string replace(std::string original,
 
 std::string to_string(int n);
 
+
+
 }  //  namespace utility
 }  //  namespace hydla
-
-#endif  // _INCLUDED_HYDLA_UTILITY_H_

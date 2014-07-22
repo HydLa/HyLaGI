@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_MODULE_SET_H_
-#define _INCLUDED_HTDLA_CH_MODULE_SET_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -64,6 +63,12 @@ public:
   {
    return module_list_.end();
   }
+
+  void clear() 
+  {
+    module_list_.clear();
+  }
+
 
   /**
    * 集合の要素の数
@@ -145,5 +150,3 @@ public:
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif //_INCLUDED_HTDLA_CH_MODULE_SET_H_

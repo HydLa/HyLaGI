@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_MODULE_SET_CONTAINER_INITIALIZER_H_
-#define _INCLUDED_MODULE_SET_CONTAINER_INITIALIZER_H_
+#pragma once
 
 #include "Node.h"
 #include "ParseTree.h"
@@ -52,4 +51,3 @@ public:
 }
 }
 
-#endif // _INCLUDED_MODULE_SET_CONTAINER_INITIALIZER_H_

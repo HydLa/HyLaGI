@@ -1,8 +1,7 @@
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 #else
 
-#ifndef _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_IPC_H_
-#define _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_IPC_H_
+#pragma once
 
 #include "REDUCELink.h"
 
@@ -95,7 +94,4 @@ private:
 } // namespace backend
 } // namespace hydla
 
-#endif // _INCLUDED_HYDLA_BACKEND_REDUCE_LINK_IPC_H_
-
 #endif // defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
-

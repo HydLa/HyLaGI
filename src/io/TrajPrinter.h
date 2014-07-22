@@ -1,5 +1,4 @@
-#ifndef _HYDLA_OUTPUT_TRAJ_PRINTER_H_
-#define _HYDLA_OUTPUT_TRAJ_PRINTER_H_
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -10,7 +9,7 @@
 #include "Simulator.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 
 typedef hydla::simulator::PhaseResult                                       phase_result_t;
@@ -45,4 +44,3 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_TRAJECTORY_PRINTER_H_

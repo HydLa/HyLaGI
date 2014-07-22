@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_AFFINE_TREE_VISITOR_H_
-#define _INCLUDED_HYDLA_AFFINE_TREE_VISITOR_H_
+#pragma once
 
 #include <sstream>
 
@@ -24,7 +23,7 @@ typedef simulator::Parameter                  parameter_t;
 typedef simulator::Value                      value_t;
 typedef simulator::ValueRange                 range_t;
 typedef simulator::parameter_map_t            parameter_map_t;
-
+typedef simulator::variable_map_t             variable_map_t;
 
 
 typedef boost::bimaps::bimap<parameter_t, int >
@@ -37,7 +36,7 @@ typedef parameter_idx_map_t::value_type parameter_idx_t;
 class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   public:
 
-  AffineTreeVisitor(parameter_idx_map_t&);
+  AffineTreeVisitor(parameter_idx_map_t&, variable_map_t&);
 
   AffineOrInteger approximate(node_sptr &node);
   ///calculate x^y
@@ -113,14 +112,14 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   
 private:
 
-
+  static affine_t pi, e; 
   void invalid_node(symbolic_expression::Node& node);
 
   AffineOrInteger current_val_;
   parameter_idx_map_t& parameter_idx_map_;
+  variable_map_t& variable_map;
+  int differential_count;
 };
 
 } //namespace interval
 } //namespace hydla
-
-#endif // include guard

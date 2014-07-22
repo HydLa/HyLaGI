@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_S_EXP_GRAMMAR_H_
-#define _INCLUDED_HYDLA_S_EXP_GRAMMAR_H_
+#pragma once
 
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_escape_char.hpp>
@@ -67,4 +66,3 @@ struct SExpGrammar : public grammar<SExpGrammar> {
 } // namespace backend
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_S_EXP_GRAMMAR_H_

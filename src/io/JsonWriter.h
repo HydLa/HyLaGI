@@ -1,5 +1,4 @@
-#ifndef _HYDLA_OUTPUT_JSON_WRITER_H_
-#define _HYDLA_OUTPUT_JSON_WRITER_H_
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -11,7 +10,7 @@
 #include "picojson.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 class JsonWriter{
 
@@ -26,10 +25,12 @@ class JsonWriter{
   typedef hydla::simulator::Simulator       simulator_t;
   typedef hydla::simulator::ValueRange      value_range_t;
 
-  void write(const simulator_t &simulator, std::string name);
   virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
   hydla::simulator::backend_sptr_t backend_;
   bool epsilon_mode_flag = false;
+
+  void write(const simulator_t &simulator, const std::string &name);
+  void write_phase(const phase_result_const_sptr_t &phase, const std::string &name);
   private:
   picojson::value for_phase(const phase_result_const_sptr_t &phase);
   picojson::value for_vm(const variable_map_t &vm);
@@ -43,5 +44,3 @@ class JsonWriter{
 
 }// output
 }// hydla
-
-#endif // include guard

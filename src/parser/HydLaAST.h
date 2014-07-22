@@ -1,11 +1,12 @@
-#ifndef _INCLUDED_HYDLA_PARSER_HYDLA_AST_H_
-#define _INCLUDED_HYDLA_PARSER_HYDLA_AST_H_
+#pragma once
 
 #include <ostream>
 
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
+#include "Node.h"
+
 
 namespace hydla {
 namespace parser {
@@ -38,6 +39,11 @@ public:
   void parse_string(const std::string& str, SyntaxType type = PROGRAM);
 
   /**
+   * 解析し、さらにNodeTreeも生成する
+   */
+  symbolic_expression::node_sptr parse_generate(const std::string& str, SyntaxType type = PROGRAM);
+
+  /**
    * ASTの構造を出力する
    */
   std::ostream& dump(std::ostream& stream) const
@@ -65,4 +71,3 @@ std::ostream& operator<<(std::ostream& s, const HydLaAST& ast);
 } // namespace parser
 } // namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_HYDLA_AST_H_

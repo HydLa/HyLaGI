@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_
+#pragma once
 
 #include <stack>
 #include <iostream>
@@ -238,4 +237,3 @@ private:
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_SEMANTIC_ANALYZER_H_

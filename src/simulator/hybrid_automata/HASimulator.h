@@ -1,6 +1,4 @@
-
-#ifndef _INCLUDED_HYDLA_HASimulator_SIMULATOR_H_
-#define _INCLUDED_HYDLA_HASimulator_SIMULATOR_H_
+#pragma once
 
 #include "HybridAutomata.h"
 
@@ -36,6 +34,3 @@ private:
 
 }//namespace hydla
 }//namespace simulator 
-
-#endif // _INCLUDED_HYDLA_HASimulator_SIMULATOR_H_
-

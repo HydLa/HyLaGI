@@ -6,7 +6,7 @@
 using namespace std;
 
 namespace hydla{
-namespace output{
+namespace io{
 
 
 void CsvProfilePrinter::print_profile(const entire_profile_t& result) const

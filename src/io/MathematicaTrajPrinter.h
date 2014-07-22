@@ -1,10 +1,9 @@
-#ifndef _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_
-#define _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_
+#pragma once
 
 #include "TrajPrinter.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 /**
  * Mathematica形式での出力を行う
@@ -29,4 +28,3 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_MATHEMATICA_TRAJ_PRINTER_H_

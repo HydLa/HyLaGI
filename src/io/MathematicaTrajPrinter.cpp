@@ -6,7 +6,7 @@ using namespace std;
 using namespace hydla::simulator;
 
 namespace hydla{
-namespace output{
+namespace io{
 /*
 void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& result_root) const{
   if(result_root->children.size() == 0){

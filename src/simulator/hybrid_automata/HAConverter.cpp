@@ -59,7 +59,7 @@ phase_result_const_sptr_t HAConverter::simulate()
 	
 void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
 {
-  hydla::output::SymbolicTrajPrinter printer(opts_->output_variables, std::cerr);
+  hydla::io::SymbolicTrajPrinter printer(backend, opts_->output_variables, std::cerr);
 
   HYDLA_LOGGER_DEBUG("************************\n");
 
@@ -184,7 +184,7 @@ bool HAConverter::check_subset(phase_result_sptr_t phase, phase_result_sptr_t pa
       }
     }
     // TODO: 幅を持つ場合への対応
-    bool isIncludeBound = check_include_bound(tmp_variable_phase.get_unique(), tmp_variable_past.get_unique(), phase->parameter_map, past_phase->parameter_map);
+    bool isIncludeBound = check_include_bound(tmp_variable_phase.get_unique_value(), tmp_variable_past.get_unique_value(), phase->parameter_map, past_phase->parameter_map);
 		  
     if(isIncludeBound){
       HYDLA_LOGGER_DEBUG("****** end check_include_bound : true ******");

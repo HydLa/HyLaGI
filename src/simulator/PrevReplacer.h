@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_PREV_REPLACER_H_
-#define _INCLUDED_HYDLA_PREV_REPLACER_H_
+#pragma once
+
 
 #include <set>
 #include <sstream>
@@ -140,4 +140,3 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
 }
 }
 
-#endif // include guard

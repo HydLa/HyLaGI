@@ -1,11 +1,9 @@
-#ifndef _HYDLA_OUTPUT_STD_PROFILE_PRINTER_H_
-#define _HYDLA_OUTPUT_STD_PROFILE_PRINTER_H_
-
+#pragma once
 
 #include "ProfilePrinter.h"
 
 namespace hydla{
-namespace output{
+namespace io{
 
 /**
  * プロファイリング結果の出力を担当するクラス
@@ -23,4 +21,3 @@ public:
 }// output
 }// hydla
 
-#endif // _HYDLA_OUTPUT_STD_PROFILE_PRINTER_H_

@@ -83,7 +83,7 @@ phase_result_const_sptr_t ParallelSimulatorWorker::simulate()
 simulation_todo_sptr_t ParallelSimulatorWorker::pop_todo()
 {
   simulation_todo_sptr_t todo;
-  recursive_mutex::scoped_lock lk(master_->get_mutex());
+  boost::recursive_mutex::scoped_lock lk(master_->get_mutex());
   cout << "pop_todo at thread " << thr_id_ << endl;
   
   while(todo_stack_->empty()){
@@ -109,7 +109,7 @@ simulation_todo_sptr_t ParallelSimulatorWorker::pop_todo()
 
 void ParallelSimulatorWorker::notify_simulation_end()
 {
-  recursive_mutex::scoped_lock lk(master_->get_mutex());
+  boost::recursive_mutex::scoped_lock lk(master_->get_mutex());
   running_thread_count_--;
   set_thread_state("simulation finished");
   print_thread_state();

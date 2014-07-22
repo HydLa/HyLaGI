@@ -1,12 +1,11 @@
-#ifndef _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
-#define _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_
+#pragma once
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <stdlib.h>
 
 #include "Node.h"
 #include "HydLaGrammarRule.h"
-#include "ParseTree.h"
 #include "DefinitionContainer.h"
 #include "ParseError.h"
 #include "Utility.h"
@@ -58,7 +57,7 @@ public:
     }
 
   /**
-   * ASTを元にParseTreeを構築する
+   * ASTを元にNodeTreeを構築する
    */
   template<typename TreeIter>
   symbolic_expression::node_sptr generate(const TreeIter& tree_iter)
@@ -194,7 +193,7 @@ private:
   }
   
   /**
-   * ParseTreeを構築する
+   * NodeTreeを構築する
    */
   template<typename TreeIter>
   boost::shared_ptr<hydla::symbolic_expression::Node>
@@ -401,6 +400,27 @@ private:
         return node;
       }
 
+      case RI_Parameter:
+      {
+        if(tree_iter->children.size() != 3)throw error::InvalidParameter();        
+        TreeIter name_it = tree_iter->children.begin();
+        std::string name(name_it->value.begin(), name_it->value.end());
+        TreeIter diff_it = ++name_it;
+        int diff = atoi(std::string(diff_it->value.begin(), diff_it->value.end()).c_str());
+        TreeIter id_it = ++diff_it;
+        int phase_id = atoi(std::string(id_it->value.begin(), id_it->value.end()).c_str());
+        boost::shared_ptr<Parameter> node(new Parameter(name, diff, phase_id));
+        return node;
+      }
+
+      case RI_Integer:
+      {
+        std::string str(tree_iter->value.begin(), tree_iter->value.end());
+        boost::shared_ptr<Number> node(new Number());
+        node->set_number(str);
+        return node;
+      }
+
       // 数字
       case RI_Number:
       {
@@ -504,5 +524,3 @@ private:
 
 } // namespace parser
 } // namespace hydla
-
-#endif // _INCLUDED_HYDLA_PARSER_NODE_TREE_GENERATOR_H_

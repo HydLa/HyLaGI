@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_BACKEND_LINK_ERROR_H_
-#define _INCLUDED_HYDLA_BACKEND_LINK_ERROR_H_
+#pragma once
 
 #include <sstream>
 #include <stdexcept>
@@ -24,5 +23,3 @@ private:
 
 }
 }
-
-#endif

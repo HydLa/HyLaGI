@@ -1,5 +1,4 @@
-#ifndef _VALUE_RANGE_H_
-#define _VALUE_RANGE_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -11,6 +10,7 @@ namespace simulator {
 
 class ValueRange {
 public:
+  typedef unsigned int uint;
   typedef Value value_t;
   typedef struct Bound{
     value_t value;
@@ -24,7 +24,7 @@ public:
   ValueRange(const value_t &lower, bool low_include,
              const value_t &upper, bool up_include);
   ValueRange(const value_t &lower, const value_t &upper);
-  ValueRange(const value_t &val){set_unique(val);}
+  ValueRange(const value_t &val){set_unique_value(val);}
   ValueRange(){}
 
   bool undefined() const
@@ -40,20 +40,20 @@ public:
   /**
    * 一意に値を定める
    */
-  void set_unique(const value_t& val)
+  void set_unique_value(const value_t& val)
   {
     unique_value_ = val;
     lower_.clear();
     upper_.clear();
   }
 
-  value_t get_unique() const
+  value_t get_unique_value() const
   {
     if(!unique())
     {
       throw std::runtime_error(
         "ValueRange: " + get_string() + 
-        "is not unique, but get_unique() is called");
+        "is not unique, but get_unique_value() is called");
     }
     return unique_value_;
   }
@@ -115,4 +115,3 @@ std::ostream& operator<<(std::ostream& s, const ValueRange & val);
 } // namespace simulator
 } // namespace hydla
 
-#endif // _VALUE_RANGE_H_

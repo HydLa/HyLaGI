@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_HYDLA_SIMULATOR_H_
-#define _INCLUDED_HYDLA_SIMULATOR_H_
+#pragma once
+
 
 #include <deque>
 
@@ -97,6 +97,7 @@ struct SimulationTodo{
   negative_asks_t           negative_asks;
   ask_set_t                 discrete_causes;
   always_set_t              expanded_always;
+
   entailed_prev_map_t       judged_prev_map;
 
   /// 前のフェーズ
@@ -133,6 +134,14 @@ struct SimulationTodo{
     negative_asks.clear();
     judged_prev_map.clear();
   }
+
+  SimulationTodo(){}
+
+  /**
+   * parentとなるPhaseResultから情報を引き継いだTodoを作る。
+   * prev_mapはこのコンストラクタで初期化されない。
+   */
+  SimulationTodo(const phase_result_sptr_t &parent_phase);
 
   inline bool in_following_step(){
     return parent.get() && parent->parent.get() && parent->parent->parent.get();
@@ -262,6 +271,7 @@ public:
 
   backend_sptr_t backend;
 
+  boost::shared_ptr<phase_simulator_t > phase_simulator_;
 
 protected:
 
@@ -276,11 +286,6 @@ protected:
 
 
   parse_tree_sptr parse_tree_;
-
-  /**
-   * PhaseSimulator to use
-   */
-  boost::shared_ptr<phase_simulator_t > phase_simulator_;
 
   /**
    * a container for candidate module sets
@@ -309,5 +314,3 @@ protected:
 
 } //namespace simulator
 } //namespace hydla
-
-#endif // _INCLUDED_HYDLA_SIMULATOR_H_

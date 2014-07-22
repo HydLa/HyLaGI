@@ -1,9 +1,9 @@
 #include "JsonWriter.h"
 #include "Logger.h"
-#include <sstream>
 #include <iostream>
 #include <fstream>
 #include "Utility.h"
+#include "Constants.h"
 
 //aho
 #include "Backend.h"
@@ -16,11 +16,10 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 
 namespace hydla{
-namespace output{
+namespace io{
 
-void JsonWriter::write(const simulator_t &simulator, std::string name)
+void JsonWriter::write(const simulator_t &simulator, const std::string &name)
 {
-  stringstream sstr;
   object json_object;
   json_object["variables"] = for_vs(simulator.get_variable_set());
   json_object["parameters"] = for_pm(simulator.get_parameter_map());
@@ -37,9 +36,17 @@ void JsonWriter::write(const simulator_t &simulator, std::string name)
   ofs.close();
 }
 
+void JsonWriter::write_phase(const phase_result_const_sptr_t &phase, const std::string &name)
+{
+  std::ofstream ofs;
+  ofs.open(name.c_str());
+  ofs << for_phase(phase).serialize();
+  ofs.close();  
+}
 
 value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
 {
+  //TODO: positive_asksとかnegative_asksとかも書く
   object phase_object;
   phase_object["id"] = value((long)phase->id);
   if(phase->phase_type == simulator::PointPhase)
@@ -68,42 +75,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   phase_object["parameter_map"] = for_pm(phase->parameter_map);
   phase_object["children"] = make_children(phase);
   if(phase->children.size() == 0){
-    std::string cot;
-    switch(phase->cause_for_termination){
-    case simulator::TIME_LIMIT:
-      cot = "TIME_LIMIT";
-      break;
-    case simulator::STEP_LIMIT:
-      cot = "STEP_LIMIT";
-      break;
-    case simulator::SOME_ERROR:
-      cot = "SOME_ERROR";
-      break;
-    case simulator::INCONSISTENCY:
-      cot = "INCONSISTENCY";
-      break;
-    case simulator::ASSERTION:
-      cot = "ASSERTION";
-      break;
-    case simulator::OTHER_ASSERTION:
-      cot = "OTHER_ASSERTION";
-      break;
-    case simulator::TIME_OUT_REACHED:
-      cot = "TIME_OUT_REACHED";
-      break;
-    case simulator::NOT_UNIQUE_IN_INTERVAL:
-      cot = "NOT_UNIQUE_IN_INTERVAL";
-      break;
-    case simulator::NOT_SELECTED:
-      cot = "NOT_SELECTED";
-      break;
-    case simulator::NONE:
-      cot = "NONE";
-      break;
-    default:
-      cot = "ERROR";
-    }
-    phase_object["cause_for_termination"] = value(cot);
+    phase_object["cause_for_termination"] = value(get_string_for_cause(phase->cause_for_termination));
   }
   return value(phase_object);
 }
@@ -125,7 +97,7 @@ value JsonWriter::for_range(const value_range_t &range)
 
   if(range.unique())
   {
-    range_object["unique_value"] = value(range.get_unique().get_string());
+    range_object["unique_value"] = value(range.get_unique_value().get_string());
   }
   else
   {

@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_CONSTRAINT_ANALYZER_H_
-#define _INCLUDED_HYDLA_CONSTRAINT_ANALYZER_H_
+#pragma once
 
 
 #include "ParseTree.h"
@@ -86,4 +85,3 @@ protected:
 
 }
 }
-#endif //_INCLUDED_CONSTRAINT_ANALYZER_H_

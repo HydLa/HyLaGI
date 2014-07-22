@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
-#define _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
+#pragma once
 
 #include "Simulator.h"
 #include <fstream>
@@ -44,7 +43,7 @@ public:
   typedef boost::spirit::classic::node_val_data_factory<> node_val_data_factory_t;
   typedef boost::spirit::classic::tree_parse_info<pos_iter_t, node_val_data_factory_t> tree_info_t;
 
-  InteractiveSimulator(Opts &opts):Simulator(opts){}
+  InteractiveSimulator(Opts &opts):Simulator(opts), printer_(backend){}
 
   virtual ~InteractiveSimulator(){}
 
@@ -104,21 +103,19 @@ protected:
   
   /**
    * save state
-   * TODO: 実装する
    */
-  int save_state(simulation_todo_sptr_t& simulation_phase){assert(0); return 0;}
+  int save_state(simulation_todo_sptr_t& simulation_phase);
 
   /**
    * load state
-   * TODO: 実装する
    */
-  int load_state(simulation_todo_sptr_t& simulation_phase){assert(0); return 0;}
+  int load_state(simulation_todo_sptr_t& simulation_phase);
   
   /**
    * 1フェーズだけ出力する．Todoを渡されてもフェーズの情報だけ出力する
    */
-  static void print_phase(phase_result_sptr_t& p){printer_.output_one_phase(p);}  
-  static void print_phase(simulation_todo_sptr_t& t){printer_.output_one_phase(t->parent);}
+  void print_phase(phase_result_sptr_t& p){printer_.output_one_phase(p);}  
+  void print_phase(simulation_todo_sptr_t& t){printer_.output_one_phase(t->parent);}
   
   /**
    * シミュレーションが何らかの条件で終了した場合にその旨を出力する
@@ -135,7 +132,8 @@ protected:
       for(unsigned int i=0;i<vec.size();i++)
       {
         std::cout << "-----Case " << i << "--------------------------" << std::endl;
-        print_phase(vec[i]);
+// TODO: implement this by nonstatic way
+//        print_phase(vec[i]);
       }
       std::cout << "-------------------------------------" << std::endl;
       std::cout << "-------------------------------------" << std::endl;
@@ -158,12 +156,10 @@ protected:
 
   tree_info_t parse(std::stringstream& stream);
 
-  static hydla::output::SymbolicTrajPrinter printer_;
+  hydla::io::SymbolicTrajPrinter printer_;
   std::vector<simulation_todo_sptr_t> all_todo_;
 };
 
 } // simulator
 } // hydla
-
-#endif // _INCLUDED_HYDLA_INTERACTIVE_SIMULATOR_H_
 

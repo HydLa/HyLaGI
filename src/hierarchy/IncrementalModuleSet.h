@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_
-#define _INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_
+#pragma once
 
 #include <map>
 #include "ModuleSet.h"
@@ -35,7 +34,7 @@ public:
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
    */
-  module_set_sptr get_removable_module_set(module_set_sptr current_ms, const ModuleSet& ms);
+  std::vector<module_set_sptr> get_removable_module_sets(module_set_sptr current_ms, const ModuleSet& ms);
 
   /**
    * parents_data_内の余分なデータを削除し、
@@ -133,5 +132,3 @@ private:
 
 } // namespace hierarchy
 } // namespace hydla
-
-#endif //_INCLUDED_HTDLA_CH_INCREMENTAL_MODULE_SET_H_

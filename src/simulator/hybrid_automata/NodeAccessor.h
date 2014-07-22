@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_NodeAccessor_H_
-#define _INCLUDED_HYDLA_NodeAccessor_H_
+#pragma once
 
 #include "BatchSimulator.h"
 #include "Node.h"
@@ -66,6 +65,4 @@ class VaribleGetter : public symbolic_expression::DefaultTreeVisitor {
 
 }//namespace hydla
 }//namespace simulator 
-
-#endif // _INCLUDED_HYDLA_NodeAccessor_H_
 
