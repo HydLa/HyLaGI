@@ -65,6 +65,24 @@ string AskRelationGraph::AskNode::get_name() const
 }
 
 
+void AskRelationGraph::set_adopted(const module_t &mod, bool adopted)
+{
+  if(!module_ask_nodes_map.count(mod))return;
+  for(auto ask_node : module_ask_nodes_map[mod])
+  {
+    ask_node->module_adopted = adopted;
+  }
+}
+
+void AskRelationGraph::set_adopted(const module_set_t &ms, bool adopted)
+{
+  for(auto module : ms)
+  {
+    set_adopted(module, adopted);
+  }
+}
+
+
 void AskRelationGraph::get_adjacent_asks(const string &var, asks_t &asks){
   asks.clear();
   if(!variable_node_map.count(var))return;
@@ -72,7 +90,10 @@ void AskRelationGraph::get_adjacent_asks(const string &var, asks_t &asks){
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
   for(auto ask_node : var_node->edges)
   {
-    asks.push_back(ask_node->ask);
+    if(ask_node->module_adopted)
+    {
+      asks.push_back(ask_node->ask);
+    }
   }
 }
 
@@ -82,6 +103,7 @@ void AskRelationGraph::get_adjacent_variables(const ask_t &ask, set<string> &var
   if(!ask_node_map.count(ask))return;
   AskNode *ask_node = ask_node_map[ask];
   if(ask_node == nullptr)throw HYDLA_SIMULATE_ERROR("AskNode is not found");
+  if(!ask_node->module_adopted)return;
   for(auto var_node: ask_node->edges)
   {
     vars.insert(var_node->variable);
@@ -101,7 +123,7 @@ AskRelationGraph::asks_t AskRelationGraph::get_asks()
   asks_t asks;
   for(auto ask_node : ask_nodes)
   {
-    asks.push_back(ask_node->ask);
+    if(ask_node->module_adopted)asks.push_back(ask_node->ask);
   }
   return asks;
 }
