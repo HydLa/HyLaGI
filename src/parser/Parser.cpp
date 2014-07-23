@@ -88,7 +88,8 @@ node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> 
   for(auto program_definition : program_definitions){
     pd.add_definition(program_definition);
   }
-  if(!error_info.empty()){
+  if(!error_info.empty() || !parse_ended()){
+    std::cout << "error occured while parsing" << std::endl;
     for(auto info : error_info){
       std::cout << "parse error : " << info.first.first+1 << " : ";
       std::cout << info.second << std::endl;
