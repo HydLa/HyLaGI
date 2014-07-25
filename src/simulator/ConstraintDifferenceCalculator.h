@@ -32,6 +32,7 @@ public:
   bool is_continuous(const phase_result_sptr_t parent, const constraint_t constraint);
 
   void collect_ask(const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
+      const std::vector<ask_t> &discrete_causes,
       const ask_set_t &positive_asks,
       const ask_set_t &negative_asks,
       ask_set_t &unknown_asks);
