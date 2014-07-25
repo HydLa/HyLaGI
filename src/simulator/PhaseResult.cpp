@@ -36,7 +36,7 @@ namespace hydla {
 namespace simulator {
 
 
-PhaseResult::PhaseResult():cause_for_termination(NONE), parent(nullptr)
+PhaseResult::PhaseResult():full_information(nullptr),cause_for_termination(NONE), parent(nullptr)
 {
 }
 
@@ -48,7 +48,49 @@ PhaseResult::~PhaseResult()
   }
 }
 
+void PhaseResult::generate_full_information()
+{
+  PhaseResult *ancestor = parent;
+  std::list<PhaseResult *> ancestor_list;
+  ancestor_list.push_back(this);
+  while(ancestor->parent != nullptr && ancestor->full_information == nullptr)
+  {
+    ancestor_list.push_back(ancestor);
+    ancestor = ancestor->parent;
+  }
+  assert(ancestor->full_information != nullptr);
+  full_information = new FullInformation(*ancestor->full_information);
+  for(auto r_it = ancestor_list.rbegin(); r_it != ancestor_list.rend(); r_it++)
+  {
+    for(auto ask : (*r_it)->diff_positive_asks)
+    {
+      full_information->negative_asks.erase(ask);
+      full_information->positive_asks.insert(ask);
+    }
+    for(auto ask : (*r_it)->diff_negative_asks)
+    {
+      full_information->positive_asks.erase(ask);
+      full_information->negative_asks.insert(ask);
+    }
+  }
+}
 
+ask_set_t PhaseResult::get_all_positive_asks()
+{
+  if(full_information == nullptr)generate_full_information();
+  return full_information->positive_asks;
+}
+
+ask_set_t PhaseResult::get_all_negative_asks()
+{
+  if(full_information == nullptr)generate_full_information();
+  return full_information->negative_asks;
+}
+
+void PhaseResult::set_full_information(FullInformation *info)
+{
+  full_information = info;
+}
 
 
 PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause):
@@ -56,10 +98,11 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   current_time(todo.current_time),
   parameter_map(todo.parameter_map),
   expanded_constraints(todo.expanded_constraints),
-  positive_asks(todo.positive_asks),
-  negative_asks(todo.negative_asks),
+  diff_positive_asks(todo.positive_asks),
+  diff_negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
   cause_for_termination(cause),
+  full_information(nullptr),
   parent(todo.parent.get())
 {
 }
@@ -83,8 +126,6 @@ ostream& operator<<(std::ostream& s, const PhaseResult& phase)
   s << phase.variable_map    << endl;
   s << "--- parameter map ---"          << endl;
   s << phase.parameter_map << endl;
-  s << "--- expanded_constraints --- " << endl;
-  s << phase.expanded_constraints << endl;
   return s;
 }
 

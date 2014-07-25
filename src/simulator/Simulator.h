@@ -74,10 +74,7 @@ struct SimulationTodo{
   /// 前のフェーズ
   phase_result_sptr_t parent;
 
-  /// このフェーズの制約ストアの初期値（離散変化条件など，特に重要な条件を入れる）
-  ConstraintStore initial_constraint_store;
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-  /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
   module_set_set_t ms_to_visit;
   /// set of module sets which are unadopted in maximal module sets
   module_set_set_t unadopted_mss;

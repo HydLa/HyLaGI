@@ -34,9 +34,9 @@ void HybridAutomata::viewPr(phase_result_sptr_t result)
   printer.output_one_phase(result);
 			
   HYDLA_LOGGER_DEBUG("negative ask:");
-  HYDLA_LOGGER_DEBUG(viewAsks(result->negative_asks));
+  HYDLA_LOGGER_DEBUG(viewAsks(result->get_all_negative_asks()));
   HYDLA_LOGGER_DEBUG("positive ask:");
-  HYDLA_LOGGER_DEBUG(viewAsks(result->positive_asks));	
+  HYDLA_LOGGER_DEBUG(viewAsks(result->get_all_positive_asks()));	
 }
 	
 string HybridAutomata::viewAsks(ask_set_t asks)

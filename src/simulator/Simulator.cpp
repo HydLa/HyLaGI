@@ -58,10 +58,8 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
 
-
   phase_simulator_->initialize(variable_set_, parameter_map_,
-                               original_map_, module_set_container_);
-  phase_simulator_->result_root = result_root_;
+                               original_map_, module_set_container_, result_root_);
 
   profile_vector_.reset(new entire_profile_t());
 }
@@ -150,8 +148,6 @@ std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
   s << "%% time: " << todo.current_time << std::endl;
   s << "--- parent phase result ---" << std::endl;
   s << *(todo.parent) << std::endl;
-  s << "--- initial_constraint_store ---"  << std::endl; 
-  s << todo.initial_constraint_store      << std::endl;
   s << "--- parameter map ---"          << std::endl;
   s << todo.parameter_map << std::endl;
   

@@ -218,15 +218,15 @@ bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr
   // モジュール集合
   if(!(r1->module_set.compare(r2->module_set) == 0)) return false;
   // positive_ask
-  ask_set_t::iterator it_1 = r1->positive_asks.begin();
-  ask_set_t::iterator it_2 = r2->positive_asks.begin();
-  while(it_1 != r1->positive_asks.end() && it_2 != r2->positive_asks.end()) {
+  ask_set_t::iterator it_1 = r1->get_all_positive_asks().begin();
+  ask_set_t::iterator it_2 = r2->get_all_positive_asks().begin();
+  while(it_1 != r1->get_all_positive_asks().end() && it_2 != r2->get_all_positive_asks().end()) {
     if(!((*it_1)->is_same_struct(**it_2, true))) return false;
     it_1++;
     it_2++;
   }
   // どちらかのイテレータが最後まで達していなかったら等しくない
-  if(it_1 != r1->positive_asks.end() || it_2 != r2->positive_asks.end()) return false;
+  if(it_1 != r1->get_all_positive_asks().end() || it_2 != r2->get_all_positive_asks().end()) return false;
 		
   return true;
 } 
@@ -309,14 +309,14 @@ void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
   cout << "labelloc=t;" << endl;
   cout << "label=\"" << stf_str << "\";" << endl;
   cout << "\"start\" [shape=point];" << endl;
-  cout << "\"start\"->\"" << "Phase " << result[1]->id << "\\n" << result[1]->module_set.get_name() << "\\n(" << get_asks_str(result[1]->positive_asks) 
-       << ")\" [label=\"" << "Phase " << result[0]->id << "\\n" << parameter_str << result[0]->module_set.get_name() << "\\n(" << get_asks_str(result[0]->positive_asks)
+  cout << "\"start\"->\"" << "Phase " << result[1]->id << "\\n" << result[1]->module_set.get_name() << "\\n(" << get_asks_str(result[1]->get_all_positive_asks()) 
+       << ")\" [label=\"" << "Phase " << result[0]->id << "\\n" << parameter_str << result[0]->module_set.get_name() << "\\n(" << get_asks_str(result[0]->get_all_positive_asks())
        << ")\", labelfloat=false,arrowtail=dot];" << endl;
   for(unsigned int i = 2 ; i < result.size() ; i++){
     if(result[i]->phase_type == IntervalPhase){
-      str_ = "\"" + result[i-2]->module_set.get_name() + "\\n(" + get_asks_str(result[i-2]->positive_asks) 
-        + ")\"->\"" + result[i]->module_set.get_name() + "\\n(" + get_asks_str(result[i]->positive_asks) 
-        + ")\" [label=\"" + result[i-1]->module_set.get_name() + "\\n(" + get_asks_str(result[i-1]->positive_asks) 
+      str_ = "\"" + result[i-2]->module_set.get_name() + "\\n(" + get_asks_str(result[i-2]->get_all_positive_asks()) 
+        + ")\"->\"" + result[i]->module_set.get_name() + "\\n(" + get_asks_str(result[i]->get_all_positive_asks()) 
+        + ")\" [label=\"" + result[i-1]->module_set.get_name() + "\\n(" + get_asks_str(result[i-1]->get_all_positive_asks()) 
         + ")\", labelfloat=false,arrowtail=dot];";
       vector<string>::iterator it_strs = find(strs_.begin(),strs_.end(),str_);
       if(it_strs != strs_.end()) continue;				

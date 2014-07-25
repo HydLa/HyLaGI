@@ -44,7 +44,7 @@ public:
   void set_break_condition(symbolic_expression::node_sptr break_cond);
   symbolic_expression::node_sptr get_break_condition();
 
-  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m,  module_set_container_sptr& msc);
+  virtual void initialize(variable_set_t &v, parameter_map_t &p, variable_map_t &m,  module_set_container_sptr& msc, phase_result_sptr_t root);
 
   /**
    * calculate phase results from given todo
@@ -72,7 +72,6 @@ public:
   /// pointer to the backend to be used
   backend_sptr_t backend_;
   bool breaking;
-  phase_result_sptr_t result_root;
 
 protected:
 
@@ -123,6 +122,8 @@ protected:
   module_set_container_sptr msc_no_init_;
 
   todo_container_t* todo_container_;
+
+  phase_result_sptr_t result_root;
 
   phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
 

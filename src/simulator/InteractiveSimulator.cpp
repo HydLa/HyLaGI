@@ -187,9 +187,6 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
 
         todo->ms_to_visit = module_set_container_->get_full_ms_list();
         todo->unadopted_mss.clear();
-        todo->positive_asks.clear();
-        todo->negative_asks.clear();
-        todo->judged_prev_map.clear();
         cout << "jump" << endl;
         print_phase(todo);
         break;

@@ -79,23 +79,6 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   if(todo->phase_type == PointPhase)
   {
     set_simulation_mode(PointPhase);
-    {
-      timer::Timer timer;
-      if(todo->parent != result_root)
-      {
-        
-        // use the discrete causes for prev_asks
-        for(auto prev_ask : prev_asks_)
-        {
-          bool entailed = todo->parent->positive_asks.count(prev_ask);
-          // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point
-          if(todo->discrete_causes.count(prev_ask)
-             && todo->discrete_causes[prev_ask]) entailed = !entailed;
-          todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
-        }
-      }
-      todo->profile["PrevMap"] += timer.get_elapsed_us();
-    }
     relation_graph_->set_ignore_prev(true);
   }else{
     set_simulation_mode(IntervalPhase);
@@ -114,28 +97,31 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   while(module_set_container->has_next())
   {
+    relation_graph_->set_expanded_all(false);
+    for(auto constraint : todo->expanded_constraints)
     {
-      timer::Timer timer;
-    
-      relation_graph_->set_expanded_all(false);
-      for(auto constraint : todo->expanded_constraints)
-      {
-        relation_graph_->set_expanded(constraint, true);
-      }
+      relation_graph_->set_expanded(constraint, true);
+    }
 
-      for(auto entry : todo->judged_prev_map)
+
+    if(todo->phase_type == PointPhase && todo->parent != result_root)
+    {
+      ask_set_t previous_positive_asks  = todo->parent->get_all_positive_asks();
+      for(auto cause : todo->discrete_causes)
       {
-        if(entry.second)
+        if(cause.second)
         {
-          todo->positive_asks.insert(entry.first);
-          relation_graph_->set_expanded(entry.first->get_child(), true);
+          if(previous_positive_asks.count(cause.first))
+          {
+            todo->negative_asks.insert(cause.first);
+          }
+          else
+          {
+            relation_graph_->set_expanded(cause.first, true);
+            todo->positive_asks.insert(cause.first);
+          }
         }
-        else
-        {
-          todo->negative_asks.insert(entry.first);
-        }
-      }
-      todo->profile["RelationGraphSetExpanded"] += timer.get_elapsed_us();
+      }        
     }
 
     
@@ -245,16 +231,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
           phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
         }
       }
-      // TODO: 効率が悪いのでどうにかする．
-      auto all_asks = guard_relation_graph_->get_asks();
-      for(auto ask : all_asks)
-      {
-        if(!phase->positive_asks.count(ask) && !phase->negative_asks.count(ask))
-        {
-          if(phase->parent->positive_asks.count(ask))phase->positive_asks.insert(ask);
-          else phase->negative_asks.insert(ask);
-        }
-      }
     }
     else if(phase->phase_type == PointPhase && phase->parent){
       variable_map_t &vm_to_take_over = todo->prev_map;
@@ -342,9 +318,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
 
 void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckConsistencyResult &result){
   simulation_todo_sptr_t branch_state_false(create_new_simulation_phase(original));
-  branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   todo_container_->push_todo(branch_state_false);
-  original->initial_constraint_store.add_constraint_store(result.consistent_store);
   //backend_->call("resetConstraint", 1, "csn", "", &original->initial_constraint_store);
   // TODO: implement branch here
   throw SimulateError("branch in calculate closure.");
@@ -371,13 +345,15 @@ phase_result_sptr_t PhaseSimulator::make_new_phase(const phase_result_sptr_t& or
 void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
-                                module_set_container_sptr &msc)
+                                module_set_container_sptr &msc,
+                                phase_result_sptr_t root)
 {
   variable_set_ = &v;
   parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
   module_set_container = msc;
+  result_root = root;
 
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
@@ -401,6 +377,9 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   // search asks and initialize prev_asks_ and ask_map
   ac.collect_ask(constraints, &pat, &nat, &prev_asks_);
+  FullInformation* root_information = new FullInformation();
+  root_information->negative_asks = prev_asks_;
+  result_root->set_full_information(root_information);
   for(auto it = prev_asks_.begin(); it != prev_asks_.end();){
     int id = (*it)->get_id();
     ask_map[id] = *it;
@@ -556,22 +535,16 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         // suspected
         if(opts_->reuse && state->phase_type == IntervalPhase && 
            state->in_following_step()){
-          timer::Timer timer;
           if(!state->discrete_causes.find(*it)->second){
             if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
-              if(state->parent->positive_asks.count(*it)){
-                positive_asks.insert(*it);
+              if(state->parent->get_all_positive_asks().count(*it)){
                 relation_graph_->set_expanded((*it)->get_child(), true);
                 expanded = true;
-              }else{
-                negative_asks.insert(*it);
               }
               unknown_asks.erase(it++);
-              state->profile["OmitEntailment"] += timer.get_elapsed_us();
               continue;
             }
           }
-          state->profile["OmitEntailment"] += timer.get_elapsed_us();
         }
 
         CheckConsistencyResult check_consistency_result;
@@ -580,7 +553,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
             relation_graph_->set_expanded((*it)->get_child(), true);
-            if(!state->parent->positive_asks.count(*it)){
+            if(!state->parent->get_all_positive_asks().count(*it)){
               difference_calculator_.add_difference_constraints((*it)->get_child(), relation_graph_);
             }
             unknown_asks.erase(it++);
@@ -589,7 +562,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
-            if(!state->parent->negative_asks.count(*it)){
+            if(!state->parent->get_all_negative_asks().count(*it)){
               difference_calculator_.add_difference_constraints((*it)->get_child(), relation_graph_);
             }
             unknown_asks.erase(it++);
@@ -611,24 +584,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
 
   if(!unknown_asks.empty()){
     throw SimulateError("unknown asks");
-    boost::shared_ptr<symbolic_expression::Ask> branched_ask = *unknown_asks.begin();
-    // TODO: 極大性に対して厳密なものになっていない（実行アルゴリズムを実装しきれてない）
-    HYDLA_LOGGER_DEBUG("%% branched_ask:", get_infix_string(branched_ask));
-    {
-      // 分岐先を生成（導出される方）
-      // TODO: 分岐時の制約の追加をしていない。
-      simulation_todo_sptr_t new_todo(create_new_simulation_phase(state));
-      todo_container_->push_todo(new_todo);
-    }
-    {
-      // 分岐先を生成（導出されない方）
-      // TODO: 分岐時の制約の追加をしていない。
-      negative_asks.insert(branched_ask);
-      if(!state->parent->negative_asks.count(branched_ask)){
-        difference_calculator_.add_difference_constraints(branched_ask->get_child(), relation_graph_);
-      }
-      return calculate_closure(state);
-    }
   }
   return true;
 }
@@ -679,12 +634,12 @@ PhaseSimulator::todo_list_t
     dc_causes_t dc_causes;
 
     //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
-    for(auto ask : phase->positive_asks){
+    for(auto ask : phase->get_all_positive_asks()){
       symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
       dc_causes.push_back(dc_cause_t(negated_node, ask->get_id() ) );
     }
     //現在導出されていないガード条件を離散変化条件として追加
-    for(auto ask : phase->negative_asks){
+    for(auto ask : phase->get_all_negative_asks()){
       symbolic_expression::node_sptr node(ask->get_guard() );
       dc_causes.push_back(dc_cause_t(node, ask->get_id() ));
     }

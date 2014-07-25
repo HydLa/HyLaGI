@@ -69,7 +69,6 @@ typedef std::set<std::string> change_variables_t;
 
 struct FullInformation
 {
-  ConstraintStore              expanded_constraints;
   ask_set_t                    positive_asks;
   ask_set_t                    negative_asks;
 };
@@ -78,6 +77,7 @@ struct FullInformation
  * A class to express the result of each phase.
  */
 class PhaseResult {
+
 public:
   PhaseType                    phase_type;
   int id;
@@ -85,9 +85,15 @@ public:
 
   variable_map_t               variable_map;
   parameter_map_t              parameter_map;
+
   ConstraintStore              expanded_constraints;
-  ask_set_t                    positive_asks;
-  ask_set_t                    negative_asks;
+  
+  ask_set_t                    get_all_positive_asks();
+  ask_set_t                    get_all_negative_asks();
+  ask_set_t                    diff_positive_asks, diff_negative_asks;
+
+  void                         set_full_information(FullInformation *); /// instance pointed by given pointer will be freed internally
+  
   int                          step;
   module_set_t                 module_set;
   ConstraintStore              current_constraints;
@@ -102,6 +108,10 @@ public:
   PhaseResult();
   PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NONE);
   ~PhaseResult();
+
+private:
+  void generate_full_information();
+  FullInformation             *full_information;
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);
