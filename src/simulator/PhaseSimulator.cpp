@@ -558,7 +558,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         if(opts_->reuse && state->phase_type == IntervalPhase && 
            state->in_following_step()){
           timer::Timer timer;
-          if(!state->discrete_causes.find[*it]){
+          if(!state->discrete_causes_map[*it]){
             if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
               if(state->parent->positive_asks.count(*it)){
                 positive_asks.insert(*it);
