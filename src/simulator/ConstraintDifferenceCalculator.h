@@ -19,7 +19,7 @@ public:
    */
   void calculate_difference_constraints(const phase_result_sptr_t parent, const boost::shared_ptr<RelationGraph> relation_graph);
 
-  void add_diference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph);
+  void add_difference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph);
 
   /**
    * Get connected constraints which are changed

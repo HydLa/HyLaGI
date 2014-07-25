@@ -144,7 +144,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     timer::Timer ms_timer;
 
     relation_graph_->set_adopted(unadopted_ms, false);
+    guard_relation_graph_->set_adopted(unadopted_ms, false);
     result_list_t tmp_result = simulate_ms(unadopted_ms, todo);
+    guard_relation_graph_->set_adopted(unadopted_ms, true);
     relation_graph_->set_adopted(unadopted_ms, true);
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
@@ -241,6 +243,16 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
         {
           // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
           phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
+        }
+      }
+      // TODO: 効率が悪いのでどうにかする．
+      auto all_asks = guard_relation_graph_->get_asks();
+      for(auto ask : all_asks)
+      {
+        if(!phase->positive_asks.count(ask) && !phase->negative_asks.count(ask))
+        {
+          if(phase->parent->positive_asks.count(ask))phase->positive_asks.insert(ask);
+          else phase->negative_asks.insert(ask);
         }
       }
     }
@@ -543,22 +555,21 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             continue;
         }
         // suspected
-        if(opts_->reuse && state->in_following_step()){
+        if(opts_->reuse && state->phase_type == IntervalPhase && 
+           state->in_following_step()){
           timer::Timer timer;
-          if(!state->discrete_causes_map[*it]){
-            if(state->phase_type == IntervalPhase){
-              if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
-                if(state->parent->positive_asks.count(*it)){
-                  positive_asks.insert(*it);
-                  relation_graph_->set_expanded((*it)->get_child(), true);
-                  expanded = true;
-                }else{
-                  negative_asks.insert(*it);
-                }
-                unknown_asks.erase(it++);
-                state->profile["OmitEntailment"] += timer.get_elapsed_us();
-                continue;
+          if(!state->discrete_causes.find[*it]){
+            if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
+              if(state->parent->positive_asks.count(*it)){
+                positive_asks.insert(*it);
+                relation_graph_->set_expanded((*it)->get_child(), true);
+                expanded = true;
+              }else{
+                negative_asks.insert(*it);
               }
+              unknown_asks.erase(it++);
+              state->profile["OmitEntailment"] += timer.get_elapsed_us();
+              continue;
             }
           }
           state->profile["OmitEntailment"] += timer.get_elapsed_us();
@@ -571,7 +582,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             positive_asks.insert(*it);
             relation_graph_->set_expanded((*it)->get_child(), true);
             if(!state->parent->positive_asks.count(*it)){
-              difference_calculator_.add_diference_constraints((*it)->get_child(), relation_graph_);
+              difference_calculator_.add_difference_constraints((*it)->get_child(), relation_graph_);
             }
             unknown_asks.erase(it++);
             expanded = true;
@@ -580,7 +591,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
             if(!state->parent->negative_asks.count(*it)){
-              difference_calculator_.add_diference_constraints((*it)->get_child(), relation_graph_);
+              difference_calculator_.add_difference_constraints((*it)->get_child(), relation_graph_);
             }
             unknown_asks.erase(it++);
             break;
@@ -615,7 +626,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
       // TODO: 分岐時の制約の追加をしていない。
       negative_asks.insert(branched_ask);
       if(!state->parent->negative_asks.count(branched_ask)){
-        difference_calculator_.add_diference_constraints(branched_ask->get_child(), relation_graph_);
+        difference_calculator_.add_difference_constraints(branched_ask->get_child(), relation_graph_);
       }
       return calculate_closure(state);
     }

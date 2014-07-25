@@ -110,8 +110,6 @@ Token Lexer::get_token()
       return VERTICAL_BAR;
     case '\'':
       return DIFFERENTIAL; 
-    case ':':
-      return COLON;
     case ';':
       return SEMICOLON;
     case '+':
@@ -127,6 +125,13 @@ Token Lexer::get_token()
   }
   // 2 or more charactors
   switch(current){
+    case ':':
+      if(get_current_char() == '='){
+        next_char();
+        current_token_string = ":=";
+        return DEFINITION;
+      }
+      return COLON;
     case '.':
       if(get_current_char() == '.'){
         next_char();

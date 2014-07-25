@@ -1,6 +1,8 @@
 #include "ConstraintDifferenceCalculator.h"
 #include "VariableFinder.h"
 
+using namespace std;
+
 namespace hydla
 {
 namespace simulator
@@ -20,16 +22,17 @@ void ConstraintDifferenceCalculator::calculate_difference_constraints(const phas
   
   ConstraintStore tmp_constraints;
   module_set_t module_set;
+
   //TODO: IPでprevを区別する
   for(auto constraint : difference_constraints){
-    relation_graph->get_related_constraints(constraint, tmp_constraints, module_set);
-    difference_constraints_.add_constraint_store(tmp_constraints);
+    add_difference_constraints(constraint, relation_graph);
   }
 }
 
-void ConstraintDifferenceCalculator::add_diference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph){
+void ConstraintDifferenceCalculator::add_difference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph){
   ConstraintStore tmp_constraints;
   module_set_t module_set;
+  difference_constraints_.add_constraint(constraint);
   relation_graph->get_related_constraints(constraint, tmp_constraints, module_set);
   difference_constraints_.add_constraint_store(tmp_constraints);
 }
@@ -56,6 +59,7 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
     const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
+
   VariableFinder finder;
   for(auto constraint : difference_constraints_){
     finder.visit_node(constraint);

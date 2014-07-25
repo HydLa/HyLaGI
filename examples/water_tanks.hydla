@@ -1,9 +1,9 @@
 // http://www-inst.cs.berkeley.edu/~ee291e/sp09/handouts/book.pdf
 // p57
-xs <=> x1..x2.
-ss <=> s1..s2.
+xs := x1..x2.
+ss := s1..s2.
 
-ys <=> y1..y2.
+ys := y1..y2.
 
 WATER <=> [](w = 50).
 OUT(x,v,s) <=> [](s- = 0 => x' = -v*x) /\
