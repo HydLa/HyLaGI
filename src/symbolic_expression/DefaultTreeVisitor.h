@@ -117,6 +117,25 @@ public:
 
   // Infinity
   virtual void visit(boost::shared_ptr<Infinity> node);
+
+  // ExpressionList
+  virtual void visit(boost::shared_ptr<ExpressionList> node);
+
+  // ConditionalExpressionList
+  virtual void visit(boost::shared_ptr<ConditionalExpressionList> node);
+
+  // ProgramList
+  virtual void visit(boost::shared_ptr<ProgramList> node);
+
+  // ConditionalProgramList
+  virtual void visit(boost::shared_ptr<ConditionalProgramList> node);
+
+  // EachElement
+  virtual void visit(boost::shared_ptr<EachElement> node);
+
+  // DifferentVariable
+  virtual void visit(boost::shared_ptr<DifferentVariable> node);
+
 };
 
 } //namespace symbolic_expression

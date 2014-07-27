@@ -248,6 +248,11 @@ bool False::is_same_struct(const Node& n, bool exactly_same) const
   return typeid(*this) == typeid(n);
 }
 
+bool EachElement::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n);
+}
+
 //Print
 bool Print::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -338,6 +343,39 @@ std::ostream& Definition::dump(std::ostream& s) const
   return s;
 }
 
+node_sptr ExpressionList::clone(){
+  node_type_sptr n(new ExpressionList(list_name_));
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+node_sptr ConditionalExpressionList::clone(){
+  node_type_sptr n(new ConditionalExpressionList(list_name_));
+  n->set_expression(expression_);
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+node_sptr ProgramList::clone(){
+  node_type_sptr n(new ProgramList(list_name_));
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+node_sptr ConditionalProgramList::clone(){
+  node_type_sptr n(new ConditionalProgramList(list_name_));
+  n->set_program(program_);
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
 
 node_sptr Function::clone(){
   node_type_sptr n(new Function(string_));
@@ -505,6 +543,16 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Not)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
 //自然対数の底
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
+
+//Lists
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionList)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalExpressionList)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramList)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalProgramList)
+
+//ListCondition
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(EachElement)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(DifferentVariable)
 
 //任意の文字列
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Function)

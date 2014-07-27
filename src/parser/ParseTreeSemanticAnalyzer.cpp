@@ -402,6 +402,48 @@ DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
 
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 
+// ExpressionList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionList> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ConditionalExpressionList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionList> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ProgramList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ConditionalProgramList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// EachElement
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<EachElement> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// DifferentVariable
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<DifferentVariable> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
 
 } //namespace parser
 } //namespace hydla

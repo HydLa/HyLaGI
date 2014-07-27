@@ -123,6 +123,25 @@ public:
  
   //False
   virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
+
+  // ExpressionList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionList> node);
+
+  // ConditionalExpressionList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+
+  // ProgramList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramList> node);
+
+  // ConditionalProgramList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+
+  // EachElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
+
+  // DifferentVariable
+  virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+
   
 
 private:

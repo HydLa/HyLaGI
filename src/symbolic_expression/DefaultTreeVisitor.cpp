@@ -106,6 +106,18 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<SVtimer> node)              {}
 
 void DefaultTreeVisitor::visit(boost::shared_ptr<Infinity> node)              {}
 
+// ExpressionList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionList> node)      {}
+// ConditionalExpressionList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ConditionalExpressionList> node)    {}
+// ProgramList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramList> node)    {}
+// ConditionalProgramList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ConditionalProgramList> node)    {}
+// EachElement
+void DefaultTreeVisitor::visit(boost::shared_ptr<EachElement> node)    {}
+// DifferentVariable
+void DefaultTreeVisitor::visit(boost::shared_ptr<DifferentVariable> node)    {}
 
 } //namespace symbolic_expression
 } //namespace hydla

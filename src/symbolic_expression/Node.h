@@ -1595,12 +1595,127 @@ public:
   std::vector<node_sptr> arguments_;
 };
 
+/**
+ * Expression List
+ */
+class ExpressionList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ExpressionList> node_type_sptr;
 
+  ExpressionList(){}
+  ExpressionList(const std::string& str) : list_name_(str){}
+
+  virtual ~ExpressionList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ExpressionList";
+  }
+
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+};
+
+class ConditionalExpressionList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ConditionalExpressionList> node_type_sptr;
+
+  ConditionalExpressionList(){}
+  ConditionalExpressionList(const std::string& str) : list_name_(str){}
+
+  virtual ~ConditionalExpressionList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ConditionalExpressionList";
+  }
+
+  virtual void set_expression(node_sptr node){ expression_ = node;}
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+  node_sptr expression_;
+};
+
+
+/**
+ * Program List
+ */
+class ProgramList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ProgramList> node_type_sptr;
+
+  ProgramList(){}
+  ProgramList(const std::string& str) : list_name_(str){}
+
+  virtual ~ProgramList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramList";
+  }
+
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+};
+
+class ConditionalProgramList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ConditionalProgramList> node_type_sptr;
+
+  ConditionalProgramList(){}
+  ConditionalProgramList(const std::string& str) : list_name_(str){}
+
+  virtual ~ConditionalProgramList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ConditionalProgramList";
+  }
+
+  void set_program(node_sptr node){ program_ = node;}
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+  node_sptr program_;
+};
+
+/**
+ * Each Element
+ * Var "in" List
+ */
+DEFINE_ASYMMETRIC_BINARY_NODE(EachElement);
+/**
+ * DifferentVariable
+ * Var "=!=" Var
+ */
+DEFINE_BINARY_NODE(DifferentVariable);
 
 /*
  * 関数
  */
-
 class Function : public ArbitraryNode {
 public:
   typedef boost::shared_ptr<Function> node_type_sptr;

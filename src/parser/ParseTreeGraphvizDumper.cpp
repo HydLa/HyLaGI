@@ -375,6 +375,42 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SymbolicT> node)
   dump_node(node);
 }
 
+// ExpressionList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionList> node)
+{
+  dump_node(node);
+}
+
+// ConditionalExpressionList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConditionalExpressionList> node)
+{
+  dump_node(node);
+}
+
+// ProgramList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramList> node)
+{
+  dump_node(node);
+}
+
+// ConditionalProgramList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConditionalProgramList> node)
+{
+  dump_node(node);
+}
+
+// EachElement
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<EachElement> node)
+{
+  dump_node(node);
+}
+
+// DifferentVariable
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<DifferentVariable> node)
+{
+  dump_node(node);
+}
+
 
 } //namespace parser
 } //namespace hydla
