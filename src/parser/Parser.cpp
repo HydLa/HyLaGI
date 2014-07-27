@@ -22,17 +22,10 @@ bool Parser::parse_ended(){
 
 node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
   parse();
-  an = assertion_node;
-  for(auto constraint_definition : constraint_definitions){
-    cd.add_definition(constraint_definition);
-  }
-  for(auto program_definition : program_definitions){
-    pd.add_definition(program_definition);
-  }
-  if(!error_info.empty() || !parse_ended()){
+  if(!error_info.empty()){
     std::cout << "error occured while parsing" << std::endl;
     for(auto info : error_info){
-      std::cout << "parse error : " << info.first.first+1 << " : ";
+      std::cout << "parse error " << info.first.first+1 << " : ";
       std::cout << info.second << std::endl;
       std::cout << "    " << lexer.get_string(info.first.first) << std::endl;
       std::cout << "    ";
@@ -42,11 +35,26 @@ node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> 
     // TODO : throw Error
     std::exit(1);
   }
+  an = assertion_node;
+  for(auto constraint_definition : constraint_definitions){
+    cd.add_definition(constraint_definition);
+  }
+  for(auto program_definition : program_definitions){
+    pd.add_definition(program_definition);
+  }
   return parsed_program;
 }
 
 node_sptr Parser::parse(){
-  return hydla_program();
+  position_t position = lexer.get_current_position();
+  while(!parse_ended()){
+    hydla_program();
+    if(position == lexer.get_current_position()){
+      lexer.get_token();
+    }
+    position = lexer.get_current_position();
+  }
+  return node_sptr();
 }
 
 /// hydla_program := statements
@@ -90,29 +98,56 @@ node_sptr Parser::statement(){
 
   // def_statement(constraint_def) "."
   boost::shared_ptr<ConstraintDefinition> cd;
-  if((cd = constraint_def())){
-    position_t tmp_position = lexer.get_current_position();
-    if(lexer.get_token() == PERIOD){
-      constraint_definitions.push_back(cd);
-      return cd;
+  // constraint_callee
+  if((cd = constraint_callee())){
+    // "<=>"
+    if(lexer.get_token() == EQUIVALENT){
+      position_t tmp_position = lexer.get_current_position();
+      node_sptr tmp;
+      // constraint
+      if((tmp = constraint())){
+        cd->set_child(tmp);
+        tmp_position = lexer.get_current_position();
+        if(lexer.get_token() == PERIOD){
+          constraint_definitions.push_back(cd);
+          return cd;
+        }
+        error_occurred(tmp_position, "expected \".\" after constraint definition");
+        return node_sptr();
+      }
+      error_occurred(tmp_position, "expected constraint after \"<=>\"");
+      return node_sptr();
     }
-    lexer.set_current_position(tmp_position);
-    error_occurred(lexer.get_current_position(), "expected \".\" after constraint definition");
-    return cd;
   }
   lexer.set_current_position(position);
 
   // def_statement(program_def) "."
   boost::shared_ptr<ProgramDefinition> pd;
-  if((pd = program_def())){
-    position_t tmp_position = lexer.get_current_position();
-    if(lexer.get_token() == PERIOD){
-      program_definitions.push_back(pd);
-      return pd;
+  // constraint_callee
+  if((pd = program_callee())){
+    // "{"
+    if(lexer.get_token() == LEFT_BRACES){
+      position_t tmp_position = lexer.get_current_position();
+      node_sptr tmp;
+      // program
+      if((tmp = program())){
+        pd->set_child(tmp);
+        tmp_position = lexer.get_current_position();
+        if(lexer.get_token() == RIGHT_BRACES){
+          tmp_position = lexer.get_current_position();
+          if(lexer.get_token() == PERIOD){
+            program_definitions.push_back(pd);
+            return pd;
+          }
+          error_occurred(tmp_position, "expected \".\" after program definition");
+          return node_sptr();
+        }
+        error_occurred(tmp_position, "expected \"}\" after defined program");
+        return node_sptr();
+      }
+      error_occurred(tmp_position, "expected program after \"{\"");
+      return node_sptr();
     }
-    lexer.set_current_position(tmp_position);
-    error_occurred(lexer.get_current_position(), "expected \".\" after program definition");
-    return pd;
   }
   lexer.set_current_position(position);
   
@@ -129,7 +164,6 @@ node_sptr Parser::statement(){
     return ret;
   }
   lexer.set_current_position(position);
-
 
   return node_sptr();
 }
@@ -188,51 +222,6 @@ node_sptr Parser::program_priority(){
 /// program_factor := module
 node_sptr Parser::program_factor(){
   return module();
-}
-
-/// constraint_def := constraint_callee "<=>" constraint
-boost::shared_ptr<ConstraintDefinition> Parser::constraint_def(){
-  position_t position = lexer.get_current_position();
-  boost::shared_ptr<ConstraintDefinition> ret;
-  node_sptr tmp;
-  // constraint_callee
-  if((ret = constraint_callee())){
-    // "<=>"
-    if(lexer.get_token() == EQUIVALENT){
-      // constraint
-      if((tmp = constraint())){
-        ret->set_child(tmp);
-        return ret;
-      }
-    }
-  }
-  lexer.set_current_position(position);
-
-  return boost::shared_ptr<ConstraintDefinition>();
-}
-
-/// program_def := program_callee "{" program "}"
-boost::shared_ptr<ProgramDefinition> Parser::program_def(){
-  position_t position = lexer.get_current_position();
-  boost::shared_ptr<ProgramDefinition> ret;
-  node_sptr tmp;
-  // program_callee
-  if((ret = program_callee())){
-    // "{"
-    if(lexer.get_token() == LEFT_BRACES){
-      // program
-      if((tmp = program())){
-        // "}"
-        if(lexer.get_token() == RIGHT_BRACES){
-          ret->set_child(tmp);
-          return ret;
-        }
-      }
-    }
-  }
-  lexer.set_current_position(position);
-
-  return boost::shared_ptr<ProgramDefinition>();
 }
 
 /// constraint_callee := constraint_name formal_args
