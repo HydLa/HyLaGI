@@ -97,7 +97,6 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   phase_type(todo.phase_type),
   current_time(todo.current_time),
   parameter_map(todo.parameter_map),
-  expanded_constraints(todo.expanded_constraints),
   diff_positive_asks(todo.positive_asks),
   diff_negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),

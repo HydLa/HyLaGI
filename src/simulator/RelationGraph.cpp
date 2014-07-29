@@ -382,7 +382,7 @@ void RelationGraph::set_ignore_prev(bool ignore)
   up_to_date = false;
 }
 
-void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node)
+void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node)
 {
   if(visit_mode == ADDING)
   {
@@ -448,30 +448,7 @@ RelationGraph::VariableNode* RelationGraph::add_variable_node(Variable &var)
   }
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Equal> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::UnEqual> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Less> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LessEqual> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Greater> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node)
-{
-  visit_binary_node(node);
-}
+
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> node)
 {
   if(visit_mode == ADDING)

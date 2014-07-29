@@ -61,7 +61,6 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
 
   VariableFinder finder;
   for(auto constraint : difference_constraints_){
-    cout << "diff: " << get_infix_string(constraint) << endl;
     finder.visit_node(constraint);
   }
   //TODO: prevを区別する

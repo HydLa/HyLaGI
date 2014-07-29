@@ -47,6 +47,7 @@ typedef enum {
 typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
 typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
 typedef std::set<ask_t >                                           ask_set_t;
+typedef std::set<boost::shared_ptr<symbolic_expression::Always> >  always_set_t;
 typedef hierarchy::ModuleSet                              module_set_t;
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
@@ -69,6 +70,7 @@ typedef std::set<std::string> change_variables_t;
 
 struct FullInformation
 {
+  always_set_t                 expanded_always;
   ask_set_t                    positive_asks;
   ask_set_t                    negative_asks;
 };
@@ -86,7 +88,7 @@ public:
   variable_map_t               variable_map;
   parameter_map_t              parameter_map;
 
-  ConstraintStore              expanded_constraints;
+  always_set_t                 diff_expanded_always;
   
   ask_set_t                    get_all_positive_asks();
   ask_set_t                    get_all_negative_asks();

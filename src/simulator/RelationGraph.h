@@ -3,7 +3,7 @@
 #include "Variable.h"
 #include "Node.h"
 #include "ModuleSetContainer.h"
-#include "DefaultTreeVisitor.h"
+#include "TreeVisitorForAtomicConstraint.h"
 #include "ConstraintStore.h"
 
 namespace hydla {
@@ -13,7 +13,7 @@ namespace simulator {
 /**
  * Graph to represent relations of constraints and variables
  */
-class RelationGraph: public symbolic_expression::DefaultTreeVisitor{
+class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
 
 public:
   typedef hierarchy::ModuleSet module_set_t;
@@ -185,16 +185,9 @@ private:
   void visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
   void visit_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
   void initialize_node_visited();
- 
-
-  void visit(boost::shared_ptr<symbolic_expression::Equal> node);
-  void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
-  void visit(boost::shared_ptr<symbolic_expression::Less> node);
-  void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
-  void visit(boost::shared_ptr<symbolic_expression::Greater> node);
-  void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
-  void visit(boost::shared_ptr<symbolic_expression::Ask> node);
-  void visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
+  using TreeVisitorForAtomicConstraint::visit; // suppress warnings
+  void visit(boost::shared_ptr<symbolic_expression::Ask> node); 
+  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node);
 
   var_nodes_t variable_nodes;
   constraint_nodes_t constraint_nodes;

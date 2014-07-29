@@ -144,6 +144,7 @@ private:
 
   bool calculate_closure(simulation_todo_sptr_t& state);
 
+  bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
@@ -152,6 +153,8 @@ private:
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
 
   module_set_container_sptr module_set_container;
+
+  ask_set_t all_asks;
 
   std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
 

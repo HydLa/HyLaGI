@@ -89,39 +89,54 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     // in the initial state, set all modules expanded
     for(auto module : module_set_container->get_max_module_set())
     {
+      relation_graph_->set_expanded(module.second, true);
       todo->expanded_constraints.add_constraint(module.second);
     }
   }
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
+
+
   while(module_set_container->has_next())
   {
-    relation_graph_->set_expanded_all(false);
-    for(auto constraint : todo->expanded_constraints)
+    if(!relation_graph_is_taken_over)
     {
-      relation_graph_->set_expanded(constraint, true);
+  // TODO: relation_graph_の状態が親フェーズから直接引き継いだものでない場合は，差分を用いることができないので全制約に関して設定する必要がある．
     }
-
-
-    if(todo->phase_type == PointPhase && todo->parent != result_root)
+    else
     {
-      ask_set_t previous_positive_asks  = todo->parent->get_all_positive_asks();
-      for(auto cause : todo->discrete_causes)
+
+      if(todo->phase_type == PointPhase && todo->parent != result_root)
       {
-        if(cause.second)
+        // TODO: この情報は用いずに，離散変化時刻の計算のところでついでに覚えておくべき．
+        ask_set_t previous_positive_asks  = todo->parent->get_all_positive_asks();
+
+        for(auto cause : todo->discrete_causes)
         {
-          if(previous_positive_asks.count(cause.first))
+          if(cause.second)
           {
-            todo->negative_asks.insert(cause.first);
+            if(previous_positive_asks.count(cause.first))
+            {
+              relation_graph_->set_expanded(cause.first->get_child(), false);
+              todo->negative_asks.insert(cause.first);
+            }
+            else
+            {
+              relation_graph_->set_expanded(cause.first->get_child(), true);
+              todo->positive_asks.insert(cause.first);
+            }
           }
-          else
-          {
-            relation_graph_->set_expanded(cause.first, true);
-            todo->positive_asks.insert(cause.first);
-          }
+        }        
+      }
+      else if(todo->phase_type == IntervalPhase)
+      {
+        // TODO: IP のガード条件はこの時点では判定が難しいので，すべてoffにしておくことにする．
+        for(auto ask : all_asks)
+        {
+          relation_graph_->set_expanded(ask->get_child(), false);
         }
-      }        
+      }
     }
 
     
@@ -252,7 +267,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
 
   for(auto positive_ask : todo->positive_asks)
   {
-    phase->expanded_constraints.add_constraint(positive_ask->get_child());
+    todo->expanded_constraints.add_constraint(positive_ask->get_child());
   }
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
   
@@ -364,6 +379,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
     relation_graph_->dump_graph(std::cout);
     exit(EXIT_SUCCESS);
   }
+  relation_graph_->set_expanded_all(false);
 
   AskCollector ac;
 
@@ -378,7 +394,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   // search asks and initialize prev_asks_ and ask_map
   ac.collect_ask(constraints, &pat, &nat, &prev_asks_);
   FullInformation* root_information = new FullInformation();
-  root_information->negative_asks = prev_asks_;
+  all_asks = root_information->negative_asks = prev_asks_;
   result_root->set_full_information(root_information);
   for(auto it = prev_asks_.begin(); it != prev_asks_.end();){
     int id = (*it)->get_id();
@@ -391,6 +407,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
       it++;
     }
   }
+
+  relation_graph_is_taken_over = true;
   
   backend_->set_variable_set(*variable_set_);
   value_modifier.reset(new ValueModifier(*backend_));
@@ -599,10 +617,14 @@ PhaseSimulator::todo_list_t
   next_todo->ms_to_visit = module_set_container->get_full_ms_list();
   
   AlwaysFinder always_finder;
-  // TODO: positive_asksの後件がalwaysだった場合に、expanded_alwaysから消しても良いはず
-  for(auto constraint : phase->expanded_constraints)
+  ConstraintStore non_always;
+  for(auto constraint : current_todo->expanded_constraints)
   {
-    always_finder.find_always(constraint, next_todo->expanded_constraints);
+    always_finder.find_always(constraint, &next_todo->expanded_always, &non_always);
+  }
+  for(auto constraint : non_always)
+  {
+    relation_graph_->set_expanded(constraint, false);
   }
   next_todo->parameter_map = phase->parameter_map;
 
