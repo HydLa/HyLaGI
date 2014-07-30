@@ -81,6 +81,23 @@ bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUA
 
 node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
   parse();
+  if(!error_info.empty()){
+    std::cout << "error occured while parsing" << std::endl;
+    int error_line = 0;
+    for(auto info : error_info){
+      if(error_line != info.first.first+1){
+        error_line = info.first.first+1;
+        std::cout << "parse error in line " << error_line << " : " << std::endl;
+//        std::cout << info.second << std::endl;
+        std::cout << "    " << lexer.get_string(info.first.first) << std::endl;
+//        std::cout << "    ";
+//        for(int i = 0; i < info.first.second; i++) std::cout << " ";
+//        std::cout << "~" << std::endl;
+      }
+    }
+    // TODO : throw Error
+    std::exit(1);
+  }
   an = assertion_node;
   for(auto constraint_definition : constraint_definitions){
     cd.add_definition(constraint_definition);
@@ -88,24 +105,19 @@ node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> 
   for(auto program_definition : program_definitions){
     pd.add_definition(program_definition);
   }
-  if(!error_info.empty() || !parse_ended()){
-    std::cout << "error occured while parsing" << std::endl;
-    for(auto info : error_info){
-      std::cout << "parse error : " << info.first.first+1 << " : ";
-      std::cout << info.second << std::endl;
-      std::cout << "    " << lexer.get_string(info.first.first) << std::endl;
-      std::cout << "    ";
-      for(int i = 0; i < info.first.second; i++) std::cout << " ";
-      std::cout << "~" << std::endl;
-    }
-    // TODO : throw Error
-    std::exit(1);
-  }
   return parsed_program;
 }
 
 node_sptr Parser::parse(){
-  return hydla_program();
+  position_t position = lexer.get_current_position();
+  while(!parse_ended()){
+    hydla_program();
+    if(position == lexer.get_current_position()){
+      lexer.get_token();
+    }
+    position = lexer.get_current_position();
+  }
+  return node_sptr();
 }
 
 /// hydla_program := statements
@@ -201,7 +213,7 @@ node_sptr Parser::statement(){
   }
   lexer.set_current_position(position);
 
-
+  error_occurred(lexer.get_current_position(), "parse error");
   return node_sptr();
 }
 
