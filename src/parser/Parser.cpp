@@ -25,7 +25,7 @@ node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> 
   if(!error_info.empty()){
     std::cout << "error occured while parsing" << std::endl;
     for(auto info : error_info){
-      std::cout << "parse error " << info.first.first+1 << " : ";
+      std::cout << "parse error - " << info.first.first+1 << " : ";
       std::cout << info.second << std::endl;
       std::cout << "    " << lexer.get_string(info.first.first) << std::endl;
       std::cout << "    ";
