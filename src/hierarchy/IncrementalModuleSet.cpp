@@ -158,7 +158,11 @@ std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& 
     generate_new_ms(mss, tmp);
     for(auto ms : ms_to_visit_){
       if(tmp.including(ms)){
-        s << "  \"" << tmp.get_name() << "\" -> \"" << ms.get_name() << "\"" << std::endl;
+        ModuleSet parent = tmp;
+        ModuleSet child = ms;
+        parent.insert(required_ms_);
+        child.insert(required_ms_);
+        s << "  \"" << parent.get_name() << "\" -> \"" << child.get_name() << "\"" << std::endl;
       }
     }
   }
