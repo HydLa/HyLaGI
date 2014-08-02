@@ -41,7 +41,7 @@ void JsonWriter::write_phase(const phase_result_const_sptr_t &phase, const std::
   std::ofstream ofs;
   ofs.open(name.c_str());
   ofs << for_phase(phase).serialize();
-  ofs.close();  
+  ofs.close();
 }
 
 value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
@@ -170,7 +170,7 @@ value JsonWriter::for_pm(const parameter_map_t &pm)
 }
 
 void JsonWriter::set_epsilon_mode(backend_sptr_t back, bool flag){
-  backend_ = back;
+  backend = back;
   epsilon_mode_flag = flag;
 }
 
@@ -182,8 +182,8 @@ value JsonWriter::for_range_diff(const value_range_t &range)
 
   if(range.unique())
     {
-      tmp = range.get_unique();
-      backend_->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+      tmp = range.get_unique_value();
+      backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
       range_object["unique_value"] = value(ret.get_string());
     }
   else
@@ -194,7 +194,7 @@ value JsonWriter::for_range_diff(const value_range_t &range)
           const value_range_t::bound_t &bound = range.get_lower_bound(i);
           object lb;
           tmp = bound.value;
-          backend_->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+          backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
           lb["value"] = value(ret.get_string());
           lb["closed"] = value(bound.include_bound);
           lbs.push_back(value(lb));
@@ -207,7 +207,7 @@ value JsonWriter::for_range_diff(const value_range_t &range)
           const value_range_t::bound_t &bound = range.get_upper_bound(i);
           object ub;
           tmp = bound.value;
-          backend_->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+          backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
           ub["value"] = value(ret.get_string());
           ub["closed"] = value(bound.include_bound);
           ubs.push_back(value(ub));

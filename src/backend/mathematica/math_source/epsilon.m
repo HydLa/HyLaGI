@@ -1,16 +1,16 @@
 
 (* ポイントフェーズにおける無矛盾性判定 *)
-checkConsistencyPointTest[] := (
-  checkConsistencyPointTest[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables], parameters ]
+checkConsistencyPointEpsilon[] := (
+  checkConsistencyPointEpsilon[constraint && tmpConstraint && initConstraint && initTmpConstraint && prevIneqs, pConstraint, Union[variables, prevVariables], parameters ]
                             );
 
 publicMethod[
-             checkConsistencyPointTest,
+             checkConsistencyPointEpsilon,
              cons, pcons, vars, pars,
              Module[
                     {cpTrue, cpFalse},
                     Quiet[
-                          cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
+                          cpTrue = Reduce[Exists[vars, cons && pcons], Reals], {Reduce::useq}
                           ];
                     simplePrint[cpTrue];
                     (* remove (Not)Element[] because it seems to be always true *)
@@ -28,14 +28,14 @@ publicMethod[
              ];
 
 (* インターバルフェーズにおける無矛盾性判定 *)
-checkConsistencyIntervalTest[] :=  (
-  checkConsistencyIntervalTest[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
+checkConsistencyIntervalEpsilon[] :=  (
+  checkConsistencyIntervalEpsilon[constraint && tmpConstraint, initConstraint && initTmpConstraint, prevIneqs, pConstraint, timeVariables, initVariables, prevVariables, parameters]
                                 );
 
 
 moveTermsToLeft[expr_] := Head[expr][expr[[1]] - expr[[2]], 0];
 
-ccIntervalForEachTest[cond_, initRules_, pCons_] :=
+ccIntervalForEachEpsilon[cond_, initRules_, pCons_] :=
   Module[
          {
            operator,
@@ -76,7 +76,7 @@ ccIntervalForEachTest[cond_, initRules_, pCons_] :=
 
 
 publicMethod[
-             checkConsistencyIntervalTest,
+             checkConsistencyIntervalEpsilon,
              cons, initCons, prevCons, pCons, timeVars, initVars, prevVars, pars,
              Module[
                     {sol, otherCons, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
@@ -108,11 +108,11 @@ publicMethod[
 
 
 (* 次のポイントフェーズに移行する時刻を求める *)
-calculateNextPointPhaseTimeTest[maxTime_, discCauses_] :=
-  calculateNextPointPhaseTimeTest[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
+calculateNextPointPhaseTimeEpsilon[maxTime_, discCauses_] :=
+  calculateNextPointPhaseTimeEpsilon[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
 
 publicMethod[
-             calculateNextPointPhaseTimeTest,
+             calculateNextPointPhaseTimeEpsilon,
              maxTime, causeAndIDs, cons, initCons, pCons, vars,
              Module[
                     {
@@ -138,7 +138,7 @@ publicMethod[
 
                     debugPrint["# In EPSILON MODE # : necessaryPCons is ",necessaryPCons];
 
-                    resultList = calculateMinTimeListTest[timeAppliedCauses, necessaryPCons, maxTime];
+                    resultList = calculateMinTimeListEpsilon[timeAppliedCauses, necessaryPCons, maxTime];
 
                     (* 整形して結果を返す *)
                     resultList = Map[({#[[1]], #[[2]], LogicalExpand[#[[3]] ]})&, resultList];
@@ -153,14 +153,14 @@ publicMethod[
              ];
 
 (* 最小時刻と条件の組をリストアップする関数 *)
-calculateMinTimeListTest[causeAndIDList_, condition_, maxT_] := (
+calculateMinTimeListEpsilon[causeAndIDList_, condition_, maxT_] := (
 Block[
   {findResult, i},
   (* -1 is regarded as the id of time limit *)
   timeCaseList = {{timeAndIDs[maxT, ids[-1]], {}, condition}};
   For[i = 1, i <= Length[causeAndIDList], i++,
-      findResult = findMinTimeTest[causeAndIDList[[i]], condition];
-      timeCaseList = compareMinTimeListTest[timeCaseList, findResult]
+      findResult = findMinTimeEpsilon[causeAndIDList[[i]], condition];
+      timeCaseList = compareMinTimeListEpsilon[timeCaseList, findResult]
       ];
   debugPrint["# In EPSILON MODE # : timeCaseList is ",timeCaseList];
   timeCaseList
@@ -168,7 +168,7 @@ Block[
 );
 
 (* 条件を満たす最小の時刻と，その条件の組を求める *)
-findMinTimeTest[causeAndID_, condition_] :=
+findMinTimeEpsilon[causeAndID_, condition_] :=
   Module[
          {
            id,
@@ -209,13 +209,13 @@ nextPPTimeShift[ret_] :=
          ];
 
 (* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
-compareMinTimeListTest[list1_, list2_] := ( Block[
+compareMinTimeListEpsilon[list1_, list2_] := ( Block[
   {resultList, i, j},
   If[list2 === {}, Return[list1] ];
   resultList = {};
   For[i = 1, i <= Length[list1], i++,
       For[j = 1, j <= Length[list2], j++,
-          resultList = Join[resultList, compareMinTimeTest[list1[[i]], list2[[j]] ] ]
+          resultList = Join[resultList, compareMinTimeEpsilon[list1[[i]], list2[[j]] ] ]
           ]
       ];
   resultList
@@ -224,7 +224,7 @@ compareMinTimeListTest[list1_, list2_] := ( Block[
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
 (* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
-compareMinTimeTest[timeCond1_, timeCond2_] := ( Block[
+compareMinTimeEpsilon[timeCond1_, timeCond2_] := ( Block[
   {
     minTime1, minTime2,
     timeAndID1, timeAndID2,
@@ -261,6 +261,18 @@ compareMinTimeTest[timeCond1_, timeCond2_] := ( Block[
   ]
 );
 
+
+publicMethod[
+             exprTimeShift,
+             expr, time,
+             toReturnForm[Simplify[expr /. t -> t - time]]
+             ];
+
+publicMethod[
+             exprTimeShiftInverse,
+             expr, time,
+             toReturnForm[expr /. t -> t + time]
+             ];
 
 (* 式が0以上かどうか *)
 isOverZero[expr_] := isOverZero[expr, pConstraint];

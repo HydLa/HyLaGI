@@ -105,7 +105,7 @@ public:
   /// A preceding phase
   phase_result_sptr_t parent;
 
-  // aho tmp PP time Guard
+  // store PP time Guard
   std::vector<int> NextGuardids;
 
   PhaseResult();
@@ -127,4 +127,3 @@ std::ostream& operator<<(std::ostream& s, const hydla::simulator::change_variabl
 
 } // namespace simulator
 } // namespace hydla
-

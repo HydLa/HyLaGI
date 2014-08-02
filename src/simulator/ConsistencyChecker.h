@@ -43,10 +43,11 @@ public:
   typedef std::set< std::string > change_variables_t;
 
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const PhaseType& phase);
-  
+
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store, const continuity_map_t&, const PhaseType& phase);
-  
+
   void add_continuity(const continuity_map_t&, const PhaseType &phase);
+  void set_epsilonmode(bool flag);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
 
   /**
@@ -63,6 +64,7 @@ public:
 
 private:
   backend_sptr_t backend;
+  bool epsilon_mode_flag = false;
 };
 
 

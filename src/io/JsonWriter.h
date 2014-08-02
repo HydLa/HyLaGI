@@ -26,7 +26,7 @@ class JsonWriter{
   typedef hydla::simulator::ValueRange      value_range_t;
 
   virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
-  hydla::simulator::backend_sptr_t backend_;
+  hydla::simulator::backend_sptr_t backend;
   bool epsilon_mode_flag = false;
 
   void write(const simulator_t &simulator, const std::string &name);

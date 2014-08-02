@@ -65,13 +65,24 @@ void ConsistencyChecker::add_continuity(const continuity_map_t& continuity_map, 
 CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const PhaseType& phase)
 {
   CheckConsistencyResult ret;
-  if(phase == PointPhase)
-  {
-    backend->call("checkConsistencyPoint", 0, "", "cc", &ret);
-  }
-  else
-  {
-    backend->call("checkConsistencyInterval", 0, "", "cc", &ret);
+  if(!epsilon_mode_flag){
+    if(phase == PointPhase)
+    {
+      backend->call("checkConsistencyPoint", 0, "", "cc", &ret);
+    }
+    else
+    {
+      backend->call("checkConsistencyInterval", 0, "", "cc", &ret);
+    }
+  }else{
+    if(phase == PointPhase)
+    {
+      backend->call("checkConsistencyPointEpsilon", 0, "", "cc", &ret);
+    }
+    else
+    {
+      backend->call("checkConsistencyIntervalEpsilon", 0, "", "cc", &ret);
+    }
   }
   return ret;
 }
@@ -86,6 +97,9 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
 {
   CheckEntailmentResult ce_result;
   ConsistencyChecker consistency_checker(backend);
+  if(epsilon_mode_flag){
+    consistency_checker.set_epsilonmode(true);
+  }
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   backend->call("startTemporary", 0, "", "");
   consistency_checker.add_continuity(cont_map, phase);
@@ -143,9 +157,13 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
 
   const char* fmt = (phase == PointPhase)?"csn":"cst";
   backend->call("addConstraint", 1, fmt, "", &constraint_store);
-      
+
   return call_backend_check_consistency(phase);
 }
 
+void ConsistencyChecker::set_epsilonmode(bool flag){
+  epsilon_mode_flag = flag;
 }
+}
+
 }

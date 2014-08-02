@@ -1,19 +1,9 @@
-#include "PhaseSimulator.h"
-#include "AskCollector.h"
-#include "VariableFinder.h"
-#include "Exceptions.h"
-#include "Backend.h"
-#include "PrevReplacer.h"
-
-using namespace std;
-using namespace hydla::simulator;
-using namespace hydla::backend;
-
 //n次近似
 // #define DIFFCNT 1
 // #define _DEBUG_CUT_HIGH_ORDER
 // #define _DEBUG_REDUCE_UNSUIT
 // #define _DEBUG_PASS_SPECIFIC_CASE
+// #define _DEBUG_PASS_SPECIFIC_CASE2
 // #define _DEBUG_ZERO_CASE
 
 #include <iostream>
@@ -27,29 +17,22 @@ using namespace hydla::backend;
 #include "Logger.h"
 #include "Timer.h"
 
+#include "VariableFinder.h"
+#include "Exceptions.h"
+
 #include "PrevReplacer.h"
 #include "TellCollector.h"
 #include "AskCollector.h"
-#include "VariableFinder.h"
-
-#include "InitNodeRemover.h"
-#include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
-#include "ContinuityMapMaker.h"
-
-#include "PrevSearcher.h"
 
 #include "Backend.h"
-#include "Exceptions.h"
-#include "AnalysisResultChecker.h"
-#include "UnsatCoreFinder.h"
-#include "AlwaysFinder.h"
 #include "EpsilonMode.h"
 #include "PhaseSimulator.h"
 
 
-using namespace hydla::backend::mathematica;
-using namespace hydla::backend::reduce;
+using namespace std;
+
+using namespace hydla::backend;
+
 
 using namespace boost;
 
@@ -303,7 +286,7 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
 #endif
   pp_time_result_t eps_time_result;
   //一階目
-  backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
+  backend_->call("calculateNextPointPhaseTimeEpsilon", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
   //中身の確認
   unsigned int time_it;
 #ifdef _DEBUG_PASS_SPECIFIC_CASE
@@ -384,11 +367,11 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
             shifted_vm[it->first] = it->second;
           else if(it->second.unique())
             {
-              value_t val = it->second.get_unique();
+              value_t val = it->second.get_unique_value();
               range_t& range = shifted_vm[it->first];
               value_t ret;
               backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
-              range.set_unique(ret);
+              range.set_unique_value(ret);
             }
           else
             {
@@ -420,7 +403,7 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
         value_t eps_time_limit = time_limit;
         eps_time_limit -= passed_time;
         //二回目
-        backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(eps_time_limit), &dc_causes, &tmp_time_result);
+        backend_->call("calculateNextPointPhaseTimeEpsilon", 2, "vltdc", "cp", &(eps_time_limit), &dc_causes, &tmp_time_result);
 
         //結果の保存
         unsigned int tmp_it;
@@ -461,6 +444,7 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
   for(time_it=0;time_it < time_result.size();time_it++)
     {
       NextPhaseResult &tmp_candidate = time_result[time_it];
+      phase->NextGuardids.clear();
       for(uint id_it = 0; id_it < tmp_candidate.minimum.ids.size(); id_it++)
         {
           phase->NextGuardids.push_back(tmp_candidate.minimum.ids[id_it]);
@@ -478,8 +462,10 @@ pp_time_result_t hydla::simulator::pass_specific_case(pp_time_result_t time_resu
 pp_time_result_t hydla::simulator::pass_specific_case2(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase,
                                                        variable_map_t vm_before_time_shift, dc_causes_t dc_causes, value_t time_limit,simulation_todo_sptr_t& current_todo)
 {
-#ifdef _DEBUG_PASS_SPECIFIC_CASE
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
   std::cout << "Pass Specific Cases Start;" << std::endl;
+  std::cout << "-----------------------=================================---------------------" << std::endl;
+  std::cout << "this phase " << phase->id << std::endl;
 #endif
   //結果の保存(ret)
   pp_time_result_t eps_time_result;
@@ -504,7 +490,7 @@ pp_time_result_t hydla::simulator::pass_specific_case2(pp_time_result_t time_res
         }
     }
 
-#ifdef _DEBUG_PASS_SPECIFIC_CASE
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
   std::cout << "Pass Specific Cases End;" << std::endl;
   std::cout << std::endl;
 #endif
@@ -521,17 +507,36 @@ pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& pha
   bool iszero = false;
   bool sameid = false;
 
-  backend_->call("calculateNextPointPhaseTimeTest", 2, "vltdc", "cp", &(time_limit), &dc_causes, &tmp_time_result);
+  // backend_->call("calculateNextPointPhaseTimeEpsilon", 2, "vltdc", "cp", &(time_limit), &dc_causes, &tmp_time_result);
+  backend_->call("calculateNextPointPhaseTimeEpsilon", 2, "vltdc", "cp", &(time_limit), &dc_causes, &tmp_time_result);
 
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
+  std::cout << "#### check next cases ####" << std::endl;
+#endif
   //中身の確認
   unsigned int time_it;
   for(time_it=0;time_it < tmp_time_result.size();time_it++)
     {
       NextPhaseResult &candidate = tmp_time_result[time_it];
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
+      std::cout << "Case " << (time_it + 1) << "\t: condition :\n";
+      //time ids
+      for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
+        {
+          int id = candidate.minimum.ids[id_it];
+          std::cout << "time and ids : id : " << id << std::endl;
+        }
+      std::cout << "candidate mintime \t: " << candidate.minimum.time << std::endl;
+#endif
 
       value_t tmp = candidate.minimum.time;
       //極限を取ると時間 t -> 0
       backend_->call("isZero", 1, "vln", "b", &tmp, &iszero);
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
+      std::cout << "iszero ? :" << tmp << std::endl;
+      if(iszero) std::cout << "      -> true" << std::endl;
+      else  std::cout << "      -> false" << std::endl;
+#endif
       //前回の離散変化条件のidとの比較
       if(phase->parent->id > 1){
         uint size = phase->parent->parent->NextGuardids.size();
@@ -539,6 +544,10 @@ pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& pha
           bool tmpidbool = true;
           for(uint beforeid_it = 0;beforeid_it < size; beforeid_it++)
             {
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
+              std::cout << "#######time ids id#########" << candidate.minimum.ids[beforeid_it] << std::endl;
+              std::cout << "#######before ids id#########" << phase->parent->parent->NextGuardids[beforeid_it] << std::endl;
+#endif
               tmpidbool = tmpidbool && (candidate.minimum.ids[beforeid_it] == phase->parent->parent->NextGuardids[beforeid_it]);
             }
           sameid = tmpidbool;
@@ -547,6 +556,10 @@ pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& pha
 
       //時刻をずらす場合
       if(iszero && sameid){
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
+        std::cout << "----- limit zero case happen -----" << std::endl;
+        //std::cout << phase->constraint_store << std::endl;
+#endif
         //時刻ずらし
         pp_time_result_t tmp_time_result;
 
@@ -562,11 +575,11 @@ pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& pha
             shifted_vm[it->first] = it->second;
           else if(it->second.unique())
             {
-              value_t val = it->second.get_unique();
+              value_t val = it->second.get_unique_value();
               range_t& range = shifted_vm[it->first];
               value_t ret;
               backend_->call("exprTimeShift", 2, "vlten", "vl", &val, &tmp_val, &ret);
-              range.set_unique(ret);
+              range.set_unique_value(ret);
             }
           else
             {
@@ -600,6 +613,7 @@ pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& pha
         //二回目
         tmp_time_result = calculate_tmp_result(phase,eps_time_limit,dc_causes,backend_,shifted_vm);
 
+        backend_->call("resetConstraint", 0, "", "");
         //結果の保存
         unsigned int tmp_it;
         for(tmp_it=0;tmp_it < tmp_time_result.size();tmp_it++)
@@ -608,6 +622,9 @@ pp_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& pha
             value_t new_time = candidate.minimum.time + tmp_candidate.minimum.time ;
             backend_->call("simplify", 1, "vln", "vl", &new_time, &new_time);
             tmp_candidate.minimum.time = new_time;
+#ifdef _DEBUG_PASS_SPECIFIC_CASE2
+            std::cout << "new mintime \t: " << new_time << std::endl;
+#endif
             eps_time_result.push_back(tmp_candidate);
           }
       }

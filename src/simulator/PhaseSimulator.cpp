@@ -86,6 +86,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   result_list_t result;
   bool has_next = false;
   ConsistencyChecker consistency_checker(backend_);
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
+
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
@@ -167,6 +171,9 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   ConstraintStore store;
   ConsistencyChecker consistency_checker(backend_);
   simulation_todo_sptr_t tes = todo;
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
 
   backend_->call("resetConstraintForVariable", 0, "", "");
 
@@ -616,6 +623,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   bool expanded;
 
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
+
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
       ask_collector.collect_ask(&expanded_always,
@@ -747,8 +758,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             continue;
           }
         }
-
         maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
+        if(opts_->epsilon_mode >= 0){
+          consistency_checker.set_epsilonmode(true);
+        }
         CheckConsistencyResult check_consistency_result;
         switch(consistency_checker.check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
           case ENTAILED:
@@ -1082,6 +1095,9 @@ void PhaseSimulator::apply_previous_solution(
     continuity_map_t& continuity_map,
     const value_t& current_time ){
   ConsistencyChecker consistency_checker(backend_);
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
   for(auto pair : parent->variable_map){
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
@@ -1262,6 +1278,7 @@ PhaseSimulator::todo_list_t
 
     else if(opts_->epsilon_mode >= 0){
       time_result = pass_specific_case2(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
+      // time_result = pass_specific_case(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
       time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
     }
 
@@ -1385,7 +1402,6 @@ variable_map_t PhaseSimulator::shift_time_of_vm(const variable_map_t& vm, const 
   }
   return result;
 }
-
 
 }
 }
