@@ -258,8 +258,16 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
   else
   {
+    if(tmp_result.inconsistent_store.consistent())
+    {
+      // There may be some branches.
+      // TODO: 本来はここで論理和を取らないといけない．
+      result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
+    }
+
     // TODO: ここで変数表が必ずしもできるとは限らない．underconstraintの場合があるので対処する．
     result.consistent_store.add_constraint_store(tmp_result.consistent_store);
+    result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     vector<variable_map_t> create_result;
     if(phase == PointPhase)
     {
@@ -312,7 +320,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     }
   }
 
-  if(result.consistent_store.consistent())
+  if(result.inconsistent_store.empty())
   {
     result.inconsistent_store.set_consistency(false);
   }

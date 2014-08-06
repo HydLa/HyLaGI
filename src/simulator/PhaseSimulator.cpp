@@ -75,6 +75,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
+  backend_->call("addParameterConstraint", 1, "csn", "", &todo->initial_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
   if(todo->phase_type == PointPhase)
   {
@@ -279,6 +280,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
     phase->expanded_constraints.add_constraint(positive_ask->get_child());
   }
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
+  backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
   
 /*  TODO: implement
   if(opts_->assertion || break_condition_.get() != NULL){
@@ -346,8 +348,6 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   todo_container_->push_todo(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
   backend_->call("resetConstraintForParameter", 1, "csn", "", &original->initial_constraint_store);
-  // TODO: implement branch here
-  throw SimulateError("branch in calculate closure.");
 }
 
 phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo)

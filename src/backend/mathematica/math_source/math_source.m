@@ -163,7 +163,8 @@ createParameterMap[] := createParameterMap[pConstraint];
 publicMethod[
   createParameterMap,
   pCons,
-  createMap[pCons, isParameter, hasParameter, {}];
+  (* TODO: the size of the result of createMap may not be 1 *)
+  createMap[pCons, isParameter, hasParameter, {}][[1]]
 ];
 
 createMap[cons_, judge_, hasJudge_, vars_] := 
