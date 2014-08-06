@@ -48,7 +48,8 @@ public:
   CheckEntailmentResult check_entailment(
     RelationGraph &relation_graph,
     CheckConsistencyResult &cc_result,
-    const ask_t &guard,
+    const constraint_t &guard,
+    const constraint_t &consequent,
     const PhaseType &phase,
     profile_t &profile
     );

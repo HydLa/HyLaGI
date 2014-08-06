@@ -218,9 +218,11 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
       case 'u':
         find_unsat_core(todo);
         break;
+/*
       case 'b':
         set_breakpoint(todo);
         break;
+*/
       case 'r':
         return -1;
       case 's':
@@ -253,7 +255,7 @@ int InteractiveSimulator::show_help(){
     "p              -- Display the information of the current phase",
     "a              -- Approx a value of a variable as interval",
     "u              -- Find unsat core constraints and print them",
-    "breakpoints    -- Making program stop at certain points",
+    //"breakpoints    -- Making program stop at certain points",
     //"debug          -- Simulate with debug-mode",
     //"edit           -- Edit constraint ",
     //"load           -- Load state ",

@@ -282,56 +282,31 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
   backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
   
-/*  TODO: implement
-  if(opts_->assertion || break_condition_.get() != NULL){
-    timer::Timer entailment_timer;
-
+  if(opts_->assertion){
     backend_->call("resetConstraintForVariable", 0, "","");
     std::string fmt = "mv0";
     fmt += (phase->phase_type==PointPhase)?"n":"t";
-    backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
-    backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
 
-    if(opts_->assertion)
-    {
-      HYDLA_LOGGER_DEBUG("%% check_assertion");
-      CheckConsistencyResult cc_result;
-      switch(consistency_checker->check_entailment(*relation_graph_, cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), todo->phase_type)){
-      case CONFLICTING:
-      case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
-        std::cout << "Assertion Failed!" << std::endl;
-        HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
-        phase->cause_for_termination = ASSERTION;
-        break;
-      case ENTAILED:
-        break;
-      case BRANCH_PAR:
-        HYDLA_LOGGER_DEBUG("%% failure of assertion depends on conditions of parameters");
-        push_branch_states(todo, cc_result);
-        std::cout << "Assertion Failed!" << std::endl;
-        phase->parameter_map = todo->parameter_map;
-        HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
-        phase->cause_for_termination = ASSERTION;
-        break;
-      }
-      todo->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-    }
-    if(break_condition_.get() != NULL)
-    {
-      HYDLA_LOGGER_DEBUG("%% check_break_condition");
-      CheckConsistencyResult cc_result;
-      switch(consistency_checker->check_entailment(*relation_graph_, cc_result, break_condition_, todo->phase_type)){
-      case ENTAILED:
-      case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
-      case BRANCH_PAR: //TODO: 分岐すべき？要検討
-        breaking = true;
-        break;
-      case CONFLICTING:
-        break;
-      }
+    HYDLA_LOGGER_DEBUG("%% check_assertion");
+    CheckConsistencyResult cc_result;
+    switch(consistency_checker->check_entailment(*relation_graph_, cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), node_sptr(), todo->phase_type, todo->profile)){
+    case CONFLICTING:
+    case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
+      std::cout << "Assertion Failed!" << std::endl;
+      HYDLA_LOGGER_DEBUG("%% Assertion Failed!");
+      phase->cause_for_termination = ASSERTION;
+      break;
+    case ENTAILED:
+      break;
+    case BRANCH_PAR:
+      HYDLA_LOGGER_DEBUG("%% failure of assertion depends on conditions of parameters");
+      push_branch_states(todo, cc_result);
+      std::cout << "Assertion Failed!" << std::endl;
+      phase->parameter_map = todo->parameter_map;
+      phase->cause_for_termination = ASSERTION;
+      break;
     }
   }
-*/
 
   if(opts_->epsilon_mode){
     phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
@@ -575,7 +550,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         }
 
         CheckConsistencyResult check_consistency_result;
-        switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, *it, state->phase_type, state->profile)){
+        switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, (*it)->get_guard(), (*it)->get_child(), state->phase_type, state->profile)){
           case ENTAILED:
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);

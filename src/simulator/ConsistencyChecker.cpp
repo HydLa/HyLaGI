@@ -164,10 +164,12 @@ map<string, int> ConsistencyChecker::get_differential_map(variable_set_t &vs)
   return dm;
 }
 
+
 ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   RelationGraph &relation_graph,
   CheckConsistencyResult &cc_result,
-  const ask_t &guard,
+  const node_sptr &guard,
+  const node_sptr &consequent,
   const PhaseType &phase,
   profile_t &profile
   )
@@ -181,10 +183,9 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   // get constraints related with the guard 
   {
     timer::Timer timer;
-    relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
+    relation_graph.get_related_constraints(guard, constraint_store, module_set);
     profile["GetRelatedConstraints"] += timer.get_elapsed_us();
   }
-
 
   backend->call("resetConstraintForVariable", 0, "", "");
 
@@ -192,10 +193,10 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   {
     finder.visit_node(constraint);
   }
-  finder.visit_node(guard->get_child());
+  if(consequent.get() != nullptr)finder.visit_node(consequent);
   add_continuity(finder, phase);
 
-  backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
+  backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard);
   backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
   
   cc_result = call_backend_check_consistency(phase);
@@ -213,7 +214,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
       backend->call("resetConstraintForVariable", 0, "", "");
       add_continuity(finder, phase);
       backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
-      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard->get_guard()));
+      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
       const char* fmt = (phase == PointPhase)?"en":"et";
       backend->call("addConstraint", 1, fmt, "", &not_node);
       profile["PrepareForSecondCC"] += timer.get_elapsed_us();
