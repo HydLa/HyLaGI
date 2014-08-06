@@ -29,7 +29,7 @@ public:
   Parser(std::istream&);
   ~Parser();
 
-  node_sptr parse(node_sptr assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
+  node_sptr parse(node_sptr& assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
   
   bool is_COMMA(Token);
   bool is_WEAKER(Token);

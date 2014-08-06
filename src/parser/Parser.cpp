@@ -79,7 +79,7 @@ bool Parser::is_COMPARE(Token token){ return token == LESS || token == LESS_EQUA
 }
 
 
-node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
+node_sptr Parser::parse(node_sptr& an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
   parse();
   if(!error_info.empty()){
     std::cout << "error occured while parsing" << std::endl;
