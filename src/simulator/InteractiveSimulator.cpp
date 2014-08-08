@@ -15,7 +15,6 @@
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
-#include "AffineApproximator.h"
 #include "ValueModifier.h"
 #include "SignalHandler.h"
 #include "Parser.h"
@@ -31,7 +30,6 @@ using namespace std;
 using namespace hydla::parser::error;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
-using namespace hydla::interval;
 
 
 namespace hydla {
@@ -202,11 +200,6 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
       case 'p':
         print(todo->parent);
         break;
-      case 'a':
-        {
-          if( approx_variable(todo) ) print_phase(todo->parent);
-          break;
-        }
       case 'c':
         change_variable(todo);
         print_phase(todo->parent);
@@ -253,8 +246,6 @@ int InteractiveSimulator::show_help(){
     "q              -- Quit this simulation",
     "c              -- Change a value of a variable",
     "p              -- Display the information of the current phase",
-    "a              -- Approx a value of a variable as interval",
-    "u              -- Find unsat core constraints and print them",
     //"breakpoints    -- Making program stop at certain points",
     //"debug          -- Simulate with debug-mode",
     //"edit           -- Edit constraint ",
@@ -348,46 +339,6 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
-  if(todo->phase_type == PointPhase)
-  {
-    cout << "(approximate time)" << endl;
-    affine_transformer_->approximate_time(todo->current_time, todo->parent->variable_map, todo->prev_map, todo->parent->parameter_map, (todo->discrete_causes.begin()->first)->get_guard());
-    todo->parent->end_time = todo->current_time;
-  }
-  else
-  {
-    variable_map_t& vm = todo->parent->variable_map;
-    cout << "(approximate variable)" << endl;
-  
-    // 変数の選択
-    cout << "input variable name " << endl;
-    cout << '>';
-    string variable_str = excin<string>();
-
-    // TODO: 変数自体が幅を持つ場合への対応
-    // TODO: 時刻を近似したい場合への対応
-
-    variable_t var;
-
-    variable_map_t::iterator v_it  = vm.begin();
-    for(;v_it!=vm.end();v_it++){
-      if( v_it->first.get_string() == variable_str)
-      {
-        var = v_it->first;
-        break;
-      }
-    }
-    if(v_it == vm.end())
-    {
-      cout << "invalid variable name " << endl;
-      return 0;
-    }
-    affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (todo->discrete_causes.begin()->first)->get_guard());
-    todo->prev_map = vm;
-  }
-
-  todo->parameter_map = todo->parent->parameter_map;
-
   return 1;
 }
 

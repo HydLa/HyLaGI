@@ -18,10 +18,6 @@ namespace backend
   class Backend;
 }
 
-namespace interval
-{
-  class AffineApproximator;
-}
 
 namespace simulator {
 
@@ -251,7 +247,6 @@ protected:
 
   Opts*     opts_;
 
-  interval::AffineApproximator* affine_transformer_;
 };
 
 } //namespace simulator

@@ -20,8 +20,6 @@ namespace simulator{
 
 Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
 {
-  affine_transformer_ = interval::AffineApproximator::get_instance();
-  affine_transformer_->set_simulator(this);
 }
 
 Simulator::~Simulator()
