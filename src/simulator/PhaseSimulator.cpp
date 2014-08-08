@@ -289,7 +289,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
 
     HYDLA_LOGGER_DEBUG("%% check_assertion");
     CheckConsistencyResult cc_result;
-    switch(consistency_checker->check_entailment(*relation_graph_, cc_result, symbolic_expression::node_sptr(new symbolic_expression::Not(opts_->assertion)), node_sptr(), todo->phase_type, todo->profile)){
+    switch(consistency_checker->check_entailment(*relation_graph_, cc_result, opts_->assertion, node_sptr(), todo->phase_type, todo->profile)){
     case CONFLICTING:
     case BRANCH_VAR: //TODO: 変数の値によるので，分岐はすべき
       std::cout << "Assertion Failed!" << std::endl;
