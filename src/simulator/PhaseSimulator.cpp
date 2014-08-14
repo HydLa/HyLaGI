@@ -529,7 +529,6 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
     }
 
     if(opts_->reuse && state->in_following_step()){
-      // std::cout<<"phase "<<state->id<<std::endl;
       difference_calculator_.collect_ask(guard_relation_graph_,
         state->discrete_causes, positive_asks, negative_asks, unknown_asks);
     }else{

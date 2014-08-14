@@ -17,7 +17,8 @@ void ConstraintDifferenceCalculator::calculate_difference_constraints(const phas
     set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
   }
   else{
-    difference_constraints = parent->changed_constraints;
+    set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
+    difference_constraints.add_constraint_store(parent->changed_constraints);
   }
   
   ConstraintStore tmp_constraints;
@@ -73,9 +74,9 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
       if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
     }
   }
-  //TODO: PPでprevは挿入しない
-  // unknown_asks.insert(discrete_causes.begin(), discrete_causes.end());
-  // std::cout << unknown_asks << std::endl;
+  for(auto ask : discrete_causes){
+    if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
+  }
 }
 
 void ConstraintDifferenceCalculator::set_symmetric_difference(
