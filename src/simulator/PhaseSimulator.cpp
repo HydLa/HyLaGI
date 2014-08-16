@@ -75,6 +75,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
+  backend_->call("addParameterConstraint", 1, "csn", "", &todo->initial_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
   if(todo->phase_type == PointPhase)
   {
@@ -89,8 +90,8 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         {
           bool entailed = todo->parent->positive_asks.count(prev_ask);
           // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point
-          if(todo->discrete_causes.count(prev_ask)
-             && todo->discrete_causes[prev_ask]) entailed = !entailed;
+          if(todo->discrete_causes_map.count(prev_ask)
+             && todo->discrete_causes_map[prev_ask]) entailed = !entailed;
           todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
         }
       }
@@ -279,6 +280,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
     phase->expanded_constraints.add_constraint(positive_ask->get_child());
   }
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
+  backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
   
 /*  TODO: implement
   if(opts_->assertion || break_condition_.get() != NULL){
@@ -345,9 +347,7 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   todo_container_->push_todo(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
-  //backend_->call("resetConstraint", 1, "csn", "", &original->initial_constraint_store);
-  // TODO: implement branch here
-  throw SimulateError("branch in calculate closure.");
+  backend_->call("resetConstraintForParameter", 1, "csn", "", &original->initial_constraint_store);
 }
 
 phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo)
@@ -530,7 +530,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
 
     if(opts_->reuse && state->in_following_step()){
       difference_calculator_.collect_ask(guard_relation_graph_,
-        positive_asks, negative_asks, unknown_asks);
+        state->discrete_causes, positive_asks, negative_asks, unknown_asks);
     }else{
       ask_collector.collect_ask(state->expanded_constraints,
           &positive_asks,
@@ -557,7 +557,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         if(opts_->reuse && state->phase_type == IntervalPhase && 
            state->in_following_step()){
           timer::Timer timer;
-          if(!state->discrete_causes.find(*it)->second){
+          if(!state->discrete_causes_map[*it]){
             if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
               if(state->parent->positive_asks.count(*it)){
                 positive_asks.insert(*it);
@@ -657,6 +657,7 @@ PhaseSimulator::todo_list_t
     next_todo->phase_type = IntervalPhase;
     next_todo->current_time = phase->current_time;
     // TODO: 離散変化した変数が関わるガード条件はここから取り除く必要が有りそう（単純なコピーではだめ）
+    next_todo->discrete_causes_map = current_todo->discrete_causes_map;
     next_todo->discrete_causes = current_todo->discrete_causes;
     next_todo->prev_map = phase->variable_map;
     ret.push_back(next_todo);
@@ -762,7 +763,8 @@ PhaseSimulator::todo_list_t
         }
         else if(id >= 0)
         {
-          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
+          next_todo->discrete_causes_map.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
+          next_todo->discrete_causes.push_back(ask_map[id]);
         }
       }
 

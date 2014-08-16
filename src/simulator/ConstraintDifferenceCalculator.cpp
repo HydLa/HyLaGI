@@ -17,7 +17,8 @@ void ConstraintDifferenceCalculator::calculate_difference_constraints(const phas
     set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
   }
   else{
-    difference_constraints = parent->changed_constraints;
+    set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
+    difference_constraints.add_constraint_store(parent->changed_constraints);
   }
   
   ConstraintStore tmp_constraints;
@@ -55,6 +56,7 @@ bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t par
 }
 
 void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
+    const std::vector<ask_t> &discrete_causes,
     const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
@@ -71,6 +73,9 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
     for(auto ask : asks){
       if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
     }
+  }
+  for(auto ask : discrete_causes){
+    if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
   }
 }
 

@@ -20,7 +20,7 @@ bool Parser::parse_ended(){
   return false;
 }
 
-node_sptr Parser::parse(node_sptr an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
+node_sptr Parser::parse(node_sptr& an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
   parse();
   if(!error_info.empty()){
     std::cout << "error occured while parsing" << std::endl;
@@ -165,6 +165,7 @@ node_sptr Parser::statement(){
   }
   lexer.set_current_position(position);
 
+  error_occurred(lexer.get_current_position(), "parse error");
   return node_sptr();
 }
 

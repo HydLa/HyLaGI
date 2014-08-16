@@ -47,7 +47,7 @@ Module[
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
   lhs = (cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules;
-  simplePrint[lhs];
+  simplePrint[lhs, pCons];
   (* caused by underConstraint *)
   If[hasVariable[lhs], Return[pCons] ];
 
@@ -163,7 +163,8 @@ createParameterMap[] := createParameterMap[pConstraint];
 publicMethod[
   createParameterMap,
   pCons,
-  createMap[pCons, isParameter, hasParameter, {}];
+  (* TODO: the size of the result of createMap may not be 1 *)
+  createMap[pCons, isParameter, hasParameter, {}][[1]]
 ];
 
 createMap[cons_, judge_, hasJudge_, vars_] := 
@@ -191,7 +192,7 @@ Module[
 
 (* 式中に変数名が出現するか否か *)
 
-hasVariable[exprs_] := Length[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter]] > 0;
+hasVariable[exprs_] := Length[getVariables[exprs] ] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
@@ -199,7 +200,7 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 
 (* 式中に出現する変数を取得 *)
 
-getVariables[exprs_] := ToExpression[StringCases[ToString[exprs], variablePrefix ~~ WordCharacter..]];
+getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], Infinity, Heads->True];
 
 (* 式中に出現するprev値を取得 *)
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
