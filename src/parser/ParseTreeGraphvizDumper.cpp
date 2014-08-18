@@ -411,6 +411,48 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<DifferentVariable> node)
   dump_node(node);
 }
 
+// ExpressionListElement 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionListElement> node)
+{
+  dump_node(node);
+}
+
+// ExpressionListCaller
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionListCaller> node)
+{
+  dump_node(node);
+}
+
+// ProgramListElement 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListElement> node)
+{
+  dump_node(node);
+}
+
+// ProgramListCaller 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListCaller> node)
+{
+  dump_node(node);
+}
+
+// Union 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Union> node)
+{
+  dump_node(node);
+}
+
+// Intersection
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Intersection> node)
+{
+  dump_node(node);
+}
+
+// Range
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Range> node)
+{
+  dump_node(node);
+}
+
 
 } //namespace parser
 } //namespace hydla

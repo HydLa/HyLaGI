@@ -409,6 +409,13 @@ DEFINE_INVALID_NODE(ExpressionList)
 DEFINE_INVALID_NODE(ConditionalExpressionList)
 DEFINE_INVALID_NODE(EachElement)
 DEFINE_INVALID_NODE(DifferentVariable)
+DEFINE_INVALID_NODE(ExpressionListElement)
+DEFINE_INVALID_NODE(ExpressionListCaller)
+DEFINE_INVALID_NODE(ProgramListElement)
+DEFINE_INVALID_NODE(ProgramListCaller)
+DEFINE_INVALID_NODE(Range)
+DEFINE_INVALID_NODE(Union)
+DEFINE_INVALID_NODE(Intersection)
 
 }
 }

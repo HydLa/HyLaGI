@@ -107,6 +107,13 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Union> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
   
 private:
 

@@ -935,7 +935,6 @@ boost::shared_ptr<Function> Parser::function(){
  */
 boost::shared_ptr<Variable> Parser::variable(std::map<std::string, std::string> bound_vars){
   std::string name;
-  boost::shared_ptr<Variable> ret;
   // identifier
   position_t position = lexer.get_current_position();
   if((name = identifier()) != ""){
@@ -1078,6 +1077,391 @@ std::vector<node_sptr> Parser::actual_args(){
   lexer.set_current_position(position);
 
   return std::vector<node_sptr>();
+}
+
+/**
+ * program_list_element := program_list "[" expression "]"
+ */
+node_sptr Parser::program_list_element(){
+  position_t position = lexer.get_current_position();
+  node_sptr list;
+  if((list = program_list())){
+    if(lexer.get_token() == LEFT_BOX_BRACKETS){
+      node_sptr expr;
+      if((expr = expression())){
+        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+          boost::shared_ptr<ProgramListElement> e(new ProgramListElement());
+          e->set_lhs(list);
+          e->set_rhs(expr);
+          return e;
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * expression_list_element := expression_list "[" expression "]"
+ */
+node_sptr Parser::expression_list_element(){
+  position_t position = lexer.get_current_position();
+  node_sptr list;
+  if((list = expression_list())){
+    if(lexer.get_token() == LEFT_BOX_BRACKETS){
+      node_sptr expr;
+      if((expr = expression())){
+        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+          boost::shared_ptr<ExpressionListElement> e(new ExpressionListElement());
+          e->set_lhs(list);
+          e->set_rhs(expr);
+          return e;
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+
+/**
+ * conditional_program_list := "{" program "|" ( list_condition ("," list_condition)* )?
+ */
+node_sptr Parser::conditional_program_list(){
+  position_t position = lexer.get_current_position();
+  node_sptr tmp;
+  if(lexer.get_token() == LEFT_BRACES){
+    if((tmp = program())){
+      if(lexer.get_token() == VERTICAL_BAR){
+        boost::shared_ptr<ConditionalProgramList> ret(new ConditionalProgramList());
+        ret->set_program(tmp);
+        if((tmp = list_condition())){
+          ret->add_argument(tmp);
+          position_t tmp_position;
+          while(lexer.get_token() == COMMA){
+            if((tmp = list_condition())){
+              ret->add_argument(tmp);
+            }else break;
+            tmp_position = lexer.get_current_position();
+          }
+          lexer.set_current_position(tmp_position);
+          if(lexer.get_token() == RIGHT_BRACES){
+            return ret;
+          }
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * program_list := program_list_term ("or" program_list_term)*
+ */
+node_sptr Parser::program_list(){
+  position_t position = lexer.get_current_position();
+  node_sptr ret;
+  if((ret = program_list_term())){
+    node_sptr list;
+    position_t tmp_position = lexer.get_current_position();
+    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "or"){
+      if((list = program_list_term())){
+        boost::shared_ptr<Union> uni(new Union(ret,list));
+        ret = uni;
+      }else break;
+      tmp_position = lexer.get_current_position();
+    }
+    lexer.set_current_position(tmp_position);
+    return ret;
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * program_list_term := program_list_factor ("and" program_list_factor )*
+ */
+node_sptr Parser::program_list_term(){
+  position_t position = lexer.get_current_position();
+  node_sptr ret;
+  if((ret = program_list_factor())){
+    node_sptr list;
+    position_t tmp_position = lexer.get_current_position();
+    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "and"){
+      if((list = program_list_factor())){
+        boost::shared_ptr<Intersection> in(new Intersection(ret,list));
+        ret = in;
+      }else break;
+      tmp_position = lexer.get_current_position();
+    }
+    lexer.set_current_position(tmp_position);
+    return ret;
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * program_list_factor := conditional_program_list
+ *                      | "{"program ("," program)* "}"
+ *                      | identifier number ".." identifier number
+ */
+node_sptr Parser::program_list_factor(){
+  node_sptr ret;
+  // conditional_program_list
+  position_t position = lexer.get_current_position();
+  // "{" program ("," program)* "}"
+  if((ret = conditional_program_list())) return ret;
+  if(lexer.get_token() == LEFT_BRACES){
+    boost::shared_ptr<ProgramList> list(new ProgramList());
+    if((ret = program())){
+      list->add_argument(ret);
+      position_t tmp_position = lexer.get_current_position();
+      while(lexer.get_token() == COMMA){
+        if((ret = program())){
+          list->add_argument(ret);
+        }else break;
+        tmp_position = lexer.get_current_position();
+      }
+      lexer.set_current_position(position);
+      if(lexer.get_token() == RIGHT_BRACES){
+        return list;
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  if(lexer.get_token() == LEFT_PARENTHESES){
+    if((ret = program_list())){
+      if(lexer.get_token() == RIGHT_PARENTHESES){
+        return ret;
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  // identifier number ".." identifier number
+  std::string str;
+  if((str = identifier()) != ""){
+    if(lexer.get_token() == TWO_PERIOD){
+      std::string str2;
+      if((str2 = identifier()) != ""){
+        int num1;
+        int num2;
+        for(num1 = str.length()-1; num1 >= 0; num1--){
+          if(str[num1] < '0' || '9' < str[num1]) break;
+        }
+        for(num2 = str2.length()-1; num2 >= 0; num2--){
+          if(str2[num2] < '0' || '9' < str2[num2]) break;
+        }
+        if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
+          boost::shared_ptr<Range> range(
+            new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
+                      boost::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
+            range->set_string(str.substr(0,num1+1));
+            return range;
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  if((str = identifier()) != ""){
+    boost::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
+    caller->set_name(str);
+    return caller;
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * conditional_expression_list := "{" expression "|" ( list_condition ("," list_condition)* )? "}"
+ */
+node_sptr Parser::conditional_expression_list(){
+  position_t position = lexer.get_current_position();
+  node_sptr tmp;
+  if(lexer.get_token() == LEFT_BRACES){
+    if((tmp = expression())){
+      if(lexer.get_token() == VERTICAL_BAR){
+        boost::shared_ptr<ConditionalExpressionList> ret(new ConditionalExpressionList());
+        ret->set_expression(tmp);
+        if((tmp = list_condition())){
+          ret->add_argument(tmp);
+          position_t tmp_position;
+          while(lexer.get_token() == COMMA){
+            if((tmp = list_condition())){
+              ret->add_argument(tmp);
+            }else break;
+            tmp_position = lexer.get_current_position();
+          }
+          lexer.set_current_position(tmp_position);
+          if(lexer.get_token() == RIGHT_BRACES){
+            return ret;
+          }
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * expression_list := expression_list_term ("or" expression_list_term )*
+ */
+node_sptr Parser::expression_list(){
+  position_t position = lexer.get_current_position();
+  node_sptr ret;
+  if((ret = expression_list_term())){
+    node_sptr list;
+    position_t tmp_position = lexer.get_current_position();
+    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "or"){
+      if((list = expression_list_term())){
+        boost::shared_ptr<Union> uni(new Union(ret,list));
+        ret = uni;
+      }else break;
+      tmp_position = lexer.get_current_position();
+    }
+    lexer.set_current_position(tmp_position);
+    return ret;
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * program_list_term := expression_list_factor ("and" expression_list_factor )*
+ */
+node_sptr Parser::expression_list_term(){
+  position_t position = lexer.get_current_position();
+  node_sptr ret;
+  if((ret = expression_list_factor())){
+    node_sptr list;
+    position_t tmp_position = lexer.get_current_position();
+    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "and"){
+      if((list = expression_list_factor())){
+        boost::shared_ptr<Intersection> in(new Intersection(ret,list));
+        ret = in;
+      }else break;
+      tmp_position = lexer.get_current_position();
+    }
+    lexer.set_current_position(tmp_position);
+    return ret;
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * expression_list_factor := conditional_expression_list
+ *                         | "{"expression ("," expression)* "}"
+ *                         | identifier number ".." identifier number
+ *                         | number ".." number
+ *                         | "(" expression_list ")"
+ *                         | identifier
+ */
+node_sptr Parser::expression_list_factor(){
+  node_sptr ret;
+  // conditional_expression_list
+  position_t position = lexer.get_current_position();
+  // "{" expression ("," expression)* "}"
+  if((ret = conditional_expression_list())) return ret;
+  if(lexer.get_token() == LEFT_BRACES){
+    boost::shared_ptr<ExpressionList> list(new ExpressionList());
+    if((ret = expression())){
+      list->add_argument(ret);
+      position_t tmp_position = lexer.get_current_position();
+      while(lexer.get_token() == COMMA){
+        if((ret = expression())){
+          list->add_argument(ret);
+        }else break;
+        tmp_position = lexer.get_current_position();
+      }
+      lexer.set_current_position(position);
+      if(lexer.get_token() == RIGHT_BRACES){
+        return list;
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  // number ".." number
+  if((ret = number())){
+    if(lexer.get_token() == TWO_PERIOD){
+      node_sptr num2;
+      if((num2 = number())){
+        return boost::shared_ptr<Range>(new Range(ret,num2));
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  if(lexer.get_token() == LEFT_PARENTHESES){
+    if((ret = expression_list())){
+      if(lexer.get_token() == RIGHT_PARENTHESES){
+        return ret;
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  // identifier number ".." identifier number
+  std::string str;
+  if((str = identifier()) != ""){
+    if(lexer.get_token() == TWO_PERIOD){
+      std::string str2;
+      if((str2 = identifier()) != ""){
+        int num1;
+        int num2;
+        for(num1 = str.length()-1; num1 >= 0; num1--){
+          if(str[num1] < '0' || '9' < str[num1]) break;
+        }
+        for(num2 = str2.length()-1; num2 >= 0; num2--){
+          if(str2[num2] < '0' || '9' < str2[num2]) break;
+        }
+        if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
+          boost::shared_ptr<Range> range(
+            new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
+                      boost::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
+            range->set_string(str.substr(0,num1+1));
+            return range;
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  if((str = identifier()) != ""){
+    boost::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
+    caller->set_name(str);
+    return caller;
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+/**
+ * list_condition := bound_variable "in" (expression_list | program_list)
+ *                 | (expression_list_element | program_list_element | bound_variable) "=!=" (expression_list_element | program_list_element | bound_variable)
+ */
+node_sptr Parser::list_condition(){
+  node_sptr lhs;
+  position_t position = lexer.get_current_position();
+  // bound_variable "in" (expression_list | program_list)
+  if((lhs = bound_variable())){
+    if(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "in"){
+      node_sptr list;
+      if((list = expression_list())){
+        return boost::shared_ptr<EachElement>(new EachElement(lhs,list));
+      }
+      if((list = program_list())){
+        return boost::shared_ptr<EachElement>(new EachElement(lhs,list));
+      }
+    }
+  }
+  lexer.set_current_position(position);
+// (expression_list_element | program_list_element | bound_variable) "=!=" (expression_list_element | program_list_element | bound_variable)
+  if((lhs = expression_list_element()) ||
+     (lhs = program_list_element()) ||
+     (lhs = bound_variable())){
+    if(lexer.get_token() == DIFFERENT_VARIABLE){
+      node_sptr rhs;
+      if((rhs = expression_list_element()) ||
+         (rhs = program_list_element()) ||
+         (rhs = bound_variable())){
+        return boost::shared_ptr<DifferentVariable>(new DifferentVariable(lhs,rhs)); 
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
 }
 
 /// formal_args := ( "(" bound_variable ("," bound_variable)* ")" )?

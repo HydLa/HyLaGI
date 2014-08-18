@@ -1564,7 +1564,6 @@ public:
 /**
  * 任意個の引数を持つノード
  */
-
 class ArbitraryNode : public Node {
 public:
   typedef boost::shared_ptr<ArbitraryNode> node_type_sptr;
@@ -1595,6 +1594,68 @@ public:
   std::vector<node_sptr> arguments_;
 };
 
+/**
+ * Range
+ */
+class Range : public BinaryNode {
+public:
+
+  typedef boost::shared_ptr<Range> node_type_sptr;
+
+  Range()
+    {}
+
+  Range(const node_sptr& lhs, const node_sptr& rhs) :
+    BinaryNode(lhs, rhs)
+    {}
+
+  virtual ~Range(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone(){
+      node_type_sptr n(new Range);
+      return BinaryNode::clone(n);
+  }
+
+  virtual std::string get_node_type_name() const {
+    return "Range";
+  }
+
+  void set_string(std::string str){ header = str; }
+  std::string get_string(){ return header; }
+private:
+  std::string header;
+};
+
+/**
+ * ExpressionListCaller
+ */
+class ExpressionListCaller : public Caller {
+public:
+  ExpressionListCaller(){}
+  virtual ~ExpressionListCaller(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ExpressionListCaller";
+  }
+};
+/**
+ * ProgramListCaller
+ */
+class ProgramListCaller : public Caller {
+public:
+  ProgramListCaller(){}
+  virtual ~ProgramListCaller(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramListCaller";
+  }
+};
 /**
  * Expression List
  */
@@ -1647,7 +1708,6 @@ private:
   std::string list_name_;
   node_sptr expression_;
 };
-
 
 /**
  * Program List
@@ -1702,6 +1762,22 @@ private:
   node_sptr program_;
 };
 
+/**
+ * ProgramListElement 
+ */
+DEFINE_BINARY_NODE(ProgramListElement);
+/**
+ * ExpressionListElement 
+ */
+DEFINE_BINARY_NODE(ExpressionListElement);
+/**
+ * Union 
+ */
+DEFINE_BINARY_NODE(Union);
+/**
+ * Intersection
+ */
+DEFINE_BINARY_NODE(Intersection);
 /**
  * Each Element
  * Var "in" List

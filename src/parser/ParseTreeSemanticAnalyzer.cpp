@@ -444,6 +444,54 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<DifferentVariable> node)
   assert(0);
 }
 
+// ExpressionListElement
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ExpressionListCaller
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ProgramListCaller
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ProgramListElement
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// Range
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Range> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// Union 
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Union> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// Intersection
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Intersection> node)
+{
+  // TODO: implement
+  assert(0);
+}
 
 } //namespace parser
 } //namespace hydla

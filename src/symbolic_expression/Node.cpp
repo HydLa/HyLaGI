@@ -247,7 +247,6 @@ bool False::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
 }
-
 bool EachElement::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
@@ -490,6 +489,8 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintDefinition)
 //呼び出し
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListCaller)
 
  //制約式
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
@@ -550,6 +551,11 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalExpressionList)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramList)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalProgramList)
 
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListElement)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListElement)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Range)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Union)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Intersection)
 //ListCondition
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(EachElement)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(DifferentVariable)

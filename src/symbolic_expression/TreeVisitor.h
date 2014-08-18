@@ -148,6 +148,27 @@ public:
   // DifferentVariable
   virtual void visit(boost::shared_ptr<DifferentVariable> node) = 0;
 
+  // ExpressionListElement
+  virtual void visit(boost::shared_ptr<ExpressionListElement> node) = 0;
+
+  // ExpressionListCaller
+  virtual void visit(boost::shared_ptr<ExpressionListCaller> node) = 0;
+
+  // ProgramListCaller
+  virtual void visit(boost::shared_ptr<ProgramListCaller> node) = 0;
+
+  // ProgramListElement
+  virtual void visit(boost::shared_ptr<ProgramListElement> node) = 0;
+
+  // Range
+  virtual void visit(boost::shared_ptr<Range> node) = 0;
+
+  // Union
+  virtual void visit(boost::shared_ptr<Union> node) = 0;
+
+  // Intersection 
+  virtual void visit(boost::shared_ptr<Intersection> node) = 0;
+
 };
 
 } //namespace symbolic_expression

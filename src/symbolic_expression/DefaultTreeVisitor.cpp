@@ -118,6 +118,20 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<ConditionalProgramList> node)  
 void DefaultTreeVisitor::visit(boost::shared_ptr<EachElement> node)    {}
 // DifferentVariable
 void DefaultTreeVisitor::visit(boost::shared_ptr<DifferentVariable> node)    {}
+// ExpressionListElement
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListElement> node)    {}
+// ExpressionListCaller
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListCaller> node)    {}
+// ProgramListElement
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListElement> node)    {}
+// ProgramListCaller
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListCaller> node)    {}
+// Range
+void DefaultTreeVisitor::visit(boost::shared_ptr<Range> node)    {}
+// Union 
+void DefaultTreeVisitor::visit(boost::shared_ptr<Union> node)    {}
+// Intersection 
+void DefaultTreeVisitor::visit(boost::shared_ptr<Intersection> node)    {}
 
 } //namespace symbolic_expression
 } //namespace hydla

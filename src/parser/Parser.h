@@ -12,8 +12,6 @@ namespace hydla{
   namespace parser{
 
   typedef hydla::symbolic_expression::node_sptr node_sptr;
-  typedef std::set<std::string> list_t;
-  typedef std::pair<std::string, std::pair<std::string, std::string> > condition_t;
   typedef std::pair<position_t, std::string> error_info_t;
 
 class Parser{
@@ -31,12 +29,6 @@ public:
 
   node_sptr parse(node_sptr& assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
   
-  bool is_COMMA(Token);
-  bool is_WEAKER(Token);
-  bool is_LOGICAL_OR(Token);
-  bool is_LOGICAL_AND(Token);
-  bool is_COMPARE(Token);
-
   node_sptr hydla_program();
   node_sptr statements();
   node_sptr statement();
@@ -86,6 +78,18 @@ public:
   node_sptr tautology();
   std::string identifier();
   node_sptr number();
+  
+  node_sptr expression_list_element();
+  node_sptr program_list_element();
+  node_sptr conditional_program_list();
+  node_sptr program_list();
+  node_sptr program_list_term();
+  node_sptr program_list_factor();
+  node_sptr conditional_expression_list();
+  node_sptr expression_list();
+  node_sptr expression_list_term();
+  node_sptr expression_list_factor();
+  node_sptr list_condition();
   
   void error_occurred(position_t position, std::string error_message){ error_info.push_back(error_info_t(position,error_message)); }
   void error_occurred(error_info_t info){ error_info.push_back(info); }
