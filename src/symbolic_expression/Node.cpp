@@ -297,6 +297,56 @@ bool Parameter::is_same_struct(const Node& n, bool exactly_same) const
           name_ == static_cast<const Parameter*>(&n)->name_;          
 }
 
+std::ostream& ConstraintCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "constraint_call<" 
+    << get_id()
+    << ","
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
+std::ostream& ProgramCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "program_call<" 
+    << get_id()
+    << ","
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
 std::ostream& Caller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();

@@ -220,7 +220,9 @@ node_sptr Parser::program_priority(){
   return node_sptr();
 }
 
-/// program_factor := module
+/**
+ * program_factor := module
+ */
 node_sptr Parser::program_factor(){
   return module();
 }
@@ -328,6 +330,8 @@ node_sptr Parser::parenthesis_program(){
 /**
  * module := program_caller
  *         | "(" program ")"
+ *         | program_list_element
+ *         | program_list
  *         | constraint
  */
 node_sptr Parser::module(){
@@ -338,9 +342,9 @@ node_sptr Parser::module(){
   if((ret = program_caller())){
     position_t tmp_position = lexer.get_current_position(); 
     Token token;
-    // after program_caller must be ")"* ("," ||  "<<" || "}" || ".")
+    // after program_caller must be ")"* ("," ||  "<<" || "}" || "." || "|")
     while((token = lexer.get_token()) == RIGHT_PARENTHESES);
-    if(token == COMMA || token == WEAKER || token == RIGHT_BRACES || token == PERIOD){
+    if(token == COMMA || token == WEAKER || token == RIGHT_BRACES || token == PERIOD || token == VERTICAL_BAR){
       // but don't skip these token
       lexer.set_current_position(tmp_position);
       return ret;
@@ -350,6 +354,10 @@ node_sptr Parser::module(){
 
   // "(" program ")"
   if((ret = parenthesis_program())){ return ret; }
+
+  // program_lists
+  if((ret = program_list_element())){ return ret; }
+  if((ret = program_list())){ return ret; }
 
   // constraint
   if((ret = constraint())){ return ret;}
@@ -660,10 +668,14 @@ node_sptr Parser::command(){
   return node_sptr();
 }
 
-/// expression := arithmetic
+/**
+ * expression := arithmetic
+ *             | expression_list_element
+ */
 node_sptr Parser::expression(){ 
-  position_t position = lexer.get_current_position();
-  return arithmetic(); 
+  node_sptr ret;
+  if((ret = arithmetic())) return ret;
+  return expression_list_element();
 }
 
 /// arithmetic := arith_term (("+"|"-") arith_term)*
@@ -1137,7 +1149,7 @@ node_sptr Parser::conditional_program_list(){
         ret->set_program(tmp);
         if((tmp = list_condition())){
           ret->add_argument(tmp);
-          position_t tmp_position;
+          position_t tmp_position = lexer.get_current_position();
           while(lexer.get_token() == COMMA){
             if((tmp = list_condition())){
               ret->add_argument(tmp);
@@ -1201,27 +1213,27 @@ node_sptr Parser::program_list_term(){
 }
 /**
  * program_list_factor := conditional_program_list
- *                      | "{"program ("," program)* "}"
+ *                      | "{"program_priority ("," program_priority)* "}"
  *                      | identifier number ".." identifier number
  */
 node_sptr Parser::program_list_factor(){
   node_sptr ret;
   // conditional_program_list
   position_t position = lexer.get_current_position();
-  // "{" program ("," program)* "}"
+  // "{" program_priority ("," program_priority)* "}"
   if((ret = conditional_program_list())) return ret;
   if(lexer.get_token() == LEFT_BRACES){
     boost::shared_ptr<ProgramList> list(new ProgramList());
-    if((ret = program())){
+    if((ret = program_priority())){
       list->add_argument(ret);
       position_t tmp_position = lexer.get_current_position();
       while(lexer.get_token() == COMMA){
-        if((ret = program())){
+        if((ret = program_priority())){
           list->add_argument(ret);
         }else break;
         tmp_position = lexer.get_current_position();
       }
-      lexer.set_current_position(position);
+      lexer.set_current_position(tmp_position);
       if(lexer.get_token() == RIGHT_BRACES){
         return list;
       }
@@ -1282,7 +1294,7 @@ node_sptr Parser::conditional_expression_list(){
         ret->set_expression(tmp);
         if((tmp = list_condition())){
           ret->add_argument(tmp);
-          position_t tmp_position;
+          position_t tmp_position = lexer.get_current_position();
           while(lexer.get_token() == COMMA){
             if((tmp = list_condition())){
               ret->add_argument(tmp);
@@ -1369,7 +1381,7 @@ node_sptr Parser::expression_list_factor(){
         }else break;
         tmp_position = lexer.get_current_position();
       }
-      lexer.set_current_position(position);
+      lexer.set_current_position(tmp_position);
       if(lexer.get_token() == RIGHT_BRACES){
         return list;
       }

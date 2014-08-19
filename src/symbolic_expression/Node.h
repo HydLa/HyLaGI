@@ -497,6 +497,7 @@ public:
   virtual std::string get_node_type_name() const {
     return "ConstraintCaller";
   }
+  virtual std::ostream& dump(std::ostream& s) const;
 };
 
 /**
@@ -512,6 +513,7 @@ public:
   virtual std::string get_node_type_name() const {
     return "ProgramCaller";
   }
+  virtual std::ostream& dump(std::ostream& s) const;
 };
 
 /**
