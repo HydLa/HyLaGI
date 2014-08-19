@@ -1102,7 +1102,18 @@ std::vector<node_sptr> Parser::actual_args(){
  * program_list_caller
  */
 
-
+/**
+ * program_list_caller := identifier
+ */
+boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> Parser::program_list_caller(){
+  return boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller>();
+}
+/**
+ * expression_list_caller := identifier
+ */
+boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> Parser::expression_list_caller(){
+  return boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller>();
+}
 /**
  * program_list_element := program_list "[" expression "]"
  */
