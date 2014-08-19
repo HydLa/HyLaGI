@@ -77,6 +77,12 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
   for(auto ask : discrete_causes){
     if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
   }
+
+/*
+  std::cout<<"positive_asks: "<<positive_asks<<std::endl;
+  std::cout<<"negative_asks: "<<negative_asks<<std::endl;
+  std::cout<<"unknown_asks: "<<unknown_asks<<std::endl;
+*/
 }
 
 void ConstraintDifferenceCalculator::set_symmetric_difference(

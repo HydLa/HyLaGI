@@ -763,7 +763,8 @@ PhaseSimulator::todo_list_t
         }
         else if(id >= 0)
         {
-          next_todo->discrete_causes_map.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
+          if(candidate.minimum.on_time) next_todo->discrete_causes_map.insert(make_pair(ask_map[id], CAUSE_PP) );
+          else next_todo->discrete_causes_map.insert(make_pair(ask_map[id], CAUSE_IP) );
           next_todo->discrete_causes.push_back(ask_map[id]);
         }
       }
