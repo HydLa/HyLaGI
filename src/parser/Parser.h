@@ -17,17 +17,15 @@ namespace hydla{
 class Parser{
 public:
 
-  enum ListType{
-    EXPRESSION,
-    PROGRAM,
-    ALL
-  };
-  
   Parser(std::string);
   Parser(std::istream&);
   ~Parser();
 
-  node_sptr parse(node_sptr& assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
+  node_sptr parse(
+      node_sptr& assertion_node, 
+      DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, 
+      DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition
+  );
   
   node_sptr hydla_program();
   node_sptr statements();
@@ -67,7 +65,7 @@ public:
   node_sptr system_variable();
   boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> unsupported_function();
   boost::shared_ptr<hydla::symbolic_expression::Function> function();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> variable(std::map<std::string, std::string>);
+  boost::shared_ptr<hydla::symbolic_expression::Variable> variable();
   node_sptr parameter();
   boost::shared_ptr<hydla::symbolic_expression::Variable> bound_variable();
   std::string constraint_name();
@@ -91,7 +89,10 @@ public:
   node_sptr expression_list_factor();
   node_sptr list_condition();
   
-  void error_occurred(position_t position, std::string error_message){ error_info.push_back(error_info_t(position,error_message)); }
+  void error_occurred(position_t position, std::string error_message){
+    error_info.push_back(error_info_t(position,error_message));
+  }
+
   void error_occurred(error_info_t info){ error_info.push_back(info); }
 
   bool parse_ended();
@@ -104,6 +105,8 @@ private:
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> > constraint_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > expression_list_definition;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > program_list_definition;
   node_sptr assertion_node;
 };
 

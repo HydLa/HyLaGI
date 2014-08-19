@@ -148,11 +148,23 @@ public:
   // ExpressionListCaller
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
 
+  // ExpressionListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+
+  // ProgramListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+
   // ProgramListCaller
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
 
   // ProgramListElement
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+
+  // SizeOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
+
+  // SumOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
 
   // Range
   virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);

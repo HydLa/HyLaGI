@@ -136,6 +136,12 @@ public:
   // DifferentVariable
   virtual void visit(boost::shared_ptr<DifferentVariable> node);
 
+  // ProgramListDefinition 
+  virtual void visit(boost::shared_ptr<ProgramListDefinition> node);
+
+  // ExpressionListDefinition 
+  virtual void visit(boost::shared_ptr<ExpressionListDefinition> node);
+
   // ExpressionListCaller 
   virtual void visit(boost::shared_ptr<ExpressionListCaller> node);
 
@@ -156,6 +162,12 @@ public:
 
   // Range 
   virtual void visit(boost::shared_ptr<Range> node);
+
+  // SizeOfLIst 
+  virtual void visit(boost::shared_ptr<SizeOfList> node);
+
+  // SumOfList
+  virtual void visit(boost::shared_ptr<SumOfList> node);
 
 };
 

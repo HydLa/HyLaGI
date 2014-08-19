@@ -465,6 +465,34 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
   assert(0);
 }
 
+// ProgramListDefinition
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListDefinition> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// ExpressionListDefinition
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListDefinition> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// SizeOfList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SizeOfList> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
+// SumOfList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SumOfList> node)
+{
+  // TODO: implement
+  assert(0);
+}
+
 // ProgramListElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node)
 {

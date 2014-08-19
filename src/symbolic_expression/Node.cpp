@@ -297,6 +297,58 @@ bool Parameter::is_same_struct(const Node& n, bool exactly_same) const
           name_ == static_cast<const Parameter*>(&n)->name_;          
 }
 
+std::ostream& ProgramListCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "program_list_call<" 
+    << get_id()
+    << ","
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
+
+std::ostream& ExpressionListCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "expression_list_call<" 
+    << get_id()
+    << ","
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
+
 std::ostream& ConstraintCaller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();
@@ -322,6 +374,7 @@ std::ostream& ConstraintCaller::dump(std::ostream& s) const
 
   return s;
 }
+
 std::ostream& ProgramCaller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();
@@ -600,6 +653,11 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionList)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalExpressionList)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramList)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalProgramList)
+
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SizeOfList);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SumOfList);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListDefinition);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListDefinition);
 
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListElement)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListElement)

@@ -130,8 +130,12 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
   // ExpressionListCaller
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  // ExpressionListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
   // ProgramListCaller
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  // ProgramListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
   // ProgramListElement
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
   // Union 
@@ -140,7 +144,10 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
   // Range 
   virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
-
+  // SizeOfList 
+  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
+  // SumOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
 
 private:
   void dump_node(boost::shared_ptr<symbolic_expression::FactorNode> node);

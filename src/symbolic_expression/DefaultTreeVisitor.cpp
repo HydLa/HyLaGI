@@ -122,16 +122,24 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<DifferentVariable> node)    {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListElement> node)    {}
 // ExpressionListCaller
 void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListCaller> node)    {}
+// ExpressionListDefinition
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListDefinition> node)    {}
 // ProgramListElement
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListElement> node)    {}
 // ProgramListCaller
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListCaller> node)    {}
+// ProgramListDefinition
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListDefinition> node)    {}
 // Range
 void DefaultTreeVisitor::visit(boost::shared_ptr<Range> node)    {}
 // Union 
 void DefaultTreeVisitor::visit(boost::shared_ptr<Union> node)    {}
 // Intersection 
 void DefaultTreeVisitor::visit(boost::shared_ptr<Intersection> node)    {}
+// SizeOfList 
+void DefaultTreeVisitor::visit(boost::shared_ptr<SizeOfList> node)    {}
+// SumOfList
+void DefaultTreeVisitor::visit(boost::shared_ptr<SumOfList> node)    {}
 
 } //namespace symbolic_expression
 } //namespace hydla

@@ -429,6 +429,18 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListElement> node)
   dump_node(node);
 }
 
+// ExpressionListDefinition
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionListDefinition> node)
+{
+  dump_node(node);
+}
+
+// ProgramListDefinition
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListDefinition> node)
+{
+  dump_node(node);
+}
+
 // ProgramListCaller 
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListCaller> node)
 {
@@ -452,6 +464,19 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Range> node)
 {
   dump_node(node);
 }
+
+// SizeOfList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SizeOfList> node)
+{
+  dump_node(node);
+}
+
+// SumOfList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SumOfList> node)
+{
+  dump_node(node);
+}
+
 
 
 } //namespace parser

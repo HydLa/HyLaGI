@@ -658,6 +658,36 @@ public:
 };
 
 /**
+ * ExpressionListDefinition
+ */
+class ExpressionListDefinition : public Definition {
+public:
+  ExpressionListDefinition(){}
+  virtual ~ExpressionListDefinition(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ExpressionListDefinition";
+  }
+};
+
+/**
+ * ProgramListDefinition
+ */
+class ProgramListDefinition : public Definition {
+public:
+  ProgramListDefinition(){}
+  virtual ~ProgramListDefinition(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramListDefinition";
+  }
+};
+
+/**
  * 制約式
  */ 
 DEFINE_UNARY_NODE(Constraint);
@@ -1643,7 +1673,9 @@ public:
   virtual std::string get_node_type_name() const {
     return "ExpressionListCaller";
   }
+  virtual std::ostream& dump(std::ostream& s) const;
 };
+
 /**
  * ProgramListCaller
  */
@@ -1657,7 +1689,19 @@ public:
   virtual std::string get_node_type_name() const {
     return "ProgramListCaller";
   }
+  virtual std::ostream& dump(std::ostream& s) const;
 };
+
+/**
+ * Size of List
+ */
+DEFINE_UNARY_NODE(SizeOfList)
+
+/**
+ * Sum of List
+ */
+DEFINE_UNARY_NODE(SumOfList)
+
 /**
  * Expression List
  */

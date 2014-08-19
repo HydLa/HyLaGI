@@ -875,7 +875,7 @@ node_sptr Parser::factor(){
   // parameter
   if((ret = parameter())){ return ret;}
   // variable
-  if((ret = variable(std::map<std::string,std::string>()))){ return ret;}
+  if((ret = variable())){ return ret;}
   // system_variable
   if((ret = system_variable())){ return ret;}
   // number
@@ -945,7 +945,7 @@ boost::shared_ptr<Function> Parser::function(){
 /**
  * variable := identifier
  */
-boost::shared_ptr<Variable> Parser::variable(std::map<std::string, std::string> bound_vars){
+boost::shared_ptr<Variable> Parser::variable(){
   std::string name;
   // identifier
   position_t position = lexer.get_current_position();
@@ -971,7 +971,7 @@ node_sptr Parser::parameter(){
       boost::shared_ptr<Variable> var;
       int first,second;
       // variable
-      if((var = variable(std::map<std::string,std::string>()))){
+      if((var = variable())){
         // ","
         if(lexer.get_token() == COMMA){
           // integer
@@ -1090,6 +1090,18 @@ std::vector<node_sptr> Parser::actual_args(){
 
   return std::vector<node_sptr>();
 }
+
+
+/**
+ * TODO : implement follow methods
+ * "|" list "|"
+ * "sum" "(" list ")"
+ * expression_list_callee ":=" expression_list "."
+ * program_list_callee "<=>" program_list "."
+ * expression_list_caller
+ * program_list_caller
+ */
+
 
 /**
  * program_list_element := program_list "[" expression "]"
