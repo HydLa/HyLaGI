@@ -183,7 +183,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_todo_sptr_t& todo)
 {
-  HYDLA_LOGGER_DEBUG("\n--- next unadopoted module set ---\n", unadopted_ms.get_infix_string());
+  HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
   timer::Timer cc_timer;
   bool consistent = calculate_closure(todo);
@@ -503,7 +503,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
-    difference_calculator_.calculate_difference_constraints(state->parent, relation_graph_);
+    difference_calculator_.calculate_difference_constraints(state, relation_graph_);
   }
 
   do{
@@ -557,8 +557,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         if(opts_->reuse && state->phase_type == IntervalPhase && 
            state->in_following_step()){
           timer::Timer timer;
-          if(!state->discrete_causes_map[*it]){
-            if(difference_calculator_.is_continuous(state->parent, (*it)->get_guard())){
+          if(!state->discrete_causes_map.count(*it)){
+            if(difference_calculator_.is_continuous(state, *it)){
               if(state->parent->positive_asks.count(*it)){
                 positive_asks.insert(*it);
                 relation_graph_->set_expanded((*it)->get_child(), true);
@@ -763,8 +763,7 @@ PhaseSimulator::todo_list_t
         }
         else if(id >= 0)
         {
-          if(candidate.minimum.on_time) next_todo->discrete_causes_map.insert(make_pair(ask_map[id], CAUSE_PP) );
-          else next_todo->discrete_causes_map.insert(make_pair(ask_map[id], CAUSE_IP) );
+          next_todo->discrete_causes_map.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
           next_todo->discrete_causes.push_back(ask_map[id]);
         }
       }

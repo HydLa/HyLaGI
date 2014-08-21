@@ -38,11 +38,6 @@ typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
 typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_prev_map_t;
 typedef std::vector<variable_map_t>      variable_maps_t;
 typedef std::map<std::string, unsigned int> profile_t;
-typedef enum{
-  NOT_CAUSE,
-  CAUSE_PP,
-  CAUSE_IP
-} DCMapValue;
 
 struct DiscreteCause{
   ask_t ask;
@@ -70,7 +65,7 @@ struct SimulationTodo{
   ask_set_t           positive_asks;
   ask_set_t           negative_asks;
   std::vector<ask_t> discrete_causes;
-  std::map<ask_t, DCMapValue>     discrete_causes_map;
+  std::map<ask_t, bool>     discrete_causes_map;
   next_pp_candidate_map_t   next_pp_candidate_map; 
   ConstraintStore           expanded_constraints;
   ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約
