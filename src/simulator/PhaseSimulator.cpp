@@ -90,8 +90,8 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         {
           bool entailed = todo->parent->positive_asks.count(prev_ask);
           // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point
-          if(todo->discrete_causes_map.count(prev_ask)
-             && todo->discrete_causes_map[prev_ask]) entailed = !entailed;
+          if(todo->discrete_causes.count(prev_ask)
+             && todo->discrete_causes[prev_ask]) entailed = !entailed;
           todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
         }
       }
@@ -557,7 +557,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
         if(opts_->reuse && state->phase_type == IntervalPhase && 
            state->in_following_step()){
           timer::Timer timer;
-          if(!state->discrete_causes_map.count(*it)){
+          if(!state->discrete_causes.count(*it)){
             if(difference_calculator_.is_continuous(state, *it)){
               if(state->parent->positive_asks.count(*it)){
                 positive_asks.insert(*it);
@@ -657,7 +657,6 @@ PhaseSimulator::todo_list_t
     next_todo->phase_type = IntervalPhase;
     next_todo->current_time = phase->current_time;
     // TODO: 離散変化した変数が関わるガード条件はここから取り除く必要が有りそう（単純なコピーではだめ）
-    next_todo->discrete_causes_map = current_todo->discrete_causes_map;
     next_todo->discrete_causes = current_todo->discrete_causes;
     next_todo->prev_map = phase->variable_map;
     ret.push_back(next_todo);
@@ -763,8 +762,7 @@ PhaseSimulator::todo_list_t
         }
         else if(id >= 0)
         {
-          next_todo->discrete_causes_map.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
-          next_todo->discrete_causes.push_back(ask_map[id]);
+          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
         }
       }
 

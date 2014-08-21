@@ -33,7 +33,7 @@ public:
   bool is_continuous(const simulation_todo_sptr_t todo, const ask_t ask);
 
   void collect_ask(const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
-      const std::vector<ask_t> &discrete_causes,
+      const std::map<ask_t, bool> &discrete_causes,
       const ask_set_t &positive_asks,
       const ask_set_t &negative_asks,
       ask_set_t &unknown_asks);

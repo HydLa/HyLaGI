@@ -19,7 +19,7 @@ void ConstraintDifferenceCalculator::calculate_difference_constraints(const simu
   else{
     set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
     difference_constraints.add_constraint_store(todo->parent->changed_constraints);
-    for(auto cause : todo->discrete_causes_map){
+    for(auto cause : todo->discrete_causes){
       if(!cause.second) difference_constraints.add_constraint(cause.first->get_child());
     }
   }
@@ -51,7 +51,7 @@ bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t 
   finder.visit_node(ask->get_guard());
   variable_set_t variables(finder.get_all_variable_set());
   finder.clear();
-  for(auto cause : todo->discrete_causes_map){
+  for(auto cause : todo->discrete_causes){
     if(!cause.second) finder.visit_node(cause.first->get_child());
   }
   variable_set_t changing_variables(finder.get_all_variable_set());
@@ -67,7 +67,7 @@ bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t 
 }
 
 void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
-    const std::vector<ask_t> &discrete_causes,
+    const std::map<ask_t, bool> &discrete_causes,
     const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
@@ -86,7 +86,7 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
     }
   }
   for(auto ask : discrete_causes){
-    if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
+    if(!positive_asks.count(ask.first) && !negative_asks.count(ask.first)) unknown_asks.insert(ask.first);
   }
 
 /*
