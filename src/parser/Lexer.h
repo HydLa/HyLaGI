@@ -92,8 +92,6 @@ private:
   // all strings of input file.
   std::vector<std::string> strs;
 
-  // previous Token
-  Token previous_token;
   // current token string
   std::string current_token_string;
   // line number that Lexer is reading now

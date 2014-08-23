@@ -20,6 +20,25 @@ bool Parser::parse_ended(){
   return false;
 }
 
+#define is_defined_as(name, size, defs, ret) \
+  for(auto D : defs){ \
+    if(name == D->get_name() && size == D->bound_variable_size()){ \
+      ret = D; \
+      break; \
+    } \
+  } \
+
+node_sptr Parser::is_defined(boost::shared_ptr<Definition> definition){
+  node_sptr ret;
+  std::string name = definition->get_name();
+  int size = definition->bound_variable_size();
+  is_defined_as(name,size,constraint_definitions,ret);
+  is_defined_as(name,size,program_list_definitions,ret);
+  is_defined_as(name,size,expression_list_definitions,ret);
+  is_defined_as(name,size,program_definitions,ret);
+  return ret; 
+}
+
 node_sptr Parser::parse(node_sptr& an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
   parse();
   if(!error_info.empty()){

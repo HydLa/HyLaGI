@@ -98,6 +98,7 @@ public:
   void error_occurred(error_info_t info){ error_info.push_back(info); }
 
   bool parse_ended();
+  node_sptr is_defined(boost::shared_ptr<hydla::symbolic_expression::Definition>);
 
 private:
   Lexer lexer;
@@ -107,8 +108,8 @@ private:
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> > constraint_definitions;
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > expression_list_definition;
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > program_list_definition;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > expression_list_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > program_list_definitions;
   node_sptr assertion_node;
 };
 
