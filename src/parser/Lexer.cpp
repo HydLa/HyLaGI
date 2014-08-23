@@ -22,9 +22,7 @@ Lexer::~Lexer(){}
 Token Lexer::identifier()
 {
   std::string identifier;
-  bool not_alpha = false;
   do{
-    if(!not_alpha && (get_current_char() == '_' || is_digit(get_current_char()))) not_alpha = true;
     identifier += get_current_char();
   }while(next_char() && (
           is_digit(get_current_char())
@@ -33,8 +31,9 @@ Token Lexer::identifier()
          )
        );
   current_token_string = identifier;
-  if(not_alpha) return IDENTIFIER;
-  return ALPHABET;
+  if('A' <= current_token_string[0] && current_token_string[0] <= 'Z') 
+    return UPPER_IDENTIFIER;
+  return LOWER_IDENTIFIER;
 }
 
 Token Lexer::number()

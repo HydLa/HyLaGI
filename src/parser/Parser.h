@@ -67,14 +67,14 @@ public:
   boost::shared_ptr<hydla::symbolic_expression::Function> function();
   boost::shared_ptr<hydla::symbolic_expression::Variable> variable();
   node_sptr parameter();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> bound_variable();
-  std::string constraint_name();
-  std::string program_name();
   std::vector<node_sptr> actual_args();
   std::vector<std::string> formal_args();
   node_sptr assertion();
   node_sptr tautology();
-  std::string identifier();
+  node_sptr constant();
+  std::string variable_name();
+  std::string function_name();
+  std::string definition_name();
   node_sptr number();
   
   node_sptr expression_list_element();

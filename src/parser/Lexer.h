@@ -11,8 +11,8 @@ namespace hydla{
   namespace parser{
 
 enum Token{
-  ALPHABET,            //  [a-z, A-Z]+
-  IDENTIFIER,          //  [a-z, A-Z, "_"] [a-z, A-Z, "_", 0-9]*
+  LOWER_IDENTIFIER,    //  [a-z, "_"] [a-z, A-Z, "_", 0-9]*
+  UPPER_IDENTIFIER,    //  [A-Z] [a-z, A-Z, "_", 0-9]*
   NUMBER,              //  ([0-9]*) [. [0-9]* ]?
   INTEGER,             //  ([0-9]*)
   DEFINITION,          //  ":="

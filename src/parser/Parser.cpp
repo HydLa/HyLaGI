@@ -171,7 +171,6 @@ node_sptr Parser::statement(){
 
 /// program := program_priority ( "," program_priority )*
 node_sptr Parser::program(){
-  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // program_priority
   if((tmp_l = program_priority())){
@@ -188,16 +187,13 @@ node_sptr Parser::program(){
       zero_position = lexer.get_current_position();
     }
     lexer.set_current_position(zero_position);
-
     return tmp_l;
   }
-
   return node_sptr();
 }
 
 /// program_priority := program_factor ( "<<" program_factor )*
 node_sptr Parser::program_priority(){
-  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // program_factor
   if((tmp_l = program_factor())){
@@ -214,7 +210,6 @@ node_sptr Parser::program_priority(){
       zero_position = lexer.get_current_position();
     }
     lexer.set_current_position(zero_position);
-
     return tmp_l;
   }
   return node_sptr();
@@ -227,13 +222,13 @@ node_sptr Parser::program_factor(){
   return module();
 }
 
-/// constraint_callee := constraint_name formal_args
+/// constraint_callee := name formal_args
 boost::shared_ptr<ConstraintDefinition> Parser::constraint_callee(){
   boost::shared_ptr<ConstraintDefinition> ret(new ConstraintDefinition());
   std::vector<std::string> args;
   std::string name;
-  // constraint_name
-  if((name = constraint_name()) != ""){
+  // name
+  if((name = definition_name()) != ""){
     ret->set_name(name);
     // formal_args
     args = formal_args();
@@ -246,13 +241,13 @@ boost::shared_ptr<ConstraintDefinition> Parser::constraint_callee(){
   return boost::shared_ptr<ConstraintDefinition>();
 }
 
-/// constraint_caller := constraint_name actual_args
+/// constraint_caller := name actual_args
 boost::shared_ptr<ConstraintCaller> Parser::constraint_caller(){
   boost::shared_ptr<ConstraintCaller> ret(new ConstraintCaller());
   std::vector<node_sptr> args;
   std::string name;
-  // constraint_name
-  if((name = constraint_name()) != ""){
+  // name
+  if((name = definition_name()) != ""){
     ret->set_name(name);
     // actual_args
     args = actual_args();
@@ -265,13 +260,13 @@ boost::shared_ptr<ConstraintCaller> Parser::constraint_caller(){
   return boost::shared_ptr<ConstraintCaller>();
 }
 
-/// program_callee := program_name formal_args
+/// program_callee := name formal_args
 boost::shared_ptr<ProgramDefinition> Parser::program_callee(){
   boost::shared_ptr<ProgramDefinition> ret(new ProgramDefinition());
   std::vector<std::string> args;
   std::string name;
-  // program_name
-  if((name = program_name()) != ""){
+  // name
+  if((name = definition_name()) != ""){
     ret->set_name(name);
     // formal_args
     args = formal_args();
@@ -284,13 +279,13 @@ boost::shared_ptr<ProgramDefinition> Parser::program_callee(){
   return boost::shared_ptr<ProgramDefinition>(); 
 }
 
-/// program_caller := program_name actual_args
+/// program_caller := name actual_args
 boost::shared_ptr<ProgramCaller> Parser::program_caller(){
   boost::shared_ptr<ProgramCaller> ret(new ProgramCaller());
   std::vector<node_sptr> args;
   std::string name;
-  // program_name
-  if((name = program_name()) != ""){
+  // name
+  if((name = definition_name()) != ""){
     ret->set_name(name);
     // actual_args
     args = actual_args();
@@ -374,7 +369,6 @@ boost::shared_ptr<Constraint> Parser::constraint(){
 
 /// logical_or := logical_and ( ("|" | "\/") logical_and )*
 node_sptr Parser::logical_or(){ 
-  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // logical_and
   if((tmp_l = logical_and())){
@@ -395,13 +389,11 @@ node_sptr Parser::logical_or(){
     lexer.set_current_position(zero_position);
     return tmp_l;
   }
-
   return node_sptr();
 }
 
 /// logical_and := always ( ("&" | "/\") always )*
 node_sptr Parser::logical_and(){
-  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // always
   if((tmp_l = always())){
@@ -422,7 +414,6 @@ node_sptr Parser::logical_and(){
     lexer.set_current_position(zero_position);
     return tmp_l;
   }
-
   return node_sptr();
 }
 
@@ -554,7 +545,6 @@ node_sptr Parser::compare_expression(){
  */
 node_sptr Parser::atomic_constraint(){
   node_sptr ret;
-  position_t position = lexer.get_current_position();
   // command
   if((ret = command())){ return ret;}
   // tautology
@@ -567,7 +557,6 @@ node_sptr Parser::atomic_constraint(){
 
 /// guard := guard_term (("|" | "\/") guard_term)*
 node_sptr Parser::guard(){
-  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // guard_term
   if((tmp_l = guard_term())){
@@ -593,7 +582,6 @@ node_sptr Parser::guard(){
 
 /// guard_term := logical_not (( "&" | "/\") logical_not)*
 node_sptr Parser::guard_term(){
-  position_t position = lexer.get_current_position();
   node_sptr tmp_l;
   // logical_not
   if((tmp_l = logical_not())){
@@ -681,7 +669,6 @@ node_sptr Parser::expression(){
 /// arithmetic := arith_term (("+"|"-") arith_term)*
 node_sptr Parser::arithmetic(){
   node_sptr ret;
-  position_t position = lexer.get_current_position();
   // arith_term
   if((ret = arith_term())){
     position_t position = lexer.get_current_position();
@@ -825,6 +812,17 @@ node_sptr Parser::diff(){
   return node_sptr();
 }
 
+node_sptr Parser::constant(){
+  position_t position = lexer.get_current_position();
+  if(lexer.get_token() == UPPER_IDENTIFIER){
+    std::string str = lexer.get_current_token_string();
+    if(str == "Pi") return boost::shared_ptr<Pi>(new Pi());
+    if(str == "E") return boost::shared_ptr<E>(new E());
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+
 /**
  * factor := (fanction | unsupported_function) "(" (expression ("," expression)* )? ")"
  *         | PI
@@ -840,15 +838,7 @@ node_sptr Parser::factor(){
   position_t position = lexer.get_current_position();
   std::string name;
   // Pi | E
-  if((name = identifier()) != ""){
-    if(lexer.get_current_token_string() == "PI"){
-      return boost::shared_ptr<Pi>(new Pi());
-    }
-    if(lexer.get_current_token_string() == "E"){
-      return boost::shared_ptr<E>(new E());
-    }
-  }
-  lexer.set_current_position(position);
+  if((ret = constant())) return ret;
 
   boost::shared_ptr<ArbitraryNode> func;
   // (function | unsupported_function) "(" (expression ("," expression)* )? ")"
@@ -902,25 +892,46 @@ node_sptr Parser::system_variable(){
   position_t position = lexer.get_current_position();
   // "$"
   if(lexer.get_token() == SYSTEM){
-    std::string name = identifier();
-    // t
-    if(name == "t"){ return boost::shared_ptr<SymbolicT>(new SymbolicT()); }
-    // timer
-    if(name == "timer"){ return boost::shared_ptr<SVtimer>(new SVtimer()); }
+    if(lexer.get_token() == LOWER_IDENTIFIER){
+      std::string str = lexer.get_current_token_string();
+      // t
+      if(str == "t"){ return boost::shared_ptr<SymbolicT>(new SymbolicT()); }
+      // timer
+      if(str == "timer"){ return boost::shared_ptr<SVtimer>(new SVtimer()); }
+    }
   }
   lexer.set_current_position(position);
 
   return node_sptr();
 }
 
+std::string Parser::function_name(){
+  position_t position = lexer.get_current_position();
+  Token token = lexer.get_token();
+  if(token == LOWER_IDENTIFIER || token == UPPER_IDENTIFIER){
+    std::string name = lexer.get_current_token_string();
+    bool alpha = true;
+    for(auto c : name){
+      if(!(('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z'))){
+        alpha = false;
+        break;
+      }
+      if(alpha) return name;
+    }
+  }
+  lexer.set_current_position(position);
+  return std::string();
+}
+
 // unsupported_function := " " " [a-z,A-Z]+ " " "
 boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
   position_t position = lexer.get_current_position();
+  std::string name;
   // " " "
   if(lexer.get_token() == DOUBLE_QUOTATION){
     // " [a-z, A-Z]+ "
-    if(lexer.get_token() == ALPHABET){
-      std::string name = lexer.get_current_token_string();
+    if((name = function_name()) != ""){
       // " " " 
       if(lexer.get_token() == DOUBLE_QUOTATION){
         return boost::shared_ptr<UnsupportedFunction>(new UnsupportedFunction(name));
@@ -935,12 +946,26 @@ boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
 /// function := [a-z,A-Z]+
 boost::shared_ptr<Function> Parser::function(){
   position_t position = lexer.get_current_position();
+  std::string name;
   // [a-z,A-Z]+
-  if(lexer.get_token() == ALPHABET){ return boost::shared_ptr<Function>(new Function(lexer.get_current_token_string()));}
+  if((name = function_name()) != ""){ 
+    return boost::shared_ptr<Function>(new Function(name));
+  }
   lexer.set_current_position(position);
 
   return boost::shared_ptr<Function>();
 }
+
+/**
+ * variable_name := lower_identifier
+ */
+std::string Parser::variable_name(){
+  position_t position = lexer.get_current_position();
+  if(lexer.get_token() == LOWER_IDENTIFIER) return lexer.get_current_token_string();
+  lexer.set_current_position(position);
+  return std::string();
+}
+
 
 /**
  * variable := identifier
@@ -949,7 +974,7 @@ boost::shared_ptr<Variable> Parser::variable(){
   std::string name;
   // identifier
   position_t position = lexer.get_current_position();
-  if((name = identifier()) != ""){
+  if((name = variable_name()) != ""){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token () != LEFT_BOX_BRACKETS){
       lexer.set_current_position(tmp_position);
@@ -1026,7 +1051,7 @@ node_sptr Parser::tautology(){
   position_t position = lexer.get_current_position();
   // "$"
   if(lexer.get_token() == SYSTEM){
-    if(lexer.get_token() == ALPHABET){
+    if(lexer.get_token() == UPPER_IDENTIFIER){
       // "TRUE"
       if(lexer.get_current_token_string() == "TRUE"){ return boost::shared_ptr<True>(new True());}
       if(lexer.get_current_token_string() == "FALSE"){ return boost::shared_ptr<False>(new False());}
@@ -1037,27 +1062,11 @@ node_sptr Parser::tautology(){
   return node_sptr();
 }
 
-/// bound_variable := identifier
-boost::shared_ptr<Variable> Parser::bound_variable(){
-  std::string name;
-  // identifier
-  if((name=identifier()) != ""){ return boost::shared_ptr<Variable>(new Variable(name));}
-  return boost::shared_ptr<Variable>();
-}
-
-/// program_name := identifier
-std::string Parser::program_name(){
-  std::string name;
-  // identifier
-  if((name=identifier()) != ""){ return name; }
-  return std::string(); 
-}
-
-/// constraint_name := identifier
-std::string Parser::constraint_name(){
-  std::string name;
-  // identifier
-  if((name=identifier()) != ""){ return name; }
+/// definition_name := upper_identifier
+std::string Parser::definition_name(){
+  position_t position = lexer.get_current_position();
+  if(lexer.get_token() == UPPER_IDENTIFIER) return lexer.get_current_token_string();
+  lexer.set_current_position(position);
   return std::string(); 
 }
 
@@ -1102,18 +1111,6 @@ std::vector<node_sptr> Parser::actual_args(){
  * program_list_caller
  */
 
-/**
- * program_list_caller := identifier
- */
-boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> Parser::program_list_caller(){
-  return boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller>();
-}
-/**
- * expression_list_caller := identifier
- */
-boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> Parser::expression_list_caller(){
-  return boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller>();
-}
 /**
  * program_list_element := program_list "[" expression "]"
  */
@@ -1199,7 +1196,7 @@ node_sptr Parser::program_list(){
   if((ret = program_list_term())){
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "or"){
+    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "or"){
       if((list = program_list_term())){
         boost::shared_ptr<Union> uni(new Union(ret,list));
         ret = uni;
@@ -1221,7 +1218,7 @@ node_sptr Parser::program_list_term(){
   if((ret = program_list_factor())){
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "and"){
+    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "and"){
       if((list = program_list_factor())){
         boost::shared_ptr<Intersection> in(new Intersection(ret,list));
         ret = in;
@@ -1273,10 +1270,10 @@ node_sptr Parser::program_list_factor(){
   lexer.set_current_position(position);
   // identifier number ".." identifier number
   std::string str;
-  if((str = identifier()) != ""){
+  if((str = definition_name()) != ""){
     if(lexer.get_token() == TWO_PERIOD){
       std::string str2;
-      if((str2 = identifier()) != ""){
+      if((str2 = definition_name()) != ""){
         int num1;
         int num2;
         for(num1 = str.length()-1; num1 >= 0; num1--){
@@ -1296,7 +1293,7 @@ node_sptr Parser::program_list_factor(){
     }
   }
   lexer.set_current_position(position);
-  if((str = identifier()) != ""){
+  if((str = definition_name()) != ""){
     boost::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
     caller->set_name(str);
     return caller;
@@ -1344,7 +1341,7 @@ node_sptr Parser::expression_list(){
   if((ret = expression_list_term())){
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "or"){
+    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "or"){
       if((list = expression_list_term())){
         boost::shared_ptr<Union> uni(new Union(ret,list));
         ret = uni;
@@ -1366,7 +1363,7 @@ node_sptr Parser::expression_list_term(){
   if((ret = expression_list_factor())){
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "and"){
+    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "and"){
       if((list = expression_list_factor())){
         boost::shared_ptr<Intersection> in(new Intersection(ret,list));
         ret = in;
@@ -1431,10 +1428,10 @@ node_sptr Parser::expression_list_factor(){
   lexer.set_current_position(position);
   // identifier number ".." identifier number
   std::string str;
-  if((str = identifier()) != ""){
+  if((str = variable_name()) != ""){
     if(lexer.get_token() == TWO_PERIOD){
       std::string str2;
-      if((str2 = identifier()) != ""){
+      if((str2 = variable_name()) != ""){
         int num1;
         int num2;
         for(num1 = str.length()-1; num1 >= 0; num1--){
@@ -1454,7 +1451,7 @@ node_sptr Parser::expression_list_factor(){
     }
   }
   lexer.set_current_position(position);
-  if((str = identifier()) != ""){
+  if((str = definition_name()) != ""){
     boost::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
     caller->set_name(str);
     return caller;
@@ -1463,15 +1460,15 @@ node_sptr Parser::expression_list_factor(){
   return node_sptr();
 }
 /**
- * list_condition := bound_variable "in" (expression_list | program_list)
- *                 | (expression_list_element | program_list_element | bound_variable) "=!=" (expression_list_element | program_list_element | bound_variable)
+ * list_condition := variable "in" (expression_list | program_list)
+ *                 | (expression_list_element | program_list_element | variable) "=!=" (expression_list_element | program_list_element | variable)
  */
 node_sptr Parser::list_condition(){
   node_sptr lhs;
   position_t position = lexer.get_current_position();
-  // bound_variable "in" (expression_list | program_list)
-  if((lhs = bound_variable())){
-    if(lexer.get_token() == ALPHABET && lexer.get_current_token_string() == "in"){
+  // variable "in" (expression_list | program_list)
+  if((lhs = variable())){
+    if(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "in"){
       node_sptr list;
       if((list = expression_list())){
         return boost::shared_ptr<EachElement>(new EachElement(lhs,list));
@@ -1482,15 +1479,15 @@ node_sptr Parser::list_condition(){
     }
   }
   lexer.set_current_position(position);
-// (expression_list_element | program_list_element | bound_variable) "=!=" (expression_list_element | program_list_element | bound_variable)
+// (expression_list_element | program_list_element | variable) "=!=" (expression_list_element | program_list_element | variable)
   if((lhs = expression_list_element()) ||
      (lhs = program_list_element()) ||
-     (lhs = bound_variable())){
+     (lhs = variable())){
     if(lexer.get_token() == DIFFERENT_VARIABLE){
       node_sptr rhs;
       if((rhs = expression_list_element()) ||
          (rhs = program_list_element()) ||
-         (rhs = bound_variable())){
+         (rhs = variable())){
         return boost::shared_ptr<DifferentVariable>(new DifferentVariable(lhs,rhs)); 
       }
     }
@@ -1499,20 +1496,20 @@ node_sptr Parser::list_condition(){
   return node_sptr();
 }
 
-/// formal_args := ( "(" bound_variable ("," bound_variable)* ")" )?
+/// formal_args := ( "(" variable ("," variable)* ")" )?
 std::vector<std::string> Parser::formal_args(){
   std::vector<std::string> ret;
   position_t position = lexer.get_current_position();
   // "("
   if(lexer.get_token() == LEFT_PARENTHESES){
     boost::shared_ptr<Variable> var;
-    // bound_variable
-    if((var = bound_variable())){
+    // variable
+    if((var = variable())){
       ret.push_back(var->get_name());
       position_t tmp_position = lexer.get_current_position();
-      // ("," bound_variable)*
+      // ("," variable)*
       while(lexer.get_token() == COMMA){
-        if((var = bound_variable())){
+        if((var = variable())){
           ret.push_back(var->get_name());
         }else{
           lexer.set_current_position(position);
@@ -1529,24 +1526,10 @@ std::vector<std::string> Parser::formal_args(){
   return std::vector<std::string>(); 
 }
 
-// identifier := [a-z,A-Z,"_"] [a-z,A-Z,"_",0-9]*
-std::string Parser::identifier(){
-  position_t position = lexer.get_current_position();
-  Token token = lexer.get_token();
-  if(token == IDENTIFIER || token == ALPHABET){ return lexer.get_current_token_string();}
-  lexer.set_current_position(position);
-  return std::string();
-}
-
 // number := [0-9]+ ("." [0-9]+)?
 node_sptr Parser::number(){
   position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
-  if(token == IDENTIFIER || token == ALPHABET){
-    node_sptr ret;
-    std::string name = lexer.get_current_token_string();
-  }
-
   if(token == NUMBER){
     std::string str = lexer.get_current_token_string();
     std::string num = "";
