@@ -72,6 +72,12 @@ public:
   std::string get_current_token_string(){ return current_token_string; }
   position_t get_current_position(){ return position_t(line,column); }
   void set_current_position(position_t p){ line = p.first; column = p.second; }
+  std::ostream& dump(std::ostream& s) const{
+    s << strs[line] << std::endl;
+    for(int i = 0; i < column; i++) s << " ";
+    s << "~";
+    return s;
+  }
 
 private:
 
