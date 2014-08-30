@@ -84,12 +84,16 @@ public:
   node_sptr program_list_term();
   node_sptr program_list_factor();
   boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> program_list_caller();
+  boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> program_list_callee();
   node_sptr conditional_expression_list();
   node_sptr expression_list();
   node_sptr expression_list_term();
   node_sptr expression_list_factor();
   boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> expression_list_caller();
+  boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> expression_list_callee();
   node_sptr list_condition();
+  node_sptr size_of_list();
+  node_sptr sum_of_list();
   
   void error_occurred(position_t position, std::string error_message){
     error_info.push_back(error_info_t(position,error_message));
