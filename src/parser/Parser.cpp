@@ -1369,9 +1369,9 @@ list_t Parser::list_conditions(
           token = lexer.get_token();
           if(token == COMMA){
             list_t tmp = list_conditions(bound_vars, elements_of_list);
-            for(auto var : tmp) ret.insert(var);
+            for(auto var : tmp) ret.push_back(var);
           }else if(token == RIGHT_BRACES){
-            ret.insert(replace_string_by_bound_variables(bound_vars, elements_of_list));
+            ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
           }
           return ret;
         }else{
@@ -1410,9 +1410,9 @@ list_t Parser::list_conditions(
           lexer.set_current_position(tmp_position);
           if(token == COMMA){
             list_t tmp = list_conditions(bound_vars, elements_of_list);
-            for(auto var : tmp) ret.insert(var);
+            for(auto var : tmp) ret.push_back(var);
           }else if(token == RIGHT_BRACES){
-            ret.insert(replace_string_by_bound_variables(bound_vars, elements_of_list));
+            ret.push_back(replace_string_by_bound_variables(bound_vars, elements_of_list));
           }else{
             error_occurred(lexer.get_current_position(), "expected \",\" or \"}\" after =!=");
             return ret;
@@ -1494,7 +1494,7 @@ list_t Parser::list_factor(ListType type, std::string list_name, std::map<std::s
             if(tmp_parser.parse_ended()){
               to = (int)std::stof(num->get_number());
               for(int i = from; i <= to; i++){
-                ret.insert(head+std::to_string(i));
+                ret.push_back(head+std::to_string(i));
               }
               return ret;
             }
@@ -1515,7 +1515,7 @@ list_t Parser::list_factor(ListType type, std::string list_name, std::map<std::s
           int from = (int)std::stof(num1->get_number());
           int to = (int)std::stof(num2->get_number());
           for(int i = from; i <= to; i++){
-            ret.insert(std::to_string(i));
+            ret.push_back(std::to_string(i));
           }
           return ret;
         }
@@ -1569,11 +1569,11 @@ list_t Parser::list_factor(ListType type, std::string list_name, std::map<std::s
         if(ch != ',' || p > 0){
           var_tmp += ch;
         }else{
-          ret.insert(var_tmp);
+          ret.push_back(var_tmp);
           var_tmp = "";
         }
       }
-      ret.insert(var_tmp);
+      ret.push_back(var_tmp);
       return ret;
     }
   }
@@ -1600,7 +1600,7 @@ list_t Parser::list(ListType type, std::string list_name, std::map<std::string, 
     Token token = lexer.get_token();
     while(lexer.get_current_token_string() == "or"){
       if(!((tmp = list_term(type, list_name,bound_vars)).empty())){
-        for(auto element : tmp) ret.insert(element);
+        for(auto element : tmp) ret.push_back(element);
       }else{
         lexer.set_current_position(tmp_position);
         break;

@@ -12,7 +12,7 @@ namespace hydla{
   namespace parser{
 
   typedef hydla::symbolic_expression::node_sptr node_sptr;
-  typedef std::set<std::string> list_t;
+  typedef std::vector<std::string> list_t;
   typedef std::pair<std::string, std::pair<std::string, std::string> > condition_t;
   typedef std::pair<position_t, std::string> error_info_t;
 
