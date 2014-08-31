@@ -2,6 +2,8 @@
 
 #include <string>
 #include <istream>
+#include <vector>
+#include <stack>
 
 #include "boost/shared_ptr.hpp"
 #include "Node.h"
@@ -106,6 +108,10 @@ public:
 
 private:
   Lexer lexer;
+
+  bool in_conditional_program_list_ = false;
+
+  std::stack<std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> > > local_program_caller_;
 
   std::vector<error_info_t> error_info;
 

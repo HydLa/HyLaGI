@@ -406,6 +406,10 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
     node_sptr defined;
     IS_DEFINED_AS(name,args.size(),program_definitions,defined);
     if((defined)) return ret;
+    else if(in_conditional_program_list_){
+      local_program_caller_.top().push_back(ret);
+      return ret;
+    }
 //  error_occurred(lexer.get_current_position(), "undefined program of " + std::to_string(args.size()) + " args program \"" + name + "\"");
   }
   lexer.set_current_position(position);
@@ -1306,6 +1310,9 @@ node_sptr Parser::expression_list_element(){
  * conditional_program_list := "{" program "|" ( list_condition ("," list_condition)* )?
  */
 node_sptr Parser::conditional_program_list(){
+  in_conditional_program_list_ = true;
+  std::vector<boost::shared_ptr<ProgramCaller> > pc;
+  local_program_caller_.push(pc);
   position_t position = lexer.get_current_position();
   node_sptr tmp;
   if(lexer.get_token() == LEFT_BRACES){
@@ -1324,12 +1331,16 @@ node_sptr Parser::conditional_program_list(){
           }
           lexer.set_current_position(tmp_position);
           if(lexer.get_token() == RIGHT_BRACES){
+            local_program_caller_.pop();
+            in_conditional_program_list_ = false;
             return ret;
           }
         }
       }
     }
   }
+  local_program_caller_.pop();
+  in_conditional_program_list_ = false;
   lexer.set_current_position(position);
   return node_sptr();
 }
