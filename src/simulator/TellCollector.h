@@ -94,8 +94,14 @@ public:
   // Ask制約
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
 
-  // Tell制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node);
+  // 原子制約
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node);
+
 
   // 論理積
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node);

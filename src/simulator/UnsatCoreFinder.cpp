@@ -109,7 +109,7 @@ void UnsatCoreFinder::find_unsat_core(
     constraint_list.clear();
 
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-      constraint_list.add_constraint((*it)->get_child());
+      constraint_list.add_constraint(*it);
       maker.visit_node((*it), false, false);
     }
 

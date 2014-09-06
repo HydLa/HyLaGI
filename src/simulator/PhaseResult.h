@@ -51,8 +51,8 @@ typedef enum {
 } PhaseType;
 
 
-typedef std::vector<boost::shared_ptr<hydla::symbolic_expression::Tell> > tells_t;
-typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Tell> >    collected_tells_t;
+typedef std::vector<boost::shared_ptr<hydla::symbolic_expression::Node> > tells_t;
+typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Node> >    collected_tells_t;
 typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
 typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Ask> >     ask_set_t;
 typedef ask_set_t                                                positive_asks_t;

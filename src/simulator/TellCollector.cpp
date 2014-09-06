@@ -112,19 +112,90 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> nod
   }
 }
 
-// Tell制約
-void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node)
+
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node)
 {
   if(!in_negative_ask_){
-    // tell制約の登録
+    // 制約の登録
     if(collect_all_tells_ || 
-       collected_tells_.find(node) == collected_tells_.end()) 
+       collected_tells_.find(node) == collected_tells_.end())
     {
       tells_->push_back(node);
       collected_tells_.insert(node);
     }
   }
 }
+
+
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::UnEqual> node)
+{
+  if(!in_negative_ask_){
+    // 制約の登録
+    if(collect_all_tells_ || 
+       collected_tells_.find(node) == collected_tells_.end())
+    {
+      tells_->push_back(node);
+      collected_tells_.insert(node);
+    }
+  }
+}
+
+
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node)
+{
+  if(!in_negative_ask_){
+    // 制約の登録
+    if(collect_all_tells_ || 
+       collected_tells_.find(node) == collected_tells_.end())
+    {
+      tells_->push_back(node);
+      collected_tells_.insert(node);
+    }
+  }
+}
+
+
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
+{
+  if(!in_negative_ask_){
+    // 制約の登録
+    if(collect_all_tells_ || 
+       collected_tells_.find(node) == collected_tells_.end())
+    {
+      tells_->push_back(node);
+      collected_tells_.insert(node);
+    }
+  }
+}
+
+
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node)
+{
+  if(!in_negative_ask_){
+    // 制約の登録
+    if(collect_all_tells_ || 
+       collected_tells_.find(node) == collected_tells_.end())
+    {
+      tells_->push_back(node);
+      collected_tells_.insert(node);
+    }
+  }
+}
+
+
+void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Less> node)
+{
+  if(!in_negative_ask_){
+    // 制約の登録
+    if(collect_all_tells_ || 
+       collected_tells_.find(node) == collected_tells_.end())
+    {
+      tells_->push_back(node);
+      collected_tells_.insert(node);
+    }
+  }
+}
+
 
 // 論理積
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)

@@ -264,7 +264,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     //    std::cout << "collected tell for guard" << std::endl;
     for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
       //      std::cout << get_infix_string((*it)->get_child()) << std::endl;
-      constraint_list.add_constraint((*it)->get_child());
+      constraint_list.add_constraint(*it);
       maker.visit_node((*it), false, false);
     }
 
@@ -297,7 +297,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       
       //    std::cout << "send tell" << std::endl;
       for(tells_t::iterator it = tell_list.begin(); it != tell_list.end(); it++){
-	constraint_list.add_constraint((*it)->get_child());
+	constraint_list.add_constraint(*it);
 // TODO? : IPにも対応する
 	maker.visit_node((*it), false, false);
 	//      std::cout << get_infix_string((*it)->get_child()) << std::endl;
