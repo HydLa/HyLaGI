@@ -1,5 +1,4 @@
-#ifndef _INCLUDED_HYDLA_PARSER_NODE_ID_REBUILDER_H_
-#define _INCLUDED_HYDLA_PARSER_NODE_ID_REBUILDER_H_
+#pragma once
 
 #include "Node.h"
 #include "BaseNodeVisitor.h"
@@ -9,10 +8,10 @@ namespace hydla {
 namespace parser {
 
 class NodeIDRebuilder : 
-  public hydla::symbolic_expression::BaseNodeVisitor
+  public symbolic_expression::BaseNodeVisitor
 {
 public:
-  typedef hydla::symbolic_expression::node_sptr node_sptr;
+  typedef symbolic_expression::node_sptr node_sptr;
 
   NodeIDRebuilder()
   {}
@@ -24,27 +23,27 @@ public:
    * ノードIDをすべて新たに登録しなおす
    * ParseTree側でノードID表を初期済みであると仮定している
    */
-  void rebuild(hydla::parse_tree::ParseTree* pt)
+  void rebuild(parse_tree::ParseTree* pt)
   {
     parse_tree_ = pt;
     pt->dispatch(this);
   }
 
   /// 因子ノードの呼び出し
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::FactorNode> node)
+  virtual void visit(boost::shared_ptr<symbolic_expression::FactorNode> node)
   {
     rebuild_node(node);
   }
   
   /// 1つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnaryNode> node)
+  virtual void visit(boost::shared_ptr<symbolic_expression::UnaryNode> node)
   {
     rebuild_node(node);
     accept(node->get_child());
   }
 
   /// 2つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::BinaryNode> node)
+  virtual void visit(boost::shared_ptr<symbolic_expression::BinaryNode> node)
   {    
     rebuild_node(node);
     accept(node->get_lhs());
@@ -59,10 +58,9 @@ private:
     parse_tree_->register_node(node);
   }
 
-  hydla::parse_tree::ParseTree* parse_tree_;
+  parse_tree::ParseTree* parse_tree_;
 };
 
 } //namespace parser
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSER_NODE_ID_REBUILDER_H_

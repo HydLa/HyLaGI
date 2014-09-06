@@ -1,19 +1,16 @@
 #include "ParseTree.h"
 
-#include <iostream>
 #include <iterator>
-#include <algorithm>
-#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 
 #include "Logger.h"
-#include "HydLaAST.h"
 #include "NodeIDUpdater.h"
 #include "NodeIDRebuilder.h"
-#include "NodeTreeGenerator.h"
 #include "ParseTreeSemanticAnalyzer.h"
 #include "ParseTreeGraphvizDumper.h"
 #include "DefinitionContainer.h"
+
+#include "Parser.h"
 
 
 using namespace std;
@@ -44,19 +41,25 @@ ParseTree::~ParseTree()
 
 void ParseTree::parse(std::istream& stream) 
 {
-  HYDLA_LOGGER_DEBUG("#*** Begin ParseTree::parse ***");
+  HYDLA_LOGGER_DEBUG("");
 
+  /*
   // ASTの構築
   HydLaAST ast;
   ast.parse(stream);
-  HYDLA_LOGGER_DEBUG("--- AST Tree ---", ast);
-  
+  HYDLA_LOGGER_DEBUG("--- AST Tree ---\n", ast);
+  */
 
   // ParseTreeの構築
   DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>    program_definition;
+  /*
   NodeTreeGenerator genarator(assertion_node_tree_, constraint_definition, program_definition);
   node_tree_ = genarator.generate(ast.get_tree_iterator());
+  */
+  Parser parser(stream);
+  node_tree_ = parser.parse(assertion_node_tree_, constraint_definition, program_definition);
+  
   HYDLA_LOGGER_DEBUG("--- Parse Tree ---\n", *this);
   HYDLA_LOGGER_DEBUG("--- Constraint Definition ---\n", constraint_definition);
   HYDLA_LOGGER_DEBUG("--- Program Definition ---\n",    program_definition);
@@ -67,7 +70,7 @@ void ParseTree::parse(std::istream& stream)
   analyer.analyze(node_tree_);
   update_node_id_list();
   HYDLA_LOGGER_DEBUG("--- Analyzed Parse Tree ---\n", *this);
-  HYDLA_LOGGER_DEBUG("#*** End ParseTree::parse ***\n");
+  HYDLA_LOGGER_DEBUG("");
 }
 
 void ParseTree::rebuild_node_id_list()

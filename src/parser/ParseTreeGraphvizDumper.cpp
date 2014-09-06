@@ -1,9 +1,5 @@
 #include "ParseTreeGraphvizDumper.h"
 
-#include <utility>
-#include <algorithm>
-#include <sstream>
-
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser::error;
 using namespace std;

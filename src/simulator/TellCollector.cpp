@@ -129,6 +129,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Tell> no
 // 論理積
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
 {
+  HYDLA_LOGGER_DEBUG("");
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
@@ -149,6 +150,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Always> 
 // モジュールの弱合成
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
 {
+  HYDLA_LOGGER_DEBUG("");
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
@@ -156,6 +158,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> 
 // モジュールの並列合成
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node)
 {
+  HYDLA_LOGGER_DEBUG("");
   accept(node->get_lhs());
   accept(node->get_rhs());
 }
@@ -163,6 +166,7 @@ void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::Parallel
 // 制約呼び出し
 void TellCollector::visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
 {
+  HYDLA_LOGGER_DEBUG("");
   accept(node->get_child());
 }
 

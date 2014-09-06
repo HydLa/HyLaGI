@@ -1,10 +1,7 @@
-#ifndef _INCLUDED_HYDLA_PARSE_TREE_H_
-#define _INCLUDED_HYDLA_PARSE_TREE_H_
+#pragma once
 
 #include <ostream>
 #include <string>
-#include <sstream>
-#include <vector>
 #include <map>
 #include <cassert>
 #include <set>
@@ -295,4 +292,3 @@ std::ostream& operator<<(std::ostream& s, const ParseTree& pt);
 } //namespace parse_tree
 } //namespace hydla
 
-#endif //_INCLUDED_HYDLA_PARSE_TREE_H_
