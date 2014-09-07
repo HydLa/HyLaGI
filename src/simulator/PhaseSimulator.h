@@ -20,6 +20,23 @@ class AnalysisResultChecker;
 class UnsatCoreFinder;
 class ValueModifier;
 
+struct FindMinTimeCandidate
+{
+  value_t time;
+  bool on_time;
+  parameter_map_t parameter_map;
+};
+
+typedef std::vector<FindMinTimeCandidate> find_min_time_result_t;
+
+struct CompareMinTimeResult
+{
+  std::vector<parameter_map_t> less_maps, greater_maps, equal_maps;
+};
+
+typedef CompareMinTimeResult compare_min_time_result_t;
+
+
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
 typedef enum{
@@ -110,6 +127,7 @@ protected:
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
   ask_set_t prev_asks_;
+  std::set<std::string> variable_names;
 
   int phase_sum_;
 
@@ -141,13 +159,14 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
+  int compare_min_time(value_t &f1, value_t &f2);
+
   void set_symmetric_difference(
     const ConstraintStore& parent_constraints,
     const ConstraintStore& current_constraints,
     ConstraintStore& result );
 
   bool calculate_closure(simulation_todo_sptr_t& state);
-
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
@@ -162,6 +181,8 @@ private:
   ConstraintDifferenceCalculator differnce_calculator_;
 
   boost::shared_ptr<ValueModifier> value_modifier;
+
+  value_t max_time;
 
   bool validate;
 };

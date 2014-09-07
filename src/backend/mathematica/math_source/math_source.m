@@ -216,9 +216,9 @@ hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Inf
 
 (* 式が定数そのものか否か *)
 
-isParameter[exprs_] := Head[exprs] === p;
+isParameter[exprs_] := Head[exprs] === parameter;
 
-isParameterOrPrev[exprs_] := Head[exprs] === p || Head[exprs] === prev;
+isParameterOrPrev[exprs_] := Head[exprs] === parameter || Head[exprs] === prev;
 
 (* 式が指定されたシンボルを持つか *)
 hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
@@ -443,154 +443,87 @@ Module[
   ]
 ];
 
+findMinTime[cause_, cons_, maxTime_] := findMinTime[cause, cons, pConstraint, maxTime];
 
 (* 条件を満たす最小の時刻と，その条件の組を求める *)
-findMinTime[causeAndID_, condition_] := 
-Module[
-  {
-    id,
-    cause,
-    minT,
-    onTime = True,
-    ret
-  },
-  id = causeAndID[[2]];
-  cause = causeAndID[[1]];
-  (* 成り立つtの最小値を求める *)
-  
-  minT = Quiet[Check[minT = Minimize[{t, cause && t>timeDelta}, {t}],
-                     onTime = False;minT,
-                     Minimize::wksol],
-         {Minimize::wksol, Minimize::infeas} ];
-  (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-  minT = ToRadicals[First[minT]];
-  If[minT === Infinity, Return[{}] ];
-  Assert[Head[minT] =!= Piecewise];
-  ret = makeListFromPiecewise[minT, condition];
-  (* 時刻が0となる場合を取り除く．*)
-  ret = Select[ret, (#[[1]] =!= 0)&];
-  (* append id for each time *)
-  ret = Map[({dcInfo[#[[1]], ids[id], If[onTime, 1, 0] ], #[[2]] })&, ret];
-  ret
-];
-
-(* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
-(* ２つの時刻と条件の組を比較し，最小時刻とその条件の組のリストを返す *)
-compareMinTime[timeCond1_, timeCond2_] := ( Block[
-    {
-      minTime1, minTime2,
-      dcInfo1, dcInfo2,
-      nonMinimum,
-      caseEq,caseLe, caseGr,
-      ret,
-      andCond
-    },
-    (* assume that only timeCond1 has nonMinimum *)
-    andCond = Reduce[timeCond1[[3]] && timeCond2[[2]], Reals];
-    If[andCond === False, Return[{}] ];
-    dcInfo1 = timeCond1[[1]];
-    dcInfo2 = timeCond2[[1]];
-    minTime1 = dcInfo1[[1]];
-    minTime2 = dcInfo2[[1]];
-    nonMinimum = timeCond1[[2]];
-    caseEq = Quiet[Reduce[And[andCond, minTime1 == minTime2], Reals]];
-    caseLe = Quiet[Reduce[And[andCond, minTime1 < minTime2], Reals]];
-    caseGr = Reduce[andCond && !caseLe && !caseEq];
-    ret = {};
-    If[ caseEq =!= False,
-      (* TODO: onTimeかどうかで真面目に場合分けをする *)
-      ret = Append[ret,
-        {dcInfo[minTime1, Join[dcInfo1[[2]], dcInfo2[[2]] ], dcInfo1[[3]] ], nonMinimum, caseEq}]
-    ];
-    If[ caseLe =!= False,
-      ret = Append[ret, 
-        {dcInfo1, Append[nonMinimum, dcInfo2], caseLe}]
-    ];
-    If[ caseGr =!= False, 
-      ret = Append[ret,
-        {dcInfo2, Append[nonMinimum, dcInfo1], caseGr}]
-    ];
-    Return[ ret ];
-  ]
-);
-
- 
-(* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
-compareMinTimeList[list1_, list2_] := ( Block[
-    {resultList, i, j},
-    If[list2 === {}, Return[list1] ];
-    resultList = {};
-    For[i = 1, i <= Length[list1], i++,
-      For[j = 1, j <= Length[list2], j++,
-        resultList = Join[resultList, compareMinTime[list1[[i]], list2[[j]] ] ]
-      ]
-    ];
-    resultList
-  ]
-);
-
-(* 最小時刻と条件の組をリストアップする関数 *)
-calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
-  Block[
-    {findResult, i},
-    (* -1 is regarded as the id of time limit *)
-    timeCaseList = {{dcInfo[maxT, ids[-1], 0], {}, condition}};
-    For[i = 1, i <= Length[causeAndIDList], i++,
-      findResult = findMinTime[causeAndIDList[[i]], condition];
-      timeCaseList = compareMinTimeList[timeCaseList, findResult]
-    ];
-    timeCaseList
-  ]
-);
-
-(* 時刻と条件の組に対し，条件が論理和でつながっている場合それぞれの場合に分解する *)
-divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
-
- 
 publicMethod[
-  calculateNextPointPhaseTime,
-  maxTime, causeAndIDs, cons, initCons, pCons, vars,
+  findMinTime,
+  cause, cons, pCons, maxTime,
+  
   Module[
     {
-      timeAppliedCauses,
-      resultList,
+      minT,
+      timeAppliedCause,
       necessaryPCons,
-      parameterList,
-      originalOther,
-      tmpMaxTime
+      resultList,
+      onTime = True,
+      ret
     },
 
-    tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
-    timeAppliedCauses = causeAndIDs /. tStore;
-    simplePrint[timeAppliedCauses];
-    
-    parameterList = getParameters[timeAppliedCauses];
-    
+    tStore = Map[(Rule@@#)&, cons];  
+    timeAppliedCause = cause /. tStore;
+    simplePrint[timeAppliedCause];
+
+    parameterList = getParameters[timeAppliedCause];
+  
     (* 必要なpConsだけを選ぶ．不要なものが入っているとMinimzeの動作がおかしくなる？ *)
-    
     necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
-    
     simplePrint[necessaryPCons];
-    
-    resultList = calculateMinTimeList[timeAppliedCauses, necessaryPCons, maxTime];
-    
-    simplePrint[resultList];
-    
-    (* 整形して結果を返す *)
-    resultList = Map[({#[[1]], #[[2]], LogicalExpand[#[[3]] ]})&, resultList];
-    resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-    resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
-    
-    debugPrint["resultList after Format", resultList];
-    
-    resultList = Map[
-    ({dcInfoToReturn[#[[1]] ], Map[(dcInfoToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
-    simplePrint[resultList];
-    resultList
+
+    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t>timeDelta && t < maxTime}, {t}],
+    onTime = False;minT,
+    Minimize::wksol],
+    {Minimize::wksol, Minimize::infeas} ];
+    (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
+    minT = ToRadicals[First[minT]];
+    If[minT === Infinity, 
+      {},
+      Assert[Head[minT] =!= Piecewise];
+      ret = makeListFromPiecewise[minT, pCons];
+      (* 時刻が0となる場合を取り除く．*)
+      ret = Select[ret, (#[[1]] =!= 0)&];
+
+      (* 整形して結果を返す *)
+      resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
+      resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+      resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
+      simplePrint[resultList];
+      resultList = Map[({toReturnForm[#[[1]] ], #[[2]], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList ];
+      resultList
+    ]
   ]
 ];
 
-dcInfoToReturn[ti_] := dcInfo[toReturnForm[ti[[1]] ], ti[[2]], ti[[3]] ];
+
+createParameterMapList[cons_] := 
+If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];
+
+(* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
+(* @retunr {condition where the first argument is smaller, condition where the second argument is smaller, condition where the first argument equals to the second argument} *)
+publicMethod[
+  compareMinTime,
+  time1, time2, pCons1, pCons2,
+  Module[
+    {
+      andCond, caseEq, caseLe, caseGr, ret
+    },
+    andCond = Reduce[And@@pCons1 && And@@pCons2, Reals];
+    If[andCond === False,
+      {},
+      caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
+      caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
+      caseGr = Reduce[andCond && !caseLe && !caseEq];
+      (* TODO: 各条件が論理和を含む場合に対応する *)
+      caseEq = createParameterMapList[caseEq];
+      caseGr = createParameterMapList[caseGr];
+      caseLe = createParameterMapList[caseLe];
+      {caseLe, caseGr, caseEq}
+    ]
+  ]
+];
+ 
+(* 時刻と条件の組に対し，条件が論理和でつながっている場合それぞれの場合に分解する *)
+divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
 
 applyDSolveResult[exprs_, integRule_] := (
   exprs  /. integRule     (* 単純にルールを適用 *)

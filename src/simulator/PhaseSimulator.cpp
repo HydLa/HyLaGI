@@ -88,6 +88,14 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         {
           bool entailed = todo->parent->positive_asks.count(prev_ask);
           // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point
+          
+        
+          HYDLA_LOGGER_DEBUG_VAR(todo->discrete_causes.size());
+          if(todo->discrete_causes.size() > 0)
+          {
+            HYDLA_LOGGER_DEBUG_VAR(todo->discrete_causes.begin()->first);
+          }
+          HYDLA_LOGGER_DEBUG_VAR(prev_ask);
           if(todo->discrete_causes.count(prev_ask)
              && todo->discrete_causes[prev_ask]) entailed = !entailed;
           todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
@@ -227,45 +235,55 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
     phase->current_time = value_modifier->apply_function("toNumericalValue", phase->current_time, "vln");
   }
 
-  // suspected
-  if(opts_->reuse && todo->in_following_step()){
-    timer::Timer timer;
-    phase->changed_constraints = differnce_calculator_.get_difference_constraints();
-    if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
-      variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
-      for(auto var_entry : vm_to_take_over)
-      {
-        auto var = var_entry.first;
-        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
-        {
-          // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
-          phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
-        }
-      }
-    }
-    else if(phase->phase_type == PointPhase && phase->parent){
-      variable_map_t &vm_to_take_over = todo->prev_map;
-      for(auto var_entry : vm_to_take_over)
-      {
-        auto var = var_entry.first;
-        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
-        {
-          phase->variable_map[var] = vm_to_take_over[var];
-        }
-      }
-    }
-    todo->profile["TakeOverVM"] += timer.get_elapsed_us();
-  }
-
-  todo->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
-  todo->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
-  consistency_checker->reset_count();
 
   for(auto positive_ask : todo->positive_asks)
   {
     phase->expanded_constraints.add_constraint(positive_ask->get_child());
   }
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
+
+  // suspected
+  if(opts_->reuse){
+    timer::Timer timer;
+    if(todo->in_following_step())
+    {
+      phase->changed_constraints = differnce_calculator_.get_difference_constraints();
+
+      if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
+        variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
+        for(auto var_entry : vm_to_take_over)
+        {
+          auto var = var_entry.first;
+          if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
+          {
+            // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
+            phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
+          }
+        }
+      }
+      else if(phase->phase_type == PointPhase && phase->parent){
+        variable_map_t &vm_to_take_over = todo->prev_map;
+        for(auto var_entry : vm_to_take_over)
+        {
+          auto var = var_entry.first;
+          if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
+          {
+            phase->variable_map[var] = vm_to_take_over[var];
+          }
+        }
+      }
+      todo->profile["TakeOverVM"] += timer.get_elapsed_us();
+    }
+    else
+    {
+      phase->changed_constraints = phase->current_constraints;
+    }
+  }
+
+  todo->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
+  todo->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
+  consistency_checker->reset_count();
+
   
 /*  TODO: implement
   if(opts_->assertion || break_condition_.get() != NULL){
@@ -369,12 +387,19 @@ void PhaseSimulator::initialize(variable_set_t &v,
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
   relation_graph_.reset(new RelationGraph(ms)); 
+
   guard_relation_graph_.reset(new AskRelationGraph(ms));
   differnce_calculator_.set_relation_graph(relation_graph_, guard_relation_graph_);
+
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(std::cout);
     exit(EXIT_SUCCESS);
+  }
+
+  for(auto variable : *variable_set_)
+  {
+    variable_names.insert(variable.get_name());
   }
 
   AskCollector ac;
@@ -400,6 +425,14 @@ void PhaseSimulator::initialize(variable_set_t &v,
       it++;
     }
   }
+
+
+  if(opts_->max_time != ""){
+    max_time = symbolic_expression::node_sptr(new symbolic_expression::Number(opts_->max_time));
+  }else{
+    max_time = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
+  }
+
   
   backend_->set_variable_set(*variable_set_);
   value_modifier.reset(new ValueModifier(*backend_));
@@ -667,7 +700,6 @@ PhaseSimulator::todo_list_t
   }
   next_todo->parameter_map = phase->parameter_map;
 
-
   if(current_phase_ == PointPhase)
   {
     next_todo->phase_type = IntervalPhase;
@@ -680,31 +712,140 @@ PhaseSimulator::todo_list_t
   else
   {
     PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
+    next_todo->phase_type = PointPhase;
     
     HYDLA_LOGGER_DEBUG_VAR(phase->variable_map);
 
     backend_->call("resetConstraint", 0, "", "");
-    backend_->call("addConstraint", 1, "mvt", "", &phase->variable_map);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
-    variable_map_t vm_before_time_shift = phase->variable_map;
-    phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
-    next_todo->phase_type = PointPhase;
-
     timer::Timer next_pp_timer;
-    dc_causes_t dc_causes;
-
-    //現在導出されているガード条件にNotをつけたものを離散変化条件として追加
-    for(auto ask : phase->positive_asks){
-      symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
-      dc_causes.push_back(dc_cause_t(negated_node, ask->get_id() ) );
+    
+    if(phase->parent && phase->parent->parent)
+    {
+      phase->next_pp_candidate_map = phase->parent->parent->next_pp_candidate_map;
     }
-    //現在導出されていないガード条件を離散変化条件として追加
-    for(auto ask : phase->negative_asks){
-      symbolic_expression::node_sptr node(ask->get_guard() );
-      dc_causes.push_back(dc_cause_t(node, ask->get_id() ));
+    next_pp_candidate_map_t &candidate_map = phase->next_pp_candidate_map;
+    VariableFinder var_finder;
+
+    struct PPTimeInfo{
+      value_t pp_time;
+      bool on_time;
+      parameter_map_t parameter_map;
+    };
+    map<ask_t, PPTimeInfo > calculated_pp_time_map;
+    set<string> checked_variables;
+
+    // get changed variables
+    for(auto constraint : phase->changed_constraints)
+    {
+      var_finder.visit_node(constraint);
     }
 
+    variable_set_t changed_variable_set = var_finder.get_all_variable_set();
+    value_t time_limit(max_time);
+    time_limit -= phase->current_time;
+
+    // TODO: 複数のガード条件が同時に成り立つ場合に対応する
+
+    value_t min_time_of_all;
+    ask_t min_ask;
+    bool min_on_time;
+    
+    // 各変数に関する最小時刻を更新する．
+    for(auto variable : changed_variable_set)
+    {
+      string var_name = variable.get_name();      
+      if(checked_variables.count(var_name))continue;
+      checked_variables.insert(var_name);
+
+      value_t min_time_for_this_variable;
+      if(candidate_map.count(var_name) )min_time_for_this_variable = candidate_map[var_name].pp_time;
+      vector<ask_t> asks; guard_relation_graph_->get_adjacent_asks(var_name, asks);
+      for(auto ask : asks)
+      {
+        value_t min_time_for_this_ask;
+        bool on_time;
+        if(calculated_pp_time_map.count(ask))
+        {
+          min_time_for_this_ask = calculated_pp_time_map[ask].pp_time;
+          on_time = calculated_pp_time_map[ask].on_time;
+        }
+        else
+        {
+          var_finder.clear();
+          var_finder.visit_node(ask->get_guard());
+          variable_set_t related_variables = var_finder.get_all_variable_set();
+          variable_map_t related_vm;
+          for(auto related_variable : related_variables)
+          {
+            related_vm[related_variable] = phase->variable_map[related_variable];
+          }
+          find_min_time_result_t find_min_time_result;
+
+          if(phase->positive_asks.count(ask))
+          {
+            symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
+            backend_->call("findMinTime", 3, "etmvtvlt", "f", &negated_node, &related_vm, &time_limit, &find_min_time_result);
+          }
+          else
+          {
+            symbolic_expression::node_sptr node(ask->get_guard());
+            backend_->call("findMinTime", 3, "etmvtvlt", "f", &node, &related_vm, &time_limit, &find_min_time_result);
+          }
+
+          assert(find_min_time_result.size() <= 1);
+          if(find_min_time_result.size() == 1)
+          {
+            min_time_for_this_ask = find_min_time_result[0].time;
+            on_time = find_min_time_result[0].on_time;
+          }
+        }
+
+        if(!min_time_for_this_ask.undefined())
+        {
+          if(min_time_for_this_variable.undefined()
+             || compare_min_time(min_time_for_this_ask, min_time_for_this_variable) == -1)
+          {
+            CandidateOfNextPP candidate;
+            min_time_for_this_variable = min_time_for_this_ask;
+            candidate.causes.push_back(DiscreteCause(ask, on_time));
+            candidate.pp_time = min_time_for_this_ask;
+            candidate_map[var_name] = candidate;
+          }
+        }
+      }
+    }
+
+    set<ask_t> checked_asks;
+    set<string> min_time_variables;
+    // 各変数に関する最小時刻を比較して最小のものを選ぶ．
+    for(auto var_name : variable_names)
+    {
+      if(candidate_map.count(var_name))
+      {
+        CandidateOfNextPP candidate = candidate_map[var_name];
+        assert(candidate.causes.size() == 1);
+        DiscreteCause &cause = candidate.causes[0];
+        if(min_ask == cause.ask)min_time_variables.insert(var_name);
+        if(checked_asks.count(cause.ask) )continue;
+        checked_asks.insert(cause.ask);
+        if(!min_ask.get() || compare_min_time(candidate.pp_time, min_time_of_all) == -1 )
+        {
+          HYDLA_LOGGER_DEBUG("");
+          min_ask = cause.ask;
+          min_time_of_all = candidate.pp_time;
+          min_on_time = cause.on_time;
+          min_time_variables.clear();
+        }
+      }
+    }
+
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(min_ask) );
+    HYDLA_LOGGER_DEBUG_VAR(min_time_of_all);
+    HYDLA_LOGGER_DEBUG_VAR(min_on_time);
+
+/* TODO: implement
     //assertionの否定を追加
     if(opts_->assertion){
       symbolic_expression::node_sptr assert_node(new Not(opts_->assertion));
@@ -714,30 +855,21 @@ PhaseSimulator::todo_list_t
     {
       dc_causes.push_back(dc_cause_t(break_condition_, -3));
     }
+*/
 
-    value_t max_time;
-    if(opts_->max_time != ""){
-      max_time = symbolic_expression::node_sptr(new symbolic_expression::Number(opts_->max_time));
-    }else{
-      max_time = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
-    }
-
-    pp_time_result_t time_result;
-    value_t time_limit(max_time);
-    time_limit -= phase->current_time;
-
-    backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
-
+/* TODO:implement
     if(opts_->epsilon_mode){
       time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
     }
+*/
 
     unsigned int time_it = 0;
     result_list_t results;
     phase_result_sptr_t pr = next_todo->parent;
-
-
+    pr->end_time = current_todo->current_time + min_time_of_all;
+    backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
     // まずインタラクティブ実行のために最小限の情報だけ整理する
+/* TODO:implement
     while(true)
     {
       DCCandidate &candidate = time_result[time_it];
@@ -746,30 +878,31 @@ PhaseSimulator::todo_list_t
         pr->parameter_map[par_entry.first] = par_entry.second;
       }
 
-      pr->end_time = current_todo->current_time + candidate.minimum.time;
+      pr->end_time = current_todo->current_time + candidate.min.time;
       backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
       results.push_back(pr);
       if(++time_it >= time_result.size())break;
       pr = make_new_phase(pr);
     }
+*/
 
     unsigned int result_it = 0;
-    bool one_phase = false;
 
+    bool one_phase = false;
     // 場合の選択を行う場合はここで
+/* TODO:implement
     if(time_result.size() > 0 && select_phase_)
     {
       result_it = select_phase_(results);
       one_phase = true;
     }
+*/
 
     // todoを実際に作成する
     while(true)
     {
-      pr = results[result_it];
-
-      DCCandidate &candidate = time_result[result_it];
-      HYDLA_LOGGER_DEBUG_VAR(result_it);
+//    pr = results[result_it];
+/*
       for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
       {
         int id = candidate.minimum.ids[id_it];
@@ -781,17 +914,25 @@ PhaseSimulator::todo_list_t
           next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
         }
       }
-
+*/
+      if(!min_ask.get())pr->cause_for_termination = simulator::TIME_LIMIT;
+      else
+      {
+        next_todo->discrete_causes.insert(make_pair(min_ask, min_on_time));
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(min_ask));
+      }
 
       if(pr->cause_for_termination != TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
-        next_todo->prev_map = value_modifier->substitute_time(candidate.minimum.time, vm_before_time_shift);
+        next_todo->prev_map = value_modifier->substitute_time(min_time_of_all, phase->variable_map);
         ret.push_back(next_todo);
       }
       // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+/*
+  TODO: implement
       if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
       {
         next_todo->current_time = pr->end_time;
@@ -799,16 +940,28 @@ PhaseSimulator::todo_list_t
         next_todo->parent = pr;
         ret.push_back(next_todo);
       }
-
+*/
       if(one_phase || ++result_it >= results.size())break;
       next_todo = create_new_simulation_phase(next_todo);
     }
     current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
+  phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
 
   current_todo->profile["NextTodo"] += next_todo_timer.get_elapsed_us();
-
   return ret;
+}
+
+
+int PhaseSimulator::compare_min_time(value_t &time1, value_t &time2)
+{
+// TODO: 記号定数の条件による場合分けを真面目に扱う(返り値がintでは無理)
+  backend::compare_min_time_result_t compare_min_time_result;
+  parameter_map_t dummy;
+  backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &time1, &time2, &dummy, &dummy, &compare_min_time_result);
+  if(!compare_min_time_result.less_maps.empty())return -1;
+  else if(!compare_min_time_result.greater_maps.empty())return 1;
+  return 0;
 }
 
 }

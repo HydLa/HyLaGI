@@ -165,7 +165,6 @@ public:
 
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
-  typedef std::vector<std::pair<constraint_t, Variable > > relation_t;
   
   void add(module_t &mod);
 
