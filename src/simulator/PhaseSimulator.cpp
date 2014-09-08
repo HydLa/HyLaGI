@@ -188,6 +188,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
           HYDLA_LOGGER_DEBUG("INCONSISTENT");
           //if(opts_->use_unsat_core) mark_nodes_by_unsat_core(ms, todo, time_applied_map);
           //else
+      /*
 	  if(opts_->reuse){
 	    module_set_sptr changed_ms(new ModuleSet());
 	    for( auto it : *connected_ms ){
@@ -195,7 +196,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hydla::hierarchy
 	    }
 	    todo->module_set_container->mark_nodes(todo->maximal_mss, *changed_ms);
 	  }
-	  else todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
+	  else*/ todo->module_set_container->mark_nodes(todo->maximal_mss, *connected_ms);
           return result;
         }
       }
