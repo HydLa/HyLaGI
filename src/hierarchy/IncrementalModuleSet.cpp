@@ -39,7 +39,7 @@ void IncrementalModuleSet::add_maximal_module_set(module_set_sptr ms)
  
   // 引数のmsに要素を追加する
   for(; p_it != p_end; ++p_it){
-      ms->add_module(*p_it);
+      if(ms->find(*p_it) == ms->end()) ms->add_module(*p_it);
   }
   // maximal_module_set_の更新
   maximal_module_set_ = ms;
