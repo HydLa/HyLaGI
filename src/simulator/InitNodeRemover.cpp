@@ -31,6 +31,7 @@ void InitNodeRemover::binary_node(boost::shared_ptr<hydla::symbolic_expression::
   accept(node->get_lhs());  
   symbolic_expression::node_sptr lhs_child = child_;
 
+  child_ = symbolic_expression::node_sptr();
   accept(node->get_rhs());  
   symbolic_expression::node_sptr rhs_child = child_;
 
@@ -41,7 +42,7 @@ void InitNodeRemover::binary_node(boost::shared_ptr<hydla::symbolic_expression::
   }
   else if(lhs_child) {
     child_ = lhs_child;
-  }  
+  }
   else if(rhs_child) {
     child_ = rhs_child;
   }
