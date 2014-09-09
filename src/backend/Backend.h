@@ -29,39 +29,17 @@ struct MidpointRadius
   value_t              radius;
 };
 
-/**
- * 離散変化に関する情報
- */
-struct DCInformation
+struct DCCandidate 
 {
   value_t time;         /// 離散変化時刻
   std::vector<int> ids; /// 原因となった条件のID
   bool on_time;         /// 計算した時刻に条件が成り立つかどうか
-};
-
-struct DCCandidate 
-{
-  /// minimum time and the id of its condition
-  DCInformation             minimum;
-  /// non-minimum pairs of times and ids
-  std::vector<DCInformation> non_minimums;
   /// condition for parameter in this case
   parameter_map_t parameter_map;
 };
 
-typedef std::vector<DCCandidate> pp_time_result_t;
+typedef DCCandidate pp_time_result_t;
 
-/**
- * 離散変化条件として渡す構造体
- */
-typedef struct DCCause
-{
-  symbolic_expression::node_sptr node;
-  int id;
-  DCCause(symbolic_expression::node_sptr n, int i):node(n), id(i){}
-} dc_cause_t;
-typedef std::vector<dc_cause_t> dc_causes_t;
-  
 
 class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 {
@@ -89,7 +67,6 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
    *    b: bool: boolean value
    *    s: const char*: symbol (send only)
    *    e(n,p,z,t): symbolic_expression::node_sptr: expression (Variables are handled like n:x,c:x (ignoring prev), p:prev[x], z:x[0], t:x[t], needed only for sending)
-   *    dc: dc_causes_t : causes of discrete changes
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
    *    cs(n, p, z, t): constraint_store_t: constraint store
    *    cc: check_consistency_result_t (receive only)
@@ -149,7 +126,6 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
    */
   int send_node(const hydla::symbolic_expression::node_sptr& node, const variable_form_t &form);
 
-  void send_dc_causes(dc_causes_t &dc_causes);
 
   /**
    * 変数の送信

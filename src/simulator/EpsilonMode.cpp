@@ -102,6 +102,7 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
 #endif
   unsigned int time_it;
   pp_time_result_t eps_time_result;
+/* TODO: implement
   for(time_it=0;time_it < time_result.size();time_it++)
   {
 #ifdef _DEBUG_REDUCE_UNSUIT
@@ -226,5 +227,6 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_
 #ifdef _DEBUG_REDUCE_UNSUIT
   std::cout << "Remove UnSuitable Cases End;" << std::endl;
 #endif
+*/
   return time_result;
 }

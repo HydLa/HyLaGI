@@ -148,6 +148,7 @@ protected:
   void push_branch_states(simulation_todo_sptr_t &original,
     CheckConsistencyResult &result);
 
+  variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);
 
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);

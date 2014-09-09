@@ -67,17 +67,6 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
-  case 'd':
-    if(args_fmt[++i] != 'c')
-    {
-      invalid_fmt(args_fmt, i);
-    }
-    else
-    {
-      dc_causes_t* dc_causes = (dc_causes_t *)arg;
-      send_dc_causes(*dc_causes);
-    }
-    break;
 
   case 'e':
   {
@@ -394,19 +383,6 @@ int Backend::send_node(const symbolic_expression::node_sptr& node, const variabl
   variable_arg_ = form;
   accept(node);
   return 0;
-}
-
-void Backend::send_dc_causes(dc_causes_t &dc_causes)
-{
-  link_->put_converted_function("List", dc_causes.size());
-  for(int i = 0; i < dc_causes.size(); i++)
-  {
-    HYDLA_LOGGER_DEBUG(dc_causes[i].id, ": ", dc_causes[i].node);
-    dc_cause_t &cause = dc_causes[i];
-    link_->put_converted_function("causeAndID", 2);
-    send_node(cause.node, Link::VF_TIME);
-    link_->put_integer(cause.id);
-  }
 }
 
 int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& vf, const bool &send_derivative)
@@ -842,6 +818,7 @@ find_min_time_result_t Backend::receive_find_min_time_result()
 {
   std::string name;
   int find_min_time_size; 
+  // List
   link_->get_function(name, find_min_time_size);
   find_min_time_result_t result;
   for(int time_it = 0; time_it < find_min_time_size; time_it++){
@@ -849,7 +826,6 @@ find_min_time_result_t Backend::receive_find_min_time_result()
     int dummy_buf;
     // List
     link_->get_function(name, dummy_buf);
-
     candidate.time = receive_value();
     candidate.on_time = (bool)link_->get_integer();
 

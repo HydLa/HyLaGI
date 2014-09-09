@@ -216,9 +216,9 @@ hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Inf
 
 (* 式が定数そのものか否か *)
 
-isParameter[exprs_] := Head[exprs] === parameter;
+isParameter[exprs_] := Head[exprs] === p;
 
-isParameterOrPrev[exprs_] := Head[exprs] === parameter || Head[exprs] === prev;
+isParameterOrPrev[exprs_] := Head[exprs] === p || Head[exprs] === prev;
 
 (* 式が指定されたシンボルを持つか *)
 hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
@@ -448,8 +448,7 @@ findMinTime[cause_, cons_, maxTime_] := findMinTime[cause, cons, pConstraint, ma
 (* 条件を満たす最小の時刻と，その条件の組を求める *)
 publicMethod[
   findMinTime,
-  cause, cons, pCons, maxTime,
-  
+  cause, cons, pCons, maxTime,  
   Module[
     {
       minT,
@@ -470,10 +469,12 @@ publicMethod[
     necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
     simplePrint[necessaryPCons];
 
-    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t>timeDelta && t < maxTime}, {t}],
-    onTime = False;minT,
-    Minimize::wksol],
-    {Minimize::wksol, Minimize::infeas} ];
+    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t>timeDelta && t < maxTime && necessaryPCons}, Append[parameterList, t] ],
+           onTime = False;minT,
+           Minimize::wksol
+         ],
+         {Minimize::wksol, Minimize::infeas}
+    ];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     minT = ToRadicals[First[minT]];
     If[minT === Infinity, 
@@ -499,7 +500,7 @@ createParameterMapList[cons_] :=
 If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
-(* @retunr {condition where the first argument is smaller, condition where the second argument is smaller, condition where the first argument equals to the second argument} *)
+(* @return {condition where the first argument is smaller, condition where the second argument is smaller, condition where the first argument equals to the second argument} *)
 publicMethod[
   compareMinTime,
   time1, time2, pCons1, pCons2,

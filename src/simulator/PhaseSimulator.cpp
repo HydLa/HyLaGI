@@ -682,6 +682,19 @@ void PhaseSimulator::set_symmetric_difference(
   }
 }
 
+variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const variable_map_t &vm)
+{
+  VariableFinder var_finder;
+  var_finder.visit_node(node);
+  variable_set_t related_variables = var_finder.get_all_variable_set();
+  variable_map_t related_vm;
+  for(auto related_variable : related_variables)
+  {
+    related_vm[related_variable] = vm.find(related_variable)->second;
+  }
+  return related_vm;
+}
+
 PhaseSimulator::todo_list_t
   PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo)
 {
@@ -719,8 +732,12 @@ PhaseSimulator::todo_list_t
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
-    timer::Timer next_pp_timer;
+    pp_time_result_t time_result;
+    value_t time_limit(max_time);
+    time_limit -= phase->current_time;
     
+
+/*    
     if(phase->parent && phase->parent->parent)
     {
       phase->next_pp_candidate_map = phase->parent->parent->next_pp_candidate_map;
@@ -741,11 +758,12 @@ PhaseSimulator::todo_list_t
     {
       var_finder.visit_node(constraint);
     }
-
+    HYDLA_LOGGER_DEBUG(max_time);
     variable_set_t changed_variable_set = var_finder.get_all_variable_set();
     value_t time_limit(max_time);
+    HYDLA_LOGGER_DEBUG(time_limit);
     time_limit -= phase->current_time;
-
+    HYDLA_LOGGER_DEBUG(time_limit);
     // TODO: 複数のガード条件が同時に成り立つ場合に対応する
 
     value_t min_time_of_all;
@@ -755,7 +773,8 @@ PhaseSimulator::todo_list_t
     // 各変数に関する最小時刻を更新する．
     for(auto variable : changed_variable_set)
     {
-      string var_name = variable.get_name();      
+      string var_name = variable.get_name();
+      // 既にチェック済みの変数なら省略（x'とxはどちらもxとして扱うため，二回呼ばれないようにする）
       if(checked_variables.count(var_name))continue;
       checked_variables.insert(var_name);
 
@@ -816,7 +835,7 @@ PhaseSimulator::todo_list_t
         }
       }
     }
-
+    HYDLA_LOGGER_DEBUG("");
     set<ask_t> checked_asks;
     set<string> min_time_variables;
     // 各変数に関する最小時刻を比較して最小のものを選ぶ．
@@ -840,10 +859,13 @@ PhaseSimulator::todo_list_t
         }
       }
     }
-
-    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(min_ask) );
-    HYDLA_LOGGER_DEBUG_VAR(min_time_of_all);
-    HYDLA_LOGGER_DEBUG_VAR(min_on_time);
+    if(min_ask.get())
+    {
+      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(min_ask) );
+      HYDLA_LOGGER_DEBUG_VAR(min_time_of_all);
+      HYDLA_LOGGER_DEBUG_VAR(min_on_time);
+    }
+*/
 
 /* TODO: implement
     //assertionの否定を追加
@@ -863,28 +885,64 @@ PhaseSimulator::todo_list_t
     }
 */
 
-    unsigned int time_it = 0;
+    for(auto ask : phase->positive_asks)
+    {
+      symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
+      find_min_time_result_t find_min_time_result;
+      variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
+      backend_->call("findMinTime", 3, "etmvtvlt", "f", &negated_node, &related_vm, &time_limit, &find_min_time_result);
+      for(auto candidate : find_min_time_result)
+      {
+        if(time_result.time.undefined() || compare_min_time(candidate.time, time_result.time) == -1)
+        {
+          // 新しく見つかった時間の方が小さい場合
+          time_result.time = candidate.time;
+          time_result.ids.push_back(ask->get_id());
+          time_result.on_time = candidate.on_time;
+          time_result.parameter_map = candidate.parameter_map;
+        }
+      }
+    }
+    for(auto ask : phase->negative_asks)
+    {
+      symbolic_expression::node_sptr node(ask->get_guard());
+      find_min_time_result_t find_min_time_result;
+      variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
+      backend_->call("findMinTime", 3, "etmvtvlt", "f", &node, &related_vm, &time_limit, &find_min_time_result);
+      for(auto candidate : find_min_time_result)
+      {
+        if(time_result.time.undefined() || compare_min_time(candidate.time, time_result.time) == -1)
+        {
+          // 新しく見つかった時間の方が小さい場合
+          time_result.time = candidate.time;
+          time_result.ids.push_back(ask->get_id());
+          time_result.on_time = candidate.on_time;
+          time_result.parameter_map = candidate.parameter_map;
+        }
+      }
+    }
+    HYDLA_LOGGER_DEBUG_VAR(time_result.parameter_map);
+
     result_list_t results;
     phase_result_sptr_t pr = next_todo->parent;
-    pr->end_time = current_todo->current_time + min_time_of_all;
+    pr->end_time = current_todo->current_time + time_result.time;
     backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
     // まずインタラクティブ実行のために最小限の情報だけ整理する
-/* TODO:implement
     while(true)
     {
-      DCCandidate &candidate = time_result[time_it];
+      HYDLA_LOGGER_DEBUG("");
+      DCCandidate &candidate = time_result;
       // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
       for(auto par_entry : candidate.parameter_map ){
         pr->parameter_map[par_entry.first] = par_entry.second;
       }
 
-      pr->end_time = current_todo->current_time + candidate.min.time;
+      pr->end_time = current_todo->current_time + candidate.time;
       backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
       results.push_back(pr);
-      if(++time_it >= time_result.size())break;
+      break;
       pr = make_new_phase(pr);
     }
-*/
 
     unsigned int result_it = 0;
 
@@ -901,25 +959,25 @@ PhaseSimulator::todo_list_t
     // todoを実際に作成する
     while(true)
     {
-//    pr = results[result_it];
-/*
-      for(uint id_it = 0; id_it < candidate.minimum.ids.size(); id_it++)
+      pr = results[result_it];
+      pp_time_result_t &candidate = time_result;
+      if(time_result.time.undefined())
       {
-        int id = candidate.minimum.ids[id_it];
-        if(id == -1) {
-          pr->cause_for_termination = simulator::TIME_LIMIT;
-        }
-        else if(id >= 0)
-        {
-          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.minimum.on_time) );
-        }
+        pr->cause_for_termination = simulator::TIME_LIMIT;
       }
-*/
-      if(!min_ask.get())pr->cause_for_termination = simulator::TIME_LIMIT;
       else
       {
-        next_todo->discrete_causes.insert(make_pair(min_ask, min_on_time));
-        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(min_ask));
+        for(uint id_it = 0; id_it < candidate.ids.size(); id_it++)
+        {
+          int id = candidate.ids[id_it];
+          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.on_time) );
+        }
+      }
+
+      if(candidate.ids.size() == 0)pr->cause_for_termination = simulator::TIME_LIMIT;
+      else
+      {
+        next_todo->discrete_causes.insert(make_pair(ask_map[candidate.ids[0]], candidate.on_time));
       }
 
       if(pr->cause_for_termination != TIME_LIMIT)
@@ -927,9 +985,10 @@ PhaseSimulator::todo_list_t
         next_todo->current_time = pr->end_time;
         next_todo->parameter_map = pr->parameter_map;
         next_todo->parent = pr;
-        next_todo->prev_map = value_modifier->substitute_time(min_time_of_all, phase->variable_map);
+        next_todo->prev_map = value_modifier->substitute_time(time_result.time, phase->variable_map);
         ret.push_back(next_todo);
       }
+ 
       // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
 /*
   TODO: implement
@@ -944,11 +1003,9 @@ PhaseSimulator::todo_list_t
       if(one_phase || ++result_it >= results.size())break;
       next_todo = create_new_simulation_phase(next_todo);
     }
-    current_todo->profile["NextPP"] += next_pp_timer.get_elapsed_us();
   }
   phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
 
-  current_todo->profile["NextTodo"] += next_todo_timer.get_elapsed_us();
   return ret;
 }
 
