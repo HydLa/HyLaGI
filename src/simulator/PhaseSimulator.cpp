@@ -924,84 +924,92 @@ PhaseSimulator::todo_list_t
     HYDLA_LOGGER_DEBUG_VAR(time_result.parameter_map);
 
     result_list_t results;
-    phase_result_sptr_t pr = next_todo->parent;
-    pr->end_time = current_todo->current_time + time_result.time;
-    backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
-    // まずインタラクティブ実行のために最小限の情報だけ整理する
-    while(true)
+    if(time_result.time.undefined())
     {
-      HYDLA_LOGGER_DEBUG("");
-      DCCandidate &candidate = time_result;
-      // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
-      for(auto par_entry : candidate.parameter_map ){
-        pr->parameter_map[par_entry.first] = par_entry.second;
+      //次の離散変化が存在しない場合
+      phase_result_sptr_t pr = next_todo->parent;
+      pr->cause_for_termination = simulator::TIME_LIMIT;
+      pr->end_time = max_time;
+      results.push_back(pr);
+    }
+    else
+    {
+      phase_result_sptr_t pr = next_todo->parent;
+      // まずインタラクティブ実行のために最小限の情報だけ整理する
+      while(true)
+      {
+        DCCandidate &candidate = time_result;
+        // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
+        for(auto par_entry : candidate.parameter_map ){
+          pr->parameter_map[par_entry.first] = par_entry.second;
+        }
+
+        pr->end_time = current_todo->current_time + candidate.time;
+        backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+        results.push_back(pr);
+        break;
+        pr = make_new_phase(pr);
       }
 
-      pr->end_time = current_todo->current_time + candidate.time;
-      backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
-      results.push_back(pr);
-      break;
-      pr = make_new_phase(pr);
-    }
+      unsigned int result_it = 0;
 
-    unsigned int result_it = 0;
-
-    bool one_phase = false;
-    // 場合の選択を行う場合はここで
+      bool one_phase = false;
+      // 場合の選択を行う場合はここで
 /* TODO:implement
-    if(time_result.size() > 0 && select_phase_)
-    {
-      result_it = select_phase_(results);
-      one_phase = true;
-    }
+   if(time_result.size() > 0 && select_phase_)
+   {
+   result_it = select_phase_(results);
+   one_phase = true;
+   }
 */
 
-    // todoを実際に作成する
-    while(true)
-    {
-      pr = results[result_it];
-      pp_time_result_t &candidate = time_result;
-      if(time_result.time.undefined())
+      // todoを実際に作成する
+      while(true)
       {
-        pr->cause_for_termination = simulator::TIME_LIMIT;
-      }
-      else
-      {
-        for(uint id_it = 0; id_it < candidate.ids.size(); id_it++)
+        pr = results[result_it];
+        pp_time_result_t &candidate = time_result;
+        if(time_result.time.undefined())
         {
-          int id = candidate.ids[id_it];
-          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.on_time) );
+          pr->cause_for_termination = simulator::TIME_LIMIT;
         }
-      }
+        else
+        {
+          for(uint id_it = 0; id_it < candidate.ids.size(); id_it++)
+          {
+            int id = candidate.ids[id_it];
+            next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.on_time) );
+          }
+        }
 
-      if(candidate.ids.size() == 0)pr->cause_for_termination = simulator::TIME_LIMIT;
-      else
-      {
-        next_todo->discrete_causes.insert(make_pair(ask_map[candidate.ids[0]], candidate.on_time));
-      }
+        if(candidate.ids.size() == 0)pr->cause_for_termination = simulator::TIME_LIMIT;
+        else
+        {
+          next_todo->discrete_causes.insert(make_pair(ask_map[candidate.ids[0]], candidate.on_time));
+        }
 
-      if(pr->cause_for_termination != TIME_LIMIT)
-      {
-        next_todo->current_time = pr->end_time;
-        next_todo->parameter_map = pr->parameter_map;
-        next_todo->parent = pr;
-        next_todo->prev_map = value_modifier->substitute_time(time_result.time, phase->variable_map);
-        ret.push_back(next_todo);
-      }
+        if(pr->cause_for_termination != TIME_LIMIT)
+        {
+          next_todo->current_time = pr->end_time;
+          next_todo->parameter_map = pr->parameter_map;
+          next_todo->parent = pr;
+          next_todo->prev_map = value_modifier->substitute_time(time_result.time, phase->variable_map);
+          ret.push_back(next_todo);
+        }
  
-      // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+        // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
 /*
   TODO: implement
-      if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
-      {
-        next_todo->current_time = pr->end_time;
-        next_todo->parameter_map = pr->parameter_map;
-        next_todo->parent = pr;
-        ret.push_back(next_todo);
-      }
+  if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
+  {
+  next_todo->current_time = pr->end_time;
+  next_todo->parameter_map = pr->parameter_map;
+  next_todo->parent = pr;
+  ret.push_back(next_todo);
+  }
 */
-      if(one_phase || ++result_it >= results.size())break;
-      next_todo = create_new_simulation_phase(next_todo);
+        if(one_phase || ++result_it >= results.size())break;
+        next_todo = create_new_simulation_phase(next_todo);
+      }
     }
   }
   phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
