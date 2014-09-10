@@ -1,4 +1,4 @@
-x <=> [20].
+x := x0..x3.
 
 // constraints
 INIT(b,b0,vb0) <=> b=b0 & b'=vb0.
@@ -7,13 +7,13 @@ CONST(b) <=> [](b''=0).
 WALL(b) <=> [](b-=-1 | b-=2*|x| => b'=-b'-).
 
 // program lists
-INITS <=> { INIT(x[i],2*i,0) | i in 0..|x|-1, x[i] =!= x0 }.
+INITS <=> { INIT(x[i],2*i-2,0) | i in 2..|x| }.
 
 COL_PRIORITIES <=> 
  { ( CONST(x[i]), CONST(x[j]) ) << COL(x[i], x[j]) |
-                       i in 0..|x|-2, j in i+1..|x|-1 }.
+                       i in 1..|x|-1, j in i+1..|x| }.
 WALL_PRIORITIES <=> 
- { CONST(x[i]) << WALL(x[i]) | i in 0..|x|-1}.
+ { CONST(x[i]) << WALL(x[i]) | i in 1..|x|}.
 
-INIT(x[0],0,1),
+INIT(x[1],0,1),
 INITS, COL_PRIORITIES, WALL_PRIORITIES.

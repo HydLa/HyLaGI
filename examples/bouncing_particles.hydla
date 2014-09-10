@@ -4,5 +4,5 @@ INIT(y, y0) <=> y = y0 & y' = 0.
 FALL(y) <=> [](y'' = -10).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
-y<=>[13].
-{ INIT(y[i],i+1), FALL(y[i]) << BOUNCE(y[i]) | i in 0..|y|-1 }.
+y := y0..y9.
+{ INIT(y[i],i+1), FALL(y[i]) << BOUNCE(y[i]) | i in 1..|y| }.

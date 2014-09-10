@@ -170,6 +170,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Negative> node){
     print_unary_node(*node, "-", "");
     (*output_stream_) << ")";
   }else{
+    need_par_ = PAR_N_P_S_T_D_P;
     print_unary_node(*node, "-", "");
   }
 }

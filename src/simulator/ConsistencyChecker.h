@@ -67,7 +67,8 @@ public:
 
 
 private:
-  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase);
+  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase, profile_t &profile);
+  void check_consistency(const ConstraintStore& constraint_store, RelationGraph &relation_graph, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
   std::map<std::string, int> get_differential_map(variable_set_t &);
   void send_init_equation(Variable &var, std::string fmt);

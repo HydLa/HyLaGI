@@ -1,18 +1,32 @@
+x <=> x1..x2.
+y <=> y1..y2.
+s <=> s1..s2.
+time <=> t1..t2.
+xinit <=> {-10000,10000}.
+yinit <=> {0,0}.
+sinit <=> { 0, PI }.
 
-VELOCITY(v) <=> [](v = 220).
-PARAMETER <=> 100 < p < 1000 /\ [](p' = 0).
+INIT(x,y,s,time,x0,y0,s0) <=> x = x0 /\ y = y0 /\ s = s0 /\ time = -1.
+PLAIN(x,y,s) <=> [](x' = 220*cos(s)) /\ [](y' = 220*sin(s)).
 
-FLAG <=> [](colided = 0).
+CONST(s) <=> [](s' = 0).
 
 COLLISION(x1,y1,x2,y2) <=>
-[]( (x1- - x2-)^2 + (y1- - y2-)^2 = 30^2 =>  colided = 1).
+[]( (x1- - x2-)^2 + (y1- - y2-)^2 = 30^2 =>  $FALSE).
 
-AVOID_START(x1,y1,s1,x2,y2) <=>
-[]( (x1- - x2-)^2 + (y1- - y2-)^2 = (30+p)^2 =>  s1 = s1- + PI/2).
+AVOID_START(x1,y1,s1,t1,x2,y2) <=>
+[]( (x1- - x2-)^2 + (y1- - y2-)^2 = (30+5000)^2 /\ t1- < 0
+ =>  s1 = s1- + PI/2 /\ t1 = 2*PI).
 
-AVOIDING(s,s0) <=> []( s- != s0- => s' = -1/2).
+AVOIDING(time,s) <=> []( time- > 0 => s' = -1/2).
 
-AVOID_END(s,s0) <=> []( s- = s0- - PI/2 =>
-s- = s0-).
+AVOID_END(time,s,s0) <=> []( time- = 0 => s = s0-).
 
-ASSERT(colided = 0).
+TIME(time)<=>[](time' = -1).
+
+{ INIT(x[i],y[i],s[i],time[i],xinit[i],yinit[i],sinit[i]) | i in 0..|x|-1 },
+{ PLAIN(x[i],y[i],s[i]) | i in 0..|x|-1 },
+{ COLLISION(x[i],y[i],x[j],y[j]) | i in 0..|x|-2, j in i+1..|x|-1 }.
+{ (CONST(s[i]),TIME(time[i])) << AVOID_START(x[i],y[i],s[i],time[i],x[j],y[j]) | i in 0..|x|-1, j in 0..|x|-1, i =!=j }.
+{ CONST(s[i]) << AVOIDING(time[i],s[i]) | i in 0..|s|-1 }.
+{ CONST(s[i]) << AVOID_END(time[i],s[i],sinit[i]) | i in 0..|s|-1 }.

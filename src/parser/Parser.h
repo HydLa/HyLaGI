@@ -18,11 +18,18 @@ namespace hydla{
 
 class Parser{
 public:
+
+  enum ListType{
+    EXPRESSION,
+    PROGRAM,
+    ALL
+  };
+  
   Parser(std::string);
   Parser(std::istream&);
   ~Parser();
 
-  node_sptr parse(node_sptr assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
+  node_sptr parse(node_sptr& assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
   
   bool is_COMMA(Token);
   bool is_WEAKER(Token);
@@ -87,9 +94,11 @@ public:
 
   // list functions
   bool list_definition();
-  list_t list(std::string,std::map<std::string, std::string>);
-  list_t list_term(std::string,std::map<std::string, std::string>);
-  list_t list_factor(std::string,std::map<std::string, std::string>);
+  list_t expression_list(std::string,std::map<std::string, std::string>);
+  list_t program_list(std::string,std::map<std::string, std::string>);
+  list_t list(ListType,std::string,std::map<std::string, std::string>);
+  list_t list_term(ListType,std::string,std::map<std::string, std::string>);
+  list_t list_factor(ListType,std::string,std::map<std::string, std::string>);
 
   boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_factor(std::map<std::string, std::string>);
   boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_term(std::map<std::string, std::string>);
@@ -98,7 +107,10 @@ public:
   list_t list_conditions(std::map<std::string, std::string>, std::string);
   std::string replace_string_by_bound_variables(std::map<std::string, std::string>, std::string);
   list_t list_check(std::string list_name);
-  void set_list(std::map<std::string, list_t> list){ list_map = list; }
+  void set_list(std::map<std::string, list_t> e_list, std::map<std::string,list_t> p_list){
+    expression_list_map = e_list; 
+    program_list_map = p_list;
+  }
 
 private:
   Lexer lexer;
@@ -106,7 +118,8 @@ private:
   std::vector<error_info_t> error_info;
 
   // map which save appeared variable list
-  std::map<std::string, list_t> list_map;
+  std::map<std::string, list_t> expression_list_map;
+  std::map<std::string, list_t> program_list_map;
 
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;

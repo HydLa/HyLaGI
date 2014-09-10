@@ -177,11 +177,6 @@ private:
 
   void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, int id);
 
-  void set_symmetric_difference(
-    const ConstraintStore& parent_constraints,
-    const ConstraintStore& current_constraints,
-    ConstraintStore& result );
-
   bool calculate_closure(simulation_todo_sptr_t& state);
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
@@ -194,7 +189,7 @@ private:
 
   std::map<int, boost::shared_ptr<symbolic_expression::Ask> > ask_map;
 
-  ConstraintDifferenceCalculator differnce_calculator_;
+  ConstraintDifferenceCalculator difference_calculator_;
 
   boost::shared_ptr<ValueModifier> value_modifier;
 

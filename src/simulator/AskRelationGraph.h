@@ -31,8 +31,9 @@ public:
   struct AskNode{
     ask_t ask;
     module_t module; /// module which the ask belongs to
+    bool module_adopted;
     std::vector<VariableNode *> edges;
-    AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod){}
+    AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod),module_adopted(true){}
     std::string get_name() const;
   };
   
@@ -50,6 +51,15 @@ public:
   AskRelationGraph(const module_set_t &mods);
 
   virtual ~AskRelationGraph();  
+
+
+  /// Set adoptedness of module
+  void set_adopted(const module_t &mod, bool adopted);
+
+  /// Set adoptedness of modules
+  void set_adopted(const module_set_t &ms, bool adopted);
+
+  // TODO: 親ガード条件が存在した場合にexpandedかどうかを考慮していない．
 
   /**
    * Print the structure in graphviz format.
@@ -86,6 +96,7 @@ private:
   ask_nodes_t ask_nodes;
   module_t current_module;
 
+  std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;
   std::map<ask_t, AskNode*> ask_node_map;
   std::map<std::string, VariableNode*> variable_node_map;
 };

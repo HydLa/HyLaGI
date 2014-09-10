@@ -75,6 +75,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
+  backend_->call("addParameterConstraint", 1, "csn", "", &todo->initial_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
   if(todo->phase_type == PointPhase)
   {
@@ -83,6 +84,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
       timer::Timer timer;
       if(todo->parent != result_root)
       {
+        
         // use the discrete causes for prev_asks
         for(auto prev_ask : prev_asks_)
         {
@@ -151,7 +153,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     timer::Timer ms_timer;
 
     relation_graph_->set_adopted(unadopted_ms, false);
+    guard_relation_graph_->set_adopted(unadopted_ms, false);
     result_list_t tmp_result = simulate_ms(unadopted_ms, todo);
+    guard_relation_graph_->set_adopted(unadopted_ms, true);
     relation_graph_->set_adopted(unadopted_ms, true);
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
@@ -187,7 +191,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
 
 PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_todo_sptr_t& todo)
 {
-  HYDLA_LOGGER_DEBUG("\n--- next unadopoted module set ---\n", unadopted_ms.get_infix_string());
+  HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
   timer::Timer cc_timer;
   bool consistent = calculate_closure(todo);
@@ -245,13 +249,13 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
   // suspected
   if(opts_->reuse){
     timer::Timer timer;
-    if(todo->in_following_step())
-    {
-      phase->changed_constraints = differnce_calculator_.get_difference_constraints();
-
-      if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
-        variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
-        for(auto var_entry : vm_to_take_over)
+    phase->changed_constraints = difference_calculator_.get_difference_constraints();
+    if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
+      variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
+      for(auto var_entry : vm_to_take_over)
+      {
+        auto var = var_entry.first;
+        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
           auto var = var_entry.first;
           if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
@@ -261,9 +265,23 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
           }
         }
       }
-      else if(phase->phase_type == PointPhase && phase->parent){
-        variable_map_t &vm_to_take_over = todo->prev_map;
-        for(auto var_entry : vm_to_take_over)
+      // TODO: 効率が悪いのでどうにかする．
+      auto all_asks = guard_relation_graph_->get_asks();
+      for(auto ask : all_asks)
+      {
+        if(!phase->positive_asks.count(ask) && !phase->negative_asks.count(ask))
+        {
+          if(phase->parent->positive_asks.count(ask))phase->positive_asks.insert(ask);
+          else phase->negative_asks.insert(ask);
+        }
+      }
+    }
+    else if(phase->phase_type == PointPhase && phase->parent){
+      variable_map_t &vm_to_take_over = todo->prev_map;
+      for(auto var_entry : vm_to_take_over)
+      {
+        auto var = var_entry.first;
+        if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
         {
           auto var = var_entry.first;
           if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
@@ -284,6 +302,12 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const module_set_t& un
   todo->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
   consistency_checker->reset_count();
 
+  for(auto positive_ask : todo->positive_asks)
+  {
+    phase->expanded_constraints.add_constraint(positive_ask->get_child());
+  }
+  phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
+  backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
   
 /*  TODO: implement
   if(opts_->assertion || break_condition_.get() != NULL){
@@ -350,9 +374,7 @@ void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckC
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   todo_container_->push_todo(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
-  //backend_->call("resetConstraint", 1, "csn", "", &original->initial_constraint_store);
-  // TODO: implement branch here
-  throw SimulateError("branch in calculate closure.");
+  backend_->call("resetConstraintForParameter", 1, "csn", "", &original->initial_constraint_store);
 }
 
 phase_result_sptr_t PhaseSimulator::make_new_phase(simulation_todo_sptr_t& todo)
@@ -389,7 +411,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   relation_graph_.reset(new RelationGraph(ms)); 
 
   guard_relation_graph_.reset(new AskRelationGraph(ms));
-  differnce_calculator_.set_relation_graph(relation_graph_, guard_relation_graph_);
 
 
   if(opts_->dump_relation){
@@ -524,16 +545,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
   bool expanded;
 
   if(opts_->reuse && state->in_following_step() ){
-    differnce_calculator_.clear_difference();
-    if(state->phase_type == PointPhase){
-      ConstraintStore difference_constraints;
-      set_symmetric_difference(state->parent->current_constraints,
-        relation_graph_->get_constraints(), difference_constraints );
-      differnce_calculator_.set_difference_constraints(difference_constraints);
-    }
-    else{
-      differnce_calculator_.set_difference_constraints(state->parent->changed_constraints);
-    }
+    difference_calculator_.calculate_difference_constraints(state, relation_graph_);
   }
 
   do{
@@ -543,7 +555,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
     {
       CheckConsistencyResult cc_result;
 
-      cc_result = consistency_checker->check_consistency(*relation_graph_, differnce_calculator_, state->phase_type, opts_->reuse && state->in_following_step(), state->profile);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, difference_calculator_, state->phase_type, opts_->reuse && state->in_following_step(), state->profile);
 
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
       state->profile["# of CheckConsistency"] += 1;
@@ -559,8 +571,8 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
     }
 
     if(opts_->reuse && state->in_following_step()){
-      differnce_calculator_.collect_ask(positive_asks,
-          negative_asks, unknown_asks);
+      difference_calculator_.collect_ask(guard_relation_graph_,
+        state->discrete_causes, positive_asks, negative_asks, unknown_asks);
     }else{
       ask_collector.collect_ask(state->expanded_constraints,
           &positive_asks,
@@ -584,11 +596,11 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             continue;
         }
         // suspected
-        if(opts_->reuse && state->in_following_step()){
+        if(opts_->reuse && state->phase_type == IntervalPhase && 
+           state->in_following_step()){
           timer::Timer timer;
-          if(!state->discrete_causes.find(*it)->second){
-            if(!differnce_calculator_.is_difference((*it)->get_guard())
-              || differnce_calculator_.is_continuous(state->parent, (*it)->get_guard())){
+          if(!state->discrete_causes.count(*it)){
+            if(difference_calculator_.is_continuous(state, *it)){
               if(state->parent->positive_asks.count(*it)){
                 positive_asks.insert(*it);
                 relation_graph_->set_expanded((*it)->get_child(), true);
@@ -610,12 +622,18 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
             HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *((*it)->get_guard()));
             positive_asks.insert(*it);
             relation_graph_->set_expanded((*it)->get_child(), true);
+            if(!state->parent->positive_asks.count(*it)){
+              difference_calculator_.add_difference_constraints((*it)->get_child(), relation_graph_);
+            }
             unknown_asks.erase(it++);
             expanded = true;
             break;
           case CONFLICTING:
             HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *((*it)->get_guard()));
             negative_asks.insert(*it);
+            if(!state->parent->negative_asks.count(*it)){
+              difference_calculator_.add_difference_constraints((*it)->get_child(), relation_graph_);
+            }
             unknown_asks.erase(it++);
             break;
           case BRANCH_VAR:
@@ -648,38 +666,13 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state)
       // 分岐先を生成（導出されない方）
       // TODO: 分岐時の制約の追加をしていない。
       negative_asks.insert(branched_ask);
+      if(!state->parent->negative_asks.count(branched_ask)){
+        difference_calculator_.add_difference_constraints(branched_ask->get_child(), relation_graph_);
+      }
       return calculate_closure(state);
     }
   }
   return true;
-}
-
-void PhaseSimulator::set_symmetric_difference(
-    const ConstraintStore& parent_constraints,
-    const ConstraintStore& current_constraints,
-    ConstraintStore& result ){
-  ConstraintStore::iterator it1 = parent_constraints.begin();
-  ConstraintStore::iterator it2 = current_constraints.begin();
-  while(it1 != parent_constraints.end() && it2 != current_constraints.end()){
-    if(*it1 < *it2){
-      result.insert(*it1);
-      it1++;
-    }else if(*it2 < *it1){
-      result.insert(*it2);
-      it2++;
-    }else{
-      it1++;
-      it2++;
-    }
-  }
-  while(it1 != parent_constraints.end()){
-    result.insert(*it1);
-    it1++;
-  }
-  while(it2 != current_constraints.end()){
-    result.insert(*it2);
-    it2++;
-  }
 }
 
 variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const variable_map_t &vm)

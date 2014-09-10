@@ -1,5 +1,3 @@
 #!/bin/sh
 
-cd ./src/backend/mathematica/math_source/
-./test.sh
-cd ../../../
+rlwrap math -run "<<test_math_source.m"

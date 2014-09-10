@@ -117,14 +117,7 @@ int ModuleSet::erase(const module_t& m)
 int ModuleSet::erase(const ModuleSet& ms)
 {
   int sum = 0;
-
-  for(auto it = begin(); it != end();){
-    if(ms.module_list_.find(*it) != ms.module_list_.end()){
-      module_list_.erase(it++);
-    }else{
-      it++;
-    }
-  }
+  for(auto m : ms) sum += erase(m);
   return sum;
 }	
 
