@@ -891,17 +891,7 @@ PhaseSimulator::todo_list_t
       find_min_time_result_t find_min_time_result;
       variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
       backend_->call("findMinTime", 3, "etmvtvlt", "f", &negated_node, &related_vm, &time_limit, &find_min_time_result);
-      for(auto candidate : find_min_time_result)
-      {
-        if(time_result.time.undefined() || compare_min_time(candidate.time, time_result.time) == -1)
-        {
-          // 新しく見つかった時間の方が小さい場合
-          time_result.time = candidate.time;
-          time_result.ids.push_back(ask->get_id());
-          time_result.on_time = candidate.on_time;
-          time_result.parameter_map = candidate.parameter_map;
-        }
-      }
+      compare_min_time(time_result, find_min_time_result, ask->get_id());
     }
     for(auto ask : phase->negative_asks)
     {
@@ -909,52 +899,39 @@ PhaseSimulator::todo_list_t
       find_min_time_result_t find_min_time_result;
       variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
       backend_->call("findMinTime", 3, "etmvtvlt", "f", &node, &related_vm, &time_limit, &find_min_time_result);
-      for(auto candidate : find_min_time_result)
-      {
-        if(time_result.time.undefined() || compare_min_time(candidate.time, time_result.time) == -1)
-        {
-          // 新しく見つかった時間の方が小さい場合
-          time_result.time = candidate.time;
-          time_result.ids.push_back(ask->get_id());
-          time_result.on_time = candidate.on_time;
-          time_result.parameter_map = candidate.parameter_map;
-        }
-      }
+      compare_min_time(time_result, find_min_time_result, ask->get_id());
     }
-    HYDLA_LOGGER_DEBUG_VAR(time_result.parameter_map);
 
+    if(time_result.empty())
+    {
+      DCCandidate candidate;
+      candidate.time = max_time;
+      time_result.push_back(candidate);
+    }
     result_list_t results;
-    if(time_result.time.undefined())
+    phase_result_sptr_t pr = next_todo->parent;
+    // まずインタラクティブ実行のために最小限の情報だけ整理する
+    auto time_it = time_result.begin();
+    HYDLA_LOGGER_DEBUG_VAR(time_result.size());
+    while(true)
     {
-      //次の離散変化が存在しない場合
-      phase_result_sptr_t pr = next_todo->parent;
-      pr->cause_for_termination = simulator::TIME_LIMIT;
-      pr->end_time = max_time;
-      results.push_back(pr);
-    }
-    else
-    {
-      phase_result_sptr_t pr = next_todo->parent;
-      // まずインタラクティブ実行のために最小限の情報だけ整理する
-      while(true)
-      {
-        DCCandidate &candidate = time_result;
-        // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
-        for(auto par_entry : candidate.parameter_map ){
-          pr->parameter_map[par_entry.first] = par_entry.second;
-        }
-
-        pr->end_time = current_todo->current_time + candidate.time;
-        backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
-        results.push_back(pr);
-        break;
-        pr = make_new_phase(pr);
+      DCCandidate &candidate = *time_it;
+      // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
+      for(auto par_entry : candidate.parameter_map ){
+        pr->parameter_map[par_entry.first] = par_entry.second;
       }
+      HYDLA_LOGGER_DEBUG("");
+      pr->end_time = current_todo->current_time + candidate.time;
+      backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+      results.push_back(pr);
+      if(++time_it == time_result.end())break;
+      pr = make_new_phase(pr);
+    }
 
-      unsigned int result_it = 0;
+    unsigned int result_it = 0;
 
-      bool one_phase = false;
-      // 場合の選択を行う場合はここで
+    bool one_phase = false;
+    // 場合の選択を行う場合はここで
 /* TODO:implement
    if(time_result.size() > 0 && select_phase_)
    {
@@ -963,40 +940,32 @@ PhaseSimulator::todo_list_t
    }
 */
 
-      // todoを実際に作成する
-      while(true)
+    // todoを実際に作成する
+    time_it = time_result.begin();
+    while(true)
+    {
+      pr = results[result_it];
+      DCCandidate &candidate = *time_it++;
+      if(candidate.time.undefined() || candidate.time.infinite() ||  candidate.ids.size() == 0)
       {
-        pr = results[result_it];
-        pp_time_result_t &candidate = time_result;
-        if(time_result.time.undefined())
+        pr->cause_for_termination = simulator::TIME_LIMIT;
+      }
+      else
+      {
+        for(uint id_it = 0; id_it < candidate.ids.size(); id_it++)
         {
-          pr->cause_for_termination = simulator::TIME_LIMIT;
+          int id = candidate.ids[id_it];
+          next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.on_time) );
         }
-        else
-        {
-          for(uint id_it = 0; id_it < candidate.ids.size(); id_it++)
-          {
-            int id = candidate.ids[id_it];
-            next_todo->discrete_causes.insert(make_pair(ask_map[id], candidate.on_time) );
-          }
-        }
+        next_todo->current_time = pr->end_time;
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->parent = pr;
+        next_todo->prev_map = value_modifier->substitute_time(candidate.time, phase->variable_map);
+        ret.push_back(next_todo);
+      }
 
-        if(candidate.ids.size() == 0)pr->cause_for_termination = simulator::TIME_LIMIT;
-        else
-        {
-          next_todo->discrete_causes.insert(make_pair(ask_map[candidate.ids[0]], candidate.on_time));
-        }
-
-        if(pr->cause_for_termination != TIME_LIMIT)
-        {
-          next_todo->current_time = pr->end_time;
-          next_todo->parameter_map = pr->parameter_map;
-          next_todo->parent = pr;
-          next_todo->prev_map = value_modifier->substitute_time(time_result.time, phase->variable_map);
-          ret.push_back(next_todo);
-        }
  
-        // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+      // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
 /*
   TODO: implement
   if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
@@ -1007,9 +976,8 @@ PhaseSimulator::todo_list_t
   ret.push_back(next_todo);
   }
 */
-        if(one_phase || ++result_it >= results.size())break;
-        next_todo = create_new_simulation_phase(next_todo);
-      }
+      if(one_phase || ++result_it >= results.size())break;
+      next_todo = create_new_simulation_phase(next_todo);
     }
   }
   phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
@@ -1018,16 +986,62 @@ PhaseSimulator::todo_list_t
 }
 
 
-int PhaseSimulator::compare_min_time(value_t &time1, value_t &time2)
+void PhaseSimulator::compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomers, int id)
 {
-// TODO: 記号定数の条件による場合分けを真面目に扱う(返り値がintでは無理)
-  backend::compare_min_time_result_t compare_min_time_result;
-  parameter_map_t dummy;
-  backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &time1, &time2, &dummy, &dummy, &compare_min_time_result);
-  if(!compare_min_time_result.less_maps.empty())return -1;
-  else if(!compare_min_time_result.greater_maps.empty())return 1;
-  return 0;
+
+  if(existing.empty())
+  {
+    for(auto newcomer :newcomers)
+    {
+
+      std::vector<int>ids;
+      ids.push_back(id);
+      DCCandidate candidate(newcomer.time, ids, newcomer.on_time, newcomer.parameter_map);
+      existing.push_front(candidate);      
+    }
+    return;
+  }
+
+  for(auto newcomer : newcomers)
+  {
+    for(auto existing_it = existing.begin(); existing_it != existing.end();)
+    {
+      compare_min_time_result_t compare_result;
+      backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing_it->time, &newcomer.time, &existing_it->parameter_map, &newcomer.parameter_map, &compare_result);
+      if(!compare_result.equal_maps.empty() || !compare_result.greater_maps.empty())
+      {
+        //existing one must be updated
+        for(auto less_map : compare_result.less_maps)
+        {
+          DCCandidate candidate(existing_it->time, existing_it->ids, existing_it->on_time, less_map);
+          existing.push_front(candidate);
+        }
+        for(auto equal_map : compare_result.equal_maps)
+        {
+          std::vector<int> ids = existing_it->ids;
+          ids.push_back(id);
+          DCCandidate candidate(existing_it->time, ids, existing_it->on_time, equal_map);
+          existing.push_front(candidate);
+          // TODO:on_timeの場合分けを正確に行う          
+        }
+        for(auto greater_map : compare_result.greater_maps)
+        {
+          std::vector<int> ids = existing_it->ids;
+          ids.push_back(id);
+          DCCandidate candidate(newcomer.time, ids, newcomer.on_time, greater_map);
+          existing.push_front(candidate);
+        }
+        existing_it = existing.erase(existing_it);
+      }
+      else 
+      {
+        existing_it++;
+      }
+    }
+  }
+  return;
 }
+
 
 }
 }

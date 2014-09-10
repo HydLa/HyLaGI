@@ -29,17 +29,6 @@ struct MidpointRadius
   value_t              radius;
 };
 
-struct DCCandidate 
-{
-  value_t time;         /// 離散変化時刻
-  std::vector<int> ids; /// 原因となった条件のID
-  bool on_time;         /// 計算した時刻に条件が成り立つかどうか
-  /// condition for parameter in this case
-  parameter_map_t parameter_map;
-};
-
-typedef DCCandidate pp_time_result_t;
-
 
 class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 {

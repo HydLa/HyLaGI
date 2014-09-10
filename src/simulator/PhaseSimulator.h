@@ -27,6 +27,20 @@ struct FindMinTimeCandidate
   parameter_map_t parameter_map;
 };
 
+struct DCCandidate 
+{
+  value_t time;         /// 離散変化時刻
+  std::vector<int> ids; /// 原因となった条件のID
+  bool on_time;         /// 計算した時刻に条件が成り立つかどうか
+  /// condition for parameter in this case
+  parameter_map_t parameter_map;
+  DCCandidate(const value_t &t, const std::vector<int> &i, bool o, const parameter_map_t &p):time(t), ids(i), on_time(o), parameter_map(p){}
+  DCCandidate(){}
+};
+
+typedef std::list<DCCandidate> pp_time_result_t;
+
+
 typedef std::vector<FindMinTimeCandidate> find_min_time_result_t;
 
 struct CompareMinTimeResult
@@ -121,6 +135,7 @@ protected:
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
+
   const Opts *opts_;
 
   variable_set_t *variable_set_;
@@ -160,7 +175,7 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
-  int compare_min_time(value_t &f1, value_t &f2);
+  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, int id);
 
   void set_symmetric_difference(
     const ConstraintStore& parent_constraints,

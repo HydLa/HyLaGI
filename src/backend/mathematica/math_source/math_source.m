@@ -454,6 +454,7 @@ publicMethod[
       minT,
       timeAppliedCause,
       necessaryPCons,
+      maxCons,
       resultList,
       onTime = True,
       ret
@@ -468,17 +469,15 @@ publicMethod[
     (* 必要なpConsだけを選ぶ．不要なものが入っているとMinimzeの動作がおかしくなる？ *)
     necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
     simplePrint[parameterList];
-
-    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t > 0 && t < maxTime && necessaryPCons}, {t}],
+    maxCons = If[maxTime === Infinity, True, t < maxTime];     simplePrint[maxCons];
+    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t > 0 && maxCons && necessaryPCons}, {t}],
            onTime = False;minT,
            Minimize::wksol
          ],
          {Minimize::wksol, Minimize::infeas}
     ];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-    simplePrint[minT];
     minT = ToRadicals[First[minT]];
-    simplePrint[minT];
     If[minT === Infinity, 
       {},
       Assert[Head[minT] =!= Piecewise];
@@ -512,7 +511,7 @@ publicMethod[
     },
     andCond = Reduce[And@@pCons1 && And@@pCons2, Reals];
     If[andCond === False,
-      {},
+      {{}, {}, {}},
       caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
       caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
       caseGr = Reduce[andCond && !caseLe && !caseEq];

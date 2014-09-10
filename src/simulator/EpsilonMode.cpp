@@ -90,7 +90,7 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
     return phase->variable_map;
 }
 
-pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase)
+hydla::simulator::pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase)
 {
 #ifdef _DEBUG_REDUCE_UNSUIT
   std::cout << "Remove UnSuitable Cases Start;" << std::endl;
