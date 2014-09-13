@@ -89,15 +89,9 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         for(auto prev_ask : prev_asks_)
         {
           bool entailed = todo->parent->positive_asks.count(prev_ask);
-          // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point
-          
-        
+          // negate entailed if the guard is the cause of the discrete change and it's entailed on this time point        
           HYDLA_LOGGER_DEBUG_VAR(todo->discrete_causes.size());
-          if(todo->discrete_causes.size() > 0)
-          {
-            HYDLA_LOGGER_DEBUG_VAR(todo->discrete_causes.begin()->first);
-          }
-          HYDLA_LOGGER_DEBUG_VAR(prev_ask);
+          HYDLA_LOGGER_DEBUG_VAR(get_infix_string(prev_ask));
           if(todo->discrete_causes.count(prev_ask)
              && todo->discrete_causes[prev_ask]) entailed = !entailed;
           todo->judged_prev_map.insert(make_pair(prev_ask, entailed) );
@@ -981,7 +975,6 @@ PhaseSimulator::todo_list_t
 
 void PhaseSimulator::compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomers, int id)
 {
-
   if(existing.empty())
   {
     for(auto newcomer :newcomers)
@@ -1019,7 +1012,7 @@ void PhaseSimulator::compare_min_time(pp_time_result_t &existing, const find_min
         }
         for(auto greater_map : compare_result.greater_maps)
         {
-          std::vector<int> ids = existing_it->ids;
+          std::vector<int> ids;
           ids.push_back(id);
           DCCandidate candidate(newcomer.time, ids, newcomer.on_time, greater_map);
           existing.push_front(candidate);
