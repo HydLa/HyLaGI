@@ -47,10 +47,9 @@ class Value
    */
   Value(double num);
   
-  /**
-   * 未定義値かどうか
-   */
   virtual bool undefined() const;
+  
+  virtual bool infinite() const;
 
   /**
    * 文字列表現を取得する

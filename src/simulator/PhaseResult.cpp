@@ -36,7 +36,7 @@ namespace hydla {
 namespace simulator {
 
 
-PhaseResult::PhaseResult():full_information(nullptr),cause_for_termination(NONE), parent(nullptr)
+PhaseResult::PhaseResult():cause_for_termination(NONE), parent(nullptr), full_information(nullptr)
 {
 }
 

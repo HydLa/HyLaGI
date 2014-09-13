@@ -67,13 +67,28 @@ typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sp
 
 typedef std::set<std::string> change_variables_t;
 
-
 struct FullInformation
 {
   always_set_t                 expanded_always;
   ask_set_t                    positive_asks;
   ask_set_t                    negative_asks;
 };
+
+
+struct DiscreteCause{
+  ask_t ask;
+  bool on_time;
+  DiscreteCause(const ask_t &a, bool on):ask(a), on_time(on){}
+};
+
+struct CandidateOfNextPP{
+  std::vector<DiscreteCause >   causes;
+  value_t                       pp_time;
+  parameter_map_t               parameter_map;
+};
+
+/// map from variables to candidates of next PP whose time is minimum
+typedef std::map<std::string, CandidateOfNextPP> next_pp_candidate_map_t;
 
 /**
  * A class to express the result of each phase.
@@ -100,6 +115,7 @@ public:
   module_set_t                 module_set;
   ConstraintStore              current_constraints;
   ConstraintStore              changed_constraints;
+  next_pp_candidate_map_t      next_pp_candidate_map; 
 
   CauseForTermination cause_for_termination;
   /// A set of succeeding phases

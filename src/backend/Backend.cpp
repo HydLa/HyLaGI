@@ -67,17 +67,6 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
-  case 'd':
-    if(args_fmt[++i] != 'c')
-    {
-      invalid_fmt(args_fmt, i);
-    }
-    else
-    {
-      dc_causes_t* dc_causes = (dc_causes_t *)arg;
-      send_dc_causes(*dc_causes);
-    }
-    break;
 
   case 'e':
   {
@@ -240,6 +229,14 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     break;
   }
 
+  
+  case 'f':
+  {
+    find_min_time_result_t *f = (find_min_time_result_t *)ret;
+    *f = receive_find_min_time_result();
+    break;
+  }
+
                    
   case 'm':
     switch(ret_fmt[++i])
@@ -286,8 +283,8 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     case 'p':
     {
       // for cp
-      pp_time_result_t* cp = (pp_time_result_t*)ret;
-      *cp = receive_cp();
+      compare_min_time_result_t* cp = (compare_min_time_result_t*)ret;
+      *cp = receive_compare_min_time_result();
       break;
     }
     case 's':
@@ -386,19 +383,6 @@ int Backend::send_node(const symbolic_expression::node_sptr& node, const variabl
   variable_arg_ = form;
   accept(node);
   return 0;
-}
-
-void Backend::send_dc_causes(dc_causes_t &dc_causes)
-{
-  link_->put_converted_function("List", dc_causes.size());
-  for(int i = 0; i < dc_causes.size(); i++)
-  {
-    HYDLA_LOGGER_DEBUG(dc_causes[i].id, ": ", dc_causes[i].node);
-    dc_cause_t &cause = dc_causes[i];
-    link_->put_converted_function("causeAndID", 2);
-    send_node(cause.node, Link::VF_TIME);
-    link_->put_integer(cause.id);
-  }
 }
 
 int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& vf, const bool &send_derivative)
@@ -798,57 +782,60 @@ create_vm_t Backend::receive_cv()
   return ret;
 }
 
-pp_time_result_t Backend::receive_cp()
+compare_min_time_result_t Backend::receive_compare_min_time_result()
 {
   std::string name;
-  int next_time_size; 
-  link_->get_function(name, next_time_size);
-  pp_time_result_t result;
-  for(int time_it = 0; time_it < next_time_size; time_it++){
-    DCCandidate candidate;
+  int list_size; 
+  link_->get_function(name, list_size);
+  compare_min_time_result_t result;
+  link_->get_function(name, list_size);
+  for(int i = 0; i < list_size; i++)
+  {
+    parameter_map_t pm;
+    receive_parameter_map(pm);
+    result.less_maps.push_back(pm);
+  }
+  link_->get_function(name, list_size);
+  for(int i = 0; i < list_size; i++)
+  {
+    parameter_map_t pm;
+    receive_parameter_map(pm);
+    result.greater_maps.push_back(pm);
+  }
+  link_->get_function(name, list_size);
+  for(int i = 0; i < list_size; i++)
+  {
+    parameter_map_t pm;
+    receive_parameter_map(pm);
+    result.equal_maps.push_back(pm);
+  }
+  return result;
+}
+
+
+
+find_min_time_result_t Backend::receive_find_min_time_result()
+{
+  std::string name;
+  int find_min_time_size; 
+  // List
+  link_->get_function(name, find_min_time_size);
+  find_min_time_result_t result;
+  for(int time_it = 0; time_it < find_min_time_size; time_it++){
+    FindMinTimeCandidate candidate;
     int dummy_buf;
     // List
     link_->get_function(name, dummy_buf);
-    
-    // for minimum
-    // dcInfo
-    link_->get_function(name, dummy_buf);
-    candidate.minimum.time = receive_value();
-    int min_size;
-    // ids
-    link_->get_function(name, min_size);
-    for(int min_it = 0; min_it < min_size; min_it++)
-    {
-      candidate.minimum.ids.push_back(link_->get_integer()); 
-    }
-    candidate.minimum.on_time = (bool)link_->get_integer();
-    HYDLA_LOGGER_DEBUG_VAR(candidate.minimum.on_time);
+    candidate.time = receive_value();
+    candidate.on_time = (bool)link_->get_integer();
 
-    // for nonminimum
-    int nonmin_size;
-    link_->get_function(name, nonmin_size);
-    for(int nonmin_it = 0; nonmin_it < nonmin_size; nonmin_it++)
-    {
-      DCInformation dc_info;
-      //dcInfo
-      link_->get_function(name, dummy_buf);
-      dc_info.time = receive_value();
-      int id_size;
-      link_->get_function(name, id_size);
-      for(int id_it = 0; id_it < id_size; id_it++)
-      {
-        dc_info.ids.push_back(link_->get_integer());
-      }
-      dc_info.on_time = (bool)link_->get_integer();
-
-      candidate.non_minimums.push_back(dc_info);
-    }
     // 条件を受け取る
     receive_parameter_map(candidate.parameter_map);
     result.push_back(candidate);
   }
   return result;
 }
+
 
 std::string Backend::remove_prefix(const std::string &original, const std::string &prefix)
 {

@@ -240,15 +240,18 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
                                            RelationGraph &relation_graph,
                                            module_set_t &module_set,
                                            CheckConsistencyResult &result,
-                                           const PhaseType& phase)
+                                           const PhaseType& phase,
+                                           profile_t &profile)
 {
   VariableFinder finder;
   for(auto constraint : constraints)
   {
+    timer::Timer timer;
     finder.visit_node(constraint);
+    profile["VisitNode"] += timer.get_elapsed_us();
   }
   CheckConsistencyResult tmp_result;
-  tmp_result = check_consistency(constraints, finder, phase);
+  tmp_result = check_consistency(constraints, finder, phase, profile);
 
   // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）
   if(!tmp_result.consistent_store.consistent())
@@ -258,9 +261,18 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
   else
   {
+    if(tmp_result.inconsistent_store.consistent())
+    {
+      // There may be some branches.
+      // TODO: 本来はここで論理和を取らないといけない．
+      result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
+    }
+
     // TODO: ここで変数表が必ずしもできるとは限らない．underconstraintの場合があるので対処する．
     result.consistent_store.add_constraint_store(tmp_result.consistent_store);
+    result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     vector<variable_map_t> create_result;
+    timer::Timer timer;
     if(phase == PointPhase)
     {
       backend->call("createVariableMap", 0, "", "cv", &create_result);
@@ -269,6 +281,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     {
       backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
     }
+    profile["CreateVMInCC"] += timer.get_elapsed_us();
     // TODO: deal with multiple variable map
     if(create_result.size() == 1)
     {
@@ -293,13 +306,15 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   HYDLA_LOGGER_DEBUG("");
   if(reuse)
   {
+    timer::Timer timer;
     ConstraintStore difference_constraints = difference_calculator.get_difference_constraints();
     vector<ConstraintStore> related_constraints_list;
     vector<module_set_t> related_modules_list;
     relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
+    profile["PreparationInCC"] += timer.get_elapsed_us();
     for(int i = 0; i < related_constraints_list.size(); i++)
     {
-      check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase);
+      check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
     }
   }
   else
@@ -308,11 +323,11 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     {
       ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
       module_set_t ms = relation_graph.get_modules(i);
-      check_consistency(tmp_constraint_store, relation_graph, ms, result, phase);
+      check_consistency(tmp_constraint_store, relation_graph, ms, result, phase, profile);
     }
   }
 
-  if(result.consistent_store.consistent())
+  if(result.inconsistent_store.empty())
   {
     result.inconsistent_store.set_consistency(false);
   }
@@ -336,10 +351,12 @@ vector<module_set_t> ConsistencyChecker::get_inconsistent_module_sets()
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const VariableFinder &finder, const PhaseType& phase)
+CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const VariableFinder &finder, const PhaseType& phase, profile_t &profile)
 {
+  timer::Timer timer;
   backend->call("resetConstraintForVariable", 0, "", "");
   add_continuity(finder, phase);
+  profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == PointPhase)?"csn":"cst";
   backend->call("addConstraint", 1, fmt, "", &constraint_store);

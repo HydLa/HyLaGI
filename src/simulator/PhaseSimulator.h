@@ -20,6 +20,37 @@ class AnalysisResultChecker;
 class UnsatCoreFinder;
 class ValueModifier;
 
+struct FindMinTimeCandidate
+{
+  value_t time;
+  bool on_time;
+  parameter_map_t parameter_map;
+};
+
+struct DCCandidate 
+{
+  value_t time;         /// 離散変化時刻
+  std::vector<int> ids; /// 原因となった条件のID
+  bool on_time;         /// 計算した時刻に条件が成り立つかどうか
+  /// condition for parameter in this case
+  parameter_map_t parameter_map;
+  DCCandidate(const value_t &t, const std::vector<int> &i, bool o, const parameter_map_t &p):time(t), ids(i), on_time(o), parameter_map(p){}
+  DCCandidate(){}
+};
+
+typedef std::list<DCCandidate> pp_time_result_t;
+
+
+typedef std::vector<FindMinTimeCandidate> find_min_time_result_t;
+
+struct CompareMinTimeResult
+{
+  std::vector<parameter_map_t> less_maps, greater_maps, equal_maps;
+};
+
+typedef CompareMinTimeResult compare_min_time_result_t;
+
+
 typedef std::vector<parameter_map_t>                       parameter_maps_t;
 
 typedef enum{
@@ -103,12 +134,14 @@ protected:
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
+
   const Opts *opts_;
 
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
   ask_set_t prev_asks_;
+  std::set<std::string> variable_names;
 
   int phase_sum_;
 
@@ -131,6 +164,7 @@ protected:
   void push_branch_states(simulation_todo_sptr_t &original,
     CheckConsistencyResult &result);
 
+  variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);
 
   /// ケースの選択時に使用する関数ポインタ
   int (*select_phase_)(result_list_t&);
@@ -142,9 +176,11 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
-  bool calculate_closure(simulation_todo_sptr_t& state);
+  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, int id);
 
   bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
+
+  bool calculate_closure(simulation_todo_sptr_t& state);
 
   CheckConsistencyResult check_consistency(const PhaseType &phase);
 
@@ -161,6 +197,8 @@ private:
   ConstraintDifferenceCalculator difference_calculator_;
 
   boost::shared_ptr<ValueModifier> value_modifier;
+
+  value_t max_time;
 
   bool validate;
 };
