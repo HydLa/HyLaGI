@@ -55,6 +55,7 @@ bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t par
 }
 
 void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
+    const std::vector<ask_t> &discrete_causes,
     const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
@@ -72,6 +73,9 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
       if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
     }
   }
+  //TODO: PPでprevは挿入しない
+  // unknown_asks.insert(discrete_causes.begin(), discrete_causes.end());
+  // std::cout << unknown_asks << std::endl;
 }
 
 void ConstraintDifferenceCalculator::set_symmetric_difference(

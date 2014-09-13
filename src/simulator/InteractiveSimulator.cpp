@@ -339,6 +339,46 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
+/*  if(todo->phase_type == PointPhase)
+  {
+    cout << "(approximate time)" << endl;
+    affine_transformer_->approximate_time(todo->current_time, todo->parent->variable_map, todo->prev_map, todo->parent->parameter_map, (todo->discrete_causes_map.begin()->first)->get_guard());
+    todo->parent->end_time = todo->current_time;
+  }
+  else
+  {
+    variable_map_t& vm = todo->parent->variable_map;
+    cout << "(approximate variable)" << endl;
+  
+    // 変数の選択
+    cout << "input variable name " << endl;
+    cout << '>';
+    string variable_str = excin<string>();
+
+    // TODO: 変数自体が幅を持つ場合への対応
+    // TODO: 時刻を近似したい場合への対応
+
+    variable_t var;
+
+    variable_map_t::iterator v_it  = vm.begin();
+    for(;v_it!=vm.end();v_it++){
+      if( v_it->first.get_string() == variable_str)
+      {
+        var = v_it->first;
+        break;
+      }
+    }
+    if(v_it == vm.end())
+    {
+      cout << "invalid variable name " << endl;
+      return 0;
+    }
+    affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (todo->discrete_causes_map.begin()->first)->get_guard());
+    todo->prev_map = vm;
+  }
+
+  todo->parameter_map = todo->parent->parameter_map;
+*/
   return 1;
 }
 
