@@ -25,8 +25,10 @@ public:
 
   node_sptr parse(
       node_sptr& assertion_node, 
-      DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, 
-      DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition
+      DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>&,
+      DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&,
+      DefinitionContainer<hydla::symbolic_expression::ExpressionListDefinition>&,
+      DefinitionContainer<hydla::symbolic_expression::ProgramListDefinition>&
   );
   
   node_sptr hydla_program();

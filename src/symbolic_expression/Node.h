@@ -1747,6 +1747,7 @@ public:
   }
 
   virtual void set_expression(node_sptr node){ expression_ = node;}
+  node_sptr get_expression(){ return expression_; }
   void set_string(const std::string& str){list_name_ = str;}
   virtual std::string get_string() const{return list_name_;}
 
@@ -1800,6 +1801,7 @@ public:
   }
 
   void set_program(node_sptr node){ program_ = node;}
+  node_sptr get_program(){ return program_; }
   void set_string(const std::string& str){list_name_ = str;}
   virtual std::string get_string() const{return list_name_;}
 

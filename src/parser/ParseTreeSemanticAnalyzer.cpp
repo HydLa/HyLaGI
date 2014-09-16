@@ -41,9 +41,13 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node){}
 ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
   DefinitionContainer<symbolic_expression::ConstraintDefinition>& constraint_definition,
   DefinitionContainer<symbolic_expression::ProgramDefinition>&    program_definition,
+  DefinitionContainer<symbolic_expression::ExpressionListDefinition>&    expression_list_definition,
+  DefinitionContainer<symbolic_expression::ProgramListDefinition>&    program_list_definition,
   parse_tree::ParseTree* parse_tree) :
     constraint_definition_(constraint_definition),
     program_definition_(program_definition),
+    expression_list_definition_(expression_list_definition),
+    program_list_definition_(program_list_definition),
     parse_tree_(parse_tree)
 {}
 
@@ -157,27 +161,58 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
                    node->actual_arg_size()));
 
   if(!node->get_child()) {
-    boost::shared_ptr<Definition> defnode;
-
-    // 制約定義から探す
-    boost::shared_ptr<ConstraintDefinition> cons_def(
-      constraint_definition_.get_definition(deftype));
-    if(cons_def) {
-      defnode = cons_def;
-    } else {
-      // プログラム定義から探す
-      boost::shared_ptr<ProgramDefinition> prog_def(
-        program_definition_.get_definition(deftype));
-      if(prog_def) {
-        defnode = prog_def;
-      } else {
-        throw UndefinedReference(node);
-      }
+    // プログラム定義から探す
+    boost::shared_ptr<ProgramDefinition> prog_def(
+      program_definition_.get_definition(deftype));
+    if(!prog_def){
+      throw UndefinedReference(node);
     }
 
     // 定義の展開
     node->set_child(
-      apply_definition(deftype, node, defnode));
+      apply_definition(deftype, node, prog_def));
+  }
+}
+
+// 式リスト呼び出し
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> node)         
+{
+  referenced_definition_t deftype(
+    std::make_pair(node->get_name(), 
+                   node->actual_arg_size()));
+
+  if(!node->get_child()) {
+    // プログラム定義から探す
+    boost::shared_ptr<ExpressionListDefinition> expr_list_def(
+      expression_list_definition_.get_definition(deftype));
+    if(!expr_list_def){
+      throw UndefinedReference(node);
+    }
+
+    // 定義の展開
+    node->set_child(
+      apply_definition(deftype, node, expr_list_def));
+  }
+}
+
+// プログラムリスト呼び出し
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)         
+{
+  referenced_definition_t deftype(
+    std::make_pair(node->get_name(), 
+                   node->actual_arg_size()));
+
+  if(!node->get_child()) {
+    // プログラム定義から探す
+    boost::shared_ptr<ProgramListDefinition> prog_list_def(
+      program_list_definition_.get_definition(deftype));
+    if(!prog_list_def){
+      throw UndefinedReference(node);
+    }
+
+    // 定義の展開
+    node->set_child(
+      apply_definition(deftype, node, prog_list_def));
   }
 }
 
@@ -419,47 +454,126 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionLis
 // ProgramList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
 {
-  // TODO: implement
-  assert(0);
+  node_sptr element;
+  for(int i = 0; i < node->get_arguments_size(); i++){
+    if(element){
+      element = boost::shared_ptr<Parallel>(new Parallel(element, node->get_argument(i)));
+    }else{
+      element = node->get_argument(i);
+    }
+  }
+  new_child_ = element;
 }
 
 // ConditionalProgramList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> node)
 {
-  // TODO: implement
-  assert(0);
+  boost::shared_ptr<ProgramList> program_list;
+  local_variables_in_list_.push(std::map<node_sptr, node_sptr>());
+  boost::shared_ptr<BinaryNode> condition;
+  std::vector<std::pair<node_sptr, std::pair<boost::shared_ptr<ArbitraryNode>,int> > > local_info;
+  std::vector<boost::shared_ptr<BinaryNode> > diff;
+  for(int i = 0; i < node->get_arguments_size(); i++){
+    condition = boost::dynamic_pointer_cast<EachElement>(node->get_argument(i)->clone());
+    if(condition){
+      boost::shared_ptr<ArbitraryNode> list;
+      boost::shared_ptr<BinaryNode> bn;
+      list = boost::dynamic_pointer_cast<ExpressionList>(condition->get_rhs());
+      if(list){
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+      list = boost::dynamic_pointer_cast<ProgramList>(condition->get_rhs());
+      if(list){
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+      list = boost::dynamic_pointer_cast<ConditionalExpressionList>(condition->get_rhs());
+      if(list){
+        accept(condition->get_rhs());
+        list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_->clone());
+        new_child_.reset();
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+      list = boost::dynamic_pointer_cast<ConditionalProgramList>(condition->get_rhs());
+      if(list){
+        accept(condition->get_rhs());
+        list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_->clone());
+        new_child_.reset();
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+      bn = boost::dynamic_pointer_cast<Range>(condition->get_rhs());
+      if(bn){
+        accept(condition->get_rhs());
+        list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_->clone());
+        new_child_.reset();
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+      bn = boost::dynamic_pointer_cast<Union>(condition->get_rhs());
+      if(bn){
+        accept(condition->get_rhs());
+        list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_->clone());
+        new_child_.reset();
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+      bn = boost::dynamic_pointer_cast<Intersection>(condition->get_rhs());
+      if(bn){
+        accept(condition->get_rhs());
+        list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_->clone());
+        new_child_.reset();
+        local_info.push_back(std::pair<node_sptr,std::pair<boost::shared_ptr<ArbitraryNode>,int> >(condition->get_lhs(),std::pair<boost::shared_ptr<ArbitraryNode>,int>(list,0)));
+        continue;
+      }
+    }
+    condition = boost::dynamic_pointer_cast<DifferentVariable>(node->get_argument(i)->clone());
+    if(condition) diff.push_back(condition);
+  }
+
+  boost::shared_ptr<ArbitraryNode> list;
+  bool loop = true;
+  while(loop){
+    // update index
+    for(int i = local_info.size()-1; i >= 0; i--){
+      if(local_info[i].second.second == local_info[i].second.first->get_arguments_size()){
+        local_info[i].second.second=0;
+      }else{
+        local_info[i].second.second++;
+        break;
+      }
+      loop = false;
+    }
+    for(int i = 0; i < local_info.size(); i++){
+      local_variables_in_list_.top()[local_info[i].first] = local_info[i].second.first->get_argument(local_info[i].second.second);
+    }
+    accept(node->get_program());
+    if(new_child_){
+      program_list->add_argument(new_child_);
+      new_child_.reset();
+    }else{
+      program_list->add_argument(node->get_program());
+    }
+  }
+  new_child_ = program_list;
 }
 
 // EachElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<EachElement> node)
 {
-  // TODO: implement
   assert(0);
 }
 
 // DifferentVariable
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<DifferentVariable> node)
 {
-  // TODO: implement
   assert(0);
 }
 
 // ExpressionListElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
-{
-  // TODO: implement
-  assert(0);
-}
-
-// ExpressionListCaller
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> node)
-{
-  // TODO: implement
-  assert(0);
-}
-
-// ProgramListCaller
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
 {
   // TODO: implement
   assert(0);
@@ -482,14 +596,113 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListDefinition
 // SizeOfList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SizeOfList> node)
 {
-  // TODO: implement
-  assert(0);
+  boost::shared_ptr<ArbitraryNode> list;
+  list = boost::dynamic_pointer_cast<ProgramList>(node->get_child()->clone());
+  if(list){
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
+  list = boost::dynamic_pointer_cast<ExpressionList>(node->get_child()->clone());
+  if(list){
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
+  list = boost::dynamic_pointer_cast<ConditionalExpressionList>(node->get_child()->clone());
+  if(list){
+    accept(node->get_child());
+    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_);
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
+  list = boost::dynamic_pointer_cast<ConditionalProgramList>(node->get_child()->clone());
+  if(list){
+    accept(node->get_child());
+    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_);
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
+  boost::shared_ptr<BinaryNode> bn = boost::dynamic_pointer_cast<Range>(node->get_child()->clone());
+  if(bn){
+    accept(bn);
+    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_);
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
+  bn = boost::dynamic_pointer_cast<Union>(node->get_child()->clone());
+  if(bn){
+    accept(bn);
+    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_);
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
+  bn = boost::dynamic_pointer_cast<Intersection>(node->get_child()->clone());
+  if(bn){
+    accept(bn);
+    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_);
+    new_child_ = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
+    return;
+  }
 }
 
 // SumOfList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SumOfList> node)
 {
-  // TODO: implement
+  boost::shared_ptr<ArbitraryNode> list;
+  list = boost::dynamic_pointer_cast<ExpressionList>(node->get_child()->clone());
+  if(list){
+    for(int i = 0; i < list->get_arguments_size(); i++){
+      if(i){
+        new_child_ = boost::shared_ptr<Plus>(new Plus(new_child_,list->get_argument(i)));
+      }else{
+        new_child_ = list->get_argument(i);
+      }
+    }
+    return;
+  }
+  list = boost::dynamic_pointer_cast<ConditionalExpressionList>(node->get_child()->clone());
+  if(list){
+    accept(node->get_child());
+    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child_);
+    for(int i = 0; i < list->get_arguments_size(); i++){
+      if(i){
+        new_child_ = boost::shared_ptr<Plus>(new Plus(new_child_,list->get_argument(i)));
+      }else{
+        new_child_ = list->get_argument(i);
+      }
+    }
+    return;
+  }
+  boost::shared_ptr<BinaryNode> bn;
+  bn = boost::dynamic_pointer_cast<Union>(node->get_child()->clone());
+  if(bn){
+    accept(node->get_child());
+    list = boost::dynamic_pointer_cast<ExpressionList>(new_child_);
+    if(list){
+      for(int i = 0; i < list->get_arguments_size(); i++){
+        if(i){
+          new_child_ = boost::shared_ptr<Plus>(new Plus(new_child_,list->get_argument(i)));
+        }else{
+          new_child_ = list->get_argument(i);
+        }
+      }
+      return;
+    }
+  }
+  bn = boost::dynamic_pointer_cast<Intersection>(node->get_child()->clone());
+  if(bn){
+    accept(node->get_child());
+    list = boost::dynamic_pointer_cast<ExpressionList>(new_child_);
+    if(list){
+      for(int i = 0; i < list->get_arguments_size(); i++){
+        if(i){
+          new_child_ = boost::shared_ptr<Plus>(new Plus(new_child_,list->get_argument(i)));
+        }else{
+          new_child_ = list->get_argument(i);
+        }
+      }
+      return;
+    }
+  }
   assert(0);
 }
 

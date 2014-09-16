@@ -39,7 +39,12 @@ node_sptr Parser::is_defined(boost::shared_ptr<Definition> definition){
   return ret; 
 }
 
-node_sptr Parser::parse(node_sptr& an, DefinitionContainer<ConstraintDefinition> &cd, DefinitionContainer<ProgramDefinition> &pd){
+node_sptr Parser::parse(node_sptr& an, 
+    DefinitionContainer<ConstraintDefinition> &cd, 
+    DefinitionContainer<ProgramDefinition> &pd,
+    DefinitionContainer<ExpressionListDefinition> &eld,
+    DefinitionContainer<ProgramListDefinition> &pld
+){
   parse();
   if(!error_info.empty()){
     std::cout << "error occured while parsing" << std::endl;
@@ -60,6 +65,12 @@ node_sptr Parser::parse(node_sptr& an, DefinitionContainer<ConstraintDefinition>
   }
   for(auto program_definition : program_definitions){
     pd.add_definition(program_definition);
+  }
+  for(auto expression_list_definition : expression_list_definitions){
+    eld.add_definition(expression_list_definition);
+  }
+  for(auto program_list_definition : program_list_definitions){
+    pld.add_definition(program_list_definition);
   }
   return parsed_program;
 }
@@ -209,7 +220,7 @@ node_sptr Parser::statement(){
       }else{
         node_sptr tmp;
         if((tmp = expression_list())){
-          pld->set_child(tmp);
+          eld->set_child(tmp);
           position_t tmp_position = lexer.get_current_position();
           if(lexer.get_token() == PERIOD){
             expression_list_definitions.push_back(eld);

@@ -17,8 +17,10 @@ public:
   typedef symbolic_expression::node_sptr                 node_sptr;
 
   ParseTreeSemanticAnalyzer(
-    DefinitionContainer<symbolic_expression::ConstraintDefinition>& constraint_definition,
-    DefinitionContainer<symbolic_expression::ProgramDefinition>&    program_definition,
+    DefinitionContainer<symbolic_expression::ConstraintDefinition>&,
+    DefinitionContainer<symbolic_expression::ProgramDefinition>&,
+    DefinitionContainer<symbolic_expression::ExpressionListDefinition>&,
+    DefinitionContainer<symbolic_expression::ProgramListDefinition>&,
     parse_tree::ParseTree* parse_tree);
   
   virtual ~ParseTreeSemanticAnalyzer();
@@ -227,6 +229,20 @@ private:
    */
   DefinitionContainer<symbolic_expression::ProgramDefinition>&    
     program_definition_;
+
+  /**
+   * 式リスト定義の情報
+   */
+  DefinitionContainer<symbolic_expression::ExpressionListDefinition>& 
+    expression_list_definition_;
+
+  /**
+   * プログラムリスト定義の情報
+   */
+  DefinitionContainer<symbolic_expression::ProgramListDefinition>& 
+    program_list_definition_;
+
+  std::stack<std::map<node_sptr, node_sptr> > local_variables_in_list_;  
 
   parse_tree::ParseTree* parse_tree_;
   
