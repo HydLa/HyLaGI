@@ -68,3 +68,6 @@ endif
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
 	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
 	$(MV) $@.tmp $@
+
+check-syntax:
+	$(CXX) -o nul $(CXXFLAGS) -S ${CHK_SOURCES}

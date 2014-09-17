@@ -13,19 +13,16 @@ void ConstraintDifferenceCalculator::calculate_difference_constraints(const simu
   
   ConstraintStore current_constraints = relation_graph->get_constraints();
   ConstraintStore difference_constraints;
-  if(todo->parent->phase_type == IntervalPhase){
-    set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
-  }
-  else{
-    set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
+  set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
+  if(todo->parent->phase_type == PointPhase){
     difference_constraints.add_constraint_store(todo->parent->changed_constraints);
-    for(auto cause : todo->discrete_causes){
-      if(!cause.second) difference_constraints.add_constraint(cause.first->get_child());
+    for(auto cause : todo->discrete_positive_asks){
+      if(!cause.on_time) difference_constraints.add_constraint(cause.ask->get_child());
+    }
+    for(auto cause : todo->discrete_negative_asks){
+      if(!cause.on_time) difference_constraints.add_constraint(cause.ask->get_child());
     }
   }
-  
-  ConstraintStore tmp_constraints;
-  module_set_t module_set;
 
   //TODO: IPã§prevã‚’åŒºåˆ¥ã™ã‚‹
   for(auto constraint : difference_constraints){
@@ -51,8 +48,12 @@ bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t 
   finder.visit_node(guard);
   variable_set_t variables(finder.get_all_variable_set());
   finder.clear();
-  for(auto cause : todo->discrete_causes){
-    if(!cause.second) finder.visit_node(cause.first->get_child());
+
+  for(auto cause : todo->discrete_positive_asks){
+    if(!cause.on_time) finder.visit_node(cause.ask->get_child());
+  }
+  for(auto cause : todo->discrete_negative_asks){
+    if(!cause.on_time) finder.visit_node(cause.ask->get_child());
   }
   variable_set_t changing_variables(finder.get_all_variable_set());
 
@@ -67,7 +68,6 @@ bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t 
 }
 
 void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
-    const std::map<ask_t, bool> &discrete_causes,
     const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
@@ -85,9 +85,11 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
       if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
     }
   }
+/* TODO: ‚±‚ê‚ª‰½‚È‚Ì‚©l‚¦‚é
   for(auto ask : discrete_causes){
     if(!positive_asks.count(ask.first) && !negative_asks.count(ask.first)) unknown_asks.insert(ask.first);
   }
+*/
 
 /*
   std::cout<<"positive_asks: "<<positive_asks<<std::endl;

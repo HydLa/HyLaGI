@@ -39,6 +39,15 @@ typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_pre
 typedef std::vector<variable_map_t>      variable_maps_t;
 typedef std::map<std::string, unsigned int> profile_t;
 
+
+struct DiscreteAsk
+{
+  /// a struct for asks which cause discrete changes
+  ask_t ask;
+  bool on_time;   /// indicate whether the entailablity changes on time
+  DiscreteAsk(const ask_t& a, bool o):ask(a), on_time(o){}
+};
+
 /**
  * シミュレーションすべきフェーズを表す構造体
  */
@@ -49,16 +58,17 @@ struct SimulationTodo{
   /// 左極限値のマップ
   variable_map_t            prev_map;
   parameter_map_t           parameter_map;
-  ask_set_t           positive_asks;
-  ask_set_t           negative_asks;
+  ask_set_t                 positive_asks;
+  ask_set_t                 negative_asks;
   
-  std::map<ask_t, bool>     discrete_causes;
+  std::list<DiscreteAsk>    discrete_positive_asks, discrete_negative_asks;
   next_pp_candidate_map_t   next_pp_candidate_map; 
   always_set_t              expanded_always;
 
   ConstraintStore           expanded_constraints;
   ConstraintStore           initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
-  ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約
+  ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約．TODO:expanded_constraintsとの役割分担について考える．
+  ConstraintStore           diff_constraints;
   
   entailed_prev_map_t       judged_prev_map;
 

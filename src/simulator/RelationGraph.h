@@ -5,6 +5,7 @@
 #include "ModuleSetContainer.h"
 #include "TreeVisitorForAtomicConstraint.h"
 #include "ConstraintStore.h"
+#include <stack>
 
 namespace hydla {
 namespace simulator {
@@ -15,6 +16,8 @@ namespace simulator {
  */
 class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
 
+// TODO: 数式のnodeとグラフ上のnodeが混じって大変なことになっているので分離したい
+
 public:
   typedef hierarchy::ModuleSet module_set_t;
   typedef hierarchy::ModuleSet::module_t module_t;
@@ -22,8 +25,8 @@ public:
   
   struct VariableNode;
   struct ConstraintNode;
-  typedef std::vector<VariableNode* > var_nodes_t;
-  typedef std::vector<ConstraintNode* > constraint_nodes_t;
+  typedef std::list<VariableNode* > var_nodes_t;
+  typedef std::list<ConstraintNode* > constraint_nodes_t;
 
   struct EdgeToVariable
   {
@@ -49,10 +52,10 @@ public:
     bool module_adopted; /// whether the module is in ms
     bool expanded; /// whether the guard of the constraint is entailed
     std::vector<EdgeToVariable> edges;
-    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(true)
+    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(false)
     {}
     std::string get_name() const;
-    bool active() const;
+    bool is_active() const;
   };
   
   /**
@@ -166,6 +169,24 @@ public:
   ConstraintStore get_adopted_constraints();
 
   /**
+   * commit diffs of constraints
+   */
+  void commit_diff();
+  
+  /**
+   * revert diffs of constraints
+   * @parameter step_num # of step for revert. if larger than zero, the recent step_num commits will be discarded
+   */
+  void revert_diff(uint step_num = 0);
+
+  /**
+   * get diffs of constraints
+   */
+  ConstraintStore get_all_diffs();
+  ConstraintStore get_diff_positives();
+  ConstraintStore get_diff_negatives();
+
+  /**
    * if true, the left hand limit is regareded as a constant (ignoring its relation)
    */
   void set_ignore_prev(bool);
@@ -206,6 +227,10 @@ private:
   std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
   std::map<constraint_t, ConstraintNode*> constraint_node_map;
   std::map<Variable, VariableNode*> variable_node_map;
+  typedef std::map<ConstraintNode*, bool> diff_t;
+  std::stack<diff_t> expanded_stack, adopted_stack;
+  std::list<std::stack<diff_t>* > diff_stacks;
+
   VisitMode visit_mode;
   bool ignore_prev;
 };

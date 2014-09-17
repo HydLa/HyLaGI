@@ -1,6 +1,6 @@
 // http://www-inst.cs.berkeley.edu/~ee291e/sp09/handouts/book.pdf
 // p57
-xs := x1..x50.
+xs := x1..x10.
 
 WATER <=> [](w = 30).
 

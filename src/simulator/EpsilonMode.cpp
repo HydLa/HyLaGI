@@ -100,9 +100,10 @@ hydla::simulator::pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_t
     std::cout << "IntervalPhase " << phase->id << std::endl;
   std::cout << "Next Phase Case Count\t: " << time_result.size() << std::endl;
 #endif
-  unsigned int time_it;
+
   pp_time_result_t eps_time_result;
 /* TODO: implement
+  unsigned int time_it;
   for(time_it=0;time_it < time_result.size();time_it++)
   {
 #ifdef _DEBUG_REDUCE_UNSUIT

@@ -297,36 +297,24 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
   result_maps.clear();
   result_maps.push_back(variable_map_t());
   HYDLA_LOGGER_DEBUG("");
-  if(reuse)
-  {
-    timer::Timer timer;
-    ConstraintStore difference_constraints = difference_calculator.get_difference_constraints();
-    vector<ConstraintStore> related_constraints_list;
-    vector<module_set_t> related_modules_list;
-    relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
-    profile["PreparationInCC"] += timer.get_elapsed_us();
-    for(int i = 0; i < related_constraints_list.size(); i++)
-    {
-      check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
-    }
-  }
-  else
-  {
-    for(int i = 0; i < relation_graph.get_connected_count(); i++)
-    {
-      ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
-      module_set_t ms = relation_graph.get_modules(i);
-      check_consistency(tmp_constraint_store, relation_graph, ms, result, phase, profile);
-    }
-  }
 
+  timer::Timer timer;
+  vector<ConstraintStore> related_constraints_list;
+  vector<module_set_t> related_modules_list;
+  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
+  profile["PreparationInCC"] += timer.get_elapsed_us();
+  for(int i = 0; i < related_constraints_list.size(); i++)
+  {
+    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
+  }
+  
   if(result.inconsistent_store.empty())
   {
     result.inconsistent_store.set_consistency(false);

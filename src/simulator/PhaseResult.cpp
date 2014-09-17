@@ -101,8 +101,8 @@ PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& 
   diff_negative_asks(todo.negative_asks),
   step(todo.parent->step + 1),
   cause_for_termination(cause),
-  full_information(nullptr),
-  parent(todo.parent.get())
+  parent(todo.parent.get()),
+  full_information(nullptr)
 {
 }
 

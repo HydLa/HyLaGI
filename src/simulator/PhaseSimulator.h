@@ -30,11 +30,11 @@ struct FindMinTimeCandidate
 struct DCCandidate 
 {
   value_t time;         /// 離散変化時刻
-  std::vector<int> ids; /// 原因となった条件のID
-  bool on_time;         /// 計算した時刻に条件が成り立つかどうか
+  std::list<DiscreteAsk>        diff_positive_asks, /// newly entailed asks
+                                diff_negative_asks; /// newly not entailed asks
   /// condition for parameter in this case
   parameter_map_t parameter_map;
-  DCCandidate(const value_t &t, const std::vector<int> &i, bool o, const parameter_map_t &p):time(t), ids(i), on_time(o), parameter_map(p){}
+  DCCandidate(const value_t &t, const std::list<DiscreteAsk> &dp, const std::list<DiscreteAsk> &dn, const parameter_map_t &p):time(t), diff_positive_asks(dp), diff_negative_asks(dn), parameter_map(p){}
   DCCandidate(){}
 };
 
@@ -120,13 +120,10 @@ protected:
    * 新たなsimulation_todo_sptr_tの作成
    */
   simulation_todo_sptr_t create_new_simulation_phase(const simulation_todo_sptr_t& old) const;
-
   /**
    * PPモードとIPモードを切り替える
    */
   void set_simulation_mode(const PhaseType& phase);
-
-
   Simulator* simulator_;
 
   void replace_prev2parameter(
@@ -176,7 +173,7 @@ private:
 
   phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
 
-  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, int id);
+  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
 
   bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
