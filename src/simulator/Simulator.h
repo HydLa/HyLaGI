@@ -205,19 +205,13 @@ protected:
 
   parse_tree_sptr parse_tree_;  
 
-  /**
-   * a container for candidate module sets
-   */
+  /// container for candidate module sets
   module_set_container_sptr module_set_container_;
   
-  /**
-   * vector for results of profiling
-   */
+  /// vector for results of profiling
   boost::shared_ptr<entire_profile_t> profile_vector_;
 
-  /** 
-   * root of the tree of result trajectories
-   */
+  /// root of the tree of result trajectories
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;

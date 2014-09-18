@@ -23,8 +23,8 @@ namespace simulator
 
 using namespace std;
 using namespace boost;
-using namespace backend;
 
+using namespace backend;
 using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
@@ -39,9 +39,17 @@ void PhaseSimulator::process_todo(simulation_todo_sptr_t &todo)
   timer::Timer phase_timer;
   module_set_container->reset(todo->ms_to_visit);
   make_results_from_todo(todo);
-  for(auto phase : todo->children)
+  if(todo->children.empty())
   {
-    make_next_todo(phase, todo);
+    phase_result_sptr_t phase(new PhaseResult(*todo, INCONSISTENCY));
+    todo->parent->children.push_back(phase);
+  }
+  else
+  {
+    for(auto phase : todo->children)
+    {
+      make_next_todo(phase, todo);
+    }
   }
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();  
 }
@@ -119,9 +127,11 @@ void PhaseSimulator::make_results_from_todo(simulation_todo_sptr_t& todo)
       else if(todo->phase_type == IntervalPhase)
       {
         // IP のガード条件はこの時点では判定が難しいので，すべてoffにしておくことにする．TODO: どうにかする．
+        todo->positive_asks.clear();
         for(auto ask : all_asks)
         {
           relation_graph_->set_expanded(ask->get_child(), false);
+          todo->negative_asks.insert(ask);
         }
       }
     }

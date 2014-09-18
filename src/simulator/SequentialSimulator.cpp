@@ -63,32 +63,22 @@ void SequentialSimulator::DFS(phase_result_sptr_t current)
   while(!current->todo_list.empty())
   {
     simulation_todo_sptr_t todo = current->todo_list.front();
-    HYDLA_LOGGER_DEBUG_VAR(*todo);
     process_one_todo(todo);
-    if(todo->children.empty())
+    for(int i = 0; i < todo->children.size(); i++)
     {
-      phase_result_sptr_t phase(new PhaseResult(*todo, INCONSISTENCY));
-      todo->parent->children.push_back(phase);
-    }
-    else
-    {
-      for(int i = 0; i < todo->children.size(); i++)
-      {
-        phase_result_sptr_t next_phase = todo->children[i];
-        HYDLA_LOGGER_DEBUG_VAR(*next_phase);
-        /* TODO: assertion違反が検出された場合の対応
-           if(phase->cause_for_termination == ASSERTION)
-           {
-           HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
-           if(opts_->stop_at_failure)break;
-           else continue;
-           }
-        */
-        if(opts_->dump_in_progress){
-          printer.output_one_phase(next_phase);
-        }
-        DFS(next_phase);
+      phase_result_sptr_t next_phase = todo->children[i];
+      /* TODO: assertion違反が検出された場合の対応
+         if(phase->cause_for_termination == ASSERTION)
+         {
+         HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
+         if(opts_->stop_at_failure)break;
+         else continue;
+         }
+      */
+      if(opts_->dump_in_progress){
+        printer.output_one_phase(next_phase);
       }
+      DFS(next_phase);
     }
     current->todo_list.pop_front();
   }

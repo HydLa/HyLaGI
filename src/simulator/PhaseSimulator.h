@@ -31,11 +31,19 @@ struct DCCandidate
                                 diff_negative_asks; /// newly not entailed asks
   /// condition for parameter in this case
   parameter_map_t parameter_map;
-  DCCandidate(const value_t &t, const std::list<DiscreteAsk> &dp, const std::list<DiscreteAsk> &dn, const parameter_map_t &p):time(t), diff_positive_asks(dp), diff_negative_asks(dn), parameter_map(p){}
+  DCCandidate(const value_t                &t,
+              const std::list<DiscreteAsk> &dp,
+              const std::list<DiscreteAsk> &dn,
+              const parameter_map_t &p)
+                :time(t),
+                 diff_positive_asks(dp),
+                 diff_negative_asks(dn),
+                 parameter_map(p)
+    {}
   DCCandidate(){}
 };
 
-typedef std::list<DCCandidate> pp_time_result_t;
+typedef std::list<DCCandidate>            pp_time_result_t;
 typedef std::vector<FindMinTimeCandidate> find_min_time_result_t;
 
 struct CompareMinTimeResult
@@ -67,12 +75,30 @@ private:
 
   void simulate_ms(const module_set_t& unadopted_ms, simulation_todo_sptr_t& state, constraint_diff_t &local_diff);
 
-  Simulator* simulator_;
-
   void replace_prev2parameter(
                               PhaseResult &phase,
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
+
+  variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);
+
+  phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
+
+  void make_results_from_todo(simulation_todo_sptr_t& todo);
+
+  void push_branch_states(simulation_todo_sptr_t &original,
+                          CheckConsistencyResult &result);
+
+  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
+
+  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
+
+  bool calculate_closure(simulation_todo_sptr_t& state, constraint_diff_t &local_diff);
+
+ 	/// make todos from given phase_result
+  void make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
+
+  Simulator* simulator_;
 
   const Opts *opts_;
 
@@ -82,38 +108,15 @@ private:
   ask_set_t prev_asks_;
   std::set<std::string> variable_names;
 
-
   module_set_container_sptr msc_no_init_;
 
   phase_result_sptr_t result_root;
-
-  variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);
-
-  phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
-
-  void make_results_from_todo(simulation_todo_sptr_t& todo);
-
-
-  void push_branch_states(simulation_todo_sptr_t &original,
-                          CheckConsistencyResult &result);
-
-  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
-
-  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
-
-  bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
-
-  bool calculate_closure(simulation_todo_sptr_t& state, constraint_diff_t &local_diff);
-
-  CheckConsistencyResult check_consistency(const PhaseType &phase);
-
- 	/// make todos from given phase_result
-  void make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
 
 
   boost::shared_ptr<RelationGraph> relation_graph_;
   boost::shared_ptr<AskRelationGraph> guard_relation_graph_;
 
+  bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
   int                                   phase_sum_;
