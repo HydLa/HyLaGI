@@ -46,17 +46,10 @@ void PhaseSimulator::process_todo(simulation_todo_sptr_t &todo)
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();  
 }
 
-PhaseSimulator::result_list_t PhaseSimulator::calculate_phase_result(simulation_todo_sptr_t& todo)
-{
-  result_list_t result;
-  // do nothing
-  return result;
-}
 
 void PhaseSimulator::make_results_from_todo(simulation_todo_sptr_t& todo)
 {
   timer::Timer preprocess_timer;
-  result_list_t result;
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
@@ -64,10 +57,8 @@ void PhaseSimulator::make_results_from_todo(simulation_todo_sptr_t& todo)
   consistency_checker->set_prev_map(&todo->prev_map);
   if(todo->phase_type == PointPhase)
   {
-    set_simulation_mode(PointPhase);
     relation_graph_->set_ignore_prev(true);
   }else{
-    set_simulation_mode(IntervalPhase);
     relation_graph_->set_ignore_prev(false);
   }
   if(todo->parent == result_root)
@@ -172,16 +163,13 @@ void PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_to
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   todo->profile["# of CalculateClosure"]++;
 
-  // suspected
   if(!consistent)
   {
-    timer::Timer timer;
     HYDLA_LOGGER_DEBUG("INCONSISTENT");
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       module_set_container->generate_new_ms(todo->unadopted_mss, module_set);
     }
-    todo->profile["MscGenerateNewMS"] += timer.get_elapsed_us();
     return; 
   }
   HYDLA_LOGGER_DEBUG("CONSISTENT");
@@ -190,10 +178,8 @@ void PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_to
 
   // suspected
   {
-    timer::Timer timer;
     module_set_container->remove_included_ms_by_current_ms();
     todo->unadopted_mss.insert(unadopted_ms);
-    todo->profile["RemoveIncludedMs"] += timer.get_elapsed_us();
   }
 
   phase_result_sptr_t phase = make_new_phase(todo);
@@ -316,7 +302,7 @@ void PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_to
 }
 
 void PhaseSimulator::push_branch_states(simulation_todo_sptr_t &original, CheckConsistencyResult &result){
-  simulation_todo_sptr_t branch_state_false(create_new_simulation_phase(original));
+  simulation_todo_sptr_t branch_state_false(new SimulationTodo(*original));
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
@@ -411,12 +397,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   value_modifier.reset(new ValueModifier(*backend_));
 }
 
-simulation_todo_sptr_t PhaseSimulator::create_new_simulation_phase(const simulation_todo_sptr_t& old) const
-{
-  simulation_todo_sptr_t sim(new SimulationTodo(*old));
-  return sim;
-}
-
 void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
                                             variable_map_t &vm,
                                             parameter_map_t &parameter_map)
@@ -467,11 +447,6 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
 {
   backend_ = back;
   consistency_checker.reset(new ConsistencyChecker(backend_));
-}
-
-void PhaseSimulator::set_simulation_mode(const PhaseType& phase)
-{
-  current_phase_ = phase;
 }
 
 bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state, constraint_diff_t &local_diff)
@@ -626,7 +601,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_
   }
   next_todo->parameter_map = phase->parameter_map;
 
-  if(current_phase_ == PointPhase)
+  if(current_todo->phase_type == PointPhase)
   {
     next_todo->phase_type = IntervalPhase;
     next_todo->current_time = phase->current_time;
@@ -824,7 +799,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_
       candidate.time = max_time;
       time_result.push_back(candidate);
     }
-    result_list_t results;
     phase_result_sptr_t pr = next_todo->parent;
     // まずインタラクティブ実行のために最小限の情報だけ整理する
     auto time_it = time_result.begin();
@@ -832,26 +806,14 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_
     while(true)
     {
       DCCandidate &candidate = *time_it;
-      // 直接代入すると，値の上限も下限もない記号定数についての枠が無くなってしまうので，追加のみを行う．
+      // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
       for(auto par_entry : candidate.parameter_map ){
         pr->parameter_map[par_entry.first] = par_entry.second;
       }
       pr->end_time = current_todo->current_time + candidate.time;
       backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
-      results.push_back(pr);
-      if(++time_it == time_result.end())break;
-      pr = make_new_phase(pr);
+
       current_todo->children.push_back(pr);
-    }
-
-    unsigned int result_it = 0;
-
-    // todoを実際に作成する
-    time_it = time_result.begin();
-    while(true)
-    {
-      pr = results[result_it];
-      DCCandidate &candidate = *time_it++;
       if(candidate.time.undefined() || candidate.time.infinite() )
       {
         pr->cause_for_termination = simulator::TIME_LIMIT;
@@ -879,8 +841,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_
   ret.push_back(next_todo);
   }
 */
-      if(++result_it >= results.size())break;
-      next_todo = create_new_simulation_phase(next_todo);
+      if(++time_it == time_result.end())break;
+      pr = make_new_phase(pr);
+      next_todo.reset(new SimulationTodo(*next_todo));
     }
   }
   phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
@@ -918,7 +881,7 @@ void PhaseSimulator::compare_min_time(pp_time_result_t &existing, const find_min
         for(auto equal_map : compare_result.equal_maps)
         {
        
-j          std::list<DiscreteAsk> positives = existing_it->diff_positive_asks,
+          std::list<DiscreteAsk> positives = existing_it->diff_positive_asks,
                                  negatives = existing_it->diff_negative_asks;
           if(positive) positives.push_back(DiscreteAsk(ask, newcomer.on_time));
           else negatives.push_back(DiscreteAsk(ask, newcomer.on_time));

@@ -53,8 +53,6 @@ public:
   
 protected:
   
-  static int select_phase(PhaseSimulator::result_list_t& results);
-  
   /**
    * 入力を受付けつつ，コマンドを処理する
    * @return 0:終了 1~: シミュレーションするステップの数

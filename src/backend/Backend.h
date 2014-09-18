@@ -17,7 +17,7 @@ typedef hydla::simulator::parameter_t     parameter_t;
 typedef hydla::simulator::variable_set_t  variable_set_t;
 typedef hydla::simulator::ConstraintStore constraint_store_t;
 typedef hydla::simulator::find_min_time_result_t find_min_time_result_t;
-typedef hydla::simulator::compare_min_time_result_t compare_min_time_result_t;
+typedef hydla::simulator::CompareMinTimeResult compare_min_time_result_t;
 typedef Link::VariableForm        variable_form_t;
 typedef hydla::symbolic_expression::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;

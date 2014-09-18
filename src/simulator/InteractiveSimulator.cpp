@@ -63,9 +63,10 @@ phase_result_sptr_t InteractiveSimulator::simulate()
     try
     {
       timer::Timer phase_timer;
-      PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
+      phase_simulator_->process_todo(todo);
 
-      phase_result_sptr_t phase;
+/*
+  TODO:implement
       if(phases.empty())
       {
         simulation_todo_sptr_t tmp_todo = todo;
@@ -83,6 +84,7 @@ phase_result_sptr_t InteractiveSimulator::simulate()
         unsigned int select_num = select_case<phase_result_sptr_t>(phases);
         phase = phases[select_num];
       }
+*/
 
       //TODO: implement
       /*
@@ -375,12 +377,6 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   todo->parameter_map = todo->parent->parameter_map;
 
   return 1;
-}
-
-
-int InteractiveSimulator::select_phase(PhaseSimulator::result_list_t& results)
-{
-  return select_case<phase_result_sptr_t>(results);
 }
 
 /*

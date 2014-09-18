@@ -162,7 +162,7 @@ map<string, int> ConsistencyChecker::get_differential_map(variable_set_t &vs)
   return dm;
 }
 
-ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
+CheckEntailmentResult ConsistencyChecker::check_entailment(
   RelationGraph &relation_graph,
   CheckConsistencyResult &cc_result,
   const ask_t &guard,

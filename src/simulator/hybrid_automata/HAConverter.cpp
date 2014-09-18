@@ -60,6 +60,7 @@ phase_result_sptr_t HAConverter::simulate()
 	
 void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
 {
+/* TODO: implement
   hydla::io::SymbolicTrajPrinter printer(backend, opts_->output_variables, std::cerr);
 
   HYDLA_LOGGER_DEBUG("************************\n");
@@ -128,6 +129,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
     todo->parent->children.push_back(phase);
   }
+*/
 }
 
 bool HAConverter::check_already_exec(phase_result_sptr_t phase, current_condition_t cc)

@@ -12,6 +12,14 @@ struct CheckConsistencyResult
   ConstraintStore consistent_store, inconsistent_store;
 };
 
+typedef enum{
+  ENTAILED,
+  CONFLICTING,
+  BRANCH_VAR,
+  BRANCH_PAR
+} CheckEntailmentResult;
+
+
 class VariableFinder;
 class ConstraintDifferenceCalculator;
 
@@ -19,12 +27,6 @@ class ConsistencyChecker{
 
 public:
 
-  typedef enum{
-    ENTAILED,
-    CONFLICTING,
-    BRANCH_VAR,
-    BRANCH_PAR
-  } CheckEntailmentResult;
 
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
