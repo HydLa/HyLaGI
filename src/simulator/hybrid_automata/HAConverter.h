@@ -17,7 +17,7 @@ public:
 
   virtual ~HAConverter();
 
-  virtual phase_result_const_sptr_t simulate();
+  virtual phase_result_sptr_t simulate();
 
   virtual void process_one_todo(simulation_todo_sptr_t& todo);
 	

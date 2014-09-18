@@ -7,7 +7,6 @@
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
 #include "HASimulator.h"
-#include "ParallelSimulator.h"
 #include "MathematicaLink.h"
 #include "REDUCELinkFactory.h"
 #include "Backend.h"
@@ -177,10 +176,12 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   {
     simulator_ = new InteractiveSimulator(opts);
   }
+/* TODO: implement
   else if(opts.parallel_mode)
   {
     simulator_ = new ParallelSimulator(opts);
   }
+*/
   else if(opts.ha_convert_mode)
   {
     simulator_ = new HAConverter(backend, opts);
@@ -209,7 +210,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   }
 
   simulator_->set_backend(backend);
-  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts, po.count("without_validation")==0));
+  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
   simulator_->initialize(parse_tree);
   simulator_->simulate();
   if(!opts.ha_convert_mode)

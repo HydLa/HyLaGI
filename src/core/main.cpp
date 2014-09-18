@@ -19,6 +19,7 @@
 #include "IncrementalModuleSet.h"
 
 #include "SequentialSimulator.h"
+#include "Logger.h"
 #include "SignalHandler.h"
 
 // namespace

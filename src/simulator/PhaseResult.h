@@ -26,10 +26,9 @@ typedef enum{
   SOME_ERROR,
   INCONSISTENCY,
   ASSERTION,
-  OTHER_ASSERTION,
   TIME_OUT_REACHED,
   NOT_UNIQUE_IN_INTERVAL,
-  NOT_SELECTED,
+  NOT_SIMULATED,
   INTERRUPTED,
   NONE
 }CauseForTermination;
@@ -51,8 +50,10 @@ typedef std::set<boost::shared_ptr<symbolic_expression::Always> >  always_set_t;
 typedef hierarchy::ModuleSet                              module_set_t;
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
-typedef boost::shared_ptr<const PhaseResult>              phase_result_const_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
+
+typedef boost::shared_ptr<SimulationTodo>                 simulation_todo_sptr_t;
+typedef std::list<simulation_todo_sptr_t>                 todo_list_t;
 
 typedef Value                                             value_t;
 typedef ValueRange                                        range_t;
@@ -66,6 +67,8 @@ typedef std::map<parameter_t, range_t, ParameterComparator>                   pa
 typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
+
+typedef std::map<constraint_t, bool> constraint_diff_t;
 
 struct FullInformation
 {
@@ -109,22 +112,27 @@ public:
   ask_set_t                    get_all_negative_asks();
   ask_set_t                    diff_positive_asks, diff_negative_asks;
 
+  constraint_diff_t            adopted_modules_diff, expanded_diff;
+
   void                         set_full_information(FullInformation *); /// instance pointed by given pointer will be freed internally
   
   int                          step;
   module_set_t                 module_set;
   ConstraintStore              current_constraints;
   ConstraintStore              changed_constraints;
-  next_pp_candidate_map_t      next_pp_candidate_map; 
+  next_pp_candidate_map_t      next_pp_candidate_map;
 
   CauseForTermination cause_for_termination;
   /// A set of succeeding phases
   phase_result_sptrs_t children;
+  
+  todo_list_t      todo_list;
+  
   /// A preceding phase
   PhaseResult *parent;
 
   PhaseResult();
-  PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NONE);
+  PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NOT_SIMULATED);
   ~PhaseResult();
 
 private:
@@ -133,15 +141,11 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);
-
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
-
 std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
 std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
-
 std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
-
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a);
 
 } // namespace simulator

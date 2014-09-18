@@ -61,6 +61,8 @@ struct SimulationTodo{
   ask_set_t                 positive_asks;
   ask_set_t                 negative_asks;
   
+  constraint_diff_t         adopted_modules_diff, expanded_diff;
+  
   std::list<DiscreteAsk>    discrete_positive_asks, discrete_negative_asks;
   next_pp_candidate_map_t   next_pp_candidate_map; 
   always_set_t              expanded_always;
@@ -74,6 +76,9 @@ struct SimulationTodo{
 
   /// 前のフェーズ
   phase_result_sptr_t parent;
+
+  /// このTodoから続くフェーズ
+  phase_result_sptrs_t children;
 
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   module_set_set_t ms_to_visit;
@@ -97,7 +102,6 @@ struct SimulationTodo{
 
 std::ostream& operator<<(std::ostream& s, const SimulationTodo& a);
 
-typedef boost::shared_ptr<SimulationTodo>     simulation_todo_sptr_t;
 // プロファイリング結果全体
 // 各Todoごとにかかった時間（現状では，Todoそのものを保存している）
 typedef std::vector<simulation_todo_sptr_t> entire_profile_t;
@@ -106,41 +110,6 @@ class PhaseSimulator;
 
 typedef PhaseResult                                       phase_result_t;
 typedef PhaseSimulator                                    phase_simulator_t;
-
-typedef boost::shared_ptr<SimulationTodo>                simulation_todo_sptr_t;
-
-
-class TodoContainer
-{
-  public:
-  virtual ~TodoContainer(){}
-  virtual void push_todo(simulation_todo_sptr_t& todo)
-  {
-    container_.push_back(todo);
-  }
-  
-  virtual simulation_todo_sptr_t pop_todo()
-  {
-    simulation_todo_sptr_t todo = container_.back();
-    container_.pop_back();
-    return todo;
-  }
-  
-  virtual bool empty()
-  {
-    return container_.empty();
-  }
-  
-  virtual int size()
-  {
-    return container_.size();
-  }
-  
-  protected:
-  std::deque<simulation_todo_sptr_t> container_;
-};
-
-typedef TodoContainer                                    todo_container_t;
 
 typedef std::set<variable_t, VariableComparator>                            variable_set_t;
 
@@ -156,7 +125,7 @@ public:
    * simulate using given parse_tree
    * @return root of the tree which expresses the result-trajectories
    */
-  virtual phase_result_const_sptr_t simulate() = 0;
+  virtual phase_result_sptr_t simulate() = 0;
   
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
@@ -178,9 +147,11 @@ public:
   phase_result_sptr_t get_result_root() const {return result_root_;}
   
   /**
-   * push the initial state of simulation into the stack
+   *  the initial state of simulation into the stack
    */
   virtual simulation_todo_sptr_t make_initial_todo();
+
+  virtual simulation_todo_sptr_t make_new_todo(phase_result_sptr_t parent);
   
   /**
    * @return introduced parameter
@@ -227,6 +198,8 @@ protected:
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
   
   void init_module_set_container(const parse_tree_sptr& parse_tree);
+
+  virtual void process_one_todo(simulation_todo_sptr_t& todo);  
   
   void reset_result_root();
 
@@ -248,6 +221,8 @@ protected:
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
+
+  int todo_id;
 
   interval::AffineApproximator* affine_transformer_;
 };

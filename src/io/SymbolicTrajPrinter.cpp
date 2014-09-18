@@ -99,9 +99,8 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
 
     //このフェーズの情報が既に完成しているなら出力する
     if(node->cause_for_termination==simulator::ASSERTION ||
-      node->cause_for_termination==simulator::OTHER_ASSERTION ||
       node->cause_for_termination==simulator::TIME_LIMIT ||
-      node->cause_for_termination==simulator::NOT_SELECTED ||
+      node->cause_for_termination==simulator::NOT_SIMULATED ||
       node->cause_for_termination==simulator::NONE ||
       node->cause_for_termination==simulator::STEP_LIMIT ||
       node->cause_for_termination==simulator::SOME_ERROR ||
@@ -124,10 +123,6 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
         ostream << "# assertion failed\n" ;
         break;
 
-      case simulator::OTHER_ASSERTION:
-        ostream << "# terminated by failure of assertion in another case\n" ;
-        break;
-
       case simulator::TIME_LIMIT:
         ostream << "# time reached limit\n" ;
         break;
@@ -144,8 +139,8 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
         ostream << "# some values of variables are not unique in IP\n" ;
         break;
 
-      case simulator::NOT_SELECTED:
-        ostream << "# this case is not selected to be simulated\n" ;
+      case simulator::NOT_SIMULATED:
+        ostream << "# this phase is not simulated\n" ;
         break;
 
 
@@ -155,7 +150,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
 
       default:
       case simulator::NONE:
-        ostream << "# unknown termination occurred\n" ;
+        ostream << "# unknown error occured\n" ;
         break;
     }
     ostream << endl;

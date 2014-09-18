@@ -19,16 +19,15 @@ HAConverter::HAConverter(boost::shared_ptr<backend::Backend> backend, Opts &opts
 
 HAConverter::~HAConverter(){}
 
-phase_result_const_sptr_t HAConverter::simulate()
+phase_result_sptr_t HAConverter::simulate()
 {
   std::string error_str;
   simulation_todo_sptr_t init_todo = make_initial_todo();
-  todo_stack_->push_todo(init_todo);
   int error_sum = 0;
 	  
   current_condition_t cc_;
   push_current_condition(cc_);
-
+/* TODO: implement
   while(!todo_stack_->empty()) 
   {
     try
@@ -46,7 +45,8 @@ phase_result_const_sptr_t HAConverter::simulate()
       HYDLA_LOGGER_DEBUG(se.what());
     }
   }
-	  
+*/
+
   if(!error_str.empty()){
     std::cout << error_str;
   }
@@ -116,7 +116,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
           push_result(tmp_tmp_cc_);
           continue;
         }
-        todo_stack_->push_todo(n_todo);
+        //todo_stack_->push_todo(n_todo); //TODO: implement
         push_current_condition(tmp_cc_);
       }
     }

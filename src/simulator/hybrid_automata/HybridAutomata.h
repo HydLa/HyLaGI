@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BatchSimulator.h"
+#include "Simulator.h"
 #include "Node.h"
 #include "NodeAccessor.h"
 #include "DefaultTreeVisitor.h"
@@ -13,7 +13,7 @@
 namespace hydla {
 namespace simulator {
     
-class HybridAutomata: public BatchSimulator{
+class HybridAutomata: public Simulator{
 public:
       
   HybridAutomata(Opts &opts);

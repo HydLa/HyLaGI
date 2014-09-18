@@ -15,7 +15,7 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-HybridAutomata::HybridAutomata(Opts &opts):BatchSimulator(opts){}
+HybridAutomata::HybridAutomata(Opts &opts):Simulator(opts){}
 
 HybridAutomata::~HybridAutomata(){}
 	
@@ -49,6 +49,6 @@ string HybridAutomata::viewAsks(ask_set_t asks)
   }
   return str;
 }
-	
+
 }//namespace hydla
 }//namespace simulator 

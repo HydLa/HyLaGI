@@ -18,12 +18,6 @@ RelationGraph::RelationGraph(const module_set_t &ms)
   }
   ignore_prev = true;
   up_to_date = false;
-  diff_stacks.push_back(&expanded_stack);
-  diff_stacks.push_back(&adopted_stack);
-  for(auto stack : diff_stacks)
-  {
-    stack->push(diff_t());
-  }
 }
 
 
@@ -312,11 +306,6 @@ void RelationGraph::set_adopted(const module_t &mod, bool adopted)
     if(adopted != constraint_node->module_adopted)
     {
       constraint_node->module_adopted = adopted;
-
-      diff_t &diff = adopted_stack.top();
-      auto adopted_it = diff.find(constraint_node);
-      if(adopted_it == diff.end()) diff.insert(make_pair(constraint_node, adopted));
-      else diff.erase(adopted_it);
     }
   }
   up_to_date = false;
@@ -346,11 +335,6 @@ void RelationGraph::set_expanded_all(bool expanded)
     if(expanded != node->expanded)
     {
       node->expanded = expanded;
-
-      diff_t &diff = expanded_stack.top();
-      auto expanded_it = diff.find(node);
-      if(expanded_it == diff.end()) diff.insert(make_pair(node, expanded));
-      else diff.erase(expanded_it);
     }
   }
   up_to_date = false;
@@ -473,11 +457,6 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
       if(!constraint_node->expanded)
       {
         constraint_node->expanded = true;
-
-        diff_t &diff = expanded_stack.top();
-        auto expanded_it = diff.find(constraint_node);
-        if(expanded_it == diff.end()) diff.insert(make_pair(constraint_node, true));
-        else diff.erase(expanded_it);
       }
     }
     else HYDLA_LOGGER_WARN("(@RelationGraph) try to expand unknown node: ", get_infix_string(node));
@@ -492,11 +471,6 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
       if(constraint_node->expanded)
       {
         constraint_node->expanded = false;
-
-        diff_t &diff = expanded_stack.top();
-        auto expanded_it = diff.find(constraint_node);
-        if(expanded_it == diff.end()) diff.insert(make_pair(constraint_node, false));
-        else diff.erase(expanded_it);
       }
     }
     else HYDLA_LOGGER_WARN("(@RelationGraph) try to unexpand unknown node: ", get_infix_string(node));
@@ -527,84 +501,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> node)
   }
 }
 
-void RelationGraph::revert_diff(uint step_num)
-{
-  if(step_num >= expanded_stack.size())throw HYDLA_SIMULATE_ERROR("step_num must be less than the size of the stack");
-  int i = 0;
-  while(true)
-  {
-    for(auto expanded_diff : expanded_stack.top())
-    {
-      expanded_diff.first->expanded = !expanded_diff.second;
-    }
-    for(auto adopted_diff : adopted_stack.top())
-    {
-      adopted_diff.first->module_adopted = !adopted_diff.second;
-    }
 
-    if(++i > step_num)break;
-    for(auto stack : diff_stacks)
-    {
-      stack->pop();
-    }
-  }
-  for(auto stack : diff_stacks)
-  {
-    stack->top().clear();
-  }
-}
-
-void RelationGraph::commit_diff()
-{
-  for(auto stack : diff_stacks)
-  {
-    stack->push(diff_t());
-  }
-}
-
-
-ConstraintStore RelationGraph::get_all_diffs()
-{
-  ConstraintStore store;
-  for(auto expanded_diff : expanded_stack.top())
-  {
-    store.add_constraint(expanded_diff.first->constraint);
-  }
-  for(auto adopted_diff : adopted_stack.top())
-  {
-    store.add_constraint(adopted_diff.first->constraint);
-  }
-  return store;
-}
-
-ConstraintStore RelationGraph::get_diff_positives()
-{
-  ConstraintStore store;
-  for(auto expanded_diff : expanded_stack.top())
-  {
-    if(expanded_diff.second)store.add_constraint(expanded_diff.first->constraint);
-  }
-  for(auto adopted_diff : adopted_stack.top())
-  {
-    if(adopted_diff.second)store.add_constraint(adopted_diff.first->constraint);
-  }
-  return store;
-}
-
-ConstraintStore RelationGraph::get_diff_negatives()
-{
-
-  ConstraintStore store;
-  for(auto expanded_diff : expanded_stack.top())
-  {
-    if(!expanded_diff.second)store.add_constraint(expanded_diff.first->constraint);
-  }
-  for(auto adopted_diff : adopted_stack.top())
-  {
-    if(!adopted_diff.second)store.add_constraint(adopted_diff.first->constraint);
-  }
-  return store;
-}
 
 } //namespace simulator
 } //namespace hydla 

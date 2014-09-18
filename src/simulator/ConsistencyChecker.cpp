@@ -30,10 +30,8 @@ ConsistencyChecker::~ConsistencyChecker(){}
 
 void ConsistencyChecker::send_prev_constraint(Variable &var)
 {
-  HYDLA_LOGGER_DEBUG_VAR(var);
   if(!prev_map->count(var))return;
   auto range = prev_map->find(var)->second;
-  HYDLA_LOGGER_DEBUG_VAR(range);
   if(range.unique())
   {
     value_t value = range.get_unique_value();

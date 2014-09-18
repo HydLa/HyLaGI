@@ -6,7 +6,9 @@
 #include "PhaseResult.h"
 #include "AffineApproximator.h"
 #include "AskCollector.h"
+#include "Timer.h"
 #include "VariableFinder.h"
+#include "TimeOutError.h"
 
 #include <iostream>
 #include <string>
@@ -18,7 +20,7 @@ using namespace hydla::backend;
 namespace hydla{
 namespace simulator{
 
-Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
+Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts), todo_id(0)
 {
   affine_transformer_ = interval::AffineApproximator::get_instance();
   affine_transformer_->set_simulator(this);
@@ -130,14 +132,26 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
 
 simulation_todo_sptr_t Simulator::make_initial_todo()
 {
-  simulation_todo_sptr_t todo(new SimulationTodo());
+  simulation_todo_sptr_t todo = make_new_todo(result_root_);
   todo->phase_type        = PointPhase;
   todo->current_time = value_t("0");
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
-  todo->unadopted_mss.clear();
-  todo->parent = result_root_;  
   return todo;
 }
+
+
+
+
+simulation_todo_sptr_t Simulator::make_new_todo(phase_result_sptr_t parent)
+{
+  simulation_todo_sptr_t todo(new SimulationTodo());
+  todo->parent = parent;
+  parent->todo_list.push_back(todo);
+  profile_vector_->push_back(todo);
+  todo->id = ++todo_id;
+  return todo;
+}
+
 
 
 
@@ -155,6 +169,26 @@ std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
 }
 
 
+void Simulator::process_one_todo(simulation_todo_sptr_t& todo)
+{
+  if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase - 1){
+    todo->parent->cause_for_termination = simulator::STEP_LIMIT;
+    return;
+  }
+  HYDLA_LOGGER_DEBUG("--- Current Todo ---\n", *todo);
+
+  try{
+    timer::Timer phase_timer;
+    phase_simulator_->process_todo(todo);
+    todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
+  }
+  catch(const timeout::TimeOutError &te)
+  {
+    HYDLA_LOGGER_DEBUG(te.what());
+    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
+    todo->parent->children.push_back(phase);
+  }
+}
 
 }
 }

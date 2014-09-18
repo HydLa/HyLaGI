@@ -49,9 +49,8 @@ void InteractiveSimulator::print_end(phase_result_sptr_t& p)
 /**
  * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
  */
-phase_result_const_sptr_t InteractiveSimulator::simulate()
+phase_result_sptr_t InteractiveSimulator::simulate()
 {
-  phase_simulator_->set_select_function(select_phase);
   printer_.set_output_variables(opts_->output_variables);
   simulation_todo_sptr_t todo(make_initial_todo());
   unsigned int todo_num = 1; // 連続して処理するTODOの残数
@@ -83,15 +82,11 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       {
         unsigned int select_num = select_case<phase_result_sptr_t>(phases);
         phase = phases[select_num];
-        for(unsigned int i = 0; i < phases.size(); i++)
-        {
-          if(i == select_num) continue;
-          phases[i]->cause_for_termination = NOT_SELECTED;
-        }
       }
 
-
-      PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
+      //TODO: implement
+      /*
+         PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
       todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
       profile_vector_->push_back(todo);
       if(todos.empty())
@@ -106,19 +101,15 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       }
       todo = todos[0];
       print_phase(todo);
-
-      if(phase_simulator_->breaking)
-      {
-        cout << "break!" << endl;
-        phase_simulator_->breaking = false;
-        todo_num = input_and_process_command(todo);
-      }
-      else if(todo_num > 0 && --todo_num == 0)
+      
+      // TODO: implement break condition
+      if(todo_num > 0 && --todo_num == 0)
       {
         todo_num = input_and_process_command(todo);
       }
       // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
       all_todo_.push_back(todo);
+      */
       if(signal_handler::interrupted) break;
     }
     catch(const runtime_error &se)
@@ -528,7 +519,7 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
     return 0;
   }
 
-  phase_simulator_->set_break_condition(node_tree);
+//  phase_simulator_->set_break_condition(node_tree); // TODO: implement
   return 0;
 }
 

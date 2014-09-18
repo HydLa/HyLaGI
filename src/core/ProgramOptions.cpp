@@ -148,8 +148,6 @@ void ProgramOptions::init_descriptions()
 
     ("approx,a",
      "simulate with approximation")
-    ("without_validation",
-     "simulate withou validation")
 
     ("change,c",
       "change next PP time")
