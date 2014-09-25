@@ -49,6 +49,9 @@ public:
 
   bool include_variable(const Variable& var)const;
   bool include_variable_prev(const Variable& var)const;
+
+  /// judge if given constraints include any of found variables
+  bool include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const;
   
   /// Ask制約
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);

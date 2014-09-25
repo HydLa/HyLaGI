@@ -70,6 +70,17 @@ bool VariableFinder::include_variables(std::set<std::string> variables) const
 }
 
 
+bool VariableFinder::include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const
+{
+  VariableFinder tmp_finder;
+  tmp_finder.visit_node(constraint);
+  for(auto found_var : variables_)
+  {
+    if(tmp_finder.include_variable(found_var))return true;
+  }
+  return false;
+}
+
 bool VariableFinder::include_variables_prev(std::set<std::string> variables) const
 {
   for(auto found_var : prev_variables_)

@@ -18,7 +18,7 @@ public:
   typedef hierarchy::ModuleSet module_set_t;
   typedef hierarchy::ModuleSet::module_t module_t;
   typedef boost::shared_ptr<symbolic_expression::Ask> ask_t;
-  typedef std::vector<ask_t> asks_t;
+  typedef std::list<ask_t> asks_t;
   
   struct VariableNode;
   struct AskNode;
@@ -62,7 +62,10 @@ public:
   /// Set adoptedness of modules
   void set_adopted(const module_set_t &ms, bool adopted);
 
-  /// Set entailedness of the ask
+  /// Set entailedness of the ask if it is prev_ask
+  /// @return true if the ask is prev_ask
+  bool set_entailed_if_prev(const ask_t &ask, bool entailed);
+
   void set_entailed(const ask_t &ask, bool entailed);
 
   // TODO: 親ガード条件が存在した場合にexpandedかどうかを考慮していない．
@@ -76,13 +79,13 @@ public:
    * Get active asks adjacent to given variable
    * @parameter asks for output
    */
-  void get_adjacent_asks(const std::string &variable, asks_t &asks, bool ignore_prev_asks = false);
+  asks_t get_adjacent_asks(const std::string &variable, bool ignore_prev_asks = false);
 
   /**
    * Get variables adjacent to given ask
    * @parameter constraints for output
    */
-  void get_adjacent_variables(const ask_t &asks, std::set<std::string> &variables);
+  std::set<std::string> get_adjacent_variables(const ask_t &asks);
 
   /**
    * Get all active asks

@@ -80,7 +80,7 @@ public:
 
 private:
 
-  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, constraint_diff_t &local_diff);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::list<DiscreteAsk> &discrete_nonprev_positives, std::list<DiscreteAsk> &discrete_nonprev_negatives);
 
   void replace_prev2parameter(
                               PhaseResult &phase,
@@ -100,7 +100,7 @@ private:
 
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
 
-  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff);
+  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::list<DiscreteAsk> &discrete_nonprev_positives, std::list<DiscreteAsk> &discrete_nonprev_negatives);
 
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t& current_todo);
@@ -112,7 +112,6 @@ private:
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
-  ask_set_t prev_asks_;
   std::set<std::string> variable_names;
 
   module_set_container_sptr msc_no_init_;
@@ -128,7 +127,6 @@ private:
   int                                   phase_sum_, todo_id;
   module_set_container_sptr             module_set_container;
   ask_set_t                             all_asks;
-  std::map<int, ask_t >                 ask_map;
   ConstraintDifferenceCalculator        difference_calculator_;
   boost::shared_ptr<ValueModifier>      value_modifier;
   value_t                               max_time;

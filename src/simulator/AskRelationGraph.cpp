@@ -33,6 +33,7 @@ AskRelationGraph::~AskRelationGraph()
 void AskRelationGraph::add(module_t &mod)
 {
   current_module = mod;
+  parent_ask = nullptr;
   accept(mod.second);
 }
 
@@ -99,9 +100,22 @@ void AskRelationGraph::set_entailed(const ask_t &ask, bool entailed)
   node_it->second->entailed = entailed;
 }
 
-void AskRelationGraph::get_adjacent_asks(const string &var, asks_t &asks, bool ignore_prev_asks){
-  asks.clear();
-  if(!variable_node_map.count(var))return;
+
+bool AskRelationGraph::set_entailed_if_prev(const ask_t &ask, bool entailed)
+{
+  auto node_it = ask_node_map.find(ask);
+  if(node_it == ask_node_map.end())return false;
+  if(node_it->second->prev)
+  {
+    node_it->second->entailed = entailed;
+    return true;
+  }
+  return false;
+}
+
+AskRelationGraph::asks_t AskRelationGraph::get_adjacent_asks(const string &var, bool ignore_prev_asks){
+  asks_t asks;
+  if(!variable_node_map.count(var))return asks;
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
   for(auto ask_node : var_node->edges)
@@ -111,17 +125,19 @@ void AskRelationGraph::get_adjacent_asks(const string &var, asks_t &asks, bool i
       asks.push_back(ask_node->ask);
     }
   }
+  return asks;
 }
 
 
-void AskRelationGraph::get_adjacent_variables(const ask_t &ask, set<string> &vars){
-  vars.clear();
-  if(!ask_node_map.count(ask))return;
+set<string> AskRelationGraph::get_adjacent_variables(const ask_t &ask){
+  set<string> vars;
+  if(!ask_node_map.count(ask))return vars;
   AskNode *ask_node = ask_node_map[ask];
   for(auto var_node: ask_node->edges)
   {
     vars.insert(var_node->variable);
   }
+  return vars;
 }
 
 AskRelationGraph::asks_t AskRelationGraph::get_active_asks(bool ignore_prev_asks)
@@ -177,7 +193,7 @@ void AskRelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
   parent_ask = ask_node->parent_ask;
 }
 
-AskRelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod), entailed(false), module_adopted(true), parent_ask(nullptr)
+AskRelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod), module_adopted(true), entailed(false), parent_ask(nullptr)
 {
   VariableFinder finder;
   finder.visit_node(ask->get_guard());
@@ -187,5 +203,7 @@ AskRelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ask(a), 
 bool AskRelationGraph::active(const AskNode *ask) const
 {
   return ask->module_adopted && ask->prev && (ask->parent_ask == nullptr || ask->parent_ask->entailed);
+}
+
 } //namespace simulator
 } //namespace hydla 

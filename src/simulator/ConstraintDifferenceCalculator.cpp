@@ -79,12 +79,14 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
   //TODO: prevã‚’åŒºåˆ¥ã™ã‚‹
   variable_set_t variables = finder.get_all_variable_set();
   AskRelationGraph::asks_t asks;
+  /*
   for(auto variable : variables){
     ask_relation_graph->get_adjacent_asks(variable.get_name(), asks);
     for(auto ask : asks){
       if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
     }
   }
+  */
 /* TODO: ‚±‚ê‚ª‰½‚È‚Ì‚©l‚¦‚é
   for(auto ask : discrete_causes){
     if(!positive_asks.count(ask.first) && !negative_asks.count(ask.first)) unknown_asks.insert(ask.first);
