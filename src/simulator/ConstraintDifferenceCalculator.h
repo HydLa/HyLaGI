@@ -18,7 +18,7 @@ public:
   /*
    * Calculate which constraints is difference between a current todo and the parent.
    */
-  void calculate_difference_constraints(const simulation_todo_sptr_t todo, const boost::shared_ptr<RelationGraph> relation_graph);
+  void calculate_difference_constraints(const simulation_job_sptr_t todo, const boost::shared_ptr<RelationGraph> relation_graph);
 
   void add_difference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph);
 
@@ -30,7 +30,7 @@ public:
   /**
    * return whether all variables of constraint are continuous
    */
-  bool is_continuous(const simulation_todo_sptr_t todo, const symbolic_expression::node_sptr guard);
+  bool is_continuous(const simulation_job_sptr_t todo, const symbolic_expression::node_sptr guard);
 
   void collect_ask(const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
       const ask_set_t &positive_asks,

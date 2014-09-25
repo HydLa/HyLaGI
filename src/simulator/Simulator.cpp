@@ -20,7 +20,7 @@ using namespace hydla::backend;
 namespace hydla{
 namespace simulator{
 
-Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts), todo_id(0)
+Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
 {
   affine_transformer_ = interval::AffineApproximator::get_instance();
   affine_transformer_->set_simulator(this);
@@ -30,12 +30,11 @@ Simulator::~Simulator()
 {
 }
 
-SimulationTodo::SimulationTodo(const phase_result_sptr_t &parent_phase)
+SimulationJob::SimulationJob(const phase_result_sptr_t &parent_phase)
 {
-  parent = parent_phase;
-  phase_type = parent->phase_type == PointPhase?IntervalPhase:PointPhase;
-  current_time = parent->current_time;
-  parameter_map = parent->parameter_map;
+  owner = parent_phase;
+  phase_type = owner->phase_type == PointPhase?IntervalPhase:PointPhase;
+  parameter_map = owner->parameter_map;
 }
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
@@ -71,6 +70,7 @@ void Simulator::reset_result_root()
   result_root_.reset(new phase_result_t());
   result_root_->step = -1;
   result_root_->id = 0;
+  result_root_->end_time = value_t("0");
 }
 
 
@@ -115,7 +115,7 @@ parameter_t Simulator::introduce_parameter(const variable_t &var,const PhaseResu
 }
 
 
-parameter_t Simulator::introduce_parameter(const std::string &name, int differential_cnt, int id, const ValueRange &range)
+parameter_t Simulator::introduce_parameter(const string &name, int differential_cnt, int id, const ValueRange &range)
 {
   parameter_t param(name, differential_cnt, id);
   return introduce_parameter(param, range);
@@ -130,11 +130,10 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
 
 
 
-simulation_todo_sptr_t Simulator::make_initial_todo()
+simulation_job_sptr_t Simulator::make_initial_todo()
 {
-  simulation_todo_sptr_t todo = make_new_todo(result_root_);
+  simulation_job_sptr_t todo = make_new_todo(result_root_);
   todo->phase_type        = PointPhase;
-  todo->current_time = value_t("0");
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
   return todo;
 }
@@ -142,37 +141,35 @@ simulation_todo_sptr_t Simulator::make_initial_todo()
 
 
 
-simulation_todo_sptr_t Simulator::make_new_todo(phase_result_sptr_t parent)
+simulation_job_sptr_t Simulator::make_new_todo(phase_result_sptr_t parent)
 {
-  simulation_todo_sptr_t todo(new SimulationTodo());
-  todo->parent = parent;
+  simulation_job_sptr_t todo(new SimulationJob());
+  todo->owner = parent;
   parent->todo_list.push_back(todo);
   profile_vector_->push_back(todo);
-  todo->id = ++todo_id;
   return todo;
 }
 
 
 
 
-std::ostream& operator<<(std::ostream& s, const SimulationTodo& todo)
+ostream& operator<<(ostream& s, const SimulationJob& todo)
 {
-  s << "%% PhaseType: " << todo.phase_type << std::endl;
-  s << "%% id: " <<  todo.id          << std::endl;
-  s << "%% time: " << todo.current_time << std::endl;
-  s << "--- parent phase result ---" << std::endl;
-  s << *(todo.parent) << std::endl;
-  s << "--- parameter map ---"          << std::endl;
-  s << todo.parameter_map << std::endl;
+  s << "PhaseType: " << todo.phase_type << endl;
+  s << "id       : " << todo.id << endl;
+  s << "--- owner phase result ---" << endl;
+  s << *(todo.owner) << endl;
+  s << "--- parameter map ---"          << endl;
+  s << todo.parameter_map << endl;
   
   return s;
 }
 
 
-void Simulator::process_one_todo(simulation_todo_sptr_t& todo)
+void Simulator::process_one_todo(simulation_job_sptr_t& todo)
 {
-  if( opts_->max_phase >= 0 && todo->parent->step >= opts_->max_phase - 1){
-    todo->parent->cause_for_termination = simulator::STEP_LIMIT;
+  if( opts_->max_phase >= 0 && todo->owner->step >= opts_->max_phase - 1){
+    todo->owner->cause_for_termination = simulator::STEP_LIMIT;
     return;
   }
   HYDLA_LOGGER_DEBUG("--- Current Todo ---\n", *todo);
@@ -186,7 +183,7 @@ void Simulator::process_one_todo(simulation_todo_sptr_t& todo)
   {
     HYDLA_LOGGER_DEBUG(te.what());
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
-    todo->parent->children.push_back(phase);
+    todo->owner->children.push_back(phase);
   }
 }
 

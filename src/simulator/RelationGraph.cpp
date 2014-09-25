@@ -209,6 +209,24 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
 }
 
 
+
+void RelationGraph::get_related_constraints_vector(const ConstraintStore &constraint_store, const list<Variable> &variables, vector<ConstraintStore> &constraints_vector, vector<module_set_t> &module_set_vector){
+  get_related_constraints_vector(constraint_store, constraints_vector, module_set_vector);
+  for(auto var : variables)
+  {
+    ConstraintStore constraints;
+    module_set_t modules;
+    get_related_constraints_core(var, constraints, modules);
+    if(!constraints.empty())
+    {
+      constraints_vector.push_back(constraints);
+      module_set_vector.push_back(modules);
+    }
+  }
+}
+
+
+
 void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
   if(!up_to_date) check_connected_components();
   initialize_node_visited();
@@ -243,6 +261,11 @@ void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
+  get_related_constraints_core(var, constraints, module_set);
+}
+
+
+void RelationGraph::get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
   if(!variable_node_map.count(var))return;
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");

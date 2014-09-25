@@ -478,10 +478,9 @@ publicMethod[
          {Minimize::wksol, Minimize::infeas}
     ];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-    minT = ToRadicals[First[minT]];
+    minT = First[minT];
     If[minT === Infinity, 
       {},
-      Assert[Head[minT] =!= Piecewise];
       ret = makeListFromPiecewise[minT, pCons];
       (* 時刻が0となる場合を取り除く．*)
       ret = Select[ret, (#[[1]] =!= 0)&];

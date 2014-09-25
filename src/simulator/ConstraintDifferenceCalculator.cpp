@@ -8,14 +8,14 @@ namespace hydla
 namespace simulator
 {
 
-void ConstraintDifferenceCalculator::calculate_difference_constraints(const simulation_todo_sptr_t todo, const boost::shared_ptr<RelationGraph> relation_graph){
+void ConstraintDifferenceCalculator::calculate_difference_constraints(const simulation_job_sptr_t todo, const boost::shared_ptr<RelationGraph> relation_graph){
   difference_constraints_.clear();
   
   ConstraintStore current_constraints = relation_graph->get_constraints();
   ConstraintStore difference_constraints;
-  set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
-  if(todo->parent->phase_type == PointPhase){
-    difference_constraints.add_constraint_store(todo->parent->changed_constraints);
+  set_symmetric_difference(todo->owner->current_constraints, current_constraints, difference_constraints);
+  if(todo->owner->phase_type == PointPhase){
+    difference_constraints.add_constraint_store(todo->owner->changed_constraints);
     for(auto cause : todo->discrete_positive_asks){
       if(!cause.on_time) difference_constraints.add_constraint(cause.ask->get_child());
     }
@@ -42,7 +42,7 @@ ConstraintStore ConstraintDifferenceCalculator::get_difference_constraints(){
   return difference_constraints_;
 }
 
-bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t todo, const symbolic_expression::node_sptr guard)
+bool ConstraintDifferenceCalculator::is_continuous(const simulation_job_sptr_t todo, const symbolic_expression::node_sptr guard)
 {
   VariableFinder finder;
   finder.visit_node(guard);
@@ -58,8 +58,8 @@ bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t 
   variable_set_t changing_variables(finder.get_all_variable_set());
 
   for(auto variable : variables){
-    auto differential_pair = todo->parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
-    if(differential_pair == todo->parent->variable_map.end() || differential_pair->second.undefined()) return false;
+    auto differential_pair = todo->owner->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
+    if(differential_pair == todo->owner->variable_map.end() || differential_pair->second.undefined()) return false;
     for(auto cv : changing_variables){
       if(variable.get_name() == cv.get_name()) return false;
     }

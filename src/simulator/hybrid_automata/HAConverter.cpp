@@ -22,7 +22,7 @@ HAConverter::~HAConverter(){}
 phase_result_sptr_t HAConverter::simulate()
 {
   std::string error_str;
-  simulation_todo_sptr_t init_todo = make_initial_todo();
+  simulation_job_sptr_t init_todo = make_initial_todo();
   int error_sum = 0;
 	  
   current_condition_t cc_;
@@ -32,7 +32,7 @@ phase_result_sptr_t HAConverter::simulate()
   {
     try
     {
-      simulation_todo_sptr_t todo(todo_stack_->pop_todo());
+      simulation_job_sptr_t todo(todo_stack_->pop_todo());
       process_one_todo(todo);
     }
     catch(const std::runtime_error &se)
@@ -58,7 +58,7 @@ phase_result_sptr_t HAConverter::simulate()
   return result_root_;
 }
 	
-void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
+void HAConverter::process_one_todo(simulation_job_sptr_t& todo)
 {
 /* TODO: implement
   hydla::io::SymbolicTrajPrinter printer(backend, opts_->output_variables, std::cerr);
@@ -104,7 +104,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
       PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
       for(unsigned int j = 0; j < next_todos.size(); j++)
       {
-        simulation_todo_sptr_t& n_todo = next_todos[j];
+        simulation_job_sptr_t& n_todo = next_todos[j];
         HYDLA_LOGGER_DEBUG("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
         HYDLA_LOGGER_DEBUG(*n_todo);
         // TIME_LIMITの場合

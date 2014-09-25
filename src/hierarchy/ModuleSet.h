@@ -21,7 +21,7 @@ class ModuleSet {
 public:
   typedef std::pair<std::string,
                     hydla::symbolic_expression::node_sptr> module_t;
-  typedef std::set<module_t>                   module_list_t;
+  typedef std::set<module_t>                      module_list_t;
   typedef module_list_t::const_iterator           module_list_const_iterator;
 
   struct ModuleComp {

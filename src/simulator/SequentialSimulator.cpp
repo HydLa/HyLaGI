@@ -43,7 +43,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
     // // TODO: 各未実行フェーズを適切に処理
     // while(!todo_stack_->empty())
     // {
-    //   simulation_todo_sptr_t todo(todo_stack_->pop_todo());
+    //   simulation_job_sptr_t todo(todo_stack_->pop_todo());
     //   todo->parent->cause_for_termination = INTERRUPTED;
     //   // TODO: restart simulation from each interrupted phase
     // }
@@ -60,13 +60,14 @@ void SequentialSimulator::DFS(phase_result_sptr_t current)
     current->cause_for_termination = INTERRUPTED;
     return;
   }
+  phase_simulator_->apply_diff(current);
   while(!current->todo_list.empty())
   {
-    simulation_todo_sptr_t todo = current->todo_list.front();
+    simulation_job_sptr_t todo = current->todo_list.front();
     process_one_todo(todo);
-    for(int i = 0; i < todo->children.size(); i++)
+    for(int i = 0; i < todo->produced_phases.size(); i++)
     {
-      phase_result_sptr_t next_phase = todo->children[i];
+      phase_result_sptr_t next_phase = todo->produced_phases[i];
       /* TODO: assertion違反が検出された場合の対応
          if(phase->cause_for_termination == ASSERTION)
          {
@@ -82,6 +83,7 @@ void SequentialSimulator::DFS(phase_result_sptr_t current)
     }
     current->todo_list.pop_front();
   }
+  phase_simulator_->revert_diff(current);
 }
 
 

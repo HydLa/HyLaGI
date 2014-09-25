@@ -176,12 +176,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   VariableFinder finder;
   ConstraintStore constraint_store;
   module_set_t module_set;
-  // get constraints related with the guard 
-  {
-    timer::Timer timer;
-    relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
-    profile["GetRelatedConstraints"] += timer.get_elapsed_us();
-  }
+  relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
 
 
   backend->call("resetConstraintForVariable", 0, "", "");
@@ -295,7 +290,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const list<Variable> &discrete_variables, const PhaseType& phase, profile_t &profile)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
@@ -306,12 +301,13 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   timer::Timer timer;
   vector<ConstraintStore> related_constraints_list;
   vector<module_set_t> related_modules_list;
-  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
+  relation_graph.get_related_constraints_vector(difference_constraints, discrete_variables, related_constraints_list, related_modules_list);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
     check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
   }
+
   
   if(result.inconsistent_store.empty())
   {

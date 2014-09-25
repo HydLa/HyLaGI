@@ -27,17 +27,16 @@ namespace simulator {
 
 class RelationGraph;
 
-typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
-
-typedef hierarchy::ModuleSet                              module_set_t;
-typedef hierarchy::ModuleSetContainer                     module_set_container_t;
-typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
-typedef std::set<module_set_t>                         module_set_set_t;
+typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
+typedef hierarchy::ModuleSet                      module_set_t;
+typedef hierarchy::ModuleSetContainer             module_set_container_t;
+typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;
+typedef std::set<module_set_t>                    module_set_set_t;
 typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
-
-typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_prev_map_t;
-typedef std::vector<variable_map_t>      variable_maps_t;
-typedef std::map<std::string, unsigned int> profile_t;
+typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool>
+                                                  entailed_prev_map_t;
+typedef std::vector<variable_map_t>               variable_maps_t;
+typedef std::map<std::string, unsigned int>       profile_t;
 
 
 struct DiscreteAsk
@@ -49,23 +48,23 @@ struct DiscreteAsk
 };
 
 /**
- * シミュレーションすべきフェーズを表す構造体
+ * シミュレーションにおいて必要な仕事を表す構造体
  */
-struct SimulationTodo{
+struct SimulationJob{
   PhaseType                 phase_type;
   int                       id;
-  value_t                   current_time;
   /// 左極限値のマップ
   variable_map_t            prev_map;
   parameter_map_t           parameter_map;
   ask_set_t                 positive_asks;
   ask_set_t                 negative_asks;
+  std::list<Variable>       discrete_variables;
   
-  constraint_diff_t         adopted_modules_diff, expanded_diff;
+  constraint_diff_t         expanded_diff;
+  module_diff_t             adopted_module_diff;
   
   std::list<DiscreteAsk>    discrete_positive_asks, discrete_negative_asks;
   next_pp_candidate_map_t   next_pp_candidate_map; 
-  always_set_t              expanded_always;
 
   ConstraintStore           expanded_constraints;
   ConstraintStore           initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
@@ -74,11 +73,9 @@ struct SimulationTodo{
   
   entailed_prev_map_t       judged_prev_map;
 
-  /// 前のフェーズ
-  phase_result_sptr_t parent;
+  phase_result_sptr_t owner;
 
-  /// このTodoから続くフェーズ
-  phase_result_sptrs_t children;
+  phase_result_sptrs_t produced_phases;
 
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
   module_set_set_t ms_to_visit;
@@ -87,24 +84,23 @@ struct SimulationTodo{
   /// プロファイリング結果
   profile_t profile;
 
-  SimulationTodo(){}
+  SimulationJob(){}
 
   /**
    * parentとなるPhaseResultから情報を引き継いだTodoを作る。
-   * prev_mapはこのコンストラクタで初期化されない。
    */
-  SimulationTodo(const phase_result_sptr_t &parent_phase);
+  SimulationJob(const phase_result_sptr_t &parent_phase);
 
   inline bool in_following_step(){
-    return parent.get() && parent->parent && parent->parent->parent;
+    return owner && owner->parent && owner->parent->parent;
   }
 };
 
-std::ostream& operator<<(std::ostream& s, const SimulationTodo& a);
+std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
 
 // プロファイリング結果全体
-// 各Todoごとにかかった時間（現状では，Todoそのものを保存している）
-typedef std::vector<simulation_todo_sptr_t> entire_profile_t;
+// 各Jobごとにかかった時間（現状では，Jobそのものを保存している）
+typedef std::vector<simulation_job_sptr_t> entire_profile_t;
 
 class PhaseSimulator;
 
@@ -149,9 +145,9 @@ public:
   /**
    *  the initial state of simulation into the stack
    */
-  virtual simulation_todo_sptr_t make_initial_todo();
+  virtual simulation_job_sptr_t make_initial_todo();
 
-  virtual simulation_todo_sptr_t make_new_todo(phase_result_sptr_t parent);
+  virtual simulation_job_sptr_t make_new_todo(phase_result_sptr_t parent);
   
   /**
    * @return introduced parameter
@@ -199,7 +195,7 @@ protected:
   
   void init_module_set_container(const parse_tree_sptr& parse_tree);
 
-  virtual void process_one_todo(simulation_todo_sptr_t& todo);  
+  virtual void process_one_todo(simulation_job_sptr_t& todo);  
   
   void reset_result_root();
 
@@ -215,8 +211,6 @@ protected:
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
-
-  int todo_id;
 
   interval::AffineApproximator* affine_transformer_;
 };

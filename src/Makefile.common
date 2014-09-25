@@ -27,7 +27,7 @@ CXX_OPT  += -Wall -std=c++11 -framework Foundation
 endif
 
 ARFLAGS  := cru
-CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
+CXXFLAGS += $(INCLUDES) $(DEFINES) $(CXX_OPT)
 
 SRC_DIR  += .
 SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 

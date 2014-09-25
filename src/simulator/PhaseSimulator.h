@@ -66,14 +66,21 @@ public:
                           module_set_container_sptr &msc,
                           phase_result_sptr_t root);
 
-  void process_todo(simulation_todo_sptr_t& todo);
+  void process_todo(simulation_job_sptr_t& todo);
 
 
   void set_backend(backend_sptr_t);
 
+  /// apply diff of given PhaseResult for relation_graph
+  void apply_diff(const phase_result_sptr_t &phase);
+  /// revert diff
+  void revert_diff(const phase_result_sptr_t &phase);
+
+  boost::shared_ptr<RelationGraph> relation_graph_;
+
 private:
 
-  void simulate_ms(const module_set_t& unadopted_ms, simulation_todo_sptr_t& state, constraint_diff_t &local_diff);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, constraint_diff_t &local_diff);
 
   void replace_prev2parameter(
                               PhaseResult &phase,
@@ -84,19 +91,19 @@ private:
 
   phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
 
-  void make_results_from_todo(simulation_todo_sptr_t& todo);
+  std::list<phase_result_sptr_t> make_results_from_todo(simulation_job_sptr_t& todo);
 
-  void push_branch_states(simulation_todo_sptr_t &original,
+  void push_branch_states(simulation_job_sptr_t &original,
                           CheckConsistencyResult &result);
 
-  phase_result_sptr_t make_new_phase(simulation_todo_sptr_t& todo);
+  phase_result_sptr_t make_new_phase(simulation_job_sptr_t& todo);
 
-  void compare_min_time(pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
+  pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
 
-  bool calculate_closure(simulation_todo_sptr_t& state, constraint_diff_t &local_diff);
+  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff);
 
  	/// make todos from given phase_result
-  void make_next_todo(phase_result_sptr_t& phase, simulation_todo_sptr_t& current_todo);
+  void make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t& current_todo);
 
   Simulator* simulator_;
 
@@ -113,13 +120,12 @@ private:
   phase_result_sptr_t result_root;
 
 
-  boost::shared_ptr<RelationGraph> relation_graph_;
   boost::shared_ptr<AskRelationGraph> guard_relation_graph_;
 
   bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
-  int                                   phase_sum_;
+  int                                   phase_sum_, todo_id;
   module_set_container_sptr             module_set_container;
   ask_set_t                             all_asks;
   std::map<int, ask_t >                 ask_map;
@@ -129,7 +135,7 @@ private:
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
-    
+
 };
 
 

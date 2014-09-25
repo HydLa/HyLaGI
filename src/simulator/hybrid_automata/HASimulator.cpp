@@ -93,8 +93,7 @@ phase_result_sptr_t HASimulator::simulate()
     // profile 
     profile["EntirePhase"] = phase_timer.get_elapsed_us();
 
-    simulation_todo_sptr_t st(new SimulationTodo);
-    st->id = pr->id;
+    simulation_job_sptr_t st(new SimulationJob);
     st->phase_type = pr->phase_type;
     st->profile = profile;
     profile_vector_->push_back(st);

@@ -189,10 +189,12 @@ Module[
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
   If[Head[expr] === Real, Return[ToString[expr] ] ];
   If[Head[expr] === p, Return[expr] ];
-  (* return Root[] as string. because it's difficult to handle *)
-  If[Head[expr] === Root, Return[ToString[expr] ] ];
+  ret = ToRadicals[expr];
 
-  ret = Map[toReturnForm, expr];
+  (* return Root[] as string. because it's difficult to handle *)
+  If[Head[ret] === Root, Return[ToString[ret] ] ];
+
+  ret = Map[toReturnForm, ret];
   ret = Replace[ret, (x_ :> ToString[InputForm[x]] /; Head[x] === Root )];
   ret = Replace[ret, (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )];
   ret = Replace[ret, (x_Integer :> replaceIntegerToString[x])];

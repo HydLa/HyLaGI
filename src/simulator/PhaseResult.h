@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/optional.hpp>
 
 #include "Variable.h"
 #include "ValueRange.h"
@@ -11,11 +12,12 @@
 #include "ConstraintStore.h"
 #include "Parameter.h"
 
+
 namespace hydla {
 namespace simulator {
 
 class PhaseResult;
-struct SimulationTodo;
+struct SimulationJob;
 
 /**
  * type for cause of termination of simulation
@@ -52,8 +54,8 @@ typedef hierarchy::ModuleSet                              module_set_t;
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 
-typedef boost::shared_ptr<SimulationTodo>                 simulation_todo_sptr_t;
-typedef std::list<simulation_todo_sptr_t>                 todo_list_t;
+typedef boost::shared_ptr<SimulationJob>                 simulation_job_sptr_t;
+typedef std::list<simulation_job_sptr_t>                 todo_list_t;
 
 typedef Value                                             value_t;
 typedef ValueRange                                        range_t;
@@ -69,6 +71,7 @@ typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sp
 typedef std::set<std::string> change_variables_t;
 
 typedef std::map<constraint_t, bool> constraint_diff_t;
+typedef std::map<module_set_t::module_t, bool>     module_diff_t;
 
 struct FullInformation
 {
@@ -112,17 +115,16 @@ public:
   ask_set_t                    get_all_negative_asks();
   ask_set_t                    diff_positive_asks, diff_negative_asks;
 
-  constraint_diff_t            adopted_modules_diff, expanded_diff;
+  constraint_diff_t            expanded_diff;
+  module_diff_t                adopted_module_diff;
 
-  void                         set_full_information(FullInformation *); /// instance pointed by given pointer will be freed internally
-  
   int                          step;
   module_set_t                 module_set;
   ConstraintStore              current_constraints;
   ConstraintStore              changed_constraints;
   next_pp_candidate_map_t      next_pp_candidate_map;
 
-  CauseForTermination cause_for_termination;
+  CauseForTermination          cause_for_termination;
   /// A set of succeeding phases
   phase_result_sptrs_t children;
   
@@ -132,12 +134,16 @@ public:
   PhaseResult *parent;
 
   PhaseResult();
-  PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NOT_SIMULATED);
+  
+  PhaseResult(const SimulationJob& todo, const CauseForTermination& cause = NOT_SIMULATED);
   ~PhaseResult();
+
+  void set_full_information(FullInformation &info);
 
 private:
   void generate_full_information();
-  FullInformation             *full_information;
+
+  boost::optional<FullInformation>             full_information;
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);

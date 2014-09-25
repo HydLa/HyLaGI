@@ -14,7 +14,7 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
     output_stream_ << "Simulation Time, ";
     std::set<std::string> label_set;
     for(unsigned int i = 0; i < result.size(); i++){
-      simulator::SimulationTodo& todo = *result[i];
+      simulator::SimulationJob& todo = *result[i];
       if(todo.phase_type == simulator::PointPhase)
       {
         output_stream_ << "P";
@@ -35,7 +35,7 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
       output_stream_ << *it << ", ";
       double sum = 0;
       for(unsigned int i = 0; i < result.size(); i++){
-        simulator::SimulationTodo& todo = *result[i];
+        simulator::SimulationJob& todo = *result[i];
         output_stream_ << todo.profile[*it] << ", ";
         sum += todo.profile[*it];
       }

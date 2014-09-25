@@ -103,6 +103,7 @@ public:
    */
   int get_connected_count();
 
+  
   /**
    * Get constraints and modules related to given variable
    * @parameter list of connectedconstraints for output
@@ -129,6 +130,13 @@ public:
   void get_related_constraints_vector(const ConstraintStore &constraints, std::vector<ConstraintStore> &constraints_vector,
                                std::vector<module_set_t> &modules_vector);
 
+  
+  /**
+   * Get vector of constraints and modules related to given variables or constraints
+   * @parameter list of connectedconstraints for output
+   * @parameter modules for output
+   */
+  void get_related_constraints_vector(const ConstraintStore &constraints, const std::list<Variable> &variables, std::vector<ConstraintStore> &constraints_vector, std::vector<module_set_t> &modules_vector);
 
   /**
    * Get variabes included by connected component specified by index
@@ -179,6 +187,8 @@ private:
   
   void add(module_t &mod);
 
+  void get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set);
+  
   VariableNode* add_variable_node(Variable &);
   
   void check_connected_components();

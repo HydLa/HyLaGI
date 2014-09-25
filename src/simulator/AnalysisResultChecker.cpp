@@ -146,7 +146,7 @@ void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::solver::Symbolic
 
 
 module_set_list_t AnalysisResultChecker::calculate_mms(
-  simulator::simulation_todo_sptr_t& state,
+  simulator::simulation_job_sptr_t& state,
   const variable_map_t& vm,
   todo_container_t* todo_container)
 {
@@ -172,7 +172,7 @@ module_set_list_t AnalysisResultChecker::calculate_mms(
 
 bool AnalysisResultChecker::check_conditions(
   const hydla::symbolic_expression::node_sptr& cond,
-  simulation_todo_sptr_t& state,
+  simulation_job_sptr_t& state,
   const variable_map_t& vm,
   todo_container_t* todo_container)
 {
@@ -187,12 +187,12 @@ bool AnalysisResultChecker::check_conditions(
     return true;
   }else{
     for(int i=1; i<(int)check_consistency_result.true_parameter_maps.size();i++){
-      simulation_todo_sptr_t branch_state(new SimulationTodo(*state));
+      simulation_job_sptr_t branch_state(new SimulationJob(*state));
       branch_state->parameter_map = check_consistency_result.true_parameter_maps[i];
       todo_container->push_todo(branch_state);
     }
     for(int i=0; i<(int)check_consistency_result.false_parameter_maps.size();i++){
-      simulation_todo_sptr_t branch_state(new SimulationTodo(*state));
+      simulation_job_sptr_t branch_state(new SimulationJob(*state));
       branch_state->parameter_map = check_consistency_result.false_parameter_maps[i];
       todo_container->push_todo(branch_state);
     }
@@ -206,7 +206,7 @@ bool AnalysisResultChecker::check_conditions(
 bool 
 AnalysisResultChecker::check_conditions(
   const module_set_sptr& ms,
-  simulation_todo_sptr_t& state,
+  simulation_job_sptr_t& state,
   const variable_map_t& vm,
   bool b,
   todo_container_t* todo_container)

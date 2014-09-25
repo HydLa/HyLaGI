@@ -23,7 +23,7 @@ public:
 
   void print_unsat_cores(unsat_constraints_t S,unsat_continuities_t S4C);
 
-//  void find_unsat_core(const module_set_sptr& ms,unsat_constraints_t& S,unsat_continuities_t& S4C, simulation_todo_sptr_t&,const variable_map_t&);
+//  void find_unsat_core(const module_set_sptr& ms,unsat_constraints_t& S,unsat_continuities_t& S4C, simulation_job_sptr_t&,const variable_map_t&);
 
 /*  void find_unsat_core(const module_set_sptr& ms,unsat_constraints_t& S,unsat_continuities_t& S4C,
   const ask_set_t &positive_asks,

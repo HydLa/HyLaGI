@@ -36,7 +36,7 @@ namespace hydla {
 namespace simulator {
 
 
-PhaseResult::PhaseResult():cause_for_termination(NOT_SIMULATED), parent(nullptr), full_information(nullptr)
+PhaseResult::PhaseResult():cause_for_termination(NOT_SIMULATED), parent(nullptr)
 {
 }
 
@@ -53,13 +53,13 @@ void PhaseResult::generate_full_information()
   PhaseResult *ancestor = parent;
   std::list<PhaseResult *> ancestor_list;
   ancestor_list.push_back(this);
-  while(ancestor->parent != nullptr && ancestor->full_information == nullptr)
+  while(ancestor->parent != nullptr && !ancestor->full_information)
   {
     ancestor_list.push_back(ancestor);
     ancestor = ancestor->parent;
   }
-  assert(ancestor->full_information != nullptr);
-  full_information = new FullInformation(*ancestor->full_information);
+  assert(ancestor->full_information);
+  full_information = ancestor->full_information;
   for(auto r_it = ancestor_list.rbegin(); r_it != ancestor_list.rend(); r_it++)
   {
     for(auto ask : (*r_it)->diff_positive_asks)
@@ -77,32 +77,31 @@ void PhaseResult::generate_full_information()
 
 ask_set_t PhaseResult::get_all_positive_asks()
 {
-  if(full_information == nullptr)generate_full_information();
+  if(!full_information)generate_full_information();
   return full_information->positive_asks;
 }
 
 ask_set_t PhaseResult::get_all_negative_asks()
 {
-  if(full_information == nullptr)generate_full_information();
+  if(!full_information)generate_full_information();
   return full_information->negative_asks;
 }
 
-void PhaseResult::set_full_information(FullInformation *info)
+void PhaseResult::set_full_information(FullInformation &info)
 {
   full_information = info;
 }
 
 
-PhaseResult::PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause):
+PhaseResult::PhaseResult(const SimulationJob& todo, const CauseForTermination& cause):
   phase_type(todo.phase_type),
-  current_time(todo.current_time),
+  current_time(todo.owner->end_time),
   parameter_map(todo.parameter_map),
   diff_positive_asks(todo.positive_asks),
   diff_negative_asks(todo.negative_asks),
-  step(todo.parent->step + 1),
+  step(todo.owner->step + 1),
   cause_for_termination(cause),
-  parent(todo.parent.get()),
-  full_information(nullptr)
+  parent(todo.owner.get())
 {
 }
 
