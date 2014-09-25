@@ -31,9 +31,12 @@ public:
   struct AskNode{
     ask_t ask;
     module_t module; /// module which the ask belongs to
-    bool module_adopted;
+    bool module_adopted,
+         prev,
+         entailed;
+    AskNode* parent_ask;
     std::vector<VariableNode *> edges;
-    AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod),module_adopted(true){}
+    AskNode(const ask_t &a, const module_t &mod);
     std::string get_name() const;
   };
   
@@ -59,6 +62,9 @@ public:
   /// Set adoptedness of modules
   void set_adopted(const module_set_t &ms, bool adopted);
 
+  /// Set entailedness of the ask
+  void set_entailed(const ask_t &ask, bool entailed);
+
   // TODO: 親ガード条件が存在した場合にexpandedかどうかを考慮していない．
 
   /**
@@ -67,10 +73,10 @@ public:
   void dump_graph(std::ostream &os) const;
 
   /**
-   * Get asks adjacent to given variable
+   * Get active asks adjacent to given variable
    * @parameter asks for output
    */
-  void get_adjacent_asks(const std::string &variable, asks_t &asks);
+  void get_adjacent_asks(const std::string &variable, asks_t &asks, bool ignore_prev_asks = false);
 
   /**
    * Get variables adjacent to given ask
@@ -79,9 +85,11 @@ public:
   void get_adjacent_variables(const ask_t &asks, std::set<std::string> &variables);
 
   /**
-   * Get all asks
+   * Get all active asks
    */
-  asks_t get_asks();
+  asks_t get_active_asks(bool ignore_prev_asks = false);
+
+  bool active(const AskNode* ask)const;
 
 private:
   typedef std::map<std::string, VariableNode*> variable_map_t;  
@@ -94,6 +102,7 @@ private:
 
   var_nodes_t variable_nodes;
   ask_nodes_t ask_nodes;
+  AskNode* parent_ask;
   module_t current_module;
 
   std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;
