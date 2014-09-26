@@ -445,6 +445,12 @@ std::ostream& Definition::dump(std::ostream& s) const
   return s;
 }
 
+node_sptr Range::clone(){
+  node_type_sptr n(new Range(get_lhs()->clone(),get_rhs()->clone()));
+  n->set_string(get_string());
+  return n;
+}
+
 node_sptr ExpressionList::clone(){
   node_type_sptr n(new ExpressionList(list_name_));
   for(unsigned int i=0;i<arguments_.size();i++){
@@ -504,6 +510,33 @@ void ArbitraryNode::accept(node_sptr own,
   visitor->visit(boost::dynamic_pointer_cast<ArbitraryNode>(own));
 }
 
+std::ostream& Range::dump(std::ostream& s) const
+{
+  Node::dump(s);
+  s << "[" << get_string() << "]";
+  s << "[" << *get_lhs() << "," << *get_rhs() << "]";
+  return s;
+}
+
+std::ostream& ConditionalProgramList::dump(std::ostream& s) const
+{
+  Node::dump(s);
+  s << "[" << *get_program() << "]";
+  s << "[";
+  for(int i = 0; i < arguments_.size(); i++) s << *arguments_[i] << ",";
+  s << "]";
+  return s;
+}
+
+std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
+{
+  Node::dump(s);
+  s << "[" << *get_expression() << "]";
+  s << "[";
+  for(int i = 0; i < arguments_.size(); i++) s << *arguments_[i] << ",";
+  s << "]";
+  return s;
+}
 
 std::ostream& ArbitraryNode::dump(std::ostream& s) const 
 {
@@ -549,6 +582,54 @@ node_sptr Caller::clone()
   return n;
 }
 
+node_sptr ProgramCaller::clone()
+{
+  boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
+node_sptr ConstraintCaller::clone()
+{
+  boost::shared_ptr<ConstraintCaller> n(new ConstraintCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
+node_sptr ExpressionListCaller::clone()
+{
+  boost::shared_ptr<ExpressionListCaller> n(new ExpressionListCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
+node_sptr ProgramListCaller::clone()
+{
+  boost::shared_ptr<ProgramListCaller> n(new ProgramListCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
 node_sptr Definition::clone()
 {
   boost::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());

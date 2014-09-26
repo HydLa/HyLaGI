@@ -491,6 +491,7 @@ class ConstraintCaller : public Caller {
 public:
   ConstraintCaller(){}
   virtual ~ConstraintCaller(){}
+  virtual node_sptr clone();
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
@@ -507,6 +508,7 @@ class ProgramCaller : public Caller {
 public:
   ProgramCaller(){}
   virtual ~ProgramCaller(){}
+  virtual node_sptr clone();
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
@@ -1643,19 +1645,17 @@ public:
 
   virtual ~Range(){}
 
+  virtual std::ostream& dump(std::ostream&) const;
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
-  virtual node_sptr clone(){
-      node_type_sptr n(new Range);
-      return BinaryNode::clone(n);
-  }
+  virtual node_sptr clone();
 
   virtual std::string get_node_type_name() const {
     return "Range";
   }
 
   void set_string(std::string str){ header = str; }
-  std::string get_string(){ return header; }
+  std::string get_string() const { return header; }
 private:
   std::string header;
 };
@@ -1667,6 +1667,7 @@ class ExpressionListCaller : public Caller {
 public:
   ExpressionListCaller(){}
   virtual ~ExpressionListCaller(){}
+  virtual node_sptr clone();
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
@@ -1683,6 +1684,7 @@ class ProgramListCaller : public Caller {
 public:
   ProgramListCaller(){}
   virtual ~ProgramListCaller(){}
+  virtual node_sptr clone();
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
@@ -1741,13 +1743,14 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone();
+  virtual std::ostream& dump(std::ostream&) const;
 
   virtual std::string get_node_type_name() const {
     return "ConditionalExpressionList";
   }
 
   virtual void set_expression(node_sptr node){ expression_ = node;}
-  node_sptr get_expression(){ return expression_; }
+  node_sptr get_expression() const { return expression_; }
   void set_string(const std::string& str){list_name_ = str;}
   virtual std::string get_string() const{return list_name_;}
 
@@ -1795,13 +1798,14 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual node_sptr clone();
+  virtual std::ostream& dump(std::ostream&) const;
 
   virtual std::string get_node_type_name() const {
     return "ConditionalProgramList";
   }
 
   void set_program(node_sptr node){ program_ = node;}
-  node_sptr get_program(){ return program_; }
+  node_sptr get_program() const { return program_; }
   void set_string(const std::string& str){list_name_ = str;}
   virtual std::string get_string() const{return list_name_;}
 

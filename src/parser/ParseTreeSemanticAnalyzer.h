@@ -6,6 +6,7 @@
 #include "TreeVisitor.h"
 #include "DefinitionContainer.h"
 #include "ParseTree.h"
+#include "ListExpander.h"
 
 namespace hydla { 
 namespace parser {
@@ -212,6 +213,8 @@ private:
   /// Stateをつむためのスタック
   std::stack<State> todo_stack_;
    
+  ListExpander list_expander_;
+
   /**
    * 新しい子ノード
    * accept後、これに値が入っている場合はノードの値を交換する

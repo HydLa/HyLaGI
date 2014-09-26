@@ -418,8 +418,12 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
     IS_DEFINED_AS(name,args.size(),program_definitions,defined);
     if((defined)) return ret;
     else if(in_conditional_program_list_){
-      local_program_caller_.top().push_back(ret);
-      return ret;
+      defined.reset();
+      IS_DEFINED_AS(name,args.size(),constraint_definitions,defined);
+      if(!(defined)){ 
+        local_program_caller_.top().push_back(ret);
+        return ret;
+      }
     }
 //  error_occurred(lexer.get_current_position(), "undefined program of " + std::to_string(args.size()) + " args program \"" + name + "\"");
   }
@@ -967,6 +971,8 @@ node_sptr Parser::factor(){
   std::string name;
   // Pi | E
   if((ret = constant())) return ret;
+  // sum_of_list
+  if((ret = sum_of_list())){ return ret;}
 
   boost::shared_ptr<ArbitraryNode> func;
   // (function | unsupported_function) "(" (expression ("," expression)* )? ")"
@@ -998,8 +1004,8 @@ node_sptr Parser::factor(){
   if((ret = system_variable())){ return ret;}
   // number
   if((ret = number())){ return ret;}
-  // sum_of_list
-  if((ret = sum_of_list())){ return ret;}
+  // expression_list_element
+  if((ret = expression_list_element())){ return ret; }
   // "(" expression ")"
   if(lexer.get_token() == LEFT_PARENTHESES){
     // expression
@@ -1585,18 +1591,6 @@ node_sptr Parser::expression_list_factor(){
       }
     }
     lexer.set_current_position(list_position);
-    // "{" expression ".." expression "}"
-    if((ret = expression())){
-      if(lexer.get_token() == TWO_PERIOD){
-        node_sptr num2;
-        if((num2 = expression())){
-          if(lexer.get_token() == RIGHT_BRACES){
-            return boost::shared_ptr<Range>(new Range(ret,num2));
-          }
-        }
-      }
-    }
-    lexer.set_current_position(list_position);
     // "{" identifier number ".." identifier number "}"
     std::string str;
     if((str = variable_name()) != ""){
@@ -1623,6 +1617,19 @@ node_sptr Parser::expression_list_factor(){
         }
       }
     }
+    lexer.set_current_position(list_position);
+    // "{" expression ".." expression "}"
+    if((ret = expression())){
+      if(lexer.get_token() == TWO_PERIOD){
+        node_sptr num2;
+        if((num2 = expression())){
+          if(lexer.get_token() == RIGHT_BRACES){
+            return boost::shared_ptr<Range>(new Range(ret,num2));
+          }
+        }
+      }
+    }
+    lexer.set_current_position(list_position);
   }
   lexer.set_current_position(position);
   // "(" expression_list ")"
