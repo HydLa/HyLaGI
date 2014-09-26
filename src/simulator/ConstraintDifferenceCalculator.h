@@ -3,6 +3,7 @@
 #include "RelationGraph.h"
 #include "AskRelationGraph.h"
 #include "PhaseResult.h"
+#include "Simulator.h"
 
 namespace hydla {
 namespace simulator {
@@ -17,7 +18,7 @@ public:
   /*
    * Calculate which constraints is difference between a current todo and the parent.
    */
-  void calculate_difference_constraints(const phase_result_sptr_t parent, const boost::shared_ptr<RelationGraph> relation_graph);
+  void calculate_difference_constraints(const simulation_todo_sptr_t todo, const boost::shared_ptr<RelationGraph> relation_graph);
 
   void add_difference_constraints(const constraint_t constraint, const boost::shared_ptr<RelationGraph> relation_graph);
 
@@ -29,10 +30,10 @@ public:
   /**
    * return whether all variables of constraint are continuous
    */
-  bool is_continuous(const phase_result_sptr_t parent, const constraint_t constraint);
+  bool is_continuous(const simulation_todo_sptr_t todo, const ask_t ask);
 
   void collect_ask(const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
-      const std::vector<ask_t> &discrete_causes,
+      const std::map<ask_t, bool> &discrete_causes,
       const ask_set_t &positive_asks,
       const ask_set_t &negative_asks,
       ask_set_t &unknown_asks);

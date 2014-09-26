@@ -349,7 +349,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
   if(todo->phase_type == PointPhase)
   {
     cout << "(approximate time)" << endl;
-    affine_transformer_->approximate_time(todo->current_time, todo->parent->variable_map, todo->prev_map, todo->parent->parameter_map, (todo->discrete_causes_map.begin()->first)->get_guard());
+    affine_transformer_->approximate_time(todo->current_time, todo->parent->variable_map, todo->prev_map, todo->parent->parameter_map, (todo->discrete_causes.begin()->first)->get_guard());
     todo->parent->end_time = todo->current_time;
   }
   else
@@ -380,7 +380,7 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
       cout << "invalid variable name " << endl;
       return 0;
     }
-    affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (todo->discrete_causes_map.begin()->first)->get_guard());
+    affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (todo->discrete_causes.begin()->first)->get_guard());
     todo->prev_map = vm;
   }
 

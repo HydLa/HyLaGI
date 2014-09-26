@@ -8,17 +8,20 @@ namespace hydla
 namespace simulator
 {
 
-void ConstraintDifferenceCalculator::calculate_difference_constraints(const phase_result_sptr_t parent, const boost::shared_ptr<RelationGraph> relation_graph){
+void ConstraintDifferenceCalculator::calculate_difference_constraints(const simulation_todo_sptr_t todo, const boost::shared_ptr<RelationGraph> relation_graph){
   difference_constraints_.clear();
   
   ConstraintStore current_constraints = relation_graph->get_constraints();
   ConstraintStore difference_constraints;
-  if(parent->phase_type == IntervalPhase){
-    set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
+  if(todo->parent->phase_type == IntervalPhase){
+    set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
   }
   else{
-    set_symmetric_difference(parent->current_constraints, current_constraints, difference_constraints);
-    difference_constraints.add_constraint_store(parent->changed_constraints);
+    set_symmetric_difference(todo->parent->current_constraints, current_constraints, difference_constraints);
+    difference_constraints.add_constraint_store(todo->parent->changed_constraints);
+    for(auto cause : todo->discrete_causes){
+      if(!cause.second) difference_constraints.add_constraint(cause.first->get_child());
+    }
   }
   
   ConstraintStore tmp_constraints;
@@ -42,21 +45,29 @@ ConstraintStore ConstraintDifferenceCalculator::get_difference_constraints(){
   return difference_constraints_;
 }
 
-bool ConstraintDifferenceCalculator::is_continuous(const phase_result_sptr_t parent, const constraint_t constraint)
+bool ConstraintDifferenceCalculator::is_continuous(const simulation_todo_sptr_t todo, const ask_t ask)
 {
-  
   VariableFinder finder;
-  finder.visit_node(constraint);
+  finder.visit_node(ask->get_guard());
   variable_set_t variables(finder.get_all_variable_set());
+  finder.clear();
+  for(auto cause : todo->discrete_causes){
+    if(!cause.second) finder.visit_node(cause.first->get_child());
+  }
+  variable_set_t changing_variables(finder.get_all_variable_set());
+
   for(auto variable : variables){
-    auto differential_pair = parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
-    if(differential_pair == parent->variable_map.end() || differential_pair->second.undefined()) return false;
+    auto differential_pair = todo->parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
+    if(differential_pair == todo->parent->variable_map.end() || differential_pair->second.undefined()) return false;
+    for(auto cv : changing_variables){
+      if(variable.get_name() == cv.get_name()) return false;
+    }
   }
   return true;
 }
 
 void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRelationGraph> ask_relation_graph,
-    const std::vector<ask_t> &discrete_causes,
+    const std::map<ask_t, bool> &discrete_causes,
     const ask_set_t &positive_asks,
     const ask_set_t &negative_asks,
     ask_set_t &unknown_asks){
@@ -75,8 +86,14 @@ void ConstraintDifferenceCalculator::collect_ask( const boost::shared_ptr<AskRel
     }
   }
   for(auto ask : discrete_causes){
-    if(!positive_asks.count(ask) && !negative_asks.count(ask)) unknown_asks.insert(ask);
+    if(!positive_asks.count(ask.first) && !negative_asks.count(ask.first)) unknown_asks.insert(ask.first);
   }
+
+/*
+  std::cout<<"positive_asks: "<<positive_asks<<std::endl;
+  std::cout<<"negative_asks: "<<negative_asks<<std::endl;
+  std::cout<<"unknown_asks: "<<unknown_asks<<std::endl;
+*/
 }
 
 void ConstraintDifferenceCalculator::set_symmetric_difference(
