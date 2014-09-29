@@ -1,8 +1,10 @@
 /* A program for a hot-air balloon rising by fuel tanks that are exchanged. */
 
 INIT<=>h=10/\h'=0/\fuel=1/\timer=0
-        /\ 1<exT<4
-        /\ 1<volume<3.
+//        /\ 1<exT<4
+//        /\ 1<volume<3.
+          /\ exT = 2
+          /\ volume = 2.
 
 CONS<=>[](exT'=0/\volume'=0).
 TIME<=>[](timer'=1).

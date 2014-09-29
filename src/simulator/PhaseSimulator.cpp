@@ -113,20 +113,30 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
             todo->expanded_diff.insert(make_pair(positive.ask->get_child(), true));
             todo->positive_asks.insert(positive.ask);
           }
-          else discrete_nonprev_positives.push_back(positive);
+          else
+          {
+            discrete_nonprev_positives.push_back(positive);
+          }
         }
       }
       for(auto negative : todo->discrete_negative_asks)
       {
         if(negative.on_time)
         {
-          if(guard_relation_graph_->set_entailed_if_prev(negative.ask, true))
+          if(guard_relation_graph_->set_entailed_if_prev(negative.ask, false))
           {
             relation_graph_->set_expanded(negative.ask->get_child(), false);
             todo->expanded_diff.insert(make_pair(negative.ask->get_child(), false));
             todo->negative_asks.insert(negative.ask);
           }
-          else discrete_nonprev_negatives.push_back(negative);
+          else
+          {
+            // set ask "not entailed" to preserve monotonicity in calculate closure
+            discrete_nonprev_negatives.push_back(negative);
+            todo->expanded_diff.insert(make_pair(negative.ask->get_child(), false));
+            guard_relation_graph_->set_entailed(negative.ask, false);
+            relation_graph_->set_expanded(negative.ask->get_child(), false);
+          }
         }
       }
     }
@@ -503,7 +513,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         if(positive.on_time && !judged_asks.count(positive.ask) && !finder.include_variables(positive.ask->get_guard()))
         {
           HYDLA_LOGGER_DEBUG_VAR(*positive.ask);
-          guard_relation_graph_->set_entailed_if_prev(positive.ask, true);
+          guard_relation_graph_->set_entailed(positive.ask, true);
           relation_graph_->set_expanded(positive.ask->get_child(), true);
           local_diff.insert(make_pair(positive.ask->get_child(), true));
           // TODO: 先頭で行なっているadd_constraintと重複する気がする
@@ -516,9 +526,6 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
       {
         if(negative.on_time && !judged_asks.count(negative.ask) && !finder.include_variables(negative.ask->get_guard()))
         {
-          // TODO: ここで制約が減るようなことが起きている気がする．他に影響が出ないか考える
-          guard_relation_graph_->set_entailed_if_prev(negative.ask, false);
-          relation_graph_->set_expanded(negative.ask->get_child(), false);
           local_diff.insert(make_pair(negative.ask->get_child(), false));
           // TODO: 先頭で行なっているadd_constraintと重複する気がする
           state->diff_constraints.add_constraint(negative.ask->get_child());
@@ -577,11 +584,10 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
       CheckConsistencyResult check_consistency_result;
       switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask, state->phase_type, state->profile)){
 
-        // TODO: ここでdiscrete_variablesを適切に管理する
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
         push_branch_states(state, check_consistency_result);
-        // Since we should choose entailed case in push_branch_states, continue.
+        // Since we should choose entailed case in push_branch_states, we go down without break.
       case ENTAILED:
         HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *(ask->get_guard()));
         relation_graph_->set_expanded(ask->get_child(), true);
@@ -595,6 +601,9 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *(ask->get_guard()));
         unknown_asks.erase(ask);
         judged_asks.insert(ask);
+        local_diff.insert(make_pair(ask->get_child(), false));
+        // TODO: 先頭で行なっているadd_constraintと重複する気がする
+        state->diff_constraints.add_constraint(ask->get_child());
         break;
       case BRANCH_VAR:
         HYDLA_LOGGER_DEBUG("--- branched ask ---\n", *(ask->get_guard()));
