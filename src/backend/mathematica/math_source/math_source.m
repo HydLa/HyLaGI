@@ -10,7 +10,7 @@ publicMethod[
   cons, pcons, vars, pars,
   Module[
     {cpTrue, cpFalse},
-    
+
     Quiet[
       cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
     ];
@@ -145,7 +145,7 @@ publicMethod[
 ];
 
 
-getConstraintStoreInterval[] := 
+getConstraintStoreInterval[] :=
 getConstraintStoreInterval[constraint, initConstraint, timeVariables];
 
 publicMethod[
@@ -181,11 +181,11 @@ publicMethod[
   createMap[pCons, isParameter, hasParameter, {}];
 ];
 
-createMap[cons_, judge_, hasJudge_, vars_] := 
+createMap[cons_, judge_, hasJudge_, vars_] :=
 createMap[cons, judge, hasJudge, vars] = (* for memoization *)
 Module[
   {map},
-  If[cons === True || cons === False, 
+  If[cons === True || cons === False,
     cons,
     (* Remove unnecessary Constraints*)
     map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
@@ -224,7 +224,7 @@ getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
 (* 式中に定数名が出現するか否か *)
 
 hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity] ] > 0;
- 
+
 hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Infinity] ] > 0;
 
 (* 式が定数そのものか否か *)
@@ -243,7 +243,7 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
-adjustExprs[andExprs_, judgeFunction_] := 
+adjustExprs[andExprs_, judgeFunction_] :=
 Fold[
   (
    If[#2 === True,
@@ -438,7 +438,7 @@ removeDash[var_] := Module[
 ];
 
 
-(* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除 
+(* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除
    ついでに othersを各条件に対して付加 *)
 
 makeListFromPiecewise[minT_, others_] := Module[
@@ -458,13 +458,13 @@ makeListFromPiecewise[minT_, others_] := Module[
  * 次のポイントフェーズに移行する時刻を求める
  *)
 
-calculateNextPointPhaseTime[maxTime_, discCauses_] := 
+calculateNextPointPhaseTime[maxTime_, discCauses_] :=
   calculateNextPointPhaseTime[maxTime, discCauses, constraint, initConstraint, pConstraint, timeVariables];
 
 
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
   そうでない場合は0を末尾に付加して返す．条件によって変化する場合は，条件を絞り込んでそれぞれを返す *)
-compareWithMaxTime[maxT_, timeCond_] := 
+compareWithMaxTime[maxT_, timeCond_] :=
 Module[
   {sol, tmpCond},
   sol = Reduce[maxT <= timeCond[[1]] && timeCond[[2]], Reals];
@@ -480,7 +480,7 @@ Module[
 
 
 (* 条件を満たす最小の時刻と，その条件の組を求める *)
-findMinTime[causeAndID_, condition_] := 
+findMinTime[causeAndID_, condition_] :=
 Module[
   {
     id,
@@ -531,10 +531,10 @@ compareMinTime[timeCond1_, timeCond2_] := ( Block[
         {timeAndIDs[minTime1, Join[timeAndID1[[2]], timeAndID2[[2]] ] ], nonMinimum, caseEq}]
     ];
     If[ caseLe =!= False,
-      ret = Append[ret, 
+      ret = Append[ret,
         {timeAndID1, Append[nonMinimum, timeCond2[[1]]], caseLe}]
     ];
-    If[ caseGr =!= False, 
+    If[ caseGr =!= False,
       ret = Append[ret,
         {timeAndID2, Append[nonMinimum, timeCond1[[1]]], caseGr}]
     ];
@@ -542,7 +542,7 @@ compareMinTime[timeCond1_, timeCond2_] := ( Block[
   ]
 );
 
- 
+
 (* ２つの時刻と条件の組のリストを比較し，各条件組み合わせにおいて，最小となる時刻と条件の組のリストを返す *)
 compareMinTimeList[list1_, list2_] := ( Block[
     {resultList, i, j},
@@ -574,7 +574,7 @@ calculateMinTimeList[causeAndIDList_, condition_, maxT_] := (
 (* 時刻と条件の組に対し，条件が論理和でつながっている場合それぞれの場合に分解する *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
 
- 
+
 publicMethod[
   calculateNextPointPhaseTime,
   maxTime, causeAndIDs, cons, initCons, pCons, vars,
@@ -591,26 +591,26 @@ publicMethod[
     tStore = Map[(Rule@@#)&, createDifferentiatedEquations[vars, applyList[cons] ] ];
     timeAppliedCauses = causeAndIDs /. tStore;
     simplePrint[timeAppliedCauses];
-    
+
     parameterList = getParameters[timeAppliedCauses];
-    
+
     (* 必要なpConsだけを選ぶ．不要なものが入っているとMinimzeの動作がおかしくなる？ *)
-    
+
     necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
-    
+
     simplePrint[necessaryPCons];
-    
+
     resultList = calculateMinTimeList[timeAppliedCauses, necessaryPCons, maxTime];
-    
+
     simplePrint[resultList];
-    
+
     (* 整形して結果を返す *)
     resultList = Map[({#[[1]], #[[2]], LogicalExpand[#[[3]] ]})&, resultList];
     resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
     resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
-    
+
     debugPrint["resultList after Format", resultList];
-    
+
     resultList = Map[
     ({timeAndIDsToReturn[#[[1]] ], Map[(timeAndIDsToReturn[#])&, #[[2]] ], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList];
     simplePrint[resultList];
@@ -644,7 +644,7 @@ createDifferentiatedEquation[var_, integRules_] := (
     tVar = removeDerivative[var];
     rule = Select[integRules, (#[[1]] === tVar)&];
     If[Length[rule] == 0, Return[{}], rule = rule[[1]] ];
-    If[MatchQ[var, Derivative[n_][x_][t]], 
+    If[MatchQ[var, Derivative[n_][x_][t]],
       dCount = Head[Head[var] ][[1]];
       result = Equal[var, D[rule[[2]], {t, dCount}] ],
       result = Equal[var, rule[[2]] ]
@@ -663,12 +663,12 @@ createDifferentiatedEquation[var_, integRules_] := (
     理由3: bvnulなどの例外処理を統一したい
   @param expr 時刻に関する変数についての制約
   @param initExpr 変数の初期値についての制約
-  @return overConstraint | 
+  @return overConstraint |
     {underConstraint, 変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} |
-    {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} 
+    {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, initExpr_] := 
+exDSolve[expr_, initExpr_] :=
 Module[
   {tmpExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
   inputPrint["exDSolve", expr, initExpr];
@@ -682,7 +682,7 @@ Module[
   tmpInitExpr = applyList[initExpr];
   resultRule = {};
   simplePrint[resultCons, tmpExpr];
-  While[True, 
+  While[True,
     searchResult = searchExprsAndVars[tmpExpr];
     If[searchResult === unExpandable,
       Break[],
@@ -710,7 +710,7 @@ Module[
   retCode = If[Length[tmpExpr] > 0 || unsolvable, underConstraint, solved];
   restCond = LogicalExpand[And@@tmpExpr && And@@resultCons];
   restCond = Or2or[restCond];
-  restCond = Map[(And2and[#])&, restCond];    
+  restCond = Map[(And2and[#])&, restCond];
   { retCode, restCond, resultRule}
 ];
 
@@ -778,7 +778,7 @@ Module[
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
   @param initExpr: 初期値制約のリスト．余計なものが含まれていてもよい
   @param tVars: exprに出現する変数のリスト
-*)  
+*)
 solveByDSolve[expr_, initExpr_, tVars_] :=
 solveByDSolve[expr, initExpr, tVars] = (* for memoization *)
 Module[
@@ -786,7 +786,7 @@ Module[
   tmpExpr = expr;
   ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
   simplePrint[tmpExpr, ini, tVars];
-  
+
   sol = Quiet[
     Check[
       DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],

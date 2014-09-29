@@ -11,14 +11,14 @@ ProgramOptions::ProgramOptions() : visible_desc_(LINE_LENGTH)
   init_descriptions();
 }
 
-ProgramOptions::~ProgramOptions() 
+ProgramOptions::~ProgramOptions()
 {
 }
 
 // TODO:コメントアウトしてあるオプションについて考える
 void ProgramOptions::init_descriptions()
 {
-  options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:", 
+  options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:",
                                    LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "produce help message")
@@ -27,47 +27,47 @@ void ProgramOptions::init_descriptions()
     ("parse_only", "only parse hydla program")
    // ("profile", "enable profile mode")
 
-  
-    ("dump_parse_tree", 
+
+    ("dump_parse_tree",
      "output parse tree")
-    ("dump_module_set_list", 
+    ("dump_module_set_list",
      "output set of module sets\n"
      "  which might be solution\n"
      "  by list representation")
-    /*("dump-module-set-list-noinit", 
+    /*("dump-module-set-list-noinit",
      "output set of non initial module sets\n"
      "  which might be solution\n"
      "  by list representation")*/
-    ("dump_module_set_graph", 
+    ("dump_module_set_graph",
      "output set of module sets\n"
      "  which might be solution\n"
      "  by graph representation")
-    /*("dump-module-set-graph-noinit", 
+    /*("dump-module-set-graph-noinit",
      "output set of non initial module sets\n"
      "  which might be solution\n"
      "  by graph representation")
      */
-    ("dump_relation_graph", 
+    ("dump_relation_graph",
      "output relation of constraints and variables\n"
      "  by graphviz format")
-    ("dump_in_progress", 
+    ("dump_in_progress",
      "output each phase in progress")
-          
+
     ("search",
-     value<std::string>()->default_value("d"), 
+     value<std::string>()->default_value("d"),
      "search method:\n"
      "  d: Depth First Search\n"
      "  b: Breadth First Search")
 
     ("solver,s",
-     value<std::string>()->default_value("m"), 
+     value<std::string>()->default_value("m"),
      "solver:\n"
      "  m or Mathematica\n"
      "  r or Reduce")
-     
+
 
     ("nd", "nondeterministic mode")
-    
+
     ("in", "interactive mode")
 
     ("find_unsat_core", "find unsat core")
@@ -82,20 +82,20 @@ void ProgramOptions::init_descriptions()
 
     ("parallel", "parallel mode")
 
-    ("pn", 
+    ("pn",
      value<int>()->default_value(2),
      "parallel number")
 
     ("reuse", "reusing results")
 
-    ("tm", 
+    ("tm",
      value<std::string>()->default_value("n"),
      "time measurement:\n"
      "  n - not measured\n"
      "  s - output standard format\n"
      "  c - output csv format\n")
-     
-    ("csv", 
+
+    ("csv",
      value<std::string>()->default_value(""),
      "csv file name for \"--tm c\":\n"
      " empty - standard out\n")
@@ -116,38 +116,38 @@ void ProgramOptions::init_descriptions()
      "analysis file name\n"
      "  empty - standard out or standard in\n")
 
-    /*    
-    ("output_format,f", 
-     value<std::string>()->default_value("t"), 
+    /*
+    ("output_format,f",
+     value<std::string>()->default_value("t"),
      "output format:\n"
      "  t - time function\n"
      "  n - numeric\n"
      "  i - numeric interval\n"
      "  m - for Mathematica Plot")
 
-    ("output_interval", 
-     value<std::string>()->default_value("1/10"), 
+    ("output_interval",
+     value<std::string>()->default_value("1/10"),
      "max time interval of output message")
-  
-    ("output_precision", 
-     value<int>()->default_value(5), 
+
+    ("output_precision",
+     value<int>()->default_value(5),
      "precision of output message")
      */
 
     ("output_name,o",
-     value<std::string>()->default_value(""), 
-     "file name for hydat output (if empty ./hydat/<program_name>.hydat)") 
+     value<std::string>()->default_value(""),
+     "file name for hydat output (if empty ./hydat/<program_name>.hydat)")
 
-    ("time,t", 
-     value<std::string>()->default_value(""), 
+    ("time,t",
+     value<std::string>()->default_value(""),
      "simulation time for the model\n"
      "  empty: infinity")
 
     ("ignore_warnings", "ignore warnings. \n"
      "Warnings are mainly caused by errors of calculations")
-     
-    ("phase,p", 
-     value<int>()->default_value(-1), 
+
+    ("phase,p",
+     value<int>()->default_value(-1),
      "simulation limit for number of phases in model\n"
      "  positive value: number of phases\n"
      "  negative value: infinity")
@@ -159,50 +159,51 @@ void ProgramOptions::init_descriptions()
       "change next PP time")
 
     ("epsilon,e",
+     value<int>()->default_value(-1),
      "epsilon mode")
-    
+
     /*
-    ("phase_expanded", 
-     value<int>()->default_value(-1), 
+    ("phase_expanded",
+     value<int>()->default_value(-1),
      "simulation limit for number of phases expanded in simulation\n"
      " (equivalent to \"phase\" if \"nd\" is invalid)"
      "  positive value: number of phases\n"
      "  negative value: infinity")
      */
-     
+
      /*
-    ("timeout", 
+    ("timeout",
      value<int>()->default_value(-1),
      "timeout (not implemented)"
      " negative or zero - infinity")
-     
-    ("timeout_phase", 
+
+    ("timeout_phase",
      value<int>()->default_value(-1),
      "timeout for each phase(not implemented)"
      " negative or zero - infinity")
-     
-    ("timeout_case", 
+
+    ("timeout_case",
      value<int>()->default_value(-1),
      "timeout for each case(not implemented)"
      " negative or zero - infinity")
      */
-     
-    ("timeout_calc", 
+
+    ("timeout_calc",
      value<int>()->default_value(-1),
      "timeout for each calculation in backend(second)\n"
      " negative or zero - infinity")
-     
-    ("fail_stop", 
+
+    ("fail_stop",
      "stop all simulation cases when assertion fails")
 
     /*
-		("mlc", 
+		("mlc",
      value<int>()->default_value(1),
      "HAConverter: Max Loop Count")
      */
 
-    ("math_name", 
-     value<std::string>()->default_value("math"), 
+    ("math_name",
+     value<std::string>()->default_value("math"),
      "name of mathematica command")
     ;
 
@@ -216,7 +217,7 @@ void ProgramOptions::init_descriptions()
 }
 
 
-void ProgramOptions::parse(int argc, char* argv[]) 
+void ProgramOptions::parse(int argc, char* argv[])
 {
   positional_options_description positional_opt;
   positional_opt.add("input-file", -1);

@@ -24,16 +24,21 @@ class JsonWriter{
   typedef hydla::simulator::parameter_map_t parameter_map_t;
   typedef hydla::simulator::Simulator       simulator_t;
   typedef hydla::simulator::ValueRange      value_range_t;
-  
+
+  virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
+  hydla::simulator::backend_sptr_t backend;
+  bool epsilon_mode_flag = false;
+
   void write(const simulator_t &simulator, const std::string &name);
   void write_phase(const phase_result_const_sptr_t &phase, const std::string &name);
   private:
   picojson::value for_phase(const phase_result_const_sptr_t &phase);
-  picojson::value for_vm(const variable_map_t &vm); 
-  picojson::value for_range(const value_range_t &range); 
-  picojson::value for_vs(const variable_set_t &vs); 
-  picojson::value for_pm(const parameter_map_t &pm); 
+  picojson::value for_vm(const variable_map_t &vm);
+  picojson::value for_range(const value_range_t &range);
+  picojson::value for_vs(const variable_set_t &vs);
+  picojson::value for_pm(const parameter_map_t &pm);
   picojson::value make_children(const phase_result_const_sptr_t &phase);
+  picojson::value for_range_diff(const value_range_t &range);
 };
 
 

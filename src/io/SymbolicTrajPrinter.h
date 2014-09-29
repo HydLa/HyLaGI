@@ -29,7 +29,6 @@ public:
   void set_output_variables(const std::set<std::string>& ovs){output_variables = ovs;}
 
   virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
-
   void output_limit_of_time(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result) const;
   void output_limits_of_variable_map(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const;
 

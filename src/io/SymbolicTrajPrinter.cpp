@@ -34,13 +34,10 @@ std::string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) 
     sstr << "t\t: " << result.current_time << "\n";
   }
 
-  if(epsilon_mode_flag){
-    output_limit_of_time(sstr,backend.get(),result);
-  }
-
   output_variable_map(sstr, result.variable_map);
 
   if(epsilon_mode_flag){
+    output_limit_of_time(sstr,backend.get(),result);
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
   }
   return sstr.str();
@@ -178,7 +175,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
   }
 }
 
-void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back,bool flag){
+void SymbolicTrajPrinter::set_epsilon_mode(backend_sptr_t back, bool flag){
   backend = back;
   epsilon_mode_flag = flag;
 }
@@ -287,6 +284,7 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
     }
   }
 }
+
 
 } // output
 } // hydla

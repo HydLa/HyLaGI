@@ -105,6 +105,9 @@ public:
   /// A preceding phase
   phase_result_sptr_t parent;
 
+  // store PP time Guard
+  std::vector<int> NextGuardids;
+
   PhaseResult();
   PhaseResult(const SimulationTodo& todo, const CauseForTermination& cause = NONE);
 };
@@ -123,5 +126,4 @@ std::ostream& operator<<(std::ostream& s, const hydla::simulator::always_set_t& 
 std::ostream& operator<<(std::ostream& s, const hydla::simulator::change_variables_t& a);
 
 } // namespace simulator
-} // namespace hydla 
-
+} // namespace hydla

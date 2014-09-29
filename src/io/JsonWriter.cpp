@@ -5,9 +5,15 @@
 #include "Utility.h"
 #include "Constants.h"
 
+//aho
+#include "Backend.h"
+
 using namespace std;
 using namespace picojson;
 using namespace hydla::utility;
+
+using namespace hydla::simulator;
+using namespace hydla::backend;
 
 namespace hydla{
 namespace io{
@@ -23,11 +29,11 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name)
   json_object["first_phases"] = make_children(root);
 
   value json(json_object);
- 
+
   std::ofstream ofs;
   ofs.open(name.c_str());
   ofs << json.serialize();
-  ofs.close(); 
+  ofs.close();
 }
 
 void JsonWriter::write_phase(const phase_result_const_sptr_t &phase, const std::string &name)
@@ -35,7 +41,7 @@ void JsonWriter::write_phase(const phase_result_const_sptr_t &phase, const std::
   std::ofstream ofs;
   ofs.open(name.c_str());
   ofs << for_phase(phase).serialize();
-  ofs.close();  
+  ofs.close();
 }
 
 value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
@@ -56,11 +62,11 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
     phase_object["type"] = value(string("IP"));
 
     object time_object;
-    time_object["start_time"] = 
+    time_object["start_time"] =
       value(phase->current_time.get_string());
     if(!phase->end_time.undefined())
     {
-      time_object["end_time"] = 
+      time_object["end_time"] =
         value(phase->end_time.get_string());
     }
     phase_object["time"] = value(time_object);
@@ -105,7 +111,7 @@ value JsonWriter::for_range(const value_range_t &range)
       lbs.push_back(value(lb));
     }
     range_object["lower_bounds"] = value(lbs);
- 
+
     picojson::array ubs;
     for(uint i = 0; i < range.get_upper_cnt(); i++)
     {
@@ -124,11 +130,20 @@ value JsonWriter::for_range(const value_range_t &range)
 value JsonWriter::for_vm(const variable_map_t &vm)
 {
   object vm_obj;
-  for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
-  {
-    const std::string &key = it->first.get_string();
-    const value_range_t &range = it->second;
-    vm_obj[key] = for_range(range);
+  if(epsilon_mode_flag){
+    for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+      {
+        const std::string &key = it->first.get_string();
+        const value_range_t &range = it->second;
+        vm_obj[key] = for_range_diff(range);
+      }
+  }else{
+    for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
+      {
+        const std::string &key = it->first.get_string();
+        const value_range_t &range = it->second;
+        vm_obj[key] = for_range(range);
+      }
   }
   return value(vm_obj);
 }
@@ -152,6 +167,54 @@ value JsonWriter::for_pm(const parameter_map_t &pm)
     pm_obj[key] = for_range(it->second);
   }
   return value(pm_obj);
+}
+
+void JsonWriter::set_epsilon_mode(backend_sptr_t back, bool flag){
+  backend = back;
+  epsilon_mode_flag = flag;
+}
+
+value JsonWriter::for_range_diff(const value_range_t &range)
+{
+  simulator::value_t tmp;
+  simulator::value_t ret;
+  object range_object;
+
+  if(range.unique())
+    {
+      tmp = range.get_unique_value();
+      backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+      range_object["unique_value"] = value(ret.get_string());
+    }
+  else
+    {
+      picojson::array lbs;
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
+        {
+          const value_range_t::bound_t &bound = range.get_lower_bound(i);
+          object lb;
+          tmp = bound.value;
+          backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+          lb["value"] = value(ret.get_string());
+          lb["closed"] = value(bound.include_bound);
+          lbs.push_back(value(lb));
+        }
+      range_object["lower_bounds"] = value(lbs);
+
+      picojson::array ubs;
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+        {
+          const value_range_t::bound_t &bound = range.get_upper_bound(i);
+          object ub;
+          tmp = bound.value;
+          backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+          ub["value"] = value(ret.get_string());
+          ub["closed"] = value(bound.include_bound);
+          ubs.push_back(value(ub));
+        }
+      range_object["upper_bounds"] = value(ubs);
+    }
+  return value(range_object);
 }
 
 

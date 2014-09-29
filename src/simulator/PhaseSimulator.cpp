@@ -86,6 +86,10 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
   result_list_t result;
   bool has_next = false;
   ConsistencyChecker consistency_checker(backend_);
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
+
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
@@ -102,7 +106,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
         CheckConsistencyResult cc_result;
         // TODO: 離散変化時刻の計算時の情報を生かせれば、そもそもこの判定自体が不要なはず。
         // 前のフェーズで成り立っていたかと、不等式を含むかどうかとかで判定できる。
-        // もしくは離散変化時刻の計算時に、PPを含むかどうかまで計算しておく。     
+        // もしくは離散変化時刻の計算時に、PPを含むかどうかまで計算しておく。
         switch(consistency_checker.check_entailment(cc_result, prev_guard->get_guard(), continuity_map_t(), todo->phase_type)){
         case ENTAILED:
           todo->judged_prev_map.insert(std::make_pair(prev_guard, true));
@@ -129,7 +133,7 @@ PhaseSimulator::result_list_t PhaseSimulator::make_results_from_todo(simulation_
     set_simulation_mode(IntervalPhase);
   }
 
-  while(todo->module_set_container->go_next())
+ while(todo->module_set_container->go_next())
   {
     module_set_sptr ms = todo->module_set_container->get_module_set();
 
@@ -167,6 +171,9 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
   ConstraintStore store;
   ConsistencyChecker consistency_checker(backend_);
   simulation_todo_sptr_t tes = todo;
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
 
   backend_->call("resetConstraintForVariable", 0, "", "");
 
@@ -202,6 +209,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
       {
         ConstraintStore sub_store =
           calculate_constraint_store(connected_ms, todo);
+
         if(sub_store.consistent())
         {
           HYDLA_LOGGER_DEBUG("CONSISTENT");
@@ -233,7 +241,6 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
 
   phase_result_sptr_t phase = make_new_phase(todo, store);
   phase->module_set = ms;
-
 
   // 変数表はここで作成する
   backend_->call("resetConstraint", 0, "", "");
@@ -269,7 +276,7 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
         if(!changed)
         {
           phase->variable_map[var_entry.first] =
-            phase->parent->parent->variable_map[var_entry.first];            
+            phase->parent->parent->variable_map[var_entry.first];
         }
       }
     }
@@ -325,8 +332,8 @@ PhaseSimulator::result_list_t PhaseSimulator::simulate_ms(const hierarchy::modul
     }
   }
 
-  if(opts_->epsilon_mode){
-    phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
+  if(opts_->epsilon_mode > 0){
+    phase->variable_map = cut_high_order_epsilon(backend_.get(),phase,opts_->epsilon_mode);
   }
 
   result.push_back(phase);
@@ -616,6 +623,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
 
   bool expanded;
 
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
+
   if(opts_->reuse && state->in_following_step() ){
     if(state->phase_type == PointPhase){
       ask_collector.collect_ask(&expanded_always,
@@ -734,7 +745,7 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           bool continuity = true;
           for(auto var : variables){
             //すべてのdiscrete_causesの後件に変数値が含まれていないことを調べないといけない
-            //以下の処理は黒ジャンプには対応しているが、白ジャンプには対応していない 
+            //以下の処理は黒ジャンプには対応しているが、白ジャンプには対応していない
             auto var_d = state->parent->variable_map.find(Variable(var.get_name(),var.get_differential_count()+1));
             if(var_d->second.undefined()){
               continuity = false;
@@ -747,8 +758,10 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
             continue;
           }
         }
-
         maker.visit_node((*it)->get_child(), state->phase_type == IntervalPhase, true);
+        if(opts_->epsilon_mode >= 0){
+          consistency_checker.set_epsilonmode(true);
+        }
         CheckConsistencyResult check_consistency_result;
         switch(consistency_checker.check_entailment(check_consistency_result, (*it)->get_guard(), maker.get_continuity_map(), state->phase_type)){
           case ENTAILED:
@@ -1082,6 +1095,9 @@ void PhaseSimulator::apply_previous_solution(
     continuity_map_t& continuity_map,
     const value_t& current_time ){
   ConsistencyChecker consistency_checker(backend_);
+  if(opts_->epsilon_mode >= 0){
+    consistency_checker.set_epsilonmode(true);
+  }
   for(auto pair : parent->variable_map){
     std::string var_name = pair.first.get_name();
     if(variables.find(var_name) == variables.end() ){
@@ -1139,7 +1155,7 @@ PhaseSimulator::todo_list_t
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addConstraint", 1, "cst", "", &phase->constraint_store);
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
-    
+
     PhaseSimulator::replace_prev2parameter(phase->parent, phase->variable_map, phase->parameter_map);
     variable_map_t vm_before_time_shift = phase->variable_map;
     phase->variable_map = shift_time_of_vm(phase->variable_map, phase->current_time);
@@ -1259,14 +1275,15 @@ PhaseSimulator::todo_list_t
         }
       }
     }
-    else
-    {
-      backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
-    }
 
-    if(opts_->epsilon_mode){
+    else if(opts_->epsilon_mode >= 0){
+      time_result = pass_specific_case2(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
+      // time_result = pass_specific_case(time_result,backend_.get(), phase,vm_before_time_shift,dc_causes,time_limit,current_todo);
       time_result = reduce_unsuitable_case(time_result,backend_.get(),phase);
     }
+
+    else
+      backend_->call("calculateNextPointPhaseTime", 2, "vltdc", "cp", &(time_limit), &dc_causes, &time_result);
 
     unsigned int time_it = 0;
     result_list_t results;
@@ -1385,7 +1402,6 @@ variable_map_t PhaseSimulator::shift_time_of_vm(const variable_map_t& vm, const 
   }
   return result;
 }
-
 
 }
 }
