@@ -353,11 +353,11 @@ void ListExpander::expand_conditional_list(boost::shared_ptr<ArbitraryNode> ret,
     }else{
       rhs = bn->get_rhs();
     }
-    if(lhs->get_string() == rhs->get_string()){
-      accept(ret);
-      if(new_child) ret = boost::dynamic_pointer_cast<ArbitraryNode>(new_child);
+    if(lhs->get_string() != rhs->get_string()){
+      expand_conditional_list(ret,element,list,idx+1);
       return;
     }
+    return;
   }
 
   // EachElement
