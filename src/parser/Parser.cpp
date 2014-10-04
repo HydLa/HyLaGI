@@ -955,15 +955,15 @@ node_sptr Parser::constant(){
 }
 
 /**
- * factor := (fanction | unsupported_function) "(" (expression ("," expression)* )? ")"
- *         | PI
- *         | E
+ * factor := constant 
+ *         | sum_of_list
+ *         | (fanction | unsupported_function) "(" (expression ("," expression)* )? ")"
  *         | parameter
  *         | variable
  *         | system_variable
  *         | number
+ *         | expression_list_element
  *         | "(" expression ")"
- *         | sum_of_list
  */
 node_sptr Parser::factor(){
   node_sptr ret;
