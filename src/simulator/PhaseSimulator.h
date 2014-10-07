@@ -27,13 +27,13 @@ struct FindMinTimeCandidate
 struct DCCandidate 
 {
   value_t time;
-  std::list<DiscreteAsk>        diff_positive_asks, /// newly entailed asks
+  std::map<ask_t, bool>        diff_positive_asks, /// newly entailed asks
                                 diff_negative_asks; /// newly not entailed asks
   /// condition for parameter in this case
   parameter_map_t parameter_map;
   DCCandidate(const value_t                &t,
-              const std::list<DiscreteAsk> &dp,
-              const std::list<DiscreteAsk> &dn,
+              const std::map<ask_t, bool> &dp,
+              const std::map<ask_t, bool> &dn,
               const parameter_map_t &p)
                 :time(t),
                  diff_positive_asks(dp),
@@ -80,7 +80,7 @@ public:
 
 private:
 
-  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::list<DiscreteAsk> &discrete_nonprev_positives, std::list<DiscreteAsk> &discrete_nonprev_negatives);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives);
 
   void replace_prev2parameter(
                               PhaseResult &phase,
@@ -100,7 +100,9 @@ private:
 
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
 
-  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::list<DiscreteAsk> &discrete_nonprev_positives, std::list<DiscreteAsk> &discrete_nonprev_negatives);
+  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives);
+
+  bool judge_continuity(const simulation_job_sptr_t &job, const ask_t &ask);
 
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t& current_todo);
@@ -117,7 +119,6 @@ private:
   module_set_container_sptr msc_no_init_;
 
   phase_result_sptr_t result_root;
-
 
   boost::shared_ptr<AskRelationGraph> guard_relation_graph_;
 

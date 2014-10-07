@@ -260,8 +260,8 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
       // TODO: 本来はここで論理和を取らないといけない．
       result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     }
-
     // TODO: ここで変数表が必ずしもできるとは限らない．underconstraintの場合があるので対処する．
+    // TODO: 最終的なunderconstraintは通すべきではないのでどうにかする．
     result.consistent_store.add_constraint_store(tmp_result.consistent_store);
     result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     vector<variable_map_t> create_result;
@@ -290,7 +290,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const list<Variable> &discrete_variables, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const variable_set_t &discrete_variables, const PhaseType& phase, profile_t &profile)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
@@ -305,6 +305,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
+    HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
     check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
   }
 

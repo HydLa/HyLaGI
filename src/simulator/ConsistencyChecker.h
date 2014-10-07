@@ -33,7 +33,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const std::list<Variable> &discrete_variables, const PhaseType& phase, profile_t &profile);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const variable_set_t &discrete_variables, const PhaseType& phase, profile_t &profile);
 
   /**
    * Get inconsistent module sets in the last check_consistency

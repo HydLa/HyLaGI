@@ -120,7 +120,7 @@ AskRelationGraph::asks_t AskRelationGraph::get_adjacent_asks(const string &var, 
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
   for(auto ask_node : var_node->edges)
   {
-    if(active(ask_node))
+    if(active(ask_node, ignore_prev_asks))
     {
       asks.push_back(ask_node->ask);
     }
@@ -145,7 +145,7 @@ AskRelationGraph::asks_t AskRelationGraph::get_active_asks(bool ignore_prev_asks
   asks_t asks;
   for(auto ask_node : ask_nodes)
   {
-    if(active(ask_node))asks.push_back(ask_node->ask);
+    if(active(ask_node, ignore_prev_asks))asks.push_back(ask_node->ask);
   }
   return asks;
 }
@@ -200,9 +200,9 @@ AskRelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ask(a), 
   prev = finder.get_variable_set().empty();
 }
 
-bool AskRelationGraph::active(const AskNode *ask) const
+bool AskRelationGraph::active(const AskNode *ask, bool ignore_prev) const
 {
-  return ask->module_adopted && ask->prev && (ask->parent_ask == nullptr || ask->parent_ask->entailed);
+  return ask->module_adopted && !(ignore_prev && ask->prev) && (ask->parent_ask == nullptr || ask->parent_ask->entailed);
 }
 
 } //namespace simulator

@@ -92,7 +92,7 @@ public:
    */
   asks_t get_active_asks(bool ignore_prev_asks = false);
 
-  bool active(const AskNode* ask)const;
+  bool active(const AskNode* ask, bool ignore_prev)const;
 
 private:
   typedef std::map<std::string, VariableNode*> variable_map_t;  

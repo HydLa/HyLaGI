@@ -39,14 +39,6 @@ typedef std::vector<variable_map_t>               variable_maps_t;
 typedef std::map<std::string, unsigned int>       profile_t;
 
 
-struct DiscreteAsk
-{
-  /// a struct for asks which cause discrete changes
-  ask_t ask;
-  bool on_time;   /// indicate whether the entailablity changes on time
-  DiscreteAsk(const ask_t& a, bool o):ask(a), on_time(o){}
-};
-
 /**
  * シミュレーションにおいて必要な仕事を表す構造体
  */
@@ -58,18 +50,16 @@ struct SimulationJob{
   parameter_map_t           parameter_map;
   ask_set_t                 positive_asks;
   ask_set_t                 negative_asks;
-  std::list<Variable>       discrete_variables;
   
   constraint_diff_t         expanded_diff;
   module_diff_t             adopted_module_diff;
   
-  std::list<DiscreteAsk>    discrete_positive_asks, discrete_negative_asks;
+  std::map<ask_t, bool>    discrete_positive_asks, discrete_negative_asks;
   next_pp_candidate_map_t   next_pp_candidate_map; 
 
   ConstraintStore           expanded_constraints;
   ConstraintStore           initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
   ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約．TODO:expanded_constraintsとの役割分担について考える．
-  ConstraintStore           diff_constraints;
   
   entailed_prev_map_t       judged_prev_map;
 
@@ -87,7 +77,7 @@ struct SimulationJob{
   SimulationJob(){}
 
   /**
-   * parentとなるPhaseResultから情報を引き継いだTodoを作る。
+   * parentとなるPhaseResultから情報を引き継いだJobを作る。
    */
   SimulationJob(const phase_result_sptr_t &parent_phase);
 

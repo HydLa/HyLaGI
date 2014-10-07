@@ -210,7 +210,7 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
 
 
 
-void RelationGraph::get_related_constraints_vector(const ConstraintStore &constraint_store, const list<Variable> &variables, vector<ConstraintStore> &constraints_vector, vector<module_set_t> &module_set_vector){
+void RelationGraph::get_related_constraints_vector(const ConstraintStore &constraint_store, const variable_set_t &variables, vector<ConstraintStore> &constraints_vector, vector<module_set_t> &module_set_vector){
   get_related_constraints_vector(constraint_store, constraints_vector, module_set_vector);
   for(auto var : variables)
   {

@@ -37,7 +37,6 @@ PhaseSimulator::~PhaseSimulator(){}
 void PhaseSimulator::process_todo(simulation_job_sptr_t &todo)
 {
   timer::Timer phase_timer;
-  HYDLA_LOGGER_DEBUG_VAR(*todo);
   module_set_container->reset(todo->ms_to_visit);
   // apply diff
   for(auto diff : todo->expanded_diff)
@@ -91,63 +90,50 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
   }
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
-  list<DiscreteAsk> discrete_nonprev_positives, discrete_nonprev_negatives;
+  map<ask_t, bool> discrete_nonprev_positives, discrete_nonprev_negatives;
 
   if(!relation_graph_is_taken_over)
   {
     // TODO: relation_graph_の状態が親フェーズから直接引き継いだものでない場合は，差分を用いることができないので全制約に関して設定する必要がある．
     assert(0);
   }
-  else
-  {  
-    if(todo->phase_type == PointPhase)
+  else if(todo->phase_type == PointPhase)
+  {
+    // set entailedness for prev_asks
+    for(auto positive : todo->discrete_positive_asks)
     {
-      // set entailedness for prev_asks
-      for(auto positive : todo->discrete_positive_asks)
+      if(positive.second)
       {
-        if(positive.on_time)
+        if(guard_relation_graph_->set_entailed_if_prev(positive.first, true))
         {
-          if(guard_relation_graph_->set_entailed_if_prev(positive.ask, true))
-          {
-            relation_graph_->set_expanded(positive.ask->get_child(), true);
-            todo->expanded_diff.insert(make_pair(positive.ask->get_child(), true));
-            todo->positive_asks.insert(positive.ask);
-          }
-          else
-          {
-            discrete_nonprev_positives.push_back(positive);
-          }
+          relation_graph_->set_expanded(positive.first->get_child(), true);
+          todo->expanded_diff.insert(make_pair(positive.first->get_child(), true));
+          todo->positive_asks.insert(positive.first);
         }
-      }
-      for(auto negative : todo->discrete_negative_asks)
-      {
-        if(negative.on_time)
+        else
         {
-          if(guard_relation_graph_->set_entailed_if_prev(negative.ask, false))
-          {
-            relation_graph_->set_expanded(negative.ask->get_child(), false);
-            todo->expanded_diff.insert(make_pair(negative.ask->get_child(), false));
-            todo->negative_asks.insert(negative.ask);
-          }
-          else
-          {
-            // set ask "not entailed" to preserve monotonicity in calculate closure
-            discrete_nonprev_negatives.push_back(negative);
-            todo->expanded_diff.insert(make_pair(negative.ask->get_child(), false));
-            guard_relation_graph_->set_entailed(negative.ask, false);
-            relation_graph_->set_expanded(negative.ask->get_child(), false);
-          }
+          discrete_nonprev_positives.insert(positive);
         }
       }
     }
-    else if(todo->phase_type == IntervalPhase)
+    for(auto negative : todo->discrete_negative_asks)
     {
-      // IP のガード条件はこの時点では判定が難しいので，すべてoffにしておくことにする．TODO: どうにかする．
-      todo->positive_asks.clear();
-      for(auto ask : all_asks)
+      if(negative.second)
       {
-        relation_graph_->set_expanded(ask->get_child(), false);
-        todo->negative_asks.insert(ask);
+        if(guard_relation_graph_->set_entailed_if_prev(negative.first, false))
+        {
+          relation_graph_->set_expanded(negative.first->get_child(), false);
+          todo->expanded_diff.insert(make_pair(negative.first->get_child(), false));
+          todo->negative_asks.insert(negative.first);
+        }
+        else
+        {
+          // set ask "not entailed" to preserve monotonicity in calculate closure
+          discrete_nonprev_negatives.insert(negative);
+          todo->expanded_diff.insert(make_pair(negative.first->get_child(), false));
+          guard_relation_graph_->set_entailed(negative.first, false);
+          relation_graph_->set_expanded(negative.first->get_child(), false);
+        }
       }
     }
   }
@@ -186,12 +172,14 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
 }
 
 
-list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& todo, constraint_diff_t &local_diff, list<DiscreteAsk> &discrete_nonprev_positives, list<DiscreteAsk> &discrete_nonprev_negatives)
+list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& todo, constraint_diff_t &local_diff, map<ask_t, bool> &discrete_nonprev_positives, map<ask_t, bool> &discrete_nonprev_negatives)
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
   list<phase_result_sptr_t> result_list;  
   timer::Timer cc_timer;
+
+
   bool consistent = calculate_closure(todo, local_diff, discrete_nonprev_positives, discrete_nonprev_negatives);
   todo->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   todo->profile["# of CalculateClosure"]++;
@@ -470,23 +458,61 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
   consistency_checker.reset(new ConsistencyChecker(backend_));
 }
 
-bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, list<DiscreteAsk> &discrete_nonprev_positives, list<DiscreteAsk> &discrete_nonprev_negatives)
+bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, map<ask_t, bool> &discrete_nonprev_positives, map<ask_t, bool> &discrete_nonprev_negatives)
 {
   ask_set_t judged_asks;
 
   ask_set_t unknown_asks;
 
-  bool expanded;
-  do{
-    for(auto diff : state->expanded_diff)state->diff_constraints.add_constraint(diff.first);
-    for(auto diff : state->adopted_module_diff)state->diff_constraints.add_constraint(diff.first.second);
-    for(auto diff : local_diff)state->diff_constraints.add_constraint(diff.first);
+  variable_set_t discrete_variables;
 
-    HYDLA_LOGGER_DEBUG_VAR(state->diff_constraints);
+  PhaseType &phase_type = state->phase_type;
+
+  bool expanded;
+  ConstraintStore all_diff;
+  relation_graph_->dump_active_graph(cerr);
+  for(auto diff : state->expanded_diff)all_diff.add_constraint(diff.first);
+  for(auto diff : state->adopted_module_diff)all_diff.add_constraint(diff.first.second);
+  for(auto diff : local_diff)all_diff.add_constraint(diff.first);
+  // IPでは親となるPPでの離散変化部分についても計算する必要がある
+  if(phase_type == IntervalPhase)
+  {
+    for(auto diff : state->owner->expanded_diff)
+    {
+      all_diff.add_constraint(diff.first);
+    }
+    for(auto diff : state->owner->adopted_module_diff)
+    {
+      all_diff.add_constraint(diff.first.second);
+    }
+    // TODO: ここですべてのaskを相手にする必要は無いはず
+    for(auto ask : all_asks)
+    {
+      // omit judgments of continous guards
+      if(state->in_following_step() && judge_continuity(state, ask)){
+        judged_asks.insert(ask);
+      }
+    }
+  }
+
+  do{
+    {
+      VariableFinder finder;
+      for(auto constraint : all_diff) finder.visit_node(constraint);
+      if(phase_type==PointPhase)
+      {
+        for(auto var : finder.get_variable_set())discrete_variables.insert(var);
+      }
+      else
+      {
+        for(auto var : finder.get_all_variable_set())discrete_variables.insert(var);
+      }
+    }
+    
     {
       timer::Timer consistency_timer;
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, state->diff_constraints, state->discrete_variables, state->phase_type, state->profile);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, all_diff, discrete_variables, phase_type, state->profile);
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
       state->profile["# of CheckConsistency"]++;
       if(!cc_result.consistent_store.consistent()){
@@ -496,93 +522,65 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         push_branch_states(state, cc_result);
       }
     }
-    
+
+    AskRelationGraph::asks_t asks;
     expanded = false;
     timer::Timer entailment_timer;
-
-    
-    if(state->phase_type == PointPhase)
+    if(phase_type == PointPhase)
     {
-      // guards not related to diff_constraints can be judged without check_entailment
+      // guards not related to diff can be judged without check_entailment
       VariableFinder finder;
-      for(auto diff : state->diff_constraints)finder.visit_node(diff);
-
-
+      for(auto diff : all_diff)finder.visit_node(diff);
       for(auto positive : discrete_nonprev_positives)
       {
-        if(positive.on_time && !judged_asks.count(positive.ask) && !finder.include_variables(positive.ask->get_guard()))
+        if(positive.second && !judged_asks.count(positive.first) && !finder.include_variables(positive.first->get_guard()))
         {
-          HYDLA_LOGGER_DEBUG_VAR(*positive.ask);
-          guard_relation_graph_->set_entailed(positive.ask, true);
-          relation_graph_->set_expanded(positive.ask->get_child(), true);
-          local_diff.insert(make_pair(positive.ask->get_child(), true));
-          // TODO: 先頭で行なっているadd_constraintと重複する気がする
-          state->diff_constraints.add_constraint(positive.ask->get_child());
-          judged_asks.insert(positive.ask);
+          guard_relation_graph_->set_entailed(positive.first, true);
+          relation_graph_->set_expanded(positive.first->get_child(), true);
+          local_diff.insert(make_pair(positive.first->get_child(), true));
+          state->positive_asks.insert(positive.first);
+          all_diff.add_constraint(positive.first->get_child());
+          judged_asks.insert(positive.first);
           expanded = true;
         }
       }
       for(auto negative : discrete_nonprev_negatives)
       {
-        if(negative.on_time && !judged_asks.count(negative.ask) && !finder.include_variables(negative.ask->get_guard()))
+        if(negative.second && !judged_asks.count(negative.first) && !finder.include_variables(negative.first->get_guard()))
         {
-          local_diff.insert(make_pair(negative.ask->get_child(), false));
-          // TODO: 先頭で行なっているadd_constraintと重複する気がする
-          state->diff_constraints.add_constraint(negative.ask->get_child());
-          judged_asks.insert(negative.ask);
+          state->positive_asks.insert(negative.first);
+          local_diff.insert(make_pair(negative.first->get_child(), false));
+          all_diff.add_constraint(negative.first->get_child());
+          judged_asks.insert(negative.first);
         }
       }
     }
-
-    
-    AskRelationGraph::asks_t asks;
-
+    else
     {
-      VariableFinder finder;
-      for(auto constraint : state->diff_constraints)
-      {
-        finder.visit_node(constraint);
-      }
-      variable_set_t discrete_variables = state->phase_type==PointPhase?finder.get_variable_set():finder.get_all_variable_set();
-      for(auto variable : discrete_variables)
-      {
-        asks.merge(guard_relation_graph_->get_adjacent_asks(variable.get_name(), state->phase_type == PointPhase));
-      }
+      // All discrete causes for parent PP need to be check_entailment
+      for(auto positive : state->discrete_positive_asks)asks.push_back(positive.first);
+      for(auto negative : state->discrete_negative_asks)asks.push_back(negative.first);
     }
+    
 
-
-
-
+    for(auto variable : discrete_variables)
+    {
+      asks.merge(guard_relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == PointPhase));
+    }
+    
+    
     for(auto ask : asks)
     {
-      if(state->phase_type == PointPhase  
+      if(phase_type == PointPhase  
          && state->owner == result_root
          && PrevSearcher().search_prev(ask->get_guard())){
         // in initial state, conditions about left-hand limits are considered to be invalid
         continue;
       }
       if(judged_asks.count(ask))continue;
-      HYDLA_LOGGER_DEBUG_VAR(*ask);
-
-      /* TODO: implement
-         if(state->phase_type == IntervalPhase && 
-         state->in_following_step()){
-         if(!state->discrete_causes.find(*it)->second){
-         if(difference_calculator_.is_continuous(state, (*it)->get_guard())){
-         if(state->owner->get_all_positive_asks().count(*it)){
-
-         relation_graph_->set_expanded((*it)->get_child(), true);
-         expanded = true;
-         }
-         unknown_asks.erase(it++);
-         continue;
-         }
-         }
-         }
-      */
       
       CheckConsistencyResult check_consistency_result;
-      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask, state->phase_type, state->profile)){
+      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask, phase_type, state->profile)){
 
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
@@ -593,6 +591,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         relation_graph_->set_expanded(ask->get_child(), true);
         guard_relation_graph_->set_entailed(ask, true);
         local_diff.insert(make_pair(ask->get_child(), true));
+        state->positive_asks.insert(ask);
         unknown_asks.erase(ask);
         judged_asks.insert(ask);
         expanded = true;
@@ -601,9 +600,10 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *(ask->get_guard()));
         unknown_asks.erase(ask);
         judged_asks.insert(ask);
+        state->negative_asks.insert(ask);
+        // TODO: この下の行は正しい？
         local_diff.insert(make_pair(ask->get_child(), false));
-        // TODO: 先頭で行なっているadd_constraintと重複する気がする
-        state->diff_constraints.add_constraint(ask->get_child());
+        all_diff.add_constraint(ask->get_child());
         break;
       case BRANCH_VAR:
         HYDLA_LOGGER_DEBUG("--- branched ask ---\n", *(ask->get_guard()));
@@ -621,78 +621,102 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
   return true;
 }
 
-  variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const variable_map_t &vm)
+bool PhaseSimulator::judge_continuity(const simulation_job_sptr_t &todo, const ask_t &ask)
+{
+  // TODO: 何かコーナーケースがある気がするので考える．
+  for(auto discrete_ask : todo->discrete_positive_asks)
   {
-    VariableFinder var_finder;
-    var_finder.visit_node(node);
-    variable_set_t related_variables = var_finder.get_all_variable_set();
-    variable_map_t related_vm;
-    for(auto related_variable : related_variables)
-    {
-      auto vm_it = vm.find(related_variable);
-      if(vm_it != vm.end())
-        related_vm[related_variable] = vm_it->second;
-    }
-    return related_vm;
+    if(discrete_ask.first == ask) return false;
   }
-
-  void
-    PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t& current_todo)
+  for(auto discrete_ask : todo->discrete_negative_asks)
   {
-    timer::Timer next_todo_timer;
-
-    simulation_job_sptr_t next_todo(new SimulationJob());
-    next_todo->id = ++todo_id;
-    next_todo->ms_to_visit = module_set_container->get_full_ms_list();
-    phase->expanded_diff.insert(current_todo->expanded_diff.begin(), current_todo->expanded_diff.end());
+    if(discrete_ask.first == ask) return false;
+  }
   
-    AlwaysFinder always_finder;
-    ConstraintStore non_always;
-    always_set_t always_set;
-    for(auto constraint : current_todo->expanded_constraints)
-    {
-      always_finder.find_always(constraint, &always_set, &non_always);
-    }
-    for(auto constraint : non_always)
-    {
-      relation_graph_->set_expanded(constraint, false);
-      next_todo->expanded_diff.insert(make_pair(constraint, false));
-    }
-    next_todo->parameter_map = phase->parameter_map;
+  VariableFinder finder;
+  finder.visit_node(ask->get_guard());
+  variable_set_t variables(finder.get_all_variable_set());
+  finder.clear();
 
-    if(current_todo->phase_type == PointPhase)
-    {
-      next_todo->phase_type = IntervalPhase;
-      phase->end_time = phase->current_time;
-      // TODO: 離散変化した変数が関わるガード条件はここから取り除く必要が有りそう（単純なコピーではだめ）
-      next_todo->owner = phase;
-      next_todo->discrete_positive_asks = current_todo->discrete_positive_asks;
-      next_todo->discrete_negative_asks = current_todo->discrete_negative_asks;
-      next_todo->prev_map = phase->variable_map;
-      VariableFinder v_finder;
-      for(auto diff : phase->expanded_diff)
-      {
-        v_finder.visit_node(diff.first);
-      }
-      for(auto var : v_finder.get_all_variable_set())
-      {
-        next_todo->discrete_variables.push_front(var);
-      }
+  for(auto cause : todo->discrete_positive_asks){
+    if(!cause.second) finder.visit_node(cause.first->get_child());
+  }
+  for(auto cause : todo->discrete_negative_asks){
+    if(!cause.second) finder.visit_node(cause.first->get_child());
+  }
+  variable_set_t changing_variables(finder.get_all_variable_set());
+
+  for(auto variable : variables){
+    auto differential_pair = todo->owner->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
+    if(differential_pair == todo->owner->variable_map.end() || differential_pair->second.undefined()) return false;
+    for(auto cv : changing_variables){
+      if(variable.get_name() == cv.get_name()) return false;
+    }
+  }
+  return true;
+}
+
+variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const variable_map_t &vm)
+{
+  VariableFinder var_finder;
+  var_finder.visit_node(node);
+  variable_set_t related_variables = var_finder.get_all_variable_set();
+  variable_map_t related_vm;
+  for(auto related_variable : related_variables)
+  {
+    auto vm_it = vm.find(related_variable);
+    if(vm_it != vm.end())
+      related_vm[related_variable] = vm_it->second;
+  }
+  return related_vm;
+}
+
+void
+PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t& current_todo)
+{
+  timer::Timer next_todo_timer;
+
+  simulation_job_sptr_t next_todo(new SimulationJob());
+  next_todo->id = ++todo_id;
+  next_todo->ms_to_visit = module_set_container->get_full_ms_list();
+  phase->expanded_diff.insert(current_todo->expanded_diff.begin(), current_todo->expanded_diff.end());
+  AlwaysFinder always_finder;
+  ConstraintStore non_always;
+  always_set_t always_set;
+  for(auto constraint : current_todo->expanded_constraints)
+  {
+    always_finder.find_always(constraint, &always_set, &non_always);
+  }
+  for(auto constraint : non_always)
+  {
+    relation_graph_->set_expanded(constraint, false);
+    next_todo->expanded_diff.insert(make_pair(constraint, false));
+  }
+  next_todo->parameter_map = phase->parameter_map;
+
+  if(current_todo->phase_type == PointPhase)
+  {
+    next_todo->phase_type = IntervalPhase;
+    next_todo->owner = phase;
+    phase->end_time = phase->current_time;
+    next_todo->discrete_positive_asks = current_todo->discrete_positive_asks;
+    next_todo->discrete_negative_asks = current_todo->discrete_negative_asks;
+    next_todo->prev_map = phase->variable_map;
       
-      current_todo->produced_phases.push_back(phase);
-      phase->todo_list.push_back(next_todo);
-    }
-    else
-    {
-      PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
-      next_todo->phase_type = PointPhase;
+    current_todo->produced_phases.push_back(phase);
+    phase->todo_list.push_back(next_todo);
+  }
+  else
+  {
+    PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
+    next_todo->phase_type = PointPhase;
 
-      backend_->call("resetConstraint", 0, "", "");
-      backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
+    backend_->call("resetConstraint", 0, "", "");
+    backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);
     
-      pp_time_result_t time_result;
-      value_t time_limit(max_time);
-      time_limit -= phase->current_time;
+    pp_time_result_t time_result;
+    value_t time_limit(max_time);
+    time_limit -= phase->current_time;
     
 
 /*    
@@ -844,61 +868,61 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
    }
 */
 
-      for(auto ask : phase->get_all_positive_asks())
-      {
-        symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
-        find_min_time_result_t find_min_time_result;
-        variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
-        backend_->call("findMinTime", 3, "etmvtvlt", "f", &negated_node, &related_vm, &time_limit, &find_min_time_result);
-        time_result = compare_min_time(time_result, find_min_time_result, ask, false);
-      }
-      for(auto ask : phase->get_all_negative_asks())
-      {
-        symbolic_expression::node_sptr node(ask->get_guard());
-        find_min_time_result_t find_min_time_result;
-        variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
-        backend_->call("findMinTime", 3, "etmvtvlt", "f", &node, &related_vm, &time_limit, &find_min_time_result);
-        time_result = compare_min_time(time_result, find_min_time_result, ask, true);
-      }
+    for(auto ask : phase->get_all_positive_asks())
+    {
+      symbolic_expression::node_sptr negated_node(new Not(ask->get_guard()));
+      find_min_time_result_t find_min_time_result;
+      variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
+      backend_->call("findMinTime", 3, "etmvtvlt", "f", &negated_node, &related_vm, &time_limit, &find_min_time_result);
+      time_result = compare_min_time(time_result, find_min_time_result, ask, false);
+    }
+    for(auto ask : phase->get_all_negative_asks())
+    {
+      symbolic_expression::node_sptr node(ask->get_guard());
+      find_min_time_result_t find_min_time_result;
+      variable_map_t related_vm = get_related_vm(ask->get_guard(), phase->variable_map);
+      backend_->call("findMinTime", 3, "etmvtvlt", "f", &node, &related_vm, &time_limit, &find_min_time_result);
+      time_result = compare_min_time(time_result, find_min_time_result, ask, true);
+    }
 
-      if(time_result.empty())
-      {
-        DCCandidate candidate;
-        candidate.time = max_time;
-        time_result.push_back(candidate);
+    if(time_result.empty())
+    {
+      DCCandidate candidate;
+      candidate.time = max_time;
+      time_result.push_back(candidate);
+    }
+    phase_result_sptr_t pr = phase;
+    variable_map_t original_vm = pr->variable_map;
+    // まずインタラクティブ実行のために最小限の情報だけ整理する
+    auto time_it = time_result.begin();
+    while(true)
+    {
+      DCCandidate &candidate = *time_it;
+      // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
+      for(auto par_entry : candidate.parameter_map ){
+        pr->parameter_map[par_entry.first] = par_entry.second;
       }
-      phase_result_sptr_t pr = phase;
-      variable_map_t original_vm = pr->variable_map;
-      // まずインタラクティブ実行のために最小限の情報だけ整理する
-      auto time_it = time_result.begin();
-      HYDLA_LOGGER_DEBUG_VAR(time_result.size());
-      while(true)
+      pr->end_time = current_todo->owner->end_time + candidate.time;
+      backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+
+      pr->variable_map = value_modifier->shift_time(pr->current_time, original_vm);
+
+      current_todo->produced_phases.push_back(pr);
+      if(candidate.time.undefined() || candidate.time.infinite() )
       {
-        DCCandidate &candidate = *time_it;
-        // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
-        for(auto par_entry : candidate.parameter_map ){
-          pr->parameter_map[par_entry.first] = par_entry.second;
-        }
-        pr->end_time = current_todo->owner->end_time + candidate.time;
-        backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+        pr->cause_for_termination = simulator::TIME_LIMIT;
+      }
+      else
+      {
+        for(auto diff_positive : candidate.diff_positive_asks)next_todo->discrete_positive_asks.insert(diff_positive);
+        for(auto diff_negative : candidate.diff_negative_asks)next_todo->discrete_negative_asks.insert(diff_negative);
 
-        pr->variable_map = value_modifier->shift_time(pr->current_time, original_vm);
-
-        current_todo->produced_phases.push_back(pr);
-        if(candidate.time.undefined() || candidate.time.infinite() )
-        {
-          pr->cause_for_termination = simulator::TIME_LIMIT;
-        }
-        else
-        {
-          next_todo->discrete_positive_asks = candidate.diff_positive_asks;
-          next_todo->discrete_negative_asks = candidate.diff_negative_asks;
-          next_todo->parameter_map = pr->parameter_map;
-          next_todo->owner = pr;
-          next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
-          pr->todo_list.push_back(next_todo);
-        }
-        // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+        next_todo->parameter_map = pr->parameter_map;
+        next_todo->owner = pr;
+        next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
+        pr->todo_list.push_back(next_todo);
+      }
+      // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
 /*
   TODO: implement
   if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->cause_for_termination == TIME_LIMIT)
@@ -909,95 +933,95 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
   ret.push_back(next_todo);
   }
 */
-        if(++time_it == time_result.end())break;
-        pr = make_new_phase(pr);
-        pr->todo_list.clear();
-        next_todo.reset(new SimulationJob(*next_todo));
-        next_todo->produced_phases.clear();
-        next_todo->id = ++todo_id;
-      }
+      if(++time_it == time_result.end())break;
+      pr = make_new_phase(pr);
+      pr->todo_list.clear();
+      next_todo.reset(new SimulationJob(*next_todo));
+      next_todo->produced_phases.clear();
+      next_todo->id = ++todo_id;
     }
   }
+}
 
-  pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomers, const ask_t &ask, bool positive)
+pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomers, const ask_t &ask, bool positive)
+{
+  pp_time_result_t result;
+  if(existing.empty())
   {
-    pp_time_result_t result;
-    if(existing.empty())
+    for(auto newcomer :newcomers)
     {
-      for(auto newcomer :newcomers)
-      {
-        list<DiscreteAsk> positives, negatives;
-        if(positive) positives.push_back(DiscreteAsk(ask, newcomer.on_time));
-        else negatives.push_back(DiscreteAsk(ask, newcomer.on_time));
-        DCCandidate candidate(newcomer.time, positives, negatives, newcomer.parameter_map);
-        result.push_back(candidate);      
-      }
+      map<ask_t, bool> positives, negatives;
+      if(positive) positives.insert(make_pair(ask, newcomer.on_time));
+      else negatives.insert(make_pair(ask, newcomer.on_time));
+      DCCandidate candidate(newcomer.time, positives, negatives, newcomer.parameter_map);
+      result.push_back(candidate);      
     }
-    else if(newcomers.empty())
-    {
-      result = existing;
-      return result;
-    }
-    else
-    {
+  }
+  else if(newcomers.empty())
+  {
+    result = existing;
+    return result;
+  }
+  else
+  {
 
-      for(auto newcomer : newcomers)
+    for(auto newcomer : newcomers)
+    {
+      for(auto existing_it = existing.begin(); existing_it != existing.end(); existing_it++)
       {
-        for(auto existing_it = existing.begin(); existing_it != existing.end(); existing_it++)
+        compare_min_time_result_t compare_result;
+        backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing_it->time, &newcomer.time, &existing_it->parameter_map, &newcomer.parameter_map, &compare_result);
+        for(auto less_map : compare_result.less_maps)
         {
-          compare_min_time_result_t compare_result;
-          backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing_it->time, &newcomer.time, &existing_it->parameter_map, &newcomer.parameter_map, &compare_result);
-          for(auto less_map : compare_result.less_maps)
-          {
-            DCCandidate candidate(existing_it->time, existing_it->diff_positive_asks, existing_it->diff_negative_asks, less_map);
-            result.push_back(candidate);
-          }
-          for(auto equal_map : compare_result.equal_maps)
-          {
-            list<DiscreteAsk> positives = existing_it->diff_positive_asks,
-              negatives = existing_it->diff_negative_asks;
-            if(positive) positives.push_back(DiscreteAsk(ask, newcomer.on_time));
-            else negatives.push_back(DiscreteAsk(ask, newcomer.on_time));
-            DCCandidate candidate(existing_it->time, positives, negatives, equal_map);          result.push_back(candidate);
-          }
-          for(auto greater_map : compare_result.greater_maps)
-          {
-            list<DiscreteAsk> positives,
-              negatives;
-            if(positive) positives.push_back(DiscreteAsk(ask, newcomer.on_time));
-            else negatives.push_back(DiscreteAsk(ask, newcomer.on_time));
-            DCCandidate candidate(newcomer.time, positives, negatives, greater_map);
-            result.push_back(candidate);
-          }
+          DCCandidate candidate(existing_it->time, existing_it->diff_positive_asks, existing_it->diff_negative_asks, less_map);
+          result.push_back(candidate);
+        }
+        for(auto equal_map : compare_result.equal_maps)
+        {
+          map<ask_t, bool> positives = existing_it->diff_positive_asks,
+            negatives = existing_it->diff_negative_asks;
+          if(positive) positives.insert(make_pair(ask, newcomer.on_time));
+          else negatives.insert(make_pair(ask, newcomer.on_time));
+          DCCandidate candidate(existing_it->time, positives, negatives, equal_map);          result.push_back(candidate);
+        }
+        for(auto greater_map : compare_result.greater_maps)
+        {
+          map<ask_t, bool> positives,
+            negatives;
+          if(positive) positives.insert(make_pair(ask, newcomer.on_time));
+          else negatives.insert(make_pair(ask, newcomer.on_time));
+          DCCandidate candidate(newcomer.time, positives, negatives, greater_map);
+          result.push_back(candidate);
         }
       }
     }
-    return result;
   }
+  return result;
+}
 
-  void PhaseSimulator::apply_diff(const phase_result_sptr_t &phase)
+void PhaseSimulator::apply_diff(const phase_result_sptr_t &phase)
+{
+  for(auto diff: phase->expanded_diff)
   {
-    for(auto diff: phase->expanded_diff)
-    {
-      relation_graph_->set_expanded(diff.first, diff.second);
-    }
-    for(auto diff: phase->adopted_module_diff)
-    {
-      relation_graph_->set_adopted(diff.first, diff.second);
-    }
+    relation_graph_->set_expanded(diff.first, diff.second);
   }
+  for(auto diff: phase->adopted_module_diff)
+  {
+    relation_graph_->set_adopted(diff.first, diff.second);
+  }
+}
 
-  void PhaseSimulator::revert_diff(const phase_result_sptr_t &phase)
+void PhaseSimulator::revert_diff(const phase_result_sptr_t &phase)
+{
+  for(auto diff: phase->expanded_diff)
   {
-    for(auto diff: phase->expanded_diff)
-    {
-      relation_graph_->set_expanded(diff.first, !diff.second);
-    }
-    for(auto diff: phase->adopted_module_diff)
-    {
-      relation_graph_->set_adopted(diff.first, !diff.second);
-    }
+    relation_graph_->set_expanded(diff.first, !diff.second);
   }
+  for(auto diff: phase->adopted_module_diff)
+  {
+    relation_graph_->set_adopted(diff.first, !diff.second);
+  }
+}
 
 }
 }

@@ -136,7 +136,7 @@ public:
    * @parameter list of connectedconstraints for output
    * @parameter modules for output
    */
-  void get_related_constraints_vector(const ConstraintStore &constraints, const std::list<Variable> &variables, std::vector<ConstraintStore> &constraints_vector, std::vector<module_set_t> &modules_vector);
+  void get_related_constraints_vector(const ConstraintStore &constraints, const variable_set_t &variables, std::vector<ConstraintStore> &constraints_vector, std::vector<module_set_t> &modules_vector);
 
   /**
    * Get variabes included by connected component specified by index
