@@ -59,6 +59,8 @@ void PhaseSimulator::process_todo(simulation_job_sptr_t &todo)
     }
   }
   // revert diff
+  // caution: If there are duplications here (for example, positive asks in the previous phase are again included in diff in this phase),
+  // the state of the relation_graph_ won't be reverted!
   for(auto diff : todo->expanded_diff)
   {
     relation_graph_->set_expanded(diff.first, !diff.second);
@@ -95,6 +97,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
   if(!relation_graph_is_taken_over)
   {
     // TODO: relation_graph_の状態が親フェーズから直接引き継いだものでない場合は，差分を用いることができないので全制約に関して設定する必要がある．
+    // TODO: 並列実行とかしなければ現状でも問題はない
     assert(0);
   }
   else if(todo->phase_type == PointPhase)
@@ -130,7 +133,6 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
         {
           // set ask "not entailed" to preserve monotonicity in calculate closure
           discrete_nonprev_negatives.insert(negative);
-          todo->expanded_diff.insert(make_pair(negative.first->get_child(), false));
           guard_relation_graph_->set_entailed(negative.first, false);
           relation_graph_->set_expanded(negative.first->get_child(), false);
         }
@@ -143,6 +145,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
     constraint_diff_t ms_local_diff;
 
     // TODO: unadopted_ms も差分をとるようにして使いたい
+    // 大体の例題ではトップレベルからでも効率が悪化しないので，expanded_diffほど重要ではなさそう
     module_set_t unadopted_ms = module_set_container->unadopted_module_set();
     string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
@@ -470,7 +473,6 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
 
   bool expanded;
   ConstraintStore all_diff;
-  relation_graph_->dump_active_graph(cerr);
   for(auto diff : state->expanded_diff)all_diff.add_constraint(diff.first);
   for(auto diff : state->adopted_module_diff)all_diff.add_constraint(diff.first.second);
   for(auto diff : local_diff)all_diff.add_constraint(diff.first);
@@ -496,6 +498,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
   }
 
   do{
+    // assumption: Constraints increase monotonically in this loop
     {
       VariableFinder finder;
       for(auto constraint : all_diff) finder.visit_node(constraint);
@@ -548,8 +551,8 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
       {
         if(negative.second && !judged_asks.count(negative.first) && !finder.include_variables(negative.first->get_guard()))
         {
-          state->positive_asks.insert(negative.first);
-          local_diff.insert(make_pair(negative.first->get_child(), false));
+          state->negative_asks.insert(negative.first);
+          state->expanded_diff.insert(make_pair(negative.first->get_child(), false));
           all_diff.add_constraint(negative.first->get_child());
           judged_asks.insert(negative.first);
         }
@@ -591,6 +594,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         relation_graph_->set_expanded(ask->get_child(), true);
         guard_relation_graph_->set_entailed(ask, true);
         local_diff.insert(make_pair(ask->get_child(), true));
+        all_diff.add_constraint(ask->get_child());
         state->positive_asks.insert(ask);
         unknown_asks.erase(ask);
         judged_asks.insert(ask);
@@ -601,8 +605,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         unknown_asks.erase(ask);
         judged_asks.insert(ask);
         state->negative_asks.insert(ask);
-        // TODO: この下の行は正しい？
-        local_diff.insert(make_pair(ask->get_child(), false));
+        state->expanded_diff.insert(make_pair(ask->get_child(), false));
         all_diff.add_constraint(ask->get_child());
         break;
       case BRANCH_VAR:
@@ -623,7 +626,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
 
 bool PhaseSimulator::judge_continuity(const simulation_job_sptr_t &todo, const ask_t &ask)
 {
-  // TODO: 何かコーナーケースがある気がするので考える．
+  // TODO: 何かうまく行かないコーナーケースがある気がするので考える．
   for(auto discrete_ask : todo->discrete_positive_asks)
   {
     if(discrete_ask.first == ask) return false;
