@@ -1,5 +1,4 @@
 #include "ConsistencyChecker.h"
-#include "ConstraintDifferenceCalculator.h"
 #include "Backend.h"
 
 #include <iostream>

@@ -10,7 +10,6 @@
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
 #include "AskRelationGraph.h"
-#include "ConstraintDifferenceCalculator.h"
 
 namespace hydla {
 namespace simulator {
@@ -128,7 +127,6 @@ private:
   int                                   phase_sum_, todo_id;
   module_set_container_sptr             module_set_container;
   ask_set_t                             all_asks;
-  ConstraintDifferenceCalculator        difference_calculator_;
   boost::shared_ptr<ValueModifier>      value_modifier;
   value_t                               max_time;
 

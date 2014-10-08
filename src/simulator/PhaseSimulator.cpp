@@ -216,7 +216,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
   if(todo->in_following_step()){
     timer::Timer timer;
-    phase->changed_constraints = difference_calculator_.get_difference_constraints();
     if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
       variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
       for(auto var_entry : vm_to_take_over)
