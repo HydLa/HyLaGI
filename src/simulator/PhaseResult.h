@@ -121,7 +121,6 @@ public:
   int                          step;
   module_set_t                 module_set;
   ConstraintStore              current_constraints;
-  ConstraintStore              changed_constraints;
   next_pp_candidate_map_t      next_pp_candidate_map;
 
   CauseForTermination          cause_for_termination;

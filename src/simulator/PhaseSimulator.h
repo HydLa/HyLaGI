@@ -79,7 +79,7 @@ public:
 
 private:
 
-  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives);
 
   void replace_prev2parameter(
                               PhaseResult &phase,
@@ -99,7 +99,7 @@ private:
 
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
 
-  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives);
+  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives, ask_set_t &positive_asks, ask_set_t &negative_asks);
 
   bool judge_continuity(const simulation_job_sptr_t &job, const ask_t &ask);
 

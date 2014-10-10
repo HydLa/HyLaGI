@@ -68,8 +68,8 @@ public:
 
   void set_entailed(const ask_t &ask, bool entailed);
 
-  // TODO: 親ガード条件が存在した場合にexpandedかどうかを考慮していない．
-
+  bool get_entailed(const ask_t &ask)const;
+  
   /**
    * Print the structure in graphviz format.
    */

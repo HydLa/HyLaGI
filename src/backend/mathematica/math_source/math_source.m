@@ -605,7 +605,8 @@ Module[
       resultRule = Union[resultRule, rules[[1]] ];
       simplePrint[resultRule];
       tmpExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-      tmpExpr = Map[(If[!hasVariable[#], Reduce[#], #])&, tmpExpr];
+      simplePrint[tmpExpr];
+      tmpExpr = Map[(If[!hasVariable[#], Reduce[#, Reals], #])&, tmpExpr];
       If[MemberQ[tmpExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
       tmpExpr = Select[tmpExpr, (#=!=True)&];
       simplePrint[tmpExpr];

@@ -100,6 +100,12 @@ void AskRelationGraph::set_entailed(const ask_t &ask, bool entailed)
   node_it->second->entailed = entailed;
 }
 
+bool AskRelationGraph::get_entailed(const ask_t &ask)const
+{
+  auto node_it = ask_node_map.find(ask);
+  if(node_it == ask_node_map.end()) throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
+  return node_it->second->entailed;
+}
 
 bool AskRelationGraph::set_entailed_if_prev(const ask_t &ask, bool entailed)
 {
@@ -122,6 +128,7 @@ AskRelationGraph::asks_t AskRelationGraph::get_adjacent_asks(const string &var, 
   {
     if(active(ask_node, ignore_prev_asks))
     {
+      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask_node->ask))
       asks.push_back(ask_node->ask);
     }
   }

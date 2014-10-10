@@ -26,7 +26,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
   try
   {
     //TODO: implement BFS
-    DFS(result_root_);
+    dfs(result_root_);
   }
   catch(const std::runtime_error &se)
   {
@@ -53,7 +53,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
   return result_root_;
 }
 
-void SequentialSimulator::DFS(phase_result_sptr_t current)
+void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
   if(signal_handler::interrupted)
   {
@@ -79,7 +79,7 @@ void SequentialSimulator::DFS(phase_result_sptr_t current)
       if(opts_->dump_in_progress){
         printer.output_one_phase(next_phase);
       }
-      DFS(next_phase);
+      dfs(next_phase);
     }
     current->todo_list.pop_front();
   }
