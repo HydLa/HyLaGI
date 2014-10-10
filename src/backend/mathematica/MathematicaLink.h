@@ -26,7 +26,7 @@ public:
   virtual ~MathematicaLink() ;
 
   /**
-   * 次のリターンパケットの直前までtextpktなどを受信する
+   * receive packets until next return packet received
    */
   bool receive_to_return_packet();
   
