@@ -286,8 +286,8 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintCaller> node){
       (*output_stream_) << ", ";
     }
   }
-  (*output_stream_) << ") ";
-  if(node->get_child()) print_unary_node(*node, "{", "}");
+  (*output_stream_) << ")";
+  // if(node->get_child()) print_unary_node(*node, "{", "}");
 }
 
 // プログラム呼び出し
@@ -303,7 +303,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
     }
   }
   (*output_stream_) << ")";
-  if(node->get_child())print_unary_node(*node, "{", "}");
+  // if(node->get_child())print_unary_node(*node, "{", "}");
 }
 
 } // namespace symbolic_expression

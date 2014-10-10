@@ -126,7 +126,7 @@ public:
       accept(node->get_actual_arg(i));
     }
     if(arg_size) container_name_ += ")";
-    accept(node->get_child());
+    // accept(node->get_child());
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
@@ -139,16 +139,18 @@ public:
       accept(node->get_actual_arg(i));
     }
     if(arg_size) container_name_ += ")";
-    accept(node->get_child());
+    // accept(node->get_child());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
     if(container_name_ == ""){
-      container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node->get_child());
+      accept(node->get_child());
+      /*
       container_name_ += "$";
       container_name_ += boost::lexical_cast<std::string>(
                           mod_name_map_[container_name_]++); 
+*/
     }
 
     // create ModuleSet

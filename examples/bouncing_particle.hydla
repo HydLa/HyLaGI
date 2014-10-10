@@ -1,7 +1,7 @@
 // bouncing particle
 
-INIT <=> y = 10 & y' = 0.
-FALL <=> [](y'' = -10).
-BOUNCE <=> [](y- = 0 => y' = -4/5*y'-).
+INIT(y) <=> y = 10 & y' = 0.
+FALL(y) <=> [](y'' = -10).
+BOUNCE(y) <=> [](y- = 0 => y' = -4/5*y'-).
 
-INIT, FALL << BOUNCE.
+INIT(y1), FALL(y1) << BOUNCE(y1).
