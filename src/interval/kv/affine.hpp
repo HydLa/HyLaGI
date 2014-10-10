@@ -21,6 +21,7 @@
 #include <kv/convert.hpp>
 
 #include <map> //added@hyrose
+#pragma GCC diagnostic ignored "-Wall" // added@hyrose
 
 /*
  * define simplicity of affine arithmetic
