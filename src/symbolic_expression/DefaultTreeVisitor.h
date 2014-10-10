@@ -6,9 +6,8 @@ namespace hydla {
 namespace symbolic_expression {
   
 /**
- * 各ノードに対してデフォルトの動作（全ノード走査するが，何も変更しない）を行うヘルパクラス．
- * このクラスを継承することで，「一部のノードに対してのみ処理を行うクラス」が作りやすくなるはず．
- * ただしこれが望ましい実装なのかはよく分かっていない by matsusho
+ * 各ノードに対して全子ノードを走査するクラス．
+ * 継承先で各visitをオーバーライドして新たなVisitorを作る．
  */
 class DefaultTreeVisitor: public TreeVisitor {
 public:

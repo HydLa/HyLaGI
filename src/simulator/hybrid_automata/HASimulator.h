@@ -19,7 +19,7 @@ public:
 
   virtual ~HASimulator();
 
-  virtual phase_result_const_sptr_t simulate();
+  virtual phase_result_sptr_t simulate();
 	
 	parameter_map_t get_init_vm(phase_result_sptr_t pr);
 	ha_result_t get_ha(ha_results_t ha_results);

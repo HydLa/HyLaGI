@@ -13,9 +13,8 @@ VariableFinder::VariableFinder()
 VariableFinder::~VariableFinder()
 {}
 
-void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool include_guard)
+void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node)
 {
-  include_guard_ = include_guard;
   in_prev_ = false;
   differential_count_ = 0;
   accept(node);
@@ -71,6 +70,17 @@ bool VariableFinder::include_variables(std::set<std::string> variables) const
 }
 
 
+bool VariableFinder::include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const
+{
+  VariableFinder tmp_finder;
+  tmp_finder.visit_node(constraint);
+  for(auto found_var : variables_)
+  {
+    if(tmp_finder.include_variable(found_var))return true;
+  }
+  return false;
+}
+
 bool VariableFinder::include_variables_prev(std::set<std::string> variables) const
 {
   for(auto found_var : prev_variables_)
@@ -100,10 +110,7 @@ variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variabl
 // Ask制約
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
-  if(include_guard_)
-  {
-    accept(node->get_guard());
-  }
+  accept(node->get_guard());
   accept(node->get_child());
 }
 

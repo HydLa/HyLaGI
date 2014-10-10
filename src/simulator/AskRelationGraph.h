@@ -18,7 +18,7 @@ public:
   typedef hierarchy::ModuleSet module_set_t;
   typedef hierarchy::ModuleSet::module_t module_t;
   typedef boost::shared_ptr<symbolic_expression::Ask> ask_t;
-  typedef std::vector<ask_t> asks_t;
+  typedef std::list<ask_t> asks_t;
   
   struct VariableNode;
   struct AskNode;
@@ -31,9 +31,12 @@ public:
   struct AskNode{
     ask_t ask;
     module_t module; /// module which the ask belongs to
-    bool module_adopted;
+    bool module_adopted,
+         prev,
+         entailed;
+    AskNode* parent_ask;
     std::vector<VariableNode *> edges;
-    AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod),module_adopted(true){}
+    AskNode(const ask_t &a, const module_t &mod);
     std::string get_name() const;
   };
   
@@ -59,29 +62,37 @@ public:
   /// Set adoptedness of modules
   void set_adopted(const module_set_t &ms, bool adopted);
 
-  // TODO: 親ガード条件が存在した場合にexpandedかどうかを考慮していない．
+  /// Set entailedness of the ask if it is prev_ask
+  /// @return true if the ask is prev_ask
+  bool set_entailed_if_prev(const ask_t &ask, bool entailed);
 
+  void set_entailed(const ask_t &ask, bool entailed);
+
+  bool get_entailed(const ask_t &ask)const;
+  
   /**
    * Print the structure in graphviz format.
    */
   void dump_graph(std::ostream &os) const;
 
   /**
-   * Get asks adjacent to given variable
+   * Get active asks adjacent to given variable
    * @parameter asks for output
    */
-  void get_adjacent_asks(const std::string &variable, asks_t &asks);
+  asks_t get_adjacent_asks(const std::string &variable, bool ignore_prev_asks = false);
 
   /**
    * Get variables adjacent to given ask
    * @parameter constraints for output
    */
-  void get_adjacent_variables(const ask_t &asks, std::set<std::string> &variables);
+  std::set<std::string> get_adjacent_variables(const ask_t &asks);
 
   /**
-   * Get all asks
+   * Get all active asks
    */
-  asks_t get_asks();
+  asks_t get_active_asks(bool ignore_prev_asks = false);
+
+  bool active(const AskNode* ask, bool ignore_prev)const;
 
 private:
   typedef std::map<std::string, VariableNode*> variable_map_t;  
@@ -94,6 +105,7 @@ private:
 
   var_nodes_t variable_nodes;
   ask_nodes_t ask_nodes;
+  AskNode* parent_ask;
   module_t current_module;
 
   std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;

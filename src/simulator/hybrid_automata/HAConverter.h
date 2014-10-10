@@ -17,9 +17,9 @@ public:
 
   virtual ~HAConverter();
 
-  virtual phase_result_const_sptr_t simulate();
+  virtual phase_result_sptr_t simulate();
 
-  virtual void process_one_todo(simulation_todo_sptr_t& todo);
+  virtual void process_one_todo(simulation_job_sptr_t& todo);
 	
 	typedef phase_result_sptrs_t													 current_condition_t;
 	typedef std::deque<current_condition_t> 					 		 current_conditions_t;

@@ -143,7 +143,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
     assert(typeid(*condition) == typeid(symbolic_expression::Equal));
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
-    finder.visit_node(condition, false);
+    finder.visit_node(condition);
     if(finder.include_variable(variable_to_approximate) || finder.include_variable_prev(variable_to_approximate))
     {
       variable_set_t variables = finder.get_all_variable_set();
@@ -182,7 +182,7 @@ void AffineApproximator::approximate_time(value_t& time, const variable_map_t& i
     assert(typeid(*condition) == typeid(symbolic_expression::Equal));
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
-    finder.visit_node(condition, false);
+    finder.visit_node(condition);
     variable_set_t variables = finder.get_all_variable_set();
     
     // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない

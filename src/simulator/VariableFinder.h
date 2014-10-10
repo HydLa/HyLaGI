@@ -29,9 +29,8 @@ public:
   /** 
    * 制約を調べ，変数の出現を取得する
    * @param node 調べる対象となる制約
-   * @param include_guard ガード条件を対象とするかどうか
    */
-  void visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool include_guard = true);
+  void visit_node(boost::shared_ptr<symbolic_expression::Node> node);
 
   void clear();
   
@@ -50,6 +49,9 @@ public:
 
   bool include_variable(const Variable& var)const;
   bool include_variable_prev(const Variable& var)const;
+
+  /// judge if given constraints include any of found variables
+  bool include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const;
   
   /// Ask制約
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
@@ -71,7 +73,6 @@ private:
   variable_set_t variables_, prev_variables_;  
   int differential_count_;
   bool in_prev_;
-  bool include_guard_;
 };
 
 } //namespace simulator

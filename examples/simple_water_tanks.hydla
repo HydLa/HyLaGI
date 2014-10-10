@@ -5,8 +5,8 @@ Xs := {x1..x2}.
 WATER <=> [](w = 30).
 
 LINEAR(x) <=> [](x'' = 0).
-POUR(x1,r1,v1) <=> [](x1- = r1- => x1' = w - v1).
-NOT_POUR(x1,r1,x2,v2) <=> [](x1- = r1- => x2' = -v2).
+POUR(x1,r1,v1) <=> [](x1- = r1- => x1' = 30 - v1).
+NOT_POUR(x1,r1,x2,v2) <=> [](x1- = r1- & x2'- = 30 - v2- => x2' = -v2).
 INIT(x,xinit,vinit) <=> x = xinit /\ x' = -vinit.
 
 WATER.

@@ -19,6 +19,7 @@
 #include "IncrementalModuleSet.h"
 
 #include "SequentialSimulator.h"
+#include "Logger.h"
 #include "SignalHandler.h"
 
 // namespace
@@ -53,21 +54,7 @@ int main(int argc, char* argv[])
 
   int ret = 0;
 
-  try {
-    hydla_main(argc, argv);
-  }
-  catch(std::exception &e) {
-    cerr << "error : " << e.what() << endl;
-    ret = -1;
-  } 
-#if !(defined(_MSC_VER) && defined(_DEBUG))
-  catch(...) {
-    cerr << "fatal error!!" << endl;
-    ret = -1;
-  }
-#else
-    system("pause");
-#endif
+  hydla_main(argc, argv);
 
   return ret;
 }

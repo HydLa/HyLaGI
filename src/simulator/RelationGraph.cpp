@@ -10,6 +10,17 @@ namespace hydla {
 namespace simulator {
 
 
+RelationGraph::RelationGraph(const module_set_t &ms)
+{
+  for(auto module : ms)
+  {
+    add(module);
+  }
+  ignore_prev = true;
+  up_to_date = false;
+}
+
+
 RelationGraph::~RelationGraph()
 {
   for(auto var : variable_nodes){
@@ -53,12 +64,13 @@ void RelationGraph::dump_graph(ostream & os) const
   os << "}" << endl;
 }
 
+
 void RelationGraph::dump_active_graph(ostream & os) const
 {
   os << "graph g {" << endl;
   os << "graph [ranksep = 2.0 ,rankdir = LR];" << endl;
   for(auto constraint_node : constraint_nodes) {
-    if(constraint_node->active())
+    if(constraint_node->is_active())
     {
       string constraint_name = constraint_node->get_name();
       os << "  \"" << constraint_name;
@@ -109,7 +121,7 @@ string RelationGraph::ConstraintNode::get_name() const
   return ret + " (" + module.first + ")";
 }
 
-bool RelationGraph::ConstraintNode::active() const
+bool RelationGraph::ConstraintNode::is_active() const
 {
   return expanded && module_adopted;
 }
@@ -125,7 +137,7 @@ bool RelationGraph::referring(const Variable& var)
 void RelationGraph::initialize_node_visited()
 {
   for(auto constraint_node : constraint_nodes){
-    constraint_node->visited = !constraint_node->active();
+    constraint_node->visited = false;
   }
 }
 
@@ -166,16 +178,53 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
       ConstraintNode *constraint_node = constraint_it->second;
       if(!constraint_node->visited)
       {
-        ConstraintStore connected_constraints;
-        module_set_t connected_ms;
-        variable_set_t vars;
-        visit_node(constraint_node, connected_constraints, connected_ms, vars);
-        constraints_vector.push_back(connected_constraints);
-        module_set_vector.push_back(connected_ms);
+        if(constraint_node->is_active())
+        {
+          ConstraintStore connected_constraints;
+          module_set_t connected_ms;
+          variable_set_t vars;
+          visit_node(constraint_node, connected_constraints, connected_ms, vars);
+          constraints_vector.push_back(connected_constraints);
+          module_set_vector.push_back(connected_ms);
+        }
+        else
+        {
+          // adjacent node may be active (this case is mainly caused by negative asks)
+          ConstraintStore connected_constraints;
+          module_set_t connected_ms;
+          variable_set_t vars;
+          for(auto edge : constraint_node->edges)
+          {
+            if(!ignore_prev || !edge.ref_prev) visit_node(edge.variable_node, connected_constraints, connected_ms, vars);
+          }
+          if(connected_constraints.size() > 0)
+          {
+            constraints_vector.push_back(connected_constraints);
+            module_set_vector.push_back(connected_ms);
+          }
+        }
       }
     }
   }
 }
+
+
+
+void RelationGraph::get_related_constraints_vector(const ConstraintStore &constraint_store, const variable_set_t &variables, vector<ConstraintStore> &constraints_vector, vector<module_set_t> &module_set_vector){
+  get_related_constraints_vector(constraint_store, constraints_vector, module_set_vector);
+  for(auto var : variables)
+  {
+    ConstraintStore constraints;
+    module_set_t modules;
+    get_related_constraints_core(var, constraints, modules);
+    if(!constraints.empty())
+    {
+      constraints_vector.push_back(constraints);
+      module_set_vector.push_back(modules);
+    }
+  }
+}
+
 
 
 void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
@@ -212,6 +261,11 @@ void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
+  get_related_constraints_core(var, constraints, module_set);
+}
+
+
+void RelationGraph::get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
   if(!variable_node_map.count(var))return;
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
@@ -231,7 +285,7 @@ void RelationGraph::check_connected_components(){
     module_set_t ms;
     ConstraintStore constraints;
     variable_set_t vars;
-    if(!constraint_node->visited){
+    if(!constraint_node->visited && constraint_node->is_active()){
       visit_node(constraint_node, constraints, ms, vars);
       connected_constraints_vector.push_back(constraints);
       connected_modules_vector.push_back(ms);
@@ -257,18 +311,8 @@ void RelationGraph::visit_node(VariableNode* node, ConstraintStore &constraints,
   for(auto edge : node->edges)
   {
     if( (!ignore_prev || !edge.ref_prev)
-      && !edge.constraint_node->visited) visit_node(edge.constraint_node, constraints, ms, vars);
+        && !edge.constraint_node->visited && edge.constraint_node->is_active()) visit_node(edge.constraint_node, constraints, ms, vars);
   }
-}
-
-RelationGraph::RelationGraph(const module_set_t &ms)
-{
-  for(auto module : ms)
-  {
-    add(module);
-  }
-  ignore_prev = true;
-  up_to_date = false;
 }
 
 int RelationGraph::get_connected_count()
@@ -282,7 +326,10 @@ void RelationGraph::set_adopted(const module_t &mod, bool adopted)
   if(!module_constraint_nodes_map.count(mod))throw HYDLA_SIMULATE_ERROR("module " + mod.first + " is not found");
   for(auto constraint_node : module_constraint_nodes_map[mod])
   {
-    constraint_node->module_adopted = adopted;
+    if(adopted != constraint_node->module_adopted)
+    {
+      constraint_node->module_adopted = adopted;
+    }
   }
   up_to_date = false;
 }
@@ -308,7 +355,10 @@ void RelationGraph::set_expanded_all(bool expanded)
 {
   for(auto node : constraint_nodes)
   {
-    node->expanded = expanded;
+    if(expanded != node->expanded)
+    {
+      node->expanded = expanded;
+    }
   }
   up_to_date = false;
 }
@@ -333,7 +383,7 @@ ConstraintStore RelationGraph::get_constraints()
   ConstraintStore constraints;
   for(auto constraint_node : constraint_nodes)
   {
-    if(constraint_node->active())
+    if(constraint_node->is_active())
     {
       constraints.add_constraint(constraint_node->constraint);
     }
@@ -382,7 +432,7 @@ void RelationGraph::set_ignore_prev(bool ignore)
   up_to_date = false;
 }
 
-void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node)
+void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node)
 {
   if(visit_mode == ADDING)
   {
@@ -399,7 +449,7 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
     {
       cons = new ConstraintNode(node, current_module);
       constraint_nodes.push_back(cons);
-      constraint_node_map[node] = cons; 
+      constraint_node_map[node] = cons;
       module_constraint_nodes_map[current_module].push_back(cons);
     }
 
@@ -423,12 +473,29 @@ void RelationGraph::visit_binary_node(boost::shared_ptr<symbolic_expression::Bin
   }
   else if(visit_mode == EXPANDING)
   {
-    if(constraint_node_map.count(node)) constraint_node_map[node]->expanded = true;
+    auto constraint_node_it = constraint_node_map.find(node);
+    if(constraint_node_it != constraint_node_map.end())
+    {
+      ConstraintNode* constraint_node = constraint_node_it->second;
+      if(!constraint_node->expanded)
+      {
+        constraint_node->expanded = true;
+      }
+    }
     else HYDLA_LOGGER_WARN("(@RelationGraph) try to expand unknown node: ", get_infix_string(node));
   }
   else if(visit_mode == UNEXPANDING)
   {
-    if(constraint_node_map.count(node)) constraint_node_map[node]->expanded = false;
+
+    auto constraint_node_it = constraint_node_map.find(node);
+    if(constraint_node_it != constraint_node_map.end())
+    {
+      ConstraintNode* constraint_node = constraint_node_it->second;
+      if(constraint_node->expanded)
+      {
+        constraint_node->expanded = false;
+      }
+    }
     else HYDLA_LOGGER_WARN("(@RelationGraph) try to unexpand unknown node: ", get_infix_string(node));
   }
 }
@@ -448,30 +515,7 @@ RelationGraph::VariableNode* RelationGraph::add_variable_node(Variable &var)
   }
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Equal> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::UnEqual> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Less> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LessEqual> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Greater> node)
-{
-  visit_binary_node(node);
-}
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node)
-{
-  visit_binary_node(node);
-}
+
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> node)
 {
   if(visit_mode == ADDING)
@@ -479,6 +523,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> node)
     accept(node->get_rhs());
   }
 }
+
 
 
 } //namespace simulator

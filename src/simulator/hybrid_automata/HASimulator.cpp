@@ -25,7 +25,7 @@ void HASimulator::set_ha_results(const ha_results_t& ha)
   ha_results = ha;
 }
 	
-phase_result_const_sptr_t HASimulator::simulate()
+phase_result_sptr_t HASimulator::simulate()
 {
   HYDLA_LOGGER_DEBUG("%% simulation start");
   HYDLA_LOGGER_DEBUG("*** using HA");
@@ -93,8 +93,7 @@ phase_result_const_sptr_t HASimulator::simulate()
     // profile 
     profile["EntirePhase"] = phase_timer.get_elapsed_us();
 
-    simulation_todo_sptr_t st(new SimulationTodo);
-    st->id = pr->id;
+    simulation_job_sptr_t st(new SimulationJob);
     st->phase_type = pr->phase_type;
     st->profile = profile;
     profile_vector_->push_back(st);

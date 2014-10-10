@@ -27,122 +27,75 @@ namespace simulator {
 
 class RelationGraph;
 
-typedef boost::shared_ptr<backend::Backend> backend_sptr_t;
-
-typedef hierarchy::ModuleSet                              module_set_t;
-typedef hierarchy::ModuleSetContainer                     module_set_container_t;
-typedef boost::shared_ptr<module_set_container_t>  module_set_container_sptr;
-typedef std::set<module_set_t>                         module_set_set_t;
+typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
+typedef hierarchy::ModuleSet                      module_set_t;
+typedef hierarchy::ModuleSetContainer             module_set_container_t;
+typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;
+typedef std::set<module_set_t>                    module_set_set_t;
 typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
+typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool>
+                                                  entailed_prev_map_t;
+typedef std::vector<variable_map_t>               variable_maps_t;
+typedef std::map<std::string, unsigned int>       profile_t;
 
-typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool> entailed_prev_map_t;
-typedef std::vector<variable_map_t>      variable_maps_t;
-typedef std::map<std::string, unsigned int> profile_t;
-
-struct DiscreteCause{
-  ask_t ask;
-  bool on_time;
-};
-
-struct CandidateOfNextPP{
-  std::vector<DiscreteCause >   causes;
-  value_t                       pp_time;
-};
-
-/// map from variables to candidates of next PP whose time is minimum
-typedef std::map<Variable, CandidateOfNextPP> next_pp_candidate_map_t;
 
 /**
- * シミュレーションすべきフェーズを表す構造体
+ * シミュレーションにおいて必要な仕事を表す構造体
  */
-struct SimulationTodo{
+struct SimulationJob{
   PhaseType                 phase_type;
   int                       id;
-  value_t                   current_time;
   /// 左極限値のマップ
   variable_map_t            prev_map;
   parameter_map_t           parameter_map;
-  ask_set_t           positive_asks;
-  ask_set_t           negative_asks;
-  std::map<ask_t, bool>     discrete_causes;
+  ask_set_t                 positive_asks;
+  ask_set_t                 negative_asks;
+  
+  constraint_diff_t         expanded_diff;
+  module_diff_t             adopted_module_diff;
+  
+  std::map<ask_t, bool>    discrete_positive_asks, discrete_negative_asks;
   next_pp_candidate_map_t   next_pp_candidate_map; 
+
   ConstraintStore           expanded_constraints;
-  ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約
+  ConstraintStore           initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
+  ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約．TODO:expanded_constraintsとの役割分担について考える．
   
   entailed_prev_map_t       judged_prev_map;
 
-  /// 前のフェーズ
-  phase_result_sptr_t parent;
+  phase_result_sptr_t owner;
 
-  /// このフェーズの制約ストアの初期値（離散変化条件など，特に重要な条件を入れる）
-  ConstraintStore initial_constraint_store;
+  phase_result_sptrs_t produced_phases;
+
   /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-  /// TODO:現状，これがまともに使われていない気がする．つまり，何か間違っている可能性があるし，無駄は確実にある
   module_set_set_t ms_to_visit;
   /// set of module sets which are unadopted in maximal module sets
   module_set_set_t unadopted_mss;
   /// プロファイリング結果
   profile_t profile;
 
-  SimulationTodo(){}
+  SimulationJob(){}
 
   /**
-   * parentとなるPhaseResultから情報を引き継いだTodoを作る。
-   * prev_mapはこのコンストラクタで初期化されない。
+   * parentとなるPhaseResultから情報を引き継いだJobを作る。
    */
-  SimulationTodo(const phase_result_sptr_t &parent_phase);
+  SimulationJob(const phase_result_sptr_t &parent_phase);
 
   inline bool in_following_step(){
-    return parent.get() && parent->parent && parent->parent->parent;
+    return owner && owner->parent && owner->parent->parent;
   }
 };
 
-std::ostream& operator<<(std::ostream& s, const SimulationTodo& a);
+std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
 
-typedef boost::shared_ptr<SimulationTodo>     simulation_todo_sptr_t;
 // プロファイリング結果全体
-// 各Todoごとにかかった時間（現状では，Todoそのものを保存している）
-typedef std::vector<simulation_todo_sptr_t> entire_profile_t;
+// 各Jobごとにかかった時間（現状では，Jobそのものを保存している）
+typedef std::vector<simulation_job_sptr_t> entire_profile_t;
 
 class PhaseSimulator;
 
 typedef PhaseResult                                       phase_result_t;
 typedef PhaseSimulator                                    phase_simulator_t;
-
-typedef boost::shared_ptr<SimulationTodo>                simulation_todo_sptr_t;
-
-
-class TodoContainer
-{
-  public:
-  virtual ~TodoContainer(){}
-  virtual void push_todo(simulation_todo_sptr_t& todo)
-  {
-    container_.push_back(todo);
-  }
-  
-  virtual simulation_todo_sptr_t pop_todo()
-  {
-    simulation_todo_sptr_t todo = container_.back();
-    container_.pop_back();
-    return todo;
-  }
-  
-  virtual bool empty()
-  {
-    return container_.empty();
-  }
-  
-  virtual int size()
-  {
-    return container_.size();
-  }
-  
-  protected:
-  std::deque<simulation_todo_sptr_t> container_;
-};
-
-typedef TodoContainer                                    todo_container_t;
 
 typedef std::set<variable_t, VariableComparator>                            variable_set_t;
 
@@ -158,7 +111,7 @@ public:
    * simulate using given parse_tree
    * @return root of the tree which expresses the result-trajectories
    */
-  virtual phase_result_const_sptr_t simulate() = 0;
+  virtual phase_result_sptr_t simulate() = 0;
   
   virtual void initialize(const parse_tree_sptr& parse_tree);
   
@@ -180,9 +133,11 @@ public:
   phase_result_sptr_t get_result_root() const {return result_root_;}
   
   /**
-   * push the initial state of simulation into the stack
+   *  the initial state of simulation into the stack
    */
-  virtual simulation_todo_sptr_t make_initial_todo();
+  virtual simulation_job_sptr_t make_initial_todo();
+
+  virtual simulation_job_sptr_t make_new_todo(phase_result_sptr_t parent);
   
   /**
    * @return introduced parameter
@@ -229,24 +184,20 @@ protected:
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
   
   void init_module_set_container(const parse_tree_sptr& parse_tree);
+
+  virtual void process_one_todo(simulation_job_sptr_t& todo);  
   
   void reset_result_root();
 
   parse_tree_sptr parse_tree_;  
 
-  /**
-   * a container for candidate module sets
-   */
+  /// container for candidate module sets
   module_set_container_sptr module_set_container_;
   
-  /**
-   * vector for results of profiling
-   */
+  /// vector for results of profiling
   boost::shared_ptr<entire_profile_t> profile_vector_;
 
-  /** 
-   * root of the tree of result trajectories
-   */
+  /// root of the tree of result trajectories
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;

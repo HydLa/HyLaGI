@@ -1,5 +1,4 @@
 #include "ConsistencyChecker.h"
-#include "ConstraintDifferenceCalculator.h"
 #include "Backend.h"
 
 #include <iostream>
@@ -30,10 +29,8 @@ ConsistencyChecker::~ConsistencyChecker(){}
 
 void ConsistencyChecker::send_prev_constraint(Variable &var)
 {
-  HYDLA_LOGGER_DEBUG_VAR(var);
   if(!prev_map->count(var))return;
   auto range = prev_map->find(var)->second;
-  HYDLA_LOGGER_DEBUG_VAR(range);
   if(range.unique())
   {
     value_t value = range.get_unique_value();
@@ -164,7 +161,7 @@ map<string, int> ConsistencyChecker::get_differential_map(variable_set_t &vs)
   return dm;
 }
 
-ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
+CheckEntailmentResult ConsistencyChecker::check_entailment(
   RelationGraph &relation_graph,
   CheckConsistencyResult &cc_result,
   const ask_t &guard,
@@ -178,12 +175,7 @@ ConsistencyChecker::CheckEntailmentResult ConsistencyChecker::check_entailment(
   VariableFinder finder;
   ConstraintStore constraint_store;
   module_set_t module_set;
-  // get constraints related with the guard 
-  {
-    timer::Timer timer;
-    relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
-    profile["GetRelatedConstraints"] += timer.get_elapsed_us();
-  }
+  relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
 
 
   backend->call("resetConstraintForVariable", 0, "", "");
@@ -267,8 +259,8 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
       // TODO: 本来はここで論理和を取らないといけない．
       result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     }
-
     // TODO: ここで変数表が必ずしもできるとは限らない．underconstraintの場合があるので対処する．
+    // TODO: 最終的なunderconstraintは通すべきではないのでどうにかする．
     result.consistent_store.add_constraint_store(tmp_result.consistent_store);
     result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     vector<variable_map_t> create_result;
@@ -297,36 +289,26 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const variable_set_t &discrete_variables, const PhaseType& phase, profile_t &profile)
 {
   CheckConsistencyResult result;
   inconsistent_module_sets.clear();
   result_maps.clear();
   result_maps.push_back(variable_map_t());
   HYDLA_LOGGER_DEBUG("");
-  if(reuse)
+
+  timer::Timer timer;
+  vector<ConstraintStore> related_constraints_list;
+  vector<module_set_t> related_modules_list;
+  relation_graph.get_related_constraints_vector(difference_constraints, discrete_variables, related_constraints_list, related_modules_list);
+  profile["PreparationInCC"] += timer.get_elapsed_us();
+  for(int i = 0; i < related_constraints_list.size(); i++)
   {
-    timer::Timer timer;
-    ConstraintStore difference_constraints = difference_calculator.get_difference_constraints();
-    vector<ConstraintStore> related_constraints_list;
-    vector<module_set_t> related_modules_list;
-    relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
-    profile["PreparationInCC"] += timer.get_elapsed_us();
-    for(int i = 0; i < related_constraints_list.size(); i++)
-    {
-      check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
-    }
-  }
-  else
-  {
-    for(int i = 0; i < relation_graph.get_connected_count(); i++)
-    {
-      ConstraintStore tmp_constraint_store = relation_graph.get_constraints(i);
-      module_set_t ms = relation_graph.get_modules(i);
-      check_consistency(tmp_constraint_store, relation_graph, ms, result, phase, profile);
-    }
+    HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
+    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
   }
 
+  
   if(result.inconsistent_store.empty())
   {
     result.inconsistent_store.set_consistency(false);

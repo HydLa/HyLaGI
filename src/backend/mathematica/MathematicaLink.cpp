@@ -111,6 +111,7 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   function_map_.insert(f_value_t("Atanh", "ArcTanh"));
   function_map_.insert(f_value_t("log", "Log"));
   function_map_.insert(f_value_t("ln", "Log"));
+  on_next_ = false;
 }
 
 MathematicaLink::~MathematicaLink()

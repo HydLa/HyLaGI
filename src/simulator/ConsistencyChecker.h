@@ -12,6 +12,14 @@ struct CheckConsistencyResult
   ConstraintStore consistent_store, inconsistent_store;
 };
 
+typedef enum{
+  ENTAILED,
+  CONFLICTING,
+  BRANCH_VAR,
+  BRANCH_PAR
+} CheckEntailmentResult;
+
+
 class VariableFinder;
 class ConstraintDifferenceCalculator;
 
@@ -19,19 +27,13 @@ class ConsistencyChecker{
 
 public:
 
-  typedef enum{
-    ENTAILED,
-    CONFLICTING,
-    BRANCH_VAR,
-    BRANCH_PAR
-  } CheckEntailmentResult;
 
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
 
   virtual ~ConsistencyChecker();
 
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintDifferenceCalculator &difference_calculator, const PhaseType& phase, const bool reuse, profile_t &profile);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const variable_set_t &discrete_variables, const PhaseType& phase, profile_t &profile);
 
   /**
    * Get inconsistent module sets in the last check_consistency

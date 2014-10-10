@@ -3,17 +3,18 @@
 #include "Variable.h"
 #include "Node.h"
 #include "ModuleSetContainer.h"
-#include "DefaultTreeVisitor.h"
+#include "TreeVisitorForAtomicConstraint.h"
 #include "ConstraintStore.h"
 
 namespace hydla {
 namespace simulator {
 
-
 /**
  * Graph to represent relations of constraints and variables
  */
-class RelationGraph: public symbolic_expression::DefaultTreeVisitor{
+class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
+
+// TODO: 数式のnodeとグラフ上のnodeが混じって大変なことになっているので分離したい
 
 public:
   typedef hierarchy::ModuleSet module_set_t;
@@ -22,8 +23,8 @@ public:
   
   struct VariableNode;
   struct ConstraintNode;
-  typedef std::vector<VariableNode* > var_nodes_t;
-  typedef std::vector<ConstraintNode* > constraint_nodes_t;
+  typedef std::list<VariableNode* > var_nodes_t;
+  typedef std::list<ConstraintNode* > constraint_nodes_t;
 
   struct EdgeToVariable
   {
@@ -49,10 +50,10 @@ public:
     bool module_adopted; /// whether the module is in ms
     bool expanded; /// whether the guard of the constraint is entailed
     std::vector<EdgeToVariable> edges;
-    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(true)
+    ConstraintNode(const constraint_t &cons, const module_t &mod):constraint(cons), module(mod), module_adopted(true), expanded(false)
     {}
     std::string get_name() const;
-    bool active() const;
+    bool is_active() const;
   };
   
   /**
@@ -102,6 +103,7 @@ public:
    */
   int get_connected_count();
 
+  
   /**
    * Get constraints and modules related to given variable
    * @parameter list of connectedconstraints for output
@@ -128,6 +130,13 @@ public:
   void get_related_constraints_vector(const ConstraintStore &constraints, std::vector<ConstraintStore> &constraints_vector,
                                std::vector<module_set_t> &modules_vector);
 
+  
+  /**
+   * Get vector of constraints and modules related to given variables or constraints
+   * @parameter list of connectedconstraints for output
+   * @parameter modules for output
+   */
+  void get_related_constraints_vector(const ConstraintStore &constraints, const variable_set_t &variables, std::vector<ConstraintStore> &constraints_vector, std::vector<module_set_t> &modules_vector);
 
   /**
    * Get variabes included by connected component specified by index
@@ -175,26 +184,20 @@ public:
 
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
-  typedef std::vector<std::pair<constraint_t, Variable > > relation_t;
   
   void add(module_t &mod);
 
+  void get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set);
+  
   VariableNode* add_variable_node(Variable &);
   
   void check_connected_components();
   void visit_node(ConstraintNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
   void visit_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
   void initialize_node_visited();
- 
-
-  void visit(boost::shared_ptr<symbolic_expression::Equal> node);
-  void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
-  void visit(boost::shared_ptr<symbolic_expression::Less> node);
-  void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
-  void visit(boost::shared_ptr<symbolic_expression::Greater> node);
-  void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
-  void visit(boost::shared_ptr<symbolic_expression::Ask> node);
-  void visit_binary_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
+  using TreeVisitorForAtomicConstraint::visit; // suppress warnings
+  void visit(boost::shared_ptr<symbolic_expression::Ask> node); 
+  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node);
 
   var_nodes_t variable_nodes;
   constraint_nodes_t constraint_nodes;
@@ -214,6 +217,7 @@ private:
   std::map<module_t, constraint_nodes_t>  module_constraint_nodes_map;
   std::map<constraint_t, ConstraintNode*> constraint_node_map;
   std::map<Variable, VariableNode*> variable_node_map;
+
   VisitMode visit_mode;
   bool ignore_prev;
 };

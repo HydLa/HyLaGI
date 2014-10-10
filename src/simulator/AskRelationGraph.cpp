@@ -10,6 +10,15 @@ namespace hydla {
 namespace simulator {
 
 
+AskRelationGraph::AskRelationGraph(const module_set_t &ms)
+{
+  for(auto module : ms)
+  {
+    add(module);
+  }
+}
+
+
 AskRelationGraph::~AskRelationGraph()
 {
   for(auto var : variable_nodes){
@@ -24,6 +33,7 @@ AskRelationGraph::~AskRelationGraph()
 void AskRelationGraph::add(module_t &mod)
 {
   current_module = mod;
+  parent_ask = nullptr;
   accept(mod.second);
 }
 
@@ -83,47 +93,66 @@ void AskRelationGraph::set_adopted(const module_set_t &ms, bool adopted)
 }
 
 
-void AskRelationGraph::get_adjacent_asks(const string &var, asks_t &asks){
-  asks.clear();
-  if(!variable_node_map.count(var))return;
+void AskRelationGraph::set_entailed(const ask_t &ask, bool entailed)
+{
+  auto node_it = ask_node_map.find(ask);
+  if(node_it == ask_node_map.end())return;
+  node_it->second->entailed = entailed;
+}
+
+bool AskRelationGraph::get_entailed(const ask_t &ask)const
+{
+  auto node_it = ask_node_map.find(ask);
+  if(node_it == ask_node_map.end()) throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
+  return node_it->second->entailed;
+}
+
+bool AskRelationGraph::set_entailed_if_prev(const ask_t &ask, bool entailed)
+{
+  auto node_it = ask_node_map.find(ask);
+  if(node_it == ask_node_map.end())return false;
+  if(node_it->second->prev)
+  {
+    node_it->second->entailed = entailed;
+    return true;
+  }
+  return false;
+}
+
+AskRelationGraph::asks_t AskRelationGraph::get_adjacent_asks(const string &var, bool ignore_prev_asks){
+  asks_t asks;
+  if(!variable_node_map.count(var))return asks;
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
   for(auto ask_node : var_node->edges)
   {
-    if(ask_node->module_adopted)
+    if(active(ask_node, ignore_prev_asks))
     {
+      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask_node->ask))
       asks.push_back(ask_node->ask);
     }
   }
+  return asks;
 }
 
 
-void AskRelationGraph::get_adjacent_variables(const ask_t &ask, set<string> &vars){
-  vars.clear();
-  if(!ask_node_map.count(ask))return;
+set<string> AskRelationGraph::get_adjacent_variables(const ask_t &ask){
+  set<string> vars;
+  if(!ask_node_map.count(ask))return vars;
   AskNode *ask_node = ask_node_map[ask];
-  if(ask_node == nullptr)throw HYDLA_SIMULATE_ERROR("AskNode is not found");
-  if(!ask_node->module_adopted)return;
   for(auto var_node: ask_node->edges)
   {
     vars.insert(var_node->variable);
   }
+  return vars;
 }
 
-AskRelationGraph::AskRelationGraph(const module_set_t &ms)
-{
-  for(auto module : ms)
-  {
-    add(module);
-  }
-}
-
-AskRelationGraph::asks_t AskRelationGraph::get_asks()
+AskRelationGraph::asks_t AskRelationGraph::get_active_asks(bool ignore_prev_asks)
 {
   asks_t asks;
   for(auto ask_node : ask_nodes)
   {
-    if(ask_node->module_adopted)asks.push_back(ask_node->ask);
+    if(active(ask_node, ignore_prev_asks))asks.push_back(ask_node->ask);
   }
   return asks;
 }
@@ -151,16 +180,12 @@ void AskRelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
   variable_set_t variables;
     
   AskNode* ask_node;
-  if(ask_node_map.count(ask))
-  {
-    ask_node = ask_node_map[ask];
-  }
-  else
-  {
-    ask_node = new AskNode(ask, current_module);
-    ask_nodes.push_back(ask_node);
-    ask_node_map[ask] = ask_node; 
-  }
+  assert(!ask_node_map.count(ask)); /// assume that same ask node doesn't exist
+
+  ask_node = new AskNode(ask, current_module);
+  ask_nodes.push_back(ask_node);
+  ask_node_map[ask] = ask_node;
+  ask_node->parent_ask = parent_ask;
 
   variables = finder.get_all_variable_set();
   for(auto variable : variables)
@@ -170,9 +195,22 @@ void AskRelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     var_node->edges.push_back(ask_node);
   }
 
+  parent_ask = ask_node;
   accept(ask->get_rhs());
+  parent_ask = ask_node->parent_ask;
 }
 
+AskRelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ask(a), module(mod), module_adopted(true), entailed(false), parent_ask(nullptr)
+{
+  VariableFinder finder;
+  finder.visit_node(ask->get_guard());
+  prev = finder.get_variable_set().empty();
+}
+
+bool AskRelationGraph::active(const AskNode *ask, bool ignore_prev) const
+{
+  return ask->module_adopted && !(ignore_prev && ask->prev) && (ask->parent_ask == nullptr || ask->parent_ask->entailed);
+}
 
 } //namespace simulator
 } //namespace hydla 

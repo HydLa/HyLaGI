@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BatchSimulator.h"
+#include "Simulator.h"
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 #include "PhaseResult.h"
