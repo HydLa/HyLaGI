@@ -303,8 +303,6 @@ std::ostream& ProgramListCaller::dump(std::ostream& s) const
   actual_args_t::const_iterator end = actual_args_.end();
 
   s << "program_list_call<" 
-    << get_id()
-    << ","
     << name_
     << "(";
 
@@ -329,8 +327,6 @@ std::ostream& ExpressionListCaller::dump(std::ostream& s) const
   actual_args_t::const_iterator end = actual_args_.end();
 
   s << "expression_list_call<" 
-    << get_id()
-    << ","
     << name_
     << "(";
 
@@ -354,9 +350,7 @@ std::ostream& ConstraintCaller::dump(std::ostream& s) const
   actual_args_t::const_iterator it  = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "constraint_call<" 
-    << get_id()
-    << ","
+  s << "ConstraintCall<" 
     << name_
     << "(";
 
@@ -380,9 +374,7 @@ std::ostream& ProgramCaller::dump(std::ostream& s) const
   actual_args_t::const_iterator it  = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "program_call<" 
-    << get_id()
-    << ","
+  s << "ProgramCall<" 
     << name_
     << "(";
 
@@ -406,8 +398,6 @@ std::ostream& Caller::dump(std::ostream& s) const
   actual_args_t::const_iterator end = actual_args_.end();
 
   s << "call<" 
-    << get_id()
-    << ","
     << name_
     << "(";
 
@@ -432,9 +422,7 @@ std::ostream& Definition::dump(std::ostream& s) const
   bound_variables_t::const_iterator end = bound_variables_.end();
 
   s << name_
-    << "<"
-    << get_id()
-    << ">(";
+    << "(";
 
   if(it!=end) s << *(it++);
   while(it!=end) {

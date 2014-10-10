@@ -25,6 +25,7 @@ public:
     n->accept(n, this);
   }
 
+
   // 制約定義
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node) = 0;
   

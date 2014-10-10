@@ -23,11 +23,6 @@ public:
   typedef variable_map_t::const_iterator variable_map_const_iterator;
 
     
-  // ノード表
-  typedef std::map<symbolic_expression::node_id_t, symbolic_expression::node_sptr> node_map_t;
-  typedef node_map_t::value_type         node_map_value_t;
-  typedef node_map_t::const_iterator     node_map_const_iterator;
-
   ParseTree();
   ParseTree(const ParseTree& pt);
 

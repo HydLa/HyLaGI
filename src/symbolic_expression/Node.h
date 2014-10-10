@@ -19,7 +19,6 @@ class ProgramDefinition;
 class TreeVisitor;
 class BaseNodeVisitor;
 
-typedef unsigned int            node_id_t;
 typedef boost::shared_ptr<Node> node_sptr;
 typedef boost::shared_ptr<const Node> node_const_sptr;
 
@@ -30,9 +29,7 @@ class Node {
 public:
   typedef boost::shared_ptr<Node> node_type_sptr;
 
-  Node() : 
-    id_(0)
-  {}
+  Node(){}
   
   virtual ~Node()
   {}
@@ -80,32 +77,9 @@ public:
    */
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << get_node_type_name()
-             << "<" << get_id() << ">";
-  }
-  
-
-  /**
-   * ノードIDの設定
-   */
-  void set_id(node_id_t id)
-  {
-    id_ = id;
+    return s << get_node_type_name();
   }
 
-  /**
-   * ノードIDを得る
-   */
-  node_id_t get_id() const 
-  {
-    return id_;
-  }
-
-private:
-  /**
-   * ノードID
-   */
-  node_id_t id_;
 };
 
 std::ostream& operator<<(std::ostream&, const Node&);
