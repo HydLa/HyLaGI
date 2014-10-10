@@ -24,11 +24,6 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 
   // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
 
-  module_set_set_t::iterator p_it = 
-    parallel_module_set_graph.full_module_set_set_.begin();
-  module_set_set_t::iterator p_end = 
-    parallel_module_set_graph.full_module_set_set_.end();
-
   // X
   module_set_set_t new_module_set_list(full_module_set_set_);
     

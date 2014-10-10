@@ -23,7 +23,7 @@ phase_result_sptr_t HAConverter::simulate()
 {
   std::string error_str;
   simulation_job_sptr_t init_todo = make_initial_todo();
-  int error_sum = 0;
+//  int error_sum = 0;
 	  
   current_condition_t cc_;
   push_current_condition(cc_);

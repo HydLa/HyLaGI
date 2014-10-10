@@ -212,8 +212,6 @@ private:
 
   /// Stateをつむためのスタック
   std::stack<State> todo_stack_;
-   
-  ListExpander list_expander_;
 
   /**
    * 新しい子ノード
@@ -246,6 +244,8 @@ private:
     program_list_definition_;
 
   std::stack<std::map<node_sptr, node_sptr> > local_variables_in_list_;  
+
+  ListExpander list_expander_;
 
   parse_tree::ParseTree* parse_tree_;
   
@@ -299,5 +299,5 @@ private:
 };
 
 } //namespace parser
-} //namespace hydla
+} //namespace ydla
 

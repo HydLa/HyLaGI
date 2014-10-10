@@ -104,7 +104,6 @@ public:
 private:
   void expand_conditional_list(boost::shared_ptr<symbolic_expression::ArbitraryNode>, symbolic_expression::node_sptr, boost::shared_ptr<symbolic_expression::ArbitraryNode>, int);
 
-  int debug_print_index = 0;
   bool in_list_element = false;
 
   std::stack<std::set<referenced_definition_t> > referenced_definition;
