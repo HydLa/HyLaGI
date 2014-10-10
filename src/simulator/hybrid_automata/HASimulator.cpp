@@ -67,7 +67,7 @@ phase_result_sptr_t HASimulator::simulate()
     HYDLA_LOGGER_DEBUG("*** after substitute pr");
     viewPr(pr);
 			
-    if(pr->phase_type == PointPhase)
+    if(pr->phase_type == POINT_PHASE)
     {
       vm = update_vm(pr, vm);
       pr->current_time = current_time;
@@ -104,7 +104,7 @@ phase_result_sptr_t HASimulator::simulate()
       break;
     }
  
-    if(ha[i]->phase_type == IntervalPhase){
+    if(ha[i]->phase_type == INTERVAL_PHASE){
       if(ha[i]->end_time.undefined()){
         // ???だったら最初のノードに戻る(初期のエッジは飛ばす)
         i = 1;
@@ -178,7 +178,7 @@ void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t pm)
 	// 時刻にも代入
   backend->call("substituteParameterCondition",
                  2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
-	if(pr->phase_type == IntervalPhase){
+	if(pr->phase_type == INTERVAL_PHASE){
     backend->call("substituteParameterCondition",
                    2, "vlnmp", "vl", &pr->end_time, &pm, &pr->end_time);
 	}

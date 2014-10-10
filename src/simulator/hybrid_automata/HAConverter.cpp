@@ -92,7 +92,7 @@ void HAConverter::process_one_todo(simulation_job_sptr_t& todo)
         continue;
       }
     		
-      if (phase->phase_type == IntervalPhase) 
+      if (phase->phase_type == INTERVAL_PHASE) 
       {
         if (check_already_exec(phase, cc_))
         {
@@ -315,7 +315,7 @@ void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
        << ")\" [label=\"" << "Phase " << result[0]->id << "\\n" << parameter_str << result[0]->module_set.get_name() << "\\n(" << get_asks_str(result[0]->get_all_positive_asks())
        << ")\", labelfloat=false,arrowtail=dot];" << endl;
   for(unsigned int i = 2 ; i < result.size() ; i++){
-    if(result[i]->phase_type == IntervalPhase){
+    if(result[i]->phase_type == INTERVAL_PHASE){
       str_ = "\"" + result[i-2]->module_set.get_name() + "\\n(" + get_asks_str(result[i-2]->get_all_positive_asks()) 
         + ")\"->\"" + result[i]->module_set.get_name() + "\\n(" + get_asks_str(result[i]->get_all_positive_asks()) 
         + ")\" [label=\"" + result[i-1]->module_set.get_name() + "\\n(" + get_asks_str(result[i-1]->get_all_positive_asks()) 

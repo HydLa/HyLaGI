@@ -112,7 +112,7 @@ void UnsatCoreFinder::find_unsat_core(
 
     for(auto constraint : constraint_list)
     {
-      const char* fmt = (phase_type == PointPhase)?"en":"et";
+      const char* fmt = (phase_type == POINT_PHASE)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(constraint));
       if(check_inconsistency(phase_type)){
         S.insert(make_pair(make_pair(constraint,"constraint"),temp_ms));
@@ -129,7 +129,7 @@ void UnsatCoreFinder::find_unsat_core(
     ask_set_t::iterator it = positive_asks.begin();
     for(int j = 0; j < (int)positive_asks.size(); j++, it++)
     {
-      const char* fmt = (phase_type == PointPhase)?"en":"et";
+      const char* fmt = (phase_type == POINT_PHASE)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it)->get_guard());
       if(check_inconsistency(phase_type)){
         S.insert(make_pair(make_pair(symbolic_expression::node_sptr((*it)->get_guard()),"guard"),temp_ms));
@@ -151,7 +151,7 @@ void UnsatCoreFinder::find_unsat_core(
     {
 
       std::string fmt = "v";
-      if(phase_type == PointPhase)
+      if(phase_type == POINT_PHASE)
       {
         fmt += "n";
       }
@@ -193,7 +193,7 @@ void UnsatCoreFinder::find_unsat_core(
         symbolic_expression::node_sptr rhs(new Number("0"));
         symbolic_expression::node_sptr cons(new Equal(lhs, rhs));
         std::string fmt = "v";
-        if(phase_type == PointPhase)
+        if(phase_type == POINT_PHASE)
         {
           fmt += "n";
         }
@@ -224,7 +224,7 @@ void UnsatCoreFinder::find_unsat_core(
 bool UnsatCoreFinder::check_inconsistency(PhaseType phase_type){
   CheckConsistencyResult check_consistency_result;
   std::string func_name;
-  if(phase_type == PointPhase)
+  if(phase_type == POINT_PHASE)
   {
     func_name = "checkConsistencyPoint";
   }
@@ -261,7 +261,7 @@ void UnsatCoreFinder::set_backend(backend_sptr_t back){
 void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C, PhaseType phase){
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
-    const char* fmt = (phase == PointPhase)?"en":"et";
+    const char* fmt = (phase == POINT_PHASE)?"en":"et";
     if(it->first.second == "guard" || it->first.second == "constraint"){
       backend_->call("addConstraint", 1, fmt, "", &it->first.first);
     }
@@ -269,7 +269,7 @@ void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
     std::string fmt = "v";
-    if(phase == PointPhase)fmt += "n";
+    if(phase == POINT_PHASE)fmt += "n";
     else fmt += "z";
     fmt += "vp";
     const string &name = it->first.first;
@@ -286,7 +286,7 @@ void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t
       }
       symbolic_expression::node_sptr rhs(new Number("0"));
       std::string fmt = "v";
-      if(phase == PointPhase) fmt += "n";
+      if(phase == POINT_PHASE) fmt += "n";
       else fmt += "z";
       fmt += "vp"; 
       variable_t var(name, diff_cnt + 1);

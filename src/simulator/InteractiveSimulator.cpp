@@ -69,7 +69,7 @@ phase_result_sptr_t InteractiveSimulator::simulate()
         simulation_job_sptr_t tmp_todo = todo;
         do
         {
-          if(todo->phase_type == PointPhase)
+          if(todo->phase_type == POINT_PHASE)
             cout << "---------PP "<<todo->id<< "---------" << endl;
           cout << "execution stuck" << endl;
           todo_num = input_and_process_command(todo);
@@ -333,7 +333,7 @@ int InteractiveSimulator::change_variable(simulation_job_sptr_t& todo){
 
 
 int InteractiveSimulator::approx_variable(simulation_job_sptr_t& todo){
-  if(todo->phase_type == PointPhase)
+  if(todo->phase_type == POINT_PHASE)
   {
     cout << "(approximate time)" << endl;
     affine_transformer_->approximate_time(todo->owner->current_time, todo->owner->variable_map, todo->prev_map, todo->owner->parameter_map, (todo->discrete_positive_asks.begin()->first)->get_guard());
@@ -471,7 +471,7 @@ int InteractiveSimulator::load_state(simulation_job_sptr_t& todo){
   result_root_->children.push_back(loaded_phase);
   todo.reset(new SimulationJob(loaded_phase));
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
-  if(todo->phase_type == PointPhase)
+  if(todo->phase_type == POINT_PHASE)
   {
     ValueModifier modifier(*backend);
     for(auto entry : loaded_phase->variable_map)

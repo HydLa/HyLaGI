@@ -20,7 +20,7 @@ SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, set<string> vars, std
 
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   stringstream sstr;
-  if(result.phase_type == IntervalPhase){
+  if(result.phase_type == INTERVAL_PHASE){
     sstr << "---------IP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.module_set.get_name() << endl;
     if(!result.end_time.undefined()){
@@ -155,7 +155,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
     ostream << endl;
   }else{
-    if(node->phase_type == simulator::PointPhase){
+    if(node->phase_type == simulator::POINT_PHASE){
       stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
@@ -167,7 +167,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       output_result_node(*it, result, case_num, phase_num);
     }
     result.pop_back();
-    if(node->phase_type == PointPhase){
+    if(node->phase_type == POINT_PHASE){
       result.pop_back();
       phase_num--;
     }
@@ -185,7 +185,7 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
   symbolic_expression::node_sptr tmp_current_time,tmp_end_time;
   int check_result,check_current_time,check_end_time;
 
-  if(result.phase_type == IntervalPhase)
+  if(result.phase_type == INTERVAL_PHASE)
   {
     if(!result.end_time.undefined() && !result.current_time.undefined())
     {

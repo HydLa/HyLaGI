@@ -27,7 +27,7 @@ void Printer::output_variable_labels(std::ostream &stream, const variable_map_t 
 std::string Printer::get_state_output(const phase_result_t& result, const bool& numeric, const bool& is_in_progress) const{
   std::stringstream sstr;
     if(!numeric){
-      if(result.phase==IntervalPhase){
+      if(result.phase==INTERVAL_PHASE){
         sstr << "---------IP---------" << std::endl;
         sstr << "time\t: " << *result.current_time << "->" << *result.end_time << "\n";
       }else{
@@ -39,7 +39,7 @@ std::string Printer::get_state_output(const phase_result_t& result, const bool& 
       output_variable_map(sstr, result.variable_map, result.current_time, false);
       sstr << "\n" ;
     }else{
-      if(result.phase==IntervalPhase){
+      if(result.phase==INTERVAL_PHASE){
         sstr << "#---------IP---------" << std::endl;
         output_variable_labels(sstr, result.variable_map);
         variable_map_t output_vm;
@@ -129,7 +129,7 @@ void Printer::output_result_tree(const phase_result_const_sptr_t& root) const
         }else{
           phase_result_sptrs_t::iterator tmp_it = check_node.first->children.begin(), tmp_end = check_node.first->children.end();
           int plus = 0;
-          if(check_node.first->phase == PointPhase) plus = 1;
+          if(check_node.first->phase == POINT_PHASE) plus = 1;
           for(;tmp_it!=tmp_end;tmp_it++) tmp.push(std::pair<phase_result_sptr_t,int>(*tmp_it,check_node.second+plus));
         }
       }
@@ -196,7 +196,7 @@ void Printer::output_result_node_time(const phase_result_sptr_t &node, std::vect
   }else{
     switch(time_measurement_){
     case tFmtStd:
-      if(node->phase==PointPhase) {
+      if(node->phase==POINT_PHASE) {
         sstr << "#---------" << phase_num++ << "---------\n";
         sstr << "---------PP---------\n";
       } else {
@@ -218,7 +218,7 @@ void Printer::output_result_node_time(const phase_result_sptr_t &node, std::vect
       output_result_node_time(*it, result, case_num, phase_num);
     }
     result.pop_back();
-    if(node->phase==PointPhase){
+    if(node->phase==POINT_PHASE){
       phase_num--;
     }
   }
@@ -270,7 +270,7 @@ void Printer::output_result_node(const phase_result_const_sptr_t &node, std::vec
     }
     std::cout << std::endl;
   }else{
-    if(node->phase==hydla::simulator::PointPhase){
+    if(node->phase==hydla::simulator::POINT_PHASE){
       std::stringstream sstr;
       sstr << "#---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
@@ -281,7 +281,7 @@ void Printer::output_result_node(const phase_result_const_sptr_t &node, std::vec
       output_result_node(*it, result, case_num, phase_num);
     }
     result.pop_back();
-    if(node->phase==PointPhase){
+    if(node->phase==POINT_PHASE){
       result.pop_back();
       phase_num--;
     }

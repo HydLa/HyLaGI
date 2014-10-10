@@ -241,7 +241,7 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
 
     // デフォルト連続性を表わす制約をソルバに送る
     continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map, PointPhase);
+    add_continuity(continuity_map, POINT_PHASE);
 
     if(non_prev){
       //      std::cout << "exist non prev" << std::endl;
@@ -275,7 +275,7 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
       
       // デフォルト連続性を表わす制約をソルバに送る
       continuity_map = maker.get_continuity_map();
-      add_continuity(continuity_map, PointPhase);
+      add_continuity(continuity_map, POINT_PHASE);
     }
     {
       symbolic_expression::node_sptr tmp_node;

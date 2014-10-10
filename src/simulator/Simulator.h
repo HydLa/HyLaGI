@@ -74,7 +74,7 @@ struct SimulationJob{
   /// プロファイリング結果
   profile_t profile;
 
-  SimulationJob(){}
+  SimulationJob():id(-1){}
 
   /**
    * parentとなるPhaseResultから情報を引き継いだJobを作る。

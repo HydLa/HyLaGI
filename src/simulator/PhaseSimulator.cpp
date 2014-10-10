@@ -80,7 +80,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
   backend_->call("addParameterConstraint", 1, "csn", "", &todo->initial_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
-  relation_graph_->set_ignore_prev(todo->phase_type == PointPhase);
+  relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
   if(todo->owner == result_root)
   {
@@ -102,7 +102,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
     // TODO: 並列実行とかしなければ現状でも問題はない
     assert(0);
   }
-  else if(todo->phase_type == PointPhase)
+  else if(todo->phase_type == POINT_PHASE)
   {
     // set entailedness for prev_asks
     for(auto positive : todo->discrete_positive_asks)
@@ -187,7 +187,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
   if(!consistent)
   {
-    HYDLA_LOGGER_DEBUG("INCONSISTENT");
+    HYDLA_LOGGER_DEBUG("INCONSISTENT: ", unadopted_ms);
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       module_set_container->generate_new_ms(todo->unadopted_mss, module_set);
@@ -195,7 +195,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   }
   else
   {
-    HYDLA_LOGGER_DEBUG("CONSISTENT");
+    HYDLA_LOGGER_DEBUG("CONSISTENT: ", unadopted_ms);
 
     timer::Timer postprocess_timer;
 
@@ -215,7 +215,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->current_constraints = todo->current_constraints = relation_graph_->get_constraints();
     if(todo->in_following_step()){
       timer::Timer timer;
-      if(phase->phase_type == IntervalPhase && phase->parent && phase->parent->parent){
+      if(phase->phase_type == INTERVAL_PHASE && phase->parent && phase->parent->parent){
         variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
         for(auto var_entry : vm_to_take_over)
         {
@@ -231,7 +231,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
           }
         }
       }
-      else if(phase->phase_type == PointPhase && phase->parent){
+      else if(phase->phase_type == POINT_PHASE && phase->parent){
         variable_map_t &vm_to_take_over = todo->prev_map;
         for(auto var_entry : vm_to_take_over)
         {
@@ -264,7 +264,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
     backend_->call("resetConstraintForVariable", 0, "","");
     string fmt = "mv0";
-    fmt += (phase->phase_type==PointPhase)?"n":"t";
+    fmt += (phase->phase_type==POINT_PHASE)?"n":"t";
     backend_->call("addConstraint", 1, fmt.c_str(), "", &phase->variable_map);
     backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
 
@@ -482,24 +482,18 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
   bool expanded;
   ConstraintStore all_diff;
   for(auto diff : state->expanded_diff)all_diff.add_constraint(diff.first);
-  for(auto diff : state->expanded_diff)HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff.first));
   for(auto diff : state->adopted_module_diff)all_diff.add_constraint(diff.first.second);
-    for(auto diff : state->adopted_module_diff)HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff.first.second));
   for(auto diff : local_diff)all_diff.add_constraint(diff.first);
-    for(auto diff : local_diff)HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff.first));
   // IPでは親となるPPでの離散変化部分についても計算する必要がある
-  if(phase_type == IntervalPhase)
+  if(phase_type == INTERVAL_PHASE)
   {
     for(auto diff : state->owner->expanded_diff)
     {
       all_diff.add_constraint(diff.first);
-      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff.first));
-      HYDLA_LOGGER_DEBUG_VAR(diff.second);
     }
     for(auto diff : state->owner->adopted_module_diff)
     {
       all_diff.add_constraint(diff.first.second);
-      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff.first.second));
     }
   }
 
@@ -509,7 +503,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
     {
       VariableFinder finder;
       for(auto constraint : all_diff) finder.visit_node(constraint);
-      if(phase_type==PointPhase)
+      if(phase_type==POINT_PHASE)
       {
         for(auto var : finder.get_variable_set())discrete_variables.insert(var);
       }
@@ -526,7 +520,6 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us(); 
       state->profile["# of CheckConsistency"]++;
       if(!cc_result.consistent_store.consistent()){
-        HYDLA_LOGGER_DEBUG("%% inconsistent for all cases");
         return false;
       }else if (cc_result.inconsistent_store.consistent()){
         push_branch_states(state, cc_result);
@@ -536,7 +529,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
     AskRelationGraph::asks_t asks;
     expanded = false;
     timer::Timer entailment_timer;
-    if(phase_type == PointPhase)
+    if(phase_type == POINT_PHASE)
     {
       // guards not related to diff can be judged without check_entailment
       VariableFinder finder;
@@ -575,12 +568,12 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
 
     for(auto variable : discrete_variables)
     {
-      asks.merge(guard_relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == PointPhase));
+      asks.merge(guard_relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE));
     }
     
     for(auto ask : asks)
     {
-      if(phase_type == PointPhase  
+      if(phase_type == POINT_PHASE  
          && state->owner == result_root
          && PrevSearcher().search_prev(ask->get_guard())){
         // in initial state, conditions about left-hand limits are considered to be invalid
@@ -714,9 +707,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t
   }
   next_todo->parameter_map = phase->parameter_map;
 
-  if(current_todo->phase_type == PointPhase)
+  if(current_todo->phase_type == POINT_PHASE)
   {
-    next_todo->phase_type = IntervalPhase;
+    next_todo->phase_type = INTERVAL_PHASE;
     next_todo->owner = phase;
     phase->end_time = phase->current_time;
     next_todo->discrete_positive_asks = current_todo->discrete_positive_asks;
@@ -729,7 +722,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t
   else
   {
     PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
-    next_todo->phase_type = PointPhase;
+    next_todo->phase_type = POINT_PHASE;
 
     backend_->call("resetConstraint", 0, "", "");
     backend_->call("addParameterConstraint", 1, "mp", "", &phase->parameter_map);

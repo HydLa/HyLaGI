@@ -169,7 +169,6 @@ bool MathematicaLink::receive_to_return_packet(){
       str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
-        HYDLA_LOGGER_DEBUG_VAR(input_print_);
       }else{
         debug_print_ += str + "\n";
       }
@@ -412,7 +411,6 @@ void MathematicaLink::get_function(std::string &name, int &cnt)
 {
   cnt = get_arg_count();
   name = get_symbol();
-  HYDLA_LOGGER_DEBUG("cnt: ", cnt, ", name: ", name);
 }
 
 std::string MathematicaLink::get_symbol()
@@ -546,7 +544,6 @@ MathematicaLink::DataType MathematicaLink::get_type(){
 MathematicaLink::DataType MathematicaLink::get_next(){
   int tk_type = MLGetNext();
   on_next_ = false;
-  HYDLA_LOGGER_DEBUG("token: ", get_token_name(tk_type));
   switch(tk_type)
   {
   case MLTKFUNC:

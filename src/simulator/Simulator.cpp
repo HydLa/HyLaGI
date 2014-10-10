@@ -33,7 +33,7 @@ Simulator::~Simulator()
 SimulationJob::SimulationJob(const phase_result_sptr_t &parent_phase)
 {
   owner = parent_phase;
-  phase_type = owner->phase_type == PointPhase?IntervalPhase:PointPhase;
+  phase_type = owner->phase_type == POINT_PHASE?INTERVAL_PHASE:POINT_PHASE;
   parameter_map = owner->parameter_map;
 }
 
@@ -133,7 +133,7 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
 simulation_job_sptr_t Simulator::make_initial_todo()
 {
   simulation_job_sptr_t todo = make_new_todo(result_root_);
-  todo->phase_type        = PointPhase;
+  todo->phase_type        = POINT_PHASE;
   todo->ms_to_visit = module_set_container_->get_full_ms_list();
   return todo;
 }
@@ -172,7 +172,7 @@ void Simulator::process_one_todo(simulation_job_sptr_t& todo)
     todo->owner->cause_for_termination = simulator::STEP_LIMIT;
     return;
   }
-  HYDLA_LOGGER_DEBUG("--- Current Todo ---\n", *todo);
+  HYDLA_LOGGER_DEBUG("\n--- Current Todo ---\n", *todo);
 
   try{
     timer::Timer phase_timer;

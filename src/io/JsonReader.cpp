@@ -30,16 +30,16 @@ JsonReader::phase_result_sptr_t JsonReader::read_phase(object &json_object)
   phase_result_sptr_t phase(new phase_result_t());
   phase->id = json_object["id"].get<long>();
   string phase_type_str = json_object["type"].get<string>();
-  if(phase_type_str == "PP")phase->phase_type = simulator::PointPhase;
-  else phase->phase_type = simulator::IntervalPhase;
-  if(phase->phase_type == simulator::PointPhase)
+  if(phase_type_str == "PP")phase->phase_type = simulator::POINT_PHASE;
+  else phase->phase_type = simulator::INTERVAL_PHASE;
+  if(phase->phase_type == simulator::POINT_PHASE)
   {
     object time_object = json_object["time"].get<object>();
     string time_str = time_object["time_point"].get<string>();
     phase->current_time =
       Parser(time_str).arithmetic();
   }
-  else if(phase->phase_type == simulator::IntervalPhase)
+  else if(phase->phase_type == simulator::INTERVAL_PHASE)
   {
 
     object time_object = json_object["time"].get<object>();

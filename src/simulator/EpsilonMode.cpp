@@ -15,9 +15,9 @@ variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase
 #ifdef _DEBUG_CUT_HIGH_ORDER
   std::cout << "Cut High Order Epsilon Start;" << std::endl;
   if(phase->phase_type==0)
-    std::cout << "PointPhase " << phase->id << std::endl;
+    std::cout << "POINT_PHASE " << phase->id << std::endl;
   if(phase->phase_type==1)
-    std::cout << "IntervalPhase " << phase->id << std::endl;
+    std::cout << "INTERVAL_PHASE " << phase->id << std::endl;
 #endif
   for(parameter_map_t::iterator p_it = phase->parameter_map.begin(); p_it != phase->parameter_map.end(); p_it++)
   {
@@ -95,9 +95,9 @@ hydla::simulator::pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_t
 #ifdef _DEBUG_REDUCE_UNSUIT
   std::cout << "Remove UnSuitable Cases Start;" << std::endl;
   if(phase->phase_type==0)
-    std::cout << "PointPhase " << phase->id << std::endl;
+    std::cout << "POINT_PHASE " << phase->id << std::endl;
   else
-    std::cout << "IntervalPhase " << phase->id << std::endl;
+    std::cout << "INTERVAL_PHASE " << phase->id << std::endl;
   std::cout << "Next Phase Case Count\t: " << time_result.size() << std::endl;
 #endif
 

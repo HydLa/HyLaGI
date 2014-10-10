@@ -82,7 +82,7 @@ void ConsistencyChecker::add_continuity(const VariableFinder& finder, const Phas
   map<string, int> vm;
   variable_set_t variable_set;
 
-  if(phase == PointPhase)
+  if(phase == POINT_PHASE)
   {
     variable_set = finder.get_variable_set();
     fmt += "n";
@@ -132,7 +132,7 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   timer::Timer timer;
   backend_check_consistency_count++;
   CheckConsistencyResult ret;
-  if(phase == PointPhase)
+  if(phase == POINT_PHASE)
   {
     backend->call("checkConsistencyPoint", 0, "", "cc", &ret);
   }
@@ -187,8 +187,8 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   finder.visit_node(guard->get_child());
   add_continuity(finder, phase);
 
-  backend->call("addConstraint", 1, (phase == PointPhase)?"en":"et", "", &guard->get_guard());
-  backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
+  backend->call("addConstraint", 1, (phase == POINT_PHASE)?"en":"et", "", &guard->get_guard());
+  backend->call("addConstraint", 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   
   cc_result = call_backend_check_consistency(phase);
 
@@ -204,9 +204,9 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
       timer::Timer timer;
       backend->call("resetConstraintForVariable", 0, "", "");
       add_continuity(finder, phase);
-      backend->call("addConstraint", 1, (phase == PointPhase)?"csn":"cst", "", &constraint_store);
+      backend->call("addConstraint", 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
       symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard->get_guard()));
-      const char* fmt = (phase == PointPhase)?"en":"et";
+      const char* fmt = (phase == POINT_PHASE)?"en":"et";
       backend->call("addConstraint", 1, fmt, "", &not_node);
       profile["PrepareForSecondCC"] += timer.get_elapsed_us();
       cc_result = call_backend_check_consistency(phase);
@@ -265,7 +265,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     vector<variable_map_t> create_result;
     timer::Timer timer;
-    if(phase == PointPhase)
+    if(phase == POINT_PHASE)
     {
       backend->call("createVariableMap", 0, "", "cv", &create_result);
     }
@@ -340,7 +340,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
   add_continuity(finder, phase);
   profile["AddContinuity"] += timer.get_elapsed_us();
 
-  const char* fmt = (phase == PointPhase)?"csn":"cst";
+  const char* fmt = (phase == POINT_PHASE)?"csn":"cst";
   backend->call("addConstraint", 1, fmt, "", &constraint_store);
   return call_backend_check_consistency(phase);
 }

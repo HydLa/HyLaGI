@@ -40,8 +40,9 @@ typedef enum{
  * type of a phase
  */
 typedef enum {
-  PointPhase,
-  IntervalPhase,
+  InvalidPhase,
+  POINT_PHASE,
+  INTERVAL_PHASE
 } PhaseType;
 
 
