@@ -1,5 +1,6 @@
 #include <vector>
 #include <cstdlib>
+#include <exception>
 
 #include "Lexer.h"
 #include "Parser.h"
@@ -47,16 +48,26 @@ node_sptr Parser::parse(node_sptr& an,
 ){
   parse();
   if(!error_info.empty()){
+    std::string error_message = "\n";
     for(auto info : error_info){
+      error_message += "Parse error in line " + std::to_string(info.first.first+1) + " : ";
+      error_message += info.second + "\n";
+      error_message += "  " + lexer.get_string(info.first.first) + "\n";
+      error_message += "  ";
+      for(int i = 0; i < info.first.second; i++) error_message += " ";
+      error_message += "~\n";
+      /*
       std::cout << "Parse error in line " << info.first.first+1 << " : ";
       std::cout << info.second << std::endl;
       std::cout << "  " << lexer.get_string(info.first.first) << std::endl;
       std::cout << "  ";
       for(int i = 0; i < info.first.second; i++) std::cout << " ";
       std::cout << "~" << std::endl;
+      */
     }
+    throw std::runtime_error(error_message);
     // TODO : throw Error
-    std::exit(1);
+    // std::exit(1);
   }
   an = assertion_node;
   for(auto constraint_definition : constraint_definitions){

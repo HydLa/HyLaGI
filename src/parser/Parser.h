@@ -104,18 +104,14 @@ public:
   }
 
   void error_occurred(error_info_t info){ error_tmp.push_back(info); }
-  
-  bool is_deepest_error(error_info_t info){
-    for(auto error : error_info){
-      if(info.first.first == error.first.first && 
-         info.first.second == error.first.second && 
-         info.second == error.second){
-        return true;
-      }
-    }
-    return false;
-  }
 
+  std::ostream& dump_error(std::ostream& s) const{
+    for(auto e : error_info){
+      s << e.first.first << " " << e.first.second << " " << e.second;
+    }
+    return s;
+  }
+  
   bool parse_ended();
   node_sptr is_defined(boost::shared_ptr<hydla::symbolic_expression::Definition>);
 
