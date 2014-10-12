@@ -1350,8 +1350,6 @@ std::vector<node_sptr> Parser::actual_args(){
     else{
       error_occurred(lexer.get_current_position(), "expected \")\"");
     }
-  }else{
-    error_occurred(lexer.get_current_position(), "expected \"(\"");
   }
   lexer.set_current_position(position);
 
