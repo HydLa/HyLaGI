@@ -108,7 +108,7 @@ node_sptr Parser::statements(){
     for(auto m : error_tmp){
       if(deepest.first.first < m.first.first ||
         (deepest.first.first == m.first.first && 
-         deepest.first.second < m.first.second)){
+         deepest.first.second <= m.first.second)){
         deepest = m;
       }
     }
@@ -288,7 +288,6 @@ node_sptr Parser::statement(){
     }
     lexer.set_current_position(tmp_position);
     error_occurred(lexer.get_current_position(), "expected \".\" after program");
-    return ret;
   }
   lexer.set_current_position(position);
 
