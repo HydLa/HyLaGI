@@ -47,12 +47,11 @@ node_sptr Parser::parse(node_sptr& an,
 ){
   parse();
   if(!error_info.empty()){
-    std::cout << "error occured while parsing" << std::endl;
     for(auto info : error_info){
-      std::cout << "parse error - " << info.first.first+1 << " : ";
+      std::cout << "Parse error in line " << info.first.first+1 << " : ";
       std::cout << info.second << std::endl;
-      std::cout << "    " << lexer.get_string(info.first.first) << std::endl;
-      std::cout << "    ";
+      std::cout << "  " << lexer.get_string(info.first.first) << std::endl;
+      std::cout << "  ";
       for(int i = 0; i < info.first.second; i++) std::cout << " ";
       std::cout << "~" << std::endl;
     }
@@ -413,7 +412,7 @@ boost::shared_ptr<ConstraintCaller> Parser::constraint_caller(){
     node_sptr defined;
     IS_DEFINED_AS(name,args.size(),constraint_definitions,defined);
     if((defined)) return ret;
-    error_occurred(lexer.get_current_position(), "undefined constraint of " + std::to_string(args.size()) + " args constraint \"" + name + "\"");
+    error_occurred(lexer.get_current_position(), "undefined constraint - " + std::to_string(args.size()) + " args constraint \"" + name + "\"");
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ConstraintCaller>();
@@ -466,7 +465,7 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
         return ret;
       }
     }
-    error_occurred(lexer.get_current_position(), "undefined program of " + std::to_string(args.size()) + " args program \"" + name + "\"");
+    error_occurred(lexer.get_current_position(), "undefined program - " + std::to_string(args.size()) + " args program \"" + name + "\"");
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ProgramCaller>();

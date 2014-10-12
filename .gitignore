@@ -9,3 +9,4 @@ src/reduce_source_converter/rsc
 *math_source.cpp
 *reduce_source.cpp
 *.hydat
+*~
