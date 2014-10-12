@@ -292,7 +292,7 @@ node_sptr Parser::statement(){
   }
   lexer.set_current_position(position);
 
-  error_occurred(lexer.get_current_position(), "parse error");
+  error_occurred(lexer.get_current_position(), "expected definition statement, assertion statement or program");
   return node_sptr();
 }
 
