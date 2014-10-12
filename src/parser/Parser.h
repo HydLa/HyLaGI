@@ -100,10 +100,21 @@ public:
   node_sptr sum_of_list();
   
   void error_occurred(position_t position, std::string error_message){
-    error_info.push_back(error_info_t(position,error_message));
+    error_tmp.push_back(error_info_t(position,error_message));
   }
 
-  void error_occurred(error_info_t info){ error_info.push_back(info); }
+  void error_occurred(error_info_t info){ error_tmp.push_back(info); }
+  
+  bool is_deepest_error(error_info_t info){
+    for(auto error : error_info){
+      if(info.first.first == error.first.first && 
+         info.first.second == error.first.second && 
+         info.second == error.second){
+        return true;
+      }
+    }
+    return false;
+  }
 
   bool parse_ended();
   node_sptr is_defined(boost::shared_ptr<hydla::symbolic_expression::Definition>);
@@ -116,6 +127,7 @@ private:
   std::stack<std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> > > local_program_caller_;
 
   std::vector<error_info_t> error_info;
+  std::vector<error_info_t> error_tmp;
 
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;
