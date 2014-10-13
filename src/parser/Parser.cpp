@@ -165,9 +165,7 @@ node_sptr Parser::statement(){
       assertion_node = ret;
       return ret;
     }
-    lexer.set_current_position(tmp_position);
-    error_occurred(lexer.get_current_position(), "expected \".\" after assert statement");
-    return ret; 
+    error_occurred(tmp_position, "expected \".\" after assert statement");
   }
   lexer.set_current_position(position);
 
@@ -176,11 +174,12 @@ node_sptr Parser::statement(){
   // constraint_callee
   if((cd = constraint_callee())){
     // "<=>"
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == EQUIVALENT){
-      position_t tmp_position = lexer.get_current_position();
       if((is_defined(cd))){
-        error_occurred(lexer.get_current_position(), "redefinition of " + std::to_string(cd->bound_variable_size()) + " args definition \"" + cd->get_name() + "\"");
+        error_occurred(tmp_position, "redefinition of " + std::to_string(cd->bound_variable_size()) + " args definition \"" + cd->get_name() + "\"");
       }else{
+        tmp_position = lexer.get_current_position();
         node_sptr tmp;
         // constraint
         if((tmp = constraint())){
@@ -205,11 +204,12 @@ node_sptr Parser::statement(){
   // constraint_callee
   if((pd = program_callee())){
     // "{"
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == LEFT_BRACES){
-      position_t tmp_position = lexer.get_current_position();
       if((is_defined(pd))){
         error_occurred(lexer.get_current_position(), "redefinition of " + std::to_string(pd->bound_variable_size()) + " args definition \"" + pd->get_name() + "\"");
       }else{
+        tmp_position = lexer.get_current_position();
         node_sptr tmp;
         // program
         if((tmp = program())){
@@ -237,19 +237,23 @@ node_sptr Parser::statement(){
   // program_list_callee ":=" program_list
   boost::shared_ptr<ProgramListDefinition> pld;
   if((pld = program_list_callee())){
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == DEFINITION){
       if((is_defined(pld))){
-        error_occurred(lexer.get_current_position(), "redefinition of " + std::to_string(pld->bound_variable_size()) + " args definition \"" + pld->get_name() + "\"");
+        error_occurred(tmp_position, "redefinition of " + std::to_string(pld->bound_variable_size()) + " args definition \"" + pld->get_name() + "\"");
       }else{
         node_sptr tmp;
+        tmp_position = lexer.get_current_position();
         if((tmp = program_list())){
           pld->set_child(tmp);
-          position_t tmp_position = lexer.get_current_position();
+          tmp_position = lexer.get_current_position();
           if(lexer.get_token() == PERIOD){
             program_list_definitions.push_back(pld);
             return pld;
           }
           error_occurred(tmp_position, "expected \".\" after program list definition");
+        }else{
+          error_occurred(tmp_position, "expected list after \";=\"");
         }
       }
     }
@@ -259,19 +263,23 @@ node_sptr Parser::statement(){
   // expression_list_callee ":=" expression_list
   boost::shared_ptr<ExpressionListDefinition> eld;
   if((eld = expression_list_callee())){
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == DEFINITION){
       if((is_defined(eld))){
-        error_occurred(lexer.get_current_position(), "redefinition of " + std::to_string(eld->bound_variable_size()) + " args definition \"" + eld->get_name() + "\"");
+        error_occurred(tmp_position, "redefinition of " + std::to_string(eld->bound_variable_size()) + " args definition \"" + eld->get_name() + "\"");
       }else{
         node_sptr tmp;
+        tmp_position = lexer.get_current_position();
         if((tmp = expression_list())){
           eld->set_child(tmp);
-          position_t tmp_position = lexer.get_current_position();
+          tmp_position = lexer.get_current_position();
           if(lexer.get_token() == PERIOD){
             expression_list_definitions.push_back(eld);
             return eld;
           }
           error_occurred(tmp_position, "expected \".\" after expression list definition");
+        }else{
+          error_occurred(tmp_position, "expected list after \":=\"");
         }
       }
     }
@@ -486,6 +494,7 @@ node_sptr Parser::parenthesis_program(){
   position_t position = lexer.get_current_position();
   if(lexer.get_token() == LEFT_PARENTHESES){
     if((ret = program())){
+      position_t right_position = lexer.get_current_position();
       if(lexer.get_token() == RIGHT_PARENTHESES){
         position_t tmp_position = lexer.get_current_position(); 
         Token token;
@@ -496,10 +505,10 @@ node_sptr Parser::parenthesis_program(){
           lexer.set_current_position(tmp_position);
           return ret;
         }else{
-          error_occurred(lexer.get_current_position(), "\",\", \"<<\", \"}\" and \".\" must be after \")\"");
+          error_occurred(tmp_position, "\",\", \"<<\", \"}\" and \".\" must be after \")\"");
         }
       }else{
-        error_occurred(lexer.get_current_position(), "expected \")\"");
+        error_occurred(right_position, "expected \")\"");
       }
     }
   }
@@ -529,7 +538,7 @@ node_sptr Parser::module(){
       lexer.set_current_position(tmp_position);
       return ret;
     }else{
-      error_occurred(lexer.get_current_position(), "\",\", \"<<\", \"}\" and \".\" must be after program_caller");
+      error_occurred(tmp_position, "\",\", \"<<\", \"}\" and \".\" must be after program_caller");
     }
   }
   lexer.set_current_position(position);
@@ -856,10 +865,11 @@ node_sptr Parser::comparison(){
     // guard
     if((ret = guard())){
       // ")"
+      position_t right_position = lexer.get_current_position();
       if(lexer.get_token() == RIGHT_PARENTHESES){
         return ret;
       }else{
-        error_occurred(lexer.get_current_position(), "expected \")\"");
+        error_occurred(right_position, "expected \")\"");
       }
     }
   }
@@ -1095,7 +1105,7 @@ node_sptr Parser::factor(){
         // ")"
         if(lexer.get_token() == RIGHT_PARENTHESES){ return func; }
         else{
-          error_occurred(lexer.get_current_position(), "expected \")\"");
+          error_occurred(tmp_position, "expected \")\"");
         }
       }
     }
@@ -1116,9 +1126,10 @@ node_sptr Parser::factor(){
     // expression
     if((ret = expression())){
       // ")"
+      position_t right_position = lexer.get_current_position();
       if(lexer.get_token() == RIGHT_PARENTHESES){ return ret;}
       else{
-        error_occurred(lexer.get_current_position(), "expected \")\"");
+        error_occurred(right_position, "expected \")\"");
       }
     }
   }
@@ -1236,32 +1247,51 @@ node_sptr Parser::parameter(){
   // "p"
   if(lexer.get_current_token_string() == "p"){
     // "["
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == LEFT_BOX_BRACKETS){
+      tmp_position = lexer.get_current_position();
       boost::shared_ptr<Variable> var;
       int first,second;
       // variable
       if((var = variable())){
+        tmp_position = lexer.get_current_position();
         // ","
         if(lexer.get_token() == COMMA){
+          tmp_position = lexer.get_current_position();
           // integer
           if(lexer.get_token() == INTEGER){
+            tmp_position = lexer.get_current_position();
             first = std::atoi(lexer.get_current_token_string().c_str());
             // ","
             if(lexer.get_token() == COMMA){
+              tmp_position = lexer.get_current_position();
               // integer
               if(lexer.get_token() == INTEGER){
                 second = std::atoi(lexer.get_current_token_string().c_str());
+                tmp_position = lexer.get_current_position();
                 // "]"
                 if(lexer.get_token() == RIGHT_BOX_BRACKETS){
                   return boost::shared_ptr<Parameter>(new Parameter(var->get_name(),first,second));
                 }else{
-                  error_occurred(lexer.get_current_position(), "expected \"]\"");
+                  error_occurred(tmp_position, "expected \"]\"");
                 }
+              }else{
+                error_occurred(tmp_position, "expected integer");
               }
+            }else{
+              error_occurred(tmp_position, "expected \",\"");
             }
+          }else{
+            error_occurred(tmp_position, "expected integer");
           }
+        }else{
+          error_occurred(tmp_position, "expected \",\"");
         }
+      }else{
+        error_occurred(tmp_position, "expected variable");
       }
+    }else{
+      error_occurred(tmp_position, "expected \"[\"");
     }
   }
   lexer.set_current_position(position);
@@ -1277,18 +1307,20 @@ node_sptr Parser::assertion(){
   // "ASSERT"
   if(lexer.get_current_token_string() == "ASSERT"){
     // "("
+    position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == LEFT_PARENTHESES){
       // guard
       if((ret = guard())){
+        position_t tmp_position = lexer.get_current_position();
         // ")"
         if(lexer.get_token() == RIGHT_PARENTHESES){
           return ret;
         }else{
-          error_occurred(lexer.get_current_position(), "expected \")\"");
+          error_occurred(tmp_position, "expected \")\"");
         }
       }
     }else{
-      error_occurred(lexer.get_current_position(), "expected \"(\"");
+      error_occurred(tmp_position, "expected \"(\"");
     }
   }
   lexer.set_current_position(position);
@@ -1345,9 +1377,10 @@ std::vector<node_sptr> Parser::actual_args(){
     }else{ 
       error_occurred(lexer.get_current_position(), "expected expression");
     }
+    position_t right_position = lexer.get_current_position();
     if(lexer.get_token() == RIGHT_PARENTHESES){ return ret; }
     else{
-      error_occurred(lexer.get_current_position(), "expected \")\"");
+      error_occurred(right_position, "expected \")\"");
     }
   }
   lexer.set_current_position(position);
@@ -1367,10 +1400,11 @@ node_sptr Parser::sum_of_list(){
       node_sptr tmp;
       if((tmp = expression_list())){
         ret->set_child(tmp);
+        position_t tmp_position = lexer.get_current_position();
         if(lexer.get_token() == RIGHT_PARENTHESES){
           return ret;
         }else{
-          error_occurred(lexer.get_current_position(), "expected \")\" after expression list");
+          error_occurred(tmp_position, "expected \")\" after expression list");
         }
       }else{
         error_occurred(lexer.get_current_position(), "expected expression list after \"(\"");
@@ -1392,10 +1426,11 @@ node_sptr Parser::size_of_list(){
     if((tmp = expression_list()) ||
        (tmp = program_list())){
       ret->set_child(tmp);
+      position_t tmp_position = lexer.get_current_position();
       if(lexer.get_token() == VERTICAL_BAR){
         return ret;
       }else{
-        error_occurred(lexer.get_current_position(), "expected \"|\" after list");
+        error_occurred(tmp_position, "expected \"|\" after list");
       }
     }else{
       error_occurred(lexer.get_current_position(), "expected expression list after \"|\"");
@@ -1415,13 +1450,14 @@ node_sptr Parser::program_list_element(){
     if(lexer.get_token() == LEFT_BOX_BRACKETS){
       node_sptr expr;
       if((expr = expression())){
+        position_t tmp_position = lexer.get_current_position();
         if(lexer.get_token() == RIGHT_BOX_BRACKETS){
           boost::shared_ptr<ProgramListElement> e(new ProgramListElement());
           e->set_lhs(list);
           e->set_rhs(expr);
           return e;
         }else{
-          error_occurred(lexer.get_current_position(), "expected \"]\" after expression");
+          error_occurred(tmp_position, "expected \"]\" after expression");
         }
       }else{
         error_occurred(lexer.get_current_position(), "expected expression after \"[\"");
@@ -1441,13 +1477,14 @@ node_sptr Parser::expression_list_element(){
     if(lexer.get_token() == LEFT_BOX_BRACKETS){
       node_sptr expr;
       if((expr = expression())){
+        position_t tmp_position = lexer.get_current_position();
         if(lexer.get_token() == RIGHT_BOX_BRACKETS){
           boost::shared_ptr<ExpressionListElement> e(new ExpressionListElement());
           e->set_lhs(list);
           e->set_rhs(expr);
           return e;
         }else{
-          error_occurred(lexer.get_current_position(), "expected \"]\" after expression");
+          error_occurred(tmp_position, "expected \"]\" after expression");
         }
       }else{
         error_occurred(lexer.get_current_position(), "expected expression after \"[\"");
@@ -1490,7 +1527,7 @@ node_sptr Parser::conditional_program_list(){
             in_conditional_program_list_ = false;
             return ret;
           }else{
-            error_occurred(lexer.get_current_position(), "expected \"}\"");
+            error_occurred(tmp_position, "expected \"}\"");
           }
         }else{
           error_occurred(lexer.get_current_position(), "expected list conditions after \"|\"");
@@ -1599,6 +1636,7 @@ node_sptr Parser::program_list_factor(){
           for(num2 = str2.length()-1; num2 >= 0; num2--){
             if(str2[num2] < '0' || '9' < str2[num2]) break;
           }
+          position_t right_position = lexer.get_current_position();
           if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
             if(lexer.get_token() == RIGHT_BRACES){
               boost::shared_ptr<Range> range(
@@ -1607,10 +1645,10 @@ node_sptr Parser::program_list_factor(){
                 range->set_string(str.substr(0,num1+1));
                 return range;
             }else{
-              error_occurred(lexer.get_current_position(), "expected \"}\"");
+              error_occurred(right_position, "expected \"}\"");
             }
           }else{
-            error_occurred(lexer.get_current_position(), str2 + " do not correspond to " + str);
+            error_occurred(right_position, str2 + " do not correspond to " + str);
           }
         }else{
           error_occurred(lexer.get_current_position(), "expected program corresponding to " + str);
@@ -1621,10 +1659,11 @@ node_sptr Parser::program_list_factor(){
   lexer.set_current_position(position);
   if(lexer.get_token() == LEFT_PARENTHESES){
     if((ret = program_list())){
+      position_t right_position = lexer.get_current_position();
       if(lexer.get_token() == RIGHT_PARENTHESES){
         return ret;
       }else{
-        error_occurred(lexer.get_current_position(), "expected \")\"");
+        error_occurred(right_position, "expected \")\"");
       }
     }
   }
@@ -1658,10 +1697,11 @@ node_sptr Parser::conditional_expression_list(){
           ret->add_argument(tmp);
           position_t tmp_position = lexer.get_current_position();
           while(lexer.get_token() == COMMA){
+            position_t error_position = lexer.get_current_position();
             if((tmp = list_condition())){
               ret->add_argument(tmp);
             }else{
-              error_occurred(lexer.get_current_position(), "expected list condition after \",\"");
+              error_occurred(error_position, "expected list condition after \",\"");
               break;
             }
             tmp_position = lexer.get_current_position();
@@ -1670,7 +1710,7 @@ node_sptr Parser::conditional_expression_list(){
           if(lexer.get_token() == RIGHT_BRACES){
             return ret;
           }else{
-            error_occurred(lexer.get_current_position(), "expected \"}\"");
+            error_occurred(tmp_position, "expected \"}\"");
           }
         }else{
           error_occurred(lexer.get_current_position(), "expected list condition after \"|\"");
@@ -1764,7 +1804,7 @@ node_sptr Parser::expression_list_factor(){
       if(lexer.get_token() == RIGHT_BRACES){
         return list;
       }else{
-        error_occurred(lexer.get_current_position(), "expected \"}\"");
+        error_occurred(tmp_position, "expected \"}\"");
       }
     }
     lexer.set_current_position(list_position);
@@ -1783,6 +1823,7 @@ node_sptr Parser::expression_list_factor(){
             if(str2[num2] < '0' || '9' < str2[num2]) break;
           }
           if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
+            position_t right_position = lexer.get_current_position();
             if(lexer.get_token() == RIGHT_BRACES){
               boost::shared_ptr<Range> range(
                 new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
@@ -1790,7 +1831,7 @@ node_sptr Parser::expression_list_factor(){
                 range->set_string(str.substr(0,num1+1));
                 return range;
             }else{
-              error_occurred(lexer.get_current_position(), "expected \"}\"");
+              error_occurred(right_position, "expected \"}\"");
             }
           }else{
             error_occurred(lexer.get_current_position(), str2 + " do not correspond to " + str);
@@ -1806,10 +1847,11 @@ node_sptr Parser::expression_list_factor(){
       if(lexer.get_token() == TWO_PERIOD){
         node_sptr num2;
         if((num2 = expression())){
+          position_t right_position = lexer.get_current_position();
           if(lexer.get_token() == RIGHT_BRACES){
             return boost::shared_ptr<Range>(new Range(ret,num2));
           }else{
-            error_occurred(lexer.get_current_position(), "expected \"}\"");
+            error_occurred(right_position, "expected \"}\"");
           }
         }else{
           error_occurred(lexer.get_current_position(), "expected expression after \"..\"");
@@ -1822,10 +1864,11 @@ node_sptr Parser::expression_list_factor(){
   // "(" expression_list ")"
   if(lexer.get_token() == LEFT_PARENTHESES){
     if((ret = expression_list())){
+      position_t right_position = lexer.get_current_position();
       if(lexer.get_token() == RIGHT_PARENTHESES){
         return ret;
       }else{
-        error_occurred(lexer.get_current_position(), "expected \")\"");
+        error_occurred(right_position, "expected \")\"");
       }
     }
   }
@@ -1922,9 +1965,10 @@ std::vector<std::string> Parser::formal_args(){
       }
       lexer.set_current_position(tmp_position);
     }
+    position_t right_position = lexer.get_current_position();
     if(lexer.get_token() == RIGHT_PARENTHESES){ return ret; }
     else{
-      error_occurred(lexer.get_current_position(), "expected \")\"");
+      error_occurred(right_position, "expected \")\"");
     }
   }
   lexer.set_current_position(position);
