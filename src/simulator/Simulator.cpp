@@ -134,7 +134,6 @@ simulation_job_sptr_t Simulator::make_initial_todo()
 {
   simulation_job_sptr_t todo = make_new_todo(result_root_);
   todo->phase_type        = POINT_PHASE;
-  todo->ms_to_visit = module_set_container_->get_full_ms_list();
   return todo;
 }
 

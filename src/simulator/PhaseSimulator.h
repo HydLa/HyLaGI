@@ -79,7 +79,7 @@ public:
 
 private:
 
-  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives, ask_set_t positive_asks, ask_set_t negative_asks);
 
   void replace_prev2parameter(
                               PhaseResult &phase,

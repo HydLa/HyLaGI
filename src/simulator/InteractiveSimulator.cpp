@@ -175,7 +175,6 @@ int InteractiveSimulator::input_and_process_command(simulation_job_sptr_t& todo)
           }
         }
 
-        todo->ms_to_visit = module_set_container_->get_full_ms_list();
         todo->unadopted_mss.clear();
         cout << "jump" << endl;
         print_phase(todo);
@@ -470,7 +469,6 @@ int InteractiveSimulator::load_state(simulation_job_sptr_t& todo){
   result_root_->children.clear();
   result_root_->children.push_back(loaded_phase);
   todo.reset(new SimulationJob(loaded_phase));
-  todo->ms_to_visit = module_set_container_->get_full_ms_list();
   if(todo->phase_type == POINT_PHASE)
   {
     ValueModifier modifier(*backend);

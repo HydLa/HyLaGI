@@ -95,11 +95,9 @@ void PhaseResult::set_full_information(FullInformation &info)
 
 PhaseResult::PhaseResult(const SimulationJob& todo, const CauseForTermination& cause):
   phase_type(todo.phase_type),
+  step(todo.owner->step + 1),
   current_time(todo.owner->end_time),
   parameter_map(todo.parameter_map),
-  diff_positive_asks(todo.positive_asks),
-  diff_negative_asks(todo.negative_asks),
-  step(todo.owner->step + 1),
   cause_for_termination(cause),
   parent(todo.owner.get())
 {

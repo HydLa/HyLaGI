@@ -40,44 +40,35 @@ typedef std::map<std::string, unsigned int>       profile_t;
 
 
 /**
- * シミュレーションにおいて必要な仕事を表す構造体
+ * Job for simulation
  */
 struct SimulationJob{
   PhaseType                 phase_type;
   int                       id;
-  /// 左極限値のマップ
-  variable_map_t            prev_map;
+  variable_map_t            prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
   parameter_map_t           parameter_map;
-  ask_set_t                 positive_asks;
-  ask_set_t                 negative_asks;
   
   constraint_diff_t         expanded_diff;
   module_diff_t             adopted_module_diff;
   
-  std::map<ask_t, bool>    discrete_positive_asks, discrete_negative_asks;
+  std::map<ask_t, bool>     discrete_positive_asks,
+                            discrete_negative_asks;
   next_pp_candidate_map_t   next_pp_candidate_map; 
 
-  ConstraintStore           expanded_constraints;
-  ConstraintStore           initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
-  ConstraintStore           current_constraints;   /// 現在のフェーズで有効な制約．TODO:expanded_constraintsとの役割分担について考える．
+  ConstraintStore           expanded_constraints,
+                            initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
   
-  entailed_prev_map_t       judged_prev_map;
+  phase_result_sptr_t       owner;
+  phase_result_sptrs_t      produced_phases;
 
-  phase_result_sptr_t owner;
-
-  phase_result_sptrs_t produced_phases;
-
-  /// 未判定のモジュール集合を保持しておく．分岐処理時，同じ集合を複数回調べることが無いように
-  module_set_set_t ms_to_visit;
   /// set of module sets which are unadopted in maximal module sets
   module_set_set_t unadopted_mss;
-  /// プロファイリング結果
   profile_t profile;
 
   SimulationJob():id(-1){}
 
   /**
-   * parentとなるPhaseResultから情報を引き継いだJobを作る。
+   * Create a new job which will be a child of given PhaseResult
    */
   SimulationJob(const phase_result_sptr_t &parent_phase);
 
@@ -88,8 +79,8 @@ struct SimulationJob{
 
 std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
 
-// プロファイリング結果全体
-// 各Jobごとにかかった時間（現状では，Jobそのものを保存している）
+/// プロファイリング結果全体
+/// 現状では，Jobそのものを保存している
 typedef std::vector<simulation_job_sptr_t> entire_profile_t;
 
 class PhaseSimulator;

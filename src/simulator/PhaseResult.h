@@ -104,41 +104,37 @@ class PhaseResult {
 
 public:
   PhaseType                    phase_type;
-  int id;
+  int                          id,
+                               step;
+  
   value_t                      current_time, end_time;
 
   variable_map_t               variable_map;
   parameter_map_t              parameter_map;
-
-  always_set_t                 diff_expanded_always;
-  
-  ask_set_t                    get_all_positive_asks();
-  ask_set_t                    get_all_negative_asks();
   ask_set_t                    diff_positive_asks, diff_negative_asks;
 
   constraint_diff_t            expanded_diff;
   module_diff_t                adopted_module_diff;
 
-  int                          step;
   module_set_t                 module_set;
-  ConstraintStore              current_constraints;
   next_pp_candidate_map_t      next_pp_candidate_map;
 
   CauseForTermination          cause_for_termination;
-  /// A set of succeeding phases
-  phase_result_sptrs_t children;
+
+  PhaseResult                 *parent;
+  phase_result_sptrs_t         children;
   
-  todo_list_t      todo_list;
-  
-  /// A preceding phase
-  PhaseResult *parent;
+  todo_list_t                  todo_list;
 
   PhaseResult();
   
   PhaseResult(const SimulationJob& todo, const CauseForTermination& cause = NOT_SIMULATED);
   ~PhaseResult();
 
-  void set_full_information(FullInformation &info);
+  ask_set_t                    get_all_positive_asks();
+  ask_set_t                    get_all_negative_asks();
+
+  void                         set_full_information(FullInformation &info);
 
 private:
   void generate_full_information();
