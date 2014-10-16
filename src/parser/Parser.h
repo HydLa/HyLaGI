@@ -20,6 +20,7 @@ class Parser{
 public:
 
   Parser(std::string);
+  Parser(std::vector<std::string>);
   Parser(std::istream&);
   ~Parser();
 

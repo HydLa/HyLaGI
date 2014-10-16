@@ -11,6 +11,7 @@ namespace hydla{
 using namespace symbolic_expression;
 
 Parser::Parser(std::string str):lexer(str){}
+Parser::Parser(std::vector<std::string> str):lexer(str){}
 Parser::Parser(std::istream& stream):lexer(stream){}
 Parser::~Parser(){}
 
