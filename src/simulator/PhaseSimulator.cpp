@@ -216,12 +216,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
           auto var = var_entry.first;
           if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
           {
-            auto var = var_entry.first;
-            if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
-            {
-              // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
-              phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
-            }
+            // TODO : ここでずらした時刻をmake_next_todoの中で戻すことになっているので何とかする
+            phase->variable_map[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
           }
         }
       }
@@ -232,11 +228,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
           auto var = var_entry.first;
           if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
           {
-            auto var = var_entry.first;
-            if(!phase->variable_map.count(var) && relation_graph_->referring(var) )
-            {
-              phase->variable_map[var] = vm_to_take_over[var];
-            }
+            phase->variable_map[var] = vm_to_take_over[var];
           }
         }
         todo->profile["TakeOverVM"] += timer.get_elapsed_us();
@@ -593,7 +585,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         push_branch_states(state, check_consistency_result);
         // Since we should choose entailed case in push_branch_states, we go down without break.
       case ENTAILED:
-        HYDLA_LOGGER_DEBUG("--- entailed ask ---\n", *(ask->get_guard()));
+        HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask->get_guard()));
         if(!guard_relation_graph_->get_entailed(ask))
         {
           relation_graph_->set_expanded(ask->get_child(), true);
@@ -694,6 +686,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t
   AlwaysFinder always_finder;
   ConstraintStore non_always;
   always_set_t always_set;
+  // TODO: All expanded constraints need not be unexpanded.
   for(auto constraint : current_todo->expanded_constraints)
   {
     always_finder.find_always(constraint, &always_set, &non_always);

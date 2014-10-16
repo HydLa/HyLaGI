@@ -158,6 +158,7 @@ ostream& operator<<(ostream& s, const SimulationJob& todo)
   s << "id       : " << todo.id << endl;
   s << "--- owner phase result ---" << endl;
   s << *(todo.owner) << endl;
+  s << "--- (owner up to here) ---" << endl;
   s << "--- parameter map ---"          << endl;
   s << todo.parameter_map << endl;
   

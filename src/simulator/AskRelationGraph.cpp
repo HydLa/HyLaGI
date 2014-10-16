@@ -128,7 +128,6 @@ AskRelationGraph::asks_t AskRelationGraph::get_adjacent_asks(const string &var, 
   {
     if(active(ask_node, ignore_prev_asks))
     {
-      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask_node->ask))
       asks.push_back(ask_node->ask);
     }
   }

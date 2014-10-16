@@ -307,7 +307,7 @@ void IncrementalModuleSet::remove_included_ms_by_current_ms(){
  * @param ms 矛盾の原因となったモジュール集合 
  */
 void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const ModuleSet& ms){
-  HYDLA_LOGGER_DEBUG("%% inconsistency module set : ", ms.get_name());
+  HYDLA_LOGGER_DEBUG("%% inconsistent module set : ", ms.get_name());
   std::string for_debug = "";
   for( auto mit : mcss ){
     for_debug += mit.get_name() + " , ";
