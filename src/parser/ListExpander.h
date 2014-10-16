@@ -3,6 +3,7 @@
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 #include "DefinitionContainer.h"
+#include "ParseError.h"
 #include <map>
 #include <stack>
 

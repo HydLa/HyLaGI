@@ -70,7 +70,7 @@ symbolic_expression::node_sptr ListExpander::circular_check(
   if (!referenced_definition.empty()){
     if (referenced_definition.top().find(def_type) != 
         referenced_definition.top().end()) {
-  //    throw CircularReference(caller);
+        throw hydla::parser::error::CircularReference(definition);
     }
   }
   std::set<referenced_definition_t> reference;
@@ -668,6 +668,9 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ProgramListCalle
                    node->actual_arg_size()));
   boost::shared_ptr<ProgramListDefinition> cons_def(
     program_list_def.get_definition(deftype));
+  if(!cons_def) {
+    throw hydla::parser::error::UndefinedReference(node);
+  }
 
   new_child = circular_check(deftype,cons_def);
   accept(new_child);
@@ -679,6 +682,9 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListCa
                    node->actual_arg_size()));
   boost::shared_ptr<ExpressionListDefinition> cons_def(
     expression_list_def.get_definition(deftype));
+  if(!cons_def) {
+    throw hydla::parser::error::UndefinedReference(node);
+  }
 
   new_child = circular_check(deftype,cons_def);
   accept(new_child);

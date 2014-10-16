@@ -112,12 +112,14 @@ public:
     return s;
   }
   
+  void list_type_check();
   bool parse_ended();
   node_sptr is_defined(boost::shared_ptr<hydla::symbolic_expression::Definition>);
 
 private:
   Lexer lexer;
 
+  bool second_parse = false;
   bool in_conditional_program_list_ = false;
 
   std::stack<std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> > > local_program_caller_;
@@ -131,6 +133,11 @@ private:
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > expression_list_definitions;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > program_list_definitions;
   node_sptr assertion_node;
+
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > tmp_program_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> > tmp_constraint_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > tmp_expression_list_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > tmp_program_list_definitions;
 };
 
 }// namespace parser
