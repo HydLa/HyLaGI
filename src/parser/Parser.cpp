@@ -11,8 +11,49 @@ namespace hydla{
 using namespace symbolic_expression;
 
 Parser::Parser(std::string str):lexer(str){}
+Parser::Parser(std::vector<std::string> str):lexer(str){}
 Parser::Parser(std::istream& stream):lexer(stream){}
 Parser::~Parser(){}
+
+void Parser::list_type_check(){
+  bool finish = false;
+  while(!finish){
+    finish = true;
+    for(auto i = program_list_definitions.begin(); i != program_list_definitions.end();)
+    {
+      bool is_expression_list = false;
+      boost::shared_ptr<ProgramListCaller> def = boost::dynamic_pointer_cast<ProgramListCaller>((*i)->get_child());
+      if(def)
+      {
+        for(auto ed : expression_list_definitions)
+        {
+          if(def->get_name() == ed->get_name() && def->actual_arg_size() == ed->bound_variable_size())
+          {
+            boost::shared_ptr<ExpressionListDefinition> eld(new ExpressionListDefinition()); 
+            eld->set_name((*i)->get_name());
+            for(auto var_it = (*i)->bound_variable_begin(); var_it != (*i)->bound_variable_end(); var_it++)
+            {
+              eld->add_bound_variable(*var_it);
+            }
+            boost::shared_ptr<ExpressionListCaller> elc(new ExpressionListCaller());
+            elc->set_name(def->get_name());
+            for(auto var_it = def->actual_arg_begin(); var_it != def->actual_arg_end(); var_it++)
+            {
+              elc->add_actual_arg(*var_it);
+            }
+            eld->set_child(elc);
+            i = program_list_definitions.erase(i);
+            expression_list_definitions.push_back(eld);
+            is_expression_list = true;
+            finish = false;
+            break;
+          }
+        }
+      }
+      if(!is_expression_list) i++;
+    }
+  }
+}
 
 bool Parser::parse_ended(){
   position_t position = lexer.get_current_position();
@@ -33,10 +74,10 @@ node_sptr Parser::is_defined(boost::shared_ptr<Definition> definition){
   node_sptr ret;
   std::string name = definition->get_name();
   int size = definition->bound_variable_size();
-  IS_DEFINED_AS(name,size,constraint_definitions,ret);
-  IS_DEFINED_AS(name,size,program_list_definitions,ret);
-  IS_DEFINED_AS(name,size,expression_list_definitions,ret);
-  IS_DEFINED_AS(name,size,program_definitions,ret);
+  IS_DEFINED_AS(name,size,tmp_constraint_definitions,ret);
+  IS_DEFINED_AS(name,size,tmp_program_list_definitions,ret);
+  IS_DEFINED_AS(name,size,tmp_expression_list_definitions,ret);
+  IS_DEFINED_AS(name,size,tmp_program_definitions,ret);
   return ret; 
 }
 
@@ -47,6 +88,24 @@ node_sptr Parser::parse(node_sptr& an,
     DefinitionContainer<ProgramListDefinition> &pld
 ){
   parse();
+  if(error_info.empty())
+  {
+    list_type_check();
+    second_parse = true;
+    lexer.set_current_position(position_t(0,0));
+    error_tmp.clear();
+    an.reset();
+    parsed_program.reset();
+    for(auto d : program_definitions) tmp_program_definitions.push_back(d);
+    for(auto d : constraint_definitions) tmp_constraint_definitions.push_back(d);
+    for(auto d : program_list_definitions) tmp_program_list_definitions.push_back(d);
+    for(auto d : expression_list_definitions) tmp_expression_list_definitions.push_back(d);
+    program_definitions.clear();
+    constraint_definitions.clear();
+    program_list_definitions.clear();
+    expression_list_definitions.clear();
+    parse();
+  }
   if(!error_info.empty()){
     std::string error_message = "\n";
     for(auto info : error_info){
@@ -56,18 +115,8 @@ node_sptr Parser::parse(node_sptr& an,
       error_message += "  ";
       for(int i = 0; i < info.first.second; i++) error_message += " ";
       error_message += "~\n";
-      /*
-      std::cout << "Parse error in line " << info.first.first+1 << " : ";
-      std::cout << info.second << std::endl;
-      std::cout << "  " << lexer.get_string(info.first.first) << std::endl;
-      std::cout << "  ";
-      for(int i = 0; i < info.first.second; i++) std::cout << " ";
-      std::cout << "~" << std::endl;
-      */
     }
     throw std::runtime_error(error_message);
-    // TODO : throw Error
-    // std::exit(1);
   }
   an = assertion_node;
   for(auto constraint_definition : constraint_definitions){
@@ -113,13 +162,6 @@ node_sptr Parser::statements(){
       }
     }
     error_info.push_back(deepest);
-    /*
-    std::cout << "(" << deepest.first.first << "," << deepest.first.second << ") : ";
-    std::cout << deepest.second << std::endl;
-    std::cout << lexer.get_string(deepest.first.first) << std::endl;
-    for(int i = 0; i < deepest.first.second; i++) std::cout << " ";
-    std::cout << "~" << std::endl << std::endl;
-    */
     error_tmp.clear();
 
     lexer.set_current_position(deepest.first);
@@ -176,7 +218,7 @@ node_sptr Parser::statement(){
     // "<=>"
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == EQUIVALENT){
-      if((is_defined(cd))){
+      if((is_defined(cd)) && !second_parse){
         error_occurred(tmp_position, "redefinition of " + std::to_string(cd->bound_variable_size()) + " args definition \"" + cd->get_name() + "\"");
       }else{
         tmp_position = lexer.get_current_position();
@@ -206,7 +248,7 @@ node_sptr Parser::statement(){
     // "{"
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == LEFT_BRACES){
-      if((is_defined(pd))){
+      if((is_defined(pd)) && !second_parse){
         error_occurred(lexer.get_current_position(), "redefinition of " + std::to_string(pd->bound_variable_size()) + " args definition \"" + pd->get_name() + "\"");
       }else{
         tmp_position = lexer.get_current_position();
@@ -239,7 +281,7 @@ node_sptr Parser::statement(){
   if((pld = program_list_callee())){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == DEFINITION){
-      if((is_defined(pld))){
+      if((is_defined(pld)) && !second_parse){
         error_occurred(tmp_position, "redefinition of " + std::to_string(pld->bound_variable_size()) + " args definition \"" + pld->get_name() + "\"");
       }else{
         node_sptr tmp;
@@ -265,7 +307,7 @@ node_sptr Parser::statement(){
   if((eld = expression_list_callee())){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == DEFINITION){
-      if((is_defined(eld))){
+      if((is_defined(eld)) && !second_parse){
         error_occurred(tmp_position, "redefinition of " + std::to_string(eld->bound_variable_size()) + " args definition \"" + eld->get_name() + "\"");
       }else{
         node_sptr tmp;
@@ -372,7 +414,7 @@ boost::shared_ptr<ExpressionListDefinition> Parser::expression_list_callee(){
   if((name = definition_name()) != ""){
     ret->set_name(name);
     // formal_args
-    if(!(is_defined(ret))){ return ret; }
+    return ret; 
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ExpressionListDefinition>();
@@ -387,7 +429,7 @@ boost::shared_ptr<ProgramListDefinition> Parser::program_list_callee(){
   // name
   if((name = definition_name()) != ""){
     ret->set_name(name);
-    if(!(is_defined(ret))){ return ret; }
+    return ret;
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ProgramListDefinition>();
@@ -407,7 +449,7 @@ boost::shared_ptr<ConstraintDefinition> Parser::constraint_callee(){
     if(!args.empty()){
       for(auto arg : args) ret->add_bound_variable(arg);
     }
-    if(!(is_defined(ret))){ return ret; }
+    return ret;
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ConstraintDefinition>();
@@ -427,10 +469,17 @@ boost::shared_ptr<ConstraintCaller> Parser::constraint_caller(){
     if(!args.empty()){
       for(auto arg : args) ret->add_actual_arg(arg);
     }
-    node_sptr defined;
-    IS_DEFINED_AS(name,args.size(),constraint_definitions,defined);
-    if((defined)) return ret;
-    error_occurred(lexer.get_current_position(), "undefined constraint - " + std::to_string(args.size()) + " args constraint \"" + name + "\"");
+    if(second_parse)
+    {
+      node_sptr defined;
+      IS_DEFINED_AS(name,args.size(),tmp_constraint_definitions,defined);
+      if((defined)) return ret;
+      error_occurred(lexer.get_current_position(), "undefined constraint - " + std::to_string(args.size()) + " args constraint \"" + name + "\"");
+    }
+    else
+    {
+      return ret;
+    }
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ConstraintCaller>();
@@ -450,7 +499,7 @@ boost::shared_ptr<ProgramDefinition> Parser::program_callee(){
     if(!args.empty()){
       for(auto arg : args) ret->add_bound_variable(arg);
     }
-    if(!(is_defined(ret))){ return ret; }
+    return ret;
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ProgramDefinition>(); 
@@ -472,18 +521,22 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
         ret->add_actual_arg(arg);
       }
     }
-    node_sptr defined;
-    IS_DEFINED_AS(name,args.size(),program_definitions,defined);
-    if((defined)) return ret;
-    else if(in_conditional_program_list_){
-      defined.reset();
-      IS_DEFINED_AS(name,args.size(),constraint_definitions,defined);
-      if(!(defined)){ 
-        local_program_caller_.top().push_back(ret);
-        return ret;
+    if(second_parse)
+    {
+      node_sptr defined;
+      IS_DEFINED_AS(name,args.size(),tmp_program_definitions,defined);
+      if((defined)) return ret;
+      else if(in_conditional_program_list_){
+        defined.reset();
+        IS_DEFINED_AS(name,args.size(),tmp_constraint_definitions,defined);
+        if(!(defined)){ 
+          local_program_caller_.top().push_back(ret);
+          return ret;
+        }
       }
+      error_occurred(lexer.get_current_position(), "undefined program - " + std::to_string(args.size()) + " args program \"" + name + "\"");
     }
-    error_occurred(lexer.get_current_position(), "undefined program - " + std::to_string(args.size()) + " args program \"" + name + "\"");
+    else return ret;
   }
   lexer.set_current_position(position);
   return boost::shared_ptr<ProgramCaller>();
@@ -1670,14 +1723,23 @@ node_sptr Parser::program_list_factor(){
   std::string str;
   lexer.set_current_position(position);
   if((str = definition_name()) != ""){
-    node_sptr defined;
-    IS_DEFINED_AS(str,0,program_list_definitions,defined);
-    if((defined)){
+    if(second_parse)
+    {
+      node_sptr defined;
+      IS_DEFINED_AS(str,0,tmp_program_list_definitions,defined);
+      if((defined)){
+        boost::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
+        caller->set_name(str);
+        return caller;
+      }
+      error_occurred(lexer.get_current_position(), "undefined program list \"" + str + "\"");  
+    }
+    else
+    {
       boost::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
       caller->set_name(str);
       return caller;
     }
-    error_occurred(lexer.get_current_position(), "undefined program list \"" + str + "\"");
   }
   lexer.set_current_position(position);
   return node_sptr();
@@ -1875,14 +1937,23 @@ node_sptr Parser::expression_list_factor(){
   lexer.set_current_position(position);
   std::string str;
   if((str = definition_name()) != ""){
-    node_sptr defined;
-    IS_DEFINED_AS(str,0,expression_list_definitions,defined);
-    if((defined)){
+    if(second_parse)
+    {
+      node_sptr defined;
+      IS_DEFINED_AS(str,0,tmp_expression_list_definitions,defined);
+      if((defined)){
+        boost::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
+        caller->set_name(str);
+        return caller;
+      }
+      error_occurred(lexer.get_current_position(), "undefined expression list \"" + str + "\"");
+    }
+    else
+    {
       boost::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
       caller->set_name(str);
       return caller;
     }
-    error_occurred(lexer.get_current_position(), "undefined expression list \"" + str + "\"");
   }
   lexer.set_current_position(position);
   return node_sptr();
