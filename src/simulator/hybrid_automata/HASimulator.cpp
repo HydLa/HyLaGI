@@ -93,14 +93,14 @@ phase_result_sptr_t HASimulator::simulate()
     // profile 
     profile["EntirePhase"] = phase_timer.get_elapsed_us();
 
-    simulation_job_sptr_t st(new SimulationJob);
+    phase_result_sptr_t st(new PhaseResult);
     st->phase_type = pr->phase_type;
     st->profile = profile;
     profile_vector_->push_back(st);
 
     if(opts_->max_phase >= 0 && opts_->max_phase < cnt_phase) {
       HYDLA_LOGGER_DEBUG("fin : max_phase");					
-      pr->cause_for_termination = STEP_LIMIT;
+      pr->simulation_state = STEP_LIMIT;
       break;
     }
  
@@ -111,14 +111,14 @@ phase_result_sptr_t HASimulator::simulate()
       }else if(ha[i]->end_time.get_string() == "inf"){
         // infだったら終了
         HYDLA_LOGGER_DEBUG("fin : inf");
-        pr->cause_for_termination = TIME_LIMIT;
+        pr->simulation_state = TIME_LIMIT;
         break;
       }else if(max_time < ha[i]->end_time){
 /*
         TODO: バックエンドで時刻同士の判定を行う
         // max_time <= end_timeなら終了
         HYDLA_LOGGER_DEBUG("fin : max_time");
-        pr->cause_for_termination = TIME_LIMIT;
+        pr->simulation_state = TIME_LIMIT;
         break;
 */
       }

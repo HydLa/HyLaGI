@@ -51,3 +51,4 @@ publicMethod[
   expr,
   toReturnForm[Rationalize[N[expr], approxPrecision] ]
 ];
+

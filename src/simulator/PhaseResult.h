@@ -31,9 +31,10 @@ typedef enum{
   TIME_OUT_REACHED,
   NOT_UNIQUE_IN_INTERVAL,
   NOT_SIMULATED,
+  SIMULATED,
   INTERRUPTED,
   NONE
-}CauseForTermination;
+}SimulationState;
 
 
 /**
@@ -54,9 +55,7 @@ typedef hierarchy::ModuleSet                              module_set_t;
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
-
-typedef boost::shared_ptr<SimulationJob>                 simulation_job_sptr_t;
-typedef std::list<simulation_job_sptr_t>                 todo_list_t;
+typedef std::list<phase_result_sptr_t >                   todo_list_t;
 
 typedef Value                                             value_t;
 typedef ValueRange                                        range_t;
@@ -73,6 +72,10 @@ typedef std::set<std::string> change_variables_t;
 
 typedef std::map<constraint_t, bool> constraint_diff_t;
 typedef std::map<module_set_t::module_t, bool>     module_diff_t;
+typedef hierarchy::ModuleSet                      module_set_t;
+typedef std::set<module_set_t>                    module_set_set_t;
+
+
 
 struct FullInformation
 {
@@ -81,21 +84,26 @@ struct FullInformation
   ask_set_t                    negative_asks;
 };
 
-
-struct DiscreteCause{
-  ask_t ask;
-  bool on_time;
-  DiscreteCause(const ask_t &a, bool on):ask(a), on_time(on){}
-};
-
-struct CandidateOfNextPP{
-  std::vector<DiscreteCause >   causes;
-  value_t                       pp_time;
+struct DCCandidate{
+  value_t                       time;
+  std::map<ask_t, bool>         discrete_asks;
   parameter_map_t               parameter_map;
+
+  DCCandidate(const value_t                &t,
+              const std::map<ask_t, bool> &d,
+              const parameter_map_t &p)
+                :time(t),
+                 discrete_asks(d),
+                 parameter_map(p)
+    {}
+  DCCandidate(){}
 };
 
+typedef std::list<DCCandidate>            pp_time_result_t;
 /// map from variables to candidates of next PP whose time is minimum
-typedef std::map<std::string, CandidateOfNextPP> next_pp_candidate_map_t;
+typedef std::map<std::string, pp_time_result_t > next_pp_candidate_map_t;
+
+typedef std::map<std::string, unsigned int>       profile_t;
 
 /**
  * A class to express the result of each phase.
@@ -110,32 +118,37 @@ public:
   value_t                      current_time, end_time;
 
   variable_map_t               variable_map;
+  variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
   parameter_map_t              parameter_map;
   ask_set_t                    diff_positive_asks, diff_negative_asks;
+  ConstraintStore              initial_constraint_store; /// 暫定的に場合分けとかで使う.TODO:別の方法を考える
+  ConstraintStore              diff_sum;
+  
+  module_diff_t                module_diff;
 
-  constraint_diff_t            expanded_diff;
-  module_diff_t                adopted_module_diff;
-
-  module_set_t                 module_set;
+  module_set_t                 unadopted_ms;
+  module_set_set_t             unadopted_mss;
   next_pp_candidate_map_t      next_pp_candidate_map;
+  ConstraintStore              always_list;
 
-  CauseForTermination          cause_for_termination;
-
+  SimulationState          simulation_state;
   PhaseResult                 *parent;
   phase_result_sptrs_t         children;
-  
   todo_list_t                  todo_list;
 
-  PhaseResult();
+  // trigger conditions
+  std::map<ask_t, bool>        discrete_asks;
   
-  PhaseResult(const SimulationJob& todo, const CauseForTermination& cause = NOT_SIMULATED);
+  profile_t                    profile;
+
+  PhaseResult();  
   ~PhaseResult();
 
   ask_set_t                    get_all_positive_asks();
   ask_set_t                    get_all_negative_asks();
 
   void                         set_full_information(FullInformation &info);
-
+  inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
 private:
   void generate_full_information();
 
@@ -149,6 +162,8 @@ std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a);
+std::ostream& operator<<(std::ostream& s, const next_pp_candidate_map_t& n);
+std::ostream& operator<<(std::ostream& s, const pp_time_result_t& n);
 
 } // namespace simulator
 } // namespace hydla 

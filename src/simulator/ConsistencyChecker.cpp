@@ -228,6 +228,11 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   return ce_result;
 }
 
+void ConsistencyChecker::clear_inconsistent_module_sets()
+{
+  inconsistent_module_sets.clear();
+}
+
 void ConsistencyChecker::check_consistency(const ConstraintStore &constraints, 
                                            RelationGraph &relation_graph,
                                            module_set_t &module_set,
@@ -289,10 +294,9 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const variable_set_t &discrete_variables, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile)
 {
   CheckConsistencyResult result;
-  inconsistent_module_sets.clear();
   result_maps.clear();
   result_maps.push_back(variable_map_t());
   HYDLA_LOGGER_DEBUG("");
@@ -300,7 +304,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   timer::Timer timer;
   vector<ConstraintStore> related_constraints_list;
   vector<module_set_t> related_modules_list;
-  relation_graph.get_related_constraints_vector(difference_constraints, discrete_variables, related_constraints_list, related_modules_list);
+  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(int i = 0; i < related_constraints_list.size(); i++)
   {

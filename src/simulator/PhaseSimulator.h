@@ -9,7 +9,6 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
-#include "AskRelationGraph.h"
 
 namespace hydla {
 namespace simulator {
@@ -23,26 +22,7 @@ struct FindMinTimeCandidate
   parameter_map_t parameter_map;
 };
 
-struct DCCandidate 
-{
-  value_t time;
-  std::map<ask_t, bool>        diff_positive_asks, /// newly entailed asks
-                                diff_negative_asks; /// newly not entailed asks
-  /// condition for parameter in this case
-  parameter_map_t parameter_map;
-  DCCandidate(const value_t                &t,
-              const std::map<ask_t, bool> &dp,
-              const std::map<ask_t, bool> &dn,
-              const parameter_map_t &p)
-                :time(t),
-                 diff_positive_asks(dp),
-                 diff_negative_asks(dn),
-                 parameter_map(p)
-    {}
-  DCCandidate(){}
-};
 
-typedef std::list<DCCandidate>            pp_time_result_t;
 typedef std::vector<FindMinTimeCandidate> find_min_time_result_t;
 
 struct CompareMinTimeResult
@@ -65,46 +45,47 @@ public:
                           module_set_container_sptr &msc,
                           phase_result_sptr_t root);
 
-  void process_todo(simulation_job_sptr_t& todo);
+
+  void process_todo(phase_result_sptr_t&);
 
 
   void set_backend(backend_sptr_t);
 
-  /// apply diff of given PhaseResult for relation_graph
-  void apply_diff(const phase_result_sptr_t &phase);
+  void apply_diff(const PhaseResult &phase);
+  
   /// revert diff
-  void revert_diff(const phase_result_sptr_t &phase);
+  void revert_diff(const PhaseResult &phase);
+  void revert_diff(const ask_set_t &positive_asks, const ask_set_t &negative_asks, const ConstraintStore &always_list, const module_diff_t &module_diff);
 
   boost::shared_ptr<RelationGraph> relation_graph_;
 
 private:
 
-  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, simulation_job_sptr_t& state, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives, ask_set_t positive_asks, ask_set_t negative_asks);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t& state, ask_set_t trigger_asks, ask_set_t positive_asks, ask_set_t negative_asks);
 
   void replace_prev2parameter(
                               PhaseResult &phase,
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
+  module_diff_t get_module_diff(module_set_t unadopted_ms, module_set_t parent_unadopted);
+
   variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);
 
-  phase_result_sptr_t make_new_phase(const phase_result_sptr_t& original);
+  std::list<phase_result_sptr_t> make_results_from_todo(phase_result_sptr_t& todo);
 
-  std::list<phase_result_sptr_t> make_results_from_todo(simulation_job_sptr_t& todo);
-
-  void push_branch_states(simulation_job_sptr_t &original,
+  void push_branch_states(phase_result_sptr_t &original,
                           CheckConsistencyResult &result);
 
-  phase_result_sptr_t make_new_phase(simulation_job_sptr_t& todo);
+  pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask);
+  pp_time_result_t compare_min_time(const pp_time_result_t &existing, const pp_time_result_t &newcomer);
 
-  pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask, bool positive);
+  bool calculate_closure(phase_result_sptr_t& state, ask_set_t &trigger_asks, ConstraintStore &diff_sum, ask_set_t &positive_asks, ask_set_t &negative_asks, ConstraintStore always);
 
-  bool calculate_closure(simulation_job_sptr_t& state, constraint_diff_t &local_diff, std::map<ask_t, bool> &discrete_nonprev_positives, std::map<ask_t, bool> &discrete_nonprev_negatives, ask_set_t &positive_asks, ask_set_t &negative_asks);
-
-  bool judge_continuity(const simulation_job_sptr_t &job, const ask_t &ask);
+  bool judge_continuity(const phase_result_sptr_t &job, const ask_t &ask, const variable_set_t &changing_variables);
 
  	/// make todos from given phase_result
-  void make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t& current_todo);
+  void make_next_todo(phase_result_sptr_t& phase);
 
   Simulator* simulator_;
 

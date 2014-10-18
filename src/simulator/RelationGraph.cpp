@@ -48,19 +48,17 @@ void RelationGraph::add(module_t &mod)
 void dump_tell_node(RelationGraph::TellNode *node, ostream &os)
 {
   string constraint_name = node->get_name();
-  os << " \"";
-  if(node->always)os << "[]";
-  os << constraint_name << "\" [shape = box]\n";
+  os << " \"" << constraint_name << "\" [shape = box]\n";
   for(auto edge : node->edges){
     string variable_name = edge.variable_node->get_name();
     os << "  \"" 
        << constraint_name 
-       << "\" -- \"" 
+       << "\" -> \"" 
        << variable_name 
-       << "\"";
+       << "\"[dir = none]";
     if(edge.ref_prev)
     {
-      os << " [style = dotted]";
+      os << " [style = dashed]";
     }
     os <<  ";\n";
   }
@@ -69,51 +67,67 @@ void dump_tell_node(RelationGraph::TellNode *node, ostream &os)
 
 void dump_ask_node(RelationGraph::AskNode *node, ostream &os)
 {
-  string constraint_name = node->get_name();
-  os << " \"";
-  if(node->always)os << "[]";
-  os << constraint_name << "\" [shape = hexagon]\n";
+  string constraint_name = " \"" + node->get_name() + "\"";
+  if(node->prev) os <<  constraint_name << " [shape = hexagon, style = dashed]\n";
+  else os << constraint_name << " [shape = hexagon]\n";
   for(auto edge : node->edges){
     string variable_name = edge.variable_node->get_name();
-    os << "  \"" 
-       << constraint_name 
-       << "\" -- \"" 
+    os << constraint_name 
+       << " -> \"" 
        << variable_name 
-       << "\"";
+       << "\" [dir = none]";
     if(edge.ref_prev)
     {
-      os << " [style = dotted]";
+      os << " [style = dashed]";
     }
     os <<  ";\n";
   }
+  for(auto child : node->children)
+  {
+    os << constraint_name
+       << " -> \""
+       << child->get_name()
+      // arrowtail is not displayed if dir != both
+       << "\" [dir = both, arrowtail = odot]; \n";
+  }
 }
 
-
-void RelationGraph::dump_graph(ostream & os) const
+void RelationGraph::dump_graph(ostream & os, DumpMode mode) const
 {
-  os << "graph g {\n";
-  os << "graph [ranksep = 1.0 ,rankdir = LR];\n";
-  for(auto tell_node : tell_nodes) {
-    dump_tell_node(tell_node, os);
+  os << "digraph g {\n";
+  os << "graph [ranksep = 2.0 ,rankdir = LR];\n";
+  if(mode != ASK_ONLY)
+  {
+    for(auto tell_node : tell_nodes) {
+      dump_tell_node(tell_node, os);
+    }
   }
 
-  for(auto ask_node : ask_nodes) {
-    dump_ask_node(ask_node, os);
+  if(mode != TELL_ONLY)
+  {
+    for(auto ask_node : ask_nodes) {
+      dump_ask_node(ask_node, os);
+    }
   }
   os << "}" << endl;
 }
 
 
-void RelationGraph::dump_active_graph(ostream & os) const
+void RelationGraph::dump_active_graph(ostream & os, DumpMode mode) const
 {
-  os << "graph g {" << endl;
+  os << "digraph g {" << endl;
   os << "graph [ranksep = 2.0 ,rankdir = LR];" << endl;
-  for(auto tell_node : tell_nodes) {
-    if(tell_node->is_active()) dump_tell_node(tell_node, os);
+  if(mode != ASK_ONLY)
+  {
+    for(auto tell_node : tell_nodes) {
+      if(tell_node->is_active()) dump_tell_node(tell_node, os);
+    }
   }
-
-  for(auto ask_node : ask_nodes) {
-    if(ask_node->is_active()) dump_ask_node(ask_node, os);
+  if(mode != TELL_ONLY)
+  {
+    for(auto ask_node : ask_nodes) {
+      if(ask_node->is_active()) dump_ask_node(ask_node, os);
+    }
   }
   os << "}" << endl;
 }
@@ -145,12 +159,12 @@ string get_constraint_name(const constraint_t &constraint, const RelationGraph::
 
 string RelationGraph::TellNode::get_name() const
 {
-  return get_constraint_name(constraint, module);
+  return (always?"[]":"") + get_constraint_name(constraint, module);
 }
 
 string RelationGraph::AskNode::get_name() const
 {
-  return get_constraint_name(ask, module);
+  return (always?"[]":"") + get_constraint_name(ask->get_guard(), module);
 }
 
 
@@ -172,8 +186,6 @@ void RelationGraph::initialize_node_visited()
     tell_node->visited = false;
   }
 }
-
-
 
 void RelationGraph::get_related_constraints_vector(const ConstraintStore &constraint_store, vector<ConstraintStore> &constraints_vector, vector<module_set_t> &module_set_vector){
   if(!up_to_date) check_connected_components();
@@ -298,7 +310,6 @@ void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore
 
 
 void RelationGraph::get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
-  if(!variable_node_map.count(var))return;
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
   variable_set_t vars;
@@ -395,7 +406,7 @@ void RelationGraph::set_expanded_recursive(constraint_t cons, bool expanded)
 }
 
 
-list<constraint_t> RelationGraph::set_entailed(const ask_t &ask, bool entailed)
+ConstraintStore RelationGraph::set_entailed(const ask_t &ask, bool entailed)
 {
   auto node_it = ask_node_map.find(ask);
   always_list.clear();
@@ -405,6 +416,7 @@ list<constraint_t> RelationGraph::set_entailed(const ask_t &ask, bool entailed)
     up_to_date = false;
     node_it->second->entailed = entailed;
   }
+  else throw HYDLA_SIMULATE_ERROR("AskNode for " + get_infix_string(ask) + " is not found");
   return always_list;
 }
 
@@ -415,7 +427,7 @@ bool RelationGraph::get_entailed(const ask_t &ask)const
   return node_it->second->entailed;
 }
 
-bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed, list<constraint_t> &always)
+bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed, ConstraintStore &always)
 {
   auto node_it = ask_node_map.find(ask);
   if(node_it == ask_node_map.end())return false;
@@ -431,16 +443,22 @@ bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed, list<constra
   return false;
 }
 
-RelationGraph::asks_t RelationGraph::get_adjacent_asks(const string &var, bool ignore_prev_asks){
+RelationGraph::asks_t RelationGraph::get_adjacent_asks(const string &var_name, bool ignore_prev_asks){
   asks_t asks;
-  if(!variable_node_map.count(var))return asks;
-  VariableNode *var_node = variable_node_map[var];
-  if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
-  for(auto ask_node : var_node->ask_edges)
+  list<VariableNode *> var_nodes;
+  for(auto node : var_name_nodes_map[var_name])
   {
-    if(active(ask_node, ignore_prev_asks))
+    var_nodes.push_back(node);
+  }
+  if(var_nodes.empty())throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
+  for(auto var_node : var_nodes)
+  {
+    for(auto ask_node : var_node->ask_edges)
     {
-      asks.push_back(ask_node->ask);
+      if(active(ask_node, ignore_prev_asks))
+      {
+        asks.insert(ask_node->ask);
+      }
     }
   }
   return asks;
@@ -463,12 +481,12 @@ RelationGraph::asks_t RelationGraph::get_active_asks(bool ignore_prev_asks)
   asks_t asks;
   for(auto ask_node : ask_nodes)
   {
-    if(active(ask_node, ignore_prev_asks))asks.push_back(ask_node->ask);
+    if(active(ask_node, ignore_prev_asks))asks.insert(ask_node->ask);
   }
   return asks;
 }
 
-RelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ConstraintNode(mod), ask(a)
+RelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ConstraintNode(mod), ask(a), entailed(false)
 {
   VariableFinder finder;
   finder.visit_node(ask->get_guard());
@@ -538,6 +556,16 @@ ConstraintStore RelationGraph::get_adopted_constraints()
   return constraints;
 }
 
+RelationGraph::asks_t RelationGraph::get_all_asks()
+{
+  asks_t asks;
+  for(auto ask_node : ask_nodes)
+  {
+    asks.insert(ask_node->ask);
+  }
+  return asks;
+}
+
 RelationGraph::module_set_t RelationGraph::get_modules(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
@@ -559,26 +587,28 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     finder.visit_node(node);
     variable_set_t variables;
     
-    TellNode* cons;
+    TellNode* tell_node;
     if(tell_node_map.count(node))
     {
-      cons = tell_node_map[node];
+      tell_node = tell_node_map[node];
     }
     else
     {
-      cons = new TellNode(node, current_module);
-      cons->always = in_always;
-      tell_nodes.push_back(cons);
-      tell_node_map[node] = cons;
-      module_tell_nodes_map[current_module].push_back(cons);
+      tell_node = new TellNode(node, current_module);
+      tell_node->always = in_always;
+      tell_node->parent = parent_ask;
+      if(parent_ask != nullptr)parent_ask->children.push_back(tell_node);
+      tell_nodes.push_back(tell_node);
+      tell_node_map[node] = tell_node;
+      module_tell_nodes_map[current_module].push_back(tell_node);
     }
 
     variables = finder.get_variable_set();
     for(auto variable : variables)
     {
       VariableNode* var_node = add_variable_node(variable);
-      cons->edges.push_back(EdgeToVariable(var_node, false));
-      var_node->edges.push_back(EdgeToConstraint(cons, false));
+      tell_node->edges.push_back(EdgeToVariable(var_node, false));
+      var_node->edges.push_back(EdgeToConstraint(tell_node, false));
     }
 
     variable_set_t prev_variables;
@@ -587,8 +617,8 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     {
       if(variables.count(variable))continue;
       VariableNode* var_node = add_variable_node(variable);
-      cons->edges.push_back(EdgeToVariable(var_node, true));
-      var_node->edges.push_back(EdgeToConstraint(cons, true));
+      tell_node->edges.push_back(EdgeToVariable(var_node, true));
+      var_node->edges.push_back(EdgeToConstraint(tell_node, true));
     }
   }
   else if(visit_mode == EXPANDING)
@@ -598,8 +628,8 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     {
       TellNode* tell_node = tell_node_it->second;
       tell_node->expanded = true;
-      if(in_always)always_list.push_back(node);
-      else nonalways_list.push_back(node);
+      if(in_always)always_list.add_constraint(node);
+      else nonalways_list.add_constraint(node);
     }
     else HYDLA_LOGGER_WARN("(@RelationGraph) try to expand unknown node: ", get_infix_string(node));
   }
@@ -629,6 +659,7 @@ RelationGraph::VariableNode* RelationGraph::add_variable_node(Variable &var)
     VariableNode* ret = new VariableNode(var);
     variable_nodes.push_back(ret);
     variable_node_map[var] = ret;
+    var_name_nodes_map[var.get_name()].push_back(ret);
     return ret;
   }
 }
@@ -648,13 +679,14 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     ask_nodes.push_back(ask_node);
     ask_node_map[ask] = ask_node;
     ask_node->parent = parent_ask;
+    if(parent_ask != nullptr)parent_ask->children.push_back(ask_node);
     ask_node->always = in_always;
 
     variables = finder.get_all_variable_set();
     for(auto variable : variables)
     {
       VariableNode* var_node = add_variable_node(variable);
-      EdgeToVariable edge(var_node, !ask_node->prev);
+      EdgeToVariable edge(var_node, ask_node->prev);
       ask_node->edges.push_back(edge);
       var_node->ask_edges.push_back(ask_node);
     }
@@ -671,8 +703,8 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     if(ask_node_it == ask_node_map.end())throw HYDLA_SIMULATE_ERROR("ask_node not found");
     if(visit_mode == EXPANDING)
     {
-      if(in_always)always_list.push_back(ask);
-      else nonalways_list.push_back(ask);
+      if(in_always)always_list.add_constraint(ask);
+      else nonalways_list.add_constraint(ask);
       ask_node_it->second->expanded = true;
     }
     else if(visit_mode == UNEXPANDING && !in_always)

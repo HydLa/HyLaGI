@@ -3,6 +3,16 @@
 namespace hydla{
   namespace parser{
 
+Lexer::Lexer():line(0),column(0){}
+Lexer::Lexer(std::string file, std::istream& stream):line(0),column(0)
+{
+  file_info.push_back(file_info_t(file,0));
+  std::string tmp;
+  while(std::getline(stream,tmp)){
+    strs.push_back(tmp);
+  }
+}
+
 Lexer::Lexer(std::istream& stream):line(0),column(0)
 {
   std::string tmp;
@@ -15,9 +25,22 @@ Lexer::Lexer(std::string str):line(0),column(0)
 {
   strs.push_back(str);
 }
+Lexer::Lexer(std::string file, std::vector<std::string> strings):strs(strings),line(0),column(0)
+{
+  file_info.push_back(file_info_t(file,0));
+}
 
 Lexer::Lexer(std::vector<std::string> strings):strs(strings),line(0),column(0){}
 Lexer::~Lexer(){}
+
+void Lexer::add_file(std::string file, std::istream& stream)
+{
+  file_info.push_back(file_info_t(file,strs.size()));
+  std::string tmp;
+  while(std::getline(stream,tmp)){
+    strs.push_back(tmp);
+  }
+}
 
 Token Lexer::identifier()
 {

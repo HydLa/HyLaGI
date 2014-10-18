@@ -22,7 +22,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   stringstream sstr;
   if(result.phase_type == INTERVAL_PHASE){
     sstr << "---------IP " << result.id << "---------" << endl;
-    sstr << "unadopted modules: " << result.module_set.get_name() << endl;
+    sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
     }else{
@@ -30,7 +30,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     }
   }else{
     sstr << "---------PP " << result.id << "---------" << endl;
-    sstr << "unadopted modules: " << result.module_set.get_name() << endl;
+    sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     sstr << "t\t: " << result.current_time << "\n";
   }
 
@@ -97,20 +97,20 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       ostream << *r_it;
     }
 
-    if(node->cause_for_termination==simulator::ASSERTION ||
-      node->cause_for_termination==simulator::TIME_LIMIT ||
-      node->cause_for_termination==simulator::NOT_SIMULATED ||
-      node->cause_for_termination==simulator::NONE ||
-      node->cause_for_termination==simulator::STEP_LIMIT ||
-      node->cause_for_termination==simulator::SOME_ERROR ||
-      node->cause_for_termination==simulator::INTERRUPTED)
+    if(node->simulation_state==simulator::ASSERTION ||
+      node->simulation_state==simulator::TIME_LIMIT ||
+      node->simulation_state==simulator::NOT_SIMULATED ||
+      node->simulation_state==simulator::NONE ||
+      node->simulation_state==simulator::STEP_LIMIT ||
+      node->simulation_state==simulator::SOME_ERROR ||
+      node->simulation_state==simulator::INTERRUPTED)
     {
       ostream << get_state_output(*node);
     }
 
     output_parameter_map(node->parameter_map);
     // print why the simulation was terminated
-    switch(node->cause_for_termination){
+    switch(node->simulation_state){
       case simulator::INCONSISTENCY:
         ostream << "# execution stuck\n";
         break;
