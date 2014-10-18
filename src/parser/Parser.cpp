@@ -10,9 +10,12 @@ namespace hydla{
 
 using namespace symbolic_expression;
 
+Parser::Parser():lexer(){}
 Parser::Parser(std::string str):lexer(str){}
 Parser::Parser(std::vector<std::string> str):lexer(str){}
 Parser::Parser(std::istream& stream):lexer(stream){}
+Parser::Parser(std::string str, std::istream& stream):lexer(str,stream){}
+Parser::Parser(std::string file, std::vector<std::string> str):lexer(file, str){}
 Parser::~Parser(){}
 
 void Parser::list_type_check(){
@@ -109,12 +112,8 @@ node_sptr Parser::parse(node_sptr& an,
   if(!error_info.empty()){
     std::string error_message = "\n";
     for(auto info : error_info){
-      error_message += "Parse error in line " + std::to_string(info.first.first+1) + " : ";
-      error_message += info.second + "\n";
-      error_message += "  " + lexer.get_string(info.first.first) + "\n";
-      error_message += "  ";
-      for(int i = 0; i < info.first.second; i++) error_message += " ";
-      error_message += "~\n";
+      error_message += "Parse error : " + info.second + "\n";
+      error_message += lexer.get_error_position(info.first);
     }
     throw std::runtime_error(error_message);
   }

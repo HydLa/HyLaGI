@@ -19,10 +19,18 @@ namespace hydla{
 class Parser{
 public:
 
+  Parser();
   Parser(std::string);
   Parser(std::vector<std::string>);
   Parser(std::istream&);
+  Parser(std::string, std::vector<std::string>);
+  Parser(std::string, std::istream&);
   ~Parser();
+
+  void add_file(std::string s, std::istream& i)
+  {
+    lexer.add_file(s,i);
+  }
 
   node_sptr parse(
       node_sptr& assertion_node, 
@@ -31,7 +39,7 @@ public:
       DefinitionContainer<hydla::symbolic_expression::ExpressionListDefinition>&,
       DefinitionContainer<hydla::symbolic_expression::ProgramListDefinition>&
   );
-  
+
   node_sptr hydla_program();
   node_sptr statements();
   node_sptr statement();
