@@ -119,8 +119,6 @@ private:
 
   phase_result_sptr_t result_root;
 
-  boost::shared_ptr<AskRelationGraph> guard_relation_graph_;
-
   bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;

@@ -44,7 +44,7 @@ void PhaseSimulator::process_todo(simulation_job_sptr_t &todo)
   {
     HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff.first));
     HYDLA_LOGGER_DEBUG_VAR(diff.second);
-    relation_graph_->set_expanded(diff.first, diff.second);
+    relation_graph_->set_expanded_recursive(diff.first, diff.second);
   }
   
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
@@ -66,7 +66,7 @@ void PhaseSimulator::process_todo(simulation_job_sptr_t &todo)
   // the state of the relation_graph_ won't be reverted!
   for(auto diff : todo->expanded_diff)
   {
-    relation_graph_->set_expanded(diff.first, !diff.second);
+    relation_graph_->set_expanded_recursive(diff.first, !diff.second);
   }
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();  
 }
@@ -88,7 +88,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
     // in the initial state, set all modules expanded
     for(auto module : module_set_container->get_max_module_set())
     {
-      relation_graph_->set_expanded(module.second, true);
+      relation_graph_->set_expanded_recursive(module.second, true);
       todo->expanded_constraints.add_constraint(module.second);
       todo->expanded_diff[module.second] = true;
     }
@@ -110,9 +110,10 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
     {
       if(positive.second)
       {
-        if(guard_relation_graph_->set_entailed_if_prev(positive.first, true))
+        list<constraint_t> always_list;
+        if(relation_graph_->entail_if_prev(positive.first, true, always_list))
         {
-          relation_graph_->set_expanded(positive.first->get_child(), true);
+          relation_graph_->set_expanded_recursive(positive.first->get_child(), true);
           todo->expanded_diff[positive.first->get_child()] = true;
           prev_positives.insert(positive.first);
         }
@@ -124,11 +125,12 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
     }
     for(auto negative : todo->discrete_negative_asks)
     {
+      list<constraint_t> always_list;
       if(negative.second)
       {
-        if(guard_relation_graph_->set_entailed_if_prev(negative.first, false))
+        if(relation_graph_->entail_if_prev(negative.first, false, always_list))
         {
-          relation_graph_->set_expanded(negative.first->get_child(), false);
+          relation_graph_->set_expanded_recursive(negative.first->get_child(), false);
           todo->expanded_diff[negative.first->get_child()] = false;
           prev_negatives.insert(negative.first);
         }
@@ -136,7 +138,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(simulation
         {
           // set ask "not entailed" to preserve monotonicity in calculate closure
           discrete_nonprev_negatives.insert(negative);
-          relation_graph_->set_expanded(negative.first->get_child(), false);
+          relation_graph_->set_expanded_recursive(negative.first->get_child(), false);
         }
       }
     }
@@ -170,8 +172,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   constraint_diff_t ms_local_diff;
 
   relation_graph_->set_adopted(unadopted_ms, false);
-  guard_relation_graph_->set_adopted(unadopted_ms, false);
-
 
   list<phase_result_sptr_t> result_list;  
   timer::Timer cc_timer;
@@ -314,9 +314,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   // revert diff
   for(auto diff : ms_local_diff)
   {
-    relation_graph_->set_expanded(diff.first, !diff.second);
+    relation_graph_->set_expanded_recursive(diff.first, !diff.second);
   }
-  guard_relation_graph_->set_adopted(unadopted_ms, true);
   relation_graph_->set_adopted(unadopted_ms, true);
 
   return result_list;
@@ -367,9 +366,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
   relation_graph_.reset(new RelationGraph(ms)); 
-
-  guard_relation_graph_.reset(new AskRelationGraph(ms));
-
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(cout);
@@ -529,8 +525,8 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
       {
         if(positive.second && !judged_asks.count(positive.first) && !finder.include_variables(positive.first->get_guard()))
         {
-          guard_relation_graph_->set_entailed(positive.first, true);
-          relation_graph_->set_expanded(positive.first->get_child(), true);
+          relation_graph_->set_entailed(positive.first, true);
+          relation_graph_->set_expanded_recursive(positive.first->get_child(), true);
           local_diff[positive.first->get_child()] = true;
           positive_asks.insert(positive.first);
           all_diff.add_constraint(positive.first->get_child());
@@ -558,8 +554,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
     
 
     for(auto variable : discrete_variables)
-    {
-      asks.merge(guard_relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE));
+    { asks.merge(relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE));
     }
     
     for(auto ask : asks)
@@ -586,10 +581,10 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         // Since we should choose entailed case in push_branch_states, we go down without break.
       case ENTAILED:
         HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask->get_guard()));
-        if(!guard_relation_graph_->get_entailed(ask))
+        if(!relation_graph_->get_entailed(ask))
         {
-          relation_graph_->set_expanded(ask->get_child(), true);
-          guard_relation_graph_->set_entailed(ask, true);
+          relation_graph_->set_expanded_recursive(ask->get_child(), true);
+          relation_graph_->set_entailed(ask, true);
           positive_asks.insert(ask);
           local_diff[ask->get_child()] = true;
           all_diff.add_constraint(ask->get_child());
@@ -600,7 +595,7 @@ bool PhaseSimulator::calculate_closure(simulation_job_sptr_t& state, constraint_
         break;
       case CONFLICTING:
         HYDLA_LOGGER_DEBUG("--- conflicted ask ---\n", *(ask->get_guard()));
-        if(guard_relation_graph_->get_entailed(ask))
+        if(relation_graph_->get_entailed(ask))
         {
           state->expanded_diff[ask->get_child()] = false;
           all_diff.add_constraint(ask->get_child());
@@ -693,7 +688,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase, simulation_job_sptr_t
   }
   for(auto constraint : non_always)
   {
-    relation_graph_->set_expanded(constraint, false);
+    relation_graph_->set_expanded_recursive(constraint, false);
     next_todo->expanded_diff[constraint] = false;
   }
   next_todo->parameter_map = phase->parameter_map;
@@ -1006,10 +1001,9 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
 
 void PhaseSimulator::apply_diff(const phase_result_sptr_t &phase)
 {
-  // TODO: ask_relation_graph_についても適切に設定し直す
   for(auto diff: phase->expanded_diff)
   {
-    relation_graph_->set_expanded(diff.first, diff.second);
+    relation_graph_->set_expanded_recursive(diff.first, diff.second);
   }
   for(auto diff: phase->adopted_module_diff)
   {
@@ -1019,10 +1013,9 @@ void PhaseSimulator::apply_diff(const phase_result_sptr_t &phase)
 
 void PhaseSimulator::revert_diff(const phase_result_sptr_t &phase)
 {
-  // TODO: ask_relation_graph_についても適切に設定し直す
   for(auto diff: phase->expanded_diff)
   {
-    relation_graph_->set_expanded(diff.first, !diff.second);
+    relation_graph_->set_expanded_recursive(diff.first, !diff.second);
   }
   for(auto diff: phase->adopted_module_diff)
   {

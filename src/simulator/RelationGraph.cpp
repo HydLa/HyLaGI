@@ -45,11 +45,12 @@ void RelationGraph::add(module_t &mod)
   up_to_date = false;
 }
 
-template<typename NodeType> void dump_constraint_node(NodeType &node, ostream &os)
+void dump_tell_node(RelationGraph::TellNode *node, ostream &os)
 {
   string constraint_name = node->get_name();
+  os << " \"";
   if(node->always)os << "[]";
-  os << "  \"" << constraint_name << "\" [shape = box]\n";
+  os << constraint_name << "\" [shape = box]\n";
   for(auto edge : node->edges){
     string variable_name = edge.variable_node->get_name();
     os << "  \"" 
@@ -66,17 +67,38 @@ template<typename NodeType> void dump_constraint_node(NodeType &node, ostream &o
 }
 
 
+void dump_ask_node(RelationGraph::AskNode *node, ostream &os)
+{
+  string constraint_name = node->get_name();
+  os << " \"";
+  if(node->always)os << "[]";
+  os << constraint_name << "\" [shape = hexagon]\n";
+  for(auto edge : node->edges){
+    string variable_name = edge.variable_node->get_name();
+    os << "  \"" 
+       << constraint_name 
+       << "\" -- \"" 
+       << variable_name 
+       << "\"";
+    if(edge.ref_prev)
+    {
+      os << " [style = dotted]";
+    }
+    os <<  ";\n";
+  }
+}
+
 
 void RelationGraph::dump_graph(ostream & os) const
 {
   os << "graph g {\n";
   os << "graph [ranksep = 1.0 ,rankdir = LR];\n";
   for(auto tell_node : tell_nodes) {
-    dump_constraint_node(tell_node, os);
+    dump_tell_node(tell_node, os);
   }
 
   for(auto ask_node : ask_nodes) {
-    dump_constraint_node(ask_node, os);
+    dump_ask_node(ask_node, os);
   }
   os << "}" << endl;
 }
@@ -87,11 +109,11 @@ void RelationGraph::dump_active_graph(ostream & os) const
   os << "graph g {" << endl;
   os << "graph [ranksep = 2.0 ,rankdir = LR];" << endl;
   for(auto tell_node : tell_nodes) {
-    if(tell_node->is_active()) dump_constraint_node(tell_node, os);
+    if(tell_node->is_active()) dump_tell_node(tell_node, os);
   }
 
   for(auto ask_node : ask_nodes) {
-    if(ask_node->is_active()) dump_constraint_node(ask_node, os);
+    if(ask_node->is_active()) dump_ask_node(ask_node, os);
   }
   os << "}" << endl;
 }
@@ -347,8 +369,25 @@ void RelationGraph::set_adopted(const module_set_t &ms, bool adopted)
   }
 }
 
+void RelationGraph::set_expanded_atomic(constraint_t cons, bool expanded)
+{
+  auto tell_node_it = tell_node_map.find(cons);
+  if(tell_node_it != tell_node_map.end())
+  {
+    tell_node_it->second->expanded = expanded;
+  }
+  else
+  {
+    auto ask_node_it = ask_node_map.find(cons);
+    if(ask_node_it != ask_node_map.end())
+    {
+      ask_node_it->second->expanded = expanded;
+    }else throw HYDLA_SIMULATE_ERROR("constraint_node not found");
+  }
+  up_to_date = false;
+}
 
-void RelationGraph::set_expanded(constraint_t cons, bool expanded)
+void RelationGraph::set_expanded_recursive(constraint_t cons, bool expanded)
 {
   visit_mode = expanded?EXPANDING:UNEXPANDING;
   accept(cons);
@@ -356,35 +395,24 @@ void RelationGraph::set_expanded(constraint_t cons, bool expanded)
 }
 
 
-void RelationGraph::set_expanded_all(bool expanded)
-{
-  for(auto node : tell_nodes)
-  {
-    if(expanded != node->expanded)
-    {
-      node->expanded = expanded;
-    }
-  }
-  up_to_date = false;
-}
-
-
-set<constraint_t> RelationGraph::entail(const ask_t &ask, bool entailed)
+list<constraint_t> RelationGraph::set_entailed(const ask_t &ask, bool entailed)
 {
   auto node_it = ask_node_map.find(ask);
-  set<constraint_t> non_always_set;
-  // TODO : expand children
-  if(node_it != ask_node_map.end());
-  return non_always_set;
+  always_list.clear();
+  if(node_it != ask_node_map.end())
+  {
+    set_expanded_recursive(ask->get_child(), entailed);
+    up_to_date = false;
+    node_it->second->entailed = entailed;
+  }
+  return always_list;
 }
-
-
 
 bool RelationGraph::get_entailed(const ask_t &ask)const
 {
   auto node_it = ask_node_map.find(ask);
-  if(node_it == ask_node_map.end()) throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
-  return node_it->second->expanded;
+  if(node_it == ask_node_map.end()) throw HYDLA_SIMULATE_ERROR("AskNode is not found");
+  return node_it->second->entailed;
 }
 
 bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed, list<constraint_t> &always)
@@ -393,8 +421,11 @@ bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed, list<constra
   if(node_it == ask_node_map.end())return false;
   if(node_it->second->prev)
   {
-    // TODO: expand children
-
+    always_list.clear();
+    up_to_date = false;
+    set_expanded_recursive(ask->get_child(), entailed);
+    node_it->second->entailed = entailed;
+    always = always_list;
     return true;
   }
   return false;
@@ -453,8 +484,8 @@ RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
 
 bool RelationGraph::active(const AskNode *ask, bool ignore_prev) const
 {
-  // TODO: fix this
-  return ask->module_adopted && !(ignore_prev && ask->prev) && (ask->parent == nullptr || ask->parent->expanded);
+  // TODO: activeという名前が重複しているのでどうにかする
+  return ask->is_active() && !(ignore_prev && ask->prev);
 }
 
 
@@ -522,7 +553,6 @@ void RelationGraph::set_ignore_prev(bool ignore)
 
 void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node)
 {
-  // TODO handle whether always or not
   if(visit_mode == ADDING)
   {
     VariableFinder finder;
@@ -537,6 +567,7 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     else
     {
       cons = new TellNode(node, current_module);
+      cons->always = in_always;
       tell_nodes.push_back(cons);
       tell_node_map[node] = cons;
       module_tell_nodes_map[current_module].push_back(cons);
@@ -566,21 +597,19 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     if(tell_node_it != tell_node_map.end())
     {
       TellNode* tell_node = tell_node_it->second;
-      if(!tell_node->expanded)
-      {
-        tell_node->expanded = true;
-      }
+      tell_node->expanded = true;
+      if(in_always)always_list.push_back(node);
+      else nonalways_list.push_back(node);
     }
     else HYDLA_LOGGER_WARN("(@RelationGraph) try to expand unknown node: ", get_infix_string(node));
   }
   else if(visit_mode == UNEXPANDING)
   {
-
     auto tell_node_it = tell_node_map.find(node);
     if(tell_node_it != tell_node_map.end())
     {
       TellNode* tell_node = tell_node_it->second;
-      if(tell_node->expanded)
+      if(!tell_node->always)
       {
         tell_node->expanded = false;
       }
@@ -607,22 +636,19 @@ RelationGraph::VariableNode* RelationGraph::add_variable_node(Variable &var)
 
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
 {
-  
   if(visit_mode == ADDING)
   {
-  
-    // TODO: handle whether always or not
     VariableFinder finder;
     finder.visit_node(ask->get_guard());
     variable_set_t variables;
     
     AskNode* ask_node;
-    HYDLA_LOGGER_DEBUG(get_infix_string(ask));
     assert(!ask_node_map.count(ask)); /// assume that same ask node doesn't exist
     ask_node = new AskNode(ask, current_module);
     ask_nodes.push_back(ask_node);
     ask_node_map[ask] = ask_node;
     ask_node->parent = parent_ask;
+    ask_node->always = in_always;
 
     variables = finder.get_all_variable_set();
     for(auto variable : variables)
@@ -632,19 +658,36 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
       ask_node->edges.push_back(edge);
       var_node->ask_edges.push_back(ask_node);
     }
-
+    bool prev_in_always = in_always;
+    in_always = false;
     parent_ask = ask_node;
     accept(ask->get_rhs());
     parent_ask = ask_node->parent;
-
-    accept(ask->get_rhs());
+    in_always = prev_in_always;
   }
-  // TODO: if called from entail(), expand children
+  else
+  {
+    auto ask_node_it = ask_node_map.find(ask);
+    if(ask_node_it == ask_node_map.end())throw HYDLA_SIMULATE_ERROR("ask_node not found");
+    if(visit_mode == EXPANDING)
+    {
+      if(in_always)always_list.push_back(ask);
+      else nonalways_list.push_back(ask);
+      ask_node_it->second->expanded = true;
+    }
+    else if(visit_mode == UNEXPANDING && !in_always)
+    {
+      ask_node_it->second->expanded = false;
+    }
+    else throw HYDLA_SIMULATE_ERROR("unknown visit_mode");
+  }
 }
 
 void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Always> node)
 {
+  if(visit_mode == UNEXPANDING)return;
   bool prev_in_always = in_always;
+  in_always = true;
   accept(node->get_child());
   in_always = prev_in_always;
 }

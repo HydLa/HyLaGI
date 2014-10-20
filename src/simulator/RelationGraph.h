@@ -49,7 +49,7 @@ public:
     module_t module; /// module which the constraint belongs to
     bool visited;
     bool module_adopted; /// whether the module is in ms
-    bool expanded; /// whether the guard of the constraint is entailed
+    bool expanded;
     bool always;
     AskNode* parent;
     ConstraintNode(const module_t &mod):module(mod), module_adopted(true), expanded(false){}
@@ -67,7 +67,7 @@ public:
   
   struct AskNode: public ConstraintNode{
     ask_t ask;
-    bool prev;
+    bool prev, entailed;
     std::list<ConstraintNode*> children;
     AskNode(const ask_t &a, const module_t &mod);
     std::string get_name() const;
@@ -85,8 +85,6 @@ public:
     {}
     std::string get_name() const;
   };
-
-    
 
   RelationGraph(const module_set_t &mods);
 
@@ -108,17 +106,13 @@ public:
   /// Set adoptedness of modules
   void set_adopted(const module_set_t &ms, bool adopted);
 
-  /**
-   * Set the constraint expanded or not
-   */ 
-  void set_expanded(constraint_t cons, bool expanded);
+  /// expand given atomic constraint
+  void set_expanded_atomic(constraint_t cons, bool expanded);
 
-  /**
-   * Set all constraints expanded or not
-   */
-  void set_expanded_all(bool expanded);
+  ///  expand given constraint recursively
+  void set_expanded_recursive(constraint_t cons, bool expanded);
 
-  std::set<constraint_t> entail(const ask_t &ask, bool entailed);
+  std::list<constraint_t> set_entailed(const ask_t &ask, bool entailed);
 
   bool get_entailed(const ask_t &ask)const;
 
@@ -272,7 +266,9 @@ private:
   std::map<Variable, VariableNode*> variable_node_map;
 
   std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;
-  std::map<ask_t, AskNode*> ask_node_map;
+  std::map<constraint_t, AskNode*> ask_node_map;
+
+  std::list<constraint_t> always_list, nonalways_list; /// temporary variables to return always and nonalways
 
   VisitMode visit_mode;
   bool in_always;
