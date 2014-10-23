@@ -552,12 +552,12 @@ node_sptr Parser::parenthesis_program(){
         Token token;
         // after "(" program ")" must be ")"* ("," ||  "<<" || "}" || ".")
         while((token = lexer.get_token()) == RIGHT_PARENTHESES);
-        if(token == COMMA || token == WEAKER || token == RIGHT_BRACES || token == PERIOD){
+        if(token == COMMA || token == WEAKER || token == RIGHT_BRACES || token == PERIOD || token == VERTICAL_BAR){
           // but don't skip these token
           lexer.set_current_position(tmp_position);
           return ret;
         }else{
-          error_occurred(tmp_position, "\",\", \"<<\", \"}\" and \".\" must be after \")\"");
+          error_occurred(tmp_position, "\",\", \"<<\", \"}\", \"|\" and \".\" must be after \")\"");
         }
       }else{
         error_occurred(right_position, "expected \")\"");
@@ -578,6 +578,9 @@ node_sptr Parser::parenthesis_program(){
 node_sptr Parser::module(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
+
+  // constraint
+  if((ret = constraint())){ return ret;}
 
   // program_caller
   if((ret = program_caller())){
@@ -601,9 +604,6 @@ node_sptr Parser::module(){
   // program_lists
   if((ret = program_list_element())){ return ret; }
   if((ret = program_list())){ return ret; }
-
-  // constraint
-  if((ret = constraint())){ return ret;}
 
   return node_sptr();
 }

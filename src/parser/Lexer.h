@@ -83,7 +83,7 @@ public:
       }
       else break;
     }
-    ret += info.first + " : " + "line " + std::to_string(ep.first-info.second) + "\n";
+    ret += info.first + " : " + "line " + std::to_string(ep.first-info.second+1) + "\n";
     ret += "  ";
     ret += get_string(ep.first) + "\n";
     ret += "  ";

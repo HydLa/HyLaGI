@@ -60,60 +60,109 @@ public:
     ret->init();
     return ret;
   }
+  
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+="|";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+="&";
+    accept(node->get_rhs());
+  }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
   {
-    container_name_+="PI";
+    if(!in_caller_) container_name_+="PI";
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
   {
-    container_name_+="E";
+    if(!in_caller_) container_name_+="E";
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
   {
     accept(node->get_lhs());
-    container_name_+="+";
+    if(!in_caller_) container_name_+="+";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
   {
     accept(node->get_lhs());
-    container_name_+="-";
+    if(!in_caller_) container_name_+="-";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
   {
     accept(node->get_lhs());
-    container_name_+="*";
+    if(!in_caller_) container_name_+="*";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
   {
     accept(node->get_lhs());
-    container_name_+="/";
+    if(!in_caller_) container_name_+="/";
     accept(node->get_rhs());
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
   {
     accept(node->get_lhs());
-    container_name_+="^";
+    if(!in_caller_) container_name_+="^";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+="=";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+="<";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+="<=";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+=">";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+=">=";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
   {
-    container_name_ += node->get_name();
+    if(!in_caller_) container_name_ += node->get_name();
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
   {
-    container_name_ += node->get_number();
+    if(!in_caller_) container_name_ += node->get_number();
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
@@ -126,7 +175,9 @@ public:
       accept(node->get_actual_arg(i));
     }
     if(arg_size) container_name_ += ")";
-    // accept(node->get_child());
+    in_caller_ = true;
+    accept(node->get_child());
+    in_caller_ = false;
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
@@ -139,18 +190,15 @@ public:
       accept(node->get_actual_arg(i));
     }
     if(arg_size) container_name_ += ")";
-    // accept(node->get_child());
+    in_caller_ = true;
+    accept(node->get_child());
+    in_caller_ = false;
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
     if(container_name_ == ""){
       accept(node->get_child());
-      /*
-      container_name_ += "$";
-      container_name_ += boost::lexical_cast<std::string>(
-                          mod_name_map_[container_name_]++); 
-*/
     }
 
     // create ModuleSet
@@ -228,6 +276,11 @@ private:
    * ModuleSets which are generated before
    */
   module_set_set_t generated_mss_;
+
+  /**
+   * flag representating processing in caller
+   */
+  bool in_caller_ = false;
 
   int constraint_level_;
 };
