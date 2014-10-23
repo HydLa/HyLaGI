@@ -1,10 +1,10 @@
-x <=> x1..x2.
-y <=> y1..y2.
-s <=> s1..s2.
-time <=> t1..t2.
-xinit <=> {-10000,10000}.
-yinit <=> {0,0}.
-sinit <=> { 0, PI }.
+X := {x1..x2}.
+Y := {y1..y2}.
+S := {s1..s2}.
+Time := {t1..t2}.
+Xinit := {-10000,10000}.
+Yinit := {0,0}.
+Sinit := { 0, Pi }.
 
 INIT(x,y,s,time,x0,y0,s0) <=> x = x0 /\ y = y0 /\ s = s0 /\ time = -1.
 PLAIN(x,y,s) <=> [](x' = 220*cos(s)) /\ [](y' = 220*sin(s)).
@@ -16,7 +16,7 @@ COLLISION(x1,y1,x2,y2) <=>
 
 AVOID_START(x1,y1,s1,t1,x2,y2) <=>
 []( (x1- - x2-)^2 + (y1- - y2-)^2 = (30+5000)^2 /\ t1- < 0
- =>  s1 = s1- + PI/2 /\ t1 = 2*PI).
+ =>  s1 = s1- + Pi/2 /\ t1 = 2*Pi).
 
 AVOIDING(time,s) <=> []( time- > 0 => s' = -1/2).
 
@@ -24,9 +24,9 @@ AVOID_END(time,s,s0) <=> []( time- = 0 => s = s0-).
 
 TIME(time)<=>[](time' = -1).
 
-{ INIT(x[i],y[i],s[i],time[i],xinit[i],yinit[i],sinit[i]) | i in 0..|x|-1 },
-{ PLAIN(x[i],y[i],s[i]) | i in 0..|x|-1 },
-{ COLLISION(x[i],y[i],x[j],y[j]) | i in 0..|x|-2, j in i+1..|x|-1 }.
-{ (CONST(s[i]),TIME(time[i])) << AVOID_START(x[i],y[i],s[i],time[i],x[j],y[j]) | i in 0..|x|-1, j in 0..|x|-1, i =!=j }.
-{ CONST(s[i]) << AVOIDING(time[i],s[i]) | i in 0..|s|-1 }.
-{ CONST(s[i]) << AVOID_END(time[i],s[i],sinit[i]) | i in 0..|s|-1 }.
+{ INIT(X[i],Y[i],S[i],Time[i],Xinit[i],Yinit[i],Sinit[i]) | i in {1..|X|} },
+{ PLAIN(X[i],Y[i],S[i]) | i in {1..|X|} },
+{ COLLISION(X[i],Y[i],X[j],Y[j]) | i in {1..|X|-1}, j in {i+1..|X|} }.
+{ (CONST(S[i]),TIME(Time[i])) << AVOID_START(X[i],Y[i],S[i],Time[i],X[j],Y[j]) | i in {1..|X|}, j in {1..|X|}, i =!=j }.
+{ CONST(S[i]) << AVOIDING(Time[i],S[i]) | i in {1..|S|} }.
+{ CONST(S[i]) << AVOID_END(Time[i],S[i],Sinit[i]) | i in {1..|S|} }.

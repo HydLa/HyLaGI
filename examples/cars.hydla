@@ -25,12 +25,12 @@ INIT(x2,960,20,t2),( CONST(x2), TIMER_OFF(t2) ) << ( SW_ACC(x1,x2,t2), SW_BRK(x1
 */
 
 
-x := x0..x2.
-t := t0..t2.
+X := {x0..x2}.
+T := {t0..t2}.
 
-{ INIT(x[i],1000-20*i,20+i/|x|,t[i]) | i in 1..|x| }.
-CONST(x[1]), TIMER_OFF(t[1]).
-{ ( CONST(x[i]), TIMER_OFF(t[i]) )
-	<< ( SW_ACC(x[i-1],x[i],t[i]), SW_BRK(x[i-1],x[i],t[i] ) )
-	<< ( ACC(x[i-1],x[i],t[i]), BRK(x[i-1],x[i],t[i] ) )
-	| i in 2..|x| }.
+{ INIT(X[i],1000-20*i,20+i/|X|,T[i]) | i in {1..|X|} }.
+CONST(X[1]), TIMER_OFF(T[1]).
+{ ( CONST(X[i]), TIMER_OFF(T[i]) )
+	<< ( SW_ACC(X[i-1],X[i],T[i]), SW_BRK(X[i-1],X[i],T[i]) )
+	<< ( ACC(X[i-1],X[i],T[i]), BRK(X[i-1],X[i],T[i]) )
+	| i in {2..|X|} }.
