@@ -145,7 +145,6 @@ simulation_job_sptr_t Simulator::make_new_todo(phase_result_sptr_t parent)
   simulation_job_sptr_t todo(new SimulationJob());
   todo->owner = parent;
   parent->todo_list.push_back(todo);
-  profile_vector_->push_back(todo);
   return todo;
 }
 

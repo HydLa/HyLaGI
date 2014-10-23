@@ -65,7 +65,7 @@ struct SimulationJob{
   module_set_set_t unadopted_mss;
   profile_t profile;
 
-  SimulationJob():id(-1){}
+  SimulationJob():id(1){}
 
   /**
    * Create a new job which will be a child of given PhaseResult

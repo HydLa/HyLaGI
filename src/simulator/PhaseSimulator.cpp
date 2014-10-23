@@ -359,7 +359,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 0;
-  todo_id = 0;
+  todo_id = 1;
   module_set_container = msc;
   result_root = root;
 

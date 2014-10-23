@@ -65,6 +65,7 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
   {
     simulation_job_sptr_t todo = current->todo_list.front();
     process_one_todo(todo);
+    profile_vector_->push_back(todo);
     for(int i = 0; i < todo->produced_phases.size(); i++)
     {
       phase_result_sptr_t next_phase = todo->produced_phases[i];
@@ -81,6 +82,7 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
       }
       dfs(next_phase);
     }
+
     current->todo_list.pop_front();
   }
   phase_simulator_->revert_diff(current);
