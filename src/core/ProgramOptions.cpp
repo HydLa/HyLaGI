@@ -142,6 +142,10 @@ void ProgramOptions::init_descriptions()
     ("epsilon,e",
      value<int>()->default_value(-1),
      "epsilon mode")
+
+    ("interval_newton",
+     "using Interval Newton method")
+    
      /*
     ("timeout",
      value<int>()->default_value(-1),

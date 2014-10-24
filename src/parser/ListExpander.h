@@ -6,6 +6,7 @@
 #include "ParseError.h"
 #include <map>
 #include <stack>
+#include <complex>
 
 namespace hydla{
 namespace parser{

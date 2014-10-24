@@ -23,6 +23,7 @@ struct Opts {
   bool approx;
   bool cheby;
   int epsilon_mode;
+  bool interval_newton;
   bool nd_mode;
   bool static_generation_of_module_sets;
   bool interactive_mode;

@@ -146,6 +146,7 @@ void setup_simulator_opts(Opts& opts)
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
   opts.epsilon_mode = po.get<int>("epsilon");
+  opts.interval_newton = po.count("interval_newton")>0;
   /*
   opts.output_interval = po.get<std::string>("output_interval");
   */
