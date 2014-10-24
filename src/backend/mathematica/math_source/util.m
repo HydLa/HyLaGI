@@ -52,8 +52,35 @@ publicMethod[
   toReturnForm[Rationalize[N[expr], approxPrecision] ]
 ];
 
-
 publicMethod[
   getSizeOfConstraint,
   ByteCount[constraint && initConstraint && prevConstraint && pConstraint]
+];
+
+(* translate given relational expression in the form of f(V) = 0 *)
+publicMethod[
+  relationToFunction,
+  exp,
+  cons,
+  Module[
+  {
+    substituted,
+    rhs,
+    lhs
+  },
+  If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
+    InvalidRelop,
+    substituted = exp /. Map[(Rule@@#)&, cons];
+    lhs = substituted[[1]];
+    rhs = substituted[[2]];
+    lhs - rhs
+    ]
+  ]
+];
+
+
+publicMethod[
+  differentiateWithTime,
+  exp,
+  D[exp, t]
 ];
