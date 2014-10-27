@@ -780,10 +780,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         phase->simulation_state = simulator::TIME_LIMIT;
         phase->end_time = max_time;
       }
-      else
+      // else
       {
         phase_result_sptr_t pr = phase;
-
         auto time_it = time_result.begin();
         while(true)
         {
