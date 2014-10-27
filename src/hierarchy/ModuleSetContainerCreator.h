@@ -61,144 +61,120 @@ public:
     return ret;
   }
   
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConditionalProgramList> node)
   {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="|";
-    accept(node->get_rhs());
-  }
+    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
+    // create ModuleSet
+    ModuleSet mod_set;
+    for(auto ms : generated_mss_){
+      if(ms.begin()->first == container_name_){
+        mod_set = ms;
+        break;
+      }
+    }
+    if(mod_set.empty()){
+      mod_set = ModuleSet(container_name_, node);
+      generated_mss_.insert(mod_set);
+    }
+    container_name_.clear();
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="&";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
-  {
-    if(!in_caller_) container_name_+="PI";
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
-  {
-    if(!in_caller_) container_name_+="E";
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="+";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="-";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="*";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="/";
-    accept(node->get_rhs());
+    // create Container
+    container_sptr  container(new Container(mod_set));
+    mod_set_stack_.push_back(container);
   }
   
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> node)
   {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="^";
-    accept(node->get_rhs());
-  }
+    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
+    // create ModuleSet
+    ModuleSet mod_set;
+    for(auto ms : generated_mss_){
+      if(ms.begin()->first == container_name_){
+        mod_set = ms;
+        break;
+      }
+    }
+    if(mod_set.empty()){
+      mod_set = ModuleSet(container_name_, node);
+      generated_mss_.insert(mod_set);
+    }
+    container_name_.clear();
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node)
+    // create Container
+    container_sptr  container(new Container(mod_set));
+    mod_set_stack_.push_back(container);
+  }
+  
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramListElement> node)
   {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="=";
-    accept(node->get_rhs());
-  }
+    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
+    // create ModuleSet
+    ModuleSet mod_set;
+    for(auto ms : generated_mss_){
+      if(ms.begin()->first == container_name_){
+        mod_set = ms;
+        break;
+      }
+    }
+    if(mod_set.empty()){
+      mod_set = ModuleSet(container_name_, node);
+      generated_mss_.insert(mod_set);
+    }
+    container_name_.clear();
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="<";
-    accept(node->get_rhs());
+    // create Container
+    container_sptr  container(new Container(mod_set));
+    mod_set_stack_.push_back(container);
   }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+="<=";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+=">";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
-  {
-    accept(node->get_lhs());
-    if(!in_caller_) container_name_+=">=";
-    accept(node->get_rhs());
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
-  {
-    if(!in_caller_) container_name_ += node->get_name();
-  }
-
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
-  {
-    if(!in_caller_) container_name_ += node->get_number();
-  }
-
+  
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
   {
-    container_name_ = node->get_name();
-    int arg_size = node->actual_arg_size();
-    if(arg_size) container_name_ += "("; 
-    for(int i = 0; i < arg_size; i++){
-      if(i) container_name_ += ",";
-      accept(node->get_actual_arg(i));
+    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
+    // create ModuleSet
+    ModuleSet mod_set;
+    for(auto ms : generated_mss_){
+      if(ms.begin()->first == container_name_){
+        mod_set = ms;
+        break;
+      }
     }
-    if(arg_size) container_name_ += ")";
-    in_caller_ = true;
-    accept(node->get_child());
-    in_caller_ = false;
+    if(mod_set.empty()){
+      mod_set = ModuleSet(container_name_, node);
+      generated_mss_.insert(mod_set);
+    }
+    container_name_.clear();
+
+    // create Container
+    container_sptr  container(new Container(mod_set));
+    mod_set_stack_.push_back(container);
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
   {
-    container_name_ = node->get_name();
-    int arg_size = node->actual_arg_size();
-    if(arg_size) container_name_ += "("; 
-    for(int i = 0; i < arg_size; i++){
-      if(i) container_name_ += ",";
-      accept(node->get_actual_arg(i));
+    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
+    // create ModuleSet
+    ModuleSet mod_set;
+    for(auto ms : generated_mss_){
+      if(ms.begin()->first == container_name_){
+        mod_set = ms;
+        break;
+      }
     }
-    if(arg_size) container_name_ += ")";
-    in_caller_ = true;
-    accept(node->get_child());
-    in_caller_ = false;
+    if(mod_set.empty()){
+      mod_set = ModuleSet(container_name_, node);
+      generated_mss_.insert(mod_set);
+    }
+    container_name_.clear();
+
+    // create Container
+    container_sptr  container(new Container(mod_set));
+    mod_set_stack_.push_back(container);
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
     if(container_name_ == ""){
-      accept(node->get_child());
+      container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node->get_child());
     }
 
     // create ModuleSet

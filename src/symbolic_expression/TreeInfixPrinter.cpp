@@ -306,5 +306,119 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
   // if(node->get_child())print_unary_node(*node, "{", "}");
 }
 
+void TreeInfixPrinter::visit(boost::shared_ptr<ProgramList> node)
+{
+  (*output_stream_) << "{";
+  for(int i = 0; i < node->get_arguments_size(); i++)
+  {
+    if(i) (*output_stream_) << ",";
+    accept(node->get_argument(i));
+  }
+  (*output_stream_) << "}";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ExpressionList> node)
+{
+  (*output_stream_) << "{";
+  for(int i = 0; i < node->get_arguments_size(); i++)
+  {
+    if(i) (*output_stream_) << ",";
+    accept(node->get_argument(i));
+  }
+  (*output_stream_) << "}";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ConditionalExpressionList> node)
+{
+  (*output_stream_) << "{";
+  accept(node->get_expression());
+  (*output_stream_) << "|";
+  for(int i = 0; i < node->get_arguments_size(); i++)
+  {
+    if(i) (*output_stream_) << ",";
+    accept(node->get_argument(i));
+  }
+  (*output_stream_) << "}";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ConditionalProgramList> node)
+{
+  (*output_stream_) << "{";
+  accept(node->get_program());
+  (*output_stream_) << "|";
+  for(int i = 0; i < node->get_arguments_size(); i++)
+  {
+    if(i) (*output_stream_) << ",";
+    accept(node->get_argument(i));
+  }
+  (*output_stream_) << "}";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<Range> node)
+{
+  (*output_stream_) << "{";
+  (*output_stream_) << node->get_string();
+  accept(node->get_lhs());
+  (*output_stream_) << node->get_string();
+  accept(node->get_rhs());
+  (*output_stream_) << "}";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ExpressionListCaller> node)
+{
+  (*output_stream_) << node->get_name();
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ProgramListCaller> node)
+{
+  (*output_stream_) << node->get_name();
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<EachElement> node)
+{
+  accept(node->get_lhs());
+  (*output_stream_) << " in ";
+  accept(node->get_rhs());
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<DifferentVariable> node)
+{
+  accept(node->get_lhs());
+  (*output_stream_) << " =!= ";
+  accept(node->get_rhs());
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<ExpressionListElement> node)
+{
+  accept(node->get_lhs());
+  (*output_stream_) << "[";
+  accept(node->get_rhs());
+  (*output_stream_) << "]";
+}
+ 
+void TreeInfixPrinter::visit(boost::shared_ptr<ProgramListElement> node)
+{
+  accept(node->get_lhs());
+  (*output_stream_) << "[";
+  accept(node->get_rhs());
+  (*output_stream_) << "]";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<Union> node)
+{
+  (*output_stream_) << "(";
+  accept(node->get_lhs());
+  (*output_stream_) << " or ";
+  accept(node->get_rhs());
+  (*output_stream_) << ")";
+}
+
+void TreeInfixPrinter::visit(boost::shared_ptr<Intersection> node)
+{
+  accept(node->get_lhs());
+  (*output_stream_) << " and ";
+  accept(node->get_rhs());
+}
+
 } // namespace symbolic_expression
 } // namespace hydla
