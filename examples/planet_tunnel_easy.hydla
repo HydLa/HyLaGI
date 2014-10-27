@@ -1,0 +1,8 @@
+INIT(x0) <=> x=x0 & x'=10 & x''=0 & r=0.552 & g=0.667.
+CONST <=> [](r'=0 & g'=0).
+FORCE1 <=> [](-1 <= x- <= 1 => x''=-4/3*Pi*r*g*x).
+FORCE2 <=> [](x- > 1 => x''=-4/3*Pi*r*g).
+FORCE3 <=> [](x- < -1 => x''=4/3*Pi*r*g).
+
+INIT(0.5), CONST, (FORCE2, FORCE3) << FORCE1.
+
