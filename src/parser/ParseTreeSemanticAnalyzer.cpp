@@ -208,12 +208,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
       throw UndefinedReference(node);
     }
 
-    /*
     // 定義の展開
     node->set_child(
       apply_definition(deftype, node, expr_list_def));
-      */
-    new_child_ = apply_definition(deftype,node,expr_list_def);
   }
 }
 
@@ -231,12 +228,9 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
       throw UndefinedReference(node);
     }
 
-    /*
     // 定義の展開
     node->set_child(
       apply_definition(deftype, node, prog_list_def));
-      */
-    new_child_ = apply_definition(deftype,node,prog_list_def);
   }
 }
 
@@ -461,48 +455,47 @@ DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
 
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 
-// ExpressionList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionList> node)
-{
-  // TODO: implement
-  assert(0);
-}
+DEFINE_DEFAULT_VISIT_ARBITRARY(ExpressionList)
+DEFINE_DEFAULT_VISIT_ARBITRARY(ProgramList)
 
+DEFINE_DEFAULT_VISIT_BINARY(ExpressionListElement)
+DEFINE_DEFAULT_VISIT_BINARY(ProgramListElement)
+DEFINE_DEFAULT_VISIT_BINARY(Range)
+DEFINE_DEFAULT_VISIT_BINARY(EachElement)
+DEFINE_DEFAULT_VISIT_BINARY(DifferentVariable)
+ 
 // ConditionalExpressionList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionList> node)
 {
-  node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
-}
-
-// ProgramList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
-{
-  node_sptr element;
-  for(int i = 0; i < node->get_arguments_size(); i++){
-    if(element){
-      element = boost::shared_ptr<Parallel>(new Parallel(element, node->get_argument(i)));
-    }else{
-      element = node->get_argument(i);
+  accept(node->get_expression());
+  if(new_child_) {
+    node->set_expression(new_child_);
+    new_child_.reset();
+  }
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
     }
   }
-  accept(element);
-  if(!new_child_) new_child_ = element;
 }
 
 // ConditionalProgramList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> node)
 {
-  node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
-}
-
-// ExpressionListElement
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
-{
-  node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
-  if(!new_child_) new_child_ = ret;
+  accept(node->get_program());
+  if(new_child_) {
+    node->set_program(new_child_);
+    new_child_.reset();
+  }
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
+    }
+  }
 }
 
 // SizeOfList
@@ -515,22 +508,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SizeOfList> node)
 
 // SumOfList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SumOfList> node)
-{
-  node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
-  if(!new_child_) new_child_ = ret;
-}
-
-// ProgramListElement
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node)
-{
-  node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
-  if(!new_child_) new_child_ = ret;
-}
-
-// Range
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Range> node)
 {
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
@@ -552,19 +529,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Intersection> node)
   accept(ret);
   if(!new_child_) new_child_ = ret;
 }
-
-// EachElement
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<EachElement> node)
-{
-  assert(0);
-}
-
-// DifferentVariable
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<DifferentVariable> node)
-{
-  assert(0);
-}
-
 
 } //namespace parser
 } //namespace hydla
