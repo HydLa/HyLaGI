@@ -18,7 +18,7 @@ ProgramOptions::~ProgramOptions()
 // TODO:コメントアウトしてあるオプションについて考える
 void ProgramOptions::init_descriptions()
 {
-  options_description generic_desc("Usage: hydla [options] [file]\n\nAllowed options:",
+  options_description generic_desc("Usage: hyrose [options] [file]\n\nAllowed options:",
                                    LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "produce help message")
