@@ -17,6 +17,8 @@
 
 #include "Backend.h"
 
+#include "TreeInfixPrinter.h"
+
 namespace hydla
 {
 namespace simulator
