@@ -73,7 +73,7 @@ publicMethod[
     substituted = exp /. Map[(Rule@@#)&, cons];
     lhs = substituted[[1]];
     rhs = substituted[[2]];
-    lhs - rhs
+    toReturnForm[lhs - rhs]
     ]
   ]
 ];
@@ -82,5 +82,5 @@ publicMethod[
 publicMethod[
   differentiateWithTime,
   exp,
-  D[exp, t]
+  toReturnForm[D[exp, t] ]
 ];
