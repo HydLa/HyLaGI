@@ -16,8 +16,11 @@
 #include "MinTimeCalculator.h"
 
 #include "Backend.h"
-
+// for dubug 
 #include "TreeInfixPrinter.h"
+
+// for interval newton method
+#include "IntervalNewton.h"
 
 namespace hydla
 {
@@ -31,6 +34,8 @@ using namespace backend;
 using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
+
+typedef interval::itvd itvd;
 
 PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts) {
 }
