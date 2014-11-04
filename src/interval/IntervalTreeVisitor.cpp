@@ -38,7 +38,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pl
   accept(node->get_rhs());
   itvd rhs = interval_value_;
   interval_value_ = lhs + rhs;
-  debug_print("Plus : ", interval_value_);
+  // debug_print("Plus : ", interval_value_);
   return;
 }
 
@@ -49,7 +49,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Su
   accept(node->get_rhs());
   itvd rhs = interval_value_;
   interval_value_ = lhs - rhs;
-  debug_print("Subtract : ", interval_value_);
+  // debug_print("Subtract : ", interval_value_);
   return;
 }
 
@@ -60,7 +60,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Ti
   accept(node->get_rhs());
   itvd rhs = interval_value_;
   interval_value_ = lhs * rhs;
-  debug_print("Times : ", interval_value_);
+  // debug_print("Times : ", interval_value_);
   return;
 }
 
@@ -73,7 +73,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Di
   // 怪しいことが起こる気がする
   // 例えば、0 を含む区間で何かを除算すると...
   interval_value_ = lhs / rhs;
-  debug_print("Divide : ", interval_value_);
+  // debug_print("Divide : ", interval_value_);
   return;
 }
 
@@ -85,35 +85,42 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
   itvd rhs = interval_value_;
   // これでいいのかわからないがとりあえず
   interval_value_ = pow(lhs, rhs);
-  debug_print("Power : ", interval_value_);
+  // debug_print("Power : ", interval_value_);
   return;
 }
+
+void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
+{
+  accept(node->get_child());
+  interval_value_ = -interval_value_;
+}
+
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
   interval_value_ = pi;
-  debug_print("Pi : ", interval_value_);
+  // debug_print("Pi : ", interval_value_);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
   interval_value_ = e;
-  debug_print("E : ", interval_value_);
+  // debug_print("E : ", interval_value_);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
 {
   interval_value_ = itvd(node->get_number());
-  debug_print("Number : ", interval_value_);
+  // debug_print("Number : ", interval_value_);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
 {
   interval_value_ = itvd(node->get_number());
-  debug_print("Float : ", interval_value_);
+  // debug_print("Float : ", interval_value_);
   return;
 }
 
@@ -128,7 +135,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     }
     accept(node->get_argument(0));
     interval_value_ = sin(interval_value_);
-    debug_print("Sin : ", interval_value_);
+    // debug_print("Sin : ", interval_value_);
   }
   else if(name == "cos")
   {
@@ -138,7 +145,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     }
     accept(node->get_argument(0));
     interval_value_ = cos(interval_value_);
-    debug_print("Cos : ", interval_value_);
+    // debug_print("Cos : ", interval_value_);
   }
   else if(name == "tan")
   {
@@ -168,7 +175,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
   interval_value_ = interval_arg_;
-  debug_print("SymbolicT : ", interval_value_);
+  // debug_print("SymbolicT : ", interval_value_);
   return;
 }
 

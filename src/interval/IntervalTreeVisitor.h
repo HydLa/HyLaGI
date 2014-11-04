@@ -60,7 +60,9 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
   
   // 円周率
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node);
-  
+
+  // 負
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node);
   
   // 任意
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Function> node);
