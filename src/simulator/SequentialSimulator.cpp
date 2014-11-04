@@ -75,6 +75,10 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
        else continue;
        }
     */
+    if(opts_->dump_in_progress){
+      printer.output_one_phase(todo);
+    }
+
     dfs(todo);
   }
   phase_simulator_->revert_diff(*current);
