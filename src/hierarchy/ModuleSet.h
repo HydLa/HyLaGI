@@ -87,6 +87,7 @@ public:
    */
   int erase(const ModuleSet& ms);
   int erase(const module_t& m);
+  module_list_const_iterator erase(const module_list_const_iterator& it);
 
   /**
    * モジュールを追加

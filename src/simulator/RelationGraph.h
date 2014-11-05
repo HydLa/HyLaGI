@@ -21,7 +21,7 @@ public:
   typedef hierarchy::ModuleSet::module_t module_t;
   typedef std::set<Variable, VariableComparator> variable_set_t;
   typedef boost::shared_ptr<symbolic_expression::Ask> ask_t;
-  typedef std::list<ask_t> asks_t;
+  typedef std::set<ask_t> asks_t;
   
   struct VariableNode;
   struct ConstraintNode;
@@ -53,16 +53,25 @@ public:
     bool always;
     AskNode* parent;
     ConstraintNode(const module_t &mod):module(mod), module_adopted(true), expanded(false){}
+    virtual ~ConstraintNode(){}
     std::vector<EdgeToVariable> edges;
     bool is_active() const;
+    virtual std::string get_name() const = 0;
   };
   
   struct TellNode: public ConstraintNode{
     constraint_t constraint;
     TellNode(const constraint_t &cons, const module_t &mod):ConstraintNode(mod), constraint(cons)
     {}
+    virtual ~TellNode(){}
     std::string get_name() const;
   };
+
+  typedef enum{
+    BOTH,
+    TELL_ONLY,
+    ASK_ONLY
+  }DumpMode;
 
   
   struct AskNode: public ConstraintNode{
@@ -70,6 +79,7 @@ public:
     bool prev, entailed;
     std::list<ConstraintNode*> children;
     AskNode(const ask_t &a, const module_t &mod);
+    virtual ~AskNode(){}
     std::string get_name() const;
   };
   
@@ -93,12 +103,12 @@ public:
   /**
    * Print the structure in graphviz format.
    */
-  void dump_graph(std::ostream &os) const;
+  void dump_graph(std::ostream &os, DumpMode mode = BOTH) const;
 
   /**
    * Print active nodes and edges in graphviz format.
    */
-  void dump_active_graph(std::ostream &os) const;
+  void dump_active_graph(std::ostream &os, DumpMode mode = BOTH) const;
 
   /// Set adoptedness of module
   void set_adopted(const module_t &mod, bool adopted);
@@ -112,19 +122,17 @@ public:
   ///  expand given constraint recursively
   void set_expanded_recursive(constraint_t cons, bool expanded);
 
-  std::list<constraint_t> set_entailed(const ask_t &ask, bool entailed);
+  ConstraintStore set_entailed(const ask_t &ask, bool entailed);
 
   bool get_entailed(const ask_t &ask)const;
 
-    /**
+  /**
    * Get active asks adjacent to given variable
-   * @parameter asks for output
    */
-  asks_t get_adjacent_asks(const std::string &variable, bool ignore_prev_asks = false);
+  asks_t get_adjacent_asks(const std::string &variable_name, bool ignore_prev_asks = false);
 
   /**
    * Get variables adjacent to given ask
-   * @parameter constraints for output
    */
   std::set<std::string> get_adjacent_variables(const ask_t &asks);
 
@@ -185,7 +193,7 @@ public:
   /// Entail the ask if it is prev_ask
   /// @param always_list always nodes refered as children of the ask
   /// @return true if the ask is prev_ask
-  bool entail_if_prev(const ask_t &ask, bool entailed, std::list<constraint_t> &always_list);
+  bool entail_if_prev(const ask_t &ask, bool entailed, ConstraintStore &always_list);
 
   /**
    * Get constraints corresponding to the connected component specified by index.
@@ -216,6 +224,8 @@ public:
    * Get all adopted constraints
    */
   ConstraintStore get_adopted_constraints();
+
+  asks_t get_all_asks();
 
   /**
    * if true, the left hand limit is regareded as a constant (ignoring its relation)
@@ -264,11 +274,12 @@ private:
   std::map<module_t, tell_nodes_t>  module_tell_nodes_map;
   std::map<constraint_t, TellNode*> tell_node_map;
   std::map<Variable, VariableNode*> variable_node_map;
+  std::map<std::string, std::list<VariableNode*> > var_name_nodes_map;
 
   std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;
   std::map<constraint_t, AskNode*> ask_node_map;
 
-  std::list<constraint_t> always_list, nonalways_list; /// temporary variables to return always and nonalways
+  ConstraintStore always_list, nonalways_list; /// temporary variables to return always and nonalways
 
   VisitMode visit_mode;
   bool in_always;

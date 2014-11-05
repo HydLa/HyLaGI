@@ -55,7 +55,7 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
       out_tmp << now_node->end_time;
       out_tmp << "} ";
       //        prev_node_time = now_node->end_time.get_string();
-      if(now_node->cause_for_termination == simulator::ASSERTION)
+      if(now_node->simulation_state == simulator::ASSERTION)
         out_tmp << ", PlotStyle -> Dashed";
       out_tmp << "]"; //Plot
     }

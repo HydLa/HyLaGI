@@ -44,7 +44,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
     // while(!todo_stack_->empty())
     // {
     //   simulation_job_sptr_t todo(todo_stack_->pop_todo());
-    //   todo->parent->cause_for_termination = INTERRUPTED;
+    //   todo->parent->simulation_state = INTERRUPTED;
     //   // TODO: restart simulation from each interrupted phase
     // }
   }
@@ -57,35 +57,31 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
   if(signal_handler::interrupted)
   {
-    current->cause_for_termination = INTERRUPTED;
+    current->simulation_state = INTERRUPTED;
     return;
   }
-  phase_simulator_->apply_diff(current);
+  phase_simulator_->apply_diff(*current);
   while(!current->todo_list.empty())
   {
-    simulation_job_sptr_t todo = current->todo_list.front();
-    process_one_todo(todo);
+    phase_result_sptr_t todo = current->todo_list.front();
+    current->todo_list.pop_front();
     profile_vector_->push_back(todo);
-    for(int i = 0; i < todo->produced_phases.size(); i++)
-    {
-      phase_result_sptr_t next_phase = todo->produced_phases[i];
-      /* TODO: assertion違反が検出された場合の対応
-         if(phase->cause_for_termination == ASSERTION)
-         {
-         HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
-         if(opts_->stop_at_failure)break;
-         else continue;
-         }
-      */
-      if(opts_->dump_in_progress){
-        printer.output_one_phase(next_phase);
-      }
-      dfs(next_phase);
+    if(todo->simulation_state == NOT_SIMULATED)process_one_todo(todo);
+    /* TODO: assertion違反が検出された場合の対応
+       if(phase->simulation_state == ASSERTION)
+       {
+       HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
+       if(opts_->stop_at_failure)break;
+       else continue;
+       }
+    */
+    if(opts_->dump_in_progress){
+      printer.output_one_phase(todo);
     }
 
-    current->todo_list.pop_front();
+    dfs(todo);
   }
-  phase_simulator_->revert_diff(current);
+  phase_simulator_->revert_diff(*current);
 }
 
 

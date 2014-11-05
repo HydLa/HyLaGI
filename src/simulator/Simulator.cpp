@@ -5,7 +5,6 @@
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
 #include "AffineApproximator.h"
-#include "AskCollector.h"
 #include "Timer.h"
 #include "VariableFinder.h"
 #include "TimeOutError.h"
@@ -28,13 +27,6 @@ Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
 
 Simulator::~Simulator()
 {
-}
-
-SimulationJob::SimulationJob(const phase_result_sptr_t &parent_phase)
-{
-  owner = parent_phase;
-  phase_type = owner->phase_type == POINT_PHASE?INTERVAL_PHASE:POINT_PHASE;
-  parameter_map = owner->parameter_map;
 }
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
@@ -130,45 +122,22 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
 
 
 
-simulation_job_sptr_t Simulator::make_initial_todo()
+phase_result_sptr_t Simulator::make_initial_todo()
 {
-  simulation_job_sptr_t todo = make_new_todo(result_root_);
+  phase_result_sptr_t todo(new PhaseResult());
+  todo->parent = result_root_.get();
+  result_root_->todo_list.push_back(todo);
+  todo->current_time = value_t("0");
+  todo->id = 1;
   todo->phase_type        = POINT_PHASE;
+  todo->step = 0;
   return todo;
 }
 
-
-
-
-simulation_job_sptr_t Simulator::make_new_todo(phase_result_sptr_t parent)
+void Simulator::process_one_todo(phase_result_sptr_t& todo)
 {
-  simulation_job_sptr_t todo(new SimulationJob());
-  todo->owner = parent;
-  parent->todo_list.push_back(todo);
-  return todo;
-}
-
-
-
-
-ostream& operator<<(ostream& s, const SimulationJob& todo)
-{
-  s << "PhaseType: " << todo.phase_type << endl;
-  s << "id       : " << todo.id << endl;
-  s << "--- owner phase result ---" << endl;
-  s << *(todo.owner) << endl;
-  s << "--- (owner up to here) ---" << endl;
-  s << "--- parameter map ---"          << endl;
-  s << todo.parameter_map << endl;
-  
-  return s;
-}
-
-
-void Simulator::process_one_todo(simulation_job_sptr_t& todo)
-{
-  if( opts_->max_phase >= 0 && todo->owner->step >= opts_->max_phase - 1){
-    todo->owner->cause_for_termination = simulator::STEP_LIMIT;
+  if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase - 1){
+    todo->parent->simulation_state = simulator::STEP_LIMIT;
     return;
   }
   HYDLA_LOGGER_DEBUG("\n--- Current Todo ---\n", *todo);
@@ -181,9 +150,11 @@ void Simulator::process_one_todo(simulation_job_sptr_t& todo)
   catch(const timeout::TimeOutError &te)
   {
     HYDLA_LOGGER_DEBUG(te.what());
-    phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
-    todo->owner->children.push_back(phase);
+    phase_result_sptr_t phase(new PhaseResult(*todo));
+    phase->simulation_state = TIME_OUT_REACHED;
+    todo->parent->children.push_back(phase);
   }
+  HYDLA_LOGGER_DEBUG("\n--- Result Phase ---\n", *todo);
 }
 
 }

@@ -8,7 +8,7 @@ namespace hydla
 namespace io
 {
 
-string get_string_for_cause(simulator::CauseForTermination cause)
+string get_string_for_cause(simulator::SimulationState cause)
 {
   switch(cause){
   case simulator::TIME_LIMIT:
@@ -35,7 +35,7 @@ string get_string_for_cause(simulator::CauseForTermination cause)
 }
 
 
-simulator::CauseForTermination get_cause_for_string(const string& str)
+simulator::SimulationState get_cause_for_string(const string& str)
 {
   if(str == "TIME_LIMIT")return TIME_LIMIT;
   else if(str == "STEP_LIMIT")return STEP_LIMIT;

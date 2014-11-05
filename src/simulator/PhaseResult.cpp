@@ -36,7 +36,7 @@ namespace hydla {
 namespace simulator {
 
 
-PhaseResult::PhaseResult():phase_type(InvalidPhase), cause_for_termination(NOT_SIMULATED), parent(nullptr)
+PhaseResult::PhaseResult():phase_type(InvalidPhase), simulation_state(NOT_SIMULATED), parent(nullptr)
 {
 }
 
@@ -90,17 +90,6 @@ ask_set_t PhaseResult::get_all_negative_asks()
 void PhaseResult::set_full_information(FullInformation &info)
 {
   full_information = info;
-}
-
-
-PhaseResult::PhaseResult(const SimulationJob& todo, const CauseForTermination& cause):
-  phase_type(todo.phase_type),
-  step(todo.owner->step + 1),
-  current_time(todo.owner->end_time),
-  parameter_map(todo.parameter_map),
-  cause_for_termination(cause),
-  parent(todo.owner.get())
-{
 }
 
 
@@ -182,6 +171,31 @@ ostream& operator<<(std::ostream& s, const change_variables_t& a)
     s << *it << (i<a.size() ? " , " : "");
   s << endl;
   return s;
+}
+
+ostream& operator<<(std::ostream& os, const next_pp_candidate_map_t& candidate_map)
+{
+  for(auto entry : candidate_map)
+  {
+    os << "--- " << entry.first << " ---" << endl;
+    os << entry.second;
+  }
+  return os;
+}
+
+ostream& operator<<(std::ostream& os, const pp_time_result_t& result)
+{
+  for(auto candidate : result)
+  {
+    os << "time: " << candidate.time << endl;
+    os << "--- parameter_map ---\n" << candidate.parameter_map << endl;
+    os << "--- discrete asks ---" << endl;
+    for(auto ask : candidate.discrete_asks)
+    {
+      os << "ask: " << get_infix_string(ask.first) << " on_time: " << ask.second << endl;
+    }
+  }
+  return os;
 }
 
 

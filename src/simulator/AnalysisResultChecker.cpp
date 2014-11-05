@@ -1,7 +1,6 @@
 /*
 #include "ConstraintAnalyzer.h"
 #include "TellCollector.h"
-#include "AskCollector.h"
 #include "ContinuityMapMaker.h"
 #include "AnalysisResultChecker.h"
 

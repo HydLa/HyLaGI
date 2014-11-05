@@ -56,10 +56,10 @@ JsonReader::phase_result_sptr_t JsonReader::read_phase(object &json_object)
   {
     phase->children.push_back(read_phase(child.get<object>()));
   }
-  if(json_object.find("cause_for_termination") != json_object.end())
+  if(json_object.find("simulation_state") != json_object.end())
   {
-    string cause_str = json_object["cause_for_termination"].get<string>();
-    phase->cause_for_termination = get_cause_for_string(cause_str);
+    string cause_str = json_object["simulation_state"].get<string>();
+    phase->simulation_state = get_cause_for_string(cause_str);
   }
   return phase; 
 }

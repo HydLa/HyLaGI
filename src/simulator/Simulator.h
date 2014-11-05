@@ -1,6 +1,4 @@
 #pragma once
-
-
 #include <deque>
 
 #include "Node.h"
@@ -28,60 +26,18 @@ namespace simulator {
 class RelationGraph;
 
 typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
-typedef hierarchy::ModuleSet                      module_set_t;
+
 typedef hierarchy::ModuleSetContainer             module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;
-typedef std::set<module_set_t>                    module_set_set_t;
 typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
 typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool>
                                                   entailed_prev_map_t;
 typedef std::vector<variable_map_t>               variable_maps_t;
-typedef std::map<std::string, unsigned int>       profile_t;
-
-
-/**
- * Job for simulation
- */
-struct SimulationJob{
-  PhaseType                 phase_type;
-  int                       id;
-  variable_map_t            prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
-  parameter_map_t           parameter_map;
-  
-  constraint_diff_t         expanded_diff;
-  module_diff_t             adopted_module_diff;
-  
-  std::map<ask_t, bool>     discrete_positive_asks,
-                            discrete_negative_asks;
-  next_pp_candidate_map_t   next_pp_candidate_map; 
-
-  ConstraintStore           expanded_constraints,
-                            initial_constraint_store; /// 暫定的に場合分けとかで使う．TODO:別の方法を考える
-  
-  phase_result_sptr_t       owner;
-  phase_result_sptrs_t      produced_phases;
-
-  /// set of module sets which are unadopted in maximal module sets
-  module_set_set_t unadopted_mss;
-  profile_t profile;
-
-  SimulationJob():id(1){}
-
-  /**
-   * Create a new job which will be a child of given PhaseResult
-   */
-  SimulationJob(const phase_result_sptr_t &parent_phase);
-
-  inline bool in_following_step(){
-    return owner && owner->parent && owner->parent->parent;
-  }
-};
 
 std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
 
 /// プロファイリング結果全体
-/// 現状では，Jobそのものを保存している
-typedef std::vector<simulation_job_sptr_t> entire_profile_t;
+typedef phase_result_sptrs_t entire_profile_t;
 
 class PhaseSimulator;
 
@@ -126,9 +82,9 @@ public:
   /**
    *  the initial state of simulation into the stack
    */
-  virtual simulation_job_sptr_t make_initial_todo();
+  virtual phase_result_sptr_t make_initial_todo();
 
-  virtual simulation_job_sptr_t make_new_todo(phase_result_sptr_t parent);
+  
   
   /**
    * @return introduced parameter
@@ -176,7 +132,7 @@ protected:
   
   void init_module_set_container(const parse_tree_sptr& parse_tree);
 
-  virtual void process_one_todo(simulation_job_sptr_t& todo);  
+  virtual void process_one_todo(phase_result_sptr_t& todo);  
   
   void reset_result_root();
 
