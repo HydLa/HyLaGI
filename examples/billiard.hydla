@@ -1,4 +1,4 @@
-X := {x0..x2}.
+X := {x0..x99}.
 
 // constraints
 INIT(b,b0,vb0) <=> b=b0 & b'=vb0.

@@ -201,6 +201,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore local_diff_sum = phase->diff_sum;
   for(auto diff : module_diff)
   {
+    HYDLA_LOGGER_DEBUG_VAR(diff.first.first);
+    HYDLA_LOGGER_DEBUG_VAR(diff.second);
     relation_graph_->set_adopted(diff.first, diff.second);
     local_diff_sum.add_constraint(diff.first.second);
   }
@@ -681,7 +683,8 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
       {
         for(auto &candidate : entry.second)
         {
-          candidate.time -= phase->current_time;
+          // TODO: implement lighter calculation
+          candidate.time -= (phase->current_time - phase->parent->parent->current_time);
         }
       }
     }
@@ -704,7 +707,6 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
       ask_set_t asks = relation_graph_->get_adjacent_asks(var_name);
       for(auto ask : asks)
       {
-        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
         find_min_time_result_t min_time_for_this_ask;
         if(calculated_pp_time_map.count(ask))
         {
@@ -722,20 +724,45 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
           for(auto adjacent_var_name : adjacent_var_names)
           {
             if(adjacent_var_name == var_name)continue;
-            HYDLA_LOGGER_DEBUG_VAR(adjacent_var_name);
+            // if the candidate is old one for the same ask, remove it from the map.
+            auto &candidates = candidate_map[adjacent_var_name];
+            for(auto candidate_it = candidates.begin(); candidate_it != candidates.end();)
+            {
+              auto &discrete_asks = candidate_it->discrete_asks;
+              auto ask_it = discrete_asks.find(ask);
+              if(ask_it != discrete_asks.end())
+              {
+                discrete_asks.erase(ask_it);
+              }
+              if(discrete_asks.empty() )
+              {
+                // TODO: recalculate mintime for this var
+                candidate_it = candidates.erase(candidate_it);
+              }
+              else candidate_it++;
+            }
             candidate_map[adjacent_var_name] = compare_min_time(candidate_map[adjacent_var_name], min_time_for_this_ask, ask);
           }
         }
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
+        for(auto candidate : min_time_for_this_ask)
+        {
+          HYDLA_LOGGER_DEBUG_VAR(candidate.time);
+        }
         result_for_this_var = compare_min_time(result_for_this_var, min_time_for_this_ask, ask);
       }
+      HYDLA_LOGGER_DEBUG_VAR(var_name);
       HYDLA_LOGGER_DEBUG_VAR(result_for_this_var);
       candidate_map[var_name] = result_for_this_var;
     }
     set<ask_t> checked_asks;
     set<string> min_time_variables;
+    HYDLA_LOGGER_DEBUG_VAR(time_result);
     // 各変数に関する最小時刻を比較して最小のものを選ぶ．
     for(auto entry : candidate_map)
     {
+      HYDLA_LOGGER_DEBUG_VAR(entry.first);
+      HYDLA_LOGGER_DEBUG_VAR(entry.second);
       time_result = compare_min_time(time_result, entry.second);
     }
     
@@ -798,10 +825,10 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
   revert_diff(*phase);
 }
 
-pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomers, const ask_t &ask)
+pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existings, const find_min_time_result_t &newcomers, const ask_t &ask)
 {
   pp_time_result_t result;
-  if(existing.empty())
+  if(existings.empty())
   {
     for(auto newcomer :newcomers)
     {
@@ -813,27 +840,28 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
   }
   else if(newcomers.empty())
   {
-    result = existing;
+    result = existings;
     return result;
   }
   else
   {
     for(auto newcomer : newcomers)
     {
-      for(auto existing_it = existing.begin(); existing_it != existing.end(); existing_it++)
+      for(auto existing: existings)
       {
         compare_min_time_result_t compare_result;
-        backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing_it->time, &newcomer.time, &existing_it->parameter_map, &newcomer.parameter_map, &compare_result);
+
+        backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing.time, &newcomer.time, &existing.parameter_map, &newcomer.parameter_map, &compare_result);
         for(auto less_map : compare_result.less_maps)
         {
-          DCCandidate candidate(existing_it->time, existing_it->discrete_asks, less_map);
+          DCCandidate candidate(existing.time, existing.discrete_asks, less_map);
           result.push_back(candidate);
         }
         for(auto equal_map : compare_result.equal_maps)
         {
-          map<ask_t, bool> discrete_asks = existing_it->discrete_asks;
+          map<ask_t, bool> discrete_asks = existing.discrete_asks;
           discrete_asks[ask] = newcomer.on_time;
-          DCCandidate candidate(existing_it->time, discrete_asks, equal_map);
+          DCCandidate candidate(existing.time, discrete_asks, equal_map);
           result.push_back(candidate);
         }
         for(auto greater_map : compare_result.greater_maps)
