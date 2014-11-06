@@ -100,6 +100,7 @@ public:
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
   
   virtual node_sptr clone() = 0;
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   virtual std::string get_node_type_name() const {
     return "FactorNode";
@@ -1591,6 +1592,9 @@ public:
   
   void add_argument(node_sptr node);
   void set_argument(node_sptr node, int i);
+
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool is_exactly_same(const Node& n, bool exactly_same) const;
   
   virtual std::ostream& dump(std::ostream& s) const;
   
@@ -1621,6 +1625,7 @@ public:
 
   virtual std::ostream& dump(std::ostream&) const;
   virtual void accept(node_sptr own, TreeVisitor* visitor);
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
   virtual node_sptr clone();
 
@@ -1710,12 +1715,12 @@ public:
   typedef boost::shared_ptr<ConditionalExpressionList> node_type_sptr;
 
   ConditionalExpressionList(){}
-  ConditionalExpressionList(const std::string& str) : list_name_(str){}
 
   virtual ~ConditionalExpressionList(){}
   
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
   virtual node_sptr clone();
   virtual std::ostream& dump(std::ostream&) const;
 
@@ -1725,11 +1730,9 @@ public:
 
   virtual void set_expression(node_sptr node){ expression_ = node;}
   node_sptr get_expression() const { return expression_; }
-  void set_string(const std::string& str){list_name_ = str;}
-  virtual std::string get_string() const{return list_name_;}
+  virtual std::string get_string() const{return "ConditionalExpressionList";}
 
 private:
-  std::string list_name_;
   node_sptr expression_;
 };
 
@@ -1765,7 +1768,6 @@ public:
   typedef boost::shared_ptr<ConditionalProgramList> node_type_sptr;
 
   ConditionalProgramList(){}
-  ConditionalProgramList(const std::string& str) : list_name_(str){}
 
   virtual ~ConditionalProgramList(){}
   
@@ -1774,17 +1776,16 @@ public:
   virtual node_sptr clone();
   virtual std::ostream& dump(std::ostream&) const;
 
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
   virtual std::string get_node_type_name() const {
     return "ConditionalProgramList";
   }
 
   void set_program(node_sptr node){ program_ = node;}
   node_sptr get_program() const { return program_; }
-  void set_string(const std::string& str){list_name_ = str;}
-  virtual std::string get_string() const{return list_name_;}
+  std::string get_string() const { return "ConditionalProgramList"; } 
 
 private:
-  std::string list_name_;
   node_sptr program_;
 };
 

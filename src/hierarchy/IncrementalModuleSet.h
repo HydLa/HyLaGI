@@ -15,8 +15,11 @@ public:
 
   typedef ModuleSet::module_t module_t;
   typedef ModuleSet::module_list_const_iterator module_list_const_iterator;
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
+  typedef std::vector<node_sptr> condition_list_t;
 
   typedef std::map<module_t, ModuleSet> node_relations_data_t;
+  typedef std::map<module_t, condition_list_t> module_conditions_t;
   
   IncrementalModuleSet();
   IncrementalModuleSet(ModuleSet ms);
@@ -140,12 +143,16 @@ private:
   virtual void update_by_new_mss(module_set_set_t&);
 
   /**
-   * stronger_data_[module_t ms] is a map which has stronger modules than ms.
-   * children_data_[module_t ms] is a map which has weaker modules than ms.
+   * stronger_modules_[module_t ms] are stronger modules than ms.
+   * weaker_modules_[module_t ms] are weaker modules than ms.
+   * same_moodules_[module_t ms] are same priorities modules.
    */ 
   node_relations_data_t stronger_modules_;
   node_relations_data_t weaker_modules_;
   node_relations_data_t same_modules_;
+
+  /// module_conditions_[module_t ms] are the conditions for ms.
+  module_conditions_t module_conditions_;
    
   /// required module set
   ModuleSet required_ms_;

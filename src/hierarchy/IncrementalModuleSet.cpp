@@ -282,6 +282,7 @@ void IncrementalModuleSet::init()
   }
 
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
+  dump_priority_data_for_graphviz(std::cout);
 }
 
 void IncrementalModuleSet::remove_included_ms_by_current_ms(){

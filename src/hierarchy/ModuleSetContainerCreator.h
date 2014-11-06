@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <deque>
 #include <map>
+#include <queue>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
@@ -11,6 +12,7 @@
 #include "TreeInfixPrinter.h"
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
+#include "NodeReplacer.h"
 
 #include "ModuleSet.h"
 
@@ -60,49 +62,66 @@ public:
     ret->init();
     return ret;
   }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::DifferentVariable> node)
+  {
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::EachElement> node)
+  {
+    num_of_bound_variables_++;
+    boost::shared_ptr<hydla::symbolic_expression::Variable> variable;
+    variable = boost::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(node->get_lhs());
+    assert((variable));
+    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("bv"+std::to_string(num_of_bound_variables_)))));
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramList> node)
+  {
+    std::queue<hydla::symbolic_expression::node_sptr> program_queue;
+    for(int i = 0; i < node->get_arguments_size(); i++)
+    {
+      program_queue.push(node->get_argument(i));
+    }
+    while(program_queue.size()>1)
+    {
+      std::queue<hydla::symbolic_expression::node_sptr> tmp_queue;
+      while(!program_queue.empty())
+      {
+        hydla::symbolic_expression::node_sptr tmp = program_queue.front();
+        program_queue.pop();
+        if(!program_queue.empty())
+        {
+          tmp_queue.push(hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Parallel(tmp, program_queue.front())));
+          program_queue.pop();
+        }
+        else
+        {
+          tmp_queue.push(tmp);
+        }
+      }
+      program_queue = tmp_queue;
+    }
+    assert(program_queue.size() == 1);
+    accept(program_queue.front());
+  }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConditionalProgramList> node)
   {
-    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
-    // create ModuleSet
-    ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
+    bound_variables_list_.clear();
+    for(int i = 0; i < node->get_arguments_size(); i++) accept(node->get_argument(i));
+    hydla::symbolic_expression::NodeReplacer nr;
+    for(auto bv : bound_variables_list_)
+    {
+      nr.set_source(bv.first);
+      nr.set_dest(bv.second);
+      std::cout << "replace : " << *bv.first << ":" << *bv.second << std::endl;
+      hydla::symbolic_expression::node_sptr replace = node->clone();
+      nr.replace(replace);
+      node = boost::dynamic_pointer_cast<hydla::symbolic_expression::ConditionalProgramList>(replace);
     }
-    if(mod_set.empty()){
-      mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
-    }
-    container_name_.clear();
-
-    // create Container
-    container_sptr  container(new Container(mod_set));
-    mod_set_stack_.push_back(container);
-  }
-  
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> node)
-  {
-    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
-    // create ModuleSet
-    ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
-    }
-    if(mod_set.empty()){
-      mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
-    }
-    container_name_.clear();
-
-    // create Container
-    container_sptr  container(new Container(mod_set));
-    mod_set_stack_.push_back(container);
+    std::cout << symbolic_expression::TreeInfixPrinter().get_infix_string(node) << std::endl;
+    accept(node->get_program());
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramListElement> node)
@@ -258,7 +277,11 @@ private:
    */
   bool in_caller_ = false;
 
-  int constraint_level_;
+  int constraint_level_ = 0;
+
+  int num_of_bound_variables_ = 0;
+
+  std::vector<std::pair<hydla::symbolic_expression::node_sptr,hydla::symbolic_expression::node_sptr> > bound_variables_list_;
 };
 
 } // namespace hierarchy

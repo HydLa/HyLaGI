@@ -30,6 +30,11 @@ bool Node::is_same_struct(const Node& n, bool exactly_same) const
   return typeid(*this) == typeid(n);
 }
 
+bool FactorNode::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n);
+}
+
 bool UnaryNode::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
@@ -178,6 +183,25 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
         lhs_->is_same_struct(*b_n_lhs->lhs_.get(), false);
     }
     */
+bool ArbitraryNode::is_exactly_same(const Node& n, bool exactly_same) const
+{
+  bool ret = typeid(*this) == typeid(n);
+  ret = ret && arguments_.size() == (*static_cast<const ArbitraryNode*>(&n)).arguments_.size();
+  if(!ret) return false;
+  for(int i = 0; ret && i < arguments_.size(); i++)
+  {
+    ret = ret && arguments_[i]->is_same_struct(*static_cast<const ArbitraryNode*>(&n)->arguments_[i].get(), exactly_same);
+  }
+  return ret;
+}
+
+bool ArbitraryNode::is_same_struct(const Node& n, bool exactly_same) const
+{
+  //if(exactly_same)
+  return is_exactly_same(n,exactly_same);
+
+  // TODO : implement when exactly_Same = false
+}
 
 bool Ask::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -247,9 +271,31 @@ bool False::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
 }
+
 bool EachElement::is_same_struct(const Node& n, bool exactly_same) const
 {
-  return typeid(*this) == typeid(n);
+  return is_exactly_same(n, exactly_same);
+}
+
+bool ConditionalProgramList::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+    program_->is_same_struct(*static_cast<const ConditionalProgramList*>(&n)->program_.get(), exactly_same) &&
+      is_same_struct(n, exactly_same);
+}
+
+bool ConditionalExpressionList::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+    expression_->is_same_struct(*static_cast<const ConditionalExpressionList*>(&n)->expression_.get(), exactly_same) &&
+      is_same_struct(n, exactly_same);
+}
+
+bool Range::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n) &&
+    header == static_cast<const Range*>(&n)->header &&
+      is_exactly_same(n, exactly_same);
 }
 
 //Print
@@ -448,7 +494,7 @@ node_sptr ExpressionList::clone(){
 }
 
 node_sptr ConditionalExpressionList::clone(){
-  node_type_sptr n(new ConditionalExpressionList(list_name_));
+  node_type_sptr n(new ConditionalExpressionList());
   n->set_expression(expression_);
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
@@ -465,7 +511,7 @@ node_sptr ProgramList::clone(){
 }
 
 node_sptr ConditionalProgramList::clone(){
-  node_type_sptr n(new ConditionalProgramList(list_name_));
+  node_type_sptr n(new ConditionalProgramList());
   n->set_program(program_);
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
