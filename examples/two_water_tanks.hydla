@@ -1,0 +1,22 @@
+/* From Lunze, J. : Handbook of Hybrid Systems Con-
+trol: Theory, Tools, Applications, Cambridge Uni-
+versity Press, 2009, pp.17-22. 
+*/
+
+// additional assumption: V1~V3 is opened and V1L~V2L is closed
+// additional approximation: sgn(x)*sqrt(2g*|x|) = x
+
+INIT <=> h1 = 3 & h2 = 2.
+CONSTANTS <=> [](g = 9.8 & a = 1 & c = 1 & h0 = 5).
+QV1 <=> []((h1 < h0 & h2 < h0 => qv1 = 0) &
+           (h1 < h0 & h2 >= h0 => qv1 = c*(h0 - h2)) &
+           (h1 >= h0 & h2 < h0 => qv1 = c*(h1 - h0)) &
+           (h1 >= h0 & h2 >= h0 => qv1 = c*(h1 - h2))).
+QV2 <=> [](qv2 = c*(h1 - h2)). 
+QV3 <=> [](qv3 = c*h2).
+QL <=> [](qv1l = qv2l = 0).
+LEVEL <=> [](h1' = (u - qv1 - qv2 - qv1l)/a & h2' = (qv1 + qv2 - qv2l - qv3)/a).
+INPUT <=> []((h2 >= h0+2 => u = 0) & (h2 < h0+2 => u = h0 - h2)).
+
+
+INIT, CONSTANTS, QV1, QV2, QV3, QL, LEVEL, INPUT.

@@ -768,38 +768,39 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
     
     if(time_result.empty())
     {
-      DCCandidate candidate;
-      candidate.time = max_time;
-      time_result.push_back(candidate);
+      phase->simulation_state = simulator::TIME_LIMIT;
+      phase->end_time = max_time;
     }
-    
-    phase_result_sptr_t pr = phase;
-
-    auto time_it = time_result.begin();
-    while(true)
+    else
     {
-      DCCandidate &candidate = *time_it;
-      // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
-      for(auto par_entry : candidate.parameter_map ){
-        pr->parameter_map[par_entry.first] = par_entry.second;
-      }
-      pr->end_time = pr->current_time + candidate.time;
-      backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+      phase_result_sptr_t pr = phase;
 
-      if(candidate.time.undefined() || candidate.time.infinite() )
+      auto time_it = time_result.begin();
+      while(true)
       {
-        pr->simulation_state = simulator::TIME_LIMIT;
-      }
-      else
-      {
-        next_todo->discrete_asks = candidate.discrete_asks;
-        next_todo->parameter_map = pr->parameter_map;
-        next_todo->parent = pr.get();
-        next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
-        next_todo->current_time = pr->end_time;
-        pr->todo_list.push_back(next_todo);
-      }
-      // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+        DCCandidate &candidate = *time_it;
+        // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
+        for(auto par_entry : candidate.parameter_map ){
+          pr->parameter_map[par_entry.first] = par_entry.second;
+        }
+        pr->end_time = pr->current_time + candidate.time;
+        backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+
+        if(candidate.time.undefined() || candidate.time.infinite() )
+        {
+          pr->simulation_state = simulator::TIME_LIMIT;
+          pr->end_time = max_time;
+        }
+        else
+        {
+          next_todo->discrete_asks = candidate.discrete_asks;
+          next_todo->parameter_map = pr->parameter_map;
+          next_todo->parent = pr.get();
+          next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
+          next_todo->current_time = pr->end_time;
+          pr->todo_list.push_back(next_todo);
+        }
+        // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
 /*
   TODO: implement
   if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->simulation_state == TIME_LIMIT)
@@ -810,16 +811,17 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
   ret.push_back(next_todo);
   }
 */
-      if(++time_it == time_result.end())break;
+        if(++time_it == time_result.end())break;
       
-      // TODO: 全部コピーしなくていい気がするので何をコピーすべきか考える
-      pr.reset(new PhaseResult(*pr));
-      pr->id = ++phase_sum_;
-      pr->parent->children.push_back(pr);
-      pr->parent->todo_list.push_back(pr);
-      pr->todo_list.clear();
-      next_todo.reset(new PhaseResult(*next_todo));
-      next_todo->id = ++phase_sum_;
+        // TODO: 全部コピーしなくていい気がするので何をコピーすべきか考える
+        pr.reset(new PhaseResult(*pr));
+        pr->id = ++phase_sum_;
+        pr->parent->children.push_back(pr);
+        pr->parent->todo_list.push_back(pr);
+        pr->todo_list.clear();
+        next_todo.reset(new PhaseResult(*next_todo));
+        next_todo->id = ++phase_sum_;
+      }
     }
   }
   revert_diff(*phase);
