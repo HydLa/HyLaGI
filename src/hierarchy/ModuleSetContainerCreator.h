@@ -69,7 +69,7 @@ public:
     boost::shared_ptr<hydla::symbolic_expression::Variable> variable;
     variable = boost::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(node->get_lhs());
     assert((variable));
-    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("BV"+std::to_string(num_of_bound_variables_)))));
+    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("|BV"+std::to_string(num_of_bound_variables_)))));
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramList> node)
