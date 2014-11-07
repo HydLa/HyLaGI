@@ -15,8 +15,8 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<ConstraintDefinition> node)  {a
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramDefinition> node)     {accept(node->get_child());}
 
 // 呼び出し
-void DefaultTreeVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      {accept(node->get_child());}
-void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramCaller> node)         {accept(node->get_child());}
+void DefaultTreeVisitor::visit(boost::shared_ptr<ConstraintCaller> node)      {for(int i = 0; i < node->actual_arg_size(); i++){ accept(node->get_actual_arg(i)); } accept(node->get_child());}
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramCaller> node)      {for(int i = 0; i < node->actual_arg_size(); i++){ accept(node->get_actual_arg(i)); } accept(node->get_child());}
 
 // 制約式
 void DefaultTreeVisitor::visit(boost::shared_ptr<Constraint> node)            {accept(node->get_child());}
@@ -121,13 +121,13 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<DifferentVariable> node)    {ac
 // ExpressionListElement
 void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListElement> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
 // ExpressionListCaller
-void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListCaller> node)    {accept(node->get_child());}
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListCaller> node)      {for(int i = 0; i < node->actual_arg_size(); i++){ accept(node->get_actual_arg(i)); } accept(node->get_child());}
 // ExpressionListDefinition
 void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListDefinition> node)    {accept(node->get_child());}
 // ProgramListElement
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListElement> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
 // ProgramListCaller
-void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListCaller> node)    {accept(node->get_child());}
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListCaller> node)      {for(int i = 0; i < node->actual_arg_size(); i++){ accept(node->get_actual_arg(i)); } accept(node->get_child());}
 // ProgramListDefinition
 void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListDefinition> node)    {accept(node->get_child());}
 // Range

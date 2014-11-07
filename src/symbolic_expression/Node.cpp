@@ -42,6 +42,18 @@ bool UnaryNode::is_same_struct(const Node& n, bool exactly_same) const
                                  exactly_same);
 }
 
+bool Caller::is_same_struct(const Node& n, bool exactly_same) const
+{
+  bool ret = typeid(*this) == typeid(n) && actual_args_.size() == static_cast<const Caller*>(&n)->actual_arg_size();
+  if(!ret) return false;
+  ret = get_name() == static_cast<const Caller*>(&n)->get_name();
+  for(int i = 0; i < actual_args_.size(); i++)
+  {
+    ret = ret && actual_args_[i]->is_same_struct(*static_cast<const Caller*>(&n)->get_actual_arg(i).get(),exactly_same);
+  }
+  return ret && get_child()->is_same_struct(*static_cast<const Caller*>(&n)->child_.get(),exactly_same);
+}
+
 bool BinaryNode::is_exactly_same(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
@@ -270,6 +282,16 @@ bool True::is_same_struct(const Node& n, bool exactly_same) const
 bool False::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
+}
+
+bool ExpressionListElement::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
+}
+
+bool ProgramListElement::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return is_exactly_same(n, exactly_same);
 }
 
 bool EachElement::is_same_struct(const Node& n, bool exactly_same) const
@@ -608,8 +630,7 @@ node_sptr Caller::clone()
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
 
-  n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  for(int i = 0; i < actual_args_.size(); i++) n->add_actual_arg(actual_args_[i]->clone());
   
   if(child_) n->child_ = child_->clone();
   
@@ -621,8 +642,7 @@ node_sptr ProgramCaller::clone()
   boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
 
-  n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  for(int i = 0; i < actual_args_.size(); i++) n->add_actual_arg(actual_args_[i]->clone());
   
   if(child_) n->child_ = child_->clone();
   
@@ -633,8 +653,7 @@ node_sptr ConstraintCaller::clone()
   boost::shared_ptr<ConstraintCaller> n(new ConstraintCaller());
   n->name_ = name_;
 
-  n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  for(int i = 0; i < actual_args_.size(); i++) n->add_actual_arg(actual_args_[i]->clone());
   
   if(child_) n->child_ = child_->clone();
   
@@ -645,8 +664,7 @@ node_sptr ExpressionListCaller::clone()
   boost::shared_ptr<ExpressionListCaller> n(new ExpressionListCaller());
   n->name_ = name_;
 
-  n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  for(int i = 0; i < actual_args_.size(); i++) n->add_actual_arg(actual_args_[i]->clone());
   
   if(child_) n->child_ = child_->clone();
   
@@ -657,8 +675,7 @@ node_sptr ProgramListCaller::clone()
   boost::shared_ptr<ProgramListCaller> n(new ProgramListCaller());
   n->name_ = name_;
 
-  n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  for(int i = 0; i < actual_args_.size(); i++) n->add_actual_arg(actual_args_[i]->clone());
   
   if(child_) n->child_ = child_->clone();
   

@@ -29,6 +29,7 @@ public:
 
   ModuleSetGraph();
   ModuleSetGraph(ModuleSet m);
+  ModuleSetGraph(ModuleSet ms, std::vector<symbolic_expression::node_sptr> cl);
 
   virtual ~ModuleSetGraph();
   

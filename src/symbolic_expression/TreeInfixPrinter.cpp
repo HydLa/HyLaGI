@@ -359,6 +359,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Range> node)
   (*output_stream_) << "{";
   (*output_stream_) << node->get_string();
   accept(node->get_lhs());
+  (*output_stream_) << "..";
   (*output_stream_) << node->get_string();
   accept(node->get_rhs());
   (*output_stream_) << "}";

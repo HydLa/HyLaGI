@@ -23,6 +23,7 @@ public:
   
   IncrementalModuleSet();
   IncrementalModuleSet(ModuleSet ms);
+  IncrementalModuleSet(ModuleSet ms, condition_list_t cl);
   IncrementalModuleSet(const IncrementalModuleSet& im);
   virtual ~IncrementalModuleSet();
 
@@ -153,6 +154,9 @@ private:
 
   /// module_conditions_[module_t ms] are the conditions for ms.
   module_conditions_t module_conditions_;
+
+  /// same modules whose bound variable names are different
+  node_relations_data_t related_modules_;
    
   /// required module set
   ModuleSet required_ms_;

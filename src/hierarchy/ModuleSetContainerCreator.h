@@ -63,17 +63,13 @@ public:
     return ret;
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::DifferentVariable> node)
-  {
-  }
-
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::EachElement> node)
   {
     num_of_bound_variables_++;
     boost::shared_ptr<hydla::symbolic_expression::Variable> variable;
     variable = boost::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(node->get_lhs());
     assert((variable));
-    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("bv"+std::to_string(num_of_bound_variables_)))));
+    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("BV"+std::to_string(num_of_bound_variables_)))));
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramList> node)
@@ -109,19 +105,21 @@ public:
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConditionalProgramList> node)
   {
     bound_variables_list_.clear();
+    conditions_.clear();
     for(int i = 0; i < node->get_arguments_size(); i++) accept(node->get_argument(i));
     hydla::symbolic_expression::NodeReplacer nr;
     for(auto bv : bound_variables_list_)
     {
       nr.set_source(bv.first);
       nr.set_dest(bv.second);
-      std::cout << "replace : " << *bv.first << ":" << *bv.second << std::endl;
       hydla::symbolic_expression::node_sptr replace = node->clone();
       nr.replace(replace);
       node = boost::dynamic_pointer_cast<hydla::symbolic_expression::ConditionalProgramList>(replace);
     }
-    std::cout << symbolic_expression::TreeInfixPrinter().get_infix_string(node) << std::endl;
+    for(int i = 0; i < node->get_arguments_size(); i++) conditions_.push_back(node->get_argument(i)); 
     accept(node->get_program());
+    conditions_.clear();
+    bound_variables_list_.clear();
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramListElement> node)
@@ -142,8 +140,16 @@ public:
     container_name_.clear();
 
     // create Container
-    container_sptr  container(new Container(mod_set));
-    mod_set_stack_.push_back(container);
+    if(conditions_.empty())
+    {
+      container_sptr container(new Container(mod_set));
+      mod_set_stack_.push_back(container);
+    }
+    else
+    {
+      container_sptr container(new Container(mod_set, conditions_));
+      mod_set_stack_.push_back(container);
+    }
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
@@ -164,8 +170,16 @@ public:
     container_name_.clear();
 
     // create Container
-    container_sptr  container(new Container(mod_set));
-    mod_set_stack_.push_back(container);
+    if(conditions_.empty())
+    {
+      container_sptr container(new Container(mod_set));
+      mod_set_stack_.push_back(container);
+    }
+    else
+    {
+      container_sptr container(new Container(mod_set, conditions_));
+      mod_set_stack_.push_back(container);
+    }
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
@@ -186,8 +200,16 @@ public:
     container_name_.clear();
 
     // create Container
-    container_sptr  container(new Container(mod_set));
-    mod_set_stack_.push_back(container);
+    if(conditions_.empty())
+    {
+      container_sptr container(new Container(mod_set));
+      mod_set_stack_.push_back(container);
+    }
+    else
+    {
+      container_sptr container(new Container(mod_set, conditions_));
+      mod_set_stack_.push_back(container);
+    }
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
@@ -211,8 +233,16 @@ public:
     container_name_.clear();
 
     // create Container
-    container_sptr  container(new Container(mod_set));
-    mod_set_stack_.push_back(container);
+    if(conditions_.empty())
+    {
+      container_sptr container(new Container(mod_set));
+      mod_set_stack_.push_back(container);
+    }
+    else
+    {
+      container_sptr container(new Container(mod_set, conditions_));
+      mod_set_stack_.push_back(container);
+    }
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
@@ -282,6 +312,8 @@ private:
   int num_of_bound_variables_ = 0;
 
   std::vector<std::pair<hydla::symbolic_expression::node_sptr,hydla::symbolic_expression::node_sptr> > bound_variables_list_;
+
+  std::vector<hydla::symbolic_expression::node_sptr> conditions_;
 };
 
 } // namespace hierarchy

@@ -360,6 +360,8 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
   virtual node_sptr clone();
 
+  virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+
   virtual std::string get_node_type_name() const {
     return "Caller";
   }
@@ -1792,11 +1794,11 @@ private:
 /**
  * ProgramListElement 
  */
-DEFINE_BINARY_NODE(ProgramListElement);
+DEFINE_ASYMMETRIC_BINARY_NODE(ProgramListElement);
 /**
  * ExpressionListElement 
  */
-DEFINE_BINARY_NODE(ExpressionListElement);
+DEFINE_ASYMMETRIC_BINARY_NODE(ExpressionListElement);
 /**
  * Union 
  */

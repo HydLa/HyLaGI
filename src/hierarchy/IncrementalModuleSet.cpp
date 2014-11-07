@@ -3,6 +3,8 @@
 #include "../common/Timer.h"
 #include "../common/Logger.h"
 
+#include "ListBoundVariableUnifier.h"
+
 #include <iostream>
 #include <algorithm>
 #include <boost/lambda/lambda.hpp>
@@ -18,6 +20,22 @@ IncrementalModuleSet::IncrementalModuleSet()
 IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms):
   ModuleSetContainer(ms)
 {}
+
+IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, condition_list_t cl):
+  ModuleSetContainer(ms)
+{
+  for(auto m : ms)
+  {
+    for(auto c : cl)
+    {
+      module_conditions_[m].push_back(c);
+    }
+    node_sptr tmp = m.second->clone();
+    ListBoundVariableUnifier().unify(tmp);
+
+    related_modules_[module_t(symbolic_expression::TreeInfixPrinter().get_infix_string(tmp),tmp)].add_module(m);
+  }
+}
 
 IncrementalModuleSet::IncrementalModuleSet(const IncrementalModuleSet& im)
 {
@@ -145,6 +163,22 @@ void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)
   for(auto wm : ims.weaker_modules_){
     weaker_modules_[wm.first].insert(wm.second);
   }
+  for(auto mc : ims.module_conditions_){
+    module_conditions_[mc.first].insert(module_conditions_[mc.first].end(),mc.second.begin(),mc.second.end());
+  }
+  for(auto rm : ims.related_modules_){
+    bool merge = false;
+    for(auto m : related_modules_){
+      if(m.first.second->is_same_struct(*rm.first.second, true)){
+        related_modules_[m.first].insert(rm.second);
+        merge = true;
+        break;
+      }
+    }
+    if(!merge){
+      related_modules_[rm.first].insert(rm.second);
+    }
+  }
 }
 
 std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& s)
@@ -194,6 +228,58 @@ std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream
 }
 std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
 {
+  s << "========== dump Incremental Module Set ==========" << std::endl;
+  s << "********** required modules **********" << std::endl;
+  for(auto m : required_ms_)
+  {
+    s << m.first << std::endl;
+  }
+  s << std::endl;
+  s << "********** module priorities **********" << std::endl;
+  for(auto m : weaker_modules_)
+  {
+    for(auto wm : m.second)
+    {
+      s << wm.first << " << " << m.first.first << "," << std::endl;
+    }
+  }
+  for(auto m : same_modules_)
+  {
+    for(auto sm : m.second)
+    {
+      s << m.first.first << " << " << sm.first << "," << std::endl;
+      s << sm.first << " << " << m.first.first << "," << std::endl;
+    }
+  }
+  s << std::endl;
+  if(!module_conditions_.empty())
+  {
+    s << "********** module conditions **********" << std::endl;
+    for(auto m : module_conditions_)
+    {
+      s << m.first.first << " : ";
+      for(auto c : m.second)
+      {
+        s << symbolic_expression::TreeInfixPrinter().get_infix_string(c) << ", ";
+      }
+      s << std::endl;
+    }
+    s << std::endl;
+  }
+  if(!related_modules_.empty())
+  {
+    s << "********** related modules **********" << std::endl;
+    for(auto m : related_modules_)
+    {
+      s << m.first.first << "    : ";
+      for(auto c : m.second)
+      {
+        s << c.first << ", ";
+      }
+      s << std::endl;
+    }
+    s << std::endl;
+  }
   return s;
 }
 
@@ -282,7 +368,7 @@ void IncrementalModuleSet::init()
   }
 
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
-  dump_priority_data_for_graphviz(std::cout);
+  dump(std::cout);
 }
 
 void IncrementalModuleSet::remove_included_ms_by_current_ms(){
