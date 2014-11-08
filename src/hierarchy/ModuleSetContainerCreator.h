@@ -13,12 +13,43 @@
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 #include "NodeReplacer.h"
+#include "ListBoundVariableUnifier.h"
 
 #include "ModuleSet.h"
 
 namespace hydla {
 namespace hierarchy {
 
+#define MAKE_NEW_CONTAINER \
+  ListBoundVariableUnifier unifier; \
+  symbolic_expression::node_sptr unified = node->clone(); \
+  unifier.unify(unified); \
+  container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(unified); \
+  ModuleSet mod_set; \
+  for(auto ms : generated_mss_){ \
+    if(ms.begin()->first == container_name_){ \
+      mod_set = ms; \
+      break; \
+    } \
+  } \
+  if(mod_set.empty()){ \
+    mod_set = ModuleSet(container_name_, unified); \
+    generated_mss_.insert(mod_set); \
+  } \
+  container_name_.clear(); \
+  if(conditions_) \
+  { \
+    symbolic_expression::node_sptr unified_conditions = conditions_->clone(); \
+    unifier.apply_change(unified_conditions); \
+    container_sptr container(new Container(mod_set, unified_conditions)); \
+    mod_set_stack_.push_back(container); \
+  } \
+  else \
+  { \
+    container_sptr container(new Container(mod_set)); \
+    mod_set_stack_.push_back(container); \
+  }
+  
 
 
 /**
@@ -105,7 +136,6 @@ public:
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConditionalProgramList> node)
   {
     bound_variables_list_.clear();
-    conditions_.clear();
     for(int i = 0; i < node->get_arguments_size(); i++) accept(node->get_argument(i));
     hydla::symbolic_expression::NodeReplacer nr;
     for(auto bv : bound_variables_list_)
@@ -116,133 +146,35 @@ public:
       nr.replace(replace);
       node = boost::dynamic_pointer_cast<hydla::symbolic_expression::ConditionalProgramList>(replace);
     }
-    for(int i = 0; i < node->get_arguments_size(); i++) conditions_.push_back(node->get_argument(i)); 
+    conditions_.reset();
+    for(int i = 0; i < node->get_arguments_size(); i++)
+    {
+      if(i) conditions_ = symbolic_expression::node_sptr(new symbolic_expression::LogicalAnd(conditions_, node->get_argument(i)->clone()));
+      else conditions_ = node->get_argument(i)->clone();
+    }
     accept(node->get_program());
-    conditions_.clear();
+    conditions_.reset();
     bound_variables_list_.clear();
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramListElement> node)
   {
-    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
-    // create ModuleSet
-    ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
-    }
-    if(mod_set.empty()){
-      mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
-    }
-    container_name_.clear();
-
-    // create Container
-    if(conditions_.empty())
-    {
-      container_sptr container(new Container(mod_set));
-      mod_set_stack_.push_back(container);
-    }
-    else
-    {
-      container_sptr container(new Container(mod_set, conditions_));
-      mod_set_stack_.push_back(container);
-    }
+    MAKE_NEW_CONTAINER
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
   {
-    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
-    // create ModuleSet
-    ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
-    }
-    if(mod_set.empty()){
-      mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
-    }
-    container_name_.clear();
-
-    // create Container
-    if(conditions_.empty())
-    {
-      container_sptr container(new Container(mod_set));
-      mod_set_stack_.push_back(container);
-    }
-    else
-    {
-      container_sptr container(new Container(mod_set, conditions_));
-      mod_set_stack_.push_back(container);
-    }
+    MAKE_NEW_CONTAINER
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
   {
-    container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node);
-    // create ModuleSet
-    ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
-    }
-    if(mod_set.empty()){
-      mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
-    }
-    container_name_.clear();
-
-    // create Container
-    if(conditions_.empty())
-    {
-      container_sptr container(new Container(mod_set));
-      mod_set_stack_.push_back(container);
-    }
-    else
-    {
-      container_sptr container(new Container(mod_set, conditions_));
-      mod_set_stack_.push_back(container);
-    }
+    MAKE_NEW_CONTAINER
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
-    if(container_name_ == ""){
-      container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node->get_child());
-    }
-
-    // create ModuleSet
-    ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
-    }
-    if(mod_set.empty()){
-      mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
-    }
-    container_name_.clear();
-
-    // create Container
-    if(conditions_.empty())
-    {
-      container_sptr container(new Container(mod_set));
-      mod_set_stack_.push_back(container);
-    }
-    else
-    {
-      container_sptr container(new Container(mod_set, conditions_));
-      mod_set_stack_.push_back(container);
-    }
+    MAKE_NEW_CONTAINER
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
@@ -313,7 +245,7 @@ private:
 
   std::vector<std::pair<hydla::symbolic_expression::node_sptr,hydla::symbolic_expression::node_sptr> > bound_variables_list_;
 
-  std::vector<hydla::symbolic_expression::node_sptr> conditions_;
+  hydla::symbolic_expression::node_sptr conditions_;
 };
 
 } // namespace hierarchy

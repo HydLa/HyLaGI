@@ -21,15 +21,12 @@ IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms):
   ModuleSetContainer(ms)
 {}
 
-IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, condition_list_t cl):
+IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, node_sptr c):
   ModuleSetContainer(ms)
 {
   for(auto m : ms)
   {
-    for(auto c : cl)
-    {
-      module_conditions_[m].push_back(c);
-    }
+    module_conditions_[m].push_back(c);
     node_sptr tmp = m.second->clone();
     ListBoundVariableUnifier().unify(tmp);
 

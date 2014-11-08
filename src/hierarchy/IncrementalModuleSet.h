@@ -23,7 +23,7 @@ public:
   
   IncrementalModuleSet();
   IncrementalModuleSet(ModuleSet ms);
-  IncrementalModuleSet(ModuleSet ms, condition_list_t cl);
+  IncrementalModuleSet(ModuleSet ms, node_sptr cl);
   IncrementalModuleSet(const IncrementalModuleSet& im);
   virtual ~IncrementalModuleSet();
 
