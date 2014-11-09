@@ -29,9 +29,9 @@ void ListBoundVariableUnifier::visit(boost::shared_ptr<symbolic_expression::Vari
     return;
   }
   if(applying) return;
-  if(name.substr(0,3) == "|BV")
+  if(name.substr(0,3) == "$BV")
   {
-    replace_name_map_[name] = "|UV"+std::to_string(bv_count_);
+    replace_name_map_[name] = "$UV"+std::to_string(bv_count_);
     bv_count_++;
     node->set_name(replace_name_map_[name]);
   }

@@ -21,10 +21,7 @@ namespace hydla {
 namespace hierarchy {
 
 #define MAKE_NEW_CONTAINER \
-  ListBoundVariableUnifier unifier; \
-  symbolic_expression::node_sptr unified = node->clone(); \
-  unifier.unify(unified); \
-  container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(unified); \
+  container_name_ = symbolic_expression::TreeInfixPrinter().get_infix_string(node); \
   ModuleSet mod_set; \
   for(auto ms : generated_mss_){ \
     if(ms.begin()->first == container_name_){ \
@@ -33,15 +30,13 @@ namespace hierarchy {
     } \
   } \
   if(mod_set.empty()){ \
-    mod_set = ModuleSet(container_name_, unified); \
+    mod_set = ModuleSet(container_name_, node); \
     generated_mss_.insert(mod_set); \
   } \
   container_name_.clear(); \
   if(conditions_) \
   { \
-    symbolic_expression::node_sptr unified_conditions = conditions_->clone(); \
-    unifier.apply_change(unified_conditions); \
-    container_sptr container(new Container(mod_set, unified_conditions)); \
+    container_sptr container(new Container(mod_set, conditions_)); \
     mod_set_stack_.push_back(container); \
   } \
   else \
@@ -100,7 +95,7 @@ public:
     boost::shared_ptr<hydla::symbolic_expression::Variable> variable;
     variable = boost::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(node->get_lhs());
     assert((variable));
-    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("|BV"+std::to_string(num_of_bound_variables_)))));
+    bound_variables_list_.push_back(std::make_pair(variable, hydla::symbolic_expression::node_sptr(new hydla::symbolic_expression::Variable("$BV"+std::to_string(num_of_bound_variables_)))));
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramList> node)
