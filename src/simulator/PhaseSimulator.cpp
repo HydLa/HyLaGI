@@ -741,7 +741,6 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
               }
               else candidate_it++;
             }
-            candidate_map[adjacent_var_name] = compare_min_time(candidate_map[adjacent_var_name], min_time_for_this_ask, ask);
           }
         }
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
@@ -852,7 +851,6 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
       for(auto existing: existings)
       {
         compare_min_time_result_t compare_result;
-
         backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing.time, &newcomer.time, &existing.parameter_map, &newcomer.parameter_map, &compare_result);
         for(auto less_map : compare_result.less_maps)
         {
@@ -899,11 +897,6 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
   {
     for(auto existing : existings)
     {
-      if(newcomer.discrete_asks == existing.discrete_asks)
-      {
-        result.push_back(existing);
-        continue;
-      }
       compare_min_time_result_t compare_result;
       backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing.time, &newcomer.time, &existing.parameter_map, &newcomer.parameter_map, &compare_result);
       for(auto less_map : compare_result.less_maps)
