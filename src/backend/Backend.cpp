@@ -4,6 +4,8 @@
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 
+#include "../symbolic_expression/TreeInfixPrinter.h"
+
 using namespace std;
 
 namespace hydla{
@@ -634,6 +636,28 @@ DEFINE_VISIT_FACTOR(Pi, Pi)
 /// 自然対数の底
 DEFINE_VISIT_FACTOR(E, E)
 
+void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node)
+{
+  // 式リストの要素の送信
+  variable_form_t va;
+  if(variable_arg_== Link::VF_NONE && in_prev_)
+  {
+    va = Link::VF_PREV;
+  }
+  else{
+    if(variable_arg_ == Link::VF_IGNORE_PREV)
+    {
+      va = Link::VF_NONE;
+    }
+    else
+    {
+      va = variable_arg_;
+    }
+  }
+
+  send_variable(TreeInfixPrinter().get_infix_string(node), differential_count_, va);
+}
+
 // 変数
 void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
 {
@@ -698,7 +722,10 @@ int Backend::send_variable(const variable_t &var, const variable_form_t &variabl
 int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
 {
   std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
-  link_->put_variable(prefix + name, diff_count, variable_arg);
+  if(name.substr(0,1) == "$")
+    link_->put_variable(name, diff_count, variable_arg);
+  else
+    link_->put_variable(prefix + name, diff_count, variable_arg);
   return 0;
 }
 

@@ -3,8 +3,6 @@
 #include "../common/Timer.h"
 #include "../common/Logger.h"
 
-#include "ListBoundVariableUnifier.h"
-
 #include <iostream>
 #include <algorithm>
 #include <boost/lambda/lambda.hpp>
@@ -28,9 +26,12 @@ IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, node_sptr c):
   {
     module_conditions_[m].push_back(c);
     node_sptr tmp = m.second->clone();
-    ListBoundVariableUnifier().unify(tmp);
+    ListBoundVariableUnifier unifier;
+    unifier.unify(tmp);
 
-    related_modules_[module_t(symbolic_expression::TreeInfixPrinter().get_infix_string(tmp),tmp)].add_module(m);
+    module_t module = module_t(symbolic_expression::TreeInfixPrinter().get_infix_string(tmp),tmp);
+    related_modules_[module].add_module(m);
+    unifiers_[m] = unifier;
   }
 }
 
@@ -176,6 +177,10 @@ void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)
       related_modules_[rm.first].insert(rm.second);
     }
   }
+  for(auto u : ims.unifiers_)
+  {
+    unifiers_[u.first] = u.second;
+  }
 }
 
 std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& s)
@@ -276,6 +281,15 @@ std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
       s << std::endl;
     }
     s << std::endl;
+  }
+  if(!unifiers_.empty())
+  {
+    for(auto u : unifiers_)
+    {
+      s << u.first.first << " : " << std::endl;
+      u.second.dump(s);
+      s << std::endl;
+    }
   }
   return s;
 }

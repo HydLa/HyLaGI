@@ -2,6 +2,7 @@
 
 #include <map>
 #include "ModuleSetContainer.h"
+#include "ListBoundVariableUnifier.h"
 
 namespace hydla {
 namespace hierarchy {
@@ -19,6 +20,7 @@ public:
   typedef std::vector<node_sptr> condition_list_t;
 
   typedef std::map<module_t, ModuleSet> node_relations_data_t;
+  typedef std::map<module_t, ListBoundVariableUnifier> unifier_map_t;
   typedef std::map<module_t, condition_list_t> module_conditions_t;
   
   IncrementalModuleSet();
@@ -157,6 +159,9 @@ private:
 
   /// same modules whose bound variable names are different
   node_relations_data_t related_modules_;
+
+  /// std::map<module_t, ListBoundVariableUnifier>
+  unifier_map_t unifiers_;
    
   /// required module set
   ModuleSet required_ms_;

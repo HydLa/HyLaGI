@@ -185,7 +185,8 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   // 自然対数の底
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node);
   
-    
+  // 式リスト要素  
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListElement> node);
   // 変数
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 

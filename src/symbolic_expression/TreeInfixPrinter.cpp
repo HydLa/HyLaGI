@@ -89,7 +89,7 @@ DEFINE_INFIX_VISIT_UNARY(Always, "[](", ")")
 // Tell制約
 DEFINE_INFIX_VISIT_UNARY(Tell, "", "")
 // 制約式
-DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".\n")
+DEFINE_INFIX_VISIT_UNARY(Constraint, "", ".")
 
 
 // Print

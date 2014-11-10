@@ -18,6 +18,8 @@ public:
   void apply_change(symbolic_expression::node_sptr node);
 
   virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
+
+  virtual std::ostream& dump(std::ostream& s) const;
 private:
   int bv_count_ = 0;
   bool applying = false;

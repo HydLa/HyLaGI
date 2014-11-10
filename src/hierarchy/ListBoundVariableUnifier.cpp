@@ -37,5 +37,15 @@ void ListBoundVariableUnifier::visit(boost::shared_ptr<symbolic_expression::Vari
   }
 }
 
+std::ostream& ListBoundVariableUnifier::dump(std::ostream& s) const
+{
+  for(auto m : replace_name_map_)
+  {
+    s << m.first << " -> " << m.second << std::endl;
+  }
+  return s;
+}
+
+
 }// hierarchy
 }// hydla
