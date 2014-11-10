@@ -136,11 +136,12 @@ phase_result_sptr_t Simulator::make_initial_todo()
 
 void Simulator::process_one_todo(phase_result_sptr_t& todo)
 {
-  if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase - 1){
+  if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase){
     todo->parent->simulation_state = simulator::STEP_LIMIT;
     return;
   }
   HYDLA_LOGGER_DEBUG("\n--- Current Todo ---\n", *todo);
+  HYDLA_LOGGER_DEBUG("\n--- prev map ---\n", todo->prev_map);
 
   try{
     timer::Timer phase_timer;

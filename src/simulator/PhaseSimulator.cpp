@@ -201,6 +201,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore local_diff_sum = phase->diff_sum;
   for(auto diff : module_diff)
   {
+    HYDLA_LOGGER_DEBUG_VAR(diff.first.first);
+    HYDLA_LOGGER_DEBUG_VAR(diff.second);
     relation_graph_->set_adopted(diff.first, diff.second);
     local_diff_sum.add_constraint(diff.first.second);
   }
@@ -681,7 +683,8 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
       {
         for(auto &candidate : entry.second)
         {
-          candidate.time -= phase->current_time;
+          // TODO: implement lighter calculation
+          candidate.time -= (phase->current_time - phase->parent->parent->current_time);
         }
       }
     }
@@ -704,7 +707,6 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
       ask_set_t asks = relation_graph_->get_adjacent_asks(var_name);
       for(auto ask : asks)
       {
-        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
         find_min_time_result_t min_time_for_this_ask;
         if(calculated_pp_time_map.count(ask))
         {
@@ -722,57 +724,82 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
           for(auto adjacent_var_name : adjacent_var_names)
           {
             if(adjacent_var_name == var_name)continue;
-            HYDLA_LOGGER_DEBUG_VAR(adjacent_var_name);
-            candidate_map[adjacent_var_name] = compare_min_time(candidate_map[adjacent_var_name], min_time_for_this_ask, ask);
+            // if the candidate is old one for the same ask, remove it from the map.
+            auto &candidates = candidate_map[adjacent_var_name];
+            for(auto candidate_it = candidates.begin(); candidate_it != candidates.end();)
+            {
+              auto &discrete_asks = candidate_it->discrete_asks;
+              auto ask_it = discrete_asks.find(ask);
+              if(ask_it != discrete_asks.end())
+              {
+                discrete_asks.erase(ask_it);
+              }
+              if(discrete_asks.empty() )
+              {
+                // TODO: recalculate mintime for this var
+                candidate_it = candidates.erase(candidate_it);
+              }
+              else candidate_it++;
+            }
           }
+        }
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
+        for(auto candidate : min_time_for_this_ask)
+        {
+          HYDLA_LOGGER_DEBUG_VAR(candidate.time);
         }
         result_for_this_var = compare_min_time(result_for_this_var, min_time_for_this_ask, ask);
       }
+      HYDLA_LOGGER_DEBUG_VAR(var_name);
       HYDLA_LOGGER_DEBUG_VAR(result_for_this_var);
       candidate_map[var_name] = result_for_this_var;
     }
     set<ask_t> checked_asks;
     set<string> min_time_variables;
+    HYDLA_LOGGER_DEBUG_VAR(time_result);
     // 各変数に関する最小時刻を比較して最小のものを選ぶ．
     for(auto entry : candidate_map)
     {
+      HYDLA_LOGGER_DEBUG_VAR(entry.first);
+      HYDLA_LOGGER_DEBUG_VAR(entry.second);
       time_result = compare_min_time(time_result, entry.second);
     }
     
     if(time_result.empty())
     {
-      DCCandidate candidate;
-      candidate.time = max_time;
-      time_result.push_back(candidate);
+      phase->simulation_state = simulator::TIME_LIMIT;
+      phase->end_time = max_time;
     }
-    
-    phase_result_sptr_t pr = phase;
-
-    auto time_it = time_result.begin();
-    while(true)
+    else
     {
-      DCCandidate &candidate = *time_it;
-      // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
-      for(auto par_entry : candidate.parameter_map ){
-        pr->parameter_map[par_entry.first] = par_entry.second;
-      }
-      pr->end_time = pr->current_time + candidate.time;
-      backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+      phase_result_sptr_t pr = phase;
 
-      if(candidate.time.undefined() || candidate.time.infinite() )
+      auto time_it = time_result.begin();
+      while(true)
       {
-        pr->simulation_state = simulator::TIME_LIMIT;
-      }
-      else
-      {
-        next_todo->discrete_asks = candidate.discrete_asks;
-        next_todo->parameter_map = pr->parameter_map;
-        next_todo->parent = pr.get();
-        next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
-        next_todo->current_time = pr->end_time;
-        pr->todo_list.push_back(next_todo);
-      }
-      // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
+        DCCandidate &candidate = *time_it;
+        // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
+        for(auto par_entry : candidate.parameter_map ){
+          pr->parameter_map[par_entry.first] = par_entry.second;
+        }
+        pr->end_time = pr->current_time + candidate.time;
+        backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+
+        if(candidate.time.undefined() || candidate.time.infinite() )
+        {
+          pr->simulation_state = simulator::TIME_LIMIT;
+          pr->end_time = max_time;
+        }
+        else
+        {
+          next_todo->discrete_asks = candidate.discrete_asks;
+          next_todo->parameter_map = pr->parameter_map;
+          next_todo->parent = pr.get();
+          next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
+          next_todo->current_time = pr->end_time;
+          pr->todo_list.push_back(next_todo);
+        }
+        // HAConverter, HASimulator用にTIME_LIMITのtodoも返す
 /*
   TODO: implement
   if((opts_->ha_convert_mode || opts_->ha_simulator_mode) && pr->simulation_state == TIME_LIMIT)
@@ -783,25 +810,26 @@ dc_causes.push_back(dc_cause_t(break_condition_, -3));
   ret.push_back(next_todo);
   }
 */
-      if(++time_it == time_result.end())break;
+        if(++time_it == time_result.end())break;
       
-      // TODO: 全部コピーしなくていい気がするので何をコピーすべきか考える
-      pr.reset(new PhaseResult(*pr));
-      pr->id = ++phase_sum_;
-      pr->parent->children.push_back(pr);
-      pr->parent->todo_list.push_back(pr);
-      pr->todo_list.clear();
-      next_todo.reset(new PhaseResult(*next_todo));
-      next_todo->id = ++phase_sum_;
+        // TODO: 全部コピーしなくていい気がするので何をコピーすべきか考える
+        pr.reset(new PhaseResult(*pr));
+        pr->id = ++phase_sum_;
+        pr->parent->children.push_back(pr);
+        pr->parent->todo_list.push_back(pr);
+        pr->todo_list.clear();
+        next_todo.reset(new PhaseResult(*next_todo));
+        next_todo->id = ++phase_sum_;
+      }
     }
   }
   revert_diff(*phase);
 }
 
-pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomers, const ask_t &ask)
+pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existings, const find_min_time_result_t &newcomers, const ask_t &ask)
 {
   pp_time_result_t result;
-  if(existing.empty())
+  if(existings.empty())
   {
     for(auto newcomer :newcomers)
     {
@@ -813,27 +841,27 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
   }
   else if(newcomers.empty())
   {
-    result = existing;
+    result = existings;
     return result;
   }
   else
   {
     for(auto newcomer : newcomers)
     {
-      for(auto existing_it = existing.begin(); existing_it != existing.end(); existing_it++)
+      for(auto existing: existings)
       {
         compare_min_time_result_t compare_result;
-        backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing_it->time, &newcomer.time, &existing_it->parameter_map, &newcomer.parameter_map, &compare_result);
+        backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing.time, &newcomer.time, &existing.parameter_map, &newcomer.parameter_map, &compare_result);
         for(auto less_map : compare_result.less_maps)
         {
-          DCCandidate candidate(existing_it->time, existing_it->discrete_asks, less_map);
+          DCCandidate candidate(existing.time, existing.discrete_asks, less_map);
           result.push_back(candidate);
         }
         for(auto equal_map : compare_result.equal_maps)
         {
-          map<ask_t, bool> discrete_asks = existing_it->discrete_asks;
+          map<ask_t, bool> discrete_asks = existing.discrete_asks;
           discrete_asks[ask] = newcomer.on_time;
-          DCCandidate candidate(existing_it->time, discrete_asks, equal_map);
+          DCCandidate candidate(existing.time, discrete_asks, equal_map);
           result.push_back(candidate);
         }
         for(auto greater_map : compare_result.greater_maps)
@@ -869,11 +897,6 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
   {
     for(auto existing : existings)
     {
-      if(newcomer.discrete_asks == existing.discrete_asks)
-      {
-        result.push_back(existing);
-        continue;
-      }
       compare_min_time_result_t compare_result;
       backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing.time, &newcomer.time, &existing.parameter_map, &newcomer.parameter_map, &compare_result);
       for(auto less_map : compare_result.less_maps)

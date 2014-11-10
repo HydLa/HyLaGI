@@ -21,7 +21,7 @@ SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, set<string> vars, std
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   stringstream sstr;
   if(result.phase_type == INTERVAL_PHASE){
-    sstr << "---------IP " << result.id << "---------" << endl;
+    sstr << "---------IP---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
@@ -29,7 +29,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
       sstr << "t\t: " << result.current_time << "->" << "???" << "\n";
     }
   }else{
-    sstr << "---------PP " << result.id << "---------" << endl;
+    sstr << "---------PP---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     sstr << "t\t: " << result.current_time << "\n";
   }
@@ -51,7 +51,7 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
   if(it != end){
-    ostream << "\n#---------parameter condition---------\n";
+    ostream << "\n---------parameter condition---------\n";
   }
   for(; it!=end; ++it) {
     ostream << it->first << "\t: " << it->second << "\n";
@@ -91,7 +91,7 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, vector<std::string> &result, int &case_num, int &phase_num) const{
 
   if(node->children.size() == 0){
-    ostream << "#---------Case " << case_num++ << "---------" << endl;
+    ostream << "---------Case " << case_num++ << "---------" << endl;
     vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
       ostream << *r_it;
@@ -157,7 +157,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
   }else{
     if(node->phase_type == simulator::POINT_PHASE){
       stringstream sstr;
-      sstr << "#---------" << phase_num++ << "---------\n";
+      sstr << "---------" << phase_num++ << "---------\n";
       result.push_back(sstr.str());
     }
     result.push_back(get_state_output(*node));

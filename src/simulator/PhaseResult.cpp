@@ -194,6 +194,7 @@ ostream& operator<<(std::ostream& os, const pp_time_result_t& result)
     {
       os << "ask: " << get_infix_string(ask.first) << " on_time: " << ask.second << endl;
     }
+    os << endl;
   }
   return os;
 }
