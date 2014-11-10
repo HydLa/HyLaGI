@@ -30,7 +30,7 @@ void HybridAutomata::viewPrs(phase_result_sptrs_t results)
 	
 void HybridAutomata::viewPr(phase_result_sptr_t result)
 {
-  hydla::io::SymbolicTrajPrinter printer(backend);
+  hydla::io::SymbolicTrajPrinter printer;
   printer.output_one_phase(result);
 			
   HYDLA_LOGGER_DEBUG("negative ask:");

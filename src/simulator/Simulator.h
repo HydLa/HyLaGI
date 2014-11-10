@@ -24,6 +24,7 @@ namespace interval
 namespace simulator {
 
 class RelationGraph;
+struct BreakPoint;
 
 typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
 
@@ -150,6 +151,8 @@ protected:
   Opts*     opts_;
 
   interval::AffineApproximator* affine_transformer_;
+private:
+  static bool assert_call_back(BreakPoint, phase_result_sptr_t);
 };
 
 } //namespace simulator

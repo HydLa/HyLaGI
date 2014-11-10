@@ -173,16 +173,6 @@ ostream& operator<<(std::ostream& s, const change_variables_t& a)
   return s;
 }
 
-ostream& operator<<(std::ostream& os, const next_pp_candidate_map_t& candidate_map)
-{
-  for(auto entry : candidate_map)
-  {
-    os << "--- " << entry.first << " ---" << endl;
-    os << entry.second;
-  }
-  return os;
-}
-
 ostream& operator<<(std::ostream& os, const pp_time_result_t& result)
 {
   for(auto candidate : result)

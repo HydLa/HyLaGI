@@ -5,6 +5,7 @@
 #include "ModuleSetContainerInitializer.h"
 #include "PhaseResult.h"
 #include "AffineApproximator.h"
+#include "SymbolicTrajPrinter.h"
 #include "Timer.h"
 #include "VariableFinder.h"
 #include "TimeOutError.h"
@@ -32,6 +33,7 @@ Simulator::~Simulator()
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
   phase_simulator_->set_backend(backend);
+
 }
 
 void Simulator::set_backend(backend_sptr_t back)
@@ -53,6 +55,15 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   phase_simulator_->initialize(variable_set_, parameter_map_,
                                original_map_, module_set_container_, result_root_);
+
+  if(opts_->assertion)
+  {
+    BreakPoint bp;
+    bp.condition.reset(new symbolic_expression::Not(opts_->assertion));
+    bp.call_back = assert_call_back;
+    bp.tag = this;
+    phase_simulator_->add_break_point(bp);
+  }
 
   profile_vector_.reset(new entire_profile_t());
 }
@@ -121,7 +132,6 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
 }
 
 
-
 phase_result_sptr_t Simulator::make_initial_todo()
 {
   phase_result_sptr_t todo(new PhaseResult());
@@ -156,6 +166,15 @@ void Simulator::process_one_todo(phase_result_sptr_t& todo)
     todo->parent->children.push_back(phase);
   }
   HYDLA_LOGGER_DEBUG("\n--- Result Phase ---\n", *todo);
+}
+
+bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)
+{
+  phase->simulation_state = ASSERTION;
+  HYDLA_LOGGER_DEBUG_VAR(*phase);
+  cout << "Assertion failed!" << endl;
+  cout << io::SymbolicTrajPrinter().get_state_output(*phase);
+  return false;
 }
 
 }

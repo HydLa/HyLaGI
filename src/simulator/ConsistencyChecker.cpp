@@ -127,18 +127,18 @@ void ConsistencyChecker::reset_count()
   backend_check_consistency_time = 0;
 }
 
-CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase)
+CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons)
 {
   timer::Timer timer;
   backend_check_consistency_count++;
   CheckConsistencyResult ret;
   if(phase == POINT_PHASE)
   {
-    backend->call("checkConsistencyPoint", 0, "", "cc", &ret);
+    backend->call("checkConsistencyPoint", 1, "csn", "cc", &tmp_cons, &ret);
   }
   else
   {
-    backend->call("checkConsistencyInterval", 0, "", "cc", &ret);
+    backend->call("checkConsistencyInterval", 1, "cst", "cc", &tmp_cons, &ret);
   }
   backend_check_consistency_time += timer.get_elapsed_us();
   return ret;
@@ -161,37 +161,64 @@ map<string, int> ConsistencyChecker::get_differential_map(variable_set_t &vs)
   return dm;
 }
 
+
+
 CheckEntailmentResult ConsistencyChecker::check_entailment(
   RelationGraph &relation_graph,
   CheckConsistencyResult &cc_result,
-  const ask_t &guard,
+  const ask_t &ask,
   const PhaseType &phase,
   profile_t &profile
   )
 {
-  
-  CheckEntailmentResult ce_result;
-  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  HYDLA_LOGGER_DEBUG(get_infix_string(ask) );
+
+  backend->call("resetConstraintForVariable", 0, "", "");
   VariableFinder finder;
   ConstraintStore constraint_store;
   module_set_t module_set;
-  relation_graph.get_related_constraints(guard->get_guard(), constraint_store, module_set);
-
-
-  backend->call("resetConstraintForVariable", 0, "", "");
-
+  relation_graph.get_related_constraints(ask, constraint_store, module_set);
+  
   for(auto constraint : constraint_store)
   {
     finder.visit_node(constraint);
   }
-  finder.visit_node(guard->get_child());
+  finder.visit_node(ask->get_child());
   add_continuity(finder, phase);
-
-  backend->call("addConstraint", 1, (phase == POINT_PHASE)?"en":"et", "", &guard->get_guard());
   backend->call("addConstraint", 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
-  
-  cc_result = call_backend_check_consistency(phase);
+  return check_entailment_core(cc_result, ask->get_guard(), phase, profile);
+}
 
+
+CheckEntailmentResult ConsistencyChecker::check_entailment(
+  variable_map_t &vm,
+  CheckConsistencyResult &cc_result,
+  const node_sptr &guard,
+  const PhaseType &phase,
+  profile_t &profile
+  )
+{
+  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+
+  backend->call("resetConstraintForVariable", 0, "", "");
+  string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
+  backend->call("addConstraint", 1, fmt.c_str(), "", &vm);
+
+  return check_entailment_core(cc_result, guard, phase, profile);
+}
+
+
+CheckEntailmentResult ConsistencyChecker::check_entailment_core(
+  CheckConsistencyResult &cc_result,
+  const node_sptr &guard,
+  const PhaseType &phase,
+  profile_t &profile
+  )
+{
+  CheckEntailmentResult ce_result;
+  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  
+  cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
 
   if(cc_result.consistent_store.consistent()){
     HYDLA_LOGGER_DEBUG("%% entailable");
@@ -201,15 +228,8 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
     }
     else
     {
-      timer::Timer timer;
-      backend->call("resetConstraintForVariable", 0, "", "");
-      add_continuity(finder, phase);
-      backend->call("addConstraint", 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
-      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard->get_guard()));
-      const char* fmt = (phase == POINT_PHASE)?"en":"et";
-      backend->call("addConstraint", 1, fmt, "", &not_node);
-      profile["PrepareForSecondCC"] += timer.get_elapsed_us();
-      cc_result = call_backend_check_consistency(phase);
+      symbolic_expression::node_sptr not_node = symbolic_expression::node_sptr(new Not(guard));
+      cc_result = call_backend_check_consistency(phase, ConstraintStore(not_node));
       if(cc_result.consistent_store.consistent()){
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
         if(cc_result.inconsistent_store.consistent()){
@@ -224,7 +244,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   }else{
     ce_result = CONFLICTING;
   }
-
   return ce_result;
 }
 

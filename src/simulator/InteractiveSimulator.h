@@ -41,7 +41,7 @@ public:
   typedef boost::spirit::classic::node_val_data_factory<> node_val_data_factory_t;
   typedef boost::spirit::classic::tree_parse_info<pos_iter_t, node_val_data_factory_t> tree_info_t;
 */
-  InteractiveSimulator(Opts &opts):Simulator(opts), printer_(backend){}
+  InteractiveSimulator(Opts &opts):Simulator(opts), printer_(){}
 
   virtual ~InteractiveSimulator(){}
 

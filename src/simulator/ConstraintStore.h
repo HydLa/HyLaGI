@@ -18,6 +18,7 @@ class ConstraintStore : public constraints_t
 {
 public:
   ConstraintStore();
+  ConstraintStore(constraint_t t);
 
   void add_constraint(const constraint_t &constraint);
   void add_constraint_store(const ConstraintStore &store);

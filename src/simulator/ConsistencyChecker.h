@@ -50,10 +50,19 @@ public:
   CheckEntailmentResult check_entailment(
     RelationGraph &relation_graph,
     CheckConsistencyResult &cc_result,
-    const ask_t &guard,
+    const ask_t &ask,
     const PhaseType &phase,
     profile_t &profile
     );
+
+  CheckEntailmentResult check_entailment(
+    variable_map_t &vm,
+    CheckConsistencyResult &cc_result,
+    const symbolic_expression::node_sptr &guard,
+    const PhaseType &phase,
+    profile_t &profile
+    );
+
 
   void set_prev_map(const variable_map_t *);
 
@@ -72,8 +81,16 @@ public:
 
 private:
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase, profile_t &profile);
+
+  CheckEntailmentResult check_entailment_core(
+    CheckConsistencyResult &cc_result,
+    const symbolic_expression::node_sptr &guard,
+    const PhaseType &phase,
+    profile_t &profile
+    );
+
   void check_consistency(const ConstraintStore& constraint_store, RelationGraph &relation_graph, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile);
-  CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase);
+  CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
   std::map<std::string, int> get_differential_map(variable_set_t &);
   void send_init_equation(Variable &var, std::string fmt);
   void send_prev_constraint(Variable &var);
