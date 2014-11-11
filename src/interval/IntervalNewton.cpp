@@ -46,7 +46,7 @@ itvd intersect_interval(itvd x, itvd y)
 }
 
 // 存在証明
-bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp)
+bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
   itvd tmp;
 
@@ -61,8 +61,8 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp)
   
   itvd n_x, div;
   bool parted;
-  IntervalTreeVisitor f_visitor(itvd(mid(tmp)));
-  IntervalTreeVisitor d_visitor(tmp);
+  IntervalTreeVisitor f_visitor(itvd(mid(tmp)), phase_map_);
+  IntervalTreeVisitor d_visitor(tmp, phase_map_);
 
   itvd f_result = f_visitor.get_interval_value(exp);
   itvd d_result = d_visitor.get_interval_value(dexp);
@@ -90,7 +90,7 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp)
 
 // 区間ニュートン法により近似解を求める関数
 // 0以上の最小の解を求める
-itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp)
+itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
   bool parted;
   itvd initial_interval, current_value, prev_value, div1, div2, tmp1, tmp2, x1, x2;
@@ -110,8 +110,8 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp)
     for(int i=0;i<100;i++)
     {
       
-      IntervalTreeVisitor f_visitor(itvd(mid(current_value)));
-      IntervalTreeVisitor d_visitor(current_value);
+      IntervalTreeVisitor f_visitor(itvd(mid(current_value)), phase_map_);
+      IntervalTreeVisitor d_visitor(current_value, phase_map_);
 
       itvd f_result = f_visitor.get_interval_value(exp);
       itvd d_result = d_visitor.get_interval_value(dexp);
@@ -130,9 +130,12 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp)
       if(parted)
       {
         div2 = division_part2(f_result, d_result);
+        debug_print("div2 : ", div2);
         tmp2 = mid(current_value) - div2;
+        debug_print("tmp2 : ", tmp2);
         x2 = intersect_interval(current_value, tmp2);
-
+        debug_print("x2 : ", x2);
+        
         if(!(x1 == itvd(0.,0.)))
         {
           candidate_stack->push(x1);
@@ -164,7 +167,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp)
       continue;
     }
     
-    if(show_existence(current_value, exp, dexp))
+    if(show_existence(current_value, exp, dexp, phase_map_))
     {
       std::cout << "FIND!\n";
       return current_value;

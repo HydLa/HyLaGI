@@ -17,7 +17,7 @@ class IntervalException : public std::runtime_error
 };
 
 
-IntervalTreeVisitor::IntervalTreeVisitor(itvd arg)
+IntervalTreeVisitor::IntervalTreeVisitor(itvd arg, parameter_map_t& map) : phase_map_(map)
 {
   interval_value_ = itvd(0.,0.);
   interval_arg_ = arg;
@@ -178,6 +178,26 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Sy
   // debug_print("SymbolicT : ", interval_value_);
   return;
 }
+
+void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
+{
+  parameter_t param(node->get_name(),
+                    node->get_differential_count(),
+                    node->get_phase_id());
+  range_t range = phase_map_[param];
+
+  value_t lower_value = (range.get_lower_bound()).value;
+  accept(lower_value.get_node());
+  itvd lower_itvd = interval_value_;
+
+  value_t uppper_value = (range.get_upper_bound()).value;
+  accept(uppper_value.get_node());
+  itvd upper_itvd = interval_value_;
+
+  interval_value_ = itvd(lower_itvd.lower(), upper_itvd.upper());
+  debug_print("Parameter : ", interval_value_);
+}
+
 
 void IntervalTreeVisitor::invalid_node(symbolic_expression::Node &node)
 {

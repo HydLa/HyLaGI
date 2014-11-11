@@ -9,6 +9,10 @@
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
+#include "Parameter.h"
+#include "Value.h"
+#include "ValueRange.h"
+#include "PhaseResult.h"
 
 
 namespace hydla
@@ -18,10 +22,10 @@ namespace interval
 
 typedef symbolic_expression::node_sptr            node_sptr;
 typedef symbolic_expression::DefaultTreeVisitor   DefaultTreeVisitor;
-// typedef simulator::Parameter                  parameter_t;
-// typedef simulator::Value                      value_t;
-// typedef simulator::ValueRange                 range_t;
-// typedef simulator::parameter_map_t            parameter_map_t;
+typedef simulator::Parameter                  parameter_t;
+typedef simulator::Value                      value_t;
+typedef simulator::ValueRange                 range_t;
+typedef simulator::parameter_map_t            parameter_map_t;
 // typedef simulator::variable_map_t             variable_map_t;
 typedef kv::interval<double>                  itvd;
 
@@ -30,7 +34,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
 {
   public:
 
-  IntervalTreeVisitor(itvd);
+  IntervalTreeVisitor(itvd, parameter_map_t&);
   
   // ノードを引数に取り、区間演算した結果を返す
   itvd get_interval_value(const node_sptr &);
@@ -47,7 +51,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Float> node);
 
   // 記号定数
-  // virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node);
 
   // t
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
@@ -75,6 +79,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
   static itvd pi, e;
   itvd interval_value_;
   itvd interval_arg_;
+  parameter_map_t& phase_map_;
 };
 
 
