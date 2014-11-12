@@ -5,8 +5,7 @@ checkConsistencyPoint[] := (
   checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
 );
 
-checkConsistencyPoint[tmpCons_] := (
-  checkConsistencyPoint[tmpCons && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
 );
 
 
@@ -38,8 +37,7 @@ checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tnpCons_] :=  (
-  checkConsistencyInterval[tnpCons && constraint, initConstraint, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
 
@@ -425,7 +423,7 @@ makeListFromPiecewise[minT_, others_] := Module[
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
   retMinT = Map[({#[[1]], Reduce[others && #[[2]] ]})&, retMinT];
   If[ tmpCondition === False,
-    retMinT,
+    retMinT,  
     Append[retMinT, {minT[[2]], tmpCondition}]
   ]
 ];
@@ -475,25 +473,22 @@ publicMethod[
     timeAppliedCause = cause /. tStore;
     simplePrint[timeAppliedCause];
 
-    parameterList = getParameters[timeAppliedCause];
-  
-    (* 必要なpConsだけを選ぶ．不要なものが入っているとMinimzeの動作がおかしくなる？ *)
-    necessaryPCons = LogicalExpand[pCons] /. (expr_ /; (( Head[expr] === Equal || Head[expr] === LessEqual || Head[expr] === Less|| Head[expr] === GreaterEqual || Head[expr] === Greater) && (!hasSymbol[expr, parameterList])) -> True);
-    simplePrint[parameterList];
-    maxCons = If[maxTime === Infinity, True, t < maxTime];     simplePrint[maxCons];
-    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t > 0 && maxCons && necessaryPCons}, {t}],
+    maxCons = If[maxTime === Infinity, True, t < maxTime];
+    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t > 0 && maxCons && pCons}, {t}],
            onTime = False;minT,
            Minimize::wksol
          ],
          {Minimize::wksol, Minimize::infeas}
     ];
+           simplePrint[minT];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     minT = First[minT];
     If[minT === Infinity, 
       {},
       ret = makeListFromPiecewise[minT, pCons];
-      (* 時刻が0となる場合を取り除く．*)
-      ret = Select[ret, (#[[1]] =!= 0)&];
+      (* 時刻が0となる場合はinfとする．*)
+       simplePrint[ret];
+       ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
 
       (* 整形して結果を返す *)
       resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];

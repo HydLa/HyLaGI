@@ -700,7 +700,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
-        variable_map_t related_vm = get_related_vm(break_point.condition, phase->variable_map);
+        variable_map_t related_vm = get_related_vm(break_point.condition, original_vm);
         backend_->call("findMinTime", 3, "etmvtvlt", "f", &break_point.condition, &related_vm, &time_limit, &entry.second);
       }
       pp_time_result_t time_result;
