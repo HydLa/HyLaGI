@@ -432,6 +432,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
     }
   } 
   else {
+    if(state.bound_arg_map.find(node->get_name()) != state.bound_arg_map.end()) return;
     // 自身が実引数であった場合
     parse_tree_->register_variable(node->get_name(), 
                                    state.differential_count);
@@ -461,34 +462,49 @@ DEFINE_DEFAULT_VISIT_ARBITRARY(ProgramList)
 DEFINE_DEFAULT_VISIT_BINARY(ExpressionListElement)
 DEFINE_DEFAULT_VISIT_BINARY(ProgramListElement)
 DEFINE_DEFAULT_VISIT_BINARY(Range)
-DEFINE_DEFAULT_VISIT_BINARY(EachElement)
 DEFINE_DEFAULT_VISIT_BINARY(DifferentVariable)
  
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<EachElement> node)
+{
+  State& state = todo_stack_.top();
+  accept(node->get_rhs());
+  if(new_child_)
+  {
+    node->set_rhs(new_child_);
+    new_child_.reset();
+  }
+  boost::shared_ptr<Variable> var = boost::dynamic_pointer_cast<Variable>(node->get_lhs());
+  state.bound_arg_map.insert(make_pair(var->get_name(), node->get_rhs()));
+}
+
 // ConditionalExpressionList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionList> node)
 {
+  State& new_state(todo_stack_.top());
+  todo_stack_.push(new_state);
+
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
+    }
+  }
   accept(node->get_expression());
   if(new_child_) {
     node->set_expression(new_child_);
     new_child_.reset();
   }
-  for(int i=0;i<node->get_arguments_size();i++){
-    accept(node->get_argument(i));
-    if(new_child_) {
-      node->set_argument((new_child_), i);
-      new_child_.reset();
-    }
-  }
+  
+  todo_stack_.pop();
 }
 
 // ConditionalProgramList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> node)
 {
-  accept(node->get_program());
-  if(new_child_) {
-    node->set_program(new_child_);
-    new_child_.reset();
-  }
+  State& new_state(todo_stack_.top());
+  todo_stack_.push(new_state);
+
   for(int i=0;i<node->get_arguments_size();i++){
     accept(node->get_argument(i));
     if(new_child_) {
@@ -496,6 +512,13 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> 
       new_child_.reset();
     }
   }
+  accept(node->get_program());
+  if(new_child_) {
+    node->set_program(new_child_);
+    new_child_.reset();
+  }
+  
+  todo_stack_.pop();
 }
 
 // SizeOfList

@@ -208,6 +208,9 @@ private:
 
     /// 仮引数とそれに対応する実引数ノードの対応表  
     formal_arg_map_t formal_arg_map;
+
+
+    formal_arg_map_t bound_arg_map;
   };
 
   /// Stateをつむためのスタック

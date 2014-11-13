@@ -17,21 +17,32 @@ IncrementalModuleSet::IncrementalModuleSet()
 
 IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms):
   ModuleSetContainer(ms)
-{}
+{
+  for(auto m : ms)
+  {
+    node_sptr tmp = m.second->clone();
+    ListBoundVariableUnifier unifier;
+    unifier.unify(tmp);
+    
+    std::string name = symbolic_expression::TreeInfixPrinter().get_infix_string(tmp);
+    related_modules_[name].add_module(m);
+    unifiers_[m.first] = unifier;
+  }
+}
 
 IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, node_sptr c):
   ModuleSetContainer(ms)
 {
   for(auto m : ms)
   {
-    module_conditions_[m].push_back(c);
+    module_conditions_[m.first].push_back(c);
     node_sptr tmp = m.second->clone();
     ListBoundVariableUnifier unifier;
     unifier.unify(tmp);
-
-    module_t module = module_t(symbolic_expression::TreeInfixPrinter().get_infix_string(tmp),tmp);
-    related_modules_[module].add_module(m);
-    unifiers_[m] = unifier;
+    
+    std::string name = symbolic_expression::TreeInfixPrinter().get_infix_string(tmp);
+    related_modules_[name].add_module(m);
+    unifiers_[m.first] = unifier;
   }
 }
 
@@ -59,7 +70,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
 
   for( auto it : ms ){
     bool has_weaker = false;
-    for( auto weaker : weaker_modules_[it] ){
+    for( auto weaker : weaker_modules_[it.first] ){
       if(ms.find(weaker) != ms.end()){
         has_weaker = true;
         break;
@@ -79,8 +90,8 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
       // to prevent recheck, erase childs front
       childs.erase(childs.begin());
       // if there are modules which is weaker than roop_it
-      if(weaker_modules_.find(roop_it) != weaker_modules_.end()){
-        for( auto wmit : weaker_modules_[roop_it] ){
+      if(weaker_modules_.find(roop_it.first) != weaker_modules_.end()){
+        for( auto wmit : weaker_modules_[roop_it.first] ){
 	  // wmit is a module which is weaker than roop_it
 	  // if wmit is included by current module set
           if(current_ms.find(wmit) != current_ms.end()){
@@ -90,7 +101,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
         }
       }
     }
-    if(same_modules_.count(it)) removable_for_it.insert(same_modules_[it]);
+    if(same_modules_.count(it.first)) removable_for_it.insert(same_modules_[it.first]);
     removable.push_back(removable_for_it);
   }
 
@@ -112,7 +123,7 @@ IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() 
 
 ModuleSet IncrementalModuleSet::unadopted_module_set(){
   ModuleSet ret = maximal_module_set_;
-  ret.erase(get_weaker_module_set());
+  ret.erase(get_module_set_without_required());
   return ret;
 }
 
@@ -135,17 +146,17 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
   ModuleSet strong_modules;
   ModuleSet weak_modules;
   for(auto this_module : maximal_module_set_ ){
-    if(weaker_modules_.count(this_module)) continue;
+    if(weaker_modules_.count(this_module.first)) continue;
     strong_modules.add_module(this_module);
   }
   for(auto weaker_module : weak_module_set_list.maximal_module_set_ ){
-    if(stronger_modules_.count(weaker_module)) continue;
+    if(stronger_modules_.count(weaker_module.first)) continue;
     weak_modules.add_module(weaker_module);
   }
   for(auto sm : strong_modules){
     for(auto wm : weak_modules){
-      stronger_modules_[wm].add_module(sm);
-      weaker_modules_[sm].add_module(wm);
+      stronger_modules_[wm.first].add_module(sm);
+      weaker_modules_[sm.first].add_module(wm);
     }
   }
 
@@ -167,7 +178,7 @@ void IncrementalModuleSet::add_order_data(IncrementalModuleSet& ims)
   for(auto rm : ims.related_modules_){
     bool merge = false;
     for(auto m : related_modules_){
-      if(m.first.second->is_same_struct(*rm.first.second, true)){
+      if(m.first == rm.first){
         related_modules_[m.first].insert(rm.second);
         merge = true;
         break;
@@ -190,7 +201,7 @@ std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& 
   s << "  edge [dir=back];" << std::endl;
   module_set_set_t mss;
   while(has_next()){
-    ModuleSet tmp = get_weaker_module_set();
+    ModuleSet tmp = get_module_set_without_required();
     generate_new_ms(mss, tmp);
     for(auto ms : ms_to_visit_){
       if(tmp.including(ms)){
@@ -216,13 +227,13 @@ std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream
   }
   for(auto m : weaker_modules_){
     for(auto wm : m.second){
-      s << "  \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
+      s << "  \"" << m.first << "\" -> \"" << wm.first << "\";" << std::endl;
     }
   }
   for(auto m : same_modules_){
     for(auto sm : m.second){
-      s << "  \"" << m.first.first << "\" -> \"" << sm.first << "\" [style=dotted];" << std::endl;
-      s << "  \"" << sm.first << "\" -> \"" << m.first.first << "\" [style=dotted];" << std::endl;
+      s << "  \"" << m.first << "\" -> \"" << sm.first << "\" [style=dotted];" << std::endl;
+      s << "  \"" << sm.first << "\" -> \"" << m.first << "\" [style=dotted];" << std::endl;
     }
   }
   s << "}" << std::endl;
@@ -242,15 +253,15 @@ std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
   {
     for(auto wm : m.second)
     {
-      s << wm.first << " << " << m.first.first << "," << std::endl;
+      s << wm.first << " << " << m.first << "," << std::endl;
     }
   }
   for(auto m : same_modules_)
   {
     for(auto sm : m.second)
     {
-      s << m.first.first << " << " << sm.first << "," << std::endl;
-      s << sm.first << " << " << m.first.first << "," << std::endl;
+      s << m.first << " << " << sm.first << "," << std::endl;
+      s << sm.first << " << " << m.first << "," << std::endl;
     }
   }
   s << std::endl;
@@ -259,7 +270,7 @@ std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
     s << "********** module conditions **********" << std::endl;
     for(auto m : module_conditions_)
     {
-      s << m.first.first << " : ";
+      s << m.first << " : ";
       for(auto c : m.second)
       {
         s << symbolic_expression::TreeInfixPrinter().get_infix_string(c) << ", ";
@@ -273,7 +284,7 @@ std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
     s << "********** related modules **********" << std::endl;
     for(auto m : related_modules_)
     {
-      s << m.first.first << "    : ";
+      s << m.first << "    : ";
       for(auto c : m.second)
       {
         s << c.first << ", ";
@@ -286,7 +297,7 @@ std::ostream& IncrementalModuleSet::dump(std::ostream& s) const
   {
     for(auto u : unifiers_)
     {
-      s << u.first.first << " : " << std::endl;
+      s << u.first << " : " << std::endl;
       u.second.dump(s);
       s << std::endl;
     }
@@ -336,8 +347,8 @@ ModuleSet IncrementalModuleSet::get_circular_ms(ModuleSet root, module_t &origin
   }
   root.add_module(module);
   ModuleSet ms;
-  if(weaker_modules_.count(module)){
-    for(auto weak : weaker_modules_[module]){
+  if(weaker_modules_.count(module.first)){
+    for(auto weak : weaker_modules_[module.first]){
       ms = get_circular_ms(root,origin,weak);
       if(!ms.empty()){
         ret.insert(ms);
@@ -348,13 +359,11 @@ ModuleSet IncrementalModuleSet::get_circular_ms(ModuleSet root, module_t &origin
   return ret;
 }
 
+
 void IncrementalModuleSet::init()
 {
-  full_module_set_set_.clear();
-  full_module_set_set_.insert(maximal_module_set_);
-
   for(auto m : maximal_module_set_){
-    if(!stronger_modules_.count(m)){ 
+    if(!stronger_modules_.count(m.first)){ 
       required_ms_.add_module(m);
     }
   }
@@ -363,20 +372,27 @@ void IncrementalModuleSet::init()
   for(auto m : maximal_module_set_){
     ModuleSet ms;
     ms.add_module(m);
-    for(auto weak : weaker_modules_[m]){
+    for(auto weak : weaker_modules_[m.first]){
       ModuleSet circular = get_circular_ms(ms, m, weak);
       if(!circular.empty()){
-        same_modules_[m].insert(circular);
+        same_modules_[m.first].insert(circular);
       }
     }
   }
   for(auto m : maximal_module_set_){
-    if(same_modules_.count(m)){
-      stronger_modules_[m].erase(same_modules_[m]);
-      weaker_modules_[m].erase(same_modules_[m]);
-      same_modules_[m].erase(m);
+    if(same_modules_.count(m.first)){
+      stronger_modules_[m.first].erase(same_modules_[m.first]);
+      weaker_modules_[m.first].erase(same_modules_[m.first]);
+      same_modules_[m.first].erase(m);
     }
   }
+  set_unified_prefix("U");
+
+  maximal_module_set_ = get_unified_module_set(maximal_module_set_);
+  required_ms_ = get_unified_module_set(required_ms_);
+
+  full_module_set_set_.clear();
+  full_module_set_set_.insert(maximal_module_set_);
 
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
   dump(std::cout);
@@ -384,7 +400,7 @@ void IncrementalModuleSet::init()
 
 void IncrementalModuleSet::remove_included_ms_by_current_ms(){
   /// current は現在のモジュール集合
-  ModuleSet current = get_weaker_module_set();
+  ModuleSet current = get_module_set_without_required();
   module_set_set_t::iterator lit = ms_to_visit_.begin();
   while(lit!=ms_to_visit_.end()){
     /**
@@ -456,21 +472,86 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
 }
 
 /// 最も要素数の多いモジュール集合を返す
-  ModuleSet IncrementalModuleSet::get_max_module_set() const{
-    ModuleSet ret = maximal_module_set_;
-    ret.insert(required_ms_);
-    return ret;
-  }
+ModuleSet IncrementalModuleSet::get_max_module_set() const{
+  ModuleSet ret = maximal_module_set_;
+  ret.insert(required_ms_);
+  return ret;
+}
 
 // 探索対象を引数のmssが示す状態にする
-  void IncrementalModuleSet::reset(const module_set_set_t &mss){
-    ms_to_visit_ = mss;
-  }
+void IncrementalModuleSet::reset(const module_set_set_t &mss){
+  ms_to_visit_ = mss;
+}
 
 // 探索対象を初期状態に戻す
-  void IncrementalModuleSet::reset(){
-    ms_to_visit_ = get_full_ms_list();
+void IncrementalModuleSet::reset(){
+  ms_to_visit_ = get_full_ms_list();
+}
+
+void IncrementalModuleSet::set_unified_prefix(std::string str)
+{
+  int num = 0;
+  for(auto related : related_modules_)
+  {
+    for(auto rm : related.second)
+    {
+      unifiers_[rm.first].set_prefix(str+std::to_string(num));
+    }
+    num++;
   }
+}
+
+void IncrementalModuleSet::reset_unified_prefix()
+{
+  for(auto unifier : unifiers_)
+  {
+    unifier.second.reset_prefix();
+  }
+}
+
+ModuleSet IncrementalModuleSet::get_unified_module_set(const ModuleSet ms)
+{
+  ModuleSet tmp = ms;
+  ModuleSet ret;
+  
+  for(auto relation : related_modules_)
+  {
+    std::vector<module_t> included_modules;
+    for(auto rm : relation.second)
+    {
+      for(auto m : tmp)
+      {
+        if(m.first == rm.first)
+        {
+          included_modules.push_back(rm);
+          break;
+        }
+      }
+    }
+    if(!included_modules.empty())
+    {
+      module_t new_module;
+      for(auto im : included_modules)
+      {
+        if(new_module.first == "" && !(new_module.second))
+        {
+          new_module.second = (im.second)->clone();
+          unifiers_[im.first].apply_change(new_module.second);
+          new_module.first = symbolic_expression::TreeInfixPrinter().get_infix_string(new_module.second);
+        }
+        for(auto condition : module_conditions_[im.first])
+        {
+          node_sptr cond = condition->clone();
+          unifiers_[im.first].apply_change(cond);
+          unified_conditions_[new_module.first].push_back(cond);
+        }
+      }
+      ret.add_module(new_module);
+    }
+  }
+
+  return ret;
+}
 
 } // namespace hierarchy
 } // namespace hydla

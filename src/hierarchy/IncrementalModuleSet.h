@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 #include "ModuleSetContainer.h"
 #include "ListBoundVariableUnifier.h"
 
@@ -19,9 +20,9 @@ public:
   typedef hydla::symbolic_expression::node_sptr node_sptr;
   typedef std::vector<node_sptr> condition_list_t;
 
-  typedef std::map<module_t, ModuleSet> node_relations_data_t;
-  typedef std::map<module_t, ListBoundVariableUnifier> unifier_map_t;
-  typedef std::map<module_t, condition_list_t> module_conditions_t;
+  typedef std::map<std::string, ModuleSet> node_relations_data_t;
+  typedef std::map<std::string, ListBoundVariableUnifier> unifier_map_t;
+  typedef std::map<std::string, condition_list_t> module_conditions_t;
   
   IncrementalModuleSet();
   IncrementalModuleSet(ModuleSet ms);
@@ -87,10 +88,10 @@ public:
 
   bool has_next(){ return !ms_to_visit_.empty(); }
 
-  ModuleSet get_weaker_module_set(){ return *ms_to_visit_.rbegin(); }
+  ModuleSet get_module_set_without_required(){ return *ms_to_visit_.rbegin(); }
 
   ModuleSet get_module_set(){
-    ModuleSet ret = get_weaker_module_set();
+    ModuleSet ret = get_module_set_without_required();
     ret.insert(required_ms_);
     return ret;
   }
@@ -129,6 +130,12 @@ public:
 
   virtual module_set_set_t get_full_ms_list() const;
 
+  virtual ModuleSet get_unified_module_set(const ModuleSet);
+
+  virtual void set_unified_prefix(std::string);
+
+  virtual void reset_unified_prefix();
+
 private:
   /**
    * add << data
@@ -165,6 +172,9 @@ private:
    
   /// required module set
   ModuleSet required_ms_;
+
+  /// conditions which are unified
+  module_conditions_t unified_conditions_;
 };
 
 
