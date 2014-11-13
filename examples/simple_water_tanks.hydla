@@ -1,16 +1,27 @@
 // http://www-inst.cs.berkeley.edu/~ee291e/sp09/handouts/book.pdf
 // p57
-Xs := {x1..x30}.
 
-WATER <=> [](w = 30).
+// definition of the set of variables.
+Xs := {x1..x3}.
 
+// Input flow of the water
+INPUT <=> [](input = 30).
+
+// out flow of the water
+OUT <=> [](output = 29/|Xs|).
+
+// The water levels change linearly
 LINEAR(x) <=> [](x'' = 0).
-POUR(x1,r1,v1) <=> [](x1- = r1- => x1' = 30 - v1).
-NOT_POUR(x1,r1,x2,v2) <=> [](x1- = r1- & x2'- = 30 - v2- => x2' = -v2).
+ 
+POUR(x1,r1) <=> [](x1- = r1- => x1' = 30 - output).
+
+NOT_POUR(x1,r1,x2) <=> [](x1- = r1- & x2'- = 30 - output => x2' = -output).
+
+// Initial condition of each water tanks
 INIT(x,xinit,vinit) <=> x = xinit /\ x' = -vinit.
 
-WATER.
-INIT(Xs[1],1,(5+1)).
-{ INIT(Xs[i],i^3,(5+i)) | i in {2..|Xs|} }.
-{ LINEAR(Xs[i]) << POUR(Xs[i],1/2*i,(5+i)) | i in {1..|Xs|} }.
-{ LINEAR(Xs[j]) << NOT_POUR(Xs[i],1/2*i,Xs[j],(5+j)) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.
+INPUT, OUT,
+INIT(Xs[1], 1, -input+output).
+{ INIT(Xs[i], 2 + i/2, output) | i in {2..|Xs|} }.
+{ LINEAR(Xs[i]) << POUR(Xs[i], 1) | i in {1..|Xs|} }.
+{ LINEAR(Xs[j]) << NOT_POUR(Xs[i], 1, Xs[j]) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.
