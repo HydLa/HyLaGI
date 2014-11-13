@@ -14,8 +14,8 @@ using namespace simulator;
 using namespace backend;
 using namespace std;
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, set<string> vars, std::ostream& ost):
-  ostream(ost), output_variables(vars), backend(b){
+SymbolicTrajPrinter::SymbolicTrajPrinter(set<string> vars, std::ostream& ost):
+  ostream(ost), output_variables(vars){
 }
 
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
@@ -34,13 +34,13 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     sstr << "t\t: " << result.current_time << "\n";
   }
 
-  if(epsilon_mode_flag){
+  if(epsilon_mode_flag && backend.get()){
     output_limit_of_time(sstr,backend.get(),result);
   }
 
   output_variable_map(sstr, result.variable_map);
 
-  if(epsilon_mode_flag){
+  if(epsilon_mode_flag && backend.get()){
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
   }
   return sstr.str();

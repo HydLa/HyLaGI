@@ -10,7 +10,7 @@ namespace simulator {
 
 using namespace std;
 
-SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts), printer(backend)
+SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts), printer()
 {
 }
 
@@ -78,7 +78,6 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
     if(opts_->dump_in_progress){
       printer.output_one_phase(todo);
     }
-
     dfs(todo);
   }
   phase_simulator_->revert_diff(*current);

@@ -84,6 +84,18 @@ struct FullInformation
   ask_set_t                    negative_asks;
 };
 
+
+struct FindMinTimeCandidate
+{
+  value_t         time;
+  bool            on_time;
+  parameter_map_t parameter_map;
+};
+
+typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
+
+
+
 struct DCCandidate{
   value_t                       time;
   std::map<ask_t, bool>         discrete_asks;
@@ -101,7 +113,7 @@ struct DCCandidate{
 
 typedef std::list<DCCandidate>            pp_time_result_t;
 /// map from variables to candidates of next PP whose time is minimum
-typedef std::map<std::string, pp_time_result_t > next_pp_candidate_map_t;
+typedef std::map<ask_t, find_min_time_result_t> next_pp_candidate_map_t;
 
 typedef std::map<std::string, unsigned int>       profile_t;
 
@@ -162,7 +174,6 @@ std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a);
-std::ostream& operator<<(std::ostream& s, const next_pp_candidate_map_t& n);
 std::ostream& operator<<(std::ostream& s, const pp_time_result_t& n);
 
 } // namespace simulator

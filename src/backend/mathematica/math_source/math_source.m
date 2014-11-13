@@ -5,6 +5,11 @@ checkConsistencyPoint[] := (
   checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
 );
 
+checkConsistencyPoint[tmpCons_] := (
+  checkConsistencyPoint[tmpCons && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
+);
+
+
 publicMethod[
   checkConsistencyPoint,
   cons, pcons, vars, pars,
@@ -32,6 +37,11 @@ publicMethod[
 checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
+
+checkConsistencyInterval[tnpCons_] :=  (
+  checkConsistencyInterval[tnpCons && constraint, initConstraint, prevConstraint, pConstraint, parameters]
+);
+
 
 ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[

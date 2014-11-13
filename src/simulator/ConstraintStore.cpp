@@ -11,6 +11,11 @@ ConstraintStore::ConstraintStore():is_consistent(true)
 {
 }
 
+ConstraintStore::ConstraintStore(constraint_t cons):is_consistent(true)
+{
+  insert(cons);
+}
+
 void ConstraintStore::add_constraint(const constraint_t &constraint)
 {
   insert(constraint);

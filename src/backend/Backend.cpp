@@ -99,7 +99,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       else
       {
         constraint_store_t *cs = (constraint_store_t *)arg;
-        link_->put_converted_function("List", cs->size());
+        link_->put_converted_function("And", cs->size());
         for(auto constraint : *cs)
         {
           send_node(constraint, form);
