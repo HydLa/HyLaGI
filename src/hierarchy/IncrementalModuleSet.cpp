@@ -401,7 +401,6 @@ void IncrementalModuleSet::init()
   full_module_set_set_.insert(maximal_module_set_);
 
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
-  dump(std::cout);
 }
 
 void IncrementalModuleSet::list_element_to_variable(ModuleSet ms)
