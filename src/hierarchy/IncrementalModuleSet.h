@@ -93,6 +93,7 @@ public:
   ModuleSet get_module_set(){
     ModuleSet ret = get_module_set_without_required();
     ret.insert(required_ms_);
+    // TODO : convert ListElement to Variable
     return ret;
   }
 
@@ -135,6 +136,8 @@ public:
   virtual void set_unified_prefix(std::string);
 
   virtual void reset_unified_prefix();
+
+  virtual void list_element_to_variable(ModuleSet);
 
 private:
   /**

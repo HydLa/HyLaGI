@@ -41,35 +41,45 @@ public:
   inline MLINK get_link() {return link_;}
 
   inline void put_function(const char* s, int n) {
+    std::cout << "put_function : " << s << ", " << n << std::endl;
     MLPutFunction(s, n);
   }
 
   inline void put_symbol(const char* s) {
+    std::cout << "put_symbol : " << s << std::endl;
     MLPutSymbol(s);
   }
 
   inline void put_number(const char* value)
   {
+    std::cout << "put_number : " << value << std::endl;
     MLPutFunction("ToExpression", 1);
     MLPutString(value);
   }
   
   void put_symbol(const std::string& s) {
+    std::cout << "put_symbol : " << s << std::endl;
     MLPutSymbol(s.c_str());
   }
 
   void put_string(const char* s) {
+    std::cout << "put_string : " << s << std::endl;
     MLPutString(s);
   }
 
   void put_integer(int i) {
+    std::cout << "put_integer : " << i << std::endl;
     MLPutInteger(i);
   } 
 
   void put_float(double num)
   {
+    std::cout << "put_float : " << num << std::endl;
     MLPutDouble(num);
   }
+
+  void put_pre_list_caller(const std::string &name, int diff_count, const variable_form_t &variable_arg);
+  void put_post_list_caller(int diff_count, const variable_form_t &variable_arg);
 
   void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg);
 

@@ -46,6 +46,8 @@ class Link
   void put_function(const std::string &name, int arg_cnt){put_function(name.c_str(), arg_cnt);}
   virtual void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg) = 0;
   virtual void put_parameter(const std::string& name, int diff_count, int id) = 0;
+  virtual void put_pre_list_caller(const std::string &str, int diff_count, const variable_form_t &variable_arg) = 0;
+  virtual void put_post_list_caller(int diff_count, const variable_form_t &variable_arg) = 0;
 
   virtual int get_integer() = 0;
   virtual void get_function(std::string& name, int& arg_cnt) = 0;

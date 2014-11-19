@@ -325,12 +325,17 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   vector<module_set_t> related_modules_list;
   relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
   profile["PreparationInCC"] += timer.get_elapsed_us();
+  // ConstraintStore constraint_store;
+  // module_set_t module_set;
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
+    // constraint_store.add_constraint_store(related_constraints_list[i]);
+    // module_set.insert(related_modules_list[i]);
+    // TODO : divide constraints correctly using List
     HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
     check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
   }
-
+  //check_consistency(constraint_store, relation_graph, module_set, result, phase, profile);
   
   if(result.inconsistent_store.empty())
   {
@@ -364,7 +369,9 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
   profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";
+  std::cout << constraint_store << std::endl;
   backend->call("addConstraint", 1, fmt, "", &constraint_store);
+  std::cout << "end add constraint" << std::endl;
   return call_backend_check_consistency(phase);
 }
 

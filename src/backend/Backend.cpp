@@ -655,7 +655,27 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
     }
   }
 
-  send_variable(TreeInfixPrinter().get_infix_string(node), differential_count_, va);
+  boost::shared_ptr<symbolic_expression::ExpressionListCaller> caller = boost::dynamic_pointer_cast<symbolic_expression::ExpressionListCaller>(node->get_lhs()->clone());
+  if(caller)
+  {
+    send_list_caller(caller->get_name(), differential_count_, va, node->get_rhs());
+  }
+  boost::shared_ptr<symbolic_expression::ExpressionList> el = boost::dynamic_pointer_cast<symbolic_expression::ExpressionList>(node->get_lhs()->clone());
+  if(el)
+  {
+    link_->put_function("Part",2);
+    accept(node->get_lhs());
+    accept(node->get_rhs());
+  }
+}
+
+void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionList> node)
+{
+  link_->put_function("List",node->get_arguments_size());
+  for(int i = 0; i < node->get_arguments_size(); i++)
+  {
+    accept(node->get_argument(i));
+  }
 }
 
 // 変数
@@ -718,14 +738,23 @@ int Backend::send_variable(const variable_t &var, const variable_form_t &variabl
   return send_variable(var.get_name(), var.get_differential_count(), variable_arg);
 }
 
+int Backend::send_list_caller(const std::string& name, int diff_count, const variable_form_t &variable_arg, symbolic_expression::node_sptr node)
+{
+  variable_form_t tmp_form = variable_form_t(variable_arg);
+  std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
+  link_->put_pre_list_caller(prefix + name, diff_count, variable_arg);
+  differential_count_ = 0;
+  accept(node);
+  differential_count_ = diff_count;
+  link_->put_post_list_caller(diff_count, tmp_form);
+  return 0;
+}
 
 int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
 {
   std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
-  if(name.substr(0,1) == "$")
-    link_->put_variable(name, diff_count, variable_arg);
-  else
-    link_->put_variable(prefix + name, diff_count, variable_arg);
+  if(name.substr(0,1) == "U") prefix = "l";
+  link_->put_variable(prefix + name, diff_count, variable_arg);
   return 0;
 }
 

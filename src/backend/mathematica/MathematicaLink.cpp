@@ -474,6 +474,49 @@ int MathematicaLink::get_arg_count()
   return c;
 }
 
+void MathematicaLink::put_post_list_caller(int diff_count, const variable_form_t &variable_arg)
+{
+  if(variable_arg == VF_PREV) put_integer(diff_count);
+  else
+  {
+    if(variable_arg == VF_TIME) put_symbol("t");
+    else if(variable_arg != VF_NONE) put_integer(0);
+  }
+}
+
+void MathematicaLink::put_pre_list_caller(const std::string &name, int diff_count, const variable_form_t &variable_arg)
+{
+  if(variable_arg == VF_PREV){
+    put_function(prev_prefix.c_str(), 2);
+    put_function(name.c_str(),1);
+    // put_integer(diff_count);
+  }else{
+    std::string derivative_str;
+    derivative_str = convert_function("derivative", true);
+    if(variable_arg == VF_NONE)
+    {
+      put_function(derivative_str.c_str(), 2);
+      put_integer(diff_count);
+      put_function(name.c_str(),1);
+    }
+    else
+    {
+      put_function(derivative_str.c_str(), 3);
+      put_integer(diff_count);
+      put_function(name.c_str(),1);
+      /*
+      if(variable_arg == VF_TIME)
+      {
+        put_symbol("t");
+      }
+      else
+      {
+        put_integer(0);
+      }
+      */
+    }
+  }
+}
 
 void MathematicaLink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
 {

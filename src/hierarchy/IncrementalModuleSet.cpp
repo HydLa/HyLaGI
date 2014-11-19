@@ -1,5 +1,6 @@
 #include "IncrementalModuleSet.h"
 #include "TreeInfixPrinter.h"
+#include "ListElementReplacer.h"
 #include "../common/Timer.h"
 #include "../common/Logger.h"
 
@@ -391,11 +392,25 @@ void IncrementalModuleSet::init()
   maximal_module_set_ = get_unified_module_set(maximal_module_set_);
   required_ms_ = get_unified_module_set(required_ms_);
 
+  /*
+  list_element_to_variable(maximal_module_set_);
+  list_element_to_variable(required_ms_);
+*/
+
   full_module_set_set_.clear();
   full_module_set_set_.insert(maximal_module_set_);
 
   HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
   dump(std::cout);
+}
+
+void IncrementalModuleSet::list_element_to_variable(ModuleSet ms)
+{
+  ListElementReplacer replacer;
+  for(auto m : ms)
+  {
+    replacer.replace(m.second);
+  }
 }
 
 void IncrementalModuleSet::remove_included_ms_by_current_ms(){

@@ -110,6 +110,15 @@ void REDUCELink::put_parameter(const std::string& name, int diff_count, int id)
   post_put();
 }
 
+void REDUCELink::put_pre_list_caller(const std::string &name, int diff_count, const variable_form_t &variable_arg)
+{
+  // TODO : implement
+}
+
+void REDUCELink::put_post_list_caller(int diff_count, const variable_form_t &variable_arg)
+{
+  // TODO : implement
+}
 
 void REDUCELink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
 {

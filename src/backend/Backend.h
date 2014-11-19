@@ -91,6 +91,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
+  int send_list_caller(const std::string& name, int diff_count, const variable_form_t &variable_arg, symbolic_expression::node_sptr node);
 
   int send_value(const hydla::simulator::value_t& val, const variable_form_t &var);
 
@@ -187,6 +188,8 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   
   // 式リスト要素  
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListElement> node);
+  // 式リスト
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionList> node);
   // 変数
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 
