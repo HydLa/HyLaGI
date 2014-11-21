@@ -5,7 +5,7 @@ no_good=0
 
 judge(){
     command_name=`head -n 1 $1`
-    command_result=`./hylagi $command_name`
+    command_result=`./bin/hylagi $command_name`
     sample=`tail -n +2 $file_name`
 #    echo $command_result
 #    echo $sample

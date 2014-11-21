@@ -162,7 +162,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
         break;
       }
     } // for
-    if(current_value == itvd(0.,0.))
+    if(current_value == itvd(0.,0.) || in(0., current_value))
     {
       continue;
     }
