@@ -654,6 +654,15 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
       va = variable_arg_;
     }
   }
+  std::string name = TreeInfixPrinter().get_infix_string(node);
+  std::string new_name;
+  for(int i = 0; i < name.length(); i++)
+  {
+    if(name[i] != '$')
+    {
+      new_name += name[i];
+    }
+  }
 
   boost::shared_ptr<symbolic_expression::ExpressionListCaller> caller = boost::dynamic_pointer_cast<symbolic_expression::ExpressionListCaller>(node->get_lhs()->clone());
   if(caller)
