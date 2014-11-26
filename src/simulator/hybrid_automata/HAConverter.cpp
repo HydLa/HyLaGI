@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <string>
 #include "Backend.h"
+#include "ValueModifier.h"
 
 using namespace std;
 
@@ -18,21 +19,20 @@ HAConverter::HAConverter(boost::shared_ptr<backend::Backend> backend, Opts &opts
 
 HAConverter::~HAConverter(){}
 
-phase_result_const_sptr_t HAConverter::simulate()
+phase_result_sptr_t HAConverter::simulate()
 {
   std::string error_str;
-  simulation_todo_sptr_t init_todo = make_initial_todo();
-  todo_stack_->push_todo(init_todo);
-  int error_sum = 0;
+  phase_result_sptr_t init_todo = make_initial_todo();
+//  int error_sum = 0;
 	  
   current_condition_t cc_;
   push_current_condition(cc_);
-
+/* TODO: implement
   while(!todo_stack_->empty()) 
   {
     try
     {
-      simulation_todo_sptr_t todo(todo_stack_->pop_todo());
+      phase_result_sptr_t todo(todo_stack_->pop_todo());
       process_one_todo(todo);
     }
     catch(const std::runtime_error &se)
@@ -45,7 +45,8 @@ phase_result_const_sptr_t HAConverter::simulate()
       HYDLA_LOGGER_DEBUG(se.what());
     }
   }
-	  
+*/
+
   if(!error_str.empty()){
     std::cout << error_str;
   }
@@ -57,8 +58,9 @@ phase_result_const_sptr_t HAConverter::simulate()
   return result_root_;
 }
 	
-void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
+void HAConverter::process_one_todo(phase_result_sptr_t& todo)
 {
+/* TODO: implement
   hydla::io::SymbolicTrajPrinter printer(backend, opts_->output_variables, std::cerr);
 
   HYDLA_LOGGER_DEBUG("************************\n");
@@ -82,7 +84,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
       tmp_cc_ = cc_;
       tmp_cc_.push_back(phase);
 	    	
-      if(phase->cause_for_termination == ASSERTION)
+      if(phase->simulation_state == ASSERTION)
       {
         // ASSERTION はそこで変換終了。HAは出力しない（push_resultしない）
         cout << "****** assertion" << endl;
@@ -90,7 +92,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
         continue;
       }
     		
-      if (phase->phase_type == IntervalPhase) 
+      if (phase->phase_type == INTERVAL_PHASE) 
       {
         if (check_already_exec(phase, cc_))
         {
@@ -102,11 +104,11 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
       PhaseSimulator::todo_list_t next_todos = phase_simulator_->make_next_todo(phase, todo);
       for(unsigned int j = 0; j < next_todos.size(); j++)
       {
-        simulation_todo_sptr_t& n_todo = next_todos[j];
+        phase_result_sptr_t& n_todo = next_todos[j];
         HYDLA_LOGGER_DEBUG("--- Next Todo", i+1 , "/", phases.size(), ", ", j+1, "/", next_todos.size(), " ---");
         HYDLA_LOGGER_DEBUG(*n_todo);
         // TIME_LIMITの場合
-        if(n_todo->parent->cause_for_termination == TIME_LIMIT){
+        if(n_todo->parent->simulation_state == TIME_LIMIT){
           current_condition_t tmp_tmp_cc_;
           tmp_tmp_cc_ = tmp_cc_;
           tmp_tmp_cc_.pop_back();
@@ -115,8 +117,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
           push_result(tmp_tmp_cc_);
           continue;
         }
-        n_todo->elapsed_time = phase_timer.get_elapsed_us() + todo->elapsed_time;
-        todo_stack_->push_todo(n_todo);
+        //todo_stack_->push_todo(n_todo); //TODO: implement
         push_current_condition(tmp_cc_);
       }
     }
@@ -128,6 +129,7 @@ void HAConverter::process_one_todo(simulation_todo_sptr_t& todo)
     phase_result_sptr_t phase(new PhaseResult(*todo, simulator::TIME_OUT_REACHED));
     todo->parent->children.push_back(phase);
   }
+*/
 }
 
 bool HAConverter::check_already_exec(phase_result_sptr_t phase, current_condition_t cc)
@@ -155,11 +157,11 @@ bool HAConverter::check_subset(phase_result_sptr_t phase, phase_result_sptr_t pa
   viewPr(phase);
   viewPr(past_phase);
 
-		
   value_t past_time = past_phase->current_time;
   variable_map_t now_vm, past_vm;
-  now_vm = phase_simulator_->apply_time_to_vm(phase->variable_map, value_t("0"));
-  past_vm = phase_simulator_->apply_time_to_vm(past_phase->variable_map, past_time);
+  ValueModifier modifier(*backend);
+  now_vm = modifier.substitute_time(value_t("0"), phase->variable_map);
+  past_vm = modifier.substitute_time(past_time, past_phase->variable_map);
 
   variable_map_t::const_iterator it_phase_v  = now_vm.begin();
   variable_map_t::const_iterator end_phase_v = now_vm.end();
@@ -209,24 +211,24 @@ void HAConverter::search_variable_parameter(parameter_map_t map, std::string nam
     HYDLA_LOGGER_DEBUG(it->first, " : " , it->second);		
   }
 }
+
 	
 bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr_t r2)
 {
   // フェーズ
   if(!(r1->phase_type == r2->phase_type)) return false;
   // モジュール集合
-  HYDLA_LOGGER_DEBUG("compare :: id:", r1->id, " ", r1->module_set->get_name(), " <=> id:", r2->id, " ", r2->module_set->get_name());
-  if(!(r1->module_set->compare(*r2->module_set) == 0)) return false;
+  if(!(r1->unadopted_ms.compare(r2->unadopted_ms) == 0)) return false;
   // positive_ask
-  ask_set_t::iterator it_1 = r1->positive_asks.begin();
-  ask_set_t::iterator it_2 = r2->positive_asks.begin();
-  while(it_1 != r1->positive_asks.end() && it_2 != r2->positive_asks.end()) {
+  ask_set_t::iterator it_1 = r1->get_all_positive_asks().begin();
+  ask_set_t::iterator it_2 = r2->get_all_positive_asks().begin();
+  while(it_1 != r1->get_all_positive_asks().end() && it_2 != r2->get_all_positive_asks().end()) {
     if(!((*it_1)->is_same_struct(**it_2, true))) return false;
     it_1++;
     it_2++;
   }
   // どちらかのイテレータが最後まで達していなかったら等しくない
-  if(it_1 != r1->positive_asks.end() || it_2 != r2->positive_asks.end()) return false;
+  if(it_1 != r1->get_all_positive_asks().end() || it_2 != r2->get_all_positive_asks().end()) return false;
 		
   return true;
 } 
@@ -242,8 +244,8 @@ bool HAConverter::check_include_bound(value_t tmp_variable_phase, value_t tmp_va
 void HAConverter::push_result(current_condition_t cc)
 {
   phase_result_sptrs_t result;
-  for(unsigned int i = 0 ; i < cc.size() ; i++){
-    result.push_back(cc[i]);
+  for(auto c : cc){
+    result.push_back(c);
   }
   HYDLA_LOGGER_DEBUG("・・・・・ ha_result ", ha_results_.size(), " ・・・・・");
   viewPrs(result);
@@ -263,13 +265,13 @@ void HAConverter::output_ha()
   }
 }
 	
-void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
+void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t results)
 {
 
 
   // 初期状態のパラメータの出力  id=1のもののみ出力
-  parameter_map_t::const_iterator it_pm = result[result.size() - 1]->parameter_map.begin();
-  parameter_map_t::const_iterator end_pm = result[result.size() - 1]->parameter_map.end();
+  auto it_pm = results.back()->parameter_map.begin();
+  auto end_pm = results.back()->parameter_map.end();
   string parameter_str = "";
   for(; it_pm!=end_pm; ++it_pm) {
     if(it_pm->first.get_phase_id() == 1){
@@ -282,20 +284,21 @@ void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
 		
   // 状態遷移列の出力
   string stf_str = "";
-  for(unsigned int i = 0 ; i < result.size() ; i++){
+  for(uint i = 0; i < results.size(); i++)
+  {
+    auto result = results[i];
     // phase_idの出力時に，同じノード，エッジは同じphase_idに合わせる
-    if (result[i]->id == subset_id){
+    if (result->id == subset_id){
       stf_str += "*";
     }
     for(unsigned int j = 1 ; j < i ; j++){
-      if(compare_phase_result(result[i],result[j])){
-        result[i]->id = result[j]->id;
+      if(compare_phase_result(result,results[j])){
+        result->id = results[j]->id;
       }
     }
-    if(i == result.size() - 1){
-      stf_str += "Phase " + utility::to_string(result[i]->id);
-    }else{
-      stf_str += "Phase " + utility::to_string(result[i]->id) + " -> ";
+    stf_str += "Phase " + utility::to_string(result->id);
+    if(result != results.back()){
+      stf_str += " -> ";
     }
   }
   cout << "State Transition Flow" << "\n";
@@ -309,14 +312,14 @@ void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t result)
   cout << "labelloc=t;" << endl;
   cout << "label=\"" << stf_str << "\";" << endl;
   cout << "\"start\" [shape=point];" << endl;
-  cout << "\"start\"->\"" << "Phase " << result[1]->id << "\\n" << result[1]->module_set->get_name() << "\\n(" << get_asks_str(result[1]->positive_asks) 
-       << ")\" [label=\"" << "Phase " << result[0]->id << "\\n" << parameter_str << result[0]->module_set->get_name() << "\\n(" << get_asks_str(result[0]->positive_asks)
+  cout << "\"start\"->\"" << "Phase " << results[1]->id << "\\n" << results[1]->unadopted_ms.get_name() << "\\n(" << get_asks_str(results[1]->get_all_positive_asks()) 
+       << ")\" [label=\"" << "Phase " << results[0]->id << "\\n" << parameter_str << results[0]->unadopted_ms.get_name() << "\\n(" << get_asks_str(results[0]->get_all_positive_asks())
        << ")\", labelfloat=false,arrowtail=dot];" << endl;
-  for(unsigned int i = 2 ; i < result.size() ; i++){
-    if(result[i]->phase_type == IntervalPhase){
-      str_ = "\"" + result[i-2]->module_set->get_name() + "\\n(" + get_asks_str(result[i-2]->positive_asks) 
-        + ")\"->\"" + result[i]->module_set->get_name() + "\\n(" + get_asks_str(result[i]->positive_asks) 
-        + ")\" [label=\"" + result[i-1]->module_set->get_name() + "\\n(" + get_asks_str(result[i-1]->positive_asks) 
+  for(unsigned int i = 2 ; i < results.size() ; i++){
+    if(results[i]->phase_type == INTERVAL_PHASE){
+      str_ = "\"" + results[i-2]->unadopted_ms.get_name() + "\\n(" + get_asks_str(results[i-2]->get_all_positive_asks()) 
+        + ")\"->\"" + results[i]->unadopted_ms.get_name() + "\\n(" + get_asks_str(results[i]->get_all_positive_asks()) 
+        + ")\" [label=\"" + results[i-1]->unadopted_ms.get_name() + "\\n(" + get_asks_str(results[i-1]->get_all_positive_asks()) 
         + ")\", labelfloat=false,arrowtail=dot];";
       vector<string>::iterator it_strs = find(strs_.begin(),strs_.end(),str_);
       if(it_strs != strs_.end()) continue;				

@@ -2,8 +2,6 @@
 
 #include <ostream>
 #include <string>
-#include <sstream>
-#include <vector>
 #include <map>
 #include <cassert>
 #include <set>
@@ -25,17 +23,6 @@ public:
   typedef variable_map_t::const_iterator variable_map_const_iterator;
 
     
-  // ノード表
-  typedef std::map<symbolic_expression::node_id_t, symbolic_expression::node_sptr> node_map_t;
-  typedef node_map_t::value_type         node_map_value_t;
-  typedef node_map_t::const_iterator     node_map_const_iterator;
-
-  // ノードID表
-  typedef std::set<symbolic_expression::node_id_t>           node_id_list_t;
-  typedef node_id_list_t::const_iterator node_id_list_const_iterator;
-
-  static const int INITIAL_MAX_NODE_ID = 0;
-
   ParseTree();
   ParseTree(const ParseTree& pt);
 
@@ -58,19 +45,6 @@ public:
   }
     
   void parse(std::istream& s);
-
-
-  /**
-   * ノードIDの表の再構築をおこなう
-   * 今までのノードIDは無効となる
-   */
-  void rebuild_node_id_list();
-
-  /**
-   * IDの割り当てられていないノードに対してIDを割り当てる
-   * ノードが削除された場合は，ノード表から削除する
-   */
-  void update_node_id_list();
 
   /**
    * 変数を登録する
@@ -157,38 +131,6 @@ public:
   }
 
   /**
-   * 新しいノードを追加する
-   */
-  symbolic_expression::node_id_t register_node(const symbolic_expression::node_sptr& n);
-
-  /**
-   * IDに対応付けられているノードの変更
-   */
-  void update_node(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n);
-
-  /**
-   * ノード表から指定されたノードIDの情報を削除する
-   */
-  void remove_node(symbolic_expression::node_id_t id);
-    
-  /**
-   * ノードに対応付けられているIDの変更
-   */
-  //void update_node_id(symbolic_expression::node_id_t id, const symbolic_expression::node_sptr& n);
-
-  /**
-   * 指定されたIDに対応するノードを得る
-   */  
-  symbolic_expression::node_sptr get_node(symbolic_expression::node_id_t id) const
-  {
-    node_map_t::const_iterator it = node_map_.find(id);
-    if(it != node_map_.end()) {
-      return it->second;
-    }
-    return symbolic_expression::node_sptr();
-  }
-  
-  /**
    * トップノードを得る
    */  
   symbolic_expression::node_sptr get_node() const
@@ -205,66 +147,6 @@ public:
   }
 
   
-  /**
-   * 指定されたノードに対応するIDを得る
-   */
-  /*
-  symbolic_expression::node_id_t get_node_id(const symbolic_expression::node_sptr& n) const
-  {
-    node_map_t::map_by<tag_symbolic_expression::node_sptr>::const_iterator it = 
-      node_map_.by<tag_symbolic_expression::node_sptr>().find(n);
-    if(it != node_map_.by<tag_symbolic_expression::node_sptr>().end()) {
-      return it->second;
-    }
-    return symbolic_expression::node_id_t();
-  }
-  */
-
-  /**
-   * ノード表の最初の要素
-   */
-  node_map_const_iterator node_map_begin() const 
-  {
-    return node_map_.begin();
-  }
-
-  /**
-   * ノード表の最後の次の要素
-   */ 
-  node_map_const_iterator node_map_end() const 
-  {
-    return node_map_.end();
-  }
-
-  /**
-   * ノード表のサイズ
-   */
-  size_t node_map_size() const
-  {
-    return node_map_.size();
-  }
-
-  /**
-   * ノード表中にあるノードIDのリストを作成する
-   */
-  void make_node_id_list();
-
-  /**
-   * ノードIDリストの最初の要素
-   */
-  node_id_list_const_iterator node_id_list_begin()
-  {
-    return node_id_list_.begin();
-  }
-
-  /**
-   * ノードIDリストの最後の次の要素
-   */
-  node_id_list_const_iterator node_id_list_end()
-  {
-    return node_id_list_.end();
-  }
-
   /**
    * すべてのデータを破棄し、初期状態に戻す
    */
@@ -283,9 +165,6 @@ private:
   
   variable_map_t       variable_map_;
 
-  node_map_t           node_map_;
-  symbolic_expression::node_id_t            max_node_id_;
-  node_id_list_t       node_id_list_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ParseTree& pt);

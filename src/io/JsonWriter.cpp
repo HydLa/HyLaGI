@@ -1,11 +1,9 @@
 #include "JsonWriter.h"
 #include "Logger.h"
-#include <iostream>
 #include <fstream>
 #include "Utility.h"
 #include "Constants.h"
 
-//aho
 #include "Backend.h"
 
 using namespace std;
@@ -49,7 +47,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   //TODO: positive_asksとかnegative_asksとかも書く
   object phase_object;
   phase_object["id"] = value((long)phase->id);
-  if(phase->phase_type == simulator::PointPhase)
+  if(phase->phase_type == simulator::POINT_PHASE)
   {
     phase_object["type"] = value(string("PP"));
     object time_object;
@@ -57,7 +55,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
       value(phase->current_time.get_string());
     phase_object["time"] = value(time_object);
   }
-  else if(phase->phase_type == simulator::IntervalPhase)
+  else if(phase->phase_type == simulator::INTERVAL_PHASE)
   {
     phase_object["type"] = value(string("IP"));
 
@@ -75,7 +73,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   phase_object["parameter_map"] = for_pm(phase->parameter_map);
   phase_object["children"] = make_children(phase);
   if(phase->children.size() == 0){
-    phase_object["cause_for_termination"] = value(get_string_for_cause(phase->cause_for_termination));
+    phase_object["simulation_state"] = value(get_string_for_cause(phase->simulation_state));
   }
   return value(phase_object);
 }

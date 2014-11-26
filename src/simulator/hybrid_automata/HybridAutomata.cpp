@@ -15,7 +15,7 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-HybridAutomata::HybridAutomata(Opts &opts):BatchSimulator(opts){}
+HybridAutomata::HybridAutomata(Opts &opts):Simulator(opts){}
 
 HybridAutomata::~HybridAutomata(){}
 	
@@ -30,13 +30,13 @@ void HybridAutomata::viewPrs(phase_result_sptrs_t results)
 	
 void HybridAutomata::viewPr(phase_result_sptr_t result)
 {
-  hydla::io::SymbolicTrajPrinter printer(backend);
+  hydla::io::SymbolicTrajPrinter printer;
   printer.output_one_phase(result);
 			
   HYDLA_LOGGER_DEBUG("negative ask:");
-  HYDLA_LOGGER_DEBUG(viewAsks(result->negative_asks));
+  HYDLA_LOGGER_DEBUG(viewAsks(result->get_all_negative_asks()));
   HYDLA_LOGGER_DEBUG("positive ask:");
-  HYDLA_LOGGER_DEBUG(viewAsks(result->positive_asks));	
+  HYDLA_LOGGER_DEBUG(viewAsks(result->get_all_positive_asks()));	
 }
 	
 string HybridAutomata::viewAsks(ask_set_t asks)
@@ -49,6 +49,6 @@ string HybridAutomata::viewAsks(ask_set_t asks)
   }
   return str;
 }
-	
+
 }//namespace hydla
 }//namespace simulator 

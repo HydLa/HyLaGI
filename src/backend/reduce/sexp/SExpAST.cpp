@@ -1,10 +1,5 @@
 #include "SExpAST.h"
 
-#include "../../../common/Logger.h"
-#include "SExpGrammar.h"
-#include <iostream>
-#include <sstream>
-
 using namespace hydla::symbolic_expression; // NegativeとNumber用
 
 namespace hydla {

@@ -11,12 +11,11 @@ namespace hierarchy {
 class ModuleSetContainer {
 public:
 
-  typedef std::set<module_set_sptr> module_set_set_t;
-  typedef std::vector<module_set_sptr> module_set_list_t;
+  typedef std::set<ModuleSet> module_set_set_t;
 
   ModuleSetContainer() 
   {}
-  ModuleSetContainer(module_set_sptr m);
+  ModuleSetContainer(ModuleSet m);
   
   virtual ~ModuleSetContainer()
   {}
@@ -29,91 +28,53 @@ public:
   /**
    * 要素数最大であるモジュール集合を得る
    */
-  virtual module_set_sptr get_max_module_set() const;
+  virtual ModuleSet get_max_module_set() const;
 
   /**
    * 現在の注目ノードを得る
    */
-  virtual module_set_sptr get_reverse_module_set() const;
-
-  /**
-   * 現在の注目ノードを得る
-   */
-  virtual module_set_sptr get_module_set() const;
+  virtual ModuleSet get_module_set() const;
   
   /**
-   * 探索すべきモジュール集合の集合を得る
+   * 次に探索すべきモジュール集合が存在しなければfalseを返す．
    */
-  module_set_list_t get_ms_to_visit() const;
-
-  /**
-   * 現在のモジュール集合を解候補モジュール集合の集合から取り除く
-   */
-  virtual bool eliminate_current_node();
-
-  /**
-   * 次に探索すべきモジュール集合に進む
-   * 存在しなければfalseを返す.
-   * 探索は小さいモジュール集合から開始する.
-   */
-  virtual bool reverse_go_next();
+  bool has_next(){ return !ms_to_visit_.empty(); }
+  
+  virtual module_set_set_t get_full_ms_list() const;
   
   /**
-   * 次に探索すべきモジュール集合に進む
-   * 存在しなければfalseを返す．
+   * 採用されていないモジュールの集合を返す
    */
-  virtual bool go_next();
-  
-  virtual module_set_list_t get_full_ms_list() const;
-  
-  /**
-   * そのノードを探索済みとし，以降探索しないようにする
-   */
-  virtual void mark_r_current_node();
+  virtual ModuleSet unadopted_module_set();
 
-  /**
-   * そのノードを探索済みとし，以降探索しないようにする
-   */
-  virtual void mark_current_node();
+  virtual ModuleSet get_module_set(){ return *ms_to_visit_.rbegin(); }
 
   /**
    * そのノードと子ノードを以降探索しないようにする
    */
-  virtual void mark_nodes() = 0;
+  virtual void remove_included_ms_by_current_ms();
   
   /**
    * mark nodes which include given module_set
    */
-  virtual void mark_nodes(const ModuleSet& ms);
-
-  virtual void mark_nodes(const module_set_list_t& mms, const ModuleSet& ms);
+  virtual void generate_new_ms(const module_set_set_t& mms, const ModuleSet& ms);
   
-  /**
-   * 探索すべきモジュール集合の集合を初期化し，注目する集合を最後にする.
-   */
-  virtual void reverse_reset();
-
   /**
    * 探索すべきモジュール集合の集合を初期化し，注目する集合を最初に戻す．
    */
   virtual void reset();
   
-  
   /**
    * 与えられたモジュール集合の集合は探索する必要が無いものとし，
    * その上で最初に探索すべきモジュール集合に注目する．
    */
-  virtual void reset(const module_set_list_t &mss);
+  virtual void reset(const module_set_set_t &mss);
   
-  /**
-   * 現在のモジュール集合を
-   * 包含するモジュール集合を探索済みとする
-   */
-  virtual void mark_super_module_set();
-
   protected:
-  module_set_list_t module_set_list_;
-  module_set_list_t ms_to_visit_, r_ms_to_visit_;
+  module_set_set_t full_module_set_set_;
+  module_set_set_t ms_to_visit_;
+  /// a module set which has all modules
+  ModuleSet maximal_module_set_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ModuleSetContainer& m);

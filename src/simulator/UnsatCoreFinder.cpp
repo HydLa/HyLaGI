@@ -4,8 +4,6 @@
 
 #include "UnsatCoreFinder.h"
 #include "ModuleSet.h"
-#include "TellCollector.h"
-#include "AskCollector.h"
 #include "ContinuityMapMaker.h"
 
 #include "../backend/Backend.h"
@@ -40,7 +38,7 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
     cout << it->first.second << " : " << get_infix_string((it->first.first)) << endl;
-    cout << it->second->get_name() << endl;
+    cout << it->second.get_name() << endl;
   }
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
@@ -50,30 +48,31 @@ void UnsatCoreFinder::print_unsat_cores(unsat_constraints_t S,unsat_continuities
       cout << "'";
     }
     cout << endl;
-    cout << it->second->get_name() << endl;
+    cout << it->second.get_name() << endl;
   }
   cout << "---------------------" << endl;
 
 }
 
+/* TODO: implement
 void UnsatCoreFinder::find_unsat_core(const module_set_sptr& ms,
     unsat_constraints_t& S,
     unsat_continuities_t& S4C,
-    simulation_todo_sptr_t& todo,
+    simulation_job_sptr_t& todo,
     const variable_map_t& vm
 )
 {
   find_unsat_core(ms, S, S4C, todo->positive_asks, todo->negative_asks, vm, todo->parameter_map, todo->phase_type);
 }
+*/
 
-
-
+/* TODO: implement
 void UnsatCoreFinder::find_unsat_core(
   const module_set_sptr& ms,
   unsat_constraints_t& S,
   unsat_continuities_t& S4C,
-  const positive_asks_t &positive_asks,
-  const negative_asks_t &negative_asks,
+  const ask_set_t &positive_asks,
+  const ask_set_t &negative_asks,
   const variable_map_t& vm,
   const parameter_map_t &pm,
   PhaseType phase_type
@@ -86,17 +85,15 @@ void UnsatCoreFinder::find_unsat_core(
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
-  negative_asks_t tmp_negative;
+  ask_set_t tmp_negative;
 
   reset(phase_type, vm, pm);
 
   add_constraints(S, S4C, phase_type);
 
-  module_list_t::const_iterator ms_it = ms->begin();
-  module_list_t::const_iterator ms_end = ms->end();
-  for(;ms_it!=ms_end;ms_it++){
+  for(auto module : *ms){
     module_set_sptr temp_ms(new hydla::hierarchy::ModuleSet());
-    temp_ms->add_module(*ms_it);
+    temp_ms->add_module(module);
     TellCollector tell_collector(temp_ms);
 
     symbolic_expression::node_sptr condition_node;
@@ -115,7 +112,7 @@ void UnsatCoreFinder::find_unsat_core(
 
     for(auto constraint : constraint_list)
     {
-      const char* fmt = (phase_type == PointPhase)?"en":"et";
+      const char* fmt = (phase_type == POINT_PHASE)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(constraint));
       if(check_inconsistency(phase_type)){
         S.insert(make_pair(make_pair(constraint,"constraint"),temp_ms));
@@ -129,10 +126,10 @@ void UnsatCoreFinder::find_unsat_core(
       }
     }
 
-    positive_asks_t::iterator it = positive_asks.begin();
+    ask_set_t::iterator it = positive_asks.begin();
     for(int j = 0; j < (int)positive_asks.size(); j++, it++)
     {
-      const char* fmt = (phase_type == PointPhase)?"en":"et";
+      const char* fmt = (phase_type == POINT_PHASE)?"en":"et";
       backend_->call("addConstraint", 1, fmt, "", &(*it)->get_guard());
       if(check_inconsistency(phase_type)){
         S.insert(make_pair(make_pair(symbolic_expression::node_sptr((*it)->get_guard()),"guard"),temp_ms));
@@ -154,7 +151,7 @@ void UnsatCoreFinder::find_unsat_core(
     {
 
       std::string fmt = "v";
-      if(phase_type == PointPhase)
+      if(phase_type == POINT_PHASE)
       {
         fmt += "n";
       }
@@ -196,7 +193,7 @@ void UnsatCoreFinder::find_unsat_core(
         symbolic_expression::node_sptr rhs(new Number("0"));
         symbolic_expression::node_sptr cons(new Equal(lhs, rhs));
         std::string fmt = "v";
-        if(phase_type == PointPhase)
+        if(phase_type == POINT_PHASE)
         {
           fmt += "n";
         }
@@ -221,12 +218,13 @@ void UnsatCoreFinder::find_unsat_core(
   }
   backend_->call("endTemporary", 0, "", "");
 }
+*/
 
 
 bool UnsatCoreFinder::check_inconsistency(PhaseType phase_type){
   CheckConsistencyResult check_consistency_result;
   std::string func_name;
-  if(phase_type == PointPhase)
+  if(phase_type == POINT_PHASE)
   {
     func_name = "checkConsistencyPoint";
   }
@@ -242,7 +240,7 @@ bool UnsatCoreFinder::check_inconsistency(PhaseType phase_type){
   }
 }
 
-
+/* TODO: implement
 bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_t S4C,const module_set_sptr& ms, PhaseType phase_type, const variable_map_t& vm, const parameter_map_t& pm){
   backend_->call("endTemporary", 0, "", "");
   backend_->call("startTemporary", 0, "", "");
@@ -253,6 +251,7 @@ bool UnsatCoreFinder::check_unsat_core(unsat_constraints_t S,unsat_continuities_
   backend_->call("endTemporary", 0, "", "");
   return ret;
 }
+*/
 
 void UnsatCoreFinder::set_backend(backend_sptr_t back){
   backend_ = back;
@@ -262,7 +261,7 @@ void UnsatCoreFinder::set_backend(backend_sptr_t back){
 void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t S4C, PhaseType phase){
   for(unsat_constraints_t::iterator it = S.begin();it !=S.end();it++ )
   {
-    const char* fmt = (phase == PointPhase)?"en":"et";
+    const char* fmt = (phase == POINT_PHASE)?"en":"et";
     if(it->first.second == "guard" || it->first.second == "constraint"){
       backend_->call("addConstraint", 1, fmt, "", &it->first.first);
     }
@@ -270,7 +269,7 @@ void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t
   for(unsat_continuities_t::iterator it = S4C.begin();it !=S4C.end();it++ )
   {
     std::string fmt = "v";
-    if(phase == PointPhase)fmt += "n";
+    if(phase == POINT_PHASE)fmt += "n";
     else fmt += "z";
     fmt += "vp";
     const string &name = it->first.first;
@@ -287,7 +286,7 @@ void UnsatCoreFinder::add_constraints(unsat_constraints_t S,unsat_continuities_t
       }
       symbolic_expression::node_sptr rhs(new Number("0"));
       std::string fmt = "v";
-      if(phase == PointPhase) fmt += "n";
+      if(phase == POINT_PHASE) fmt += "n";
       else fmt += "z";
       fmt += "vp"; 
       variable_t var(name, diff_cnt + 1);

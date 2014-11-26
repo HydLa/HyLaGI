@@ -1,30 +1,25 @@
 #include <iostream>
 #include <exception>
 #include <string>
-#include <vector>
 #include <fstream>
 
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
 
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-
 // core
 #include "version.h"
 #include "ProgramOptions.h"
 
 // common
-#include "Logger.h"
 #include "Timer.h"
 
 // constraint hierarchy
 #include "ModuleSetContainerCreator.h"
-#include "ModuleSetList.h"
-#include "ModuleSetGraph.h"
+#include "IncrementalModuleSet.h"
 
 #include "SequentialSimulator.h"
+#include "Logger.h"
 #include "SignalHandler.h"
 
 // namespace
@@ -41,12 +36,12 @@ using namespace std;
 // prototype declarations
 int main(int argc, char* argv[]);
 void hydla_main(int argc, char* argv[]);
-void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree);
+void simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
-void output_result(hydla::simulator::SequentialSimulator& ss, hydla::simulator::Opts& opts);
+void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 
-extern hydla::simulator::SequentialSimulator* simulator_;
-extern hydla::simulator::Opts opts;
+extern simulator::SequentialSimulator* simulator_;
+extern Opts opts;
 
 /**
  * エントリポイント
@@ -59,21 +54,7 @@ int main(int argc, char* argv[])
 
   int ret = 0;
 
-  try {
-    hydla_main(argc, argv);
-  }
-  catch(std::exception &e) {
-    std::cerr << "error : " << e.what() << std::endl;
-    ret = -1;
-  } 
-#if !(defined(_MSC_VER) && defined(_DEBUG))
-  catch(...) {
-    std::cerr << "fatal error!!" << std::endl;
-    ret = -1;
-  }
-#else
-    system("pause");
-#endif
+  hydla_main(argc, argv);
 
   return ret;
 }
@@ -97,12 +78,12 @@ void hydla_main(int argc, char* argv[])
   
   
   if(po.count("help")) {     // ヘルプ表示して終了
-    po.help_msg(std::cout);
+    po.help_msg(cout);
     return;
   }
 
   if(po.count("version")) {  // バージョン表示して終了
-    std::cout << Version::description() << std::endl;
+    cout << Version::description() << endl;
     return;
   }
   // ParseTreeの構築
@@ -110,19 +91,19 @@ void hydla_main(int argc, char* argv[])
   // そうでなければ標準入力から受け取る
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   if(po.count("input-file")) {
-    std::string filename(po.get<std::string>("input-file"));
-    std::ifstream in(filename.c_str());
+    string filename(po.get<string>("input-file"));
+    ifstream in(filename.c_str());
     if (!in) {
-      throw std::runtime_error(std::string("cannot open \"") + filename + "\"");
+      throw runtime_error(string("cannot open \"") + filename + "\"");
     }
     pt->parse(in);
   } else {
-    pt->parse(std::cin);
+    pt->parse(cin);
   }
 
   if(po.count("parse_only"))
   {
-    std::cout << "successfully parsed" << std::endl;
+    cout << "successfully parsed" << endl;
     return;
   }
   
@@ -131,12 +112,14 @@ void hydla_main(int argc, char* argv[])
     return;
   }
 
+  Timer simulation_timer;
   // シミュレーション開始
   simulate(pt);
 
-  if(po.get<std::string>("tm") != "n"){
+  if(po.get<string>("tm") != "n"){
+    simulation_timer.elapsed("Simulation Time");
     main_timer.elapsed("Finish Time");
-    std::cout << std::endl;
+    cout << endl;
   }
 
 }
@@ -150,37 +133,23 @@ bool dump(boost::shared_ptr<ParseTree> pt)
   ProgramOptions &po = ProgramOptions::instance();
 
   if(po.count("dump_parse_tree")>0) {
-    pt->to_graphviz(std::cout);
+    pt->to_graphviz(cout);
     return true;
   }
-
-  if(po.count("dump_module_set_list")>0) {
-    ModuleSetContainerCreator<ModuleSetList> mcc;
-    boost::shared_ptr<ModuleSetList> msc(mcc.create(pt));
-    msc->dump_node_names(std::cout);
-    return true;
-  }
-
-//   if(po.count("dump_module_set_list_noinit")>0) {
-//     ModuleSetContainerCreator<ModuleSetList> mcc;
-//     boost::shared_ptr<ModuleSetList> msc(mcc.create(pt_no_init_node));
-//     msc->dump_node_names(std::cout);
-//     return true;
-//   }
 
   if(po.count("dump_module_set_graph")>0) {
-    ModuleSetContainerCreator<ModuleSetGraph> mcc;
-    boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt));
-    msc->dump_graphviz(std::cout);
+    ModuleSetContainerCreator<IncrementalModuleSet> mcc;
+    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    msc->dump_module_sets_for_graphviz(cout);
     return true;
   }
 
-//   if(po.count("dump_module_set_graph_noinit")>0) {
-//     ModuleSetContainerCreator<ModuleSetGraph> mcc;
-//     boost::shared_ptr<ModuleSetGraph> msc(mcc.create(pt_no_init_node));
-//     msc->dump_graphviz(std::cout);
-//     return true;
-//   }
+  if(po.count("dump_module_priority_graph")>0) {
+    ModuleSetContainerCreator<IncrementalModuleSet> mcc;
+    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    msc->dump_priority_data_for_graphviz(cout);
+    return true;
+  }
 
   return false;
 }

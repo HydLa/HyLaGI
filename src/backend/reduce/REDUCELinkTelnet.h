@@ -2,12 +2,7 @@
 
 #include "REDUCELink.h"
 
-#include "sexp/SExpAST.h"
 #include <boost/asio.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/system/error_code.hpp>
-#include <sstream>
-#include <stdexcept>
 
 namespace hydla {
 namespace backend {
@@ -22,7 +17,7 @@ public:
   /**
    * localhost:1206 に接続する
    */
-  REDUCELinkTelnet(const simulator::Opts &opts);
+  REDUCELinkTelnet(const Opts &opts);
   ~REDUCELinkTelnet();
 
   /**

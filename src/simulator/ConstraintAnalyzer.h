@@ -35,7 +35,7 @@ public:
    */
   virtual void print_conditions();
 
-  void add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase);
+  //void add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase);
 
   /**
    * msに対応する条件を算出する関数
@@ -47,7 +47,7 @@ public:
    * CONDITIONS_FALSE : 得られた条件がFalseだった場合
    * CONDITIONS_VARIABLE_CONDITIONS : 得られた条件が何らかの条件だった場合
    */
-  virtual ConditionsResult find_conditions(const module_set_sptr& ms, bool b);
+//  virtual ConditionsResult find_conditions(const module_set_sptr& ms, bool b);
 
 
   /**
@@ -58,7 +58,7 @@ public:
   /**
    * cm_listの対応する場所にmsを入れる
    */
-  virtual void add_new_cm(const module_set_sptr& ms);
+//  virtual void add_new_cm(const module_set_sptr& ms);
 
 protected:
 
@@ -72,13 +72,13 @@ protected:
    * 極大無矛盾となる制約モジュール集合を値に持つmapのlist
    * 順番は極大な方から順に持っている
    */
-  hydla::hierarchy::cm_map_list_t cm_list_;
+  //hierarchy::cm_map_list_t cm_list_;
 
   /**
    * 上のリストのルート
    * 多分いらないけど持っておく
    */
-  hydla::hierarchy::cm_map_sptr root_cm_;
+  //hierarchy::cm_map_sptr root_cm_;
 
   backend_sptr_t backend_;
 };

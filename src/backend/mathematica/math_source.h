@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 namespace hydla{
 namespace backend{
 namespace mathematica{

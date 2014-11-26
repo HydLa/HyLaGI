@@ -5,9 +5,6 @@
 
 #include "REDUCELink.h"
 
-#include "sexp/SExpAST.h"
-#include <stdexcept>
-#include <string>
 
 namespace hydla {
 namespace backend {
@@ -28,7 +25,7 @@ public:
   /**
    * REDUCEプロセスの生成
    */
-  REDUCELinkIpc(const simulator::Opts &opts);
+  REDUCELinkIpc(const Opts &opts);
   /**
    * reduceプロセスに終了命令を出す
    */

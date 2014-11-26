@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BatchSimulator.h"
+#include "Simulator.h"
 #include "Node.h"
 #include "NodeAccessor.h"
 #include "DefaultTreeVisitor.h"
@@ -13,19 +13,14 @@
 namespace hydla {
 namespace simulator {
     
-class HybridAutomata: public BatchSimulator{
+class HybridAutomata: public Simulator{
 public:
       
   HybridAutomata(Opts &opts);
   virtual ~HybridAutomata();
 
-  typedef hydla::hierarchy::module_set_sptr module_set_sptr_t;
-  typedef std::vector<module_set_sptr_t> module_set_sptrs_t;
-
-  typedef phase_result_sptrs_t													 current_condition_t;
-  typedef std::deque<current_condition_t> 					 		 current_conditions_t;
   typedef phase_result_sptrs_t              ha_result_t;
-  typedef std::deque<current_condition_t> 	ha_results_t;
+  typedef std::deque<ha_result_t> 	        ha_results_t;
 
 protected:
 

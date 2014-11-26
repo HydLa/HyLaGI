@@ -1,11 +1,8 @@
 #pragma once
 
 #include "sexp/SExpAST.h"
-#include <sstream>
-#include <stdexcept>
 #include "Link.h"
 #include "Simulator.h"
-#include "Logger.h"
 #include <stack>
 
 namespace hydla {
@@ -83,7 +80,7 @@ public:
   void pre_receive();
   void post_receive();
 
-  void init_opts(const simulator::Opts &opts);
+  void init_opts(const Opts &opts);
 
 
   void flush(bool debug = true);

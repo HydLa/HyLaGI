@@ -12,9 +12,106 @@ const std::string MathematicaLink::prev_prefix = "prev";
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const hydla::simulator::Opts &opts) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, int timeout, int precision, int time_delta) : env_(0), link_(0)
 {
-  init(opts);
+
+  if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
+  int err;
+  link_ = MLOpenString(env_, mathlink_name.c_str(), &err);
+  if(link_ == (MLINK)0 || err != MLEOK) throw LinkError("math", "can not link",1);
+  if(!MLActivate(link_)) throw LinkError("math", "can not link",2);
+
+
+  // 出力する画面の横幅の設定
+  MLPutFunction("SetOptions", 2);
+  MLPutSymbol("$Output"); 
+  MLPutFunction("Rule", 2);
+  MLPutSymbol("PageWidth"); 
+  MLPutSymbol("Infinity"); 
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+
+  // 警告無視
+  MLPutFunction("Set", 2);
+  MLPutSymbol("optIgnoreWarnings"); 
+  MLPutSymbol(ignore_warnings ? "True" : "False");
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+  
+  // タイムアウト時間
+  MLPutFunction("Set",2);
+  MLPutSymbol("timeOutS"); 
+  if(timeout > 0){
+    MLPutInteger(timeout);
+  }else{
+    MLPutSymbol("Infinity");
+  }
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+
+
+  // 近似精度
+  MLPutFunction("Set",2);
+  MLPutSymbol("approxPrecision"); 
+  if(precision > 0)
+  {
+    MLPutFunction("Power", 2);
+    MLPutInteger(10);
+    MLPutInteger(-precision);
+  }
+  else
+  {
+    MLPutInteger(0);
+  }
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+
+  // 最小タイムステップ 
+  MLPutFunction("Set",2);
+  MLPutSymbol("timeDelta"); 
+  if(time_delta > 0)
+  {
+    MLPutFunction("Power", 2);
+    MLPutInteger(10);
+    MLPutInteger(-time_delta);
+  }
+  else
+  {
+    MLPutInteger(0);
+  }
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+
+
+  MLPutFunction("ToExpression", 1);
+  MLPutString(math_source());  
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+  
+  
+  typedef function_map_t::value_type f_value_t;
+  //HydLaとMathematicaの関数名の対応関係を作っておく．
+  function_map_.insert(f_value_t("sin", "Sin"));
+  function_map_.insert(f_value_t("sinh", "Sinh"));
+  function_map_.insert(f_value_t("Asin", "ArcSin"));
+  function_map_.insert(f_value_t("Asinh","ArcSinh"));
+  function_map_.insert(f_value_t("cos", "Cos"));
+  function_map_.insert(f_value_t("cosh", "Cosh"));
+  function_map_.insert(f_value_t("Acos", "ArcCos"));
+  function_map_.insert(f_value_t("Acosh", "ArcCosh"));
+  function_map_.insert(f_value_t("tan", "Tan"));
+  function_map_.insert(f_value_t("tanh", "Tanh"));
+  function_map_.insert(f_value_t("Atan", "Arctan"));
+  function_map_.insert(f_value_t("Atanh", "ArcTanh"));
+  function_map_.insert(f_value_t("log", "Log"));
+  function_map_.insert(f_value_t("ln", "Log"));
+  on_next_ = false;
 }
 
 MathematicaLink::~MathematicaLink()
@@ -47,95 +144,6 @@ void MathematicaLink::skip_pkt_until(int pkt_name)
 }
 
 
-void MathematicaLink::init(const hydla::simulator::Opts &opts)
-{
-  if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
-  int err;
-  link_ = MLOpenString(env_, opts.mathlink.c_str(), &err);
-  if(link_ == (MLINK)0 || err != MLEOK) throw LinkError("math", "can not link",1);
-  if(!MLActivate(link_)) throw LinkError("math", "can not link",2);
-
-
-  // 出力する画面の横幅の設定
-  MLPutFunction("SetOptions", 2);
-  MLPutSymbol("$Output"); 
-  MLPutFunction("Rule", 2);
-  MLPutSymbol("PageWidth"); 
-  MLPutSymbol("Infinity"); 
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  // デバッグプリント
-  MLPutFunction("Set", 2);
-  MLPutSymbol("optUseDebugPrint"); 
-  MLPutSymbol(opts.debug_mode ? "True" : "False");
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  // プロファイルモード
-  MLPutFunction("Set", 2);
-  MLPutSymbol("optUseProfile"); 
-  MLPutSymbol(opts.profile_mode ? "True" : "False");
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  // 並列モード
-  MLPutFunction("Set", 2);
-  MLPutSymbol("optParallel"); 
-  MLPutSymbol(opts.parallel_mode ? "True" : "False");
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  // 警告無視
-  MLPutFunction("Set", 2);
-  MLPutSymbol("optIgnoreWarnings"); 
-  MLPutSymbol(opts.ignore_warnings ? "True" : "False");
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-  
-  // タイムアウト時間
-  MLPutFunction("Set",2);
-  MLPutSymbol("timeOutS"); 
-  if(opts.timeout_calc > 0){
-    MLPutInteger(opts.timeout_calc);
-  }else{
-    MLPutSymbol("Infinity");
-  }
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  MLPutFunction("ToExpression", 1);
-  MLPutString(math_source());  
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-  
-  
-  typedef function_map_t::value_type f_value_t;
-  //HydLaとMathematicaの関数名の対応関係を作っておく．
-  function_map_.insert(f_value_t("sin", "Sin"));
-  function_map_.insert(f_value_t("sinh", "Sinh"));
-  function_map_.insert(f_value_t("Asin", "ArcSin"));
-  function_map_.insert(f_value_t("Asinh","ArcSinh"));
-  function_map_.insert(f_value_t("cos", "Cos"));
-  function_map_.insert(f_value_t("cosh", "Cosh"));
-  function_map_.insert(f_value_t("Acos", "ArcCos"));
-  function_map_.insert(f_value_t("Acosh", "ArcCosh"));
-  function_map_.insert(f_value_t("tan", "Tan"));
-  function_map_.insert(f_value_t("tanh", "Tanh"));
-  function_map_.insert(f_value_t("Atan", "Arctan"));
-  function_map_.insert(f_value_t("Atanh", "ArcTanh"));
-  function_map_.insert(f_value_t("log", "Log"));
-  function_map_.insert(f_value_t("ln", "Log"));
-}
-
-
 bool MathematicaLink::receive_to_return_packet(){
   bool at_end = false;
   debug_print_.clear();
@@ -161,12 +169,13 @@ bool MathematicaLink::receive_to_return_packet(){
       str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
-        HYDLA_LOGGER_DEBUG_VAR(input_print_);
       }else{
         debug_print_ += str + "\n";
       }
       break;
     }
+    case CALLPKT:
+      break;
     case SYNTAXPKT:
       break;
     case INPUTNAMEPKT: // 次の入力に割り当てられる名前（通常 In[n]:=）
@@ -393,7 +402,7 @@ void MathematicaLink::pre_receive()
     throw LinkError(backend_name(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print(), 0, "");
   }
   if(ret_code == -1) {
-    throw hydla::timeout::TimeOutError("input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
+    throw timeout::TimeOutError("input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
   }
 }
 
@@ -402,7 +411,6 @@ void MathematicaLink::get_function(std::string &name, int &cnt)
 {
   cnt = get_arg_count();
   name = get_symbol();
-  HYDLA_LOGGER_DEBUG("cnt: ", cnt, ", name: ", name);
 }
 
 std::string MathematicaLink::get_symbol()
@@ -536,7 +544,6 @@ MathematicaLink::DataType MathematicaLink::get_type(){
 MathematicaLink::DataType MathematicaLink::get_next(){
   int tk_type = MLGetNext();
   on_next_ = false;
-  HYDLA_LOGGER_DEBUG("token: ", get_token_name(tk_type));
   switch(tk_type)
   {
   case MLTKFUNC:

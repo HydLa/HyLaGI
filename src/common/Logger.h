@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/preprocessor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
 namespace hydla {
@@ -127,7 +126,7 @@ private:
  * append informations for location by default
  */
 #define HYDLA_LOGGER_DEBUG(...)                                  \
-  HYDLA_LOGGER_DEBUG_INTERNAL("@", __FILE__, " ", __LINE__, " function: ", __FUNCTION__, " @ ",  __VA_ARGS__)
+  HYDLA_LOGGER_DEBUG_INTERNAL("@", __FILE__, " ", __LINE__, " function: ", __FUNCTION__, "   ",  __VA_ARGS__)
 
 
 /**

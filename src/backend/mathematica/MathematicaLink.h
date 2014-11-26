@@ -3,12 +3,7 @@
 #include "mathlink.h"
 #include "LinkError.h"
 #include <string.h>
-#include <stdexcept>
-#include <sstream>
-#include <iostream>
-#include "Logger.h"
 #include "Link.h"
-
 
 #ifdef _MSC_VER
 #pragma comment(lib, "ml32i1m.lib")
@@ -20,22 +15,18 @@
 
 namespace hydla{
 
-namespace simulator{
-  struct Opts;
-}
-
 namespace backend{
 namespace mathematica{
 
 class MathematicaLink : public Link
 {
 public:
-  MathematicaLink(const hydla::simulator::Opts &opts);
+  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, int timeout, int precision, int time_delta);
 
   virtual ~MathematicaLink() ;
 
   /**
-   * 次のリターンパケットの直前までtextpktなどを受信する
+   * receive packets until next return packet received
    */
   bool receive_to_return_packet();
   
@@ -127,9 +118,6 @@ public:
   inline std::string backend_name(){return "Mathematica";}
 
 private:
-
-  void init(const hydla::simulator::Opts& opts);
-
 
   /////////// Mathematica Function /////////////
   int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}

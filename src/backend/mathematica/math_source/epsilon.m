@@ -274,7 +274,7 @@ publicMethod[
              toReturnForm[expr /. t -> t + time]
              ];
 
-(* 式が0以上かどうか *)
+(* expr > 0かどうか *)
 isOverZero[expr_] := isOverZero[expr, pConstraint];
 publicMethod[
              isOverZero,
@@ -289,6 +289,34 @@ publicMethod[
                     ret
                     ]
              ];
+
+
+(* expr < 0 *)
+lessThanZero[expr_] := lessThanZero[expr, pConstraint];
+publicMethod[
+             lessThanZero,
+             expr, pCons,
+             Module[
+                    {less,ret},
+                    less = Refine[expr < 0, Assumptions -> pCons];
+                    ret = less === True;
+                    ret
+                    ]
+             ];
+
+(* expr < 0 *)
+unequalZero[expr_] := unequalZero[expr, pConstraint];
+publicMethod[
+             unequalZero,
+             expr, pCons,
+             Module[
+                    {unequal,ret},
+                    unequal = Refine[expr != 0, Assumptions -> pCons];
+                    ret = unequal === True;
+                    ret
+                    ]
+             ];
+
 
 (* n(dcount)次近似をする *)
 publicMethod[

@@ -14,6 +14,7 @@
 #include <limits>
 #include <cmath>
 #include <cstdlib>
+#pragma GCC diagnostic ignored "-Wall" // added@hyrose
 
 namespace kv {
 

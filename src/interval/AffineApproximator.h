@@ -1,20 +1,6 @@
 #pragma once
 
-#include <sstream>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/optional.hpp>
-#include <boost/bimap.hpp>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-
-#include "Node.h"
-#include "PhaseResult.h"
-#include "TreeVisitor.h"
-#include "AffineOrInteger.h"
 #include "Simulator.h"
-#include "Parameter.h"
 #include "AffineTreeVisitor.h"
 
 namespace hydla {

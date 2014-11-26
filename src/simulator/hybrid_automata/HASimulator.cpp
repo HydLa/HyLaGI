@@ -25,7 +25,7 @@ void HASimulator::set_ha_results(const ha_results_t& ha)
   ha_results = ha;
 }
 	
-phase_result_const_sptr_t HASimulator::simulate()
+phase_result_sptr_t HASimulator::simulate()
 {
   HYDLA_LOGGER_DEBUG("%% simulation start");
   HYDLA_LOGGER_DEBUG("*** using HA");
@@ -67,7 +67,7 @@ phase_result_const_sptr_t HASimulator::simulate()
     HYDLA_LOGGER_DEBUG("*** after substitute pr");
     viewPr(pr);
 			
-    if(pr->phase_type == PointPhase)
+    if(pr->phase_type == POINT_PHASE)
     {
       vm = update_vm(pr, vm);
       pr->current_time = current_time;
@@ -93,33 +93,32 @@ phase_result_const_sptr_t HASimulator::simulate()
     // profile 
     profile["EntirePhase"] = phase_timer.get_elapsed_us();
 
-    simulation_todo_sptr_t st(new SimulationTodo);
-    st->id = pr->id;
+    phase_result_sptr_t st(new PhaseResult);
     st->phase_type = pr->phase_type;
     st->profile = profile;
     profile_vector_->push_back(st);
 
     if(opts_->max_phase >= 0 && opts_->max_phase < cnt_phase) {
       HYDLA_LOGGER_DEBUG("fin : max_phase");					
-      pr->cause_for_termination = STEP_LIMIT;
+      pr->simulation_state = STEP_LIMIT;
       break;
     }
  
-    if(ha[i]->phase_type == IntervalPhase){
+    if(ha[i]->phase_type == INTERVAL_PHASE){
       if(ha[i]->end_time.undefined()){
         // ???だったら最初のノードに戻る(初期のエッジは飛ばす)
         i = 1;
       }else if(ha[i]->end_time.get_string() == "inf"){
         // infだったら終了
         HYDLA_LOGGER_DEBUG("fin : inf");
-        pr->cause_for_termination = TIME_LIMIT;
+        pr->simulation_state = TIME_LIMIT;
         break;
       }else if(max_time < ha[i]->end_time){
 /*
         TODO: バックエンドで時刻同士の判定を行う
         // max_time <= end_timeなら終了
         HYDLA_LOGGER_DEBUG("fin : max_time");
-        pr->cause_for_termination = TIME_LIMIT;
+        pr->simulation_state = TIME_LIMIT;
         break;
 */
       }
@@ -160,10 +159,31 @@ HASimulator::ha_result_t HASimulator::get_ha(ha_results_t ha_results){
   return cc;
 }
 
-void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t vm){
-  // parameter_map の適用
-  phase_simulator_->substitute_parameter_condition(pr, vm);
+void HASimulator::substitute(phase_result_sptr_t pr, parameter_map_t pm)
+{
+  HYDLA_LOGGER_DEBUG("");
+	// 変数に代入
+	variable_map_t ret;
+  variable_map_t &vm = pr->variable_map;
+  for(auto var_entry : vm)
+  {
+    if(var_entry.second.undefined())continue;
+    assert(var_entry.second.unique());
+    value_t tmp_val = var_entry.second.get_unique_value();
+    backend->call("substituteParameterCondition",
+                   2, "vlnmp", "vl", &tmp_val, &pm, &tmp_val);
+    var_entry.second.set_unique_value(tmp_val);
+  }
+
+	// 時刻にも代入
+  backend->call("substituteParameterCondition",
+                 2, "vlnmp", "vl", &pr->current_time, &pm, &pr->current_time);
+	if(pr->phase_type == INTERVAL_PHASE){
+    backend->call("substituteParameterCondition",
+                   2, "vlnmp", "vl", &pr->end_time, &pm, &pr->end_time);
+	}
 }
+
 
 parameter_map_t HASimulator::update_vm(phase_result_sptr_t pr, parameter_map_t vm_pre){
   parameter_map_t vm;

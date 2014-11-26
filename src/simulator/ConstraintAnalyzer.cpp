@@ -3,8 +3,6 @@
 #include <fstream>
 
 #include "ConstraintAnalyzer.h"
-#include "TellCollector.h"
-#include "AskCollector.h"
 #include "ContinuityMapMaker.h"
 #include "Timer.h"
 #include "PrevSearcher.h"
@@ -32,9 +30,9 @@ void ConstraintAnalyzer::set_backend(backend_sptr_t back)
 
 void ConstraintAnalyzer::print_conditions()
 {
+/*
   conditions_map_t::iterator it = conditions_.begin();
   std::ofstream ofs;
-  /*
   if(opts_->analysis_file != ""){
     ofs.open(opts_->analysis_file.c_str());
   }
@@ -48,26 +46,26 @@ void ConstraintAnalyzer::print_conditions()
       ofs << std::endl;
     }else{
     */
-      // 出力先が標準出力の場合
-      std::cout << (*it).first << ":";
-      if((*it).second != NULL){
-	std::cout << get_infix_string((*it).second);
-      }
-      std::cout << std::endl;
-   // }
- // }
-  if(!cm_list_.empty()){
-    for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
-      std::cout << *(*it) << std::endl;
-    }
-  }
+ //      // 出力先が標準出力の場合
+ //      std::cout << (*it).first << ":";
+ //      if((*it).second != NULL){
+ //  std::cout << get_infix_string((*it).second);
+ //      }
+ //      std::cout << std::endl;
+ //   // }
+ // // }
+ //  if(!cm_list_.empty()){
+ //    for(cm_map_list_t::iterator it = cm_list_.begin(); it != cm_list_.end(); it++){
+ //      std::cout << *(*it) << std::endl;
+ //    }
+ //  }
 /*
   if(opts_->analysis_file != ""){
     ofs.close();
   }
   */
 }
-
+/*
 void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
   // msに対する無矛盾の条件
   symbolic_expression::node_sptr cond = conditions_[ms->get_name()];
@@ -123,6 +121,7 @@ void ConstraintAnalyzer::add_new_cm(const module_set_sptr& ms){
     cm_list_.push_back(new_cm);
   }
 }
+*/
 
 void ConstraintAnalyzer::check_all_module_set(bool b)
 {
@@ -154,52 +153,19 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
   */
 }
 
-void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, const PhaseType &phase){
-  for(continuity_map_t::const_iterator it = continuity_map.begin(); it != continuity_map.end();it++){
 
-    std::string fmt = "v";
-    if(phase == PointPhase)
-    {
-      fmt += "n";
-    }
-    else
-    {
-      fmt += "z";
-    }
-    fmt += "vp";
-    if(it->second>=0){
-      for(int i=0; i<it->second;i++){
-        variable_t var(it->first, i);
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-      }
-    }else{
-      for(int i=0; i<=-it->second;i++){
-        variable_t var(it->first, i);
-        backend_->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
-      }
-      if(phase == IntervalPhase)
-      {
-        symbolic_expression::node_sptr rhs(new Number("0"));
-        fmt = phase == PointPhase?"vn":"vt";
-        fmt += "en";
-        variable_t var(it->first, -it->second + 1);
-        backend_->call("addEquation", 2, fmt.c_str(), "", &var, &rhs);
-      }
-    }
-  }
-}
-
-
+/* TODO: implement
   ConstraintAnalyzer::ConditionsResult ConstraintAnalyzer::find_conditions(const module_set_sptr& ms, bool b)
 {
+
   bool non_prev;
   PrevSearcher searcher;
  // if(opts_->analysis_mode == "debug") 
     std::cout << ms->get_name() << std::endl;
   ConstraintAnalyzer::ConditionsResult ret = CONDITIONS_FALSE;
 
-  positive_asks_t positive_asks;
-  negative_asks_t negative_asks;
+  ask_set_t positive_asks;
+  ask_set_t negative_asks;
   always_set_t expanded_always;
   TellCollector tell_collector(ms);
   AskCollector ask_collector(ms);
@@ -208,7 +174,7 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
-  negative_asks_t tmp_negative;
+  ask_set_t tmp_negative;
 
   variable_map_t vm;
   parameter_map_t pm;
@@ -229,14 +195,14 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
   // ask制約のガード条件の成否のパターンを全通り考える(2^(ask制約の個数)通り)
   for(int i = 0; i < (1 << negative_asks.size()) && ret != CONDITIONS_TRUE; i++){
     non_prev = false;
-    positive_asks_t tmp_positive_asks;
+    ask_set_t tmp_positive_asks;
     backend_->call("startTemporary", 0, "", "");
     maker.reset();
     constraint_list.clear();
 
     tmp_positive_asks.clear();
 
-    negative_asks_t::iterator it = negative_asks.begin();
+    ask_set_t::iterator it = negative_asks.begin();
 
     // ガード条件の成否の仮定。i の各ビットが成否に対応
     // つまり i = 11(1011) でask制約が5つあれば否、成、否、成、成の順に仮定する
@@ -270,12 +236,12 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
 
     // 集めた制約をソルバに送る
     // TODO? : IP にも対応する
-    const char* fmt = (/*state->phase == PointPhase*/ true)?"csn":"cst";
+    const char* fmt = (true)?"csn":"cst";
     backend_->call("addConstraint", 1, fmt, "", &constraint_list);
 
     // デフォルト連続性を表わす制約をソルバに送る
     continuity_map = maker.get_continuity_map();
-    add_continuity(continuity_map, PointPhase);
+    add_continuity(continuity_map, POINT_PHASE);
 
     if(non_prev){
       //      std::cout << "exist non prev" << std::endl;
@@ -304,12 +270,12 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
       }
       
       // TODO? : IP にも対応する
-      const char* fmt = (/*state->phase == PointPhase*/ true)?"csn":"cst";
+      const char* fmt = (true)?"csn":"cst";
       backend_->call("addConstraint", 1, fmt, "", &constraint_list);
       
       // デフォルト連続性を表わす制約をソルバに送る
       continuity_map = maker.get_continuity_map();
-      add_continuity(continuity_map, PointPhase);
+      add_continuity(continuity_map, POINT_PHASE);
     }
     {
       symbolic_expression::node_sptr tmp_node;
@@ -354,8 +320,8 @@ void ConstraintAnalyzer::add_continuity(const continuity_map_t& continuity_map, 
     break;
   }
   return ret;
-
-
 }
+*/
+
 }
 }

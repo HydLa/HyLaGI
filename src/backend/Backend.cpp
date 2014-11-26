@@ -1,6 +1,5 @@
 #include "Backend.h"
 #include <stdarg.h>
-#include "LinkError.h"
 #include "InterfaceError.h"
 #include <sstream>
 #include <boost/lexical_cast.hpp>
@@ -68,17 +67,6 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
-  case 'd':
-    if(args_fmt[++i] != 'c')
-    {
-      invalid_fmt(args_fmt, i);
-    }
-    else
-    {
-      dc_causes_t* dc_causes = (dc_causes_t *)arg;
-      send_dc_causes(*dc_causes);
-    }
-    break;
 
   case 'e':
   {
@@ -109,7 +97,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       else
       {
         constraint_store_t *cs = (constraint_store_t *)arg;
-        link_->put_converted_function("List", cs->size());
+        link_->put_converted_function("And", cs->size());
         for(auto constraint : *cs)
         {
           send_node(constraint, form);
@@ -241,6 +229,14 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     break;
   }
 
+  
+  case 'f':
+  {
+    find_min_time_result_t *f = (find_min_time_result_t *)ret;
+    *f = receive_find_min_time_result();
+    break;
+  }
+
                    
   case 'm':
     switch(ret_fmt[++i])
@@ -287,8 +283,8 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     case 'p':
     {
       // for cp
-      pp_time_result_t* cp = (pp_time_result_t*)ret;
-      *cp = receive_cp();
+      compare_min_time_result_t* cp = (compare_min_time_result_t*)ret;
+      *cp = receive_compare_min_time_result();
       break;
     }
     case 's':
@@ -325,10 +321,6 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 
 int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
-  HYDLA_LOGGER_DEBUG("%%name: ",  name, 
-                   ", arg_cnt: ", arg_cnt,
-                   ", args_fmt: ", args_fmt,
-                   ", ret_fmt: ", ret_fmt);
   link_->pre_send();
   link_->put_converted_function(name, arg_cnt);
   va_list args;
@@ -338,10 +330,8 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
     void* arg = va_arg(args, void *);
     i += read_args_fmt(args_fmt, i, arg);
   }
-  HYDLA_LOGGER_DEBUG("start receive");
   link_->pre_receive();
   HYDLA_LOGGER_DEBUG("input: \n", link_->get_input_print());
-  HYDLA_LOGGER_DEBUG("trace: \n", link_->get_debug_print());
   for(int i = 0; ret_fmt[i] != '\0'; i++)
   {
     void* ret = va_arg(args, void *);
@@ -380,26 +370,12 @@ bool Backend::get_form(const char &form_c, variable_form_t &form)
 
 int Backend::send_node(const symbolic_expression::node_sptr& node, const variable_form_t &form)
 {
-  HYDLA_LOGGER_DEBUG("%%node: ", get_infix_string(node));
   differential_count_ = 0;
   in_prev_ = false;
   apply_not_ = false;
   variable_arg_ = form;
   accept(node);
   return 0;
-}
-
-void Backend::send_dc_causes(dc_causes_t &dc_causes)
-{
-  link_->put_converted_function("List", dc_causes.size());
-  for(int i = 0; i < dc_causes.size(); i++)
-  {
-    HYDLA_LOGGER_DEBUG(dc_causes[i].id, ": ", dc_causes[i].node);
-    dc_cause_t &cause = dc_causes[i];
-    link_->put_converted_function("causeAndID", 2);
-    send_node(cause.node, Link::VF_TIME);
-    link_->put_integer(cause.id);
-  }
 }
 
 int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& vf, const bool &send_derivative)
@@ -482,7 +458,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
     }
   }
   
-  link_->put_converted_function("List", size);
+  link_->put_converted_function("And", size);
   it = parameter_map.begin();
   for(; it!=parameter_map.end(); ++it)
   {
@@ -543,7 +519,6 @@ void Backend::visit(boost::shared_ptr<Tell> node)
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
 void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 {                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
   link_->put_converted_function(#FUNC_NAME, 2);                                  \
   accept(node->get_lhs());                                              \
   accept(node->get_rhs());                                              \
@@ -552,7 +527,6 @@ void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 #define DEFINE_VISIT_BINARY_NOT(NODE_NAME, FUNC_NAME, NOT_NAME)        \
 void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 {                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
   if(!apply_not_)                                                        \
     link_->put_converted_function(#FUNC_NAME, 2);                       \
   else                                                                  \
@@ -565,7 +539,6 @@ void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
 void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 {                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
   link_->put_converted_function(#FUNC_NAME, 1);                                  \
   accept(node->get_child());                                            \
 }
@@ -573,7 +546,6 @@ void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 #define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                       \
 void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
 {                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
   link_->put_symbol(#FUNC_NAME);                                       \
 }
 
@@ -713,8 +685,7 @@ void Backend::visit(boost::shared_ptr<SymbolicT> node)
 
 int Backend::send_value(const value_t &val, const variable_form_t& var)
 {
-  variable_arg_ = var;
-  accept(val.get_node());
+  send_node(val.get_node(), var);
   return 0;
 }
 
@@ -800,53 +771,60 @@ create_vm_t Backend::receive_cv()
   return ret;
 }
 
-pp_time_result_t Backend::receive_cp()
+compare_min_time_result_t Backend::receive_compare_min_time_result()
 {
   std::string name;
-  int next_time_size; 
-  link_->get_function(name, next_time_size);
-  pp_time_result_t result;
-  for(int time_it = 0; time_it < next_time_size; time_it++){
-    candidate_t candidate;
+  int list_size; 
+  link_->get_function(name, list_size);
+  compare_min_time_result_t result;
+  link_->get_function(name, list_size);
+  for(int i = 0; i < list_size; i++)
+  {
+    parameter_map_t pm;
+    receive_parameter_map(pm);
+    result.less_maps.push_back(pm);
+  }
+  link_->get_function(name, list_size);
+  for(int i = 0; i < list_size; i++)
+  {
+    parameter_map_t pm;
+    receive_parameter_map(pm);
+    result.greater_maps.push_back(pm);
+  }
+  link_->get_function(name, list_size);
+  for(int i = 0; i < list_size; i++)
+  {
+    parameter_map_t pm;
+    receive_parameter_map(pm);
+    result.equal_maps.push_back(pm);
+  }
+  return result;
+}
+
+
+
+find_min_time_result_t Backend::receive_find_min_time_result()
+{
+  std::string name;
+  int find_min_time_size; 
+  // List
+  link_->get_function(name, find_min_time_size);
+  find_min_time_result_t result;
+  for(int time_it = 0; time_it < find_min_time_size; time_it++){
+    FindMinTimeCandidate candidate;
     int dummy_buf;
     // List
     link_->get_function(name, dummy_buf);
+    candidate.time = receive_value();
+    candidate.on_time = (bool)link_->get_integer();
 
-    // for minimum
-    // timeAndIDs
-    link_->get_function(name, dummy_buf);
-    candidate.minimum.time = receive_value();
-    int min_size;
-    // ids
-    link_->get_function(name, min_size);
-    for(int min_it = 0; min_it < min_size; min_it++)
-    {
-      candidate.minimum.ids.push_back(link_->get_integer()); 
-    }
-
-    // for nonminimum
-    int nonmin_size;
-    link_->get_function(name, nonmin_size);
-    for(int nonmin_it = 0; nonmin_it < nonmin_size; nonmin_it++)
-    {
-      TimeIdsPair time_id;
-      //timeAndIDs
-      link_->get_function(name, dummy_buf);
-      time_id.time = receive_value();
-      int id_size;
-      link_->get_function(name, id_size);
-      for(int id_it = 0; id_it < id_size; id_it++)
-      {
-        time_id.ids.push_back(link_->get_integer());
-      }
-      candidate.non_minimums.push_back(time_id);
-    }
     // 条件を受け取る
     receive_parameter_map(candidate.parameter_map);
     result.push_back(candidate);
   }
   return result;
 }
+
 
 std::string Backend::remove_prefix(const std::string &original, const std::string &prefix)
 {
@@ -966,7 +944,6 @@ symbolic_expression::node_sptr Backend::receive_function()
   else{
     // その他の関数
     boost::shared_ptr<symbolic_expression::ArbitraryNode> f;
-    HYDLA_LOGGER_DEBUG_VAR(symbol);
     if(converted)
     {
       // 対応している関数
@@ -988,14 +965,12 @@ symbolic_expression::node_sptr Backend::receive_function()
 value_t Backend::receive_value()
 {
   value_t val(receive_node());
-  HYDLA_LOGGER_DEBUG_VAR(val);
   return val;
 }
 
 symbolic_expression::node_sptr Backend::receive_node(){
   symbolic_expression::node_sptr ret;
   Link::DataType type = link_->get_type();
-  HYDLA_LOGGER_DEBUG_VAR(type);
   switch(type){
   case Link::DT_STR: // 文字列
     {
@@ -1072,15 +1047,11 @@ int Backend::receive_map(variable_map_t& map)
     link_->get_function(f_name, size); //List
     link_->get_function(f_name, size); //List
     std::string variable_name = link_->get_symbol();
-    HYDLA_LOGGER_DEBUG_VAR(variable_name);
     int d_cnt = link_->get_integer();
-    HYDLA_LOGGER_DEBUG_VAR(d_cnt);
     // 関係演算子のコード
     int rel = link_->get_integer();
-    HYDLA_LOGGER_DEBUG_VAR(rel);
 
     symbolic_value = value_t(receive_node());
-    HYDLA_LOGGER_DEBUG("%% received: ", symbolic_value);
 
     // TODO:次の一行消す
     if(variable_name == "t")continue;
@@ -1102,7 +1073,6 @@ int Backend::receive_parameter_map(parameter_map_t& map)
 {
   string func_name;
   int condition_size; link_->get_function(func_name, condition_size);
-  HYDLA_LOGGER_DEBUG("func_name: ", func_name, "\ncondition_size: ", condition_size);
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
     string str_buf;
     int int_buf;
@@ -1140,7 +1110,6 @@ MidpointRadius Backend::receive_midpoint_radius()
   string func_name;
   int size;
   link_->get_function(func_name, size);
-  HYDLA_LOGGER_DEBUG("func_name: ", func_name, "\nsize: ", size);
   if(func_name != "midpointRadius" || size != 2)
   {
     throw InterfaceError("invalid as midpoint_radius");

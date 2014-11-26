@@ -1,5 +1,4 @@
 #include "TreeInfixPrinter.h"
-#include <sstream>
 
 namespace hydla {
 namespace symbolic_expression{
@@ -118,7 +117,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){
 
 // 算術二項演算子
 void TreeInfixPrinter::visit(boost::shared_ptr<Plus> node){
-  if(need_par_>=PAR_N_P_S){
+  if(need_par_>=PAR_N_P_S || need_par_ == PAR_P_S){
     (*output_stream_) << "(";
      print_binary_node(*node, "+", PAR_NONE, PAR_N);
     (*output_stream_) << ")";
@@ -127,7 +126,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Plus> node){
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<Subtract> node){
-  if(need_par_>=PAR_N_P_S){
+  if(need_par_>=PAR_N_P_S || need_par_ == PAR_P_S){
     (*output_stream_) << "(";
      print_binary_node(*node, "-", PAR_NONE, PAR_N_P_S);
     (*output_stream_) << ")";
@@ -147,7 +146,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Times> node){
 void TreeInfixPrinter::visit(boost::shared_ptr<Divide> node){
   if(need_par_>=PAR_N_P_S_T_D_P){
     (*output_stream_) << "(";
-     print_binary_node(*node, "/", PAR_N_P_S, PAR_N_P_S);
+     print_binary_node(*node, "/", PAR_P_S, PAR_N_P_S);
     (*output_stream_) << ")";
   }else{
      print_binary_node(*node, "/", PAR_N_P_S, PAR_N_P_S);
@@ -171,6 +170,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Negative> node){
     print_unary_node(*node, "-", "");
     (*output_stream_) << ")";
   }else{
+    need_par_ = PAR_N_P_S_T_D_P;
     print_unary_node(*node, "-", "");
   }
 }
@@ -286,8 +286,8 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintCaller> node){
       (*output_stream_) << ", ";
     }
   }
-  (*output_stream_) << ") ";
-  if(node->get_child()) print_unary_node(*node, "{", "}");
+  (*output_stream_) << ")";
+  // if(node->get_child()) print_unary_node(*node, "{", "}");
 }
 
 // プログラム呼び出し
@@ -303,7 +303,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
     }
   }
   (*output_stream_) << ")";
-  if(node->get_child())print_unary_node(*node, "{", "}");
+  // if(node->get_child())print_unary_node(*node, "{", "}");
 }
 
 } // namespace symbolic_expression

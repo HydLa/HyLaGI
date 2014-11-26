@@ -17,7 +17,7 @@ public:
 
   virtual module_set_list_t 
     calculate_mms(
-      simulator::simulation_todo_sptr_t& state,
+      simulator::simulation_job_sptr_t& state,
       const variable_map_t& vm,
       todo_container_t* todo_container);
 
@@ -25,14 +25,14 @@ public:
   virtual bool 
     check_conditions(
       const hydla::symbolic_expression::node_sptr& cond,
-      simulation_todo_sptr_t& state,
+      simulation_job_sptr_t& state,
       const variable_map_t& vm,
       todo_container_t* todo_container);
 
 
   virtual bool 
     check_conditions(const hydla::hierarchy::module_set_sptr& ms,
-                           simulator::simulation_todo_sptr_t& state,
+                           simulator::simulation_job_sptr_t& state,
 		     const variable_map_t&,
 		     bool b,
                      todo_container_t* todo_container);

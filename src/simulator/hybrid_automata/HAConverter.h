@@ -17,9 +17,9 @@ public:
 
   virtual ~HAConverter();
 
-  virtual phase_result_const_sptr_t simulate();
+  virtual phase_result_sptr_t simulate();
 
-  virtual void process_one_todo(simulation_todo_sptr_t& todo);
+  virtual void process_one_todo(phase_result_sptr_t& todo);
 	
 	typedef phase_result_sptrs_t													 current_condition_t;
 	typedef std::deque<current_condition_t> 					 		 current_conditions_t;
@@ -78,13 +78,12 @@ protected:
    */ 
   bool check_include_bound(value_t tmp_variable_phase, value_t tmp_variable_past, parameter_map_t pm1, parameter_map_t pm2);
 
-
 	// 状態キューから状態をひとつ取り出す
 	// pop_simulation_phase()と合わせる必要あり
 	current_condition_t pop_current_condition()
 	{
     current_condition_t cc;
-    if(opts_->search_method == simulator::DFS){
+    if(opts_->search_method == DFS){
       cc = cc_vec_.front();
       cc_vec_.pop_front();
     }else{

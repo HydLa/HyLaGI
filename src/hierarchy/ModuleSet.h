@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <set>
 #include <string>
 #include <ostream>
 #include <algorithm>
@@ -12,7 +12,6 @@
 namespace hydla {
 namespace hierarchy {
 
-typedef boost::shared_ptr<class ModuleSet> module_set_sptr;
 
 /**
  * モジュールの集合を表すクラス
@@ -22,7 +21,7 @@ class ModuleSet {
 public:
   typedef std::pair<std::string,
                     hydla::symbolic_expression::node_sptr> module_t;
-  typedef std::vector<module_t>                   module_list_t;
+  typedef std::set<module_t>                      module_list_t;
   typedef module_list_t::const_iterator           module_list_const_iterator;
 
   struct ModuleComp {
@@ -82,12 +81,19 @@ public:
    * find module
    */
   module_list_const_iterator find(const module_t& mod) const;
-  
-  
+
+  /**
+   * erase module from module_list_
+   */
+  int erase(const ModuleSet& ms);
+  int erase(const module_t& m);
+  module_list_const_iterator erase(const module_list_const_iterator& it);
+
   /**
    * モジュールを追加
    */
-  void add_module(const module_t& mod){module_list_.push_back(mod);}
+  void add_module(const module_t& mod){module_list_.insert(mod);}
+  void insert(const ModuleSet &ms){module_list_.insert(ms.module_list_.begin(), ms.module_list_.end());}
 
   bool is_super_set(const ModuleSet& subset_mod) const
   {
@@ -111,20 +117,21 @@ public:
    */ 
   int compare(const ModuleSet& rhs) const;
   
+  bool empty() const { return module_list_.size()==0; }
   /**
    * return whether this module_set includes given module_set or not
    */
   bool including(const ModuleSet& ms) const;
+
+  bool disjoint(const ModuleSet& ms) const;
 
   /**
    * 集合の各制約モジュールに対してTreeVisitorの適用
    */ 
   void dispatch(hydla::symbolic_expression::TreeVisitor* visitor)
   {
-    module_list_t::iterator it  = module_list_.begin();
-    module_list_t::iterator end = module_list_.end();
-    for(; it!=end; ++it) {
-      (it->second)->accept(it->second, visitor);
+    for(auto module :module_list_) {
+      (module.second)->accept(module.second, visitor);
     }
   }
   
@@ -140,10 +147,10 @@ std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
 
 class ModuleSetComparator {
 public:
-  bool operator()(const module_set_sptr &lhs, 
-                  const module_set_sptr &rhs) const
+  bool operator()(const ModuleSet &lhs, 
+                  const ModuleSet &rhs) const
   {
-    return lhs->compare(*rhs) > 0;
+    return lhs.compare(rhs) > 0;
   }
 };
 

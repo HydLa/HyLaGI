@@ -1,5 +1,3 @@
-#include "ModuleSetList.h"
-
 #include "ProgramOptions.h"
 #include "PhaseSimulator.h"
 #include "SequentialSimulator.h"
@@ -9,11 +7,11 @@
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
 #include "HASimulator.h"
-#include "ParallelSimulator.h"
 #include "MathematicaLink.h"
 #include "REDUCELinkFactory.h"
 #include "Backend.h"
 #include "JsonWriter.h"
+#include "Timer.h"
 #include <sys/stat.h>
 
 #ifdef _MSC_VER
@@ -21,7 +19,6 @@
 #endif
 // parser
 
-#include <boost/lexical_cast.hpp>
 
 // namespace
 using namespace hydla;
@@ -53,8 +50,10 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
-  hydla::io::SymbolicTrajPrinter Printer(backend_, opts.output_variables, sstr);
+
+  hydla::io::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_, true);}
+
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
@@ -132,6 +131,7 @@ void setup_simulator_opts(Opts& opts)
   opts.max_time      = po.get<std::string>("time");
   opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
+  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") > 0;
   opts.dump_in_progress = po.count("dump_in_progress")>0;
   opts.dump_relation = po.count("dump_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
@@ -146,14 +146,8 @@ void setup_simulator_opts(Opts& opts)
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
   opts.epsilon_mode = po.get<int>("epsilon");
-  // if(po.get<std::string>("epsilon") == ""){
-  //   opts.epsilon_mode = 0;
-  // }else{
-  //   opts.epsilon_mode = 1;
-  // }
   /*
   opts.output_interval = po.get<std::string>("output_interval");
-  opts.output_precision = po.get<int>("output_precision");
   */
   opts.analysis_mode = po.get<std::string>("analysis_mode");
   opts.analysis_file = po.get<std::string>("analysis_file");
@@ -173,17 +167,14 @@ void setup_simulator_opts(Opts& opts)
   */
   opts.timeout_calc= po.get<int>("timeout_calc");
 
-
-  /*
-  opts.max_loop_count= po.get<int>("mlc");
-  opts.max_phase_expanded = po.get<int>("phase_expanded");
-  */
+  
+  //opts.max_loop_count= po.get<int>("mlc");
 
   // select search method (dfs or bfs)
   if(po.get<std::string>("search") == "d"){
-    opts.search_method = simulator::DFS;
+    opts.search_method = DFS;
   }else if(po.get<std::string>("search") == "b"){
-    opts.search_method = simulator::BFS;
+    opts.search_method = BFS;
   }else{
     throw std::runtime_error(std::string("invalid option - search"));
   }
@@ -192,12 +183,14 @@ void setup_simulator_opts(Opts& opts)
 void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   Opts opts;
+  ProgramOptions &po = ProgramOptions::instance();
   setup_simulator_opts(opts);
+  
 
   boost::shared_ptr<Backend> backend;
 
   if(opts.solver == "m" || opts.solver == "Mathematica") {
-    backend.reset(new Backend(new MathematicaLink(opts)));
+    backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.timeout_calc, po.get<int>("precision"), po.count("without_validation")==0?0:po.get<int>("time_delta"))));
   }else{
     REDUCELinkFactory rlf;
     REDUCELink *reduce_link  = rlf.createInstance(opts);
@@ -210,10 +203,12 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   {
     simulator_ = new InteractiveSimulator(opts);
   }
+/* TODO: implement
   else if(opts.parallel_mode)
   {
     simulator_ = new ParallelSimulator(opts);
   }
+*/
   else if(opts.ha_convert_mode)
   {
     simulator_ = new HAConverter(backend, opts);

@@ -1,15 +1,13 @@
 #pragma once
 
-
 #include "TreeVisitor.h"
 
 namespace hydla { 
 namespace symbolic_expression {
   
 /**
- * 各ノードに対してデフォルトの動作（全ノード走査するが，何も変更しない）を行うヘルパクラス．
- * このクラスを継承することで，「一部のノードに対してのみ処理を行うクラス」が作りやすくなるはず．
- * ただしこれが望ましい実装なのかはよく分かっていない by matsusho
+ * 各ノードに対して全子ノードを走査するクラス．
+ * 継承先で各visitをオーバーライドして新たなVisitorを作る．
  */
 class DefaultTreeVisitor: public TreeVisitor {
 public:
@@ -118,6 +116,58 @@ public:
 
   // Infinity
   virtual void visit(boost::shared_ptr<Infinity> node);
+
+  // ExpressionList
+  virtual void visit(boost::shared_ptr<ExpressionList> node);
+
+  // ConditionalExpressionList
+  virtual void visit(boost::shared_ptr<ConditionalExpressionList> node);
+
+  // ProgramList
+  virtual void visit(boost::shared_ptr<ProgramList> node);
+
+  // ConditionalProgramList
+  virtual void visit(boost::shared_ptr<ConditionalProgramList> node);
+
+  // EachElement
+  virtual void visit(boost::shared_ptr<EachElement> node);
+
+  // DifferentVariable
+  virtual void visit(boost::shared_ptr<DifferentVariable> node);
+
+  // ProgramListDefinition 
+  virtual void visit(boost::shared_ptr<ProgramListDefinition> node);
+
+  // ExpressionListDefinition 
+  virtual void visit(boost::shared_ptr<ExpressionListDefinition> node);
+
+  // ExpressionListCaller 
+  virtual void visit(boost::shared_ptr<ExpressionListCaller> node);
+
+  // ExpressionListElement 
+  virtual void visit(boost::shared_ptr<ExpressionListElement> node);
+
+  // ProgramListCaller 
+  virtual void visit(boost::shared_ptr<ProgramListCaller> node);
+
+  // ProgramListElement 
+  virtual void visit(boost::shared_ptr<ProgramListElement> node);
+
+  // Union 
+  virtual void visit(boost::shared_ptr<Union> node);
+
+  // Intersection 
+  virtual void visit(boost::shared_ptr<Intersection> node);
+
+  // Range 
+  virtual void visit(boost::shared_ptr<Range> node);
+
+  // SizeOfLIst 
+  virtual void visit(boost::shared_ptr<SizeOfList> node);
+
+  // SumOfList
+  virtual void visit(boost::shared_ptr<SumOfList> node);
+
 };
 
 } //namespace symbolic_expression

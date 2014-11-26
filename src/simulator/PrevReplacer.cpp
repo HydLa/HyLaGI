@@ -9,84 +9,87 @@ using namespace hydla::symbolic_expression;
 namespace hydla {
 namespace simulator {
 
-PrevReplacer::PrevReplacer(parameter_map_t& map, phase_result_sptr_t &phase, Simulator &simulator, bool approx):parameter_map_(map), prev_phase_(phase), simulator_(simulator), approx_(approx)
+PrevReplacer::PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator &simulator, bool approx):parameter_map(map), prev_phase(phase), simulator(simulator), approx(approx)
 {}
 
 PrevReplacer::~PrevReplacer()
 {}
 
-void PrevReplacer::replace_value(value_t& val)
+bool PrevReplacer::replace_value(value_t& val)
 {
   symbolic_expression::node_sptr node = val.get_node();
   replace_node(node);
   val.set_node(node);
+  return replaced;
 }
 
 void PrevReplacer::replace_node(symbolic_expression::node_sptr &node)
 {
-  differential_cnt_ = 0;
-  in_prev_ = false;
-  new_child_.reset();
+  differential_cnt = 0;
+  in_prev = false;
+  replaced = false;
+  new_child.reset();
   accept(node);
-  if(new_child_) node = new_child_;
+  if(new_child) node = new_child;
 }
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
 {
-  assert(!in_prev_);
-  in_prev_ = true;
+  assert(!in_prev);
+  in_prev = true;
   accept(node->get_child());
-  in_prev_ = false;
+  in_prev = false;
 }
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
-  if(in_prev_)
+  if(in_prev)
   {
     HYDLA_LOGGER_DEBUG_VAR(*node);
     string v_name = node->get_name();
-    int diff_cnt = differential_cnt_;
+    int diff_cnt = differential_cnt;
     HYDLA_LOGGER_DEBUG_VAR(v_name);
     HYDLA_LOGGER_DEBUG_VAR(diff_cnt);
     variable_t variable(v_name, diff_cnt);
-    ValueRange range = prev_phase_->variable_map[variable];
-  
+    ValueRange range = prev_phase.variable_map[variable];
+    replaced = true;
+
     // replace variables in the range with their values
-    VariableReplacer v_replacer(prev_phase_->variable_map);
+    VariableReplacer v_replacer(prev_phase.variable_map);
     v_replacer.replace_range(range);
 
     if(range.unique())
     {
-      new_child_ = range.get_unique_value().get_node();
+      new_child = range.get_unique_value().get_node();
     }
     else
     {
-      new_child_ = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase_->id));
-      parameter_t param(v_name, diff_cnt, prev_phase_->id);
+      new_child = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase.id));
+      parameter_t param(v_name, diff_cnt, prev_phase.id);
 
-      if(!parameter_map_.count(param))
+      if(!parameter_map.count(param))
       {
-        if(approx_)
+        if(approx)
         {
           hydla::backend::MidpointRadius mr;
           value_t lb = range.get_lower_bound().value;
           value_t ub = range.get_upper_bound().value;
-          simulator_.backend->call("intervalToMidpointRadius", 2, "vltvlt", "r", &lb, &ub, &mr);
+          simulator.backend->call("intervalToMidpointRadius", 2, "vltvlt", "r", &lb, &ub, &mr);
           HYDLA_LOGGER_DEBUG("");
           range.set_upper_bound(value_t("1"), range.get_upper_bound().include_bound);
           range.set_lower_bound(value_t("-1"), range.get_lower_bound().include_bound);
-          value_t new_value(mr.midpoint + mr.radius * value_t(new_child_));
-          prev_phase_->variable_map[variable] = new_value;
-          new_child_ = new_value.get_node();
+          value_t new_value(mr.midpoint + mr.radius * value_t(new_child));
+          prev_phase.variable_map[variable] = new_value;
+          new_child = new_value.get_node();
         }
         else
         {
-          prev_phase_->variable_map[variable] = value_t(new_child_);
+          prev_phase.variable_map[variable] = value_t(new_child);
         }
 
-        simulator_.introduce_parameter(variable, prev_phase_, range);
-        parameter_map_[param] = range;
-        prev_phase_->parameter_map[param] = parameter_map_[param];
+        simulator.introduce_parameter(variable, prev_phase, range);
+        parameter_map[param] = range;
+        prev_phase.parameter_map[param] = parameter_map[param];
       }
     }
   }
@@ -94,9 +97,9 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
-  differential_cnt_++;
+  differential_cnt++;
   accept(node->get_child());
-  differential_cnt_--;
+  differential_cnt--;
 }
 
 
@@ -105,9 +108,9 @@ void PrevReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 {                                                     \
   for(int i = 0;i < node->get_arguments_size();i++){      \
     accept(node->get_argument(i));                    \
-    if(new_child_) {                                  \
-      node->set_argument((new_child_), i);            \
-      new_child_.reset();                             \
+    if(new_child) {                                  \
+      node->set_argument((new_child), i);            \
+      new_child.reset();                             \
     }                                                 \
   }                                                   \
 }

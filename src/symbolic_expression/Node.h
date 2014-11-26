@@ -19,7 +19,6 @@ class ProgramDefinition;
 class TreeVisitor;
 class BaseNodeVisitor;
 
-typedef unsigned int            node_id_t;
 typedef boost::shared_ptr<Node> node_sptr;
 typedef boost::shared_ptr<const Node> node_const_sptr;
 
@@ -30,9 +29,7 @@ class Node {
 public:
   typedef boost::shared_ptr<Node> node_type_sptr;
 
-  Node() : 
-    id_(0)
-  {}
+  Node(){}
   
   virtual ~Node()
   {}
@@ -80,32 +77,9 @@ public:
    */
   virtual std::ostream& dump(std::ostream& s) const 
   {
-    return s << get_node_type_name()
-             << "<" << get_id() << ">";
-  }
-  
-
-  /**
-   * ノードIDの設定
-   */
-  void set_id(node_id_t id)
-  {
-    id_ = id;
+    return s << get_node_type_name();
   }
 
-  /**
-   * ノードIDを得る
-   */
-  node_id_t get_id() const 
-  {
-    return id_;
-  }
-
-private:
-  /**
-   * ノードID
-   */
-  node_id_t id_;
 };
 
 std::ostream& operator<<(std::ostream&, const Node&);
@@ -491,12 +465,14 @@ class ConstraintCaller : public Caller {
 public:
   ConstraintCaller(){}
   virtual ~ConstraintCaller(){}
+  virtual node_sptr clone();
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual std::string get_node_type_name() const {
     return "ConstraintCaller";
   }
+  virtual std::ostream& dump(std::ostream& s) const;
 };
 
 /**
@@ -506,12 +482,14 @@ class ProgramCaller : public Caller {
 public:
   ProgramCaller(){}
   virtual ~ProgramCaller(){}
+  virtual node_sptr clone();
 
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual std::string get_node_type_name() const {
     return "ProgramCaller";
   }
+  virtual std::ostream& dump(std::ostream& s) const;
 };
 
 /**
@@ -652,6 +630,36 @@ public:
 
   virtual std::string get_node_type_name() const {
     return "ConstraintDefinition";
+  }
+};
+
+/**
+ * ExpressionListDefinition
+ */
+class ExpressionListDefinition : public Definition {
+public:
+  ExpressionListDefinition(){}
+  virtual ~ExpressionListDefinition(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ExpressionListDefinition";
+  }
+};
+
+/**
+ * ProgramListDefinition
+ */
+class ProgramListDefinition : public Definition {
+public:
+  ProgramListDefinition(){}
+  virtual ~ProgramListDefinition(){}
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramListDefinition";
   }
 };
 
@@ -1564,7 +1572,6 @@ public:
 /**
  * 任意個の引数を持つノード
  */
-
 class ArbitraryNode : public Node {
 public:
   typedef boost::shared_ptr<ArbitraryNode> node_type_sptr;
@@ -1595,12 +1602,222 @@ public:
   std::vector<node_sptr> arguments_;
 };
 
+/**
+ * Range
+ */
+class Range : public BinaryNode {
+public:
 
+  typedef boost::shared_ptr<Range> node_type_sptr;
+
+  Range()
+    {}
+
+  Range(const node_sptr& lhs, const node_sptr& rhs) :
+    BinaryNode(lhs, rhs)
+    {}
+
+  virtual ~Range(){}
+
+  virtual std::ostream& dump(std::ostream&) const;
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "Range";
+  }
+
+  void set_string(std::string str){ header = str; }
+  std::string get_string() const { return header; }
+private:
+  std::string header;
+};
+
+/**
+ * ExpressionListCaller
+ */
+class ExpressionListCaller : public Caller {
+public:
+  ExpressionListCaller(){}
+  virtual ~ExpressionListCaller(){}
+  virtual node_sptr clone();
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ExpressionListCaller";
+  }
+  virtual std::ostream& dump(std::ostream& s) const;
+};
+
+/**
+ * ProgramListCaller
+ */
+class ProgramListCaller : public Caller {
+public:
+  ProgramListCaller(){}
+  virtual ~ProgramListCaller(){}
+  virtual node_sptr clone();
+
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramListCaller";
+  }
+  virtual std::ostream& dump(std::ostream& s) const;
+};
+
+/**
+ * Size of List
+ */
+DEFINE_UNARY_NODE(SizeOfList)
+
+/**
+ * Sum of List
+ */
+DEFINE_UNARY_NODE(SumOfList)
+
+/**
+ * Expression List
+ */
+class ExpressionList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ExpressionList> node_type_sptr;
+
+  ExpressionList(){}
+  ExpressionList(const std::string& str) : list_name_(str){}
+
+  virtual ~ExpressionList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ExpressionList";
+  }
+
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+};
+
+class ConditionalExpressionList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ConditionalExpressionList> node_type_sptr;
+
+  ConditionalExpressionList(){}
+  ConditionalExpressionList(const std::string& str) : list_name_(str){}
+
+  virtual ~ConditionalExpressionList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+  virtual std::ostream& dump(std::ostream&) const;
+
+  virtual std::string get_node_type_name() const {
+    return "ConditionalExpressionList";
+  }
+
+  virtual void set_expression(node_sptr node){ expression_ = node;}
+  node_sptr get_expression() const { return expression_; }
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+  node_sptr expression_;
+};
+
+/**
+ * Program List
+ */
+class ProgramList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ProgramList> node_type_sptr;
+
+  ProgramList(){}
+  ProgramList(const std::string& str) : list_name_(str){}
+
+  virtual ~ProgramList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+
+  virtual std::string get_node_type_name() const {
+    return "ProgramList";
+  }
+
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+};
+
+class ConditionalProgramList : public ArbitraryNode {
+public:
+  typedef boost::shared_ptr<ConditionalProgramList> node_type_sptr;
+
+  ConditionalProgramList(){}
+  ConditionalProgramList(const std::string& str) : list_name_(str){}
+
+  virtual ~ConditionalProgramList(){}
+  
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone();
+  virtual std::ostream& dump(std::ostream&) const;
+
+  virtual std::string get_node_type_name() const {
+    return "ConditionalProgramList";
+  }
+
+  void set_program(node_sptr node){ program_ = node;}
+  node_sptr get_program() const { return program_; }
+  void set_string(const std::string& str){list_name_ = str;}
+  virtual std::string get_string() const{return list_name_;}
+
+private:
+  std::string list_name_;
+  node_sptr program_;
+};
+
+/**
+ * ProgramListElement 
+ */
+DEFINE_BINARY_NODE(ProgramListElement);
+/**
+ * ExpressionListElement 
+ */
+DEFINE_BINARY_NODE(ExpressionListElement);
+/**
+ * Union 
+ */
+DEFINE_BINARY_NODE(Union);
+/**
+ * Intersection
+ */
+DEFINE_BINARY_NODE(Intersection);
+/**
+ * Each Element
+ * Var "in" List
+ */
+DEFINE_ASYMMETRIC_BINARY_NODE(EachElement);
+/**
+ * DifferentVariable
+ * Var "=!=" Var
+ */
+DEFINE_BINARY_NODE(DifferentVariable);
 
 /*
  * 関数
  */
-
 class Function : public ArbitraryNode {
 public:
   typedef boost::shared_ptr<Function> node_type_sptr;

@@ -15,10 +15,10 @@
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
-#include "HydLaAST.h"
 #include "AffineApproximator.h"
-#include "TimeModifier.h"
+#include "ValueModifier.h"
 #include "SignalHandler.h"
+#include "Parser.h"
 
 
 // surpress warning "C4996: old 'strcpy'" on VC++2005
@@ -27,7 +27,7 @@
 
 using namespace boost;
 using namespace std;
-using namespace hydla::grammer_rule;
+//using namespace hydla::grammer_rule;
 using namespace hydla::parser::error;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
@@ -49,30 +49,27 @@ void InteractiveSimulator::print_end(phase_result_sptr_t& p)
 /**
  * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
  */
-phase_result_const_sptr_t InteractiveSimulator::simulate()
+phase_result_sptr_t InteractiveSimulator::simulate()
 {
-  phase_simulator_->set_select_function(select_phase);
   printer_.set_output_variables(opts_->output_variables);
-  simulation_todo_sptr_t todo(make_initial_todo());
+  phase_result_sptr_t todo(make_initial_todo());
   unsigned int todo_num = 1; // 連続して処理するTODOの残数
-  int todo_id = 0;
 
   while(todo_num)
   {
-    todo_id++;
-    todo->id =todo_id;
     try
     {
       timer::Timer phase_timer;
-      PhaseSimulator::result_list_t phases = phase_simulator_->calculate_phase_result(todo);
+      phase_simulator_->process_todo(todo);
 
-      phase_result_sptr_t phase;
+/*
+  TODO:implement
       if(phases.empty())
       {
-        simulation_todo_sptr_t tmp_todo = todo;
+        phase_result_sptr_t tmp_todo = todo;
         do
         {
-          if(todo->phase_type == PointPhase)
+          if(todo->phase_type == POINT_PHASE)
             cout << "---------PP "<<todo->id<< "---------" << endl;
           cout << "execution stuck" << endl;
           todo_num = input_and_process_command(todo);
@@ -83,20 +80,17 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       {
         unsigned int select_num = select_case<phase_result_sptr_t>(phases);
         phase = phases[select_num];
-        for(unsigned int i = 0; i < phases.size(); i++)
-        {
-          if(i == select_num) continue;
-          phases[i]->cause_for_termination = NOT_SELECTED;
-        }
       }
+*/
 
-
-      PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
+      //TODO: implement
+      /*
+         PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
       todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
       profile_vector_->push_back(todo);
       if(todos.empty())
       {
-        simulation_todo_sptr_t tmp_todo = todo;
+        phase_result_sptr_t tmp_todo = todo;
         do
         {
           print_end(phase);
@@ -106,41 +100,37 @@ phase_result_const_sptr_t InteractiveSimulator::simulate()
       }
       todo = todos[0];
       print_phase(todo);
-
-      if(phase_simulator_->breaking)
-      {
-        cout << "break!" << endl;
-        phase_simulator_->breaking = false;
-        todo_num = input_and_process_command(todo);
-      }
-      else if(todo_num > 0 && --todo_num == 0)
+      
+      // TODO: implement break condition
+      if(todo_num > 0 && --todo_num == 0)
       {
         todo_num = input_and_process_command(todo);
       }
       // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
       all_todo_.push_back(todo);
+      */
       if(signal_handler::interrupted) break;
     }
     catch(const runtime_error &se)
     {
       cout << se.what() << endl;
-      todo->parent->cause_for_termination = SOME_ERROR;
+      todo->simulation_state = SOME_ERROR;
       HYDLA_LOGGER_DEBUG(se.what());
       break;
     }
 
   }
 
-  if(signal_handler::interrupted || todo->parent->cause_for_termination != SOME_ERROR){
-    todo->parent->cause_for_termination = INTERRUPTED;
-    io::JsonWriter().write_phase(todo->parent, "interrupted_phase");
+  if(signal_handler::interrupted || todo->simulation_state != SOME_ERROR){
+    todo->simulation_state = INTERRUPTED;
+    io::JsonWriter().write_phase(todo, "interrupted_phase");
   }
   return result_root_;
 }
 
 
 
-int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo){
+int InteractiveSimulator::input_and_process_command(phase_result_sptr_t& todo){
   io::JsonWriter writer;
   writer.write(*this, "interactive.hydat");
   while(true)
@@ -184,7 +174,7 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
             }
           }
         }
-        todo->reset_from_start_of_phase();
+
         cout << "jump" << endl;
         print_phase(todo);
         break;
@@ -195,20 +185,20 @@ int InteractiveSimulator::input_and_process_command(simulation_todo_sptr_t& todo
         show_help();
         break;
       case 'p':
-        print(todo->parent);
+        print(todo);
         break;
       case 'a':
         {
-          if( approx_variable(todo) ) print_phase(todo->parent);
+          if( approx_variable(todo) ) print_phase(todo);
           break;
         }
       case 'c':
         change_variable(todo);
-        print_phase(todo->parent);
+        print_phase(todo);
         break;
       case 't':
         change_time(todo);
-        print_phase(todo->parent);
+        print_phase(todo);
         break;
       case 'u':
         find_unsat_core(todo);
@@ -268,18 +258,18 @@ void InteractiveSimulator::print(phase_result_sptr_t& phase)
   print_phase(phase);
 }
 
-int InteractiveSimulator::change_time(simulation_todo_sptr_t& todo){
-  value_t& current_time = todo->parent->current_time;
+int InteractiveSimulator::change_time(phase_result_sptr_t& todo){
+  value_t& current_time = todo->current_time;
   string time_str = excin<string>();
   current_time = time_str;
   todo->current_time = current_time;
   return 0;
 }
 
-int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
+int InteractiveSimulator::change_variable(phase_result_sptr_t& todo){
 
   cout << "(change variable mode)" << endl;
-  variable_map_t& vm = todo->parent->variable_map;
+  variable_map_t& vm = todo->variable_map;
 
   // 変数の選択
   variable_map_t::iterator v_it  = vm.begin();
@@ -327,29 +317,29 @@ int InteractiveSimulator::change_variable(simulation_todo_sptr_t& todo){
     ValueRange range;
     range.set_upper_bound(upvalue,upperflag);
     range.set_lower_bound(lowvalue,lowerflag);
-    parameter_t introduced_par = introduce_parameter(v_it->first, todo->parent, range);
+    parameter_t introduced_par = introduce_parameter(v_it->first, *todo, range);
     pm[introduced_par] = range;
     value_t pvalue(symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_it->first.get_name(),
       v_it->first.get_differential_count(),
-      todo->parent->id)));
+      todo->id)));
     vm[v_it->first] = pvalue;
     
-    todo->parent->parameter_map = todo->parameter_map;
+    todo->parameter_map = todo->parameter_map;
   }
   return 0;
 }
 
 
-int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
-  if(todo->phase_type == PointPhase)
+int InteractiveSimulator::approx_variable(phase_result_sptr_t& todo){
+  if(todo->phase_type == POINT_PHASE)
   {
     cout << "(approximate time)" << endl;
-    affine_transformer_->approximate_time(todo->current_time, todo->parent->variable_map, todo->prev_map, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
-    todo->parent->end_time = todo->current_time;
+    //   affine_transformer_->approximate_time(todo->current_time, todo->variable_map, todo->prev_map, todo->parameter_map, (todo->discrete_positive_asks.begin()->first)->get_guard());
+    todo->end_time = todo->current_time;
   }
   else
   {
-    variable_map_t& vm = todo->parent->variable_map;
+    variable_map_t& vm = todo->variable_map;
     cout << "(approximate variable)" << endl;
   
     // 変数の選択
@@ -375,19 +365,11 @@ int InteractiveSimulator::approx_variable(simulation_todo_sptr_t& todo){
       cout << "invalid variable name " << endl;
       return 0;
     }
-    affine_transformer_->approximate(var, vm, todo->parent->parameter_map, (*todo->discrete_causes.begin())->get_guard());
+//    affine_transformer_->approximate(var, vm, todo->parameter_map, (todo->discrete_positive_asks.begin()->first)->get_guard());
     todo->prev_map = vm;
   }
 
-  todo->parameter_map = todo->parent->parameter_map;
-
   return 1;
-}
-
-
-int InteractiveSimulator::select_phase(PhaseSimulator::result_list_t& results)
-{
-  return select_case<phase_result_sptr_t>(results);
 }
 
 /*
@@ -422,7 +404,7 @@ int InteractiveSimulator::select_options(){
   if(area_string!=""){                 // デバッグ出力
     Logger::instance().set_log_level(Logger::Debug);
     if(area_string.find('a') != string::npos){
-      Logger::instance().set_log_level(Logger::Debug);
+     Logger::instance().set_log_level(Logger::Debug);
       Logger::parsing_area_ = true;
       Logger::calculate_closure_area_ = true;
       Logger::phase_area_ = true;
@@ -458,19 +440,19 @@ int InteractiveSimulator::select_options(){
 
 
 
-int InteractiveSimulator::save_state(simulation_todo_sptr_t& todo){
+int InteractiveSimulator::save_state(phase_result_sptr_t& todo){
   cout << "input name of the file to save (default: last_phase)" <<endl;
   string file_name;
   getline(cin, file_name);
   if(file_name == "")file_name = "last_phase";
   io::JsonWriter writer;
-  writer.write_phase(todo->parent, file_name);
+  writer.write_phase(todo, file_name);
   cout << "saved phase" << endl;
   return 1;
 }
 
 
-int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
+int InteractiveSimulator::load_state(phase_result_sptr_t& todo){
   cout << "input name of the file to load (default: last_phase)" <<endl;
   string file_name;
   getline(cin, file_name);
@@ -480,15 +462,13 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
 
 
   loaded_phase->step = 0;
-  loaded_phase->parent = result_root_;
+  loaded_phase->parent = result_root_.get();
   result_root_->children.clear();
   result_root_->children.push_back(loaded_phase);
-  todo.reset(new SimulationTodo(loaded_phase));
-  todo->module_set_container = msc_no_init_;
-  todo->ms_to_visit = todo->module_set_container->get_full_ms_list();
-  if(todo->phase_type == PointPhase)
+  todo.reset(new PhaseResult(*loaded_phase));
+  if(todo->phase_type == POINT_PHASE)
   {
-    TimeModifier modifier(*backend);
+    ValueModifier modifier(*backend);
     for(auto entry : loaded_phase->variable_map)
     {
       todo->prev_map[entry.first] = modifier.substitute_time(todo->current_time, entry.second);
@@ -503,17 +483,17 @@ int InteractiveSimulator::load_state(simulation_todo_sptr_t& todo){
   return 1;
 }
 
-int InteractiveSimulator::find_unsat_core(simulation_todo_sptr_t & todo){
+int InteractiveSimulator::find_unsat_core(phase_result_sptr_t & todo){
 /*  phase_simulator_->find_unsat_core(
-    todo->parent->module_set_container->get_max_module_set(),
+    todo->module_set_container->get_max_module_set(),
     todo,
-    todo->parent->variable_map);
+    todo->variable_map);
 */
   return 0;
 }
 
 
-int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
+int InteractiveSimulator::set_breakpoint(phase_result_sptr_t & todo){
   cout << "input break point" << endl;
   stringstream ss;
   string break_str;
@@ -521,21 +501,13 @@ int InteractiveSimulator::set_breakpoint(simulation_todo_sptr_t & todo){
   cin.clear();
   ss << break_str;
   
-  HydLaAST ast;
-  try
-  {
-    ast.parse(ss, HydLaAST::CONSTRAINT);
-  }
-  catch(SyntaxError e)
-  {
+  symbolic_expression::node_sptr node_tree = Parser(ss.str()).constraint();
+  if(!node_tree){
     cout << "invalid condition" << endl;
     return 0;
   }
 
-  NodeTreeGenerator genarator;
-  symbolic_expression::node_sptr node_tree = genarator.generate(ast.get_tree_iterator());
-
-  phase_simulator_->set_break_condition(node_tree);
+//  phase_simulator_->set_break_condition(node_tree); // TODO: implement
   return 0;
 }
 

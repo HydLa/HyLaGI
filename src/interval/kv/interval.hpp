@@ -14,7 +14,7 @@
 
 #include <kv/convert.hpp>
 #include <kv/constants.hpp>
-
+#pragma GCC diagnostic ignored "-Wall" //added@hyrose
 
 namespace kv {
 

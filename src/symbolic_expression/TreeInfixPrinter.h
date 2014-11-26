@@ -1,6 +1,5 @@
 #pragma once
 
-
 //ツリーを中置記法で出力するクラス
 
 #include "Node.h"
@@ -16,9 +15,10 @@ class TreeInfixPrinter:
   public:
   typedef enum{
     PAR_NONE,
-    PAR_N,
-    PAR_N_P_S,
-    PAR_N_P_S_T_D_P,
+    PAR_P_S,        /// parentheses are needed for plus and subtract
+    PAR_N,          /// parentheses are needed for negative
+    PAR_N_P_S,      /// needed for negative, plus and subtract
+    PAR_N_P_S_T_D_P, /// needed for negative, plus, subtract, times, divide, power
   }needParenthesis;
 
   /**
@@ -148,6 +148,18 @@ class TreeInfixPrinter:
   // False
   virtual void visit(boost::shared_ptr<False> node);
 
+  // List 
+  /*
+  virtual void visit(boost::shared_ptr<ExpressionList> node);
+  virtual void visit(boost::shared_ptr<ExpressionListCaller> node);
+  virtual void visit(boost::shared_ptr<ExpressionListElement> node);
+  virtual void visit(boost::shared_ptr<ProgramList> node);
+  virtual void visit(boost::shared_ptr<ProgramListCaller> node);
+  virtual void visit(boost::shared_ptr<ProgramListElement> node);
+  virtual void visit(boost::shared_ptr<Range> node);
+  virtual void visit(boost::shared_ptr<Union> node);
+  virtual void visit(boost::shared_ptr<Intersection> node);
+  */
 };
 
 } // namespace symbolic_expression

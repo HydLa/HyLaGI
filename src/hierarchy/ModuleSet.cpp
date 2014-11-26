@@ -14,16 +14,16 @@ namespace hierarchy {
 ModuleSet::ModuleSet()
 {}
 
-ModuleSet::ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node) :
-  module_list_(1, std::make_pair(name, node))
-{}
-
-ModuleSet::ModuleSet(ModuleSet& lhs, ModuleSet& rhs) :
-  module_list_(lhs.module_list_.size() + rhs.module_list_.size())
+ModuleSet::ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node)
 {
-  std::merge(lhs.module_list_.begin(), lhs.module_list_.end(),
-             rhs.module_list_.begin(), rhs.module_list_.end(),
-             module_list_.begin());
+  module_list_.insert(std::make_pair(name, node));
+}
+
+
+ModuleSet::ModuleSet(ModuleSet& lhs, ModuleSet& rhs)
+{
+  module_list_.insert(lhs.module_list_.begin(), lhs.module_list_.end());
+  module_list_.insert(rhs.module_list_.begin(), rhs.module_list_.end());
 }
 
 ModuleSet::~ModuleSet()
@@ -46,8 +46,18 @@ std::string ModuleSet::get_name() const
   return str;
 }
 
+bool ModuleSet::disjoint(const ModuleSet& ms) const
+{
+  for(auto m : ms){
+    if(module_list_.count(m)) return false;
+  }
+  return true;
+}
+
 ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
 {
+  return module_list_.find(mod);
+  /*
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
 
@@ -55,6 +65,7 @@ ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
     if(it->first == mod.first && it->second->get_id() == mod.second->get_id()) return it;
   }
   return this->end();
+  */
 }
 
 std::string ModuleSet::get_infix_string() const 
@@ -98,20 +109,33 @@ int ModuleSet::compare(const ModuleSet& rhs) const
   return comp;
 }
 
+int ModuleSet::erase(const module_t& m)
+{
+  return module_list_.erase(m);
+}
+
+int ModuleSet::erase(const ModuleSet& ms)
+{
+  int sum = 0;
+  for(auto m : ms) sum += erase(m);
+  return sum;
+}	
+
+
+ModuleSet::module_list_const_iterator ModuleSet::erase(const module_list_const_iterator &it)
+{
+  return module_list_.erase(it);
+}	
 
 bool ModuleSet::including(const ModuleSet& ms) const
 {
-  module_list_t::const_iterator ms_it   = ms.module_list_.begin();
-  module_list_t::const_iterator ms_end   = ms.module_list_.end();
-  
-  for(;ms_it != ms_end; ms_it++)
+  for(auto m : ms)
   {
-    if(std::find(module_list_.begin(), module_list_.end(), *ms_it) == module_list_.end())
+    if(!module_list_.count(m))
     {
       return false;
     }
   }
-  
   return true;
 }
 

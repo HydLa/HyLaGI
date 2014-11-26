@@ -1,15 +1,7 @@
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
 #else
 
-#include "Logger.h"
 #include "REDUCELinkIpc.h"
-#include <cassert>
-#include <iostream>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 namespace hydla {
 namespace backend {
@@ -18,7 +10,7 @@ namespace reduce {
 const std::string REDUCELinkIpc::end_of_redeval_ = "<redeval> end:";
 
 
-REDUCELinkIpc::REDUCELinkIpc(const simulator::Opts &opts):REDUCELink(){
+REDUCELinkIpc::REDUCELinkIpc(const Opts &opts):REDUCELink(){
   initProcess();
   init_opts(opts);
 } 

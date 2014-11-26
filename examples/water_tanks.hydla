@@ -1,0 +1,21 @@
+// http://www-inst.cs.berkeley.edu/~ee291e/sp09/handouts/book.pdf
+// p57
+Xs := {x1..x3}.
+Ss := {s1..s3}.
+
+WATER <=> [](w = 50).
+OUT(x,v,s) <=> [](s- = 0 => x' = -v*x) /\
+               [](s- = 1 => x' = w-v*x).
+
+CONST(s) <=> [](s' = 0).
+POUR(x1,r1,s1) <=> [](x1- = r1- => s1 = 1).
+NOT_POUR(x1,r1,s2) <=> [](x1- = r1- => s2 = 0).
+
+INIT(x,xinit,s,sinit,vinit) <=> x = xinit /\ s = sinit /\ x' = vinit.
+
+WATER.
+INIT(Xs[1],1,Ss[1],1,w-5*Xs[1]).
+{ INIT(Xs[i],i^3,Ss[i],0,-5*Xs[i]) | i in {2..|Xs|} }.
+{ OUT(Xs[i],5+i,Ss[i]) | i in {1..|Xs|} }.
+{ CONST(Ss[i]) << POUR(Xs[i],1/2*i,Ss[i]) | i in {1..|Xs|} }.
+{ CONST(Ss[j]) << NOT_POUR(Xs[i],1/2*i,Ss[j]) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.

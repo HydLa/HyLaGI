@@ -1,3 +1,4 @@
+/*
 #include "CMMap.h"
 #include "TreeInfixPrinter.h"
 #include <iostream>
@@ -76,7 +77,7 @@ namespace hydla{
       s << "condition : " << hydla::symbolic_expression::TreeInfixPrinter().get_infix_string(condition_) << std::endl;
       //      s << "*****" << condition_ << "*****" << std::endl;
       //      s << "  parent" << std::endl;
-      /*      for(cm_map_list_t::const_iterator it = parents_.begin(); it != parents_.end(); it++){
+            for(cm_map_list_t::const_iterator it = parents_.begin(); it != parents_.end(); it++){
 	s << "    " << hydla::symbolic_expression::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
 	//	s << "    " << (*it)->get_condition() << std::endl;
       }
@@ -85,7 +86,7 @@ namespace hydla{
 	s << "    " << hydla::symbolic_expression::TreeInfixPrinter().get_infix_string((*it)->get_condition()) << std::endl;
 	//	s << "    " << (*it)->get_condition() << std::endl;
       }
-      */
+      
       s << "module sets : " << std::endl;
       for(module_set_list_t::const_iterator it = ms_list_.begin(); it != ms_list_.end(); it++){
 	s << "    " << (*it)->get_name() << std::endl;
@@ -99,3 +100,4 @@ namespace hydla{
     }
   }
 }
+*/

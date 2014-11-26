@@ -67,6 +67,12 @@ bool Value::undefined() const
   return (node_ == NULL);
 }
 
+bool Value::infinite() const
+{
+  return (typeid(*node_) == typeid(Infinity));
+}
+
+
 Value::Value(){}
 
 Value::Value(const std::string &str){

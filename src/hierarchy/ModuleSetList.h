@@ -17,10 +17,8 @@ namespace hierarchy {
  */
 class ModuleSetList : public ModuleSetContainer {
 public:
-  typedef std::vector<module_set_sptr> module_set_list_t;
-
   ModuleSetList();
-  ModuleSetList(module_set_sptr m);
+  ModuleSetList(ModuleSet m);
   virtual ~ModuleSetList();
 
   /**
@@ -58,7 +56,7 @@ public:
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
-  void mark_nodes();
+  void init(){}
 };
 
 } // namespace hierarchy

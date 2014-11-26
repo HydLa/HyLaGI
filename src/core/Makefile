@@ -24,7 +24,6 @@ LIBS     += -lboost_program_options-mt
 LIBS     += -lMLi3 -lm -lstdc++.6.0.9
 endif
 
-DEFINES  += -DRP_SYSTEM_LINUX_IX86
 CXX_OPT  += 
 
 

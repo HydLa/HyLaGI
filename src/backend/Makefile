@@ -3,7 +3,6 @@ MAKE_TYPE := library
 TARGET	 := libhydla_backend.a
 INCLUDES += -I. -I./mathematica -I./reduce -I./reduce/sexp
 INCLUDES += -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility
-DEFINES  += -DRP_SYSTEM_LINUX_IX86
 CXX_OPT  += 
 
 SRC_DIR += mathematica reduce reduce/sexp

@@ -1,19 +1,11 @@
 #pragma once
 
-#include <sstream>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/optional.hpp>
 #include <boost/bimap.hpp>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
 
-#include "Node.h"
-#include "PhaseResult.h"
 #include "TreeVisitor.h"
 #include "AffineOrInteger.h"
 #include "Parameter.h"
+#include "PhaseResult.h"
 
 namespace hydla {
 namespace interval {
@@ -109,6 +101,23 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::True> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Union> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
   
 private:
 

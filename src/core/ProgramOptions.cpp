@@ -25,29 +25,21 @@ void ProgramOptions::init_descriptions()
     ("version", "display version")
     ("debug,d", "enable debug mode\n")
     ("parse_only", "only parse hydla program")
-   // ("profile", "enable profile mode")
-
-
-    ("dump_parse_tree",
+    ("dump_parse_tree", 
      "output parse tree")
     ("dump_module_set_list",
      "output set of module sets\n"
      "  which might be solution\n"
      "  by list representation")
-    /*("dump-module-set-list-noinit",
-     "output set of non initial module sets\n"
-     "  which might be solution\n"
-     "  by list representation")*/
-    ("dump_module_set_graph",
+
+    ("dump_module_set_graph", 
      "output set of module sets\n"
      "  which might be solution\n"
      "  by graph representation")
-    /*("dump-module-set-graph-noinit",
-     "output set of non initial module sets\n"
-     "  which might be solution\n"
-     "  by graph representation")
-     */
-    ("dump_relation_graph",
+    ("dump_module_priority_graph",
+     "output priorities of modules\n"
+     "  by graphviz format")
+    ("dump_relation_graph", 
      "output relation of constraints and variables\n"
      "  by graphviz format")
     ("dump_in_progress",
@@ -64,19 +56,14 @@ void ProgramOptions::init_descriptions()
      "solver:\n"
      "  m or Mathematica\n"
      "  r or Reduce")
-
+     
+    ("static_generation_of_module_sets", "simulation with static generation of module sets")
 
     ("nd", "nondeterministic mode")
 
     ("in", "interactive mode")
 
-    ("find_unsat_core", "find unsat core")
-
     ("ha", "convert to HA")
-
-    ("find_unsat_core", "find unsat core")
-
-    ("use_unsat_core", "simulation using unsat core")
 
     ("hs", "simulation using HA")
 
@@ -116,23 +103,17 @@ void ProgramOptions::init_descriptions()
      "analysis file name\n"
      "  empty - standard out or standard in\n")
 
-    /*
-    ("output_format,f",
-     value<std::string>()->default_value("t"),
-     "output format:\n"
-     "  t - time function\n"
-     "  n - numeric\n"
-     "  i - numeric interval\n"
-     "  m - for Mathematica Plot")
+    ("precision", 
+     value<int>()->default_value(10), 
+     "precision of approximation\n"
+     "0 or negative number means best-effort for precision\n"
+     "(invalid if \"without_validation\" isn't specified ")
 
-    ("output_interval",
-     value<std::string>()->default_value("1/10"),
-     "max time interval of output message")
-
-    ("output_precision",
-     value<int>()->default_value(5),
-     "precision of output message")
-     */
+    ("time_delta", 
+     value<int>()->default_value(10), 
+     "exponent of minimum time step, e.g. 5 means 1.0E5, 10 means 1.0E10 \n"
+     "0 or negative number means that time step equals to 0\n"
+     "(invalid if \"without_validation\" isn't specified)")
 
     ("output_name,o",
      value<std::string>()->default_value(""),
@@ -161,16 +142,6 @@ void ProgramOptions::init_descriptions()
     ("epsilon,e",
      value<int>()->default_value(-1),
      "epsilon mode")
-
-    /*
-    ("phase_expanded",
-     value<int>()->default_value(-1),
-     "simulation limit for number of phases expanded in simulation\n"
-     " (equivalent to \"phase\" if \"nd\" is invalid)"
-     "  positive value: number of phases\n"
-     "  negative value: infinity")
-     */
-
      /*
     ("timeout",
      value<int>()->default_value(-1),

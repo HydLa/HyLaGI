@@ -19,16 +19,16 @@ public:
   
   typedef boost::bimaps::bimap<
     boost::bimaps::multiset_of<
-      boost::bimaps::tags::tagged<module_set_sptr, superset>,
+      boost::bimaps::tags::tagged<ModuleSet, superset>,
       ModuleSetComparator>,
     boost::bimaps::multiset_of<
-      boost::bimaps::tags::tagged<module_set_sptr, subset>,
+      boost::bimaps::tags::tagged<ModuleSet, subset>,
       ModuleSetComparator>
   > edges_t;
   
 
   ModuleSetGraph();
-  ModuleSetGraph(module_set_sptr m);
+  ModuleSetGraph(ModuleSet m);
 
   virtual ~ModuleSetGraph();
   
@@ -52,7 +52,7 @@ public:
    */
   virtual std::ostream& dump(std::ostream& s) const;
   
-  virtual void reset(const module_set_list_t &mss);
+  virtual void reset(const module_set_set_t &mss);
 
   /**
    * ノードの情報の名前表現によるダンプ
@@ -74,11 +74,7 @@ public:
    */
   std::ostream& dump_graphviz(std::ostream& s) const;
 
-
-  /**
-   * そのノードと子ノードをマーキングし，以降探索しないようにする
-   */
-  virtual void mark_nodes();
+  void init(){}
   
 
 private:
@@ -86,7 +82,7 @@ private:
    * 与えられたノードおよび，
    * それに包含されるノードに対して訪問フラグを立てる
    */
-  void mark_visited_flag(const module_set_sptr& ms);
+  void mark_visited_flag(const ModuleSet& ms);
 
   /**
    * グラフの辺を構築する
@@ -103,7 +99,7 @@ private:
    * 極大性を満たさないことによる枝刈とを区別する必要がありそうなので，
    * 極大性を満たさない枝刈のためにms_to_visitとは別に使用する変数．
    */
-  std::set<module_set_sptr> visited_module_sets_;
+  std::set<ModuleSet> visited_module_sets_;
 
 };
 
