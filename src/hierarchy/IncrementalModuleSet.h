@@ -137,8 +137,6 @@ public:
 
   virtual void reset_unified_prefix();
 
-  virtual void list_element_to_variable(ModuleSet);
-
 private:
   /**
    * add << data
