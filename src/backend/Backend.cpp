@@ -680,7 +680,7 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
 
 void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionList> node)
 {
-  link_->send_converted_function("List",node->get_arguments_size());
+  link_->put_converted_function("List",node->get_arguments_size());
   for(int i = 0; i < node->get_arguments_size(); i++)
   {
     accept(node->get_argument(i));
