@@ -358,7 +358,7 @@ publicMethod[
   resetConstraintForParameter,
   pCons,
   pConstraint = True;
-  pConstraint = Reduce[pConstraint && And@@pCons, Reals];
+  pConstraint = Reduce[pConstraint && pCons, Reals];
   simplePrint[pConstraint];
 ];
 
@@ -383,7 +383,7 @@ publicMethod[
 publicMethod[
   addParameterConstraint,
   pCons,
-  pConstraint = Reduce[pConstraint && And@@pCons, Reals];
+  pConstraint = Reduce[pConstraint && pCons, Reals];
   simplePrint[pConstraint];
 ];
 
@@ -514,7 +514,7 @@ publicMethod[
     {
       andCond, caseEq, caseLe, caseGr, ret
     },
-    andCond = Reduce[And@@pCons1 && And@@pCons2, Reals];
+    andCond = Reduce[pCons1 && pCons2, Reals];
     If[andCond === False,
       {{}, {}, {}},
       caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
