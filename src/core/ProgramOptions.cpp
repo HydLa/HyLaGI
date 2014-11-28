@@ -103,6 +103,12 @@ void ProgramOptions::init_descriptions()
      "analysis file name\n"
      "  empty - standard out or standard in\n")
 
+    ("output_format,f", 
+     value<std::string>()->default_value("t"), 
+     "output format:\n"
+     "  t - time function\n"
+     "  n - numeric\n")
+
     ("precision", 
      value<int>()->default_value(10), 
      "precision of approximation\n"

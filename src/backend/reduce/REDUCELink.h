@@ -64,7 +64,7 @@ public:
   void put_function(const char* s, int n);
   void put_symbol(const char* s);
   void put_number(const char* value);
-  void put_float(double d){assert(0);}
+  void put_double(double d){assert(0);}
   void put_string(const char* s);
   void put_integer(int i);
   void put_parameter(const std::string& name, int diff_count, int id);  
@@ -72,6 +72,7 @@ public:
   std::string get_symbol();
   std::string get_string();
   int get_integer();
+  double get_double();
   DataType get_type();
   std::string get_token_name(int tk_type);
   DataType get_next();

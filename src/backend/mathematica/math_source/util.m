@@ -27,7 +27,8 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   exprTimeShift,
   expr, time,
-  toReturnForm[Simplify[expr /. t -> t - time]]
+  toReturnForm[expr /. t -> t - time]
+ (* toReturnForm[Simplify[expr /. t -> t - time]]*)
 ];
 
 publicMethod[

@@ -65,7 +65,7 @@ publicMethod[
 ];
 
 publicMethod[
-  numericalOutput,
+  numerize,
   expr,
-  toReturnForm[N[Expand[expr]]]
+  toReturnForm[N[expr]]
 ];

@@ -56,6 +56,8 @@ class Value
    */
   virtual std::string get_string() const;
 
+  virtual Value get_numerized_value()const;
+
   /**
    * Nodeの形式にしたものを取得する
    */
@@ -81,6 +83,10 @@ class Value
 
   /// negative
   Value operator-();
+
+  
+  Value& operator^=(const Value &rhs);
+  Value operator^(const Value &rhs);
   
   /**
    * データをダンプする

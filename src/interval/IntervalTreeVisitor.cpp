@@ -17,110 +17,110 @@ class IntervalException : public std::runtime_error
 };
 
 
-IntervalTreeVisitor::IntervalTreeVisitor(itvd arg, parameter_map_t& map) : phase_map_(map)
+IntervalTreeVisitor::IntervalTreeVisitor()
 {
-  interval_value_ = itvd(0.,0.);
-  interval_arg_ = arg;
 }
 
 
-itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node)
+itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd t, parameter_map_t& map)
 {
+  time_interval = t;
+  parameter_map = &map;
   accept(node);
-  return interval_value_;
+  return interval_value;
 }
 
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
   accept(node->get_lhs());
-  itvd lhs = interval_value_;
+  itvd lhs = interval_value;
   accept(node->get_rhs());
-  itvd rhs = interval_value_;
-  interval_value_ = lhs + rhs;
-  // debug_print("Plus : ", interval_value_);
+  itvd rhs = interval_value;
+  interval_value = lhs + rhs;
+  // debug_print("Plus : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
 {
   accept(node->get_lhs());
-  itvd lhs = interval_value_;
+  itvd lhs = interval_value;
   accept(node->get_rhs());
-  itvd rhs = interval_value_;
-  interval_value_ = lhs - rhs;
-  // debug_print("Subtract : ", interval_value_);
+  itvd rhs = interval_value;
+  interval_value = lhs - rhs;
+  // debug_print("Subtract : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
 {
   accept(node->get_lhs());
-  itvd lhs = interval_value_;
+  itvd lhs = interval_value;
   accept(node->get_rhs());
-  itvd rhs = interval_value_;
-  interval_value_ = lhs * rhs;
-  // debug_print("Times : ", interval_value_);
+  itvd rhs = interval_value;
+  interval_value = lhs * rhs;
+  // debug_print("Times : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
 {
   accept(node->get_lhs());
-  itvd lhs = interval_value_;
+  itvd lhs = interval_value;
   accept(node->get_rhs());
-  itvd rhs = interval_value_;
+  itvd rhs = interval_value;
   // 怪しいことが起こる気がする
   // 例えば、0 を含む区間で何かを除算すると...
-  interval_value_ = lhs / rhs;
-  // debug_print("Divide : ", interval_value_);
+  interval_value = lhs / rhs;
+  // debug_print("Divide : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
 {
   accept(node->get_lhs());
-  itvd lhs = interval_value_;
+  itvd lhs = interval_value;
   accept(node->get_rhs());
-  itvd rhs = interval_value_;
+  itvd rhs = interval_value;
   // これでいいのかわからないがとりあえず
-  interval_value_ = pow(lhs, rhs);
-  // debug_print("Power : ", interval_value_);
+  interval_value = pow(lhs, rhs);
+  // debug_print("Power : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
 {
   accept(node->get_child());
-  interval_value_ = -interval_value_;
+  interval_value = -interval_value;
 }
 
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
-  interval_value_ = pi;
-  // debug_print("Pi : ", interval_value_);
+  interval_value = pi;
+  // debug_print("Pi : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
-  interval_value_ = e;
-  // debug_print("E : ", interval_value_);
+  interval_value = e;
+  // debug_print("E : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
 {
-  interval_value_ = itvd(node->get_number());
-  // debug_print("Number : ", interval_value_);
+  interval_value = itvd(node->get_number());
+  // debug_print("Number : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
 {
-  interval_value_ = itvd(node->get_number());
-  // debug_print("Float : ", interval_value_);
+  interval_value = itvd(node->get_number());
+  // debug_print("Float : ", interval_value);
   return;
 }
 
@@ -134,8 +134,8 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
       invalid_node(*node);
     }
     accept(node->get_argument(0));
-    interval_value_ = sin(interval_value_);
-    // debug_print("Sin : ", interval_value_);
+    interval_value = sin(interval_value);
+    // debug_print("Sin : ", interval_value);
   }
   else if(name == "cos")
   {
@@ -144,8 +144,8 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
       invalid_node(*node); 
     }
     accept(node->get_argument(0));
-    interval_value_ = cos(interval_value_);
-    // debug_print("Cos : ", interval_value_);
+    interval_value = cos(interval_value);
+    // debug_print("Cos : ", interval_value);
   }
   else if(name == "tan")
   {
@@ -154,7 +154,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
       invalid_node(*node);
     }
     accept(node->get_argument(0));
-    interval_value_ = tan(interval_value_);
+    interval_value = tan(interval_value);
   }
   else if(name == "log")
   {
@@ -163,7 +163,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
       invalid_node(*node);
     }
     accept(node->get_argument(0));
-    interval_value_ = log(interval_value_);
+    interval_value = log(interval_value);
   }
   else
   {
@@ -174,8 +174,8 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
-  interval_value_ = interval_arg_;
-  // debug_print("SymbolicT : ", interval_value_);
+  interval_value = time_interval;
+  // debug_print("SymbolicT : ", interval_value);
   return;
 }
 
@@ -184,18 +184,18 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
   parameter_t param(node->get_name(),
                     node->get_differential_count(),
                     node->get_phase_id());
-  range_t range = phase_map_[param];
+  range_t range = (*parameter_map)[param];
 
   value_t lower_value = (range.get_lower_bound()).value;
   accept(lower_value.get_node());
-  itvd lower_itvd = interval_value_;
+  itvd lower_itvd = interval_value;
 
   value_t uppper_value = (range.get_upper_bound()).value;
   accept(uppper_value.get_node());
-  itvd upper_itvd = interval_value_;
+  itvd upper_itvd = interval_value;
 
-  interval_value_ = itvd(lower_itvd.lower(), upper_itvd.upper());
-  debug_print("Parameter : ", interval_value_);
+  interval_value = itvd(lower_itvd.lower(), upper_itvd.upper());
+  debug_print("Parameter : ", interval_value);
 }
 
 

@@ -61,11 +61,10 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
   
   itvd n_x, div;
   bool parted;
-  IntervalTreeVisitor f_visitor(itvd(mid(tmp)), phase_map_);
-  IntervalTreeVisitor d_visitor(tmp, phase_map_);
+  IntervalTreeVisitor visitor;
 
-  itvd f_result = f_visitor.get_interval_value(exp);
-  itvd d_result = d_visitor.get_interval_value(dexp);
+  itvd f_result = visitor.get_interval_value(exp, itvd(mid(tmp)), phase_map_);
+  itvd d_result = visitor.get_interval_value(dexp, tmp, phase_map_);
   
   div = division_part1(f_result, d_result, parted);
 
@@ -110,11 +109,10 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
     for(int i=0;i<100;i++)
     {
       
-      IntervalTreeVisitor f_visitor(itvd(mid(current_value)), phase_map_);
-      IntervalTreeVisitor d_visitor(current_value, phase_map_);
+      IntervalTreeVisitor visitor;
 
-      itvd f_result = f_visitor.get_interval_value(exp);
-      itvd d_result = d_visitor.get_interval_value(dexp);
+      itvd f_result = visitor.get_interval_value(exp, itvd(mid(current_value)), phase_map_);
+      itvd d_result = visitor.get_interval_value(dexp, current_value, phase_map_);
 
       std::cout << "f_result : " << f_result << "\n";
       std::cout << "d_result : " << d_result << "\n";

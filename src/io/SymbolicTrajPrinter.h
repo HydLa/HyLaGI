@@ -8,7 +8,7 @@ namespace io{
 class SymbolicTrajPrinter: public TrajPrinter{
 public:
 
-  SymbolicTrajPrinter(std::set<std::string> output_variables = std::set<std::string>(), std::ostream& ostream = std::cout);
+  SymbolicTrajPrinter(simulator::backend_sptr_t b, std::set<std::string> output_variables = std::set<std::string>(), std::ostream& ostream = std::cout, bool numerize_par = false);
 
   void output_result_tree(const phase_result_const_sptr_t&)const;
   void output_one_phase(const phase_result_const_sptr_t&)const;
@@ -33,6 +33,7 @@ private:
   std::ostream& ostream;
   std::set<std::string> output_variables;
   simulator::backend_sptr_t backend;
+  bool numerize_parameter;
   bool epsilon_mode_flag = false;
 };
 

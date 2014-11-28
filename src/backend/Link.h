@@ -25,7 +25,7 @@ class Link
   virtual void put_symbol(const char *symbol) = 0;
   void put_symbol(const std::string& str){put_symbol(str.c_str());}
   virtual void put_integer(int value) = 0;
-  virtual void put_float(double value) = 0;
+  virtual void put_double(double value) = 0;
   virtual void put_number(const char *value) = 0;
   virtual void put_string(const char *value) = 0;
   virtual void put_string(const std::string &str){put_string(str.c_str());}
@@ -36,6 +36,7 @@ class Link
 
   virtual int get_integer() = 0;
   virtual void get_function(std::string& name, int& arg_cnt) = 0;
+  virtual double get_double() = 0;
   virtual DataType get_type() = 0;
   virtual std::string get_symbol() = 0;
   virtual std::string get_string() = 0;

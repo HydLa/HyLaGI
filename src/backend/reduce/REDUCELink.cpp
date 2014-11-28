@@ -157,6 +157,11 @@ int REDUCELink::get_integer()
   return ret;
 }
 
+double REDUCELink::get_double()
+{
+  assert(0);
+}
+
 
 REDUCELink::DataType REDUCELink::get_type()
 {

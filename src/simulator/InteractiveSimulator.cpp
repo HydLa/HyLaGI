@@ -19,7 +19,7 @@
 #include "ValueModifier.h"
 #include "SignalHandler.h"
 #include "Parser.h"
-
+#include "IntervalTreeVisitor.h"
 
 // surpress warning "C4996: old 'strcpy'" on VC++2005
 #define _CRT_SECURE_NO_DEPRECATE
@@ -27,7 +27,6 @@
 
 using namespace boost;
 using namespace std;
-//using namespace hydla::grammer_rule;
 using namespace hydla::parser::error;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser;
@@ -52,79 +51,45 @@ void InteractiveSimulator::print_end(phase_result_sptr_t& p)
 phase_result_sptr_t InteractiveSimulator::simulate()
 {
   printer_.set_output_variables(opts_->output_variables);
-  phase_result_sptr_t todo(make_initial_todo());
+  make_initial_todo();
+  phase_result_sptr_t current = result_root_;
   unsigned int todo_num = 1; // 連続して処理するTODOの残数
 
   while(todo_num)
   {
     try
     {
-      timer::Timer phase_timer;
-      phase_simulator_->process_todo(todo);
+      phase_simulator_->apply_diff(*current);      
+      while(!current->todo_list.empty())
+      {
+        phase_result_sptr_t todo = current->todo_list.front();
+        current->todo_list.pop_front();
+        profile_vector_->push_back(todo);
+        // TODO: implement selection of todo
+        current->todo_list.clear();
+        current = todo;
+        break;
+      }
 
-/*
-  TODO:implement
-      if(phases.empty())
-      {
-        phase_result_sptr_t tmp_todo = todo;
-        do
-        {
-          if(todo->phase_type == POINT_PHASE)
-            cout << "---------PP "<<todo->id<< "---------" << endl;
-          cout << "execution stuck" << endl;
-          todo_num = input_and_process_command(todo);
-        }while(todo_num > 0 && tmp_todo == todo);
-        continue;
-      }
-      else
-      {
-        unsigned int select_num = select_case<phase_result_sptr_t>(phases);
-        phase = phases[select_num];
-      }
-*/
+      process_one_todo(current);
 
-      //TODO: implement
-      /*
-         PhaseSimulator::todo_list_t todos = phase_simulator_->make_next_todo(phase, todo);
-      todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
-      profile_vector_->push_back(todo);
-      if(todos.empty())
-      {
-        phase_result_sptr_t tmp_todo = todo;
-        do
-        {
-          print_end(phase);
-          todo_num = input_and_process_command(todo);
-        }while(todo_num > 0 && tmp_todo == todo);
-        continue;
-      }
-      todo = todos[0];
-      print_phase(todo);
+      print_phase(current);
       
-      // TODO: implement break condition
       if(todo_num > 0 && --todo_num == 0)
       {
-        todo_num = input_and_process_command(todo);
+        todo_num = input_and_process_command(current);
       }
-      // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
-      all_todo_.push_back(todo);
-      */
-      if(signal_handler::interrupted) break;
+      
     }
     catch(const runtime_error &se)
     {
       cout << se.what() << endl;
-      todo->simulation_state = SOME_ERROR;
+      current->simulation_state = SOME_ERROR;
       HYDLA_LOGGER_DEBUG(se.what());
       break;
     }
-
   }
 
-  if(signal_handler::interrupted || todo->simulation_state != SOME_ERROR){
-    todo->simulation_state = INTERRUPTED;
-    io::JsonWriter().write_phase(todo, "interrupted_phase");
-  }
   return result_root_;
 }
 
@@ -200,9 +165,6 @@ int InteractiveSimulator::input_and_process_command(phase_result_sptr_t& todo){
         change_time(todo);
         print_phase(todo);
         break;
-      case 'u':
-        find_unsat_core(todo);
-        break;
       case 'b':
         set_breakpoint(todo);
         break;
@@ -237,11 +199,7 @@ int InteractiveSimulator::show_help(){
     "c              -- Change a value of a variable",
     "p              -- Display the information of the current phase",
     "a              -- Approx a value of a variable as interval",
-    "u              -- Find unsat core constraints and print them",
     "breakpoints    -- Making program stop at certain points",
-    //"debug          -- Simulate with debug-mode",
-    //"edit           -- Edit constraint ",
-    //"load           -- Load state ",
     "run            -- simulate program  until the breakpoint is reached",
     "s              -- Save state to file",
   };
@@ -333,12 +291,6 @@ int InteractiveSimulator::change_variable(phase_result_sptr_t& todo){
 int InteractiveSimulator::approx_variable(phase_result_sptr_t& todo){
   if(todo->phase_type == POINT_PHASE)
   {
-    cout << "(approximate time)" << endl;
-    //   affine_transformer_->approximate_time(todo->current_time, todo->variable_map, todo->prev_map, todo->parameter_map, (todo->discrete_positive_asks.begin()->first)->get_guard());
-    todo->end_time = todo->current_time;
-  }
-  else
-  {
     variable_map_t& vm = todo->variable_map;
     cout << "(approximate variable)" << endl;
   
@@ -348,8 +300,6 @@ int InteractiveSimulator::approx_variable(phase_result_sptr_t& todo){
     string variable_str = excin<string>();
 
     // TODO: 変数自体が幅を持つ場合への対応
-    // TODO: 時刻を近似したい場合への対応
-
     variable_t var;
 
     variable_map_t::iterator v_it  = vm.begin();
@@ -365,12 +315,31 @@ int InteractiveSimulator::approx_variable(phase_result_sptr_t& todo){
       cout << "invalid variable name " << endl;
       return 0;
     }
-//    affine_transformer_->approximate(var, vm, todo->parameter_map, (todo->discrete_positive_asks.begin()->first)->get_guard());
-    todo->prev_map = vm;
-  }
 
+    IntervalTreeVisitor visitor;
+    range_t range = vm[var];
+    assert(range.unique());
+    itvd interval = visitor.get_interval_value(range.get_unique_value().get_node(), itvd(0.0), todo->parameter_map);
+    
+    value_t lower(interval.lower());
+    backend->call("transformToRational", 1, "vln", "vl", &lower, &lower);
+    value_t upper(interval.upper());
+    backend->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+    ValueRange approximated_range (lower, upper);
+    Parameter parameter = introduce_parameter(var.get_name(), var.get_differential_count(), todo->id, approximated_range);
+    todo->parameter_map[parameter] = approximated_range;
+    vm[var] = value_t(parameter);
+
+    //affine_transformer_->approximate(var, vm, todo->parameter_map, (*todo->diff_positive_asks.begin())->get_guard());
+    for(auto child : todo->todo_list)
+    {
+      child->prev_map = vm;
+      child->parameter_map = todo->parameter_map;
+    }
+  }
   return 1;
 }
+
 
 /*
 int InteractiveSimulator::select_options(){
@@ -483,16 +452,6 @@ int InteractiveSimulator::load_state(phase_result_sptr_t& todo){
   return 1;
 }
 
-int InteractiveSimulator::find_unsat_core(phase_result_sptr_t & todo){
-/*  phase_simulator_->find_unsat_core(
-    todo->module_set_container->get_max_module_set(),
-    todo,
-    todo->variable_map);
-*/
-  return 0;
-}
-
-
 int InteractiveSimulator::set_breakpoint(phase_result_sptr_t & todo){
   cout << "input break point" << endl;
   stringstream ss;
@@ -506,7 +465,6 @@ int InteractiveSimulator::set_breakpoint(phase_result_sptr_t & todo){
     cout << "invalid condition" << endl;
     return 0;
   }
-
 //  phase_simulator_->set_break_condition(node_tree); // TODO: implement
   return 0;
 }

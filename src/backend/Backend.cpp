@@ -226,6 +226,17 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   }
   break;
 
+  case 'd':
+  {
+    if(ret_fmt[++i] == 'b')
+    {
+      double *db = (double*)ret;
+      *db = link_->get_double();
+      break;
+    }
+    else invalid_fmt(ret_fmt, i);
+  }
+
   case 'e':
   {
     symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr*)ret;
@@ -662,7 +673,7 @@ void Backend::visit(boost::shared_ptr<Number> node)
 }
 
 void Backend::visit(boost::shared_ptr<Float> node)              {
-  link_->put_float(node->get_number());
+  link_->put_double(node->get_number());
 }  
 
 

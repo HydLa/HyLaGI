@@ -1,4 +1,5 @@
 #include "ValueRange.h"
+#include "ValueNumerizer.h"
 
 namespace hydla {
 namespace simulator {
@@ -20,6 +21,27 @@ ValueRange::ValueRange(const value_t& lower, const value_t& upper)
   set_upper_bound(upper, true);
 }
 
+ValueRange ValueRange::get_numerized_range()const
+{
+  ValueRange numerized_range = *this;
+  ValueNumerizer numerizer;
+  if(unique())
+  {
+    numerizer.numerize(numerized_range.unique_value_);
+  }
+  else
+  {
+    for(auto &bound : numerized_range.lower_)
+    {
+      numerizer.numerize(bound.value);
+    }
+    for(auto &bound : numerized_range.upper_)
+    {
+      numerizer.numerize(bound.value);
+    }
+  }
+  return numerized_range;
+}
 
 std::string ValueRange::get_string()const
 {

@@ -169,7 +169,7 @@ bool MathematicaLink::receive_to_return_packet(){
       str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
-        HYDLA_LOGGER_DEBUG("input: ", str);
+        HYDLA_LOGGER_DEBUG("input: \n", str);
       }else{
         HYDLA_LOGGER_DEBUG("trace: ", str);
         debug_print_ += str + "\n";
@@ -459,6 +459,20 @@ int MathematicaLink::get_integer()
   }
   on_next_ = false;
   return i;
+}
+
+double MathematicaLink::get_double()
+{
+  double d;
+  if(!on_next_)
+  {
+    get_next();
+  }
+  if(!MLGetDouble(&d)) {
+    throw LinkError("math", "get_double", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
+  }
+  on_next_ = false;
+  return d;
 }
 
 int MathematicaLink::get_arg_count()

@@ -1,6 +1,6 @@
 // bouncing particle to a roof
 
-INIT <=> 9 < y < 11 & y' = 10.
+INIT <=> 10.5 <= y < 11 & y' = 10.
 FALL <=> [](y'' = -10).
 BOUNCE <=> [](y- = 15 => y' = -(4/5)*y'-).
 

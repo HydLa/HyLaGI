@@ -14,8 +14,9 @@ using namespace simulator;
 using namespace backend;
 using namespace std;
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(set<string> vars, std::ostream& ost):
-  ostream(ost), output_variables(vars){
+
+SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, set<string> vars, std::ostream& ost, bool numerize_par):
+  ostream(ost), output_variables(vars), backend(b), numerize_parameter(numerize_par){
 }
 
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
@@ -54,8 +55,17 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm, const 
   if(it != end){
     ostream << "\n---------parameter condition" << post_fix << "---------\n";
   }
-  for(; it!=end; ++it) {
-    ostream << it->first << "\t: " << it->second << "\n";
+  if(numerize_parameter)
+  {
+    for(; it!=end; ++it) {
+      ValueRange numerized_range = it->second.get_numerized_range();
+      ostream << it->first << "\t: " << numerized_range << "\n";
+    }
+  }else
+  {
+    for(; it!=end; ++it) {
+      ostream << it->first << "\t: " << it->second << "\n";
+    }
   }
 }
 
@@ -65,7 +75,7 @@ ostream &stream, const variable_map_t& vm) const
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    stream << it->first << "\t: " << it->second << "\n";
+    stream << it->first << "\t: " << it->second.get_numerized_range() << "\n";
   }
 }
 
