@@ -20,7 +20,7 @@ void ValueNumerizer::numerize(Value& val)
 {
   fully_numerized = true;
   accept(val.get_node());
-  if(fully_numerized)val = current_double;
+  if(fully_numerized)val = Value(current_double);
   else val = current_value;
 }
 
@@ -197,10 +197,10 @@ void ValueNumerizer::visit(shared_ptr<Power> node)
 
 void ValueNumerizer::visit(shared_ptr<Negative> node)
 {
+  
   accept(node->get_child());
   if(!fully_numerized)current_value = -current_value;
   else current_double = -current_double;
-  
 }
 
 

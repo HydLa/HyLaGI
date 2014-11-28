@@ -75,7 +75,7 @@ ostream &stream, const variable_map_t& vm) const
   variable_map_t::const_iterator it  = vm.begin();
   variable_map_t::const_iterator end = vm.end();
   for(; it!=end; ++it) {
-    stream << it->first << "\t: " << it->second.get_numerized_range() << "\n";
+    stream << it->first << "\t: " << it->second << "\n";
   }
 }
 

@@ -1,6 +1,7 @@
 #include "ValueRange.h"
 #include "ValueNumerizer.h"
 
+
 namespace hydla {
 namespace simulator {
 
@@ -23,6 +24,7 @@ ValueRange::ValueRange(const value_t& lower, const value_t& upper)
 
 ValueRange ValueRange::get_numerized_range()const
 {
+  //TODO: calculate the interval which encloses this range 
   ValueRange numerized_range = *this;
   ValueNumerizer numerizer;
   if(unique())

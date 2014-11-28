@@ -194,11 +194,11 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Number> node){
 
 void TreeInfixPrinter::visit(boost::shared_ptr<Float> node){
   double number = node->get_number();
-  if(number >= 0)
+  if(number >= 0 || need_par_ < PAR_N)
   {
     (*output_stream_) << number;
   }
-  else if(need_par_>=PAR_N){
+  else{
     (*output_stream_) << "(";
     (*output_stream_) << number;
     (*output_stream_) << ")";

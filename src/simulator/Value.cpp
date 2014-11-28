@@ -3,6 +3,7 @@
 #include <sstream>
 #include "Utility.h"
 #include "ValueNumerizer.h"
+#include "Logger.h"
 
 using namespace hydla::simulator;
 using namespace hydla::utility;
