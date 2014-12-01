@@ -164,7 +164,7 @@ public:
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
   {
-    MAKE_NEW_CONTAINER
+    accept(node->get_child());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
