@@ -5,5 +5,3 @@ FALL <=> [](y'' = -10).
 BOUNCE <=> [](y- = 0 => y' = -4/5 * y'-).
 
 INIT, FALL << BOUNCE.
-
-ASSERT(y>=1).

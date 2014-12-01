@@ -369,9 +369,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
   profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";
-  std::cout << constraint_store << std::endl;
   backend->call("addConstraint", 1, fmt, "", &constraint_store);
-  std::cout << "end add constraint" << std::endl;
   return call_backend_check_consistency(phase);
 }
 
