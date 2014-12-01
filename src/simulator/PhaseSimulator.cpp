@@ -793,6 +793,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         auto time_it = time_result.begin();
         while(true)
         {
+<<<<<<< HEAD
           DCCandidate &candidate = *time_it;
           // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
           for(auto par_entry : candidate.parameter_map ){
@@ -810,6 +811,16 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->discrete_asks = candidate.discrete_asks;
             for(auto ask : next_todo->discrete_asks)
+=======
+          assert(next_todo->discrete_asks.size() <= 1);
+          for(auto ask: next_todo->discrete_asks)
+          {
+            VariableFinder finder;
+            finder.visit_node(ask.first->get_guard());
+            HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask.first));
+            variable_set_t variables = finder.get_all_variable_set();
+            if(variables.size() == 1)
+>>>>>>> fix for equations without zero crossing
             {
               pr->next_pp_candidate_map.erase(ask.first);
               std::list<AtomicConstraint *> atomic_guards = relation_graph_->get_atomic_guards(ask.first->get_guard());

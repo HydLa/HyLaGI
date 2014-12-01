@@ -72,9 +72,12 @@ publicMethod[
   If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
     InvalidRelop,
     substituted = exp /. Map[(Rule@@#)&, cons];
-    lhs = substituted[[1]];
-    rhs = substituted[[2]];
-    toReturnForm[lhs - rhs]
+    If[substituted === False, 
+      undefined,
+      lhs = substituted[[1]];
+      rhs = substituted[[2]];
+      toReturnForm[lhs - rhs]
+      ]
     ]
   ]
 ];

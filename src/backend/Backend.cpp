@@ -1065,7 +1065,12 @@ symbolic_expression::node_sptr Backend::receive_node(){
     {
 
       std::string symbol = link_->get_symbol();
-      if(symbol=="t")
+      if(symbol=="undefined")
+      {
+        //do nothing
+        return ret;
+      }
+      else if(symbol=="t")
         ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
       else if(symbol=="Pi")
         ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());
