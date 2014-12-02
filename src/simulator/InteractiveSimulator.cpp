@@ -319,7 +319,7 @@ int InteractiveSimulator::approx_variable(phase_result_sptr_t& todo){
     IntervalTreeVisitor visitor;
     range_t range = vm[var];
     assert(range.unique());
-    itvd interval = visitor.get_interval_value(range.get_unique_value().get_node(), itvd(0.0), todo->parameter_map);
+    itvd interval = visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &todo->parameter_map);
     
     value_t lower(interval.lower());
     backend->call("transformToRational", 1, "vln", "vl", &lower, &lower);

@@ -1,14 +1,17 @@
 #include "ValueRange.h"
-#include "ValueNumerizer.h"
-
+#include "IntervalTreeVisitor.h"
+#include <cfloat>
 
 namespace hydla {
 namespace simulator {
+
+using namespace hydla::symbolic_expression;
 
 std::ostream& operator<<(std::ostream& s, const ValueRange & val)
 {
   return val.dump(s);
 }
+
 ValueRange::ValueRange(const value_t& lower, bool low_include,
                        const value_t& upper, bool up_include)
 {
@@ -24,25 +27,29 @@ ValueRange::ValueRange(const value_t& lower, const value_t& upper)
 
 ValueRange ValueRange::get_numerized_range()const
 {
-  //TODO: calculate the interval which encloses this range 
-  ValueRange numerized_range = *this;
-  ValueNumerizer numerizer;
+  interval::IntervalTreeVisitor itv_visitor;
+  double lower = -DBL_MAX, upper = DBL_MAX; 
   if(unique())
   {
-    numerizer.numerize(numerized_range.unique_value_);
+    interval::itvd itv;
+    itv = itv_visitor.get_interval_value(unique_value_.get_node());
+    lower = itv.lower();
+    upper = itv.upper();
   }
   else
   {
-    for(auto &bound : numerized_range.lower_)
+    for(auto &bound : lower_)
     {
-      numerizer.numerize(bound.value);
+      interval::itvd lower_itv = itv_visitor.get_interval_value(bound.value.get_node());
+      if(lower_itv.lower() > lower)lower = lower_itv.lower();
     }
-    for(auto &bound : numerized_range.upper_)
+    for(auto &bound : upper_)
     {
-      numerizer.numerize(bound.value);
+      interval::itvd upper_itv = itv_visitor.get_interval_value(bound.value.get_node());
+      if(upper_itv.upper() < upper) upper = upper_itv.upper();
     }
   }
-  return numerized_range;
+  return ValueRange(Value(lower), true, Value(upper), true);
 }
 
 std::string ValueRange::get_string()const

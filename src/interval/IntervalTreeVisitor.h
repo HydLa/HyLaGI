@@ -35,7 +35,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
 
   IntervalTreeVisitor();
   
-  itvd get_interval_value(const node_sptr &, itvd, parameter_map_t&);
+  itvd get_interval_value(const node_sptr &, itvd *time_interval = nullptr, parameter_map_t *parameter_map = nullptr);
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node);
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node);
@@ -65,7 +65,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
   
   static itvd pi, e;
   itvd interval_value;
-  itvd time_interval;
+  itvd *time_interval;
   parameter_map_t *parameter_map;
 };
 

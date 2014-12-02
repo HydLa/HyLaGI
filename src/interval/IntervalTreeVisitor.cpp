@@ -22,10 +22,10 @@ IntervalTreeVisitor::IntervalTreeVisitor()
 }
 
 
-itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd t, parameter_map_t& map)
+itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd *t, parameter_map_t *map)
 {
   time_interval = t;
-  parameter_map = &map;
+  parameter_map = map;
   accept(node);
   return interval_value;
 }
@@ -70,8 +70,6 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Di
   itvd lhs = interval_value;
   accept(node->get_rhs());
   itvd rhs = interval_value;
-  // 怪しいことが起こる気がする
-  // 例えば、0 を含む区間で何かを除算すると...
   interval_value = lhs / rhs;
   // debug_print("Divide : ", interval_value);
   return;
@@ -83,7 +81,6 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
   itvd lhs = interval_value;
   accept(node->get_rhs());
   itvd rhs = interval_value;
-  // これでいいのかわからないがとりあえず
   interval_value = pow(lhs, rhs);
   // debug_print("Power : ", interval_value);
   return;
@@ -174,17 +171,22 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
-  interval_value = time_interval;
+  if(time_interval == nullptr)invalid_node(*node);
+  interval_value = *time_interval;
   // debug_print("SymbolicT : ", interval_value);
   return;
 }
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
 {
+  if(parameter_map == nullptr)invalid_node(*node);
   parameter_t param(node->get_name(),
                     node->get_differential_count(),
                     node->get_phase_id());
-  range_t range = (*parameter_map)[param];
+  auto param_it = parameter_map->find(param);
+  if(param_it == parameter_map->end())invalid_node(*node);
+
+  range_t range = param_it->second;;
 
   value_t lower_value = (range.get_lower_bound()).value;
   accept(lower_value.get_node());
@@ -195,7 +197,6 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
   itvd upper_itvd = interval_value;
 
   interval_value = itvd(lower_itvd.lower(), upper_itvd.upper());
-  debug_print("Parameter : ", interval_value);
 }
 
 
