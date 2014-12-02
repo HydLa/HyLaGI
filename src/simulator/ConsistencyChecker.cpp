@@ -216,6 +216,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_core(
   )
 {
   CheckEntailmentResult ce_result;
+
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
@@ -374,4 +375,5 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintSto
 }
 
 }
+
 }

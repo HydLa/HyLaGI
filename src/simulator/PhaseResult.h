@@ -70,6 +70,7 @@ typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sp
 
 typedef std::set<std::string> change_variables_t;
 
+
 typedef std::map<constraint_t, bool> constraint_diff_t;
 typedef std::map<module_set_t::module_t, bool>     module_diff_t;
 typedef hierarchy::ModuleSet                      module_set_t;
@@ -177,5 +178,4 @@ std::ostream& operator<<(std::ostream& s, const change_variables_t& a);
 std::ostream& operator<<(std::ostream& s, const pp_time_result_t& n);
 
 } // namespace simulator
-} // namespace hydla 
-
+} // namespace hydla

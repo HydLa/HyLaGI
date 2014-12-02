@@ -460,7 +460,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
     }
   }
   
-  link_->put_converted_function("List", size);
+  link_->put_converted_function("And", size);
   it = parameter_map.begin();
   for(; it!=parameter_map.end(); ++it)
   {

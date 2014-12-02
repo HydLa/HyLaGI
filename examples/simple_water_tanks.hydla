@@ -1,16 +1,28 @@
 // http://www-inst.cs.berkeley.edu/~ee291e/sp09/handouts/book.pdf
 // p57
-Xs := {x1..x30}.
+// Many watertanks with one inflow
 
-WATER <=> [](w = 30).
+// Definition of the set of variables for water levels (xn)
+Xs := {x1..x5}.
 
+// Initial condition of each water tank
+INIT(x,xinit,vinit) <=> x = xinit /\ x' = vinit.
+
+// Constant for inflow
+// |Xs| : the size of the list Xs (number of water tanks)
+CONST <=> [](inflow = |Xs|).
+
+// The water levels change linearly
 LINEAR(x) <=> [](x'' = 0).
-POUR(x1,r1,v1) <=> [](x1- = r1- => x1' = 30 - v1).
-NOT_POUR(x1,r1,x2,v2) <=> [](x1- = r1- & x2'- = 30 - v2- => x2' = -v2).
-INIT(x,xinit,vinit) <=> x = xinit /\ x' = -vinit.
+ 
+// If the water level(x1) reaches to threshold(r1), the inflow switches to the water tank.
+INFLOW(x1,r1, outflow) <=> [](x1- = r1- => x1' = inflow - outflow).
 
-WATER.
-INIT(Xs[1],1,(5+1)).
-{ INIT(Xs[i],i^3,(5+i)) | i in {2..|Xs|} }.
-{ LINEAR(Xs[i]) << POUR(Xs[i],1/2*i,(5+i)) | i in {1..|Xs|} }.
-{ LINEAR(Xs[j]) << NOT_POUR(Xs[i],1/2*i,Xs[j],(5+j)) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.
+// If a water level of another tank(x1) reaches to threshold(r1) and inflow is into the water tank(x2), inflow is removed from x2.
+NO_INFLOW(x1,r1,x2, outflow) <=> [](x1- = r1- & x2'- = inflow - outflow => x2' = -outflow).
+
+// The constraint hierarchy using list comprehension
+INIT(Xs[1], 1, inflow - 1), CONST,
+{ INIT(Xs[i], 2 + i/2, -1-((i-1)/17) ) | i in {2..|Xs|} }.
+{ LINEAR(Xs[i]) << INFLOW(Xs[i], 1, 1+((i-1)/17) ) | i in {1..|Xs|} }.
+{ LINEAR(Xs[j]) << NO_INFLOW(Xs[i], 1, Xs[j], 1+((j-1)/17)) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.

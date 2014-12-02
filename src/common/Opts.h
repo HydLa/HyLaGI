@@ -22,7 +22,7 @@ struct Opts {
   std::string max_time;
   bool approx;
   bool cheby;
-  bool epsilon_mode;
+  int epsilon_mode;
   bool nd_mode;
   bool static_generation_of_module_sets;
   bool interactive_mode;

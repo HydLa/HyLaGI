@@ -1,0 +1,16 @@
+/**
+ * From "Bounce of a spinning ball near normal incidence"
+ * Rod Cross, American Journal of Physics, 74, 914(2005).  
+ * r: the radius of the ball
+ * ey: the normal coefficient of restitution
+ * ex: the tangential coefficient of restitution
+ * m : the mass of the ball
+ * 
+ */
+
+INIT <=> x = 0 & y = 10 & x' = 1 & y' = 0 & w = 5 & 0 < ex < 1 & [](r = 1 & ey = 0.9 & ex' = 0  & m = 1 & i = 2/5 * m * r^2).
+FALL <=> [](x'' = 0 & y'' = -10 & w' = 0).
+BOUNCE <=> [](y- = 0 => y' = -ey*y'- & ex * (x'- - r * w-) = (x' - r * w) & i * w- + m * r * x'- = i * w + m * r * x').
+
+INIT, FALL << BOUNCE.
+

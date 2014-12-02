@@ -1,54 +1,17 @@
-LAW(m,M,L,g,iniU) <=>
- [](I = m*L^2/3
- & e = I*(m+M)+m*M*L^2
- & th''= m*L*(m+M)*g/e*th - m*L/e*u).
-// & x'' = -m^2*L^2*g/e*th + (I+m*L^2)/e*u
+INIT <=> th = 0.005 & th' = 0 & s = 0 & threshold = 0.01 & [](threshold' = 0).
 
-SR <=> [](th- = threshold & s-=0 => s=1 & timer = 0).
-SL <=> [](th- = -threshold & s-=0 => s=2 & timer = 0).
-SN <=> []((th- = threshold & s-=1)
- | (th-= -threshold & s-=2) => s=0 & timer = 0).
-
-CAR(iniTH,iniTHV){
- LAW(1,1,1,10,0),
- th = iniTH & th' = iniTHV
-}.
-CAR(0.005, 0).
-
-FORCE(state, force) <=> [](s- = state & timer -= 1 => u = force).
-
-CONTROL(){
- 0.01 < threshold < 0.4
- //threshold = 0.01
- & [](threshold' = 0),
- [](s' = 0 & timer' = 1) << SR & SL & SN ,
- s = 0 & timer = 1 & u = 0, [](u' = 0) << FORCE(1, 15) & FORCE(2, -15) & FORCE(0, 0)
-}.
-CONTROL().
-
-
-/*
+LAW(m,m2,l,g,iniU) <=>
+ [](i = m*l^2/3 & e = i*(m+m2)+m*m2*l^2
+ & th''= m*l*(m+m2)*g/e*th - m*l/e*u).
+// & x'' = -m^2*L^2*g//e*th + (I+m*L^2)/e*u
 
 SR <=> [](th- = threshold & s-=0 => s=1).
 SL <=> [](th- = -threshold & s-=0 => s=2).
 SN <=> []((th- = threshold & s-=1)
- | (th-= -threshold & s-=2) => s=0).
-
-CAR(iniTH,iniTHV){
- LAW(1,1,1,10,0),
- th = iniTH & th' = iniTHV
-}.
-CAR(0.005, 0).
-
+ | (th-= -threshold & s-=2) => s=0). 
+SCONST <=> [](s' = 0).
 FORCE(state, force) <=> [](s = state => u = force).
 
-CONTROL(){
- 0.01 < threshold < 0.4
- //threshold = 0.01
- & [](threshold' = 0),
- [](s' = 0) << SR & SL & SN ,
- s = 0, FORCE(1, 15), FORCE(2, -15),FORCE(0, 0)
-}.
-CONTROL().
-
-*/
+LAW(1,1,1,10,0),
+SCONST << (SR, SL, SN),
+FORCE(1, 15), FORCE(2, -15), FORCE(0, 0).

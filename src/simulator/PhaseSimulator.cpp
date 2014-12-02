@@ -154,9 +154,9 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
   }
 
+
   if(todo->profile["# of CheckConsistency"]) todo->profile["Average of CheckConsistency"] = todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
   if(todo->profile["# of CheckEntailment"]) todo->profile["Average of CheckEntailment"] =  todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
-
   return result_list;
 }
 
@@ -269,8 +269,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
 
 
-    if(opts_->epsilon_mode){
-      phase->variable_map = cut_high_order_epsilon(backend_.get(),phase);
+    if(opts_->epsilon_mode >= 0){
+      cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
     }
     
     phase->diff_positive_asks.insert(positive_asks.begin(), positive_asks.end());
@@ -325,7 +325,6 @@ void PhaseSimulator::check_break_points(phase_result_sptr_t &phase, variable_map
       phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     }
   }
-
 }
 
 void PhaseSimulator::initialize(variable_set_t &v,
@@ -526,8 +525,6 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, ask_set_t &tr
       }
       first_loop = false;
     }
-    diff = next_diff;
-    next_diff.clear();
   }while(expanded);
 
   // TODO: implement branching here
@@ -690,7 +687,16 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
             symbolic_expression::node_sptr trigger(ask->get_guard());
             if(relation_graph_->get_entailed(ask))trigger.reset(new Not(trigger)); // negate the condition
-            backend_->call("findMinTime", 3, "etmvtvlt", "f", &trigger, &related_vm, &time_limit, &min_time_for_this_ask);
+            if(opts_->epsilon_mode >= 0)
+            {
+              min_time_for_this_ask = find_min_time_epsilon(trigger, related_vm,
+                                                            time_limit, phase, backend_.get());
+            }
+            else
+            {
+               backend_->call("findMinTime", 3, "etmvtvlt", "f", &trigger, &related_vm, &time_limit, &min_time_for_this_ask);
+            }
+            
             candidate_map[ask] = min_time_for_this_ask;
             calculated_pp_time_set.insert(ask);
           }
@@ -700,7 +706,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
-        variable_map_t related_vm = get_related_vm(break_point.condition, phase->variable_map);
+        variable_map_t related_vm = get_related_vm(break_point.condition, original_vm);
         backend_->call("findMinTime", 3, "etmvtvlt", "f", &break_point.condition, &related_vm, &time_limit, &entry.second);
       }
       pp_time_result_t time_result;
@@ -717,7 +723,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         ask_t null_ask;
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
-    
+
       if(time_result.empty())
       {
         phase->simulation_state = simulator::TIME_LIMIT;
@@ -877,8 +883,6 @@ void PhaseSimulator::revert_diff(const ask_set_t &positive_asks, const ask_set_t
     relation_graph_->set_expanded_atomic(always, true);
   }
 }
-
-
 
 }
 }

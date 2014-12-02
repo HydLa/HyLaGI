@@ -96,6 +96,7 @@ private:
   void send_prev_constraint(Variable &var);
 
   backend_sptr_t backend;
+
   const variable_map_t *prev_map;
   std::vector<variable_map_t> result_maps;
   int backend_check_consistency_count;
