@@ -170,9 +170,6 @@ private:
   /// module_conditions_[module_t ms] are the conditions for ms.
   module_conditions_t module_conditions_;
 
-  /// list_variables
-  std::vector<boost::shared_ptr<symbolic_expression::Variable> > list_variables_;
-
   /// same modules whose bound variable names are different
   node_relations_data_t related_modules_;
 
