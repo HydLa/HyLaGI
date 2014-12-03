@@ -57,6 +57,11 @@ IncrementalModuleSet::IncrementalModuleSet(const IncrementalModuleSet& im)
 IncrementalModuleSet::~IncrementalModuleSet()
 {}
 
+std::vector<boost::shared_ptr<symbolic_expression::Variable> > IncrementalModuleSet::get_list_variables(ModuleSet ms)
+{
+  return list_variables_;
+}
+
 /**
  * 対象のモジュール集合から除去可能なモジュールの集合を返す
  * @param current_ms 対象のモジュール集合 
@@ -390,11 +395,6 @@ void IncrementalModuleSet::init()
 
   maximal_module_set_ = get_unified_module_set(maximal_module_set_);
   required_ms_ = get_unified_module_set(required_ms_);
-
-  /*
-  list_element_to_variable(maximal_module_set_);
-  list_element_to_variable(required_ms_);
-*/
 
   full_module_set_set_.clear();
   full_module_set_set_.insert(maximal_module_set_);

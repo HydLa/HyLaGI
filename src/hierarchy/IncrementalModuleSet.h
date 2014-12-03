@@ -53,6 +53,11 @@ public:
   void add_weak(IncrementalModuleSet&);
 
   /**
+   * return list variable vector
+   */
+  std::vector<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables(ModuleSet);
+
+  /**
    * 集合の集合(このクラス)の名前
    */ 
   std::string get_name() const;
@@ -164,6 +169,9 @@ private:
 
   /// module_conditions_[module_t ms] are the conditions for ms.
   module_conditions_t module_conditions_;
+
+  /// list_variables
+  std::vector<boost::shared_ptr<symbolic_expression::Variable> > list_variables_;
 
   /// same modules whose bound variable names are different
   node_relations_data_t related_modules_;

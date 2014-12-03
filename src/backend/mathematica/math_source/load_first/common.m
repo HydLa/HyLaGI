@@ -6,6 +6,7 @@ $MaxExtraPrecision = 1000;
 (*
  * global variables
  * constraint: 現在のフェーズでの制約
+ * lConstraint: リスト変数についての制約
  * pConstraint: 定数についての制約
  * prevIneqs: constraints of inequalities of left-hand limits
  * prevRules:      rules converted from equalities of left-hand limits
@@ -26,6 +27,7 @@ $MaxExtraPrecision = 1000;
  * timeOutS: タイムアウトまでの時間．秒単位．
  * opt...: 各種オプションのON/OFF．
  * approxPrecision: 近似精度．
+ * listVariables: リスト内変数
  *)
 
 
@@ -37,6 +39,7 @@ parameters = {};
 dList = {};
 profileList = {};
 createMapList = {};
+listVariables = {};
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,

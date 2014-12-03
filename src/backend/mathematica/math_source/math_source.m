@@ -399,6 +399,33 @@ publicMethod[
   parameters = Union[parameters, {par}]
 ];
 
+publicMethod[
+  clearListVariables,
+  var,
+  listVariabless = {}
+];
+
+publicMethod[
+  addListVariable,
+  var,
+  listVariables = Union[listVariables, {var}]
+];
+
+publicMethod[
+  resetConstraintForListVariable,
+  lCons,
+  lConstraint = True;
+  lConstraint = Reduce[lConstraint && lCons, Reals];
+  simplePrint[lConstraint];
+];
+
+publicMethod[
+  addListConstraint,
+  lCons,
+  lConstraint = Reduce[lConstraint && lCons, Reals];
+  simplePrint[lConstraint];
+];
+
 (* 変数名からDerivativeやtを取り，微分回数とともに返す *)
 removeDash[var_] := Module[
    {ret},
