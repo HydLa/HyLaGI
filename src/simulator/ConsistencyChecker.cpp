@@ -29,6 +29,7 @@ ConsistencyChecker::~ConsistencyChecker(){}
 
 void ConsistencyChecker::send_prev_constraint(Variable &var)
 {
+  if(var.get_name().substr(0,1) == "U") return;
   if(!prev_map->count(var))return;
   auto range = prev_map->find(var)->second;
   if(range.unique())
@@ -70,6 +71,7 @@ void ConsistencyChecker::send_prev_constraint(Variable &var)
 
 void ConsistencyChecker::send_init_equation(Variable &var, string fmt)
 {
+  if(var.get_name().substr(0,1) == "U") return;
   fmt += "vp";
   backend->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
 }
