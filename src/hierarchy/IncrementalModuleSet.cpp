@@ -57,7 +57,7 @@ IncrementalModuleSet::IncrementalModuleSet(const IncrementalModuleSet& im)
 IncrementalModuleSet::~IncrementalModuleSet()
 {}
 
-std::vector<boost::shared_ptr<symbolic_expression::Variable> > IncrementalModuleSet::get_list_variables(ModuleSet ms)
+std::vector<boost::shared_ptr<symbolic_expression::Variable> > IncrementalModuleSet::get_list_variables()
 {
   std::vector<boost::shared_ptr<symbolic_expression::Variable> > ret;
   for(auto u_map : unifiers_)
