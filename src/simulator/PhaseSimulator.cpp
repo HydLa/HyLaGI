@@ -741,6 +741,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       guard_time_map_t guard_time_map;
 
+<<<<<<< HEAD
       // 各変数に関する最小時刻をask単位で更新する．
       MinTimeCalculator min_time_calculator(relation_graph_.get(), backend_.get());
       for(auto variable : diff_variables)
@@ -757,6 +758,53 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
+=======
+          if(opts_->interval_newton)
+          {
+            node_sptr exp;
+            node_sptr dexp;
+            symbolic_expression::TreeInfixPrinter foo;
+            backend_->call("relationToFunction", 2, "etmvt", "et", &trigger, &related_vm, &exp);
+            backend_->call("differentiateWithTime", 1, "et", "et", &exp, &dexp);
+            std::cout << "exp:" << foo.get_infix_string(exp) << "\n";
+            std::cout << "dexp:" << foo.get_infix_string(dexp) << "\n";
+            // 初期値は適当
+            itvd init = itvd(0.,100.);
+            itvd test;
+            
+            // if(phase->parent->diff_positive_asks.count(ask) > 0 || phase->parent->diff_negative_asks.count(ask) > 0)
+            // {
+            //   test = hydla::interval::calculate_interval_newton(init, exp, dexp, phase->parameter_map); 
+            // }
+            
+            test = hydla::interval::calculate_interval_newton(init, exp, dexp, phase->parameter_map); 
+            std::cout << "test : " << test << "\n";
+            // phase->paraent->diff_positive_asks, phase->parent->diff_negative_asks を使う
+            
+            // test の結果をパラメータにしたい！
+            value_t lower(test.lower());
+            backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
+            value_t upper(test.upper());
+            backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+            ValueRange range (lower, upper);
+            Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
+            parameter_map_t parameter_map = phase->parameter_map;
+            parameter_map[parameter] = range;
+            min_time_for_this_ask.push_back(FindMinTimeCandidate(value_t(parameter), true, parameter_map));
+          }
+          else
+          {
+            backend_->call("findMinTime", 3, "etmvtvlt", "f", &trigger, &related_vm, &time_limit, &min_time_for_this_ask);
+          }
+          calculated_pp_time_map[ask] = min_time_for_this_ask;
+          set<string> adjacent_var_names = relation_graph_->get_adjacent_variables(ask);
+          for(auto adjacent_var_name : adjacent_var_names)
+          {
+            if(adjacent_var_name == var_name)continue;
+            HYDLA_LOGGER_DEBUG_VAR(adjacent_var_name);
+            candidate_map[adjacent_var_name] = compare_min_time(candidate_map[adjacent_var_name], min_time_for_this_ask, ask);
+          }
+>>>>>>>  On branch Hyrose_Newton
         }
       }
 

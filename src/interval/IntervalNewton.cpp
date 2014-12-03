@@ -56,8 +56,12 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     return true;
   }
     
-  tmp.lower() = candidate.lower() - 1.0 * pow(10, (int)log10(width(candidate)));            
-  tmp.upper() = candidate.upper() + 1.0 * pow(10, (int)log10(width(candidate)));
+  tmp.lower() = candidate.lower() - 1.0 * pow(10, (int)log10(width(candidate)) - 1);            
+  tmp.upper() = candidate.upper() + 1.0 * pow(10, (int)log10(width(candidate)) - 1);
+
+  std::cout << "width : " << width(candidate) << "\n";
+  std::cout << "log(width) : " << log10(width(candidate)) << "\n";
+  std::cout << "(int)log(width) : " << (int)log10(width(candidate)) << "\n";
   
   itvd n_x, div;
   bool parted;
@@ -109,6 +113,21 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
     
     for(int i=0;i<100;i++)
     {
+      itvd f_result;
+      // if(i==0)
+      // {
+      //   IntervalTreeVisitor f_visitor(itvd(current_value.lower() + 0.1), phase_map_);
+      //   f_result = f_visitor.get_interval_value(exp);
+      // }
+      // else 
+      // {
+      //   IntervalTreeVisitor f_visitor = IntervalTreeVisitor(itvd(mid(current_value)), phase_map_);
+      //   f_result = f_visitor.get_interval_value(exp);
+      // }
+
+
+      IntervalTreeVisitor f_visitor = IntervalTreeVisitor(itvd(mid(current_value)), phase_map_);
+      f_result = f_visitor.get_interval_value(exp);
       
       IntervalTreeVisitor visitor;
 
@@ -159,6 +178,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       if(itvd_eqal(prev_value, current_value))
       {
         printf("Criteria prev == present.\n");
+        printf("Stopping at %d times\n", i+1);
         break;
       }
     } // for
@@ -170,6 +190,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
     if(show_existence(current_value, exp, dexp, phase_map_))
     {
       std::cout << "FIND!\n";
+      printf("Width of answer : %lf\n", width(current_value));
       return current_value;
     }
     
