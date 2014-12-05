@@ -29,6 +29,16 @@ void ListBoundVariableUnifier::apply_change(symbolic_expression::node_sptr node)
   applying_ = false;
 }
 
+std::vector<std::string> ListBoundVariableUnifier::get_list_variables()
+{
+  std::vector<std::string> ret;
+  for(auto map : replace_name_map_)
+  {
+    ret.push_back(map.second);
+  }
+  return ret;
+}
+
 void ListBoundVariableUnifier::visit(boost::shared_ptr<symbolic_expression::Variable> node)
 {
   std::string name = node->get_name();
