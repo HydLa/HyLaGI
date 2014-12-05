@@ -610,11 +610,12 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::Power> node){
   }
   lhs = boost::dynamic_pointer_cast<Number>(node->get_lhs()->clone());
   rhs = boost::dynamic_pointer_cast<Number>(node->get_rhs()->clone());
-  if(lhs && rhs){
-    double num = std::pow(std::stof(lhs->get_number()), std::stof(rhs->get_number()));
-    std::string str = std::to_string(num);
-    new_child = boost::shared_ptr<Number>(new Number(str));
-  }else new_child = node;
+  // if(lhs && rhs){
+  //   double num = std::pow(std::stof(lhs->get_number()), std::stof(rhs->get_number()));
+  //   std::string str = std::to_string(num);
+  //   new_child = boost::shared_ptr<Number>(new Number(str));
+  // }else 
+  new_child = node;
 }
 
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node){

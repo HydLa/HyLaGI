@@ -53,8 +53,8 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
 
-  phase_simulator_->initialize(variable_set_, parameter_map_,
-                               original_map_, module_set_container_, result_root_);
+  phase_simulator_->initialize(variable_set_, parameter_map_, original_map_, 
+      module_set_container_, result_root_, parse_tree_);
 
   if(opts_->assertion)
   {

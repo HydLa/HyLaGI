@@ -21,7 +21,8 @@ CXX_OPT  += -Wall -std=c++11
 endif
 ifeq ($(UNAME),Darwin)
 INCLUDES += -I/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-LDFLAGS  += -L/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+LDFLAGS  += -L/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/ \
+			-L/usr/local/lib/
 
 CXX_OPT  += -Wall -std=c++11 -framework Foundation
 endif

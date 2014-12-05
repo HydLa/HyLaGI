@@ -4,6 +4,7 @@
 
 #include "DefaultTreeVisitor.h"
 #include "PhaseSimulator.h"
+#include "ExpressionListElementFinder.h"
 
 namespace hydla{
 namespace backend{
@@ -22,6 +23,7 @@ typedef Link::VariableForm        variable_form_t;
 typedef hydla::symbolic_expression::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
+typedef hydla::simulator::list_element_data_set_t list_element_data_set_t;
 
 struct MidpointRadius
 {
@@ -79,6 +81,15 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
         int diff = it->get_differential_count();
         call("addVariable", 2, "si", "", name.c_str(), &diff);
       }
+  }
+
+  void set_list_element_set(list_element_data_set_t& le){
+
+    for(auto element : le){
+      std::string name = var_prefix + element->node->get_name();
+      int diff = element->differential_count;
+      call("addVariable", 2, "si", "", name.c_str(), &diff);
+    }
   }
 
   private:

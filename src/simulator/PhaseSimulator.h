@@ -43,7 +43,8 @@ public:
                           parameter_map_t &p,
                           variable_map_t  &m,
                           module_set_container_sptr &msc,
-                          phase_result_sptr_t root);
+                          phase_result_sptr_t root,
+                          parse_tree_sptr tree);
 
 
   void process_todo(phase_result_sptr_t&);
