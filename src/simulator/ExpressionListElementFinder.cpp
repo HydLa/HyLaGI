@@ -43,7 +43,7 @@ void ExpressionListElementFinder::visit(boost::shared_ptr<hydla::symbolic_expres
   accept(node->get_child());
 }
 
-void ExpressionListElementFinder::visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> node)
+void ExpressionListElementFinder::visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListElement> node)
 {
   if(in_prev_){
     prev_variables_.insert(boost::shared_ptr<ListElementData>(new ListElementData(node, differential_count_)));

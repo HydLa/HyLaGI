@@ -13,14 +13,14 @@
 namespace hydla {
 namespace simulator {
 
-typedef boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> list_caller_sptr_t;
+typedef boost::shared_ptr<hydla::symbolic_expression::ExpressionListElement> list_element_sptr_t;
 
 struct ListElementData
 {
-  list_caller_sptr_t node;
+  list_element_sptr_t node;
   int differential_count;
 
-  ListElementData(list_caller_sptr_t n, int dc) : node(n),differential_count(dc){}
+  ListElementData(list_element_sptr_t n, int dc) : node(n),differential_count(dc){}
   ~ListElementData(){}
 };
 
@@ -64,7 +64,7 @@ public:
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
   /// 変数
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> node);
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListElement> node);
 
 private:
 

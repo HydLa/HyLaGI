@@ -86,9 +86,8 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   void set_list_element_set(list_element_data_set_t& le){
 
     for(auto element : le){
-      std::string name = var_prefix + element->node->get_name();
       int diff = element->differential_count;
-      call("addVariable", 2, "si", "", name.c_str(), &diff);
+      call("addVariable", 2, "eni", "", &element->node, &diff);
     }
   }
 

@@ -374,15 +374,13 @@ void PhaseSimulator::initialize(variable_set_t &v,
   aborting = false;
 
   ExpressionListElementFinder finder;
-  finder.visit_node(tree->get_node());
-  list_element_data_set_t tmp_le_set(finder.get_all_variable_set());
+  for(auto m : ms)
+  {
+    finder.visit_node(m.second);
+  }
 
-  VariableFinder var_finder;
-  var_finder.visit_node(tree->get_node());
-  variable_set_t tmp_var_set(var_finder.get_all_variable_set());
-  variable_set_->insert(tmp_var_set.begin(), tmp_var_set.end());
-
-  backend_->set_list_element_set(tmp_le_set);
+  list_element_data_set_t le_set(finder.get_all_variable_set());
+  backend_->set_list_element_set(le_set);
 
   backend_->set_variable_set(*variable_set_);
   value_modifier.reset(new ValueModifier(*backend_));
