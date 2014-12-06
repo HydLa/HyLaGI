@@ -46,10 +46,33 @@ void ExpressionListElementFinder::visit(boost::shared_ptr<hydla::symbolic_expres
 void ExpressionListElementFinder::visit(boost::shared_ptr<hydla::symbolic_expression::ExpressionListElement> node)
 {
   if(in_prev_){
-    prev_variables_.insert(boost::shared_ptr<ListElementData>(new ListElementData(node, differential_count_)));
+    bool inserted = false;
+    for(auto prev_var : prev_variables_)
+    {
+      if(prev_var->node->is_same_struct(*node,true))
+      {
+        inserted = true;
+        break;
+      }
+    }
+    if(!inserted)
+    {
+      prev_variables_.insert(boost::shared_ptr<ListElementData>(new ListElementData(node, differential_count_)));
+    }
   }else{
     for(int i=0; i <= differential_count_; i++){
-      variables_.insert(boost::shared_ptr<ListElementData>(new ListElementData(node, i)));
+      bool inserted = false;
+      for(auto var : variables_)
+      {
+        if(var->node->is_same_struct(*node,true) && i==var->differential_count)
+        {
+          inserted = true;
+          break;
+        }
+      }
+      if(!inserted){
+        variables_.insert(boost::shared_ptr<ListElementData>(new ListElementData(node, i)));
+      }
     }
   }
 }
