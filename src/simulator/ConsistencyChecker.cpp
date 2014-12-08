@@ -325,20 +325,21 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
   timer::Timer timer;
   vector<ConstraintStore> related_constraints_list;
+  ConstraintStore all_constraints;
   vector<module_set_t> related_modules_list;
+  module_set_t module_sets;
   relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   // ConstraintStore constraint_store;
   // module_set_t module_set;
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
-    // constraint_store.add_constraint_store(related_constraints_list[i]);
-    // module_set.insert(related_modules_list[i]);
-    // TODO : divide constraints correctly using List
     HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
-    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
+//    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
+    all_constraints.add_constraint_store(related_constraints_list[i]);
+    module_sets.insert(related_modules_list[i]);
   }
-  //check_consistency(constraint_store, relation_graph, module_set, result, phase, profile);
+  check_consistency(all_constraints, relation_graph, module_sets, result, phase, profile);
   
   if(result.inconsistent_store.empty())
   {
