@@ -54,6 +54,14 @@ bool ModuleSet::disjoint(const ModuleSet& ms) const
   return true;
 }
 
+ModuleSet::module_list_const_iterator ModuleSet::find(const std::string& mod) const
+{
+  for(auto it = begin(); it != end(); it++)
+  {
+    if(it->first == mod) return it;
+  }
+  return end();
+}
 ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
 {
   return module_list_.find(mod);

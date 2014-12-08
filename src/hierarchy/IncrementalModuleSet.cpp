@@ -87,7 +87,7 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   for( auto it : ms ){
     bool has_weaker = false;
     for( auto weaker : weaker_modules_[it.first] ){
-      if(ms.find(weaker) != ms.end()){
+      if(ms.find(weaker.first) != ms.end()){
         has_weaker = true;
         break;
       }
@@ -108,10 +108,10 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
       // if there are modules which is weaker than roop_it
       if(weaker_modules_.find(roop_it.first) != weaker_modules_.end()){
         for( auto wmit : weaker_modules_[roop_it.first] ){
-	  // wmit is a module which is weaker than roop_it
-	  // if wmit is included by current module set
+          // wmit is a module which is weaker than roop_it
+          // if wmit is included by current module set
           if(current_ms.find(wmit) != current_ms.end()){
-	    // push wmit to childs
+            // push wmit to childs
             childs.push_back(wmit);
           }
         }

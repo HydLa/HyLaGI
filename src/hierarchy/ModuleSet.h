@@ -83,6 +83,11 @@ public:
   module_list_const_iterator find(const module_t& mod) const;
 
   /**
+   * find module by name
+   */
+  module_list_const_iterator find(const std::string& mod) const;
+
+  /**
    * erase module from module_list_
    */
   int erase(const ModuleSet& ms);
